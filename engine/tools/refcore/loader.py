@@ -9,7 +9,7 @@ from fractions import Fraction
 from . import units as U
 from . import ty as T
 from .dates import (Period, day_period, month_period, year_period, quarter_period, add_days, add_months, ONE_DAY,
-                    month_add)
+                    month_add, next_day, end_days, end_months, END)
 from .errors import LoadError, Unspecified, NotYet
 from .lexer import split_lines
 from .model import (Reality, Span, ALWAYS, lit_period, lspan_to_span, visible, known_first, VersionInfo, KindInfo,
@@ -548,7 +548,7 @@ class Loader:
         d = S
         while d <= E:
             days.keys.append(d)
-            d = d + ONE_DAY
+            d = next_day(d)
         months = IndexInfo('months', 'builtin')
         months.pk = 'month'
         y, mo = S.year, S.month
@@ -651,7 +651,7 @@ class Loader:
             yy = a
             while yy <= b:
                 st = datetime.date(yy, mm, dd)
-                en = datetime.date(yy + n, mm, dd)
+                en = end_months(st, 12 * n)
                 ix.keys.append(Period('year', st, en, 'month', 12 * n))
                 yy += n
         elif pk == 'month':
@@ -667,7 +667,7 @@ class Loader:
                 raise LoadError('LOAD-KEY', 'range out of order', loc)
             while (y, mo) <= hi.v:
                 st = datetime.date(y, mo, dd)
-                ix.keys.append(Period('month', st, add_months(st, n), 'month', n))
+                ix.keys.append(Period('month', st, end_months(st, n), 'month', n))
                 y, mo = month_add(y, mo, n)
         elif pk == 'day':
             if lo.k != 'date' or hi.k != 'date':
@@ -677,11 +677,13 @@ class Loader:
             if lo.v > hi.v:
                 raise LoadError('LOAD-KEY', 'range out of order', loc)
             d = lo.v
-            while d <= hi.v:
+            while True:
                 if n == 1:
                     ix.keys.append(d)
                 else:
-                    ix.keys.append(Period('day', d, add_days(d, n), 'day', n))
+                    ix.keys.append(Period('day', d, end_days(d, n), 'day', n))
+                if (hi.v - d).days < n:
+                    break
                 d = add_days(d, n)
 
     def build_axes(self):
@@ -2406,7 +2408,7 @@ def band_defect(rows, isint):
 
 def _uncovered(span, others):
     """The first stretch of span that no span of others covers, as a Span, or None."""
-    lo_d, hi_d = datetime.date.min, datetime.date.max
+    lo_d, hi_d = datetime.date.min, END
     lo = lo_d if span.always or span.start is None else span.start
     hi = hi_d if span.always or span.end is None else span.end
     ivs = sorted((lo_d if o.always or o.start is None else o.start, hi_d if o.always or o.end is None else o.end)

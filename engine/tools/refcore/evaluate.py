@@ -14,7 +14,8 @@ from fractions import Fraction
 from . import units as U
 from . import ty as T
 from .dates import (Period, day_period, month_period, quarter_period, year_period, month_of, quarter_of, year_of,
-                    add_days, add_months, age, age_months, overlap_days, last_day, WEEKDAYS, ONE_DAY)
+                    add_days, add_months, age, age_months, overlap_days, last_day, WEEKDAYS, ONE_DAY, next_day,
+                    end_months)
 from .errors import TallyError, LoadError, Refusal, Unspecified, NotYet, load_now
 from .model import (in_world, set_world, Span, visible, known_first, InputInfo, DefInfo, BandInfo, key_text, _kv,
                     wcut, WindowUndecided, row_known_sid)
@@ -2141,12 +2142,12 @@ class Engine:
                 return a.shift(k)
             if a.kind == 'month':
                 s = add_months(a.start, k)
-                return Period(a.kind, s, add_months(s, 1), 'month', a.n) if a.n == 1 else a.shift(k)
+                return Period(a.kind, s, end_months(s, 1), 'month', a.n) if a.n == 1 else a.shift(k)
             if a.kind == 'quarter':
                 return a.shift(k)
             # a year moves by years
             s = add_months(a.start, 12 * k)
-            return Period('year', s, add_months(a.start, 12 * (k + 1)) if a.n == 12 else add_months(s, a.n), 'month',
+            return Period('year', s, end_months(a.start, 12 * (k + 1)) if a.n == 12 else end_months(s, a.n), 'month',
                           a.n)
         raise refuse('LOAD-UNIT', '%s %s %s' % (fmt(a), op, fmt(b)))
 
@@ -2765,7 +2766,7 @@ class Engine:
                     return None, sp, False
                 ow = getattr(b, '_owner', None)
                 sel = [t for t in things if alive(t, lambda t: m.alive_over(t, kind, sp, ctx.cut, ow))]
-                past = sp.end is None or sp.end > ctx.cut + ONE_DAY
+                past = sp.end is None or sp.end > next_day(ctx.cut)
             sel.sort(key=lambda t: self.safe_order_key(t, kind, ctx.cut))
             vals = [Thing(t.name) for t in sel]
             b._unknown = unknown
@@ -2869,7 +2870,7 @@ class Engine:
 
     def span_end(self, v):
         if isinstance(v, datetime.date):
-            return v + ONE_DAY
+            return next_day(v)
         if isinstance(v, Period):
             return v.end
         if isinstance(v, Iv):
@@ -3286,7 +3287,7 @@ class Engine:
                 sp = self.bind_day(b, b.over, env, ctx, span=True)
                 if sp is EMPTY_BIND or isinstance(sp, Hole):
                     continue
-                if sp.end is None or sp.end > ctx.cut + ONE_DAY:
+                if sp.end is None or sp.end > next_day(ctx.cut):
                     return b
         return None
 

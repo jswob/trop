@@ -12,7 +12,7 @@ Installed as Engine methods (`m_<name>` -> `<name>`).
 import bisect
 import datetime
 
-from .dates import ONE_DAY
+from .dates import ONE_DAY, next_day
 from .moves import item_in_world, order_key
 from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, RandomLine
 from .model import known_first, key_text, SameDiffers
@@ -1934,7 +1934,7 @@ class Walk:
         for place, th in self.ending(d):
             # a place stated same that one side ends today and the other doesn't (L §6.1): the refusal depends on the
             # place being alive tomorrow, a HOLE-SAME hole
-            nxt = self.alive_day(th, d + ONE_DAY) if getattr(th, 'same_others', None) else False
+            nxt = self.alive_day(th, next_day(d)) if getattr(th, 'same_others', None) else False
             for (p, u) in list(self.logs):
                 if p != place or u == '*':
                     continue

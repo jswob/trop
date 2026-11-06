@@ -32,6 +32,108 @@ def add_days(d, n):
     return d + datetime.timedelta(days=n)
 
 
+class EndOfTime(D):
+    """The end of time (L §2.1, tally 2.1.6, issue #48): the start of the period after one that ends with 9999-12-31,
+    Tally's last day, as the day 10000-01-01 would be. It follows every day, a span or a period may end there, and
+    it is compared, and has days or months taken from it, as a day is (`END - ONE_DAY` is 9999-12-31,
+    `add_months(END, -1)` 9999-12-01); it is no day itself, so a day after it is refused and it never prints (L §7.6).
+    A subclass of date, so Python tries its own comparisons and subtraction first; its stored day is 9999-12-31,
+    which no method reads. refcore 2.1.5 built the year 9999's end as date(10000, 1, 1), which Python refuses."""
+    __slots__ = ()
+    _one = None
+
+    def __new__(cls, *args):
+        if cls._one is None:
+            cls._one = D.__new__(cls, 9999, 12, 31)
+        return cls._one
+
+    year = property(lambda self: 10000)
+    month = property(lambda self: 1)
+    day = property(lambda self: 1)
+
+    def __eq__(self, o):
+        return o is self if isinstance(o, D) else NotImplemented
+
+    def __ne__(self, o):
+        return o is not self if isinstance(o, D) else NotImplemented
+
+    def __lt__(self, o):
+        return False if isinstance(o, D) else NotImplemented
+
+    def __le__(self, o):
+        return o is self if isinstance(o, D) else NotImplemented
+
+    def __gt__(self, o):
+        return o is not self if isinstance(o, D) else NotImplemented
+
+    def __ge__(self, o):
+        return True if isinstance(o, D) else NotImplemented
+
+    def __hash__(self):
+        return hash('EndOfTime')
+
+    def __add__(self, o):
+        if not isinstance(o, datetime.timedelta):
+            return NotImplemented
+        if o.days == 0:
+            return self
+        if o.days < 0:
+            return D.max + (o + ONE_DAY)
+        raise OverflowError('date value out of range')
+
+    __radd__ = __add__
+
+    def __sub__(self, o):
+        if isinstance(o, datetime.timedelta):
+            return self + (-o)
+        if o is self:
+            return datetime.timedelta(0)
+        if isinstance(o, D):
+            return (D.max - o) + ONE_DAY
+        return NotImplemented
+
+    def __rsub__(self, o):
+        if isinstance(o, D):
+            return -(self - o)
+        return NotImplemented
+
+    def toordinal(self):
+        return D.max.toordinal() + 1
+
+    def no_day(self, *a):
+        raise OverflowError('date value out of range')
+
+    isoformat = __str__ = __format__ = weekday = isoweekday = isocalendar = replace = strftime = timetuple = no_day
+
+    def __repr__(self):
+        return 'END'
+
+    def __reduce__(self):
+        return (EndOfTime, ())
+
+
+END = EndOfTime()
+
+
+def next_day(d):
+    """The day after d, or the end of time after 9999-12-31 (L §2.1)."""
+    return END if d == D.max else d + ONE_DAY
+
+
+def end_days(s, n):
+    """The end of a period of n days from s: the day after its last, or the end of time (L §2.1)."""
+    last = s + datetime.timedelta(days=n - 1)
+    return next_day(last)
+
+
+def end_months(s, n):
+    """The end of a period of n months from s, the end of time where it ends with 9999-12-31 (L §2.1)."""
+    y, m = month_add(s.year, s.month, n)
+    if (y, m) == (10000, 1) and s.day == 1:
+        return END
+    return add_months(s, n)
+
+
 class Period:
     __slots__ = ('kind', 'start', 'end', 'unit', 'n')
 
@@ -58,9 +160,9 @@ class Period:
         """The period k steps later (key arithmetic on its index)."""
         if self.unit == 'day':
             s = add_days(self.start, k * self.n)
-            return Period(self.kind, s, add_days(s, self.n), 'day', self.n)
+            return Period(self.kind, s, end_days(s, self.n), 'day', self.n)
         s = add_months(self.start, k * self.n)
-        e = add_months(self.start, (k + 1) * self.n)
+        e = end_months(self.start, (k + 1) * self.n)
         return Period(self.kind, s, e, 'month', self.n)
 
     def steps_to(self, o):
@@ -95,22 +197,22 @@ class Period:
 
 
 def day_period(d):
-    return Period('day', d, d + ONE_DAY, 'day', 1)
+    return Period('day', d, next_day(d), 'day', 1)
 
 
 def month_period(y, m):
     s = D(y, m, 1)
-    return Period('month', s, add_months(s, 1), 'month', 1)
+    return Period('month', s, end_months(s, 1), 'month', 1)
 
 
 def quarter_period(y, q):
     s = D(y, 3 * (q - 1) + 1, 1)
-    return Period('quarter', s, add_months(s, 3), 'month', 3)
+    return Period('quarter', s, end_months(s, 3), 'month', 3)
 
 
 def year_period(y):
     s = D(y, 1, 1)
-    return Period('year', s, D(y + 1, 1, 1), 'month', 12)
+    return Period('year', s, end_months(s, 12), 'month', 12)
 
 
 def month_of(d):

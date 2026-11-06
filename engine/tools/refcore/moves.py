@@ -9,7 +9,7 @@ Installed as Engine methods (`m_<name>` -> `<name>`), as eval2 is.
 """
 import datetime
 
-from .dates import Period, ONE_DAY
+from .dates import Period, ONE_DAY, END
 from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, RandomLine
 from .model import visible, row_known_sid, known_first, PlaceThing, _kv, key_text, in_world, _WSET
 from .values import Num, Money, Hole, Thing, Mv, Iv, Rec, Text, NONE, NEVER, CURRENCIES, fmt, vkey
@@ -314,7 +314,9 @@ def m_key_sort(self, k, b):
 
 
 def m_inst_order(self, inst):
-    d = day_lo(inst.day) or datetime.date.max
+    # a hole day sorts after every day, 9999-12-31 included (E §4.1). tally 2.1.6 (issue #48): refcore 2.1.5 wrote it
+    # as date.max, so it tied with a movement dated 9999-12-31
+    d = day_lo(inst.day) or END
     ks = tuple(self.key_sort(k, b) for k, b in zip(inst.keys, inst.move.binds))
     return (d, inst.move.stratum, inst.move.id, ks)
 
@@ -326,6 +328,8 @@ def order_key(o):
     stratum or a key position of 10 sorted before 2."""
     if o is None:
         return (0,)
+    if o is END:
+        return (1, datetime.date.max, 1)
     if isinstance(o, datetime.date):
         return (1, o)
     if isinstance(o, int) and not isinstance(o, bool):

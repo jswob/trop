@@ -10,7 +10,7 @@ from fractions import Fraction
 from . import units as U
 from . import ty as T
 from .dates import (Period, day_period, month_period, year_period, quarter_period, add_days, add_months,
-                    ONE_DAY)
+                    ONE_DAY, END)
 from .errors import LoadError, Unspecified, NotYet
 from .node import Node
 from .values import (Num, Int, Money, Text, Key, Thing, Code, Rec, Lst, Iv, Cal, Hole, NONE, NEVER, CURRENCIES)
@@ -37,7 +37,7 @@ class Span:
         if self.always or o.always:
             return True
         a = max(self.start or datetime.date.min, o.start or datetime.date.min)
-        b = min(self.end or datetime.date.max, o.end or datetime.date.max)
+        b = min(self.end or END, o.end or END)
         return a < b
 
     def text(self):

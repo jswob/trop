@@ -7,7 +7,7 @@ import datetime
 from fractions import Fraction
 
 from . import units as U
-from .dates import Period, ONE_DAY
+from .dates import Period, ONE_DAY, next_day, END
 from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now
 from .evaluate import member_owns, member_moves, move_owner
 from .model import Span, _kv, key_text, WindowUndecided
@@ -445,7 +445,7 @@ def m_movements_of(self, dom, ctx, owner=None):
     if restrict is not None and dom[0] == 'event' and 'adjustments' in m.kinds[dom[1]].subtree(m):
         # a settlement move's instances bound to the adjustments being settled (moves.settle_candidates)
         out = [a for a in restrict if a.kind in m.kinds[dom[1]].subtree(m)]
-        out.sort(key=lambda x: (day_lo(x.day) or datetime.date.max, order_key(x.order)))
+        out.sort(key=lambda x: (day_lo(x.day) or END, order_key(x.order)))
         return out
     key = ('mvs', dom, self.wkey(ctx), ctx.unc, id(ctx.walk) if ctx.walk is not None else None, ctx.wp, owner)
     hit = self.run_cache.get(key)
@@ -517,7 +517,7 @@ def m_movements_of(self, dom, ctx, owner=None):
         from .joint import owns
         out = [x for x in out if owns(owner, move_owner(x))]
     out = once_by_same(m, out, owner)
-    out.sort(key=lambda x: (day_lo(x.day) or datetime.date.max, order_key(x.order)))
+    out.sort(key=lambda x: (day_lo(x.day) or END, order_key(x.order)))
     self.run_cache[key] = out
     return out
 
@@ -648,7 +648,7 @@ def m_movement_members(self, b, env, ctx, defer=False):
         if isinstance(d, Hole):
             return d
         d = self.date_of(d, 'the day of a binding')
-        sp = Span(d, d + ONE_DAY)
+        sp = Span(d, next_day(d))
     else:
         sp = self.bind_day(b, b.over, env, ctx, span=True)
         if sp is EMPTY_BIND:
@@ -688,7 +688,7 @@ def m_span_members(self, dom, sp, ctx, owner=None):
             # an arrival rule's running read of its arrival's day's end or later is RUN-CYCLE (L §5.14.1, 2.1-C7b-3)
             raise arrival_span_cycle(arr, '%s over %s' % (b._dom[1], span_text(sp)))
         if ('pads' in sub or any(mi.decision and mi.kind in sub for mi in m.moves.values())) and \
-                (sp.end is None or sp.end > t + ONE_DAY):
+                (sp.end is None or sp.end > next_day(t)):
             raise refuse('RUN-FUTURE', 'a decision on %s binds over %s through %s, after its day' % (
                 t, b._dom[1], (sp.end - ONE_DAY) if sp.end is not None else 'the end'))
     out = []
