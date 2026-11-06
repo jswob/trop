@@ -1,0 +1,23 @@
+# L §3.1 (a record literal names its type's fields), §8.3 LOAD-FIELD `field <f> twice` (tally 2.1.6, issue #64): a
+# record row naming x twice is refused, so no reader can take one x and another reader the other. A pinning test:
+# tally 2.1.5's refcore refused it so already, without the form in the catalogue.
+=== m.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input r: (x int, y int)
+
+ask q: r.x
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r = (x: 1, x: 2, y: 3)
+=== expect
+refused: LOAD-FIELD field x twice (m.tally:17)
