@@ -328,7 +328,7 @@ Expressions nest at most **8** deep (`LOAD-DEPTH`). The depth at a point is the 
 
 ### 2.4 Canonical format
 
-The loader accepts any spacing that the grammar allows: spaces between tokens are read as none, so `f (x)` and `a.b (x)` are calls, as `f(x)` and `a.b(x)` are (tally 2.1.6). It then reprints the model as follows, so equal models print identically (N-1902).
+The loader accepts any spacing that the grammar allows: spaces between tokens are read as none, so `f (x)` and `a.b (x)` are calls, as `f(x)` and `a.b(x)` are (tally 2.1.6). It then reprints the model as follows, so equal models print identically (N-1902). A text with a duplicated id, or a key domain under a prefix no `use` line names, has no canonical form: `reprint` refuses it as load does, before it orders anything (`LOAD-DUP <x> is declared twice`, `LOAD-NAME unknown id <a>.<x>`; each joint model's member is a reality of its own, tally 2.1.6).
 
 - **Header first:** `model`, then `tally`, `on`, `start`, `end`, `use` lines (by name), `same` lines (by left side), notes.
 - **Sections in this kind order:** `source`, `unit`, `kind`, `axis`, `index`, `place`, `input`, `band`, `def`, `fill`, `move`, `ask`, `version`.

@@ -1,0 +1,26 @@
+# L §2.4, §6.1 (tally 2.1.6, issue #91): mult is keyed by c.nt, under a prefix c no use line names, so its rows
+# have no key order: reprint refuses as load does, LOAD-NAME unknown id c.nt. tally 2.1.5's refcore stopped
+# REFCORE-NOT-YET (the canonical order of keys of c.nt), the M0 engine not built (T's fuzz finding c5a8…,
+# minimized).
+=== options reprint
+=== pre.tally
+model m
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+index nt = [n1, n2]
+
+input mult[k in c.nt]: num
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  mult[n2] = 2
+  mult[n1] = 1
+
+source s "s"
+=== expect
+refused: LOAD-NAME unknown id c.nt (pre.tally:9)

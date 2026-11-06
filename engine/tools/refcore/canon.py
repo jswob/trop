@@ -74,14 +74,16 @@ def printed_hash(printed):
     return hashlib.sha256(''.join(text for p, text in printed).encode('utf-8')).hexdigest()
 
 
-def reprint(files, members=None):
+def reprint(files, members=None, member_paths=None):
     """[(path, source)] -> [(path, canonical text)], each reprinted with the declarations of all of them (a key's order
     is its index's, a kind's parent may sit in another file, a rule's `v` names a version anywhere).  members: {alias:
     [(path, source)]}, a joint model's members, whose indexes and kinds order the keys of its items keyed by them (L
-    §2.4 "keys in index order"; L §6.1 a member's items are read as a.item)."""
+    §2.4 "keys in index order"; L §6.1 a member's items are read as a.item); member_paths: {alias: paths}, the files
+    given that are a member's (cli.reprint_lines), each member a reality of its own."""
     lined = [(p, split_lines(src, p)) for p, src in files]
     units = prescan_units([ls for p, ls in lined])
     parsed = [(p, ls, parse_file(ls, units)) for p, ls in lined]
+    unorderable(parsed, members or {}, member_paths or {})
     table = Table([t for p, ls, t in parsed])
     for alias, mfiles in sorted((members or {}).items()):
         mlined = [(p, split_lines(src, p)) for p, src in mfiles]
@@ -94,6 +96,51 @@ def reprint(files, members=None):
             for sec in t.sections:
                 table.add_member(alias, sec)
     return [(p, FilePrinter(ls, tree, units, table).text()) for p, ls, tree in parsed]
+
+
+def unorderable(parsed, members, member_paths):
+    """L §2.4 (tally 2.1.6, issue #91): "A text with a duplicated id, or a reference no `use` line resolves, has no
+    canonical form and is refused as load refuses it", before anything is ordered: in each reality (the files given,
+    each joint model's members apart), a top-level id declared twice, the second in the order of the files' paths,
+    as load meets it (LOAD-DUP `<id> is declared twice`; a scenario's file is checked with the base, two scenarios
+    never meet, L §6.4); and a key domain under a prefix that names no member (LOAD-NAME `unknown id <q>.<x>`).
+    refcore 2.1.5 kept one block per id, silently, and stopped REFCORE-NOT-YET on an unknown prefix."""
+    taken = set()
+    for ps in member_paths.values():
+        taken |= set(ps)
+    groups = [[x for x in parsed if x[0] not in taken]] + [[x for x in parsed if x[0] in ps]
+                                                           for _, ps in sorted(member_paths.items())]
+    # files of several models given together are several realities (reprint prints each; load refuses them as one,
+    # LOAD-HEADER): each file is checked alone
+    split = []
+    for g in groups:
+        split.extend([[x] for x in g] if sum(1 for x in g if x[2].header.kind == 'model') > 1 else [g])
+    for g in split:
+        base = {}
+        for p, ls, t in g:
+            if t.header.kind == 'scenario':
+                continue
+            for sec in t.sections:
+                sid = getattr(sec, 'id', None)
+                if sid is not None and sid in base:
+                    raise LoadError('LOAD-DUP', '%s is declared twice' % sid, sec.loc)
+                base[sid] = sec
+        for p, ls, t in g:
+            if t.header.kind != 'scenario':
+                continue
+            seen = dict(base)
+            for sec in t.sections:
+                sid = getattr(sec, 'id', None)
+                if sid is not None and sid in seen:
+                    raise LoadError('LOAD-DUP', '%s is declared twice' % sid, sec.loc)
+                seen[sid] = sec
+    for p, ls, t in parsed:
+        for sec in t.sections:
+            for b in getattr(sec, 'binds', None) or ():
+                d = getattr(b, 'dom', None)
+                q = getattr(d, 'qual', None)
+                if q is not None and q not in members:
+                    raise LoadError('LOAD-NAME', 'unknown id %s.%s' % (q, d.id), d.loc)
 
 
 # -- what the reality declares -----------------------------------------------------------------------------------

@@ -58,13 +58,15 @@ def reprint_lines(texts, ordered=False):
         # joint model whose member was absent or changed); and kept for the order of keys of their indexes
         # (canon.reprint)
         members = {}
+        member_paths = {}
         on_disk = any(os.path.isfile(p) for p, src in texts)
         for p, src in files:
             uses = header_uses(src)
             if uses and is_model(src):
-                pinned_members(p, uses, texts)
+                for a, fs in pinned_members(p, uses, texts).items():
+                    member_paths[a] = set(f for f, rel, s in fs)
                 members.update(use_member_files([(p, p, src)], texts, on_disk))
-        printed = reprint(files, members)
+        printed = reprint(files, members, member_paths)
         out = []
         for p, t in printed:
             out.append('--- ' + p)

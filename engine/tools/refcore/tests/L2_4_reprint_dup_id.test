@@ -1,0 +1,22 @@
+# L §2.4, §2.5 (tally 2.1.6, issue #91): kind cards is declared twice, so the text has no canonical form: reprint
+# refuses it as load does, LOAD-DUP at the second, before it orders anything. tally 2.1.5's refcore and the M0
+# engine printed it, keeping one block per id (T's fuzz finding b943…, minimized; the engine's twin moves).
+=== options reprint
+=== one.tally
+model m
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "one"
+
+kind cards
+
+kind refunds: cards
+
+kind cards
+
+source s "two"
+=== expect
+refused: LOAD-DUP cards is declared twice (one.tally:13)
