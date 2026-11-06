@@ -734,10 +734,11 @@ impl Walk {
     }
 }
 
-/// The first day of the month after `day`'s. P §2.4.
+/// The first day of the month after `day`'s; after 9999-12 the end of time, past every day
+/// the walk reaches (L §7.6 item 1). P §2.4.
 fn month_after(day: Day) -> Result<Day, Stop> {
     Day::from_ymd(day.year(), day.month(), 1)
-        .and_then(|first| first.add_months(1))
+        .and_then(|first| first.end_months(1))
         .ok_or_else(|| invariant("a checkpoint past the calendar"))
 }
 

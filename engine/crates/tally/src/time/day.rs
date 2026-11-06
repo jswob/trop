@@ -3,8 +3,9 @@
 //! `days_between`, `weekday`).
 //! Twin: engine/tools/refcore/dates.py (`add_days`, `add_months`, `month_add`, `last_day`), on
 //! Python's `datetime.date` (years 1 to 9999, `toordinal`, `isoweekday`).
-//! Invariants: a `Day` is always a real day, year 1 to 9999; its number is Python's ordinal
-//! (0001-01-01 is 1), and its year, month and day agree with that number; days are ordered by it.
+//! Invariants: a `Day` is a real day, year 1 to 9999, or [`Day::END`], the end of time after
+//! 9999-12-31 (refcore's `END`); its number is Python's ordinal (0001-01-01 is 1), and its
+//! year, month and day agree with that number; days are ordered by it.
 
 use core::cmp::Ordering;
 
@@ -16,6 +17,8 @@ const DAYS_IN_100_YEARS: u32 = 36_524;
 const DAYS_IN_4_YEARS: u32 = 1_461;
 /// The number of 9999-12-31, the last day there is.
 const LAST: u32 = 3_652_059;
+/// The number of the end of time, the day after 9999-12-31.
+const END: u32 = 3_652_060;
 
 /// A day, `2026-07-14`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -50,6 +53,23 @@ impl Day {
         month: 12,
         dom: 31,
     };
+
+    /// The end of time: the start of the period after one that ends with 9999-12-31, as the
+    /// day 10000-01-01 would be. It follows every day, ends a span or a period, and has days
+    /// or months taken from it; it is no day itself, so where it is read as one it is refused
+    /// (`RUN-LIMIT`). L §2.1, §7.6 item 1.
+    pub const END: Day = Day {
+        number: END,
+        year: 10_000,
+        month: 1,
+        dom: 1,
+    };
+
+    /// Whether it is the end of time, no day. L §2.1, §7.6 item 1.
+    #[must_use]
+    pub fn is_end(self) -> bool {
+        self.number == END
+    }
 
     /// The day `year-month-day`, or `None` when no such day exists (as `datetime.date`
     /// refuses it). L §2.1.
@@ -144,6 +164,9 @@ impl Day {
     /// 9999. L §4.2 `add_days`.
     #[must_use]
     pub fn add_days(self, n: i64) -> Option<Day> {
+        if n == 0 {
+            return Some(self);
+        }
         let number = i64::from(self.number).checked_add(n)?;
         Day::from_number(u32::try_from(number).ok()?)
     }
@@ -171,9 +194,38 @@ impl Day {
     /// or `None` outside years 1 to 9999. L §4.2 `add_months`.
     #[must_use]
     pub fn add_months(self, n: i64) -> Option<Day> {
+        if n == 0 {
+            return Some(self);
+        }
         let (year, month) = month_add(self.year, self.month, n)?;
         let dom = self.dom.min(month_length(year, month)?);
         Day::from_ymd(year, month, dom)
+    }
+
+    /// The first day after a period of `n` days from this day: the end of time where its last
+    /// day is 9999-12-31; `None` where it passes it (refcore's `end_days`). L §2.1, §7.6 item 1.
+    #[must_use]
+    pub fn end_days(self, n: i64) -> Option<Day> {
+        let last = self.add_days(n.checked_sub(1)?)?;
+        if last.number == LAST {
+            return Some(Day::END);
+        }
+        last.next()
+    }
+
+    /// The first day after a period of `n` months from this day: the end of time where it ends
+    /// with 9999-12-31; `None` where it passes it (refcore's `end_months`). L §2.1, §7.6 item 1.
+    #[must_use]
+    pub fn end_months(self, n: i64) -> Option<Day> {
+        let months = i64::from(self.year)
+            .checked_mul(12)?
+            .checked_add(i64::from(self.month))?
+            .checked_add(n)?;
+        if months == 120_001 && self.dom == 1 {
+            // 10000-01: the period's last day is 9999-12-31
+            return Some(Day::END);
+        }
+        self.add_months(n)
     }
 
     /// The day as ISO text, `2026-07-14` (Python's `isoformat`). L §2.1.

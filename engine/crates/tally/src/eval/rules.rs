@@ -9,7 +9,7 @@
 //! entries reach every reader of the cell; recursion through cells is counted (R-16).
 
 use super::state::{
-    Cell, Ctx, DEPTH_LIMIT, Engine, Env, Task, invariant, num_stop, refuse, refuse_load,
+    Cell, Ctx, DEPTH_LIMIT, Engine, Env, Task, a_day, invariant, num_stop, refuse, refuse_load,
 };
 use crate::base::{Load, Run};
 use crate::hole::{Hole, spread};
@@ -92,7 +92,7 @@ impl Engine {
                 let Value::Day(day) = law else {
                     return Err(bad_law_date(m, def, &law)?);
                 };
-                self.def_cell(m, def, keys, &env, ctx.at_law(Some(day)))
+                self.def_cell(m, def, keys, &env, ctx.at_law(Some(a_day(day)?)))
             }
         }
     }

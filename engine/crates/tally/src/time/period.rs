@@ -59,7 +59,7 @@ impl Period {
     /// The day `day` as a period (refcore's `day_period`). L §4.1.
     #[must_use]
     pub fn day(day: Day) -> Option<Period> {
-        Period::new(PeriodKind::Day, day, day.next()?, Step::Days(1))
+        Period::new(PeriodKind::Day, day, day.end_days(1)?, Step::Days(1))
     }
 
     /// The month `year-month` (refcore's `month_period`). L §4.1.
@@ -69,7 +69,7 @@ impl Period {
         Period::new(
             PeriodKind::Month,
             start,
-            start.add_months(1)?,
+            start.end_months(1)?,
             Step::Months(1),
         )
     }
@@ -82,7 +82,7 @@ impl Period {
         Period::new(
             PeriodKind::Quarter,
             start,
-            start.add_months(3)?,
+            start.end_months(3)?,
             Step::Months(3),
         )
     }
@@ -91,7 +91,7 @@ impl Period {
     #[must_use]
     pub fn year(year: u16) -> Option<Period> {
         let start = Day::from_ymd(year, 1, 1)?;
-        let end = Day::from_ymd(year.checked_add(1)?, 1, 1)?;
+        let end = start.end_months(12)?;
         Period::new(PeriodKind::Year, start, end, Step::Months(12))
     }
 
@@ -150,13 +150,13 @@ impl Period {
         match self.step {
             Step::Days(n) => {
                 let start = self.start.add_days(k.checked_mul(i64::from(n))?)?;
-                let end = start.add_days(i64::from(n))?;
+                let end = start.end_days(i64::from(n))?;
                 Period::new(self.kind, start, end, self.step)
             }
             Step::Months(n) => {
                 let n = i64::from(n);
                 let start = self.start.add_months(k.checked_mul(n)?)?;
-                let end = self.start.add_months(k.checked_add(1)?.checked_mul(n)?)?;
+                let end = self.start.end_months(k.checked_add(1)?.checked_mul(n)?)?;
                 Period::new(self.kind, start, end, self.step)
             }
         }

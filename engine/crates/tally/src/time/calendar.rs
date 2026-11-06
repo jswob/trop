@@ -8,6 +8,8 @@
 //! An added day that is a window, a `one_of` or a hole needs the evaluator's windows and
 //! holes; the evaluator decides those before it asks this calendar (milestone S, G5).
 
+use std::collections::BTreeSet;
+
 use super::day::Day;
 use super::period::Period;
 
@@ -81,6 +83,18 @@ impl Calendar {
         let yearly = self.yearly.contains(&(day.month(), day.day()))
             && self.yearly_from.is_none_or(|from| day.year() >= from);
         !yearly && !self.added.contains(&day)
+    }
+
+    /// Whether a search for a business day can find one, as of `day`: not when the weekends
+    /// name all seven days, or the yearly days all 366 month-days from their first year on
+    /// (refcore's `business`, its `seek`). L §4.2, §7.6 item 5.
+    #[must_use]
+    pub fn has_business_day(&self, day: Day) -> bool {
+        let weekends: BTreeSet<u8> = self.weekends.iter().copied().collect();
+        let yearly: BTreeSet<(u8, u8)> = self.yearly.iter().copied().collect();
+        let all_yearly =
+            yearly.len() == 366 && self.yearly_from.is_none_or(|from| day.year() >= from);
+        weekends.len() < 7 && !all_yearly
     }
 
     /// The `n`-th business day after `day` (before it for a negative `n`), never `day`

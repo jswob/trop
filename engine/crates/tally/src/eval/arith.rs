@@ -10,7 +10,7 @@
 
 use core::cmp::Ordering;
 
-use super::state::{invariant, num_stop, refuse, refuse_load};
+use super::state::{invariant, num_stop, past_days, refuse, refuse_load};
 use crate::base::{Load, Run};
 use crate::model::{
     Class, KeyVal, Number, Reality, Shown, Unit, Value, currency_id, currency_unit, money_num,
@@ -452,16 +452,12 @@ fn day_shift(m: &Reality, day: Day, num: &Number, sign: i64, rhs: &Value) -> Res
             "quarter" => k.checked_mul(3).and_then(|k| day.add_months(k)),
             _ => k.checked_mul(12).and_then(|k| day.add_months(k)),
         };
-        return Ok(Value::Day(
-            moved.ok_or_else(|| invariant("a day past the calendar's range"))?,
-        ));
+        return Ok(Value::Day(moved.ok_or_else(|| past_days(k))?));
     }
     let k = int_of(m, rhs)?
         .checked_mul(sign)
         .ok_or_else(|| invariant("a day step past the integers"))?;
-    day.add_days(k)
-        .map(Value::Day)
-        .ok_or_else(|| invariant("a day past the calendar's range"))
+    day.add_days(k).map(Value::Day).ok_or_else(|| past_days(k))
 }
 
 /// A period moved by an int of its periods, or by a duration that is a whole number of them
@@ -505,7 +501,7 @@ fn period_shift(
     period
         .shift(steps)
         .map(Value::Period)
-        .ok_or_else(|| invariant("lhs period past the calendar's range"))
+        .ok_or_else(|| past_days(steps))
 }
 
 /// A duration as a count of a period's own periods: days of a day period, months of a

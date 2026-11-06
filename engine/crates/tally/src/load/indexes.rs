@@ -1,14 +1,18 @@
 //! Load's indexes: the built-in period indexes over the run, written lists and ranges, and open indexes' keys.
 //! Spec: L §4.1 (indexes: lists, integer and period ranges with `by` and `from`, open indexes,
-//! the built-in `days`, `months`, `years`, `bank_account`), §5.6 (keys and their order).
+//! the built-in `days`, `months`, `years`, `bank_account`), §5.6 (keys and their order), §7.6
+//! (a range's keys, digits and days inside Tally's capacity).
 //! Twin: engine/tools/refcore/loader.py (`build_indexes`, `build_range`, `prescan_open_keys`).
 //! Invariants: a range's keys are in its order and each period is `by` long; a built-in period
 //! index holds the periods that meet the run [S, E]; an open index's keys are in text order.
 
+use core::cmp::Ordering;
+
 use super::keys::{KeyLit, int_of, key_source_text, lit_text};
-use super::steps::{Loader, refuse};
+use super::steps::{Loader, num_stop, refuse};
 use crate::base::Load;
 use crate::model::{Domain, IndexForm as Form, IndexInfo, KeyVal, NameKind};
+use crate::num::Num;
 use crate::syntax::{IndexForm, IndexFrom, ItemForm, Lit, Row, Section, Stop};
 use crate::time::{Day, Period, PeriodKind, Step};
 
@@ -22,8 +26,8 @@ struct Range {
     lo: Lit,
     /// The last key.
     hi: Lit,
-    /// `by n`.
-    by: i64,
+    /// `by n`, 1 if unwritten.
+    by: Num,
     /// `from …`.
     from: Option<IndexFrom>,
     /// The file it is in.
@@ -35,7 +39,7 @@ struct Range {
 impl Loader {
     /// The built-in indexes, then each `index` section (refcore's `build_indexes`). L §4.1.
     pub(super) fn build_indexes(&mut self) -> Result<(), Stop> {
-        let not_built = Stop::NotBuilt("a run past 9999-12-31");
+        let not_built = Stop::NotBuilt("a run past the end of time");
         let mut days = IndexInfo::new("days", Form::Builtin);
         days.period = Some(PeriodKind::Day);
         let mut day = Some(self.m.start);
@@ -52,9 +56,10 @@ impl Loader {
             (&mut years, Period::year_of(self.m.start)),
         ] {
             let mut period = first.ok_or(not_built.clone())?;
-            while period.start() <= self.m.end {
-                index.keys.push(KeyVal::Period(period));
+            index.keys.push(KeyVal::Period(period));
+            while period.end() <= self.m.end {
                 period = period.shift(1).ok_or(not_built.clone())?;
+                index.keys.push(KeyVal::Period(period));
             }
         }
         for index in [
@@ -80,19 +85,22 @@ impl Loader {
                     by,
                     from,
                 } => {
-                    let step = match by {
-                        None => 1,
-                        Some(n) => n
-                            .to_i64()
-                            .filter(|s| *s > 0)
-                            .ok_or(Stop::NotBuilt("a range's by that isn't a positive integer"))?,
-                    };
+                    let by = by.clone().unwrap_or_else(|| Num::int(1));
+                    if by.compare(&Num::int(1)).map_err(num_stop)? == Ordering::Less {
+                        let message = format!(
+                            "index {}: by {} is not a positive step",
+                            decl.id,
+                            by.integer_text()
+                                .ok_or(Stop::NotBuilt("a by that isn't whole"))?
+                        );
+                        return Err(refuse(Load::Domain, message, file, decl.line));
+                    }
                     build_range(&Range {
                         id: decl.id.clone(),
                         period: period.clone(),
                         lo: lo.clone(),
                         hi: hi.clone(),
-                        by: step,
+                        by,
                         from: from.clone(),
                         file: file.clone(),
                         line: decl.line,
@@ -202,7 +210,7 @@ fn build_range(range: &Range) -> Result<IndexInfo, Stop> {
     let word = if let Some(word) = range.period.as_deref() {
         word
     } else {
-        if int_of(lo).is_none() || int_of(hi).is_none() {
+        if whole(lo).is_none() || whole(hi).is_none() {
             return Err(range.cannot("a range without a period word is of integers"));
         }
         if is_year(lo) && is_year(hi) {
@@ -222,36 +230,46 @@ fn build_range(range: &Range) -> Result<IndexInfo, Stop> {
     let mut index = IndexInfo::new(&range.id, Form::Range);
     match word {
         "int" => {
-            let (Some(a), Some(b)) = (int_of(lo), int_of(hi)) else {
+            let (Some(a), Some(b)) = (whole(lo), whole(hi)) else {
                 return Err(range.cannot("an integer range"));
             };
             if range.from.is_some() {
                 return Err(range.cannot("from on an integer range"));
             }
+            for n in [a, b, &range.by] {
+                range.digits(n)?;
+            }
+            let (Some(a), Some(b), by) = (a.to_i64(), b.to_i64(), range.step()?) else {
+                return Err(range.cannot("an integer range"));
+            };
             if a > b {
                 return Err(out_of_order(
                     range,
                     &format!("range {a}..{b} is out of order"),
                 ));
             }
+            range.count(b.checked_sub(a).and_then(|d| d.checked_div_euclid(by)))?;
             index.is_int = true;
             let mut at = a;
             while at <= b {
                 index.keys.push(KeyVal::Int(at));
                 at = at
-                    .checked_add(range.by)
+                    .checked_add(by)
                     .ok_or(Stop::NotBuilt("a range past i64"))?;
             }
         }
         "year" => {
+            range.digits(&range.by)?;
             index.period = Some(PeriodKind::Year);
             index.keys = year_keys(range)?;
         }
         "month" => {
+            range.digits(&range.by)?;
             index.period = Some(PeriodKind::Month);
             index.keys = month_keys(range)?;
         }
         "day" => {
+            range.digits(&range.by)?;
             index.period = Some(PeriodKind::Day);
             index.keys = day_keys(range)?;
         }
@@ -274,6 +292,61 @@ impl Range {
             &self.file,
             self.line,
         )
+    }
+
+    /// `LOAD-LIMIT index <x>: a day passes 9999-12-31` at the range's line (refcore's
+    /// `past_days` met building its keys). L §7.6 item 1, §8.3 item 5.
+    fn past_days(&self) -> Stop {
+        let message = format!("index {}: a day passes 9999-12-31", self.id);
+        refuse(Load::Limit, message, &self.file, self.line)
+    }
+
+    /// `LOAD-LIMIT <n> has more than 18 digits` for an integer that names keys (refcore's
+    /// `digits_limit`). L §7.6 item 3.
+    fn digits(&self, n: &Num) -> Result<(), Stop> {
+        let Some(text) = n
+            .integer_text()
+            .filter(|t| t.trim_start_matches('-').len() > 18)
+        else {
+            return Ok(());
+        };
+        let message = format!("{text} has more than 18 digits");
+        Err(refuse(Load::Limit, message, &self.file, self.line))
+    }
+
+    /// `LOAD-LIMIT index <x> holds more than 1 000 000 keys` for a range of `steps` steps
+    /// after its first key, none past the integers (refcore's `count_limit`). L §7.6 item 2.
+    fn count(&self, steps: Option<i64>) -> Result<(), Stop> {
+        if steps.is_some_and(|n| n < 1_000_000) {
+            return Ok(());
+        }
+        let message = format!("index {} holds more than 1 000 000 keys", self.id);
+        Err(refuse(Load::Limit, message, &self.file, self.line))
+    }
+
+    /// `by n` as a step: at most 18 digits, so an `i64`.
+    fn step(&self) -> Result<i64, Stop> {
+        self.by
+            .to_i64()
+            .ok_or_else(|| self.cannot("a range's step"))
+    }
+}
+
+/// A whole number of no unit, as written.
+fn whole(lit: &Lit) -> Option<&Num> {
+    match lit {
+        Lit::Num(n) if n.whole && n.unit.is_none() => Some(&n.value),
+        Lit::Num(_)
+        | Lit::Day(_)
+        | Lit::Month(..)
+        | Lit::Quarter(..)
+        | Lit::MonthDay(..)
+        | Lit::Key(_)
+        | Lit::Name(_)
+        | Lit::Cur(_)
+        | Lit::Bool(_)
+        | Lit::Nominal(_)
+        | Lit::Inf { .. } => None,
     }
 }
 
@@ -312,25 +385,26 @@ fn year_keys(range: &Range) -> Result<Vec<KeyVal>, Stop> {
             return Err(range.cannot("a year range is anchored by a month-day"));
         }
     };
-    let months = range
-        .by
-        .checked_mul(12)
-        .and_then(|n| u32::try_from(n).ok())
-        .ok_or(Stop::NotBuilt("a range past u32"))?;
+    let by = range.step()?;
+    let months = by.checked_mul(12).ok_or_else(|| range.past_days())?;
     let mut keys = Vec::new();
     let mut year = a;
     while year <= b {
-        let next = year
-            .checked_add(range.by)
-            .ok_or(Stop::NotBuilt("a range past i64"))?;
         let start = ymd(year, month, day)?;
-        let end = ymd(next, month, day)?;
-        let period = Period::new(PeriodKind::Year, start, end, Step::Months(months))
-            .ok_or(Stop::NotBuilt("a period out of order"))?;
-        keys.push(KeyVal::Period(period));
-        year = next;
+        let end = start.end_months(months).ok_or_else(|| range.past_days())?;
+        keys.push(KeyVal::Period(period_of(
+            PeriodKind::Year,
+            (start, end),
+            Step::Months(u32::try_from(months).map_err(|_| range.past_days())?),
+        )?));
+        year = year.checked_add(by).ok_or_else(|| range.past_days())?;
     }
     Ok(keys)
+}
+
+/// The period of a range's key, from its start to the first day after it.
+fn period_of(kind: PeriodKind, (start, end): (Day, Day), step: Step) -> Result<Period, Stop> {
+    Period::new(kind, start, end, step).ok_or(Stop::NotBuilt("a period out of order"))
 }
 
 /// The months of a month range, each `by` months long, from a day of the month.
@@ -352,17 +426,23 @@ fn month_keys(range: &Range) -> Result<Vec<KeyVal>, Stop> {
     if (y0, m0) > (y1, m1) {
         return Err(out_of_order(range, "range out of order"));
     }
-    let months = u32::try_from(range.by).map_err(|_| Stop::NotBuilt("a range past u32"))?;
+    let by = range.step()?;
+    let between = i64::from(*y1)
+        .checked_sub(i64::from(*y0))
+        .and_then(|y| y.checked_mul(12)?.checked_add(i64::from(*m1)))
+        .and_then(|n| n.checked_sub(i64::from(*m0))?.checked_div_euclid(by));
+    range.count(between)?;
     let last = Day::from_ymd(*y1, *m1, day).ok_or(Stop::NotBuilt("a month past 9999"))?;
     let mut keys = Vec::new();
     let mut start = Day::from_ymd(*y0, *m0, day).ok_or(Stop::NotBuilt("a month past 9999"))?;
     while start <= last {
-        let end = start
-            .add_months(range.by)
-            .ok_or(Stop::NotBuilt("a month past 9999"))?;
-        let period = Period::new(PeriodKind::Month, start, end, Step::Months(months))
-            .ok_or(Stop::NotBuilt("a period out of order"))?;
-        keys.push(KeyVal::Period(period));
+        let end = start.end_months(by).ok_or_else(|| range.past_days())?;
+        let step = Step::Months(u32::try_from(by).map_err(|_| range.past_days())?);
+        keys.push(KeyVal::Period(period_of(
+            PeriodKind::Month,
+            (start, end),
+            step,
+        )?));
         start = end;
     }
     Ok(keys)
@@ -379,19 +459,21 @@ fn day_keys(range: &Range) -> Result<Vec<KeyVal>, Stop> {
     if first > last {
         return Err(out_of_order(range, "range out of order"));
     }
-    let days = u32::try_from(range.by).map_err(|_| Stop::NotBuilt("a range past u32"))?;
+    let by = range.step()?;
+    range.count(first.days_to(*last).and_then(|n| n.checked_div_euclid(by)))?;
     let mut keys = Vec::new();
     let mut day = *first;
     while day <= *last {
-        let next = day
-            .add_days(range.by)
-            .ok_or(Stop::NotBuilt("a day past 9999-12-31"))?;
-        if range.by == 1 {
+        let next = day.end_days(by).ok_or_else(|| range.past_days())?;
+        if by == 1 {
             keys.push(KeyVal::Day(day));
         } else {
-            let period = Period::new(PeriodKind::Day, day, next, Step::Days(days))
-                .ok_or(Stop::NotBuilt("a period out of order"))?;
-            keys.push(KeyVal::Period(period));
+            let step = Step::Days(u32::try_from(by).map_err(|_| range.past_days())?);
+            keys.push(KeyVal::Period(period_of(
+                PeriodKind::Day,
+                (day, next),
+                step,
+            )?));
         }
         day = next;
     }

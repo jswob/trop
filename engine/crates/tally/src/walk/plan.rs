@@ -1418,7 +1418,7 @@ pub fn qty_value(m: &Reality, q: &Num, unit: &str) -> Result<Value, Stop> {
 /// one is a load refusal met at run. L §4.2.
 fn date_of(v: &Value) -> Result<Day, Stop> {
     if let Value::Day(d) = v {
-        return Ok(*d);
+        return crate::eval::a_day(*d);
     }
     if let Value::Period(p) = v
         && p.kind() == PeriodKind::Day
