@@ -160,7 +160,14 @@ The **walk point** (day, stratum, movement, keys) is in the context only of a wa
   - an item that reads no scenario's versions shares the base's cell;
   - an item's cut class is the interval between the `known` dates of the versions and rows in its cone, so a version that the item's cone doesn't read doesn't divide its cells (`PERFORMANCE.md` §3).
 - **The law date is a class.** It is the interval between consecutive boundaries of the governs spans of the rows and rules the item reaches and of the lifespans of the things at the keys it reads (LANGUAGE §4.6 step 5), with the spans in force at the cell's cut (after `moves` and `replace`). Every law date inside one interval gives the same value. A stretch of law dates over which the rows and rules the item reaches don't change is one class even where no row covers it, so a window `at` inside such a stretch is read once, at its first day inside the window, and gives one hole, which names that day (LANGUAGE §4.6 step 5). A window `at` or `on` reads one law date per class it overlaps (LANGUAGE §4.3).
-- **The memo maps cells to results.** A result is a value, a hole or a refusal, with its register and its **read set**: the rows and cells it read, band rows included. The read set is what makes adjustments (§5), invalidation (`PERFORMANCE.md` §4), `inputs-of` and `readers-of` exact.
+- **The memo maps cells to results.** A result is a value, a hole or a refusal, with its register and its **read set**: every read its value depends on, each named by what can change it (tally 2.1.6). The read set is what makes adjustments (§5), invalidation (`PERFORMANCE.md` §4), `inputs-of` and `readers-of` exact, so it leaves out no read:
+  - **rows:** each row it read (an input's row, a reading, an observed row, by version and row id), each band row, and each input read at keys where no row was chosen (the gap rule's read, LANGUAGE §4.6);
+  - **cells:** each cell it read, by its key; that cell's own reads stay in its own set;
+  - **walk reads:** each balance, `flows` or `low` of a place, and each `flows` of a decision, by (place or move, unit, day or span, cut, and the walk point of a walk-bound cell), and each projection by (holder, place, t, d, clauses) (§4.2, §4.3);
+  - **movement reads:** each movement instance it read, by (move, keys) and what it read of it (a leg, its day, an attribute, whether it exists), and each `flows(m[keys], span)` and `next(K, d)` by (move or kind, span or day) (§4.1);
+  - **bindings:** each binding or aggregate over a kind, an event kind or an index, by (kind or index, day or span), which an entry, a movement or a key added there changes.
+
+  What the walk, the plan pass, adjustments or links read while a cell first needed them is theirs, not the cell's: a walk read names the walk, and the walk's own reads are those of the movements it books.
 - **Evaluation is demand-driven.** A cell is computed the first time something needs it. A recurrence is computed iteratively in key order (from the last key for reads at later keys, LANGUAGE §5.11), never by recursion on a stack, so a 12 000-day index needs no deep stack.
 
 ### 3.3 The order of a run
@@ -260,7 +267,8 @@ The rule is LANGUAGE §5.14.3: a booked amount never changes, and a later versio
    The candidates are every instance tuple of the move in the version's cone, whether or not it existed at its cut. Take the versions and rows V with κ₀ < V.known ≤ K, in `known` order; those with one `known` are one step. Only those that touch the instance's read set can change it:
    - V has a candidate row, or a `replace`, for a read in the read set;
    - V is the `v` of a rule of a def in the cone, or replaces one;
-   - V enters a key into an index or kind that the cone aggregates or binds over.
+   - V enters a key into an index or kind that the cone aggregates or binds over;
+   - V changes a movement, or a balance, that a movement read or a walk read in the read set names (§3.2, tally 2.1.6).
 
    The others are skipped without evaluation.
 3. **Measure each change.** For each step, re-evaluate the instance with its versions added, giving Aᵥ, and for each leg let δ = Aᵥ − A_previous. When V makes an instance exist that didn't, δ = Aᵥ; when V ends one, δ = −A_previous. A re-measurement that is refused, the instance at V's cut or a leg's amount on either side, makes that leg's δ refused, with the refusal's code and message; one whose `when` is a hole makes each leg's δ a hole, as a hole amount does. The next step measures against that state, so its δ is refused, or a hole, too, the leg's δ = −A_previous included when V ends the instance (tally 2.1.2).
@@ -467,7 +475,7 @@ The test suite adds **determinism**: every case is run twice, with 1 and with 6 
 
 **Long derivations fold.** A recurrence over 300 months prints its first and last steps and a count. Any step can be asked for with `explain x[k]`. A cause met again prints once and is referenced by its line.
 
-**`inputs-of ref`** is the transitive read set: every row the evaluation read, the rows an `at` reads included, with its source (N-1705). A rule's `v` version isn't a row; `explain` shows it. Across an axis it fans out, one set per line.
+**`inputs-of ref`** is the transitive read set: every row the evaluation read, the rows an `at` reads included, with its source (N-1705). A walk or movement read in it stands for the rows behind what it counts: the openings, readings and observed rows of the places it reads, and the rows the movements it counts read for their days, `when`s and amounts (§3.2, tally 2.1.6). A rule's `v` version isn't a row; `explain` shows it. Across an axis it fans out, one set per line.
 
 **`readers-of x`** is the inverse of the item graph (§3.1), static: every item with a path of edges to x, the direct readers first. Of an event kind, every binding over it or over a kind it is a subkind of.
 
