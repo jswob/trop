@@ -295,8 +295,10 @@ call      = (ID {"." ID} ["[" expr "]"] | BUILTIN) "(" [expr {"," expr}] ")"   (
             also take two or more plain arguments, §2.3 Calls)
 ref       = ID [["." ID] "[" expr {"," expr} "]"] {"." FIELD}
                           (a.x[k], bal(a.p[k], d): a keyed item of a member, read from outside, §2.5)
-sref      = ID {"." FIELD | "[" lit {"," lit} "]"}      (a kind, thing, row or movement of this model or a member,
-            its keys written as literals: `a.konto`, `a.a_stmt[a_g1]`, `b.rent[2026-03]`, §6.1)
+sref      = ID ["." ID] ["[" sk {"," sk} "]"] {"." FIELD}   (a kind, thing, row or movement of this model or a
+            member, one key list, its keys written as literals or places keyed by things: `a.konto`,
+            `a.a_stmt[a_g1]`, `b.rent[2026-03]`, `lim[konto[ana]]`, §6.1)
+            sk = lit | ID "[" key {"," key} "]"   (no sign, no `*`, no range, no expression: LOAD-PARSE, tally 2.1.6)
 qid       = ID ["." ID]
 FIELD     = ID | "kind" | "version" | "source" | "known" | "governs" | "assumed" | "at"
             (a record field or a built-in field after ".", §2.2)

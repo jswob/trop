@@ -582,9 +582,27 @@ class P:
 
     def key_expr(self):
         if self.at('*'):
+            if getattr(self, '_field_ref', False):
+                # L §2.3 field: a record field's ref has expression keys, and * is none (tally 2.1.6, issue #88)
+                self.err('an expression')
             self.i += 1
             return self.N('star')
         return self.expr()
+
+    def skey(self):
+        """sk = lit | ID "[" key {"," key} "]" (L §2.3 sref, tally 2.1.6, issue #88): a key written as a literal, with
+        no sign, or a place keyed by things (konto[ana]), as rowkeys' rk; `*`, a range or an expression is no sref
+        key (LOAD-PARSE at the token)."""
+        tok = self.peek()
+        if tok is not None and tok.t == 'ID' and self.at('[', 1) and not self.peek(1).ws:
+            obj = self.N('name', id=self.ident())
+            self.i += 1
+            ks = [self.lit(signed=False)]
+            while self.accept(','):
+                ks.append(self.lit(signed=False))
+            self.expect(']')
+            return self.N('index', obj=obj, keys=ks)
+        return self.lit(signed=False)
 
     def step_unit(self):
         """UNIT = a positive lit (a step), "1e-" INT, "minor" "(" CUR ")", or a ref (L §7.2)."""
@@ -604,16 +622,18 @@ class P:
             return self.N('call', name='minor', args=[self.N('cur', v=c)], bkey=None)
         return self.ref()
 
-    def ref(self):
-        """ref = ID ["[" expr {"," expr} "]"] {"." FIELD}"""
-        name = self.ident('a reference')
+    def ref(self, sref=False, what='a reference'):
+        """ref = ID ["[" expr {"," expr} "]"] {"." FIELD}; with sref, L §2.3's sref (tally 2.1.6, issue #88): its keys
+        are sref keys (skey), so `same rate[1 + 1] = …` and `same rate[*] = …` are refused where the grammar stops."""
+        name = self.ident(what)
         e = self.N('name', id=name)
+        key = self.skey if sref else self.key_expr
         if self.at('['):
             self.i += 1
             self.open()
-            keys = [self.key_expr()]
+            keys = [key()]
             while self.accept(','):
-                keys.append(self.key_expr())
+                keys.append(key())
             self.expect(']')
             self.close()
             e = self.N('index', obj=e, keys=keys)
@@ -628,9 +648,9 @@ class P:
                 # a.x[k]: a member's item read with keys (L §2.3 ref)
                 self.i += 1
                 self.open()
-                keys = [self.key_expr()]
+                keys = [key()]
                 while self.accept(','):
-                    keys.append(self.key_expr())
+                    keys.append(key())
                 self.expect(']')
                 self.close()
                 e = self.N('index', obj=e, keys=keys)
@@ -785,24 +805,9 @@ class P:
         return self.ref()
 
     def sref(self):
-        """sref = ID {"." FIELD | "[" lit {"," lit} "]"} (L §2.3)"""
-        e = self.N('name', id=self.ident('an id'))
-        while True:
-            if self.at('.') and not self.peek().ws:
-                self.i += 1
-                tok = self.next()
-                if tok.t != 'ID':
-                    self.err('a field')
-                e = self.N('field', obj=e, name=tok.s)
-            elif self.at('['):
-                self.i += 1
-                keys = [self.lit()]
-                while self.accept(','):
-                    keys.append(self.lit())
-                self.expect(']')
-                e = self.N('index', obj=e, keys=keys)
-            else:
-                return e
+        """sref = ID ["." ID] ["[" sk {"," sk} "]"] {"." FIELD} (L §2.3; tally 2.1.6, issue #88: one key list, each key a
+        literal or a place keyed by things), as a same line's sides are read"""
+        return self.ref(sref=True, what='an id')
 
     def ofrow(self):
         """ofrow = sref | "(" sref "," sref ")" (L §2.3, tally 2.1)"""
@@ -960,7 +965,11 @@ class P:
         if self.at('none'):
             self.i += 1
             return self.N('none')
-        return self.expr()
+        self._field_ref = True
+        try:
+            return self.expr()
+        finally:
+            self._field_ref = False
 
     def leg_body(self):
         self.expect('leg')
@@ -1626,9 +1635,9 @@ class P:
         if self.accept('same'):
             if replace or given:
                 self.err('a row')
-            l = self.ref()
+            l = self.ref(sref=True)
             self.expect('=')
-            r = self.ref()
+            r = self.ref(sref=True)
             self.end()
             return self.N('same', l=l, r=r)
         q, x = self.qid()
@@ -1657,6 +1666,7 @@ class P:
                           replace=replace)
         key = None
         keys = None
+        kstart = self.i
         if self.at('['):
             self.i += 1
             ks = [self.rowkey()]
@@ -1677,6 +1687,15 @@ class P:
             self.i += 1
             if keys is not None and len(keys) != 1:
                 self.err('one key of a keyed band')
+            if keys is not None:
+                # L §2.3 bandrow = qid ["[" key "]"] ":" …: a band row's key is a key, never * or a range (tally 2.1.6,
+                # issue #88): read again as the grammar reads it, so the refusal stops where the grammar does
+                end = self.i
+                self.i = kstart + 1
+                self.lit(signed=False)
+                if not self.at(']'):
+                    self.err('"]"')
+                self.i = end
             iv = self.interval()
             self.expect('=')
             if self.at('?') and self.at_t('STR', 1):
@@ -1829,9 +1848,9 @@ def parse_header(lines, units):
             hsh = q.string()
             h.uses.append((a, f, hsh))
         elif w == 'same':
-            a = q.ref()
+            a = q.ref(sref=True)
             q.expect('=')
-            b = q.ref()
+            b = q.ref(sref=True)
             h.sames.append((a, b))
         elif w == 'note':
             h.notes.append(q.string())

@@ -1,0 +1,28 @@
+# L §2.3 bandrow = qid ["[" key "]"] ":" … (tally 2.1.6, issue #88): a band row's key is a key, never *, so
+# `b[*]: [20, inf) = 6` is refused at parse. tally 2.1.5's refcore read it as a row key and printed its node's name
+# (LOAD-KEY star is not a key of classes).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+index classes = [c1, c2]
+band b[k in classes](n: int): int
+input x: int
+
+version v
+  cite s
+  governs 2026..
+  known 2025-12-01
+  b[c1]: [0, 10) = 1
+  b[c1]: [10, inf) = 2
+  b[c2]: [0, 20) = 5
+  b[*]: [20, inf) = 6
+  x = 12
+
+ask q1: b[c1](x), b[c2](x), band_hi(b[c2], x) law 2026-06-30
+=== expect
+refused: LOAD-PARSE cannot parse: expected a literal, got * (m.tally:19)

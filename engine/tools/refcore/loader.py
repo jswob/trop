@@ -754,7 +754,9 @@ class Loader:
         for vid, v in m.versions.items():
             for ref, ls in v.node.moves:
                 if ref.k != 'name':
-                    raise LoadError('LOAD-MOVES', 'moves %s: unknown, or not known before this version' % ref, v.loc)
+                    # the reference as written (tally 2.1.6, issue #88: refcore 2.1.5 printed its parse node)
+                    raise LoadError('LOAD-MOVES', 'moves %s: unknown, or not known before this version' % _txt_node(ref),
+                                    v.loc)
                 tgt = m.versions.get(ref.id)
                 if tgt is None or not (known_first(tgt.known) < known_first(v.known)):
                     raise LoadError('LOAD-MOVES', 'moves %s: unknown, or not known before this version' % ref.id, v.loc)
@@ -2680,8 +2682,8 @@ def resolve_key_literal(m, kn, dom, loc):
             return ix.texts[t]
         if ix.form == 'open':
             # its keys are those its inputs' rows bring (L §4.1), all gathered before any read is resolved
-            raise LoadError('LOAD-KEY', '%s is not a key of %s: no row brings it' % (t or kn.k, ix.id), loc)
-        raise LoadError('LOAD-KEY', '%s is not a key of %s' % (t or kn.k, ix.id), loc)
+            raise LoadError('LOAD-KEY', '%s is not a key of %s: no row brings it' % (t or _txt_node(kn), ix.id), loc)
+        raise LoadError('LOAD-KEY', '%s is not a key of %s' % (t or _txt_node(kn), ix.id), loc)
     if kind == 'kind':
         if kn.k == 'placekey' or (kn.k == 'index' and kn.obj.k == 'name'):
             name = kn.id if kn.k == 'placekey' else kn.obj.id
@@ -2702,12 +2704,12 @@ def resolve_key_literal(m, kn, dom, loc):
                 t = hit[1].things[()].name
         if t is not None and m.thing_in(t, dom[1]):
             return Thing(t)
-        raise LoadError('LOAD-KEY', '%s is not a key of %s' % (t or kn.k, dom[1]), loc)
+        raise LoadError('LOAD-KEY', '%s is not a key of %s' % (t or _txt_node(kn), dom[1]), loc)
     if kind == 'axis':
         t = resolve_text(kn) if kn.k in ('name', 'key', 'num') else None
         if t is not None and t in m.axes[dom[1]].options:
             return Key(dom[1], t)
-        raise LoadError('LOAD-KEY', '%s is not a key of %s' % (t or kn.k, dom[1]), loc)
+        raise LoadError('LOAD-KEY', '%s is not a key of %s' % (t or _txt_node(kn), dom[1]), loc)
     if kind == 'list':
         t = resolve_text(kn)
         if t in [resolve_text(x) for x in dom[1]]:
