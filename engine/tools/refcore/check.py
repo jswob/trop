@@ -190,6 +190,7 @@ class Checker:
         self.check_after_readings()
         self.check_seen_days()
         self.check_seen_day_limits()
+        self.check_literal_ranges()
         self.check_period_keys()
         self.check_settlement_units()
         self.check_schedules()

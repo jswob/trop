@@ -1691,6 +1691,33 @@ def m_check_scenario_moves(self):
                                     loc)
 
 
+def m_check_literal_ranges(self):
+    """L §7.6 item 2, §8.3 LOAD-LIMIT (tally 2.1.6, P30 on T's SR-T2 of #89): a range whose ends and step are literals
+    is seen at load, so one past 1 000 000 keys is refused at load, whatever the asks (E §3.1, as #72's checks are),
+    with the bytes an ask that steps through it prints (evaluate.range_values). A rule holds no literal (LOAD-LITERAL),
+    so such a range stands in an ask; a declared index is counted where its keys are built (loader.count_limit).
+    refcore's first 2.1.6 raised it only when that ask was asked."""
+    from .evaluate import Engine, Ctx, range_is_literal
+    eng = ctx = None
+    for s in self.m.asks:
+        for x in _nwalk(s):
+            d = getattr(x, 'dom', None) if x.k == 'bind' else None
+            if d is None or getattr(d, 'k', None) != 'drange' or not range_is_literal(d):
+                continue
+            if eng is None:
+                eng, ctx = Engine(self.m), Ctx(None, self.m.on)
+            try:
+                a = eng.ev(d.a, {}, ctx)
+                z = eng.ev(d.b, {}, ctx)
+                st = eng.ev(d.step, {}, ctx) if d.step is not None else None
+                eng.range_values(a, z, st, None, d)
+            except LoadError as e:
+                if e.code == 'LOAD-LIMIT':
+                    raise
+            except TallyError:
+                continue
+
+
 def m_check_settlement_units(self):
     """L §5.14.3 (a settlement leg "in another unit than the leg's", LOAD-UNIT), E §3.1 (load once per reality,
     whatever the asks; tally 2.1.6, issue #72): an observed row that fulfils an adjustment of a leg whose kind states

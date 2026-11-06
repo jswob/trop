@@ -1,0 +1,25 @@
+# L §7.6 item 2 (tally 2.1.6, P30 on T's SR-T2 of #89), a twin: 1..1000000 holds 1 000 000 keys, within the limit, so
+# load counts it and refuses nothing, and q answers. Both 2.1.6 refcores answer so.
+=== m.tally
+model m
+  tally 2
+  on 2026-01-02
+  start 2026-01-01
+  end 2026-01-05
+
+source s "s"
+
+input x: int
+
+ask q: x
+
+ask many: max(k for k in 1..1000000)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  x = 1
+=== expect q
+q: 1
+  cut 2026-01-02
