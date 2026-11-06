@@ -1519,15 +1519,18 @@ FOLD_FNS = ('end_of', 'start_of', 'day_of', 'add_days', 'add_months', 'add_years
             'quarter_of')
 
 
-def m_seen_day(self, e, mi):
+def m_seen_day(self, e, mi, cond=False):
     """L §8.3 item 9: "A move's day and a leg's place are seen where they are written as literals or keys of a declared
     index, and where they are computed from these alone, folded through built-ins that read no fact (`on end_of(m)` for
-    a key m of a declared index is seen)". The keys of an open index come from rows, which load doesn't see (item 5)."""
+    a key m of a declared index is seen)". The keys of an open index come from rows, which load doesn't see (item 5).
+    With cond, e is a binding's `where`, which may also compare and join these (L §6.4, tally 2.1.6)."""
     m = self.m
     binds = dict((b.var, b) for b in mi.binds)
     for x in _nwalk(e):
         k = x.k
         if k in ('date', 'month', 'quarter'):
+            continue
+        if cond and k in ('cmp', 'and', 'or', 'not', 'bool'):
             continue
         if k == 'num':
             continue
@@ -1547,6 +1550,14 @@ def m_seen_day(self, e, mi):
             continue
         return False
     return True
+
+
+def m_existence_seen(self, mi):
+    """L §6.4 (tally 2.1.6, P29 on SR-T1 of #75): load sees whether an instance of mi exists where the move has no
+    `when` and each binding's `where` reads nothing but its keys and literals (§8.3 item 9); otherwise its existence
+    is decided at run, and an instance before a scenario's from is left out there."""
+    return mi.decl.when is None and all(b.node.where is None or self.seen_day(b.node.where, mi, cond=True)
+                                        for b in mi.binds)
 
 
 def m_check_seen_days(self):
@@ -1651,7 +1662,8 @@ def m_check_scenario_moves(self):
             continue
         days = [(mi.decl.on, mi.decl.loc)] + [(ln.on, ln.loc) for ln in mi.decl.legs if ln.on is not None]
         days = [(e, loc) for e, loc in days if e is not None and self.seen_day(e, mi)]
-        if not days:
+        # P29 (SR-T1): load sees that an instance books before D only where it sees its existence too
+        if not days or not self.existence_seen(mi):
             continue
         doms = []
         for b in mi.binds:
@@ -1664,6 +1676,11 @@ def m_check_scenario_moves(self):
         ctx = Ctx(None, m.on)
         for keys in itertools.product(*doms):
             env = dict((b.var, k) for b, k in zip(mi.binds, keys))
+            try:
+                if any(b.node.where is not None and eng.ev(b.node.where, env, ctx) is False for b in mi.binds):
+                    continue
+            except TallyError:
+                continue
             for e, loc in days:
                 try:
                     first = day_lo(eng.ev(e, env, ctx))

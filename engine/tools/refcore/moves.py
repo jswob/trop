@@ -1413,9 +1413,9 @@ def m_before_scen_from(self, i, day):
     if frm is None or not day < frm:
         return False
     ch = getattr(self.m, 'checker', None)
-    if ch is not None and not ch.edges.get(('moveon', mi.id)) and mi.decl.when is None:
-        # its day reads nothing but its keys, and it has no when: load sees the day (LOAD-SCENARIO where load sees
-        # the day, L §6.4)
+    if ch is not None and not ch.edges.get(('moveon', mi.id)) and ch.existence_seen(mi):
+        # its day reads nothing but its keys, and it has no when and no where reading values: load sees the day and
+        # that the instance exists (LOAD-SCENARIO where load sees the day, L §6.4; P29); else it is left out
         # L §8.3 (round 9): "move <m> of <s> books on <d>, before <from>"
         raise LoadError('LOAD-SCENARIO', 'move %s of %s books on %s, before %s' % (mi.id, sc, day, frm), mi.decl.loc)
     return True

@@ -1,0 +1,46 @@
+# L §6.4, §8.3 item 9 (tally 2.1.6, P29 on T's SR-T1 of #75), a twin: a `where` that reads nothing but the keys is
+# seen at load, so where it keeps an instance whose day falls before D, load sees it and refuses the scenario. top
+# keeps e == d, so top[2025-12-30, 2025-12-30] books before 2026-01-01. Both 2.1.6 refcores refuse it so.
+=== base.tally
+model hh
+  tally 2
+  on 2026-01-02
+  start 2025-12-30
+  end 2026-01-05
+
+source s "s"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2025-01-01..
+
+place world: outside lives 1900-01-01..
+
+input from_day: date
+
+input early: date
+
+ask q: bal(konto, 2026-01-05)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  from_day = 2026-01-01
+  early = 2025-01-01
+  opening[konto] = 10.00 PLN at 2025-12-30 start
+=== scen.tally
+scenario topup over hh
+  tally 2
+  from 2026-01-01
+
+move top[d in days, e in days where e == d]: transfers
+  on e
+  leg cash from world to konto amount 1.00 PLN
+
+ask q_top: bal(konto, 2026-01-05) in topup
+=== expect q_top
+scenario topup: refused: LOAD-SCENARIO move top of topup books on 2025-12-30, before 2026-01-01 (scen.tally:5)
+warning: WARN-UNREAD input early is read by nothing
+warning: WARN-UNREAD input from_day is read by nothing
+warning: WARN-UNREAD place world is read by nothing
