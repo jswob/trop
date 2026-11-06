@@ -1,0 +1,63 @@
+# L §7.6 item 1 (tally 2.1.6, issue #89): a day computed past 9999-12-31 or before 0001-01-01 is refused at its
+# key, RUN-LIMIT, and so is the end of time where a day is read: printed (end_of(9999)), a day argument (year_of,
+# weekday), a balance's day. The edges stand: 9999-12-31 itself, 0001-01-02 - 1 day, end_of(9999) - 1 day. tally
+# 2.1.5's refcore refused the model REFCORE-NOT-YET (its run lies in 9999).
+=== m.tally
+model m
+  tally 2
+  on 9999-12-31
+  start 9999-01-01
+  end 9999-12-31
+
+source plan "plan"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-05-01..
+place other: accounts PLN lives 2019-05-01..
+place landlord: outside lives 1900-01-01..
+input d: date
+input amt: money PLN
+
+version v
+  cite plan
+  governs always
+  known 9999-01-01
+  d = 9999-12-31 "plan"
+  amt = 100.00 PLN "plan"
+  opening[konto] = 1 000.00 PLN at 9999-01-01 start "plan"
+
+ask last: d
+ask past: d + 1 day
+ask past2: end_of(9999-12) + 1 day
+ask month: add_months(9999-12-15, 1)
+ask eot: end_of(9999)
+ask year: year_of(end_of(9999))
+ask wd: weekday(end_of(9999-12))
+ask bal: bal(konto, end_of(9999))
+ask first: 0001-01-02 - 1 day
+ask before: 0001-01-01 - 1 day
+ask back: end_of(9999) - 1 day
+=== expect
+back: 9999-12-31
+  cut 9999-12-31
+bal: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+before: refused: RUN-LIMIT a day comes before 0001-01-01
+  cut 9999-12-31
+eot: refused: RUN-LIMIT a day passes 9999-12-31
+first: 0001-01-01
+  cut 9999-12-31
+last: 9999-12-31
+  cut 9999-12-31
+month: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+past: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+past2: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+wd: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+year: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+warning: WARN-UNREAD input amt is read by nothing
+warning: WARN-UNREAD place landlord is read by nothing
+warning: WARN-UNREAD place other is read by nothing

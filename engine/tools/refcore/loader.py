@@ -10,7 +10,7 @@ from . import units as U
 from . import ty as T
 from .dates import (Period, day_period, month_period, year_period, quarter_period, add_days, add_months, ONE_DAY,
                     month_add, next_day, end_days, end_months, END)
-from .errors import LoadError, Unspecified, NotYet
+from .errors import LoadError, Unspecified, NotYet, Refusal
 from .lexer import split_lines
 from .model import (Reality, Span, ALWAYS, lit_period, lspan_to_span, visible, known_first, VersionInfo, KindInfo,
                     Entry, ThingInfo, IndexInfo, AxisInfo, BindInfo, Row, InputInfo, RuleVer, DefInfo, Table,
@@ -581,7 +581,15 @@ class Loader:
                     ix.texts[t] = kv
                     ix.keys.append(kv)
             elif s.form == 'range':
-                self.build_range(ix, s)
+                try:
+                    self.build_range(ix, s)
+                except Refusal as e:
+                    if e.code != 'RUN-LIMIT':
+                        raise
+                    # L §7.6 item 1 (tally 2.1.6, issue #89): load builds a range index's keys (§8.3 item 5)
+                    raise LoadError('LOAD-LIMIT', 'index %s: %s' % (s.id, e.msg), s.loc)
+            if len(ix.keys) > KEY_LIMIT:
+                raise LoadError('LOAD-LIMIT', 'index %s holds more than 1 000 000 keys' % s.id, s.loc)
             ix.finish()
             m.indexes[s.id] = ix
             m.names[s.id] = ('index', ix)
@@ -624,13 +632,17 @@ class Loader:
             if s.frm is not None:
                 raise LoadError('LOAD-PARSE', 'cannot parse: from on an integer range', loc)
             step = s.by or 1
+            for x in (a, b, step):
+                digits_limit(x, loc)
             if a > b:
                 raise LoadError('LOAD-KEY', 'range %d..%d is out of order' % (a, b), loc)
             ix.isint = True
+            count_limit(ix, (b - a) // step + 1, loc)
             ix.keys = list(range(a, b + 1, step))
             return
         ix.pk = pk
         n = s.by or 1
+        digits_limit(n, loc)
         if pk == 'year':
             if not (is4(lo) and is4(hi)):
                 raise LoadError('LOAD-PARSE', 'cannot parse: a year range', loc)
@@ -665,6 +677,7 @@ class Loader:
             y, mo = lo.v
             if lo.v > hi.v:
                 raise LoadError('LOAD-KEY', 'range out of order', loc)
+            count_limit(ix, ((hi.v[0] - y) * 12 + hi.v[1] - mo) // n + 1, loc)
             while (y, mo) <= hi.v:
                 st = datetime.date(y, mo, dd)
                 ix.keys.append(Period('month', st, end_months(st, n), 'month', n))
@@ -676,6 +689,7 @@ class Loader:
                 raise LoadError('LOAD-PARSE', 'cannot parse: from on a day range', loc)
             if lo.v > hi.v:
                 raise LoadError('LOAD-KEY', 'range out of order', loc)
+            count_limit(ix, (hi.v - lo.v).days // n + 1, loc)
             d = lo.v
             while True:
                 if n == 1:
@@ -990,7 +1004,7 @@ class Loader:
                 terms.append((b, e))
             else:
                 raise LoadError('LOAD-NAME', 'unknown id %s (a unit)' % b, loc)
-        return U.from_syntax(terms)
+        return U.at(loc, U.from_syntax, terms)
 
     def is_unit_key(self, b):
         return b in self.m.unit_kind_keys
@@ -1524,7 +1538,7 @@ class Loader:
         m = self.m
         if node.k != 'num' or node.unit is None:
             raise LoadError('LOAD-LEG', 'the amount of leg %s of %s states its unit' % (d.name, o.sid), o.loc)
-        uu, f = U.from_syntax(node.unit)
+        uu, f = U.at(o.loc, U.from_syntax, node.unit)
         if len(uu) != 1 or uu[0][1] != 1:
             raise LoadError('LOAD-LEG', 'leg %s of %s: %s is not a unit of a leg' % (d.name, o.sid, node.text), o.loc)
         u = uu[0][0]
@@ -2129,7 +2143,7 @@ class Loader:
             if node.unit is None:
                 raise LoadError('LOAD-UNIT', '%s[%s] holds any unit; its row states the unit' % (inf.id, th.name),
                                 r.loc)
-            uu, f = U.from_syntax(node.unit)
+            uu, f = U.at(r.loc, U.from_syntax, node.unit)
             if len(uu) != 1 or uu[0][1] != 1:
                 raise LoadError('LOAD-UNIT', '%s is not a unit of a place' % node.text, r.loc)
             pu = uu[0][0]
@@ -2406,6 +2420,22 @@ def band_defect(rows, isint):
             return (iv2[0] if iv2[0] is not None else '-inf', r2)
     return None
 
+KEY_LIMIT = 1000000
+
+
+def digits_limit(x, loc):
+    """L §7.6 item 3 (tally 2.1.6, issue #89): an integer that names keys has at most 18 digits."""
+    if len(str(abs(x))) > 18:
+        raise LoadError('LOAD-LIMIT', '%d has more than 18 digits' % x, loc)
+
+
+def count_limit(ix, n, loc):
+    """L §7.6 item 2 (tally 2.1.6, issue #89): a declared index holds at most 1 000 000 keys; counted before they are
+    built."""
+    if n > KEY_LIMIT:
+        raise LoadError('LOAD-LIMIT', 'index %s holds more than 1 000 000 keys' % ix.id, loc)
+
+
 def _uncovered(span, others):
     """The first stretch of span that no span of others covers, as a Span, or None."""
     lo_d, hi_d = datetime.date.min, END
@@ -2661,7 +2691,7 @@ def range_literal(m, kn, loc):
                 if not (b == '%' or b in CURRENCIES or b in m.units or b in ('year', 'quarter', 'month', 'day')
                         or b in getattr(m, 'unit_kind_keys', ())):
                     raise LoadError('LOAD-UNIT', 'an unknown unit %s' % b, loc)
-            u, f = U.from_syntax(terms)
+            u, f = U.at(loc, U.from_syntax, terms)
             q = Fraction(kn.v) * f
             if U.is_currency(u):
                 return Num(q, u, money=True)
@@ -2779,7 +2809,7 @@ def convert_value(m, node, ty, loc, factor, target, binds=None, pattern=None, al
     if k == 'num':
         if node.get('frac') and terminating(node.v):
             raise LoadError('LOAD-PRECISION', '%s terminates; write it as a decimal' % node.text, loc)
-        uu, f = U.from_syntax(node.unit) if node.unit else (None, Fraction(1))
+        uu, f = U.at(loc, U.from_syntax, node.unit) if node.unit else (None, Fraction(1))
         if tk == 'money':
             if uu is None:
                 q = node.v * factor

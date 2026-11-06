@@ -1513,6 +1513,9 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
         if st in ('none', 'uncertain'):
             continue
         d = i.day
+        if d is None and i.err is not None:
+            # a movement whose day is refused may fall in any span: its refusal (L §8.4, tally 2.1.6)
+            raise i.err
         if isinstance(d, Hole):
             holes.append(d)
             continue

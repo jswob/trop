@@ -1,0 +1,17 @@
+# L §7.6 item 2 (tally 2.1.6, issue #89): a declared index holds at most 1 000 000 keys; 1..1000001 is LOAD-LIMIT,
+# counted before its keys are built. tally 2.1.5's refcore built it and answered 1 000 001. (The edge, 1..1000000,
+# answers 1 000 000 but costs seconds here; T's vectors hold it.)
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+unit PLN: currency minor 0.01
+index ns = 1..1000001
+
+ask n: max(pos(k) for k in ns)
+=== expect
+refused: LOAD-LIMIT index ns holds more than 1 000 000 keys (m.tally:9)

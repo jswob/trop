@@ -1,0 +1,25 @@
+# L §7.6 item 4 (tally 2.1.6, issue #89): z * y in a def, two values of num PLN^64, reaches PLN^128 before the / y:
+# LOAD-LIMIT at the def's line, though its declared type is PLN^64. tally 2.1.5's refcore answered 1 PLN^64.
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+unit PLN: currency minor 0.01
+input y: num PLN^64
+
+def z: num PLN^64 = y
+def w: num PLN^64 = z * y / y
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  y = 1 PLN^64 "plan"
+
+ask q: w
+=== expect
+refused: LOAD-LIMIT unit PLN has a power past 64 (m.tally:12)

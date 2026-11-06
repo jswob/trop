@@ -9,16 +9,40 @@ of a declaration (`num PLN/u`) until a read substitutes the key.
 """
 from fractions import Fraction
 
+from .errors import LoadError
+
 PERIOD_MONTHS = {'year': 12, 'quarter': 3, 'month': 1}
 PERIODS = ('year', 'quarter', 'month', 'day')
 
 ONE = ()
 
 
+POWER_LIMIT = 64
+
+
+def power_limit(b, e):
+    """L §7.6 item 4 (tally 2.1.6, issue #89): every power of a unit, `%` included, written or reached by `*`, `/` and
+    `pow`, is at most 64 in size. Powers are literals (L §7.1), so load meets each one; the caller adds the place."""
+    if abs(e) > POWER_LIMIT:
+        raise LoadError('LOAD-LIMIT', 'unit %s has a power past 64' % b)
+
+
+def at(loc, fn, *args):
+    """fn(*args), a refusal it raises without a place given loc."""
+    try:
+        return fn(*args)
+    except LoadError as e:
+        if e.loc is None:
+            e.loc = loc
+        raise
+
+
 def make(terms):
     d = {}
     for b, e in terms:
         d[b] = d.get(b, 0) + e
+    for b, e in d.items():
+        power_limit(b, e)
     return tuple(sorted((b, e) for b, e in d.items() if e != 0))
 
 
@@ -26,6 +50,8 @@ def from_syntax(terms):
     """Unit syntax (from the parser) -> (unit, factor).  `%` gives 1/100 per power."""
     if not terms:
         return ONE, Fraction(1)
+    for b, e in terms:
+        power_limit(b, e)
     f = Fraction(1)
     out = []
     for b, e in terms:
@@ -78,6 +104,8 @@ def div(a, b):
 
 
 def power(a, n):
+    for b, e in a:
+        power_limit(b, e * n)
     return make([(b, e * n) for b, e in a])
 
 

@@ -1589,6 +1589,46 @@ def m_check_seen_days(self):
                                 mi.decl.loc)
 
 
+def m_check_seen_day_limits(self):
+    """L §7.6 item 1, §8.3 item 9 (tally 2.1.6, issue #89): a move's day that load sees, folded at every key of its
+    bindings, that passes 9999-12-31 (the end of time, `on end_of(y)` for the year 9999, included) or comes before
+    0001-01-01 is refused at load (LOAD-LIMIT); a day computed from a row's value is refused at its key (RUN-LIMIT,
+    moves.eval_inst)."""
+    m = self.m
+    import itertools
+    from .evaluate import Engine, Ctx
+    from .dates import END
+    eng = None
+    for mi in m.moves.values():
+        on = getattr(mi.decl, 'on', None)
+        if on is None or not self.seen_day(on, mi):
+            continue
+        doms = []
+        for b in mi.binds:
+            dom = getattr(b, 'dom', None)
+            doms.append(m.indexes[dom[1]].keys if isinstance(dom, tuple) and dom[0] == 'index' else None)
+        if any(d is None for d in doms):
+            continue
+        if eng is None:
+            eng = Engine(m)
+        ctx = Ctx(None, m.on)
+        for keys in itertools.product(*doms):
+            env = dict((b.var, k) for b, k in zip(mi.binds, keys))
+            try:
+                day = eng.ev(on, env, ctx)
+            except TallyError as e:
+                if e.code != 'RUN-LIMIT':
+                    continue
+                msg = e.msg
+            else:
+                if day is not END:
+                    continue
+                msg = 'a day passes 9999-12-31'
+            kt = ', '.join(fmt(k) for k in keys)
+            raise LoadError('LOAD-LIMIT', 'move %s%s on %s: %s' % (mi.id, '[%s]' % kt if kt else '', _txt(on), msg),
+                            mi.decl.loc)
+
+
 def m_check_after_readings(self):
     """L §4.6 Readings (round 19, GD-10, C4-2): "A reading `after m` with m an observation or a plan is refused at load,
     which sees m's class (LOAD-ORDER): the batch has no order (§5.14.2, P-7). The refusal is by class, so it holds for

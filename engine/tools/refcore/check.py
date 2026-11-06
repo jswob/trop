@@ -28,6 +28,14 @@ DATE_FNS = {'start_of', 'end_of', 'year_of', 'quarter_of', 'month_of', 'day_of',
             'is_business', 'add_business', 'last_business', 'schedule', 'window', 'one_of'}
 
 
+def key_digits(lit, loc):
+    """L §7.6 item 3 (tally 2.1.6, issue #89): an integer that names keys (a key offset, a pos bound) has at most 18
+    digits."""
+    v = abs(int(lit.v))
+    if len(str(v)) > 18:
+        raise LoadError('LOAD-LIMIT', '%s has more than 18 digits' % int(lit.v), loc)
+
+
 def uerr(msg, loc):
     return LoadError('LOAD-UNIT', msg, loc)
 
@@ -172,6 +180,7 @@ class Checker:
         self.check_arrival_reads()
         self.check_after_readings()
         self.check_seen_days()
+        self.check_seen_day_limits()
         self.check_period_keys()
         self.check_move_lawdates()
         self.finish_random()
@@ -761,7 +770,7 @@ class Checker:
             raise LoadError('LOAD-LITERAL', 'figure %s in an ask; make it a row' % _txt(node), node.loc)
 
     def tc(self, n, sc, expect=None):
-        t = self._tc(n, sc, expect)
+        t = U.at(n.loc, self._tc, n, sc, expect)
         n._t = t
         return t
 
@@ -1630,6 +1639,9 @@ class Checker:
                     raise uerr('key arithmetic on an axis', loc)
                 # L §5.6: key arithmetic over an open index's keys is refused (§8.4)
                 self.no_order(lt, 'key arithmetic', loc)
+                if n.r.k == 'num' and n.r.isint and not n.r.unit:
+                    # L §7.6 item 3 (tally 2.1.6, issue #89): a key offset has at most 18 digits
+                    key_digits(n.r, loc)
                 n._keyarith = True
                 return lt
             if op == '-' and rk == 'key' and rt.ix == lt.ix:
@@ -1789,6 +1801,8 @@ class Checker:
         lt = self.tc(n.l, sc)
         sc2 = sc
         if n.r.k == 'num' and n.r.isint and not n.r.unit and n.l.k == 'call' and n.l.name == 'pos':
+            # L §7.6 item 3 (tally 2.1.6, issue #89): a pos(k) bound has at most 18 digits
+            key_digits(n.r, n.loc)
             # pos(k) > n, pos(k) == n: "the same integer in the guard that protects the read" (L §7.1, §5.11):
             # n must be an offset of the def's key arithmetic on k
             a0 = n.l.args[0] if n.l.args else None

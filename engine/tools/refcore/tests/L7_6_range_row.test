@@ -1,0 +1,30 @@
+# L §7.6 item 2 (tally 2.1.6, issue #89): with an end from a row, 1..n for n = 1 000 001 is RUN-LIMIT at the ask,
+# with step 1 too; step 1000 gives 1 001 keys and answers. tally 2.1.5's refcore answered the first, refused the second
+# REFCORE-NOT-YET (its own guard) and answered the third.
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+unit PLN: currency minor 0.01
+input n: int
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  n = 1000001 "plan"
+
+ask r: sum(k for k in 1..n)
+ask s: sum(k for k in 1..n step 1)
+ask t: sum(k for k in 1..n step 1000)
+=== expect
+r: refused: RUN-LIMIT 1 .. 1 000 001 holds more than 1 000 000 keys
+  cut 2026-12-31
+s: refused: RUN-LIMIT 1 .. 1 000 001 step 1 holds more than 1 000 000 keys
+  cut 2026-12-31
+t: 500 501 001
+  cut 2026-12-31

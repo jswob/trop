@@ -22,21 +22,41 @@ def last_day(y, m):
     return _cal.monthrange(y, m)[1]
 
 
+def past_days(after=True):
+    """L §7.6 item 1 (tally 2.1.6, issue #89): a day computed outside 0001-01-01..9999-12-31 is refused, RUN-LIMIT at
+    the key (load turns it into LOAD-LIMIT where it builds an index's keys or sees a move's day)."""
+    return Refusal('RUN-LIMIT', 'a day passes 9999-12-31' if after else 'a day comes before 0001-01-01')
+
+
+def check_year(y):
+    if not 1 <= y <= 9999:
+        raise past_days(y > 9999)
+
+
 def add_months(d, n):
     """The same day number, clamped to the last day of the target month (L §4.2)."""
-    y, m = month_add(d.year, d.month, n)
-    return D(y, m, min(d.day, last_day(y, m)))
+    if n == 0:
+        return d
+    # the end of time moves as the day 10000-01-01 would (L §2.1)
+    yy, mm, dd = (10000, 1, 1) if d is END else (d.year, d.month, d.day)
+    y, m = month_add(yy, mm, n)
+    check_year(y)
+    return D(y, m, min(dd, last_day(y, m)))
 
 
 def add_days(d, n):
-    return d + datetime.timedelta(days=n)
+    try:
+        return d + datetime.timedelta(days=n)
+    except OverflowError:
+        raise past_days(n > 0)
 
 
 class EndOfTime(D):
     """The end of time (L §2.1, tally 2.1.6, issue #48): the start of the period after one that ends with 9999-12-31,
     Tally's last day, as the day 10000-01-01 would be. It follows every day, a span or a period may end there, and
     it is compared, and has days or months taken from it, as a day is (`END - ONE_DAY` is 9999-12-31,
-    `add_months(END, -1)` 9999-12-01); it is no day itself, so a day after it is refused and it never prints (L §7.6).
+    `add_months(END, -1)` 9999-12-01); it is no day itself, so a day after it, its calendar fields and its print are
+    refused (RUN-LIMIT, L §7.6).
     A subclass of date, so Python tries its own comparisons and subtraction first; its stored day is 9999-12-31,
     which no method reads. refcore 2.1.5 built the year 9999's end as date(10000, 1, 1), which Python refuses."""
     __slots__ = ()
@@ -47,9 +67,11 @@ class EndOfTime(D):
             cls._one = D.__new__(cls, 9999, 12, 31)
         return cls._one
 
-    year = property(lambda self: 10000)
-    month = property(lambda self: 1)
-    day = property(lambda self: 1)
+    @property
+    def year(self):
+        raise past_days()
+
+    month = day = year
 
     def __eq__(self, o):
         return o is self if isinstance(o, D) else NotImplemented
@@ -79,7 +101,7 @@ class EndOfTime(D):
             return self
         if o.days < 0:
             return D.max + (o + ONE_DAY)
-        raise OverflowError('date value out of range')
+        raise past_days()
 
     __radd__ = __add__
 
@@ -101,7 +123,7 @@ class EndOfTime(D):
         return D.max.toordinal() + 1
 
     def no_day(self, *a):
-        raise OverflowError('date value out of range')
+        raise past_days()
 
     isoformat = __str__ = __format__ = weekday = isoweekday = isocalendar = replace = strftime = timetuple = no_day
 
@@ -117,17 +139,18 @@ END = EndOfTime()
 
 def next_day(d):
     """The day after d, or the end of time after 9999-12-31 (L §2.1)."""
-    return END if d == D.max else d + ONE_DAY
+    return END if d == D.max else add_days(d, 1)
 
 
 def end_days(s, n):
-    """The end of a period of n days from s: the day after its last, or the end of time (L §2.1)."""
-    last = s + datetime.timedelta(days=n - 1)
-    return next_day(last)
+    """The end of a period of n days from s: the day after its last, or the end of time (L §2.1); a period whose last
+    day passes 9999-12-31 is refused (L §7.6)."""
+    return next_day(add_days(s, n - 1))
 
 
 def end_months(s, n):
-    """The end of a period of n months from s, the end of time where it ends with 9999-12-31 (L §2.1)."""
+    """The end of a period of n months from s, the end of time where it ends with 9999-12-31 (L §2.1); a period whose
+    last day passes 9999-12-31 is refused (L §7.6)."""
     y, m = month_add(s.year, s.month, n)
     if (y, m) == (10000, 1) and s.day == 1:
         return END
@@ -201,16 +224,19 @@ def day_period(d):
 
 
 def month_period(y, m):
+    check_year(y)
     s = D(y, m, 1)
     return Period('month', s, end_months(s, 1), 'month', 1)
 
 
 def quarter_period(y, q):
+    check_year(y)
     s = D(y, 3 * (q - 1) + 1, 1)
     return Period('quarter', s, end_months(s, 3), 'month', 3)
 
 
 def year_period(y):
+    check_year(y)
     s = D(y, 1, 1)
     return Period('year', s, end_months(s, 12), 'month', 12)
 

@@ -9,7 +9,7 @@ Installed as Engine methods (`m_<name>` -> `<name>`), as eval2 is.
 """
 import datetime
 
-from .dates import Period, ONE_DAY, END
+from .dates import Period, ONE_DAY, END, past_days
 from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, RandomLine
 from .model import visible, row_known_sid, known_first, PlaceThing, _kv, key_text, in_world, _WSET
 from .values import Num, Money, Hole, Thing, Mv, Iv, Rec, Text, NONE, NEVER, CURRENCIES, fmt, vkey
@@ -880,6 +880,10 @@ def m_eval_inst(self, mi, env, keys, tctx, exists0=True, at_cut=None, upto=None)
                 return None
             if isinstance(day, Period) and day.kind == 'day':
                 day = day.start
+            if day is END:
+                # L §7.6 item 1 (tally 2.1.6, issue #89): the end of time is no day, so a movement dated there is
+                # refused at its key (LOAD-LIMIT where load sees its day, check3.check_seen_day_limits)
+                raise past_days()
             if isinstance(day, Iv):
                 inst.wlo = day.lo
                 day = self.window_choice(day, tctx)

@@ -1,0 +1,16 @@
+# L §7.6 item 3 (tally 2.1.6, issue #89): a range index's ends and step have at most 18 digits;
+# 1000000000000000000 has 19: LOAD-LIMIT. tally 2.1.5's refcore loaded it (one key).
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+unit PLN: currency minor 0.01
+index ns = 1..1000000000000000000 by 1000000000000000000
+
+ask n: max(pos(k) for k in ns)
+=== expect
+refused: LOAD-LIMIT 1000000000000000000 has more than 18 digits (m.tally:9)
