@@ -279,6 +279,11 @@ def run_worlds(heads, ids=None, loader=None, srcs=None):
     asks = {}
     for a in m0.asks:
         asks[(a.id, '')] = (a, None)
+    # L §6.4, §8.3 (GD-18): an ask whose world isn't loaded is refused alone (LOAD-SCENARIO), in a reality with
+    # scenarios as in a plain one. tally 2.1.6 (issues #73, #62): refcore 2.1.5 left these out here, so they printed
+    # nothing
+    for a in getattr(m0, 'asks_alone', ()):
+        asks[(a.id, '')] = (a, None)
     for sid, r in realities.items():
         if sid is None:
             continue
@@ -308,6 +313,9 @@ def run_worlds(heads, ids=None, loader=None, srcs=None):
             continue
         aid = akey[0]
         a, sf = asks[akey]
+        if getattr(a, 'refused_alone', None) is not None:
+            out.append('%s: refused: %s' % (aid, a.refused_alone.text()))
+            continue
         need = set()
         if sf is not None:
             need.add(sf)
