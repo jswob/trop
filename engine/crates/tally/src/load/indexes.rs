@@ -7,6 +7,7 @@
 //! index holds the periods that meet the run [S, E]; an open index's keys are in text order.
 
 use core::cmp::Ordering;
+use std::collections::BTreeSet;
 
 use super::keys::{KeyLit, int_of, key_source_text, lit_text};
 use super::steps::{Loader, num_stop, refuse};
@@ -180,12 +181,14 @@ impl Loader {
     }
 }
 
-/// A list index's keys, each named once. L §4.1.
+/// A list index's keys, each named once, at most 1 000 000 of them (refcore's
+/// `build_indexes`, its list arm and `KEY_LIMIT`). L §4.1, §7.6 item 2.
 fn list_index(id: &str, keys: &[Lit], file: &str, line: u32) -> Result<IndexInfo, Stop> {
     let mut list = IndexInfo::new(id, Form::List);
+    let mut seen = BTreeSet::new();
     for key in keys {
         let text = key_source_text(key, file, line)?;
-        if list.by_text(&text).is_some() {
+        if !seen.insert(text.clone()) {
             return Err(refuse(
                 Load::Dup,
                 format!("a key entered twice: {text}"),
@@ -199,6 +202,10 @@ fn list_index(id: &str, keys: &[Lit], file: &str, line: u32) -> Result<IndexInfo
         };
         list.texts.push((text, value.clone()));
         list.keys.push(value);
+    }
+    if list.keys.len() > 1_000_000 {
+        let message = format!("index {id} holds more than 1 000 000 keys");
+        return Err(refuse(Load::Limit, message, file, line));
     }
     Ok(list)
 }

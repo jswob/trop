@@ -2,7 +2,8 @@
 //! Spec: L §5.11 (aggregates; a key whose `where` is a hole is an unknown member; `sum` over
 //! no keys is 0 in the term's type; `min`/`max` over no keys is `RUN-EMPTY`), §2.5 (binding
 //! order: an index's order, a kind's things by the text of `kind:key`), §5.7 (a binding over
-//! a kind `on d` or `over s`), §4.5 (the keys and things a cut sees), §8.1 (holes spread).
+//! a kind `on d` or `over s`), §4.5 (the keys and things a cut sees), §8.1 (holes spread),
+//! §7.6 items 1 and 2 (a range's days and its 1 000 000 keys).
 //! Twin: engine/tools/refcore/evaluate.py (`members`, `bind_values`, `range_values`,
 //! `span_value`, `zero_of`, `e_agg`, `agg_minmax`, `agg_anyall`) and model.py (`alive_on`,
 //! `alive_over`, `kind_order_key`).
@@ -25,7 +26,8 @@ use super::state::{
 use super::ty::zero_of;
 use crate::base::{Load, Run};
 use crate::hole::{Hole, spread};
-use crate::model::{Domain, IndexInfo, KeyVal, Reality, Span, Thing, Value};
+use crate::model::{Class, Domain, IndexInfo, KeyVal, Number, Reality, Span, Thing, Value};
+use crate::num::Num;
 use crate::syntax::{
     Agg, AggFn, Bind, Domain as Over, Expr, Field, FieldValue, Key, Lit, Postfix, Span as SpanText,
     Stop,
@@ -595,43 +597,60 @@ impl Engine {
             }
         }
         let stride = match &by {
-            None => 1,
-            Some(s) if [&first, &last, s].iter().all(|v| is_int(v)) => int_of(m, s)?,
+            None => Num::int(1),
+            Some(s) if [&first, &last, s].iter().all(|v| is_int(v)) => whole_of(m, s)?,
             Some(_) => return Err(Stop::NotBuilt("a stepped range of numbers not integers")),
         };
-        if let Some(s) = by.as_ref().filter(|_| stride <= 0) {
+        if let Some(s) = by
+            .as_ref()
+            .filter(|_| stride.is_negative() || stride.is_zero())
+        {
             let message = format!(
                 "a stepped range whose step {} is not positive",
                 s.text(m).map_err(num_stop)?
             );
             return Err(refuse(Run::Domain, message));
         }
-        let (lo, hi) = (int_of(m, &first)?, int_of(m, &last)?);
-        let count = hi
-            .checked_sub(lo)
-            .and_then(|d| d.checked_div_euclid(stride));
-        if lo <= hi && count.is_none_or(|n| n >= RANGE_LIMIT) {
+        let (lo, hi) = (whole_of(m, &first)?, whole_of(m, &last)?);
+        // its keys, ⌊(hi − lo) / step⌋ + 1, pass 1 000 000 once hi − lo reaches 1 000 000 steps
+        let span = hi.checked_sub(&lo).map_err(num_stop)?;
+        let most = stride
+            .checked_mul(&Num::int(RANGE_LIMIT))
+            .map_err(num_stop)?;
+        if !span.is_negative() && span.compare(&most).map_err(num_stop)? != Ordering::Less {
             return Err(too_many_keys(m, (&first, &last, by.as_ref()))?);
         }
         let mut out = Vec::new();
         let mut k = lo;
-        while k <= hi {
-            out.push((Value::int(k), None));
-            // a step past the 64-bit integers is past `hi` too: the range ends
-            let Some(next) = k.checked_add(stride) else {
-                break;
+        while k.compare(&hi).map_err(num_stop)? != Ordering::Greater {
+            let next = k.checked_add(&stride).map_err(num_stop)?;
+            let key = Number {
+                q: k,
+                class: Class::Int,
             };
+            out.push((Value::Number(key), None));
             k = next;
         }
         Ok(Values::Known(out))
     }
 }
 
+/// An integer range's end or step as the exact integer it is, of any size (refcore's Python
+/// integer; L §7.6 item 2 bounds the keys, not the values). L §5.11.
+fn whole_of(m: &Reality, v: &Value) -> Result<Num, Stop> {
+    if let Value::Number(n) = v
+        && n.q.is_integer()
+    {
+        return Ok(n.q.clone());
+    }
+    int_of(m, v).map(Num::int)
+}
+
 /// Whether a value is an integer of no unit: an `int`, or a whole inline figure, which takes
 /// the type of what it meets (L §3.2).
 fn is_int(v: &Value) -> bool {
     matches!(v, Value::Number(n) if n.q.is_integer()
-        && matches!(n.class, crate::model::Class::Int | crate::model::Class::Flex))
+        && matches!(n.class, Class::Int | Class::Flex))
 }
 
 /// `RUN-LIMIT <a> .. <b> [step <s>] holds more than 1 000 000 keys` (refcore's `too_many`).
@@ -862,10 +881,10 @@ fn span_start(m: &Reality, v: &Value) -> Result<Day, Stop> {
 }
 
 /// The first day after a span's end: the day after a day, a period's end (refcore's
-/// `span_end`). L §5.7.
+/// `span_end`); the end of time is no day to end on, `RUN-LIMIT`. L §5.7, §7.6 item 1.
 fn span_end(m: &Reality, v: &Value) -> Result<Day, Stop> {
     if let Value::Day(d) = v {
-        return d
+        return a_day(*d)?
             .end_days(1)
             .ok_or_else(|| invariant("a day past the end of time"));
     }

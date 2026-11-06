@@ -9,7 +9,7 @@
 //! calendar in force on that day; a power that isn't an integer stops `NotBuilt` (the
 //! transcendental kernel isn't S's).
 
-use super::arith::{Test, compare, int_of};
+use super::arith::{Test, compare, int_of, step_count};
 use super::expr::hole_of;
 use super::read::{Given, make_keys};
 use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load, wrong_type};
@@ -179,7 +179,7 @@ impl Engine {
                     .ok_or_else(|| invariant("a day count past the integers"))
             }
             "add_days" => {
-                let n = int_of(m, &b)?;
+                let n = step_count(m, &b, 1)?;
                 first
                     .add_days(n)
                     .map(Value::Day)
@@ -222,16 +222,14 @@ impl Engine {
             return hole_of(&[d.as_hole(), k.as_hole()]);
         }
         let day = a_day(date_arg(m, &d, "add_business")?)?;
-        let k = int_of(m, &k)?;
+        let k = step_count(m, &k, 1)?;
         if k == 0 {
             return Err(refuse(
                 Run::Zero,
                 format!("add_business({}, 0, {})", day.text(), expr_name(cal)),
             ));
         }
-        let mut left = k
-            .checked_abs()
-            .ok_or_else(|| invariant("a business-day count"))?;
+        let mut left = k.unsigned_abs();
         let mut current = day;
         while left > 0 {
             let open = self.next_business(m, cal, env, ctx, (current, k.signum()))?;
@@ -694,9 +692,9 @@ fn months_arg(m: &Reality, v: &Value) -> Result<i64, Stop> {
                 format!("a duration of {} for add_months", unit.text()),
             ));
         }
-        return int_of(m, &Value::Number(Number::plain(q.clone(), Unit::one())));
+        return step_count(m, &Value::Number(Number::plain(q.clone(), Unit::one())), 1);
     }
-    int_of(m, v)
+    step_count(m, v, 1)
 }
 
 /// `minor(CUR)`: the currency's minor unit as money (refcore's `c_minor`). L §7.2.
