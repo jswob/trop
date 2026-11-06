@@ -191,6 +191,8 @@ class Checker:
         self.check_seen_days()
         self.check_seen_day_limits()
         self.check_period_keys()
+        self.check_settlement_units()
+        self.check_schedules()
         self.check_move_lawdates()
         self.finish_random()
         self.check_proj_seen()

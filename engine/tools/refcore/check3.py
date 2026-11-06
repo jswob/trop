@@ -1629,6 +1629,65 @@ def m_check_seen_day_limits(self):
                             mi.decl.loc)
 
 
+def m_check_settlement_units(self):
+    """L §5.14.3 (a settlement leg "in another unit than the leg's", LOAD-UNIT), E §3.1 (load once per reality,
+    whatever the asks; tally 2.1.6, issue #72): an observed row that fulfils an adjustment of a leg whose kind states
+    its unit (a currency or a declared unit) is refused at load where one of its legs is in another unit, with the
+    engine's bytes (load/moves.rs). A leg of unit `any` or a unit kind takes its unit from a value (L §8.3 item 4), so
+    its settlements are checked as they are booked (moves.settle_sign). refcore 2.1.5 checked every one there, so an
+    ask that didn't reach the settlement answered."""
+    from .model import key_text
+    m = self.m
+    for inf in m.inputs.values():
+        if not getattr(inf, 'observed', False):
+            continue
+        for o in getattr(inf, 'obs', ()):
+            f = o.fulfils
+            if not (isinstance(f, tuple) and f and f[0] == 'adj'):
+                continue
+            _, mid, kv, leg, vid = f
+            mi = m.moves.get(mid)
+            if mi is None or mi.kind is None:
+                continue
+            d = next((x for x in m.kind_legs(mi.kind) if x.name == leg), None)
+            if d is None or not (d.unit in CURRENCIES or d.unit in m.units):
+                continue
+            bad = next((lg for lg in o.legs if lg[4] is not None and lg[4] != d.unit), None)
+            if bad is None:
+                continue
+            iid = '%s[%s]' % (mid, ', '.join(key_text(k) for k in kv)) if kv else mid
+            raise LoadError('LOAD-UNIT', 'settlement %s of adjustments[%s.%s, %s] is in %s, not %s' % (
+                o.sid, iid, leg, vid, bad[4], d.unit))
+
+
+def m_check_schedules(self):
+    """L §4.2 (round 19, C4-5), E §3.1 (tally 2.1.6, issue #72): a plan move whose day is a schedule load sees that
+    gives no date in the run is refused at load (LOAD-SCHEDULE), whatever the asks: its instances are folded once at
+    the model's on, before any ask, by moves.check_schedule. refcore 2.1.5 folded them only where an ask reached the
+    move."""
+    m = self.m
+    from .eval2 import strip
+    from .evaluate import Engine, Ctx
+    eng = None
+    for mi in m.moves.values():
+        if mi.decision or mi.decl.on is None:
+            continue
+        on = strip(mi.decl.on)
+        if not (on.k == 'call' and on.name == 'schedule'):
+            continue
+        if len(on.args) < 2 or not (self.seen_day(on.args[0], mi) and self.seen_day(on.args[1], mi)):
+            continue
+        if eng is None:
+            eng = Engine(m)
+        try:
+            eng.move_instances(mi, Ctx(None, m.on))
+        except LoadError as e:
+            if e.code == 'LOAD-SCHEDULE':
+                raise
+        except TallyError:
+            pass
+
+
 def m_check_after_readings(self):
     """L §4.6 Readings (round 19, GD-10, C4-2): "A reading `after m` with m an observation or a plan is refused at load,
     which sees m's class (LOAD-ORDER): the batch has no order (§5.14.2, P-7). The refusal is by class, so it holds for
