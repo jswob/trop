@@ -353,7 +353,9 @@ def spaced(p, t):
     if t.s == '[' and t.t == 'OP':
         if p.s in (']', ')'):
             return False
-        if p.t == 'ID' and p.s not in KEYWORDS and p.s not in LIST_WORDS:
+        # a field is a name whatever its word (parse rule 3), so mi.or[k1] touches as every keyed read does (L §2.4
+        # Expressions; tally 2.1.6, issue #81: it printed mi.or [k1])
+        if p.t == 'ID' and (p.fld or p.nm or (p.s not in KEYWORDS and p.s not in LIST_WORDS)):
             return False
         return True
     return True

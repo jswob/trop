@@ -228,7 +228,8 @@ def _rename_ok(toks, j):
         return False
     prev = toks[j - 1] if j > 0 else None
     nxt = toks[j + 1] if j + 1 < len(toks) else None
-    if prev is not None and prev.s == '.' and not t.ws:
+    if prev is not None and prev.s == '.':
+        # a word after "." is a field whatever the spacing (L §2.4, parse rule 3; tally 2.1.6, issue #81)
         return False
     if prev is not None and prev.s in ('rule', 'leg', 'attr'):
         return False

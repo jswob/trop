@@ -542,15 +542,21 @@ class P:
                     e = self.N('call', name=chain[-1], args=args, bkey=keys[0], prefix=chain[:-1] or None)
                     continue
                 e = self.N('index', obj=e, keys=keys)
-            elif self.at('.') and not self.peek().ws:
+            elif self.at('.'):
+                # L §2.4 "The loader accepts any spacing that the grammar allows" (tally 2.1.6, issue #81): `a .b` and
+                # `a. b` are a.b, and `a.b (x)` a call, as f (x) is; refcore 2.1.5 read the "." and a prefixed call's
+                # "(" only touching
                 self.i += 1
                 tok = self.peek()
                 if tok is None or tok.t != 'ID':
                     self.err('a field')
                 self.i += 1
+                # a word right after "." is a field (parse rule 3), whatever its word: its "[" prints touching
+                # (canon.spaced)
+                tok.fld = True
                 e = self.N('field', obj=e, name=tok.s)
                 chain = _name_chain(e)
-                if self.at('(') and chain is not None and not self.peek().ws:
+                if self.at('(') and chain is not None:
                     # L §2.3 (round 14): call = (ID {"." ID} ["[" expr "]"] | BUILTIN) "(": a band named with the
                     # prefixes that name it outside its member or its base, a.b(x), household.b(x) (GD-1: no regime).
                     # Its name is read as an id, so the canonical form prints it touching its "(" (L §2.4

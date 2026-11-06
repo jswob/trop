@@ -1,0 +1,22 @@
+# L §2.4 "The loader accepts any spacing that the grammar allows", §2.3 parse rule 3 (a word right after . is a
+# field; tally 2.1.6, issue #81): r .n and r. m read as r.n and r.m, and print so. tally 2.1.5's refcore read a
+# field's . only touching the token before it (LOAD-PARSE expected end of line, got .); the M0 engine too.
+=== options reprint
+=== m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+def y: int = r .n + r. m
+=== expect
+--- m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+def y: int = r.n + r.m
+sha256 ...
