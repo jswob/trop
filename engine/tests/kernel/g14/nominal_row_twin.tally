@@ -1,0 +1,18 @@
+model g14_nominal_row_twin
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#89, P38, the third review's H2): an int input's row written as a compounding code inside 64 bits is refused LOAD-UNIT, its type before its size; its twin is nominal_row.tally."
+
+source plan "T's fixture (invented values)"
+
+input x: int
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  x = nominal 12 "a compounding code where an int goes"
+
+ask r1: x

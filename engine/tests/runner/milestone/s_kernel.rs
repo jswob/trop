@@ -271,8 +271,10 @@ mod tests {
     /// each beside its answered twin; and the second review's six (P37): an integer past 64
     /// bits as a business-day count (a hole's question, `RUN-DOMAIN`), a duration, a key's
     /// shift (`RUN-KEY`), a day number, a power on base 1, 0 or -1 and a calendar's first
-    /// year, ranges near the 4 096-digit cap, and the refusal texts refcore says
-    /// (`kernel/g14/`).
+    /// year, ranges near the 4 096-digit cap, and the refusal texts refcore says; and the
+    /// third review's two (P38): a key of a range `by n` moved by whole keys of its step, a
+    /// `nominal` row where an int goes (`LOAD-UNIT`); `by_n_years_98` is held for #98 (P39,
+    /// `held.tsv`) (`kernel/g14/`).
     #[test]
     fn s_kernel_g14_capacity() {
         group_holds("g14");

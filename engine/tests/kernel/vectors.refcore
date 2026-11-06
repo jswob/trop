@@ -15699,4 +15699,324 @@ g3_steps: (1, 1)
   cut 2026-12-31
 g3_twin: 1 000 000
   cut 2026-12-31
+,8:g14/by_n,3:g14,18:run g14/by_n.tally,4705:14:g14/by_n.tally,4681:model g14_by_n
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#89, the coordinator's pick P38, the third review's H1): a key of a range by n moves by whole keys of its index's step (L §4.1 by n, §4.2): a duration that isn't a whole number of its periods is refused RUN-DOMAIN, at 1 and past 64 bits, on months by 2 and by 3 and years by 2, anchored too; a whole number moves it, or passes 9999-12-31 (RUN-LIMIT); beside the by-1 twins, unchanged."
+
+source plan "T's fixture (invented values)"
+
+index m1 = month 2026-01..2027-12
+
+index m2 = month 2026-01..2027-12 by 2
+
+index m3 = month 2026-01..2027-12 by 3
+
+index y1 = year 2026..2040
+
+index y2 = year 2026..2040 by 2
+
+index fy = year 2026..2040 from 04-06
+
+index fy2 = year 2026..2040 by 2 from 04-06
+
+index am = month 2026-01..2027-12 from 17
+
+index am3 = month 2026-01..2027-12 by 3 from 17
+
+input h2: int
+
+input huge: int
+
+input hz: int
+
+input n1: int
+
+input n12: int
+
+input n2: int
+
+input n3: int
+
+def m1_month[q in m1]: date = start_of(q + n1 * 1 month)
+
+def m1_huge[q in m1]: date = start_of(q + huge * 1 month)
+
+def m1_back_year[q in m1]: date = start_of(q - n1 * 1 year)
+
+def m2_month[q in m2]: date = start_of(q + n1 * 1 month)
+
+def m2_huge[q in m2]: date = start_of(q + huge * 1 month)
+
+def m2_h2[q in m2]: date = start_of(q + h2 * 1 month)
+
+def m2_two[q in m2]: date = start_of(q + n2 * 1 month)
+
+def m2_back_two[q in m2]: date = start_of(q - n2 * 1 month)
+
+def m2_quarter[q in m2]: date = start_of(q + n1 * 1 quarter)
+
+def m2_year[q in m2]: date = start_of(q + n1 * 1 year)
+
+def m2_three[q in m2]: date = start_of(q + n3 * 1 month)
+
+def m2_back_huge[q in m2]: date = start_of(q - huge * 1 month)
+
+def m2_huge_year[q in m2]: date = start_of(q + huge * 1 year)
+
+def m2_key[q in m2]: date = start_of(q + n1)
+
+def m3_month[q in m3]: date = start_of(q + n1 * 1 month)
+
+def m3_huge[q in m3]: date = start_of(q + hz * 1 month)
+
+def m3_three[q in m3]: date = start_of(q + n3 * 1 month)
+
+def m3_key[q in m3]: date = start_of(q + n1)
+
+def y1_year[q in y1]: date = start_of(q + n1 * 1 year)
+
+def y1_months[q in y1]: date = start_of(q + n12 * 1 month)
+
+def y1_quarter[q in y1]: date = start_of(q + n1 * 1 quarter)
+
+def y1_huge[q in y1]: date = start_of(q + huge * 1 year)
+
+def y2_year[q in y2]: date = start_of(q + n1 * 1 year)
+
+def y2_huge[q in y2]: date = start_of(q + huge * 1 year)
+
+def y2_back_huge[q in y2]: date = start_of(q - huge * 1 year)
+
+def y2_months[q in y2]: date = start_of(q + n12 * 1 month)
+
+def y2_h2[q in y2]: date = start_of(q + h2 * 1 year)
+
+def y2_key[q in y2]: date = start_of(q + n2)
+
+def fy_year[q in fy]: date = start_of(q + n1 * 1 year)
+
+def fy_month[q in fy]: date = start_of(q + n1 * 1 month)
+
+def fy2_year[q in fy2]: date = start_of(q + n1 * 1 year)
+
+def fy2_huge[q in fy2]: date = start_of(q + huge * 1 year)
+
+def am_month[q in am]: date = start_of(q + n1 * 1 month)
+
+def am3_three[q in am3]: date = start_of(q + n3 * 1 month)
+
+def am3_month[q in am3]: date = start_of(q + n1 * 1 month)
+
+def am3_quarter[q in am3]: date = start_of(q + n1 * 1 quarter)
+
+def am3_huge[q in am3]: date = start_of(q + huge * 1 month)
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  h2 = 200000000000000000000 "2 * 10^20, past 64 bits and even"
+  huge = 100000000000000000001 "10^20 + 1, past 64 bits and odd"
+  hz = 100000000000000000000 "10^20, not a multiple of 3"
+  n1 = 1 "one"
+  n12 = 12 "twelve"
+  n2 = 2 "two"
+  n3 = 3 "three"
+
+ask a_m1_month: m1_month[2026-01]
+ask a_m1_huge: m1_huge[2026-01]
+ask a_m1_back_year: m1_back_year[2027-03]
+ask a_m2_month: m2_month[2026-01]
+ask a_m2_huge: m2_huge[2026-01]
+ask a_m2_h2: m2_h2[2026-01]
+ask a_m2_two: m2_two[2026-01]
+ask a_m2_back_two: m2_back_two[2026-03]
+ask a_m2_quarter: m2_quarter[2026-01]
+ask a_m2_year: m2_year[2026-01]
+ask a_m2_three: m2_three[2026-01]
+ask a_m2_back_huge: m2_back_huge[2026-03]
+ask a_m2_huge_year: m2_huge_year[2026-01]
+ask a_m2_key: m2_key[2026-01]
+ask a_m3_month: m3_month[2026-01]
+ask a_m3_huge: m3_huge[2026-01]
+ask a_m3_three: m3_three[2026-01]
+ask a_m3_key: m3_key[2026-01]
+ask a_y1_year: y1_year[2026]
+ask a_y1_months: y1_months[2026]
+ask a_y1_quarter: y1_quarter[2026]
+ask a_y1_huge: y1_huge[2026]
+ask a_y2_year: y2_year[2026]
+ask a_y2_huge: y2_huge[2026]
+ask a_y2_back_huge: y2_back_huge[2028]
+ask a_y2_months: y2_months[2026]
+ask a_y2_h2: y2_h2[2026]
+ask a_y2_key: y2_key[2026]
+ask a_fy_year: fy_year[2026]
+ask a_fy_month: fy_month[2026]
+ask a_fy2_year: fy2_year[2026]
+ask a_fy2_huge: fy2_huge[2026]
+ask a_am_month: am_month[2026-01]
+ask a_am3_three: am3_three[2026-01]
+ask a_am3_month: am3_month[2026-01]
+ask a_am3_quarter: am3_quarter[2026-01]
+ask a_am3_huge: am3_huge[2026-01]
+,,1:0,3209:a_am3_huge: refused: RUN-DOMAIN 2026-01 + 100 000 000 000 000 000 001 (100 000 000 000 000 000 000) month: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_am3_month: refused: RUN-DOMAIN 2026-01 + 1 month: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_am3_quarter: 2026-04-17
+  cut 2026-12-31
+a_am3_three: 2026-04-17
+  cut 2026-12-31
+a_am_month: 2026-02-17
+  cut 2026-12-31
+a_fy2_huge: refused: RUN-DOMAIN 2026 + 100 000 000 000 000 000 001 (100 000 000 000 000 000 000) year: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_fy2_year: refused: RUN-DOMAIN 2026 + 1 year: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_fy_month: refused: RUN-DOMAIN 2026 + 1 month: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_fy_year: 2027-04-06
+  cut 2026-12-31
+a_m1_back_year: 2026-03-01
+  cut 2026-12-31
+a_m1_huge: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 2026-12-31
+a_m1_month: 2026-02-01
+  cut 2026-12-31
+a_m2_back_huge: refused: RUN-DOMAIN 2026-03 - 100 000 000 000 000 000 001 (100 000 000 000 000 000 000) month: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_m2_back_two: 2026-01-01
+  cut 2026-12-31
+a_m2_h2: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 2026-12-31
+a_m2_huge: refused: RUN-DOMAIN 2026-01 + 100 000 000 000 000 000 001 (100 000 000 000 000 000 000) month: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_m2_huge_year: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 2026-12-31
+a_m2_key: 2026-03-01
+  cut 2026-12-31
+a_m2_month: refused: RUN-DOMAIN 2026-01 + 1 month: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_m2_quarter: refused: RUN-DOMAIN 2026-01 + 1 quarter: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_m2_three: refused: RUN-DOMAIN 2026-01 + 3 month: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_m2_two: 2026-03-01
+  cut 2026-12-31
+a_m2_year: 2027-01-01
+  cut 2026-12-31
+a_m3_huge: refused: RUN-DOMAIN 2026-01 + 100 000 000 000 000 000 000 month: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_m3_key: 2026-04-01
+  cut 2026-12-31
+a_m3_month: refused: RUN-DOMAIN 2026-01 + 1 month: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_m3_three: 2026-04-01
+  cut 2026-12-31
+a_y1_huge: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 2026-12-31
+a_y1_months: 2027-01-01
+  cut 2026-12-31
+a_y1_quarter: refused: RUN-DOMAIN 2026 + 1 quarter: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_y1_year: 2027-01-01
+  cut 2026-12-31
+a_y2_back_huge: refused: RUN-DOMAIN 2028 - 100 000 000 000 000 000 001 (100 000 000 000 000 000 000) year: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_y2_h2: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 2026-12-31
+a_y2_huge: refused: RUN-DOMAIN 2026 + 100 000 000 000 000 000 001 (100 000 000 000 000 000 000) year: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_y2_key: 2030-01-01
+  cut 2026-12-31
+a_y2_months: refused: RUN-DOMAIN 2026 + 12 month: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_y2_year: refused: RUN-DOMAIN 2026 + 1 year: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+,17:g14/by_n_years_98,3:g14,27:run g14/by_n_years_98.tally,1111:23:g14/by_n_years_98.tally,1078:model g14_by_n_years_98
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#98, P39): a key of a year range by 2 moved by two years or 24 months, either way, anchored too. refcore moves it one year a period (2027-01-01, not a key); L §4.2 moves it by whole keys (2028-01-01). Held for #98 (held.tsv), refcore's bytes stored, until the next spec round fixes refcore."
+
+source plan "T's fixture (invented values)"
+
+index y2 = year 2026..2040 by 2
+
+index fy2 = year 2026..2040 by 2 from 04-06
+
+input n2: int
+
+input n24: int
+
+def y2_two_years[q in y2]: date = start_of(q + n2 * 1 year)
+
+def y2_24_months[q in y2]: date = start_of(q + n24 * 1 month)
+
+def y2_back_two_years[q in y2]: date = start_of(q - n2 * 1 year)
+
+def fy2_two_years[q in fy2]: date = start_of(q + n2 * 1 year)
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  n2 = 2 "two"
+  n24 = 24 "twenty-four"
+
+ask a_y2_two_years: y2_two_years[2026]
+ask a_y2_24_months: y2_24_months[2026]
+ask a_y2_back_two_years: y2_back_two_years[2028]
+ask a_fy2_two_years: fy2_two_years[2026]
+,,1:0,182:a_fy2_two_years: 2027-04-06
+  cut 2026-12-31
+a_y2_24_months: 2027-01-01
+  cut 2026-12-31
+a_y2_back_two_years: 2027-01-01
+  cut 2026-12-31
+a_y2_two_years: 2027-01-01
+  cut 2026-12-31
+,15:g14/nominal_row,3:g14,25:run g14/nominal_row.tally,523:21:g14/nominal_row.tally,493:model g14_nominal_row
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#89, P38, the third review's H2): an int input's row written as a compounding code past 64 bits is refused LOAD-UNIT, its type before its size; its twin is nominal_row_twin.tally."
+
+source plan "T's fixture (invented values)"
+
+input x: int
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  x = nominal 100000000000000000000 "a compounding code where an int goes"
+
+ask r1: x
+,,1:1,98:refused: LOAD-UNIT nominal 100000000000000000000 is a compounding code (g14/nominal_row.tally:16)
+,20:g14/nominal_row_twin,3:g14,30:run g14/nominal_row_twin.tally,511:26:g14/nominal_row_twin.tally,476:model g14_nominal_row_twin
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#89, P38, the third review's H2): an int input's row written as a compounding code inside 64 bits is refused LOAD-UNIT, its type before its size; its twin is nominal_row.tally."
+
+source plan "T's fixture (invented values)"
+
+input x: int
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  x = nominal 12 "a compounding code where an int goes"
+
+ask r1: x
+,,1:1,84:refused: LOAD-UNIT nominal 12 is a compounding code (g14/nominal_row_twin.tally:16)
 ,

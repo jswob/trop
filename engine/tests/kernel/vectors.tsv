@@ -121,3 +121,7 @@ g14/list_1000001	g14		engine/tests/kernel/	engine/tests/kernel/g14/list_1000001.
 g14/list_1000000	g14		engine/tests/kernel/	engine/tests/kernel/g14/list_1000000.tally.gen		
 g14/past_64_counts	g14		engine/tests/kernel/	engine/tests/kernel/g14/past_64_counts.tally		
 g14/near_cap	g14		engine/tests/kernel/	engine/tests/kernel/g14/near_cap.tally		
+g14/by_n	g14		engine/tests/kernel/	engine/tests/kernel/g14/by_n.tally		
+g14/by_n_years_98	g14		engine/tests/kernel/	engine/tests/kernel/g14/by_n_years_98.tally		
+g14/nominal_row	g14		engine/tests/kernel/	engine/tests/kernel/g14/nominal_row.tally		
+g14/nominal_row_twin	g14		engine/tests/kernel/	engine/tests/kernel/g14/nominal_row_twin.tally		

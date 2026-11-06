@@ -1,0 +1,164 @@
+model g14_by_n
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#89, the coordinator's pick P38, the third review's H1): a key of a range by n moves by whole keys of its index's step (L §4.1 by n, §4.2): a duration that isn't a whole number of its periods is refused RUN-DOMAIN, at 1 and past 64 bits, on months by 2 and by 3 and years by 2, anchored too; a whole number moves it, or passes 9999-12-31 (RUN-LIMIT); beside the by-1 twins, unchanged."
+
+source plan "T's fixture (invented values)"
+
+index m1 = month 2026-01..2027-12
+
+index m2 = month 2026-01..2027-12 by 2
+
+index m3 = month 2026-01..2027-12 by 3
+
+index y1 = year 2026..2040
+
+index y2 = year 2026..2040 by 2
+
+index fy = year 2026..2040 from 04-06
+
+index fy2 = year 2026..2040 by 2 from 04-06
+
+index am = month 2026-01..2027-12 from 17
+
+index am3 = month 2026-01..2027-12 by 3 from 17
+
+input h2: int
+
+input huge: int
+
+input hz: int
+
+input n1: int
+
+input n12: int
+
+input n2: int
+
+input n3: int
+
+def m1_month[q in m1]: date = start_of(q + n1 * 1 month)
+
+def m1_huge[q in m1]: date = start_of(q + huge * 1 month)
+
+def m1_back_year[q in m1]: date = start_of(q - n1 * 1 year)
+
+def m2_month[q in m2]: date = start_of(q + n1 * 1 month)
+
+def m2_huge[q in m2]: date = start_of(q + huge * 1 month)
+
+def m2_h2[q in m2]: date = start_of(q + h2 * 1 month)
+
+def m2_two[q in m2]: date = start_of(q + n2 * 1 month)
+
+def m2_back_two[q in m2]: date = start_of(q - n2 * 1 month)
+
+def m2_quarter[q in m2]: date = start_of(q + n1 * 1 quarter)
+
+def m2_year[q in m2]: date = start_of(q + n1 * 1 year)
+
+def m2_three[q in m2]: date = start_of(q + n3 * 1 month)
+
+def m2_back_huge[q in m2]: date = start_of(q - huge * 1 month)
+
+def m2_huge_year[q in m2]: date = start_of(q + huge * 1 year)
+
+def m2_key[q in m2]: date = start_of(q + n1)
+
+def m3_month[q in m3]: date = start_of(q + n1 * 1 month)
+
+def m3_huge[q in m3]: date = start_of(q + hz * 1 month)
+
+def m3_three[q in m3]: date = start_of(q + n3 * 1 month)
+
+def m3_key[q in m3]: date = start_of(q + n1)
+
+def y1_year[q in y1]: date = start_of(q + n1 * 1 year)
+
+def y1_months[q in y1]: date = start_of(q + n12 * 1 month)
+
+def y1_quarter[q in y1]: date = start_of(q + n1 * 1 quarter)
+
+def y1_huge[q in y1]: date = start_of(q + huge * 1 year)
+
+def y2_year[q in y2]: date = start_of(q + n1 * 1 year)
+
+def y2_huge[q in y2]: date = start_of(q + huge * 1 year)
+
+def y2_back_huge[q in y2]: date = start_of(q - huge * 1 year)
+
+def y2_months[q in y2]: date = start_of(q + n12 * 1 month)
+
+def y2_h2[q in y2]: date = start_of(q + h2 * 1 year)
+
+def y2_key[q in y2]: date = start_of(q + n2)
+
+def fy_year[q in fy]: date = start_of(q + n1 * 1 year)
+
+def fy_month[q in fy]: date = start_of(q + n1 * 1 month)
+
+def fy2_year[q in fy2]: date = start_of(q + n1 * 1 year)
+
+def fy2_huge[q in fy2]: date = start_of(q + huge * 1 year)
+
+def am_month[q in am]: date = start_of(q + n1 * 1 month)
+
+def am3_three[q in am3]: date = start_of(q + n3 * 1 month)
+
+def am3_month[q in am3]: date = start_of(q + n1 * 1 month)
+
+def am3_quarter[q in am3]: date = start_of(q + n1 * 1 quarter)
+
+def am3_huge[q in am3]: date = start_of(q + huge * 1 month)
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  h2 = 200000000000000000000 "2 * 10^20, past 64 bits and even"
+  huge = 100000000000000000001 "10^20 + 1, past 64 bits and odd"
+  hz = 100000000000000000000 "10^20, not a multiple of 3"
+  n1 = 1 "one"
+  n12 = 12 "twelve"
+  n2 = 2 "two"
+  n3 = 3 "three"
+
+ask a_m1_month: m1_month[2026-01]
+ask a_m1_huge: m1_huge[2026-01]
+ask a_m1_back_year: m1_back_year[2027-03]
+ask a_m2_month: m2_month[2026-01]
+ask a_m2_huge: m2_huge[2026-01]
+ask a_m2_h2: m2_h2[2026-01]
+ask a_m2_two: m2_two[2026-01]
+ask a_m2_back_two: m2_back_two[2026-03]
+ask a_m2_quarter: m2_quarter[2026-01]
+ask a_m2_year: m2_year[2026-01]
+ask a_m2_three: m2_three[2026-01]
+ask a_m2_back_huge: m2_back_huge[2026-03]
+ask a_m2_huge_year: m2_huge_year[2026-01]
+ask a_m2_key: m2_key[2026-01]
+ask a_m3_month: m3_month[2026-01]
+ask a_m3_huge: m3_huge[2026-01]
+ask a_m3_three: m3_three[2026-01]
+ask a_m3_key: m3_key[2026-01]
+ask a_y1_year: y1_year[2026]
+ask a_y1_months: y1_months[2026]
+ask a_y1_quarter: y1_quarter[2026]
+ask a_y1_huge: y1_huge[2026]
+ask a_y2_year: y2_year[2026]
+ask a_y2_huge: y2_huge[2026]
+ask a_y2_back_huge: y2_back_huge[2028]
+ask a_y2_months: y2_months[2026]
+ask a_y2_h2: y2_h2[2026]
+ask a_y2_key: y2_key[2026]
+ask a_fy_year: fy_year[2026]
+ask a_fy_month: fy_month[2026]
+ask a_fy2_year: fy2_year[2026]
+ask a_fy2_huge: fy2_huge[2026]
+ask a_am_month: am_month[2026-01]
+ask a_am3_three: am3_three[2026-01]
+ask a_am3_month: am3_month[2026-01]
+ask a_am3_quarter: am3_quarter[2026-01]
+ask a_am3_huge: am3_huge[2026-01]
