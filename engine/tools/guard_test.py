@@ -78,6 +78,12 @@ EDITS = [
     ("engine/crates/tally/benches/p8_m1.rs", RULES),
     (".github/workflows/engine.yml", RULES),
     (".claude/settings.json", RULES),
+    (".claude/skills/engine-coordinator/SKILL.md", RULES),
+    # the conventions and their templates, which the checks read (the retro after M0)
+    ("engine/CONVENTIONS.md", RULES),
+    ("engine/templates/pr.md", RULES),
+    ("engine/templates/brief.md", RULES),
+    (".ignore", RULES),
     # the builder's instructions (F-23)
     ("engine/CLAUDE.md", RULES),
     (".claude/skills/engine-rust/SKILL.md", RULES),
@@ -235,6 +241,17 @@ BASH = [
     ("TALLY_ROLE=rules engine/tools/guard < /tmp/x", NOT_BUILD, ""),
     ("git commit -m 'Add parser\n\nCo-Authored-By: Claude <noreply@anthropic.com>'", {"unset"}, ""),
     ("git commit -F - <<'EOF'\nAdd parser\n\nCo-authored-by: an AI\nEOF", {"unset"}, ""),
+    # the harness's session lines are attribution too (the retro after M0, R-100), in a
+    # commit, and in a pull request's or an issue's text or --body-file
+    ("git commit -m 'feat(load): x' -m 'Claude-Session: https://claude.ai/code/session_x'", {"unset"}, ""),
+    ("git commit -m 'feat(load): x\n\nhttps://claude.ai/code/session_x'", {"unset"}, ""),
+    ("git commit -F engine/target/msg-session.txt", {"unset"}, ""),
+    ("gh pr create --title t --body 'x\n\nhttps://claude.ai/code/session_x'", {"unset"}, ""),
+    ("gh issue comment 9 --body 'Generated with [Claude Code](https://claude.com/claude-code)'", {"unset"}, ""),
+    ("gh pr create --title t --body-file engine/target/msg-session.txt", {"unset"}, ""),
+    ("gh pr edit 9 --body-file=engine/target/msg-session.txt", {"unset"}, ""),
+    ("gh pr create --title t --body-file engine/target/msg-ok.txt", ALL, ""),
+    ("git commit -m 'feat(load): refuse an unknown field' -m 'Issue: #56'", ALL, ""),
     ("echo x > ~/.claude/settings.json", NOT_BUILD, ""),
     ("echo x > \"$TALLY_GUARD_UNDEFINED_VAR\"", NOT_BUILD, ""),
     ("echo \"unbalanced", NOT_BUILD, ""),
@@ -459,6 +476,10 @@ BASH = [
     # reading, diffing and committing them stays open to every role
     ("cat engine/tools/merge-pr", ALL, ""),
     ("grep -n refused engine/tools/merge_pr.py engine/tools/worktree_done.py", ALL, ""),
+    # the checksum files' writer in a merge is every role's (the retro after M0, decision 3)
+    ("engine/tools/sums", ALL, ""),
+    ("engine/tools/sums --check", ALL, ""),
+    ("cd engine && tools/sums", ALL, ""),
     ("git diff master -- engine/tools/merge_pr.py", ALL, ""),
     ("git add engine/tools/merge-pr engine/tools/worktree-done", ALL, ""),
     ("echo 'engine/tools/merge-pr 9'", ALL, ""),
@@ -494,6 +515,73 @@ BASH = [
     ("echo x > tmp/notes/link-to-active/x.md", MASTER, ""),
     ("echo x > tmp/notes/link-to-holdout/x.md", MASTER, ""),
     ("echo x > tmp/notes/link-to-spec.md", SPEC, ""),
+    # the seal (R-79, the retro after M0, decision 9): a search or listing that reaches the
+    # sealed folders (here tmp/cases-holdout/, planted) or the hidden keys
+    # (engine/tests/cases/*-hidden.md, planted) without excluding them is refused in every
+    # role; the root .ignore keeps a plain rg off them, and a glob overrides it
+    ("grep -rn needle .", set(), ""),
+    ("grep -r needle", set(), ""),
+    ("grep -rn needle engine", set(), ""),
+    ("grep -Rl needle engine/tests", set(), ""),
+    ("grep -rn needle engine --exclude-dir=cases-holdout", set(), ""),
+    ("grep -rn needle . --exclude='*-hidden.md'", set(), ""),
+    ("grep -rnl needle .", set(), "engine/tests"),
+    ("cd engine/tests && grep -rn needle .", set(), ""),
+    ("grep -d recurse needle engine", set(), ""),
+    ("rg -u needle", set(), ""),
+    ("rg --no-ignore needle engine", set(), ""),
+    ("rg --no-ignore-dot -n needle engine/tests", set(), ""),
+    ("rg -g '*.md' needle", set(), ""),
+    ("rg --glob='*.md' -l needle engine", set(), ""),
+    ("rg -u -g '!cases/*-hidden.md' needle engine", set(), ""),  # P9: a glob with a / is anchored at the root
+    ("rg -uu --files", set(), ""),
+    ("fd -u hidden", set(), ""),
+    ("fd -I needle engine", set(), ""),
+    ("find . -name '*.md'", set(), ""),
+    ("find tmp -type f", set(), ""),
+    ("find engine -name '*.md' -exec grep -l needle {} +", set(), ""),
+    ("ls -R", set(), ""),
+    ("ls -laR tmp", set(), ""),
+    ("git grep needle", set(), ""),
+    ("git grep -n needle -- engine/tests", set(), ""),
+    ("git grep -n needle -- ':!*.rs'", set(), ""),
+    ("git -C engine grep -l needle", set(), ""),
+    ("grep needle engine/tests/cases/*.md", MASTER - LEAD, ""),
+    ("grep -n needle engine/tests/cases/a-hidden.md", MASTER - LEAD, ""),
+    ("cat engine/tests/cases/a-hidden.md", MASTER - LEAD, ""),
+    ("head -5 cases/a-hidden.md", MASTER - LEAD, "engine/tests"),
+    ("cat tmp/cases-holdout/key.md", MASTER - LEAD, ""),
+    ("grep -rn needle tmp/cases-holdout", MASTER - LEAD, ""),
+    ("ls -R tmp/cases-holdout", MASTER - LEAD, ""),
+    # what stays open: a search that excludes them, or doesn't reach them; listing the
+    # cases' names; hashing the hidden keys (TESTS.sha256), which isn't a search
+    ("grep -rn needle engine/crates", ALL, ""),
+    ("grep -rn needle engine --exclude='*-hidden.md'", ALL, ""),
+    ("grep -rn --exclude=*-hidden.md needle engine/tests", ALL, ""),
+    ("grep -rn needle . --exclude='*-hidden.md' --exclude-dir=cases-holdout --exclude-dir=holdout", ALL, ""),
+    ("grep -rn needle . --exclude-dir=tmp --exclude-dir=cases", ALL, ""),
+    ("grep -rn --include='*.rs' needle engine", ALL, ""),
+    ("rg needle", ALL, ""),
+    ("rg -n needle engine/tests", ALL, ""),
+    ("rg -g '*.rs' needle engine", ALL, ""),
+    ("rg -u -g '!**/*-hidden.md' -g '!tmp' needle", ALL, ""),
+    ("rg -u -g '!*-hidden.md' needle engine", ALL, ""),
+    ("fd -u -E '*-hidden.md' -E tmp needle", ALL, ""),
+    ("fd needle", ALL, ""),
+    ("find engine -name '*.rs'", ALL, ""),
+    ("find . -path ./tmp -prune -o -name '*.md' -print", ALL, ""),
+    ("find . -name tmp -prune -o -type f -print", ALL, ""),
+    ("find . -not -path '*/tmp/*' -name '*.md'", ALL, ""),
+    ("find . -maxdepth 1", ALL, ""),
+    ("ls -R engine/crates", ALL, ""),
+    ("ls engine/tests/cases", ALL, ""),
+    ("ls tmp", ALL, ""),
+    ("git grep needle -- ':!*-hidden.md'", ALL, ""),
+    ("git grep -n needle -- engine/crates", ALL, ""),
+    ("git grep needle -- . ':(exclude)engine/tests/cases/*-hidden.md'", ALL, ""),
+    ("cat engine/tests/cases/a.md", ALL, ""),
+    ("grep -n needle engine/tests/cases/a.md", ALL, ""),
+    ("shasum -a 256 engine/tests/cases/*.md", ALL, ""),
 ]
 
 
@@ -816,6 +904,30 @@ def worktree_done_checks(root, expect, failures):
             failures.append(f"worktree-done, {label}: lacks {says!r} or changed something: {r.stderr.strip()[:300]}")
     r = run(done, "lead", cwd=done)
     expect("worktree-done of the checkout it runs from: refuses", r.returncode, 1, r.stderr)
+    # --target-only frees engine/target/ of a worktree whose pull request waits (decision 5):
+    # unmerged and dirty are fine; the worktree, its branch and its other files stay
+    waiting = tree("waiting", merged=False, dirty="notes.txt")
+    os.makedirs(os.path.join(waiting, "engine", "target", "debug"))
+    with open(os.path.join(waiting, "engine", "target", "debug", "big"), "w", encoding="utf-8") as f:
+        f.write("x" * 4096)
+
+    def run_target(path, role, cwd=main_tree):
+        env = {k: v for k, v in os.environ.items() if k != "TALLY_ROLE"}
+        if role != "unset":
+            env["TALLY_ROLE"] = role
+        return subprocess.run([os.path.join(root, "engine/tools/worktree-done"), "--target-only", path], capture_output=True,
+                              text=True, env=env, cwd=cwd, check=False)
+
+    r = run_target(waiting, "build")
+    expect("worktree-done --target-only as build refuses", r.returncode, 1, r.stderr)
+    r = run_target(main_tree, "lead")
+    expect("worktree-done --target-only of the main checkout refuses", r.returncode, 1, r.stderr)
+    before = branches()
+    r = run_target(waiting, "lead")
+    expect("worktree-done --target-only of a waiting worktree as lead", r.returncode, 0, r.stderr)
+    if os.path.exists(os.path.join(waiting, "engine", "target")) or not os.path.isfile(os.path.join(waiting, "notes.txt")) \
+            or branches() != before or "freed" not in r.stdout:
+        failures.append(f"worktree-done --target-only: target/ still there, or more removed: {r.stdout.strip()[:200]} {r.stderr.strip()[:200]}")
     for argv in ([], ["a", "b"]):
         r = subprocess.run([os.path.join(root, "engine/tools/worktree-done"), *argv], capture_output=True, text=True,
                            env={**os.environ, "TALLY_ROLE": "lead"}, cwd=main_tree, check=False)
@@ -826,11 +938,77 @@ def worktree_done_checks(root, expect, failures):
         failures.append(f"worktree-done as lead: the worktree or its branch is still there: {r.stdout.strip()[:200]} {r.stderr.strip()[:200]}")
 
 
+def launch_usage_checks(root, expect, failures):
+    """launch and usage, the coordinator's tools (the retro after M0, decision 4): launch's
+    dry run on the throwaway and its refusals; usage on planted transcripts, an id listed
+    twice and a call in two files counted once. No session is started."""
+    prompt = os.path.join(root, "engine", "target", "prompt.txt")
+    ids = os.path.join(root, "engine", "target", "run", "ids.txt")
+    os.makedirs(os.path.dirname(ids), exist_ok=True)
+    with open(prompt, "w", encoding="utf-8") as f:
+        f.write("You are T. Read the brief.\n")
+
+    def launch(*args, role="lead", extra=None):
+        env = {k: v for k, v in os.environ.items() if k != "TALLY_ROLE"} | (extra or {})
+        if role != "unset":
+            env["TALLY_ROLE"] = role
+        return subprocess.run([os.path.join(root, "engine/tools/launch"), *args], capture_output=True, text=True,
+                              env=env, cwd=root, check=False)
+
+    r = launch("tests", prompt, root, "--ids", ids, "--dry-run")
+    expect("launch --dry-run as lead", r.returncode, 0, r.stderr)
+    for says in ("TALLY_ROLE=tests", "CARGO_BUILD_JOBS=6", "NEXTEST_TEST_THREADS=6", "CARGO_INCREMENTAL=0", "nice -n 10",
+                 "--output-format json", "--session-id", "--effort xhigh", "dry run: nothing started"):
+        if says not in r.stdout:
+            failures.append(f"launch --dry-run: its command lacks {says!r}: {r.stdout.strip()[:300]}")
+    if os.path.exists(ids):
+        failures.append("launch --dry-run wrote the ids file")
+    r = launch("build", prompt, root, "--ids", ids, "--dry-run", "--resume", "0e1d2c3b-4a59-4687-9a1b-2c3d4e5f6a7b", role="unset")
+    expect("launch --dry-run --resume in app work", r.returncode, 0, r.stderr)
+    if "--resume 0e1d2c3b-4a59-4687-9a1b-2c3d4e5f6a7b" not in r.stdout:
+        failures.append(f"launch --resume: the command doesn't resume that id: {r.stdout.strip()[:300]}")
+    for label, args, role, extra, says in (
+        ("as build", ("tests", prompt, root, "--ids", ids, "--dry-run"), "build", None, "only a coordinator"),
+        ("an unknown role", ("tester", prompt, root, "--ids", ids, "--dry-run"), "lead", None, "isn't a role"),
+        ("a missing prompt", ("tests", prompt + ".none", root, "--ids", ids, "--dry-run"), "lead", None, "isn't a file"),
+        ("a folder that isn't a checkout", ("tests", prompt, os.path.dirname(root), "--ids", ids, "--dry-run"), "lead", None,
+         "isn't a git checkout"),
+        ("no ids file", ("tests", prompt, root, "--dry-run"), "lead", None, "usage"),
+        ("too little free disk", ("tests", prompt, root, "--ids", ids, "--dry-run"), "lead",
+         {"TALLY_LAUNCH_MIN_FREE_GB": "1000000000"}, "GB free"),
+    ):
+        r = launch(*args, role=role, extra=extra)
+        expect(f"launch refuses {label}", r.returncode, 1, r.stderr)
+        if says not in r.stderr:
+            failures.append(f"launch refuses {label}: stderr lacks {says!r}: {r.stderr.strip()[:200]}")
+    # usage: two transcripts under a planted projects folder, one call in both
+    projects = os.path.join(root, "engine", "target", "projects")
+    a, b = "11111111-1111-4111-8111-111111111111", "22222222-2222-4222-8222-222222222222"
+    call = {"type": "assistant", "message": {"id": "msg_1", "usage": {"input_tokens": 1000, "output_tokens": 200,
+                                                                      "cache_read_input_tokens": 10000}}}
+    other = {"type": "assistant", "message": {"id": "msg_2", "usage": {"input_tokens": 0, "output_tokens": 0,
+                                                                       "cache_creation_input_tokens": 800}}}
+    for folder, sid, lines in (("p1", a, [call, call]), ("p2", a, [call, other]), ("p1", b, [call])):
+        os.makedirs(os.path.join(projects, folder), exist_ok=True)
+        with open(os.path.join(projects, folder, sid + ".jsonl"), "a", encoding="utf-8") as f:
+            f.writelines(json.dumps(x) + "\n" for x in lines + [{"type": "user"}])
+    with open(ids, "w", encoding="utf-8") as f:
+        f.write(f"{a} tests\n{a} tests\n{b} build\n")
+    r = subprocess.run([os.path.join(root, "engine/tools/usage"), ids, "--projects", projects], capture_output=True, text=True, check=False)
+    expect("usage of a planted ids file", r.returncode, 0, r.stderr)
+    # a: msg_1 (1000 + 1000 + 5*200 = 3000) and msg_2 (1.25*800 = 1000); b: msg_1 again, counted once
+    for says in (f"session {a}: 2 calls, 0.00 M weighted", f"session {b}: 0 calls", "all 2 sessions"):
+        if says not in r.stdout:
+            failures.append(f"usage: lacks {says!r}: {r.stdout.strip()[:300]}")
+
+
 def setup(root):
-    for d in ("engine/tools", "engine/spec", "engine/tests/runner", "engine/crates/tally/src",
+    for d in ("engine/tools", "engine/spec", "engine/tests/runner", "engine/tests/cases", "tmp/cases-holdout",
+              "engine/crates/tally/src",
               "engine/crates/tally/benches", "engine/crates/tally-cli/src", "engine/fuzz", "engine/target", ".claude"):
         os.makedirs(os.path.join(root, d), exist_ok=True)
-    for name in ("guard", "guard.py", "stop-check", "stop_check.py", "merge-pr", "merge_pr.py", "worktree-done", "worktree_done.py"):
+    for name in ("guard", "guard.py", "stop-check", "stop_check.py", "merge-pr", "merge_pr.py", "worktree-done", "worktree_done.py",
+                 "session-start", "launch", "launch.py", "usage", "usage.py"):
         shutil.copy2(os.path.join(TOOLS, name), os.path.join(root, "engine/tools", name))
     files = {
         "engine/spec/DONE.md": "the contract\n",
@@ -838,6 +1016,7 @@ def setup(root):
         "engine/crates/tally/src/lib.rs": "//! stub\n",
         "engine/crates/tally/benches/p8_m1.rs": "//! bench\n",
         "engine/BUILD-LOG.md": "# Build log\n",
+        "engine/CLAUDE.md": "# The Tally engine: rules for the build session (planted)\n",
         ".claude/settings.json": "{}\n",
         # a cargo workspace like the engine's, for the cargo writers (F-4)
         "engine/Cargo.toml": '[workspace]\nmembers = ["crates/tally", "crates/tally-cli", "tests/runner"]\nexclude = ["fuzz"]\n',
@@ -848,6 +1027,11 @@ def setup(root):
         # commit messages for R-100 (F-8)
         "engine/target/msg-ai.txt": "Add the parser\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n",
         "engine/target/msg-ok.txt": "Add the parser\n",
+        "engine/target/msg-session.txt": "feat(load): add the parser\n\nClaude-Session: https://claude.ai/code/session_x\n",
+        # the seal's planted places (R-79, decision 9): never the real sealed files
+        "engine/tests/cases/a.md": "a case\n",
+        "engine/tests/cases/a-hidden.md": "a planted hidden key\n",
+        "tmp/cases-holdout/key.md": "a planted sealed record\n",
     }
     for path, text in files.items():
         with open(os.path.join(root, path), "w", encoding="utf-8") as f:
@@ -1003,9 +1187,15 @@ def main():
                     expect(f"Bash `{command}` as {role}", code, 2, err)
             for tree in (linked, nested):
                 subprocess.run([*git, "worktree", "remove", "--force", tree], check=False)
+        # the seal's ignore file lists the three places, unanchored (R-79, decision 9)
+        with open(os.path.join(REPO, ".ignore"), encoding="utf-8") as f:
+            listed = {line.strip() for line in f if line.strip() and not line.startswith("#")}
+        expect("the repo's .ignore lists *-hidden.md, holdout/ and cases-holdout/",
+               int({"*-hidden.md", "holdout/", "cases-holdout/"} <= listed), 1)
         # the lead's tools themselves (issue #18)
         merge_pr_checks(root, expect, failures)
         worktree_done_checks(root, expect, failures)
+        launch_usage_checks(root, expect, failures)
         # it fails closed when the git files can't be read
         with tempfile.TemporaryDirectory(prefix="tally-guard-test-nogit-") as bare:
             os.makedirs(os.path.join(bare, "engine/tools"))
@@ -1072,6 +1262,36 @@ def main():
             with tempfile.TemporaryDirectory(prefix="tally-guard-test-app-") as app:
                 code, err = run_hook(pre, app, lib, "build")
                 expect("PreToolUse hook in a project without engine/", code, 0, err)
+            # a worktree in the permanent folder beside the repo (decision 5): the hook
+            # strings run its own guard, which binds it as a checkout of the repo
+            with tempfile.TemporaryDirectory(prefix="tally-guard-test-wts-") as wts:
+                wt = os.path.join(os.path.realpath(wts), "trop-worktrees", "build-m1")
+                subprocess.run(["git", "-C", root, "worktree", "add", "-q", "-b", "build/m1", wt, "HEAD"], check=True,
+                               capture_output=True)
+                try:
+                    own = {"tool_name": "Edit", "tool_input": {"file_path": os.path.join(wt, "engine/crates/tally/src/lib.rs")}, "cwd": wt}
+                    for label, payload, role, want in (
+                        ("PreToolUse hook in trop-worktrees/build-m1: its own code as build", own, "build", 0),
+                        ("PreToolUse hook in trop-worktrees/build-m1: the main checkout's spec as build", spec, "build", 2),
+                        ("PreToolUse hook in trop-worktrees/build-m1: its own spec as rules",
+                         {**own, "tool_input": {"file_path": os.path.join(wt, "engine/spec/DONE.md")}}, "rules", 2),
+                        ("PreToolUse hook in trop-worktrees/build-m1: the main checkout's code as build", lib, "build", 2),
+                    ):
+                        code, err = run_hook(pre, wt, payload, role)
+                        expect(label, code, want, err)
+                    start = hook_command("SessionStart", "session-start")
+                    env = {**{k: v for k, v in os.environ.items() if k != "TALLY_ROLE"}, "CLAUDE_PROJECT_DIR": wt, "TALLY_ROLE": "build"}
+                    r = subprocess.run(["/bin/sh", "-c", start or "false"], capture_output=True, text=True, env=env, check=False)
+                    expect("SessionStart hook in trop-worktrees/build-m1 as build", r.returncode, 0, r.stderr)
+                    if "rules for the build session" not in r.stdout:
+                        failures.append(f"SessionStart hook in trop-worktrees/build-m1: didn't print its engine/CLAUDE.md: {r.stdout[:200]!r}")
+                    r = subprocess.run(["/bin/sh", "-c", start or "false"], capture_output=True, text=True,
+                                       env={**env, "TALLY_ROLE": "lead"}, check=False)
+                    if r.returncode != 0 or "engine-coordinator" not in r.stdout:
+                        failures.append(f"SessionStart hook as lead: doesn't name the skill engine-coordinator: {r.stdout[:200]!r}")
+                finally:
+                    subprocess.run(["git", "-C", root, "worktree", "remove", "--force", wt], check=False, capture_output=True)
+                    subprocess.run(["git", "-C", root, "branch", "-q", "-D", "build/m1"], check=False, capture_output=True)
         # the Stop hook's string fails closed too (the rest of F-10, G2-5): a stop-check that
         # can't run holds the turn, and says why
         stop = hook_command("Stop", "stop-check")

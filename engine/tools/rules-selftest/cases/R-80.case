@@ -163,3 +163,53 @@ expect: rules: .claude/agents/engine-reviewer.md changed
 planted
 --- run
 tools/check-frozen
+
+# The sums tool (the retro after M0, decision 3): any role rewrites the two checksum files,
+# but only in a merge, and only when every protected file in it is a parent's version or
+# git's clean merge of both. Each case merges in the scratch and takes it all back.
+
+case: sums-outside-a-merge
+tool: run
+expect: it runs only in a merge
+--- run
+tools/sums
+
+case: sums-hand-edit-in-a-merge
+tool: run
+exit: any
+expect: so a hand edit (R-112)
+--- run
+export GIT_AUTHOR_NAME=rules-selftest GIT_AUTHOR_EMAIL=rules-selftest@invalid GIT_COMMITTER_NAME=rules-selftest GIT_COMMITTER_EMAIL=rules-selftest@invalid
+start=$(git rev-parse HEAD); here=$(git symbolic-ref --short HEAD)
+git switch -qc planted-side && echo '# side' >> clippy.toml && git commit -qam 'planted: side'
+git switch -q "$here" && echo '# main' >> tests/GAPS.md && git commit -qam 'planted: main'
+git merge -q --no-ff --no-commit planted-side
+echo '# by hand' >> sgconfig.yml
+tools/sums
+git merge --abort; git reset -q --hard "$start"; git branch -qD planted-side
+
+case: sums-clean-merge-passes
+tool: run
+exit: any
+expect: sums: staged engine/tests/TESTS.sha256 and engine/tools/RULES.sha256
+--- run
+export GIT_AUTHOR_NAME=rules-selftest GIT_AUTHOR_EMAIL=rules-selftest@invalid GIT_COMMITTER_NAME=rules-selftest GIT_COMMITTER_EMAIL=rules-selftest@invalid
+start=$(git rev-parse HEAD); here=$(git symbolic-ref --short HEAD)
+git switch -qc planted-side && echo '# side' >> clippy.toml && git commit -qam 'planted: side'
+git switch -q "$here" && echo '# main' >> tests/GAPS.md && git commit -qam 'planted: main'
+git merge -q --no-ff --no-commit planted-side
+tools/sums
+git merge --abort; git reset -q --hard "$start"; git branch -qD planted-side
+
+case: sums-merge-commit-both-sides-pass
+tool: run
+exit: any
+expect: now `git commit --amend --no-edit`
+--- run
+export GIT_AUTHOR_NAME=rules-selftest GIT_AUTHOR_EMAIL=rules-selftest@invalid GIT_COMMITTER_NAME=rules-selftest GIT_COMMITTER_EMAIL=rules-selftest@invalid
+start=$(git rev-parse HEAD); here=$(git symbolic-ref --short HEAD)
+git switch -qc planted-side && echo '# side' >> tests/GAPS.md && git commit -qam 'planted: side'
+git switch -q "$here" && { echo '# main'; cat tests/GAPS.md; } > zz-gaps && mv zz-gaps tests/GAPS.md && git commit -qam 'planted: main'
+git merge -q --no-ff -m 'planted: the merge' planted-side
+tools/sums --check && tools/sums
+git reset -q --hard "$start"; git branch -qD planted-side

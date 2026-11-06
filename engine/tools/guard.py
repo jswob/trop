@@ -22,6 +22,10 @@ tests and spec don't write the sealed tmp/holdout/ and tmp/cases-holdout/, or tm
 The oracle is the spec's reference interpreter: engine/tools/refcore/, refcore_fast/
 and engine/tools/SHA256SUMS (refcore's checksums). It is frozen with the spec.
 
+In every role it also keeps the seal (R-79, decision 9): a search or listing that reaches
+tmp/holdout/, tmp/cases-holdout/ or engine/tests/cases/*-hidden.md without excluding them
+is refused (check_search).
+
 Every checkout of the repo is judged alike: the main checkout and each linked worktree,
 found from the git files, so a session in one can't write another's spec (F-1).
 
@@ -72,10 +76,18 @@ RULE_GLOBS = [
     # the builder's instructions (D6-3, F-23); the rest of .claude/ is the toolkit's
     "engine/CLAUDE.md",
     ".claude/skills/engine-rust/*",
+    # the coordinator's procedure (the retro after M0, decision 4)
+    ".claude/skills/engine-coordinator/*",
     ".claude/agents/engine-reviewer.md",
     # the rules' full texts, which the skill and the reviewer cite (issue #3)
     "engine/RULEBOOK.md",
     "engine/BUILDER.md",
+    # the conventions and their templates, which commit-check and pr-body read (the retro
+    # after M0, decisions 6 to 8)
+    "engine/CONVENTIONS.md",
+    "engine/templates/*",
+    # the seal's ignore file, which ripgrep and the Grep tool read (R-79, decision 9)
+    ".ignore",
 ]
 CONFIG_NAMES = {"clippy.toml", ".clippy.toml", "rustfmt.toml", ".rustfmt.toml"}
 # The oracle: the spec's reference interpreter, frozen with it and written only in the
@@ -146,7 +158,8 @@ GIT_WRITES = {
 # git commands that take a message (R-100)
 GIT_MESSAGES = {"commit", "merge", "tag", "notes", "commit-tree"}
 FIND_WRITES = {"-delete", "-exec", "-execdir", "-ok", "-okdir", "-fprint", "-fprintf", "-fls"}
-ATTRIBUTION = ("co-authored-by", "noreply@anthropic.com", "generated with [claude", "generated with claude")
+ATTRIBUTION = ("co-authored-by", "noreply@anthropic.com", "generated with [claude", "generated with claude",
+               "claude-session:", "claude.ai/code/session")  # the last two: the retro after M0 (R-100)
 # cargo commands that write sources or manifests: judged by the manifests they act on
 CARGO_WRITES = {"fmt", "fix", "add", "remove", "rm"}
 
@@ -997,7 +1010,7 @@ def check_push(rest, cwd, role, state):
             raise Refused(f"{what} to master ({spec}): {LANDING}.")
 
 
-def check_gh(args, role):
+def check_gh(args, role, cwd):
     """R-132: no `gh pr merge`, and no `gh api` call that merges a pull request or a
     branch, moves or deletes master's ref, or changes master's protection, in every
     role, the lead included: the lead merges only through engine/tools/merge-pr."""
@@ -1010,6 +1023,18 @@ def check_gh(args, role):
     what = f"engine guard (role {role}): refused"
     if words[:2] == ["pr", "merge"]:
         raise Refused(f"{what} `gh pr merge`: {LANDING}.")
+    if role != "unset" and words[:1] in (["pr"], ["issue"]):
+        # the file a description or a comment is read from (R-100, the retro after M0)
+        for k, a in enumerate(args):
+            name = a.partition("=")[2] if a.startswith("--body-file=") else (args[k + 1] if a in ("-F", "--body-file") and k + 1 < len(args) else None)
+            if name and name != "-":
+                try:
+                    with open(resolve(name, cwd), encoding="utf-8", errors="replace") as f:
+                        text = f.read().casefold()
+                except OSError:
+                    continue
+                if any(m in text for m in ATTRIBUTION):
+                    raise Refused(f"{what} a pull request or issue text with an AI co-author or attribution line, in {name} (R-100).")
     if words[:1] == ["api"] and any(GH_API_MERGES.search(a) for a in args):
         raise Refused(f"{what} a `gh api` call that merges, moves master or changes its protection: {LANDING}.")
 
@@ -1055,6 +1080,9 @@ def check_git(args, cwd, role, state):
         check_message(sub, rest, cwd, role, state)
     if sub == "push":
         check_push(rest, cwd, role, state)
+        return
+    if sub == "grep":
+        check_git_grep(rest, cwd, role)
         return
     if sub not in GIT_WRITES or sub == "commit":
         return
@@ -1129,6 +1157,315 @@ def strip_prefixes(words, cwd, role, depth, state):
     return words, cwd
 
 
+# --- the seal (R-79, the retro after M0, decision 9) ---------------------------------
+# The sealed exam and its record, tmp/holdout/ and tmp/cases-holdout/, are never listed or
+# searched, and the hidden keys, engine/tests/cases/*-hidden.md, are never read. The root
+# `.ignore` keeps ripgrep and the Grep tool off them; this refuses the searches that read
+# no ignore file, or are told to skip it, when their paths reach a sealed place unexcluded.
+
+HIDDEN_DIR = "engine/tests/cases"
+HIDDEN_SAMPLE = "zz-hidden.md"  # a name `*-hidden.md` matches, for testing exclusion globs
+GREPS = {"grep", "egrep", "fgrep", "rgrep", "ggrep"}
+READERS = {"cat", "head", "tail", "less", "more", "bat", "strings", "xxd", "od", "nl"}
+SEARCH_VALUED = {
+    "grep": {"-e", "-f", "-m", "-A", "-B", "-C", "-d", "-D", "--regexp", "--file", "--max-count", "--context",
+             "--after-context", "--before-context", "--directories", "--devices", "--label", "--color", "--colour"},
+    "rg": {"-e", "-f", "-g", "-m", "-A", "-B", "-C", "-t", "-T", "-j", "-M", "-r", "-d", "-E", "--regexp", "--file",
+           "--glob", "--iglob", "--type", "--type-not", "--type-add", "--threads", "--max-columns", "--replace",
+           "--max-depth", "--maxdepth", "--encoding", "--sort", "--sortr", "--pre", "--pre-glob", "--max-count",
+           "--context", "--after-context", "--before-context", "--ignore-file", "--max-filesize", "--colors"},
+    "fd": {"-e", "-E", "-t", "-d", "-j", "-x", "-X", "-S", "-c", "--extension", "--exclude", "--type", "--max-depth",
+           "--min-depth", "--threads", "--size", "--changed-within", "--changed-before", "--owner", "--color",
+           "--base-directory", "--search-path", "--ignore-file", "--exec", "--exec-batch", "--format"},
+    "git-grep": {"-e", "-f", "-A", "-B", "-C", "-m", "--max-depth", "--threads", "--max-count", "--context",
+                 "--after-context", "--before-context", "-O", "--open-files-in-pager", "--color"},
+}
+RG_UNIGNORE = {"-u", "-uu", "-uuu", "--unrestricted", "--no-ignore", "--no-ignore-dot", "--no-ignore-parent",
+               "--no-ignore-files"}
+FD_UNIGNORE = {"-u", "-uu", "-I", "--unrestricted", "--no-ignore", "--no-ignore-parent"}
+
+
+def sealed_places():
+    """[(kind, realpath)] of the sealed places that exist, in every checkout: `holdout`
+    (a folder never listed or searched) and `hidden` (the cases folder, whose *-hidden.md
+    files are never read)."""
+    found = []
+    for root in roots():
+        for kind, r in [("holdout", f) for f in SEALED_SCRATCH] + [("hidden", HIDDEN_DIR)]:
+            p = os.path.join(root, r)
+            if os.path.isdir(p):
+                found.append((kind, os.path.realpath(p)))
+    return found
+
+
+def glob_re(pattern):
+    """A gitignore-style glob as a regex: `*` and `?` stay inside one name, `**` crosses."""
+    out, i = "", 0
+    while i < len(pattern):
+        c = pattern[i]
+        if pattern.startswith("**", i):
+            out, i = out + ".*", i + 2
+            continue
+        if c == "*":
+            out += "[^/]*"
+        elif c == "?":
+            out += "[^/]"
+        elif c == "[":
+            j = pattern.find("]", i + 1)
+            if j < 0:
+                out += re.escape(c)
+            else:
+                out, i = out + "[" + pattern[i + 1 : j].replace("!", "^", 1) + "]", j + 1
+                continue
+        else:
+            out += re.escape(c)
+        i += 1
+    return re.compile(out, re.IGNORECASE)
+
+
+def ignore_glob_hits(pattern, parts):
+    """Whether a gitignore-style pattern (as `rg -g '!…'`, `fd -E` read it) matches the
+    path `parts` (relative to the search root) or one of its folders. A pattern with no
+    `/` but at its end matches a name at any depth; with one, it is anchored at the root."""
+    p = pattern.rstrip("/")
+    if p.endswith("/**"):
+        p = p[:-3]
+    if p.startswith("**/"):
+        p = p[3:]
+        anchored = False
+    else:
+        anchored = "/" in p
+    p = p.lstrip("/")
+    if not p:
+        return False
+    rx = glob_re(p)
+    if not anchored:
+        return any(rx.fullmatch(name) for name in parts)
+    return any(rx.fullmatch("/".join(parts[: k + 1])) for k in range(len(parts)))
+
+
+def reached(path, sealed):
+    """How the search root `path` (a realpath) reaches a sealed place: ('inside', []) when
+    it is in it or is it, ('covers', the names from the root down to it) when it holds it,
+    or None."""
+    p, s = path.casefold(), sealed.casefold()
+    if p == s or p.startswith(s + os.sep):
+        return "inside", []
+    if s.startswith(p.rstrip(os.sep) + os.sep):
+        return "covers", sealed[len(p.rstrip(os.sep)) + 1 :].split(os.sep)
+    return None
+
+
+def seal_refusal(role, what, kind, sealed, how):
+    place = "the hidden keys (engine/tests/cases/*-hidden.md)" if kind == "hidden" else f"the sealed {sealed}"
+    hint = ("exclude them (grep --exclude='*-hidden.md' --exclude-dir=holdout --exclude-dir=cases-holdout; "
+            "rg/fd -g '!**/*-hidden.md' -g '!tmp'; find -path '*/tmp' -prune; git grep … -- ':!*-hidden.md'), "
+            "or search a narrower folder")
+    if how == "inside":
+        return Refused(f"engine guard (role {role}): refused {what} inside {place}: only the exam side opens it (R-79, the seal).")
+    return Refused(f"engine guard (role {role}): refused {what}, which reaches {place}: {hint} (R-79, the seal).")
+
+
+def check_seal(what, roots_, role, excluded, kinds=("holdout", "hidden")):
+    """Refuses when a search root reaches a sealed place of one of `kinds` that `excluded`
+    (kind, the names from the root down to it) doesn't rule out. A search aimed inside a
+    sealed folder passes only in app work, which the exam side is."""
+    places = sealed_places()
+    for r in roots_:
+        for kind, sealed in places:
+            if kind not in kinds:
+                continue
+            hit = reached(os.path.realpath(r), sealed)
+            if hit is None:
+                continue
+            how, names = hit
+            if how == "inside" and kind == "holdout":
+                if role != "unset":
+                    raise seal_refusal(role, what, kind, sealed, how)
+                continue
+            if not excluded(kind, names):
+                raise seal_refusal(role, what, kind, sealed, how)
+
+
+def read_options(args, valued):
+    """(options as (name, value) pairs, operands) of a command line, `--` ending options."""
+    opts, operands_, i = [], [], 0
+    while i < len(args):
+        a = args[i]
+        i += 1
+        if a == "--":
+            operands_ += args[i:]
+            break
+        if not a.startswith("-") or a == "-":
+            operands_.append(a)
+            continue
+        key, eq, value = a.partition("=")
+        if a.startswith("--"):
+            if not eq and key in valued and i < len(args):
+                value, i = args[i], i + 1
+            opts.append((key, value))
+            continue
+        if re.fullmatch(r"-u+", a):
+            opts.append((a, ""))  # rg's and fd's -u, -uu, -uuu
+            continue
+        hit = short_value(a, "".join(v[1] for v in valued if len(v) == 2))
+        flags = a[1 : a.index(hit[0], 1)] if hit else a[1:]
+        opts += [("-" + f, "") for f in flags]
+        if hit:
+            value = hit[1]
+            if not value and i < len(args):
+                value, i = args[i], i + 1
+            opts.append(("-" + hit[0], value))
+    return opts, operands_
+
+
+def glob_operands(name, operands_, cwd, role):
+    """A shell glob the guard sees unexpanded (`cases/*.md`, `**/*.md`) is expanded here: it
+    may not name a hidden key or a file in a sealed folder; nor may a plain operand."""
+    for tok in operands_:
+        if dynamic(tok):
+            continue
+        path = resolve(tok, cwd)
+        hits = glob.glob(path, recursive=True) if re.search(r"[*?[]", tok) else [path]
+        for h in hits:
+            real = os.path.realpath(h)
+            for kind, sealed in sealed_places():
+                if reached(real, sealed) is None or reached(real, sealed)[0] != "inside":
+                    continue
+                if kind == "holdout" and role != "unset":
+                    raise seal_refusal(role, f"`{name}`", kind, sealed, "inside")
+                if kind == "hidden" and os.path.basename(real).casefold().endswith("-hidden.md") and role != "unset":
+                    raise seal_refusal(role, f"`{name}`", kind, sealed, "inside")
+
+
+def check_search(name, args, cwd, role):
+    """The seal's tripwire for one search or listing command (R-79, decision 9)."""
+    if name in READERS:
+        glob_operands(name, [a for a in args if not a.startswith("-")], cwd, role)
+        return
+    if name in GREPS:
+        opts, rest = read_options(args, SEARCH_VALUED["grep"])
+        keys = {k for k, _ in opts}
+        pattern_given = keys & {"-e", "-f", "--regexp", "--file"}
+        files = rest if pattern_given else rest[1:]
+        glob_operands(name, files, cwd, role)
+        recursive = name == "rgrep" or keys & {"-r", "-R", "--recursive", "--dereference-recursive"} or any(
+            k in ("-d", "--directories") and v == "recurse" for k, v in opts)
+        if not recursive:
+            return
+        excl = [v for k, v in opts if k == "--exclude"]
+        excl_dir = [v for k, v in opts if k == "--exclude-dir"]
+        incl = [v for k, v in opts if k == "--include"]
+
+        def excluded(kind, names):
+            if any(fnmatch.fnmatch(n, g) for g in excl_dir for n in names):
+                return True
+            if kind == "hidden":
+                if any(fnmatch.fnmatch(HIDDEN_SAMPLE, g) for g in excl):
+                    return True
+                return bool(incl) and not any(fnmatch.fnmatch(HIDDEN_SAMPLE, g) for g in incl)
+            return False
+
+        check_seal(f"a recursive `{name}`", [resolve(f, cwd) for f in files] or [cwd], role, excluded)
+        return
+    if name in ("rg", "fd", "fdfind"):
+        tool = "rg" if name == "rg" else "fd"
+        opts, rest = read_options(args, SEARCH_VALUED[tool])
+        keys = {k for k, _ in opts}
+        if tool == "rg":
+            pattern_given = keys & {"-e", "-f", "--regexp", "--file"} or "--files" in keys or "--type-list" in keys
+            paths = rest if pattern_given else rest[1:]
+            globs = [v for k, v in opts if k in ("-g", "--glob", "--iglob")]
+            negative = [g[1:] for g in globs if g.startswith("!")]
+            positive = [g for g in globs if not g.startswith("!")]
+            unignored = bool(keys & RG_UNIGNORE) or bool(positive)  # a positive glob overrides every ignore file
+        else:
+            paths = rest[1:] + [v for k, v in opts if k in ("--search-path", "--base-directory")]
+            negative = [v for k, v in opts if k in ("-E", "--exclude")]
+            positive = []
+            unignored = bool(keys & FD_UNIGNORE)
+        glob_operands(name, paths, cwd, role)
+        if not unignored:
+            return
+        depth = next((int(v) for k, v in opts if k in ("-d", "--max-depth", "--maxdepth") and v.isdigit()), None)
+
+        def excluded(kind, names):
+            parts = names + [HIDDEN_SAMPLE] if kind == "hidden" else names + ["zz"]
+            if depth is not None and depth < len(parts):
+                return True
+            if any(ignore_glob_hits(g, parts) for g in negative):
+                return True
+            # a positive glob limits the files to those it matches: a sealed folder may hold any
+            return kind == "hidden" and bool(positive) and not any(ignore_glob_hits(g, parts) for g in positive)
+
+        check_seal(f"`{name}` told to skip the ignore files", [resolve(p, cwd) for p in paths] or [cwd], role, excluded)
+        return
+    if name in ("find", "gfind"):
+        k = next((k for k, a in enumerate(args) if a.startswith(("-", "(", "!", ")"))), len(args))
+        starts, expr = args[:k], args[k:]
+        # an action that runs a search or a reader opens the files it finds
+        reads = any(a in ("-exec", "-execdir", "-ok", "-okdir") and j + 1 < len(expr)
+                    and os.path.basename(expr[j + 1]) in GREPS | READERS | {"rg"} for j, a in enumerate(expr))
+        depth = next((int(expr[j + 1]) for j, a in enumerate(expr[:-1]) if a == "-maxdepth" and expr[j + 1].isdigit()), None)
+        pruned = [expr[j - 1] for j, a in enumerate(expr) if a == "-prune" and j >= 2 and expr[j - 2] in
+                  ("-path", "-wholename", "-ipath", "-name", "-iname")]
+        prune_kind = {expr[j - 1]: expr[j - 2] for j, a in enumerate(expr) if a == "-prune" and j >= 2}
+        negated = [expr[j + 2] for j, a in enumerate(expr[:-2]) if a in ("!", "-not") and expr[j + 1] in
+                   ("-path", "-wholename", "-ipath", "-name", "-iname")]
+        names = [expr[j + 1] for j, a in enumerate(expr[:-1]) if a in ("-name", "-iname") and (j == 0 or expr[j - 1] not in ("!", "-not"))
+                 and (j + 2 >= len(expr) or expr[j + 2] != "-prune")]
+        for start in starts or ["."]:
+            def excluded(kind, parts, start=start):
+                tail = parts + [HIDDEN_SAMPLE if kind == "hidden" else "zz"]
+                if depth is not None and depth < len(tail):
+                    return True
+                shown = [start.rstrip("/") + "/" + "/".join(tail[: n + 1]) for n in range(len(tail))]
+                for pat in pruned:
+                    by_name = prune_kind.get(pat) in ("-name", "-iname")
+                    if any(fnmatch.fnmatch(os.path.basename(s) if by_name else s, pat) for s in shown[:-1]):
+                        return True
+                for pat in negated:
+                    if fnmatch.fnmatch(shown[-1], pat) or fnmatch.fnmatch(tail[-1], pat):
+                        return True
+                return kind == "hidden" and bool(names) and not any(fnmatch.fnmatch(HIDDEN_SAMPLE, n) for n in names)
+
+            kinds = ("holdout", "hidden") if reads else ("holdout",)
+            check_seal(f"`{name}`", [resolve(start, cwd)], role, excluded, kinds)
+        return
+    if name in ("ls", "gls"):
+        opts, rest = read_options(args, {"-I", "--ignore", "-w", "--width", "--color", "--format", "--sort", "--time"})
+        keys = {k for k, _ in opts}
+        glob_operands(name, rest, cwd, role)
+        if keys & {"-R", "--recursive"}:
+            ignored = [v for k, v in opts if k in ("-I", "--ignore")]
+            check_seal("`ls -R`", [resolve(p, cwd) for p in rest] or [cwd], role,
+                       lambda kind, names: any(fnmatch.fnmatch(n, g) for g in ignored for n in names), ("holdout",))
+
+
+def check_git_grep(rest, cwd, role):
+    """`git grep` reads every tracked file under the cwd, the hidden keys among them; with
+    --no-index or --untracked --no-exclude-standard, the sealed folders too (R-79)."""
+    own, specs = (rest[: rest.index("--")], rest[rest.index("--") + 1 :]) if "--" in rest else (rest, None)
+    opts, operands_ = read_options(own, SEARCH_VALUED["git-grep"])
+    keys = {k for k, _ in opts}
+    if specs is None:
+        # without `--`, the words after the pattern are revisions or paths: a path exists or is magic
+        words = operands_ if keys & {"-e", "-f"} else operands_[1:]
+        specs = [w for w in words if w.startswith(":") or os.path.lexists(resolve(w, cwd))]
+    magic = re.compile(r":(!|\^|\([^)]*exclude[^)]*\))")
+    exclude = [magic.sub("", s, count=1) for s in specs if magic.match(s)]
+    include = [re.sub(r"^:\([^)]*\)", "", s) for s in specs if not magic.match(s)]
+    kinds = ("holdout", "hidden") if "--no-index" in keys or {"--untracked", "--no-exclude-standard"} <= keys else ("hidden",)
+
+    def excluded(kind, names):
+        tail = names + [HIDDEN_SAMPLE if kind == "hidden" else "zz"]
+        shown = ["/".join(tail[n:]) for n in range(len(tail))]  # a pathspec is relative to the cwd or the top
+        return any(fnmatch.fnmatch(s, p) or fnmatch.fnmatch(s, p.rstrip("/") + "/*") for p in exclude for s in shown)
+
+    roots_ = [resolve(s or ".", cwd) for s in include if not re.search(r"[*?[]", s)] or [cwd]
+    check_seal("`git grep`", roots_, role, excluded, kinds)
+
+
 def check_segment(argv, cwd, role, depth, state):
     """Checks one simple command; returns the cwd after it (cd)."""
     # redirections first, wherever they sit
@@ -1163,6 +1500,8 @@ def check_segment(argv, cwd, role, depth, state):
         return cwd
     name = os.path.basename(words[0])
     args = words[1:]
+    if name in GREPS or name in READERS or name in ("rg", "fd", "fdfind", "find", "gfind", "ls", "gls"):
+        check_search(name, args, cwd, role)
     if name in ("cd", "pushd"):
         target = args[-1] if args else HOME
         if target != "-":
@@ -1258,7 +1597,7 @@ def check_segment(argv, cwd, role, depth, state):
                 check_target(m, cwd, role, f"`cargo {sub}` (it acts on each package's files: name yours with -p)")
         return cwd
     if name == "gh":
-        check_gh(args, role)
+        check_gh(args, role, cwd)
         return cwd
     if name == "git":
         check_git(args, cwd, role, state)
@@ -1284,7 +1623,10 @@ def check_command(command, cwd, role, depth=0):
             raise Refused(f"engine guard (role build): refused a command naming disableAllHooks (R-81). {REPORT}")
         if "tally_role" in folded:
             raise Refused(f"engine guard (role build): refused a command naming TALLY_ROLE (R-79). {REPORT}")
-    if role != "unset" and re.search(r"\bgit\b", command) and re.search(r"\b(commit|merge|tag|notes|commit-tree)\b", command):
+    messages = re.search(r"\bgit\b", command) and re.search(r"\b(commit|merge|tag|notes|commit-tree)\b", command)
+    # a pull request's or an issue's text too (the retro after M0): `gh pr create --body …`
+    messages = messages or re.search(r"\bgh\b.*\b(pr|issue)\b.*\b(create|edit|comment|review)\b", command, re.S)
+    if role != "unset" and messages:
         if any(m in command.casefold() for m in ATTRIBUTION):
             raise Refused(f"engine guard (role {role}): refused a commit with an AI co-author or attribution line (R-100).")
     command, bodies = strip_heredocs(command)

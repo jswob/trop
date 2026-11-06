@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# An engine pull request's description has the convention's sections (R-100): engine/tools/pr-body FILE
+d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || exit 1
+exec python3 -I -B "$d/pr_body.py" "$@"

@@ -14,3 +14,52 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 git add -A && git -c user.name=rules-selftest -c user.email=rules-selftest@invalid commit -q -F zz-message.txt
 tools/commit-check HEAD~1
 git reset -q --hard HEAD~1
+
+# The retro after M0 (2026-11-05): the harness's session lines are attribution too, and a
+# commit touching the engine carries engine/CONVENTIONS.md's subject (decision 6).
+
+case: session-line-in-a-commit
+tool: run
+exit: any
+expect: an AI co-author or attribution line: 'Claude-Session:
+--- write zz-message.txt
+feat(rules): a planted commit
+
+Claude-Session: https://claude.ai/code/session_planted
+--- run
+git add -A && git -c user.name=rules-selftest -c user.email=rules-selftest@invalid commit -q -F zz-message.txt
+tools/commit-check HEAD~1
+git reset -q --hard HEAD~1
+
+case: subject-off-the-conventions
+tool: run
+exit: any
+expect: the subject isn't `type(scope): …`
+--- write zz-planted.txt
+planted
+--- run
+git add -A && git -c user.name=rules-selftest -c user.email=rules-selftest@invalid commit -q -m "M1, G2: a planted subject in the old form (issue #56)"
+tools/commit-check HEAD~1
+git reset -q --hard HEAD~1
+
+case: subject-over-72-characters
+tool: run
+exit: any
+expect: characters, over 72
+--- write zz-planted.txt
+planted
+--- run
+git add -A && git -c user.name=rules-selftest -c user.email=rules-selftest@invalid commit -q -m "feat(load): a planted subject that runs on and on past the seventy-two characters"
+tools/commit-check HEAD~1
+git reset -q --hard HEAD~1
+
+case: subject-on-the-conventions-passes
+tool: run
+exit: any
+expect: commit-check: 0 rule-changing commits, no attribution line
+--- write zz-planted.txt
+planted
+--- run
+git add -A && git -c user.name=rules-selftest -c user.email=rules-selftest@invalid commit -q -m "feat(load): a planted subject on the conventions" -m "Issue: #56"
+tools/commit-check HEAD~1
+git reset -q --hard HEAD~1

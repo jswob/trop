@@ -43,7 +43,9 @@ OUTSIDE = [
     ".github/workflows/engine.yml",
     ".claude/settings.json",
     ".claude/skills/engine-rust",
+    ".claude/skills/engine-coordinator",
     ".claude/agents/engine-reviewer.md",
+    ".ignore",
 ]
 LOCAL_SETTINGS = ".claude/settings.local.json"
 

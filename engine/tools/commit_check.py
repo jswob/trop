@@ -4,8 +4,14 @@ it after `check full`, on a pull request only, against the branch it merges into
     engine/tools/commit-check BASE      the commits in BASE..HEAD, merges left out
 
 It fails on:
-  - a commit message with an AI co-author or attribution line (R-100). The guard's
-    tripwire reads only the command text; this reads the commits themselves.
+  - a commit message with an AI co-author or attribution line (R-100): a co-author, a
+    "generated with Claude" line, a `Claude-Session:` line or a claude.ai session link
+    (the retro after M0). The guard's tripwire reads only the command text; this reads
+    the commits themselves.
+  - a commit that touches engine/, .github/workflows/engine.yml or .claude/skills/engine-*
+    whose subject isn't `type(scope): …` from engine/CONVENTIONS.md's lists, or is over
+    72 characters (R-100, the retro after M0, decision 6). A commit whose parent has no
+    engine/CONVENTIONS.md is listed, never failed.
   - a commit that changes a rule file (the guard's list, the CI workflow and the
     settings) without a trailer line `Rule-Change: R-<n> approved <YYYY-MM-DD> …`, or
     without changing tools/RULES.sha256 and a proof (a selftest case or guard-test) in
@@ -34,7 +40,14 @@ sys.path.insert(0, TOOLS)
 import check_frozen  # noqa: E402  the list of files outside engine/ that are rule files
 import guard  # noqa: E402  the one list of rule files
 
-ATTRIBUTION = re.compile(r"co-authored-by:|noreply@anthropic\.com|generated with \[?claude", re.IGNORECASE)
+ATTRIBUTION = re.compile(r"co-authored-by:|noreply@anthropic\.com|generated with \[?claude|claude-session:|claude\.ai/code/session",
+                         re.IGNORECASE)
+# engine/CONVENTIONS.md's commit subject: `type(scope): what changes`, at most 72 characters
+TYPES = ("feat", "fix", "spec", "test", "refactor", "perf", "docs", "ci", "chore")
+SCOPES = ("parse", "format", "load", "eval", "walk", "book", "ask", "num", "time", "refcore", "fuzz", "rules")
+SUBJECT = re.compile(rf"^({'|'.join(TYPES)})\(({'|'.join(SCOPES)})\): \S.*$")
+SUBJECT_MAX = 72
+CONVENTIONS = "engine/CONVENTIONS.md"
 TRAILER = re.compile(r"^Rule-Change: R-([1-9][0-9]*) approved (\d{4}-\d{2}-\d{2})\b(?P<rest>.*)$", re.MULTILINE)
 SELF = "engine/tools/commit_check.py"
 LOGGED_RED = re.compile(r"^Logged-Red:[ \t]*(?P<ids>.*)$", re.MULTILINE)
@@ -70,8 +83,28 @@ def logged_red(short, message, changed, later, problems, reds):
         problems.append(f"{short}: a logged red with no later commit changing engine/crates/ on the branch (R-77)")
 
 
+def engine_commit(changed):
+    return any(p.startswith(("engine/", ".claude/skills/engine-")) or p == ".github/workflows/engine.yml" for p in changed if p)
+
+
+def subject(sha, short, title, changed, problems, listed):
+    """engine/CONVENTIONS.md's subject, for a commit that touches the engine (decision 6)."""
+    if not engine_commit(changed):
+        return
+    if SUBJECT.match(title) and len(title) <= SUBJECT_MAX:
+        return
+    before = subprocess.run(["git", "-C", ROOT, "cat-file", "-e", f"{sha}^:{CONVENTIONS}"], capture_output=True, check=False)
+    if before.returncode != 0:
+        listed.append(f"{short}: its subject is off the conventions (made before {CONVENTIONS})")
+    elif not SUBJECT.match(title):
+        problems.append(f"{short}: the subject isn't `type(scope): …` with a type from {', '.join(TYPES)} "
+                        f"and a scope from {', '.join(SCOPES)} ({CONVENTIONS}, R-100)")
+    else:
+        problems.append(f"{short}: the subject is {len(title)} characters, over {SUBJECT_MAX} ({CONVENTIONS}, R-100)")
+
+
 def check(base):
-    problems, listed, reds = [], [], []
+    problems, listed, reds, early = [], [], [], []
     shas = git("rev-list", "--no-merges", "--reverse", f"{base}..HEAD").split()
     files = {sha: git("show", "--format=", "--name-only", "--no-renames", sha).split("\n") for sha in shas}
     for k, sha in enumerate(shas):
@@ -82,6 +115,7 @@ def check(base):
             if ATTRIBUTION.search(line):
                 problems.append(f"{short}: an AI co-author or attribution line: {line.strip()!r} (R-100)")
         changed = files[sha]
+        subject(sha, short, title, changed, problems, early)
         logged_red(short, message, changed, [files[s] for s in shas[k + 1:]], problems, reds)
         rules = sorted(p for p in changed if p and is_rule(p))
         if not rules:
@@ -100,7 +134,7 @@ def check(base):
         no_case = any("no case:" in rest for _, _, rest in trailers)
         if not no_case and not any(p.startswith(PROOFS) for p in changed):
             problems.append(f"{short}: changes rule files with no selftest case or guard-test row, and its trailer gives no 'no case:' reason (R-112)")
-    return problems, listed, reds
+    return problems, listed, reds, early
 
 
 def main():
@@ -108,7 +142,7 @@ def main():
         print("usage: engine/tools/commit-check BASE", file=sys.stderr)
         return 64
     try:
-        problems, listed, reds = check(sys.argv[1])
+        problems, listed, reds, early = check(sys.argv[1])
     except RuntimeError as e:
         print(f"FAIL commit-check: {e}")
         return 1
@@ -116,6 +150,8 @@ def main():
         print(f"commit-check: rule change: {line}")
     for line in reds:
         print(f"commit-check: logged red: {line}")
+    for line in early:
+        print(f"commit-check: listed: {line}")
     for p in problems:
         print(f"FAIL {p}")
     if problems:

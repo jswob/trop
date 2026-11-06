@@ -61,3 +61,13 @@ expect: sets alias.clippy, which changes the engine's build (R-82)
 clippy = "check"
 --- run
 tools/check-rules
+
+# The retro after M0 (decision 5): check sets CARGO_INCREMENTAL=0 unless the caller sets 0
+# or 1, so a worktree's target/ holds no incremental caches.
+case: incremental-off-by-default
+tool: run
+exit: any
+expect: incremental=0 incremental=1 incremental=0
+--- run
+printf 'import sys\nsys.path.insert(0, "tools")\nimport check\nprint("incremental=" + check.clean_env().get("CARGO_INCREMENTAL", "unset"), end=" ")\n' > zz_incr.py
+env -u CARGO_INCREMENTAL python3 -I -B zz_incr.py; CARGO_INCREMENTAL=1 python3 -I -B zz_incr.py; CARGO_INCREMENTAL=yes python3 -I -B zz_incr.py; echo
