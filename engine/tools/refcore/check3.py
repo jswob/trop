@@ -1629,6 +1629,50 @@ def m_check_seen_day_limits(self):
                             mi.decl.loc)
 
 
+def m_check_scenario_moves(self):
+    """L §6.4 ("A move the scenario declares books nothing before D: an instance whose day, a window's first day, or a
+    leg's own day falls before D is left out (LOAD-SCENARIO where load sees the day)"), §8.3 item 9 (tally 2.1.6,
+    issue #75): a move a scenario's file declares, whose day or leg's own day load sees, folded at every key of its
+    bindings, before the scenario's from, is refused at load: the first such move by id, at its line or its leg's,
+    with the engine's bytes (load/across.rs). A fold that gives no day refuses nothing. refcore 2.1.5 refused it only
+    as the walk reached the instance (moves.m_before_scen_from), so an ask that didn't reach it answered."""
+    m = self.m
+    import itertools
+    from .evaluate import Engine, Ctx
+    from .moves import day_lo
+    froms = getattr(m, 'scen_from', {})
+    eng = None
+    for mid in sorted(m.moves):
+        mi = m.moves[mid]
+        sc = getattr(mi.decl, '_scen', None) if mi.decl is not None else None
+        frm = froms.get(sc) if sc is not None else None
+        if frm is None:
+            continue
+        days = [(mi.decl.on, mi.decl.loc)] + [(ln.on, ln.loc) for ln in mi.decl.legs if ln.on is not None]
+        days = [(e, loc) for e, loc in days if e is not None and self.seen_day(e, mi)]
+        if not days:
+            continue
+        doms = []
+        for b in mi.binds:
+            dom = getattr(b, 'dom', None)
+            doms.append(m.indexes[dom[1]].keys if isinstance(dom, tuple) and dom[0] == 'index' else None)
+        if any(d is None for d in doms):
+            continue
+        if eng is None:
+            eng = Engine(m)
+        ctx = Ctx(None, m.on)
+        for keys in itertools.product(*doms):
+            env = dict((b.var, k) for b, k in zip(mi.binds, keys))
+            for e, loc in days:
+                try:
+                    first = day_lo(eng.ev(e, env, ctx))
+                except TallyError:
+                    continue
+                if first is not None and first < frm:
+                    raise LoadError('LOAD-SCENARIO', 'move %s of %s books on %s, before %s' % (mid, sc, first, frm),
+                                    loc)
+
+
 def m_check_settlement_units(self):
     """L §5.14.3 (a settlement leg "in another unit than the leg's", LOAD-UNIT), E §3.1 (load once per reality,
     whatever the asks; tally 2.1.6, issue #72): an observed row that fulfils an adjustment of a leg whose kind states
@@ -1785,8 +1829,11 @@ def m_check_proj_seen(self):
         if mks is None:
             continue
         for rm in rmoves:
-            if rm is mi or rm.decl.when is not None or rm.decl.at is None or not self.seen_day(rm.decl.on, rm) or \
-                    not self.seen_day(rm.decl.at, rm):
+            # a move with no at reads nothing law-dated (L §5.11), so its random amount is dated by its day alone (L
+            # §5.16 "a random amount dated after t"): load sees it where it sees the day (tally 2.1.6, issue #75, as the
+            # engine's load/across.rs; refcore 2.1.5 left such a move to the run)
+            if rm is mi or rm.decl.when is not None or not self.seen_day(rm.decl.on, rm) or \
+                    (rm.decl.at is not None and not self.seen_day(rm.decl.at, rm)):
                 continue
             rr = rreads(rm, target)
             rks = keysets(rm)
@@ -1805,7 +1852,7 @@ def m_check_proj_seen(self):
                 for renv in rks:
                     try:
                         rday = eng.ev(rm.decl.on, renv, ctx)
-                        rlaw = eng.ev(rm.decl.at, renv, ctx)
+                        rlaw = eng.ev(rm.decl.at, renv, ctx) if rm.decl.at is not None else rday
                     except TallyError:
                         continue
                     if not (isinstance(rday, datetime.date) and isinstance(rlaw, datetime.date)) or \

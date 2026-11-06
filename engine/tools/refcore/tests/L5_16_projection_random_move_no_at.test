@@ -1,0 +1,65 @@
+# L §5.14.1, §5.16 Decisions and projections (LOAD-RANDOM where load sees the projection reach a random fact after
+# its t; tally 2.1.6, issue #75): sweep's own projection from start_of(m) reaches gift, a random move with no at,
+# whose amount is dated by its day, 2026-03-01, after t. tally 2.1.5's refcore saw only a random move with an at,
+# so q answered. T's held basic/random-projection; the engine's bytes.
+=== base.tally
+model basic
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index gm = month 2026-02..2026-02
+
+input amt: money PLN
+
+input day: date
+
+input ru: dist PLN
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move gift[m in gm]: transfers
+  on end_of(m)
+  leg cash from world to konto amount round(ru, minor(PLN), half-up)
+
+move sweep[m in gm]: transfers
+  on start_of(m)
+  reads konto
+  leg cash from konto to world amount bal(konto, end_of(m)) from start_of(m)
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  ru = uniform(0 PLN, 4 PLN) to 0.01 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+=== expect q
+refused: LOAD-RANDOM sweep[2026-02] on 2026-02-01: bal(konto, end_of(m)) from start_of(m) reaches random ru after 2026-02-01 with no random clause or query (base.tally:41)

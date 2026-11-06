@@ -799,6 +799,7 @@ class Reality:
         self.things = {}
         self.indexes = {}
         self.axes = {}
+        self.elsewhere = {}  # the base of a reality with scenarios: an id their files declare -> its scenario (L §6.4)
         self.inputs = {}
         self.bands = {}
         self.defs = {}

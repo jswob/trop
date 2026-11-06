@@ -61,14 +61,15 @@ def scenario_header(fname, src):
     return (toks[1].s, toks[3].s, lines[0].loc)
 
 
-def load_texts(texts, worlds=None, members=None):
+def load_texts(texts, worlds=None, members=None, elsewhere=None):
     """texts: [(file name, source)] -> Reality.  worlds: every scenario id of the reality's files, for the asks
-    that name one this reality doesn't load (L §6.4)."""
+    that name one this reality doesn't load (L §6.4); elsewhere: for the base of a reality with scenarios, the ids
+    their files declare, each with the first scenario by id that declares it (cli.run_worlds)."""
     split = {}
     for i in by_path(texts):
         fname, src = texts[i]
         split[i] = (fname, split_lines(src, fname))
-    return load_lines([split[i] for i in range(len(texts))], worlds, members)
+    return load_lines([split[i] for i in range(len(texts))], worlds, members, elsewhere=elsewhere)
 
 
 def by_path(files):
@@ -79,7 +80,7 @@ def by_path(files):
     return sorted(range(len(files)), key=lambda i: files[i][0])
 
 
-def load_lines(all_lines, worlds=None, members=None, joint=None):
+def load_lines(all_lines, worlds=None, members=None, joint=None, elsewhere=None):
     """[(file name, lines)] -> Reality; joint: a joint model's JointInfo (joint.py), its members' lines merged in."""
     units = prescan_units([ls for _, ls in all_lines])
     parsed = {}
@@ -90,6 +91,7 @@ def load_lines(all_lines, worlds=None, members=None, joint=None):
         parsed[i] = (fname, parse_file(lines, units))
     trees = [parsed[i] for i in range(len(all_lines))]
     ld = Loader(trees, worlds, members)
+    ld.m.elsewhere = dict(elsewhere or {})
     ld.joint = joint
     return ld.build()
 
@@ -118,6 +120,16 @@ def _parts_overlap(a, b):
         return (q[1], None) if q[0] == 'owner' else (None, q[1]) if q[0] == 'batch' else (q[1], q[2])
     pa, pb = pat(a), pat(b)
     return (pa[0] is None or pb[0] is None or pa[0] == pb[0]) and (pa[1] is None or pb[1] is None or pa[1] == pb[1])
+
+
+def no_version(m, item, v, msg, loc):
+    """A rule's or a takes' v that names no version of the world: LOAD-SCENARIO `<item> of the base names <v> of
+    scenario <s>` when a scenario's file declares it, since the base is whole without its scenarios (L §6.4, a rule's v
+    included; tally 2.1.6, #75), else LOAD-NAME with msg (L §5.11 step 2)."""
+    sid = m.elsewhere.get(v)
+    if sid is not None:
+        return LoadError('LOAD-SCENARIO', '%s of the base names %s of scenario %s' % (item, v, sid), loc)
+    return LoadError('LOAD-NAME', msg, loc)
 
 
 class Loader:
@@ -840,8 +852,8 @@ class Loader:
                         if v is None:
                             # L §5.11 step 2 (round 19, GD-24): "a v that names no version of the reality is refused,
                             # LOAD-NAME"; L §8.3 `rule <d>.<r>: v <x> names no version`
-                            raise LoadError('LOAD-NAME', 'rule %s.%s: v %s names no version' % (qid, r.label, r.v),
-                                            r.loc)
+                            raise no_version(m, qid, r.v, 'rule %s.%s: v %s names no version' % (qid, r.label, r.v),
+                                             r.loc)
                     span = lspan_to_span(r.governs, r.loc) if r.governs is not None else None
                     d.rules[r.label] = [RuleVer(r.label, r, None, v, span, False, r.loc)]
                     d.labels.append(r.label)
@@ -1361,7 +1373,7 @@ class Loader:
         vv = None
         if r.v is not None and r.v != v.id and r.v not in self.m.versions:
             # L §5.11 step 2 (round 19, C4-4): a v naming no version at all is LOAD-NAME
-            raise LoadError('LOAD-NAME', 'rule %s.%s: v %s names no version' % (it.d, it.label, r.v), it.loc)
+            raise no_version(self.m, it.d, r.v, 'rule %s.%s: v %s names no version' % (it.d, it.label, r.v), it.loc)
         if r.v is not None and r.v != v.id:
             # L §5.11 step 2 (round 19, C4-4): "a v on it may name only that version and adds nothing (LOAD-VERSION
             # where it names another version)"
@@ -1990,6 +2002,10 @@ class Loader:
         for inf in list(m.inputs.values()) + list(m.defs.values()):
             rows = inf.rows if isinstance(inf, InputInfo) else inf.givens
             if not rows:
+                if isinstance(inf, InputInfo) and inf.builtin and inf.id in ('opening', 'stated'):
+                    # L §5.19: stated parts stand beside a total (LOAD-PARTS otherwise), so parts of a reading with no
+                    # total row at all are refused too. tally 2.1.6 (issue #75): refcore 2.1.5 skipped them here
+                    self.check_part_rows(inf)
                 continue
             tyv = inf.type
             for r in rows:

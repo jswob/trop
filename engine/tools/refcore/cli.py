@@ -113,8 +113,8 @@ def joint(texts, uses, ids=None, options=None):
     if any(h is not None for f, ls, h in heads):
         # L §6.1 Writes into members: "A scenario over a joint model (§6.4) may replace the members' rows too, named
         # with their prefixes": its files are the joint model's own, merged as they are, and run as worlds (§6.4)
-        return shown(run_worlds(heads, ids, loader=lambda files, worlds: load_lines(files, worlds, members=alone,
-                                                                                  joint=info), srcs=srcs))
+        return shown(run_worlds(heads, ids, loader=lambda files, worlds, elsewhere=None: load_lines(
+            files, worlds, members=alone, joint=info, elsewhere=elsewhere), srcs=srcs))
     try:
         m = load_lines(merged, members=alone, joint=info)
     except TallyError as e:
@@ -213,7 +213,13 @@ def run_worlds(heads, ids=None, loader=None, srcs=None):
     worlds = set(scen)
     if loader is None:
         loader = load_texts
-    m0, err = guarded(lambda: loader(base, worlds))
+    # the ids the scenarios' files declare, each with the first scenario by id: the base, whole without them, refuses
+    # a read of one at load (L §6.4, tally 2.1.6, #75)
+    elsewhere = {}
+    for sid in sorted(scen, reverse=True):
+        for name in declared_ids(scen[sid][1] if srcs is None else srcs[scen[sid][0]]):
+            elsewhere[name] = sid
+    m0, err = guarded(lambda: loader(base, worlds, elsewhere=elsewhere))
     if err is not None:
         # a base item or ask that names an item declared only in a scenario file (L §6.4, LOAD-SCENARIO)
         name = None

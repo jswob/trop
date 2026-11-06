@@ -198,6 +198,7 @@ class Checker:
         self.check_proj_seen()
         if getattr(m, 'scenario_over', None):
             self.check_srow_reads()
+        self.check_scenario_moves()
         self.check_scenario_reads()
 
     def item_scen(self, item):
@@ -966,6 +967,12 @@ class Checker:
         return Ty('list', elem=None)
 
     # -- keys ----------------------------------------------------------------------
+    def holds_key(self, name):
+        """Whether name is a key of an index, an option of an axis, or a thing of the world (a key literal)."""
+        m = self.m
+        return (any(name in (x.keys or ()) for x in m.indexes.values())
+                or any(name in a.options for a in m.axes.values()) or name in m.things)
+
     def keylit(self, n, sc, expect):
         """A key literal: resolved by the type its position expects (L §2.5)."""
         text = resolve_text(n)
@@ -1212,6 +1219,12 @@ class Checker:
             return v.ty
         hit = m.lookup(n.id, sc.regime)
         if hit is None:
+            if m.elsewhere.get(n.id) is not None and (expect is None or expect.k not in ('key', 'code')) \
+                    and not self.holds_key(n.id):
+                # L §6.4: a read of an item a scenario's file declares stands only inside that scenario; the base,
+                # whole without its scenarios, refuses it at load (tally 2.1.6, #75), not as a key literal at run
+                raise LoadError('LOAD-SCENARIO', '%s of scenario %s is read outside it' % (n.id, m.elsewhere[n.id]),
+                                n.loc)
             return self.keylit(n, sc, expect)
         kind, info = hit
         if kind in ('input', 'def'):

@@ -1,0 +1,62 @@
+# L §6.4 (a move the scenario declares books nothing before D, LOAD-SCENARIO where load sees the day), §8.3 item 9
+# (tally 2.1.6, issue #75): gift[2026-06] books on start_of(m), a day load sees, before raised's from 2027-01-01,
+# so raised is refused at load, though q_raised reads nothing gift books. tally 2.1.5's refcore refused it only as
+# the walk reached the instance, so q_raised answered 300.00 PLN. T's held scen/scenario-move; the engine's bytes.
+=== model.tally
+model household
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2027-12-31
+  note "T's base for M0's load-code fixtures (invented): a model and a scenario over it, scen.tally; it loads clean"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input amt: money PLN
+
+def doubled: money PLN = amt + amt at reader
+
+ask q: doubled law 2026-03-01
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  opening[konto] = 0 PLN at 2026-01-01 start "the card"
+=== scen.tally
+scenario raised over household
+  tally 2
+  from 2027-01-01
+
+version raise_2027
+  cite card
+  governs 2027..
+  known 2026-02-01
+  replace amt = 150.00 PLN "a raise from 2027"
+
+version gifts
+  cite card
+  governs always
+  known 2026-02-01
+  gift_amt = 10.00 PLN "a gift"
+
+ask q_raised: doubled in raised law 2027-06-01
+
+index gm = month 2026-06..2026-06
+
+input gift_amt: money PLN
+
+move gift[m in gm]: transfers
+  on start_of(m)
+  leg cash from world to konto amount gift_amt
+=== expect q_raised
+scenario raised: refused: LOAD-SCENARIO move gift of raised books on 2026-06-01, before 2027-01-01 (scen.tally:23)
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing

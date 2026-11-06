@@ -1,7 +1,9 @@
 # L §6.4 (round 8): a move the scenario declares books nothing before D, "LOAD-SCENARIO where load sees the day":
 # extra's day is start_of(m), a function of its key alone, and it has no when, so load sees that extra[2026-01] falls
 # on 2026-01-01, before from 2027-01-01: the scenario is refused (the base's ask still answers), with L §8.3's
-# message (round 9) "move <m> of <s> books on <d>, before <from>", d the first such instance's day.
+# message (round 9) "move <m> of <s> books on <d>, before <from>", d the first such instance's day. tally 2.1.6
+# (issue #75): load refuses the scenario itself, so it prints as the scenario's refusal (the engine's bytes), not as
+# its ask's at run.
 === household.tally
 model household
   tally 2
@@ -37,7 +39,6 @@ move extra[m in months]: transfers
 
 ask e: bal(konto, 2027-12-31) in early
 === expect
+scenario early: refused: LOAD-SCENARIO move extra of early books on 2026-01-01, before 2027-01-01 (early.tally:5)
 b: 100.00 PLN
-...
-e: refused: LOAD-SCENARIO move extra of early books on 2026-01-01, before 2027-01-01 (early.tally:5)
 ...
