@@ -1,0 +1,49 @@
+# L §3.1 key K, §5.7 (tally 2.1.6, issue #86): the twin of L3_1_attr_names_move_instance: item names side[2027-03],
+# an instance of a move of kind others, not of items, so it is refused LOAD-KEY, as a key not of its kind is.
+=== m.tally
+model m
+  tally 2
+  on 2027-06-01
+  start 2027-01-01
+  end 2027-12-31
+
+source s "s"
+
+unit PLN: currency minor 0.01
+
+kind items: event certain
+  leg cash: PLN
+
+kind others: event certain
+  leg cash: PLN
+
+kind refunds: event certain
+  leg cash: PLN
+  attr item: key items
+
+place acct: accounts PLN lives 2027-01-01..
+
+place world: outside lives 2027-01-01..
+
+input bank: observed
+
+input amt: money PLN
+
+move get[m in months]: items
+  on start_of(m)
+  leg cash from world to acct amount amt
+
+move side[m in months]: others
+  on start_of(m)
+  leg cash from world to acct amount amt
+
+ask t: count(f in refunds over .. where f.item == r) for r in items over 2027-03
+
+version v
+  cite s
+  governs always
+  known 2027-01-01
+  amt = 10.00 PLN "the plan"
+  bank[r1] = (on: 2027-03-10, kind: refunds, leg cash from acct to world amount 10.00 PLN, item: side[2027-03]) "line 1"
+=== expect
+refused: LOAD-KEY side[2027-03] is not a key of items (m.tally:44)

@@ -2066,9 +2066,26 @@ class Loader:
                     types = dict(m.kind_attrs(o.kind))
                 kid = types[a].ix
                 name = v[1].split('[', 1)[0]
-                tk = m.moves[name].kind if name in m.moves else (obs[v[1]].kind if v[1] in obs else None)
+                tk = self.move_kind(m.moves[name]) if name in m.moves else (obs[v[1]].kind if v[1] in obs else None)
                 if tk is None or tk not in m.kinds[kid].subtree(m):
                     raise LoadError('LOAD-KEY', '%s is not a key of %s' % (v[1], kid), o.loc)
+
+    def move_kind(self, mi):
+        """A move's event kind as its section declares it (`move x: K`): the checker sets MoveInfo.kind only after
+        load's row checks (check3), so check_mv_refs reads the declaration. tally 2.1.6 (issue #86): refcore 2.1.5 read
+        the unset kind, so every move instance an attribute named was refused LOAD-KEY."""
+        if mi.kind is not None:
+            return mi.kind
+        m = self.m
+        s = mi.decl.kind
+        if not s:
+            return None
+        if '.' in s:
+            q, x = s.split('.', 1)
+            hit = m.qualified(q, x)
+        else:
+            hit = m.lookup(s, mi.regime)
+        return hit[1].id if hit is not None and hit[0] == 'kind' else None
 
     def check_part_rows(self, inf):
         """A reading's stated parts (L §5.19, tally 2.1): "They stand beside the reading's total, in the same version
