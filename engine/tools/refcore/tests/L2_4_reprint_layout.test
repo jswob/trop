@@ -4,7 +4,9 @@
 # subkinds" (alpha waits for its parent zeta; beta and zeta by id); "Versions come last, sorted by known date (a window
 # by its first day), then id" (v1's window starts 2026-01-01; a3 and v2 share 2026-03-01, so by id); "One blank line
 # between sections, always, one-line sections included". ASCII puts PLN before hour. E §3.1 step 1: the reality's
-# hash is the sha256 of the canonical text (its value is refcore's, so matched by prefix).
+# hash is the sha256 of the canonical text (its value is refcore's, so matched by prefix). tally 2.1.6 (issue
+# #74): reprint pins a joint model's members as run does, so the members a.tally and b.tally are given,
+# with their hashes.
 === options reprint
 === m.tally
 model m
@@ -12,8 +14,8 @@ model m
   on 2026-10-20
   start 2026-01-01
   end 2026-12-31
-  use b = "b.tally" sha256 "0000000000000000000000000000000000000000000000000000000000000000"
-  use a = "a.tally" sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+  use b = "b.tally" sha256 "3558bfc60c0cc70d33354bb1c25ed55c8ff26980aa36ff2be6096b8e53562746"
+  use a = "a.tally" sha256 "2ebb0757232e7a6b22996db04a17cfaa41ae24c2936a9c4a3dafc32d9a9a4cac"
   same b.x = a.x
   same a.y = b.y
   note "n"
@@ -42,15 +44,55 @@ input x: int
 source s "src"
 unit hour "h"
 unit PLN: currency minor 0.01
+=== a.tally
+model a
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+input x: int
+
+input y: int
+=== b.tally
+model b
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+input x: int
+
+input y: int
 === expect
+--- a.tally
+model a
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+input x: int
+
+input y: int
+--- b.tally
+model b
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+input x: int
+
+input y: int
 --- m.tally
 model m
   tally 2
   on 2026-10-20
   start 2026-01-01
   end 2026-12-31
-  use a = "a.tally" sha256 "0000000000000000000000000000000000000000000000000000000000000000"
-  use b = "b.tally" sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+  use a = "a.tally" sha256 "2ebb0757232e7a6b22996db04a17cfaa41ae24c2936a9c4a3dafc32d9a9a4cac"
+  use b = "b.tally" sha256 "3558bfc60c0cc70d33354bb1c25ed55c8ff26980aa36ff2be6096b8e53562746"
   same a.y = b.y
   same b.x = a.x
   note "n"

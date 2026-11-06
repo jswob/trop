@@ -372,6 +372,29 @@ def collect_decls(owner, files, units):
 
 # -- the joint model -------------------------------------------------------------------------------------------------
 
+def pinned_members(jfile, uses, pool, options=None):
+    """A joint model's members found relative to its model file jfile and checked against their pins (E §3.1 step 1):
+    {alias: [(path, path in the member's tree, source)]}. LOAD-PIN for a member absent or changed; a member's other
+    refusal is MemberRefused. `run` (joint_texts) and `reprint` (cli.reprint_lines; tally 2.1.6, issue #74) both
+    take them so."""
+    on_disk = os.path.isfile(jfile)
+    member_files = {}
+    for a, f, h in uses:
+        if a in member_files:
+            raise LoadError('LOAD-DUP', 'use %s twice' % a)
+        member_files[a] = member_texts(a, f, os.path.normpath(os.path.join(os.path.dirname(jfile), f)), pool, on_disk)
+    for a, f, h in uses:
+        try:
+            pin_check(a, f, member_files[a], h, options, pool, on_disk)
+        except LoadError as e:
+            if e.code == 'LOAD-PIN':
+                raise
+            raise MemberRefused(a, e)
+        except TallyError as e:
+            raise MemberRefused(a, e)
+    return member_files
+
+
 def joint_texts(texts, uses, options, pool=None, jfile=None, own=None):
     """Resolve, pin and merge.  Returns (merged lines [(fname, lines)], members loaded alone {alias: Reality},
     JointInfo).  texts: the files given; for a member that is itself a joint model (E §3.1 step 1: "a member that is
@@ -387,20 +410,7 @@ def joint_texts(texts, uses, options, pool=None, jfile=None, own=None):
             raise LoadError('LOAD-HEADER', 'two files have a model header' if roots else 'no file has a model header')
     base = os.path.dirname(jfile)
     on_disk = os.path.isfile(jfile)
-    member_files = {}
-    for a, f, h in uses:
-        if a in member_files:
-            raise LoadError('LOAD-DUP', 'use %s twice' % a)
-        member_files[a] = member_texts(a, f, os.path.normpath(os.path.join(base, f)), pool, on_disk)
-    for a, f, h in uses:
-        try:
-            pin_check(a, f, member_files[a], h, options, pool, on_disk)
-        except LoadError as e:
-            if e.code == 'LOAD-PIN':
-                raise
-            raise MemberRefused(a, e)
-        except TallyError as e:
-            raise MemberRefused(a, e)
+    member_files = pinned_members(jfile, uses, pool, options)
     # each member alone (its asks, a.q; L §6.1 "joining changes no member's answer"): its base, without its
     # scenario files (L §6.4 "The base is whole without its scenarios")
     alone = {}

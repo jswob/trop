@@ -50,14 +50,19 @@ def reprint_lines(texts, ordered=False):
     sha256 of the texts printed, in the order printed.  texts are taken by their names, unless ordered: then in the
     order given (reprint_paths gives them in the order of their full paths, tally 2.1.3)."""
     from .canon import reprint, printed_hash
-    from .joint import use_member_files, header_uses
+    from .joint import use_member_files, header_uses, pinned_members, MemberRefused, is_model
     files = list(texts) if ordered else sorted(texts, key=lambda f: f[0])
     try:
-        # a joint model's members, for the order of keys of their indexes (canon.reprint)
+        # a joint model's members, checked against their pins as `run` checks them, before anything prints (E §3.1
+        # step 1, INTERFACE §1: reprint reads its files as run does; tally 2.1.6, issue #74: refcore 2.1.5 printed a
+        # joint model whose member was absent or changed); and kept for the order of keys of their indexes
+        # (canon.reprint)
         members = {}
         on_disk = any(os.path.isfile(p) for p, src in texts)
         for p, src in files:
-            if header_uses(src):
+            uses = header_uses(src)
+            if uses and is_model(src):
+                pinned_members(p, uses, texts)
                 members.update(use_member_files([(p, p, src)], texts, on_disk))
         printed = reprint(files, members)
         out = []
@@ -65,6 +70,8 @@ def reprint_lines(texts, ordered=False):
             out.append('--- ' + p)
             out.extend(t.rstrip('\n').split('\n'))
         out.append('sha256 ' + printed_hash(printed))
+    except MemberRefused as e:
+        return ['refused: member %s: %s' % (e.alias, e.err.text())]
     except TallyError as e:
         return ['refused: %s' % e.text()]
     except RecursionError:

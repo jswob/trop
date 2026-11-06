@@ -1,0 +1,35 @@
+# E §3.1 step 1, INTERFACE §1 (tally 2.1.6, issue #74): reprint of a joint model whose member a/a.tally is given
+# but isn't the text its use line pins (amt = 2, pinned with amt = 1) refuses LOAD-PIN, as run does. tally 2.1.5's
+# refcore printed both files and their hash.
+=== options reprint
+=== joint.tally
+model family
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  use a = "a/a.tally" sha256 "244e202f2765069c3eeedc89b40d367e39ee638acaea58bad6d4a488b90a6072"
+
+ask x: a.twice
+=== a/a.tally
+model ana
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "src"
+
+input amt: int
+
+def twice: int = amt + amt
+
+ask q: twice
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 2
+=== expect
+refused: LOAD-PIN a/a.tally doesn't match its sha256 in use a
