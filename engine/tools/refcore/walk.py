@@ -505,6 +505,12 @@ class Walk:
                 d = i.day
                 if i.exists is False:
                     continue
+                if i.err is not None and not isinstance(i.err, RandomLine) and isinstance(d, datetime.date):
+                    # tally 2.1.6 (issue #51): a decision instance refused before its point (its key's `where`) is
+                    # refused at the places its legs name from its day, as a hole movement would be (L §8.4, E §4.2)
+                    if S <= d <= self.end:
+                        self.dec_bad(i, K_before(d), i.err, ctx)
+                    continue
                 if isinstance(d, datetime.date):
                     if eng.before_scen_from(i, d):
                         # a scenario's move books nothing before its from (L §6.4): left out

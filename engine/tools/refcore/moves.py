@@ -637,6 +637,14 @@ def m_move_tuples(self, mi, ctx):
                 self.stack.append(cw)
                 try:
                     w = self.ev(b.where, e2, bctx)
+                except TallyError as e:
+                    # tally 2.1.6 (issue #51): a refused `where` makes a refused instance at that tuple, which reaches
+                    # as a hole movement does, its places from its day (L §8.4, §5.14 Keys; E §4.2); it no longer
+                    # refuses the whole plan pass
+                    if isinstance(e, LoadError) or load_now(e):
+                        raise
+                    out.append((e2, keys + [v] + [None] * (len(mi.binds) - i - 1), ('refused', e), cw))
+                    continue
                 finally:
                     self.stack.pop()
                 if w is False:
@@ -706,10 +714,15 @@ def m_insts_of_tuples(self, mi, tuples, tctx, upto=None):
         for env, keys, st, c in tuples:
             if isinstance(st, tuple) and st[0] == 'refused':
                 if None in keys:
+                    # a later key is unknown, so are its day and places: every place from the run's start
                     raise st[1]
-                inst = Inst(mi, keys, env)
+                # tally 2.1.6 (issue #51): its day and its legs' places are read as for any instance (neither depends
+                # on whether it exists), so the refusal reaches its places from its day (L §8.4, E §4.2); a false
+                # `when` leaves no instance, as under a hole `where`
+                inst = self.eval_inst(mi, env, keys, tctx, upto=upto)
+                if inst is None or inst.exists is False:
+                    continue
                 inst.err = st[1]
-                inst.coll = _coll()
             elif isinstance(st, tuple):
                 inst = Inst(mi, keys, env)
                 inst.day = st[1]
@@ -920,9 +933,40 @@ def m_eval_inst(self, mi, env, keys, tctx, exists0=True, at_cut=None, upto=None)
             if isinstance(e, LoadError) or load_now(e):
                 raise
             inst.err = e
+            if not mi.decision and not inst.legs:
+                # tally 2.1.6 (issue #51): a refused instance (its `when`, an attribute, its `for`) reaches as a hole
+                # movement does: its legs' places are read, so it refuses those from its day, not every place
+                inst.legs = self.refused_places(mi, env, inst, tctx)
     finally:
         self.stack.pop()
     return inst
+
+
+def m_refused_places(self, mi, env, inst, tctx):
+    """The legs of a refused instance, with their places and no amounts, read at its booking cut (L §8.4: a refusal
+    propagates like a hole; E §4.2 Holes in the walk): none where a place can't be read, so the walk refuses every
+    place (walk.sched_refused)."""
+    d = day_lo(inst.day)
+    c = tctx.but(cut=min(d, tctx.cut)) if isinstance(d, datetime.date) else tctx
+    law = inst.law
+    if law is not None and not isinstance(law, Hole):
+        c = c.but(law=law_days(law)[0])
+    from .evaluate import HoleSignal
+    legs = []
+    try:
+        for ln, _d in mi.legs:
+            frm = self.ev(ln.frm, env, c)
+            to = self.ev(ln.to, env, c)
+            if not (isinstance(frm, Thing) and isinstance(to, Thing)):
+                return []
+            legs.append(Leg(ln.name, frm, to, inst.err, None, inst.day))
+    except HoleSignal:
+        return []
+    except TallyError as e:
+        if isinstance(e, LoadError) or load_now(e):
+            raise
+        return []
+    return legs
 
 
 def vkey_ex(x):
