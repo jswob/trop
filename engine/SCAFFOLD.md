@@ -246,7 +246,7 @@ The scaffold proves the machinery on stubs; the gates' evidence comes from T's t
 4. **One commit by the `rules` role** holds: the config change; its selftest case in `tools/rules-selftest/cases/` (a new rule gets a planted violation; a loosened one gets a case showing what still fires); the map row in this file (section 7); `tools/frozen-lints.toml` if a lint or profile table changed (`check-rules --write-frozen`); and `tools/RULES.sha256` (`check-frozen --write-rules`), written last.
 5. **`tools/check full` passes** before the commit, rules-selftest included.
 
-A toolchain bump (R-61) and a budget raise (R-111) go the same way. A spec patch is not a rule change: it follows `engine/README.md` in the `spec` role.
+A toolchain bump (R-61) and a budget raise (R-111) go the same way. A spec patch is not a rule change: it follows `engine/README.md` in the `spec` role. A spec question found mid-milestone is not a patch either (the retro after M0, decision 2, "Accept", 2026-11-05): the coordinator rules it by the recommended option on its issue, which is the spec decided first (DONE rule 3); its text lands at the next spec round; where the spec is clear and refcore differs, the engine follows the spec and T holds the vector "for #n"; a patch release mid-milestone is only for a wrong number or an unsound rule. And each builder group's diff is reviewed by `engine-reviewer` before the next group starts, the gate reviewing the whole once (decision 1; `engine/CLAUDE.md` §3, BUILDER §9, the skill `engine-coordinator`).
 
 ## 7. Every rule, its enforcement and its proof
 

@@ -95,7 +95,7 @@ Each line: the workaround that tempts, what to write instead, and the rule that 
 
 **Then:** leave the code as it was (no half-fix, no workaround), and copy the template at the top of `engine/BUILD-LOG.md` to its end. Fill it with the smallest input, what the engine gives and what the test expects, which of the model, the spec, the test, the rule or the code you think is wrong and why, what you tried, and what you did **not** do. A STOP-REPORT heading newer than the last commit lets the turn end (R-83). Then move on to other red vectors, or end the session.
 
-Never edit a test, special-case an input, or weaken a check to get past a stop. The spec is fixed first, never only the code (DONE rule 3).
+Never edit a test, special-case an input, or weaken a check to get past a stop. The spec is decided first, never only the code (DONE rule 3): a ruling recorded on the STOP-REPORT's issue is that decision, and its text lands at the next spec round. Where the spec is clear and refcore differs, follow the spec; T holds the vector "for #n" and refcore is fixed at the round. A patch release mid-milestone is only for a wrong number or an unsound rule.
 
 ## 6. Performance, in one paragraph
 

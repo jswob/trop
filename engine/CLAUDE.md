@@ -22,13 +22,14 @@ Printed by the build role's SessionStart hook at the start and after each compac
 - Leave the code as it was. No half-fix, no workaround.
 - Copy the template at the top of `engine/BUILD-LOG.md` to its end. Give the smallest input, what the engine gives and what the test expects, which of model, spec, test, rule or code you think is wrong and why, what you tried, and what you did not do.
 - Then take other red vectors, or end the session.
-- The spec is fixed first, never only the code (DONE rule 3).
+- The spec is decided first, never only the code (DONE rule 3): a ruling recorded on the STOP-REPORT's issue is that decision, and its text lands at the next spec round. Where the spec is clear and refcore differs, follow the spec; T holds the vector "for #n" and refcore is fixed at the round. A patch release mid-milestone is only for a wrong number or an unsound rule.
 
 ## 3. The loop
 
 - Start: read the last `engine/BUILD-LOG.md` entries, the milestone's section of `engine/spec/BUILD-ORDER.md`, the plan's traceability table; run `engine/tools/check fast`; note the red vector ids.
 - `check` prints a line such as `milestone-report: S: 3/7 green`: T's Rust tests of the next milestone, your work list, never failing. Once a milestone is in `gating` (`engine/tools/milestones.toml`: after its tag, or for S and M0 from their branch's last commit), its tests gate like any other, so they can't go red again.
 - Work: the next group of red vectors in plan order; implement; `engine/tools/check fast`; commit when green.
+- After each group's commit, a review session runs `engine-reviewer` on that group's diff alone; you fix its blocking findings in the same group before the next one starts, and T turns each fix into tests. The gate reviews the whole once.
 - Before each commit: `engine/tools/check full`. Never commit red. (T's re-run commit after a spec ruling may be red on the ids its `Logged-Red:` lines name; your commits then turn them green, R-77.)
 - When a group turns green: `engine/tools/mutants-local -F '<regex of the functions you changed or added>' <their kernel files>`; caught and missed go into the group's BUILD-LOG entry, the missed ones for T. Advisory, never blocking (R-88).
 - Only `engine/tools/check`, never raw `cargo` with your own flags. Read the one-line failures; open a log only when needed. A failure that doesn't reproduce is reported, not "fixed".
