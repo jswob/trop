@@ -1,0 +1,20 @@
+model alpha
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#74): a member of m0/format/header_order.tally, which reprint now reads and pins"
+
+source s "s"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+input cash: money PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  cash = 1.00 PLN "s"

@@ -1,0 +1,29 @@
+model m7_sample_order
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#49, P23), for M7: L §8.2, §5.16: a path's sample lines print in canonical order, keys in index order: a list index of twelve months' draws, m2 before m10, and the two-key draws by their first key, then their second. refcore 2.1.5 sorted the keys' order by its text, so m10 to m12 printed after m1. M7 builds paths."
+
+source src "T's invented source"
+
+index ms = [m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12]
+
+index side = [a, b]
+
+input draw[k in ms]: dist
+
+input pair[k in ms, s in side]: dist
+
+def tot: num = sum(draw[k] for k in ms) at reader
+
+def two: num = pair[m10, b] + pair[m2, a] + pair[m2, b] at reader
+
+ask p: tot, two law 2026-06-30 paths 3 seed 7 path 2
+
+version v
+  cite src
+  governs 2026..
+  known 2026-01-01
+  draw[*] = uniform(0, 10) to 0.1
+  pair[*] = uniform(0, 1) to 0.01

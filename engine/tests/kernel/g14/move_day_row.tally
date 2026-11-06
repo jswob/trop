@@ -1,0 +1,43 @@
+model g14_move_day_row
+  tally 2
+  on 9999-12-31
+  start 9999-01-01
+  end 9999-12-31
+  note "T, tally 2.1.6 (#89, P7; #51), G14: L §7.6 item 1, §8.4: late's day is pay_day + 1 day, from a row's 9999-12-31, past 9999-12-31: load doesn't see it, so the instance is refused at its key (RUN-LIMIT), and a movement whose day is refused may fall on any day, so it refuses the places its legs give, konto and world, on every day (bal(konto) at 9999-03-31 too) and flows of late. The place spare, which only on_time touches, stands, and so do flows of on_time, dated by the row itself."
+
+source plan "T's invented plan"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 9999-01-01..
+
+place spare: accounts PLN lives 9999-01-01..
+
+place world: outside lives 9999-01-01..
+
+input pay_day: date
+
+input amt: money PLN
+
+move late: transfers
+  on pay_day + 1 day
+  leg cash from konto to world amount amt
+
+move on_time: transfers
+  on pay_day
+  leg cash from world to spare amount amt
+
+version plan_9999
+  cite plan
+  governs always
+  known 9999-01-01
+  pay_day = 9999-12-31
+  amt = 15.00 PLN
+  opening[konto] = 300.00 PLN at 9999-01-01 start
+  opening[spare] = 100.00 PLN at 9999-01-01 start
+
+ask k: bal(konto, 9999-03-31)
+
+ask s: bal(spare, 9999-12-31)
+
+ask f: flows(late, 9999), flows(on_time, 9999)

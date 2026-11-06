@@ -1,0 +1,14 @@
+model unknown_prefix
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#91, P22), the fuzz input c5a8 minimized: an input keyed by an index under a prefix no use line names; refcore stopped REFCORE-NOT-YET, the engine not built"
+
+source s "s"
+
+index zone = [green, amber, red]
+
+input mult[k in c.zone]: num
+
+input base: num

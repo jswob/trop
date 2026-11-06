@@ -3,7 +3,7 @@
 //! so the tests read no file (`INTERFACE.md` §4) and no text is copied. Never edited by hand.
 
 /// Each text: its path under `engine/tests/` and its content.
-pub static TEXTS: [(&str, &str); 1335] = [
+pub static TEXTS: [(&str, &str); 1346] = [
     (
         "integration/amendments/cards11/i10q/model.tally",
         include_str!("../../integration/amendments/cards11/i10q/model.tally"),
@@ -4709,6 +4709,14 @@ pub static TEXTS: [(&str, &str); 1335] = [
         include_str!("../../m0/format/clause_order.tally"),
     ),
     (
+        "m0/format/dup_id.tally",
+        include_str!("../../m0/format/dup_id.tally"),
+    ),
+    (
+        "m0/format/dup_kind.tally",
+        include_str!("../../m0/format/dup_kind.tally"),
+    ),
+    (
         "m0/format/expr_spacing.tally",
         include_str!("../../m0/format/expr_spacing.tally"),
     ),
@@ -4719,6 +4727,30 @@ pub static TEXTS: [(&str, &str); 1335] = [
     (
         "m0/format/kinds_tree_order.tally",
         include_str!("../../m0/format/kinds_tree_order.tally"),
+    ),
+    (
+        "m0/format/member_absent.tally",
+        include_str!("../../m0/format/member_absent.tally"),
+    ),
+    (
+        "m0/format/member_changed.tally",
+        include_str!("../../m0/format/member_changed.tally"),
+    ),
+    (
+        "m0/format/members/alpha/alpha.tally",
+        include_str!("../../m0/format/members/alpha/alpha.tally"),
+    ),
+    (
+        "m0/format/members/banded/banded.tally",
+        include_str!("../../m0/format/members/banded/banded.tally"),
+    ),
+    (
+        "m0/format/members/changed/changed.tally",
+        include_str!("../../m0/format/members/changed/changed.tally"),
+    ),
+    (
+        "m0/format/members/zeta/zeta.tally",
+        include_str!("../../m0/format/members/zeta/zeta.tally"),
     ),
     (
         "m0/format/numbers.tally",
@@ -4767,6 +4799,18 @@ pub static TEXTS: [(&str, &str); 1335] = [
     (
         "m0/format/short_with_notes.tally",
         include_str!("../../m0/format/short_with_notes.tally"),
+    ),
+    (
+        "m0/format/spacing_call.tally",
+        include_str!("../../m0/format/spacing_call.tally"),
+    ),
+    (
+        "m0/format/spacing_read.tally",
+        include_str!("../../m0/format/spacing_read.tally"),
+    ),
+    (
+        "m0/format/unknown_prefix.tally",
+        include_str!("../../m0/format/unknown_prefix.tally"),
     ),
     (
         "m0/format/version_items_sorted.tally",

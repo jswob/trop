@@ -1,0 +1,53 @@
+model g10_ties_9999
+  tally 2
+  on 9999-12-31
+  start 9999-01-01
+  end 9999-12-31
+  note "T, tally 2.1.6 (#48, P8), G10: a run inside the year 9999, whole (L §2.1: its built-in years and months end with 9999-12-31). The residual ledger of 9999-05 ties two matched lines but for the movement order (E §6.3, E §4.1): fee[f2] is dated 9999-05-31, the lines' day, fee[f1]'s day is a hole, which sorts after every day, 9999-12-31 included, so fee[f2] prints first though f1 is the first key. tally 2.1.5's refcore refused the model (the year 9999 ended on 10000-01-01), and a hole day sorted as 9999-12-31 itself."
+
+source plan "T's invented plan"
+
+source bank "T's invented statement"
+
+unit PLN: currency minor 0.01
+
+index flats = [f1, f2]
+
+input stmt: observed
+
+input fee_amt: money PLN
+
+input fee_day[f in flats]: date
+
+place konto: accounts PLN lives 9999-01-01..
+
+place agent: outside lives 9999-01-01..
+
+place unexplained: outside lives 9999-01-01..
+
+move fee[f in flats]: transfers
+  on fee_day[f]
+  leg cash from konto to agent amount fee_amt
+
+version plan_9999
+  cite plan
+  governs always
+  known 9999-01-01
+  fee_amt = 300.00 PLN
+  fee_day[f1] = ?"which day is f1's fee paid?"
+  fee_day[f2] = 9999-05-31
+  opening[konto] = 2 000.00 PLN at 9999-01-01 start
+
+version statement_05
+  cite bank
+  governs 9999-05
+  known 9999-06-02
+  covers konto
+  pad konto from unexplained
+  stmt[r1] = (on: 9999-05-31, kind: transfers, leg cash from konto to agent amount 300.00 PLN, fulfils: fee[f1]) "line 1"
+  stmt[r2] = (on: 9999-05-31, kind: transfers, leg cash from konto to agent amount 300.00 PLN, fulfils: fee[f2]) "line 2"
+  stated[konto] = 1 400.00 PLN at 9999-05-31 end
+
+ask led: residuals konto 9999-05
+
+ask y: max(pos(m) for m in months), bal(konto, 9999-12-31), end_of(9999-11)

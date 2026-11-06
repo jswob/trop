@@ -6844,41 +6844,7 @@ version card_2025
   window = 3 "rule 1: the three full months before the decision's month"
 sha256 8c83057f0e8fd96c4dc048967f23ec26ac18dcce6469e34a2af4c74b2b01cc6f
 ,35:total/U:rule/RULE-08/duplicate-line,12:mutant:probe,1:1,58:refused: LOAD-DUP spending is declared twice (m.tally:13)
-,35:total/U:rule/RULE-08/duplicate-line,14:mutant:reprint,1:0,1184:--- m.tally
-model rule08
-  tally 2
-  on 2025-06-15
-  start 2025-01-01
-  end 2025-06-30
-  note "RULE-08: the 15th rule's floor is the mean of the three full months before the decision's month, half up to 0.01. The window reads only months before the decision's month, so the estimator reads history up to the decision date."
-
-source card "Probe card RULE-08: Ania's spending and the 15th rule's floor"
-
-unit DUK: currency minor 0.01
-
-input spending[m in months]: money DUK
-
-input spending[m in months]: money DUK
-
-input window: int
-
-def floor_on[m in months]: money DUK at start_of(m)
-  note "the floor on the 15th of month m"
-  rule base = round(mean(spending[k] for k in months where k < m and m - k <= window), minor(DUK), half-up)
-
-ask q: floor_on[2025-04], floor_on[2025-06] law 2025-06-15
-
-version card_2025
-  cite card
-  governs always
-  known 2025-01-01
-  spending[2025-01] = 3100 "January"
-  spending[2025-02] = 2900 "February"
-  spending[2025-03] = 3650 "March"
-  spending[2025-04] = 3200 "April"
-  spending[2025-05] = 2950 "May"
-  window = 3 "rule 1: the three full months before the decision's month"
-sha256 a28c13afb869051fa099f7a2ce389376dc5165dcdec0a6a0bbe203eec3eacd3b
+,35:total/U:rule/RULE-08/duplicate-line,14:mutant:reprint,1:1,58:refused: LOAD-DUP spending is declared twice (m.tally:13)
 ,31:total/U:rule/RULE-08/swap-lines,12:mutant:probe,1:1,74:refused: LOAD-PARSE cannot parse: header line on out of order (m.tally:4)
 ,31:total/U:rule/RULE-08/swap-lines,14:mutant:reprint,1:1,74:refused: LOAD-PARSE cannot parse: header line on out of order (m.tally:4)
 ,33:total/U:rule/RULE-08/delete-token,12:mutant:probe,1:1,71:refused: LOAD-PARSE cannot parse: indentation of 3 spaces (m.tally:23)
@@ -7175,41 +7141,7 @@ version life_table
   q_die[88] = 1 "at 88"
 sha256 d0388b45e2b9c17ea6388459498bc608d7abd0b30994c934b49e87e41c62057d
 ,35:total/U:rand/RAND-01/duplicate-line,12:mutant:probe,1:1,59:refused: LOAD-DUP death_age is declared twice (m.tally:15)
-,35:total/U:rand/RAND-01/duplicate-line,14:mutant:reprint,1:0,1100:--- m.tally
-model rand01
-  tally 2
-  on 2025-10-24
-  start 2025-10-24
-  end 2029-10-24
-  note "RAND-01: Halina's lifetime drawn year by year from her stated life table; it counts the whole years lived before the year of death. The model date is not on the card; the draws don't read it."
-
-source card "Probe card RAND-01: Halina's stated life table"
-
-index yr_age = int 85..88
-
-input q_die[a in yr_age]: num
-
-def death_age: key yr_age = first(a in yr_age where die[a] == 1) at reader
-
-def death_age: key yr_age = first(a in yr_age where die[a] == 1) at reader
-
-def die[a in yr_age]: dist = binomial(1, q_die[a]) at reader
-
-def lifetime: int = pos(death_age) - 1 at reader
-
-ask q_mean: mean(lifetime) law 2025-10-24 paths 60 000 seed 20 251 024
-
-ask q_mean_again: mean(lifetime) law 2025-10-24 paths 60 000 seed 20 251 024
-
-version life_table
-  cite card
-  governs always
-  known 2025-10-24
-  q_die[85] = 0.2 "the chance of dying within the year at 85"
-  q_die[86] = 0.3 "at 86"
-  q_die[87] = 0.5 "at 87"
-  q_die[88] = 1 "at 88"
-sha256 faa963aac17611c24e7ae755de7b95fdbd53072da9c7c2fd1f84e597b4e5a730
+,35:total/U:rand/RAND-01/duplicate-line,14:mutant:reprint,1:1,59:refused: LOAD-DUP death_age is declared twice (m.tally:15)
 ,31:total/U:rand/RAND-01/swap-lines,12:mutant:probe,1:1,36:refused: REQ-ASK no ask zz_m0_probe
 ,31:total/U:rand/RAND-01/swap-lines,14:mutant:reprint,1:0,1024:--- m.tally
 model rand01

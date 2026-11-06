@@ -1,0 +1,40 @@
+model g6_refusal_keys_typed_twin
+  tally 2
+  on 2025-12-31
+  start 2025-01-01
+  end 2025-12-31
+  note "T, tally 2.1.6 (#57, P4), G6: the twin of g6/refusal_keys_typed: m[x, f3] is a leg of 0, so m[x, f11].cash refuses src alone, and bal(src) prints it."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit DUK: currency minor 0.01
+
+index flats = [f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11]
+
+input d0: date
+
+input leg_amt[f in flats]: money DUK
+
+place src: accounts DUK lives 2025-01-01..
+
+place gone: accounts DUK lives 2025-01-01..2025-01-05
+
+place x: accounts DUK lives 2025-01-01..
+
+move m[p in accounts on d0, f in flats]: transfers
+  on d0
+  when p == x and (pos(f) == 3 or pos(f) == 11)
+  leg cash from src to gone amount leg_amt[f]
+
+ask q: bal(src, 2025-01-31)
+
+version facts
+  cite fixture
+  governs always
+  known 2025-01-01
+  d0 = 2025-01-10
+  leg_amt[*] = 1.00 DUK
+  leg_amt[f3] = 0 DUK
+  opening[src] = 500.00 DUK at 2025-01-01 start
+  opening[gone] = 0 DUK at 2025-01-01 start
+  opening[x] = 0 DUK at 2025-01-01 start

@@ -3,7 +3,7 @@ model g6_when
   on 2026-02-15
   start 2026-01-01
   end 2026-03-31
-  note "T, issue #41, G6: plans refused in the plan pass (E §4.1 step 2, L §5.14): one whose attribute divides by zero in February, after its legs are known, refused at its places only; one whose when divides by zero in March, before its legs, refusing every place from its day; January answered for both."
+  note "T, issue #41, G6: plans refused in the plan pass (E §4.1 step 2, L §5.14): one whose attribute divides by zero in February, after its legs are known, refused at its places only; one whose when divides by zero in March, refusing from its day the places its legs give, konto and world (tally 2.1.6, #51: the attribute's refusal in February no longer reaches konto); January answered for both."
 
 source fixture "T's fixture for S's kernel tests (invented values)"
 

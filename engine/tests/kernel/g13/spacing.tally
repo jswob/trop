@@ -1,0 +1,33 @@
+model g13_spacing
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#81, P21), G13: L §2.4 The loader accepts any spacing the grammar allows: a record field spaced at its . (pair .x, pair. y, pair . x), an id at its [ (added [q2], an item named as a calendar list word), a call at its ( (max (…)) read as written touching, and a keyword keeps its space before ( (not (…)). refcore 2.1.5 refused the spaced field (LOAD-PARSE). Its twin, the same text touching, answers the same."
+
+source plan "T's invented plan"
+
+index qs = [q1, q2]
+
+input pair: (x int, y int)
+
+input added[k in qs]: int
+
+input base: int
+
+def fields: int = pair .x + pair. y + pair . x
+
+def keyed: int = added [q2] + max (base, added [q1])
+
+def kept: bool = not (base > pair.y or base < added[q2])
+
+version plan_2026
+  cite plan
+  governs always
+  known 2026-01-01
+  pair = (x: 4, y: 9)
+  added[q1] = 7
+  added[q2] = 2
+  base = 3
+
+ask q: fields, keyed, kept

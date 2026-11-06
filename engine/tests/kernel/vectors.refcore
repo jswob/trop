@@ -9365,12 +9365,12 @@ q_res: residuals konto 2026-01
   2026-01 move anyway: model -4.00 PLN, observed 0.00 PLN, difference 4.00 PLN
     expected but missing anyway[2026-01] on 2026-01-18: model -4.00 PLN
   law date 2026-02-15, cut 2026-02-15
-,7:g6/when,2:g6,17:run g6/when.tally,1810:13:g6/when.tally,1787:model g6_when
+,7:g6/when,2:g6,17:run g6/when.tally,1903:13:g6/when.tally,1880:model g6_when
   tally 2
   on 2026-02-15
   start 2026-01-01
   end 2026-03-31
-  note "T, issue #41, G6: plans refused in the plan pass (E §4.1 step 2, L §5.14): one whose attribute divides by zero in February, after its legs are known, refused at its places only; one whose when divides by zero in March, before its legs, refusing every place from its day; January answered for both."
+  note "T, issue #41, G6: plans refused in the plan pass (E §4.1 step 2, L §5.14): one whose attribute divides by zero in February, after its legs are known, refused at its places only; one whose when divides by zero in March, refusing from its day the places its legs give, konto and world (tally 2.1.6, #51: the attribute's refusal in February no longer reaches konto); January answered for both."
 
 source fixture "T's fixture for S's kernel tests (invented values)"
 
@@ -9429,11 +9429,11 @@ version openings
   known 2025-12-31
   opening[konto] = 100 at 2026-01-01 start
   opening[box] = 0 at 2026-01-01 start
-,,1:0,580:q_bal (d = 2026-01-20): (103.00 PLN, 3.00 PLN)
+,,1:0,557:q_bal (d = 2026-01-20): (103.00 PLN, 3.00 PLN)
   unfulfilled: gate[2026-01]
   unfulfilled: tag[2026-01]
   law date 2026-02-15, cut 2026-02-15
-q_bal (d = 2026-02-20): (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
+q_bal (d = 2026-02-20): (106.00 PLN, refused: RUN-DIV division by zero)
   unfulfilled: gate[2026-01]
   unfulfilled: gate[2026-02]
   unfulfilled: tag[2026-01]
@@ -10018,12 +10018,12 @@ q_unc: (619.00 PLN, ?"late has no balance before 2026-02-12" (late), ?"late has 
   uncertain: g_on_d
   uncertain: g_on_t
   law date 2026-02-15, cut 2026-02-15
-,8:g7/flows,2:g7,18:run g7/flows.tally,5281:14:g7/flows.tally,5257:model g7_flows
+,8:g7/flows,2:g7,18:run g7/flows.tally,5374:14:g7/flows.tally,5350:model g7_flows
   tally 2
   on 2026-02-15
   start 2026-01-01
   end 2026-03-31
-  note "T, issue #41, G7: reads at the ask (L §5.14, §5.14.3, §8.2): flows of a place over spans before, across, starting on and after a refusal of every place, and from before the run's start; a hole amount inside a span and a hole day; flows of a move by leg and by keys, over a span with no movement where the kind's leg has a unit and where it doesn't; bal(x, u, d); with uncertain on a place with a reading, uncertain movements before it, after it, on the day read and after it, into and out of the place, and on a place with no reading."
+  note "T, issue #41, G7: reads at the ask (L §5.14, §5.14.3, §8.2): flows of a place over spans before, across, starting on and after a refused when whose legs (shop, world) don't touch it, so konto stands (tally 2.1.6, #51; 2.1.5 refused every place), and from before the run's start; a hole amount inside a span and a hole day; flows of a move by leg and by keys, over a span with no movement where the kind's leg has a unit and where it doesn't; bal(x, u, d); with uncertain on a place with a reading, uncertain movements before it, after it, on the day read and after it, into and out of the place, and on a place with no reading."
 
 source fixture "T's fixture for S's kernel tests (invented values)"
 
@@ -10191,11 +10191,11 @@ version openings
   opening[fund] = 0 at 2026-01-01 start
   opening[box_h] = 0 at 2026-01-01 start
   stated[konto] = 880.00 at 2026-01-22 end "konto's statement, below the plan"
-,,1:0,1544:q_move: (20.00 PLN, 2 etf_unit, 3 etf_unit, 0 etf_unit, 0.00 PLN, 0.00 PLN, 0.00 PLN, 7.00 PLN)
+,,1:0,1522:q_move: (20.00 PLN, 2 etf_unit, 3 etf_unit, 0 etf_unit, 0.00 PLN, 0.00 PLN, 0.00 PLN, 7.00 PLN)
   unfulfilled: buy[2026-01]
   unfulfilled: ext
   law date 2026-02-15, cut 2026-02-15
-q_place: (-113.00 PLN, -113.00 PLN, ?"How much is the repair?" (hole_amt), refused: RUN-DIV division by zero, -12.00 PLN, -12.00 PLN, ?"before the run's start" (konto), ?"When does the parcel come?" (hole_day), ?"When does the parcel come?" (hole_day), -30.00 PLN, 2 etf_unit)
+q_place: (-113.00 PLN, -113.00 PLN, ?"How much is the repair?" (hole_amt), -112.00 PLN, -12.00 PLN, -12.00 PLN, ?"before the run's start" (konto), ?"When does the parcel come?" (hole_day), ?"When does the parcel come?" (hole_day), -30.00 PLN, 2 etf_unit)
   unfulfilled: buy[2026-01]
   unfulfilled: rent[2026-01]
   unfulfilled: rent[2026-02]
@@ -14061,7 +14061,7 @@ version facts
   d0 = 2025-01-10
   opening[src] = 500.00 DUK at 2025-01-01 start
   opening[gone] = 0 DUK at 2025-01-01 start
-,,1:0,97:q: refused: RUN-LIFESPAN ab.cash moves into or out of gone outside its lifespan
+,,1:0,96:q: refused: RUN-LIFESPAN a.cash moves into or out of gone outside its lifespan
   cut 2025-12-31
 ,21:g6/refusal_order_twin,2:g6,31:run g6/refusal_order_twin.tally,1111:27:g6/refusal_order_twin.tally,1074:model g6_refusal_order_twin
   tally 2
@@ -14370,4 +14370,879 @@ q_reduced (k = common): (0.4, 0.8, 0.8, true, 12)
   law date 2026-11-06, cut 2026-11-06
 q_reduced (k = neg): (-0.5, -1, -1, true, -10)
   law date 2026-11-06, cut 2026-11-06
+,16:g6/where_refused,2:g6,26:run g6/where_refused.tally,2132:22:g6/where_refused.tally,2100:model g6_where_refused
+  tally 2
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-04-30
+  note "T, tally 2.1.6 (#51, P2), G6: a move bound over a kind whose key's where is refused for one member (eve: 1 / 0) makes a refused instance, which reaches as a hole movement does (L §8.4, L §5.14 Keys, E §4.2): from its day (2026-03-12) the places its legs give, purse and world, and flows of the move over a span that holds it. purse before that day, the place box that dues never touches, flows of the move before its day and a count over the kind stand. refcore 2.1.5 refused every balance from the run's start, box included. Its twin answers eve."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit DUK: currency minor 0.01
+
+kind member
+
+place purse: accounts DUK lives 2026-01-01..
+
+place box: accounts DUK lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input share[p in member]: int
+
+input due_day: date
+
+input early_day: date
+
+input fee: money DUK
+
+move dues[p in member on due_day where 1 / share[p] > 0]: transfers
+  on due_day
+  leg cash from purse to world amount fee
+
+move early[p in member on early_day where share[p] >= 0]: transfers
+  on early_day
+  leg cash from purse to world amount fee
+
+move gift: transfers
+  on due_day
+  leg cash from world to box amount fee
+
+ask q_purse: bal(purse, 2026-02-28), bal(purse, 2026-03-31) law cut
+
+ask q_box: bal(box, 2026-02-28), bal(box, 2026-03-31) law cut
+
+ask q_flows: flows(dues, 2026-03-01 .. 2026-03-31), flows(dues, 2026-01-01 .. 2026-02-28), flows(early, 2026-01-01 .. 2026-02-28), flows(gift, 2026-03-01 .. 2026-03-31) law cut
+
+ask q_n: count(p in member on due_day) law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  member + [ada, eve, ivo] lives 2026-01-01..
+  share[ada] = 1 "ada's share"
+  share[eve] = 0 "eve's share divides by zero"
+  share[ivo] = -1 "ivo's share, his where fails"
+  due_day = 2026-03-12 "the dues' day"
+  early_day = 2026-02-05 "the early dues' day"
+  fee = 5.00 "the fee"
+  opening[purse] = 100 at 2026-01-01 start
+  opening[box] = 50 at 2026-01-01 start
+,,1:0,515:q_box: (50.00 DUK, 55.00 DUK)
+  unfulfilled: gift
+  law date 2026-04-30, cut 2026-04-30
+q_flows: (refused: RUN-DIV division by zero, 0.00 DUK, 10.00 DUK, 5.00 DUK)
+  unfulfilled: dues[ada]
+  unfulfilled: early[ada]
+  unfulfilled: early[eve]
+  unfulfilled: gift
+  law date 2026-04-30, cut 2026-04-30
+q_n: 3
+  law date 2026-04-30, cut 2026-04-30
+q_purse: (90.00 DUK, refused: RUN-DIV division by zero)
+  unfulfilled: dues[ada]
+  unfulfilled: early[ada]
+  unfulfilled: early[eve]
+  law date 2026-04-30, cut 2026-04-30
+,21:g6/where_refused_twin,2:g6,31:run g6/where_refused_twin.tally,1696:27:g6/where_refused_twin.tally,1659:model g6_where_refused_twin
+  tally 2
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-04-30
+  note "T, tally 2.1.6 (#51, P2), G6: the twin of g6/where_refused: eve's share is 4, so her where holds and every read answers."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit DUK: currency minor 0.01
+
+kind member
+
+place purse: accounts DUK lives 2026-01-01..
+
+place box: accounts DUK lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input share[p in member]: int
+
+input due_day: date
+
+input early_day: date
+
+input fee: money DUK
+
+move dues[p in member on due_day where 1 / share[p] > 0]: transfers
+  on due_day
+  leg cash from purse to world amount fee
+
+move early[p in member on early_day where share[p] >= 0]: transfers
+  on early_day
+  leg cash from purse to world amount fee
+
+move gift: transfers
+  on due_day
+  leg cash from world to box amount fee
+
+ask q_purse: bal(purse, 2026-02-28), bal(purse, 2026-03-31) law cut
+
+ask q_box: bal(box, 2026-02-28), bal(box, 2026-03-31) law cut
+
+ask q_flows: flows(dues, 2026-03-01 .. 2026-03-31), flows(dues, 2026-01-01 .. 2026-02-28), flows(early, 2026-01-01 .. 2026-02-28), flows(gift, 2026-03-01 .. 2026-03-31) law cut
+
+ask q_n: count(p in member on due_day) law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  member + [ada, eve, ivo] lives 2026-01-01..
+  share[ada] = 1 "ada's share"
+  share[eve] = 4 "eve's share"
+  share[ivo] = -1 "ivo's share, his where fails"
+  due_day = 2026-03-12 "the dues' day"
+  early_day = 2026-02-05 "the early dues' day"
+  fee = 5.00 "the fee"
+  opening[purse] = 100 at 2026-01-01 start
+  opening[box] = 50 at 2026-01-01 start
+,,1:0,517:q_box: (50.00 DUK, 55.00 DUK)
+  unfulfilled: gift
+  law date 2026-04-30, cut 2026-04-30
+q_flows: (10.00 DUK, 0.00 DUK, 10.00 DUK, 5.00 DUK)
+  unfulfilled: dues[ada]
+  unfulfilled: dues[eve]
+  unfulfilled: early[ada]
+  unfulfilled: early[eve]
+  unfulfilled: gift
+  law date 2026-04-30, cut 2026-04-30
+q_n: 3
+  law date 2026-04-30, cut 2026-04-30
+q_purse: (90.00 DUK, 80.00 DUK)
+  unfulfilled: dues[ada]
+  unfulfilled: dues[eve]
+  unfulfilled: early[ada]
+  unfulfilled: early[eve]
+  law date 2026-04-30, cut 2026-04-30
+,21:g6/refusal_keys_typed,2:g6,31:run g6/refusal_keys_typed.tally,1449:27:g6/refusal_keys_typed.tally,1412:model g6_refusal_keys_typed
+  tally 2
+  on 2025-12-31
+  start 2025-01-01
+  end 2025-12-31
+  note "T, tally 2.1.6 (#57, P4), G6: which refusal a place keeps (E §4.1): one plan move m of two keys, a place and a flat of a list index, with two instances on one day, m[x, f3] and m[x, f11], each a leg into gone after its lifespan ends (RUN-LIFESPAN), both refused at src. Of a day's legs refused at one place the first in the typed movement order prints: f3 (position 3) before f11 (position 11), so bal(src) prints m[x, f3].cash, where the order's text (f11 before f3) printed m[x, f11].cash. Its twin makes m[x, f3] a leg of 0, so m[x, f11].cash refuses alone."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit DUK: currency minor 0.01
+
+index flats = [f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11]
+
+input amt: money DUK
+
+input d0: date
+
+place src: accounts DUK lives 2025-01-01..
+
+place gone: accounts DUK lives 2025-01-01..2025-01-05
+
+place x: accounts DUK lives 2025-01-01..
+
+move m[p in accounts on d0, f in flats]: transfers
+  on d0
+  when p == x and (pos(f) == 3 or pos(f) == 11)
+  leg cash from src to gone amount amt
+
+ask q: bal(src, 2025-01-31)
+
+version facts
+  cite fixture
+  governs always
+  known 2025-01-01
+  amt = 1.00 DUK
+  d0 = 2025-01-10
+  opening[src] = 500.00 DUK at 2025-01-01 start
+  opening[gone] = 0 DUK at 2025-01-01 start
+  opening[x] = 0 DUK at 2025-01-01 start
+,,1:0,103:q: refused: RUN-LIFESPAN m[x, f3].cash moves into or out of gone outside its lifespan
+  cut 2025-12-31
+,26:g6/refusal_keys_typed_twin,2:g6,36:run g6/refusal_keys_typed_twin.tally,1099:32:g6/refusal_keys_typed_twin.tally,1057:model g6_refusal_keys_typed_twin
+  tally 2
+  on 2025-12-31
+  start 2025-01-01
+  end 2025-12-31
+  note "T, tally 2.1.6 (#57, P4), G6: the twin of g6/refusal_keys_typed: m[x, f3] is a leg of 0, so m[x, f11].cash refuses src alone, and bal(src) prints it."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit DUK: currency minor 0.01
+
+index flats = [f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11]
+
+input d0: date
+
+input leg_amt[f in flats]: money DUK
+
+place src: accounts DUK lives 2025-01-01..
+
+place gone: accounts DUK lives 2025-01-01..2025-01-05
+
+place x: accounts DUK lives 2025-01-01..
+
+move m[p in accounts on d0, f in flats]: transfers
+  on d0
+  when p == x and (pos(f) == 3 or pos(f) == 11)
+  leg cash from src to gone amount leg_amt[f]
+
+ask q: bal(src, 2025-01-31)
+
+version facts
+  cite fixture
+  governs always
+  known 2025-01-01
+  d0 = 2025-01-10
+  leg_amt[*] = 1.00 DUK
+  leg_amt[f3] = 0 DUK
+  opening[src] = 500.00 DUK at 2025-01-01 start
+  opening[gone] = 0 DUK at 2025-01-01 start
+  opening[x] = 0 DUK at 2025-01-01 start
+,,1:0,104:q: refused: RUN-LIFESPAN m[x, f11].cash moves into or out of gone outside its lifespan
+  cut 2025-12-31
+,13:g10/ties_9999,3:g10,23:run g10/ties_9999.tally,1813:19:g10/ties_9999.tally,1784:model g10_ties_9999
+  tally 2
+  on 9999-12-31
+  start 9999-01-01
+  end 9999-12-31
+  note "T, tally 2.1.6 (#48, P8), G10: a run inside the year 9999, whole (L §2.1: its built-in years and months end with 9999-12-31). The residual ledger of 9999-05 ties two matched lines but for the movement order (E §6.3, E §4.1): fee[f2] is dated 9999-05-31, the lines' day, fee[f1]'s day is a hole, which sorts after every day, 9999-12-31 included, so fee[f2] prints first though f1 is the first key. tally 2.1.5's refcore refused the model (the year 9999 ended on 10000-01-01), and a hole day sorted as 9999-12-31 itself."
+
+source plan "T's invented plan"
+
+source bank "T's invented statement"
+
+unit PLN: currency minor 0.01
+
+index flats = [f1, f2]
+
+input stmt: observed
+
+input fee_amt: money PLN
+
+input fee_day[f in flats]: date
+
+place konto: accounts PLN lives 9999-01-01..
+
+place agent: outside lives 9999-01-01..
+
+place unexplained: outside lives 9999-01-01..
+
+move fee[f in flats]: transfers
+  on fee_day[f]
+  leg cash from konto to agent amount fee_amt
+
+version plan_9999
+  cite plan
+  governs always
+  known 9999-01-01
+  fee_amt = 300.00 PLN
+  fee_day[f1] = ?"which day is f1's fee paid?"
+  fee_day[f2] = 9999-05-31
+  opening[konto] = 2 000.00 PLN at 9999-01-01 start
+
+version statement_05
+  cite bank
+  governs 9999-05
+  known 9999-06-02
+  covers konto
+  pad konto from unexplained
+  stmt[r1] = (on: 9999-05-31, kind: transfers, leg cash from konto to agent amount 300.00 PLN, fulfils: fee[f1]) "line 1"
+  stmt[r2] = (on: 9999-05-31, kind: transfers, leg cash from konto to agent amount 300.00 PLN, fulfils: fee[f2]) "line 2"
+  stated[konto] = 1 400.00 PLN at 9999-05-31 end
+
+ask led: residuals konto 9999-05
+
+ask y: max(pos(m) for m in months), bal(konto, 9999-12-31), end_of(9999-11)
+,,1:0,662:led: residuals konto 9999-05
+  9999-05 balance: model 1 400.00 PLN, observed 1 400.00 PLN, difference 0.00 PLN
+    balance konto 9999-05-31 end (padded): booked 1 400.00 PLN, stated 1 400.00 PLN, gap 0.00 PLN
+  9999-05 move fee: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN
+    matched fee[f2] on 9999-05-31: model -300.00 PLN, observed -300.00 PLN, difference 0.00 PLN, timing +0 days
+    matched fee[f1] on 9999-05-31: model -300.00 PLN, observed -300.00 PLN, difference 0.00 PLN, timing +0 days
+  cut 9999-12-31
+y: (12, 1 400.00 PLN, 9999-12-01)
+  pad: konto 9999-05-31 end, pads:statement_05:konto@9999-05-31 end of 0.00 PLN
+  cut 9999-12-31
+,13:g10/attr_move,3:g10,23:run g10/attr_move.tally,1641:19:g10/attr_move.tally,1612:model g10_attr_move
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#86, P17), G10: L §3.1 key K names the movements of an event kind, planned or observed: an observed refund's attribute of type key dues names dues[2026-03], an instance of a move of kind dues, and loads (refcore 2.1.5 refused it, LOAD-KEY dues[2026-03] is not a key of dues). The bindings count the refunds naming each instance, and flows of acct takes the refunds in. Its refused twin, an instance of a move of another kind, is codes/m0's adjust/attr-move-other."
+
+source plan "T's invented plan"
+
+source bank "T's invented statement"
+
+unit PLN: currency minor 0.01
+
+kind dues: event certain
+  leg cash: PLN
+
+kind refunds: event certain
+  leg cash: PLN
+  attr of_due: key dues
+
+place acct: accounts PLN lives 2026-01-01..
+
+place club: outside lives 2026-01-01..
+
+input stmt: observed
+
+input due_amt: money PLN
+
+move due[m in months]: dues
+  on start_of(m)
+  leg cash from acct to club amount due_amt
+
+ask t: count(r in refunds over .. where r.of_due == d) for d in dues over 2026-02 .. 2026-04
+
+ask back: flows(acct, 2026-03-01 .. 2026-04-30)
+
+version plan_2026
+  cite plan
+  governs always
+  known 2026-01-01
+  due_amt = 40.00 PLN
+  opening[acct] = 500.00 PLN at 2026-01-01 start
+
+version statement
+  cite bank
+  governs 2026-03..2026-04
+  known 2026-05-02
+  stmt[r1] = (on: 2026-03-15, kind: refunds, leg cash from club to acct amount 40.00 PLN, of_due: due[2026-03]) "refund 1"
+  stmt[r2] = (on: 2026-04-20, kind: refunds, leg cash from club to acct amount 10.00 PLN, of_due: due[2026-03]) "refund 2"
+,,1:0,297:back: -30.00 PLN
+  unfulfilled: due[2026-03]
+  unfulfilled: due[2026-04]
+  cut 2026-06-30
+t (d = due[2026-02]): 0
+  unfulfilled: due[2026-02]
+  cut 2026-06-30
+t (d = due[2026-03]): 2
+  unfulfilled: due[2026-03]
+  cut 2026-06-30
+t (d = due[2026-04]): 0
+  unfulfilled: due[2026-04]
+  cut 2026-06-30
+,35:g11/remeasure_refused_leg_hole_when,3:g11,45:run g11/remeasure_refused_leg_hole_when.tally,1966:41:g11/remeasure_refused_leg_hole_when.tally,1915:model g11_remeasure_refused_leg_hole_when
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#52, P3), G11: E §5 step 3, L §5.14.3, L §8.4: late (known 2026-05-01) makes rent[2026-03]'s when a hole (seats unknown) and its cash leg's amount refused (no tenants: RUN-DIV), while its charge leg's amount stands (the fee). A refusal outranks a hole, per leg: the cash leg's adjustment is refused and reaches what konto_c's reads count from 2026-05-01; the charge leg's is a hole with the seats question, and konto_f's reads from 2026-05-01 hold it. Before 2026-05-01 both stand. refcore 2.1.5 made both legs' adjustments the seats' hole."
+
+source plan "T's invented plan"
+
+source act "T's invented act"
+
+unit PLN: currency minor 0.01
+
+kind rentals: event certain
+  leg cash: PLN
+  leg charge: PLN
+
+place konto_c: accounts PLN lives 2026-01-01..
+
+place konto_f: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+input total: money PLN
+
+input fee: money PLN
+
+input tenants[m in months]: int
+
+input dom: int
+
+input seats[m in months]: int
+
+move rent[m in months]: rentals
+  on day_of(m, dom)
+  at start_of(m)
+  when seats[m] > 0
+  leg cash from konto_c to landlord amount round(total / tenants[m], minor(PLN), half-even)
+  leg charge from konto_f to landlord amount fee
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  total = 900.00 PLN
+  fee = 20.00 PLN
+  tenants[*] = 3
+  dom = 10
+  seats[*] = 1
+  opening[konto_c] = 5 000.00 PLN at 2026-01-01 start
+  opening[konto_f] = 1 000.00 PLN at 2026-01-01 start
+
+version late
+  cite act
+  governs 2026-03
+  known 2026-05-01
+  replace seats[*] = ?"were the seats taken in March?"
+  replace tenants[*] = 0
+
+ask before: bal(konto_c, 2026-04-30), bal(konto_f, 2026-04-30)
+
+ask after_c: bal(konto_c, 2026-05-31)
+
+ask after_f: bal(konto_f, 2026-05-31)
+
+ask l: a.change for a in adjustments over ..
+,,1:0,1048:after_c: refused: RUN-DIV division by zero
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  unfulfilled: rent[2026-05]
+  cut 2026-10-20
+after_f: ?"rent[2026-03] on 2026-03-10 changed after it was paid (version late); is back pay due, and when?" (rent[2026-03])
+  adjustment: rent[2026-03] by ?"were the seats taken in March?" (seats[2026-03]) on 2026-05-01 (version late), remaining ?"were the seats taken in March?" (seats[2026-03])
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  unfulfilled: rent[2026-05]
+  cut 2026-10-20
+before: (3 800.00 PLN, 920.00 PLN)
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  cut 2026-10-20
+l (a = adjustments[rent[2026-03].cash, late]): refused: RUN-DIV division by zero
+  cut 2026-10-20
+l (a = adjustments[rent[2026-03].charge, late]): ?"were the seats taken in March?" (seats[2026-03])
+  cut 2026-10-20
+,23:g11/remeasure_hole_legs,3:g11,33:run g11/remeasure_hole_legs.tally,1853:29:g11/remeasure_hole_legs.tally,1814:model g11_remeasure_hole_legs
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#52's family; MUTANTS-SURVIVORS' against_hole recipe), G11: E §5 step 3: late (known 2026-05-01) makes rent[2026-03]'s when a hole (seats unknown): each leg's adjustment a hole. later (known 2026-07-01) states the seats and makes the March fee a hole, measured against that hole state per leg: the cash leg's amount is known, so its 2026-07-01 adjustment holds the seats question alone; the charge leg's holds the fee's question too. Each leg is measured against its own state, never another leg's."
+
+source plan "T's invented plan"
+
+source act "T's invented act"
+
+unit PLN: currency minor 0.01
+
+kind rentals: event certain
+  leg cash: PLN
+  leg charge: PLN
+
+place konto_c: accounts PLN lives 2026-01-01..
+
+place konto_f: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+input total: money PLN
+
+input fee[m in months]: money PLN
+
+input dom: int
+
+input seats[m in months]: int
+
+move rent[m in months]: rentals
+  on day_of(m, dom)
+  at start_of(m)
+  when seats[m] > 0
+  leg cash from konto_c to landlord amount total
+  leg charge from konto_f to landlord amount fee[m]
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  total = 900.00 PLN
+  fee[*] = 20.00 PLN
+  dom = 10
+  seats[*] = 1
+  opening[konto_c] = 5 000.00 PLN at 2026-01-01 start
+  opening[konto_f] = 1 000.00 PLN at 2026-01-01 start
+
+version late
+  cite act
+  governs 2026-03
+  known 2026-05-01
+  replace seats[*] = ?"were the seats taken in March?"
+
+version later
+  cite act
+  governs 2026-03
+  known 2026-07-01
+  replace seats[*] = 1
+  replace fee[*] = ?"what was March's fee?"
+
+ask c: bal(konto_c, 2026-07-31)
+
+ask f: bal(konto_f, 2026-07-31)
+
+ask l: a.change for a in adjustments over ..
+,,1:0,2192:c: ?"rent[2026-03] on 2026-03-10 changed after it was paid (version late); is back pay due, and when?" (rent[2026-03]) ?"rent[2026-03] on 2026-03-10 changed after it was paid (version later); is back pay due, and when?" (rent[2026-03])
+  adjustment: rent[2026-03] by ?"were the seats taken in March?" (seats[2026-03]) on 2026-05-01 (version late), remaining ?"were the seats taken in March?" (seats[2026-03])
+  adjustment: rent[2026-03] by ?"were the seats taken in March?" (seats[2026-03]) on 2026-07-01 (version later), remaining ?"were the seats taken in March?" (seats[2026-03])
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  unfulfilled: rent[2026-05]
+  unfulfilled: rent[2026-06]
+  unfulfilled: rent[2026-07]
+  cut 2026-10-20
+f: ?"rent[2026-03] on 2026-03-10 changed after it was paid (version late); is back pay due, and when?" (rent[2026-03]) ?"rent[2026-03] on 2026-03-10 changed after it was paid (version later); is back pay due, and when?" (rent[2026-03])
+  adjustment: rent[2026-03] by ?"were the seats taken in March?" (seats[2026-03]) ?"what was March's fee?" (fee[2026-03]) on 2026-07-01 (version later), remaining ?"were the seats taken in March?" (seats[2026-03]) ?"what was March's fee?" (fee[2026-03])
+  adjustment: rent[2026-03] by ?"were the seats taken in March?" (seats[2026-03]) on 2026-05-01 (version late), remaining ?"were the seats taken in March?" (seats[2026-03])
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  unfulfilled: rent[2026-05]
+  unfulfilled: rent[2026-06]
+  unfulfilled: rent[2026-07]
+  cut 2026-10-20
+l (a = adjustments[rent[2026-03].cash, late]): ?"were the seats taken in March?" (seats[2026-03])
+  cut 2026-10-20
+l (a = adjustments[rent[2026-03].charge, late]): ?"were the seats taken in March?" (seats[2026-03])
+  cut 2026-10-20
+l (a = adjustments[rent[2026-03].cash, later]): ?"were the seats taken in March?" (seats[2026-03])
+  cut 2026-10-20
+l (a = adjustments[rent[2026-03].charge, later]): ?"were the seats taken in March?" (seats[2026-03]) ?"what was March's fee?" (fee[2026-03])
+  cut 2026-10-20
+,11:g13/spacing,3:g13,21:run g13/spacing.tally,992:17:g13/spacing.tally,966:model g13_spacing
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#81, P21), G13: L §2.4 The loader accepts any spacing the grammar allows: a record field spaced at its . (pair .x, pair. y, pair . x), an id at its [ (added [q2], an item named as a calendar list word), a call at its ( (max (…)) read as written touching, and a keyword keeps its space before ( (not (…)). refcore 2.1.5 refused the spaced field (LOAD-PARSE). Its twin, the same text touching, answers the same."
+
+source plan "T's invented plan"
+
+index qs = [q1, q2]
+
+input pair: (x int, y int)
+
+input added[k in qs]: int
+
+input base: int
+
+def fields: int = pair .x + pair. y + pair . x
+
+def keyed: int = added [q2] + max (base, added [q1])
+
+def kept: bool = not (base > pair.y or base < added[q2])
+
+version plan_2026
+  cite plan
+  governs always
+  known 2026-01-01
+  pair = (x: 4, y: 9)
+  added[q1] = 7
+  added[q2] = 2
+  base = 3
+
+ask q: fields, keyed, kept
+,,1:0,34:q: (17, 9, true)
+  cut 2026-12-31
+,16:g13/spacing_twin,3:g13,26:run g13/spacing_twin.tally,661:22:g13/spacing_twin.tally,630:model g13_spacing_twin
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#81, P21), G13: the twin of g13/spacing, every token touching: the same answers."
+
+source plan "T's invented plan"
+
+index qs = [q1, q2]
+
+input pair: (x int, y int)
+
+input added[k in qs]: int
+
+input base: int
+
+def fields: int = pair.x + pair.y + pair.x
+
+def keyed: int = added[q2] + max(base, added[q1])
+
+def kept: bool = not (base > pair.y or base < added[q2])
+
+version plan_2026
+  cite plan
+  governs always
+  known 2026-01-01
+  pair = (x: 4, y: 9)
+  added[q1] = 7
+  added[q2] = 2
+  base = 3
+
+ask q: fields, keyed, kept
+,,1:0,34:q: (17, 9, true)
+  cut 2026-12-31
+,8:g14/days,3:g14,18:run g14/days.tally,1292:14:g14/days.tally,1268:model g14_days
+  tally 2
+  on 9999-12-31
+  start 9999-01-01
+  end 9999-12-31
+  note "T, tally 2.1.6 (#89, P7; #48, P8), G14: L §7.6 item 1: a day is one of 0001-01-01 to 9999-12-31. A day computed past 9999-12-31 or before 0001-01-01 is refused at its key, RUN-LIMIT (a row's value gives it, so load doesn't see it), and so is the end of time where a day is read: end_of(9999) printed, a day argument, a balance's day. The edges stand: the row's own 9999-12-31, add_months to 9999-12-30, end_of(9999) - 1 day, 0001-01-02 - 1 day."
+
+source plan "T's invented plan"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 9999-01-01..
+
+input last: date
+
+input first: date
+
+input late_nov: date
+
+input mid_dec: date
+
+version plan_9999
+  cite plan
+  governs always
+  known 9999-01-01
+  last = 9999-12-31
+  first = 0001-01-02
+  late_nov = 9999-11-30
+  mid_dec = 9999-12-15
+  opening[konto] = 250.00 PLN at 9999-01-01 start
+
+ask at_last: last, last - 1 day, add_months(late_nov, 1)
+
+ask past: last + 1 day
+
+ask month_past: add_months(mid_dec, 1)
+
+ask eot: end_of(9999)
+
+ask eot_back: end_of(9999) - 1 day, end_of(9999-11)
+
+ask eot_year: year_of(end_of(9999))
+
+ask eot_bal: bal(konto, end_of(9999-12))
+
+ask at_first: first - 1 day
+
+ask before: first - 1 day - 1 day
+,,1:0,552:at_first: 0001-01-01
+  cut 9999-12-31
+at_last: (9999-12-31, 9999-12-30, 9999-12-30)
+  cut 9999-12-31
+before: refused: RUN-LIMIT a day comes before 0001-01-01
+  cut 9999-12-31
+eot: refused: RUN-LIMIT a day passes 9999-12-31
+eot_back: (9999-12-31, 9999-12-01)
+  cut 9999-12-31
+eot_bal: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+eot_year: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+month_past: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+past: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+,16:g14/move_day_row,3:g14,26:run g14/move_day_row.tally,1336:22:g14/move_day_row.tally,1304:model g14_move_day_row
+  tally 2
+  on 9999-12-31
+  start 9999-01-01
+  end 9999-12-31
+  note "T, tally 2.1.6 (#89, P7; #51), G14: L §7.6 item 1, §8.4: late's day is pay_day + 1 day, from a row's 9999-12-31, past 9999-12-31: load doesn't see it, so the instance is refused at its key (RUN-LIMIT), and a movement whose day is refused may fall on any day, so it refuses the places its legs give, konto and world, on every day (bal(konto) at 9999-03-31 too) and flows of late. The place spare, which only on_time touches, stands, and so do flows of on_time, dated by the row itself."
+
+source plan "T's invented plan"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 9999-01-01..
+
+place spare: accounts PLN lives 9999-01-01..
+
+place world: outside lives 9999-01-01..
+
+input pay_day: date
+
+input amt: money PLN
+
+move late: transfers
+  on pay_day + 1 day
+  leg cash from konto to world amount amt
+
+move on_time: transfers
+  on pay_day
+  leg cash from world to spare amount amt
+
+version plan_9999
+  cite plan
+  governs always
+  known 9999-01-01
+  pay_day = 9999-12-31
+  amt = 15.00 PLN
+  opening[konto] = 300.00 PLN at 9999-01-01 start
+  opening[spare] = 100.00 PLN at 9999-01-01 start
+
+ask k: bal(konto, 9999-03-31)
+
+ask s: bal(spare, 9999-12-31)
+
+ask f: flows(late, 9999), flows(on_time, 9999)
+,,1:0,170:f: (refused: RUN-LIMIT a day passes 9999-12-31, 15.00 PLN)
+  cut 9999-12-31
+k: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+s: 115.00 PLN
+  cut 9999-12-31
+,13:g14/range_row,3:g14,23:run g14/range_row.tally,838:19:g14/range_row.tally,810:model g14_range_row
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#89, P7), G14: L §7.6 item 2: a range an aggregate steps through holds at most 1 000 000 keys; its ends come from rows here, so it is refused at run, RUN-LIMIT, as written with or without its step. At the edge, 1 .. 1 000 000 is stepped through; 1 .. 1 000 001 by 1 000 is 1 001 keys and answers."
+
+source plan "T's invented plan"
+
+input n_edge: int
+
+input n_past: int
+
+input step_wide: int
+
+version plan_2026
+  cite plan
+  governs always
+  known 2026-01-01
+  n_edge = 1 000 000
+  n_past = 1 000 001
+  step_wide = 1 000
+
+ask edge: max(k for k in 1 .. n_edge)
+
+ask past: sum(k for k in 1 .. n_past)
+
+ask past_step: max(k for k in 1 .. n_past step 1)
+
+ask wide: max(k for k in 1 .. n_past step step_wide)
+,,1:0,254:edge: 1 000 000
+  cut 2026-12-31
+past: refused: RUN-LIMIT 1 .. 1 000 001 holds more than 1 000 000 keys
+  cut 2026-12-31
+past_step: refused: RUN-LIMIT 1 .. 1 000 001 step 1 holds more than 1 000 000 keys
+  cut 2026-12-31
+wide: 1 000 001
+  cut 2026-12-31
+,9:g14/edges,3:g14,19:run g14/edges.tally,1510:15:g14/edges.tally,1485:model g14_edges
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#89, P7; #48, P8), G14: L §7.6's limits load sees, each at its edge, where it loads and answers (one past each is codes/m0's basic/limit-* and basic/s1-*, LOAD-LIMIT): an index of 1 000 000 keys and a literal range an ask steps through of as many; a day range by 10 whose last period ends on 9999-12-31, the end of time, as a whole period; a range index's end and step of 18 digits; a key offset and its pos(k) guard of 18 digits (the guard never holds, so the base rule answers); unit powers of 64, PLN and %, written and reached by * (PLN^32 * PLN^32)."
+
+source plan "T's invented plan"
+
+unit PLN: currency minor 0.01
+
+index ns = 1..1000000
+
+index ds = day 9999-12-02..9999-12-31 by 10
+
+index big = 1..999999999999999999 by 999999999999999999
+
+index ks = 1..3
+
+input base: int
+
+input y: num PLN^64
+
+input h: num PLN^32
+
+input p: num %^64
+
+def x[k in ks]: int at reader
+  rule base = base
+  rule back beats base = x[k - 999999999999999999] + base when pos(k) > 999999999999999999
+
+def sq: num PLN^64 = h * h
+
+version plan_2026
+  cite plan
+  governs always
+  known 2026-01-01
+  base = 1
+  y = 2 PLN^64
+  h = 3 PLN^32
+  p = 1 %^64
+
+ask keys: max(pos(k) for k in ns), max(pos(k) for k in big), max(k for k in 1..1000000)
+
+ask last_period: max(pos(k) for k in ds), max(start_of(k) for k in ds), max(end_of(k) - 1 day for k in ds)
+
+ask offset: x[3] law 2026-06-30
+
+ask powers: y, sq, p
+,,1:0,333:keys: (1 000 000, 1, 1 000 000)
+  cut 2026-12-31
+last_period: (3, 9999-12-22, 9999-12-31)
+  cut 2026-12-31
+offset: 1
+  law date 2026-06-30, cut 2026-12-31
+powers: (2 PLN^64, 9 PLN^64, 0.00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001)
+  cut 2026-12-31
+,12:g14/calendar,3:g14,22:run g14/calendar.tally,3910:18:g14/calendar.tally,3882:model g14_calendar
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#89, P7), G14: L §4.2, §7.6 item 5: a calendar whose weekends name all seven days has no business day, so add_business and schedule, which seek one, refuse it (RUN-DOMAIN calendar <c> has no business day), while is_business answers false. Its twins: six weekend days find the Sunday; a yearly list of every month-day there is, 365 of them (02-29 is no month-day, L §3.1), leaves the leap day, so add_business finds 2028-02-29."
+
+source plan "T's invented plan"
+
+input all7: calendar
+
+input six: calendar
+
+input every_md: calendar
+
+input d0: date
+
+input dom: int
+
+def seek7: date = add_business(d0, 1, all7) at reader
+
+def sched7: date = schedule(month_of(d0), dom, following, all7) at reader
+
+def is7: bool = is_business(d0, all7) at reader
+
+def seek6: date = add_business(d0, 1, six) at reader
+
+def seek_md: date = add_business(d0, 1, every_md) at reader
+
+version plan_2026
+  cite plan
+  governs always
+  known 2026-01-01
+  all7 = calendar(weekends [mon, tue, wed, thu, fri, sat, sun])
+  six = calendar(weekends [mon, tue, wed, thu, fri, sat])
+  every_md = calendar(weekends [sat, sun], yearly [01-01, 01-02, 01-03, 01-04, 01-05, 01-06, 01-07, 01-08, 01-09, 01-10, 01-11, 01-12, 01-13, 01-14, 01-15, 01-16, 01-17, 01-18, 01-19, 01-20, 01-21, 01-22, 01-23, 01-24, 01-25, 01-26, 01-27, 01-28, 01-29, 01-30, 01-31, 02-01, 02-02, 02-03, 02-04, 02-05, 02-06, 02-07, 02-08, 02-09, 02-10, 02-11, 02-12, 02-13, 02-14, 02-15, 02-16, 02-17, 02-18, 02-19, 02-20, 02-21, 02-22, 02-23, 02-24, 02-25, 02-26, 02-27, 02-28, 03-01, 03-02, 03-03, 03-04, 03-05, 03-06, 03-07, 03-08, 03-09, 03-10, 03-11, 03-12, 03-13, 03-14, 03-15, 03-16, 03-17, 03-18, 03-19, 03-20, 03-21, 03-22, 03-23, 03-24, 03-25, 03-26, 03-27, 03-28, 03-29, 03-30, 03-31, 04-01, 04-02, 04-03, 04-04, 04-05, 04-06, 04-07, 04-08, 04-09, 04-10, 04-11, 04-12, 04-13, 04-14, 04-15, 04-16, 04-17, 04-18, 04-19, 04-20, 04-21, 04-22, 04-23, 04-24, 04-25, 04-26, 04-27, 04-28, 04-29, 04-30, 05-01, 05-02, 05-03, 05-04, 05-05, 05-06, 05-07, 05-08, 05-09, 05-10, 05-11, 05-12, 05-13, 05-14, 05-15, 05-16, 05-17, 05-18, 05-19, 05-20, 05-21, 05-22, 05-23, 05-24, 05-25, 05-26, 05-27, 05-28, 05-29, 05-30, 05-31, 06-01, 06-02, 06-03, 06-04, 06-05, 06-06, 06-07, 06-08, 06-09, 06-10, 06-11, 06-12, 06-13, 06-14, 06-15, 06-16, 06-17, 06-18, 06-19, 06-20, 06-21, 06-22, 06-23, 06-24, 06-25, 06-26, 06-27, 06-28, 06-29, 06-30, 07-01, 07-02, 07-03, 07-04, 07-05, 07-06, 07-07, 07-08, 07-09, 07-10, 07-11, 07-12, 07-13, 07-14, 07-15, 07-16, 07-17, 07-18, 07-19, 07-20, 07-21, 07-22, 07-23, 07-24, 07-25, 07-26, 07-27, 07-28, 07-29, 07-30, 07-31, 08-01, 08-02, 08-03, 08-04, 08-05, 08-06, 08-07, 08-08, 08-09, 08-10, 08-11, 08-12, 08-13, 08-14, 08-15, 08-16, 08-17, 08-18, 08-19, 08-20, 08-21, 08-22, 08-23, 08-24, 08-25, 08-26, 08-27, 08-28, 08-29, 08-30, 08-31, 09-01, 09-02, 09-03, 09-04, 09-05, 09-06, 09-07, 09-08, 09-09, 09-10, 09-11, 09-12, 09-13, 09-14, 09-15, 09-16, 09-17, 09-18, 09-19, 09-20, 09-21, 09-22, 09-23, 09-24, 09-25, 09-26, 09-27, 09-28, 09-29, 09-30, 10-01, 10-02, 10-03, 10-04, 10-05, 10-06, 10-07, 10-08, 10-09, 10-10, 10-11, 10-12, 10-13, 10-14, 10-15, 10-16, 10-17, 10-18, 10-19, 10-20, 10-21, 10-22, 10-23, 10-24, 10-25, 10-26, 10-27, 10-28, 10-29, 10-30, 10-31, 11-01, 11-02, 11-03, 11-04, 11-05, 11-06, 11-07, 11-08, 11-09, 11-10, 11-11, 11-12, 11-13, 11-14, 11-15, 11-16, 11-17, 11-18, 11-19, 11-20, 11-21, 11-22, 11-23, 11-24, 11-25, 11-26, 11-27, 11-28, 11-29, 11-30, 12-01, 12-02, 12-03, 12-04, 12-05, 12-06, 12-07, 12-08, 12-09, 12-10, 12-11, 12-12, 12-13, 12-14, 12-15, 12-16, 12-17, 12-18, 12-19, 12-20, 12-21, 12-22, 12-23, 12-24, 12-25, 12-26, 12-27, 12-28, 12-29, 12-30, 12-31])
+  d0 = 2026-05-13
+  dom = 4
+
+ask refused7: seek7, sched7 law 2026-06-30
+
+ask answered: is7, seek6, seek_md law 2026-06-30
+,,1:0,239:answered: (false, 2026-05-17, 2028-02-29)
+  law date 2026-06-30, cut 2026-12-31
+refused7: (refused: RUN-DOMAIN calendar all7 has no business day, refused: RUN-DOMAIN calendar all7 has no business day)
+  law date 2026-06-30, cut 2026-12-31
 ,

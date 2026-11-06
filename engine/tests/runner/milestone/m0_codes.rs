@@ -281,6 +281,16 @@ mod tests {
         code_as_refcore("LOAD-LIFESPAN");
     }
 
+    /// `LOAD-LIMIT` (L §7.6, tally 2.1.6, #89): `basic/limit-index-day` (a day range's last
+    /// period past 9999-12-31), `basic/limit-move-day` (a move's day load sees, the end of
+    /// time), `basic/limit-index-keys` and `basic/limit-range-keys` (1 000 001 keys),
+    /// `basic/limit-digits` and `basic/limit-offset-digits` (19 digits), and the seven
+    /// `basic/s1-*` (a unit power past 64, G13's S1); their edges answer in `kernel/g14/edges`.
+    #[test]
+    fn m0_code_load_limit() {
+        code_as_refcore("LOAD-LIMIT");
+    }
+
     /// `LOAD-LITERAL`: `basic/literal-amount`.
     #[test]
     fn m0_code_load_literal() {

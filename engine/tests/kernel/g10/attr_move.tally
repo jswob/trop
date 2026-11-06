@@ -1,0 +1,49 @@
+model g10_attr_move
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#86, P17), G10: L §3.1 key K names the movements of an event kind, planned or observed: an observed refund's attribute of type key dues names dues[2026-03], an instance of a move of kind dues, and loads (refcore 2.1.5 refused it, LOAD-KEY dues[2026-03] is not a key of dues). The bindings count the refunds naming each instance, and flows of acct takes the refunds in. Its refused twin, an instance of a move of another kind, is codes/m0's adjust/attr-move-other."
+
+source plan "T's invented plan"
+
+source bank "T's invented statement"
+
+unit PLN: currency minor 0.01
+
+kind dues: event certain
+  leg cash: PLN
+
+kind refunds: event certain
+  leg cash: PLN
+  attr of_due: key dues
+
+place acct: accounts PLN lives 2026-01-01..
+
+place club: outside lives 2026-01-01..
+
+input stmt: observed
+
+input due_amt: money PLN
+
+move due[m in months]: dues
+  on start_of(m)
+  leg cash from acct to club amount due_amt
+
+ask t: count(r in refunds over .. where r.of_due == d) for d in dues over 2026-02 .. 2026-04
+
+ask back: flows(acct, 2026-03-01 .. 2026-04-30)
+
+version plan_2026
+  cite plan
+  governs always
+  known 2026-01-01
+  due_amt = 40.00 PLN
+  opening[acct] = 500.00 PLN at 2026-01-01 start
+
+version statement
+  cite bank
+  governs 2026-03..2026-04
+  known 2026-05-02
+  stmt[r1] = (on: 2026-03-15, kind: refunds, leg cash from club to acct amount 40.00 PLN, of_due: due[2026-03]) "refund 1"
+  stmt[r2] = (on: 2026-04-20, kind: refunds, leg cash from club to acct amount 10.00 PLN, of_due: due[2026-03]) "refund 2"

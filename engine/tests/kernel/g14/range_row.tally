@@ -1,0 +1,30 @@
+model g14_range_row
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#89, P7), G14: L §7.6 item 2: a range an aggregate steps through holds at most 1 000 000 keys; its ends come from rows here, so it is refused at run, RUN-LIMIT, as written with or without its step. At the edge, 1 .. 1 000 000 is stepped through; 1 .. 1 000 001 by 1 000 is 1 001 keys and answers."
+
+source plan "T's invented plan"
+
+input n_edge: int
+
+input n_past: int
+
+input step_wide: int
+
+version plan_2026
+  cite plan
+  governs always
+  known 2026-01-01
+  n_edge = 1 000 000
+  n_past = 1 000 001
+  step_wide = 1 000
+
+ask edge: max(k for k in 1 .. n_edge)
+
+ask past: sum(k for k in 1 .. n_past)
+
+ask past_step: max(k for k in 1 .. n_past step 1)
+
+ask wide: max(k for k in 1 .. n_past step step_wide)

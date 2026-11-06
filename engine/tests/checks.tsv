@@ -1,5 +1,5 @@
 id	layer	cwd	files	asks	options	baseline	block	baseline_s	question	note	key
-R:all	interpreter	.			test	1170 passed				refcore test; same = its last line reports 1170 passed and nothing failed (tally 2.1.5, issue #84; 1168 on 2.1.4, issue #80; 1165 on 2.1.3, issues #58, #59, #60; 1152 on 2.1.2, the spec round; 1124 on 2.1.1, issue #13; 1115 on 2.1 after session 7c; 1105 in 7b; 950 on 2.0)	
+R:all	interpreter	.			test	1243 passed				refcore test; same = its last line reports 1243 passed and nothing failed (tally 2.1.6, the spec round; 1170 on 2.1.5, issue #84; 1168 on 2.1.4, issue #80; 1165 on 2.1.3, issues #58, #59, #60; 1152 on 2.1.2, the spec round; 1124 on 2.1.1, issue #13; 1115 on 2.1 after session 7c; 1105 in 7b; 950 on 2.0)	
 U:ask/ASK-01	unit	engine/tests/	engine/tests/unit/probes/ask/ASK-01.tally			engine/tests/baselines/snap16-probes/cases__probes__ask__ASK-01.tally.out		0			
 U:ask/ASK-02	unit	engine/tests/	engine/tests/unit/probes/ask/ASK-02.tally			engine/tests/baselines/snap16-probes/cases__probes__ask__ASK-02.tally.out		0			
 U:ask/ASK-03	unit	engine/tests/	engine/tests/unit/probes/ask/ASK-03.tally			engine/tests/baselines/snap16-probes/cases__probes__ask__ASK-03.tally.out		0			

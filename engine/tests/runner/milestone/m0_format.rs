@@ -252,4 +252,59 @@ mod tests {
     fn m0_format_rule_same_place_keys() {
         formats_as_refcore("format/same_place_keys");
     }
+
+    /// E §3.1 step 1, L §2.4 (tally 2.1.6, #74): `reprint` reads and pins a joint model's
+    /// members as `run` does, before it prints anything: a member with no file is refused
+    /// `LOAD-PIN`, exit 1 (refcore 2.1.5 printed the model, exit 0).
+    #[test]
+    fn m0_format_refused_member_absent() {
+        formats_as_refcore("format/member_absent");
+    }
+
+    /// E §3.1 step 1 (tally 2.1.6, #74): a member whose text no longer has the hash its `use`
+    /// line names is refused `LOAD-PIN` before anything prints; `format/header_order`, its
+    /// twin, pins its members' true hashes and prints.
+    #[test]
+    fn m0_format_refused_member_changed() {
+        formats_as_refcore("format/member_changed");
+    }
+
+    /// L §2.4, §2.5 (tally 2.1.6, #91): a text with a duplicated id has no canonical form, so
+    /// `reprint` refuses it as load does, `LOAD-DUP` at the second by line: a source declared
+    /// twice with two texts (the fuzz input b943 minimized; 2.1.5 kept one block silently).
+    #[test]
+    fn m0_format_refused_dup_id() {
+        formats_as_refcore("format/dup_id");
+    }
+
+    /// L §2.4 (tally 2.1.6, #91): a kind declared twice under two parents, the first one no
+    /// line declares, is refused `LOAD-DUP` before anything is ordered (the fuzz input e523
+    /// minimized; its second print moved the kind).
+    #[test]
+    fn m0_format_refused_dup_kind() {
+        formats_as_refcore("format/dup_kind");
+    }
+
+    /// L §2.4 (tally 2.1.6, #91): an index under a prefix no `use` line names can't be
+    /// ordered, so `reprint` refuses it as load does, `LOAD-NAME unknown id` (the fuzz input
+    /// c5a8 minimized; the engine stopped "not built").
+    #[test]
+    fn m0_format_refused_unknown_prefix() {
+        formats_as_refcore("format/unknown_prefix");
+    }
+
+    /// L §2.4 (tally 2.1.6, #81): any spacing between tokens reads: a field spaced at its `.`,
+    /// a call at its `(`, an id at its `[`, all printed touching; an item named as a calendar
+    /// list word (`added`) touches its `[`; a keyword before `(` keeps its space (`not (…)`).
+    #[test]
+    fn m0_format_rule_spacing_read() {
+        formats_as_refcore("format/spacing_read");
+    }
+
+    /// L §2.4 (tally 2.1.6, #81): a member's band call spaced at its `(` and a field spaced at
+    /// its `.` read as `b.fee(x)` and `b.ana`, and print touching.
+    #[test]
+    fn m0_format_rule_spacing_call() {
+        formats_as_refcore("format/spacing_call");
+    }
 }

@@ -1,0 +1,16 @@
+model dup_kind
+  tally 2
+  on 2026-01-15
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#91, P22), the fuzz input e523 minimized: a kind declared twice under two parents, the first a parent no line declares; reprint kept one block, and its second print moved the kind"
+
+source s "s"
+
+unit PLN: currency minor 0.01
+
+kind refunds: tranexp
+
+kind wages_in: transfers
+
+kind refunds: transfers

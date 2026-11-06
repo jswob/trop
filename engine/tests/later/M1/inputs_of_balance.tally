@@ -1,0 +1,55 @@
+model m1_inputs_of_balance
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#36, P1), for M1: E §3.2, §10, L §5.18: a cell's read set holds its walk reads, and inputs-of reports the rows behind them: b reads bal(konto, d + 1 day), so inputs-of b lists the opening, the rows of fee's day and amount the walk books (rate[q1]), and d, not rate[q2], which no movement on or before that day reads; total, a plain def, lists what it reads. M1 builds the memo's read sets and inputs-of (BUILD-ORDER M1)."
+
+source card "T's invented card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input d: date
+
+input late: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN = round(amt * rate[k], minor(PLN), half-up)
+
+def total: money PLN = fee[q1] + fee[q2]
+
+def b: money PLN = bal(konto, d + 1 day)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on d
+  leg cash from konto to world amount fee[q1]
+
+move later_pay: transfers
+  on late
+  leg cash from konto to world amount fee[q2]
+
+ask ib: inputs-of b
+
+ask it: inputs-of total
+
+ask v: b, total
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN
+  d = 2026-02-10
+  late = 2026-09-01
+  rate[q1] = 0.1
+  rate[q2] = 0.2
+  opening[konto] = 500.00 PLN at 2026-01-01 start
