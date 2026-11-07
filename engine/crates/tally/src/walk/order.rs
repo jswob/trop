@@ -337,8 +337,10 @@ impl Engine {
         Ok(())
     }
 
-    /// What a run books by what its body gave (refcore's `run_one_body`, after the body).
-    /// E §4.2 step 3, Holes in the walk.
+    /// What a run books by what its body gave (refcore's `run_one_body`, after the body); a
+    /// refused run refuses the places its known legs give from its point, every place where
+    /// none is known, and none for a move with no legs (L §8.4, tally 2.1.6; P16). E §4.2
+    /// step 3, Holes in the walk.
     fn book_run(&mut self, m: &Reality, id: usize, mut run: Run, t: Day) -> Result<usize, Stop> {
         let key = run.point;
         let (cut, main) = {
@@ -347,9 +349,18 @@ impl Engine {
         };
         let modelled = main
             && ((t < cut && self.touches_covered(m, &run.inst, cut)) || !run.inst.obs.is_empty());
+        let legless = m
+            .moves
+            .get(&run.inst.move_id)
+            .ok_or_else(|| invariant("a decision of a move load didn't build"))?
+            .decl
+            .legs
+            .is_empty();
         let walk = self.walk_mut(id)?;
         let ix = walk.runs.len();
         if let Some(err) = run.inst.err.clone() {
+            // refused: the places its legs give, every place where one can't be read, none for
+            // a move with no legs (L §8.4, tally 2.1.6; P16)
             run.inst.status = Status::Refused;
             let known: Vec<_> = run
                 .inst
@@ -360,7 +371,7 @@ impl Engine {
                 .collect();
             let mv_id = run.inst.id.clone();
             walk.record(run);
-            if known.is_empty() {
+            if known.is_empty() && !legless {
                 walk.add(m, ALL, ALL, Ent::new(key, Change::Bad(err.clone())))?;
             }
             for lg in &known {
