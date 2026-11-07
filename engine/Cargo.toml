@@ -175,8 +175,12 @@ debug-assertions = true
 [profile.dev.package."*"]
 opt-level = 2
 
-# cargo-mutants (R-88)
+# cargo-mutants (R-88). Measured for issue #99: the engine built optimised, with the
+# test profile's debug assertions and overflow checks kept explicit
 [profile.mutants]
 inherits = "test"
 debug = "none"
+opt-level = 3
+debug-assertions = true
+overflow-checks = true
 # --- profiles: end frozen section ---
