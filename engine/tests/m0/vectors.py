@@ -83,6 +83,8 @@ REPRINT_REFUSED = {
     'format/dup_kind': '#91: a kind declared twice under two parents (LOAD-DUP; the fuzz input e523 minimized)',
     'format/unknown_prefix': '#91: an input keyed by an index under a prefix no use line names (LOAD-NAME; the '
                              'fuzz input c5a8 minimized)',
+    'format/same_key_signed': '#88, #90: a same side keyed by a signed literal, no sref (LOAD-PARSE at parse, before '
+                              'the canonical order of same sides)',
 }
 REFUSED_LINE = re.compile(r'refused: [A-Z]+(?:-[A-Z]+)+ [^\n]*\n')
 TEXTS_RS = R.T + 'runner/src/m0_texts.rs'

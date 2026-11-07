@@ -5301,6 +5301,8 @@ members/zeta/zeta.tally	m0/format/members/zeta/zeta.tally
 ,19:format/rules_sorted,19:format/rules_sorted,22:engine/tests/m0/format,26:reprint rules_sorted.tally,48:rules_sorted.tally	m0/format/rules_sorted.tally
 ,1:0,56:rules_sorted.tally	422	1072a3b119ea75b107236f7eabee7708
 ,72:sha256 c4c3e6b1ca0c586693956cf1d4500afde76eca24f9d794699609869cf97b5c96
+,22:format/same_key_signed,22:format/same_key_signed,22:engine/tests/m0/format,29:reprint same_key_signed.tally,54:same_key_signed.tally	m0/format/same_key_signed.tally
+,1:1,0:,87:refused: LOAD-PARSE cannot parse: expected a literal, got - (same_key_signed.tally:24)
 ,22:format/same_place_keys,22:format/same_place_keys,22:engine/tests/m0/format,29:reprint same_place_keys.tally,54:same_place_keys.tally	m0/format/same_place_keys.tally
 ,1:0,59:same_place_keys.tally	452	14ceff864fd3fd1e175fba29ac87835b
 ,72:sha256 85c3629a0b2449031fe8744192edc731be59eee641fca1477aef52792bc31ed5

@@ -293,6 +293,16 @@ mod tests {
         formats_as_refcore("format/unknown_prefix");
     }
 
+    /// L §2.3 `sref` (tally 2.1.6, #88), §2.4 (issue #90): a `same` side keyed by a signed
+    /// literal is no `sref`, so `reprint` refuses it at parse, `LOAD-PARSE`, as load does,
+    /// and the canonical order of `same` sides never meets a key that isn't a literal or a
+    /// place keyed by literals (the engine met `ENGINE-INVARIANT` there);
+    /// `format/same_place_keys` is its twin.
+    #[test]
+    fn m0_format_refused_same_key_signed() {
+        formats_as_refcore("format/same_key_signed");
+    }
+
     /// L §2.4 (tally 2.1.6, #81): any spacing between tokens reads: a field spaced at its `.`,
     /// a call at its `(`, an id at its `[`, all printed touching; an item named as a calendar
     /// list word (`added`) touches its `[`; a keyword before `(` keeps its space (`not (…)`).
