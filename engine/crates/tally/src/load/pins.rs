@@ -12,7 +12,8 @@
 use super::check::{Checker, Figure, Files, Scope, Stands};
 use super::random::sample_type;
 use super::steps::refuse;
-use super::types::{is_date, lit_rule, numcls, refused, text, uerr};
+use super::texts::text;
+use super::types::{is_date, lit_rule, numcls, refused, uerr};
 use crate::base::{Code, Load, Reach, Refusal};
 use crate::model::{BindInfo, Graph, NameKind, Node, NodeKind, Reality, Rel, Ty};
 use crate::num::{Num, NumError};

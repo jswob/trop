@@ -12,11 +12,13 @@
 //! band's, a built-in's with its arm, or a name looked up (`unknown id`, `is not called`), as
 //! refcore's `t_call`: no call is left untyped.
 
-use super::check::{Checker, Reading, Scope, Stands, named_parts};
+use super::check::{Checker, Reading, Scope, Stands};
 use super::ops::unify;
 use super::steps::num_stop;
+use super::targets::named_parts;
+use super::texts::text;
 use super::types::{
-    Typed, input_read, is_date, is_period, no_order, num, numcls, period_kind, refused, text, uerr,
+    Typed, input_read, is_date, is_period, no_order, num, numcls, period_kind, refused, uerr,
     unit_error, unit_of, unit_stop,
 };
 use crate::base::Load;

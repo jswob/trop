@@ -14,7 +14,7 @@ use super::check::invariant;
 use super::joint::owner_of;
 use super::keys::{KeyLit, lit_of_expr, lit_text, resolve_key};
 use super::steps::{Loader, refuse};
-use super::types::text;
+use super::texts::text;
 use crate::base::Load;
 use crate::model::{KeyVal, NameKind, Pat, SamePair, Ty, pattern_text};
 use crate::syntax::{Expr, Key, Lit, Postfix, Stop};

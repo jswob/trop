@@ -174,7 +174,7 @@ impl Loader {
                 Load::Moves,
                 format!(
                     "moves {}: unknown, or not known before this version",
-                    super::types::text(target)
+                    super::texts::text(target)
                 ),
                 file,
                 line,

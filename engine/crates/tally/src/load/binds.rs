@@ -15,9 +15,10 @@
 use super::check::{Checker, Scope, Stands, VarDom};
 use super::ops::unify;
 use super::steps::num_stop;
+use super::texts::{span_text, text};
 use super::types::{
     Typed, converts, int_flex, is_bool, is_date, is_duration, key_value_kind, no_order,
-    period_kind, span_text, text, uerr, unit_of,
+    period_kind, uerr, unit_of,
 };
 use crate::base::{Code, Load, Refusal};
 use crate::model::{KindSpec, NameKind, Node, NodeKind, Reality, Rel, Shown, Ty};

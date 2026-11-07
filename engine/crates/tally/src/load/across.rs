@@ -19,11 +19,12 @@
 //! reader's own keys of declared indexes through built-ins that read no fact; a fold the
 //! evaluator refuses is left to the value, as refcore leaves it.
 
-use super::check::{DayRead, Files, ProjRead, Scope, Stands, Var, VarDom, invariant, place_target};
+use super::check::{DayRead, Files, ProjRead, Scope, Stands, Var, VarDom, invariant};
 use super::cone::all_children;
 use super::keys::literal_end;
 use super::steps::refuse;
-use super::types::text;
+use super::targets::place_target;
+use super::texts::text;
 use crate::base::{Code, Load, Run};
 use crate::eval::{Ctx, Engine, Env, int_of};
 use crate::model::{

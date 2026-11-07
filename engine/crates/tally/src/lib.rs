@@ -241,12 +241,16 @@ pub mod load {
     mod binds;
     mod calls;
     mod check;
+    mod compare;
     mod cone;
     mod decls;
+    mod defs;
     mod exact;
     mod fills;
     mod indexes;
+    mod joins;
     mod joint;
+    mod keyed;
     mod keys;
     mod kinds;
     mod lawdates;
@@ -259,6 +263,7 @@ pub mod load {
     mod parts;
     mod pins;
     mod places;
+    mod prefixed;
     mod prices;
     mod random;
     mod reads;
@@ -269,6 +274,8 @@ pub mod load {
     mod srows;
     mod steps;
     mod strata;
+    mod targets;
+    mod texts;
     mod types;
     mod values;
     mod worlds;

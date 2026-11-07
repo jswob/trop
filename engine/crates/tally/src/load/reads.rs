@@ -13,11 +13,10 @@
 //! an `of q` reads the labels its place's kind keeps (the parts clauses, `parts.rs`) and is
 //! `LOAD-PARTS` where load sees a place that keeps none of q's sort.
 
-use super::check::{
-    Checker, ProjRead, ReadIn, Scope, invariant, literal_place, move_keys, named_parts,
-    place_section, place_target,
-};
-use super::types::{Typed, is_date, numcls, refused, text, uerr, unit_type};
+use super::check::{Checker, ProjRead, ReadIn, Scope, invariant};
+use super::targets::{literal_place, move_keys, named_parts, place_section, place_target};
+use super::texts::text;
+use super::types::{Typed, is_date, numcls, refused, uerr, unit_type};
 use crate::base::Load;
 use crate::model::{
     KindInfo, KindSpec, Labels, Mark, NameKind, Node, NodeKind, Reality, Rel, Target, Ty,

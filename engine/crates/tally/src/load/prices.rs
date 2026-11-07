@@ -8,11 +8,10 @@
 //! then the places' by thing name, a keyed place's clause once; each refusal is put at the
 //! line its clause or its value is written on; a value reads its places' prices at its day.
 
-use super::check::{
-    Checker, Files, Scope, Stands, invariant, literal_place, named_parts, place_section,
-    place_target,
-};
-use super::types::{Typed, is_date, name_word, refused, text, uerr};
+use super::check::{Checker, Files, Scope, Stands, invariant};
+use super::targets::{literal_place, named_parts, place_section, place_target};
+use super::texts::text;
+use super::types::{Typed, is_date, name_word, refused, uerr};
 use crate::base::{Code, Load, Place as At, Refusal};
 use crate::model::{
     Entry, Mark, NameKind, Node, NodeKind, PlaceInfo, Reality, Rel, Shown, Thing, Ty, Unit,

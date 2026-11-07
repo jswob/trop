@@ -11,9 +11,10 @@
 use super::calls::arity;
 use super::check::{Checker, Scope, invariant};
 use super::random::strip;
+use super::texts::text;
 use super::types::{
-    Typed, converts, key_value_kind, lit_expr, num, numcls, refused, text, uerr, unit_error,
-    unit_of, unit_stop,
+    Typed, converts, key_value_kind, lit_expr, num, numcls, refused, uerr, unit_error, unit_of,
+    unit_stop,
 };
 use crate::base::Load;
 use crate::model::{CodeKind, NameKind, Node, NodeKind, Reality, Rel, Ty, Unit};

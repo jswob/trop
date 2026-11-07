@@ -16,7 +16,7 @@ use super::check::{Checker, Files, Scope, Stands, VarDom, invariant};
 use super::keys::{KeyLit, resolve_key};
 use super::steps::{Loader, num_stop, refuse};
 use super::strata::reaches_mark;
-use super::types::{children, text};
+use super::texts::{children, text};
 use super::values::{at_row, row_file};
 use super::worlds::no_version;
 use crate::base::{Code, Load};

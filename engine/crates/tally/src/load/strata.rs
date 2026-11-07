@@ -25,7 +25,7 @@ use super::parts::{arrival_reads, parts_walk_bound};
 use super::pins::check_forks;
 use super::srows::check_srow_reads;
 use super::steps::{Loader, refuse};
-use super::types::text;
+use super::texts::text;
 use crate::base::{Code, Load, Refusal, Warn};
 use crate::model::{
     Domain, GapRole, Graph, Mark, MoveInfo, Node, NodeKind, Reality, Rel, RowInstant, Shift,

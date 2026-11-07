@@ -10,10 +10,12 @@
 //! and the settlements; the settlements are checked after every other check of the walk, as
 //! refcore meets them after load; a type load doesn't see refuses nothing.
 
-use super::check::{Checker, DayRead, Scope, literal_place};
+use super::check::{Checker, DayRead, Scope};
 use super::reads::is_place_type;
 use super::same::instance_text;
-use super::types::{Typed, children, numcls, refused, text, uerr, unit_type};
+use super::targets::literal_place;
+use super::texts::{children, text};
+use super::types::{Typed, numcls, refused, uerr, unit_type};
 use crate::base::{Code, Load, Refusal};
 use crate::model::{Fulfils, MoveInfo, NameKind, Reality, Ty};
 use crate::syntax::{AddOp, Bal, Expr, Leg, Lit, Stop};

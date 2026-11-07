@@ -8,7 +8,7 @@
 //! it); a keyed place inside a key is resolved one level deep, never recursively.
 
 use super::steps::{Loader, refuse};
-use super::types::text;
+use super::texts::text;
 use crate::base::Load;
 use crate::eval::Engine;
 use crate::model::{BindInfo, Domain, IndexForm, IndexInfo, KeyVal, NameKind, Reality};
