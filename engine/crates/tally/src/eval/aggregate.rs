@@ -1,12 +1,12 @@
-//! Aggregates `sum`, `count`, `min`, `max`, `any`, `all` over bindings: the binding tuples in binding order, the unknown members a hole `where` makes, and each aggregate's rule for holes.
+//! Aggregates over bindings: tuples in binding order, the unknown members a hole `where` makes, each aggregate's rule for holes, and whether a stepped range holds a written key (`range_key_missing`).
 //! Spec: L §5.11 (aggregates; a key whose `where` is a hole is an unknown member; `sum` over
 //! no keys is 0 in the term's type; `min`/`max` over no keys is `RUN-EMPTY`), §2.5 (binding
 //! order: an index's order, a kind's things by the text of `kind:key`), §5.7 (a binding over
 //! a kind `on d` or `over s`), §4.5 (the keys and things a cut sees), §8.1 (holes spread),
 //! §7.6 items 1 and 2 (a range's days and its 1 000 000 keys).
 //! Twin: engine/tools/refcore/evaluate.py (`members`, `bind_values`, `range_values`,
-//! `span_value`, `zero_of`, `e_agg`, `agg_minmax`, `agg_anyall`) and model.py (`alive_on`,
-//! `alive_over`, `kind_order_key`).
+//! `span_value`, `zero_of`, `e_agg`, `agg_minmax`, `agg_anyall`, `check_range_lits`) and
+//! model.py (`alive_on`, `alive_over`, `kind_order_key`).
 //! Invariants: tuples come in binding order, depth first as refcore's generator; an unknown
 //! member's term counts only as its questions, except a 0 in a sum; a domain that is a hole
 //! makes the aggregate that hole; a binding over movements or an observed input takes its
@@ -21,8 +21,8 @@ use super::arith::{Op, Test, arith, compare, numbers_past, whole_of};
 use super::builtin::written_year;
 use super::expr::{hole_of, literal};
 use super::state::{
-    Collected, Ctx, Engine, Env, Figures, a_day, invariant, num_stop, refuse, refuse_load,
-    wrong_type,
+    Collected, Ctx, Engine, Env, Figures, a_day, invariant, not_typed, num_stop, refuse,
+    refuse_load, wrong_type,
 };
 use super::ty::zero_of;
 use crate::base::{Code, Load, Refusal, Run};
@@ -247,7 +247,7 @@ impl Engine {
                 continue;
             }
             let Value::Bool(holds) = t else {
-                return Err(wrong_type(m, &format!("{word} of"), &t));
+                return Err(not_typed());
             };
             if holds == decides {
                 return Ok(Value::Bool(decides));
@@ -452,7 +452,7 @@ impl Engine {
             return Err(refuse(Run::None, "a where is none here".to_owned()));
         }
         let Value::Bool(holds) = tested else {
-            return Err(wrong_type(m, "a where of", &tested));
+            return Err(not_typed());
         };
         Ok(if holds { Kept::In(None) } else { Kept::Out })
     }
@@ -529,7 +529,7 @@ impl Engine {
                 if let Value::Hole(h) = day {
                     return empty_or_unknown(bind, &things, h);
                 }
-                When::Day(day_of_binding(m, &day)?)
+                When::Day(day_of_binding(&day)?)
             }
             (None, Some(over)) => match self.span_value(m, over, env, ctx)? {
                 Err(h) => return empty_or_unknown(bind, &things, h),
@@ -778,7 +778,7 @@ fn days_past(m: &Reality, start: Day, end: &Value, by: Option<&Value>) -> Result
     let Some(by) = by else {
         return Err(Stop::NotBuilt("a range of days with no step"));
     };
-    let last = day_of_binding(m, end)?;
+    let last = day_of_binding(end)?;
     if start > last {
         return Ok(false);
     }
@@ -831,7 +831,7 @@ fn range_holds(m: &Reality, (first, last, by): &Ends, key: &Value) -> Result<boo
         let Value::Day(day) = key else {
             return Ok(false);
         };
-        let last = day_of_binding(m, last)?;
+        let last = day_of_binding(last)?;
         let mut current = *start;
         while current < *day && current <= last {
             current = day_step(m, current, by)?;
@@ -1016,7 +1016,7 @@ fn day_range(
     start: Day,
     (end, step): (&Value, &Value),
 ) -> Result<Vec<(Value, Option<Hole>)>, Stop> {
-    let last = day_of_binding(m, end)?;
+    let last = day_of_binding(end)?;
     let mut out = Vec::new();
     let mut current = start;
     while current <= last {
@@ -1031,9 +1031,9 @@ fn day_range(
 /// §5.11.
 fn day_step(m: &Reality, day: Day, step: &Value) -> Result<Day, Stop> {
     let Value::Day(next) = arith(m, Op::Add, &Value::Day(day), step)? else {
-        return Err(refuse_load(
-            Load::Unit,
-            "a range of days stepped by a value that isn't a duration".to_owned(),
+        // `arith` refuses a day moved by anything but a duration first
+        return Err(Stop::NotBuilt(
+            "a range of days stepped by no duration, met at run",
         ));
     };
     if next <= day {
@@ -1046,7 +1046,7 @@ fn day_step(m: &Reality, day: Day, step: &Value) -> Result<Day, Stop> {
 }
 
 /// A binding's day: a day, or a day period's (refcore's `date_of`). L §5.7.
-fn day_of_binding(m: &Reality, v: &Value) -> Result<Day, Stop> {
+fn day_of_binding(v: &Value) -> Result<Day, Stop> {
     if let Value::Day(d) = v {
         return a_day(*d);
     }
@@ -1061,7 +1061,7 @@ fn day_of_binding(m: &Reality, v: &Value) -> Result<Day, Stop> {
             "a value is none here: the day of a binding".to_owned(),
         ));
     }
-    Err(wrong_type(m, "the day of a binding is", v))
+    Err(not_typed())
 }
 
 /// A span's first day: a day, a period's start (refcore's `span_start`). L §5.7.

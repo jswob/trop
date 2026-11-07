@@ -489,15 +489,13 @@ pub(super) fn literal_key(m: &Reality, lit: &Lit, domain: &Domain) -> Result<Key
                 .indexes
                 .get(id)
                 .ok_or_else(|| invariant("a bind over an index load didn't build"))?;
-            index_key_of(ix, lit)
-                .ok_or_else(|| refuse_load(Load::Key, format!("{text} is not a key of {id}")))
+            // load refuses it with its place; refcore's run, `RUN-KEY`
+            index_key_of(ix, lit).ok_or(Stop::NotBuilt("a literal key its index lacks, met at run"))
         }
         Domain::Kind(kind) => {
             if !m.thing_in(&text, kind) {
-                return Err(refuse_load(
-                    Load::Key,
-                    format!("{text} is not a thing of {kind}"),
-                ));
+                // load refuses it with its place; refcore's run has no twin of this text
+                return Err(Stop::NotBuilt("a literal key its kind lacks, met at run"));
             }
             Ok(KeyVal::Thing(text))
         }

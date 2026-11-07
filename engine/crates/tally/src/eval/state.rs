@@ -496,6 +496,12 @@ pub(super) fn refuse_load(code: crate::base::Load, message: String) -> Stop {
     Stop::Refused(Refusal::new(Code::Load(code), message))
 }
 
+/// A value of a type its place doesn't take, met at run where refcore's run has no twin of
+/// the text: load's types refuse it first, so the run stops "not implemented".
+pub(super) fn not_typed() -> Stop {
+    Stop::NotBuilt("a value of a type its place doesn't take, met at run")
+}
+
 /// A value of a type its place doesn't take: `LOAD-UNIT` with `what` and the value as it
 /// prints (refcore raises it where load's checker would have).
 pub(super) fn wrong_type(m: &Reality, what: &str, v: &Value) -> Stop {

@@ -133,26 +133,41 @@ pub fn arith(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Result<Value, Sto
         return Err(refuse_load(Load::Unit, shown(m, lhs, op, rhs)?));
     };
     let out = match op {
-        Op::Add | Op::Sub => add_sub(m, op, x, y)?,
+        Op::Add | Op::Sub => add_sub(m, op, x, y, (lhs, rhs))?,
         Op::Mul | Op::Div => mul_div(m, op, x, y, (lhs, rhs))?,
     };
     if let Value::Number(n) = &out
         && n.unit().day_and_period()
     {
-        return Err(refuse_load(
-            Load::Unit,
-            format!(
-                "{}: day is a dimension of its own (1 day / 1 year is refused, L §3.2)",
-                shown(m, lhs, op, rhs)?
-            ),
-        ));
+        // load refuses `1 day / 1 year` (L §3.2); refcore's run computes what load missed
+        return Err(Stop::NotBuilt("a day times or over a period met at run"));
     }
     Ok(out)
 }
 
+/// `<a> and <b> have different units`, the operands as written (L §3.2; refcore's `arith`,
+/// `cmp3`).
+fn different_units(m: &Reality, (a, b): (&Value, &Value)) -> Result<Stop, Stop> {
+    Ok(refuse_load(
+        Load::Unit,
+        format!(
+            "{} and {} have different units",
+            a.text(m).map_err(num_stop)?,
+            b.text(m).map_err(num_stop)?
+        ),
+    ))
+}
+
 /// `a ± b` (L §3.2): a bare figure takes the other operand's class (`%` beside a `num %`,
-/// L §7.1), money meets money of its currency or a `num CUR`, rates meet rates of their period.
-fn add_sub(m: &Reality, op: Op, lhs: Operand, rhs: Operand) -> Result<Value, Stop> {
+/// L §7.1), money meets money of its currency or a `num CUR`, rates meet rates of their
+/// period; the values as written for a refusal's text.
+fn add_sub(
+    m: &Reality,
+    op: Op,
+    lhs: Operand,
+    rhs: Operand,
+    values: (&Value, &Value),
+) -> Result<Value, Stop> {
     let (lhs, rhs) = pct_flex(lhs, rhs)?;
     let kind = match (&lhs.kind, &rhs.kind) {
         (Kind::Plain(Class::Flex), Kind::Plain(Class::Flex)) => {
@@ -164,25 +179,20 @@ fn add_sub(m: &Reality, op: Op, lhs: Operand, rhs: Operand) -> Result<Value, Sto
         }
         (Kind::Plain(Class::Flex), other) | (other, Kind::Plain(Class::Flex)) => other.clone(),
         (Kind::Money(cur), Kind::Money(other_cur)) if cur == other_cur => Kind::Money(*cur),
-        (Kind::Money(_), Kind::Money(_)) => {
-            return Err(refuse_load(
-                Load::Unit,
-                "money in two currencies: different units".to_owned(),
-            ));
-        }
+        (Kind::Money(_), Kind::Money(_)) => return Err(different_units(m, values)?),
         (Kind::Plain(Class::Rate(per)), Kind::Plain(Class::Rate(other_per))) => {
             if per != other_per {
-                return Err(refuse_load(
-                    Load::Unit,
-                    "rates of different periods".to_owned(),
-                ));
+                return Err(rate_periods(m, op, values)?);
             }
             Kind::Plain(Class::Rate(per.clone()))
         }
         (Kind::Plain(Class::Rate(_)), _) | (_, Kind::Plain(Class::Rate(_))) => {
-            return Err(refuse_load(
-                Load::Unit,
-                "rate arithmetic outside L §3.3".to_owned(),
+            if lhs.unit(m)? != rhs.unit(m)? {
+                return Err(rate_periods(m, op, values)?);
+            }
+            // refcore's run adds them as a rate; load refuses the sum (L §3.3)
+            return Err(Stop::NotBuilt(
+                "a rate and a number of its unit added at run",
             ));
         }
         (Kind::Plain(Class::Int), Kind::Plain(Class::Int)) => Kind::Plain(Class::Int),
@@ -194,10 +204,7 @@ fn add_sub(m: &Reality, op: Op, lhs: Operand, rhs: Operand) -> Result<Value, Sto
         (Kind::Money(cur), Kind::Plain(Class::Int)) if rhs.q.is_zero() => Kind::Money(*cur),
         (Kind::Plain(Class::Int), Kind::Money(cur)) if lhs.q.is_zero() => Kind::Money(*cur),
         (Kind::Money(_), Kind::Plain(Class::Int)) | (Kind::Plain(Class::Int), Kind::Money(_)) => {
-            return Err(refuse_load(
-                Load::Unit,
-                "money and int: different units".to_owned(),
-            ));
+            return Err(different_units(m, values)?);
         }
         (
             Kind::Plain(Class::Num(_, Shown::Percent)),
@@ -207,7 +214,7 @@ fn add_sub(m: &Reality, op: Op, lhs: Operand, rhs: Operand) -> Result<Value, Sto
     };
     let factor = match (&lhs.kind, &rhs.kind) {
         (Kind::Plain(Class::Flex), _) | (_, Kind::Plain(Class::Flex)) => Num::int(1),
-        _ => convert(m, &rhs, &lhs)?,
+        _ => convert(m, &rhs, &lhs, values)?,
     };
     let scaled = rhs.q.checked_mul(&factor).map_err(num_stop)?;
     let q = match op {
@@ -218,9 +225,23 @@ fn add_sub(m: &Reality, op: Op, lhs: Operand, rhs: Operand) -> Result<Value, Sto
     finish(m, q, kind)
 }
 
+/// `rates of different periods: <a> <op> <b>` (L §3.3; refcore's `arith`).
+fn rate_periods(m: &Reality, op: Op, (a, b): (&Value, &Value)) -> Result<Stop, Stop> {
+    Ok(refuse_load(
+        Load::Unit,
+        format!("rates of different periods: {}", shown(m, a, op, b)?),
+    ))
+}
+
 /// The factor that brings `from`'s value into `to`'s unit; a zero with no unit meets any
-/// (refcore's runtime `arith`); otherwise different units are refused (L §3.2).
-fn convert(m: &Reality, from: &Operand, to: &Operand) -> Result<Num, Stop> {
+/// (refcore's runtime `arith`); otherwise different units are refused (L §3.2), the
+/// written operands `values` named.
+fn convert(
+    m: &Reality,
+    from: &Operand,
+    to: &Operand,
+    values: (&Value, &Value),
+) -> Result<Num, Stop> {
     let fu = from.unit(m)?;
     let tu = to.unit(m)?;
     if fu == tu {
@@ -232,7 +253,7 @@ fn convert(m: &Reality, from: &Operand, to: &Operand) -> Result<Num, Stop> {
     if (fu.is_one() && from.q.is_zero()) || (tu.is_one() && to.q.is_zero()) {
         return Ok(Num::int(1));
     }
-    Err(refuse_load(Load::Unit, "different units".to_owned()))
+    Err(different_units(m, values)?)
 }
 
 /// A bare figure beside a `num %` takes its unit: `1` is 1 % (L §7.1, refcore's `pct_flex`).
@@ -331,7 +352,8 @@ fn rate_mul(
         (_, Kind::Plain(Class::Rate(u))) => (u, lhs),
         _ => return Ok(None),
     };
-    let refused = || refuse_load(Load::Unit, "rate arithmetic outside L §3.3".to_owned());
+    // load refuses rate arithmetic outside L §3.3; refcore's run computes what load missed
+    let refused = || Stop::NotBuilt("rate arithmetic outside L §3.3 met at run");
     if op != Op::Mul {
         return Err(refused());
     }
@@ -383,7 +405,7 @@ pub fn negate(v: &Value) -> Result<Option<Value>, Stop> {
 ///
 /// # Errors
 ///
-/// `RUN-NOT-INT`; `RUN-NONE` for `none`; `LOAD-UNIT` for a value that isn't a number.
+/// `RUN-NOT-INT`; `RUN-NONE` for `none`; `NotBuilt` for a value that isn't a number.
 pub fn int_of(m: &Reality, v: &Value) -> Result<i64, Stop> {
     if let Value::Number(n) = v {
         if !n.q.is_integer() {
@@ -403,9 +425,9 @@ pub fn int_of(m: &Reality, v: &Value) -> Result<i64, Stop> {
             "a value is none here: an integer argument".to_owned(),
         ));
     }
-    Err(refuse_load(
-        Load::Unit,
-        format!("{} is not an integer", v.text(m).map_err(num_stop)?),
+    // load's types refuse it; refcore's run takes the value as it is
+    Err(Stop::NotBuilt(
+        "an integer argument that isn't a number, met at run",
     ))
 }
 
@@ -772,7 +794,7 @@ pub fn compare(m: &Reality, lhs: &Value, rhs: &Value, test: Test) -> Result<Orde
                 "rates of different periods compared".to_owned(),
             ));
         }
-        let factor = compare_factor(m, &r, &l)?;
+        let factor = compare_factor(m, &r, &l, (lhs, rhs))?;
         let scaled = r.q.checked_mul(&factor).map_err(num_stop)?;
         return l.q.compare(&scaled).map_err(num_stop);
     }
@@ -821,16 +843,22 @@ pub fn compare(m: &Reality, lhs: &Value, rhs: &Value, test: Test) -> Result<Orde
 }
 
 /// The factor that brings `from` into `to`'s unit for a comparison; a number with no unit
-/// meets any (refcore's `cmp3`).
-fn compare_factor(m: &Reality, from: &Operand, to: &Operand) -> Result<Num, Stop> {
+/// meets any (refcore's `cmp3`); the written operands `values` named in the refusal.
+fn compare_factor(
+    m: &Reality,
+    from: &Operand,
+    to: &Operand,
+    values: (&Value, &Value),
+) -> Result<Num, Stop> {
     let fu = from.unit(m)?;
     let tu = to.unit(m)?;
     if fu == tu || fu.is_one() || tu.is_one() {
         return Ok(Num::int(1));
     }
-    fu.conv(&tu)
-        .map_err(num_stop)?
-        .ok_or_else(|| refuse_load(Load::Unit, "different units compared".to_owned()))
+    match fu.conv(&tu).map_err(num_stop)? {
+        Some(f) => Ok(f),
+        None => Err(different_units(m, values)?),
+    }
 }
 
 /// Two keys' order: by position in their index; things and an open index's keys have none
