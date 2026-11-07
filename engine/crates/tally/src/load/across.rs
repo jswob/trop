@@ -504,6 +504,11 @@ pub(super) fn check_scenario_moves(m: &Reality, files: &Files) -> Result<(), Sto
             }
         }
         days.retain(|(day, _)| seen_day(m, day, &mv.binds));
+        // load sees that an instance books before the from only where it sees that the
+        // instance exists (P29); the walk leaves out the others
+        if days.is_empty() || !existence_seen(m, mv) {
+            continue;
+        }
         let Some(domains) = bind_keys(m, &mv.binds) else {
             continue;
         };
@@ -511,6 +516,9 @@ pub(super) fn check_scenario_moves(m: &Reality, files: &Files) -> Result<(), Sto
         while let Some(counters) = at {
             let (_, env) = choice(&mv.binds, &domains, &counters)?;
             at = next_choice(&counters, &domains)?;
+            if no_instance(&mut engine, m, &mv.binds, &env)? {
+                continue;
+            }
             if let Some((first, line)) = early_day(&mut engine, m, &days, &env, from)? {
                 let message = format!(
                     "move {id} of {scenario} books on {}, before {}",
@@ -955,9 +963,31 @@ fn reader_binds(m: &Reality, reader: &Node) -> Option<Vec<BindInfo>> {
 /// index, built-ins that read no fact, and `+` and `-` over these (refcore's `m_seen_day`).
 /// L §8.3 item 9.
 pub(super) fn seen_day(m: &Reality, e: &Expr, binds: &[BindInfo]) -> bool {
+    seen(m, e, binds, Seen::Day)
+}
+
+/// What load is asked to see: a day, or a binding's `where`, which may also compare and join
+/// what a day may be made of (refcore's `cond`). L §8.3 item 9, §6.4.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Seen {
+    /// A day or a period.
+    Day,
+    /// A condition.
+    Where,
+}
+
+/// [`seen_day`], or with [`Seen::Where`] a binding's `where` (refcore's `m_seen_day`).
+/// L §8.3 item 9, §6.4.
+fn seen(m: &Reality, e: &Expr, binds: &[BindInfo], what: Seen) -> bool {
     let mut stack = vec![e];
     while let Some(node) = stack.pop() {
         if let Expr::Lit(Lit::Day(_) | Lit::Month(..) | Lit::Quarter(..) | Lit::Num(_)) = node {
+            continue;
+        }
+        if what == Seen::Where
+            && let Some(parts) = joined(node)
+        {
+            stack.extend(parts);
             continue;
         }
         if let Expr::Name(name) = node {
@@ -985,6 +1015,46 @@ pub(super) fn seen_day(m: &Reality, e: &Expr, binds: &[BindInfo]) -> bool {
         stack.push(inner);
     }
     true
+}
+
+/// The parts of `node` when it is a comparison, `and`, `or`, `not` or a truth literal, each to
+/// be seen in turn (refcore's `cond` arm); `None` for any other node. L §6.4.
+fn joined(node: &Expr) -> Option<Vec<&Expr>> {
+    if let Expr::Cmp(cmp) = node {
+        return Some(vec![&cmp.0, &cmp.2]);
+    }
+    if let Expr::And(parts) | Expr::Or(parts) = node {
+        return Some(parts.iter().collect());
+    }
+    if let Expr::Not(inner) = node {
+        return Some(vec![inner]);
+    }
+    matches!(node, Expr::Lit(Lit::Bool(_))).then(Vec::new)
+}
+
+/// Whether load sees that each instance of a move exists: the move has no `when`, and each
+/// binding's `where` reads nothing but keys, folded as a day is (refcore's
+/// `m_existence_seen`; tally 2.1.6, P29). L §6.4, §8.3 item 9.
+fn existence_seen(m: &Reality, mv: &MoveInfo) -> bool {
+    let mut filters = mv.binds.iter().filter_map(|bind| bind.node.filter.as_ref());
+    mv.decl.when.is_none() && filters.all(|filter| seen(m, filter, &mv.binds, Seen::Where))
+}
+
+/// Whether load sees the choice of keys `env` give no instance: a binding's `where` folds
+/// false, or is refused (refcore's `except TallyError: continue`), the bindings in their
+/// order. L §6.4.
+fn no_instance(
+    engine: &mut Engine,
+    m: &Reality,
+    binds: &[BindInfo],
+    env: &Env,
+) -> Result<bool, Stop> {
+    for filter in binds.iter().filter_map(|bind| bind.node.filter.as_ref()) {
+        if let Some(Value::Bool(false)) | None = fold_value(engine, m, filter, env)? {
+            return Ok(true);
+        }
+    }
+    Ok(false)
 }
 
 /// Whether `name` is one of the reader's bound variables over a declared index that isn't

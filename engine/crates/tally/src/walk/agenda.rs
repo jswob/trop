@@ -531,6 +531,13 @@ fn schedule_decision(
     let rank = u32::try_from(rank).map_err(|_| super::plan::invariant("a move's rank"))?;
     match inst.day.clone() {
         Some(Dated::Day(d)) => {
+            if super::plan::scenario_from(m, move_id).is_some_and(|from| d < from) {
+                // a scenario's move books nothing before its from (L §6.4): left out
+                if walk.proj.is_none() {
+                    note_left_out(walk, &inst)?;
+                }
+                return Ok(());
+            }
             if d < walk.start || d > walk.end {
                 if walk.proj.is_none() && (d < m.start || d > m.end) {
                     note_left_out(walk, &inst)?;

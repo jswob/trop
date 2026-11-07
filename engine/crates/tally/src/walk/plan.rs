@@ -2,10 +2,12 @@
 //! Spec: E §4.1 (enumerate the instances, date them at K, evaluate them at min(t, K),
 //! classify them, the movement order); E §5 (steps 0 and 1: dating at K, the booking cut);
 //! L §5.14 (moves: keys, `on`, `at`, `for`, `when`, legs, their places, amounts and days; a
-//! day or a `when` that is a hole makes a hole movement).
+//! day or a `when` that is a hole makes a hole movement); L §6.4 (a move a scenario declares
+//! books nothing before its `from`).
 //! Twin: engine/tools/refcore/moves.py (`move_tuples`, `move_instances`, `insts_of_tuples`,
 //! `decision_instances`, `eval_inst`, `body_over_law`, `inst_body`, `eval_leg`,
-//! `leg_unit_static`, `leg_amount`, `status`, `inst_order`, `key_sort`, `keys_seen`).
+//! `leg_unit_static`, `leg_amount`, `status`, `scen_early`, `inst_order`, `key_sort`,
+//! `keys_seen`).
 //! Invariants: an instance's day is read at the ask's cut K and its body at its booking cut
 //! min(t, K); a run-time refusal met evaluating an instance stays with that instance; a move's
 //! instances are computed once per cut, and a move that reads its own instances is `RUN-CYCLE`.
@@ -507,6 +509,9 @@ impl Engine {
         if let Some(d) = day
             && (d < m.start || d > m.end)
         {
+            return Ok(Status::LeftOut);
+        }
+        if scenario_early(m, mv, inst) {
             return Ok(Status::LeftOut);
         }
         if inst.err.is_some() {
@@ -1231,6 +1236,27 @@ fn keys_seen(m: &Reality, mv: &MoveInfo, keys: &[KeyVal], cut: Day) -> bool {
         }
     }
     true
+}
+
+/// Whether `inst` is an instance of a move a scenario declares whose day, or a leg's own day,
+/// falls before the scenario's `from`: it books nothing there, so it is left out; load has
+/// refused the move where it sees that day and that the instance exists (refcore's
+/// `scen_early`). L §6.4.
+fn scenario_early(m: &Reality, mv: &MoveInfo, inst: &Inst) -> bool {
+    let Some(from) = scenario_from(m, &mv.id) else {
+        return false;
+    };
+    let legs = inst.legs.iter().filter_map(|leg| leg.day.day());
+    let day = inst.day.as_ref().and_then(Dated::day);
+    day.into_iter().chain(legs).any(|d| d < from)
+}
+
+/// The `from` of the scenario whose file declares move `id`, or `None` for a move of the base
+/// (refcore's `scen_from`). L §6.4.
+#[must_use]
+pub(super) fn scenario_from(m: &Reality, id: &str) -> Option<Day> {
+    let scenario = m.scenarios.of(id)?;
+    m.scenarios.from.get(scenario).copied()
 }
 
 /// An event kind's certainty, its own or its nearest parent's (refcore's `kind_certainty`).

@@ -14,8 +14,8 @@ use super::places::Written;
 use super::steps::{Loader, num_stop, refuse};
 use crate::base::Load;
 use crate::model::{
-    Fulfils, KeyVal, KindSpec, NameKind, ObsLeg, Observation, Unit, UnitError, Value as ModelValue,
-    power_past_limit,
+    Fulfils, KeyVal, KindSpec, MvRef, MvSrc, NameKind, ObsLeg, Observation, Unit, UnitError,
+    Value as ModelValue, power_past_limit,
 };
 use crate::syntax::{
     Certainty, Expr, Field, FieldValue, Key, Known, Leg, Lit, Postfix, Row, Stop, Type, Value,
@@ -255,6 +255,16 @@ impl Loader {
                 .as_ref()
                 .ok_or_else(|| crate::walk::invariant("an observed attribute with no type"))?;
             if let Some(movement) = self.named_movement(value, ty, at)? {
+                // the movement as a value, its record found by its id at the reader's cut
+                // (refcore's `_obs_attr`, an `mvref`)
+                let named = MvRef {
+                    id: movement.clone(),
+                    day: None,
+                    src: MvSrc::Missing,
+                };
+                observation
+                    .values
+                    .push((name.clone(), ModelValue::Mv(Box::new(named))));
                 observation.moves_named.push((name.clone(), movement));
                 continue;
             }
@@ -351,15 +361,14 @@ impl Loader {
         let Some((_, Some(Type::Key(wanted)))) = attrs.iter().find(|(a, _)| a == attr) else {
             return Err(invariant(format!("attribute {attr} of {of} names no kind")));
         };
+        // a move's instance is of the kind its section declares (refcore's `move_kind`, tally
+        // 2.1.6 #86); an observed row, of its own
         let name = movement.split_once('[').map_or(movement, |(name, _)| name);
-        if self.m.moves.get(name).is_some() {
-            // refcore refuses every move instance here (its move's kind is unset at load),
-            // where L §3.1 takes one of the kind: a STOP-REPORT (G9), not guessed.
-            return Err(Stop::NotBuilt("a move instance named by an attribute"));
-        }
-        let fits = kinds
-            .get(movement)
-            .is_some_and(|kind| self.m.subtree(wanted).contains(kind));
+        let kind = match self.m.moves.get(name) {
+            Some(mv) => Some(&mv.kind),
+            None => kinds.get(movement),
+        };
+        let fits = kind.is_some_and(|kind| self.m.subtree(wanted).contains(kind));
         if !fits {
             let file = self
                 .m

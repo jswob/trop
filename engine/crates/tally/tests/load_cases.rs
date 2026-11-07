@@ -3729,12 +3729,9 @@ version v1
                 )],
                 "loaded",
             ),
-            // mvref-move: refcore refuses every move instance here (`LOAD-KEY rent[a2] is not
-            // a key of pays`), where L §3.1 takes one of the kind: G9's STOP-REPORT
-            (
-                &[("of_pay: bank[r1])", "of_pay: rent[a2])")],
-                "not built: a move instance named by an attribute",
-            ),
+            // mvref-move: an instance of a move of the attribute's kind is taken (L §3.1, tally
+            // 2.1.6 #86; refcore 2.1.5 refused it, `LOAD-KEY rent[a2] is not a key of pays`)
+            (&[("of_pay: bank[r1])", "of_pay: rent[a2])")], "loaded"),
             // mvref-move-nokey
             (
                 &[("of_pay: bank[r1])", "of_pay: rent)")],
