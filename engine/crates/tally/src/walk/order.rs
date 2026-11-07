@@ -395,7 +395,7 @@ impl Engine {
         }
         let legs = run.inst.legs.clone();
         let (mv_id, coll) = (run.inst.id.clone(), run.inst.coll.clone());
-        let later_rank = walk.text_rank(&mv_id)?;
+        let later_rank = walk.plan_rank(&run.inst.order)?;
         let inst = run.inst.clone();
         walk.record(run);
         for (li, lg) in legs.iter().enumerate() {

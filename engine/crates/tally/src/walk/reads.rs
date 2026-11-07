@@ -754,8 +754,9 @@ impl Engine {
 
     /// A decision move's runs a flows read counts: the main walk's, or inside a decision the
     /// running walk's and the walks' it continues, before its point; an instance whose day is
-    /// a hole counted as that hole (refcore's `flows_move`, its decisions). L §5.14.1,
-    /// §5.14.3, E §4.3.
+    /// a hole counted as that hole, and one refused before its point (its key's `where`, its
+    /// day) as its refusal, over a span it may fall in (refcore's `flows_move`, its decisions;
+    /// L §8.4, tally 2.1.6). L §5.14.1, §5.14.3, E §4.3.
     fn decision_runs(
         &mut self,
         m: &Reality,
@@ -784,7 +785,8 @@ impl Engine {
         let mut out = Vec::new();
         for i in self.move_instances(m, mv, ctx.cut)?.iter() {
             let Some(run) = self.chain_run(id, &i.id)? else {
-                if matches!(i.day, Some(Dated::Hole(_))) && i.exists != Exists::No {
+                let unrun = matches!(i.day, Some(Dated::Hole(_))) || i.err.is_some();
+                if unrun && i.exists != Exists::No {
                     out.push(i.clone());
                 }
                 continue;

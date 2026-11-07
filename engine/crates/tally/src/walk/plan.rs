@@ -2,12 +2,13 @@
 //! Spec: E §4.1 (enumerate the instances, date them at K, evaluate them at min(t, K),
 //! classify them, the movement order); E §5 (steps 0 and 1: dating at K, the booking cut);
 //! L §5.14 (moves: keys, `on`, `at`, `for`, `when`, legs, their places, amounts and days; a
-//! day or a `when` that is a hole makes a hole movement); L §6.4 (a move a scenario declares
-//! books nothing before its `from`).
+//! day or a `when` that is a hole makes a hole movement); L §8.4 (a refused key's `where`,
+//! `when`, attribute or `for` makes a refused movement, its day and legs' places still read;
+//! tally 2.1.6); L §6.4 (a move a scenario declares books nothing before its `from`).
 //! Twin: engine/tools/refcore/moves.py (`move_tuples`, `move_instances`, `insts_of_tuples`,
-//! `decision_instances`, `eval_inst`, `body_over_law`, `inst_body`, `eval_leg`,
-//! `leg_unit_static`, `leg_amount`, `status`, `scen_early`, `inst_order`, `key_sort`,
-//! `keys_seen`).
+//! `decision_instances`, `eval_inst`, `refused_places`, `body_over_law`, `inst_body`,
+//! `eval_leg`, `leg_unit_static`, `leg_amount`, `status`, `scen_early`, `inst_order`,
+//! `key_sort`, `keys_seen`).
 //! Invariants: an instance's day is read at the ask's cut K and its body at its booking cut
 //! min(t, K); a run-time refusal met evaluating an instance stays with that instance; a move's
 //! instances are computed once per cut, and a move that reads its own instances is `RUN-CYCLE`.
@@ -213,23 +214,6 @@ impl Order {
             Term::Tuple(keys),
         ]))
     }
-
-    /// The movement's text among a day's plans, `<move>|<keys>`, the keys' places written as
-    /// a tuple (refcore's `osort`, the walk key's text). E §4.1, §4.2.
-    #[must_use]
-    pub fn text(&self) -> String {
-        let parts: Vec<String> = self
-            .keys
-            .iter()
-            .map(|(a, b, s)| format!("({a}, {b}, {})", quoted(s)))
-            .collect();
-        let tuple = match parts.as_slice() {
-            [] => "()".to_owned(),
-            [one] => format!("({one},)"),
-            [_, _, ..] => format!("({})", parts.join(", ")),
-        };
-        format!("{}|{tuple}", self.move_id)
-    }
 }
 
 /// One term of a movement order, typed as refcore's `order_key` types it: a day, a number, a
@@ -298,34 +282,6 @@ impl PartialOrd for Term {
     fn partial_cmp(&self, other: &Term) -> Option<Ordering> {
         Some(self.cmp(other))
     }
-}
-
-/// A text quoted as the walk key's tuple writes it: in single quotes, double ones when it
-/// holds a single quote and no double one, with backslashes, line ends, tabs and the quote
-/// escaped. E §4.1.
-fn quoted(s: &str) -> String {
-    let quote = if s.contains('\'') && !s.contains('"') {
-        '"'
-    } else {
-        '\''
-    };
-    let mut out = String::with_capacity(s.len());
-    out.push(quote);
-    for c in s.chars() {
-        match c {
-            '\\' => out.push_str("\\\\"),
-            '\n' => out.push_str("\\n"),
-            '\r' => out.push_str("\\r"),
-            '\t' => out.push_str("\\t"),
-            c if c == quote => {
-                out.push('\\');
-                out.push(c);
-            }
-            c => out.push(c),
-        }
-    }
-    out.push(quote);
-    out
 }
 
 /// A move instance in one timeline (refcore's `Inst`).
@@ -432,6 +388,9 @@ struct Tuple {
     exists: Exists,
     /// The hole of a domain or of a law date: the instance's day and existence are that hole.
     domain_hole: Option<Hole>,
+    /// The refusal its last key's `where` met: a refused instance, its later keys unbound
+    /// where it isn't the move's last binding (L §5.14 Keys, §8.4; tally 2.1.6).
+    refused: Option<Refusal>,
     /// What deciding it read: its law dates, domains, members and `where`s, which go with its
     /// instance, not to the reader of the move's instances.
     coll: Collected,
@@ -566,6 +525,10 @@ impl Engine {
         let tctx = Ctx::new(None, cut);
         let mut out = Vec::new();
         for tuple in self.move_tuples(m, mv, tctx)? {
+            if let Some(err) = tuple.refused.clone() {
+                out.extend(self.refused_tuple(m, mv, tuple, err, tctx)?);
+                continue;
+            }
             if let Some(hole) = tuple.domain_hole {
                 let mut inst = Inst::new(mv, tuple.keys, tuple.env);
                 inst.day = Some(Dated::Hole(hole.clone()));
@@ -598,6 +561,43 @@ impl Engine {
         Ok(out)
     }
 
+    /// The instance of a tuple whose last key's `where` is refused: a refused instance, its
+    /// day and legs read as any instance's, none where its `when` is false or its keys weren't
+    /// there; a tuple whose later keys are unbound has no day or places to read, so the move's
+    /// instances are refused, every place from the run's start (refcore's `insts_of_tuples`,
+    /// its refused tuples). L §5.14 Keys, §8.4 (tally 2.1.6); E §4.1 step 2.
+    ///
+    /// # Errors
+    ///
+    /// The refusal, for a tuple whose later keys are unbound; a load refusal met at run.
+    fn refused_tuple(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        tuple: Tuple,
+        err: Refusal,
+        tctx: Ctx,
+    ) -> Result<Option<Inst>, Stop> {
+        if tuple.keys.len() < mv.binds.len() {
+            return Err(Stop::Refused(err));
+        }
+        let seed = Seed {
+            env: tuple.env,
+            keys: tuple.keys,
+            exists: Exists::Yes,
+            at_cut: None,
+        };
+        let Some(mut inst) = self.eval_inst(m, mv, &seed, tctx)? else {
+            return Ok(None);
+        };
+        if inst.exists == Exists::No {
+            return Ok(None);
+        }
+        inst.err = Some(err);
+        inst.coll.merge(&tuple.coll);
+        Ok(Some(inst))
+    }
+
     /// A booked plan amount never changes: an instance's A₀, its existence and legs, is the
     /// same under every cut that books it at booking cut `booking`, across the asks of a run
     /// (refcore's `inv5`). E §9 item 5.
@@ -627,7 +627,8 @@ impl Engine {
 
     /// A move's binding tuples at the cut, depth first in binding order, each binding read at
     /// the move's law date with the keys bound before it, each tuple with what deciding it
-    /// read, kept from the reader (refcore's `move_tuples`). E §4.1 step 1, L §5.14.
+    /// read, kept from the reader; a member whose `where` is refused ends its tuple there, a
+    /// refused one (refcore's `move_tuples`). E §4.1 step 1, L §5.14 Keys (tally 2.1.6).
     fn move_tuples(&mut self, m: &Reality, mv: &MoveInfo, ctx: Ctx) -> Result<Vec<Tuple>, Stop> {
         let mut out = Vec::new();
         let mut work = vec![Tuple {
@@ -635,9 +636,14 @@ impl Engine {
             keys: Vec::new(),
             exists: Exists::Yes,
             domain_hole: None,
+            refused: None,
             coll: Collected::default(),
         }];
         while let Some(tuple) = work.pop() {
+            if tuple.refused.is_some() {
+                out.push(tuple);
+                continue;
+            }
             let Some(bind) = mv.binds.get(tuple.keys.len()) else {
                 out.push(tuple);
                 continue;
@@ -671,10 +677,11 @@ impl Engine {
                 Ok(members) => members,
             };
             let mut next = Vec::with_capacity(members.len());
-            for (member, read) in members {
+            for (member, read, refused) in members {
                 let mut extended = extend(m, mv, &tuple, &bind.var, &bind.domain, member)?;
                 extended.coll = decided.clone();
                 extended.coll.merge(&read);
+                extended.refused = refused;
                 next.push(extended);
             }
             work.extend(next.into_iter().rev());
@@ -709,8 +716,9 @@ impl Engine {
     }
 
     /// The binding tuple of `mv` at `keys` under cut `cut`, its `when` read at the cut: none
-    /// when no tuple has those keys or its `when` is false; a `when` that is a hole or refused
-    /// is taken as existing, its link judged where its instance is (refcore's `link_tuple`).
+    /// when no tuple has those keys or its `when` is false; a `when` that is a hole or refused,
+    /// or a refused `where`, is taken as existing, its link judged where its instance is
+    /// (refcore's `link_tuple`).
     /// L §5.19 Links, E §4.1 step 2.
     ///
     /// # Errors
@@ -731,9 +739,12 @@ impl Engine {
             if tuple.exists == Exists::No {
                 return Ok(None);
             }
-            if let (Some(when), Exists::Yes, None) =
-                (&mv.decl.when, &tuple.exists, &tuple.domain_hole)
-            {
+            if let (Some(when), Exists::Yes, None, None) = (
+                &mv.decl.when,
+                &tuple.exists,
+                &tuple.domain_hole,
+                &tuple.refused,
+            ) {
                 match self.when_at_cut(m, mv, when, &tuple.env, tctx) {
                     Ok(false) => return Ok(None),
                     Ok(true) => {}
@@ -808,12 +819,13 @@ impl Engine {
 
     /// One instance: its day at the cut K, then, for a plan, its body at its booking cut
     /// min(t, K) or at the seed's cut; none when its day is `never` or `none` (refcore's
-    /// `eval_inst`). E §5 steps 0–1, E §4.1 step 2.
+    /// `eval_inst`). A run-time refusal stays with the instance, a refused movement, and a
+    /// plan's legs are then read for their places (tally 2.1.6). E §5 steps 0–1, E §4.1
+    /// step 2.
     ///
     /// # Errors
     ///
-    /// A load refusal met at run; `NotBuilt` past what S builds; a run-time refusal stays
-    /// with the instance.
+    /// A load refusal met at run; `NotBuilt` past what S builds.
     pub(crate) fn eval_inst(
         &mut self,
         m: &Reality,
@@ -823,16 +835,105 @@ impl Engine {
     ) -> Result<Option<Inst>, Stop> {
         let mut inst = Inst::new(mv, seed.keys.clone(), seed.env.clone());
         self.push();
-        let made = self.inst_parts(m, mv, &mut inst, tctx, seed);
-        let met = self.pop_alone();
-        inst.coll.merge(&met);
-        match made {
-            Ok(true) => Ok(Some(inst)),
-            Ok(false) => Ok(None),
+        let made = match self.inst_parts(m, mv, &mut inst, tctx, seed) {
             Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {
                 inst.err = Some(r);
-                Ok(Some(inst))
+                self.refused_legs(m, mv, &mut inst, tctx).map(|()| true)
             }
+            made => made,
+        };
+        let met = self.pop_alone();
+        inst.coll.merge(&met);
+        Ok(made?.then_some(inst))
+    }
+
+    /// A refused plan instance's legs, its evaluation stopped before them: their places read
+    /// at its booking cut and law date, each leg's amount the refusal; none where a place
+    /// can't be read here, so the walk refuses every place from its day (refcore's
+    /// `eval_inst`, its refusal). A refused movement reaches as a hole movement does: its day
+    /// and its legs' places are still read, since neither depends on whether it exists (L §8.4,
+    /// tally 2.1.6). E §4.1 step 2, §4.2 Holes in the walk.
+    ///
+    /// # Errors
+    ///
+    /// A load refusal met at run.
+    fn refused_legs(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        inst: &mut Inst,
+        tctx: Ctx,
+    ) -> Result<(), Stop> {
+        if mv.decision {
+            return Ok(());
+        }
+        let day = inst.day.as_ref().and_then(Dated::day);
+        let cut = day.map_or(tctx.cut, |d| d.min(tctx.cut));
+        if let Some(legs) = self.refused_places(m, mv, inst, Ctx::new(inst.law, cut))? {
+            inst.legs = legs;
+        }
+        Ok(())
+    }
+
+    /// The legs of refused instance `inst` with their places read at `ctx` and no amount, the
+    /// refusal in its place, each on the instance's day; none where a place isn't a thing
+    /// here, a hole or a refusal, since such a leg could book anywhere (refcore's
+    /// `refused_places`, and `dec_bad`'s places). An instance refused before its day may fall
+    /// on any day: its legs are dated the end of time, no day (L §7.6 item 1), which falls
+    /// before no scenario's `from` (L §6.4: refcore's legs there have no day). L §8.4, E §4.2
+    /// Holes in the walk.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for an instance with no refusal; a load refusal met at run.
+    pub(super) fn refused_places(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        inst: &Inst,
+        ctx: Ctx,
+    ) -> Result<Option<Vec<LegVal>>, Stop> {
+        let err = inst
+            .err
+            .clone()
+            .ok_or_else(|| invariant("a refused instance with no refusal"))?;
+        let day = inst.day.clone().unwrap_or(Dated::Day(Day::END));
+        let mut legs = Vec::with_capacity(mv.decl.legs.len());
+        for leg in &mv.decl.legs {
+            let Some(from) = self.read_or_refused(m, &leg.from, &inst.env, ctx)? else {
+                return Ok(None);
+            };
+            let Some(to) = self.read_or_refused(m, &leg.to, &inst.env, ctx)? else {
+                return Ok(None);
+            };
+            let (Value::Key(KeyVal::Thing(from)), Value::Key(KeyVal::Thing(to))) = (from, to)
+            else {
+                return Ok(None);
+            };
+            legs.push(LegVal {
+                name: leg.name.clone(),
+                from: End::Place(from),
+                to: End::Place(to),
+                amount: Amount::Refused(err.clone()),
+                unit: None,
+                day: day.clone(),
+            });
+        }
+        Ok(Some(legs))
+    }
+
+    /// The value of `e` at `ctx`, or none where it is refused at run (refcore's `try: ev …
+    /// except TallyError`, a load refusal raised). L §8.4.
+    fn read_or_refused(
+        &mut self,
+        m: &Reality,
+        e: &crate::syntax::Expr,
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Option<Value>, Stop> {
+        match self.ev(m, e, env, ctx) {
+            Ok(v) => Ok(Some(v)),
+            Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => Ok(None),
             Err(stop) => Err(stop),
         }
     }
@@ -1193,6 +1294,7 @@ fn extend(
         keys,
         exists,
         domain_hole: None,
+        refused: None,
         coll: tuple.coll.clone(),
     })
 }

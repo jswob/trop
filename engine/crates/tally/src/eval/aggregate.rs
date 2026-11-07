@@ -24,7 +24,7 @@ use super::state::{
     Collected, Ctx, Engine, Env, a_day, invariant, num_stop, refuse, refuse_load, wrong_type,
 };
 use super::ty::zero_of;
-use crate::base::{Load, Run};
+use crate::base::{Code, Load, Refusal, Run};
 use crate::hole::{Hole, spread};
 use crate::model::{Class, Domain, IndexInfo, KeyVal, Number, Reality, Span, Thing, Value};
 use crate::num::Num;
@@ -61,9 +61,19 @@ pub(crate) enum Brings {
     ToTuple,
 }
 
-/// One binding's members, each with what deciding it read; or the hole of a domain that is
-/// one, with what reading it read (refcore's `move_tuples`, its `cd` and `cw`). E §4.1 step 1.
-pub(crate) type Decided = Result<Vec<(Member, Collected)>, (Hole, Collected)>;
+/// One binding's members, each with what deciding it read and the refusal its `where` met;
+/// or the hole of a domain that is one, with what reading it read (refcore's `move_tuples`,
+/// its `cd` and `cw`). E §4.1 step 1, L §5.14 Keys.
+pub(crate) type Decided = Result<Vec<(Member, Collected, Option<Refusal>)>, (Hole, Collected)>;
+
+/// What a binding's `where` says of a member: left out, or kept with the hole the `where` is
+/// where it is one. L §5.11.
+enum Kept {
+    /// The `where` is false.
+    Out,
+    /// The `where` is true, or a hole.
+    In(Option<Hole>),
+}
 
 /// A range's ends and step, evaluated: `a`, `b` and `s` of `a .. b [step s]` (L §2.3 `bind`).
 type Ends = (Value, Value, Option<Value>);
@@ -353,11 +363,12 @@ impl Engine {
     /// One binding's members, each with what deciding it read, kept apart from the reader:
     /// the domain's reads, the member's own register and its `where`'s reads; or the hole of
     /// a domain that is one, with what reading it read (refcore's `move_tuples`, its `cd` and
-    /// `cw`). L §5.11, E §4.1 step 1.
+    /// `cw`). A member whose `where` is refused at run is kept with that refusal: its tuple is
+    /// a refused instance (L §5.14 Keys, §8.4; tally 2.1.6). L §5.11, E §4.1 step 1.
     ///
     /// # Errors
     ///
-    /// The refusals the domain and the `where`s meet.
+    /// The refusals the domain meets; a load refusal a `where` meets at run.
     pub(crate) fn binding_members(
         &mut self,
         m: &Reality,
@@ -382,19 +393,22 @@ impl Engine {
             if let Some(c) = brings.get(i) {
                 read.merge(c);
             }
+            let inner = env.with(&bind.var, value, bind_domain(m, bind));
             self.push();
-            let taken = self.take_value(m, bind, env, value, own, ctx);
+            let kept = self.where_keeps(m, bind, &inner, ctx);
             read.merge(&self.pop_alone());
-            if let Some((inner, unknown)) = taken? {
-                out.push((
-                    Member {
-                        env: inner,
-                        unknown,
-                        brought: Collected::default(),
-                    },
-                    read,
-                ));
-            }
+            let (unknown, refused) = match kept {
+                Ok(Kept::Out) => continue,
+                Ok(Kept::In(h)) => (joined(own, h), None),
+                Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => (None, Some(r)),
+                Err(stop) => return Err(stop),
+            };
+            let member = Member {
+                env: inner,
+                unknown,
+                brought: Collected::default(),
+            };
+            out.push((member, read, refused));
         }
         Ok(Ok(out))
     }
@@ -411,12 +425,27 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Option<(Env, Option<Hole>)>, Stop> {
         let inner = scope.with(&bind.var, value, bind_domain(m, bind));
+        Ok(match self.where_keeps(m, bind, &inner, ctx)? {
+            Kept::Out => None,
+            Kept::In(h) => Some((inner, joined(unknown, h))),
+        })
+    }
+
+    /// Whether binding `bind`'s `where` keeps the member bound in `inner`, and the hole it is
+    /// where it is one (refcore's `members`, its `where`). L §5.11.
+    fn where_keeps(
+        &mut self,
+        m: &Reality,
+        bind: &Bind,
+        inner: &Env,
+        ctx: Ctx,
+    ) -> Result<Kept, Stop> {
         let Some(filter) = &bind.filter else {
-            return Ok(Some((inner, unknown)));
+            return Ok(Kept::In(None));
         };
-        let tested = self.ev(m, filter, &inner, ctx)?;
+        let tested = self.ev(m, filter, inner, ctx)?;
         if let Value::Hole(h) = tested {
-            return Ok(Some((inner, joined(unknown, Some(h)))));
+            return Ok(Kept::In(Some(h)));
         }
         if tested == Value::None {
             return Err(refuse(Run::None, "a where is none here".to_owned()));
@@ -424,7 +453,7 @@ impl Engine {
         let Value::Bool(holds) = tested else {
             return Err(wrong_type(m, "a where of", &tested));
         };
-        Ok(holds.then_some((inner, unknown)))
+        Ok(if holds { Kept::In(None) } else { Kept::Out })
     }
 
     /// The values one binding ranges over in scope `env` (refcore's `bind_values`). L §5.11,

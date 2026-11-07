@@ -25,7 +25,7 @@ use std::rc::Rc;
 
 use super::agenda::{Act, Mv};
 use super::order::Run;
-use super::plan::{Inst, LegVal, invariant};
+use super::plan::{Inst, LegVal, Order, invariant};
 use super::point::{At, Step};
 use crate::base::{Refusal, Warn};
 use crate::eval::{Collected, Entry};
@@ -245,9 +245,10 @@ pub struct Walk {
     pub(crate) endings: BTreeMap<Day, Vec<String>>,
     /// The running decision's legs, one group of the sign rule (L §5.10 point 2).
     pub(crate) group: Option<Group>,
-    /// The plan movements' order texts, `<move>|<keys>`, sorted by code point: a movement's
-    /// rank among the day's plans (refcore's `osort`).
-    pub(crate) order_texts: Vec<String>,
+    /// The movement orders of the walk's plan and decision instances, each once, sorted in
+    /// the typed movement order: a movement's rank among the day's plans (refcore's
+    /// `plan_key`; tally 2.1.6).
+    pub(crate) orders: Vec<Order>,
     /// A projection's walk: what it continues and what it leaves out; none for a main walk.
     pub(crate) proj: Option<Box<Projected>>,
     /// The observations a main walk books, by their place in the list (E §4.2 step 1).
@@ -389,7 +390,7 @@ impl Walk {
             first_reading: BTreeMap::new(),
             endings: BTreeMap::new(),
             group: None,
-            order_texts: Vec::new(),
+            orders: Vec::new(),
             proj: None,
             obs: Vec::new(),
             obs_texts: Vec::new(),
@@ -410,15 +411,17 @@ impl Walk {
         u32::try_from(at).map_err(|_| invariant("an observed leg's rank"))
     }
 
-    /// The rank of order text `text` among the plans' (refcore's walk keys compare the text):
-    /// twice its place plus one for one of them, twice the place it would take otherwise. E §4.2.
+    /// The rank of movement order `order` among the walk's, each term typed (refcore's walk
+    /// key compares `plan_key`): twice its place plus one for one of them, twice the place it
+    /// would take otherwise. Of several refusals at one place on one day, the first in this
+    /// order is the one its reads print (tally 2.1.6). E §4.1, §4.2.
     ///
     /// # Errors
     ///
     /// `ENGINE-INVARIANT` past two billion movements.
-    pub fn text_rank(&self, text: &str) -> Result<u32, Stop> {
-        let at = self.order_texts.partition_point(|t| t.as_str() < text);
-        let found = self.order_texts.get(at).is_some_and(|t| t == text);
+    pub fn plan_rank(&self, order: &Order) -> Result<u32, Stop> {
+        let at = self.orders.partition_point(|o| o < order);
+        let found = self.orders.get(at).is_some_and(|o| o == order);
         let twice = u32::try_from(at)
             .map_err(|_| invariant("a movement's rank"))?
             .checked_mul(2)

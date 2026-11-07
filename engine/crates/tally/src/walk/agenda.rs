@@ -1,6 +1,7 @@
 //! The walk's agenda: the acts the plan pass hands the day walk, each at its point, and the days the walk steps through.
-//! Spec: E §4.1 (what the plan pass hands the walk; the movement order), §4.2 (the day walk's
-//! steps; a hole movement; a decision's day), §4.3 (a projection's walk: the movements dated t
+//! Spec: E §4.1 (what the plan pass hands the walk; the movement order, each term typed, which
+//! ranks a day's plans; tally 2.1.6), §4.2 (the day walk's steps; a hole movement, and a
+//! refused one reaching as it does, L §8.4; a decision's day), §4.3 (a projection's walk: the movements dated t
 //! through d, those that depend on its holder left out and counted, no reading, observation or
 //! adjustment; read at a decision's point, only the decisions after it that day), §5 step 5
 //! (`HOLE-CHANGED` from the day of an adjustment nothing settles); §6.1 (each observed leg on
@@ -9,9 +10,9 @@
 //! the modelled past: an instance on a covered day before K, or one an observation fulfils, is
 //! not booked, and one nothing fulfils marks its places `open`); P §2.2 (the event-driven walk steps only days that hold
 //! an act, N-1 to N-14; the oracle steps every day).
-//! Twin: engine/tools/refcore/walk.py (`Walk.prepare`, `sched_leg`, `sched_hole`,
+//! Twin: engine/tools/refcore/walk.py (`Walk.prepare`, `plan_key`, `sched_leg`, `sched_hole`,
 //! `sched_leg_hole`, `sched_refused`, `sched_adj`, `note_leftout`, `count_leftout`,
-//! `dec_hole`, `ending`, and `proj_walk`'s first day) and moves.py (`readings`).
+//! `dec_hole`, `dec_bad`, `ending`, and `proj_walk`'s first day) and moves.py (`readings`).
 //! Invariants: every act is scheduled on its day at its point before the walk reaches that
 //! day; the event walk steps the days with an act, the run's first day and each lifespan's
 //! last; the oracle steps every day from S to E through the same steps; a projection's walk
@@ -25,13 +26,13 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use super::plan::{Amount, Dated, End, Exists, Inst, Status};
+use super::plan::{Amount, Dated, End, Exists, Inst, Order, Status};
 use super::point::{At, Step};
 use super::state::{Progress, Walk, WalkObs};
 use crate::Days;
 use crate::base::Refusal;
 use crate::book::Seen;
-use crate::eval::{Collected, Engine, Entry};
+use crate::eval::{Collected, Ctx, Engine, Entry};
 use crate::hole::Hole;
 use crate::model::Reality;
 use crate::num::Num;
@@ -82,9 +83,10 @@ pub enum Act {
     Perm(Mv, usize, Hole),
     /// An adjustment nothing settles: its leg's places are `HOLE-CHANGED` from its day.
     Changed(String, String, Hole, Collected),
-    /// An adjustment whose change is refused: the place, in every unit, is refused from its
-    /// day, by the adjustment (E §5 step 5, tally 2.1.2).
-    ChangeRefused(String, Refusal, String),
+    /// A place refused in every unit from this point, by a movement: an adjustment whose
+    /// change is refused (E §5 step 5, tally 2.1.2), or a decision instance refused before
+    /// its point (L §8.4, tally 2.1.6).
+    PlaceBad(String, Refusal, String),
     /// A hole that holds for every place.
     GlobalHole(Hole),
     /// A refusal that holds for every place.
@@ -152,9 +154,9 @@ impl Engine {
     /// The refusals the plan pass meets; `NotBuilt` for a reading after a movement or at a
     /// day with no edge, and for a written order with a plan.
     pub(crate) fn plan_walk(&mut self, m: &Reality, id: usize) -> Result<(), Stop> {
-        let (cut, main) = {
+        let (cut, main, run) = {
             let walk = self.walk(id)?;
-            (walk.cut, walk.proj.is_none())
+            (walk.cut, walk.proj.is_none(), (walk.start, walk.end))
         };
         not_yet(m)?;
         let readings = if main {
@@ -178,14 +180,16 @@ impl Engine {
         let mut plans = Vec::new();
         let mut decisions = Vec::new();
         for mv in sorted_moves(m) {
-            let insts = self.move_instances(m, mv, cut)?.to_vec();
+            let mut insts = self.move_instances(m, mv, cut)?.to_vec();
             if mv.decision {
+                self.refused_decisions(m, mv, &mut insts, (run, cut))?;
                 decisions.push((mv.id.clone(), mv.stratum, insts));
             } else {
                 plans.extend(insts);
             }
         }
         plans.sort_by(|a, b| a.order.cmp(&b.order));
+        let orders = movement_orders(&plans, &decisions);
         let adjustments = if main {
             self.all_adjustments(m, cut)?
         } else {
@@ -195,8 +199,7 @@ impl Engine {
             wo.err = self.obs_err(m, &wo.obs, cut)?;
         }
         let walk = self.walk_mut(id)?;
-        let texts: BTreeSet<String> = plans.iter().map(|i| i.order.text()).collect();
-        walk.order_texts = texts.into_iter().collect();
+        walk.orders = orders;
         for w in legs_warned {
             if !walk.warnings.contains(&w) {
                 walk.warnings.push(w);
@@ -230,6 +233,58 @@ impl Engine {
         walk.progress = Progress::Walking;
         Ok(())
     }
+
+    /// The legs' places of each instance of decision `mv` refused before its point and dated
+    /// in the walk, read at the walk's cut: the places it refuses from its day (refcore's
+    /// `dec_bad`, its places). L §8.4 (tally 2.1.6), E §4.2 Holes in the walk.
+    ///
+    /// # Errors
+    ///
+    /// A load refusal met at run.
+    fn refused_decisions(
+        &mut self,
+        m: &Reality,
+        mv: &crate::model::MoveInfo,
+        insts: &mut [Inst],
+        (run, cut): ((Day, Day), Day),
+    ) -> Result<(), Stop> {
+        for inst in insts.iter_mut() {
+            if refused_day(m, inst, run).is_none() {
+                continue;
+            }
+            if let Some(legs) = self.refused_places(m, mv, inst, Ctx::new(None, cut))? {
+                inst.legs = legs;
+            }
+        }
+        Ok(())
+    }
+}
+
+/// The movement orders of a walk's plan and decision instances, sorted in the typed movement
+/// order, each once since an instance is its move and keys: the ranks of the day's plans
+/// (refcore's `plan_key`; tally 2.1.6, #57). E §4.1.
+fn movement_orders(plans: &[Inst], decisions: &[(String, u32, Vec<Inst>)]) -> Vec<Order> {
+    let decided = decisions.iter().flat_map(|(_, _, insts)| insts);
+    let mut orders: Vec<Order> = plans
+        .iter()
+        .chain(decided)
+        .map(|i| i.order.clone())
+        .collect();
+    orders.sort();
+    orders
+}
+
+/// The day of decision instance `inst` where it was refused before its point (its key's
+/// `where`) and is dated in the walk's `[start, end]`, after the `from` of a scenario that
+/// declares it (L §6.4 first: such an instance before it is left out); none otherwise. L §8.4
+/// (tally 2.1.6), E §4.2 step 3.
+fn refused_day(m: &Reality, inst: &Inst, (start, end): (Day, Day)) -> Option<Day> {
+    inst.err.as_ref()?;
+    let d = inst.day.as_ref().and_then(Dated::day)?;
+    if super::plan::scenario_from(m, &inst.move_id).is_some_and(|from| d < from) {
+        return None;
+    }
+    (start <= d && d <= end).then_some(d)
 }
 
 /// Whether a projection's walk leaves out the movements of move `move_id`: they depend on
@@ -386,7 +441,7 @@ fn leg_text(id: &str, leg: &str) -> String {
 /// `open` from its legs' days (refcore's `prepare`, its modelled plans). E §4.1 step 3, L §5.19.
 fn schedule_modelled(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
     if inst.obs.is_empty() {
-        let rank = walk.text_rank(&inst.id)?;
+        let rank = walk.plan_rank(&inst.order)?;
         for lg in &inst.legs {
             let Dated::Day(d) = lg.day else {
                 continue;
@@ -420,13 +475,12 @@ fn schedule_modelled(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
 }
 
 /// Puts a plan instance's legs on their days by its status: left out, uncertain, refused, a
-/// hole, modelled past, or booked (refcore's `prepare`, its plans). E §4.1 step 3, §4.2.
+/// hole, modelled past, or booked, each at its rank in the typed movement order (refcore's
+/// `prepare`, its plans; tally 2.1.6, #57). A refused instance refuses the places its legs
+/// give from its day, and every place where a leg's place can't be read (L §8.4). E §4.1
+/// step 3, §4.2.
 fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
-    let rank = if inst.status == Status::Refused {
-        walk.text_rank(&inst.move_id)?
-    } else {
-        walk.text_rank(&inst.order.text())?
-    };
+    let rank = walk.plan_rank(&inst.order)?;
     match inst.status {
         Status::LeftOut => return note_left_out(walk, &inst),
         Status::Modelled => return schedule_modelled(walk, inst),
@@ -517,8 +571,12 @@ fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
 }
 
 /// Puts a decision instance on its day, at its move's stratum; one dated outside the run is
-/// left out, one whose day is a hole makes its places holes from the walk's start (refcore's
-/// `prepare`, its decisions, and `dec_hole`). E §4.2 step 3, Holes in the walk.
+/// left out, and so is one of a move a scenario declares dated before the scenario's `from`,
+/// which books nothing there (L §6.4); one refused before its point (its key's `where`)
+/// refuses from its day the places its legs give, or every place where one can't be read,
+/// as a hole movement would (L §8.4, tally 2.1.6), the scenario's rule first; one whose day
+/// is a hole makes its places holes from the walk's start (refcore's `prepare`, its
+/// decisions, `dec_bad` and `dec_hole`). E §4.2 step 3, Holes in the walk; L §6.4.
 fn schedule_decision(
     m: &Reality,
     walk: &mut Walk,
@@ -535,6 +593,13 @@ fn schedule_decision(
                 // a scenario's move books nothing before its from (L §6.4): left out
                 if walk.proj.is_none() {
                     note_left_out(walk, &inst)?;
+                }
+                return Ok(());
+            }
+            if let Some(err) = &inst.err {
+                // tally 2.1.6 (#51): refused before its point, it reaches as a hole movement
+                if refused_day(m, &inst, (walk.start, walk.end)).is_some() {
+                    decision_refused(m, walk, &inst, d, err);
                 }
                 return Ok(());
             }
@@ -570,6 +635,31 @@ fn schedule_decision(
     Ok(())
 }
 
+/// A decision instance refused before its point, dated `day` in the walk: from that day it
+/// refuses the places its legs give, read at the walk's cut, each in every unit, and every
+/// place where its move has legs whose places can't be read; a move with no legs refuses
+/// nothing (refcore's `dec_bad`). L §8.4 (tally 2.1.6), E §4.2 Holes in the walk.
+fn decision_refused(m: &Reality, walk: &mut Walk, inst: &Inst, day: Day, err: &Refusal) {
+    let has_legs = m
+        .moves
+        .get(&inst.move_id)
+        .is_some_and(|mv| !mv.decl.legs.is_empty());
+    if has_legs && inst.legs.is_empty() {
+        walk.at(At::before(day), Act::GlobalBad(err.clone()));
+        return;
+    }
+    let places: BTreeSet<&str> = inst
+        .legs
+        .iter()
+        .flat_map(|lg| [&lg.from, &lg.to])
+        .filter_map(End::place)
+        .collect();
+    for place in places {
+        let act = Act::PlaceBad(place.to_owned(), err.clone(), inst.id.clone());
+        walk.at(At::before(day), act);
+    }
+}
+
 /// An adjustment on the walk: `HOLE-CHANGED` at its leg's places from its day when nothing
 /// settles it, and its remainder in the register of every read of them (refcore's
 /// `sched_adj`). E §5 step 5, L §8.2.
@@ -586,7 +676,7 @@ fn schedule_adjustment(
             .into_iter()
             .filter_map(End::place)
         {
-            let act = Act::ChangeRefused(place.to_owned(), err.clone(), adj.id.clone());
+            let act = Act::PlaceBad(place.to_owned(), err.clone(), adj.id.clone());
             walk.at(At::before(day), act);
         }
         return Ok(());
