@@ -169,9 +169,11 @@ mod tests {
     use std::collections::BTreeSet;
 
     /// Fourteen families' bases print the load probe's line alone; every fixture prints its
-    /// code and no warning; 210 fixtures of 52 codes (the pre-M1 run adds 9: issue #90's
+    /// code and no warning; 237 fixtures of 52 codes (the pre-M1 run adds 36: issue #90's
     /// probes, the family `written` and `adjust/fulfils-key-expr`, and P32's second
-    /// anchored form, `basic/domain-anchored-schedule`; tally 2.1.6 adds 58: #71's, #75's and
+    /// anchored form, `basic/domain-anchored-schedule`; then 27 for the group reviews' fixes,
+    /// G1a's literal ranges counted, `of` rows' parties and keys written as places, G4a's
+    /// row keys a kind or index lacks; tally 2.1.6 adds 58: #71's, #75's and
     /// #88's held rows, #89's as LOAD-LIMIT, the round's new rows, and after T's re-run P29's
     /// family `scenwhen` and P30's twin; G4's 49 of 43, G7's 64
     /// message forms, the gate's 13 of G11's forms: path counts and `lifespan` at load, 14 of G12's: a
@@ -225,8 +227,8 @@ mod tests {
             .collect();
         assert_eq!(
             (vs.len(), codes.len()),
-            (224, 52),
-            "210 fixtures of 52 codes"
+            (251, 52),
+            "237 fixtures of 52 codes"
         );
     }
 

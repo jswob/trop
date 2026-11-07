@@ -31,8 +31,8 @@ HOLE-PART	L §8.1	M5b	*	3	M5b	I:S1:S1-01~s1
 HOLE-PART	L §8.1	M5b	<place>: <amount> may be <q>'s: <questions>	3	M5b	I:S1:S1-01~s1
 LOAD-PATH	L §8.3	M0	*	2	M0	codes/LOAD-PATH/alone
 LOAD-PATH	L §8.3	M0	<path> doesn't exist	2	M0	codes/LOAD-PATH/alone
-LOAD-PARSE	L §8.3	M0	*	14	M0	codes/LOAD-PATH/control
-LOAD-PARSE	L §8.3	M0	cannot parse: <what was expected>	14	M0	codes/LOAD-PATH/control
+LOAD-PARSE	L §8.3	M0	*	18	M0	codes/LOAD-PATH/control
+LOAD-PARSE	L §8.3	M0	cannot parse: <what was expected>	18	M0	codes/LOAD-PATH/control
 LOAD-HEADER	L §8.3	M0	*	29	M0	U:law/LAW-13/rate25
 LOAD-HEADER	L §8.3	M0	missing tally version	1	M0	codes/m0/basic/header-tally
 LOAD-HEADER	L §8.3	M0	missing on date	1	M0	codes/m0/basic/header-on
@@ -57,8 +57,8 @@ LOAD-NAME	L §8.3	M0	unknown id <x> (a unit)	1	M0	codes/m0/basic/name-kind-unit
 LOAD-NAME	L §8.3	M0	rule <d>.<r>: v <x> names no version	1	M0	codes/m0/basic/name-rule-v
 LOAD-SHADOW	L §8.3	M0	*	1	M0	codes/m0/basic/shadow
 LOAD-SHADOW	L §8.3	M0	bound variable <k> has the name of a top-level id	1	M0	codes/m0/basic/shadow
-LOAD-KEY	L §8.3	M0	*	18	M0	codes/m0/adjust/attr-move-other
-LOAD-KEY	L §8.3	M0	<key> is not a key of <index or kind>	8	M0	codes/m0/adjust/attr-move-other
+LOAD-KEY	L §8.3	M0	*	32	M0	codes/m0/adjust/attr-move-other
+LOAD-KEY	L §8.3	M0	<key> is not a key of <index or kind>	22	M0	codes/m0/adjust/attr-move-other
 LOAD-KEY	L §8.3	M0	ambiguous key <key>	1	M0	codes/order/passes-control
 LOAD-KEY	L §8.3	M0	a key is also an id	1	M0	codes/m0/basic/key-id
 LOAD-KEY	L §8.3	M0	wrong number of keys	1	M0	codes/m0/basic/key-count
@@ -83,14 +83,14 @@ LOAD-LEAF	L §8.3	M0	<k> enters <kind>, which has subkinds	1	M0	codes/m0/basic/l
 LOAD-PLACEKIND	L §8.3	M0	*	2	M0	codes/m0/basic/placekind
 LOAD-PLACEKIND	L §8.3	M0	place kind <K> has no unit or sign rule	1	M0	codes/m0/basic/placekind
 LOAD-PLACEKIND	L §8.3	M0	<k> enters a kind of unit one without its unit	1	M0	codes/m0/basic/placekind-one
-LOAD-PARTS	L §8.3	M0	*	14	M0	U:own/OWN-11/p21-signed
+LOAD-PARTS	L §8.3	M0	*	15	M0	U:own/OWN-11/p21-signed
 LOAD-PARTS	L §8.3	M0	kind <K>: <clause> missing	1	M0	codes/m0/own/parts-missing
 LOAD-PARTS	L §8.3	M0	kind <K> keeps parts and is <signed, max 0, an asset kind, not a place kind>	3	M0	U:own/OWN-11/p21-signed
 LOAD-PARTS	L §8.3	M0	<K> states parts clauses under <kind>, which keeps parts	1	M0	codes/m0/own/parts-under
 LOAD-PARTS	L §8.3	M0	arrival rule <D> is not a num keyed by a movement and a party at its movement's day	1	M0	codes/m0/own/parts-arrival
 LOAD-PARTS	L §8.3	M0	owns[<p>, <x>]: <x> keeps parts	1	M0	codes/m0/own/parts-owns
 LOAD-PARTS	L §8.3	M0	same <p> = <q>: <x> keeps parts	1	M0	codes/m0/jown/same-parts
-LOAD-PARTS	L §8.3	M0	of on a row of <input>	1	M0	codes/m0/own/parts-of-input
+LOAD-PARTS	L §8.3	M0	of on a row of <input>	2	M0	codes/m0/basic/of-key-place
 LOAD-PARTS	L §8.3	M0	the parts of <x> at <instant> have no total in <version>	1	M0	codes/m0/own/parts-no-total
 LOAD-PARTS	L §8.3	M0	the stated parts of <x> sum to <a>, over its total <b>	1	M0	codes/m0/own/parts-over
 LOAD-PARTS	L §8.3	M0	the stated part of <q> at <x> is below 0	1	M0	codes/m0/own/parts-below
@@ -231,11 +231,11 @@ LOAD-ASIF	L §8.3	M0	as if deeper than 4	1	M0	codes/m0/basic/asif
 LOAD-ASIF	L §8.3	M0	pin on unknown id <x>	1	M0	codes/m0/basic/asif-unknown
 LOAD-DEPTH	L §8.3	M0	*	2	S	kernel/g13/depth_from
 LOAD-DEPTH	L §8.3	M0	expression nested deeper than 8	2	S	kernel/g13/depth_from
-LOAD-LIMIT	L §8.3	M0	*	15	S	kernel/g14/list_1000001
+LOAD-LIMIT	L §8.3	M0	*	23	S	kernel/g14/list_1000001
 LOAD-LIMIT	L §8.3	M0	index <x>: a day passes 9999-12-31	1	M0	codes/m0/basic/limit-index-day
 LOAD-LIMIT	L §8.3	M0	move <m>[k] on <e>: a day passes 9999-12-31	1	M0	codes/m0/basic/limit-move-day
 LOAD-LIMIT	L §8.3	M0	index <x> holds more than 1 000 000 keys	2	S	kernel/g14/list_1000001
-LOAD-LIMIT	L §8.3	M0	<a> .. <b> holds more than 1 000 000 keys	2	M0	codes/m0/basic/limit-range-keys
+LOAD-LIMIT	L §8.3	M0	<a> .. <b> holds more than 1 000 000 keys	10	M0	codes/m0/basic/limit-range-cents
 LOAD-LIMIT	L §8.3	M0	<n> has more than 18 digits	2	M0	codes/m0/basic/limit-digits
 LOAD-LIMIT	L §8.3	M0	unit <u> has a power past 64	7	M0	codes/m0/basic/s1-def-pct
 LOAD-FORKS	L §8.3	M0	*	3	M0	codes/m0/basic/forks
