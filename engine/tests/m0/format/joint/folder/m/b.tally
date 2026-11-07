@@ -1,0 +1,6 @@
+part pb
+  tally 2
+
+source tb "t"
+
+input wb: num

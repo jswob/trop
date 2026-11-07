@@ -436,7 +436,7 @@ mod tests {
     use std::collections::BTreeSet;
 
     /// The corpus groups `vectors.py` sorts the 315 text sets into, and how many sets each
-    /// holds; with the 22 format fixtures, 337 vectors.
+    /// holds; with the 38 format fixtures, 353 vectors.
     const GROUPS: [(&str, usize); 12] = [
         ("blind", 18),
         ("household-A", 8),
@@ -455,13 +455,18 @@ mod tests {
     /// The sets whose reprint refcore refuses, each by a ruling of tally 2.1.6: #91, a
     /// section id declared twice (LOAD-DUP), or an unknown prefix (LOAD-NAME); #74, a member
     /// absent or changed (LOAD-PIN); #88 with #90, a `same` side keyed by a signed literal,
-    /// no `sref` (LOAD-PARSE). `vectors.py`'s `REPRINT_REFUSED` lists the same.
-    const REPRINT_REFUSED: [&str; 7] = [
+    /// no `sref` (LOAD-PARSE); and two refcore refuses where the engine prints or refuses
+    /// otherwise, held for #105 (pre-M1, P17): a member outside the folder given from its
+    /// parent (LOAD-PIN), a nested member's absent member (LOAD-NAME, a member's refusal).
+    /// `vectors.py`'s `REPRINT_REFUSED` lists the same.
+    const REPRINT_REFUSED: [&str; 9] = [
         "U:set/surf/SURF-04/SURF-04",
         "format/dup_id",
         "format/dup_kind",
         "format/member_absent",
         "format/member_changed",
+        "format/member_nested_absent",
+        "format/member_outside_parent",
         "format/same_key_signed",
         "format/unknown_prefix",
     ];
@@ -486,7 +491,7 @@ mod tests {
     #[test]
     fn the_format_vectors_read_and_name_their_texts() {
         let vs = format_vectors(FORMAT).expect("m0/format.refcore reads");
-        assert_eq!(vs.len(), 345, "315 text sets and 30 format fixtures");
+        assert_eq!(vs.len(), 353, "315 text sets and 38 format fixtures");
         let all = texts();
         let mut ids = BTreeSet::new();
         for v in &vs {
@@ -500,8 +505,15 @@ mod tests {
             if REPRINT_REFUSED.contains(&v.id.as_str()) {
                 assert_eq!(v.code, 1, "{}: refcore refuses its reprint", v.id);
                 assert!(v.sections.is_empty(), "{}: a section", v.id);
+                // a member's refusal is `refused: member <alias>: <the refusal>` (INTERFACE §2)
+                let code = v
+                    .tail
+                    .strip_prefix("refused: member ")
+                    .and_then(|rest| rest.split_once(": "))
+                    .map_or(v.tail.as_str(), |(_, refusal)| refusal);
                 assert!(
-                    v.tail.starts_with("refused: LOAD-") && v.tail.lines().count() == 1,
+                    (code.starts_with("refused: LOAD-") || code.starts_with("LOAD-"))
+                        && v.tail.lines().count() == 1,
                     "{}: one refusal line, not {:?}",
                     v.id,
                     v.tail
@@ -515,8 +527,11 @@ mod tests {
                 assert!(all.contains_key(f.path.as_str()), "{}: {}", v.id, f.path);
             }
             for name in v.args.iter().skip(1) {
+                // a file given is a key; a directory given is the keys under it (INTERFACE §4)
                 assert!(
-                    v.table.iter().any(|f| f.key == *name),
+                    v.table
+                        .iter()
+                        .any(|f| f.key == *name || f.key.starts_with(&in_dir(name, ""))),
                     "{}: {name} isn't in its table",
                     v.id
                 );
@@ -531,7 +546,7 @@ mod tests {
         }
         assert_eq!(
             vs.iter().filter(|v| v.group.starts_with("format/")).count(),
-            30,
+            38,
             "one vector per format fixture"
         );
     }
@@ -548,6 +563,16 @@ mod tests {
         );
     }
 
+    /// The key of `name` under directory `dir`, as the binary names a directory's files
+    /// (`dir/name`, or `dir` + `name` when `dir` ends in `/`).
+    fn in_dir(dir: &str, name: &str) -> String {
+        if dir.ends_with('/') {
+            format!("{dir}{name}")
+        } else {
+            format!("{dir}/{name}")
+        }
+    }
+
     /// `vectors.py`'s digest and this one agree: a section whose file is already canonical
     /// holds its source's digest, and hundreds do.
     #[test]
@@ -557,10 +582,14 @@ mod tests {
         let mut agree = 0_usize;
         for v in &vs {
             for s in &v.sections {
+                // a file given alone prints as given, a directory's files relative to it
                 let path = v
                     .table
                     .iter()
-                    .find(|f| f.key == s.name)
+                    .find(|f| {
+                        f.key == s.name
+                            || v.args.iter().skip(1).any(|d| f.key == in_dir(d, &s.name))
+                    })
                     .map(|f| f.path.as_str());
                 let source = path
                     .and_then(|p| all.get(p))

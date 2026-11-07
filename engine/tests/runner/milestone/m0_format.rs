@@ -317,4 +317,63 @@ mod tests {
     fn m0_format_rule_spacing_call() {
         formats_as_refcore("format/spacing_call");
     }
+
+    /// E §3.1 step 1, CHANGES 2.1.6-14 (#74; G3's review fix, P17): `reprint .` inside the
+    /// folder of a joint model whose member lies outside it finds and pins the member as
+    /// `run .` does, relative to the joint model's file, and prints (the engine refused
+    /// `LOAD-PIN … (no such file)`).
+    #[test]
+    fn m0_format_joint_member_outside_dot() {
+        formats_as_refcore("format/member_outside_dot");
+    }
+
+    /// The same joint model given from its parent folder, `reprint x`: refcore refuses
+    /// `LOAD-PIN`, looking the member up from the printed name; held for #105.
+    #[test]
+    fn m0_format_joint_member_outside_parent() {
+        formats_as_refcore("format/member_outside_parent");
+    }
+
+    /// E §3.1 step 1 (#74, P17): a member that is itself a joint model has its own members
+    /// found and pinned before anything prints; every pin true, it prints (the twin of the
+    /// two below).
+    #[test]
+    fn m0_format_joint_member_nested() {
+        formats_as_refcore("format/member_nested");
+    }
+
+    /// A nested member's member whose text has changed is refused `LOAD-PIN`, as `run`
+    /// refuses it; refcore's `reprint` pins direct members only and prints: held for #105.
+    #[test]
+    fn m0_format_joint_member_nested_changed() {
+        formats_as_refcore("format/member_nested_changed");
+    }
+
+    /// A nested member's member with no file is refused `LOAD-PIN`, as the engine's `run`
+    /// refuses it; refcore refuses `LOAD-NAME unknown id b.zone` in both: held for #105.
+    #[test]
+    fn m0_format_joint_member_nested_absent() {
+        formats_as_refcore("format/member_nested_absent");
+    }
+
+    /// INTERFACE §2, L §6.1 (#74, P17): a member folder of one model file and a part prints
+    /// (the twin of the two below).
+    #[test]
+    fn m0_format_joint_member_folder() {
+        formats_as_refcore("format/member_folder");
+    }
+
+    /// A member folder with no model file is refused `LOAD-HEADER`, as `run` refuses it;
+    /// refcore's `reprint` prints: held for #105.
+    #[test]
+    fn m0_format_joint_member_folder_none() {
+        formats_as_refcore("format/member_folder_none");
+    }
+
+    /// A member folder with two model files is refused `LOAD-HEADER`, as `run` refuses it;
+    /// refcore's `reprint` prints: held for #105.
+    #[test]
+    fn m0_format_joint_member_folder_two() {
+        formats_as_refcore("format/member_folder_two");
+    }
 }

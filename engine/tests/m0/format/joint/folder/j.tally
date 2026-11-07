@@ -1,0 +1,11 @@
+model j
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  use m = "m" sha256 "2437ba566c390985157be44193a5f9ef5e9435633246ed3401a46cada2aa9dc6"
+  note "T, pre-M1 (#97, chunk 4; G3 review, 5815c57, #105, P17): a member folder of one model file and a part"
+
+input y: num
+
+source s "s"

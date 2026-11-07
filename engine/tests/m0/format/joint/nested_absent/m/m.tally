@@ -1,0 +1,10 @@
+model mm
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  use b = "../b/b.tally" sha256 "be4463915516bf956ac4de46e79b2e45f6faa87a9e9fe00817215bc75b232c77"
+
+source s "s"
+
+input w[k in b.zone]: num

@@ -1,0 +1,11 @@
+model bb
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+index zone = [g, r]
+
+input extra: num

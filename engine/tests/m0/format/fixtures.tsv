@@ -1,31 +1,39 @@
-name	rule
-header_order	L §2.4 Header first: model, tally, on, start, end, then use lines by name, same lines by left side, notes
-section_kind_order	L §2.4 Sections in the kind order source, unit, kind, axis, index, place, input, band, def, fill, move, ask, version
-sections_by_id	L §2.4 Within a kind, sections are sorted by id (ASCII)
-kinds_tree_order	L §2.4 kind sections print in tree order: each kind followed by its subkinds depth first, siblings by id
-versions_last_by_known	L §2.4 Versions come last, sorted by known date (a window by its first day), then id
-blank_lines	L §2.4 One blank line between sections, always, one-line sections included
-clause_order	L §2.4 Inside a section, its clause lines and notes first, in the grammar's order (§2.3): a move's on, when, leg, note; an index's assumed before its notes
-rules_sorted	L §2.4 Rules sorted by label, then by the known date of their v, a rule without v first
-version_items_sorted	L §2.4 Version items: entries into kinds and indexes first, then by target id, a keyless row first, then keys in index order
-version_items_wider_key_first	L §2.4 At one key position the wider key comes first: a key left out, then *, then a range before the keys it holds (tally 2.1.3, #59)
-version_items_ties	L §2.4 Two items every key leaves tied sort by their own canonical line, compared as ASCII (GD-28)
-beats_sorted	L §2.4 A beats list is sorted by label, with ", "
-short_form	L §2.4 Short form: a def with one rule labelled base, no v, no when, no own governs, no notes prints as def x: T = expr at E
-short_with_notes	L §2.4 A one-line def followed by note lines means the long form, its one rule labelled base, and prints as it (2.1-4)
-numbers	L §2.4 Numbers print as the shortest exact decimal, a leading 0 before the point, thousands grouped by a space, or a reduced a/b when the value doesn't terminate
-percent_units	L §2.4 A value of the unit % prints with it; the shortest exact decimal before a unit
-expr_spacing	L §2.4 Expressions: one space around binary operators and after commas, none inside brackets
-parens_redundant	L §2.4 Parentheses appear only where precedence needs them
-parens_forced	L §2.4 A to u call used as an operand and a converted flows inside a comparison are always parenthesised (parse rule 4)
-numbers_of_any_size	L §2.4 Numbers of any size print as every number does: a reduced a/b whose numerator, denominator or both pass 64 bits, and a decimal past 64 bits grouped by a space (G11, B4)
-same_sides	L §2.3 sref, §2.4 A same side of every sref form prints as written, keys and fields kept: three names deep, a field after its keys, keys after a field; each the only same item of its list (the header, a version), so no order between sides is read (#88; G11, B3)
-same_place_keys	L §2.3 sref, §2.4 A same side keyed by a keyed place prints as written, its items sorted by their left sides' place keys (a place keyed by things is one key, sorted as things are) (G12's N3; beside a row of its target, #88: m0/format/held.tsv)
-member_absent	E §3.1 step 1, L §2.4 (tally 2.1.6, #74, P15): reprint reads and pins a joint model's members as run does, before it prints anything: a member with no file is refused LOAD-PIN (refcore 2.1.5 printed it, exit 0)
-member_changed	E §3.1 step 1 (tally 2.1.6, #74, P15): a member whose text no longer has the hash its use line names is refused LOAD-PIN, before reprint prints anything
-dup_id	L §2.4, §2.5 (tally 2.1.6, #91, P22): a text with a duplicated id has no canonical form, and reprint refuses it as load does, LOAD-DUP at the second by line: a source declared twice with two texts (the fuzz input b943 minimized; refcore 2.1.5 kept one block)
-dup_kind	L §2.4, §2.5 (tally 2.1.6, #91, P22): a kind declared twice under two parents, the first a parent no line declares, is refused LOAD-DUP before anything is ordered (the fuzz input e523 minimized; its second print moved the kind)
-unknown_prefix	L §2.4 (tally 2.1.6, #91, P22): an index under a prefix no use line names can't be ordered; reprint refuses it as load does, LOAD-NAME unknown id (the fuzz input c5a8 minimized; refcore 2.1.5 stopped REFCORE-NOT-YET)
-spacing_read	L §2.4 The loader accepts any spacing the grammar allows (tally 2.1.6, #81, P21): a field spaced at its . (r .n, r. m, r . k), a call at its ( and an id at its [ read, and print touching; an item named as a calendar list word (added) touches its [; a keyword before ( keeps its space (not (…))
-spacing_call	L §2.4 (tally 2.1.6, #81, P21): a member's band call spaced at its ( (b.fee (x)) and a field spaced at its . (b .ana, b. income) read as b.fee(x) and b.ana, and print touching
-same_key_signed	L §2.3 sref (tally 2.1.6, #88), §2.4 (issue #90): a same side keyed by a signed literal is no sref; reprint refuses it at parse, LOAD-PARSE, so the canonical order of same sides never meets a key that isn't a literal or a place keyed by literals
+name	rule	cwd	args
+header_order	L §2.4 Header first: model, tally, on, start, end, then use lines by name, same lines by left side, notes		
+section_kind_order	L §2.4 Sections in the kind order source, unit, kind, axis, index, place, input, band, def, fill, move, ask, version		
+sections_by_id	L §2.4 Within a kind, sections are sorted by id (ASCII)		
+kinds_tree_order	L §2.4 kind sections print in tree order: each kind followed by its subkinds depth first, siblings by id		
+versions_last_by_known	L §2.4 Versions come last, sorted by known date (a window by its first day), then id		
+blank_lines	L §2.4 One blank line between sections, always, one-line sections included		
+clause_order	L §2.4 Inside a section, its clause lines and notes first, in the grammar's order (§2.3): a move's on, when, leg, note; an index's assumed before its notes		
+rules_sorted	L §2.4 Rules sorted by label, then by the known date of their v, a rule without v first		
+version_items_sorted	L §2.4 Version items: entries into kinds and indexes first, then by target id, a keyless row first, then keys in index order		
+version_items_wider_key_first	L §2.4 At one key position the wider key comes first: a key left out, then *, then a range before the keys it holds (tally 2.1.3, #59)		
+version_items_ties	L §2.4 Two items every key leaves tied sort by their own canonical line, compared as ASCII (GD-28)		
+beats_sorted	L §2.4 A beats list is sorted by label, with ", "		
+short_form	L §2.4 Short form: a def with one rule labelled base, no v, no when, no own governs, no notes prints as def x: T = expr at E		
+short_with_notes	L §2.4 A one-line def followed by note lines means the long form, its one rule labelled base, and prints as it (2.1-4)		
+numbers	L §2.4 Numbers print as the shortest exact decimal, a leading 0 before the point, thousands grouped by a space, or a reduced a/b when the value doesn't terminate		
+percent_units	L §2.4 A value of the unit % prints with it; the shortest exact decimal before a unit		
+expr_spacing	L §2.4 Expressions: one space around binary operators and after commas, none inside brackets		
+parens_redundant	L §2.4 Parentheses appear only where precedence needs them		
+parens_forced	L §2.4 A to u call used as an operand and a converted flows inside a comparison are always parenthesised (parse rule 4)		
+numbers_of_any_size	L §2.4 Numbers of any size print as every number does: a reduced a/b whose numerator, denominator or both pass 64 bits, and a decimal past 64 bits grouped by a space (G11, B4)		
+same_sides	L §2.3 sref, §2.4 A same side of every sref form prints as written, keys and fields kept: three names deep, a field after its keys, keys after a field; each the only same item of its list (the header, a version), so no order between sides is read (#88; G11, B3)		
+same_place_keys	L §2.3 sref, §2.4 A same side keyed by a keyed place prints as written, its items sorted by their left sides' place keys (a place keyed by things is one key, sorted as things are) (G12's N3; beside a row of its target, #88: m0/format/held.tsv)		
+member_absent	E §3.1 step 1, L §2.4 (tally 2.1.6, #74, P15): reprint reads and pins a joint model's members as run does, before it prints anything: a member with no file is refused LOAD-PIN (refcore 2.1.5 printed it, exit 0)		
+member_changed	E §3.1 step 1 (tally 2.1.6, #74, P15): a member whose text no longer has the hash its use line names is refused LOAD-PIN, before reprint prints anything		
+dup_id	L §2.4, §2.5 (tally 2.1.6, #91, P22): a text with a duplicated id has no canonical form, and reprint refuses it as load does, LOAD-DUP at the second by line: a source declared twice with two texts (the fuzz input b943 minimized; refcore 2.1.5 kept one block)		
+dup_kind	L §2.4, §2.5 (tally 2.1.6, #91, P22): a kind declared twice under two parents, the first a parent no line declares, is refused LOAD-DUP before anything is ordered (the fuzz input e523 minimized; its second print moved the kind)		
+unknown_prefix	L §2.4 (tally 2.1.6, #91, P22): an index under a prefix no use line names can't be ordered; reprint refuses it as load does, LOAD-NAME unknown id (the fuzz input c5a8 minimized; refcore 2.1.5 stopped REFCORE-NOT-YET)		
+spacing_read	L §2.4 The loader accepts any spacing the grammar allows (tally 2.1.6, #81, P21): a field spaced at its . (r .n, r. m, r . k), a call at its ( and an id at its [ read, and print touching; an item named as a calendar list word (added) touches its [; a keyword before ( keeps its space (not (…))		
+spacing_call	L §2.4 (tally 2.1.6, #81, P21): a member's band call spaced at its ( (b.fee (x)) and a field spaced at its . (b .ana, b. income) read as b.fee(x) and b.ana, and print touching		
+same_key_signed	L §2.3 sref (tally 2.1.6, #88), §2.4 (issue #90): a same side keyed by a signed literal is no sref; reprint refuses it at parse, LOAD-PARSE, so the canonical order of same sides never meets a key that isn't a literal or a place keyed by literals		
+member_outside_dot	E §3.1 step 1, INTERFACE §1, CHANGES 2.1.6-14 (#74; G3 review, 5815c57, P17): reprint finds and pins a joint model's members as run does, before it prints anything: reprint . inside the folder of a joint model whose member ../m/m.tally lies outside it prints the model (the engine refused LOAD-PIN, no such file); member_outside_parent the same from the parent (held for #105)	joint/outside/x	.
+member_outside_parent	E §3.1 step 1, INTERFACE §1, CHANGES 2.1.6-14 (#74; G3 review, 5815c57, P17): reprint finds and pins a joint model's members as run does, before it prints anything: reprint x from its parent finds the member as run x does, relative to the joint model's file, and prints it. Held for #105: refcore refuses LOAD-PIN, looking the member up from the printed name	joint/outside	x
+member_nested	E §3.1 step 1, INTERFACE §1, CHANGES 2.1.6-14 (#74; G3 review, 5815c57, P17): reprint finds and pins a joint model's members as run does, before it prints anything: a member that is itself a joint model has its own members found and pinned, every pin true: it prints; the twin of member_nested_changed and member_nested_absent	joint/nested	j.tally
+member_nested_changed	E §3.1 step 1, INTERFACE §1, CHANGES 2.1.6-14 (#74; G3 review, 5815c57, P17): reprint finds and pins a joint model's members as run does, before it prints anything: a nested member's member whose text has changed is refused LOAD-PIN as run refuses it. Held for #105: refcore's reprint pins direct members only, and prints	joint/nested_changed	j.tally
+member_nested_absent	E §3.1 step 1, INTERFACE §1, CHANGES 2.1.6-14 (#74; G3 review, 5815c57, P17): reprint finds and pins a joint model's members as run does, before it prints anything: a nested member's member with no file is refused LOAD-PIN as run refuses it. Held for #105: refcore refuses LOAD-NAME unknown id b.zone, its run too (its members' prefixes are the members it finds; L §2.4 names a prefix no use line names)	joint/nested_absent	j.tally
+member_folder	E §3.1 step 1, INTERFACE §1, CHANGES 2.1.6-14 (#74; G3 review, 5815c57, P17): reprint finds and pins a joint model's members as run does, before it prints anything: a member folder of one model file and a part prints; the twin of member_folder_none and member_folder_two	joint/folder	j.tally
+member_folder_none	E §3.1 step 1, INTERFACE §1, CHANGES 2.1.6-14 (#74; G3 review, 5815c57, P17): reprint finds and pins a joint model's members as run does, before it prints anything: a member folder with no model file is refused LOAD-HEADER as run refuses it. Held for #105: refcore's reprint prints	joint/folder_none	j.tally
+member_folder_two	E §3.1 step 1, INTERFACE §1, CHANGES 2.1.6-14 (#74; G3 review, 5815c57, P17): reprint finds and pins a joint model's members as run does, before it prints anything: a member folder with two model files is refused LOAD-HEADER as run refuses it. Held for #105: refcore's reprint prints	joint/folder_two	j.tally
