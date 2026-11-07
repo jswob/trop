@@ -13,7 +13,7 @@
 use core::cmp::Ordering;
 
 use super::arith::{Op, Test, arith, compare, negate, same_value};
-use super::read::{Given, literal_key, make_keys};
+use super::read::{Given, lacks_at_run, literal_key, make_keys};
 use super::state::{
     Ctx, Engine, Env, Figures, invariant, not_typed, num_stop, refuse, refuse_load, unit_stop,
 };
@@ -635,7 +635,8 @@ fn resolve_word(m: &Reality, word: &str, other: &Value) -> Result<Value, Stop> {
             m,
             &Lit::Name(word.to_owned()),
             &Domain::Index(index.clone()),
-        )?;
+        )?
+        .ok_or_else(lacks_at_run)?;
         return Ok(Value::of_key(&key));
     }
     if let Value::Key(KeyVal::Thing(_)) = other {

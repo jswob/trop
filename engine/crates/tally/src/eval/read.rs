@@ -331,7 +331,7 @@ pub(crate) fn make_keys(
                 continue;
             }
             Given::Value(v) => to_key(m, item, &v, &bind.domain)?,
-            Given::Literal(lit) => literal_key(m, &lit, &bind.domain)?,
+            Given::Literal(lit) => literal_key(m, &lit, &bind.domain)?.ok_or_else(lacks_at_run)?,
         };
         check_key(m, &key, &bind.domain, cut)?;
         keys.push(key);
@@ -476,12 +476,14 @@ pub(super) fn shown(m: &Reality, v: &Value) -> Result<String, Stop> {
 
 /// A key literal resolved in `domain`: a key of an index, an integer or a period by its
 /// label or a key by its text, a thing of a kind by its name (refcore's
-/// `resolve_key_literal`). L §2.5.
+/// `resolve_key_literal`); `None` for a literal the domain doesn't hold, which its caller
+/// refuses. L §2.5.
 ///
 /// # Errors
 ///
-/// `LOAD-KEY`, where load sees it, for a literal the domain doesn't hold.
-pub(super) fn literal_key(m: &Reality, lit: &Lit, domain: &Domain) -> Result<KeyVal, Stop> {
+/// An invariant for an index load didn't build; `NotBuilt` for a key list, a range or an
+/// axis.
+pub(super) fn literal_key(m: &Reality, lit: &Lit, domain: &Domain) -> Result<Option<KeyVal>, Stop> {
     let text = lit.text();
     match domain {
         Domain::Index(id) => {
@@ -489,16 +491,9 @@ pub(super) fn literal_key(m: &Reality, lit: &Lit, domain: &Domain) -> Result<Key
                 .indexes
                 .get(id)
                 .ok_or_else(|| invariant("a bind over an index load didn't build"))?;
-            // load refuses it with its place; refcore's run, `RUN-KEY`
-            index_key_of(ix, lit).ok_or(Stop::NotBuilt("a literal key its index lacks, met at run"))
+            Ok(index_key_of(ix, lit))
         }
-        Domain::Kind(kind) => {
-            if !m.thing_in(&text, kind) {
-                // load refuses it with its place; refcore's run has no twin of this text
-                return Err(Stop::NotBuilt("a literal key its kind lacks, met at run"));
-            }
-            Ok(KeyVal::Thing(text))
-        }
+        Domain::Kind(kind) => Ok(m.thing_in(&text, kind).then_some(KeyVal::Thing(text))),
         Domain::List(_) | Domain::Range | Domain::Axis(_) => Err(Stop::NotBuilt(
             "a key literal of a key list, a range or an axis",
         )),
@@ -982,7 +977,15 @@ pub(super) fn key_value(m: &Reality, lit: &Lit, ix: &str) -> Result<Value, Stop>
     } else {
         return Err(refuse_load(Load::Name, format!("unknown id {ix}")).naming(ix));
     };
-    Ok(Value::of_key(&literal_key(m, lit, &domain)?))
+    let key = literal_key(m, lit, &domain)?
+        .ok_or_else(|| refuse_load(Load::Key, format!("{} is not a key of {ix}", lit.text())))?;
+    Ok(Value::of_key(&key))
+}
+
+/// A literal key its index or kind lacks, met at run: load refuses it with its place
+/// (`key_value`), refcore's run with `RUN-KEY`, so the run stops "not implemented".
+pub(super) fn lacks_at_run() -> Stop {
+    Stop::NotBuilt("a literal key its index or kind lacks, met at run")
 }
 
 /// A number literal of a row as a value of type `ty` (refcore's `convert_value`, its `num`
