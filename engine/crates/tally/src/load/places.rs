@@ -7,7 +7,7 @@
 //! bind order; things of a kind are taken in name order; a place written in a row names a thing
 //! whose base is a place kind.
 
-use super::keys::{KeyLit, keyed_place_thing, lit_of_expr};
+use super::keys::{KeyLit, keyed_place_thing};
 use super::spans::lspan_to_span;
 use super::steps::{Loader, refuse};
 use crate::base::Load;
@@ -331,14 +331,8 @@ impl Loader {
                 line,
             ));
         }
-        let mut lits = Vec::new();
-        for key in &keys {
-            let Some(KeyLit::Lit(lit)) = KeyLit::of_expr(key) else {
-                return Err(Stop::NotBuilt("a keyed place's key that isn't a literal"));
-            };
-            lits.push(lit);
-        }
-        keyed_place_thing(&self.m, &name, &lits, file, line)?.ok_or_else(|| {
+        let place_keys: Vec<KeyLit> = keys.iter().map(KeyLit::written).collect();
+        keyed_place_thing(&self.m, &name, &place_keys, file, line)?.ok_or_else(|| {
             refuse(
                 Load::Key,
                 format!("no place {name} at these keys"),
@@ -349,7 +343,9 @@ impl Loader {
     }
 }
 
-/// A keyed place as written, `konto[ana]`: its name and its key expressions.
+/// A keyed place as written, `konto[ana]`: its name and its key expressions, each resolved at
+/// its position, one that isn't a literal refused there as written (refcore's `keyed_place`,
+/// `resolve_key_literal`; issue #90). L §5.10, §8.3 `LOAD-KEY`.
 fn keyed_ref(written: &Expr) -> Option<(String, Vec<Expr>)> {
     let Expr::Post(base, posts) = written else {
         return None;
@@ -365,7 +361,6 @@ fn keyed_ref(written: &Expr) -> Option<(String, Vec<Expr>)> {
         let Key::Expr(expr) = key else {
             return None;
         };
-        lit_of_expr(expr)?;
         exprs.push(expr.clone());
     }
     Some((name.clone(), exprs))

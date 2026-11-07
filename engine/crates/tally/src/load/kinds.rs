@@ -6,6 +6,7 @@
 //! stated one; children are sorted; entries are read in versions' known order, ties in section
 //! order; every thing has a base kind once this step ends.
 
+use super::check::invariant;
 use super::keys::key_source_text;
 use super::spans::lspan_to_span;
 use super::steps::{Loader, refuse};
@@ -89,7 +90,11 @@ impl Loader {
                 continue;
             };
             let Some(up) = self.m.kinds.get_mut(&parent) else {
-                return Err(Stop::NotBuilt("a kind whose parent is missing"));
+                return Err(invariant(
+                    "unreachable: build_kinds refuses a kind whose parent isn't a kind \
+                     (LOAD-NAME) before it links them"
+                        .to_owned(),
+                ));
             };
             up.children.push(id.clone());
         }
@@ -121,7 +126,11 @@ impl Loader {
         while let Some(parent) = self.m.kinds.get(&at).and_then(|k| k.parent.clone()) {
             if !seen.insert(at.clone()) {
                 let Some((file, line)) = self.kind_place(id) else {
-                    return Err(Stop::NotBuilt("a cycle of the prelude's kinds"));
+                    return Err(invariant(
+                        "unreachable: the prelude's kinds are a tree, so a chain that comes \
+                         back starts at a written kind, whose section holds its place"
+                            .to_owned(),
+                    ));
                 };
                 return Err(refuse(
                     Load::Cycle,
@@ -555,9 +564,11 @@ impl Loader {
             .and_then(|v| self.m.versions.get(v));
         match (version, entry.and_then(|e| e.line)) {
             (Some(v), Some(line)) => Ok((v.file.clone(), line)),
-            (Some(_) | None, None) | (None, Some(_)) => {
-                Err(Stop::NotBuilt("an entry no version states"))
-            }
+            (Some(_) | None, None) | (None, Some(_)) => Err(invariant(
+                "unreachable: an entry a refusal names is a version's `+` line, built with its \
+                 version and line"
+                    .to_owned(),
+            )),
         }
     }
 }

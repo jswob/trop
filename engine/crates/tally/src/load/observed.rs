@@ -621,7 +621,8 @@ impl Loader {
         ))
     }
 
-    /// A move instance's written keys (refcore's `move_keys`). L §2.5.
+    /// A move instance's written keys (refcore's `move_keys`), a key that isn't a literal
+    /// `LOAD-KEY` as written. L §2.5, §8.3 `LOAD-KEY`.
     fn move_keys(&self, id: &str, keys: &[Expr], at: &At) -> Result<Vec<KeyVal>, Stop> {
         let Some(info) = self.m.moves.get(id) else {
             return Err(Stop::NotBuilt("a move that isn't built"));
@@ -631,9 +632,9 @@ impl Loader {
         }
         let mut out = Vec::new();
         for (key, bind) in keys.iter().zip(&info.binds) {
-            let Some(written) = KeyLit::of_expr(key) else {
-                return Err(Stop::NotBuilt("a computed key of a move instance"));
-            };
+            // a computed key (`wage[2026-02 + 1]`) is refused as written (issue #90; tally
+            // 2.1.6's #100, pick P1)
+            let written = KeyLit::written(key);
             out.push(resolve_key(
                 &self.m,
                 &written,

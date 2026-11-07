@@ -61,7 +61,10 @@ pub(super) fn lspan_to_span(span: &LSpan, file: &str, line: u32) -> Result<Span,
         .transpose()?;
     if !span.dots {
         let Some(one) = from else {
-            return Err(Stop::NotBuilt("a span with no day"));
+            return Err(invariant(
+                "unreachable: the parser reads a span with no `..` as a date or a period"
+                    .to_owned(),
+            ));
         };
         return Ok(Span::between(Some(one.start()), Some(one.end())));
     }

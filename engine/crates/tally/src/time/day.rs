@@ -25,7 +25,7 @@ const END: u32 = 3_652_060;
 pub struct Day {
     /// The day's number: 1 is 0001-01-01 (Python's `toordinal`).
     number: u32,
-    /// The year, 1 to 9999.
+    /// The year, 1 to 9999; 10000 for the end of time (`END`, L §7.6 item 1).
     year: u16,
     /// The month, 1 to 12.
     month: u8,

@@ -356,16 +356,18 @@ impl Loader {
         }
         let mut values = Vec::with_capacity(keys.len());
         for (key, bind) in keys.iter().zip(&info.binds) {
-            let written = match key {
-                Key::Expr(key) => KeyLit::of_expr(key),
-                Key::Star => None,
-            };
             // An observation's attribute naming a move by a computed key (`item: wage[2026-02 +
-            // 1]`) reaches this (a `same` side's keys and `*` are refused at parse, #88);
-            // refcore prints `LOAD-KEY None is not a key of <ix>` there (issue #100, P1).
-            let Some(written) = written else {
-                return Err(Stop::NotBuilt("a reference keyed by a computed key"));
+            // 1]`) is refused as written, where refcore prints `LOAD-KEY None is not a key of
+            // <ix>` (tally 2.1.6's #100, pick P1)
+            let Key::Expr(key) = key else {
+                return Err(invariant(
+                    "unreachable: since tally 2.1.6 (#88, L §2.3) the parser refuses `*` in a \
+                     `same` side's keys and in a record field's reference, the two that name a \
+                     move here"
+                        .to_owned(),
+                ));
             };
+            let written = KeyLit::written(key);
             values.push(resolve_key(&self.m, &written, &bind.domain, file, line)?);
         }
         Ok(values)

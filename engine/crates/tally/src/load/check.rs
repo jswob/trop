@@ -17,7 +17,7 @@
 
 use super::across::PeriodRead;
 use super::fills::{FillState, inline_fill_edges};
-use super::keys::keyed_place_thing;
+use super::keys::{KeyLit, keyed_place_thing};
 use super::moves::{own_day_reads, settlements};
 use super::pins::unloaded_world;
 use super::prices::price_twice;
@@ -1769,7 +1769,7 @@ pub(super) fn literal_place(
     match literal_form(m, scope, expr) {
         None => Ok(None),
         Some(Literal::Thing(thing)) => Ok(Some(thing)),
-        Some(Literal::Keyed(id, lits)) => match keyed_place_thing(m, &id, &lits, "", 0) {
+        Some(Literal::Keyed(id, lits)) => match keyed_place_thing(m, &id, &keyed(lits), "", 0) {
             Ok(thing) => Ok(thing),
             // A key no index or kind holds is refused where the key is typed (`LOAD-KEY`);
             // here it names no literal place. `LOAD-KEY` is the one refusal of a key.
@@ -1777,6 +1777,11 @@ pub(super) fn literal_place(
             Err(stop) => Err(stop),
         },
     }
+}
+
+/// Literal keys as keys written at a place's positions.
+fn keyed(lits: Vec<Lit>) -> Vec<KeyLit> {
+    lits.into_iter().map(KeyLit::Lit).collect()
 }
 
 /// A place expression read literally, before a keyed place's keys are looked up.

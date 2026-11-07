@@ -1,7 +1,9 @@
 //! Arithmetic and comparison on values: numbers with their classes and units, money, dates, periods and keys.
 //! Spec: L §3.2 (the unit rules: `+ - * /`, money as a `num CUR`, inline figures), §3.3 (rate
 //! arithmetic), §4.2 (date arithmetic, key arithmetic, differences of periods), §5.6 and §5.7
-//! (keys and things: which have an order), §7.1 (exact numbers), §8.4 (what is refused per value).
+//! (keys and things: which have an order), §7.1 (exact numbers), §7.6 (Tally's limits: a day
+//! past the calendar, a range's 1 000 000 keys, integers of any size), §8.4 (what is refused
+//! per value).
 //! Twin: engine/tools/refcore/evaluate.py (`arith`, `binop`, `key_arith`, `key_diff`,
 //! `date_arith`, `cmp3`, `same_value`) and check.py (`_arith`, `arith_time`: the classes of
 //! results, which the runtime takes from its operands here).
@@ -132,7 +134,7 @@ pub fn arith(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Result<Value, Sto
     };
     let out = match op {
         Op::Add | Op::Sub => add_sub(m, op, x, y)?,
-        Op::Mul | Op::Div => mul_div(m, op, x, y)?,
+        Op::Mul | Op::Div => mul_div(m, op, x, y, (lhs, rhs))?,
     };
     if let Value::Number(n) = &out
         && n.unit().day_and_period()
@@ -276,11 +278,18 @@ fn scalar(kind: &Kind) -> bool {
 }
 
 /// `a * b`, `a / b` (L §3.2, §3.3): units multiply and divide; money times an int stays
-/// money; a rate is scaled by a plain number, or times a duration gives a plain number.
-fn mul_div(m: &Reality, op: Op, lhs: Operand, rhs: Operand) -> Result<Value, Stop> {
+/// money; a rate is scaled by a plain number, or times a duration gives a plain number; the
+/// values as written for a refusal's text.
+fn mul_div(
+    m: &Reality,
+    op: Op,
+    lhs: Operand,
+    rhs: Operand,
+    values: (&Value, &Value),
+) -> Result<Value, Stop> {
     let lhs = unflex(lhs);
     let rhs = unflex(rhs);
-    if let Some(out) = rate_mul(m, op, &lhs, &rhs)? {
+    if let Some(out) = rate_mul(m, op, (&lhs, &rhs), values)? {
         return Ok(out);
     }
     if op == Op::Div {
@@ -307,8 +316,16 @@ fn mul_div(m: &Reality, op: Op, lhs: Operand, rhs: Operand) -> Result<Value, Sto
 }
 
 /// A rate in `*` (L §3.3): times a plain number it stays a rate; times a duration it is a
-/// plain number; anything else is refused. `None` when neither operand is a rate.
-fn rate_mul(m: &Reality, op: Op, lhs: &Operand, rhs: &Operand) -> Result<Option<Value>, Stop> {
+/// plain number; times a duration of another period dimension (a rate per year times days)
+/// it is `LOAD-UNIT` with the product's unit, met where it is computed, since load can't see
+/// a rate's period through its row (refcore's `binop`, `_rate_duration`); anything else is
+/// refused. `None` when neither operand is a rate.
+fn rate_mul(
+    m: &Reality,
+    op: Op,
+    (lhs, rhs): (&Operand, &Operand),
+    (a, b): (&Value, &Value),
+) -> Result<Option<Value>, Stop> {
     let (rate, other) = match (&lhs.kind, &rhs.kind) {
         (Kind::Plain(Class::Rate(u)), _) => (u, rhs),
         (_, Kind::Plain(Class::Rate(u))) => (u, lhs),
@@ -328,11 +345,15 @@ fn rate_mul(m: &Reality, op: Op, lhs: &Operand, rhs: &Operand) -> Result<Option<
     if !one_period {
         return Err(refused());
     }
-    let (unit, factor) = rate.mul(&duration).map_err(unit_stop)?;
+    let (unit, factor) = lhs.unit(m)?.mul(&rhs.unit(m)?).map_err(unit_stop)?;
     if !unit.is_one() {
         return Err(refuse_load(
             Load::Unit,
-            "a rate times a duration of another period dimension".to_owned(),
+            format!(
+                "{}: a rate times a duration of another period dimension ({})",
+                shown(m, a, op, b)?,
+                unit.text()
+            ),
         ));
     }
     let q = q.checked_mul(&factor).map_err(num_stop)?;

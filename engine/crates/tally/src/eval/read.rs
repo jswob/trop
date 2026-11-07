@@ -2,7 +2,8 @@
 //! Spec: L §4.6 (the read rule; a row's value, `assumed`, `held`), §2.5 (keys by position),
 //! §4.2 (keys as values), §5.6 (`assumed` on an index), §5.8 (inputs and their values), §3.4
 //! (a figure in Y prices), §8.1 (a read whose key is a hole carries the key's questions only),
-//! §8.2 (the register entries a read makes), §8.4 (`RUN-KEY`, `RUN-NONE`).
+//! §8.2 (the register entries a read makes), §8.4 (`RUN-KEY`, `RUN-NONE`), §7.6 items 1 and 3
+//! (the end of time is no key; a key offset's 18 digits).
 //! Twin: engine/tools/refcore/evaluate.py (`key_values`, `to_key`, `check_key`, `read_input`,
 //! `row_value`, `prices`, `index_assumed`) and loader.py (`convert_value`, `key_value`).
 //! Invariants: a key a read takes is a key its domain holds and the cut sees; a row's value
@@ -1181,17 +1182,11 @@ fn calendar_value(cal: &CalendarLit) -> Result<Value, Stop> {
     }
     let from = match &cal.yearly_from {
         None => None,
-        Some(n) => {
-            let first = || refuse_load(Load::Unit, "a calendar's first year".to_owned());
-            let text = n.integer_text().ok_or_else(first)?;
-            // a first year past 9999, of any size, comes after every day there is (L §2.1)
-            let year = match n.to_i64().and_then(|y| u16::try_from(y).ok()) {
-                Some(y) if y <= 9_999 => y,
-                Some(_) | None if !n.is_negative() => 10_000,
-                Some(_) | None => return Err(first()),
-            };
-            Some(FirstYear { year, text })
-        }
+        // a first year past 9999, of any size, comes after every day there is (L §2.1)
+        Some(n) => Some(
+            FirstYear::of(n)
+                .ok_or_else(|| refuse_load(Load::Unit, "a calendar's first year".to_owned()))?,
+        ),
     };
     Ok(Value::Calendar(Box::new(Calendar::new(
         weekends,

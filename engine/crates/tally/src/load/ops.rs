@@ -327,13 +327,18 @@ impl Checker {
             if intlike(rk) {
                 return Ok(lt.clone());
             }
-            if op == Op::Sub && matches!(rt, Ty::Period(other) if other == word) {
+            if op == Op::Sub
+                && *word != PeriodWord::Day
+                && matches!(rt, Ty::Period(other) if other == word)
+            {
                 return Ok(Ty::Int);
             }
+            // a duration of its own family: days for a period of days, months, quarters or
+            // years for the others; whether the count is whole shows at run (L §4.2, §8.4)
             if let Ty::Num(unit, _) = rt
                 && is_duration(rt)
                 && let [(du, _)] = unit.terms()
-                && du != "day"
+                && (du == "day") == (*word == PeriodWord::Day)
             {
                 return Ok(lt.clone());
             }
@@ -969,13 +974,14 @@ fn multiplicative(op: Op, lt: Ty, rt: Ty) -> Typed {
     Ok(num(u))
 }
 
-/// A period kind as a type, where the type has a word for it.
+/// A period kind as a type (refcore's `T.period`): a key of a day index `by n` is a period
+/// of days. L §4.1 `by n`, §4.2.
 fn period_ty(pk: PeriodKind) -> Ty {
     match pk {
         PeriodKind::Month => Ty::Period(PeriodWord::Month),
         PeriodKind::Quarter => Ty::Period(PeriodWord::Quarter),
         PeriodKind::Year => Ty::Period(PeriodWord::Year),
-        PeriodKind::Day => Ty::Unseen,
+        PeriodKind::Day => Ty::Period(PeriodWord::Day),
     }
 }
 

@@ -2,9 +2,12 @@
 //! Spec: L §4.2 (calendar built-ins: `start_of`, `end_of`, `day_of`, `year_of`, `month_of`,
 //! `days_between`, `add_days`, `add_months`, `age`, `pos`, `is_business`, `add_business`),
 //! §7.2 (`round` and the type of its result), §5.11 (`min`, `max`, `missing`), §3.3
-//! (`periodic`, `factor`: exact when the power is an integer), §8.1 (`HOLE-CALENDAR`).
+//! (`periodic`, `factor`: exact when the power is an integer), §8.1 (`HOLE-CALENDAR`); L §4.2
+//! `schedule` (a day of a period, rolled by a calendar), §7.6 items 1 and 5 (a day past the
+//! calendar; a calendar's search within 400 years).
 //! Twin: engine/tools/refcore/evaluate.py (`c_start_of` to `c_missing`, `business`,
-//! `c_is_business`, `c_add_business`) and eval2.py (`m_rate_parts`, `m_periodic_real`).
+//! `c_is_business`, `c_add_business`, `c_schedule`, `rolled`) and eval2.py (`m_rate_parts`,
+//! `m_periodic_real`).
 //! Invariants: a hole argument makes the call that hole; a business day is read from the
 //! calendar in force on that day; a power that isn't an integer stops `NotBuilt` (the
 //! transcendental kernel isn't S's).

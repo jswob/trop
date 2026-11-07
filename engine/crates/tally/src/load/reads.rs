@@ -14,8 +14,8 @@
 //! `LOAD-PARTS` where load sees a place that keeps none of q's sort.
 
 use super::check::{
-    Checker, ProjRead, ReadIn, Scope, literal_place, move_keys, named_parts, place_section,
-    place_target,
+    Checker, ProjRead, ReadIn, Scope, invariant, literal_place, move_keys, named_parts,
+    place_section, place_target,
 };
 use super::types::{Typed, is_date, numcls, refused, text, uerr, unit_type};
 use crate::base::Load;
@@ -517,8 +517,10 @@ impl Checker {
                 ),
             ));
         }
-        let Some((name, unit, _)) = legs.first() else {
-            return Err(Stop::NotBuilt("a leg that isn't built"));
+        let [(name, unit, _)] = legs.as_slice() else {
+            return Err(invariant(format!(
+                "unreachable: flows of {id} names one leg here, its kind's or the one written"
+            )));
         };
         let mut ut = unit_type(m, Some(unit))?;
         if matches!(ut, Ty::Dyn)

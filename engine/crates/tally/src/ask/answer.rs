@@ -9,8 +9,9 @@
 //! (`date_of`).
 //! Invariants: asks print in id order unless the run names them; every id the run names is
 //! checked before any ask is answered; each ask has its own engine and memo; a load refusal met
-//! at run and every construct not built yet stop the run `NotBuilt` at the ask that meets it,
-//! never a guessed line.
+//! at run refuses the run in the base's world and the ask alone in a scenario's (refcore's
+//! `LoadAtRun`); every construct not built yet stops the run `NotBuilt` at the ask that meets
+//! it, never a guessed line.
 
 use std::collections::BTreeMap;
 
@@ -82,7 +83,7 @@ pub(crate) enum Turn {
 /// # Errors
 ///
 /// `REQ-ASK` for the first ask the run names that the reality lacks, before any is answered
-/// (E §11); `NotBuilt` for a load refusal met at run and for a construct not built yet.
+/// (E §11); a load refusal met at run; `NotBuilt` for a construct not built yet.
 pub fn answer(m: &Reality, asks: &Asks, days: Days, memo: Memo) -> Result<Answered, Stop> {
     let turns = match asks {
         Asks::Every => {
@@ -125,7 +126,7 @@ pub(crate) fn no_ask(id: &str) -> Refusal {
 ///
 /// # Errors
 ///
-/// `NotBuilt` for a load refusal met at run and for a construct not built yet.
+/// A load refusal met at run in the base's world; `NotBuilt` for a construct not built yet.
 pub(crate) fn answer_turns(
     realities: &[&Reality],
     turns: &[Turn],
@@ -142,7 +143,15 @@ pub(crate) fn answer_turns(
             Turn::Ask(world, at) => {
                 let m = realities.get(*world).ok_or_else(no_turn)?;
                 let gathered = worlds.get_mut(*world).ok_or_else(no_turn)?;
-                out.extend(gathered.answer(m, *at, days)?);
+                match gathered.answer(m, *at, days) {
+                    // a load refusal met at run refuses the run in the base's world, the ask
+                    // alone in a scenario's (refcore's `run_worlds`, `LoadAtRun`)
+                    Err(Stop::Refused(r)) if *world > 0 && matches!(r.code(), Code::Load(_)) => {
+                        let ask = m.asks.get(*at).ok_or_else(no_turn)?;
+                        out.push(format!("{}: refused: {}", ask.id, r.text()));
+                    }
+                    lines => out.extend(lines?),
+                }
             }
             Turn::Line(line) => out.push(line.clone()),
         }
@@ -291,19 +300,16 @@ fn no_turn() -> Stop {
 }
 
 /// One ask's lines; a run-time refusal its reading meets outside a line's values is its one
-/// line (refcore's `answer`). L §8.4.
+/// line, and a load refusal met at run is returned to stop its world (refcore's `answer`,
+/// `LoadAtRun`: a load refusal load can't see, such as a rate per year times days read
+/// through rows, L §3.3). L §8.3, §8.4.
 fn answer_one(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<String>, Stop> {
     match ask_lines(m, ask, days, seen) {
-        Err(Stop::Refused(r)) if matches!(r.code(), Code::Load(_)) => Err(load_at_run()),
-        Err(Stop::Refused(r)) => Ok(vec![format!("{}: refused: {}", ask.id, r.text())]),
+        Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {
+            Ok(vec![format!("{}: refused: {}", ask.id, r.text())])
+        }
         other => other,
     }
-}
-
-/// A load refusal met at run: refcore refuses the run with it, where load's checks (M0's)
-/// would have met it first, so S stops `NotBuilt` rather than print another line.
-fn load_at_run() -> Stop {
-    Stop::NotBuilt("a load refusal met at run (load's checks are M0's)")
 }
 
 /// One ask's lines: its cut by `as known`, its law date by `law`, then one line per binding
@@ -537,5 +543,8 @@ pub(crate) fn date_of(v: &Value, what: &str) -> Result<Day, Stop> {
             format!("never in {what}"),
         )));
     }
-    Err(load_at_run())
+    // refcore's `LOAD-UNIT <what> is <v>, not a date`, which load's types meet first
+    Err(Stop::NotBuilt(
+        "a law date or a cut that isn't a date, met at run",
+    ))
 }

@@ -8,7 +8,7 @@
 //! one per (version, key); a row's stable id is `version:target[keys]`, its own span or instant
 //! added where two rows of a version share a pattern.
 
-use super::keys::{KeyLit, key_order, range_key_of};
+use super::keys::{KeyLit, RangeKey, key_order, not_a_range_value, range_key_of};
 use super::places::Written;
 use super::same::SameLine;
 use super::spans::{governs_span, lspan_to_span};
@@ -475,16 +475,22 @@ impl Loader {
                     }
                     Pat::Range(lo, hi)
                 }
-                RowKey::Lit(_) | RowKey::Place(..) => {
-                    let Some(written) = KeyLit::of_row_key(key) else {
-                        return Err(Stop::NotBuilt("a row key of that form"));
-                    };
-                    let value = if bind.domain == Domain::Range {
-                        range_key_of(&written)?
+                RowKey::Lit(lit) => {
+                    let written = KeyLit::Lit(lit.clone());
+                    if bind.domain == Domain::Range {
+                        let value = range_key_of(&written, file, line)?;
+                        self.range_keys.extend(RangeKey::of(bind, lit, file, line));
+                        Pat::Key(value)
                     } else {
-                        self.pattern_key(&written, bind, Some(vid), file, line)?
-                    };
-                    Pat::Key(value)
+                        Pat::Key(self.pattern_key(&written, bind, Some(vid), file, line)?)
+                    }
+                }
+                RowKey::Place(name, place_keys) => {
+                    let written = KeyLit::Place(name.clone(), place_keys.clone());
+                    if bind.domain == Domain::Range {
+                        return Err(not_a_range_value(&written, file, line));
+                    }
+                    Pat::Key(self.pattern_key(&written, bind, Some(vid), file, line)?)
                 }
             };
             if pat != Pat::Star {

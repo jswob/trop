@@ -57,6 +57,9 @@ pub enum PeriodWord {
     Quarter,
     /// `year`.
     Year,
+    /// A period of days: a key of a day index `by n` read as a value (L §4.1 `by n`, §4.2);
+    /// no type word names it.
+    Day,
 }
 
 /// How a number prints: plain, or with `%` (`num %`).
@@ -218,6 +221,7 @@ impl Ty {
             Ty::Period(PeriodWord::Month) => "month".to_owned(),
             Ty::Period(PeriodWord::Quarter) => "quarter".to_owned(),
             Ty::Period(PeriodWord::Year) => "year".to_owned(),
+            Ty::Period(PeriodWord::Day) => "day".to_owned(),
             Ty::MonthDay => "monthday".to_owned(),
             Ty::Key(ix) => format!("key {ix}"),
             Ty::Code(code) => code.name().to_owned(),

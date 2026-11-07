@@ -9,7 +9,8 @@
 //! line its clause or its value is written on; a value reads its places' prices at its day.
 
 use super::check::{
-    Checker, Files, Scope, Stands, literal_place, named_parts, place_section, place_target,
+    Checker, Files, Scope, Stands, invariant, literal_place, named_parts, place_section,
+    place_target,
 };
 use super::types::{Typed, is_date, name_word, refused, text, uerr};
 use crate::base::{Code, Load, Place as At, Refusal};
@@ -285,7 +286,11 @@ impl Checker {
             (other, _) => other,
         };
         let Some((id, posts)) = named_parts(&price.input) else {
-            return Err(Stop::NotBuilt("a priced reference with fields"));
+            return Err(invariant(
+                "unreachable: the parser reads a price as L §2.3's `ref`, so a price that isn't \
+                 a reference is LOAD-PARSE before load (T's `written/price-paren`)"
+                    .to_owned(),
+            ));
         };
         let keyed = matches!(posts, [Postfix::Keys(_)]);
         if !keyed && !posts.is_empty() {

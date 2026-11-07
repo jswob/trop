@@ -1,5 +1,6 @@
 //! A business calendar of fixed days: its weekends, its yearly days off, its added days off, and the business-day count.
-//! Spec: L §4.2 (`calendar`, `is_business`, `add_business`, `last_business`).
+//! Spec: L §4.2 (`calendar`, `is_business`, `add_business`, `last_business`), §7.6 item 5 (a
+//! business day searched for within 400 years).
 //! Twin: engine/tools/refcore/evaluate.py (`business`, `c_add_business`, `c_last_business`),
 //! dates.py (`WEEKDAYS`); values.py (`Cal`).
 //! Invariants: a day is a business day unless its weekday is a weekend, it is a yearly day
@@ -12,6 +13,7 @@ use std::collections::BTreeSet;
 
 use super::day::Day;
 use super::period::Period;
+use crate::num::Num;
 
 /// The weekday number, 1 Monday to 7 Sunday, of a weekday's word (refcore's `WEEKDAYS`).
 /// L §4.2.
@@ -43,13 +45,41 @@ fn weekday_word(n: u8) -> &'static str {
 }
 
 /// The first year a calendar's yearly days are off: the year its rule compares, and the
-/// figure as written, which it prints. L §4.2 `calendar`.
+/// figure as written, which it prints, both made from one figure. L §4.2 `calendar`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FirstYear {
     /// The year compared: any year past 9999 is 10000, after every day there is (L §2.1).
-    pub year: u16,
+    year: u16,
     /// The figure as written.
-    pub text: String,
+    text: String,
+}
+
+impl FirstYear {
+    /// The first year a figure names: its year, any year past 9999 as 10000, and the figure
+    /// as written; none for a figure that is no whole number of zero or more. L §4.2
+    /// `calendar`, §2.1.
+    #[must_use]
+    pub fn of(n: &Num) -> Option<FirstYear> {
+        let text = n.integer_text()?;
+        let year = match n.to_i64().and_then(|y| u16::try_from(y).ok()) {
+            Some(y) if y <= 9_999 => y,
+            Some(_) | None if !n.is_negative() => 10_000,
+            Some(_) | None => return None,
+        };
+        Some(FirstYear { year, text })
+    }
+
+    /// The year compared. L §4.2 `calendar`.
+    #[must_use]
+    pub fn year(&self) -> u16 {
+        self.year
+    }
+
+    /// The figure as written. L §2.4.
+    #[must_use]
+    pub fn text(&self) -> &str {
+        &self.text
+    }
 }
 
 /// A business calendar whose days off are all fixed.
@@ -94,7 +124,7 @@ impl Calendar {
             && self
                 .yearly_from
                 .as_ref()
-                .is_none_or(|from| day.year() >= from.year);
+                .is_none_or(|from| day.year() >= from.year());
         !yearly && !self.added.contains(&day)
     }
 
@@ -109,7 +139,7 @@ impl Calendar {
             && self
                 .yearly_from
                 .as_ref()
-                .is_none_or(|from| day.year() >= from.year);
+                .is_none_or(|from| day.year() >= from.year());
         weekends.len() < 7 && !all_yearly
     }
 
@@ -149,7 +179,7 @@ impl Calendar {
             let from = self
                 .yearly_from
                 .as_ref()
-                .map_or_else(String::new, |from| format!(" from {}", from.text));
+                .map_or_else(String::new, |from| format!(" from {}", from.text()));
             parts.push(format!("yearly [{}]{from}", days.join(", ")));
         }
         format!("calendar({})", parts.join(", "))
@@ -177,7 +207,7 @@ impl Calendar {
 
 #[cfg(test)]
 mod tests {
-    use super::{Calendar, FirstYear, weekday_number};
+    use super::{Calendar, FirstYear, Num, weekday_number};
     use crate::time::{Day, Period};
 
     fn day(y: u16, m: u8, d: u8) -> Day {
@@ -203,10 +233,7 @@ mod tests {
         assert!(!cal.is_business(day(2026, 1, 1)), "added");
         assert!(cal.is_business(day(2026, 1, 2)), "a Friday");
         assert!(!cal.is_business(day(2026, 1, 3)), "a Saturday");
-        let from = FirstYear {
-            year: 2027,
-            text: "2027".to_owned(),
-        };
+        let from = FirstYear::of(&Num::int(2027)).expect("a year");
         let yearly = Calendar::new(Vec::new(), vec![(12, 25)], Some(from), Vec::new());
         assert!(
             yearly.is_business(day(2026, 12, 25)),

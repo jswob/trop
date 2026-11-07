@@ -8,6 +8,7 @@
 //! currency is declared; a unit's terms are units, currencies, period words, `%`, the keys of
 //! kinds of unit, or the declaration's own bound variables (as `$var`).
 
+use super::check::invariant;
 use super::spans::lspan_to_span;
 use super::steps::{Loader, num_stop, refuse};
 use super::worlds::no_version;
@@ -537,9 +538,12 @@ impl Loader {
                 }
                 Ok((Ty::Record(out), Num::int(1)))
             }
-            Type::Word(word) => word_type(word)
-                .map(|t| (t, Num::int(1)))
-                .ok_or(Stop::NotBuilt("a type of that word")),
+            Type::Word(word) => word_type(word).map(|t| (t, Num::int(1))).ok_or_else(|| {
+                invariant(
+                    "unreachable: the parser reads a one-word type from load's word list"
+                        .to_owned(),
+                )
+            }),
         }
     }
 

@@ -21,6 +21,7 @@
 
 use super::check::{DayRead, Files, ProjRead, Scope, Stands, Var, VarDom, invariant, place_target};
 use super::cone::all_children;
+use super::keys::literal_end;
 use super::steps::refuse;
 use super::types::text;
 use crate::base::{Code, Load, Run};
@@ -373,19 +374,6 @@ fn expr_binds(e: &Expr) -> Vec<&Bind> {
         return prorata.binds.iter().collect();
     }
     Vec::new()
-}
-
-/// Whether a range's end or step is a literal: a number (a duration included), a day, a
-/// month or a quarter, negated or in parentheses (refcore's `range_is_literal`). L §2.5.
-fn literal_end(e: &Expr) -> bool {
-    let mut node = e;
-    while let Expr::Neg(inner) | Expr::Paren(inner) = node {
-        node = inner;
-    }
-    matches!(
-        node,
-        Expr::Lit(Lit::Num(_) | Lit::Day(_) | Lit::Month(..) | Lit::Quarter(..))
-    )
 }
 
 /// `LOAD-SCHEDULE` for a plan whose day is `schedule(p, e, …)` with `p` and `e` seen, when at

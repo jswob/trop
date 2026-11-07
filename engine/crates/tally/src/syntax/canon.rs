@@ -511,7 +511,13 @@ impl Printer {
 /// (`x[k]`, `a.x[k]`, `a.b.x[k]`); any other side is its own target (`x`, `a.x`, `a.b.c`,
 /// `x[k].f`), written as the side is.
 fn same_side(left: &Expr) -> Result<(String, &[Key]), Stop> {
-    let no_id = || invariant("a same side that is no id with fields and keys");
+    let no_id = || {
+        invariant(
+            "unreachable: since tally 2.1.6 (#88, L §2.3 `sref`) the parser refuses with \
+             LOAD-PARSE a `same` side that isn't an id with its fields and keys, so `reprint` \
+             never orders one",
+        )
+    };
     if let Expr::Name(id) = left {
         return Ok((id.clone(), &[]));
     }
@@ -589,7 +595,11 @@ fn same_key(key: &Key) -> Result<KeyRef, Stop> {
 
 /// A `same` side keyed by what the parser's `sref` never takes.
 fn no_literal() -> Stop {
-    invariant("a same side keyed by no literal or place")
+    invariant(
+        "unreachable: since tally 2.1.6 (#88, L §2.3 `sref`) the parser refuses with LOAD-PARSE \
+         a `same` side keyed by anything but literals or places keyed by literals, so `reprint` \
+         never orders one (T's `format/same_key_signed`)",
+    )
 }
 
 /// A target's id, with its member's prefix.

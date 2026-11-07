@@ -7,6 +7,8 @@
 //! `NotBuilt`, never a guessed refusal; the load refusals made are the ones construction meets,
 //! in refcore's words (the rest are M0's later groups').
 
+use super::check::invariant;
+use super::keys::{RangeKey, check_range_keys};
 use super::same::SameLine;
 use crate::base::{Code, Load, Place as At, Refusal, Run, Table, Warn};
 use crate::model::{Graph, Joint, PERIODS, Reality, Scenarios, UnitError, power_past_limit};
@@ -25,6 +27,9 @@ pub(super) struct Loader {
     /// The `same` lines of rows and movements, the header's then the versions' (refcore's
     /// `header.sames` and `sames`).
     pub(super) same_lines: Vec<SameLine>,
+    /// The keys rows write at a stepped range's position, checked once load is done
+    /// (refcore's `range_lits`).
+    pub(super) range_keys: Vec<RangeKey>,
 }
 
 /// A load refusal at a line of a file. L §8.3.
@@ -115,6 +120,7 @@ pub(super) fn load_among(
     super::bands::check_bands(&loader.m)?;
     loader.collect_asks();
     loader.build_graph()?;
+    check_range_keys(&loader.m, &loader.range_keys)?;
     Ok(loader.m)
 }
 
@@ -162,7 +168,10 @@ impl Loader {
             .collect();
         let scenarios = scenarios(&files, &model.header.id)?;
         let header = model.header.clone();
-        let missing = Stop::NotBuilt("a model header without on, start or end");
+        let missing = invariant(
+            "unreachable: a model header without on, start or end is refused first (LOAD-HEADER)"
+                .to_owned(),
+        );
         let start = header.start.ok_or(missing.clone())?;
         let end = header.end.ok_or(missing.clone())?;
         let on = header.on.ok_or(missing)?;
@@ -207,6 +216,7 @@ impl Loader {
             sections,
             currency_order: Vec::new(),
             same_lines: header_sames,
+            range_keys: Vec::new(),
         })
     }
 

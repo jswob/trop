@@ -205,7 +205,9 @@ band|scale||2025-06-01|2026-03-01|rows v2 [0, 100]; v1 (100, inf)
         };
         match got {
             Ok(line) => line,
-            Err(Stop::NotBuilt(what)) if what.contains("LOAD-LAWDATE") => "lawdate".to_owned(),
+            // load refuses a dated read with no law date first, so the reader, called here
+            // with none, meets its invariant
+            Err(Stop::Refused(r)) if r.text().contains("(LOAD-LAWDATE)") => "lawdate".to_owned(),
             Err(Stop::NotBuilt(what)) => format!("not built: {what}"),
             Err(Stop::Deep) => "deep".to_owned(),
             Err(Stop::Refused(r)) => format!("refused {}", r.text()),

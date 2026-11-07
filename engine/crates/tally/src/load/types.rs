@@ -177,6 +177,7 @@ fn word_pk(word: PeriodWord) -> PeriodKind {
         PeriodWord::Month => PeriodKind::Month,
         PeriodWord::Quarter => PeriodKind::Quarter,
         PeriodWord::Year => PeriodKind::Year,
+        PeriodWord::Day => PeriodKind::Day,
     }
 }
 
