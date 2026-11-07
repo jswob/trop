@@ -266,7 +266,7 @@ impl Checker {
                 if m.kinds.get(ix).is_some() {
                     return Err(uerr(format!("key arithmetic on things of kind {ix}")));
                 }
-                if m.names.get(ix) == Some(&NameKind::Axis) {
+                if m.names.kind(ix) == Some(NameKind::Axis) {
                     return Err(uerr("key arithmetic on an axis".to_owned()));
                 }
                 no_order(m, lt, "key arithmetic")?;
@@ -681,7 +681,7 @@ impl Checker {
         if let Expr::Name(id) = &test.set
             && !scope.is_var(id)
         {
-            match m.names.get(id) {
+            match m.names.kind(id) {
                 Some(NameKind::Kind) => {
                     if matches!(lt, Ty::KeyLit(_)) {
                         lt =

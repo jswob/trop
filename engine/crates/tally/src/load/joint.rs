@@ -543,8 +543,8 @@ fn ask_ids(m: &Reality) -> BTreeSet<String> {
 /// member finds as an ask, read or called by the joint model as `a.q`. L §6.1, §5.18.
 fn asks_named(m: &Reality) -> BTreeSet<String> {
     let mut named = BTreeSet::new();
-    for (id, kind) in &m.names {
-        if *kind == NameKind::Ask {
+    for (id, name) in m.names.entries() {
+        if name.kind() == NameKind::Ask {
             named.insert(id.clone());
         }
     }

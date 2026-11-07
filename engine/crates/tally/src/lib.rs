@@ -36,10 +36,12 @@ pub use oracle::Days;
 pub mod base {
     mod code;
     mod refusal;
+    mod symbol;
     mod table;
 
     pub use code::{Code, Hole, Load, Req, Run, Warn};
     pub use refusal::{Place, Reach, Refusal};
+    pub use symbol::{Internal, Interner, Symbol};
     pub use table::Table;
 }
 
@@ -96,6 +98,7 @@ pub mod time {
 pub mod model {
     mod decl;
     mod graph;
+    mod ids;
     mod index;
     mod key;
     mod kind;
@@ -110,6 +113,10 @@ pub mod model {
         ObsLeg, Observation, PlaceInfo, Row, RowInstant, RuleVer, Table as BandTable, TimePos,
     };
     pub use graph::{Graph, Mark, Node, NodeKind, ReadRole, Rel, Shift, Target};
+    pub use ids::{
+        AxisId, BandId, DefId, FillId, IndexId, InputId, KindId, MoveId, Name, Names, PlaceId,
+        SourceId, ThingId, VersionId,
+    };
     pub use index::{GapRole, IndexForm, IndexInfo, Moved, OwnTime, VersionInfo};
     pub use key::{KeyVal, Pat, Span, pattern_text};
     pub use kind::{Entry, KindInfo, KindSpec, Labels, PRELUDE_KINDS, PlaceKeys, Thing, prelude};

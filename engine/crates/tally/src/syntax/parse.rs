@@ -10,7 +10,7 @@
 
 use super::lex::{Canon, Kind, Line, Mark, Read, Role, Tok, cannot};
 use super::tree::{Known, LSpan, Lit, Number, Unit, UnitTerm};
-use crate::base::{Code, Load, Place, Reach, Refusal};
+use crate::base::{Code, Internal, Load, Place, Reach, Refusal};
 use crate::num::Num;
 use crate::time::Day;
 use std::cell::Cell;
@@ -33,6 +33,13 @@ pub enum Stop {
 impl From<Refusal> for Stop {
     fn from(refusal: Refusal) -> Stop {
         Stop::Refused(refusal)
+    }
+}
+
+impl From<Internal> for Stop {
+    /// A broken invariant of the engine's tables: `ENGINE-INVARIANT` (E §9).
+    fn from(internal: Internal) -> Stop {
+        Stop::Refused(Refusal::new(Code::EngineInvariant, internal.message()))
     }
 }
 

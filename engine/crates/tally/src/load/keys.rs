@@ -488,7 +488,7 @@ pub(super) fn keyed_place_thing(
     file: &str,
     line: u32,
 ) -> Result<Option<String>, Stop> {
-    if m.names.get(name) != Some(&NameKind::Place) {
+    if m.names.kind(name) != Some(NameKind::Place) {
         return Ok(None);
     }
     let Some(place) = m.places.get(name) else {

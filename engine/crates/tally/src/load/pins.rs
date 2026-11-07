@@ -220,7 +220,7 @@ impl Checker {
             return Err(Stop::NotBuilt("a member's pin"));
         }
         let name = &target.id;
-        let Some(kind) = m.names.get(name).copied() else {
+        let Some(kind) = m.names.kind(name) else {
             return Err(sc.place(unknown(name)));
         };
         let fact = if kind == NameKind::Input {
@@ -318,7 +318,7 @@ impl Checker {
             return Err(Stop::NotBuilt("a member's pin"));
         }
         let name = &target.id;
-        let Some(kind) = m.names.get(name).copied() else {
+        let Some(kind) = m.names.kind(name) else {
             return Err(sc.place(unknown(name)));
         };
         if kind == NameKind::Axis {

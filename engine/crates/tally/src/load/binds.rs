@@ -112,7 +112,7 @@ fn over_name(m: &Reality, bind: &Bind, id: &str, key_bind: BindAs) -> Result<Ove
     let var = &bind.var;
     let alive = bind.on.is_some() || bind.over.is_some() || key_bind == BindAs::KeyBind;
     let needs_alive = || refused(Load::Alive, format!("binding over {id} needs on or over"));
-    match m.names.get(id) {
+    match m.names.kind(id) {
         None => Err(refused(Load::Name, format!("unknown id {id}")).naming(id)),
         Some(NameKind::Index) => {
             if m.indexes

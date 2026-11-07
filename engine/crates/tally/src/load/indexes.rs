@@ -71,7 +71,7 @@ impl Loader {
             IndexInfo::new("bank_account", Form::Open),
         ] {
             let id = index.id.clone();
-            self.m.indexes.push(&id, index);
+            self.m.indexes.push(&mut self.m.symbols, &id, index)?;
         }
         for (file, section) in &self.sections {
             let Section::Index(decl) = section else {
@@ -114,7 +114,7 @@ impl Loader {
             index.line = Some(decl.line);
             index.anchored = matches!(&decl.form, IndexForm::Range { from: Some(_), .. });
             index.finish();
-            self.m.indexes.push(&decl.id, index);
+            self.m.indexes.push(&mut self.m.symbols, &decl.id, index)?;
         }
         Ok(())
     }
@@ -153,7 +153,7 @@ impl Loader {
         let Some(keys) = &row.keys else {
             return;
         };
-        if self.m.names.get(&row.target) != Some(&NameKind::Input) {
+        if self.m.names.kind(&row.target) != Some(NameKind::Input) {
             return;
         }
         let Some(input) = self.m.inputs.get(&row.target).filter(|i| !i.observed) else {

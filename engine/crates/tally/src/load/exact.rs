@@ -589,7 +589,7 @@ impl Checker {
         } else {
             return Err(not_a_target(&s.target));
         };
-        let kind = m.names.get(name).copied();
+        let kind = m.names.kind(name);
         let Some(kind) = kind else {
             return Err(refused(Load::Name, format!("unknown id {name}")).naming(name));
         };

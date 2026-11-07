@@ -93,7 +93,7 @@ impl Engine {
         if let Some(var) = env.get(name) {
             return Ok(var.value.clone());
         }
-        match m.names.get(name) {
+        match m.names.kind(name) {
             Some(NameKind::Input | NameKind::Def) => self.read_item(m, name, &[], env, ctx),
             Some(NameKind::Cut) => Ok(Value::Day(ctx.cut)),
             Some(_) | None => {
@@ -568,7 +568,7 @@ fn based_in(m: &Reality, thing: &crate::model::Thing, kind: &str) -> bool {
 
 /// Whether `name` names an input or a def.
 fn is_read(m: &Reality, name: &str) -> bool {
-    matches!(m.names.get(name), Some(NameKind::Input | NameKind::Def))
+    matches!(m.names.kind(name), Some(NameKind::Input | NameKind::Def))
 }
 
 /// The hole of the operands' questions (the hole module's one rule, L §8.1).

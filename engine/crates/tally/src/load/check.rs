@@ -875,7 +875,7 @@ impl Checker {
             };
             let refuse =
                 |code: Load, message: String| files.at_input(id, input.line, code, message);
-            let binds = match m.names.get(by) {
+            let binds = match m.names.kind(by) {
                 None => return Err(refuse(Load::Name, format!("unknown id {by}")).naming(by)),
                 Some(NameKind::Input) => m.inputs.get(by).map(|i| i.binds.as_slice()),
                 Some(NameKind::Def) => m.defs.get(by).map(|d| d.binds.as_slice()),
@@ -1266,7 +1266,7 @@ impl Checker {
             read_targets.push(self.read_target(m, &scope.on_line(lines.reads), mv, read)?);
         }
         for (order, other) in &decl.order {
-            if m.names.get(other) != Some(&NameKind::Move) {
+            if m.names.kind(other) != Some(NameKind::Move) {
                 let word = match order {
                     Order::Before => "before",
                     Order::After => "after",
@@ -1339,22 +1339,22 @@ impl Checker {
         if let Expr::Name(id) = read
             && !scope.is_var(id)
         {
-            let named = m.names.get(id);
-            if named == Some(&NameKind::Move) {
+            let named = m.names.kind(id);
+            if named == Some(NameKind::Move) {
                 return Ok(Target::Move(id.clone()));
             }
             let keyed = m
                 .places
                 .get(id)
                 .is_some_and(|place| !place.binds.is_empty());
-            if named == Some(&NameKind::Place) && keyed {
+            if named == Some(NameKind::Place) && keyed {
                 return Ok(Target::PlaceSec(id.clone()));
             }
             let event = m
                 .kinds
                 .get(id)
                 .is_some_and(|kind| kind.spec == KindSpec::Event);
-            if named == Some(&NameKind::Kind) && event {
+            if named == Some(NameKind::Kind) && event {
                 return Ok(Target::Kind(id.clone()));
             }
         }
@@ -1735,7 +1735,7 @@ pub(super) fn move_keys(target: &Expr) -> Option<(&str, &[Key])> {
 
 /// The input or def `id`, and whether it is keyed.
 pub(super) fn input_or_def(m: &Reality, id: &str) -> Option<(Node, bool)> {
-    match m.names.get(id)? {
+    match m.names.kind(id)? {
         NameKind::Input => {
             let input = m.inputs.get(id)?;
             Some((Node::new(NodeKind::Input, id), !input.binds.is_empty()))
@@ -1799,7 +1799,7 @@ fn literal_form(m: &Reality, scope: &Scope, expr: &Expr) -> Option<Literal> {
     if scope.is_var(id) {
         return None;
     }
-    let named = m.names.get(id);
+    let named = m.names.kind(id);
     if named.is_none() && posts.is_empty() {
         let thing = m.things.get(id)?;
         return m.is_place(thing).then(|| Literal::Thing(id.to_owned()));
@@ -1807,7 +1807,7 @@ fn literal_form(m: &Reality, scope: &Scope, expr: &Expr) -> Option<Literal> {
     let place = m
         .places
         .get(id)
-        .filter(|_| named == Some(&NameKind::Place))?;
+        .filter(|_| named == Some(NameKind::Place))?;
     if posts.is_empty() {
         let unkeyed = place.things.iter().find(|(keys, _)| keys.is_empty());
         return unkeyed.map(|(_, thing)| Literal::Thing(thing.clone()));
@@ -1849,7 +1849,7 @@ fn key_literal(m: &Reality, scope: &Scope, key: &Key) -> Option<Lit> {
 pub(super) fn place_section(m: &Reality, scope: &Scope, expr: &Expr) -> Option<String> {
     let (id, posts) = named_parts(expr)?;
     let read = posts.is_empty() || matches!(posts, [Postfix::Keys(_)]);
-    let place = !scope.is_var(id) && m.names.get(id) == Some(&NameKind::Place);
+    let place = !scope.is_var(id) && m.names.kind(id) == Some(NameKind::Place);
     (read && place).then(|| id.to_owned())
 }
 
@@ -1889,7 +1889,7 @@ fn place_kind(m: &Reality, scope: &Scope, expr: &Expr) -> Option<String> {
     if let Some(var) = scope.vars.get(id) {
         return var.kind().map(str::to_owned);
     }
-    let named = m.names.get(id)?;
+    let named = m.names.kind(id)?;
     let ty = match named {
         NameKind::Place => return m.places.get(id).map(|place| place.kind.clone()),
         NameKind::Input => m.inputs.get(id).and_then(|input| input.ty.as_ref()),

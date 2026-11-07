@@ -877,7 +877,7 @@ fn dist_read(m: &Reality, scope: &Scope, x: &Expr) -> AmountNode {
     if scope.is_var(name) {
         return AmountNode::Other;
     }
-    let kind = m.names.get(name.as_str()).copied();
+    let kind = m.names.kind(name.as_str());
     let ty = if kind == Some(NameKind::Input) {
         m.inputs.get(name).and_then(|input| input.ty.as_ref())
     } else if kind == Some(NameKind::Def) {

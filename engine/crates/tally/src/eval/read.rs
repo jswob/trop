@@ -877,7 +877,7 @@ fn convert_lit(
         Lit::Name(text)
             if is_event_key(m, ty)
                 && matches!(
-                    m.names.get(text.as_str()),
+                    m.names.kind(text.as_str()),
                     Some(NameKind::Move | NameKind::Input)
                 ) =>
         {

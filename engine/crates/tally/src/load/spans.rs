@@ -104,7 +104,7 @@ impl Loader {
                 .as_ref()
                 .map(|g| governs_span(g, file, line))
                 .transpose()?;
-            if self.m.names.get(&version.cite) != Some(&NameKind::Source) {
+            if self.m.names.kind(&version.cite) != Some(NameKind::Source) {
                 return Err(refuse(
                     Load::Name,
                     format!("unknown id {} (version {id} cites no source)", version.cite),
@@ -147,7 +147,7 @@ impl Loader {
                 file: file.clone(),
                 line,
             };
-            self.m.versions.push(id, info);
+            self.m.versions.push(&mut self.m.symbols, id, info)?;
             for (target, span) in &version.moves {
                 moves.push((id.clone(), target.clone(), span.clone(), file.clone(), line));
             }

@@ -398,7 +398,7 @@ impl Loader {
         let Some((name, keys)) = named else {
             return Ok(None);
         };
-        match self.m.names.get(name.as_str()) {
+        match self.m.names.kind(name.as_str()) {
             Some(NameKind::Input) if self.m.inputs.get(name).is_some_and(|i| i.observed) => {
                 let Some(id) = super::same::row_id(keys) else {
                     return Err(at.refuse(
@@ -427,7 +427,7 @@ impl Loader {
                 None
             }
         };
-        let Some(id) = name.filter(|n| self.m.names.get(n) == Some(&NameKind::Kind)) else {
+        let Some(id) = name.filter(|n| self.m.names.kind(n) == Some(NameKind::Kind)) else {
             return Err(at.refuse(Load::Name, format!("unknown event kind in {sid}")));
         };
         let Some(kind) = self.m.kinds.get(&id) else {
@@ -537,20 +537,20 @@ impl Loader {
                 format!("fulfils on a field ({sid}), not a movement"),
             ));
         };
-        let Some(kind) = self.m.names.get(&name) else {
+        let Some(kind) = self.m.names.kind(&name) else {
             return Err(at
                 .refuse(Load::Name, format!("unknown id {name}"))
                 .naming(&name));
         };
-        if *kind == NameKind::Kind && name == "adjustments" && !keys.is_empty() {
+        if kind == NameKind::Kind && name == "adjustments" && !keys.is_empty() {
             return self.adj_ref(&keys, at);
         }
-        if *kind != NameKind::Move {
+        if kind != NameKind::Move {
             return Err(at.refuse(
                 Load::Kind,
                 format!(
                     "fulfils on a {} {name} ({sid}), not a movement",
-                    name_word(*kind)
+                    name_word(kind)
                 ),
             ));
         }
@@ -588,17 +588,17 @@ impl Loader {
             }
             _ => return Err(shape()),
         };
-        let Some(kind) = self.m.names.get(name) else {
+        let Some(kind) = self.m.names.kind(name) else {
             return Err(at
                 .refuse(Load::Name, format!("unknown id {name}"))
                 .naming(name));
         };
-        if *kind != NameKind::Move {
+        if kind != NameKind::Move {
             return Err(at.refuse(
                 Load::Kind,
                 format!(
                     "fulfils on a {} {name} ({sid}), not a movement",
-                    name_word(*kind)
+                    name_word(kind)
                 ),
             ));
         }
@@ -609,7 +609,7 @@ impl Loader {
                 return Err(at.refuse(Load::Leg, format!("leg {leg} is not a leg of {of}")));
             }
         }
-        if self.m.names.get(version) != Some(&NameKind::Version) {
+        if self.m.names.kind(version) != Some(NameKind::Version) {
             return Err(at.refuse(Load::Name, format!("unknown version {version}")));
         }
         let values = self.move_keys(name, &move_keys, at)?;

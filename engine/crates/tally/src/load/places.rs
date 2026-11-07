@@ -48,7 +48,7 @@ impl Loader {
                 .m
                 .kinds
                 .get(&decl.kind)
-                .filter(|_| self.m.names.get(&decl.kind) == Some(&NameKind::Kind))
+                .filter(|_| self.m.names.kind(&decl.kind) == Some(NameKind::Kind))
             else {
                 return Err(
                     refuse(Load::Name, format!("unknown id {}", decl.kind), &file, line)
@@ -125,7 +125,7 @@ impl Loader {
                 let mut thing = Thing::new(&id);
                 thing.base = Some(kind_id.clone());
                 thing.entries.push(entry);
-                self.m.things.push(&id, thing);
+                self.m.things.push(&mut self.m.symbols, &id, thing)?;
                 named.push((Vec::new(), id.clone()));
             } else {
                 for tuple in self.place_tuples(&id, &binds, &file, line)? {
@@ -140,7 +140,7 @@ impl Loader {
                         key_things: tuple.key_things,
                         key_indexes: tuple.key_indexes,
                     });
-                    self.m.things.push(&name, thing);
+                    self.m.things.push(&mut self.m.symbols, &name, thing)?;
                     named.push((tuple.keys, name));
                 }
             }
@@ -275,7 +275,7 @@ impl Loader {
         let not_place =
             |name: &str| refuse(Load::Covers, format!("{name} is not a place"), file, line);
         if let Expr::Name(id) = written {
-            if self.m.names.get(id) == Some(&NameKind::Place) {
+            if self.m.names.kind(id) == Some(NameKind::Place) {
                 let keyed = self.m.places.get(id).is_some_and(|p| !p.binds.is_empty());
                 if keyed {
                     return Err(refuse(
@@ -314,7 +314,7 @@ impl Loader {
                 line,
             ));
         };
-        if self.m.names.get(&name) != Some(&NameKind::Place) {
+        if self.m.names.kind(&name) != Some(NameKind::Place) {
             if role == Written::Covers {
                 return Err(not_place(&name));
             }

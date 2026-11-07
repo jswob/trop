@@ -217,7 +217,7 @@ impl Loader {
             let message = format!("wrong number of keys for {name}");
             refuse(Load::Key, message, &same.file, same.line)
         };
-        match self.m.names.get(name.as_str()) {
+        match self.m.names.kind(name.as_str()) {
             None => {
                 Ok(keys.is_empty() && self.m.things.get(name).is_some_and(|t| self.m.is_place(t)))
             }
@@ -268,7 +268,7 @@ impl Loader {
         let Some((name, keys)) = named(side) else {
             return Ok(Side::Other("a field path".to_owned()));
         };
-        let Some(kind) = self.m.names.get(name.as_str()) else {
+        let Some(kind) = self.m.names.kind(name.as_str()) else {
             if self.m.things.get(name).is_some() {
                 return Ok(Side::Thing);
             }
@@ -290,7 +290,7 @@ impl Loader {
             | NameKind::Version
             | NameKind::Ask
             | NameKind::Source
-            | NameKind::Cut => Ok(Side::Other(format!("a {}", super::types::name_word(*kind)))),
+            | NameKind::Cut => Ok(Side::Other(format!("a {}", super::types::name_word(kind)))),
         }
     }
 

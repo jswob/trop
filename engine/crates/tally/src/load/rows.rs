@@ -170,8 +170,8 @@ impl Loader {
         } else {
             "input"
         };
-        match self.m.names.get(name) {
-            Some(kind) if *kind == want => Ok(()),
+        match self.m.names.kind(name) {
+            Some(kind) if kind == want => Ok(()),
             Some(_) => Err(refuse(
                 Load::Name,
                 format!("{name} is not {word}"),
@@ -241,7 +241,7 @@ impl Loader {
     ) -> Result<(), Stop> {
         unprefixed(row.qual.as_deref(), &row.target, file, line)?;
         let id = &row.target;
-        match self.m.names.get(id) {
+        match self.m.names.kind(id) {
             Some(NameKind::Band) => {}
             Some(_) => {
                 return Err(refuse(Load::Name, format!("{id} is not band"), file, line));

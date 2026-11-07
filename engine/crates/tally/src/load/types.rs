@@ -523,7 +523,7 @@ fn fill_ref(
     let Expr::Name(name) = base else {
         return None;
     };
-    if scope.is_var(name) || m.names.get(name) != Some(&NameKind::Fill) {
+    if scope.is_var(name) || m.names.kind(name) != Some(NameKind::Fill) {
         return None;
     }
     let (fkeys, at) = match posts {
@@ -710,7 +710,7 @@ pub(super) fn input_read(m: &Reality, scope: &Scope, e: &Expr) -> Option<String>
         id = Some(name);
     }
     let id = id?;
-    let input = !scope.is_var(id) && m.names.get(id) == Some(&NameKind::Input);
+    let input = !scope.is_var(id) && m.names.kind(id) == Some(NameKind::Input);
     input.then(|| id.clone())
 }
 
@@ -1046,7 +1046,7 @@ impl Checker {
         if let Some(var) = scope.vars.get(name) {
             return Ok(var_type(var));
         }
-        let Some(kind) = m.names.get(name).copied() else {
+        let Some(kind) = m.names.kind(name) else {
             if !matches!(expect, Some(Ty::Key(_) | Ty::Code(_))) {
                 read_elsewhere(m, name)?;
             }
@@ -1565,7 +1565,7 @@ impl Checker {
         if let Expr::Name(name) = base
             && !scope.is_var(name)
         {
-            let Some(kind) = m.names.get(name).copied() else {
+            let Some(kind) = m.names.kind(name) else {
                 return Err(refused(Load::Name, format!("unknown id {name}")).naming(name));
             };
             return match kind {
@@ -1953,7 +1953,7 @@ pub(super) fn domain_of(m: &Reality, ix: &str) -> Option<Domain> {
     if m.kinds.get(ix).is_some() {
         return Some(Domain::Kind(ix.to_owned()));
     }
-    (m.names.get(ix) == Some(&NameKind::Axis)).then(|| Domain::Axis(ix.to_owned()))
+    (m.names.kind(ix) == Some(NameKind::Axis)).then(|| Domain::Axis(ix.to_owned()))
 }
 
 /// A domain's name, as a message names it.
@@ -2074,7 +2074,7 @@ pub(super) fn unit_type(m: &Reality, u: Option<&str>) -> Result<Ty, Stop> {
     }
     let named = m.units.contains(u)
         || m.unit_kind_keys.contains_key(u)
-        || (m.names.get(u) == Some(&NameKind::Kind));
+        || (m.names.kind(u) == Some(NameKind::Kind));
     if named {
         return Ok(num(Unit::make(vec![(u.to_owned(), 1)]).map_err(unit_stop)?));
     }

@@ -10,8 +10,8 @@
 use super::check::invariant;
 use super::keys::{RangeKey, check_range_keys};
 use super::same::SameLine;
-use crate::base::{Code, Load, Place as At, Refusal, Run, Table, Warn};
-use crate::model::{Graph, Joint, PERIODS, Reality, Scenarios, UnitError, power_past_limit};
+use crate::base::{Code, Interner, Load, Place as At, Refusal, Run, Table, Warn};
+use crate::model::{Graph, Joint, Names, PERIODS, Reality, Scenarios, UnitError, power_past_limit};
 use crate::num::{Num, NumError};
 use crate::syntax::{File, HeaderKind, Lit, Section, Stop, UnitForm};
 use std::collections::{BTreeMap, BTreeSet};
@@ -97,7 +97,7 @@ pub(super) fn load_among(
         .all_worlds
         .extend(loader.m.scenarios.over.keys().cloned());
     loader.m.all_worlds.insert(loader.m.header.id.clone());
-    loader.register_builtins();
+    loader.register_builtins()?;
     loader.register_names()?;
     loader.build_units()?;
     loader.build_kinds()?;
@@ -187,7 +187,8 @@ impl Loader {
                 start,
                 end,
                 on,
-                names: BTreeMap::new(),
+                symbols: Interner::new(),
+                names: Names::new(),
                 sources: Table::new(),
                 versions: Table::new(),
                 units: BTreeSet::new(),
@@ -271,7 +272,8 @@ impl Loader {
                 let message = format!("a key entered twice in axis {}", axis.id);
                 return Err(refuse(Load::Dup, message, file, axis.line));
             }
-            self.m.axes.push(&axis.id, axis.as_ref().clone());
+            let written = axis.as_ref().clone();
+            self.m.axes.push(&mut self.m.symbols, &axis.id, written)?;
         }
         Ok(())
     }

@@ -139,7 +139,7 @@ impl Checker {
             return Err(prefixed_call(m, first, call));
         }
         let named_band = !DATE_FNS.contains(&call.name.as_str())
-            && m.names.get(&call.name) == Some(&NameKind::Band);
+            && m.names.kind(&call.name) == Some(NameKind::Band);
         if call.band_key.is_some() || named_band {
             return self.band_call(m, scope, call, depth);
         }
@@ -737,7 +737,7 @@ impl Checker {
         let info = m
             .bands
             .get(id)
-            .filter(|_| m.names.get(id) == Some(&NameKind::Band));
+            .filter(|_| m.names.kind(id) == Some(NameKind::Band));
         let Some(info) = info else {
             return Err(refused(Load::Name, format!("unknown band {id}")));
         };
@@ -833,10 +833,10 @@ impl Checker {
     /// `b(x)` or `b[k](x)`: one argument of the band's argument type (refcore's
     /// `band_call`). L §5.9.
     fn band_call(&mut self, m: &Reality, scope: &Scope, call: &Call, depth: u32) -> Typed {
-        let Some(kind) = m.names.get(&call.name) else {
+        let Some(kind) = m.names.kind(&call.name) else {
             return Err(refused(Load::Name, format!("unknown id {}", call.name)).naming(&call.name));
         };
-        let band = m.bands.get(&call.name).filter(|_| *kind == NameKind::Band);
+        let band = m.bands.get(&call.name).filter(|_| kind == NameKind::Band);
         let Some(band) = band else {
             return Err(refused(
                 Load::Parse,

@@ -74,7 +74,8 @@ impl Loader {
                 Section::Place(decl) => self.declare_place(decl, file)?,
                 Section::Move(decl) => self.declare_move(decl, file)?,
                 Section::Fill(decl) => {
-                    self.m.fills.push(&decl.id, decl.as_ref().clone());
+                    let fill = decl.as_ref().clone();
+                    self.m.fills.push(&mut self.m.symbols, &decl.id, fill)?;
                 }
                 Section::Axis(_)
                 | Section::Source(_)
@@ -130,7 +131,7 @@ impl Loader {
     /// a currency code no unit line declares, `LOAD-NAME` naming `what` for another word
     /// (refcore's `build_kind_types`). L §5.4, §5.7.
     fn kind_unit_word(&self, unit: &str, what: &str, file: &str, line: u32) -> Result<(), Stop> {
-        let unit_kind = self.m.names.get(unit) == Some(&NameKind::Kind)
+        let unit_kind = self.m.names.kind(unit) == Some(NameKind::Kind)
             && self
                 .m
                 .kinds
@@ -179,7 +180,7 @@ impl Loader {
             }
         }
         input.time_pos = self.time_pos(&input.binds);
-        self.m.inputs.push(&decl.id, input);
+        self.m.inputs.push(&mut self.m.symbols, &decl.id, input)?;
         Ok(())
     }
 
@@ -234,7 +235,7 @@ impl Loader {
             time_pos,
             decl: decl.clone(),
         };
-        self.m.defs.push(&decl.id, def);
+        self.m.defs.push(&mut self.m.symbols, &decl.id, def)?;
         Ok(())
     }
 
@@ -270,7 +271,7 @@ impl Loader {
             unit_factor,
             tables: Vec::new(),
         };
-        self.m.bands.push(&decl.id, band);
+        self.m.bands.push(&mut self.m.symbols, &decl.id, band)?;
         Ok(())
     }
 
@@ -299,7 +300,7 @@ impl Loader {
             things: Vec::new(),
             decl: decl.clone(),
         };
-        self.m.places.push(&decl.id, place);
+        self.m.places.push(&mut self.m.symbols, &decl.id, place)?;
         Ok(())
     }
 
@@ -318,7 +319,7 @@ impl Loader {
             self_reads: false,
             decl: decl.clone(),
         };
-        self.m.moves.push(&decl.id, info);
+        self.m.moves.push(&mut self.m.symbols, &decl.id, info)?;
         Ok(())
     }
 
@@ -330,7 +331,7 @@ impl Loader {
             .m
             .kinds
             .get(kind)
-            .filter(|_| self.m.names.get(kind) == Some(&NameKind::Kind))
+            .filter(|_| self.m.names.kind(kind) == Some(NameKind::Kind))
         else {
             return Err(refuse(Load::Name, format!("unknown id {kind}"), file, line).naming(kind));
         };
@@ -435,7 +436,7 @@ impl Loader {
 
     /// An index, a kind or an axis by name (refcore's `resolve_domain`). L §5.6.
     fn resolve_domain(&self, id: &str, file: &str, line: u32) -> Result<Domain, Stop> {
-        match self.m.names.get(id) {
+        match self.m.names.kind(id) {
             Some(NameKind::Index) => Ok(Domain::Index(id.to_owned())),
             Some(NameKind::Kind) => Ok(Domain::Kind(id.to_owned())),
             Some(NameKind::Axis) => Ok(Domain::Axis(id.to_owned())),
@@ -510,7 +511,7 @@ impl Loader {
             }
             Type::Key(name) => {
                 // A prefixed `key a.x` is no name (the merge has made each member's one): unknown.
-                match self.m.names.get(name) {
+                match self.m.names.kind(name) {
                     Some(NameKind::Kind | NameKind::Index | NameKind::Axis) => {
                         Ok((Ty::Key(name.clone()), Num::int(1)))
                     }

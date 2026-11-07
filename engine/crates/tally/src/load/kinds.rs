@@ -22,7 +22,7 @@ impl Loader {
     pub(super) fn build_kinds(&mut self) -> Result<(), Stop> {
         for kind in prelude() {
             let id = kind.id.clone();
-            self.m.kinds.push(&id, kind);
+            self.m.kinds.push(&mut self.m.symbols, &id, kind)?;
         }
         let mut subs: BTreeSet<String> = BTreeSet::new();
         for (file, section) in &self.sections {
@@ -51,7 +51,7 @@ impl Loader {
                     place
                 }
                 Written::Sub { parent, certainty } => {
-                    if self.m.names.get(parent) != Some(&NameKind::Kind) {
+                    if self.m.names.kind(parent) != Some(NameKind::Kind) {
                         return Err(refuse(
                             Load::Name,
                             format!("unknown id {parent}"),
@@ -77,7 +77,7 @@ impl Loader {
             // Kept as written; the checker checks them (`load/parts.rs`), as refcore keeps
             // `decl.pclauses` for `check_parts`.
             info.parts.clone_from(&decl.parts);
-            self.m.kinds.push(&decl.id, info);
+            self.m.kinds.push(&mut self.m.symbols, &decl.id, info)?;
         }
         self.link_kinds(&subs)
     }
@@ -171,7 +171,7 @@ impl Loader {
                 priced: None,
                 line: None,
             });
-            self.m.things.push(&code, thing);
+            self.m.things.push(&mut self.m.symbols, &code, thing)?;
         }
         let mut order: Vec<(Day, String)> = self
             .m
@@ -236,7 +236,7 @@ impl Loader {
             .iter()
             .map(|k| key_source_text(k, file, line))
             .collect::<Result<Vec<String>, Stop>>()?;
-        match self.m.names.get(target) {
+        match self.m.names.kind(target) {
             Some(NameKind::Index) => self.enter_index(version, file, enter, &texts, line),
             Some(NameKind::Kind) => self.enter_kind(version, file, enter, &texts, line),
             Some(_) => Err(refuse(
@@ -430,7 +430,9 @@ impl Loader {
         }
         let known = self.m.versions.get(version).map(|v| v.known);
         if !self.m.things.contains(name) {
-            self.m.things.push(name, Thing::new(name));
+            self.m
+                .things
+                .push(&mut self.m.symbols, name, Thing::new(name))?;
         }
         let mut olds: Vec<(Option<Day>, bool)> = Vec::new();
         let owner = self.entry_owner(Some(version));

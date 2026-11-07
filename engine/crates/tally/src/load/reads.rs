@@ -443,7 +443,7 @@ impl Checker {
     /// L §5.14.3, §5.14.1.
     pub(super) fn flows(&mut self, m: &Reality, scope: &Scope, flows: &Flows, depth: u32) -> Typed {
         let hit = flow_move(&flows.target)
-            .filter(|(id, _, _)| !scope.is_var(id) && m.names.get(*id) == Some(&NameKind::Move));
+            .filter(|(id, _, _)| !scope.is_var(id) && m.names.kind(id) == Some(NameKind::Move));
         let mut ut = match hit {
             Some((id, keys, leg)) => self.move_flows(m, scope, id, keys, leg, depth)?,
             None => self.place_flows(m, scope, flows, depth)?,
@@ -642,8 +642,8 @@ impl Checker {
             [Postfix::Keys(keys)] => Some((id, keys.as_slice())),
             [Postfix::Field(_), ..] | [Postfix::Keys(_), _, ..] => None,
         });
-        let Some((id, keys)) = planned
-            .filter(|(id, _)| !scope.is_var(id) && m.names.get(*id) == Some(&NameKind::Move))
+        let Some((id, keys)) =
+            planned.filter(|(id, _)| !scope.is_var(id) && m.names.kind(id) == Some(NameKind::Move))
         else {
             return Err(refused(
                 Load::Parse,
@@ -680,7 +680,7 @@ impl Checker {
             ));
         };
         let event = if let Expr::Name(id) = kind
-            && m.names.get(id) == Some(&NameKind::Kind)
+            && m.names.kind(id) == Some(NameKind::Kind)
         {
             m.kinds.get(id).filter(|k| k.spec == KindSpec::Event)
         } else {
