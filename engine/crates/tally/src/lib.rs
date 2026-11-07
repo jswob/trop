@@ -175,12 +175,15 @@ pub mod eval {
 pub mod walk {
     mod agenda;
     mod day;
+    mod flows;
+    mod legs;
     mod order;
     mod plan;
     mod point;
     mod projection;
     mod reads;
     mod state;
+    mod tuples;
 
     pub use agenda::{Act, Mv, Reading, endings, reading_point};
     pub use day::{Broke, Ends};

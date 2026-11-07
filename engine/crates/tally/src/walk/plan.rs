@@ -1,31 +1,31 @@
 //! The plan pass: each move's instances over its binding tuples, dated at the cut, evaluated at their booking cut, and classified.
 //! Spec: E §4.1 (enumerate the instances, date them at K, evaluate them at min(t, K),
 //! classify them, the movement order); E §5 (steps 0 and 1: dating at K, the booking cut);
-//! L §5.14 (moves: keys, `on`, `at`, `for`, `when`, legs, their places, amounts and days; a
-//! day or a `when` that is a hole makes a hole movement); L §8.4 (a refused key's `where`,
-//! `when`, attribute or `for` makes a refused movement, its day and legs' places still read;
-//! tally 2.1.6); L §6.4 (a move a scenario declares books nothing before its `from`).
-//! Twin: engine/tools/refcore/moves.py (`move_tuples`, `move_instances`, `insts_of_tuples`,
+//! L §5.14 (moves: keys, `on`, `at`, `for`, `when`, legs and their days; a day or a `when`
+//! that is a hole makes a hole movement); L §8.4 (a refused key's `where`, `when`, attribute
+//! or `for` makes a refused movement, its day and legs' places still read; tally 2.1.6);
+//! L §6.4 (a move a scenario declares books nothing before its `from`). The binding tuples are
+//! `tuples.rs`'s, a leg's places and amount `legs.rs`'s.
+//! Twin: engine/tools/refcore/moves.py (`move_instances`, `insts_of_tuples`,
 //! `decision_instances`, `eval_inst`, `refused_places`, `body_over_law`, `inst_body`,
-//! `eval_leg`, `leg_unit_static`, `leg_amount`, `status`, `scen_early`, `inst_order`,
-//! `key_sort`, `keys_seen`).
+//! `status`, `scen_early`, `inst_order`, `key_sort`, `keys_seen`).
 //! Invariants: an instance's day is read at the ask's cut K and its body at its booking cut
 //! min(t, K); a run-time refusal met evaluating an instance stays with that instance; a move's
 //! instances are computed once per cut, and a move that reads its own instances is `RUN-CYCLE`.
 
-use core::cmp::Ordering;
-use std::rc::Rc;
-
+use super::tuples::{Law, Tuple};
 use crate::base::{Code, Load, Refusal, Run};
-use crate::eval::{Collected, Ctx, Engine, Env, Member, order_text, reads_name, thing_seen};
+use crate::eval::{Collected, Ctx, Engine, Env, order_text, thing_seen};
 use crate::hole::{Hole, spread};
 use crate::model::{
     Domain, KeyVal, MoveInfo, Node, NodeKind, Number, Reality, Value, currency_id, money_num,
     num_money,
 };
 use crate::num::Num;
-use crate::syntax::{Certainty, Leg, Stop};
+use crate::syntax::{Certainty, Stop};
 use crate::time::{Day, PeriodKind};
+use core::cmp::Ordering;
+use std::rc::Rc;
 
 /// A leg's end: a place by name, or a hole, a place nobody has told us (L §5.14 Legs).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -376,26 +376,6 @@ pub struct Seed {
     pub at_cut: Option<Day>,
 }
 
-/// A binding tuple of a move: its scope, keys, and the hole of a `where` that is one, or of a
-/// domain or law date that is one, and what deciding it read (refcore's `move_tuples`
-/// statuses and colls).
-struct Tuple {
-    /// The scope.
-    env: Env,
-    /// The keys.
-    keys: Vec<KeyVal>,
-    /// Whether it exists.
-    exists: Exists,
-    /// The hole of a domain or of a law date: the instance's day and existence are that hole.
-    domain_hole: Option<Hole>,
-    /// The refusal its last key's `where` met: a refused instance, its later keys unbound
-    /// where it isn't the move's last binding (L §5.14 Keys, §8.4; tally 2.1.6).
-    refused: Option<Refusal>,
-    /// What deciding it read: its law dates, domains, members and `where`s, which go with its
-    /// instance, not to the reader of the move's instances.
-    coll: Collected,
-}
-
 /// What an instance's body gives: whether it exists, its legs, attributes and period.
 pub(super) struct Body {
     /// Whether it exists.
@@ -623,198 +603,6 @@ impl Engine {
             old.cut.text(),
             cut.text()
         )))
-    }
-
-    /// A move's binding tuples at the cut, depth first in binding order, each binding read at
-    /// the move's law date with the keys bound before it, each tuple with what deciding it
-    /// read, kept from the reader; a member whose `where` is refused ends its tuple there, a
-    /// refused one (refcore's `move_tuples`). E §4.1 step 1, L §5.14 Keys (tally 2.1.6).
-    fn move_tuples(&mut self, m: &Reality, mv: &MoveInfo, ctx: Ctx) -> Result<Vec<Tuple>, Stop> {
-        let mut out = Vec::new();
-        let mut work = vec![Tuple {
-            env: Env::empty(),
-            keys: Vec::new(),
-            exists: Exists::Yes,
-            domain_hole: None,
-            refused: None,
-            coll: Collected::default(),
-        }];
-        while let Some(tuple) = work.pop() {
-            if tuple.refused.is_some() {
-                out.push(tuple);
-                continue;
-            }
-            let Some(bind) = mv.binds.get(tuple.keys.len()) else {
-                out.push(tuple);
-                continue;
-            };
-            self.push();
-            let law = self.move_law(m, mv, &tuple.env, ctx);
-            let mut decided = tuple.coll.clone();
-            decided.merge(&self.pop_alone());
-            let law = match law? {
-                Law::Hole(h) => {
-                    out.push(Tuple {
-                        domain_hole: Some(h),
-                        coll: decided,
-                        ..tuple
-                    });
-                    continue;
-                }
-                Law::Day(d) => Some(d),
-                Law::None => None,
-            };
-            let members = match self.binding_members(m, &bind.node, &tuple.env, ctx.at_law(law))? {
-                Err((h, read)) => {
-                    decided.merge(&read);
-                    out.push(Tuple {
-                        domain_hole: Some(h),
-                        coll: decided,
-                        ..tuple
-                    });
-                    continue;
-                }
-                Ok(members) => members,
-            };
-            let mut next = Vec::with_capacity(members.len());
-            for (member, read, refused) in members {
-                let mut extended = extend(m, mv, &tuple, &bind.var, &bind.domain, member)?;
-                extended.coll = decided.clone();
-                extended.coll.merge(&read);
-                extended.refused = refused;
-                next.push(extended);
-            }
-            work.extend(next.into_iter().rev());
-        }
-        Ok(out)
-    }
-
-    /// A move's law date by its `at`, with the keys bound so far: none while it reads a key
-    /// not yet bound (refcore's `move_law`). L §4.3, §5.14.
-    fn move_law(&mut self, m: &Reality, mv: &MoveInfo, env: &Env, ctx: Ctx) -> Result<Law, Stop> {
-        let Some(at) = &mv.decl.at else {
-            return Ok(Law::None);
-        };
-        if mv
-            .binds
-            .iter()
-            .any(|b| env.get(&b.var).is_none() && reads_name(at, &b.var))
-        {
-            return Ok(Law::None);
-        }
-        let v = self.ev(m, at, env, ctx.at_law(None))?;
-        if let Value::Hole(h) = v {
-            return Ok(Law::Hole(h));
-        }
-        if v == Value::None {
-            return Err(refuse(
-                Run::None,
-                format!("the law date of {} is none here", mv.id),
-            ));
-        }
-        Ok(Law::Day(date_of(&v)?))
-    }
-
-    /// The binding tuple of `mv` at `keys` under cut `cut`, its `when` read at the cut: none
-    /// when no tuple has those keys or its `when` is false; a `when` that is a hole or refused,
-    /// or a refused `where`, is taken as existing, its link judged where its instance is
-    /// (refcore's `link_tuple`).
-    /// L §5.19 Links, E §4.1 step 2.
-    ///
-    /// # Errors
-    ///
-    /// The refusals the binding tuples meet; a load refusal met at run.
-    pub(crate) fn link_tuple(
-        &mut self,
-        m: &Reality,
-        mv: &MoveInfo,
-        keys: &[KeyVal],
-        cut: Day,
-    ) -> Result<Option<Env>, Stop> {
-        let tctx = Ctx::new(None, cut);
-        for tuple in self.move_tuples(m, mv, tctx)? {
-            if tuple.keys != keys {
-                continue;
-            }
-            if tuple.exists == Exists::No {
-                return Ok(None);
-            }
-            if let (Some(when), Exists::Yes, None, None) = (
-                &mv.decl.when,
-                &tuple.exists,
-                &tuple.domain_hole,
-                &tuple.refused,
-            ) {
-                match self.when_at_cut(m, mv, when, &tuple.env, tctx) {
-                    Ok(false) => return Ok(None),
-                    Ok(true) => {}
-                    Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {}
-                    Err(stop) => return Err(stop),
-                }
-            }
-            return Ok(Some(tuple.env));
-        }
-        Ok(None)
-    }
-
-    /// Whether a link's instance may exist by its `when` at the ask's cut: false only for a
-    /// `when` that is false (refcore's `link_tuple`, its `when`). L §5.19.
-    fn when_at_cut(
-        &mut self,
-        m: &Reality,
-        mv: &MoveInfo,
-        when: &crate::syntax::Expr,
-        env: &Env,
-        tctx: Ctx,
-    ) -> Result<bool, Stop> {
-        let law = match self.move_law(m, mv, env, tctx)? {
-            Law::Hole(_) => return Ok(true),
-            Law::Day(d) => Some(d),
-            Law::None => None,
-        };
-        let w = self.ev(m, when, env, tctx.at_law(law))?;
-        Ok(w != Value::Bool(false))
-    }
-
-    /// The places the legs of `mv`'s instance at `env` give at the cut, no amount read; none
-    /// where a place can't be read here, so the link is judged by its keys alone (refcore's
-    /// `link_places`). L §5.19 Links.
-    ///
-    /// # Errors
-    ///
-    /// A load refusal met at run.
-    pub(crate) fn link_places(
-        &mut self,
-        m: &Reality,
-        mv: &MoveInfo,
-        env: &Env,
-        cut: Day,
-    ) -> Result<std::collections::BTreeSet<String>, Stop> {
-        let tctx = Ctx::new(None, cut);
-        let none = std::collections::BTreeSet::new();
-        let law = match self.move_law(m, mv, env, tctx) {
-            Ok(Law::Hole(_)) => return Ok(none),
-            Ok(Law::Day(d)) => Some(d),
-            Ok(Law::None) => None,
-            Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => return Ok(none),
-            Err(stop) => return Err(stop),
-        };
-        let mut places = std::collections::BTreeSet::new();
-        for leg in &mv.decl.legs {
-            for e in [&leg.from, &leg.to] {
-                match self.ev(m, e, env, tctx.at_law(law)) {
-                    Ok(Value::Key(KeyVal::Thing(name))) => {
-                        places.insert(name);
-                    }
-                    Ok(_) => return Ok(none),
-                    Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {
-                        return Ok(none);
-                    }
-                    Err(stop) => return Err(stop),
-                }
-            }
-        }
-        Ok(places)
     }
 
     /// One instance: its day at the cut K, then, for a plan, its body at its booking cut
@@ -1106,201 +894,10 @@ impl Engine {
             fulfils,
         })
     }
-
-    /// One leg: its places, its day and its amount in its unit; a run-time refusal of the
-    /// amount stays with the leg (refcore's `eval_leg`). L §5.14 Legs.
-    fn eval_leg(
-        &mut self,
-        m: &Reality,
-        inst: &Inst,
-        leg: &Leg,
-        kind_unit: &str,
-        ctx: Ctx,
-    ) -> Result<LegVal, Stop> {
-        let from_value = self.ev(m, &leg.from, &inst.env, ctx)?;
-        let to_value = self.ev(m, &leg.to, &inst.env, ctx)?;
-        let from = leg_end(m, inst, leg, from_value, "from")?;
-        let to = leg_end(m, inst, leg, to_value, "to")?;
-        let day = match &leg.on {
-            None => inst
-                .day
-                .clone()
-                .ok_or_else(|| invariant("a leg of an instance with no day"))?,
-            Some(e) => {
-                let v = self.ev(m, e, &inst.env, ctx)?;
-                if v == Value::None {
-                    return Err(refuse(
-                        Run::None,
-                        format!("the day of leg {} of {} is none here", leg.name, inst.id),
-                    ));
-                }
-                if let Value::Hole(h) = v {
-                    Dated::Hole(h)
-                } else {
-                    Dated::Day(date_of(&v)?)
-                }
-            }
-        };
-        let read = self.ev(m, &leg.amount, &inst.env, ctx);
-        let ends = (&from, &to);
-        let (amount, unit) = match read {
-            Ok(v) => amount_of(m, &inst.id, &leg.name, kind_unit, &v, ends)?,
-            Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {
-                (Amount::Refused(r), None)
-            }
-            Err(stop) => return Err(stop),
-        };
-        Ok(LegVal {
-            name: leg.name.clone(),
-            from,
-            to,
-            amount,
-            unit,
-            day,
-        })
-    }
-}
-
-/// A leg's end read as `v`: a place, or a hole; `RUN-NONE` for none, `RUN-DOMAIN` for a value
-/// that isn't a place (refcore's `eval_leg`, its places). L §5.14 Legs.
-fn leg_end(m: &Reality, inst: &Inst, leg: &Leg, v: Value, side: &str) -> Result<End, Stop> {
-    if v == Value::None {
-        return Err(refuse(
-            Run::None,
-            format!(
-                "the {side} place of leg {} of {} is none here",
-                leg.name, inst.id
-            ),
-        ));
-    }
-    if let Value::Hole(h) = v {
-        return Ok(End::Hole(h));
-    }
-    if let Value::Key(KeyVal::Thing(name)) = &v
-        && let Some(thing) = m.things.get(name)
-        && m.is_place(thing)
-    {
-        if thing
-            .base
-            .as_ref()
-            .is_some_and(|b| m.subtree("assets").contains(b))
-        {
-            return Err(refuse_load(
-                Load::Kind,
-                format!("a leg to or from an asset ({} of {})", leg.name, inst.id),
-            ));
-        }
-        return Ok(End::Place(name.clone()));
-    }
-    Err(refuse(
-        Run::Domain,
-        format!(
-            "the {side} of leg {} of {} is {}, not a place",
-            leg.name,
-            inst.id,
-            shown(m, &v)?
-        ),
-    ))
-}
-
-/// A leg's amount read as `v`: a hole, `RUN-NONE` for none, a quantity in its unit, else
-/// `RUN-DOMAIN`; a run-time refusal stays with the leg (refcore's `eval_leg`, its amount).
-/// L §5.14 Legs.
-fn amount_of(
-    m: &Reality,
-    inst_id: &str,
-    leg: &str,
-    kind_unit: &str,
-    v: &Value,
-    ends: (&End, &End),
-) -> Result<(Amount, Option<String>), Stop> {
-    if let Value::Hole(h) = v {
-        return Ok((
-            Amount::Hole(h.clone()),
-            leg_unit_static(m, kind_unit, ends.0, ends.1),
-        ));
-    }
-    if *v == Value::None {
-        let r = Refusal::new(
-            Code::Run(Run::None),
-            format!("the amount of leg {leg} of {inst_id} is none here"),
-        );
-        return Ok((Amount::Refused(r), None));
-    }
-    if !matches!(v, Value::Money(_) | Value::Number(_)) {
-        let r = Refusal::new(
-            Code::Run(Run::Domain),
-            format!("the amount of leg {leg} of {inst_id} is {}", shown(m, v)?),
-        );
-        return Ok((Amount::Refused(r), None));
-    }
-    match leg_amount(m, inst_id, leg, kind_unit, v, ends.0, ends.1) {
-        Ok((q, u)) => Ok((Amount::Qty(q), Some(u))),
-        Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {
-            Ok((Amount::Refused(r), None))
-        }
-        Err(stop) => Err(stop),
-    }
-}
-
-/// A move's law date: none, a day, or a hole.
-enum Law {
-    /// No `at`, or one that reads a key not yet bound.
-    None,
-    /// A day.
-    Day(Day),
-    /// A hole.
-    Hole(Hole),
-}
-
-/// A tuple extended by one binding's member: its variable bound, its key made a key of the
-/// binding's domain, its hole joined (refcore's `move_tuples`, `go`). L §5.14.
-fn extend(
-    m: &Reality,
-    mv: &MoveInfo,
-    tuple: &Tuple,
-    var: &str,
-    domain: &Domain,
-    member: Member,
-) -> Result<Tuple, Stop> {
-    let value = member
-        .env
-        .get(var)
-        .map(|v| v.value.clone())
-        .ok_or_else(|| invariant("a member without its variable"))?;
-    let listed = matches!(domain, Domain::List(_) | Domain::Range);
-    let key = if let Value::Key(k) = &value {
-        k.clone()
-    } else if let Value::Mv(r) = &value {
-        KeyVal::Mv(r.clone())
-    } else if let (Value::Number(n), true) = (&value, listed) {
-        KeyVal::Int(
-            n.q.to_i64()
-                .ok_or(Stop::NotBuilt("a key that isn't an integer"))?,
-        )
-    } else if let (Value::Day(d), true) = (&value, listed) {
-        KeyVal::Day(*d)
-    } else {
-        crate::eval::to_key(m, &mv.id, &value, domain)?
-    };
-    let mut keys = tuple.keys.clone();
-    keys.push(key);
-    let exists = match member.unknown {
-        None => tuple.exists.clone(),
-        Some(h) => join(tuple.exists.clone(), &h),
-    };
-    Ok(Tuple {
-        env: member.env,
-        keys,
-        exists,
-        domain_hole: None,
-        refused: None,
-        coll: tuple.coll.clone(),
-    })
 }
 
 /// Existence joined with a hole: the union of the questions (L §8.1).
-fn join(ex: Exists, h: &Hole) -> Exists {
+pub(super) fn join(ex: Exists, h: &Hole) -> Exists {
     match ex {
         Exists::Unknown(own) => match spread(&[Some(&own), Some(h)]) {
             Some(both) => Exists::Unknown(both),
@@ -1397,114 +994,6 @@ fn inst_order(m: &Reality, mv: &MoveInfo, inst: &Inst) -> Order {
     }
 }
 
-/// A hole amount's unit, where it can be seen: the kind's leg unit when it is one, else a
-/// place's (refcore's `leg_unit_static`). L §5.14.
-fn leg_unit_static(m: &Reality, kind_unit: &str, from: &End, to: &End) -> Option<String> {
-    if m.currencies.contains_key(kind_unit) || m.units.contains(kind_unit) {
-        return Some(kind_unit.to_owned());
-    }
-    place_units(m, from, to).into_iter().next()
-}
-
-/// A leg's amount as a quantity of its unit: places of another unit are `LOAD-UNIT`, a
-/// negative amount `RUN-NEG`, money finer than its minor unit `LOAD-UNIT` (refcore's
-/// `leg_amount`). L §5.10, §5.14.
-fn leg_amount(
-    m: &Reality,
-    inst_id: &str,
-    leg: &str,
-    kind_unit: &str,
-    amount: &Value,
-    from: &End,
-    to: &End,
-) -> Result<(Num, String), Stop> {
-    let units = place_units(m, from, to);
-    let (q, own) = quantity(m, amount)?;
-    let unit = if m.currencies.contains_key(kind_unit) || m.units.contains(kind_unit) {
-        kind_unit.to_owned()
-    } else {
-        let found = match (&own, units.iter().next()) {
-            (Some(u), _) => Some(u.clone()),
-            (None, Some(u)) if q.is_zero() && units.len() == 1 => Some(u.clone()),
-            (None, _) => None,
-        };
-        let Some(u) = found else {
-            return Err(refuse_load(
-                Load::Unit,
-                format!(
-                    "the amount of leg {leg} of {inst_id} ({}) is in no unit of a place",
-                    shown(m, amount)?
-                ),
-            ));
-        };
-        if kind_unit != "any"
-            && m.kinds.get(kind_unit).is_some()
-            && m.unit_kind_keys.get(&u).map(String::as_str) != Some(kind_unit)
-            && !(kind_unit == "currencies" && m.currencies.contains_key(&u))
-        {
-            return Err(refuse_load(
-                Load::Unit,
-                format!(
-                    "the amount of leg {leg} of {inst_id} is in {u}, not a unit of {kind_unit}"
-                ),
-            ));
-        }
-        u
-    };
-    if !units.is_empty() && (units.len() != 1 || !units.contains(&unit)) {
-        let all: Vec<&str> = units.iter().map(String::as_str).collect();
-        return Err(refuse_load(
-            Load::Unit,
-            format!(
-                "leg {leg} of {inst_id} moves {unit} between places of {}",
-                all.join(", ")
-            ),
-        ));
-    }
-    if let Some(u) = &own
-        && *u != unit
-    {
-        return Err(refuse_load(
-            Load::Unit,
-            format!("the amount of leg {leg} of {inst_id} is in {u}, not {unit}"),
-        ));
-    }
-    if q.is_negative() {
-        return Err(refuse(
-            Run::Neg,
-            format!(
-                "negative amount {} for leg {leg} of {inst_id}",
-                shown(m, amount)?
-            ),
-        ));
-    }
-    if let Some(minor) = m.currencies.get(&unit)
-        && !q.checked_div(minor).map_err(num_err)?.is_integer()
-    {
-        return Err(refuse_load(
-            Load::Unit,
-            format!(
-                "the amount of leg {leg} of {inst_id} ({}) is not money of {unit}: round it",
-                shown(m, amount)?
-            ),
-        ));
-    }
-    Ok((q, unit))
-}
-
-/// The units of a leg's places, but `any` (refcore's `leg_amount`, the places' units). L §5.14.
-fn place_units(m: &Reality, from: &End, to: &End) -> std::collections::BTreeSet<String> {
-    let mut out = std::collections::BTreeSet::new();
-    for p in [from, to].into_iter().filter_map(End::place) {
-        if let Some(u) = m.things.get(p).and_then(|t| m.place_unit(t))
-            && u != "any"
-        {
-            out.insert(u);
-        }
-    }
-    out
-}
-
 /// A number or money as a quantity, with its unit where it is one unit to the first power
 /// (refcore's `unit_of_value`). L §3.2.
 pub(crate) fn quantity(m: &Reality, v: &Value) -> Result<(Num, Option<String>), Stop> {
@@ -1544,7 +1033,7 @@ pub fn qty_value(m: &Reality, q: &Num, unit: &str) -> Result<Value, Stop> {
 
 /// The day a value names: a day, or a day period's (refcore's `date_of`); a value that isn't
 /// one is a load refusal met at run. L §4.2.
-fn date_of(v: &Value) -> Result<Day, Stop> {
+pub(super) fn date_of(v: &Value) -> Result<Day, Stop> {
     if let Value::Day(d) = v {
         return crate::eval::a_day(*d);
     }
@@ -1560,22 +1049,22 @@ fn date_of(v: &Value) -> Result<Day, Stop> {
 }
 
 /// A value as it prints, for a message. L §8.4.
-fn shown(m: &Reality, v: &Value) -> Result<String, Stop> {
+pub(super) fn shown(m: &Reality, v: &Value) -> Result<String, Stop> {
     v.text(m).map_err(num_err)
 }
 
 /// A number error as its refusal (L §7.1).
-fn num_err(e: crate::num::NumError) -> Stop {
+pub(super) fn num_err(e: crate::num::NumError) -> Stop {
     crate::eval::num_stop(e)
 }
 
 /// A run-time refusal (L §8.4).
-fn refuse(code: Run, message: String) -> Stop {
+pub(super) fn refuse(code: Run, message: String) -> Stop {
     Stop::Refused(Refusal::new(Code::Run(code), message))
 }
 
 /// A load refusal met at run (L §8.3).
-fn refuse_load(code: Load, message: String) -> Stop {
+pub(super) fn refuse_load(code: Load, message: String) -> Stop {
     Stop::Refused(Refusal::new(Code::Load(code), message))
 }
 
