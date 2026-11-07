@@ -65,6 +65,16 @@ pub(crate) enum Brings {
 /// one, with what reading it read (refcore's `move_tuples`, its `cd` and `cw`). E §4.1 step 1.
 pub(crate) type Decided = Result<Vec<(Member, Collected)>, (Hole, Collected)>;
 
+/// Where a range's key limit is met: at load, where its ends and step are literals, which
+/// load sees, or at run. L §7.6 item 2.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum LimitAt {
+    /// `LOAD-LIMIT`.
+    Load,
+    /// `RUN-LIMIT`.
+    Run,
+}
+
 /// One binding's values, each with its own unknown-member hole, or the hole of a domain that
 /// is unknown.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -463,7 +473,7 @@ impl Engine {
                 })
             }
             Over::List(lits) => Ok(Values::Known(list_values(lits))),
-            Over::Range(parts) => self.range_values(m, parts, env, ctx),
+            Over::Range(parts) => self.range_values(m, parts, env, ctx, LimitAt::Run),
         }
     }
 
@@ -558,14 +568,34 @@ impl Engine {
         Ok(Ok(Span::between(start, end)))
     }
 
-    /// The values of a range `a .. b [step s]`: days stepped, or integers (refcore's
-    /// `range_values`). L §5.11.
+    /// A range whose ends and step are literals, stepped through at load: past 1 000 000 keys
+    /// it is `LOAD-LIMIT` with the bytes an ask that steps through it prints (refcore's
+    /// `m_check_literal_ranges`, its `range_values` with `lit`). L §7.6 item 2.
+    ///
+    /// # Errors
+    ///
+    /// `LOAD-LIMIT <a> .. <b>[ step <s>] holds more than 1 000 000 keys`; any other stop the
+    /// range meets, as at run.
+    pub(crate) fn literal_range(
+        &mut self,
+        m: &Reality,
+        parts: &(Expr, Expr, Option<Expr>),
+    ) -> Result<(), Stop> {
+        let ctx = Ctx::new(None, m.on);
+        self.range_values(m, parts, &Env::empty(), ctx, LimitAt::Load)
+            .map(|_| ())
+    }
+
+    /// The values of a range `a .. b [step s]`: days stepped, or integers, at most 1 000 000,
+    /// the limit met where `at` says (refcore's `range_values`, its `lit`). L §5.11, §7.6
+    /// item 2.
     fn range_values(
         &mut self,
         m: &Reality,
         parts: &(Expr, Expr, Option<Expr>),
         env: &Env,
         ctx: Ctx,
+        at: LimitAt,
     ) -> Result<Values, Stop> {
         let (from, to, step) = parts;
         let first = self.ev(m, from, env, ctx)?;
@@ -586,7 +616,7 @@ impl Engine {
             let Some(by) = by else {
                 return Err(Stop::NotBuilt("a range of days with no step"));
             };
-            return day_range(m, start, &last, &by).map(Values::Known);
+            return day_range(m, start, (&last, &by), at).map(Values::Known);
         }
         for v in [&first, &last] {
             if *v == Value::None {
@@ -614,7 +644,7 @@ impl Engine {
         let (lo, hi) = (whole_of(m, &first)?, whole_of(m, &last)?);
         let limit = u64::try_from(RANGE_LIMIT).map_err(|_| invariant("the key limit"))?;
         let Some(keys) = lo.range_keys(&hi, &stride, limit).map_err(num_stop)? else {
-            return Err(too_many_keys(m, (&first, &last, by.as_ref()))?);
+            return Err(too_many_keys(m, (&first, &last, by.as_ref()), at)?);
         };
         let out = keys
             .into_iter()
@@ -637,18 +667,23 @@ fn is_int(v: &Value) -> bool {
         && matches!(n.class, Class::Int | Class::Flex))
 }
 
-/// `RUN-LIMIT <a> .. <b> [step <s>] holds more than 1 000 000 keys` (refcore's `too_many`).
-/// L §7.6 item 2.
-fn too_many_keys(m: &Reality, (a, b, s): (&Value, &Value, Option<&Value>)) -> Result<Stop, Stop> {
+/// `<a> .. <b> [step <s>] holds more than 1 000 000 keys`, `LOAD-LIMIT` or `RUN-LIMIT` as
+/// `at` says (refcore's `too_many`). L §7.6 item 2.
+fn too_many_keys(
+    m: &Reality,
+    (a, b, s): (&Value, &Value, Option<&Value>),
+    at: LimitAt,
+) -> Result<Stop, Stop> {
     let step = match s {
         Some(s) => format!(" step {}", s.text(m).map_err(num_stop)?),
         None => String::new(),
     };
     let (a, b) = (a.text(m).map_err(num_stop)?, b.text(m).map_err(num_stop)?);
-    Ok(refuse(
-        Run::Limit,
-        format!("{a} .. {b}{step} holds more than 1 000 000 keys"),
-    ))
+    let message = format!("{a} .. {b}{step} holds more than 1 000 000 keys");
+    Ok(match at {
+        LimitAt::Load => refuse_load(Load::Limit, message),
+        LimitAt::Run => refuse(Run::Limit, message),
+    })
 }
 
 /// When a binding over a kind tests its things: on a day, or over a span.
@@ -798,12 +833,13 @@ fn list_value(lit: &Lit) -> Value {
     }
 }
 
-/// The days from `start` to `end`, stepped (refcore's `range_values` for days). L §5.11.
+/// The days from `start` to `end`, stepped, at most 1 000 000, the limit met where `at` says
+/// (refcore's `range_values` for days). L §5.11, §7.6 item 2.
 fn day_range(
     m: &Reality,
     start: Day,
-    end: &Value,
-    step: &Value,
+    (end, step): (&Value, &Value),
+    at: LimitAt,
 ) -> Result<Vec<(Value, Option<Hole>)>, Stop> {
     let last = day_of_binding(m, end)?;
     let mut out = Vec::new();
@@ -814,7 +850,7 @@ fn day_range(
             .checked_add(1)
             .ok_or_else(|| invariant("a day count"))?;
         if count > RANGE_LIMIT {
-            return Err(too_many_keys(m, (&Value::Day(start), end, Some(step)))?);
+            return Err(too_many_keys(m, (&Value::Day(start), end, Some(step)), at)?);
         }
         out.push((Value::Day(current), None));
         let Value::Day(next) = arith(m, Op::Add, &Value::Day(current), step)? else {

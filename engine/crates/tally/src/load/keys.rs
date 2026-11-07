@@ -329,12 +329,15 @@ fn resolve_thing(
             let found = keyed_place_thing(m, name, keys, file, line)?;
             match found {
                 Some(thing) if m.thing_in(&thing, kind) => Ok(KeyVal::Thing(thing)),
-                Some(_) | None => Err(refuse(
-                    Load::Key,
-                    format!("{name}[...] is not a key of {kind}"),
-                    file,
-                    line,
-                )),
+                Some(_) | None => {
+                    let written: Vec<String> = keys.iter().map(lit_text).collect();
+                    Err(refuse(
+                        Load::Key,
+                        format!("{name}[{}] is not a key of {kind}", written.join(", ")),
+                        file,
+                        line,
+                    ))
+                }
             }
         }
         KeyLit::Lit(lit) => {

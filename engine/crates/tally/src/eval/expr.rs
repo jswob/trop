@@ -15,7 +15,7 @@ use core::cmp::Ordering;
 use super::arith::{Op, Test, arith, compare, negate, same_value};
 use super::read::{Given, literal_key, make_keys};
 use super::state::{
-    Ctx, Engine, Env, Figures, invariant, num_stop, refuse, refuse_load, wrong_type,
+    Ctx, Engine, Env, Figures, invariant, num_stop, refuse, refuse_load, unit_stop, wrong_type,
 };
 use super::ty::{figure_like, sample};
 use crate::base::{Load, Run};
@@ -783,13 +783,13 @@ fn number(m: &Reality, n: &crate::syntax::Number, figures: Figures) -> Result<Va
             class,
         }));
     };
-    let terms: Vec<(String, i64)> = unit
+    let terms: Vec<(String, crate::num::Num)> = unit
         .terms
         .iter()
-        .map(|t| (t.base.clone(), t.power))
+        .map(|t| (t.base.clone(), t.power.clone()))
         .collect();
-    let percent = terms == [("%".to_owned(), 1)];
-    let (u, factor) = Unit::from_syntax(terms).map_err(num_stop)?;
+    let percent = terms == [("%".to_owned(), crate::num::Num::int(1))];
+    let (u, factor) = Unit::from_syntax(terms).map_err(unit_stop)?;
     let q = n.value.checked_mul(&factor).map_err(num_stop)?;
     if percent {
         return Ok(Value::Number(Number {

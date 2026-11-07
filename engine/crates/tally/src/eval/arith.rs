@@ -10,7 +10,7 @@
 
 use core::cmp::Ordering;
 
-use super::state::{invariant, num_stop, past_days, refuse, refuse_load};
+use super::state::{invariant, num_stop, past_days, refuse, refuse_load, unit_stop};
 use crate::base::{Load, Run};
 use crate::model::{
     Class, KeyVal, Number, Reality, Shown, Unit, Value, currency_id, currency_unit, money_num,
@@ -287,7 +287,7 @@ fn mul_div(m: &Reality, op: Op, lhs: Operand, rhs: Operand) -> Result<Value, Sto
         if rhs.q.is_zero() {
             return Err(refuse(Run::Div, "division by zero".to_owned()));
         }
-        let (unit, factor) = lhs.unit(m)?.div(&rhs.unit(m)?).map_err(num_stop)?;
+        let (unit, factor) = lhs.unit(m)?.div(&rhs.unit(m)?).map_err(unit_stop)?;
         let q = lhs.q.checked_div(&rhs.q).map_err(num_stop)?;
         let q = q.checked_mul(&factor).map_err(num_stop)?;
         return finish(m, q, Kind::Plain(Class::Num(unit, Shown::Plain)));
@@ -298,7 +298,7 @@ fn mul_div(m: &Reality, op: Op, lhs: Operand, rhs: Operand) -> Result<Value, Sto
         (Kind::Money(cur), Kind::Plain(Class::Int))
         | (Kind::Plain(Class::Int), Kind::Money(cur)) => Kind::Money(*cur),
         _ => {
-            let (unit, factor) = lhs.unit(m)?.mul(&rhs.unit(m)?).map_err(num_stop)?;
+            let (unit, factor) = lhs.unit(m)?.mul(&rhs.unit(m)?).map_err(unit_stop)?;
             let q = q.checked_mul(&factor).map_err(num_stop)?;
             return finish(m, q, Kind::Plain(Class::Num(unit, Shown::Plain)));
         }
@@ -328,7 +328,7 @@ fn rate_mul(m: &Reality, op: Op, lhs: &Operand, rhs: &Operand) -> Result<Option<
     if !one_period {
         return Err(refused());
     }
-    let (unit, factor) = rate.mul(&duration).map_err(num_stop)?;
+    let (unit, factor) = rate.mul(&duration).map_err(unit_stop)?;
     if !unit.is_one() {
         return Err(refuse_load(
             Load::Unit,

@@ -1,15 +1,17 @@
-//! What load sees, folded at every key: periods across keys, decisions' days and projections, schedules, scenarios' moves.
+//! What load sees, folded at every key: periods across keys, decisions' days and projections, moves' days and literal ranges at Tally's limits, schedules, scenarios' moves.
 //! Spec: L §4.6 (a period no longer than the keys that no key's period holds is refused at
 //! load where load sees it), §5.14.1 (a decision's plain `bal(x, d)` of its own day or later
 //! is `LOAD-CYCLE` where load sees the day), §4.2 (a schedule that gives no date in the run
 //! is `LOAD-SCHEDULE` where load sees it), §5.16 Decisions and projections (a projection a
 //! decision reaches that reads a random amount after its t, with no random clause or query,
 //! is `LOAD-RANDOM` where load sees it), §6.4 (a move a scenario declares books nothing
-//! before D), §8.3 (`LOAD-KEY` `<period> lies across keys <a> and <b> of <index>`; the
-//! forms of `LOAD-RANDOM` and `LOAD-SCENARIO`; item 5, the keys of a declared index; item 9,
-//! what load sees).
+//! before D), §7.6 items 1 and 2 (a move's day past the calendar, a literal range past
+//! 1 000 000 keys, `LOAD-LIMIT` where load sees them), §8.3 (`LOAD-KEY` `<period> lies
+//! across keys <a> and <b> of <index>`; the forms of `LOAD-RANDOM`, `LOAD-SCENARIO` and
+//! `LOAD-LIMIT`; item 5, the keys of a declared index; item 9, what load sees).
 //! Twin: engine/tools/refcore/check.py (`period_conv`, its `period_cands`); check3.py
 //! (`m_check_period_keys`, `m_seen_day`, `FOLD_FNS`, `m_check_seen_days`,
+//! `m_check_seen_day_limits`, `m_check_literal_ranges`,
 //! `m_check_proj_seen`, where a move with no `at` dates its amount by its day, issue #75);
 //! moves.py (`m_check_schedule`, at load by issue #72); evaluate.py (`c_schedule`, the day
 //! before its roll); a scenario's move before its `from` has no twin (issue #75).
@@ -21,13 +23,15 @@ use super::check::{DayRead, Files, ProjRead, Scope, Stands, Var, VarDom, invaria
 use super::cone::all_children;
 use super::steps::refuse;
 use super::types::text;
-use crate::base::{Code, Load};
+use crate::base::{Code, Load, Run};
 use crate::eval::{Ctx, Engine, Env, int_of};
 use crate::model::{
     BindInfo, Domain, IndexForm, IndexInfo, KeyVal, MoveInfo, NameKind, Node, NodeKind, Reality,
     Target, Ty, Value,
 };
-use crate::syntax::{Expr, Key, LawDate, Lit, Postfix, Stop};
+use crate::syntax::{
+    Ask, AskBody, Bind, Domain as Written, Expr, Key, LawDate, Lit, PinForm, Postfix, Stop,
+};
 use crate::time::{Day, Period};
 use std::collections::BTreeSet;
 
@@ -196,6 +200,192 @@ pub(super) fn check_seen_days(m: &Reality, reads: &[DayRead], files: &Files) -> 
         }
     }
     Ok(())
+}
+
+/// `LOAD-LIMIT move <m>[<keys>] on <e>: a day passes 9999-12-31` (or `comes before
+/// 0001-01-01`) for a move whose day load sees, folded at every key of its bindings, outside
+/// the calendar: the end of time read as a day (`on end_of(y)` for the year 9999), or a day
+/// the fold computes past it (refcore's `m_check_seen_day_limits`). A day computed from a
+/// row's value is refused at its key at run. L §7.6 item 1, §8.3 item 9.
+///
+/// # Errors
+///
+/// The first such move's `LOAD-LIMIT`, the moves in the reality's order, at the move's line;
+/// an invariant or `NotBuilt` the fold meets.
+pub(super) fn check_seen_day_limits(m: &Reality, files: &Files) -> Result<(), Stop> {
+    let mut engine = Engine::new(m.on);
+    for (id, mv) in m.moves.entries() {
+        let on = &mv.decl.on;
+        if !seen_day(m, on, &mv.binds) {
+            continue;
+        }
+        let Some(domains) = index_keys(m, &mv.binds) else {
+            continue;
+        };
+        let mut at = first_choice(&domains);
+        while let Some(counters) = at {
+            let (keys, env) = choice(&mv.binds, &domains, &counters)?;
+            at = next_choice(&counters, &domains)?;
+            let Some(limit) = day_limit(&mut engine, m, on, &env)? else {
+                continue;
+            };
+            let shown: Vec<String> = keys.iter().map(KeyVal::text).collect();
+            let message = format!("move {id}{} on {}: {limit}", bracketed(&shown), text(on));
+            return Err(refuse(
+                Load::Limit,
+                message,
+                files.get("move", id)?,
+                mv.decl.line,
+            ));
+        }
+    }
+    Ok(())
+}
+
+/// The calendar's limit a move's day meets at one choice of keys: the end of time read as a
+/// day, or the `RUN-LIMIT` the fold refuses with; `None` for a day in the calendar, any
+/// other value, or another refusal, which the value meets at run. L §7.6 item 1.
+fn day_limit(
+    engine: &mut Engine,
+    m: &Reality,
+    on: &Expr,
+    env: &Env,
+) -> Result<Option<String>, Stop> {
+    match engine.ev(m, on, env, Ctx::new(None, m.on)) {
+        Ok(Value::Day(day)) if day.is_end() => Ok(Some("a day passes 9999-12-31".to_owned())),
+        Err(Stop::Refused(r)) if r.code() == Code::Run(Run::Limit) => {
+            Ok(Some(r.message().to_owned()))
+        }
+        Ok(_) => Ok(None),
+        Err(Stop::Refused(r)) if r.code() != Code::EngineInvariant => Ok(None),
+        Err(stop) => Err(stop),
+    }
+}
+
+/// `LOAD-LIMIT <a> .. <b>[ step <s>] holds more than 1 000 000 keys` for a range an ask's
+/// binding steps through whose ends and step are literals, which load sees: refused at load
+/// whatever the asks, at the ask's line, with the bytes the asked path prints (refcore's
+/// `m_check_literal_ranges`). A range the evaluator refuses otherwise, or doesn't build, is
+/// left to the ask that steps through it. L §7.6 item 2, §8.3 `LOAD-LIMIT`; E §3.1.
+///
+/// # Errors
+///
+/// The first such range's `LOAD-LIMIT`, the asks in the reality's order; an invariant the
+/// range meets.
+pub(super) fn check_literal_ranges(m: &Reality, files: &Files) -> Result<(), Stop> {
+    let mut engine = Engine::new(m.on);
+    for ask in &m.asks {
+        for parts in literal_ranges(ask) {
+            match engine.literal_range(m, parts) {
+                Err(Stop::Refused(r)) if r.code() == Code::Load(Load::Limit) => {
+                    let file = files.get("ask", &ask.id)?;
+                    return Err(refuse(Load::Limit, r.message().to_owned(), file, ask.line));
+                }
+                Err(Stop::Refused(r)) if r.code() == Code::EngineInvariant => {
+                    return Err(Stop::Refused(r));
+                }
+                Err(Stop::Deep) => return Err(Stop::Deep),
+                Ok(()) | Err(Stop::Refused(_) | Stop::NotBuilt(_)) => {}
+            }
+        }
+    }
+    Ok(())
+}
+
+/// A range's ends and step as written, `a .. b [step s]` (L §2.3 `bind`).
+type RangeParts = (Expr, Expr, Option<Expr>);
+
+/// The ranges an ask's bindings step through whose ends and step are literals: the ask's own
+/// bindings first, then those its expressions hold (refcore's `m_check_literal_ranges`, its
+/// walk of the ask). L §2.5.
+fn literal_ranges(ask: &Ask) -> Vec<&RangeParts> {
+    let mut binds: Vec<&Bind> = ask.binds.iter().collect();
+    if let AskBody::Diff(diff) = &ask.body {
+        binds.extend(&diff.binds);
+    }
+    let mut stack = ask_exprs(ask);
+    let mut out = Vec::new();
+    loop {
+        for bind in core::mem::take(&mut binds) {
+            let (range, inner) = bind_parts(bind);
+            out.extend(range);
+            stack.extend(inner);
+        }
+        let Some(e) = stack.pop() else {
+            return out;
+        };
+        binds.extend(expr_binds(e));
+        stack.extend(all_children(e));
+    }
+}
+
+/// A binding's range, when its ends and step are literals, and the expressions it holds for
+/// the walk: its range's, its `on`, its `where`.
+fn bind_parts(bind: &Bind) -> (Option<&RangeParts>, Vec<&Expr>) {
+    let mut inner: Vec<&Expr> = bind.on.iter().chain(bind.filter.iter()).collect();
+    let Written::Range(parts) = &bind.domain else {
+        return (None, inner);
+    };
+    inner.extend([&parts.0, &parts.1]);
+    inner.extend(parts.2.as_ref());
+    let literal =
+        literal_end(&parts.0) && literal_end(&parts.1) && parts.2.as_ref().is_none_or(literal_end);
+    (literal.then_some(&**parts), inner)
+}
+
+/// An ask's expressions: its body's, its `law` and `as known`, its pins' values.
+fn ask_exprs(ask: &Ask) -> Vec<&Expr> {
+    let mut out: Vec<&Expr> = match &ask.body {
+        AskBody::Exprs(exprs) => exprs.iter().collect(),
+        AskBody::Residuals(residuals) => vec![&residuals.place],
+        AskBody::Explain(e) | AskBody::InputsOf(e) | AskBody::ReadersOf(e) => vec![e],
+        AskBody::Check(a, b) => vec![a, b],
+        AskBody::Solve(solve) => vec![&solve.left, &solve.right, &solve.target],
+        AskBody::Diff(diff) => vec![&diff.expr],
+    };
+    out.extend(ask.law.iter().chain(ask.known.iter()));
+    for pin in &ask.pins {
+        match &pin.form {
+            PinForm::Law(e) | PinForm::Known(e) | PinForm::Wording(e, _) => out.push(e),
+            PinForm::Set { value, .. } => out.push(value),
+            PinForm::Scenario(_) => {}
+        }
+    }
+    out
+}
+
+/// The bindings an expression holds itself: an aggregate's, a query's, a distribution's, a
+/// `crps`'s, a `prorata`'s; and a `diff`'s, which its ask holds.
+fn expr_binds(e: &Expr) -> Vec<&Bind> {
+    if let Expr::Agg(agg) = e {
+        return agg.binds.iter().collect();
+    }
+    if let Expr::Query(query) = e {
+        return query.binds.iter().flatten().collect();
+    }
+    if let Expr::Dist(dist) = e {
+        return dist.bind.iter().collect();
+    }
+    if let Expr::Crps(crps) = e {
+        return crps.bind.iter().collect();
+    }
+    if let Expr::Prorata(prorata) = e {
+        return prorata.binds.iter().collect();
+    }
+    Vec::new()
+}
+
+/// Whether a range's end or step is a literal: a number (a duration included), a day, a
+/// month or a quarter, negated or in parentheses (refcore's `range_is_literal`). L §2.5.
+fn literal_end(e: &Expr) -> bool {
+    let mut node = e;
+    while let Expr::Neg(inner) | Expr::Paren(inner) = node {
+        node = inner;
+    }
+    matches!(
+        node,
+        Expr::Lit(Lit::Num(_) | Lit::Day(_) | Lit::Month(..) | Lit::Quarter(..))
+    )
 }
 
 /// `LOAD-SCHEDULE` for a plan whose day is `schedule(p, e, …)` with `p` and `e` seen, when at

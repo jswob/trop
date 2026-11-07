@@ -257,9 +257,7 @@ impl Loader {
         let arg_type = band.arg_type.clone();
         let key = match (&row.key, first_bind) {
             (Some(written), Some(bind)) => {
-                let Some(lit) = KeyLit::of_row_key(written) else {
-                    return Err(Stop::NotBuilt("a band key that isn't one key"));
-                };
+                let lit = KeyLit::Lit(written.clone());
                 Some(self.pattern_key(&lit, &bind, None, file, line)?)
             }
             (Some(_), None) => {

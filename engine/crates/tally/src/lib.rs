@@ -116,7 +116,7 @@ pub mod model {
         BUILTIN_INDEXES, BUILTIN_INPUTS, Joint, MemberAsks, NameKind, Reality, SamePair,
     };
     pub use ty::{CodeKind, PeriodWord, Shown, Ty};
-    pub use unit::{PERIODS, Scaled, Unit, is_currency_code};
+    pub use unit::{PERIODS, Scaled, Unit, UnitError, is_currency_code, power_past_limit};
     pub use value::{
         Class, Code, MvRef, MvSrc, Number, Value, currency, currency_id, currency_unit, money_num,
         num_money,

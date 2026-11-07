@@ -171,9 +171,9 @@ fn row_unit(input: &str, place: &str, number: &crate::syntax::Number) -> Result<
     let terms = written
         .terms
         .iter()
-        .map(|t| (t.base.clone(), t.power))
+        .map(|t| (t.base.clone(), t.power.clone()))
         .collect();
-    let (unit, _) = Unit::from_syntax(terms).map_err(super::steps::num_stop)?;
+    let (unit, _) = Unit::from_syntax(terms).map_err(super::steps::unit_num_stop)?;
     match unit.terms() {
         [(base, 1)] => Ok(base.clone()),
         _ => Err(load_refusal(

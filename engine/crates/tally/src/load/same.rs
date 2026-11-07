@@ -360,10 +360,11 @@ impl Loader {
                 Key::Expr(key) => KeyLit::of_expr(key),
                 Key::Star => None,
             };
-            // An observation's attribute naming a move (`of: wage[*]`, `wage[1 + 1]`) reaches
-            // this; refcore prints `LOAD-KEY None is not a key of <ix>` there (issue #88).
+            // An observation's attribute naming a move by a computed key (`item: wage[2026-02 +
+            // 1]`) reaches this (a `same` side's keys and `*` are refused at parse, #88);
+            // refcore prints `LOAD-KEY None is not a key of <ix>` there (issue #100, P1).
             let Some(written) = written else {
-                return Err(Stop::NotBuilt("a reference keyed by * or a computed key"));
+                return Err(Stop::NotBuilt("a reference keyed by a computed key"));
             };
             values.push(resolve_key(&self.m, &written, &bind.domain, file, line)?);
         }

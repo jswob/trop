@@ -14,8 +14,9 @@ use crate::time::Day;
 pub struct UnitTerm {
     /// The unit's name (a period word in its singular form).
     pub base: String,
-    /// Its power, negative under `/`.
-    pub power: i64,
+    /// Its power as written, a whole number of any size, negative under `/` (load holds it
+    /// to 64 in size, L §7.6 item 4).
+    pub power: Num,
 }
 
 /// A unit written after a number or in a type: its terms in order (L §2.1 Units).
@@ -1517,8 +1518,8 @@ pub struct BandRow {
     pub qual: Option<String>,
     /// The band.
     pub target: String,
-    /// The key of a keyed band.
-    pub key: Option<RowKey>,
+    /// The key of a keyed band: one literal, no sign (L §2.3 `bandrow`, tally 2.1.6).
+    pub key: Option<Lit>,
     /// The interval.
     pub interval: Interval,
     /// The value.

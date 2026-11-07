@@ -17,7 +17,7 @@ use super::ops::unify;
 use super::steps::num_stop;
 use super::types::{
     Typed, input_read, is_date, is_period, no_order, num, numcls, period_kind, refused, text, uerr,
-    unit_of, unit_stop,
+    unit_error, unit_of, unit_stop,
 };
 use crate::base::Load;
 use crate::model::{CodeKind, NameKind, Node, NodeKind, PeriodWord, Reality, Rel, Shown, Ty, Unit};
@@ -826,7 +826,7 @@ impl Checker {
         } else {
             Unit::one()
         };
-        let (u, _) = xu.mul(&ru).map_err(unit_stop)?;
+        let (u, _) = xu.mul(&ru).map_err(unit_error)?;
         Ok(num(u))
     }
 

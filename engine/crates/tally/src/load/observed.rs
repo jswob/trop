@@ -14,7 +14,8 @@ use super::places::Written;
 use super::steps::{Loader, num_stop, refuse};
 use crate::base::Load;
 use crate::model::{
-    Fulfils, KeyVal, KindSpec, NameKind, ObsLeg, Observation, Unit, Value as ModelValue,
+    Fulfils, KeyVal, KindSpec, NameKind, ObsLeg, Observation, Unit, UnitError, Value as ModelValue,
+    power_past_limit,
 };
 use crate::syntax::{
     Certainty, Expr, Field, FieldValue, Key, Known, Leg, Lit, Postfix, Row, Stop, Type, Value,
@@ -459,13 +460,16 @@ impl Loader {
                 format!("the amount of leg {leg} of {sid} states its unit"),
             ));
         };
-        let terms: Vec<(String, i64)> = number
+        let terms: Vec<(String, crate::num::Num)> = number
             .unit
             .iter()
             .flat_map(|u| u.terms.iter())
-            .map(|t| (t.base.clone(), t.power))
+            .map(|t| (t.base.clone(), t.power.clone()))
             .collect();
-        let (unit, factor) = Unit::from_syntax(terms).map_err(num_stop)?;
+        let (unit, factor) = Unit::from_syntax(terms).map_err(|error| match error {
+            UnitError::Power(base) => at.refuse(Load::Limit, power_past_limit(&base)),
+            UnitError::Num(error) => num_stop(error),
+        })?;
         let [(base, 1)] = unit.terms() else {
             return Err(at.refuse(
                 Load::Leg,

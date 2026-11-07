@@ -14,7 +14,8 @@ use super::worlds::no_version;
 use crate::base::Load;
 use crate::model::{
     BandInfo, BindInfo, CodeKind, DefInfo, Domain, InputInfo, KindSpec, MoveInfo, NameKind,
-    PERIODS, PeriodWord, PlaceInfo, RuleVer, Shown, Span, TimePos, Ty, Unit, is_currency_code,
+    PERIODS, PeriodWord, PlaceInfo, RuleVer, Shown, Span, TimePos, Ty, Unit, UnitError,
+    is_currency_code, power_past_limit,
 };
 use crate::num::Num;
 use crate::syntax::{
@@ -576,9 +577,12 @@ impl Loader {
                 )
                 .naming(base));
             };
-            terms.push((term, *power));
+            terms.push((term, power.clone()));
         }
-        Unit::from_syntax(terms).map_err(num_stop)
+        Unit::from_syntax(terms).map_err(|error| match error {
+            UnitError::Power(base) => refuse(Load::Limit, power_past_limit(&base), file, line),
+            UnitError::Num(error) => num_stop(error),
+        })
     }
 }
 
@@ -600,7 +604,7 @@ fn is_percent(unit: Option<&WrittenUnit>) -> bool {
     let [UnitTerm { base, power }] = written.terms.as_slice() else {
         return false;
     };
-    base == "%" && *power == 1
+    base == "%" && *power == Num::int(1)
 }
 
 /// The type a one-word type names, the four code types by their names (refcore's

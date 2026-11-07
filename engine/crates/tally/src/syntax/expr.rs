@@ -546,8 +546,12 @@ impl P<'_> {
         Ok(keys)
     }
 
-    /// A key position: `*`, or an expression.
+    /// A key position: `*`, or an expression; in a record field's value an expression only, as
+    /// a `ref`'s keys are (refcore's `key_expr`, L §2.3 `ref`, issue #88).
     pub(super) fn key_expr(&mut self) -> Result<Key, Stop> {
+        if self.at("*", 0) && self.field_ref {
+            return Err(self.err("an expression"));
+        }
         if self.accept("*")? {
             return Ok(Key::Star);
         }
@@ -659,17 +663,18 @@ impl P<'_> {
         Ok(keys)
     }
 
-    /// One key of an `sref`: a literal, or a place keyed by things, `konto[ana]` (L §2.3
-    /// `rk`'s last form, one key by L §2.4), the reference `konto[ana]` refcore's `sref` reads.
+    /// One key of an `sref`: a literal with no sign, or a place keyed by things, `konto[ana]`
+    /// (L §2.3 `sk`, tally 2.1.6), the reference `konto[ana]` refcore's `skey` reads; a sign,
+    /// `*`, a range or an expression is `LOAD-PARSE` where the grammar stops (issue #88).
     fn lit_key(&mut self) -> Result<Key, Stop> {
-        if !(self.at_id(0) && self.at("[", 1)) {
-            return Ok(Key::Expr(Expr::Lit(self.lit()?)));
+        if !(self.at_id(0) && self.at("[", 1) && !self.spaced(1)) {
+            return Ok(Key::Expr(Expr::Lit(self.lit_unsigned()?)));
         }
         let name = self.ident("an id")?;
         self.skip(1)?;
-        let mut keys = vec![Key::Expr(Expr::Lit(self.lit()?))];
+        let mut keys = vec![Key::Expr(Expr::Lit(self.lit_unsigned()?))];
         while self.accept(",")? {
-            keys.push(Key::Expr(Expr::Lit(self.lit()?)));
+            keys.push(Key::Expr(Expr::Lit(self.lit_unsigned()?)));
         }
         self.expect("]")?;
         let place = Expr::Post(Box::new(Expr::Name(name)), vec![Postfix::Keys(keys)]);
@@ -1160,7 +1165,11 @@ impl P<'_> {
         if self.accept("none")? {
             return Ok(FieldValue::None);
         }
-        Ok(FieldValue::Expr(self.expr(Ends::Free)?))
+        let outer = self.field_ref;
+        self.field_ref = true;
+        let value = self.expr(Ends::Free);
+        self.field_ref = outer;
+        Ok(FieldValue::Expr(value?))
     }
 
     /// `leg l from a to b amount q [on d]` (L §2.3 `leg`).

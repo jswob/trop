@@ -1436,7 +1436,9 @@ fn item(q: &mut P<'_>) -> Result<ItemForm, Stop> {
         }
         return enter(q, qual, target, replace);
     }
+    let mut first_key = None;
     let keys = if q.accept("[")? {
+        first_key = Some(q.i);
         let mut keys = vec![q.row_key()?];
         while q.accept(",")? {
             keys.push(q.row_key()?);
@@ -1460,7 +1462,8 @@ fn item(q: &mut P<'_>) -> Result<ItemForm, Stop> {
         if given {
             return Err(q.err("a row"));
         }
-        return band_row(q, qual, target, keys, replace);
+        let keys = keys.zip(first_key);
+        return band_row(q, (qual, target), keys, replace);
     }
     q.expect("=")?;
     let (value, assumed) = value(q)?;
@@ -1533,20 +1536,21 @@ fn enter(
     })))
 }
 
-/// `qid ["[" key "]"] ":" interval "=" (expr | hole) [locator]`.
+/// `qid ["[" key "]"] ":" interval "=" (expr | hole) [locator]`; `keys` are the row keys read
+/// before the `:`, with the position of the first.
 fn band_row(
     q: &mut P<'_>,
-    qual: Option<String>,
-    target: String,
-    keys: Option<Vec<RowKey>>,
+    (qual, target): (Option<String>, String),
+    keys: Option<(Vec<RowKey>, usize)>,
     replace: Replace,
 ) -> Result<ItemForm, Stop> {
     let key = match keys {
         None => None,
-        Some(keys) => {
-            let [key] =
-                <[RowKey; 1]>::try_from(keys).map_err(|_| q.err("one key of a keyed band"))?;
-            Some(key)
+        Some((keys, first)) => {
+            if keys.len() != 1 {
+                return Err(q.err("one key of a keyed band"));
+            }
+            Some(band_key(q, first)?)
         }
     };
     let interval = interval(q)?;
@@ -1568,6 +1572,20 @@ fn band_row(
         locator,
         replace: replace == Replace::Yes,
     })))
+}
+
+/// A band row's key read again from `first` as the grammar reads it, one literal with no
+/// sign and then `]`, so `*`, a range, a place or a sign is refused where the grammar stops
+/// (refcore's `vitem`, issue #88). L §2.3 `bandrow`.
+fn band_key(q: &mut P<'_>, first: usize) -> Result<Lit, Stop> {
+    let after = q.i;
+    q.i = first;
+    let key = q.lit_unsigned()?;
+    if !q.at("]", 0) {
+        return Err(q.err("\"]\""));
+    }
+    q.i = after;
+    Ok(key)
 }
 
 /// A row's value and its `assumed` reason (L §2.3 `value`).

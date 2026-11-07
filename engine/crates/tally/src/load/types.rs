@@ -24,7 +24,7 @@ use super::worlds::read_elsewhere;
 use crate::base::{Code, Load, Refusal};
 use crate::model::{
     CodeKind, Domain, IndexForm, KeyVal, KindSpec, NameKind, Node, NodeKind, PeriodWord, Reality,
-    Rel, Shown, Ty, Unit,
+    Rel, Shown, Ty, Unit, UnitError, power_past_limit,
 };
 use crate::num::{Num, NumError};
 use crate::syntax::{
@@ -46,10 +46,19 @@ pub(super) fn uerr(message: String) -> Stop {
     refused(Load::Unit, message)
 }
 
-/// A number error met while typing a unit (`1 %^3000`, `1 PLN^9223372036854775807*PLN`): a
-/// power past 64 bits or a scale past the digit cap is a capacity limit, "not built" until
-/// issue #89 rules (refcore's powers and scales are unbounded); the number kernel's own
-/// invariant stays `ENGINE-INVARIANT`. L §3.2.
+/// A unit operation's refusal at load: a power past 64 in size is `LOAD-LIMIT unit <u> has
+/// a power past 64` (refcore's `power_limit`), placed where it was met; a number error is
+/// `unit_stop`'s. L §7.6 item 4, §8.3 `LOAD-LIMIT`.
+pub(super) fn unit_error(error: UnitError) -> Stop {
+    match error {
+        UnitError::Power(base) => refused(Load::Limit, power_past_limit(&base)),
+        UnitError::Num(error) => unit_stop(error),
+    }
+}
+
+/// A number error met while typing a unit: a literal scaled by its unit past the digit cap is
+/// "not built" (refcore's scales are unbounded); the number kernel's own invariant stays
+/// `ENGINE-INVARIANT`. L §3.2, §7.1.
 pub(super) fn unit_stop(error: NumError) -> Stop {
     match error {
         NumError::Invariant => Stop::Refused(Refusal::new(
@@ -471,7 +480,7 @@ fn lit_txt(lit: &Lit) -> String {
         let terms = unit
             .terms
             .iter()
-            .map(|t| (t.base.clone(), t.power))
+            .map(|t| (t.base.clone(), t.power.clone()))
             .collect();
         if let Ok((u, _)) = Unit::from_syntax(terms) {
             return format!("{} {}", n.text, u.text());
@@ -1161,12 +1170,12 @@ impl Checker {
         if let Ty::Num(unit, shown) = &ty
             && unit.terms().iter().any(|(base, _)| base.starts_with('$'))
         {
-            ty = Ty::Num(unit.subst(&env).map_err(unit_stop)?, *shown);
+            ty = Ty::Num(unit.subst(&env).map_err(unit_error)?, *shown);
         }
         if let Ty::Dist(unit) = &ty
             && unit.terms().iter().any(|(base, _)| base.starts_with('$'))
         {
-            ty = Ty::Dist(unit.subst(&env).map_err(unit_stop)?);
+            ty = Ty::Dist(unit.subst(&env).map_err(unit_error)?);
         }
         if matches!(ty, Ty::Dist(_)) {
             return self.dist_read(m, scope, &target, &ty, affx);
@@ -1862,14 +1871,14 @@ fn number_with_unit(
             || crate::model::PERIODS.contains(&base)
             || m.unit_kind_keys.contains_key(base);
         if known {
-            terms.push((term.base.clone(), term.power));
+            terms.push((term.base.clone(), term.power.clone()));
         } else if crate::model::is_currency_code(base) {
             return Err(uerr(format!("money in an undeclared currency {base}")));
         } else {
             return Err(refused(Load::Name, format!("unknown id {base} (a unit)")).naming(base));
         }
     }
-    let (made, factor) = Unit::from_syntax(terms).map_err(unit_stop)?;
+    let (made, factor) = Unit::from_syntax(terms).map_err(unit_error)?;
     let scaled = n.value.checked_mul(&factor).map_err(unit_stop)?;
     let shown = lit_txt(&Lit::Num(n.clone()));
     let ruled = if is_inline(&scaled) {
@@ -1892,7 +1901,7 @@ fn number_with_unit(
         }
         return Ok(Ty::Money(cur.clone()));
     }
-    if matches!(unit.terms.as_slice(), [t] if t.base == "%" && t.power == 1) {
+    if matches!(unit.terms.as_slice(), [t] if t.base == "%" && t.power == Num::int(1)) {
         return Ok(pct());
     }
     if matches!(expect, Some(Ty::Rate)) && made.period_of().is_some() {

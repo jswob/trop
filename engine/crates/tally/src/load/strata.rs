@@ -15,7 +15,8 @@
 //! an acyclic graph once each cycle no written order breaks is one component.
 
 use super::across::{
-    check_period_keys, check_proj_seen, check_scenario_moves, check_schedules, check_seen_days,
+    check_literal_ranges, check_period_keys, check_proj_seen, check_scenario_moves,
+    check_schedules, check_seen_day_limits, check_seen_days,
 };
 use super::check::{Files, ShiftRead, walk};
 use super::cone::{check_path_lines, finish_random};
@@ -86,6 +87,8 @@ impl Loader {
         arrival_reads(&self.m, &self.m.graph, &files)?;
         after_readings(&self.m, &files)?;
         check_seen_days(&self.m, &walked.day_reads, &files)?;
+        check_seen_day_limits(&self.m, &files)?;
+        check_literal_ranges(&self.m, &files)?;
         check_period_keys(&self.m, &walked.periods)?;
         check_move_lawdates(&self.m, &walked, &dated, &files)?;
         let random = finish_random(

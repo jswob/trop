@@ -10,7 +10,7 @@
 
 use super::arith::{Op, arith, int_of};
 use super::memo::{LawClass, Read, may_hold, rows_class};
-use super::state::{Ctx, Engine, a_day, invariant, num_stop, refuse, refuse_load};
+use super::state::{Ctx, Engine, a_day, invariant, num_stop, refuse, refuse_load, unit_stop};
 use crate::base::{Load, Run};
 use crate::hole::Hole;
 use crate::load::index_key_of;
@@ -1006,9 +1006,9 @@ fn convert_number(
             let terms = unit
                 .terms
                 .iter()
-                .map(|t| (t.base.clone(), t.power))
+                .map(|t| (t.base.clone(), t.power.clone()))
                 .collect();
-            Some(Unit::from_syntax(terms).map_err(num_stop)?)
+            Some(Unit::from_syntax(terms).map_err(unit_stop)?)
         }
     };
     match ty {
@@ -1130,7 +1130,7 @@ fn number_in(
         return n.value.checked_mul(&of.factor).map_err(num_stop);
     };
     let to = if keyed(unit) {
-        unit.subst(&of.keys).map_err(num_stop)?
+        unit.subst(&of.keys).map_err(unit_stop)?
     } else {
         unit.clone()
     };

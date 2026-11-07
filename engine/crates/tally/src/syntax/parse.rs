@@ -200,6 +200,9 @@ pub(crate) struct P<'a> {
     /// Parsing for the reprint's comparison (refcore's `sig`): no `Paren` node and no source
     /// text, so two parses that differ only in parentheses are equal trees (L §2.4).
     pub(super) blind: bool,
+    /// Inside a record field's value, whose `ref` keys are expressions and never `*`
+    /// (refcore's `_field_ref`; L §2.3 `field`, tally 2.1.6).
+    pub(super) field_ref: bool,
 }
 
 impl<'a> P<'a> {
@@ -222,6 +225,7 @@ impl<'a> P<'a> {
             ask_for: false,
             asif,
             blind: false,
+            field_ref: false,
         }
     }
 
@@ -561,18 +565,16 @@ impl<'a> P<'a> {
             }
             _ => tok.text.clone(),
         };
-        let mut power = 1_i64;
+        let mut power = Num::int(1);
         if self.at("^", 0) && !self.spaced(0) {
             self.skip(1)?;
-            let negative = self.accept("-")?;
-            let n = self.integer()?;
-            let n = n.to_i64().ok_or_else(|| self.cannot("a power too large"))?;
-            power = if negative {
-                n.checked_neg()
-                    .ok_or_else(|| self.cannot("a power too large"))?
+            let minus = if self.accept("-")? {
+                Minus::Taken
             } else {
-                n
+                Minus::None
             };
+            let n = self.integer()?;
+            power = self.signed(n, minus, "a power")?;
         }
         for at in (first..self.i).skip(1) {
             self.role(Some(at), Role::Unit);
@@ -593,9 +595,7 @@ impl<'a> P<'a> {
             let divide = self.next()?.text == "/";
             let term = self.uterm()?;
             let power = if divide {
-                term.power
-                    .checked_neg()
-                    .ok_or_else(|| self.cannot("a power too large"))?
+                self.signed(term.power, Minus::Taken, "a power")?
             } else {
                 term.power
             };
@@ -614,10 +614,7 @@ impl<'a> P<'a> {
         self.role(Some(self.i), Role::Unit);
         let term = self.uterm()?;
         Ok(UnitTerm {
-            power: term
-                .power
-                .checked_neg()
-                .ok_or_else(|| self.cannot("a power too large"))?,
+            power: self.signed(term.power, Minus::Taken, "a power")?,
             base: term.base,
         })
     }
@@ -731,7 +728,8 @@ impl<'a> P<'a> {
         self.lit_after(Minus::None)
     }
 
-    /// A literal with no sign before it (a currency's minor unit).
+    /// A literal with no sign before it (a currency's minor unit, an `sref`'s key, a band
+    /// row's key).
     pub(super) fn lit_unsigned(&mut self) -> Result<Lit, Stop> {
         self.lit_after(Minus::None)
     }

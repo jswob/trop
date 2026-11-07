@@ -13,7 +13,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::Days;
 use crate::base::{Code, Refusal, Run, Warn};
 use crate::book::{Adjustment, Coverage, Linked, Obs};
-use crate::model::{Domain, KeyVal, Node, NodeKind, Reality, Value};
+use crate::model::{Domain, KeyVal, Node, NodeKind, Reality, UnitError, Value, power_past_limit};
 use crate::num::NumError;
 use crate::syntax::{Ask, Stop};
 use crate::time::Day;
@@ -537,5 +537,15 @@ pub(crate) fn num_stop(error: NumError) -> Stop {
         ),
         NumError::Domain => refuse(Run::Domain, "outside its operation's domain".to_owned()),
         NumError::Invariant => invariant("the number kernel's invariant"),
+    }
+}
+
+/// A unit operation's error met at run: a power past 64 in size is the load refusal
+/// refcore's `power_limit` raises where it meets it (a unit a key gives, L §3.2); a number
+/// error is `num_stop`'s. L §7.6 item 4.
+pub(crate) fn unit_stop(error: UnitError) -> Stop {
+    match error {
+        UnitError::Power(base) => refuse_load(crate::base::Load::Limit, power_past_limit(&base)),
+        UnitError::Num(error) => num_stop(error),
     }
 }

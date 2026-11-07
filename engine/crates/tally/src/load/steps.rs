@@ -9,7 +9,7 @@
 
 use super::same::SameLine;
 use crate::base::{Code, Load, Place as At, Refusal, Run, Table, Warn};
-use crate::model::{Graph, Joint, PERIODS, Reality, Scenarios};
+use crate::model::{Graph, Joint, PERIODS, Reality, Scenarios, UnitError, power_past_limit};
 use crate::num::{Num, NumError};
 use crate::syntax::{File, HeaderKind, Lit, Section, Stop, UnitForm};
 use std::collections::{BTreeMap, BTreeSet};
@@ -34,6 +34,19 @@ pub(super) fn refuse(code: Load, message: String, file: &str, line: u32) -> Stop
         message,
         At::Line(file.to_owned(), line),
     ))
+}
+
+/// A unit operation's error met while loading a row: a power past 64 in size is `LOAD-LIMIT
+/// unit <u> has a power past 64`, placed by the caller (refcore's `at`); a number error is
+/// `num_stop`'s. L §7.6 item 4, §8.3 `LOAD-LIMIT`.
+pub(super) fn unit_num_stop(error: UnitError) -> Stop {
+    match error {
+        UnitError::Power(base) => Stop::Refused(Refusal::new(
+            Code::Load(Load::Limit),
+            power_past_limit(&base),
+        )),
+        UnitError::Num(error) => num_stop(error),
+    }
 }
 
 /// A number error met while loading: its code, as at a read (L §8.4).

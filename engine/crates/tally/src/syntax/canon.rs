@@ -335,7 +335,7 @@ impl Printer {
             ]),
             ItemForm::Same(pair) => self.same_key(&pair.0, item, line, &place),
             ItemForm::Band(row) => {
-                let keys: Vec<KeyRef> = row.key.iter().map(row_key).collect();
+                let keys: Vec<KeyRef> = row.key.iter().cloned().map(KeyRef::One).collect();
                 self.keyed(row.qual.as_deref(), &row.target, &keys, &place)
             }
             ItemForm::Row(row) => {

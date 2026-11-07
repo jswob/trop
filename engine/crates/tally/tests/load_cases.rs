@@ -4793,14 +4793,17 @@ version v1
                 "kind gifts: event certain\n  leg cash: PLN\n  attr giver: key accounts\n\ndef early: int = count(e in events over .. where e in gifts and lifespan(e.giver).from < e.day)",
                 no_ask,
             ),
-            // G13, S1: a unit past the 64-bit powers or the digit cap is the capacity stop
-            // (issue #89), never `ENGINE-INVARIANT`; refcore loads the first and refuses the
-            // second `LOAD-UNIT … num PLN^9223372036854775808, not num` (`s1-pct`, `s1-pow`).
-            ("unit-digits", "def y: num = 1 %^3000", "not built"),
+            // G13, S1: a unit power past 64 is `LOAD-LIMIT` at its line (L §7.6 item 4, tally
+            // 2.1.6, #89), never `ENGINE-INVARIANT` (T's `basic/s1-def-pct`, `s1-def-pow`).
+            (
+                "unit-digits",
+                "def y: num = 1 %^3000",
+                "refused: LOAD-LIMIT unit % has a power past 64 (a.tally:27)",
+            ),
             (
                 "unit-power",
                 "def y: num = 1 PLN^9223372036854775807*PLN",
-                "not built",
+                "refused: LOAD-LIMIT unit PLN has a power past 64 (a.tally:27)",
             ),
         ];
         for &(name, def, expected) in lifespan {

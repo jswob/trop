@@ -15,7 +15,7 @@ use super::check::{Checker, Figure, Reading, Scope, tested_vars};
 use super::types::{
     Op, Operand, Sides, Typed, cmp_sign, converts, covered_spans, input_read, int_flex, is_bool,
     is_date, is_duration, key_pk, key_value_kind, lit_expr, lit_rule, no_order, num, numcls,
-    period_kind, refused, uerr, unit_of, unit_stop,
+    period_kind, refused, uerr, unit_error, unit_of,
 };
 use crate::base::{Code, Load};
 use crate::model::{
@@ -23,6 +23,25 @@ use crate::model::{
 };
 use crate::syntax::{Agg, AggFn, CmpOp, Expr, In, Lit, Stop};
 use crate::time::PeriodKind;
+
+/// `LOAD-LIMIT <n> has more than 18 digits` for an integer written as a literal that names
+/// keys: a key offset `k ± n`, a `pos(k)` bound (refcore's `key_digits`). L §7.6 item 3.
+fn key_digits(n: &crate::syntax::Number) -> Result<(), Stop> {
+    if !n.whole || n.unit.is_some() {
+        return Ok(());
+    }
+    let Some(text) = n
+        .value
+        .integer_text()
+        .filter(|t| t.trim_start_matches('-').len() > 18)
+    else {
+        return Ok(());
+    };
+    Err(refused(
+        Load::Limit,
+        format!("{text} has more than 18 digits"),
+    ))
+}
 
 /// Whether `t` is `num %`.
 fn is_pct(t: &Ty) -> bool {
@@ -251,6 +270,9 @@ impl Checker {
                     return Err(uerr("key arithmetic on an axis".to_owned()));
                 }
                 no_order(m, lt, "key arithmetic")?;
+                if let Some(Lit::Num(offset)) = &sides.right.lit {
+                    key_digits(offset)?;
+                }
                 return Ok(lt.clone());
             }
             if op == Op::Sub && matches!(rt, Ty::Key(other) if other == ix) {
@@ -408,6 +430,7 @@ impl Checker {
             && let Expr::Call(call) = l
             && call.name == "pos"
         {
+            key_digits(n)?;
             self.pos_guard(scope, call.args.first(), n)?;
             right_scope.allow_lit = true;
         }
@@ -939,10 +962,10 @@ fn multiplicative(op: Op, lt: Ty, rt: Ty) -> Typed {
         if rk == "money" && lk == "int" {
             return Ok(rt);
         }
-        let (u, _) = lu.mul(&ru).map_err(unit_stop)?;
+        let (u, _) = lu.mul(&ru).map_err(unit_error)?;
         return Ok(num(u));
     }
-    let (u, _) = lu.div(&ru).map_err(unit_stop)?;
+    let (u, _) = lu.div(&ru).map_err(unit_error)?;
     Ok(num(u))
 }
 
