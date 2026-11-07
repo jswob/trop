@@ -14,8 +14,9 @@ use crate::time::Day;
 pub struct UnitTerm {
     /// The unit's name (a period word in its singular form).
     pub base: String,
-    /// Its power, negative under `/`.
-    pub power: i64,
+    /// Its power as written, a whole number of any size, negative under `/` (load holds it
+    /// to 64 in size, L §7.6 item 4).
+    pub power: Num,
 }
 
 /// A unit written after a number or in a type: its terms in order (L §2.1 Units).
@@ -849,6 +850,49 @@ pub enum Section {
     Fill(Box<Fill>),
 }
 
+impl Section {
+    /// Its id and line.
+    #[must_use]
+    pub fn id_line(&self) -> (&str, u32) {
+        match self {
+            Section::Source(s) => (&s.id, s.line),
+            Section::Version(s) => (&s.id, s.line),
+            Section::Unit(s) => (&s.id, s.line),
+            Section::Kind(s) => (&s.id, s.line),
+            Section::Index(s) => (&s.id, s.line),
+            Section::Place(s) => (&s.id, s.line),
+            Section::Input(s) => (&s.id, s.line),
+            Section::Band(s) => (&s.id, s.line),
+            Section::Def(s) => (&s.id, s.line),
+            Section::Move(s) => (&s.id, s.line),
+            Section::Ask(s) => (&s.id, s.line),
+            Section::Axis(s) => (&s.id, s.line),
+            Section::Fill(s) => (&s.id, s.line),
+        }
+    }
+
+    /// The key binds of its head: an item's, or an ask's `for` (refcore's `binds` of a
+    /// section).
+    #[must_use]
+    pub fn binds(&self) -> &[Bind] {
+        match self {
+            Section::Place(s) => &s.binds,
+            Section::Input(s) => &s.binds,
+            Section::Band(s) => &s.binds,
+            Section::Def(s) => &s.binds,
+            Section::Move(s) => &s.binds,
+            Section::Ask(s) => &s.binds,
+            Section::Fill(s) => &s.binds,
+            Section::Source(_)
+            | Section::Version(_)
+            | Section::Unit(_)
+            | Section::Kind(_)
+            | Section::Index(_)
+            | Section::Axis(_) => &[],
+        }
+    }
+}
+
 /// `axis id` and its options, each a key and its label (L §5.5).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Axis {
@@ -1517,8 +1561,8 @@ pub struct BandRow {
     pub qual: Option<String>,
     /// The band.
     pub target: String,
-    /// The key of a keyed band.
-    pub key: Option<RowKey>,
+    /// The key of a keyed band: one literal, no sign (L §2.3 `bandrow`, tally 2.1.6).
+    pub key: Option<Lit>,
     /// The interval.
     pub interval: Interval,
     /// The value.

@@ -8,7 +8,7 @@
 //! one per (version, key); a row's stable id is `version:target[keys]`, its own span or instant
 //! added where two rows of a version share a pattern.
 
-use super::keys::{KeyLit, key_order, range_key_of};
+use super::keys::{KeyLit, RangeKey, key_order, not_a_range_value, range_key_of};
 use super::places::Written;
 use super::same::SameLine;
 use super::spans::{governs_span, lspan_to_span};
@@ -170,8 +170,8 @@ impl Loader {
         } else {
             "input"
         };
-        match self.m.names.get(name) {
-            Some(kind) if *kind == want => Ok(()),
+        match self.m.names.kind(name) {
+            Some(kind) if kind == want => Ok(()),
             Some(_) => Err(refuse(
                 Load::Name,
                 format!("{name} is not {word}"),
@@ -220,9 +220,7 @@ impl Loader {
             span,
             replace: true,
         };
-        let Some(info) = self.m.defs.get_mut(def) else {
-            return Err(Stop::NotBuilt("a def that isn't built"));
-        };
+        let info = self.m.defs.at_mut(self.m.names.def_id(def)?)?;
         if let Some((_, vers)) = info.rules.iter_mut().find(|(l, _)| l == label) {
             vers.push(ver);
         } else {
@@ -241,7 +239,7 @@ impl Loader {
     ) -> Result<(), Stop> {
         unprefixed(row.qual.as_deref(), &row.target, file, line)?;
         let id = &row.target;
-        match self.m.names.get(id) {
+        match self.m.names.kind(id) {
             Some(NameKind::Band) => {}
             Some(_) => {
                 return Err(refuse(Load::Name, format!("{id} is not band"), file, line));
@@ -250,16 +248,13 @@ impl Loader {
                 return Err(refuse(Load::Name, format!("unknown id {id}"), file, line).naming(id));
             }
         }
-        let Some(band) = self.m.bands.get(id) else {
-            return Err(Stop::NotBuilt("a band that isn't built"));
-        };
+        let band_id = self.m.names.band_id(id)?;
+        let band = self.m.bands.at(band_id)?;
         let first_bind = band.binds.first().cloned();
         let arg_type = band.arg_type.clone();
         let key = match (&row.key, first_bind) {
             (Some(written), Some(bind)) => {
-                let Some(lit) = KeyLit::of_row_key(written) else {
-                    return Err(Stop::NotBuilt("a band key that isn't one key"));
-                };
+                let lit = KeyLit::Lit(written.clone());
                 Some(self.pattern_key(&lit, &bind, None, file, line)?)
             }
             (Some(_), None) => {
@@ -301,9 +296,7 @@ impl Loader {
             replace: row.replace,
             line,
         };
-        let Some(held) = self.m.bands.get_mut(id) else {
-            return Err(Stop::NotBuilt("a band that isn't built"));
-        };
+        let held = self.m.bands.at_mut(band_id)?;
         if let Some(table) = held
             .tables
             .iter_mut()
@@ -350,14 +343,10 @@ impl Loader {
             ));
         }
         let (binds, reading, balance) = if row.given {
-            let Some(def) = self.m.defs.get(id) else {
-                return Err(Stop::NotBuilt("a def that isn't built"));
-            };
+            let def = self.m.defs.at(self.m.names.def_id(id)?)?;
             (def.binds.clone(), false, false)
         } else {
-            let Some(input) = self.m.inputs.get(id) else {
-                return Err(Stop::NotBuilt("an input that isn't built"));
-            };
+            let input = self.m.inputs.at(self.m.names.input_id(id)?)?;
             if input.observed {
                 return self.obs_item(vid, id, row, file, line);
             }
@@ -378,7 +367,7 @@ impl Loader {
         } else {
             ReadAs::Plain
         };
-        let instant = row_instant(id, row.instant.as_ref(), read_as, file, line)?;
+        let instant = row_instant(id, &pattern, row.instant.as_ref(), read_as, (file, line))?;
         if instant.is_some() && own_span.is_some() {
             return Err(refuse(
                 Load::Parse,
@@ -477,16 +466,22 @@ impl Loader {
                     }
                     Pat::Range(lo, hi)
                 }
-                RowKey::Lit(_) | RowKey::Place(..) => {
-                    let Some(written) = KeyLit::of_row_key(key) else {
-                        return Err(Stop::NotBuilt("a row key of that form"));
-                    };
-                    let value = if bind.domain == Domain::Range {
-                        range_key_of(&written)?
+                RowKey::Lit(lit) => {
+                    let written = KeyLit::Lit(lit.clone());
+                    if bind.domain == Domain::Range {
+                        let value = range_key_of(&written, file, line)?;
+                        self.range_keys.extend(RangeKey::of(bind, lit, file, line));
+                        Pat::Key(value)
                     } else {
-                        self.pattern_key(&written, bind, Some(vid), file, line)?
-                    };
-                    Pat::Key(value)
+                        Pat::Key(self.pattern_key(&written, bind, Some(vid), file, line)?)
+                    }
+                }
+                RowKey::Place(name, place_keys) => {
+                    let written = KeyLit::Place(name.clone(), place_keys.clone());
+                    if bind.domain == Domain::Range {
+                        return Err(not_a_range_value(&written, file, line));
+                    }
+                    Pat::Key(self.pattern_key(&written, bind, Some(vid), file, line)?)
                 }
             };
             if pat != Pat::Star {
@@ -566,13 +561,14 @@ enum ReadAs {
     Balance,
 }
 
-/// A row's instant: only a reading's rows have one, and they must (L §4.6 Readings, §5.19).
+/// A row's instant: only a reading's rows have one, and they must; a reading's row with
+/// none is named with its keys (L §4.6 Readings, §5.19, §8.3).
 fn row_instant(
     id: &str,
+    pattern: &[Pat],
     written: Option<&Instant>,
     read_as: ReadAs,
-    file: &str,
-    line: u32,
+    (file, line): (&str, u32),
 ) -> Result<Option<RowInstant>, Stop> {
     let Some(instant) = written else {
         if read_as == ReadAs::Plain {
@@ -580,7 +576,10 @@ fn row_instant(
         }
         return Err(refuse(
             Load::Instant,
-            format!("row {id} of a reading has no instant"),
+            format!(
+                "row {id}{} of a reading has no instant",
+                load_pattern_text(pattern)
+            ),
             file,
             line,
         ));

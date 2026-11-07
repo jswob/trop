@@ -7,7 +7,7 @@
 //! bind order; things of a kind are taken in name order; a place written in a row names a thing
 //! whose base is a place kind.
 
-use super::keys::{KeyLit, keyed_place_thing, lit_of_expr};
+use super::keys::{KeyLit, keyed_place_thing};
 use super::spans::lspan_to_span;
 use super::steps::{Loader, refuse};
 use crate::base::Load;
@@ -48,7 +48,7 @@ impl Loader {
                 .m
                 .kinds
                 .get(&decl.kind)
-                .filter(|_| self.m.names.get(&decl.kind) == Some(&NameKind::Kind))
+                .filter(|_| self.m.names.kind(&decl.kind) == Some(NameKind::Kind))
             else {
                 return Err(
                     refuse(Load::Name, format!("unknown id {}", decl.kind), &file, line)
@@ -125,7 +125,7 @@ impl Loader {
                 let mut thing = Thing::new(&id);
                 thing.base = Some(kind_id.clone());
                 thing.entries.push(entry);
-                self.m.things.push(&id, thing);
+                self.m.things.push(&mut self.m.symbols, &id, thing)?;
                 named.push((Vec::new(), id.clone()));
             } else {
                 for tuple in self.place_tuples(&id, &binds, &file, line)? {
@@ -140,7 +140,7 @@ impl Loader {
                         key_things: tuple.key_things,
                         key_indexes: tuple.key_indexes,
                     });
-                    self.m.things.push(&name, thing);
+                    self.m.things.push(&mut self.m.symbols, &name, thing)?;
                     named.push((tuple.keys, name));
                 }
             }
@@ -215,9 +215,7 @@ impl Loader {
     /// The keys a keyed place's key over an index takes, in its order, each with the index
     /// when a version added it. L §5.10.
     fn index_options(&self, index: &str) -> Result<Vec<(KeyVal, Option<String>)>, Stop> {
-        let Some(info) = self.m.indexes.get(index) else {
-            return Err(Stop::NotBuilt("an index that isn't built"));
-        };
+        let info = self.m.indexes.at(self.m.names.index_id(index)?)?;
         let mut out = Vec::new();
         for key in &info.keys {
             let added = info.added_by(key).is_some().then(|| index.to_owned());
@@ -275,7 +273,7 @@ impl Loader {
         let not_place =
             |name: &str| refuse(Load::Covers, format!("{name} is not a place"), file, line);
         if let Expr::Name(id) = written {
-            if self.m.names.get(id) == Some(&NameKind::Place) {
+            if self.m.names.kind(id) == Some(NameKind::Place) {
                 let keyed = self.m.places.get(id).is_some_and(|p| !p.binds.is_empty());
                 if keyed {
                     return Err(refuse(
@@ -314,15 +312,13 @@ impl Loader {
                 line,
             ));
         };
-        if self.m.names.get(&name) != Some(&NameKind::Place) {
+        if self.m.names.kind(&name) != Some(NameKind::Place) {
             if role == Written::Covers {
                 return Err(not_place(&name));
             }
             return Err(refuse(Load::Name, format!("unknown id {name}"), file, line).naming(&name));
         }
-        let Some(place) = self.m.places.get(&name) else {
-            return Err(Stop::NotBuilt("a place that isn't built"));
-        };
+        let place = self.m.places.at(self.m.names.place_id(&name)?)?;
         if keys.len() != place.binds.len() {
             return Err(refuse(
                 Load::Key,
@@ -331,14 +327,8 @@ impl Loader {
                 line,
             ));
         }
-        let mut lits = Vec::new();
-        for key in &keys {
-            let Some(KeyLit::Lit(lit)) = KeyLit::of_expr(key) else {
-                return Err(Stop::NotBuilt("a keyed place's key that isn't a literal"));
-            };
-            lits.push(lit);
-        }
-        keyed_place_thing(&self.m, &name, &lits, file, line)?.ok_or_else(|| {
+        let place_keys: Vec<KeyLit> = keys.iter().map(KeyLit::written).collect();
+        keyed_place_thing(&self.m, &name, &place_keys, file, line)?.ok_or_else(|| {
             refuse(
                 Load::Key,
                 format!("no place {name} at these keys"),
@@ -349,7 +339,9 @@ impl Loader {
     }
 }
 
-/// A keyed place as written, `konto[ana]`: its name and its key expressions.
+/// A keyed place as written, `konto[ana]`: its name and its key expressions, each resolved at
+/// its position, one that isn't a literal refused there as written (refcore's `keyed_place`,
+/// `resolve_key_literal`; issue #90). L §5.10, §8.3 `LOAD-KEY`.
 fn keyed_ref(written: &Expr) -> Option<(String, Vec<Expr>)> {
     let Expr::Post(base, posts) = written else {
         return None;
@@ -365,7 +357,6 @@ fn keyed_ref(written: &Expr) -> Option<(String, Vec<Expr>)> {
         let Key::Expr(expr) = key else {
             return None;
         };
-        lit_of_expr(expr)?;
         exprs.push(expr.clone());
     }
     Some((name.clone(), exprs))

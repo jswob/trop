@@ -1,13 +1,71 @@
 //! Units and the unit rules: products of bases to whole powers, with the period words of one dimension.
-//! Spec: L §3.2 (units, `%`, year = 4 quarters = 12 months, `day` its own dimension, `$v` bases).
-//! Twin: engine/tools/refcore/units.py (`make` to `day_and_period`).
+//! Spec: L §3.2 (units, `%`, year = 4 quarters = 12 months, `day` its own dimension, `$v` bases),
+//! §7.6 item 4 (every power at most 64 in size).
+//! Twin: engine/tools/refcore/units.py (`power_limit` to `day_and_period`).
 //! Invariants: a unit's terms are sorted by base, by code point, each base once, no zero
-//! power; every factor is exact.
+//! power; a unit written, multiplied, divided, raised or keyed has no power past 64 in size;
+//! every factor is exact.
 
 use crate::num::{Num, NumError};
 
 /// The period words: year, quarter and month are one dimension, day its own.
 pub const PERIODS: [&str; 4] = ["year", "quarter", "month", "day"];
+
+/// The largest size of a unit's power (refcore's `POWER_LIMIT`). L §7.6 item 4.
+const POWER_LIMIT: u64 = 64;
+
+/// A unit operation that fails: a number error of its factor, or a power past the limit.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum UnitError {
+    /// A number error of the factor.
+    Num(NumError),
+    /// A power of this base past 64 in size: `LOAD-LIMIT unit <u> has a power past 64`
+    /// (L §7.6 item 4).
+    Power(String),
+}
+
+impl From<NumError> for UnitError {
+    fn from(error: NumError) -> UnitError {
+        UnitError::Num(error)
+    }
+}
+
+/// The message of a power of `base` past the limit, `unit <u> has a power past 64` (refcore's
+/// `power_limit`). L §7.6 item 4, §8.3 `LOAD-LIMIT`.
+#[must_use]
+pub fn power_past_limit(base: &str) -> String {
+    format!("unit {base} has a power past 64")
+}
+
+/// Refuses a power of `base` past 64 in size (refcore's `power_limit`). L §7.6 item 4.
+fn within_limit(base: &str, power: i64) -> Result<(), UnitError> {
+    if power.unsigned_abs() > POWER_LIMIT {
+        return Err(UnitError::Power(base.to_owned()));
+    }
+    Ok(())
+}
+
+/// A written power, a whole number of any size, within the limit (refcore's `from_syntax`,
+/// its first loop). L §7.6 item 4.
+fn written_power(base: &str, power: &Num) -> Result<i64, UnitError> {
+    match power.to_i64() {
+        Some(p) => within_limit(base, p).map(|()| p),
+        None => Err(UnitError::Power(base.to_owned())),
+    }
+}
+
+/// The powers of each base summed, the bases in the order they first appear (refcore's
+/// `make`, its dict).
+fn summed(terms: Vec<(String, i64)>) -> Result<Vec<(String, i64)>, NumError> {
+    let mut out: Vec<(String, i64)> = Vec::new();
+    for (base, power) in terms {
+        match out.iter_mut().find(|(b, _)| *b == base) {
+            Some(term) => term.1 = term.1.checked_add(power).ok_or(NumError::Domain)?,
+            None => out.push((base, power)),
+        }
+    }
+    Ok(out)
+}
 
 /// The months in a period word of the one dimension, or `None` (`day`, any other base).
 fn period_months(base: &str) -> Option<i64> {
@@ -49,22 +107,32 @@ impl Unit {
     }
 
     /// The unit of these terms: powers of one base summed, zero powers dropped, sorted by
-    /// base (refcore's `make`). L §3.2.
+    /// base (refcore's `make`), for terms whose sums can't pass the limit: one base to the
+    /// first power, or the halves of a unit's powers. The operations that can pass it
+    /// check it (`make_within`). L §3.2.
     ///
     /// # Errors
     ///
     /// `Domain` if a power passes the 64-bit range.
     pub fn make(terms: Vec<(String, i64)>) -> Result<Unit, NumError> {
-        let mut out: Vec<(String, i64)> = Vec::new();
-        for (base, power) in terms {
-            match out.iter_mut().find(|(b, _)| *b == base) {
-                Some(term) => term.1 = term.1.checked_add(power).ok_or(NumError::Domain)?,
-                None => out.push((base, power)),
-            }
+        Ok(Unit::sorted(summed(terms)?))
+    }
+
+    /// The unit of these terms, each summed power within the limit (refcore's `make`, its
+    /// `power_limit` in the order the bases first appear). L §3.2, §7.6 item 4.
+    fn make_within(terms: Vec<(String, i64)>) -> Result<Unit, UnitError> {
+        let terms = summed(terms)?;
+        for (base, power) in &terms {
+            within_limit(base, *power)?;
         }
-        out.retain(|(_, power)| *power != 0);
-        out.sort_by(|a, b| a.0.cmp(&b.0));
-        Ok(Unit { terms: out })
+        Ok(Unit::sorted(terms))
+    }
+
+    /// Summed terms with their zero powers dropped, sorted by base.
+    fn sorted(mut terms: Vec<(String, i64)>) -> Unit {
+        terms.retain(|(_, power)| *power != 0);
+        terms.sort_by(|a, b| a.0.cmp(&b.0));
+        Unit { terms }
     }
 
     /// The terms, sorted by base.
@@ -79,24 +147,30 @@ impl Unit {
         self.terms.is_empty()
     }
 
-    /// Unit syntax to a unit and a factor: `%` gives 1/100 per power (refcore's
-    /// `from_syntax`). L §3.2.
+    /// Unit syntax to a unit and a factor: every written power within the limit, in the
+    /// order written, then `%` gives 1/100 per power (refcore's `from_syntax`). L §3.2,
+    /// §7.6 item 4.
     ///
     /// # Errors
     ///
-    /// A number error of the factor.
-    pub fn from_syntax(terms: Vec<(String, i64)>) -> Result<Scaled, NumError> {
+    /// `Power` for a power past 64 in size, written or summed; a number error of the factor.
+    pub fn from_syntax(terms: Vec<(String, Num)>) -> Result<Scaled, UnitError> {
+        let mut whole = Vec::with_capacity(terms.len());
+        for (base, power) in terms {
+            let power = written_power(&base, &power)?;
+            whole.push((base, power));
+        }
         let mut factor = Num::int(1);
         let mut rest = Vec::new();
         let hundredth = Num::ratio(1, 100)?;
-        for (base, power) in terms {
+        for (base, power) in whole {
             if base == "%" {
                 factor = factor.checked_mul(&power_of(&hundredth, power)?)?;
             } else {
                 rest.push((base, power));
             }
         }
-        let (unit, more) = Unit::make(rest)?.simplify()?;
+        let (unit, more) = Unit::make_within(rest)?.simplify()?;
         Ok((unit, factor.checked_mul(&more)?))
     }
 
@@ -114,8 +188,8 @@ impl Unit {
     ///
     /// # Errors
     ///
-    /// A number error of the factor.
-    pub fn simplify(self) -> Result<Scaled, NumError> {
+    /// `Power` for a summed power past 64 in size; a number error of the factor.
+    fn simplify(self) -> Result<Scaled, UnitError> {
         let first = match self.period_bases().as_slice() {
             [] | [_] => None,
             [first, ..] => Some((*first).to_owned()),
@@ -126,8 +200,8 @@ impl Unit {
         }
     }
 
-    /// Every period base of the one dimension as `target` (refcore's `_to_base`).
-    fn to_base(&self, target: &str) -> Result<Scaled, NumError> {
+    /// Every period base of the one dimension as `target` (refcore's `_to_base`). L §3.2.
+    fn to_base(&self, target: &str) -> Result<Scaled, UnitError> {
         let target_months = period_months(target).ok_or(NumError::Invariant)?;
         let mut factor = Num::int(1);
         let mut out = Vec::new();
@@ -141,20 +215,21 @@ impl Unit {
                 Some(_) | None => out.push((base.clone(), *power)),
             }
         }
-        Ok((Unit::make(out)?, factor))
+        Ok((Unit::make_within(out)?, factor))
     }
 
-    /// The product of two units, and the factor its periods bring (refcore's `mul`). L §3.2.
+    /// The product of two units, and the factor its periods bring (refcore's `mul`). L §3.2,
+    /// §7.6 item 4.
     ///
     /// # Errors
     ///
-    /// A number error of the factor.
-    pub fn mul(&self, other: &Unit) -> Result<Scaled, NumError> {
+    /// `Power` for a summed power past 64 in size; a number error of the factor.
+    pub fn mul(&self, other: &Unit) -> Result<Scaled, UnitError> {
         let mine = self.period_bases();
         let theirs = other.period_bases();
         let mut terms = self.terms.clone();
         terms.extend(other.terms.iter().cloned());
-        let unit = Unit::make(terms)?;
+        let unit = Unit::make_within(terms)?;
         if let (Some(target), Some(_)) = (mine.first(), theirs.first()) {
             let one_base = mine.iter().chain(theirs.iter()).all(|b| b == target);
             if !one_base {
@@ -177,26 +252,28 @@ impl Unit {
         Ok(Unit { terms })
     }
 
-    /// The quotient (refcore's `div`). L §3.2.
+    /// The quotient (refcore's `div`). L §3.2, §7.6 item 4.
     ///
     /// # Errors
     ///
-    /// A number error of the factor.
-    pub fn div(&self, other: &Unit) -> Result<Scaled, NumError> {
+    /// `Power` for a summed power past 64 in size; a number error of the factor.
+    pub fn div(&self, other: &Unit) -> Result<Scaled, UnitError> {
         self.mul(&other.inv()?)
     }
 
-    /// The unit to the `n`-th power (refcore's `power`). L §3.2.
+    /// The unit to the `n`-th power, `n` a whole number of any size, each power within the
+    /// limit (refcore's `power`). L §3.2, §7.6 item 4.
     ///
     /// # Errors
     ///
-    /// `Domain` if a power passes the 64-bit range.
-    pub fn power(&self, n: i64) -> Result<Unit, NumError> {
+    /// `Power` for a power past 64 in size, the first base's in the unit's order.
+    pub fn power(&self, n: &Num) -> Result<Unit, UnitError> {
         let mut terms = Vec::with_capacity(self.terms.len());
         for (base, power) in &self.terms {
-            terms.push((base.clone(), power.checked_mul(n).ok_or(NumError::Domain)?));
+            let raised = Num::int(*power).checked_mul(n)?;
+            terms.push((base.clone(), written_power(base, &raised)?));
         }
-        Unit::make(terms)
+        Unit::make_within(terms)
     }
 
     /// The unit with its periods of the one dimension as months, and the factor (refcore's
@@ -240,18 +317,19 @@ impl Unit {
         matches_one_currency(&self.terms)
     }
 
-    /// Its `$v` bases replaced by the keys `env` gives (refcore's `subst`). L §3.2.
+    /// Its `$v` bases replaced by the keys `env` gives (refcore's `subst`). L §3.2, §7.6
+    /// item 4.
     ///
     /// # Errors
     ///
-    /// `Domain` if a power passes the 64-bit range.
-    pub fn subst(&self, env: &[(String, String)]) -> Result<Unit, NumError> {
+    /// `Power` for a key's summed power past 64 in size.
+    pub fn subst(&self, env: &[(String, String)]) -> Result<Unit, UnitError> {
         let mut terms = Vec::with_capacity(self.terms.len());
         for (base, power) in &self.terms {
             let key = base.strip_prefix('$').and_then(|var| key_of(env, var));
             terms.push((key.unwrap_or_else(|| base.clone()), *power));
         }
-        Unit::make(terms)
+        Unit::make_within(terms)
     }
 
     /// For a rate unit `1/P`: the period word `P` (refcore's `period_of`). L §3.3.
@@ -367,7 +445,7 @@ mod tests {
             .mul(&unit(&[("month", -1)]))
             .expect("mul");
         assert_eq!((u, f), (Unit::one(), Num::int(12)), "year/month is 12");
-        let (pct, hundredth) = Unit::from_syntax(vec![("%".to_owned(), 1)]).expect("%");
+        let (pct, hundredth) = Unit::from_syntax(vec![("%".to_owned(), Num::int(1))]).expect("%");
         assert_eq!(
             (pct, hundredth),
             (Unit::one(), Num::ratio(1, 100).expect("1/100")),

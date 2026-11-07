@@ -12,7 +12,8 @@ use super::calls::arity;
 use super::check::{Checker, Scope, invariant};
 use super::random::strip;
 use super::types::{
-    Typed, converts, key_value_kind, lit_expr, num, numcls, refused, text, uerr, unit_of, unit_stop,
+    Typed, converts, key_value_kind, lit_expr, num, numcls, refused, text, uerr, unit_error,
+    unit_of, unit_stop,
 };
 use crate::base::Load;
 use crate::model::{CodeKind, NameKind, Node, NodeKind, Reality, Rel, Ty, Unit};
@@ -272,13 +273,13 @@ impl Checker {
             return Err(uerr(format!("pow: the power is {}", nt.show())));
         }
         if !x_unit.is_one() {
-            let Some(p) = literal_int(arg(call, 1)?) else {
+            let Some(p) = literal_int(arg(call, 1)?)? else {
                 return Err(uerr(format!(
                     "pow of {} to a power that is not a literal",
                     xt.show()
                 )));
             };
-            return Ok(num(x_unit.power(p).map_err(unit_stop)?));
+            return Ok(num(x_unit.power(&p).map_err(unit_error)?));
         }
         Ok(num(x_unit))
     }
@@ -439,13 +440,13 @@ fn step_unit(m: &Reality, unit: &crate::syntax::Unit) -> Result<(Unit, Num), Sto
         if !known {
             return Err(refused(Load::Name, format!("unknown id {base} (a unit)")).naming(base));
         }
-        terms.push((term.base.clone(), term.power));
+        terms.push((term.base.clone(), term.power.clone()));
     }
-    Unit::from_syntax(terms).map_err(unit_stop)
+    Unit::from_syntax(terms).map_err(unit_error)
 }
 
-/// An integer literal, or a negated one (refcore's `c_pow`, its literal power).
-fn literal_int(e: &Expr) -> Option<i64> {
+/// An integer literal of any size, or a negated one (refcore's `c_pow`, its literal power).
+fn literal_int(e: &Expr) -> Result<Option<Num>, Stop> {
     let inner = strip(e);
     let (lit, negative) = if let Expr::Neg(neg) = inner {
         (&**neg, true)
@@ -453,13 +454,15 @@ fn literal_int(e: &Expr) -> Option<i64> {
         (inner, false)
     };
     let Expr::Lit(Lit::Num(n)) = lit else {
-        return None;
+        return Ok(None);
     };
     if !n.whole {
-        return None;
+        return Ok(None);
     }
-    let v = n.value.to_i64()?;
-    if negative { v.checked_neg() } else { Some(v) }
+    if negative {
+        return n.value.checked_neg().map(Some).map_err(unit_stop);
+    }
+    Ok(Some(n.value.clone()))
 }
 
 /// A period word argument (refcore's `period_arg`). L §3.3.
@@ -486,7 +489,7 @@ fn rate_lit_period(e: &Expr) -> Option<&'static str> {
     let terms = unit
         .terms
         .iter()
-        .map(|t| (t.base.clone(), t.power))
+        .map(|t| (t.base.clone(), t.power.clone()))
         .collect();
     let (made, _) = Unit::from_syntax(terms).ok()?;
     let period = made.period_of()?;
@@ -586,7 +589,7 @@ impl Checker {
         } else {
             return Err(not_a_target(&s.target));
         };
-        let kind = m.names.get(name).copied();
+        let kind = m.names.kind(name);
         let Some(kind) = kind else {
             return Err(refused(Load::Name, format!("unknown id {name}")).naming(name));
         };
@@ -746,9 +749,9 @@ fn lit_value(end: &Lit, vt: &Ty) -> Result<Option<(Num, Unit)>, Stop> {
     let terms = unit
         .terms
         .iter()
-        .map(|t| (t.base.clone(), t.power))
+        .map(|t| (t.base.clone(), t.power.clone()))
         .collect();
-    let (made, factor) = Unit::from_syntax(terms).map_err(unit_stop)?;
+    let (made, factor) = Unit::from_syntax(terms).map_err(unit_error)?;
     Ok(Some((
         n.value.checked_mul(&factor).map_err(unit_stop)?,
         made,

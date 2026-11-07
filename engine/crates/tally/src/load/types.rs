@@ -24,7 +24,7 @@ use super::worlds::read_elsewhere;
 use crate::base::{Code, Load, Refusal};
 use crate::model::{
     CodeKind, Domain, IndexForm, KeyVal, KindSpec, NameKind, Node, NodeKind, PeriodWord, Reality,
-    Rel, Shown, Ty, Unit,
+    Rel, Shown, Ty, Unit, UnitError, power_past_limit,
 };
 use crate::num::{Num, NumError};
 use crate::syntax::{
@@ -46,10 +46,19 @@ pub(super) fn uerr(message: String) -> Stop {
     refused(Load::Unit, message)
 }
 
-/// A number error met while typing a unit (`1 %^3000`, `1 PLN^9223372036854775807*PLN`): a
-/// power past 64 bits or a scale past the digit cap is a capacity limit, "not built" until
-/// issue #89 rules (refcore's powers and scales are unbounded); the number kernel's own
-/// invariant stays `ENGINE-INVARIANT`. L §3.2.
+/// A unit operation's refusal at load: a power past 64 in size is `LOAD-LIMIT unit <u> has
+/// a power past 64` (refcore's `power_limit`), placed where it was met; a number error is
+/// `unit_stop`'s. L §7.6 item 4, §8.3 `LOAD-LIMIT`.
+pub(super) fn unit_error(error: UnitError) -> Stop {
+    match error {
+        UnitError::Power(base) => refused(Load::Limit, power_past_limit(&base)),
+        UnitError::Num(error) => unit_stop(error),
+    }
+}
+
+/// A number error met while typing a unit: a literal scaled by its unit past the digit cap is
+/// "not built" (refcore's scales are unbounded); the number kernel's own invariant stays
+/// `ENGINE-INVARIANT`. L §3.2, §7.1.
 pub(super) fn unit_stop(error: NumError) -> Stop {
     match error {
         NumError::Invariant => Stop::Refused(Refusal::new(
@@ -168,6 +177,7 @@ fn word_pk(word: PeriodWord) -> PeriodKind {
         PeriodWord::Month => PeriodKind::Month,
         PeriodWord::Quarter => PeriodKind::Quarter,
         PeriodWord::Year => PeriodKind::Year,
+        PeriodWord::Day => PeriodKind::Day,
     }
 }
 
@@ -471,7 +481,7 @@ fn lit_txt(lit: &Lit) -> String {
         let terms = unit
             .terms
             .iter()
-            .map(|t| (t.base.clone(), t.power))
+            .map(|t| (t.base.clone(), t.power.clone()))
             .collect();
         if let Ok((u, _)) = Unit::from_syntax(terms) {
             return format!("{} {}", n.text, u.text());
@@ -513,7 +523,7 @@ fn fill_ref(
     let Expr::Name(name) = base else {
         return None;
     };
-    if scope.is_var(name) || m.names.get(name) != Some(&NameKind::Fill) {
+    if scope.is_var(name) || m.names.kind(name) != Some(NameKind::Fill) {
         return None;
     }
     let (fkeys, at) = match posts {
@@ -700,7 +710,7 @@ pub(super) fn input_read(m: &Reality, scope: &Scope, e: &Expr) -> Option<String>
         id = Some(name);
     }
     let id = id?;
-    let input = !scope.is_var(id) && m.names.get(id) == Some(&NameKind::Input);
+    let input = !scope.is_var(id) && m.names.kind(id) == Some(NameKind::Input);
     input.then(|| id.clone())
 }
 
@@ -1036,7 +1046,7 @@ impl Checker {
         if let Some(var) = scope.vars.get(name) {
             return Ok(var_type(var));
         }
-        let Some(kind) = m.names.get(name).copied() else {
+        let Some(kind) = m.names.kind(name) else {
             if !matches!(expect, Some(Ty::Key(_) | Ty::Code(_))) {
                 read_elsewhere(m, name)?;
             }
@@ -1089,15 +1099,11 @@ impl Checker {
             super::random::SampleOf::Scope
         };
         let (binds, declared, observed, priced) = if kind == NameKind::Input {
-            let Some(input) = m.inputs.get(id) else {
-                return Err(Stop::NotBuilt("an input that isn't built"));
-            };
+            let input = m.inputs.at(m.names.input_id(id)?)?;
             let priced = input.prices.is_some() && input.prices_by.is_some();
             (&input.binds, input.ty.clone(), input.observed, priced)
         } else {
-            let Some(def) = m.defs.get(id) else {
-                return Err(Stop::NotBuilt("a def that isn't built"));
-            };
+            let def = m.defs.at(m.names.def_id(id)?)?;
             (&def.binds, Some(def.ty.clone()), false, false)
         };
         let node_kind = if kind == NameKind::Input {
@@ -1152,7 +1158,7 @@ impl Checker {
         let target = Node::new(node_kind, id);
         let rel = super::check::relation(scope, keys);
         self.direct(&target);
-        self.shifted(scope, &target, &rel);
+        self.shifted(scope, &target, &rel, keys);
         self.edge(&scope.item, target.clone(), rel);
         let mut ty = declared.unwrap_or(Ty::Unseen);
         if priced {
@@ -1161,12 +1167,12 @@ impl Checker {
         if let Ty::Num(unit, shown) = &ty
             && unit.terms().iter().any(|(base, _)| base.starts_with('$'))
         {
-            ty = Ty::Num(unit.subst(&env).map_err(unit_stop)?, *shown);
+            ty = Ty::Num(unit.subst(&env).map_err(unit_error)?, *shown);
         }
         if let Ty::Dist(unit) = &ty
             && unit.terms().iter().any(|(base, _)| base.starts_with('$'))
         {
-            ty = Ty::Dist(unit.subst(&env).map_err(unit_stop)?);
+            ty = Ty::Dist(unit.subst(&env).map_err(unit_error)?);
         }
         if matches!(ty, Ty::Dist(_)) {
             return self.dist_read(m, scope, &target, &ty, affx);
@@ -1185,9 +1191,7 @@ impl Checker {
         keys: &[Key],
         depth: u32,
     ) -> Typed {
-        let Some(place) = m.places.get(id) else {
-            return Err(Stop::NotBuilt("a place that isn't built"));
-        };
+        let place = m.places.at(m.names.place_id(id)?)?;
         if keys.len() != place.binds.len() {
             return Err(refused(
                 Load::Key,
@@ -1221,9 +1225,21 @@ impl Checker {
         keys: &[Key],
         depth: u32,
     ) -> Typed {
-        let Some(mv) = m.moves.get(id) else {
-            return Err(Stop::NotBuilt("a move that isn't built"));
-        };
+        self.move_instance(m, scope, id, keys, depth).map(Ty::Key)
+    }
+
+    /// The kind of a movement instance named by its move and keys, its keys checked and its
+    /// reads noted (refcore's `m_move_value`, whose type is always that kind's key). L §2.5,
+    /// §5.14.1.
+    pub(super) fn move_instance(
+        &mut self,
+        m: &Reality,
+        scope: &Scope,
+        id: &str,
+        keys: &[Key],
+        depth: u32,
+    ) -> Result<String, Stop> {
+        let mv = m.moves.at(m.names.move_id(id)?)?;
         if keys.len() != mv.binds.len() {
             return Err(refused(
                 Load::Key,
@@ -1251,7 +1267,7 @@ impl Checker {
                 crate::model::Target::Move(id.to_owned()),
             );
         }
-        Ok(Ty::Key(mv.kind.clone()))
+        Ok(mv.kind.clone())
     }
 
     /// A key at a key position whose domain is `domain`: typed there, and checked against
@@ -1371,9 +1387,7 @@ impl Checker {
         };
         match domain {
             Domain::Index(ix) => {
-                let Some(index) = m.indexes.get(ix) else {
-                    return Err(Stop::NotBuilt("an index that isn't built"));
-                };
+                let index = m.indexes.at(m.names.index_id(ix)?)?;
                 if let Ty::Key(other) = t {
                     if key_of_index(m, (ix, index), other, kn)? == Conv::Period {
                         self.period_read(scope, ix, kn);
@@ -1555,7 +1569,7 @@ impl Checker {
         if let Expr::Name(name) = base
             && !scope.is_var(name)
         {
-            let Some(kind) = m.names.get(name).copied() else {
+            let Some(kind) = m.names.kind(name) else {
                 return Err(refused(Load::Name, format!("unknown id {name}")).naming(name));
             };
             return match kind {
@@ -1862,14 +1876,14 @@ fn number_with_unit(
             || crate::model::PERIODS.contains(&base)
             || m.unit_kind_keys.contains_key(base);
         if known {
-            terms.push((term.base.clone(), term.power));
+            terms.push((term.base.clone(), term.power.clone()));
         } else if crate::model::is_currency_code(base) {
             return Err(uerr(format!("money in an undeclared currency {base}")));
         } else {
             return Err(refused(Load::Name, format!("unknown id {base} (a unit)")).naming(base));
         }
     }
-    let (made, factor) = Unit::from_syntax(terms).map_err(unit_stop)?;
+    let (made, factor) = Unit::from_syntax(terms).map_err(unit_error)?;
     let scaled = n.value.checked_mul(&factor).map_err(unit_stop)?;
     let shown = lit_txt(&Lit::Num(n.clone()));
     let ruled = if is_inline(&scaled) {
@@ -1892,7 +1906,7 @@ fn number_with_unit(
         }
         return Ok(Ty::Money(cur.clone()));
     }
-    if matches!(unit.terms.as_slice(), [t] if t.base == "%" && t.power == 1) {
+    if matches!(unit.terms.as_slice(), [t] if t.base == "%" && t.power == Num::int(1)) {
         return Ok(pct());
     }
     if matches!(expect, Some(Ty::Rate)) && made.period_of().is_some() {
@@ -1943,7 +1957,7 @@ pub(super) fn domain_of(m: &Reality, ix: &str) -> Option<Domain> {
     if m.kinds.get(ix).is_some() {
         return Some(Domain::Kind(ix.to_owned()));
     }
-    (m.names.get(ix) == Some(&NameKind::Axis)).then(|| Domain::Axis(ix.to_owned()))
+    (m.names.kind(ix) == Some(NameKind::Axis)).then(|| Domain::Axis(ix.to_owned()))
 }
 
 /// A domain's name, as a message names it.
@@ -2064,7 +2078,7 @@ pub(super) fn unit_type(m: &Reality, u: Option<&str>) -> Result<Ty, Stop> {
     }
     let named = m.units.contains(u)
         || m.unit_kind_keys.contains_key(u)
-        || (m.names.get(u) == Some(&NameKind::Kind));
+        || (m.names.kind(u) == Some(NameKind::Kind));
     if named {
         return Ok(num(Unit::make(vec![(u.to_owned(), 1)]).map_err(unit_stop)?));
     }

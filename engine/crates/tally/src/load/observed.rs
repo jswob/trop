@@ -14,7 +14,8 @@ use super::places::Written;
 use super::steps::{Loader, num_stop, refuse};
 use crate::base::Load;
 use crate::model::{
-    Fulfils, KeyVal, KindSpec, NameKind, ObsLeg, Observation, Unit, Value as ModelValue,
+    Fulfils, KeyVal, KindSpec, MvRef, MvSrc, NameKind, ObsLeg, Observation, Unit, UnitError,
+    Value as ModelValue, power_past_limit,
 };
 use crate::syntax::{
     Certainty, Expr, Field, FieldValue, Key, Known, Leg, Lit, Postfix, Row, Stop, Type, Value,
@@ -254,6 +255,16 @@ impl Loader {
                 .as_ref()
                 .ok_or_else(|| crate::walk::invariant("an observed attribute with no type"))?;
             if let Some(movement) = self.named_movement(value, ty, at)? {
+                // the movement as a value, its record found by its id at the reader's cut
+                // (refcore's `_obs_attr`, an `mvref`)
+                let named = MvRef {
+                    id: movement.clone(),
+                    day: None,
+                    src: MvSrc::Missing,
+                };
+                observation
+                    .values
+                    .push((name.clone(), ModelValue::Mv(Box::new(named))));
                 observation.moves_named.push((name.clone(), movement));
                 continue;
             }
@@ -350,15 +361,14 @@ impl Loader {
         let Some((_, Some(Type::Key(wanted)))) = attrs.iter().find(|(a, _)| a == attr) else {
             return Err(invariant(format!("attribute {attr} of {of} names no kind")));
         };
+        // a move's instance is of the kind its section declares (refcore's `move_kind`, tally
+        // 2.1.6 #86); an observed row, of its own
         let name = movement.split_once('[').map_or(movement, |(name, _)| name);
-        if self.m.moves.get(name).is_some() {
-            // refcore refuses every move instance here (its move's kind is unset at load),
-            // where L §3.1 takes one of the kind: a STOP-REPORT (G9), not guessed.
-            return Err(Stop::NotBuilt("a move instance named by an attribute"));
-        }
-        let fits = kinds
-            .get(movement)
-            .is_some_and(|kind| self.m.subtree(wanted).contains(kind));
+        let kind = match self.m.moves.get(name) {
+            Some(mv) => Some(&mv.kind),
+            None => kinds.get(movement),
+        };
+        let fits = kind.is_some_and(|kind| self.m.subtree(wanted).contains(kind));
         if !fits {
             let file = self
                 .m
@@ -388,7 +398,7 @@ impl Loader {
         let Some((name, keys)) = named else {
             return Ok(None);
         };
-        match self.m.names.get(name.as_str()) {
+        match self.m.names.kind(name.as_str()) {
             Some(NameKind::Input) if self.m.inputs.get(name).is_some_and(|i| i.observed) => {
                 let Some(id) = super::same::row_id(keys) else {
                     return Err(at.refuse(
@@ -417,12 +427,10 @@ impl Loader {
                 None
             }
         };
-        let Some(id) = name.filter(|n| self.m.names.get(n) == Some(&NameKind::Kind)) else {
+        let Some(id) = name.filter(|n| self.m.names.kind(n) == Some(NameKind::Kind)) else {
             return Err(at.refuse(Load::Name, format!("unknown event kind in {sid}")));
         };
-        let Some(kind) = self.m.kinds.get(&id) else {
-            return Err(Stop::NotBuilt("a kind that isn't built"));
-        };
+        let kind = self.m.kinds.at(self.m.names.kind_id(&id)?)?;
         if kind.spec != KindSpec::Event {
             return Err(at.refuse(Load::Kind, format!("{id} is not an event kind ({sid})")));
         }
@@ -459,13 +467,16 @@ impl Loader {
                 format!("the amount of leg {leg} of {sid} states its unit"),
             ));
         };
-        let terms: Vec<(String, i64)> = number
+        let terms: Vec<(String, crate::num::Num)> = number
             .unit
             .iter()
             .flat_map(|u| u.terms.iter())
-            .map(|t| (t.base.clone(), t.power))
+            .map(|t| (t.base.clone(), t.power.clone()))
             .collect();
-        let (unit, factor) = Unit::from_syntax(terms).map_err(num_stop)?;
+        let (unit, factor) = Unit::from_syntax(terms).map_err(|error| match error {
+            UnitError::Power(base) => at.refuse(Load::Limit, power_past_limit(&base)),
+            UnitError::Num(error) => num_stop(error),
+        })?;
         let [(base, 1)] = unit.terms() else {
             return Err(at.refuse(
                 Load::Leg,
@@ -492,7 +503,7 @@ impl Loader {
         if !fits {
             return Err(at.refuse(
                 Load::Leg,
-                format!("leg {leg} of {sid} is of the wrong unit ({})", number.text),
+                format!("leg {leg} of observation {sid} is in {base}, not its kind's unit"),
             ));
         }
         let amount = number.value.checked_mul(&factor).map_err(num_stop)?;
@@ -524,20 +535,20 @@ impl Loader {
                 format!("fulfils on a field ({sid}), not a movement"),
             ));
         };
-        let Some(kind) = self.m.names.get(&name) else {
+        let Some(kind) = self.m.names.kind(&name) else {
             return Err(at
                 .refuse(Load::Name, format!("unknown id {name}"))
                 .naming(&name));
         };
-        if *kind == NameKind::Kind && name == "adjustments" && !keys.is_empty() {
+        if kind == NameKind::Kind && name == "adjustments" && !keys.is_empty() {
             return self.adj_ref(&keys, at);
         }
-        if *kind != NameKind::Move {
+        if kind != NameKind::Move {
             return Err(at.refuse(
                 Load::Kind,
                 format!(
                     "fulfils on a {} {name} ({sid}), not a movement",
-                    name_word(*kind)
+                    name_word(kind)
                 ),
             ));
         }
@@ -575,17 +586,17 @@ impl Loader {
             }
             _ => return Err(shape()),
         };
-        let Some(kind) = self.m.names.get(name) else {
+        let Some(kind) = self.m.names.kind(name) else {
             return Err(at
                 .refuse(Load::Name, format!("unknown id {name}"))
                 .naming(name));
         };
-        if *kind != NameKind::Move {
+        if kind != NameKind::Move {
             return Err(at.refuse(
                 Load::Kind,
                 format!(
                     "fulfils on a {} {name} ({sid}), not a movement",
-                    name_word(*kind)
+                    name_word(kind)
                 ),
             ));
         }
@@ -596,7 +607,7 @@ impl Loader {
                 return Err(at.refuse(Load::Leg, format!("leg {leg} is not a leg of {of}")));
             }
         }
-        if self.m.names.get(version) != Some(&NameKind::Version) {
+        if self.m.names.kind(version) != Some(NameKind::Version) {
             return Err(at.refuse(Load::Name, format!("unknown version {version}")));
         }
         let values = self.move_keys(name, &move_keys, at)?;
@@ -608,19 +619,18 @@ impl Loader {
         ))
     }
 
-    /// A move instance's written keys (refcore's `move_keys`). L §2.5.
+    /// A move instance's written keys (refcore's `move_keys`), a key that isn't a literal
+    /// `LOAD-KEY` as written. L §2.5, §8.3 `LOAD-KEY`.
     fn move_keys(&self, id: &str, keys: &[Expr], at: &At) -> Result<Vec<KeyVal>, Stop> {
-        let Some(info) = self.m.moves.get(id) else {
-            return Err(Stop::NotBuilt("a move that isn't built"));
-        };
+        let info = self.m.moves.at(self.m.names.move_id(id)?)?;
         if keys.len() != info.binds.len() {
             return Err(at.refuse(Load::Key, format!("wrong number of keys for {id}")));
         }
         let mut out = Vec::new();
         for (key, bind) in keys.iter().zip(&info.binds) {
-            let Some(written) = KeyLit::of_expr(key) else {
-                return Err(Stop::NotBuilt("a computed key of a move instance"));
-            };
+            // a computed key (`wage[2026-02 + 1]`) is refused as written (issue #90; tally
+            // 2.1.6's #100, pick P1)
+            let written = KeyLit::written(key);
             out.push(resolve_key(
                 &self.m,
                 &written,

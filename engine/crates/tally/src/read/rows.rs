@@ -8,7 +8,8 @@
 //! Invariants: a plain scan of the target's rows in the order versions state them; the
 //! candidates keep that order; two rows still tied are refused, never broken by order.
 //! Scenarios, joint models, `wording` pins and known windows stop before load ends
-//! (`NotBuilt`), so every row here is the base's, known on one day, and no pin narrows it.
+//! (`NotBuilt`), so every row here is the base's, known on one day, and no pin narrows it; a
+//! dated read with no law date is refused by load (`LOAD-LAWDATE`), so here it is an invariant.
 
 use crate::base::{Code, Load, Refusal};
 use crate::model::{
@@ -52,10 +53,10 @@ pub(super) fn invariant(what: &str) -> Stop {
     Stop::Refused(Refusal::new(Code::EngineInvariant, what.to_owned()))
 }
 
-/// A dated read with no law date: load refuses it (`LOAD-LAWDATE`, L §4.3), a check S
-/// doesn't build.
+/// A dated read with no law date: load refuses it first (`LOAD-LAWDATE`, L §4.3; M0's
+/// `check_lawdates`), so it is `ENGINE-INVARIANT` (E §11).
 pub(super) fn no_law_date() -> Stop {
-    Stop::NotBuilt("a dated read with no law date (LOAD-LAWDATE)")
+    invariant("unreachable: load refuses a dated read with no law date (LOAD-LAWDATE)")
 }
 
 /// A version load didn't build: `ENGINE-INVARIANT` (E §11).
@@ -184,7 +185,8 @@ pub fn lawless(m: &Reality, input: &InputInfo) -> Result<bool, Stop> {
 ///
 /// # Errors
 ///
-/// `NotBuilt` for a dated read with no law date, which load refuses (`LOAD-LAWDATE`).
+/// `ENGINE-INVARIANT` for a dated read with no law date, which load refuses
+/// (`LOAD-LAWDATE`).
 pub fn need_law(m: &Reality, input: &InputInfo, day: Option<Day>) -> Result<(), Stop> {
     if day.is_none() && !lawless(m, input)? {
         return Err(no_law_date());
@@ -362,8 +364,8 @@ fn in_time(m: &Reality, row: &Row, test: Test, cut: Day) -> Result<bool, Stop> {
 ///
 /// # Errors
 ///
-/// `NotBuilt` for a dated row read with no law date (`LOAD-LAWDATE`); `ENGINE-INVARIANT`
-/// for a row whose version is missing.
+/// `ENGINE-INVARIANT` for a dated row read with no law date, which load refuses
+/// (`LOAD-LAWDATE`), and for a row whose version is missing.
 pub fn candidates(
     m: &Reality,
     rows: &[Row],

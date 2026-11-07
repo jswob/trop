@@ -14,8 +14,8 @@
 //! `LOAD-PARTS` where load sees a place that keeps none of q's sort.
 
 use super::check::{
-    Checker, ProjRead, ReadIn, Scope, literal_place, move_keys, named_parts, place_section,
-    place_target,
+    Checker, ProjRead, ReadIn, Scope, invariant, literal_place, move_keys, named_parts,
+    place_section, place_target,
 };
 use super::types::{Typed, is_date, numcls, refused, text, uerr, unit_type};
 use crate::base::Load;
@@ -443,7 +443,7 @@ impl Checker {
     /// L §5.14.3, §5.14.1.
     pub(super) fn flows(&mut self, m: &Reality, scope: &Scope, flows: &Flows, depth: u32) -> Typed {
         let hit = flow_move(&flows.target)
-            .filter(|(id, _, _)| !scope.is_var(id) && m.names.get(*id) == Some(&NameKind::Move));
+            .filter(|(id, _, _)| !scope.is_var(id) && m.names.kind(id) == Some(NameKind::Move));
         let mut ut = match hit {
             Some((id, keys, leg)) => self.move_flows(m, scope, id, keys, leg, depth)?,
             None => self.place_flows(m, scope, flows, depth)?,
@@ -483,9 +483,7 @@ impl Checker {
         leg: Option<&str>,
         depth: u32,
     ) -> Typed {
-        let Some(mv) = m.moves.get(id) else {
-            return Err(Stop::NotBuilt("a move that isn't built"));
-        };
+        let mv = m.moves.at(m.names.move_id(id)?)?;
         if keys.len() > mv.binds.len() {
             return Err(refused(Load::Key, format!("wrong number of keys for {id}")));
         }
@@ -517,8 +515,10 @@ impl Checker {
                 ),
             ));
         }
-        let Some((name, unit, _)) = legs.first() else {
-            return Err(Stop::NotBuilt("a leg that isn't built"));
+        let [(name, unit, _)] = legs.as_slice() else {
+            return Err(invariant(format!(
+                "unreachable: flows of {id} names one leg here, its kind's or the one written"
+            )));
         };
         let mut ut = unit_type(m, Some(unit))?;
         if matches!(ut, Ty::Dyn)
@@ -640,17 +640,15 @@ impl Checker {
             [Postfix::Keys(keys)] => Some((id, keys.as_slice())),
             [Postfix::Field(_), ..] | [Postfix::Keys(_), _, ..] => None,
         });
-        let Some((id, keys)) = planned
-            .filter(|(id, _)| !scope.is_var(id) && m.names.get(*id) == Some(&NameKind::Move))
+        let Some((id, keys)) =
+            planned.filter(|(id, _)| !scope.is_var(id) && m.names.kind(id) == Some(NameKind::Move))
         else {
             return Err(refused(
                 Load::Parse,
                 "cannot parse: observed takes a planned instance m[k]".to_owned(),
             ));
         };
-        let Ty::Key(kind) = self.move_value(m, scope, id, keys, depth)? else {
-            return Err(Stop::NotBuilt("a move that isn't built"));
-        };
+        let kind = self.move_instance(m, scope, id, keys, depth)?;
         let mut fields = Vec::new();
         for (leg, unit, _) in m.kind_legs(&kind) {
             fields.push((leg, leg_type(m, &unit)?));
@@ -678,7 +676,7 @@ impl Checker {
             ));
         };
         let event = if let Expr::Name(id) = kind
-            && m.names.get(id) == Some(&NameKind::Kind)
+            && m.names.kind(id) == Some(NameKind::Kind)
         {
             m.kinds.get(id).filter(|k| k.spec == KindSpec::Event)
         } else {

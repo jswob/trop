@@ -21,8 +21,8 @@ use crate::api::Source;
 use crate::base::{Code, Load, Place as At, Refusal};
 use crate::model::{BUILTIN_INDEXES, BUILTIN_INPUTS, PRELUDE_KINDS};
 use crate::syntax::{
-    Enter, InputForm, ItemForm, Kind, KindDecl, KindSpec, Line, Lit, Price, Section, Stop, Tok,
-    Type, UnitForm, parse_lines, prescan_units, split_lines,
+    Enter, InputForm, ItemForm, Kind, KindDecl, KindSpec, Line, Lit, Price, Read, Section, Stop,
+    Tok, Type, UnitForm, parse_lines, prescan_units, split_lines,
 };
 use crate::time::Day;
 use std::cell::Cell;
@@ -1611,7 +1611,10 @@ fn rename_line(
 ) -> Vec<Tok> {
     let mut out = Vec::with_capacity(toks.len());
     for (j, t) in toks.iter().enumerate() {
-        if t.kind == Kind::Id && names.contains(&t.text) && t.mark.get().name && rename_ok(toks, j)
+        if t.kind == Kind::Id
+            && names.contains(&t.text)
+            && t.mark.get().read == Read::Name
+            && rename_ok(toks, j)
         {
             let full = format!("{alias}{SEP}{}", t.text);
             out.push(retok(t, jmap.get(&full).cloned().unwrap_or(full)));
@@ -1820,7 +1823,7 @@ fn retok(t: &Tok, text: String) -> Tok {
 /// A token renamed and read as an id (refcore's `retok` and its `x.nm = True`).
 fn retok_named(t: &Tok, text: String) -> Tok {
     let mut mark = t.mark.get();
-    mark.name = true;
+    mark.read = Read::Name;
     Tok {
         kind: Kind::Id,
         text,

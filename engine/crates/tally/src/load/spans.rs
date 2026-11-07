@@ -61,7 +61,10 @@ pub(super) fn lspan_to_span(span: &LSpan, file: &str, line: u32) -> Result<Span,
         .transpose()?;
     if !span.dots {
         let Some(one) = from else {
-            return Err(Stop::NotBuilt("a span with no day"));
+            return Err(invariant(
+                "unreachable: the parser reads a span with no `..` as a date or a period"
+                    .to_owned(),
+            ));
         };
         return Ok(Span::between(Some(one.start()), Some(one.end())));
     }
@@ -101,7 +104,7 @@ impl Loader {
                 .as_ref()
                 .map(|g| governs_span(g, file, line))
                 .transpose()?;
-            if self.m.names.get(&version.cite) != Some(&NameKind::Source) {
+            if self.m.names.kind(&version.cite) != Some(NameKind::Source) {
                 return Err(refuse(
                     Load::Name,
                     format!("unknown id {} (version {id} cites no source)", version.cite),
@@ -144,7 +147,7 @@ impl Loader {
                 file: file.clone(),
                 line,
             };
-            self.m.versions.push(id, info);
+            self.m.versions.push(&mut self.m.symbols, id, info)?;
             for (target, span) in &version.moves {
                 moves.push((id.clone(), target.clone(), span.clone(), file.clone(), line));
             }
@@ -155,8 +158,9 @@ impl Loader {
         self.moves_known_apart()
     }
 
-    /// One `moves V to SPAN` line of version `by`: V is a version known before `by`
-    /// (refcore's `build_versions`, its moves). L §5.3.
+    /// One `moves V to SPAN` line of version `by`: V is a version known before `by`, named by
+    /// its id; any other reference names no version, printed as written (refcore's
+    /// `build_versions`, its moves; issue #88). L §5.3, §8.3 `LOAD-MOVES`.
     fn moves_line(
         &mut self,
         by: &str,
@@ -166,8 +170,14 @@ impl Loader {
         line: u32,
     ) -> Result<(), Stop> {
         let Expr::Name(name) = target else {
-            return Err(Stop::NotBuilt(
-                "a moves line naming a member's or a keyed version",
+            return Err(refuse(
+                Load::Moves,
+                format!(
+                    "moves {}: unknown, or not known before this version",
+                    super::types::text(target)
+                ),
+                file,
+                line,
             ));
         };
         let (known, window) = self

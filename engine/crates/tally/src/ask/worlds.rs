@@ -7,8 +7,9 @@
 //! Twin: engine/tools/refcore/cli.py (`run_worlds`, from its `REQ-ASK` check on, and its
 //! `unread_everywhere`).
 //! Invariants: every id the run names is checked before any ask is answered; the refused
-//! scenarios print first, by id; the asks go by id, then by world, the base's first; an ask that
-//! would be evaluated in a scenario's world stops the run `NotBuilt` (M1's).
+//! scenarios print first, by id; the asks go by id, then by world, the base's first; an ask
+//! evaluated in one loaded scenario's world is answered on that scenario's reality, with its own
+//! engines and memo; one evaluated in two worlds stops the run `NotBuilt` (M1's overlays).
 
 use super::answer::{Answered, Turn, answer_turns, no_ask};
 use super::register::warning_lines;
@@ -19,6 +20,7 @@ use crate::load::{Loaded, Worlds};
 use crate::model::Reality;
 use crate::oracle::Days;
 use crate::syntax::{Ask, AskBody, PinForm, Stop};
+use crate::walk::invariant;
 use std::collections::{BTreeMap, BTreeSet};
 
 /// The lines a run of a reality with scenarios prints (refcore's `run_worlds`, its asks): each
@@ -28,8 +30,7 @@ use std::collections::{BTreeMap, BTreeSet};
 /// # Errors
 ///
 /// `REQ-ASK` for the first id the run names that no world's ask has (E §11); `NotBuilt` for an
-/// ask evaluated in a scenario's world, a load refusal met at run, and a construct not built
-/// yet.
+/// ask evaluated in two worlds, a load refusal met at run, and a construct not built yet.
 pub fn answer_worlds(w: &Worlds, asks: &Asks, days: Days, memo: Memo) -> Result<Answered, Stop> {
     if let Asks::Named(ids) = asks
         && let Some(id) = ids.iter().find(|id| !knows(w, id))
@@ -70,7 +71,7 @@ pub fn answer_worlds(w: &Worlds, asks: &Asks, days: Days, memo: Memo) -> Result<
         .collect();
     for ((_, world), (at, ask)) in order {
         if let Some(base_at) = at.filter(|_| w.base.asks_alone.contains_key(&ask.id)) {
-            turns.push(Turn::Ask(base_at));
+            turns.push(Turn::Ask(0, base_at));
             continue;
         }
         let named = worlds_named(ask, world, model);
@@ -82,12 +83,53 @@ pub fn answer_worlds(w: &Worlds, asks: &Asks, days: Days, memo: Memo) -> Result<
             )));
             continue;
         }
-        let Some(base_at) = at.filter(|_| named.is_empty()) else {
-            return Err(Stop::NotBuilt("an ask in a scenario's world"));
-        };
-        turns.push(Turn::Ask(base_at));
+        turns.push(world_turn(w, &named, *at, &ask.id)?);
     }
-    answer_turns(&w.base, &turns, merged_warnings(w), days, memo)
+    // the base's reality first, then each loaded scenario's by id, as `world_turn` counts them
+    let realities: Vec<&Reality> = core::iter::once(&w.base).chain(w.loaded.values()).collect();
+    answer_turns(&realities, &turns, merged_warnings(w), days, memo)
+}
+
+/// The turn of an ask that names at most one world besides the model's: the base's ask at
+/// `at` in the base, or, in a loaded scenario's world, the ask `id` as that scenario's reality
+/// holds it, the base and the scenarios under it all seen (refcore's `run_worlds`: `cands`,
+/// `ra`). L §6.4, §5.18.
+///
+/// # Errors
+///
+/// `NotBuilt` for an ask whose line is evaluated in two worlds (a difference, an ask `in` a
+/// world under its own file's scenario): M1's overlays.
+fn world_turn(
+    w: &Worlds,
+    named: &BTreeSet<String>,
+    at: Option<usize>,
+    id: &str,
+) -> Result<Turn, Stop> {
+    let mut worlds = named.iter();
+    let one = match (worlds.next(), worlds.next(), at) {
+        (None, _, Some(base_at)) => return Ok(Turn::Ask(0, base_at)),
+        (Some(world), None, _) => world,
+        (None, _, None) | (Some(_), Some(_), _) => {
+            return Err(Stop::NotBuilt("an ask in a scenario's world"));
+        }
+    };
+    let found = w
+        .loaded
+        .iter()
+        .enumerate()
+        .find(|(_, (world, _))| *world == one);
+    let Some((place, (_, reality))) = found else {
+        return Err(Stop::NotBuilt("an ask in a scenario's world"));
+    };
+    let ask_at = reality
+        .asks
+        .iter()
+        .position(|ask| ask.id == id)
+        .ok_or_else(|| invariant("a scenario's reality holds no ask its world names"))?;
+    let place = place
+        .checked_add(1)
+        .ok_or_else(|| invariant("a count of worlds"))?;
+    Ok(Turn::Ask(place, ask_at))
 }
 
 /// The lines a load prints when no ask is answered: a reality's warnings, or each refused

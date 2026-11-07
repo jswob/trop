@@ -177,7 +177,15 @@ fn tables_of_one_key(
         return Err(refuse(Load::Band, message, &file, line));
     }
     if earlier.is_empty() {
-        let message = format!("replace {id}: no earlier row to replace");
+        // L §8.3 LOAD-REPLACE's band form where its version has a span on the model's `on`
+        // (refcore's `check_bands`)
+        let message = match version_span(m, vid)? {
+            Some(span) => format!(
+                "replace rows of {id} in {vid} patch no table on {}",
+                span.text()
+            ),
+            None => format!("replace {id}: no earlier row to replace"),
+        };
         return Err(refuse(Load::Replace, message, &file, line));
     }
     let whole = match check_table(m, band, table, Whole::Asked) {

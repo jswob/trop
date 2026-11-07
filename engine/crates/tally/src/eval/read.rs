@@ -2,7 +2,8 @@
 //! Spec: L §4.6 (the read rule; a row's value, `assumed`, `held`), §2.5 (keys by position),
 //! §4.2 (keys as values), §5.6 (`assumed` on an index), §5.8 (inputs and their values), §3.4
 //! (a figure in Y prices), §8.1 (a read whose key is a hole carries the key's questions only),
-//! §8.2 (the register entries a read makes), §8.4 (`RUN-KEY`, `RUN-NONE`).
+//! §8.2 (the register entries a read makes), §8.4 (`RUN-KEY`, `RUN-NONE`), §7.6 items 1 and 3
+//! (the end of time is no key; a key offset's 18 digits).
 //! Twin: engine/tools/refcore/evaluate.py (`key_values`, `to_key`, `check_key`, `read_input`,
 //! `row_value`, `prices`, `index_assumed`) and loader.py (`convert_value`, `key_value`).
 //! Invariants: a key a read takes is a key its domain holds and the cut sees; a row's value
@@ -10,7 +11,7 @@
 
 use super::arith::{Op, arith, int_of};
 use super::memo::{LawClass, Read, may_hold, rows_class};
-use super::state::{Ctx, Engine, a_day, invariant, num_stop, refuse, refuse_load};
+use super::state::{Ctx, Engine, a_day, invariant, num_stop, refuse, refuse_load, unit_stop};
 use crate::base::{Load, Run};
 use crate::hole::Hole;
 use crate::load::index_key_of;
@@ -330,7 +331,7 @@ pub(crate) fn make_keys(
                 continue;
             }
             Given::Value(v) => to_key(m, item, &v, &bind.domain)?,
-            Given::Literal(lit) => literal_key(m, &lit, &bind.domain)?,
+            Given::Literal(lit) => literal_key(m, &lit, &bind.domain)?.ok_or_else(lacks_at_run)?,
         };
         check_key(m, &key, &bind.domain, cut)?;
         keys.push(key);
@@ -475,12 +476,14 @@ pub(super) fn shown(m: &Reality, v: &Value) -> Result<String, Stop> {
 
 /// A key literal resolved in `domain`: a key of an index, an integer or a period by its
 /// label or a key by its text, a thing of a kind by its name (refcore's
-/// `resolve_key_literal`). L §2.5.
+/// `resolve_key_literal`); `None` for a literal the domain doesn't hold, which its caller
+/// refuses. L §2.5.
 ///
 /// # Errors
 ///
-/// `LOAD-KEY`, where load sees it, for a literal the domain doesn't hold.
-pub(super) fn literal_key(m: &Reality, lit: &Lit, domain: &Domain) -> Result<KeyVal, Stop> {
+/// An invariant for an index load didn't build; `NotBuilt` for a key list, a range or an
+/// axis.
+pub(super) fn literal_key(m: &Reality, lit: &Lit, domain: &Domain) -> Result<Option<KeyVal>, Stop> {
     let text = lit.text();
     match domain {
         Domain::Index(id) => {
@@ -488,18 +491,9 @@ pub(super) fn literal_key(m: &Reality, lit: &Lit, domain: &Domain) -> Result<Key
                 .indexes
                 .get(id)
                 .ok_or_else(|| invariant("a bind over an index load didn't build"))?;
-            index_key_of(ix, lit)
-                .ok_or_else(|| refuse_load(Load::Key, format!("{text} is not a key of {id}")))
+            Ok(index_key_of(ix, lit))
         }
-        Domain::Kind(kind) => {
-            if !m.thing_in(&text, kind) {
-                return Err(refuse_load(
-                    Load::Key,
-                    format!("{text} is not a thing of {kind}"),
-                ));
-            }
-            Ok(KeyVal::Thing(text))
-        }
+        Domain::Kind(kind) => Ok(m.thing_in(&text, kind).then_some(KeyVal::Thing(text))),
         Domain::List(_) | Domain::Range | Domain::Axis(_) => Err(Stop::NotBuilt(
             "a key literal of a key list, a range or an axis",
         )),
@@ -883,7 +877,7 @@ fn convert_lit(
         Lit::Name(text)
             if is_event_key(m, ty)
                 && matches!(
-                    m.names.get(text.as_str()),
+                    m.names.kind(text.as_str()),
                     Some(NameKind::Move | NameKind::Input)
                 ) =>
         {
@@ -983,7 +977,15 @@ pub(super) fn key_value(m: &Reality, lit: &Lit, ix: &str) -> Result<Value, Stop>
     } else {
         return Err(refuse_load(Load::Name, format!("unknown id {ix}")).naming(ix));
     };
-    Ok(Value::of_key(&literal_key(m, lit, &domain)?))
+    let key = literal_key(m, lit, &domain)?
+        .ok_or_else(|| refuse_load(Load::Key, format!("{} is not a key of {ix}", lit.text())))?;
+    Ok(Value::of_key(&key))
+}
+
+/// A literal key its index or kind lacks, met at run: load refuses it with its place
+/// (`key_value`), refcore's run with `RUN-KEY`, so the run stops "not implemented".
+pub(super) fn lacks_at_run() -> Stop {
+    Stop::NotBuilt("a literal key its index or kind lacks, met at run")
 }
 
 /// A number literal of a row as a value of type `ty` (refcore's `convert_value`, its `num`
@@ -1006,9 +1008,9 @@ fn convert_number(
             let terms = unit
                 .terms
                 .iter()
-                .map(|t| (t.base.clone(), t.power))
+                .map(|t| (t.base.clone(), t.power.clone()))
                 .collect();
-            Some(Unit::from_syntax(terms).map_err(num_stop)?)
+            Some(Unit::from_syntax(terms).map_err(unit_stop)?)
         }
     };
     match ty {
@@ -1130,7 +1132,7 @@ fn number_in(
         return n.value.checked_mul(&of.factor).map_err(num_stop);
     };
     let to = if keyed(unit) {
-        unit.subst(&of.keys).map_err(num_stop)?
+        unit.subst(&of.keys).map_err(unit_stop)?
     } else {
         unit.clone()
     };
@@ -1181,17 +1183,11 @@ fn calendar_value(cal: &CalendarLit) -> Result<Value, Stop> {
     }
     let from = match &cal.yearly_from {
         None => None,
-        Some(n) => {
-            let first = || refuse_load(Load::Unit, "a calendar's first year".to_owned());
-            let text = n.integer_text().ok_or_else(first)?;
-            // a first year past 9999, of any size, comes after every day there is (L §2.1)
-            let year = match n.to_i64().and_then(|y| u16::try_from(y).ok()) {
-                Some(y) if y <= 9_999 => y,
-                Some(_) | None if !n.is_negative() => 10_000,
-                Some(_) | None => return Err(first()),
-            };
-            Some(FirstYear { year, text })
-        }
+        // a first year past 9999, of any size, comes after every day there is (L §2.1)
+        Some(n) => Some(
+            FirstYear::of(n)
+                .ok_or_else(|| refuse_load(Load::Unit, "a calendar's first year".to_owned()))?,
+        ),
     };
     Ok(Value::Calendar(Box::new(Calendar::new(
         weekends,

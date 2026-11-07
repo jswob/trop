@@ -2,8 +2,10 @@
 //! Spec: E §3.2 (every value is a cell: an item, its keys and a context; the memo maps cells to
 //! results, a value or a refusal, with the register entries the cell met and its read set);
 //! L §4.3 (the law date), §4.5 (the cut), §5.18 (the ask line's `with uncertain`, in its own
-//! reads' context only), §8.2 (the register).
-//! Twin: engine/tools/refcore/evaluate.py (`Ctx`, `Coll`, `Engine` and its collector stack).
+//! reads' context only), §8.2 (the register); §7.6 items 1 and 4 (a day past the calendar and
+//! the end of time read as a day, `past_days` and `a_day`; a unit's power past 64).
+//! Twin: engine/tools/refcore/evaluate.py (`Ctx`, `Coll`, `Engine` and its collector stack,
+//! `past_days`).
 //! Invariants: a cell is computed once per context and its result, refusal included, is kept;
 //! a cell read while it is being computed is `RUN-CYCLE`; recursion through def cells is
 //! counted, and past its limit the cell demanded waits on the work stack (R-16).
@@ -13,7 +15,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::Days;
 use crate::base::{Code, Refusal, Run, Warn};
 use crate::book::{Adjustment, Coverage, Linked, Obs};
-use crate::model::{Domain, KeyVal, Node, NodeKind, Reality, Value};
+use crate::model::{Domain, KeyVal, Node, NodeKind, Reality, UnitError, Value, power_past_limit};
 use crate::num::NumError;
 use crate::syntax::{Ask, Stop};
 use crate::time::Day;
@@ -494,6 +496,12 @@ pub(super) fn refuse_load(code: crate::base::Load, message: String) -> Stop {
     Stop::Refused(Refusal::new(Code::Load(code), message))
 }
 
+/// A value of a type its place doesn't take, met at run where refcore's run has no twin of
+/// the text: load's types refuse it first, so the run stops "not implemented".
+pub(super) fn not_typed() -> Stop {
+    Stop::NotBuilt("a value of a type its place doesn't take, met at run")
+}
+
 /// A value of a type its place doesn't take: `LOAD-UNIT` with `what` and the value as it
 /// prints (refcore raises it where load's checker would have).
 pub(super) fn wrong_type(m: &Reality, what: &str, v: &Value) -> Stop {
@@ -537,5 +545,15 @@ pub(crate) fn num_stop(error: NumError) -> Stop {
         ),
         NumError::Domain => refuse(Run::Domain, "outside its operation's domain".to_owned()),
         NumError::Invariant => invariant("the number kernel's invariant"),
+    }
+}
+
+/// A unit operation's error met at run: a power past 64 in size is the load refusal
+/// refcore's `power_limit` raises where it meets it (a unit a key gives, L §3.2); a number
+/// error is `num_stop`'s. L §7.6 item 4.
+pub(crate) fn unit_stop(error: UnitError) -> Stop {
+    match error {
+        UnitError::Power(base) => refuse_load(crate::base::Load::Limit, power_past_limit(&base)),
+        UnitError::Num(error) => num_stop(error),
     }
 }

@@ -17,13 +17,14 @@
 
 use super::across::PeriodRead;
 use super::fills::{FillState, inline_fill_edges};
-use super::keys::keyed_place_thing;
+use super::keys::{KeyLit, keyed_place_thing};
 use super::moves::{own_day_reads, settlements};
 use super::pins::unloaded_world;
 use super::prices::price_twice;
 use super::random::{DrawKey, QueryAt, dist_whole};
 use super::reads::{is_move_type, is_place_type};
 use super::srows::{BaseWorld, SrowAt, ask_worlds, top_scenario};
+use super::steps::refuse;
 use super::types::{
     children, covered_spans, is_bool, is_date, key_value_kind, lit_rule, refused, uerr,
 };
@@ -342,6 +343,9 @@ pub(super) struct ShiftRead {
     pub(super) var: String,
     /// Which way.
     pub(super) shift: Shift,
+    /// The offset as written, `1` of `x[k - 1]`, or `n` where no key is the variable and
+    /// a number (refcore's `shift_offset`). L §8.3 `LOAD-GUARD`.
+    pub(super) offset: String,
     /// Whether a condition on the variable guards the read.
     pub(super) guarded: bool,
     /// The file and line it is written on.
@@ -745,13 +749,14 @@ impl Checker {
 
     /// A def's read at a shifted key variable, with whether a condition guards it (refcore's
     /// `shift_reads`). L §5.11.
-    pub(super) fn shifted(&mut self, scope: &Scope, target: &Node, rel: &Rel) {
+    pub(super) fn shifted(&mut self, scope: &Scope, target: &Node, rel: &Rel, keys: &[Key]) {
         if let Rel::Shifted(var, shift) = rel {
             self.shifts.push(ShiftRead {
                 reader: scope.item.clone(),
                 target: target.clone(),
                 var: var.clone(),
                 shift: *shift,
+                offset: shift_offset(keys, var),
                 guarded: scope.guards.contains(var),
                 at: scope.file_line(),
             });
@@ -870,7 +875,7 @@ impl Checker {
             };
             let refuse =
                 |code: Load, message: String| files.at_input(id, input.line, code, message);
-            let binds = match m.names.get(by) {
+            let binds = match m.names.kind(by) {
                 None => return Err(refuse(Load::Name, format!("unknown id {by}")).naming(by)),
                 Some(NameKind::Input) => m.inputs.get(by).map(|i| i.binds.as_slice()),
                 Some(NameKind::Def) => m.defs.get(by).map(|d| d.binds.as_slice()),
@@ -985,7 +990,7 @@ impl Checker {
             self.at_reads.insert(def.id.clone(), made);
         }
         let beats = labels(def, file)?;
-        beats_cycle(&def.id, &beats)?;
+        beats_cycle(&def.id, &beats, (file, line))?;
         self.offsets.insert(def.id.clone(), key_offsets(def));
         let guards = rule_guards(def, &beats);
         for (label, versions) in &def.rules {
@@ -1261,7 +1266,7 @@ impl Checker {
             read_targets.push(self.read_target(m, &scope.on_line(lines.reads), mv, read)?);
         }
         for (order, other) in &decl.order {
-            if m.names.get(other) != Some(&NameKind::Move) {
+            if m.names.kind(other) != Some(NameKind::Move) {
                 let word = match order {
                     Order::Before => "before",
                     Order::After => "after",
@@ -1334,22 +1339,22 @@ impl Checker {
         if let Expr::Name(id) = read
             && !scope.is_var(id)
         {
-            let named = m.names.get(id);
-            if named == Some(&NameKind::Move) {
+            let named = m.names.kind(id);
+            if named == Some(NameKind::Move) {
                 return Ok(Target::Move(id.clone()));
             }
             let keyed = m
                 .places
                 .get(id)
                 .is_some_and(|place| !place.binds.is_empty());
-            if named == Some(&NameKind::Place) && keyed {
+            if named == Some(NameKind::Place) && keyed {
                 return Ok(Target::PlaceSec(id.clone()));
             }
             let event = m
                 .kinds
                 .get(id)
                 .is_some_and(|kind| kind.spec == KindSpec::Event);
-            if named == Some(&NameKind::Kind) && event {
+            if named == Some(NameKind::Kind) && event {
                 return Ok(Target::Kind(id.clone()));
             }
         }
@@ -1417,8 +1422,13 @@ fn labels(def: &DefInfo, file: &str) -> Result<BTreeMap<String, BTreeSet<String>
 }
 
 /// `LOAD-CYCLE` when a def's `beats` run in a cycle, the path from the first label in text
-/// order (refcore's `_beats_cycle`, its depth-first walk as a worklist). L §5.11.
-fn beats_cycle(def: &str, beats: &BTreeMap<String, BTreeSet<String>>) -> Result<(), Stop> {
+/// order, at the def's line (refcore's `_beats_cycle`, its depth-first walk as a worklist).
+/// L §5.11, §8.3.
+fn beats_cycle(
+    def: &str,
+    beats: &BTreeMap<String, BTreeSet<String>>,
+    at: (&str, u32),
+) -> Result<(), Stop> {
     let mut done: BTreeSet<String> = BTreeSet::new();
     for start in beats.keys() {
         if done.contains(start) {
@@ -1435,9 +1445,11 @@ fn beats_cycle(def: &str, beats: &BTreeMap<String, BTreeSet<String>>) -> Result<
             if path.iter().any(|(label, _)| *label == next) {
                 let mut names: Vec<String> = path.into_iter().map(|(label, _)| label).collect();
                 names.push(next);
-                return Err(refused(
+                return Err(refuse(
                     Load::Cycle,
                     format!("a beats cycle in {def}: {}", names.join(" -> ")),
+                    at.0,
+                    at.1,
                 ));
             }
             if !done.contains(&next) {
@@ -1654,6 +1666,25 @@ enum KeyRel {
     Computed,
 }
 
+/// The offset of a recurrence read's key `k ± n` as written, the first key that is the
+/// variable `var` plus or minus a number, else `n` (refcore's `shift_offset`). L §8.3
+/// `LOAD-GUARD`.
+fn shift_offset(keys: &[Key], var: &str) -> String {
+    keys.iter()
+        .find_map(|key| {
+            if let Key::Expr(Expr::Sum(base, rest)) = key
+                && let Expr::Name(name) = base.as_ref()
+                && name == var
+                && let [(_, Expr::Lit(Lit::Num(number)))] = rest.as_slice()
+            {
+                Some(number.text.clone())
+            } else {
+                None
+            }
+        })
+        .unwrap_or_else(|| "n".to_owned())
+}
+
 /// One key's relation to the reader's keys (refcore's `relation`, its loop).
 fn key_relation(scope: &Scope, key: &Key) -> KeyRel {
     let Key::Expr(expr) = key else {
@@ -1704,7 +1735,7 @@ pub(super) fn move_keys(target: &Expr) -> Option<(&str, &[Key])> {
 
 /// The input or def `id`, and whether it is keyed.
 pub(super) fn input_or_def(m: &Reality, id: &str) -> Option<(Node, bool)> {
-    match m.names.get(id)? {
+    match m.names.kind(id)? {
         NameKind::Input => {
             let input = m.inputs.get(id)?;
             Some((Node::new(NodeKind::Input, id), !input.binds.is_empty()))
@@ -1738,7 +1769,7 @@ pub(super) fn literal_place(
     match literal_form(m, scope, expr) {
         None => Ok(None),
         Some(Literal::Thing(thing)) => Ok(Some(thing)),
-        Some(Literal::Keyed(id, lits)) => match keyed_place_thing(m, &id, &lits, "", 0) {
+        Some(Literal::Keyed(id, lits)) => match keyed_place_thing(m, &id, &keyed(lits), "", 0) {
             Ok(thing) => Ok(thing),
             // A key no index or kind holds is refused where the key is typed (`LOAD-KEY`);
             // here it names no literal place. `LOAD-KEY` is the one refusal of a key.
@@ -1746,6 +1777,11 @@ pub(super) fn literal_place(
             Err(stop) => Err(stop),
         },
     }
+}
+
+/// Literal keys as keys written at a place's positions.
+fn keyed(lits: Vec<Lit>) -> Vec<KeyLit> {
+    lits.into_iter().map(KeyLit::Lit).collect()
 }
 
 /// A place expression read literally, before a keyed place's keys are looked up.
@@ -1763,7 +1799,7 @@ fn literal_form(m: &Reality, scope: &Scope, expr: &Expr) -> Option<Literal> {
     if scope.is_var(id) {
         return None;
     }
-    let named = m.names.get(id);
+    let named = m.names.kind(id);
     if named.is_none() && posts.is_empty() {
         let thing = m.things.get(id)?;
         return m.is_place(thing).then(|| Literal::Thing(id.to_owned()));
@@ -1771,7 +1807,7 @@ fn literal_form(m: &Reality, scope: &Scope, expr: &Expr) -> Option<Literal> {
     let place = m
         .places
         .get(id)
-        .filter(|_| named == Some(&NameKind::Place))?;
+        .filter(|_| named == Some(NameKind::Place))?;
     if posts.is_empty() {
         let unkeyed = place.things.iter().find(|(keys, _)| keys.is_empty());
         return unkeyed.map(|(_, thing)| Literal::Thing(thing.clone()));
@@ -1813,7 +1849,7 @@ fn key_literal(m: &Reality, scope: &Scope, key: &Key) -> Option<Lit> {
 pub(super) fn place_section(m: &Reality, scope: &Scope, expr: &Expr) -> Option<String> {
     let (id, posts) = named_parts(expr)?;
     let read = posts.is_empty() || matches!(posts, [Postfix::Keys(_)]);
-    let place = !scope.is_var(id) && m.names.get(id) == Some(&NameKind::Place);
+    let place = !scope.is_var(id) && m.names.kind(id) == Some(NameKind::Place);
     (read && place).then(|| id.to_owned())
 }
 
@@ -1853,7 +1889,7 @@ fn place_kind(m: &Reality, scope: &Scope, expr: &Expr) -> Option<String> {
     if let Some(var) = scope.vars.get(id) {
         return var.kind().map(str::to_owned);
     }
-    let named = m.names.get(id)?;
+    let named = m.names.kind(id)?;
     let ty = match named {
         NameKind::Place => return m.places.get(id).map(|place| place.kind.clone()),
         NameKind::Input => m.inputs.get(id).and_then(|input| input.ty.as_ref()),
@@ -1981,17 +2017,20 @@ mod tests {
         let mut beats = BTreeMap::new();
         beats.insert("base".to_owned(), set(&["waived"]));
         beats.insert("waived".to_owned(), set(&["base"]));
-        let refused = match beats_cycle("fee", &beats) {
+        let refused = match beats_cycle("fee", &beats, ("a.tally", 3)) {
             Err(Stop::Refused(refusal)) => refusal.text(),
             other => format!("{other:?}"),
         };
         assert_eq!(
-            refused, "LOAD-CYCLE a beats cycle in fee: base -> waived -> base",
+            refused, "LOAD-CYCLE a beats cycle in fee: base -> waived -> base (a.tally:3)",
             "the cycle"
         );
         let mut chain = BTreeMap::new();
         chain.insert("a".to_owned(), set(&["b", "c"]));
         chain.insert("b".to_owned(), set(&["c"]));
-        assert!(beats_cycle("fee", &chain).is_ok(), "a chain is no cycle");
+        assert!(
+            beats_cycle("fee", &chain, ("a.tally", 3)).is_ok(),
+            "a chain is no cycle"
+        );
     }
 }

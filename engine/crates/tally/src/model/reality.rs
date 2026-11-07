@@ -8,17 +8,22 @@
 
 use super::decl::{BandInfo, DefInfo, InputInfo, MoveInfo, PlaceInfo};
 use super::graph::Graph;
+use super::ids::{
+    AxisId, BandId, DefId, FillId, IndexId, InputId, KindId, MoveId, Names, PlaceId, SourceId,
+    ThingId, VersionId,
+};
 use super::index::{IndexInfo, VersionInfo};
 use super::key::{KeyVal, Span};
 use super::kind::{Entry, KindInfo, KindSpec, Thing};
 use super::world::Scenarios;
-use crate::base::{Refusal, Table, Warn};
+use crate::base::{Internal, Interner, Refusal, Table, Warn};
 use crate::num::Num;
 use crate::syntax::{Ask, Axis, Fill, Header, Price, Sign, Source, Type};
 use crate::time::Day;
 use std::collections::{BTreeMap, BTreeSet};
 
-/// What a name in the one namespace names (refcore's `Reality.names` kinds).
+/// What a name in the one namespace names, its sort (refcore's `Reality.names` kinds); a
+/// `Name` holds it with its id.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NameKind {
     /// A unit or currency.
@@ -68,12 +73,14 @@ pub struct Reality {
     pub end: Day,
     /// The model's `on` date.
     pub on: Day,
+    /// Every name's text, interned: the namespace's ids and the tables' slots (D2-3).
+    pub symbols: Interner,
     /// The one namespace.
-    pub names: BTreeMap<String, NameKind>,
+    pub names: Names,
     /// The sources.
-    pub sources: Table<Source>,
+    pub sources: Table<SourceId, Source>,
     /// The versions, in section order.
-    pub versions: Table<VersionInfo>,
+    pub versions: Table<VersionId, VersionInfo>,
     /// The declared units that aren't currencies.
     pub units: BTreeSet<String>,
     /// The currencies, with their minor units.
@@ -81,21 +88,21 @@ pub struct Reality {
     /// The keys of kinds of unit, with their kind.
     pub unit_kind_keys: BTreeMap<String, String>,
     /// The kinds.
-    pub kinds: Table<KindInfo>,
+    pub kinds: Table<KindId, KindInfo>,
     /// The things.
-    pub things: Table<Thing>,
+    pub things: Table<ThingId, Thing>,
     /// The indexes.
-    pub indexes: Table<IndexInfo>,
+    pub indexes: Table<IndexId, IndexInfo>,
     /// The inputs.
-    pub inputs: Table<InputInfo>,
+    pub inputs: Table<InputId, InputInfo>,
     /// The defs.
-    pub defs: Table<DefInfo>,
+    pub defs: Table<DefId, DefInfo>,
     /// The bands.
-    pub bands: Table<BandInfo>,
+    pub bands: Table<BandId, BandInfo>,
     /// The places.
-    pub places: Table<PlaceInfo>,
+    pub places: Table<PlaceId, PlaceInfo>,
     /// The moves.
-    pub moves: Table<MoveInfo>,
+    pub moves: Table<MoveId, MoveInfo>,
     /// The asks, in section order.
     pub asks: Vec<Ask>,
     /// The warnings load decided.
@@ -105,9 +112,9 @@ pub struct Reality {
     /// The scenarios this reality loads with the base: none for a base (L §6.4).
     pub scenarios: Scenarios,
     /// The axes, each with its options in the order written (L §5.5).
-    pub axes: Table<Axis>,
+    pub axes: Table<AxisId, Axis>,
     /// The fills, as written (L §5.12).
-    pub fills: Table<Fill>,
+    pub fills: Table<FillId, Fill>,
     /// The worlds an ask may name: the model, this reality's scenarios and the run's
     /// (refcore's `all_worlds`). L §6.4.
     pub all_worlds: BTreeSet<String>,
@@ -187,6 +194,16 @@ pub enum SamePair {
 }
 
 impl Reality {
+    /// The id of the thing named `name`, which its table holds (the caller pushed or found
+    /// it).
+    ///
+    /// # Errors
+    ///
+    /// `Internal` where the name was never interned.
+    pub fn thing_id(&self, name: &str) -> Result<ThingId, Internal> {
+        super::ids::thing_id(&self.symbols, name)
+    }
+
     /// The kind `id`.
     #[must_use]
     pub fn kind(&self, id: &str) -> Option<&KindInfo> {

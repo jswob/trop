@@ -5,9 +5,10 @@
 //! §5.10 (the sign rule's point 2); E §4.2 step 3 and L §5.19 (a decision on a covered day
 //! before K, or one an observation fulfils, is modelled past: its own observations booked at
 //! its point, its legs not; it computes against the balances less its own observations
-//! booked before its day).
+//! booked before its day); L §8.4 (one refused before its point, by its key's `where`, refuses
+//! the places its legs give from its point; tally 2.1.6).
 //! Twin: engine/tools/refcore/walk.py (`run_decisions`, `tie_order`, `run_one`,
-//! `run_one_body`, `book_own_obs`).
+//! `run_one_body`, `dec_bad`, `book_own_obs`).
 //! Invariants: a decision reads the walk as it stands at its point, never a later point; a
 //! run is recorded once, after its body is computed, so a run cut short past the counted depth
 //! is run again from its start; the instances of one move run in the order of its `ties by`.
@@ -252,7 +253,9 @@ impl Engine {
 
     /// A decision instance's run: its body at its point with running reads, then, by what it
     /// gives, its legs booked, a hole at its places, or a refusal there (refcore's
-    /// `run_one_body`). E §4.2 step 3, L §5.14.1.
+    /// `run_one_body`). One refused before its point (its key's `where`) doesn't exist where
+    /// its `when` is false here; else it is that refusal, its legs' places read at its point
+    /// (L §8.4, tally 2.1.6). E §4.2 step 3, L §5.14.1.
     fn run_one_body(&mut self, m: &Reality, id: usize, inst: Inst, key: At) -> Result<usize, Stop> {
         let mv = m
             .moves
@@ -288,6 +291,7 @@ impl Engine {
         };
         run.inst.coll.merge(&met);
         run.inst.obs = linked;
+        let before = run.inst.err.take();
         match body {
             Ok(b) => {
                 run.inst.exists = b.exists;
@@ -299,12 +303,44 @@ impl Engine {
             Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => run.inst.err = Some(r),
             Err(stop) => return Err(stop),
         }
+        if let Some(err) = before
+            && (run.inst.err.is_some() || run.inst.exists != Exists::No)
+        {
+            run.inst.err = Some(err);
+            self.refused_at_point(m, mv, &mut run.inst, ctx)?;
+        }
         self.walk_mut(id)?.group = Some(Group::new());
         self.book_run(m, id, run, t)
     }
 
-    /// What a run books by what its body gave (refcore's `run_one_body`, after the body).
-    /// E §4.2 step 3, Holes in the walk.
+    /// The legs of decision instance `inst`, refused before its point, with their places read
+    /// at its point (running reads, its law and facts at min(t, K)) and the refusal as their
+    /// amount, so it refuses those places from its point in the day's order; none where a
+    /// place can't be read there, a hole or a refusal, so it refuses every place (refcore's
+    /// `dec_bad`, read at the decision's point). L §8.4 (tally 2.1.6), E §4.1 (the order of a
+    /// day's refusals), E §4.2 step 3, Holes in the walk.
+    fn refused_at_point(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        inst: &mut Inst,
+        ctx: Ctx,
+    ) -> Result<(), Stop> {
+        self.push();
+        let read = self.refused_places(m, mv, inst, ctx);
+        inst.coll.merge(&self.pop_alone());
+        inst.legs = match read {
+            Ok(Some(legs)) => legs,
+            Ok(None) | Err(Stop::Refused(_)) => Vec::new(),
+            Err(stop) => return Err(stop),
+        };
+        Ok(())
+    }
+
+    /// What a run books by what its body gave (refcore's `run_one_body`, after the body); a
+    /// refused run refuses the places its known legs give from its point, every place where
+    /// none is known, and none for a move with no legs (L §8.4, tally 2.1.6; P16). E §4.2
+    /// step 3, Holes in the walk.
     fn book_run(&mut self, m: &Reality, id: usize, mut run: Run, t: Day) -> Result<usize, Stop> {
         let key = run.point;
         let (cut, main) = {
@@ -313,9 +349,18 @@ impl Engine {
         };
         let modelled = main
             && ((t < cut && self.touches_covered(m, &run.inst, cut)) || !run.inst.obs.is_empty());
+        let legless = m
+            .moves
+            .get(&run.inst.move_id)
+            .ok_or_else(|| invariant("a decision of a move load didn't build"))?
+            .decl
+            .legs
+            .is_empty();
         let walk = self.walk_mut(id)?;
         let ix = walk.runs.len();
         if let Some(err) = run.inst.err.clone() {
+            // refused: the places its legs give, every place where one can't be read, none for
+            // a move with no legs (L §8.4, tally 2.1.6; P16)
             run.inst.status = Status::Refused;
             let known: Vec<_> = run
                 .inst
@@ -326,7 +371,7 @@ impl Engine {
                 .collect();
             let mv_id = run.inst.id.clone();
             walk.record(run);
-            if known.is_empty() {
+            if known.is_empty() && !legless {
                 walk.add(m, ALL, ALL, Ent::new(key, Change::Bad(err.clone())))?;
             }
             for lg in &known {
@@ -395,7 +440,7 @@ impl Engine {
         }
         let legs = run.inst.legs.clone();
         let (mv_id, coll) = (run.inst.id.clone(), run.inst.coll.clone());
-        let later_rank = walk.text_rank(&mv_id)?;
+        let later_rank = walk.plan_rank(&run.inst.order)?;
         let inst = run.inst.clone();
         walk.record(run);
         for (li, lg) in legs.iter().enumerate() {
@@ -525,4 +570,112 @@ fn value_cmp(x: &Value, y: &Value) -> Result<Ordering, Stop> {
 /// A run-time refusal (L §8.4).
 fn refuse(code: RunCode, message: String) -> Stop {
     Stop::Refused(Refusal::new(Code::Run(code), message))
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::Days;
+    use crate::api::{Asks, Given, Pin, Request, run};
+
+    /// Two decisions over three months whose key's `where` is refused in February (a
+    /// division by zero): `split`'s body is answered there, `spill`'s refused too, by its
+    /// `when`.
+    const REFUSED_WHERE: &str = r#"model refused_where
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+
+source fixture "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+place konto: accounts PLN lives 2026-01-01..
+
+place box: accounts PLN lives 2026-01-01..
+
+place bin: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input dec_dom: int
+
+input fee_amt: money PLN
+
+input wdiv[m in month]: num
+
+input adiv[m in month]: num
+
+move split[m in month where 1 / wdiv[m] > 0]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads box
+  leg cash from world to box amount fee_amt + 0 * bal(box)
+
+move spill[m in month where 1 / wdiv[m] > 0]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads bin
+  when 1 / adiv[m] > 0
+  leg cash from world to bin amount fee_amt + 0 * bal(bin)
+
+ask q_bal: bal(konto, d), bal(box, d), bal(bin, d) for d in [2026-01-20, 2026-02-19, 2026-02-20, 2026-03-20] law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  dec_dom = 20 "the decisions' day of the month"
+  fee_amt = 3.00 "a fee"
+  wdiv[2026-01] = 1 "answered"
+  wdiv[2026-02] = 0 "a division by zero: the key's where is refused"
+  wdiv[2026-03] = 2 "answered"
+  adiv[2026-01] = 1 "answered"
+  adiv[2026-02] = 0 "a division by zero: spill's when is refused too"
+  adiv[2026-03] = 2 "answered"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 100 at 2026-01-01 start
+  opening[box] = 0 at 2026-01-01 start
+  opening[bin] = 0 at 2026-01-01 start
+"#;
+
+    #[test]
+    fn a_decision_refused_by_its_keys_where_refuses_the_places_its_legs_give_at_its_point() {
+        // L §8.4 (tally 2.1.6): split[2026-02] and spill[2026-02] are refused by their key's
+        // where; each refuses the place its leg gives from its point, box and bin, whether its
+        // body is answered (split) or refused too (spill, its leg's place read at its point),
+        // and konto stands; refcore drops both instances (#104)
+        let given = vec![Given {
+            path: "where.tally".to_owned(),
+            bytes: Some(REFUSED_WHERE.as_bytes().to_vec()),
+        }];
+        let request = Request {
+            asks: Asks::Named(vec!["q_bal".to_owned()]),
+            pin: Pin::Canonical,
+            days: Days::Events,
+        };
+        let answer = run(given, &request).expect("an answer");
+        let values: Vec<&str> = answer
+            .lines()
+            .iter()
+            .filter(|line| line.starts_with("q_bal "))
+            .map(String::as_str)
+            .collect();
+        assert_eq!(
+            values,
+            [
+                "q_bal (d = 2026-01-20): (100.00 PLN, 3.00 PLN, 3.00 PLN)",
+                "q_bal (d = 2026-02-19): (100.00 PLN, 3.00 PLN, 3.00 PLN)",
+                "q_bal (d = 2026-02-20): (100.00 PLN, refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)",
+                "q_bal (d = 2026-03-20): (100.00 PLN, refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)"
+            ],
+            "box and bin refused from 20 February, konto standing"
+        );
+    }
 }

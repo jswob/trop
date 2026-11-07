@@ -8,18 +8,24 @@
 //! it); a keyed place inside a key is resolved one level deep, never recursively.
 
 use super::steps::{Loader, refuse};
+use super::types::text;
 use crate::base::Load;
+use crate::eval::Engine;
 use crate::model::{BindInfo, Domain, IndexForm, IndexInfo, KeyVal, NameKind, Reality};
-use crate::syntax::{Expr, Key, Lit, Postfix, RowKey, Stop};
+use crate::syntax::{Domain as Written, Expr, Key, Lit, Postfix, RowKey, Stop};
 use crate::time::{Day, Period, PeriodKind};
 
-/// A key as written at a key position: a literal, or a keyed place `konto[ana]`.
+/// A key as written at a key position: a literal, a keyed place `konto[ana]`, or an
+/// expression, which names no key.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum KeyLit {
     /// A literal or a name.
     Lit(Lit),
     /// A keyed place with its keys.
     Place(String, Vec<Lit>),
+    /// Any other expression, as written (`if true then ana else ben`, `(ana)`, `2026-02 + 1`):
+    /// `LOAD-KEY` at every position (L §8.3; tally 2.1.6's #100, pick P1).
+    Written(String),
 }
 
 impl KeyLit {
@@ -56,11 +62,22 @@ impl KeyLit {
         Some(KeyLit::Place(name.clone(), lits))
     }
 
-    /// The key as its message names it.
+    /// A key written as an expression: a literal, a name, a keyed place of literals, or any
+    /// other expression as written (refcore's `_txt`). L §2.5, §8.3 `LOAD-KEY`.
+    pub(super) fn written(expr: &Expr) -> KeyLit {
+        KeyLit::of_expr(expr).unwrap_or_else(|| KeyLit::Written(text(expr)))
+    }
+
+    /// The key as written, as every message names it: a place with its keys, `konto[ana]`
+    /// (L §2.5, tally 2.1.6; pick P1).
     pub(super) fn text(&self) -> String {
         match self {
             KeyLit::Lit(lit) => lit_text(lit),
-            KeyLit::Place(name, _) => name.clone(),
+            KeyLit::Place(name, keys) => {
+                let written: Vec<String> = keys.iter().map(lit_text).collect();
+                format!("{name}[{}]", written.join(", "))
+            }
+            KeyLit::Written(written) => written.clone(),
         }
     }
 }
@@ -168,31 +185,122 @@ pub(super) fn resolve_key(
                 KeyVal::Int,
             ))
         }
-        Domain::Range => range_key_of(key),
+        Domain::Range => range_key_of(key, file, line),
     }
 }
 
-/// A key literal at a stepped range's position: the value as written (refcore's
-/// `range_literal`); its membership is checked at run. L §2.5.
-pub(super) fn range_key_of(key: &KeyLit) -> Result<KeyVal, Stop> {
-    let not_built = Stop::NotBuilt("a stepped range's key of that kind");
+/// A key a row writes at a stepped range's position whose ends and step are literals, kept for
+/// the check once load is done (refcore's `register_range_lit`). L §2.5.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct RangeKey {
+    /// The range's ends and step, as written.
+    range: Box<(Expr, Expr, Option<Expr>)>,
+    /// The key, as written.
+    key: Lit,
+    /// The row's file and line.
+    at: (String, u32),
+}
+
+impl RangeKey {
+    /// The key `key` written at the position of binding `bind`, at `file:line`; none where the
+    /// binding isn't a stepped range whose ends and step are literals, which load can't see
+    /// (refcore's `range_is_literal`; its key is checked where it is read). L §2.5.
+    pub(super) fn of(bind: &BindInfo, key: &Lit, file: &str, line: u32) -> Option<RangeKey> {
+        let Written::Range(range) = &bind.node.domain else {
+            return None;
+        };
+        let literal = literal_end(&range.0)
+            && literal_end(&range.1)
+            && range.2.as_ref().is_none_or(literal_end);
+        literal.then(|| RangeKey {
+            range: range.clone(),
+            key: key.clone(),
+            at: (file.to_owned(), line),
+        })
+    }
+}
+
+/// Whether a range's end or step is a literal: a number (a duration included), a day, a
+/// month or a quarter, negated or in parentheses (refcore's `range_is_literal`). L §2.5.
+pub(super) fn literal_end(e: &Expr) -> bool {
+    let mut node = e;
+    while let Expr::Neg(inner) | Expr::Paren(inner) = node {
+        node = inner;
+    }
+    matches!(
+        node,
+        Expr::Lit(Lit::Num(_) | Lit::Day(_) | Lit::Month(..) | Lit::Quarter(..))
+    )
+}
+
+/// `LOAD-KEY <k> is not a value of <a> .. <b>[ step <s>]` at its row for the first key rows
+/// write at a stepped range's position that the range doesn't hold, once load is done, the
+/// keys in the order load met them (refcore's `check_range_lits`, at the first ask; L §2.5
+/// makes it a load refusal, so the engine refuses whatever the asks). L §2.5, §8.3 `LOAD-KEY`
+/// (tally 2.1.6's #100, pick P2).
+///
+/// # Errors
+///
+/// That `LOAD-KEY`; `NotBuilt` for a range of numbers not integers; an invariant.
+pub(super) fn check_range_keys(m: &Reality, keys: &[RangeKey]) -> Result<(), Stop> {
+    let mut engine = Engine::new(m.on);
+    for written in keys {
+        if let Some(message) = engine.range_key_missing(m, &written.range, &written.key)? {
+            let (file, line) = &written.at;
+            return Err(refuse(Load::Key, message, file, *line));
+        }
+    }
+    Ok(())
+}
+
+/// The index name a stepped range's key that is a number other than an integer is kept
+/// under, by its text, as a key list's keys are under `[list]`: no read finds it, and load
+/// checks it against the range's values (refcore's `range_literal`, a `Num`).
+pub(super) const RANGE_KEYS: &str = "[range]";
+
+/// A key literal at a stepped range's position: a value as written, a day, a period or a
+/// number (refcore's `range_literal`); whether the range holds it is checked once load is done
+/// (`check_range_keys`). L §2.5, §5.6.
+///
+/// # Errors
+///
+/// `LOAD-KEY <key> is not a value of a stepped range` for a key that is no value, as written
+/// (tally 2.1.6's #100, pick P2).
+pub(super) fn range_key_of(key: &KeyLit, file: &str, line: u32) -> Result<KeyVal, Stop> {
     let KeyLit::Lit(lit) = key else {
-        return Err(not_built);
+        return Err(not_a_range_value(key, file, line));
     };
     let value = match lit {
         Lit::Day(day) => Some(KeyVal::Day(*day)),
         Lit::Month(year, month) => Period::month(*year, *month).map(KeyVal::Period),
         Lit::Quarter(year, quarter) => Period::quarter(*year, *quarter).map(KeyVal::Period),
-        Lit::Num(_)
-        | Lit::MonthDay(..)
+        Lit::Num(_) => Some(int_of(lit).map_or_else(
+            || KeyVal::Key {
+                index: RANGE_KEYS.to_owned(),
+                name: lit_text(lit),
+            },
+            KeyVal::Int,
+        )),
+        Lit::MonthDay(..)
         | Lit::Key(_)
         | Lit::Cur(_)
         | Lit::Bool(_)
         | Lit::Inf { .. }
         | Lit::Nominal(_)
-        | Lit::Name(_) => int_of(lit).map(KeyVal::Int),
+        | Lit::Name(_) => None,
     };
-    value.ok_or(not_built)
+    value.ok_or_else(|| not_a_range_value(key, file, line))
+}
+
+/// `LOAD-KEY <key> is not a value of a stepped range`, the key as written (refcore's
+/// `range_literal`; tally 2.1.6's #100, pick P2). L §2.5, §8.3 `LOAD-KEY`.
+pub(super) fn not_a_range_value(key: &KeyLit, file: &str, line: u32) -> Stop {
+    refuse(
+        Load::Key,
+        format!("{} is not a value of a stepped range", key.text()),
+        file,
+        line,
+    )
 }
 
 /// A key of an index: an integer, a period by its label, or a key by its text.
@@ -203,14 +311,12 @@ fn resolve_index_key(
     file: &str,
     line: u32,
 ) -> Result<KeyVal, Stop> {
-    let Some(index) = m.indexes.get(id) else {
-        return Err(Stop::NotBuilt("an index that isn't built"));
-    };
+    let index = m.indexes.at(m.names.index_id(id)?)?;
     let lit = match key {
         KeyLit::Lit(lit) => Some(lit),
-        KeyLit::Place(..) => None,
+        KeyLit::Place(..) | KeyLit::Written(_) => None,
     };
-    let text = lit.map_or_else(|| "placekey".to_owned(), lit_text);
+    let text = key.text();
     let not_a_key = || {
         refuse(
             Load::Key,
@@ -298,7 +404,7 @@ fn resolve_option(
 ) -> Result<KeyVal, Stop> {
     let text = match key {
         KeyLit::Lit(lit @ (Lit::Name(_) | Lit::Key(_) | Lit::Num(_))) => lit_text(lit),
-        KeyLit::Lit(_) | KeyLit::Place(..) => key.text(),
+        KeyLit::Lit(_) | KeyLit::Place(..) | KeyLit::Written(_) => key.text(),
     };
     let found = is_option(m, axis, &text);
     let named = matches!(key, KeyLit::Lit(Lit::Name(_) | Lit::Key(_) | Lit::Num(_)));
@@ -326,17 +432,23 @@ fn resolve_thing(
 ) -> Result<KeyVal, Stop> {
     match key {
         KeyLit::Place(name, keys) => {
-            let found = keyed_place_thing(m, name, keys, file, line)?;
-            match found {
+            let keys: Vec<KeyLit> = keys.iter().cloned().map(KeyLit::Lit).collect();
+            match keyed_place_thing(m, name, &keys, file, line)? {
                 Some(thing) if m.thing_in(&thing, kind) => Ok(KeyVal::Thing(thing)),
                 Some(_) | None => Err(refuse(
                     Load::Key,
-                    format!("{name}[...] is not a key of {kind}"),
+                    format!("{} is not a key of {kind}", key.text()),
                     file,
                     line,
                 )),
             }
         }
+        KeyLit::Written(written) => Err(refuse(
+            Load::Key,
+            format!("{written} is not a key of {kind}"),
+            file,
+            line,
+        )),
         KeyLit::Lit(lit) => {
             let text = match lit {
                 Lit::Name(_) | Lit::Key(_) | Lit::Num(_) | Lit::Cur(_) => Some(lit_text(lit)),
@@ -370,11 +482,11 @@ fn resolve_thing(
 pub(super) fn keyed_place_thing(
     m: &Reality,
     name: &str,
-    keys: &[Lit],
+    keys: &[KeyLit],
     file: &str,
     line: u32,
 ) -> Result<Option<String>, Stop> {
-    if m.names.get(name) != Some(&NameKind::Place) {
+    if m.names.kind(name) != Some(NameKind::Place) {
         return Ok(None);
     }
     let Some(place) = m.places.get(name) else {
@@ -392,14 +504,8 @@ pub(super) fn keyed_place_thing(
         ));
     }
     let mut values = Vec::new();
-    for (lit, bind) in keys.iter().zip(&place.binds) {
-        values.push(resolve_key(
-            m,
-            &KeyLit::Lit(lit.clone()),
-            &bind.domain,
-            file,
-            line,
-        )?);
+    for (key, bind) in keys.iter().zip(&place.binds) {
+        values.push(resolve_key(m, key, &bind.domain, file, line)?);
     }
     Ok(place
         .things
@@ -466,7 +572,8 @@ impl Loader {
                 | Lit::Inf { .. }
                 | Lit::Nominal(_),
             )
-            | KeyLit::Place(..) => {
+            | KeyLit::Place(..)
+            | KeyLit::Written(_) => {
                 return Err(refuse(
                     Load::Key,
                     format!("a key of the open index {id} is a key literal"),
@@ -476,9 +583,8 @@ impl Loader {
             }
         };
         let known = self.m.versions.get(version).map(|v| v.known);
-        let Some(index) = self.m.indexes.get(id) else {
-            return Err(Stop::NotBuilt("an index that isn't built"));
-        };
+        let ix = self.m.names.index_id(id)?;
+        let index = self.m.indexes.at(ix)?;
         if let Some(found) = index.by_text(&text).cloned() {
             let old_known: Option<Day> = index
                 .added_by(&found)
@@ -493,9 +599,7 @@ impl Loader {
             }
             return Ok(found);
         }
-        let Some(open) = self.m.indexes.get_mut(id) else {
-            return Err(Stop::NotBuilt("an index that isn't built"));
-        };
+        let open = self.m.indexes.at_mut(ix)?;
         let value = KeyVal::Key {
             index: id.to_owned(),
             name: text.clone(),

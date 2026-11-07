@@ -2,11 +2,14 @@
 //! hash over the reprints.
 //! Spec: L §2.4 (the canonical format: header first, sections in kind order, kinds in tree
 //! order, versions last by `known`; clause lines and notes first, then rules or version items;
-//! the short form; a sorted `beats`); E §3.1 step 1 (the hash: the sha256 of the files'
-//! canonical texts in the order of their paths).
-//! Twin: engine/tools/refcore/canon.py (`reprint`, `printed_hash`, `FilePrinter`, `blocks`,
-//! `beats_sorted`, `kahn`, `BODY_RANK`, `SECTION_ORDER`, `HEADER_ORDER`).
-//! Invariants: every file is split and parsed before any is reprinted (L §8.3); a section's
+//! the short form; a sorted `beats`; a text with a duplicated id or a key domain under a prefix
+//! no `use` line names has no canonical form, tally 2.1.6); E §3.1 step 1 (the hash: the
+//! sha256 of the files' canonical texts in the order of their paths).
+//! Twin: engine/tools/refcore/canon.py (`reprint`, `unorderable`, `printed_hash`,
+//! `FilePrinter`, `blocks`, `beats_sorted`, `kahn`, `BODY_RANK`, `SECTION_ORDER`,
+//! `HEADER_ORDER`).
+//! Invariants: every file is split and parsed, then checked for an id declared twice or an
+//! unknown prefix, before any is ordered or reprinted (L §8.3, §2.4); a section's
 //! lines change only by its parentheses (`parens.rs`) and the orders L §2.4 states; what the
 //! spec leaves open keeps the file's order and spelling.
 
@@ -19,8 +22,8 @@ use super::parens::canon_block;
 use super::parse::Stop;
 use super::spacing::line_text;
 use super::tree::{
-    Def, Expr, Governs, Item, ItemForm, Key, KindDecl, KindSpec, Lit, Postfix, Rule, Section,
-    Version,
+    Def, Domain, Expr, File, Governs, HeaderKind, Item, ItemForm, Key, KindDecl, KindSpec, Lit,
+    Postfix, Rule, Section, Version,
 };
 use crate::api::Source;
 use crate::base::{Code, Load, Place, Refusal};
@@ -43,13 +46,28 @@ const VERSION_CLAUSES: [&str; 9] = [
 const KIND_RANK: u8 = 2;
 
 /// Each file's canonical text, in the order given, each reprinted with the declarations of
-/// all of them (refcore's `reprint`).
+/// all of them (refcore's `reprint`), the files taken as one reality's.
 ///
 /// # Errors
 ///
-/// The first refusal met splitting, parsing or ordering (`LOAD-PARSE`, `LOAD-KEY`,
-/// `LOAD-NAME`), or a form whose order the engine doesn't build yet.
+/// As [`reprint_among`].
 pub fn reprint(sources: &[Source]) -> Result<Vec<(String, String)>, Stop> {
+    reprint_among(sources, &[])
+}
+
+/// [`reprint`], where `members` holds, for each member of a joint model among the files, the
+/// paths of the files given that are that member's, each member a reality of its own
+/// (refcore's `reprint`, its `member_paths`).
+///
+/// # Errors
+///
+/// The first refusal met splitting, parsing or ordering (`LOAD-PARSE`; `LOAD-DUP` and
+/// `LOAD-NAME` for a text with no canonical form; `LOAD-KEY`), or a form whose order the
+/// engine doesn't build yet.
+pub fn reprint_among(
+    sources: &[Source],
+    members: &[BTreeSet<String>],
+) -> Result<Vec<(String, String)>, Stop> {
     let mut split = Vec::with_capacity(sources.len());
     for source in sources {
         split.push(split_lines(&source.text, &source.path)?);
@@ -60,6 +78,7 @@ pub fn reprint(sources: &[Source]) -> Result<Vec<(String, String)>, Stop> {
     for (source, lines) in sources.iter().zip(&split) {
         files.push(parse_file(lines, &source.path, &units)?);
     }
+    unorderable(&files, members)?;
     let printer = Printer {
         decls: Decls::of(&files),
         units,
@@ -70,6 +89,98 @@ pub fn reprint(sources: &[Source]) -> Result<Vec<(String, String)>, Stop> {
         printed.push((source.path.clone(), text));
     }
     Ok(printed)
+}
+
+/// A text with no canonical form, refused as load refuses it, before anything is ordered
+/// (refcore's `unorderable`; L §2.4, tally 2.1.6, #91): in each reality, the files given that
+/// are no member's and each member's apart, a top-level id declared twice, then a key domain
+/// under a prefix no model file's `use` line names (`LOAD-NAME unknown id <a>.<x>`, at its
+/// section's line).
+fn unorderable(files: &[File], members: &[BTreeSet<String>]) -> Result<(), Stop> {
+    let taken: BTreeSet<&String> = members.iter().flatten().collect();
+    let own: Vec<&File> = files.iter().filter(|f| !taken.contains(&f.path)).collect();
+    declared_once(&own)?;
+    for paths in members {
+        let group: Vec<&File> = files.iter().filter(|f| paths.contains(&f.path)).collect();
+        declared_once(&group)?;
+    }
+    let mut aliases: BTreeSet<&str> = BTreeSet::new();
+    for file in files.iter().filter(|f| f.header.kind == HeaderKind::Model) {
+        aliases.extend(file.header.uses.iter().map(|(alias, ..)| alias.as_str()));
+    }
+    for file in files {
+        for section in &file.sections {
+            for bind in section.binds() {
+                if let Domain::Name {
+                    id,
+                    qual: Some(qual),
+                } = &bind.domain
+                    && !aliases.contains(qual.as_str())
+                {
+                    let message = format!("unknown id {qual}.{id}");
+                    return Err(refuse(Load::Name, message, &file.path, section.id_line().1));
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+/// One reality's files, each top-level id declared once: `LOAD-DUP <x> is declared twice` at
+/// the second in the order of the files' paths, a scenario's file checked with the base's
+/// files and never with another scenario's (L §2.5, §6.4); files of several models are
+/// several realities, each file checked alone (refcore's `unorderable`, its groups).
+fn declared_once(group: &[&File]) -> Result<(), Stop> {
+    let models = group
+        .iter()
+        .filter(|f| f.header.kind == HeaderKind::Model)
+        .count();
+    if models > 1 {
+        for file in group {
+            declared_once_in(core::slice::from_ref(file))?;
+        }
+        return Ok(());
+    }
+    declared_once_in(group)
+}
+
+/// [`declared_once`] for one reality's files.
+fn declared_once_in(group: &[&File]) -> Result<(), Stop> {
+    let mut base: BTreeSet<String> = BTreeSet::new();
+    for file in group
+        .iter()
+        .filter(|f| f.header.kind != HeaderKind::Scenario)
+    {
+        declare(&mut base, file)?;
+    }
+    for file in group
+        .iter()
+        .filter(|f| f.header.kind == HeaderKind::Scenario)
+    {
+        declare(&mut base.clone(), file)?;
+    }
+    Ok(())
+}
+
+/// Each section of `file` declared into `seen`: `LOAD-DUP` at one already there.
+fn declare(seen: &mut BTreeSet<String>, file: &File) -> Result<(), Stop> {
+    for section in &file.sections {
+        let (id, line) = section.id_line();
+        if !seen.insert(id.to_owned()) {
+            let message = format!("{id} is declared twice");
+            return Err(refuse(Load::Dup, message, &file.path, line));
+        }
+    }
+    Ok(())
+}
+
+/// A refusal at a line of a file.
+fn refuse(code: Load, message: String, file: &str, line: u32) -> Stop {
+    Stop::Refused(Refusal::at(
+        Code::Load(code),
+        message,
+        Place::Line(file.to_owned(), line),
+    ))
 }
 
 /// The reality's hash: the sha256 of the canonical texts, each ending with its newline, joined
@@ -335,7 +446,7 @@ impl Printer {
             ]),
             ItemForm::Same(pair) => self.same_key(&pair.0, item, line, &place),
             ItemForm::Band(row) => {
-                let keys: Vec<KeyRef> = row.key.iter().map(row_key).collect();
+                let keys: Vec<KeyRef> = row.key.iter().cloned().map(KeyRef::One).collect();
                 self.keyed(row.qual.as_deref(), &row.target, &keys, &place)
             }
             ItemForm::Row(row) => {
@@ -400,7 +511,13 @@ impl Printer {
 /// (`x[k]`, `a.x[k]`, `a.b.x[k]`); any other side is its own target (`x`, `a.x`, `a.b.c`,
 /// `x[k].f`), written as the side is.
 fn same_side(left: &Expr) -> Result<(String, &[Key]), Stop> {
-    let no_id = || invariant("a same side that is no id with fields and keys");
+    let no_id = || {
+        invariant(
+            "unreachable: since tally 2.1.6 (#88, L §2.3 `sref`) the parser refuses with \
+             LOAD-PARSE a `same` side that isn't an id with its fields and keys, so `reprint` \
+             never orders one",
+        )
+    };
     if let Expr::Name(id) = left {
         return Ok((id.clone(), &[]));
     }
@@ -478,7 +595,11 @@ fn same_key(key: &Key) -> Result<KeyRef, Stop> {
 
 /// A `same` side keyed by what the parser's `sref` never takes.
 fn no_literal() -> Stop {
-    invariant("a same side keyed by no literal or place")
+    invariant(
+        "unreachable: since tally 2.1.6 (#88, L §2.3 `sref`) the parser refuses with LOAD-PARSE \
+         a `same` side keyed by anything but literals or places keyed by literals, so `reprint` \
+         never orders one (T's `format/same_key_signed`)",
+    )
 }
 
 /// A target's id, with its member's prefix.

@@ -96,7 +96,7 @@ impl Checker {
             lt = unit_type(m, Some(held)).map_err(|s| scope.place(s))?;
         }
         let unit_kind = (unit != "any" && unit != "one")
-            && m.names.get(unit) == Some(&NameKind::Kind)
+            && m.names.kind(unit) == Some(NameKind::Kind)
             && !m.units.contains(unit)
             && !m.currencies.contains_key(unit);
         let what = format!("the amount of leg {} of {}", leg.name, mv.id);

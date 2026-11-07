@@ -6,7 +6,7 @@
 //! Invariants: every loop takes a token or ends; each bracket and `if` is counted by `open`;
 //! every form of the grammar parses (the reads M0 adds are in `reads.rs`, the pins in `ask.rs`).
 
-use super::lex::{Kind, Paren, Role};
+use super::lex::{Kind, Mark, Paren, Read, Role};
 use super::parse::{P, Stop, is_keyword};
 use super::reads::{dist_kind, query_fn};
 use super::tree::{
@@ -478,19 +478,22 @@ impl P<'_> {
                     continue;
                 }
                 fixes.push(Postfix::Keys(keys));
-            } else if self.at(".", 0) && !self.spaced(0) {
+            } else if self.at(".", 0) {
+                // Any spacing reads: `a .b` and `a. b` are `a.b`, and `a.b (x)` a call, as
+                // `f (x)` is (L §2.4, §2.3 parse rule 3; tally 2.1.6, #81). The word right
+                // after `.` is a field whatever its word, so its `[` prints touching.
                 self.skip(1)?;
                 if !self.at_id(0) {
                     return Err(self.err("a field"));
                 }
+                self.mark(Some(self.i), Mark::read_as_field);
                 fixes.push(Postfix::Field(self.next()?.text.clone()));
                 if self.at("(", 0)
-                    && !self.spaced(0)
                     && let Some(mut names) = name_chain(&base, &fixes)
                 {
                     // The call's name is read as an id, so the canonical form prints it touching
                     // its `(` (L §2.4 Expressions, tally 2.1.4; refcore's `tok.nm = True`).
-                    self.mark(self.back(), |m| m.name = true);
+                    self.mark(self.back(), |m| m.read = Read::Name);
                     let name = names.pop().ok_or_else(|| self.cannot("a band"))?;
                     base = self.band_call(name, names, None)?;
                     fixes = Vec::new();
@@ -546,8 +549,12 @@ impl P<'_> {
         Ok(keys)
     }
 
-    /// A key position: `*`, or an expression.
+    /// A key position: `*`, or an expression; in a record field's value an expression only, as
+    /// a `ref`'s keys are (refcore's `key_expr`, L §2.3 `ref`, issue #88).
     pub(super) fn key_expr(&mut self) -> Result<Key, Stop> {
+        if self.at("*", 0) && self.field_ref {
+            return Err(self.err("an expression"));
+        }
         if self.accept("*")? {
             return Ok(Key::Star);
         }
@@ -603,7 +610,7 @@ impl P<'_> {
 
     /// `ref = ID ["[" keys "]"] {"." FIELD ["[" keys "]"]}` (L §2.3).
     pub(super) fn reference(&mut self) -> Result<Expr, Stop> {
-        self.reference_keyed(KeysOf::Exprs)
+        self.reference_keyed(KeysOf::Exprs, "a reference")
     }
 
     /// A `same` side, `sref` (L §2.3): a reference whose keys are literals (`a.konto`,
@@ -612,12 +619,18 @@ impl P<'_> {
     /// each field). Any other key, `*` or a computed one, is `LOAD-PARSE`, as the grammar
     /// reads it.
     pub(super) fn same_ref(&mut self) -> Result<Expr, Stop> {
-        self.reference_keyed(KeysOf::Lits)
+        self.reference_keyed(KeysOf::Lits, "a reference")
     }
 
-    /// A reference, its keys written as `keys` says.
-    fn reference_keyed(&mut self, keys: KeysOf) -> Result<Expr, Stop> {
-        let name = self.ident("a reference")?;
+    /// An `of` row's `sref` (L §2.3 `ofrow`): the `same` side's form, read by the one `sref`
+    /// parser (issue #88), "an id" where its first word isn't one (refcore's `sref`).
+    pub(super) fn sref(&mut self) -> Result<Expr, Stop> {
+        self.reference_keyed(KeysOf::Lits, "an id")
+    }
+
+    /// A reference, its keys written as `keys` says; `what` names its first word.
+    fn reference_keyed(&mut self, keys: KeysOf, what: &str) -> Result<Expr, Stop> {
+        let name = self.ident(what)?;
         let mut fixes = Vec::new();
         if self.at("[", 0) {
             fixes.push(Postfix::Keys(self.ref_keys(keys)?));
@@ -659,17 +672,18 @@ impl P<'_> {
         Ok(keys)
     }
 
-    /// One key of an `sref`: a literal, or a place keyed by things, `konto[ana]` (L §2.3
-    /// `rk`'s last form, one key by L §2.4), the reference `konto[ana]` refcore's `sref` reads.
+    /// One key of an `sref`: a literal with no sign, or a place keyed by things, `konto[ana]`
+    /// (L §2.3 `sk`, tally 2.1.6), the reference `konto[ana]` refcore's `skey` reads; a sign,
+    /// `*`, a range or an expression is `LOAD-PARSE` where the grammar stops (issue #88).
     fn lit_key(&mut self) -> Result<Key, Stop> {
-        if !(self.at_id(0) && self.at("[", 1)) {
-            return Ok(Key::Expr(Expr::Lit(self.lit()?)));
+        if !(self.at_id(0) && self.at("[", 1) && !self.spaced(1)) {
+            return Ok(Key::Expr(Expr::Lit(self.lit_unsigned()?)));
         }
         let name = self.ident("an id")?;
         self.skip(1)?;
-        let mut keys = vec![Key::Expr(Expr::Lit(self.lit()?))];
+        let mut keys = vec![Key::Expr(Expr::Lit(self.lit_unsigned()?))];
         while self.accept(",")? {
-            keys.push(Key::Expr(Expr::Lit(self.lit()?)));
+            keys.push(Key::Expr(Expr::Lit(self.lit_unsigned()?)));
         }
         self.expect("]")?;
         let place = Expr::Post(Box::new(Expr::Name(name)), vec![Postfix::Keys(keys)]);
@@ -1072,7 +1086,7 @@ impl P<'_> {
         if is_keyword(word) {
             return Err(self.keyword_atom(word));
         }
-        self.mark(Some(self.i), |m| m.name = true);
+        self.mark(Some(self.i), |m| m.read = Read::Name);
         self.skip(1)?;
         if self.at("(", 0) {
             let args = self.call_args()?;
@@ -1160,7 +1174,11 @@ impl P<'_> {
         if self.accept("none")? {
             return Ok(FieldValue::None);
         }
-        Ok(FieldValue::Expr(self.expr(Ends::Free)?))
+        let outer = self.field_ref;
+        self.field_ref = true;
+        let value = self.expr(Ends::Free);
+        self.field_ref = outer;
+        Ok(FieldValue::Expr(value?))
     }
 
     /// `leg l from a to b amount q [on d]` (L §2.3 `leg`).
@@ -1241,7 +1259,7 @@ impl P<'_> {
             && t.kind == Kind::Id
             && matches!(t.text.as_str(), "day" | "month" | "quarter" | "year")
         {
-            self.mark(Some(s), |mark| mark.name = false);
+            self.mark(Some(s), |mark| mark.read = Read::Word);
         }
     }
 

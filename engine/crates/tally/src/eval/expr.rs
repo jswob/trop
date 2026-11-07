@@ -13,9 +13,9 @@
 use core::cmp::Ordering;
 
 use super::arith::{Op, Test, arith, compare, negate, same_value};
-use super::read::{Given, literal_key, make_keys};
+use super::read::{Given, lacks_at_run, literal_key, make_keys};
 use super::state::{
-    Ctx, Engine, Env, Figures, invariant, num_stop, refuse, refuse_load, wrong_type,
+    Ctx, Engine, Env, Figures, invariant, not_typed, num_stop, refuse, refuse_load, unit_stop,
 };
 use super::ty::{figure_like, sample};
 use crate::base::{Load, Run};
@@ -93,7 +93,7 @@ impl Engine {
         if let Some(var) = env.get(name) {
             return Ok(var.value.clone());
         }
-        match m.names.get(name) {
+        match m.names.kind(name) {
             Some(NameKind::Input | NameKind::Def) => self.read_item(m, name, &[], env, ctx),
             Some(NameKind::Cut) => Ok(Value::Day(ctx.cut)),
             Some(_) | None => {
@@ -300,7 +300,7 @@ impl Engine {
             return Err(refuse(Run::None, "a value is none here: if".to_owned()));
         }
         let Value::Hole(cond_hole) = test else {
-            return Err(wrong_type(m, "if of", &test));
+            return Err(not_typed());
         };
         let first = self.ev(m, yes, env, ctx)?;
         let second = self.ev(m, no, env, ctx)?;
@@ -338,7 +338,7 @@ impl Engine {
                 return Ok(Value::Bool(any));
             }
             let v = self.ev(m, term, env, ctx)?;
-            let v = boolean(m, v, word)?;
+            let v = boolean(v, word)?;
             if v == Value::Bool(any) {
                 return Ok(Value::Bool(any));
             }
@@ -356,7 +356,7 @@ impl Engine {
     /// `not e` (refcore's `e_not`). L §5.11.
     fn not(&mut self, m: &Reality, x: &Expr, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
         let v = self.ev(m, x, env, ctx)?;
-        let tested = boolean(m, v, "not")?;
+        let tested = boolean(v, "not")?;
         if let Value::Bool(holds) = tested {
             return Ok(Value::Bool(!holds));
         }
@@ -513,10 +513,8 @@ impl Engine {
         let mut out = Vec::with_capacity(fields.len());
         for f in fields {
             let Field::Named(name, value) = f else {
-                return Err(refuse_load(
-                    Load::Field,
-                    "a leg is not a field of a record".to_owned(),
-                ));
+                // load refuses it; refcore's run has no twin of this text
+                return Err(Stop::NotBuilt("a leg in a record, met at run"));
             };
             let v = match value {
                 FieldValue::Hole(text) => Value::Hole(Hole::asked(text, "")),
@@ -570,7 +568,7 @@ fn based_in(m: &Reality, thing: &crate::model::Thing, kind: &str) -> bool {
 
 /// Whether `name` names an input or a def.
 fn is_read(m: &Reality, name: &str) -> bool {
-    matches!(m.names.get(name), Some(NameKind::Input | NameKind::Def))
+    matches!(m.names.kind(name), Some(NameKind::Input | NameKind::Def))
 }
 
 /// The hole of the operands' questions (the hole module's one rule, L §8.1).
@@ -581,14 +579,14 @@ pub(super) fn hole_of(operands: &[Option<&Hole>]) -> Result<Value, Stop> {
 }
 
 /// A value in a logic position: a bool, or a hole; `none` is refused (L §3.1, §5.11).
-fn boolean(m: &Reality, v: Value, word: &str) -> Result<Value, Stop> {
+fn boolean(v: Value, word: &str) -> Result<Value, Stop> {
     if let Value::Bool(_) | Value::Hole(_) = v {
         return Ok(v);
     }
     if v == Value::None {
         return Err(refuse(Run::None, format!("a value is none here: {word}")));
     }
-    Err(wrong_type(m, &format!("{word} of"), &v))
+    Err(not_typed())
 }
 
 /// `a op b` on two values: a hole spreads, unless the other is `none` or `never`, which are
@@ -604,8 +602,10 @@ pub(super) fn binop(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Result<Val
                 "a value is none here: arithmetic".to_owned(),
             ));
         }
-        if let Value::Word(word) = v {
-            return Err(refuse_load(Load::Key, format!("ambiguous key {word}")).naming(word));
+        if let Value::Word(_) = v {
+            // load resolves a key word; refcore's run refuses it with its place, which a
+            // value here doesn't carry
+            return Err(Stop::NotBuilt("an ambiguous key met at run"));
         }
     }
     if lhs.as_hole().is_some() || rhs.as_hole().is_some() {
@@ -635,7 +635,8 @@ fn resolve_word(m: &Reality, word: &str, other: &Value) -> Result<Value, Stop> {
             m,
             &Lit::Name(word.to_owned()),
             &Domain::Index(index.clone()),
-        )?;
+        )?
+        .ok_or_else(lacks_at_run)?;
         return Ok(Value::of_key(&key));
     }
     if let Value::Key(KeyVal::Thing(_)) = other {
@@ -719,7 +720,8 @@ fn field(m: &Reality, v: Value, name: &str) -> Result<Value, Stop> {
         .into_iter()
         .find(|(f, _)| f == name)
         .map(|(_, value)| value)
-        .ok_or_else(|| refuse_load(Load::Field, format!("{name} is not a field of the record")))
+        // load's types refuse it; refcore's run names the record by its id
+        .ok_or(Stop::NotBuilt("a field a record lacks, met at run"))
 }
 
 /// A key list `[a, b]` as written.
@@ -783,13 +785,13 @@ fn number(m: &Reality, n: &crate::syntax::Number, figures: Figures) -> Result<Va
             class,
         }));
     };
-    let terms: Vec<(String, i64)> = unit
+    let terms: Vec<(String, crate::num::Num)> = unit
         .terms
         .iter()
-        .map(|t| (t.base.clone(), t.power))
+        .map(|t| (t.base.clone(), t.power.clone()))
         .collect();
-    let percent = terms == [("%".to_owned(), 1)];
-    let (u, factor) = Unit::from_syntax(terms).map_err(num_stop)?;
+    let percent = terms == [("%".to_owned(), crate::num::Num::int(1))];
+    let (u, factor) = Unit::from_syntax(terms).map_err(unit_stop)?;
     let q = n.value.checked_mul(&factor).map_err(num_stop)?;
     if percent {
         return Ok(Value::Number(Number {
@@ -801,12 +803,10 @@ fn number(m: &Reality, n: &crate::syntax::Number, figures: Figures) -> Result<Va
         && let [(cur, _)] = u.terms()
     {
         let id = currency_id(m, cur).map_err(num_stop)?;
-        return num_money(m, &q, id).map(Value::Money).map_err(|_| {
-            refuse_load(
-                Load::Precision,
-                format!("{} is finer than the minor unit", n.text),
-            )
-        });
+        // load refuses a figure finer than the minor unit with its place
+        return num_money(m, &q, id)
+            .map(Value::Money)
+            .map_err(|_| Stop::NotBuilt("money finer than its minor unit, met at run"));
     }
     Ok(Value::Number(Number {
         q,
@@ -824,12 +824,9 @@ pub(super) fn typed(m: &Reality, q: &crate::num::Num, ty: &Ty) -> Result<Option<
     match ty {
         Ty::Money(cur) => {
             let id = currency_id(m, cur).map_err(num_stop)?;
-            let money = num_money(m, q, id).map_err(|_| {
-                refuse_load(
-                    Load::Precision,
-                    "a figure finer than the minor unit".to_owned(),
-                )
-            })?;
+            // load refuses a figure finer than the minor unit with its place
+            let money = num_money(m, q, id)
+                .map_err(|_| Stop::NotBuilt("a figure finer than the minor unit, met at run"))?;
             Ok(Some(Value::Money(money)))
         }
         Ty::Int => Ok(Some(Value::Number(Number {

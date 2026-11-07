@@ -1,14 +1,15 @@
 //! Adjustments: a booked instance measured again at each later version's cut, each change of a leg recorded with the versions that made it.
 //! Spec: E §5 (steps 1–5: the booked instance at its booking cut, one refused there never
 //! re-measured; each later step c with t < c ≤ K, δ per leg, refused where the step's
-//! re-measurement is refused and a hole where its `when` is, the next step measured against
-//! that state; an adjustment recorded for δ ≠ 0, a change of places, or a δ that is a hole or
+//! re-measurement is refused or the leg's amount is on either side, else a hole where its
+//! `when` is, tally 2.1.6, the next step measured against that state; an adjustment recorded
+//! for δ ≠ 0, a change of places, or a δ that is a hole or
 //! refused; an adjustment nothing settles is `HOLE-CHANGED` from its day, and one whose δ is
 //! refused refuses its change and its remainder; tally 2.1.2); L §5.14.3 (adjustments, their
 //! names and remainders), §8.1 (`HOLE-CHANGED`'s question), §8.2 (`adjustment:` in the
 //! register), §8.4 (a refusal outranks a hole).
 //! Twin: engine/tools/refcore/moves.py (`AdjMv`, `remainder`, `known_dates`, `adjust_move`,
-//! `adjust_move_compute`, `step_legs`, `adjust_made`, `step_versions`).
+//! `adjust_move_compute`, `step_legs`, `leg_refusal`, `adjust_made`, `step_versions`).
 //! Invariants: a move's adjustments are computed once per cut, in the order of their day,
 //! move, instance and leg; the versions known on a day are the versions', rows' and
 //! observations' own; a booking refused at its booking cut records no adjustment; an
@@ -261,8 +262,9 @@ impl Engine {
     /// One instance measured at each step: δ per leg against the state before (refcore's
     /// `adjust_move_compute`, its steps). A booking refused at κ₀ stays refused and records
     /// nothing; a refused step makes each leg's adjustment refused, a step whose `when` is a
-    /// hole makes each a hole, and the step after either is measured against it (tally
-    /// 2.1.2). E §5 steps 1–4.
+    /// hole makes each a hole but a leg's whose amount is refused on either side, refused
+    /// (tally 2.1.6), and the step after either is measured against it (tally 2.1.2). E §5
+    /// steps 1–4.
     fn measure_inst(
         &mut self,
         m: &Reality,
@@ -332,9 +334,10 @@ impl Engine {
                 ));
             }
             if let Exists::Unknown(h) = &j.exists {
-                // tally 2.1.2: a `when` that is a hole makes each leg's adjustment that hole
-                let hole = Amount::Hole(h.clone());
-                out.extend(each_leg(&step, inst, &prev.legs, &j.legs, &hole));
+                // tally 2.1.2: a `when` that is a hole makes each leg's adjustment that hole,
+                // but a leg refused on either side (tally 2.1.6)
+                let before = prev.exists.then_some(prev.legs.as_slice());
+                out.extend(hole_when(&step, inst, (&prev.legs, before), &j.legs, h));
                 prev = Prev::after(&j);
                 continue;
             }
@@ -396,9 +399,44 @@ fn each_leg(
         .collect()
 }
 
+/// Each leg's adjustment at a step whose `when` is a hole: that hole, as a hole amount
+/// makes it, but for a leg whose amount is refused at this step or in the state measured
+/// against when it existed, whose δ is that refusal, which outranks a hole (refcore's
+/// `adjust_move_compute`, its hole `when`, `leg_refusal`; tally 2.1.6). E §5 steps 3–4,
+/// L §8.4.
+fn hole_when(
+    step: &Step,
+    inst: &Inst,
+    (prev, before): (&[LegVal], Option<&[LegVal]>),
+    now: &[LegVal],
+    h: &Hole,
+) -> Vec<Adjustment> {
+    let mut out = Vec::new();
+    for lg in step_legs(inst, prev, now) {
+        let delta = match leg_refusal(before, now, &lg.name) {
+            Some(err) => Amount::Refused(err),
+            None => Amount::Hole(h.clone()),
+        };
+        out.push(make(step, lg, delta, (Vec::new(), Vec::new())));
+    }
+    out
+}
+
+/// The refusal of leg `name`'s amount at this step, or else in the state measured against;
+/// none where both are a number or a hole (refcore's `leg_refusal`; tally 2.1.6). E §5
+/// step 3: "a leg's amount on either side".
+fn leg_refusal(before: Option<&[LegVal]>, now: &[LegVal], name: &str) -> Option<Refusal> {
+    now.iter()
+        .chain(before.into_iter().flatten())
+        .filter(|lg| lg.name == name)
+        .find_map(|lg| refusal_of(Some(&lg.amount)).cloned())
+}
+
 /// A step measured against a state whose existence is a hole: each leg's adjustment a hole
-/// holding that hole, this step's hole amount at the leg and its own existence's hole
-/// (refcore's `adjust_move_compute`, `prev_hole`; tally 2.1.2). E §5 steps 3–4.
+/// holding that hole, this step's hole amount at the leg and its own existence's hole, but
+/// for a leg whose amount is refused on either side, whose δ is that refusal (refcore's
+/// `adjust_move_compute`, `prev_hole`; tally 2.1.2, and 2.1.6 for the refused leg). E §5
+/// steps 3–4, L §8.4.
 fn against_hole(
     step: &Step,
     inst: &Inst,
@@ -408,6 +446,15 @@ fn against_hole(
 ) -> Result<Vec<Adjustment>, Stop> {
     let mut out = Vec::new();
     for lg in step_legs(inst, prev, &j.legs) {
+        if let Some(err) = leg_refusal(Some(prev), &j.legs, &lg.name) {
+            out.push(make(
+                step,
+                lg,
+                Amount::Refused(err),
+                (Vec::new(), Vec::new()),
+            ));
+            continue;
+        }
         let mut holes = vec![Some(was)];
         let now = j.legs.iter().filter(|x| x.name == lg.name);
         holes.extend(now.map(|x| hole_of(&x.amount)));

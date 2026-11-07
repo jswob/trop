@@ -6,7 +6,8 @@
 //! L §8.3 (`LOAD-PIN`, `LOAD-DUP`, `LOAD-HEADER`), E §11 (`REQ-ASK`: a member's ask).
 //! Twin: engine/tools/refcore/joint.py (`split_reality`, `header_uses`, `header_has_sames`,
 //! `member_texts`, `pin_check`, `member_hash`, `joint_texts` up to its merge, `MemberRefused`,
-//! `owner_of`, `owner_deep`, `shown`); cli.py (`_run_texts`, `joint`); model.py (`lookup` on a
+//! `owner_of`, `owner_deep`, `shown`, `pinned_members`); cli.py (`_run_texts`, `joint`,
+//! `reprint_lines`: a reprint's members pinned first, tally 2.1.6); model.py (`lookup` on a
 //! member, for the asks its namespace holds).
 //! Invariants: every member of a model is found, then every one pinned, in use order, before
 //! any loads; a member that is a joint model is a frame of a worklist, never a recursion
@@ -254,6 +255,69 @@ pub(super) fn load_joint(
     }
 }
 
+/// The members of each joint model among a reprint's files, found and pinned as `run` finds
+/// and pins them, before anything prints (tally 2.1.6, #74; the coordinator's P17, #105): each
+/// file named by its path as the run keys it, a member's paths relative to its model's file;
+/// a member that is itself a joint model has its own members found and pinned too, in use
+/// order, as `run` meets them before it loads each. For each direct member, by its alias, the
+/// paths of its files, which a reprint takes as a reality of its own. E §3.1 step 1;
+/// INTERFACE §1.
+///
+/// # Errors
+///
+/// `LOAD-PIN` for a member absent or changed, `LOAD-DUP` for a `use` twice, `LOAD-HEADER` for
+/// a member with no model file or two; `member <a>: …` for a member's other refusal, as `run`
+/// prints each.
+pub(crate) fn reprint_members(
+    given: &[Source],
+    disk: &BTreeMap<&str, &[u8]>,
+) -> Result<Vec<BTreeSet<String>>, Stop> {
+    let pool = Pool {
+        given: given.to_vec(),
+        pin: Pin::Canonical,
+    };
+    let mut members: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+    for source in given {
+        if !is_model(&source.text) || header_uses(&source.text).is_empty() {
+            continue;
+        }
+        let model = frame(Vec::new(), source.path.clone(), vec![source.clone()]);
+        let found = start(model, &pool, disk)?;
+        for (alias, files) in &found.files {
+            members.insert(
+                alias.clone(),
+                files.iter().map(|f| f.path.clone()).collect(),
+            );
+        }
+        pin_nested(found, &pool, disk)?;
+    }
+    Ok(members.into_values().collect())
+}
+
+/// Each member of `first` that is itself a joint model, its own members found and pinned, in
+/// use order, depth first, as `run` meets them (refcore's `joint_texts`, recursing), its
+/// members loaded by none: a worklist, never a recursion (R-16). E §3.1 step 1; L §6.1.
+fn pin_nested(first: Frame, pool: &Pool, disk: &BTreeMap<&str, &[u8]>) -> Result<(), Stop> {
+    let mut stack = vec![(first, 0_usize)];
+    while let Some((top, at)) = stack.last_mut() {
+        let Some((alias, files)) = top.files.get(*at) else {
+            stack.pop();
+            continue;
+        };
+        *at = at
+            .checked_add(1)
+            .ok_or_else(|| invariant("a joint model's members past counting".to_owned()))?;
+        let mut chain = top.chain.clone();
+        chain.push(alias.clone());
+        let (base, model) = member_base(files).map_err(|r| tagged(Stop::Refused(r), &chain))?;
+        if is_joint(&model.text) {
+            let nested = nested_frame(&base, model, chain, pool, disk)?;
+            stack.push((nested, 0));
+        }
+    }
+    Ok(())
+}
+
 /// A joint model's frame before its members are found: its aliases, its model file and its
 /// own files.
 fn frame(chain: Vec<String>, jfile: String, own: Vec<Source>) -> Frame {
@@ -319,35 +383,18 @@ fn member(
     pool: &Pool,
     disk: &BTreeMap<&str, &[u8]>,
 ) -> Result<Next, Stop> {
-    let base: Vec<&MemberFile> = files.iter().filter(|f| !is_scenario(&f.text)).collect();
     let mut worlds = BTreeSet::new();
     let mut scenario_asks = BTreeSet::new();
     for file in files.iter().filter(|f| is_scenario(&f.text)) {
         worlds.extend(scenario_id(&file.text));
         scenario_asks.extend(declared_asks(&file.text));
     }
-    let models: Vec<&&MemberFile> = base.iter().filter(|f| is_model(&f.text)).collect();
-    let [model] = models.as_slice() else {
-        let message = if models.is_empty() {
-            "no file has a model header"
-        } else {
-            "two files have a model header"
-        };
-        let refusal = Refusal::new(Code::Load(Load::Header), message.to_owned());
-        return Err(tagged(Stop::Refused(refusal), &chain));
-    };
+    let (base, model) = member_base(files).map_err(|r| tagged(Stop::Refused(r), &chain))?;
     if is_joint(&model.text) {
-        let own = base
-            .iter()
-            .map(|f| Source {
-                path: f.path.clone(),
-                text: f.text.clone(),
-            })
-            .collect();
-        let mut nested = frame(chain, model.path.clone(), own);
+        let mut nested = nested_frame(&base, model, chain, pool, disk)?;
         nested.worlds = worlds;
         nested.scenario_asks = scenario_asks;
-        return Ok(Next::Nested(Box::new(start(nested, pool, disk)?)));
+        return Ok(Next::Nested(Box::new(nested)));
     }
     let reality = alone(&base, &worlds).map_err(|s| tagged(s, &chain))?;
     let mut asks = ask_ids(&reality);
@@ -373,6 +420,45 @@ fn member(
             members: BTreeMap::new(),
         },
     ))
+}
+
+/// A member's base, the files that are no scenario's, and its one model file (refcore's
+/// `joint_texts`, its loop over members). L §6.1, §6.4.
+///
+/// # Errors
+///
+/// `LOAD-HEADER` for a base with no model file, or two.
+fn member_base(files: &[MemberFile]) -> Result<(Vec<&MemberFile>, &MemberFile), Refusal> {
+    let base: Vec<&MemberFile> = files.iter().filter(|f| !is_scenario(&f.text)).collect();
+    let models: Vec<&MemberFile> = base.iter().copied().filter(|f| is_model(&f.text)).collect();
+    let [model] = models.as_slice() else {
+        let message = if models.is_empty() {
+            "no file has a model header"
+        } else {
+            "two files have a model header"
+        };
+        return Err(Refusal::new(Code::Load(Load::Header), message.to_owned()));
+    };
+    Ok((base, *model))
+}
+
+/// The frame of a member that is itself a joint model, its own members found and pinned: its
+/// model file and its base's files.
+fn nested_frame(
+    base: &[&MemberFile],
+    model: &MemberFile,
+    chain: Vec<String>,
+    pool: &Pool,
+    disk: &BTreeMap<&str, &[u8]>,
+) -> Result<Frame, Stop> {
+    let own = base
+        .iter()
+        .map(|f| Source {
+            path: f.path.clone(),
+            text: f.text.clone(),
+        })
+        .collect();
+    start(frame(chain, model.path.clone(), own), pool, disk)
 }
 
 /// A member that is no joint model, loaded alone (refcore's `load_texts`): its files split in
@@ -457,8 +543,8 @@ fn ask_ids(m: &Reality) -> BTreeSet<String> {
 /// member finds as an ask, read or called by the joint model as `a.q`. L §6.1, §5.18.
 fn asks_named(m: &Reality) -> BTreeSet<String> {
     let mut named = BTreeSet::new();
-    for (id, kind) in &m.names {
-        if *kind == NameKind::Ask {
+    for (id, name) in m.names.entries() {
+        if name.kind() == NameKind::Ask {
             named.insert(id.clone());
         }
     }

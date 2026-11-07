@@ -15,7 +15,7 @@ use super::check::{Checker, Figure, Reading, Scope, tested_vars};
 use super::types::{
     Op, Operand, Sides, Typed, cmp_sign, converts, covered_spans, input_read, int_flex, is_bool,
     is_date, is_duration, key_pk, key_value_kind, lit_expr, lit_rule, no_order, num, numcls,
-    period_kind, refused, uerr, unit_of, unit_stop,
+    period_kind, refused, uerr, unit_error, unit_of,
 };
 use crate::base::{Code, Load};
 use crate::model::{
@@ -23,6 +23,25 @@ use crate::model::{
 };
 use crate::syntax::{Agg, AggFn, CmpOp, Expr, In, Lit, Stop};
 use crate::time::PeriodKind;
+
+/// `LOAD-LIMIT <n> has more than 18 digits` for an integer written as a literal that names
+/// keys: a key offset `k ± n`, a `pos(k)` bound (refcore's `key_digits`). L §7.6 item 3.
+fn key_digits(n: &crate::syntax::Number) -> Result<(), Stop> {
+    if !n.whole || n.unit.is_some() {
+        return Ok(());
+    }
+    let Some(text) = n
+        .value
+        .integer_text()
+        .filter(|t| t.trim_start_matches('-').len() > 18)
+    else {
+        return Ok(());
+    };
+    Err(refused(
+        Load::Limit,
+        format!("{text} has more than 18 digits"),
+    ))
+}
 
 /// Whether `t` is `num %`.
 fn is_pct(t: &Ty) -> bool {
@@ -247,10 +266,13 @@ impl Checker {
                 if m.kinds.get(ix).is_some() {
                     return Err(uerr(format!("key arithmetic on things of kind {ix}")));
                 }
-                if m.names.get(ix) == Some(&NameKind::Axis) {
+                if m.names.kind(ix) == Some(NameKind::Axis) {
                     return Err(uerr("key arithmetic on an axis".to_owned()));
                 }
                 no_order(m, lt, "key arithmetic")?;
+                if let Some(Lit::Num(offset)) = &sides.right.lit {
+                    key_digits(offset)?;
+                }
                 return Ok(lt.clone());
             }
             if op == Op::Sub && matches!(rt, Ty::Key(other) if other == ix) {
@@ -305,13 +327,18 @@ impl Checker {
             if intlike(rk) {
                 return Ok(lt.clone());
             }
-            if op == Op::Sub && matches!(rt, Ty::Period(other) if other == word) {
+            if op == Op::Sub
+                && *word != PeriodWord::Day
+                && matches!(rt, Ty::Period(other) if other == word)
+            {
                 return Ok(Ty::Int);
             }
+            // a duration of its own family: days for a period of days, months, quarters or
+            // years for the others; whether the count is whole shows at run (L §4.2, §8.4)
             if let Ty::Num(unit, _) = rt
                 && is_duration(rt)
                 && let [(du, _)] = unit.terms()
-                && du != "day"
+                && (du == "day") == (*word == PeriodWord::Day)
             {
                 return Ok(lt.clone());
             }
@@ -408,6 +435,7 @@ impl Checker {
             && let Expr::Call(call) = l
             && call.name == "pos"
         {
+            key_digits(n)?;
             self.pos_guard(scope, call.args.first(), n)?;
             right_scope.allow_lit = true;
         }
@@ -653,7 +681,7 @@ impl Checker {
         if let Expr::Name(id) = &test.set
             && !scope.is_var(id)
         {
-            match m.names.get(id) {
+            match m.names.kind(id) {
                 Some(NameKind::Kind) => {
                     if matches!(lt, Ty::KeyLit(_)) {
                         lt =
@@ -939,20 +967,21 @@ fn multiplicative(op: Op, lt: Ty, rt: Ty) -> Typed {
         if rk == "money" && lk == "int" {
             return Ok(rt);
         }
-        let (u, _) = lu.mul(&ru).map_err(unit_stop)?;
+        let (u, _) = lu.mul(&ru).map_err(unit_error)?;
         return Ok(num(u));
     }
-    let (u, _) = lu.div(&ru).map_err(unit_stop)?;
+    let (u, _) = lu.div(&ru).map_err(unit_error)?;
     Ok(num(u))
 }
 
-/// A period kind as a type, where the type has a word for it.
+/// A period kind as a type (refcore's `T.period`): a key of a day index `by n` is a period
+/// of days. L §4.1 `by n`, §4.2.
 fn period_ty(pk: PeriodKind) -> Ty {
     match pk {
         PeriodKind::Month => Ty::Period(PeriodWord::Month),
         PeriodKind::Quarter => Ty::Period(PeriodWord::Quarter),
         PeriodKind::Year => Ty::Period(PeriodWord::Year),
-        PeriodKind::Day => Ty::Unseen,
+        PeriodKind::Day => Ty::Period(PeriodWord::Day),
     }
 }
 

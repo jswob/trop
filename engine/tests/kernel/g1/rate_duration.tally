@@ -1,0 +1,23 @@
+model g1_rate_duration
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97's comment, the third review's H6, item R5): a rate per year times a duration of days has a period dimension of its own, day/year, which load can't see through a rate's row: refused where it is computed, LOAD-UNIT with refcore's text (L §3.2, §3.3); its twin, the same rate times months, answers."
+
+source plan "T's fixture (invented values)"
+
+input r5: rate
+
+input n1: int
+
+ask d_month: r5 * 1 month, r5 * n1 * 1 month
+
+ask d_day: r5 * 1 day
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  r5 = 5 %/year "five per cent a year"
+  n1 = 1 "one"

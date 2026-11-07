@@ -454,13 +454,15 @@ mod tests {
 
     /// The sets whose reprint refcore refuses, each by a ruling of tally 2.1.6: #91, a
     /// section id declared twice (LOAD-DUP), or an unknown prefix (LOAD-NAME); #74, a member
-    /// absent or changed (LOAD-PIN). `vectors.py`'s `REPRINT_REFUSED` lists the same.
-    const REPRINT_REFUSED: [&str; 6] = [
+    /// absent or changed (LOAD-PIN); #88 with #90, a `same` side keyed by a signed literal,
+    /// no `sref` (LOAD-PARSE). `vectors.py`'s `REPRINT_REFUSED` lists the same.
+    const REPRINT_REFUSED: [&str; 7] = [
         "U:set/surf/SURF-04/SURF-04",
         "format/dup_id",
         "format/dup_kind",
         "format/member_absent",
         "format/member_changed",
+        "format/same_key_signed",
         "format/unknown_prefix",
     ];
 
@@ -484,7 +486,7 @@ mod tests {
     #[test]
     fn the_format_vectors_read_and_name_their_texts() {
         let vs = format_vectors(FORMAT).expect("m0/format.refcore reads");
-        assert_eq!(vs.len(), 344, "315 text sets and 29 format fixtures");
+        assert_eq!(vs.len(), 345, "315 text sets and 30 format fixtures");
         let all = texts();
         let mut ids = BTreeSet::new();
         for v in &vs {
@@ -529,7 +531,7 @@ mod tests {
         }
         assert_eq!(
             vs.iter().filter(|v| v.group.starts_with("format/")).count(),
-            29,
+            30,
             "one vector per format fixture"
         );
     }

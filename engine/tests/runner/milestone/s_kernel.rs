@@ -94,7 +94,9 @@ mod tests {
     /// past the machine word; the 4 096-digit cap and a step that isn't positive, each refused
     /// beside an answered twin; a sum of a whole number and a fraction, a num in lowest terms,
     /// and what prints with no decimals (a minor unit of 1, an int), so a mutant in them fails
-    /// here, not only in M0's load tests (tally 2.1.6) (`kernel/g1/`).
+    /// here, not only in M0's load tests (tally 2.1.6); a rate per year times days, refused
+    /// where it is computed (`LOAD-UNIT`, L §3.2, §3.3), beside the rate times months (pre-M1,
+    /// #97's comment, H6) (`kernel/g1/`).
     #[test]
     fn s_kernel_g1_numbers() {
         group_holds("g1");
@@ -277,7 +279,11 @@ mod tests {
     /// year, ranges near the 4 096-digit cap, and the refusal texts refcore says; and the
     /// third review's two (P38): a key of a range `by n` moved by whole keys of its step, a
     /// `nominal` row where an int goes (`LOAD-UNIT`); `by_n_years_98` is held for #98 (P39,
-    /// `held.tsv`) (`kernel/g14/`).
+    /// `held.tsv`); and the reviews' small items (pre-M1, #97's comment): an aggregate over a
+    /// range of no keys beside one key, a written key list's integer past 64 bits, a key of a
+    /// day range `by 7` moved by days (whole keys, else `RUN-DOMAIN`), and a range of days
+    /// whose next key passes 9999-12-31, refused there before its keys are counted (P3)
+    /// beside one whose next key is still a day (`kernel/g14/`).
     #[test]
     fn s_kernel_g14_capacity() {
         group_holds("g14");

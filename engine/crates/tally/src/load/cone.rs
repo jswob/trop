@@ -170,7 +170,7 @@ fn only_queried(roles: &[ReadRole]) -> bool {
 
 /// The input, def or fill a name reads, if it names one.
 fn read_node(m: &Reality, name: &str) -> Option<Node> {
-    let kind = m.names.get(name)?;
+    let kind = m.names.kind(name)?;
     let node_kind = match kind {
         NameKind::Input => NodeKind::Input,
         NameKind::Def => NodeKind::Def,
