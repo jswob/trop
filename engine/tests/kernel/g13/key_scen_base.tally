@@ -1,0 +1,28 @@
+model g13_key_scen
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97, chunk 4, G4a K1): the base of scenario s, which replaces a key-typed input's row: with a key of persons, ben, the scenario loads and answers (g13/key_scen); with zed, a key persons lacks, the scenario alone is refused LOAD-KEY at load and the base answers (g13/key_scen_bad; L §6.4, §8.3)"
+
+source s "s"
+
+input r5: rate
+
+input n1: int
+
+kind persons
+
+input who: key persons
+
+ask a: n1
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r5 = 5 %/year "five"
+  n1 = 1 "one"
+  persons + [ana] lives 2026-01-01..
+  persons + [ben] lives 2026-01-01..
+  who = ana "a"

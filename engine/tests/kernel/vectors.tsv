@@ -132,3 +132,32 @@ g14/empty_range	g14		engine/tests/kernel/	engine/tests/kernel/g14/empty_range.ta
 g14/list_past_64	g14		engine/tests/kernel/	engine/tests/kernel/g14/list_past_64.tally		
 g14/by_n_days	g14		engine/tests/kernel/	engine/tests/kernel/g14/by_n_days.tally		
 g14/day_range_end	g14		engine/tests/kernel/	engine/tests/kernel/g14/day_range_end.tally		
+g6/refusal_order_later_leg	g6		engine/tests/kernel/	engine/tests/kernel/g6/refusal_order_later_leg.tally	q	
+g6/refusal_order_three	g6		engine/tests/kernel/	engine/tests/kernel/g6/refusal_order_three.tally		
+g5/scen_decisions	g5		engine/tests/kernel/	engine/tests/kernel/g5/scen_decisions_base.tally engine/tests/kernel/g5/scen_decisions.tally	q_boost	
+g6/refused_place	g6		engine/tests/kernel/	engine/tests/kernel/g6/refused_place.tally	q_bal	
+g6/refused_place_load	g6		engine/tests/kernel/	engine/tests/kernel/g6/refused_place_load.tally	q_bal	
+g6/refused_where_later_key	g6		engine/tests/kernel/	engine/tests/kernel/g6/refused_where_later_key.tally	q_bal	
+g6/scen_early	g6		engine/tests/kernel/	engine/tests/kernel/g6/scen_early_base.tally engine/tests/kernel/g6/scen_early.tally	q_top	
+g6/scen_open	g6		engine/tests/kernel/	engine/tests/kernel/g6/scen_open_base.tally engine/tests/kernel/g6/scen_open.tally		
+g5/dec_where_place	g5		engine/tests/kernel/	engine/tests/kernel/g5/dec_where_place.tally		
+g5/dec_where_lawdate	g5		engine/tests/kernel/	engine/tests/kernel/g5/dec_where_lawdate.tally		
+g5/dec_where_plan	g5		engine/tests/kernel/	engine/tests/kernel/g5/dec_where_plan.tally		
+g5/dec_where_plan_twin	g5		engine/tests/kernel/	engine/tests/kernel/g5/dec_where_plan_twin.tally		
+g5/dec_where_when_false	g5		engine/tests/kernel/	engine/tests/kernel/g5/dec_where_when_false.tally		
+g5/dec_where_noleg	g5		engine/tests/kernel/	engine/tests/kernel/g5/dec_where_noleg.tally		
+g5/dec_when_noleg	g5		engine/tests/kernel/	engine/tests/kernel/g5/dec_when_noleg.tally		
+g1/rate_periods_add	g1		engine/tests/kernel/	engine/tests/kernel/g1/rate_periods.tally	d_add	
+g1/rate_periods_sub	g1		engine/tests/kernel/	engine/tests/kernel/g1/rate_periods.tally	d_sub	
+g1/rate_periods_def	g1		engine/tests/kernel/	engine/tests/kernel/g1/rate_periods.tally	d_def	
+g1/rate_periods_cmp	g1		engine/tests/kernel/	engine/tests/kernel/g1/rate_periods.tally	d_cmp	
+g1/rate_periods_twin	g1		engine/tests/kernel/	engine/tests/kernel/g1/rate_periods.tally	a d_same d_periodic	
+g1/rate_periods_scen	g1		engine/tests/kernel/	engine/tests/kernel/g1/rate_periods.tally engine/tests/kernel/g1/rate_periods_scen.tally	b c	
+g14/range_count	g14		engine/tests/kernel/	engine/tests/kernel/g14/range_count.tally	q	
+g14/range_count_run	g14		engine/tests/kernel/	engine/tests/kernel/g14/range_count.tally	run_frac run_days	
+g13/key_band	g13		engine/tests/kernel/	engine/tests/kernel/g13/key_band.tally		
+g13/key_band_bad	g13		engine/tests/kernel/	engine/tests/kernel/g13/key_band_bad.tally		
+g13/key_scen	g13		engine/tests/kernel/	engine/tests/kernel/g13/key_scen_base.tally engine/tests/kernel/g13/key_scen.tally		
+g13/key_scen_bad	g13		engine/tests/kernel/	engine/tests/kernel/g13/key_scen_base.tally engine/tests/kernel/g13/key_scen_bad.tally		
+g13/range_key_unasked	g13		engine/tests/kernel/	engine/tests/kernel/g13/range_key_unasked.tally		
+g13/range_key_unasked_ask	g13		engine/tests/kernel/	engine/tests/kernel/g13/range_key_unasked.tally	nope	

@@ -1,0 +1,38 @@
+model g1_rate_periods
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97, chunk 4, G4a review B1): two rates of different periods added, subtracted (also through a def) or compared, which load can't see (their periods are the rows'): refused at run with load's code and refcore's text naming the operands (L §3.3, §8.3 LOAD-UNIT; 2.1.6-8), the run refused in the base's world; its twins, a rate plus itself and periodic by quarter, answer"
+
+source s "s"
+
+input r5: rate
+
+input n1: int
+
+input r6: rate
+
+def x: rate = r6 - r5
+
+ask a: n1
+
+ask d_add: r5 + r6
+
+ask d_sub: r5 - r6
+
+ask d_def: x
+
+ask d_cmp: r5 < r6
+
+ask d_same: r5 + r5
+
+ask d_periodic: periodic(r6, quarter, simple)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r5 = 5 %/year "five"
+  n1 = 1 "one"
+  r6 = 1 %/month "one"

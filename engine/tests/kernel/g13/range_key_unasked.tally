@@ -1,0 +1,42 @@
+model g13_range_key_unasked
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97, chunk 4, #106, P18): codes/m0 written's base with its row rr[3] written rr[4], a key its stepped range 1 .. 9 step 2 lacks, and its one ask taken out: load refuses it, LOAD-KEY, whatever the asks (L §2.5 Keys; E §11: a load refusal outranks REQ-ASK), so the same with an ask no text declares. Held for #106: refcore checks the keys at the first ask"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit etf_unit "a fund unit"
+
+kind persons
+
+kind gifts: event certain
+  leg cash: PLN
+
+place konto[p in persons]: accounts PLN lives 2026-01-01..
+
+place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input fund_price[m in months]: num PLN/etf_unit
+
+input rr[k in 1..9 step 2]: money PLN
+
+input amt: money PLN
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ana] lives 2026-01-01..
+  persons + [ben] lives 2026-01-01..
+  amt = 1.00 PLN "the card"
+  rr[4] = 2.00 PLN "the card"
+  opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
+  bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[ana] amount 1.00 PLN) "a gift"

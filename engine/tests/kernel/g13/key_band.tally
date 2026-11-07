@@ -1,0 +1,27 @@
+model g13_key_band
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97, chunk 4, G4a K1): a band keyed by an index, its rows naming its keys (L §5.9): it loads and answers; g13/key_band_bad names a key the index lacks"
+
+source s "s"
+
+input r5: rate
+
+input n1: int
+
+index tier = [low, mid, high]
+
+band tb(x: int): key tier
+
+ask d: tb(n1)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r5 = 5 %/year "five"
+  n1 = 1 "one"
+  tb: [0, 10] = low "a"
+  tb: (10, inf) = high "b"

@@ -1,0 +1,13 @@
+scenario s over g13_key_scen
+  tally 2
+  from 2026-01-01
+
+source t "t"
+
+version w
+  cite t
+  governs 2026-01..2026-12
+  known 2026-01-01
+  replace who = zed "z"
+
+ask b: n1 in s

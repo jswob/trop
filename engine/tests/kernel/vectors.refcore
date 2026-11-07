@@ -16384,4 +16384,1443 @@ r_twin: 2
   cut 2026-12-31
 r_two: refused: RUN-LIMIT a day passes 9999-12-31
   cut 2026-12-31
+,26:g6/refusal_order_later_leg,2:g6,44:run g6/refusal_order_later_leg.tally --ask q,1283:32:g6/refusal_order_later_leg.tally,1241:model g6_refusal_order_later_leg
+  tally 2
+  on 2025-12-31
+  start 2025-01-01
+  end 2025-12-31
+  note "T, pre-M1 (#97, chunk 4, P13): which refusal a place keeps when a decision's leg dated after its own day meets a plan's leg on that day (E §4.1, tally 2.1.6's typed movement order, #57): decision sweep on 3 January with its leg on 10 January and plan a on 10 January, both into gone after its lifespan ends (RUN-LIFESPAN), both refused at src; the decision's instance is dated first, so its leg takes its place before the plan's and bal(src) keeps its refusal. Its twin is g6/refusal_order_twin, where one leg refuses alone"
+
+source card "a card"
+
+unit DUK: currency minor 0.01
+
+input amt: money DUK
+
+input d0: date
+
+input d1: date
+
+place src: accounts DUK lives 2025-01-01..
+
+place gone: accounts DUK lives 2025-01-01..2025-01-05
+
+move a: transfers
+  on d0
+  leg cash from src to gone amount amt
+
+move sweep: transfers
+  on d1
+  reads src
+  leg cash from src to gone amount min(amt, bal(src)) on d0
+
+ask q: bal(src, 2025-01-31)
+
+version facts
+  cite card
+  governs always
+  known 2025-01-01
+  amt = 1.00 DUK
+  d0 = 2025-01-10
+  d1 = 2025-01-03
+  opening[src] = 500.00 DUK at 2025-01-01 start
+  opening[gone] = 0 DUK at 2025-01-01 start
+,,1:0,100:q: refused: RUN-LIFESPAN sweep.cash moves into or out of gone outside its lifespan
+  cut 2025-12-31
+,22:g6/refusal_order_three,2:g6,32:run g6/refusal_order_three.tally,1106:28:g6/refusal_order_three.tally,1068:model g6_refusal_order_three
+  tally 2
+  on 2025-12-31
+  start 2025-01-01
+  end 2025-12-31
+  note "T, pre-M1 (#97, chunk 4, P13): three plan moves a, b and c, one leg each on one day into gone after its lifespan ends (RUN-LIFESPAN), all refused at src: src keeps the first refusal booked, the first of the three in the typed movement order (E §4.1, tally 2.1.6, #57). g6/refusal_order holds two; its twin one"
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit DUK: currency minor 0.01
+
+input amt: money DUK
+
+input d0: date
+
+place src: accounts DUK lives 2025-01-01..
+
+place gone: accounts DUK lives 2025-01-01..2025-01-05
+
+move a: transfers
+  on d0
+  leg cash from src to gone amount amt
+
+move b: transfers
+  on d0
+  leg cash from src to gone amount amt
+
+move c: transfers
+  on d0
+  leg cash from src to gone amount amt
+
+ask q: bal(src, 2025-01-31)
+
+version facts
+  cite fixture
+  governs always
+  known 2025-01-01
+  amt = 1.00 DUK
+  d0 = 2025-01-10
+  opening[src] = 500.00 DUK at 2025-01-01 start
+  opening[gone] = 0 DUK at 2025-01-01 start
+,,1:0,96:q: refused: RUN-LIFESPAN a.cash moves into or out of gone outside its lifespan
+  cut 2025-12-31
+,17:g5/scen_decisions,2:g5,70:run g5/scen_decisions_base.tally g5/scen_decisions.tally --ask q_boost,1214:28:g5/scen_decisions_base.tally,807:model g5_scen_decisions
+  tally 2
+  on 2025-12-31
+  start 2025-12-30
+  end 2026-01-05
+  note "T, pre-M1 (#97, chunk 4, P13): the base of scenario boost, whose two decisions read konto, top dated on its from and lift two days after it (L §6.4): a move a scenario declares books nothing before its from, and books on the from itself and after it"
+
+source s "a card"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2025-01-01..
+
+place world: outside lives 1900-01-01..
+
+input from_day: date
+
+input late_day: date
+
+input top_amt: money PLN
+
+input lift_amt: money PLN
+
+ask q: bal(konto, 2026-01-05)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  from_day = 2026-01-01
+  late_day = 2026-01-03
+  top_amt = 1.00 PLN
+  lift_amt = 2.00 PLN
+  opening[konto] = 10.00 PLN at 2025-12-30 start
+,23:g5/scen_decisions.tally,338:scenario boost over g5_scen_decisions
+  tally 2
+  from 2026-01-01
+
+move top: transfers
+  on from_day
+  reads konto
+  leg cash from world to konto amount min(top_amt, bal(konto))
+
+move lift: transfers
+  on late_day
+  reads konto
+  leg cash from world to konto amount min(lift_amt, bal(konto))
+
+ask q_boost: bal(konto, 2026-01-05) in boost
+,,1:0,51:q_boost: 13.00 PLN
+  world: boost
+  cut 2025-12-31
+,16:g6/refused_place,2:g6,38:run g6/refused_place.tally --ask q_bal,1403:22:g6/refused_place.tally,1371:model g6_refused_place
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, pre-M1 (#97, chunk 4, P13): a plan over three months whose when is refused in February (a division by zero), and its leg's place refused there too (L §8.4, E §4.1, tally 2.1.6, #51): the refused instance refuses every place from its own day, 20 February; January's instance books and the days before are answered. g6/when has a refused when whose place can be read"
+
+source fixture "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+place konto: accounts PLN lives 2026-01-01..
+
+place box: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input dec_dom: int
+
+input fee_amt: money PLN
+
+input wdiv[m in month]: num
+
+move topup[m in month]: transfers
+  on day_of(m, dec_dom)
+  when 1 / wdiv[m] > 0
+  leg cash from world to (if 1 / wdiv[m] > 0 then box else konto) amount fee_amt
+
+ask q_bal: bal(konto, d), bal(box, d) for d in [2026-01-20, 2026-02-19, 2026-02-20]
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  dec_dom = 20 "the day of the month"
+  fee_amt = 3.00 "a fee"
+  wdiv[2026-01] = 1 "answered"
+  wdiv[2026-02] = 0 "a division by zero: the when and the place are refused"
+  wdiv[2026-03] = 2 "answered"
+  opening[konto] = 100 at 2026-01-01 start
+  opening[box] = 0 at 2026-01-01 start
+,,1:0,330:q_bal (d = 2026-01-20): (100.00 PLN, 3.00 PLN)
+  unfulfilled: topup[2026-01]
+  cut 2026-02-15
+q_bal (d = 2026-02-19): (100.00 PLN, 3.00 PLN)
+  unfulfilled: topup[2026-01]
+  cut 2026-02-15
+q_bal (d = 2026-02-20): (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
+  unfulfilled: topup[2026-01]
+  cut 2026-02-15
+,21:g6/refused_place_load,2:g6,43:run g6/refused_place_load.tally --ask q_bal,1469:27:g6/refused_place_load.tally,1432:model g6_refused_place_load
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, pre-M1 (#97, chunk 4, P13): g6/refused_place's plan, its leg's place, read only for February's refused instance, meeting a load refusal at run, a rate per year times a day (L §3.3, §8.3): a load refusal met at run refuses the run in the base's world, as anywhere else. Its twin is g6/refused_place, where the place meets a run refusal"
+
+source fixture "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+place konto: accounts PLN lives 2026-01-01..
+
+place box: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input dec_dom: int
+
+input fee_amt: money PLN
+
+input r5: rate
+
+input wdiv[m in month]: num
+
+move topup[m in month]: transfers
+  on day_of(m, dec_dom)
+  when 1 / wdiv[m] > 0
+  leg cash from world to (if wdiv[m] == 0 then (if r5 * 1 day > 0 then konto else box) else box) amount fee_amt
+
+ask q_bal: bal(konto, d), bal(box, d) for d in [2026-01-20, 2026-02-19, 2026-02-20]
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  dec_dom = 20 "the day of the month"
+  fee_amt = 3.00 "a fee"
+  r5 = 5 %/year "five per cent a year"
+  wdiv[2026-01] = 1 "answered"
+  wdiv[2026-02] = 0 "a division by zero: the when and the place are refused"
+  wdiv[2026-03] = 2 "answered"
+  opening[konto] = 100 at 2026-01-01 start
+  opening[box] = 0 at 2026-01-01 start
+,,1:1,102:refused: LOAD-UNIT 0.05 /year * 1 day: a rate times a duration of another period dimension (day/year)
+,26:g6/refused_where_later_key,2:g6,48:run g6/refused_where_later_key.tally --ask q_bal,1429:32:g6/refused_where_later_key.tally,1387:model g6_refused_where_later_key
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, pre-M1 (#97, chunk 4, P13): a plan over two bindings whose first key's where is refused in February (a division by zero) before its second binding is bound (L §5.14 Keys, §8.4, tally 2.1.6): the instance has no day or places to read, so the move's instances refuse every place from the run's start. Its twin is g6/where_refused, one binding, whose refused where refuses only its places from its day"
+
+source fixture "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+index tier = 1..2
+
+place konto: accounts PLN lives 2026-01-01..
+
+place box: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input dec_dom: int
+
+input fee_amt: money PLN
+
+input wdiv[m in month]: num
+
+move topup[m in month where 1 / wdiv[m] > 0, t in tier]: transfers
+  on day_of(m, dec_dom)
+  leg cash from world to box amount fee_amt
+
+ask q_bal: bal(konto, d), bal(box, d) for d in [2026-01-20, 2026-03-20]
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  dec_dom = 20 "the day of the month"
+  fee_amt = 3.00 "a fee"
+  wdiv[2026-01] = 1 "answered"
+  wdiv[2026-02] = 0 "a division by zero: the key's where is refused"
+  wdiv[2026-03] = 2 "answered"
+  opening[konto] = 100 at 2026-01-01 start
+  opening[box] = 0 at 2026-01-01 start
+,,1:0,224:q_bal (d = 2026-01-20): (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
+  cut 2026-02-15
+q_bal (d = 2026-03-20): (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
+  cut 2026-02-15
+,13:g6/scen_early,2:g6,60:run g6/scen_early_base.tally g6/scen_early.tally --ask q_top,1144:24:g6/scen_early_base.tally,871:model g6_scen_early
+  tally 2
+  on 2026-01-02
+  start 2025-12-30
+  end 2026-01-05
+  note "T, pre-M1 (#97, chunk 4, P13): the base of scenario topup, which declares a plan over the days kept by a when load can't see (d >= from_day, 31 December), so one instance exists before the scenario's from, 1 January (L §6.4): it books nothing there and is left out at run, with the note; the instances from the from on book"
+
+source s "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2025-01-01..
+
+place world: outside lives 1900-01-01..
+
+input from_day: date
+
+input top_amt: money PLN
+
+input lift_amt: money PLN
+
+ask q: bal(konto, 2026-01-05), top_amt, lift_amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  from_day = 2025-12-31
+  top_amt = 1.00 PLN
+  lift_amt = 2.00 PLN
+  opening[konto] = 10.00 PLN at 2025-12-30 start
+,19:g6/scen_early.tally,212:scenario topup over g6_scen_early
+  tally 2
+  from 2026-01-01
+
+move top[d in days]: transfers
+  on d
+  when d >= from_day
+  leg cash from world to konto amount top_amt
+
+ask q_top: bal(konto, 2026-01-05) in topup
+,,1:0,127:q_top: 15.00 PLN
+  world: topup
+  unfulfilled: top[2026-01-01]
+  left out: top, 1 instances, first 2025-12-31
+  cut 2026-01-02
+,12:g6/scen_open,2:g6,46:run g6/scen_open_base.tally g6/scen_open.tally,1168:23:g6/scen_open_base.tally,913:model g6_scen_open
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97, chunk 4, #103, P14): the base of scenario s, which declares a move over the months and an open index acct whose instances fall before its from, 1 June (L §6.4, A-9; §8.3): load never sees an open index's keys, so it can't see that these instances exist; they are left out at run, not refused LOAD-SCENARIO. Held for #103: refcore refuses the scenario. g6/scen_early is its twin over the days"
+
+source card "a card"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-12
+
+index acct: open
+
+kind pays: transfers
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input lim[k in acct]: money PLN
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  lim[x1] = 10.00 PLN
+  opening[konto] = 100.00 PLN at 2026-01-01 start
+
+ask a: bal(konto, 2026-12-31)
+,18:g6/scen_open.tally,196:scenario s over g6_scen_open
+  tally 2
+  from 2026-06-01
+
+move topup[d in month, k in acct]: pays
+  on start_of(d)
+  leg cash from world to konto amount lim[k]
+
+ask b: bal(konto, 2026-12-31) in s
+,,1:0,246:scenario s: refused: LOAD-SCENARIO move topup of s books on 2026-01-01, before 2026-06-01 (g6/scen_open.tally:5)
+a: 100.00 PLN
+  cut 2026-01-01
+warning: WARN-UNREAD input lim is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,18:g5/dec_where_place,2:g5,28:run g5/dec_where_place.tally,1692:24:g5/dec_where_place.tally,1658:model g5_dec_where_place
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, pre-M1 (#97, chunk 4, #104): a decision whose key's where is refused in February (a division by zero), its leg's place reading bal(box) (G2 review B1): it runs at its point as any instance does, its legs' places read there, and refuses them from its day; March's instance, whose place reads the refused box, refuses every place (L §8.4; E §4.1, §4.2 step 3). Held for #104: refcore drops the instance"
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+place konto: accounts PLN lives 2026-01-01..
+
+place box: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input dec_dom: int
+
+input fee_amt: money PLN
+
+input small_put: money PLN
+
+input divisor[m in month]: num
+
+move split[m in month where 1 / divisor[m] > 0]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads box
+  leg cash from world to (if bal(box) > fee_amt then konto else box) amount fee_amt
+
+ask q_bal: bal(konto, d), bal(box, d) for d in [2026-01-20, 2026-02-19, 2026-02-20, 2026-03-20] law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  dec_dom = 20 "the decision's day of the month"
+  fee_amt = 3.00 "a fee"
+  small_put = 1.00 "a small amount"
+  divisor[2026-01] = 1 "answered"
+  divisor[2026-02] = 0 "a division by zero, refused"
+  divisor[2026-03] = 2 "answered, but after February's refusal"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 100 at 2026-01-01 start
+  opening[box] = 0 at 2026-01-01 start
+,,1:0,516:q_bal (d = 2026-01-20): (100.00 PLN, 3.00 PLN)
+  unfulfilled: split[2026-01]
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-02-19): (100.00 PLN, 3.00 PLN)
+  unfulfilled: split[2026-01]
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-02-20): (100.00 PLN, 3.00 PLN)
+  unfulfilled: split[2026-01]
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-03-20): (100.00 PLN, 6.00 PLN)
+  unfulfilled: split[2026-01]
+  law date 2026-02-15, cut 2026-02-15
+warning: WARN-UNREAD input small_put is read by nothing
+,20:g5/dec_where_lawdate,2:g5,30:run g5/dec_where_lawdate.tally,1823:26:g5/dec_where_lawdate.tally,1787:model g5_dec_where_lawdate
+  tally 2
+  on 2026-03-31
+  start 2026-01-01
+  end 2026-03-31
+  note "T, pre-M1 (#97, chunk 4, #104): g5/dec_where_place with its place read from flag, replaced by a version known 1 March (G2 review B2): a decision refused by its key's where reads its legs' places at its point, its law at its law date and its facts at min(t, K), so February's reads flag = 1 and refuses box (L §8.4; E §4.2 step 3). Held for #104: refcore drops the instance"
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+place konto: accounts PLN lives 2026-01-01..
+
+place box: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input dec_dom: int
+
+input fee_amt: money PLN
+
+input small_put: money PLN
+
+input divisor[m in month]: num
+
+input flag: int
+
+move split[m in month where 1 / divisor[m] > 0]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads box
+  leg cash from world to (if flag > 0 then box else konto) amount if bal(box) >= small_put then small_put else fee_amt
+
+ask q_bal: bal(konto, d), bal(box, d) for d in [2026-01-20, 2026-02-19, 2026-02-20, 2026-03-20] law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  dec_dom = 20 "the decision's day of the month"
+  fee_amt = 3.00 "a fee"
+  small_put = 1.00 "a small amount"
+  divisor[2026-01] = 1 "answered"
+  divisor[2026-02] = 0 "a division by zero, refused"
+  divisor[2026-03] = 2 "answered, but after February's refusal"
+  flag = 1 "the flag"
+
+version later
+  cite fixture
+  governs always
+  known 2026-03-01
+  replace flag = 0
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 100 at 2026-01-01 start
+  opening[box] = 0 at 2026-01-01 start
+,,1:0,490:q_bal (d = 2026-01-20): (100.00 PLN, 3.00 PLN)
+  unfulfilled: split[2026-01]
+  law date 2026-03-31, cut 2026-03-31
+q_bal (d = 2026-02-19): (100.00 PLN, 3.00 PLN)
+  unfulfilled: split[2026-01]
+  law date 2026-03-31, cut 2026-03-31
+q_bal (d = 2026-02-20): (100.00 PLN, 3.00 PLN)
+  unfulfilled: split[2026-01]
+  law date 2026-03-31, cut 2026-03-31
+q_bal (d = 2026-03-20): (101.00 PLN, 3.00 PLN)
+  unfulfilled: split[2026-01]
+  unfulfilled: split[2026-03]
+  law date 2026-03-31, cut 2026-03-31
+,17:g5/dec_where_plan,2:g5,27:run g5/dec_where_plan.tally,1873:23:g5/dec_where_plan.tally,1840:model g5_dec_where_plan
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, pre-M1 (#97, chunk 4, #104): a decision refused by its key's where in February and a plan p refused at its when the same day, at box (G2 review B3): the decision's refusal comes at its point, after the day's plans, so box keeps the plan's (L §8.4; E §4.2 step 3). Its twin is g5/dec_where_plan_twin, the plan refused alone"
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+place konto: accounts PLN lives 2026-01-01..
+
+place box: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input dec_dom: int
+
+input fee_amt: money PLN
+
+input small_put: money PLN
+
+input divisor[m in month]: num
+
+input sh[m in month]: int
+
+move split[m in month where 1 / divisor[m] > 0]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads box
+  leg cash from world to box amount if bal(box) >= small_put then small_put else fee_amt
+
+move p[m in month]: transfers
+  on day_of(m, dec_dom)
+  when divisor[m - sh[m]] >= 0
+  leg cash from world to box amount fee_amt
+
+ask q_bal: bal(konto, d), bal(box, d) for d in [2026-01-20, 2026-02-19, 2026-02-20, 2026-03-20] law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  dec_dom = 20 "the decision's day of the month"
+  fee_amt = 3.00 "a fee"
+  small_put = 1.00 "a small amount"
+  divisor[2026-01] = 1 "answered"
+  divisor[2026-02] = 0 "a division by zero, refused"
+  divisor[2026-03] = 2 "answered, but after February's refusal"
+  sh[2026-01] = 0 "no shift"
+  sh[2026-02] = 5 "a shift off the index"
+  sh[2026-03] = 0 "no shift"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 100 at 2026-01-01 start
+  opening[box] = 0 at 2026-01-01 start
+,,1:0,630:q_bal (d = 2026-01-20): (100.00 PLN, 4.00 PLN)
+  unfulfilled: p[2026-01]
+  unfulfilled: split[2026-01]
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-02-19): (100.00 PLN, 4.00 PLN)
+  unfulfilled: p[2026-01]
+  unfulfilled: split[2026-01]
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-02-20): (100.00 PLN, refused: RUN-KEY 2025-09 is outside month)
+  unfulfilled: p[2026-01]
+  unfulfilled: split[2026-01]
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-03-20): (100.00 PLN, refused: RUN-KEY 2025-09 is outside month)
+  unfulfilled: p[2026-01]
+  unfulfilled: split[2026-01]
+  law date 2026-02-15, cut 2026-02-15
+,22:g5/dec_where_plan_twin,2:g5,32:run g5/dec_where_plan_twin.tally,1688:28:g5/dec_where_plan_twin.tally,1650:model g5_dec_where_plan_twin
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, pre-M1 (#97, chunk 4, #104): g5/dec_where_plan's twin: the decision with no where, so only plan p is refused in February, at box (L §8.4; E §4.2 step 3)"
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+place konto: accounts PLN lives 2026-01-01..
+
+place box: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input dec_dom: int
+
+input fee_amt: money PLN
+
+input small_put: money PLN
+
+input divisor[m in month]: num
+
+input sh[m in month]: int
+
+move split[m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads box
+  leg cash from world to box amount if bal(box) >= small_put then small_put else fee_amt
+
+move p[m in month]: transfers
+  on day_of(m, dec_dom)
+  when divisor[m - sh[m]] >= 0
+  leg cash from world to box amount fee_amt
+
+ask q_bal: bal(konto, d), bal(box, d) for d in [2026-01-20, 2026-02-19, 2026-02-20, 2026-03-20] law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  dec_dom = 20 "the decision's day of the month"
+  fee_amt = 3.00 "a fee"
+  small_put = 1.00 "a small amount"
+  divisor[2026-01] = 1 "answered"
+  divisor[2026-02] = 0 "a division by zero, refused"
+  divisor[2026-03] = 2 "answered, but after February's refusal"
+  sh[2026-01] = 0 "no shift"
+  sh[2026-02] = 5 "a shift off the index"
+  sh[2026-03] = 0 "no shift"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 100 at 2026-01-01 start
+  opening[box] = 0 at 2026-01-01 start
+,,1:0,630:q_bal (d = 2026-01-20): (100.00 PLN, 4.00 PLN)
+  unfulfilled: p[2026-01]
+  unfulfilled: split[2026-01]
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-02-19): (100.00 PLN, 4.00 PLN)
+  unfulfilled: p[2026-01]
+  unfulfilled: split[2026-01]
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-02-20): (100.00 PLN, refused: RUN-KEY 2025-09 is outside month)
+  unfulfilled: p[2026-01]
+  unfulfilled: split[2026-01]
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-03-20): (100.00 PLN, refused: RUN-KEY 2025-09 is outside month)
+  unfulfilled: p[2026-01]
+  unfulfilled: split[2026-01]
+  law date 2026-02-15, cut 2026-02-15
+,23:g5/dec_where_when_false,2:g5,33:run g5/dec_where_when_false.tally,1580:29:g5/dec_where_when_false.tally,1541:model g5_dec_where_when_false
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, pre-M1 (#97, chunk 4, #104): a decision whose key's where is refused in February, and whose when there is false (G2 review): it runs at its point, where its false when leaves no instance, so it refuses nothing (L §8.4, §5.14 Keys; E §4.2 step 3)"
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+place konto: accounts PLN lives 2026-01-01..
+
+place box: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input dec_dom: int
+
+input fee_amt: money PLN
+
+input small_put: money PLN
+
+input divisor[m in month]: num
+
+move split[m in month where 1 / divisor[m] > 0]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads box
+  when bal(box) < small_put
+  leg cash from world to box amount if bal(box) >= small_put then small_put else fee_amt
+
+ask q_bal: bal(konto, d), bal(box, d) for d in [2026-01-20, 2026-02-19, 2026-02-20, 2026-03-20] law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  dec_dom = 20 "the decision's day of the month"
+  fee_amt = 3.00 "a fee"
+  small_put = 1.00 "a small amount"
+  divisor[2026-01] = 1 "answered"
+  divisor[2026-02] = 0 "a division by zero, refused"
+  divisor[2026-03] = 2 "answered, but after February's refusal"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 100 at 2026-01-01 start
+  opening[box] = 0 at 2026-01-01 start
+,,1:0,460:q_bal (d = 2026-01-20): (100.00 PLN, 3.00 PLN)
+  unfulfilled: split[2026-01]
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-02-19): (100.00 PLN, 3.00 PLN)
+  unfulfilled: split[2026-01]
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-02-20): (100.00 PLN, 3.00 PLN)
+  unfulfilled: split[2026-01]
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-03-20): (100.00 PLN, 3.00 PLN)
+  unfulfilled: split[2026-01]
+  law date 2026-02-15, cut 2026-02-15
+,18:g5/dec_where_noleg,2:g5,28:run g5/dec_where_noleg.tally,1444:24:g5/dec_where_noleg.tally,1410:model g5_dec_where_noleg
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, pre-M1 (#97, chunk 4, #104): a decision of an events kind with no legs, refused by its key's where in February (G2 review N1): it refuses the places its legs give, none, so every balance is answered (L §8.4)"
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+place konto: accounts PLN lives 2026-01-01..
+
+place box: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input dec_dom: int
+
+input fee_amt: money PLN
+
+input small_put: money PLN
+
+input divisor[m in month]: num
+
+kind ev: events
+
+move split[m in month where 1 / divisor[m] > 0]: ev
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads box
+  when bal(box) >= 0
+
+ask q_bal: bal(konto, d), bal(box, d) for d in [2026-01-20, 2026-02-19, 2026-02-20, 2026-03-20] law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  dec_dom = 20 "the decision's day of the month"
+  fee_amt = 3.00 "a fee"
+  small_put = 1.00 "a small amount"
+  divisor[2026-01] = 1 "answered"
+  divisor[2026-02] = 0 "a division by zero, refused"
+  divisor[2026-03] = 2 "answered, but after February's refusal"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 100 at 2026-01-01 start
+  opening[box] = 0 at 2026-01-01 start
+,,1:0,502:q_bal (d = 2026-01-20): (100.00 PLN, 0.00 PLN)
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-02-19): (100.00 PLN, 0.00 PLN)
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-02-20): (100.00 PLN, 0.00 PLN)
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-03-20): (100.00 PLN, 0.00 PLN)
+  law date 2026-02-15, cut 2026-02-15
+warning: WARN-UNREAD input fee_amt is read by nothing
+warning: WARN-UNREAD input small_put is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,17:g5/dec_when_noleg,2:g5,27:run g5/dec_when_noleg.tally,1518:23:g5/dec_when_noleg.tally,1485:model g5_dec_when_noleg
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, pre-M1 (#97, chunk 4, #104): a decision of an events kind with no legs, refused by its when at its point in February (P16): it refuses the places its legs give, none, so every balance is answered (L §8.4); g5/dec_where_noleg is its twin by where. Held for #104: refcore refuses every place"
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+place konto: accounts PLN lives 2026-01-01..
+
+place box: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input dec_dom: int
+
+input fee_amt: money PLN
+
+input small_put: money PLN
+
+input divisor[m in month]: num
+
+kind ev: events
+
+move split[m in month]: ev
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads box
+  when bal(box) * (1 / divisor[m]) >= 0
+
+ask q_bal: bal(konto, d), bal(box, d) for d in [2026-01-20, 2026-02-19, 2026-02-20, 2026-03-20] law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  dec_dom = 20 "the decision's day of the month"
+  fee_amt = 3.00 "a fee"
+  small_put = 1.00 "a small amount"
+  divisor[2026-01] = 1 "answered"
+  divisor[2026-02] = 0 "a division by zero, refused"
+  divisor[2026-03] = 2 "answered, but after February's refusal"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 100 at 2026-01-01 start
+  opening[box] = 0 at 2026-01-01 start
+,,1:0,598:q_bal (d = 2026-01-20): (100.00 PLN, 0.00 PLN)
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-02-19): (100.00 PLN, 0.00 PLN)
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-02-20): (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-03-20): (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
+  law date 2026-02-15, cut 2026-02-15
+warning: WARN-UNREAD input fee_amt is read by nothing
+warning: WARN-UNREAD input small_put is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,19:g1/rate_periods_add,2:g1,37:run g1/rate_periods.tally --ask d_add,860:21:g1/rate_periods.tally,830:model g1_rate_periods
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97, chunk 4, G4a review B1): two rates of different periods added, subtracted (also through a def) or compared, which load can't see (their periods are the rows'): refused at run with load's code and refcore's text naming the operands (L §3.3, §8.3 LOAD-UNIT; 2.1.6-8), the run refused in the base's world; its twins, a rate plus itself and periodic by quarter, answer"
+
+source s "s"
+
+input r5: rate
+
+input n1: int
+
+input r6: rate
+
+def x: rate = r6 - r5
+
+ask a: n1
+
+ask d_add: r5 + r6
+
+ask d_sub: r5 - r6
+
+ask d_def: x
+
+ask d_cmp: r5 < r6
+
+ask d_same: r5 + r5
+
+ask d_periodic: periodic(r6, quarter, simple)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r5 = 5 %/year "five"
+  n1 = 1 "one"
+  r6 = 1 %/month "one"
+,,1:1,72:refused: LOAD-UNIT rates of different periods: 0.05 /year + 0.01 /month
+,19:g1/rate_periods_sub,2:g1,37:run g1/rate_periods.tally --ask d_sub,860:21:g1/rate_periods.tally,830:model g1_rate_periods
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97, chunk 4, G4a review B1): two rates of different periods added, subtracted (also through a def) or compared, which load can't see (their periods are the rows'): refused at run with load's code and refcore's text naming the operands (L §3.3, §8.3 LOAD-UNIT; 2.1.6-8), the run refused in the base's world; its twins, a rate plus itself and periodic by quarter, answer"
+
+source s "s"
+
+input r5: rate
+
+input n1: int
+
+input r6: rate
+
+def x: rate = r6 - r5
+
+ask a: n1
+
+ask d_add: r5 + r6
+
+ask d_sub: r5 - r6
+
+ask d_def: x
+
+ask d_cmp: r5 < r6
+
+ask d_same: r5 + r5
+
+ask d_periodic: periodic(r6, quarter, simple)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r5 = 5 %/year "five"
+  n1 = 1 "one"
+  r6 = 1 %/month "one"
+,,1:1,72:refused: LOAD-UNIT rates of different periods: 0.05 /year - 0.01 /month
+,19:g1/rate_periods_def,2:g1,37:run g1/rate_periods.tally --ask d_def,860:21:g1/rate_periods.tally,830:model g1_rate_periods
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97, chunk 4, G4a review B1): two rates of different periods added, subtracted (also through a def) or compared, which load can't see (their periods are the rows'): refused at run with load's code and refcore's text naming the operands (L §3.3, §8.3 LOAD-UNIT; 2.1.6-8), the run refused in the base's world; its twins, a rate plus itself and periodic by quarter, answer"
+
+source s "s"
+
+input r5: rate
+
+input n1: int
+
+input r6: rate
+
+def x: rate = r6 - r5
+
+ask a: n1
+
+ask d_add: r5 + r6
+
+ask d_sub: r5 - r6
+
+ask d_def: x
+
+ask d_cmp: r5 < r6
+
+ask d_same: r5 + r5
+
+ask d_periodic: periodic(r6, quarter, simple)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r5 = 5 %/year "five"
+  n1 = 1 "one"
+  r6 = 1 %/month "one"
+,,1:1,72:refused: LOAD-UNIT rates of different periods: 0.01 /month - 0.05 /year
+,19:g1/rate_periods_cmp,2:g1,37:run g1/rate_periods.tally --ask d_cmp,860:21:g1/rate_periods.tally,830:model g1_rate_periods
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97, chunk 4, G4a review B1): two rates of different periods added, subtracted (also through a def) or compared, which load can't see (their periods are the rows'): refused at run with load's code and refcore's text naming the operands (L §3.3, §8.3 LOAD-UNIT; 2.1.6-8), the run refused in the base's world; its twins, a rate plus itself and periodic by quarter, answer"
+
+source s "s"
+
+input r5: rate
+
+input n1: int
+
+input r6: rate
+
+def x: rate = r6 - r5
+
+ask a: n1
+
+ask d_add: r5 + r6
+
+ask d_sub: r5 - r6
+
+ask d_def: x
+
+ask d_cmp: r5 < r6
+
+ask d_same: r5 + r5
+
+ask d_periodic: periodic(r6, quarter, simple)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r5 = 5 %/year "five"
+  n1 = 1 "one"
+  r6 = 1 %/month "one"
+,,1:1,55:refused: LOAD-UNIT rates of different periods compared
+,20:g1/rate_periods_twin,2:g1,51:run g1/rate_periods.tally --ask a d_same d_periodic,860:21:g1/rate_periods.tally,830:model g1_rate_periods
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97, chunk 4, G4a review B1): two rates of different periods added, subtracted (also through a def) or compared, which load can't see (their periods are the rows'): refused at run with load's code and refcore's text naming the operands (L §3.3, §8.3 LOAD-UNIT; 2.1.6-8), the run refused in the base's world; its twins, a rate plus itself and periodic by quarter, answer"
+
+source s "s"
+
+input r5: rate
+
+input n1: int
+
+input r6: rate
+
+def x: rate = r6 - r5
+
+ask a: n1
+
+ask d_add: r5 + r6
+
+ask d_sub: r5 - r6
+
+ask d_def: x
+
+ask d_cmp: r5 < r6
+
+ask d_same: r5 + r5
+
+ask d_periodic: periodic(r6, quarter, simple)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r5 = 5 %/year "five"
+  n1 = 1 "one"
+  r6 = 1 %/month "one"
+,,1:0,91:a: 1
+  cut 2026-12-31
+d_same: 0.1 /year
+  cut 2026-12-31
+d_periodic: 0.03
+  cut 2026-12-31
+,20:g1/rate_periods_scen,2:g1,62:run g1/rate_periods.tally g1/rate_periods_scen.tally --ask b c,1006:21:g1/rate_periods.tally,830:model g1_rate_periods
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97, chunk 4, G4a review B1): two rates of different periods added, subtracted (also through a def) or compared, which load can't see (their periods are the rows'): refused at run with load's code and refcore's text naming the operands (L §3.3, §8.3 LOAD-UNIT; 2.1.6-8), the run refused in the base's world; its twins, a rate plus itself and periodic by quarter, answer"
+
+source s "s"
+
+input r5: rate
+
+input n1: int
+
+input r6: rate
+
+def x: rate = r6 - r5
+
+ask a: n1
+
+ask d_add: r5 + r6
+
+ask d_sub: r5 - r6
+
+ask d_def: x
+
+ask d_cmp: r5 < r6
+
+ask d_same: r5 + r5
+
+ask d_periodic: periodic(r6, quarter, simple)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r5 = 5 %/year "five"
+  n1 = 1 "one"
+  r6 = 1 %/month "one"
+,26:g1/rate_periods_scen.tally,111:scenario s over g1_rate_periods
+  tally 2
+  from 2026-01-01
+
+source t "t"
+
+ask b: r5 + r6 in s
+
+ask c: n1 in s
+,,1:0,157:b: refused: LOAD-UNIT rates of different periods: 0.05 /year + 0.01 /month
+c: 1
+  world: s
+  cut 2026-12-31
+warning: WARN-UNREAD source t is read by nothing
+,15:g14/range_count,3:g14,33:run g14/range_count.tally --ask q,1292:21:g14/range_count.tally,1261:model g14_range_count
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97, chunk 4, G1a review B1): a range whose ends and step are literals is counted at load, whatever its form, never stepped (L §7.6 item 2, P30): of 1 000 000 keys each, a fractional step, money by its minor unit and days by 1, and days by 4 and by a month, it loads and the run answers an ask that reads none (their 1 000 001-key twins are codes/m0 basic/limit-range-*); a range whose end load can't see is counted at run, RUN-LIMIT, a fraction step and days"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+input amt: money PLN
+
+input day: date
+
+ask q: amt
+
+ask edge_frac: max(k for k in 0..499999.5 step 0.5)
+
+ask edge_cents: max(k for k in 0 PLN..9999.99 PLN step 0.01 PLN)
+
+ask edge_days: max(d for d in 7262-02-02..9999-12-31 step 1 day)
+
+ask edge_days4: max(d for d in 0001-01-01..9999-12-31 step 4 day)
+
+ask edge_month: max(d for d in 0001-01-01..9999-12-31 step 1 month)
+
+ask run_frac: max(k for k in 0..(amt / 1 PLN * 10000) step 0.5)
+
+ask run_days: max(d for d in day..9999-12-31 step 1 day)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+,,1:0,31:q: 100.00 PLN
+  cut 2026-03-01
+,19:g14/range_count_run,3:g14,49:run g14/range_count.tally --ask run_frac run_days,1292:21:g14/range_count.tally,1261:model g14_range_count
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97, chunk 4, G1a review B1): a range whose ends and step are literals is counted at load, whatever its form, never stepped (L §7.6 item 2, P30): of 1 000 000 keys each, a fractional step, money by its minor unit and days by 1, and days by 4 and by a month, it loads and the run answers an ask that reads none (their 1 000 001-key twins are codes/m0 basic/limit-range-*); a range whose end load can't see is counted at run, RUN-LIMIT, a fraction step and days"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+input amt: money PLN
+
+input day: date
+
+ask q: amt
+
+ask edge_frac: max(k for k in 0..499999.5 step 0.5)
+
+ask edge_cents: max(k for k in 0 PLN..9999.99 PLN step 0.01 PLN)
+
+ask edge_days: max(d for d in 7262-02-02..9999-12-31 step 1 day)
+
+ask edge_days4: max(d for d in 0001-01-01..9999-12-31 step 4 day)
+
+ask edge_month: max(d for d in 0001-01-01..9999-12-31 step 1 month)
+
+ask run_frac: max(k for k in 0..(amt / 1 PLN * 10000) step 0.5)
+
+ask run_days: max(d for d in day..9999-12-31 step 1 day)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+,,1:0,214:run_frac: refused: RUN-LIMIT 0 .. 1 000 000 step 0.5 holds more than 1 000 000 keys
+  cut 2026-03-01
+run_days: refused: RUN-LIMIT 2026-02-10 .. 9999-12-31 step 1 day holds more than 1 000 000 keys
+  cut 2026-03-01
+,12:g13/key_band,3:g13,22:run g13/key_band.tally,543:18:g13/key_band.tally,516:model g13_key_band
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97, chunk 4, G4a K1): a band keyed by an index, its rows naming its keys (L §5.9): it loads and answers; g13/key_band_bad names a key the index lacks"
+
+source s "s"
+
+input r5: rate
+
+input n1: int
+
+index tier = [low, mid, high]
+
+band tb(x: int): key tier
+
+ask d: tb(n1)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r5 = 5 %/year "five"
+  n1 = 1 "one"
+  tb: [0, 10] = low "a"
+  tb: (10, inf) = high "b"
+,,1:0,73:d: low
+  cut 2026-12-31
+warning: WARN-UNREAD input r5 is read by nothing
+,16:g13/key_band_bad,3:g13,26:run g13/key_band_bad.tally,543:22:g13/key_band_bad.tally,512:model g13_key_band_bad
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97, chunk 4, G4a K1): a band row naming a key its index lacks, zzz: LOAD-KEY at load, refcore's text (L §5.9, §8.3); g13/key_band is its twin"
+
+source s "s"
+
+input r5: rate
+
+input n1: int
+
+index tier = [low, mid, high]
+
+band tb(x: int): key tier
+
+ask d: tb(n1)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r5 = 5 %/year "five"
+  n1 = 1 "one"
+  tb: [0, 10] = low "a"
+  tb: (10, inf) = zzz "b"
+,,1:1,71:refused: LOAD-KEY zzz is not a key of tier (g13/key_band_bad.tally:27)
+,12:g13/key_scen,3:g13,46:run g13/key_scen_base.tally g13/key_scen.tally,911:23:g13/key_scen_base.tally,675:model g13_key_scen
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97, chunk 4, G4a K1): the base of scenario s, which replaces a key-typed input's row: with a key of persons, ben, the scenario loads and answers (g13/key_scen); with zed, a key persons lacks, the scenario alone is refused LOAD-KEY at load and the base answers (g13/key_scen_bad; L §6.4, §8.3)"
+
+source s "s"
+
+input r5: rate
+
+input n1: int
+
+kind persons
+
+input who: key persons
+
+ask a: n1
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r5 = 5 %/year "five"
+  n1 = 1 "one"
+  persons + [ana] lives 2026-01-01..
+  persons + [ben] lives 2026-01-01..
+  who = ana "a"
+,18:g13/key_scen.tally,177:scenario s over g13_key_scen
+  tally 2
+  from 2026-01-01
+
+source t "t"
+
+version w
+  cite t
+  governs 2026-01..2026-12
+  known 2026-01-01
+  replace who = ben "z"
+
+ask b: n1 in s
+,,1:0,154:a: 1
+  cut 2026-12-31
+b: 1
+  world: s
+  cut 2026-12-31
+warning: WARN-UNREAD input r5 is read by nothing
+warning: WARN-UNREAD input who is read by nothing
+,16:g13/key_scen_bad,3:g13,50:run g13/key_scen_base.tally g13/key_scen_bad.tally,915:23:g13/key_scen_base.tally,675:model g13_key_scen
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97, chunk 4, G4a K1): the base of scenario s, which replaces a key-typed input's row: with a key of persons, ben, the scenario loads and answers (g13/key_scen); with zed, a key persons lacks, the scenario alone is refused LOAD-KEY at load and the base answers (g13/key_scen_bad; L §6.4, §8.3)"
+
+source s "s"
+
+input r5: rate
+
+input n1: int
+
+kind persons
+
+input who: key persons
+
+ask a: n1
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r5 = 5 %/year "five"
+  n1 = 1 "one"
+  persons + [ana] lives 2026-01-01..
+  persons + [ben] lives 2026-01-01..
+  who = ana "a"
+,22:g13/key_scen_bad.tally,177:scenario s over g13_key_scen
+  tally 2
+  from 2026-01-01
+
+source t "t"
+
+version w
+  cite t
+  governs 2026-01..2026-12
+  known 2026-01-01
+  replace who = zed "z"
+
+ask b: n1 in s
+,,1:0,207:scenario s: refused: LOAD-KEY zed is not a key of persons (g13/key_scen_bad.tally:11)
+a: 1
+  cut 2026-12-31
+warning: WARN-UNREAD input r5 is read by nothing
+warning: WARN-UNREAD input who is read by nothing
+,21:g13/range_key_unasked,3:g13,31:run g13/range_key_unasked.tally,1330:27:g13/range_key_unasked.tally,1293:model g13_range_key_unasked
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97, chunk 4, #106, P18): codes/m0 written's base with its row rr[3] written rr[4], a key its stepped range 1 .. 9 step 2 lacks, and its one ask taken out: load refuses it, LOAD-KEY, whatever the asks (L §2.5 Keys; E §11: a load refusal outranks REQ-ASK), so the same with an ask no text declares. Held for #106: refcore checks the keys at the first ask"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit etf_unit "a fund unit"
+
+kind persons
+
+kind gifts: event certain
+  leg cash: PLN
+
+place konto[p in persons]: accounts PLN lives 2026-01-01..
+
+place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input fund_price[m in months]: num PLN/etf_unit
+
+input rr[k in 1..9 step 2]: money PLN
+
+input amt: money PLN
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ana] lives 2026-01-01..
+  persons + [ben] lives 2026-01-01..
+  amt = 1.00 PLN "the card"
+  rr[4] = 2.00 PLN "the card"
+  opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
+  bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[ana] amount 1.00 PLN) "a gift"
+,,1:0,207:warning: WARN-UNREAD input amt is read by nothing
+warning: WARN-UNREAD input fund_price is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD place fund is read by nothing
+,25:g13/range_key_unasked_ask,3:g13,42:run g13/range_key_unasked.tally --ask nope,1330:27:g13/range_key_unasked.tally,1293:model g13_range_key_unasked
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97, chunk 4, #106, P18): codes/m0 written's base with its row rr[3] written rr[4], a key its stepped range 1 .. 9 step 2 lacks, and its one ask taken out: load refuses it, LOAD-KEY, whatever the asks (L §2.5 Keys; E §11: a load refusal outranks REQ-ASK), so the same with an ask no text declares. Held for #106: refcore checks the keys at the first ask"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit etf_unit "a fund unit"
+
+kind persons
+
+kind gifts: event certain
+  leg cash: PLN
+
+place konto[p in persons]: accounts PLN lives 2026-01-01..
+
+place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input fund_price[m in months]: num PLN/etf_unit
+
+input rr[k in 1..9 step 2]: money PLN
+
+input amt: money PLN
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ana] lives 2026-01-01..
+  persons + [ben] lives 2026-01-01..
+  amt = 1.00 PLN "the card"
+  rr[4] = 2.00 PLN "the card"
+  opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
+  bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[ana] amount 1.00 PLN) "a gift"
+,,1:1,29:refused: REQ-ASK no ask nope
 ,

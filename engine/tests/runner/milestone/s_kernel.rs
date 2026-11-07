@@ -96,7 +96,10 @@ mod tests {
     /// and what prints with no decimals (a minor unit of 1, an int), so a mutant in them fails
     /// here, not only in M0's load tests (tally 2.1.6); a rate per year times days, refused
     /// where it is computed (`LOAD-UNIT`, L §3.2, §3.3), beside the rate times months (pre-M1,
-    /// #97's comment, H6) (`kernel/g1/`).
+    /// #97's comment, H6); two rates of different periods added, subtracted, through a def,
+    /// compared and in a scenario's world, refused at run with load's code and refcore's text
+    /// naming the operands (G4a's review, B1), beside a rate plus itself and `periodic`
+    /// (`kernel/g1/`).
     #[test]
     fn s_kernel_g1_numbers() {
         group_holds("g1");
@@ -133,8 +136,10 @@ mod tests {
     /// observation; decisions on the cut's day; a walk-bound def read at two points; ties with
     /// no `ties by` (RUN-TIE) beside an untied twin; a decision refused in its `when`; a
     /// projection read by a decision on its own day and by an ask, from a day with a reading
-    /// at its start; lifespans that end inside the run; a cut after the run's end
-    /// (`kernel/g5/`).
+    /// at its start; lifespans that end inside the run; a cut after the run's end; a
+    /// scenario's decisions on its `from` and after it; a decision refused by its key's `where`
+    /// run at its point (G2's review: its refusal after the day's plans, a false `when` there,
+    /// no legs; three held for #104) (`kernel/g5/`).
     #[test]
     fn s_kernel_g5_agenda() {
         group_holds("g5");
@@ -149,7 +154,11 @@ mod tests {
     /// order (tally 2.1.6, #57: move `a` before `ab`; one move's keys `[x, f3]` before
     /// `[y, f11]` and `[x, f3]` before `[x, f11]`), each beside a twin where one leg refuses
     /// alone; a refused `when`, attribute or key's `where` refusing only the places its legs
-    /// give, from its day (tally 2.1.6, #51), beside a twin whose `where` holds (`kernel/g6/`).
+    /// give, from its day (tally 2.1.6, #51), beside a twin whose `where` holds; a decision's
+    /// later leg among the day's plans and three plans' legs, by the typed order; a refused
+    /// plan whose leg's place is refused, or meets a load refusal at run; a `where` refused
+    /// before a later binding; a scenario's plan before its `from` left out at run, and one
+    /// over an open index (held for #103) (P13's recipes; `kernel/g6/`).
     #[test]
     fn s_kernel_g6_plan_pass() {
         group_holds("g6");
@@ -254,7 +263,9 @@ mod tests {
     /// no line names (L §8.5, #30): an opening, a reading, an anchor and a `covers` line name
     /// none; a read, a leg, an observed row's leg, a pad, a binding over its kind and a row
     /// whose value it is each name one; any spacing between tokens reads (tally 2.1.6, #81): a
-    /// field spaced at its `.`, an id at its `[`, a call at its `(`, beside its touching twin
+    /// field spaced at its `.`, an id at its `[`, a call at its `(`, beside its touching twin; a
+    /// band row's and a scenario row's key its index or kind lacks, `LOAD-KEY`, beside twins
+    /// (G4a's K1); a stepped range's written key it lacks with no ask, held for #106
     /// (`kernel/g13/`).
     #[test]
     fn s_kernel_g13_load() {
@@ -283,7 +294,9 @@ mod tests {
     /// range of no keys beside one key, a written key list's integer past 64 bits, a key of a
     /// day range `by 7` moved by days (whole keys, else `RUN-DOMAIN`), and a range of days
     /// whose next key passes 9999-12-31, refused there before its keys are counted (P3)
-    /// beside one whose next key is still a day (`kernel/g14/`).
+    /// beside one whose next key is still a day; literal ranges of 1 000 000 keys counted at
+    /// load, a fractional step, money by its minor unit and days, and two counted at run
+    /// (G1a's review, B1) (`kernel/g14/`).
     #[test]
     fn s_kernel_g14_capacity() {
         group_holds("g14");
