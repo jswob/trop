@@ -56,11 +56,15 @@ impl KeyLit {
         Some(KeyLit::Place(name.clone(), lits))
     }
 
-    /// The key as its message names it.
+    /// The key as written, as every message names it: a place with its keys, `konto[ana]`
+    /// (L §2.5, tally 2.1.6; pick P1).
     pub(super) fn text(&self) -> String {
         match self {
             KeyLit::Lit(lit) => lit_text(lit),
-            KeyLit::Place(name, _) => name.clone(),
+            KeyLit::Place(name, keys) => {
+                let written: Vec<String> = keys.iter().map(lit_text).collect();
+                format!("{name}[{}]", written.join(", "))
+            }
         }
     }
 }
@@ -210,7 +214,7 @@ fn resolve_index_key(
         KeyLit::Lit(lit) => Some(lit),
         KeyLit::Place(..) => None,
     };
-    let text = lit.map_or_else(|| "placekey".to_owned(), lit_text);
+    let text = key.text();
     let not_a_key = || {
         refuse(
             Load::Key,
@@ -325,21 +329,15 @@ fn resolve_thing(
     line: u32,
 ) -> Result<KeyVal, Stop> {
     match key {
-        KeyLit::Place(name, keys) => {
-            let found = keyed_place_thing(m, name, keys, file, line)?;
-            match found {
-                Some(thing) if m.thing_in(&thing, kind) => Ok(KeyVal::Thing(thing)),
-                Some(_) | None => {
-                    let written: Vec<String> = keys.iter().map(lit_text).collect();
-                    Err(refuse(
-                        Load::Key,
-                        format!("{name}[{}] is not a key of {kind}", written.join(", ")),
-                        file,
-                        line,
-                    ))
-                }
-            }
-        }
+        KeyLit::Place(name, keys) => match keyed_place_thing(m, name, keys, file, line)? {
+            Some(thing) if m.thing_in(&thing, kind) => Ok(KeyVal::Thing(thing)),
+            Some(_) | None => Err(refuse(
+                Load::Key,
+                format!("{} is not a key of {kind}", key.text()),
+                file,
+                line,
+            )),
+        },
         KeyLit::Lit(lit) => {
             let text = match lit {
                 Lit::Name(_) | Lit::Key(_) | Lit::Num(_) | Lit::Cur(_) => Some(lit_text(lit)),

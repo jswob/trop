@@ -192,6 +192,21 @@ impl Num {
         }
     }
 
+    /// Whether the range `self .. hi step step` holds more than `limit` keys, counted on the
+    /// big tier, uncapped, as refcore's Python numbers count them, and never stepped:
+    /// `⌊(hi − self) ÷ step⌋ + 1 > limit`, that is `hi − self ≥ limit × step` (no key when
+    /// `hi < self`). `RUN-DOMAIN` unless the step is positive. L §5.6, §7.1, §7.6 item 2.
+    pub fn range_past(&self, hi: &Num, step: &Num, limit: u64) -> Result<bool, NumError> {
+        if step.is_negative() || step.is_zero() {
+            return Err(NumError::Domain);
+        }
+        let span = hi.to_big().add(&self.to_big().neg()?)?;
+        let reach = step
+            .to_big()
+            .mul(&BigRat::integer(Big::from_u128(u128::from(limit))))?;
+        Ok(span.compare(&reach)? != Ordering::Less)
+    }
+
     /// Both values, when both are small. P §6 (the small tier first).
     fn small_pair(&self, o: &Num) -> Option<(Small, Small)> {
         match (&self.0, &o.0) {

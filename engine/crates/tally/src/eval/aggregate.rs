@@ -17,7 +17,7 @@
 use core::cmp::Ordering;
 use std::collections::BTreeSet;
 
-use super::arith::{Op, Test, arith, compare, whole_of};
+use super::arith::{Op, Test, arith, compare, numbers_past, whole_of};
 use super::builtin::written_year;
 use super::expr::hole_of;
 use super::state::{
@@ -65,15 +65,8 @@ pub(crate) enum Brings {
 /// one, with what reading it read (refcore's `move_tuples`, its `cd` and `cw`). E §4.1 step 1.
 pub(crate) type Decided = Result<Vec<(Member, Collected)>, (Hole, Collected)>;
 
-/// Where a range's key limit is met: at load, where its ends and step are literals, which
-/// load sees, or at run. L §7.6 item 2.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum LimitAt {
-    /// `LOAD-LIMIT`.
-    Load,
-    /// `RUN-LIMIT`.
-    Run,
-}
+/// A range's ends and step, evaluated: `a`, `b` and `s` of `a .. b [step s]` (L §2.3 `bind`).
+type Ends = (Value, Value, Option<Value>);
 
 /// One binding's values, each with its own unknown-member hole, or the hole of a domain that
 /// is unknown.
@@ -473,7 +466,7 @@ impl Engine {
                 })
             }
             Over::List(lits) => Ok(Values::Known(list_values(lits))),
-            Over::Range(parts) => self.range_values(m, parts, env, ctx, LimitAt::Run),
+            Over::Range(parts) => self.range_values(m, parts, env, ctx),
         }
     }
 
@@ -568,83 +561,62 @@ impl Engine {
         Ok(Ok(Span::between(start, end)))
     }
 
-    /// A range whose ends and step are literals, stepped through at load: past 1 000 000 keys
-    /// it is `LOAD-LIMIT` with the bytes an ask that steps through it prints (refcore's
-    /// `m_check_literal_ranges`, its `range_values` with `lit`). L §7.6 item 2.
+    /// A range whose ends and step are literals, counted at load and never built: past
+    /// 1 000 000 keys it is `LOAD-LIMIT` with the bytes an ask that steps through it prints
+    /// (refcore's `m_check_literal_ranges`, its `range_values` with `lit`). L §7.6 item 2.
     ///
     /// # Errors
     ///
     /// `LOAD-LIMIT <a> .. <b>[ step <s>] holds more than 1 000 000 keys`; any other stop the
-    /// range meets, as at run.
+    /// count meets, as at run.
     pub(crate) fn literal_range(
         &mut self,
         m: &Reality,
         parts: &(Expr, Expr, Option<Expr>),
     ) -> Result<(), Stop> {
         let ctx = Ctx::new(None, m.on);
-        self.range_values(m, parts, &Env::empty(), ctx, LimitAt::Load)
-            .map(|_| ())
+        let Ok(ends) = self.range_ends(m, parts, &Env::empty(), ctx)? else {
+            return Ok(());
+        };
+        if past_limit(m, &ends)? {
+            return Err(refuse_load(Load::Limit, too_many_keys(m, &ends)?));
+        }
+        Ok(())
     }
 
-    /// The values of a range `a .. b [step s]`: days stepped, or integers, at most 1 000 000,
-    /// the limit met where `at` says (refcore's `range_values`, its `lit`). L §5.11, §7.6
-    /// item 2.
+    /// The values of a range `a .. b [step s]`, days stepped or integers, counted before one
+    /// is built, so past 1 000 000 keys it is `RUN-LIMIT` (refcore's `range_values`). L §5.11,
+    /// §7.6 item 2.
     fn range_values(
         &mut self,
         m: &Reality,
         parts: &(Expr, Expr, Option<Expr>),
         env: &Env,
         ctx: Ctx,
-        at: LimitAt,
     ) -> Result<Values, Stop> {
-        let (from, to, step) = parts;
-        let first = self.ev(m, from, env, ctx)?;
-        let last = self.ev(m, to, env, ctx)?;
-        let by = match step {
-            None => None,
-            Some(e) => Some(self.ev(m, e, env, ctx)?),
+        let ends = match self.range_ends(m, parts, env, ctx)? {
+            Ok(ends) => ends,
+            Err(h) => return Ok(Values::Unknown(h)),
         };
-        let holes = [
-            first.as_hole(),
-            last.as_hole(),
-            by.as_ref().and_then(Value::as_hole),
-        ];
-        if let Some(h) = spread(&holes) {
-            return Ok(Values::Unknown(h));
+        if past_limit(m, &ends)? {
+            return Err(refuse(Run::Limit, too_many_keys(m, &ends)?));
         }
+        let (first, last, by) = ends;
         if let Value::Day(start) = first {
             let Some(by) = by else {
                 return Err(Stop::NotBuilt("a range of days with no step"));
             };
-            return day_range(m, start, (&last, &by), at).map(Values::Known);
-        }
-        for v in [&first, &last] {
-            if *v == Value::None {
-                return Err(refuse(
-                    Run::None,
-                    "a value is none here: a range end".to_owned(),
-                ));
-            }
+            return day_range(m, start, (&last, &by)).map(Values::Known);
         }
         let stride = match &by {
             None => Num::int(1),
             Some(s) if [&first, &last, s].iter().all(|v| is_int(v)) => whole_of(m, s)?,
             Some(_) => return Err(Stop::NotBuilt("a stepped range of numbers not integers")),
         };
-        if let Some(s) = by
-            .as_ref()
-            .filter(|_| stride.is_negative() || stride.is_zero())
-        {
-            let message = format!(
-                "a stepped range whose step {} is not positive",
-                s.text(m).map_err(num_stop)?
-            );
-            return Err(refuse(Run::Domain, message));
-        }
         let (lo, hi) = (whole_of(m, &first)?, whole_of(m, &last)?);
         let limit = u64::try_from(RANGE_LIMIT).map_err(|_| invariant("the key limit"))?;
         let Some(keys) = lo.range_keys(&hi, &stride, limit).map_err(num_stop)? else {
-            return Err(too_many_keys(m, (&first, &last, by.as_ref()), at)?);
+            return Err(invariant("a range counted within the key limit"));
         };
         let out = keys
             .into_iter()
@@ -658,6 +630,31 @@ impl Engine {
             .collect();
         Ok(Values::Known(out))
     }
+
+    /// A range's ends and step evaluated, or the hole one of them is (L §8.1). L §5.11.
+    fn range_ends(
+        &mut self,
+        m: &Reality,
+        (from, to, step): &(Expr, Expr, Option<Expr>),
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Result<Ends, Hole>, Stop> {
+        let first = self.ev(m, from, env, ctx)?;
+        let last = self.ev(m, to, env, ctx)?;
+        let by = match step {
+            None => None,
+            Some(e) => Some(self.ev(m, e, env, ctx)?),
+        };
+        let holes = [
+            first.as_hole(),
+            last.as_hole(),
+            by.as_ref().and_then(Value::as_hole),
+        ];
+        Ok(match spread(&holes) {
+            Some(h) => Err(h),
+            None => Ok((first, last, by)),
+        })
+    }
 }
 
 /// Whether a value is an integer of no unit: an `int`, or a whole inline figure, which takes
@@ -667,23 +664,66 @@ fn is_int(v: &Value) -> bool {
         && matches!(n.class, Class::Int | Class::Flex))
 }
 
-/// `<a> .. <b> [step <s>] holds more than 1 000 000 keys`, `LOAD-LIMIT` or `RUN-LIMIT` as
-/// `at` says (refcore's `too_many`). L §7.6 item 2.
-fn too_many_keys(
-    m: &Reality,
-    (a, b, s): (&Value, &Value, Option<&Value>),
-    at: LimitAt,
-) -> Result<Stop, Stop> {
+/// Whether a range holds more than 1 000 000 keys, counted and never built (refcore's
+/// `range_values`, its checks before `too_many`, in its order): days by their step, numbers
+/// by `(b − a) ÷ s`. L §5.11, §7.6 item 2.
+fn past_limit(m: &Reality, (first, last, by): &Ends) -> Result<bool, Stop> {
+    if let Value::Day(start) = first {
+        return days_past(m, *start, last, by.as_ref());
+    }
+    for v in [first, last] {
+        if *v == Value::None {
+            return Err(refuse(
+                Run::None,
+                "a value is none here: a range end".to_owned(),
+            ));
+        }
+    }
+    let limit = u64::try_from(RANGE_LIMIT).map_err(|_| invariant("the key limit"))?;
+    numbers_past(m, (first, last, by.as_ref()), limit)
+}
+
+/// Whether the days `start .. end step s` are more than 1 000 000, counted and never stepped:
+/// a step of days moves every day by its first step's days, and one of months moves a day
+/// by 28 days at least, so a million of them pass the calendar. Past the limit, the
+/// 1 000 001st day is stepped from, as refcore's loop steps from it before it counts
+/// (refcore's `range_values` for days). L §4.2, §5.11, §7.6 item 2.
+fn days_past(m: &Reality, start: Day, end: &Value, by: Option<&Value>) -> Result<bool, Stop> {
+    let Some(by) = by else {
+        return Err(Stop::NotBuilt("a range of days with no step"));
+    };
+    let last = day_of_binding(m, end)?;
+    if start > last {
+        return Ok(false);
+    }
+    let days = start
+        .days_to(day_step(m, start, by)?)
+        .ok_or_else(|| invariant("a step's days"))?;
+    let reach = days
+        .checked_mul(RANGE_LIMIT)
+        .ok_or_else(|| invariant("a range's reach"))?;
+    let span = start
+        .days_to(last)
+        .ok_or_else(|| invariant("a range's days"))?;
+    if span < reach {
+        return Ok(false);
+    }
+    let key = start
+        .add_days(reach)
+        .ok_or_else(|| invariant("a day of the range"))?;
+    day_step(m, key, by)?;
+    Ok(true)
+}
+
+/// `<a> .. <b> [step <s>] holds more than 1 000 000 keys`, the ends and step as the range's
+/// values print (refcore's `too_many`). L §7.6 item 2.
+fn too_many_keys(m: &Reality, (a, b, s): &Ends) -> Result<String, Stop> {
     let step = match s {
         Some(s) => format!(" step {}", s.text(m).map_err(num_stop)?),
         None => String::new(),
     };
     let (a, b) = (a.text(m).map_err(num_stop)?, b.text(m).map_err(num_stop)?);
-    let message = format!("{a} .. {b}{step} holds more than 1 000 000 keys");
-    Ok(match at {
-        LimitAt::Load => refuse_load(Load::Limit, message),
-        LimitAt::Run => refuse(Run::Limit, message),
-    })
+    Ok(format!("{a} .. {b}{step} holds more than 1 000 000 keys"))
 }
 
 /// When a binding over a kind tests its things: on a day, or over a span.
@@ -833,41 +873,40 @@ fn list_value(lit: &Lit) -> Value {
     }
 }
 
-/// The days from `start` to `end`, stepped, at most 1 000 000, the limit met where `at` says
-/// (refcore's `range_values` for days). L §5.11, §7.6 item 2.
+/// The days from `start` to `end`, stepped, a range counted within the key limit (refcore's
+/// `range_values` for days). L §5.11.
 fn day_range(
     m: &Reality,
     start: Day,
     (end, step): (&Value, &Value),
-    at: LimitAt,
 ) -> Result<Vec<(Value, Option<Hole>)>, Stop> {
     let last = day_of_binding(m, end)?;
     let mut out = Vec::new();
     let mut current = start;
-    let mut count: i64 = 0;
     while current <= last {
-        count = count
-            .checked_add(1)
-            .ok_or_else(|| invariant("a day count"))?;
-        if count > RANGE_LIMIT {
-            return Err(too_many_keys(m, (&Value::Day(start), end, Some(step)), at)?);
-        }
         out.push((Value::Day(current), None));
-        let Value::Day(next) = arith(m, Op::Add, &Value::Day(current), step)? else {
-            return Err(refuse_load(
-                Load::Unit,
-                "a range of days stepped by a value that isn't a duration".to_owned(),
-            ));
-        };
-        if next <= current {
-            return Err(refuse(
-                Run::Domain,
-                "a stepped range whose step is not positive".to_owned(),
-            ));
-        }
-        current = next;
+        current = day_step(m, current, step)?;
     }
     Ok(out)
+}
+
+/// A day of a range moved by its step (refcore's `date_arith` in `range_values`): a step
+/// that isn't a duration is `LOAD-UNIT`, one that doesn't move forward `RUN-DOMAIN`. L §4.2,
+/// §5.11.
+fn day_step(m: &Reality, day: Day, step: &Value) -> Result<Day, Stop> {
+    let Value::Day(next) = arith(m, Op::Add, &Value::Day(day), step)? else {
+        return Err(refuse_load(
+            Load::Unit,
+            "a range of days stepped by a value that isn't a duration".to_owned(),
+        ));
+    };
+    if next <= day {
+        return Err(refuse(
+            Run::Domain,
+            "a stepped range whose step is not positive".to_owned(),
+        ));
+    }
+    Ok(next)
 }
 
 /// A binding's day: a day, or a day period's (refcore's `date_of`). L §5.7.

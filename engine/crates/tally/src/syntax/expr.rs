@@ -607,7 +607,7 @@ impl P<'_> {
 
     /// `ref = ID ["[" keys "]"] {"." FIELD ["[" keys "]"]}` (L §2.3).
     pub(super) fn reference(&mut self) -> Result<Expr, Stop> {
-        self.reference_keyed(KeysOf::Exprs)
+        self.reference_keyed(KeysOf::Exprs, "a reference")
     }
 
     /// A `same` side, `sref` (L §2.3): a reference whose keys are literals (`a.konto`,
@@ -616,12 +616,18 @@ impl P<'_> {
     /// each field). Any other key, `*` or a computed one, is `LOAD-PARSE`, as the grammar
     /// reads it.
     pub(super) fn same_ref(&mut self) -> Result<Expr, Stop> {
-        self.reference_keyed(KeysOf::Lits)
+        self.reference_keyed(KeysOf::Lits, "a reference")
     }
 
-    /// A reference, its keys written as `keys` says.
-    fn reference_keyed(&mut self, keys: KeysOf) -> Result<Expr, Stop> {
-        let name = self.ident("a reference")?;
+    /// An `of` row's `sref` (L §2.3 `ofrow`): the `same` side's form, read by the one `sref`
+    /// parser (issue #88), "an id" where its first word isn't one (refcore's `sref`).
+    pub(super) fn sref(&mut self) -> Result<Expr, Stop> {
+        self.reference_keyed(KeysOf::Lits, "an id")
+    }
+
+    /// A reference, its keys written as `keys` says; `what` names its first word.
+    fn reference_keyed(&mut self, keys: KeysOf, what: &str) -> Result<Expr, Stop> {
+        let name = self.ident(what)?;
         let mut fixes = Vec::new();
         if self.at("[", 0) {
             fixes.push(Postfix::Keys(self.ref_keys(keys)?));
