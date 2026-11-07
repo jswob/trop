@@ -1,0 +1,14 @@
+model dup_id
+  tally 2
+  on 2026-01-15
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#91, P22), the fuzz input b943 minimized: a source declared twice with two texts; reprint kept one block silently"
+
+source wrz "Bank Wrzos export"
+
+source notary "A notary's deed, the first copy"
+
+source misc "a third source"
+
+source notary "A notary's deed, the second copy"

@@ -1,0 +1,10 @@
+model g14_list_1000001
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#89, P35, finding 7): a list index of 1 000 001 keys, k1 to k1000001: one past the cap, refused at load (L §7.6 item 2, §8.3 LOAD-LIMIT). Its twin is list_1000000.tally."
+
+index x = [@keys k 1 1000001@]
+
+ask n: count(k in x)

@@ -10,7 +10,7 @@
 
 use super::arith::{Op, arith, int_of};
 use super::memo::{LawClass, Read, may_hold, rows_class};
-use super::state::{Ctx, Engine, invariant, num_stop, refuse, refuse_load};
+use super::state::{Ctx, Engine, a_day, invariant, num_stop, refuse, refuse_load};
 use crate::base::{Load, Run};
 use crate::hole::Hole;
 use crate::load::index_key_of;
@@ -24,7 +24,7 @@ use crate::syntax::{
     Calendar as CalendarLit, CalendarDay, DaySet, Expr, Field, FieldValue, Lit, Stop,
     Value as Written,
 };
-use crate::time::{Calendar, Day, Period, PeriodKind, weekday_number};
+use crate::time::{Calendar, Day, FirstYear, Period, PeriodKind, weekday_number};
 
 /// A key a read is given: a value, or a key literal its position resolves (L §2.5).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -399,9 +399,17 @@ pub(crate) fn to_key(m: &Reality, item: &str, v: &Value, domain: &Domain) -> Res
 }
 
 /// A value made a key of index `ix`: an int of an integer index, the key holding a day or a
-/// period of a period index, a key of a list or open index as it is (refcore's `to_key`).
+/// period of a period index, a key of a list or open index as it is (refcore's `to_key`);
+/// an integer past 64 bits is no key of an integer index, whose keys have at most 18 digits
+/// (L §7.6 item 3), `RUN-KEY`.
 fn index_key(m: &Reality, item: &str, ix: &IndexInfo, v: &Value) -> Result<KeyVal, Stop> {
     if ix.is_int {
+        if let Value::Number(n) = v
+            && n.q.to_i64().is_none()
+            && let Some(text) = n.q.integer_text()
+        {
+            return Err(refuse(Run::Key, format!("{text} is outside {}", ix.id)));
+        }
         return Ok(KeyVal::Int(int_of(m, v)?));
     }
     if ix.period.is_some() {
@@ -417,11 +425,13 @@ fn index_key(m: &Reality, item: &str, ix: &IndexInfo, v: &Value) -> Result<KeyVa
 }
 
 /// The key of a period index a day or a period stands for: the key holding the day, the
-/// key equal to the period or holding it (refcore's `to_key`, `holding` and `period`). L §4.6.
+/// key equal to the period or holding it (refcore's `to_key`, `holding` and `period`); the
+/// end of time is no day a key holds, `RUN-LIMIT`. L §4.6, §7.6 item 1.
 fn period_key(m: &Reality, item: &str, ix: &IndexInfo, v: &Value) -> Result<KeyVal, Stop> {
     let outside = |text: String| refuse(Run::Key, format!("{text} is outside {}", ix.id));
     if let Value::Day(day) = v {
-        return ix.holding(*day).cloned().ok_or_else(|| {
+        let day = a_day(*day)?;
+        return ix.holding(day).cloned().ok_or_else(|| {
             let def_days = m.defs.get(item).is_some() && ix.period == Some(PeriodKind::Day);
             if def_days {
                 refuse(
@@ -881,15 +891,19 @@ fn convert_lit(
         }
         Lit::Name(text) | Lit::Key(text) | Lit::Cur(text) => word_value(m, lit, text, ty),
         Lit::Nominal(times) => {
-            let Some(whole) = times.to_i64() else {
-                return Err(wrong_for(&lit.text(), ty));
-            };
-            if *ty == Ty::Code(CodeKind::Compounding) {
-                return Ok(Value::Code(Code::Nominal(whole)));
+            if *ty != Ty::Code(CodeKind::Compounding) {
+                let figure = times
+                    .integer_text()
+                    .ok_or_else(|| invariant("a nominal the parser read"))?;
+                return Err(unit_refusal(format!(
+                    "nominal {figure} is a compounding code"
+                )));
             }
-            Err(unit_refusal(format!(
-                "nominal {whole} is a compounding code"
-            )))
+            // as `eval/expr.rs`'s literal: refcore takes any size, the engine 64 bits
+            times
+                .to_i64()
+                .map(|whole| Value::Code(Code::Nominal(whole)))
+                .ok_or(Stop::NotBuilt("a nominal compounding past 64 bits"))
         }
         Lit::Inf { .. } => Err(unit_refusal(format!(
             "a value of the wrong type for {target}"
@@ -1167,11 +1181,17 @@ fn calendar_value(cal: &CalendarLit) -> Result<Value, Stop> {
     }
     let from = match &cal.yearly_from {
         None => None,
-        Some(n) => Some(
-            n.to_i64()
-                .and_then(|y| u16::try_from(y).ok())
-                .ok_or_else(|| refuse_load(Load::Unit, "a calendar's first year".to_owned()))?,
-        ),
+        Some(n) => {
+            let first = || refuse_load(Load::Unit, "a calendar's first year".to_owned());
+            let text = n.integer_text().ok_or_else(first)?;
+            // a first year past 9999, of any size, comes after every day there is (L §2.1)
+            let year = match n.to_i64().and_then(|y| u16::try_from(y).ok()) {
+                Some(y) if y <= 9_999 => y,
+                Some(_) | None if !n.is_negative() => 10_000,
+                Some(_) | None => return Err(first()),
+            };
+            Some(FirstYear { year, text })
+        }
     };
     Ok(Value::Calendar(Box::new(Calendar::new(
         weekends,

@@ -2,7 +2,8 @@
 //! Spec: L §5.11 (aggregates; a key whose `where` is a hole is an unknown member; `sum` over
 //! no keys is 0 in the term's type; `min`/`max` over no keys is `RUN-EMPTY`), §2.5 (binding
 //! order: an index's order, a kind's things by the text of `kind:key`), §5.7 (a binding over
-//! a kind `on d` or `over s`), §4.5 (the keys and things a cut sees), §8.1 (holes spread).
+//! a kind `on d` or `over s`), §4.5 (the keys and things a cut sees), §8.1 (holes spread),
+//! §7.6 items 1 and 2 (a range's days and its 1 000 000 keys).
 //! Twin: engine/tools/refcore/evaluate.py (`members`, `bind_values`, `range_values`,
 //! `span_value`, `zero_of`, `e_agg`, `agg_minmax`, `agg_anyall`) and model.py (`alive_on`,
 //! `alive_over`, `kind_order_key`).
@@ -16,22 +17,25 @@
 use core::cmp::Ordering;
 use std::collections::BTreeSet;
 
-use super::arith::{Op, Test, arith, compare, int_of};
+use super::arith::{Op, Test, arith, compare, whole_of};
+use super::builtin::written_year;
 use super::expr::hole_of;
-use super::state::{Collected, Ctx, Engine, Env, invariant, refuse, refuse_load, wrong_type};
+use super::state::{
+    Collected, Ctx, Engine, Env, a_day, invariant, num_stop, refuse, refuse_load, wrong_type,
+};
 use super::ty::zero_of;
 use crate::base::{Load, Run};
 use crate::hole::{Hole, spread};
-use crate::model::{Domain, IndexInfo, KeyVal, Reality, Span, Thing, Value};
+use crate::model::{Class, Domain, IndexInfo, KeyVal, Number, Reality, Span, Thing, Value};
+use crate::num::Num;
 use crate::syntax::{
     Agg, AggFn, Bind, Domain as Over, Expr, Field, FieldValue, Key, Lit, Postfix, Span as SpanText,
     Stop,
 };
 use crate::time::{Day, Period};
 
-/// The most keys a stepped range binds: past it the run stops `NotBuilt` (refcore's size guard;
-/// L §5.6 sets no cap).
-const RANGE_LIMIT: usize = 1_000_000;
+/// The most keys a stepped range binds: past it, `RUN-LIMIT` (L §7.6 item 2).
+const RANGE_LIMIT: i64 = 1_000_000;
 
 /// A binding tuple: its scope, the questions that make it an unknown member, and what its
 /// movements brought when it keeps them for its own line.
@@ -536,7 +540,12 @@ impl Engine {
             if let Value::Hole(h) = v {
                 return Ok(Err(h));
             }
-            ends.push(Some(v));
+            let year = if matches!(v, Value::Number(_)) {
+                written_year(Some(e))?.map(Value::Period)
+            } else {
+                None
+            };
+            ends.push(Some(year.unwrap_or(v)));
         }
         let [from, to] = <[Option<Value>; 2]>::try_from(ends)
             .map_err(|_| invariant("a span with other than two ends"))?;
@@ -587,23 +596,59 @@ impl Engine {
                 ));
             }
         }
-        if by.is_some() {
-            return Err(Stop::NotBuilt("a stepped range of numbers"));
+        let stride = match &by {
+            None => Num::int(1),
+            Some(s) if [&first, &last, s].iter().all(|v| is_int(v)) => whole_of(m, s)?,
+            Some(_) => return Err(Stop::NotBuilt("a stepped range of numbers not integers")),
+        };
+        if let Some(s) = by
+            .as_ref()
+            .filter(|_| stride.is_negative() || stride.is_zero())
+        {
+            let message = format!(
+                "a stepped range whose step {} is not positive",
+                s.text(m).map_err(num_stop)?
+            );
+            return Err(refuse(Run::Domain, message));
         }
-        let (lo, hi) = (int_of(m, &first)?, int_of(m, &last)?);
-        let mut out = Vec::new();
-        let mut k = lo;
-        while k <= hi {
-            if out.len() >= RANGE_LIMIT {
-                return Err(Stop::NotBuilt("a range of more than a million keys"));
-            }
-            out.push((Value::int(k), None));
-            k = k
-                .checked_add(1)
-                .ok_or_else(|| invariant("a range past the integers"))?;
-        }
+        let (lo, hi) = (whole_of(m, &first)?, whole_of(m, &last)?);
+        let limit = u64::try_from(RANGE_LIMIT).map_err(|_| invariant("the key limit"))?;
+        let Some(keys) = lo.range_keys(&hi, &stride, limit).map_err(num_stop)? else {
+            return Err(too_many_keys(m, (&first, &last, by.as_ref()))?);
+        };
+        let out = keys
+            .into_iter()
+            .map(|q| {
+                let key = Number {
+                    q,
+                    class: Class::Int,
+                };
+                (Value::Number(key), None)
+            })
+            .collect();
         Ok(Values::Known(out))
     }
+}
+
+/// Whether a value is an integer of no unit: an `int`, or a whole inline figure, which takes
+/// the type of what it meets (L §3.2).
+fn is_int(v: &Value) -> bool {
+    matches!(v, Value::Number(n) if n.q.is_integer()
+        && matches!(n.class, Class::Int | Class::Flex))
+}
+
+/// `RUN-LIMIT <a> .. <b> [step <s>] holds more than 1 000 000 keys` (refcore's `too_many`).
+/// L §7.6 item 2.
+fn too_many_keys(m: &Reality, (a, b, s): (&Value, &Value, Option<&Value>)) -> Result<Stop, Stop> {
+    let step = match s {
+        Some(s) => format!(" step {}", s.text(m).map_err(num_stop)?),
+        None => String::new(),
+    };
+    let (a, b) = (a.text(m).map_err(num_stop)?, b.text(m).map_err(num_stop)?);
+    Ok(refuse(
+        Run::Limit,
+        format!("{a} .. {b}{step} holds more than 1 000 000 keys"),
+    ))
 }
 
 /// When a binding over a kind tests its things: on a day, or over a span.
@@ -763,9 +808,13 @@ fn day_range(
     let last = day_of_binding(m, end)?;
     let mut out = Vec::new();
     let mut current = start;
+    let mut count: i64 = 0;
     while current <= last {
-        if out.len() >= RANGE_LIMIT {
-            return Err(Stop::NotBuilt("a range of more than a million keys"));
+        count = count
+            .checked_add(1)
+            .ok_or_else(|| invariant("a day count"))?;
+        if count > RANGE_LIMIT {
+            return Err(too_many_keys(m, (&Value::Day(start), end, Some(step)))?);
         }
         out.push((Value::Day(current), None));
         let Value::Day(next) = arith(m, Op::Add, &Value::Day(current), step)? else {
@@ -788,7 +837,7 @@ fn day_range(
 /// A binding's day: a day, or a day period's (refcore's `date_of`). L §5.7.
 fn day_of_binding(m: &Reality, v: &Value) -> Result<Day, Stop> {
     if let Value::Day(d) = v {
-        return Ok(*d);
+        return a_day(*d);
     }
     if let Value::Period(p) = v
         && p.kind() == crate::time::PeriodKind::Day
@@ -816,12 +865,12 @@ fn span_start(m: &Reality, v: &Value) -> Result<Day, Stop> {
 }
 
 /// The first day after a span's end: the day after a day, a period's end (refcore's
-/// `span_end`). L §5.7.
+/// `span_end`); the end of time is no day to end on, `RUN-LIMIT`. L §5.7, §7.6 item 1.
 fn span_end(m: &Reality, v: &Value) -> Result<Day, Stop> {
     if let Value::Day(d) = v {
-        return d
-            .next()
-            .ok_or_else(|| invariant("a day past the calendar's range"));
+        return a_day(*d)?
+            .end_days(1)
+            .ok_or_else(|| invariant("a day past the end of time"));
     }
     if let Value::Period(p) = v {
         return Ok(p.end());

@@ -536,7 +536,10 @@ def m_sample_read(self, info, keys, ctx):
     if upin is None:
         tx = fmt(Num(v.q, v.u)) if isinstance(v, Num) else fmt(v)
         order = tuple(self.key_ord(k, b.dom) for b, k in zip(info.binds, keys)) if keys else ()
-        self.reg(('sample', (law is not None, law or datetime.date.min, info.id, repr(order)),
+        # the keys' order typed (moves.order_key), so position 2 sorts before 10 (L §8.2 "in canonical order", L §5.16;
+        # tally 2.1.6, issue #49: refcore 2.1.5 sorted the order's text, as #33 found for the ledger)
+        from .moves import order_key
+        self.reg(('sample', (law is not None, law or datetime.date.min, info.id, order_key(order)),
                   '%s = %s (u = %s)' % (org, tx, fmt_q(u))))
     return v
 

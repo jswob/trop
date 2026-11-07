@@ -1,0 +1,36 @@
+model g14_by_n_years_98
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#98, P39): a key of a year range by 2 moved by two years or 24 months, either way, anchored too. refcore moves it one year a period (2027-01-01, not a key); L §4.2 moves it by whole keys (2028-01-01). Held for #98 (held.tsv), refcore's bytes stored, until the next spec round fixes refcore."
+
+source plan "T's fixture (invented values)"
+
+index y2 = year 2026..2040 by 2
+
+index fy2 = year 2026..2040 by 2 from 04-06
+
+input n2: int
+
+input n24: int
+
+def y2_two_years[q in y2]: date = start_of(q + n2 * 1 year)
+
+def y2_24_months[q in y2]: date = start_of(q + n24 * 1 month)
+
+def y2_back_two_years[q in y2]: date = start_of(q - n2 * 1 year)
+
+def fy2_two_years[q in fy2]: date = start_of(q + n2 * 1 year)
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  n2 = 2 "two"
+  n24 = 24 "twenty-four"
+
+ask a_y2_two_years: y2_two_years[2026]
+ask a_y2_24_months: y2_24_months[2026]
+ask a_y2_back_two_years: y2_back_two_years[2028]
+ask a_fy2_two_years: fy2_two_years[2026]

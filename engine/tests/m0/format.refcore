@@ -2790,7 +2790,7 @@ C/law/gen1_ahead.tally	1466	07bfb7a3641eff411c23c4f85f5365d0
 C/law/holdout.tally	3554	004e2007dbbabc6c0f4377b8aeaa6d0e
 C/law/rosvald.tally	5217	0bfafe2ba0b79883100986abf2f679f5
 C/law/treaty.tally	1573	1431978fa426d65f1ca1b804412c15ee
-C/loan.tally	7585	0623ff84973cb75f0e65b46e74c7b021
+C/loan.tally	7582	07f11e00a4f591fb0b74dded03143ec4
 C/rates.tally	121977	038235cf9210ff911eab27a62a3e786f
 C/rec_biz.tally	16273	13b675f1743de560031321aed0ac9f47
 C/rec_joint.tally	163946	134f1d2e616f837c18abf11055ba81a8
@@ -2802,7 +2802,7 @@ C/rec_registers.tally	18652	19cf82e82948313a0d1d380d2008b87f
 C/rosvald_pay.tally	14659	0665aa0ca6f9bfdd0cd0bd101abb7924
 C/stas.tally	5775	1c5cfd909d3295f10935c8e63fa8afc8
 C/worth.tally	5957	09a8e3857b32b38e19566b369e3c3666
-,72:sha256 e8dab012ed1b3dc6f0cc8e52fab6fbe01d74e2890973e389852ecddb09e955e2
+,72:sha256 317c5c54dfecd27ee39dc64bdeb31e2a8ee10f4468d7d72c08d2d2d6eb09bac3
 ,12:I:C:C-11~c11,11:household-C,35:engine/tests/integration/households,534:reprint C/c.tally C/law/GEN-1.tally C/law/GEN-5.tally C/law/GEN-6.tally C/law/gen1_ahead.tally C/law/holdout.tally C/law/IGT-3.tally C/law/IGT-4.tally C/law/IGT-5.tally C/law/PIT-10.tally C/law/PIT-2.tally C/law/PIT-3.tally C/law/PIT-5.tally C/law/PIT-7.tally C/law/rosvald.tally C/law/SOC-3.tally C/law/SOC-4.tally C/law/treaty.tally C/law/VAT-1.tally C/rec_biz.tally C/rec_joint.tally C/rec_lazur.tally C/rec_log.tally C/rec_marta.tally C/rec_pot.tally C/rec_registers.tally C/rates.tally C/loan.tally C/stas.tally C/asks/C-11.tally,1744:C/c.tally	integration/households/C/c.tally
 C/law/GEN-1.tally	integration/households/C/law/GEN-1.tally
 C/law/GEN-5.tally	integration/households/C/law/GEN-5.tally
@@ -2853,7 +2853,7 @@ C/law/gen1_ahead.tally	1466	07bfb7a3641eff411c23c4f85f5365d0
 C/law/holdout.tally	3554	004e2007dbbabc6c0f4377b8aeaa6d0e
 C/law/rosvald.tally	5217	0bfafe2ba0b79883100986abf2f679f5
 C/law/treaty.tally	1573	1431978fa426d65f1ca1b804412c15ee
-C/loan.tally	7585	0623ff84973cb75f0e65b46e74c7b021
+C/loan.tally	7582	07f11e00a4f591fb0b74dded03143ec4
 C/rates.tally	121977	038235cf9210ff911eab27a62a3e786f
 C/rec_biz.tally	16273	13b675f1743de560031321aed0ac9f47
 C/rec_joint.tally	163946	134f1d2e616f837c18abf11055ba81a8
@@ -2863,7 +2863,7 @@ C/rec_marta.tally	11817	1b8d78c6c088f1c119eed000a1a3a607
 C/rec_pot.tally	12200	1b8032f25b5807ab14a4385e99450b4c
 C/rec_registers.tally	18652	19cf82e82948313a0d1d380d2008b87f
 C/stas.tally	5775	1c5cfd909d3295f10935c8e63fa8afc8
-,72:sha256 0c6790aa5faa5aeb719ba28c0ecf7d0fa9134c86c2537a587a50ceca8f6a9289
+,72:sha256 8a2923644b7ac4617c8ff15af049843ba07eaf5003c5d4225e9ea02d10a0ba4d
 ,12:I:C:C-12~c12,11:household-C,35:engine/tests/integration/households,525:reprint C/c.tally C/law/GEN-1.tally C/law/GEN-5.tally C/law/GEN-6.tally C/law/gen1_ahead.tally C/law/holdout.tally C/law/IGT-3.tally C/law/IGT-4.tally C/law/IGT-5.tally C/law/PIT-10.tally C/law/PIT-2.tally C/law/PIT-3.tally C/law/PIT-5.tally C/law/PIT-7.tally C/law/rosvald.tally C/law/SOC-3.tally C/law/SOC-4.tally C/law/treaty.tally C/law/VAT-1.tally C/rec_biz.tally C/rec_joint.tally C/rec_lazur.tally C/rec_log.tally C/rec_marta.tally C/rec_pot.tally C/rec_registers.tally C/rates.tally C/forecast.tally C/asks/C-12.tally,1703:C/c.tally	integration/households/C/c.tally
 C/law/GEN-1.tally	integration/households/C/law/GEN-1.tally
 C/law/GEN-5.tally	integration/households/C/law/GEN-5.tally
@@ -3977,7 +3977,7 @@ C/law/gen1_ahead.tally	1466	07bfb7a3641eff411c23c4f85f5365d0
 C/law/holdout.tally	3554	004e2007dbbabc6c0f4377b8aeaa6d0e
 C/law/rosvald.tally	5217	0bfafe2ba0b79883100986abf2f679f5
 C/law/treaty.tally	1573	1431978fa426d65f1ca1b804412c15ee
-C/loan.tally	7585	0623ff84973cb75f0e65b46e74c7b021
+C/loan.tally	7582	07f11e00a4f591fb0b74dded03143ec4
 C/rates.tally	121977	038235cf9210ff911eab27a62a3e786f
 C/rec_biz.tally	16273	13b675f1743de560031321aed0ac9f47
 C/rec_joint.tally	163946	134f1d2e616f837c18abf11055ba81a8
@@ -3988,7 +3988,7 @@ C/rec_pot.tally	12200	1b8032f25b5807ab14a4385e99450b4c
 C/rec_registers.tally	18652	19cf82e82948313a0d1d380d2008b87f
 C/stas.tally	5775	1c5cfd909d3295f10935c8e63fa8afc8
 E2/cside/e2c.tally	5837	0d0eb26d03c35730072b31c250535367
-,72:sha256 fb92079b0b3514d3204236870f9a5396ca033a121ad682fa93abf85d3d3ee9fa
+,72:sha256 2c3b0c9c348d59e5b02afe2eb73448efaf2a9c18c5c806ccc69a272f665cc365
 ,9:I:M:CB-01,6:models,13:engine/tests/,38:reprint integration/models/CB-01.tally,62:integration/models/CB-01.tally	integration/models/CB-01.tally
 ,1:0,69:integration/models/CB-01.tally	4000	1c09ad419782740e1398fcca18fd0129
 ,72:sha256 d042848e91ac844dbe51e2298ad332440d728e5620472ff298ac654ffe82cb1e
@@ -4056,8 +4056,8 @@ E2/cside/e2c.tally	5837	0d0eb26d03c35730072b31c250535367
 ,1:0,71:integration/models/CMP-02.tally	12778	1aad19419463194218645263a18bfe53
 ,72:sha256 b21ef2f81784102074a24fe4f18e83162506e8be74e0e44ce2557bdbbbd6fc8f
 ,9:I:M:LH-01,6:models,13:engine/tests/,38:reprint integration/models/LH-01.tally,62:integration/models/LH-01.tally	integration/models/LH-01.tally
-,1:0,70:integration/models/LH-01.tally	18385	05ff6c1828aab4a50dab9df4885e5dee
-,72:sha256 23e35c65e1b5a4d1d48e3acf98dc81851b484ee35e21f6d71cc8876f65f79090
+,1:0,70:integration/models/LH-01.tally	18380	1188653a96b267aa09a46b7179f8a5c8
+,72:sha256 9fa3317c75005ef318174747350aabb7ef5cea07afcfe63cb0630e9134697468
 ,9:I:M:LH-02,6:models,13:engine/tests/,38:reprint integration/models/LH-02.tally,62:integration/models/LH-02.tally	integration/models/LH-02.tally
 ,1:0,69:integration/models/LH-02.tally	9970	08d955d18b2f65cf0bc69b2c70849b52
 ,72:sha256 76e58e23b1062cf0140e6c7c764b06d2fd32a8a99d38c64a50e947264d5f96db
@@ -4724,11 +4724,11 @@ integration/blind/modeller-b1/I-7/model.tally	11594	0c218504317cfc6a171c35b05eab
 integration/blind/modeller-b1/I-9/refund_early.tally	integration/blind/modeller-b1/I-9/refund_early.tally
 integration/blind/modeller-b1/I-9/refund_late.tally	integration/blind/modeller-b1/I-9/refund_late.tally
 integration/blind/modeller-b1/I-9/refund_refused.tally	integration/blind/modeller-b1/I-9/refund_refused.tally
-,1:0,355:integration/blind/modeller-b1/I-9/model.tally	9847	1220709f3d103f511808ceace67e41f0
-integration/blind/modeller-b1/I-9/refund_early.tally	670	0fc8513a83f81a5e0b9b593fa23f861b
-integration/blind/modeller-b1/I-9/refund_late.tally	657	031f2945f071709108cdccbe4d48b7ba
-integration/blind/modeller-b1/I-9/refund_refused.tally	669	10904c80e6ab0a8906ccc02e9d0f5a76
-,72:sha256 4a0de3ace48c510a1561ef06dc8250b6e87dcff00a068b85c6c4dc328b68b95f
+,1:0,355:integration/blind/modeller-b1/I-9/model.tally	9846	0e4acbd3c60ffcbb19f79ba22f997aa5
+integration/blind/modeller-b1/I-9/refund_early.tally	669	1c8843fd48e79fc1136d87bd96d1b00b
+integration/blind/modeller-b1/I-9/refund_late.tally	656	1fc02d548307109b151647431a52847d
+integration/blind/modeller-b1/I-9/refund_refused.tally	668	1dc4db3cdeebd4d91c1dcece139d09e7
+,72:sha256 c3de37f38f175f2b45c6ece9f01408598cae2c2785558dad708e3dafbff05260
 ,33:I:hardset/modeller-b2/I-11/budget,5:blind,13:engine/tests/,55:reprint integration/blind/modeller-b2/I-11/budget.tally,96:integration/blind/modeller-b2/I-11/budget.tally	integration/blind/modeller-b2/I-11/budget.tally
 ,1:0,87:integration/blind/modeller-b2/I-11/budget.tally	11398	14253c2dce3aee140437ef51147569ff
 ,72:sha256 7c593d210bbbe61da1216471931cdae0e4915d8a22904e06a2fdaae25ab58d69
@@ -5179,9 +5179,7 @@ unit/probes/scen/SCEN-04/crash.tally	248	05f67dd37e67232a1228685048e671ad
 ,72:sha256 f999f43309391117d0ee4b7eb9a8ddcaf09e415a3ace84eef666974e8eaf253f
 ,26:U:set/surf/SURF-04/SURF-04,10:probe-sets,13:engine/tests/,86:reprint unit/probes/surf/SURF-04/SURF-04.tally unit/probes/surf/SURF-04/redefine.tally,158:unit/probes/surf/SURF-04/SURF-04.tally	unit/probes/surf/SURF-04/SURF-04.tally
 unit/probes/surf/SURF-04/redefine.tally	unit/probes/surf/SURF-04/redefine.tally
-,1:0,154:unit/probes/surf/SURF-04/SURF-04.tally	2217	03520f5bf0d051fc083514d1d571e6b8
-unit/probes/surf/SURF-04/redefine.tally	399	07aeeeba0ca1ebf71e783a14b701d4cf
-,72:sha256 4d69d5ade955a847ebb2d057274224a070afdf4567ef1146de7d3419630869c9
+,1:1,0:,88:refused: LOAD-DUP contrib is declared twice (unit/probes/surf/SURF-04/redefine.tally:6)
 ,14:U:surf/SURF-01,6:probes,13:engine/tests/,38:reprint unit/probes/surf/SURF-01.tally,62:unit/probes/surf/SURF-01.tally	unit/probes/surf/SURF-01.tally
 ,1:0,69:unit/probes/surf/SURF-01.tally	1242	016103e3c206ba3416a926554ee44178
 ,72:sha256 2990dea89352596354455faba16340ef062dcdb0c980d72dc72d642b5f6cf4dc
@@ -5263,15 +5261,28 @@ unit/probes/surf/SURF-04/redefine.tally	399	07aeeeba0ca1ebf71e783a14b701d4cf
 ,19:format/clause_order,19:format/clause_order,22:engine/tests/m0/format,26:reprint clause_order.tally,48:clause_order.tally	m0/format/clause_order.tally
 ,1:0,56:clause_order.tally	485	110a2b99453698ff0f11258332666ff0
 ,72:sha256 f11fedddf9efc1558f421521a23408c0ac46e97e4758c51475e6b15ae0b12228
+,13:format/dup_id,13:format/dup_id,22:engine/tests/m0/format,20:reprint dup_id.tally,36:dup_id.tally	m0/format/dup_id.tally
+,1:1,0:,61:refused: LOAD-DUP notary is declared twice (dup_id.tally:14)
+,15:format/dup_kind,15:format/dup_kind,22:engine/tests/m0/format,22:reprint dup_kind.tally,40:dup_kind.tally	m0/format/dup_kind.tally
+,1:1,0:,64:refused: LOAD-DUP refunds is declared twice (dup_kind.tally:16)
 ,19:format/expr_spacing,19:format/expr_spacing,22:engine/tests/m0/format,26:reprint expr_spacing.tally,48:expr_spacing.tally	m0/format/expr_spacing.tally
 ,1:0,56:expr_spacing.tally	262	00c3ba8b97b09cc410ac00b2ab104d96
 ,72:sha256 5e39943ab11adaa39a5a323c1f8313f2c0afe38d428051206d0106ae84dde86a
-,19:format/header_order,19:format/header_order,22:engine/tests/m0/format,26:reprint header_order.tally,48:header_order.tally	m0/format/header_order.tally
-,1:0,56:header_order.tally	437	1226aa674952e1fd106c1ef01ede8e68
-,72:sha256 2dea84e807833ea75dea321fd0b20763791f2b8f187962a1d39a58309b502e89
+,19:format/header_order,19:format/header_order,22:engine/tests/m0/format,26:reprint header_order.tally,168:header_order.tally	m0/format/header_order.tally
+members/zeta/zeta.tally	m0/format/members/zeta/zeta.tally
+members/alpha/alpha.tally	m0/format/members/alpha/alpha.tally
+,1:0,56:header_order.tally	437	1b8cbd0b9e00eb70181cfbdc37b15ee8
+,72:sha256 dac364f1b0e3617dadf7b9c55866af1dca5d419cc8f7e67fe55048e893bb143c
 ,23:format/kinds_tree_order,23:format/kinds_tree_order,22:engine/tests/m0/format,30:reprint kinds_tree_order.tally,56:kinds_tree_order.tally	m0/format/kinds_tree_order.tally
 ,1:0,60:kinds_tree_order.tally	194	1d8e9a4775e33d761e533b80c5952294
 ,72:sha256 2461bc9877901eeef20c23fd4ebb4d61474bb039d595b430ca2e49c1696a2ccc
+,20:format/member_absent,20:format/member_absent,22:engine/tests/m0/format,27:reprint member_absent.tally,108:member_absent.tally	m0/format/member_absent.tally
+members/zeta/zeta.tally	m0/format/members/zeta/zeta.tally
+,1:1,0:,83:refused: LOAD-PIN members/gone doesn't match its sha256 in use gone (no such file)
+,21:format/member_changed,21:format/member_changed,22:engine/tests/m0/format,28:reprint member_changed.tally,180:member_changed.tally	m0/format/member_changed.tally
+members/changed/changed.tally	m0/format/members/changed/changed.tally
+members/zeta/zeta.tally	m0/format/members/zeta/zeta.tally
+,1:1,0:,74:refused: LOAD-PIN members/changed doesn't match its sha256 in use changed
 ,14:format/numbers,14:format/numbers,22:engine/tests/m0/format,21:reprint numbers.tally,38:numbers.tally	m0/format/numbers.tally
 ,1:0,51:numbers.tally	338	01be4a45ae78ecb608c7643c9df33846
 ,72:sha256 7259c6ed95eac3e54f43602c22498976e201522204dbf27611761d12e0d530cc
@@ -5308,6 +5319,15 @@ unit/probes/surf/SURF-04/redefine.tally	399	07aeeeba0ca1ebf71e783a14b701d4cf
 ,23:format/short_with_notes,23:format/short_with_notes,22:engine/tests/m0/format,30:reprint short_with_notes.tally,56:short_with_notes.tally	m0/format/short_with_notes.tally
 ,1:0,60:short_with_notes.tally	227	10a2a363913c3c9906365af66297e6bb
 ,72:sha256 4e23c0acc66d8c7ae9c4b7d5baa997f28574ac04c6d27db3d238470aea49f8e3
+,19:format/spacing_call,19:format/spacing_call,22:engine/tests/m0/format,26:reprint spacing_call.tally,114:spacing_call.tally	m0/format/spacing_call.tally
+members/banded/banded.tally	m0/format/members/banded/banded.tally
+,1:0,56:spacing_call.tally	395	090429fa33d8e6ce124abae2aa118cd0
+,72:sha256 506616eee2a5dbeaa84a455688ae04b077b88266666e8327ee3dcbdf3a06638a
+,19:format/spacing_read,19:format/spacing_read,22:engine/tests/m0/format,26:reprint spacing_read.tally,48:spacing_read.tally	m0/format/spacing_read.tally
+,1:0,56:spacing_read.tally	412	1515d5d941fa0ae10084eb6054fec08a
+,72:sha256 bd9412698e12d783335948831810c916d2c1736ff9562216e3d8dcc08206bebf
+,21:format/unknown_prefix,21:format/unknown_prefix,22:engine/tests/m0/format,28:reprint unknown_prefix.tally,52:unknown_prefix.tally	m0/format/unknown_prefix.tally
+,1:1,0:,63:refused: LOAD-NAME unknown id c.zone (unknown_prefix.tally:12)
 ,27:format/version_items_sorted,27:format/version_items_sorted,22:engine/tests/m0/format,34:reprint version_items_sorted.tally,64:version_items_sorted.tally	m0/format/version_items_sorted.tally
 ,1:0,64:version_items_sorted.tally	325	09d2ed9f47e4cd65091eba625517125e
 ,72:sha256 84b58084964bda42115ff05e59242b81e16f21333708ae575592badd5b547731

@@ -1,0 +1,26 @@
+# L §2.4 Expressions (tally 2.1.6, issue #81): a keyword before ( keeps its space, written: not(p and q) and
+# diff(x) print not (p and q) and diff (x), as refcore and the engine printed them (M0's format vectors of diff
+# texts keep their hashes). A twin: it passes on tally 2.1.5 too.
+=== options reprint
+=== m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+def e: bool = not(p and q)
+
+ask qd: diff(x) in s1 against m law 2026-06-30
+=== expect
+--- m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+def e: bool = not (p and q)
+
+ask qd: diff (x) in s1 against m law 2026-06-30
+sha256 ...

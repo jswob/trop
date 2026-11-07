@@ -1,0 +1,69 @@
+# E §5 step 3, L §5.14.3 Detection, L §8.4 (tally 2.1.6, issue #52, the coordinator's pick P3): late makes rent[2026-03]'s
+# when a hole (seats unknown) and its amount refused (0 tenants: RUN-DIV). A refused amount outranks the hole when: the
+# adjustment's change is refused (l), and so are what an unfulfilled one makes HOLE-CHANGED (q). refcore 2.1.5 took the
+# when before the amounts, so the change and q were the seats' hole.
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source act "act"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-05-01..
+place landlord: outside lives 1900-01-01..
+input total: money PLN
+input tenants[m in months]: int
+input dom: int
+input seats[m in months]: int
+
+move rent[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  when seats[m] > 0
+  leg cash from konto to landlord amount round(total / tenants[m], minor(PLN), half-even)
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  total = 1 000.00 PLN "umowa"
+  dom = 10 "umowa"
+  tenants[*] = 2 "umowa"
+  seats[*] = 1 "umowa"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "wyciąg"
+
+version late
+  cite act
+  governs 2026-03
+  known 2026-05-01
+  replace seats[*] = ?"how many seats in March?" "aneks"
+  replace tenants[*] = 0 "aneks"
+
+ask before: bal(konto, 2026-04-30)
+ask q: flows(rent, 2026-05-01 .. 2026-05-31), bal(konto, 2026-06-30)
+ask early: flows(rent, 2026-03-01 .. 2026-04-30)
+ask l: a.change for a in adjustments over ..
+=== expect
+before: 8 000.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  cut 2026-10-20
+early: 1 000.00 PLN
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  cut 2026-10-20
+l (a = adjustments[rent[2026-03].cash, late]): refused: RUN-DIV division by zero
+  cut 2026-10-20
+q: (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  unfulfilled: rent[2026-05]
+  unfulfilled: rent[2026-06]
+  cut 2026-10-20

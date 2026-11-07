@@ -157,6 +157,8 @@ pub enum Load {
     AsIf,
     /// `LOAD-DEPTH`
     Depth,
+    /// `LOAD-LIMIT`
+    Limit,
     /// `LOAD-FORKS`
     Forks,
     /// `LOAD-ASKONLY`
@@ -190,6 +192,8 @@ pub enum Run {
     Empty,
     /// `RUN-DIGITS`
     Digits,
+    /// `RUN-LIMIT`
+    Limit,
     /// `RUN-DIV`
     Div,
     /// `RUN-DOMAIN`
@@ -249,7 +253,7 @@ pub enum Req {
 impl Code {
     /// Every code, each once, in the order of the spec's tables: L §8.1, §8.3, §8.4, §8.5,
     /// then E §11.
-    pub const ALL: [Code; 99] = [
+    pub const ALL: [Code; 101] = [
         Code::Hole(Hole::Stated),
         Code::Hole(Hole::Ungoverned),
         Code::Hole(Hole::NoReading),
@@ -312,6 +316,7 @@ impl Code {
         Code::Load(Load::Random),
         Code::Load(Load::AsIf),
         Code::Load(Load::Depth),
+        Code::Load(Load::Limit),
         Code::Load(Load::Forks),
         Code::Load(Load::AskOnly),
         Code::Load(Load::Missing),
@@ -326,6 +331,7 @@ impl Code {
         Code::Run(Run::Tie),
         Code::Run(Run::Empty),
         Code::Run(Run::Digits),
+        Code::Run(Run::Limit),
         Code::Run(Run::Div),
         Code::Run(Run::Domain),
         Code::Run(Run::Undecided),
@@ -441,6 +447,7 @@ impl Load {
             Load::Random => "LOAD-RANDOM",
             Load::AsIf => "LOAD-ASIF",
             Load::Depth => "LOAD-DEPTH",
+            Load::Limit => "LOAD-LIMIT",
             Load::Forks => "LOAD-FORKS",
             Load::AskOnly => "LOAD-ASKONLY",
             Load::Missing => "LOAD-MISSING",
@@ -464,6 +471,7 @@ impl Run {
             Run::Tie => "RUN-TIE",
             Run::Empty => "RUN-EMPTY",
             Run::Digits => "RUN-DIGITS",
+            Run::Limit => "RUN-LIMIT",
             Run::Div => "RUN-DIV",
             Run::Domain => "RUN-DOMAIN",
             Run::Undecided => "RUN-UNDECIDED",

@@ -298,7 +298,7 @@ The design the seam leaves room for is 1.0.1's §4, restated for 2.1:
 
 An amendment (`OPERATIONS.md` §1, stale) has a **direct set**: the rows it adds or restates (target, keys, spans, `known`), the rules it adds (def, label, `v`), the keys and entries it adds to indexes and kinds, the items it adds or revises.
 1. **The static cone:** the items reachable from the direct set on the item graph. Anything outside it is untouched by construction.
-2. **Verify downward, from what the asks need:** a cell in the cone is checked against its read set; if none of its reads has a new candidate row, a new rule or a new key, it stays valid, at O(its read set) with no evaluation; otherwise it is recomputed.
+2. **Verify downward, from what the asks need:** a cell in the cone is checked against its read set (E §3.2); if none of its reads has a new candidate row, a new rule or a new key, and none of its walk or movement reads falls on or after the day the walk restarts from (§4.2) or names a changed movement, it stays valid, at O(its read set) with no evaluation; otherwise it is recomputed.
 3. **Early cut-off:** a recomputed cell equal to its old result (value, holes, refusals, register) leaves its readers valid.
 
 **Durability tiers** cut the verification walk: each row is tagged by what changes it.

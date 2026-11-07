@@ -1,0 +1,72 @@
+# L §8.4, L §5.14 Keys, E §4.1 step 2, E §4.2 Holes and refusals in the walk (tally 2.1.6, issue #51, the
+# coordinator's pick P2): a move bound over a kind whose key's `where` is refused for one member (bob: 1 / 0) makes a
+# refused instance, which reaches as a hole movement does: the places its legs give (konto, world) from its day
+# (2026-02-10), and `flows` of the move over a span that holds it. konto before its day (2026-01-15), the place
+# `other` that dues never touches, gift's `flows` and a count over the kind stand. refcore 2.1.5 let the `where`'s
+# refusal leave the plan pass, so every balance was refused from the run's start, `other` included.
+=== m.tally
+model p51
+  tally 2
+  on 2026-03-15
+  start 2026-01-01
+  end 2026-03-31
+
+source fixture "invented"
+
+unit PLN: currency minor 0.01
+
+kind member
+
+place konto: accounts PLN lives 2025-01-01..
+
+place other: accounts PLN lives 2025-01-01..
+
+place world: outside lives 2025-01-01..
+
+input cnt[p in member]: int
+
+input pay_day: date
+
+input fee: money PLN
+
+move dues[p in member on pay_day where 1 / cnt[p] > 0]: transfers
+  on pay_day
+  leg cash from konto to world amount fee
+
+move gift: transfers
+  on pay_day
+  leg cash from world to other amount fee
+
+ask q_bal: bal(konto, 2026-01-15), bal(konto, 2026-02-28) law cut
+
+ask q_other: bal(other, 2026-01-15), bal(other, 2026-02-28) law cut
+
+ask q_flows: flows(dues, 2026-02-01 .. 2026-02-28), flows(gift, 2026-02-01 .. 2026-02-28) law cut
+
+ask q_n: count(p in member on pay_day) law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  member + [ana, bob, cid] lives 2025-01-01..
+  cnt[ana] = 1
+  cnt[bob] = 0
+  cnt[cid] = -1
+  pay_day = 2026-02-10
+  fee = 10.00
+  opening[konto] = 100 at 2026-01-01 start
+  opening[other] = 100 at 2026-01-01 start
+=== expect
+q_bal: (100.00 PLN, refused: RUN-DIV division by zero)
+  unfulfilled: dues[ana]
+  law date 2026-03-15, cut 2026-03-15
+q_flows: (refused: RUN-DIV division by zero, 10.00 PLN)
+  unfulfilled: dues[ana]
+  unfulfilled: gift
+  law date 2026-03-15, cut 2026-03-15
+q_n: 3
+  law date 2026-03-15, cut 2026-03-15
+q_other: (100.00 PLN, 110.00 PLN)
+  unfulfilled: gift
+  law date 2026-03-15, cut 2026-03-15

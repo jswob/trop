@@ -1,0 +1,11 @@
+model spacing_call
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  use b = "members/banded" sha256 "5bd47f24aa3d472e060c25ba7787568b92b3fbfa44199ae2f0447d23fcc8fa30"
+  note "T, tally 2.1.6 (#81, P21): a prefixed call spaced at its ( and a field spaced at its . read, and print touching"
+
+ask f: b.fee (b.income[b .ana]) law 2026-06-30
+
+ask g: b .fee(b. income [b.ana]) law 2026-06-30

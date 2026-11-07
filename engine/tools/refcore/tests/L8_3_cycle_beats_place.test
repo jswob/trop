@@ -1,0 +1,50 @@
+# L §8.3 LOAD-CYCLE `a beats cycle in <x>: <path>` (tally 2.1.6, issue #71, P31 on T's SR-T3): with the file and line
+# of the def, as the spec's scan (spec/tools/loadcheck.py) places it. M0's fixture basic/cycle-beats. tally 2.1.5's
+# refcore printed no place; 2.1.6's first (522a715) the line of the rule whose beats closes the cycle, m.tally:22.
+=== m.tally
+model basic
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base beats waived v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+=== expect
+refused: LOAD-CYCLE a beats cycle in fee: base -> waived -> base (m.tally:20)

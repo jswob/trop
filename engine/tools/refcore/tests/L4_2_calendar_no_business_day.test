@@ -1,0 +1,45 @@
+# L §4.2, §7.6 item 5 (tally 2.1.6, issue #89): a calendar whose weekends name all seven days has no business
+# day: add_business and schedule, which seek one, refuse it (RUN-DOMAIN calendar cal has no business day); is_business
+# answers false; a calendar of six weekend days finds Sunday 2026-03-08. tally 2.1.5's refcore walked add_business to
+# 9999-12-31 (REFCORE-NOT-YET).
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+unit PLN: currency minor 0.01
+input cal: calendar
+input cal6: calendar
+input d0: date
+input dom: int
+
+def nb: date = add_business(d0, 1, cal) at reader
+def nb6: date = add_business(d0, 1, cal6) at reader
+def ib: bool = is_business(d0, cal) at reader
+def sc: date = schedule(month_of(d0), dom, following, cal) at reader
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  cal = calendar(weekends [mon, tue, wed, thu, fri, sat, sun])
+  cal6 = calendar(weekends [mon, tue, wed, thu, fri, sat])
+  d0 = 2026-03-04 "plan"
+  dom = 7 "plan"
+
+ask a: nb law 2026-06-30
+ask b: nb6 law 2026-06-30
+ask c: ib law 2026-06-30
+ask d: sc law 2026-06-30
+=== expect
+a: refused: RUN-DOMAIN calendar cal has no business day
+  law date 2026-06-30, cut 2026-12-31
+b: 2026-03-08
+  law date 2026-06-30, cut 2026-12-31
+c: false
+  law date 2026-06-30, cut 2026-12-31
+d: refused: RUN-DOMAIN calendar cal has no business day
+  law date 2026-06-30, cut 2026-12-31

@@ -1,0 +1,23 @@
+# L §8.3 LOAD-UNIT `<a> and <b> have different units` (tally 2.1.6, issue #71): a row's literal is named with its
+# unit, 100.00 EUR. tally 2.1.5's refcore printed the figure alone, `100.00 and money PLN`.
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+input a: money PLN
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  a = 100.00 EUR "plan"
+
+ask q: a
+=== expect
+refused: LOAD-UNIT 100.00 EUR and money PLN have different units (m.tally:16)

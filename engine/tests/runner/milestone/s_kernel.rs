@@ -11,11 +11,13 @@ mod tests {
     use std::collections::BTreeSet;
     use tally_runner::corpus::{KERNEL_CORPUS, KERNEL_REFCORE, records, refcore_runs};
     use tally_runner::engine::{run_args, run_record};
+    use tally_runner::held::is_held;
     use tally_runner::kernel::{VECTORS, difference, vectors};
 
     /// The groups this target tests, one `#[test]` each.
-    const GROUPS: [&str; 14] = [
+    const GROUPS: [&str; 15] = [
         "checks", "g1", "g2", "g3", "g4", "g5", "g6", "g7", "g8", "g9", "g10", "g11", "g12", "g13",
+        "g14",
     ];
 
     /// Runs every vector of `group` on the engine and holds it to refcore's run.
@@ -25,6 +27,7 @@ mod tests {
         assert!(!mine.is_empty(), "the group {group} has vectors");
         let failed: Vec<String> = mine
             .iter()
+            .filter(|v| !is_held("s_kernel", &v.id))
             .filter_map(|v| {
                 difference(&v.refcore, &run_args(&v.args, &v.files))
                     .map(|d| format!("{}: {d}", v.id))
@@ -89,7 +92,9 @@ mod tests {
     /// G1, exact numbers, their text and rounding (L §7.1, §7.2, §5.18): every rounding mode
     /// at ties and off them, both signs, in the big tier too; a/b and the reading aid; money
     /// past the machine word; the 4 096-digit cap and a step that isn't positive, each refused
-    /// beside an answered twin (`kernel/g1/`).
+    /// beside an answered twin; a sum of a whole number and a fraction, a num in lowest terms,
+    /// and what prints with no decimals (a minor unit of 1, an int), so a mutant in them fails
+    /// here, not only in M0's load tests (tally 2.1.6) (`kernel/g1/`).
     #[test]
     fn s_kernel_g1_numbers() {
         group_holds("g1");
@@ -138,9 +143,11 @@ mod tests {
     /// kind with and without `with uncertain`; legs in money and units, of a kind of unit
     /// `any`, and of 0; money in two declared currencies on a leg of unit kind `currencies`
     /// beside a leg whose unit is the currency itself (tally 2.1.2, #43); which refusal a
-    /// place keeps when two of a day's plan legs refuse there, in the order's text (moves `a`
-    /// and `ab`; one move's keys `[x, f3]` and `[y, f11]`), each beside a twin where one leg
-    /// refuses alone (#55; #57 asks the spec) (`kernel/g6/`).
+    /// place keeps when two of a day's plan legs refuse there: the first in the typed movement
+    /// order (tally 2.1.6, #57: move `a` before `ab`; one move's keys `[x, f3]` before
+    /// `[y, f11]` and `[x, f3]` before `[x, f11]`), each beside a twin where one leg refuses
+    /// alone; a refused `when`, attribute or key's `where` refusing only the places its legs
+    /// give, from its day (tally 2.1.6, #51), beside a twin whose `where` holds (`kernel/g6/`).
     #[test]
     fn s_kernel_g6_plan_pass() {
         group_holds("g6");
@@ -150,9 +157,13 @@ mod tests {
     /// decision's read of its own day (RUN-CYCLE), of a later one (RUN-FUTURE), of its day's
     /// start and of the day before; flows of a place and of a decision move through a later
     /// day, the reader's own and the day before; flows read that tie two instances (RUN-TIE)
-    /// beside a twin that doesn't; flows of a place across a refusal of every place, a hole
+    /// beside a twin that doesn't; flows of a place beside a refused `when` whose legs don't
+    /// touch it, which stands (tally 2.1.6, #51), a hole
     /// amount, a hole day and the run's start; flows of a move by leg and keys, and over a
-    /// span with no movement; `bal(x, u, d)`; `with uncertain` around a reading; flows of a
+    /// span with no movement; `bal(x, u, d)`; `with uncertain` around a reading; the reads
+    /// 2.1.5 and 2.1.6 agree on where a refused `when` touches the place, its other leg
+    /// outside, beside a hole day, `with uncertain` with no reading and a move's flows over a
+    /// span with no movement, of an outside pair and of one leg of two units (P40); flows of a
     /// move whose leg the walk refuses, asked first while the walk it needs reads a def deeper
     /// than the evaluation's depth limit, in a decision and in a plan (`kernel/g7/`).
     #[test]
@@ -197,7 +208,9 @@ mod tests {
     /// each other at one instant, an anchor; a place's first reading as a cut sees it; ledgers
     /// with matched, partly fulfilled, missing, undated, unexplained and balance lines, a link
     /// to an instance that doesn't exist beside one of its move that does, ties broken by the
-    /// movement order, typed: key positions 2, 3 and 11 (tally 2.1.2, #33) (`kernel/g10/`).
+    /// movement order, typed: key positions 2, 3 and 11 (tally 2.1.2, #33), and in the year
+    /// 9999 a dated line before a hole-day one (tally 2.1.6, #48); an observed attribute naming
+    /// a move instance of its kind (tally 2.1.6, #86) (`kernel/g10/`).
     #[test]
     fn s_kernel_g10_observations() {
         group_holds("g10");
@@ -212,7 +225,9 @@ mod tests {
     /// (RUN-RECORD) beside twins that settle; tally 2.1.2: a refused settlement read twice in
     /// one ask, in both orders, beside a twin that settles (#44); re-measurements refused by
     /// an amount and by a `when`, a booking refused at its first measure that stays refused,
-    /// and `when`s made holes, then ended (#34), each beside reads that don't reach them
+    /// and `when`s made holes, then ended (#34), each beside reads that don't reach them; tally
+    /// 2.1.6: under a hole `when`, a leg whose amount is refused has its adjustment refused, the
+    /// other leg's a hole (#52), and each leg is measured against its own hole state
     /// (`kernel/g11/`).
     #[test]
     fn s_kernel_g11_adjustments() {
@@ -236,9 +251,35 @@ mod tests {
     /// (L §2.3, #29), refused at 9 beside a twin at 8 that answers; `WARN-UNREAD` for a place
     /// no line names (L §8.5, #30): an opening, a reading, an anchor and a `covers` line name
     /// none; a read, a leg, an observed row's leg, a pad, a binding over its kind and a row
-    /// whose value it is each name one (`kernel/g13/`).
+    /// whose value it is each name one; any spacing between tokens reads (tally 2.1.6, #81): a
+    /// field spaced at its `.`, an id at its `[`, a call at its `(`, beside its touching twin
+    /// (`kernel/g13/`).
     #[test]
     fn s_kernel_g13_load() {
         group_holds("g13");
+    }
+
+    /// G14, capacity at run (L §7.6; tally 2.1.6, #89 and #48): a day computed past
+    /// 9999-12-31 or before 0001-01-01, and the end of time read as a day, refused at its key
+    /// (`RUN-LIMIT`) beside the edges that answer; a movement whose day passes 9999-12-31
+    /// refusing its legs' places on every day while another place stands; a range from rows of
+    /// more than 1 000 000 keys beside one of 1 000 000; the edges load allows (1 000 000 keys,
+    /// a period ending on 9999-12-31, 18 digits, unit powers of 64); a calendar with no
+    /// business day (`RUN-DOMAIN`) beside six weekend days and every month-day; and the
+    /// review's seven findings in 0bbf95b (P35): the end of time as a span's end or a key, a
+    /// day, month or year shifted by the machine word's least or greatest value or past 64
+    /// bits, `add_business` by the least value, ranges near ±9e18, an integer key past 64
+    /// bits (`RUN-KEY`), and a list index of 1 000 001 keys (`LOAD-LIMIT`) beside its twin of
+    /// 1 000 000, texts of 8.9 MB generated at test time from their sources (`.gen`, P36),
+    /// each beside its answered twin; and the second review's six (P37): an integer past 64
+    /// bits as a business-day count (a hole's question, `RUN-DOMAIN`), a duration, a key's
+    /// shift (`RUN-KEY`), a day number, a power on base 1, 0 or -1 and a calendar's first
+    /// year, ranges near the 4 096-digit cap, and the refusal texts refcore says; and the
+    /// third review's two (P38): a key of a range `by n` moved by whole keys of its step, a
+    /// `nominal` row where an int goes (`LOAD-UNIT`); `by_n_years_98` is held for #98 (P39,
+    /// `held.tsv`) (`kernel/g14/`).
+    #[test]
+    fn s_kernel_g14_capacity() {
+        group_holds("g14");
     }
 }

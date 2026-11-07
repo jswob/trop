@@ -1,0 +1,31 @@
+model g14_keys_past_64
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#89, P35, finding 6): an integer key past 64 bits is outside the index (RUN-KEY), as one inside the machine word is; a sum past 64 bits is exact; a range of one key past 64 bits holds one key."
+
+source plan "plan"
+
+index ks = 1..3
+
+input huge: int
+
+input imax: int
+
+def v[k in ks]: int = k
+
+version v1
+  cite plan
+  governs always
+  known 2026-01-01
+  huge = 100000000000000000000
+  imax = 9223372036854775807
+
+ask q1: v[huge]
+
+ask q2: v[imax]
+
+ask q3: sum(v[k] for k in ks) + huge
+
+ask q4: max(k for k in huge .. huge)

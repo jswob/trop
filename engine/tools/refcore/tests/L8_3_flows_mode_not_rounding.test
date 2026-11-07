@@ -1,0 +1,42 @@
+# L §2.3 MODE, §8.3 LOAD-UNIT (tally 2.1.6, issue #79): a converted flows whose mode is day, a date, not a rounding
+# code, is refused LOAD-UNIT `flows: the mode is date, not a rounding code`, the engine's bytes. tally 2.1.5's
+# refcore built the message from the call's name, which a flows node lacks, and crashed (REFCORE-NOT-YET).
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+input fx: num PLN/EUR
+
+input day: date
+
+input eamt: money EUR
+
+place konto: accounts EUR lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+move pay[m in months]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount eamt
+
+ask b: flows(konto, 2026-01) in PLN at fx day law 2026-01-01
+
+version v
+  cite s
+  governs 2026..
+  known 2025-12-01
+  fx = 4.3333
+  day = 2026-02-10
+  eamt = 1.00 EUR
+=== expect
+refused: LOAD-UNIT flows: the mode is date, not a rounding code (m.tally:28)

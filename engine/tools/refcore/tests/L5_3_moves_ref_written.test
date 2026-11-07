@@ -1,0 +1,33 @@
+# L §5.3 moves, §8.3 LOAD-MOVES `moves <V>: unknown, or not known before this version` (tally 2.1.6, issue #88):
+# `moves v_act[a1]` names no version, its reference printed as written. tally 2.1.5's refcore printed its parse
+# node (moves index(obj=name(id='v_act'), …)).
+=== m.tally
+model p
+  tally 2
+  on 2027-12-31
+  start 2027-01-01
+  end 2027-12-31
+
+unit PLN: currency minor 0.01
+source act "the act"
+
+input age3: int
+band rate(a: int): money PLN
+def r[m in months]: money PLN = rate(age3)
+ask q: r[2027-05]
+
+version v_act
+  cite act
+  governs always
+  known 2026-12-01
+  age3 = 3 "the age"
+  rate: [0, 6) = 400.00 PLN "under 6"
+  rate: [6, 18) = 250.00 PLN "6 to 17"
+
+version v2
+  cite act
+  governs always
+  known 2027-05-01
+  moves v_act[a1] to 2027..
+=== expect
+refused: LOAD-MOVES moves v_act[a1]: unknown, or not known before this version (m.tally:23)

@@ -7,6 +7,45 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.1.6 (the spec round after M0: 24 issues)
+
+The spec patch tally 2.1.6 (`spec/CHANGES.md` 2.1.6-1 to 2.1.6-28), the coordinator's picks P1–P27 and, on T's
+re-run, P29–P32, under the user's standing rule of 2026-11-04. Each new test was seen failing on tally 2.1.5's refcore
+first (those of 2.1.6-25 to -27 on 522a715's, the round's first close), but the twins and pins named. **1251 tests,
+all pass** (1170, 81 new, 5 changed: `L6_4_scenario_move_load_day`, which now prints the scenario's load refusal;
+`L2_4_reprint_layout`, `_member_index`, `_prefixed_call_member`, which write their members' true hashes now that
+`reprint` pins them; `L8_3_cycle_beats_place`, at the def's line).
+
+- **The end of time and the limits (#48, #89).** `dates.END` is an `EndOfTime` date after every day: `END - n days`
+  and `add_months(END, -n)` work; reading its year, month or day, printing it or booking on it refuses `RUN-LIMIT a day
+  passes 9999-12-31`. `loader` caps a declared index or a stepped range at `KEY_LIMIT` (1 000 000) keys, `check` an
+  integer naming a key at 18 digits, `units` a unit power at `POWER_LIMIT` (64): `LOAD-LIMIT` where load sees it
+  (`check3.m_check_seen_day_limits`, `evaluate.range_values`' up-front counts), `RUN-LIMIT` where a row's value gives
+  it. `evaluate.business` refuses a calendar with no business day (seven weekend days, or 366 yearly days).
+- **Reach and order (#51, #52, #57, #49).** A refused `where` or `when` refuses its places from its day
+  (`moves.m_refused_places`); a refused leg amount outranks a hole `when` (`moves.leg_refusal`); a day's agenda keys
+  and a path's sample lines take `moves.order_key`.
+- **Load sees it, whatever the asks (#72, #75, #83, #86, #87).** `check3.m_check_schedules`,
+  `m_check_settlement_units`, `m_check_scenario_moves`; `check.check_path_line`; `check.t_name` refuses a base read of a
+  scenario's item (`Reality.elsewhere`, the ids the scenarios' files declare, from `cli.run_worlds`) and
+  `loader.no_version` a `v` naming a scenario's version; `check_rows` checks parts with no total; `m_check_proj_seen`
+  dates an `at`-less random move by its day; `check2.dist_support_max` sees `discrete`'s keys and a `to`;
+  `loader.move_kind` reads a move's declared kind; `build_range` refuses `by 0`. `moves.py` l.1062 stays at run (#72).
+- **Messages (#71, #79, #88).** refcore's texts went into the catalogue; refcore now prints the facts it dropped
+  (`check.shift_offset`, `var_index`, the cycles' places, `loader._txt_node` for literals, keys and a `moves`
+  reference); `check.mode_arg` names its function.
+- **Parse and format (#81, #88, #74, #91).** `parser.skey` (an `sref` key) for `same` sides and `ofrow`; a band row's
+  key re-read as the grammar's; a field's ref takes no `*`; a field's `.` and a prefixed call's `(` read across spaces,
+  a field marked `Tok.fld` so its `[` touches (`canon.spaced`), and `joint._rename_ok` spacing-blind; `reprint` pins a
+  joint model's members (`joint.pinned_members`, shared with `run`) and refuses a duplicated id or an unknown prefix
+  (`canon.unorderable`), each reality apart.
+- **Scenarios (#73, #62).** `run_worlds` prints the base's asks refused alone.
+- **T's re-run (P29–P31).** `check3.m_existence_seen` (no `when`; each binding's `where` seen as a day is, through
+  `m_seen_day(cond=True)`) gates `m_check_scenario_moves`, which folds a seen `where` at each key, and
+  `moves.m_before_scen_from`; an instance whose existence load can't decide is left out at run (#75).
+  `check3.m_check_literal_ranges` counts every ask's literal range at load (#89). `check._beats_cycle` and `_cycles`
+  print at the def's (or band's) line, as `spec/tools/loadcheck.py` does (#71).
+
 ## tally 2.1.5 (M0's spec patch: issue #84)
 
 The spec patch tally 2.1.5 (`spec/CHANGES.md` 2.1.5-1 and 2.1.5-2), the coordinator's pick P8 (a) on #84 under the

@@ -1,0 +1,22 @@
+model spacing_read
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#81, P21): any spacing between tokens reads, and prints canonical"
+
+source s "s"
+
+index qs = [q1, q2]
+
+input added[k in qs]: num
+
+input base: num
+
+def fields: int = r .n + r. m + r . k
+
+def listword: num = added [q1] + added[q2]
+
+def call: num = max (base, added [q2])
+
+def kept: bool = not (base > 1 or base < 0)

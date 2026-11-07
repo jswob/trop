@@ -80,9 +80,17 @@ impl IndexInfo {
         }
     }
 
-    /// The position of `key`, from 0 (refcore's `IndexInfo.pos`). L §4.2 `pos`.
+    /// The position of `key`, from 0 (refcore's `IndexInfo.pos`); an integer range's keys,
+    /// up to 1 000 000 of them (L §7.6 item 2), rise, so its key is sought by halving (a
+    /// list's keep their written order). L §4.2 `pos`.
     #[must_use]
     pub fn pos(&self, key: &KeyVal) -> Option<usize> {
+        if let (IndexForm::Range, true, KeyVal::Int(n)) = (self.form, self.is_int, key) {
+            let at = self
+                .keys
+                .partition_point(|k| matches!(k, KeyVal::Int(x) if x < n));
+            return self.keys.get(at).filter(|k| *k == key).map(|_| at);
+        }
         self.keys.iter().position(|k| k == key)
     }
 

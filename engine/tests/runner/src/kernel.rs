@@ -6,9 +6,61 @@
 //! (`properties/kernel.refcore`), which `s_properties` holds only to the laws.
 //!
 //! - [`VECTORS`]: the stored vectors, read by [`vectors`];
+//! - [`expand`]: a generated text's source expanded (tally 2.1.6, the coordinator's pick
+//!   P36): a file table may store a source whose `@keys <prefix> <first> <last>@` stands for
+//!   `<prefix><first>, …, <prefix><last>`, as `kernel/vectors.py`'s `expand` writes it, so a
+//!   text of a million keys stays small in git; [`vectors`] expands each before the run;
 //! - [`difference`]: how a run differs from refcore's, by its first differing line.
 
 use crate::corpus::{Run, groups, netstrings, text};
+
+/// The token that opens a generated key list.
+const KEYS: &str = "@keys ";
+
+/// `source` with each `@keys <prefix> <first> <last>@` replaced by its keys, joined by `, `.
+pub fn expand(source: &str) -> Result<String, String> {
+    let mut out = String::new();
+    let mut rest = source;
+    while let Some((before, after)) = rest.split_once(KEYS) {
+        out.push_str(before);
+        let (spec, tail) = after
+            .split_once('@')
+            .ok_or_else(|| "an @keys token isn't closed".to_owned())?;
+        let words: Vec<&str> = spec.split(' ').collect();
+        let [prefix, first, last] = words.as_slice() else {
+            return Err(format!("@keys {spec}@: not a prefix and two numbers"));
+        };
+        let first: u64 = first
+            .parse()
+            .map_err(|_| format!("@keys {spec}@: its first"))?;
+        let last: u64 = last
+            .parse()
+            .map_err(|_| format!("@keys {spec}@: its last"))?;
+        let keys: Vec<String> = (first..=last).map(|i| format!("{prefix}{i}")).collect();
+        out.push_str(&keys.join(", "));
+        rest = tail;
+    }
+    out.push_str(rest);
+    Ok(out)
+}
+
+/// The file table `table` with each generated source expanded, repacked.
+fn expanded_table(table: &[u8]) -> Result<Vec<u8>, String> {
+    let mut out = Vec::new();
+    for part in netstrings(table)? {
+        let part = text(part)?;
+        let part = if part.contains(KEYS) {
+            expand(&part)?
+        } else {
+            part
+        };
+        out.extend_from_slice(part.len().to_string().as_bytes());
+        out.push(b':');
+        out.extend_from_slice(part.as_bytes());
+        out.push(b',');
+    }
+    Ok(out)
+}
 
 /// The vectors `kernel/vectors.py` writes from refcore's runs: six netstrings each, the id,
 /// the group, the argument words joined by single spaces, the file table, the exit code and
@@ -45,7 +97,7 @@ pub fn vectors(bytes: &[u8]) -> Result<Vec<Vector>, String> {
             id: text(id)?,
             group: text(group)?,
             args: text(args)?.split(' ').map(str::to_owned).collect(),
-            files: files.to_vec(),
+            files: expanded_table(files)?,
             refcore: Run {
                 out: text(printed)?,
                 code,
@@ -83,9 +135,49 @@ pub fn difference(expected: &Run, got: &Run) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{VECTORS, difference, vectors};
-    use crate::corpus::{KERNEL_CORPUS, KERNEL_REFCORE, Run, paths, records, refcore_runs};
+    use super::{VECTORS, difference, expand, vectors};
+    use crate::corpus::{
+        KERNEL_CORPUS, KERNEL_REFCORE, Run, netstrings, paths, records, refcore_runs, text,
+    };
+    use crate::m0::digest;
     use std::collections::BTreeSet;
+
+    /// The generated texts expand to the bytes `kernel/vectors.py`'s `expand` gives, which
+    /// refcore ran: each one's length and `m0::digest` as Python computed them from the same
+    /// source (tally 2.1.6, P36), so the two expansions can't drift apart unseen.
+    #[test]
+    fn the_generated_texts_are_vectors_pys() {
+        let want: [(&str, usize, [u128; 2]); 2] = [
+            (
+                "g14/list_1000001",
+                8_889_222,
+                [836_064_428_610_996_816, 1_600_463_275_642_521_602],
+            ),
+            (
+                "g14/list_1000000",
+                8_889_203,
+                [1_544_476_892_599_510_816, 1_700_045_282_514_058_299],
+            ),
+        ];
+        let vs = vectors(VECTORS).expect("kernel/vectors.refcore reads");
+        for (id, len, hash) in want {
+            let v = vs
+                .iter()
+                .find(|v| v.id == id)
+                .expect("the generated vector");
+            let parts = netstrings(&v.files).expect("its table");
+            assert_eq!(parts.len(), 2, "{id}: one file");
+            let content = text(parts.get(1).expect("its text")).expect("UTF-8");
+            assert_eq!(content.len(), len, "{id}: its length");
+            assert_eq!(digest(content.as_bytes()), Some(hash), "{id}: its digest");
+        }
+        assert_eq!(
+            expand("[@keys k 2 4@]").as_deref(),
+            Ok("[k2, k3, k4]"),
+            "a token's keys, first to last"
+        );
+        assert!(expand("@keys k 1@").is_err(), "a token without its last");
+    }
 
     #[test]
     fn the_vectors_read_and_their_tables_hold_every_path_they_name() {

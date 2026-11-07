@@ -1,0 +1,39 @@
+# L §8.2 (a path's sample: entries in canonical order), §5.16 (keys in index order; tally 2.1.6, issue #49): path 2
+# replays r at its eleven keys, and the sample lines print in index order, r[2] before r[10] and r[11]. tally 2.1.5's
+# refcore sorted the keys' order by its text, so r[10] and r[11] printed after r[1] (as #33 found for the ledger).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+index ks = int 1..11
+
+input r[k in ks]: dist
+
+def tot: num = sum(r[k] for k in ks) at reader
+
+ask p: tot law 2026-06-30 paths 4 seed 1 path 2
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  r[*] = uniform(0, 1) to 0.01
+=== expect
+p: ≈ 5.57 ± 0.055
+  sample: r[1] = 0.58 (u = ...
+  sample: r[2] = 0.49 (u = ...
+  sample: r[3] = 0.59 (u = ...
+  sample: r[4] = 0.7 (u = ...
+  sample: r[5] = 1 (u = ...
+  sample: r[6] = 0.49 (u = ...
+  sample: r[7] = 0.17 (u = ...
+  sample: r[8] = 0.4 (u = ...
+  sample: r[9] = 0.44 (u = ...
+  sample: r[10] = 0.19 (u = ...
+  sample: r[11] = 0.52 (u = ...
+  law date 2026-06-30, cut 2026-12-31

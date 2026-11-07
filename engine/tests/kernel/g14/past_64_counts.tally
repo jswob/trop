@@ -1,0 +1,88 @@
+model g14_past_64_counts
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#89, the coordinator's pick P37, the second review's G1, G2, G4, G5, G6 and the builder's sweep): an integer past 64 bits as a count, a duration, a key's shift, a day number, a power and a calendar's first year, each computed exactly or refused by the rule it meets first, beside its twin inside 64 bits or answered; and the refusal texts refcore says."
+
+source plan "T's fixture (invented values)"
+
+input d: date
+
+input cal: calendar
+
+input cal7: calendar
+
+input calh: calendar
+
+input cy: calendar
+
+input imin: int
+
+input imax: int
+
+input huge: int
+
+input n1: int
+
+input n2: int
+
+input h5: num
+
+input rz: rate
+
+input rneg1: rate
+
+input rneg2: rate
+
+index li = [a, b, c]
+
+def w[k in li]: int = pos(k)
+
+def z[k in li]: int = if pos(k) > n1 then w[k - huge] else n2
+
+def z3[k in li]: int = w[k + huge]
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  d = 2026-06-01 "a day"
+  cal = calendar(weekends [sat, sun]) "weekends off"
+  cal7 = calendar(weekends [mon, tue, wed, thu, fri, sat, sun]) "no business day"
+  cy = calendar(weekends [sat, sun], yearly [01-01] from 100000000000000000000) "a rule from a year past 9999"
+  imin = -9223372036854775808 "the machine word's least value"
+  imax = 9223372036854775807 "the machine word's greatest value"
+  huge = 100000000000000000000 "10^20, past 64 bits"
+  n1 = 1 "one"
+  n2 = 2 "two"
+  h5 = 2.5 "two and a half"
+  rz = 0 %/year "a base of 1"
+  rneg1 = -100 %/year "a base of 0"
+  rneg2 = -200 %/year "a base of -1"
+
+ask g1_hole: add_business(d, huge, calh), add_business(d, -huge, calh), add_business(d, imax, calh)
+
+ask g1_none: add_business(d, huge, cal7), add_business(d, -huge, cal7), add_business(d, imax, cal7), add_business(d, imin, cal7)
+
+ask g1_twin: add_business(d, n1, cal), add_business(d, -n1, cal)
+
+ask g2: year_of(d) + huge * 1 month, quarter_of(d) + huge * 1 month, year_of(d) + huge * 1 year
+
+ask g2_twin: year_of(d) + n1 * 1 year, quarter_of(d) + n1 * 1 quarter, month_of(d) + n1 * 1 month
+
+ask g4: z[b], z[c], z3[a]
+
+ask g4_twin: z[a], w[c]
+
+ask g5: day_of(month_of(d), huge), day_of(month_of(d), imax), schedule(month_of(d), huge, following, cal), schedule(month_of(d), imax, following, cal), day_of(month_of(d), -huge)
+
+ask g5_twin: day_of(month_of(d), n2), schedule(month_of(d), n2, following, cal)
+
+ask g6: month_of(d) + h5 * 1 month, d + h5 * 1 month, year_of(d) + n1 * 1 month
+
+ask sweep_power: factor(rz, huge, year, effective), factor(rz, huge, month, nominal 12), factor(rz, -huge, year, effective), factor(rneg1, huge, year, effective), factor(rneg2, huge, year, effective), factor(rneg2, huge + n1, year, effective)
+
+ask sweep_power_twin: factor(rz, n2, year, effective), factor(rneg2, n2, year, effective)
+
+ask sweep_calendar: is_business(d, cy), is_business(2026-01-01, cy)

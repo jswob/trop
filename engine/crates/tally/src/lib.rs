@@ -84,7 +84,7 @@ pub mod time {
     mod day;
     mod period;
 
-    pub use calendar::{Calendar, weekday_number};
+    pub use calendar::{Calendar, FirstYear, weekday_number};
     pub use day::Day;
     pub use period::{Period, PeriodKind, Step, age, age_months, overlap_days};
 }
@@ -156,8 +156,8 @@ pub mod eval {
         ConvertFor, Converted, convert, convert_row, field_literal, make_keys, thing_seen, to_key,
     };
     pub use stack::Item;
-    pub(crate) use state::num_stop;
     pub use state::{Collected, Ctx, Engine, Entry, Env};
+    pub(crate) use state::{a_day, num_stop, past_days};
 }
 
 /// The walk (E §4): the plan pass's instances and their order (E §4.1), the day walk's

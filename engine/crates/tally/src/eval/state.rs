@@ -503,6 +503,25 @@ pub(super) fn wrong_type(m: &Reality, what: &str, v: &Value) -> Stop {
     }
 }
 
+/// `RUN-LIMIT` for a day computed by a step of sign `toward` past 9999-12-31, or before
+/// 0001-01-01 (refcore's `past_days`). L §7.6 item 1, §8.4.
+pub(crate) fn past_days(toward: i64) -> Stop {
+    let message = if toward > 0 {
+        "a day passes 9999-12-31"
+    } else {
+        "a day comes before 0001-01-01"
+    };
+    refuse(Run::Limit, message.to_owned())
+}
+
+/// A day read as a day: the end of time is none, `RUN-LIMIT`. L §7.6 item 1.
+pub(crate) fn a_day(day: Day) -> Result<Day, Stop> {
+    if day.is_end() {
+        return Err(past_days(1));
+    }
+    Ok(day)
+}
+
 /// A broken promise of load's or the evaluator's: `ENGINE-INVARIANT` (E §11).
 pub(super) fn invariant(what: &str) -> Stop {
     Stop::Refused(Refusal::new(Code::EngineInvariant, what.to_owned()))

@@ -1,0 +1,48 @@
+model g14_days
+  tally 2
+  on 9999-12-31
+  start 9999-01-01
+  end 9999-12-31
+  note "T, tally 2.1.6 (#89, P7; #48, P8), G14: L §7.6 item 1: a day is one of 0001-01-01 to 9999-12-31. A day computed past 9999-12-31 or before 0001-01-01 is refused at its key, RUN-LIMIT (a row's value gives it, so load doesn't see it), and so is the end of time where a day is read: end_of(9999) printed, a day argument, a balance's day. The edges stand: the row's own 9999-12-31, add_months to 9999-12-30, end_of(9999) - 1 day, 0001-01-02 - 1 day."
+
+source plan "T's invented plan"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 9999-01-01..
+
+input last: date
+
+input first: date
+
+input late_nov: date
+
+input mid_dec: date
+
+version plan_9999
+  cite plan
+  governs always
+  known 9999-01-01
+  last = 9999-12-31
+  first = 0001-01-02
+  late_nov = 9999-11-30
+  mid_dec = 9999-12-15
+  opening[konto] = 250.00 PLN at 9999-01-01 start
+
+ask at_last: last, last - 1 day, add_months(late_nov, 1)
+
+ask past: last + 1 day
+
+ask month_past: add_months(mid_dec, 1)
+
+ask eot: end_of(9999)
+
+ask eot_back: end_of(9999) - 1 day, end_of(9999-11)
+
+ask eot_year: year_of(end_of(9999))
+
+ask eot_bal: bal(konto, end_of(9999-12))
+
+ask at_first: first - 1 day
+
+ask before: first - 1 day - 1 day

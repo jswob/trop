@@ -1,0 +1,42 @@
+# L §6.4, §8.3 (GD-18; tally 2.1.6, issue #73): an ask naming a world that isn't loaded (lowered) is refused alone,
+# LOAD-SCENARIO, in a reality with a scenario (raised) as in a plain one: asked by id, q_low prints its refusal.
+# M0's scen family. tally 2.1.5's refcore printed nothing, exit 0.
+=== model.tally
+model household
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2027-12-31
+  note "T's base for M0's load-code fixtures (invented): a model and a scenario over it, scen.tally; it loads clean"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+input amt: money PLN
+
+def doubled: money PLN = amt + amt at reader
+
+ask q: doubled law 2026-03-01
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+
+ask q_low: doubled in lowered law 2026-03-01
+=== scen.tally
+scenario raised over household
+  tally 2
+  from 2027-01-01
+
+version raise_2027
+  cite card
+  governs 2027..
+  known 2026-02-01
+  replace amt = 150.00 PLN "a raise from 2027"
+
+ask q_raised: doubled in raised law 2027-06-01
+=== expect q_low
+q_low: refused: LOAD-SCENARIO ask q_low names lowered, neither the model nor a loaded scenario (model.tally:24)

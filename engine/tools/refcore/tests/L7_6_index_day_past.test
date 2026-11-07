@@ -1,0 +1,17 @@
+# L §7.6 item 1 (tally 2.1.6, issue #89): the last key of a day range by 7 from 9999-12-01 is a period
+# 9999-12-29 to 10000-01-04, past 9999-12-31: LOAD-LIMIT, since load builds an index's keys (§8.3 item 5). tally
+# 2.1.5's refcore refused it REFCORE-NOT-YET (OverflowError).
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+unit PLN: currency minor 0.01
+index ds = day 9999-12-01..9999-12-31 by 7
+
+ask n: max(pos(k) for k in ds)
+=== expect
+refused: LOAD-LIMIT index ds: a day passes 9999-12-31 (m.tally:9)

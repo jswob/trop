@@ -1,0 +1,46 @@
+# L §6.4, §8.3 (tally 2.1.6, issue #75): the base is whole without its scenarios, so a base ask that reads extra,
+# a def only the scenario's file declares, refuses the reality at load, LOAD-SCENARIO `<item> of scenario <s> is
+# read outside it`, whatever the asks (here q, which reads doubled). tally 2.1.5's refcore read extra as a key
+# literal and refused only an ask that reached it, at run (LOAD-KEY ambiguous key extra). T's held
+# scen/scenario-read; the engine's bytes.
+=== model.tally
+model household
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2027-12-31
+  note "T's base for M0's load-code fixtures (invented): a model and a scenario over it, scen.tally; it loads clean"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+input amt: money PLN
+
+def doubled: money PLN = amt + amt at reader
+
+ask q: doubled law 2026-03-01
+
+ask q2: extra law 2027-06-01
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+=== scen.tally
+scenario raised over household
+  tally 2
+  from 2027-01-01
+
+version raise_2027
+  cite card
+  governs 2027..
+  known 2026-02-01
+  replace amt = 150.00 PLN "a raise from 2027"
+
+ask q_raised: doubled in raised law 2027-06-01
+
+def extra: money PLN = amt at reader
+=== expect q
+refused: LOAD-SCENARIO extra of scenario raised is read outside it (model.tally:18)

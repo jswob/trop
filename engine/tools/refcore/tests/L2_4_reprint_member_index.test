@@ -8,7 +8,7 @@ model family
   on 2026-10-20
   start 2026-01-01
   end 2026-12-31
-  use a = "../A/ana.tally" sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+  use a = "../A/ana.tally" sha256 "d7ffa928ad8042e2cf6d61ac3053cb8d7c87a7ece1220416c4c6226b01bd1883"
 
 input j[k in a.ks]: int
 
@@ -41,7 +41,7 @@ model family
   on 2026-10-20
   start 2026-01-01
   end 2026-12-31
-  use a = "../A/ana.tally" sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+  use a = "../A/ana.tally" sha256 "d7ffa928ad8042e2cf6d61ac3053cb8d7c87a7ece1220416c4c6226b01bd1883"
 
 input j[k in a.ks]: int
 

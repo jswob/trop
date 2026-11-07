@@ -22,14 +22,139 @@ def last_day(y, m):
     return _cal.monthrange(y, m)[1]
 
 
+def past_days(after=True):
+    """L §7.6 item 1 (tally 2.1.6, issue #89): a day computed outside 0001-01-01..9999-12-31 is refused, RUN-LIMIT at
+    the key (load turns it into LOAD-LIMIT where it builds an index's keys or sees a move's day)."""
+    return Refusal('RUN-LIMIT', 'a day passes 9999-12-31' if after else 'a day comes before 0001-01-01')
+
+
+def check_year(y):
+    if not 1 <= y <= 9999:
+        raise past_days(y > 9999)
+
+
 def add_months(d, n):
     """The same day number, clamped to the last day of the target month (L §4.2)."""
-    y, m = month_add(d.year, d.month, n)
-    return D(y, m, min(d.day, last_day(y, m)))
+    if n == 0:
+        return d
+    # the end of time moves as the day 10000-01-01 would (L §2.1)
+    yy, mm, dd = (10000, 1, 1) if d is END else (d.year, d.month, d.day)
+    y, m = month_add(yy, mm, n)
+    check_year(y)
+    return D(y, m, min(dd, last_day(y, m)))
 
 
 def add_days(d, n):
-    return d + datetime.timedelta(days=n)
+    try:
+        return d + datetime.timedelta(days=n)
+    except OverflowError:
+        raise past_days(n > 0)
+
+
+class EndOfTime(D):
+    """The end of time (L §2.1, tally 2.1.6, issue #48): the start of the period after one that ends with 9999-12-31,
+    Tally's last day, as the day 10000-01-01 would be. It follows every day, a span or a period may end there, and
+    it is compared, and has days or months taken from it, as a day is (`END - ONE_DAY` is 9999-12-31,
+    `add_months(END, -1)` 9999-12-01); it is no day itself, so a day after it, its calendar fields and its print are
+    refused (RUN-LIMIT, L §7.6).
+    A subclass of date, so Python tries its own comparisons and subtraction first; its stored day is 9999-12-31,
+    which no method reads. refcore 2.1.5 built the year 9999's end as date(10000, 1, 1), which Python refuses."""
+    __slots__ = ()
+    _one = None
+
+    def __new__(cls, *args):
+        if cls._one is None:
+            cls._one = D.__new__(cls, 9999, 12, 31)
+        return cls._one
+
+    @property
+    def year(self):
+        raise past_days()
+
+    month = day = year
+
+    def __eq__(self, o):
+        return o is self if isinstance(o, D) else NotImplemented
+
+    def __ne__(self, o):
+        return o is not self if isinstance(o, D) else NotImplemented
+
+    def __lt__(self, o):
+        return False if isinstance(o, D) else NotImplemented
+
+    def __le__(self, o):
+        return o is self if isinstance(o, D) else NotImplemented
+
+    def __gt__(self, o):
+        return o is not self if isinstance(o, D) else NotImplemented
+
+    def __ge__(self, o):
+        return True if isinstance(o, D) else NotImplemented
+
+    def __hash__(self):
+        return hash('EndOfTime')
+
+    def __add__(self, o):
+        if not isinstance(o, datetime.timedelta):
+            return NotImplemented
+        if o.days == 0:
+            return self
+        if o.days < 0:
+            return D.max + (o + ONE_DAY)
+        raise past_days()
+
+    __radd__ = __add__
+
+    def __sub__(self, o):
+        if isinstance(o, datetime.timedelta):
+            return self + (-o)
+        if o is self:
+            return datetime.timedelta(0)
+        if isinstance(o, D):
+            return (D.max - o) + ONE_DAY
+        return NotImplemented
+
+    def __rsub__(self, o):
+        if isinstance(o, D):
+            return -(self - o)
+        return NotImplemented
+
+    def toordinal(self):
+        return D.max.toordinal() + 1
+
+    def no_day(self, *a):
+        raise past_days()
+
+    isoformat = __str__ = __format__ = weekday = isoweekday = isocalendar = replace = strftime = timetuple = no_day
+
+    def __repr__(self):
+        return 'END'
+
+    def __reduce__(self):
+        return (EndOfTime, ())
+
+
+END = EndOfTime()
+
+
+def next_day(d):
+    """The day after d, or the end of time after 9999-12-31 (L §2.1)."""
+    return END if d == D.max else add_days(d, 1)
+
+
+def end_days(s, n):
+    """The end of a period of n days from s: the day after its last, or the end of time (L §2.1); a period whose last
+    day passes 9999-12-31 is refused (L §7.6)."""
+    return next_day(add_days(s, n - 1))
+
+
+def end_months(s, n):
+    """The end of a period of n months from s, the end of time where it ends with 9999-12-31 (L §2.1); a period whose
+    last day passes 9999-12-31 is refused (L §7.6)."""
+    y, m = month_add(s.year, s.month, n)
+    if (y, m) == (10000, 1) and s.day == 1:
+        return END
+    return add_months(s, n)
 
 
 class Period:
@@ -58,9 +183,9 @@ class Period:
         """The period k steps later (key arithmetic on its index)."""
         if self.unit == 'day':
             s = add_days(self.start, k * self.n)
-            return Period(self.kind, s, add_days(s, self.n), 'day', self.n)
+            return Period(self.kind, s, end_days(s, self.n), 'day', self.n)
         s = add_months(self.start, k * self.n)
-        e = add_months(self.start, (k + 1) * self.n)
+        e = end_months(self.start, (k + 1) * self.n)
         return Period(self.kind, s, e, 'month', self.n)
 
     def steps_to(self, o):
@@ -95,22 +220,25 @@ class Period:
 
 
 def day_period(d):
-    return Period('day', d, d + ONE_DAY, 'day', 1)
+    return Period('day', d, next_day(d), 'day', 1)
 
 
 def month_period(y, m):
+    check_year(y)
     s = D(y, m, 1)
-    return Period('month', s, add_months(s, 1), 'month', 1)
+    return Period('month', s, end_months(s, 1), 'month', 1)
 
 
 def quarter_period(y, q):
+    check_year(y)
     s = D(y, 3 * (q - 1) + 1, 1)
-    return Period('quarter', s, add_months(s, 3), 'month', 3)
+    return Period('quarter', s, end_months(s, 3), 'month', 3)
 
 
 def year_period(y):
+    check_year(y)
     s = D(y, 1, 1)
-    return Period('year', s, D(y + 1, 1, 1), 'month', 12)
+    return Period('year', s, end_months(s, 12), 'month', 12)
 
 
 def month_of(d):

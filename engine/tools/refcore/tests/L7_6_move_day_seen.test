@@ -1,0 +1,30 @@
+# L §7.6 item 1, §8.3 item 9 (tally 2.1.6, issue #89): a move's day that load sees, on end_of(y) for the key 9999 of
+# the built-in years, is the end of time, no day: LOAD-LIMIT with the move and its key. tally 2.1.5's refcore refused
+# the model REFCORE-NOT-YET (its run lies in 9999).
+=== m.tally
+model m
+  tally 2
+  on 9999-12-31
+  start 9999-01-01
+  end 9999-12-31
+
+source plan "plan"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-05-01..
+place other: accounts PLN lives 2019-05-01..
+place landlord: outside lives 1900-01-01..
+input amt: money PLN
+
+move fee[y in years]: transfers
+  on end_of(y)
+  leg cash from konto to landlord amount amt
+
+version v
+  cite plan
+  governs always
+  known 9999-01-01
+  amt = 100.00 PLN "plan"
+
+ask f: flows(konto, 9999)
+=== expect
+refused: LOAD-LIMIT move fee[9999] on end_of(y): a day passes 9999-12-31 (m.tally:14)

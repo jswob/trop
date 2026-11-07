@@ -113,10 +113,13 @@ def matches(form, message):
 
 
 def pattern(form):
-    """A form as a regular expression: each <…> and bare one-letter name (not `a`) any text, a bracket of names
-    (`[k]`, `[keys]`, `[lo, hi]`) any bracket or none (an item with no keys prints none), and ± either sign."""
-    parts = re.split(r'(\[[a-z, ]+\]|<[^>]*>|\b[b-zA-Z]\b)', form)
+    """A form as a regular expression: each <…>, each `…` (tally 2.1.6's LOAD-ORDER: `… read each other …`) and
+    bare one-letter name (not `a`) any text, a bracket of names (`[k]`, `[keys]`, `[lo, hi]`) any bracket or none
+    (an item with no keys prints none), a bracket holding a <…> (`[through <path>]`, tally 2.1.6's LOAD-SCENARIO)
+    any text or none, and ± either sign."""
+    parts = re.split(r'(\[[a-z, ]+\]|\[[^\]<]*<[^>]*>\]|<[^>]*>|…|\b[b-zA-Z]\b)', form)
     return re.compile(''.join(re.escape(p).replace('±', '[+-]') if k % 2 == 0 else
+                              '.*?' if p.startswith('[') and '<' in p else
                               r'(?:\[.+?\])?' if p.startswith('[') else '.+?' for k, p in enumerate(parts)))
 
 

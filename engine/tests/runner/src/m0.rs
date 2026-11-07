@@ -26,6 +26,7 @@
 
 use crate::corpus::{Run, groups, netstrings, pack, text};
 use crate::engine::run_args;
+use crate::held::is_held;
 use crate::kernel::difference;
 use crate::m0_spec_texts::SPEC_TEXTS;
 use crate::m0_texts::TEXTS;
@@ -356,6 +357,7 @@ pub fn group_failures(group: &str) -> Result<(Vec<String>, usize), String> {
     }
     let failed = mine
         .iter()
+        .filter(|v| !is_held("m0_format", &v.id))
         .filter_map(|v| format_failure(v, &texts))
         .collect();
     Ok((failed, mine.len()))
@@ -412,8 +414,14 @@ fn group_failures_in(
     if mine.is_empty() {
         return Err(format!("{name} holds no vector of {group}"));
     }
+    let target = if name == "m0/load.refcore" {
+        "m0_load"
+    } else {
+        "m0_loadcheck"
+    };
     let failed = mine
         .iter()
+        .filter(|v| !is_held(target, &v.id))
         .filter_map(|v| load_failure(v, &texts))
         .collect();
     Ok((failed, mine.len()))
@@ -444,6 +452,18 @@ mod tests {
         ("probes", 142),
     ];
 
+    /// The sets whose reprint refcore refuses, each by a ruling of tally 2.1.6: #91, a
+    /// section id declared twice (LOAD-DUP), or an unknown prefix (LOAD-NAME); #74, a member
+    /// absent or changed (LOAD-PIN). `vectors.py`'s `REPRINT_REFUSED` lists the same.
+    const REPRINT_REFUSED: [&str; 6] = [
+        "U:set/surf/SURF-04/SURF-04",
+        "format/dup_id",
+        "format/dup_kind",
+        "format/member_absent",
+        "format/member_changed",
+        "format/unknown_prefix",
+    ];
+
     /// The values `vectors.py`'s `digest` prints for three texts.
     #[test]
     fn the_digest_is_vectors_pys() {
@@ -464,7 +484,7 @@ mod tests {
     #[test]
     fn the_format_vectors_read_and_name_their_texts() {
         let vs = format_vectors(FORMAT).expect("m0/format.refcore reads");
-        assert_eq!(vs.len(), 337, "315 text sets and 22 format fixtures");
+        assert_eq!(vs.len(), 344, "315 text sets and 29 format fixtures");
         let all = texts();
         let mut ids = BTreeSet::new();
         for v in &vs {
@@ -475,9 +495,20 @@ mod tests {
                 "{}",
                 v.id
             );
-            assert_eq!(v.code, 0, "{}: refcore reprints every set", v.id);
-            assert!(!v.sections.is_empty(), "{}: no section", v.id);
-            assert!(v.tail.starts_with("sha256 "), "{}: {}", v.id, v.tail);
+            if REPRINT_REFUSED.contains(&v.id.as_str()) {
+                assert_eq!(v.code, 1, "{}: refcore refuses its reprint", v.id);
+                assert!(v.sections.is_empty(), "{}: a section", v.id);
+                assert!(
+                    v.tail.starts_with("refused: LOAD-") && v.tail.lines().count() == 1,
+                    "{}: one refusal line, not {:?}",
+                    v.id,
+                    v.tail
+                );
+            } else {
+                assert_eq!(v.code, 0, "{}: refcore reprints the set", v.id);
+                assert!(!v.sections.is_empty(), "{}: no section", v.id);
+                assert!(v.tail.starts_with("sha256 "), "{}: {}", v.id, v.tail);
+            }
             for f in &v.table {
                 assert!(all.contains_key(f.path.as_str()), "{}: {}", v.id, f.path);
             }
@@ -498,7 +529,7 @@ mod tests {
         }
         assert_eq!(
             vs.iter().filter(|v| v.group.starts_with("format/")).count(),
-            22,
+            29,
             "one vector per format fixture"
         );
     }

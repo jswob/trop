@@ -169,7 +169,8 @@ def chk_check_takes(self, k, tk):
     if tk.part == tk.w:
         raise LoadError('LOAD-DUP', '%s is declared twice (takes %s for %s)' % (tk.w, tk.part, tk.w), tk.loc)
     if tk.v is not None and tk.v not in m.versions:
-        raise LoadError('LOAD-NAME', 'takes of %s: v %s names no version' % (k.id, tk.v), tk.loc)
+        from .loader import no_version
+        raise no_version(m, k.id, tk.v, 'takes of %s: v %s names no version' % (k.id, tk.v), tk.loc)
     sc = check.Scope(self, ('parts', k.id), None, 'def')
     for v in (tk.part, tk.w):
         if m.lookup(v) is not None:

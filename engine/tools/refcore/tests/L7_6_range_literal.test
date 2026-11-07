@@ -1,0 +1,15 @@
+# L §7.6 item 2 (tally 2.1.6, issue #89): a range an aggregate steps through holds at most 1 000 000 keys; with
+# literal ends, which load sees (§2.5), 1..1000001 is LOAD-LIMIT, which stops the reality. tally 2.1.5's refcore
+# answered 500 001 500 001. (The edge, 1..1000000, costs seconds here; T's vectors hold it.)
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+unit PLN: currency minor 0.01
+ask r: sum(k for k in 1..1000001)
+=== expect
+refused: LOAD-LIMIT 1 .. 1 000 001 holds more than 1 000 000 keys (m.tally:9)

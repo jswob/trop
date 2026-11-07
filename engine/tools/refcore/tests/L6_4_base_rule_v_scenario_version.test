@@ -1,0 +1,41 @@
+# L §6.4 (a rule's v included), §8.3 (tally 2.1.6, issue #75): a base rule whose v names raise_2027, a version only
+# the scenario's file declares, is LOAD-SCENARIO `<item> of the base names <v> of scenario <s>`, not LOAD-NAME's
+# `names no version` (tally 2.1.5's refcore). T's held scen/scenario-names; the engine's bytes.
+=== model.tally
+model household
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2027-12-31
+  note "T's base for M0's load-code fixtures (invented): a model and a scenario over it, scen.tally; it loads clean"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+input amt: money PLN
+
+def doubled: money PLN at reader
+  rule base v raise_2027 = amt + amt
+
+ask q: doubled law 2026-03-01
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+=== scen.tally
+scenario raised over household
+  tally 2
+  from 2027-01-01
+
+version raise_2027
+  cite card
+  governs 2027..
+  known 2026-02-01
+  replace amt = 150.00 PLN "a raise from 2027"
+
+ask q_raised: doubled in raised law 2027-06-01
+=== expect q
+refused: LOAD-SCENARIO doubled of the base names raise_2027 of scenario raised (model.tally:15)

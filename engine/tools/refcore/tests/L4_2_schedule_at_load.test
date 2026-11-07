@@ -1,0 +1,60 @@
+# L §4.2, E §3.1 (tally 2.1.6, issue #72): a schedule load sees that gives no date in the run (day 0 of every month)
+# is refused at load whatever the asks: asking only an ask the base lacks prints LOAD-SCHEDULE, which outranks REQ-ASK
+# (E §11). M0's fixture basic/schedule. tally 2.1.5's refcore refused it only where an ask reached the move, so it
+# printed REQ-ASK here.
+=== m.tally
+model basic
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index qm = month 2026-02..2026-02
+
+input cal: calendar
+
+move rent[m in qm]: transfers
+  on schedule(m, 0, unadjusted, cal)
+  leg cash from konto to world amount amt
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31), flows(rent, 2026)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  cal = calendar(weekends [sat, sun]) "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+=== expect zz_m0_probe
+refused: LOAD-SCHEDULE schedule schedule(m, 0, unadjusted, cal) (the day of rent) gives no date in the run (m.tally:18)

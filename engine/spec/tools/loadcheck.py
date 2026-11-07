@@ -16,14 +16,15 @@ line. It checks:
   LOAD-DUP       one namespace of top-level ids across a reality's files; a
                  built-in id declared again
                  (§2.2); a band with a built-in name (§2.2); a key added twice
-                 to one index or kind (a `replace` entry adds none); two rules
-                 with one label and version
+                 to one index or kind (a `replace` entry adds none)
   LOAD-SHADOW    a bound variable (a bind, an aggregate's, a `for`'s or a
                  crps's or prorata's variable, a band's argument) with the name
                  of a top-level id, built-in ids included
   LOAD-KEY       a declared key (index list, axis option, `+ [..]` entry, row
                  key) that is also a top-level id; place ids may be row keys
-  LOAD-LABEL     a `beats` naming no rule of its def
+  LOAD-LABEL     two rules with one label and version in a def (§8.3 `rule
+                 <label> already exists in <def>; write replace`; tally 2.1.6,
+                 issue #76); a `beats` naming no rule of its def
   LOAD-CYCLE     a `beats` cycle among a def's rules
   LOAD-PARSE     what the scan itself needs: tabs, odd indentation, an
                  unterminated string, an id outside [a-z][a-z0-9_]* or longer
@@ -53,8 +54,7 @@ import sys
 KEYWORDS = set("""
 model part scenario source version unit kind axis index place input band def given fill move
 ask tally note if then else and or not in for where with as when true false inf by at
-law known governs assumed none pending never check solve diff explain inputs-of readers-of
-residuals
+law known governs assumed none never check solve diff explain inputs-of readers-of residuals
 """.split())
 
 # §2.2 built-in names
@@ -62,10 +62,9 @@ BUILTIN_NAMES = set("""
 sum count min max any all first last argmin argmax share mean quantile prorata flows bal value
 low next covered round pow exp ln sqrt abs periodic factor dcf accrue days_between add_days
 add_months add_years start_of end_of year_of quarter_of month_of day_of overlap_days pos age
-age_months weekday add_business first_business last_business is_business schedule calendar
-window one_of latest earliest since band_lo band_hi marginal unit minor lifespan in_force meta
-reasons gap observed missing real normal lognormal exponential gamma poisson binomial negbin
-uniform discrete empirical cdf pdf pmf crps paths
+age_months weekday add_business last_business is_business schedule calendar window one_of since
+band_lo band_hi marginal unit minor lifespan gap observed missing normal lognormal exponential
+gamma poisson binomial negbin uniform discrete cdf pdf pmf crps
 """.split())
 
 # §2.2 / §2.3 FIELD: the keywords a record's field may be (and a built-in field after ".")
@@ -528,8 +527,8 @@ def check_rules(reality, s, body):
     labels = {}
     for label, v, beats, line in rules:
         if (label, v) in labels:
-            reality.refuse('LOAD-DUP', line, item, 'two rules %s with version %s (first %s)'
-                           % (label, v or '(none)', labels[(label, v)].loc))
+            reality.refuse('LOAD-LABEL', line, item, 'rule %s already exists in %s; write replace (first %s)'
+                           % (label, s.id, labels[(label, v)].loc))
         else:
             labels[(label, v)] = line
     names = {label for label, _, _, _ in rules}
@@ -700,7 +699,7 @@ SELFTEST_EXPECTED = sorted([
     ('LOAD-SHADOW', 'a.tally:31'),     # band argument salary
     ('LOAD-SHADOW', 'a.tally:35'),     # bound variable months (a built-in index)
     ('LOAD-SHADOW', 'a.tally:37'),     # bound variable salary
-    ('LOAD-DUP', 'a.tally:42'),        # two rules first
+    ('LOAD-LABEL', 'a.tally:42'),      # two rules first
     ('LOAD-LABEL', 'a.tally:43'),      # beats nope
     ('LOAD-CYCLE', 'a.tally:39'),      # cyc1 / cyc2
     ('LOAD-DUP', 'a.tally:47'),        # def opening: a built-in input

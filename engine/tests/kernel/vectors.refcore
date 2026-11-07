@@ -9365,12 +9365,12 @@ q_res: residuals konto 2026-01
   2026-01 move anyway: model -4.00 PLN, observed 0.00 PLN, difference 4.00 PLN
     expected but missing anyway[2026-01] on 2026-01-18: model -4.00 PLN
   law date 2026-02-15, cut 2026-02-15
-,7:g6/when,2:g6,17:run g6/when.tally,1810:13:g6/when.tally,1787:model g6_when
+,7:g6/when,2:g6,17:run g6/when.tally,1903:13:g6/when.tally,1880:model g6_when
   tally 2
   on 2026-02-15
   start 2026-01-01
   end 2026-03-31
-  note "T, issue #41, G6: plans refused in the plan pass (E §4.1 step 2, L §5.14): one whose attribute divides by zero in February, after its legs are known, refused at its places only; one whose when divides by zero in March, before its legs, refusing every place from its day; January answered for both."
+  note "T, issue #41, G6: plans refused in the plan pass (E §4.1 step 2, L §5.14): one whose attribute divides by zero in February, after its legs are known, refused at its places only; one whose when divides by zero in March, refusing from its day the places its legs give, konto and world (tally 2.1.6, #51: the attribute's refusal in February no longer reaches konto); January answered for both."
 
 source fixture "T's fixture for S's kernel tests (invented values)"
 
@@ -9429,11 +9429,11 @@ version openings
   known 2025-12-31
   opening[konto] = 100 at 2026-01-01 start
   opening[box] = 0 at 2026-01-01 start
-,,1:0,580:q_bal (d = 2026-01-20): (103.00 PLN, 3.00 PLN)
+,,1:0,557:q_bal (d = 2026-01-20): (103.00 PLN, 3.00 PLN)
   unfulfilled: gate[2026-01]
   unfulfilled: tag[2026-01]
   law date 2026-02-15, cut 2026-02-15
-q_bal (d = 2026-02-20): (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
+q_bal (d = 2026-02-20): (106.00 PLN, refused: RUN-DIV division by zero)
   unfulfilled: gate[2026-01]
   unfulfilled: gate[2026-02]
   unfulfilled: tag[2026-01]
@@ -10018,12 +10018,12 @@ q_unc: (619.00 PLN, ?"late has no balance before 2026-02-12" (late), ?"late has 
   uncertain: g_on_d
   uncertain: g_on_t
   law date 2026-02-15, cut 2026-02-15
-,8:g7/flows,2:g7,18:run g7/flows.tally,5281:14:g7/flows.tally,5257:model g7_flows
+,8:g7/flows,2:g7,18:run g7/flows.tally,5374:14:g7/flows.tally,5350:model g7_flows
   tally 2
   on 2026-02-15
   start 2026-01-01
   end 2026-03-31
-  note "T, issue #41, G7: reads at the ask (L §5.14, §5.14.3, §8.2): flows of a place over spans before, across, starting on and after a refusal of every place, and from before the run's start; a hole amount inside a span and a hole day; flows of a move by leg and by keys, over a span with no movement where the kind's leg has a unit and where it doesn't; bal(x, u, d); with uncertain on a place with a reading, uncertain movements before it, after it, on the day read and after it, into and out of the place, and on a place with no reading."
+  note "T, issue #41, G7: reads at the ask (L §5.14, §5.14.3, §8.2): flows of a place over spans before, across, starting on and after a refused when whose legs (shop, world) don't touch it, so konto stands (tally 2.1.6, #51; 2.1.5 refused every place), and from before the run's start; a hole amount inside a span and a hole day; flows of a move by leg and by keys, over a span with no movement where the kind's leg has a unit and where it doesn't; bal(x, u, d); with uncertain on a place with a reading, uncertain movements before it, after it, on the day read and after it, into and out of the place, and on a place with no reading."
 
 source fixture "T's fixture for S's kernel tests (invented values)"
 
@@ -10191,11 +10191,11 @@ version openings
   opening[fund] = 0 at 2026-01-01 start
   opening[box_h] = 0 at 2026-01-01 start
   stated[konto] = 880.00 at 2026-01-22 end "konto's statement, below the plan"
-,,1:0,1544:q_move: (20.00 PLN, 2 etf_unit, 3 etf_unit, 0 etf_unit, 0.00 PLN, 0.00 PLN, 0.00 PLN, 7.00 PLN)
+,,1:0,1522:q_move: (20.00 PLN, 2 etf_unit, 3 etf_unit, 0 etf_unit, 0.00 PLN, 0.00 PLN, 0.00 PLN, 7.00 PLN)
   unfulfilled: buy[2026-01]
   unfulfilled: ext
   law date 2026-02-15, cut 2026-02-15
-q_place: (-113.00 PLN, -113.00 PLN, ?"How much is the repair?" (hole_amt), refused: RUN-DIV division by zero, -12.00 PLN, -12.00 PLN, ?"before the run's start" (konto), ?"When does the parcel come?" (hole_day), ?"When does the parcel come?" (hole_day), -30.00 PLN, 2 etf_unit)
+q_place: (-113.00 PLN, -113.00 PLN, ?"How much is the repair?" (hole_amt), -112.00 PLN, -12.00 PLN, -12.00 PLN, ?"before the run's start" (konto), ?"When does the parcel come?" (hole_day), ?"When does the parcel come?" (hole_day), -30.00 PLN, 2 etf_unit)
   unfulfilled: buy[2026-01]
   unfulfilled: rent[2026-01]
   unfulfilled: rent[2026-02]
@@ -14061,7 +14061,7 @@ version facts
   d0 = 2025-01-10
   opening[src] = 500.00 DUK at 2025-01-01 start
   opening[gone] = 0 DUK at 2025-01-01 start
-,,1:0,97:q: refused: RUN-LIFESPAN ab.cash moves into or out of gone outside its lifespan
+,,1:0,96:q: refused: RUN-LIFESPAN a.cash moves into or out of gone outside its lifespan
   cut 2025-12-31
 ,21:g6/refusal_order_twin,2:g6,31:run g6/refusal_order_twin.tally,1111:27:g6/refusal_order_twin.tally,1074:model g6_refusal_order_twin
   tally 2
@@ -14195,4 +14195,1966 @@ version facts
   opening[y] = 0 DUK at 2025-01-01 start
 ,,1:0,104:q: refused: RUN-LIFESPAN m[y, f11].cash moves into or out of gone outside its lifespan
   cut 2025-12-31
+,12:g1/minor_one,2:g1,22:run g1/minor_one.tally,1434:18:g1/minor_one.tally,1406:model g1_minor_one
+  tally 2
+  on 2026-11-06
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (the mutation run's speed), G1: what prints with no decimals (L §5.18): money of a currency whose minor unit is 1, an int, and a num that is a whole number, each grouped by threes, both signs and zero."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit ZLT: currency minor 1
+
+index w = [small, grouped, neg, zero]
+
+input amt[k in w]: money ZLT
+
+input count_in[k in w]: int
+
+input whole_in[k in w]: num
+
+def doubled[k in w]: money ZLT at reader
+  rule base v card = amt[k] + amt[k]
+
+def count_up[k in w]: int at reader
+  rule base v card = count_in[k] + count_in[k]
+
+def whole_up[k in w]: num at reader
+  rule base v card = whole_in[k] * whole_in[k]
+
+ask q_money: amt[k], doubled[k] for k in w law 2026-11-06
+
+ask q_counts: count_in[k], count_up[k], whole_in[k], whole_up[k] for k in w law 2026-11-06
+
+version card
+  cite fixture
+  governs always
+  known 2026-11-06
+  amt[small] = 500 "five hundred"
+  amt[grouped] = 1234567 "grouped twice"
+  amt[neg] = -2300 "negative"
+  amt[zero] = 0 "zero"
+  count_in[small] = 7 "seven"
+  count_in[grouped] = 1234567 "grouped twice"
+  count_in[neg] = -2300 "negative"
+  count_in[zero] = 0 "zero"
+  whole_in[small] = 12 "twelve"
+  whole_in[grouped] = 1234 "squares past a million"
+  whole_in[neg] = -5 "negative"
+  whole_in[zero] = 0 "zero"
+,,1:0,662:q_counts (k = small): (7, 14, 12, 144)
+  law date 2026-11-06, cut 2026-11-06
+q_counts (k = grouped): (1 234 567, 2 469 134, 1 234, 1 522 756)
+  law date 2026-11-06, cut 2026-11-06
+q_counts (k = neg): (-2 300, -4 600, -5, 25)
+  law date 2026-11-06, cut 2026-11-06
+q_counts (k = zero): (0, 0, 0, 0)
+  law date 2026-11-06, cut 2026-11-06
+q_money (k = small): (500 ZLT, 1 000 ZLT)
+  law date 2026-11-06, cut 2026-11-06
+q_money (k = grouped): (1 234 567 ZLT, 2 469 134 ZLT)
+  law date 2026-11-06, cut 2026-11-06
+q_money (k = neg): (-2 300 ZLT, -4 600 ZLT)
+  law date 2026-11-06, cut 2026-11-06
+q_money (k = zero): (0 ZLT, 0 ZLT)
+  law date 2026-11-06, cut 2026-11-06
+,12:g1/mixed_add,2:g1,22:run g1/mixed_add.tally,1183:18:g1/mixed_add.tally,1155:model g1_mixed_add
+  tally 2
+  on 2026-11-06
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (the mutation run's speed), G1: a sum of a whole number and a fraction, either order (L §7.1, exact): 1 + 1/2 is 3/2, 1/2 + 1 is 3/2; and of two whole numbers and two fractions, beside."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+index w = [int_frac, frac_int, neg_int_frac, int_third, both_int, both_frac]
+
+input a[k in w]: num
+
+input b[k in w]: num
+
+def s[k in w]: num at reader
+  rule base v card = a[k] + b[k]
+
+def d[k in w]: num at reader
+  rule base v card = a[k] - b[k]
+
+ask q_sum: a[k], b[k], s[k], d[k] for k in w law 2026-11-06
+
+version card
+  cite fixture
+  governs always
+  known 2026-11-06
+  a[int_frac] = 1 "a whole number"
+  b[int_frac] = 0.5 "a half"
+  a[frac_int] = 0.5 "a half"
+  b[frac_int] = 1 "a whole number"
+  a[neg_int_frac] = -3 "a negative whole number"
+  b[neg_int_frac] = 0.25 "a quarter"
+  a[int_third] = 2 "a whole number"
+  b[int_third] = 1.5 "three halves"
+  a[both_int] = 4 "a whole number"
+  b[both_int] = 9 "a whole number"
+  a[both_frac] = 0.5 "a half"
+  b[both_frac] = 0.25 "a quarter"
+,,1:0,488:q_sum (k = int_frac): (1, 0.5, 1.5, 0.5)
+  law date 2026-11-06, cut 2026-11-06
+q_sum (k = frac_int): (0.5, 1, 1.5, -0.5)
+  law date 2026-11-06, cut 2026-11-06
+q_sum (k = neg_int_frac): (-3, 0.25, -2.75, -3.25)
+  law date 2026-11-06, cut 2026-11-06
+q_sum (k = int_third): (2, 1.5, 3.5, 0.5)
+  law date 2026-11-06, cut 2026-11-06
+q_sum (k = both_int): (4, 9, 13, -5)
+  law date 2026-11-06, cut 2026-11-06
+q_sum (k = both_frac): (0.5, 0.25, 0.75, 0.25)
+  law date 2026-11-06, cut 2026-11-06
+,10:g1/reduced,2:g1,20:run g1/reduced.tally,1546:16:g1/reduced.tally,1520:model g1_reduced
+  tally 2
+  on 2026-11-06
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (the mutation run's speed), G1: a num is its value, in lowest terms (L §7.1, §5.18): 1/6 + 1/6 prints 1/3, 1/2 + 1/2 prints 1, 2/4 equals 1/2, and a quotient of two whole numbers with a common factor prints reduced."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+index w = [sixth, half, quarter, common, neg]
+
+input top[k in w]: num
+
+input bottom[k in w]: num
+
+def q[k in w]: num at reader
+  note "the quotient"
+  rule base v card = top[k] / bottom[k]
+
+def twice[k in w]: num at reader
+  note "the quotient added to itself"
+  rule base v card = q[k] + q[k]
+
+def twice_div[k in w]: num at reader
+  note "twice the top over the bottom: the same value as twice, by another road"
+  rule base v card = (top[k] + top[k]) / bottom[k]
+
+def same[k in w]: bool at reader
+  rule base v card = twice[k] == twice_div[k]
+
+def back[k in w]: num at reader
+  note "twice times the bottom: twice the top, a whole number"
+  rule base v card = twice[k] * bottom[k]
+
+ask q_reduced: q[k], twice[k], twice_div[k], same[k], back[k] for k in w law 2026-11-06
+
+version card
+  cite fixture
+  governs always
+  known 2026-11-06
+  top[sixth] = 1 "1/6"
+  bottom[sixth] = 6 "1/6"
+  top[half] = 1 "1/2"
+  bottom[half] = 2 "1/2"
+  top[quarter] = 1 "1/4"
+  bottom[quarter] = 4 "1/4"
+  top[common] = 6 "6/15: a common factor of 3"
+  bottom[common] = 15 "6/15"
+  top[neg] = -5 "-5/10: a negative half"
+  bottom[neg] = 10 "-5/10"
+,,1:0,489:q_reduced (k = sixth): (1/6 (0.166666666666667), 1/3 (0.333333333333333), 1/3 (0.333333333333333), true, 2)
+  law date 2026-11-06, cut 2026-11-06
+q_reduced (k = half): (0.5, 1, 1, true, 2)
+  law date 2026-11-06, cut 2026-11-06
+q_reduced (k = quarter): (0.25, 0.5, 0.5, true, 2)
+  law date 2026-11-06, cut 2026-11-06
+q_reduced (k = common): (0.4, 0.8, 0.8, true, 12)
+  law date 2026-11-06, cut 2026-11-06
+q_reduced (k = neg): (-0.5, -1, -1, true, -10)
+  law date 2026-11-06, cut 2026-11-06
+,16:g6/where_refused,2:g6,26:run g6/where_refused.tally,2132:22:g6/where_refused.tally,2100:model g6_where_refused
+  tally 2
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-04-30
+  note "T, tally 2.1.6 (#51, P2), G6: a move bound over a kind whose key's where is refused for one member (eve: 1 / 0) makes a refused instance, which reaches as a hole movement does (L §8.4, L §5.14 Keys, E §4.2): from its day (2026-03-12) the places its legs give, purse and world, and flows of the move over a span that holds it. purse before that day, the place box that dues never touches, flows of the move before its day and a count over the kind stand. refcore 2.1.5 refused every balance from the run's start, box included. Its twin answers eve."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit DUK: currency minor 0.01
+
+kind member
+
+place purse: accounts DUK lives 2026-01-01..
+
+place box: accounts DUK lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input share[p in member]: int
+
+input due_day: date
+
+input early_day: date
+
+input fee: money DUK
+
+move dues[p in member on due_day where 1 / share[p] > 0]: transfers
+  on due_day
+  leg cash from purse to world amount fee
+
+move early[p in member on early_day where share[p] >= 0]: transfers
+  on early_day
+  leg cash from purse to world amount fee
+
+move gift: transfers
+  on due_day
+  leg cash from world to box amount fee
+
+ask q_purse: bal(purse, 2026-02-28), bal(purse, 2026-03-31) law cut
+
+ask q_box: bal(box, 2026-02-28), bal(box, 2026-03-31) law cut
+
+ask q_flows: flows(dues, 2026-03-01 .. 2026-03-31), flows(dues, 2026-01-01 .. 2026-02-28), flows(early, 2026-01-01 .. 2026-02-28), flows(gift, 2026-03-01 .. 2026-03-31) law cut
+
+ask q_n: count(p in member on due_day) law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  member + [ada, eve, ivo] lives 2026-01-01..
+  share[ada] = 1 "ada's share"
+  share[eve] = 0 "eve's share divides by zero"
+  share[ivo] = -1 "ivo's share, his where fails"
+  due_day = 2026-03-12 "the dues' day"
+  early_day = 2026-02-05 "the early dues' day"
+  fee = 5.00 "the fee"
+  opening[purse] = 100 at 2026-01-01 start
+  opening[box] = 50 at 2026-01-01 start
+,,1:0,515:q_box: (50.00 DUK, 55.00 DUK)
+  unfulfilled: gift
+  law date 2026-04-30, cut 2026-04-30
+q_flows: (refused: RUN-DIV division by zero, 0.00 DUK, 10.00 DUK, 5.00 DUK)
+  unfulfilled: dues[ada]
+  unfulfilled: early[ada]
+  unfulfilled: early[eve]
+  unfulfilled: gift
+  law date 2026-04-30, cut 2026-04-30
+q_n: 3
+  law date 2026-04-30, cut 2026-04-30
+q_purse: (90.00 DUK, refused: RUN-DIV division by zero)
+  unfulfilled: dues[ada]
+  unfulfilled: early[ada]
+  unfulfilled: early[eve]
+  law date 2026-04-30, cut 2026-04-30
+,21:g6/where_refused_twin,2:g6,31:run g6/where_refused_twin.tally,1696:27:g6/where_refused_twin.tally,1659:model g6_where_refused_twin
+  tally 2
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-04-30
+  note "T, tally 2.1.6 (#51, P2), G6: the twin of g6/where_refused: eve's share is 4, so her where holds and every read answers."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit DUK: currency minor 0.01
+
+kind member
+
+place purse: accounts DUK lives 2026-01-01..
+
+place box: accounts DUK lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input share[p in member]: int
+
+input due_day: date
+
+input early_day: date
+
+input fee: money DUK
+
+move dues[p in member on due_day where 1 / share[p] > 0]: transfers
+  on due_day
+  leg cash from purse to world amount fee
+
+move early[p in member on early_day where share[p] >= 0]: transfers
+  on early_day
+  leg cash from purse to world amount fee
+
+move gift: transfers
+  on due_day
+  leg cash from world to box amount fee
+
+ask q_purse: bal(purse, 2026-02-28), bal(purse, 2026-03-31) law cut
+
+ask q_box: bal(box, 2026-02-28), bal(box, 2026-03-31) law cut
+
+ask q_flows: flows(dues, 2026-03-01 .. 2026-03-31), flows(dues, 2026-01-01 .. 2026-02-28), flows(early, 2026-01-01 .. 2026-02-28), flows(gift, 2026-03-01 .. 2026-03-31) law cut
+
+ask q_n: count(p in member on due_day) law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  member + [ada, eve, ivo] lives 2026-01-01..
+  share[ada] = 1 "ada's share"
+  share[eve] = 4 "eve's share"
+  share[ivo] = -1 "ivo's share, his where fails"
+  due_day = 2026-03-12 "the dues' day"
+  early_day = 2026-02-05 "the early dues' day"
+  fee = 5.00 "the fee"
+  opening[purse] = 100 at 2026-01-01 start
+  opening[box] = 50 at 2026-01-01 start
+,,1:0,517:q_box: (50.00 DUK, 55.00 DUK)
+  unfulfilled: gift
+  law date 2026-04-30, cut 2026-04-30
+q_flows: (10.00 DUK, 0.00 DUK, 10.00 DUK, 5.00 DUK)
+  unfulfilled: dues[ada]
+  unfulfilled: dues[eve]
+  unfulfilled: early[ada]
+  unfulfilled: early[eve]
+  unfulfilled: gift
+  law date 2026-04-30, cut 2026-04-30
+q_n: 3
+  law date 2026-04-30, cut 2026-04-30
+q_purse: (90.00 DUK, 80.00 DUK)
+  unfulfilled: dues[ada]
+  unfulfilled: dues[eve]
+  unfulfilled: early[ada]
+  unfulfilled: early[eve]
+  law date 2026-04-30, cut 2026-04-30
+,21:g6/refusal_keys_typed,2:g6,31:run g6/refusal_keys_typed.tally,1449:27:g6/refusal_keys_typed.tally,1412:model g6_refusal_keys_typed
+  tally 2
+  on 2025-12-31
+  start 2025-01-01
+  end 2025-12-31
+  note "T, tally 2.1.6 (#57, P4), G6: which refusal a place keeps (E §4.1): one plan move m of two keys, a place and a flat of a list index, with two instances on one day, m[x, f3] and m[x, f11], each a leg into gone after its lifespan ends (RUN-LIFESPAN), both refused at src. Of a day's legs refused at one place the first in the typed movement order prints: f3 (position 3) before f11 (position 11), so bal(src) prints m[x, f3].cash, where the order's text (f11 before f3) printed m[x, f11].cash. Its twin makes m[x, f3] a leg of 0, so m[x, f11].cash refuses alone."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit DUK: currency minor 0.01
+
+index flats = [f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11]
+
+input amt: money DUK
+
+input d0: date
+
+place src: accounts DUK lives 2025-01-01..
+
+place gone: accounts DUK lives 2025-01-01..2025-01-05
+
+place x: accounts DUK lives 2025-01-01..
+
+move m[p in accounts on d0, f in flats]: transfers
+  on d0
+  when p == x and (pos(f) == 3 or pos(f) == 11)
+  leg cash from src to gone amount amt
+
+ask q: bal(src, 2025-01-31)
+
+version facts
+  cite fixture
+  governs always
+  known 2025-01-01
+  amt = 1.00 DUK
+  d0 = 2025-01-10
+  opening[src] = 500.00 DUK at 2025-01-01 start
+  opening[gone] = 0 DUK at 2025-01-01 start
+  opening[x] = 0 DUK at 2025-01-01 start
+,,1:0,103:q: refused: RUN-LIFESPAN m[x, f3].cash moves into or out of gone outside its lifespan
+  cut 2025-12-31
+,26:g6/refusal_keys_typed_twin,2:g6,36:run g6/refusal_keys_typed_twin.tally,1099:32:g6/refusal_keys_typed_twin.tally,1057:model g6_refusal_keys_typed_twin
+  tally 2
+  on 2025-12-31
+  start 2025-01-01
+  end 2025-12-31
+  note "T, tally 2.1.6 (#57, P4), G6: the twin of g6/refusal_keys_typed: m[x, f3] is a leg of 0, so m[x, f11].cash refuses src alone, and bal(src) prints it."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit DUK: currency minor 0.01
+
+index flats = [f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11]
+
+input d0: date
+
+input leg_amt[f in flats]: money DUK
+
+place src: accounts DUK lives 2025-01-01..
+
+place gone: accounts DUK lives 2025-01-01..2025-01-05
+
+place x: accounts DUK lives 2025-01-01..
+
+move m[p in accounts on d0, f in flats]: transfers
+  on d0
+  when p == x and (pos(f) == 3 or pos(f) == 11)
+  leg cash from src to gone amount leg_amt[f]
+
+ask q: bal(src, 2025-01-31)
+
+version facts
+  cite fixture
+  governs always
+  known 2025-01-01
+  d0 = 2025-01-10
+  leg_amt[*] = 1.00 DUK
+  leg_amt[f3] = 0 DUK
+  opening[src] = 500.00 DUK at 2025-01-01 start
+  opening[gone] = 0 DUK at 2025-01-01 start
+  opening[x] = 0 DUK at 2025-01-01 start
+,,1:0,104:q: refused: RUN-LIFESPAN m[x, f11].cash moves into or out of gone outside its lifespan
+  cut 2025-12-31
+,13:g10/ties_9999,3:g10,23:run g10/ties_9999.tally,1813:19:g10/ties_9999.tally,1784:model g10_ties_9999
+  tally 2
+  on 9999-12-31
+  start 9999-01-01
+  end 9999-12-31
+  note "T, tally 2.1.6 (#48, P8), G10: a run inside the year 9999, whole (L §2.1: its built-in years and months end with 9999-12-31). The residual ledger of 9999-05 ties two matched lines but for the movement order (E §6.3, E §4.1): fee[f2] is dated 9999-05-31, the lines' day, fee[f1]'s day is a hole, which sorts after every day, 9999-12-31 included, so fee[f2] prints first though f1 is the first key. tally 2.1.5's refcore refused the model (the year 9999 ended on 10000-01-01), and a hole day sorted as 9999-12-31 itself."
+
+source plan "T's invented plan"
+
+source bank "T's invented statement"
+
+unit PLN: currency minor 0.01
+
+index flats = [f1, f2]
+
+input stmt: observed
+
+input fee_amt: money PLN
+
+input fee_day[f in flats]: date
+
+place konto: accounts PLN lives 9999-01-01..
+
+place agent: outside lives 9999-01-01..
+
+place unexplained: outside lives 9999-01-01..
+
+move fee[f in flats]: transfers
+  on fee_day[f]
+  leg cash from konto to agent amount fee_amt
+
+version plan_9999
+  cite plan
+  governs always
+  known 9999-01-01
+  fee_amt = 300.00 PLN
+  fee_day[f1] = ?"which day is f1's fee paid?"
+  fee_day[f2] = 9999-05-31
+  opening[konto] = 2 000.00 PLN at 9999-01-01 start
+
+version statement_05
+  cite bank
+  governs 9999-05
+  known 9999-06-02
+  covers konto
+  pad konto from unexplained
+  stmt[r1] = (on: 9999-05-31, kind: transfers, leg cash from konto to agent amount 300.00 PLN, fulfils: fee[f1]) "line 1"
+  stmt[r2] = (on: 9999-05-31, kind: transfers, leg cash from konto to agent amount 300.00 PLN, fulfils: fee[f2]) "line 2"
+  stated[konto] = 1 400.00 PLN at 9999-05-31 end
+
+ask led: residuals konto 9999-05
+
+ask y: max(pos(m) for m in months), bal(konto, 9999-12-31), end_of(9999-11)
+,,1:0,662:led: residuals konto 9999-05
+  9999-05 balance: model 1 400.00 PLN, observed 1 400.00 PLN, difference 0.00 PLN
+    balance konto 9999-05-31 end (padded): booked 1 400.00 PLN, stated 1 400.00 PLN, gap 0.00 PLN
+  9999-05 move fee: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN
+    matched fee[f2] on 9999-05-31: model -300.00 PLN, observed -300.00 PLN, difference 0.00 PLN, timing +0 days
+    matched fee[f1] on 9999-05-31: model -300.00 PLN, observed -300.00 PLN, difference 0.00 PLN, timing +0 days
+  cut 9999-12-31
+y: (12, 1 400.00 PLN, 9999-12-01)
+  pad: konto 9999-05-31 end, pads:statement_05:konto@9999-05-31 end of 0.00 PLN
+  cut 9999-12-31
+,13:g10/attr_move,3:g10,23:run g10/attr_move.tally,1641:19:g10/attr_move.tally,1612:model g10_attr_move
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#86, P17), G10: L §3.1 key K names the movements of an event kind, planned or observed: an observed refund's attribute of type key dues names dues[2026-03], an instance of a move of kind dues, and loads (refcore 2.1.5 refused it, LOAD-KEY dues[2026-03] is not a key of dues). The bindings count the refunds naming each instance, and flows of acct takes the refunds in. Its refused twin, an instance of a move of another kind, is codes/m0's adjust/attr-move-other."
+
+source plan "T's invented plan"
+
+source bank "T's invented statement"
+
+unit PLN: currency minor 0.01
+
+kind dues: event certain
+  leg cash: PLN
+
+kind refunds: event certain
+  leg cash: PLN
+  attr of_due: key dues
+
+place acct: accounts PLN lives 2026-01-01..
+
+place club: outside lives 2026-01-01..
+
+input stmt: observed
+
+input due_amt: money PLN
+
+move due[m in months]: dues
+  on start_of(m)
+  leg cash from acct to club amount due_amt
+
+ask t: count(r in refunds over .. where r.of_due == d) for d in dues over 2026-02 .. 2026-04
+
+ask back: flows(acct, 2026-03-01 .. 2026-04-30)
+
+version plan_2026
+  cite plan
+  governs always
+  known 2026-01-01
+  due_amt = 40.00 PLN
+  opening[acct] = 500.00 PLN at 2026-01-01 start
+
+version statement
+  cite bank
+  governs 2026-03..2026-04
+  known 2026-05-02
+  stmt[r1] = (on: 2026-03-15, kind: refunds, leg cash from club to acct amount 40.00 PLN, of_due: due[2026-03]) "refund 1"
+  stmt[r2] = (on: 2026-04-20, kind: refunds, leg cash from club to acct amount 10.00 PLN, of_due: due[2026-03]) "refund 2"
+,,1:0,297:back: -30.00 PLN
+  unfulfilled: due[2026-03]
+  unfulfilled: due[2026-04]
+  cut 2026-06-30
+t (d = due[2026-02]): 0
+  unfulfilled: due[2026-02]
+  cut 2026-06-30
+t (d = due[2026-03]): 2
+  unfulfilled: due[2026-03]
+  cut 2026-06-30
+t (d = due[2026-04]): 0
+  unfulfilled: due[2026-04]
+  cut 2026-06-30
+,35:g11/remeasure_refused_leg_hole_when,3:g11,45:run g11/remeasure_refused_leg_hole_when.tally,1966:41:g11/remeasure_refused_leg_hole_when.tally,1915:model g11_remeasure_refused_leg_hole_when
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#52, P3), G11: E §5 step 3, L §5.14.3, L §8.4: late (known 2026-05-01) makes rent[2026-03]'s when a hole (seats unknown) and its cash leg's amount refused (no tenants: RUN-DIV), while its charge leg's amount stands (the fee). A refusal outranks a hole, per leg: the cash leg's adjustment is refused and reaches what konto_c's reads count from 2026-05-01; the charge leg's is a hole with the seats question, and konto_f's reads from 2026-05-01 hold it. Before 2026-05-01 both stand. refcore 2.1.5 made both legs' adjustments the seats' hole."
+
+source plan "T's invented plan"
+
+source act "T's invented act"
+
+unit PLN: currency minor 0.01
+
+kind rentals: event certain
+  leg cash: PLN
+  leg charge: PLN
+
+place konto_c: accounts PLN lives 2026-01-01..
+
+place konto_f: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+input total: money PLN
+
+input fee: money PLN
+
+input tenants[m in months]: int
+
+input dom: int
+
+input seats[m in months]: int
+
+move rent[m in months]: rentals
+  on day_of(m, dom)
+  at start_of(m)
+  when seats[m] > 0
+  leg cash from konto_c to landlord amount round(total / tenants[m], minor(PLN), half-even)
+  leg charge from konto_f to landlord amount fee
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  total = 900.00 PLN
+  fee = 20.00 PLN
+  tenants[*] = 3
+  dom = 10
+  seats[*] = 1
+  opening[konto_c] = 5 000.00 PLN at 2026-01-01 start
+  opening[konto_f] = 1 000.00 PLN at 2026-01-01 start
+
+version late
+  cite act
+  governs 2026-03
+  known 2026-05-01
+  replace seats[*] = ?"were the seats taken in March?"
+  replace tenants[*] = 0
+
+ask before: bal(konto_c, 2026-04-30), bal(konto_f, 2026-04-30)
+
+ask after_c: bal(konto_c, 2026-05-31)
+
+ask after_f: bal(konto_f, 2026-05-31)
+
+ask l: a.change for a in adjustments over ..
+,,1:0,1048:after_c: refused: RUN-DIV division by zero
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  unfulfilled: rent[2026-05]
+  cut 2026-10-20
+after_f: ?"rent[2026-03] on 2026-03-10 changed after it was paid (version late); is back pay due, and when?" (rent[2026-03])
+  adjustment: rent[2026-03] by ?"were the seats taken in March?" (seats[2026-03]) on 2026-05-01 (version late), remaining ?"were the seats taken in March?" (seats[2026-03])
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  unfulfilled: rent[2026-05]
+  cut 2026-10-20
+before: (3 800.00 PLN, 920.00 PLN)
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  cut 2026-10-20
+l (a = adjustments[rent[2026-03].cash, late]): refused: RUN-DIV division by zero
+  cut 2026-10-20
+l (a = adjustments[rent[2026-03].charge, late]): ?"were the seats taken in March?" (seats[2026-03])
+  cut 2026-10-20
+,23:g11/remeasure_hole_legs,3:g11,33:run g11/remeasure_hole_legs.tally,1853:29:g11/remeasure_hole_legs.tally,1814:model g11_remeasure_hole_legs
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#52's family; MUTANTS-SURVIVORS' against_hole recipe), G11: E §5 step 3: late (known 2026-05-01) makes rent[2026-03]'s when a hole (seats unknown): each leg's adjustment a hole. later (known 2026-07-01) states the seats and makes the March fee a hole, measured against that hole state per leg: the cash leg's amount is known, so its 2026-07-01 adjustment holds the seats question alone; the charge leg's holds the fee's question too. Each leg is measured against its own state, never another leg's."
+
+source plan "T's invented plan"
+
+source act "T's invented act"
+
+unit PLN: currency minor 0.01
+
+kind rentals: event certain
+  leg cash: PLN
+  leg charge: PLN
+
+place konto_c: accounts PLN lives 2026-01-01..
+
+place konto_f: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+input total: money PLN
+
+input fee[m in months]: money PLN
+
+input dom: int
+
+input seats[m in months]: int
+
+move rent[m in months]: rentals
+  on day_of(m, dom)
+  at start_of(m)
+  when seats[m] > 0
+  leg cash from konto_c to landlord amount total
+  leg charge from konto_f to landlord amount fee[m]
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  total = 900.00 PLN
+  fee[*] = 20.00 PLN
+  dom = 10
+  seats[*] = 1
+  opening[konto_c] = 5 000.00 PLN at 2026-01-01 start
+  opening[konto_f] = 1 000.00 PLN at 2026-01-01 start
+
+version late
+  cite act
+  governs 2026-03
+  known 2026-05-01
+  replace seats[*] = ?"were the seats taken in March?"
+
+version later
+  cite act
+  governs 2026-03
+  known 2026-07-01
+  replace seats[*] = 1
+  replace fee[*] = ?"what was March's fee?"
+
+ask c: bal(konto_c, 2026-07-31)
+
+ask f: bal(konto_f, 2026-07-31)
+
+ask l: a.change for a in adjustments over ..
+,,1:0,2192:c: ?"rent[2026-03] on 2026-03-10 changed after it was paid (version late); is back pay due, and when?" (rent[2026-03]) ?"rent[2026-03] on 2026-03-10 changed after it was paid (version later); is back pay due, and when?" (rent[2026-03])
+  adjustment: rent[2026-03] by ?"were the seats taken in March?" (seats[2026-03]) on 2026-05-01 (version late), remaining ?"were the seats taken in March?" (seats[2026-03])
+  adjustment: rent[2026-03] by ?"were the seats taken in March?" (seats[2026-03]) on 2026-07-01 (version later), remaining ?"were the seats taken in March?" (seats[2026-03])
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  unfulfilled: rent[2026-05]
+  unfulfilled: rent[2026-06]
+  unfulfilled: rent[2026-07]
+  cut 2026-10-20
+f: ?"rent[2026-03] on 2026-03-10 changed after it was paid (version late); is back pay due, and when?" (rent[2026-03]) ?"rent[2026-03] on 2026-03-10 changed after it was paid (version later); is back pay due, and when?" (rent[2026-03])
+  adjustment: rent[2026-03] by ?"were the seats taken in March?" (seats[2026-03]) ?"what was March's fee?" (fee[2026-03]) on 2026-07-01 (version later), remaining ?"were the seats taken in March?" (seats[2026-03]) ?"what was March's fee?" (fee[2026-03])
+  adjustment: rent[2026-03] by ?"were the seats taken in March?" (seats[2026-03]) on 2026-05-01 (version late), remaining ?"were the seats taken in March?" (seats[2026-03])
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  unfulfilled: rent[2026-05]
+  unfulfilled: rent[2026-06]
+  unfulfilled: rent[2026-07]
+  cut 2026-10-20
+l (a = adjustments[rent[2026-03].cash, late]): ?"were the seats taken in March?" (seats[2026-03])
+  cut 2026-10-20
+l (a = adjustments[rent[2026-03].charge, late]): ?"were the seats taken in March?" (seats[2026-03])
+  cut 2026-10-20
+l (a = adjustments[rent[2026-03].cash, later]): ?"were the seats taken in March?" (seats[2026-03])
+  cut 2026-10-20
+l (a = adjustments[rent[2026-03].charge, later]): ?"were the seats taken in March?" (seats[2026-03]) ?"what was March's fee?" (fee[2026-03])
+  cut 2026-10-20
+,11:g13/spacing,3:g13,21:run g13/spacing.tally,992:17:g13/spacing.tally,966:model g13_spacing
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#81, P21), G13: L §2.4 The loader accepts any spacing the grammar allows: a record field spaced at its . (pair .x, pair. y, pair . x), an id at its [ (added [q2], an item named as a calendar list word), a call at its ( (max (…)) read as written touching, and a keyword keeps its space before ( (not (…)). refcore 2.1.5 refused the spaced field (LOAD-PARSE). Its twin, the same text touching, answers the same."
+
+source plan "T's invented plan"
+
+index qs = [q1, q2]
+
+input pair: (x int, y int)
+
+input added[k in qs]: int
+
+input base: int
+
+def fields: int = pair .x + pair. y + pair . x
+
+def keyed: int = added [q2] + max (base, added [q1])
+
+def kept: bool = not (base > pair.y or base < added[q2])
+
+version plan_2026
+  cite plan
+  governs always
+  known 2026-01-01
+  pair = (x: 4, y: 9)
+  added[q1] = 7
+  added[q2] = 2
+  base = 3
+
+ask q: fields, keyed, kept
+,,1:0,34:q: (17, 9, true)
+  cut 2026-12-31
+,16:g13/spacing_twin,3:g13,26:run g13/spacing_twin.tally,661:22:g13/spacing_twin.tally,630:model g13_spacing_twin
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#81, P21), G13: the twin of g13/spacing, every token touching: the same answers."
+
+source plan "T's invented plan"
+
+index qs = [q1, q2]
+
+input pair: (x int, y int)
+
+input added[k in qs]: int
+
+input base: int
+
+def fields: int = pair.x + pair.y + pair.x
+
+def keyed: int = added[q2] + max(base, added[q1])
+
+def kept: bool = not (base > pair.y or base < added[q2])
+
+version plan_2026
+  cite plan
+  governs always
+  known 2026-01-01
+  pair = (x: 4, y: 9)
+  added[q1] = 7
+  added[q2] = 2
+  base = 3
+
+ask q: fields, keyed, kept
+,,1:0,34:q: (17, 9, true)
+  cut 2026-12-31
+,8:g14/days,3:g14,18:run g14/days.tally,1292:14:g14/days.tally,1268:model g14_days
+  tally 2
+  on 9999-12-31
+  start 9999-01-01
+  end 9999-12-31
+  note "T, tally 2.1.6 (#89, P7; #48, P8), G14: L §7.6 item 1: a day is one of 0001-01-01 to 9999-12-31. A day computed past 9999-12-31 or before 0001-01-01 is refused at its key, RUN-LIMIT (a row's value gives it, so load doesn't see it), and so is the end of time where a day is read: end_of(9999) printed, a day argument, a balance's day. The edges stand: the row's own 9999-12-31, add_months to 9999-12-30, end_of(9999) - 1 day, 0001-01-02 - 1 day."
+
+source plan "T's invented plan"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 9999-01-01..
+
+input last: date
+
+input first: date
+
+input late_nov: date
+
+input mid_dec: date
+
+version plan_9999
+  cite plan
+  governs always
+  known 9999-01-01
+  last = 9999-12-31
+  first = 0001-01-02
+  late_nov = 9999-11-30
+  mid_dec = 9999-12-15
+  opening[konto] = 250.00 PLN at 9999-01-01 start
+
+ask at_last: last, last - 1 day, add_months(late_nov, 1)
+
+ask past: last + 1 day
+
+ask month_past: add_months(mid_dec, 1)
+
+ask eot: end_of(9999)
+
+ask eot_back: end_of(9999) - 1 day, end_of(9999-11)
+
+ask eot_year: year_of(end_of(9999))
+
+ask eot_bal: bal(konto, end_of(9999-12))
+
+ask at_first: first - 1 day
+
+ask before: first - 1 day - 1 day
+,,1:0,552:at_first: 0001-01-01
+  cut 9999-12-31
+at_last: (9999-12-31, 9999-12-30, 9999-12-30)
+  cut 9999-12-31
+before: refused: RUN-LIMIT a day comes before 0001-01-01
+  cut 9999-12-31
+eot: refused: RUN-LIMIT a day passes 9999-12-31
+eot_back: (9999-12-31, 9999-12-01)
+  cut 9999-12-31
+eot_bal: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+eot_year: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+month_past: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+past: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+,16:g14/move_day_row,3:g14,26:run g14/move_day_row.tally,1336:22:g14/move_day_row.tally,1304:model g14_move_day_row
+  tally 2
+  on 9999-12-31
+  start 9999-01-01
+  end 9999-12-31
+  note "T, tally 2.1.6 (#89, P7; #51), G14: L §7.6 item 1, §8.4: late's day is pay_day + 1 day, from a row's 9999-12-31, past 9999-12-31: load doesn't see it, so the instance is refused at its key (RUN-LIMIT), and a movement whose day is refused may fall on any day, so it refuses the places its legs give, konto and world, on every day (bal(konto) at 9999-03-31 too) and flows of late. The place spare, which only on_time touches, stands, and so do flows of on_time, dated by the row itself."
+
+source plan "T's invented plan"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 9999-01-01..
+
+place spare: accounts PLN lives 9999-01-01..
+
+place world: outside lives 9999-01-01..
+
+input pay_day: date
+
+input amt: money PLN
+
+move late: transfers
+  on pay_day + 1 day
+  leg cash from konto to world amount amt
+
+move on_time: transfers
+  on pay_day
+  leg cash from world to spare amount amt
+
+version plan_9999
+  cite plan
+  governs always
+  known 9999-01-01
+  pay_day = 9999-12-31
+  amt = 15.00 PLN
+  opening[konto] = 300.00 PLN at 9999-01-01 start
+  opening[spare] = 100.00 PLN at 9999-01-01 start
+
+ask k: bal(konto, 9999-03-31)
+
+ask s: bal(spare, 9999-12-31)
+
+ask f: flows(late, 9999), flows(on_time, 9999)
+,,1:0,170:f: (refused: RUN-LIMIT a day passes 9999-12-31, 15.00 PLN)
+  cut 9999-12-31
+k: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+s: 115.00 PLN
+  cut 9999-12-31
+,13:g14/range_row,3:g14,23:run g14/range_row.tally,838:19:g14/range_row.tally,810:model g14_range_row
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#89, P7), G14: L §7.6 item 2: a range an aggregate steps through holds at most 1 000 000 keys; its ends come from rows here, so it is refused at run, RUN-LIMIT, as written with or without its step. At the edge, 1 .. 1 000 000 is stepped through; 1 .. 1 000 001 by 1 000 is 1 001 keys and answers."
+
+source plan "T's invented plan"
+
+input n_edge: int
+
+input n_past: int
+
+input step_wide: int
+
+version plan_2026
+  cite plan
+  governs always
+  known 2026-01-01
+  n_edge = 1 000 000
+  n_past = 1 000 001
+  step_wide = 1 000
+
+ask edge: max(k for k in 1 .. n_edge)
+
+ask past: sum(k for k in 1 .. n_past)
+
+ask past_step: max(k for k in 1 .. n_past step 1)
+
+ask wide: max(k for k in 1 .. n_past step step_wide)
+,,1:0,254:edge: 1 000 000
+  cut 2026-12-31
+past: refused: RUN-LIMIT 1 .. 1 000 001 holds more than 1 000 000 keys
+  cut 2026-12-31
+past_step: refused: RUN-LIMIT 1 .. 1 000 001 step 1 holds more than 1 000 000 keys
+  cut 2026-12-31
+wide: 1 000 001
+  cut 2026-12-31
+,9:g14/edges,3:g14,19:run g14/edges.tally,1510:15:g14/edges.tally,1485:model g14_edges
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#89, P7; #48, P8), G14: L §7.6's limits load sees, each at its edge, where it loads and answers (one past each is codes/m0's basic/limit-* and basic/s1-*, LOAD-LIMIT): an index of 1 000 000 keys and a literal range an ask steps through of as many; a day range by 10 whose last period ends on 9999-12-31, the end of time, as a whole period; a range index's end and step of 18 digits; a key offset and its pos(k) guard of 18 digits (the guard never holds, so the base rule answers); unit powers of 64, PLN and %, written and reached by * (PLN^32 * PLN^32)."
+
+source plan "T's invented plan"
+
+unit PLN: currency minor 0.01
+
+index ns = 1..1000000
+
+index ds = day 9999-12-02..9999-12-31 by 10
+
+index big = 1..999999999999999999 by 999999999999999999
+
+index ks = 1..3
+
+input base: int
+
+input y: num PLN^64
+
+input h: num PLN^32
+
+input p: num %^64
+
+def x[k in ks]: int at reader
+  rule base = base
+  rule back beats base = x[k - 999999999999999999] + base when pos(k) > 999999999999999999
+
+def sq: num PLN^64 = h * h
+
+version plan_2026
+  cite plan
+  governs always
+  known 2026-01-01
+  base = 1
+  y = 2 PLN^64
+  h = 3 PLN^32
+  p = 1 %^64
+
+ask keys: max(pos(k) for k in ns), max(pos(k) for k in big), max(k for k in 1..1000000)
+
+ask last_period: max(pos(k) for k in ds), max(start_of(k) for k in ds), max(end_of(k) - 1 day for k in ds)
+
+ask offset: x[3] law 2026-06-30
+
+ask powers: y, sq, p
+,,1:0,333:keys: (1 000 000, 1, 1 000 000)
+  cut 2026-12-31
+last_period: (3, 9999-12-22, 9999-12-31)
+  cut 2026-12-31
+offset: 1
+  law date 2026-06-30, cut 2026-12-31
+powers: (2 PLN^64, 9 PLN^64, 0.00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001)
+  cut 2026-12-31
+,12:g14/calendar,3:g14,22:run g14/calendar.tally,3910:18:g14/calendar.tally,3882:model g14_calendar
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#89, P7), G14: L §4.2, §7.6 item 5: a calendar whose weekends name all seven days has no business day, so add_business and schedule, which seek one, refuse it (RUN-DOMAIN calendar <c> has no business day), while is_business answers false. Its twins: six weekend days find the Sunday; a yearly list of every month-day there is, 365 of them (02-29 is no month-day, L §3.1), leaves the leap day, so add_business finds 2028-02-29."
+
+source plan "T's invented plan"
+
+input all7: calendar
+
+input six: calendar
+
+input every_md: calendar
+
+input d0: date
+
+input dom: int
+
+def seek7: date = add_business(d0, 1, all7) at reader
+
+def sched7: date = schedule(month_of(d0), dom, following, all7) at reader
+
+def is7: bool = is_business(d0, all7) at reader
+
+def seek6: date = add_business(d0, 1, six) at reader
+
+def seek_md: date = add_business(d0, 1, every_md) at reader
+
+version plan_2026
+  cite plan
+  governs always
+  known 2026-01-01
+  all7 = calendar(weekends [mon, tue, wed, thu, fri, sat, sun])
+  six = calendar(weekends [mon, tue, wed, thu, fri, sat])
+  every_md = calendar(weekends [sat, sun], yearly [01-01, 01-02, 01-03, 01-04, 01-05, 01-06, 01-07, 01-08, 01-09, 01-10, 01-11, 01-12, 01-13, 01-14, 01-15, 01-16, 01-17, 01-18, 01-19, 01-20, 01-21, 01-22, 01-23, 01-24, 01-25, 01-26, 01-27, 01-28, 01-29, 01-30, 01-31, 02-01, 02-02, 02-03, 02-04, 02-05, 02-06, 02-07, 02-08, 02-09, 02-10, 02-11, 02-12, 02-13, 02-14, 02-15, 02-16, 02-17, 02-18, 02-19, 02-20, 02-21, 02-22, 02-23, 02-24, 02-25, 02-26, 02-27, 02-28, 03-01, 03-02, 03-03, 03-04, 03-05, 03-06, 03-07, 03-08, 03-09, 03-10, 03-11, 03-12, 03-13, 03-14, 03-15, 03-16, 03-17, 03-18, 03-19, 03-20, 03-21, 03-22, 03-23, 03-24, 03-25, 03-26, 03-27, 03-28, 03-29, 03-30, 03-31, 04-01, 04-02, 04-03, 04-04, 04-05, 04-06, 04-07, 04-08, 04-09, 04-10, 04-11, 04-12, 04-13, 04-14, 04-15, 04-16, 04-17, 04-18, 04-19, 04-20, 04-21, 04-22, 04-23, 04-24, 04-25, 04-26, 04-27, 04-28, 04-29, 04-30, 05-01, 05-02, 05-03, 05-04, 05-05, 05-06, 05-07, 05-08, 05-09, 05-10, 05-11, 05-12, 05-13, 05-14, 05-15, 05-16, 05-17, 05-18, 05-19, 05-20, 05-21, 05-22, 05-23, 05-24, 05-25, 05-26, 05-27, 05-28, 05-29, 05-30, 05-31, 06-01, 06-02, 06-03, 06-04, 06-05, 06-06, 06-07, 06-08, 06-09, 06-10, 06-11, 06-12, 06-13, 06-14, 06-15, 06-16, 06-17, 06-18, 06-19, 06-20, 06-21, 06-22, 06-23, 06-24, 06-25, 06-26, 06-27, 06-28, 06-29, 06-30, 07-01, 07-02, 07-03, 07-04, 07-05, 07-06, 07-07, 07-08, 07-09, 07-10, 07-11, 07-12, 07-13, 07-14, 07-15, 07-16, 07-17, 07-18, 07-19, 07-20, 07-21, 07-22, 07-23, 07-24, 07-25, 07-26, 07-27, 07-28, 07-29, 07-30, 07-31, 08-01, 08-02, 08-03, 08-04, 08-05, 08-06, 08-07, 08-08, 08-09, 08-10, 08-11, 08-12, 08-13, 08-14, 08-15, 08-16, 08-17, 08-18, 08-19, 08-20, 08-21, 08-22, 08-23, 08-24, 08-25, 08-26, 08-27, 08-28, 08-29, 08-30, 08-31, 09-01, 09-02, 09-03, 09-04, 09-05, 09-06, 09-07, 09-08, 09-09, 09-10, 09-11, 09-12, 09-13, 09-14, 09-15, 09-16, 09-17, 09-18, 09-19, 09-20, 09-21, 09-22, 09-23, 09-24, 09-25, 09-26, 09-27, 09-28, 09-29, 09-30, 10-01, 10-02, 10-03, 10-04, 10-05, 10-06, 10-07, 10-08, 10-09, 10-10, 10-11, 10-12, 10-13, 10-14, 10-15, 10-16, 10-17, 10-18, 10-19, 10-20, 10-21, 10-22, 10-23, 10-24, 10-25, 10-26, 10-27, 10-28, 10-29, 10-30, 10-31, 11-01, 11-02, 11-03, 11-04, 11-05, 11-06, 11-07, 11-08, 11-09, 11-10, 11-11, 11-12, 11-13, 11-14, 11-15, 11-16, 11-17, 11-18, 11-19, 11-20, 11-21, 11-22, 11-23, 11-24, 11-25, 11-26, 11-27, 11-28, 11-29, 11-30, 12-01, 12-02, 12-03, 12-04, 12-05, 12-06, 12-07, 12-08, 12-09, 12-10, 12-11, 12-12, 12-13, 12-14, 12-15, 12-16, 12-17, 12-18, 12-19, 12-20, 12-21, 12-22, 12-23, 12-24, 12-25, 12-26, 12-27, 12-28, 12-29, 12-30, 12-31])
+  d0 = 2026-05-13
+  dom = 4
+
+ask refused7: seek7, sched7 law 2026-06-30
+
+ask answered: is7, seek6, seek_md law 2026-06-30
+,,1:0,239:answered: (false, 2026-05-17, 2028-02-29)
+  law date 2026-06-30, cut 2026-12-31
+refused7: (refused: RUN-DOMAIN calendar all7 has no business day, refused: RUN-DOMAIN calendar all7 has no business day)
+  law date 2026-06-30, cut 2026-12-31
+,15:g14/end_of_time,3:g14,25:run g14/end_of_time.tally,1549:21:g14/end_of_time.tally,1518:model g14_end_of_time
+  tally 2
+  on 9999-12-31
+  start 9999-01-01
+  end 9999-12-31
+  note "T, tally 2.1.6 (#89, #48, the coordinator's pick P35, the review of 0bbf95b, findings 1 and 2): the end of time, 10000-01-01, as a value: a span that ends there, a day or month index's key there, each refused RUN-LIMIT, beside the twin a day before, answered; and the other uses of end_of(9999) (L §7.6, §4.2 end_of)."
+
+source plan "plan"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 9999-01-01..
+
+input k: int
+
+input cal: calendar
+
+def two[d in days]: int = k
+
+def mm[m in months]: int = k
+
+version v
+  cite plan
+  governs always
+  known 9999-01-01
+  k = 2
+  cal = calendar(weekends [sat, sun])
+  opening[konto] = 250.00 PLN at 9999-01-01 start
+
+ask t4: two[end_of(9999-12-31)]
+
+ask t4e: two[end_of(9999-12-31) - 1 day], two[9999-12-31]
+
+ask t5: mm[end_of(9999-12-31)]
+
+ask t5e: mm[end_of(9999-12-31) - 1 day]
+
+ask t6: days_between(9999-01-01, end_of(9999))
+
+ask t6e: days_between(9999-01-01, end_of(9999) - 1 day)
+
+ask t8: year_of(end_of(9999-12))
+
+ask t9: add_days(end_of(9999), -1)
+
+
+ask t11: flows(konto, 9999-12-31..end_of(9999))
+
+ask t11e: flows(konto, 9999-12-31..end_of(9999) - 1 day)
+
+ask t12: flows(konto, end_of(9999-12))
+
+ask t13: sum(1 for d in 9999-12-30 .. end_of(9999) step 1 day)
+
+ask t14: is_business(end_of(9999), cal)
+
+ask t15: end_of(9999-12-31) > 9999-12-31
+
+ask t16: bal(konto, end_of(9999) - 1 day)
+
+ask f_day: flows(konto, end_of(9999))
+
+ask f_open: flows(konto, end_of(9999)..)
+,,1:0,781:f_day: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+f_open: 0.00 PLN
+  cut 9999-12-31
+t11: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+t11e: 0.00 PLN
+  cut 9999-12-31
+t12: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+t13: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+t14: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+t15: true
+  cut 9999-12-31
+t16: 250.00 PLN
+  cut 9999-12-31
+t4: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+t4e: (2, 2)
+  cut 9999-12-31
+t5: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+t5e: 2
+  cut 9999-12-31
+t6: 365
+  cut 9999-12-31
+t6e: 364
+  cut 9999-12-31
+t8: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+t9: 9999-12-31
+  cut 9999-12-31
+,10:g14/shifts,3:g14,20:run g14/shifts.tally,2276:16:g14/shifts.tally,2250:model g14_shifts
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#89, #48, P35, findings 3 to 6): a day, a month and a year shifted by the machine word's least and greatest value and past 64 bits, refused RUN-LIMIT where they pass 9999-12-31 or come before 0001-01-01, each beside its twin at the edge, answered; add_business by the least value; ranges of 3 keys with ends and step near ±9e18, and past 64 bits."
+
+source plan "plan"
+
+input d: date
+
+input d0: date
+
+input cal: calendar
+
+input imin: int
+
+input imax: int
+
+input huge: int
+
+input back: int
+
+input back1: int
+
+input fwd: int
+
+input fwd1: int
+
+input mfwd: int
+
+input mfwd1: int
+
+input zero: int
+
+input n1: int
+
+input n2m2: int
+
+input s2: int
+
+input b7: int
+
+input b8: int
+
+input hend: int
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  d = 2026-06-01
+  d0 = 0001-01-10
+  cal = calendar(weekends [sat, sun])
+  imin = -9223372036854775808
+  imax = 9223372036854775807
+  huge = 100000000000000000000
+  back = 739767
+  back1 = 739768
+  fwd = 2912291
+  fwd1 = 2912292
+  mfwd = 95682
+  mfwd1 = 95683
+  zero = 0
+  n1 = 1
+  n2m2 = 1999998
+  s2 = 2
+  b7 = -7
+  b8 = -8
+  hend = 100000000000000999999
+
+ask a1: d - back, d - back1
+
+ask a2: d + fwd, d + fwd1
+
+ask a3: d - huge, d + -huge, add_days(d, -huge), add_days(d, imin)
+
+ask a4: add_months(d, mfwd), add_months(d, mfwd1), add_months(d, -huge), add_months(d, imax)
+
+ask a5: d + huge * 1 month, d - huge * 1 month, d - imin * 1 day, d + imax * 1 quarter
+
+ask a6: month_of(d) + huge, month_of(d) - imin, month_of(d) - huge, year_of(d) + imax
+
+ask a7: month_of(d) + huge * 1 month, month_of(d) - imin * 1 month, year_of(d) + huge * 1 year
+
+ask b1: add_business(d0, b7, cal), add_business(d0, b8, cal), add_business(d0, imin, cal), add_business(d0, -huge, cal)
+
+ask b2: add_business(d, huge, cal)
+
+ask k1: sum(n1 for k in imin .. imax step imax), sum(k for k in imin .. imax step imax)
+
+ask k2: sum(n1 for k in -huge .. huge step huge), sum(k for k in huge .. huge), sum(n1 for k in huge .. hend)
+
+ask k3: sum(n1 for k in zero .. n2m2 step s2), sum(n1 for k in imin .. imax), sum(n1 for k in -huge .. huge)
+
+ask k4: sum(n1 for k in zero .. imax step imax), sum(k for k in imax .. imax step huge)
+,,1:0,1763:a1: (0001-01-01, refused: RUN-LIMIT a day comes before 0001-01-01)
+  cut 2026-12-31
+a2: (9999-12-31, refused: RUN-LIMIT a day passes 9999-12-31)
+  cut 2026-12-31
+a3: (refused: RUN-LIMIT a day comes before 0001-01-01, refused: RUN-LIMIT a day comes before 0001-01-01, refused: RUN-LIMIT a day comes before 0001-01-01, refused: RUN-LIMIT a day comes before 0001-01-01)
+  cut 2026-12-31
+a4: (9999-12-01, refused: RUN-LIMIT a day passes 9999-12-31, refused: RUN-LIMIT a day comes before 0001-01-01, refused: RUN-LIMIT a day passes 9999-12-31)
+  cut 2026-12-31
+a5: (refused: RUN-LIMIT a day passes 9999-12-31, refused: RUN-LIMIT a day comes before 0001-01-01, refused: RUN-LIMIT a day passes 9999-12-31, refused: RUN-LIMIT a day passes 9999-12-31)
+  cut 2026-12-31
+a6: (refused: RUN-LIMIT a day passes 9999-12-31, refused: RUN-LIMIT a day passes 9999-12-31, refused: RUN-LIMIT a day comes before 0001-01-01, refused: RUN-LIMIT a day passes 9999-12-31)
+  cut 2026-12-31
+a7: (refused: RUN-LIMIT a day passes 9999-12-31, refused: RUN-LIMIT a day passes 9999-12-31, refused: RUN-LIMIT a day passes 9999-12-31)
+  cut 2026-12-31
+b1: (0001-01-01, refused: RUN-LIMIT a day comes before 0001-01-01, refused: RUN-LIMIT a day comes before 0001-01-01, refused: RUN-LIMIT a day comes before 0001-01-01)
+  cut 2026-12-31
+b2: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 2026-12-31
+k1: (3, -3)
+  cut 2026-12-31
+k2: (3, 100 000 000 000 000 000 000, 1 000 000)
+  cut 2026-12-31
+k3: (1 000 000, refused: RUN-LIMIT -9 223 372 036 854 775 808 .. 9 223 372 036 854 775 807 holds more than 1 000 000 keys, refused: RUN-LIMIT -100 000 000 000 000 000 000 .. 100 000 000 000 000 000 000 holds more than 1 000 000 keys)
+  cut 2026-12-31
+k4: (2, 9 223 372 036 854 775 807)
+  cut 2026-12-31
+,16:g14/keys_past_64,3:g14,26:run g14/keys_past_64.tally,660:22:g14/keys_past_64.tally,629:model g14_keys_past_64
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#89, P35, finding 6): an integer key past 64 bits is outside the index (RUN-KEY), as one inside the machine word is; a sum past 64 bits is exact; a range of one key past 64 bits holds one key."
+
+source plan "plan"
+
+index ks = 1..3
+
+input huge: int
+
+input imax: int
+
+def v[k in ks]: int = k
+
+version v1
+  cite plan
+  governs always
+  known 2026-01-01
+  huge = 100000000000000000000
+  imax = 9223372036854775807
+
+ask q1: v[huge]
+
+ask q2: v[imax]
+
+ask q3: sum(v[k] for k in ks) + huge
+
+ask q4: max(k for k in huge .. huge)
+,,1:0,244:q1: refused: RUN-KEY 100000000000000000000 is outside ks
+  cut 2026-12-31
+q2: refused: RUN-KEY 9223372036854775807 is outside ks
+  cut 2026-12-31
+q3: 100 000 000 000 000 000 006
+  cut 2026-12-31
+q4: 100 000 000 000 000 000 000
+  cut 2026-12-31
+,16:g14/list_1000001,3:g14,26:run g14/list_1000001.tally,367:22:g14/list_1000001.tally,336:model g14_list_1000001
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#89, P35, finding 7): a list index of 1 000 001 keys, k1 to k1000001: one past the cap, refused at load (L §7.6 item 2, §8.3 LOAD-LIMIT). Its twin is list_1000000.tally."
+
+index x = [@keys k 1 1000001@]
+
+ask n: count(k in x)
+,,1:1,86:refused: LOAD-LIMIT index x holds more than 1 000 000 keys (g14/list_1000001.tally:8)
+,16:g14/list_1000000,3:g14,26:run g14/list_1000000.tally,358:22:g14/list_1000000.tally,327:model g14_list_1000000
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#89, P35, finding 7): a list index of 1 000 000 keys, k1 to k1000000: the cap itself, answered (L §7.6 item 2, §8.3 LOAD-LIMIT). Its twin is list_1000001.tally."
+
+index x = [@keys k 1 1000000@]
+
+ask n: count(k in x)
+,,1:0,30:n: 1 000 000
+  cut 2026-12-31
+,18:g14/past_64_counts,3:g14,28:run g14/past_64_counts.tally,2908:24:g14/past_64_counts.tally,2874:model g14_past_64_counts
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#89, the coordinator's pick P37, the second review's G1, G2, G4, G5, G6 and the builder's sweep): an integer past 64 bits as a count, a duration, a key's shift, a day number, a power and a calendar's first year, each computed exactly or refused by the rule it meets first, beside its twin inside 64 bits or answered; and the refusal texts refcore says."
+
+source plan "T's fixture (invented values)"
+
+input d: date
+
+input cal: calendar
+
+input cal7: calendar
+
+input calh: calendar
+
+input cy: calendar
+
+input imin: int
+
+input imax: int
+
+input huge: int
+
+input n1: int
+
+input n2: int
+
+input h5: num
+
+input rz: rate
+
+input rneg1: rate
+
+input rneg2: rate
+
+index li = [a, b, c]
+
+def w[k in li]: int = pos(k)
+
+def z[k in li]: int = if pos(k) > n1 then w[k - huge] else n2
+
+def z3[k in li]: int = w[k + huge]
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  d = 2026-06-01 "a day"
+  cal = calendar(weekends [sat, sun]) "weekends off"
+  cal7 = calendar(weekends [mon, tue, wed, thu, fri, sat, sun]) "no business day"
+  cy = calendar(weekends [sat, sun], yearly [01-01] from 100000000000000000000) "a rule from a year past 9999"
+  imin = -9223372036854775808 "the machine word's least value"
+  imax = 9223372036854775807 "the machine word's greatest value"
+  huge = 100000000000000000000 "10^20, past 64 bits"
+  n1 = 1 "one"
+  n2 = 2 "two"
+  h5 = 2.5 "two and a half"
+  rz = 0 %/year "a base of 1"
+  rneg1 = -100 %/year "a base of 0"
+  rneg2 = -200 %/year "a base of -1"
+
+ask g1_hole: add_business(d, huge, calh), add_business(d, -huge, calh), add_business(d, imax, calh)
+
+ask g1_none: add_business(d, huge, cal7), add_business(d, -huge, cal7), add_business(d, imax, cal7), add_business(d, imin, cal7)
+
+ask g1_twin: add_business(d, n1, cal), add_business(d, -n1, cal)
+
+ask g2: year_of(d) + huge * 1 month, quarter_of(d) + huge * 1 month, year_of(d) + huge * 1 year
+
+ask g2_twin: year_of(d) + n1 * 1 year, quarter_of(d) + n1 * 1 quarter, month_of(d) + n1 * 1 month
+
+ask g4: z[b], z[c], z3[a]
+
+ask g4_twin: z[a], w[c]
+
+ask g5: day_of(month_of(d), huge), day_of(month_of(d), imax), schedule(month_of(d), huge, following, cal), schedule(month_of(d), imax, following, cal), day_of(month_of(d), -huge)
+
+ask g5_twin: day_of(month_of(d), n2), schedule(month_of(d), n2, following, cal)
+
+ask g6: month_of(d) + h5 * 1 month, d + h5 * 1 month, year_of(d) + n1 * 1 month
+
+ask sweep_power: factor(rz, huge, year, effective), factor(rz, huge, month, nominal 12), factor(rz, -huge, year, effective), factor(rneg1, huge, year, effective), factor(rneg2, huge, year, effective), factor(rneg2, huge + n1, year, effective)
+
+ask sweep_power_twin: factor(rz, n2, year, effective), factor(rneg2, n2, year, effective)
+
+ask sweep_calendar: is_business(d, cy), is_business(2026-01-01, cy)
+,,1:0,1547:g1_hole: (?"calendar calh doesn't cover 2026" (calh), ?"calendar calh doesn't cover 2026" (calh), ?"calendar calh doesn't cover 2026" (calh))
+  cut 2026-12-31
+g1_none: (refused: RUN-DOMAIN calendar cal7 has no business day, refused: RUN-DOMAIN calendar cal7 has no business day, refused: RUN-DOMAIN calendar cal7 has no business day, refused: RUN-DOMAIN calendar cal7 has no business day)
+  cut 2026-12-31
+g1_twin: (2026-06-02, 2026-05-29)
+  cut 2026-12-31
+g2: (refused: RUN-DOMAIN 2026 + 100 000 000 000 000 000 000 month: not a whole number of its periods (L §4.2), refused: RUN-DOMAIN 2026-Q2 + 100 000 000 000 000 000 000 month: not a whole number of its periods (L §4.2), refused: RUN-LIMIT a day passes 9999-12-31)
+  cut 2026-12-31
+g2_twin: (2027, 2026-Q3, 2026-07)
+  cut 2026-12-31
+g4: (refused: RUN-KEY b - 100000000000000000000 is outside li, refused: RUN-KEY c - 100000000000000000000 is outside li, refused: RUN-KEY a + 100000000000000000000 is outside li)
+  cut 2026-12-31
+g4_twin: (2, 3)
+  cut 2026-12-31
+g5: (2026-06-30, 2026-06-30, none, none, refused: RUN-DOMAIN day_of(m, -100000000000000000000): a day number below 1)
+  cut 2026-12-31
+g5_twin: (2026-06-02, 2026-06-02)
+  cut 2026-12-31
+g6: (refused: RUN-NOT-INT 2.5 month is not an integer, refused: RUN-NOT-INT 2.5 month is not an integer, refused: RUN-DOMAIN 2026 + 1 month: not a whole number of its periods (L §4.2))
+  cut 2026-12-31
+sweep_calendar: (true, true)
+  cut 2026-12-31
+sweep_power: (1, 1, 1, 0, 1, -1)
+  cut 2026-12-31
+sweep_power_twin: (1, 1)
+  cut 2026-12-31
+,12:g14/near_cap,3:g14,22:run g14/near_cap.tally,17631:18:g14/near_cap.tally,17602:model g14_near_cap
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#89, P37, the second review's G3): ranges whose ends or step lie near the 4 096-digit cap, their keys counted exactly (top is 4 096 nines); one of more than 1 000 000 keys refused RUN-LIMIT beside the twin of 1 000 000."
+
+source plan "T's fixture (invented values)"
+
+input top: int
+
+input ntop: int
+
+input n0: int
+
+input n1: int
+
+input n5: int
+
+input s4091: int
+
+input s4095: int
+
+input s7: int
+
+input a7: int
+
+input b7: int
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  top = 9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999 "4 096 nines, the cap"
+  ntop = -9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999 "minus top"
+  n0 = 0 "zero"
+  n1 = 1 "one"
+  n5 = 5 "five"
+  s4091 = 10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "a step of 4 091 digits"
+  s4095 = 100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "a step of 4 095 digits"
+  s7 = 7 "seven"
+  a7 = 6999993 "the millionth key of 0 step 7"
+  b7 = 7000000 "one key past it"
+
+ask g3: sum(n1 for k in top .. top), sum(n1 for k in top - n1 .. top), sum(n1 for k in n0 .. top step top), sum(n1 for k in ntop .. top step top)
+
+ask g3_steps: sum(n1 for k in n0 .. n5 step s4091), sum(n1 for k in n0 .. n5 step s4095)
+
+ask g3_limit: sum(n1 for k in ntop .. top), sum(n1 for k in n0 .. b7 step s7)
+
+ask g3_twin: sum(n1 for k in n0 .. a7 step s7)
+,,1:0,11184:g3: (1, 2, 2, 3)
+  cut 2026-12-31
+g3_limit: (refused: RUN-LIMIT -9 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 .. 9 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 999 holds more than 1 000 000 keys, refused: RUN-LIMIT 0 .. 7 000 000 step 7 holds more than 1 000 000 keys)
+  cut 2026-12-31
+g3_steps: (1, 1)
+  cut 2026-12-31
+g3_twin: 1 000 000
+  cut 2026-12-31
+,8:g14/by_n,3:g14,18:run g14/by_n.tally,4705:14:g14/by_n.tally,4681:model g14_by_n
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#89, the coordinator's pick P38, the third review's H1): a key of a range by n moves by whole keys of its index's step (L §4.1 by n, §4.2): a duration that isn't a whole number of its periods is refused RUN-DOMAIN, at 1 and past 64 bits, on months by 2 and by 3 and years by 2, anchored too; a whole number moves it, or passes 9999-12-31 (RUN-LIMIT); beside the by-1 twins, unchanged."
+
+source plan "T's fixture (invented values)"
+
+index m1 = month 2026-01..2027-12
+
+index m2 = month 2026-01..2027-12 by 2
+
+index m3 = month 2026-01..2027-12 by 3
+
+index y1 = year 2026..2040
+
+index y2 = year 2026..2040 by 2
+
+index fy = year 2026..2040 from 04-06
+
+index fy2 = year 2026..2040 by 2 from 04-06
+
+index am = month 2026-01..2027-12 from 17
+
+index am3 = month 2026-01..2027-12 by 3 from 17
+
+input h2: int
+
+input huge: int
+
+input hz: int
+
+input n1: int
+
+input n12: int
+
+input n2: int
+
+input n3: int
+
+def m1_month[q in m1]: date = start_of(q + n1 * 1 month)
+
+def m1_huge[q in m1]: date = start_of(q + huge * 1 month)
+
+def m1_back_year[q in m1]: date = start_of(q - n1 * 1 year)
+
+def m2_month[q in m2]: date = start_of(q + n1 * 1 month)
+
+def m2_huge[q in m2]: date = start_of(q + huge * 1 month)
+
+def m2_h2[q in m2]: date = start_of(q + h2 * 1 month)
+
+def m2_two[q in m2]: date = start_of(q + n2 * 1 month)
+
+def m2_back_two[q in m2]: date = start_of(q - n2 * 1 month)
+
+def m2_quarter[q in m2]: date = start_of(q + n1 * 1 quarter)
+
+def m2_year[q in m2]: date = start_of(q + n1 * 1 year)
+
+def m2_three[q in m2]: date = start_of(q + n3 * 1 month)
+
+def m2_back_huge[q in m2]: date = start_of(q - huge * 1 month)
+
+def m2_huge_year[q in m2]: date = start_of(q + huge * 1 year)
+
+def m2_key[q in m2]: date = start_of(q + n1)
+
+def m3_month[q in m3]: date = start_of(q + n1 * 1 month)
+
+def m3_huge[q in m3]: date = start_of(q + hz * 1 month)
+
+def m3_three[q in m3]: date = start_of(q + n3 * 1 month)
+
+def m3_key[q in m3]: date = start_of(q + n1)
+
+def y1_year[q in y1]: date = start_of(q + n1 * 1 year)
+
+def y1_months[q in y1]: date = start_of(q + n12 * 1 month)
+
+def y1_quarter[q in y1]: date = start_of(q + n1 * 1 quarter)
+
+def y1_huge[q in y1]: date = start_of(q + huge * 1 year)
+
+def y2_year[q in y2]: date = start_of(q + n1 * 1 year)
+
+def y2_huge[q in y2]: date = start_of(q + huge * 1 year)
+
+def y2_back_huge[q in y2]: date = start_of(q - huge * 1 year)
+
+def y2_months[q in y2]: date = start_of(q + n12 * 1 month)
+
+def y2_h2[q in y2]: date = start_of(q + h2 * 1 year)
+
+def y2_key[q in y2]: date = start_of(q + n2)
+
+def fy_year[q in fy]: date = start_of(q + n1 * 1 year)
+
+def fy_month[q in fy]: date = start_of(q + n1 * 1 month)
+
+def fy2_year[q in fy2]: date = start_of(q + n1 * 1 year)
+
+def fy2_huge[q in fy2]: date = start_of(q + huge * 1 year)
+
+def am_month[q in am]: date = start_of(q + n1 * 1 month)
+
+def am3_three[q in am3]: date = start_of(q + n3 * 1 month)
+
+def am3_month[q in am3]: date = start_of(q + n1 * 1 month)
+
+def am3_quarter[q in am3]: date = start_of(q + n1 * 1 quarter)
+
+def am3_huge[q in am3]: date = start_of(q + huge * 1 month)
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  h2 = 200000000000000000000 "2 * 10^20, past 64 bits and even"
+  huge = 100000000000000000001 "10^20 + 1, past 64 bits and odd"
+  hz = 100000000000000000000 "10^20, not a multiple of 3"
+  n1 = 1 "one"
+  n12 = 12 "twelve"
+  n2 = 2 "two"
+  n3 = 3 "three"
+
+ask a_m1_month: m1_month[2026-01]
+ask a_m1_huge: m1_huge[2026-01]
+ask a_m1_back_year: m1_back_year[2027-03]
+ask a_m2_month: m2_month[2026-01]
+ask a_m2_huge: m2_huge[2026-01]
+ask a_m2_h2: m2_h2[2026-01]
+ask a_m2_two: m2_two[2026-01]
+ask a_m2_back_two: m2_back_two[2026-03]
+ask a_m2_quarter: m2_quarter[2026-01]
+ask a_m2_year: m2_year[2026-01]
+ask a_m2_three: m2_three[2026-01]
+ask a_m2_back_huge: m2_back_huge[2026-03]
+ask a_m2_huge_year: m2_huge_year[2026-01]
+ask a_m2_key: m2_key[2026-01]
+ask a_m3_month: m3_month[2026-01]
+ask a_m3_huge: m3_huge[2026-01]
+ask a_m3_three: m3_three[2026-01]
+ask a_m3_key: m3_key[2026-01]
+ask a_y1_year: y1_year[2026]
+ask a_y1_months: y1_months[2026]
+ask a_y1_quarter: y1_quarter[2026]
+ask a_y1_huge: y1_huge[2026]
+ask a_y2_year: y2_year[2026]
+ask a_y2_huge: y2_huge[2026]
+ask a_y2_back_huge: y2_back_huge[2028]
+ask a_y2_months: y2_months[2026]
+ask a_y2_h2: y2_h2[2026]
+ask a_y2_key: y2_key[2026]
+ask a_fy_year: fy_year[2026]
+ask a_fy_month: fy_month[2026]
+ask a_fy2_year: fy2_year[2026]
+ask a_fy2_huge: fy2_huge[2026]
+ask a_am_month: am_month[2026-01]
+ask a_am3_three: am3_three[2026-01]
+ask a_am3_month: am3_month[2026-01]
+ask a_am3_quarter: am3_quarter[2026-01]
+ask a_am3_huge: am3_huge[2026-01]
+,,1:0,3209:a_am3_huge: refused: RUN-DOMAIN 2026-01 + 100 000 000 000 000 000 001 (100 000 000 000 000 000 000) month: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_am3_month: refused: RUN-DOMAIN 2026-01 + 1 month: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_am3_quarter: 2026-04-17
+  cut 2026-12-31
+a_am3_three: 2026-04-17
+  cut 2026-12-31
+a_am_month: 2026-02-17
+  cut 2026-12-31
+a_fy2_huge: refused: RUN-DOMAIN 2026 + 100 000 000 000 000 000 001 (100 000 000 000 000 000 000) year: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_fy2_year: refused: RUN-DOMAIN 2026 + 1 year: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_fy_month: refused: RUN-DOMAIN 2026 + 1 month: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_fy_year: 2027-04-06
+  cut 2026-12-31
+a_m1_back_year: 2026-03-01
+  cut 2026-12-31
+a_m1_huge: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 2026-12-31
+a_m1_month: 2026-02-01
+  cut 2026-12-31
+a_m2_back_huge: refused: RUN-DOMAIN 2026-03 - 100 000 000 000 000 000 001 (100 000 000 000 000 000 000) month: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_m2_back_two: 2026-01-01
+  cut 2026-12-31
+a_m2_h2: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 2026-12-31
+a_m2_huge: refused: RUN-DOMAIN 2026-01 + 100 000 000 000 000 000 001 (100 000 000 000 000 000 000) month: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_m2_huge_year: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 2026-12-31
+a_m2_key: 2026-03-01
+  cut 2026-12-31
+a_m2_month: refused: RUN-DOMAIN 2026-01 + 1 month: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_m2_quarter: refused: RUN-DOMAIN 2026-01 + 1 quarter: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_m2_three: refused: RUN-DOMAIN 2026-01 + 3 month: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_m2_two: 2026-03-01
+  cut 2026-12-31
+a_m2_year: 2027-01-01
+  cut 2026-12-31
+a_m3_huge: refused: RUN-DOMAIN 2026-01 + 100 000 000 000 000 000 000 month: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_m3_key: 2026-04-01
+  cut 2026-12-31
+a_m3_month: refused: RUN-DOMAIN 2026-01 + 1 month: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_m3_three: 2026-04-01
+  cut 2026-12-31
+a_y1_huge: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 2026-12-31
+a_y1_months: 2027-01-01
+  cut 2026-12-31
+a_y1_quarter: refused: RUN-DOMAIN 2026 + 1 quarter: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_y1_year: 2027-01-01
+  cut 2026-12-31
+a_y2_back_huge: refused: RUN-DOMAIN 2028 - 100 000 000 000 000 000 001 (100 000 000 000 000 000 000) year: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_y2_h2: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 2026-12-31
+a_y2_huge: refused: RUN-DOMAIN 2026 + 100 000 000 000 000 000 001 (100 000 000 000 000 000 000) year: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_y2_key: 2030-01-01
+  cut 2026-12-31
+a_y2_months: refused: RUN-DOMAIN 2026 + 12 month: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+a_y2_year: refused: RUN-DOMAIN 2026 + 1 year: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+,17:g14/by_n_years_98,3:g14,27:run g14/by_n_years_98.tally,1111:23:g14/by_n_years_98.tally,1078:model g14_by_n_years_98
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#98, P39): a key of a year range by 2 moved by two years or 24 months, either way, anchored too. refcore moves it one year a period (2027-01-01, not a key); L §4.2 moves it by whole keys (2028-01-01). Held for #98 (held.tsv), refcore's bytes stored, until the next spec round fixes refcore."
+
+source plan "T's fixture (invented values)"
+
+index y2 = year 2026..2040 by 2
+
+index fy2 = year 2026..2040 by 2 from 04-06
+
+input n2: int
+
+input n24: int
+
+def y2_two_years[q in y2]: date = start_of(q + n2 * 1 year)
+
+def y2_24_months[q in y2]: date = start_of(q + n24 * 1 month)
+
+def y2_back_two_years[q in y2]: date = start_of(q - n2 * 1 year)
+
+def fy2_two_years[q in fy2]: date = start_of(q + n2 * 1 year)
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  n2 = 2 "two"
+  n24 = 24 "twenty-four"
+
+ask a_y2_two_years: y2_two_years[2026]
+ask a_y2_24_months: y2_24_months[2026]
+ask a_y2_back_two_years: y2_back_two_years[2028]
+ask a_fy2_two_years: fy2_two_years[2026]
+,,1:0,182:a_fy2_two_years: 2027-04-06
+  cut 2026-12-31
+a_y2_24_months: 2027-01-01
+  cut 2026-12-31
+a_y2_back_two_years: 2027-01-01
+  cut 2026-12-31
+a_y2_two_years: 2027-01-01
+  cut 2026-12-31
+,15:g14/nominal_row,3:g14,25:run g14/nominal_row.tally,523:21:g14/nominal_row.tally,493:model g14_nominal_row
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#89, P38, the third review's H2): an int input's row written as a compounding code past 64 bits is refused LOAD-UNIT, its type before its size; its twin is nominal_row_twin.tally."
+
+source plan "T's fixture (invented values)"
+
+input x: int
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  x = nominal 100000000000000000000 "a compounding code where an int goes"
+
+ask r1: x
+,,1:1,98:refused: LOAD-UNIT nominal 100000000000000000000 is a compounding code (g14/nominal_row.tally:16)
+,20:g14/nominal_row_twin,3:g14,30:run g14/nominal_row_twin.tally,511:26:g14/nominal_row_twin.tally,476:model g14_nominal_row_twin
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#89, P38, the third review's H2): an int input's row written as a compounding code inside 64 bits is refused LOAD-UNIT, its type before its size; its twin is nominal_row.tally."
+
+source plan "T's fixture (invented values)"
+
+input x: int
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  x = nominal 12 "a compounding code where an int goes"
+
+ask r1: x
+,,1:1,84:refused: LOAD-UNIT nominal 12 is a compounding code (g14/nominal_row_twin.tally:16)
+,16:g7/flows_touched,2:g7,26:run g7/flows_touched.tally,3410:22:g7/flows_touched.tally,3378:model g7_flows_touched
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, tally 2.1.6 (P40), G7: reads (L §5.14, §5.14.3, §8.2) where 2.1.5 and 2.1.6 agree. A movement refused by its when, from world into konto2 on 2026-03-10: flows of konto2 over spans before it, across it, after it and from before the run's start, bal before, on and after its day, and flows of the move by leg and by key. A hole day into box_h, read before the refused day. bal(fresh, d) with uncertain on a place with no reading, before, between and after its two uncertain movements. Flows of a move over a span with no movement: of a kind whose one leg has a unit, between outside places, and of one leg of a kind whose two legs are in two units."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+kind maybe: transfers uncertain
+
+kind pays: event certain
+  leg cash: PLN
+
+kind swaps: event certain
+  leg cash: PLN
+  leg fee: EUR
+
+index month = month 2026-01..2026-03
+
+place konto2: accounts PLN lives 2026-01-01..
+
+place box_h: accounts PLN lives 2026-01-01..
+
+place fresh: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+place shop: outside lives 2026-01-01..
+
+input amt: money PLN
+
+input fee_amt: money EUR
+
+input gate_dom: int
+
+input div_when[m in month]: num
+
+input hole_day: date question "When does the parcel come?"
+
+input u_in: date
+
+input u_late: date
+
+input ext_day: date
+
+move gate[m in month]: transfers
+  on day_of(m, gate_dom)
+  when div_when[m] * div_when[m] / div_when[m] > 0
+  leg cash from world to konto2 amount amt
+
+move parcel: transfers
+  on hole_day
+  leg cash from world to box_h amount amt
+
+move fr_in: maybe
+  on u_in
+  leg cash from world to fresh amount amt
+
+move fr_late: maybe
+  on u_late
+  leg cash from world to fresh amount amt
+
+move ext: pays
+  on ext_day
+  leg cash from world to shop amount amt
+
+move swap: swaps
+  on ext_day
+  leg cash from world to shop amount amt
+  leg fee from world to shop amount fee_amt
+
+ask q_place: flows(konto2, 2026-02-01 .. 2026-02-28), flows(konto2, 2026-03-01 .. 2026-03-31), flows(konto2, 2026-03-11 .. 2026-03-31), flows(konto2, 2026-01-01 .. 2026-03-09), flows(konto2, 2025-12-01 .. 2026-01-31), flows(box_h, 2026-01-01 .. 2026-01-31), flows(box_h, 2026-02-01 .. 2026-02-28) law cut
+
+ask q_bal: bal(konto2, d) for d in [2026-02-28, 2026-03-09, 2026-03-10, 2026-03-31] law cut
+
+ask q_move: flows(gate.cash, 2026-01-01 .. 2026-02-28), flows(gate.cash, 2026-01-01 .. 2026-03-31), flows(gate[2026-02].cash, 2026-01-01 .. 2026-03-31), flows(gate[2026-03], 2026-03-01 .. 2026-03-31), flows(gate, 2026-02-01 .. 2026-02-28), flows(ext, 2026-01-01 .. 2026-01-10), flows(swap.cash, 2026-01-01 .. 2026-01-10), flows(swap.fee, 2026-01-01 .. 2026-01-10), flows(ext, 2026-01-01 .. 2026-01-31) law cut
+
+ask q_unc: bal(fresh, d) with uncertain for d in [2026-01-22, 2026-01-24, 2026-01-28] law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  amt = 10.00 PLN
+  fee_amt = 2.00 EUR
+  gate_dom = 10
+  div_when[2026-01] = 1
+  div_when[2026-02] = 2
+  div_when[2026-03] = 0
+  u_in = 2026-01-23
+  u_late = 2026-01-27
+  ext_day = 2026-01-15
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto2] = 0 PLN at 2026-01-01 start
+  opening[box_h] = 0 PLN at 2026-01-01 start
+,,1:0,1403:q_bal (d = 2026-02-28): 20.00 PLN
+  unfulfilled: gate[2026-01]
+  unfulfilled: gate[2026-02]
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-03-09): 20.00 PLN
+  unfulfilled: gate[2026-01]
+  unfulfilled: gate[2026-02]
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-03-10): refused: RUN-DIV division by zero
+  unfulfilled: gate[2026-01]
+  unfulfilled: gate[2026-02]
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-03-31): refused: RUN-DIV division by zero
+  unfulfilled: gate[2026-01]
+  unfulfilled: gate[2026-02]
+  law date 2026-02-15, cut 2026-02-15
+q_move: (20.00 PLN, refused: RUN-DIV division by zero, 10.00 PLN, refused: RUN-DIV division by zero, 10.00 PLN, 0.00 PLN, 0.00 PLN, 0.00 EUR, 10.00 PLN)
+  unfulfilled: ext
+  unfulfilled: gate[2026-01]
+  unfulfilled: gate[2026-02]
+  law date 2026-02-15, cut 2026-02-15
+q_place: (10.00 PLN, refused: RUN-DIV division by zero, 0.00 PLN, 20.00 PLN, ?"before the run's start" (konto2), ?"When does the parcel come?" (hole_day), ?"When does the parcel come?" (hole_day))
+  unfulfilled: gate[2026-01]
+  unfulfilled: gate[2026-02]
+  law date 2026-02-15, cut 2026-02-15
+q_unc (d = 2026-01-22): 0.00 PLN
+  law date 2026-02-15, cut 2026-02-15
+q_unc (d = 2026-01-24): 10.00 PLN
+  uncertain: fr_in
+  law date 2026-02-15, cut 2026-02-15
+q_unc (d = 2026-01-28): 20.00 PLN
+  uncertain: fr_in
+  uncertain: fr_late
+  law date 2026-02-15, cut 2026-02-15
 ,

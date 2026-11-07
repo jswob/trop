@@ -1,0 +1,60 @@
+model g6_where_refused
+  tally 2
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-04-30
+  note "T, tally 2.1.6 (#51, P2), G6: a move bound over a kind whose key's where is refused for one member (eve: 1 / 0) makes a refused instance, which reaches as a hole movement does (L §8.4, L §5.14 Keys, E §4.2): from its day (2026-03-12) the places its legs give, purse and world, and flows of the move over a span that holds it. purse before that day, the place box that dues never touches, flows of the move before its day and a count over the kind stand. refcore 2.1.5 refused every balance from the run's start, box included. Its twin answers eve."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit DUK: currency minor 0.01
+
+kind member
+
+place purse: accounts DUK lives 2026-01-01..
+
+place box: accounts DUK lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input share[p in member]: int
+
+input due_day: date
+
+input early_day: date
+
+input fee: money DUK
+
+move dues[p in member on due_day where 1 / share[p] > 0]: transfers
+  on due_day
+  leg cash from purse to world amount fee
+
+move early[p in member on early_day where share[p] >= 0]: transfers
+  on early_day
+  leg cash from purse to world amount fee
+
+move gift: transfers
+  on due_day
+  leg cash from world to box amount fee
+
+ask q_purse: bal(purse, 2026-02-28), bal(purse, 2026-03-31) law cut
+
+ask q_box: bal(box, 2026-02-28), bal(box, 2026-03-31) law cut
+
+ask q_flows: flows(dues, 2026-03-01 .. 2026-03-31), flows(dues, 2026-01-01 .. 2026-02-28), flows(early, 2026-01-01 .. 2026-02-28), flows(gift, 2026-03-01 .. 2026-03-31) law cut
+
+ask q_n: count(p in member on due_day) law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  member + [ada, eve, ivo] lives 2026-01-01..
+  share[ada] = 1 "ada's share"
+  share[eve] = 0 "eve's share divides by zero"
+  share[ivo] = -1 "ivo's share, his where fails"
+  due_day = 2026-03-12 "the dues' day"
+  early_day = 2026-02-05 "the early dues' day"
+  fee = 5.00 "the fee"
+  opening[purse] = 100 at 2026-01-01 start
+  opening[box] = 50 at 2026-01-01 start

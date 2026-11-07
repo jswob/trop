@@ -14,7 +14,8 @@ from fractions import Fraction
 from . import units as U
 from . import ty as T
 from .dates import (Period, day_period, month_period, quarter_period, year_period, month_of, quarter_of, year_of,
-                    add_days, add_months, age, age_months, overlap_days, last_day, WEEKDAYS, ONE_DAY)
+                    add_days, add_months, age, age_months, overlap_days, last_day, WEEKDAYS, ONE_DAY, next_day,
+                    end_months, END, past_days)
 from .errors import TallyError, LoadError, Refusal, Unspecified, NotYet, load_now
 from .model import (in_world, set_world, Span, visible, known_first, InputInfo, DefInfo, BandInfo, key_text, _kv,
                     wcut, WindowUndecided, row_known_sid)
@@ -621,7 +622,7 @@ class Engine:
         mk = (id(d), vkey(a), vkey(z), vkey(s) if s is not None else None)
         vals = memo.get(mk)
         if vals is None:
-            vals = memo[mk] = set(vkey(x) for x in self.range_values(a, z, s, b))
+            vals = memo[mk] = set(vkey(x) for x in self.range_values(a, z, s, b, range_is_literal(d) and d))
         kk = Int(k) if isinstance(k, int) and not isinstance(k, bool) else k
         if vkey(kk) not in vals:
             code = 'LOAD-KEY' if getattr(kn, '_rangelit', False) and range_is_literal(d) else 'RUN-KEY'
@@ -2141,12 +2142,12 @@ class Engine:
                 return a.shift(k)
             if a.kind == 'month':
                 s = add_months(a.start, k)
-                return Period(a.kind, s, add_months(s, 1), 'month', a.n) if a.n == 1 else a.shift(k)
+                return Period(a.kind, s, end_months(s, 1), 'month', a.n) if a.n == 1 else a.shift(k)
             if a.kind == 'quarter':
                 return a.shift(k)
             # a year moves by years
             s = add_months(a.start, 12 * k)
-            return Period('year', s, add_months(a.start, 12 * (k + 1)) if a.n == 12 else add_months(s, a.n), 'month',
+            return Period('year', s, end_months(a.start, 12 * (k + 1)) if a.n == 12 else end_months(s, a.n), 'month',
                           a.n)
         raise refuse('LOAD-UNIT', '%s %s %s' % (fmt(a), op, fmt(b)))
 
@@ -2415,6 +2416,9 @@ class Engine:
         raise refuse('LOAD-UNIT', 'membership in %s' % fmt(coll))
 
     def date_of(self, v, what):
+        if v is END:
+            # L §7.6 item 1 (tally 2.1.6, issue #89): the end of time is no day, so where a day is read it is refused
+            raise past_days()
         if isinstance(v, datetime.date):
             return v
         if isinstance(v, Iv):
@@ -2765,7 +2769,7 @@ class Engine:
                     return None, sp, False
                 ow = getattr(b, '_owner', None)
                 sel = [t for t in things if alive(t, lambda t: m.alive_over(t, kind, sp, ctx.cut, ow))]
-                past = sp.end is None or sp.end > ctx.cut + ONE_DAY
+                past = sp.end is None or sp.end > next_day(ctx.cut)
             sel.sort(key=lambda t: self.safe_order_key(t, kind, ctx.cut))
             vals = [Thing(t.name) for t in sel]
             b._unknown = unknown
@@ -2794,10 +2798,20 @@ class Engine:
             hs = [x for x in (a, z, s) if isinstance(x, Hole)]
             if hs:
                 return None, merge(*hs), False
-            vals = self.range_values(a, z, s, b)
+            vals = self.range_values(a, z, s, b, range_is_literal(d) and d)
         return vals, None, past
 
-    def range_values(self, a, z, s, b):
+    def range_values(self, a, z, s, b, lit=None):
+        """A stepped range's values, a + i·s <= z (L §2.5). L §7.6 item 2 (tally 2.1.6, issue #89): at most 1 000 000
+        of them, LOAD-LIMIT where its ends and step are literals (lit, the range's node), which load sees, RUN-LIMIT
+        otherwise; refcore 2.1.5 stopped past a million as its own guard (REFCORE-NOT-YET), and a range with no step
+        had none."""
+        def too_many():
+            msg = '%s .. %s%s holds more than 1 000 000 keys' % (fmt(a), fmt(z),
+                                                                (' step %s' % fmt(s)) if s is not None else '')
+            if lit:
+                return LoadError('LOAD-LIMIT', msg, getattr(lit, 'loc', None))
+            return Refusal('RUN-LIMIT', msg)
         out = []
         if isinstance(a, datetime.date):
             z = self.date_of(z, 'a range end')
@@ -2811,12 +2825,14 @@ class Engine:
                     raise refuse('RUN-DOMAIN', 'a stepped range whose step is not positive')
                 cur = nxt
                 if len(out) > 1000000:
-                    raise NotYet('a stepped range of more than a million keys (a size guard of this interpreter; L §5.6 sets no cap)')
+                    raise too_many()
             return out
         self.no_none(a, 'a range end')
         self.no_none(z, 'a range end')
         if s is None:
             lo, hi = self.int_of(a), self.int_of(z)
+            if hi - lo + 1 > 1000000:
+                raise too_many()
             return [Int(i) for i in range(lo, hi + 1)]
         if s.q <= 0:
             # "a step or a count that isn't positive" (L §8.4 What isn't defined is refused)
@@ -2828,13 +2844,15 @@ class Engine:
         cur = a.q
         stop = z.q * f
         step = s.q * g
+        if cur <= stop and (stop - cur) // step + 1 > 1000000:
+            raise too_many()
         n = 0
         while cur <= stop:
             out.append(Num(cur, a.u, money=a.money, isint=a.isint and step.denominator == 1))
             cur += step
             n += 1
             if n > 1000000:
-                raise NotYet('a stepped range of more than a million keys (a size guard of this interpreter; L §5.6 sets no cap)')
+                raise too_many()
         return out
 
     def span_value(self, sp, env, ctx):
@@ -2869,7 +2887,7 @@ class Engine:
 
     def span_end(self, v):
         if isinstance(v, datetime.date):
-            return v + ONE_DAY
+            return next_day(v)
         if isinstance(v, Period):
             return v.end
         if isinstance(v, Iv):
@@ -3286,7 +3304,7 @@ class Engine:
                 sp = self.bind_day(b, b.over, env, ctx, span=True)
                 if sp is EMPTY_BIND or isinstance(sp, Hole):
                     continue
-                if sp.end is None or sp.end > ctx.cut + ONE_DAY:
+                if sp.end is None or sp.end > next_day(ctx.cut):
                     return b
         return None
 
@@ -3752,12 +3770,18 @@ class Engine:
             return hole
         return self.read_input(info, keys, ctx.but(law=day), calendar=True)
 
-    def business(self, node, env, ctx, day):
+    def business(self, node, env, ctx, day, seek=False):
         cal = self.cal_at(node, env, ctx, day)
         if isinstance(cal, Hole):
             return cal
         if cal is NONE:
             raise refuse('RUN-NONE', 'the calendar is none here')
+        if seek and (len(set(cal.weekends)) == 7 or (len(set(cal.yearly)) == 366 and
+                                                      (cal.yfrom is None or day.year >= cal.yfrom))):
+            # L §4.2, §7.6 item 5 (tally 2.1.6, issue #89): add_business and schedule seek a business day, and a
+            # calendar whose weekends name all seven days, or whose yearly days all 366 month-days (from its from
+            # year), has none; refcore 2.1.5 walked to 9999-12-31
+            raise refuse('RUN-DOMAIN', 'calendar %s has no business day' % node._r[2])
         wd = day.isoweekday()
         if any(WEEKDAYS[w] == wd for w in cal.weekends):
             return False
@@ -3866,8 +3890,8 @@ class Engine:
             left = abs(k)
             cur = d
             while left:
-                cur = cur + datetime.timedelta(days=step)
-                b = self.business(n.args[2], env, ctx, cur)
+                cur = add_days(cur, step)
+                b = self.business(n.args[2], env, ctx, cur, seek=True)
                 if isinstance(b, Hole):
                     return b
                 if b:
@@ -3929,7 +3953,7 @@ class Engine:
 
     def rolled(self, n, env, ctx, day, w):
         """schedule's day moved by its roll (L §4.2, ISDA 2006 section 4.12)."""
-        b = self.business(n.args[3], env, ctx, day)
+        b = self.business(n.args[3], env, ctx, day, seek=True)
         if isinstance(b, Hole):
             return b
         if b:
@@ -3938,8 +3962,8 @@ class Engine:
         def walk(start, step):
             cur = start
             while True:
-                cur = cur + datetime.timedelta(days=step)
-                bb = self.business(n.args[3], env, ctx, cur)
+                cur = add_days(cur, step)
+                bb = self.business(n.args[3], env, ctx, cur, seek=True)
                 if isinstance(bb, Hole):
                     return bb
                 if bb:

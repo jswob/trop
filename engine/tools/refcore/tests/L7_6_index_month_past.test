@@ -1,0 +1,17 @@
+# L §7.6 item 1 (tally 2.1.6, issue #89): a month range by 3 anchored on the 15th ends its last period
+# (9999-11-15) on 10000-02-14, past 9999-12-31: LOAD-LIMIT. tally 2.1.5's refcore refused it REFCORE-NOT-YET
+# (ValueError).
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+unit PLN: currency minor 0.01
+index ms = month 9999-02..9999-12 by 3 from 15
+
+ask n: max(pos(k) for k in ms)
+=== expect
+refused: LOAD-LIMIT index ms: a day passes 9999-12-31 (m.tally:9)

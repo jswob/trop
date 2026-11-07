@@ -6,7 +6,7 @@ Session 4.5c, 2026-10-29. One page of rules for the test set and for everything 
 
 | Layer | What | Budget | Runs |
 |---|---|---|---|
-| **interpreter** | refcore's own tests (`R:all`: 1170 at tally 2.1.5, 950 on 2.0) | 90 s | every pass |
+| **interpreter** | refcore's own tests (`R:all`: 1251 at tally 2.1.6, 950 on 2.0) | 90 s | every pass |
 | **unit** | the probes: one card per catalogue edge (and pair cards for two edges that interact), seconds each | 90 s each; the layer about 2 min | every pass |
 | **integration** | the household questions (one check per ask), the 79 old models, the light twins, the blind texts, the amendments household, the key scripts of `keys-extra/` | 90 s each; the layer under 10 min on 4 jobs | every pass |
 | **acceptance** | the holdout: blind, exam only, never split into visible probes | the exam's | session 5 only |

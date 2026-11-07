@@ -880,14 +880,27 @@ def m_check_draw_slots(self):
         elif r is not None and r[1] == 'def' and r[2] in m.defs:
             vals = [rv.node.value for vers in m.defs[r[2]].rules.values() for rv in vers]
         for v in vals:
-            sup = dist_support_max(v)
+            sup = dist_support_max(v, m)
             if sup is not None and (sup == 'inf' or sup > last):
                 raise LoadError('LOAD-RANDOM', 'the draw %s can exceed the last slot of %s' % (txt, ix), kn.loc)
 
 
-def dist_support_max(v):
+def dist_support_max(v, m=None):
     """The largest value a distribution written in a row or rule can draw, where the text shows it: 'inf' for one
-    unbounded above, a number for literal bounds, None where it rests on facts."""
+    unbounded above, a number for literal bounds, None where it rests on facts. A `to u` around it draws what it does;
+    a `discrete(… for k in D)` over an integer index D draws D's largest key (tally 2.1.6, issue #75, as the engine's
+    load/random.rs: refcore 2.1.5 saw neither)."""
+    if v is not None and getattr(v, 'k', None) == 'to':
+        v = v.e
+    if v is not None and getattr(v, 'k', None) == 'dist' and getattr(v, 'fn', None) == 'discrete' and m is not None:
+        b = getattr(v, 'bind', None)
+        d = getattr(b, 'dom', None)
+        if d is None or getattr(d, 'k', None) != 'dname' or getattr(d, 'qual', None) is not None:
+            return None
+        info = m.indexes.get(d.id)
+        if info is None or not info.isint or not info.keys or not all(isinstance(k, int) for k in info.keys):
+            return None
+        return Fraction(max(info.keys))
     if v is None or getattr(v, 'k', None) not in ('dist', 'call'):
         return None
     name = getattr(v, 'fn', None) or getattr(v, 'name', None)
@@ -1545,7 +1558,8 @@ def m_fill_read_type(self, n, sc, obj, keys):
     self.edge(sc, ('fill', qid), rel)
     if rel.startswith('shift'):
         var, sign = rel.split(':')[1], rel.split(':')[2]
-        self.shift_reads.append((sc.item, ('fill', qid), var, sign, var in sc.guards, n.loc))
+        self.shift_reads.append((sc.item, ('fill', qid), var, sign, var in sc.guards, n.loc,
+                                 _c().shift_offset(fkeys, var)))
     self.note_read(sc, 'fill', fi['s'] if False else _Id(qid))
     if fi['taken'] is None and qid not in self.__dict__.get('_fills_checking', ()):
         # read before the fill's own check (a move's leg is checked before the fills): check it now

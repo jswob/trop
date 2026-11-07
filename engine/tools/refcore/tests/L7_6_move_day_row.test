@@ -1,0 +1,46 @@
+# L §7.6 item 1, §8.4 (tally 2.1.6, issues #89, #51): fee's day d + 1 day, from a row's 9999-12-31, passes
+# 9999-12-31, which load doesn't see: the instance is refused at its key (RUN-LIMIT), and a movement whose day is
+# refused refuses the places its legs give on every day, so konto is refused at 9999-06-30 and flows(fee, 9999) is
+# refused; other, which only gift touches, stands. tally 2.1.5's refcore refused the model REFCORE-NOT-YET.
+=== m.tally
+model m
+  tally 2
+  on 9999-12-31
+  start 9999-01-01
+  end 9999-12-31
+
+source plan "plan"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-05-01..
+place other: accounts PLN lives 2019-05-01..
+place landlord: outside lives 1900-01-01..
+input d: date
+input amt: money PLN
+
+move fee: transfers
+  on d + 1 day
+  leg cash from konto to landlord amount amt
+
+move gift: transfers
+  on d
+  leg cash from landlord to other amount amt
+
+version v
+  cite plan
+  governs always
+  known 9999-01-01
+  d = 9999-12-31 "plan"
+  amt = 100.00 PLN "plan"
+  opening[konto] = 1 000.00 PLN at 9999-01-01 start "plan"
+  opening[other] = 1 000.00 PLN at 9999-01-01 start "plan"
+
+ask k: bal(konto, 9999-06-30)
+ask o: bal(other, 9999-12-31)
+ask f: flows(fee, 9999)
+=== expect
+f: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+k: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+o: 1 100.00 PLN
+  cut 9999-12-31

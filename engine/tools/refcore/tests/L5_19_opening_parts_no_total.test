@@ -1,0 +1,56 @@
+# L §5.19 (stated parts stand beside the reading's total, in the same version and at the same instant, LOAD-PARTS
+# otherwise; tally 2.1.6, issue #75): opening rows of parts with no total row of opening at all are refused at
+# load. tally 2.1.5's refcore skipped an input with no total rows, so the parts loaded. T's held own/parts-no-total;
+# the engine's bytes.
+=== base.tally
+model own
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): a place kind that keeps parts by owner, its opening stated by parts; it loads clean"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind persons: parties
+
+kind savings: place PLN min 0
+  owned by arrive
+  step minor(PLN)
+  takes k for w prorata
+
+place sav: savings lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input amt: money PLN
+
+input day: date
+
+def arrive[m in events, p in parties]: num at m.day
+  rule base v card_2026 = (if p == ania then 1 else 0)
+
+move dep: transfers
+  on day
+  leg cash from world to sav amount amt
+
+ask q: bal(sav, 2026-12-31) of p for p in parties on 2026-12-31
+
+version card_cast
+  cite card
+  known 2026-01-01
+  persons + [ania] lives 1988-04-12..
+  persons + [tomek] lives 1986-09-03..
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  opening[sav] of ania = 10.00 PLN at 2026-01-01 start "the card"
+  opening[sav] of tomek = 20.00 PLN at 2026-01-01 start "the card"
+=== expect q
+refused: LOAD-PARTS the parts of sav at 2026-01-01 start have no total in card_2026 (base.tally:48)

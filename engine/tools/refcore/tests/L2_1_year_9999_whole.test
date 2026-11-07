@@ -1,0 +1,82 @@
+# L §2.1 Dates (tally 2.1.6, issue #48): Tally's days are 0001-01-01 to 9999-12-31, and the year 9999 and its
+# quarters, months and days are whole periods; the start of the period after one that ends with 9999-12-31 is the
+# end of time, which follows every day, and a duration or a day taken from it is as from any day. A run inside 9999:
+# the built-in days, months and years, a month range by 3 and a year range ending 9999 load; flows over 9999, its
+# December and its last day count the rents; end_of(9999-12) - 1 day is 9999-12-31, - 1 month 9999-12-01; the year
+# 9999 has 365 days and its last quarter 92. Each answer is the one the same model gives in 2026 (2017..2026 for ys).
+# tally 2.1.5's refcore refused the model REFCORE-NOT-YET (the days index stepped past 9999-12-31; the years index
+# built 10000-01-01).
+=== m.tally
+model hh
+  tally 2
+  on 9999-12-31
+  start 9999-01-01
+  end 9999-12-31
+
+source plan "plan"
+unit PLN: currency minor 0.01
+index flats = [f1, f2]
+index qs = month 9999-01..9999-12 by 3
+index ys = year 9990..9999
+input rent_amt: money PLN
+input rent_day[f in flats]: date
+place konto: accounts PLN lives 2019-05-01..
+place landlord: outside lives 1900-01-01..
+
+def qlen[q in qs]: int = days_between(start_of(q), end_of(q))
+def ylen[y in ys]: int = days_between(start_of(y), end_of(y))
+
+move rent[f in flats]: transfers
+  on rent_day[f]
+  leg cash from konto to landlord amount rent_amt
+
+version plan_9999
+  cite plan
+  governs always
+  known 9999-01-01
+  rent_amt = 2 000.00 PLN "umowa najmu"
+  rent_day[f1] = 9999-06-30 "umowa najmu"
+  rent_day[f2] = 9999-12-31 "umowa najmu"
+  opening[konto] = 10 000.00 PLN at 9999-01-01 start "wyciąg"
+
+ask yd: days_between(start_of(9999), end_of(9999))
+ask md: days_between(end_of(9999-12), start_of(9999-12))
+ask after: 9999-12-31 < end_of(9999)
+ask same: end_of(9999-12) == end_of(9999)
+ask last: max(end_of(9999-12) - 1 day, 9999-06-01)
+ask back: end_of(9999-12) - 1 month
+ask q4: end_of(9999-Q4) - 1 day
+ask qlast: qlen[9999-10]
+ask ylast: ylen[9999]
+ask fy: flows(konto, 9999)
+ask fm: flows(konto, 9999-12)
+ask fo: flows(konto, 9999-12..)
+ask fd: flows(konto, 9999-12-31)
+=== expect
+after: true
+  cut 9999-12-31
+back: 9999-12-01
+  cut 9999-12-31
+fd: -2 000.00 PLN
+  cut 9999-12-31
+fm: -2 000.00 PLN
+  cut 9999-12-31
+fo: -2 000.00 PLN
+  cut 9999-12-31
+fy: -4 000.00 PLN
+  unfulfilled: rent[f1]
+  cut 9999-12-31
+last: 9999-12-31
+  cut 9999-12-31
+md: -31
+  cut 9999-12-31
+q4: 9999-12-31
+  cut 9999-12-31
+qlast: 92
+  cut 9999-12-31
+same: true
+  cut 9999-12-31
+yd: 365
+  cut 9999-12-31
+ylast: 365
+  cut 9999-12-31

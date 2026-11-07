@@ -1,0 +1,16 @@
+model changed
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#74): the member of m0/format/member_changed.tally, whose pin names another text"
+
+source s "s"
+
+input rate: num
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  rate = 2

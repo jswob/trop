@@ -6,11 +6,12 @@ FILE is a kernel file (tools/kernel.toml, .cargo/mutants.toml's examine_globs), 
 engine/ or to the repository. -F keeps the mutants whose name matches REGEX (cargo-mutants
 27.1.0 keeps a file's struct-field deletions whatever -F says). It runs what CI's mutants
 jobs run, with the same flags (R-84, R-88): T's tests unmutated first, the default
-targets and every gating milestone's (tools/milestones args); then cargo-mutants with
+targets and every gating milestone's but the marker's mutants_leave_out (tools/milestones
+args); then cargo-mutants with
 .cargo/mutants.toml, its kernel list narrowed to FILE, the gating milestones' targets, a
 fixed proptest seed, no failure files, the baseline skipped, `--timeout 300
---build-timeout 600`, and each test under the memory cap (nextest's `mutants` profile,
-tools/test-memcap). The output is engine/target/mutants-local/mutants.out/; the exit is
+--build-timeout 600`, and each test under the memory cap, each mutant ended at its first
+failing test (nextest's `mutants` profile, tools/test-memcap). The output is engine/target/mutants-local/mutants.out/; the exit is
 cargo-mutants' (0 all caught, 2 some missed, 3 some timed out).
 
 The environment is check's (R-82); only CARGO_BUILD_JOBS and NEXTEST_TEST_THREADS pass

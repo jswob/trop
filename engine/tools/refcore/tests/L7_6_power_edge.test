@@ -1,0 +1,28 @@
+# L §7.6 item 4 (tally 2.1.6, issue #89): powers of exactly 64, PLN^64 and %^64, load and print, as in tally
+# 2.1.5.
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+unit PLN: currency minor 0.01
+input y: num PLN^64
+input p: num %^64
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  y = 2 PLN^64 "plan"
+  p = 1 %^64 "plan"
+
+ask q: y
+ask r: p
+=== expect
+q: 2 PLN^64
+  cut 2026-12-31
+r: 0.00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001
+  cut 2026-12-31

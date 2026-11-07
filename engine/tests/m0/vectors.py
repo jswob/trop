@@ -22,7 +22,9 @@ reality's `sha256` line (E §3.1 step 1). Stored per set in format.refcore, eigh
 so every expected byte is refcore's, held by its digest (the texts would be 6 MB more). Before it writes anything, the
 script holds refcore to the round trip (DONE gate 6): each canonical text, written back in place of its file
 (engine/tests/out/m0/canon/, a mirror of the repository's paths), reprints to itself, byte for byte, and the whole
-output is the same. A fixture of m0/format/ must differ from its canonical text (else it tests nothing).
+output is the same. A fixture of m0/format/ must differ from its canonical text (else it tests nothing). Since tally
+2.1.6 a text that has no canonical form is refused as load refuses it (L §2.4, E §3.1 step 1): the sets
+REPRINT_REFUSED names, each with its ruling, store their one refusal line and exit 1, and no other set may refuse.
 
 The load half (rows 1 and 2): M0's engine evaluates nothing, and its tests must stay green after M1, so a set's load
 is seen through the load probe, `run <files> --ask zz_m0_probe`, an ask no text declares: load runs first, a load
@@ -69,6 +71,20 @@ REFUSALS = ['U:law/LAW-13/rate25', 'U:rand/RAND-04/plan_b', 'U:rule/RULE-09/inpa
             'U:scen/SCEN-02/kept', 'U:scen/SCEN-03/infl8', 'U:scen/SCEN-04/crash', 'U:surf/SURF-04/redefine',
             'U:rule/RULE-04', 'U:own/OWN-11/p21-signed']
 SCENARIO_REFUSED = re.compile(r'^scenario ([a-z][a-z0-9_]*): refused: ', re.M)
+# the sets whose reprint refuses, as load refuses them, before it prints anything (tally 2.1.6): a joint model's
+# member absent or changed (E §3.1 step 1, #74, P15); a duplicated id or an unknown prefix, which has no canonical
+# form (L §2.4, #91, P22). Each stores its one refusal line (no section) and its exit code; the round trip of a
+# refusal is the same refusal. Any other set must reprint, and each of these must refuse.
+REPRINT_REFUSED = {
+    'U:set/surf/SURF-04/SURF-04': '#91: its scenario declares the base\'s contrib again (LOAD-DUP)',
+    'format/member_absent': '#74: a joint model whose member file is absent (LOAD-PIN)',
+    'format/member_changed': '#74: a joint model whose member\'s text no longer matches its pin (LOAD-PIN)',
+    'format/dup_id': '#91: a source declared twice, with two texts (LOAD-DUP; the fuzz input b943 minimized)',
+    'format/dup_kind': '#91: a kind declared twice under two parents (LOAD-DUP; the fuzz input e523 minimized)',
+    'format/unknown_prefix': '#91: an input keyed by an index under a prefix no use line names (LOAD-NAME; the '
+                             'fuzz input c5a8 minimized)',
+}
+REFUSED_LINE = re.compile(r'refused: [A-Z]+(?:-[A-Z]+)+ [^\n]*\n')
 TEXTS_RS = R.T + 'runner/src/m0_texts.rs'
 FIXTURES = os.path.join(HERE, 'format', 'fixtures.tsv')
 FIXTURE_CWD = 'engine/tests/m0/format'
@@ -234,7 +250,12 @@ def runs(sets):
     bad = 0
     for s, e, g, canon in zip(sets, first, again, canons):
         secs, tail = sections(e['out'])
-        if e['rc'] != 0 or not secs or not tail.startswith('sha256 '):
+        if s['id'] in REPRINT_REFUSED:
+            if e['rc'] != 1 or secs or not REFUSED_LINE.fullmatch(e['out']) or g['out'] != e['out']:
+                bad += 1
+                print('FAIL %s: refcore\'s reprint should refuse (%s), in one line, again on its round trip: exit '
+                      '%s: %s' % (s['id'], REPRINT_REFUSED[s['id']], e['rc'], e['out'][:200]))
+        elif e['rc'] != 0 or not secs or not tail.startswith('sha256 '):
             bad += 1
             print('FAIL %s: refcore\'s reprint exits %s: %s' % (s['id'], e['rc'], e['out'][:200]))
         elif g['out'] != e['out'] or g['rc'] != e['rc']:
@@ -406,6 +427,9 @@ def main(argv):
         print('%d load vectors, %d print the probe\'s REQ-ASK line, %d fail the tie' % (
             len(vecs), sum(e['out'] == PROBED for e in res), len(bad)))
         return 1 if bad else 0
+    missing = sorted(set(REPRINT_REFUSED) - {s['id'] for s in sets})
+    if missing:
+        sys.exit('REPRINT_REFUSED names sets that don\'t exist: ' + ', '.join(missing))
     res = runs(sets)
     data, rs = stored(sets, res), texts_rs(sets)
     vecs, unseen = load_vectors(sets)

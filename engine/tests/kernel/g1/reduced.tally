@@ -1,0 +1,50 @@
+model g1_reduced
+  tally 2
+  on 2026-11-06
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (the mutation run's speed), G1: a num is its value, in lowest terms (L §7.1, §5.18): 1/6 + 1/6 prints 1/3, 1/2 + 1/2 prints 1, 2/4 equals 1/2, and a quotient of two whole numbers with a common factor prints reduced."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+index w = [sixth, half, quarter, common, neg]
+
+input top[k in w]: num
+
+input bottom[k in w]: num
+
+def q[k in w]: num at reader
+  note "the quotient"
+  rule base v card = top[k] / bottom[k]
+
+def twice[k in w]: num at reader
+  note "the quotient added to itself"
+  rule base v card = q[k] + q[k]
+
+def twice_div[k in w]: num at reader
+  note "twice the top over the bottom: the same value as twice, by another road"
+  rule base v card = (top[k] + top[k]) / bottom[k]
+
+def same[k in w]: bool at reader
+  rule base v card = twice[k] == twice_div[k]
+
+def back[k in w]: num at reader
+  note "twice times the bottom: twice the top, a whole number"
+  rule base v card = twice[k] * bottom[k]
+
+ask q_reduced: q[k], twice[k], twice_div[k], same[k], back[k] for k in w law 2026-11-06
+
+version card
+  cite fixture
+  governs always
+  known 2026-11-06
+  top[sixth] = 1 "1/6"
+  bottom[sixth] = 6 "1/6"
+  top[half] = 1 "1/2"
+  bottom[half] = 2 "1/2"
+  top[quarter] = 1 "1/4"
+  bottom[quarter] = 4 "1/4"
+  top[common] = 6 "6/15: a common factor of 3"
+  bottom[common] = 15 "6/15"
+  top[neg] = -5 "-5/10: a negative half"
+  bottom[neg] = 10 "-5/10"

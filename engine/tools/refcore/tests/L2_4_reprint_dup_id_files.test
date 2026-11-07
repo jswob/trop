@@ -1,0 +1,23 @@
+# L §2.4, §2.5 (tally 2.1.6, issue #91): source s is declared in a.tally and again in b.tally, a part of the same
+# model: reprint refuses as load does, at the second in the order of the files' paths. tally 2.1.5's refcore
+# printed both files (T's fuzz finding e523…, minimized).
+=== options reprint
+=== a.tally
+model m
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "one"
+
+kind cards
+=== b.tally
+part p
+  tally 2
+
+kind refunds: cards
+
+source s "again"
+=== expect
+refused: LOAD-DUP s is declared twice (b.tally:6)

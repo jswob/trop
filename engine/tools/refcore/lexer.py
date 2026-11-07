@@ -13,7 +13,7 @@ from .errors import LoadError
 
 
 class Tok:
-    __slots__ = ('t', 's', 'v', 'ws', 'col', 'nm', 'role', 'canon')
+    __slots__ = ('t', 's', 'v', 'ws', 'col', 'nm', 'role', 'canon', 'fld')
 
     def __init__(self, t, s, v=None, ws=False, col=0):
         self.t = t      # ID KEY INT DEC DAY MONTH MMDD CUR STR OP
@@ -25,6 +25,7 @@ class Tok:
         self.role = None  # what the parser read it as, for the canonical reprint (canon.py): 'bin' a spaced
         #                   operator, 'u' a token inside a unit or a fraction (touching the one before)
         self.canon = None  # its canonical text, where it differs (a number, L §2.4)
+        self.fld = False  # the parser read it as a field, the word right after "." (L §2.3 parse rule 3; canon.py)
 
     def __repr__(self):
         return '%s(%s)' % (self.t, self.s)

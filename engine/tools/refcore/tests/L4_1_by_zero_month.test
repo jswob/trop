@@ -1,0 +1,14 @@
+# L §4.1 `by n` (tally 2.1.6, issue #87): a month range by 0 is refused at load, LOAD-DOMAIN. tally 2.1.5's
+# refcore read it as by 1 and answered 12, as by 1 does.
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+index ms = month 2026-01..2026-12 by 0
+
+ask n: max(pos(k) for k in ms)
+=== expect
+refused: LOAD-DOMAIN index ms: by 0 is not a positive step (m.tally:7)

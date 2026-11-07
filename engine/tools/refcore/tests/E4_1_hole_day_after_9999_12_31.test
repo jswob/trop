@@ -1,0 +1,55 @@
+# E §4.1 (tally 2.1.6, issue #48): movements sort by day, a hole day after every day, 9999-12-31 included; E §6.3:
+# a residual ledger's remaining ties go by that order. rent[f1]'s day is a hole, rent[f2]'s is 9999-12-31; both are
+# matched by statement lines on 9999-12-31, difference 0.00 PLN, so they tie but for the order: rent[f2] comes
+# first, as in 2026. tally 2.1.5's refcore refused the model REFCORE-NOT-YET (the run lies in 9999), and it ranked a
+# hole day as 9999-12-31 itself, so rent[f1] came first by its key.
+=== m.tally
+model hh
+  tally 2
+  on 9999-12-31
+  start 9999-01-01
+  end 9999-12-31
+
+source plan "plan"
+source bank_9999_12 "bank"
+unit PLN: currency minor 0.01
+index flats = [f1, f2]
+input bank: observed
+input rent_amt: money PLN
+input rent_day[f in flats]: date
+place konto: accounts PLN lives 2019-05-01..
+place landlord: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+move rent[f in flats]: transfers
+  on rent_day[f]
+  leg cash from konto to landlord amount rent_amt
+
+version plan_9999
+  cite plan
+  governs always
+  known 9999-01-01
+  rent_amt = 2 000.00 PLN "umowa najmu"
+  rent_day[f1] = ?"which day is f1's rent paid?" "umowa najmu"
+  rent_day[f2] = 9999-12-31 "umowa najmu"
+  opening[konto] = 10 000.00 PLN at 9999-01-01 start "wyciąg"
+
+version statement_12
+  cite bank_9999_12
+  governs 9999-12
+  known 9999-12-31
+  covers konto
+  pad konto from unexplained
+  bank[r1] = (on: 9999-12-31, kind: transfers, leg cash from konto to landlord amount 2 000.00 PLN, fulfils: rent[f1]) "line 1"
+  bank[r2] = (on: 9999-12-31, kind: transfers, leg cash from konto to landlord amount 2 000.00 PLN, fulfils: rent[f2]) "line 2"
+  stated[konto] = 6 000.00 PLN at 9999-12-31 end "saldo"
+
+ask led: residuals konto 9999-12
+=== expect
+led: residuals konto 9999-12
+  9999-12 balance: model 10 000.00 PLN, observed 6 000.00 PLN, difference -4 000.00 PLN
+    balance konto 9999-12-31 end (padded): booked 10 000.00 PLN, stated 6 000.00 PLN, gap -4 000.00 PLN
+  9999-12 move rent: model -4 000.00 PLN, observed -4 000.00 PLN, difference 0.00 PLN
+    matched rent[f2] on 9999-12-31: model -2 000.00 PLN, observed -2 000.00 PLN, difference 0.00 PLN, timing +0 days
+    matched rent[f1] on 9999-12-31: model -2 000.00 PLN, observed -2 000.00 PLN, difference 0.00 PLN, timing +0 days
+  cut 9999-12-31

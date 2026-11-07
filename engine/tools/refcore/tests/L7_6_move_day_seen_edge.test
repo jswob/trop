@@ -1,0 +1,31 @@
+# L §7.6 item 1 (tally 2.1.6, issue #89): the twin of L7_6_move_day_seen dated end_of(y) - 1 day, 9999-12-31,
+# loads and books the fee in 9999. tally 2.1.5's refcore refused the model REFCORE-NOT-YET.
+=== m.tally
+model m
+  tally 2
+  on 9999-12-31
+  start 9999-01-01
+  end 9999-12-31
+
+source plan "plan"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-05-01..
+place other: accounts PLN lives 2019-05-01..
+place landlord: outside lives 1900-01-01..
+input amt: money PLN
+
+move fee[y in years]: transfers
+  on end_of(y) - 1 day
+  leg cash from konto to landlord amount amt
+
+version v
+  cite plan
+  governs always
+  known 9999-01-01
+  amt = 100.00 PLN "plan"
+
+ask f: flows(konto, 9999)
+=== expect
+f: -100.00 PLN
+  cut 9999-12-31
+warning: WARN-UNREAD place other is read by nothing

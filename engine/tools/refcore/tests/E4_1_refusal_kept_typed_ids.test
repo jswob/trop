@@ -1,0 +1,45 @@
+# E §4.1, E §4.2 step 5 (tally 2.1.6, issue #57, the coordinator's pick P4): two plan moves a and ab, one leg each on one
+# day into gone after its lifespan, both refused at src. Of several refusals at one place, the first in the typed
+# movement order is the one its reads print: a before ab, ids by code point. refcore 2.1.5 booked the legs in their
+# text order, `ab|()` before `a|()`, and printed ab.cash (T's g6/refusal_order).
+=== m.tally
+model ids
+  tally 2
+  on 2025-12-31
+  start 2025-01-01
+  end 2025-12-31
+
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit DUK: currency minor 0.01
+
+input amt: money DUK
+
+input d0: date
+
+place src: accounts DUK lives 2025-01-01..
+
+place gone: accounts DUK lives 2025-01-01..2025-01-05
+
+move a: transfers
+  on d0
+  leg cash from src to gone amount amt
+
+move ab: transfers
+  on d0
+  leg cash from src to gone amount amt
+
+ask q: bal(src, 2025-01-31)
+
+version facts
+  cite fixture
+  governs always
+  known 2025-01-01
+  amt = 1.00 DUK
+  d0 = 2025-01-10
+  opening[src] = 500.00 DUK at 2025-01-01 start
+  opening[gone] = 0 DUK at 2025-01-01 start
+=== expect
+q: refused: RUN-LIFESPAN a.cash moves into or out of gone outside its lifespan
+  cut 2025-12-31

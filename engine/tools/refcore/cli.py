@@ -50,21 +50,30 @@ def reprint_lines(texts, ordered=False):
     sha256 of the texts printed, in the order printed.  texts are taken by their names, unless ordered: then in the
     order given (reprint_paths gives them in the order of their full paths, tally 2.1.3)."""
     from .canon import reprint, printed_hash
-    from .joint import use_member_files, header_uses
+    from .joint import use_member_files, header_uses, pinned_members, MemberRefused, is_model
     files = list(texts) if ordered else sorted(texts, key=lambda f: f[0])
     try:
-        # a joint model's members, for the order of keys of their indexes (canon.reprint)
+        # a joint model's members, checked against their pins as `run` checks them, before anything prints (E §3.1
+        # step 1, INTERFACE §1: reprint reads its files as run does; tally 2.1.6, issue #74: refcore 2.1.5 printed a
+        # joint model whose member was absent or changed); and kept for the order of keys of their indexes
+        # (canon.reprint)
         members = {}
+        member_paths = {}
         on_disk = any(os.path.isfile(p) for p, src in texts)
         for p, src in files:
-            if header_uses(src):
+            uses = header_uses(src)
+            if uses and is_model(src):
+                for a, fs in pinned_members(p, uses, texts).items():
+                    member_paths[a] = set(f for f, rel, s in fs)
                 members.update(use_member_files([(p, p, src)], texts, on_disk))
-        printed = reprint(files, members)
+        printed = reprint(files, members, member_paths)
         out = []
         for p, t in printed:
             out.append('--- ' + p)
             out.extend(t.rstrip('\n').split('\n'))
         out.append('sha256 ' + printed_hash(printed))
+    except MemberRefused as e:
+        return ['refused: member %s: %s' % (e.alias, e.err.text())]
     except TallyError as e:
         return ['refused: %s' % e.text()]
     except RecursionError:
@@ -113,8 +122,8 @@ def joint(texts, uses, ids=None, options=None):
     if any(h is not None for f, ls, h in heads):
         # L §6.1 Writes into members: "A scenario over a joint model (§6.4) may replace the members' rows too, named
         # with their prefixes": its files are the joint model's own, merged as they are, and run as worlds (§6.4)
-        return shown(run_worlds(heads, ids, loader=lambda files, worlds: load_lines(files, worlds, members=alone,
-                                                                                  joint=info), srcs=srcs))
+        return shown(run_worlds(heads, ids, loader=lambda files, worlds, elsewhere=None: load_lines(
+            files, worlds, members=alone, joint=info, elsewhere=elsewhere), srcs=srcs))
     try:
         m = load_lines(merged, members=alone, joint=info)
     except TallyError as e:
@@ -213,7 +222,13 @@ def run_worlds(heads, ids=None, loader=None, srcs=None):
     worlds = set(scen)
     if loader is None:
         loader = load_texts
-    m0, err = guarded(lambda: loader(base, worlds))
+    # the ids the scenarios' files declare, each with the first scenario by id: the base, whole without them, refuses
+    # a read of one at load (L §6.4, tally 2.1.6, #75)
+    elsewhere = {}
+    for sid in sorted(scen, reverse=True):
+        for name in declared_ids(scen[sid][1] if srcs is None else srcs[scen[sid][0]]):
+            elsewhere[name] = sid
+    m0, err = guarded(lambda: loader(base, worlds, elsewhere=elsewhere))
     if err is not None:
         # a base item or ask that names an item declared only in a scenario file (L §6.4, LOAD-SCENARIO)
         name = None
@@ -279,6 +294,11 @@ def run_worlds(heads, ids=None, loader=None, srcs=None):
     asks = {}
     for a in m0.asks:
         asks[(a.id, '')] = (a, None)
+    # L §6.4, §8.3 (GD-18): an ask whose world isn't loaded is refused alone (LOAD-SCENARIO), in a reality with
+    # scenarios as in a plain one. tally 2.1.6 (issues #73, #62): refcore 2.1.5 left these out here, so they printed
+    # nothing
+    for a in getattr(m0, 'asks_alone', ()):
+        asks[(a.id, '')] = (a, None)
     for sid, r in realities.items():
         if sid is None:
             continue
@@ -308,6 +328,9 @@ def run_worlds(heads, ids=None, loader=None, srcs=None):
             continue
         aid = akey[0]
         a, sf = asks[akey]
+        if getattr(a, 'refused_alone', None) is not None:
+            out.append('%s: refused: %s' % (aid, a.refused_alone.text()))
+            continue
         need = set()
         if sf is not None:
             need.add(sf)

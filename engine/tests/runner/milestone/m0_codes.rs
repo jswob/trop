@@ -17,6 +17,7 @@ mod tests {
     use std::collections::BTreeSet;
     use tally_runner::codes::{FIXTURES, Fixture, M0, M0Fixture, fixtures, m0_fixtures};
     use tally_runner::engine::run_args;
+    use tally_runner::held::is_held;
     use tally_runner::kernel::difference;
 
     /// Runs every fixture of `codes/m0.refcore` that prints `code`, and the base of each of
@@ -35,6 +36,7 @@ mod tests {
             .filter(|v| v.is_base() && families.contains(v.family.as_str()));
         let failed: Vec<String> = twins
             .chain(mine.iter().copied())
+            .filter(|v| !is_held("m0_codes", &v.id))
             .filter_map(|v| {
                 difference(&v.run, &run_args(&v.args, &v.files)).map(|d| format!("{}: {d}", v.id))
             })
@@ -279,6 +281,16 @@ mod tests {
     #[test]
     fn m0_code_load_lifespan() {
         code_as_refcore("LOAD-LIFESPAN");
+    }
+
+    /// `LOAD-LIMIT` (L §7.6, tally 2.1.6, #89): `basic/limit-index-day` (a day range's last
+    /// period past 9999-12-31), `basic/limit-move-day` (a move's day load sees, the end of
+    /// time), `basic/limit-index-keys` and `basic/limit-range-keys` (1 000 001 keys),
+    /// `basic/limit-digits` and `basic/limit-offset-digits` (19 digits), and the seven
+    /// `basic/s1-*` (a unit power past 64, G13's S1); their edges answer in `kernel/g14/edges`.
+    #[test]
+    fn m0_code_load_limit() {
+        code_as_refcore("LOAD-LIMIT");
     }
 
     /// `LOAD-LITERAL`: `basic/literal-amount`.

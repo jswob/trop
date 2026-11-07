@@ -3,7 +3,7 @@ model g7_flows
   on 2026-02-15
   start 2026-01-01
   end 2026-03-31
-  note "T, issue #41, G7: reads at the ask (L §5.14, §5.14.3, §8.2): flows of a place over spans before, across, starting on and after a refusal of every place, and from before the run's start; a hole amount inside a span and a hole day; flows of a move by leg and by keys, over a span with no movement where the kind's leg has a unit and where it doesn't; bal(x, u, d); with uncertain on a place with a reading, uncertain movements before it, after it, on the day read and after it, into and out of the place, and on a place with no reading."
+  note "T, issue #41, G7: reads at the ask (L §5.14, §5.14.3, §8.2): flows of a place over spans before, across, starting on and after a refused when whose legs (shop, world) don't touch it, so konto stands (tally 2.1.6, #51; 2.1.5 refused every place), and from before the run's start; a hole amount inside a span and a hole day; flows of a move by leg and by keys, over a span with no movement where the kind's leg has a unit and where it doesn't; bal(x, u, d); with uncertain on a place with a reading, uncertain movements before it, after it, on the day read and after it, into and out of the place, and on a place with no reading."
 
 source fixture "T's fixture for S's kernel tests (invented values)"
 

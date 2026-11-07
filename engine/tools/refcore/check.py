@@ -28,6 +28,22 @@ DATE_FNS = {'start_of', 'end_of', 'year_of', 'quarter_of', 'month_of', 'day_of',
             'is_business', 'add_business', 'last_business', 'schedule', 'window', 'one_of'}
 
 
+def shift_offset(keys, var):
+    """The offset n of a recurrence read's key k ± n as written (L §8.3 LOAD-GUARD)."""
+    for k in keys:
+        if k.k == 'bin' and k.op in ('+', '-') and k.l.k == 'name' and k.l.id == var and k.r.k == 'num':
+            return k.r.text
+    return 'n'
+
+
+def key_digits(lit, loc):
+    """L §7.6 item 3 (tally 2.1.6, issue #89): an integer that names keys (a key offset, a pos bound) has at most 18
+    digits."""
+    v = abs(int(lit.v))
+    if len(str(v)) > 18:
+        raise LoadError('LOAD-LIMIT', '%s has more than 18 digits' % int(lit.v), loc)
+
+
 def uerr(msg, loc):
     return LoadError('LOAD-UNIT', msg, loc)
 
@@ -141,6 +157,7 @@ class Checker:
         for a in m.asks:
             try:
                 self.check_ask(a)
+                self.check_path_line(a)
             except LoadError as e:
                 # L §6.4, §8, §8.3 (round 19, GD-18): "an ask's LOAD-SCENARIO for a scenario whose file isn't loaded
                 # refuses only that ask"; the base answers its other asks (E §11)
@@ -172,12 +189,17 @@ class Checker:
         self.check_arrival_reads()
         self.check_after_readings()
         self.check_seen_days()
+        self.check_seen_day_limits()
+        self.check_literal_ranges()
         self.check_period_keys()
+        self.check_settlement_units()
+        self.check_schedules()
         self.check_move_lawdates()
         self.finish_random()
         self.check_proj_seen()
         if getattr(m, 'scenario_over', None):
             self.check_srow_reads()
+        self.check_scenario_moves()
         self.check_scenario_reads()
 
     def item_scen(self, item):
@@ -367,8 +389,11 @@ class Checker:
         # rules
         labels = set(d.rules)
         beats = {}
+        d.beat_locs = {}
         for lab, vers in d.rules.items():
             for rv in vers:
+                if rv.node.beats:
+                    d.beat_locs.setdefault(lab, rv.loc)
                 for b in rv.node.beats:
                     if b not in labels:
                         raise LoadError('LOAD-LABEL', 'beats names no rule %s' % b, rv.loc)
@@ -495,7 +520,11 @@ class Checker:
         def visit(x, path):
             st = state.get(x)
             if st == 1:
-                raise LoadError('LOAD-CYCLE', 'a beats cycle in %s: %s' % (d.id, ' -> '.join(path + [x])))
+                # L §8.3: each refusal names its file, line and item; the line is the def's, as the spec's scan
+                # (spec/tools/loadcheck.py) places it. tally 2.1.6 (issue #71, P31 on T's SR-T3): refcore 2.1.5
+                # printed no place, 2.1.6's first the line of the rule whose beats closes the cycle
+                raise LoadError('LOAD-CYCLE', 'a beats cycle in %s: %s' % (d.id, ' -> '.join(path + [x])),
+                                d.decl.loc)
             if st == 2:
                 return
             state[x] = 1
@@ -529,6 +558,19 @@ class Checker:
                 self.assign(b.type, r.value, r.loc, 'a row of band %s' % b.id)
 
     # -- asks -------------------------------------------------------------
+    def check_path_line(self, a):
+        """L §5.16: a `path p` line "holds no query over paths (LOAD-RANDOM)", a property of the line that load sees
+        whole, so it is refused at load whatever the asks (E §3.1 step 11). tally 2.1.6 (issue #83): refcore 2.1.5
+        refused it as the line was evaluated, so a request for another ask answered."""
+        if getattr(a, 'path', None) is None:
+            return
+        from .ask import is_query_line
+        for e in getattr(a, 'exprs', None) or ():
+            for x in walk(e):
+                if is_query_line(x):
+                    # the engine's bytes (load/cone.rs), which print no place, as tally 2.1.5's did
+                    raise LoadError('LOAD-RANDOM', 'a query over paths on a path p line')
+
     def check_ask(self, a):
         sc = Scope(self, ('ask', a.id), None, 'ask')
         worlds = getattr(self.m, 'all_worlds', {self.m.header.id})
@@ -761,7 +803,7 @@ class Checker:
             raise LoadError('LOAD-LITERAL', 'figure %s in an ask; make it a row' % _txt(node), node.loc)
 
     def tc(self, n, sc, expect=None):
-        t = self._tc(n, sc, expect)
+        t = U.at(n.loc, self._tc, n, sc, expect)
         n._t = t
         return t
 
@@ -927,6 +969,12 @@ class Checker:
         return Ty('list', elem=None)
 
     # -- keys ----------------------------------------------------------------------
+    def holds_key(self, name):
+        """Whether name is a key of an index, an option of an axis, or a thing of the world (a key literal)."""
+        m = self.m
+        return (any(name in (x.keys or ()) for x in m.indexes.values())
+                or any(name in a.options for a in m.axes.values()) or name in m.things)
+
     def keylit(self, n, sc, expect):
         """A key literal: resolved by the type its position expects (L §2.5)."""
         text = resolve_text(n)
@@ -1173,6 +1221,12 @@ class Checker:
             return v.ty
         hit = m.lookup(n.id, sc.regime)
         if hit is None:
+            if m.elsewhere.get(n.id) is not None and (expect is None or expect.k not in ('key', 'code')) \
+                    and not self.holds_key(n.id):
+                # L §6.4: a read of an item a scenario's file declares stands only inside that scenario; the base,
+                # whole without its scenarios, refuses it at load (tally 2.1.6, #75), not as a key literal at run
+                raise LoadError('LOAD-SCENARIO', '%s of scenario %s is read outside it' % (n.id, m.elsewhere[n.id]),
+                                n.loc)
             return self.keylit(n, sc, expect)
         kind, info = hit
         if kind in ('input', 'def'):
@@ -1244,7 +1298,8 @@ class Checker:
         self.edge(sc, (kind, info.id), rel)
         if rel.startswith('shift'):
             var, sign = rel.split(':')[1], rel.split(':')[2]
-            self.shift_reads.append((sc.item, (kind, info.id), var, sign, var in sc.guards, n.loc))
+            self.shift_reads.append((sc.item, (kind, info.id), var, sign, var in sc.guards, n.loc,
+                                     shift_offset(keys, var)))
         if kind == 'def':
             pass
         if ty is not None and ty.k in ('num', 'dist') and any(b.startswith('$') for b, e in ty.u):
@@ -1253,6 +1308,17 @@ class Checker:
             return self.dist_read_type(n, kind, info, ty, sc)
         self.note_read(sc, kind, info)
         return ty
+
+    def var_index(self, reader, var):
+        """The index a reader's key variable ranges over (L §8.3 LOAD-CYCLE names it), or the variable."""
+        coll = {'def': self.m.defs, 'fill': getattr(self.m, 'fills', None) or {}}.get(reader[0], {})
+        info = coll.get(reader[1])
+        for b in getattr(info, 'binds', None) or ():
+            if getattr(b, 'var', None) == var:
+                dom = getattr(b, 'dom', None)
+                if isinstance(dom, tuple) and len(dom) > 1:
+                    return dom[1]
+        return var
 
     def relation(self, sc, keys):
         """How a read's keys relate to the reader's (E §3.1 step 5)."""
@@ -1630,6 +1696,9 @@ class Checker:
                     raise uerr('key arithmetic on an axis', loc)
                 # L §5.6: key arithmetic over an open index's keys is refused (§8.4)
                 self.no_order(lt, 'key arithmetic', loc)
+                if n.r.k == 'num' and n.r.isint and not n.r.unit:
+                    # L §7.6 item 3 (tally 2.1.6, issue #89): a key offset has at most 18 digits
+                    key_digits(n.r, loc)
                 n._keyarith = True
                 return lt
             if op == '-' and rk == 'key' and rt.ix == lt.ix:
@@ -1789,6 +1858,8 @@ class Checker:
         lt = self.tc(n.l, sc)
         sc2 = sc
         if n.r.k == 'num' and n.r.isint and not n.r.unit and n.l.k == 'call' and n.l.name == 'pos':
+            # L §7.6 item 3 (tally 2.1.6, issue #89): a pos(k) bound has at most 18 digits
+            key_digits(n.r, n.loc)
             # pos(k) > n, pos(k) == n: "the same integer in the guard that protects the read" (L §7.1, §5.11):
             # n must be an offset of the def's key arithmetic on k
             a0 = n.l.args[0] if n.l.args else None
@@ -2724,8 +2795,12 @@ class Checker:
             return T.num(())
         return T.num(xu)
 
-    def mode_arg(self, mode, sc, n):
+    def mode_arg(self, mode, sc, n, fn=None):
+        """A rounding mode argument of the function fn (n's name where n is a call: round, prorata): an axis of
+        rounding codes, or an expression of type rounding (LOAD-UNIT `<function>: the mode is <type>, not a rounding
+        code` otherwise, L §8.3)."""
         m = self.m
+        fn = fn or n.name
         if mode.k == 'name' and mode.id not in sc.vars and mode.id in m.axes:
             ax = m.axes[mode.id]
             for o in ax.options:
@@ -2738,7 +2813,7 @@ class Checker:
             return
         t = self.tc(mode, sc, expect=T.code('rounding'))
         if not (t.k == 'code' and t.code == 'rounding'):
-            raise uerr('%s: the mode is %s, not a rounding code' % (n.name, T.show(t)), n.loc)
+            raise uerr('%s: the mode is %s, not a rounding code' % (fn, T.show(t)), n.loc)
 
     def c_minor(self, n, sc, expect):
         self.args(n, 1)
@@ -2983,15 +3058,22 @@ class Checker:
             reach_cache[key] = ok
             return ok
         dirs = {}
-        for reader, target, var, sign, guarded, loc in self.shift_reads:
+        locs = {}
+        for reader, target, var, sign, guarded, loc, off in self.shift_reads:
             if target == reader or reaches(target, reader):
                 if not guarded:
-                    raise LoadError('LOAD-GUARD', '%s[%s %s n] is a recurrence read with no condition on %s or pos(%s) '
-                                                  'guarding it' % (target[1], var, sign, var, var), loc)
+                    # L §8.3 `<x>[k ± n] is a recurrence read ...`, n the offset as written. tally 2.1.6 (issue #71):
+                    # refcore 2.1.5 printed the letter n
+                    raise LoadError('LOAD-GUARD', '%s[%s %s %s] is a recurrence read with no condition on %s or pos(%s) '
+                                                  'guarding it' % (target[1], var, sign, off, var, var), loc)
                 dirs.setdefault((reader, var), set()).add(sign)
+                locs.setdefault((reader, var), loc)
         for (reader, var), ss in dirs.items():
             if len(ss) > 1:
-                raise LoadError('LOAD-CYCLE', '%s reads itself both earlier and later on %s' % (reader[1], var))
+                # L §8.3 `<x> reads itself both earlier and later on <index>`, with its place. tally 2.1.6 (issue
+                # #71): refcore 2.1.5 named the key variable, not its index, and printed no place
+                raise LoadError('LOAD-CYCLE', '%s reads itself both earlier and later on %s' % (
+                    reader[1], self.var_index(reader, var)), locs[(reader, var)])
         # law dates (L §4.3)
         self.check_lawdates()
         # forks (L §5.5)
@@ -3068,8 +3150,11 @@ class Checker:
             st = state.get(x)
             if st == 1:
                 cyc = path[path.index(x):] + [x]
+                # L §8.3: each refusal names its file, line and item: the line of x's def (or band), as a beats
+                # cycle's (tally 2.1.6, P31 on T's SR-T3 of #71; refcore printed no place)
+                own = (self.m.defs if x[0] == 'def' else self.m.bands).get(x[1])
                 raise LoadError('LOAD-CYCLE', '%s depends on itself at the same key: %s' % (
-                    x[1], ' -> '.join(c[1] for c in cyc)))
+                    x[1], ' -> '.join(c[1] for c in cyc)), own.decl.loc if own is not None else None)
             if st == 2:
                 return
             state[x] = 1

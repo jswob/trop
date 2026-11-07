@@ -17,7 +17,9 @@ use std::collections::BTreeMap;
 use super::register::{register_lines, warning_lines};
 use super::residuals::residual_lines;
 use crate::base::{Code, Refusal, Req, Run, Warn};
-use crate::eval::{Collected, Ctx, Engine, Entry, Env, Item, Member, Memo, num_stop};
+use crate::eval::{
+    Collected, Ctx, Engine, Entry, Env, Item, Member, Memo, a_day, num_stop, past_days,
+};
 use crate::model::{Reality, Value};
 use crate::syntax::{Ask, AskBody, Bind, Domain, Expr, Stop};
 use crate::time::{Day, PeriodKind};
@@ -421,6 +423,7 @@ fn item_text(m: &Reality, item: &Item) -> Result<String, Stop> {
             "refused: {} {text} is outside {index}",
             Code::Run(Run::Key).as_str()
         )),
+        Item::Value(Value::Day(d)) if d.is_end() => Err(past_days(1)),
         Item::Value(v) => v.typed_text(m).map_err(num_stop),
     }
 }
@@ -468,7 +471,7 @@ fn bound_text(m: &Reality, bind: &Bind, v: &Value) -> Result<String, Stop> {
 /// The day a value names, for an ask's `law` or `as known` (refcore's `date_of`). L §4.3, §4.5.
 pub(crate) fn date_of(v: &Value, what: &str) -> Result<Day, Stop> {
     if let Value::Day(day) = v {
-        return Ok(*day);
+        return a_day(*day);
     }
     if let Value::Period(p) = v
         && p.kind() == PeriodKind::Day

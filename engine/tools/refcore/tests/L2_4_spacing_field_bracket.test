@@ -1,0 +1,22 @@
+# L §2.4 Expressions, §2.3 parse rule 3 (tally 2.1.6, issue #81): a [ after a field touches it, whatever the field's
+# word: mi.or [k1] prints mi.or[k1], as mi.ks [k2] prints mi.ks[k2]. tally 2.1.5's refcore read or as a keyword
+# there and printed mi.or [k1]; the M0 engine too.
+=== options reprint
+=== m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+def x: int = mi.or [k1] + mi.ks [k2]
+=== expect
+--- m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+def x: int = mi.or[k1] + mi.ks[k2]
+sha256 ...

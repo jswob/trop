@@ -9,7 +9,7 @@ Installed as Engine methods (`m_<name>` -> `<name>`), as eval2 is.
 """
 import datetime
 
-from .dates import Period, ONE_DAY
+from .dates import Period, ONE_DAY, END, past_days
 from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, RandomLine
 from .model import visible, row_known_sid, known_first, PlaceThing, _kv, key_text, in_world, _WSET
 from .values import Num, Money, Hole, Thing, Mv, Iv, Rec, Text, NONE, NEVER, CURRENCIES, fmt, vkey
@@ -314,7 +314,9 @@ def m_key_sort(self, k, b):
 
 
 def m_inst_order(self, inst):
-    d = day_lo(inst.day) or datetime.date.max
+    # a hole day sorts after every day, 9999-12-31 included (E §4.1). tally 2.1.6 (issue #48): refcore 2.1.5 wrote it
+    # as date.max, so it tied with a movement dated 9999-12-31
+    d = day_lo(inst.day) or END
     ks = tuple(self.key_sort(k, b) for k, b in zip(inst.keys, inst.move.binds))
     return (d, inst.move.stratum, inst.move.id, ks)
 
@@ -326,6 +328,8 @@ def order_key(o):
     stratum or a key position of 10 sorted before 2."""
     if o is None:
         return (0,)
+    if o is END:
+        return (1, datetime.date.max, 1)
     if isinstance(o, datetime.date):
         return (1, o)
     if isinstance(o, int) and not isinstance(o, bool):
@@ -637,6 +641,14 @@ def m_move_tuples(self, mi, ctx):
                 self.stack.append(cw)
                 try:
                     w = self.ev(b.where, e2, bctx)
+                except TallyError as e:
+                    # tally 2.1.6 (issue #51): a refused `where` makes a refused instance at that tuple, which reaches
+                    # as a hole movement does, its places from its day (L §8.4, §5.14 Keys; E §4.2); it no longer
+                    # refuses the whole plan pass
+                    if isinstance(e, LoadError) or load_now(e):
+                        raise
+                    out.append((e2, keys + [v] + [None] * (len(mi.binds) - i - 1), ('refused', e), cw))
+                    continue
                 finally:
                     self.stack.pop()
                 if w is False:
@@ -706,10 +718,15 @@ def m_insts_of_tuples(self, mi, tuples, tctx, upto=None):
         for env, keys, st, c in tuples:
             if isinstance(st, tuple) and st[0] == 'refused':
                 if None in keys:
+                    # a later key is unknown, so are its day and places: every place from the run's start
                     raise st[1]
-                inst = Inst(mi, keys, env)
+                # tally 2.1.6 (issue #51): its day and its legs' places are read as for any instance (neither depends
+                # on whether it exists), so the refusal reaches its places from its day (L §8.4, E §4.2); a false
+                # `when` leaves no instance, as under a hole `where`
+                inst = self.eval_inst(mi, env, keys, tctx, upto=upto)
+                if inst is None or inst.exists is False:
+                    continue
                 inst.err = st[1]
-                inst.coll = _coll()
             elif isinstance(st, tuple):
                 inst = Inst(mi, keys, env)
                 inst.day = st[1]
@@ -863,6 +880,10 @@ def m_eval_inst(self, mi, env, keys, tctx, exists0=True, at_cut=None, upto=None)
                 return None
             if isinstance(day, Period) and day.kind == 'day':
                 day = day.start
+            if day is END:
+                # L §7.6 item 1 (tally 2.1.6, issue #89): the end of time is no day, so a movement dated there is
+                # refused at its key (LOAD-LIMIT where load sees its day, check3.check_seen_day_limits)
+                raise past_days()
             if isinstance(day, Iv):
                 inst.wlo = day.lo
                 day = self.window_choice(day, tctx)
@@ -920,9 +941,40 @@ def m_eval_inst(self, mi, env, keys, tctx, exists0=True, at_cut=None, upto=None)
             if isinstance(e, LoadError) or load_now(e):
                 raise
             inst.err = e
+            if not mi.decision and not inst.legs:
+                # tally 2.1.6 (issue #51): a refused instance (its `when`, an attribute, its `for`) reaches as a hole
+                # movement does: its legs' places are read, so it refuses those from its day, not every place
+                inst.legs = self.refused_places(mi, env, inst, tctx)
     finally:
         self.stack.pop()
     return inst
+
+
+def m_refused_places(self, mi, env, inst, tctx):
+    """The legs of a refused instance, with their places and no amounts, read at its booking cut (L §8.4: a refusal
+    propagates like a hole; E §4.2 Holes in the walk): none where a place can't be read, so the walk refuses every
+    place (walk.sched_refused)."""
+    d = day_lo(inst.day)
+    c = tctx.but(cut=min(d, tctx.cut)) if isinstance(d, datetime.date) else tctx
+    law = inst.law
+    if law is not None and not isinstance(law, Hole):
+        c = c.but(law=law_days(law)[0])
+    from .evaluate import HoleSignal
+    legs = []
+    try:
+        for ln, _d in mi.legs:
+            frm = self.ev(ln.frm, env, c)
+            to = self.ev(ln.to, env, c)
+            if not (isinstance(frm, Thing) and isinstance(to, Thing)):
+                return []
+            legs.append(Leg(ln.name, frm, to, inst.err, None, inst.day))
+    except HoleSignal:
+        return []
+    except TallyError as e:
+        if isinstance(e, LoadError) or load_now(e):
+            raise
+        return []
+    return legs
 
 
 def vkey_ex(x):
@@ -1361,9 +1413,9 @@ def m_before_scen_from(self, i, day):
     if frm is None or not day < frm:
         return False
     ch = getattr(self.m, 'checker', None)
-    if ch is not None and not ch.edges.get(('moveon', mi.id)) and mi.decl.when is None:
-        # its day reads nothing but its keys, and it has no when: load sees the day (LOAD-SCENARIO where load sees
-        # the day, L §6.4)
+    if ch is not None and not ch.edges.get(('moveon', mi.id)) and ch.existence_seen(mi):
+        # its day reads nothing but its keys, and it has no when and no where reading values: load sees the day and
+        # that the instance exists (LOAD-SCENARIO where load sees the day, L §6.4; P29); else it is left out
         # L §8.3 (round 9): "move <m> of <s> books on <d>, before <from>"
         raise LoadError('LOAD-SCENARIO', 'move %s of %s books on %s, before %s' % (mi.id, sc, day, frm), mi.decl.loc)
     return True
@@ -1409,6 +1461,18 @@ def m_plan_insts(self, ctx):
 
 
 # -- adjustments (E §5 steps 2-5) ----------------------------------------------------------------------------------
+
+def leg_refusal(prev, j, name):
+    """The refusal of leg `name`'s amount in the state measured against (prev) or in this step's (j), j's first; none
+    when both are a number or a hole (E §5 step 3: "a leg's amount on either side")."""
+    for st in (j, prev):
+        if st is None:
+            continue
+        for x in st.legs:
+            if x.name == name and isinstance(x.amount, TallyError):
+                return x.amount
+    return None
+
 
 def m_known_dates(self):
     m = self.m
@@ -1551,8 +1615,11 @@ def m_adjust_move_compute(self, mi, ctx):
                 if prev_bad is not None or prev_hole is not None:
                     # measured against a refused state, or one whose existence is a hole
                     for lg in self.step_legs(i, prev, j):
-                        if prev_bad is not None:
-                            self.adjust_made(i, lg, prev_bad, c, j, vids, out, err=prev_bad)
+                        bad = prev_bad if prev_bad is not None else leg_refusal(prev, j, lg.name)
+                        if bad is not None:
+                            # tally 2.1.6 (issue #52): a leg whose amount is refused on either side has its δ
+                            # refused, against a hole state too (E §5 step 3; L §8.4 a refusal outranks a hole)
+                            self.adjust_made(i, lg, bad, c, j, vids, out, err=bad)
                         else:
                             now = [x.amount for x in j.legs if x.name == lg.name and isinstance(x.amount, Hole)]
                             if isinstance(j.exists, Hole):
@@ -1577,7 +1644,13 @@ def m_adjust_move_compute(self, mi, ctx):
                     # tally 2.1.2 (issue #34): a `when` that is a hole at this step makes each leg's adjustment a hole,
                     # as a hole amount does, and the next step measures against it; tally 2.1.1 skipped the step
                     for lg in self.step_legs(i, prev, j):
-                        self.adjust_made(i, lg, j.exists, c, j, vids, out)
+                        bad = leg_refusal(prev if prev_ex else None, j, lg.name)
+                        if bad is not None:
+                            # tally 2.1.6 (issue #52): a leg whose amount is refused at this step, or was before it,
+                            # has its δ refused, whatever the `when` (E §5 step 3; L §8.4)
+                            self.adjust_made(i, lg, bad, c, j, vids, out, err=bad)
+                        else:
+                            self.adjust_made(i, lg, j.exists, c, j, vids, out)
                     prev_hole = j.exists
                     prev, prev_ex = j, False
                     continue

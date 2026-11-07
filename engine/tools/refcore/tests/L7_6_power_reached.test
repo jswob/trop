@@ -1,0 +1,16 @@
+# L §7.6 item 4 (tally 2.1.6, issue #89): a power reached by * counts too: num PLN^64*PLN is PLN^65, LOAD-LIMIT.
+# tally 2.1.5's refcore loaded it.
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+unit PLN: currency minor 0.01
+input y: num PLN^64*PLN
+
+ask q: 1
+=== expect
+refused: LOAD-LIMIT unit PLN has a power past 64 (m.tally:9)

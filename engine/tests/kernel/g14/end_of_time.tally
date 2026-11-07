@@ -1,0 +1,63 @@
+model g14_end_of_time
+  tally 2
+  on 9999-12-31
+  start 9999-01-01
+  end 9999-12-31
+  note "T, tally 2.1.6 (#89, #48, the coordinator's pick P35, the review of 0bbf95b, findings 1 and 2): the end of time, 10000-01-01, as a value: a span that ends there, a day or month index's key there, each refused RUN-LIMIT, beside the twin a day before, answered; and the other uses of end_of(9999) (L §7.6, §4.2 end_of)."
+
+source plan "plan"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 9999-01-01..
+
+input k: int
+
+input cal: calendar
+
+def two[d in days]: int = k
+
+def mm[m in months]: int = k
+
+version v
+  cite plan
+  governs always
+  known 9999-01-01
+  k = 2
+  cal = calendar(weekends [sat, sun])
+  opening[konto] = 250.00 PLN at 9999-01-01 start
+
+ask t4: two[end_of(9999-12-31)]
+
+ask t4e: two[end_of(9999-12-31) - 1 day], two[9999-12-31]
+
+ask t5: mm[end_of(9999-12-31)]
+
+ask t5e: mm[end_of(9999-12-31) - 1 day]
+
+ask t6: days_between(9999-01-01, end_of(9999))
+
+ask t6e: days_between(9999-01-01, end_of(9999) - 1 day)
+
+ask t8: year_of(end_of(9999-12))
+
+ask t9: add_days(end_of(9999), -1)
+
+
+ask t11: flows(konto, 9999-12-31..end_of(9999))
+
+ask t11e: flows(konto, 9999-12-31..end_of(9999) - 1 day)
+
+ask t12: flows(konto, end_of(9999-12))
+
+ask t13: sum(1 for d in 9999-12-30 .. end_of(9999) step 1 day)
+
+ask t14: is_business(end_of(9999), cal)
+
+ask t15: end_of(9999-12-31) > 9999-12-31
+
+ask t16: bal(konto, end_of(9999) - 1 day)
+
+ask f_day: flows(konto, end_of(9999))
+
+ask f_open: flows(konto, end_of(9999)..)

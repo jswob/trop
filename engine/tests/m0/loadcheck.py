@@ -83,10 +83,21 @@ def scanned(mod, group, cwd, files):
     return [(code, os.path.relpath(loc, path) if loc.startswith(path) else loc) for code, loc, _, _ in r.refusals]
 
 
+# The forms whose line the scan and refcore give differently, compared by code and file until ruled. None now: T's
+# STOP-REPORT SR-T3 (a beats cycle at the closing rule's line in refcore, at the def's in the scan) was ruled P31,
+# tally 2.1.6 (#71): a load cycle prints at its def's line, as the scan does, so its line is compared again.
+FILE_ONLY = []
+
+
 def agree(scan_codes, refusals, out):
-    """Why the scan and refcore disagree on a reality, or None. Where refcore's line names no place (LOAD-CYCLE's beats
-    cycle prints none, though L §8.3 says each refusal names its file and line: issue #71's family), the code alone."""
+    """Why the scan and refcore disagree on a reality, or None. Where refcore's line names no place, the code alone;
+    for a form of FILE_ONLY, the code and the file."""
     m = re.match(r'refused: (\S+) .*?(?:\(([^()]*:\d+)\))?$', out.split('\n', 1)[0])
+    if refusals and m and m.group(2) and any(m.group(1) == c and m.group(0).startswith('refused: %s %s' % (c, f))
+                                              for c, f in FILE_ONLY):
+        files = [(c, loc.rsplit(':', 1)[0]) for c, loc in refusals]
+        why = 'the scan refuses %s; refcore prints %r' % (refusals[0], out[:200])
+        return None if (m.group(1), m.group(2).rsplit(':', 1)[0]) in files else why
     if refusals:
         found = [(c, loc) for c, loc in refusals] if not m or m.group(2) else [(c, None) for c, _ in refusals]
         if not m or (m.group(1), m.group(2)) not in found:

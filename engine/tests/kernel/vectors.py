@@ -15,6 +15,13 @@ output and exit code are written to vectors.refcore, six netstrings per vector:
 The runner embeds vectors.refcore (engine/tests/runner/src/kernel.rs, include_bytes!) and milestone/s_kernel.rs
 holds the engine's whole output to it, byte for byte. Every expected byte is refcore's; nothing is written by hand.
 
+A generated text (tally 2.1.6, the coordinator's pick P36): a fixture's file named `<name>.gen` is a source whose
+`@keys <prefix> <first> <last>@` stands for `<prefix><first>, ..., <prefix><last>` (`expand`), so a text of a million
+keys stays a few hundred bytes in git. refcore runs the expanded text, written under out/gen/ (git ignores out/,
+check-frozen skips it) at the same path relative to the run's cwd, so it prints what it would print for the file, and
+the run sees `<name>`; the file table stores the source under `<name>`, and the runner expands it the same way before
+the engine runs (runner/src/kernel.rs, `expand`, whose test pins each expansion's digest).
+
     python3 -I -B engine/tests/kernel/vectors.py              -> writes vectors.refcore
     python3 -I -B engine/tests/kernel/vectors.py --check      -> exit 1 if vectors.refcore isn't what refcore prints
     python3 -I -B engine/tests/kernel/vectors.py --engine     -> the release binary's whole output against refcore's,
@@ -25,6 +32,7 @@ holds the engine's whole output to it, byte for byte. Every expected byte is ref
 import csv
 import fnmatch
 import os
+import re
 import sys
 from concurrent.futures import ThreadPoolExecutor
 
@@ -36,6 +44,35 @@ LIST = os.path.join(HERE, 'vectors.tsv')
 STORED = os.path.join(HERE, 'vectors.refcore')
 COLUMNS = ['id', 'group', 'check', 'cwd', 'files', 'asks', 'options']
 JOBS = 3
+GEN = 'engine/tests/out/gen/'  # the expanded texts of the .gen sources: run output, never tracked
+KEYS = re.compile(r'@keys ([a-z][a-z0-9_]*) ([0-9]+) ([0-9]+)@')
+
+
+def expand(text):
+    """A generated text's source expanded: each `@keys <prefix> <first> <last>@` becomes its keys, comma-separated."""
+    return KEYS.sub(lambda m: ', '.join('%s%d' % (m.group(1), i) for i in range(int(m.group(2)), int(m.group(3)) + 1)),
+                    text)
+
+
+def generated(c):
+    """Check `c` with its .gen sources expanded under GEN, its cwd and files moved there (the same relative paths), and
+    `sources`, each run path's source; `c` itself when it names no .gen file."""
+    files = c['files'].split()
+    if not any(f.endswith('.gen') for f in files):
+        return c
+    moved, sources = [], {}
+    for f in files:
+        run = f[:-len('.gen')] if f.endswith('.gen') else f
+        out = GEN + os.path.relpath(R.ROOT + run, R.ROOT + 'engine/tests/')
+        with open(R.ROOT + f, encoding='utf-8', newline='') as fh:
+            src = fh.read()
+        os.makedirs(os.path.dirname(R.ROOT + out), exist_ok=True)
+        with open(R.ROOT + out, 'w', encoding='utf-8', newline='') as fh:
+            fh.write(expand(src))
+        moved.append(out)
+        sources[out] = src
+    cwd = GEN + os.path.relpath(R.ROOT + c['cwd'], R.ROOT + 'engine/tests/') + '/'
+    return dict(c, cwd=cwd, files=' '.join(moved), sources=sources)
 
 
 def ns(b):
@@ -73,8 +110,8 @@ def checks_of(vs):
         else:
             if not v['cwd'] or not v['files']:
                 sys.exit('vectors.tsv: %s has no cwd or no files' % v['id'])
-            c = {'id': v['id'], 'layer': 'unit', 'cwd': v['cwd'], 'files': v['files'], 'asks': v['asks'],
-                 'options': v['options'], 'baseline': '', 'block': '', 'note': '', 'baseline_s': ''}
+            c = generated({'id': v['id'], 'layer': 'unit', 'cwd': v['cwd'], 'files': v['files'], 'asks': v['asks'],
+                           'options': v['options'], 'baseline': '', 'block': '', 'note': '', 'baseline_s': ''})
         out.append((v, c))
     return out
 
@@ -83,6 +120,9 @@ def table(c):
     """The file table of check `c`: each file as its command line names it (relative to its cwd), then its text."""
     parts = []
     for f in c['files'].split():
+        if f in c.get('sources', {}):
+            parts.append(ns(R.here(c, f)) + ns(c['sources'][f]))
+            continue
         with open(R.ROOT + f, encoding='utf-8', newline='') as fh:
             parts.append(ns(R.here(c, f)) + ns(fh.read()))
     return b''.join(parts)

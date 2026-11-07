@@ -1,0 +1,28 @@
+# L §7.6 item 3 (tally 2.1.6, issue #89): the twin of L7_6_offset_digits with an 18-digit offset and guard loads,
+# as in tally 2.1.5; the guard never holds, so x[3] is the base rule's 1.
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+unit PLN: currency minor 0.01
+index ks = 1..3
+input step: int
+
+def x[k in ks]: int at reader
+  rule base = step
+  rule a beats base = x[k - 999999999999999999] + step when pos(k) > 999999999999999999
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  step = 1 "plan"
+
+ask q: x[3] law 2026-06-30
+=== expect
+q: 1
+  law date 2026-06-30, cut 2026-12-31

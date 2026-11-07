@@ -8,6 +8,8 @@
 //! An added day that is a window, a `one_of` or a hole needs the evaluator's windows and
 //! holes; the evaluator decides those before it asks this calendar (milestone S, G5).
 
+use std::collections::BTreeSet;
+
 use super::day::Day;
 use super::period::Period;
 
@@ -40,6 +42,16 @@ fn weekday_word(n: u8) -> &'static str {
     }
 }
 
+/// The first year a calendar's yearly days are off: the year its rule compares, and the
+/// figure as written, which it prints. L §4.2 `calendar`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FirstYear {
+    /// The year compared: any year past 9999 is 10000, after every day there is (L §2.1).
+    pub year: u16,
+    /// The figure as written.
+    pub text: String,
+}
+
 /// A business calendar whose days off are all fixed.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Calendar {
@@ -48,7 +60,7 @@ pub struct Calendar {
     /// The days off every year, as (month, day).
     yearly: Vec<(u8, u8)>,
     /// The first year the yearly days are off, or every year.
-    yearly_from: Option<u16>,
+    yearly_from: Option<FirstYear>,
     /// The added days off.
     added: Vec<Day>,
 }
@@ -60,7 +72,7 @@ impl Calendar {
     pub fn new(
         weekends: Vec<u8>,
         yearly: Vec<(u8, u8)>,
-        yearly_from: Option<u16>,
+        yearly_from: Option<FirstYear>,
         added: Vec<Day>,
     ) -> Calendar {
         Calendar {
@@ -79,8 +91,26 @@ impl Calendar {
             return false;
         }
         let yearly = self.yearly.contains(&(day.month(), day.day()))
-            && self.yearly_from.is_none_or(|from| day.year() >= from);
+            && self
+                .yearly_from
+                .as_ref()
+                .is_none_or(|from| day.year() >= from.year);
         !yearly && !self.added.contains(&day)
+    }
+
+    /// Whether a search for a business day can find one, as of `day`: not when the weekends
+    /// name all seven days, or the yearly days all 366 month-days from their first year on
+    /// (refcore's `business`, its `seek`). L §4.2, §7.6 item 5.
+    #[must_use]
+    pub fn has_business_day(&self, day: Day) -> bool {
+        let weekends: BTreeSet<u8> = self.weekends.iter().copied().collect();
+        let yearly: BTreeSet<(u8, u8)> = self.yearly.iter().copied().collect();
+        let all_yearly = yearly.len() == 366
+            && self
+                .yearly_from
+                .as_ref()
+                .is_none_or(|from| day.year() >= from.year);
+        weekends.len() < 7 && !all_yearly
     }
 
     /// The `n`-th business day after `day` (before it for a negative `n`), never `day`
@@ -118,7 +148,8 @@ impl Calendar {
                 .collect();
             let from = self
                 .yearly_from
-                .map_or_else(String::new, |from| format!(" from {from}"));
+                .as_ref()
+                .map_or_else(String::new, |from| format!(" from {}", from.text));
             parts.push(format!("yearly [{}]{from}", days.join(", ")));
         }
         format!("calendar({})", parts.join(", "))
@@ -146,7 +177,7 @@ impl Calendar {
 
 #[cfg(test)]
 mod tests {
-    use super::{Calendar, weekday_number};
+    use super::{Calendar, FirstYear, weekday_number};
     use crate::time::{Day, Period};
 
     fn day(y: u16, m: u8, d: u8) -> Day {
@@ -172,7 +203,11 @@ mod tests {
         assert!(!cal.is_business(day(2026, 1, 1)), "added");
         assert!(cal.is_business(day(2026, 1, 2)), "a Friday");
         assert!(!cal.is_business(day(2026, 1, 3)), "a Saturday");
-        let yearly = Calendar::new(Vec::new(), vec![(12, 25)], Some(2027), Vec::new());
+        let from = FirstYear {
+            year: 2027,
+            text: "2027".to_owned(),
+        };
+        let yearly = Calendar::new(Vec::new(), vec![(12, 25)], Some(from), Vec::new());
         assert!(
             yearly.is_business(day(2026, 12, 25)),
             "before its first year"

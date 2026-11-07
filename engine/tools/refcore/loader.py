@@ -9,8 +9,8 @@ from fractions import Fraction
 from . import units as U
 from . import ty as T
 from .dates import (Period, day_period, month_period, year_period, quarter_period, add_days, add_months, ONE_DAY,
-                    month_add)
-from .errors import LoadError, Unspecified, NotYet
+                    month_add, next_day, end_days, end_months, END)
+from .errors import LoadError, Unspecified, NotYet, Refusal
 from .lexer import split_lines
 from .model import (Reality, Span, ALWAYS, lit_period, lspan_to_span, visible, known_first, VersionInfo, KindInfo,
                     Entry, ThingInfo, IndexInfo, AxisInfo, BindInfo, Row, InputInfo, RuleVer, DefInfo, Table,
@@ -61,14 +61,15 @@ def scenario_header(fname, src):
     return (toks[1].s, toks[3].s, lines[0].loc)
 
 
-def load_texts(texts, worlds=None, members=None):
+def load_texts(texts, worlds=None, members=None, elsewhere=None):
     """texts: [(file name, source)] -> Reality.  worlds: every scenario id of the reality's files, for the asks
-    that name one this reality doesn't load (L §6.4)."""
+    that name one this reality doesn't load (L §6.4); elsewhere: for the base of a reality with scenarios, the ids
+    their files declare, each with the first scenario by id that declares it (cli.run_worlds)."""
     split = {}
     for i in by_path(texts):
         fname, src = texts[i]
         split[i] = (fname, split_lines(src, fname))
-    return load_lines([split[i] for i in range(len(texts))], worlds, members)
+    return load_lines([split[i] for i in range(len(texts))], worlds, members, elsewhere=elsewhere)
 
 
 def by_path(files):
@@ -79,7 +80,7 @@ def by_path(files):
     return sorted(range(len(files)), key=lambda i: files[i][0])
 
 
-def load_lines(all_lines, worlds=None, members=None, joint=None):
+def load_lines(all_lines, worlds=None, members=None, joint=None, elsewhere=None):
     """[(file name, lines)] -> Reality; joint: a joint model's JointInfo (joint.py), its members' lines merged in."""
     units = prescan_units([ls for _, ls in all_lines])
     parsed = {}
@@ -90,6 +91,7 @@ def load_lines(all_lines, worlds=None, members=None, joint=None):
         parsed[i] = (fname, parse_file(lines, units))
     trees = [parsed[i] for i in range(len(all_lines))]
     ld = Loader(trees, worlds, members)
+    ld.m.elsewhere = dict(elsewhere or {})
     ld.joint = joint
     return ld.build()
 
@@ -118,6 +120,16 @@ def _parts_overlap(a, b):
         return (q[1], None) if q[0] == 'owner' else (None, q[1]) if q[0] == 'batch' else (q[1], q[2])
     pa, pb = pat(a), pat(b)
     return (pa[0] is None or pb[0] is None or pa[0] == pb[0]) and (pa[1] is None or pb[1] is None or pa[1] == pb[1])
+
+
+def no_version(m, item, v, msg, loc):
+    """A rule's or a takes' v that names no version of the world: LOAD-SCENARIO `<item> of the base names <v> of
+    scenario <s>` when a scenario's file declares it, since the base is whole without its scenarios (L §6.4, a rule's v
+    included; tally 2.1.6, #75), else LOAD-NAME with msg (L §5.11 step 2)."""
+    sid = m.elsewhere.get(v)
+    if sid is not None:
+        return LoadError('LOAD-SCENARIO', '%s of the base names %s of scenario %s' % (item, v, sid), loc)
+    return LoadError('LOAD-NAME', msg, loc)
 
 
 class Loader:
@@ -548,7 +560,7 @@ class Loader:
         d = S
         while d <= E:
             days.keys.append(d)
-            d = d + ONE_DAY
+            d = next_day(d)
         months = IndexInfo('months', 'builtin')
         months.pk = 'month'
         y, mo = S.year, S.month
@@ -581,7 +593,15 @@ class Loader:
                     ix.texts[t] = kv
                     ix.keys.append(kv)
             elif s.form == 'range':
-                self.build_range(ix, s)
+                try:
+                    self.build_range(ix, s)
+                except Refusal as e:
+                    if e.code != 'RUN-LIMIT':
+                        raise
+                    # L §7.6 item 1 (tally 2.1.6, issue #89): load builds a range index's keys (§8.3 item 5)
+                    raise LoadError('LOAD-LIMIT', 'index %s: %s' % (s.id, e.msg), s.loc)
+            if len(ix.keys) > KEY_LIMIT:
+                raise LoadError('LOAD-LIMIT', 'index %s holds more than 1 000 000 keys' % s.id, s.loc)
             ix.finish()
             m.indexes[s.id] = ix
             m.names[s.id] = ('index', ix)
@@ -608,6 +628,10 @@ class Loader:
     def build_range(self, ix, s):
         lo, hi, pk = s.lo, s.hi, s.pk
         loc = s.loc
+        if s.by is not None and s.by < 1:
+            # L §4.1 `by n`, n a whole number from 1; L §8.4 "a step or a count that isn't positive" is refused,
+            # LOAD-DOMAIN where load sees it. tally 2.1.6 (issue #87): refcore 2.1.5 read `by 0` as `by 1`
+            raise LoadError('LOAD-DOMAIN', 'index %s: by %d is not a positive step' % (s.id, s.by), loc)
 
         def is4(n):
             return n.k == 'num' and n.isint and n.unit is None and len(n.text.lstrip('-')) == 4
@@ -624,13 +648,17 @@ class Loader:
             if s.frm is not None:
                 raise LoadError('LOAD-PARSE', 'cannot parse: from on an integer range', loc)
             step = s.by or 1
+            for x in (a, b, step):
+                digits_limit(x, loc)
             if a > b:
                 raise LoadError('LOAD-KEY', 'range %d..%d is out of order' % (a, b), loc)
             ix.isint = True
+            count_limit(ix, (b - a) // step + 1, loc)
             ix.keys = list(range(a, b + 1, step))
             return
         ix.pk = pk
         n = s.by or 1
+        digits_limit(n, loc)
         if pk == 'year':
             if not (is4(lo) and is4(hi)):
                 raise LoadError('LOAD-PARSE', 'cannot parse: a year range', loc)
@@ -651,7 +679,7 @@ class Loader:
             yy = a
             while yy <= b:
                 st = datetime.date(yy, mm, dd)
-                en = datetime.date(yy + n, mm, dd)
+                en = end_months(st, 12 * n)
                 ix.keys.append(Period('year', st, en, 'month', 12 * n))
                 yy += n
         elif pk == 'month':
@@ -665,9 +693,10 @@ class Loader:
             y, mo = lo.v
             if lo.v > hi.v:
                 raise LoadError('LOAD-KEY', 'range out of order', loc)
+            count_limit(ix, ((hi.v[0] - y) * 12 + hi.v[1] - mo) // n + 1, loc)
             while (y, mo) <= hi.v:
                 st = datetime.date(y, mo, dd)
-                ix.keys.append(Period('month', st, add_months(st, n), 'month', n))
+                ix.keys.append(Period('month', st, end_months(st, n), 'month', n))
                 y, mo = month_add(y, mo, n)
         elif pk == 'day':
             if lo.k != 'date' or hi.k != 'date':
@@ -676,12 +705,15 @@ class Loader:
                 raise LoadError('LOAD-PARSE', 'cannot parse: from on a day range', loc)
             if lo.v > hi.v:
                 raise LoadError('LOAD-KEY', 'range out of order', loc)
+            count_limit(ix, (hi.v - lo.v).days // n + 1, loc)
             d = lo.v
-            while d <= hi.v:
+            while True:
                 if n == 1:
                     ix.keys.append(d)
                 else:
-                    ix.keys.append(Period('day', d, add_days(d, n), 'day', n))
+                    ix.keys.append(Period('day', d, end_days(d, n), 'day', n))
+                if (hi.v - d).days < n:
+                    break
                 d = add_days(d, n)
 
     def build_axes(self):
@@ -722,7 +754,9 @@ class Loader:
         for vid, v in m.versions.items():
             for ref, ls in v.node.moves:
                 if ref.k != 'name':
-                    raise LoadError('LOAD-MOVES', 'moves %s: unknown, or not known before this version' % ref, v.loc)
+                    # the reference as written (tally 2.1.6, issue #88: refcore 2.1.5 printed its parse node)
+                    raise LoadError('LOAD-MOVES', 'moves %s: unknown, or not known before this version' % _txt_node(ref),
+                                    v.loc)
                 tgt = m.versions.get(ref.id)
                 if tgt is None or not (known_first(tgt.known) < known_first(v.known)):
                     raise LoadError('LOAD-MOVES', 'moves %s: unknown, or not known before this version' % ref.id, v.loc)
@@ -820,8 +854,8 @@ class Loader:
                         if v is None:
                             # L §5.11 step 2 (round 19, GD-24): "a v that names no version of the reality is refused,
                             # LOAD-NAME"; L §8.3 `rule <d>.<r>: v <x> names no version`
-                            raise LoadError('LOAD-NAME', 'rule %s.%s: v %s names no version' % (qid, r.label, r.v),
-                                            r.loc)
+                            raise no_version(m, qid, r.v, 'rule %s.%s: v %s names no version' % (qid, r.label, r.v),
+                                             r.loc)
                     span = lspan_to_span(r.governs, r.loc) if r.governs is not None else None
                     d.rules[r.label] = [RuleVer(r.label, r, None, v, span, False, r.loc)]
                     d.labels.append(r.label)
@@ -988,7 +1022,7 @@ class Loader:
                 terms.append((b, e))
             else:
                 raise LoadError('LOAD-NAME', 'unknown id %s (a unit)' % b, loc)
-        return U.from_syntax(terms)
+        return U.at(loc, U.from_syntax, terms)
 
     def is_unit_key(self, b):
         return b in self.m.unit_kind_keys
@@ -1341,7 +1375,7 @@ class Loader:
         vv = None
         if r.v is not None and r.v != v.id and r.v not in self.m.versions:
             # L §5.11 step 2 (round 19, C4-4): a v naming no version at all is LOAD-NAME
-            raise LoadError('LOAD-NAME', 'rule %s.%s: v %s names no version' % (it.d, it.label, r.v), it.loc)
+            raise no_version(self.m, it.d, r.v, 'rule %s.%s: v %s names no version' % (it.d, it.label, r.v), it.loc)
         if r.v is not None and r.v != v.id:
             # L §5.11 step 2 (round 19, C4-4): "a v on it may name only that version and adds nothing (LOAD-VERSION
             # where it names another version)"
@@ -1522,7 +1556,7 @@ class Loader:
         m = self.m
         if node.k != 'num' or node.unit is None:
             raise LoadError('LOAD-LEG', 'the amount of leg %s of %s states its unit' % (d.name, o.sid), o.loc)
-        uu, f = U.from_syntax(node.unit)
+        uu, f = U.at(o.loc, U.from_syntax, node.unit)
         if len(uu) != 1 or uu[0][1] != 1:
             raise LoadError('LOAD-LEG', 'leg %s of %s: %s is not a unit of a leg' % (d.name, o.sid, node.text), o.loc)
         u = uu[0][0]
@@ -1539,7 +1573,10 @@ class Loader:
             if pu not in ('any', u):
                 ok = False
         if not ok:
-            raise LoadError('LOAD-LEG', 'leg %s of %s is of the wrong unit (%s)' % (d.name, o.sid, node.text), o.loc)
+            # L §8.3 LOAD-LEG `leg <l> of observation <r> is in <u>, not its kind's unit`. tally 2.1.6 (issue #71):
+            # refcore 2.1.5 printed `is of the wrong unit (<amount>)`, the amount without its unit
+            raise LoadError('LOAD-LEG', "leg %s of observation %s is in %s, not its kind's unit" % (d.name, o.sid, u),
+                            o.loc)
         q = node.v * f
         if u in CURRENCIES:
             if (q / CURRENCIES[u]).denominator != 1:
@@ -1944,8 +1981,10 @@ class Loader:
             if own_span is not None:
                 raise LoadError('LOAD-PARSE', 'cannot parse: a reading states an instant, not governs', it.loc)
         elif reading or balance:
-            # L §4.6 Readings: "a row of a reading without an instant ... is refused, LOAD-INSTANT"
-            raise LoadError('LOAD-INSTANT', 'row %s of a reading has no instant' % inf.id, it.loc)
+            # L §4.6 Readings: "a row of a reading without an instant ... is refused, LOAD-INSTANT"; L §8.3 names the
+            # row, its keys included. tally 2.1.6 (issue #71): refcore 2.1.5 printed the input alone
+            raise LoadError('LOAD-INSTANT', 'row %s%s of a reading has no instant' % (inf.id, pattern_text(pattern)),
+                            it.loc)
         row = Row(inf, tuple(pattern), nstated, it.value, it.assumed, v, own_span, own_known, instant, it.locator,
                   it.given, it.replace, it.loc, it)
         if kind == 'input':
@@ -1965,6 +2004,10 @@ class Loader:
         for inf in list(m.inputs.values()) + list(m.defs.values()):
             rows = inf.rows if isinstance(inf, InputInfo) else inf.givens
             if not rows:
+                if isinstance(inf, InputInfo) and inf.builtin and inf.id in ('opening', 'stated'):
+                    # L §5.19: stated parts stand beside a total (LOAD-PARTS otherwise), so parts of a reading with no
+                    # total row at all are refused too. tally 2.1.6 (issue #75): refcore 2.1.5 skipped them here
+                    self.check_part_rows(inf)
                 continue
             tyv = inf.type
             for r in rows:
@@ -2025,9 +2068,26 @@ class Loader:
                     types = dict(m.kind_attrs(o.kind))
                 kid = types[a].ix
                 name = v[1].split('[', 1)[0]
-                tk = m.moves[name].kind if name in m.moves else (obs[v[1]].kind if v[1] in obs else None)
+                tk = self.move_kind(m.moves[name]) if name in m.moves else (obs[v[1]].kind if v[1] in obs else None)
                 if tk is None or tk not in m.kinds[kid].subtree(m):
                     raise LoadError('LOAD-KEY', '%s is not a key of %s' % (v[1], kid), o.loc)
+
+    def move_kind(self, mi):
+        """A move's event kind as its section declares it (`move x: K`): the checker sets MoveInfo.kind only after
+        load's row checks (check3), so check_mv_refs reads the declaration. tally 2.1.6 (issue #86): refcore 2.1.5 read
+        the unset kind, so every move instance an attribute named was refused LOAD-KEY."""
+        if mi.kind is not None:
+            return mi.kind
+        m = self.m
+        s = mi.decl.kind
+        if not s:
+            return None
+        if '.' in s:
+            q, x = s.split('.', 1)
+            hit = m.qualified(q, x)
+        else:
+            hit = m.lookup(s, mi.regime)
+        return hit[1].id if hit is not None and hit[0] == 'kind' else None
 
     def check_part_rows(self, inf):
         """A reading's stated parts (L §5.19, tally 2.1): "They stand beside the reading's total, in the same version
@@ -2127,7 +2187,7 @@ class Loader:
             if node.unit is None:
                 raise LoadError('LOAD-UNIT', '%s[%s] holds any unit; its row states the unit' % (inf.id, th.name),
                                 r.loc)
-            uu, f = U.from_syntax(node.unit)
+            uu, f = U.at(r.loc, U.from_syntax, node.unit)
             if len(uu) != 1 or uu[0][1] != 1:
                 raise LoadError('LOAD-UNIT', '%s is not a unit of a place' % node.text, r.loc)
             pu = uu[0][0]
@@ -2323,13 +2383,19 @@ class Loader:
                         if not all(r.replace for r in t.rows):
                             raise LoadError('LOAD-BAND', 'band %s in %s mixes replace rows and plain rows' % (
                                 bid, t.version.id), t.loc)
-                        if not earlier:
-                            raise LoadError('LOAD-REPLACE', 'replace %s: no earlier row to replace' % bid, t.loc)
                         try:
                             self.check_table(b, t, whole=True)
                             t.whole_ok = True
                         except LoadError:
                             t.whole_ok = False
+                        if not earlier:
+                            sp = t.version.span_at(m.on)
+                            if sp is None:
+                                raise LoadError('LOAD-REPLACE', 'replace %s: no earlier row to replace' % bid, t.loc)
+                            # L §8.3 LOAD-REPLACE's band form: a band's replace rows that find no table in force on
+                            # their version's span. tally 2.1.6 (issue #71): refcore 2.1.5 printed the row form here
+                            raise LoadError('LOAD-REPLACE', 'replace rows of %s in %s patch no table on %s' % (
+                                bid, t.version.id, sp.text()), t.loc)
                         matches = all(any(any(r.same_interval(o) for o in e.rows) for e in earlier) for r in t.rows)
                         if not matches and not t.whole_ok:
                             raise LoadError('LOAD-BAND', 'band %s in %s: the replace rows neither match the earlier '
@@ -2404,9 +2470,25 @@ def band_defect(rows, isint):
             return (iv2[0] if iv2[0] is not None else '-inf', r2)
     return None
 
+KEY_LIMIT = 1000000
+
+
+def digits_limit(x, loc):
+    """L §7.6 item 3 (tally 2.1.6, issue #89): an integer that names keys has at most 18 digits."""
+    if len(str(abs(x))) > 18:
+        raise LoadError('LOAD-LIMIT', '%d has more than 18 digits' % x, loc)
+
+
+def count_limit(ix, n, loc):
+    """L §7.6 item 2 (tally 2.1.6, issue #89): a declared index holds at most 1 000 000 keys; counted before they are
+    built."""
+    if n > KEY_LIMIT:
+        raise LoadError('LOAD-LIMIT', 'index %s holds more than 1 000 000 keys' % ix.id, loc)
+
+
 def _uncovered(span, others):
     """The first stretch of span that no span of others covers, as a Span, or None."""
-    lo_d, hi_d = datetime.date.min, datetime.date.max
+    lo_d, hi_d = datetime.date.min, END
     lo = lo_d if span.always or span.start is None else span.start
     hi = hi_d if span.always or span.end is None else span.end
     ivs = sorted((lo_d if o.always or o.start is None else o.start, hi_d if o.always or o.end is None else o.end)
@@ -2600,8 +2682,8 @@ def resolve_key_literal(m, kn, dom, loc):
             return ix.texts[t]
         if ix.form == 'open':
             # its keys are those its inputs' rows bring (L §4.1), all gathered before any read is resolved
-            raise LoadError('LOAD-KEY', '%s is not a key of %s: no row brings it' % (t or kn.k, ix.id), loc)
-        raise LoadError('LOAD-KEY', '%s is not a key of %s' % (t or kn.k, ix.id), loc)
+            raise LoadError('LOAD-KEY', '%s is not a key of %s: no row brings it' % (t or _txt_node(kn), ix.id), loc)
+        raise LoadError('LOAD-KEY', '%s is not a key of %s' % (t or _txt_node(kn), ix.id), loc)
     if kind == 'kind':
         if kn.k == 'placekey' or (kn.k == 'index' and kn.obj.k == 'name'):
             name = kn.id if kn.k == 'placekey' else kn.obj.id
@@ -2622,12 +2704,12 @@ def resolve_key_literal(m, kn, dom, loc):
                 t = hit[1].things[()].name
         if t is not None and m.thing_in(t, dom[1]):
             return Thing(t)
-        raise LoadError('LOAD-KEY', '%s is not a key of %s' % (t or kn.k, dom[1]), loc)
+        raise LoadError('LOAD-KEY', '%s is not a key of %s' % (t or _txt_node(kn), dom[1]), loc)
     if kind == 'axis':
         t = resolve_text(kn) if kn.k in ('name', 'key', 'num') else None
         if t is not None and t in m.axes[dom[1]].options:
             return Key(dom[1], t)
-        raise LoadError('LOAD-KEY', '%s is not a key of %s' % (t or kn.k, dom[1]), loc)
+        raise LoadError('LOAD-KEY', '%s is not a key of %s' % (t or _txt_node(kn), dom[1]), loc)
     if kind == 'list':
         t = resolve_text(kn)
         if t in [resolve_text(x) for x in dom[1]]:
@@ -2659,7 +2741,7 @@ def range_literal(m, kn, loc):
                 if not (b == '%' or b in CURRENCIES or b in m.units or b in ('year', 'quarter', 'month', 'day')
                         or b in getattr(m, 'unit_kind_keys', ())):
                     raise LoadError('LOAD-UNIT', 'an unknown unit %s' % b, loc)
-            u, f = U.from_syntax(terms)
+            u, f = U.at(loc, U.from_syntax, terms)
             q = Fraction(kn.v) * f
             if U.is_currency(u):
                 return Num(q, u, money=True)
@@ -2777,13 +2859,15 @@ def convert_value(m, node, ty, loc, factor, target, binds=None, pattern=None, al
     if k == 'num':
         if node.get('frac') and terminating(node.v):
             raise LoadError('LOAD-PRECISION', '%s terminates; write it as a decimal' % node.text, loc)
-        uu, f = U.from_syntax(node.unit) if node.unit else (None, Fraction(1))
+        uu, f = U.at(loc, U.from_syntax, node.unit) if node.unit else (None, Fraction(1))
         if tk == 'money':
             if uu is None:
                 q = node.v * factor
             else:
                 if uu != ty.u:
-                    raise LoadError('LOAD-UNIT', '%s and %s have different units' % (node.text, T.show(ty)), loc)
+                    # L §8.3 `<a> and <b> have different units`, the literal with its unit. tally 2.1.6 (issue #71):
+                    # refcore 2.1.5 printed the figure alone
+                    raise LoadError('LOAD-UNIT', '%s and %s have different units' % (_txt_node(node), T.show(ty)), loc)
                 q = node.v * f
             minor = CURRENCIES[ty.cur]
             if (q / minor).denominator != 1:
@@ -2809,7 +2893,7 @@ def convert_value(m, node, ty, loc, factor, target, binds=None, pattern=None, al
                     # unless its value is a bare literal, which takes each key's unit"
                     raise LoadError('LOAD-UNIT', '%s gives one unit for keys of several units (%s)' % (
                         node.text, T.show(ty)), loc)
-                raise LoadError('LOAD-UNIT', '%s and %s have different units' % (node.text, T.show(ty)), loc)
+                raise LoadError('LOAD-UNIT', '%s and %s have different units' % (_txt_node(node), T.show(ty)), loc)
             return Num(node.v * f * c, tu)
         if tk == 'int':
             if uu is not None or not node.isint or node.get('frac'):

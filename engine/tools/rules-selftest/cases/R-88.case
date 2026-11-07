@@ -20,3 +20,28 @@ mod planted_runaway {
 }
 --- run
 cargo nextest run --locked -p tally-runner --cargo-profile mutants --profile mutants --lib -E 'test(=planted_runaway::grows_for_ever)'
+
+# Since 2026-11-06 a mutant ends at its first failing test, and the tests still running are
+# ended then (nextest's fail-fast max-fail 1, terminate immediate): the planted slow test
+# would pass after 100 s if the run waited for it.
+
+case: first-failure-ends-the-rest
+tool: run
+expect: Cancelling due to test failure: immediately terminating 1 test still running
+expect: planted_failfast::runs_long
+--- append tests/runner/src/lib.rs
+
+#[cfg(test)]
+mod planted_failfast {
+    #[test]
+    fn fails_at_once() {
+        assert!(core::hint::black_box(false), "planted");
+    }
+
+    #[test]
+    fn runs_long() {
+        std::thread::sleep(std::time::Duration::from_secs(100));
+    }
+}
+--- run
+cargo nextest run --locked -p tally-runner --cargo-profile mutants --profile mutants --lib -E 'test(/^planted_failfast::/)'

@@ -1,0 +1,16 @@
+# L §7.6 item 2 (tally 2.1.6, issue #89): a declared day index of 0001-01-01..9999-12-31 holds 3 652 059 keys:
+# LOAD-LIMIT (the built-in days take no limit). tally 2.1.5's refcore refused it REFCORE-NOT-YET (OverflowError).
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+unit PLN: currency minor 0.01
+index ds = day 0001-01-01..9999-12-31
+
+ask n: max(pos(k) for k in ds)
+=== expect
+refused: LOAD-LIMIT index ds holds more than 1 000 000 keys (m.tally:9)

@@ -9,7 +9,7 @@ model family
   on 2026-01-05
   start 2026-01-01
   end 2026-12-31
-  use a = "../A/ana.tally" sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+  use a = "../A/ana.tally" sha256 "71199adf94c4e5b296f8a2a329994846c0bf935d86860bb2726beeecec6ea41e"
 
 ask f: a.fee(a.income[a.ana]) law 2026-06-30
 === A/ana.tally
@@ -44,7 +44,7 @@ model family
   on 2026-01-05
   start 2026-01-01
   end 2026-12-31
-  use a = "../A/ana.tally" sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+  use a = "../A/ana.tally" sha256 "71199adf94c4e5b296f8a2a329994846c0bf935d86860bb2726beeecec6ea41e"
 
 ask f: a.fee(a.income[a.ana]) law 2026-06-30
-sha256 0d014eb3c0e05d11cc150a1331347ff728859739ee4fcbbab7c2f5ba68ac5565
+sha256 ecdd4ed468d39f03626e71bd38b0d84a04edfad9b44ac821698a6a6588592924

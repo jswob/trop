@@ -1,6 +1,7 @@
 # R-84: gate 8's mutation score counts T's tests only, a gating milestone's among them
 # (tools/milestones.toml, issue #14): the mutants baseline and every shard select the
-# runner's default targets and each gating milestone's, and no other milestone's.
+# runner's default targets and each gating milestone's, and no other milestone's; since
+# 2026-11-06 not the marker's mutants_leave_out either, which must name gating targets.
 
 case: mutants-select-gating-targets
 tool: run
@@ -10,6 +11,7 @@ expect: -C=--test=s_planted
 --- write tools/milestones.toml
 milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
 gating = ["S"]
+mutants_leave_out = []
 --- append tests/runner/Cargo.toml
 
 [[test]]
@@ -34,6 +36,7 @@ expect: m0_planted is left out
 --- write tools/milestones.toml
 milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
 gating = ["S"]
+mutants_leave_out = []
 --- append tests/runner/Cargo.toml
 
 [[test]]
@@ -51,3 +54,66 @@ fn planted_red() {
 args="$(tools/milestones args --mutants)"
 echo "$args"
 case "$args" in *m0_planted*) echo "m0_planted is selected" ;; *) echo "m0_planted is left out" ;; esac
+
+case: mutants-leave-out-named-targets
+tool: run
+exit: any
+expect: -C=--test=s_planted
+expect: s_slow is left out of both
+--- write tools/milestones.toml
+milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
+gating = ["S"]
+mutants_leave_out = ["s_slow"]
+--- append tests/runner/Cargo.toml
+
+[[test]]
+name = "s_planted"
+path = "milestone/s_planted.rs"
+test = false
+
+[[test]]
+name = "s_slow"
+path = "milestone/s_slow.rs"
+test = false
+--- write tests/runner/milestone/s_planted.rs
+//! Planted: a test of milestone S that mutation runs select.
+
+#[test]
+fn planted_green() {
+    assert!(core::hint::black_box(true), "planted");
+}
+--- write tests/runner/milestone/s_slow.rs
+//! Planted: a test of milestone S that mutation runs leave out (the marker's mutants_leave_out).
+
+#[test]
+fn planted_green() {
+    assert!(core::hint::black_box(true), "planted");
+}
+--- run
+shards="$(tools/milestones args --mutants)"
+baseline="$(tools/milestones args)"
+echo "$shards"
+case "$shards $baseline" in *s_slow*) echo "s_slow is selected" ;; *) echo "s_slow is left out of both" ;; esac
+
+case: mutants-leave-out-names-a-gating-target
+tool: run
+expect: FAIL milestones: tools/milestones.toml: mutants_leave_out names m0_planted, which is no gating milestone's test target
+--- write tools/milestones.toml
+milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
+gating = ["S"]
+mutants_leave_out = ["m0_planted"]
+--- append tests/runner/Cargo.toml
+
+[[test]]
+name = "m0_planted"
+path = "milestone/m0_planted.rs"
+test = false
+--- write tests/runner/milestone/m0_planted.rs
+//! Planted: a test of milestone M0, which doesn't gate.
+
+#[test]
+fn planted_red() {
+    assert!(core::hint::black_box(false), "planted");
+}
+--- run
+tools/milestones args --mutants

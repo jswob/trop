@@ -794,7 +794,8 @@ def m_t_flows(self, n, sc, expect):
         ft = self.tc(fx, sc)
         if ft.k != 'num' or not ft.u:
             raise uerr('flows in %s at %s: the rate is %s' % (cur, _txt(fx), T.show(ft)), n.loc)
-        self.mode_arg(mode, sc, n)
+        # a flows node has no name: its word names it (tally 2.1.6, issue #79: refcore 2.1.5 crashed here)
+        self.mode_arg(mode, sc, n, 'flows')
         return T.money(cur)
     return ut
 
@@ -1518,15 +1519,18 @@ FOLD_FNS = ('end_of', 'start_of', 'day_of', 'add_days', 'add_months', 'add_years
             'quarter_of')
 
 
-def m_seen_day(self, e, mi):
+def m_seen_day(self, e, mi, cond=False):
     """L §8.3 item 9: "A move's day and a leg's place are seen where they are written as literals or keys of a declared
     index, and where they are computed from these alone, folded through built-ins that read no fact (`on end_of(m)` for
-    a key m of a declared index is seen)". The keys of an open index come from rows, which load doesn't see (item 5)."""
+    a key m of a declared index is seen)". The keys of an open index come from rows, which load doesn't see (item 5).
+    With cond, e is a binding's `where`, which may also compare and join these (L §6.4, tally 2.1.6)."""
     m = self.m
     binds = dict((b.var, b) for b in mi.binds)
     for x in _nwalk(e):
         k = x.k
         if k in ('date', 'month', 'quarter'):
+            continue
+        if cond and k in ('cmp', 'and', 'or', 'not', 'bool'):
             continue
         if k == 'num':
             continue
@@ -1546,6 +1550,14 @@ def m_seen_day(self, e, mi):
             continue
         return False
     return True
+
+
+def m_existence_seen(self, mi):
+    """L §6.4 (tally 2.1.6, P29 on SR-T1 of #75): load sees whether an instance of mi exists where the move has no
+    `when` and each binding's `where` reads nothing but its keys and literals (§8.3 item 9); otherwise its existence
+    is decided at run, and an instance before a scenario's from is left out there."""
+    return mi.decl.when is None and all(b.node.where is None or self.seen_day(b.node.where, mi, cond=True)
+                                        for b in mi.binds)
 
 
 def m_check_seen_days(self):
@@ -1587,6 +1599,182 @@ def m_check_seen_days(self):
                                                             _txt(dn), ' start' if x.start else '', d,
                                                             'its own day' if d == day else 'a later day'),
                                 mi.decl.loc)
+
+
+def m_check_seen_day_limits(self):
+    """L §7.6 item 1, §8.3 item 9 (tally 2.1.6, issue #89): a move's day that load sees, folded at every key of its
+    bindings, that passes 9999-12-31 (the end of time, `on end_of(y)` for the year 9999, included) or comes before
+    0001-01-01 is refused at load (LOAD-LIMIT); a day computed from a row's value is refused at its key (RUN-LIMIT,
+    moves.eval_inst)."""
+    m = self.m
+    import itertools
+    from .evaluate import Engine, Ctx
+    from .dates import END
+    eng = None
+    for mi in m.moves.values():
+        on = getattr(mi.decl, 'on', None)
+        if on is None or not self.seen_day(on, mi):
+            continue
+        doms = []
+        for b in mi.binds:
+            dom = getattr(b, 'dom', None)
+            doms.append(m.indexes[dom[1]].keys if isinstance(dom, tuple) and dom[0] == 'index' else None)
+        if any(d is None for d in doms):
+            continue
+        if eng is None:
+            eng = Engine(m)
+        ctx = Ctx(None, m.on)
+        for keys in itertools.product(*doms):
+            env = dict((b.var, k) for b, k in zip(mi.binds, keys))
+            try:
+                day = eng.ev(on, env, ctx)
+            except TallyError as e:
+                if e.code != 'RUN-LIMIT':
+                    continue
+                msg = e.msg
+            else:
+                if day is not END:
+                    continue
+                msg = 'a day passes 9999-12-31'
+            kt = ', '.join(fmt(k) for k in keys)
+            raise LoadError('LOAD-LIMIT', 'move %s%s on %s: %s' % (mi.id, '[%s]' % kt if kt else '', _txt(on), msg),
+                            mi.decl.loc)
+
+
+def m_check_scenario_moves(self):
+    """L §6.4 ("A move the scenario declares books nothing before D: an instance whose day, a window's first day, or a
+    leg's own day falls before D is left out (LOAD-SCENARIO where load sees the day)"), §8.3 item 9 (tally 2.1.6,
+    issue #75): a move a scenario's file declares, whose day or leg's own day load sees, folded at every key of its
+    bindings, before the scenario's from, is refused at load: the first such move by id, at its line or its leg's,
+    with the engine's bytes (load/across.rs). A fold that gives no day refuses nothing. refcore 2.1.5 refused it only
+    as the walk reached the instance (moves.m_before_scen_from), so an ask that didn't reach it answered."""
+    m = self.m
+    import itertools
+    from .evaluate import Engine, Ctx
+    from .moves import day_lo
+    froms = getattr(m, 'scen_from', {})
+    eng = None
+    for mid in sorted(m.moves):
+        mi = m.moves[mid]
+        sc = getattr(mi.decl, '_scen', None) if mi.decl is not None else None
+        frm = froms.get(sc) if sc is not None else None
+        if frm is None:
+            continue
+        days = [(mi.decl.on, mi.decl.loc)] + [(ln.on, ln.loc) for ln in mi.decl.legs if ln.on is not None]
+        days = [(e, loc) for e, loc in days if e is not None and self.seen_day(e, mi)]
+        # P29 (SR-T1): load sees that an instance books before D only where it sees its existence too
+        if not days or not self.existence_seen(mi):
+            continue
+        doms = []
+        for b in mi.binds:
+            dom = getattr(b, 'dom', None)
+            doms.append(m.indexes[dom[1]].keys if isinstance(dom, tuple) and dom[0] == 'index' else None)
+        if any(d is None for d in doms):
+            continue
+        if eng is None:
+            eng = Engine(m)
+        ctx = Ctx(None, m.on)
+        for keys in itertools.product(*doms):
+            env = dict((b.var, k) for b, k in zip(mi.binds, keys))
+            try:
+                if any(b.node.where is not None and eng.ev(b.node.where, env, ctx) is False for b in mi.binds):
+                    continue
+            except TallyError:
+                continue
+            for e, loc in days:
+                try:
+                    first = day_lo(eng.ev(e, env, ctx))
+                except TallyError:
+                    continue
+                if first is not None and first < frm:
+                    raise LoadError('LOAD-SCENARIO', 'move %s of %s books on %s, before %s' % (mid, sc, first, frm),
+                                    loc)
+
+
+def m_check_literal_ranges(self):
+    """L §7.6 item 2, §8.3 LOAD-LIMIT (tally 2.1.6, P30 on T's SR-T2 of #89): a range whose ends and step are literals
+    is seen at load, so one past 1 000 000 keys is refused at load, whatever the asks (E §3.1, as #72's checks are),
+    with the bytes an ask that steps through it prints (evaluate.range_values). A rule holds no literal (LOAD-LITERAL),
+    so such a range stands in an ask; a declared index is counted where its keys are built (loader.count_limit).
+    refcore's first 2.1.6 raised it only when that ask was asked."""
+    from .evaluate import Engine, Ctx, range_is_literal
+    eng = ctx = None
+    for s in self.m.asks:
+        for x in _nwalk(s):
+            d = getattr(x, 'dom', None) if x.k == 'bind' else None
+            if d is None or getattr(d, 'k', None) != 'drange' or not range_is_literal(d):
+                continue
+            if eng is None:
+                eng, ctx = Engine(self.m), Ctx(None, self.m.on)
+            try:
+                a = eng.ev(d.a, {}, ctx)
+                z = eng.ev(d.b, {}, ctx)
+                st = eng.ev(d.step, {}, ctx) if d.step is not None else None
+                eng.range_values(a, z, st, None, d)
+            except LoadError as e:
+                if e.code == 'LOAD-LIMIT':
+                    raise
+            except TallyError:
+                continue
+
+
+def m_check_settlement_units(self):
+    """L §5.14.3 (a settlement leg "in another unit than the leg's", LOAD-UNIT), E §3.1 (load once per reality,
+    whatever the asks; tally 2.1.6, issue #72): an observed row that fulfils an adjustment of a leg whose kind states
+    its unit (a currency or a declared unit) is refused at load where one of its legs is in another unit, with the
+    engine's bytes (load/moves.rs). A leg of unit `any` or a unit kind takes its unit from a value (L §8.3 item 4), so
+    its settlements are checked as they are booked (moves.settle_sign). refcore 2.1.5 checked every one there, so an
+    ask that didn't reach the settlement answered."""
+    from .model import key_text
+    m = self.m
+    for inf in m.inputs.values():
+        if not getattr(inf, 'observed', False):
+            continue
+        for o in getattr(inf, 'obs', ()):
+            f = o.fulfils
+            if not (isinstance(f, tuple) and f and f[0] == 'adj'):
+                continue
+            _, mid, kv, leg, vid = f
+            mi = m.moves.get(mid)
+            if mi is None or mi.kind is None:
+                continue
+            d = next((x for x in m.kind_legs(mi.kind) if x.name == leg), None)
+            if d is None or not (d.unit in CURRENCIES or d.unit in m.units):
+                continue
+            bad = next((lg for lg in o.legs if lg[4] is not None and lg[4] != d.unit), None)
+            if bad is None:
+                continue
+            iid = '%s[%s]' % (mid, ', '.join(key_text(k) for k in kv)) if kv else mid
+            raise LoadError('LOAD-UNIT', 'settlement %s of adjustments[%s.%s, %s] is in %s, not %s' % (
+                o.sid, iid, leg, vid, bad[4], d.unit))
+
+
+def m_check_schedules(self):
+    """L §4.2 (round 19, C4-5), E §3.1 (tally 2.1.6, issue #72): a plan move whose day is a schedule load sees that
+    gives no date in the run is refused at load (LOAD-SCHEDULE), whatever the asks: its instances are folded once at
+    the model's on, before any ask, by moves.check_schedule. refcore 2.1.5 folded them only where an ask reached the
+    move."""
+    m = self.m
+    from .eval2 import strip
+    from .evaluate import Engine, Ctx
+    eng = None
+    for mi in m.moves.values():
+        if mi.decision or mi.decl.on is None:
+            continue
+        on = strip(mi.decl.on)
+        if not (on.k == 'call' and on.name == 'schedule'):
+            continue
+        if len(on.args) < 2 or not (self.seen_day(on.args[0], mi) and self.seen_day(on.args[1], mi)):
+            continue
+        if eng is None:
+            eng = Engine(m)
+        try:
+            eng.move_instances(mi, Ctx(None, m.on))
+        except LoadError as e:
+            if e.code == 'LOAD-SCHEDULE':
+                raise
+        except TallyError:
+            pass
 
 
 def m_check_after_readings(self):
@@ -1686,8 +1874,11 @@ def m_check_proj_seen(self):
         if mks is None:
             continue
         for rm in rmoves:
-            if rm is mi or rm.decl.when is not None or rm.decl.at is None or not self.seen_day(rm.decl.on, rm) or \
-                    not self.seen_day(rm.decl.at, rm):
+            # a move with no at reads nothing law-dated (L §5.11), so its random amount is dated by its day alone (L
+            # §5.16 "a random amount dated after t"): load sees it where it sees the day (tally 2.1.6, issue #75, as the
+            # engine's load/across.rs; refcore 2.1.5 left such a move to the run)
+            if rm is mi or rm.decl.when is not None or not self.seen_day(rm.decl.on, rm) or \
+                    (rm.decl.at is not None and not self.seen_day(rm.decl.at, rm)):
                 continue
             rr = rreads(rm, target)
             rks = keysets(rm)
@@ -1706,7 +1897,7 @@ def m_check_proj_seen(self):
                 for renv in rks:
                     try:
                         rday = eng.ev(rm.decl.on, renv, ctx)
-                        rlaw = eng.ev(rm.decl.at, renv, ctx)
+                        rlaw = eng.ev(rm.decl.at, renv, ctx) if rm.decl.at is not None else rday
                     except TallyError:
                         continue
                     if not (isinstance(rday, datetime.date) and isinstance(rlaw, datetime.date)) or \
