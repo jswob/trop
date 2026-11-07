@@ -24,6 +24,7 @@ use super::prices::price_twice;
 use super::random::{DrawKey, QueryAt, dist_whole};
 use super::reads::{is_move_type, is_place_type};
 use super::srows::{BaseWorld, SrowAt, ask_worlds, top_scenario};
+use super::steps::refuse;
 use super::types::{
     children, covered_spans, is_bool, is_date, key_value_kind, lit_rule, refused, uerr,
 };
@@ -342,6 +343,9 @@ pub(super) struct ShiftRead {
     pub(super) var: String,
     /// Which way.
     pub(super) shift: Shift,
+    /// The offset as written, `1` of `x[k - 1]`, or `n` where no key is the variable and
+    /// a number (refcore's `shift_offset`). L §8.3 `LOAD-GUARD`.
+    pub(super) offset: String,
     /// Whether a condition on the variable guards the read.
     pub(super) guarded: bool,
     /// The file and line it is written on.
@@ -745,13 +749,14 @@ impl Checker {
 
     /// A def's read at a shifted key variable, with whether a condition guards it (refcore's
     /// `shift_reads`). L §5.11.
-    pub(super) fn shifted(&mut self, scope: &Scope, target: &Node, rel: &Rel) {
+    pub(super) fn shifted(&mut self, scope: &Scope, target: &Node, rel: &Rel, keys: &[Key]) {
         if let Rel::Shifted(var, shift) = rel {
             self.shifts.push(ShiftRead {
                 reader: scope.item.clone(),
                 target: target.clone(),
                 var: var.clone(),
                 shift: *shift,
+                offset: shift_offset(keys, var),
                 guarded: scope.guards.contains(var),
                 at: scope.file_line(),
             });
@@ -985,7 +990,7 @@ impl Checker {
             self.at_reads.insert(def.id.clone(), made);
         }
         let beats = labels(def, file)?;
-        beats_cycle(&def.id, &beats)?;
+        beats_cycle(&def.id, &beats, (file, line))?;
         self.offsets.insert(def.id.clone(), key_offsets(def));
         let guards = rule_guards(def, &beats);
         for (label, versions) in &def.rules {
@@ -1417,8 +1422,13 @@ fn labels(def: &DefInfo, file: &str) -> Result<BTreeMap<String, BTreeSet<String>
 }
 
 /// `LOAD-CYCLE` when a def's `beats` run in a cycle, the path from the first label in text
-/// order (refcore's `_beats_cycle`, its depth-first walk as a worklist). L §5.11.
-fn beats_cycle(def: &str, beats: &BTreeMap<String, BTreeSet<String>>) -> Result<(), Stop> {
+/// order, at the def's line (refcore's `_beats_cycle`, its depth-first walk as a worklist).
+/// L §5.11, §8.3.
+fn beats_cycle(
+    def: &str,
+    beats: &BTreeMap<String, BTreeSet<String>>,
+    at: (&str, u32),
+) -> Result<(), Stop> {
     let mut done: BTreeSet<String> = BTreeSet::new();
     for start in beats.keys() {
         if done.contains(start) {
@@ -1435,9 +1445,11 @@ fn beats_cycle(def: &str, beats: &BTreeMap<String, BTreeSet<String>>) -> Result<
             if path.iter().any(|(label, _)| *label == next) {
                 let mut names: Vec<String> = path.into_iter().map(|(label, _)| label).collect();
                 names.push(next);
-                return Err(refused(
+                return Err(refuse(
                     Load::Cycle,
                     format!("a beats cycle in {def}: {}", names.join(" -> ")),
+                    at.0,
+                    at.1,
                 ));
             }
             if !done.contains(&next) {
@@ -1652,6 +1664,25 @@ enum KeyRel {
     Shifted(String, Shift),
     /// Anything else.
     Computed,
+}
+
+/// The offset of a recurrence read's key `k ± n` as written, the first key that is the
+/// variable `var` plus or minus a number, else `n` (refcore's `shift_offset`). L §8.3
+/// `LOAD-GUARD`.
+fn shift_offset(keys: &[Key], var: &str) -> String {
+    keys.iter()
+        .find_map(|key| {
+            if let Key::Expr(Expr::Sum(base, rest)) = key
+                && let Expr::Name(name) = base.as_ref()
+                && name == var
+                && let [(_, Expr::Lit(Lit::Num(number)))] = rest.as_slice()
+            {
+                Some(number.text.clone())
+            } else {
+                None
+            }
+        })
+        .unwrap_or_else(|| "n".to_owned())
 }
 
 /// One key's relation to the reader's keys (refcore's `relation`, its loop).
@@ -1981,17 +2012,20 @@ mod tests {
         let mut beats = BTreeMap::new();
         beats.insert("base".to_owned(), set(&["waived"]));
         beats.insert("waived".to_owned(), set(&["base"]));
-        let refused = match beats_cycle("fee", &beats) {
+        let refused = match beats_cycle("fee", &beats, ("a.tally", 3)) {
             Err(Stop::Refused(refusal)) => refusal.text(),
             other => format!("{other:?}"),
         };
         assert_eq!(
-            refused, "LOAD-CYCLE a beats cycle in fee: base -> waived -> base",
+            refused, "LOAD-CYCLE a beats cycle in fee: base -> waived -> base (a.tally:3)",
             "the cycle"
         );
         let mut chain = BTreeMap::new();
         chain.insert("a".to_owned(), set(&["b", "c"]));
         chain.insert("b".to_owned(), set(&["c"]));
-        assert!(beats_cycle("fee", &chain).is_ok(), "a chain is no cycle");
+        assert!(
+            beats_cycle("fee", &chain, ("a.tally", 3)).is_ok(),
+            "a chain is no cycle"
+        );
     }
 }

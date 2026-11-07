@@ -505,7 +505,7 @@ impl Loader {
         if !fits {
             return Err(at.refuse(
                 Load::Leg,
-                format!("leg {leg} of {sid} is of the wrong unit ({})", number.text),
+                format!("leg {leg} of observation {sid} is in {base}, not its kind's unit"),
             ));
         }
         let amount = number.value.checked_mul(&factor).map_err(num_stop)?;

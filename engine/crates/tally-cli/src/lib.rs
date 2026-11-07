@@ -194,7 +194,8 @@ fn command(args: &[OsString], files: &[u8]) -> Output {
 
 /// `reprint`: each file's canonical text, then the reality's hash (refcore's `reprint_paths`).
 /// A file is named as given; a directory's files relative to the directory given (INTERFACE
-/// gap I-3); they are read, printed and hashed in the order of their full paths.
+/// gap I-3); they are read, printed and hashed in the order of their full paths. A joint
+/// model's members are found among them, then in the file table, as `run` finds them.
 fn reprint_paths(paths: &[String], files: &[u8]) -> Output {
     let Ok(table) = table(files) else {
         return bad_table();
@@ -210,7 +211,7 @@ fn reprint_paths(paths: &[String], files: &[u8]) -> Output {
             named.push((given, name));
         }
     }
-    match tally::reprint(named) {
+    match tally::reprint_in(named, &table) {
         Ok(answer) => answered(&answer),
         Err(tally::NotImplemented) => not_implemented("reprint"),
     }

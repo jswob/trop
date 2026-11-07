@@ -6,7 +6,7 @@
 //! Invariants: every loop takes a token or ends; each bracket and `if` is counted by `open`;
 //! every form of the grammar parses (the reads M0 adds are in `reads.rs`, the pins in `ask.rs`).
 
-use super::lex::{Kind, Paren, Role};
+use super::lex::{Kind, Mark, Paren, Read, Role};
 use super::parse::{P, Stop, is_keyword};
 use super::reads::{dist_kind, query_fn};
 use super::tree::{
@@ -478,19 +478,22 @@ impl P<'_> {
                     continue;
                 }
                 fixes.push(Postfix::Keys(keys));
-            } else if self.at(".", 0) && !self.spaced(0) {
+            } else if self.at(".", 0) {
+                // Any spacing reads: `a .b` and `a. b` are `a.b`, and `a.b (x)` a call, as
+                // `f (x)` is (L §2.4, §2.3 parse rule 3; tally 2.1.6, #81). The word right
+                // after `.` is a field whatever its word, so its `[` prints touching.
                 self.skip(1)?;
                 if !self.at_id(0) {
                     return Err(self.err("a field"));
                 }
+                self.mark(Some(self.i), Mark::read_as_field);
                 fixes.push(Postfix::Field(self.next()?.text.clone()));
                 if self.at("(", 0)
-                    && !self.spaced(0)
                     && let Some(mut names) = name_chain(&base, &fixes)
                 {
                     // The call's name is read as an id, so the canonical form prints it touching
                     // its `(` (L §2.4 Expressions, tally 2.1.4; refcore's `tok.nm = True`).
-                    self.mark(self.back(), |m| m.name = true);
+                    self.mark(self.back(), |m| m.read = Read::Name);
                     let name = names.pop().ok_or_else(|| self.cannot("a band"))?;
                     base = self.band_call(name, names, None)?;
                     fixes = Vec::new();
@@ -1083,7 +1086,7 @@ impl P<'_> {
         if is_keyword(word) {
             return Err(self.keyword_atom(word));
         }
-        self.mark(Some(self.i), |m| m.name = true);
+        self.mark(Some(self.i), |m| m.read = Read::Name);
         self.skip(1)?;
         if self.at("(", 0) {
             let args = self.call_args()?;
@@ -1256,7 +1259,7 @@ impl P<'_> {
             && t.kind == Kind::Id
             && matches!(t.text.as_str(), "day" | "month" | "quarter" | "year")
         {
-            self.mark(Some(s), |mark| mark.name = false);
+            self.mark(Some(s), |mark| mark.read = Read::Word);
         }
     }
 

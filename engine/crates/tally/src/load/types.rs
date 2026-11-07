@@ -1161,7 +1161,7 @@ impl Checker {
         let target = Node::new(node_kind, id);
         let rel = super::check::relation(scope, keys);
         self.direct(&target);
-        self.shifted(scope, &target, &rel);
+        self.shifted(scope, &target, &rel, keys);
         self.edge(&scope.item, target.clone(), rel);
         let mut ty = declared.unwrap_or(Ty::Unseen);
         if priced {

@@ -22,7 +22,8 @@ mod invariant;
 mod oracle;
 
 pub use api::{
-    Answer, Asks, Given, Pin, Request, Source, load_report, reprint, run, run_in, run_with_memo,
+    Answer, Asks, Given, Pin, Request, Source, load_report, reprint, reprint_in, run, run_in,
+    run_with_memo,
 };
 #[cfg(feature = "counters")]
 pub use counters::Counters;
@@ -58,12 +59,12 @@ pub mod syntax {
     mod spacing;
     mod tree;
 
-    pub use canon::{printed_hash, reprint};
+    pub use canon::{printed_hash, reprint, reprint_among};
     pub(crate) use expr::is_builtin;
     pub(crate) use item::{parse_lines, prescan_units};
     pub use item::{parse_reality, parse_split};
     pub(crate) use lex::cannot;
-    pub use lex::{Canon, Kind, Line, Mark, Paren, Role, Tok, split_lines};
+    pub use lex::{Canon, Kind, Line, Mark, Paren, Read, Role, Tok, split_lines};
     pub use parse::Stop;
     pub use tree::{
         AddOp, Agg, AggFn, Ask, AskBody, Axis, Bal, Band, BandRow, Bind, Calendar, CalendarDay,
@@ -266,6 +267,7 @@ pub mod load {
     mod worlds;
 
     pub use joint::member_paths;
+    pub(crate) use joint::reprint_members;
     pub use keys::index_key_of;
     pub use steps::load;
     pub use worlds::{Loaded, Split, Worlds, load_run, split_files};

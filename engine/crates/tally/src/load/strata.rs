@@ -28,8 +28,8 @@ use super::steps::{Loader, refuse};
 use super::types::text;
 use crate::base::{Code, Load, Refusal, Warn};
 use crate::model::{
-    GapRole, Graph, Mark, MoveInfo, Node, NodeKind, Reality, Rel, RowInstant, Shift, Target, Ty,
-    pattern_text,
+    Domain, GapRole, Graph, Mark, MoveInfo, Node, NodeKind, Reality, Rel, RowInstant, Shift,
+    Target, Ty, pattern_text,
 };
 use crate::syntax::{Expr, Field, Lit, Order, Postfix, Section, Stop, Value as Written};
 use std::collections::{BTreeMap, BTreeSet};
@@ -68,8 +68,8 @@ impl Loader {
                 mv.changes = fact.changes;
             }
         }
-        same_key_cycles(&self.m, &walked.graph)?;
-        recurrences(&walked.graph, &walked.shifts)?;
+        same_key_cycles(&self.m, &self.sections, &walked.graph)?;
+        recurrences(&self.m, &walked.graph, &walked.shifts)?;
         let dated = check_lawdates(&self.m, &walked, &files)?;
         walked.graph.ask_axes = check_forks(&self.m, &walked.graph, &files)?;
         let unread_items = unread(&self.m, &walked.graph);
@@ -249,8 +249,9 @@ impl Loader {
 }
 
 /// Same-key cycles among defs and bands: a read at the reader's own key, or a band's read
-/// of an unkeyed def (refcore's `check_graph`, `_cycles`). L §5.11; E §3.1 step 6.
-fn same_key_cycles(m: &Reality, graph: &Graph) -> Result<(), Stop> {
+/// of an unkeyed def, refused at the line of the def (or band) the cycle comes back to
+/// (refcore's `check_graph`, `_cycles`). L §5.11, §8.3; E §3.1 step 6.
+fn same_key_cycles(m: &Reality, sections: &[(String, Section)], graph: &Graph) -> Result<(), Stop> {
     let mut same: BTreeMap<Node, BTreeSet<Node>> = BTreeMap::new();
     for (reader, reads) in &graph.edges {
         if !is_def_or_band(reader) {
@@ -276,23 +277,48 @@ fn same_key_cycles(m: &Reality, graph: &Graph) -> Result<(), Stop> {
         return Err(broken("an empty same-key cycle"));
     };
     let ids: Vec<&str> = cycle.iter().map(|node| node.id.as_str()).collect();
+    let message = format!(
+        "{} depends on itself at the same key: {}",
+        again.id,
+        ids.join(" -> ")
+    );
+    for (file, section) in sections {
+        if let Some(line) = declares(section, again) {
+            return Err(refuse(Load::Cycle, message, file, line));
+        }
+    }
     Err(Stop::Refused(Refusal::new(
         Code::Load(Load::Cycle),
-        format!(
-            "{} depends on itself at the same key: {}",
-            again.id,
-            ids.join(" -> ")
-        ),
+        message,
     )))
 }
 
+/// The line of `section` where it declares the def or the band `node`, if it does.
+fn declares(section: &Section, node: &Node) -> Option<u32> {
+    if let Section::Def(def) = section
+        && node.kind == NodeKind::Def
+        && def.id == node.id
+    {
+        return Some(def.line);
+    }
+    if let Section::Band(band) = section
+        && node.kind == NodeKind::Band
+        && band.id == node.id
+    {
+        return Some(band.line);
+    }
+    None
+}
+
 /// The recurrence reads: a def's read at a shifted key of a def that reads it back is
-/// `LOAD-GUARD` unless a condition on the key variable guards it, and `LOAD-CYCLE` when it
-/// reads itself both earlier and later on one variable (refcore's `check_graph`, its
-/// `shift_reads` loop and `dirs`). L §5.11.
-fn recurrences(graph: &Graph, shifts: &[ShiftRead]) -> Result<(), Stop> {
-    // (reader, variable) → whether it reads earlier, later, in the order first met
-    let mut ways: Vec<(&Node, &str, bool, bool)> = Vec::new();
+/// `LOAD-GUARD` unless a condition on the key variable guards it, its offset as written, and
+/// `LOAD-CYCLE` when it reads itself both earlier and later on one variable, naming the
+/// variable's index, at the first such read (refcore's `check_graph`, its `shift_reads` loop,
+/// `dirs` and `locs`). L §5.11, §8.3.
+fn recurrences(m: &Reality, graph: &Graph, shifts: &[ShiftRead]) -> Result<(), Stop> {
+    // (the first read of a reader's variable, whether it reads earlier, later), in the
+    // order first met
+    let mut ways: Vec<(&ShiftRead, bool, bool)> = Vec::new();
     for read in shifts {
         if read.target != read.reader && !graph.reaches(&read.target, &read.reader) {
             continue;
@@ -304,33 +330,49 @@ fn recurrences(graph: &Graph, shifts: &[ShiftRead]) -> Result<(), Stop> {
                 Shift::Later => "+",
             };
             let message = format!(
-                "{}[{var} {sign} n] is a recurrence read with no condition on {var} or pos({var}) guarding it",
-                read.target.id
+                "{}[{var} {sign} {}] is a recurrence read with no condition on {var} or pos({var}) guarding it",
+                read.target.id, read.offset
             );
             return Err(refuse(Load::Guard, message, &read.at.0, read.at.1));
         }
         let earlier = read.shift == Shift::Earlier;
         match ways
             .iter_mut()
-            .find(|(reader, var, ..)| *reader == &read.reader && *var == read.var)
+            .find(|(first, ..)| first.reader == read.reader && first.var == read.var)
         {
             Some(way) => {
-                way.2 = way.2 || earlier;
-                way.3 = way.3 || !earlier;
+                way.1 = way.1 || earlier;
+                way.2 = way.2 || !earlier;
             }
-            None => ways.push((&read.reader, &read.var, earlier, !earlier)),
+            None => ways.push((read, earlier, !earlier)),
         }
     }
-    let Some((reader, var, ..)) = ways
-        .iter()
-        .find(|(_, _, earlier, later)| *earlier && *later)
-    else {
+    let Some((first, ..)) = ways.iter().find(|(_, earlier, later)| *earlier && *later) else {
         return Ok(());
     };
-    Err(Stop::Refused(Refusal::new(
-        Code::Load(Load::Cycle),
-        format!("{} reads itself both earlier and later on {var}", reader.id),
-    )))
+    let message = format!(
+        "{} reads itself both earlier and later on {}",
+        first.reader.id,
+        var_index(m, &first.reader, &first.var)
+    );
+    Err(refuse(Load::Cycle, message, &first.at.0, first.at.1))
+}
+
+/// The index a def's key variable ranges over, its kind or axis; else, a key list's or a
+/// range's variable, or a fill's, the variable (refcore's `var_index`). L §8.3 `LOAD-CYCLE`.
+fn var_index(m: &Reality, reader: &Node, var: &str) -> String {
+    let binds = match m.defs.get(&reader.id) {
+        Some(def) if reader.kind == NodeKind::Def => def.binds.as_slice(),
+        Some(_) | None => &[],
+    };
+    match binds
+        .iter()
+        .find(|bind| bind.var == var)
+        .map(|bind| &bind.domain)
+    {
+        Some(Domain::Index(id) | Domain::Kind(id) | Domain::Axis(id)) => id.clone(),
+        Some(Domain::List(_) | Domain::Range) | None => var.to_owned(),
+    }
 }
 
 /// The running reads and projections an item reaches through defs and its moves' days,

@@ -6,7 +6,8 @@
 //! L §8.3 (`LOAD-PIN`, `LOAD-DUP`, `LOAD-HEADER`), E §11 (`REQ-ASK`: a member's ask).
 //! Twin: engine/tools/refcore/joint.py (`split_reality`, `header_uses`, `header_has_sames`,
 //! `member_texts`, `pin_check`, `member_hash`, `joint_texts` up to its merge, `MemberRefused`,
-//! `owner_of`, `owner_deep`, `shown`); cli.py (`_run_texts`, `joint`); model.py (`lookup` on a
+//! `owner_of`, `owner_deep`, `shown`, `pinned_members`); cli.py (`_run_texts`, `joint`,
+//! `reprint_lines`: a reprint's members pinned first, tally 2.1.6); model.py (`lookup` on a
 //! member, for the asks its namespace holds).
 //! Invariants: every member of a model is found, then every one pinned, in use order, before
 //! any loads; a member that is a joint model is a frame of a worklist, never a recursion
@@ -252,6 +253,37 @@ pub(super) fn load_joint(
             nested: true,
         });
     }
+}
+
+/// The members of each joint model among a reprint's files, found and pinned as `run` finds
+/// and pins them, before anything prints: for each member, by its alias, the paths of its
+/// files, which a reprint takes as a reality of its own (refcore's `reprint_lines`, its
+/// `pinned_members`; tally 2.1.6, #74). The disk is reached where it holds the model file.
+/// E §3.1 step 1; INTERFACE §1.
+///
+/// # Errors
+///
+/// `LOAD-PIN` for a member absent or changed, `LOAD-DUP` for a `use` twice; `member <a>: …`
+/// for a member's other refusal.
+pub(crate) fn reprint_members(
+    sources: &[Source],
+    disk: &BTreeMap<&str, &[u8]>,
+) -> Result<Vec<BTreeSet<String>>, Stop> {
+    let pool = Pool {
+        given: sources.to_vec(),
+        pin: Pin::Canonical,
+    };
+    let mut members: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+    for source in sources {
+        if !is_model(&source.text) || header_uses(&source.text).is_empty() {
+            continue;
+        }
+        let model = frame(Vec::new(), source.path.clone(), vec![source.clone()]);
+        for (alias, files) in start(model, &pool, disk)?.files {
+            members.insert(alias, files.into_iter().map(|f| f.path).collect());
+        }
+    }
+    Ok(members.into_values().collect())
 }
 
 /// A joint model's frame before its members are found: its aliases, its model file and its

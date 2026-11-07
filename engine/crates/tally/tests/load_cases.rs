@@ -1386,7 +1386,7 @@ version card_2026
                     "  rule step beats base = acc[m - 1] + rate[q2] when pos(m) > 1",
                     "  rule step beats base = acc[m - 1] + rate[q2]",
                 )],
-                "LOAD-GUARD acc[m - n] is a recurrence read with no condition on m or pos(m) guarding it (a.tally:36)",
+                "LOAD-GUARD acc[m - 1] is a recurrence read with no condition on m or pos(m) guarding it (a.tally:36)",
             ),
             // guard-later
             (
@@ -1394,7 +1394,7 @@ version card_2026
                     "  rule step beats base = acc[m - 1] + rate[q2] when pos(m) > 1",
                     "  rule step beats base = acc[m + 1] + rate[q2]",
                 )],
-                "LOAD-GUARD acc[m + n] is a recurrence read with no condition on m or pos(m) guarding it (a.tally:36)",
+                "LOAD-GUARD acc[m + 1] is a recurrence read with no condition on m or pos(m) guarding it (a.tally:36)",
             ),
             // guard-by-beater
             (
@@ -1431,7 +1431,7 @@ version card_2026
                     "  rule step beats base = acc[m - 1] + rate[q2] when pos(m) > 1",
                     "  rule step beats base = acc[m - 1] + acc[m + 1] when pos(m) > 1",
                 )],
-                "LOAD-CYCLE acc reads itself both earlier and later on m",
+                "LOAD-CYCLE acc reads itself both earlier and later on months (a.tally:36)",
             ),
             // not-recurrence
             (
@@ -1453,7 +1453,7 @@ version card_2026
                         "  rule step beats base = lag[m] + rate[q2] when pos(m) > 1",
                     ),
                 ],
-                "LOAD-GUARD acc[m - n] is a recurrence read with no condition on m or pos(m) guarding it (a.tally:40)",
+                "LOAD-GUARD acc[m - 1] is a recurrence read with no condition on m or pos(m) guarding it (a.tally:40)",
             ),
             // dated-move
             (
@@ -1984,7 +1984,7 @@ version card_2026
                         "def fee: money PLN = amt at day\n\ndef lawd: num = spare",
                     ),
                 ],
-                "LOAD-GUARD acc[m - n] is a recurrence read with no condition on m or pos(m) guarding it (a.tally:38)",
+                "LOAD-GUARD acc[m - 1] is a recurrence read with no condition on m or pos(m) guarding it (a.tally:38)",
             ),
             // order-reads-lawdate
             (

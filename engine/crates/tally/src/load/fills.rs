@@ -284,7 +284,7 @@ impl Checker {
             super::check::relation(scope, fkeys)
         };
         let target = Node::new(NodeKind::Fill, id);
-        self.shifted(scope, &target, &rel);
+        self.shifted(scope, &target, &rel, fkeys);
         self.edge(&scope.item, target, rel);
         let taken = self.fill.sides.get(id).and_then(|s| s.taken.clone());
         if taken.is_none() && !self.fill.busy.contains(id) {

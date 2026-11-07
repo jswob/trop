@@ -8,7 +8,7 @@
 //!
 //! The expressions are in `expr.rs`, the sections in `item.rs`; both extend this parser.
 
-use super::lex::{Canon, Kind, Line, Mark, Role, Tok, cannot};
+use super::lex::{Canon, Kind, Line, Mark, Read, Role, Tok, cannot};
 use super::tree::{Known, LSpan, Lit, Number, Unit, UnitTerm};
 use crate::base::{Code, Load, Place, Reach, Refusal};
 use crate::num::Num;
@@ -466,7 +466,7 @@ impl<'a> P<'a> {
         if is_keyword(&tok.text) {
             return Err(self.refuse(Load::Reserved, format!("{} is a keyword", tok.text)));
         }
-        self.mark(Some(self.i), |m| m.name = true);
+        self.mark(Some(self.i), |m| m.read = Read::Name);
         self.skip(1)?;
         Ok(tok.text.clone())
     }
@@ -560,7 +560,7 @@ impl<'a> P<'a> {
         let base = match (&tok.kind, period_word(&tok.text)) {
             (Kind::Id, Some(singular)) => singular.to_owned(),
             (Kind::Id, None) => {
-                self.mark(Some(first), |m| m.name = true);
+                self.mark(Some(first), |m| m.read = Read::Name);
                 tok.text.clone()
             }
             _ => tok.text.clone(),
@@ -773,7 +773,7 @@ impl<'a> P<'a> {
             }
             _ if is_keyword(word) => Err(self.err("a literal")),
             _ => {
-                self.mark(Some(self.i), |m| m.name = true);
+                self.mark(Some(self.i), |m| m.read = Read::Name);
                 self.take(Lit::Name(word.to_owned()))
             }
         }

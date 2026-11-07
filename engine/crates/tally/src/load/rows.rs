@@ -376,7 +376,7 @@ impl Loader {
         } else {
             ReadAs::Plain
         };
-        let instant = row_instant(id, row.instant.as_ref(), read_as, file, line)?;
+        let instant = row_instant(id, &pattern, row.instant.as_ref(), read_as, (file, line))?;
         if instant.is_some() && own_span.is_some() {
             return Err(refuse(
                 Load::Parse,
@@ -564,13 +564,14 @@ enum ReadAs {
     Balance,
 }
 
-/// A row's instant: only a reading's rows have one, and they must (L §4.6 Readings, §5.19).
+/// A row's instant: only a reading's rows have one, and they must; a reading's row with
+/// none is named with its keys (L §4.6 Readings, §5.19, §8.3).
 fn row_instant(
     id: &str,
+    pattern: &[Pat],
     written: Option<&Instant>,
     read_as: ReadAs,
-    file: &str,
-    line: u32,
+    (file, line): (&str, u32),
 ) -> Result<Option<RowInstant>, Stop> {
     let Some(instant) = written else {
         if read_as == ReadAs::Plain {
@@ -578,7 +579,10 @@ fn row_instant(
         }
         return Err(refuse(
             Load::Instant,
-            format!("row {id} of a reading has no instant"),
+            format!(
+                "row {id}{} of a reading has no instant",
+                load_pattern_text(pattern)
+            ),
             file,
             line,
         ));

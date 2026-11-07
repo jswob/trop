@@ -321,7 +321,7 @@ fn scenarios(files: &[File], model: &str) -> Result<Scenarios, Stop> {
         for section in &file.sections {
             found
                 .section
-                .insert(section_id(section).0.to_owned(), head.id.clone());
+                .insert(section.id_line().0.to_owned(), head.id.clone());
         }
     }
     for (id, path, line) in declared {
@@ -333,23 +333,4 @@ fn scenarios(files: &[File], model: &str) -> Result<Scenarios, Stop> {
         }
     }
     Ok(found)
-}
-
-/// A section's id and line.
-pub(super) fn section_id(section: &Section) -> (&str, u32) {
-    match section {
-        Section::Source(s) => (&s.id, s.line),
-        Section::Version(s) => (&s.id, s.line),
-        Section::Unit(s) => (&s.id, s.line),
-        Section::Kind(s) => (&s.id, s.line),
-        Section::Index(s) => (&s.id, s.line),
-        Section::Place(s) => (&s.id, s.line),
-        Section::Input(s) => (&s.id, s.line),
-        Section::Band(s) => (&s.id, s.line),
-        Section::Def(s) => (&s.id, s.line),
-        Section::Move(s) => (&s.id, s.line),
-        Section::Ask(s) => (&s.id, s.line),
-        Section::Axis(s) => (&s.id, s.line),
-        Section::Fill(s) => (&s.id, s.line),
-    }
 }

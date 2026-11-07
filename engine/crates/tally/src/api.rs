@@ -241,7 +241,23 @@ fn finish(outcome: Result<Answered, Stop>) -> Result<Answer, NotImplemented> {
 /// # Errors
 ///
 /// [`NotImplemented`] for a form whose order the engine doesn't build yet (a member's keys).
-pub fn reprint(mut files: Vec<(Given, String)>) -> Result<Answer, NotImplemented> {
+pub fn reprint(files: Vec<(Given, String)>) -> Result<Answer, NotImplemented> {
+    reprint_in(files, &BTreeMap::new())
+}
+
+/// [`reprint`] with the file table's files, `disk`: a joint model's members are found among
+/// the files given, by the names they print under, then on `disk` where it holds the model's
+/// file, and pinned as `run` pins them, before anything prints; each member's files given are
+/// a reality of their own (E §3.1 step 1; INTERFACE §1; tally 2.1.6, #74, #91). The CLI's
+/// entry.
+///
+/// # Errors
+///
+/// As [`reprint`].
+pub fn reprint_in(
+    mut files: Vec<(Given, String)>,
+    disk: &BTreeMap<&str, &[u8]>,
+) -> Result<Answer, NotImplemented> {
     files.sort_by(|(a, x), (b, y)| (&a.path, x).cmp(&(&b.path, y)));
     let mut sources = Vec::with_capacity(files.len());
     for (file, name) in files {
@@ -253,7 +269,9 @@ pub fn reprint(mut files: Vec<(Given, String)>) -> Result<Answer, NotImplemented
         };
         sources.push(Source { path: name, text });
     }
-    let printed = match crate::syntax::reprint(&sources) {
+    let printed = match crate::load::reprint_members(&sources, disk)
+        .and_then(|members| crate::syntax::reprint_among(&sources, &members))
+    {
         Ok(printed) => printed,
         Err(Stop::Refused(refusal)) => return Ok(Answer::refused(&refusal)),
         Err(Stop::NotBuilt(_) | Stop::Deep) => return Err(NotImplemented),

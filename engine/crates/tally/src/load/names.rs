@@ -9,7 +9,7 @@
 //! key of a list or open index, and no thing but a currency or a declared place, is named like
 //! an id.
 
-use super::steps::{Loader, refuse, section_id};
+use super::steps::{Loader, refuse};
 use crate::base::{Code, Load, Refusal};
 use crate::model::{
     BUILTIN_INDEXES, BUILTIN_INPUTS, BindInfo, Domain, InputInfo, NameKind, PRELUDE_KINDS, Ty,
@@ -46,7 +46,7 @@ impl Loader {
     /// function's name. L §2.5, §5.9.
     pub(super) fn register_names(&mut self) -> Result<(), Stop> {
         for (file, section) in &self.sections {
-            let (id, line) = section_id(section);
+            let (id, line) = section.id_line();
             if self.m.names.contains_key(id) {
                 let message = if is_builtin_id(id) {
                     format!("{id} is declared twice (a built-in id)")
