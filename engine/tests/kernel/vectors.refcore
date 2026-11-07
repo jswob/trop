@@ -16019,4 +16019,142 @@ version v
 
 ask r1: x
 ,,1:1,84:refused: LOAD-UNIT nominal 12 is a compounding code (g14/nominal_row_twin.tally:16)
+,16:g7/flows_touched,2:g7,26:run g7/flows_touched.tally,3410:22:g7/flows_touched.tally,3378:model g7_flows_touched
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, tally 2.1.6 (P40), G7: reads (L §5.14, §5.14.3, §8.2) where 2.1.5 and 2.1.6 agree. A movement refused by its when, from world into konto2 on 2026-03-10: flows of konto2 over spans before it, across it, after it and from before the run's start, bal before, on and after its day, and flows of the move by leg and by key. A hole day into box_h, read before the refused day. bal(fresh, d) with uncertain on a place with no reading, before, between and after its two uncertain movements. Flows of a move over a span with no movement: of a kind whose one leg has a unit, between outside places, and of one leg of a kind whose two legs are in two units."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+kind maybe: transfers uncertain
+
+kind pays: event certain
+  leg cash: PLN
+
+kind swaps: event certain
+  leg cash: PLN
+  leg fee: EUR
+
+index month = month 2026-01..2026-03
+
+place konto2: accounts PLN lives 2026-01-01..
+
+place box_h: accounts PLN lives 2026-01-01..
+
+place fresh: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+place shop: outside lives 2026-01-01..
+
+input amt: money PLN
+
+input fee_amt: money EUR
+
+input gate_dom: int
+
+input div_when[m in month]: num
+
+input hole_day: date question "When does the parcel come?"
+
+input u_in: date
+
+input u_late: date
+
+input ext_day: date
+
+move gate[m in month]: transfers
+  on day_of(m, gate_dom)
+  when div_when[m] * div_when[m] / div_when[m] > 0
+  leg cash from world to konto2 amount amt
+
+move parcel: transfers
+  on hole_day
+  leg cash from world to box_h amount amt
+
+move fr_in: maybe
+  on u_in
+  leg cash from world to fresh amount amt
+
+move fr_late: maybe
+  on u_late
+  leg cash from world to fresh amount amt
+
+move ext: pays
+  on ext_day
+  leg cash from world to shop amount amt
+
+move swap: swaps
+  on ext_day
+  leg cash from world to shop amount amt
+  leg fee from world to shop amount fee_amt
+
+ask q_place: flows(konto2, 2026-02-01 .. 2026-02-28), flows(konto2, 2026-03-01 .. 2026-03-31), flows(konto2, 2026-03-11 .. 2026-03-31), flows(konto2, 2026-01-01 .. 2026-03-09), flows(konto2, 2025-12-01 .. 2026-01-31), flows(box_h, 2026-01-01 .. 2026-01-31), flows(box_h, 2026-02-01 .. 2026-02-28) law cut
+
+ask q_bal: bal(konto2, d) for d in [2026-02-28, 2026-03-09, 2026-03-10, 2026-03-31] law cut
+
+ask q_move: flows(gate.cash, 2026-01-01 .. 2026-02-28), flows(gate.cash, 2026-01-01 .. 2026-03-31), flows(gate[2026-02].cash, 2026-01-01 .. 2026-03-31), flows(gate[2026-03], 2026-03-01 .. 2026-03-31), flows(gate, 2026-02-01 .. 2026-02-28), flows(ext, 2026-01-01 .. 2026-01-10), flows(swap.cash, 2026-01-01 .. 2026-01-10), flows(swap.fee, 2026-01-01 .. 2026-01-10), flows(ext, 2026-01-01 .. 2026-01-31) law cut
+
+ask q_unc: bal(fresh, d) with uncertain for d in [2026-01-22, 2026-01-24, 2026-01-28] law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  amt = 10.00 PLN
+  fee_amt = 2.00 EUR
+  gate_dom = 10
+  div_when[2026-01] = 1
+  div_when[2026-02] = 2
+  div_when[2026-03] = 0
+  u_in = 2026-01-23
+  u_late = 2026-01-27
+  ext_day = 2026-01-15
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto2] = 0 PLN at 2026-01-01 start
+  opening[box_h] = 0 PLN at 2026-01-01 start
+,,1:0,1403:q_bal (d = 2026-02-28): 20.00 PLN
+  unfulfilled: gate[2026-01]
+  unfulfilled: gate[2026-02]
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-03-09): 20.00 PLN
+  unfulfilled: gate[2026-01]
+  unfulfilled: gate[2026-02]
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-03-10): refused: RUN-DIV division by zero
+  unfulfilled: gate[2026-01]
+  unfulfilled: gate[2026-02]
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-03-31): refused: RUN-DIV division by zero
+  unfulfilled: gate[2026-01]
+  unfulfilled: gate[2026-02]
+  law date 2026-02-15, cut 2026-02-15
+q_move: (20.00 PLN, refused: RUN-DIV division by zero, 10.00 PLN, refused: RUN-DIV division by zero, 10.00 PLN, 0.00 PLN, 0.00 PLN, 0.00 EUR, 10.00 PLN)
+  unfulfilled: ext
+  unfulfilled: gate[2026-01]
+  unfulfilled: gate[2026-02]
+  law date 2026-02-15, cut 2026-02-15
+q_place: (10.00 PLN, refused: RUN-DIV division by zero, 0.00 PLN, 20.00 PLN, ?"before the run's start" (konto2), ?"When does the parcel come?" (hole_day), ?"When does the parcel come?" (hole_day))
+  unfulfilled: gate[2026-01]
+  unfulfilled: gate[2026-02]
+  law date 2026-02-15, cut 2026-02-15
+q_unc (d = 2026-01-22): 0.00 PLN
+  law date 2026-02-15, cut 2026-02-15
+q_unc (d = 2026-01-24): 10.00 PLN
+  uncertain: fr_in
+  law date 2026-02-15, cut 2026-02-15
+q_unc (d = 2026-01-28): 20.00 PLN
+  uncertain: fr_in
+  uncertain: fr_late
+  law date 2026-02-15, cut 2026-02-15
 ,

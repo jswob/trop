@@ -125,3 +125,4 @@ g14/by_n	g14		engine/tests/kernel/	engine/tests/kernel/g14/by_n.tally
 g14/by_n_years_98	g14		engine/tests/kernel/	engine/tests/kernel/g14/by_n_years_98.tally		
 g14/nominal_row	g14		engine/tests/kernel/	engine/tests/kernel/g14/nominal_row.tally		
 g14/nominal_row_twin	g14		engine/tests/kernel/	engine/tests/kernel/g14/nominal_row_twin.tally		
+g7/flows_touched	g7		engine/tests/kernel/	engine/tests/kernel/g7/flows_touched.tally		

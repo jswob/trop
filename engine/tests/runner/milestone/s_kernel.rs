@@ -160,7 +160,10 @@ mod tests {
     /// beside a twin that doesn't; flows of a place beside a refused `when` whose legs don't
     /// touch it, which stands (tally 2.1.6, #51), a hole
     /// amount, a hole day and the run's start; flows of a move by leg and keys, and over a
-    /// span with no movement; `bal(x, u, d)`; `with uncertain` around a reading; flows of a
+    /// span with no movement; `bal(x, u, d)`; `with uncertain` around a reading; the reads
+    /// 2.1.5 and 2.1.6 agree on where a refused `when` touches the place, its other leg
+    /// outside, beside a hole day, `with uncertain` with no reading and a move's flows over a
+    /// span with no movement, of an outside pair and of one leg of two units (P40); flows of a
     /// move whose leg the walk refuses, asked first while the walk it needs reads a def deeper
     /// than the evaluation's depth limit, in a decision and in a plan (`kernel/g7/`).
     #[test]
