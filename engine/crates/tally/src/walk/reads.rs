@@ -1349,3 +1349,87 @@ fn counted(dated: Option<Day>, window: Window) -> bool {
         Window::Projected { start, day } => start <= d && d <= day,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::Days;
+    use crate::api::{Asks, Given, Pin, Request, run};
+
+    /// A decision over three months whose day is refused in February (a division by zero),
+    /// its flows read over January and over February.
+    const REFUSED_DAY: &str = r#"model refused_day
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+
+source fixture "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+place box: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input dec_dom: int
+
+input fee_amt: money PLN
+
+input small_put: money PLN
+
+input divisor[m in month]: num
+
+move split[m in month]: transfers
+  on day_of(m, dec_dom * divisor[m] / divisor[m])
+  at start_of(m)
+  reads box
+  leg cash from world to box amount if bal(box) >= small_put then small_put else fee_amt
+
+ask q_fl: flows(split, 2026-01-01 .. 2026-01-31), flows(split, 2026-02-01 .. 2026-02-28) law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  dec_dom = 20 "the decision's day of the month"
+  fee_amt = 3.00 "a fee"
+  small_put = 1.00 "a small amount"
+  divisor[2026-01] = 1 "answered"
+  divisor[2026-02] = 0 "a division by zero, refused"
+  divisor[2026-03] = 2 "answered"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[box] = 0 at 2026-01-01 start
+"#;
+
+    #[test]
+    fn flows_of_a_decision_whose_day_is_refused_is_refused_over_any_span() {
+        // L §8.4 (tally 2.1.6): split[2026-02]'s day is refused, so it may fall in any span,
+        // and every flows of its move is that refusal; refcore prints 0.00 PLN for February
+        // (#104, refcore's flows_move counts an unrun instance only for a hole day)
+        let given = vec![Given {
+            path: "refused_day.tally".to_owned(),
+            bytes: Some(REFUSED_DAY.as_bytes().to_vec()),
+        }];
+        let request = Request {
+            asks: Asks::Named(vec!["q_fl".to_owned()]),
+            pin: Pin::Canonical,
+            days: Days::Events,
+        };
+        let answer = run(given, &request).expect("an answer");
+        assert_eq!(
+            answer.lines(),
+            [
+                "q_fl: (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)",
+                "  unfulfilled: split[2026-01]",
+                "  law date 2026-02-15, cut 2026-02-15"
+            ],
+            "both spans refused"
+        );
+    }
+}

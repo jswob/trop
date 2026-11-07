@@ -1031,6 +1031,20 @@ ask bank_end: bal(bank, 2025-07-10)
     }
 
     #[test]
+    fn a_movement_ranks_twice_its_place_in_the_typed_order_plus_one() {
+        // E §4.1 (tally 2.1.6): rent (20 January), the sweep decision (10 February) and the
+        // wage (5 May), each at twice its place among the walk's movement orders, plus one
+        let m = reality();
+        let walk = walked(&m, Days::Events);
+        let ranks: Vec<u32> = walk
+            .orders
+            .iter()
+            .map(|order| walk.plan_rank(order).expect("a rank"))
+            .collect();
+        assert_eq!(ranks, [1, 3, 5], "the plans' and the decision's ranks");
+    }
+
+    #[test]
     fn a_state_moves_by_its_entries_and_a_reset_answers_the_holes() {
         let start = St::of(Some(Num::int(5)));
         let moved = apply(&start, &Change::Delta(Num::int(-7)), 0).expect("moves");

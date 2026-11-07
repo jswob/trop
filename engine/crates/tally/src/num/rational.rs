@@ -508,6 +508,45 @@ mod tests {
     }
 
     #[test]
+    fn a_range_is_past_its_limit_counted_uncapped_and_its_step_is_positive() {
+        // L §7.6 item 2: ⌊(hi − lo) ÷ step⌋ + 1 keys, counted on the big tier, never stepped
+        let (one, two, six) = (Num::int(1), Num::int(2), Num::int(6));
+        let past = |lo: &Num, hi: &Num, step: &Num, limit| lo.range_past(hi, step, limit);
+        assert_eq!(
+            past(&one, &six, &two, 3),
+            Ok(false),
+            "1 .. 6 step 2: 3 keys"
+        );
+        assert_eq!(
+            past(&one, &Num::int(7), &two, 3),
+            Ok(true),
+            "1 .. 7 step 2: 4"
+        );
+        assert_eq!(past(&two, &one, &one, 0), Ok(false), "2 .. 1: no key");
+        let nines = Big::pow(10, 4_096)
+            .expect("pow")
+            .sub(&Big::from_i128(1))
+            .expect("sub");
+        let top = Num::from_big(BigRat::integer(nines)).expect("10^4096 - 1");
+        let ntop = top.checked_neg().expect("-top");
+        assert_eq!(
+            past(&ntop, &top, &one, u64::MAX),
+            Ok(true),
+            "-top .. top: past every limit, uncapped"
+        );
+        assert_eq!(
+            past(&one, &two, &Num::zero(), 3),
+            Err(NumError::Domain),
+            "step 0"
+        );
+        assert_eq!(
+            past(&one, &two, &Num::int(-1), 3),
+            Err(NumError::Domain),
+            "step -1"
+        );
+    }
+
+    #[test]
     fn the_cap_is_4096_digits() {
         // BUILDER §10: fixtures at 13 606, 13 607 and 13 608 bits; 10^4096 - 1 passes,
         // 10^4096 is refused

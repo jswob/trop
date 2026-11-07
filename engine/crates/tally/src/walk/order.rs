@@ -571,3 +571,111 @@ fn value_cmp(x: &Value, y: &Value) -> Result<Ordering, Stop> {
 fn refuse(code: RunCode, message: String) -> Stop {
     Stop::Refused(Refusal::new(Code::Run(code), message))
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::Days;
+    use crate::api::{Asks, Given, Pin, Request, run};
+
+    /// Two decisions over three months whose key's `where` is refused in February (a
+    /// division by zero): `split`'s body is answered there, `spill`'s refused too, by its
+    /// `when`.
+    const REFUSED_WHERE: &str = r#"model refused_where
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+
+source fixture "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+place konto: accounts PLN lives 2026-01-01..
+
+place box: accounts PLN lives 2026-01-01..
+
+place bin: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input dec_dom: int
+
+input fee_amt: money PLN
+
+input wdiv[m in month]: num
+
+input adiv[m in month]: num
+
+move split[m in month where 1 / wdiv[m] > 0]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads box
+  leg cash from world to box amount fee_amt + 0 * bal(box)
+
+move spill[m in month where 1 / wdiv[m] > 0]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads bin
+  when 1 / adiv[m] > 0
+  leg cash from world to bin amount fee_amt + 0 * bal(bin)
+
+ask q_bal: bal(konto, d), bal(box, d), bal(bin, d) for d in [2026-01-20, 2026-02-19, 2026-02-20, 2026-03-20] law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  dec_dom = 20 "the decisions' day of the month"
+  fee_amt = 3.00 "a fee"
+  wdiv[2026-01] = 1 "answered"
+  wdiv[2026-02] = 0 "a division by zero: the key's where is refused"
+  wdiv[2026-03] = 2 "answered"
+  adiv[2026-01] = 1 "answered"
+  adiv[2026-02] = 0 "a division by zero: spill's when is refused too"
+  adiv[2026-03] = 2 "answered"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 100 at 2026-01-01 start
+  opening[box] = 0 at 2026-01-01 start
+  opening[bin] = 0 at 2026-01-01 start
+"#;
+
+    #[test]
+    fn a_decision_refused_by_its_keys_where_refuses_the_places_its_legs_give_at_its_point() {
+        // L §8.4 (tally 2.1.6): split[2026-02] and spill[2026-02] are refused by their key's
+        // where; each refuses the place its leg gives from its point, box and bin, whether its
+        // body is answered (split) or refused too (spill, its leg's place read at its point),
+        // and konto stands; refcore drops both instances (#104)
+        let given = vec![Given {
+            path: "where.tally".to_owned(),
+            bytes: Some(REFUSED_WHERE.as_bytes().to_vec()),
+        }];
+        let request = Request {
+            asks: Asks::Named(vec!["q_bal".to_owned()]),
+            pin: Pin::Canonical,
+            days: Days::Events,
+        };
+        let answer = run(given, &request).expect("an answer");
+        let values: Vec<&str> = answer
+            .lines()
+            .iter()
+            .filter(|line| line.starts_with("q_bal "))
+            .map(String::as_str)
+            .collect();
+        assert_eq!(
+            values,
+            [
+                "q_bal (d = 2026-01-20): (100.00 PLN, 3.00 PLN, 3.00 PLN)",
+                "q_bal (d = 2026-02-19): (100.00 PLN, 3.00 PLN, 3.00 PLN)",
+                "q_bal (d = 2026-02-20): (100.00 PLN, refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)",
+                "q_bal (d = 2026-03-20): (100.00 PLN, refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)"
+            ],
+            "box and bin refused from 20 February, konto standing"
+        );
+    }
+}

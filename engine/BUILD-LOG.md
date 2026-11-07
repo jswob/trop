@@ -1495,3 +1495,27 @@ The builder of the pre-M1 run, group G4a of `tmp/pre-m1-build/plan.md` (the coor
 - **What I tried:** nothing to try: the spec is clear.
 - **What I ask:** refcore checks the written keys as its last load check, before `REQ-ASK`, at the next round; T then adds vectors of the two forms.
 - **State:** G4a's commit holds this report; no test, spec or refcore file touched.
+
+## 2026-11-07 pre-M1, P13: the mutation batch on the run's kernel changes (issue #97)
+
+The builder of the pre-M1 run, the batch P13 deferred to after G4a, on 633d5d6 (`check full` green, no gating id red). `mutants-local` on the eight kernel files `git diff a48a800..HEAD` touches, each filtered to the functions G1a to G4a changed or added (regexes in `tmp/pre-m1-build/p13/run.sh`), four runs one after another, niced, jobs 6: 17:06 to 18:56.
+
+- **Per file, mutants / caught / missed / unviable / timed out:** `walk/agenda.rs` 48 / 26 / 21 / 1 / 0; `walk/plan.rs` 68 / 41 / 14 / 13 / 0; `walk/order.rs` 40 / 28 / 10 / 2 / 0; `walk/state.rs` 9 / 3 / 6 / 0 / 0; `walk/reads.rs` 9 / 6 / 2 / 1 / 0; `book/adjust.rs` 14 / 10 / 0 / 4 / 0; `num/rational.rs` 4 / 3 / 1 / 0 / 0; `read/rows.rs` 1 / 0 / 0 / 1 / 0. In all, 193 / 117 / 54 / 22 / 0.
+- **The 54 missed:** 29 are older code, each already a row (agenda 16, order 5, plan 8). 25 are on the run's code: 4 `R-87: equivalent:` (`plan_rank`'s `delete !`, `<` → `<=`, `==` → `!=`: every order it is asked is among the walk's, each once, so the ranks shift alike; `range_past`'s `||` → `&&`: `numbers_past` refuses a step that isn't positive first). The other 21 are listed `R-87: missed:`. 14 are `open:` with a recipe where refcore prints the engine's bytes, for T: `movement_orders` → `vec![]`; `plan_rank` → `Ok(0)`, `Ok(1)`, `<` → `==`; `schedule_plan`'s rank; `schedule_decision`'s `<` at l.552 three ways; `refused_tuple`'s `<` → `>`; `read_or_refused`'s guard three ways; `scenario_early` → `false`; `scenario_from` → `None`. 1 is `open:` and untraced: `decision_runs`' `&&` → `||`. 6 are `held for #104`, where refcore drops a decision refused by its key's `where` or counts a refused day as no flows: `run_one_body` ×2, `refused_at_point`, `book_run`'s `&&` → `||` and `delete !`, `decision_runs`' `!=` → `==`.
+- **The l.552 key:** `schedule_decision`'s `replace < with <=` / `==` / `>` keys also match l.560's mutants, which were equivalent. So rows 115 to 117 are now `missed: open:`, with l.560's reason kept under "Also", as row 147 does.
+- **Row 141:** `book_run`'s `delete !` was equivalent. G2's `refused_at_point` gives a refused run known legs, so it is now `missed: held for #104`.
+- **Own tests (not gating, R-84; 11, each seen failing on its mutants in six rounds of hand-applied mutants, `tmp/pre-m1-build/p13/round1.log` to `round6.log`):**
+  - `walk/agenda.rs`: a decision's later leg among the day's plans; a scenario's decisions on its `from` and after it.
+  - `walk/state.rs`: the ranks 1, 3, 5.
+  - `walk/reads.rs`: flows of a decision whose day is refused (G2's `dec-day-flows` probe).
+  - `walk/order.rs`: two decisions refused by their key's `where`, one with its body answered, one refused by its `when`.
+  - `walk/plan.rs`: a refused `where` before a later binding; a refused plan's leg place refused; a load refusal met reading it; a scenario's plan before its `from`.
+  - `num/rational.rs`: `range_past`.
+  - Each test's text is a probe run on refcore and the engine (`tmp/pre-m1-build/p13/probe/`): byte-equal except the two #104 ones. The first try at the order test missed `refused_at_point` (a refused amount stays with its leg), so its `spill` is refused by its `when`.
+- **The six `held for #97` rows:** 5 out. `Order::text` ×2 and `Walk::text_rank` `Ok(0)`/`Ok(1)` name functions G2 deleted. `schedule_plan`'s `==` → `!=` names a comparison that is gone, and is no longer generated. Kept: `schedule_plan`'s `delete field rank`, still missed, now `open:` with the later-leg recipe. Also out: 9 more rows of deleted functions, `quoted` ×5 and `Walk::text_rank`'s other 4.
+- **Rows:** 200 (104 equivalent, 96 missed) → 204 (99, 105): 14 out, 18 in, 7 reasons changed (rows 115 to 117, 125, 141, 197, 198, by their numbers before).
+- **For T, before the final dispatch:** the 14 recipes as kernel vectors (refcore's bytes are in each row); a vector that catches a mutant takes its row out, as the survivors job fails on a listed mutant now caught. Without them, those rows stay missed. The 6 #104 rows wait for refcore's fix at M2's round.
+- **Seen, not changed (older code, notes only):** rows 148, 160, 161, 173 and `link_tuple`'s say "not built at S: only a load-coded refusal met at run", but since G4a (N6) such a refusal prints, so they may now be testable. `decision_runs`' `&&` → `||` (row 198) isn't traced to an output.
+- **Size:** 6 code files, test modules only (+714, no engine line changed), and `engine/MUTANTS-SURVIVORS.md`.
+- **Totals:** exception delta +0 (6; report-only hits 5, as locked). check full: "check full: green, 31 steps (1850s)" (guard-test skipped as its inputs are a green run's; rules-selftest ran); gating "155 tests run: 155 passed (1 slow), 0 skipped", no gating id red. The run before was red only on clippy-tests (two raw strings with needless `#`s, fixed). Wall time: mutants 1 h 50 min, the six rounds about 8 min, the two check full runs 45 min.
+- **Next:** T's vectors for the 14 recipes; then G4b. Open STOP-REPORTs: G4a's (#106), unchanged.

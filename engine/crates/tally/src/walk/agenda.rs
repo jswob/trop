@@ -704,3 +704,152 @@ pub fn endings(m: &Reality, walk: &Walk) -> BTreeMap<Day, Vec<String>> {
 fn is_plan(m: &Reality, id: &str) -> bool {
     m.moves.get(id).is_some_and(|mv| !mv.decision)
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::Days;
+    use crate::api::{Asks, Given, Pin, Request, run};
+
+    /// The printed lines of ask `ask` over `files`, under the event walk.
+    fn answer(files: &[(&str, &str)], ask: &str) -> Vec<String> {
+        let given = files
+            .iter()
+            .map(|(path, text)| Given {
+                path: (*path).to_owned(),
+                bytes: Some(text.as_bytes().to_vec()),
+            })
+            .collect();
+        let request = Request {
+            asks: Asks::Named(vec![ask.to_owned()]),
+            pin: Pin::Canonical,
+            days: Days::Events,
+        };
+        run(given, &request).expect("an answer").lines().to_vec()
+    }
+
+    /// A decision dated 3 January whose leg is dated 10 January, and a plan dated 10 January,
+    /// each moving into `gone` after its lifespan ends: both refuse `src` that day.
+    const LATER_LEG: &str = r#"model later_leg
+  tally 2
+  on 2025-12-31
+  start 2025-01-01
+  end 2025-12-31
+
+source card "a card"
+
+unit DUK: currency minor 0.01
+
+input amt: money DUK
+
+input d0: date
+
+input d1: date
+
+place src: accounts DUK lives 2025-01-01..
+
+place gone: accounts DUK lives 2025-01-01..2025-01-05
+
+move a: transfers
+  on d0
+  leg cash from src to gone amount amt
+
+move sweep: transfers
+  on d1
+  reads src
+  leg cash from src to gone amount min(amt, bal(src)) on d0
+
+ask q: bal(src, 2025-01-31)
+
+version facts
+  cite card
+  governs always
+  known 2025-01-01
+  amt = 1.00 DUK
+  d0 = 2025-01-10
+  d1 = 2025-01-03
+  opening[src] = 500.00 DUK at 2025-01-01 start
+  opening[gone] = 0 DUK at 2025-01-01 start
+"#;
+
+    #[test]
+    fn a_decisions_later_leg_takes_its_place_among_the_days_plans_in_the_movement_order() {
+        // E §4.1 (tally 2.1.6): the decision's instance is dated 3 January, before the plan's
+        // 10 January, so its leg on 10 January is booked first there and src keeps its
+        // refusal; ranked as the plans are scheduled, the plan's would be first
+        assert_eq!(
+            answer(&[("later_leg.tally", LATER_LEG)], "q"),
+            [
+                "q: refused: RUN-LIFESPAN sweep.cash moves into or out of gone outside its lifespan",
+                "  cut 2025-12-31"
+            ],
+            "the decision's refusal, first in the typed movement order"
+        );
+    }
+
+    /// The base of a scenario whose two decisions are dated on its `from` and after it.
+    const BASE: &str = r#"model hh
+  tally 2
+  on 2025-12-31
+  start 2025-12-30
+  end 2026-01-05
+
+source s "a card"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2025-01-01..
+
+place world: outside lives 1900-01-01..
+
+input from_day: date
+
+input late_day: date
+
+input top_amt: money PLN
+
+input lift_amt: money PLN
+
+ask q: bal(konto, 2026-01-05)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  from_day = 2026-01-01
+  late_day = 2026-01-03
+  top_amt = 1.00 PLN
+  lift_amt = 2.00 PLN
+  opening[konto] = 10.00 PLN at 2025-12-30 start
+"#;
+
+    const SCENARIO: &str = r"scenario boost over hh
+  tally 2
+  from 2026-01-01
+
+move top: transfers
+  on from_day
+  reads konto
+  leg cash from world to konto amount min(top_amt, bal(konto))
+
+move lift: transfers
+  on late_day
+  reads konto
+  leg cash from world to konto amount min(lift_amt, bal(konto))
+
+ask q_boost: bal(konto, 2026-01-05) in boost
+";
+
+    #[test]
+    fn a_scenarios_decision_books_on_its_from_and_after_it() {
+        // L §6.4: a move a scenario declares books nothing before its from, and books on the
+        // from itself and after it: 10.00 + 1.00 (on the from) + 2.00 (two days after)
+        assert_eq!(
+            answer(
+                &[("model.tally", BASE), ("scen.tally", SCENARIO)],
+                "q_boost"
+            ),
+            ["q_boost: 13.00 PLN", "  world: boost", "  cut 2025-12-31"],
+            "both decisions booked"
+        );
+    }
+}

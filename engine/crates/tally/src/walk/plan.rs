@@ -1583,3 +1583,298 @@ fn refuse_load(code: Load, message: String) -> Stop {
 pub(crate) fn invariant(what: &str) -> Stop {
     Stop::Refused(Refusal::new(Code::EngineInvariant, what.to_owned()))
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::Days;
+    use crate::api::{Asks, Given, Pin, Request, run};
+
+    /// A plan over two bindings whose first key's `where` is refused in February (a
+    /// division by zero), before its second binding.
+    const LATER_KEY: &str = r#"model later_key
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+
+source fixture "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+index tier = 1..2
+
+place konto: accounts PLN lives 2026-01-01..
+
+place box: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input dec_dom: int
+
+input fee_amt: money PLN
+
+input wdiv[m in month]: num
+
+move topup[m in month where 1 / wdiv[m] > 0, t in tier]: transfers
+  on day_of(m, dec_dom)
+  leg cash from world to box amount fee_amt
+
+ask q_bal: bal(konto, d), bal(box, d) for d in [2026-01-20, 2026-03-20]
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  dec_dom = 20 "the day of the month"
+  fee_amt = 3.00 "a fee"
+  wdiv[2026-01] = 1 "answered"
+  wdiv[2026-02] = 0 "a division by zero: the key's where is refused"
+  wdiv[2026-03] = 2 "answered"
+  opening[konto] = 100 at 2026-01-01 start
+  opening[box] = 0 at 2026-01-01 start
+"#;
+
+    #[test]
+    fn a_refused_where_before_a_later_binding_refuses_every_place_from_the_start() {
+        // L §5.14 Keys, §8.4 (tally 2.1.6): topup[2026-02]'s where is refused before its tier
+        // is bound, so it has no day or places to read and the move's instances are refused,
+        // every place from the run's start, as refcore's insts_of_tuples raises
+        let given = vec![Given {
+            path: "later_key.tally".to_owned(),
+            bytes: Some(LATER_KEY.as_bytes().to_vec()),
+        }];
+        let request = Request {
+            asks: Asks::Named(vec!["q_bal".to_owned()]),
+            pin: Pin::Canonical,
+            days: Days::Events,
+        };
+        let answer = run(given, &request).expect("an answer");
+        assert_eq!(
+            answer.lines(),
+            [
+                "q_bal (d = 2026-01-20): (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)",
+                "  cut 2026-02-15",
+                "q_bal (d = 2026-03-20): (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)",
+                "  cut 2026-02-15"
+            ],
+            "every place refused from the start"
+        );
+    }
+
+    /// A plan over three months whose `when` is refused in February, and its leg's place
+    /// there too.
+    const REFUSED_PLACE: &str = r#"model refused_place
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+
+source fixture "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+
+place konto: accounts PLN lives 2026-01-01..
+
+place box: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input dec_dom: int
+
+input fee_amt: money PLN
+
+input wdiv[m in month]: num
+
+move topup[m in month]: transfers
+  on day_of(m, dec_dom)
+  when 1 / wdiv[m] > 0
+  leg cash from world to (if 1 / wdiv[m] > 0 then box else konto) amount fee_amt
+
+ask q_bal: bal(konto, d), bal(box, d) for d in [2026-01-20, 2026-02-19, 2026-02-20]
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  dec_dom = 20 "the day of the month"
+  fee_amt = 3.00 "a fee"
+  wdiv[2026-01] = 1 "answered"
+  wdiv[2026-02] = 0 "a division by zero: the when and the place are refused"
+  wdiv[2026-03] = 2 "answered"
+  opening[konto] = 100 at 2026-01-01 start
+  opening[box] = 0 at 2026-01-01 start
+"#;
+
+    /// The same plan whose leg's place, read only for February's refused instance, meets a
+    /// load refusal at run (a rate per year times a day).
+    const PLACE_LOAD_REFUSAL: &str = r#"model place_load_refusal
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+
+source fixture "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+
+place konto: accounts PLN lives 2026-01-01..
+
+place box: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input dec_dom: int
+
+input fee_amt: money PLN
+
+input r5: rate
+
+input wdiv[m in month]: num
+
+move topup[m in month]: transfers
+  on day_of(m, dec_dom)
+  when 1 / wdiv[m] > 0
+  leg cash from world to (if wdiv[m] == 0 then (if r5 * 1 day > 0 then konto else box) else box) amount fee_amt
+
+ask q_bal: bal(konto, d), bal(box, d) for d in [2026-01-20, 2026-02-19, 2026-02-20]
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  dec_dom = 20 "the day of the month"
+  fee_amt = 3.00 "a fee"
+  r5 = 5 %/year "five per cent a year"
+  wdiv[2026-01] = 1 "answered"
+  wdiv[2026-02] = 0 "a division by zero: the when and the place are refused"
+  wdiv[2026-03] = 2 "answered"
+  opening[konto] = 100 at 2026-01-01 start
+  opening[box] = 0 at 2026-01-01 start
+"#;
+
+    /// A base whose scenario declares a plan over the days, kept by a `when` load can't see,
+    /// that exists on 31 December, before the scenario's `from`.
+    const EARLY_BASE: &str = r#"model hh
+  tally 2
+  on 2026-01-02
+  start 2025-12-30
+  end 2026-01-05
+
+source s "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2025-01-01..
+
+place world: outside lives 1900-01-01..
+
+input from_day: date
+
+input top_amt: money PLN
+
+input lift_amt: money PLN
+
+ask q: bal(konto, 2026-01-05), top_amt, lift_amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  from_day = 2025-12-31
+  top_amt = 1.00 PLN
+  lift_amt = 2.00 PLN
+  opening[konto] = 10.00 PLN at 2025-12-30 start
+"#;
+
+    const EARLY_SCENARIO: &str = r"scenario topup over hh
+  tally 2
+  from 2026-01-01
+
+move top[d in days]: transfers
+  on d
+  when d >= from_day
+  leg cash from world to konto amount top_amt
+
+ask q_top: bal(konto, 2026-01-05) in topup
+";
+
+    /// The printed lines of ask `ask` over `files`, under the event walk.
+    fn answer(files: &[(&str, &str)], ask: &str) -> Vec<String> {
+        let given = files
+            .iter()
+            .map(|(path, text)| Given {
+                path: (*path).to_owned(),
+                bytes: Some(text.as_bytes().to_vec()),
+            })
+            .collect();
+        let request = Request {
+            asks: Asks::Named(vec![ask.to_owned()]),
+            pin: Pin::Canonical,
+            days: Days::Events,
+        };
+        run(given, &request).expect("an answer").lines().to_vec()
+    }
+
+    #[test]
+    fn a_refused_plan_whose_legs_place_is_refused_refuses_every_place_from_its_day() {
+        // L §8.4 (tally 2.1.6): topup[2026-02]'s when is refused, and its leg's place can't be
+        // read there either, so it refuses every place from its day, 20 February; January's
+        // instance books, and nothing is refused before
+        assert_eq!(
+            answer(&[("place.tally", REFUSED_PLACE)], "q_bal"),
+            [
+                "q_bal (d = 2026-01-20): (100.00 PLN, 3.00 PLN)",
+                "  unfulfilled: topup[2026-01]",
+                "  cut 2026-02-15",
+                "q_bal (d = 2026-02-19): (100.00 PLN, 3.00 PLN)",
+                "  unfulfilled: topup[2026-01]",
+                "  cut 2026-02-15",
+                "q_bal (d = 2026-02-20): (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)",
+                "  unfulfilled: topup[2026-01]",
+                "  cut 2026-02-15"
+            ],
+            "every place refused from 20 February"
+        );
+    }
+
+    #[test]
+    fn a_load_refusal_met_reading_a_refused_plans_place_refuses_the_run() {
+        // L §3.3, §8.3: a load refusal met at run, here reading the place of February's
+        // refused instance, refuses the run in the base's world, as anywhere else
+        assert_eq!(
+            answer(&[("loadrun.tally", PLACE_LOAD_REFUSAL)], "q_bal"),
+            [
+                "refused: LOAD-UNIT 0.05 /year * 1 day: a rate times a duration of another period dimension (day/year)"
+            ],
+            "the run refused"
+        );
+    }
+
+    #[test]
+    fn a_scenarios_plan_before_its_from_is_left_out_at_run() {
+        // L §6.4: top[2025-12-31] exists (from_day is 31 December), but scenario topup's from
+        // is 1 January, so it books nothing there: 10.00 + 5 × 1.00, and the note
+        assert_eq!(
+            answer(
+                &[("model.tally", EARLY_BASE), ("a.tally", EARLY_SCENARIO)],
+                "q_top"
+            ),
+            [
+                "q_top: 15.00 PLN",
+                "  world: topup",
+                "  unfulfilled: top[2026-01-01]",
+                "  left out: top, 1 instances, first 2025-12-31",
+                "  cut 2026-01-02"
+            ],
+            "the instance before the from left out"
+        );
+    }
+}
