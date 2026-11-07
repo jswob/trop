@@ -12,6 +12,7 @@ use super::check::invariant;
 use super::keys::{KeyLit, lit_text, resolve_key};
 use super::places::Written;
 use super::steps::{Loader, num_stop, refuse};
+use super::values::at_row;
 use crate::base::Load;
 use crate::model::{
     Fulfils, KeyVal, KindSpec, MvRef, MvSrc, NameKind, ObsLeg, Observation, Unit, UnitError,
@@ -293,8 +294,9 @@ impl Loader {
         Ok(None)
     }
 
-    /// An observed row's attribute as a value of its type; a stated hole names the row
-    /// (refcore's `convert_value`, `_obs_attr`). L §5.19, §3.1.
+    /// An observed row's attribute as a value of its type; a stated hole names the row, and a
+    /// refusal with no place of its own is at the row's line (refcore's `convert_value` with
+    /// the row's `loc`, `_obs_attr`). L §5.19, §3.1, §8.3.
     fn attr_value(&self, value: &FieldValue, ty: &Type, at: &At) -> Result<ModelValue, Stop> {
         let (ty, _) = self.decl_type(ty, &[], &at.file, at.line)?;
         let written = match value {
@@ -315,7 +317,9 @@ impl Loader {
                 ));
             }
         };
-        match crate::eval::convert_row(&self.m, &written, &ty)? {
+        let converted = crate::eval::convert_row(&self.m, &written, &ty)
+            .map_err(|stop| at_row(stop, &at.file, at.line))?;
+        match converted {
             Ok(v) => Ok(v),
             Err(text) => Ok(ModelValue::Hole(crate::hole::Hole::asked(&text, &at.sid))),
         }
