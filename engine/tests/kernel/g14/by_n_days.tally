@@ -1,0 +1,42 @@
+model g14_by_n_days
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97's comment, the third review's H7, item B4): a key of a day range by 7 moved by days stands for its seven days (L §4.1 by n), so it moves only by a whole number of them (L §4.2): 7 and 14 days are the next keys, 1 day is refused; and by a count of its keys."
+
+source plan "T's fixture (invented values)"
+
+index wk = day 2026-01-05..2026-03-29 by 7
+
+input n1: int
+
+input n7: int
+
+input n14: int
+
+def w1[q in wk]: date = start_of(q + n1 * 1 day)
+
+def w7[q in wk]: date = start_of(q + n7 * 1 day)
+
+def w14[q in wk]: date = start_of(q + n14 * 1 day)
+
+def wk1[q in wk]: date = start_of(q + n1)
+
+def wback[q in wk]: date = start_of(q - n7 * 1 day)
+
+ask b1: w1[2026-01-05]
+
+ask b7: w7[2026-01-05], w14[2026-01-05]
+
+ask bk: wk1[2026-01-05]
+
+ask bback: wback[2026-01-12]
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  n1 = 1 "one"
+  n7 = 7 "seven"
+  n14 = 14 "fourteen"

@@ -98,22 +98,22 @@ LOAD-PARTS	L §8.3	M0	the stated parts <q> and <q'> of <x> overlap	1	M0	codes/m0
 LOAD-PARTS	L §8.3	M0	of <q> at <x>, which keeps no labels of its sort	1	M0	codes/m0/own/parts-sort
 LOAD-ALIVE	L §8.3	M0	*	1	M0	codes/m0/basic/alive
 LOAD-ALIVE	L §8.3	M0	binding over <kind> needs on or over	1	M0	codes/m0/basic/alive
-LOAD-DOMAIN	L §8.3	M0	*	10	M0	codes/m0/basic/by-zero-int
+LOAD-DOMAIN	L §8.3	M0	*	11	M0	codes/m0/basic/by-zero-int
 LOAD-DOMAIN	L §8.3	M0	range of quantities <a> .. <b> has no step	1	M0	codes/m0/basic/domain
 LOAD-DOMAIN	L §8.3	M0	index <x>: by 0 is not a positive step	2	M0	codes/m0/basic/by-zero-int
 LOAD-DOMAIN	L §8.3	M0	<operation> has no meaning for <values>	0	-	-
 LOAD-DOMAIN	L §8.3	M0	day_of of a key of the anchored index <x> has no meaning	1	M0	codes/m0/basic/domain-anchored
-LOAD-DOMAIN	L §8.3	M0	schedule of a key of the anchored index <x> has no meaning	0	-	-
+LOAD-DOMAIN	L §8.3	M0	schedule of a key of the anchored index <x> has no meaning	1	M0	codes/m0/basic/domain-anchored-schedule
 LOAD-DOMAIN	L §8.3	M0	discrete over a key list or a stepped range	1	M0	codes/m0/basic/domain-discrete
 LOAD-DOMAIN	L §8.3	M0	?	5	M0	codes/m0/lifepath/path-past-64
-LOAD-UNIT	L §8.3	M0	*	20	S	kernel/g14/nominal_row
+LOAD-UNIT	L §8.3	M0	*	21	S	kernel/g1/rate_duration
 LOAD-UNIT	L §8.3	M0	<a> and <b> have different units	1	M0	codes/m0/basic/unit-mixed
 LOAD-UNIT	L §8.3	M0	<operation> on things of kind <K> has no meaning: they have no order a rule can read	1	M0	codes/m0/basic/unit-orders
 LOAD-UNIT	L §8.3	M0	settlement <s> of <adjustment> is in <u>, not <u'>	2	M0	codes/m0/adjust/unit-settlement
 LOAD-UNIT	L §8.3	M0	axis <a> is used as a mode, but <o> is not a mode name	1	M0	codes/m0/basic/unit-mode
 LOAD-UNIT	L §8.3	M0	<function>: the mode is <type>, not a rounding code	1	M0	codes/m0/basic/flows-mode
 LOAD-UNIT	L §8.3	M0	money in an undeclared currency	1	M0	codes/m0/basic/unit-currency
-LOAD-UNIT	L §8.3	M0	?	13	S	kernel/g14/nominal_row
+LOAD-UNIT	L §8.3	M0	?	14	S	kernel/g1/rate_duration
 LOAD-PRECISION	L §8.3	M0	*	2	M0	codes/m0/basic/precision
 LOAD-PRECISION	L §8.3	M0	<literal> is finer than the minor unit	1	M0	codes/m0/basic/precision
 LOAD-PRECISION	L §8.3	M0	<a/b> terminates; write it as a decimal	1	M0	codes/m0/basic/precision-fraction
@@ -278,13 +278,13 @@ RUN-EMPTY	L §8.4	-	*	0	-	-
 RUN-EMPTY	L §8.4	-	<min, max, first, last, argmin, argmax, mean, share, quantile> over no keys	0	-	-
 RUN-DIGITS	L §8.4	S	*	1	S	kernel/g1/cap
 RUN-DIGITS	L §8.4	S	<x> passes 4 096 digits; round where the law rounds	1	S	kernel/g1/cap
-RUN-LIMIT	L §8.4	-	*	8	S	kernel/g14/by_n
-RUN-LIMIT	L §8.4	-	a day passes 9999-12-31	6	S	kernel/g14/by_n
+RUN-LIMIT	L §8.4	-	*	9	S	kernel/g14/by_n
+RUN-LIMIT	L §8.4	-	a day passes 9999-12-31	7	S	kernel/g14/by_n
 RUN-LIMIT	L §8.4	-	a day comes before 0001-01-01	2	S	kernel/g14/days
-RUN-LIMIT	L §8.4	-	<a> .. <b> holds more than 1 000 000 keys	3	S	kernel/g14/near_cap
+RUN-LIMIT	L §8.4	-	<a> .. <b> holds more than 1 000 000 keys	4	S	kernel/g14/day_range_end
 RUN-DIV	L §8.4	-	*	13	S	kernel/g1/text
 RUN-DIV	L §8.4	-	division by zero	13	S	kernel/g1/text
-RUN-DOMAIN	L §8.4	-	*	4	S	kernel/g1/step
+RUN-DOMAIN	L §8.4	-	*	5	S	kernel/g1/step
 RUN-DOMAIN	L §8.4	-	ln, sqrt or pow outside its domain	0	-	-
 RUN-DOMAIN	L §8.4	-	<operation> with a step <s> that is not positive	1	S	kernel/g1/step
 RUN-DOMAIN	L §8.4	-	<operation> has no meaning for <values>	0	-	-
@@ -292,7 +292,7 @@ RUN-DOMAIN	L §8.4	-	<a> and <b> are in different keys <u> and <u'> of <K>	0	-	-
 RUN-DOMAIN	L §8.4	-	<code> is not a <family> code	0	-	-
 RUN-DOMAIN	L §8.4	-	of <q> at <x>, which keeps no labels of its sort	0	-	-
 RUN-DOMAIN	L §8.4	-	calendar <c> has no business day	2	S	kernel/g14/calendar
-RUN-DOMAIN	L §8.4	-	?	2	S	kernel/g14/by_n
+RUN-DOMAIN	L §8.4	-	?	3	S	kernel/g14/by_n
 RUN-UNDECIDED	L §8.4	-	*	0	-	-
 RUN-UNDECIDED	L §8.4	-	<function> to <u> not decided within the precision cap	0	-	-
 RUN-PARAM	L §8.4	-	*	1	M6	I:M:CH-03

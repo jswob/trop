@@ -16157,4 +16157,231 @@ q_unc (d = 2026-01-28): 20.00 PLN
   uncertain: fr_in
   uncertain: fr_late
   law date 2026-02-15, cut 2026-02-15
+,16:g1/rate_duration,2:g1,38:run g1/rate_duration.tally --ask d_day,696:22:g1/rate_duration.tally,665:model g1_rate_duration
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97's comment, the third review's H6, item R5): a rate per year times a duration of days has a period dimension of its own, day/year, which load can't see through a rate's row: refused where it is computed, LOAD-UNIT with refcore's text (L §3.2, §3.3); its twin, the same rate times months, answers."
+
+source plan "T's fixture (invented values)"
+
+input r5: rate
+
+input n1: int
+
+ask d_month: r5 * 1 month, r5 * n1 * 1 month
+
+ask d_day: r5 * 1 day
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  r5 = 5 %/year "five per cent a year"
+  n1 = 1 "one"
+,,1:1,102:refused: LOAD-UNIT 0.05 /year * 1 day: a rate times a duration of another period dimension (day/year)
+,21:g1/rate_duration_twin,2:g1,40:run g1/rate_duration.tally --ask d_month,696:22:g1/rate_duration.tally,665:model g1_rate_duration
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97's comment, the third review's H6, item R5): a rate per year times a duration of days has a period dimension of its own, day/year, which load can't see through a rate's row: refused where it is computed, LOAD-UNIT with refcore's text (L §3.2, §3.3); its twin, the same rate times months, answers."
+
+source plan "T's fixture (invented values)"
+
+input r5: rate
+
+input n1: int
+
+ask d_month: r5 * 1 month, r5 * n1 * 1 month
+
+ask d_day: r5 * 1 day
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  r5 = 5 %/year "five per cent a year"
+  n1 = 1 "one"
+,,1:0,85:d_month: (1/240 (0.00416666666666667), 1/240 (0.00416666666666667))
+  cut 2026-12-31
+,15:g14/empty_range,3:g14,25:run g14/empty_range.tally,1026:21:g14/empty_range.tally,996:model g14_empty_range
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97's comment, the first review's 14, item N2): an aggregate over a range of no keys, an integer range, a stepped one, one of days and a sum of money, beside its twin of one key."
+
+source plan "T's fixture (invented values)"
+
+unit PLN: currency minor 0.01
+
+input n1: int
+
+input n5: int
+
+input s2: int
+
+input d1: date
+
+input d5: date
+
+input amt: money PLN
+
+ask e_int: sum(n1 for k in n5 .. n1), sum(k for k in n5 .. n1)
+
+ask e_step: sum(n1 for k in n5 .. n1 step s2)
+
+ask e_money: sum(amt for k in n5 .. n1)
+
+ask e_day: sum(n1 for d in d5 .. d1 step 1 day)
+
+ask e_twin: sum(n1 for k in n1 .. n1), sum(n1 for k in n1 .. n5 step s2), sum(amt for k in n1 .. n1), sum(n1 for d in d1 .. d1 step 1 day)
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  n1 = 1 "one"
+  n5 = 5 "five"
+  s2 = 2 "two"
+  d1 = 2026-06-01 "a day"
+  d5 = 2026-06-05 "four days after it"
+  amt = 1.00 PLN "a zloty"
+,,1:0,164:e_day: 0
+  cut 2026-12-31
+e_int: (0, 0)
+  cut 2026-12-31
+e_money: 0.00 PLN
+  cut 2026-12-31
+e_step: 0
+  cut 2026-12-31
+e_twin: (1, 3, 1.00 PLN, 1)
+  cut 2026-12-31
+,16:g14/list_past_64,3:g14,26:run g14/list_past_64.tally,514:22:g14/list_past_64.tally,483:model g14_list_past_64
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97's comment, the second review's G9, item N3): an integer of a written key list past 64 bits, read as a value exactly (L §7.6, §7.1), beside its twin inside 64 bits."
+
+ask l_max: max(k for k in [1, 100000000000000000000])
+
+ask l_min: min(k for k in [-100000000000000000000, 1])
+
+ask l_twin: max(k for k in [1, 9223372036854775807]), min(k for k in [-9223372036854775808, 1])
+,,1:0,186:l_max: 100 000 000 000 000 000 000
+  cut 2026-12-31
+l_min: -100 000 000 000 000 000 000
+  cut 2026-12-31
+l_twin: (9 223 372 036 854 775 807, -9 223 372 036 854 775 808)
+  cut 2026-12-31
+,13:g14/by_n_days,3:g14,23:run g14/by_n_days.tally,1009:19:g14/by_n_days.tally,981:model g14_by_n_days
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97's comment, the third review's H7, item B4): a key of a day range by 7 moved by days stands for its seven days (L §4.1 by n), so it moves only by a whole number of them (L §4.2): 7 and 14 days are the next keys, 1 day is refused; and by a count of its keys."
+
+source plan "T's fixture (invented values)"
+
+index wk = day 2026-01-05..2026-03-29 by 7
+
+input n1: int
+
+input n7: int
+
+input n14: int
+
+def w1[q in wk]: date = start_of(q + n1 * 1 day)
+
+def w7[q in wk]: date = start_of(q + n7 * 1 day)
+
+def w14[q in wk]: date = start_of(q + n14 * 1 day)
+
+def wk1[q in wk]: date = start_of(q + n1)
+
+def wback[q in wk]: date = start_of(q - n7 * 1 day)
+
+ask b1: w1[2026-01-05]
+
+ask b7: w7[2026-01-05], w14[2026-01-05]
+
+ask bk: wk1[2026-01-05]
+
+ask bback: wback[2026-01-12]
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  n1 = 1 "one"
+  n7 = 7 "seven"
+  n14 = 14 "fourteen"
+,,1:0,218:b1: refused: RUN-DOMAIN 2026-01-05 + 1 day: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
+b7: (2026-01-12, 2026-01-19)
+  cut 2026-12-31
+bback: 2026-01-05
+  cut 2026-12-31
+bk: 2026-01-12
+  cut 2026-12-31
+,17:g14/day_range_end,3:g14,27:run g14/day_range_end.tally,1439:23:g14/day_range_end.tally,1406:model g14_day_range_end
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97's comment, the first review's 11, the coordinator's P3): a range's next key is made, then the keys are counted (L §7.6 items 1 and 2, refcore's order), so a range of days whose next key passes 9999-12-31 is refused there, whether it holds 1 000 001 keys, 1 000 000 or two; one of 1 000 001 keys whose next key is still a day holds too many; and its twin, two days ending on 9999-12-30, answers."
+
+source plan "T's fixture (invented values)"
+
+input n1: int
+
+input end31: date
+
+input end30: date
+
+input from01: date
+
+input from02: date
+
+input from03: date
+
+input near: date
+
+input near2: date
+
+ask r_past: sum(n1 for d in from02 .. end31 step 1 day)
+
+ask r_count: sum(n1 for d in from01 .. end30 step 1 day)
+
+ask r_edge: sum(n1 for d in from03 .. end31 step 1 day)
+
+ask r_two: sum(n1 for d in near .. end31 step 1 day)
+
+ask r_twin: sum(n1 for d in near2 .. end30 step 1 day)
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  n1 = 1 "one"
+  end31 = 9999-12-31 "the calendar's last day"
+  end30 = 9999-12-30 "the day before it"
+  from01 = 7262-02-01 "1 000 000 days before 9999-12-30"
+  from02 = 7262-02-02 "1 000 000 days before 9999-12-31"
+  from03 = 7262-02-03 "999 999 days before 9999-12-31"
+  near = 9999-12-30 "a day before the last"
+  near2 = 9999-12-29 "two days before the last"
+,,1:0,342:r_count: refused: RUN-LIMIT 7262-02-01 .. 9999-12-30 step 1 day holds more than 1 000 000 keys
+  cut 2026-12-31
+r_edge: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 2026-12-31
+r_past: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 2026-12-31
+r_twin: 2
+  cut 2026-12-31
+r_two: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 2026-12-31
 ,

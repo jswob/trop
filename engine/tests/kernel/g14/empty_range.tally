@@ -1,0 +1,43 @@
+model g14_empty_range
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97's comment, the first review's 14, item N2): an aggregate over a range of no keys, an integer range, a stepped one, one of days and a sum of money, beside its twin of one key."
+
+source plan "T's fixture (invented values)"
+
+unit PLN: currency minor 0.01
+
+input n1: int
+
+input n5: int
+
+input s2: int
+
+input d1: date
+
+input d5: date
+
+input amt: money PLN
+
+ask e_int: sum(n1 for k in n5 .. n1), sum(k for k in n5 .. n1)
+
+ask e_step: sum(n1 for k in n5 .. n1 step s2)
+
+ask e_money: sum(amt for k in n5 .. n1)
+
+ask e_day: sum(n1 for d in d5 .. d1 step 1 day)
+
+ask e_twin: sum(n1 for k in n1 .. n1), sum(n1 for k in n1 .. n5 step s2), sum(amt for k in n1 .. n1), sum(n1 for d in d1 .. d1 step 1 day)
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  n1 = 1 "one"
+  n5 = 5 "five"
+  s2 = 2 "two"
+  d1 = 2026-06-01 "a day"
+  d5 = 2026-06-05 "four days after it"
+  amt = 1.00 PLN "a zloty"

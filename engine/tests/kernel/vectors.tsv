@@ -126,3 +126,9 @@ g14/by_n_years_98	g14		engine/tests/kernel/	engine/tests/kernel/g14/by_n_years_9
 g14/nominal_row	g14		engine/tests/kernel/	engine/tests/kernel/g14/nominal_row.tally		
 g14/nominal_row_twin	g14		engine/tests/kernel/	engine/tests/kernel/g14/nominal_row_twin.tally		
 g7/flows_touched	g7		engine/tests/kernel/	engine/tests/kernel/g7/flows_touched.tally		
+g1/rate_duration	g1		engine/tests/kernel/	engine/tests/kernel/g1/rate_duration.tally	d_day	
+g1/rate_duration_twin	g1		engine/tests/kernel/	engine/tests/kernel/g1/rate_duration.tally	d_month	
+g14/empty_range	g14		engine/tests/kernel/	engine/tests/kernel/g14/empty_range.tally		
+g14/list_past_64	g14		engine/tests/kernel/	engine/tests/kernel/g14/list_past_64.tally		
+g14/by_n_days	g14		engine/tests/kernel/	engine/tests/kernel/g14/by_n_days.tally		
+g14/day_range_end	g14		engine/tests/kernel/	engine/tests/kernel/g14/day_range_end.tally		

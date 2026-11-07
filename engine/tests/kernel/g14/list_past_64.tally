@@ -1,0 +1,12 @@
+model g14_list_past_64
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97's comment, the second review's G9, item N3): an integer of a written key list past 64 bits, read as a value exactly (L §7.6, §7.1), beside its twin inside 64 bits."
+
+ask l_max: max(k for k in [1, 100000000000000000000])
+
+ask l_min: min(k for k in [-100000000000000000000, 1])
+
+ask l_twin: max(k for k in [1, 9223372036854775807]), min(k for k in [-9223372036854775808, 1])

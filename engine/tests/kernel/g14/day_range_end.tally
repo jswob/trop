@@ -1,0 +1,47 @@
+model g14_day_range_end
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97's comment, the first review's 11, the coordinator's P3): a range's next key is made, then the keys are counted (L §7.6 items 1 and 2, refcore's order), so a range of days whose next key passes 9999-12-31 is refused there, whether it holds 1 000 001 keys, 1 000 000 or two; one of 1 000 001 keys whose next key is still a day holds too many; and its twin, two days ending on 9999-12-30, answers."
+
+source plan "T's fixture (invented values)"
+
+input n1: int
+
+input end31: date
+
+input end30: date
+
+input from01: date
+
+input from02: date
+
+input from03: date
+
+input near: date
+
+input near2: date
+
+ask r_past: sum(n1 for d in from02 .. end31 step 1 day)
+
+ask r_count: sum(n1 for d in from01 .. end30 step 1 day)
+
+ask r_edge: sum(n1 for d in from03 .. end31 step 1 day)
+
+ask r_two: sum(n1 for d in near .. end31 step 1 day)
+
+ask r_twin: sum(n1 for d in near2 .. end30 step 1 day)
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  n1 = 1 "one"
+  end31 = 9999-12-31 "the calendar's last day"
+  end30 = 9999-12-30 "the day before it"
+  from01 = 7262-02-01 "1 000 000 days before 9999-12-30"
+  from02 = 7262-02-02 "1 000 000 days before 9999-12-31"
+  from03 = 7262-02-03 "999 999 days before 9999-12-31"
+  near = 9999-12-30 "a day before the last"
+  near2 = 9999-12-29 "two days before the last"
