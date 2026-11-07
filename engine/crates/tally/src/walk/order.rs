@@ -5,9 +5,10 @@
 //! §5.10 (the sign rule's point 2); E §4.2 step 3 and L §5.19 (a decision on a covered day
 //! before K, or one an observation fulfils, is modelled past: its own observations booked at
 //! its point, its legs not; it computes against the balances less its own observations
-//! booked before its day).
+//! booked before its day); L §8.4 (one refused before its point, by its key's `where`, refuses
+//! the places its legs give from its point; tally 2.1.6).
 //! Twin: engine/tools/refcore/walk.py (`run_decisions`, `tie_order`, `run_one`,
-//! `run_one_body`, `book_own_obs`).
+//! `run_one_body`, `dec_bad`, `book_own_obs`).
 //! Invariants: a decision reads the walk as it stands at its point, never a later point; a
 //! run is recorded once, after its body is computed, so a run cut short past the counted depth
 //! is run again from its start; the instances of one move run in the order of its `ties by`.
@@ -252,7 +253,9 @@ impl Engine {
 
     /// A decision instance's run: its body at its point with running reads, then, by what it
     /// gives, its legs booked, a hole at its places, or a refusal there (refcore's
-    /// `run_one_body`). E §4.2 step 3, L §5.14.1.
+    /// `run_one_body`). One refused before its point (its key's `where`) doesn't exist where
+    /// its `when` is false here; else it is that refusal, its legs' places read at its point
+    /// (L §8.4, tally 2.1.6). E §4.2 step 3, L §5.14.1.
     fn run_one_body(&mut self, m: &Reality, id: usize, inst: Inst, key: At) -> Result<usize, Stop> {
         let mv = m
             .moves
@@ -288,6 +291,7 @@ impl Engine {
         };
         run.inst.coll.merge(&met);
         run.inst.obs = linked;
+        let before = run.inst.err.take();
         match body {
             Ok(b) => {
                 run.inst.exists = b.exists;
@@ -299,8 +303,38 @@ impl Engine {
             Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => run.inst.err = Some(r),
             Err(stop) => return Err(stop),
         }
+        if let Some(err) = before
+            && (run.inst.err.is_some() || run.inst.exists != Exists::No)
+        {
+            run.inst.err = Some(err);
+            self.refused_at_point(m, mv, &mut run.inst, ctx)?;
+        }
         self.walk_mut(id)?.group = Some(Group::new());
         self.book_run(m, id, run, t)
+    }
+
+    /// The legs of decision instance `inst`, refused before its point, with their places read
+    /// at its point (running reads, its law and facts at min(t, K)) and the refusal as their
+    /// amount, so it refuses those places from its point in the day's order; none where a
+    /// place can't be read there, a hole or a refusal, so it refuses every place (refcore's
+    /// `dec_bad`, read at the decision's point). L §8.4 (tally 2.1.6), E §4.1 (the order of a
+    /// day's refusals), E §4.2 step 3, Holes in the walk.
+    fn refused_at_point(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        inst: &mut Inst,
+        ctx: Ctx,
+    ) -> Result<(), Stop> {
+        self.push();
+        let read = self.refused_places(m, mv, inst, ctx);
+        inst.coll.merge(&self.pop_alone());
+        inst.legs = match read {
+            Ok(Some(legs)) => legs,
+            Ok(None) | Err(Stop::Refused(_)) => Vec::new(),
+            Err(stop) => return Err(stop),
+        };
+        Ok(())
     }
 
     /// What a run books by what its body gave (refcore's `run_one_body`, after the body).

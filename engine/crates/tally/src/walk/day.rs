@@ -373,9 +373,9 @@ impl Engine {
                 ent.coll = Some(coll);
                 self.walk_mut(id)?.add(m, &place, &unit, ent)
             }
-            Act::PlaceBad(place, err, mv) => {
+            Act::ChangeRefused(place, err, adj) => {
                 let mut ent = Ent::new(at, Change::Bad(err));
-                ent.mv = Some(mv);
+                ent.mv = Some(adj);
                 self.walk_mut(id)?.add(m, &place, ALL, ent)
             }
             Act::GlobalHole(h) => {
