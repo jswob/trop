@@ -220,9 +220,7 @@ impl Loader {
             span,
             replace: true,
         };
-        let Some(info) = self.m.defs.get_mut(def) else {
-            return Err(Stop::NotBuilt("a def that isn't built"));
-        };
+        let info = self.m.defs.at_mut(self.m.names.def_id(def)?)?;
         if let Some((_, vers)) = info.rules.iter_mut().find(|(l, _)| l == label) {
             vers.push(ver);
         } else {
@@ -250,9 +248,8 @@ impl Loader {
                 return Err(refuse(Load::Name, format!("unknown id {id}"), file, line).naming(id));
             }
         }
-        let Some(band) = self.m.bands.get(id) else {
-            return Err(Stop::NotBuilt("a band that isn't built"));
-        };
+        let band_id = self.m.names.band_id(id)?;
+        let band = self.m.bands.at(band_id)?;
         let first_bind = band.binds.first().cloned();
         let arg_type = band.arg_type.clone();
         let key = match (&row.key, first_bind) {
@@ -299,9 +296,7 @@ impl Loader {
             replace: row.replace,
             line,
         };
-        let Some(held) = self.m.bands.get_mut(id) else {
-            return Err(Stop::NotBuilt("a band that isn't built"));
-        };
+        let held = self.m.bands.at_mut(band_id)?;
         if let Some(table) = held
             .tables
             .iter_mut()
@@ -348,14 +343,10 @@ impl Loader {
             ));
         }
         let (binds, reading, balance) = if row.given {
-            let Some(def) = self.m.defs.get(id) else {
-                return Err(Stop::NotBuilt("a def that isn't built"));
-            };
+            let def = self.m.defs.at(self.m.names.def_id(id)?)?;
             (def.binds.clone(), false, false)
         } else {
-            let Some(input) = self.m.inputs.get(id) else {
-                return Err(Stop::NotBuilt("an input that isn't built"));
-            };
+            let input = self.m.inputs.at(self.m.names.input_id(id)?)?;
             if input.observed {
                 return self.obs_item(vid, id, row, file, line);
             }

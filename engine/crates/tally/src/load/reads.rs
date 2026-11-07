@@ -483,9 +483,7 @@ impl Checker {
         leg: Option<&str>,
         depth: u32,
     ) -> Typed {
-        let Some(mv) = m.moves.get(id) else {
-            return Err(Stop::NotBuilt("a move that isn't built"));
-        };
+        let mv = m.moves.at(m.names.move_id(id)?)?;
         if keys.len() > mv.binds.len() {
             return Err(refused(Load::Key, format!("wrong number of keys for {id}")));
         }
@@ -650,9 +648,7 @@ impl Checker {
                 "cannot parse: observed takes a planned instance m[k]".to_owned(),
             ));
         };
-        let Ty::Key(kind) = self.move_value(m, scope, id, keys, depth)? else {
-            return Err(Stop::NotBuilt("a move that isn't built"));
-        };
+        let kind = self.move_instance(m, scope, id, keys, depth)?;
         let mut fields = Vec::new();
         for (leg, unit, _) in m.kind_legs(&kind) {
             fields.push((leg, leg_type(m, &unit)?));

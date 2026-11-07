@@ -97,9 +97,7 @@ impl Loader {
             let Section::Kind(decl) = section else {
                 continue;
             };
-            let Some(kind) = self.m.kinds.get(&decl.id) else {
-                return Err(Stop::NotBuilt("a kind that isn't built"));
-            };
+            let kind = self.m.kinds.at(self.m.names.kind_id(&decl.id)?)?;
             let mut types = Vec::with_capacity(kind.attrs.len());
             for (name, written) in &kind.attrs {
                 let ty = match written {

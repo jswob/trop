@@ -430,9 +430,7 @@ impl Loader {
         let Some(id) = name.filter(|n| self.m.names.kind(n) == Some(NameKind::Kind)) else {
             return Err(at.refuse(Load::Name, format!("unknown event kind in {sid}")));
         };
-        let Some(kind) = self.m.kinds.get(&id) else {
-            return Err(Stop::NotBuilt("a kind that isn't built"));
-        };
+        let kind = self.m.kinds.at(self.m.names.kind_id(&id)?)?;
         if kind.spec != KindSpec::Event {
             return Err(at.refuse(Load::Kind, format!("{id} is not an event kind ({sid})")));
         }
@@ -624,9 +622,7 @@ impl Loader {
     /// A move instance's written keys (refcore's `move_keys`), a key that isn't a literal
     /// `LOAD-KEY` as written. L §2.5, §8.3 `LOAD-KEY`.
     fn move_keys(&self, id: &str, keys: &[Expr], at: &At) -> Result<Vec<KeyVal>, Stop> {
-        let Some(info) = self.m.moves.get(id) else {
-            return Err(Stop::NotBuilt("a move that isn't built"));
-        };
+        let info = self.m.moves.at(self.m.names.move_id(id)?)?;
         if keys.len() != info.binds.len() {
             return Err(at.refuse(Load::Key, format!("wrong number of keys for {id}")));
         }

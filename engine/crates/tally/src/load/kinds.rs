@@ -261,9 +261,7 @@ impl Loader {
         line: u32,
     ) -> Result<(), Stop> {
         let target = &enter.target;
-        let Some(index) = self.m.indexes.get_mut(target) else {
-            return Err(Stop::NotBuilt("an index that isn't built"));
-        };
+        let index = self.m.indexes.at_mut(self.m.names.index_id(target)?)?;
         if index.form != IndexForm::List {
             let form = if index.form == IndexForm::Open {
                 "open"
@@ -317,9 +315,7 @@ impl Loader {
         line: u32,
     ) -> Result<(), Stop> {
         let target = &enter.target;
-        let Some(kind) = self.m.kinds.get(target) else {
-            return Err(Stop::NotBuilt("a kind that isn't built"));
-        };
+        let kind = self.m.kinds.at(self.m.names.kind_id(target)?)?;
         let named = texts.join(", ");
         if !kind.children.is_empty() {
             return Err(refuse(
@@ -445,9 +441,7 @@ impl Loader {
                 olds.push((self.entry_known(entry), entry.replace));
             }
         }
-        let Some(thing) = self.m.things.get_mut(name) else {
-            return Err(Stop::NotBuilt("a thing that isn't built"));
-        };
+        let thing = self.m.things.at_mut(self.m.thing_id(name)?)?;
         if enter.replace {
             let earlier = olds.iter().any(|(old, _)| old.is_some() && *old < known);
             if !earlier {

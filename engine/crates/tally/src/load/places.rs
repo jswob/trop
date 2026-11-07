@@ -215,9 +215,7 @@ impl Loader {
     /// The keys a keyed place's key over an index takes, in its order, each with the index
     /// when a version added it. L §5.10.
     fn index_options(&self, index: &str) -> Result<Vec<(KeyVal, Option<String>)>, Stop> {
-        let Some(info) = self.m.indexes.get(index) else {
-            return Err(Stop::NotBuilt("an index that isn't built"));
-        };
+        let info = self.m.indexes.at(self.m.names.index_id(index)?)?;
         let mut out = Vec::new();
         for key in &info.keys {
             let added = info.added_by(key).is_some().then(|| index.to_owned());
@@ -320,9 +318,7 @@ impl Loader {
             }
             return Err(refuse(Load::Name, format!("unknown id {name}"), file, line).naming(&name));
         }
-        let Some(place) = self.m.places.get(&name) else {
-            return Err(Stop::NotBuilt("a place that isn't built"));
-        };
+        let place = self.m.places.at(self.m.names.place_id(&name)?)?;
         if keys.len() != place.binds.len() {
             return Err(refuse(
                 Load::Key,

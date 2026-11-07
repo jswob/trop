@@ -326,17 +326,11 @@ impl Checker {
         }
         let (binds, declared, node) = match kind {
             NameKind::Input => {
-                let input = m
-                    .inputs
-                    .get(name)
-                    .ok_or(Stop::NotBuilt("an input that isn't built"))?;
+                let input = m.inputs.at(m.names.input_id(name)?)?;
                 (&input.binds, input.ty.clone(), NodeKind::Input)
             }
             NameKind::Def => {
-                let def = m
-                    .defs
-                    .get(name)
-                    .ok_or(Stop::NotBuilt("a def that isn't built"))?;
+                let def = m.defs.at(m.names.def_id(name)?)?;
                 (&def.binds, Some(def.ty.clone()), NodeKind::Def)
             }
             NameKind::Unit

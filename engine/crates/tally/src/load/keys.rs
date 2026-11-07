@@ -311,9 +311,7 @@ fn resolve_index_key(
     file: &str,
     line: u32,
 ) -> Result<KeyVal, Stop> {
-    let Some(index) = m.indexes.get(id) else {
-        return Err(Stop::NotBuilt("an index that isn't built"));
-    };
+    let index = m.indexes.at(m.names.index_id(id)?)?;
     let lit = match key {
         KeyLit::Lit(lit) => Some(lit),
         KeyLit::Place(..) | KeyLit::Written(_) => None,
@@ -585,9 +583,8 @@ impl Loader {
             }
         };
         let known = self.m.versions.get(version).map(|v| v.known);
-        let Some(index) = self.m.indexes.get(id) else {
-            return Err(Stop::NotBuilt("an index that isn't built"));
-        };
+        let ix = self.m.names.index_id(id)?;
+        let index = self.m.indexes.at(ix)?;
         if let Some(found) = index.by_text(&text).cloned() {
             let old_known: Option<Day> = index
                 .added_by(&found)
@@ -602,9 +599,7 @@ impl Loader {
             }
             return Ok(found);
         }
-        let Some(open) = self.m.indexes.get_mut(id) else {
-            return Err(Stop::NotBuilt("an index that isn't built"));
-        };
+        let open = self.m.indexes.at_mut(ix)?;
         let value = KeyVal::Key {
             index: id.to_owned(),
             name: text.clone(),

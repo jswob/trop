@@ -222,9 +222,7 @@ impl Loader {
                 Ok(keys.is_empty() && self.m.things.get(name).is_some_and(|t| self.m.is_place(t)))
             }
             Some(NameKind::Place) => {
-                let Some(place) = self.m.places.get(name) else {
-                    return Err(Stop::NotBuilt("a place that isn't built"));
-                };
+                let place = self.m.places.at(self.m.names.place_id(name)?)?;
                 if place.binds.is_empty() {
                     return if keys.is_empty() {
                         Ok(true)
@@ -297,9 +295,7 @@ impl Loader {
     /// A side naming an input: an observed row by its id, or a row at its keys. L §6.1, §5.19.
     fn input_side(&self, name: &str, keys: &[Key], same: &SameLine) -> Result<Side, Stop> {
         let at = |message: String| refuse(Load::Key, message, &same.file, same.line);
-        let Some(info) = self.m.inputs.get(name) else {
-            return Err(Stop::NotBuilt("an input that isn't built"));
-        };
+        let info = self.m.inputs.at(self.m.names.input_id(name)?)?;
         if info.observed {
             let Some(id) = row_id(keys) else {
                 return Err(at(format!(
@@ -343,9 +339,7 @@ impl Loader {
         file: &str,
         line: u32,
     ) -> Result<Vec<KeyVal>, Stop> {
-        let Some(info) = self.m.moves.get(name) else {
-            return Err(Stop::NotBuilt("a move that isn't built"));
-        };
+        let info = self.m.moves.at(self.m.names.move_id(name)?)?;
         if keys.len() != info.binds.len() {
             return Err(refuse(
                 Load::Key,

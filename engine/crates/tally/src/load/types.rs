@@ -1099,15 +1099,11 @@ impl Checker {
             super::random::SampleOf::Scope
         };
         let (binds, declared, observed, priced) = if kind == NameKind::Input {
-            let Some(input) = m.inputs.get(id) else {
-                return Err(Stop::NotBuilt("an input that isn't built"));
-            };
+            let input = m.inputs.at(m.names.input_id(id)?)?;
             let priced = input.prices.is_some() && input.prices_by.is_some();
             (&input.binds, input.ty.clone(), input.observed, priced)
         } else {
-            let Some(def) = m.defs.get(id) else {
-                return Err(Stop::NotBuilt("a def that isn't built"));
-            };
+            let def = m.defs.at(m.names.def_id(id)?)?;
             (&def.binds, Some(def.ty.clone()), false, false)
         };
         let node_kind = if kind == NameKind::Input {
@@ -1195,9 +1191,7 @@ impl Checker {
         keys: &[Key],
         depth: u32,
     ) -> Typed {
-        let Some(place) = m.places.get(id) else {
-            return Err(Stop::NotBuilt("a place that isn't built"));
-        };
+        let place = m.places.at(m.names.place_id(id)?)?;
         if keys.len() != place.binds.len() {
             return Err(refused(
                 Load::Key,
@@ -1231,9 +1225,21 @@ impl Checker {
         keys: &[Key],
         depth: u32,
     ) -> Typed {
-        let Some(mv) = m.moves.get(id) else {
-            return Err(Stop::NotBuilt("a move that isn't built"));
-        };
+        self.move_instance(m, scope, id, keys, depth).map(Ty::Key)
+    }
+
+    /// The kind of a movement instance named by its move and keys, its keys checked and its
+    /// reads noted (refcore's `m_move_value`, whose type is always that kind's key). L §2.5,
+    /// §5.14.1.
+    pub(super) fn move_instance(
+        &mut self,
+        m: &Reality,
+        scope: &Scope,
+        id: &str,
+        keys: &[Key],
+        depth: u32,
+    ) -> Result<String, Stop> {
+        let mv = m.moves.at(m.names.move_id(id)?)?;
         if keys.len() != mv.binds.len() {
             return Err(refused(
                 Load::Key,
@@ -1261,7 +1267,7 @@ impl Checker {
                 crate::model::Target::Move(id.to_owned()),
             );
         }
-        Ok(Ty::Key(mv.kind.clone()))
+        Ok(mv.kind.clone())
     }
 
     /// A key at a key position whose domain is `domain`: typed there, and checked against
@@ -1381,9 +1387,7 @@ impl Checker {
         };
         match domain {
             Domain::Index(ix) => {
-                let Some(index) = m.indexes.get(ix) else {
-                    return Err(Stop::NotBuilt("an index that isn't built"));
-                };
+                let index = m.indexes.at(m.names.index_id(ix)?)?;
                 if let Ty::Key(other) = t {
                     if key_of_index(m, (ix, index), other, kn)? == Conv::Period {
                         self.period_read(scope, ix, kn);

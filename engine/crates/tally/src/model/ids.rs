@@ -263,6 +263,102 @@ impl Names {
     pub fn entries(&self) -> Iter<'_, String, Name> {
         self.by_text.iter()
     }
+
+    /// The id of the kind `text` names, which the caller's check proved.
+    ///
+    /// # Errors
+    ///
+    /// `Internal` where it names no kind.
+    pub fn kind_id(&self, text: &str) -> Result<KindId, Internal> {
+        let Some(Name::Kind(id)) = self.get(text) else {
+            return Err(Internal::new("the namespace names a kind there"));
+        };
+        Ok(id)
+    }
+
+    /// The id of the index `text` names, which the caller's check proved.
+    ///
+    /// # Errors
+    ///
+    /// `Internal` where it names no index.
+    pub fn index_id(&self, text: &str) -> Result<IndexId, Internal> {
+        let Some(Name::Index(id)) = self.get(text) else {
+            return Err(Internal::new("the namespace names an index there"));
+        };
+        Ok(id)
+    }
+
+    /// The id of the input `text` names, which the caller's check proved.
+    ///
+    /// # Errors
+    ///
+    /// `Internal` where it names no input.
+    pub fn input_id(&self, text: &str) -> Result<InputId, Internal> {
+        let Some(Name::Input(id)) = self.get(text) else {
+            return Err(Internal::new("the namespace names an input there"));
+        };
+        Ok(id)
+    }
+
+    /// The id of the def `text` names, which the caller's check proved.
+    ///
+    /// # Errors
+    ///
+    /// `Internal` where it names no def.
+    pub fn def_id(&self, text: &str) -> Result<DefId, Internal> {
+        let Some(Name::Def(id)) = self.get(text) else {
+            return Err(Internal::new("the namespace names a def there"));
+        };
+        Ok(id)
+    }
+
+    /// The id of the band `text` names, which the caller's check proved.
+    ///
+    /// # Errors
+    ///
+    /// `Internal` where it names no band.
+    pub fn band_id(&self, text: &str) -> Result<BandId, Internal> {
+        let Some(Name::Band(id)) = self.get(text) else {
+            return Err(Internal::new("the namespace names a band there"));
+        };
+        Ok(id)
+    }
+
+    /// The id of the place `text` names, which the caller's check proved.
+    ///
+    /// # Errors
+    ///
+    /// `Internal` where it names no place.
+    pub fn place_id(&self, text: &str) -> Result<PlaceId, Internal> {
+        let Some(Name::Place(id)) = self.get(text) else {
+            return Err(Internal::new("the namespace names a place there"));
+        };
+        Ok(id)
+    }
+
+    /// The id of the move `text` names, which the caller's check proved.
+    ///
+    /// # Errors
+    ///
+    /// `Internal` where it names no move.
+    pub fn move_id(&self, text: &str) -> Result<MoveId, Internal> {
+        let Some(Name::Move(id)) = self.get(text) else {
+            return Err(Internal::new("the namespace names a move there"));
+        };
+        Ok(id)
+    }
+}
+
+/// The id of the thing named `text`, interned in `symbols` when its table took it.
+///
+/// # Errors
+///
+/// `Internal` where `symbols` never interned the text.
+pub(super) fn thing_id(symbols: &Interner, text: &str) -> Result<ThingId, Internal> {
+    let symbol = symbols
+        .find(text)
+        .ok_or(Internal::new("a thing's name is interned"))?;
+    Ok(ThingId(symbol))
 }
 
 #[cfg(test)]

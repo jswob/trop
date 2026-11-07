@@ -16,7 +16,7 @@ use super::index::{IndexInfo, VersionInfo};
 use super::key::{KeyVal, Span};
 use super::kind::{Entry, KindInfo, KindSpec, Thing};
 use super::world::Scenarios;
-use crate::base::{Interner, Refusal, Table, Warn};
+use crate::base::{Internal, Interner, Refusal, Table, Warn};
 use crate::num::Num;
 use crate::syntax::{Ask, Axis, Fill, Header, Price, Sign, Source, Type};
 use crate::time::Day;
@@ -194,6 +194,16 @@ pub enum SamePair {
 }
 
 impl Reality {
+    /// The id of the thing named `name`, which its table holds (the caller pushed or found
+    /// it).
+    ///
+    /// # Errors
+    ///
+    /// `Internal` where the name was never interned.
+    pub fn thing_id(&self, name: &str) -> Result<ThingId, Internal> {
+        super::ids::thing_id(&self.symbols, name)
+    }
+
     /// The kind `id`.
     #[must_use]
     pub fn kind(&self, id: &str) -> Option<&KindInfo> {
