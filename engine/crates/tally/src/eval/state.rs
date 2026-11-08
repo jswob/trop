@@ -22,6 +22,7 @@ use crate::syntax::{Ask, Stop};
 use crate::time::Day;
 use crate::walk::{Inst, ProjKey, Walk, WalkAt};
 
+use super::context::{Layer, Layers};
 use super::memo::{CellId, Cells, Frame, Memo, Open, Reads};
 
 /// The deepest chain of def cells computed by plain calls; past it the cell demanded waits on
@@ -43,6 +44,9 @@ pub struct Ctx {
     /// reads reach takes (L §5.18). A timeline's and a decision's contexts are made anew
     /// without it, so no decision sees it (L §5.14: "the clause is the read's").
     pub unc: bool,
+    /// The pins and wording pins in force, as one interned layer (E §3.2; `context.rs`). A
+    /// timeline's and a decision's contexts are made anew without them.
+    pub layer: Layer,
 }
 
 impl Ctx {
@@ -55,6 +59,7 @@ impl Ctx {
             cut,
             at: None,
             unc: false,
+            layer: Layer::BASE,
         }
     }
 
@@ -77,15 +82,21 @@ impl Ctx {
         self.world()
     }
 
-    /// The world a read is made in, as text: its law date, cut, walk point and `with
-    /// uncertain`; two reads of one item at the same keys in one world are one value (L §4.4).
+    /// The world a read is made in, as text: its law date, cut, walk point, `with
+    /// uncertain` and pins; two reads of one item at the same keys in one world are one value
+    /// (L §4.4).
     pub(super) fn world(self) -> String {
         let law = self.law.map_or_else(|| "-".to_owned(), Day::text);
         let unc = if self.unc { "|uncertain" } else { "" };
+        let pins = if self.layer.is_base() {
+            String::new()
+        } else {
+            format!("|pins {}", self.layer.number())
+        };
         match self.at {
-            None => format!("{law}|{}{unc}", self.cut.text()),
+            None => format!("{law}|{}{unc}{pins}", self.cut.text()),
             Some(at) => format!(
-                "{law}|{}|{}@{}{unc}",
+                "{law}|{}|{}@{}{unc}{pins}",
                 self.cut.text(),
                 at.walk,
                 at.point.text()
@@ -325,6 +336,9 @@ pub struct Engine {
     /// The splits `prorata`'s `rest largest` made, once per total, step and weights (L §5.13
     /// Cost).
     pub(super) splits: super::prorata::Splits,
+    /// The context's interned layers: the pin sets and wording pins met, the open scopes
+    /// (E §3.2, P §3.1, §3.5).
+    pub(super) layers: Layers,
     /// What this engine did, in P §1.1's units: the `counters` build only (BUILDER §13.2).
     #[cfg(feature = "counters")]
     pub(crate) counts: crate::Counters,
@@ -369,6 +383,7 @@ impl Engine {
             signatures: BTreeMap::new(),
             calendar_pass: None,
             splits: super::prorata::Splits::default(),
+            layers: Layers::default(),
             #[cfg(feature = "counters")]
             counts: crate::Counters::default(),
         }

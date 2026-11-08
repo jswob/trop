@@ -1,5 +1,6 @@
 //! The gap rule and the read of an input: the row a read takes, `none` outside a lifespan, or the question of the hole a read with no row is.
-//! Spec: L §4.6 step 5 (no candidate: `HOLE-UNGOVERNED`'s questions, outside a lifespan),
+//! Spec: L §4.6 step 5 (no candidate: `HOLE-UNGOVERNED`'s questions, outside a lifespan; the
+//! candidates a `wording` pin keeps, L §4.3),
 //! Readings (a plain read of a reading, `HOLE-NOREADING`), Past the last row (`last(x, d)`),
 //! §4.2 (a calendar's question), §5.7 (lifespans and memberships), §8.1.
 //! Twin: engine/tools/refcore/evaluate.py (`origin`, `no_candidate`, `read_input`,
@@ -11,7 +12,7 @@
 use std::collections::BTreeSet;
 
 use super::rows::{
-    Clocks, Point, Test, candidates, choose, invariant, need_law, row_start, time_point,
+    Clocks, Point, Test, candidates, choose, invariant, need_law, row_start, time_point, worded,
 };
 use crate::model::{Domain, InputInfo, KeyVal, Reality, Span, Thing};
 use crate::syntax::Stop;
@@ -181,6 +182,7 @@ pub fn read_input(
     need_law(m, input, point.day)?;
     let test = Test::At(point.day);
     let cands = candidates(m, &input.rows, &input.binds, keys, test, clocks.cut)?;
+    let cands = worded(m, &input.rows, cands, clocks)?;
     match choose(m, &input.rows, &input.binds, &cands, clocks.cut, &input.id)? {
         Some(at) => Ok(Found::Row(at)),
         None => no_candidate(m, input, keys, &point, clocks.cut, asked),
@@ -205,6 +207,7 @@ pub fn read_last(
 ) -> Result<Found, Stop> {
     let test = Test::Last(day);
     let cands = candidates(m, &input.rows, &input.binds, keys, test, clocks.cut)?;
+    let cands = worded(m, &input.rows, cands, clocks)?;
     if cands.is_empty() {
         if input.reading {
             let figure = origin(&input.id, keys);
@@ -253,6 +256,7 @@ fn read_reading(
         .ok_or_else(|| invariant("a reading read with no law date"))?;
     let test = Test::Instant(day);
     let cands = candidates(m, &input.rows, &input.binds, keys, test, clocks.cut)?;
+    let cands = worded(m, &input.rows, cands, clocks)?;
     if let Some(at) = choose(m, &input.rows, &input.binds, &cands, clocks.cut, &input.id)? {
         return Ok(Found::Row(at));
     }

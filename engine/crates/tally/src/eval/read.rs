@@ -28,6 +28,25 @@ use crate::read::{Asked, Clocks, Found, held, origin, read_input, read_last, tim
 use crate::syntax::{Call, Expr, Lit, Stop};
 use crate::time::{Day, PeriodKind};
 
+/// Which read past a row's span: `last(x, d)` or `since(x, d)` (L §4.6).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Past {
+    /// `last(x, d)`.
+    Last,
+    /// `since(x, d)`.
+    Since,
+}
+
+impl Past {
+    /// Its word, as a message names it.
+    fn word(self) -> &'static str {
+        match self {
+            Past::Last => "last",
+            Past::Since => "since",
+        }
+    }
+}
+
 /// A key a read is given: a value, or a key literal its position resolves (L §2.5).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum Given {
@@ -60,13 +79,19 @@ fn latest_of(input: &InputInfo, at: usize) -> Result<&Row, Stop> {
 }
 
 impl Engine {
-    /// The clocks of a read in context `ctx` (L §4.3, §4.5).
-    pub(super) fn clocks(&self, ctx: Ctx) -> Clocks {
-        Clocks {
+    /// The clocks of a read of `item` in context `ctx`: the law date, the cut, the ask's cut,
+    /// and the day a `wording` pin names the item with (L §4.3, §4.5).
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a context whose layer was freed.
+    pub(super) fn clocks(&self, ctx: Ctx, item: &str) -> Result<Clocks, Stop> {
+        Ok(Clocks {
             law: ctx.law,
             cut: ctx.cut,
             ask_cut: self.ask_cut,
-        }
+            wording: self.wording_of(item, ctx)?,
+        })
     }
 
     /// An index with `assumed` lists `assumed: <index>: <reason>` for every figure keyed by
@@ -98,7 +123,11 @@ impl Engine {
         asked: Asked,
     ) -> Result<Value, Stop> {
         self.index_assumed(m, &input.binds);
-        let clocks = self.clocks(ctx);
+        // a `with` or `as if` pin replaces every read of the input at its keys (L §5.11)
+        if let Some(pinned) = self.pin_of(&input.id, keys, ctx)? {
+            return Ok(pinned);
+        }
+        let clocks = self.clocks(ctx, &input.id)?;
         #[cfg(feature = "counters")]
         self.counts
             .read(format!("{}|{}", origin(&input.id, keys), ctx.key()));
@@ -171,7 +200,7 @@ impl Engine {
         let figure = origin(&input.id, keys);
         let value = self.row_converted(m, input, row, &figure)?;
         let point = time_point(input, keys, ctx.law)?;
-        let is_held = held(m, row, point.day, self.clocks(ctx))?;
+        let is_held = held(m, row, point.day, self.clocks(ctx, &input.id)?)?;
         if let (Some(day), false) = (ctx.law, matches!(input.time_pos, TimePos::At(_))) {
             if is_held {
                 // the `held` entry names the day (L §8.2)
@@ -235,7 +264,7 @@ impl Engine {
         env: &Env,
         ctx: Ctx,
     ) -> Result<Value, Stop> {
-        let latest = match self.latest_row(m, (read, day), "last", env, ctx)? {
+        let latest = match self.latest_row(m, (read, day), Past::Last, env, ctx)? {
             Err(value) => return Ok(value),
             Ok(latest) => latest,
         };
@@ -278,7 +307,7 @@ impl Engine {
         let [read, day] = call.args.as_slice() else {
             return Err(invariant("since's two arguments, which load counts"));
         };
-        let latest = match self.latest_row(m, (read, day), "since", env, ctx)? {
+        let latest = match self.latest_row(m, (read, day), Past::Since, env, ctx)? {
             Err(value) => return Ok(value),
             Ok(latest) => latest,
         };
@@ -297,16 +326,18 @@ impl Engine {
 
     /// The row `last(x[k], d)` and `since(x[k], d)` read, recorded as read, with its keys and
     /// d; or the value they are instead: the hole of a key or of d, a window d's
-    /// `HOLE-IMPRECISE`, `none`, the gap rule's hole. A movement of another kind as a key is
-    /// refused (`RUN-KEY`, as every read). L §4.6 (Past the last row, Readings), §4.4, §5.7.
+    /// `HOLE-IMPRECISE`, a pin of x at its keys (`last`'s, as refcore's `e_lastx`), `none`,
+    /// the gap rule's hole. A movement of another kind as a key is refused (`RUN-KEY`, as
+    /// every read). L §4.6 (Past the last row, Readings), §4.4, §5.7, §5.11.
     fn latest_row(
         &mut self,
         m: &Reality,
         (read, day): (&Expr, &Expr),
-        what: &str,
+        past: Past,
         env: &Env,
         ctx: Ctx,
     ) -> Result<Result<Latest, Value>, Stop> {
+        let what = past.word();
         let (name, written) =
             read_parts(read).ok_or_else(|| invariant("a read of last load didn't check"))?;
         let input = m
@@ -327,11 +358,16 @@ impl Engine {
             Ok(day) => day,
             Err(hole) => return Ok(Err(Value::Hole(hole))),
         };
+        if past == Past::Last
+            && let Some(pinned) = self.pin_of(&input.id, &keys, ctx)?
+        {
+            return Ok(Err(pinned));
+        }
         self.read(Read::Input {
             id: input.id.clone(),
             keys: keys.clone(),
         });
-        let at = match read_last(m, input, &keys, day, self.clocks(ctx))? {
+        let at = match read_last(m, input, &keys, day, self.clocks(ctx, &input.id)?)? {
             Found::Row(at) => at,
             Found::None => return Ok(Err(Value::None)),
             Found::Hole(q) => return Ok(Err(Value::Hole(Hole::asked(&q.text, &q.origin)))),

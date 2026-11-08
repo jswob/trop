@@ -10,14 +10,16 @@
 //! does, and ends with no cell in progress.
 
 use super::aggregate::{Brings, Member};
+use super::context::Pinning;
 use super::memo::{CellId, CellKey};
+use super::read::Given;
 use super::rules::key_env;
 use super::state::{Collected, Ctx, Engine, Env, invariant};
 use crate::base::{Code, Refusal};
 use crate::book::Ledger;
 use crate::hole::Hole;
 use crate::model::{DefInfo, KeyVal, Reality, Value};
-use crate::syntax::{Bind, Expr, Residuals, Stop};
+use crate::syntax::{Bind, Expr, Pin, Residuals, Stop};
 
 /// One value of an ask's line: a value, or the run-time refusal it met, which the line prints
 /// in its place (refcore's `one`). L §5.18.
@@ -73,6 +75,50 @@ impl Engine {
         let mark = self.mark();
         loop {
             match self.read_def_at(m, def, keys, ctx) {
+                Err(Stop::Deep) if mark.outermost => self.replay(m, &mark)?,
+                result => return result,
+            }
+        }
+    }
+
+    /// A key as written, read from outside the evaluator: as [`Engine::value`], for a key
+    /// (L §2.5).
+    ///
+    /// # Errors
+    ///
+    /// The refusals the key's expression meets.
+    pub(crate) fn key_given(
+        &mut self,
+        m: &Reality,
+        e: &Expr,
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Given, Stop> {
+        let mark = self.mark();
+        loop {
+            match self.given_key(m, e, env, ctx) {
+                Err(Stop::Deep) if mark.outermost => self.replay(m, &mark)?,
+                result => return result,
+            }
+        }
+    }
+
+    /// The context inside an ask's `with` pins, read from outside the evaluator: as
+    /// [`Engine::value`], for the pins' dates, keys and values; or the hole of a pin whose key
+    /// or date is one (L §5.11, §5.18).
+    ///
+    /// # Errors
+    ///
+    /// The refusals the pins meet; `NotBuilt` for a pin form not built yet.
+    pub fn with_pins(
+        &mut self,
+        m: &Reality,
+        pins: &[Pin],
+        ctx: Ctx,
+    ) -> Result<Result<Ctx, Hole>, Stop> {
+        let mark = self.mark();
+        loop {
+            match self.pinned(m, pins, &Env::empty(), ctx, Pinning::Ask) {
                 Err(Stop::Deep) if mark.outermost => self.replay(m, &mark)?,
                 result => return result,
             }

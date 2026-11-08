@@ -1,12 +1,13 @@
-//! Answering the asks: each ask's cut and law date, its binding tuples, its line's values and the register under each line, as L §5.18 prints them.
-//! Spec: L §5.18 (asks: `as known`, `law`, `in`, `for`, one line per binding tuple, a tuple
-//! whose `where` is a hole printed as that hole); L §4.3 (the law date), §4.5 (the cut),
-//! §5.11 (an ask's `law` or `as known` that is a hole makes the ask line that hole), §8.2 (the
-//! register), §8.4 (a run-time refusal prints as the ask's line), §8.5 (warnings last); E §11
-//! (`REQ-ASK`, tally 2.1.3).
+//! Answering the asks: each ask's cut, law date and `with` pins, its binding tuples, its line's values, check or solve, and each line's register.
+//! Spec: L §5.18 (asks: `as known`, `law`, `in`, `with`, `for`, `check`, `solve`, one line
+//! per binding tuple, a tuple whose `where` is a hole printed as that hole); L §4.3 (the law
+//! date), §4.5 (the cut), §5.11 (an ask's `law`, `as known` or pin that is a hole makes the ask
+//! line that hole), §8.2 (the register), §8.4 (a run-time refusal prints as the ask's line),
+//! §8.5 (warnings last); E §11 (`REQ-ASK`, tally 2.1.3; `REQ-CLOCK`).
 //! Twin: engine/tools/refcore/ask.py (`Asker.run`, `req_ask`, `answer`, `_answer`,
-//! `_answer_in`, `evaluate`, `one`, `print_line`, `fmt_value`, `fmt_bind`) and evaluate.py
-//! (`date_of`).
+//! `_answer_in`, `evaluate`, `one`, `one_solve`, `print_line`, `fmt_value`, `fmt_bind`) and
+//! evaluate.py (`date_of`, `apply_pins`); refcore answers an `as known` after `on` where E §11
+//! refuses it (codes/m1 held.tsv, P22).
 //! Invariants: asks print in id order unless the run names them; every id the run names is
 //! checked before any ask is answered; each ask has its own engine and memo; a load refusal met
 //! at run refuses the run in the base's world and the ask alone in a scenario's (refcore's
@@ -15,14 +16,15 @@
 
 use std::collections::BTreeMap;
 
-use super::register::{register_lines, warning_lines};
+use super::check::{Printed, check_line};
+use super::register::{check_register_lines, register_lines, warning_lines};
 use super::residuals::residual_lines;
 use crate::base::{Code, Refusal, Req, Run, Warn};
 use crate::eval::{
     Collected, Ctx, Engine, Entry, Env, Item, Member, Memo, a_day, num_stop, past_days,
 };
 use crate::model::{Reality, Value};
-use crate::syntax::{Ask, AskBody, Bind, Domain, Expr, Stop};
+use crate::syntax::{Ask, AskBody, Bind, Domain, Expr, Solve, Stop};
 use crate::time::{Day, PeriodKind};
 use crate::walk::Booked;
 use crate::{Asks, Days};
@@ -263,13 +265,10 @@ fn keeps_parts(m: &Reality) -> bool {
             .any(|(_, input)| !input.part_rows.is_empty())
 }
 
-/// A form load checks (M0) that the run doesn't evaluate yet, where the ask meets it: its
-/// pins, a random ask, `orient`, an axis it reaches, a fill or a `same` line of the reality, or
-/// a joint model's merged reality (L §5.5, §5.12, §5.16, §5.18, §6.1).
+/// A form load checks (M0) that the run doesn't evaluate yet, where the ask meets it: a random
+/// ask, `orient`, an axis it reaches, a fill or a `same` line of the reality, or a joint
+/// model's merged reality (L §5.5, §5.12, §5.16, §5.18, §6.1).
 fn unbuilt_at_run(m: &Reality, ask: &Ask) -> Option<&'static str> {
-    if !ask.pins.is_empty() {
-        return Some("an ask's pins at run");
-    }
     if ask.random.is_some() || ask.paths.is_some() || ask.path.is_some() {
         return Some("a random ask at run");
     }
@@ -302,10 +301,10 @@ fn no_turn() -> Stop {
 /// One ask's lines; a run-time refusal its reading meets outside a line's values is its one
 /// line, and a load refusal met at run is returned to stop its world (refcore's `answer`,
 /// `LoadAtRun`: a load refusal load can't see, such as a rate per year times days read
-/// through rows, L §3.3). L §8.3, §8.4.
+/// through rows, L §3.3); a request's refusal is the run's one result (E §11). L §8.3, §8.4.
 fn answer_one(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<String>, Stop> {
     match ask_lines(m, ask, days, seen) {
-        Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {
+        Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_) | Code::Req(_)) => {
             Ok(vec![format!("{}: refused: {}", ask.id, r.text())])
         }
         other => other,
@@ -337,6 +336,17 @@ fn ask_lines(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<
             return Ok(vec![format!("{}: {}", ask.id, shown(m, &v)?)]);
         }
         cut = date_of(&v, "as known")?;
+        if cut > m.on {
+            // E §11: an `as known` after the model's `on` refuses the request (P22's line)
+            return Err(Stop::Refused(Refusal::new(
+                Code::Req(Req::Clock),
+                format!(
+                    "as known {} is after the model's on {}",
+                    cut.text(),
+                    m.on.text()
+                ),
+            )));
+        }
         known_engine = Some(engine);
     }
     let mut engine = Engine::new(cut)
@@ -402,24 +412,55 @@ fn ask_body(m: &Reality, ask: &Ask, engine: &mut Engine, cut: Day) -> Result<Vec
     } else {
         plain
     };
+    let ctx = if ask.pins.is_empty() {
+        ctx
+    } else {
+        // the ask's `with` pins: evaluated once, outside the line, their register under every
+        // line (refcore's `apply_pins` with `ask=True`); a pin whose key or date is a hole makes
+        // the ask line that hole (L §5.11)
+        engine.push();
+        let read = engine.with_pins(m, &ask.pins, ctx);
+        pinned.merge(&engine.pop_alone());
+        let inside = match read? {
+            Err(hole) => return Ok(vec![format!("{}: {}", ask.id, hole.text())]),
+            Ok(inside) => inside,
+        };
+        engine.ask_cut = inside.cut;
+        engine.open_layer(inside.layer);
+        inside
+    };
     match &ask.body {
-        AskBody::Exprs(exprs) => expr_lines(m, ask, exprs, engine, (ctx, &pinned)),
+        AskBody::Exprs(exprs) => form_lines(m, ask, Form::Values(exprs), engine, (ctx, &pinned)),
+        AskBody::Check(left, right) => {
+            form_lines(m, ask, Form::Check(left, right), engine, (ctx, &pinned))
+        }
+        AskBody::Solve(form) => form_lines(m, ask, Form::Solve(form), engine, (ctx, &pinned)),
         AskBody::Residuals(r) => residual_lines(m, ask, r, engine, (ctx, &pinned)),
-        AskBody::Explain(_)
-        | AskBody::InputsOf(_)
-        | AskBody::ReadersOf(_)
-        | AskBody::Check(..)
-        | AskBody::Solve(_)
-        | AskBody::Diff(_) => Err(Stop::NotBuilt("an ask's form beyond values and residuals")),
+        AskBody::Explain(_) | AskBody::InputsOf(_) | AskBody::ReadersOf(_) | AskBody::Diff(_) => {
+            Err(Stop::NotBuilt(
+                "an ask's form beyond values, check, solve and residuals",
+            ))
+        }
     }
 }
 
-/// An ask's lines of values: a line per binding tuple with the register under it (refcore's
-/// `_answer_in`). L §5.18.
-fn expr_lines(
+/// What an ask's line reads for each binding tuple (refcore's `evaluate`, its forms). L §5.18.
+#[derive(Debug, Clone, Copy)]
+enum Form<'a> {
+    /// Its values, `e, f, …`.
+    Values(&'a [Expr]),
+    /// `check e == f`.
+    Check(&'a Expr, &'a Expr),
+    /// `solve f == g for v in [lo, hi] to u`.
+    Solve(&'a Solve),
+}
+
+/// An ask's lines: a line per binding tuple with the register under it (refcore's
+/// `_answer_in`, `print_line`). L §5.18.
+fn form_lines(
     m: &Reality,
     ask: &Ask,
-    exprs: &[Expr],
+    form: Form<'_>,
     engine: &mut Engine,
     (ctx, pinned): (Ctx, &Collected),
 ) -> Result<Vec<String>, Stop> {
@@ -442,17 +483,47 @@ fn expr_lines(
             out.push(format!("{head}: {}", hole.text()));
             continue;
         }
-        let (items, mut met) = engine.line(m, exprs, &tuple.env, ctx)?;
-        out.push(format!("{head}: {}", line_values(m, &items)?));
-        met.merge(&tuple.brought);
-        met.merge(pinned);
-        out.extend(
-            register_lines(&met, ctx)?
-                .into_iter()
-                .map(|l| format!("  {l}")),
-        );
+        let mut line = form_line(m, form, engine, &tuple.env, ctx)?;
+        out.push(format!("{head}: {}", line.text));
+        line.met.merge(&tuple.brought);
+        line.met.merge(pinned);
+        let register = match line.laws {
+            Some(laws) => check_register_lines(&line.met, ctx, laws)?,
+            None => register_lines(&line.met, ctx)?,
+        };
+        out.extend(register.into_iter().map(|l| format!("  {l}")));
     }
     Ok(out)
+}
+
+/// One tuple's line after its head, with the register entries it met (refcore's `evaluate`).
+/// L §5.18.
+fn form_line(
+    m: &Reality,
+    form: Form<'_>,
+    engine: &mut Engine,
+    env: &Env,
+    ctx: Ctx,
+) -> Result<Printed, Stop> {
+    match form {
+        Form::Values(exprs) => {
+            let (items, met) = engine.line(m, exprs, env, ctx)?;
+            Ok(Printed {
+                text: line_values(m, &items)?,
+                met,
+                laws: None,
+            })
+        }
+        Form::Check(left, right) => check_line(m, engine, (left, right), env, ctx),
+        Form::Solve(solve) => {
+            let (item, met) = engine.solve_line(m, solve, env, ctx)?;
+            Ok(Printed {
+                text: item_text(m, &item)?,
+                met,
+                laws: None,
+            })
+        }
+    }
 }
 
 /// A line's values: one alone, several in parentheses (refcore's `print_line`). L §5.18.

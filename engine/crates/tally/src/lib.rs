@@ -153,6 +153,7 @@ pub mod eval {
     mod bindings;
     mod builtin;
     mod business;
+    mod context;
     mod convert;
     mod dates;
     mod expr;
@@ -162,6 +163,7 @@ pub mod eval {
     mod ranges;
     mod read;
     mod rules;
+    mod solve;
     mod stack;
     mod state;
     mod ty;
@@ -171,7 +173,9 @@ pub mod eval {
     pub use aggregate::Member;
     pub use arith::{Op, Test, arith, compare, currency_of, int_of, negate, same_value};
     pub(crate) use bindings::{order_text, reads_name};
+    pub use context::Layer;
     pub(crate) use convert::{ConvertFor, Converted, convert, convert_row, field_literal};
+    pub(crate) use expr::equal_sides;
     pub use memo::Memo;
     pub(crate) use read::{make_keys, thing_seen, to_key};
     pub use stack::Item;
@@ -237,6 +241,7 @@ pub mod book {
 /// run's warnings (L §8.5). The module's code is its files under `ask/`.
 pub mod ask {
     mod answer;
+    mod check;
     mod register;
     mod residuals;
     mod worlds;
@@ -319,7 +324,7 @@ pub mod read {
     };
     pub use rows::{
         Clocks, Point, Test, candidates, choose, held, lawless, need_law, row_known, row_place,
-        row_span, time_point,
+        row_span, time_point, worded,
     };
     pub use rules::rule_in_force;
 }

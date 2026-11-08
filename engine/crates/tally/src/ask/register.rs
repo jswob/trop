@@ -5,11 +5,12 @@
 //! Invariants: every entry prints under its word in refcore's order; an entry of a word the
 //! register doesn't print is `ENGINE-INVARIANT`, never dropped; lines sort by code point.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::base::{Code, Refusal, Warn};
 use crate::eval::{Collected, Ctx};
 use crate::syntax::Stop;
+use crate::time::Day;
 
 /// How an entry of a word prints.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -21,10 +22,12 @@ enum Style {
 }
 
 /// The words printed after `assumed:`, in the register's order, each with its style
-/// (refcore's `register`: given, missing, world, then the walk's words, then held). L §8.2.
-const WORDS: [(&str, Style); 11] = [
+/// (refcore's `register`: given, missing, pinned, world, then the walk's words, then held).
+/// L §8.2.
+const WORDS: [(&str, Style); 12] = [
     ("given", Style::Plain),
     ("missing", Style::Missing),
+    ("pinned", Style::Plain),
     ("world", Style::Plain),
     ("anchor", Style::Plain),
     ("pad", Style::Plain),
@@ -44,11 +47,50 @@ const WORDS: [(&str, Style); 11] = [
 ///
 /// `ENGINE-INVARIANT` for an entry of a word the register doesn't print.
 pub fn register_lines(met: &Collected, ctx: Ctx) -> Result<Vec<String>, Stop> {
+    let mut out = entry_lines(met)?;
+    out.push(match ctx.law {
+        Some(law) => format!("law date {}, cut {}", law.text(), ctx.cut.text()),
+        None => format!("cut {}", ctx.cut.text()),
+    });
+    Ok(out)
+}
+
+/// The register's lines under a `check` whose sides are read at different law dates: the
+/// entries, then each side's law date (refcore's `register`, its `laws`). L §5.18, §8.2.
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for an entry of a word the register doesn't print.
+pub(crate) fn check_register_lines(
+    met: &Collected,
+    ctx: Ctx,
+    (left, right): (Option<Day>, Option<Day>),
+) -> Result<Vec<String>, Stop> {
+    let mut out = entry_lines(met)?;
+    let law = |day: Option<Day>| day.map_or_else(|| "none".to_owned(), Day::text);
+    out.push(format!(
+        "law date {} (left), {} (right), cut {}",
+        law(left),
+        law(right),
+        ctx.cut.text()
+    ));
+    Ok(out)
+}
+
+/// The register's entries' lines: `assumed` merged by reason, then the other words in their
+/// order, each sorted, a `pinned:` date pin's days merged into spans (refcore's `register`).
+/// L §8.2.
+fn entry_lines(met: &Collected) -> Result<Vec<String>, Stop> {
     let mut assumed: BTreeSet<(&str, &str)> = BTreeSet::new();
     let mut by_word: BTreeSet<(usize, String)> = BTreeSet::new();
+    let mut pins: Vec<&str> = Vec::new();
     for entry in &met.entries {
         if entry.word == "assumed" {
             assumed.insert((entry.text.as_str(), entry.figure.as_str()));
+            continue;
+        }
+        if entry.word == "pinned" {
+            pins.push(&entry.text);
             continue;
         }
         let Some((at, (_, style))) = WORDS
@@ -70,13 +112,93 @@ pub fn register_lines(met: &Collected, ctx: Ctx) -> Result<Vec<String>, Stop> {
         };
         by_word.insert((at, line));
     }
+    let pinned_at = WORDS
+        .iter()
+        .position(|(word, _)| *word == "pinned")
+        .ok_or_else(|| {
+            Stop::Refused(Refusal::new(
+                Code::EngineInvariant,
+                "the register's words lack pinned".to_owned(),
+            ))
+        })?;
+    for line in merged_pins(&pins) {
+        by_word.insert((pinned_at, format!("pinned: {line}")));
+    }
     let mut out = assumed_lines(&assumed);
     out.extend(by_word.into_iter().map(|(_, line)| line));
-    out.push(match ctx.law {
-        Some(law) => format!("law date {}, cut {}", law.text(), ctx.cut.text()),
-        None => format!("cut {}", ctx.cut.text()),
-    });
     Ok(out)
+}
+
+/// The `pinned:` texts with the days of one `known` or `law` pin given by an expression
+/// (`known <e> = <d>`, one per key it was formed at) merged into maximal spans, `= <a> .. <b>,
+/// <c>` (refcore's `merge_pin_days`). L §8.2.
+fn merged_pins(pins: &[&str]) -> BTreeSet<String> {
+    let mut out = BTreeSet::new();
+    let mut days: BTreeMap<&str, BTreeSet<Day>> = BTreeMap::new();
+    for text in pins {
+        match pin_day(text) {
+            Some((head, day)) => {
+                days.entry(head).or_default().insert(day);
+            }
+            None => {
+                out.insert((*text).to_owned());
+            }
+        }
+    }
+    for (head, set) in days {
+        let mut spans: Vec<(Day, Day)> = Vec::new();
+        for day in set {
+            match spans.last_mut() {
+                Some((_, end)) if end.next() == Some(day) => *end = day,
+                _ => spans.push((day, day)),
+            }
+        }
+        let texts: Vec<String> = spans
+            .iter()
+            .map(|(a, b)| {
+                if a == b {
+                    a.text()
+                } else {
+                    format!("{} .. {}", a.text(), b.text())
+                }
+            })
+            .collect();
+        out.insert(format!("{head} = {}", texts.join(", ")));
+    }
+    out
+}
+
+/// A `known` or `law` pin's text split into its head and its day, `known e = 2026-01-05`
+/// (refcore's `_PIN_DAY`); none for any other pin.
+fn pin_day(text: &str) -> Option<(&str, Day)> {
+    if !text.starts_with("known ") && !text.starts_with("law ") {
+        return None;
+    }
+    let (head, day) = text.rsplit_once(" = ")?;
+    let mut parts = day.split('-');
+    let (Some(y), Some(mo), Some(d), None) =
+        (parts.next(), parts.next(), parts.next(), parts.next())
+    else {
+        return None;
+    };
+    let (Ok(year), Ok(month), Ok(dom)) = (
+        u16::try_from(digits(y, 4)?),
+        u8::try_from(digits(mo, 2)?),
+        u8::try_from(digits(d, 2)?),
+    ) else {
+        return None;
+    };
+    Some((head, Day::from_ymd(year, month, dom)?))
+}
+
+/// The number `len` decimal digits write; none for any other text.
+fn digits(text: &str, len: usize) -> Option<u32> {
+    if text.len() != len {
+        return None;
+    }
+    text.chars().try_fold(0_u32, |n, c| {
+        n.checked_mul(10)?.checked_add(c.to_digit(10)?)
+    })
 }
 
 /// The `assumed` lines: one per reason, the figures that met it listed after it, sorted

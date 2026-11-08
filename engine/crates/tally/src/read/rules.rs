@@ -1,15 +1,15 @@
 //! The read rule for dated rules: which version of a def's rule is in force at the law date.
 //! Spec: L §4.6 (one rule for rows, givens, band rows and dated rules: replacement, ties),
 //! §5.11 step 2 (the versions of one rule that exist at d and K), §4.3 (a rule read with no
-//! law date).
+//! law date; a `wording` pin's versions), §5.3 (entry into force).
 //! Twin: engine/tools/refcore/evaluate.py (`rule_exists`, `rule_in_force`), model.py
 //! (`RuleVer.known`).
 //! Invariants: a label's versions are scanned in the order versions state them; two
 //! `replace` versions known the same day both in force are refused, never broken by order.
 
-use super::rows::{invariant, no_law_date, version_known, version_span};
+use super::rows::{enters, invariant, no_law_date, version_known, version_span};
 use crate::base::{Code, Load, Refusal};
-use crate::model::{Reality, RuleVer, Span};
+use crate::model::{OwnTime, Reality, RuleVer, Span};
 use crate::syntax::Stop;
 use crate::time::Day;
 
@@ -24,11 +24,28 @@ fn holds(span: &Span, law: Option<Day>) -> Result<bool, Stop> {
 }
 
 /// Whether a version of a rule exists at law date `law` under cut `cut`: its version (the
-/// `replace rule` line's, else `v V`'s) is known by the cut and governs the law date, and
-/// so does its own span (L §5.11 step 2, §4.6 step 1).
-fn rule_exists(m: &Reality, rule: &RuleVer, law: Option<Day>, cut: Day) -> Result<bool, Stop> {
+/// `replace rule` line's, else `v V`'s) is known by the cut, entered into force by the day of
+/// a `wording` pin naming its def (`wording`, if one does), and governs the law date, and so
+/// does its own span (L §5.11 step 2, §4.6 step 1, §4.3; refcore's `rule_exists`).
+fn rule_exists(
+    m: &Reality,
+    rule: &RuleVer,
+    law: Option<Day>,
+    cut: Day,
+    wording: Option<Day>,
+) -> Result<bool, Stop> {
+    let own_time = match &rule.span {
+        Some(span) => OwnTime::Stated(span.start()),
+        None => OwnTime::Version,
+    };
+    let unworded = |version: &str| -> Result<bool, Stop> {
+        match wording {
+            Some(by) => Ok(enters(m, version, own_time, cut)? > by),
+            None => Ok(false),
+        }
+    };
     if let Some(version) = &rule.version {
-        if version_known(m, version)? > cut {
+        if version_known(m, version)? > cut || unworded(version)? {
             return Ok(false);
         }
         let span = match &rule.span {
@@ -42,7 +59,7 @@ fn rule_exists(m: &Reality, rule: &RuleVer, law: Option<Day>, cut: Day) -> Resul
     }
     let mut exists = true;
     if let Some(v) = &rule.v {
-        if version_known(m, v)? > cut {
+        if version_known(m, v)? > cut || unworded(v)? {
             return Ok(false);
         }
         let Some(span) = version_span(m, v, cut)? else {
@@ -67,7 +84,8 @@ fn rule_known(m: &Reality, rule: &RuleVer) -> Result<Option<Day>, Stop> {
 
 /// The version of rule `label` of def `def` in force at law date `law` under cut `cut`, by
 /// its position among `versions`: the latest-known `replace` among those that exist, else
-/// the one that exists; none where none does (L §5.11 step 2, §4.6 steps 2 and 4).
+/// the one that exists; none where none does; under a `wording` pin naming the def, only
+/// versions that entered into force by its day (L §5.11 step 2, §4.6 steps 2 and 4, §4.3).
 ///
 /// # Errors
 ///
@@ -79,13 +97,13 @@ pub fn rule_in_force(
     def: &str,
     label: &str,
     versions: &[RuleVer],
-    law: Option<Day>,
-    cut: Day,
+    (law, cut): (Option<Day>, Day),
+    wording: Option<Day>,
 ) -> Result<Option<usize>, Stop> {
     let mut live = Vec::new();
     let mut replacing = Vec::new();
     for (at, rule) in versions.iter().enumerate() {
-        if !rule_exists(m, rule, law, cut)? {
+        if !rule_exists(m, rule, law, cut, wording)? {
             continue;
         }
         live.push(at);

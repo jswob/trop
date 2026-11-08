@@ -27,8 +27,9 @@
 //! the kernel corpus under both (crates/tally-cli/tests/walk_oracle.rs).
 
 use core::cmp::Ordering;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
+use super::context::Layer;
 use super::state::{Cell, Ctx, Engine, invariant};
 use crate::model::{BandInfo, DefInfo, KeyVal, Reality, Row, RuleVer, Span};
 use crate::read::row_span;
@@ -203,6 +204,8 @@ pub(crate) struct CellKey {
     at: Option<WalkAt>,
     /// Whether the cell is read under the ask line's `with uncertain` (L §5.18).
     unc: bool,
+    /// The pins in force, trimmed to those the def reaches (E §3.2, P §3.1).
+    layer: Layer,
 }
 
 impl CellKey {
@@ -214,6 +217,7 @@ impl CellKey {
             cut: ctx.cut,
             at: ctx.at,
             unc: ctx.unc,
+            layer: ctx.layer,
         }
     }
 }
@@ -229,12 +233,13 @@ impl Ord for CellKey {
 }
 
 impl CellKey {
-    /// The contexts' order: the cut, the walk point, the clause.
+    /// The contexts' order: the cut, the walk point, the clause, the pins.
     fn context_order(&self, other: &CellKey) -> Ordering {
         self.cut
             .cmp(&other.cut)
             .then_with(|| walk_at_order(self.at, other.at))
             .then_with(|| self.unc.cmp(&other.unc))
+            .then_with(|| self.layer.cmp(&other.layer))
     }
 }
 
@@ -518,6 +523,11 @@ impl Cells {
             }
         }
         Ok(class)
+    }
+
+    /// Frees the cells kept under the layers `freed`, whose scopes have ended (P §3.5).
+    pub(super) fn free(&mut self, freed: &BTreeSet<Layer>) {
+        self.kept.retain(|key, _| !freed.contains(&key.layer));
     }
 }
 

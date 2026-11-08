@@ -85,7 +85,7 @@ impl Engine {
             Expr::DistFn(..) => Err(Stop::NotBuilt("`cdf`, `pdf` and `pmf`")),
             Expr::Dist(..) => Err(Stop::NotBuilt("distributions")),
             Expr::Prorata(p) => self.prorata(m, p, env, ctx),
-            Expr::AsIf(..) => Err(Stop::NotBuilt("`as if`")),
+            Expr::AsIf(inner, pins) => self.as_if(m, (inner, pins), env, ctx),
         }
     }
 
@@ -428,7 +428,28 @@ impl Engine {
         let (left, right) = resolve_pair(m, left, right)?;
         compare_values(m, op, (&left, &right), written)
     }
+}
 
+/// `e == f` of two values already read, as a comparison of the two expressions decides it
+/// (refcore's `compare('==', …)` in `check`): true, false or the hole of an undecided
+/// comparison. L §5.18, §5.11.
+///
+/// # Errors
+///
+/// The refusals of a comparison, `RUN-NONE` and `LOAD-UNIT` among them.
+pub(crate) fn equal_sides(
+    m: &Reality,
+    (lhs, left): (&Expr, &Value),
+    (rhs, right): (&Expr, &Value),
+) -> Result<Value, Stop> {
+    let left_year = year_beside(lhs, left.clone(), right);
+    let right_year = year_beside(rhs, right.clone(), &left_year);
+    let (a, b) = resolve_pair(m, left_year, right_year)?;
+    let written = Expr::Cmp(Box::new((lhs.clone(), CmpOp::Eq, rhs.clone())));
+    compare_values(m, CmpOp::Eq, (&a, &b), &written)
+}
+
+impl Engine {
     /// `x in K [on d]`: a thing's membership of a kind; `x in [a, b]`: a list's (refcore's
     /// `e_in`). A `d` that is a hole makes the test that hole; one that is `none`, `never` or
     /// no day is refused as `date_of` refuses it, and a day period stands for its first day.

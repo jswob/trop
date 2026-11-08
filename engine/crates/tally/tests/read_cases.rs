@@ -223,7 +223,8 @@ band|scale||2025-06-01|2026-03-01|rows v2 [0, 100]; v1 (100, inf)
             .iter()
             .find(|(l, _)| l == label)
             .expect("the label");
-        let Some(at) = rule_in_force(m, id, label, versions, clocks.law, clocks.cut)? else {
+        let Some(at) = rule_in_force(m, id, label, versions, (clocks.law, clocks.cut), None)?
+        else {
             return Ok("no rule".to_owned());
         };
         let rule = versions.get(at).expect("the version");
@@ -293,6 +294,7 @@ band|scale||2025-06-01|2026-03-01|rows v2 [0, 100]; v1 (100, inf)
                 law: (*law != "-").then(|| day(law)),
                 cut: day(cut),
                 ask_cut: m.on,
+                wording: None,
             };
             let got = outcome(&m, kind, id, &texts, clocks);
             assert_eq!(got, *expected, "{line}");
@@ -317,6 +319,7 @@ band|scale||2025-06-01|2026-03-01|rows v2 [0, 100]; v1 (100, inf)
             law: Some(day(law)),
             cut: m.on,
             ask_cut: m.on,
+            wording: None,
         }
     }
 

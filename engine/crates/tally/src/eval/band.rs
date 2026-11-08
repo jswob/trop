@@ -207,7 +207,7 @@ impl Engine {
             let class = tables_class(m, band, ctx.cut, day)?;
             self.narrow(ctx.law, class);
         }
-        let Some(rows) = band_rows(m, band, key.as_ref(), self.clocks(ctx))? else {
+        let Some(rows) = band_rows(m, band, key.as_ref(), self.clocks(ctx, &band.id)?)? else {
             self.narrow_to_day(ctx.law);
             let q = band_no_table(&band.id, key.as_ref(), ctx.law);
             let figure = band_origin(&band.id, key.as_ref());
@@ -289,7 +289,7 @@ impl Engine {
         if let Some(reason) = &version.assumed {
             self.note("assumed", reason.clone(), figure.to_owned());
         }
-        if table_held(m, table, self.clocks(ctx))? {
+        if table_held(m, table, self.clocks(ctx, &band.id)?)? {
             // the `held` entry names the law date (L §8.2)
             self.narrow_to_day(ctx.law);
             let law = ctx.law.map_or_else(String::new, Day::text);

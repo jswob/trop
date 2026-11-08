@@ -258,7 +258,7 @@ impl Engine {
         if value.as_hole().is_none() {
             return Ok(Value::Bool(false));
         }
-        let held = match read_input(m, input, &keys, self.clocks(ctx), Asked::Plain)? {
+        let held = match read_input(m, input, &keys, self.clocks(ctx, &input.id)?, Asked::Plain)? {
             Found::Hole(_) => true,
             Found::Row(at) => input
                 .rows

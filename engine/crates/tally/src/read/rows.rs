@@ -1,21 +1,23 @@
 //! The read rule's rows: which rows of an input or of a def's givens are candidates for a read, and which one it takes.
 //! Spec: L §4.6 steps 1–4 (candidates, replacement, precedence, ties), §4.5 (the cut sees
-//! what is known by it), §4.3 (the law date; a read with none), §6.4 (a scenario's rows stand
-//! above its base's).
+//! what is known by it), §4.3 (the law date; a read with none; a `wording D` pin keeps the
+//! candidates that entered into force by D), §5.3 (entry into force), §6.4 (a scenario's rows
+//! stand above its base's).
 //! Twin: engine/tools/refcore/evaluate.py (`time_point`, `need_law`, `row_matches`,
 //! `key_ord`, `unstated_ok`, `row_visible`, `candidates`, `choose`), loader.py
 //! (`pattern_norm`, `_pos_rel`, `narrower`, `key_order`), model.py (`Row.span`, `Row.known`,
-//! `row_timeless`, `InputInfo.lawless`).
+//! `row_timeless`, `InputInfo.lawless`, `VersionInfo.enters_at`), evaluate.py (`wording_ok`).
 //! Invariants: a plain scan of the target's rows in the order versions state them; the
 //! candidates keep that order; two rows still tied are refused, never broken by order; a
 //! scenario's `replace` beats its base's row at the same keys whatever their `known` dates.
-//! Joint models, `wording` pins and known windows stop before load ends (`NotBuilt`), so
-//! every row is known on one day, and no pin narrows it; a dated read with no law date is
-//! refused by load (`LOAD-LAWDATE`), so here it is an invariant.
+//! Joint models and known windows stop before load ends (`NotBuilt`), so every row is known
+//! on one day; a `wording` pin narrows the candidates by their entry into force alone; a
+//! dated read with no law date is refused by load (`LOAD-LAWDATE`), so here it is an
+//! invariant.
 
 use crate::base::{Code, Load, Refusal};
 use crate::model::{
-    BindInfo, Domain, InputInfo, KeyVal, Pat, Reality, Row, RowInstant, Span, TimePos,
+    BindInfo, Domain, InputInfo, KeyVal, OwnTime, Pat, Reality, Row, RowInstant, Span, TimePos,
 };
 use crate::syntax::Stop;
 use crate::time::Day;
@@ -29,6 +31,9 @@ pub struct Clocks {
     pub cut: Day,
     /// The ask's cut, past which a row read for a later day is `held` (L §8.2).
     pub ask_cut: Day,
+    /// The day a `wording D for […]` pin names the item read with: only rows that entered
+    /// into force by D are its candidates (L §4.3); none outside such a pin.
+    pub wording: Option<Day>,
 }
 
 /// Which rows a read takes as candidates by their time (L §4.6 step 1, Readings).
@@ -412,6 +417,57 @@ pub fn candidates(
         }
     }
     Ok(out)
+}
+
+/// The candidates among `cands` that entered into force by the day of the read's `wording`
+/// pin, each row by its own time where it states one; all of them outside such a pin
+/// (L §4.3, §5.3; refcore's `wording_ok`).
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for a candidate past the rows, or a row whose version is missing.
+pub fn worded(
+    m: &Reality,
+    rows: &[Row],
+    cands: Vec<usize>,
+    clocks: Clocks,
+) -> Result<Vec<usize>, Stop> {
+    let Some(by) = clocks.wording else {
+        return Ok(cands);
+    };
+    let mut out = Vec::with_capacity(cands.len());
+    for at in cands {
+        let row = rows
+            .get(at)
+            .ok_or_else(|| invariant("a candidate past its rows"))?;
+        if enters(m, &row.version, own_time(row), clocks.cut)? <= by {
+            out.push(at);
+        }
+    }
+    Ok(out)
+}
+
+/// A row's own time for its entry into force: its own span's start, else the day of its
+/// instant; else its version's governs (L §5.3; refcore's `read_input`, its `own`).
+fn own_time(row: &Row) -> OwnTime {
+    if let Some(span) = &row.own_span {
+        return OwnTime::Stated(span.start());
+    }
+    match &row.instant {
+        Some(RowInstant::At(day, _)) => OwnTime::Stated(Some(*day)),
+        Some(RowInstant::After(_)) | None => OwnTime::Version,
+    }
+}
+
+/// Version `id`'s entry into force for a row or a rule of own time `own`, as the cut sees
+/// its governs (L §5.3).
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for a version load didn't build.
+pub(super) fn enters(m: &Reality, id: &str, own: OwnTime, cut: Day) -> Result<Day, Stop> {
+    let version = m.versions.get(id).ok_or_else(no_version)?;
+    Ok(version.enters_at(cut, own))
 }
 
 /// How one key position of a row relates to another's (L §4.6 steps 2 and 3.2).
