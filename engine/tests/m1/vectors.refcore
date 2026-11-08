@@ -28135,4 +28135,1500 @@ g10_rent_infl5: 3 889.62 PLN
   held: inflation = 0.05 (infl5_rates), read for 2029-01-01
   held: inflation = 0.05 (infl5_rates), read for 2030-01-01
   cut 2026-10-17
+,18:carried/years/base,9:carried-5,26:run model.tally --ask base,1063:11:model.tally,1042:model years
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2027-12-31
+  note "T's carried items 5 and 6 (issue #108, invented): a parenthesised literal is that literal wherever the bare one stands (L §2.1, the coordinator's picks P6 and P12), and #97's N1, the written year forms; each form is a file of its own beside this base"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ys = year 2026..2027
+
+index ms = month 2026-01..2027-12
+
+place konto: accounts PLN lives 2026-01-01..
+
+input rate[y in ys]: num
+
+input start_day: date
+
+input wage[m in ms]: money PLN
+
+ask base: rate[2026], rate[2027], year_of(start_day) == 2026, day_of(2026, 12-31), wage[2026-06], wage[2027-06], bal(konto, 2026-01-05)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  rate[2026] = 0.1 "the card"
+  rate[2027] = 0.2 "the card"
+  start_day = 2026-01-05 "the card"
+  wage = 5000.00 PLN governs 2026 "the card"
+  wage = 5200.00 PLN governs 2027 "the card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "the card"
+,,1:0,92:base: (0.1, 0.2, true, 2026-12-31, 5 000.00 PLN, 5 200.00 PLN, 100.00 PLN)
+  cut 2026-10-01
+,23:carried/years/p_compare,9:carried-5,47:run model.tally p_compare.tally --ask p_compare,1156:11:model.tally,1042:model years
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2027-12-31
+  note "T's carried items 5 and 6 (issue #108, invented): a parenthesised literal is that literal wherever the bare one stands (L §2.1, the coordinator's picks P6 and P12), and #97's N1, the written year forms; each form is a file of its own beside this base"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ys = year 2026..2027
+
+index ms = month 2026-01..2027-12
+
+place konto: accounts PLN lives 2026-01-01..
+
+input rate[y in ys]: num
+
+input start_day: date
+
+input wage[m in ms]: money PLN
+
+ask base: rate[2026], rate[2027], year_of(start_day) == 2026, day_of(2026, 12-31), wage[2026-06], wage[2027-06], bal(konto, 2026-01-05)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  rate[2026] = 0.1 "the card"
+  rate[2027] = 0.2 "the card"
+  start_day = 2026-01-05 "the card"
+  wage = 5000.00 PLN governs 2026 "the card"
+  wage = 5200.00 PLN governs 2027 "the card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "the card"
+,15:p_compare.tally,70:part p_compare
+  tally 2
+
+ask p_compare: year_of(start_day) == (2026)
+,,1:0,33:p_compare: true
+  cut 2026-10-01
+,21:carried/years/p_month,9:carried-5,43:run model.tally p_month.tally --ask p_month,1137:11:model.tally,1042:model years
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2027-12-31
+  note "T's carried items 5 and 6 (issue #108, invented): a parenthesised literal is that literal wherever the bare one stands (L §2.1, the coordinator's picks P6 and P12), and #97's N1, the written year forms; each form is a file of its own beside this base"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ys = year 2026..2027
+
+index ms = month 2026-01..2027-12
+
+place konto: accounts PLN lives 2026-01-01..
+
+input rate[y in ys]: num
+
+input start_day: date
+
+input wage[m in ms]: money PLN
+
+ask base: rate[2026], rate[2027], year_of(start_day) == 2026, day_of(2026, 12-31), wage[2026-06], wage[2027-06], bal(konto, 2026-01-05)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  rate[2026] = 0.1 "the card"
+  rate[2027] = 0.2 "the card"
+  start_day = 2026-01-05 "the card"
+  wage = 5000.00 PLN governs 2026 "the card"
+  wage = 5200.00 PLN governs 2027 "the card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "the card"
+,13:p_month.tally,53:part p_month
+  tally 2
+
+ask p_month: wage[(2026-03)]
+,,1:0,39:p_month: 5 000.00 PLN
+  cut 2026-10-01
+,19:carried/years/p_day,9:carried-5,39:run model.tally p_day.tally --ask p_day,1140:11:model.tally,1042:model years
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2027-12-31
+  note "T's carried items 5 and 6 (issue #108, invented): a parenthesised literal is that literal wherever the bare one stands (L §2.1, the coordinator's picks P6 and P12), and #97's N1, the written year forms; each form is a file of its own beside this base"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ys = year 2026..2027
+
+index ms = month 2026-01..2027-12
+
+place konto: accounts PLN lives 2026-01-01..
+
+input rate[y in ys]: num
+
+input start_day: date
+
+input wage[m in ms]: money PLN
+
+ask base: rate[2026], rate[2027], year_of(start_day) == 2026, day_of(2026, 12-31), wage[2026-06], wage[2027-06], bal(konto, 2026-01-05)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  rate[2026] = 0.1 "the card"
+  rate[2027] = 0.2 "the card"
+  start_day = 2026-01-05 "the card"
+  wage = 5000.00 PLN governs 2026 "the card"
+  wage = 5200.00 PLN governs 2027 "the card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "the card"
+,11:p_day.tally,58:part p_day
+  tally 2
+
+ask p_day: bal(konto, (2026-01-05))
+,,1:0,35:p_day: 100.00 PLN
+  cut 2026-10-01
+,21:carried/years/n1_plus,9:carried-6,43:run model.tally n1_plus.tally --ask n1_plus,1141:11:model.tally,1042:model years
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2027-12-31
+  note "T's carried items 5 and 6 (issue #108, invented): a parenthesised literal is that literal wherever the bare one stands (L §2.1, the coordinator's picks P6 and P12), and #97's N1, the written year forms; each form is a file of its own beside this base"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ys = year 2026..2027
+
+index ms = month 2026-01..2027-12
+
+place konto: accounts PLN lives 2026-01-01..
+
+input rate[y in ys]: num
+
+input start_day: date
+
+input wage[m in ms]: money PLN
+
+ask base: rate[2026], rate[2027], year_of(start_day) == 2026, day_of(2026, 12-31), wage[2026-06], wage[2027-06], bal(konto, 2026-01-05)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  rate[2026] = 0.1 "the card"
+  rate[2027] = 0.2 "the card"
+  start_day = 2026-01-05 "the card"
+  wage = 5000.00 PLN governs 2026 "the card"
+  wage = 5200.00 PLN governs 2027 "the card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "the card"
+,13:n1_plus.tally,57:part n1_plus
+  tally 2
+
+ask n1_plus: rate[2026 + 1 year]
+,,1:0,30:n1_plus: 0.2
+  cut 2026-10-01
+,21:carried/years/n1_list,9:carried-6,43:run model.tally n1_list.tally --ask n1_list,1151:11:model.tally,1042:model years
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2027-12-31
+  note "T's carried items 5 and 6 (issue #108, invented): a parenthesised literal is that literal wherever the bare one stands (L §2.1, the coordinator's picks P6 and P12), and #97's N1, the written year forms; each form is a file of its own beside this base"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ys = year 2026..2027
+
+index ms = month 2026-01..2027-12
+
+place konto: accounts PLN lives 2026-01-01..
+
+input rate[y in ys]: num
+
+input start_day: date
+
+input wage[m in ms]: money PLN
+
+ask base: rate[2026], rate[2027], year_of(start_day) == 2026, day_of(2026, 12-31), wage[2026-06], wage[2027-06], bal(konto, 2026-01-05)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  rate[2026] = 0.1 "the card"
+  rate[2027] = 0.2 "the card"
+  start_day = 2026-01-05 "the card"
+  wage = 5000.00 PLN governs 2026 "the card"
+  wage = 5200.00 PLN governs 2027 "the card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "the card"
+,13:n1_list.tally,67:part n1_list
+  tally 2
+
+ask n1_list: rate[y] for y in [2026, 2027]
+,,1:0,82:n1_list (y = 2026): 0.1
+  cut 2026-10-01
+n1_list (y = 2027): 0.2
+  cut 2026-10-01
+,23:carried/steps/n4_inside,9:carried-6,31:run model.tally --ask n4_inside,1760:11:model.tally,1739:model steps
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 6 (issue #108, invented): #97's N4, pos(k + n) on an integer index, and N7, the calendar built-ins and explain over a movement"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = 1..4
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+
+input holidays: calendar
+
+input last_k: int
+
+input n_add: int
+
+input n_last: int
+
+input pay_day: date
+
+input windowed: calendar
+
+def nxt[k in ks]: int = pos(k + 1)
+
+def nxt_guarded[k in ks]: int = if k < last_k then pos(k + 1) else pos(k)
+
+move pay: transfers
+  on pay_day
+  leg cash from konto to world amount fee
+
+ask n4_inside: nxt[2]
+
+ask n4_past: nxt[4]
+
+ask n4_guard: nxt_guarded[k] for k in ks
+
+ask n7_weekday: weekday(2026-06-01), weekday(2026-06-07)
+
+ask n7_last_business: last_business(2026-06, n_last - 1, holidays), last_business(2026-05, n_last, holidays)
+
+ask n7_window_agrees: add_business(2026-06-01, n_add, windowed)
+
+ask n7_window_differs: add_business(2026-06-19, n_add, windowed)
+
+ask n7_explain_before: explain bal(konto, 2026-06-09)
+
+ask n7_explain_after: explain bal(konto, 2026-06-30)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 40.00 PLN "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  last_k = 4 "the card"
+  n_add = 3 "the card"
+  n_last = 2 "the card"
+  pay_day = 2026-06-10 "the card"
+  windowed = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26)]) "the card: one more holiday in the week of 22 June, its day not yet fixed"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:0,30:n4_inside: 3
+  cut 2026-10-01
+,21:carried/steps/n4_past,9:carried-6,29:run model.tally --ask n4_past,1760:11:model.tally,1739:model steps
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 6 (issue #108, invented): #97's N4, pos(k + n) on an integer index, and N7, the calendar built-ins and explain over a movement"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = 1..4
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+
+input holidays: calendar
+
+input last_k: int
+
+input n_add: int
+
+input n_last: int
+
+input pay_day: date
+
+input windowed: calendar
+
+def nxt[k in ks]: int = pos(k + 1)
+
+def nxt_guarded[k in ks]: int = if k < last_k then pos(k + 1) else pos(k)
+
+move pay: transfers
+  on pay_day
+  leg cash from konto to world amount fee
+
+ask n4_inside: nxt[2]
+
+ask n4_past: nxt[4]
+
+ask n4_guard: nxt_guarded[k] for k in ks
+
+ask n7_weekday: weekday(2026-06-01), weekday(2026-06-07)
+
+ask n7_last_business: last_business(2026-06, n_last - 1, holidays), last_business(2026-05, n_last, holidays)
+
+ask n7_window_agrees: add_business(2026-06-01, n_add, windowed)
+
+ask n7_window_differs: add_business(2026-06-19, n_add, windowed)
+
+ask n7_explain_before: explain bal(konto, 2026-06-09)
+
+ask n7_explain_after: explain bal(konto, 2026-06-30)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 40.00 PLN "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  last_k = 4 "the card"
+  n_add = 3 "the card"
+  n_last = 2 "the card"
+  pay_day = 2026-06-10 "the card"
+  windowed = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26)]) "the card: one more holiday in the week of 22 June, its day not yet fixed"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:0,59:n4_past: refused: RUN-KEY 5 is outside ks
+  cut 2026-10-01
+,22:carried/steps/n4_guard,9:carried-6,30:run model.tally --ask n4_guard,1760:11:model.tally,1739:model steps
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 6 (issue #108, invented): #97's N4, pos(k + n) on an integer index, and N7, the calendar built-ins and explain over a movement"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = 1..4
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+
+input holidays: calendar
+
+input last_k: int
+
+input n_add: int
+
+input n_last: int
+
+input pay_day: date
+
+input windowed: calendar
+
+def nxt[k in ks]: int = pos(k + 1)
+
+def nxt_guarded[k in ks]: int = if k < last_k then pos(k + 1) else pos(k)
+
+move pay: transfers
+  on pay_day
+  leg cash from konto to world amount fee
+
+ask n4_inside: nxt[2]
+
+ask n4_past: nxt[4]
+
+ask n4_guard: nxt_guarded[k] for k in ks
+
+ask n7_weekday: weekday(2026-06-01), weekday(2026-06-07)
+
+ask n7_last_business: last_business(2026-06, n_last - 1, holidays), last_business(2026-05, n_last, holidays)
+
+ask n7_window_agrees: add_business(2026-06-01, n_add, windowed)
+
+ask n7_window_differs: add_business(2026-06-19, n_add, windowed)
+
+ask n7_explain_before: explain bal(konto, 2026-06-09)
+
+ask n7_explain_after: explain bal(konto, 2026-06-30)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 40.00 PLN "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  last_k = 4 "the card"
+  n_add = 3 "the card"
+  n_last = 2 "the card"
+  pay_day = 2026-06-10 "the card"
+  windowed = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26)]) "the card: one more holiday in the week of 22 June, its day not yet fixed"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:0,148:n4_guard (k = 1): 2
+  cut 2026-10-01
+n4_guard (k = 2): 3
+  cut 2026-10-01
+n4_guard (k = 3): 4
+  cut 2026-10-01
+n4_guard (k = 4): 4
+  cut 2026-10-01
+,24:carried/steps/n7_weekday,9:carried-6,32:run model.tally --ask n7_weekday,1760:11:model.tally,1739:model steps
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 6 (issue #108, invented): #97's N4, pos(k + n) on an integer index, and N7, the calendar built-ins and explain over a movement"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = 1..4
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+
+input holidays: calendar
+
+input last_k: int
+
+input n_add: int
+
+input n_last: int
+
+input pay_day: date
+
+input windowed: calendar
+
+def nxt[k in ks]: int = pos(k + 1)
+
+def nxt_guarded[k in ks]: int = if k < last_k then pos(k + 1) else pos(k)
+
+move pay: transfers
+  on pay_day
+  leg cash from konto to world amount fee
+
+ask n4_inside: nxt[2]
+
+ask n4_past: nxt[4]
+
+ask n4_guard: nxt_guarded[k] for k in ks
+
+ask n7_weekday: weekday(2026-06-01), weekday(2026-06-07)
+
+ask n7_last_business: last_business(2026-06, n_last - 1, holidays), last_business(2026-05, n_last, holidays)
+
+ask n7_window_agrees: add_business(2026-06-01, n_add, windowed)
+
+ask n7_window_differs: add_business(2026-06-19, n_add, windowed)
+
+ask n7_explain_before: explain bal(konto, 2026-06-09)
+
+ask n7_explain_after: explain bal(konto, 2026-06-30)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 40.00 PLN "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  last_k = 4 "the card"
+  n_add = 3 "the card"
+  n_last = 2 "the card"
+  pay_day = 2026-06-10 "the card"
+  windowed = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26)]) "the card: one more holiday in the week of 22 June, its day not yet fixed"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:0,36:n7_weekday: (1, 7)
+  cut 2026-10-01
+,30:carried/steps/n7_last_business,9:carried-6,38:run model.tally --ask n7_last_business,1760:11:model.tally,1739:model steps
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 6 (issue #108, invented): #97's N4, pos(k + n) on an integer index, and N7, the calendar built-ins and explain over a movement"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = 1..4
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+
+input holidays: calendar
+
+input last_k: int
+
+input n_add: int
+
+input n_last: int
+
+input pay_day: date
+
+input windowed: calendar
+
+def nxt[k in ks]: int = pos(k + 1)
+
+def nxt_guarded[k in ks]: int = if k < last_k then pos(k + 1) else pos(k)
+
+move pay: transfers
+  on pay_day
+  leg cash from konto to world amount fee
+
+ask n4_inside: nxt[2]
+
+ask n4_past: nxt[4]
+
+ask n4_guard: nxt_guarded[k] for k in ks
+
+ask n7_weekday: weekday(2026-06-01), weekday(2026-06-07)
+
+ask n7_last_business: last_business(2026-06, n_last - 1, holidays), last_business(2026-05, n_last, holidays)
+
+ask n7_window_agrees: add_business(2026-06-01, n_add, windowed)
+
+ask n7_window_differs: add_business(2026-06-19, n_add, windowed)
+
+ask n7_explain_before: explain bal(konto, 2026-06-09)
+
+ask n7_explain_after: explain bal(konto, 2026-06-30)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 40.00 PLN "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  last_k = 4 "the card"
+  n_add = 3 "the card"
+  n_last = 2 "the card"
+  pay_day = 2026-06-10 "the card"
+  windowed = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26)]) "the card: one more holiday in the week of 22 June, its day not yet fixed"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:0,108:n7_last_business: (2026-06-30, 2026-05-28)
+  assumed: the card names no holiday (holidays)
+  cut 2026-10-01
+,30:carried/steps/n7_window_agrees,9:carried-6,38:run model.tally --ask n7_window_agrees,1760:11:model.tally,1739:model steps
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 6 (issue #108, invented): #97's N4, pos(k + n) on an integer index, and N7, the calendar built-ins and explain over a movement"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = 1..4
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+
+input holidays: calendar
+
+input last_k: int
+
+input n_add: int
+
+input n_last: int
+
+input pay_day: date
+
+input windowed: calendar
+
+def nxt[k in ks]: int = pos(k + 1)
+
+def nxt_guarded[k in ks]: int = if k < last_k then pos(k + 1) else pos(k)
+
+move pay: transfers
+  on pay_day
+  leg cash from konto to world amount fee
+
+ask n4_inside: nxt[2]
+
+ask n4_past: nxt[4]
+
+ask n4_guard: nxt_guarded[k] for k in ks
+
+ask n7_weekday: weekday(2026-06-01), weekday(2026-06-07)
+
+ask n7_last_business: last_business(2026-06, n_last - 1, holidays), last_business(2026-05, n_last, holidays)
+
+ask n7_window_agrees: add_business(2026-06-01, n_add, windowed)
+
+ask n7_window_differs: add_business(2026-06-19, n_add, windowed)
+
+ask n7_explain_before: explain bal(konto, 2026-06-09)
+
+ask n7_explain_after: explain bal(konto, 2026-06-30)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 40.00 PLN "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  last_k = 4 "the card"
+  n_add = 3 "the card"
+  n_last = 2 "the card"
+  pay_day = 2026-06-10 "the card"
+  windowed = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26)]) "the card: one more holiday in the week of 22 June, its day not yet fixed"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:0,46:n7_window_agrees: 2026-06-04
+  cut 2026-10-01
+,31:carried/steps/n7_window_differs,9:carried-6,39:run model.tally --ask n7_window_differs,1760:11:model.tally,1739:model steps
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 6 (issue #108, invented): #97's N4, pos(k + n) on an integer index, and N7, the calendar built-ins and explain over a movement"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = 1..4
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+
+input holidays: calendar
+
+input last_k: int
+
+input n_add: int
+
+input n_last: int
+
+input pay_day: date
+
+input windowed: calendar
+
+def nxt[k in ks]: int = pos(k + 1)
+
+def nxt_guarded[k in ks]: int = if k < last_k then pos(k + 1) else pos(k)
+
+move pay: transfers
+  on pay_day
+  leg cash from konto to world amount fee
+
+ask n4_inside: nxt[2]
+
+ask n4_past: nxt[4]
+
+ask n4_guard: nxt_guarded[k] for k in ks
+
+ask n7_weekday: weekday(2026-06-01), weekday(2026-06-07)
+
+ask n7_last_business: last_business(2026-06, n_last - 1, holidays), last_business(2026-05, n_last, holidays)
+
+ask n7_window_agrees: add_business(2026-06-01, n_add, windowed)
+
+ask n7_window_differs: add_business(2026-06-19, n_add, windowed)
+
+ask n7_explain_before: explain bal(konto, 2026-06-09)
+
+ask n7_explain_after: explain bal(konto, 2026-06-30)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 40.00 PLN "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  last_k = 4 "the card"
+  n_add = 3 "the card"
+  n_last = 2 "the card"
+  pay_day = 2026-06-10 "the card"
+  windowed = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26)]) "the card: one more holiday in the week of 22 June, its day not yet fixed"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:0,67:n7_window_differs: window(2026-06-24, 2026-06-25)
+  cut 2026-10-01
+,31:carried/steps/n7_explain_before,9:carried-6,39:run model.tally --ask n7_explain_before,1760:11:model.tally,1739:model steps
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 6 (issue #108, invented): #97's N4, pos(k + n) on an integer index, and N7, the calendar built-ins and explain over a movement"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = 1..4
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+
+input holidays: calendar
+
+input last_k: int
+
+input n_add: int
+
+input n_last: int
+
+input pay_day: date
+
+input windowed: calendar
+
+def nxt[k in ks]: int = pos(k + 1)
+
+def nxt_guarded[k in ks]: int = if k < last_k then pos(k + 1) else pos(k)
+
+move pay: transfers
+  on pay_day
+  leg cash from konto to world amount fee
+
+ask n4_inside: nxt[2]
+
+ask n4_past: nxt[4]
+
+ask n4_guard: nxt_guarded[k] for k in ks
+
+ask n7_weekday: weekday(2026-06-01), weekday(2026-06-07)
+
+ask n7_last_business: last_business(2026-06, n_last - 1, holidays), last_business(2026-05, n_last, holidays)
+
+ask n7_window_agrees: add_business(2026-06-01, n_add, windowed)
+
+ask n7_window_differs: add_business(2026-06-19, n_add, windowed)
+
+ask n7_explain_before: explain bal(konto, 2026-06-09)
+
+ask n7_explain_after: explain bal(konto, 2026-06-30)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 40.00 PLN "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  last_k = 4 "the card"
+  n_add = 3 "the card"
+  n_last = 2 "the card"
+  pay_day = 2026-06-10 "the card"
+  windowed = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26)]) "the card: one more holiday in the week of 22 June, its day not yet fixed"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:0,236:n7_explain_before: 500.00 PLN
+  balance of konto (PLN) at the end of 2026-06-09
+  from: opening card_2026:opening[konto] = 500.00 PLN, 2026-01-01 start (version card_2026, source card, locator "the card")
+  no movement
+  cut 2026-10-01
+,30:carried/steps/n7_explain_after,9:carried-6,38:run model.tally --ask n7_explain_after,1760:11:model.tally,1739:model steps
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 6 (issue #108, invented): #97's N4, pos(k + n) on an integer index, and N7, the calendar built-ins and explain over a movement"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = 1..4
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+
+input holidays: calendar
+
+input last_k: int
+
+input n_add: int
+
+input n_last: int
+
+input pay_day: date
+
+input windowed: calendar
+
+def nxt[k in ks]: int = pos(k + 1)
+
+def nxt_guarded[k in ks]: int = if k < last_k then pos(k + 1) else pos(k)
+
+move pay: transfers
+  on pay_day
+  leg cash from konto to world amount fee
+
+ask n4_inside: nxt[2]
+
+ask n4_past: nxt[4]
+
+ask n4_guard: nxt_guarded[k] for k in ks
+
+ask n7_weekday: weekday(2026-06-01), weekday(2026-06-07)
+
+ask n7_last_business: last_business(2026-06, n_last - 1, holidays), last_business(2026-05, n_last, holidays)
+
+ask n7_window_agrees: add_business(2026-06-01, n_add, windowed)
+
+ask n7_window_differs: add_business(2026-06-19, n_add, windowed)
+
+ask n7_explain_before: explain bal(konto, 2026-06-09)
+
+ask n7_explain_after: explain bal(konto, 2026-06-30)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 40.00 PLN "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  last_k = 4 "the card"
+  n_add = 3 "the card"
+  n_last = 2 "the card"
+  pay_day = 2026-06-10 "the card"
+  windowed = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26)]) "the card: one more holiday in the week of 22 June, its day not yet fixed"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:0,286:n7_explain_after: 460.00 PLN
+  balance of konto (PLN) at the end of 2026-06-30
+  from: opening card_2026:opening[konto] = 500.00 PLN, 2026-01-01 start (version card_2026, source card, locator "the card")
+  2026-06-10:
+    pay.cash (past): -40.00 PLN
+  unfulfilled: pay
+  cut 2026-10-01
+,18:carried/big/b1_sum,9:carried-6,34:run list_100000.tally --ask b1_sum,532:17:list_100000.tally,506:model big_list
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 6 (issue #108, invented): #97's B1, a sum over a list index of 100 000 keys, k1 to k100000, each weighted by one row; the list lookup's count budget is a rules-step row"
+
+source card "T's card (invented)"
+
+index big = [@keys k 1 100000@]
+
+input w[k in big]: num
+
+ask b1_sum: sum(w[k] for k in big)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = 1 "the card: every key weighs 1"
+,,1:0,33:b1_sum: 100 000
+  cut 2026-12-31
+,21:carried/layers/l_base,9:carried-1,40:run model.tally cheap.tally --ask l_base,1259:11:model.tally,849:model layers
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 1 (issue #108, invented): scenarios as layers (D1-3, L §6.4): asks in two worlds, an as if world, a difference by key"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input asked_on: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN = round(amt * rate[k], minor(PLN), half-up) at asked_on
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+ask l_base: total, fee[q1], fee[q2]
+
+ask l_as_if: total, total as if {scenario cheap}
+
+ask l_by_key: diff(fee[k] for k in qs) in cheap against layers
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  asked_on = 2026-06-01 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0.2 "the card"
+,11:cheap.tally,370:scenario cheap over layers
+  tally 2
+  from 2026-01-01
+  note "T's carried item 1: a cheaper rate for q1, a layer over the base"
+
+version cheap_rates
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  replace rate[q1] = 0.05 "a cheaper rate"
+
+ask l_in_scenario: total in cheap
+
+ask l_in_model: total in layers
+
+ask l_two_worlds: diff(total) in cheap against layers
+,,1:0,59:l_base: (30.00 PLN, 10.00 PLN, 20.00 PLN)
+  cut 2026-03-01
+,22:carried/layers/l_as_if,9:carried-1,41:run model.tally cheap.tally --ask l_as_if,1259:11:model.tally,849:model layers
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 1 (issue #108, invented): scenarios as layers (D1-3, L §6.4): asks in two worlds, an as if world, a difference by key"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input asked_on: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN = round(amt * rate[k], minor(PLN), half-up) at asked_on
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+ask l_base: total, fee[q1], fee[q2]
+
+ask l_as_if: total, total as if {scenario cheap}
+
+ask l_by_key: diff(fee[k] for k in qs) in cheap against layers
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  asked_on = 2026-06-01 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0.2 "the card"
+,11:cheap.tally,370:scenario cheap over layers
+  tally 2
+  from 2026-01-01
+  note "T's carried item 1: a cheaper rate for q1, a layer over the base"
+
+version cheap_rates
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  replace rate[q1] = 0.05 "a cheaper rate"
+
+ask l_in_scenario: total in cheap
+
+ask l_in_model: total in layers
+
+ask l_two_worlds: diff(total) in cheap against layers
+,,1:0,123:l_as_if: (30.00 PLN, 25.00 PLN)
+  world: cheap
+  held: rate[q1] = 0.05 (cheap_rates), read for 2026-06-01
+  cut 2026-03-01
+,23:carried/layers/l_by_key,9:carried-1,42:run model.tally cheap.tally --ask l_by_key,1259:11:model.tally,849:model layers
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 1 (issue #108, invented): scenarios as layers (D1-3, L §6.4): asks in two worlds, an as if world, a difference by key"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input asked_on: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN = round(amt * rate[k], minor(PLN), half-up) at asked_on
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+ask l_base: total, fee[q1], fee[q2]
+
+ask l_as_if: total, total as if {scenario cheap}
+
+ask l_by_key: diff(fee[k] for k in qs) in cheap against layers
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  asked_on = 2026-06-01 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0.2 "the card"
+,11:cheap.tally,370:scenario cheap over layers
+  tally 2
+  from 2026-01-01
+  note "T's carried item 1: a cheaper rate for q1, a layer over the base"
+
+version cheap_rates
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  replace rate[q1] = 0.05 "a cheaper rate"
+
+ask l_in_scenario: total in cheap
+
+ask l_in_model: total in layers
+
+ask l_two_worlds: diff(total) in cheap against layers
+,,1:0,237:l_by_key: diff in cheap against layers: 1 changed, 0 added, 0 removed, 1 unchanged
+  changed (k = q1): 5.00 PLN against 10.00 PLN
+  world: cheap
+  world: layers
+  held: rate[q1] = 0.05 (cheap_rates), read for 2026-06-01
+  cut 2026-03-01
+,28:carried/layers/l_in_scenario,9:carried-1,47:run model.tally cheap.tally --ask l_in_scenario,1259:11:model.tally,849:model layers
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 1 (issue #108, invented): scenarios as layers (D1-3, L §6.4): asks in two worlds, an as if world, a difference by key"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input asked_on: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN = round(amt * rate[k], minor(PLN), half-up) at asked_on
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+ask l_base: total, fee[q1], fee[q2]
+
+ask l_as_if: total, total as if {scenario cheap}
+
+ask l_by_key: diff(fee[k] for k in qs) in cheap against layers
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  asked_on = 2026-06-01 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0.2 "the card"
+,11:cheap.tally,370:scenario cheap over layers
+  tally 2
+  from 2026-01-01
+  note "T's carried item 1: a cheaper rate for q1, a layer over the base"
+
+version cheap_rates
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  replace rate[q1] = 0.05 "a cheaper rate"
+
+ask l_in_scenario: total in cheap
+
+ask l_in_model: total in layers
+
+ask l_two_worlds: diff(total) in cheap against layers
+,,1:0,116:l_in_scenario: 25.00 PLN
+  world: cheap
+  held: rate[q1] = 0.05 (cheap_rates), read for 2026-06-01
+  cut 2026-03-01
+,25:carried/layers/l_in_model,9:carried-1,44:run model.tally cheap.tally --ask l_in_model,1259:11:model.tally,849:model layers
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 1 (issue #108, invented): scenarios as layers (D1-3, L §6.4): asks in two worlds, an as if world, a difference by key"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input asked_on: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN = round(amt * rate[k], minor(PLN), half-up) at asked_on
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+ask l_base: total, fee[q1], fee[q2]
+
+ask l_as_if: total, total as if {scenario cheap}
+
+ask l_by_key: diff(fee[k] for k in qs) in cheap against layers
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  asked_on = 2026-06-01 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0.2 "the card"
+,11:cheap.tally,370:scenario cheap over layers
+  tally 2
+  from 2026-01-01
+  note "T's carried item 1: a cheaper rate for q1, a layer over the base"
+
+version cheap_rates
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  replace rate[q1] = 0.05 "a cheaper rate"
+
+ask l_in_scenario: total in cheap
+
+ask l_in_model: total in layers
+
+ask l_two_worlds: diff(total) in cheap against layers
+,,1:0,55:l_in_model: 30.00 PLN
+  world: layers
+  cut 2026-03-01
+,27:carried/layers/l_two_worlds,9:carried-1,46:run model.tally cheap.tally --ask l_two_worlds,1259:11:model.tally,849:model layers
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 1 (issue #108, invented): scenarios as layers (D1-3, L §6.4): asks in two worlds, an as if world, a difference by key"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input asked_on: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN = round(amt * rate[k], minor(PLN), half-up) at asked_on
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+ask l_base: total, fee[q1], fee[q2]
+
+ask l_as_if: total, total as if {scenario cheap}
+
+ask l_by_key: diff(fee[k] for k in qs) in cheap against layers
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  asked_on = 2026-06-01 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0.2 "the card"
+,11:cheap.tally,370:scenario cheap over layers
+  tally 2
+  from 2026-01-01
+  note "T's carried item 1: a cheaper rate for q1, a layer over the base"
+
+version cheap_rates
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  replace rate[q1] = 0.05 "a cheaper rate"
+
+ask l_in_scenario: total in cheap
+
+ask l_in_model: total in layers
+
+ask l_two_worlds: diff(total) in cheap against layers
+,,1:0,239:l_two_worlds: diff in cheap against layers: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed total: 25.00 PLN against 30.00 PLN
+  world: cheap
+  world: layers
+  held: rate[q1] = 0.05 (cheap_rates), read for 2026-06-01
+  cut 2026-03-01
+,27:carried/ranges/r_small_step,9:carried-3,34:run model.tally --ask r_small_step,975:11:model.tally,955:model ranges
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 3 (issue #108, invented): ranges an ask steps through (L §5.6, §7.6): a small fractional step, an end computed from a row, the 1 000 000-key limit on each side"
+
+source card "T's card (invented)"
+
+input fine: num
+
+input half: num
+
+input hi: num
+
+input lo: num
+
+input many: int
+
+input mult: num
+
+input one: int
+
+input over_many: int
+
+input rate: num
+
+ask r_small_step: count(v in lo .. hi step fine)
+
+ask r_computed_end: count(v in lo .. mult * rate step half)
+
+ask r_at_limit: count(v in one .. many step one)
+
+ask r_past_limit: count(v in one .. over_many step one)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fine = 0.001 "the card"
+  half = 0.5 "the card"
+  hi = 1 "the card"
+  lo = 0 "the card"
+  many = 1000000 "the card"
+  mult = 20 "the card"
+  one = 1 "the card"
+  over_many = 1000001 "the card"
+  rate = 0.1 "the card"
+,,1:0,37:r_small_step: 1 001
+  cut 2026-03-01
+,29:carried/ranges/r_computed_end,9:carried-3,36:run model.tally --ask r_computed_end,975:11:model.tally,955:model ranges
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 3 (issue #108, invented): ranges an ask steps through (L §5.6, §7.6): a small fractional step, an end computed from a row, the 1 000 000-key limit on each side"
+
+source card "T's card (invented)"
+
+input fine: num
+
+input half: num
+
+input hi: num
+
+input lo: num
+
+input many: int
+
+input mult: num
+
+input one: int
+
+input over_many: int
+
+input rate: num
+
+ask r_small_step: count(v in lo .. hi step fine)
+
+ask r_computed_end: count(v in lo .. mult * rate step half)
+
+ask r_at_limit: count(v in one .. many step one)
+
+ask r_past_limit: count(v in one .. over_many step one)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fine = 0.001 "the card"
+  half = 0.5 "the card"
+  hi = 1 "the card"
+  lo = 0 "the card"
+  many = 1000000 "the card"
+  mult = 20 "the card"
+  one = 1 "the card"
+  over_many = 1000001 "the card"
+  rate = 0.1 "the card"
+,,1:0,35:r_computed_end: 5
+  cut 2026-03-01
+,25:carried/ranges/r_at_limit,9:carried-3,32:run model.tally --ask r_at_limit,975:11:model.tally,955:model ranges
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 3 (issue #108, invented): ranges an ask steps through (L §5.6, §7.6): a small fractional step, an end computed from a row, the 1 000 000-key limit on each side"
+
+source card "T's card (invented)"
+
+input fine: num
+
+input half: num
+
+input hi: num
+
+input lo: num
+
+input many: int
+
+input mult: num
+
+input one: int
+
+input over_many: int
+
+input rate: num
+
+ask r_small_step: count(v in lo .. hi step fine)
+
+ask r_computed_end: count(v in lo .. mult * rate step half)
+
+ask r_at_limit: count(v in one .. many step one)
+
+ask r_past_limit: count(v in one .. over_many step one)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fine = 0.001 "the card"
+  half = 0.5 "the card"
+  hi = 1 "the card"
+  lo = 0 "the card"
+  many = 1000000 "the card"
+  mult = 20 "the card"
+  one = 1 "the card"
+  over_many = 1000001 "the card"
+  rate = 0.1 "the card"
+,,1:0,39:r_at_limit: 1 000 000
+  cut 2026-03-01
+,27:carried/ranges/r_past_limit,9:carried-3,34:run model.tally --ask r_past_limit,975:11:model.tally,955:model ranges
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 3 (issue #108, invented): ranges an ask steps through (L §5.6, §7.6): a small fractional step, an end computed from a row, the 1 000 000-key limit on each side"
+
+source card "T's card (invented)"
+
+input fine: num
+
+input half: num
+
+input hi: num
+
+input lo: num
+
+input many: int
+
+input mult: num
+
+input one: int
+
+input over_many: int
+
+input rate: num
+
+ask r_small_step: count(v in lo .. hi step fine)
+
+ask r_computed_end: count(v in lo .. mult * rate step half)
+
+ask r_at_limit: count(v in one .. many step one)
+
+ask r_past_limit: count(v in one .. over_many step one)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fine = 0.001 "the card"
+  half = 0.5 "the card"
+  hi = 1 "the card"
+  lo = 0 "the card"
+  many = 1000000 "the card"
+  mult = 20 "the card"
+  one = 1 "the card"
+  over_many = 1000001 "the card"
+  rate = 0.1 "the card"
+,,1:0,103:r_past_limit: refused: RUN-LIMIT 1 .. 1 000 001 step 1 holds more than 1 000 000 keys
+  cut 2026-03-01
+,23:carried/walk/w_day_hole,9:carried-7,32:run model.tally --ask w_day_hole,801:11:model.tally,781:model walk_notes
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 7 (issue #108, invented): the G2 review's walk notes: a plan whose day reads a hole prints the hole and books nothing at the run's end (R-27)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+
+input pay_day: date question "On which day is the fee paid?"
+
+move pay: transfers
+  on pay_day
+  leg cash from konto to world amount fee
+
+ask w_day_hole: bal(konto, 2026-06-30), bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 40.00 PLN "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:0,118:w_day_hole: (?"On which day is the fee paid?" (pay_day), ?"On which day is the fee paid?" (pay_day))
+  cut 2026-03-01
 ,

@@ -1,0 +1,4 @@
+part p_compare
+  tally 2
+
+ask p_compare: year_of(start_day) == (2026)

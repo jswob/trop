@@ -1,0 +1,4 @@
+part p_month
+  tally 2
+
+ask p_month: wage[(2026-03)]

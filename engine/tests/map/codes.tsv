@@ -253,8 +253,8 @@ RUN-NONE	L §8.4	S	<x>[k] is none here: <arithmetic, ordering, aggregate or comp
 RUN-NONE	L §8.4	S	never in <a use>	1	S	kernel/g12/members
 RUN-NOT-INT	L §8.4	S	*	2	S	kernel/g14/past_64_counts
 RUN-NOT-INT	L §8.4	S	<value> is not an integer	2	S	kernel/g14/past_64_counts
-RUN-KEY	L §8.4	S	*	5	S	kernel/g14/keys_past_64
-RUN-KEY	L §8.4	S	<k ± n> is outside <index>	5	S	kernel/g14/keys_past_64
+RUN-KEY	L §8.4	S	*	6	S	kernel/g14/keys_past_64
+RUN-KEY	L §8.4	S	<k ± n> is outside <index>	6	S	kernel/g14/keys_past_64
 RUN-KEY	L §8.4	S	<key> was added after the cut	0	-	-
 RUN-KEY	L §8.4	S	<d> is outside the days of <def>	1	M1	codes/m1/rules/outside-days
 RUN-KEY	L §8.4	S	draw <n> of <x> passes the last slot of <index>	0	-	-
@@ -278,10 +278,10 @@ RUN-EMPTY	L §8.4	M1	*	1	M1	codes/m1/rules/empty
 RUN-EMPTY	L §8.4	M1	<min, max, first, last, argmin, argmax, mean, share, quantile> over no keys	1	M1	codes/m1/rules/empty
 RUN-DIGITS	L §8.4	S	*	1	S	kernel/g1/cap
 RUN-DIGITS	L §8.4	S	<x> passes 4 096 digits; round where the law rounds	1	S	kernel/g1/cap
-RUN-LIMIT	L §8.4	S	*	10	S	kernel/g14/by_n
+RUN-LIMIT	L §8.4	S	*	11	S	kernel/g14/by_n
 RUN-LIMIT	L §8.4	S	a day passes 9999-12-31	7	S	kernel/g14/by_n
 RUN-LIMIT	L §8.4	S	a day comes before 0001-01-01	2	S	kernel/g14/days
-RUN-LIMIT	L §8.4	S	<a> .. <b> holds more than 1 000 000 keys	5	S	kernel/g14/day_range_end
+RUN-LIMIT	L §8.4	S	<a> .. <b> holds more than 1 000 000 keys	6	S	kernel/g14/day_range_end
 RUN-DIV	L §8.4	S	*	18	S	kernel/g1/text
 RUN-DIV	L §8.4	S	division by zero	18	S	kernel/g1/text
 RUN-DOMAIN	L §8.4	S	*	5	S	kernel/g1/step

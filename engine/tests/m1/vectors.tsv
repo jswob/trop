@@ -68,3 +68,30 @@ goldens/pins_employment	goldens-pins		engine/tests	engine/tests/integration/amen
 goldens/g6_raise	goldens-g6		engine/tests	engine/tests/integration/amendments/real11/c1/asks/core.tally engine/tests/integration/amendments/real11/c1/facts/2026.tally engine/tests/integration/amendments/real11/c1/facts/2027.tally engine/tests/integration/amendments/real11/c1/law/pl/benefits.tally engine/tests/integration/amendments/real11/c1/law/pl/business.tally engine/tests/integration/amendments/real11/c1/law/pl/common.tally engine/tests/integration/amendments/real11/c1/law/pl/employment.tally engine/tests/integration/amendments/real11/c1/law/pl/wrappers.tally engine/tests/integration/amendments/real11/c1/loans.tally engine/tests/integration/amendments/real11/c1/pays.tally engine/tests/integration/amendments/real11/c1/people.tally engine/tests/integration/amendments/real11/c1/places.tally engine/tests/integration/amendments/real11/c1/reality.tally engine/tests/integration/amendments/real11/c1/records/mbank/2026-09.tally engine/tests/m1/goldens/law/golden.tally engine/tests/m1/goldens/law/raise.tally	g6_raise_net		-
 goldens/g7_price_year	goldens-g7		engine/tests/m1/goldens/rent	engine/tests/m1/goldens/rent/model.tally	g7_rent_2028		-
 goldens/g10_rent	goldens-g10		engine/tests/m1/goldens/rent	engine/tests/m1/goldens/rent/model.tally engine/tests/m1/goldens/rent/infl5.tally	g10_rent g10_rent_infl5		G1
+carried/years/base	carried-5		engine/tests/m1/carried/years	engine/tests/m1/carried/years/model.tally	base		G1
+carried/years/p_compare	carried-5		engine/tests/m1/carried/years	engine/tests/m1/carried/years/model.tally engine/tests/m1/carried/years/p_compare.tally	p_compare		G1
+carried/years/p_month	carried-5		engine/tests/m1/carried/years	engine/tests/m1/carried/years/model.tally engine/tests/m1/carried/years/p_month.tally	p_month		-
+carried/years/p_day	carried-5		engine/tests/m1/carried/years	engine/tests/m1/carried/years/model.tally engine/tests/m1/carried/years/p_day.tally	p_day		-
+carried/years/n1_plus	carried-6		engine/tests/m1/carried/years	engine/tests/m1/carried/years/model.tally engine/tests/m1/carried/years/n1_plus.tally	n1_plus		G1
+carried/years/n1_list	carried-6		engine/tests/m1/carried/years	engine/tests/m1/carried/years/model.tally engine/tests/m1/carried/years/n1_list.tally	n1_list		G1
+carried/steps/n4_inside	carried-6		engine/tests/m1/carried/steps	engine/tests/m1/carried/steps/model.tally	n4_inside		G3
+carried/steps/n4_past	carried-6		engine/tests/m1/carried/steps	engine/tests/m1/carried/steps/model.tally	n4_past		G3
+carried/steps/n4_guard	carried-6		engine/tests/m1/carried/steps	engine/tests/m1/carried/steps/model.tally	n4_guard		G3
+carried/steps/n7_weekday	carried-6		engine/tests/m1/carried/steps	engine/tests/m1/carried/steps/model.tally	n7_weekday		G2
+carried/steps/n7_last_business	carried-6		engine/tests/m1/carried/steps	engine/tests/m1/carried/steps/model.tally	n7_last_business		G2
+carried/steps/n7_window_agrees	carried-6		engine/tests/m1/carried/steps	engine/tests/m1/carried/steps/model.tally	n7_window_agrees		G2
+carried/steps/n7_window_differs	carried-6		engine/tests/m1/carried/steps	engine/tests/m1/carried/steps/model.tally	n7_window_differs		G2
+carried/steps/n7_explain_before	carried-6		engine/tests/m1/carried/steps	engine/tests/m1/carried/steps/model.tally	n7_explain_before		G12
+carried/steps/n7_explain_after	carried-6		engine/tests/m1/carried/steps	engine/tests/m1/carried/steps/model.tally	n7_explain_after		G12
+carried/big/b1_sum	carried-6		engine/tests/m1/carried/big	engine/tests/m1/carried/big/list_100000.tally.gen	b1_sum		-
+carried/layers/l_base	carried-1		engine/tests/m1/carried/layers	engine/tests/m1/carried/layers/model.tally engine/tests/m1/carried/layers/cheap.tally	l_base		-
+carried/layers/l_as_if	carried-1		engine/tests/m1/carried/layers	engine/tests/m1/carried/layers/model.tally engine/tests/m1/carried/layers/cheap.tally	l_as_if		G6
+carried/layers/l_by_key	carried-1		engine/tests/m1/carried/layers	engine/tests/m1/carried/layers/model.tally engine/tests/m1/carried/layers/cheap.tally	l_by_key		G6
+carried/layers/l_in_scenario	carried-1		engine/tests/m1/carried/layers	engine/tests/m1/carried/layers/model.tally engine/tests/m1/carried/layers/cheap.tally	l_in_scenario		-
+carried/layers/l_in_model	carried-1		engine/tests/m1/carried/layers	engine/tests/m1/carried/layers/model.tally engine/tests/m1/carried/layers/cheap.tally	l_in_model		G6
+carried/layers/l_two_worlds	carried-1		engine/tests/m1/carried/layers	engine/tests/m1/carried/layers/model.tally engine/tests/m1/carried/layers/cheap.tally	l_two_worlds		G6
+carried/ranges/r_small_step	carried-3		engine/tests/m1/carried/ranges	engine/tests/m1/carried/ranges/model.tally	r_small_step		G13
+carried/ranges/r_computed_end	carried-3		engine/tests/m1/carried/ranges	engine/tests/m1/carried/ranges/model.tally	r_computed_end		G13
+carried/ranges/r_at_limit	carried-3		engine/tests/m1/carried/ranges	engine/tests/m1/carried/ranges/model.tally	r_at_limit		-
+carried/ranges/r_past_limit	carried-3		engine/tests/m1/carried/ranges	engine/tests/m1/carried/ranges/model.tally	r_past_limit		-
+carried/walk/w_day_hole	carried-7		engine/tests/m1/carried/walk	engine/tests/m1/carried/walk/model.tally	w_day_hole		-

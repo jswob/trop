@@ -1,0 +1,4 @@
+part n1_if
+  tally 2
+
+ask n1_if: rate[if year_of(start_day) == 2026 then 2026 else 2027]

@@ -1,0 +1,12 @@
+part p_governs
+  tally 2
+
+input bonus: money PLN
+
+ask p_governs: bonus law 2026-06-01
+
+version card_bonus
+  cite card
+  governs always
+  known 2026-01-01
+  bonus = 100.00 PLN governs (2026) "the card"

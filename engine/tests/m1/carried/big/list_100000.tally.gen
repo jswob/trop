@@ -1,0 +1,20 @@
+model big_list
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 6 (issue #108, invented): #97's B1, a sum over a list index of 100 000 keys, k1 to k100000, each weighted by one row; the list lookup's count budget is a rules-step row"
+
+source card "T's card (invented)"
+
+index big = [@keys k 1 100000@]
+
+input w[k in big]: num
+
+ask b1_sum: sum(w[k] for k in big)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = 1 "the card: every key weighs 1"

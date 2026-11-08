@@ -1,0 +1,4 @@
+part p_key
+  tally 2
+
+ask p_key: rate[(2026)]

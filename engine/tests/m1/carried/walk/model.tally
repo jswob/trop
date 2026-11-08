@@ -1,0 +1,31 @@
+model walk_notes
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 7 (issue #108, invented): the G2 review's walk notes: a plan whose day reads a hole prints the hole and books nothing at the run's end (R-27)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+
+input pay_day: date question "On which day is the fee paid?"
+
+move pay: transfers
+  on pay_day
+  leg cash from konto to world amount fee
+
+ask w_day_hole: bal(konto, 2026-06-30), bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 40.00 PLN "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"

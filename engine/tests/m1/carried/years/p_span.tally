@@ -1,0 +1,4 @@
+part p_span
+  tally 2
+
+ask p_span: sum(rate[y] for y in (2026)..2027)

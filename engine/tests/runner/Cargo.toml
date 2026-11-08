@@ -97,3 +97,9 @@ test = false
 name = "m1_codes"
 path = "milestone/m1_codes.rs"
 test = false
+
+# M1: the items the pre-M1 run left for M1 (m1/carried/; MILESTONE-M1.md row 6)
+[[test]]
+name = "m1_carried"
+path = "milestone/m1_carried.rs"
+test = false
