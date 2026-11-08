@@ -395,22 +395,27 @@ impl Checker {
         depth: u32,
     ) -> Typed {
         let [c, a, b] = parts;
-        let ct = self.expr(m, scope, c, None, depth)?;
+        // a kind test of the condition narrows throughout it and the `then` branch (L §5.7)
+        let narrowed = scope.narrowed(m, Some(c));
+        let ct = self.expr(m, &narrowed, c, None, depth)?;
         if !is_bool(&ct) {
             return Err(uerr(format!("if of {}", ct.show())));
         }
-        let mut branch = scope.clone();
-        covered_spans(Some(c), &mut branch.covered);
-        branch.guards.extend(tested_vars(c, &scope.keyvars));
-        let mut at = self.expr(m, &branch, a, expect, depth)?;
-        let mut bt = self.expr(m, &branch, b, expect, depth)?;
+        let mut yes = narrowed;
+        let mut no = scope.clone();
+        for branch in [&mut yes, &mut no] {
+            covered_spans(Some(c), &mut branch.covered);
+            branch.guards.extend(tested_vars(c, &scope.keyvars));
+        }
+        let mut at = self.expr(m, &yes, a, expect, depth)?;
+        let mut bt = self.expr(m, &no, b, expect, depth)?;
         let open = |t: &Ty| matches!(t, Ty::KeyLit(_) | Ty::Flex(_) | Ty::Year4);
         if expect.is_none() {
             if open(&at) && !open(&bt) && !matches!(bt, Ty::None | Ty::Hole) {
-                at = self.expr(m, &branch, a, Some(&bt), depth)?;
+                at = self.expr(m, &yes, a, Some(&bt), depth)?;
             }
             if open(&bt) && !open(&at) && !matches!(at, Ty::None | Ty::Hole) {
-                bt = self.expr(m, &branch, b, Some(&at), depth)?;
+                bt = self.expr(m, &no, b, Some(&at), depth)?;
             }
         }
         unify(m, &at, &bt)

@@ -79,8 +79,8 @@ pub mod syntax {
         Item, ItemForm, Key, KindDecl, KindSpec, Known, LSpan, LawDate, Leg, Lit, Low, Move,
         MoveLines, MulOp, Number, OfQ, OfRow, Order, Orient, PRef, PartsClause, Pin, PinForm,
         Place, Postfix, Price, Proj, Prorata, Query, QueryFn, RChoice, Residuals, Rest, Row,
-        RowKey, Rule, RuleValue, Section, Sign, Solve, Source, Span, Step, Takes, Type, TypedInput,
-        Unit, UnitDecl, UnitForm, UnitTerm, Valuation, Value, Version,
+        RowKey, Rule, RuleValue, Section, Sign, Site, Solve, Source, Span, Step, Takes, Type,
+        TypedInput, Unit, UnitDecl, UnitForm, UnitTerm, Valuation, Value, Version,
     };
 }
 
@@ -127,7 +127,7 @@ pub mod model {
         BUILTIN_INDEXES, BUILTIN_INPUTS, Joint, MemberAsks, NameKind, Reality, SamePair,
     };
     pub use ty::{CodeKind, PeriodWord, Shown, Ty};
-    pub use unit::{PERIODS, Scaled, Unit, UnitError, is_currency_code, power_past_limit};
+    pub use unit::{PERIODS, Scaled, Unit, UnitError, is_currency_code};
     pub use value::{
         Class, Code, MvRef, MvSrc, Number, Value, currency, currency_id, currency_unit, money_num,
         num_money,
@@ -160,6 +160,7 @@ pub mod eval {
     mod stack;
     mod state;
     mod ty;
+    mod years;
 
     pub use aggregate::Member;
     pub(crate) use aggregate::{order_text, reads_name};
@@ -170,6 +171,7 @@ pub mod eval {
     pub use stack::Item;
     pub use state::{Collected, Ctx, Engine, Entry, Env};
     pub(crate) use state::{a_day, num_stop, past_days};
+    pub(crate) use years::year_form;
 }
 
 /// The walk (E §4): the plan pass's instances and their order (E §4.1), the day walk's

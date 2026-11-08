@@ -250,6 +250,9 @@ impl Checker {
             }
         };
         let mut var = self.new_var(&bind.var, ty.clone(), dom, keylist)?;
+        if let Written::List(_) = &bind.domain {
+            var.site = Some(bind.site.key());
+        }
         if let Written::Range(range) = &bind.domain {
             var.end = Some(range.1.clone());
         }
@@ -670,7 +673,7 @@ mod tests {
     use crate::api::Source;
     use crate::load::load;
     use crate::model::Reality;
-    use crate::syntax::{Bind, Domain, Expr, Lit, Stop, parse_reality};
+    use crate::syntax::{Bind, Domain, Expr, Lit, Site, Stop, parse_reality};
 
     /// A reality with an index, an input, a place kind and an observed input.
     fn reality() -> Reality {
@@ -697,6 +700,7 @@ mod tests {
             over: None,
             filter: None,
             text: String::new(),
+            site: Site::default(),
         }
     }
 

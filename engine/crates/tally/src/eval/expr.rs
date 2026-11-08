@@ -12,12 +12,13 @@
 
 use core::cmp::Ordering;
 
-use super::arith::{Op, Test, arith, compare, negate, same_value};
+use super::arith::{Op, Test, arith, compare, duration, negate, same_value};
 use super::read::{Given, lacks_at_run, literal_key, make_keys};
 use super::state::{
     Ctx, Engine, Env, Figures, invariant, not_typed, num_stop, refuse, refuse_load, unit_stop,
 };
 use super::ty::{figure_like, sample};
+use super::years::{as_year, year_literal};
 use crate::base::{Load, Run};
 use crate::hole::{Hole, spread};
 use crate::model::{
@@ -173,8 +174,9 @@ impl Engine {
         ))
     }
 
-    /// A key as written: a literal or a name no variable or item holds is a key literal its
-    /// position resolves; anything else is evaluated (L §2.5).
+    /// A key as written: a literal, bracketed or not, or a name no variable or item holds is a
+    /// key literal its position resolves; so is an int a year form gives; anything else is
+    /// evaluated (L §2.1, §2.5).
     pub(crate) fn given_key(
         &mut self,
         m: &Reality,
@@ -182,7 +184,7 @@ impl Engine {
         env: &Env,
         ctx: Ctx,
     ) -> Result<Given, Stop> {
-        match e {
+        match e.unbracketed() {
             Expr::Lit(
                 lit @ (Lit::Num(_)
                 | Lit::Day(_)
@@ -232,6 +234,9 @@ impl Engine {
                 let v = self.ev(m, e, env, ctx)?;
                 if let Value::Word(word) = v {
                     return Ok(Given::Literal(Lit::Name(word)));
+                }
+                if let Some(lit) = year_literal(e, &v)? {
+                    return Ok(Given::Literal(lit));
                 }
                 Ok(Given::Value(v))
             }
@@ -377,6 +382,8 @@ impl Engine {
     ) -> Result<Value, Stop> {
         let left = self.ev(m, lhs, env, ctx)?;
         let right = self.ev(m, rhs, env, ctx)?;
+        let left = year_beside(lhs, left, &right);
+        let right = year_beside(rhs, right, &left);
         let (left, right) = resolve_pair(m, left, right)?;
         compare_values(m, op, &left, &right)
     }
@@ -449,8 +456,15 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let mut acc = self.ev(m, first, env, ctx)?;
+        let mut written = Some(first);
         for (op, x) in rest {
             let b = self.ev(m, x, env, ctx)?;
+            if let Some(e) = written.take()
+                && moves_a_year(&b)
+                && let Some(year) = as_year(Some(e), &acc)
+            {
+                acc = Value::Period(year);
+            }
             let op = match op {
                 AddOp::Add => Op::Add,
                 AddOp::Sub => Op::Sub,
@@ -535,6 +549,27 @@ enum Logic {
     Any,
     /// `and`.
     All,
+}
+
+/// A side of a comparison written in a year form beside a period: the year it names (refcore's
+/// `_year` mark of `compare`). L §2.1.
+fn year_beside(e: &Expr, v: Value, other: &Value) -> Value {
+    if let Value::Period(_) = other
+        && let Some(year) = as_year(Some(e), &v)
+    {
+        return Value::Period(year);
+    }
+    v
+}
+
+/// Whether a value moves or measures a year in a sum: a period, or a duration. A four-digit
+/// figure before one reads as a year, the one reading its arithmetic takes (refcore's
+/// `ambig`). L §2.1, §4.2.
+fn moves_a_year(v: &Value) -> bool {
+    if let Value::Number(n) = v {
+        return duration(n).is_some();
+    }
+    matches!(v, Value::Period(_))
 }
 
 /// A bare figure that is an `if`'s branch, in the type of the other branch (refcore's

@@ -62,6 +62,7 @@ impl Loader {
         let mut walked = walk(&self.m, &self.sections)?;
         self.m.asks.retain(|ask| !walked.dropped.contains(&ask.id));
         self.m.asks_alone = core::mem::take(&mut walked.alone);
+        self.m.list_keys = core::mem::take(&mut walked.list_keys);
         for fact in core::mem::take(&mut walked.facts) {
             if let Some(mv) = self.m.moves.get_mut(&fact.id) {
                 mv.read_targets = fact.read_targets;

@@ -6,7 +6,9 @@
 //! power; a unit written, multiplied, divided, raised or keyed has no power past 64 in size;
 //! every factor is exact.
 
+use crate::base::{Code, Load, Place, Refusal};
 use crate::num::{Num, NumError};
+use crate::syntax::Stop;
 
 /// The period words: year, quarter and month are one dimension, day its own.
 pub const PERIODS: [&str; 4] = ["year", "quarter", "month", "day"];
@@ -30,11 +32,26 @@ impl From<NumError> for UnitError {
     }
 }
 
-/// The message of a power of `base` past the limit, `unit <u> has a power past 64` (refcore's
-/// `power_limit`). L §7.6 item 4, §8.3 `LOAD-LIMIT`.
-#[must_use]
-pub fn power_past_limit(base: &str) -> String {
-    format!("unit {base} has a power past 64")
+impl UnitError {
+    /// The refusal this error is, wherever a unit operation meets it, at load or at run: a
+    /// power past 64 in size is `LOAD-LIMIT unit <u> has a power past 64` (refcore's
+    /// `power_limit`), at `at` where the caller names the line that states it; a number error
+    /// is what `num` makes of it (load's mapping and the run's differ, L §7.1, §8.4).
+    /// L §7.6 item 4, §8.3 `LOAD-LIMIT`.
+    #[must_use]
+    pub fn refusal(self, num: fn(NumError) -> Stop, at: Option<Place>) -> Stop {
+        match self {
+            UnitError::Power(base) => {
+                let message = format!("unit {base} has a power past 64");
+                let code = Code::Load(Load::Limit);
+                Stop::Refused(match at {
+                    Some(place) => Refusal::at(code, message, place),
+                    None => Refusal::new(code, message),
+                })
+            }
+            UnitError::Num(error) => num(error),
+        }
+    }
 }
 
 /// Refuses a power of `base` past 64 in size (refcore's `power_limit`). L §7.6 item 4.

@@ -94,6 +94,7 @@ impl P<'_> {
 
     /// `bind = ID "in" (qid | "[" keys "]" | range) ["on" e | "over" span] ["where" e]`.
     fn bind_inner(&mut self) -> Result<Bind, Stop> {
+        let site = self.site();
         let var = self.ident("a bound variable")?;
         self.expect("in")?;
         let domain = if self.at("[", 0) {
@@ -138,6 +139,7 @@ impl P<'_> {
             over,
             filter,
             text: String::new(),
+            site,
         })
     }
 

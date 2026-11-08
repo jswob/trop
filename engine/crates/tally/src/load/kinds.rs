@@ -430,7 +430,7 @@ impl Loader {
                 .things
                 .push(&mut self.m.symbols, name, Thing::new(name))?;
         }
-        let mut olds: Vec<(Option<Day>, bool)> = Vec::new();
+        let mut olds: Vec<(Option<Day>, bool, usize)> = Vec::new();
         let owner = self.entry_owner(Some(version));
         if let Some(thing) = self.m.things.get(name) {
             for entry in thing.entries.iter().filter(|e| e.kind == *target) {
@@ -438,12 +438,18 @@ impl Loader {
                 if entry.version.is_some() && self.entry_owner(entry.version.as_deref()) != owner {
                     continue;
                 }
-                olds.push((self.entry_known(entry), entry.replace));
+                let layer = self.m.scenarios.layer(entry.version.as_deref());
+                olds.push((self.entry_known(entry), entry.replace, layer));
             }
         }
         let thing = self.m.things.at_mut(self.m.thing_id(name)?)?;
         if enter.replace {
-            let earlier = olds.iter().any(|(old, _)| old.is_some() && *old < known);
+            // in a scenario, its base's entry is an earlier row whatever its known: "a base row
+            // known on the scenario's own known day is replaced too" (L §6.4, §4.6 step 2)
+            let layer = self.m.scenarios.layer(Some(version));
+            let earlier = olds
+                .iter()
+                .any(|(old, _, below)| old.is_some() && (*old < known || *below < layer));
             if !earlier {
                 return Err(refuse(
                     Load::Replace,
@@ -452,7 +458,7 @@ impl Loader {
                     line,
                 ));
             }
-        } else if olds.iter().any(|(_, replace)| !replace) {
+        } else if olds.iter().any(|(_, replace, _)| !replace) {
             return Err(refuse(
                 Load::Dup,
                 format!("a key entered twice: {name} in {target}"),

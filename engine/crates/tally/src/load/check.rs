@@ -126,6 +126,8 @@ pub(super) struct Var {
     /// A range's end, as written, for a variable bound over a range (refcore's `v.node.dom.b`):
     /// a slot key whose range ends at a draw (L §5.16).
     pub(super) end: Option<Expr>,
+    /// A key list's binding site, by which the run finds the index its key positions fix.
+    pub(super) site: Option<(String, u32, usize)>,
 }
 
 impl Var {
@@ -174,6 +176,9 @@ pub(super) struct Scope {
     /// values (refcore's `in_query`, which a child keeps and which outranks the role).
     /// L §5.16.
     pub(super) read_in: ReadIn,
+    /// Each variable a kind test narrows here, with the subkind it is narrowed to: its legs
+    /// and attributes are readable (refcore's `Scope.narrow`). L §5.7.
+    pub(super) narrow: BTreeMap<String, String>,
 }
 
 /// How a read of a random fact is taken in a scope (refcore's `dist_role`, `in_query`).
@@ -204,7 +209,46 @@ impl Scope {
             covered: BTreeSet::new(),
             guards: BTreeSet::new(),
             read_in: ReadIn::Plain,
+            narrow: BTreeMap::new(),
         }
+    }
+
+    /// This scope with each variable that a kind test of condition `c` narrows to a strict
+    /// subkind of its kind narrowed to it: a test `v in K` with no `on`, alone or a conjunct of
+    /// an `and`; `or`, `not` and `on` narrow nothing (refcore's `narrow_tests`, `narrowed`).
+    /// L §5.7.
+    pub(super) fn narrowed(&self, m: &Reality, c: Option<&Expr>) -> Scope {
+        let mut out = self.clone();
+        // left to right, as refcore's `narrow_tests` lists the conjuncts
+        let mut work: Vec<&Expr> = c.into_iter().collect();
+        while let Some(node) = work.pop() {
+            if let Expr::Paren(inner) = node {
+                work.push(inner);
+            }
+            if let Expr::And(terms) = node {
+                work.extend(terms.iter().rev());
+            }
+            if let Expr::In(test) = node
+                && let (Expr::Name(v), Expr::Name(k), None) = (&test.member, &test.set, &test.on)
+                && self.narrows(m, v, k)
+            {
+                out.narrow.insert(v.clone(), k.clone());
+            }
+        }
+        out
+    }
+
+    /// Whether a kind test `v in k` narrows `v` to `k`: a strict subkind of the kind it is
+    /// bound over, or narrowed to here (refcore's `narrowed`, its loop). L §5.7.
+    fn narrows(&self, m: &Reality, v: &str, k: &str) -> bool {
+        let Some(Ty::Key(bound)) = self.vars.get(v).map(|var| &var.ty) else {
+            return false;
+        };
+        if m.kinds.get(bound).is_none() || m.kinds.get(k).is_none() {
+            return false;
+        }
+        let parent = self.narrow.get(v).unwrap_or(bound);
+        k != parent && m.subtree(parent).contains(k)
     }
 
     /// A child of this scope, as refcore's `child`: no figure allowed, no dist role.
@@ -413,6 +457,8 @@ pub(super) struct Walked {
     /// The asks a scenario's reality doesn't hold: those whose lines are evaluated in other
     /// worlds (refcore's filter of `m.asks`). L §6.4.
     pub(super) dropped: BTreeSet<String>,
+    /// Each key list's binding site with the index its key positions fixed. L §2.5.
+    pub(super) list_keys: BTreeMap<(String, u32, usize), String>,
 }
 
 /// The checker's state over the walk (refcore's `Checker`).
@@ -424,6 +470,9 @@ pub(super) struct Checker {
     pub(super) year4: Vec<Year4>,
     /// Each key-list variable's index, fixed by its first key position.
     pub(super) kl_fixed: BTreeMap<usize, Domain>,
+    /// Each key list's binding site with the index its key positions fixed, for the run
+    /// (refcore's `b._var.fixed`). L §2.5.
+    pub(super) list_keys: BTreeMap<(String, u32, usize), String>,
     /// Key-list variables read as values.
     pub(super) kl_uses: Vec<KeyListUse>,
     /// Each def's key offsets, by its id.
@@ -585,6 +634,7 @@ pub(super) fn walk(m: &Reality, sections: &[(String, Section)]) -> Result<Walked
         srows: checker.srows,
         read_order: checker.read_order,
         dropped,
+        list_keys: checker.list_keys,
     })
 }
 
@@ -779,6 +829,7 @@ impl Checker {
             keylist,
             id,
             end: None,
+            site: None,
         })
     }
 
@@ -1216,6 +1267,7 @@ mod tests {
             keylist: Vec::new(),
             id: 0,
             end: None,
+            site: None,
         }
     }
 

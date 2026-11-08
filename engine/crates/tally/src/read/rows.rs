@@ -1,15 +1,17 @@
 //! The read rule's rows: which rows of an input or of a def's givens are candidates for a read, and which one it takes.
 //! Spec: L §4.6 steps 1–4 (candidates, replacement, precedence, ties), §4.5 (the cut sees
-//! what is known by it), §4.3 (the law date; a read with none).
+//! what is known by it), §4.3 (the law date; a read with none), §6.4 (a scenario's rows stand
+//! above its base's).
 //! Twin: engine/tools/refcore/evaluate.py (`time_point`, `need_law`, `row_matches`,
 //! `key_ord`, `unstated_ok`, `row_visible`, `candidates`, `choose`), loader.py
 //! (`pattern_norm`, `_pos_rel`, `narrower`, `key_order`), model.py (`Row.span`, `Row.known`,
 //! `row_timeless`, `InputInfo.lawless`).
 //! Invariants: a plain scan of the target's rows in the order versions state them; the
-//! candidates keep that order; two rows still tied are refused, never broken by order.
-//! Scenarios, joint models, `wording` pins and known windows stop before load ends
-//! (`NotBuilt`), so every row here is the base's, known on one day, and no pin narrows it; a
-//! dated read with no law date is refused by load (`LOAD-LAWDATE`), so here it is an invariant.
+//! candidates keep that order; two rows still tied are refused, never broken by order; a
+//! scenario's `replace` beats its base's row at the same keys whatever their `known` dates.
+//! Joint models, `wording` pins and known windows stop before load ends (`NotBuilt`), so
+//! every row is known on one day, and no pin narrows it; a dated read with no law date is
+//! refused by load (`LOAD-LAWDATE`), so here it is an invariant.
 
 use crate::base::{Code, Load, Refusal};
 use crate::model::{
@@ -435,8 +437,9 @@ fn narrower(m: &Reality, binds: &[BindInfo], a: &[Pat], b: &[Pat]) -> bool {
     strict
 }
 
-/// The candidates no `replace` row beats: a later-known row at the same keys that says
-/// `replace` wins over the rows known before it (L §4.6 step 2).
+/// The candidates no `replace` row beats: a row at the same keys that says `replace` wins
+/// over the rows known before it, and a scenario's over its base's whatever their `known`
+/// dates (refcore's `choose`, its replacement). L §4.6 step 2, §6.4.
 fn unreplaced(m: &Reality, rows: &[Row], cands: &[usize]) -> Result<Vec<usize>, Stop> {
     let mut keep = Vec::new();
     for &at in cands {
@@ -444,12 +447,17 @@ fn unreplaced(m: &Reality, rows: &[Row], cands: &[usize]) -> Result<Vec<usize>, 
             .get(at)
             .ok_or_else(|| invariant("a candidate past its rows"))?;
         let known = row_known(m, row)?;
+        let layer = m.scenarios.layer(Some(&row.version));
         let mut beaten = false;
         for &other in cands {
             let Some(o) = rows.get(other) else {
                 return Err(invariant("a candidate past its rows"));
             };
-            if other != at && o.replace && o.pattern == row.pattern && row_known(m, o)? > known {
+            if other == at || !o.replace || o.pattern != row.pattern {
+                continue;
+            }
+            let above = m.scenarios.layer(Some(&o.version));
+            if above > layer || (above == layer && row_known(m, o)? > known) {
                 beaten = true;
                 break;
             }

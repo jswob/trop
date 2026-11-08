@@ -1,15 +1,17 @@
 //! Load's checker, its keyed reads: an input, a def, a place or a move read at keys, each key at its position, and a postfix's index or field.
 //! Spec: L §2.5 (names, keys by position: a key literal resolved against the index, kind or
-//! axis at its position), §4.6 (a period at a key of another granularity), §5.10 (a place by
-//! its id or at keys), §5.7 and §5.14.3 (a movement's fields, `a.adjusts`), §6.4 (a scenario's
-//! rows), §8.3 (`LOAD-KEY`, `-FIELD`, `-PARSE`, `-UNIT`); E §3.1 step 5 (each read an edge
-//! with its keys' relation).
+//! axis at its position), §2.1 (a four-digit figure at a period key, an if's arms there),
+//! §4.6 (a period at a key of another granularity), §5.10 (a place by its id or at keys), §5.7
+//! and §5.14.3 (a movement's fields, a kind test's narrowing, `a.adjusts`), §6.4 (a
+//! scenario's rows), §8.3 (`LOAD-KEY`, `-FIELD`, `-PARSE`, `-UNIT`); E §3.1 step 5 (each read
+//! an edge with its keys' relation).
 //! Twin: engine/tools/refcore/check.py (`read`, `key_pos`, `key_conv`, `period_conv`,
 //! `t_index`, `t_field`, `member_read`, `dom_of`); check3.py (`m_place_value`,
 //! `m_move_value`, `m_movement_field`); model.py (`kind_attrs`).
 //! Invariants: each read is typed in refcore's order and recorded as an edge as it is typed; a
-//! name the namespace proves is found by its typed id, a miss the engine's invariant; a field
-//! load can't narrow is `Unseen`, refused by no rule; every recursion is counted (R-16).
+//! name the namespace proves is found by its typed id, a miss the engine's invariant; a
+//! movement's field its kind lacks is read through the kind test that narrows its name, else
+//! refused; every recursion is counted (R-16).
 
 use super::check::{AxisRead, Checker, Figure, Scope, Var, VarDom, invariant};
 use super::keys::resolve_key;
@@ -21,7 +23,8 @@ use super::types::{
     Typed, granularity, is_keylit_node, key_lit_of, lit_rule, name_word, num, pk_name, refused,
     unit_error, unit_of, word_pk,
 };
-use crate::base::Load;
+use crate::base::{Code, Load};
+use crate::eval::year_form;
 use crate::model::{
     Domain, KeyVal, KindSpec, NameKind, Node, NodeKind, PeriodWord, Reality, Rel, Ty,
 };
@@ -217,16 +220,17 @@ impl Checker {
     }
 
     /// A key at a key position whose domain is `domain`: typed there, and checked against
-    /// it; the key it names when written as a literal (refcore's `key_pos`). L §2.5, §4.2,
-    /// §4.6.
+    /// it; the key it names when written as a literal, bracketed or not (refcore's
+    /// `key_pos`). L §2.1, §2.5, §4.2, §4.6.
     pub(super) fn key_pos(
         &mut self,
         m: &Reality,
         scope: &Scope,
-        kn: &Expr,
+        written: &Expr,
         domain: &Domain,
         depth: u32,
     ) -> Result<Option<KeyVal>, Stop> {
+        let kn = written.unbracketed();
         if let (Domain::Axis(axis), Expr::Name(name)) = (domain, kn)
             && !scope.is_var(name)
         {
@@ -251,7 +255,10 @@ impl Checker {
                 return Ok(None);
             }
             let four = matches!(kn, Expr::Lit(Lit::Num(n)) if n.four);
-            if four && pk != PeriodKind::Year {
+            // an `if` takes the type of the place it stands in, so a four-digit arm is read
+            // as the bare figure is here: a year (L §2.1, the ruling on #113)
+            let arms = !four && year_form(kn);
+            if (four && pk != PeriodKind::Year) || arms {
                 let t = self.expr(m, scope, kn, Some(&Ty::Period(PeriodWord::Year)), depth)?;
                 self.key_conv(m, scope, &t, domain, kn)?;
                 return Ok(None);
@@ -408,6 +415,9 @@ impl Checker {
             None => {
                 self.kl_fixed.insert(var.id, domain.clone());
             }
+        }
+        if let (Some(site), Domain::Index(ix)) = (&var.site, domain) {
+            self.list_keys.insert(site.clone(), ix.clone());
         }
         for key in &var.keylist {
             resolve_lit(m, scope, &Expr::Lit(key.clone()), domain)?;
@@ -582,7 +592,8 @@ impl Checker {
             && let Some(info) = m.kinds.get(kind)
         {
             if info.spec == KindSpec::Event {
-                return movement_field(m, kind, field, base);
+                let narrowed = narrowed_kind(scope, base);
+                return movement_field(m, kind, field, narrowed.as_deref());
             }
             return Err(refused(
                 Load::Field,
@@ -694,53 +705,42 @@ fn period_conv(index_pk: Option<PeriodKind>, ix: &str, pk: PeriodKind) -> Result
     Ok(())
 }
 
-/// Whether a field's object is a name, parentheses aside: the one object a kind test narrows
-/// (refcore's `sc.narrow`, read for a name only). `None` is a field read after another
-/// postfix, never a name.
-fn may_narrow(base: Option<&Expr>) -> bool {
+/// The subkind a kind test narrows a field's object to here: a name, parentheses aside, the
+/// one object a kind test narrows (refcore's `sc.narrow`, read for a name only). `None` for
+/// a field read after another postfix, never a name. L §5.7.
+fn narrowed_kind(scope: &Scope, base: Option<&Expr>) -> Option<String> {
     let mut object = base;
     while let Some(Expr::Paren(inner)) = object {
         object = Some(inner.as_ref());
     }
-    matches!(object, Some(Expr::Name(_)))
+    let Some(Expr::Name(name)) = object else {
+        return None;
+    };
+    scope.narrow.get(name).cloned()
 }
 
-/// A field of a movement of event kind `kind`: a leg, an attribute, `day`, `fulfils`; any
-/// other, of a movement of `events` (`a.adjusts.f`), is read by name over every event kind;
-/// else `LOAD-FIELD` (refcore's `m_movement_field`). Of a name a kind test may narrow it is
-/// `Unseen`: load keeps no kind test's narrowing. L §5.7, §5.14, §5.14.3, §8.3.
-fn movement_field(m: &Reality, kind: &str, field: &str, object: Option<&Expr>) -> Typed {
-    for (leg, unit, _) in m.kind_legs(kind) {
-        if leg == field {
-            return leg_type(m, &unit);
-        }
-    }
-    let chain = m.chain(kind);
-    // Root first, as refcore's `kind_attrs`: a parent's attribute before a subkind's.
-    for info in chain.iter().rev() {
-        if !info.attrs.iter().any(|(attr, _)| attr == field) {
-            continue;
-        }
-        let declared = info.attr_types.iter().find(|(attr, _)| attr == field);
-        if let Some((_, Some(ty))) = declared {
-            return Ok(ty.clone());
-        }
-        // An attribute the prelude declares has no written type: refcore's `DYN`, but an
-        // adjustment's `adjusts`, the movement it adjusts (L §5.14.3).
-        let adjustment = chain.iter().any(|k| k.id == "adjustments");
-        return Ok(if adjustment && field == "adjusts" {
-            Ty::Key("events".to_owned())
-        } else {
-            Ty::Dyn
-        });
+/// A field of a movement of event kind `kind`: a leg, an attribute, `day`, `fulfils`; else,
+/// of a name a kind test narrows to a subkind, the subkind's leg or attribute; any other, of a
+/// movement of `events` (`a.adjusts.f`, a variable bound over the root), is read by name over
+/// every event kind; else `LOAD-FIELD`: a field of a subkind read where no test narrows the
+/// variable stays refused (refcore's `m_movement_field`). L §5.7, §5.14, §5.14.3, §8.3.
+fn movement_field(m: &Reality, kind: &str, field: &str, narrowed: Option<&str>) -> Typed {
+    if let Some(ty) = kind_field(m, kind, field) {
+        return ty;
     }
     match field {
         "day" => return Ok(Ty::Date),
         "fulfils" => return Ok(Ty::Key("events".to_owned())),
         _ => {}
     }
-    if may_narrow(object) {
-        return Ok(Ty::Unseen);
+    if let Some(sub) = narrowed.filter(|sub| *sub != kind)
+        && let Some(ty) = kind_field(m, sub, field)
+    {
+        match ty {
+            Ok(ty) => return Ok(ty),
+            Err(Stop::Refused(r)) if matches!(r.code(), Code::Load(_)) => {}
+            Err(stop) => return Err(stop),
+        }
     }
     if kind == "events"
         && let Some(ty) = event_field(m, field)?
@@ -751,6 +751,35 @@ fn movement_field(m: &Reality, kind: &str, field: &str, object: Option<&Expr>) -
         Load::Field,
         format!("{field} is not a field of {kind}"),
     ))
+}
+
+/// A leg or an attribute of event kind `kind`, the root's attributes first, as refcore's
+/// `kind_attrs` lists them; `None` when it has none of that name. L §5.14, §5.14.3.
+fn kind_field(m: &Reality, kind: &str, field: &str) -> Option<Typed> {
+    for (leg, unit, _) in m.kind_legs(kind) {
+        if leg == field {
+            return Some(leg_type(m, &unit));
+        }
+    }
+    let chain = m.chain(kind);
+    for info in chain.iter().rev() {
+        if !info.attrs.iter().any(|(attr, _)| attr == field) {
+            continue;
+        }
+        let declared = info.attr_types.iter().find(|(attr, _)| attr == field);
+        if let Some((_, Some(ty))) = declared {
+            return Some(Ok(ty.clone()));
+        }
+        // An attribute the prelude declares has no written type: refcore's `DYN`, but an
+        // adjustment's `adjusts`, the movement it adjusts (L §5.14.3).
+        let adjustment = chain.iter().any(|k| k.id == "adjustments");
+        return Some(Ok(if adjustment && field == "adjusts" {
+            Ty::Key("events".to_owned())
+        } else {
+            Ty::Dyn
+        }));
+    }
+    None
 }
 
 /// A field of a movement whose kind load doesn't know (`a.adjusts`, a key of `events`): the

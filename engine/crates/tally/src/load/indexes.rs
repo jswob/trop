@@ -12,7 +12,7 @@ use std::collections::BTreeSet;
 use super::check::invariant;
 use super::keys::{KeyLit, int_of, key_source_text, lit_text};
 use super::steps::{Loader, num_stop, refuse};
-use crate::base::Load;
+use crate::base::{Code, Load};
 use crate::model::{Domain, IndexForm as Form, IndexInfo, KeyVal, NameKind};
 use crate::num::Num;
 use crate::syntax::{IndexForm, IndexFrom, ItemForm, Lit, Row, Section, Stop};
@@ -121,43 +121,56 @@ impl Loader {
 
     /// The keys of open indexes the rows of inputs keyed by them bring, before places keyed by
     /// such an index are built (refcore's `prescan_open_keys`). L §4.1.
-    pub(super) fn prescan_open_keys(&mut self) {
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT`, or a depth stop, that a row's key meets; a key's own refusal waits
+    /// for its row.
+    pub(super) fn prescan_open_keys(&mut self) -> Result<(), Stop> {
         if !self
             .m
             .indexes
             .entries()
             .any(|(_, ix)| ix.form == Form::Open)
         {
-            return;
+            return Ok(());
         }
         let sections = core::mem::take(&mut self.sections);
-        for (file, section) in &sections {
+        let met = self.prescan_sections(&sections);
+        self.sections = sections;
+        met
+    }
+
+    /// The versions' rows of `sections`, each prescanned in turn.
+    fn prescan_sections(&mut self, sections: &[(String, Section)]) -> Result<(), Stop> {
+        for (file, section) in sections {
             let Section::Version(version) = section else {
                 continue;
             };
             for item in &version.items {
                 if let ItemForm::Row(row) = &item.form {
-                    self.prescan_row(&version.id, row, file, item.line);
+                    self.prescan_row(&version.id, row, file, item.line)?;
                 }
             }
         }
-        self.sections = sections;
+        Ok(())
     }
 
-    /// The open keys one row of an input brings; a key refused here is refused again at its
-    /// row (refcore's `pass`).
-    fn prescan_row(&mut self, vid: &str, row: &Row, file: &str, line: u32) {
+    /// The open keys one row of an input brings; a key refused here, or not built, is met
+    /// again at its row (refcore's `pass`), so the row's other keys wait for it; an invariant
+    /// or a depth stop is no such refusal and stops load (R-66).
+    fn prescan_row(&mut self, vid: &str, row: &Row, file: &str, line: u32) -> Result<(), Stop> {
         if row.given || row.qual.is_some() {
-            return;
+            return Ok(());
         }
         let Some(keys) = &row.keys else {
-            return;
+            return Ok(());
         };
         if self.m.names.kind(&row.target) != Some(NameKind::Input) {
-            return;
+            return Ok(());
         }
         let Some(input) = self.m.inputs.get(&row.target).filter(|i| !i.observed) else {
-            return;
+            return Ok(());
         };
         let binds = input.binds.clone();
         for (key, bind) in keys.iter().zip(&binds) {
@@ -172,13 +185,16 @@ impl Loader {
             let Some(written) = KeyLit::of_row_key(key).filter(|_| open) else {
                 continue;
             };
-            if self
-                .pattern_key(&written, bind, Some(vid), file, line)
-                .is_err()
-            {
-                break;
+            match self.pattern_key(&written, bind, Some(vid), file, line) {
+                Ok(_) => {}
+                Err(Stop::Refused(r)) if r.code() == Code::EngineInvariant => {
+                    return Err(Stop::Refused(r));
+                }
+                Err(Stop::Deep) => return Err(Stop::Deep),
+                Err(Stop::Refused(_) | Stop::NotBuilt(_)) => break,
             }
         }
+        Ok(())
     }
 }
 

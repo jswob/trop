@@ -8,8 +8,8 @@
 //!
 //! The expressions are in `expr.rs`, the sections in `item.rs`; both extend this parser.
 
-use super::lex::{Canon, Kind, Line, Mark, Read, Role, Tok, cannot};
-use super::tree::{Known, LSpan, Lit, Number, Unit, UnitTerm};
+use super::lex::{Canon, Kind, Line, Mark, Paren, Read, Role, Tok, cannot};
+use super::tree::{Known, LSpan, Lit, Number, Site, Unit, UnitTerm};
 use crate::base::{Code, Internal, Load, Place, Reach, Refusal};
 use crate::num::Num;
 use crate::time::Day;
@@ -139,7 +139,7 @@ pub(super) enum Space {
 /// Which words name a unit: the units the reality declares (after a number), or any word
 /// that is no keyword (in a type, read by syntax only).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(super) enum Names {
+pub(super) enum UnitWords {
     /// Periods and the declared units.
     Declared,
     /// Any word that is no keyword.
@@ -327,6 +327,15 @@ impl<'a> P<'a> {
         };
         self.skip(1)?;
         Ok(tok)
+    }
+
+    /// Where the next token stands: the file, the line and its place in the line.
+    pub(super) fn site(&self) -> Site {
+        Site {
+            file: self.file.to_owned(),
+            line: self.line,
+            at: self.i,
+        }
     }
 
     /// Whether the token `k` ahead is the word or operator `s`.
@@ -536,8 +545,8 @@ impl<'a> P<'a> {
     // -- units (L §2.1 Units, §2.3 unit) --
 
     /// Whether a unit term starts `k` ahead: a currency, `%`, or a unit's or period's name
-    /// (with `Names::Any`, any word that is no keyword).
-    pub(super) fn is_uterm_start(&self, k: usize, space: Space, names: Names) -> bool {
+    /// (with `UnitWords::Any`, any word that is no keyword).
+    pub(super) fn is_uterm_start(&self, k: usize, space: Space, names: UnitWords) -> bool {
         let Some(tok) = self.peek(k) else {
             return false;
         };
@@ -547,7 +556,7 @@ impl<'a> P<'a> {
         match tok.kind {
             Kind::Cur => true,
             Kind::Op => tok.text == "%",
-            Kind::Id if names == Names::Any => !is_keyword(&tok.text),
+            Kind::Id if names == UnitWords::Any => !is_keyword(&tok.text),
             Kind::Id => period_word(&tok.text).is_some() || self.units.contains(&tok.text),
             Kind::Key
             | Kind::Int(_)
@@ -595,7 +604,7 @@ impl<'a> P<'a> {
             .peek(0)
             .is_some_and(|t| t.kind == Kind::Op && (t.text == "*" || t.text == "/"))
             && !self.spaced(0)
-            && self.is_uterm_start(1, Space::Touching, Names::Any)
+            && self.is_uterm_start(1, Space::Touching, UnitWords::Any)
         {
             self.role(Some(self.i), Role::Unit);
             self.role(self.ahead(1), Role::Unit);
@@ -633,13 +642,13 @@ impl<'a> P<'a> {
             Some(_) | None => false,
         };
         let term_touches =
-            || !self.spaced(1) && self.is_uterm_start(2, Space::Touching, Names::Any);
+            || !self.spaced(1) && self.is_uterm_start(2, Space::Touching, UnitWords::Any);
         one && self.at("/", 1) && (term == Space::Free || term_touches())
     }
 
     /// A unit written after a number, or none (L §2.1 Units).
     pub(super) fn unit_after_number(&mut self) -> Result<Option<Unit>, Stop> {
-        let first = if self.is_uterm_start(0, Space::Free, Names::Declared) {
+        let first = if self.is_uterm_start(0, Space::Free, UnitWords::Declared) {
             self.uterm()?
         } else if self.at_reciprocal(Space::Touching) {
             self.reciprocal()?
@@ -658,7 +667,7 @@ impl<'a> P<'a> {
         if clause {
             return Ok(None);
         }
-        let first = if self.is_uterm_start(0, Space::Free, Names::Any) {
+        let first = if self.is_uterm_start(0, Space::Free, UnitWords::Any) {
             self.uterm()?
         } else if self.at_reciprocal(Space::Free) {
             self.reciprocal()?
@@ -717,8 +726,11 @@ impl<'a> P<'a> {
     }
 
     /// A literal: a number with a unit, a date, a key, a code word, `true`/`false`, `inf`;
-    /// a `-` before a number or `inf` is its sign.
+    /// a `-` before a number or `inf` is its sign; in parentheses, the literal itself.
     pub(super) fn lit(&mut self) -> Result<Lit, Stop> {
+        if self.at("(", 0) {
+            return self.paren_lit(Self::lit);
+        }
         if self.at("-", 0) {
             match self.kind(1) {
                 Some(Kind::Int(_) | Kind::Dec(_)) => {
@@ -736,9 +748,26 @@ impl<'a> P<'a> {
     }
 
     /// A literal with no sign before it (a currency's minor unit, an `sref`'s key, a band
-    /// row's key).
+    /// row's key), in parentheses or not.
     pub(super) fn lit_unsigned(&mut self) -> Result<Lit, Stop> {
+        if self.at("(", 0) {
+            return self.paren_lit(Self::lit_unsigned);
+        }
         self.lit_after(Minus::None)
+    }
+
+    /// `( lit )` where a literal stands: a parenthesised literal is that literal (L §2.1;
+    /// the M1 run's picks P6 and P12), `inner` reading it as the position reads a bare one;
+    /// the pair is counted as a bracket (`LOAD-DEPTH`) and marked plain, so the canonical
+    /// form leaves it out (L §2.4).
+    fn paren_lit(&mut self, inner: fn(&mut Self) -> Result<Lit, Stop>) -> Result<Lit, Stop> {
+        self.skip(1)?;
+        self.mark(self.back(), |m| m.paren = Paren::Plain);
+        self.open()?;
+        let lit = inner(self)?;
+        self.expect(")")?;
+        self.close()?;
+        Ok(lit)
     }
 
     /// A literal, after the `-` of `minus` if one was taken.

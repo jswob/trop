@@ -19,6 +19,7 @@ use super::state::{
     Ctx, Engine, Env, invariant, not_typed, num_stop, refuse, refuse_load, wrong_type,
 };
 use super::state::{a_day, past_days};
+use super::years::as_year;
 use crate::base::{Load, Run};
 use crate::hole::spread;
 use crate::model::{
@@ -647,7 +648,7 @@ fn period_arg((arg, v): (Option<&Expr>, &Value), what: &str) -> Result<Period, S
     if let Value::Period(p) = v {
         return Ok(*p);
     }
-    if let Some(year) = written_year(arg)? {
+    if let Some(year) = as_year(arg, v) {
         return Ok(year);
     }
     if let Value::Day(d) = v {
@@ -657,27 +658,6 @@ fn period_arg((arg, v): (Option<&Expr>, &Value), what: &str) -> Result<Period, S
         return Err(refuse(Run::None, format!("a value is none here: {what}")));
     }
     Err(not_typed())
-}
-
-/// A four-digit figure written where a period is read, as an argument or a span's end: the
-/// year the checker read it as (refcore's `_year` mark). L §2.1.
-///
-/// # Errors
-///
-/// `ENGINE-INVARIANT` for a year the parser read that the calendar lacks.
-pub(super) fn written_year(arg: Option<&Expr>) -> Result<Option<Period>, Stop> {
-    let Some(Expr::Lit(Lit::Num(n))) = arg else {
-        return Ok(None);
-    };
-    if !(n.whole && n.four) {
-        return Ok(None);
-    }
-    let Some(Ok(year)) = n.value.to_i64().map(u16::try_from) else {
-        return Err(invariant("a four-digit year the parser read"));
-    };
-    Period::year(year)
-        .map(Some)
-        .ok_or_else(|| invariant("a four-digit year the parser read"))
 }
 
 /// A date argument: a day, or a day period's day (refcore's `as_date_or_iv`). L §4.2.

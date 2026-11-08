@@ -26,7 +26,7 @@ use super::steps::refuse;
 use super::targets::place_target;
 use super::texts::text;
 use crate::base::{Code, Load, Run};
-use crate::eval::{Ctx, Engine, Env, int_of};
+use crate::eval::{Ctx, Engine, Env, a_day, int_of};
 use crate::model::{
     BindInfo, Domain, IndexForm, IndexInfo, KeyVal, MoveInfo, NameKind, Node, NodeKind, Reality,
     Target, Ty, Value,
@@ -174,11 +174,7 @@ pub(super) fn check_seen_days(m: &Reality, reads: &[DayRead], files: &Files) -> 
                 continue;
             }
             let shown: Vec<String> = keys.iter().map(KeyVal::text).collect();
-            let at_keys = if shown.is_empty() {
-                String::new()
-            } else {
-                format!("[{}]", shown.join(", "))
-            };
+            let at_keys = bracketed(&shown);
             let start = if read.start { " start" } else { "" };
             let when = if d == day {
                 "its own day"
@@ -253,8 +249,16 @@ fn day_limit(
     on: &Expr,
     env: &Env,
 ) -> Result<Option<String>, Stop> {
-    match engine.ev(m, on, env, Ctx::new(None, m.on)) {
-        Ok(Value::Day(day)) if day.is_end() => Ok(Some("a day passes 9999-12-31".to_owned())),
+    // the end of time read as a day is the run's own `RUN-LIMIT` (`a_day`)
+    let day = engine
+        .ev(m, on, env, Ctx::new(None, m.on))
+        .and_then(|value| {
+            if let Value::Day(day) = value {
+                return a_day(day).map(Value::Day);
+            }
+            Ok(value)
+        });
+    match day {
         Err(Stop::Refused(r)) if r.code() == Code::Run(Run::Limit) => {
             Ok(Some(r.message().to_owned()))
         }
@@ -794,6 +798,7 @@ fn random_reads(
             keylist: Vec::new(),
             id: 0,
             end: None,
+            site: None,
         };
         scope.vars.insert(bind.var.clone(), var);
     }

@@ -27,6 +27,22 @@ impl Scenarios {
         self.section.get(id).map(String::as_str)
     }
 
+    /// The layer of the section `id` (a version's, a row's): 0 for the base's, or for what no
+    /// version states (a thing's own entry), and one more for each scenario of the stack from
+    /// the base up to the one whose file declares it, so a scenario's rows stand above its
+    /// base's (refcore's `version_layer`, `row_layer`). L §6.4, §4.6 steps 2 and 3.1.
+    #[must_use]
+    pub fn layer(&self, id: Option<&str>) -> usize {
+        let mut at = id.and_then(|id| self.of(id));
+        for depth in 0..=self.over.len() {
+            let Some(scenario) = at else {
+                return depth;
+            };
+            at = self.over.get(scenario).and_then(Option::as_deref);
+        }
+        self.over.len()
+    }
+
     /// The scenario whose world this reality is: the top of its stack, the one no other of the
     /// stack is over; `None` for a base. L §6.4.
     #[must_use]

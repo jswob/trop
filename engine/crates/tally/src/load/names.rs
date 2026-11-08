@@ -14,7 +14,7 @@ use crate::base::{Code, Load, Refusal};
 use crate::model::{
     BUILTIN_INDEXES, BUILTIN_INPUTS, BindInfo, Domain, InputInfo, NameKind, PRELUDE_KINDS, Ty,
 };
-use crate::syntax::{Bind, Domain as BindDomain, Section, Stop, is_builtin};
+use crate::syntax::{Bind, Domain as BindDomain, Section, Site, Stop, is_builtin};
 
 impl Loader {
     /// The built-in inputs, the prelude's kinds, `cut` and the built-in indexes, named first
@@ -140,6 +140,7 @@ fn builtin_bind(var: &str, domain: Domain) -> BindInfo {
             over: None,
             filter: None,
             text: format!("{var} in {id}"),
+            site: Site::default(),
         },
         domain,
     }

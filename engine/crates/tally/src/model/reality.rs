@@ -125,6 +125,9 @@ pub struct Reality {
     /// The asks refused alone, each with its refusal: one that names a world the run doesn't
     /// load (refcore's `asks_alone`). L §6.4, §8.
     pub asks_alone: BTreeMap<String, Refusal>,
+    /// Each key list's binding site (file, line, token) with the index its key positions
+    /// fixed: its keys are that index's (refcore's `b._var.fixed`). L §2.5.
+    pub list_keys: BTreeMap<(String, u32, usize), String>,
     /// The rows and movements stated `same`, in the order written (refcore's `same_rows` and
     /// `same_moves`): read together at run. L §6.1, §5.19.
     pub sames: Vec<SamePair>,

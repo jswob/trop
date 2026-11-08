@@ -533,7 +533,7 @@ fn steps_of(count: &Num, per: i64) -> Result<i64, Stop> {
 
 /// The period word of a duration `5 years`, `-1 day`, and its count, or `None` when the
 /// number isn't one (L §4.2).
-fn duration(n: &Number) -> Option<(&str, &Num)> {
+pub(super) fn duration(n: &Number) -> Option<(&str, &Num)> {
     let Class::Num(unit, _) = &n.class else {
         return None;
     };

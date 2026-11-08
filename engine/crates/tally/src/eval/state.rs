@@ -15,7 +15,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::Days;
 use crate::base::{Code, Refusal, Run, Warn};
 use crate::book::{Adjustment, Coverage, Linked, Obs};
-use crate::model::{Domain, KeyVal, Node, NodeKind, Reality, UnitError, Value, power_past_limit};
+use crate::model::{Domain, KeyVal, Node, NodeKind, Reality, UnitError, Value};
 use crate::num::NumError;
 use crate::syntax::{Ask, Stop};
 use crate::time::Day;
@@ -548,12 +548,9 @@ pub(crate) fn num_stop(error: NumError) -> Stop {
     }
 }
 
-/// A unit operation's error met at run: a power past 64 in size is the load refusal
-/// refcore's `power_limit` raises where it meets it (a unit a key gives, L §3.2); a number
-/// error is `num_stop`'s. L §7.6 item 4.
+/// A unit operation's error met at run (`UnitError::refusal`): a power past 64 in size is the
+/// load refusal refcore's `power_limit` raises where it meets it (a unit a key gives,
+/// L §3.2); a number error is `num_stop`'s. L §7.6 item 4.
 pub(crate) fn unit_stop(error: UnitError) -> Stop {
-    match error {
-        UnitError::Power(base) => refuse_load(crate::base::Load::Limit, power_past_limit(&base)),
-        UnitError::Num(error) => num_stop(error),
-    }
+    error.refusal(num_stop, None)
 }

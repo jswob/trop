@@ -16,10 +16,11 @@
 //! tuple alone.
 
 use super::arith::{Op, Test, arith, compare};
-use super::builtin::written_year;
 use super::expr::hole_of;
+use super::read::{lacks_at_run, literal_key};
 use super::state::{Collected, Ctx, Engine, Env, a_day, invariant, not_typed, refuse, wrong_type};
 use super::ty::zero_of;
+use super::years::span_year;
 use crate::base::{Code, Refusal, Run};
 use crate::hole::{Hole, spread};
 use crate::model::{Class, Domain, IndexInfo, KeyVal, Number, Reality, Span, Thing, Value};
@@ -485,7 +486,10 @@ impl Engine {
                     Ok(moves) => Values::Moves(moves),
                 })
             }
-            Over::List(lits) => Ok(Values::Known(list_values(lits))),
+            Over::List(lits) => {
+                let fixed = m.list_keys.get(&bind.site.key());
+                list_values(m, lits, fixed).map(Values::Known)
+            }
             Over::Range(parts) => self.range_values(m, parts, env, ctx),
         }
     }
@@ -563,11 +567,7 @@ impl Engine {
             if let Value::Hole(h) = v {
                 return Ok(Err(h));
             }
-            let year = if matches!(v, Value::Number(_)) {
-                written_year(Some(e))?.map(Value::Period)
-            } else {
-                None
-            };
+            let year = span_year(&v).map(Value::Period);
             ends.push(Some(year.unwrap_or(v)));
         }
         let [from, to] = <[Option<Value>; 2]>::try_from(ends)
@@ -704,10 +704,31 @@ fn index_values(m: &Reality, ix: &IndexInfo, cut: Day) -> Result<Vec<(Value, Opt
     Ok(out)
 }
 
-/// A written key list's values: integers, days and periods as such, other keys as literals
-/// their use resolves (refcore's `bind_values` for a list). L §2.5.
-fn list_values(lits: &[Lit]) -> Vec<(Value, Option<Hole>)> {
-    lits.iter().map(|lit| (list_value(lit), None)).collect()
+/// A written key list's values: the keys of the index its key positions fixed, else
+/// integers, days and periods as such and other keys as literals their use resolves
+/// (refcore's `bind_values` for a list, its `b._var.fixed`). L §2.5.
+///
+/// # Errors
+///
+/// `NotBuilt` for a key the index lacks, which load refuses first.
+fn list_values(
+    m: &Reality,
+    lits: &[Lit],
+    fixed: Option<&String>,
+) -> Result<Vec<(Value, Option<Hole>)>, Stop> {
+    let mut out = Vec::with_capacity(lits.len());
+    for lit in lits {
+        let value = match fixed {
+            Some(ix) => {
+                let key =
+                    literal_key(m, lit, &Domain::Index(ix.clone()))?.ok_or_else(lacks_at_run)?;
+                Value::of_key(&key)
+            }
+            None => list_value(lit),
+        };
+        out.push((value, None));
+    }
+    Ok(out)
 }
 
 /// One written key's value (refcore's `bind_values` for a list): an integer of any size, read

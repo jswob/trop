@@ -246,10 +246,10 @@ pub fn reprint(files: Vec<(Given, String)>) -> Result<Answer, NotImplemented> {
 }
 
 /// [`reprint`] with the file table's files, `disk`: a joint model's members are found among
-/// the files given, by the names they print under, then on `disk` where it holds the model's
-/// file, and pinned as `run` pins them, before anything prints; each member's files given are
-/// a reality of their own (E §3.1 step 1; INTERFACE §1; tally 2.1.6, #74, #91). The CLI's
-/// entry.
+/// the files given, by their full paths, then on `disk` where it holds the model's file, and
+/// pinned as `run` pins them, before anything prints; each member's files given are a reality
+/// of their own, printed under the names given (E §3.1 step 1; INTERFACE §1; tally 2.1.6,
+/// #74, #91). The CLI's entry.
 ///
 /// # Errors
 ///

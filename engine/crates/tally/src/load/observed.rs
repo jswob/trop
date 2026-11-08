@@ -13,10 +13,10 @@ use super::keys::{KeyLit, lit_text, resolve_key};
 use super::places::Written;
 use super::steps::{Loader, num_stop, refuse};
 use super::values::at_row;
-use crate::base::Load;
+use crate::base::{Load, Place};
 use crate::model::{
     Fulfils, KeyVal, KindSpec, MvRef, MvSrc, NameKind, ObsLeg, Observation, Unit, UnitError,
-    Value as ModelValue, power_past_limit,
+    Value as ModelValue,
 };
 use crate::syntax::{
     Certainty, Expr, Field, FieldValue, Key, Known, Leg, Lit, Postfix, Row, Stop, Type, Value,
@@ -38,6 +38,11 @@ impl At {
     /// A refusal at the observation's line.
     fn refuse(&self, code: Load, message: String) -> Stop {
         refuse(code, message, &self.file, self.line)
+    }
+
+    /// The observation's line, as a refusal names it.
+    fn place(&self) -> Place {
+        Place::Line(self.file.clone(), self.line)
     }
 }
 
@@ -477,10 +482,8 @@ impl Loader {
             .flat_map(|u| u.terms.iter())
             .map(|t| (t.base.clone(), t.power.clone()))
             .collect();
-        let (unit, factor) = Unit::from_syntax(terms).map_err(|error| match error {
-            UnitError::Power(base) => at.refuse(Load::Limit, power_past_limit(&base)),
-            UnitError::Num(error) => num_stop(error),
-        })?;
+        let (unit, factor) = Unit::from_syntax(terms)
+            .map_err(|error: UnitError| error.refusal(num_stop, Some(at.place())))?;
         let [(base, 1)] = unit.terms() else {
             return Err(at.refuse(
                 Load::Leg,
