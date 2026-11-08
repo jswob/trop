@@ -15,8 +15,9 @@
 //! key, STOP-REPORT 2026-11-08); `first` and `last` bring the register of the movements they
 //! met up to the key they return, no further.
 
-use super::aggregate::{Brings, Member, reads_name, span_reads};
+use super::aggregate::{Brings, Member};
 use super::arith::{Test, compare};
+use super::bindings::{day_of_binding, reads_name, span_reads};
 use super::expr::hole_of;
 use super::state::{Ctx, Engine, Env, a_day, invariant, num_stop, refuse};
 use super::windows::{End, as_window, imprecise, window_end};
@@ -451,7 +452,7 @@ impl Engine {
             if matches!(day, Value::Hole(_) | Value::None) {
                 return Ok(false);
             }
-            return Ok(super::aggregate::day_of_binding(&day)? > ctx.cut);
+            return Ok(day_of_binding(&day)? > ctx.cut);
         }
         let Some(over) = &bind.over else {
             return Ok(false);

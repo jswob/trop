@@ -150,6 +150,7 @@ pub mod eval {
     mod aggregate;
     mod arith;
     mod band;
+    mod bindings;
     mod builtin;
     mod business;
     mod convert;
@@ -167,8 +168,8 @@ pub mod eval {
     mod years;
 
     pub use aggregate::Member;
-    pub(crate) use aggregate::{order_text, reads_name};
     pub use arith::{Op, Test, arith, compare, currency_of, int_of, negate, same_value};
+    pub(crate) use bindings::{order_text, reads_name};
     pub(crate) use convert::{ConvertFor, Converted, convert, convert_row, field_literal};
     pub use memo::Memo;
     pub(crate) use read::{make_keys, thing_seen, to_key};
