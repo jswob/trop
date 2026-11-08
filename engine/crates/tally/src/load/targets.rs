@@ -4,8 +4,8 @@
 //! literally), §5.7 (an event kind's attributes), §2.5 (a key literal at a key position),
 //! §8.3 (`LOAD-LEG`, `-FIELD`, `-READS`); E §3.1 step 7 (a running or declared read's target).
 //! Twin: engine/tools/refcore/check3.py (`m_check_move`, `m_read_target`, `m_literal_place`,
-//! `m_place_target`, `m_move_changes`); check.py (`kind_attrs`, `is_keylit_node`, `_r` of
-//! `place`).
+//! `m_place_target`, `m_move_changes`, and the `_r` of `place` that `m_place_value` sets);
+//! check.py (`is_keylit_node`); model.py (`kind_attrs`).
 //! Invariants: a move is checked in refcore's order, each refusal at its line; a target is a
 //! place written, every place of a keyed place or of a kind, or a place load can't see, each
 //! once in the order met.

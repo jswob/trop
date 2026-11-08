@@ -5,8 +5,8 @@
 //! rows), §8.3 (`LOAD-KEY`, `-FIELD`, `-PARSE`, `-UNIT`); E §3.1 step 5 (each read an edge
 //! with its keys' relation).
 //! Twin: engine/tools/refcore/check.py (`read`, `key_pos`, `key_conv`, `period_conv`,
-//! `t_index`, `t_field`, `member_read`, `dom_of`, `kind_attrs`); check3.py (`m_place_value`,
-//! `m_move_value`, `m_movement_field`).
+//! `t_index`, `t_field`, `member_read`, `dom_of`); check3.py (`m_place_value`,
+//! `m_move_value`, `m_movement_field`); model.py (`kind_attrs`).
 //! Invariants: each read is typed in refcore's order and recorded as an edge as it is typed; a
 //! name the namespace proves is found by its typed id, a miss the engine's invariant; a field
 //! load can't narrow is `Unseen`, refused by no rule; every recursion is counted (R-16).

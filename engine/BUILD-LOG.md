@@ -1584,3 +1584,7 @@ The builder of the pre-M1 run, group G6b of `tmp/pre-m1-build/plan.md` § "G6a, 
 - **Exception delta:** +0 (6; report-only hits 8, as locked).
 - **Deviations from the plan:** (1) Two commits, not one per file: the parser's and eval's four files are one commit, since the guard refuses `git checkout` and `git apply` on `engine/crates` (as in G6a), so one split couldn't be set aside to check another alone; `check full` ran on exactly what each commit holds. Its scope is `parse`, the larger part; commit-check has no scope for both. (2) The walk files were split and committed first, so that `mutants-local` ran on 51db9f0's tree while the other four were moved (not compiled) in the worktree after cargo-mutants had copied it. (3) `engine/ARCHITECTURE.md` still names the six originals alone (lines 88 to 89, 119 to 124, 136, 146, 374, 406, 418, 420); not the builder's file, for the lead, with G6a's rows.
 - **Next:** none for the builder in this run (G6b is the last build group); the group review of G6a and G6b together (P11). Open STOP-REPORTs: G4a's (#106), unchanged; none new.
+
+## 2026-11-08 pre-M1, the G6 review's follow-up 2 and T's chunk 5 (issues #97, #107)
+
+- `load/keyed.rs` and `load/targets.rs` name their twins where refcore has them (`kind_attrs` in `model.py`, the `_r` of `place` set in `check3.py` `m_place_value`; comments only), and `MUTANTS-SURVIVORS.md`'s `Sums::global` `>` → `>=` row is `R-87: missed:` with T's reason (a refusal on a span's first day tells it apart, held for #107); no code changed.
