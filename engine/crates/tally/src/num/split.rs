@@ -123,9 +123,9 @@ impl Weights {
     /// # Errors
     ///
     /// `RUN-PRORATA` for a total that isn't a whole number of `step`; `RUN-DOMAIN` for a step
-    /// that isn't positive; a number error.
+    /// that isn't positive (`prorata` refuses one first, with its text); a number error.
     pub fn largest(&self, total: &Num, step: &Num) -> Result<Largest, SplitError> {
-        if step.is_zero() || step.is_negative() {
+        if step.compare(&Num::zero())? != Ordering::Greater {
             return Err(SplitError::Num(NumError::Domain));
         }
         let signed_steps = total.checked_div(step)?;
