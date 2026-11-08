@@ -116,7 +116,8 @@ pub(super) enum Way {
 }
 
 impl Frame {
-    /// The frame with its values in the order `way` takes them.
+    /// The frame with its values in the order `way` takes them: `last` reads from the last
+    /// binding (L §5.11).
     fn taken(mut self, way: Way) -> Frame {
         if way == Way::Back {
             self.values.reverse();
@@ -463,9 +464,9 @@ impl Engine {
         Ok(Ok(out))
     }
 
-    /// Whether binding `bind`'s `where` keeps a candidate, with its unknown-member hole, its
-    /// movement's register brought to the reader when it does (refcore's `members`, one
-    /// value). L §5.11, §8.2.
+    /// Whether binding `bind`'s `where` keeps a candidate, with its unknown-member hole; its
+    /// movement's register is its reader's to bring, when it reaches it (refcore's `members`,
+    /// one value). L §5.11, §8.2.
     pub(super) fn candidate_kept(
         &mut self,
         m: &Reality,
@@ -476,9 +477,6 @@ impl Engine {
         let Kept::In(hole) = self.where_keeps(m, bind, &cand.env, ctx)? else {
             return Ok(Kept::Out);
         };
-        if let Some(c) = &cand.brings {
-            self.absorb(c);
-        }
         Ok(Kept::In(joined(cand.own.clone(), hole)))
     }
 

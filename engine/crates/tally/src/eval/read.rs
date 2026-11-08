@@ -16,7 +16,7 @@ use super::builtin::read_parts;
 use super::convert::{ConvertFor, Converted, convert};
 use super::memo::{LawClass, Read, may_hold, rows_class};
 use super::state::{Ctx, Engine, Env, a_day, invariant, num_stop, refuse, refuse_load};
-use super::windows::as_read;
+use super::windows::{as_read, one_day};
 use crate::base::{Load, Run};
 use crate::hole::Hole;
 use crate::load::index_key_of;
@@ -296,9 +296,9 @@ impl Engine {
     }
 
     /// The row `last(x[k], d)` and `since(x[k], d)` read, recorded as read, with its keys and
-    /// d; or the value they are instead: the hole of a key or of d, `none`, the gap rule's
-    /// hole. A movement of another kind as a key is refused (`RUN-KEY`, as every read).
-    /// L §4.6 (Past the last row, Readings), §5.7.
+    /// d; or the value they are instead: the hole of a key or of d, a window d's
+    /// `HOLE-IMPRECISE`, `none`, the gap rule's hole. A movement of another kind as a key is
+    /// refused (`RUN-KEY`, as every read). L §4.6 (Past the last row, Readings), §4.4, §5.7.
     fn latest_row(
         &mut self,
         m: &Reality,
@@ -323,7 +323,10 @@ impl Engine {
         if let Value::Hole(_) = day {
             return Ok(Err(day));
         }
-        let day = crate::ask::date_of(&day, &format!("the day of {what}"))?;
+        let day = match one_day(m, &day, &format!("the day of {what}"))? {
+            Ok(day) => day,
+            Err(hole) => return Ok(Err(Value::Hole(hole))),
+        };
         self.read(Read::Input {
             id: input.id.clone(),
             keys: keys.clone(),

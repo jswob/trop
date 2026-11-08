@@ -15,8 +15,10 @@
 //! Invariants: a tie is broken only by the written `ties by`, never by index order or binding
 //! order; a `ties by` term is read only among the candidates still tied, and a hole there
 //! makes the result that hole (L §8.1; refcore reads every term, #116); every order an
-//! extreme takes is decided by its comparisons, never assumed; `first` and `last` read no
-//! `where`, and bring no register, past the key they return (#117).
+//! extreme takes is decided by its comparisons, never assumed, and a window's hole comes only
+//! from a comparison that decides the extreme; a `ties by` is read only for values the
+//! `where` keeps; `first` and `last` bring no register past the key they return, and over
+//! bindings in binding order read no `where` past it (#117).
 
 use super::aggregate::{Brings, Candidate, Kept, Step, Way};
 use super::arith::{Test, compare};
@@ -175,80 +177,92 @@ fn tie_order(
     Ok(Err(imprecise(m, w, &format!("the ties by of {word}"))?))
 }
 
-/// Two runs in ascending order as one, the first run's candidate first among equals; the
-/// later candidate compared with the earlier, as refcore's sort compares them.
-fn merge(m: &Reality, (a, b): (Scored, Scored), word: &str) -> Result<Result<Scored, Hole>, Stop> {
-    let mut out: Scored = Vec::new();
-    let (mut a, mut b) = (a.into_iter().peekable(), b.into_iter().peekable());
-    while let (Some(x), Some(y)) = (a.peek(), b.peek()) {
-        let sooner = match tie_order(m, (&y.1, &x.1), word)? {
-            Err(hole) => return Ok(Err(hole)),
-            Ok(order) => order == Ordering::Less,
-        };
-        out.extend(if sooner { b.next() } else { a.next() });
-    }
-    out.extend(a);
-    out.extend(b);
-    Ok(Ok(out))
-}
-
-/// Scored candidates in ascending order, those equal in one group in the order given: a merge
-/// sort, so each comparison either decides or makes the result its hole, and none is assumed
-/// (refcore's `sorted` in `tie_groups`, stable). L §5.11, §4.4.
-fn sorted_groups(
+/// The scored candidates whose value is the least (`Way::Forward`) or the greatest, in the
+/// order given, and the rest: the extreme found by comparing each value with the extreme so
+/// far, a comparison that doesn't decide passed over, then compared with every other value,
+/// so only a comparison that decides the extreme can make the result a window's hole (L §5.11
+/// "the one with the least e", §4.4; pick P33). The later value is compared with the
+/// earlier, as refcore compares them.
+fn pick_extreme(
     m: &Reality,
     scored: Scored,
+    way: Way,
     word: &str,
-) -> Result<Result<Vec<Vec<usize>>, Hole>, Stop> {
-    let mut runs: Vec<Scored> = scored.into_iter().map(|s| vec![s]).collect();
-    while runs.len() > 1 {
-        let mut merged: Vec<Scored> = Vec::new();
-        let mut it = runs.into_iter();
-        while let Some(a) = it.next() {
-            let Some(b) = it.next() else {
-                merged.push(a);
-                break;
-            };
-            match merge(m, (a, b), word)? {
-                Ok(run) => merged.push(run),
-                Err(hole) => return Ok(Err(hole)),
-            }
-        }
-        runs = merged;
-    }
-    let mut groups: Vec<(Value, Vec<usize>)> = Vec::new();
-    for (at, v) in runs.into_iter().flatten() {
-        let equal = match groups.last() {
-            None => false,
-            Some((held, _)) => match tie_order(m, (&v, held), word)? {
-                Err(hole) => return Ok(Err(hole)),
-                Ok(order) => order == Ordering::Equal,
-            },
+) -> Result<Result<(Vec<usize>, Scored), Hole>, Stop> {
+    let wanted = match way {
+        Way::Forward => Ordering::Less,
+        Way::Back => Ordering::Greater,
+    };
+    let mut best: Option<usize> = None;
+    for (i, (_, v)) in scored.iter().enumerate() {
+        let Some((_, held)) = best.and_then(|b| scored.get(b)) else {
+            best = Some(i);
+            continue;
         };
-        if let (true, Some((_, group))) = (equal, groups.last_mut()) {
+        if matches!(tie_order(m, (v, held), word)?, Ok(order) if order == wanted) {
+            best = Some(i);
+        }
+    }
+    let Some(b) = best else {
+        return Ok(Ok((Vec::new(), Vec::new())));
+    };
+    let (_, extreme) = scored
+        .get(b)
+        .cloned()
+        .ok_or_else(|| invariant("an extreme past its candidates"))?;
+    let (mut group, mut rest): (Vec<usize>, Scored) = (Vec::new(), Vec::new());
+    for (i, (at, v)) in scored.into_iter().enumerate() {
+        if i == b {
+            group.push(at);
+            continue;
+        }
+        let order = match tie_order(m, (&v, &extreme), word)? {
+            Err(hole) => return Ok(Err(hole)),
+            Ok(order) => order,
+        };
+        if order == wanted {
+            return Err(invariant("a value beyond the extreme"));
+        }
+        if order == Ordering::Equal {
             group.push(at);
         } else {
-            groups.push((v, vec![at]));
+            rest.push((at, v));
         }
     }
-    Ok(Ok(groups.into_iter().map(|(_, g)| g).collect()))
+    Ok(Ok((group, rest)))
+}
+
+/// A group of candidates in a `ties by` order, by position: the term that orders it next and,
+/// once read, that term's values (L §5.11).
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct Group {
+    /// The candidates, in binding order.
+    members: Vec<usize>,
+    /// The term that orders them next.
+    term: usize,
+    /// That term's values, once read.
+    scored: Option<Scored>,
 }
 
 /// The candidates of a `ties by` by position, in its order: the groups still to visit, the
-/// next on top, each with the term that orders it next (L §5.11).
+/// next on top (L §5.11).
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct TieOrder {
     /// The groups, the next to visit last.
-    groups: Vec<(Vec<usize>, usize)>,
+    groups: Vec<Group>,
     /// The end the order is visited from: its end, as `last` reads it, or its start.
     way: Way,
 }
 
 impl TieOrder {
-    /// All `n` candidates in one group, the first term to order it.
+    /// All `n` candidates in one group, the first term to order it (L §5.11).
     fn of(n: usize, way: Way) -> TieOrder {
         TieOrder {
-            groups: vec![((0..n).collect(), 0)],
+            groups: vec![Group {
+                members: (0..n).collect(),
+                term: 0,
+                scored: None,
+            }],
             way,
         }
     }
@@ -360,11 +374,12 @@ impl Engine {
         Ok(Ok(*one))
     }
 
-    /// The next group of candidates in the `ties by` order, from its end for `last`: a group
-    /// is ordered by a term only while it holds more than one candidate, so e2 is read only
-    /// among those e1 left tied; a term that is a hole for one of them, or a comparison of a
-    /// window it doesn't decide, is the result's hole (refcore's `tie_groups`, `tie_break`).
-    /// L §5.11, §4.4, §8.1.
+    /// The next group of candidates in the `ties by` order, from its end for `last`: of a
+    /// group with more than one candidate, the term read once and the least (greatest) of it
+    /// taken out, ordered by the next term, the rest left for later; so e2 is read only among
+    /// those e1 left tied, and a group is ordered only when it is reached. A term that is a
+    /// hole for one of them, or a comparison of a window that doesn't decide the extreme, is
+    /// the result's hole (refcore's `tie_groups`, `tie_break`). L §5.11, §4.4, §8.1.
     fn next_tied(
         &mut self,
         m: &Reality,
@@ -377,26 +392,38 @@ impl Engine {
             return Err(invariant("a ties by with no term"));
         };
         let word = agg.func.word();
-        while let Some((group, term)) = order.groups.pop() {
-            let Some(expr) = ties.get(term).filter(|_| group.len() > 1) else {
-                return Ok(Ok(Some(group)));
+        while let Some(group) = order.groups.pop() {
+            let Some(expr) = ties.get(group.term).filter(|_| group.members.len() > 1) else {
+                return Ok(Ok(Some(group.members)));
             };
-            let scored = match self.tie_terms(m, (expr, word), envs, &group, ctx)? {
+            let read = if let Some(scored) = group.scored {
+                Ok(scored)
+            } else {
+                self.tie_terms(m, (expr, word), envs, &group.members, ctx)?
+            };
+            let picked = match read {
                 Err(hole) => return Ok(Err(hole)),
-                Ok(scored) => scored,
+                Ok(scored) => pick_extreme(m, scored, order.way, word)?,
             };
-            let sorted = match sorted_groups(m, scored, word)? {
+            let (extreme, rest) = match picked {
                 Err(hole) => return Ok(Err(hole)),
-                Ok(sorted) => sorted,
+                Ok(picked) => picked,
             };
-            let next = term
-                .checked_add(1)
-                .ok_or_else(|| invariant("a ties by's next term"))?;
-            let subs = sorted.into_iter().map(|g| (g, next));
-            match order.way {
-                Way::Back => order.groups.extend(subs),
-                Way::Forward => order.groups.extend(subs.rev()),
+            if !rest.is_empty() {
+                order.groups.push(Group {
+                    members: rest.iter().map(|(at, _)| *at).collect(),
+                    term: group.term,
+                    scored: Some(rest),
+                });
             }
+            order.groups.push(Group {
+                members: extreme,
+                term: group
+                    .term
+                    .checked_add(1)
+                    .ok_or_else(|| invariant("a ties by's next term"))?,
+                scored: None,
+            });
         }
         Ok(Ok(None))
     }
@@ -441,10 +468,11 @@ impl Engine {
     }
 
     /// `first(b where c)` and `last(…)`: the first (last) binding tuple whose `where` is
-    /// true, in binding order, or over things, movements or an open index's keys in the order
-    /// of the `ties by`, no `where` read past it; a hole met before it makes the result that
-    /// hole; none, `HOLE-NOTYET` where a binding of things or movements reaches past the cut,
-    /// else `RUN-EMPTY` (refcore's `agg_first`). L §5.11, §3.1, §8.1, §8.4.
+    /// true, in binding order with no `where` read past it, or over things, movements or an
+    /// open index's keys in the order of the `ties by` among those the `where` keeps; a hole
+    /// met before it makes the result that hole; none, `HOLE-NOTYET` where a binding of things
+    /// or movements reaches past the cut, else `RUN-EMPTY` (refcore's `agg_first`). L §5.11,
+    /// §3.1, §8.1, §8.4.
     pub(super) fn first_last(
         &mut self,
         m: &Reality,
@@ -523,10 +551,11 @@ impl Engine {
     }
 
     /// `first` (`last`, from the end `way` names) over things, movements or an open index's
-    /// keys: the values in the order of the `ties by`, each group of candidates it leaves tied
-    /// read together, their `where`s read group by group up to the first group with a true
-    /// one; two true in one group are a tie it doesn't break (refcore's `agg_first`,
-    /// `tie_groups`). L §5.11.
+    /// keys: every value's `where` read first, since it guards the `ties by` ("a term that is
+    /// `none` is refused unless the `where` tests it out"); the values it keeps in the order
+    /// of the `ties by`, group by group, each group's register brought as it is reached, up to
+    /// the first group with a true one; two true in one group are a tie it doesn't break
+    /// (refcore's `agg_first`, `members`, `tie_groups`). L §5.11, §8.2.
     fn first_by_ties(
         &mut self,
         m: &Reality,
@@ -542,8 +571,14 @@ impl Engine {
             Err(hole) => return Ok(Met::Holes(vec![hole])),
             Ok(cands) => cands,
         };
-        let envs: Vec<&Env> = cands.iter().map(|c| &c.env).collect();
-        let mut order = TieOrder::of(cands.len(), way);
+        let mut kept: Vec<(&Candidate, Option<Hole>)> = Vec::with_capacity(cands.len());
+        for cand in &cands {
+            if let Kept::In(hole) = self.candidate_kept(m, bind, cand, ctx)? {
+                kept.push((cand, hole));
+            }
+        }
+        let envs: Vec<&Env> = kept.iter().map(|(c, _)| &c.env).collect();
+        let mut order = TieOrder::of(kept.len(), way);
         let mut holes: Vec<Hole> = Vec::new();
         loop {
             let group = match self.next_tied(m, agg, &envs, &mut order, ctx)? {
@@ -556,13 +591,15 @@ impl Engine {
             };
             let mut trues: Vec<&Env> = Vec::new();
             for at in group {
-                let cand = cands
+                let (cand, hole) = kept
                     .get(at)
                     .ok_or_else(|| invariant("a candidate past the list"))?;
-                match self.candidate_kept(m, bind, cand, ctx)? {
-                    Kept::Out => {}
-                    Kept::In(Some(hole)) => holes.push(hole),
-                    Kept::In(None) => trues.push(&cand.env),
+                if let Some(c) = &cand.brings {
+                    self.absorb(c);
+                }
+                match hole {
+                    Some(h) => holes.push(h.clone()),
+                    None => trues.push(&cand.env),
                 }
             }
             let Some(first) = trues.first() else {
