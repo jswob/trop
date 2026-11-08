@@ -1,0 +1,105 @@
+model golden_y22
+  tally 2
+  on 2023-06-01
+  start 2022-01-01
+  end 2023-12-31
+  note "T, M1 (issue #108), DONE gate 2: the pins y22_tax/pit.advance[2022-01, -06, -07, -12] 266, 266, 188, 188 and y22_return tax, advances, due 2 253, 2 724, -471 (pins-1-7.json), restated from the prototype's block 06-pit-2022.json: a job of 5 000 gross a month in 2022 (job_pl@1), its advances (employment_pl@2022) and its separate return (pit_return@2022)."
+  note "The defs are household X's employment law (integration/amendments/real11/c1/law/pl/employment.tally, the prototype's employment_pl@2022 rewritten) for one year, without what the example doesn't reach: child relief, a change of residence, the payments. X's law governs 2026 on and states July 2022's scale for the whole of 2022, so it can't be reused for 2022's first half."
+  note "goldens.md's reading (changes form): the advance of a month reads the law of that month, the January 2022 scale (17 %, 5 100 a year, 425 a month) to June and July's (12 %, 3 600, 300) from July; the return reads the scale for the year as amended in June 2022, so it is read at the tax year's end. At a cut before 2022-06-24 the July rows aren't known and the return reads January's scale."
+  note "Not stated: ZUS's 30-fold cap, which 60 000 a year doesn't reach, and block 06's price.etf (illustrative, read by nothing here)."
+
+source prototype "the prototype's block 06-pit-2022.json and its templates job_pl@1, employment_pl@2022, pit_return@2022 (engine/spec/verification/blocks)"
+
+source polski_lad "Polski Ład, Dz.U. 2021 poz. 2105 (block 06's source)"
+
+source pit_july_2022 "Ustawa z 9 czerwca 2022 r., Dz.U. 2022 poz. 1265 (block 06: 12 % zamiast 17 %, kwota zmniejszająca 3 600 zamiast 5 100, nowa skala za cały rok w zeznaniu)"
+
+unit PLN: currency minor 0.01
+
+kind job
+
+kind person
+
+index month = month 2022-01..2023-12
+
+index tax_year = year 2022..2023
+
+index zus_part = [pension, disability, sickness]
+
+input ee_rate[z in zus_part]: num
+
+input health_rate: num
+
+input kup_month: money PLN
+
+input pit_reduction_month: money PLN
+
+input salary[j in job, m in month]: money PLN
+
+input works_for[j in job]: key person
+
+band pit_scale(x: num PLN): num PLN
+  note "art. 27 ust. 1: the tax before reliefs, after the reducing amount"
+
+def emp_zus[j in job, m in month]: money PLN = round(salary[j, m] * ee_rate[pension], minor(PLN), half-up) + round(salary[j, m] * ee_rate[disability], minor(PLN), half-up) + round(salary[j, m] * ee_rate[sickness], minor(PLN), half-up) at start_of(m)
+
+def emp_health[j in job, m in month]: money PLN = round((salary[j, m] - emp_zus[j, m]) * health_rate, minor(PLN), half-up) at start_of(m)
+
+def emp_pit_base[j in job, m in month]: money PLN = round(max(0, salary[j, m] - emp_zus[j, m] - kup_month), 1, half-up) at start_of(m)
+
+def emp_cum[j in job, m in month]: money PLN = sum(emp_pit_base[j, k] for k in month where year_of(k) == year_of(m) and k <= m) at start_of(m)
+
+def emp_pit_adv[j in job, m in month]: money PLN = max(0, round(pit_scale(emp_cum[j, m]) - pit_scale(emp_cum[j, m] - emp_pit_base[j, m]) - pit_reduction_month, 1, half-up)) at start_of(m)
+  note "art. 32: the advance on the running base, less a twelfth of the reducing amount, to whole zloty"
+
+def emp_net[j in job, m in month]: money PLN = salary[j, m] - emp_zus[j, m] - emp_health[j, m] - emp_pit_adv[j, m] at start_of(m)
+
+def pit37_base[p in person, y in tax_year]: money PLN = round(max(0, sum(salary[j, m] - emp_zus[j, m] - (if salary[j, m] > 0 then kup_month else 0) for j in job over .., m in month where works_for[j] == p and year_of(m) == y)), 1, half-up) at end_of(y)
+
+def pit37_tax[p in person, y in tax_year]: money PLN = round(max(0, pit_scale(pit37_base[p, y])), 1, half-up) at end_of(y)
+  note "the return reads the scale for the tax year as amended (pit_july_2022: the new scale for the whole year's income)"
+
+def pit37_advances[p in person, y in tax_year]: money PLN = sum(emp_pit_adv[j, m] for j in job over .., m in month where works_for[j] == p and year_of(m) == y) at end_of(y)
+
+def pit37_due[p in person, y in tax_year]: money PLN = pit37_tax[p, y] - pit37_advances[p, y] at end_of(y)
+
+ask g_y22_adv: emp_pit_adv[y22_job, m] for m in [2022-01, 2022-06, 2022-07, 2022-12]
+
+ask g_y22_return: pit37_tax[me, 2022], pit37_advances[me, 2022], pit37_due[me, 2022]
+
+ask g_y22_march: pit37_tax[me, 2022] as known 2022-03-31
+
+version y22_household
+  cite prototype
+  governs always
+  known 2021-12-31
+  person + [me] lives 2022-01-01..
+  job + [y22_job] lives 2022-01-01..
+  works_for[y22_job] = me "06-pit-2022.json: y22_job, person me"
+  salary[y22_job] = 5000 governs 2022-01..2022-12 "06-pit-2022.json: y22_job, gross 5 000"
+
+version sus_2022
+  cite prototype
+  governs 2022..
+  known 2021-11-15
+  ee_rate[disability] = 0.015 "employment_pl@2022: the employee's disability share"
+  ee_rate[pension] = 0.0976 "employment_pl@2022: the employee's pension share"
+  ee_rate[sickness] = 0.0245 "employment_pl@2022: sickness"
+  health_rate = 0.09 "employment_pl@2022: health, 9 %"
+  kup_month = 250 "employment_pl@2022: costs of earning, 250 a month"
+
+version pit_jan_2022
+  cite polski_lad
+  governs 2022..
+  known 2021-11-15
+  pit_reduction_month = 425 "art. 32 ust. 3: a twelfth of 5 100 (block 06's pit.reduction)"
+  pit_scale: [0, 120000] = x * 0.17 - 5100 "art. 27 ust. 1, first threshold (block 06's pit.scale, from 2022-01-01)"
+  pit_scale: (120000, inf) = 15300 + (x - 120000) * 0.32 "art. 27 ust. 1, second threshold"
+
+version pit_jul_2022
+  cite pit_july_2022
+  governs 2022-07-01..
+  known 2022-06-24
+  replace pit_reduction_month = 300 "art. 32 ust. 3: a twelfth of 3 600, from July 2022"
+  replace pit_scale: [0, 120000] = x * 0.12 - 3600 "art. 27 ust. 1, first threshold, from July 2022 and for the whole year's return"
+  replace pit_scale: (120000, inf) = 10800 + (x - 120000) * 0.32 "art. 27 ust. 1, second threshold"

@@ -45,8 +45,8 @@ LOAD-VERSION	L §8.3	M0	files declare different tally versions	1	M0	codes/m0/par
 LOAD-VERSION	L §8.3	M0	replace rule <d>.<r> in <V> names version <W>	1	M0	codes/m0/basic/version-rule
 LOAD-PIN	L §8.3	M0	*	1	M0	codes/m0/joint/pin
 LOAD-PIN	L §8.3	M0	<file> doesn't match its sha256 in use <a>	1	M0	codes/m0/joint/pin
-LOAD-RESERVED	L §8.3	M0	*	1	M0	codes/m0/basic/reserved
-LOAD-RESERVED	L §8.3	M0	<word> is a keyword	1	M0	codes/m0/basic/reserved
+LOAD-RESERVED	L §8.3	M0	*	2	M0	codes/m0/basic/reserved
+LOAD-RESERVED	L §8.3	M0	<word> is a keyword	2	M0	codes/m0/basic/reserved
 LOAD-DUP	L §8.3	M0	*	6	M0	codes/LOAD-DEPTH/ties-by-control
 LOAD-DUP	L §8.3	M0	<id> is declared twice	4	M0	codes/LOAD-DEPTH/ties-by-control
 LOAD-DUP	L §8.3	M0	a key entered twice	1	M0	codes/m0/basic/dup-key
@@ -340,10 +340,10 @@ RUN-RECORD	L §8.4	S	same <p> = <q>: <p> doesn't exist	0	-	-
 RUN-RECORD	L §8.4	S	<r> and <r'> state one transfer and both fulfil <instance>: state them same	0	-	-
 RUN-RECORD	L §8.4	S	the stated parts of <x> at <instant> sum to <a>, over its total <b>	0	-	-
 RUN-RECORD	L §8.4	S	reading <r> of <x> at <d> start pads and states parts while the day's first batch moves <x>	0	-	-
-WARN-NEGATIVE	L §8.5	S	*	68	S	I:X:konto_balance@b_r1
-WARN-NEGATIVE	L §8.5	S	<account> is below zero from <d>	68	S	I:X:konto_balance@b_r1
-WARN-UNREAD	L §8.5	S	*	85	S	kernel/I:M:RC-06
-WARN-UNREAD	L §8.5	S	<source, input, def or place> is read by nothing	85	S	kernel/I:M:RC-06
+WARN-NEGATIVE	L §8.5	S	*	69	S	I:X:konto_balance@b_r1
+WARN-NEGATIVE	L §8.5	S	<account> is below zero from <d>	69	S	I:X:konto_balance@b_r1
+WARN-UNREAD	L §8.5	S	*	89	S	kernel/I:M:RC-06
+WARN-UNREAD	L §8.5	S	<source, input, def or place> is read by nothing	89	S	kernel/I:M:RC-06
 WARN-LEGS	L §8.5	S	*	1	S	kernel/g10/observe
 WARN-LEGS	L §8.5	S	the two observations of <movement> disagree: <input>[<row>] (<a>) and <input>[<row>] (<b>)	1	S	kernel/g10/observe
 WARN-LABELS	L §8.5	M5b	*	4	M5b	I:S4:S4-01~s4

@@ -1,0 +1,22 @@
+model golden_g9
+  tally 2
+  on 2026-10-17
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M1 (issue #108), DONE gate 2: G9, a question with a payment is refused (goldens.md: unchanged; C-19, L §5.18: an ask's grammar has no pay). The base answers; the part g9_pay.tally asks what konto would hold with a payment written into the ask."
+
+source prototype "the prototype's question rule C-19 (engine/spec/verification/goldens.md)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+ask g9_konto: bal(konto, 2026-12-31)
+
+version g9_household
+  cite prototype
+  governs always
+  known 2026-10-17
+  opening[konto] = 1000 at 2026-01-01 start "an invented opening balance"

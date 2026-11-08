@@ -1,0 +1,160 @@
+model golden_business
+  tally 2
+  on 2026-10-17
+  start 2026-01-01
+  end 2027-12-31
+  note "T, M1 (issue #108), DONE gate 2: the pins business_tax/health[2026-10] 498.35, business_tax/pit.advance[2026-10] 690, business_tax/health.settle[2026] 0 and business_vat/vat.due[2026-10] 1 288 (pins-1-7.json), restated from the prototype's block 05-side-business.json: the side business from 2026-03-01 (dzialalnosc@1: revenue 6 000 a month, costs 400 with 92 of VAT), on ryczałt, concurrent with a job (jdg_pl@2026: form ryczalt, zus_stage zbieg, no sickness insurance), and its VAT (vat_pl@2026)."
+  note "The defs are household X's business law (integration/amendments/real11/c1/law/pl/business.tally and common.tally, the prototype's jdg_pl@2026 and vat_pl@2026 rewritten) for this one business. X's stages have no concurrence (zbieg), so the stages are the two this business has: in concurrence no social contribution is due, and health is. X's main business is another (its health_month[2026-10] is 830.58), so its law can't be loaded beside it."
+  note "goldens.md (unchanged): 60 000 of revenue in 2026 is inside the first band, so the month's health is the first tier's and the year's settlement is 0. The advance deducts half the health paid in the month, September's, paid on 2026-10-20."
+
+source prototype "the prototype's block 05-side-business.json and its templates dzialalnosc@1, jdg_pl@2026, vat_pl@2026 (engine/spec/verification/blocks)"
+
+source health_act "Ustawa o świadczeniach opieki zdrowotnej finansowanych ze środków publicznych (tekst jednolity)"
+
+source holidays_act "Ustawa z 18 stycznia 1951 r. o dniach wolnych od pracy (tekst jednolity)"
+
+source mp_2026_117 "Komunikat Prezesa GUS o przeciętnym wynagrodzeniu w IV kwartale 2025 r., M.P. 2026 poz. 117"
+
+source ryczalt_act "Ustawa o zryczałtowanym podatku dochodowym (tekst jednolity)"
+
+source vat_act "Ustawa o podatku od towarów i usług (tekst jednolity)"
+
+unit PLN: currency minor 0.01
+
+kind client
+
+kind health_pay_pays: event certain
+  leg cash: any
+
+index month = month 2026-01..2027-12
+
+index stage = [inactive, concurrent]
+
+index tax_year = year 2026..2027
+
+index tier = [low, mid, high]
+
+place klienci: outside lives 2026-01-01..
+
+place konto: accounts PLN lives 2026-01-01..
+
+place zus: outside lives 2026-01-01..
+
+input cost_vat[m in month]: money PLN
+
+input fee_net[c in client, m in month]: money PLN
+
+input health_base_wage: money PLN
+
+input health_rate: num
+
+input health_settle_day_16: int
+
+input health_settle_day_19: int
+
+input health_share[t in tier]: num
+
+input holidays_pl: calendar
+
+input ryczalt_health_ded: num
+
+input ryczalt_rate: num
+
+input vat_rate: num
+
+input zus_pay_dom: int
+
+input zus_stage[m in month]: key stage
+
+band health_tier(rev: num PLN): key tier
+  note "the year's revenue band for health on ryczałt"
+
+def active_months[y in tax_year]: int = count(m in month where year_of(m) == y and zus_stage[m] != inactive) at start_of(y)
+
+def health_month[m in month]: money PLN = round(health_rate * health_share[health_tier(rev_ytd[m])] * health_base_wage, minor(PLN), half-up) at start_of(m)
+  note "the month's health by the revenue from the year's start"
+
+def health_paid[y in tax_year]: money PLN = sum(flows(health_pay[m], start_of(m)..health_settle_day[y]) for m in month where year_of(m) == y) at start_of(y)
+
+def health_settle[y in tax_year]: money PLN = health_year[y] - health_paid[y] at start_of(y)
+
+def health_settle_day[y in tax_year]: date = if is_business(add_days(add_months(start_of(y), health_settle_day_16), health_settle_day_19), holidays_pl) then add_days(add_months(start_of(y), health_settle_day_16), health_settle_day_19) else add_business(add_days(add_months(start_of(y), health_settle_day_16), health_settle_day_19), 1, holidays_pl) at start_of(y)
+
+def health_year[y in tax_year]: money PLN = active_months[y] * round(health_rate * health_share[health_tier(revenue_year[y])] * health_base_wage, minor(PLN), half-up) at start_of(y)
+  note "the year's settlement: the month's health by the whole year's revenue, times the months of activity"
+
+def rev_ytd[m in month]: money PLN = sum(revenue[k] for k in month where year_of(k) == year_of(m) and k <= m) at start_of(m)
+
+def revenue[m in month]: money PLN = sum(fee_net[c, m] for c in client over ..) at start_of(m)
+
+def revenue_year[y in tax_year]: money PLN = sum(revenue[m] for m in month where year_of(m) == y) at start_of(y)
+
+def ryczalt_adv[m in month]: money PLN = round(round(max(0, revenue[m] - flows(health_pay, m) * ryczalt_health_ded), 1, half-up) * ryczalt_rate, 1, half-up) at start_of(m)
+  note "the advance: the rate on the month's revenue less half the health paid in the month (no social contribution in concurrence)"
+
+def vat_due[m in month]: money PLN at start_of(m)
+  rule base = round(sum(vat_out[c, m] for c in client over ..) - cost_vat[m], 1, half-up)
+  rule surplus beats base = ?"Nadwyżka VAT naliczonego: przeniesienie na następny miesiąc czy zwrot (art. 87)?" when sum(vat_out[c, m] for c in client over ..) < cost_vat[m]
+
+def vat_out[c in client, m in month]: money PLN = round(fee_net[c, m] * vat_rate, minor(PLN), half-up) at start_of(m)
+
+move health_pay[m in month]: health_pay_pays
+  on if is_business(add_months(day_of(m, zus_pay_dom), 1), holidays_pl) then add_months(day_of(m, zus_pay_dom), 1) else add_business(add_months(day_of(m, zus_pay_dom), 1), 1, holidays_pl)
+  at start_of(m)
+  for m
+  when zus_stage[m] != inactive
+  leg cash from konto to zus amount health_month[m]
+
+ask g_business: health_month[2026-10], ryczalt_adv[2026-10], health_settle[2026], vat_due[2026-10]
+
+version business_2026
+  cite prototype
+  governs always
+  known 2026-02-20
+  client + [klient] lives 2026-03-01..
+  cost_vat = 0 governs 2026-01..2026-02 "05-side-business.json: business from 2026-03-01"
+  cost_vat = 92 governs 2026-03..2027-12 "05-side-business.json: costs_vat 92"
+  fee_net[klient] = 0 governs 2026-01..2026-02 "05-side-business.json: business from 2026-03-01"
+  fee_net[klient] = 6000 governs 2026-03..2027-12 "05-side-business.json: revenue 6 000"
+  zus_stage = inactive governs 2026-01..2026-02 "05-side-business.json: business from 2026-03-01"
+  zus_stage = concurrent governs 2026-03..2027-12 "05-side-business.json: business_tax, zus_stage zbieg"
+
+version health_base_2026
+  cite mp_2026_117
+  governs 2026
+  known 2026-02-10
+  health_base_wage = 9228.64 "pkt 1 (household X's row)"
+
+version health_ryczalt_2022
+  cite health_act
+  governs 2022..
+  known 2021-11-15
+  health_rate = 0.09 "art. 79 ust. 1"
+  health_settle_day_16 = 16 "art. 81 ust. 2j: the settlement by the 20th of May of the next year (16 months on, then 19 days)"
+  health_settle_day_19 = 19 "art. 81 ust. 2j"
+  health_share[high] = 1.8 "art. 81 ust. 2i pkt 3"
+  health_share[low] = 0.6 "art. 81 ust. 2i pkt 1"
+  health_share[mid] = 1 "art. 81 ust. 2i pkt 2"
+  health_tier: [0, 60000] = low "art. 81 ust. 2i pkt 1"
+  health_tier: (60000, 300000] = mid "art. 81 ust. 2i pkt 2"
+  health_tier: (300000, inf) = high "art. 81 ust. 2i pkt 3"
+  zus_pay_dom = 20 "the 20th of the next month"
+
+version holidays_2026_2028
+  cite holidays_act
+  governs 2026..2028
+  known 2025-12-31
+  holidays_pl = calendar(weekends [sat, sun], added [2026-01-01, 2026-01-06, 2026-04-06, 2026-05-01, 2026-06-04, 2026-11-11, 2026-12-24, 2026-12-25, 2027-01-01, 2027-01-06, 2027-03-29, 2027-05-03, 2027-05-27, 2027-11-01, 2027-11-11, 2027-12-24, 2028-01-06, 2028-04-17, 2028-05-01, 2028-05-03, 2028-06-15, 2028-08-15, 2028-11-01, 2028-12-25, 2028-12-26]) "art. 1 pkt 1; household X's rows for 2026 to 2028 (2027-12's payments fall in 2028)"
+
+version ryczalt_2022
+  cite ryczalt_act
+  governs 2022..
+  known 2021-11-15
+  ryczalt_health_ded = 0.5 "art. 11 ust. 1c"
+  ryczalt_rate = 0.12 "art. 12 ust. 1 pkt 2b"
+
+version vat_2026
+  cite vat_act
+  governs 2026..
+  known 2025-12-31
+  vat_rate = 0.23 "art. 146ef ust. 1"

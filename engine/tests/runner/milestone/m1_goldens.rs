@@ -15,7 +15,16 @@ mod tests {
     use tally_runner::m1::VECTORS;
 
     /// The groups this target tests, one `#[test]` each.
-    const GROUPS: [&str; 4] = ["goldens-pins", "goldens-g6", "goldens-g7", "goldens-g10"];
+    const GROUPS: [&str; 8] = [
+        "goldens-pins",
+        "goldens-g6",
+        "goldens-g7",
+        "goldens-g10",
+        "goldens-y22",
+        "goldens-business",
+        "goldens-g8",
+        "goldens-g9",
+    ];
 
     /// Runs every vector of `group` on the engine and holds it to refcore's run.
     fn group_holds(group: &str) {
@@ -83,5 +92,35 @@ mod tests {
     #[test]
     fn m1_goldens_g10_rent() {
         group_holds("goldens-g10");
+    }
+
+    /// The 2022 pins (06-pit-2022): the advances of January and June, 266, and of July and
+    /// December, 188, each month under its own law; the return under July's scale for the
+    /// whole year, 2 253, its advances 2 724 and its due −471; as known in March 2022, the
+    /// return under January's scale, 3 192 (L §4.5, `goldens.md`: changes form).
+    #[test]
+    fn m1_goldens_pins_2022() {
+        group_holds("goldens-y22");
+    }
+
+    /// The side business's pins (05-side-business): health in 2026-10, 498.35, the ryczałt
+    /// advance, 690, the year's health settlement, 0, and the VAT due, 1 288.
+    #[test]
+    fn m1_goldens_pins_business() {
+        group_holds("goldens-business");
+    }
+
+    /// G8's first half: a job whose pay no law reads warns (`WARN-UNREAD`; the 381 885.38
+    /// half is blocked, `GOLDENS.md`).
+    #[test]
+    fn m1_goldens_g8_job_without_law() {
+        group_holds("goldens-g8");
+    }
+
+    /// G9: a question with a payment is refused (C-19: an ask's grammar has no pay); its base
+    /// answers.
+    #[test]
+    fn m1_goldens_g9_payment_refused() {
+        group_holds("goldens-g9");
     }
 }

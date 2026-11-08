@@ -28135,6 +28135,417 @@ g10_rent_infl5: 3 889.62 PLN
   held: inflation = 0.05 (infl5_rates), read for 2029-01-01
   held: inflation = 0.05 (infl5_rates), read for 2030-01-01
   cut 2026-10-17
+,16:goldens/pins_y22,11:goldens-y22,56:run model.tally --ask g_y22_adv g_y22_return g_y22_march,5909:11:model.tally,5888:model golden_y22
+  tally 2
+  on 2023-06-01
+  start 2022-01-01
+  end 2023-12-31
+  note "T, M1 (issue #108), DONE gate 2: the pins y22_tax/pit.advance[2022-01, -06, -07, -12] 266, 266, 188, 188 and y22_return tax, advances, due 2 253, 2 724, -471 (pins-1-7.json), restated from the prototype's block 06-pit-2022.json: a job of 5 000 gross a month in 2022 (job_pl@1), its advances (employment_pl@2022) and its separate return (pit_return@2022)."
+  note "The defs are household X's employment law (integration/amendments/real11/c1/law/pl/employment.tally, the prototype's employment_pl@2022 rewritten) for one year, without what the example doesn't reach: child relief, a change of residence, the payments. X's law governs 2026 on and states July 2022's scale for the whole of 2022, so it can't be reused for 2022's first half."
+  note "goldens.md's reading (changes form): the advance of a month reads the law of that month, the January 2022 scale (17 %, 5 100 a year, 425 a month) to June and July's (12 %, 3 600, 300) from July; the return reads the scale for the year as amended in June 2022, so it is read at the tax year's end. At a cut before 2022-06-24 the July rows aren't known and the return reads January's scale."
+  note "Not stated: ZUS's 30-fold cap, which 60 000 a year doesn't reach, and block 06's price.etf (illustrative, read by nothing here)."
+
+source prototype "the prototype's block 06-pit-2022.json and its templates job_pl@1, employment_pl@2022, pit_return@2022 (engine/spec/verification/blocks)"
+
+source polski_lad "Polski Ład, Dz.U. 2021 poz. 2105 (block 06's source)"
+
+source pit_july_2022 "Ustawa z 9 czerwca 2022 r., Dz.U. 2022 poz. 1265 (block 06: 12 % zamiast 17 %, kwota zmniejszająca 3 600 zamiast 5 100, nowa skala za cały rok w zeznaniu)"
+
+unit PLN: currency minor 0.01
+
+kind job
+
+kind person
+
+index month = month 2022-01..2023-12
+
+index tax_year = year 2022..2023
+
+index zus_part = [pension, disability, sickness]
+
+input ee_rate[z in zus_part]: num
+
+input health_rate: num
+
+input kup_month: money PLN
+
+input pit_reduction_month: money PLN
+
+input salary[j in job, m in month]: money PLN
+
+input works_for[j in job]: key person
+
+band pit_scale(x: num PLN): num PLN
+  note "art. 27 ust. 1: the tax before reliefs, after the reducing amount"
+
+def emp_zus[j in job, m in month]: money PLN = round(salary[j, m] * ee_rate[pension], minor(PLN), half-up) + round(salary[j, m] * ee_rate[disability], minor(PLN), half-up) + round(salary[j, m] * ee_rate[sickness], minor(PLN), half-up) at start_of(m)
+
+def emp_health[j in job, m in month]: money PLN = round((salary[j, m] - emp_zus[j, m]) * health_rate, minor(PLN), half-up) at start_of(m)
+
+def emp_pit_base[j in job, m in month]: money PLN = round(max(0, salary[j, m] - emp_zus[j, m] - kup_month), 1, half-up) at start_of(m)
+
+def emp_cum[j in job, m in month]: money PLN = sum(emp_pit_base[j, k] for k in month where year_of(k) == year_of(m) and k <= m) at start_of(m)
+
+def emp_pit_adv[j in job, m in month]: money PLN = max(0, round(pit_scale(emp_cum[j, m]) - pit_scale(emp_cum[j, m] - emp_pit_base[j, m]) - pit_reduction_month, 1, half-up)) at start_of(m)
+  note "art. 32: the advance on the running base, less a twelfth of the reducing amount, to whole zloty"
+
+def emp_net[j in job, m in month]: money PLN = salary[j, m] - emp_zus[j, m] - emp_health[j, m] - emp_pit_adv[j, m] at start_of(m)
+
+def pit37_base[p in person, y in tax_year]: money PLN = round(max(0, sum(salary[j, m] - emp_zus[j, m] - (if salary[j, m] > 0 then kup_month else 0) for j in job over .., m in month where works_for[j] == p and year_of(m) == y)), 1, half-up) at end_of(y)
+
+def pit37_tax[p in person, y in tax_year]: money PLN = round(max(0, pit_scale(pit37_base[p, y])), 1, half-up) at end_of(y)
+  note "the return reads the scale for the tax year as amended (pit_july_2022: the new scale for the whole year's income)"
+
+def pit37_advances[p in person, y in tax_year]: money PLN = sum(emp_pit_adv[j, m] for j in job over .., m in month where works_for[j] == p and year_of(m) == y) at end_of(y)
+
+def pit37_due[p in person, y in tax_year]: money PLN = pit37_tax[p, y] - pit37_advances[p, y] at end_of(y)
+
+ask g_y22_adv: emp_pit_adv[y22_job, m] for m in [2022-01, 2022-06, 2022-07, 2022-12]
+
+ask g_y22_return: pit37_tax[me, 2022], pit37_advances[me, 2022], pit37_due[me, 2022]
+
+ask g_y22_march: pit37_tax[me, 2022] as known 2022-03-31
+
+version y22_household
+  cite prototype
+  governs always
+  known 2021-12-31
+  person + [me] lives 2022-01-01..
+  job + [y22_job] lives 2022-01-01..
+  works_for[y22_job] = me "06-pit-2022.json: y22_job, person me"
+  salary[y22_job] = 5000 governs 2022-01..2022-12 "06-pit-2022.json: y22_job, gross 5 000"
+
+version sus_2022
+  cite prototype
+  governs 2022..
+  known 2021-11-15
+  ee_rate[disability] = 0.015 "employment_pl@2022: the employee's disability share"
+  ee_rate[pension] = 0.0976 "employment_pl@2022: the employee's pension share"
+  ee_rate[sickness] = 0.0245 "employment_pl@2022: sickness"
+  health_rate = 0.09 "employment_pl@2022: health, 9 %"
+  kup_month = 250 "employment_pl@2022: costs of earning, 250 a month"
+
+version pit_jan_2022
+  cite polski_lad
+  governs 2022..
+  known 2021-11-15
+  pit_reduction_month = 425 "art. 32 ust. 3: a twelfth of 5 100 (block 06's pit.reduction)"
+  pit_scale: [0, 120000] = x * 0.17 - 5100 "art. 27 ust. 1, first threshold (block 06's pit.scale, from 2022-01-01)"
+  pit_scale: (120000, inf) = 15300 + (x - 120000) * 0.32 "art. 27 ust. 1, second threshold"
+
+version pit_jul_2022
+  cite pit_july_2022
+  governs 2022-07-01..
+  known 2022-06-24
+  replace pit_reduction_month = 300 "art. 32 ust. 3: a twelfth of 3 600, from July 2022"
+  replace pit_scale: [0, 120000] = x * 0.12 - 3600 "art. 27 ust. 1, first threshold, from July 2022 and for the whole year's return"
+  replace pit_scale: (120000, inf) = 10800 + (x - 120000) * 0.32 "art. 27 ust. 1, second threshold"
+,,1:0,2323:g_y22_adv (m = 2022-01): 266.00 PLN
+  cut 2023-06-01
+g_y22_adv (m = 2022-06): 266.00 PLN
+  cut 2023-06-01
+g_y22_adv (m = 2022-07): 188.00 PLN
+  cut 2023-06-01
+g_y22_adv (m = 2022-12): 188.00 PLN
+  cut 2023-06-01
+g_y22_return: (2 253.00 PLN, 2 724.00 PLN, -471.00 PLN)
+  cut 2023-06-01
+g_y22_march: 3 192.00 PLN
+  held: ee_rate[disability] = 0.015 (sus_2022), read for 2022-04-01
+  held: ee_rate[disability] = 0.015 (sus_2022), read for 2022-05-01
+  held: ee_rate[disability] = 0.015 (sus_2022), read for 2022-06-01
+  held: ee_rate[disability] = 0.015 (sus_2022), read for 2022-07-01
+  held: ee_rate[disability] = 0.015 (sus_2022), read for 2022-08-01
+  held: ee_rate[disability] = 0.015 (sus_2022), read for 2022-09-01
+  held: ee_rate[disability] = 0.015 (sus_2022), read for 2022-10-01
+  held: ee_rate[disability] = 0.015 (sus_2022), read for 2022-11-01
+  held: ee_rate[disability] = 0.015 (sus_2022), read for 2022-12-01
+  held: ee_rate[pension] = 0.0976 (sus_2022), read for 2022-04-01
+  held: ee_rate[pension] = 0.0976 (sus_2022), read for 2022-05-01
+  held: ee_rate[pension] = 0.0976 (sus_2022), read for 2022-06-01
+  held: ee_rate[pension] = 0.0976 (sus_2022), read for 2022-07-01
+  held: ee_rate[pension] = 0.0976 (sus_2022), read for 2022-08-01
+  held: ee_rate[pension] = 0.0976 (sus_2022), read for 2022-09-01
+  held: ee_rate[pension] = 0.0976 (sus_2022), read for 2022-10-01
+  held: ee_rate[pension] = 0.0976 (sus_2022), read for 2022-11-01
+  held: ee_rate[pension] = 0.0976 (sus_2022), read for 2022-12-01
+  held: ee_rate[sickness] = 0.0245 (sus_2022), read for 2022-04-01
+  held: ee_rate[sickness] = 0.0245 (sus_2022), read for 2022-05-01
+  held: ee_rate[sickness] = 0.0245 (sus_2022), read for 2022-06-01
+  held: ee_rate[sickness] = 0.0245 (sus_2022), read for 2022-07-01
+  held: ee_rate[sickness] = 0.0245 (sus_2022), read for 2022-08-01
+  held: ee_rate[sickness] = 0.0245 (sus_2022), read for 2022-09-01
+  held: ee_rate[sickness] = 0.0245 (sus_2022), read for 2022-10-01
+  held: ee_rate[sickness] = 0.0245 (sus_2022), read for 2022-11-01
+  held: ee_rate[sickness] = 0.0245 (sus_2022), read for 2022-12-01
+  held: kup_month = 250.00 PLN (sus_2022), read for 2023-01-01
+  held: pit_scale row [0, 120 000] (pit_jan_2022), read for 2023-01-01
+  cut 2022-03-31
+warning: WARN-UNREAD def emp_net is read by nothing
+,21:goldens/pins_business,16:goldens-business,32:run model.tally --ask g_business,7901:11:model.tally,7880:model golden_business
+  tally 2
+  on 2026-10-17
+  start 2026-01-01
+  end 2027-12-31
+  note "T, M1 (issue #108), DONE gate 2: the pins business_tax/health[2026-10] 498.35, business_tax/pit.advance[2026-10] 690, business_tax/health.settle[2026] 0 and business_vat/vat.due[2026-10] 1 288 (pins-1-7.json), restated from the prototype's block 05-side-business.json: the side business from 2026-03-01 (dzialalnosc@1: revenue 6 000 a month, costs 400 with 92 of VAT), on ryczałt, concurrent with a job (jdg_pl@2026: form ryczalt, zus_stage zbieg, no sickness insurance), and its VAT (vat_pl@2026)."
+  note "The defs are household X's business law (integration/amendments/real11/c1/law/pl/business.tally and common.tally, the prototype's jdg_pl@2026 and vat_pl@2026 rewritten) for this one business. X's stages have no concurrence (zbieg), so the stages are the two this business has: in concurrence no social contribution is due, and health is. X's main business is another (its health_month[2026-10] is 830.58), so its law can't be loaded beside it."
+  note "goldens.md (unchanged): 60 000 of revenue in 2026 is inside the first band, so the month's health is the first tier's and the year's settlement is 0. The advance deducts half the health paid in the month, September's, paid on 2026-10-20."
+
+source prototype "the prototype's block 05-side-business.json and its templates dzialalnosc@1, jdg_pl@2026, vat_pl@2026 (engine/spec/verification/blocks)"
+
+source health_act "Ustawa o świadczeniach opieki zdrowotnej finansowanych ze środków publicznych (tekst jednolity)"
+
+source holidays_act "Ustawa z 18 stycznia 1951 r. o dniach wolnych od pracy (tekst jednolity)"
+
+source mp_2026_117 "Komunikat Prezesa GUS o przeciętnym wynagrodzeniu w IV kwartale 2025 r., M.P. 2026 poz. 117"
+
+source ryczalt_act "Ustawa o zryczałtowanym podatku dochodowym (tekst jednolity)"
+
+source vat_act "Ustawa o podatku od towarów i usług (tekst jednolity)"
+
+unit PLN: currency minor 0.01
+
+kind client
+
+kind health_pay_pays: event certain
+  leg cash: any
+
+index month = month 2026-01..2027-12
+
+index stage = [inactive, concurrent]
+
+index tax_year = year 2026..2027
+
+index tier = [low, mid, high]
+
+place klienci: outside lives 2026-01-01..
+
+place konto: accounts PLN lives 2026-01-01..
+
+place zus: outside lives 2026-01-01..
+
+input cost_vat[m in month]: money PLN
+
+input fee_net[c in client, m in month]: money PLN
+
+input health_base_wage: money PLN
+
+input health_rate: num
+
+input health_settle_day_16: int
+
+input health_settle_day_19: int
+
+input health_share[t in tier]: num
+
+input holidays_pl: calendar
+
+input ryczalt_health_ded: num
+
+input ryczalt_rate: num
+
+input vat_rate: num
+
+input zus_pay_dom: int
+
+input zus_stage[m in month]: key stage
+
+band health_tier(rev: num PLN): key tier
+  note "the year's revenue band for health on ryczałt"
+
+def active_months[y in tax_year]: int = count(m in month where year_of(m) == y and zus_stage[m] != inactive) at start_of(y)
+
+def health_month[m in month]: money PLN = round(health_rate * health_share[health_tier(rev_ytd[m])] * health_base_wage, minor(PLN), half-up) at start_of(m)
+  note "the month's health by the revenue from the year's start"
+
+def health_paid[y in tax_year]: money PLN = sum(flows(health_pay[m], start_of(m)..health_settle_day[y]) for m in month where year_of(m) == y) at start_of(y)
+
+def health_settle[y in tax_year]: money PLN = health_year[y] - health_paid[y] at start_of(y)
+
+def health_settle_day[y in tax_year]: date = if is_business(add_days(add_months(start_of(y), health_settle_day_16), health_settle_day_19), holidays_pl) then add_days(add_months(start_of(y), health_settle_day_16), health_settle_day_19) else add_business(add_days(add_months(start_of(y), health_settle_day_16), health_settle_day_19), 1, holidays_pl) at start_of(y)
+
+def health_year[y in tax_year]: money PLN = active_months[y] * round(health_rate * health_share[health_tier(revenue_year[y])] * health_base_wage, minor(PLN), half-up) at start_of(y)
+  note "the year's settlement: the month's health by the whole year's revenue, times the months of activity"
+
+def rev_ytd[m in month]: money PLN = sum(revenue[k] for k in month where year_of(k) == year_of(m) and k <= m) at start_of(m)
+
+def revenue[m in month]: money PLN = sum(fee_net[c, m] for c in client over ..) at start_of(m)
+
+def revenue_year[y in tax_year]: money PLN = sum(revenue[m] for m in month where year_of(m) == y) at start_of(y)
+
+def ryczalt_adv[m in month]: money PLN = round(round(max(0, revenue[m] - flows(health_pay, m) * ryczalt_health_ded), 1, half-up) * ryczalt_rate, 1, half-up) at start_of(m)
+  note "the advance: the rate on the month's revenue less half the health paid in the month (no social contribution in concurrence)"
+
+def vat_due[m in month]: money PLN at start_of(m)
+  rule base = round(sum(vat_out[c, m] for c in client over ..) - cost_vat[m], 1, half-up)
+  rule surplus beats base = ?"Nadwyżka VAT naliczonego: przeniesienie na następny miesiąc czy zwrot (art. 87)?" when sum(vat_out[c, m] for c in client over ..) < cost_vat[m]
+
+def vat_out[c in client, m in month]: money PLN = round(fee_net[c, m] * vat_rate, minor(PLN), half-up) at start_of(m)
+
+move health_pay[m in month]: health_pay_pays
+  on if is_business(add_months(day_of(m, zus_pay_dom), 1), holidays_pl) then add_months(day_of(m, zus_pay_dom), 1) else add_business(add_months(day_of(m, zus_pay_dom), 1), 1, holidays_pl)
+  at start_of(m)
+  for m
+  when zus_stage[m] != inactive
+  leg cash from konto to zus amount health_month[m]
+
+ask g_business: health_month[2026-10], ryczalt_adv[2026-10], health_settle[2026], vat_due[2026-10]
+
+version business_2026
+  cite prototype
+  governs always
+  known 2026-02-20
+  client + [klient] lives 2026-03-01..
+  cost_vat = 0 governs 2026-01..2026-02 "05-side-business.json: business from 2026-03-01"
+  cost_vat = 92 governs 2026-03..2027-12 "05-side-business.json: costs_vat 92"
+  fee_net[klient] = 0 governs 2026-01..2026-02 "05-side-business.json: business from 2026-03-01"
+  fee_net[klient] = 6000 governs 2026-03..2027-12 "05-side-business.json: revenue 6 000"
+  zus_stage = inactive governs 2026-01..2026-02 "05-side-business.json: business from 2026-03-01"
+  zus_stage = concurrent governs 2026-03..2027-12 "05-side-business.json: business_tax, zus_stage zbieg"
+
+version health_base_2026
+  cite mp_2026_117
+  governs 2026
+  known 2026-02-10
+  health_base_wage = 9228.64 "pkt 1 (household X's row)"
+
+version health_ryczalt_2022
+  cite health_act
+  governs 2022..
+  known 2021-11-15
+  health_rate = 0.09 "art. 79 ust. 1"
+  health_settle_day_16 = 16 "art. 81 ust. 2j: the settlement by the 20th of May of the next year (16 months on, then 19 days)"
+  health_settle_day_19 = 19 "art. 81 ust. 2j"
+  health_share[high] = 1.8 "art. 81 ust. 2i pkt 3"
+  health_share[low] = 0.6 "art. 81 ust. 2i pkt 1"
+  health_share[mid] = 1 "art. 81 ust. 2i pkt 2"
+  health_tier: [0, 60000] = low "art. 81 ust. 2i pkt 1"
+  health_tier: (60000, 300000] = mid "art. 81 ust. 2i pkt 2"
+  health_tier: (300000, inf) = high "art. 81 ust. 2i pkt 3"
+  zus_pay_dom = 20 "the 20th of the next month"
+
+version holidays_2026_2028
+  cite holidays_act
+  governs 2026..2028
+  known 2025-12-31
+  holidays_pl = calendar(weekends [sat, sun], added [2026-01-01, 2026-01-06, 2026-04-06, 2026-05-01, 2026-06-04, 2026-11-11, 2026-12-24, 2026-12-25, 2027-01-01, 2027-01-06, 2027-03-29, 2027-05-03, 2027-05-27, 2027-11-01, 2027-11-11, 2027-12-24, 2028-01-06, 2028-04-17, 2028-05-01, 2028-05-03, 2028-06-15, 2028-08-15, 2028-11-01, 2028-12-25, 2028-12-26]) "art. 1 pkt 1; household X's rows for 2026 to 2028 (2027-12's payments fall in 2028)"
+
+version ryczalt_2022
+  cite ryczalt_act
+  governs 2022..
+  known 2021-11-15
+  ryczalt_health_ded = 0.5 "art. 11 ust. 1c"
+  ryczalt_rate = 0.12 "art. 12 ust. 1 pkt 2b"
+
+version vat_2026
+  cite vat_act
+  governs 2026..
+  known 2025-12-31
+  vat_rate = 0.23 "art. 146ef ust. 1"
+,,1:0,985:g_business: (498.35 PLN, 690.00 PLN, 0.00 PLN, 1 288.00 PLN)
+  unfulfilled: health_pay[2026-03]
+  unfulfilled: health_pay[2026-04]
+  unfulfilled: health_pay[2026-05]
+  unfulfilled: health_pay[2026-06]
+  unfulfilled: health_pay[2026-07]
+  unfulfilled: health_pay[2026-08]
+  held: health_rate = 0.09 (health_ryczalt_2022), read for 2026-11-01
+  held: health_rate = 0.09 (health_ryczalt_2022), read for 2026-12-01
+  held: health_share[low] = 0.6 (health_ryczalt_2022), read for 2026-11-01
+  held: health_share[low] = 0.6 (health_ryczalt_2022), read for 2026-12-01
+  held: health_tier row [0, 60 000] (health_ryczalt_2022), read for 2026-11-01
+  held: health_tier row [0, 60 000] (health_ryczalt_2022), read for 2026-12-01
+  held: zus_pay_dom = 20 (health_ryczalt_2022), read for 2026-11-01
+  held: zus_pay_dom = 20 (health_ryczalt_2022), read for 2026-12-01
+  cut 2026-10-17
+warning: WARN-NEGATIVE konto is below zero from 2026-04-20
+warning: WARN-UNREAD place klienci is read by nothing
+,18:goldens/g8_warning,10:goldens-g8,29:run model.tally --ask g8_jobs,1132:11:model.tally,1111:model golden_g8
+  tally 2
+  on 2026-10-17
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M1 (issue #108), DONE gate 2: G8's first half, a job without its law warns (goldens.md: changes form; tally 2 has no composite, so a job without its law is a job whose pay no def reads). Restated from 11-wife-works.json's wife_job2 (job_pl@1, gross 6 000, person wife) with no employment_pl@2022 beside it: the loader warns that its salary is read by nothing."
+
+source prototype "the prototype's block 11-wife-works.json (engine/spec/verification/blocks)"
+
+unit PLN: currency minor 0.01
+
+kind job
+
+kind person
+
+input salary[j in job, m in month]: money PLN
+
+input works_for[j in job]: key person
+
+index month = month 2026-01..2026-12
+
+ask g8_jobs: count(j in job over .. where works_for[j] == wife)
+
+version g8_household
+  cite prototype
+  governs always
+  known 2026-10-17
+  person + [wife] lives 2026-01-01..
+  job + [wife_job2] lives 2026-10-17..
+  works_for[wife_job2] = wife "11-wife-works.json: wife_job2, person wife"
+  salary[wife_job2] = 6000 governs 2026-10..2026-12 "11-wife-works.json: wife_job2, gross 6 000"
+,,1:0,81:g8_jobs: 1
+  cut 2026-10-17
+warning: WARN-UNREAD input salary is read by nothing
+,15:goldens/g9_base,10:goldens-g9,30:run model.tally --ask g9_konto,753:11:model.tally,733:model golden_g9
+  tally 2
+  on 2026-10-17
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M1 (issue #108), DONE gate 2: G9, a question with a payment is refused (goldens.md: unchanged; C-19, L §5.18: an ask's grammar has no pay). The base answers; the part g9_pay.tally asks what konto would hold with a payment written into the ask."
+
+source prototype "the prototype's question rule C-19 (engine/spec/verification/goldens.md)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+ask g9_konto: bal(konto, 2026-12-31)
+
+version g9_household
+  cite prototype
+  governs always
+  known 2026-10-17
+  opening[konto] = 1000 at 2026-01-01 start "an invented opening balance"
+,,1:0,92:g9_konto: 1 000.00 PLN
+  cut 2026-10-17
+warning: WARN-UNREAD place world is read by nothing
+,18:goldens/g9_payment,10:goldens-g9,41:run model.tally g9_pay.tally --ask g9_pay,915:11:model.tally,733:model golden_g9
+  tally 2
+  on 2026-10-17
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M1 (issue #108), DONE gate 2: G9, a question with a payment is refused (goldens.md: unchanged; C-19, L §5.18: an ask's grammar has no pay). The base answers; the part g9_pay.tally asks what konto would hold with a payment written into the ask."
+
+source prototype "the prototype's question rule C-19 (engine/spec/verification/goldens.md)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+ask g9_konto: bal(konto, 2026-12-31)
+
+version g9_household
+  cite prototype
+  governs always
+  known 2026-10-17
+  opening[konto] = 1000 at 2026-01-01 start "an invented opening balance"
+,12:g9_pay.tally,141:part g9_pay
+  tally 2
+
+ask g9_pay: bal(konto, 2026-12-31) as if {move gift: transfers on 2026-11-02 leg cash from konto to world amount 100}
+,,1:1,58:refused: LOAD-RESERVED move is a keyword (g9_pay.tally:4)
 ,18:carried/years/base,9:carried-5,26:run model.tally --ask base,1063:11:model.tally,1042:model years
   tally 2
   on 2026-10-01
