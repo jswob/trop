@@ -91,7 +91,8 @@ impl IndexInfo {
     pub fn set_keys(&mut self, keys: Vec<KeyVal>) {
         self.keys = keys;
         if self.form == IndexForm::Open {
-            self.keys.sort_by_key(KeyVal::text);
+            // a stable sort, each key's text made once
+            self.keys.sort_by_cached_key(KeyVal::text);
         }
         // a stable sort: equal keys keep their positions' order
         let mut sorted: Vec<(usize, &KeyVal)> = self.keys.iter().enumerate().collect();
@@ -99,12 +100,40 @@ impl IndexInfo {
         self.by_key = sorted.into_iter().map(|(at, _)| at).collect();
     }
 
-    /// Adds keys after its others, the keys versions bring (an open index's then in text
-    /// order), and sorts the positions again. L §4.1, §4.5.
+    /// Adds keys after its others, the keys versions bring, and sorts the positions again; an
+    /// open index's keys that are all its own names go in at their places in text order with
+    /// no sort (`add_name`). L §4.1, §4.5.
     pub fn add_keys(&mut self, more: Vec<KeyVal>) {
+        if self.form == IndexForm::Open && self.keys.iter().chain(&more).all(|k| self.names(k)) {
+            for key in more {
+                self.add_name(key);
+            }
+            return;
+        }
         let mut keys = core::mem::take(&mut self.keys);
         keys.extend(more);
         self.set_keys(keys);
+    }
+
+    /// Whether `key` is one of this index's own names, as every key of an open index is
+    /// (refcore's `IndexInfo.keys` of an open index). L §4.1.
+    fn names(&self, key: &KeyVal) -> bool {
+        matches!(key, KeyVal::Key { index, .. } if *index == self.id)
+    }
+
+    /// An open index's own name, put in at its place in the text order of its names, found
+    /// by halving, after any equal one (refcore's `IndexInfo.finish`, a stable sort). While
+    /// every key is one of its own names, `lookup_order` is that same text order, so the
+    /// positions sorted for `pos` are the positions in order, and stay so with one more at
+    /// the end. L §2.5, §4.1, §5.6.
+    fn add_name(&mut self, key: KeyVal) {
+        let text = key.text();
+        let at = self.keys.partition_point(|k| k.text() <= text);
+        let mut old = core::mem::take(&mut self.keys).into_iter();
+        self.keys = old.by_ref().take(at).collect();
+        self.keys.push(key);
+        self.keys.extend(old);
+        self.by_key.push(self.by_key.len());
     }
 
     /// The position of `key`, from 0, the first if two keys are equal (refcore's
@@ -340,6 +369,31 @@ mod tests {
             "text order"
         );
         assert_eq!(open.pos(&key("acc", "b")), Some(1), "b after a");
+    }
+
+    #[test]
+    fn open_names_added_one_at_a_time_match_one_sort() {
+        // 500 names added from the last: their text order (n0, n1, n10, n100, …) is neither
+        let names: Vec<String> = (0..500_u32).rev().map(|n| format!("n{n}")).collect();
+        let mut one_by_one = IndexInfo::new("acc", IndexForm::Open);
+        for name in &names {
+            one_by_one.add_keys(vec![key("acc", name)]);
+        }
+        let mut sorted = IndexInfo::new("acc", IndexForm::Open);
+        sorted.set_keys(names.iter().map(|n| key("acc", n)).collect());
+        assert_eq!(one_by_one.keys(), sorted.keys(), "text order");
+        assert_eq!(one_by_one.by_key, sorted.by_key, "the positions pos halves");
+        for (at, k) in sorted.keys().iter().enumerate() {
+            assert_eq!(one_by_one.pos(k), Some(at), "{k:?}");
+        }
+        // another index's key among them: all sorted again, `m` first in text order
+        one_by_one.add_keys(vec![key("other", "m")]);
+        assert_eq!(
+            one_by_one.pos(&key("other", "m")),
+            Some(0),
+            "the foreign key"
+        );
+        assert_eq!(one_by_one.pos(&key("acc", "n0")), Some(1), "still found");
     }
 
     #[test]

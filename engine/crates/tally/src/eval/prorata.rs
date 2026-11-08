@@ -8,7 +8,8 @@
 //! reads them: a bare figure takes the total's unit), §8.1 (holes spread), §8.4 (`RUN-NONE`,
 //! `RUN-DOMAIN`).
 //! Twin: engine/tools/refcore/eval2.py (`m_e_prorata`).
-//! Invariants: every share comes from `num::Weights`, the one split (R-114); a tie among the
+//! Invariants: every share comes from `num::Weights`, the one split (R-114), a `rest largest`
+//! split made once per total, step and weights and kept (`Splits`, L §5.13 Cost); a tie among the
 //! remainders is broken only by the written `ties by`, never by key order, and a term of it is
 //! read only for tied keys whose order still decides which of them take a step (D-5); a hole
 //! among the total, the weights, the members, the key, the step or the mode, or in a `ties by`
@@ -27,8 +28,9 @@ use super::years::year_literal;
 use crate::base::{Load, Run};
 use crate::hole::Hole;
 use crate::model::{Number, Reality, Unit, Value, currency_unit, money_num, num_money};
-use crate::num::{Money, Num, SplitError, Tie, Weights};
+use crate::num::{Largest, Money, Num, NumError, SplitError, Tie, Weights};
 use crate::syntax::{Lit, Prorata, Rest, Step, Stop};
+use std::collections::BTreeMap;
 
 /// A number or money as `prorata` reads it: its value in its unit, the unit, and whether it is
 /// money (L §5.13: "The total is money or a `num CUR`").
@@ -119,6 +121,105 @@ fn keys_text(m: &Reality, keys: &[Value], at: &[usize]) -> Result<String, Stop> 
         out.push(key.text(m).map_err(num_stop)?);
     }
     Ok(out.join(", "))
+}
+
+/// The splits `rest largest` made, kept for the other keys that read them (L §5.13 Cost:
+/// "O(n log n) once per (total, weights), memoised"): by the total and the step, each with
+/// the weights that made it. A split is a function of these three alone, so a kept one holds
+/// in every context.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub(super) struct Splits {
+    /// The splits by their total and step.
+    by: BTreeMap<SplitAt, Vec<Kept>>,
+}
+
+/// The total and the step of a split, each as its numerator's and denominator's digits: its
+/// exact value, since a number is kept reduced (L §7.1).
+type SplitAt = [(String, String); 2];
+
+/// A split kept: its weights, the split before its tie is broken, and its shares by the tied
+/// keys a `ties by` chose, none where it has no tie (L §5.13 step 2).
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct Kept {
+    /// The weights that made it.
+    weights: Weights,
+    /// The split, before its tie is broken.
+    made: Largest,
+    /// Its shares in key order, by the tied keys chosen.
+    shares: Vec<(Vec<usize>, Vec<Num>)>,
+}
+
+/// Where a kept split is: its total and step, and its place among theirs.
+struct KeptAt {
+    /// Its total and step.
+    at: SplitAt,
+    /// Its place among the splits of that total and step.
+    place: usize,
+}
+
+impl Splits {
+    /// Where the split of `total` by `weights` to `step` is kept, made the first time it is
+    /// sought (L §5.13 step 2, Cost); a refused split is not kept.
+    fn made(&mut self, weights: &Weights, total: &Num, step: &Num) -> Result<KeptAt, SplitError> {
+        let at = [total.fraction_parts(), step.fraction_parts()];
+        if let Some(kept) = self.by.get(&at)
+            && let Some(place) = kept.iter().position(|k| k.weights == *weights)
+        {
+            return Ok(KeptAt { at, place });
+        }
+        let new = Kept {
+            weights: weights.clone(),
+            made: weights.largest(total, step)?,
+            shares: Vec::new(),
+        };
+        let place = if let Some(kept) = self.by.get_mut(&at) {
+            kept.push(new);
+            kept.len()
+                .checked_sub(1)
+                .ok_or(SplitError::Num(NumError::Invariant))?
+        } else {
+            self.by.insert(at.clone(), vec![new]);
+            0
+        };
+        Ok(KeptAt { at, place })
+    }
+
+    /// The split kept at `at`. L §5.13.
+    fn kept(&mut self, at: &KeptAt) -> Result<&mut Kept, Stop> {
+        self.by
+            .get_mut(&at.at)
+            .and_then(|kept| kept.get_mut(at.place))
+            .ok_or_else(|| invariant("a split kept nowhere"))
+    }
+}
+
+impl Kept {
+    /// The share of the key at `at` with the tied keys `chosen` given a step, the shares made
+    /// and checked the first time they are sought; 0 for a key the binding leaves out
+    /// (L §5.13 step 1, step 2).
+    fn share(&mut self, chosen: &[usize], at: Option<usize>) -> Result<Num, SplitError> {
+        let place = if let Some(place) = self.shares.iter().position(|(c, _)| c == chosen) {
+            place
+        } else {
+            let shares = self.made.shares(chosen)?;
+            self.shares.push((chosen.to_vec(), shares));
+            self.shares
+                .len()
+                .checked_sub(1)
+                .ok_or(SplitError::Num(NumError::Invariant))?
+        };
+        let (_, shares) = self
+            .shares
+            .get(place)
+            .ok_or(SplitError::Num(NumError::Invariant))?;
+        let Some(j) = at else {
+            return Ok(Num::zero());
+        };
+        shares
+            .get(j)
+            .cloned()
+            .ok_or(SplitError::Num(NumError::Invariant))
+    }
 }
 
 /// A group of tied keys, by position among the tied, still to place: the `ties by` term that
@@ -281,7 +382,10 @@ impl Engine {
         shared: &Shared,
         ctx: Ctx,
     ) -> Result<Result<Num, Hole>, Stop> {
-        let made = match split.weights.largest(&split.total.q, &split.step.q) {
+        let kept = match self
+            .splits
+            .made(&split.weights, &split.total.q, &split.step.q)
+        {
             Err(SplitError::NotWhole) => {
                 let message = format!(
                     "{} isn't a whole number of {}",
@@ -292,22 +396,16 @@ impl Engine {
             }
             made => made.map_err(split_stop)?,
         };
-        let chosen = match made.tie() {
+        let tie = self.splits.kept(&kept)?.made.tie().cloned();
+        let chosen = match tie {
             None => Vec::new(),
-            Some(tie) => match self.break_tie(m, p, shared, tie, ctx)? {
+            Some(tie) => match self.break_tie(m, p, shared, &tie, ctx)? {
                 Err(hole) => return Ok(Err(hole)),
                 Ok(chosen) => chosen,
             },
         };
-        let shares = made.shares(&chosen).map_err(split_stop)?;
-        let Some(j) = split.at else {
-            return Ok(Ok(Num::zero()));
-        };
-        let share = shares
-            .into_iter()
-            .nth(j)
-            .ok_or_else(|| invariant("a share past the keys"))?;
-        Ok(Ok(share))
+        let share = self.splits.kept(&kept)?.share(&chosen, split.at);
+        Ok(Ok(share.map_err(split_stop)?))
     }
 
     /// The step as `round` reads it (refcore's `_stepflex`): `minor(CUR)`, a figure, or a
@@ -527,22 +625,33 @@ fn weights_of(m: &Reality, weights: &[Value]) -> Result<Weights, Stop> {
         };
         each.push(q);
     }
-    // refcore's `fmt_q`: each weight a plain number
-    let mut texts = Vec::with_capacity(each.len());
-    for q in &each {
-        let shown = Value::Number(Number::plain(q.clone(), Unit::one()));
-        texts.push(shown.text(m).map_err(num_stop)?);
-    }
     match Weights::new(each) {
         Err(SplitError::Weights) => Err(refuse(
             Run::Weights,
             format!(
                 "prorata weights [{}] are negative or sum to 0",
-                texts.join(", ")
+                weights_text(m, &amounts, &unit)?
             ),
         )),
         made => made.map_err(split_stop),
     }
+}
+
+/// The weights as `RUN-WEIGHTS` lists them, each in `unit` as a plain number (refcore's
+/// `fmt_q`). L §5.13 step 1, §8.4.
+fn weights_text(m: &Reality, amounts: &[Amount], unit: &Unit) -> Result<String, Stop> {
+    let mut texts = Vec::with_capacity(amounts.len());
+    for a in amounts {
+        let q = a
+            .in_unit(unit)?
+            .ok_or_else(|| invariant("a weight that converted once"))?;
+        texts.push(
+            Value::Number(Number::plain(q, Unit::one()))
+                .text(m)
+                .map_err(num_stop)?,
+        );
+    }
+    Ok(texts.join(", "))
 }
 
 /// The total as refusals print it (refcore's `fmt` of the total). L §2.4.
@@ -597,16 +706,49 @@ fn share_value(
 ) -> Result<Value, Stop> {
     if step.whole && (p.rest != Rest::Last || total.money) {
         let cur = currency_id_of(m, &total.unit)?;
-        return match num_money(m, &q, cur) {
-            Ok(money) => Ok(Value::Money(money)),
-            Err(_) => Err(refuse_load(
+        if !whole_minor(m, &q, &total.unit)? {
+            return Err(refuse_load(
                 Load::Unit,
                 format!(
                     "prorata to money: the step {} is not a whole number of minor units",
                     step.shown.text(m).map_err(num_stop)?
                 ),
-            )),
-        };
+            ));
+        }
+        return Ok(Value::Money(num_money(m, &q, cur).map_err(num_stop)?));
     }
     Ok(Value::Number(Number::plain(q, total.unit.clone())))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Splits;
+    use crate::num::{Num, Weights};
+
+    #[test]
+    fn a_split_is_made_once_per_total_step_and_weights() {
+        let mut splits = Splits::default();
+        let thirds = Weights::new(vec![Num::int(1); 3]).expect("weights");
+        let halves = Weights::new(vec![Num::int(1); 2]).expect("weights");
+        let (total, step) = (Num::int(10), Num::int(1));
+        let first = splits.made(&thirds, &total, &step).expect("split");
+        let again = splits.made(&thirds, &total, &step).expect("split");
+        assert_eq!((&first.at, first.place), (&again.at, again.place), "kept");
+        let other = splits.made(&halves, &total, &step).expect("split");
+        assert_eq!(other.place, 1, "other weights, another split");
+        assert_eq!(splits.by.len(), 1, "one total and step");
+        let kept = splits.kept(&first).expect("kept");
+        assert!(
+            kept.made.tie().is_some(),
+            "one step left for three tied keys"
+        );
+        assert_eq!(kept.share(&[1], Some(1)), Ok(Num::int(4)), "the chosen key");
+        assert_eq!(
+            kept.share(&[1], Some(0)),
+            Ok(Num::int(3)),
+            "a key not chosen"
+        );
+        assert_eq!(kept.share(&[1], None), Ok(Num::zero()), "a key left out");
+        assert_eq!(kept.shares.len(), 1, "the shares made once");
+    }
 }

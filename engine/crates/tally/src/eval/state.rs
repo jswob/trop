@@ -322,6 +322,9 @@ pub struct Engine {
     /// The pass a business-day function runs now over the days its calendar's added windows
     /// can take (L §4.2, §4.4).
     pub(super) calendar_pass: Option<super::business::CalendarPass>,
+    /// The splits `prorata`'s `rest largest` made, once per total, step and weights (L §5.13
+    /// Cost).
+    pub(super) splits: super::prorata::Splits,
     /// What this engine did, in P §1.1's units: the `counters` build only (BUILDER §13.2).
     #[cfg(feature = "counters")]
     pub(crate) counts: crate::Counters,
@@ -365,6 +368,7 @@ impl Engine {
             booked: BTreeMap::new(),
             signatures: BTreeMap::new(),
             calendar_pass: None,
+            splits: super::prorata::Splits::default(),
             #[cfg(feature = "counters")]
             counts: crate::Counters::default(),
         }
