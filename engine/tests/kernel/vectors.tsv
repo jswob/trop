@@ -161,3 +161,8 @@ g13/key_scen	g13		engine/tests/kernel/	engine/tests/kernel/g13/key_scen_base.tal
 g13/key_scen_bad	g13		engine/tests/kernel/	engine/tests/kernel/g13/key_scen_base.tally engine/tests/kernel/g13/key_scen_bad.tally		
 g13/range_key_unasked	g13		engine/tests/kernel/	engine/tests/kernel/g13/range_key_unasked.tally		
 g13/range_key_unasked_ask	g13		engine/tests/kernel/	engine/tests/kernel/g13/range_key_unasked.tally	nope	
+g7/flows_refused_plan	g7		engine/tests/kernel/	engine/tests/kernel/g7/flows_refused_plan.tally	q_start q_whole q_ends_before q_ends_on q_ends_after q_starts_before q_starts_after	
+g7/flows_refused_plan_first_day	g7		engine/tests/kernel/	engine/tests/kernel/g7/flows_refused_plan.tally	q_starts_on q_one_day	
+g7/flows_refused_plan_twin	g7		engine/tests/kernel/	engine/tests/kernel/g7/flows_refused_plan_twin.tally		
+g7/flows_refused_day	g7		engine/tests/kernel/	engine/tests/kernel/g7/flows_refused_day.tally		
+g7/flows_refused_day_twin	g7		engine/tests/kernel/	engine/tests/kernel/g7/flows_refused_day_twin.tally		

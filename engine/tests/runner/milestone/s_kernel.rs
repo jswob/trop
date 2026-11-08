@@ -176,7 +176,11 @@ mod tests {
     /// outside, beside a hole day, `with uncertain` with no reading and a move's flows over a
     /// span with no movement, of an outside pair and of one leg of two units (P40); flows of a
     /// move whose leg the walk refuses, asked first while the walk it needs reads a def deeper
-    /// than the evaluation's depth limit, in a decision and in a plan (`kernel/g7/`).
+    /// than the evaluation's depth limit, in a decision and in a plan; flows of places over
+    /// spans before, ending on, across and after the day of a refused plan whose leg's place is
+    /// refused, which refuses every place from that day (#51; a span starting on it held for
+    /// #107), and from the run's start beside a decision whose day is refused, which refuses
+    /// every place from the start, each beside its answered twin (`kernel/g7/`).
     #[test]
     fn s_kernel_g7_reads() {
         group_holds("g7");
