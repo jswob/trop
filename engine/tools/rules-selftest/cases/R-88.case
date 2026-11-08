@@ -45,3 +45,48 @@ mod planted_failfast {
 }
 --- run
 cargo nextest run --locked -p tally-runner --cargo-profile mutants --profile mutants --lib -E 'test(/^planted_failfast::/)'
+
+# P13 (issue #108, 2026-11-08): `mutants-local --next` adds the next milestone's tests, each
+# only if it is green in the unmutated run just before the mutants: a test red there would
+# count as catching every mutant. The planted baseline holds one green and one red test of a
+# next-milestone target; the filter keeps the green one and leaves the red one out, and a
+# baseline whose summary doesn't match its lines keeps none.
+
+case: next-red-at-the-baseline-is-left-out
+tool: run
+exit: any
+expect: R-88 --next: kept tests::m1_green; left out tests::m1_red
+--- write zz-next-baseline.log
+        PASS [   0.104s] (1/2) tally-runner::m1_planted tests::m1_green
+        FAIL [   0.110s] (2/2) tally-runner::m1_planted tests::m1_red
+  stderr ───
+
+    thread 'tests::m1_red' panicked at milestone/m1_planted.rs:9:5:
+    1 of 3 vectors of g1 differ from refcore:
+    g1/planted: exit 0, refcore 1
+
+────────────
+     Summary [   0.214s] 2 tests run: 1 passed, 1 failed, 0 skipped
+        FAIL [   0.110s] (2/2) tally-runner::m1_planted tests::m1_red
+error: test run failed
+--- run
+python3 -I -B -c "
+import sys; sys.path.insert(0, 'tools'); import mutants_local as m
+e, g, r = m.next_filter(open('zz-next-baseline.log').read(), ['m1_planted', 'm1_other'])
+ok = e is not None and 'test(=tests::m1_green)' in e and 'm1_red' not in e and e.startswith('not (')
+print('R-88 --next: kept ' + ' '.join(t for _, t in g) + '; left out ' + ' '.join(t for _, t in r) if ok else 'R-88 --next broken: ' + repr(e))
+"
+
+case: next-unreadable-baseline-keeps-none
+tool: run
+exit: any
+expect: R-88 --next: no filter from a baseline that didn't run
+--- write zz-next-baseline.log
+error[E0425]: cannot find function `run_faulted` in crate `tally_cli`
+error: could not compile `tally-runner` (test "m1_planted") due to 1 previous error
+--- run
+python3 -I -B -c "
+import sys; sys.path.insert(0, 'tools'); import mutants_local as m
+e, g, r = m.next_filter(open('zz-next-baseline.log').read(), ['m1_planted'])
+print('R-88 --next: no filter from a baseline that didn\'t run' if e is None else 'R-88 --next broken: ' + repr(e))
+"

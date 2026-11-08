@@ -1,6 +1,6 @@
 """mutants-local: CI's mutation run on a few kernel files, for T's loop (issue #40).
 
-    engine/tools/mutants-local FILE… [-F REGEX]
+    engine/tools/mutants-local [--next] FILE… [-F REGEX]
 
 FILE is a kernel file (tools/kernel.toml, .cargo/mutants.toml's examine_globs), relative to
 engine/ or to the repository. -F keeps the mutants whose name matches REGEX (cargo-mutants
@@ -14,12 +14,21 @@ fixed proptest seed, no failure files, the baseline skipped, `--timeout 300
 failing test (nextest's `mutants` profile, tools/test-memcap). The output is engine/target/mutants-local/mutants.out/; the exit is
 cargo-mutants' (0 all caught, 2 some missed, 3 some timed out).
 
+--next (R-88, issue #108; the M1 coordinator's pick P13) adds the next milestone's test
+targets (tools/milestones: M1's `m1_…` while M1 builds), each test only if it passes in an
+unmutated run of those targets just before the mutants, the batch's baseline (the mutants
+profile, no fail-fast, the features their targets require). A test red there would count
+as catching every mutant (pre-M1's P13), so it is left out, and listed; the rest are
+kept through a nextest filter (`-E`) on the mutants' test runs. Without --next the run is
+CI's, the next milestone's tests left out.
+
 The environment is check's (R-82); only CARGO_BUILD_JOBS and NEXTEST_TEST_THREADS pass
 through, which change how many jobs run at once, never a result.
 """
 
 import fnmatch
 import os
+import re
 import subprocess
 import sys
 import tomllib
@@ -28,12 +37,42 @@ TOOLS = os.path.dirname(os.path.realpath(__file__))
 ENGINE = os.path.dirname(TOOLS)
 sys.path.insert(0, TOOLS)
 import check  # noqa: E402  the clean environment and the fixed seeds (R-82, R-88)
+import milestones  # noqa: E402  the next milestone's targets (--next)
 
 CONFIG = os.path.join(ENGINE, ".cargo", "mutants.toml")
 OUT = os.path.join(ENGINE, "target", "mutants-local")
 PASSED = ("CARGO_BUILD_JOBS", "NEXTEST_TEST_THREADS")
 # CI's flags (.github/workflows/engine.yml's mutants jobs), the shard aside
 FLAGS = ["--no-shuffle", "--baseline", "skip", "--timeout", "300", "--build-timeout", "600"]
+
+
+# nextest's line for a finished test: `FAIL [   0.009s] (1/3) tally-runner::m1_format tests::name`
+STATUS = re.compile(r"^\s*([A-Z][A-Z-]*)\s+\[\s*[\d.]+s\]\s+(?:\(\s*\d+/\d+\)\s+)?(\S+)\s+(\S+)\s*$")
+GREEN = ("PASS", "LEAK")
+
+
+def baseline_split(out):
+    """(green, red) of an unmutated nextest run's output: each test as (binary id, name)."""
+    passed = {}
+    for line in out.splitlines():
+        m = STATUS.match(line)
+        if m:
+            passed[(m.group(2), m.group(3))] = m.group(1) in GREEN
+    return sorted(t for t, ok in passed.items() if ok), sorted(t for t, ok in passed.items() if not ok)
+
+
+def next_filter(out, names):
+    """The nextest filter for the mutants' test runs (--next, R-88): every test of the other
+    targets, and of the next milestone's targets `names` only those green in `out`, the
+    unmutated run; with the green and the red. None when the run's summary doesn't match
+    its lines (it didn't run, or nextest's form changed): nothing can be told green."""
+    green, red = baseline_split(out)
+    counted = milestones.tally(out)
+    if counted is None or counted[0] != len(green) + len(red):
+        return None, green, red
+    others = " | ".join(f"binary_id(={milestones.RUNNER}::{n})" for n in names)
+    kept = "".join(f" | (binary_id(={b}) & test(={t}))" for b, t in green)
+    return f"not ({others}){kept}", green, red
 
 
 def toml_value(v):
@@ -67,7 +106,8 @@ def main(argv):
     if not argv or argv[0] in ("-h", "--help"):
         print(__doc__.strip())
         return 0 if argv else 64
-    regex = None
+    regex, nxt = None, "--next" in argv
+    argv = [a for a in argv if a != "--next"]
     if "-F" in argv:
         at = argv.index("-F")
         if at + 1 >= len(argv):
@@ -99,6 +139,11 @@ def main(argv):
     if base.returncode != 0:
         print("mutants-local: T's tests fail unmutated; no mutant is run", file=sys.stderr)
         return 1
+    if nxt:
+        added = next_targets(env)
+        if added is None:
+            return 1
+        targets += added
     os.makedirs(OUT, exist_ok=True)
     local = os.path.join(OUT, "mutants.toml")
     with open(local, "w", encoding="utf-8") as f:
@@ -108,6 +153,38 @@ def main(argv):
         argv += ["-F", regex]
     print(f"mutants-local: {' '.join(argv[2:])}", flush=True)
     return subprocess.run(argv, cwd=ENGINE, env=env, check=False).returncode
+
+
+def next_targets(env):
+    """--next: cargo-mutants' arguments that add the next milestone's tests green at the
+    batch's baseline, or None when they can't be told (R-88)."""
+    try:
+        m, names = milestones.next_milestone(env)
+        features = milestones.required_features(env, names) if names else []
+    except milestones.MilestoneError as e:
+        print(f"mutants-local: --next: {e}", file=sys.stderr)
+        return None
+    if not names:
+        print(f"mutants-local: --next: {m or 'no milestone'} has no test target to add", file=sys.stderr)
+        return None
+    selected = [*(f"--features={f}" for f in features), *(f"--test={n}" for n in names)]
+    print(f"mutants-local: {m}'s tests, unmutated (the batch's baseline)", flush=True)
+    run = subprocess.run(["cargo", "nextest", "run", "--locked", "-p", "tally-runner", "--cargo-profile", "mutants",
+                          "--profile", "mutants", "--no-fail-fast", *selected], cwd=ENGINE, env=env,
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, check=False)
+    with open(os.path.join(check.LOGS, "mutants-local-next.log"), "w", encoding="utf-8") as f:
+        f.write(run.stdout)
+    expr, green, red = next_filter(run.stdout, names)
+    if expr is None:
+        print(f"mutants-local: --next: {m}'s tests didn't run, so none can be told green "
+              "(target/check-logs/mutants-local-next.log)", file=sys.stderr)
+        return None
+    print(f"mutants-local: {m}: {len(green)} of {len(green) + len(red)} tests green at the baseline, kept as catchers")
+    for b, t in red:
+        print(f"mutants-local: left out, red at the baseline (R-88): {b} {t}")
+    if not green:
+        return []
+    return [*(f"-C={a}" for a in selected), "--cargo-test-arg=-E", f"--cargo-test-arg={expr}"]
 
 
 if __name__ == "__main__":

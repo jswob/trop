@@ -80,8 +80,8 @@ def marker():
     return milestones, gating, leave_out
 
 
-def targets(env, milestones):
-    """The runner's default targets, as cargo arguments, and each milestone's test targets."""
+def runner_package(env):
+    """The runner's package, from cargo metadata."""
     r = subprocess.run(["cargo", "metadata", "--no-deps", "--format-version", "1", "--locked"], cwd=ENGINE, env=env,
                        capture_output=True, text=True, check=False)
     if r.returncode != 0:
@@ -89,6 +89,20 @@ def targets(env, milestones):
     runner = [p for p in json.loads(r.stdout)["packages"] if p["name"] == RUNNER]
     if len(runner) != 1:
         raise MilestoneError(f"the workspace has no {RUNNER} package")
+    return runner
+
+
+def required_features(env, names):
+    """The features the runner's test targets `names` require (`required-features`, such
+    as M1's m1_invariant and fault-injection), sorted: a run that selects one by name
+    has to turn them on, or cargo refuses it."""
+    wanted = set(names)
+    return sorted({f for t in runner_package(env)[0]["targets"] if t["name"] in wanted for f in t.get("required-features", [])})
+
+
+def targets(env, milestones):
+    """The runner's default targets, as cargo arguments, and each milestone's test targets."""
+    runner = runner_package(env)
     by_prefix = {m.casefold(): m for m in milestones}
     defaults, by_milestone = [], {m: [] for m in milestones}
     for t in sorted(runner[0]["targets"], key=lambda t: t["name"]):

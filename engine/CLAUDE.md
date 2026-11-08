@@ -31,7 +31,7 @@ Printed by the build role's SessionStart hook at the start and after each compac
 - Work: the next group of red vectors in plan order; implement; `engine/tools/check fast`; commit when green.
 - After each group's commit, a review session runs `engine-reviewer` on that group's diff alone; you fix its blocking findings in the same group before the next one starts, and T turns each fix into tests. The gate reviews the whole once.
 - Before each commit: `engine/tools/check full`. Never commit red. (T's re-run commit after a spec ruling may be red on the ids its `Logged-Red:` lines name; your commits then turn them green, R-77.)
-- When a group turns green: `engine/tools/mutants-local -F '<regex of the functions you changed or added>' <their kernel files>`; caught and missed go into the group's BUILD-LOG entry, the missed ones for T. Advisory, never blocking (R-88).
+- When a group turns green: `engine/tools/mutants-local -F '<regex of the functions you changed or added>' <their kernel files>` (add `--next` to count the next milestone's tests green at that moment); caught and missed go into the group's BUILD-LOG entry, the missed ones for T. Advisory, never blocking (R-88).
 - Only `engine/tools/check`, never raw `cargo` with your own flags. Read the one-line failures; open a log only when needed. A failure that doesn't reproduce is reported, not "fixed".
 - To format: `cargo fmt -p tally -p tally-cli`. A plain `cargo fmt` is refused, since the workspace also holds T's runner.
 - The Stop hook runs `check fast` at the end of every turn.
