@@ -1,7 +1,11 @@
 """commit-check: the commits a pull request brings, read from git (R-100, R-112). CI runs
-it after `check full`, on a pull request only, against the branch it merges into.
+it after `check full`, on a pull request only, against the branch it merges into, and the
+guard runs it before every `git push`, over what the push sends (R-100, issue #108).
 
-    engine/tools/commit-check BASE      the commits in BASE..HEAD, merges left out
+    engine/tools/commit-check BASE              the commits in BASE..HEAD, merges left out
+    engine/tools/commit-check [-C DIR] BASE TIP the commits in BASE..TIP, read in the
+                                                checkout DIR; a TIP that names no commit
+                                                has nothing to check (git refuses to push it)
 
 It fails on:
   - a commit message with an AI co-author or attribution line (R-100): a co-author, a
@@ -54,8 +58,12 @@ LOGGED_RED = re.compile(r"^Logged-Red:[ \t]*(?P<ids>.*)$", re.MULTILINE)
 PROOFS = ("engine/tools/rules-selftest/cases/", "engine/tools/guard_test.py")
 
 
+# the checkout whose commits are read: this one, or the one `-C` names (the guard's push)
+REPO = ROOT
+
+
 def git(*args):
-    r = subprocess.run(["git", "-C", ROOT, *args], capture_output=True, text=True, check=False)
+    r = subprocess.run(["git", "-C", REPO, *args], capture_output=True, text=True, check=False)
     if r.returncode != 0:
         raise RuntimeError(f"git {' '.join(args)}: {r.stderr.strip()}")
     return r.stdout
@@ -93,7 +101,7 @@ def subject(sha, short, title, changed, problems, listed):
         return
     if SUBJECT.match(title) and len(title) <= SUBJECT_MAX:
         return
-    before = subprocess.run(["git", "-C", ROOT, "cat-file", "-e", f"{sha}^:{CONVENTIONS}"], capture_output=True, check=False)
+    before = subprocess.run(["git", "-C", REPO, "cat-file", "-e", f"{sha}^:{CONVENTIONS}"], capture_output=True, check=False)
     if before.returncode != 0:
         listed.append(f"{short}: its subject is off the conventions (made before {CONVENTIONS})")
     elif not SUBJECT.match(title):
@@ -103,9 +111,9 @@ def subject(sha, short, title, changed, problems, listed):
         problems.append(f"{short}: the subject is {len(title)} characters, over {SUBJECT_MAX} ({CONVENTIONS}, R-100)")
 
 
-def check(base):
+def check(base, tip="HEAD"):
     problems, listed, reds, early = [], [], [], []
-    shas = git("rev-list", "--no-merges", "--reverse", f"{base}..HEAD").split()
+    shas = git("rev-list", "--no-merges", "--reverse", f"{base}..{tip}").split()
     files = {sha: git("show", "--format=", "--name-only", "--no-renames", sha).split("\n") for sha in shas}
     for k, sha in enumerate(shas):
         message = git("show", "-s", "--format=%B", sha)
@@ -122,7 +130,7 @@ def check(base):
             continue
         trailers = TRAILER.findall(message)
         listed.append(f"{short}: {len(rules)} rule file(s); " + ("; ".join(f"R-{n} approved {d}" for n, d, _ in trailers) or "no trailer"))
-        before = subprocess.run(["git", "-C", ROOT, "cat-file", "-e", f"{sha}^:{SELF}"], capture_output=True, check=False)
+        before = subprocess.run(["git", "-C", REPO, "cat-file", "-e", f"{sha}^:{SELF}"], capture_output=True, check=False)
         if before.returncode != 0:
             listed[-1] += " (made before this check)"
             continue
@@ -137,12 +145,26 @@ def check(base):
     return problems, listed, reds, early
 
 
+def names_a_commit(ref):
+    r = subprocess.run(["git", "-C", REPO, "rev-parse", "--verify", "--quiet", "--end-of-options", f"{ref}^{{commit}}"],
+                       capture_output=True, check=False)
+    return r.returncode == 0
+
+
 def main():
-    if len(sys.argv) != 2:
-        print("usage: engine/tools/commit-check BASE", file=sys.stderr)
+    global REPO  # one checkout for the whole run
+    args = sys.argv[1:]
+    if args[:1] == ["-C"] and len(args) >= 2:
+        REPO, args = os.path.realpath(args[1]), args[2:]
+    if len(args) not in (1, 2):
+        print("usage: engine/tools/commit-check [-C DIR] BASE [TIP]", file=sys.stderr)
         return 64
+    base, tip = args[0], (args[1] if len(args) == 2 else "HEAD")
+    if len(args) == 2 and not names_a_commit(tip):
+        print(f"commit-check: {tip} names no commit, so nothing to check (git refuses to push it)")
+        return 0
     try:
-        problems, listed, reds, early = check(sys.argv[1])
+        problems, listed, reds, early = check(base, tip)
     except RuntimeError as e:
         print(f"FAIL commit-check: {e}")
         return 1

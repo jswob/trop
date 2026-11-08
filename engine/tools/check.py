@@ -201,7 +201,9 @@ def gating(profile):
 GUARD_TEST_FILES = ["engine/tools/guard-test", "engine/tools/guard_test.py", "engine/tools/guard", "engine/tools/guard.py",
                     "engine/tools/stop-check", "engine/tools/stop_check.py", "engine/tools/merge-pr",
                     "engine/tools/merge_pr.py", "engine/tools/worktree-done", "engine/tools/worktree_done.py",
-                    ".claude/settings.json", "engine/tools/check", "engine/tools/check.py"]
+                    ".claude/settings.json", "engine/tools/check", "engine/tools/check.py",
+                    # the guard runs commit-check before a push (R-100, issue #108)
+                    "engine/tools/commit-check", "engine/tools/commit_check.py", "engine/tools/check_frozen.py"]
 GUARD_TEST_VERSIONS = [["python3", "--version"], ["git", "--version"]]
 # rules-selftest builds, lints and plants into a copy of the engine with these tools
 SELFTEST_VERSIONS = [*GUARD_TEST_VERSIONS, ["rustc", "-vV"], ["cargo", "-V"], ["cargo", "clippy", "-V"],

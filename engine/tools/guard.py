@@ -41,6 +41,7 @@ import json
 import os
 import re
 import shlex
+import subprocess
 import sys
 import tomllib
 import urllib.parse
@@ -939,15 +940,24 @@ GH_API_MERGES = re.compile(
 )
 
 
-def current_branch(cwd):
-    """The branch checked out where `cwd` is, from the git files without running git:
-    the nearest `.git` above it (a folder, or a linked worktree's `gitdir:` file) and
-    its HEAD. None when no repo holds `cwd` or HEAD is detached."""
+def checkout_of(cwd):
+    """The checkout holding `cwd`: the nearest folder above it with a `.git` (a folder, or
+    a linked worktree's `gitdir:` file), or None."""
     d = cwd
     while not os.path.lexists(os.path.join(d, ".git")):
         if os.path.dirname(d) == d:
             return None
         d = os.path.dirname(d)
+    return d
+
+
+def current_branch(cwd):
+    """The branch checked out where `cwd` is, from the git files without running git:
+    the nearest `.git` above it (a folder, or a linked worktree's `gitdir:` file) and
+    its HEAD. None when no repo holds `cwd` or HEAD is detached."""
+    d = checkout_of(cwd)
+    if d is None:
+        return None
     dotgit = os.path.join(d, ".git")
     try:
         gitdir = dotgit
@@ -970,9 +980,10 @@ def is_master(ref):
 def check_push(rest, cwd, role, state):
     """R-132: no `git push` whose destination is master, in any form: a refspec naming
     it (`master`, `HEAD:master`, `+master`, `:master`, `--delete master`, forced or
-    not), `--all`, `--mirror`, or no refspec at all while master is checked out."""
+    not), `--all`, `--mirror`, or no refspec at all while master is checked out.
+    R-100 (issue #108): then what the push sends passes commit-check (push_commits)."""
     what = f"engine guard (role {role}): refused `git push`"
-    words, repo_given, tags, it = [], False, False, iter(rest)
+    words, repo_given, tags, deleting, it = [], False, False, False, iter(rest)
     for a in it:
         if a == "--":
             words += list(it)
@@ -986,10 +997,13 @@ def check_push(rest, cwd, role, state):
             next(it, None)
         elif a == "--tags":
             tags = True
+        elif a == "--delete":
+            deleting = True
         elif not a.startswith("--") and a.startswith("-"):
             hit = short_value(a, "o")
             if hit and not hit[1]:
                 next(it, None)  # -o VALUE, -fo VALUE
+            deleting = deleting or "d" in a[1:].split("o", 1)[0]  # -d, -fd; not -o's value
         if not a.startswith("-"):
             words.append(a)
     refspecs = words if repo_given else words[1:]
@@ -998,7 +1012,9 @@ def check_push(rest, cwd, role, state):
             return  # only the tags
         if is_master(current_branch(cwd)):
             raise Refused(f"{what} on branch master, which pushes master: {LANDING}.")
+        push_commits(["HEAD"], cwd, what)
         return
+    sources = []
     for spec in refspecs:
         if dynamic(spec) and state.get("expands"):
             raise Refused(f"{what} to a computed ref ({spec}), which can't be checked against master (R-132); name the branch.")
@@ -1008,6 +1024,37 @@ def check_push(rest, cwd, role, state):
             dest = current_branch(cwd)
         if is_master(dest):
             raise Refused(f"{what} to master ({spec}): {LANDING}.")
+        if src and not deleting:
+            sources.append(src)
+    push_commits(sources, cwd, what)
+
+
+# where a push's commits are read from: what CI's commit-check reads them against
+PUSH_BASE = "origin/master"
+PUSH_CHECK_SECONDS = 40
+
+
+def push_commits(sources, cwd, what):
+    """R-100 (issue #108; the user's "I approve both", 2026-11-08): before a push, every
+    commit it sends, PUSH_BASE..<source> for each source ref, passes engine/tools/
+    commit-check, the check CI runs on the pull request, in every role. A subject over 72
+    characters is refused here, not two hours later in CI. A source that names no commit
+    has nothing to check: git refuses to push it. The commits are read in the checkout the
+    push runs in."""
+    repo = checkout_of(cwd)
+    if repo is None:
+        return  # no repository: git has nothing to push
+    for src in dict.fromkeys(sources):
+        argv = [sys.executable, "-I", "-B", os.path.join(TOOLS, "commit_check.py"), "-C", repo, PUSH_BASE, src]
+        try:
+            r = subprocess.run(argv, capture_output=True, text=True, timeout=PUSH_CHECK_SECONDS, check=False)
+        except (OSError, subprocess.TimeoutExpired) as e:
+            raise Refused(f"{what} {src}: engine/tools/commit-check didn't finish ({e}), so its commits can't be checked (R-100).") from e
+        if r.returncode != 0:
+            lines = [l for l in r.stdout.splitlines() if l.startswith("FAIL ")] or (r.stdout + r.stderr).strip().splitlines()[-3:]
+            raise Refused(f"{what} {src}: engine/tools/commit-check {PUSH_BASE} {src} fails, as CI would (R-100):\n"
+                          + "\n".join(lines)
+                          + "\nReword the commit (a new commit, or `git commit --amend` before it was ever pushed), then push.")
 
 
 def check_gh(args, role, cwd):
