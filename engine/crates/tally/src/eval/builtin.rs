@@ -467,7 +467,7 @@ pub(super) fn minor_of(m: &Reality, call: &Call) -> Result<Value, Stop> {
 /// `LOAD-UNIT` for a mode that isn't a rounding code or a step of another unit; `RUN-DOMAIN`
 /// for a step that isn't positive.
 pub(super) fn round_values(m: &Reality, x: &Value, u: &Value, mode: &Value) -> Result<Value, Stop> {
-    let mode = rounding_mode(m, mode)?;
+    let mode = rounding_mode(m, "round", mode)?;
     let xs = Scalar::of(m, x)?;
     let us = Scalar::of(m, u)?;
     if us.q.compare(&Num::zero()).map_err(num_stop)? != core::cmp::Ordering::Greater {
@@ -509,13 +509,14 @@ pub(super) fn round_values(m: &Reality, x: &Value, u: &Value, mode: &Value) -> R
     round_result(m, &xs, &us, u, q)
 }
 
-/// A rounding mode: a code word of the rounding family (L §7.2).
-fn rounding_mode(m: &Reality, v: &Value) -> Result<Mode, Stop> {
+/// A rounding mode of function `what` (`round`, `prorata`): a code word of the rounding
+/// family (L §7.2, §5.13).
+pub(super) fn rounding_mode(m: &Reality, what: &str, v: &Value) -> Result<Mode, Stop> {
     let (Value::Word(word) | Value::Code(Code::Word(word))) = v else {
-        return Err(wrong_type(m, "round: the mode is", v));
+        return Err(wrong_type(m, &format!("{what}: the mode is"), v));
     };
     Mode::from_word(word)
-        .ok_or_else(|| refuse_load(Load::Unit, format!("round: the mode is {word}")))
+        .ok_or_else(|| refuse_load(Load::Unit, format!("{what}: the mode is {word}")))
 }
 
 /// A number or money as `round` reads it: its value, unit and class (none for money).

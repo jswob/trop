@@ -471,8 +471,8 @@ impl Engine {
             return Err(not_built());
         };
         let ix = m.indexes.get(ix_id).ok_or_else(not_built)?;
-        let at_year = ix
-            .keys
+        let keys = ix.keys();
+        let at_year = keys
             .iter()
             .find(|k| {
                 matches!(k, KeyVal::Period(p)
@@ -648,7 +648,7 @@ fn period_key(m: &Reality, item: &str, ix: &IndexInfo, v: &Value) -> Result<KeyV
         });
     }
     if let Value::Period(p) = v {
-        for key in &ix.keys {
+        for key in ix.keys() {
             match key {
                 KeyVal::Day(d) if p.kind() == PeriodKind::Day && *d == p.start() => {
                     return Ok(key.clone());

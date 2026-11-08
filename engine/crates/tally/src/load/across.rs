@@ -913,11 +913,11 @@ fn bare(e: &Expr) -> &Expr {
 /// The keys of an index that isn't open, when each is a period (refcore's `isinstance(k,
 /// Period)` over `ix.keys`). L §4.1.
 fn period_keys(index: &IndexInfo) -> Option<Vec<Period>> {
-    if is_open(index) || index.keys.is_empty() {
+    if is_open(index) || index.keys().is_empty() {
         return None;
     }
     let mut keys = Vec::new();
-    for key in &index.keys {
+    for key in index.keys() {
         let KeyVal::Period(period) = key else {
             return None;
         };
@@ -1067,7 +1067,7 @@ fn declared_keys(m: &Reality, bind: &BindInfo) -> Option<Vec<KeyVal>> {
     m.indexes
         .get(ix)
         .filter(|index| !is_open(index))
-        .map(|index| index.keys.clone())
+        .map(|index| index.keys().to_vec())
 }
 
 /// The keys of each binding's index, in the bindings' order, or `None` when one ranges over
@@ -1084,7 +1084,7 @@ fn index_keys(m: &Reality, binds: &[BindInfo]) -> Option<Vec<Vec<KeyVal>>> {
         let Domain::Index(ix) = &bind.domain else {
             return None;
         };
-        out.push(m.indexes.get(ix)?.keys.clone());
+        out.push(m.indexes.get(ix)?.keys().to_vec());
     }
     Some(out)
 }

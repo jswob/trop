@@ -193,8 +193,8 @@ pub(super) fn bind_domain(m: &Reality, bind: &Bind) -> Option<Domain> {
 
 /// The keys of an index the cut sees, in its order (refcore's `keys_at`). L §4.5, §2.5.
 fn index_values(m: &Reality, ix: &IndexInfo, cut: Day) -> Result<Vec<(Value, Option<Hole>)>, Stop> {
-    let mut out = Vec::with_capacity(ix.keys.len());
-    for key in &ix.keys {
+    let mut out = Vec::with_capacity(ix.keys().len());
+    for key in ix.keys() {
         if let Some(version) = ix.added_by(key) {
             let known = m
                 .versions

@@ -740,7 +740,7 @@ fn key_shift(
     let step = k.checked_mul(&Num::int(sign)).map_err(num_stop)?;
     let to = Num::int(pos).checked_add(&step).map_err(num_stop)?;
     let at = to.to_i64().and_then(|at| usize::try_from(at).ok());
-    if let Some(found) = at.and_then(|at| ix.keys.get(at)) {
+    if let Some(found) = at.and_then(|at| ix.keys().get(at)) {
         return Ok(Value::of_key(found));
     }
     let size = if k.is_negative() {

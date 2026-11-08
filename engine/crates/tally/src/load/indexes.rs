@@ -45,10 +45,12 @@ impl Loader {
         let mut days = IndexInfo::new("days", Form::Builtin);
         days.period = Some(PeriodKind::Day);
         let mut day = Some(self.m.start);
+        let mut day_list = Vec::new();
         while let Some(d) = day.filter(|x| *x <= self.m.end) {
-            days.keys.push(KeyVal::Day(d));
+            day_list.push(KeyVal::Day(d));
             day = d.next();
         }
+        days.set_keys(day_list);
         let mut months = IndexInfo::new("months", Form::Builtin);
         months.period = Some(PeriodKind::Month);
         let mut years = IndexInfo::new("years", Form::Builtin);
@@ -58,11 +60,12 @@ impl Loader {
             (&mut years, Period::year_of(self.m.start)),
         ] {
             let mut period = first.ok_or(not_built.clone())?;
-            index.keys.push(KeyVal::Period(period));
+            let mut periods = vec![KeyVal::Period(period)];
             while period.end() <= self.m.end {
                 period = period.shift(1).ok_or(not_built.clone())?;
-                index.keys.push(KeyVal::Period(period));
+                periods.push(KeyVal::Period(period));
             }
+            index.set_keys(periods);
         }
         for index in [
             days,
@@ -113,7 +116,6 @@ impl Loader {
             index.v.clone_from(&decl.v);
             index.line = Some(decl.line);
             index.anchored = matches!(&decl.form, IndexForm::Range { from: Some(_), .. });
-            index.finish();
             self.m.indexes.push(&mut self.m.symbols, &decl.id, index)?;
         }
         Ok(())
@@ -203,6 +205,7 @@ impl Loader {
 fn list_index(id: &str, keys: &[Lit], file: &str, line: u32) -> Result<IndexInfo, Stop> {
     let mut list = IndexInfo::new(id, Form::List);
     let mut seen = BTreeSet::new();
+    let mut values = Vec::with_capacity(keys.len());
     for key in keys {
         let text = key_source_text(key, file, line)?;
         if !seen.insert(text.clone()) {
@@ -218,9 +221,10 @@ fn list_index(id: &str, keys: &[Lit], file: &str, line: u32) -> Result<IndexInfo
             name: text.clone(),
         };
         list.texts.push((text, value.clone()));
-        list.keys.push(value);
+        values.push(value);
     }
-    if list.keys.len() > 1_000_000 {
+    list.set_keys(values);
+    if list.keys().len() > 1_000_000 {
         let message = format!("index {id} holds more than 1 000 000 keys");
         return Err(refuse(Load::Limit, message, file, line));
     }
@@ -275,27 +279,29 @@ fn build_range(range: &Range) -> Result<IndexInfo, Stop> {
             range.count(b.checked_sub(a).and_then(|d| d.checked_div_euclid(by)))?;
             index.is_int = true;
             let mut at = a;
+            let mut ints = Vec::new();
             while at <= b {
-                index.keys.push(KeyVal::Int(at));
+                ints.push(KeyVal::Int(at));
                 at = at
                     .checked_add(by)
                     .ok_or(Stop::NotBuilt("a range past i64"))?;
             }
+            index.set_keys(ints);
         }
         "year" => {
             range.digits(&range.by)?;
             index.period = Some(PeriodKind::Year);
-            index.keys = year_keys(range)?;
+            index.set_keys(year_keys(range)?);
         }
         "month" => {
             range.digits(&range.by)?;
             index.period = Some(PeriodKind::Month);
-            index.keys = month_keys(range)?;
+            index.set_keys(month_keys(range)?);
         }
         "day" => {
             range.digits(&range.by)?;
             index.period = Some(PeriodKind::Day);
-            index.keys = day_keys(range)?;
+            index.set_keys(day_keys(range)?);
         }
         _ => {
             return Err(invariant(

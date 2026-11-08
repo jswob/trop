@@ -284,6 +284,7 @@ impl Loader {
                 line,
             ));
         }
+        let mut keys = Vec::with_capacity(texts.len());
         for text in texts {
             if index.by_text(text).is_some() {
                 return Err(refuse(
@@ -298,10 +299,10 @@ impl Loader {
                 name: text.clone(),
             };
             index.texts.push((text.clone(), key.clone()));
-            index.keys.push(key.clone());
+            keys.push(key.clone());
             index.added.push((key, version.to_owned()));
         }
-        index.finish();
+        index.add_keys(keys);
         Ok(())
     }
 

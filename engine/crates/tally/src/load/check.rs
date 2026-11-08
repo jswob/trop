@@ -961,7 +961,7 @@ impl Checker {
                 return Err(refuse(Load::Key, message));
             };
             let label = format!("{year:04}");
-            let has_year = index.keys.iter().any(|key| {
+            let has_year = index.keys().iter().any(|key| {
                 matches!(key, KeyVal::Period(p) if p.kind() == PeriodKind::Year && p.label() == label)
             });
             if !has_year {

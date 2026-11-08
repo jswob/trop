@@ -84,7 +84,7 @@ impl Engine {
             Expr::Crps(..) => Err(Stop::NotBuilt("`crps`")),
             Expr::DistFn(..) => Err(Stop::NotBuilt("`cdf`, `pdf` and `pmf`")),
             Expr::Dist(..) => Err(Stop::NotBuilt("distributions")),
-            Expr::Prorata(..) => Err(Stop::NotBuilt("`prorata`")),
+            Expr::Prorata(p) => self.prorata(m, p, env, ctx),
             Expr::AsIf(..) => Err(Stop::NotBuilt("`as if`")),
         }
     }

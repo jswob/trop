@@ -217,7 +217,7 @@ impl Loader {
     fn index_options(&self, index: &str) -> Result<Vec<(KeyVal, Option<String>)>, Stop> {
         let info = self.m.indexes.at(self.m.names.index_id(index)?)?;
         let mut out = Vec::new();
-        for key in &info.keys {
+        for key in info.keys() {
             let added = info.added_by(key).is_some().then(|| index.to_owned());
             out.push((key.clone(), added));
         }

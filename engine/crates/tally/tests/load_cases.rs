@@ -119,10 +119,10 @@ ask q1: pay[ana, 2026-01], code[x1]
         let mut out = Vec::new();
         for (id, ix) in m.indexes.entries() {
             let first = ix
-                .keys
+                .keys()
                 .first()
                 .map_or_else(|| "-".to_owned(), tally::model::KeyVal::text);
-            out.push(format!("index {id} {} {first}", ix.keys.len()));
+            out.push(format!("index {id} {} {first}", ix.keys().len()));
         }
         for (id, p) in m.places.entries() {
             out.push(format!("place {id} {} {}", p.kind, p.things.len()));

@@ -350,7 +350,7 @@ pub fn index_key_of(index: &IndexInfo, lit: &Lit) -> Option<KeyVal> {
             .filter(|v| index.pos(v).is_some());
     }
     if index.period.is_some() {
-        return period_key(&index.keys, lit);
+        return period_key(index.keys(), lit);
     }
     index_text(lit).and_then(|t| index.by_text(&t)).cloned()
 }
@@ -605,9 +605,8 @@ impl Loader {
             name: text.clone(),
         };
         open.texts.push((text, value.clone()));
-        open.keys.push(value.clone());
         open.added.push((value.clone(), version.to_owned()));
-        open.finish();
+        open.add_keys(vec![value.clone()]);
         Ok(value)
     }
 }

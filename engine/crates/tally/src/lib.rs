@@ -158,6 +158,7 @@ pub mod eval {
     mod expr;
     mod extremes;
     mod memo;
+    mod prorata;
     mod ranges;
     mod read;
     mod rules;
@@ -324,7 +325,8 @@ pub mod read {
 }
 
 /// Exact numbers (L §7.1, §7.2): `Num`, a reduced fraction held small or big; `Money`, a
-/// whole number of a currency's minor units; rounding by the seven modes. The module's
+/// whole number of a currency's minor units; rounding by the seven modes; the split of a
+/// total by weights to a step (L §5.13), the largest remainder written once. The module's
 /// code is its files under `num/`, the kernel's (gate 8); this block only names them.
 pub mod num {
     mod big;
@@ -333,11 +335,13 @@ pub mod num {
     mod rational;
     mod round;
     mod small;
+    mod split;
     mod text;
 
     pub use money::{Currency, Money};
     pub use rational::{Num, NumError};
     pub use round::Mode;
+    pub use split::{Largest, SplitError, Tie, Weights};
 }
 
 #[cfg(all(feature = "fault-injection", not(debug_assertions)))]

@@ -159,7 +159,7 @@ fn unbroken(m: &Reality, agg: &Agg, envs: &[&Env]) -> Result<Stop, Stop> {
 }
 
 /// Candidates by their position, each with a value of a `ties by` term.
-type Scored = Vec<(usize, Value)>;
+pub(super) type Scored = Vec<(usize, Value)>;
 
 /// The order of two `ties by` values where their comparison decides it, else the
 /// `HOLE-IMPRECISE` of the window between them (L §4.4, §5.11; pick P33).
@@ -183,7 +183,7 @@ fn tie_order(
 /// so only a comparison that decides the extreme can make the result a window's hole (L §5.11
 /// "the one with the least e", §4.4; pick P33). The later value is compared with the
 /// earlier, as refcore compares them.
-fn pick_extreme(
+pub(super) fn pick_extreme(
     m: &Reality,
     scored: Scored,
     way: Way,
@@ -431,7 +431,7 @@ impl Engine {
     /// A `ties by` term read for each candidate of a group: their values by position, or the
     /// hole of every term that is one; a term that is `none` is refused, a refusal outranking
     /// a hole. L §5.11, §8.1, §8.4.
-    fn tie_terms(
+    pub(super) fn tie_terms(
         &mut self,
         m: &Reality,
         (expr, word): (&Expr, &str),

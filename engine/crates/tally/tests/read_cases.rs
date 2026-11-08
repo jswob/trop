@@ -172,7 +172,7 @@ band|scale||2025-06-01|2026-03-01|rows v2 [0, 100]; v1 (100, inf)
             Domain::Index(id) => m
                 .indexes
                 .get(id)
-                .and_then(|ix| ix.keys.iter().find(|k| k.text() == text))
+                .and_then(|ix| ix.keys().iter().find(|k| k.text() == text))
                 .cloned()
                 .expect("a key of the index"),
             Domain::Kind(_) => KeyVal::Thing(text.to_owned()),

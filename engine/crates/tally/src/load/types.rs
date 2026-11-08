@@ -147,7 +147,7 @@ pub(super) fn key_value_kind(m: &Reality, t: &Ty) -> Option<&'static str> {
         return Some("int");
     }
     let dated = index
-        .keys
+        .keys()
         .first()
         .is_none_or(|key| matches!(key, KeyVal::Day(_)));
     match index.period {
