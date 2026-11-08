@@ -18,13 +18,17 @@
 //!   (`m0/format.refcore`) and its run of the load probe on each (`m0/load.refcore`, issue
 //!   #56) and of row 3's realities (`m0/loadcheck.refcore`), and [`m0_texts`] and
 //!   [`m0_spec_texts`], the texts they name;
+//! - [`m1`]: milestone M1's vectors, refcore's whole output for each (`m1/vectors.refcore`,
+//!   issue #108), and #109's text with the law it is held to, a canonical text reprints as
+//!   itself;
 //! - [`engine`]: a run on the engine, in process;
 //! - [`held`]: the gating vectors T holds "for #n" (`held.tsv`), which the targets leave out.
 //!
 //! The tests that run the engine are each milestone's test targets (`milestone/s_properties.rs`,
 //! `milestone/s_household.rs` and `milestone/s_kernel.rs` for S, `milestone/m0_codes.rs`,
 //! `milestone/m0_format.rs`, `milestone/m0_load.rs`, `milestone/m0_loadcheck.rs` and
-//! `milestone/m0_properties.rs` for M0),
+//! `milestone/m0_properties.rs` for M0, `milestone/m1_checks.rs` and `milestone/m1_format.rs`
+//! for M1),
 //! with `test = false`:
 //! red until their milestone is built. The marker `engine/tools/milestones.toml` gates a
 //! milestone's targets once it is tagged, and `check` reports the next milestone's, never
@@ -44,4 +48,5 @@ pub mod laws_m0;
 pub mod m0;
 pub mod m0_spec_texts;
 pub mod m0_texts;
+pub mod m1;
 pub mod output;

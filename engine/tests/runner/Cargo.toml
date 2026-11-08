@@ -71,3 +71,16 @@ test = false
 name = "m0_properties"
 path = "milestone/m0_properties.rs"
 test = false
+
+# M1: the checks of BUILD-ORDER § M1 that s_kernel doesn't hold, refcore's whole output for
+# each (m1/vectors.refcore; MILESTONE-M1.md row 1), one test per builder group
+[[test]]
+name = "m1_checks"
+path = "milestone/m1_checks.rs"
+test = false
+
+# M1: a canonical text reprints as itself, on #109's text (m1/format/; MILESTONE-M1.md row 7)
+[[test]]
+name = "m1_format"
+path = "milestone/m1_format.rs"
+test = false
