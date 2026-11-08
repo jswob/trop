@@ -2,7 +2,9 @@
 //! Spec: L §5.11 (def and rule: `at`, givens, the versions of a rule in force, `when`,
 //! `beats`, the candidates, a hole `when`, `RUN-CONFLICT`, `RUN-NO-RULE`), §4.3 (the law date),
 //! §8.2 (`assumed`, `given`, `missing` entries); E §3.2 (the memo: one cell per def, keys and
-//! context, its result kept, refusal included; a cell read while it is computed is `RUN-CYCLE`).
+//! context, its result kept, refusal included; a cell read while it is computed is `RUN-CYCLE`);
+//! L §4.4 (a window a def computes is the read's value in its cell's world; one it passes on
+//! keeps the read that made it).
 //! Twin: engine/tools/refcore/evaluate.py (`read_def`, `_read_def`, `law_value`, `def_cell`,
 //! `coerce_def`, `rule_in_force`, `beats_order`, `eval_rules`).
 //! Invariants: every result a cell computes is kept, with the register entries it met; the
@@ -45,8 +47,7 @@ impl Engine {
         let outer = self.holding(Node::new(NodeKind::Def, &def.id));
         let read = self.read_def_held(m, def, keys, ctx);
         self.holder = outer;
-        // a window the def gives is this read's value, whichever read made it (L §4.4)
-        Ok(as_read(read?, &def.id, keys, ctx))
+        read
     }
 
     /// [`Engine::read_def_at`] with the def holding what its `where` and `at` read. L §5.11,
@@ -76,8 +77,8 @@ impl Engine {
                 ));
             }
         }
-        match &def.at {
-            None => self.def_cell(m, def, keys, &env, ctx.at_law(None)),
+        let cell = match &def.at {
+            None => ctx.at_law(None),
             Some(LawDate::Reader) => {
                 if ctx.law.is_none() {
                     return Err(refuse_load(
@@ -85,7 +86,7 @@ impl Engine {
                         format!("ask reaches an at reader def ({}) without law", def.id),
                     ));
                 }
-                self.def_cell(m, def, keys, &env, ctx)
+                ctx
             }
             Some(LawDate::Expr(e)) => {
                 let law = self.ev(m, e, &env, ctx)?;
@@ -95,9 +96,13 @@ impl Engine {
                 let Value::Day(day) = law else {
                     return Err(bad_law_date(m, def, &law)?);
                 };
-                self.def_cell(m, def, keys, &env, ctx.at_law(Some(a_day(day)?)))
+                ctx.at_law(Some(a_day(day)?))
             }
-        }
+        };
+        let value = self.def_cell(m, def, keys, &env, cell)?;
+        // a window the def computed is this read's value, in the world its cell is computed
+        // in; one it passes on keeps the read that made it (L §4.4)
+        Ok(as_read(value, (&def.id, keys), cell, None))
     }
 
     /// A def's cell: the memo's result, or the rules evaluated now and kept (refcore's

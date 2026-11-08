@@ -3,7 +3,8 @@
 //! results, a value or a refusal, with the register entries the cell met and its read set);
 //! L §4.3 (the law date), §4.5 (the cut), §5.18 (the ask line's `with uncertain`, in its own
 //! reads' context only), §8.2 (the register); §7.6 items 1 and 4 (a day past the calendar and
-//! the end of time read as a day, `past_days` and `a_day`; a unit's power past 64).
+//! the end of time read as a day, `past_days` and `a_day`; a unit's power past 64); §4.4 (a
+//! read's world, `Ctx::world`: two reads of one item at the same keys in it are one value).
 //! Twin: engine/tools/refcore/evaluate.py (`Ctx`, `Coll`, `Engine` and its collector stack,
 //! `past_days`).
 //! Invariants: a cell is computed once per context and its result, refusal included, is kept;

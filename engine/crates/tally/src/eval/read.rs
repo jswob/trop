@@ -4,8 +4,8 @@
 //! (a figure in Y prices), §8.1 (a read whose key is a hole carries the key's questions only),
 //! §8.2 (the register entries a read makes), §8.4 (`RUN-KEY`, `RUN-NONE`), §7.6 items 1 and 3
 //! (the end of time is no key; a key offset's 18 digits), `last(x, d)` and `since(x, d)`
-//! (§4.6 Past the last row, Readings; §5.3). A row's value converted to its input's type is
-//! `convert.rs`'s.
+//! (§4.6 Past the last row, Readings; §5.3); §4.4 (a window read is that read's value, its
+//! holes asked of its row). A row's value converted to its input's type is `convert.rs`'s.
 //! Twin: engine/tools/refcore/evaluate.py (`key_values`, `to_key`, `check_key`, `read_input`,
 //! `row_value`, `e_lastx`, `e_call_since`, `prices`, `index_assumed`).
 //! Invariants: a key a read takes is a key its domain holds and the cut sees; a row's value
@@ -128,7 +128,7 @@ impl Engine {
             Found::None => Value::None,
             Found::Hole(q) => Value::Hole(Hole::asked(&q.text, &q.origin)),
         };
-        Ok(as_read(value, &input.id, keys, ctx))
+        Ok(as_read(value, (&input.id, keys), ctx, None))
     }
 
     /// Narrows the reading cell's law date class by what a read of `input` tests its law
@@ -257,7 +257,13 @@ impl Engine {
             );
             self.note("held", text, String::new());
         }
-        Ok(value)
+        // a read of x at its keys, its day d part of the read (L §4.4, §4.6)
+        Ok(as_read(
+            value,
+            (&input.id, &latest.keys),
+            ctx,
+            Some(latest.day),
+        ))
     }
 
     /// `since(x[k], d)`: the days from the last reading of x on or before d to d, a hole
