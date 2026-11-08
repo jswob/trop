@@ -39,6 +39,9 @@ pub enum Test {
     At(Option<Day>),
     /// A reading at this instant.
     Instant(Day),
+    /// `last(x, d)`: a row whose span began on or before this day, past its end too; a
+    /// reading at an instant on or before it.
+    Last(Day),
 }
 
 /// The day a read's spans are tested at, and its time key's period (L §4.6 step 1).
@@ -341,13 +344,15 @@ fn instant_day(instant: &RowInstant) -> Option<Day> {
 }
 
 /// Whether a row holds the read's time: a reading at its instant; a state when its span
-/// holds the day, or governs `always` for a read with no law date (L §4.6 step 1,
-/// Readings).
+/// holds the day, or governs `always` for a read with no law date; for `last(x, d)`, a
+/// reading at an instant on or before d, a state whose span has a start on or before d
+/// (L §4.6 step 1, Readings, Past the last row).
 fn in_time(m: &Reality, row: &Row, test: Test, cut: Day) -> Result<bool, Stop> {
     if let Some(instant) = &row.instant {
         return Ok(match test {
             Test::At(_) => true,
             Test::Instant(at) => instant_day(instant) == Some(at),
+            Test::Last(at) => instant_day(instant).is_some_and(|day| day <= at),
         });
     }
     let Some(span) = row_span(m, row, cut)? else {
@@ -357,7 +362,23 @@ fn in_time(m: &Reality, row: &Row, test: Test, cut: Day) -> Result<bool, Stop> {
         Test::At(None) if span.is_always() => Ok(true),
         Test::At(None) => Err(no_law_date()),
         Test::At(Some(day)) | Test::Instant(day) => Ok(span.contains(day)),
+        Test::Last(at) => Ok(!span.is_always() && span.start().is_some_and(|day| day <= at)),
     }
+}
+
+/// When a candidate of `last(x, d)` began: a reading's instant, a state's first day (L §4.6
+/// Readings, Past the last row).
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for a row with neither, which `in_time` never takes, or whose version
+/// is missing.
+pub(super) fn row_start(m: &Reality, row: &Row, cut: Day) -> Result<Day, Stop> {
+    let start = match &row.instant {
+        Some(instant) => instant_day(instant),
+        None => row_span(m, row, cut)?.and_then(|span| span.start()),
+    };
+    start.ok_or_else(|| invariant("a candidate of last with no start"))
 }
 
 /// The candidates of a read among `rows`, by position: every key it states matches, the

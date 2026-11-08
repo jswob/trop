@@ -1,16 +1,18 @@
 //! The gap rule and the read of an input: the row a read takes, `none` outside a lifespan, or the question of the hole a read with no row is.
 //! Spec: L §4.6 step 5 (no candidate: `HOLE-UNGOVERNED`'s questions, outside a lifespan),
-//! Readings (a plain read of a reading, `HOLE-NOREADING`), §4.2 (a calendar's question),
-//! §5.7 (lifespans and memberships), §8.1.
+//! Readings (a plain read of a reading, `HOLE-NOREADING`), Past the last row (`last(x, d)`),
+//! §4.2 (a calendar's question), §5.7 (lifespans and memberships), §8.1.
 //! Twin: engine/tools/refcore/evaluate.py (`origin`, `no_candidate`, `read_input`,
-//! `read_reading`), model.py (`member_span`).
+//! `read_reading`, `e_lastx`), model.py (`member_span`).
 //! Invariants: a question is text and the item it is asked of; the hole itself is built in
 //! the hole module (R-116). A thing stated `same` belongs to a joint model, which S doesn't
 //! build.
 
 use std::collections::BTreeSet;
 
-use super::rows::{Clocks, Point, Test, candidates, choose, invariant, need_law, time_point};
+use super::rows::{
+    Clocks, Point, Test, candidates, choose, invariant, need_law, row_start, time_point,
+};
 use crate::model::{Domain, InputInfo, KeyVal, Reality, Span, Thing};
 use crate::syntax::Stop;
 use crate::time::Day;
@@ -182,6 +184,57 @@ pub fn read_input(
     match choose(m, &input.rows, &input.binds, &cands, clocks.cut, &input.id)? {
         Some(at) => Ok(Found::Row(at)),
         None => no_candidate(m, input, keys, &point, clocks.cut, asked),
+    }
+}
+
+/// `last(x[k], d)`'s read: among the rows of `input` at `keys` whose span began on or before
+/// `day` (a reading's instants on or before it), those that began latest, and of them the
+/// row the read rule takes; with none, `HOLE-NOREADING` for a reading, else the gap rule's
+/// question at `day` (L §4.6 step 5, Readings, Past the last row; refcore's `e_lastx`).
+///
+/// # Errors
+///
+/// `LOAD-OVERLAP` for rows still tied; `ENGINE-INVARIANT` where load's promises break.
+pub fn read_last(
+    m: &Reality,
+    input: &InputInfo,
+    keys: &[KeyVal],
+    day: Day,
+    clocks: Clocks,
+) -> Result<Found, Stop> {
+    let test = Test::Last(day);
+    let cands = candidates(m, &input.rows, &input.binds, keys, test, clocks.cut)?;
+    if cands.is_empty() {
+        if input.reading {
+            let figure = origin(&input.id, keys);
+            return Ok(Found::Hole(Question {
+                text: format!("{figure} has no reading on or before {}", day.text()),
+                origin: figure,
+            }));
+        }
+        let point = Point {
+            day: Some(day),
+            period: None,
+        };
+        return no_candidate(m, input, keys, &point, clocks.cut, Asked::Plain);
+    }
+    let mut starts = Vec::with_capacity(cands.len());
+    for &at in &cands {
+        let row = input
+            .rows
+            .get(at)
+            .ok_or_else(|| invariant("a candidate past its rows"))?;
+        starts.push((at, row_start(m, row, clocks.cut)?));
+    }
+    let latest = starts.iter().map(|(_, start)| *start).max();
+    let kept: Vec<usize> = starts
+        .into_iter()
+        .filter(|(_, start)| Some(*start) == latest)
+        .map(|(at, _)| at)
+        .collect();
+    match choose(m, &input.rows, &input.binds, &kept, clocks.cut, &input.id)? {
+        Some(at) => Ok(Found::Row(at)),
+        None => Err(invariant("last's candidates chose no row")),
     }
 }
 

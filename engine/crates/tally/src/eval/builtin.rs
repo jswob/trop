@@ -4,24 +4,25 @@
 //! (`min`, `max`, `missing`), §3.3 (`periodic`, `factor`: exact when the power is an integer),
 //! §7.1, §7.3 (`pow` by an integer, exact; a power that isn't one needs `to u`), §4.4 (`min`
 //! and `max` of windows, `round` of one).
-//! Twin: engine/tools/refcore/evaluate.py (`e_call`, `c_min`, `agg_minmax`, `c_abs`, `c_pow`,
+//! Twin: engine/tools/refcore/evaluate.py (`e_call`, `c_min`, `c_abs`, `c_pow`,
 //! `c_minor`, `c_round`, `c_pos`, `c_missing`) and eval2.py (`m_rate_parts`,
 //! `m_periodic_real`).
 //! Invariants: a hole argument makes the call that hole; a power by an integer is exact and
 //! its unit raised to it; a power that isn't an integer stops `NotBuilt` (the transcendental
 //! kernel is M6's).
 
-use super::arith::{Test, compare, int_of};
+use super::arith::int_of;
 use super::expr::hole_of;
+use super::extremes::min_max;
 use super::read::{Given, make_keys};
 use super::state::{
     Ctx, Engine, Env, invariant, not_typed, num_stop, refuse, refuse_load, wrong_type,
 };
-use super::windows::{End, as_window, imprecise, window_end};
+use super::windows::{End, imprecise};
 use crate::base::{Load, Run};
 use crate::model::{
-    Class, Code, Domain, KeyVal, Number, Reality, Shown, Unit, Value, Window, currency_unit,
-    money_num, num_money,
+    Class, Code, Domain, KeyVal, Number, Reality, Shown, Unit, Value, currency_unit, money_num,
+    num_money,
 };
 use crate::num::{Mode, Num, NumError};
 use crate::read::{Asked, Found, read_input};
@@ -61,6 +62,7 @@ impl Engine {
             "abs" => self.abs(m, call, env, ctx),
             "pow" => self.pow(m, call, env, ctx),
             "minor" => minor_of(m, call),
+            "marginal" => self.marginal(m, call, env, ctx),
             "pos" => self.pos(m, call, env, ctx),
             "missing" => self.missing(m, call, env, ctx),
             "periodic" | "factor" => self.rate_call(m, call, env, ctx),
@@ -121,29 +123,15 @@ impl Engine {
             }
             return hole_of(&holes);
         }
-        let vals = coerce_flex(m, vals)?;
+        if vals.is_empty() {
+            return Err(arity());
+        }
         let pick = if call.name == "min" {
             End::Low
         } else {
             End::High
         };
-        let Some(w) = vals.iter().find_map(as_window) else {
-            return extreme_of(m, vals, pick);
-        };
-        let src = w.src.clone();
-        let los: Vec<Value> = vals.iter().map(|v| window_end(v, End::Low)).collect();
-        let his: Vec<Value> = vals.iter().map(|v| window_end(v, End::High)).collect();
-        let (lo, hi) = (extreme_of(m, los, pick)?, extreme_of(m, his, pick)?);
-        if compare(m, &lo, &hi, Test::Order)? == core::cmp::Ordering::Equal {
-            return Ok(lo);
-        }
-        Ok(Value::Window(Box::new(Window {
-            lo,
-            hi,
-            days: None,
-            src,
-            origin: None,
-        })))
+        min_max(m, coerce_flex(m, vals)?, pick)
     }
 
     /// `pow(x, n)`: x to the integer power n, exact, its unit to the n-th power, a `num`; a
@@ -231,15 +219,7 @@ impl Engine {
         if let Value::OutKey { index, text } = &v {
             return Err(refuse(Run::Key, format!("{text} is outside {index}")));
         }
-        let from_var = if let Expr::Name(name) = arg
-            && let Some(var) = env.get(name)
-            && let Some(Domain::Index(ix)) = &var.domain
-        {
-            Some(ix.clone())
-        } else {
-            None
-        };
-        let index = if let Some(ix) = from_var {
+        let index = if let Some(ix) = written_index(arg, env) {
             ix
         } else if let Value::Key(KeyVal::Key { index, .. }) = &v {
             index.clone()
@@ -369,26 +349,6 @@ fn bare_step(written: Option<&Expr>, u: Value) -> Value {
     u
 }
 
-/// The lowest or the highest of values that are no windows, by `pick` (refcore's
-/// `extreme`). L §5.11.
-fn extreme_of(m: &Reality, vals: Vec<Value>, pick: End) -> Result<Value, Stop> {
-    let mut best: Option<Value> = None;
-    for v in vals {
-        best = Some(match best {
-            None => v,
-            Some(held) => {
-                let order = compare(m, &v, &held, Test::Order)?;
-                let better = match pick {
-                    End::Low => order == core::cmp::Ordering::Less,
-                    End::High => order == core::cmp::Ordering::Greater,
-                };
-                if better { v } else { held }
-            }
-        });
-    }
-    best.ok_or_else(arity)
-}
-
 /// `base^k` for a whole `k`, as refcore's `c_pow` screens and computes it: past the digits its
 /// parts' bits promise, `RUN-DIGITS` before the power; 0 to a power below 0 `RUN-DIV`; 1, 0
 /// and -1 to a power past 64 bits by their closed forms. L §3.3, §7.1.
@@ -451,6 +411,23 @@ pub(super) fn read_parts(e: &Expr) -> Option<(&str, &[Key])> {
         return Some((name.as_str(), keys.as_slice()));
     }
     None
+}
+
+/// The index of `pos`'s argument as written: a variable bound over an index, or a key moved
+/// by steps from one, `k ± n`, which keeps its index's type (refcore's `n.args[0]._t.ix`;
+/// check.py types `k + n` as k's key). L §4.2, §5.11 Recurrences.
+fn written_index(arg: &Expr, env: &Env) -> Option<String> {
+    let mut at = arg;
+    while let Expr::Paren(x) | Expr::Sum(x, _) = at {
+        at = x;
+    }
+    let Expr::Name(name) = at else {
+        return None;
+    };
+    let Some(Domain::Index(ix)) = &env.get(name)?.domain else {
+        return None;
+    };
+    Some(ix.clone())
 }
 
 /// A value `pos` reads as a key of its index (refcore's `c_pos`). L §4.2.

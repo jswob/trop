@@ -15,11 +15,13 @@
 //! when the member passes the `where`: an aggregate's reader, or an ask's line for that
 //! tuple alone.
 
-use super::arith::{Op, Test, arith, compare};
+use super::arith::{Op, arith};
 use super::expr::hole_of;
+use super::extremes::{bare_key, min_max};
 use super::read::{lacks_at_run, literal_key};
 use super::state::{Collected, Ctx, Engine, Env, a_day, invariant, not_typed, refuse, wrong_type};
 use super::ty::zero_of;
+use super::windows::End;
 use super::years::span_year;
 use crate::base::{Code, Refusal, Run};
 use crate::hole::{Hole, spread};
@@ -29,7 +31,6 @@ use crate::syntax::{
     Stop,
 };
 use crate::time::{Day, Period};
-use core::cmp::Ordering;
 use std::collections::BTreeSet;
 
 /// A binding tuple: its scope, the questions that make it an unknown member, and what its
@@ -134,11 +135,8 @@ impl Engine {
         env: &Env,
         ctx: Ctx,
     ) -> Result<Value, Stop> {
-        match agg.func {
-            AggFn::First | AggFn::Last | AggFn::Argmin | AggFn::Argmax => {
-                return Err(Stop::NotBuilt("first, last, argmin and argmax"));
-            }
-            AggFn::Sum | AggFn::Count | AggFn::Min | AggFn::Max | AggFn::Any | AggFn::All => {}
+        if let AggFn::First | AggFn::Last = agg.func {
+            return self.first_last(m, agg, env, ctx);
         }
         let members = match self.members(m, &agg.binds, env, ctx, Brings::ToReader)? {
             Err(hole) => return Ok(Value::Hole(hole)),
@@ -157,7 +155,8 @@ impl Engine {
         self.terms_aggregate(m, agg, &members, env, ctx)
     }
 
-    /// `count`, `sum`, `min`, `max` over their terms (refcore's `e_agg`). L §5.11.
+    /// `count`, `sum`, `min`, `max`, `argmin`, `argmax` over their terms (refcore's
+    /// `e_agg`). L §5.11.
     fn terms_aggregate(
         &mut self,
         m: &Reality,
@@ -167,7 +166,7 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let word = agg.func.word();
-        let mut terms: Vec<Value> = Vec::with_capacity(members.len());
+        let mut terms: Vec<(&Env, Value)> = Vec::with_capacity(members.len());
         let mut holes: Vec<Hole> = Vec::new();
         for member in members {
             let t = match &agg.term {
@@ -191,22 +190,37 @@ impl Engine {
             if t == Value::None {
                 return Err(refuse(Run::None, format!("a term of {word} is none here")));
             }
-            terms.push(t);
+            terms.push((&member.env, t));
         }
         if !holes.is_empty() {
             let operands: Vec<Option<&Hole>> = holes.iter().map(Some).collect();
             return hole_of(&operands);
         }
-        if agg.func == AggFn::Count {
-            let n = terms.iter().filter(|t| **t == Value::Bool(true)).count();
-            return Ok(Value::int(
-                i64::try_from(n).map_err(|_| invariant("a count past the integers"))?,
-            ));
+        let pick = match agg.func {
+            AggFn::Count => {
+                let n = terms
+                    .iter()
+                    .filter(|(_, t)| *t == Value::Bool(true))
+                    .count();
+                return Ok(Value::int(
+                    i64::try_from(n).map_err(|_| invariant("a count past the integers"))?,
+                ));
+            }
+            AggFn::Sum => {
+                let terms = terms.into_iter().map(|(_, t)| t).collect();
+                return sum_terms(m, agg, terms, env, ctx);
+            }
+            AggFn::Argmin | AggFn::Argmax => return self.arg_extreme(m, agg, terms, ctx),
+            AggFn::Min => End::Low,
+            AggFn::Max => End::High,
+            AggFn::First | AggFn::Last | AggFn::Any | AggFn::All => {
+                return Err(invariant("an aggregate with no terms to fold"));
+            }
+        };
+        if terms.is_empty() {
+            return Err(refuse(Run::Empty, format!("{word} over no keys")));
         }
-        if agg.func == AggFn::Sum {
-            return sum_terms(m, agg, terms, env, ctx);
-        }
-        extreme_term(m, agg.func, terms)
+        min_max(m, terms.into_iter().map(|(_, t)| t).collect(), pick)
     }
 
     /// `any(c for …)`, `all(c for …)` under Kleene logic (refcore's `agg_anyall`). L §5.11.
@@ -601,16 +615,6 @@ fn count_members(members: &[Member]) -> Result<Value, Stop> {
     Ok(Value::int(n))
 }
 
-/// A bare binding's term: its one variable's value (refcore's `bare_key`).
-fn bare_key(agg: &Agg, env: &Env) -> Result<Value, Stop> {
-    let [bind] = agg.binds.as_slice() else {
-        return Err(Stop::NotBuilt("a bare aggregate over a tuple of keys"));
-    };
-    env.get(&bind.var)
-        .map(|v| v.value.clone())
-        .ok_or_else(|| invariant("a bound variable the scope lacks"))
-}
-
 /// Whether a term is zero: an unknown member's 0 adds nothing to a sum (L §5.11).
 fn is_zero(v: &Value) -> bool {
     if let Value::Number(n) = v {
@@ -644,25 +648,6 @@ fn sum_terms(
         acc = arith(m, Op::Add, &acc, &t)?;
     }
     Ok(acc)
-}
-
-/// `min` or `max` of known terms; `RUN-EMPTY` over none (refcore's `agg_minmax`). L §5.11.
-fn extreme_term(m: &Reality, func: AggFn, terms: Vec<Value>) -> Result<Value, Stop> {
-    let mut it = terms.into_iter();
-    let Some(mut best) = it.next() else {
-        return Err(refuse(Run::Empty, format!("{} over no keys", func.word())));
-    };
-    let wanted = if func == AggFn::Min {
-        Ordering::Less
-    } else {
-        Ordering::Greater
-    };
-    for t in it {
-        if compare(m, &t, &best, Test::Order)? == wanted {
-            best = t;
-        }
-    }
-    Ok(best)
 }
 
 /// Two unknown-member holes as one.
@@ -931,7 +916,7 @@ fn field_expr(f: &Field) -> Option<&Expr> {
 }
 
 /// Whether a span as written may read the name `name`.
-fn span_reads(sp: &SpanText, name: &str) -> bool {
+pub(super) fn span_reads(sp: &SpanText, name: &str) -> bool {
     sp.from.as_ref().is_some_and(|e| reads_name(e, name))
         || sp.to.as_ref().is_some_and(|e| reads_name(e, name))
 }

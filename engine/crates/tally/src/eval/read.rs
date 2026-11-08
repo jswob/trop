@@ -3,25 +3,26 @@
 //! §4.2 (keys as values), §5.6 (`assumed` on an index), §5.8 (inputs and their values), §3.4
 //! (a figure in Y prices), §8.1 (a read whose key is a hole carries the key's questions only),
 //! §8.2 (the register entries a read makes), §8.4 (`RUN-KEY`, `RUN-NONE`), §7.6 items 1 and 3
-//! (the end of time is no key; a key offset's 18 digits). A row's value converted to its
-//! input's type is `convert.rs`'s.
+//! (the end of time is no key; a key offset's 18 digits), `last(x, d)` (§4.6 Past the last
+//! row). A row's value converted to its input's type is `convert.rs`'s.
 //! Twin: engine/tools/refcore/evaluate.py (`key_values`, `to_key`, `check_key`, `read_input`,
-//! `row_value`, `prices`, `index_assumed`).
+//! `row_value`, `e_lastx`, `prices`, `index_assumed`).
 //! Invariants: a key a read takes is a key its domain holds and the cut sees; a row's value
 //! has its input's declared type; a hole is built in the hole module.
 
 use super::arith::{Op, arith, int_of};
+use super::builtin::read_parts;
 use super::convert::{ConvertFor, Converted, convert};
 use super::memo::{LawClass, Read, may_hold, rows_class};
-use super::state::{Ctx, Engine, a_day, invariant, num_stop, refuse, refuse_load};
+use super::state::{Ctx, Engine, Env, a_day, invariant, num_stop, refuse, refuse_load};
 use crate::base::{Load, Run};
 use crate::hole::Hole;
 use crate::load::index_key_of;
 use crate::model::{
     BindInfo, Domain, IndexInfo, InputInfo, KeyVal, Number, Reality, Row, TimePos, Unit, Value,
 };
-use crate::read::{Asked, Clocks, Found, held, origin, read_input, time_point};
-use crate::syntax::{Lit, Stop};
+use crate::read::{Asked, Clocks, Found, held, origin, read_input, read_last, time_point};
+use crate::syntax::{Expr, Lit, Stop};
 use crate::time::{Day, PeriodKind};
 
 /// A key a read is given: a value, or a key literal its position resolves (L §2.5).
@@ -142,6 +143,127 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let figure = origin(&input.id, keys);
+        let value = self.row_converted(m, input, row, &figure)?;
+        let point = time_point(input, keys, ctx.law)?;
+        let is_held = held(m, row, point.day, self.clocks(ctx))?;
+        if let (Some(day), false) = (ctx.law, matches!(input.time_pos, TimePos::At(_))) {
+            if is_held {
+                // the `held` entry names the day (L §8.2)
+                self.narrow_to_day(ctx.law);
+            } else {
+                self.unheld_class(m, row, ctx, day)?;
+            }
+        }
+        if is_held {
+            let shown = shown(m, &value)?;
+            let read_for = match (&point.period, point.day) {
+                (Some(period), _) => Value::of_key(period).text(m).map_err(num_stop)?,
+                (None, Some(day)) => day.text(),
+                (None, None) => String::new(),
+            };
+            self.note(
+                "held",
+                format!("{figure} = {shown} ({}), read for {read_for}", row.version),
+                String::new(),
+            );
+        }
+        Ok(value)
+    }
+
+    /// The keys of a read that are movements, each checked to be a movement of its position's
+    /// event kind or a subkind (refcore's `check_key`, a movement). L §5.7, §5.11.
+    ///
+    /// # Errors
+    ///
+    /// `RUN-KEY` for a movement of another kind.
+    pub(super) fn movement_keys(
+        &mut self,
+        m: &Reality,
+        binds: &[BindInfo],
+        keys: &[KeyVal],
+        ctx: Ctx,
+    ) -> Result<(), Stop> {
+        for (bind, key) in binds.iter().zip(keys) {
+            let (Domain::Kind(kind), KeyVal::Mv(mv)) = (&bind.domain, key) else {
+                continue;
+            };
+            if !self.mv_kind_in(m, mv, kind, ctx)? {
+                return Err(refuse(
+                    Run::Key,
+                    format!("{} is not a movement of {kind}", mv.id),
+                ));
+            }
+        }
+        Ok(())
+    }
+
+    /// `last(x[k], d)`: the row of x whose span began latest on or before d, past its end
+    /// too, its value marked `held` for d in the register; a reading's latest on or before d
+    /// (refcore's `e_lastx`). A key or a day that is a hole makes it that hole. L §4.6 (Past
+    /// the last row, Readings), §8.2.
+    pub(super) fn last_read(
+        &mut self,
+        m: &Reality,
+        (read, day): (&Expr, &Expr),
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Value, Stop> {
+        let (name, written) =
+            read_parts(read).ok_or_else(|| invariant("last of a read load didn't check"))?;
+        let input = m
+            .inputs
+            .get(name)
+            .ok_or_else(|| invariant("last of an input load didn't build"))?;
+        let given = self.given_keys(m, written, env, ctx)?;
+        let keys = match make_keys(m, name, &input.binds, given, ctx.cut)? {
+            Err(hole) => return Ok(Value::Hole(hole)),
+            Ok(keys) => keys,
+        };
+        let day = self.ev(m, day, env, ctx)?;
+        if let Value::Hole(_) = day {
+            return Ok(day);
+        }
+        let day = crate::ask::date_of(&day, "the day of last")?;
+        self.read(Read::Input {
+            id: input.id.clone(),
+            keys: keys.clone(),
+        });
+        let found = read_last(m, input, &keys, day, self.clocks(ctx))?;
+        let row = match found {
+            Found::Row(at) => input
+                .rows
+                .get(at)
+                .ok_or_else(|| invariant("the read rule took a row the input lacks"))?,
+            Found::None => return Ok(Value::None),
+            Found::Hole(q) => return Ok(Value::Hole(Hole::asked(&q.text, &q.origin))),
+        };
+        self.read(Read::Row {
+            version: row.version.clone(),
+            sid: row.sid.clone(),
+        });
+        let figure = origin(&input.id, &keys);
+        let value = self.row_converted(m, input, row, &figure)?;
+        let text = format!(
+            "{figure} = {} ({}), read for {}",
+            shown(m, &value)?,
+            row.version,
+            day.text()
+        );
+        self.note("held", text, String::new());
+        Ok(value)
+    }
+
+    /// A chosen row's value with the register entries every read of it makes: `assumed`, its
+    /// own and its version's, and its keys' indexes' (refcore's `row_value`, before `held`).
+    /// L §4.6, §8.2.
+    fn row_converted(
+        &mut self,
+        m: &Reality,
+        input: &InputInfo,
+        row: &Row,
+        figure: &str,
+    ) -> Result<Value, Stop> {
+        let figure = figure.to_owned();
         self.note_version(&row.version);
         if let Some(reason) = &row.assumed {
             self.note("assumed", reason.clone(), figure.clone());
@@ -168,29 +290,6 @@ impl Engine {
             }
             Converted::Value(v) => v,
         };
-        let point = time_point(input, keys, ctx.law)?;
-        let is_held = held(m, row, point.day, self.clocks(ctx))?;
-        if let (Some(day), false) = (ctx.law, matches!(input.time_pos, TimePos::At(_))) {
-            if is_held {
-                // the `held` entry names the day (L §8.2)
-                self.narrow_to_day(ctx.law);
-            } else {
-                self.unheld_class(m, row, ctx, day)?;
-            }
-        }
-        if is_held {
-            let shown = shown(m, &value)?;
-            let read_for = match (&point.period, point.day) {
-                (Some(period), _) => Value::of_key(period).text(m).map_err(num_stop)?,
-                (None, Some(day)) => day.text(),
-                (None, None) => String::new(),
-            };
-            self.note(
-                "held",
-                format!("{figure} = {shown} ({}), read for {read_for}", row.version),
-                String::new(),
-            );
-        }
         Ok(value)
     }
 
@@ -384,6 +483,11 @@ pub(crate) fn to_key(m: &Reality, item: &str, v: &Value, domain: &Domain) -> Res
             index_key(m, item, ix, v)
         }
         Domain::Kind(kind) => {
+            if let Value::Mv(mv) = v {
+                // a key of an event kind is a movement; its kind is checked where the walk
+                // can find it (`movement_keys`, L §5.7, §5.11)
+                return Ok(KeyVal::Mv(mv.clone()));
+            }
             let Value::Key(KeyVal::Thing(name)) = v else {
                 return Err(refuse(
                     Run::Key,
@@ -534,6 +638,9 @@ pub(super) fn check_key(m: &Reality, key: &KeyVal, domain: &Domain, cut: Day) ->
             Ok(())
         }
         Domain::Kind(kind) => {
+            if let KeyVal::Mv(_) = key {
+                return Ok(());
+            }
             let KeyVal::Thing(name) = key else {
                 return Err(refuse(
                     Run::Key,

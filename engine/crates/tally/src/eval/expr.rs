@@ -73,7 +73,7 @@ impl Engine {
             Expr::Agg(agg) => self.aggregate(m, agg, env, ctx),
             Expr::LegOf(..) => Err(Stop::NotBuilt("a leg's amount of a party or a batch")),
             Expr::To(..) => Err(Stop::NotBuilt("`to u`, a transcendental value")),
-            Expr::Last(..) => Err(Stop::NotBuilt("`last(x, d)`")),
+            Expr::Last(last) => self.last_read(m, (&last.0, &last.1), env, ctx),
             Expr::Bal(b) => self.bal(m, b, env, ctx),
             Expr::Flows(f) => self.flows(m, f, env, ctx),
             Expr::Covered(c) => self.covered_call(m, (&c.0, &c.1), env, ctx),
@@ -127,7 +127,10 @@ impl Engine {
         if let Some(input) = m.inputs.get(id) {
             return match make_keys(m, id, &input.binds, given, ctx.cut)? {
                 Err(hole) => Ok(Value::Hole(hole)),
-                Ok(made) => self.read_input_at(m, input, &made, ctx, Asked::Plain),
+                Ok(made) => {
+                    self.movement_keys(m, &input.binds, &made, ctx)?;
+                    self.read_input_at(m, input, &made, ctx, Asked::Plain)
+                }
             };
         }
         let def = m
@@ -136,7 +139,10 @@ impl Engine {
             .ok_or_else(|| invariant("a read of an item that is neither an input nor a def"))?;
         match make_keys(m, id, &def.binds, given, ctx.cut)? {
             Err(hole) => Ok(Value::Hole(hole)),
-            Ok(made) => self.read_def_at(m, def, &made, ctx),
+            Ok(made) => {
+                self.movement_keys(m, &def.binds, &made, ctx)?;
+                self.read_def_at(m, def, &made, ctx)
+            }
         }
     }
 
@@ -452,7 +458,13 @@ impl Engine {
             return Ok(Value::Bool(self.mv_kind_in(m, mv, kind, ctx)?));
         }
         let Value::Key(KeyVal::Thing(name)) = &member else {
-            return Err(Stop::NotBuilt("membership of a value in a kind"));
+            return Err(refuse_load(
+                Load::Unit,
+                format!(
+                    "membership of {} in a kind",
+                    member.text(m).map_err(num_stop)?
+                ),
+            ));
         };
         let Some(thing) = m.things.get(name) else {
             return Ok(Value::Bool(false));
