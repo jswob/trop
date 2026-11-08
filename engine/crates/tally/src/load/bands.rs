@@ -55,6 +55,7 @@ fn order_key(m: &Reality, value: &Value) -> Result<BandEnd, Stop> {
         Value::Day(day) => Ok(BandEnd::Day(*day)),
         Value::Period(period) => Ok(BandEnd::Period(*period)),
         Value::Key(key) => key_end(m, key),
+        Value::Window(_) => Err(Stop::NotBuilt("a band's end that is a window")),
         Value::Bool(_)
         | Value::MonthDay(..)
         | Value::Text(_)

@@ -124,6 +124,12 @@ fn shown(m: &Reality, a: &Value, op: Op, b: &Value) -> Result<String, Stop> {
 /// The refusal of L §8.4 the operation meets (`RUN-DIV`, `RUN-NOT-INT`, `RUN-KEY`,
 /// `RUN-DOMAIN`, `RUN-DIGITS`), or the unit refusal refcore raises (`LOAD-UNIT`).
 pub fn arith(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Result<Value, Stop> {
+    if matches!(lhs, Value::Window(_)) || matches!(rhs, Value::Window(_)) {
+        // the evaluator's arithmetic takes a window (`windows.rs`); a sum or a walk doesn't yet
+        return Err(Stop::NotBuilt(
+            "a window in arithmetic outside an expression",
+        ));
+    }
     if matches!(lhs, Value::Day(_) | Value::Period(_) | Value::Key(_))
         || matches!(rhs, Value::Day(_) | Value::Period(_) | Value::Key(_))
     {
@@ -784,6 +790,10 @@ pub enum Test {
 /// `RUN-DOMAIN` for an order that has no meaning; `LOAD-UNIT` for values of different units
 /// or types.
 pub fn compare(m: &Reality, lhs: &Value, rhs: &Value, test: Test) -> Result<Ordering, Stop> {
+    if matches!(lhs, Value::Window(_)) || matches!(rhs, Value::Window(_)) {
+        // a comparison decides a window (`windows.rs`); an aggregate's order doesn't yet
+        return Err(Stop::NotBuilt("a window ordered outside a comparison"));
+    }
     if let (Some(l), Some(r)) = (operand(m, lhs)?, operand(m, rhs)?) {
         if let (Kind::Plain(Class::Rate(per)), Kind::Plain(Class::Rate(other_per))) =
             (&l.kind, &r.kind)

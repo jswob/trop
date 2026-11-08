@@ -161,6 +161,11 @@ impl Engine {
         let of = ConvertFor::row(&input.unit_factor, ty, &input.binds, &row.pattern);
         let value = match convert(m, &row.value, ty, &input.id, &of)? {
             Converted::Hole(text) => Value::Hole(Hole::asked(&text, &figure)),
+            Converted::Value(Value::Window(mut w)) => {
+                // two reads of one figure's row are one value (L §4.4)
+                w.origin = Some((row.sid.clone(), figure.clone()));
+                Value::Window(w)
+            }
             Converted::Value(v) => v,
         };
         let point = time_point(input, keys, ctx.law)?;

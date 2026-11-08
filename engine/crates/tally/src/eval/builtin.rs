@@ -1,35 +1,31 @@
-//! The built-ins S's realities call: the calendar's, dates and periods, `round`, `min` and `max`, `abs`, `pos`, `age`, `missing`, and a rate's `periodic` and `factor`.
-//! Spec: L §4.2 (calendar built-ins: `start_of`, `end_of`, `day_of`, `year_of`, `month_of`,
-//! `days_between`, `add_days`, `add_months`, `age`, `pos`, `is_business`, `add_business`),
-//! §7.2 (`round` and the type of its result), §5.11 (`min`, `max`, `missing`), §3.3
-//! (`periodic`, `factor`: exact when the power is an integer), §8.1 (`HOLE-CALENDAR`); L §4.2
-//! `schedule` (a day of a period, rolled by a calendar), §7.6 items 1 and 5 (a day past the
-//! calendar; a calendar's search within 400 years).
-//! Twin: engine/tools/refcore/evaluate.py (`c_start_of` to `c_missing`, `business`,
-//! `c_is_business`, `c_add_business`, `c_schedule`, `rolled`) and eval2.py (`m_rate_parts`,
+//! The built-ins' dispatch and the number built-ins: `round`, `min` and `max`, `abs`, `pow`, `pos`, `missing`, `minor`, and a rate's `periodic` and `factor`.
+//! Spec: L §4.2 (the dates' and calendars' built-ins, in `dates.rs` and `business.rs`; `pos`),
+//! §7.2 (`round` and the type of its result; a bare step takes the operand's unit), §5.11
+//! (`min`, `max`, `missing`), §3.3 (`periodic`, `factor`: exact when the power is an integer),
+//! §7.1, §7.3 (`pow` by an integer, exact; a power that isn't one needs `to u`), §4.4 (`min`
+//! and `max` of windows, `round` of one).
+//! Twin: engine/tools/refcore/evaluate.py (`e_call`, `c_min`, `agg_minmax`, `c_abs`, `c_pow`,
+//! `c_minor`, `c_round`, `c_pos`, `c_missing`) and eval2.py (`m_rate_parts`,
 //! `m_periodic_real`).
-//! Invariants: a hole argument makes the call that hole; a business day is read from the
-//! calendar in force on that day; a power that isn't an integer stops `NotBuilt` (the
-//! transcendental kernel isn't S's).
+//! Invariants: a hole argument makes the call that hole; a power by an integer is exact and
+//! its unit raised to it; a power that isn't an integer stops `NotBuilt` (the transcendental
+//! kernel is M6's).
 
-use super::arith::{Test, compare, int_of, step_count, whole_of};
+use super::arith::{Test, compare, int_of};
 use super::expr::hole_of;
 use super::read::{Given, make_keys};
 use super::state::{
     Ctx, Engine, Env, invariant, not_typed, num_stop, refuse, refuse_load, wrong_type,
 };
-use super::state::{a_day, past_days};
-use super::years::as_year;
+use super::windows::{End, as_window, imprecise, window_end};
 use crate::base::{Load, Run};
-use crate::hole::spread;
 use crate::model::{
-    Class, Code, Domain, KeyVal, Number, Reality, Shown, Unit, Value, currency_unit, money_num,
-    num_money,
+    Class, Code, Domain, KeyVal, Number, Reality, Shown, Unit, Value, Window, currency_unit,
+    money_num, num_money,
 };
 use crate::num::{Mode, Num, NumError};
 use crate::read::{Asked, Found, read_input};
 use crate::syntax::{Call, Expr, Key, Lit, Postfix, Stop, Value as Written};
-use crate::time::{Day, Period, PeriodKind, age};
 
 impl Engine {
     /// A call: a band's, or a built-in's (refcore's `e_call`). L §4.2, §5.9, §5.11, §7.2.
@@ -48,22 +44,38 @@ impl Engine {
                 self.period_edge(m, call, env, ctx)
             }
             "day_of" => self.day_of(m, call, env, ctx),
-            "days_between" | "add_days" | "add_months" | "age" => self.day_count(m, call, env, ctx),
-            "is_business" | "add_business" => self.business_call(m, call, env, ctx),
+            "days_between" | "add_days" | "add_months" | "add_years" | "age" | "age_months" => {
+                self.day_count(m, call, env, ctx)
+            }
+            "overlap_days" => self.overlap(m, call, env, ctx),
+            "weekday" => self.weekday(m, call, env, ctx),
+            "dcf" => self.dcf(m, call, env, ctx),
+            "window" => self.window_call(m, call, env, ctx),
+            "one_of" => self.one_of_call(m, call, env, ctx),
+            "is_business" => self.is_business(m, call, env, ctx),
+            "add_business" => self.add_business(m, call, env, ctx),
+            "last_business" => self.last_business(m, call, env, ctx),
             "schedule" => self.schedule(m, call, env, ctx),
             "round" => self.round(m, call, env, ctx),
             "min" | "max" => self.extreme(m, call, env, ctx),
             "abs" => self.abs(m, call, env, ctx),
+            "pow" => self.pow(m, call, env, ctx),
             "minor" => minor_of(m, call),
             "pos" => self.pos(m, call, env, ctx),
             "missing" => self.missing(m, call, env, ctx),
             "periodic" | "factor" => self.rate_call(m, call, env, ctx),
-            _ => Err(Stop::NotBuilt("a built-in S's realities don't call")),
+            _ => Err(Stop::NotBuilt("a built-in M1's realities don't call")),
         }
     }
 
     /// The arguments of a call, evaluated in order.
-    fn args(&mut self, m: &Reality, call: &Call, env: &Env, ctx: Ctx) -> Result<Vec<Value>, Stop> {
+    pub(super) fn args(
+        &mut self,
+        m: &Reality,
+        call: &Call,
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Vec<Value>, Stop> {
         let mut out = Vec::with_capacity(call.args.len());
         for arg in &call.args {
             out.push(self.ev(m, arg, env, ctx)?);
@@ -71,327 +83,10 @@ impl Engine {
         Ok(out)
     }
 
-    /// `start_of(p)`, `end_of(p)` (the first day after p), `year_of(d)`, `month_of(d)`,
-    /// `quarter_of(d)` (refcore's `c_start_of`, `c_end_of`, `_of`). L §4.2.
-    fn period_edge(
-        &mut self,
-        m: &Reality,
-        call: &Call,
-        env: &Env,
-        ctx: Ctx,
-    ) -> Result<Value, Stop> {
-        let [v] = self
-            .args(m, call, env, ctx)?
-            .try_into()
-            .map_err(|_| arity())?;
-        if let Value::Hole(_) = v {
-            return Ok(v);
-        }
-        let name = call.name.as_str();
-        let period = period_arg((call.args.first(), &v), name)?;
-        let missing_day = || invariant("a period past the calendar's range");
-        match name {
-            "start_of" => Ok(Value::Day(period.start())),
-            "end_of" => Ok(Value::Day(period.end())),
-            "year_of" => Period::year_of(period.start())
-                .map(Value::Period)
-                .ok_or_else(missing_day),
-            "month_of" => Period::month_of(period.start())
-                .map(Value::Period)
-                .ok_or_else(missing_day),
-            _ => Period::quarter_of(period.start())
-                .map(Value::Period)
-                .ok_or_else(missing_day),
-        }
-    }
-
-    /// `day_of(m, n)`, the n-th day of month m clamped to its days; `day_of(y, md)`, a
-    /// month-day in year y (refcore's `c_day_of`). L §4.2.
-    fn day_of(&mut self, m: &Reality, call: &Call, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
-        let [a, b] = self
-            .args(m, call, env, ctx)?
-            .try_into()
-            .map_err(|_| arity())?;
-        if a.as_hole().is_some() || b.as_hole().is_some() {
-            return hole_of(&[a.as_hole(), b.as_hole()]);
-        }
-        let period = period_arg((call.args.first(), &a), "day_of")?;
-        let anchored = || {
-            refuse(
-                Run::Domain,
-                format!("day_of of {}, a key of an anchored index", period.label()),
-            )
-        };
-        if !matches!(b, Value::MonthDay(..)) {
-            let number = whole_of(m, &b)?;
-            if period.kind() != PeriodKind::Month || period.start().day() != 1 {
-                return Err(anchored());
-            }
-            if number.is_negative() || number.is_zero() {
-                let text = number
-                    .integer_text()
-                    .ok_or_else(|| invariant("a day number"))?;
-                return Err(refuse(
-                    Run::Domain,
-                    format!("day_of(m, {text}): a day number below 1"),
-                ));
-            }
-            let last = period
-                .end()
-                .previous()
-                .ok_or_else(|| invariant("a month with no last day"))?;
-            // a number past 64 bits is past the month's last day too
-            let day = match number.to_i64() {
-                Some(whole) => u8::try_from(whole.min(i64::from(last.day())))
-                    .map_err(|_| invariant("a day number"))?,
-                None => last.day(),
-            };
-            return Day::from_ymd(last.year(), last.month(), day)
-                .map(Value::Day)
-                .ok_or_else(|| invariant("a day of a month"));
-        }
-        if period.kind() == PeriodKind::Year
-            && (period.start().month(), period.start().day()) != (1, 1)
-        {
-            return Err(anchored());
-        }
-        let Value::MonthDay(month, day) = b else {
-            // load's types refuse it; refcore's run has no twin of this text
-            return Err(Stop::NotBuilt(
-                "day_of(y, md) with no month-day, met at run",
-            ));
-        };
-        Day::from_ymd(period.start().year(), month, day)
-            .map(Value::Day)
-            .ok_or_else(|| {
-                refuse(
-                    Run::Domain,
-                    format!("day_of(y, {month:02}-{day:02}) in a year without that day"),
-                )
-            })
-    }
-
-    /// `days_between(a, b)`, `add_days(d, n)`, `add_months(d, n)`, `age(b, d)` (refcore's
-    /// `c_days_between`, `c_add_days`, `c_add_months`, `c_age`). L §4.2.
-    fn day_count(&mut self, m: &Reality, call: &Call, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
-        let [a, b] = self
-            .args(m, call, env, ctx)?
-            .try_into()
-            .map_err(|_| arity())?;
-        if a.as_hole().is_some() || b.as_hole().is_some() {
-            return hole_of(&[a.as_hole(), b.as_hole()]);
-        }
-        let name = call.name.as_str();
-        let first = date_arg(&a, name)?;
-        match name {
-            "days_between" => {
-                let second = date_arg(&b, name)?;
-                first
-                    .days_to(second)
-                    .map(Value::int)
-                    .ok_or_else(|| invariant("a day count past the integers"))
-            }
-            "add_days" => {
-                let n = step_count(m, &b, 1)?;
-                first
-                    .add_days(n)
-                    .map(Value::Day)
-                    .ok_or_else(|| past_days(n))
-            }
-            "add_months" => {
-                let n = months_arg(m, &b)?;
-                first
-                    .add_months(n)
-                    .map(Value::Day)
-                    .ok_or_else(|| past_days(n))
-            }
-            _ => {
-                let second = a_day(date_arg(&b, name)?)?;
-                Ok(age(a_day(first)?, second).map_or(Value::None, Value::int))
-            }
-        }
-    }
-
-    /// `is_business(d, cal)` and `add_business(d, n, cal)`: the calendar read in force on
-    /// each day asked about (refcore's `c_is_business`, `c_add_business`, `business`). L §4.2.
-    fn business_call(
-        &mut self,
-        m: &Reality,
-        call: &Call,
-        env: &Env,
-        ctx: Ctx,
-    ) -> Result<Value, Stop> {
-        let cal = call.args.last().ok_or_else(arity)?;
-        let d = self.ev(m, call.args.first().ok_or_else(arity)?, env, ctx)?;
-        if call.name == "is_business" {
-            if let Value::Hole(_) = d {
-                return Ok(d);
-            }
-            let day = a_day(date_arg(&d, "is_business")?)?;
-            return self.business(m, cal, env, ctx, (day, false));
-        }
-        let k = self.ev(m, call.args.get(1).ok_or_else(arity)?, env, ctx)?;
-        if d.as_hole().is_some() || k.as_hole().is_some() {
-            return hole_of(&[d.as_hole(), k.as_hole()]);
-        }
-        let day = a_day(date_arg(&d, "add_business")?)?;
-        let k = whole_of(m, &k)?;
-        if k.is_zero() {
-            return Err(refuse(
-                Run::Zero,
-                format!("add_business({}, 0, {})", day.text(), expr_name(cal)),
-            ));
-        }
-        let step = if k.is_negative() { -1 } else { 1 };
-        // a count past 64 bits outnumbers the calendar's days: the walk reads the calendar
-        // day by day until it meets 0001-01-01 or 9999-12-31 (L §7.6 item 1)
-        let mut left = k.to_i64().map(i64::unsigned_abs);
-        let mut current = day;
-        while left != Some(0) {
-            let open = self.next_business(m, cal, env, ctx, (current, step))?;
-            let Value::Day(found) = open else {
-                return Ok(open);
-            };
-            current = found;
-            if let Some(n) = left.as_mut() {
-                *n = n
-                    .checked_sub(1)
-                    .ok_or_else(|| invariant("a business-day count"))?;
-            }
-        }
-        Ok(Value::Day(current))
-    }
-
-    /// The first business day after `from` (before it, `step` -1), never `from` itself, or
-    /// the hole of the calendar's gap met on the way: a calendar with a business day has one
-    /// within 400 years of every day (refcore's `walk` of `rolled`, `count`). L §4.2, §7.6
-    /// item 5.
-    fn next_business(
-        &mut self,
-        m: &Reality,
-        cal: &Expr,
-        env: &Env,
-        ctx: Ctx,
-        (from, step): (Day, i64),
-    ) -> Result<Value, Stop> {
-        let mut current = from;
-        loop {
-            current = current.add_days(step).ok_or_else(|| past_days(step))?;
-            let open = self.business(m, cal, env, ctx, (current, true))?;
-            let Value::Bool(is_open) = open else {
-                return Ok(open);
-            };
-            if is_open {
-                return Ok(Value::Day(current));
-            }
-        }
-    }
-
-    /// `schedule(p, e, roll, cal)`: day `e` of month `p`, none past its last day, moved by
-    /// its roll to a business day of `cal` (refcore's `c_schedule`, `rolled`; ISDA 2006
-    /// section 4.12). L §4.2.
-    fn schedule(&mut self, m: &Reality, call: &Call, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
-        let [month, dom, roll, cal] = call.args.as_slice() else {
-            return Err(arity());
-        };
-        let (month, dom, roll) = (
-            self.ev(m, month, env, ctx)?,
-            self.ev(m, dom, env, ctx)?,
-            self.ev(m, roll, env, ctx)?,
-        );
-        if let Some(h) = spread(&[month.as_hole(), dom.as_hole(), roll.as_hole()]) {
-            return Ok(Value::Hole(h));
-        }
-        let period = period_arg((call.args.first(), &month), "schedule")?;
-        let start = period.start();
-        // a day number past the month's, 64 bits or not, is none
-        let Some(day) = whole_of(m, &dom)?
-            .to_i64()
-            .and_then(|n| u8::try_from(n).ok())
-            .and_then(|n| Day::from_ymd(start.year(), start.month(), n))
-            .filter(|d| period.contains(*d))
-        else {
-            return Ok(Value::None);
-        };
-        let (Value::Word(word) | Value::Code(Code::Word(word))) = &roll else {
-            return Err(not_typed());
-        };
-        let open = match word.as_str() {
-            "unadjusted" => return Ok(Value::Day(day)),
-            "following" | "preceding" | "modified_following" => {
-                self.business(m, cal, env, ctx, (day, true))?
-            }
-            _ => {
-                let message = format!("schedule: {word} is not a roll");
-                return Err(refuse_load(Load::Unit, message));
-            }
-        };
-        if open != Value::Bool(false) {
-            return Ok(if open == Value::Bool(true) {
-                Value::Day(day)
-            } else {
-                open
-            });
-        }
-        let step = if word == "preceding" { -1 } else { 1 };
-        let found = self.next_business(m, cal, env, ctx, (day, step))?;
-        if let Value::Day(f) = found
-            && word == "modified_following"
-            && f.month() != day.month()
-        {
-            return self.next_business(m, cal, env, ctx, (day, -1));
-        }
-        Ok(found)
-    }
-
-    /// Whether `day` is a business day of the calendar `cal` reads, in force on that day
-    /// (refcore's `cal_at`, `business`); the calendar's gap is `HOLE-CALENDAR`. Where the
-    /// search for one asks (`seek`), a calendar with none is `RUN-DOMAIN`. L §4.2, §7.6 item 5.
-    fn business(
-        &mut self,
-        m: &Reality,
-        cal: &Expr,
-        env: &Env,
-        ctx: Ctx,
-        (day, seek): (Day, bool),
-    ) -> Result<Value, Stop> {
-        let Some((name, written)) = read_parts(cal) else {
-            return Err(Stop::NotBuilt("a calendar that isn't an input's read"));
-        };
-        let input = m
-            .inputs
-            .get(name)
-            .ok_or(Stop::NotBuilt("a calendar that isn't an input's read"))?;
-        let given = self.given_keys(m, written, env, ctx)?;
-        let keys = match make_keys(m, name, &input.binds, given, ctx.cut)? {
-            Err(hole) => return Ok(Value::Hole(hole)),
-            Ok(made) => made,
-        };
-        let value = self.read_input_at(m, input, &keys, ctx.at_law(Some(day)), Asked::Calendar)?;
-        if let Value::Calendar(c) = &value {
-            if seek && !c.has_business_day(day) {
-                return Err(refuse(
-                    Run::Domain,
-                    format!("calendar {name} has no business day"),
-                ));
-            }
-            return Ok(Value::Bool(c.is_business(day)));
-        }
-        if let Value::Hole(_) = value {
-            return Ok(value);
-        }
-        if value == Value::None {
-            return Err(refuse(Run::None, "the calendar is none here".to_owned()));
-        }
-        // load's types refuse it; refcore's run has no twin of this text
-        Err(Stop::NotBuilt(
-            "a calendar argument that isn't a calendar, met at run",
-        ))
-    }
-
     /// `round(x, u, mode)`: the multiple of u the mode chooses, money when u is a whole
     /// number of minor units of x's currency, an int for `round(x, 1, m)` of a plain number
-    /// (refcore's `c_round` and check.py's `c_round` for the result's type). L §7.2.
+    /// (refcore's `c_round` and check.py's `c_round` for the result's type); a step written as
+    /// a bare figure takes the operand's unit (check.py's `_stepflex`). L §7.1, §7.2, §4.4.
     fn round(&mut self, m: &Reality, call: &Call, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
         let [x, u, mode] = self
             .args(m, call, env, ctx)?
@@ -405,11 +100,15 @@ impl Engine {
                 return Err(refuse(Run::None, "a value is none here: round".to_owned()));
             }
         }
-        round_values(m, &x, &u, &mode)
+        if let Value::Window(w) = &x {
+            return Ok(Value::Hole(imprecise(m, w, "round")?));
+        }
+        round_values(m, &x, &bare_step(call.args.get(1), u), &mode)
     }
 
-    /// `min(a, b, …)`, `max(a, b, …)`: a bare figure takes the unit of an argument with one
-    /// (refcore's `c_min`, `coerce_flex`, `extreme`). L §5.11.
+    /// `min(a, b, …)`, `max(a, b, …)`: a bare figure takes the unit of an argument with one;
+    /// of windows, the window of the extremes of their ends (refcore's `c_min`, `coerce_flex`,
+    /// `agg_minmax`, `extreme`). L §5.11, §4.4.
     fn extreme(&mut self, m: &Reality, call: &Call, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
         let vals = self.args(m, call, env, ctx)?;
         let holes: Vec<Option<&crate::hole::Hole>> = vals.iter().map(Value::as_hole).collect();
@@ -423,21 +122,73 @@ impl Engine {
             return hole_of(&holes);
         }
         let vals = coerce_flex(m, vals)?;
-        let mut best: Option<Value> = None;
-        for v in vals {
-            best = Some(match best {
-                None => v,
-                Some(held) => {
-                    let order = compare(m, &v, &held, Test::Order)?;
-                    let better = match call.name.as_str() {
-                        "min" => order == core::cmp::Ordering::Less,
-                        _ => order == core::cmp::Ordering::Greater,
-                    };
-                    if better { v } else { held }
-                }
-            });
+        let pick = if call.name == "min" {
+            End::Low
+        } else {
+            End::High
+        };
+        let Some(w) = vals.iter().find_map(as_window) else {
+            return extreme_of(m, vals, pick);
+        };
+        let src = w.src.clone();
+        let los: Vec<Value> = vals.iter().map(|v| window_end(v, End::Low)).collect();
+        let his: Vec<Value> = vals.iter().map(|v| window_end(v, End::High)).collect();
+        let (lo, hi) = (extreme_of(m, los, pick)?, extreme_of(m, his, pick)?);
+        if compare(m, &lo, &hi, Test::Order)? == core::cmp::Ordering::Equal {
+            return Ok(lo);
         }
-        best.ok_or_else(arity)
+        Ok(Value::Window(Box::new(Window {
+            lo,
+            hi,
+            days: None,
+            src,
+            origin: None,
+        })))
+    }
+
+    /// `pow(x, n)`: x to the integer power n, exact, its unit to the n-th power, a `num`; a
+    /// power that isn't an integer needs the transcendental kernel (refcore's `c_pow`).
+    /// L §3.3, §7.1, §7.3.
+    fn pow(&mut self, m: &Reality, call: &Call, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
+        let [x, k] = self
+            .args(m, call, env, ctx)?
+            .try_into()
+            .map_err(|_| arity())?;
+        let some_hole = x.as_hole().is_some() || k.as_hole().is_some();
+        for v in [&x, &k] {
+            if *v == Value::None {
+                return Err(refuse(Run::None, "a value is none here: pow".to_owned()));
+            }
+        }
+        if some_hole {
+            return hole_of(&[x.as_hole(), k.as_hole()]);
+        }
+        let (base, unit) = if let Value::Money(money) = &x {
+            (
+                money_num(m, money).map_err(num_stop)?,
+                currency_unit(m, money.currency()).map_err(num_stop)?,
+            )
+        } else if let Value::Number(n) = &x {
+            (n.q.clone(), n.unit())
+        } else {
+            return Err(not_typed());
+        };
+        let Value::Number(power) = &k else {
+            return Err(not_typed());
+        };
+        if !power.q.is_integer() {
+            return Err(Stop::NotBuilt(
+                "a power that isn't an integer (the transcendental kernel)",
+            ));
+        }
+        let q = int_power(m, (&x, &base), &power.q)?;
+        let unit = if unit.is_one() {
+            unit
+        } else {
+            unit.power(&power.q)
+                .map_err(|e| e.refusal(num_stop, None))?
+        };
+        Ok(Value::Number(Number::plain(q, unit)))
     }
 
     /// `abs(x)` (refcore's `c_abs`). L §5.11.
@@ -540,7 +291,7 @@ impl Engine {
     }
 
     /// The keys of a read as written, each a value or a key literal (L §2.5).
-    fn given_keys(
+    pub(super) fn given_keys(
         &mut self,
         m: &Reality,
         keys: &[Key],
@@ -603,16 +354,94 @@ fn arity() -> Stop {
     invariant("a built-in called with the wrong number of arguments")
 }
 
-/// The name of a calendar argument as a message names it.
-fn expr_name(e: &Expr) -> String {
-    read_parts(e).map_or_else(|| "the calendar".to_owned(), |(name, _)| name.to_owned())
+/// `round`'s step as its operand meets it: a figure written bare, with no unit and not as a
+/// fraction, takes the operand's unit (check.py's `_stepflex`). L §7.1, §7.2.
+fn bare_step(written: Option<&Expr>, u: Value) -> Value {
+    if let (Some(Expr::Lit(Lit::Num(n))), Value::Number(step)) = (written, &u)
+        && n.unit.is_none()
+        && !n.fraction
+    {
+        return Value::Number(Number {
+            q: step.q.clone(),
+            class: Class::Flex,
+        });
+    }
+    u
+}
+
+/// The lowest or the highest of values that are no windows, by `pick` (refcore's
+/// `extreme`). L §5.11.
+fn extreme_of(m: &Reality, vals: Vec<Value>, pick: End) -> Result<Value, Stop> {
+    let mut best: Option<Value> = None;
+    for v in vals {
+        best = Some(match best {
+            None => v,
+            Some(held) => {
+                let order = compare(m, &v, &held, Test::Order)?;
+                let better = match pick {
+                    End::Low => order == core::cmp::Ordering::Less,
+                    End::High => order == core::cmp::Ordering::Greater,
+                };
+                if better { v } else { held }
+            }
+        });
+    }
+    best.ok_or_else(arity)
+}
+
+/// `base^k` for a whole `k`, as refcore's `c_pow` screens and computes it: past the digits its
+/// parts' bits promise, `RUN-DIGITS` before the power; 0 to a power below 0 `RUN-DIV`; 1, 0
+/// and -1 to a power past 64 bits by their closed forms. L §3.3, §7.1.
+fn int_power(m: &Reality, (x, base): (&Value, &Num), k: &Num) -> Result<Num, Stop> {
+    let k_text = k.integer_text().ok_or_else(|| invariant("a whole power"))?;
+    let bits = base.bits();
+    if bits > 1 && passes_cap(bits, k)? {
+        let x_text = x.text(m).map_err(num_stop)?;
+        return Err(refuse(
+            Run::Digits,
+            format!("pow({x_text}, {k_text}) passes 4 096 digits; round where the law rounds"),
+        ));
+    }
+    if base.is_zero() && k.is_negative() {
+        return Err(refuse(
+            Run::Div,
+            format!("division by zero: pow(0, {k_text})"),
+        ));
+    }
+    match k.to_i64() {
+        Some(whole) => base.checked_pow(whole).map_err(num_stop),
+        None => power_past_64_bits(base, k),
+    }
+}
+
+/// Whether `(bits - 1) × |k| × log₁₀ 2` passes 4 096 + 10 digits, log₁₀ 2 as refcore's
+/// 0.30102999 (refcore's `c_pow`, its screen); a screen past the cap itself passes. L §7.1.
+fn passes_cap(bits: u64, k: &Num) -> Result<bool, Stop> {
+    let below = bits
+        .checked_sub(1)
+        .and_then(|b| i64::try_from(b).ok())
+        .ok_or_else(|| invariant("a part's bits"))?;
+    let size = if k.is_negative() {
+        k.checked_neg().map_err(num_stop)?
+    } else {
+        k.clone()
+    };
+    let log2 = Num::ratio(30_102_999, 100_000_000).map_err(num_stop)?;
+    let digits = Num::int(below)
+        .checked_mul(&size)
+        .and_then(|d| d.checked_mul(&log2));
+    match digits {
+        Ok(d) => Ok(d.compare(&Num::int(4_106)).map_err(num_stop)? == core::cmp::Ordering::Greater),
+        Err(NumError::Digits) => Ok(true),
+        Err(other) => Err(num_stop(other)),
+    }
 }
 
 /// The keys a read of an input has when none are written.
 const NO_KEYS: &[Key] = &[];
 
 /// A read of an item as written, `x` or `x[k, …]`: its id and its keys.
-fn read_parts(e: &Expr) -> Option<(&str, &[Key])> {
+pub(super) fn read_parts(e: &Expr) -> Option<(&str, &[Key])> {
     if let Expr::Name(name) = e {
         return Some((name.as_str(), NO_KEYS));
     }
@@ -639,64 +468,6 @@ fn pos_key(m: &Reality, v: &Value) -> Result<KeyVal, Stop> {
         return Ok(k.clone());
     }
     Err(not_typed())
-}
-
-/// A period argument: a period, a day as its day period, or a four-digit figure written as
-/// the argument, which the checker read as a year (refcore's `period_arg`, and the `_year`
-/// mark of `tdate_or_period`). L §2.1, §4.2.
-fn period_arg((arg, v): (Option<&Expr>, &Value), what: &str) -> Result<Period, Stop> {
-    if let Value::Period(p) = v {
-        return Ok(*p);
-    }
-    if let Some(year) = as_year(arg, v) {
-        return Ok(year);
-    }
-    if let Value::Day(d) = v {
-        return Period::day(a_day(*d)?).ok_or_else(|| invariant("a day period"));
-    }
-    if *v == Value::None {
-        return Err(refuse(Run::None, format!("a value is none here: {what}")));
-    }
-    Err(not_typed())
-}
-
-/// A date argument: a day, or a day period's day (refcore's `as_date_or_iv`). L §4.2.
-fn date_arg(v: &Value, what: &str) -> Result<Day, Stop> {
-    if let Value::Day(d) = v {
-        return Ok(*d);
-    }
-    if let Value::Period(p) = v
-        && p.kind() == PeriodKind::Day
-    {
-        return Ok(p.start());
-    }
-    if *v == Value::None {
-        return Err(refuse(Run::None, format!("a value is none here: {what}")));
-    }
-    if *v == Value::Never {
-        return Err(refuse(Run::None, format!("never in {what}")));
-    }
-    Err(not_typed())
-}
-
-/// The months of `add_months`'s count: an int, or a duration in months (refcore's
-/// `months_arg`). L §4.2.
-fn months_arg(m: &Reality, v: &Value) -> Result<i64, Stop> {
-    if let Value::Number(Number {
-        q,
-        class: Class::Num(unit, _),
-    }) = v
-        && !unit.is_one()
-    {
-        if unit.terms() != [("month".to_owned(), 1)] {
-            return Err(refuse_load(
-                Load::Unit,
-                format!("a duration of {} for add_months", unit.text()),
-            ));
-        }
-        return step_count(m, &Value::Number(Number::plain(q.clone(), Unit::one())), 1);
-    }
-    step_count(m, v, 1)
 }
 
 /// `minor(CUR)`: the currency's minor unit as money (refcore's `c_minor`). L §7.2.
@@ -1065,26 +836,7 @@ fn power(base: &Num, e: &Num) -> Result<Num, Stop> {
     let Some(k) = e.to_i64() else {
         return power_past_64_bits(base, e);
     };
-    if base.is_zero() && k < 0 {
-        return Err(refuse(Run::Div, "division by zero".to_owned()));
-    }
-    let mut out = Num::int(1);
-    let mut square = base.clone();
-    let mut left = k.unsigned_abs();
-    let halving = || invariant("a power's exponent");
-    while left > 0 {
-        if left.checked_rem_euclid(2).ok_or_else(halving)? == 1 {
-            out = out.checked_mul(&square).map_err(num_stop)?;
-        }
-        left = left.checked_div_euclid(2).ok_or_else(halving)?;
-        if left > 0 {
-            square = square.checked_mul(&square).map_err(num_stop)?;
-        }
-    }
-    if k < 0 {
-        return Num::int(1).checked_div(&out).map_err(num_stop);
-    }
-    Ok(out)
+    base.checked_pow(k).map_err(num_stop)
 }
 
 /// `base^e` for a whole `e` past 64 bits, as refcore's Python integers: 1, 0 and -1 keep their

@@ -124,6 +124,60 @@ pub enum Value {
     /// A movement: a move's instance, an observation, an adjustment, by its stable id; a
     /// movement is a thing of its event kind (L §5.14, §2.5).
     Mv(Box<MvRef>),
+    /// A day not yet known, `window(a, b)` or `one_of([…])`, or the interval of values an
+    /// operation on one gives (L §4.4).
+    Window(Box<Window>),
+}
+
+/// A window: the interval of values a day not yet known can give, from its lowest to its
+/// highest (refcore's `Iv`). L §4.4.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Window {
+    /// The lowest value.
+    pub lo: Value,
+    /// The highest value.
+    pub hi: Value,
+    /// A `one_of`'s days, sorted, each once; none for a window of every day between.
+    pub days: Option<Vec<Day>>,
+    /// The window as written, which a question names; none for an interval no one window
+    /// gives (a calendar's added window met by a business-day function).
+    pub src: Option<String>,
+    /// The read it came from, its row's id and its figure (`bought[l1]`): two reads of one
+    /// figure are one value, decided against itself (L §4.4).
+    pub origin: Option<(String, String)>,
+}
+
+impl Window {
+    /// The window as a question names it: as written, else `window(lo, hi)` (refcore's
+    /// `window_text`). L §4.4.
+    ///
+    /// # Errors
+    ///
+    /// As [`Value::text`].
+    pub fn question_text(&self, m: &Reality) -> Result<String, NumError> {
+        if let Some(src) = &self.src {
+            return Ok(src.clone());
+        }
+        Ok(format!(
+            "window({}, {})",
+            self.lo.text(m)?,
+            self.hi.text(m)?
+        ))
+    }
+
+    /// The figure a question about it is asked of: its read's, or none (L §8.1).
+    #[must_use]
+    pub fn figure(&self) -> &str {
+        self.origin
+            .as_ref()
+            .map_or("", |(_, figure)| figure.as_str())
+    }
+
+    /// Whether its values are days, a date (L §3.1, §4.4).
+    #[must_use]
+    pub fn of_days(&self) -> bool {
+        matches!(self.lo, Value::Day(_))
+    }
 }
 
 /// A movement as a value: its stable id and what it is (refcore's `Mv`). L §5.14, §2.5.
@@ -228,6 +282,7 @@ impl Value {
             Value::OutKey { text, .. } => Ok(text.clone()),
             Value::Word(word) => Ok(word.clone()),
             Value::Mv(mv) => Ok(mv.id.clone()),
+            Value::Window(w) => window_text(m, w),
         }
     }
 
@@ -248,6 +303,16 @@ impl Value {
         }
         self.text(m)
     }
+}
+
+/// A window as it prints: `one_of([a, b])` of its days, else `window(lo, hi)` (refcore's
+/// `fmt` of an `Iv`). L §4.4, §5.18.
+fn window_text(m: &Reality, w: &Window) -> Result<String, NumError> {
+    if let Some(days) = &w.days {
+        let texts: Vec<String> = days.iter().map(|d| d.text()).collect();
+        return Ok(format!("one_of([{}])", texts.join(", ")));
+    }
+    Ok(format!("window({}, {})", w.lo.text(m)?, w.hi.text(m)?))
 }
 
 /// `(a: x, b: y)`.

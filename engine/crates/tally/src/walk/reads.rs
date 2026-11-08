@@ -126,6 +126,7 @@ impl Engine {
             }
             let name = match &u {
                 Value::Key(k) => k.text(),
+                Value::Window(_) => return Err(Stop::NotBuilt("a unit read as a window")),
                 Value::Number(_)
                 | Value::Money(_)
                 | Value::Bool(_)

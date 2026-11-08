@@ -757,6 +757,7 @@ impl Engine {
         }
         let day = match v {
             Value::Hole(h) => Dated::Hole(h),
+            Value::Window(_) => return Err(Stop::NotBuilt("a movement dated by a window")),
             Value::Number(_)
             | Value::Money(_)
             | Value::Bool(_)

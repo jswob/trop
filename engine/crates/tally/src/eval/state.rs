@@ -312,6 +312,9 @@ pub struct Engine {
     pub(crate) booked: BTreeMap<(String, Day), crate::walk::Booked>,
     /// Each main walk's signature once it is done, by its place in `walks` (E §9 item 4).
     pub(crate) signatures: BTreeMap<usize, crate::invariant::Signature>,
+    /// The pass a business-day function runs now over the days its calendar's added windows
+    /// can take (L §4.2, §4.4).
+    pub(super) calendar_pass: Option<super::business::CalendarPass>,
     /// What this engine did, in P §1.1's units: the `counters` build only (BUILDER §13.2).
     #[cfg(feature = "counters")]
     pub(crate) counts: crate::Counters,
@@ -354,6 +357,7 @@ impl Engine {
             adjust_all_active: BTreeSet::new(),
             booked: BTreeMap::new(),
             signatures: BTreeMap::new(),
+            calendar_pass: None,
             #[cfg(feature = "counters")]
             counts: crate::Counters::default(),
         }

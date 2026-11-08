@@ -1,18 +1,15 @@
-//! A business calendar of fixed days: its weekends, its yearly days off, its added days off, and the business-day count.
-//! Spec: L §4.2 (`calendar`, `is_business`, `add_business`, `last_business`), §7.6 item 5 (a
-//! business day searched for within 400 years).
-//! Twin: engine/tools/refcore/evaluate.py (`business`, `c_add_business`, `c_last_business`),
-//! dates.py (`WEEKDAYS`); values.py (`Cal`).
-//! Invariants: a day is a business day unless its weekday is a weekend, it is a yearly day
-//! from the yearly list's first year, or it is added; counting never stops on a non-business day.
-//!
-//! An added day that is a window, a `one_of` or a hole needs the evaluator's windows and
-//! holes; the evaluator decides those before it asks this calendar (milestone S, G5).
+//! A business calendar: its weekends, its yearly days off from their first year, and its added days, fixed or not yet.
+//! Spec: L §4.2 (`calendar`, its `weekends`, `yearly … from Y` and `added`; a day not yet fixed
+//! in `added`), §7.6 item 5 (a calendar with no business day).
+//! Twin: engine/tools/refcore/evaluate.py (`business`), dates.py (`WEEKDAYS`); values.py
+//! (`Cal`, its `fmt`); loader.py (`convert_value`, its `calval` arm).
+//! Invariants: a day is off by the rules when its weekday is a weekend or it is a yearly day
+//! from the yearly list's first year; an added day that is a hole or a window is kept as
+//! written, and the evaluator decides it per day and per pass (`eval/business.rs`).
 
 use std::collections::BTreeSet;
 
 use super::day::Day;
-use super::period::Period;
 use crate::num::Num;
 
 /// The weekday number, 1 Monday to 7 Sunday, of a weekday's word (refcore's `WEEKDAYS`).
@@ -82,7 +79,65 @@ impl FirstYear {
     }
 }
 
-/// A business calendar whose days off are all fixed.
+/// A day a calendar adds as a day off (L §4.2 `added`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Added {
+    /// A day.
+    Day(Day),
+    /// A day not known yet, `?"…"`: its question.
+    Hole(String),
+    /// `window(a, b)`: one day from a to b, not yet fixed.
+    Window(Day, Day),
+    /// `one_of([…])`: one of these days, sorted, each once.
+    OneOf(Vec<Day>),
+}
+
+impl Added {
+    /// Whether `day` is one the added entry may be, for a window or a choice of days.
+    #[must_use]
+    pub fn may_be(&self, day: Day) -> bool {
+        match self {
+            Added::Window(a, b) => *a <= day && day <= *b,
+            Added::OneOf(days) => days.contains(&day),
+            Added::Day(_) | Added::Hole(_) => false,
+        }
+    }
+
+    /// The days a window or a choice of days can take, in order; none for another entry.
+    #[must_use]
+    pub fn days(&self) -> Option<Vec<Day>> {
+        match self {
+            Added::Window(a, b) => {
+                let mut out = Vec::new();
+                let mut day = *a;
+                while day <= *b {
+                    out.push(day);
+                    day = day.next()?;
+                }
+                Some(out)
+            }
+            Added::OneOf(days) => Some(days.clone()),
+            Added::Day(_) | Added::Hole(_) => None,
+        }
+    }
+
+    /// A window or a choice of days as written, `window(a, b)` or `one_of([a, b])`, which a
+    /// question names (refcore's `business`, its `wt`). L §4.2, §4.4.
+    #[must_use]
+    pub fn text(&self) -> String {
+        match self {
+            Added::Window(a, b) => format!("window({}, {})", a.text(), b.text()),
+            Added::OneOf(days) => {
+                let texts: Vec<String> = days.iter().map(|d| d.text()).collect();
+                format!("one_of([{}])", texts.join(", "))
+            }
+            Added::Day(d) => d.text(),
+            Added::Hole(q) => format!("?\"{q}\""),
+        }
+    }
+}
+
+/// A business calendar (L §4.2 `calendar`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Calendar {
     /// The weekend days, as weekday numbers 1 to 7.
@@ -91,8 +146,8 @@ pub struct Calendar {
     yearly: Vec<(u8, u8)>,
     /// The first year the yearly days are off, or every year.
     yearly_from: Option<FirstYear>,
-    /// The added days off.
-    added: Vec<Day>,
+    /// The added days off, as written.
+    added: Vec<Added>,
 }
 
 impl Calendar {
@@ -103,7 +158,7 @@ impl Calendar {
         weekends: Vec<u8>,
         yearly: Vec<(u8, u8)>,
         yearly_from: Option<FirstYear>,
-        added: Vec<Day>,
+        added: Vec<Added>,
     ) -> Calendar {
         Calendar {
             weekends,
@@ -113,19 +168,24 @@ impl Calendar {
         }
     }
 
-    /// Whether `day` is a business day (refcore's `business`, its fixed days). L §4.2
-    /// `is_business`.
+    /// Whether `day` is off by the calendar's rules: a weekend, or a yearly day from the
+    /// yearly list's first year (refcore's `business`, before its added days). L §4.2.
     #[must_use]
-    pub fn is_business(&self, day: Day) -> bool {
+    pub fn off_by_rule(&self, day: Day) -> bool {
         if self.weekends.contains(&day.weekday()) {
-            return false;
+            return true;
         }
-        let yearly = self.yearly.contains(&(day.month(), day.day()))
+        self.yearly.contains(&(day.month(), day.day()))
             && self
                 .yearly_from
                 .as_ref()
-                .is_none_or(|from| day.year() >= from.year());
-        !yearly && !self.added.contains(&day)
+                .is_none_or(|from| day.year() >= from.year())
+    }
+
+    /// The added days, as written, in their order. L §4.2 `added`.
+    #[must_use]
+    pub fn added(&self) -> &[Added] {
+        &self.added
     }
 
     /// Whether a search for a business day can find one, as of `day`: not when the weekends
@@ -143,29 +203,8 @@ impl Calendar {
         weekends.len() < 7 && !all_yearly
     }
 
-    /// The `n`-th business day after `day` (before it for a negative `n`), never `day`
-    /// itself; `None` for `n = 0` (`RUN-ZERO`) or past the calendar's years (refcore's
-    /// `c_add_business`). L §4.2 `add_business`.
-    #[must_use]
-    pub fn add_business(&self, day: Day, n: i64) -> Option<Day> {
-        let step: i64 = match n.signum() {
-            1 => 1,
-            -1 => -1,
-            _ => return None,
-        };
-        let mut left = n.checked_abs()?;
-        let mut current = day;
-        while left > 0 {
-            current = current.add_days(step)?;
-            if self.is_business(current) {
-                left = left.checked_sub(1)?;
-            }
-        }
-        Some(current)
-    }
-
-    /// The calendar as it prints, `calendar(weekends [sat, sun], yearly [12-25] from 2027)`
-    /// (refcore's `fmt` of a `Cal`). L §5.18.
+    /// The calendar as it prints, `calendar(weekends [sat, sun], yearly [12-25] from 2027)`;
+    /// its added days don't print (refcore's `fmt` of a `Cal`). L §5.18.
     #[must_use]
     pub fn text(&self) -> String {
         let words: Vec<&str> = self.weekends.iter().map(|n| weekday_word(*n)).collect();
@@ -184,88 +223,58 @@ impl Calendar {
         }
         format!("calendar({})", parts.join(", "))
     }
-
-    /// The `n`-th last business day of `period`, counting back from its last day; `None` when
-    /// it has fewer (refcore's `c_last_business`; `n` below 1 is the evaluator's `RUN-DOMAIN`).
-    /// L §4.2 `last_business`.
-    #[must_use]
-    pub fn last_business(&self, period: Period, n: i64) -> Option<Day> {
-        let mut left = n;
-        let mut current = period.end().previous()?;
-        while period.contains(current) {
-            if self.is_business(current) {
-                left = left.checked_sub(1)?;
-                if left == 0 {
-                    return Some(current);
-                }
-            }
-            current = current.previous()?;
-        }
-        None
-    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{Calendar, FirstYear, Num, weekday_number};
-    use crate::time::{Day, Period};
+    use super::{Added, Calendar, FirstYear, Num, weekday_number};
+    use crate::time::Day;
 
     fn day(y: u16, m: u8, d: u8) -> Day {
         Day::from_ymd(y, m, d).expect("a real day")
     }
 
-    fn polish() -> Calendar {
+    #[test]
+    fn weekends_and_yearly_days_are_off_by_rule() {
         let weekends = ["sat", "sun"]
             .iter()
             .filter_map(|w| weekday_number(w))
             .collect();
-        Calendar::new(
+        let cal = Calendar::new(
             weekends,
             Vec::new(),
             None,
-            vec![day(2026, 1, 1), day(2026, 1, 6)],
-        )
-    }
-
-    #[test]
-    fn weekends_and_added_days_are_off() {
-        let cal = polish();
-        assert!(!cal.is_business(day(2026, 1, 1)), "added");
-        assert!(cal.is_business(day(2026, 1, 2)), "a Friday");
-        assert!(!cal.is_business(day(2026, 1, 3)), "a Saturday");
+            vec![Added::Day(day(2026, 1, 1))],
+        );
+        assert!(
+            !cal.off_by_rule(day(2026, 1, 1)),
+            "an added day isn't a rule's"
+        );
+        assert!(!cal.off_by_rule(day(2026, 1, 2)), "a Friday");
+        assert!(cal.off_by_rule(day(2026, 1, 3)), "a Saturday");
         let from = FirstYear::of(&Num::int(2027)).expect("a year");
         let yearly = Calendar::new(Vec::new(), vec![(12, 25)], Some(from), Vec::new());
         assert!(
-            yearly.is_business(day(2026, 12, 25)),
+            !yearly.off_by_rule(day(2026, 12, 25)),
             "before its first year"
         );
-        assert!(!yearly.is_business(day(2027, 12, 25)), "from it");
+        assert!(yearly.off_by_rule(day(2027, 12, 25)), "from it");
     }
 
     #[test]
-    fn counting_business_days() {
-        let cal = polish();
+    fn an_added_window_names_its_days() {
+        let w = Added::Window(day(2026, 6, 22), day(2026, 6, 24));
         assert_eq!(
-            cal.add_business(day(2026, 1, 2), 1),
-            Some(day(2026, 1, 5)),
-            "over the weekend"
+            w.days(),
+            Some(vec![day(2026, 6, 22), day(2026, 6, 23), day(2026, 6, 24)]),
+            "every day from a to b"
         );
-        assert_eq!(
-            cal.add_business(day(2026, 1, 5), 1),
-            Some(day(2026, 1, 7)),
-            "over the 6th"
-        );
-        assert_eq!(
-            cal.add_business(day(2026, 1, 5), -1),
-            Some(day(2026, 1, 2)),
-            "back"
-        );
-        assert_eq!(cal.add_business(day(2026, 1, 5), 0), None, "zero");
-        let jan = Period::month(2026, 1).expect("January");
-        assert_eq!(
-            cal.last_business(jan, 1),
-            Some(day(2026, 1, 30)),
-            "the 31st is a Saturday"
-        );
+        assert!(w.may_be(day(2026, 6, 23)), "inside");
+        assert!(!w.may_be(day(2026, 6, 25)), "after");
+        assert_eq!(w.text(), "window(2026-06-22, 2026-06-24)", "as written");
+        let o = Added::OneOf(vec![day(2026, 6, 22), day(2026, 6, 26)]);
+        assert!(!o.may_be(day(2026, 6, 23)), "between, not one of them");
+        assert_eq!(o.text(), "one_of([2026-06-22, 2026-06-26])", "as written");
+        assert_eq!(Added::Day(day(2026, 1, 1)).days(), None, "a fixed day");
     }
 }

@@ -18,6 +18,7 @@ use super::state::{
     Ctx, Engine, Env, Figures, invariant, not_typed, num_stop, refuse, refuse_load, unit_stop,
 };
 use super::ty::{figure_like, sample};
+use super::windows::{as_window, window_arith, window_compare, window_negated};
 use super::years::{as_year, year_literal};
 use crate::base::{Load, Run};
 use crate::hole::{Hole, spread};
@@ -59,7 +60,7 @@ impl Engine {
             Expr::Or(terms) => self.logic(m, terms, Logic::Any, env, ctx),
             Expr::And(terms) => self.logic(m, terms, Logic::All, env, ctx),
             Expr::Not(x) => self.not(m, x, env, ctx),
-            Expr::Cmp(c) => self.comparison(m, &c.0, c.1, &c.2, env, ctx),
+            Expr::Cmp(c) => self.comparison(m, (e, &c.0, c.1, &c.2), env, ctx),
             Expr::In(x) => self.membership(m, x, env, ctx),
             Expr::Sum(first, rest) => self.sum(m, first, rest, env, ctx),
             Expr::Prod(first, rest) => self.product(m, first, rest, env, ctx),
@@ -68,7 +69,7 @@ impl Engine {
             Expr::Call(call) => self.call(m, call, env, ctx),
             Expr::Paren(x) => self.ev(m, x, env, ctx),
             Expr::Record(fields) => self.record(m, fields, env, ctx),
-            Expr::List(items) => list(m, items),
+            Expr::List(items) => self.list(m, items, env, ctx),
             Expr::Agg(agg) => self.aggregate(m, agg, env, ctx),
             Expr::LegOf(..) => Err(Stop::NotBuilt("a leg's amount of a party or a batch")),
             Expr::To(..) => Err(Stop::NotBuilt("`to u`, a transcendental value")),
@@ -404,14 +405,13 @@ impl Engine {
     }
 
     /// `a op b` (refcore's `e_cmp`, `compare`): `none` only tests equal, a hole spreads,
-    /// `never` is later than every date, a key literal resolves against the other side.
-    /// L §3.1, §5.11, §8.4.
+    /// `never` is later than every date, a key literal resolves against the other side, a
+    /// window decides or is `HOLE-IMPRECISE` naming the comparison `written`. L §3.1, §4.4,
+    /// §5.11, §8.4.
     fn comparison(
         &mut self,
         m: &Reality,
-        lhs: &Expr,
-        op: CmpOp,
-        rhs: &Expr,
+        (written, lhs, op, rhs): (&Expr, &Expr, CmpOp, &Expr),
         env: &Env,
         ctx: Ctx,
     ) -> Result<Value, Stop> {
@@ -420,7 +420,7 @@ impl Engine {
         let left = year_beside(lhs, left, &right);
         let right = year_beside(rhs, right, &left);
         let (left, right) = resolve_pair(m, left, right)?;
-        compare_values(m, op, &left, &right)
+        compare_values(m, op, (&left, &right), written)
     }
 
     /// `x in K [on d]`: a thing's membership of a kind; `x in [a, b]`: a list's (refcore's
@@ -542,13 +542,34 @@ impl Engine {
                 "a value is none here: arithmetic".to_owned(),
             ));
         }
-        match negate(&v)? {
+        let negated = if let Value::Window(w) = &v {
+            window_negated(w)?
+        } else {
+            negate(&v)?
+        };
+        match negated {
             Some(n) => Ok(n),
             None => Err(refuse_load(
                 Load::Unit,
                 format!("unary minus on {}", v.text(m).map_err(num_stop)?),
             )),
         }
+    }
+
+    /// A list `[a, b]` (refcore's `e_list`): each item's value, a name evaluated as any name
+    /// is (a read of an input, a bound variable, a thing, else its word), as load typed it.
+    /// L §2.5, §4.4.
+    fn list(&mut self, m: &Reality, items: &[Lit], env: &Env, ctx: Ctx) -> Result<Value, Stop> {
+        let mut out = Vec::with_capacity(items.len());
+        for lit in items {
+            let v = if let Lit::Name(name) = lit {
+                self.name(m, name, env, ctx)?
+            } else {
+                literal(m, lit, Figures::Rule)?
+            };
+            out.push(v);
+        }
+        Ok(Value::List(out))
     }
 
     /// A record literal `(a: x, b: y)` (refcore's `e_record`). L §3.1.
@@ -681,6 +702,9 @@ pub(super) fn binop(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Result<Val
     if lhs.as_hole().is_some() || rhs.as_hole().is_some() {
         return hole_of(&[lhs.as_hole(), rhs.as_hole()]);
     }
+    if as_window(lhs).is_some() || as_window(rhs).is_some() {
+        return window_arith(m, op, lhs, rhs);
+    }
     arith(m, op, lhs, rhs)
 }
 
@@ -718,8 +742,14 @@ fn resolve_word(m: &Reality, word: &str, other: &Value) -> Result<Value, Stop> {
     Ok(Value::Word(word.to_owned()))
 }
 
-/// The comparison `a op b` of two values, keys resolved (refcore's `compare`). L §3.1, §8.4.
-pub(super) fn compare_values(m: &Reality, op: CmpOp, a: &Value, b: &Value) -> Result<Value, Stop> {
+/// The comparison `a op b` of two values, keys resolved, as `written` (refcore's `compare`).
+/// L §3.1, §4.4, §8.4.
+pub(super) fn compare_values(
+    m: &Reality,
+    op: CmpOp,
+    (a, b): (&Value, &Value),
+    written: &Expr,
+) -> Result<Value, Stop> {
     let eq = matches!(op, CmpOp::Eq | CmpOp::Ne);
     let holds = |same: bool| Value::Bool(same == (op == CmpOp::Eq));
     if *a == Value::None || *b == Value::None {
@@ -750,6 +780,9 @@ pub(super) fn compare_values(m: &Reality, op: CmpOp, a: &Value, b: &Value) -> Re
             CmpOp::Lt | CmpOp::Le => !later,
             CmpOp::Gt | CmpOp::Ge | CmpOp::Eq | CmpOp::Ne => later,
         }));
+    }
+    if as_window(a).is_some() || as_window(b).is_some() {
+        return window_compare(m, op, (a, b), &crate::load::expr_text(written));
     }
     if let (Value::Word(x), Value::Word(y)) = (a, b) {
         return Ok(holds(x == y));
@@ -792,15 +825,6 @@ fn field(m: &Reality, v: Value, name: &str) -> Result<Value, Stop> {
         .map(|(_, value)| value)
         // load's types refuse it; refcore's run names the record by its id
         .ok_or(Stop::NotBuilt("a field a record lacks, met at run"))
-}
-
-/// A key list `[a, b]` as written.
-fn list(m: &Reality, items: &[Lit]) -> Result<Value, Stop> {
-    let mut out = Vec::with_capacity(items.len());
-    for lit in items {
-        out.push(literal(m, lit, Figures::Rule)?);
-    }
-    Ok(Value::List(out))
 }
 
 /// A literal's value (refcore's `e_num` and the literal nodes): a number with a currency is

@@ -14,7 +14,7 @@ use crate::syntax::{
 };
 
 /// An expression's text, as a message names it (refcore's `_txt`).
-pub(super) fn text(e: &Expr) -> String {
+pub(crate) fn text(e: &Expr) -> String {
     match e {
         Expr::Name(id) => id.clone(),
         Expr::Lit(lit) => lit_txt(lit),

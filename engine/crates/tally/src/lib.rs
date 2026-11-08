@@ -90,7 +90,7 @@ pub mod time {
     mod day;
     mod period;
 
-    pub use calendar::{Calendar, FirstYear, weekday_number};
+    pub use calendar::{Added, Calendar, FirstYear, weekday_number};
     pub use day::Day;
     pub use period::{Period, PeriodKind, Step, age, age_months, overlap_days};
 }
@@ -129,8 +129,8 @@ pub mod model {
     pub use ty::{CodeKind, PeriodWord, Shown, Ty};
     pub use unit::{PERIODS, Scaled, Unit, UnitError, is_currency_code};
     pub use value::{
-        Class, Code, MvRef, MvSrc, Number, Value, currency, currency_id, currency_unit, money_num,
-        num_money,
+        Class, Code, MvRef, MvSrc, Number, Value, Window, currency, currency_id, currency_unit,
+        money_num, num_money,
     };
     pub use world::Scenarios;
 }
@@ -151,7 +151,9 @@ pub mod eval {
     mod arith;
     mod band;
     mod builtin;
+    mod business;
     mod convert;
+    mod dates;
     mod expr;
     mod memo;
     mod ranges;
@@ -160,6 +162,7 @@ pub mod eval {
     mod stack;
     mod state;
     mod ty;
+    mod windows;
     mod years;
 
     pub use aggregate::Member;
@@ -293,6 +296,7 @@ pub mod load {
     pub(crate) use joint::reprint_members;
     pub use keys::index_key_of;
     pub use steps::load;
+    pub(crate) use texts::text as expr_text;
     pub use worlds::{Loaded, Split, Worlds, load_run, split_files};
 }
 

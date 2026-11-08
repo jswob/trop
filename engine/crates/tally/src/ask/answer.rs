@@ -477,6 +477,12 @@ fn item_text(m: &Reality, item: &Item) -> Result<String, Stop> {
             Code::Run(Run::Key).as_str()
         )),
         Item::Value(Value::Day(d)) if d.is_end() => Err(past_days(1)),
+        Item::Value(Value::Window(w)) if !w.of_days() => {
+            // a window prints as a date; any other interval needs its one value (L §4.4)
+            let window = w.question_text(m).map_err(num_stop)?;
+            let text = format!("date within {window} not precise enough for a print");
+            Ok(crate::hole::Hole::asked(&text, w.figure()).text())
+        }
         Item::Value(v) => v.typed_text(m).map_err(num_stop),
     }
 }
