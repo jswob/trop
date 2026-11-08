@@ -383,8 +383,12 @@ impl Checker {
             (self.expr(m, scope, &owner, None, depth)?, None)
         };
         let is_leg = movement_leg(m, &ot, leg);
-        let record = Self::field(m, scope, first, &ot, leg).map_err(|stop| scope.place(stop))?;
-        let t = Self::field(m, scope, None, &record, amount).map_err(|stop| scope.place(stop))?;
+        let record = self
+            .field(m, scope, first, &ot, leg)
+            .map_err(|stop| scope.place(stop))?;
+        let t = self
+            .field(m, scope, None, &record, amount)
+            .map_err(|stop| scope.place(stop))?;
         Ok((t, is_leg))
     }
 

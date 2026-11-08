@@ -79,8 +79,8 @@ pub mod syntax {
         Item, ItemForm, Key, KindDecl, KindSpec, Known, LSpan, LawDate, Leg, Lit, Low, Move,
         MoveLines, MulOp, Number, OfQ, OfRow, Order, Orient, PRef, PartsClause, Pin, PinForm,
         Place, Postfix, Price, Proj, Prorata, Query, QueryFn, RChoice, Residuals, Rest, Row,
-        RowKey, Rule, RuleValue, Section, Sign, Site, Solve, Source, Span, Step, Takes, Type,
-        TypedInput, Unit, UnitDecl, UnitForm, UnitTerm, Valuation, Value, Version,
+        RowKey, Rule, RuleValue, Section, Sign, Site, SiteKey, Solve, Source, Span, Step, Takes,
+        Type, TypedInput, Unit, UnitDecl, UnitForm, UnitTerm, Valuation, Value, Version,
     };
 }
 

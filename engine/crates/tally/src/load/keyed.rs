@@ -13,7 +13,7 @@
 //! movement's field its kind lacks is read through the kind test that narrows its name, else
 //! refused; every recursion is counted (R-16).
 
-use super::check::{AxisRead, Checker, Figure, Scope, Var, VarDom, invariant};
+use super::check::{AxisRead, Checker, Figure, Narrowed, Scope, Var, VarDom, invariant};
 use super::keys::resolve_key;
 use super::random::DrawKey;
 use super::reads::leg_type;
@@ -28,7 +28,7 @@ use crate::eval::year_form;
 use crate::model::{
     Domain, KeyVal, KindSpec, NameKind, Node, NodeKind, PeriodWord, Reality, Rel, Ty,
 };
-use crate::syntax::{Expr, Key, Lit, Postfix, Stop};
+use crate::syntax::{Expr, Key, Lit, Postfix, SiteKey, Stop};
 use crate::time::PeriodKind;
 
 impl Checker {
@@ -453,7 +453,7 @@ impl Checker {
             Postfix::Keys(keys) => self.index(m, scope, base, keys, depth)?,
             Postfix::Field(field) => {
                 let t = self.expr(m, scope, base, None, depth)?;
-                Self::field(m, scope, Some(base), &t, field)?
+                self.field(m, scope, Some(base), &t, field)?
             }
         };
         Self::post_rest(m, scope, base, posts, (ty, 1))
@@ -504,7 +504,7 @@ impl Checker {
                         format!("cannot parse: {prefix} is not read with keys"),
                     ));
                 }
-                Postfix::Field(field) => ty = Self::field(m, scope, None, &ty, field)?,
+                Postfix::Field(field) => ty = Self::field_of(m, scope, None, &ty, field)?.0,
             }
             done = done
                 .checked_add(1)
@@ -556,16 +556,34 @@ impl Checker {
         ))
     }
 
-    /// `x.f` of a value of type `t` (refcore's `t_field`). L §3.1, §5.7, §5.14. A prefix that
-    /// names no item: a joint model's member whose namespace holds the ask `f` (no value,
-    /// refcore's `member_read`), else an unknown id.
+    /// `x.f` of a value of type `t`, the kind test whose narrowing gave it recorded for the run
+    /// (refcore's `t_field`, and the flag `narrow_mark` reads). L §3.1, §5.7, §5.14.
     pub(super) fn field(
+        &mut self,
         m: &Reality,
         scope: &Scope,
         base: Option<&Expr>,
         t: &Ty,
         field: &str,
     ) -> Typed {
+        let (ty, used) = Self::field_of(m, scope, base, t, field)?;
+        if let Some(test) = used {
+            self.narrow_used.insert(test);
+        }
+        Ok(ty)
+    }
+
+    /// `x.f` of a value of type `t`, and the site of the kind test whose narrowing gave it, if
+    /// one did (refcore's `t_field`). L §3.1, §5.7, §5.14. A prefix that names no item: a
+    /// joint model's member whose namespace holds the ask `f` (no value, refcore's
+    /// `member_read`), else an unknown id.
+    pub(super) fn field_of(
+        m: &Reality,
+        scope: &Scope,
+        base: Option<&Expr>,
+        t: &Ty,
+        field: &str,
+    ) -> Result<(Ty, Option<SiteKey>), Stop> {
         if let (Some(Expr::Name(name)), Ty::KeyLit(_)) = (base, t)
             && !scope.is_var(name)
             && !m.names.contains_key(name)
@@ -578,22 +596,25 @@ impl Checker {
             return Err(refused(Load::Name, format!("unknown id {id}")).naming(&id));
         }
         if matches!(t, Ty::Unseen) {
-            return Ok(Ty::Unseen);
+            return Ok((Ty::Unseen, None));
         }
         if let Ty::Record(_) = t {
-            return t.field(field).cloned().ok_or_else(|| {
+            let ty = t.field(field).cloned().ok_or_else(|| {
                 refused(
                     Load::Field,
                     format!("{field} is not a field of {}", t.show()),
                 )
-            });
+            })?;
+            return Ok((ty, None));
         }
         if let Ty::Key(kind) = t
             && let Some(info) = m.kinds.get(kind)
         {
             if info.spec == KindSpec::Event {
                 let narrowed = narrowed_kind(scope, base);
-                return movement_field(m, kind, field, narrowed.as_deref());
+                let sub = narrowed.as_ref().map(|n| n.kind.as_str());
+                let (ty, used) = movement_field(m, kind, field, sub)?;
+                return Ok((ty, narrowed.filter(|_| used).map(|n| n.test)));
             }
             return Err(refused(
                 Load::Field,
@@ -708,7 +729,7 @@ fn period_conv(index_pk: Option<PeriodKind>, ix: &str, pk: PeriodKind) -> Result
 /// The subkind a kind test narrows a field's object to here: a name, parentheses aside, the
 /// one object a kind test narrows (refcore's `sc.narrow`, read for a name only). `None` for
 /// a field read after another postfix, never a name. L §5.7.
-fn narrowed_kind(scope: &Scope, base: Option<&Expr>) -> Option<String> {
+fn narrowed_kind(scope: &Scope, base: Option<&Expr>) -> Option<Narrowed> {
     let mut object = base;
     while let Some(Expr::Paren(inner)) = object {
         object = Some(inner.as_ref());
@@ -719,25 +740,31 @@ fn narrowed_kind(scope: &Scope, base: Option<&Expr>) -> Option<String> {
     scope.narrow.get(name).cloned()
 }
 
-/// A field of a movement of event kind `kind`: a leg, an attribute, `day`, `fulfils`; else,
-/// of a name a kind test narrows to a subkind, the subkind's leg or attribute; any other, of a
-/// movement of `events` (`a.adjusts.f`, a variable bound over the root), is read by name over
-/// every event kind; else `LOAD-FIELD`: a field of a subkind read where no test narrows the
-/// variable stays refused (refcore's `m_movement_field`). L §5.7, §5.14, §5.14.3, §8.3.
-fn movement_field(m: &Reality, kind: &str, field: &str, narrowed: Option<&str>) -> Typed {
+/// A field of a movement of event kind `kind`, and whether the narrowing gave it: a leg, an
+/// attribute, `day`, `fulfils`; else, of a name a kind test narrows to a subkind, the
+/// subkind's leg or attribute; any other, of a movement of `events` (`a.adjusts.f`, a
+/// variable bound over the root), is read by name over every event kind; else `LOAD-FIELD`: a
+/// field of a subkind read where no test narrows the variable stays refused (refcore's
+/// `m_movement_field`). L §5.7, §5.14, §5.14.3, §8.3.
+fn movement_field(
+    m: &Reality,
+    kind: &str,
+    field: &str,
+    narrowed: Option<&str>,
+) -> Result<(Ty, bool), Stop> {
     if let Some(ty) = kind_field(m, kind, field) {
-        return ty;
+        return Ok((ty?, false));
     }
     match field {
-        "day" => return Ok(Ty::Date),
-        "fulfils" => return Ok(Ty::Key("events".to_owned())),
+        "day" => return Ok((Ty::Date, false)),
+        "fulfils" => return Ok((Ty::Key("events".to_owned()), false)),
         _ => {}
     }
     if let Some(sub) = narrowed.filter(|sub| *sub != kind)
         && let Some(ty) = kind_field(m, sub, field)
     {
         match ty {
-            Ok(ty) => return Ok(ty),
+            Ok(ty) => return Ok((ty, true)),
             Err(Stop::Refused(r)) if matches!(r.code(), Code::Load(_)) => {}
             Err(stop) => return Err(stop),
         }
@@ -745,7 +772,7 @@ fn movement_field(m: &Reality, kind: &str, field: &str, narrowed: Option<&str>) 
     if kind == "events"
         && let Some(ty) = event_field(m, field)?
     {
-        return Ok(ty);
+        return Ok((ty, false));
     }
     Err(refused(
         Load::Field,

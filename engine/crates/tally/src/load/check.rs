@@ -29,7 +29,7 @@ use crate::model::{
 use crate::num::Num;
 use crate::syntax::{
     AddOp, Ask, AskBody, Bal, CmpOp, Domain as Written, Expr, Key, Lit, Number, RChoice, Section,
-    Stop,
+    SiteKey, Stop,
 };
 use crate::time::PeriodKind;
 use std::collections::{BTreeMap, BTreeSet};
@@ -178,7 +178,17 @@ pub(super) struct Scope {
     pub(super) read_in: ReadIn,
     /// Each variable a kind test narrows here, with the subkind it is narrowed to: its legs
     /// and attributes are readable (refcore's `Scope.narrow`). L §5.7.
-    pub(super) narrow: BTreeMap<String, String>,
+    pub(super) narrow: BTreeMap<String, Narrowed>,
+}
+
+/// A variable's narrowing: the subkind, and the site of the kind test that narrows it, which
+/// the run evaluates first once a field read uses it (refcore's `(K, [used])`). L §5.7.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct Narrowed {
+    /// The subkind.
+    pub(super) kind: String,
+    /// The kind test's site.
+    pub(super) test: SiteKey,
 }
 
 /// How a read of a random fact is taken in a scope (refcore's `dist_role`, `in_query`).
@@ -232,7 +242,14 @@ impl Scope {
                 && let (Expr::Name(v), Expr::Name(k), None) = (&test.member, &test.set, &test.on)
                 && self.narrows(m, v, k)
             {
-                out.narrow.insert(v.clone(), k.clone());
+                let test = test.site.key();
+                out.narrow.insert(
+                    v.clone(),
+                    Narrowed {
+                        kind: k.clone(),
+                        test,
+                    },
+                );
             }
         }
         out
@@ -247,7 +264,7 @@ impl Scope {
         if m.kinds.get(bound).is_none() || m.kinds.get(k).is_none() {
             return false;
         }
-        let parent = self.narrow.get(v).unwrap_or(bound);
+        let parent = self.narrow.get(v).map_or(bound, |n| &n.kind);
         k != parent && m.subtree(parent).contains(k)
     }
 
@@ -459,6 +476,8 @@ pub(super) struct Walked {
     pub(super) dropped: BTreeSet<String>,
     /// Each key list's binding site with the index its key positions fixed. L §2.5.
     pub(super) list_keys: BTreeMap<(String, u32, usize), String>,
+    /// The sites of the kind tests whose narrowing a field read used. L §5.7.
+    pub(super) narrow_used: BTreeSet<SiteKey>,
 }
 
 /// The checker's state over the walk (refcore's `Checker`).
@@ -473,6 +492,9 @@ pub(super) struct Checker {
     /// Each key list's binding site with the index its key positions fixed, for the run
     /// (refcore's `b._var.fixed`). L §2.5.
     pub(super) list_keys: BTreeMap<(String, u32, usize), String>,
+    /// The sites of the kind tests whose narrowing a field read used, which the run evaluates
+    /// first in their conjunction (refcore's `narrow_mark`). L §5.7.
+    pub(super) narrow_used: BTreeSet<SiteKey>,
     /// Key-list variables read as values.
     pub(super) kl_uses: Vec<KeyListUse>,
     /// Each def's key offsets, by its id.
@@ -635,6 +657,7 @@ pub(super) fn walk(m: &Reality, sections: &[(String, Section)]) -> Result<Walked
         read_order: checker.read_order,
         dropped,
         list_keys: checker.list_keys,
+        narrow_used: checker.narrow_used,
     })
 }
 

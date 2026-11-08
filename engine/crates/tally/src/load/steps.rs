@@ -205,6 +205,7 @@ impl Loader {
                 elsewhere: BTreeMap::new(),
                 asks_alone: BTreeMap::new(),
                 list_keys: BTreeMap::new(),
+                narrow_tests: BTreeSet::new(),
                 sames: Vec::new(),
                 joint: joint.cloned(),
             },

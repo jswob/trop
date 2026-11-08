@@ -520,6 +520,9 @@ pub struct In {
     pub set: Expr,
     /// The day, for a kind.
     pub on: Option<Expr>,
+    /// Where its `in` is written, so the run finds the kind tests whose narrowing load used
+    /// (L §5.7).
+    pub site: Site,
 }
 
 /// A call: a built-in's name or a band's id, with the prefixes that name a band.
@@ -641,9 +644,10 @@ pub struct Bind {
     pub site: Site,
 }
 
-/// Where a binding is written: its file, its line and its first token's place in the line,
-/// the key load's decisions about it are found by at run (a key list's index, L §2.5). A
-/// site takes no part in a tree's equality: two trees are the same text wherever written.
+/// Where a binding or a membership test is written: its file, its line and its first token's
+/// place in the line, the key load's decisions about it are found by at run (a key list's
+/// index, L §2.5; a kind test's narrowing, §5.7). A site takes no part in a tree's equality:
+/// two trees are the same text wherever written.
 #[derive(Debug, Clone, Default)]
 pub struct Site {
     /// The file, as the run names it.
@@ -654,10 +658,13 @@ pub struct Site {
     pub at: usize,
 }
 
+/// A site as a map's key: its file, its line, its token's place.
+pub type SiteKey = (String, u32, usize);
+
 impl Site {
     /// The site as a map's key.
     #[must_use]
-    pub fn key(&self) -> (String, u32, usize) {
+    pub fn key(&self) -> SiteKey {
         (self.file.clone(), self.line, self.at)
     }
 }

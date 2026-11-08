@@ -271,6 +271,7 @@ impl P<'_> {
         let world = self.ask_for && self.depth_is_zero() && self.world_in();
         if self.at("in", 0) && ends != Ends::AtIn && !world {
             self.force(&left, from, Under::Comparison);
+            let site = self.site();
             self.skip(1)?;
             let set_from = self.i;
             let set = self.sum(ends)?;
@@ -288,6 +289,7 @@ impl P<'_> {
                 member: left,
                 set,
                 on,
+                site,
             })));
         }
         Ok(left)

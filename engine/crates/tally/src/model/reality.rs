@@ -128,6 +128,9 @@ pub struct Reality {
     /// Each key list's binding site (file, line, token) with the index its key positions
     /// fixed: its keys are that index's (refcore's `b._var.fixed`). L §2.5.
     pub list_keys: BTreeMap<(String, u32, usize), String>,
+    /// The sites (file, line, token) of the kind tests whose narrowing a field read uses: the
+    /// run evaluates them first in their conjunction (refcore's `narrow_mark`). L §5.7.
+    pub narrow_tests: BTreeSet<crate::syntax::SiteKey>,
     /// The rows and movements stated `same`, in the order written (refcore's `same_rows` and
     /// `same_moves`): read together at run. L §6.1, §5.19.
     pub sames: Vec<SamePair>,

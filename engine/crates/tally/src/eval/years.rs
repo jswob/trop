@@ -48,12 +48,13 @@ pub(super) fn as_year(e: Option<&Expr>, v: &Value) -> Option<Period> {
 
 /// The year an int names at a span's end. Load lets an int stand there only as a year: a
 /// figure in a year form, or a key-list variable of four-digit keys (refcore's `span_value`,
-/// and the `_year` marks of `span` and `kl_value`). L §2.1, §2.5, §5.7.
+/// and the `_year` marks of `span` and `kl_value`). L §2.1, §2.5, §4.1.
 pub(super) fn span_year(v: &Value) -> Option<Period> {
     int_year(v)
 }
 
-/// The year that a whole-number value names, or `None` for any other value.
+/// The year that a whole-number value names, or `None` for any other value: an int past the
+/// calendar's years names none, and the place that reads it refuses it. L §2.1, §4.1.
 fn int_year(v: &Value) -> Option<Period> {
     let Value::Number(Number {
         q,
@@ -62,7 +63,9 @@ fn int_year(v: &Value) -> Option<Period> {
     else {
         return None;
     };
-    let year = u16::try_from(q.to_i64()?).ok()?;
+    let Ok(year) = u16::try_from(q.to_i64()?) else {
+        return None;
+    };
     Period::year(year)
 }
 

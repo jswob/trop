@@ -335,6 +335,12 @@ impl Engine {
             Logic::Any => ("or", true),
             Logic::All => ("and", false),
         };
+        if kind == Logic::All
+            && !m.narrow_tests.is_empty()
+            && self.narrowed_false(m, terms, env, ctx)?
+        {
+            return Ok(Value::Bool(false));
+        }
         let mut acc: Option<Value> = None;
         for term in terms {
             if let Some(Value::Bool(b)) = &acc
@@ -356,6 +362,35 @@ impl Engine {
             });
         }
         acc.ok_or_else(|| invariant("a logic chain of no terms"))
+    }
+
+    /// Whether a kind test of conjunction `terms` whose narrowing a field read uses is false,
+    /// the tests taken first, left to right: a conjunct that reads the narrowed fields is
+    /// evaluated only where the test holds, and the conjunction is false where it doesn't
+    /// (refcore's `e_and`, its `_narrow`). L §5.7.
+    fn narrowed_false(
+        &mut self,
+        m: &Reality,
+        terms: &[Expr],
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<bool, Stop> {
+        let mut work: Vec<&Expr> = terms.iter().rev().collect();
+        while let Some(node) = work.pop() {
+            if let Expr::Paren(inner) = node {
+                work.push(inner);
+            }
+            if let Expr::And(inner) = node {
+                work.extend(inner.iter().rev());
+            }
+            if let Expr::In(test) = node
+                && m.narrow_tests.contains(&test.site.key())
+                && self.membership(m, test, env, ctx)? == Value::Bool(false)
+            {
+                return Ok(true);
+            }
+        }
+        Ok(false)
     }
 
     /// `not e` (refcore's `e_not`). L §5.11.
