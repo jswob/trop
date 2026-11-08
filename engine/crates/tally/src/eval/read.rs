@@ -15,6 +15,7 @@ use super::builtin::read_parts;
 use super::convert::{ConvertFor, Converted, convert};
 use super::memo::{LawClass, Read, may_hold, rows_class};
 use super::state::{Ctx, Engine, Env, a_day, invariant, num_stop, refuse, refuse_load};
+use super::windows::as_read;
 use crate::base::{Load, Run};
 use crate::hole::Hole;
 use crate::load::index_key_of;
@@ -87,7 +88,7 @@ impl Engine {
             // a thing's lifespan or the question's text: the day itself (L §4.6 step 5)
             self.narrow_to_day(ctx.law);
         }
-        match found {
+        let value = match found {
             Found::Row(at) => {
                 let row = input
                     .rows
@@ -98,11 +99,12 @@ impl Engine {
                     sid: row.sid.clone(),
                 });
                 let value = self.row_value(m, input, row, keys, ctx)?;
-                self.priced(m, input, keys, ctx, value)
+                self.priced(m, input, keys, ctx, value)?
             }
-            Found::None => Ok(Value::None),
-            Found::Hole(q) => Ok(Value::Hole(Hole::asked(&q.text, &q.origin))),
-        }
+            Found::None => Value::None,
+            Found::Hole(q) => Value::Hole(Hole::asked(&q.text, &q.origin)),
+        };
+        Ok(as_read(value, &input.id, keys, ctx))
     }
 
     /// Narrows the reading cell's law date class by what a read of `input` tests its law
@@ -284,8 +286,9 @@ impl Engine {
         let value = match convert(m, &row.value, ty, &input.id, &of)? {
             Converted::Hole(text) => Value::Hole(Hole::asked(&text, &figure)),
             Converted::Value(Value::Window(mut w)) => {
-                // two reads of one figure's row are one value (L §4.4)
-                w.origin = Some((row.sid.clone(), figure.clone()));
+                // its holes are asked of this row (L §8.1); the read that made it is stamped
+                // by `read_input_at`
+                w.figure = Some(figure.clone());
                 Value::Window(w)
             }
             Converted::Value(v) => v,

@@ -95,7 +95,8 @@ pub(super) fn min_max(m: &Reality, vals: Vec<Value>, pick: End) -> Result<Value,
         hi,
         days: None,
         src,
-        origin: None,
+        figure: None,
+        read: None,
     })))
 }
 

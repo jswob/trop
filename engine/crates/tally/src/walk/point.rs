@@ -163,9 +163,8 @@ impl At {
         }
     }
 
-    /// The point as text, for the counted build's distinct reads (P §1.1): a running read's
-    /// cells are kept per point (E §3.2). Only the `counters` build has it.
-    #[cfg(feature = "counters")]
+    /// The point as text: a running read's world (L §4.4, a read's identity) and the counted
+    /// build's distinct reads (P §1.1); a running read's cells are kept per point (E §3.2).
     #[must_use]
     pub fn text(self) -> String {
         format!(

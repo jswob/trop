@@ -129,8 +129,8 @@ pub mod model {
     pub use ty::{CodeKind, PeriodWord, Shown, Ty};
     pub use unit::{PERIODS, Scaled, Unit, UnitError, is_currency_code};
     pub use value::{
-        Class, Code, MvRef, MvSrc, Number, Value, Window, currency, currency_id, currency_unit,
-        money_num, num_money,
+        Class, Code, MvRef, MvSrc, Number, ReadOf, Value, Window, currency, currency_id,
+        currency_unit, money_num, num_money,
     };
     pub use world::Scenarios;
 }

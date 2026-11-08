@@ -142,9 +142,25 @@ pub struct Window {
     /// The window as written, which a question names; none for an interval no one window
     /// gives (a calendar's added window met by a business-day function).
     pub src: Option<String>,
-    /// The read it came from, its row's id and its figure (`bought[l1]`): two reads of one
-    /// figure are one value, decided against itself (L §4.4).
-    pub origin: Option<(String, String)>,
+    /// The figure of the row it came from (`bought[l1]`), which its holes are asked of, kept
+    /// through the operations on it (L §8.1).
+    pub figure: Option<String>,
+    /// The read of an item it is the value of; none for a value an operation computed. Two
+    /// reads alike are one value, decided against itself (L §4.4).
+    pub read: Option<ReadOf>,
+}
+
+/// One read of an item: the input or def, its keys and the world it was read in. Two reads
+/// of one item at the same keys, law date, cut and pins are one value, whatever variables
+/// bind the keys; equal intervals from different reads stay undecided (L §4.4).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ReadOf {
+    /// The input or def read.
+    pub item: String,
+    /// Its keys, as made.
+    pub keys: Vec<KeyVal>,
+    /// The world: the law date, the cut, the walk point and `with uncertain`, as text.
+    pub world: String,
 }
 
 impl Window {
@@ -165,12 +181,10 @@ impl Window {
         ))
     }
 
-    /// The figure a question about it is asked of: its read's, or none (L §8.1).
+    /// The figure a question about it is asked of: its row's, or none (L §8.1).
     #[must_use]
     pub fn figure(&self) -> &str {
-        self.origin
-            .as_ref()
-            .map_or("", |(_, figure)| figure.as_str())
+        self.figure.as_ref().map_or("", String::as_str)
     }
 
     /// Whether its values are days, a date (L §3.1, §4.4).

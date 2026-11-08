@@ -73,6 +73,12 @@ impl Ctx {
     /// read's cells are kept per walk point (E §3.2).
     #[cfg(feature = "counters")]
     pub(super) fn key(self) -> String {
+        self.world()
+    }
+
+    /// The world a read is made in, as text: its law date, cut, walk point and `with
+    /// uncertain`; two reads of one item at the same keys in one world are one value (L §4.4).
+    pub(super) fn world(self) -> String {
         let law = self.law.map_or_else(|| "-".to_owned(), Day::text);
         let unc = if self.unc { "|uncertain" } else { "" };
         match self.at {

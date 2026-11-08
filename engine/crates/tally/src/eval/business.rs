@@ -248,7 +248,8 @@ impl Engine {
             hi: Value::Day(*hi),
             days: None,
             src: None,
-            origin: None,
+            figure: None,
+            read: None,
         })))
     }
 

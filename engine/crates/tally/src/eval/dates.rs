@@ -76,7 +76,8 @@ impl Engine {
             "end_of" => DateFn::End,
             "year_of" => DateFn::Year,
             "month_of" => DateFn::Month,
-            _ => DateFn::Quarter,
+            "quarter_of" => DateFn::Quarter,
+            _ => return Err(invariant("a period built-in dispatched by another name")),
         };
         if let Value::Window(_) = v {
             return lifted(m, f, &[v]);
@@ -185,7 +186,8 @@ impl Engine {
             "add_months" => lifted(m, DateFn::AddMonths(months_arg(m, &b, "month")?), &[first]),
             "add_years" => lifted(m, DateFn::AddMonths(months_arg(m, &b, "year")?), &[first]),
             "age_months" => lifted(m, DateFn::AgeMonths, &[first, date_or_window(b, name)?]),
-            _ => lifted(m, DateFn::Age, &[first, date_or_window(b, name)?]),
+            "age" => lifted(m, DateFn::Age, &[first, date_or_window(b, name)?]),
+            _ => Err(invariant("a day-count built-in dispatched by another name")),
         }
     }
 
@@ -378,9 +380,10 @@ fn window_weekday(w: &Window) -> Result<Value, Stop> {
     } else if let Some(days) = &w.days {
         days.iter().map(|d| d.weekday()).collect()
     } else {
-        let mut out = BTreeSet::new();
+        // stop at the last day before a step: a window may end on 9999-12-31
+        let mut out = BTreeSet::from([last.weekday()]);
         let mut day = first;
-        while day <= last {
+        while day < last {
             out.insert(day.weekday());
             day = day.next().ok_or_else(|| past_days(1))?;
         }
@@ -397,7 +400,8 @@ fn window_weekday(w: &Window) -> Result<Value, Stop> {
         hi: Value::int(i64::from(*hi)),
         days: None,
         src: w.src.clone(),
-        origin: None,
+        figure: None,
+        read: None,
     })))
 }
 

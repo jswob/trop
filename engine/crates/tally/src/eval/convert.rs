@@ -204,7 +204,8 @@ fn days_value(days: &DaySet, ty: &Ty, target: &str) -> Result<Converted, Stop> {
                 hi: Value::Day(*b),
                 days: None,
                 src: Some(format!("window({}, {})", a.text(), b.text())),
-                origin: None,
+                figure: None,
+                read: None,
             }
         }
         DaySet::OneOf(written) => one_of(written)?,
@@ -227,7 +228,8 @@ pub(super) fn one_of(written: &[Day]) -> Result<Window, Stop> {
         hi: Value::Day(hi),
         src: Some(format!("one_of([{}])", texts.join(", "))),
         days: Some(days),
-        origin: None,
+        figure: None,
+        read: None,
     })
 }
 

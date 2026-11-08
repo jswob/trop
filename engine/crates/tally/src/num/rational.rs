@@ -155,13 +155,10 @@ impl Num {
     }
 
     /// `self^k` for a whole `k`, exactly, by repeated squaring: `RUN-DIV` for 0 to a power
-    /// below 0, `RUN-DIGITS` past the cap (Python's `Fraction ** int`, refcore's `c_pow`).
-    /// Each factor and square is a part of the power, so none passes the cap before it does.
-    /// L §3.3 (a power that is an integer is exact), §7.1.
+    /// below 0 (the reciprocal of 0^|k|), `RUN-DIGITS` past the cap (Python's `Fraction **
+    /// int`, refcore's `c_pow`). Each factor and square is a part of the power, so none passes
+    /// the cap before it does. L §3.3 (a power that is an integer is exact), §7.1.
     pub fn checked_pow(&self, k: i64) -> Result<Num, NumError> {
-        if self.is_zero() && k < 0 {
-            return Err(NumError::Div);
-        }
         let mut out = Num::int(1);
         let mut square = self.clone();
         let mut left = k.unsigned_abs();

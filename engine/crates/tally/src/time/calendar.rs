@@ -103,16 +103,21 @@ impl Added {
         }
     }
 
-    /// The days a window or a choice of days can take, in order; none for another entry.
+    /// The days a window or a choice of days can take, in order; none for another entry. A
+    /// window's days stop at its last day before a step, so one that ends on the last day of
+    /// time, 9999-12-31, has its days too.
     #[must_use]
     pub fn days(&self) -> Option<Vec<Day>> {
         match self {
             Added::Window(a, b) => {
                 let mut out = Vec::new();
                 let mut day = *a;
-                while day <= *b {
+                while day < *b {
                     out.push(day);
                     day = day.next()?;
+                }
+                if day == *b {
+                    out.push(day);
                 }
                 Some(out)
             }

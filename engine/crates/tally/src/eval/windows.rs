@@ -6,9 +6,10 @@
 //! Twin: engine/tools/refcore/evaluate.py (`iv_arith`, `iv_compare`, `imprecise`, `lift`'s end,
 //! `e_neg` of an `Iv`, `c_window`, `c_one_of`, `date_of`); ask.py (`fmt_value` of an `Iv`).
 //! Invariants: a window's low end is never above its high end; an operation on two windows,
-//! and a use that needs one value, is the window's `HOLE-IMPRECISE`, asked of the read it came
-//! from; a window keeps the text it was written with and its read through every operation
-//! that keeps it a window.
+//! and a use that needs one value, is the window's `HOLE-IMPRECISE`, asked of the row it came
+//! from; a window keeps the text it was written with and its row's figure through every
+//! operation that keeps it a window, but only a read of an item gives it a read, so a value
+//! an operation computed is never decided against itself (#115, pick P28).
 
 use core::cmp::Ordering;
 
@@ -17,7 +18,7 @@ use super::expr::hole_of;
 use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load};
 use crate::base::{Load, Run};
 use crate::hole::Hole;
-use crate::model::{Reality, Value, Window};
+use crate::model::{KeyVal, ReadOf, Reality, Value, Window};
 use crate::syntax::{Call, CmpOp, Stop};
 use crate::time::{Day, PeriodKind};
 
@@ -61,9 +62,24 @@ pub(super) fn window_end(v: &Value, end: End) -> Value {
     }
 }
 
+/// Value `v` as the value of one read of `item` at `keys` in `ctx`'s world: a window takes
+/// that read, so another read alike is the same value (L §4.4: "Two reads of one item at the
+/// same keys, law date, cut and pins are one value"); any other value is itself.
+pub(super) fn as_read(v: Value, item: &str, keys: &[KeyVal], ctx: Ctx) -> Value {
+    let Value::Window(mut w) = v else {
+        return v;
+    };
+    w.read = Some(ReadOf {
+        item: item.to_owned(),
+        keys: keys.to_vec(),
+        world: ctx.world(),
+    });
+    Value::Window(w)
+}
+
 /// The interval of the values `a` and `b` a built-in gives at window `from`'s ends: one value
-/// when they are equal, else from the lower to the higher, with `from`'s text and read
-/// (refcore's `lift`, its end). L §4.4.
+/// when they are equal, else from the lower to the higher, with `from`'s text and figure and
+/// no read, a value computed (refcore's `lift`, its end). L §4.4.
 pub(super) fn interval(m: &Reality, (a, b): (Value, Value), from: &Window) -> Result<Value, Stop> {
     let (lo, hi) = match compare(m, &a, &b, Test::Order)? {
         Ordering::Equal => return Ok(a),
@@ -75,12 +91,14 @@ pub(super) fn interval(m: &Reality, (a, b): (Value, Value), from: &Window) -> Re
         hi,
         days: None,
         src: from.src.clone(),
-        origin: from.origin.clone(),
+        figure: from.figure.clone(),
+        read: None,
     })))
 }
 
 /// `a op b` where one side is a window: the op at the window's ends, in order, a window with
-/// its text and read; on two windows `HOLE-IMPRECISE` (refcore's `iv_arith`). L §4.4.
+/// its text and figure and no read, a value computed; on two windows `HOLE-IMPRECISE`
+/// (refcore's `iv_arith`). L §4.4.
 pub(super) fn window_arith(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Result<Value, Stop> {
     let (w, lo, hi) = match (lhs, rhs) {
         (Value::Window(a), Value::Window(_)) => {
@@ -100,7 +118,8 @@ pub(super) fn window_arith(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Res
         hi,
         days: None,
         src: w.src.clone(),
-        origin: w.origin.clone(),
+        figure: w.figure.clone(),
+        read: None,
     })))
 }
 
@@ -115,13 +134,15 @@ pub(super) fn window_negated(w: &Window) -> Result<Option<Value>, Stop> {
         hi,
         days: None,
         src: w.src.clone(),
-        origin: None,
+        figure: None,
+        read: None,
     }))))
 }
 
 /// The comparison `a op b` where a side is a window: decided when the whole interval lies on
-/// one side, a read compared with itself decided, else `HOLE-IMPRECISE` naming the comparison
-/// as written, `text` (refcore's `iv_compare`). L §4.4.
+/// one side, two reads alike of one item decided as one value, else `HOLE-IMPRECISE` naming
+/// the comparison as written, `text` (refcore's `iv_compare`; its identity is the input row,
+/// the spec's the read, #115). L §4.4.
 pub(super) fn window_compare(
     m: &Reality,
     op: CmpOp,
@@ -129,8 +150,8 @@ pub(super) fn window_compare(
     text: &str,
 ) -> Result<Value, Stop> {
     if let (Value::Window(x), Value::Window(y)) = (a, b)
-        && x.origin.is_some()
-        && x.origin == y.origin
+        && x.read.is_some()
+        && x.read == y.read
     {
         return Ok(Value::Bool(matches!(op, CmpOp::Eq | CmpOp::Le | CmpOp::Ge)));
     }
@@ -261,7 +282,8 @@ impl Engine {
             hi: Value::Day(last),
             days: None,
             src: Some(written),
-            origin: None,
+            figure: None,
+            read: None,
         })))
     }
 
@@ -317,7 +339,8 @@ mod tests {
             hi: Value::Day(day(2026, 6, 5)),
             days: Some(vec![day(2026, 6, 1), day(2026, 6, 5)]),
             src: None,
-            origin: None,
+            figure: None,
+            read: None,
         };
         assert!(
             one_of_holds(&w, &Value::Day(day(2026, 6, 5))),

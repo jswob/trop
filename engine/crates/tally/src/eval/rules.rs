@@ -24,6 +24,7 @@ use crate::time::Day;
 use super::convert::{ConvertFor, Converted, convert};
 use super::memo::{CellId, CellKey, LawClass, Read, rows_class, rules_class};
 use super::read::shown;
+use super::windows::as_read;
 
 impl Engine {
     /// A read of def `def` at keys already made keys (refcore's `read_def`): its law date by
@@ -44,7 +45,8 @@ impl Engine {
         let outer = self.holding(Node::new(NodeKind::Def, &def.id));
         let read = self.read_def_held(m, def, keys, ctx);
         self.holder = outer;
-        read
+        // a window the def gives is this read's value, whichever read made it (L §4.4)
+        Ok(as_read(read?, &def.id, keys, ctx))
     }
 
     /// [`Engine::read_def_at`] with the def holding what its `where` and `at` read. L §5.11,
