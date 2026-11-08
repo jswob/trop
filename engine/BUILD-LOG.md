@@ -1588,3 +1588,7 @@ The builder of the pre-M1 run, group G6b of `tmp/pre-m1-build/plan.md` § "G6a, 
 ## 2026-11-08 pre-M1, the G6 review's follow-up 2 and T's chunk 5 (issues #97, #107)
 
 - `load/keyed.rs` and `load/targets.rs` name their twins where refcore has them (`kind_attrs` in `model.py`, the `_r` of `place` set in `check3.py` `m_place_value`; comments only), and `MUTANTS-SURVIVORS.md`'s `Sums::global` `>` → `>=` row is `R-87: missed:` with T's reason (a refusal on a span's first day tells it apart, held for #107); no code changed.
+
+## 2026-11-08 pre-M1, the final dispatch's survivors (run 42434978721, issue #97)
+
+- Five rows T's vectors now catch are out (`book_run`'s `delete !`, `&&` → `||`, `>` → `<`; `run_one_body`'s `!=` → `==`; `Order`'s `partial_cmp` → `None`), and `Num::range_keys`' `<` → `<=` is in as `R-87: equivalent:` (`range_values` calls it only after `range_past` found the range within the limit, on the same integer ends and step); no code changed.
