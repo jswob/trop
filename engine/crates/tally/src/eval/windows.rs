@@ -149,10 +149,7 @@ pub(super) fn window_compare(
     (a, b): (&Value, &Value),
     text: &str,
 ) -> Result<Value, Stop> {
-    if let (Value::Window(x), Value::Window(y)) = (a, b)
-        && x.read.is_some()
-        && x.read == y.read
-    {
+    if one_read(a, b) {
         return Ok(Value::Bool(matches!(op, CmpOp::Eq | CmpOp::Le | CmpOp::Ge)));
     }
     let ((alo, ahi), (blo, bhi)) = (ends(a), ends(b));
@@ -199,6 +196,40 @@ pub(super) fn window_compare(
         .or_else(|| as_window(b))
         .ok_or_else(|| invariant("a window comparison with no window"))?;
     Ok(Value::Hole(imprecise(m, w, text)?))
+}
+
+/// Whether two values are windows that are two reads alike of one item, so one value (L §4.4:
+/// "Two reads of one item at the same keys, law date, cut and pins are one value").
+pub(super) fn one_read(a: &Value, b: &Value) -> bool {
+    if let (Value::Window(x), Value::Window(y)) = (a, b) {
+        return x.read.is_some() && x.read == y.read;
+    }
+    false
+}
+
+/// The order of two values where a side may be a window, where it is decided: below (above)
+/// when the whole interval lies below (above) the other, equal for two reads alike of one
+/// item; none where the intervals meet, an order an aggregate can't take (L §4.4; refcore's
+/// `iv_compare`, its identity the input row's, #115).
+///
+/// # Errors
+///
+/// The refusals of comparing the values or their ends.
+pub(super) fn decided_order(m: &Reality, a: &Value, b: &Value) -> Result<Option<Ordering>, Stop> {
+    if as_window(a).is_none() && as_window(b).is_none() {
+        return compare(m, a, b, Test::Order).map(Some);
+    }
+    if one_read(a, b) {
+        return Ok(Some(Ordering::Equal));
+    }
+    let ((alo, ahi), (blo, bhi)) = (ends(a), ends(b));
+    if compare(m, ahi, blo, Test::Order)? == Ordering::Less {
+        return Ok(Some(Ordering::Less));
+    }
+    if compare(m, alo, bhi, Test::Order)? == Ordering::Greater {
+        return Ok(Some(Ordering::Greater));
+    }
+    Ok(None)
 }
 
 /// A value's interval: a window's ends, any other value twice. L §4.4.

@@ -345,8 +345,9 @@ fn instant_day(instant: &RowInstant) -> Option<Day> {
 
 /// Whether a row holds the read's time: a reading at its instant; a state when its span
 /// holds the day, or governs `always` for a read with no law date; for `last(x, d)`, a
-/// reading at an instant on or before d, a state whose span has a start on or before d
-/// (L §4.6 step 1, Readings, Past the last row).
+/// reading at an instant on or before d, a state whose span began on or before d, a span
+/// with no start (`always`, `..e`) before every d (L §4.6 step 1, Readings, Past the last
+/// row; §5.3 `governs always` governs every day).
 fn in_time(m: &Reality, row: &Row, test: Test, cut: Day) -> Result<bool, Stop> {
     if let Some(instant) = &row.instant {
         return Ok(match test {
@@ -362,23 +363,26 @@ fn in_time(m: &Reality, row: &Row, test: Test, cut: Day) -> Result<bool, Stop> {
         Test::At(None) if span.is_always() => Ok(true),
         Test::At(None) => Err(no_law_date()),
         Test::At(Some(day)) | Test::Instant(day) => Ok(span.contains(day)),
-        Test::Last(at) => Ok(!span.is_always() && span.start().is_some_and(|day| day <= at)),
+        Test::Last(at) => Ok(span.start().is_none_or(|day| day <= at)),
     }
 }
 
-/// When a candidate of `last(x, d)` began: a reading's instant, a state's first day (L §4.6
-/// Readings, Past the last row).
+/// When a candidate of `last(x, d)` began: a reading's instant, a state's first day, none for
+/// a span from the start of time (`always`, `..e`), which began before every other (L §4.6
+/// Readings, Past the last row; §5.3).
 ///
 /// # Errors
 ///
-/// `ENGINE-INVARIANT` for a row with neither, which `in_time` never takes, or whose version
-/// is missing.
-pub(super) fn row_start(m: &Reality, row: &Row, cut: Day) -> Result<Day, Stop> {
-    let start = match &row.instant {
-        Some(instant) => instant_day(instant),
-        None => row_span(m, row, cut)?.and_then(|span| span.start()),
-    };
-    start.ok_or_else(|| invariant("a candidate of last with no start"))
+/// `ENGINE-INVARIANT` for a reading with no day or a state with no span, which `in_time`
+/// never takes, or a row whose version is missing.
+pub(super) fn row_start(m: &Reality, row: &Row, cut: Day) -> Result<Option<Day>, Stop> {
+    if let Some(instant) = &row.instant {
+        let day = instant_day(instant).ok_or_else(|| invariant("a reading of last with no day"))?;
+        return Ok(Some(day));
+    }
+    let span =
+        row_span(m, row, cut)?.ok_or_else(|| invariant("a candidate of last with no span"))?;
+    Ok(span.start())
 }
 
 /// The candidates of a read among `rows`, by position: every key it states matches, the

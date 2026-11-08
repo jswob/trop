@@ -65,6 +65,7 @@ impl Engine {
             "marginal" => self.marginal(m, call, env, ctx),
             "pos" => self.pos(m, call, env, ctx),
             "missing" => self.missing(m, call, env, ctx),
+            "since" => self.since_read(m, call, env, ctx),
             "periodic" | "factor" => self.rate_call(m, call, env, ctx),
             _ => Err(Stop::NotBuilt("a built-in M1's realities don't call")),
         }
@@ -252,6 +253,7 @@ impl Engine {
         let Ok(keys) = make_keys(m, name, &input.binds, given, ctx.cut)? else {
             return Ok(Value::Bool(false));
         };
+        self.movement_keys(m, &input.binds, &keys, ctx)?;
         let value = self.read_input_at(m, input, &keys, ctx, Asked::Plain)?;
         if value.as_hole().is_none() {
             return Ok(Value::Bool(false));

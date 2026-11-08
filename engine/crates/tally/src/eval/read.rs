@@ -3,10 +3,11 @@
 //! §4.2 (keys as values), §5.6 (`assumed` on an index), §5.8 (inputs and their values), §3.4
 //! (a figure in Y prices), §8.1 (a read whose key is a hole carries the key's questions only),
 //! §8.2 (the register entries a read makes), §8.4 (`RUN-KEY`, `RUN-NONE`), §7.6 items 1 and 3
-//! (the end of time is no key; a key offset's 18 digits), `last(x, d)` (§4.6 Past the last
-//! row). A row's value converted to its input's type is `convert.rs`'s.
+//! (the end of time is no key; a key offset's 18 digits), `last(x, d)` and `since(x, d)`
+//! (§4.6 Past the last row, Readings; §5.3). A row's value converted to its input's type is
+//! `convert.rs`'s.
 //! Twin: engine/tools/refcore/evaluate.py (`key_values`, `to_key`, `check_key`, `read_input`,
-//! `row_value`, `e_lastx`, `prices`, `index_assumed`).
+//! `row_value`, `e_lastx`, `e_call_since`, `prices`, `index_assumed`).
 //! Invariants: a key a read takes is a key its domain holds and the cut sees; a row's value
 //! has its input's declared type; a hole is built in the hole module.
 
@@ -20,10 +21,11 @@ use crate::base::{Load, Run};
 use crate::hole::Hole;
 use crate::load::index_key_of;
 use crate::model::{
-    BindInfo, Domain, IndexInfo, InputInfo, KeyVal, Number, Reality, Row, TimePos, Unit, Value,
+    BindInfo, Domain, IndexInfo, InputInfo, KeyVal, Number, Reality, Row, RowInstant, TimePos,
+    Unit, Value,
 };
 use crate::read::{Asked, Clocks, Found, held, origin, read_input, read_last, time_point};
-use crate::syntax::{Expr, Lit, Stop};
+use crate::syntax::{Call, Expr, Lit, Stop};
 use crate::time::{Day, PeriodKind};
 
 /// A key a read is given: a value, or a key literal its position resolves (L §2.5).
@@ -33,6 +35,28 @@ pub(crate) enum Given {
     Value(Value),
     /// A key literal, resolved in the position's domain.
     Literal(Lit),
+}
+
+/// The row `last(x[k], d)` or `since(x[k], d)` reads: its input, its keys, its position
+/// among the input's rows and d (L §4.6).
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct Latest {
+    /// The input x.
+    input: String,
+    /// Its keys, made.
+    keys: Vec<KeyVal>,
+    /// The row's position among the input's rows.
+    at: usize,
+    /// The day d.
+    day: Day,
+}
+
+/// The row at position `at` of `input`, which the read rule took (L §4.6).
+fn latest_of(input: &InputInfo, at: usize) -> Result<&Row, Stop> {
+    input
+        .rows
+        .get(at)
+        .ok_or_else(|| invariant("the read rule took a row the input lacks"))
 }
 
 impl Engine {
@@ -200,9 +224,10 @@ impl Engine {
     }
 
     /// `last(x[k], d)`: the row of x whose span began latest on or before d, past its end
-    /// too, its value marked `held` for d in the register; a reading's latest on or before d
-    /// (refcore's `e_lastx`). A key or a day that is a hole makes it that hole. L §4.6 (Past
-    /// the last row, Readings), §8.2.
+    /// too, its value marked `held` for d in the register, except a row that governs `always`,
+    /// which is never `held`; a reading's latest on or before d (refcore's `e_lastx`). A key
+    /// or a day that is a hole makes it that hole. L §4.6 (Past the last row, Readings), §5.3,
+    /// §8.2.
     pub(super) fn last_read(
         &mut self,
         m: &Reality,
@@ -210,49 +235,109 @@ impl Engine {
         env: &Env,
         ctx: Ctx,
     ) -> Result<Value, Stop> {
+        let latest = match self.latest_row(m, (read, day), "last", env, ctx)? {
+            Err(value) => return Ok(value),
+            Ok(latest) => latest,
+        };
+        let input = m
+            .inputs
+            .get(&latest.input)
+            .ok_or_else(|| invariant("an input of last load didn't build"))?;
+        let row = latest_of(input, latest.at)?;
+        let figure = origin(&input.id, &latest.keys);
+        let value = self.row_converted(m, input, row, &figure)?;
+        let always = row.instant.is_none()
+            && crate::read::row_span(m, row, ctx.cut)?.is_some_and(|span| span.is_always());
+        if !always {
+            let text = format!(
+                "{figure} = {} ({}), read for {}",
+                shown(m, &value)?,
+                row.version,
+                latest.day.text()
+            );
+            self.note("held", text, String::new());
+        }
+        Ok(value)
+    }
+
+    /// `since(x[k], d)`: the days from the last reading of x on or before d to d, a hole
+    /// where `last(x[k], d)` is one (refcore's `e_call_since`). L §4.6 Readings.
+    pub(super) fn since_read(
+        &mut self,
+        m: &Reality,
+        call: &Call,
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Value, Stop> {
+        let [read, day] = call.args.as_slice() else {
+            return Err(invariant("since's two arguments, which load counts"));
+        };
+        let latest = match self.latest_row(m, (read, day), "since", env, ctx)? {
+            Err(value) => return Ok(value),
+            Ok(latest) => latest,
+        };
+        let input = m
+            .inputs
+            .get(&latest.input)
+            .ok_or_else(|| invariant("an input of since load didn't build"))?;
+        let Some(RowInstant::At(at, _)) = &latest_of(input, latest.at)?.instant else {
+            return Err(invariant("since read a reading with no day"));
+        };
+        let days = at
+            .days_to(latest.day)
+            .ok_or_else(|| invariant("the days from a reading"))?;
+        Ok(Value::int(days))
+    }
+
+    /// The row `last(x[k], d)` and `since(x[k], d)` read, recorded as read, with its keys and
+    /// d; or the value they are instead: the hole of a key or of d, `none`, the gap rule's
+    /// hole. A movement of another kind as a key is refused (`RUN-KEY`, as every read).
+    /// L §4.6 (Past the last row, Readings), §5.7.
+    fn latest_row(
+        &mut self,
+        m: &Reality,
+        (read, day): (&Expr, &Expr),
+        what: &str,
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Result<Latest, Value>, Stop> {
         let (name, written) =
-            read_parts(read).ok_or_else(|| invariant("last of a read load didn't check"))?;
+            read_parts(read).ok_or_else(|| invariant("a read of last load didn't check"))?;
         let input = m
             .inputs
             .get(name)
-            .ok_or_else(|| invariant("last of an input load didn't build"))?;
+            .ok_or_else(|| invariant("an input of last load didn't build"))?;
         let given = self.given_keys(m, written, env, ctx)?;
         let keys = match make_keys(m, name, &input.binds, given, ctx.cut)? {
-            Err(hole) => return Ok(Value::Hole(hole)),
+            Err(hole) => return Ok(Err(Value::Hole(hole))),
             Ok(keys) => keys,
         };
+        self.movement_keys(m, &input.binds, &keys, ctx)?;
         let day = self.ev(m, day, env, ctx)?;
         if let Value::Hole(_) = day {
-            return Ok(day);
+            return Ok(Err(day));
         }
-        let day = crate::ask::date_of(&day, "the day of last")?;
+        let day = crate::ask::date_of(&day, &format!("the day of {what}"))?;
         self.read(Read::Input {
             id: input.id.clone(),
             keys: keys.clone(),
         });
-        let found = read_last(m, input, &keys, day, self.clocks(ctx))?;
-        let row = match found {
-            Found::Row(at) => input
-                .rows
-                .get(at)
-                .ok_or_else(|| invariant("the read rule took a row the input lacks"))?,
-            Found::None => return Ok(Value::None),
-            Found::Hole(q) => return Ok(Value::Hole(Hole::asked(&q.text, &q.origin))),
+        let at = match read_last(m, input, &keys, day, self.clocks(ctx))? {
+            Found::Row(at) => at,
+            Found::None => return Ok(Err(Value::None)),
+            Found::Hole(q) => return Ok(Err(Value::Hole(Hole::asked(&q.text, &q.origin)))),
         };
+        let row = latest_of(input, at)?;
         self.read(Read::Row {
             version: row.version.clone(),
             sid: row.sid.clone(),
         });
-        let figure = origin(&input.id, &keys);
-        let value = self.row_converted(m, input, row, &figure)?;
-        let text = format!(
-            "{figure} = {} ({}), read for {}",
-            shown(m, &value)?,
-            row.version,
-            day.text()
-        );
-        self.note("held", text, String::new());
-        Ok(value)
+        Ok(Ok(Latest {
+            input: name.to_owned(),
+            keys,
+            at,
+            day,
+        }))
     }
 
     /// A chosen row's value with the register entries every read of it makes: `assumed`, its

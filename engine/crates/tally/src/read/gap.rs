@@ -188,9 +188,10 @@ pub fn read_input(
 }
 
 /// `last(x[k], d)`'s read: among the rows of `input` at `keys` whose span began on or before
-/// `day` (a reading's instants on or before it), those that began latest, and of them the
-/// row the read rule takes; with none, `HOLE-NOREADING` for a reading, else the gap rule's
-/// question at `day` (L §4.6 step 5, Readings, Past the last row; refcore's `e_lastx`).
+/// `day` (a span with no start before every day; a reading's instants on or before it),
+/// those that began latest, and of them the row the read rule takes; with none,
+/// `HOLE-NOREADING` for a reading, else the gap rule's question at `day` (L §4.6 step 5,
+/// Readings, Past the last row; §5.3; refcore's `e_lastx`).
 ///
 /// # Errors
 ///

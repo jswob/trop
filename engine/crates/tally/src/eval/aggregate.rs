@@ -3,7 +3,8 @@
 //! no keys is 0 in the term's type; `count`, `any`, `all`), §8.1 (holes spread). The values a
 //! binding ranges over are `bindings.rs`'s; the extremes, `min` to `last`, `extremes.rs`'s.
 //! Twin: engine/tools/refcore/evaluate.py (`members`, `zero_of`, `e_agg`, `agg_anyall`).
-//! Invariants: tuples come in binding order, depth first as refcore's generator; an unknown
+//! Invariants: tuples come in binding order, depth first as refcore's generator, one at a
+//! time, so `first` and `last` (from the last) read no `where` past their key; an unknown
 //! member's term counts only as its questions, except a 0 in a sum; a domain that is a hole
 //! makes the aggregate that hole; a binding over movements or an observed input takes its
 //! members from the book (`book/members.rs`), and a member's register reaches the reader only
@@ -53,7 +54,8 @@ pub(crate) type Decided = Result<Vec<(Member, Collected, Option<Refusal>)>, (Hol
 
 /// What a binding's `where` says of a member: left out, or kept with the hole the `where` is
 /// where it is one. L §5.11.
-enum Kept {
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) enum Kept {
     /// The `where` is false.
     Out,
     /// The `where` is true, or a hole.
@@ -101,6 +103,60 @@ struct Frame {
     next: usize,
     /// What each value brings to a reader that keeps it: a movement's register.
     colls: Vec<Collected>,
+}
+
+/// The end a reader takes a binding's values from: the first, or the last, as `last` reads
+/// them (L §5.11).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum Way {
+    /// From the first value.
+    Forward,
+    /// From the last value.
+    Back,
+}
+
+impl Frame {
+    /// The frame with its values in the order `way` takes them.
+    fn taken(mut self, way: Way) -> Frame {
+        if way == Way::Back {
+            self.values.reverse();
+            self.colls.reverse();
+        }
+        self
+    }
+}
+
+/// A walk over binding tuples, one at a time, so a reader can stop at the tuple it wants
+/// (refcore's `members` as a generator). L §5.11.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct Walk {
+    /// The frames, the innermost last.
+    frames: Vec<Frame>,
+    /// The end each binding's values are taken from.
+    way: Way,
+}
+
+/// What a walk's next step meets.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) enum Step {
+    /// A tuple whose `where`s keep it.
+    Member(Member),
+    /// An inner binding's domain that is a hole.
+    Hole(Hole),
+    /// No tuple is left.
+    Done,
+}
+
+/// A binding's value bound, its `where` not yet read: its scope, its own unknown-member hole
+/// (a movement's day that is one) and its movement's register.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct Candidate {
+    /// The scope with the value bound.
+    pub(super) env: Env,
+    /// The value's own hole.
+    pub(super) own: Option<Hole>,
+    /// What it brings to a reader that keeps it.
+    pub(super) brings: Option<Collected>,
 }
 
 impl Engine {
@@ -187,7 +243,7 @@ impl Engine {
                 let terms = terms.into_iter().map(|(_, t)| t).collect();
                 return sum_terms(m, agg, terms, env, ctx);
             }
-            AggFn::Argmin | AggFn::Argmax => return self.arg_extreme(m, agg, terms, ctx),
+            AggFn::Argmin | AggFn::Argmax => return self.arg_extreme(m, agg, &terms, ctx),
             AggFn::Min => End::Low,
             AggFn::Max => End::High,
             AggFn::First | AggFn::Last | AggFn::Any | AggFn::All => {
@@ -254,15 +310,56 @@ impl Engine {
         ctx: Ctx,
         brings: Brings,
     ) -> Result<Result<Vec<Member>, Hole>, Stop> {
-        let Some(first) = binds.first() else {
-            return Err(invariant("an aggregate with no binding"));
+        let mut walk = match self.tuple_walk(m, binds, env, ctx, Way::Forward)? {
+            Err(hole) => return Ok(Err(hole)),
+            Ok(walk) => walk,
         };
         let mut out: Vec<Member> = Vec::new();
         let mut domain_hole: Option<Hole> = None;
-        let mut frames: Vec<Frame> = Vec::new();
-        match self.bind_values(m, first, env, ctx)? {
+        loop {
+            match self.next_tuple(m, binds, &mut walk, ctx, brings)? {
+                Step::Member(member) => out.push(member),
+                Step::Hole(h) => {
+                    domain_hole.get_or_insert(h);
+                }
+                Step::Done => break,
+            }
+        }
+        Ok(domain_hole.map_or(Ok(out), Err))
+    }
+
+    /// The walk over the binding tuples, depth first, each binding's values from the end
+    /// `way` says (the last, `last`'s); the hole of a first domain that is one (refcore's
+    /// `members`). L §5.11.
+    pub(super) fn tuple_walk(
+        &mut self,
+        m: &Reality,
+        binds: &[Bind],
+        env: &Env,
+        ctx: Ctx,
+        way: Way,
+    ) -> Result<Result<Walk, Hole>, Stop> {
+        let Some(first) = binds.first() else {
+            return Err(invariant("an aggregate with no binding"));
+        };
+        Ok(self.first_frame(m, first, env, ctx)?.map(|frame| Walk {
+            frames: vec![frame.taken(way)],
+            way,
+        }))
+    }
+
+    /// The frame of the first binding's values in scope `env`, or the hole of a domain that
+    /// is one (refcore's `members`, its first binding). L §5.11.
+    fn first_frame(
+        &mut self,
+        m: &Reality,
+        bind: &Bind,
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Result<Frame, Hole>, Stop> {
+        Ok(Ok(match self.bind_values(m, bind, env, ctx)? {
             Values::Unknown(h) => return Ok(Err(h)),
-            Values::Known(values) => frames.push(Frame {
+            Values::Known(values) => Frame {
                 level: 0,
                 env: env.clone(),
                 unknown: None,
@@ -270,16 +367,27 @@ impl Engine {
                 values,
                 next: 0,
                 colls: Vec::new(),
-            }),
-            Values::Moves(moves) => frames.push(moves_frame(
-                0,
-                (env.clone(), None, Collected::default()),
-                moves,
-            )),
-        }
-        while let Some(frame) = frames.last_mut() {
+            },
+            Values::Moves(moves) => {
+                moves_frame(0, (env.clone(), None, Collected::default()), moves)
+            }
+        }))
+    }
+
+    /// The walk's next tuple whose `where`s keep it, each `where` read when its binding is
+    /// reached; or the hole of an inner domain that is one; or the end (refcore's `members`,
+    /// one step). L §5.11, §5.19 Bindings, §8.2.
+    pub(super) fn next_tuple(
+        &mut self,
+        m: &Reality,
+        binds: &[Bind],
+        walk: &mut Walk,
+        ctx: Ctx,
+        brings: Brings,
+    ) -> Result<Step, Stop> {
+        while let Some(frame) = walk.frames.last_mut() {
             let Some((value, own)) = frame.values.get(frame.next).cloned() else {
-                frames.pop();
+                walk.frames.pop();
                 continue;
             };
             let brought = frame.colls.get(frame.next).cloned();
@@ -304,20 +412,15 @@ impl Engine {
                 .checked_add(1)
                 .ok_or_else(|| invariant("a binding's position"))?;
             let Some(bind_next) = binds.get(next) else {
-                out.push(Member {
+                return Ok(Step::Member(Member {
                     env: inner,
                     unknown,
                     brought: path,
-                });
-                continue;
+                }));
             };
-            match self.bind_values(m, bind_next, &inner, ctx)? {
-                Values::Unknown(h) => {
-                    if domain_hole.is_none() {
-                        domain_hole = Some(h);
-                    }
-                }
-                Values::Known(values) => frames.push(Frame {
+            let deeper = match self.bind_values(m, bind_next, &inner, ctx)? {
+                Values::Unknown(h) => return Ok(Step::Hole(h)),
+                Values::Known(values) => Frame {
                     level: next,
                     env: inner,
                     unknown,
@@ -325,13 +428,58 @@ impl Engine {
                     values,
                     next: 0,
                     colls: Vec::new(),
-                }),
-                Values::Moves(moves) => {
-                    frames.push(moves_frame(next, (inner, unknown, path), moves));
-                }
-            }
+                },
+                Values::Moves(moves) => moves_frame(next, (inner, unknown, path), moves),
+            };
+            walk.frames.push(deeper.taken(walk.way));
         }
-        Ok(domain_hole.map_or(Ok(out), Err))
+        Ok(Step::Done)
+    }
+
+    /// A binding's values bound one by one in scope `env`, their `where` not yet read: the
+    /// candidates `first` and `last` over things or movements order by their `ties by` before
+    /// reading it; or the hole of a domain that is one (refcore's `members`, one binding).
+    /// L §5.11.
+    pub(super) fn bind_candidates(
+        &mut self,
+        m: &Reality,
+        bind: &Bind,
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Result<Vec<Candidate>, Hole>, Stop> {
+        let frame = match self.first_frame(m, bind, env, ctx)? {
+            Err(hole) => return Ok(Err(hole)),
+            Ok(frame) => frame,
+        };
+        let mut colls = frame.colls.into_iter();
+        let mut out = Vec::with_capacity(frame.values.len());
+        for (value, own) in frame.values {
+            out.push(Candidate {
+                env: env.with(&bind.var, value, bind_domain(m, bind)),
+                own,
+                brings: colls.next(),
+            });
+        }
+        Ok(Ok(out))
+    }
+
+    /// Whether binding `bind`'s `where` keeps a candidate, with its unknown-member hole, its
+    /// movement's register brought to the reader when it does (refcore's `members`, one
+    /// value). L §5.11, §8.2.
+    pub(super) fn candidate_kept(
+        &mut self,
+        m: &Reality,
+        bind: &Bind,
+        cand: &Candidate,
+        ctx: Ctx,
+    ) -> Result<Kept, Stop> {
+        let Kept::In(hole) = self.where_keeps(m, bind, &cand.env, ctx)? else {
+            return Ok(Kept::Out);
+        };
+        if let Some(c) = &cand.brings {
+            self.absorb(c);
+        }
+        Ok(Kept::In(joined(cand.own.clone(), hole)))
     }
 
     /// A bound movement's register `met`, to the reader's collector or to the tuple's `path`
