@@ -95,3 +95,21 @@ carried/ranges/r_computed_end	carried-3		engine/tests/m1/carried/ranges	engine/t
 carried/ranges/r_at_limit	carried-3		engine/tests/m1/carried/ranges	engine/tests/m1/carried/ranges/model.tally	r_at_limit		-
 carried/ranges/r_past_limit	carried-3		engine/tests/m1/carried/ranges	engine/tests/m1/carried/ranges/model.tally	r_past_limit		-
 carried/walk/w_day_hole	carried-7		engine/tests/m1/carried/walk	engine/tests/m1/carried/walk/model.tally	w_day_hole		-
+carried/reads/d_kind_key	carried-2		engine/tests/m1/carried/reads	engine/tests/m1/carried/reads/model.tally	d_kind_key		G13
+carried/reads/d_places	carried-2		engine/tests/m1/carried/reads	engine/tests/m1/carried/reads/model.tally	d_places		G13
+carried/reads/d_unstated	carried-2		engine/tests/m1/carried/reads	engine/tests/m1/carried/reads/model.tally	d_unstated		G13
+carried/reads/d_star	carried-2		engine/tests/m1/carried/reads	engine/tests/m1/carried/reads/model.tally	d_star		G13
+carried/reads/d_money	carried-2		engine/tests/m1/carried/reads	engine/tests/m1/carried/reads/model.tally	d_money		G13
+carried/reads/d_frac	carried-2		engine/tests/m1/carried/reads	engine/tests/m1/carried/reads/model.tally	d_frac		G13
+carried/sites/base	carried-4		engine/tests/m1/carried/sites	engine/tests/m1/carried/sites/model.tally	base		-
+carried/sites/s_day_period	carried-4		engine/tests/m1/carried/sites	engine/tests/m1/carried/sites/model.tally engine/tests/m1/carried/sites/s_day_period.tally	s_day_period		-
+carried/sites/s_rate	carried-4		engine/tests/m1/carried/sites	engine/tests/m1/carried/sites/model.tally engine/tests/m1/carried/sites/s_rate.tally	s_rate		-
+carried/sites/s_int_arg	carried-4		engine/tests/m1/carried/sites	engine/tests/m1/carried/sites/model.tally engine/tests/m1/carried/sites/s_int_arg.tally	s_int_arg		-
+carried/sites/s_day_of	carried-4		engine/tests/m1/carried/sites	engine/tests/m1/carried/sites/model.tally engine/tests/m1/carried/sites/s_day_of.tally	s_day_of		-
+carried/sites/s_calendar	carried-4		engine/tests/m1/carried/sites	engine/tests/m1/carried/sites/model.tally engine/tests/m1/carried/sites/s_calendar.tally	s_calendar		-
+carried/sites/s_period	carried-4		engine/tests/m1/carried/sites	engine/tests/m1/carried/sites/model.tally engine/tests/m1/carried/sites/s_period.tally	s_period		-
+carried/sites/s_test	carried-4		engine/tests/m1/carried/sites	engine/tests/m1/carried/sites/model.tally engine/tests/m1/carried/sites/s_test.tally	s_test		-
+carried/sites/s_ambiguous	carried-4		engine/tests/m1/carried/sites	engine/tests/m1/carried/sites/model.tally engine/tests/m1/carried/sites/s_ambiguous.tally	s_ambiguous		-
+carried/sites/s_field	carried-4		engine/tests/m1/carried/sites	engine/tests/m1/carried/sites/model.tally engine/tests/m1/carried/sites/s_field.tally	s_field		G1
+carried/sites/s_finer	carried-4		engine/tests/m1/carried/sites	engine/tests/m1/carried/sites/model.tally engine/tests/m1/carried/sites/s_finer.tally	s_finer		-
+carried/sites/s_key	carried-4		engine/tests/m1/carried/sites	engine/tests/m1/carried/sites/model.tally engine/tests/m1/carried/sites/s_key.tally	s_key		-

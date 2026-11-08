@@ -16,9 +16,11 @@ mod tests {
     use tally_runner::m1::VECTORS;
 
     /// The groups this target tests, one `#[test]` each.
-    const GROUPS: [&str; 5] = [
+    const GROUPS: [&str; 7] = [
         "carried-1",
+        "carried-2",
         "carried-3",
+        "carried-4",
         "carried-5",
         "carried-6",
         "carried-7",
@@ -69,12 +71,29 @@ mod tests {
         group_holds("carried-1");
     }
 
+    /// Item 2, reads at run (L §2.5, §5.6): a kind-keyed input at a key a row gives, a stepped
+    /// range's input at a key no row states (a hole), a row for every key, money and fraction
+    /// ranges (`m1/carried/reads/`). For G13.
+    #[test]
+    fn m1_carried_2_reads_at_run() {
+        group_holds("carried-2");
+    }
+
     /// Item 3, ranges an ask steps through (L §5.6, §7.6): a step of 0.001, an end computed
     /// from rows, and the 1 000 000-key limit on each side (`m1/carried/ranges/`). For G13
     /// (the limit's twins green before M1).
     #[test]
     fn m1_carried_3_ranges_an_ask_steps_through() {
         group_holds("carried-3");
+    }
+
+    /// Item 4, the 26 run sites G4a's fix left "not implemented": one probe per cause class,
+    /// each refused at load first by refcore (bin i: the site is unreachable, so the builder
+    /// makes it `ENGINE-INVARIANT` with its reason; `m1/carried/sites/`). 11 of 12 green before
+    /// M1; red: a missing field, which the engine names by the move, not its kind. For G1.
+    #[test]
+    fn m1_carried_4_the_26_sites() {
+        group_holds("carried-4");
     }
 
     /// Item 5, the coordinator's picks P6 and P12: a parenthesised literal is that literal

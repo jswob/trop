@@ -57,8 +57,8 @@ LOAD-NAME	L §8.3	M0	unknown id <x> (a unit)	1	M0	codes/m0/basic/name-kind-unit
 LOAD-NAME	L §8.3	M0	rule <d>.<r>: v <x> names no version	1	M0	codes/m0/basic/name-rule-v
 LOAD-SHADOW	L §8.3	M0	*	1	M0	codes/m0/basic/shadow
 LOAD-SHADOW	L §8.3	M0	bound variable <k> has the name of a top-level id	1	M0	codes/m0/basic/shadow
-LOAD-KEY	L §8.3	M0	*	34	S	kernel/g13/key_band_bad
-LOAD-KEY	L §8.3	M0	<key> is not a key of <index or kind>	24	S	kernel/g13/key_band_bad
+LOAD-KEY	L §8.3	M0	*	35	S	kernel/g13/key_band_bad
+LOAD-KEY	L §8.3	M0	<key> is not a key of <index or kind>	25	S	kernel/g13/key_band_bad
 LOAD-KEY	L §8.3	M0	ambiguous key <key>	1	M0	codes/order/passes-control
 LOAD-KEY	L §8.3	M0	a key is also an id	1	M0	codes/m0/basic/key-id
 LOAD-KEY	L §8.3	M0	wrong number of keys	1	M0	codes/m0/basic/key-count
@@ -98,31 +98,31 @@ LOAD-PARTS	L §8.3	M0	the stated parts <q> and <q'> of <x> overlap	1	M0	codes/m0
 LOAD-PARTS	L §8.3	M0	of <q> at <x>, which keeps no labels of its sort	1	M0	codes/m0/own/parts-sort
 LOAD-ALIVE	L §8.3	M0	*	1	M0	codes/m0/basic/alive
 LOAD-ALIVE	L §8.3	M0	binding over <kind> needs on or over	1	M0	codes/m0/basic/alive
-LOAD-DOMAIN	L §8.3	M0	*	11	M0	codes/m0/basic/by-zero-int
-LOAD-DOMAIN	L §8.3	M0	range of quantities <a> .. <b> has no step	1	M0	codes/m0/basic/domain
+LOAD-DOMAIN	L §8.3	M0	*	12	M0	codes/m0/basic/by-zero-int
+LOAD-DOMAIN	L §8.3	M0	range of quantities <a> .. <b> has no step	2	M0	codes/m0/basic/domain
 LOAD-DOMAIN	L §8.3	M0	index <x>: by 0 is not a positive step	2	M0	codes/m0/basic/by-zero-int
 LOAD-DOMAIN	L §8.3	M0	<operation> has no meaning for <values>	0	-	-
 LOAD-DOMAIN	L §8.3	M0	day_of of a key of the anchored index <x> has no meaning	1	M0	codes/m0/basic/domain-anchored
 LOAD-DOMAIN	L §8.3	M0	schedule of a key of the anchored index <x> has no meaning	1	M0	codes/m0/basic/domain-anchored-schedule
 LOAD-DOMAIN	L §8.3	M0	discrete over a key list or a stepped range	1	M0	codes/m0/basic/domain-discrete
 LOAD-DOMAIN	L §8.3	M0	?	5	M0	codes/m0/lifepath/path-past-64
-LOAD-UNIT	L §8.3	M0	*	27	S	kernel/g1/rate_duration
+LOAD-UNIT	L §8.3	M0	*	34	S	kernel/g1/rate_duration
 LOAD-UNIT	L §8.3	M0	<a> and <b> have different units	1	M0	codes/m0/basic/unit-mixed
 LOAD-UNIT	L §8.3	M0	<operation> on things of kind <K> has no meaning: they have no order a rule can read	1	M0	codes/m0/basic/unit-orders
 LOAD-UNIT	L §8.3	M0	settlement <s> of <adjustment> is in <u>, not <u'>	2	M0	codes/m0/adjust/unit-settlement
 LOAD-UNIT	L §8.3	M0	axis <a> is used as a mode, but <o> is not a mode name	1	M0	codes/m0/basic/unit-mode
 LOAD-UNIT	L §8.3	M0	<function>: the mode is <type>, not a rounding code	1	M0	codes/m0/basic/flows-mode
 LOAD-UNIT	L §8.3	M0	money in an undeclared currency	1	M0	codes/m0/basic/unit-currency
-LOAD-UNIT	L §8.3	M0	?	20	S	kernel/g1/rate_duration
-LOAD-PRECISION	L §8.3	M0	*	2	M0	codes/m0/basic/precision
-LOAD-PRECISION	L §8.3	M0	<literal> is finer than the minor unit	1	M0	codes/m0/basic/precision
+LOAD-UNIT	L §8.3	M0	?	27	S	kernel/g1/rate_duration
+LOAD-PRECISION	L §8.3	M0	*	3	M0	codes/m0/basic/precision
+LOAD-PRECISION	L §8.3	M0	<literal> is finer than the minor unit	2	M0	codes/m0/basic/precision
 LOAD-PRECISION	L §8.3	M0	<a/b> terminates; write it as a decimal	1	M0	codes/m0/basic/precision-fraction
 LOAD-LITERAL	L §8.3	M0	*	3	M0	codes/m0/basic/literal-amount
 LOAD-LITERAL	L §8.3	M0	figure <n> in a rule; make it a row	1	M0	codes/m0/basic/literal-amount
 LOAD-LITERAL	L §8.3	M0	a date in a rule; make it a version	2	M0	codes/order/items
-LOAD-FIELD	L §8.3	M0	*	14	M0	codes/m0/adjust/adjusts-field
+LOAD-FIELD	L §8.3	M0	*	15	M0	codes/m0/adjust/adjusts-field
 LOAD-FIELD	L §8.3	M0	positional record; name its fields	1	M0	codes/m0/adjust/field-positional
-LOAD-FIELD	L §8.3	M0	<field> is not a field of <type>	9	M0	codes/m0/adjust/adjusts-field
+LOAD-FIELD	L §8.3	M0	<field> is not a field of <type>	10	M0	codes/m0/adjust/adjusts-field
 LOAD-FIELD	L §8.3	M0	field <f> twice	2	M0	codes/m0/adjust/obs-field-twice
 LOAD-FIELD	L §8.3	M0	field <f> twice in <row>	1	M0	codes/m0/adjust/obs-field-twice
 LOAD-FIELD	L §8.3	M0	<row> lacks field <f>	0	-	-

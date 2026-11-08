@@ -1,0 +1,6 @@
+part s_rate
+  tally 2
+
+def s_rate_x: num PLN = r5 * r5
+
+ask s_rate: s_rate_x

@@ -1,0 +1,6 @@
+part s_ambiguous
+  tally 2
+
+def s_ambiguous_x: int = count(k in 2020..2025)
+
+ask s_ambiguous: s_ambiguous_x

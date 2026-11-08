@@ -29631,4 +29631,1044 @@ version card_2026
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
 ,,1:0,118:w_day_hole: (?"On which day is the fee paid?" (pay_day), ?"On which day is the fee paid?" (pay_day))
   cut 2026-03-01
+,24:carried/reads/d_kind_key,9:carried-2,32:run model.tally --ask d_kind_key,1553:11:model.tally,1532:model reads
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 2 (issue #108, invented): reads at run (L §2.5, §5.6): a kind-keyed input read at a key a row gives, a stepped range's input at a key no row states, a row for every key of a stepped range, money and fraction ranges"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+input at_frac: num
+
+input at_money: money PLN
+
+input by_frac[f in 0.5 .. 2.5 step 0.5]: num
+
+input by_money[a in 0 PLN .. 10 PLN step 1 PLN]: num
+
+input chosen: key accounts
+
+input k_at: int
+
+input rate_of[x in accounts]: num
+
+input rr[k in 1 .. 9 step 2]: num
+
+input star[k in 1 .. 9 step 2]: num
+
+ask d_kind_key: rate_of[chosen]
+
+ask d_places: bal(konto, 2026-06-30), bal(savings, 2026-06-30)
+
+ask d_unstated: rr[k_at]
+
+ask d_star: star[5]
+
+ask d_money: by_money[at_money]
+
+ask d_frac: by_frac[at_frac]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  at_frac = 1.5 "the card"
+  at_money = 3.00 PLN "the card"
+  by_frac[1.5] = 0.15 "the card"
+  by_money[3 PLN] = 0.3 "the card"
+  chosen = savings "the card"
+  k_at = 7 "the card"
+  rate_of[konto] = 0.01 "the card"
+  rate_of[savings] = 0.03 "the card"
+  rr[1] = 0.1 "the card"
+  rr[3] = 0.3 "the card"
+  rr[5] = 0.5 "the card"
+  star = 0.5 "the card: every key"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0.00 PLN at 2026-01-01 start "the card"
+,,1:0,34:d_kind_key: 0.03
+  cut 2026-03-01
+,22:carried/reads/d_places,9:carried-2,30:run model.tally --ask d_places,1553:11:model.tally,1532:model reads
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 2 (issue #108, invented): reads at run (L §2.5, §5.6): a kind-keyed input read at a key a row gives, a stepped range's input at a key no row states, a row for every key of a stepped range, money and fraction ranges"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+input at_frac: num
+
+input at_money: money PLN
+
+input by_frac[f in 0.5 .. 2.5 step 0.5]: num
+
+input by_money[a in 0 PLN .. 10 PLN step 1 PLN]: num
+
+input chosen: key accounts
+
+input k_at: int
+
+input rate_of[x in accounts]: num
+
+input rr[k in 1 .. 9 step 2]: num
+
+input star[k in 1 .. 9 step 2]: num
+
+ask d_kind_key: rate_of[chosen]
+
+ask d_places: bal(konto, 2026-06-30), bal(savings, 2026-06-30)
+
+ask d_unstated: rr[k_at]
+
+ask d_star: star[5]
+
+ask d_money: by_money[at_money]
+
+ask d_frac: by_frac[at_frac]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  at_frac = 1.5 "the card"
+  at_money = 3.00 PLN "the card"
+  by_frac[1.5] = 0.15 "the card"
+  by_money[3 PLN] = 0.3 "the card"
+  chosen = savings "the card"
+  k_at = 7 "the card"
+  rate_of[konto] = 0.01 "the card"
+  rate_of[savings] = 0.03 "the card"
+  rr[1] = 0.1 "the card"
+  rr[3] = 0.3 "the card"
+  rr[5] = 0.5 "the card"
+  star = 0.5 "the card: every key"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0.00 PLN at 2026-01-01 start "the card"
+,,1:0,48:d_places: (0.00 PLN, 0.00 PLN)
+  cut 2026-03-01
+,24:carried/reads/d_unstated,9:carried-2,32:run model.tally --ask d_unstated,1553:11:model.tally,1532:model reads
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 2 (issue #108, invented): reads at run (L §2.5, §5.6): a kind-keyed input read at a key a row gives, a stepped range's input at a key no row states, a row for every key of a stepped range, money and fraction ranges"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+input at_frac: num
+
+input at_money: money PLN
+
+input by_frac[f in 0.5 .. 2.5 step 0.5]: num
+
+input by_money[a in 0 PLN .. 10 PLN step 1 PLN]: num
+
+input chosen: key accounts
+
+input k_at: int
+
+input rate_of[x in accounts]: num
+
+input rr[k in 1 .. 9 step 2]: num
+
+input star[k in 1 .. 9 step 2]: num
+
+ask d_kind_key: rate_of[chosen]
+
+ask d_places: bal(konto, 2026-06-30), bal(savings, 2026-06-30)
+
+ask d_unstated: rr[k_at]
+
+ask d_star: star[5]
+
+ask d_money: by_money[at_money]
+
+ask d_frac: by_frac[at_frac]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  at_frac = 1.5 "the card"
+  at_money = 3.00 PLN "the card"
+  by_frac[1.5] = 0.15 "the card"
+  by_money[3 PLN] = 0.3 "the card"
+  chosen = savings "the card"
+  k_at = 7 "the card"
+  rate_of[konto] = 0.01 "the card"
+  rate_of[savings] = 0.03 "the card"
+  rr[1] = 0.1 "the card"
+  rr[3] = 0.3 "the card"
+  rr[5] = 0.5 "the card"
+  star = 0.5 "the card: every key"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0.00 PLN at 2026-01-01 start "the card"
+,,1:0,58:d_unstated: ?"rr at 7: no value" (rr[7])
+  cut 2026-03-01
+,20:carried/reads/d_star,9:carried-2,28:run model.tally --ask d_star,1553:11:model.tally,1532:model reads
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 2 (issue #108, invented): reads at run (L §2.5, §5.6): a kind-keyed input read at a key a row gives, a stepped range's input at a key no row states, a row for every key of a stepped range, money and fraction ranges"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+input at_frac: num
+
+input at_money: money PLN
+
+input by_frac[f in 0.5 .. 2.5 step 0.5]: num
+
+input by_money[a in 0 PLN .. 10 PLN step 1 PLN]: num
+
+input chosen: key accounts
+
+input k_at: int
+
+input rate_of[x in accounts]: num
+
+input rr[k in 1 .. 9 step 2]: num
+
+input star[k in 1 .. 9 step 2]: num
+
+ask d_kind_key: rate_of[chosen]
+
+ask d_places: bal(konto, 2026-06-30), bal(savings, 2026-06-30)
+
+ask d_unstated: rr[k_at]
+
+ask d_star: star[5]
+
+ask d_money: by_money[at_money]
+
+ask d_frac: by_frac[at_frac]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  at_frac = 1.5 "the card"
+  at_money = 3.00 PLN "the card"
+  by_frac[1.5] = 0.15 "the card"
+  by_money[3 PLN] = 0.3 "the card"
+  chosen = savings "the card"
+  k_at = 7 "the card"
+  rate_of[konto] = 0.01 "the card"
+  rate_of[savings] = 0.03 "the card"
+  rr[1] = 0.1 "the card"
+  rr[3] = 0.3 "the card"
+  rr[5] = 0.5 "the card"
+  star = 0.5 "the card: every key"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0.00 PLN at 2026-01-01 start "the card"
+,,1:0,29:d_star: 0.5
+  cut 2026-03-01
+,21:carried/reads/d_money,9:carried-2,29:run model.tally --ask d_money,1553:11:model.tally,1532:model reads
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 2 (issue #108, invented): reads at run (L §2.5, §5.6): a kind-keyed input read at a key a row gives, a stepped range's input at a key no row states, a row for every key of a stepped range, money and fraction ranges"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+input at_frac: num
+
+input at_money: money PLN
+
+input by_frac[f in 0.5 .. 2.5 step 0.5]: num
+
+input by_money[a in 0 PLN .. 10 PLN step 1 PLN]: num
+
+input chosen: key accounts
+
+input k_at: int
+
+input rate_of[x in accounts]: num
+
+input rr[k in 1 .. 9 step 2]: num
+
+input star[k in 1 .. 9 step 2]: num
+
+ask d_kind_key: rate_of[chosen]
+
+ask d_places: bal(konto, 2026-06-30), bal(savings, 2026-06-30)
+
+ask d_unstated: rr[k_at]
+
+ask d_star: star[5]
+
+ask d_money: by_money[at_money]
+
+ask d_frac: by_frac[at_frac]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  at_frac = 1.5 "the card"
+  at_money = 3.00 PLN "the card"
+  by_frac[1.5] = 0.15 "the card"
+  by_money[3 PLN] = 0.3 "the card"
+  chosen = savings "the card"
+  k_at = 7 "the card"
+  rate_of[konto] = 0.01 "the card"
+  rate_of[savings] = 0.03 "the card"
+  rr[1] = 0.1 "the card"
+  rr[3] = 0.3 "the card"
+  rr[5] = 0.5 "the card"
+  star = 0.5 "the card: every key"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0.00 PLN at 2026-01-01 start "the card"
+,,1:0,30:d_money: 0.3
+  cut 2026-03-01
+,20:carried/reads/d_frac,9:carried-2,28:run model.tally --ask d_frac,1553:11:model.tally,1532:model reads
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 2 (issue #108, invented): reads at run (L §2.5, §5.6): a kind-keyed input read at a key a row gives, a stepped range's input at a key no row states, a row for every key of a stepped range, money and fraction ranges"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+input at_frac: num
+
+input at_money: money PLN
+
+input by_frac[f in 0.5 .. 2.5 step 0.5]: num
+
+input by_money[a in 0 PLN .. 10 PLN step 1 PLN]: num
+
+input chosen: key accounts
+
+input k_at: int
+
+input rate_of[x in accounts]: num
+
+input rr[k in 1 .. 9 step 2]: num
+
+input star[k in 1 .. 9 step 2]: num
+
+ask d_kind_key: rate_of[chosen]
+
+ask d_places: bal(konto, 2026-06-30), bal(savings, 2026-06-30)
+
+ask d_unstated: rr[k_at]
+
+ask d_star: star[5]
+
+ask d_money: by_money[at_money]
+
+ask d_frac: by_frac[at_frac]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  at_frac = 1.5 "the card"
+  at_money = 3.00 PLN "the card"
+  by_frac[1.5] = 0.15 "the card"
+  by_money[3 PLN] = 0.3 "the card"
+  chosen = savings "the card"
+  k_at = 7 "the card"
+  rate_of[konto] = 0.01 "the card"
+  rate_of[savings] = 0.03 "the card"
+  rr[1] = 0.1 "the card"
+  rr[3] = 0.3 "the card"
+  rr[5] = 0.5 "the card"
+  star = 0.5 "the card: every key"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0.00 PLN at 2026-01-01 start "the card"
+,,1:0,30:d_frac: 0.15
+  cut 2026-03-01
+,18:carried/sites/base,9:carried-4,26:run model.tally --ask base,1076:11:model.tally,1055:model sites
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 4 (issue #108, invented): the 26 run sites G4a's fix left 'not implemented', one probe per cause class, each a file beside this base; where load refuses the class first, the site is unreachable (bin i)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input d0: date
+
+input fee: money PLN
+
+input n1: int
+
+input r5: num PLN
+
+input rate[k in qs]: num
+
+input txt: text
+
+move pay: transfers
+  on d0
+  leg cash from konto to world amount fee
+
+ask base: d0, fee, n1, r5, rate[q1], rate[q2], txt, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d0 = 2026-02-10 "the card"
+  fee = 10.00 PLN "the card"
+  n1 = 3 "the card"
+  r5 = 2.50 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0.2 "the card"
+  txt = "a note" "the card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "the card"
+,,1:0,109:base: (2026-02-10, 10.00 PLN, 3, 2.5 PLN, 0.1, 0.2, "a note", 90.00 PLN)
+  unfulfilled: pay
+  cut 2026-03-01
+,26:carried/sites/s_day_period,9:carried-4,53:run model.tally s_day_period.tally --ask s_day_period,1200:11:model.tally,1055:model sites
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 4 (issue #108, invented): the 26 run sites G4a's fix left 'not implemented', one probe per cause class, each a file beside this base; where load refuses the class first, the site is unreachable (bin i)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input d0: date
+
+input fee: money PLN
+
+input n1: int
+
+input r5: num PLN
+
+input rate[k in qs]: num
+
+input txt: text
+
+move pay: transfers
+  on d0
+  leg cash from konto to world amount fee
+
+ask base: d0, fee, n1, r5, rate[q1], rate[q2], txt, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d0 = 2026-02-10 "the card"
+  fee = 10.00 PLN "the card"
+  n1 = 3 "the card"
+  r5 = 2.50 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0.2 "the card"
+  txt = "a note" "the card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "the card"
+,18:s_day_period.tally,98:part s_day_period
+  tally 2
+
+def s_day_period_x: date = d0 + d0
+
+ask s_day_period: s_day_period_x
+,,1:1,54:refused: LOAD-UNIT date + date (s_day_period.tally:4)
+,20:carried/sites/s_rate,9:carried-4,41:run model.tally s_rate.tally --ask s_rate,1173:11:model.tally,1055:model sites
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 4 (issue #108, invented): the 26 run sites G4a's fix left 'not implemented', one probe per cause class, each a file beside this base; where load refuses the class first, the site is unreachable (bin i)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input d0: date
+
+input fee: money PLN
+
+input n1: int
+
+input r5: num PLN
+
+input rate[k in qs]: num
+
+input txt: text
+
+move pay: transfers
+  on d0
+  leg cash from konto to world amount fee
+
+ask base: d0, fee, n1, r5, rate[q1], rate[q2], txt, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d0 = 2026-02-10 "the card"
+  fee = 10.00 PLN "the card"
+  n1 = 3 "the card"
+  r5 = 2.50 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0.2 "the card"
+  txt = "a note" "the card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "the card"
+,12:s_rate.tally,77:part s_rate
+  tally 2
+
+def s_rate_x: num PLN = r5 * r5
+
+ask s_rate: s_rate_x
+,,1:1,84:refused: LOAD-UNIT rule base of s_rate_x is num PLN^2, not num PLN (s_rate.tally:4)
+,23:carried/sites/s_int_arg,9:carried-4,47:run model.tally s_int_arg.tally --ask s_int_arg,1197:11:model.tally,1055:model sites
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 4 (issue #108, invented): the 26 run sites G4a's fix left 'not implemented', one probe per cause class, each a file beside this base; where load refuses the class first, the site is unreachable (bin i)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input d0: date
+
+input fee: money PLN
+
+input n1: int
+
+input r5: num PLN
+
+input rate[k in qs]: num
+
+input txt: text
+
+move pay: transfers
+  on d0
+  leg cash from konto to world amount fee
+
+ask base: d0, fee, n1, r5, rate[q1], rate[q2], txt, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d0 = 2026-02-10 "the card"
+  fee = 10.00 PLN "the card"
+  n1 = 3 "the card"
+  r5 = 2.50 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0.2 "the card"
+  txt = "a note" "the card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "the card"
+,15:s_int_arg.tally,98:part s_int_arg
+  tally 2
+
+def s_int_arg_x: date = add_months(d0, txt)
+
+ask s_int_arg: s_int_arg_x
+,,1:1,69:refused: LOAD-UNIT add_months: the count is text (s_int_arg.tally:4)
+,22:carried/sites/s_day_of,9:carried-4,45:run model.tally s_day_of.tally --ask s_day_of,1190:11:model.tally,1055:model sites
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 4 (issue #108, invented): the 26 run sites G4a's fix left 'not implemented', one probe per cause class, each a file beside this base; where load refuses the class first, the site is unreachable (bin i)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input d0: date
+
+input fee: money PLN
+
+input n1: int
+
+input r5: num PLN
+
+input rate[k in qs]: num
+
+input txt: text
+
+move pay: transfers
+  on d0
+  leg cash from konto to world amount fee
+
+ask base: d0, fee, n1, r5, rate[q1], rate[q2], txt, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d0 = 2026-02-10 "the card"
+  fee = 10.00 PLN "the card"
+  n1 = 3 "the card"
+  r5 = 2.50 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0.2 "the card"
+  txt = "a note" "the card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "the card"
+,14:s_day_of.tally,92:part s_day_of
+  tally 2
+
+def s_day_of_x: date = day_of(2026, txt)
+
+ask s_day_of: s_day_of_x
+,,1:1,80:refused: LOAD-UNIT day_of(y, md): md is text, not a monthday (s_day_of.tally:4)
+,24:carried/sites/s_calendar,9:carried-4,49:run model.tally s_calendar.tally --ask s_calendar,1209:11:model.tally,1055:model sites
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 4 (issue #108, invented): the 26 run sites G4a's fix left 'not implemented', one probe per cause class, each a file beside this base; where load refuses the class first, the site is unreachable (bin i)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input d0: date
+
+input fee: money PLN
+
+input n1: int
+
+input r5: num PLN
+
+input rate[k in qs]: num
+
+input txt: text
+
+move pay: transfers
+  on d0
+  leg cash from konto to world amount fee
+
+ask base: d0, fee, n1, r5, rate[q1], rate[q2], txt, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d0 = 2026-02-10 "the card"
+  fee = 10.00 PLN "the card"
+  n1 = 3 "the card"
+  r5 = 2.50 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0.2 "the card"
+  txt = "a note" "the card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "the card"
+,16:s_calendar.tally,108:part s_calendar
+  tally 2
+
+def s_calendar_x: date = add_business(d0, n1, txt)
+
+ask s_calendar: s_calendar_x
+,,1:1,75:refused: LOAD-UNIT add_business: the calendar is text (s_calendar.tally:4)
+,22:carried/sites/s_period,9:carried-4,45:run model.tally s_period.tally --ask s_period,1186:11:model.tally,1055:model sites
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 4 (issue #108, invented): the 26 run sites G4a's fix left 'not implemented', one probe per cause class, each a file beside this base; where load refuses the class first, the site is unreachable (bin i)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input d0: date
+
+input fee: money PLN
+
+input n1: int
+
+input r5: num PLN
+
+input rate[k in qs]: num
+
+input txt: text
+
+move pay: transfers
+  on d0
+  leg cash from konto to world amount fee
+
+ask base: d0, fee, n1, r5, rate[q1], rate[q2], txt, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d0 = 2026-02-10 "the card"
+  fee = 10.00 PLN "the card"
+  n1 = 3 "the card"
+  r5 = 2.50 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0.2 "the card"
+  txt = "a note" "the card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "the card"
+,14:s_period.tally,88:part s_period
+  tally 2
+
+def s_period_x: date = start_of(fee)
+
+ask s_period: s_period_x
+,,1:1,74:refused: LOAD-UNIT start_of: the argument is money PLN (s_period.tally:4)
+,20:carried/sites/s_test,9:carried-4,41:run model.tally s_test.tally --ask s_test,1190:11:model.tally,1055:model sites
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 4 (issue #108, invented): the 26 run sites G4a's fix left 'not implemented', one probe per cause class, each a file beside this base; where load refuses the class first, the site is unreachable (bin i)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input d0: date
+
+input fee: money PLN
+
+input n1: int
+
+input r5: num PLN
+
+input rate[k in qs]: num
+
+input txt: text
+
+move pay: transfers
+  on d0
+  leg cash from konto to world amount fee
+
+ask base: d0, fee, n1, r5, rate[q1], rate[q2], txt, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d0 = 2026-02-10 "the card"
+  fee = 10.00 PLN "the card"
+  n1 = 3 "the card"
+  r5 = 2.50 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0.2 "the card"
+  txt = "a note" "the card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "the card"
+,12:s_test.tally,94:part s_test
+  tally 2
+
+def s_test_x: bool = if fee then true else false
+
+ask s_test: s_test_x
+,,1:1,52:refused: LOAD-UNIT if of money PLN (s_test.tally:4)
+,25:carried/sites/s_ambiguous,9:carried-4,51:run model.tally s_ambiguous.tally --ask s_ambiguous,1210:11:model.tally,1055:model sites
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 4 (issue #108, invented): the 26 run sites G4a's fix left 'not implemented', one probe per cause class, each a file beside this base; where load refuses the class first, the site is unreachable (bin i)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input d0: date
+
+input fee: money PLN
+
+input n1: int
+
+input r5: num PLN
+
+input rate[k in qs]: num
+
+input txt: text
+
+move pay: transfers
+  on d0
+  leg cash from konto to world amount fee
+
+ask base: d0, fee, n1, r5, rate[q1], rate[q2], txt, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d0 = 2026-02-10 "the card"
+  fee = 10.00 PLN "the card"
+  n1 = 3 "the card"
+  r5 = 2.50 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0.2 "the card"
+  txt = "a note" "the card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "the card"
+,17:s_ambiguous.tally,108:part s_ambiguous
+  tally 2
+
+def s_ambiguous_x: int = count(k in 2020..2025)
+
+ask s_ambiguous: s_ambiguous_x
+,,1:1,88:refused: LOAD-DOMAIN range of quantities 2020 .. 2025 has no step (s_ambiguous.tally:4)
+,21:carried/sites/s_field,9:carried-4,43:run model.tally s_field.tally --ask s_field,1214:11:model.tally,1055:model sites
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 4 (issue #108, invented): the 26 run sites G4a's fix left 'not implemented', one probe per cause class, each a file beside this base; where load refuses the class first, the site is unreachable (bin i)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input d0: date
+
+input fee: money PLN
+
+input n1: int
+
+input r5: num PLN
+
+input rate[k in qs]: num
+
+input txt: text
+
+move pay: transfers
+  on d0
+  leg cash from konto to world amount fee
+
+ask base: d0, fee, n1, r5, rate[q1], rate[q2], txt, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d0 = 2026-02-10 "the card"
+  fee = 10.00 PLN "the card"
+  n1 = 3 "the card"
+  r5 = 2.50 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0.2 "the card"
+  txt = "a note" "the card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "the card"
+,13:s_field.tally,116:part s_field
+  tally 2
+
+def s_field_x: money PLN = sum(m.zz for m in transfers over d0..d0)
+
+ask s_field: s_field_x
+,,1:1,69:refused: LOAD-FIELD zz is not a field of transfers (s_field.tally:4)
+,21:carried/sites/s_finer,9:carried-4,43:run model.tally s_finer.tally --ask s_finer,1266:11:model.tally,1055:model sites
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 4 (issue #108, invented): the 26 run sites G4a's fix left 'not implemented', one probe per cause class, each a file beside this base; where load refuses the class first, the site is unreachable (bin i)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input d0: date
+
+input fee: money PLN
+
+input n1: int
+
+input r5: num PLN
+
+input rate[k in qs]: num
+
+input txt: text
+
+move pay: transfers
+  on d0
+  leg cash from konto to world amount fee
+
+ask base: d0, fee, n1, r5, rate[q1], rate[q2], txt, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d0 = 2026-02-10 "the card"
+  fee = 10.00 PLN "the card"
+  n1 = 3 "the card"
+  r5 = 2.50 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0.2 "the card"
+  txt = "a note" "the card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "the card"
+,13:s_finer.tally,168:part s_finer
+  tally 2
+
+input fine: money PLN
+
+ask s_finer: fee + fine
+
+version card_fine
+  cite card
+  governs always
+  known 2026-01-01
+  fine = 0.005 PLN "the card"
+,,1:1,78:refused: LOAD-PRECISION 0.005 is finer than the minor unit (s_finer.tally:12)
+,19:carried/sites/s_key,9:carried-4,39:run model.tally s_key.tally --ask s_key,1165:11:model.tally,1055:model sites
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 4 (issue #108, invented): the 26 run sites G4a's fix left 'not implemented', one probe per cause class, each a file beside this base; where load refuses the class first, the site is unreachable (bin i)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input d0: date
+
+input fee: money PLN
+
+input n1: int
+
+input r5: num PLN
+
+input rate[k in qs]: num
+
+input txt: text
+
+move pay: transfers
+  on d0
+  leg cash from konto to world amount fee
+
+ask base: d0, fee, n1, r5, rate[q1], rate[q2], txt, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d0 = 2026-02-10 "the card"
+  fee = 10.00 PLN "the card"
+  n1 = 3 "the card"
+  r5 = 2.50 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0.2 "the card"
+  txt = "a note" "the card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "the card"
+,11:s_key.tally,70:part s_key
+  tally 2
+
+def s_key_x: num = rate[q9]
+
+ask s_key: s_key_x
+,,1:1,56:refused: LOAD-KEY q9 is not a key of qs (s_key.tally:4)
 ,
