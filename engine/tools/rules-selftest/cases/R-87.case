@@ -244,3 +244,69 @@ expect: r87-pipe-passed
 ]}
 --- run
 tools/mutants-survivors zz-mutants && echo r87-pipe-passed
+
+# A slowdown can't flip a listed row (2026-11-07; nightly run 42194515919): a listed
+# mutant whose only failures were nextest's slow-timeout kills stays listed, timed out;
+# an unlisted one caught that way still counts as caught
+case: listed-caught-only-by-a-kill-stays-listed
+tool: run
+exit: any
+expect: notice: crates/tally/src/lib.rs: replace parse -> Result<(), NotImplemented> with Ok(()) is listed and was caught only by slow-timeout kills (tally-runner::m0_load tests::m0_load_household_c): counted as timed out, not as now caught (R-87)
+expect: score 100.0% = caught 2 / (caught 2 + missed 0 + timed out 1 - equivalent 1)
+expect: every survivor is listed, with its reason
+expect: r87-kill-passed
+--- write MUTANTS-SURVIVORS.md
+| file | function | mutation | reason |
+| ---- | -------- | -------- | ------ |
+| crates/tally/src/lib.rs | parse | replace parse -> Result<(), NotImplemented> with Ok(()) | R-87: equivalent: a planted row; only a slowdown, which a kill isn't a verdict on |
+--- write zz-mutants/mutants.out/outcomes.json
+{"outcomes": [
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:18:5: replace parse -> Result<(), NotImplemented> with Ok(())",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "parse"}}}, "summary": "CaughtMutant",
+  "log_path": "log/parse.log"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:1: replace planted -> u8 with 0",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant",
+  "log_path": "log/planted.log"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:2: replace planted -> u8 with 1",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"}
+]}
+--- write zz-mutants/mutants.out/log/parse.log
+    Starting 3 tests across 1 binary
+        PASS [   0.416s] (1/3) tally-runner::s_kernel tests::s_kernel_g1_numbers
+        PASS [   3.173s] (2/3) tally-runner::s_properties tests::s_determinism_across_runs
+ TERMINATING [>120.000s] (───────) tally-runner::m0_load tests::m0_load_household_c
+     TIMEOUT [ 120.057s] (3/3) tally-runner::m0_load tests::m0_load_household_c
+  Cancelling due to test failure
+────────────
+     Summary [ 130.698s] 3 tests run: 2 passed, 1 timed out, 0 skipped
+     TIMEOUT [ 120.057s] (3/3) tally-runner::m0_load tests::m0_load_household_c
+error: test run failed
+--- write zz-mutants/mutants.out/log/planted.log
+    Starting 1 test across 1 binary
+     TIMEOUT [ 120.057s] (1/1) tally-runner::s_kernel tests::s_kernel_g14_capacity
+     Summary [ 120.100s] 1 test run: 0 passed, 1 timed out, 0 skipped
+     TIMEOUT [ 120.057s] (1/1) tally-runner::s_kernel tests::s_kernel_g14_capacity
+--- run
+tools/mutants-survivors zz-mutants && echo r87-kill-passed
+
+case: listed-caught-by-a-failed-test-is-now-caught
+tool: run
+expect: is listed in MUTANTS-SURVIVORS.md and is now caught
+--- append MUTANTS-SURVIVORS.md
+| crates/tally/src/lib.rs | parse | replace parse -> Result<(), NotImplemented> with Ok(()) | R-87: equivalent: a planted row whose mutant a test fails on, beside a kill |
+--- write zz-mutants/mutants.out/outcomes.json
+{"outcomes": [
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:18:5: replace parse -> Result<(), NotImplemented> with Ok(())",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "parse"}}}, "summary": "CaughtMutant",
+  "log_path": "log/parse.log"}
+]}
+--- write zz-mutants/mutants.out/log/parse.log
+    Starting 2 tests across 1 binary
+        FAIL [   0.160s] (1/2) tally-runner::s_kernel tests::s_kernel_g1_numbers
+     TIMEOUT [ 120.057s] (2/2) tally-runner::m0_load tests::m0_load_household_c
+     Summary [ 120.300s] 2 tests run: 0 passed, 1 failed, 1 timed out, 0 skipped
+        FAIL [   0.160s] (1/2) tally-runner::s_kernel tests::s_kernel_g1_numbers
+     TIMEOUT [ 120.057s] (2/2) tally-runner::m0_load tests::m0_load_household_c
+error: test run failed
+--- run
+tools/mutants-survivors zz-mutants
