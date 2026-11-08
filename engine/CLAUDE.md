@@ -14,7 +14,7 @@ Printed by the build role's SessionStart hook at the start and after each compac
 2. Never special-case an input: no branch on a case id, an ask text, a path or an expected value. _The special-casing scan (R-94); review._
 3. Never add a crate or a feature. _cargo-deny's allow-lists (R-52)._
 4. Never weaken a check: no `#[allow]`, no config edit, no `cfg(not(clippy))`, no `ast-grep-ignore`, no mutation skip, no raised timeout, no retry. _R-103 to R-109, R-86, R-90; CI fails._
-5. A STOP-REPORT is a good outcome. When a test, the spec or a rule seems to conflict with correct behaviour, stop and file one. _The Stop hook lets a turn end only when `check fast` is green or a STOP-REPORT is newer than the last commit (R-83)._
+5. A STOP-REPORT is a good outcome. When a test, the spec or a rule seems to conflict with correct behaviour, stop and file one. _The Stop hook lets a turn end only when `check fast` is green, a STOP-REPORT is newer than the last commit, or the only red is T's tests logged red on a `Logged-Red:` line of this branch (R-83)._
 
 **The STOP-REPORT protocol:**
 
