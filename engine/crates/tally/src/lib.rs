@@ -50,8 +50,11 @@ pub mod base {
 /// files under `syntax/`.
 pub mod syntax {
     mod ask;
+    mod binds;
+    mod calls;
     mod canon;
     mod canon_order;
+    mod decls;
     mod expr;
     mod item;
     mod lex;
@@ -148,8 +151,10 @@ pub mod eval {
     mod arith;
     mod band;
     mod builtin;
+    mod convert;
     mod expr;
     mod memo;
+    mod ranges;
     mod read;
     mod rules;
     mod stack;
@@ -159,10 +164,9 @@ pub mod eval {
     pub use aggregate::Member;
     pub(crate) use aggregate::{order_text, reads_name};
     pub use arith::{Op, Test, arith, compare, currency_of, int_of, negate, same_value};
+    pub(crate) use convert::{ConvertFor, Converted, convert, convert_row, field_literal};
     pub use memo::Memo;
-    pub(crate) use read::{
-        ConvertFor, Converted, convert, convert_row, field_literal, make_keys, thing_seen, to_key,
-    };
+    pub(crate) use read::{make_keys, thing_seen, to_key};
     pub use stack::Item;
     pub use state::{Collected, Ctx, Engine, Entry, Env};
     pub(crate) use state::{a_day, num_stop, past_days};
