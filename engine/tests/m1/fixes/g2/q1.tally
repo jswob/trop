@@ -1,0 +1,45 @@
+model probes
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probes"
+
+source card "invented"
+
+index ks = [a, b]
+
+input w: date
+input wk[k in ks]: date
+input zero: int
+input mone: int
+input two: int
+
+def same: date = w
+def same2: date = w
+def sk[k in ks]: date = wk[k]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-06-01, 2026-06-05) "c"
+  wk[a] = window(2026-06-01, 2026-06-05) "c"
+  wk[b] = window(2026-06-01, 2026-06-05) "c"
+  zero = 0 "c"
+  mone = -1 "c"
+  two = 2 "c"
+
+ask l1: last(w, 2026-07-01) == last(w, 2026-07-01)
+ask l2: last(w, 2026-07-01) < last(w, 2026-07-01)
+ask s1: same == w
+ask s2: same == same2
+ask s3: same == same
+ask s4: sk[a] == wk[a], sk[a] == sk[a], sk[a] == sk[b]
+ask s5: wk[k] == wk[a] for k in [a]
+ask s6: sk[k] == sk[a] for k in [a]
+ask b1: w + 1 day == w + 1 day
+ask p1: pow(zero, mone)
+ask p2: pow(zero, 0)
+ask p3: pow(zero, two)
+ask p4: pow(two, mone)

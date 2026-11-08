@@ -1,0 +1,32 @@
+model lastalw
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+index ds = day 2023-01-01..2026-12-31
+
+input s: num
+
+input t: num
+
+def sv[d in ds]: num = s
+def tv[d in ds]: num = t at d
+ask q0: sv[2026-03-01], tv[2023-03-01]
+ask q1: last(s, 2026-03-01)
+ask q2: last(t, 2026-03-01)
+ask q3: last(t, 2023-03-01)
+
+version v1
+  cite card
+  governs always
+  known 2024-01-01
+  s = 3 "c"
+
+version v2
+  cite card
+  governs ..2024-06-30
+  known 2024-01-01
+  t = 4 "c"

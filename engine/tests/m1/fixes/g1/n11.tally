@@ -1,0 +1,4 @@
+part n11
+  tally 2
+
+ask n11: count(g in gifts over .. where (if g.size > 0 and g in big then g.size else 0) > 0)

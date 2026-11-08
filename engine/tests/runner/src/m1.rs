@@ -2,8 +2,10 @@
 //! `m1/vectors.py`, stored in `m1/vectors.refcore` in `kernel/vectors.refcore`'s six
 //! netstrings and read by [`crate::kernel::vectors`]. The milestone targets
 //! `milestone/m1_checks.rs` (the checks of BUILD-ORDER § M1 that S's `s_kernel` doesn't
-//! hold) and `milestone/m1_carried.rs` (the items the pre-M1 run left for M1) hold the
-//! engine's whole output to them, byte for byte; `milestone/m1_format.rs` holds #109's law.
+//! hold), `milestone/m1_carried.rs` (the items the pre-M1 run left for M1),
+//! `milestone/m1_goldens.rs` (the prototype's goldens) and `milestone/m1_fixes.rs` (the
+//! builder groups' review fixes) hold the engine's whole output to them, byte for byte;
+//! `milestone/m1_format.rs` holds #109's law.
 //!
 //! - [`VECTORS`]: the stored vectors;
 //! - [`KEY_KINDS`]: #109's text, rows keyed by literals of different kinds;
@@ -62,8 +64,8 @@ mod tests {
     use std::collections::BTreeSet;
 
     /// The runner tests' groups, `<target>-<group>`: `checks-…` for `m1_checks`, `carried-…`
-    /// for `m1_carried`, `goldens-…` for `m1_goldens`.
-    const TARGETS: [&str; 3] = ["checks-", "carried-", "goldens-"];
+    /// for `m1_carried`, `goldens-…` for `m1_goldens`, `fixes-…` for `m1_fixes`.
+    const TARGETS: [&str; 4] = ["checks-", "carried-", "goldens-", "fixes-"];
 
     #[test]
     fn the_m1_vectors_read_and_their_tables_hold_every_path_they_name() {

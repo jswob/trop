@@ -30671,4 +30671,3518 @@ def s_key_x: num = rate[q9]
 
 ask s_key: s_key_x
 ,,1:1,56:refused: LOAD-KEY q9 is not a key of qs (s_key.tally:4)
+,11:fixes/g1/n5,8:fixes-g1,33:run gifts.tally n5.tally --ask n5,1018:11:gifts.tally,876:model gifts
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+kind gifts: event certain
+  leg cash: PLN
+
+kind big: gifts
+  attr size: int
+
+kind bigger: big
+  attr extra: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input amt: money PLN
+
+input sz: int
+
+move small_gift[m in months]: gifts
+  on start_of(m)
+  leg cash from world to konto amount amt
+
+move big_gift[m in months]: big
+  on start_of(m)
+  attr size = sz
+  leg cash from world to konto amount amt
+
+move bigger_gift[m in months]: bigger
+  on start_of(m)
+  attr size = sz
+  attr extra = sz
+  leg cash from world to konto amount amt
+
+ask q: bal(konto, 2026-12-31)
+
+version plan
+  cite card
+  governs always
+  known 2025-12-01
+  amt = 10.00 "x"
+  sz = 3 "x"
+  opening[konto] = 0 at 2026-01-01 start "the card"
+,8:n5.tally,106:part n5
+  tally 2
+
+ask n5: count(g in gifts over .. where (if g.size > 0 and g in big then 1 else 0) > 0)
+,,1:0,714:n5: 24
+  unfulfilled: big_gift[2026-01]
+  unfulfilled: big_gift[2026-02]
+  unfulfilled: big_gift[2026-03]
+  unfulfilled: big_gift[2026-04]
+  unfulfilled: big_gift[2026-05]
+  unfulfilled: big_gift[2026-06]
+  unfulfilled: big_gift[2026-07]
+  unfulfilled: big_gift[2026-08]
+  unfulfilled: big_gift[2026-09]
+  unfulfilled: big_gift[2026-10]
+  unfulfilled: bigger_gift[2026-01]
+  unfulfilled: bigger_gift[2026-02]
+  unfulfilled: bigger_gift[2026-03]
+  unfulfilled: bigger_gift[2026-04]
+  unfulfilled: bigger_gift[2026-05]
+  unfulfilled: bigger_gift[2026-06]
+  unfulfilled: bigger_gift[2026-07]
+  unfulfilled: bigger_gift[2026-08]
+  unfulfilled: bigger_gift[2026-09]
+  unfulfilled: bigger_gift[2026-10]
+  cut 2026-10-20
+,12:fixes/g1/n10,8:fixes-g1,35:run gifts.tally n10.tally --ask n10,1036:11:gifts.tally,876:model gifts
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+kind gifts: event certain
+  leg cash: PLN
+
+kind big: gifts
+  attr size: int
+
+kind bigger: big
+  attr extra: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input amt: money PLN
+
+input sz: int
+
+move small_gift[m in months]: gifts
+  on start_of(m)
+  leg cash from world to konto amount amt
+
+move big_gift[m in months]: big
+  on start_of(m)
+  attr size = sz
+  leg cash from world to konto amount amt
+
+move bigger_gift[m in months]: bigger
+  on start_of(m)
+  attr size = sz
+  attr extra = sz
+  leg cash from world to konto amount amt
+
+ask q: bal(konto, 2026-12-31)
+
+version plan
+  cite card
+  governs always
+  known 2025-12-01
+  amt = 10.00 "x"
+  sz = 3 "x"
+  opening[konto] = 0 at 2026-01-01 start "the card"
+,9:n10.tally,123:part n10
+  tally 2
+
+ask n10: count(g in gifts over .. where (if g.size > 0 and g.size > 0 and g in big then 1 else 0) > 0)
+,,1:0,715:n10: 24
+  unfulfilled: big_gift[2026-01]
+  unfulfilled: big_gift[2026-02]
+  unfulfilled: big_gift[2026-03]
+  unfulfilled: big_gift[2026-04]
+  unfulfilled: big_gift[2026-05]
+  unfulfilled: big_gift[2026-06]
+  unfulfilled: big_gift[2026-07]
+  unfulfilled: big_gift[2026-08]
+  unfulfilled: big_gift[2026-09]
+  unfulfilled: big_gift[2026-10]
+  unfulfilled: bigger_gift[2026-01]
+  unfulfilled: bigger_gift[2026-02]
+  unfulfilled: bigger_gift[2026-03]
+  unfulfilled: bigger_gift[2026-04]
+  unfulfilled: bigger_gift[2026-05]
+  unfulfilled: bigger_gift[2026-06]
+  unfulfilled: bigger_gift[2026-07]
+  unfulfilled: bigger_gift[2026-08]
+  unfulfilled: bigger_gift[2026-09]
+  unfulfilled: bigger_gift[2026-10]
+  cut 2026-10-20
+,12:fixes/g1/n11,8:fixes-g1,35:run gifts.tally n11.tally --ask n11,1026:11:gifts.tally,876:model gifts
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+kind gifts: event certain
+  leg cash: PLN
+
+kind big: gifts
+  attr size: int
+
+kind bigger: big
+  attr extra: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input amt: money PLN
+
+input sz: int
+
+move small_gift[m in months]: gifts
+  on start_of(m)
+  leg cash from world to konto amount amt
+
+move big_gift[m in months]: big
+  on start_of(m)
+  attr size = sz
+  leg cash from world to konto amount amt
+
+move bigger_gift[m in months]: bigger
+  on start_of(m)
+  attr size = sz
+  attr extra = sz
+  leg cash from world to konto amount amt
+
+ask q: bal(konto, 2026-12-31)
+
+version plan
+  cite card
+  governs always
+  known 2025-12-01
+  amt = 10.00 "x"
+  sz = 3 "x"
+  opening[konto] = 0 at 2026-01-01 start "the card"
+,9:n11.tally,113:part n11
+  tally 2
+
+ask n11: count(g in gifts over .. where (if g.size > 0 and g in big then g.size else 0) > 0)
+,,1:0,715:n11: 24
+  unfulfilled: big_gift[2026-01]
+  unfulfilled: big_gift[2026-02]
+  unfulfilled: big_gift[2026-03]
+  unfulfilled: big_gift[2026-04]
+  unfulfilled: big_gift[2026-05]
+  unfulfilled: big_gift[2026-06]
+  unfulfilled: big_gift[2026-07]
+  unfulfilled: big_gift[2026-08]
+  unfulfilled: big_gift[2026-09]
+  unfulfilled: big_gift[2026-10]
+  unfulfilled: bigger_gift[2026-01]
+  unfulfilled: bigger_gift[2026-02]
+  unfulfilled: bigger_gift[2026-03]
+  unfulfilled: bigger_gift[2026-04]
+  unfulfilled: bigger_gift[2026-05]
+  unfulfilled: bigger_gift[2026-06]
+  unfulfilled: bigger_gift[2026-07]
+  unfulfilled: bigger_gift[2026-08]
+  unfulfilled: bigger_gift[2026-09]
+  unfulfilled: bigger_gift[2026-10]
+  cut 2026-10-20
+,11:fixes/g1/p5,8:fixes-g1,33:run gifts.tally p5.tally --ask p5,1034:11:gifts.tally,876:model gifts
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+kind gifts: event certain
+  leg cash: PLN
+
+kind big: gifts
+  attr size: int
+
+kind bigger: big
+  attr extra: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input amt: money PLN
+
+input sz: int
+
+move small_gift[m in months]: gifts
+  on start_of(m)
+  leg cash from world to konto amount amt
+
+move big_gift[m in months]: big
+  on start_of(m)
+  attr size = sz
+  leg cash from world to konto amount amt
+
+move bigger_gift[m in months]: bigger
+  on start_of(m)
+  attr size = sz
+  attr extra = sz
+  leg cash from world to konto amount amt
+
+ask q: bal(konto, 2026-12-31)
+
+version plan
+  cite card
+  governs always
+  known 2025-12-01
+  amt = 10.00 "x"
+  sz = 3 "x"
+  opening[konto] = 0 at 2026-01-01 start "the card"
+,8:p5.tally,122:part p5
+  tally 2
+
+ask p5: count(g in gifts over .. where (if g.size > 0 and g in big and g in bigger then 1 else 0) > 0)
+,,1:0,384:p5: 12
+  unfulfilled: bigger_gift[2026-01]
+  unfulfilled: bigger_gift[2026-02]
+  unfulfilled: bigger_gift[2026-03]
+  unfulfilled: bigger_gift[2026-04]
+  unfulfilled: bigger_gift[2026-05]
+  unfulfilled: bigger_gift[2026-06]
+  unfulfilled: bigger_gift[2026-07]
+  unfulfilled: bigger_gift[2026-08]
+  unfulfilled: bigger_gift[2026-09]
+  unfulfilled: bigger_gift[2026-10]
+  cut 2026-10-20
+,11:fixes/g1/p7,8:fixes-g1,33:run gifts.tally p7.tally --ask p7,1035:11:gifts.tally,876:model gifts
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+kind gifts: event certain
+  leg cash: PLN
+
+kind big: gifts
+  attr size: int
+
+kind bigger: big
+  attr extra: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input amt: money PLN
+
+input sz: int
+
+move small_gift[m in months]: gifts
+  on start_of(m)
+  leg cash from world to konto amount amt
+
+move big_gift[m in months]: big
+  on start_of(m)
+  attr size = sz
+  leg cash from world to konto amount amt
+
+move bigger_gift[m in months]: bigger
+  on start_of(m)
+  attr size = sz
+  attr extra = sz
+  leg cash from world to konto amount amt
+
+ask q: bal(konto, 2026-12-31)
+
+version plan
+  cite card
+  governs always
+  known 2025-12-01
+  amt = 10.00 "x"
+  sz = 3 "x"
+  opening[konto] = 0 at 2026-01-01 start "the card"
+,8:p7.tally,123:part p7
+  tally 2
+
+ask p7: count(g in gifts over .. where (if g.extra > 0 and g in big and g in bigger then 1 else 0) > 0)
+,,1:0,384:p7: 12
+  unfulfilled: bigger_gift[2026-01]
+  unfulfilled: bigger_gift[2026-02]
+  unfulfilled: bigger_gift[2026-03]
+  unfulfilled: bigger_gift[2026-04]
+  unfulfilled: bigger_gift[2026-05]
+  unfulfilled: bigger_gift[2026-06]
+  unfulfilled: bigger_gift[2026-07]
+  unfulfilled: bigger_gift[2026-08]
+  unfulfilled: bigger_gift[2026-09]
+  unfulfilled: bigger_gift[2026-10]
+  cut 2026-10-20
+,11:fixes/g1/w1,8:fixes-g1,33:run gifts.tally w1.tally --ask w1,1093:11:gifts.tally,876:model gifts
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+kind gifts: event certain
+  leg cash: PLN
+
+kind big: gifts
+  attr size: int
+
+kind bigger: big
+  attr extra: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input amt: money PLN
+
+input sz: int
+
+move small_gift[m in months]: gifts
+  on start_of(m)
+  leg cash from world to konto amount amt
+
+move big_gift[m in months]: big
+  on start_of(m)
+  attr size = sz
+  leg cash from world to konto amount amt
+
+move bigger_gift[m in months]: bigger
+  on start_of(m)
+  attr size = sz
+  attr extra = sz
+  leg cash from world to konto amount amt
+
+ask q: bal(konto, 2026-12-31)
+
+version plan
+  cite card
+  governs always
+  known 2025-12-01
+  amt = 10.00 "x"
+  sz = 3 "x"
+  opening[konto] = 0 at 2026-01-01 start "the card"
+,8:w1.tally,181:part w1
+  tally 2
+
+def wa[g in gifts]: int
+  rule base = 0
+  rule b beats base = g.size when g.size > 0 and g in big
+
+ask w1: sum(wa[g] for g in gifts over .. where not (g in big))
+,,1:0,373:w1: 0
+  unfulfilled: small_gift[2026-01]
+  unfulfilled: small_gift[2026-02]
+  unfulfilled: small_gift[2026-03]
+  unfulfilled: small_gift[2026-04]
+  unfulfilled: small_gift[2026-05]
+  unfulfilled: small_gift[2026-06]
+  unfulfilled: small_gift[2026-07]
+  unfulfilled: small_gift[2026-08]
+  unfulfilled: small_gift[2026-09]
+  unfulfilled: small_gift[2026-10]
+  cut 2026-10-20
+,11:fixes/g1/w2,8:fixes-g1,33:run gifts.tally w2.tally --ask w2,1093:11:gifts.tally,876:model gifts
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+kind gifts: event certain
+  leg cash: PLN
+
+kind big: gifts
+  attr size: int
+
+kind bigger: big
+  attr extra: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input amt: money PLN
+
+input sz: int
+
+move small_gift[m in months]: gifts
+  on start_of(m)
+  leg cash from world to konto amount amt
+
+move big_gift[m in months]: big
+  on start_of(m)
+  attr size = sz
+  leg cash from world to konto amount amt
+
+move bigger_gift[m in months]: bigger
+  on start_of(m)
+  attr size = sz
+  attr extra = sz
+  leg cash from world to konto amount amt
+
+ask q: bal(konto, 2026-12-31)
+
+version plan
+  cite card
+  governs always
+  known 2025-12-01
+  amt = 10.00 "x"
+  sz = 3 "x"
+  opening[konto] = 0 at 2026-01-01 start "the card"
+,8:w2.tally,181:part w2
+  tally 2
+
+def wb[g in gifts]: int
+  rule base = 0
+  rule b beats base = g.size when g in big and g.size > 0
+
+ask w2: sum(wb[g] for g in gifts over .. where not (g in big))
+,,1:0,373:w2: 0
+  unfulfilled: small_gift[2026-01]
+  unfulfilled: small_gift[2026-02]
+  unfulfilled: small_gift[2026-03]
+  unfulfilled: small_gift[2026-04]
+  unfulfilled: small_gift[2026-05]
+  unfulfilled: small_gift[2026-06]
+  unfulfilled: small_gift[2026-07]
+  unfulfilled: small_gift[2026-08]
+  unfulfilled: small_gift[2026-09]
+  unfulfilled: small_gift[2026-10]
+  cut 2026-10-20
+,11:fixes/g1/w3,8:fixes-g1,33:run gifts.tally w3.tally --ask w3,1121:11:gifts.tally,876:model gifts
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+kind gifts: event certain
+  leg cash: PLN
+
+kind big: gifts
+  attr size: int
+
+kind bigger: big
+  attr extra: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input amt: money PLN
+
+input sz: int
+
+move small_gift[m in months]: gifts
+  on start_of(m)
+  leg cash from world to konto amount amt
+
+move big_gift[m in months]: big
+  on start_of(m)
+  attr size = sz
+  leg cash from world to konto amount amt
+
+move bigger_gift[m in months]: bigger
+  on start_of(m)
+  attr size = sz
+  attr extra = sz
+  leg cash from world to konto amount amt
+
+ask q: bal(konto, 2026-12-31)
+
+version plan
+  cite card
+  governs always
+  known 2025-12-01
+  amt = 10.00 "x"
+  sz = 3 "x"
+  opening[konto] = 0 at 2026-01-01 start "the card"
+,8:w3.tally,209:part w3
+  tally 2
+
+def wc[g in gifts]: int
+  rule base = 0
+  rule b beats base = 1 when (g.size > 0 and (g in big)) and g.cash.amount > 0.00 PLN
+
+ask w3: sum(wc[g] for g in gifts over .. where not (g in big))
+,,1:0,373:w3: 0
+  unfulfilled: small_gift[2026-01]
+  unfulfilled: small_gift[2026-02]
+  unfulfilled: small_gift[2026-03]
+  unfulfilled: small_gift[2026-04]
+  unfulfilled: small_gift[2026-05]
+  unfulfilled: small_gift[2026-06]
+  unfulfilled: small_gift[2026-07]
+  unfulfilled: small_gift[2026-08]
+  unfulfilled: small_gift[2026-09]
+  unfulfilled: small_gift[2026-10]
+  cut 2026-10-20
+,11:fixes/g1/r1,8:fixes-g1,33:run gifts.tally r1.tally --ask r1,1070:11:gifts.tally,876:model gifts
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+kind gifts: event certain
+  leg cash: PLN
+
+kind big: gifts
+  attr size: int
+
+kind bigger: big
+  attr extra: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input amt: money PLN
+
+input sz: int
+
+move small_gift[m in months]: gifts
+  on start_of(m)
+  leg cash from world to konto amount amt
+
+move big_gift[m in months]: big
+  on start_of(m)
+  attr size = sz
+  leg cash from world to konto amount amt
+
+move bigger_gift[m in months]: bigger
+  on start_of(m)
+  attr size = sz
+  attr extra = sz
+  leg cash from world to konto amount amt
+
+ask q: bal(konto, 2026-12-31)
+
+version plan
+  cite card
+  governs always
+  known 2025-12-01
+  amt = 10.00 "x"
+  sz = 3 "x"
+  opening[konto] = 0 at 2026-01-01 start "the card"
+,8:r1.tally,158:part r1
+  tally 2
+
+def w[g in gifts]: int
+  rule base = 0
+  rule b beats base = g.size when g.size > 0 and g in big
+
+ask r1: sum(w[g] for g in gifts over ..)
+,,1:0,1064:r1: 72
+  unfulfilled: big_gift[2026-01]
+  unfulfilled: big_gift[2026-02]
+  unfulfilled: big_gift[2026-03]
+  unfulfilled: big_gift[2026-04]
+  unfulfilled: big_gift[2026-05]
+  unfulfilled: big_gift[2026-06]
+  unfulfilled: big_gift[2026-07]
+  unfulfilled: big_gift[2026-08]
+  unfulfilled: big_gift[2026-09]
+  unfulfilled: big_gift[2026-10]
+  unfulfilled: bigger_gift[2026-01]
+  unfulfilled: bigger_gift[2026-02]
+  unfulfilled: bigger_gift[2026-03]
+  unfulfilled: bigger_gift[2026-04]
+  unfulfilled: bigger_gift[2026-05]
+  unfulfilled: bigger_gift[2026-06]
+  unfulfilled: bigger_gift[2026-07]
+  unfulfilled: bigger_gift[2026-08]
+  unfulfilled: bigger_gift[2026-09]
+  unfulfilled: bigger_gift[2026-10]
+  unfulfilled: small_gift[2026-01]
+  unfulfilled: small_gift[2026-02]
+  unfulfilled: small_gift[2026-03]
+  unfulfilled: small_gift[2026-04]
+  unfulfilled: small_gift[2026-05]
+  unfulfilled: small_gift[2026-06]
+  unfulfilled: small_gift[2026-07]
+  unfulfilled: small_gift[2026-08]
+  unfulfilled: small_gift[2026-09]
+  unfulfilled: small_gift[2026-10]
+  cut 2026-10-20
+,11:fixes/g1/r2,8:fixes-g1,33:run gifts.tally r2.tally --ask r2,1072:11:gifts.tally,876:model gifts
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+kind gifts: event certain
+  leg cash: PLN
+
+kind big: gifts
+  attr size: int
+
+kind bigger: big
+  attr extra: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input amt: money PLN
+
+input sz: int
+
+move small_gift[m in months]: gifts
+  on start_of(m)
+  leg cash from world to konto amount amt
+
+move big_gift[m in months]: big
+  on start_of(m)
+  attr size = sz
+  leg cash from world to konto amount amt
+
+move bigger_gift[m in months]: bigger
+  on start_of(m)
+  attr size = sz
+  attr extra = sz
+  leg cash from world to konto amount amt
+
+ask q: bal(konto, 2026-12-31)
+
+version plan
+  cite card
+  governs always
+  known 2025-12-01
+  amt = 10.00 "x"
+  sz = 3 "x"
+  opening[konto] = 0 at 2026-01-01 start "the card"
+,8:r2.tally,160:part r2
+  tally 2
+
+def w2[g in gifts]: int
+  rule base = 0
+  rule b beats base = g.size when g in big and g.size > 0
+
+ask r2: sum(w2[g] for g in gifts over ..)
+,,1:0,1064:r2: 72
+  unfulfilled: big_gift[2026-01]
+  unfulfilled: big_gift[2026-02]
+  unfulfilled: big_gift[2026-03]
+  unfulfilled: big_gift[2026-04]
+  unfulfilled: big_gift[2026-05]
+  unfulfilled: big_gift[2026-06]
+  unfulfilled: big_gift[2026-07]
+  unfulfilled: big_gift[2026-08]
+  unfulfilled: big_gift[2026-09]
+  unfulfilled: big_gift[2026-10]
+  unfulfilled: bigger_gift[2026-01]
+  unfulfilled: bigger_gift[2026-02]
+  unfulfilled: bigger_gift[2026-03]
+  unfulfilled: bigger_gift[2026-04]
+  unfulfilled: bigger_gift[2026-05]
+  unfulfilled: bigger_gift[2026-06]
+  unfulfilled: bigger_gift[2026-07]
+  unfulfilled: bigger_gift[2026-08]
+  unfulfilled: bigger_gift[2026-09]
+  unfulfilled: bigger_gift[2026-10]
+  unfulfilled: small_gift[2026-01]
+  unfulfilled: small_gift[2026-02]
+  unfulfilled: small_gift[2026-03]
+  unfulfilled: small_gift[2026-04]
+  unfulfilled: small_gift[2026-05]
+  unfulfilled: small_gift[2026-06]
+  unfulfilled: small_gift[2026-07]
+  unfulfilled: small_gift[2026-08]
+  unfulfilled: small_gift[2026-09]
+  unfulfilled: small_gift[2026-10]
+  cut 2026-10-20
+,16:fixes/g1/u_later,8:fixes-g1,45:run replace.tally cheaper.tally --ask u_later,1307:13:replace.tally,970:model replaces
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's vectors for G1's unreplaced survivors (issue #108, invented): a replace row beats the rows at the same keys known before it in its own layer, never a row at other keys, and a scenario's beats its base's rows whatever their known dates (L §4.6 steps 2-3, §6.4)"
+
+source card "T's card (invented)"
+
+index ks = [a, b]
+
+input cap[k in ks]: num
+
+input fee: num
+
+input rate: num
+
+ask u_later: rate
+
+ask u_wide: cap[a], cap[b]
+
+ask u_base: fee
+
+ask u_scenario: rate in cheaper law cut
+
+ask u_scenario_fee: fee in cheaper law cut
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  cap[a] = 1 "the card"
+  cap[*] = 2 "the card"
+  rate = 0.1 "the card"
+
+version card_2026_06
+  cite card
+  governs always
+  known 2026-06-01
+  replace cap[*] = 3 "a later card replaces the wide row only"
+  fee = 0.3 "the card of June"
+  replace rate = 0.2 "a later card replaces the rate"
+,13:cheaper.tally,293:scenario cheaper over replaces
+  tally 2
+  from 2026-01-01
+  note "a scenario whose replace rows are known before the base rows they replace"
+
+version cheaper_card
+  cite card
+  governs 2026-01-01..
+  known 2026-02-01
+  replace fee = 0.1 "a cheaper fee"
+  replace rate = 0.15 "a cheaper rate"
+,,1:0,30:u_later: 0.2
+  cut 2026-10-01
+,15:fixes/g1/u_wide,8:fixes-g1,44:run replace.tally cheaper.tally --ask u_wide,1307:13:replace.tally,970:model replaces
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's vectors for G1's unreplaced survivors (issue #108, invented): a replace row beats the rows at the same keys known before it in its own layer, never a row at other keys, and a scenario's beats its base's rows whatever their known dates (L §4.6 steps 2-3, §6.4)"
+
+source card "T's card (invented)"
+
+index ks = [a, b]
+
+input cap[k in ks]: num
+
+input fee: num
+
+input rate: num
+
+ask u_later: rate
+
+ask u_wide: cap[a], cap[b]
+
+ask u_base: fee
+
+ask u_scenario: rate in cheaper law cut
+
+ask u_scenario_fee: fee in cheaper law cut
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  cap[a] = 1 "the card"
+  cap[*] = 2 "the card"
+  rate = 0.1 "the card"
+
+version card_2026_06
+  cite card
+  governs always
+  known 2026-06-01
+  replace cap[*] = 3 "a later card replaces the wide row only"
+  fee = 0.3 "the card of June"
+  replace rate = 0.2 "a later card replaces the rate"
+,13:cheaper.tally,293:scenario cheaper over replaces
+  tally 2
+  from 2026-01-01
+  note "a scenario whose replace rows are known before the base rows they replace"
+
+version cheaper_card
+  cite card
+  governs 2026-01-01..
+  known 2026-02-01
+  replace fee = 0.1 "a cheaper fee"
+  replace rate = 0.15 "a cheaper rate"
+,,1:0,32:u_wide: (1, 3)
+  cut 2026-10-01
+,15:fixes/g1/u_base,8:fixes-g1,44:run replace.tally cheaper.tally --ask u_base,1307:13:replace.tally,970:model replaces
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's vectors for G1's unreplaced survivors (issue #108, invented): a replace row beats the rows at the same keys known before it in its own layer, never a row at other keys, and a scenario's beats its base's rows whatever their known dates (L §4.6 steps 2-3, §6.4)"
+
+source card "T's card (invented)"
+
+index ks = [a, b]
+
+input cap[k in ks]: num
+
+input fee: num
+
+input rate: num
+
+ask u_later: rate
+
+ask u_wide: cap[a], cap[b]
+
+ask u_base: fee
+
+ask u_scenario: rate in cheaper law cut
+
+ask u_scenario_fee: fee in cheaper law cut
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  cap[a] = 1 "the card"
+  cap[*] = 2 "the card"
+  rate = 0.1 "the card"
+
+version card_2026_06
+  cite card
+  governs always
+  known 2026-06-01
+  replace cap[*] = 3 "a later card replaces the wide row only"
+  fee = 0.3 "the card of June"
+  replace rate = 0.2 "a later card replaces the rate"
+,13:cheaper.tally,293:scenario cheaper over replaces
+  tally 2
+  from 2026-01-01
+  note "a scenario whose replace rows are known before the base rows they replace"
+
+version cheaper_card
+  cite card
+  governs 2026-01-01..
+  known 2026-02-01
+  replace fee = 0.1 "a cheaper fee"
+  replace rate = 0.15 "a cheaper rate"
+,,1:0,29:u_base: 0.3
+  cut 2026-10-01
+,19:fixes/g1/u_scenario,8:fixes-g1,48:run replace.tally cheaper.tally --ask u_scenario,1307:13:replace.tally,970:model replaces
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's vectors for G1's unreplaced survivors (issue #108, invented): a replace row beats the rows at the same keys known before it in its own layer, never a row at other keys, and a scenario's beats its base's rows whatever their known dates (L §4.6 steps 2-3, §6.4)"
+
+source card "T's card (invented)"
+
+index ks = [a, b]
+
+input cap[k in ks]: num
+
+input fee: num
+
+input rate: num
+
+ask u_later: rate
+
+ask u_wide: cap[a], cap[b]
+
+ask u_base: fee
+
+ask u_scenario: rate in cheaper law cut
+
+ask u_scenario_fee: fee in cheaper law cut
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  cap[a] = 1 "the card"
+  cap[*] = 2 "the card"
+  rate = 0.1 "the card"
+
+version card_2026_06
+  cite card
+  governs always
+  known 2026-06-01
+  replace cap[*] = 3 "a later card replaces the wide row only"
+  fee = 0.3 "the card of June"
+  replace rate = 0.2 "a later card replaces the rate"
+,13:cheaper.tally,293:scenario cheaper over replaces
+  tally 2
+  from 2026-01-01
+  note "a scenario whose replace rows are known before the base rows they replace"
+
+version cheaper_card
+  cite card
+  governs 2026-01-01..
+  known 2026-02-01
+  replace fee = 0.1 "a cheaper fee"
+  replace rate = 0.15 "a cheaper rate"
+,,1:0,72:u_scenario: 0.15
+  world: cheaper
+  law date 2026-10-01, cut 2026-10-01
+,23:fixes/g1/u_scenario_fee,8:fixes-g1,52:run replace.tally cheaper.tally --ask u_scenario_fee,1307:13:replace.tally,970:model replaces
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's vectors for G1's unreplaced survivors (issue #108, invented): a replace row beats the rows at the same keys known before it in its own layer, never a row at other keys, and a scenario's beats its base's rows whatever their known dates (L §4.6 steps 2-3, §6.4)"
+
+source card "T's card (invented)"
+
+index ks = [a, b]
+
+input cap[k in ks]: num
+
+input fee: num
+
+input rate: num
+
+ask u_later: rate
+
+ask u_wide: cap[a], cap[b]
+
+ask u_base: fee
+
+ask u_scenario: rate in cheaper law cut
+
+ask u_scenario_fee: fee in cheaper law cut
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  cap[a] = 1 "the card"
+  cap[*] = 2 "the card"
+  rate = 0.1 "the card"
+
+version card_2026_06
+  cite card
+  governs always
+  known 2026-06-01
+  replace cap[*] = 3 "a later card replaces the wide row only"
+  fee = 0.3 "the card of June"
+  replace rate = 0.2 "a later card replaces the rate"
+,13:cheaper.tally,293:scenario cheaper over replaces
+  tally 2
+  from 2026-01-01
+  note "a scenario whose replace rows are known before the base rows they replace"
+
+version cheaper_card
+  cite card
+  governs 2026-01-01..
+  known 2026-02-01
+  replace fee = 0.1 "a cheaper fee"
+  replace rate = 0.15 "a cheaper rate"
+,,1:0,75:u_scenario_fee: 0.1
+  world: cheaper
+  law date 2026-10-01, cut 2026-10-01
+,16:fixes/g1/u_nolaw,8:fixes-g1,57:run replace.tally cheaper.tally nolaw.tally --ask u_nolaw,1376:13:replace.tally,970:model replaces
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's vectors for G1's unreplaced survivors (issue #108, invented): a replace row beats the rows at the same keys known before it in its own layer, never a row at other keys, and a scenario's beats its base's rows whatever their known dates (L §4.6 steps 2-3, §6.4)"
+
+source card "T's card (invented)"
+
+index ks = [a, b]
+
+input cap[k in ks]: num
+
+input fee: num
+
+input rate: num
+
+ask u_later: rate
+
+ask u_wide: cap[a], cap[b]
+
+ask u_base: fee
+
+ask u_scenario: rate in cheaper law cut
+
+ask u_scenario_fee: fee in cheaper law cut
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  cap[a] = 1 "the card"
+  cap[*] = 2 "the card"
+  rate = 0.1 "the card"
+
+version card_2026_06
+  cite card
+  governs always
+  known 2026-06-01
+  replace cap[*] = 3 "a later card replaces the wide row only"
+  fee = 0.3 "the card of June"
+  replace rate = 0.2 "a later card replaces the rate"
+,13:cheaper.tally,293:scenario cheaper over replaces
+  tally 2
+  from 2026-01-01
+  note "a scenario whose replace rows are known before the base rows they replace"
+
+version cheaper_card
+  cite card
+  governs 2026-01-01..
+  known 2026-02-01
+  replace fee = 0.1 "a cheaper fee"
+  replace rate = 0.15 "a cheaper rate"
+,11:nolaw.tally,50:part nolaw
+  tally 2
+
+ask u_nolaw: fee in cheaper
+,,1:0,211:scenario cheaper: refused: LOAD-LAWDATE ask u_nolaw reads law-dated fee directly, without law (nolaw.tally:4)
+u_nolaw: refused: LOAD-LAWDATE ask u_nolaw reads law-dated fee directly, without law (nolaw.tally:4)
+,15:fixes/g1/u_same,8:fixes-g1,27:run same.tally --ask u_same,603:10:same.tally,584:model same_day
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's vector for G1's unreplaced (issue #108, invented): two rows of one layer known on one day overlap, a replace among them or not, so the read never weighs two known dates that are equal"
+
+source card "T's card (invented)"
+
+input tip: num
+
+ask u_same: tip
+
+version tips_2026_06
+  cite card
+  governs always
+  known 2026-06-01
+  tip = 0.1 "the card of June"
+
+version tips_2026_06_b
+  cite card
+  governs always
+  known 2026-06-01
+  replace tip = 0.2 "a second card of the same day replaces the tip"
+,,1:1,130:refused: LOAD-OVERLAP rows same.tally:18 and same.tally:24 of tip overlap at no keys, neither replacing the other (same.tally:24)
+,14:fixes/g2/p1_a1,8:fixes-g2,21:run p1.tally --ask a1,1033:8:p1.tally,1016:model probes
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probes"
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+input w: date
+input wy: date
+input o: date
+input wd: date
+input cal: calendar
+input caly: calendar
+input two: int
+input three: int
+input n_months: int
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-06-01, 2026-06-05) "c"
+  wy = window(2026-12-30, 2027-01-02) "c"
+  o = one_of([2026-06-01, 2026-06-05]) "c"
+  wd = window(2026-06-01, 2026-06-01) "c"
+  cal = calendar(weekends [sat, sun]) "c"
+  caly = calendar(weekends [sat, sun], yearly [01-01] from 2027) "c"
+  two = 2 "c"
+  three = 3 "c"
+  n_months = 1 "c"
+
+ask a1: add_days(w, 1) == w
+ask a2: w + 1 day > w
+ask a3: w + 1 day == w
+ask a4: w == w, w < w, w <= w
+ask a5: end_of(year_of(wy))
+ask a6: year_of(wy)
+ask a7: o == 2026-06-03, o == 2026-06-01, o != 2026-06-07
+ask a8: wd == 2026-06-01
+ask a9: add_business(w, 1, cal)
+ask a10: end_of(w) > w
+ask a11: start_of(w) == w
+,,1:0,234:a1: true
+  cut 2026-10-01
+warning: WARN-UNREAD input caly is read by nothing
+warning: WARN-UNREAD input n_months is read by nothing
+warning: WARN-UNREAD input three is read by nothing
+warning: WARN-UNREAD input two is read by nothing
+,14:fixes/g2/p1_a2,8:fixes-g2,21:run p1.tally --ask a2,1033:8:p1.tally,1016:model probes
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probes"
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+input w: date
+input wy: date
+input o: date
+input wd: date
+input cal: calendar
+input caly: calendar
+input two: int
+input three: int
+input n_months: int
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-06-01, 2026-06-05) "c"
+  wy = window(2026-12-30, 2027-01-02) "c"
+  o = one_of([2026-06-01, 2026-06-05]) "c"
+  wd = window(2026-06-01, 2026-06-01) "c"
+  cal = calendar(weekends [sat, sun]) "c"
+  caly = calendar(weekends [sat, sun], yearly [01-01] from 2027) "c"
+  two = 2 "c"
+  three = 3 "c"
+  n_months = 1 "c"
+
+ask a1: add_days(w, 1) == w
+ask a2: w + 1 day > w
+ask a3: w + 1 day == w
+ask a4: w == w, w < w, w <= w
+ask a5: end_of(year_of(wy))
+ask a6: year_of(wy)
+ask a7: o == 2026-06-03, o == 2026-06-01, o != 2026-06-07
+ask a8: wd == 2026-06-01
+ask a9: add_business(w, 1, cal)
+ask a10: end_of(w) > w
+ask a11: start_of(w) == w
+,,1:0,235:a2: false
+  cut 2026-10-01
+warning: WARN-UNREAD input caly is read by nothing
+warning: WARN-UNREAD input n_months is read by nothing
+warning: WARN-UNREAD input three is read by nothing
+warning: WARN-UNREAD input two is read by nothing
+,14:fixes/g2/p1_a3,8:fixes-g2,21:run p1.tally --ask a3,1033:8:p1.tally,1016:model probes
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probes"
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+input w: date
+input wy: date
+input o: date
+input wd: date
+input cal: calendar
+input caly: calendar
+input two: int
+input three: int
+input n_months: int
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-06-01, 2026-06-05) "c"
+  wy = window(2026-12-30, 2027-01-02) "c"
+  o = one_of([2026-06-01, 2026-06-05]) "c"
+  wd = window(2026-06-01, 2026-06-01) "c"
+  cal = calendar(weekends [sat, sun]) "c"
+  caly = calendar(weekends [sat, sun], yearly [01-01] from 2027) "c"
+  two = 2 "c"
+  three = 3 "c"
+  n_months = 1 "c"
+
+ask a1: add_days(w, 1) == w
+ask a2: w + 1 day > w
+ask a3: w + 1 day == w
+ask a4: w == w, w < w, w <= w
+ask a5: end_of(year_of(wy))
+ask a6: year_of(wy)
+ask a7: o == 2026-06-03, o == 2026-06-01, o != 2026-06-07
+ask a8: wd == 2026-06-01
+ask a9: add_business(w, 1, cal)
+ask a10: end_of(w) > w
+ask a11: start_of(w) == w
+,,1:0,234:a3: true
+  cut 2026-10-01
+warning: WARN-UNREAD input caly is read by nothing
+warning: WARN-UNREAD input n_months is read by nothing
+warning: WARN-UNREAD input three is read by nothing
+warning: WARN-UNREAD input two is read by nothing
+,15:fixes/g2/p1_a10,8:fixes-g2,22:run p1.tally --ask a10,1033:8:p1.tally,1016:model probes
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probes"
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+input w: date
+input wy: date
+input o: date
+input wd: date
+input cal: calendar
+input caly: calendar
+input two: int
+input three: int
+input n_months: int
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-06-01, 2026-06-05) "c"
+  wy = window(2026-12-30, 2027-01-02) "c"
+  o = one_of([2026-06-01, 2026-06-05]) "c"
+  wd = window(2026-06-01, 2026-06-01) "c"
+  cal = calendar(weekends [sat, sun]) "c"
+  caly = calendar(weekends [sat, sun], yearly [01-01] from 2027) "c"
+  two = 2 "c"
+  three = 3 "c"
+  n_months = 1 "c"
+
+ask a1: add_days(w, 1) == w
+ask a2: w + 1 day > w
+ask a3: w + 1 day == w
+ask a4: w == w, w < w, w <= w
+ask a5: end_of(year_of(wy))
+ask a6: year_of(wy)
+ask a7: o == 2026-06-03, o == 2026-06-01, o != 2026-06-07
+ask a8: wd == 2026-06-01
+ask a9: add_business(w, 1, cal)
+ask a10: end_of(w) > w
+ask a11: start_of(w) == w
+,,1:0,236:a10: false
+  cut 2026-10-01
+warning: WARN-UNREAD input caly is read by nothing
+warning: WARN-UNREAD input n_months is read by nothing
+warning: WARN-UNREAD input three is read by nothing
+warning: WARN-UNREAD input two is read by nothing
+,14:fixes/g2/p3_e1,8:fixes-g2,21:run p3.tally --ask e1,1423:8:p3.tally,1406:model probes
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probes"
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+input w: date
+input windowed: calendar
+input two_w: calendar
+input oo: calendar
+input three: int
+input mthree: int
+input from_day: date
+
+def later: date = add_days(w, 1)
+def paid: date = add_business(from_day, three, windowed)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-06-01, 2026-06-05) "c"
+  windowed = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26)]) "c"
+  two_w = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26), one_of([2026-06-29, 2026-07-01])]) "c"
+  oo = calendar(weekends [sat, sun], added [one_of([2026-06-22, 2026-06-24])]) "c"
+  three = 3 "c"
+  mthree = -3 "c"
+  from_day = 2026-06-19 "c"
+
+ask e1: later == w, later > w
+ask e2: paid == paid, paid < 2026-07-01
+ask e3: add_business(2026-07-01, mthree, windowed), add_business(2026-06-29, -1, windowed)
+ask e4: is_business(2026-06-23, windowed), is_business(2026-06-29, windowed)
+ask e5: add_business(2026-06-19, three, two_w), add_business(2026-06-26, three, two_w)
+ask e6: last_business(2026-06, three, windowed), last_business(2026-06, 1, windowed)
+ask e7: is_business(2026-06-23, oo), add_business(2026-06-21, 1, oo), add_business(2026-06-22, 1, oo)
+ask e8: schedule(2026-06, three, following, windowed)
+,,1:0,35:e1: (true, false)
+  cut 2026-10-01
+,14:fixes/g2/p3_e2,8:fixes-g2,21:run p3.tally --ask e2,1423:8:p3.tally,1406:model probes
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probes"
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+input w: date
+input windowed: calendar
+input two_w: calendar
+input oo: calendar
+input three: int
+input mthree: int
+input from_day: date
+
+def later: date = add_days(w, 1)
+def paid: date = add_business(from_day, three, windowed)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-06-01, 2026-06-05) "c"
+  windowed = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26)]) "c"
+  two_w = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26), one_of([2026-06-29, 2026-07-01])]) "c"
+  oo = calendar(weekends [sat, sun], added [one_of([2026-06-22, 2026-06-24])]) "c"
+  three = 3 "c"
+  mthree = -3 "c"
+  from_day = 2026-06-19 "c"
+
+ask e1: later == w, later > w
+ask e2: paid == paid, paid < 2026-07-01
+ask e3: add_business(2026-07-01, mthree, windowed), add_business(2026-06-29, -1, windowed)
+ask e4: is_business(2026-06-23, windowed), is_business(2026-06-29, windowed)
+ask e5: add_business(2026-06-19, three, two_w), add_business(2026-06-26, three, two_w)
+ask e6: last_business(2026-06, three, windowed), last_business(2026-06, 1, windowed)
+ask e7: is_business(2026-06-23, oo), add_business(2026-06-21, 1, oo), add_business(2026-06-22, 1, oo)
+ask e8: schedule(2026-06, three, following, windowed)
+,,1:0,111:e2: (?"date within window(2026-06-24, 2026-06-25) not precise enough for paid == paid", true)
+  cut 2026-10-01
+,14:fixes/g2/q1_s1,8:fixes-g2,21:run q1.tally --ask s1,968:8:q1.tally,952:model probes
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probes"
+
+source card "invented"
+
+index ks = [a, b]
+
+input w: date
+input wk[k in ks]: date
+input zero: int
+input mone: int
+input two: int
+
+def same: date = w
+def same2: date = w
+def sk[k in ks]: date = wk[k]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-06-01, 2026-06-05) "c"
+  wk[a] = window(2026-06-01, 2026-06-05) "c"
+  wk[b] = window(2026-06-01, 2026-06-05) "c"
+  zero = 0 "c"
+  mone = -1 "c"
+  two = 2 "c"
+
+ask l1: last(w, 2026-07-01) == last(w, 2026-07-01)
+ask l2: last(w, 2026-07-01) < last(w, 2026-07-01)
+ask s1: same == w
+ask s2: same == same2
+ask s3: same == same
+ask s4: sk[a] == wk[a], sk[a] == sk[a], sk[a] == sk[b]
+ask s5: wk[k] == wk[a] for k in [a]
+ask s6: sk[k] == sk[a] for k in [a]
+ask b1: w + 1 day == w + 1 day
+ask p1: pow(zero, mone)
+ask p2: pow(zero, 0)
+ask p3: pow(zero, two)
+ask p4: pow(two, mone)
+,,1:0,26:s1: true
+  cut 2026-10-01
+,14:fixes/g2/q1_s2,8:fixes-g2,21:run q1.tally --ask s2,968:8:q1.tally,952:model probes
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probes"
+
+source card "invented"
+
+index ks = [a, b]
+
+input w: date
+input wk[k in ks]: date
+input zero: int
+input mone: int
+input two: int
+
+def same: date = w
+def same2: date = w
+def sk[k in ks]: date = wk[k]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-06-01, 2026-06-05) "c"
+  wk[a] = window(2026-06-01, 2026-06-05) "c"
+  wk[b] = window(2026-06-01, 2026-06-05) "c"
+  zero = 0 "c"
+  mone = -1 "c"
+  two = 2 "c"
+
+ask l1: last(w, 2026-07-01) == last(w, 2026-07-01)
+ask l2: last(w, 2026-07-01) < last(w, 2026-07-01)
+ask s1: same == w
+ask s2: same == same2
+ask s3: same == same
+ask s4: sk[a] == wk[a], sk[a] == sk[a], sk[a] == sk[b]
+ask s5: wk[k] == wk[a] for k in [a]
+ask s6: sk[k] == sk[a] for k in [a]
+ask b1: w + 1 day == w + 1 day
+ask p1: pow(zero, mone)
+ask p2: pow(zero, 0)
+ask p3: pow(zero, two)
+ask p4: pow(two, mone)
+,,1:0,26:s2: true
+  cut 2026-10-01
+,14:fixes/g2/q1_s4,8:fixes-g2,21:run q1.tally --ask s4,968:8:q1.tally,952:model probes
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probes"
+
+source card "invented"
+
+index ks = [a, b]
+
+input w: date
+input wk[k in ks]: date
+input zero: int
+input mone: int
+input two: int
+
+def same: date = w
+def same2: date = w
+def sk[k in ks]: date = wk[k]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-06-01, 2026-06-05) "c"
+  wk[a] = window(2026-06-01, 2026-06-05) "c"
+  wk[b] = window(2026-06-01, 2026-06-05) "c"
+  zero = 0 "c"
+  mone = -1 "c"
+  two = 2 "c"
+
+ask l1: last(w, 2026-07-01) == last(w, 2026-07-01)
+ask l2: last(w, 2026-07-01) < last(w, 2026-07-01)
+ask s1: same == w
+ask s2: same == same2
+ask s3: same == same
+ask s4: sk[a] == wk[a], sk[a] == sk[a], sk[a] == sk[b]
+ask s5: wk[k] == wk[a] for k in [a]
+ask s6: sk[k] == sk[a] for k in [a]
+ask b1: w + 1 day == w + 1 day
+ask p1: pow(zero, mone)
+ask p2: pow(zero, 0)
+ask p3: pow(zero, two)
+ask p4: pow(two, mone)
+,,1:0,127:s4: (true, true, ?"date within window(2026-06-01, 2026-06-05) not precise enough for sk[a] == sk[b]" (wk[a]))
+  cut 2026-10-01
+,14:fixes/g2/q1_b1,8:fixes-g2,21:run q1.tally --ask b1,968:8:q1.tally,952:model probes
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probes"
+
+source card "invented"
+
+index ks = [a, b]
+
+input w: date
+input wk[k in ks]: date
+input zero: int
+input mone: int
+input two: int
+
+def same: date = w
+def same2: date = w
+def sk[k in ks]: date = wk[k]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-06-01, 2026-06-05) "c"
+  wk[a] = window(2026-06-01, 2026-06-05) "c"
+  wk[b] = window(2026-06-01, 2026-06-05) "c"
+  zero = 0 "c"
+  mone = -1 "c"
+  two = 2 "c"
+
+ask l1: last(w, 2026-07-01) == last(w, 2026-07-01)
+ask l2: last(w, 2026-07-01) < last(w, 2026-07-01)
+ask s1: same == w
+ask s2: same == same2
+ask s3: same == same
+ask s4: sk[a] == wk[a], sk[a] == sk[a], sk[a] == sk[b]
+ask s5: wk[k] == wk[a] for k in [a]
+ask s6: sk[k] == sk[a] for k in [a]
+ask b1: w + 1 day == w + 1 day
+ask p1: pow(zero, mone)
+ask p2: pow(zero, 0)
+ask p3: pow(zero, two)
+ask p4: pow(two, mone)
+,,1:0,26:b1: true
+  cut 2026-10-01
+,14:fixes/g2/q1_p1,8:fixes-g2,21:run q1.tally --ask p1,968:8:q1.tally,952:model probes
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probes"
+
+source card "invented"
+
+index ks = [a, b]
+
+input w: date
+input wk[k in ks]: date
+input zero: int
+input mone: int
+input two: int
+
+def same: date = w
+def same2: date = w
+def sk[k in ks]: date = wk[k]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-06-01, 2026-06-05) "c"
+  wk[a] = window(2026-06-01, 2026-06-05) "c"
+  wk[b] = window(2026-06-01, 2026-06-05) "c"
+  zero = 0 "c"
+  mone = -1 "c"
+  two = 2 "c"
+
+ask l1: last(w, 2026-07-01) == last(w, 2026-07-01)
+ask l2: last(w, 2026-07-01) < last(w, 2026-07-01)
+ask s1: same == w
+ask s2: same == same2
+ask s3: same == same
+ask s4: sk[a] == wk[a], sk[a] == sk[a], sk[a] == sk[b]
+ask s5: wk[k] == wk[a] for k in [a]
+ask s6: sk[k] == sk[a] for k in [a]
+ask b1: w + 1 day == w + 1 day
+ask p1: pow(zero, mone)
+ask p2: pow(zero, 0)
+ask p3: pow(zero, two)
+ask p4: pow(two, mone)
+,,1:0,67:p1: refused: RUN-DIV division by zero: pow(0, -1)
+  cut 2026-10-01
+,14:fixes/g2/q1_p2,8:fixes-g2,21:run q1.tally --ask p2,968:8:q1.tally,952:model probes
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probes"
+
+source card "invented"
+
+index ks = [a, b]
+
+input w: date
+input wk[k in ks]: date
+input zero: int
+input mone: int
+input two: int
+
+def same: date = w
+def same2: date = w
+def sk[k in ks]: date = wk[k]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-06-01, 2026-06-05) "c"
+  wk[a] = window(2026-06-01, 2026-06-05) "c"
+  wk[b] = window(2026-06-01, 2026-06-05) "c"
+  zero = 0 "c"
+  mone = -1 "c"
+  two = 2 "c"
+
+ask l1: last(w, 2026-07-01) == last(w, 2026-07-01)
+ask l2: last(w, 2026-07-01) < last(w, 2026-07-01)
+ask s1: same == w
+ask s2: same == same2
+ask s3: same == same
+ask s4: sk[a] == wk[a], sk[a] == sk[a], sk[a] == sk[b]
+ask s5: wk[k] == wk[a] for k in [a]
+ask s6: sk[k] == sk[a] for k in [a]
+ask b1: w + 1 day == w + 1 day
+ask p1: pow(zero, mone)
+ask p2: pow(zero, 0)
+ask p3: pow(zero, two)
+ask p4: pow(two, mone)
+,,1:0,23:p2: 1
+  cut 2026-10-01
+,14:fixes/g2/q1_p3,8:fixes-g2,21:run q1.tally --ask p3,968:8:q1.tally,952:model probes
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probes"
+
+source card "invented"
+
+index ks = [a, b]
+
+input w: date
+input wk[k in ks]: date
+input zero: int
+input mone: int
+input two: int
+
+def same: date = w
+def same2: date = w
+def sk[k in ks]: date = wk[k]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-06-01, 2026-06-05) "c"
+  wk[a] = window(2026-06-01, 2026-06-05) "c"
+  wk[b] = window(2026-06-01, 2026-06-05) "c"
+  zero = 0 "c"
+  mone = -1 "c"
+  two = 2 "c"
+
+ask l1: last(w, 2026-07-01) == last(w, 2026-07-01)
+ask l2: last(w, 2026-07-01) < last(w, 2026-07-01)
+ask s1: same == w
+ask s2: same == same2
+ask s3: same == same
+ask s4: sk[a] == wk[a], sk[a] == sk[a], sk[a] == sk[b]
+ask s5: wk[k] == wk[a] for k in [a]
+ask s6: sk[k] == sk[a] for k in [a]
+ask b1: w + 1 day == w + 1 day
+ask p1: pow(zero, mone)
+ask p2: pow(zero, 0)
+ask p3: pow(zero, two)
+ask p4: pow(two, mone)
+,,1:0,23:p3: 0
+  cut 2026-10-01
+,14:fixes/g2/q1_p4,8:fixes-g2,21:run q1.tally --ask p4,968:8:q1.tally,952:model probes
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probes"
+
+source card "invented"
+
+index ks = [a, b]
+
+input w: date
+input wk[k in ks]: date
+input zero: int
+input mone: int
+input two: int
+
+def same: date = w
+def same2: date = w
+def sk[k in ks]: date = wk[k]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-06-01, 2026-06-05) "c"
+  wk[a] = window(2026-06-01, 2026-06-05) "c"
+  wk[b] = window(2026-06-01, 2026-06-05) "c"
+  zero = 0 "c"
+  mone = -1 "c"
+  two = 2 "c"
+
+ask l1: last(w, 2026-07-01) == last(w, 2026-07-01)
+ask l2: last(w, 2026-07-01) < last(w, 2026-07-01)
+ask s1: same == w
+ask s2: same == same2
+ask s3: same == same
+ask s4: sk[a] == wk[a], sk[a] == sk[a], sk[a] == sk[b]
+ask s5: wk[k] == wk[a] for k in [a]
+ask s6: sk[k] == sk[a] for k in [a]
+ask b1: w + 1 day == w + 1 day
+ask p1: pow(zero, mone)
+ask p2: pow(zero, 0)
+ask p3: pow(zero, two)
+ask p4: pow(two, mone)
+,,1:0,25:p4: 0.5
+  cut 2026-10-01
+,14:fixes/g2/q2_l1,8:fixes-g2,21:run q2.tally --ask l1,457:8:q2.tally,441:model probes
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probes"
+
+source card "invented"
+
+input wr: date
+
+version spring
+  cite card
+  governs 2026-01-01..2026-03-31
+  known 2026-01-01
+  wr = window(2026-06-01, 2026-06-05) "c"
+
+ask l1: last(wr, 2026-07-01) == last(wr, 2026-07-01)
+ask l2: last(wr, 2026-07-01) < last(wr, 2026-07-01), last(wr, 2026-07-01) <= last(wr, 2026-07-01)
+ask l3: last(wr, 2026-07-01)
+,,1:0,100:l1: true
+  held: wr = window(2026-06-01, 2026-06-05) (spring), read for 2026-07-01
+  cut 2026-10-01
+,14:fixes/g2/q2_l2,8:fixes-g2,21:run q2.tally --ask l2,457:8:q2.tally,441:model probes
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probes"
+
+source card "invented"
+
+input wr: date
+
+version spring
+  cite card
+  governs 2026-01-01..2026-03-31
+  known 2026-01-01
+  wr = window(2026-06-01, 2026-06-05) "c"
+
+ask l1: last(wr, 2026-07-01) == last(wr, 2026-07-01)
+ask l2: last(wr, 2026-07-01) < last(wr, 2026-07-01), last(wr, 2026-07-01) <= last(wr, 2026-07-01)
+ask l3: last(wr, 2026-07-01)
+,,1:0,109:l2: (false, true)
+  held: wr = window(2026-06-01, 2026-06-05) (spring), read for 2026-07-01
+  cut 2026-10-01
+,14:fixes/g2/p4_f1,8:fixes-g2,21:run p4.tally --ask f1,521:8:p4.tally,505:model probes
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probes"
+
+source card "invented"
+
+input wl: date
+input endcal: calendar
+input last_day: date
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  wl = window(9999-12-29, 9999-12-31) "c"
+  endcal = calendar(weekends [sat, sun], added [window(9999-12-29, 9999-12-31)]) "c"
+  last_day = 9999-12-31 "c"
+
+ask f1: weekday(wl)
+ask f2: is_business(last_day, endcal)
+ask f3: last_business(9999-12, 1, endcal)
+,,1:0,98:f1: ?"date within window(9999-12-29, 9999-12-31) not precise enough for a print"
+  cut 2026-10-01
+,14:fixes/g2/p4_f2,8:fixes-g2,21:run p4.tally --ask f2,521:8:p4.tally,505:model probes
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probes"
+
+source card "invented"
+
+input wl: date
+input endcal: calendar
+input last_day: date
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  wl = window(9999-12-29, 9999-12-31) "c"
+  endcal = calendar(weekends [sat, sun], added [window(9999-12-29, 9999-12-31)]) "c"
+  last_day = 9999-12-31 "c"
+
+ask f1: weekday(wl)
+ask f2: is_business(last_day, endcal)
+ask f3: last_business(9999-12, 1, endcal)
+,,1:0,129:f2: ?"date within window(9999-12-29, 9999-12-31) not precise enough for is_business(last_day, endcal)" (endcal)
+  cut 2026-10-01
+,14:fixes/g2/p4_f3,8:fixes-g2,21:run p4.tally --ask f3,521:8:p4.tally,505:model probes
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probes"
+
+source card "invented"
+
+input wl: date
+input endcal: calendar
+input last_day: date
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  wl = window(9999-12-29, 9999-12-31) "c"
+  endcal = calendar(weekends [sat, sun], added [window(9999-12-29, 9999-12-31)]) "c"
+  last_day = 9999-12-31 "c"
+
+ask f1: weekday(wl)
+ask f2: is_business(last_day, endcal)
+ask f3: last_business(9999-12, 1, endcal)
+,,1:0,52:f3: window(9999-12-30, 9999-12-31)
+  cut 2026-10-01
+,15:fixes/g2/pow_m1,8:fixes-g2,22:run pow.tally --ask m1,690:9:pow.tally,673:model pows
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's vectors for num/rational.rs's pow mutants (G2 review note 9, issue #108, invented): a fraction to a negative power, and ten to powers under and over the 4 096-digit cap (q1.tally holds zero's powers)"
+
+source card "T's card (invented)"
+
+input big_a: int
+
+input big_b: int
+
+input half3: num
+
+input mtwo: int
+
+input ten: int
+
+ask m1: pow(half3, mtwo)
+
+ask m4: pow(ten, big_a)
+
+ask m5: pow(ten, big_b)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  big_a = 3000 "the card"
+  big_b = 5000 "the card"
+  half3 = 1.5 "the card"
+  mtwo = -2 "the card"
+  ten = 10 "the card"
+,,1:0,45:m1: 4/9 (0.444444444444444)
+  cut 2026-10-01
+,15:fixes/g2/pow_m4,8:fixes-g2,22:run pow.tally --ask m4,690:9:pow.tally,673:model pows
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's vectors for num/rational.rs's pow mutants (G2 review note 9, issue #108, invented): a fraction to a negative power, and ten to powers under and over the 4 096-digit cap (q1.tally holds zero's powers)"
+
+source card "T's card (invented)"
+
+input big_a: int
+
+input big_b: int
+
+input half3: num
+
+input mtwo: int
+
+input ten: int
+
+ask m1: pow(half3, mtwo)
+
+ask m4: pow(ten, big_a)
+
+ask m5: pow(ten, big_b)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  big_a = 3000 "the card"
+  big_b = 5000 "the card"
+  half3 = 1.5 "the card"
+  mtwo = -2 "the card"
+  ten = 10 "the card"
+,,1:0,4023:m4: 1 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000
+  cut 2026-10-01
+,15:fixes/g2/pow_m5,8:fixes-g2,22:run pow.tally --ask m5,690:9:pow.tally,673:model pows
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's vectors for num/rational.rs's pow mutants (G2 review note 9, issue #108, invented): a fraction to a negative power, and ten to powers under and over the 4 096-digit cap (q1.tally holds zero's powers)"
+
+source card "T's card (invented)"
+
+input big_a: int
+
+input big_b: int
+
+input half3: num
+
+input mtwo: int
+
+input ten: int
+
+ask m1: pow(half3, mtwo)
+
+ask m4: pow(ten, big_a)
+
+ask m5: pow(ten, big_b)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  big_a = 3000 "the card"
+  big_b = 5000 "the card"
+  half3 = 1.5 "the card"
+  mtwo = -2 "the card"
+  ten = 10 "the card"
+,,1:0,103:m5: refused: RUN-DIGITS pow(10, 5000) passes 4 096 digits; round where the law rounds
+  cut 2026-10-01
+,17:fixes/g3/p8_n21_a,8:fixes-g3,24:run p8_n21.tally --ask a,1961:12:p8_n21.tally,1939:model p8
+  tally 2
+  on 2025-04-01
+  start 2025-03-01
+  end 2025-03-31
+
+source card "invented"
+
+unit DUK: currency minor 0.01
+
+place p0: accounts DUK lives 2025-03-01..
+
+place p1: accounts DUK lives 2025-03-01..
+
+place p2: accounts DUK lives 2025-03-01..
+
+place p3: accounts DUK lives 2025-03-01..
+
+place p4: accounts DUK lives 2025-03-01..
+
+place p5: accounts DUK lives 2025-03-01..
+
+place p6: accounts DUK lives 2025-03-01..
+
+place p7: accounts DUK lives 2025-03-01..
+
+place p8: accounts DUK lives 2025-03-01..
+
+place p9: accounts DUK lives 2025-03-01..
+
+place p10: accounts DUK lives 2025-03-01..
+
+place p11: accounts DUK lives 2025-03-01..
+
+place p12: accounts DUK lives 2025-03-01..
+
+place p13: accounts DUK lives 2025-03-01..
+
+place p14: accounts DUK lives 2025-03-01..
+
+place p15: accounts DUK lives 2025-03-01..
+
+place p16: accounts DUK lives 2025-03-01..
+
+place p17: accounts DUK lives 2025-03-01..
+
+place p18: accounts DUK lives 2025-03-01..
+
+place p19: accounts DUK lives 2025-03-01..
+
+place p20: accounts DUK lives 2025-03-01..
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+input w[p in accounts]: date
+
+input day: date
+
+def f: key accounts = first(p in accounts on day) ties by w[p]
+
+ask a: f
+
+version v1
+  cite card
+  governs always
+  known 2025-03-01
+  day = 2025-03-15 "c"
+  w[p0] = window(2025-01-01, 2025-01-10) "c"
+  w[p1] = 2025-02-12 "c"
+  w[p2] = 2025-02-23 "c"
+  w[p3] = window(2025-01-04, 2025-01-18) "c"
+  w[p4] = 2025-02-18 "c"
+  w[p5] = 2025-02-02 "c"
+  w[p6] = window(2025-01-02, 2025-01-13) "c"
+  w[p7] = 2025-02-24 "c"
+  w[p8] = 2025-02-08 "c"
+  w[p9] = window(2025-01-05, 2025-01-21) "c"
+  w[p10] = 2025-02-03 "c"
+  w[p11] = 2025-02-14 "c"
+  w[p12] = window(2025-01-03, 2025-01-16) "c"
+  w[p13] = 2025-02-09 "c"
+  w[p14] = 2025-02-20 "c"
+  w[p15] = window(2025-01-01, 2025-01-11) "c"
+  w[p16] = 2025-02-15 "c"
+  w[p17] = 2025-02-26 "c"
+  w[p18] = window(2025-01-04, 2025-01-19) "c"
+  w[p19] = 2025-02-21 "c"
+  w[p20] = 2025-02-05 "c"
+,,1:1,74:refused: LOAD-UNIT 2025-02-12 and window(2025-01-01, 2025-01-10) compared
+,26:fixes/g3/p6_sort_windows_a,8:fixes-g3,33:run p6_sort_windows.tally --ask a,2358:21:p6_sort_windows.tally,2327:model p6
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+index ks = [k0, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15, k16, k17, k18, k19, k20, k21, k22, k23, k24, k25, k26, k27, k28, k29]
+
+input v[k in ks]: int
+
+input w[k in ks]: date
+
+ask a: argmin(v[k] for k in ks) ties by w[k]
+
+ask b: first(k in ks where v[k] == v[k0]) ties by w[k]
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  v[k0] = 1 "c"
+  w[k0] = window(2026-01-01, 2026-01-10) "c"
+  v[k1] = 1 "c"
+  w[k1] = window(2026-01-02, 2026-01-11) "c"
+  v[k2] = 1 "c"
+  w[k2] = window(2026-01-03, 2026-01-12) "c"
+  v[k3] = 1 "c"
+  w[k3] = window(2026-01-04, 2026-01-13) "c"
+  v[k4] = 1 "c"
+  w[k4] = window(2026-01-05, 2026-01-14) "c"
+  v[k5] = 1 "c"
+  w[k5] = window(2026-01-01, 2026-01-15) "c"
+  v[k6] = 1 "c"
+  w[k6] = window(2026-01-02, 2026-01-16) "c"
+  v[k7] = 1 "c"
+  w[k7] = window(2026-01-03, 2026-01-10) "c"
+  v[k8] = 1 "c"
+  w[k8] = window(2026-01-04, 2026-01-11) "c"
+  v[k9] = 1 "c"
+  w[k9] = window(2026-01-05, 2026-01-12) "c"
+  v[k10] = 1 "c"
+  w[k10] = window(2026-01-01, 2026-01-13) "c"
+  v[k11] = 1 "c"
+  w[k11] = window(2026-01-02, 2026-01-14) "c"
+  v[k12] = 1 "c"
+  w[k12] = window(2026-01-03, 2026-01-15) "c"
+  v[k13] = 1 "c"
+  w[k13] = window(2026-01-04, 2026-01-16) "c"
+  v[k14] = 1 "c"
+  w[k14] = window(2026-01-05, 2026-01-10) "c"
+  v[k15] = 1 "c"
+  w[k15] = window(2026-01-01, 2026-01-11) "c"
+  v[k16] = 1 "c"
+  w[k16] = window(2026-01-02, 2026-01-12) "c"
+  v[k17] = 1 "c"
+  w[k17] = window(2026-01-03, 2026-01-13) "c"
+  v[k18] = 1 "c"
+  w[k18] = window(2026-01-04, 2026-01-14) "c"
+  v[k19] = 1 "c"
+  w[k19] = window(2026-01-05, 2026-01-15) "c"
+  v[k20] = 1 "c"
+  w[k20] = window(2026-01-01, 2026-01-16) "c"
+  v[k21] = 1 "c"
+  w[k21] = window(2026-01-02, 2026-01-10) "c"
+  v[k22] = 1 "c"
+  w[k22] = window(2026-01-03, 2026-01-11) "c"
+  v[k23] = 1 "c"
+  w[k23] = window(2026-01-04, 2026-01-12) "c"
+  v[k24] = 1 "c"
+  w[k24] = window(2026-01-05, 2026-01-13) "c"
+  v[k25] = 1 "c"
+  w[k25] = window(2026-01-01, 2026-01-14) "c"
+  v[k26] = 1 "c"
+  w[k26] = window(2026-01-02, 2026-01-15) "c"
+  v[k27] = 1 "c"
+  w[k27] = window(2026-01-03, 2026-01-16) "c"
+  v[k28] = 1 "c"
+  w[k28] = window(2026-01-04, 2026-01-10) "c"
+  v[k29] = 1 "c"
+  w[k29] = window(2026-01-05, 2026-01-11) "c"
+,,1:1,94:refused: LOAD-UNIT window(2026-01-02, 2026-01-11) and window(2026-01-01, 2026-01-10) compared
+,26:fixes/g3/p6_sort_windows_b,8:fixes-g3,33:run p6_sort_windows.tally --ask b,2358:21:p6_sort_windows.tally,2327:model p6
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+index ks = [k0, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15, k16, k17, k18, k19, k20, k21, k22, k23, k24, k25, k26, k27, k28, k29]
+
+input v[k in ks]: int
+
+input w[k in ks]: date
+
+ask a: argmin(v[k] for k in ks) ties by w[k]
+
+ask b: first(k in ks where v[k] == v[k0]) ties by w[k]
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  v[k0] = 1 "c"
+  w[k0] = window(2026-01-01, 2026-01-10) "c"
+  v[k1] = 1 "c"
+  w[k1] = window(2026-01-02, 2026-01-11) "c"
+  v[k2] = 1 "c"
+  w[k2] = window(2026-01-03, 2026-01-12) "c"
+  v[k3] = 1 "c"
+  w[k3] = window(2026-01-04, 2026-01-13) "c"
+  v[k4] = 1 "c"
+  w[k4] = window(2026-01-05, 2026-01-14) "c"
+  v[k5] = 1 "c"
+  w[k5] = window(2026-01-01, 2026-01-15) "c"
+  v[k6] = 1 "c"
+  w[k6] = window(2026-01-02, 2026-01-16) "c"
+  v[k7] = 1 "c"
+  w[k7] = window(2026-01-03, 2026-01-10) "c"
+  v[k8] = 1 "c"
+  w[k8] = window(2026-01-04, 2026-01-11) "c"
+  v[k9] = 1 "c"
+  w[k9] = window(2026-01-05, 2026-01-12) "c"
+  v[k10] = 1 "c"
+  w[k10] = window(2026-01-01, 2026-01-13) "c"
+  v[k11] = 1 "c"
+  w[k11] = window(2026-01-02, 2026-01-14) "c"
+  v[k12] = 1 "c"
+  w[k12] = window(2026-01-03, 2026-01-15) "c"
+  v[k13] = 1 "c"
+  w[k13] = window(2026-01-04, 2026-01-16) "c"
+  v[k14] = 1 "c"
+  w[k14] = window(2026-01-05, 2026-01-10) "c"
+  v[k15] = 1 "c"
+  w[k15] = window(2026-01-01, 2026-01-11) "c"
+  v[k16] = 1 "c"
+  w[k16] = window(2026-01-02, 2026-01-12) "c"
+  v[k17] = 1 "c"
+  w[k17] = window(2026-01-03, 2026-01-13) "c"
+  v[k18] = 1 "c"
+  w[k18] = window(2026-01-04, 2026-01-14) "c"
+  v[k19] = 1 "c"
+  w[k19] = window(2026-01-05, 2026-01-15) "c"
+  v[k20] = 1 "c"
+  w[k20] = window(2026-01-01, 2026-01-16) "c"
+  v[k21] = 1 "c"
+  w[k21] = window(2026-01-02, 2026-01-10) "c"
+  v[k22] = 1 "c"
+  w[k22] = window(2026-01-03, 2026-01-11) "c"
+  v[k23] = 1 "c"
+  w[k23] = window(2026-01-04, 2026-01-12) "c"
+  v[k24] = 1 "c"
+  w[k24] = window(2026-01-05, 2026-01-13) "c"
+  v[k25] = 1 "c"
+  w[k25] = window(2026-01-01, 2026-01-14) "c"
+  v[k26] = 1 "c"
+  w[k26] = window(2026-01-02, 2026-01-15) "c"
+  v[k27] = 1 "c"
+  w[k27] = window(2026-01-03, 2026-01-16) "c"
+  v[k28] = 1 "c"
+  w[k28] = window(2026-01-04, 2026-01-10) "c"
+  v[k29] = 1 "c"
+  w[k29] = window(2026-01-05, 2026-01-11) "c"
+,,1:0,23:b: k0
+  cut 2026-03-01
+,28:fixes/g3/p7_things_windows_a,8:fixes-g3,35:run p7_things_windows.tally --ask a,3043:23:p7_things_windows.tally,3010:model p7
+  tally 2
+  on 2025-04-01
+  start 2025-03-01
+  end 2025-03-31
+
+source card "invented"
+
+unit DUK: currency minor 0.01
+
+place p0: accounts DUK lives 2025-03-01..
+
+place p1: accounts DUK lives 2025-03-01..
+
+place p2: accounts DUK lives 2025-03-01..
+
+place p3: accounts DUK lives 2025-03-01..
+
+place p4: accounts DUK lives 2025-03-01..
+
+place p5: accounts DUK lives 2025-03-01..
+
+place p6: accounts DUK lives 2025-03-01..
+
+place p7: accounts DUK lives 2025-03-01..
+
+place p8: accounts DUK lives 2025-03-01..
+
+place p9: accounts DUK lives 2025-03-01..
+
+place p10: accounts DUK lives 2025-03-01..
+
+place p11: accounts DUK lives 2025-03-01..
+
+place p12: accounts DUK lives 2025-03-01..
+
+place p13: accounts DUK lives 2025-03-01..
+
+place p14: accounts DUK lives 2025-03-01..
+
+place p15: accounts DUK lives 2025-03-01..
+
+place p16: accounts DUK lives 2025-03-01..
+
+place p17: accounts DUK lives 2025-03-01..
+
+place p18: accounts DUK lives 2025-03-01..
+
+place p19: accounts DUK lives 2025-03-01..
+
+place p20: accounts DUK lives 2025-03-01..
+
+place p21: accounts DUK lives 2025-03-01..
+
+place p22: accounts DUK lives 2025-03-01..
+
+place p23: accounts DUK lives 2025-03-01..
+
+place p24: accounts DUK lives 2025-03-01..
+
+place p25: accounts DUK lives 2025-03-01..
+
+place p26: accounts DUK lives 2025-03-01..
+
+place p27: accounts DUK lives 2025-03-01..
+
+place p28: accounts DUK lives 2025-03-01..
+
+place p29: accounts DUK lives 2025-03-01..
+
+input w[p in accounts]: date
+
+input day: date
+
+def f: key accounts = first(p in accounts on day) ties by w[p]
+
+ask a: f
+
+version v1
+  cite card
+  governs always
+  known 2025-03-01
+  day = 2025-03-15 "c"
+  w[p0] = window(2025-01-01, 2025-01-10) "c"
+  w[p1] = window(2025-01-02, 2025-01-17) "c"
+  w[p2] = window(2025-01-03, 2025-01-11) "c"
+  w[p3] = window(2025-01-04, 2025-01-18) "c"
+  w[p4] = window(2025-01-05, 2025-01-12) "c"
+  w[p5] = window(2025-01-01, 2025-01-19) "c"
+  w[p6] = window(2025-01-02, 2025-01-13) "c"
+  w[p7] = window(2025-01-03, 2025-01-20) "c"
+  w[p8] = window(2025-01-04, 2025-01-14) "c"
+  w[p9] = window(2025-01-05, 2025-01-21) "c"
+  w[p10] = window(2025-01-01, 2025-01-15) "c"
+  w[p11] = window(2025-01-02, 2025-01-22) "c"
+  w[p12] = window(2025-01-03, 2025-01-16) "c"
+  w[p13] = window(2025-01-04, 2025-01-10) "c"
+  w[p14] = window(2025-01-05, 2025-01-17) "c"
+  w[p15] = window(2025-01-01, 2025-01-11) "c"
+  w[p16] = window(2025-01-02, 2025-01-18) "c"
+  w[p17] = window(2025-01-03, 2025-01-12) "c"
+  w[p18] = window(2025-01-04, 2025-01-19) "c"
+  w[p19] = window(2025-01-05, 2025-01-13) "c"
+  w[p20] = window(2025-01-01, 2025-01-20) "c"
+  w[p21] = window(2025-01-02, 2025-01-14) "c"
+  w[p22] = window(2025-01-03, 2025-01-21) "c"
+  w[p23] = window(2025-01-04, 2025-01-15) "c"
+  w[p24] = window(2025-01-05, 2025-01-22) "c"
+  w[p25] = window(2025-01-01, 2025-01-16) "c"
+  w[p26] = window(2025-01-02, 2025-01-10) "c"
+  w[p27] = window(2025-01-03, 2025-01-17) "c"
+  w[p28] = window(2025-01-04, 2025-01-11) "c"
+  w[p29] = window(2025-01-05, 2025-01-18) "c"
+,,1:1,94:refused: LOAD-UNIT window(2025-01-02, 2025-01-17) and window(2025-01-01, 2025-01-10) compared
+,22:fixes/g3/p2b_ties_e1_a,8:fixes-g3,29:run p2b_ties_e1.tally --ask a,476:17:p2b_ties_e1.tally,450:model p2b
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+index qs = [q1, q2]
+
+input cost[k in qs]: int
+
+input rank[k in qs]: int
+
+input sub[k in qs]: int
+
+def pick: key qs = argmin(cost[o] for o in qs) ties by (rank[o], sub[o])
+
+ask a: pick
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  cost[q1] = 5 "card"
+  cost[q2] = 5 "card"
+  rank[q1] = 2 "card"
+  rank[q2] = 1 "card"
+  sub[q2] = 7 "card"
+,,1:0,23:a: q1
+  cut 2026-03-01
+,14:fixes/g3/b3_t1,8:fixes-g3,21:run b3.tally --ask t1,1762:8:b3.tally,1745:model fx
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+index ks = 1..4
+
+kind persons
+
+input base: int
+
+input lim: int
+
+input h[k in ks]: int
+
+input w[k in ks]: int
+
+input born[p in persons]: date
+
+input rank[p in persons]: int
+
+input sub[p in persons]: int
+
+input gate[p in persons]: int
+
+ask l1: last(k in ks where k == 4 or base / (k - 3) > 0)
+
+ask l2: first(k in ks where h[k] > 0)
+
+ask l3: first(k in ks where w[k] > 0)
+
+ask l4: last(k in ks where h[k] > 0)
+
+ask l5: first(k in ks where w[k] > lim)
+
+ask l6: first(k in ks where h[k] > lim)
+
+ask l7: count(k in ks where h[k] > 0)
+
+ask t1: first(p in persons on 2026-02-01 where p == bob or base / gate[p] > 0) ties by born[p]
+
+ask t2: last(p in persons on 2026-02-01 where p == ana or base / gate[p] > 0) ties by born[p]
+
+ask t3: first(p in persons on 2026-02-01) ties by (rank[p], sub[p])
+
+ask t4: last(p in persons on 2026-02-01) ties by (rank[p], sub[p])
+
+ask t5: first(p in persons on 2026-02-01 where rank[p] > 1) ties by (rank[p], sub[p])
+
+ask t6: argmax(rank[p] for p in persons on 2026-02-01) ties by (born[p], sub[p])
+
+ask t7: first(p in persons on 2026-02-01 where h[1] > 0) ties by born[p]
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ana] lives 2026-01-01..
+  persons + [bob] lives 2026-01-01..
+  persons + [cid] lives 2026-01-01..
+  base = 6 "c"
+  lim = 9 "c"
+  h[2] = 1 "c"
+  h[3] = 1 "c"
+  h[4] = 1 "c"
+  w[1] = 1 "c"
+  w[2] = 1 "c"
+  w[3] = 1 "c"
+  w[4] = 1 "c"
+  born[ana] = 2000-01-01 "x"
+  born[bob] = 1990-01-01 "x"
+  born[cid] = 1995-01-01 "x"
+  rank[ana] = 1 "x"
+  rank[bob] = 2 "x"
+  rank[cid] = 2 "x"
+  sub[bob] = 5 "x"
+  sub[cid] = 4 "x"
+  gate[ana] = 0 "x"
+  gate[bob] = 0 "x"
+  gate[cid] = 0 "x"
+,,1:0,55:t1: refused: RUN-DIV division by zero
+  cut 2026-03-01
+,14:fixes/g3/b3_t2,8:fixes-g3,21:run b3.tally --ask t2,1762:8:b3.tally,1745:model fx
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+index ks = 1..4
+
+kind persons
+
+input base: int
+
+input lim: int
+
+input h[k in ks]: int
+
+input w[k in ks]: int
+
+input born[p in persons]: date
+
+input rank[p in persons]: int
+
+input sub[p in persons]: int
+
+input gate[p in persons]: int
+
+ask l1: last(k in ks where k == 4 or base / (k - 3) > 0)
+
+ask l2: first(k in ks where h[k] > 0)
+
+ask l3: first(k in ks where w[k] > 0)
+
+ask l4: last(k in ks where h[k] > 0)
+
+ask l5: first(k in ks where w[k] > lim)
+
+ask l6: first(k in ks where h[k] > lim)
+
+ask l7: count(k in ks where h[k] > 0)
+
+ask t1: first(p in persons on 2026-02-01 where p == bob or base / gate[p] > 0) ties by born[p]
+
+ask t2: last(p in persons on 2026-02-01 where p == ana or base / gate[p] > 0) ties by born[p]
+
+ask t3: first(p in persons on 2026-02-01) ties by (rank[p], sub[p])
+
+ask t4: last(p in persons on 2026-02-01) ties by (rank[p], sub[p])
+
+ask t5: first(p in persons on 2026-02-01 where rank[p] > 1) ties by (rank[p], sub[p])
+
+ask t6: argmax(rank[p] for p in persons on 2026-02-01) ties by (born[p], sub[p])
+
+ask t7: first(p in persons on 2026-02-01 where h[1] > 0) ties by born[p]
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ana] lives 2026-01-01..
+  persons + [bob] lives 2026-01-01..
+  persons + [cid] lives 2026-01-01..
+  base = 6 "c"
+  lim = 9 "c"
+  h[2] = 1 "c"
+  h[3] = 1 "c"
+  h[4] = 1 "c"
+  w[1] = 1 "c"
+  w[2] = 1 "c"
+  w[3] = 1 "c"
+  w[4] = 1 "c"
+  born[ana] = 2000-01-01 "x"
+  born[bob] = 1990-01-01 "x"
+  born[cid] = 1995-01-01 "x"
+  rank[ana] = 1 "x"
+  rank[bob] = 2 "x"
+  rank[cid] = 2 "x"
+  sub[bob] = 5 "x"
+  sub[cid] = 4 "x"
+  gate[ana] = 0 "x"
+  gate[bob] = 0 "x"
+  gate[cid] = 0 "x"
+,,1:0,55:t2: refused: RUN-DIV division by zero
+  cut 2026-03-01
+,14:fixes/g3/b3_t3,8:fixes-g3,21:run b3.tally --ask t3,1762:8:b3.tally,1745:model fx
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+index ks = 1..4
+
+kind persons
+
+input base: int
+
+input lim: int
+
+input h[k in ks]: int
+
+input w[k in ks]: int
+
+input born[p in persons]: date
+
+input rank[p in persons]: int
+
+input sub[p in persons]: int
+
+input gate[p in persons]: int
+
+ask l1: last(k in ks where k == 4 or base / (k - 3) > 0)
+
+ask l2: first(k in ks where h[k] > 0)
+
+ask l3: first(k in ks where w[k] > 0)
+
+ask l4: last(k in ks where h[k] > 0)
+
+ask l5: first(k in ks where w[k] > lim)
+
+ask l6: first(k in ks where h[k] > lim)
+
+ask l7: count(k in ks where h[k] > 0)
+
+ask t1: first(p in persons on 2026-02-01 where p == bob or base / gate[p] > 0) ties by born[p]
+
+ask t2: last(p in persons on 2026-02-01 where p == ana or base / gate[p] > 0) ties by born[p]
+
+ask t3: first(p in persons on 2026-02-01) ties by (rank[p], sub[p])
+
+ask t4: last(p in persons on 2026-02-01) ties by (rank[p], sub[p])
+
+ask t5: first(p in persons on 2026-02-01 where rank[p] > 1) ties by (rank[p], sub[p])
+
+ask t6: argmax(rank[p] for p in persons on 2026-02-01) ties by (born[p], sub[p])
+
+ask t7: first(p in persons on 2026-02-01 where h[1] > 0) ties by born[p]
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ana] lives 2026-01-01..
+  persons + [bob] lives 2026-01-01..
+  persons + [cid] lives 2026-01-01..
+  base = 6 "c"
+  lim = 9 "c"
+  h[2] = 1 "c"
+  h[3] = 1 "c"
+  h[4] = 1 "c"
+  w[1] = 1 "c"
+  w[2] = 1 "c"
+  w[3] = 1 "c"
+  w[4] = 1 "c"
+  born[ana] = 2000-01-01 "x"
+  born[bob] = 1990-01-01 "x"
+  born[cid] = 1995-01-01 "x"
+  rank[ana] = 1 "x"
+  rank[bob] = 2 "x"
+  rank[cid] = 2 "x"
+  sub[bob] = 5 "x"
+  sub[cid] = 4 "x"
+  gate[ana] = 0 "x"
+  gate[bob] = 0 "x"
+  gate[cid] = 0 "x"
+,,1:0,56:t3: ?"sub at ana: no value" (sub[ana])
+  cut 2026-03-01
+,14:fixes/g3/b3_t4,8:fixes-g3,21:run b3.tally --ask t4,1762:8:b3.tally,1745:model fx
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+index ks = 1..4
+
+kind persons
+
+input base: int
+
+input lim: int
+
+input h[k in ks]: int
+
+input w[k in ks]: int
+
+input born[p in persons]: date
+
+input rank[p in persons]: int
+
+input sub[p in persons]: int
+
+input gate[p in persons]: int
+
+ask l1: last(k in ks where k == 4 or base / (k - 3) > 0)
+
+ask l2: first(k in ks where h[k] > 0)
+
+ask l3: first(k in ks where w[k] > 0)
+
+ask l4: last(k in ks where h[k] > 0)
+
+ask l5: first(k in ks where w[k] > lim)
+
+ask l6: first(k in ks where h[k] > lim)
+
+ask l7: count(k in ks where h[k] > 0)
+
+ask t1: first(p in persons on 2026-02-01 where p == bob or base / gate[p] > 0) ties by born[p]
+
+ask t2: last(p in persons on 2026-02-01 where p == ana or base / gate[p] > 0) ties by born[p]
+
+ask t3: first(p in persons on 2026-02-01) ties by (rank[p], sub[p])
+
+ask t4: last(p in persons on 2026-02-01) ties by (rank[p], sub[p])
+
+ask t5: first(p in persons on 2026-02-01 where rank[p] > 1) ties by (rank[p], sub[p])
+
+ask t6: argmax(rank[p] for p in persons on 2026-02-01) ties by (born[p], sub[p])
+
+ask t7: first(p in persons on 2026-02-01 where h[1] > 0) ties by born[p]
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ana] lives 2026-01-01..
+  persons + [bob] lives 2026-01-01..
+  persons + [cid] lives 2026-01-01..
+  base = 6 "c"
+  lim = 9 "c"
+  h[2] = 1 "c"
+  h[3] = 1 "c"
+  h[4] = 1 "c"
+  w[1] = 1 "c"
+  w[2] = 1 "c"
+  w[3] = 1 "c"
+  w[4] = 1 "c"
+  born[ana] = 2000-01-01 "x"
+  born[bob] = 1990-01-01 "x"
+  born[cid] = 1995-01-01 "x"
+  rank[ana] = 1 "x"
+  rank[bob] = 2 "x"
+  rank[cid] = 2 "x"
+  sub[bob] = 5 "x"
+  sub[cid] = 4 "x"
+  gate[ana] = 0 "x"
+  gate[bob] = 0 "x"
+  gate[cid] = 0 "x"
+,,1:0,56:t4: ?"sub at ana: no value" (sub[ana])
+  cut 2026-03-01
+,14:fixes/g3/b3_l1,8:fixes-g3,21:run b3.tally --ask l1,1762:8:b3.tally,1745:model fx
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+index ks = 1..4
+
+kind persons
+
+input base: int
+
+input lim: int
+
+input h[k in ks]: int
+
+input w[k in ks]: int
+
+input born[p in persons]: date
+
+input rank[p in persons]: int
+
+input sub[p in persons]: int
+
+input gate[p in persons]: int
+
+ask l1: last(k in ks where k == 4 or base / (k - 3) > 0)
+
+ask l2: first(k in ks where h[k] > 0)
+
+ask l3: first(k in ks where w[k] > 0)
+
+ask l4: last(k in ks where h[k] > 0)
+
+ask l5: first(k in ks where w[k] > lim)
+
+ask l6: first(k in ks where h[k] > lim)
+
+ask l7: count(k in ks where h[k] > 0)
+
+ask t1: first(p in persons on 2026-02-01 where p == bob or base / gate[p] > 0) ties by born[p]
+
+ask t2: last(p in persons on 2026-02-01 where p == ana or base / gate[p] > 0) ties by born[p]
+
+ask t3: first(p in persons on 2026-02-01) ties by (rank[p], sub[p])
+
+ask t4: last(p in persons on 2026-02-01) ties by (rank[p], sub[p])
+
+ask t5: first(p in persons on 2026-02-01 where rank[p] > 1) ties by (rank[p], sub[p])
+
+ask t6: argmax(rank[p] for p in persons on 2026-02-01) ties by (born[p], sub[p])
+
+ask t7: first(p in persons on 2026-02-01 where h[1] > 0) ties by born[p]
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ana] lives 2026-01-01..
+  persons + [bob] lives 2026-01-01..
+  persons + [cid] lives 2026-01-01..
+  base = 6 "c"
+  lim = 9 "c"
+  h[2] = 1 "c"
+  h[3] = 1 "c"
+  h[4] = 1 "c"
+  w[1] = 1 "c"
+  w[2] = 1 "c"
+  w[3] = 1 "c"
+  w[4] = 1 "c"
+  born[ana] = 2000-01-01 "x"
+  born[bob] = 1990-01-01 "x"
+  born[cid] = 1995-01-01 "x"
+  rank[ana] = 1 "x"
+  rank[bob] = 2 "x"
+  rank[cid] = 2 "x"
+  sub[bob] = 5 "x"
+  sub[cid] = 4 "x"
+  gate[ana] = 0 "x"
+  gate[bob] = 0 "x"
+  gate[cid] = 0 "x"
+,,1:0,55:l1: refused: RUN-DIV division by zero
+  cut 2026-03-01
+,25:fixes/g3/p1_first_stops_a,8:fixes-g3,32:run p1_first_stops.tally --ask a,321:20:p1_first_stops.tally,292:model p1
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+index ks = 1..3
+
+input base: int
+
+def found: key ks = first(k in ks where k == 1 or base / (k - 2) > 0)
+
+ask a: found
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  base = 6 "card"
+,,1:0,54:a: refused: RUN-DIV division by zero
+  cut 2026-03-01
+,20:fixes/g3/lastalw2_q0,8:fixes-g3,27:run lastalw2.tally --ask q0,519:14:lastalw2.tally,496:model lastalw
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+index ds = day 2023-01-01..2026-12-31
+
+input s: num
+
+input t: num
+
+def sv[d in ds]: num = s
+def tv[d in ds]: num = t at d
+ask q0: sv[2026-03-01], tv[2023-03-01]
+ask q1: last(s, 2026-03-01)
+ask q2: last(t, 2026-03-01)
+ask q3: last(t, 2023-03-01)
+
+version v1
+  cite card
+  governs always
+  known 2024-01-01
+  s = 3 "c"
+
+version v2
+  cite card
+  governs ..2024-06-30
+  known 2024-01-01
+  t = 4 "c"
+,,1:0,28:q0: (3, 4)
+  cut 2026-03-01
+,20:fixes/g3/lastalw2_q1,8:fixes-g3,27:run lastalw2.tally --ask q1,519:14:lastalw2.tally,496:model lastalw
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+index ds = day 2023-01-01..2026-12-31
+
+input s: num
+
+input t: num
+
+def sv[d in ds]: num = s
+def tv[d in ds]: num = t at d
+ask q0: sv[2026-03-01], tv[2023-03-01]
+ask q1: last(s, 2026-03-01)
+ask q2: last(t, 2026-03-01)
+ask q3: last(t, 2023-03-01)
+
+version v1
+  cite card
+  governs always
+  known 2024-01-01
+  s = 3 "c"
+
+version v2
+  cite card
+  governs ..2024-06-30
+  known 2024-01-01
+  t = 4 "c"
+,,1:0,54:q1: ?"s: no value at 2026-03-01" (s)
+  cut 2026-03-01
+,20:fixes/g3/lastalw2_q2,8:fixes-g3,27:run lastalw2.tally --ask q2,519:14:lastalw2.tally,496:model lastalw
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+index ds = day 2023-01-01..2026-12-31
+
+input s: num
+
+input t: num
+
+def sv[d in ds]: num = s
+def tv[d in ds]: num = t at d
+ask q0: sv[2026-03-01], tv[2023-03-01]
+ask q1: last(s, 2026-03-01)
+ask q2: last(t, 2026-03-01)
+ask q3: last(t, 2023-03-01)
+
+version v1
+  cite card
+  governs always
+  known 2024-01-01
+  s = 3 "c"
+
+version v2
+  cite card
+  governs ..2024-06-30
+  known 2024-01-01
+  t = 4 "c"
+,,1:0,54:q2: ?"t: no value at 2026-03-01" (t)
+  cut 2026-03-01
+,20:fixes/g3/lastalw2_q3,8:fixes-g3,27:run lastalw2.tally --ask q3,519:14:lastalw2.tally,496:model lastalw
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+index ds = day 2023-01-01..2026-12-31
+
+input s: num
+
+input t: num
+
+def sv[d in ds]: num = s
+def tv[d in ds]: num = t at d
+ask q0: sv[2026-03-01], tv[2023-03-01]
+ask q1: last(s, 2026-03-01)
+ask q2: last(t, 2026-03-01)
+ask q3: last(t, 2023-03-01)
+
+version v1
+  cite card
+  governs always
+  known 2024-01-01
+  s = 3 "c"
+
+version v2
+  cite card
+  governs ..2024-06-30
+  known 2024-01-01
+  t = 4 "c"
+,,1:0,54:q3: ?"t: no value at 2023-03-01" (t)
+  cut 2026-03-01
+,25:fixes/g3/p3_window_same_a,8:fixes-g3,32:run p3_window_same.tally --ask a,434:20:p3_window_same.tally,405:model p3
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+index qs = [q1, q2]
+
+input d0: date
+
+input rank[k in qs]: int
+
+def pick: key qs = argmin(d0 for o in qs) ties by rank[o]
+
+ask a: pick
+
+ask b: d0 < d0, d0 == d0
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  d0 = window(2026-02-01, 2026-02-10) "card"
+  rank[q1] = 1 "card"
+  rank[q2] = 2 "card"
+,,1:0,101:a: ?"date within window(2026-02-01, 2026-02-10) not precise enough for argmin" (d0)
+  cut 2026-03-01
+,25:fixes/g3/p3_window_same_b,8:fixes-g3,32:run p3_window_same.tally --ask b,434:20:p3_window_same.tally,405:model p3
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+index qs = [q1, q2]
+
+input d0: date
+
+input rank[k in qs]: int
+
+def pick: key qs = argmin(d0 for o in qs) ties by rank[o]
+
+ask a: pick
+
+ask b: d0 < d0, d0 == d0
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  d0 = window(2026-02-01, 2026-02-10) "card"
+  rank[q1] = 1 "card"
+  rank[q2] = 2 "card"
+,,1:0,34:b: (false, true)
+  cut 2026-03-01
+,16:fixes/g3/last_q5,8:fixes-g3,23:run last.tally --ask q5,662:10:last.tally,643:model lastp
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+input s: money PLN
+
+input r: num reading
+
+ask q1: last(s, 2023-06-01)
+ask q2: last(s, 2024-03-01)
+ask q3: last(s, 2025-03-01)
+ask q4: last(s, 2026-03-01)
+ask q5: last(r, 2024-01-31)
+ask q6: last(r, 2024-02-01)
+ask q7: last(r, 2026-01-01)
+ask q8: since(r, 2026-01-01)
+
+version v1
+  cite card
+  governs 2024-01-01..2024-06-30
+  known 2024-01-01
+  s = 100.00 PLN "c"
+
+version v2
+  cite card
+  governs 2024-07-01..2024-12-31
+  known 2024-01-01
+  s = 200.00 PLN "c"
+  r = 5 at 2024-02-01 "c"
+  r = 7 at 2024-09-01 "c"
+,,1:0,69:q5: ?"r has no reading on or before 2024-01-31" (r)
+  cut 2026-03-01
+,16:fixes/g3/last_q6,8:fixes-g3,23:run last.tally --ask q6,662:10:last.tally,643:model lastp
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+input s: money PLN
+
+input r: num reading
+
+ask q1: last(s, 2023-06-01)
+ask q2: last(s, 2024-03-01)
+ask q3: last(s, 2025-03-01)
+ask q4: last(s, 2026-03-01)
+ask q5: last(r, 2024-01-31)
+ask q6: last(r, 2024-02-01)
+ask q7: last(r, 2026-01-01)
+ask q8: since(r, 2026-01-01)
+
+version v1
+  cite card
+  governs 2024-01-01..2024-06-30
+  known 2024-01-01
+  s = 100.00 PLN "c"
+
+version v2
+  cite card
+  governs 2024-07-01..2024-12-31
+  known 2024-01-01
+  s = 200.00 PLN "c"
+  r = 5 at 2024-02-01 "c"
+  r = 7 at 2024-09-01 "c"
+,,1:0,63:q6: 5
+  held: r = 5 (v2), read for 2024-02-01
+  cut 2026-03-01
+,16:fixes/g3/last_q7,8:fixes-g3,23:run last.tally --ask q7,662:10:last.tally,643:model lastp
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+input s: money PLN
+
+input r: num reading
+
+ask q1: last(s, 2023-06-01)
+ask q2: last(s, 2024-03-01)
+ask q3: last(s, 2025-03-01)
+ask q4: last(s, 2026-03-01)
+ask q5: last(r, 2024-01-31)
+ask q6: last(r, 2024-02-01)
+ask q7: last(r, 2026-01-01)
+ask q8: since(r, 2026-01-01)
+
+version v1
+  cite card
+  governs 2024-01-01..2024-06-30
+  known 2024-01-01
+  s = 100.00 PLN "c"
+
+version v2
+  cite card
+  governs 2024-07-01..2024-12-31
+  known 2024-01-01
+  s = 200.00 PLN "c"
+  r = 5 at 2024-02-01 "c"
+  r = 7 at 2024-09-01 "c"
+,,1:0,63:q7: 7
+  held: r = 7 (v2), read for 2026-01-01
+  cut 2026-03-01
+,16:fixes/g3/last_q8,8:fixes-g3,23:run last.tally --ask q8,662:10:last.tally,643:model lastp
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+input s: money PLN
+
+input r: num reading
+
+ask q1: last(s, 2023-06-01)
+ask q2: last(s, 2024-03-01)
+ask q3: last(s, 2025-03-01)
+ask q4: last(s, 2026-03-01)
+ask q5: last(r, 2024-01-31)
+ask q6: last(r, 2024-02-01)
+ask q7: last(r, 2026-01-01)
+ask q8: since(r, 2026-01-01)
+
+version v1
+  cite card
+  governs 2024-01-01..2024-06-30
+  known 2024-01-01
+  s = 100.00 PLN "c"
+
+version v2
+  cite card
+  governs 2024-07-01..2024-12-31
+  known 2024-01-01
+  s = 200.00 PLN "c"
+  r = 5 at 2024-02-01 "c"
+  r = 7 at 2024-09-01 "c"
+,,1:0,25:q8: 487
+  cut 2026-03-01
+,29:fixes/g3/f1_where_hole_ties_a,8:fixes-g3,36:run f1_where_hole_ties.tally --ask a,561:24:f1_where_hole_ties.tally,528:model f1
+  tally 2
+  on 2025-04-01
+  start 2025-03-01
+  end 2025-03-31
+
+source card "invented"
+
+unit DUK: currency minor 0.01
+
+place p0: accounts DUK lives 2025-03-01..
+
+place p1: accounts DUK lives 2025-03-01..
+
+input rank[p in accounts]: int
+
+input act[p in accounts]: bool
+
+input day: date
+
+def f: key accounts = first(p in accounts on day where act[p]) ties by rank[p]
+
+ask a: f
+
+version v1
+  cite card
+  governs always
+  known 2025-03-01
+  day = 2025-03-15 "c"
+  act[p0] = true "c"
+  act[p1] = false "c"
+  rank[p0] = 2 "c"
+,,1:0,23:a: p0
+  cut 2025-04-01
+,29:fixes/g3/f2_where_none_ties_a,8:fixes-g3,36:run f2_where_none_ties.tally --ask a,592:24:f2_where_none_ties.tally,559:model f2
+  tally 2
+  on 2025-04-01
+  start 2025-03-01
+  end 2025-03-31
+
+source card "invented"
+
+unit DUK: currency minor 0.01
+
+place p0: accounts DUK lives 2025-03-01..
+
+place p1: accounts DUK lives 2025-03-01..
+
+input rank[p in accounts]: int
+
+input act[p in accounts]: bool
+
+input day: date
+
+def f: key accounts = first(p in accounts on day where rank[p] != none) ties by rank[p]
+
+ask a: f
+
+version v1
+  cite card
+  governs always
+  known 2025-03-01
+  day = 2025-03-15 "c"
+  act[p0] = true "c"
+  act[p1] = false "c"
+  rank[p0] = 2 "c"
+  rank[p1] = none "c"
+,,1:0,73:a: p0
+  cut 2025-04-01
+warning: WARN-UNREAD input act is read by nothing
+,23:fixes/g3/f7_register_q3,8:fixes-g3,30:run f7_register.tally --ask q3,827:17:f7_register.tally,801:model f7
+  tally 2
+  on 2025-04-01
+  start 2025-03-01
+  end 2025-03-31
+
+source card "invented"
+
+unit DUK: currency minor 0.01
+
+place p0: accounts DUK lives 2025-03-01..
+
+place p1: accounts DUK lives 2025-03-01..
+
+index ks = [k0, k1, k2]
+
+input v[k in ks]: int
+
+input t: int
+
+input r1[p in accounts]: int
+
+input ok[p in accounts]: bool
+
+input day: date
+
+ask q1: first(k in ks where v[k] > t)
+ask q2: last(k in ks where v[k] > t)
+ask q3: first(p in accounts on day where ok[p]) ties by r1[p]
+
+version v1
+  cite card
+  governs always
+  known 2025-03-01
+  day = 2025-03-15 "c"
+  t = 0 "c"
+  v[k0] = 1 "c"
+  v[k1] = 1 "c"
+  r1[p0] = 1 "c"
+  ok[p0] = true "c"
+  ok[p1] = false "c"
+
+version va
+  cite card
+  governs always
+  known 2025-03-01
+  assumed "a guess past the key"
+  v[k2] = 1 "c"
+  r1[p1] = 2 "c"
+,,1:0,24:q3: p0
+  cut 2025-04-01
+,33:fixes/g3/f3_ties_window_decided_a,8:fixes-g3,40:run f3_ties_window_decided.tally --ask a,918:28:f3_ties_window_decided.tally,881:model f3
+  tally 2
+  on 2025-04-01
+  start 2025-03-01
+  end 2025-03-31
+
+source card "invented"
+
+unit DUK: currency minor 0.01
+
+place p0: accounts DUK lives 2025-03-01..
+
+place p1: accounts DUK lives 2025-03-01..
+
+place p2: accounts DUK lives 2025-03-01..
+
+index ks = [k0, k1, k2]
+
+input w[p in accounts]: date
+
+input u[k in ks]: date
+
+input day: date
+
+input c0: int
+
+def f: key accounts = first(p in accounts on day) ties by w[p]
+
+def g: key ks = argmin(u[k] for k in ks)
+
+def h: key ks = argmin(c0 for k in ks) ties by u[k]
+
+ask a: f
+
+ask b: g
+
+ask c: h
+
+version v1
+  cite card
+  governs always
+  known 2025-03-01
+  day = 2025-03-15 "c"
+  c0 = 5 "c"
+  w[p0] = 2025-01-01 "c"
+  w[p1] = window(2025-02-01, 2025-02-10) "c"
+  w[p2] = window(2025-02-05, 2025-02-15) "c"
+  u[k0] = 2025-01-01 "c"
+  u[k1] = window(2025-02-01, 2025-02-10) "c"
+  u[k2] = window(2025-02-05, 2025-02-15) "c"
+,,1:1,74:refused: LOAD-UNIT window(2025-02-01, 2025-02-10) and 2025-01-01 compared
+,33:fixes/g3/f3_ties_window_decided_b,8:fixes-g3,40:run f3_ties_window_decided.tally --ask b,918:28:f3_ties_window_decided.tally,881:model f3
+  tally 2
+  on 2025-04-01
+  start 2025-03-01
+  end 2025-03-31
+
+source card "invented"
+
+unit DUK: currency minor 0.01
+
+place p0: accounts DUK lives 2025-03-01..
+
+place p1: accounts DUK lives 2025-03-01..
+
+place p2: accounts DUK lives 2025-03-01..
+
+index ks = [k0, k1, k2]
+
+input w[p in accounts]: date
+
+input u[k in ks]: date
+
+input day: date
+
+input c0: int
+
+def f: key accounts = first(p in accounts on day) ties by w[p]
+
+def g: key ks = argmin(u[k] for k in ks)
+
+def h: key ks = argmin(c0 for k in ks) ties by u[k]
+
+ask a: f
+
+ask b: g
+
+ask c: h
+
+version v1
+  cite card
+  governs always
+  known 2025-03-01
+  day = 2025-03-15 "c"
+  c0 = 5 "c"
+  w[p0] = 2025-01-01 "c"
+  w[p1] = window(2025-02-01, 2025-02-10) "c"
+  w[p2] = window(2025-02-05, 2025-02-15) "c"
+  u[k0] = 2025-01-01 "c"
+  u[k1] = window(2025-02-01, 2025-02-10) "c"
+  u[k2] = window(2025-02-05, 2025-02-15) "c"
+,,1:0,23:b: k0
+  cut 2025-04-01
+,33:fixes/g3/f3_ties_window_decided_c,8:fixes-g3,40:run f3_ties_window_decided.tally --ask c,918:28:f3_ties_window_decided.tally,881:model f3
+  tally 2
+  on 2025-04-01
+  start 2025-03-01
+  end 2025-03-31
+
+source card "invented"
+
+unit DUK: currency minor 0.01
+
+place p0: accounts DUK lives 2025-03-01..
+
+place p1: accounts DUK lives 2025-03-01..
+
+place p2: accounts DUK lives 2025-03-01..
+
+index ks = [k0, k1, k2]
+
+input w[p in accounts]: date
+
+input u[k in ks]: date
+
+input day: date
+
+input c0: int
+
+def f: key accounts = first(p in accounts on day) ties by w[p]
+
+def g: key ks = argmin(u[k] for k in ks)
+
+def h: key ks = argmin(c0 for k in ks) ties by u[k]
+
+ask a: f
+
+ask b: g
+
+ask c: h
+
+version v1
+  cite card
+  governs always
+  known 2025-03-01
+  day = 2025-03-15 "c"
+  c0 = 5 "c"
+  w[p0] = 2025-01-01 "c"
+  w[p1] = window(2025-02-01, 2025-02-10) "c"
+  w[p2] = window(2025-02-05, 2025-02-15) "c"
+  u[k0] = 2025-01-01 "c"
+  u[k1] = window(2025-02-01, 2025-02-10) "c"
+  u[k2] = window(2025-02-05, 2025-02-15) "c"
+,,1:1,74:refused: LOAD-UNIT window(2025-02-01, 2025-02-10) and 2025-01-01 compared
 ,

@@ -1,0 +1,29 @@
+model p2b
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+index qs = [q1, q2]
+
+input cost[k in qs]: int
+
+input rank[k in qs]: int
+
+input sub[k in qs]: int
+
+def pick: key qs = argmin(cost[o] for o in qs) ties by (rank[o], sub[o])
+
+ask a: pick
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  cost[q1] = 5 "card"
+  cost[q2] = 5 "card"
+  rank[q1] = 2 "card"
+  rank[q2] = 1 "card"
+  sub[q2] = 7 "card"

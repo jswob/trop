@@ -1,0 +1,24 @@
+model same_day
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's vector for G1's unreplaced (issue #108, invented): two rows of one layer known on one day overlap, a replace among them or not, so the read never weighs two known dates that are equal"
+
+source card "T's card (invented)"
+
+input tip: num
+
+ask u_same: tip
+
+version tips_2026_06
+  cite card
+  governs always
+  known 2026-06-01
+  tip = 0.1 "the card of June"
+
+version tips_2026_06_b
+  cite card
+  governs always
+  known 2026-06-01
+  replace tip = 0.2 "a second card of the same day replaces the tip"

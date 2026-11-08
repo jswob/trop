@@ -1,0 +1,42 @@
+model probes
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probes"
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+input w: date
+input windowed: calendar
+input two_w: calendar
+input oo: calendar
+input three: int
+input mthree: int
+input from_day: date
+
+def later: date = add_days(w, 1)
+def paid: date = add_business(from_day, three, windowed)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-06-01, 2026-06-05) "c"
+  windowed = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26)]) "c"
+  two_w = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26), one_of([2026-06-29, 2026-07-01])]) "c"
+  oo = calendar(weekends [sat, sun], added [one_of([2026-06-22, 2026-06-24])]) "c"
+  three = 3 "c"
+  mthree = -3 "c"
+  from_day = 2026-06-19 "c"
+
+ask e1: later == w, later > w
+ask e2: paid == paid, paid < 2026-07-01
+ask e3: add_business(2026-07-01, mthree, windowed), add_business(2026-06-29, -1, windowed)
+ask e4: is_business(2026-06-23, windowed), is_business(2026-06-29, windowed)
+ask e5: add_business(2026-06-19, three, two_w), add_business(2026-06-26, three, two_w)
+ask e6: last_business(2026-06, three, windowed), last_business(2026-06, 1, windowed)
+ask e7: is_business(2026-06-23, oo), add_business(2026-06-21, 1, oo), add_business(2026-06-22, 1, oo)
+ask e8: schedule(2026-06, three, following, windowed)

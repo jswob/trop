@@ -1,0 +1,42 @@
+model replaces
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's vectors for G1's unreplaced survivors (issue #108, invented): a replace row beats the rows at the same keys known before it in its own layer, never a row at other keys, and a scenario's beats its base's rows whatever their known dates (L §4.6 steps 2-3, §6.4)"
+
+source card "T's card (invented)"
+
+index ks = [a, b]
+
+input cap[k in ks]: num
+
+input fee: num
+
+input rate: num
+
+ask u_later: rate
+
+ask u_wide: cap[a], cap[b]
+
+ask u_base: fee
+
+ask u_scenario: rate in cheaper law cut
+
+ask u_scenario_fee: fee in cheaper law cut
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  cap[a] = 1 "the card"
+  cap[*] = 2 "the card"
+  rate = 0.1 "the card"
+
+version card_2026_06
+  cite card
+  governs always
+  known 2026-06-01
+  replace cap[*] = 3 "a later card replaces the wide row only"
+  fee = 0.3 "the card of June"
+  replace rate = 0.2 "a later card replaces the rate"

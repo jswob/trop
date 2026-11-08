@@ -1,0 +1,105 @@
+model p8
+  tally 2
+  on 2025-04-01
+  start 2025-03-01
+  end 2025-03-31
+
+source card "invented"
+
+unit DUK: currency minor 0.01
+
+place p0: accounts DUK lives 2025-03-01..
+
+place p1: accounts DUK lives 2025-03-01..
+
+place p2: accounts DUK lives 2025-03-01..
+
+place p3: accounts DUK lives 2025-03-01..
+
+place p4: accounts DUK lives 2025-03-01..
+
+place p5: accounts DUK lives 2025-03-01..
+
+place p6: accounts DUK lives 2025-03-01..
+
+place p7: accounts DUK lives 2025-03-01..
+
+place p8: accounts DUK lives 2025-03-01..
+
+place p9: accounts DUK lives 2025-03-01..
+
+place p10: accounts DUK lives 2025-03-01..
+
+place p11: accounts DUK lives 2025-03-01..
+
+place p12: accounts DUK lives 2025-03-01..
+
+place p13: accounts DUK lives 2025-03-01..
+
+place p14: accounts DUK lives 2025-03-01..
+
+place p15: accounts DUK lives 2025-03-01..
+
+place p16: accounts DUK lives 2025-03-01..
+
+place p17: accounts DUK lives 2025-03-01..
+
+place p18: accounts DUK lives 2025-03-01..
+
+place p19: accounts DUK lives 2025-03-01..
+
+place p20: accounts DUK lives 2025-03-01..
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+input w[p in accounts]: date
+
+input day: date
+
+def f: key accounts = first(p in accounts on day) ties by w[p]
+
+ask a: f
+
+version v1
+  cite card
+  governs always
+  known 2025-03-01
+  day = 2025-03-15 "c"
+  w[p0] = window(2025-01-01, 2025-01-10) "c"
+  w[p1] = 2025-02-12 "c"
+  w[p2] = 2025-02-23 "c"
+  w[p3] = window(2025-01-04, 2025-01-18) "c"
+  w[p4] = 2025-02-18 "c"
+  w[p5] = 2025-02-02 "c"
+  w[p6] = window(2025-01-02, 2025-01-13) "c"
+  w[p7] = 2025-02-24 "c"
+  w[p8] = 2025-02-08 "c"
+  w[p9] = window(2025-01-05, 2025-01-21) "c"
+  w[p10] = 2025-02-03 "c"
+  w[p11] = 2025-02-14 "c"
+  w[p12] = window(2025-01-03, 2025-01-16) "c"
+  w[p13] = 2025-02-09 "c"
+  w[p14] = 2025-02-20 "c"
+  w[p15] = window(2025-01-01, 2025-01-11) "c"
+  w[p16] = 2025-02-15 "c"
+  w[p17] = 2025-02-26 "c"
+  w[p18] = window(2025-01-04, 2025-01-19) "c"
+  w[p19] = 2025-02-21 "c"
+  w[p20] = 2025-02-05 "c"

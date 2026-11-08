@@ -1,0 +1,34 @@
+model pows
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's vectors for num/rational.rs's pow mutants (G2 review note 9, issue #108, invented): a fraction to a negative power, and ten to powers under and over the 4 096-digit cap (q1.tally holds zero's powers)"
+
+source card "T's card (invented)"
+
+input big_a: int
+
+input big_b: int
+
+input half3: num
+
+input mtwo: int
+
+input ten: int
+
+ask m1: pow(half3, mtwo)
+
+ask m4: pow(ten, big_a)
+
+ask m5: pow(ten, big_b)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  big_a = 3000 "the card"
+  big_b = 5000 "the card"
+  half3 = 1.5 "the card"
+  mtwo = -2 "the card"
+  ten = 10 "the card"

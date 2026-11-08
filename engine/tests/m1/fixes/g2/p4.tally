@@ -1,0 +1,24 @@
+model probes
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probes"
+
+source card "invented"
+
+input wl: date
+input endcal: calendar
+input last_day: date
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  wl = window(9999-12-29, 9999-12-31) "c"
+  endcal = calendar(weekends [sat, sun], added [window(9999-12-29, 9999-12-31)]) "c"
+  last_day = 9999-12-31 "c"
+
+ask f1: weekday(wl)
+ask f2: is_business(last_day, endcal)
+ask f3: last_business(9999-12, 1, endcal)

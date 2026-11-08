@@ -103,3 +103,9 @@ test = false
 name = "m1_carried"
 path = "milestone/m1_carried.rs"
 test = false
+
+# M1: the builder groups' review fixes (m1/fixes/; MILESTONE-M1.md row 8)
+[[test]]
+name = "m1_fixes"
+path = "milestone/m1_fixes.rs"
+test = false

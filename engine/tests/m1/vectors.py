@@ -7,9 +7,10 @@ Reads vectors.tsv, one vector per row:
 The first seven columns are kernel/vectors.py's, read and run by its own functions (imported, not copied): a vector
 names a check of checks.tsv (`check`; the other columns empty) or is a fixture of its own (`cwd`, `files`, `asks`,
 `options`; a `.gen` source expanded as there). `group` is the runner test that holds it (`checks-g1`, `carried-5`,
-...: milestone/m1_checks.rs and m1_carried.rs, one test per group). `for` is the builder's group that turns it green
-(G1 ... G14 of tmp/m1/build-plan.md §3), or `-` for a vector the engine already answers; it is the builder's work list
-and is not stored.
+`fixes-g2`, ...: milestone/m1_checks.rs, m1_carried.rs, m1_goldens.rs and m1_fixes.rs, one test per group). `for` is
+the builder's group that turns it green (G1 ... G14 of tmp/m1/build-plan.md §3), or `-` for a vector the engine
+already answers; a `fixes-` vector's is the group whose review fix it holds, green from that fix; it is the builder's
+work list and is not stored.
 
 Each vector is run on the frozen refcore (PyPy, plain refcore, never the fast layer: run.py's run_one, its 90 s
 budget, its cache, the watchdog) and written to vectors.refcore in kernel/vectors.refcore's six netstrings (id, group,

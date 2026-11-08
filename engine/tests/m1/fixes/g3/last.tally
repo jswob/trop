@@ -1,0 +1,36 @@
+model lastp
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+input s: money PLN
+
+input r: num reading
+
+ask q1: last(s, 2023-06-01)
+ask q2: last(s, 2024-03-01)
+ask q3: last(s, 2025-03-01)
+ask q4: last(s, 2026-03-01)
+ask q5: last(r, 2024-01-31)
+ask q6: last(r, 2024-02-01)
+ask q7: last(r, 2026-01-01)
+ask q8: since(r, 2026-01-01)
+
+version v1
+  cite card
+  governs 2024-01-01..2024-06-30
+  known 2024-01-01
+  s = 100.00 PLN "c"
+
+version v2
+  cite card
+  governs 2024-07-01..2024-12-31
+  known 2024-01-01
+  s = 200.00 PLN "c"
+  r = 5 at 2024-02-01 "c"
+  r = 7 at 2024-09-01 "c"

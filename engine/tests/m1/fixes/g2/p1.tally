@@ -1,0 +1,46 @@
+model probes
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probes"
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+input w: date
+input wy: date
+input o: date
+input wd: date
+input cal: calendar
+input caly: calendar
+input two: int
+input three: int
+input n_months: int
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-06-01, 2026-06-05) "c"
+  wy = window(2026-12-30, 2027-01-02) "c"
+  o = one_of([2026-06-01, 2026-06-05]) "c"
+  wd = window(2026-06-01, 2026-06-01) "c"
+  cal = calendar(weekends [sat, sun]) "c"
+  caly = calendar(weekends [sat, sun], yearly [01-01] from 2027) "c"
+  two = 2 "c"
+  three = 3 "c"
+  n_months = 1 "c"
+
+ask a1: add_days(w, 1) == w
+ask a2: w + 1 day > w
+ask a3: w + 1 day == w
+ask a4: w == w, w < w, w <= w
+ask a5: end_of(year_of(wy))
+ask a6: year_of(wy)
+ask a7: o == 2026-06-03, o == 2026-06-01, o != 2026-06-07
+ask a8: wd == 2026-06-01
+ask a9: add_business(w, 1, cal)
+ask a10: end_of(w) > w
+ask a11: start_of(w) == w

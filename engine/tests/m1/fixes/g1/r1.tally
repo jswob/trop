@@ -1,0 +1,8 @@
+part r1
+  tally 2
+
+def w[g in gifts]: int
+  rule base = 0
+  rule b beats base = g.size when g.size > 0 and g in big
+
+ask r1: sum(w[g] for g in gifts over ..)

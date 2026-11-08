@@ -1,0 +1,11 @@
+scenario cheaper over replaces
+  tally 2
+  from 2026-01-01
+  note "a scenario whose replace rows are known before the base rows they replace"
+
+version cheaper_card
+  cite card
+  governs 2026-01-01..
+  known 2026-02-01
+  replace fee = 0.1 "a cheaper fee"
+  replace rate = 0.15 "a cheaper rate"

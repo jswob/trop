@@ -1,0 +1,8 @@
+part w3
+  tally 2
+
+def wc[g in gifts]: int
+  rule base = 0
+  rule b beats base = 1 when (g.size > 0 and (g in big)) and g.cash.amount > 0.00 PLN
+
+ask w3: sum(wc[g] for g in gifts over .. where not (g in big))
