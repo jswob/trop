@@ -16,6 +16,9 @@ doc = false
 # --stats: the work counters on standard error (D4-8, BUILDER §13.2), a build-side
 # instrument; tally refuses it in a build without debug assertions (R-51).
 counters = ["tally/counters"]
+# Gate 5's ENGINE-INVARIANT fixture (pick P8, tests/INTERFACE.md §4): `run_faulted`,
+# plants one invariant break; tally refuses it in a build without debug assertions (R-51).
+fault-injection = ["tally/fault-injection"]
 
 [dependencies]
 tally = { workspace = true }
