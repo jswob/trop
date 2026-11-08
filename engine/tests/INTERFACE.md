@@ -50,6 +50,19 @@ pub fn run(args: &[OsString], files: &[u8]) -> Output   // Output { stdout, stde
 - **The library** resolves a path in `args` against the table: a key is that file; a path that is no key but a directory prefix of keys (`<path>/…`) is every key under it ending `.tally`; anything else is a path that doesn't exist, refused `LOAD-PATH` (§2).
 - **Today's stub** has this signature, `run(args: &[OsString], stdin: &[u8])`, with the second argument named for standard input and unused. The table takes its place without a signature change, so T's runner compiles against the stub now and against the engine later. The name `stdin` and the stub's doc comment are the builder's to change at S.
 
+**`run_faulted`, the fault-injection twin** (milestone M1, issue #108; the coordinator's pick P8, the builder's plan §5; built in G10). `ENGINE-INVARIANT` (E §9, §11) is printed only on an engine bug, so its fixture plants one:
+
+```rust
+#[cfg(feature = "fault-injection")]
+pub enum Fault { Conservation }                                    // tally: E §9 invariant 1; more only when a gate asks
+pub fn run_faulted(given: Vec<Given>, request: &Request, fault: Fault) -> Result<Answer, NotImplemented>   // tally, run's twin
+pub fn run_faulted(args: &[OsString], files: &[u8], fault: tally::Fault) -> Output                      // tally_cli, run's twin
+```
+
+- **The plant (`Fault::Conservation`):** on the first day a walk books a leg whole, the day's close adds one minor unit (0.01 of the fixture's currency) to that day's conservation sum before invariant 1 is checked, once per run. A build without the feature changes nothing.
+- **The expected bytes** are refcore's under the same plant: `codes/m1_fault.py` patches refcore's close of the day in memory (no refcore file changes) and `codes/m1.py` stores the run as `codes/m1_invariant.refcore` (`decide/conservation`: the family `decide`'s answers). refcore prints it per value, at each value the walk reaches, exit 0: `q_decide: (refused: ENGINE-INVARIANT conservation: the legs booked on 2026-04-15 in PLN sum to 0.01 PLN, not 0 (E §9 invariant 1), refused: ENGINE-INVARIANT …)`. E §11's "the whole result is refused, with the evidence" is read as refcore reads it: every result that rests on the broken walk.
+- **The target** is `m1_invariant`, with `required-features = ["fault-injection"]`, the feature and its `check full` step the rules step's (R-52: the builder adds no feature); T writes its test once the rules step lands, holding `tally_cli::run_faulted(args, files, Fault::Conservation)` to the stored run byte for byte.
+
 ## 5. The order of a reality's files
 
 refcore takes the files in the order of its command line, and a directory in `os.walk`'s order: each directory's own files sorted by name, then its subdirectories, each sorted by name (`loader.collect`). R-40 (amended 2026-10-30) and E §3.1 step 1 take the **full relative paths, sorted by code point**. The two differ beyond 8c's example (`a.x.tally` before `a/b.tally` by full path): a walk puts `C/c.tally` before `C/asks/q.tally`, a full-path sort after it.

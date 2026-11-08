@@ -51,3 +51,13 @@ last. A held fixture stays written (`codes/m0/held.tsv`, `m0/format/held.tsv`); 
 - **What I tried:** nothing on the engine. Where refcore loads a unit power past 64 bits or a value past the cap, the spec's meaning is unsettled (L §8.4 caps a value's digits at a key, at run; no text states a unit's powers or an axis count's size), so neither side is the expected value.
 - **What I ask:** nothing now: #89's round states each limit and its code; T then moves the rows to `edits.tsv` (and writes the axis form by a generator if it is a vector).
 - **State:** held, as ruled.
+
+## STOP-REPORT 2026-11-08: an ask's `as known` after the model's `on` is answered by refcore; E §11 refuses the request `REQ-CLOCK`
+
+- **Kind:** refcore and the spec disagree (M1's code fixtures, issue #108, chunk C4; no vector holds the form)
+- **Where:** E §11 (`spec/ENGINE.md:498`: `REQ-CLOCK` | `as known` after `on` | the request is refused); L §5.18 (`as known D` states the line's cut K, in place of the model's `on`); `codes/m1/held.tsv` `rules/clock`.
+- **Rule or gate:** DONE gate 5 (each code has its fixture; `tools/xref_check.py --gate M1` stays red on `REQ-CLOCK` alone).
+- **What happens:** `codes/m1/rules/base.tally` (on 2026-03-01) with `ask q_due: due as known 2026-06-01`, run `run base.tally --ask q_due`: refcore answers `q_due: 2026-02-13`, the register's `cut 2026-06-01`, exit 0 (`ask.py:383`: the cut is set to the ask's date, never checked against `on`). E §11 refuses the request. E §11 also gives `REQ-CLOCK` no message: no form says what the refusal line prints after the code.
+- **What I tried:** nothing on refcore or the engine. I judge the spec clear on the refusal and silent on its words.
+- **What I ask:** **(a) Recommended:** the spec states `REQ-CLOCK`'s message (e.g. `as known <D> is after the model's on <on>`) and that it is the run's one result, as `REQ-ASK`'s row does; refcore is fixed at the next spec round; T moves `rules/clock` to `edits.tsv` with refcore's bytes then, and the engine is held to the spec's line until then "for #n". (b) `as known` after `on` is allowed (the cut moves past what the reality knows) and E §11's row is struck.
+- **State:** held in `codes/m1/held.tsv`; no vector depends on it.

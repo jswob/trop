@@ -12,7 +12,8 @@ either.
 
 What is printed, and where: every stored output of checks.tsv (its `baseline`; a `not-run:` row has none), at the
 milestone map/placement.tsv places the check in; and T's own vectors: kernel/vectors.refcore (S), codes/fixtures.tsv
-and m0/load.refcore and codes/m0.refcore (M0). In an output a refusal prints `refused: <CODE> <message>` (at
+and m0/load.refcore and codes/m0.refcore (M0), m1/vectors.refcore, codes/m1.refcore and codes/m1_invariant.refcore
+(M1). In an output a refusal prints `refused: <CODE> <message>` (at
 the start of a line, after an ask's or a scenario's or a member's name, or in a list), a warning
 `warning: <CODE> <message>` (in a register, indented, with no `warning:`: L §8.2's dropped labels), and a hole its
 questions, `?"<question>"`, with no code: a question is put to the
@@ -24,14 +25,17 @@ Writes map/codes.tsv, one row per code (form `*`), one per message form, and one
 prints with a message no form of its matches, in the catalogue's order:
 
     code, section, built (the milestone that builds it: M0 for every LOAD-* code, else the first milestone whose
-    BUILD-ORDER section names the code, `-` if none does), form, outputs (how many print it), first (the earliest
-    milestone of one that does), example (the id of the first such output, by milestone then id)
+    BUILD-ORDER section names the code, else BUILT's, T's plan for M1 (issue #108), `-` if none), form, outputs (how
+    many print it), first (the earliest milestone of one that does), example (the id of the first such output, by
+    milestone then id)
 
     python3 -I -B engine/tests/tools/xref_check.py              -> writes map/codes.tsv, prints the counts
     python3 -I -B engine/tests/tools/xref_check.py --check      -> exit 1 if map/codes.tsv isn't what the sources give
     python3 -I -B engine/tests/tools/xref_check.py --gate M0    -> exit 1 while a LOAD-* code has no output at S or M0
+    python3 -I -B engine/tests/tools/xref_check.py --gate M1    -> exit 1 while a code built by M1 has no output by M1
 
 `--check` runs in run.py --self-test. `--gate M0` is M0's gate (MILESTONE-M0.md row 5): red until G4's fixtures land.
+`--gate M1` is M1's (MILESTONE-M1.md row 3): every code built at S, M0 or M1 printed by an output at S, M0 or M1.
 """
 import csv
 import os
@@ -48,6 +52,17 @@ SPEC = ROOT + 'engine/spec/'
 OUT = T + 'map/codes.tsv'
 COLS = ['code', 'section', 'built', 'form', 'outputs', 'first', 'example']
 ORDER = ['S', 'M0', 'M1', 'M2', 'M3', 'M4', 'M5a', 'M5b', 'M5c', 'M6', 'M7', 'M8', 'M9']   # as map/placement.py
+# The milestone that builds a code no BUILD-ORDER section names (T's plan for M1, section 2.2; issue #108): S for the
+# codes S's outputs already print, M1 for those of M1's constructs, the later ones where their constructs are built.
+BUILT = dict([(c, 'S') for c in ['HOLE-UNGOVERNED', 'HOLE-ANCHOR', 'HOLE-CALENDAR', 'HOLE-CHANGED', 'HOLE-PRERUN',
+                                  'RUN-NONE', 'RUN-NOT-INT', 'RUN-KEY', 'RUN-NO-RULE', 'RUN-LIMIT', 'RUN-DIV',
+                                  'RUN-DOMAIN', 'RUN-NEG', 'RUN-PLACE', 'RUN-LIFESPAN', 'RUN-FUTURE', 'RUN-RECORD',
+                                  'WARN-NEGATIVE', 'WARN-UNREAD', 'WARN-LEGS', 'REQ-ASK']] +
+             [(c, 'M1') for c in ['HOLE-STATED', 'HOLE-NOTYET', 'HOLE-PRICE', 'HOLE-IMPRECISE', 'RUN-CONFLICT',
+                                   'RUN-EMPTY', 'RUN-ZERO', 'RUN-WEIGHTS', 'RUN-PRORATA', 'RUN-ORDER', 'RUN-SOLVE',
+                                   'REQ-CLOCK', 'ENGINE-INVARIANT']] +
+             [('HOLE-NOREADING', 'M2'), ('HOLE-SAME', 'M2'), ('WARN-STALE', 'M3'), ('HOLE-LOTS', 'M5a'),
+              ('RUN-UNDECIDED', 'M6'), ('RUN-PARAM', 'M6'), ('REQ-PATHS', 'M7')])
 CODE = r'[A-Z]+(?:-[A-Z]+)+'
 REFUSED = re.compile(r'refused: (%s) (.*?)(?=, refused: |$)' % CODE, re.M)
 WARNING = re.compile(r'(?:warning: |^ +)(WARN-[A-Z]+) (.*)$', re.M)
@@ -124,7 +139,8 @@ def pattern(form):
 
 
 def built_at(cat):
-    """{code: milestone}: M0 for LOAD-*, else the first BUILD-ORDER milestone section that names the code."""
+    """{code: milestone}: M0 for LOAD-*, else the first BUILD-ORDER milestone section that names the code, else
+    BUILT's."""
     sections, current = {}, None
     for line in open(SPEC + 'BUILD-ORDER.md', encoding='utf-8').read().split('\n'):
         m = re.match(r'#{2,3} (S|M\d[abc]?)\. ', line)
@@ -137,7 +153,7 @@ def built_at(cat):
     out = {}
     for code in cat:
         named = [ms for ms in ORDER if ms in sections and re.search(r'`%s`' % re.escape(code), sections[ms])]
-        out[code] = 'M0' if code.startswith('LOAD-') else (named[0] if named else '-')
+        out[code] = 'M0' if code.startswith('LOAD-') else (named[0] if named else BUILT.get(code, '-'))
     return out
 
 
@@ -163,7 +179,10 @@ def outputs():
             out.append((c['id'], placed[c['id']], R.text(f.read())))
     for path, width, at, ms, prefix in [('kernel/vectors.refcore', 6, 5, 'S', 'kernel/'),
                                         ('m0/load.refcore', 7, 6, 'M0', 'm0/load/'),
-                                        ('codes/m0.refcore', 7, 6, 'M0', 'codes/m0/')]:
+                                        ('codes/m0.refcore', 7, 6, 'M0', 'codes/m0/'),
+                                        ('m1/vectors.refcore', 6, 5, 'M1', 'm1/'),
+                                        ('codes/m1.refcore', 7, 6, 'M1', 'codes/m1/'),
+                                        ('codes/m1_invariant.refcore', 7, 6, 'M1', 'codes/m1/')]:
         ns = netstrings(open(T + path, 'rb').read())
         out += [(prefix + ns[k], ms, ns[k + at]) for k in range(0, len(ns), width)]
     for r in csv.DictReader(open(T + 'codes/fixtures.tsv', encoding='utf-8'), delimiter='\t', quoting=csv.QUOTE_NONE):
@@ -171,7 +190,14 @@ def outputs():
     return out
 
 
-def printed(cat, outs):
+def stated_ids():
+    """The ids of codes/m1.refcore's HOLE-STATED fixtures: a question there that no HOLE-* form matches is the
+    fixture's stated hole, HOLE-STATED's, not a writer's text counted apart."""
+    ns = netstrings(open(T + 'codes/m1.refcore', 'rb').read())
+    return {'codes/m1/' + ns[k] for k in range(0, len(ns), 7) if ns[k + 1] == 'HOLE-STATED'}
+
+
+def printed(cat, outs, stated=frozenset()):
     """{(code, form or '*'): [(milestone, id)]}, the writers' questions counted apart, and the unknown codes."""
     hits, writers, unknown = {}, set(), set()
     holes = [(code, pattern(f)) for code, (_, forms) in cat.items() if code.startswith('HOLE-') for f in forms]
@@ -182,7 +208,9 @@ def printed(cat, outs):
         for q in QUESTION.findall(text):
             codes = [code for code, p in holes if p.search(q)]
             found += [(code, q) for code in codes]
-            if not codes:
+            if not codes and oid in stated:
+                found.append(('HOLE-STATED', q))
+            elif not codes:
                 writers.add(oid)
         for code, message in found:
             if code not in cat:
@@ -222,6 +250,20 @@ def unshown_load_forms(rows):
             (r['first'] == '-' or ORDER.index(r['first']) > ORDER.index('M0'))]
 
 
+def unshown_by(rows, ms):
+    """The codes built at or before ms that no output at or before ms prints."""
+    k = ORDER.index(ms)
+    return [r['code'] for r in rows if r['form'] == '*' and r['built'] in ORDER and ORDER.index(r['built']) <= k and
+            (r['first'] == '-' or ORDER.index(r['first']) > k)]
+
+
+def unshown_forms_by(rows, ms):
+    """The message forms of the codes built at or before ms that no output at or before ms prints: [(code, form)]."""
+    k = ORDER.index(ms)
+    return [(r['code'], r['form']) for r in rows if r['form'] not in ('*', '?') and r['built'] in ORDER and
+            ORDER.index(r['built']) <= k and (r['first'] == '-' or ORDER.index(r['first']) > k)]
+
+
 def selftest():
     """The rules above on small inputs, each beside a case it must refuse; the failures."""
     cat = {'LOAD-X': ('L §8.3', ['band <b> at <x>', 'a key entered twice']), 'HOLE-Y': ('L §8.1', ['x at k: no value'])}
@@ -250,7 +292,7 @@ def main(argv):
     if bad:
         sys.exit('xref_check.py fails its own rules: ' + '; '.join(bad))
     cat = catalogue()
-    hits, writers, unknown = printed(cat, outputs())
+    hits, writers, unknown = printed(cat, outputs(), stated_ids())
     if unknown:
         sys.exit('codes printed that the catalogue lacks: ' + ', '.join(sorted(unknown)))
     rows = table(cat, hits)
@@ -273,11 +315,16 @@ def main(argv):
     forms_left = unshown_load_forms(rows)
     print('M0: %d of %d LOAD-* message forms have no output at S or M0 (tier 2; codes/m0/held.tsv holds the fixtures held and why)' % (
         len(forms_left), sum(r['code'].startswith('LOAD-') for r in forms)))
+    m1, m1_forms = unshown_by(rows, 'M1'), unshown_forms_by(rows, 'M1')
+    print('M1: %d of %d codes built by M1 have no output by M1: %s' % (
+        len(m1), sum(r['built'] in ORDER[:3] for r in codes), ' '.join(m1)))
+    print('M1: %d message forms of codes built by M1 have no output by M1 (tier 2; codes/m1/held.tsv holds the '
+          'fixtures held and why)' % len(m1_forms))
     if '--gate' in argv:
         ms = argv[argv.index('--gate') + 1]
-        if ms != 'M0':
-            sys.exit('--gate knows M0 only')
-        return 1 if load else 0
+        if ms not in ('M0', 'M1'):
+            sys.exit('--gate knows M0 and M1 only')
+        return 1 if (load if ms == 'M0' else m1) else 0
     if '--check' in argv:
         old = open(OUT, encoding='utf-8').read() if os.path.exists(OUT) else ''
         if old != data:

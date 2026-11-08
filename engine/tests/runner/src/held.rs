@@ -11,7 +11,7 @@ pub const HELD: &str = include_str!("../../held.tsv");
 
 /// The targets a row may name: the gating ones, and M1's vector stores (issue #108), whose
 /// targets gate from M1's marker.
-pub const TARGETS: [&str; 8] = [
+pub const TARGETS: [&str; 9] = [
     "s_kernel",
     "m0_codes",
     "m0_format",
@@ -20,6 +20,7 @@ pub const TARGETS: [&str; 8] = [
     "m1_checks",
     "m1_carried",
     "m1_goldens",
+    "m1_codes",
 ];
 
 /// One held vector.
@@ -69,7 +70,7 @@ pub fn is_held(target: &str, id: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::{HELD, rows};
-    use crate::codes::{M0, m0_fixtures};
+    use crate::codes::{M0, M1 as M1_CODES, m0_fixtures};
     use crate::corpus::records;
     use crate::kernel::{VECTORS, vectors};
     use crate::laws_m0::M0_CORPUS;
@@ -117,6 +118,11 @@ mod tests {
             .into_iter()
             .map(|v| v.id)
             .collect();
+        let m1_codes: BTreeSet<String> = m0_fixtures(M1_CODES)
+            .expect("m1 codes")
+            .into_iter()
+            .map(|v| v.id)
+            .collect();
         for h in &rs {
             let store = match h.target.as_str() {
                 "s_kernel" => &kernel,
@@ -124,6 +130,7 @@ mod tests {
                 "m0_format" => &format,
                 "m0_load" => &load,
                 "m1_checks" | "m1_carried" | "m1_goldens" => &m1,
+                "m1_codes" => &m1_codes,
                 _ => &cases,
             };
             assert!(

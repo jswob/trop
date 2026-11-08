@@ -90,3 +90,10 @@ test = false
 name = "m1_goldens"
 path = "milestone/m1_goldens.rs"
 test = false
+
+# M1: a fixture for each code and message form of M1's constructs no other output prints
+# (codes/m1/; MILESTONE-M1.md row 3)
+[[test]]
+name = "m1_codes"
+path = "milestone/m1_codes.rs"
+test = false

@@ -1,0 +1,2 @@
+id	code	family	file	old	new	asks	rule	form	held
+rules/clock	REQ-CLOCK	rules	base.tally	ask q_due: due	ask q_due: due as known 2026-06-01	q_due	E §11 REQ-CLOCK: an ask's as known after the model's on		STOP-REPORT 2026-11-08 in GAPS.md (for the coordinator; no issue yet): refcore answers the ask at the cut 2026-06-01 (q_due: 2026-02-13, cut 2026-06-01, exit 0) where E §11 refuses the request; E §11 gives REQ-CLOCK no message form

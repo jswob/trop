@@ -670,6 +670,10 @@ def self_test(checks):
         # 8j. M1's vectors (issue #108): refcore's bytes for m1/vectors.tsv, each check tied to its stored baseline
         p = subprocess.run([sys.executable, '-I', '-B', T + 'm1/vectors.py', '--check'], capture_output=True, text=True)
         say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])
+        # 8k. M1's code fixtures (issue #108): each family loads and answers clean, each fixture prints its code or
+        # its hole's question, refcore's bytes; the ENGINE-INVARIANT fixture is refcore's run under the planted fault
+        p = subprocess.run([sys.executable, '-I', '-B', T + 'codes/m1.py', '--check'], capture_output=True, text=True)
+        say(p.returncode == 0, ' '.join(p.stdout.strip().split('\n')[-2:]) if p.stdout.strip() else p.stderr[-200:])
         # 9. U2 (4.5f): under fast, a check with no baseline runs on refcore (its cache entry is refcore's)
         nb = dict(fast, baseline='')
         _, r, _ = session([nb], checks, **dict(kw, runtimes=['pypy+fast']))
