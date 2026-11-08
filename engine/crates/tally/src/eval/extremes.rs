@@ -221,27 +221,31 @@ impl Engine {
         }
         let envs: Vec<&Env> = best.into_iter().map(|(env, _)| env).collect();
         match self.tie_break(m, agg, &envs, ctx)? {
-            Ok(env) => bare_key(agg, env),
+            Ok(at) => bare_key(
+                agg,
+                envs.get(at)
+                    .ok_or_else(|| invariant("a tie broken past its candidates"))?,
+            ),
             Err(hole) => Ok(Value::Hole(hole)),
         }
     }
 
-    /// The one candidate of `tied` whose `ties by` score is least; with one candidate, it
-    /// (refcore's `tie_break`). L §5.11, §8.4.
+    /// The position in `tied` of the one candidate whose `ties by` score is least; with one
+    /// candidate, it (refcore's `tie_break`). L §5.11, §8.4.
     ///
     /// # Errors
     ///
     /// `RUN-TIE` for a tie with no `ties by`, or one it doesn't break.
-    fn tie_break<'e>(
+    fn tie_break(
         &mut self,
         m: &Reality,
         agg: &Agg,
-        tied: &[&'e Env],
+        tied: &[&Env],
         ctx: Ctx,
-    ) -> Result<Result<&'e Env, Hole>, Stop> {
+    ) -> Result<Result<usize, Hole>, Stop> {
         let word = agg.func.word();
-        if let [one] = tied {
-            return Ok(Ok(one));
+        if tied.len() == 1 {
+            return Ok(Ok(0));
         }
         if agg.ties.is_none() {
             return Err(refuse(
@@ -252,27 +256,30 @@ impl Engine {
                 ),
             ));
         }
-        let mut scored: Vec<(Vec<Value>, &Env)> = Vec::with_capacity(tied.len());
+        let mut scored: Vec<Vec<Value>> = Vec::with_capacity(tied.len());
         for env in tied {
             match self.score(m, agg, env, ctx)? {
                 Score::Unknown(h) => return Ok(Err(h)),
-                Score::Known(vals) => scored.push((vals, env)),
+                Score::Known(vals) => scored.push(vals),
             }
         }
-        let mut best: Vec<(Vec<Value>, &Env)> = Vec::new();
-        for (vals, env) in scored {
-            let order = match best.first() {
+        let mut best: Vec<usize> = Vec::new();
+        for (at, vals) in scored.iter().enumerate() {
+            let order = match best.first().and_then(|b| scored.get(*b)) {
                 None => Ordering::Less,
-                Some((held, _)) => score_order(m, &vals, held)?,
+                Some(held) => score_order(m, vals, held)?,
             };
             if order == Ordering::Less {
-                best = vec![(vals, env)];
+                best = vec![at];
             } else if order == Ordering::Equal {
-                best.push((vals, env));
+                best.push(at);
             }
         }
-        let envs: Vec<&Env> = best.into_iter().map(|(_, env)| env).collect();
-        let [one] = envs.as_slice() else {
+        let [one] = best.as_slice() else {
+            let envs: Vec<&Env> = best
+                .iter()
+                .filter_map(|at| tied.get(*at).copied())
+                .collect();
             return Err(refuse(
                 Run::Tie,
                 format!(
@@ -281,7 +288,7 @@ impl Engine {
                 ),
             ));
         };
-        Ok(Ok(one))
+        Ok(Ok(*one))
     }
 
     /// `first(b where c)` and `last(…)`: the first (last) binding tuple whose `where` is
@@ -418,10 +425,7 @@ impl Engine {
     ) -> Result<Option<(String, String)>, Stop> {
         let mut earlier: Vec<&str> = Vec::with_capacity(binds.len());
         for bind in binds {
-            let reads_earlier = earlier.iter().any(|v| {
-                bind.on.as_ref().is_some_and(|e| reads_name(e, v))
-                    || bind.over.as_ref().is_some_and(|s| span_reads(s, v))
-            });
+            let reads_earlier = reads_any(bind, &earlier);
             earlier.push(&bind.var);
             let what = unordered(m, bind);
             if reads_earlier || !matches!(what, Some(Unordered::Things | Unordered::Movements)) {
@@ -465,6 +469,19 @@ impl Engine {
             .ok_or_else(|| invariant("the day after the cut"))?;
         Ok(span.end().is_none_or(|end| end > after))
     }
+}
+
+/// Whether a binding's day or span may read one of the variables `vars` (refcore's
+/// `reads_var` over the earlier bindings). L §5.11.
+fn reads_any(bind: &Bind, vars: &[&str]) -> bool {
+    for var in vars {
+        let on = bind.on.as_ref().is_some_and(|e| reads_name(e, var));
+        let over = bind.over.as_ref().is_some_and(|s| span_reads(s, var));
+        if on || over {
+            return true;
+        }
+    }
+    false
 }
 
 /// `argmin` (`wanted` Less) or `argmax` over terms of which one is a window: the key whose
