@@ -16,7 +16,7 @@ use super::check::{Checker, Files, Scope, Stands, VarDom, invariant};
 use super::keys::{KeyLit, resolve_key};
 use super::steps::{Loader, num_stop, refuse};
 use super::strata::reaches_mark;
-use super::types::{children, text};
+use super::texts::{children, text};
 use super::values::{at_row, row_file};
 use super::worlds::no_version;
 use crate::base::{Code, Load};
@@ -135,7 +135,7 @@ impl Checker {
                 line,
             )
         };
-        match m.names.get(rule) {
+        match m.names.kind(rule) {
             None => {
                 return Err(
                     refuse(Load::Name, format!("unknown id {rule}"), file, line).naming(rule)
@@ -828,7 +828,7 @@ impl Loader {
         } else {
             return Ok(None);
         };
-        match self.m.names.get(name) {
+        match self.m.names.kind(name) {
             None | Some(NameKind::Place | NameKind::Kind) => Ok(self.party(name)),
             Some(NameKind::Move) => self.batch_of_move(name, keys, file, line),
             Some(NameKind::Input) => Ok(self.batch_of_row(name, keys)),

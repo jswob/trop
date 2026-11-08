@@ -315,14 +315,14 @@ fn reads_dist_fact(m: &Reality, scope: &Scope, e: &Expr) -> bool {
     if scope.is_var(name) {
         return false;
     }
-    let kind = m.names.get(name);
-    if kind == Some(&NameKind::Input) {
+    let kind = m.names.kind(name);
+    if kind == Some(NameKind::Input) {
         return m
             .inputs
             .get(name)
             .is_some_and(|i| matches!(i.ty, Some(Ty::Dist(_))));
     }
-    kind == Some(&NameKind::Def)
+    kind == Some(NameKind::Def)
         && m.defs
             .get(name)
             .is_some_and(|d| matches!(d.ty, Ty::Dist(_)))
@@ -1059,9 +1059,9 @@ fn read_target(m: &Reality, scope: &Scope, e: &Expr) -> Option<Node> {
     if scope.is_var(name) {
         return None;
     }
-    let kind = m.names.get(name)?;
-    if *kind == NameKind::Input {
+    let kind = m.names.kind(name)?;
+    if kind == NameKind::Input {
         return Some(Node::new(NodeKind::Input, name));
     }
-    (*kind == NameKind::Def).then(|| Node::new(NodeKind::Def, name))
+    (kind == NameKind::Def).then(|| Node::new(NodeKind::Def, name))
 }

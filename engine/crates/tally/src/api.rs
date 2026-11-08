@@ -17,7 +17,7 @@ use crate::eval::Memo;
 use crate::load::{Loaded, load_run, split_files};
 use crate::oracle::Days;
 use crate::syntax::Stop;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// One file the run is given: its path as the run names it, and its bytes, or none when the
 /// path names no file or folder.
@@ -241,8 +241,25 @@ fn finish(outcome: Result<Answered, Stop>) -> Result<Answer, NotImplemented> {
 /// # Errors
 ///
 /// [`NotImplemented`] for a form whose order the engine doesn't build yet (a member's keys).
-pub fn reprint(mut files: Vec<(Given, String)>) -> Result<Answer, NotImplemented> {
+pub fn reprint(files: Vec<(Given, String)>) -> Result<Answer, NotImplemented> {
+    reprint_in(files, &BTreeMap::new())
+}
+
+/// [`reprint`] with the file table's files, `disk`: a joint model's members are found among
+/// the files given, by the names they print under, then on `disk` where it holds the model's
+/// file, and pinned as `run` pins them, before anything prints; each member's files given are
+/// a reality of their own (E §3.1 step 1; INTERFACE §1; tally 2.1.6, #74, #91). The CLI's
+/// entry.
+///
+/// # Errors
+///
+/// As [`reprint`].
+pub fn reprint_in(
+    mut files: Vec<(Given, String)>,
+    disk: &BTreeMap<&str, &[u8]>,
+) -> Result<Answer, NotImplemented> {
     files.sort_by(|(a, x), (b, y)| (&a.path, x).cmp(&(&b.path, y)));
+    let mut given = Vec::with_capacity(files.len());
     let mut sources = Vec::with_capacity(files.len());
     for (file, name) in files {
         let Some(bytes) = file.bytes else {
@@ -251,9 +268,15 @@ pub fn reprint(mut files: Vec<(Given, String)>) -> Result<Answer, NotImplemented
         let Ok(text) = String::from_utf8(bytes) else {
             return Ok(Answer::refused(&Refusal::not_utf8(&file.path)));
         };
+        given.push(Source {
+            path: file.path,
+            text: text.clone(),
+        });
         sources.push(Source { path: name, text });
     }
-    let printed = match crate::syntax::reprint(&sources) {
+    let printed = match crate::load::reprint_members(&given, disk).and_then(|members| {
+        crate::syntax::reprint_among(&sources, &named(&members, &given, &sources))
+    }) {
         Ok(printed) => printed,
         Err(Stop::Refused(refusal)) => return Ok(Answer::refused(&refusal)),
         Err(Stop::NotBuilt(_) | Stop::Deep) => return Err(NotImplemented),
@@ -269,6 +292,32 @@ pub fn reprint(mut files: Vec<(Given, String)>) -> Result<Answer, NotImplemented
         #[cfg(feature = "counters")]
         counters: crate::Counters::default(),
     })
+}
+
+/// Each member's files given, by the names they print under (`given` and `sources` are the
+/// same files, by their paths as the run keys them and by those names); a member's file found
+/// on the disk is none of them.
+fn named(
+    members: &[BTreeSet<String>],
+    given: &[Source],
+    sources: &[Source],
+) -> Vec<BTreeSet<String>> {
+    let names: BTreeMap<&str, &str> = given
+        .iter()
+        .zip(sources)
+        .map(|(file, source)| (file.path.as_str(), source.path.as_str()))
+        .collect();
+    let mut out = Vec::with_capacity(members.len());
+    for paths in members {
+        let mut group = BTreeSet::new();
+        for path in paths {
+            if let Some(name) = names.get(path.as_str()) {
+                group.insert((*name).to_owned());
+            }
+        }
+        out.push(group);
+    }
+    out
 }
 
 /// The read step: every file in the order of its full path, by code point; the first path
@@ -468,9 +517,25 @@ mod tests {
             "a base ask in the base"
         );
         assert_eq!(
-            run(both(), &every()),
+            lines(both(), &every()),
+            [
+                "a: 12.50 PLN",
+                "  cut 2026-01-01",
+                "b: 12.50 PLN",
+                "  world: s",
+                "  cut 2026-01-01"
+            ],
+            "b is asked in s's world, on s's reality"
+        );
+        let under = "scenario s over m\n  tally 2\n  from 2026-06-01\n\nask b: fee in m\n";
+        let hidden = given(&[
+            ("m.tally", Some(base.as_bytes())),
+            ("s.tally", Some(under.as_bytes())),
+        ]);
+        assert_eq!(
+            run(hidden, &every()),
             Err(NotImplemented),
-            "b is asked in s's world"
+            "s's ask in the model's world hides s's layer: M1's overlays"
         );
         let fromless = "scenario s over m\n  tally 2\n\nask b: fee in s\n";
         let refused = given(&[

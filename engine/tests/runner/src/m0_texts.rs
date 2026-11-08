@@ -3,7 +3,7 @@
 //! so the tests read no file (`INTERFACE.md` §4) and no text is copied. Never edited by hand.
 
 /// Each text: its path under `engine/tests/` and its content.
-pub static TEXTS: [(&str, &str); 1346] = [
+pub static TEXTS: [(&str, &str); 1366] = [
     (
         "integration/amendments/cards11/i10q/model.tally",
         include_str!("../../integration/amendments/cards11/i10q/model.tally"),
@@ -4725,6 +4725,82 @@ pub static TEXTS: [(&str, &str); 1346] = [
         include_str!("../../m0/format/header_order.tally"),
     ),
     (
+        "m0/format/joint/folder/j.tally",
+        include_str!("../../m0/format/joint/folder/j.tally"),
+    ),
+    (
+        "m0/format/joint/folder/m/a.tally",
+        include_str!("../../m0/format/joint/folder/m/a.tally"),
+    ),
+    (
+        "m0/format/joint/folder/m/b.tally",
+        include_str!("../../m0/format/joint/folder/m/b.tally"),
+    ),
+    (
+        "m0/format/joint/folder_none/j.tally",
+        include_str!("../../m0/format/joint/folder_none/j.tally"),
+    ),
+    (
+        "m0/format/joint/folder_none/m/a.tally",
+        include_str!("../../m0/format/joint/folder_none/m/a.tally"),
+    ),
+    (
+        "m0/format/joint/folder_none/m/b.tally",
+        include_str!("../../m0/format/joint/folder_none/m/b.tally"),
+    ),
+    (
+        "m0/format/joint/folder_two/j.tally",
+        include_str!("../../m0/format/joint/folder_two/j.tally"),
+    ),
+    (
+        "m0/format/joint/folder_two/m/a.tally",
+        include_str!("../../m0/format/joint/folder_two/m/a.tally"),
+    ),
+    (
+        "m0/format/joint/folder_two/m/b.tally",
+        include_str!("../../m0/format/joint/folder_two/m/b.tally"),
+    ),
+    (
+        "m0/format/joint/nested/b/b.tally",
+        include_str!("../../m0/format/joint/nested/b/b.tally"),
+    ),
+    (
+        "m0/format/joint/nested/j.tally",
+        include_str!("../../m0/format/joint/nested/j.tally"),
+    ),
+    (
+        "m0/format/joint/nested/m/m.tally",
+        include_str!("../../m0/format/joint/nested/m/m.tally"),
+    ),
+    (
+        "m0/format/joint/nested_absent/j.tally",
+        include_str!("../../m0/format/joint/nested_absent/j.tally"),
+    ),
+    (
+        "m0/format/joint/nested_absent/m/m.tally",
+        include_str!("../../m0/format/joint/nested_absent/m/m.tally"),
+    ),
+    (
+        "m0/format/joint/nested_changed/b/b.tally",
+        include_str!("../../m0/format/joint/nested_changed/b/b.tally"),
+    ),
+    (
+        "m0/format/joint/nested_changed/j.tally",
+        include_str!("../../m0/format/joint/nested_changed/j.tally"),
+    ),
+    (
+        "m0/format/joint/nested_changed/m/m.tally",
+        include_str!("../../m0/format/joint/nested_changed/m/m.tally"),
+    ),
+    (
+        "m0/format/joint/outside/m/m.tally",
+        include_str!("../../m0/format/joint/outside/m/m.tally"),
+    ),
+    (
+        "m0/format/joint/outside/x/j.tally",
+        include_str!("../../m0/format/joint/outside/x/j.tally"),
+    ),
+    (
         "m0/format/kinds_tree_order.tally",
         include_str!("../../m0/format/kinds_tree_order.tally"),
     ),
@@ -4775,6 +4851,10 @@ pub static TEXTS: [(&str, &str); 1346] = [
     (
         "m0/format/rules_sorted.tally",
         include_str!("../../m0/format/rules_sorted.tally"),
+    ),
+    (
+        "m0/format/same_key_signed.tally",
+        include_str!("../../m0/format/same_key_signed.tally"),
     ),
     (
         "m0/format/same_place_keys.tally",

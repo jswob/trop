@@ -8,13 +8,15 @@
 //! currency is declared; a unit's terms are units, currencies, period words, `%`, the keys of
 //! kinds of unit, or the declaration's own bound variables (as `$var`).
 
+use super::check::invariant;
 use super::spans::lspan_to_span;
 use super::steps::{Loader, num_stop, refuse};
 use super::worlds::no_version;
 use crate::base::Load;
 use crate::model::{
     BandInfo, BindInfo, CodeKind, DefInfo, Domain, InputInfo, KindSpec, MoveInfo, NameKind,
-    PERIODS, PeriodWord, PlaceInfo, RuleVer, Shown, Span, TimePos, Ty, Unit, is_currency_code,
+    PERIODS, PeriodWord, PlaceInfo, RuleVer, Shown, Span, TimePos, Ty, Unit, UnitError,
+    is_currency_code, power_past_limit,
 };
 use crate::num::Num;
 use crate::syntax::{
@@ -72,7 +74,8 @@ impl Loader {
                 Section::Place(decl) => self.declare_place(decl, file)?,
                 Section::Move(decl) => self.declare_move(decl, file)?,
                 Section::Fill(decl) => {
-                    self.m.fills.push(&decl.id, decl.as_ref().clone());
+                    let fill = decl.as_ref().clone();
+                    self.m.fills.push(&mut self.m.symbols, &decl.id, fill)?;
                 }
                 Section::Axis(_)
                 | Section::Source(_)
@@ -94,9 +97,7 @@ impl Loader {
             let Section::Kind(decl) = section else {
                 continue;
             };
-            let Some(kind) = self.m.kinds.get(&decl.id) else {
-                return Err(Stop::NotBuilt("a kind that isn't built"));
-            };
+            let kind = self.m.kinds.at(self.m.names.kind_id(&decl.id)?)?;
             let mut types = Vec::with_capacity(kind.attrs.len());
             for (name, written) in &kind.attrs {
                 let ty = match written {
@@ -128,7 +129,7 @@ impl Loader {
     /// a currency code no unit line declares, `LOAD-NAME` naming `what` for another word
     /// (refcore's `build_kind_types`). L §5.4, §5.7.
     fn kind_unit_word(&self, unit: &str, what: &str, file: &str, line: u32) -> Result<(), Stop> {
-        let unit_kind = self.m.names.get(unit) == Some(&NameKind::Kind)
+        let unit_kind = self.m.names.kind(unit) == Some(NameKind::Kind)
             && self
                 .m
                 .kinds
@@ -177,7 +178,7 @@ impl Loader {
             }
         }
         input.time_pos = self.time_pos(&input.binds);
-        self.m.inputs.push(&decl.id, input);
+        self.m.inputs.push(&mut self.m.symbols, &decl.id, input)?;
         Ok(())
     }
 
@@ -232,7 +233,7 @@ impl Loader {
             time_pos,
             decl: decl.clone(),
         };
-        self.m.defs.push(&decl.id, def);
+        self.m.defs.push(&mut self.m.symbols, &decl.id, def)?;
         Ok(())
     }
 
@@ -268,7 +269,7 @@ impl Loader {
             unit_factor,
             tables: Vec::new(),
         };
-        self.m.bands.push(&decl.id, band);
+        self.m.bands.push(&mut self.m.symbols, &decl.id, band)?;
         Ok(())
     }
 
@@ -297,7 +298,7 @@ impl Loader {
             things: Vec::new(),
             decl: decl.clone(),
         };
-        self.m.places.push(&decl.id, place);
+        self.m.places.push(&mut self.m.symbols, &decl.id, place)?;
         Ok(())
     }
 
@@ -316,7 +317,7 @@ impl Loader {
             self_reads: false,
             decl: decl.clone(),
         };
-        self.m.moves.push(&decl.id, info);
+        self.m.moves.push(&mut self.m.symbols, &decl.id, info)?;
         Ok(())
     }
 
@@ -328,7 +329,7 @@ impl Loader {
             .m
             .kinds
             .get(kind)
-            .filter(|_| self.m.names.get(kind) == Some(&NameKind::Kind))
+            .filter(|_| self.m.names.kind(kind) == Some(NameKind::Kind))
         else {
             return Err(refuse(Load::Name, format!("unknown id {kind}"), file, line).naming(kind));
         };
@@ -433,7 +434,7 @@ impl Loader {
 
     /// An index, a kind or an axis by name (refcore's `resolve_domain`). L §5.6.
     fn resolve_domain(&self, id: &str, file: &str, line: u32) -> Result<Domain, Stop> {
-        match self.m.names.get(id) {
+        match self.m.names.kind(id) {
             Some(NameKind::Index) => Ok(Domain::Index(id.to_owned())),
             Some(NameKind::Kind) => Ok(Domain::Kind(id.to_owned())),
             Some(NameKind::Axis) => Ok(Domain::Axis(id.to_owned())),
@@ -508,7 +509,7 @@ impl Loader {
             }
             Type::Key(name) => {
                 // A prefixed `key a.x` is no name (the merge has made each member's one): unknown.
-                match self.m.names.get(name) {
+                match self.m.names.kind(name) {
                     Some(NameKind::Kind | NameKind::Index | NameKind::Axis) => {
                         Ok((Ty::Key(name.clone()), Num::int(1)))
                     }
@@ -536,9 +537,12 @@ impl Loader {
                 }
                 Ok((Ty::Record(out), Num::int(1)))
             }
-            Type::Word(word) => word_type(word)
-                .map(|t| (t, Num::int(1)))
-                .ok_or(Stop::NotBuilt("a type of that word")),
+            Type::Word(word) => word_type(word).map(|t| (t, Num::int(1))).ok_or_else(|| {
+                invariant(
+                    "unreachable: the parser reads a one-word type from load's word list"
+                        .to_owned(),
+                )
+            }),
         }
     }
 
@@ -576,9 +580,12 @@ impl Loader {
                 )
                 .naming(base));
             };
-            terms.push((term, *power));
+            terms.push((term, power.clone()));
         }
-        Unit::from_syntax(terms).map_err(num_stop)
+        Unit::from_syntax(terms).map_err(|error| match error {
+            UnitError::Power(base) => refuse(Load::Limit, power_past_limit(&base), file, line),
+            UnitError::Num(error) => num_stop(error),
+        })
     }
 }
 
@@ -600,7 +607,7 @@ fn is_percent(unit: Option<&WrittenUnit>) -> bool {
     let [UnitTerm { base, power }] = written.terms.as_slice() else {
         return false;
     };
-    base == "%" && *power == 1
+    base == "%" && *power == Num::int(1)
 }
 
 /// The type a one-word type names, the four code types by their names (refcore's

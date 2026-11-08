@@ -349,7 +349,7 @@ fn scenario_item(kind: NameKind) -> bool {
 /// doesn't stack on, or one that isn't an input, a band or a def.
 pub(super) fn base_name(m: &Reality, world: &BaseWorld, name: &str) -> Result<(), Stop> {
     let base = &world.id;
-    let Some(kind) = m.names.get(name).copied() else {
+    let Some(kind) = m.names.kind(name) else {
         let id = format!("{base}.{name}");
         return Err(refused(Load::Name, format!("unknown id {id}")).naming(&id));
     };

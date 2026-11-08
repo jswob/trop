@@ -1,28 +1,31 @@
 //! The plan pass: each move's instances over its binding tuples, dated at the cut, evaluated at their booking cut, and classified.
 //! Spec: E §4.1 (enumerate the instances, date them at K, evaluate them at min(t, K),
 //! classify them, the movement order); E §5 (steps 0 and 1: dating at K, the booking cut);
-//! L §5.14 (moves: keys, `on`, `at`, `for`, `when`, legs, their places, amounts and days; a
-//! day or a `when` that is a hole makes a hole movement).
-//! Twin: engine/tools/refcore/moves.py (`move_tuples`, `move_instances`, `insts_of_tuples`,
-//! `decision_instances`, `eval_inst`, `body_over_law`, `inst_body`, `eval_leg`,
-//! `leg_unit_static`, `leg_amount`, `status`, `inst_order`, `key_sort`, `keys_seen`).
+//! L §5.14 (moves: keys, `on`, `at`, `for`, `when`, legs and their days; a day or a `when`
+//! that is a hole makes a hole movement); L §8.4 (a refused key's `where`, `when`, attribute
+//! or `for` makes a refused movement, its day and legs' places still read; tally 2.1.6);
+//! L §6.4 (a move a scenario declares books nothing before its `from`). The binding tuples are
+//! `tuples.rs`'s, a leg's places and amount `legs.rs`'s.
+//! Twin: engine/tools/refcore/moves.py (`move_instances`, `insts_of_tuples`,
+//! `decision_instances`, `eval_inst`, `refused_places`, `body_over_law`, `inst_body`,
+//! `status`, `scen_early`, `inst_order`, `key_sort`, `keys_seen`).
 //! Invariants: an instance's day is read at the ask's cut K and its body at its booking cut
 //! min(t, K); a run-time refusal met evaluating an instance stays with that instance; a move's
 //! instances are computed once per cut, and a move that reads its own instances is `RUN-CYCLE`.
 
-use core::cmp::Ordering;
-use std::rc::Rc;
-
+use super::tuples::{Law, Tuple};
 use crate::base::{Code, Load, Refusal, Run};
-use crate::eval::{Collected, Ctx, Engine, Env, Member, order_text, reads_name, thing_seen};
+use crate::eval::{Collected, Ctx, Engine, Env, order_text, thing_seen};
 use crate::hole::{Hole, spread};
 use crate::model::{
     Domain, KeyVal, MoveInfo, Node, NodeKind, Number, Reality, Value, currency_id, money_num,
     num_money,
 };
 use crate::num::Num;
-use crate::syntax::{Certainty, Leg, Stop};
+use crate::syntax::{Certainty, Stop};
 use crate::time::{Day, PeriodKind};
+use core::cmp::Ordering;
+use std::rc::Rc;
 
 /// A leg's end: a place by name, or a hole, a place nobody has told us (L §5.14 Legs).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -211,23 +214,6 @@ impl Order {
             Term::Tuple(keys),
         ]))
     }
-
-    /// The movement's text among a day's plans, `<move>|<keys>`, the keys' places written as
-    /// a tuple (refcore's `osort`, the walk key's text). E §4.1, §4.2.
-    #[must_use]
-    pub fn text(&self) -> String {
-        let parts: Vec<String> = self
-            .keys
-            .iter()
-            .map(|(a, b, s)| format!("({a}, {b}, {})", quoted(s)))
-            .collect();
-        let tuple = match parts.as_slice() {
-            [] => "()".to_owned(),
-            [one] => format!("({one},)"),
-            [_, _, ..] => format!("({})", parts.join(", ")),
-        };
-        format!("{}|{tuple}", self.move_id)
-    }
 }
 
 /// One term of a movement order, typed as refcore's `order_key` types it: a day, a number, a
@@ -296,34 +282,6 @@ impl PartialOrd for Term {
     fn partial_cmp(&self, other: &Term) -> Option<Ordering> {
         Some(self.cmp(other))
     }
-}
-
-/// A text quoted as the walk key's tuple writes it: in single quotes, double ones when it
-/// holds a single quote and no double one, with backslashes, line ends, tabs and the quote
-/// escaped. E §4.1.
-fn quoted(s: &str) -> String {
-    let quote = if s.contains('\'') && !s.contains('"') {
-        '"'
-    } else {
-        '\''
-    };
-    let mut out = String::with_capacity(s.len());
-    out.push(quote);
-    for c in s.chars() {
-        match c {
-            '\\' => out.push_str("\\\\"),
-            '\n' => out.push_str("\\n"),
-            '\r' => out.push_str("\\r"),
-            '\t' => out.push_str("\\t"),
-            c if c == quote => {
-                out.push('\\');
-                out.push(c);
-            }
-            c => out.push(c),
-        }
-    }
-    out.push(quote);
-    out
 }
 
 /// A move instance in one timeline (refcore's `Inst`).
@@ -418,23 +376,6 @@ pub struct Seed {
     pub at_cut: Option<Day>,
 }
 
-/// A binding tuple of a move: its scope, keys, and the hole of a `where` that is one, or of a
-/// domain or law date that is one, and what deciding it read (refcore's `move_tuples`
-/// statuses and colls).
-struct Tuple {
-    /// The scope.
-    env: Env,
-    /// The keys.
-    keys: Vec<KeyVal>,
-    /// Whether it exists.
-    exists: Exists,
-    /// The hole of a domain or of a law date: the instance's day and existence are that hole.
-    domain_hole: Option<Hole>,
-    /// What deciding it read: its law dates, domains, members and `where`s, which go with its
-    /// instance, not to the reader of the move's instances.
-    coll: Collected,
-}
-
 /// What an instance's body gives: whether it exists, its legs, attributes and period.
 pub(super) struct Body {
     /// Whether it exists.
@@ -509,6 +450,9 @@ impl Engine {
         {
             return Ok(Status::LeftOut);
         }
+        if scenario_early(m, mv, inst) {
+            return Ok(Status::LeftOut);
+        }
         if inst.err.is_some() {
             return Ok(Status::Refused);
         }
@@ -561,6 +505,10 @@ impl Engine {
         let tctx = Ctx::new(None, cut);
         let mut out = Vec::new();
         for tuple in self.move_tuples(m, mv, tctx)? {
+            if let Some(err) = tuple.refused.clone() {
+                out.extend(self.refused_tuple(m, mv, tuple, err, tctx)?);
+                continue;
+            }
             if let Some(hole) = tuple.domain_hole {
                 let mut inst = Inst::new(mv, tuple.keys, tuple.env);
                 inst.day = Some(Dated::Hole(hole.clone()));
@@ -593,6 +541,43 @@ impl Engine {
         Ok(out)
     }
 
+    /// The instance of a tuple whose last key's `where` is refused: a refused instance, its
+    /// day and legs read as any instance's, none where its `when` is false or its keys weren't
+    /// there; a tuple whose later keys are unbound has no day or places to read, so the move's
+    /// instances are refused, every place from the run's start (refcore's `insts_of_tuples`,
+    /// its refused tuples). L §5.14 Keys, §8.4 (tally 2.1.6); E §4.1 step 2.
+    ///
+    /// # Errors
+    ///
+    /// The refusal, for a tuple whose later keys are unbound; a load refusal met at run.
+    fn refused_tuple(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        tuple: Tuple,
+        err: Refusal,
+        tctx: Ctx,
+    ) -> Result<Option<Inst>, Stop> {
+        if tuple.keys.len() < mv.binds.len() {
+            return Err(Stop::Refused(err));
+        }
+        let seed = Seed {
+            env: tuple.env,
+            keys: tuple.keys,
+            exists: Exists::Yes,
+            at_cut: None,
+        };
+        let Some(mut inst) = self.eval_inst(m, mv, &seed, tctx)? else {
+            return Ok(None);
+        };
+        if inst.exists == Exists::No {
+            return Ok(None);
+        }
+        inst.err = Some(err);
+        inst.coll.merge(&tuple.coll);
+        Ok(Some(inst))
+    }
+
     /// A booked plan amount never changes: an instance's A₀, its existence and legs, is the
     /// same under every cut that books it at booking cut `booking`, across the asks of a run
     /// (refcore's `inv5`). E §9 item 5.
@@ -620,195 +605,15 @@ impl Engine {
         )))
     }
 
-    /// A move's binding tuples at the cut, depth first in binding order, each binding read at
-    /// the move's law date with the keys bound before it, each tuple with what deciding it
-    /// read, kept from the reader (refcore's `move_tuples`). E §4.1 step 1, L §5.14.
-    fn move_tuples(&mut self, m: &Reality, mv: &MoveInfo, ctx: Ctx) -> Result<Vec<Tuple>, Stop> {
-        let mut out = Vec::new();
-        let mut work = vec![Tuple {
-            env: Env::empty(),
-            keys: Vec::new(),
-            exists: Exists::Yes,
-            domain_hole: None,
-            coll: Collected::default(),
-        }];
-        while let Some(tuple) = work.pop() {
-            let Some(bind) = mv.binds.get(tuple.keys.len()) else {
-                out.push(tuple);
-                continue;
-            };
-            self.push();
-            let law = self.move_law(m, mv, &tuple.env, ctx);
-            let mut decided = tuple.coll.clone();
-            decided.merge(&self.pop_alone());
-            let law = match law? {
-                Law::Hole(h) => {
-                    out.push(Tuple {
-                        domain_hole: Some(h),
-                        coll: decided,
-                        ..tuple
-                    });
-                    continue;
-                }
-                Law::Day(d) => Some(d),
-                Law::None => None,
-            };
-            let members = match self.binding_members(m, &bind.node, &tuple.env, ctx.at_law(law))? {
-                Err((h, read)) => {
-                    decided.merge(&read);
-                    out.push(Tuple {
-                        domain_hole: Some(h),
-                        coll: decided,
-                        ..tuple
-                    });
-                    continue;
-                }
-                Ok(members) => members,
-            };
-            let mut next = Vec::with_capacity(members.len());
-            for (member, read) in members {
-                let mut extended = extend(m, mv, &tuple, &bind.var, &bind.domain, member)?;
-                extended.coll = decided.clone();
-                extended.coll.merge(&read);
-                next.push(extended);
-            }
-            work.extend(next.into_iter().rev());
-        }
-        Ok(out)
-    }
-
-    /// A move's law date by its `at`, with the keys bound so far: none while it reads a key
-    /// not yet bound (refcore's `move_law`). L §4.3, §5.14.
-    fn move_law(&mut self, m: &Reality, mv: &MoveInfo, env: &Env, ctx: Ctx) -> Result<Law, Stop> {
-        let Some(at) = &mv.decl.at else {
-            return Ok(Law::None);
-        };
-        if mv
-            .binds
-            .iter()
-            .any(|b| env.get(&b.var).is_none() && reads_name(at, &b.var))
-        {
-            return Ok(Law::None);
-        }
-        let v = self.ev(m, at, env, ctx.at_law(None))?;
-        if let Value::Hole(h) = v {
-            return Ok(Law::Hole(h));
-        }
-        if v == Value::None {
-            return Err(refuse(
-                Run::None,
-                format!("the law date of {} is none here", mv.id),
-            ));
-        }
-        Ok(Law::Day(date_of(&v)?))
-    }
-
-    /// The binding tuple of `mv` at `keys` under cut `cut`, its `when` read at the cut: none
-    /// when no tuple has those keys or its `when` is false; a `when` that is a hole or refused
-    /// is taken as existing, its link judged where its instance is (refcore's `link_tuple`).
-    /// L §5.19 Links, E §4.1 step 2.
-    ///
-    /// # Errors
-    ///
-    /// The refusals the binding tuples meet; a load refusal met at run.
-    pub(crate) fn link_tuple(
-        &mut self,
-        m: &Reality,
-        mv: &MoveInfo,
-        keys: &[KeyVal],
-        cut: Day,
-    ) -> Result<Option<Env>, Stop> {
-        let tctx = Ctx::new(None, cut);
-        for tuple in self.move_tuples(m, mv, tctx)? {
-            if tuple.keys != keys {
-                continue;
-            }
-            if tuple.exists == Exists::No {
-                return Ok(None);
-            }
-            if let (Some(when), Exists::Yes, None) =
-                (&mv.decl.when, &tuple.exists, &tuple.domain_hole)
-            {
-                match self.when_at_cut(m, mv, when, &tuple.env, tctx) {
-                    Ok(false) => return Ok(None),
-                    Ok(true) => {}
-                    Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {}
-                    Err(stop) => return Err(stop),
-                }
-            }
-            return Ok(Some(tuple.env));
-        }
-        Ok(None)
-    }
-
-    /// Whether a link's instance may exist by its `when` at the ask's cut: false only for a
-    /// `when` that is false (refcore's `link_tuple`, its `when`). L §5.19.
-    fn when_at_cut(
-        &mut self,
-        m: &Reality,
-        mv: &MoveInfo,
-        when: &crate::syntax::Expr,
-        env: &Env,
-        tctx: Ctx,
-    ) -> Result<bool, Stop> {
-        let law = match self.move_law(m, mv, env, tctx)? {
-            Law::Hole(_) => return Ok(true),
-            Law::Day(d) => Some(d),
-            Law::None => None,
-        };
-        let w = self.ev(m, when, env, tctx.at_law(law))?;
-        Ok(w != Value::Bool(false))
-    }
-
-    /// The places the legs of `mv`'s instance at `env` give at the cut, no amount read; none
-    /// where a place can't be read here, so the link is judged by its keys alone (refcore's
-    /// `link_places`). L §5.19 Links.
-    ///
-    /// # Errors
-    ///
-    /// A load refusal met at run.
-    pub(crate) fn link_places(
-        &mut self,
-        m: &Reality,
-        mv: &MoveInfo,
-        env: &Env,
-        cut: Day,
-    ) -> Result<std::collections::BTreeSet<String>, Stop> {
-        let tctx = Ctx::new(None, cut);
-        let none = std::collections::BTreeSet::new();
-        let law = match self.move_law(m, mv, env, tctx) {
-            Ok(Law::Hole(_)) => return Ok(none),
-            Ok(Law::Day(d)) => Some(d),
-            Ok(Law::None) => None,
-            Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => return Ok(none),
-            Err(stop) => return Err(stop),
-        };
-        let mut places = std::collections::BTreeSet::new();
-        for leg in &mv.decl.legs {
-            for e in [&leg.from, &leg.to] {
-                match self.ev(m, e, env, tctx.at_law(law)) {
-                    Ok(Value::Key(KeyVal::Thing(name))) => {
-                        places.insert(name);
-                    }
-                    Ok(_) => return Ok(none),
-                    Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {
-                        return Ok(none);
-                    }
-                    Err(stop) => return Err(stop),
-                }
-            }
-        }
-        Ok(places)
-    }
-
     /// One instance: its day at the cut K, then, for a plan, its body at its booking cut
     /// min(t, K) or at the seed's cut; none when its day is `never` or `none` (refcore's
-    /// `eval_inst`). E §5 steps 0–1, E §4.1 step 2.
+    /// `eval_inst`). A run-time refusal stays with the instance, a refused movement, and a
+    /// plan's legs are then read for their places (tally 2.1.6). E §5 steps 0–1, E §4.1
+    /// step 2.
     ///
     /// # Errors
     ///
-    /// A load refusal met at run; `NotBuilt` past what S builds; a run-time refusal stays
-    /// with the instance.
+    /// A load refusal met at run; `NotBuilt` past what S builds.
     pub(crate) fn eval_inst(
         &mut self,
         m: &Reality,
@@ -818,16 +623,105 @@ impl Engine {
     ) -> Result<Option<Inst>, Stop> {
         let mut inst = Inst::new(mv, seed.keys.clone(), seed.env.clone());
         self.push();
-        let made = self.inst_parts(m, mv, &mut inst, tctx, seed);
-        let met = self.pop_alone();
-        inst.coll.merge(&met);
-        match made {
-            Ok(true) => Ok(Some(inst)),
-            Ok(false) => Ok(None),
+        let made = match self.inst_parts(m, mv, &mut inst, tctx, seed) {
             Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {
                 inst.err = Some(r);
-                Ok(Some(inst))
+                self.refused_legs(m, mv, &mut inst, tctx).map(|()| true)
             }
+            made => made,
+        };
+        let met = self.pop_alone();
+        inst.coll.merge(&met);
+        Ok(made?.then_some(inst))
+    }
+
+    /// A refused plan instance's legs, its evaluation stopped before them: their places read
+    /// at its booking cut and law date, each leg's amount the refusal; none where a place
+    /// can't be read here, so the walk refuses every place from its day (refcore's
+    /// `eval_inst`, its refusal). A refused movement reaches as a hole movement does: its day
+    /// and its legs' places are still read, since neither depends on whether it exists (L §8.4,
+    /// tally 2.1.6). E §4.1 step 2, §4.2 Holes in the walk.
+    ///
+    /// # Errors
+    ///
+    /// A load refusal met at run.
+    fn refused_legs(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        inst: &mut Inst,
+        tctx: Ctx,
+    ) -> Result<(), Stop> {
+        if mv.decision {
+            return Ok(());
+        }
+        let day = inst.day.as_ref().and_then(Dated::day);
+        let cut = day.map_or(tctx.cut, |d| d.min(tctx.cut));
+        if let Some(legs) = self.refused_places(m, mv, inst, Ctx::new(inst.law, cut))? {
+            inst.legs = legs;
+        }
+        Ok(())
+    }
+
+    /// The legs of refused instance `inst` with their places read at `ctx` and no amount, the
+    /// refusal in its place, each on the instance's day; none where a place isn't a thing
+    /// here, a hole or a refusal, since such a leg could book anywhere (refcore's
+    /// `refused_places`, and `dec_bad`'s places). An instance refused before its day may fall
+    /// on any day: its legs are dated the end of time, no day (L §7.6 item 1), which falls
+    /// before no scenario's `from` (L §6.4: refcore's legs there have no day). L §8.4, E §4.2
+    /// Holes in the walk.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for an instance with no refusal; a load refusal met at run.
+    pub(super) fn refused_places(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        inst: &Inst,
+        ctx: Ctx,
+    ) -> Result<Option<Vec<LegVal>>, Stop> {
+        let err = inst
+            .err
+            .clone()
+            .ok_or_else(|| invariant("a refused instance with no refusal"))?;
+        let day = inst.day.clone().unwrap_or(Dated::Day(Day::END));
+        let mut legs = Vec::with_capacity(mv.decl.legs.len());
+        for leg in &mv.decl.legs {
+            let Some(from) = self.read_or_refused(m, &leg.from, &inst.env, ctx)? else {
+                return Ok(None);
+            };
+            let Some(to) = self.read_or_refused(m, &leg.to, &inst.env, ctx)? else {
+                return Ok(None);
+            };
+            let (Value::Key(KeyVal::Thing(from)), Value::Key(KeyVal::Thing(to))) = (from, to)
+            else {
+                return Ok(None);
+            };
+            legs.push(LegVal {
+                name: leg.name.clone(),
+                from: End::Place(from),
+                to: End::Place(to),
+                amount: Amount::Refused(err.clone()),
+                unit: None,
+                day: day.clone(),
+            });
+        }
+        Ok(Some(legs))
+    }
+
+    /// The value of `e` at `ctx`, or none where it is refused at run (refcore's `try: ev …
+    /// except TallyError`, a load refusal raised). L §8.4.
+    fn read_or_refused(
+        &mut self,
+        m: &Reality,
+        e: &crate::syntax::Expr,
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Option<Value>, Stop> {
+        match self.ev(m, e, env, ctx) {
+            Ok(v) => Ok(Some(v)),
+            Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => Ok(None),
             Err(stop) => Err(stop),
         }
     }
@@ -1000,200 +894,10 @@ impl Engine {
             fulfils,
         })
     }
-
-    /// One leg: its places, its day and its amount in its unit; a run-time refusal of the
-    /// amount stays with the leg (refcore's `eval_leg`). L §5.14 Legs.
-    fn eval_leg(
-        &mut self,
-        m: &Reality,
-        inst: &Inst,
-        leg: &Leg,
-        kind_unit: &str,
-        ctx: Ctx,
-    ) -> Result<LegVal, Stop> {
-        let from_value = self.ev(m, &leg.from, &inst.env, ctx)?;
-        let to_value = self.ev(m, &leg.to, &inst.env, ctx)?;
-        let from = leg_end(m, inst, leg, from_value, "from")?;
-        let to = leg_end(m, inst, leg, to_value, "to")?;
-        let day = match &leg.on {
-            None => inst
-                .day
-                .clone()
-                .ok_or_else(|| invariant("a leg of an instance with no day"))?,
-            Some(e) => {
-                let v = self.ev(m, e, &inst.env, ctx)?;
-                if v == Value::None {
-                    return Err(refuse(
-                        Run::None,
-                        format!("the day of leg {} of {} is none here", leg.name, inst.id),
-                    ));
-                }
-                if let Value::Hole(h) = v {
-                    Dated::Hole(h)
-                } else {
-                    Dated::Day(date_of(&v)?)
-                }
-            }
-        };
-        let read = self.ev(m, &leg.amount, &inst.env, ctx);
-        let ends = (&from, &to);
-        let (amount, unit) = match read {
-            Ok(v) => amount_of(m, &inst.id, &leg.name, kind_unit, &v, ends)?,
-            Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {
-                (Amount::Refused(r), None)
-            }
-            Err(stop) => return Err(stop),
-        };
-        Ok(LegVal {
-            name: leg.name.clone(),
-            from,
-            to,
-            amount,
-            unit,
-            day,
-        })
-    }
-}
-
-/// A leg's end read as `v`: a place, or a hole; `RUN-NONE` for none, `RUN-DOMAIN` for a value
-/// that isn't a place (refcore's `eval_leg`, its places). L §5.14 Legs.
-fn leg_end(m: &Reality, inst: &Inst, leg: &Leg, v: Value, side: &str) -> Result<End, Stop> {
-    if v == Value::None {
-        return Err(refuse(
-            Run::None,
-            format!(
-                "the {side} place of leg {} of {} is none here",
-                leg.name, inst.id
-            ),
-        ));
-    }
-    if let Value::Hole(h) = v {
-        return Ok(End::Hole(h));
-    }
-    if let Value::Key(KeyVal::Thing(name)) = &v
-        && let Some(thing) = m.things.get(name)
-        && m.is_place(thing)
-    {
-        if thing
-            .base
-            .as_ref()
-            .is_some_and(|b| m.subtree("assets").contains(b))
-        {
-            return Err(refuse_load(
-                Load::Kind,
-                format!("a leg to or from an asset ({} of {})", leg.name, inst.id),
-            ));
-        }
-        return Ok(End::Place(name.clone()));
-    }
-    Err(refuse(
-        Run::Domain,
-        format!(
-            "the {side} of leg {} of {} is {}, not a place",
-            leg.name,
-            inst.id,
-            shown(m, &v)?
-        ),
-    ))
-}
-
-/// A leg's amount read as `v`: a hole, `RUN-NONE` for none, a quantity in its unit, else
-/// `RUN-DOMAIN`; a run-time refusal stays with the leg (refcore's `eval_leg`, its amount).
-/// L §5.14 Legs.
-fn amount_of(
-    m: &Reality,
-    inst_id: &str,
-    leg: &str,
-    kind_unit: &str,
-    v: &Value,
-    ends: (&End, &End),
-) -> Result<(Amount, Option<String>), Stop> {
-    if let Value::Hole(h) = v {
-        return Ok((
-            Amount::Hole(h.clone()),
-            leg_unit_static(m, kind_unit, ends.0, ends.1),
-        ));
-    }
-    if *v == Value::None {
-        let r = Refusal::new(
-            Code::Run(Run::None),
-            format!("the amount of leg {leg} of {inst_id} is none here"),
-        );
-        return Ok((Amount::Refused(r), None));
-    }
-    if !matches!(v, Value::Money(_) | Value::Number(_)) {
-        let r = Refusal::new(
-            Code::Run(Run::Domain),
-            format!("the amount of leg {leg} of {inst_id} is {}", shown(m, v)?),
-        );
-        return Ok((Amount::Refused(r), None));
-    }
-    match leg_amount(m, inst_id, leg, kind_unit, v, ends.0, ends.1) {
-        Ok((q, u)) => Ok((Amount::Qty(q), Some(u))),
-        Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {
-            Ok((Amount::Refused(r), None))
-        }
-        Err(stop) => Err(stop),
-    }
-}
-
-/// A move's law date: none, a day, or a hole.
-enum Law {
-    /// No `at`, or one that reads a key not yet bound.
-    None,
-    /// A day.
-    Day(Day),
-    /// A hole.
-    Hole(Hole),
-}
-
-/// A tuple extended by one binding's member: its variable bound, its key made a key of the
-/// binding's domain, its hole joined (refcore's `move_tuples`, `go`). L §5.14.
-fn extend(
-    m: &Reality,
-    mv: &MoveInfo,
-    tuple: &Tuple,
-    var: &str,
-    domain: &Domain,
-    member: Member,
-) -> Result<Tuple, Stop> {
-    let value = member
-        .env
-        .get(var)
-        .map(|v| v.value.clone())
-        .ok_or_else(|| invariant("a member without its variable"))?;
-    let listed = matches!(domain, Domain::List(_) | Domain::Range);
-    let key = if let Value::Key(k) = &value {
-        k.clone()
-    } else if let Value::Mv(r) = &value {
-        KeyVal::Mv(r.clone())
-    } else if let (Value::Number(n), true) = (&value, listed) {
-        KeyVal::Int(
-            n.q.to_i64()
-                .ok_or(Stop::NotBuilt("a key that isn't an integer"))?,
-        )
-    } else if let (Value::Day(d), true) = (&value, listed) {
-        KeyVal::Day(*d)
-    } else {
-        crate::eval::to_key(m, &mv.id, &value, domain)?
-    };
-    let mut keys = tuple.keys.clone();
-    keys.push(key);
-    let exists = match member.unknown {
-        None => tuple.exists.clone(),
-        Some(h) => join(tuple.exists.clone(), &h),
-    };
-    Ok(Tuple {
-        env: member.env,
-        keys,
-        exists,
-        domain_hole: None,
-        coll: tuple.coll.clone(),
-    })
 }
 
 /// Existence joined with a hole: the union of the questions (L §8.1).
-fn join(ex: Exists, h: &Hole) -> Exists {
+pub(super) fn join(ex: Exists, h: &Hole) -> Exists {
     match ex {
         Exists::Unknown(own) => match spread(&[Some(&own), Some(h)]) {
             Some(both) => Exists::Unknown(both),
@@ -1233,6 +937,27 @@ fn keys_seen(m: &Reality, mv: &MoveInfo, keys: &[KeyVal], cut: Day) -> bool {
     true
 }
 
+/// Whether `inst` is an instance of a move a scenario declares whose day, or a leg's own day,
+/// falls before the scenario's `from`: it books nothing there, so it is left out; load has
+/// refused the move where it sees that day and that the instance exists (refcore's
+/// `scen_early`). L §6.4.
+fn scenario_early(m: &Reality, mv: &MoveInfo, inst: &Inst) -> bool {
+    let Some(from) = scenario_from(m, &mv.id) else {
+        return false;
+    };
+    let legs = inst.legs.iter().filter_map(|leg| leg.day.day());
+    let day = inst.day.as_ref().and_then(Dated::day);
+    day.into_iter().chain(legs).any(|d| d < from)
+}
+
+/// The `from` of the scenario whose file declares move `id`, or `None` for a move of the base
+/// (refcore's `scen_from`). L §6.4.
+#[must_use]
+pub(super) fn scenario_from(m: &Reality, id: &str) -> Option<Day> {
+    let scenario = m.scenarios.of(id)?;
+    m.scenarios.from.get(scenario).copied()
+}
+
 /// An event kind's certainty, its own or its nearest parent's (refcore's `kind_certainty`).
 /// L §5.7.
 #[must_use]
@@ -1267,114 +992,6 @@ fn inst_order(m: &Reality, mv: &MoveInfo, inst: &Inst) -> Order {
         move_id: mv.id.clone(),
         keys,
     }
-}
-
-/// A hole amount's unit, where it can be seen: the kind's leg unit when it is one, else a
-/// place's (refcore's `leg_unit_static`). L §5.14.
-fn leg_unit_static(m: &Reality, kind_unit: &str, from: &End, to: &End) -> Option<String> {
-    if m.currencies.contains_key(kind_unit) || m.units.contains(kind_unit) {
-        return Some(kind_unit.to_owned());
-    }
-    place_units(m, from, to).into_iter().next()
-}
-
-/// A leg's amount as a quantity of its unit: places of another unit are `LOAD-UNIT`, a
-/// negative amount `RUN-NEG`, money finer than its minor unit `LOAD-UNIT` (refcore's
-/// `leg_amount`). L §5.10, §5.14.
-fn leg_amount(
-    m: &Reality,
-    inst_id: &str,
-    leg: &str,
-    kind_unit: &str,
-    amount: &Value,
-    from: &End,
-    to: &End,
-) -> Result<(Num, String), Stop> {
-    let units = place_units(m, from, to);
-    let (q, own) = quantity(m, amount)?;
-    let unit = if m.currencies.contains_key(kind_unit) || m.units.contains(kind_unit) {
-        kind_unit.to_owned()
-    } else {
-        let found = match (&own, units.iter().next()) {
-            (Some(u), _) => Some(u.clone()),
-            (None, Some(u)) if q.is_zero() && units.len() == 1 => Some(u.clone()),
-            (None, _) => None,
-        };
-        let Some(u) = found else {
-            return Err(refuse_load(
-                Load::Unit,
-                format!(
-                    "the amount of leg {leg} of {inst_id} ({}) is in no unit of a place",
-                    shown(m, amount)?
-                ),
-            ));
-        };
-        if kind_unit != "any"
-            && m.kinds.get(kind_unit).is_some()
-            && m.unit_kind_keys.get(&u).map(String::as_str) != Some(kind_unit)
-            && !(kind_unit == "currencies" && m.currencies.contains_key(&u))
-        {
-            return Err(refuse_load(
-                Load::Unit,
-                format!(
-                    "the amount of leg {leg} of {inst_id} is in {u}, not a unit of {kind_unit}"
-                ),
-            ));
-        }
-        u
-    };
-    if !units.is_empty() && (units.len() != 1 || !units.contains(&unit)) {
-        let all: Vec<&str> = units.iter().map(String::as_str).collect();
-        return Err(refuse_load(
-            Load::Unit,
-            format!(
-                "leg {leg} of {inst_id} moves {unit} between places of {}",
-                all.join(", ")
-            ),
-        ));
-    }
-    if let Some(u) = &own
-        && *u != unit
-    {
-        return Err(refuse_load(
-            Load::Unit,
-            format!("the amount of leg {leg} of {inst_id} is in {u}, not {unit}"),
-        ));
-    }
-    if q.is_negative() {
-        return Err(refuse(
-            Run::Neg,
-            format!(
-                "negative amount {} for leg {leg} of {inst_id}",
-                shown(m, amount)?
-            ),
-        ));
-    }
-    if let Some(minor) = m.currencies.get(&unit)
-        && !q.checked_div(minor).map_err(num_err)?.is_integer()
-    {
-        return Err(refuse_load(
-            Load::Unit,
-            format!(
-                "the amount of leg {leg} of {inst_id} ({}) is not money of {unit}: round it",
-                shown(m, amount)?
-            ),
-        ));
-    }
-    Ok((q, unit))
-}
-
-/// The units of a leg's places, but `any` (refcore's `leg_amount`, the places' units). L §5.14.
-fn place_units(m: &Reality, from: &End, to: &End) -> std::collections::BTreeSet<String> {
-    let mut out = std::collections::BTreeSet::new();
-    for p in [from, to].into_iter().filter_map(End::place) {
-        if let Some(u) = m.things.get(p).and_then(|t| m.place_unit(t))
-            && u != "any"
-        {
-            out.insert(u);
-        }
-    }
-    out
 }
 
 /// A number or money as a quantity, with its unit where it is one unit to the first power
@@ -1416,7 +1033,7 @@ pub fn qty_value(m: &Reality, q: &Num, unit: &str) -> Result<Value, Stop> {
 
 /// The day a value names: a day, or a day period's (refcore's `date_of`); a value that isn't
 /// one is a load refusal met at run. L §4.2.
-fn date_of(v: &Value) -> Result<Day, Stop> {
+pub(super) fn date_of(v: &Value) -> Result<Day, Stop> {
     if let Value::Day(d) = v {
         return crate::eval::a_day(*d);
     }
@@ -1432,26 +1049,321 @@ fn date_of(v: &Value) -> Result<Day, Stop> {
 }
 
 /// A value as it prints, for a message. L §8.4.
-fn shown(m: &Reality, v: &Value) -> Result<String, Stop> {
+pub(super) fn shown(m: &Reality, v: &Value) -> Result<String, Stop> {
     v.text(m).map_err(num_err)
 }
 
 /// A number error as its refusal (L §7.1).
-fn num_err(e: crate::num::NumError) -> Stop {
+pub(super) fn num_err(e: crate::num::NumError) -> Stop {
     crate::eval::num_stop(e)
 }
 
 /// A run-time refusal (L §8.4).
-fn refuse(code: Run, message: String) -> Stop {
+pub(super) fn refuse(code: Run, message: String) -> Stop {
     Stop::Refused(Refusal::new(Code::Run(code), message))
 }
 
 /// A load refusal met at run (L §8.3).
-fn refuse_load(code: Load, message: String) -> Stop {
+pub(super) fn refuse_load(code: Load, message: String) -> Stop {
     Stop::Refused(Refusal::new(Code::Load(code), message))
 }
 
 /// A broken promise: `ENGINE-INVARIANT` (E §11).
 pub(crate) fn invariant(what: &str) -> Stop {
     Stop::Refused(Refusal::new(Code::EngineInvariant, what.to_owned()))
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::Days;
+    use crate::api::{Asks, Given, Pin, Request, run};
+
+    /// A plan over two bindings whose first key's `where` is refused in February (a
+    /// division by zero), before its second binding.
+    const LATER_KEY: &str = r#"model later_key
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+
+source fixture "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+index tier = 1..2
+
+place konto: accounts PLN lives 2026-01-01..
+
+place box: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input dec_dom: int
+
+input fee_amt: money PLN
+
+input wdiv[m in month]: num
+
+move topup[m in month where 1 / wdiv[m] > 0, t in tier]: transfers
+  on day_of(m, dec_dom)
+  leg cash from world to box amount fee_amt
+
+ask q_bal: bal(konto, d), bal(box, d) for d in [2026-01-20, 2026-03-20]
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  dec_dom = 20 "the day of the month"
+  fee_amt = 3.00 "a fee"
+  wdiv[2026-01] = 1 "answered"
+  wdiv[2026-02] = 0 "a division by zero: the key's where is refused"
+  wdiv[2026-03] = 2 "answered"
+  opening[konto] = 100 at 2026-01-01 start
+  opening[box] = 0 at 2026-01-01 start
+"#;
+
+    #[test]
+    fn a_refused_where_before_a_later_binding_refuses_every_place_from_the_start() {
+        // L §5.14 Keys, §8.4 (tally 2.1.6): topup[2026-02]'s where is refused before its tier
+        // is bound, so it has no day or places to read and the move's instances are refused,
+        // every place from the run's start, as refcore's insts_of_tuples raises
+        let given = vec![Given {
+            path: "later_key.tally".to_owned(),
+            bytes: Some(LATER_KEY.as_bytes().to_vec()),
+        }];
+        let request = Request {
+            asks: Asks::Named(vec!["q_bal".to_owned()]),
+            pin: Pin::Canonical,
+            days: Days::Events,
+        };
+        let answer = run(given, &request).expect("an answer");
+        assert_eq!(
+            answer.lines(),
+            [
+                "q_bal (d = 2026-01-20): (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)",
+                "  cut 2026-02-15",
+                "q_bal (d = 2026-03-20): (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)",
+                "  cut 2026-02-15"
+            ],
+            "every place refused from the start"
+        );
+    }
+
+    /// A plan over three months whose `when` is refused in February, and its leg's place
+    /// there too.
+    const REFUSED_PLACE: &str = r#"model refused_place
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+
+source fixture "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+
+place konto: accounts PLN lives 2026-01-01..
+
+place box: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input dec_dom: int
+
+input fee_amt: money PLN
+
+input wdiv[m in month]: num
+
+move topup[m in month]: transfers
+  on day_of(m, dec_dom)
+  when 1 / wdiv[m] > 0
+  leg cash from world to (if 1 / wdiv[m] > 0 then box else konto) amount fee_amt
+
+ask q_bal: bal(konto, d), bal(box, d) for d in [2026-01-20, 2026-02-19, 2026-02-20]
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  dec_dom = 20 "the day of the month"
+  fee_amt = 3.00 "a fee"
+  wdiv[2026-01] = 1 "answered"
+  wdiv[2026-02] = 0 "a division by zero: the when and the place are refused"
+  wdiv[2026-03] = 2 "answered"
+  opening[konto] = 100 at 2026-01-01 start
+  opening[box] = 0 at 2026-01-01 start
+"#;
+
+    /// The same plan whose leg's place, read only for February's refused instance, meets a
+    /// load refusal at run (a rate per year times a day).
+    const PLACE_LOAD_REFUSAL: &str = r#"model place_load_refusal
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+
+source fixture "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+
+place konto: accounts PLN lives 2026-01-01..
+
+place box: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input dec_dom: int
+
+input fee_amt: money PLN
+
+input r5: rate
+
+input wdiv[m in month]: num
+
+move topup[m in month]: transfers
+  on day_of(m, dec_dom)
+  when 1 / wdiv[m] > 0
+  leg cash from world to (if wdiv[m] == 0 then (if r5 * 1 day > 0 then konto else box) else box) amount fee_amt
+
+ask q_bal: bal(konto, d), bal(box, d) for d in [2026-01-20, 2026-02-19, 2026-02-20]
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  dec_dom = 20 "the day of the month"
+  fee_amt = 3.00 "a fee"
+  r5 = 5 %/year "five per cent a year"
+  wdiv[2026-01] = 1 "answered"
+  wdiv[2026-02] = 0 "a division by zero: the when and the place are refused"
+  wdiv[2026-03] = 2 "answered"
+  opening[konto] = 100 at 2026-01-01 start
+  opening[box] = 0 at 2026-01-01 start
+"#;
+
+    /// A base whose scenario declares a plan over the days, kept by a `when` load can't see,
+    /// that exists on 31 December, before the scenario's `from`.
+    const EARLY_BASE: &str = r#"model hh
+  tally 2
+  on 2026-01-02
+  start 2025-12-30
+  end 2026-01-05
+
+source s "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2025-01-01..
+
+place world: outside lives 1900-01-01..
+
+input from_day: date
+
+input top_amt: money PLN
+
+input lift_amt: money PLN
+
+ask q: bal(konto, 2026-01-05), top_amt, lift_amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  from_day = 2025-12-31
+  top_amt = 1.00 PLN
+  lift_amt = 2.00 PLN
+  opening[konto] = 10.00 PLN at 2025-12-30 start
+"#;
+
+    const EARLY_SCENARIO: &str = r"scenario topup over hh
+  tally 2
+  from 2026-01-01
+
+move top[d in days]: transfers
+  on d
+  when d >= from_day
+  leg cash from world to konto amount top_amt
+
+ask q_top: bal(konto, 2026-01-05) in topup
+";
+
+    /// The printed lines of ask `ask` over `files`, under the event walk.
+    fn answer(files: &[(&str, &str)], ask: &str) -> Vec<String> {
+        let given = files
+            .iter()
+            .map(|(path, text)| Given {
+                path: (*path).to_owned(),
+                bytes: Some(text.as_bytes().to_vec()),
+            })
+            .collect();
+        let request = Request {
+            asks: Asks::Named(vec![ask.to_owned()]),
+            pin: Pin::Canonical,
+            days: Days::Events,
+        };
+        run(given, &request).expect("an answer").lines().to_vec()
+    }
+
+    #[test]
+    fn a_refused_plan_whose_legs_place_is_refused_refuses_every_place_from_its_day() {
+        // L §8.4 (tally 2.1.6): topup[2026-02]'s when is refused, and its leg's place can't be
+        // read there either, so it refuses every place from its day, 20 February; January's
+        // instance books, and nothing is refused before
+        assert_eq!(
+            answer(&[("place.tally", REFUSED_PLACE)], "q_bal"),
+            [
+                "q_bal (d = 2026-01-20): (100.00 PLN, 3.00 PLN)",
+                "  unfulfilled: topup[2026-01]",
+                "  cut 2026-02-15",
+                "q_bal (d = 2026-02-19): (100.00 PLN, 3.00 PLN)",
+                "  unfulfilled: topup[2026-01]",
+                "  cut 2026-02-15",
+                "q_bal (d = 2026-02-20): (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)",
+                "  unfulfilled: topup[2026-01]",
+                "  cut 2026-02-15"
+            ],
+            "every place refused from 20 February"
+        );
+    }
+
+    #[test]
+    fn a_load_refusal_met_reading_a_refused_plans_place_refuses_the_run() {
+        // L §3.3, §8.3: a load refusal met at run, here reading the place of February's
+        // refused instance, refuses the run in the base's world, as anywhere else
+        assert_eq!(
+            answer(&[("loadrun.tally", PLACE_LOAD_REFUSAL)], "q_bal"),
+            [
+                "refused: LOAD-UNIT 0.05 /year * 1 day: a rate times a duration of another period dimension (day/year)"
+            ],
+            "the run refused"
+        );
+    }
+
+    #[test]
+    fn a_scenarios_plan_before_its_from_is_left_out_at_run() {
+        // L §6.4: top[2025-12-31] exists (from_day is 31 December), but scenario topup's from
+        // is 1 January, so it books nothing there: 10.00 + 5 × 1.00, and the note
+        assert_eq!(
+            answer(
+                &[("model.tally", EARLY_BASE), ("a.tally", EARLY_SCENARIO)],
+                "q_top"
+            ),
+            [
+                "q_top: 15.00 PLN",
+                "  world: topup",
+                "  unfulfilled: top[2026-01-01]",
+                "  left out: top, 1 instances, first 2025-12-31",
+                "  cut 2026-01-02"
+            ],
+            "the instance before the from left out"
+        );
+    }
 }

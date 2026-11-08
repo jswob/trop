@@ -1,12 +1,13 @@
-//! Aggregates `sum`, `count`, `min`, `max`, `any`, `all` over bindings: the binding tuples in binding order, the unknown members a hole `where` makes, and each aggregate's rule for holes.
+//! Aggregates over bindings: tuples in binding order, the unknown members a hole `where` makes, and each aggregate's rule for holes.
 //! Spec: L §5.11 (aggregates; a key whose `where` is a hole is an unknown member; `sum` over
 //! no keys is 0 in the term's type; `min`/`max` over no keys is `RUN-EMPTY`), §2.5 (binding
 //! order: an index's order, a kind's things by the text of `kind:key`), §5.7 (a binding over
 //! a kind `on d` or `over s`), §4.5 (the keys and things a cut sees), §8.1 (holes spread),
-//! §7.6 items 1 and 2 (a range's days and its 1 000 000 keys).
-//! Twin: engine/tools/refcore/evaluate.py (`members`, `bind_values`, `range_values`,
-//! `span_value`, `zero_of`, `e_agg`, `agg_minmax`, `agg_anyall`) and model.py (`alive_on`,
-//! `alive_over`, `kind_order_key`).
+//! §7.6 item 1 (the end of time is no day to end a span on). A stepped range's keys are
+//! `ranges.rs`'s.
+//! Twin: engine/tools/refcore/evaluate.py (`members`, `bind_values`, `span_value`, `zero_of`,
+//! `e_agg`, `agg_minmax`, `agg_anyall`) and model.py (`alive_on`, `alive_over`,
+//! `kind_order_key`).
 //! Invariants: tuples come in binding order, depth first as refcore's generator; an unknown
 //! member's term counts only as its questions, except a 0 in a sum; a domain that is a hole
 //! makes the aggregate that hole; a binding over movements or an observed input takes its
@@ -14,28 +15,21 @@
 //! when the member passes the `where`: an aggregate's reader, or an ask's line for that
 //! tuple alone.
 
-use core::cmp::Ordering;
-use std::collections::BTreeSet;
-
-use super::arith::{Op, Test, arith, compare, whole_of};
+use super::arith::{Op, Test, arith, compare};
 use super::builtin::written_year;
 use super::expr::hole_of;
-use super::state::{
-    Collected, Ctx, Engine, Env, a_day, invariant, num_stop, refuse, refuse_load, wrong_type,
-};
+use super::state::{Collected, Ctx, Engine, Env, a_day, invariant, not_typed, refuse, wrong_type};
 use super::ty::zero_of;
-use crate::base::{Load, Run};
+use crate::base::{Code, Refusal, Run};
 use crate::hole::{Hole, spread};
 use crate::model::{Class, Domain, IndexInfo, KeyVal, Number, Reality, Span, Thing, Value};
-use crate::num::Num;
 use crate::syntax::{
     Agg, AggFn, Bind, Domain as Over, Expr, Field, FieldValue, Key, Lit, Postfix, Span as SpanText,
     Stop,
 };
 use crate::time::{Day, Period};
-
-/// The most keys a stepped range binds: past it, `RUN-LIMIT` (L §7.6 item 2).
-const RANGE_LIMIT: i64 = 1_000_000;
+use core::cmp::Ordering;
+use std::collections::BTreeSet;
 
 /// A binding tuple: its scope, the questions that make it an unknown member, and what its
 /// movements brought when it keeps them for its own line.
@@ -61,14 +55,24 @@ pub(crate) enum Brings {
     ToTuple,
 }
 
-/// One binding's members, each with what deciding it read; or the hole of a domain that is
-/// one, with what reading it read (refcore's `move_tuples`, its `cd` and `cw`). E §4.1 step 1.
-pub(crate) type Decided = Result<Vec<(Member, Collected)>, (Hole, Collected)>;
+/// One binding's members, each with what deciding it read and the refusal its `where` met;
+/// or the hole of a domain that is one, with what reading it read (refcore's `move_tuples`,
+/// its `cd` and `cw`). E §4.1 step 1, L §5.14 Keys.
+pub(crate) type Decided = Result<Vec<(Member, Collected, Option<Refusal>)>, (Hole, Collected)>;
+
+/// What a binding's `where` says of a member: left out, or kept with the hole the `where` is
+/// where it is one. L §5.11.
+enum Kept {
+    /// The `where` is false.
+    Out,
+    /// The `where` is true, or a hole.
+    In(Option<Hole>),
+}
 
 /// One binding's values, each with its own unknown-member hole, or the hole of a domain that
 /// is unknown.
 #[derive(Debug, Clone, PartialEq, Eq)]
-enum Values {
+pub(super) enum Values {
     /// The values, in binding order.
     Known(Vec<(Value, Option<Hole>)>),
     /// The domain is a hole.
@@ -233,7 +237,7 @@ impl Engine {
                 continue;
             }
             let Value::Bool(holds) = t else {
-                return Err(wrong_type(m, &format!("{word} of"), &t));
+                return Err(not_typed());
             };
             if holds == decides {
                 return Ok(Value::Bool(decides));
@@ -350,11 +354,12 @@ impl Engine {
     /// One binding's members, each with what deciding it read, kept apart from the reader:
     /// the domain's reads, the member's own register and its `where`'s reads; or the hole of
     /// a domain that is one, with what reading it read (refcore's `move_tuples`, its `cd` and
-    /// `cw`). L §5.11, E §4.1 step 1.
+    /// `cw`). A member whose `where` is refused at run is kept with that refusal: its tuple is
+    /// a refused instance (L §5.14 Keys, §8.4; tally 2.1.6). L §5.11, E §4.1 step 1.
     ///
     /// # Errors
     ///
-    /// The refusals the domain and the `where`s meet.
+    /// The refusals the domain meets; a load refusal a `where` meets at run.
     pub(crate) fn binding_members(
         &mut self,
         m: &Reality,
@@ -379,19 +384,22 @@ impl Engine {
             if let Some(c) = brings.get(i) {
                 read.merge(c);
             }
+            let inner = env.with(&bind.var, value, bind_domain(m, bind));
             self.push();
-            let taken = self.take_value(m, bind, env, value, own, ctx);
+            let kept = self.where_keeps(m, bind, &inner, ctx);
             read.merge(&self.pop_alone());
-            if let Some((inner, unknown)) = taken? {
-                out.push((
-                    Member {
-                        env: inner,
-                        unknown,
-                        brought: Collected::default(),
-                    },
-                    read,
-                ));
-            }
+            let (unknown, refused) = match kept {
+                Ok(Kept::Out) => continue,
+                Ok(Kept::In(h)) => (joined(own, h), None),
+                Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => (None, Some(r)),
+                Err(stop) => return Err(stop),
+            };
+            let member = Member {
+                env: inner,
+                unknown,
+                brought: Collected::default(),
+            };
+            out.push((member, read, refused));
         }
         Ok(Ok(out))
     }
@@ -408,20 +416,35 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Option<(Env, Option<Hole>)>, Stop> {
         let inner = scope.with(&bind.var, value, bind_domain(m, bind));
+        Ok(match self.where_keeps(m, bind, &inner, ctx)? {
+            Kept::Out => None,
+            Kept::In(h) => Some((inner, joined(unknown, h))),
+        })
+    }
+
+    /// Whether binding `bind`'s `where` keeps the member bound in `inner`, and the hole it is
+    /// where it is one (refcore's `members`, its `where`). L §5.11.
+    fn where_keeps(
+        &mut self,
+        m: &Reality,
+        bind: &Bind,
+        inner: &Env,
+        ctx: Ctx,
+    ) -> Result<Kept, Stop> {
         let Some(filter) = &bind.filter else {
-            return Ok(Some((inner, unknown)));
+            return Ok(Kept::In(None));
         };
-        let tested = self.ev(m, filter, &inner, ctx)?;
+        let tested = self.ev(m, filter, inner, ctx)?;
         if let Value::Hole(h) = tested {
-            return Ok(Some((inner, joined(unknown, Some(h)))));
+            return Ok(Kept::In(Some(h)));
         }
         if tested == Value::None {
             return Err(refuse(Run::None, "a where is none here".to_owned()));
         }
         let Value::Bool(holds) = tested else {
-            return Err(wrong_type(m, "a where of", &tested));
+            return Err(not_typed());
         };
-        Ok(holds.then_some((inner, unknown)))
+        Ok(if holds { Kept::In(None) } else { Kept::Out })
     }
 
     /// The values one binding ranges over in scope `env` (refcore's `bind_values`). L §5.11,
@@ -496,7 +519,7 @@ impl Engine {
                 if let Value::Hole(h) = day {
                     return empty_or_unknown(bind, &things, h);
                 }
-                When::Day(day_of_binding(m, &day)?)
+                When::Day(day_of_binding(&day)?)
             }
             (None, Some(over)) => match self.span_value(m, over, env, ctx)? {
                 Err(h) => return empty_or_unknown(bind, &things, h),
@@ -557,98 +580,6 @@ impl Engine {
         let end = to.as_ref().map(|v| span_end(m, v)).transpose()?;
         Ok(Ok(Span::between(start, end)))
     }
-
-    /// The values of a range `a .. b [step s]`: days stepped, or integers (refcore's
-    /// `range_values`). L §5.11.
-    fn range_values(
-        &mut self,
-        m: &Reality,
-        parts: &(Expr, Expr, Option<Expr>),
-        env: &Env,
-        ctx: Ctx,
-    ) -> Result<Values, Stop> {
-        let (from, to, step) = parts;
-        let first = self.ev(m, from, env, ctx)?;
-        let last = self.ev(m, to, env, ctx)?;
-        let by = match step {
-            None => None,
-            Some(e) => Some(self.ev(m, e, env, ctx)?),
-        };
-        let holes = [
-            first.as_hole(),
-            last.as_hole(),
-            by.as_ref().and_then(Value::as_hole),
-        ];
-        if let Some(h) = spread(&holes) {
-            return Ok(Values::Unknown(h));
-        }
-        if let Value::Day(start) = first {
-            let Some(by) = by else {
-                return Err(Stop::NotBuilt("a range of days with no step"));
-            };
-            return day_range(m, start, &last, &by).map(Values::Known);
-        }
-        for v in [&first, &last] {
-            if *v == Value::None {
-                return Err(refuse(
-                    Run::None,
-                    "a value is none here: a range end".to_owned(),
-                ));
-            }
-        }
-        let stride = match &by {
-            None => Num::int(1),
-            Some(s) if [&first, &last, s].iter().all(|v| is_int(v)) => whole_of(m, s)?,
-            Some(_) => return Err(Stop::NotBuilt("a stepped range of numbers not integers")),
-        };
-        if let Some(s) = by
-            .as_ref()
-            .filter(|_| stride.is_negative() || stride.is_zero())
-        {
-            let message = format!(
-                "a stepped range whose step {} is not positive",
-                s.text(m).map_err(num_stop)?
-            );
-            return Err(refuse(Run::Domain, message));
-        }
-        let (lo, hi) = (whole_of(m, &first)?, whole_of(m, &last)?);
-        let limit = u64::try_from(RANGE_LIMIT).map_err(|_| invariant("the key limit"))?;
-        let Some(keys) = lo.range_keys(&hi, &stride, limit).map_err(num_stop)? else {
-            return Err(too_many_keys(m, (&first, &last, by.as_ref()))?);
-        };
-        let out = keys
-            .into_iter()
-            .map(|q| {
-                let key = Number {
-                    q,
-                    class: Class::Int,
-                };
-                (Value::Number(key), None)
-            })
-            .collect();
-        Ok(Values::Known(out))
-    }
-}
-
-/// Whether a value is an integer of no unit: an `int`, or a whole inline figure, which takes
-/// the type of what it meets (L §3.2).
-fn is_int(v: &Value) -> bool {
-    matches!(v, Value::Number(n) if n.q.is_integer()
-        && matches!(n.class, Class::Int | Class::Flex))
-}
-
-/// `RUN-LIMIT <a> .. <b> [step <s>] holds more than 1 000 000 keys` (refcore's `too_many`).
-/// L §7.6 item 2.
-fn too_many_keys(m: &Reality, (a, b, s): (&Value, &Value, Option<&Value>)) -> Result<Stop, Stop> {
-    let step = match s {
-        Some(s) => format!(" step {}", s.text(m).map_err(num_stop)?),
-        None => String::new(),
-    };
-    let (a, b) = (a.text(m).map_err(num_stop)?, b.text(m).map_err(num_stop)?);
-    Ok(refuse(
-        Run::Limit,
-        format!("{a} .. {b}{step} holds more than 1 000 000 keys"),
-    ))
 }
 
 /// When a binding over a kind tests its things: on a day, or over a span.
@@ -779,11 +710,15 @@ fn list_values(lits: &[Lit]) -> Vec<(Value, Option<Hole>)> {
     lits.iter().map(|lit| (list_value(lit), None)).collect()
 }
 
-/// One written key's value (refcore's `bind_values` for a list). L §2.5.
+/// One written key's value (refcore's `bind_values` for a list): an integer of any size, read
+/// exactly. L §2.5, §7.1, §7.6.
 fn list_value(lit: &Lit) -> Value {
     let word = Value::Word(lit.text());
     match lit {
-        Lit::Num(n) if n.whole && n.unit.is_none() => n.value.to_i64().map_or(word, Value::int),
+        Lit::Num(n) if n.whole && n.unit.is_none() => Value::Number(Number {
+            q: n.value.clone(),
+            class: Class::Int,
+        }),
         Lit::Day(d) => Value::Day(*d),
         Lit::Month(y, mo) => Period::month(*y, *mo).map_or(word, Value::Period),
         Lit::Quarter(y, q) => Period::quarter(*y, *q).map_or(word, Value::Period),
@@ -798,44 +733,8 @@ fn list_value(lit: &Lit) -> Value {
     }
 }
 
-/// The days from `start` to `end`, stepped (refcore's `range_values` for days). L §5.11.
-fn day_range(
-    m: &Reality,
-    start: Day,
-    end: &Value,
-    step: &Value,
-) -> Result<Vec<(Value, Option<Hole>)>, Stop> {
-    let last = day_of_binding(m, end)?;
-    let mut out = Vec::new();
-    let mut current = start;
-    let mut count: i64 = 0;
-    while current <= last {
-        count = count
-            .checked_add(1)
-            .ok_or_else(|| invariant("a day count"))?;
-        if count > RANGE_LIMIT {
-            return Err(too_many_keys(m, (&Value::Day(start), end, Some(step)))?);
-        }
-        out.push((Value::Day(current), None));
-        let Value::Day(next) = arith(m, Op::Add, &Value::Day(current), step)? else {
-            return Err(refuse_load(
-                Load::Unit,
-                "a range of days stepped by a value that isn't a duration".to_owned(),
-            ));
-        };
-        if next <= current {
-            return Err(refuse(
-                Run::Domain,
-                "a stepped range whose step is not positive".to_owned(),
-            ));
-        }
-        current = next;
-    }
-    Ok(out)
-}
-
 /// A binding's day: a day, or a day period's (refcore's `date_of`). L §5.7.
-fn day_of_binding(m: &Reality, v: &Value) -> Result<Day, Stop> {
+pub(super) fn day_of_binding(v: &Value) -> Result<Day, Stop> {
     if let Value::Day(d) = v {
         return a_day(*d);
     }
@@ -850,7 +749,7 @@ fn day_of_binding(m: &Reality, v: &Value) -> Result<Day, Stop> {
             "a value is none here: the day of a binding".to_owned(),
         ));
     }
-    Err(wrong_type(m, "the day of a binding is", v))
+    Err(not_typed())
 }
 
 /// A span's first day: a day, a period's start (refcore's `span_start`). L §5.7.

@@ -1,0 +1,11 @@
+model j
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  use m = "m/m.tally" sha256 "4bcae9a9d95227c06160e1a8e17b09280223ee80d52311bde4aa7761f6a108c3"
+  note "T, pre-M1 (#97, chunk 4; G3 review, 5815c57, #105, P17): its member m pins b, which has no file"
+
+input y: num
+
+source s "s"

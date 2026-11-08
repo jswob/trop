@@ -612,6 +612,51 @@ version v
   lift_amt = 2.00 PLN
   opening[konto] = 10.00 PLN at 2025-12-30 start
 ,,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:written/base,7:REQ-ASK,7:written,32:run base.tally --ask zz_m0_probe,1242:10:base.tally,1222:model written
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented, issue #90): keys and a price written in rows and clauses; a place keyed by persons, an observation's leg to one of them, an input keyed by a stepped range, a priced holding; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit etf_unit "a fund unit"
+
+kind persons
+
+kind gifts: event certain
+  leg cash: PLN
+
+place konto[p in persons]: accounts PLN lives 2026-01-01..
+
+place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input fund_price[m in months]: num PLN/etf_unit
+
+input rr[k in 1..9 step 2]: money PLN
+
+input amt: money PLN
+
+ask q: amt + rr[3]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ana] lives 2026-01-01..
+  persons + [ben] lives 2026-01-01..
+  amt = 1.00 PLN "the card"
+  rr[3] = 2.00 PLN "the card"
+  opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
+  bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[ana] amount 1.00 PLN) "a gift"
+,,1:1,36:refused: REQ-ASK no ask zz_m0_probe
 ,14:basic/reserved,13:LOAD-RESERVED,5:basic,32:run base.tally --ask zz_m0_probe,1033:10:base.tally,1013:model basic
   tally 2
   on 2026-03-01
@@ -10847,4 +10892,1732 @@ q_top: 15.00 PLN
   world: topup
   unfulfilled: top[2026-01-01]
   cut 2026-01-02
+,18:written/leg-key-if,8:LOAD-KEY,7:written,32:run base.tally --ask zz_m0_probe,1264:10:base.tally,1244:model written
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented, issue #90): keys and a price written in rows and clauses; a place keyed by persons, an observation's leg to one of them, an input keyed by a stepped range, a priced holding; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit etf_unit "a fund unit"
+
+kind persons
+
+kind gifts: event certain
+  leg cash: PLN
+
+place konto[p in persons]: accounts PLN lives 2026-01-01..
+
+place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input fund_price[m in months]: num PLN/etf_unit
+
+input rr[k in 1..9 step 2]: money PLN
+
+input amt: money PLN
+
+ask q: amt + rr[3]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ana] lives 2026-01-01..
+  persons + [ben] lives 2026-01-01..
+  amt = 1.00 PLN "the card"
+  rr[3] = 2.00 PLN "the card"
+  opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
+  bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[if true then ana else ben] amount 1.00 PLN) "a gift"
+,,1:1,84:refused: LOAD-KEY if true then ana else ben is not a key of persons (base.tally:44)
+,21:written/leg-key-paren,8:LOAD-KEY,7:written,32:run base.tally --ask zz_m0_probe,1244:10:base.tally,1224:model written
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented, issue #90): keys and a price written in rows and clauses; a place keyed by persons, an observation's leg to one of them, an input keyed by a stepped range, a priced holding; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit etf_unit "a fund unit"
+
+kind persons
+
+kind gifts: event certain
+  leg cash: PLN
+
+place konto[p in persons]: accounts PLN lives 2026-01-01..
+
+place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input fund_price[m in months]: num PLN/etf_unit
+
+input rr[k in 1..9 step 2]: money PLN
+
+input amt: money PLN
+
+ask q: amt + rr[3]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ana] lives 2026-01-01..
+  persons + [ben] lives 2026-01-01..
+  amt = 1.00 PLN "the card"
+  rr[3] = 2.00 PLN "the card"
+  opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
+  bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[(ana)] amount 1.00 PLN) "a gift"
+,,1:1,64:refused: LOAD-KEY (ana) is not a key of persons (base.tally:44)
+,19:written/price-paren,10:LOAD-PARSE,7:written,32:run base.tally --ask zz_m0_probe,1244:10:base.tally,1224:model written
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented, issue #90): keys and a price written in rows and clauses; a place keyed by persons, an observation's leg to one of them, an input keyed by a stepped range, a priced holding; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit etf_unit "a fund unit"
+
+kind persons
+
+kind gifts: event certain
+  leg cash: PLN
+
+place konto[p in persons]: accounts PLN lives 2026-01-01..
+
+place fund: holdings etf_unit priced (fund_price) lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input fund_price[m in months]: num PLN/etf_unit
+
+input rr[k in 1..9 step 2]: money PLN
+
+input amt: money PLN
+
+ask q: amt + rr[3]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ana] lives 2026-01-01..
+  persons + [ben] lives 2026-01-01..
+  amt = 1.00 PLN "the card"
+  rr[3] = 2.00 PLN "the card"
+  opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
+  bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[ana] amount 1.00 PLN) "a gift"
+,,1:1,78:refused: LOAD-PARSE cannot parse: expected a reference, got ( (base.tally:21)
+,22:written/range-key-name,8:LOAD-KEY,7:written,32:run base.tally --ask zz_m0_probe,1244:10:base.tally,1224:model written
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented, issue #90): keys and a price written in rows and clauses; a place keyed by persons, an observation's leg to one of them, an input keyed by a stepped range, a priced holding; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit etf_unit "a fund unit"
+
+kind persons
+
+kind gifts: event certain
+  leg cash: PLN
+
+place konto[p in persons]: accounts PLN lives 2026-01-01..
+
+place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input fund_price[m in months]: num PLN/etf_unit
+
+input rr[k in 1..9 step 2]: money PLN
+
+input amt: money PLN
+
+ask q: amt + rr[3]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ana] lives 2026-01-01..
+  persons + [ben] lives 2026-01-01..
+  amt = 1.00 PLN "the card"
+  rr[ana] = 2.00 PLN "the card"
+  opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
+  bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[ana] amount 1.00 PLN) "a gift"
+,,1:1,72:refused: LOAD-KEY ana is not a value of a stepped range (base.tally:42)
+,22:written/range-key-frac,8:LOAD-KEY,7:written,22:run base.tally --ask q,1244:10:base.tally,1224:model written
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented, issue #90): keys and a price written in rows and clauses; a place keyed by persons, an observation's leg to one of them, an input keyed by a stepped range, a priced holding; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit etf_unit "a fund unit"
+
+kind persons
+
+kind gifts: event certain
+  leg cash: PLN
+
+place konto[p in persons]: accounts PLN lives 2026-01-01..
+
+place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input fund_price[m in months]: num PLN/etf_unit
+
+input rr[k in 1..9 step 2]: money PLN
+
+input amt: money PLN
+
+ask q: amt + rr[3]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ana] lives 2026-01-01..
+  persons + [ben] lives 2026-01-01..
+  amt = 1.00 PLN "the card"
+  rr[2.5] = 2.00 PLN "the card"
+  opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
+  bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[ana] amount 1.00 PLN) "a gift"
+,,1:1,70:refused: LOAD-KEY 2.5 is not a value of 1 .. 9 step 2 (base.tally:42)
+,22:written/range-key-bool,8:LOAD-KEY,7:written,32:run base.tally --ask zz_m0_probe,1245:10:base.tally,1225:model written
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented, issue #90): keys and a price written in rows and clauses; a place keyed by persons, an observation's leg to one of them, an input keyed by a stepped range, a priced holding; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit etf_unit "a fund unit"
+
+kind persons
+
+kind gifts: event certain
+  leg cash: PLN
+
+place konto[p in persons]: accounts PLN lives 2026-01-01..
+
+place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input fund_price[m in months]: num PLN/etf_unit
+
+input rr[k in 1..9 step 2]: money PLN
+
+input amt: money PLN
+
+ask q: amt + rr[3]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ana] lives 2026-01-01..
+  persons + [ben] lives 2026-01-01..
+  amt = 1.00 PLN "the card"
+  rr[true] = 2.00 PLN "the card"
+  opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
+  bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[ana] amount 1.00 PLN) "a gift"
+,,1:1,73:refused: LOAD-KEY True is not a value of a stepped range (base.tally:42)
+,23:written/range-key-place,8:LOAD-KEY,7:written,32:run base.tally --ask zz_m0_probe,1251:10:base.tally,1231:model written
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented, issue #90): keys and a price written in rows and clauses; a place keyed by persons, an observation's leg to one of them, an input keyed by a stepped range, a priced holding; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit etf_unit "a fund unit"
+
+kind persons
+
+kind gifts: event certain
+  leg cash: PLN
+
+place konto[p in persons]: accounts PLN lives 2026-01-01..
+
+place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input fund_price[m in months]: num PLN/etf_unit
+
+input rr[k in 1..9 step 2]: money PLN
+
+input amt: money PLN
+
+ask q: amt + rr[3]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ana] lives 2026-01-01..
+  persons + [ben] lives 2026-01-01..
+  amt = 1.00 PLN "the card"
+  rr[konto[ana]] = 2.00 PLN "the card"
+  opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
+  bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[ana] amount 1.00 PLN) "a gift"
+,,1:1,73:refused: LOAD-KEY None is not a value of a stepped range (base.tally:42)
+,23:adjust/fulfils-key-expr,8:LOAD-KEY,6:adjust,32:run base.tally --ask zz_m0_probe,1303:10:base.tally,1283:model adjust
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): a wage raised after it was paid, and the back pay that settles the adjustment; it loads clean"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+kind wages: event certain
+  leg cash: PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input wage_amt: money PLN
+
+input wage_dom: int
+
+def net[m in months]: money PLN = wage_amt at start_of(m)
+
+move wage[m in months]: wages
+  on day_of(m, wage_dom)
+  at start_of(m)
+  leg cash from world to konto amount net[m]
+
+ask q: bal(konto, 2026-12-31)
+
+version plan
+  cite card
+  governs always
+  known 2025-12-01
+  wage_amt = 5 000.00 "a wage"
+  wage_dom = 10 "paid on the 10th"
+  opening[konto] = 0 at 2026-01-01 start "the card"
+
+version raise
+  cite card
+  governs 2026-03..2026-04
+  known 2026-05-01
+  replace wage_amt = 5 500.00 "a raise for March and April"
+
+version bank_a
+  cite card
+  governs 2026-05
+  known 2026-06-01
+  bank[r1] = (on: 2026-05-15, kind: wages, leg cash from world to konto amount 500.00 PLN, fulfils: adjustments[wage[2026-02 + 1].cash, raise]) "back pay for March"
+,,1:1,62:refused: LOAD-KEY None is not a key of months (base.tally:54)
+,30:basic/domain-anchored-schedule,11:LOAD-DOMAIN,5:basic,32:run base.tally --ask zz_m0_probe,1199:10:base.tally,1179:model basic
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index fm = month 2026-01..2026-03 from 17
+
+input cal: calendar
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def s[m in fm]: date = schedule(m, 1, following, cal)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  cal = calendar(weekends [sat, sun]) "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,95:refused: LOAD-DOMAIN schedule of a key of the anchored index fm has no meaning (base.tally:30)
+,22:basic/limit-range-frac,10:LOAD-LIMIT,5:basic,22:run base.tally --ask q,1078:10:base.tally,1058:model basic
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+ask many: max(k for k in 0..2000000 step 0.5)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,91:refused: LOAD-LIMIT 0 .. 2 000 000 step 0.5 holds more than 1 000 000 keys (base.tally:36)
+,27:basic/limit-range-frac-edge,10:LOAD-LIMIT,5:basic,22:run base.tally --ask q,1077:10:base.tally,1057:model basic
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+ask many: max(k for k in 0..500000 step 0.5)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,89:refused: LOAD-LIMIT 0 .. 500 000 step 0.5 holds more than 1 000 000 keys (base.tally:36)
+,23:basic/limit-range-money,10:LOAD-LIMIT,5:basic,22:run base.tally --ask q,1088:10:base.tally,1068:model basic
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+ask many: max(k for k in 0 PLN..2000000 PLN step 1 PLN)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,110:refused: LOAD-LIMIT 0.00 PLN .. 2 000 000.00 PLN step 1.00 PLN holds more than 1 000 000 keys (base.tally:36)
+,23:basic/limit-range-cents,10:LOAD-LIMIT,5:basic,22:run base.tally --ask q,1089:10:base.tally,1069:model basic
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+ask many: max(k for k in 0 PLN..20000 PLN step 0.01 PLN)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,107:refused: LOAD-LIMIT 0.00 PLN .. 20 000.00 PLN step 0.01 PLN holds more than 1 000 000 keys (base.tally:36)
+,21:basic/limit-range-pct,10:LOAD-LIMIT,5:basic,22:run base.tally --ask q,1080:10:base.tally,1060:model basic
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+ask many: max(k for k in 0%..100% step 0.0001%)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,88:refused: LOAD-LIMIT 0 .. 1 step 0.000001 holds more than 1 000 000 keys (base.tally:36)
+,22:basic/limit-range-days,10:LOAD-LIMIT,5:basic,22:run base.tally --ask q,1092:10:base.tally,1072:model basic
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+ask many: max(d for d in 2026-01-01..9999-12-31 step 1 day)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,103:refused: LOAD-LIMIT 2026-01-01 .. 9999-12-31 step 1 day holds more than 1 000 000 keys (base.tally:36)
+,27:basic/limit-range-days-edge,10:LOAD-LIMIT,5:basic,22:run base.tally --ask q,1092:10:base.tally,1072:model basic
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+ask many: max(d for d in 7262-02-01..9999-12-30 step 1 day)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,103:refused: LOAD-LIMIT 7262-02-01 .. 9999-12-30 step 1 day holds more than 1 000 000 keys (base.tally:36)
+,24:basic/limit-range-days-3,10:LOAD-LIMIT,5:basic,22:run base.tally --ask q,1092:10:base.tally,1072:model basic
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+ask many: max(d for d in 0001-01-01..9999-12-31 step 3 day)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,103:refused: LOAD-LIMIT 0001-01-01 .. 9999-12-31 step 3 day holds more than 1 000 000 keys (base.tally:36)
+,19:basic/of-key-signed,10:LOAD-PARSE,5:basic,22:run base.tally --ask q,1070:10:base.tally,1050:model basic
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  rate[q1] of konto[-1] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,76:refused: LOAD-PARSE cannot parse: expected a literal, got - (base.tally:44)
+,17:basic/of-key-star,10:LOAD-PARSE,5:basic,22:run base.tally --ask q,1069:10:base.tally,1049:model basic
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  rate[q1] of konto[*] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,76:refused: LOAD-PARSE cannot parse: expected a literal, got * (base.tally:44)
+,17:basic/of-key-expr,10:LOAD-PARSE,5:basic,22:run base.tally --ask q,1074:10:base.tally,1054:model basic
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  rate[q1] of konto[q1 + 1] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,70:refused: LOAD-PARSE cannot parse: expected "]", got + (base.tally:44)
+,24:basic/of-key-pair-signed,10:LOAD-PARSE,5:basic,22:run base.tally --ask q,1079:10:base.tally,1059:model basic
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  rate[q1] of (konto[-1], konto) = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,76:refused: LOAD-PARSE cannot parse: expected a literal, got - (base.tally:44)
+,18:basic/of-key-place,10:LOAD-PARTS,5:basic,22:run base.tally --ask q,1075:10:base.tally,1055:model basic
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  rate[q1] of konto[ana[q1]] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,56:refused: LOAD-PARTS of on a row of rate (base.tally:44)
+,20:basic/same-key-place,8:LOAD-KEY,5:basic,22:run base.tally --ask q,1066:10:base.tally,1046:model basic
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  same rate[q1] = rate[konto[ana]]
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,64:refused: LOAD-KEY konto[ana] is not a key of qs (base.tally:44)
+,21:basic/same-key-places,8:LOAD-KEY,5:basic,22:run base.tally --ask q,1071:10:base.tally,1051:model basic
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  same rate[q1] = rate[konto[ana, ben]]
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,69:refused: LOAD-KEY konto[ana, ben] is not a key of qs (base.tally:44)
+,25:basic/same-key-place-left,8:LOAD-KEY,5:basic,22:run base.tally --ask q,1065:10:base.tally,1045:model basic
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  same rate[konto[q1]] = rate[q2]
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,63:refused: LOAD-KEY konto[q1] is not a key of qs (base.tally:44)
+,25:basic/same-key-place-axis,8:LOAD-KEY,5:basic,22:run base.tally --ask q,1123:10:base.tally,1103:model basic
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+axis view
+  low "low"
+  high "high"
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+input w[o in view]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  same w[low] = w[konto[ana]]
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,66:refused: LOAD-KEY konto[ana] is not a key of view (base.tally:50)
+,30:basic/same-key-place-axis-left,8:LOAD-KEY,5:basic,22:run base.tally --ask q,1123:10:base.tally,1103:model basic
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+axis view
+  low "low"
+  high "high"
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+input w[o in view]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  same w[konto[ana]] = w[low]
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,66:refused: LOAD-KEY konto[ana] is not a key of view (base.tally:50)
+,25:basic/same-key-place-year,8:LOAD-KEY,5:basic,22:run base.tally --ask q,1113:10:base.tally,1093:model basic
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ly = year 2026..2027
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+input v[y in ly]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  same v[2026] = v[konto[ana]]
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,58:refused: LOAD-KEY None is not a key of ly (base.tally:48)
+,24:basic/same-key-place-int,8:LOAD-KEY,5:basic,22:run base.tally --ask q,1099:10:base.tally,1079:model basic
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ns = 1..3
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+input v[n in ns]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  same v[1] = v[konto[ana]]
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,58:refused: LOAD-KEY None is not a key of ns (base.tally:48)
+,19:basic/row-key-place,8:LOAD-KEY,5:basic,22:run base.tally --ask q,1102:10:base.tally,1082:model basic
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ns = 1..3
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+input v[n in ns]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  v[konto[ana]] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,58:refused: LOAD-KEY None is not a key of ns (base.tally:48)
+,16:written/key-kind,8:LOAD-KEY,7:written,32:run base.tally --ask zz_m0_probe,1289:10:base.tally,1269:model written
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented, issue #90): keys and a price written in rows and clauses; a place keyed by persons, an observation's leg to one of them, an input keyed by a stepped range, a priced holding; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit etf_unit "a fund unit"
+
+kind persons
+
+kind gifts: event certain
+  leg cash: PLN
+
+place konto[p in persons]: accounts PLN lives 2026-01-01..
+
+place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input fund_price[m in months]: num PLN/etf_unit
+
+input rr[k in 1..9 step 2]: money PLN
+
+input amt: money PLN
+
+input who: key persons
+
+ask q: amt + rr[3]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ana] lives 2026-01-01..
+  persons + [ben] lives 2026-01-01..
+  amt = 1.00 PLN "the card"
+  rr[3] = 2.00 PLN "the card"
+  who = zed "the card"
+  opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
+  bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[ana] amount 1.00 PLN) "a gift"
+,,1:1,62:refused: LOAD-KEY zed is not a key of persons (base.tally:45)
+,17:written/key-index,8:LOAD-KEY,7:written,32:run base.tally --ask zz_m0_probe,1304:10:base.tally,1284:model written
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented, issue #90): keys and a price written in rows and clauses; a place keyed by persons, an observation's leg to one of them, an input keyed by a stepped range, a priced holding; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit etf_unit "a fund unit"
+
+kind persons
+
+kind gifts: event certain
+  leg cash: PLN
+
+place konto[p in persons]: accounts PLN lives 2026-01-01..
+
+place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input fund_price[m in months]: num PLN/etf_unit
+
+input rr[k in 1..9 step 2]: money PLN
+
+input amt: money PLN
+
+index qs = [q1, q2]
+
+input who: key qs
+
+ask q: amt + rr[3]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ana] lives 2026-01-01..
+  persons + [ben] lives 2026-01-01..
+  amt = 1.00 PLN "the card"
+  rr[3] = 2.00 PLN "the card"
+  who = q9 "the card"
+  opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
+  bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[ana] amount 1.00 PLN) "a gift"
+,,1:1,56:refused: LOAD-KEY q9 is not a key of qs (base.tally:47)
+,17:written/key-month,8:LOAD-KEY,7:written,32:run base.tally --ask zz_m0_probe,1292:10:base.tally,1272:model written
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented, issue #90): keys and a price written in rows and clauses; a place keyed by persons, an observation's leg to one of them, an input keyed by a stepped range, a priced holding; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit etf_unit "a fund unit"
+
+kind persons
+
+kind gifts: event certain
+  leg cash: PLN
+
+place konto[p in persons]: accounts PLN lives 2026-01-01..
+
+place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input fund_price[m in months]: num PLN/etf_unit
+
+input rr[k in 1..9 step 2]: money PLN
+
+input amt: money PLN
+
+input who: key months
+
+ask q: amt + rr[3]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ana] lives 2026-01-01..
+  persons + [ben] lives 2026-01-01..
+  amt = 1.00 PLN "the card"
+  rr[3] = 2.00 PLN "the card"
+  who = 2031-05 "the card"
+  opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
+  bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[ana] amount 1.00 PLN) "a gift"
+,,1:1,67:refused: LOAD-KEY (2031, 5) is not a key of months (base.tally:45)
+,15:written/key-row,8:LOAD-KEY,7:written,32:run base.tally --ask zz_m0_probe,1294:10:base.tally,1274:model written
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented, issue #90): keys and a price written in rows and clauses; a place keyed by persons, an observation's leg to one of them, an input keyed by a stepped range, a priced holding; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit etf_unit "a fund unit"
+
+kind persons
+
+kind gifts: event certain
+  leg cash: PLN
+
+place konto[p in persons]: accounts PLN lives 2026-01-01..
+
+place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input fund_price[m in months]: num PLN/etf_unit
+
+input rr[k in 1..9 step 2]: money PLN
+
+input amt: money PLN
+
+input w[p in persons]: int
+
+ask q: amt + rr[3]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ana] lives 2026-01-01..
+  persons + [ben] lives 2026-01-01..
+  amt = 1.00 PLN "the card"
+  rr[3] = 2.00 PLN "the card"
+  w[zed] = 1 "the card"
+  opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
+  bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[ana] amount 1.00 PLN) "a gift"
+,,1:1,62:refused: LOAD-KEY zed is not a key of persons (base.tally:45)
+,15:written/key-ask,8:LOAD-KEY,7:written,22:run base.tally --ask z,1309:10:base.tally,1289:model written
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented, issue #90): keys and a price written in rows and clauses; a place keyed by persons, an observation's leg to one of them, an input keyed by a stepped range, a priced holding; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit etf_unit "a fund unit"
+
+kind persons
+
+kind gifts: event certain
+  leg cash: PLN
+
+place konto[p in persons]: accounts PLN lives 2026-01-01..
+
+place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input fund_price[m in months]: num PLN/etf_unit
+
+input rr[k in 1..9 step 2]: money PLN
+
+input amt: money PLN
+
+input w[p in persons]: int
+
+ask z: w[zed]
+
+ask q: amt + rr[3]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ana] lives 2026-01-01..
+  persons + [ben] lives 2026-01-01..
+  amt = 1.00 PLN "the card"
+  rr[3] = 2.00 PLN "the card"
+  w[ana] = 1 "the card"
+  opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
+  bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[ana] amount 1.00 PLN) "a gift"
+,,1:1,62:refused: LOAD-KEY zed is not a key of persons (base.tally:35)
+,15:gifts/key-giver,8:LOAD-KEY,5:gifts,32:run base.tally --ask zz_m0_probe,1697:10:base.tally,1677:model gifts
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): adjust's text, an event kind with a giver, and lifespan of a bound name's field over events and under a kind test; it loads clean"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+kind wages: event certain
+  leg cash: PLN
+
+kind gifts: event certain
+  leg cash: PLN
+  attr giver: key accounts
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input wage_amt: money PLN
+
+input wage_dom: int
+
+def net[m in months]: money PLN = wage_amt at start_of(m)
+
+def early: int = count(e in events over .. where lifespan(e.giver).from < e.day)
+
+def early_gifts: int = count(e in events over .. where e in gifts and lifespan(e.giver).to > e.day)
+
+move wage[m in months]: wages
+  on day_of(m, wage_dom)
+  at start_of(m)
+  leg cash from world to konto amount net[m]
+
+ask q: bal(konto, 2026-12-31)
+
+version plan
+  cite card
+  governs always
+  known 2025-12-01
+  wage_amt = 5 000.00 "a wage"
+  wage_dom = 10 "paid on the 10th"
+  opening[konto] = 0 at 2026-01-01 start "the card"
+
+version raise
+  cite card
+  governs 2026-03..2026-04
+  known 2026-05-01
+  replace wage_amt = 5 500.00 "a raise for March and April"
+
+version bank_a
+  cite card
+  governs 2026-05
+  known 2026-06-01
+  bank[r1] = (on: 2026-05-15, kind: wages, leg cash from world to konto amount 500.00 PLN, fulfils: adjustments[wage[2026-03].cash, raise]) "back pay for March"
+  bank[r2] = (on: 2026-05-20, kind: gifts, leg cash from world to konto amount 1.00 PLN, giver: zed) "a gift"
+,,1:1,63:refused: LOAD-KEY zed is not a key of accounts (base.tally:63)
 ,

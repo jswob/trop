@@ -9,6 +9,7 @@
 use core::cmp::Ordering;
 use std::collections::BTreeSet;
 
+use super::check::invariant;
 use super::keys::{KeyLit, int_of, key_source_text, lit_text};
 use super::steps::{Loader, num_stop, refuse};
 use crate::base::Load;
@@ -70,7 +71,7 @@ impl Loader {
             IndexInfo::new("bank_account", Form::Open),
         ] {
             let id = index.id.clone();
-            self.m.indexes.push(&id, index);
+            self.m.indexes.push(&mut self.m.symbols, &id, index)?;
         }
         for (file, section) in &self.sections {
             let Section::Index(decl) = section else {
@@ -113,7 +114,7 @@ impl Loader {
             index.line = Some(decl.line);
             index.anchored = matches!(&decl.form, IndexForm::Range { from: Some(_), .. });
             index.finish();
-            self.m.indexes.push(&decl.id, index);
+            self.m.indexes.push(&mut self.m.symbols, &decl.id, index)?;
         }
         Ok(())
     }
@@ -152,7 +153,7 @@ impl Loader {
         let Some(keys) = &row.keys else {
             return;
         };
-        if self.m.names.get(&row.target) != Some(&NameKind::Input) {
+        if self.m.names.kind(&row.target) != Some(NameKind::Input) {
             return;
         }
         let Some(input) = self.m.inputs.get(&row.target).filter(|i| !i.observed) else {
@@ -280,7 +281,12 @@ fn build_range(range: &Range) -> Result<IndexInfo, Stop> {
             index.period = Some(PeriodKind::Day);
             index.keys = day_keys(range)?;
         }
-        _ => return Err(Stop::NotBuilt("a range of that period word")),
+        _ => {
+            return Err(invariant(
+                "unreachable: the parser reads a range's word as int, year, month or day only"
+                    .to_owned(),
+            ));
+        }
     }
     Ok(index)
 }
@@ -331,7 +337,7 @@ impl Range {
         Err(refuse(Load::Limit, message, &self.file, self.line))
     }
 
-    /// `by n` as a step: at most 18 digits, so an `i64`.
+    /// `by n` as a step: at most 18 digits, so an `i64`. L §4.1 `by n`, §7.6 item 3.
     fn step(&self) -> Result<i64, Stop> {
         self.by
             .to_i64()
@@ -339,7 +345,7 @@ impl Range {
     }
 }
 
-/// A whole number of no unit, as written.
+/// A whole number of no unit, as written. L §4.1.
 fn whole(lit: &Lit) -> Option<&Num> {
     match lit {
         Lit::Num(n) if n.whole && n.unit.is_none() => Some(&n.value),
@@ -409,9 +415,15 @@ fn year_keys(range: &Range) -> Result<Vec<KeyVal>, Stop> {
     Ok(keys)
 }
 
-/// The period of a range's key, from its start to the first day after it.
+/// The period of a range's key, from its start to the first day after it. L §4.1.
 fn period_of(kind: PeriodKind, (start, end): (Day, Day), step: Step) -> Result<Period, Stop> {
-    Period::new(kind, start, end, step).ok_or(Stop::NotBuilt("a period out of order"))
+    Period::new(kind, start, end, step).ok_or_else(|| {
+        invariant(
+            "unreachable: a range's step below 1 is refused (LOAD-DOMAIN), so each key ends \
+             after its start"
+                .to_owned(),
+        )
+    })
 }
 
 /// The months of a month range, each `by` months long, from a day of the month.

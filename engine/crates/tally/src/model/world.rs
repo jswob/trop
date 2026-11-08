@@ -7,7 +7,7 @@
 //! Invariants: a reality loaded alone, or a base, holds no scenario; a scenario's reality holds
 //! its stack, each scenario over the model or over another of the stack.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// The scenarios a reality loads (L §6.4), empty for a base.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -25,5 +25,16 @@ impl Scenarios {
     #[must_use]
     pub fn of(&self, id: &str) -> Option<&str> {
         self.section.get(id).map(String::as_str)
+    }
+
+    /// The scenario whose world this reality is: the top of its stack, the one no other of the
+    /// stack is over; `None` for a base. L §6.4.
+    #[must_use]
+    pub fn own(&self) -> Option<&str> {
+        let under: BTreeSet<&str> = self.over.values().filter_map(Option::as_deref).collect();
+        self.over
+            .keys()
+            .map(String::as_str)
+            .find(|id| !under.contains(id))
     }
 }

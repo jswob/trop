@@ -8,10 +8,10 @@
 //! then the places' by thing name, a keyed place's clause once; each refusal is put at the
 //! line its clause or its value is written on; a value reads its places' prices at its day.
 
-use super::check::{
-    Checker, Files, Scope, Stands, literal_place, named_parts, place_section, place_target,
-};
-use super::types::{Typed, is_date, name_word, refused, text, uerr};
+use super::check::{Checker, Files, Scope, Stands, invariant};
+use super::targets::{literal_place, named_parts, place_section, place_target};
+use super::texts::text;
+use super::types::{Typed, is_date, name_word, refused, uerr};
 use crate::base::{Code, Load, Place as At, Refusal};
 use crate::model::{
     Entry, Mark, NameKind, Node, NodeKind, PlaceInfo, Reality, Rel, Shown, Thing, Ty, Unit,
@@ -136,7 +136,7 @@ pub(super) fn section_of(m: &Reality, thing: &Thing) -> Option<String> {
     if let Some(keys) = &thing.place {
         return Some(keys.place.clone());
     }
-    let unkeyed = m.names.get(&thing.name) == Some(&NameKind::Place);
+    let unkeyed = m.names.kind(&thing.name) == Some(NameKind::Place);
     unkeyed.then(|| thing.name.clone())
 }
 
@@ -185,7 +185,7 @@ fn per_unit_of(t: &Ty, cur: &str) -> bool {
 
 /// An input or a def `id`: its kind, its declared type and how many keys it takes.
 fn input_or_def_info(m: &Reality, id: &str) -> Option<(NameKind, Option<Ty>, usize)> {
-    let kind = *m.names.get(id)?;
+    let kind = m.names.kind(id)?;
     if kind == NameKind::Input {
         let input = m.inputs.get(id)?;
         return Some((kind, input.ty.clone(), input.binds.len()));
@@ -285,7 +285,11 @@ impl Checker {
             (other, _) => other,
         };
         let Some((id, posts)) = named_parts(&price.input) else {
-            return Err(Stop::NotBuilt("a priced reference with fields"));
+            return Err(invariant(
+                "unreachable: the parser reads a price as L §2.3's `ref`, so a price that isn't \
+                 a reference is LOAD-PARSE before load (T's `written/price-paren`)"
+                    .to_owned(),
+            ));
         };
         let keyed = matches!(posts, [Postfix::Keys(_)]);
         if !keyed && !posts.is_empty() {
@@ -298,7 +302,7 @@ impl Checker {
                 None => scope,
             };
             self.expr(m, &scope, &price.input, None, 0)?;
-            let read = m.names.get(id).filter(|_| !scope.is_var(id)).copied();
+            let read = m.names.kind(id).filter(|_| !scope.is_var(id));
             if !matches!(read, Some(NameKind::Input | NameKind::Def)) {
                 let message = format!(
                     "{what} is priced by {}, not an input or a def",
@@ -314,7 +318,7 @@ impl Checker {
                 return Err(at_clause(uerr(message)));
             }
         }
-        let Some(kind) = m.names.get(id).copied() else {
+        let Some(kind) = m.names.kind(id) else {
             return Err(at_clause(
                 refused(Load::Name, format!("unknown id {id}")).naming(id),
             ));
@@ -411,7 +415,7 @@ impl Checker {
             None
         };
         // refcore's `hit`: the id the name looks up, and the input or def it is.
-        let looked = name.filter(|id| !scope.is_var(id) && m.names.contains_key(*id));
+        let looked = name.filter(|id| !scope.is_var(id) && m.names.contains_key(id));
         // An unkeyed input or def with no `last` is read as an expression, below.
         let mut read = None;
         if let Some(id) = looked
@@ -491,7 +495,7 @@ fn keyed_input(m: &Reality, scope: &Scope, e: &Expr) -> bool {
     };
     matches!(posts.as_slice(), [Postfix::Keys(_)])
         && !scope.is_var(id)
-        && m.names.get(id) == Some(&NameKind::Input)
+        && m.names.kind(id) == Some(NameKind::Input)
 }
 
 /// The names of the things a value's place can give: the place it names, or every thing of

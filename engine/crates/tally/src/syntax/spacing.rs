@@ -11,7 +11,7 @@
 //! `8 PLN/hour`, `19 %`), as refcore does.
 
 use super::expr::is_builtin;
-use super::lex::{Canon, Kind, Role, Tok};
+use super::lex::{Canon, Kind, Read, Role, Tok};
 use super::parse::{Stop, is_keyword};
 use crate::base::{Code, Refusal};
 use crate::num::Num;
@@ -70,12 +70,14 @@ fn spaced(p: &Tok, t: &Tok) -> bool {
     if t.text == "(" && t_op {
         // A token the parser marks a name is one whatever its word: a field after `.` is never
         // a keyword (L §2.3 rule 3), so `a.or(x)` is a call and prints touching (2.1.4-1, #84).
-        let call = p.kind == Kind::Id && (is_builtin(&p.text) || pm.name);
+        let call = p.kind == Kind::Id && (is_builtin(&p.text) || pm.read == Read::Name);
         return !(p.text == "]" || call);
     }
     if t.text == "[" && t_op {
-        let keyed =
-            p.kind == Kind::Id && !is_keyword(&p.text) && !LIST_WORDS.contains(&p.text.as_str());
+        // An id's or a field's `[` touches whatever its word (`mi.or[k1]`, an item named
+        // `added`, `added[d]`; tally 2.1.6, #81); a calendar's list word's is spaced.
+        let word = !is_keyword(&p.text) && !LIST_WORDS.contains(&p.text.as_str());
+        let keyed = p.kind == Kind::Id && (pm.read != Read::Word || word);
         return !(p.text == "]" || p.text == ")" || keyed);
     }
     true

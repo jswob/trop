@@ -1,0 +1,6 @@
+part pa
+  tally 2
+
+source ta "t"
+
+input wa: num

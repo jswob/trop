@@ -199,7 +199,8 @@ def other: money DUK = round(gross, mi.and(DUK), half-up)
 
     /// The M0 gate's B3 and B4 (G11): `same` sides of every `sref` form stopped "not built",
     /// and a fraction past 64 bits was `ENGINE-INVARIANT`. The expected text and hash are
-    /// refcore's `reprint` of the same text.
+    /// refcore's `reprint` of the same text. A signed key is no `sref` key since tally 2.1.6
+    /// (#88, `format/same_key_signed`), so `fee[-1]` left the text.
     #[test]
     fn same_sides_of_every_form_and_fractions_of_any_size_reprint_as_refcore() {
         let written = "model home
@@ -233,7 +234,6 @@ version v1
   s = -200000000000000000000/40000000000000000000000
   same fee[a1].x = fee[a2]
   same z.b = fee[a2]
-  same fee[a2] = fee[-1]
 ";
         let canonical = "model home
   tally 2
@@ -259,7 +259,6 @@ version v1
   cite card
   governs always
   known 2026-01-01
-  same fee[a2] = fee[-1]
   same fee.y = fee[a2]
   same fee[a1].x = fee[a2]
   same fee[a1].x[a2] = fee[a2]
@@ -275,7 +274,7 @@ version v1
         let files = [("b.tally".to_owned(), canonical.to_owned())];
         assert_eq!(
             printed_hash(&files),
-            "5c80a260be1e5b07e11e967c117e0cbfc1d61ce9c41fc7cfdab272d62c1cf697",
+            "058774a2696cd0ba8c629f91ed7c18836002cfcc65a77b03ae480a290e1b0965",
             "refcore's sha256 line"
         );
     }

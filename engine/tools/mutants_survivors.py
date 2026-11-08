@@ -23,7 +23,15 @@ as missed. The equivalent count is of mutants, not rows: one row covers every mu
 with its key, such as the same mutation at two columns. Unviable mutants are reported,
 not counted. It fails on a survivor that isn't listed, a listed one that is now caught
 or unviable, a listed one no run produced, a row without a reason, a key listed twice,
-and a score under DONE gate 8's 90 %. Until the lead sets
+and a score under DONE gate 8's 90 %.
+
+A listed mutant reported caught whose only failures were nextest's slow-timeout kills
+(its log's last nextest `Summary` line has tests `timed out` and none `failed`: the
+mutants profile's `terminate-after`, not a test's verdict) isn't "now caught": a
+slowdown, such as an equivalent mutant that only turns off a fast path, mustn't flip a
+listed row (R-87, 2026-11-07; nightly run 42194515919). It stays a listed survivor,
+counted as timed out, and a notice names the killed tests. An unlisted mutant caught
+that way still counts as caught. Until the lead sets
 the kernel at S (tools/kernel.toml), it reports the same problems and exits 0, since the
 stubs' mutants test nothing (R-85).
 """
@@ -43,6 +51,28 @@ CELL = re.compile(r"(?<!\\)\|")  # a cell ends at a pipe; `\|` is a pipe inside 
 POSITION = re.compile(r"^(?P<file>[^:]+):[0-9]+:[0-9]+: (?P<mutation>.+)$")
 SURVIVED = {"MissedMutant": "missed", "Timeout": "timed out"}
 GATE = 90  # DONE gate 8: at least 90 % of the kernel's mutants killed
+# nextest's lines in a mutant's log: the run's summary, and each test its slow-timeout ended
+SUMMARY = re.compile(r"^\s+Summary \[.*\] \d+ tests? run: (?P<counts>.*)$")
+KILLED = re.compile(r"^\s+TIMEOUT \[.*\] \(\S+\) (?P<test>.+)$")
+# a caught mutant whose only failures were slow-timeout kills (the docstring)
+KILLED_ONLY = "CaughtByKill"
+
+
+def killed_tests(log_path):
+    """The tests nextest's slow-timeout ended in a mutant's log, when those kills were its
+    only failures; [] when a test failed, nothing was ended, or there is no log."""
+    try:
+        with open(log_path, encoding="utf-8", errors="replace") as f:
+            lines = f.read().splitlines()
+    except OSError:
+        return []
+    last = max((i for i, line in enumerate(lines) if SUMMARY.match(line)), default=None)
+    if last is None:
+        return []
+    counts = SUMMARY.match(lines[last])["counts"]
+    if "timed out" not in counts or "failed" in counts:
+        return []
+    return sorted({m["test"] for line in lines[last + 1:] if (m := KILLED.match(line))})
 
 
 def outcomes_files(dirs):
@@ -58,10 +88,12 @@ def outcomes_files(dirs):
 
 
 def mutants(paths):
-    """{(file, function, mutation): [summary, ...]} over every run, plus the counts.
+    """{(file, function, mutation): [summary, ...]} over every run, the counts, and
+    {key: killed tests} for the caught mutants whose only failures were kills (their
+    summary KILLED_ONLY, counted caught here).
 
     A key can hold several mutants: the same mutation at different columns."""
-    seen, counts = {}, {"caught": 0, "missed": 0, "timeout": 0, "unviable": 0}
+    seen, counts, killed = {}, {"caught": 0, "missed": 0, "timeout": 0, "unviable": 0}, {}
     for path in paths:
         with open(path, encoding="utf-8") as f:
             data = json.load(f)
@@ -74,10 +106,15 @@ def mutants(paths):
             function = (m.get("function") or {}).get("function_name") or "-"
             key = (m["file"], function, mutation)
             summary = outcome["summary"]
-            seen.setdefault(key, []).append(summary)
             counts[{"CaughtMutant": "caught", "MissedMutant": "missed", "Timeout": "timeout",
                      "Unviable": "unviable"}.get(summary, "unviable")] += 1
-    return seen, counts
+            if summary == "CaughtMutant" and outcome.get("log_path"):
+                tests = killed_tests(os.path.join(os.path.dirname(path), outcome["log_path"]))
+                if tests:
+                    summary = KILLED_ONLY
+                    killed.setdefault(key, set()).update(tests)
+            seen.setdefault(key, []).append(summary)
+    return seen, counts, killed
 
 
 def listed(problems):
@@ -119,9 +156,19 @@ def main(argv):
     if not argv or argv[0] in ("-h", "--help"):
         print(__doc__.strip())
         return 0 if argv else 64
-    seen, counts = mutants(outcomes_files(argv))
+    seen, counts, killed = mutants(outcomes_files(argv))
     problems = []
     rows = listed(problems)
+    for key in sorted(k for k in killed if k in rows):
+        # a listed mutant caught only by slow-timeout kills stays a survivor, timed out
+        n = seen[key].count(KILLED_ONLY)
+        seen[key] = ["Timeout" if s == KILLED_ONLY else s for s in seen[key]]
+        counts["caught"] -= n
+        counts["timeout"] += n
+        print(f"mutants-survivors: notice: {key[0]}: {key[2]} is listed and was caught only by slow-timeout kills "
+              f"({', '.join(sorted(killed[key]))}): counted as timed out, not as now caught (R-87)")
+    for key in seen:
+        seen[key] = ["CaughtMutant" if s == KILLED_ONLY else s for s in seen[key]]
     equivalent = 0
     for key, summaries in sorted(seen.items()):
         survived = [s for s in summaries if s in SURVIVED]

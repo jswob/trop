@@ -6,6 +6,7 @@
 //! stated one; children are sorted; entries are read in versions' known order, ties in section
 //! order; every thing has a base kind once this step ends.
 
+use super::check::invariant;
 use super::keys::key_source_text;
 use super::spans::lspan_to_span;
 use super::steps::{Loader, refuse};
@@ -21,7 +22,7 @@ impl Loader {
     pub(super) fn build_kinds(&mut self) -> Result<(), Stop> {
         for kind in prelude() {
             let id = kind.id.clone();
-            self.m.kinds.push(&id, kind);
+            self.m.kinds.push(&mut self.m.symbols, &id, kind)?;
         }
         let mut subs: BTreeSet<String> = BTreeSet::new();
         for (file, section) in &self.sections {
@@ -50,7 +51,7 @@ impl Loader {
                     place
                 }
                 Written::Sub { parent, certainty } => {
-                    if self.m.names.get(parent) != Some(&NameKind::Kind) {
+                    if self.m.names.kind(parent) != Some(NameKind::Kind) {
                         return Err(refuse(
                             Load::Name,
                             format!("unknown id {parent}"),
@@ -76,7 +77,7 @@ impl Loader {
             // Kept as written; the checker checks them (`load/parts.rs`), as refcore keeps
             // `decl.pclauses` for `check_parts`.
             info.parts.clone_from(&decl.parts);
-            self.m.kinds.push(&decl.id, info);
+            self.m.kinds.push(&mut self.m.symbols, &decl.id, info)?;
         }
         self.link_kinds(&subs)
     }
@@ -89,7 +90,11 @@ impl Loader {
                 continue;
             };
             let Some(up) = self.m.kinds.get_mut(&parent) else {
-                return Err(Stop::NotBuilt("a kind whose parent is missing"));
+                return Err(invariant(
+                    "unreachable: build_kinds refuses a kind whose parent isn't a kind \
+                     (LOAD-NAME) before it links them"
+                        .to_owned(),
+                ));
             };
             up.children.push(id.clone());
         }
@@ -121,7 +126,11 @@ impl Loader {
         while let Some(parent) = self.m.kinds.get(&at).and_then(|k| k.parent.clone()) {
             if !seen.insert(at.clone()) {
                 let Some((file, line)) = self.kind_place(id) else {
-                    return Err(Stop::NotBuilt("a cycle of the prelude's kinds"));
+                    return Err(invariant(
+                        "unreachable: the prelude's kinds are a tree, so a chain that comes \
+                         back starts at a written kind, whose section holds its place"
+                            .to_owned(),
+                    ));
                 };
                 return Err(refuse(
                     Load::Cycle,
@@ -162,7 +171,7 @@ impl Loader {
                 priced: None,
                 line: None,
             });
-            self.m.things.push(&code, thing);
+            self.m.things.push(&mut self.m.symbols, &code, thing)?;
         }
         let mut order: Vec<(Day, String)> = self
             .m
@@ -227,7 +236,7 @@ impl Loader {
             .iter()
             .map(|k| key_source_text(k, file, line))
             .collect::<Result<Vec<String>, Stop>>()?;
-        match self.m.names.get(target) {
+        match self.m.names.kind(target) {
             Some(NameKind::Index) => self.enter_index(version, file, enter, &texts, line),
             Some(NameKind::Kind) => self.enter_kind(version, file, enter, &texts, line),
             Some(_) => Err(refuse(
@@ -252,9 +261,7 @@ impl Loader {
         line: u32,
     ) -> Result<(), Stop> {
         let target = &enter.target;
-        let Some(index) = self.m.indexes.get_mut(target) else {
-            return Err(Stop::NotBuilt("an index that isn't built"));
-        };
+        let index = self.m.indexes.at_mut(self.m.names.index_id(target)?)?;
         if index.form != IndexForm::List {
             let form = if index.form == IndexForm::Open {
                 "open"
@@ -308,9 +315,7 @@ impl Loader {
         line: u32,
     ) -> Result<(), Stop> {
         let target = &enter.target;
-        let Some(kind) = self.m.kinds.get(target) else {
-            return Err(Stop::NotBuilt("a kind that isn't built"));
-        };
+        let kind = self.m.kinds.at(self.m.names.kind_id(target)?)?;
         let named = texts.join(", ");
         if !kind.children.is_empty() {
             return Err(refuse(
@@ -421,7 +426,9 @@ impl Loader {
         }
         let known = self.m.versions.get(version).map(|v| v.known);
         if !self.m.things.contains(name) {
-            self.m.things.push(name, Thing::new(name));
+            self.m
+                .things
+                .push(&mut self.m.symbols, name, Thing::new(name))?;
         }
         let mut olds: Vec<(Option<Day>, bool)> = Vec::new();
         let owner = self.entry_owner(Some(version));
@@ -434,9 +441,7 @@ impl Loader {
                 olds.push((self.entry_known(entry), entry.replace));
             }
         }
-        let Some(thing) = self.m.things.get_mut(name) else {
-            return Err(Stop::NotBuilt("a thing that isn't built"));
-        };
+        let thing = self.m.things.at_mut(self.m.thing_id(name)?)?;
         if enter.replace {
             let earlier = olds.iter().any(|(old, _)| old.is_some() && *old < known);
             if !earlier {
@@ -555,9 +560,11 @@ impl Loader {
             .and_then(|v| self.m.versions.get(v));
         match (version, entry.and_then(|e| e.line)) {
             (Some(v), Some(line)) => Ok((v.file.clone(), line)),
-            (Some(_) | None, None) | (None, Some(_)) => {
-                Err(Stop::NotBuilt("an entry no version states"))
-            }
+            (Some(_) | None, None) | (None, Some(_)) => Err(invariant(
+                "unreachable: an entry a refusal names is a version's `+` line, built with its \
+                 version and line"
+                    .to_owned(),
+            )),
         }
     }
 }

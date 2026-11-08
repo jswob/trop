@@ -10,9 +10,11 @@
 //! every walk over an expression or the graph is an explicit stack; the affine form's
 //! recursion is counted.
 
-use super::check::{Files, Scope, Stands, invariant, place_target};
+use super::check::{Files, Scope, Stands, invariant};
 use super::random::{DrawKey, QueryAt, Support, strip, support_max};
-use super::types::{children, refused, text};
+use super::targets::place_target;
+use super::texts::{children, text};
+use super::types::refused;
 use crate::base::Load;
 use crate::model::{Graph, Mark, NameKind, Node, NodeKind, ReadRole, Reality, Rel, Target, Ty};
 use crate::syntax::{Ask, AskBody, Expr, Postfix, QueryFn, Stop};
@@ -170,7 +172,7 @@ fn only_queried(roles: &[ReadRole]) -> bool {
 
 /// The input, def or fill a name reads, if it names one.
 fn read_node(m: &Reality, name: &str) -> Option<Node> {
-    let kind = m.names.get(name)?;
+    let kind = m.names.kind(name)?;
     let node_kind = match kind {
         NameKind::Input => NodeKind::Input,
         NameKind::Def => NodeKind::Def,

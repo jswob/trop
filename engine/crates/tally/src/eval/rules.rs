@@ -21,8 +21,9 @@ use crate::read::{Test, candidates, choose, origin, rule_in_force};
 use crate::syntax::{LawDate, RuleValue, Stop};
 use crate::time::Day;
 
+use super::convert::{ConvertFor, Converted, convert};
 use super::memo::{CellId, CellKey, LawClass, Read, rows_class, rules_class};
-use super::read::{ConvertFor, Converted, convert, shown};
+use super::read::shown;
 
 impl Engine {
     /// A read of def `def` at keys already made keys (refcore's `read_def`): its law date by

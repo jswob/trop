@@ -39,7 +39,7 @@ pub(super) fn zero_of(
 ) -> Result<Value, Stop> {
     let mut scope = env.clone();
     for bind in binds {
-        let v = bind_sample(m, bind).ok_or_else(unseen)?;
+        let v = bind_sample(m, bind, &scope, ctx)?.ok_or_else(unseen)?;
         scope.bind(&bind.var, v, None);
     }
     let like = sample(m, term, &scope, ctx)?.ok_or_else(unseen)?;
@@ -338,7 +338,7 @@ fn agg_sample(m: &Reality, agg: &Agg, env: &Env, ctx: Ctx) -> Result<Option<Valu
     }
     let mut scope = env.clone();
     for bind in &agg.binds {
-        let Some(v) = bind_sample(m, bind) else {
+        let Some(v) = bind_sample(m, bind, &scope, ctx)? else {
             return Ok(None);
         };
         scope.bind(&bind.var, v, None);
@@ -351,26 +351,48 @@ fn agg_sample(m: &Reality, agg: &Agg, env: &Env, ctx: Ctx) -> Result<Option<Valu
     }
 }
 
-/// A sample of a binding's values: an index's first key, a thing, a list's first item.
-fn bind_sample(m: &Reality, bind: &Bind) -> Option<Value> {
+/// A sample of a binding's values: an index's first key, a thing, a movement, a range's key.
+fn bind_sample(m: &Reality, bind: &Bind, env: &Env, ctx: Ctx) -> Result<Option<Value>, Stop> {
     match &bind.domain {
         Over::Name { id, qual: None } => {
             if let Some(ix) = m.indexes.get(id) {
-                return first_key(ix);
+                return Ok(first_key(ix));
             }
             if let Some(k) = m.kinds.get(id) {
                 if k.spec == crate::model::KindSpec::Event {
-                    return Some(mv_sample(id));
+                    return Ok(Some(mv_sample(id)));
                 }
-                return Some(Value::Key(KeyVal::Thing(String::new())));
+                return Ok(Some(Value::Key(KeyVal::Thing(String::new()))));
             }
-            m.inputs
+            Ok(m.inputs
                 .get(id)
                 .filter(|i| i.observed)
-                .map(|_| mv_sample("events"))
+                .map(|_| mv_sample("events")))
         }
-        Over::Name { qual: Some(_), .. } | Over::List(_) | Over::Range(_) => None,
+        Over::Range(parts) => range_sample(m, parts, env, ctx),
+        Over::Name { qual: Some(_), .. } | Over::List(_) => Ok(None),
     }
+}
+
+/// A sample of a range's key: its ends' type, two bare figures an integer (refcore's
+/// `range_type`: `int` where both ends are integers or bare figures, else the ends' type).
+/// L §5.6 (a stepped range), §3.2 (a bare figure takes the type of what it meets).
+fn range_sample(
+    m: &Reality,
+    (from, to, _): &(Expr, Expr, Option<Expr>),
+    env: &Env,
+    ctx: Ctx,
+) -> Result<Option<Value>, Stop> {
+    let Some(first) = sample(m, from, env, ctx)? else {
+        return Ok(None);
+    };
+    if !is_flex(&first) {
+        return Ok(Some(first));
+    }
+    Ok(match sample(m, to, env, ctx)? {
+        Some(last) if is_flex(&last) => Some(Value::int(0)),
+        last => last,
+    })
 }
 
 /// A movement of event kind `kind` as a sample.
@@ -486,6 +508,7 @@ fn ty_sample(m: &Reality, ty: &Ty) -> Result<Option<Value>, Stop> {
                 crate::model::PeriodWord::Month => Period::month_of(d),
                 crate::model::PeriodWord::Quarter => Period::quarter_of(d),
                 crate::model::PeriodWord::Year => Period::year_of(d),
+                crate::model::PeriodWord::Day => Period::day(d),
             })
             .map(Value::Period),
         Ty::Key(ix) => match m.indexes.get(ix) {

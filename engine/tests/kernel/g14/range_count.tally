@@ -1,0 +1,37 @@
+model g14_range_count
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97, chunk 4, G1a review B1): a range whose ends and step are literals is counted at load, whatever its form, never stepped (L §7.6 item 2, P30): of 1 000 000 keys each, a fractional step, money by its minor unit and days by 1, and days by 4 and by a month, it loads and the run answers an ask that reads none (their 1 000 001-key twins are codes/m0 basic/limit-range-*); a range whose end load can't see is counted at run, RUN-LIMIT, a fraction step and days"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+input amt: money PLN
+
+input day: date
+
+ask q: amt
+
+ask edge_frac: max(k for k in 0..499999.5 step 0.5)
+
+ask edge_cents: max(k for k in 0 PLN..9999.99 PLN step 0.01 PLN)
+
+ask edge_days: max(d for d in 7262-02-02..9999-12-31 step 1 day)
+
+ask edge_days4: max(d for d in 0001-01-01..9999-12-31 step 4 day)
+
+ask edge_month: max(d for d in 0001-01-01..9999-12-31 step 1 month)
+
+ask run_frac: max(k for k in 0..(amt / 1 PLN * 10000) step 0.5)
+
+ask run_days: max(d for d in day..9999-12-31 step 1 day)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"

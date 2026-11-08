@@ -9,7 +9,7 @@
 //! key of a list or open index, and no thing but a currency or a declared place, is named like
 //! an id.
 
-use super::steps::{Loader, refuse, section_id};
+use super::steps::{Loader, refuse};
 use crate::base::{Code, Load, Refusal};
 use crate::model::{
     BUILTIN_INDEXES, BUILTIN_INPUTS, BindInfo, Domain, InputInfo, NameKind, PRELUDE_KINDS, Ty,
@@ -19,7 +19,8 @@ use crate::syntax::{Bind, Domain as BindDomain, Section, Stop, is_builtin};
 impl Loader {
     /// The built-in inputs, the prelude's kinds, `cut` and the built-in indexes, named first
     /// (refcore's `register_builtins`). L §5.19, §5.7, §4.1.
-    pub(super) fn register_builtins(&mut self) {
+    pub(super) fn register_builtins(&mut self) -> Result<(), Stop> {
+        let symbols = &mut self.m.symbols;
         for id in BUILTIN_INPUTS {
             let mut input = InputInfo::new(id, None);
             if id == "account_place" {
@@ -29,16 +30,17 @@ impl Loader {
                 input.binds = vec![builtin_bind("x", Domain::Kind("places".to_owned()))];
                 input.reading = true;
             }
-            self.m.names.insert(id.to_owned(), NameKind::Input);
-            self.m.inputs.push(id, input);
+            self.m.names.declare(symbols, id, NameKind::Input)?;
+            self.m.inputs.push(symbols, id, input)?;
         }
         for id in PRELUDE_KINDS {
-            self.m.names.insert(id.to_owned(), NameKind::Kind);
+            self.m.names.declare(symbols, id, NameKind::Kind)?;
         }
-        self.m.names.insert("cut".to_owned(), NameKind::Cut);
+        self.m.names.declare(symbols, "cut", NameKind::Cut)?;
         for id in BUILTIN_INDEXES {
-            self.m.names.insert(id.to_owned(), NameKind::Index);
+            self.m.names.declare(symbols, id, NameKind::Index)?;
         }
+        Ok(())
     }
 
     /// Every section's id into the one namespace, in section order (refcore's
@@ -46,7 +48,7 @@ impl Loader {
     /// function's name. L §2.5, §5.9.
     pub(super) fn register_names(&mut self) -> Result<(), Stop> {
         for (file, section) in &self.sections {
-            let (id, line) = section_id(section);
+            let (id, line) = section.id_line();
             if self.m.names.contains_key(id) {
                 let message = if is_builtin_id(id) {
                     format!("{id} is declared twice (a built-in id)")
@@ -59,9 +61,10 @@ impl Loader {
                 let message = format!("band {id} has a built-in's name");
                 return Err(refuse(Load::Dup, message, file, line));
             }
-            self.m.names.insert(id.to_owned(), section_kind(section));
+            let symbols = &mut self.m.symbols;
+            self.m.names.declare(symbols, id, section_kind(section))?;
             if let Section::Source(source) = section {
-                self.m.sources.push(id, source.as_ref().clone());
+                self.m.sources.push(symbols, id, source.as_ref().clone())?;
             }
         }
         Ok(())
@@ -86,7 +89,7 @@ impl Loader {
             }
         }
         for (name, _) in self.m.things.entries() {
-            let other = self.m.names.get(name).copied();
+            let other = self.m.names.kind(name);
             let shared = other.is_some_and(|k| k != NameKind::Unit && k != NameKind::Place);
             if shared && !self.m.currencies.contains_key(name) {
                 return Err(Stop::Refused(Refusal::new(

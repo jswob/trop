@@ -4,8 +4,10 @@ M0's own fixtures, for the format (row 4) and the load (rows 1 and 2). Standard 
 A text set is a (cwd, files) pair of a check of checks.tsv that runs a reality (its `not-run:` load rows included: their
 texts load and reprint, only their asks are never run): 315 sets, each named by the first of its checks' ids. To them
 come the format fixtures of m0/format/ (fixtures.tsv: one invented text per rule of L §2.4, each written off its
-canonical form in the one way the rule fixes). A set's file table holds the files its command line names, as named,
-and the members a joint model's `use` lines name, as INTERFACE.md §2 resolves them.
+canonical form in the one way the rule fixes; a row may name its run folder under m0/format/ and its arguments, the
+columns `cwd` and `args`, empty for m0/format/ and `<name>.tally`). A set's file table holds the files its command
+line names, as named (a directory given: each of its files as `<dir>/<path>`, as the binary names them), and the
+members a joint model's `use` lines name, as INTERFACE.md §2 resolves them.
 
 The format half: `reprint <files>` on the frozen refcore (PyPy, through run.py's own run_one: its 90 s budget, its
 cache, the watchdog). Its output is a section per file (`--- <path>` and the file's canonical text, L §2.4), then the
@@ -83,8 +85,14 @@ REPRINT_REFUSED = {
     'format/dup_kind': '#91: a kind declared twice under two parents (LOAD-DUP; the fuzz input e523 minimized)',
     'format/unknown_prefix': '#91: an input keyed by an index under a prefix no use line names (LOAD-NAME; the '
                              'fuzz input c5a8 minimized)',
+    'format/same_key_signed': '#88, #90: a same side keyed by a signed literal, no sref (LOAD-PARSE at parse, before '
+                              'the canonical order of same sides)',
+    'format/member_outside_parent': '#105 (held): refcore looks the member up from the printed name, LOAD-PIN (no such '
+                                    'file), where run finds it',
+    'format/member_nested_absent': '#105 (held): refcore refuses a nested member\'s absent member LOAD-NAME, the engine '
+                                   'LOAD-PIN as its run does',
 }
-REFUSED_LINE = re.compile(r'refused: [A-Z]+(?:-[A-Z]+)+ [^\n]*\n')
+REFUSED_LINE = re.compile(r'refused: (?:member [a-z][a-z0-9_]*: )*[A-Z]+(?:-[A-Z]+)+ [^\n]*\n')  # a member's: INTERFACE §2
 TEXTS_RS = R.T + 'runner/src/m0_texts.rs'
 FIXTURES = os.path.join(HERE, 'format', 'fixtures.tsv')
 FIXTURE_CWD = 'engine/tests/m0/format'
@@ -180,15 +188,24 @@ def text_sets():
     with open(FIXTURES, encoding='utf-8', newline='') as f:
         rows = list(csv.DictReader(f, delimiter='\t', quoting=csv.QUOTE_NONE))
     for r in rows:
-        out.append({'id': 'format/' + r['name'], 'group': 'format/' + r['name'], 'cwd': FIXTURE_CWD,
-                    'args': [r['name'] + '.tally'], 'rule': r['rule'], 'checks': []})
+        cwd = FIXTURE_CWD + ('/' + r['cwd'] if r.get('cwd') else '')
+        args = r['args'].split() if r.get('args') else [r['name'] + '.tally']
+        out.append({'id': 'format/' + r['name'], 'group': 'format/' + r['name'], 'cwd': cwd,
+                    'args': args, 'rule': r['rule'], 'checks': []})
     ids = [s['id'] for s in out]
     if len(set(ids)) != len(ids):
         sys.exit('two sets share an id')
     for s in out:
         cwd = s['cwd'].rstrip('/') or '.'
-        table = [(a, os.path.normpath(os.path.join(cwd, a))) for a in s['args']]
-        table += members(cwd, s['args'])
+        table = []
+        for a in s['args']:
+            p = os.path.normpath(os.path.join(cwd, a))
+            if os.path.isdir(R.ROOT + p):   # a directory given: its files, named <dir>/<path> as the binary names them
+                table += [((a if a.endswith('/') else a + '/') + os.path.relpath(f, R.ROOT + p).replace(os.sep, '/'),
+                           os.path.relpath(f, R.ROOT).replace(os.sep, '/')) for f in collect(R.ROOT + p)]
+            else:
+                table.append((a, p))
+        table += members(cwd, [k for k, _ in table])
         for key, repo in table:
             if not repo.startswith(PREFIX) or not os.path.isfile(R.ROOT + repo):
                 sys.exit('%s: %s is no file under engine/tests/' % (s['id'], key))

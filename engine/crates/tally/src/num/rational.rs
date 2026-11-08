@@ -192,6 +192,21 @@ impl Num {
         }
     }
 
+    /// Whether the range `self .. hi step step` holds more than `limit` keys, counted on the
+    /// big tier, uncapped, as refcore's Python numbers count them, and never stepped:
+    /// `⌊(hi − self) ÷ step⌋ + 1 > limit`, that is `hi − self ≥ limit × step` (no key when
+    /// `hi < self`). `RUN-DOMAIN` unless the step is positive. L §5.6, §7.1, §7.6 item 2.
+    pub fn range_past(&self, hi: &Num, step: &Num, limit: u64) -> Result<bool, NumError> {
+        if step.is_negative() || step.is_zero() {
+            return Err(NumError::Domain);
+        }
+        let span = hi.to_big().add(&self.to_big().neg()?)?;
+        let reach = step
+            .to_big()
+            .mul(&BigRat::integer(Big::from_u128(u128::from(limit))))?;
+        Ok(span.compare(&reach)? != Ordering::Less)
+    }
+
     /// Both values, when both are small. P §6 (the small tier first).
     fn small_pair(&self, o: &Num) -> Option<(Small, Small)> {
         match (&self.0, &o.0) {
@@ -489,6 +504,45 @@ mod tests {
             at(&one, &two, &half, 3),
             Err(NumError::Domain),
             "a step not whole"
+        );
+    }
+
+    #[test]
+    fn a_range_is_past_its_limit_counted_uncapped_and_its_step_is_positive() {
+        // L §7.6 item 2: ⌊(hi − lo) ÷ step⌋ + 1 keys, counted on the big tier, never stepped
+        let (one, two, six) = (Num::int(1), Num::int(2), Num::int(6));
+        let past = |lo: &Num, hi: &Num, step: &Num, limit| lo.range_past(hi, step, limit);
+        assert_eq!(
+            past(&one, &six, &two, 3),
+            Ok(false),
+            "1 .. 6 step 2: 3 keys"
+        );
+        assert_eq!(
+            past(&one, &Num::int(7), &two, 3),
+            Ok(true),
+            "1 .. 7 step 2: 4"
+        );
+        assert_eq!(past(&two, &one, &one, 0), Ok(false), "2 .. 1: no key");
+        let nines = Big::pow(10, 4_096)
+            .expect("pow")
+            .sub(&Big::from_i128(1))
+            .expect("sub");
+        let top = Num::from_big(BigRat::integer(nines)).expect("10^4096 - 1");
+        let ntop = top.checked_neg().expect("-top");
+        assert_eq!(
+            past(&ntop, &top, &one, u64::MAX),
+            Ok(true),
+            "-top .. top: past every limit, uncapped"
+        );
+        assert_eq!(
+            past(&one, &two, &Num::zero(), 3),
+            Err(NumError::Domain),
+            "step 0"
+        );
+        assert_eq!(
+            past(&one, &two, &Num::int(-1), 3),
+            Err(NumError::Domain),
+            "step -1"
         );
     }
 

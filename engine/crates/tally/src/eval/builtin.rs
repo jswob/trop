@@ -2,9 +2,12 @@
 //! Spec: L §4.2 (calendar built-ins: `start_of`, `end_of`, `day_of`, `year_of`, `month_of`,
 //! `days_between`, `add_days`, `add_months`, `age`, `pos`, `is_business`, `add_business`),
 //! §7.2 (`round` and the type of its result), §5.11 (`min`, `max`, `missing`), §3.3
-//! (`periodic`, `factor`: exact when the power is an integer), §8.1 (`HOLE-CALENDAR`).
+//! (`periodic`, `factor`: exact when the power is an integer), §8.1 (`HOLE-CALENDAR`); L §4.2
+//! `schedule` (a day of a period, rolled by a calendar), §7.6 items 1 and 5 (a day past the
+//! calendar; a calendar's search within 400 years).
 //! Twin: engine/tools/refcore/evaluate.py (`c_start_of` to `c_missing`, `business`,
-//! `c_is_business`, `c_add_business`) and eval2.py (`m_rate_parts`, `m_periodic_real`).
+//! `c_is_business`, `c_add_business`, `c_schedule`, `rolled`) and eval2.py (`m_rate_parts`,
+//! `m_periodic_real`).
 //! Invariants: a hole argument makes the call that hole; a business day is read from the
 //! calendar in force on that day; a power that isn't an integer stops `NotBuilt` (the
 //! transcendental kernel isn't S's).
@@ -12,7 +15,9 @@
 use super::arith::{Test, compare, int_of, step_count, whole_of};
 use super::expr::hole_of;
 use super::read::{Given, make_keys};
-use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load, wrong_type};
+use super::state::{
+    Ctx, Engine, Env, invariant, not_typed, num_stop, refuse, refuse_load, wrong_type,
+};
 use super::state::{a_day, past_days};
 use crate::base::{Load, Run};
 use crate::hole::spread;
@@ -82,7 +87,7 @@ impl Engine {
             return Ok(v);
         }
         let name = call.name.as_str();
-        let period = period_arg(m, (call.args.first(), &v), name)?;
+        let period = period_arg((call.args.first(), &v), name)?;
         let missing_day = || invariant("a period past the calendar's range");
         match name {
             "start_of" => Ok(Value::Day(period.start())),
@@ -109,7 +114,7 @@ impl Engine {
         if a.as_hole().is_some() || b.as_hole().is_some() {
             return hole_of(&[a.as_hole(), b.as_hole()]);
         }
-        let period = period_arg(m, (call.args.first(), &a), "day_of")?;
+        let period = period_arg((call.args.first(), &a), "day_of")?;
         let anchored = || {
             refuse(
                 Run::Domain,
@@ -150,9 +155,9 @@ impl Engine {
             return Err(anchored());
         }
         let Value::MonthDay(month, day) = b else {
-            return Err(refuse_load(
-                Load::Unit,
-                "day_of(y, md) takes a month-day".to_owned(),
+            // load's types refuse it; refcore's run has no twin of this text
+            return Err(Stop::NotBuilt(
+                "day_of(y, md) with no month-day, met at run",
             ));
         };
         Day::from_ymd(period.start().year(), month, day)
@@ -176,10 +181,10 @@ impl Engine {
             return hole_of(&[a.as_hole(), b.as_hole()]);
         }
         let name = call.name.as_str();
-        let first = date_arg(m, &a, name)?;
+        let first = date_arg(&a, name)?;
         match name {
             "days_between" => {
-                let second = date_arg(m, &b, name)?;
+                let second = date_arg(&b, name)?;
                 first
                     .days_to(second)
                     .map(Value::int)
@@ -200,7 +205,7 @@ impl Engine {
                     .ok_or_else(|| past_days(n))
             }
             _ => {
-                let second = a_day(date_arg(m, &b, name)?)?;
+                let second = a_day(date_arg(&b, name)?)?;
                 Ok(age(a_day(first)?, second).map_or(Value::None, Value::int))
             }
         }
@@ -221,14 +226,14 @@ impl Engine {
             if let Value::Hole(_) = d {
                 return Ok(d);
             }
-            let day = a_day(date_arg(m, &d, "is_business")?)?;
+            let day = a_day(date_arg(&d, "is_business")?)?;
             return self.business(m, cal, env, ctx, (day, false));
         }
         let k = self.ev(m, call.args.get(1).ok_or_else(arity)?, env, ctx)?;
         if d.as_hole().is_some() || k.as_hole().is_some() {
             return hole_of(&[d.as_hole(), k.as_hole()]);
         }
-        let day = a_day(date_arg(m, &d, "add_business")?)?;
+        let day = a_day(date_arg(&d, "add_business")?)?;
         let k = whole_of(m, &k)?;
         if k.is_zero() {
             return Err(refuse(
@@ -296,7 +301,7 @@ impl Engine {
         if let Some(h) = spread(&[month.as_hole(), dom.as_hole(), roll.as_hole()]) {
             return Ok(Value::Hole(h));
         }
-        let period = period_arg(m, (call.args.first(), &month), "schedule")?;
+        let period = period_arg((call.args.first(), &month), "schedule")?;
         let start = period.start();
         // a day number past the month's, 64 bits or not, is none
         let Some(day) = whole_of(m, &dom)?
@@ -308,7 +313,7 @@ impl Engine {
             return Ok(Value::None);
         };
         let (Value::Word(word) | Value::Code(Code::Word(word))) = &roll else {
-            return Err(wrong_type(m, "schedule: the roll is", &roll));
+            return Err(not_typed());
         };
         let open = match word.as_str() {
             "unadjusted" => return Ok(Value::Day(day)),
@@ -377,7 +382,10 @@ impl Engine {
         if value == Value::None {
             return Err(refuse(Run::None, "the calendar is none here".to_owned()));
         }
-        Err(refuse_load(Load::Unit, format!("{name} is not a calendar")))
+        // load's types refuse it; refcore's run has no twin of this text
+        Err(Stop::NotBuilt(
+            "a calendar argument that isn't a calendar, met at run",
+        ))
     }
 
     /// `round(x, u, mode)`: the multiple of u the mode chooses, money when u is a whole
@@ -450,7 +458,7 @@ impl Engine {
             return Ok(v);
         }
         let Value::Number(n) = v else {
-            return Err(wrong_type(m, "abs of", &v));
+            return Err(not_typed());
         };
         if n.q.is_negative() {
             return Ok(Value::Number(Number {
@@ -629,13 +637,13 @@ fn pos_key(m: &Reality, v: &Value) -> Result<KeyVal, Stop> {
     if let Value::Key(k) = v {
         return Ok(k.clone());
     }
-    Err(wrong_type(m, "pos of", v))
+    Err(not_typed())
 }
 
 /// A period argument: a period, a day as its day period, or a four-digit figure written as
 /// the argument, which the checker read as a year (refcore's `period_arg`, and the `_year`
 /// mark of `tdate_or_period`). L §2.1, §4.2.
-fn period_arg(m: &Reality, (arg, v): (Option<&Expr>, &Value), what: &str) -> Result<Period, Stop> {
+fn period_arg((arg, v): (Option<&Expr>, &Value), what: &str) -> Result<Period, Stop> {
     if let Value::Period(p) = v {
         return Ok(*p);
     }
@@ -648,7 +656,7 @@ fn period_arg(m: &Reality, (arg, v): (Option<&Expr>, &Value), what: &str) -> Res
     if *v == Value::None {
         return Err(refuse(Run::None, format!("a value is none here: {what}")));
     }
-    Err(wrong_type(m, &format!("{what}: not a period:"), v))
+    Err(not_typed())
 }
 
 /// A four-digit figure written where a period is read, as an argument or a span's end: the
@@ -673,7 +681,7 @@ pub(super) fn written_year(arg: Option<&Expr>) -> Result<Option<Period>, Stop> {
 }
 
 /// A date argument: a day, or a day period's day (refcore's `as_date_or_iv`). L §4.2.
-fn date_arg(m: &Reality, v: &Value, what: &str) -> Result<Day, Stop> {
+fn date_arg(v: &Value, what: &str) -> Result<Day, Stop> {
     if let Value::Day(d) = v {
         return Ok(*d);
     }
@@ -688,7 +696,7 @@ fn date_arg(m: &Reality, v: &Value, what: &str) -> Result<Day, Stop> {
     if *v == Value::Never {
         return Err(refuse(Run::None, format!("never in {what}")));
     }
-    Err(wrong_type(m, &format!("{what} of"), v))
+    Err(not_typed())
 }
 
 /// The months of `add_months`'s count: an int, or a duration in months (refcore's
@@ -802,7 +810,7 @@ impl Scalar {
             });
         }
         let Value::Number(n) = v else {
-            return Err(wrong_type(m, "round of", v));
+            return Err(not_typed());
         };
         Ok(Scalar {
             q: n.q.clone(),
@@ -965,6 +973,17 @@ fn period_months(word: &str) -> Option<i64> {
     }
 }
 
+/// `<what>: <c> is not a compounding code` (refcore's `rate_parts`). L §3.3.
+fn no_compounding(m: &Reality, what: &str, code: &Value) -> Result<Stop, Stop> {
+    Ok(refuse_load(
+        Load::Unit,
+        format!(
+            "{what}: {} is not a compounding code",
+            code.text(m).map_err(num_stop)?
+        ),
+    ))
+}
+
 /// `periodic`'s parts of rate `r` per period `p` under compounding `c` (refcore's
 /// `rate_parts`). L §3.3.
 fn rate_parts(
@@ -984,13 +1003,17 @@ fn rate_parts(
             format!("{what}: {} is not a rate", rate.text(m).map_err(num_stop)?),
         ));
     };
-    let per = unit
-        .period_of()
-        .ok_or_else(|| refuse_load(Load::Unit, format!("{what}: the rate states no period")))?;
-    let Value::Word(target) = period else {
+    let Some(per) = unit.period_of() else {
+        let shown = rate.text(m).map_err(num_stop)?;
         return Err(refuse_load(
             Load::Unit,
-            format!("{what}: the period is no period word"),
+            format!("{what}: {shown} states no period"),
+        ));
+    };
+    let Value::Word(target) = period else {
+        // load's types refuse it; refcore's run has no twin of this text
+        return Err(Stop::NotBuilt(
+            "a period argument that isn't a period word, met at run",
         ));
     };
     let share = if target == "day" || per == "day" {
@@ -1004,8 +1027,9 @@ fn rate_parts(
         }
         Num::int(1)
     } else {
-        let months = period_months(target)
-            .ok_or_else(|| refuse_load(Load::Unit, format!("{what}: {target} is no period")))?;
+        let months = period_months(target).ok_or(Stop::NotBuilt(
+            "a period word that is no period, met at run",
+        ))?;
         let per_months = period_months(per).ok_or_else(|| invariant("a rate's period"))?;
         Num::ratio(months, per_months).map_err(num_stop)?
     };
@@ -1020,11 +1044,7 @@ fn rate_parts(
         ));
     }
     let (Value::Word(word) | Value::Code(Code::Word(word))) = code else {
-        return Err(wrong_type(
-            m,
-            &format!("{what}: not a compounding code:"),
-            code,
-        ));
+        return Err(no_compounding(m, what, code)?);
     };
     match word.as_str() {
         "simple" => Ok(Parts::Linear(rq.checked_mul(&share).map_err(num_stop)?)),
@@ -1041,11 +1061,7 @@ fn rate_parts(
                 .map_err(num_stop)?;
             Ok(Parts::Power(plus(&interest)?, share))
         }
-        _ => Err(wrong_type(
-            m,
-            &format!("{what}: not a compounding code:"),
-            code,
-        )),
+        _ => Err(no_compounding(m, what, code)?),
     }
 }
 

@@ -1,0 +1,31 @@
+model g6_scen_open
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, pre-M1 (#97, chunk 4, #103, P14): the base of scenario s, which declares a move over the months and an open index acct whose instances fall before its from, 1 June (L §6.4, A-9; §8.3): load never sees an open index's keys, so it can't see that these instances exist; they are left out at run, not refused LOAD-SCENARIO. Held for #103: refcore refuses the scenario. g6/scen_early is its twin over the days"
+
+source card "a card"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-12
+
+index acct: open
+
+kind pays: transfers
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input lim[k in acct]: money PLN
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  lim[x1] = 10.00 PLN
+  opening[konto] = 100.00 PLN at 2026-01-01 start
+
+ask a: bal(konto, 2026-12-31)

@@ -1,22 +1,21 @@
-//! The expression grammar: precedence climbing over flat chains, postfixes, atoms and the reads.
-//! Spec: L §2.3 (`expr` to `atom`, `binds`, `span`, `tieby`, `balx`, `valuex`, `flowsx`, `coveredx`,
-//! `agg`, `calval`, `record`, `leg`, `type`, `sref`), its seven parse rules, and its depth limit.
-//! Twin: engine/tools/refcore/parser.py (`expr` to `call_args`, `span` to `leg_body`,
-//! `builtin`, `agg`, `calval` to `dayset`, `price`, `type`, `bindlist`, `qid`, `rowkey`).
+//! The expression grammar: precedence climbing over flat chains, postfixes, references, atoms, records, legs and types.
+//! Spec: L §2.3 (`expr` to `atom`, `ofq`, `ref`, `sref`, `record`, `field`, `leg`, `type`,
+//! `qid`, `rowkeys`), its seven parse rules, and its depth limit.
+//! Twin: engine/tools/refcore/parser.py (`expr` to `call_args`, `ofq`, `sref`, `atom`,
+//! `field`, `field_value`, `leg_body`, `type`, `qid`, `rowkey`).
 //! Invariants: every loop takes a token or ends; each bracket and `if` is counted by `open`;
-//! every form of the grammar parses (the reads M0 adds are in `reads.rs`, the pins in `ask.rs`).
+//! every form of the grammar parses (the bindings and spans are in `binds.rs`, the built-ins
+//! and the reads with clauses in `calls.rs`, the reads M0 adds in `reads.rs`, the pins in
+//! `ask.rs`).
 
-use super::lex::{Kind, Paren, Role};
+use super::lex::{Kind, Mark, Paren, Read, Role};
 use super::parse::{P, Stop, is_keyword};
-use super::reads::{dist_kind, query_fn};
 use super::tree::{
-    AddOp, Agg, AggFn, Bal, Bind, Calendar, CalendarDay, Call, CmpOp, DaySet, DistFnKind, Domain,
-    Expr, Field, FieldValue, Flows, In, Key, Leg, Lit, MulOp, Number, OfQ, Postfix, Price, Proj,
-    RowKey, Span, Step, Type, Valuation,
+    AddOp, Call, CmpOp, Expr, Field, FieldValue, In, Key, Leg, Lit, MulOp, Number, OfQ, Postfix,
+    RowKey, Step, Type,
 };
 use crate::base::Load;
 use crate::num::Num;
-use crate::time::Day;
 
 /// Where an expression stops early: at a membership's `in`, or at a leg's `to`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -138,23 +137,6 @@ const BUILTINS: [&str; 75] = [
 /// Whether `word` is a built-in's name (L §2.2).
 pub(crate) fn is_builtin(word: &str) -> bool {
     !word.is_empty() && BUILTINS.contains(&word)
-}
-
-/// The aggregate named `word`, if it is one.
-fn agg_fn(word: &str) -> Option<AggFn> {
-    match word {
-        "sum" => Some(AggFn::Sum),
-        "count" => Some(AggFn::Count),
-        "min" => Some(AggFn::Min),
-        "max" => Some(AggFn::Max),
-        "any" => Some(AggFn::Any),
-        "all" => Some(AggFn::All),
-        "first" => Some(AggFn::First),
-        "last" => Some(AggFn::Last),
-        "argmin" => Some(AggFn::Argmin),
-        "argmax" => Some(AggFn::Argmax),
-        _ => None,
-    }
 }
 
 /// The comparison an operator token writes.
@@ -478,19 +460,22 @@ impl P<'_> {
                     continue;
                 }
                 fixes.push(Postfix::Keys(keys));
-            } else if self.at(".", 0) && !self.spaced(0) {
+            } else if self.at(".", 0) {
+                // Any spacing reads: `a .b` and `a. b` are `a.b`, and `a.b (x)` a call, as
+                // `f (x)` is (L §2.4, §2.3 parse rule 3; tally 2.1.6, #81). The word right
+                // after `.` is a field whatever its word, so its `[` prints touching.
                 self.skip(1)?;
                 if !self.at_id(0) {
                     return Err(self.err("a field"));
                 }
+                self.mark(Some(self.i), Mark::read_as_field);
                 fixes.push(Postfix::Field(self.next()?.text.clone()));
                 if self.at("(", 0)
-                    && !self.spaced(0)
                     && let Some(mut names) = name_chain(&base, &fixes)
                 {
                     // The call's name is read as an id, so the canonical form prints it touching
                     // its `(` (L §2.4 Expressions, tally 2.1.4; refcore's `tok.nm = True`).
-                    self.mark(self.back(), |m| m.name = true);
+                    self.mark(self.back(), |m| m.read = Read::Name);
                     let name = names.pop().ok_or_else(|| self.cannot("a band"))?;
                     base = self.band_call(name, names, None)?;
                     fixes = Vec::new();
@@ -546,8 +531,12 @@ impl P<'_> {
         Ok(keys)
     }
 
-    /// A key position: `*`, or an expression.
+    /// A key position: `*`, or an expression; in a record field's value an expression only, as
+    /// a `ref`'s keys are (refcore's `key_expr`, L §2.3 `ref`, issue #88).
     pub(super) fn key_expr(&mut self) -> Result<Key, Stop> {
+        if self.at("*", 0) && self.field_ref {
+            return Err(self.err("an expression"));
+        }
         if self.accept("*")? {
             return Ok(Key::Star);
         }
@@ -603,7 +592,7 @@ impl P<'_> {
 
     /// `ref = ID ["[" keys "]"] {"." FIELD ["[" keys "]"]}` (L §2.3).
     pub(super) fn reference(&mut self) -> Result<Expr, Stop> {
-        self.reference_keyed(KeysOf::Exprs)
+        self.reference_keyed(KeysOf::Exprs, "a reference")
     }
 
     /// A `same` side, `sref` (L §2.3): a reference whose keys are literals (`a.konto`,
@@ -612,12 +601,18 @@ impl P<'_> {
     /// each field). Any other key, `*` or a computed one, is `LOAD-PARSE`, as the grammar
     /// reads it.
     pub(super) fn same_ref(&mut self) -> Result<Expr, Stop> {
-        self.reference_keyed(KeysOf::Lits)
+        self.reference_keyed(KeysOf::Lits, "a reference")
     }
 
-    /// A reference, its keys written as `keys` says.
-    fn reference_keyed(&mut self, keys: KeysOf) -> Result<Expr, Stop> {
-        let name = self.ident("a reference")?;
+    /// An `of` row's `sref` (L §2.3 `ofrow`): the `same` side's form, read by the one `sref`
+    /// parser (issue #88), "an id" where its first word isn't one (refcore's `sref`).
+    pub(super) fn sref(&mut self) -> Result<Expr, Stop> {
+        self.reference_keyed(KeysOf::Lits, "an id")
+    }
+
+    /// A reference, its keys written as `keys` says; `what` names its first word.
+    fn reference_keyed(&mut self, keys: KeysOf, what: &str) -> Result<Expr, Stop> {
+        let name = self.ident(what)?;
         let mut fixes = Vec::new();
         if self.at("[", 0) {
             fixes.push(Postfix::Keys(self.ref_keys(keys)?));
@@ -659,17 +654,18 @@ impl P<'_> {
         Ok(keys)
     }
 
-    /// One key of an `sref`: a literal, or a place keyed by things, `konto[ana]` (L §2.3
-    /// `rk`'s last form, one key by L §2.4), the reference `konto[ana]` refcore's `sref` reads.
+    /// One key of an `sref`: a literal with no sign, or a place keyed by things, `konto[ana]`
+    /// (L §2.3 `sk`, tally 2.1.6), the reference `konto[ana]` refcore's `skey` reads; a sign,
+    /// `*`, a range or an expression is `LOAD-PARSE` where the grammar stops (issue #88).
     fn lit_key(&mut self) -> Result<Key, Stop> {
-        if !(self.at_id(0) && self.at("[", 1)) {
-            return Ok(Key::Expr(Expr::Lit(self.lit()?)));
+        if !(self.at_id(0) && self.at("[", 1) && !self.spaced(1)) {
+            return Ok(Key::Expr(Expr::Lit(self.lit_unsigned()?)));
         }
         let name = self.ident("an id")?;
         self.skip(1)?;
-        let mut keys = vec![Key::Expr(Expr::Lit(self.lit()?))];
+        let mut keys = vec![Key::Expr(Expr::Lit(self.lit_unsigned()?))];
         while self.accept(",")? {
-            keys.push(Key::Expr(Expr::Lit(self.lit()?)));
+            keys.push(Key::Expr(Expr::Lit(self.lit_unsigned()?)));
         }
         self.expect("]")?;
         let place = Expr::Post(Box::new(Expr::Name(name)), vec![Postfix::Keys(keys)]);
@@ -690,85 +686,6 @@ impl P<'_> {
         self.expect(")")?;
         self.close()?;
         Ok(args)
-    }
-
-    /// `span = expr ".." [expr] | ".." [expr] | expr` (L §2.3).
-    pub(super) fn span(&mut self) -> Result<Span, Stop> {
-        if self.at("..", 0) {
-            self.role(Some(self.i), Role::Bin);
-        }
-        if self.accept("..")? {
-            let to = if self.span_end() {
-                None
-            } else {
-                Some(self.expr(Ends::Free)?)
-            };
-            return Ok(Span {
-                from: None,
-                to,
-                dots: true,
-            });
-        }
-        let from = self.expr(Ends::Free)?;
-        if self.at("..", 0) {
-            self.role(Some(self.i), Role::Bin);
-        }
-        if self.accept("..")? {
-            let to = if self.span_end() {
-                None
-            } else {
-                Some(self.expr(Ends::Free)?)
-            };
-            return Ok(Span {
-                from: Some(from),
-                to,
-                dots: true,
-            });
-        }
-        Ok(Span {
-            from: Some(from),
-            to: None,
-            dots: false,
-        })
-    }
-
-    /// Whether a span ends here, its end left open.
-    fn span_end(&self) -> bool {
-        let Some(tok) = self.peek(0) else {
-            return true;
-        };
-        match tok.kind {
-            Kind::Op => [",", ")", "]", "}"].contains(&tok.text.as_str()),
-            Kind::Id => [
-                "where", "by", "for", "law", "with", "as", "windows", "random", "paths", "path",
-                "partial", "orient", "in", "from",
-            ]
-            .contains(&tok.text.as_str()),
-            Kind::Key
-            | Kind::Int(_)
-            | Kind::Dec(_)
-            | Kind::Str(_)
-            | Kind::Day(_)
-            | Kind::Month(..)
-            | Kind::Quarter(..)
-            | Kind::MonthDay(..)
-            | Kind::Cur => false,
-        }
-    }
-
-    /// Whether a binding starts here: an id that is no keyword, then `in` (parse rule 6).
-    fn is_bind_start(&self) -> bool {
-        self.peek(0)
-            .is_some_and(|tok| tok.kind == Kind::Id && !is_keyword(&tok.text))
-            && self.at("in", 1)
-    }
-
-    /// A binding, with its text as written.
-    pub(super) fn bind(&mut self) -> Result<Bind, Stop> {
-        let first = self.i;
-        let mut bind = self.bind_inner()?;
-        bind.text = self.source_text(first);
-        Ok(bind)
     }
 
     /// The tokens from `first` to the current one, as written.
@@ -792,73 +709,8 @@ impl P<'_> {
         text
     }
 
-    /// `bind = ID "in" (qid | "[" keys "]" | range) ["on" e | "over" span] ["where" e]`.
-    fn bind_inner(&mut self) -> Result<Bind, Stop> {
-        let var = self.ident("a bound variable")?;
-        self.expect("in")?;
-        let domain = if self.at("[", 0) {
-            self.skip(1)?;
-            self.open()?;
-            let keys = self.lits_until("]")?;
-            self.expect("]")?;
-            self.close()?;
-            Domain::List(keys)
-        } else {
-            let from = self.expr(Ends::AtIn)?;
-            if self.at("..", 0) {
-                self.role(Some(self.i), Role::Bin);
-            }
-            if self.accept("..")? {
-                let to = self.expr(Ends::AtIn)?;
-                let step = if self.accept("step")? {
-                    Some(self.expr(Ends::AtIn)?)
-                } else {
-                    None
-                };
-                Domain::Range(Box::new((from, to, step)))
-            } else {
-                self.domain_name(from)?
-            }
-        };
-        let (mut on, mut over) = (None, None);
-        if self.accept("on")? {
-            on = Some(self.expr(Ends::Free)?);
-        } else if self.accept("over")? {
-            over = Some(self.span()?);
-        }
-        let filter = if self.accept("where")? {
-            Some(self.expr(Ends::Free)?)
-        } else {
-            None
-        };
-        Ok(Bind {
-            var,
-            domain,
-            on,
-            over,
-            filter,
-            text: String::new(),
-        })
-    }
-
-    /// A binding's index or kind: `ix`, or a member's `a.ix`.
-    fn domain_name(&self, expr: Expr) -> Result<Domain, Stop> {
-        if let Expr::Name(id) = expr {
-            return Ok(Domain::Name { id, qual: None });
-        }
-        if let Expr::Post(base, fixes) = expr
-            && let (Expr::Name(qual), [Postfix::Field(id)]) = (*base, fixes.as_slice())
-        {
-            return Ok(Domain::Name {
-                id: id.clone(),
-                qual: Some(qual),
-            });
-        }
-        Err(self.err("an index, a kind, a key list or a range"))
-    }
-
     /// Literals separated by commas up to `close` (not taken), none if it is next.
-    fn lits_until(&mut self, close: &str) -> Result<Vec<Lit>, Stop> {
+    pub(super) fn lits_until(&mut self, close: &str) -> Result<Vec<Lit>, Stop> {
         let mut lits = Vec::new();
         if !self.at(close, 0) {
             lits.push(self.lit()?);
@@ -869,65 +721,8 @@ impl P<'_> {
         Ok(lits)
     }
 
-    /// `binds = bind {"," bind}`, a comma continuing only before another `ID in`.
-    pub(super) fn binds(&mut self) -> Result<Vec<Bind>, Stop> {
-        let mut out = vec![self.bind()?];
-        while self.at(",", 0) && self.at_id(1) && self.at("in", 2) {
-            self.skip(1)?;
-            out.push(self.bind()?);
-        }
-        Ok(out)
-    }
-
-    /// `"[" bind {"," bind} "]"`, a declaration's keys.
-    pub(super) fn bind_list(&mut self) -> Result<Vec<Bind>, Stop> {
-        self.expect("[")?;
-        self.open()?;
-        let mut out = vec![self.bind()?];
-        while self.accept(",")? {
-            out.push(self.bind()?);
-        }
-        self.expect("]")?;
-        self.close()?;
-        Ok(out)
-    }
-
-    /// `ties by (post | "(" e "," e {"," e} ")")` (L §2.3 `tieby`). The term counts one
-    /// depth level, as an `if` does, so a chain of reads each with its own `ties by` is
-    /// bounded by `LOAD-DEPTH` (L §2.3, tally 2.1.2).
-    pub(super) fn ties(&mut self) -> Result<Vec<Expr>, Stop> {
-        self.expect("ties")?;
-        self.expect("by")?;
-        self.open()?;
-        let items = self.tie_term()?;
-        self.close()?;
-        Ok(items)
-    }
-
-    /// The term after `ties by`: one postfix expression, or a bracketed list of two or more.
-    fn tie_term(&mut self) -> Result<Vec<Expr>, Stop> {
-        if self.at("(", 0) {
-            let save = self.i;
-            self.skip(1)?;
-            self.open()?;
-            let first = self.expr(Ends::Free)?;
-            if self.accept(",")? {
-                let mut items = vec![first, self.expr(Ends::Free)?];
-                while self.accept(",")? {
-                    items.push(self.expr(Ends::Free)?);
-                }
-                self.expect(")")?;
-                self.close()?;
-                return Ok(items);
-            }
-            self.close()?;
-            self.i = save;
-        }
-        Ok(vec![self.post(Ends::Free)?])
-    }
-
     /// `ofq = ref | "(" e "," e ")"`.
-    fn ofq(&mut self) -> Result<OfQ, Stop> {
+    pub(super) fn ofq(&mut self) -> Result<OfQ, Stop> {
         if !self.at("(", 0) {
             return Ok(OfQ::Ref(self.reference()?));
         }
@@ -939,64 +734,6 @@ impl P<'_> {
         self.expect(")")?;
         self.close()?;
         Ok(OfQ::Pair(a, b))
-    }
-
-    /// A projection's clauses: `from`, `windows`, `random at`, `with uncertain`. The `from`
-    /// term counts one depth level, so `bal(x, d) from bal(y, e) from …` is bounded by
-    /// `LOAD-DEPTH` (L §2.3, tally 2.1.2).
-    pub(super) fn proj(&mut self) -> Result<Proj, Stop> {
-        let from = if self.accept("from")? {
-            self.open()?;
-            let term = self.post(Ends::Free)?;
-            self.close()?;
-            Some(term)
-        } else {
-            None
-        };
-        let windows_each = if self.accept("windows")? {
-            self.each()?;
-            true
-        } else {
-            false
-        };
-        let random = if self.at("random", 0) && self.at("at", 1) {
-            self.skip(2)?;
-            Some(self.rchoice()?)
-        } else {
-            None
-        };
-        let uncertain = self.with_uncertain()?;
-        Ok(Proj {
-            from,
-            windows_each,
-            random,
-            uncertain,
-        })
-    }
-
-    /// `with uncertain`, taken if next.
-    pub(super) fn with_uncertain(&mut self) -> Result<bool, Stop> {
-        if self.at("with", 0) && self.at("uncertain", 1) {
-            self.skip(2)?;
-            return Ok(true);
-        }
-        Ok(false)
-    }
-
-    /// `wchoice = "each"`.
-    pub(super) fn each(&mut self) -> Result<(), Stop> {
-        if self.at("each", 0) {
-            return self.skip(1);
-        }
-        Err(self.err("each"))
-    }
-
-    /// `MODE`: a rounding code's key token, or a reference.
-    pub(super) fn mode(&mut self) -> Result<Expr, Stop> {
-        if self.kind(0) == Some(&Kind::Key) {
-            return Ok(Expr::Lit(Lit::Key(self.next()?.text.clone())));
-        }
-        self.reference()
     }
 
     /// An atom (L §2.3 `atom`).
@@ -1072,7 +809,7 @@ impl P<'_> {
         if is_keyword(word) {
             return Err(self.keyword_atom(word));
         }
-        self.mark(Some(self.i), |m| m.name = true);
+        self.mark(Some(self.i), |m| m.read = Read::Name);
         self.skip(1)?;
         if self.at("(", 0) {
             let args = self.call_args()?;
@@ -1160,7 +897,11 @@ impl P<'_> {
         if self.accept("none")? {
             return Ok(FieldValue::None);
         }
-        Ok(FieldValue::Expr(self.expr(Ends::Free)?))
+        let outer = self.field_ref;
+        self.field_ref = true;
+        let value = self.expr(Ends::Free);
+        self.field_ref = outer;
+        Ok(FieldValue::Expr(value?))
     }
 
     /// `leg l from a to b amount q [on d]` (L §2.3 `leg`).
@@ -1185,400 +926,6 @@ impl P<'_> {
             amount,
             on,
             line: self.line,
-        })
-    }
-
-    /// A built-in, `word` directly before `(`.
-    pub(super) fn builtin(&mut self, word: &str) -> Result<Expr, Stop> {
-        if let Some(func) = agg_fn(word) {
-            return self.agg(func);
-        }
-        if let Some(func) = query_fn(word) {
-            return self.query(func);
-        }
-        if let Some(func) = dist_kind(word) {
-            return self.dist(func);
-        }
-        match word {
-            "low" => self.low(),
-            "crps" => self.crps(),
-            "cdf" => self.dist_fn(DistFnKind::Cdf),
-            "pdf" => self.dist_fn(DistFnKind::Pdf),
-            "pmf" => self.dist_fn(DistFnKind::Pmf),
-            "prorata" => self.prorata(),
-            "bal" => self.bal(),
-            "flows" => self.flows(),
-            "covered" => self.covered(),
-            "value" => self.valuation(),
-            "calendar" => Ok(Expr::Calendar(Box::new(self.calendar()?))),
-            _ => {
-                self.skip(1)?;
-                let open = self.i;
-                let args = self.call_args()?;
-                match word {
-                    "periodic" => self.period_word_arg(open, 1),
-                    "factor" => self.period_word_arg(open, 2),
-                    _ => {}
-                }
-                Ok(Expr::Call(Box::new(Call {
-                    name: word.to_owned(),
-                    prefix: Vec::new(),
-                    band_key: None,
-                    args,
-                })))
-            }
-        }
-    }
-
-    /// The period argument of `periodic` (its second) and `factor` (its third), a lone period
-    /// word there, is a word of the language, not an id, so a member's index named `month`
-    /// doesn't take it (refcore's `period_word_arg`). L §2.2, §6.1.
-    fn period_word_arg(&self, open: usize, pos: usize) {
-        let Some(s) = self.lone_arg(open, pos) else {
-            return;
-        };
-        if let Some(t) = self.toks.get(s)
-            && t.kind == Kind::Id
-            && matches!(t.text.as_str(), "day" | "month" | "quarter" | "year")
-        {
-            self.mark(Some(s), |mark| mark.name = false);
-        }
-    }
-
-    /// The place of the one token argument `pos` of a call is, its `(` at `open`, when it is
-    /// one token (refcore's `period_word_arg`, its walk over the arguments). L §2.3.
-    fn lone_arg(&self, open: usize, pos: usize) -> Option<usize> {
-        let (mut depth, mut k, mut start): (u32, usize, Option<usize>) = (0, 0, None);
-        for j in open..self.i {
-            let t = self.toks.get(j)?;
-            let op = t.kind == Kind::Op;
-            if op && (t.text == "(" || t.text == "[") {
-                depth = depth.checked_add(1)?;
-                if depth == 1 && t.text == "(" && j == open {
-                    start = Some(j.checked_add(1)?);
-                }
-                continue;
-            }
-            let lone = start.filter(|s| j.checked_sub(*s) == Some(1));
-            if op && (t.text == ")" || t.text == "]") {
-                if depth == 1 && k == pos && lone.is_some() {
-                    return lone;
-                }
-                depth = depth.checked_sub(1)?;
-                continue;
-            }
-            if depth == 1 && op && t.text == "," {
-                if k == pos {
-                    return lone;
-                }
-                k = k.checked_add(1)?;
-                start = Some(j.checked_add(1)?);
-            }
-        }
-        None
-    }
-
-    /// `bal(x [, [e,] e [start]]) [of q] [proj | modelled]` (L §2.3 `balx`, parse rule 7).
-    fn bal(&mut self) -> Result<Expr, Stop> {
-        self.skip(1)?;
-        self.expect("(")?;
-        self.open()?;
-        let place = self.reference()?;
-        let mut args = Vec::new();
-        let mut start = false;
-        if self.accept(",")? {
-            args.push(self.expr(Ends::Free)?);
-            if self.accept(",")? {
-                args.push(self.expr(Ends::Free)?);
-            }
-            start = self.accept("start")?;
-        }
-        self.expect(")")?;
-        self.close()?;
-        let of = if self.accept("of")? {
-            Some(self.ofq()?)
-        } else {
-            None
-        };
-        let modelled = self.accept("modelled")?;
-        let proj = if modelled {
-            Proj {
-                from: None,
-                windows_each: false,
-                random: None,
-                uncertain: false,
-            }
-        } else if self.at("from", 0) {
-            self.proj()?
-        } else {
-            Proj {
-                from: None,
-                windows_each: false,
-                random: None,
-                uncertain: self.with_uncertain()?,
-            }
-        };
-        Ok(Expr::Bal(Box::new(Bal {
-            place,
-            args,
-            start,
-            modelled,
-            proj,
-            of,
-        })))
-    }
-
-    /// `value(x, d) in CUR [by p | by last(p)] [of q]`: a value's `of` comes after its `by`
-    /// (L §2.3 `valuex`, parse rule 7).
-    fn valuation(&mut self) -> Result<Expr, Stop> {
-        self.skip(1)?;
-        self.expect("(")?;
-        self.open()?;
-        let place = self.reference()?;
-        self.expect(",")?;
-        let day = self.expr(Ends::Free)?;
-        self.expect(")")?;
-        self.close()?;
-        self.expect("in")?;
-        let currency = self.cur()?;
-        let by = if self.accept("by")? {
-            Some(self.price()?)
-        } else {
-            None
-        };
-        let of = if self.accept("of")? {
-            Some(self.ofq()?)
-        } else {
-            None
-        };
-        Ok(Expr::Value(Box::new(Valuation {
-            place,
-            day,
-            currency,
-            by,
-            of,
-        })))
-    }
-
-    /// `flows(x, span [, for k]) [in CUR at fx MODE]` (L §2.3 `flowsx`, parse rule 4).
-    fn flows(&mut self) -> Result<Expr, Stop> {
-        self.skip(1)?;
-        self.expect("(")?;
-        self.open()?;
-        let target = self.reference()?;
-        self.expect(",")?;
-        let span = self.span()?;
-        let for_key = if self.accept(",")? {
-            self.expect("for")?;
-            Some(self.expr(Ends::Free)?)
-        } else {
-            None
-        };
-        self.expect(")")?;
-        self.close()?;
-        let convert = if self.at("in", 0) && self.kind(1) == Some(&Kind::Cur) {
-            self.skip(1)?;
-            let cur = self.cur()?;
-            self.expect("at")?;
-            let rate = self.reference()?;
-            let mode = self.mode()?;
-            Some((cur, rate, mode))
-        } else {
-            None
-        };
-        Ok(Expr::Flows(Box::new(Flows {
-            target,
-            span,
-            for_key,
-            convert,
-        })))
-    }
-
-    /// `covered(x, span)` (L §2.3 `coveredx`).
-    fn covered(&mut self) -> Result<Expr, Stop> {
-        self.skip(1)?;
-        self.expect("(")?;
-        self.open()?;
-        let place = self.expr(Ends::Free)?;
-        self.expect(",")?;
-        let span = self.span()?;
-        self.expect(")")?;
-        self.close()?;
-        Ok(Expr::Covered(Box::new((place, span))))
-    }
-
-    /// An aggregate; `min` and `max` with plain arguments are calls; `last(x, d)` a carry.
-    fn agg(&mut self, func: AggFn) -> Result<Expr, Stop> {
-        self.skip(1)?;
-        self.expect("(")?;
-        self.open()?;
-        let (term, binds) = if self.is_bind_start() {
-            (None, self.binds()?)
-        } else {
-            let first = self.expr(Ends::Free)?;
-            if self.accept("for")? {
-                (Some(first), self.binds()?)
-            } else if (func == AggFn::Min || func == AggFn::Max) && self.at(",", 0) {
-                return self.plain_min_max(func, first);
-            } else if func == AggFn::Last && self.accept(",")? {
-                let day = self.expr(Ends::Free)?;
-                self.expect(")")?;
-                self.close()?;
-                return Ok(Expr::Last(Box::new((first, day))));
-            } else {
-                return Err(self.err("\"for\" or a binding"));
-            }
-        };
-        self.expect(")")?;
-        self.close()?;
-        let ties = if self.at("ties", 0) && self.at("by", 1) {
-            Some(self.ties()?)
-        } else {
-            None
-        };
-        Ok(Expr::Agg(Box::new(Agg {
-            func,
-            term,
-            binds,
-            ties,
-        })))
-    }
-
-    /// `min(a, b, …)` or `max(a, b, …)`: a call of two or more plain arguments.
-    fn plain_min_max(&mut self, func: AggFn, first: Expr) -> Result<Expr, Stop> {
-        let mut args = vec![first];
-        while self.accept(",")? {
-            args.push(self.expr(Ends::Free)?);
-        }
-        self.expect(")")?;
-        self.close()?;
-        let name = if func == AggFn::Min { "min" } else { "max" };
-        Ok(Expr::Call(Box::new(Call {
-            name: name.to_owned(),
-            prefix: Vec::new(),
-            band_key: None,
-            args,
-        })))
-    }
-
-    /// `calendar(weekends [...], [yearly [...] [from n]], [added [...]])` (L §4.2).
-    pub(super) fn calendar(&mut self) -> Result<Calendar, Stop> {
-        self.expect("calendar")?;
-        self.expect("(")?;
-        self.open()?;
-        self.expect("weekends")?;
-        self.expect("[")?;
-        let mut weekends = vec![self.ident("a weekday")?];
-        while self.accept(",")? {
-            weekends.push(self.ident("a weekday")?);
-        }
-        self.expect("]")?;
-        let mut yearly = Vec::new();
-        let mut yearly_from = None;
-        if self.at(",", 0) && self.at("yearly", 1) {
-            self.skip(2)?;
-            self.expect("[")?;
-            if !self.at("]", 0) {
-                yearly.push(self.month_day()?);
-                while self.accept(",")? {
-                    yearly.push(self.month_day()?);
-                }
-            }
-            self.expect("]")?;
-            if self.accept("from")? {
-                yearly_from = Some(self.integer()?);
-            }
-        }
-        let mut added = Vec::new();
-        if self.at(",", 0) && self.at("added", 1) {
-            self.skip(2)?;
-            self.expect("[")?;
-            if !self.at("]", 0) {
-                added.push(self.calendar_day()?);
-                while self.accept(",")? {
-                    added.push(self.calendar_day()?);
-                }
-            }
-            self.expect("]")?;
-        }
-        self.expect(")")?;
-        self.close()?;
-        Ok(Calendar {
-            weekends,
-            yearly,
-            yearly_from,
-            added,
-        })
-    }
-
-    /// A month-day every year has (L §3.1: never `02-29`).
-    fn month_day(&mut self) -> Result<(u8, u8), Stop> {
-        let Some(tok) = self.peek(0) else {
-            return Err(self.err("a month-day (MM-DD)"));
-        };
-        let Kind::MonthDay(month, day) = tok.kind else {
-            return Err(self.err("a month-day (MM-DD)"));
-        };
-        if Day::from_ymd(2001, month, day).is_none() {
-            return Err(self.cannot(&format!("{} is not a month-day every year has", tok.text)));
-        }
-        self.skip(1)?;
-        Ok((month, day))
-    }
-
-    /// An added day: a day, a hole, a window or a choice.
-    fn calendar_day(&mut self) -> Result<CalendarDay, Stop> {
-        match self.peek(0).map(|tok| (&tok.kind, &tok.text)) {
-            Some((Kind::Day(day), _)) => {
-                self.skip(1)?;
-                Ok(CalendarDay::Day(*day))
-            }
-            Some((Kind::MonthDay(..), text)) => {
-                Err(self.cannot(&format!("a month-day {text} in added; added takes days")))
-            }
-            _ if self.at("?", 0) && self.at_str(1) => {
-                self.skip(1)?;
-                Ok(CalendarDay::Hole(self.string()?))
-            }
-            _ => Ok(CalendarDay::Set(self.day_set()?)),
-        }
-    }
-
-    /// `window(a, b)` or `one_of([a, …])` (L §4.4).
-    pub(super) fn day_set(&mut self) -> Result<DaySet, Stop> {
-        if self.at("window", 0) && self.at("(", 1) {
-            self.skip(2)?;
-            let a = self.day()?;
-            self.expect(",")?;
-            let b = self.day()?;
-            self.expect(")")?;
-            return Ok(DaySet::Window(a, b));
-        }
-        if self.at("one_of", 0) && self.at("(", 1) {
-            self.skip(2)?;
-            self.expect("[")?;
-            let mut days = vec![self.day()?];
-            while self.accept(",")? {
-                days.push(self.day()?);
-            }
-            self.expect("]")?;
-            self.expect(")")?;
-            return Ok(DaySet::OneOf(days));
-        }
-        Err(self.err("a window or one_of"))
-    }
-
-    /// `price = ref | "last" "(" ref ")"`.
-    pub(super) fn price(&mut self) -> Result<Price, Stop> {
-        if self.at("last", 0) && self.at("(", 1) {
-            self.skip(2)?;
-            let input = self.reference()?;
-            self.expect(")")?;
-            return Ok(Price { input, last: true });
-        }
-        Ok(Price {
-            input: self.reference()?,
-            last: false,
         })
     }
 

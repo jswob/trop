@@ -14,7 +14,7 @@ use super::check::invariant;
 use super::joint::owner_of;
 use super::keys::{KeyLit, lit_of_expr, lit_text, resolve_key};
 use super::steps::{Loader, refuse};
-use super::types::text;
+use super::texts::text;
 use crate::base::Load;
 use crate::model::{KeyVal, NameKind, Pat, SamePair, Ty, pattern_text};
 use crate::syntax::{Expr, Key, Lit, Postfix, Stop};
@@ -217,14 +217,12 @@ impl Loader {
             let message = format!("wrong number of keys for {name}");
             refuse(Load::Key, message, &same.file, same.line)
         };
-        match self.m.names.get(name.as_str()) {
+        match self.m.names.kind(name.as_str()) {
             None => {
                 Ok(keys.is_empty() && self.m.things.get(name).is_some_and(|t| self.m.is_place(t)))
             }
             Some(NameKind::Place) => {
-                let Some(place) = self.m.places.get(name) else {
-                    return Err(Stop::NotBuilt("a place that isn't built"));
-                };
+                let place = self.m.places.at(self.m.names.place_id(name)?)?;
                 if place.binds.is_empty() {
                     return if keys.is_empty() {
                         Ok(true)
@@ -268,7 +266,7 @@ impl Loader {
         let Some((name, keys)) = named(side) else {
             return Ok(Side::Other("a field path".to_owned()));
         };
-        let Some(kind) = self.m.names.get(name.as_str()) else {
+        let Some(kind) = self.m.names.kind(name.as_str()) else {
             if self.m.things.get(name).is_some() {
                 return Ok(Side::Thing);
             }
@@ -290,16 +288,14 @@ impl Loader {
             | NameKind::Version
             | NameKind::Ask
             | NameKind::Source
-            | NameKind::Cut => Ok(Side::Other(format!("a {}", super::types::name_word(*kind)))),
+            | NameKind::Cut => Ok(Side::Other(format!("a {}", super::types::name_word(kind)))),
         }
     }
 
     /// A side naming an input: an observed row by its id, or a row at its keys. L §6.1, §5.19.
     fn input_side(&self, name: &str, keys: &[Key], same: &SameLine) -> Result<Side, Stop> {
         let at = |message: String| refuse(Load::Key, message, &same.file, same.line);
-        let Some(info) = self.m.inputs.get(name) else {
-            return Err(Stop::NotBuilt("an input that isn't built"));
-        };
+        let info = self.m.inputs.at(self.m.names.input_id(name)?)?;
         if info.observed {
             let Some(id) = row_id(keys) else {
                 return Err(at(format!(
@@ -343,9 +339,7 @@ impl Loader {
         file: &str,
         line: u32,
     ) -> Result<Vec<KeyVal>, Stop> {
-        let Some(info) = self.m.moves.get(name) else {
-            return Err(Stop::NotBuilt("a move that isn't built"));
-        };
+        let info = self.m.moves.at(self.m.names.move_id(name)?)?;
         if keys.len() != info.binds.len() {
             return Err(refuse(
                 Load::Key,
@@ -356,15 +350,18 @@ impl Loader {
         }
         let mut values = Vec::with_capacity(keys.len());
         for (key, bind) in keys.iter().zip(&info.binds) {
-            let written = match key {
-                Key::Expr(key) => KeyLit::of_expr(key),
-                Key::Star => None,
+            // An observation's attribute naming a move by a computed key (`item: wage[2026-02 +
+            // 1]`) is refused as written, where refcore prints `LOAD-KEY None is not a key of
+            // <ix>` (tally 2.1.6's #100, pick P1)
+            let Key::Expr(key) = key else {
+                return Err(invariant(
+                    "unreachable: since tally 2.1.6 (#88, L §2.3) the parser refuses `*` in a \
+                     `same` side's keys and in a record field's reference, the two that name a \
+                     move here"
+                        .to_owned(),
+                ));
             };
-            // An observation's attribute naming a move (`of: wage[*]`, `wage[1 + 1]`) reaches
-            // this; refcore prints `LOAD-KEY None is not a key of <ix>` there (issue #88).
-            let Some(written) = written else {
-                return Err(Stop::NotBuilt("a reference keyed by * or a computed key"));
-            };
+            let written = KeyLit::written(key);
             values.push(resolve_key(&self.m, &written, &bind.domain, file, line)?);
         }
         Ok(values)

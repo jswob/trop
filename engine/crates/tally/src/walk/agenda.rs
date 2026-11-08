@@ -1,6 +1,7 @@
 //! The walk's agenda: the acts the plan pass hands the day walk, each at its point, and the days the walk steps through.
-//! Spec: E §4.1 (what the plan pass hands the walk; the movement order), §4.2 (the day walk's
-//! steps; a hole movement; a decision's day), §4.3 (a projection's walk: the movements dated t
+//! Spec: E §4.1 (what the plan pass hands the walk; the movement order, each term typed, which
+//! ranks a day's plans; tally 2.1.6), §4.2 (the day walk's steps; a hole movement, and a
+//! refused one reaching as it does, L §8.4; a decision's day), §4.3 (a projection's walk: the movements dated t
 //! through d, those that depend on its holder left out and counted, no reading, observation or
 //! adjustment; read at a decision's point, only the decisions after it that day), §5 step 5
 //! (`HOLE-CHANGED` from the day of an adjustment nothing settles); §6.1 (each observed leg on
@@ -9,7 +10,7 @@
 //! the modelled past: an instance on a covered day before K, or one an observation fulfils, is
 //! not booked, and one nothing fulfils marks its places `open`); P §2.2 (the event-driven walk steps only days that hold
 //! an act, N-1 to N-14; the oracle steps every day).
-//! Twin: engine/tools/refcore/walk.py (`Walk.prepare`, `sched_leg`, `sched_hole`,
+//! Twin: engine/tools/refcore/walk.py (`Walk.prepare`, `plan_key`, `sched_leg`, `sched_hole`,
 //! `sched_leg_hole`, `sched_refused`, `sched_adj`, `note_leftout`, `count_leftout`,
 //! `dec_hole`, `ending`, and `proj_walk`'s first day) and moves.py (`readings`).
 //! Invariants: every act is scheduled on its day at its point before the walk reaches that
@@ -25,7 +26,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use super::plan::{Amount, Dated, End, Exists, Inst, Status};
+use super::plan::{Amount, Dated, End, Exists, Inst, Order, Status};
 use super::point::{At, Step};
 use super::state::{Progress, Walk, WalkObs};
 use crate::Days;
@@ -186,6 +187,7 @@ impl Engine {
             }
         }
         plans.sort_by(|a, b| a.order.cmp(&b.order));
+        let orders = movement_orders(&plans, &decisions);
         let adjustments = if main {
             self.all_adjustments(m, cut)?
         } else {
@@ -195,8 +197,7 @@ impl Engine {
             wo.err = self.obs_err(m, &wo.obs, cut)?;
         }
         let walk = self.walk_mut(id)?;
-        let texts: BTreeSet<String> = plans.iter().map(|i| i.order.text()).collect();
-        walk.order_texts = texts.into_iter().collect();
+        walk.orders = orders;
         for w in legs_warned {
             if !walk.warnings.contains(&w) {
                 walk.warnings.push(w);
@@ -230,6 +231,20 @@ impl Engine {
         walk.progress = Progress::Walking;
         Ok(())
     }
+}
+
+/// The movement orders of a walk's plan and decision instances, sorted in the typed movement
+/// order, each once since an instance is its move and keys: the ranks of the day's plans
+/// (refcore's `plan_key`; tally 2.1.6, #57). E §4.1.
+fn movement_orders(plans: &[Inst], decisions: &[(String, u32, Vec<Inst>)]) -> Vec<Order> {
+    let decided = decisions.iter().flat_map(|(_, _, insts)| insts);
+    let mut orders: Vec<Order> = plans
+        .iter()
+        .chain(decided)
+        .map(|i| i.order.clone())
+        .collect();
+    orders.sort();
+    orders
 }
 
 /// Whether a projection's walk leaves out the movements of move `move_id`: they depend on
@@ -386,7 +401,7 @@ fn leg_text(id: &str, leg: &str) -> String {
 /// `open` from its legs' days (refcore's `prepare`, its modelled plans). E §4.1 step 3, L §5.19.
 fn schedule_modelled(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
     if inst.obs.is_empty() {
-        let rank = walk.text_rank(&inst.id)?;
+        let rank = walk.plan_rank(&inst.order)?;
         for lg in &inst.legs {
             let Dated::Day(d) = lg.day else {
                 continue;
@@ -420,13 +435,12 @@ fn schedule_modelled(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
 }
 
 /// Puts a plan instance's legs on their days by its status: left out, uncertain, refused, a
-/// hole, modelled past, or booked (refcore's `prepare`, its plans). E §4.1 step 3, §4.2.
+/// hole, modelled past, or booked, each at its rank in the typed movement order (refcore's
+/// `prepare`, its plans; tally 2.1.6, #57). A refused instance refuses the places its legs
+/// give from its day, and every place where a leg's place can't be read (L §8.4). E §4.1
+/// step 3, §4.2.
 fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
-    let rank = if inst.status == Status::Refused {
-        walk.text_rank(&inst.move_id)?
-    } else {
-        walk.text_rank(&inst.order.text())?
-    };
+    let rank = walk.plan_rank(&inst.order)?;
     match inst.status {
         Status::LeftOut => return note_left_out(walk, &inst),
         Status::Modelled => return schedule_modelled(walk, inst),
@@ -517,8 +531,12 @@ fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
 }
 
 /// Puts a decision instance on its day, at its move's stratum; one dated outside the run is
-/// left out, one whose day is a hole makes its places holes from the walk's start (refcore's
-/// `prepare`, its decisions, and `dec_hole`). E §4.2 step 3, Holes in the walk.
+/// left out, and so is one of a move a scenario declares dated before the scenario's `from`,
+/// which books nothing there (L §6.4); one refused before its point (its key's `where`) is
+/// put on its day as any instance is, so its refusal takes its place in the day's movement
+/// order (E §4.1; L §8.4, tally 2.1.6), the scenario's rule first; one whose day is a hole
+/// makes its places holes from the walk's start (refcore's `prepare`, its decisions, and
+/// `dec_hole`). E §4.2 step 3, Holes in the walk; L §6.4.
 fn schedule_decision(
     m: &Reality,
     walk: &mut Walk,
@@ -531,6 +549,13 @@ fn schedule_decision(
     let rank = u32::try_from(rank).map_err(|_| super::plan::invariant("a move's rank"))?;
     match inst.day.clone() {
         Some(Dated::Day(d)) => {
+            if super::plan::scenario_from(m, move_id).is_some_and(|from| d < from) {
+                // a scenario's move books nothing before its from (L §6.4): left out
+                if walk.proj.is_none() {
+                    note_left_out(walk, &inst)?;
+                }
+                return Ok(());
+            }
             if d < walk.start || d > walk.end {
                 if walk.proj.is_none() && (d < m.start || d > m.end) {
                     note_left_out(walk, &inst)?;
@@ -678,4 +703,153 @@ pub fn endings(m: &Reality, walk: &Walk) -> BTreeMap<Day, Vec<String>> {
 /// Whether `id` names a plan move (L §5.14.2: a written order with a plan). L §5.14.2.
 fn is_plan(m: &Reality, id: &str) -> bool {
     m.moves.get(id).is_some_and(|mv| !mv.decision)
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::Days;
+    use crate::api::{Asks, Given, Pin, Request, run};
+
+    /// The printed lines of ask `ask` over `files`, under the event walk.
+    fn answer(files: &[(&str, &str)], ask: &str) -> Vec<String> {
+        let given = files
+            .iter()
+            .map(|(path, text)| Given {
+                path: (*path).to_owned(),
+                bytes: Some(text.as_bytes().to_vec()),
+            })
+            .collect();
+        let request = Request {
+            asks: Asks::Named(vec![ask.to_owned()]),
+            pin: Pin::Canonical,
+            days: Days::Events,
+        };
+        run(given, &request).expect("an answer").lines().to_vec()
+    }
+
+    /// A decision dated 3 January whose leg is dated 10 January, and a plan dated 10 January,
+    /// each moving into `gone` after its lifespan ends: both refuse `src` that day.
+    const LATER_LEG: &str = r#"model later_leg
+  tally 2
+  on 2025-12-31
+  start 2025-01-01
+  end 2025-12-31
+
+source card "a card"
+
+unit DUK: currency minor 0.01
+
+input amt: money DUK
+
+input d0: date
+
+input d1: date
+
+place src: accounts DUK lives 2025-01-01..
+
+place gone: accounts DUK lives 2025-01-01..2025-01-05
+
+move a: transfers
+  on d0
+  leg cash from src to gone amount amt
+
+move sweep: transfers
+  on d1
+  reads src
+  leg cash from src to gone amount min(amt, bal(src)) on d0
+
+ask q: bal(src, 2025-01-31)
+
+version facts
+  cite card
+  governs always
+  known 2025-01-01
+  amt = 1.00 DUK
+  d0 = 2025-01-10
+  d1 = 2025-01-03
+  opening[src] = 500.00 DUK at 2025-01-01 start
+  opening[gone] = 0 DUK at 2025-01-01 start
+"#;
+
+    #[test]
+    fn a_decisions_later_leg_takes_its_place_among_the_days_plans_in_the_movement_order() {
+        // E §4.1 (tally 2.1.6): the decision's instance is dated 3 January, before the plan's
+        // 10 January, so its leg on 10 January is booked first there and src keeps its
+        // refusal; ranked as the plans are scheduled, the plan's would be first
+        assert_eq!(
+            answer(&[("later_leg.tally", LATER_LEG)], "q"),
+            [
+                "q: refused: RUN-LIFESPAN sweep.cash moves into or out of gone outside its lifespan",
+                "  cut 2025-12-31"
+            ],
+            "the decision's refusal, first in the typed movement order"
+        );
+    }
+
+    /// The base of a scenario whose two decisions are dated on its `from` and after it.
+    const BASE: &str = r#"model hh
+  tally 2
+  on 2025-12-31
+  start 2025-12-30
+  end 2026-01-05
+
+source s "a card"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2025-01-01..
+
+place world: outside lives 1900-01-01..
+
+input from_day: date
+
+input late_day: date
+
+input top_amt: money PLN
+
+input lift_amt: money PLN
+
+ask q: bal(konto, 2026-01-05)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  from_day = 2026-01-01
+  late_day = 2026-01-03
+  top_amt = 1.00 PLN
+  lift_amt = 2.00 PLN
+  opening[konto] = 10.00 PLN at 2025-12-30 start
+"#;
+
+    const SCENARIO: &str = r"scenario boost over hh
+  tally 2
+  from 2026-01-01
+
+move top: transfers
+  on from_day
+  reads konto
+  leg cash from world to konto amount min(top_amt, bal(konto))
+
+move lift: transfers
+  on late_day
+  reads konto
+  leg cash from world to konto amount min(lift_amt, bal(konto))
+
+ask q_boost: bal(konto, 2026-01-05) in boost
+";
+
+    #[test]
+    fn a_scenarios_decision_books_on_its_from_and_after_it() {
+        // L §6.4: a move a scenario declares books nothing before its from, and books on the
+        // from itself and after it: 10.00 + 1.00 (on the from) + 2.00 (two days after)
+        assert_eq!(
+            answer(
+                &[("model.tally", BASE), ("scen.tally", SCENARIO)],
+                "q_boost"
+            ),
+            ["q_boost: 13.00 PLN", "  world: boost", "  cut 2025-12-31"],
+            "both decisions booked"
+        );
+    }
 }

@@ -5283,6 +5283,41 @@ members/zeta/zeta.tally	m0/format/members/zeta/zeta.tally
 members/changed/changed.tally	m0/format/members/changed/changed.tally
 members/zeta/zeta.tally	m0/format/members/zeta/zeta.tally
 ,1:1,0:,74:refused: LOAD-PIN members/changed doesn't match its sha256 in use changed
+,20:format/member_folder,20:format/member_folder,35:engine/tests/m0/format/joint/folder,15:reprint j.tally,125:j.tally	m0/format/joint/folder/j.tally
+m/a.tally	m0/format/joint/folder/m/a.tally
+m/b.tally	m0/format/joint/folder/m/b.tally
+,1:0,45:j.tally	297	020463ce216d98170a39287a0035dbe6
+,72:sha256 f04aa5d7017abc8ae399555274ac22a5e240731e54b8f76548d447cde2cf0b8a
+,25:format/member_folder_none,25:format/member_folder_none,40:engine/tests/m0/format/joint/folder_none,15:reprint j.tally,140:j.tally	m0/format/joint/folder_none/j.tally
+m/a.tally	m0/format/joint/folder_none/m/a.tally
+m/b.tally	m0/format/joint/folder_none/m/b.tally
+,1:0,45:j.tally	298	027fc2419ff1f11c0ff0a2e214d9ee5b
+,72:sha256 ab615c74cf8394ddf3011c33b6262efbb91f5c89be49e9b020cb5470a7a140a7
+,24:format/member_folder_two,24:format/member_folder_two,39:engine/tests/m0/format/joint/folder_two,15:reprint j.tally,137:j.tally	m0/format/joint/folder_two/j.tally
+m/a.tally	m0/format/joint/folder_two/m/a.tally
+m/b.tally	m0/format/joint/folder_two/m/b.tally
+,1:0,45:j.tally	289	1108602840a0063414f252a5150d2583
+,72:sha256 ef51eb87c38a6fbfac1f143e4f2c8b87a377df6988f6a29a492fc2246c0cb227
+,20:format/member_nested,20:format/member_nested,35:engine/tests/m0/format/joint/nested,15:reprint j.tally,125:j.tally	m0/format/joint/nested/j.tally
+m/m.tally	m0/format/joint/nested/m/m.tally
+b/b.tally	m0/format/joint/nested/b/b.tally
+,1:0,45:j.tally	327	0d73cc15628af6de13905170a27a4c07
+,72:sha256 fa62fcc0c57e842667f12844e735450a551cb8f60184b5d4ac7f57734107f0dc
+,27:format/member_nested_absent,27:format/member_nested_absent,42:engine/tests/m0/format/joint/nested_absent,15:reprint j.tally,96:j.tally	m0/format/joint/nested_absent/j.tally
+m/m.tally	m0/format/joint/nested_absent/m/m.tally
+,1:1,0:,60:refused: member m: LOAD-NAME unknown id b.zone (m.tally:10)
+,28:format/member_nested_changed,28:format/member_nested_changed,43:engine/tests/m0/format/joint/nested_changed,15:reprint j.tally,149:j.tally	m0/format/joint/nested_changed/j.tally
+m/m.tally	m0/format/joint/nested_changed/m/m.tally
+b/b.tally	m0/format/joint/nested_changed/b/b.tally
+,1:0,45:j.tally	304	139ca986c44232e417d84c23262a09cd
+,72:sha256 a0ed28a9b055b8a4e2e7889d0e7e4721bbc7bcde434b0bf717423d412588475b
+,25:format/member_outside_dot,25:format/member_outside_dot,38:engine/tests/m0/format/joint/outside/x,9:reprint .,91:./j.tally	m0/format/joint/outside/x/j.tally
+../m/m.tally	m0/format/joint/outside/m/m.tally
+,1:0,45:j.tally	353	0a2335aa8faf940d07310a22159fc0ce
+,72:sha256 354b3e82eb917a40fc68c59255022d2723e061545ed40b7ac56465e3afd87e22
+,28:format/member_outside_parent,28:format/member_outside_parent,36:engine/tests/m0/format/joint/outside,9:reprint x,88:x/j.tally	m0/format/joint/outside/x/j.tally
+m/m.tally	m0/format/joint/outside/m/m.tally
+,1:1,0:,80:refused: LOAD-PIN ../m/m.tally doesn't match its sha256 in use m (no such file)
 ,14:format/numbers,14:format/numbers,22:engine/tests/m0/format,21:reprint numbers.tally,38:numbers.tally	m0/format/numbers.tally
 ,1:0,51:numbers.tally	338	01be4a45ae78ecb608c7643c9df33846
 ,72:sha256 7259c6ed95eac3e54f43602c22498976e201522204dbf27611761d12e0d530cc
@@ -5301,6 +5336,8 @@ members/zeta/zeta.tally	m0/format/members/zeta/zeta.tally
 ,19:format/rules_sorted,19:format/rules_sorted,22:engine/tests/m0/format,26:reprint rules_sorted.tally,48:rules_sorted.tally	m0/format/rules_sorted.tally
 ,1:0,56:rules_sorted.tally	422	1072a3b119ea75b107236f7eabee7708
 ,72:sha256 c4c3e6b1ca0c586693956cf1d4500afde76eca24f9d794699609869cf97b5c96
+,22:format/same_key_signed,22:format/same_key_signed,22:engine/tests/m0/format,29:reprint same_key_signed.tally,54:same_key_signed.tally	m0/format/same_key_signed.tally
+,1:1,0:,87:refused: LOAD-PARSE cannot parse: expected a literal, got - (same_key_signed.tally:24)
 ,22:format/same_place_keys,22:format/same_place_keys,22:engine/tests/m0/format,29:reprint same_place_keys.tally,54:same_place_keys.tally	m0/format/same_place_keys.tally
 ,1:0,59:same_place_keys.tally	452	14ceff864fd3fd1e175fba29ac87835b
 ,72:sha256 85c3629a0b2449031fe8744192edc731be59eee641fca1477aef52792bc31ed5

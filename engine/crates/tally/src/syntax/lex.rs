@@ -61,9 +61,8 @@ pub struct Tok {
 pub struct Mark {
     /// How it spaces against its neighbours.
     pub role: Role,
-    /// Read as an id: a name or a declaration's id, not a word of the language. Kept
-    /// across reparses, as refcore keeps `nm`.
-    pub name: bool,
+    /// How the parser read the word. Kept across reparses, as refcore keeps `nm` and `fld`.
+    pub read: Read,
     /// Its canonical text, where it differs from the written one.
     pub canon: Canon,
     /// A `(` that opens a parenthesised expression.
@@ -75,14 +74,35 @@ pub struct Mark {
 }
 
 impl Mark {
-    /// The mark a token has before its line is parsed again: only `name` stays.
+    /// The mark a token has before its line is parsed again: only `read` stays.
     #[must_use]
     pub fn cleared(self) -> Mark {
         Mark {
-            name: self.name,
+            read: self.read,
             ..Mark::default()
         }
     }
+
+    /// Reads the word as a field, unless the parser read it as a name.
+    pub fn read_as_field(&mut self) {
+        if self.read == Read::Word {
+            self.read = Read::Field;
+        }
+    }
+}
+
+/// How the parser read a word (refcore's `nm` and `fld`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Read {
+    /// As its text says: a word of the language where it is one.
+    #[default]
+    Word,
+    /// A field, the word right after an expression's `.` (L §2.3 parse rule 3): its `[`
+    /// touches whatever its word (tally 2.1.6, #81).
+    Field,
+    /// An id: a name or a declaration's id, not a word of the language; a field read as a
+    /// call's name among them.
+    Name,
 }
 
 /// How a token spaces (refcore's `role`).

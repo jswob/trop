@@ -1,0 +1,44 @@
+model g6_refused_where_later_key
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, pre-M1 (#97, chunk 4, P13): a plan over two bindings whose first key's where is refused in February (a division by zero) before its second binding is bound (L §5.14 Keys, §8.4, tally 2.1.6): the instance has no day or places to read, so the move's instances refuse every place from the run's start. Its twin is g6/where_refused, one binding, whose refused where refuses only its places from its day"
+
+source fixture "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+index tier = 1..2
+
+place konto: accounts PLN lives 2026-01-01..
+
+place box: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input dec_dom: int
+
+input fee_amt: money PLN
+
+input wdiv[m in month]: num
+
+move topup[m in month where 1 / wdiv[m] > 0, t in tier]: transfers
+  on day_of(m, dec_dom)
+  leg cash from world to box amount fee_amt
+
+ask q_bal: bal(konto, d), bal(box, d) for d in [2026-01-20, 2026-03-20]
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  dec_dom = 20 "the day of the month"
+  fee_amt = 3.00 "a fee"
+  wdiv[2026-01] = 1 "answered"
+  wdiv[2026-02] = 0 "a division by zero: the key's where is refused"
+  wdiv[2026-03] = 2 "answered"
+  opening[konto] = 100 at 2026-01-01 start
+  opening[box] = 0 at 2026-01-01 start

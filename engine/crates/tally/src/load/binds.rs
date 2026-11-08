@@ -15,9 +15,10 @@
 use super::check::{Checker, Scope, Stands, VarDom};
 use super::ops::unify;
 use super::steps::num_stop;
+use super::texts::{span_text, text};
 use super::types::{
     Typed, converts, int_flex, is_bool, is_date, is_duration, key_value_kind, no_order,
-    period_kind, span_text, text, uerr, unit_of,
+    period_kind, uerr, unit_of,
 };
 use crate::base::{Code, Load, Refusal};
 use crate::model::{KindSpec, NameKind, Node, NodeKind, Reality, Rel, Shown, Ty};
@@ -112,7 +113,7 @@ fn over_name(m: &Reality, bind: &Bind, id: &str, key_bind: BindAs) -> Result<Ove
     let var = &bind.var;
     let alive = bind.on.is_some() || bind.over.is_some() || key_bind == BindAs::KeyBind;
     let needs_alive = || refused(Load::Alive, format!("binding over {id} needs on or over"));
-    match m.names.get(id) {
+    match m.names.kind(id) {
         None => Err(refused(Load::Name, format!("unknown id {id}")).naming(id)),
         Some(NameKind::Index) => {
             if m.indexes

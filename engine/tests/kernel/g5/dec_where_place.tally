@@ -1,0 +1,52 @@
+model g5_dec_where_place
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, pre-M1 (#97, chunk 4, #104): a decision whose key's where is refused in February (a division by zero), its leg's place reading bal(box) (G2 review B1): it runs at its point as any instance does, its legs' places read there, and refuses them from its day; March's instance, whose place reads the refused box, refuses every place (L §8.4; E §4.1, §4.2 step 3). Held for #104: refcore drops the instance"
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+place konto: accounts PLN lives 2026-01-01..
+
+place box: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input dec_dom: int
+
+input fee_amt: money PLN
+
+input small_put: money PLN
+
+input divisor[m in month]: num
+
+move split[m in month where 1 / divisor[m] > 0]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads box
+  leg cash from world to (if bal(box) > fee_amt then konto else box) amount fee_amt
+
+ask q_bal: bal(konto, d), bal(box, d) for d in [2026-01-20, 2026-02-19, 2026-02-20, 2026-03-20] law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  dec_dom = 20 "the decision's day of the month"
+  fee_amt = 3.00 "a fee"
+  small_put = 1.00 "a small amount"
+  divisor[2026-01] = 1 "answered"
+  divisor[2026-02] = 0 "a division by zero, refused"
+  divisor[2026-03] = 2 "answered, but after February's refusal"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 100 at 2026-01-01 start
+  opening[box] = 0 at 2026-01-01 start

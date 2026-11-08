@@ -1,55 +1,21 @@
 id	target	issue	why
-g14/move_day_row	s_kernel	#97	#89, #48 (tally 2.1.6): a move's day past 9999-12-31 refused RUN-LIMIT
-g6/refusal_order	s_kernel	#97	#57 (2.1.6): a day's plan legs refused at one place in the typed order
-g6/refusal_keys_typed	s_kernel	#97	#57 (2.1.6): keys f3 before f11 in the typed order
-g6/when	s_kernel	#97	#51 (2.1.6): a movement refused by its when refuses its places from its own day
-g6/where_refused	s_kernel	#97	#51 (2.1.6): a movement refused by its key's where refuses its places from its own day
-g7/flows	s_kernel	#97	#51 (2.1.6): flows over a movement refused by its when
-g11/remeasure_refused_leg_hole_when	s_kernel	#97	#52 (2.1.6): a re-measurement's legs judged each, a refused leg beside a hole
-g10/attr_move	s_kernel	#97	#86 (2.1.6): a move instance named by an observed row's attribute
-g13/spacing	s_kernel	#97	#81 (2.1.6): any spacing around a field's . and a call's (
-basic/s1-def-pct	m0_codes	#97	#89 (2.1.6): a unit past the 64-bit powers, LOAD-LIMIT
-basic/s1-def-pow	m0_codes	#97	#89 (2.1.6): a unit past the 64-bit powers, LOAD-LIMIT
-basic/s1-def-pow-neg	m0_codes	#97	#89 (2.1.6): a unit past the 64-bit powers, LOAD-LIMIT
-basic/s1-input-pow	m0_codes	#97	#89 (2.1.6): a unit past the 64-bit powers, LOAD-LIMIT
-basic/s1-input-pct	m0_codes	#97	#89 (2.1.6): a unit past the 64-bit powers, LOAD-LIMIT
-basic/s1-row-pct	m0_codes	#97	#89 (2.1.6): a unit past the 64-bit powers, LOAD-LIMIT
-basic/s1-row-pow	m0_codes	#97	#89 (2.1.6): a unit past the 64-bit powers, LOAD-LIMIT
-basic/limit-move-day	m0_codes	#97	#89 (2.1.6): a move's day past 9999-12-31 that load sees, LOAD-LIMIT
-basic/limit-range-keys	m0_codes	#97	#89, P30 (2.1.6): a literal range past a million keys, LOAD-LIMIT
-basic/limit-range-keys-other	m0_codes	#97	#89, P30 (2.1.6): the same range with another ask asked, LOAD-LIMIT at load
-basic/limit-offset-digits	m0_codes	#97	#89 (2.1.6): an offset past 18 digits, LOAD-LIMIT
-basic/guard	m0_codes	#97	#71 (2.1.6): LOAD-GUARD in L §8.3's words
-basic/instant-none	m0_codes	#97	#71 (2.1.6): LOAD-INSTANT in L §8.3's words
-basic/cycle-both	m0_codes	#97	#71, P31 (2.1.6): LOAD-CYCLE in L §8.3's words, at its def's line
-basic/cycle-beats	m0_codes	#97	#71, P31 (2.1.6): a beats cycle in L §8.3's words, at its def's line
-adjust/leg-unit	m0_codes	#97	#71 (2.1.6): LOAD-LEG in L §8.3's words
-basic/replace-band	m0_codes	#97	#71 (2.1.6): LOAD-REPLACE in L §8.3's words
-adjust/attr-move-other	m0_codes	#97	#86 (2.1.6): an observed row's attribute naming another kind's move, LOAD-KEY
-kplace/same-key-index	m0_codes	#97	#88 (2.1.6): a same side's key read as L §2.3's sref
-basic/moves-ref-written	m0_codes	#97	#88 (2.1.6): LOAD-MOVES in written words, not the parse tree's
-basic/bandrow-key-star	m0_codes	#97	#88 (2.1.6): a band row's key, * refused LOAD-PARSE
-basic/bandrow-key-range	m0_codes	#97	#88 (2.1.6): a band row's key, a range refused LOAD-PARSE
-adjust/field-ref-star	m0_codes	#97	#88 (2.1.6): * in a field reference refused LOAD-PARSE
-basic/same-key-signed	m0_codes	#97	#88 (2.1.6): a sign in an sref key refused LOAD-PARSE
-scenwhen/move-no-when	m0_codes	#97	#75, P29 (2.1.6): LOAD-SCENARIO only where load sees the instance; the when-guarded twin answered
-scen/ask-alone-every	m0_codes	#97	#73, #62 (2.1.6): a base ask naming a world not loaded refused beside every other ask
-U:rule/RULE-04	m0_load	#97	#71, P31 (2.1.6): a same-key cycle prints its def's file and line
-refusal/U:rule/RULE-04	m0_load	#97	#71, P31 (2.1.6): a same-key cycle prints its def's file and line
-I:B:b10_v3#hr2_v3	m0_load	#97	#71, P31 (2.1.6): scenario hr2_v3's cycle prints its def's file and line
-format/member_absent	m0_format	#97	#74 (2.1.6): reprint refuses a joint model whose member is absent, LOAD-PIN
-format/member_changed	m0_format	#97	#74 (2.1.6): reprint refuses a joint model whose member changed, LOAD-PIN
-format/dup_id	m0_format	#97	#91 (2.1.6): reprint refuses an id declared twice, LOAD-DUP
-format/dup_kind	m0_format	#97	#91 (2.1.6): reprint refuses a kind declared twice, LOAD-DUP
-format/unknown_prefix	m0_format	#97	#91 (2.1.6): reprint refuses an unknown prefix, LOAD-NAME
-U:set/surf/SURF-04/SURF-04	m0_format	#97	#91 (2.1.6): its scenario declares the base's contrib again, LOAD-DUP
-format/spacing_read	m0_format	#97	#81 (2.1.6): a field's . read with spacing, reprinted canonical
-format/spacing_call	m0_format	#97	#81 (2.1.6): a prefixed call's ( read with spacing, reprinted canonical
-I:C:C-10~c10	m0_format	#97	#81 (2.1.6): household C's loan.tally reprinted with 2.1.6's spacing
-I:C:C-11~c11	m0_format	#97	#81 (2.1.6): household C's loan.tally reprinted with 2.1.6's spacing
-I:E2:E2-01~e2c	m0_format	#97	#81 (2.1.6): household C's loan.tally reprinted with 2.1.6's spacing
-I:hardset/modeller-b1/I-9/model	m0_format	#97	#81 (2.1.6): reprinted with 2.1.6's spacing
-I:M:LH-01	m0_format	#97	#81 (2.1.6): reprinted with 2.1.6's spacing
-total/U:rand/RAND-01/duplicate-line	m0_properties	#97	#91 (2.1.6): a duplicate-line mutant's reprint refused LOAD-DUP
-total/U:rule/RULE-08/duplicate-line	m0_properties	#97	#91 (2.1.6): a duplicate-line mutant's reprint refused LOAD-DUP
 g14/by_n_years_98	s_kernel	#98	P39 (tally 2.1.6): a year key by 2 moved by two years or 24 months; refcore moves it one year a period (2027-01-01), L §4.2 by whole keys (2028-01-01): the engine follows the spec; the next round fixes refcore
+adjust/fulfils-key-expr	m0_codes	#100	P1 (a) (issue #90's probe): a move instance's key written as an expression in an observation's fulfils; refcore prints LOAD-KEY None is not a key of months, L §8.3's form the key as written (2026-02 + 1): the engine follows the spec; the next round fixes refcore
+written/range-key-bool	m0_codes	#100	P2 (a) (issue #90's probe): a stepped range's row keyed true; refcore prints LOAD-KEY True is not a value of a stepped range, the key as written is true: the engine follows the spec; the next round fixes refcore
+written/range-key-place	m0_codes	#100	P2 (a) (issue #90's probe): a stepped range's row keyed by a place, konto[ana]; refcore prints LOAD-KEY None is not a value of a stepped range, the key as written is konto[ana]: the engine follows the spec; the next round fixes refcore
+format/member_outside_parent	m0_format	#105	P17 (G3 review B2): reprint x from the parent of a joint model whose member lies outside x; refcore refuses LOAD-PIN (no such file), CHANGES 2.1.6-14 finds the member as run does: the engine follows the spec; the next round fixes refcore
+format/member_nested_changed	m0_format	#105	P17 (G3 review): a nested member's changed member; refcore's reprint prints, E §3.1 step 1 refuses LOAD-PIN as run does: the engine follows the spec; the next round fixes refcore
+format/member_nested_absent	m0_format	#105	P17 (G3 review): a nested member's absent member; refcore refuses LOAD-NAME (reprint and run), the engine LOAD-PIN as its run does (L §2.4, E §3.1 step 1): the engine follows the spec; the next round fixes refcore
+format/member_folder_none	m0_format	#105	P17 (G3 fix's note): a member folder with no model file; refcore's reprint prints, run refuses LOAD-HEADER and reprint does as run does: the engine follows the spec; the next round fixes refcore
+format/member_folder_two	m0_format	#105	P17 (G3 fix's note): a member folder with two model files; refcore's reprint prints, run refuses LOAD-HEADER and reprint does as run does: the engine follows the spec; the next round fixes refcore
+basic/same-key-place-year	m0_codes	#100	P1 (a) (G1a review B3): a same side keyed at a year index by a place, konto[ana]; refcore prints LOAD-KEY None is not a key of ly, the key as written is konto[ana] (2.1.6-17): the engine follows the spec; the next round fixes refcore
+basic/same-key-place-int	m0_codes	#100	P1 (a) (G1a review B3): a same side keyed at an integer index by a place, konto[ana]; refcore prints LOAD-KEY None is not a key of ns, the key as written is konto[ana]: the engine follows the spec; the next round fixes refcore
+basic/row-key-place	m0_codes	#100	P1 (a) (G1a review B3): a row keyed at an integer index by a place, konto[ana]; refcore prints LOAD-KEY None is not a key of ns, the key as written is konto[ana]: the engine follows the spec; the next round fixes refcore
+written/key-month	m0_codes	#100	P1 (a) (G4a review K1): a key-typed input's row naming a month the run lacks, 2031-05; refcore prints LOAD-KEY (2031, 5) is not a key of months, the key as written is 2031-05: the engine follows the spec; the next round fixes refcore
+g6/scen_open	s_kernel	#103	P14 (G1b review): a scenario's move over an open index whose instances fall before its from; refcore refuses the scenario LOAD-SCENARIO, L §6.4 and §8.3 leave them out at run (load never sees an open index's keys): the engine follows the spec; the next round fixes refcore
+g5/dec_where_place	s_kernel	#104	P15 (G2 review B1): a decision refused by its key's where, its leg's place reading bal(); refcore drops the instance, L §8.4 refuses its places from its point: the engine follows the spec; the next round fixes refcore
+g5/dec_where_lawdate	s_kernel	#104	P15 (G2 review B2): a decision refused by its key's where, its place read from a row a later version replaces; refcore drops the instance, L §8.4 and E §4.2 step 3 read it at its point, law date and min(t, K): the engine follows the spec; the next round fixes refcore
+g5/dec_when_noleg	s_kernel	#104	P16: a decision with no legs refused by its when at its point; refcore refuses every place, L §8.4 only the places its legs give, none: the engine follows the spec; the next round fixes refcore
+g13/range_key_unasked	s_kernel	#106	P18 (G4a STOP-REPORT): a stepped range's written key it lacks, no ask; refcore loads (it checks the keys at the first ask), L §2.5 and E §11 refuse at load: the engine follows the spec; the next round fixes refcore
+g13/range_key_unasked_ask	s_kernel	#106	P18: the same with an ask no text declares; refcore prints REQ-ASK, E §11 lets the load refusal outrank it: the engine follows the spec; the next round fixes refcore
+g7/flows_refused_plan_first_day	s_kernel	#107	T-8 (chunk 5): flows over a span starting on the day of a refused plan whose leg's place is refused, so it refuses every place from that day; refcore prints 3.00 PLN and 0.00 PLN, and the engine as refcore, where L §8.4 refuses every flows over a span it may fall in, as both do when the leg's place can be read: refcore and the engine follow at M2's round

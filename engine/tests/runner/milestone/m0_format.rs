@@ -293,6 +293,16 @@ mod tests {
         formats_as_refcore("format/unknown_prefix");
     }
 
+    /// L §2.3 `sref` (tally 2.1.6, #88), §2.4 (issue #90): a `same` side keyed by a signed
+    /// literal is no `sref`, so `reprint` refuses it at parse, `LOAD-PARSE`, as load does,
+    /// and the canonical order of `same` sides never meets a key that isn't a literal or a
+    /// place keyed by literals (the engine met `ENGINE-INVARIANT` there);
+    /// `format/same_place_keys` is its twin.
+    #[test]
+    fn m0_format_refused_same_key_signed() {
+        formats_as_refcore("format/same_key_signed");
+    }
+
     /// L §2.4 (tally 2.1.6, #81): any spacing between tokens reads: a field spaced at its `.`,
     /// a call at its `(`, an id at its `[`, all printed touching; an item named as a calendar
     /// list word (`added`) touches its `[`; a keyword before `(` keeps its space (`not (…)`).
@@ -306,5 +316,64 @@ mod tests {
     #[test]
     fn m0_format_rule_spacing_call() {
         formats_as_refcore("format/spacing_call");
+    }
+
+    /// E §3.1 step 1, CHANGES 2.1.6-14 (#74; G3's review fix, P17): `reprint .` inside the
+    /// folder of a joint model whose member lies outside it finds and pins the member as
+    /// `run .` does, relative to the joint model's file, and prints (the engine refused
+    /// `LOAD-PIN … (no such file)`).
+    #[test]
+    fn m0_format_joint_member_outside_dot() {
+        formats_as_refcore("format/member_outside_dot");
+    }
+
+    /// The same joint model given from its parent folder, `reprint x`: refcore refuses
+    /// `LOAD-PIN`, looking the member up from the printed name; held for #105.
+    #[test]
+    fn m0_format_joint_member_outside_parent() {
+        formats_as_refcore("format/member_outside_parent");
+    }
+
+    /// E §3.1 step 1 (#74, P17): a member that is itself a joint model has its own members
+    /// found and pinned before anything prints; every pin true, it prints (the twin of the
+    /// two below).
+    #[test]
+    fn m0_format_joint_member_nested() {
+        formats_as_refcore("format/member_nested");
+    }
+
+    /// A nested member's member whose text has changed is refused `LOAD-PIN`, as `run`
+    /// refuses it; refcore's `reprint` pins direct members only and prints: held for #105.
+    #[test]
+    fn m0_format_joint_member_nested_changed() {
+        formats_as_refcore("format/member_nested_changed");
+    }
+
+    /// A nested member's member with no file is refused `LOAD-PIN`, as the engine's `run`
+    /// refuses it; refcore refuses `LOAD-NAME unknown id b.zone` in both: held for #105.
+    #[test]
+    fn m0_format_joint_member_nested_absent() {
+        formats_as_refcore("format/member_nested_absent");
+    }
+
+    /// INTERFACE §2, L §6.1 (#74, P17): a member folder of one model file and a part prints
+    /// (the twin of the two below).
+    #[test]
+    fn m0_format_joint_member_folder() {
+        formats_as_refcore("format/member_folder");
+    }
+
+    /// A member folder with no model file is refused `LOAD-HEADER`, as `run` refuses it;
+    /// refcore's `reprint` prints: held for #105.
+    #[test]
+    fn m0_format_joint_member_folder_none() {
+        formats_as_refcore("format/member_folder_none");
+    }
+
+    /// A member folder with two model files is refused `LOAD-HEADER`, as `run` refuses it;
+    /// refcore's `reprint` prints: held for #105.
+    #[test]
+    fn m0_format_joint_member_folder_two() {
+        formats_as_refcore("format/member_folder_two");
     }
 }

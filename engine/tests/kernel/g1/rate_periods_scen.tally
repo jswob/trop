@@ -1,0 +1,9 @@
+scenario s over g1_rate_periods
+  tally 2
+  from 2026-01-01
+
+source t "t"
+
+ask b: r5 + r6 in s
+
+ask c: n1 in s

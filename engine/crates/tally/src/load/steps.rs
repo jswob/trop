@@ -7,9 +7,11 @@
 //! `NotBuilt`, never a guessed refusal; the load refusals made are the ones construction meets,
 //! in refcore's words (the rest are M0's later groups').
 
+use super::check::invariant;
+use super::keys::{RangeKey, check_range_keys};
 use super::same::SameLine;
-use crate::base::{Code, Load, Place as At, Refusal, Run, Table, Warn};
-use crate::model::{Graph, Joint, PERIODS, Reality, Scenarios};
+use crate::base::{Code, Interner, Load, Place as At, Refusal, Run, Table, Warn};
+use crate::model::{Graph, Joint, Names, PERIODS, Reality, Scenarios, UnitError, power_past_limit};
 use crate::num::{Num, NumError};
 use crate::syntax::{File, HeaderKind, Lit, Section, Stop, UnitForm};
 use std::collections::{BTreeMap, BTreeSet};
@@ -25,6 +27,9 @@ pub(super) struct Loader {
     /// The `same` lines of rows and movements, the header's then the versions' (refcore's
     /// `header.sames` and `sames`).
     pub(super) same_lines: Vec<SameLine>,
+    /// The keys rows write at a stepped range's position, checked once load is done
+    /// (refcore's `range_lits`).
+    pub(super) range_keys: Vec<RangeKey>,
 }
 
 /// A load refusal at a line of a file. L §8.3.
@@ -34,6 +39,19 @@ pub(super) fn refuse(code: Load, message: String, file: &str, line: u32) -> Stop
         message,
         At::Line(file.to_owned(), line),
     ))
+}
+
+/// A unit operation's error met while loading a row: a power past 64 in size is `LOAD-LIMIT
+/// unit <u> has a power past 64`, placed by the caller (refcore's `at`); a number error is
+/// `num_stop`'s. L §7.6 item 4, §8.3 `LOAD-LIMIT`.
+pub(super) fn unit_num_stop(error: UnitError) -> Stop {
+    match error {
+        UnitError::Power(base) => Stop::Refused(Refusal::new(
+            Code::Load(Load::Limit),
+            power_past_limit(&base),
+        )),
+        UnitError::Num(error) => num_stop(error),
+    }
 }
 
 /// A number error met while loading: its code, as at a read (L §8.4).
@@ -79,7 +97,7 @@ pub(super) fn load_among(
         .all_worlds
         .extend(loader.m.scenarios.over.keys().cloned());
     loader.m.all_worlds.insert(loader.m.header.id.clone());
-    loader.register_builtins();
+    loader.register_builtins()?;
     loader.register_names()?;
     loader.build_units()?;
     loader.build_kinds()?;
@@ -102,6 +120,7 @@ pub(super) fn load_among(
     super::bands::check_bands(&loader.m)?;
     loader.collect_asks();
     loader.build_graph()?;
+    check_range_keys(&loader.m, &loader.range_keys)?;
     Ok(loader.m)
 }
 
@@ -149,7 +168,10 @@ impl Loader {
             .collect();
         let scenarios = scenarios(&files, &model.header.id)?;
         let header = model.header.clone();
-        let missing = Stop::NotBuilt("a model header without on, start or end");
+        let missing = invariant(
+            "unreachable: a model header without on, start or end is refused first (LOAD-HEADER)"
+                .to_owned(),
+        );
         let start = header.start.ok_or(missing.clone())?;
         let end = header.end.ok_or(missing.clone())?;
         let on = header.on.ok_or(missing)?;
@@ -165,7 +187,8 @@ impl Loader {
                 start,
                 end,
                 on,
-                names: BTreeMap::new(),
+                symbols: Interner::new(),
+                names: Names::new(),
                 sources: Table::new(),
                 versions: Table::new(),
                 units: BTreeSet::new(),
@@ -194,6 +217,7 @@ impl Loader {
             sections,
             currency_order: Vec::new(),
             same_lines: header_sames,
+            range_keys: Vec::new(),
         })
     }
 
@@ -248,7 +272,8 @@ impl Loader {
                 let message = format!("a key entered twice in axis {}", axis.id);
                 return Err(refuse(Load::Dup, message, file, axis.line));
             }
-            self.m.axes.push(&axis.id, axis.as_ref().clone());
+            let written = axis.as_ref().clone();
+            self.m.axes.push(&mut self.m.symbols, &axis.id, written)?;
         }
         Ok(())
     }
@@ -308,7 +333,7 @@ fn scenarios(files: &[File], model: &str) -> Result<Scenarios, Stop> {
         for section in &file.sections {
             found
                 .section
-                .insert(section_id(section).0.to_owned(), head.id.clone());
+                .insert(section.id_line().0.to_owned(), head.id.clone());
         }
     }
     for (id, path, line) in declared {
@@ -320,23 +345,4 @@ fn scenarios(files: &[File], model: &str) -> Result<Scenarios, Stop> {
         }
     }
     Ok(found)
-}
-
-/// A section's id and line.
-pub(super) fn section_id(section: &Section) -> (&str, u32) {
-    match section {
-        Section::Source(s) => (&s.id, s.line),
-        Section::Version(s) => (&s.id, s.line),
-        Section::Unit(s) => (&s.id, s.line),
-        Section::Kind(s) => (&s.id, s.line),
-        Section::Index(s) => (&s.id, s.line),
-        Section::Place(s) => (&s.id, s.line),
-        Section::Input(s) => (&s.id, s.line),
-        Section::Band(s) => (&s.id, s.line),
-        Section::Def(s) => (&s.id, s.line),
-        Section::Move(s) => (&s.id, s.line),
-        Section::Ask(s) => (&s.id, s.line),
-        Section::Axis(s) => (&s.id, s.line),
-        Section::Fill(s) => (&s.id, s.line),
-    }
 }

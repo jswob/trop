@@ -1,0 +1,11 @@
+model j
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  use m = "../m/m.tally" sha256 "6f2026fb9ffcb4037baae88109c1b7d44b28eccd72500bdb6a9351953d607e30"
+  note "T, pre-M1 (#97, chunk 4; G3 review, 5815c57, #105, P17): a joint model whose member lies outside its folder, reprint of the folder as run reads it"
+
+input z: num
+
+source s "s"

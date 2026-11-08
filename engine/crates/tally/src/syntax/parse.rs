@@ -8,9 +8,9 @@
 //!
 //! The expressions are in `expr.rs`, the sections in `item.rs`; both extend this parser.
 
-use super::lex::{Canon, Kind, Line, Mark, Role, Tok, cannot};
+use super::lex::{Canon, Kind, Line, Mark, Read, Role, Tok, cannot};
 use super::tree::{Known, LSpan, Lit, Number, Unit, UnitTerm};
-use crate::base::{Code, Load, Place, Reach, Refusal};
+use crate::base::{Code, Internal, Load, Place, Reach, Refusal};
 use crate::num::Num;
 use crate::time::Day;
 use std::cell::Cell;
@@ -33,6 +33,13 @@ pub enum Stop {
 impl From<Refusal> for Stop {
     fn from(refusal: Refusal) -> Stop {
         Stop::Refused(refusal)
+    }
+}
+
+impl From<Internal> for Stop {
+    /// A broken invariant of the engine's tables: `ENGINE-INVARIANT` (E §9).
+    fn from(internal: Internal) -> Stop {
+        Stop::Refused(Refusal::new(Code::EngineInvariant, internal.message()))
     }
 }
 
@@ -200,6 +207,9 @@ pub(crate) struct P<'a> {
     /// Parsing for the reprint's comparison (refcore's `sig`): no `Paren` node and no source
     /// text, so two parses that differ only in parentheses are equal trees (L §2.4).
     pub(super) blind: bool,
+    /// Inside a record field's value, whose `ref` keys are expressions and never `*`
+    /// (refcore's `_field_ref`; L §2.3 `field`, tally 2.1.6).
+    pub(super) field_ref: bool,
 }
 
 impl<'a> P<'a> {
@@ -222,6 +232,7 @@ impl<'a> P<'a> {
             ask_for: false,
             asif,
             blind: false,
+            field_ref: false,
         }
     }
 
@@ -462,7 +473,7 @@ impl<'a> P<'a> {
         if is_keyword(&tok.text) {
             return Err(self.refuse(Load::Reserved, format!("{} is a keyword", tok.text)));
         }
-        self.mark(Some(self.i), |m| m.name = true);
+        self.mark(Some(self.i), |m| m.read = Read::Name);
         self.skip(1)?;
         Ok(tok.text.clone())
     }
@@ -556,23 +567,21 @@ impl<'a> P<'a> {
         let base = match (&tok.kind, period_word(&tok.text)) {
             (Kind::Id, Some(singular)) => singular.to_owned(),
             (Kind::Id, None) => {
-                self.mark(Some(first), |m| m.name = true);
+                self.mark(Some(first), |m| m.read = Read::Name);
                 tok.text.clone()
             }
             _ => tok.text.clone(),
         };
-        let mut power = 1_i64;
+        let mut power = Num::int(1);
         if self.at("^", 0) && !self.spaced(0) {
             self.skip(1)?;
-            let negative = self.accept("-")?;
-            let n = self.integer()?;
-            let n = n.to_i64().ok_or_else(|| self.cannot("a power too large"))?;
-            power = if negative {
-                n.checked_neg()
-                    .ok_or_else(|| self.cannot("a power too large"))?
+            let minus = if self.accept("-")? {
+                Minus::Taken
             } else {
-                n
+                Minus::None
             };
+            let n = self.integer()?;
+            power = self.signed(n, minus, "a power")?;
         }
         for at in (first..self.i).skip(1) {
             self.role(Some(at), Role::Unit);
@@ -593,9 +602,7 @@ impl<'a> P<'a> {
             let divide = self.next()?.text == "/";
             let term = self.uterm()?;
             let power = if divide {
-                term.power
-                    .checked_neg()
-                    .ok_or_else(|| self.cannot("a power too large"))?
+                self.signed(term.power, Minus::Taken, "a power")?
             } else {
                 term.power
             };
@@ -614,10 +621,7 @@ impl<'a> P<'a> {
         self.role(Some(self.i), Role::Unit);
         let term = self.uterm()?;
         Ok(UnitTerm {
-            power: term
-                .power
-                .checked_neg()
-                .ok_or_else(|| self.cannot("a power too large"))?,
+            power: self.signed(term.power, Minus::Taken, "a power")?,
             base: term.base,
         })
     }
@@ -731,7 +735,8 @@ impl<'a> P<'a> {
         self.lit_after(Minus::None)
     }
 
-    /// A literal with no sign before it (a currency's minor unit).
+    /// A literal with no sign before it (a currency's minor unit, an `sref`'s key, a band
+    /// row's key).
     pub(super) fn lit_unsigned(&mut self) -> Result<Lit, Stop> {
         self.lit_after(Minus::None)
     }
@@ -775,7 +780,7 @@ impl<'a> P<'a> {
             }
             _ if is_keyword(word) => Err(self.err("a literal")),
             _ => {
-                self.mark(Some(self.i), |m| m.name = true);
+                self.mark(Some(self.i), |m| m.read = Read::Name);
                 self.take(Lit::Name(word.to_owned()))
             }
         }

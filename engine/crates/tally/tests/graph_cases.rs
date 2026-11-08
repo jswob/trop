@@ -309,7 +309,7 @@ place shop: ext lives 2026-01-01..
         let cases = [
             (
                 "\ndef a[m in month]: money PLN = b[m]\n\ndef b[m in month]: money PLN = a[m]\n",
-                "LOAD-CYCLE a depends on itself at the same key: a -> b -> a",
+                "LOAD-CYCLE a depends on itself at the same key: a -> b -> a (a.tally:19)",
             ),
             (
                 "\nmove d1: transfers\n  on cut\n  reads konto\n  leg cash from save to konto amount bal(konto)\n\nmove d2: transfers\n  on cut\n  reads save\n  leg cash from konto to save amount bal(save)\n",

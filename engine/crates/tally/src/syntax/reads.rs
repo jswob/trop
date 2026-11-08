@@ -1,19 +1,18 @@
 //! The reads with a production of their own: queries, `low`, `crps`, distributions and their
 //! functions, `prorata`, a random choice, and a reading row's `of`.
-//! Spec: L §2.3 (`query`, `lowx`, `crps`, `distfn`, `dist`, `prorata`, `rchoice`, `ofrow`, `sref`),
+//! Spec: L §2.3 (`query`, `lowx`, `crps`, `distfn`, `dist`, `prorata`, `rchoice`, `ofrow`),
 //! §5.11 (queries over keys), §5.13 (`prorata`), §5.14.1 (`low`), §5.15 (`crps`), §5.16
 //! (distributions, random values' queries), §5.19 (a reading's parts).
 //! Twin: engine/tools/refcore/parser.py (`builtin`'s `low`, `crps`, `cdf`/`pdf`/`pmf`, `DISTS`
-//! and `discrete` arms; `query`, `prorata`, `rchoice`, `sref`, `ofrow`).
+//! and `discrete` arms; `query`, `prorata`, `rchoice`, `ofrow`).
 //! Invariants: each bracket is counted by `open` as refcore counts it (an `ofrow` pair's
 //! parentheses aren't, as in refcore); the error texts are refcore's word for word.
 
 use super::expr::Ends;
-use super::lex::Kind;
 use super::parse::{P, Stop};
 use super::tree::{
-    Crps, Dist, DistFn, DistFnKind, DistKind, Expr, Key, Low, OfRow, Postfix, Prorata, Query,
-    QueryFn, RChoice, Rest,
+    Crps, Dist, DistFn, DistFnKind, DistKind, Expr, Low, OfRow, Prorata, Query, QueryFn, RChoice,
+    Rest,
 };
 
 /// The query named `word`, if it is one (L §2.2).
@@ -214,37 +213,8 @@ impl P<'_> {
         Ok(RChoice::Quantile(level))
     }
 
-    /// `sref = ID {"." FIELD | "[" lit {"," lit} "]"}`: a kind, thing, row or movement, its keys
-    /// written as literals (L §2.3).
-    pub(super) fn sref(&mut self) -> Result<Expr, Stop> {
-        let name = self.ident("an id")?;
-        let mut fixes = Vec::new();
-        loop {
-            if self.at(".", 0) && !self.spaced(0) {
-                self.skip(1)?;
-                let tok = self.next()?;
-                if tok.kind != Kind::Id {
-                    return Err(self.err("a field"));
-                }
-                fixes.push(Postfix::Field(tok.text.clone()));
-            } else if self.accept("[")? {
-                let mut keys = vec![Key::Expr(Expr::Lit(self.lit()?))];
-                while self.accept(",")? {
-                    keys.push(Key::Expr(Expr::Lit(self.lit()?)));
-                }
-                self.expect("]")?;
-                fixes.push(Postfix::Keys(keys));
-            } else {
-                break;
-            }
-        }
-        if fixes.is_empty() {
-            return Ok(Expr::Name(name));
-        }
-        Ok(Expr::Post(Box::new(Expr::Name(name)), fixes))
-    }
-
-    /// `ofrow = sref | "(" sref "," sref ")"`: a party, a batch, or the pair (L §2.3, §3.6).
+    /// `ofrow = sref | "(" sref "," sref ")"`: a party, a batch, or the pair, each read by the
+    /// one `sref` parser a `same` side's is (`P::sref`, issue #88). L §2.3, §3.6.
     pub(super) fn of_row(&mut self) -> Result<OfRow, Stop> {
         if !self.accept("(")? {
             return Ok(OfRow::One(self.sref()?));

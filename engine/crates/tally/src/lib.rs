@@ -22,7 +22,8 @@ mod invariant;
 mod oracle;
 
 pub use api::{
-    Answer, Asks, Given, Pin, Request, Source, load_report, reprint, run, run_in, run_with_memo,
+    Answer, Asks, Given, Pin, Request, Source, load_report, reprint, reprint_in, run, run_in,
+    run_with_memo,
 };
 #[cfg(feature = "counters")]
 pub use counters::Counters;
@@ -35,10 +36,12 @@ pub use oracle::Days;
 pub mod base {
     mod code;
     mod refusal;
+    mod symbol;
     mod table;
 
     pub use code::{Code, Hole, Load, Req, Run, Warn};
     pub use refusal::{Place, Reach, Refusal};
+    pub use symbol::{Internal, Interner, Symbol};
     pub use table::Table;
 }
 
@@ -47,8 +50,11 @@ pub mod base {
 /// files under `syntax/`.
 pub mod syntax {
     mod ask;
+    mod binds;
+    mod calls;
     mod canon;
     mod canon_order;
+    mod decls;
     mod expr;
     mod item;
     mod lex;
@@ -58,12 +64,12 @@ pub mod syntax {
     mod spacing;
     mod tree;
 
-    pub use canon::{printed_hash, reprint};
+    pub use canon::{printed_hash, reprint, reprint_among};
     pub(crate) use expr::is_builtin;
     pub(crate) use item::{parse_lines, prescan_units};
     pub use item::{parse_reality, parse_split};
     pub(crate) use lex::cannot;
-    pub use lex::{Canon, Kind, Line, Mark, Paren, Role, Tok, split_lines};
+    pub use lex::{Canon, Kind, Line, Mark, Paren, Read, Role, Tok, split_lines};
     pub use parse::Stop;
     pub use tree::{
         AddOp, Agg, AggFn, Ask, AskBody, Axis, Bal, Band, BandRow, Bind, Calendar, CalendarDay,
@@ -95,6 +101,7 @@ pub mod time {
 pub mod model {
     mod decl;
     mod graph;
+    mod ids;
     mod index;
     mod key;
     mod kind;
@@ -109,6 +116,10 @@ pub mod model {
         ObsLeg, Observation, PlaceInfo, Row, RowInstant, RuleVer, Table as BandTable, TimePos,
     };
     pub use graph::{Graph, Mark, Node, NodeKind, ReadRole, Rel, Shift, Target};
+    pub use ids::{
+        AxisId, BandId, DefId, FillId, IndexId, InputId, KindId, MoveId, Name, Names, PlaceId,
+        SourceId, ThingId, VersionId,
+    };
     pub use index::{GapRole, IndexForm, IndexInfo, Moved, OwnTime, VersionInfo};
     pub use key::{KeyVal, Pat, Span, pattern_text};
     pub use kind::{Entry, KindInfo, KindSpec, Labels, PRELUDE_KINDS, PlaceKeys, Thing, prelude};
@@ -116,7 +127,7 @@ pub mod model {
         BUILTIN_INDEXES, BUILTIN_INPUTS, Joint, MemberAsks, NameKind, Reality, SamePair,
     };
     pub use ty::{CodeKind, PeriodWord, Shown, Ty};
-    pub use unit::{PERIODS, Scaled, Unit, is_currency_code};
+    pub use unit::{PERIODS, Scaled, Unit, UnitError, is_currency_code, power_past_limit};
     pub use value::{
         Class, Code, MvRef, MvSrc, Number, Value, currency, currency_id, currency_unit, money_num,
         num_money,
@@ -140,8 +151,10 @@ pub mod eval {
     mod arith;
     mod band;
     mod builtin;
+    mod convert;
     mod expr;
     mod memo;
+    mod ranges;
     mod read;
     mod rules;
     mod stack;
@@ -151,10 +164,9 @@ pub mod eval {
     pub use aggregate::Member;
     pub(crate) use aggregate::{order_text, reads_name};
     pub use arith::{Op, Test, arith, compare, currency_of, int_of, negate, same_value};
+    pub(crate) use convert::{ConvertFor, Converted, convert, convert_row, field_literal};
     pub use memo::Memo;
-    pub(crate) use read::{
-        ConvertFor, Converted, convert, convert_row, field_literal, make_keys, thing_seen, to_key,
-    };
+    pub(crate) use read::{make_keys, thing_seen, to_key};
     pub use stack::Item;
     pub use state::{Collected, Ctx, Engine, Entry, Env};
     pub(crate) use state::{a_day, num_stop, past_days};
@@ -167,12 +179,15 @@ pub mod eval {
 pub mod walk {
     mod agenda;
     mod day;
+    mod flows;
+    mod legs;
     mod order;
     mod plan;
     mod point;
     mod projection;
     mod reads;
     mod state;
+    mod tuples;
 
     pub use agenda::{Act, Mv, Reading, endings, reading_point};
     pub use day::{Broke, Ends};
@@ -233,12 +248,16 @@ pub mod load {
     mod binds;
     mod calls;
     mod check;
+    mod compare;
     mod cone;
     mod decls;
+    mod defs;
     mod exact;
     mod fills;
     mod indexes;
+    mod joins;
     mod joint;
+    mod keyed;
     mod keys;
     mod kinds;
     mod lawdates;
@@ -251,6 +270,7 @@ pub mod load {
     mod parts;
     mod pins;
     mod places;
+    mod prefixed;
     mod prices;
     mod random;
     mod reads;
@@ -261,11 +281,14 @@ pub mod load {
     mod srows;
     mod steps;
     mod strata;
+    mod targets;
+    mod texts;
     mod types;
     mod values;
     mod worlds;
 
     pub use joint::member_paths;
+    pub(crate) use joint::reprint_members;
     pub use keys::index_key_of;
     pub use steps::load;
     pub use worlds::{Loaded, Split, Worlds, load_run, split_files};

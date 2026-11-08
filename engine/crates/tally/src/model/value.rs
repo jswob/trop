@@ -157,7 +157,8 @@ pub enum MvSrc {
         /// The step's versions.
         vids: Vec<String>,
     },
-    /// A move's instance no binding tuple gives at the cut.
+    /// A movement known by its id alone, found again at the reader's cut: a move's instance no
+    /// binding tuple gives there, or a movement an observed row's attribute names (L §3.1).
     Missing,
     /// A movement of an event kind as the type sampler sees one: never a run's value.
     Kind(String),

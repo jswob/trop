@@ -12,12 +12,14 @@
 //! band's, a built-in's with its arm, or a name looked up (`unknown id`, `is not called`), as
 //! refcore's `t_call`: no call is left untyped.
 
-use super::check::{Checker, Reading, Scope, Stands, named_parts};
+use super::check::{Checker, Reading, Scope, Stands};
 use super::ops::unify;
 use super::steps::num_stop;
+use super::targets::named_parts;
+use super::texts::text;
 use super::types::{
-    Typed, input_read, is_date, is_period, no_order, num, numcls, period_kind, refused, text, uerr,
-    unit_of, unit_stop,
+    Typed, input_read, is_date, is_period, no_order, num, numcls, period_kind, refused, uerr,
+    unit_error, unit_of, unit_stop,
 };
 use crate::base::Load;
 use crate::model::{CodeKind, NameKind, Node, NodeKind, PeriodWord, Reality, Rel, Shown, Ty, Unit};
@@ -139,7 +141,7 @@ impl Checker {
             return Err(prefixed_call(m, first, call));
         }
         let named_band = !DATE_FNS.contains(&call.name.as_str())
-            && m.names.get(&call.name) == Some(&NameKind::Band);
+            && m.names.kind(&call.name) == Some(NameKind::Band);
         if call.band_key.is_some() || named_band {
             return self.band_call(m, scope, call, depth);
         }
@@ -737,7 +739,7 @@ impl Checker {
         let info = m
             .bands
             .get(id)
-            .filter(|_| m.names.get(id) == Some(&NameKind::Band));
+            .filter(|_| m.names.kind(id) == Some(NameKind::Band));
         let Some(info) = info else {
             return Err(refused(Load::Name, format!("unknown band {id}")));
         };
@@ -826,17 +828,17 @@ impl Checker {
         } else {
             Unit::one()
         };
-        let (u, _) = xu.mul(&ru).map_err(unit_stop)?;
+        let (u, _) = xu.mul(&ru).map_err(unit_error)?;
         Ok(num(u))
     }
 
     /// `b(x)` or `b[k](x)`: one argument of the band's argument type (refcore's
     /// `band_call`). L §5.9.
     fn band_call(&mut self, m: &Reality, scope: &Scope, call: &Call, depth: u32) -> Typed {
-        let Some(kind) = m.names.get(&call.name) else {
+        let Some(kind) = m.names.kind(&call.name) else {
             return Err(refused(Load::Name, format!("unknown id {}", call.name)).naming(&call.name));
         };
-        let band = m.bands.get(&call.name).filter(|_| *kind == NameKind::Band);
+        let band = m.bands.get(&call.name).filter(|_| kind == NameKind::Band);
         let Some(band) = band else {
             return Err(refused(
                 Load::Parse,
