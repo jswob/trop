@@ -1,0 +1,44 @@
+model golden_rent
+  tally 2
+  on 2026-10-17
+  start 2026-01-01
+  end 2031-12-31
+  note "T, M1 (issue #108), DONE gate 2: goldens G10 (its rent) and G7, restated from the prototype's blocks (engine/spec/verification/blocks/cases). 01-month.json: the rent najem@1 is in.rent * p.index.prices, rent 3 200; index.prices is 1 from 2000-01-01, then before * (1 + assume.inflation) each year from 2027-01-01; assume.inflation is 0.03 from 2027-01-01. G10: the rent of 2030 is 3 601.63, and 3 889.62 at 5 % inflation (the scenario infl5). G7 (12-rent-vs-buy.json): a rent of 2 500 from 2028 must not book 2 652.25; its price year is stated, so it books 2 500.00 (rent_2028), and the same figure stated in 2026 money books 2 652.25 (rent_2026_money, the twin)."
+
+source prototype "the prototype's blocks 01-month.json and 12-rent-vs-buy.json"
+
+unit PLN: currency minor 0.01
+
+index ys = year 2026..2031
+
+input inflation: num
+
+input rent: money PLN prices 2026 by cpi question "Ile wynosi czynsz najmu?"
+
+input rent_2028: money PLN prices 2028 by cpi question "Ile wynosi czynsz od 2028 roku, w cenach 2028 roku?"
+
+input rent_2026_money: money PLN prices 2026 by cpi question "Ile wynosi ten czynsz w cenach 2026 roku?"
+
+def cpi[y in ys]: num at start_of(y)
+  rule initial = 1 when pos(y) == 1
+  rule next = cpi[y - 1] * (1 + inflation) when pos(y) > 1
+
+def rent_due[y in ys]: money PLN = round(rent, minor(PLN), half-up) at start_of(y)
+
+def rent_2028_due[y in ys]: money PLN = round(rent_2028, minor(PLN), half-up) at start_of(y)
+
+def rent_2026_money_due[y in ys]: money PLN = round(rent_2026_money, minor(PLN), half-up) at start_of(y)
+
+version prototype_2026
+  cite prototype
+  governs always
+  known 2026-10-17
+  inflation = 0 governs 2026 "index.prices is 1 until 2027-01-01"
+  inflation = 0.03 governs 2027.. "assume.inflation from 2027-01-01"
+  rent = 3200 "najem@1, rent"
+  rent_2028 = 2500 governs 2028.. "12-rent-vs-buy.json: rent 2 500 from 2028, in 2028 money"
+  rent_2026_money = 2500 governs 2028.. "the same figure stated in 2026 money: the reading G7 forbids"
+
+ask g10_rent: rent_due[2030]
+
+ask g7_rent_2028: rent_2028_due[2028], rent_2026_money_due[2028]

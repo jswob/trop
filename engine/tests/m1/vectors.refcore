@@ -25466,4 +25466,2673 @@ ask n2: count(j in jobs on 2028-06-01) in leave
 ,,1:0,38:n2: 0
   world: leave
   cut 2027-01-01
+,23:goldens/pins_employment,12:goldens-pins,778:run integration/amendments/real11/c1/asks/core.tally integration/amendments/real11/c1/facts/2026.tally integration/amendments/real11/c1/facts/2027.tally integration/amendments/real11/c1/law/pl/benefits.tally integration/amendments/real11/c1/law/pl/business.tally integration/amendments/real11/c1/law/pl/common.tally integration/amendments/real11/c1/law/pl/employment.tally integration/amendments/real11/c1/law/pl/wrappers.tally integration/amendments/real11/c1/loans.tally integration/amendments/real11/c1/pays.tally integration/amendments/real11/c1/people.tally integration/amendments/real11/c1/places.tally integration/amendments/real11/c1/reality.tally integration/amendments/real11/c1/records/mbank/2026-09.tally m1/goldens/law/golden.tally --ask g_my_net g_wife_net g_pit37,51982:48:integration/amendments/real11/c1/asks/core.tally,1264:part asks_core
+  tally 2
+  note "Zapisane pytania gospodarstwa. Plan zmiany (OPERATIONS §7) porównuje je przed i po."
+
+ask explain_room: explain room[2026-11] law cut
+
+ask health_settlement: health_settle[y] for y in [2026, 2027, 2028] law cut
+
+ask ike_left: ike_limit[y] - flows(invest[ike], y) for y in [2026, 2027, 2028] law cut
+
+ask konto_balance: bal(konto, d) with uncertain, bal(konto, d) with uncertain - vat_owed[d] for d in [2026-10-31, 2026-12-31, 2027-06-30, 2027-12-31] law cut
+
+ask net_worth: sum(bal(x, d) with uncertain for x in places over .. where not x in outside and ((x in accounts or x in cash or x in claims or x in debts) and unit(x) == PLN)) + sum(value(wunits[w], d) in PLN by etf_price[month_of(d)] for w in wrapper) for d in [2026-12-31, 2031-12-31, 2041-12-31, 2059-12-31] law cut
+
+ask pit28: pit28_due[y] for y in [2026, 2027, 2028] law cut
+
+ask pit37: pit37_due[p, y] for p in person over .., y in [2026, 2027, 2028] law cut
+
+ask replay_september: residuals konto 2026-09 law cut
+
+ask social_and_health: zus_social[m], health_month[m] for m in [2026-10, 2027-01, 2028-09] law cut
+
+ask taxes_paid: flows(urzad_skarbowy, y) for y in [2026, 2027, 2028] law cut
+
+ask wife_net: emp_net[wife_acme, m] for m in [2026-10, 2027-01] law cut
+,49:integration/amendments/real11/c1/facts/2026.tally,4255:part facts_2026
+  tally 2
+  note "Fakty gospodarstwa z 2026 roku: umowy, rejestracje, wybory, założenia prognozy."
+
+source broker "Wyciągi z rachunku maklerskiego i IKE (notowania jednostek ETF)"
+
+kind waivers: event certain
+
+input spend_waive_on: date
+
+move spend_waive_spend_2026_09[a in adjustments on spend_waive_on where a.adjusts in spend_pays]: waivers
+  on a.day
+  fulfils a
+
+version forecast_2026
+  cite modeller
+  governs always
+  known 2025-12-31
+  cost_net = 0 assumed "przed wpisem do CEIDG nie znamy kosztów firmy; wpis je poda" governs 2026-03..
+  cost_vat = 0 assumed "przed wpisem do CEIDG nie znamy kosztów firmy; wpis je poda" governs 2026-03..
+  etf_return = 0.06 assumed "zwrot ETF 6% rocznie (prototyp)" governs 2027..
+  fee_net = 0 assumed "przed umowami B2B nie znamy faktur; umowy je podadzą" governs 2026-03..
+  inflation = 0 assumed "indeks cen równy 1 do 2027 roku (prototyp)" governs 2026..2027
+  inflation = 0.03 assumed "ceny +3% rocznie (prototyp)" governs 2028..
+  oki_from = none assumed "na początek 2026 OKI nie istnieje w prawie"
+
+version home_2026
+  cite household
+  governs always
+  known 2025-12-31
+  cost_net = 0 governs 2026-01..2026-02 "przed założeniem działalności"
+  cost_vat = 0 governs 2026-01..2026-02 "przed założeniem działalności"
+  fee_net = 0 governs 2026-01..2026-02 "przed założeniem działalności"
+  keep_floor = 1000 "reguła 15.: zostawiamy 1 000 zł"
+  oki_holds = foreign "na OKI będzie ETF zagraniczny"
+  rent = 3200 governs 2026-01.. "umowa najmu, § 4"
+  salary[wife_acme] = 7000 governs 2026-01.. "umowa o pracę żony, § 3"
+  spend_budget[groceries] = 2200 assumed "budżet gospodarstwa na 2026, przed pierwszym wyciągiem"
+  spend_budget[health_care] = 300 assumed "budżet gospodarstwa na 2026, przed pierwszym wyciągiem"
+  spend_budget[other] = 1500 assumed "budżet gospodarstwa na 2026, przed pierwszym wyciągiem"
+  spend_budget[transport] = 600 assumed "budżet gospodarstwa na 2026, przed pierwszym wyciągiem"
+  spend_window = none "nie ma jeszcze wyciągu"
+  zus_stage = inactive governs 2026-01..2026-02 "przed założeniem działalności"
+
+version broker_2026_01
+  cite broker
+  governs 2026-01..2026-06
+  known 2026-01-02
+  etf_mark = 121 "notowanie z początku stycznia"
+
+version dg_2026
+  cite household
+  governs always
+  known 2026-02-20
+  note "wpis do CEIDG od 2026-03-01, umowy B2B z klientami A i B, zgłoszenie do ZUS"
+  replace cost_net = 400 governs 2026-03.. "oprogramowanie i biuro, netto"
+  replace cost_vat = 92 governs 2026-03.. "VAT naliczony od kosztów"
+  fee_net[client_a] = 14000 governs 2026-03.. "umowa B2B z klientem A, § 5"
+  fee_net[client_b] = 3000 governs 2026-03.. "umowa B2B z klientem B, § 4"
+  sickness_opt = true "ZUS ZUA: dobrowolne ubezpieczenie chorobowe"
+  tax_form = ryczalt governs 2026.. "CEIDG: ryczałt od przychodów ewidencjonowanych"
+  terms[client_a] = 14 "umowa B2B z klientem A, § 6"
+  terms[client_b] = 30 "umowa B2B z klientem B, § 5"
+  zus_stage = relief governs 2026-03..2026-08 "ZUS ZZA: ulga na start, 6 miesięcy"
+  zus_stage = preferential governs 2026-09..2028-08 "ZUS ZUA: 24 miesiące składek preferencyjnych"
+  zus_stage = standard governs 2028-09.. "pełne składki po okresie preferencyjnym"
+
+version marek_lend_2026
+  cite household
+  governs always
+  known 2026-03-12
+  lend_amt[lend1] = 2000 "przelew do Marka"
+  lend_day[lend1] = 2026-03-12
+
+version marek_back_2026_06
+  cite household
+  governs always
+  known 2026-06-30
+  marek_amt[back1] = 700 "zwrot od Marka"
+  marek_day[back1] = 2026-06-30
+
+version broker_2026_07
+  cite broker
+  governs 2026-07..
+  known 2026-07-01
+  etf_mark = 126 "notowanie z początku lipca"
+
+version marek_back_2026_09
+  cite household
+  governs always
+  known 2026-09-15
+  marek_amt[back2] = 500 "zwrot od Marka"
+  marek_day[back2] = 2026-09-15
+  marek_promise = (amt: 800, due: 2026-12-31) "Marek obiecał resztę do końca roku"
+
+version spend_2026_09
+  cite household
+  governs always
+  known 2026-10-02
+  note "średnia z wyciągu zmienia prognozę, nie przeszłość: zaksięgowane dni wydatków zostają"
+  replace spend_window = 2026-09 "pierwszy pełny wyciąg konta"
+  spend_waive_on = 2026-10-02 "dzień, w którym wyciąg zmienił prognozę"
+,49:integration/amendments/real11/c1/facts/2027.tally,346:part facts_2027
+  tally 2
+
+source contract_c "Umowa B2B z klientem C, 2027-01-20"
+
+version client_c_2027
+  cite contract_c
+  governs always
+  known 2027-01-20
+  client + [client_c] lives 2027-01-20..
+  fee_net[client_c] = 0 governs 2026-01..2027-01 "przed umową"
+  fee_net[client_c] = 6000 governs 2027-02.. "§ 5"
+  terms[client_c] = 21 "§ 6"
+,54:integration/amendments/real11/c1/law/pl/benefits.tally,1827:part pl_benefits
+  tally 2
+  law
+  note "Świadczenie wychowawcze 800+: na każde dziecko do 18 lat mieszkające w Polsce, od miesiąca wniosku albo od miesiąca urodzenia, gdy wniosek złożono w ciągu 3 miesięcy."
+  note "Wycinek przykładowy; nie przeszedł bramki."
+
+source b800_act "Ustawa o pomocy państwa w wychowywaniu dzieci (tekst jednolity)"
+
+kind b800_pay_pays: event certain
+  leg cash: any
+
+input b800_age: int
+
+input b800_amount: money PLN
+
+input b800_pay_20: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input b800_window: int
+
+input claim_800[c in person]: date question "Kiedy złożono wniosek o 800+ dla tego dziecka?"
+
+def b800_due[c in person, m in month]: bool at start_of(m)
+  note "wniosek '-': jeszcze nie złożony; wtedy świadczenia nie ma, a wniosek złożony później dopłaca miesiące wstecz przez 'arrears' swojej wersji"
+  rule base v b800_2024 = is_child[c] and born[c] < end_of(m) and residence[c, m] == pl and claim_800[c] != none and m >= b800_from[c] and age(born[c], add_days(end_of(m), -1)) < b800_age
+
+def b800_from[c in person]: month at reader
+  rule base v b800_2024 = month_of(claim_800[c])
+  rule early beats base v b800_2024 = month_of(born[c]) when claim_800[c] <= add_months(born[c], b800_window)
+
+def is_child[c in person]: bool = any(parent[c, p] for p in person over ..) at reader
+
+move b800_pay[c in person over .., m in month]: b800_pay_pays
+  on if is_business(day_of(m, b800_pay_20), holidays_pl) then day_of(m, b800_pay_20) else add_business(day_of(m, b800_pay_20), 1, holidays_pl)
+  at start_of(m)
+  for m
+  when b800_due[c, m]
+  leg cash from zus to konto amount b800_amount
+
+version b800_2024
+  cite b800_act
+  governs 2024..
+  known 2023-08-30
+  b800_age = 18 "art. 4 ust. 2"
+  b800_amount = 800 "art. 5 ust. 1"
+  b800_window = 3 "art. 26 ust. 2"
+,54:integration/amendments/real11/c1/law/pl/business.tally,10080:part pl_business
+  tally 2
+  law
+  note "Jednoosobowa działalność (B2B): ryczałt, składki ZUS przedsiębiorcy (ulga na start, preferencyjne, pełne), zdrowotna na ryczałcie z rozliczeniem rocznym, VAT miesięczny."
+  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki."
+
+source ryczalt_act "Ustawa o zryczałtowanym podatku dochodowym od niektórych przychodów (tekst jednolity)"
+
+source vat_act "Ustawa o podatku od towarów i usług (tekst jednolity)"
+
+kind health_pay_pays: event certain
+  leg cash: any
+
+index form = [ryczalt, scale, linear]
+
+index stage = [inactive, relief, preferential, standard]
+
+index tier = [low, mid, high]
+
+input health_settle_day_16: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input health_settle_day_19: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input health_share[t in tier]: num
+
+input pref_share: num
+
+input ryczalt_health_ded: num
+
+input ryczalt_pay_20: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input ryczalt_rate: num
+
+input standard_share: num
+
+input vat_day_25: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input vat_rate: num
+
+input zus_due[z in zus_part, s in stage]: bool
+
+input zus_rate[z in zus_part]: num
+
+input zus_pay_dom: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+band health_tier(rev: num PLN): key tier
+  note "próg przychodów roku dla składki zdrowotnej na ryczałcie"
+
+def active_months[y in tax_year]: int = count(m in month where year_of(m) == y and zus_stage[m] != inactive) at start_of(y)
+
+def health_month[m in month]: money PLN at start_of(m)
+  note "składka miesięczna według przychodów od początku roku"
+  rule base v health_ryczalt_2022 = round(health_rate * health_share[health_tier(rev_ytd[m])] * health_base_y[year_of(m)], minor(PLN), half-up)
+
+def health_paid[y in tax_year]: money PLN = sum(flows(health_pay[m], start_of(m)..health_settle_day[y]) for m in month where year_of(m) == y) at start_of(y)
+
+def health_settle[y in tax_year]: money PLN = health_year[y] - health_paid[y] at start_of(y)
+
+def health_settle_day[y in tax_year]: date at start_of(y)
+  rule base v health_ryczalt_2022 = if is_business(add_days(add_months(start_of(y), health_settle_day_16), health_settle_day_19), holidays_pl) then add_days(add_months(start_of(y), health_settle_day_16), health_settle_day_19) else add_business(add_days(add_months(start_of(y), health_settle_day_16), health_settle_day_19), 1, holidays_pl)
+
+def health_year[y in tax_year]: money PLN at start_of(y)
+  note "rozliczenie roczne: składka miesięczna według przychodów całego roku, razy miesiące działalności"
+  rule base v health_ryczalt_2022 = active_months[y] * round(health_rate * health_share[health_tier(revenue_year[y])] * health_base_y[y], minor(PLN), half-up)
+
+def invoice_gross[c in client, m in month]: money PLN = fee_net[c, m] + vat_out[c, m] at start_of(m)
+
+def issue_day[m in month]: date = add_days(end_of(m), -1) at start_of(m)
+
+def pay_day[c in client, m in month]: date = if is_business(add_days(issue_day[m], terms[c]), holidays_pl) then add_days(issue_day[m], terms[c]) else add_business(add_days(issue_day[m], terms[c]), 1, holidays_pl) at start_of(m)
+
+def pit28_due[y in tax_year]: money PLN = pit28_tax[y] - sum(flows(ryczalt_pay[m], start_of(m)..return_day[y]) for m in month where year_of(m) == y) at start_of(y)
+
+def pit28_tax[y in tax_year]: money PLN at start_of(y)
+  rule base v ryczalt_2022 = round(round(max(0, revenue_year[y] - flows(zus_social_pay, y) - flows(health_pay, y) * ryczalt_health_ded), 1, half-up) * ryczalt_rate, 1, half-up)
+  rule other_form beats base v ryczalt_2022 = ?"Zeznanie dla innej formy opodatkowania niż ryczałt nie jest opisane." when revenue_year[y] > 0 and tax_form[y] != ryczalt
+
+def rev_ytd[m in month]: money PLN = sum(revenue[k] for k in month where year_of(k) == year_of(m) and k <= m) at start_of(m)
+
+def revenue[m in month]: money PLN = sum(fee_net[c, m] for c in client over ..) at start_of(m)
+
+def revenue_year[y in tax_year]: money PLN = sum(revenue[m] for m in month where year_of(m) == y) at start_of(y)
+
+def ryczalt_adv[m in month]: money PLN at start_of(m)
+  note "zaliczka: stawka od przychodu miesiąca po odliczeniu składek społecznych i połowy zdrowotnej zapłaconych w miesiącu"
+  rule base v ryczalt_2022 = round(round(max(0, revenue[m] - flows(zus_social_pay, m) - flows(health_pay, m) * ryczalt_health_ded), 1, half-up) * ryczalt_rate, 1, half-up)
+  rule other_form beats base v ryczalt_2022 = ?"Zaliczki dla innej formy opodatkowania niż ryczałt nie są opisane." when revenue[m] > 0 and tax_form[year_of(m)] != ryczalt
+
+def vat_day[m in month]: date at start_of(m)
+  rule base v vat_2026 = if is_business(add_months(day_of(m, vat_day_25), 1), holidays_pl) then add_months(day_of(m, vat_day_25), 1) else add_business(add_months(day_of(m, vat_day_25), 1), 1, holidays_pl)
+
+def vat_due[m in month]: money PLN at start_of(m)
+  rule base v vat_2026 = round(sum(vat_out[c, m] for c in client over ..) - cost_vat[m], 1, half-up)
+  rule surplus beats base v vat_2026 = ?"Nadwyżka VAT naliczonego: przeniesienie na następny miesiąc czy zwrot (art. 87)?" when sum(vat_out[c, m] for c in client over ..) < cost_vat[m]
+
+def vat_out[c in client, m in month]: money PLN at start_of(m)
+  rule base v vat_2026 = round(fee_net[c, m] * vat_rate, minor(PLN), half-up)
+
+def vat_owed[d in day]: money PLN at start_of(d)
+  note "VAT należny z faktur już zapłaconych przez klientów, a jeszcze nie wpłacony do urzędu: nie nasz"
+  rule base = sum(vat_out[c, m] for c in client over .., m in month where fee_net[c, m] > 0 and pay_day[c, m] <= d and vat_day[m] > d)
+
+def zus_base[m in month]: money PLN at start_of(m)
+  rule nobase v sus_rates_2026 = 0 when zus_stage[m] == inactive or zus_stage[m] == relief
+  rule pref v sus_rates_2026 = round(min_wage_y[year_of(m)] * pref_share, minor(PLN), half-up) when zus_stage[m] == preferential
+  rule standard v sus_rates_2026 = round(proj_wage_y[year_of(m)] * standard_share, minor(PLN), half-up) when zus_stage[m] == standard
+
+def zus_social[m in month]: money PLN = sum(round(zus_base[m] * zus_rate[z], minor(PLN), half-up) for z in zus_part where zus_due[z, zus_stage[m]] and (z != sickness or sickness_opt)) at start_of(m)
+
+move client_pay[c in client over .., m in month]: transfers
+  on pay_day[c, m]
+  at start_of(m)
+  for m
+  when fee_net[c, m] > 0
+  leg cash from klienci to konto amount invoice_gross[c, m]
+
+move health_pay[m in month]: health_pay_pays
+  on if is_business(add_months(day_of(m, zus_pay_dom), 1), holidays_pl) then add_months(day_of(m, zus_pay_dom), 1) else add_business(add_months(day_of(m, zus_pay_dom), 1), 1, holidays_pl)
+  at start_of(m)
+  for m
+  when zus_stage[m] != inactive
+  leg cash from konto to zus amount health_month[m]
+
+move health_settle_back[y in tax_year]: transfers
+  on health_settle_day[y]
+  at start_of(y)
+  for y
+  when health_settle[y] < 0
+  leg cash from zus to konto amount -health_settle[y]
+
+move health_settle_pay[y in tax_year]: transfers
+  on health_settle_day[y]
+  at start_of(y)
+  for y
+  when health_settle[y] > 0
+  leg cash from konto to zus amount health_settle[y]
+
+move pit28_pay[y in tax_year]: transfers
+  on return_day[y]
+  at start_of(y)
+  for y
+  when pit28_due[y] > 0
+  leg cash from konto to urzad_skarbowy amount pit28_due[y]
+
+move pit28_refund[y in tax_year]: transfers
+  on add_days(return_day[y], refund_days)
+  at start_of(y)
+  for y
+  when pit28_due[y] < 0
+  leg cash from urzad_skarbowy to konto amount -pit28_due[y]
+
+move ryczalt_pay[m in month]: transfers
+  on if is_business(add_months(day_of(m, ryczalt_pay_20), 1), holidays_pl) then add_months(day_of(m, ryczalt_pay_20), 1) else add_business(add_months(day_of(m, ryczalt_pay_20), 1), 1, holidays_pl)
+  at start_of(m)
+  for m
+  when ryczalt_adv[m] > 0
+  leg cash from konto to urzad_skarbowy amount ryczalt_adv[m]
+
+move vat_pay[m in month]: transfers
+  on vat_day[m]
+  at start_of(m)
+  for m
+  when vat_due[m] > 0
+  leg cash from konto to urzad_skarbowy amount vat_due[m]
+
+move zus_social_pay[m in month]: transfers
+  on if is_business(add_months(day_of(m, zus_pay_dom), 1), holidays_pl) then add_months(day_of(m, zus_pay_dom), 1) else add_business(add_months(day_of(m, zus_pay_dom), 1), 1, holidays_pl)
+  at start_of(m)
+  for m
+  when zus_social[m] > 0
+  leg cash from konto to zus amount zus_social[m]
+
+version health_ryczalt_2022
+  cite health_act
+  governs 2022..
+  known 2021-11-15
+  health_share[high] = 1.8 "art. 81 ust. 2i pkt 3"
+  health_share[low] = 0.6 "art. 81 ust. 2i pkt 1"
+  health_share[mid] = 1 "art. 81 ust. 2i pkt 2"
+  health_tier: [0, 60000] = low "art. 81 ust. 2i pkt 1"
+  health_tier: (60000, 300000] = mid "art. 81 ust. 2i pkt 2"
+  health_tier: (300000, inf) = high "art. 81 ust. 2i pkt 3"
+
+version ryczalt_2022
+  cite ryczalt_act
+  governs 2022..
+  known 2021-11-15
+  ryczalt_health_ded = 0.5 "art. 11 ust. 1c"
+  ryczalt_rate = 0.12 "art. 12 ust. 1 pkt 2b"
+
+version sus_rates_2026
+  cite sus_act
+  governs 2026..
+  known 2025-12-31
+  pref_share = 0.3 "art. 18a ust. 1"
+  standard_share = 0.6 "art. 18 ust. 8"
+  zus_due = false "poza wymienionymi niżej"
+  zus_due[accident, preferential] = true "art. 12"
+  zus_due[accident, standard] = true "art. 12"
+  zus_due[disability, preferential] = true "art. 6"
+  zus_due[disability, standard] = true "art. 6"
+  zus_due[labour_fund, standard] = true "ustawa o rynku pracy, art. 255"
+  zus_due[pension, preferential] = true "art. 6"
+  zus_due[pension, standard] = true "art. 6"
+  zus_due[sickness, preferential] = true "art. 11 ust. 2, dobrowolna"
+  zus_due[sickness, standard] = true "art. 11 ust. 2, dobrowolna"
+  zus_rate[accident] = 0.0167 "art. 15 ust. 1, stawka dla płatnika do 9 ubezpieczonych"
+  zus_rate[disability] = 0.08 "art. 22 ust. 1 pkt b"
+  zus_rate[labour_fund] = 0.0245 "ustawa o rynku pracy, art. 255"
+  zus_rate[pension] = 0.1952 "art. 22 ust. 1 pkt a"
+  zus_rate[sickness] = 0.0245 "art. 22 ust. 1 pkt c"
+
+version vat_2026
+  cite vat_act
+  governs 2026..
+  known 2025-12-31
+  vat_rate = 0.23 "art. 146ef ust. 1"
+,52:integration/amendments/real11/c1/law/pl/common.tally,4896:part pl_common
+  tally 2
+  law
+  note "Wskaźniki wspólne: płaca minimalna, prognozowane przeciętne wynagrodzenie, podstawa zdrowotnej, kalendarz świąt, termin zeznania rocznego."
+  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §3)."
+
+source dz_2025_1242 "Rozporządzenie RM w sprawie minimalnego wynagrodzenia za pracę w 2026 r., Dz.U. 2025 poz. 1242"
+
+source health_act "Ustawa o świadczeniach opieki zdrowotnej finansowanych ze środków publicznych (tekst jednolity)"
+
+source holidays_act "Ustawa z 18 stycznia 1951 r. o dniach wolnych od pracy (tekst jednolity)"
+
+source mp_2025_1206 "Obwieszczenie w sprawie prognozowanego przeciętnego wynagrodzenia na 2026 r., M.P. 2025 poz. 1206"
+
+source mp_2026_117 "Komunikat Prezesa GUS o przeciętnym wynagrodzeniu w IV kwartale 2025 r., M.P. 2026 poz. 117"
+
+source ordynacja "Ustawa Ordynacja podatkowa (tekst jednolity)"
+
+source pit_act "Ustawa o podatku dochodowym od osób fizycznych (tekst jednolity)"
+
+source sus_act "Ustawa o systemie ubezpieczeń społecznych (tekst jednolity)"
+
+index zus_part = [pension, disability, sickness, accident, labour_fund]
+
+input health_base_wage: money PLN question "Ile wynosi przeciętne wynagrodzenie w IV kwartale poprzedniego roku (podstawa składki zdrowotnej)?"
+
+input health_rate: num
+
+input holidays_pl: calendar
+
+input min_wage: money PLN question "Ile wynosi płaca minimalna w tym roku?"
+
+input proj_wage: money PLN question "Ile wynosi prognozowane przeciętne wynagrodzenie na ten rok?"
+
+input refund_days: int
+
+input return_day_16: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input wage_growth: num
+
+def health_base_y[y in tax_year]: money PLN at start_of(y)
+  note "opublikowana kwota roku; bez niej rzut z poprzedniego roku"
+  rule projected beats published v wage_fc_2026 = round(health_base_y[y - 1] * (1 + wage_growth), minor(PLN), half-up) when missing(health_base_wage) and pos(y) > 1
+  rule published = health_base_wage
+
+def min_wage_y[y in tax_year]: money PLN at start_of(y)
+  note "opublikowana kwota roku; bez niej rzut z poprzedniego roku"
+  rule projected beats published v wage_fc_2026 = round(min_wage_y[y - 1] * (1 + wage_growth), minor(PLN), half-up) when missing(min_wage) and pos(y) > 1
+  rule published = min_wage
+
+def proj_wage_y[y in tax_year]: money PLN at start_of(y)
+  note "opublikowana kwota roku; bez niej rzut z poprzedniego roku"
+  rule projected beats published v wage_fc_2026 = round(proj_wage_y[y - 1] * (1 + wage_growth), minor(PLN), half-up) when missing(proj_wage) and pos(y) > 1
+  rule published = proj_wage
+
+def return_day[y in tax_year]: date at start_of(y)
+  note "30 kwietnia roku następnego, przesunięty na dzień roboczy"
+  rule base v pit_return_2022 = if is_business(add_days(add_months(start_of(y), return_day_16), -1), holidays_pl) then add_days(add_months(start_of(y), return_day_16), -1) else add_business(add_days(add_months(start_of(y), return_day_16), -1), 1, holidays_pl)
+
+version health_2022
+  cite health_act
+  governs 2022..
+  known 2021-11-15
+  health_rate = 0.09 "art. 79 ust. 1"
+
+version pit_return_2022
+  cite pit_act
+  governs 2022..
+  known 2022-06-24
+  note "termin zeznania rocznego, art. 45 ust. 1"
+
+version min_wage_2026
+  cite dz_2025_1242
+  governs 2026
+  known 2025-09-15
+  min_wage = 4806 "§ 1"
+
+version proj_wage_2026
+  cite mp_2025_1206
+  governs 2026
+  known 2025-12-19
+  proj_wage = 9420 "pkt 1"
+
+version holidays_2026_2030
+  cite holidays_act
+  governs 2026..2030
+  known 2025-12-31
+  holidays_pl = calendar(weekends [sat, sun], added [2026-01-01, 2026-01-06, 2026-04-06, 2026-05-01, 2026-06-04, 2026-11-11, 2026-12-24, 2026-12-25, 2027-01-01, 2027-01-06, 2027-03-29, 2027-05-03, 2027-05-27, 2027-11-01, 2027-11-11, 2027-12-24, 2028-01-06, 2028-04-17, 2028-05-01, 2028-05-03, 2028-06-15, 2028-08-15, 2028-11-01, 2028-12-25, 2028-12-26, 2029-01-01, 2029-04-02, 2029-05-01, 2029-05-03, 2029-05-31, 2029-08-15, 2029-11-01, 2029-12-24, 2029-12-25, 2029-12-26, 2030-01-01, 2030-04-22, 2030-05-01, 2030-05-03, 2030-06-20, 2030-08-15, 2030-11-01, 2030-11-11, 2030-12-24, 2030-12-25, 2030-12-26]) governs 2026..2030 "art. 1 pkt 1; święta w dni robocze"
+
+version holidays_later
+  cite modeller
+  governs 2031..
+  known 2025-12-31
+  holidays_pl = calendar(weekends [sat, sun]) assumed "kalendarz świąt po 2030 nie jest wpisany; terminy przesuwają tylko soboty i niedziele"
+
+version refund_rule
+  cite ordynacja
+  governs always
+  known 2025-12-31
+  refund_days = 45 "art. 77b § 1 pkt 1"
+
+version wage_fc_2026
+  cite modeller
+  governs 2026..
+  known 2025-12-31
+  note "rzut wskaźników płacowych na lata bez opublikowanej kwoty (prototyp: indeks płac +4% rocznie)"
+  wage_growth = 0.04 assumed "indeks płac +4% rocznie, założenie prototypu"
+
+version health_base_2026
+  cite mp_2026_117
+  governs 2026
+  known 2026-02-10
+  health_base_wage = 9228.64 "pkt 1"
+,56:integration/amendments/real11/c1/law/pl/employment.tally,5600:part pl_employment
+  tally 2
+  law
+  note "Umowa o pracę: składki pracownika, zdrowotna, zaliczka PIT, zeznanie PIT-37 z ulgą na dziecko."
+  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki."
+
+input ee_rate[z in zus_part]: num
+
+input kup_month: money PLN
+
+input pit_reduction_month: money PLN
+
+input relief_limit: money PLN
+
+input relief_month: money PLN
+
+input relief_months_18: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input relief_parent[c in person]: key person question "Który z rodziców odlicza ulgę na to dziecko?"
+
+input salary[j in job, m in month]: money PLN question "Ile wynosi pensja brutto z tej pracy w tym miesiącu?"
+
+input wage_10: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input zus_cap_30: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+band pit_scale(x: num PLN): num PLN
+  note "skala podatkowa, art. 27 ust. 1: podatek przed ulgami, po kwocie zmniejszającej"
+
+def child_relief[p in person, y in tax_year]: money PLN at start_of(y)
+  rule base v pit_2022 = sum(relief_months[c, y] for c in person over .. where parent[c, p] and relief_parent[c] == p) * relief_month
+  rule over_limit beats base v pit_2022 = 0 when pit37_base[p, y] > relief_limit
+
+def emp_base_capped[j in job, m in month]: money PLN = max(0, min(salary[j, m], zus_cap[year_of(m)] - emp_ytd[j, m])) at start_of(m)
+
+def emp_cum[j in job, m in month]: money PLN = sum(emp_pit_base[j, k] for k in month where year_of(k) == year_of(m) and k <= m) at start_of(m)
+
+def emp_health[j in job, m in month]: money PLN at start_of(m)
+  rule base v health_2022 = round((salary[j, m] - emp_zus[j, m]) * health_rate, minor(PLN), half-up)
+
+def emp_net[j in job, m in month]: money PLN = salary[j, m] - emp_zus[j, m] - emp_health[j, m] - emp_pit_adv[j, m] at start_of(m)
+
+def emp_pit_adv[j in job, m in month]: money PLN at start_of(m)
+  note "art. 32: zaliczka od narastającej podstawy, minus 1/12 kwoty zmniejszającej, do pełnych złotych"
+  rule base v pit_2022 = max(0, round(pit_scale(emp_cum[j, m]) - pit_scale(emp_cum[j, m] - emp_pit_base[j, m]) - pit_reduction_month, 1, half-up))
+
+def emp_pit_base[j in job, m in month]: money PLN at start_of(m)
+  rule base v pit_2022 = round(max(0, salary[j, m] - emp_zus[j, m] - kup_month), 1, half-up)
+
+def emp_ytd[j in job, m in month]: money PLN = sum(salary[j, k] for k in month where year_of(k) == year_of(m) and k < m) at start_of(m)
+
+def emp_zus[j in job, m in month]: money PLN at start_of(m)
+  note "emerytalna i rentowa do rocznej granicy 30-krotności, chorobowa bez granicy"
+  rule base v sus_2026 = round(emp_base_capped[j, m] * ee_rate[pension], minor(PLN), half-up) + round(emp_base_capped[j, m] * ee_rate[disability], minor(PLN), half-up) + round(salary[j, m] * ee_rate[sickness], minor(PLN), half-up)
+
+def pit37_base[p in person, y in tax_year]: money PLN at start_of(y)
+  rule base v pit_2022 = round(max(0, sum(salary[j, m] - emp_zus[j, m] - (if salary[j, m] > 0 then kup_month else 0) for j in job over .., m in month where works_for[j] == p and year_of(m) == y)), 1, half-up)
+
+def pit37_due[p in person, y in tax_year]: money PLN = pit37_tax[p, y] - sum(emp_pit_adv[j, m] for j in job over .., m in month where works_for[j] == p and year_of(m) == y) at start_of(y)
+
+def pit37_tax[p in person, y in tax_year]: money PLN at start_of(y)
+  rule abroad beats base, unused v pit_2022 = ?"Zmiana rezydencji podatkowej w roku nie jest opisana (art. 3, umowa o unikaniu podwójnego opodatkowania)." when any(residence[p, m] != pl for m in month where year_of(m) == y)
+  rule base v pit_2022 = round(max(0, pit_scale(pit37_base[p, y]) - child_relief[p, y]), 1, half-up)
+  rule unused beats base v pit_2022 = ?"Niewykorzystana ulga na dziecko (art. 27f ust. 8): zwrot nie jest opisany." when child_relief[p, y] > max(0, pit_scale(pit37_base[p, y]))
+
+def relief_months[c in person, y in tax_year]: int = count(m in month where year_of(m) == y and born[c] < end_of(m) and age(born[c], add_days(end_of(m), -1)) < relief_months_18) at start_of(y)
+
+def zus_cap[y in tax_year]: money PLN at start_of(y)
+  rule base v sus_2026 = zus_cap_30 * proj_wage_y[y]
+
+move pit37_pay[p in person over .., y in tax_year]: transfers
+  on return_day[y]
+  at start_of(y)
+  for y
+  when pit37_due[p, y] > 0
+  leg cash from konto to urzad_skarbowy amount pit37_due[p, y]
+
+move pit37_refund[p in person over .., y in tax_year]: transfers
+  on add_days(return_day[y], refund_days)
+  at start_of(y)
+  for y
+  when pit37_due[p, y] < 0
+  leg cash from urzad_skarbowy to konto amount -pit37_due[p, y]
+
+move wage[j in job over .., m in month]: transfers
+  on if is_business(add_months(day_of(m, wage_10), 1), holidays_pl) then add_months(day_of(m, wage_10), 1) else add_business(add_months(day_of(m, wage_10), 1), 1, holidays_pl)
+  at start_of(m)
+  for m
+  leg cash from pracodawcy to konto amount emp_net[j, m]
+
+version pit_2022
+  cite pit_act
+  governs 2022..
+  known 2022-06-24
+  kup_month = 250 "art. 22 ust. 2 pkt 1"
+  pit_reduction_month = 300 "art. 32 ust. 3"
+  pit_scale: [0, 120000] = x * 0.12 - 3600 "art. 27 ust. 1, pierwszy próg"
+  pit_scale: (120000, inf) = 10800 + (x - 120000) * 0.32 "art. 27 ust. 1, drugi próg"
+  relief_limit = 112000 "art. 27f ust. 1 pkt 1 lit. a"
+  relief_month = 92.67 "art. 27f ust. 1 pkt 1: 1/6 z 556,02 zł za miesiąc"
+
+version sus_2026
+  cite sus_act
+  governs 2026..
+  known 2025-12-31
+  ee_rate[disability] = 0.015 "art. 22 ust. 1 pkt b, część pracownika"
+  ee_rate[pension] = 0.0976 "art. 22 ust. 1 pkt a, część pracownika"
+  ee_rate[sickness] = 0.0245 "art. 22 ust. 1 pkt c"
+,54:integration/amendments/real11/c1/law/pl/wrappers.tally,3500:part pl_wrappers
+  tally 2
+  law
+  note "IKE: roczny limit wpłat. OKI: od 2027, podatek od średniej wartości rachunku ponad kwotę wolną, płatny do 31 maja."
+  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki."
+
+source ike_act "Ustawa o indywidualnych kontach emerytalnych oraz indywidualnych kontach zabezpieczenia emerytalnego (tekst jednolity)"
+
+source oki_act "Ustawa o osobistych kontach inwestycyjnych, Dz.U. 2026 poz. 1098 (z prototypu)"
+
+source rpp "Komunikaty Rady Polityki Pieniężnej o stopach procentowych NBP"
+
+index oki_asset = [pln_funds, deposits_bonds, foreign]
+
+input ike_limit_3: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input nbp_oct_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input nbp_ref: num question "Ile wynosi stopa referencyjna NBP?"
+
+input oki_exempt[a in oki_asset]: money PLN
+
+input oki_from: month
+
+input oki_rate_0_0001: num
+  note "lifted from an inline figure of tally 1.0.1"
+
+input oki_rate_first: num
+
+input oki_rate_floor: num
+
+input oki_ref_share: num
+
+input oki_tax_pay_17: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+def ike_limit[y in tax_year]: money PLN at start_of(y)
+  rule base v ike_2004 = ike_limit_3 * proj_wage_y[y]
+
+def nbp_oct[y in tax_year]: num = nbp_ref at add_days(add_months(start_of(y), -nbp_oct_2), -1)
+
+def oki_avg[y in tax_year]: num PLN at start_of(y)
+  rule base v oki_rules = sum(value(wunits[oki], d) in PLN by etf_price[month_of(d)] + bal(wcash[oki], d) for d in day where year_of(d) == y) / days_between(start_of(y), end_of(y))
+
+def oki_rate[y in tax_year]: num at start_of(y)
+  rule base v oki_2027 = oki_rate_first
+
+def oki_tax[y in tax_year]: money PLN at start_of(y)
+  rule base v oki_rules = round(max(0, oki_avg[y] - oki_exempt[oki_holds]) * oki_rate[y], 1, half-up)
+
+move oki_tax_pay[y in tax_year]: transfers
+  on if is_business(add_days(add_months(start_of(y), oki_tax_pay_17), -1), holidays_pl) then add_days(add_months(start_of(y), oki_tax_pay_17), -1) else add_business(add_days(add_months(start_of(y), oki_tax_pay_17), -1), 1, holidays_pl)
+  at start_of(y)
+  for y
+  when oki_from != none and start_of(y) >= start_of(oki_from) and oki_tax[y] > 0
+  reads wcash, wunits
+  leg cash from konto to urzad_skarbowy amount oki_tax[y]
+
+version ike_2004
+  cite ike_act
+  governs 2004..
+  known 2004-04-20
+  note "art. 13 ust. 1: limit wpłat to trzykrotność prognozowanego przeciętnego wynagrodzenia"
+
+version nbp_2026_03
+  cite rpp
+  governs 2026-03-05..
+  known 2026-03-04
+  nbp_ref = 0.0375 "decyzja RPP z 4 marca 2026 r., utrzymana w październiku"
+
+version oki_2027
+  cite oki_act
+  governs 2027
+  known 2026-07-15
+  note "art. 43: stawka przejściowa na pierwszy rok"
+  oki_rate_first = 0.0085 "art. 43"
+
+version oki_2028
+  cite oki_act
+  governs 2028..
+  known 2026-07-15
+  note "art. 25: 19% stopy referencyjnej NBP z 31 października roku poprzedniego, w dół do 0,01 pp, nie mniej niż 0,1%"
+  replace rule oki_rate.base v oki_2028 = max(oki_rate_floor, round(oki_ref_share * nbp_oct[y], oki_rate_0_0001, floor))
+
+version oki_rules
+  cite oki_act
+  governs 2027..
+  known 2026-07-15
+  oki_exempt[deposits_bonds] = 25000 "art. 26"
+  oki_exempt[foreign] = 0 "art. 26: brak kwoty wolnej"
+  oki_exempt[pln_funds] = 100000 "art. 26"
+  oki_rate_floor = 0.001 "art. 25 ust. 2"
+  oki_ref_share = 0.19 "art. 25 ust. 1"
+
+version oki_start
+  cite oki_act
+  governs always
+  known 2026-07-15
+  replace oki_from = 2027-01 "przepis o wejściu w życie"
+,44:integration/amendments/real11/c1/loans.tally,3307:part loans
+  tally 2
+  note "Kredyty gospodarstwa: rata równa (annuitet), odsetki od salda, nadpłata skraca okres. Wypłata trafia do sprzedawcy."
+
+kind loan_payments: event certain
+  leg principal: PLN
+  leg interest: PLN
+  leg overpay: PLN
+  note "rata kredytu: część kapitałowa, odsetki i nadpłata, jednego dnia"
+
+kind seller
+
+index inst = int 1..480
+
+index overpay_mode = [shorten, reduce]
+
+place loan_debt[l in loan]: debts PLN lives 2026-01-01..
+
+place sellers[s in seller]: outside lives 2026-01-01..
+
+input loan_seller[l in loan]: key seller
+
+input loan_terms[l in loan]: (principal money PLN, n int, apr rate, first_month month, due int)
+
+input overpay[l in loan, k in inst]: money PLN
+
+input overpay_choice[l in loan]: key overpay_mode
+
+def annuity[l in loan]: money PLN at reader
+  rule base = round(loan_terms[l].principal * inst_rate[l] * factor(loan_terms[l].apr, loan_terms[l].n, month, nominal 12) / (factor(loan_terms[l].apr, loan_terms[l].n, month, nominal 12) - 1), minor(PLN), half-up)
+  rule zero beats base = round(loan_terms[l].principal / loan_terms[l].n, minor(PLN), half-up) when inst_rate[l] == 0
+
+def debt_before[l in loan, k in inst]: money PLN at reader
+  rule initial = loan_terms[l].principal when k == 1
+  rule later = debt_before[l, k - 1] - principal_part[l, k - 1] - overpay_paid[l, k - 1] when k > 1
+
+def inst_day[l in loan, k in inst]: date = day_of(loan_terms[l].first_month + (k - 1), loan_terms[l].due)
+
+def inst_rate[l in loan]: num = periodic(loan_terms[l].apr, month, nominal 12) at reader
+
+def instalment[l in loan, k in inst]: money PLN at reader
+  rule reduce beats shorten = ?"Nadpłata ze zmniejszeniem raty: bank przelicza ratę; zasada przeliczenia nie jest wpisana." when overpay_choice[l] == reduce
+  rule shorten = annuity[l]
+
+def interest_part[l in loan, k in inst]: money PLN = round(debt_before[l, k] * inst_rate[l], minor(PLN), half-up) at reader
+
+def overpay_paid[l in loan, k in inst]: money PLN = min(overpay[l, k], debt_before[l, k] - principal_part[l, k]) at reader
+
+def principal_part[l in loan, k in inst]: money PLN at reader
+  note "ostatnia rata umowy spłaca resztę, także grosze z zaokrąglenia raty"
+  rule base = min(debt_before[l, k], instalment[l, k] - interest_part[l, k])
+  rule last beats base = debt_before[l, k] when k >= loan_terms[l].n
+
+move loan_instalment[l in loan over .., k in inst]: loan_payments
+  on inst_day[l, k]
+  at inst_day[l, k]
+  when debt_before[l, k] > 0
+  leg principal from konto to loan_debt[l] amount principal_part[l, k]
+  leg interest from konto to kredytodawcy amount interest_part[l, k]
+  leg overpay from konto to loan_debt[l] amount overpay_paid[l, k]
+
+move loan_out[l in loan over ..]: transfers
+  on day_of(loan_terms[l].first_month - 1, loan_terms[l].due)
+  at day_of(loan_terms[l].first_month - 1, loan_terms[l].due)
+  leg cash from loan_debt[l] to sellers[loan_seller[l]] amount loan_terms[l].principal
+
+version laptop_loan
+  cite household
+  governs always
+  known 2026-05-05
+  loan + [laptop] lives 2026-05-05..
+  loan_seller[laptop] = electro "umowa ratalna, sprzedawca"
+  loan_terms[laptop] = (principal: 3000, n: 10, apr: 0 1/year, first_month: 2026-06, due: 5) "umowa ratalna 0%, § 2"
+  overpay = 0 "brak nadpłat"
+  overpay_choice = shorten "regulamin: nadpłata skraca okres"
+,43:integration/amendments/real11/c1/pays.tally,5559:part pays
+  tally 2
+  note "Ruchy gospodarstwa poza prawem: czynsz, wydatki, koszty firmy, reguła 15., zakup jednostek, pożyczka Markowi."
+
+kind etf_buys: event certain
+  leg cash: PLN
+  leg units: etf_unit
+
+kind promises: transfers uncertain
+
+kind spend_pays: event certain
+  leg cash: any
+
+input buy_dom: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input cost_net[m in month]: money PLN question "Ile netto wynoszą koszty firmy w tym miesiącu?"
+
+input cost_vat[m in month]: money PLN question "Ile VAT naliczonego jest w kosztach firmy w tym miesiącu?"
+
+input costs_pay_5: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input etf_mark: num PLN/etf_unit question "Jaka jest ostatnia znana cena jednostki ETF?"
+
+input etf_return: num
+
+input fee_net[c in client, m in month]: money PLN question "Ile netto wynosi faktura dla tego klienta za ten miesiąc?"
+
+input inflation: num
+
+input invest_dom: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input keep_floor: money PLN
+
+input lend_amt[k in marek_loan]: money PLN
+
+input lend_day[k in marek_loan]: date
+
+input marek_amt[k in marek_part]: money PLN
+
+input marek_day[k in marek_part]: date
+
+input marek_promise: (amt money PLN, due date)
+
+input oki_holds: key oki_asset question "Co jest na OKI: fundusze w PLN, lokaty i obligacje czy ETF zagraniczny?"
+
+input rent: money PLN prices 2026 by cpi question "Ile wynosi czynsz najmu?"
+
+input sickness_opt: bool
+
+input spend_budget[c in category]: money PLN
+
+input spend_price_year: year
+  note "lifted from an inline figure of tally 1.0.1"
+
+input spend_window: month
+
+input tax_form[y in tax_year]: key form question "Jaką formę opodatkowania wybrano na ten rok?"
+
+input terms[c in client]: int question "Ile dni ma termin płatności tego klienta?"
+
+input zus_stage[m in month]: key stage question "Na jakim etapie składek ZUS jest działalność w tym miesiącu?"
+
+def cpi[y in tax_year]: num at start_of(y)
+  rule initial = 1 when pos(y) == 1
+  rule next = cpi[y - 1] * (1 + inflation) when pos(y) > 1
+
+def etf_growth[y in tax_year]: num at start_of(y)
+  rule initial = 1 when pos(y) == 1
+  rule next = etf_growth[y - 1] * (1 + etf_return) when pos(y) > 1
+
+def etf_price[m in month]: num PLN/etf_unit = etf_mark * etf_growth[year_of(m)] at start_of(m)
+
+def invest_amt[w in wrapper, m in month]: money PLN at start_of(m)
+  note "reguła 15.: najpierw IKE do limitu roku, reszta na rachunek maklerski, od OKI na OKI"
+  rule ike = min(room[m], max(0, ike_limit[year_of(m)] - flows(invest[ike], start_of(year_of(m))..day_of(m, invest_dom)))) when w == ike
+  rule mak = if oki_from != none and m >= oki_from then 0 else room[m] when w == mak
+  rule oki = if oki_from != none and m >= oki_from then room[m] else 0 when w == oki
+
+def room[m in month]: money PLN at start_of(m)
+  note "wolne środki ponad 1 000 zł do następnego uruchomienia reguły (dzień przed kolejnym 15.); VAT do zapłaty nie jest nasz"
+  rule base = max(0, min(bal(konto, d) from day_of(m, invest_dom) - vat_owed[d] for d in day_of(m, invest_dom) .. add_days(add_months(day_of(m, invest_dom), 1), -1) step 1 day) - keep_floor)
+
+def spend_day[d in day]: money PLN = round(sum(spend_month[c] for c in category) * cpi[year_of(d)] / cpi[spend_price_year] / days_between(start_of(month_of(d)), end_of(month_of(d))), minor(PLN), half-up) at start_of(d)
+
+def spend_month[c in category]: money PLN at reader
+  note "wydatki miesiąca w cenach 2026: z wyciągu za miesiąc estymacji, gdy go mamy; wcześniej budżet gospodarstwa"
+  rule budget = spend_budget[c]
+  rule learned beats budget = round((sum(o.cash.amount for o in bank over spend_window where o.fulfils == none and o in spending and o.cat == c and o.cash.from == konto) - sum(o.cash.amount for o in bank over spend_window where o.fulfils == none and o in spending and o.cat == c and o.cash.to == konto)) * cpi[spend_price_year] / cpi[year_of(spend_window)], minor(PLN), half-up) when spend_window != none and covered(konto, spend_window)
+
+def units_to_buy[w in wrapper, m in month]: num etf_unit = round(bal(wcash[w]) / etf_price[m], 1 etf_unit, down) at start_of(m)
+
+move buy[w in wrapper, m in month]: etf_buys
+  on day_of(m, buy_dom)
+  at start_of(m)
+  reads wcash
+  ties by pos(w)
+  leg cash from wcash[w] to rynek amount round(units_to_buy[w, m] * etf_price[m], minor(PLN), half-up)
+  leg units from rynek to wunits[w] amount units_to_buy[w, m]
+
+move costs_pay[m in month]: transfers
+  on if is_business(day_of(m, costs_pay_5), holidays_pl) then day_of(m, costs_pay_5) else add_business(day_of(m, costs_pay_5), 1, holidays_pl)
+  at start_of(m)
+  for m
+  when cost_net[m] > 0
+  leg cash from konto to dostawcy amount cost_net[m] + cost_vat[m]
+
+move invest[w in wrapper, m in month]: transfers
+  on day_of(m, invest_dom)
+  at start_of(m)
+  reads invest, konto
+  ties by pos(w)
+  leg cash from konto to wcash[w] amount invest_amt[w, m]
+
+move marek_back[k in marek_part]: transfers
+  on marek_day[k]
+  at marek_day[k]
+  leg cash from marek to konto amount marek_amt[k]
+
+move marek_last: promises
+  on marek_promise.due
+  at marek_promise.due
+  leg cash from marek to konto amount marek_promise.amt
+
+move marek_lend[k in marek_loan]: transfers
+  on lend_day[k]
+  at lend_day[k]
+  leg cash from konto to marek amount lend_amt[k]
+
+move rent_pay[m in month]: transfers
+  on day_of(m, 1)
+  at start_of(m)
+  for m
+  leg cash from konto to wynajmujacy amount round(rent, minor(PLN), half-up)
+
+move spend[d in day]: spend_pays
+  on d
+  at start_of(d)
+  leg cash from konto to sklepy amount spend_day[d]
+,45:integration/amendments/real11/c1/people.tally,641:part people
+  tally 2
+
+input born[p in person]: date question "Kiedy urodziła się ta osoba?"
+
+input parent[c in person, k in person]: bool question "Czy ta osoba jest dzieckiem tej drugiej?"
+
+input residence[p in person, m in month]: key country question "W jakim kraju ta osoba mieszka w tym miesiącu?"
+
+input works_for[j in job]: key person
+
+version people_2026
+  cite household
+  governs always
+  known 2025-12-31
+  born[me] = 1991-02-14 "dowód osobisty"
+  born[wife] = 1992-07-03 "dowód osobisty"
+  parent = false "brak dzieci"
+  residence = pl governs 2026-01.. "meldunek w Krakowie"
+  works_for[wife_acme] = wife "umowa o pracę"
+,45:integration/amendments/real11/c1/places.tally,2067:part places
+  tally 2
+  note "Miejsca gospodarstwa i schemat wyciągów. Miejsca na zewnątrz nazywają, skąd i dokąd płyną pieniądze."
+
+kind spending: transfers
+  attr cat: key category
+  note "wiersz wyciągu, którego nie wyjaśnia żaden zaplanowany ruch, z kategorią wydatku"
+
+index category = [groceries, transport, health_care, other]
+
+place dostawcy: outside lives 2026-01-01..
+
+kind tax_offices: place PLN signed outside
+  note "urzad_skarbowy beyond the model (tally 1 outside PLN); every leg into or out of it is PLN"
+
+place gotowka: cash PLN lives 2026-01-01..
+
+place klienci: outside lives 2026-01-01..
+
+place konto: accounts PLN lives 2026-01-01..
+
+place kredytodawcy: outside lives 2026-01-01..
+
+place marek: claims PLN lives 2026-01-01..
+
+place niewyjasnione: outside lives 2026-01-01..
+
+place pracodawcy: outside lives 2026-01-01..
+
+place rynek: outside lives 2026-01-01..
+
+place sklepy: outside lives 2026-01-01..
+
+place urzad_skarbowy: tax_offices lives 2026-01-01..
+
+place wcash[w in wrapper]: accounts PLN lives 2026-01-01..
+
+place wunits[w in wrapper]: holdings etf_unit priced etf_price lives 2026-01-01..
+
+place wynajmujacy: outside lives 2026-01-01..
+
+place zus: outside lives 2026-01-01..
+
+input bank: observed
+  note "wiersze wyciągów; wiersz bez powiązania z zaplanowanym ruchem idzie z konta do miejsca niewyjasnione"
+
+version openings_2026
+  cite household
+  governs always
+  known 2025-12-31
+  opening[gotowka] = 600 at 2026-01-01 start "portfel"
+  opening[konto] = 24000 at 2026-01-01 start "wyciąg za grudzień 2025, saldo końcowe"
+  opening[marek] = 0 at 2026-01-01 start
+  opening[wcash[ike]] = 0 at 2026-01-01 start "rachunek IKE, gotówka"
+  opening[wcash[mak]] = 0 at 2026-01-01 start "rachunek maklerski, gotówka"
+  opening[wcash[oki]] = 0 at 2026-01-01 start "OKI jeszcze nie istnieje"
+  opening[wunits[ike]] = 150 at 2026-01-01 start "rachunek IKE, jednostki"
+  opening[wunits[mak]] = 80 at 2026-01-01 start "rachunek maklerski, jednostki"
+  opening[wunits[oki]] = 0 at 2026-01-01 start "OKI jeszcze nie istnieje"
+,46:integration/amendments/real11/c1/reality.tally,3063:model tropek
+  tally 2
+  on 2027-01-20
+  start 2026-01-01
+  end 2059-12-31
+  note "Syntetyczne gospodarstwo z prototypu (spec §12, kwoty przykładowe). To nie są dane gospodarstwa."
+  note "Główna praca: działalność B2B na ryczałcie. Żona: umowa o pracę."
+
+source household "Oświadczenia gospodarstwa: umowy, rejestracje, decyzje i wybory"
+
+source index_keys_1_0_1 "Keys tally 1.0.1 listed in index declarations"
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
+
+source modeller "Założenia modelu, każde z powodem"
+
+unit PLN: currency minor 0.01
+
+unit etf_unit "jednostka funduszu ETF"
+
+kind client
+
+kind job
+
+kind loan
+
+kind person
+
+index country = [pl, de]
+
+index day = day 2026-01-01..2059-12-31
+
+index marek_loan: open
+
+index marek_part: open
+
+index month = month 2026-01..2059-12
+
+index tax_year = year 2026..2059
+
+index wrapper = [ike, oki, mak]
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2004-04-20
+  b800_pay_20 = 20 "inline in tally 1.0.1: b800_pay line 31, argument 2 of day_of"
+  buy_dom = 16 "inline in tally 1.0.1: buy_cash line 78 and buy_units line 85, argument 2 of day_of; one fact, the day units are bought"
+  costs_pay_5 = 5 "inline in tally 1.0.1: costs_pay line 92, argument 2 of day_of"
+  health_settle_day_16 = 16 "inline in tally 1.0.1: health_settle_day line 46, argument 2 of add_months"
+  health_settle_day_19 = 19 "inline in tally 1.0.1: health_settle_day line 46, argument 2 of add_days"
+  ike_limit_3 = 3 "inline in tally 1.0.1: ike_limit line 26, factor"
+  invest_dom = 15 "inline in tally 1.0.1: invest_amt line 57, room line 63 (twice), invest line 100, argument 2 of day_of; one fact, the day of the rule of the 15th"
+  nbp_oct_2 = 2 "inline in tally 1.0.1: nbp_oct line 28, argument 2 of add_months"
+  oki_rate_0_0001 = 0.0001 "inline in tally 1.0.1: oki_rate line 35, round step"
+  oki_tax_pay_17 = 17 "inline in tally 1.0.1: oki_tax_pay line 44, argument 2 of add_months"
+  relief_months_18 = 18 "inline in tally 1.0.1: relief_months line 60, operand"
+  return_day_16 = 16 "inline in tally 1.0.1: return_day line 49, argument 2 of add_months"
+  ryczalt_pay_20 = 20 "inline in tally 1.0.1: ryczalt_pay line 148, argument 2 of day_of"
+  spend_price_year = 2026 "inline in tally 1.0.1: spend_day line 65 and spend_month line 70, a year key; one fact, the price year of the spending figures"
+  vat_day_25 = 25 "inline in tally 1.0.1: vat_day line 76, argument 2 of day_of"
+  wage_10 = 10 "inline in tally 1.0.1: wage line 85, argument 2 of day_of"
+  zus_cap_30 = 30 "inline in tally 1.0.1: zus_cap line 63, factor"
+  zus_pay_dom = 20 "inline in tally 1.0.1: health_pay line 108 and zus_social_pay line 164, argument 2 of day_of; one fact, the day ZUS contributions are due"
+
+version things_1_0_1
+  cite index_keys_1_0_1
+  known 2004-04-20
+  client + [client_a] lives 2026-01-01..
+  client + [client_b] lives 2026-01-01..
+  job + [wife_acme] lives 2026-01-01..
+  person + [me] lives 1991-02-14..
+  person + [wife] lives 1992-07-03..
+  seller + [electro] lives 2026-01-01..
+,60:integration/amendments/real11/c1/records/mbank/2026-09.tally,3289:part mbank_2026_09
+  tally 2
+  note "Wyciąg konta wspólnego za wrzesień 2026, syntetyczny. Faktura klienta B za sierpień (płatna 30 września) nie wpłynęła."
+
+source mbank_export "Eksport wyciągu mBank, konto wspólne"
+
+version mbank_2026_09
+  cite mbank_export
+  governs 2026-09
+  known 2026-10-02
+  covers konto
+  anchor konto
+  bank[r20260901a] = (on: 2026-09-01, kind: transfers, leg cash from konto to wynajmujacy amount 3200.00 PLN, fulfils: rent_pay[2026-09]) "CZYNSZ WRZESIEN"
+  bank[r20260902a] = (on: 2026-09-02, kind: spending, leg cash from konto to niewyjasnione amount 412.37 PLN, cat: groceries) "BIEDRONKA KRAKOW"
+  bank[r20260903a] = (on: 2026-09-03, kind: spending, leg cash from konto to niewyjasnione amount 250.00 PLN, cat: transport) "ORLEN STACJA 4021"
+  bank[r20260907a] = (on: 2026-09-07, kind: transfers, leg cash from konto to dostawcy amount 492.00 PLN, fulfils: costs_pay[2026-09]) "DOSTAWCA FV 09/2026"
+  bank[r20260909a] = (on: 2026-09-09, kind: spending, leg cash from konto to niewyjasnione amount 286.15 PLN, cat: groceries) "LIDL KRAKOW"
+  bank[r20260910a] = (on: 2026-09-10, kind: transfers, leg cash from pracodawcy to konto amount 5101.67 PLN, fulfils: wage[wife_acme, 2026-08]) "ACME SP Z O O WYNAGR 08/2026"
+  bank[r20260911a] = (on: 2026-09-11, kind: spending, leg cash from konto to niewyjasnione amount 145.00 PLN, cat: health_care) "APTEKA"
+  bank[r20260914a] = (on: 2026-09-14, kind: transfers, leg cash from klienci to konto amount 17220.00 PLN, fulfils: client_pay[client_a, 2026-08]) "KLIENT A FV 08/2026"
+  bank[r20260915a] = (on: 2026-09-15, kind: transfers, leg cash from marek to konto amount 500.00 PLN, fulfils: marek_back[back2]) "MAREK ZWROT"
+  bank[r20260915b] = (on: 2026-09-15, kind: transfers, leg cash from konto to wcash[ike] amount 6000.00 PLN, fulfils: invest[ike, 2026-09]) "PRZELEW NA IKE"
+  bank[r20260916a] = (on: 2026-09-16, kind: spending, leg cash from konto to niewyjasnione amount 530.80 PLN, cat: groceries) "AUCHAN KRAKOW"
+  bank[r20260918a] = (on: 2026-09-18, kind: spending, leg cash from konto to niewyjasnione amount 180.00 PLN, cat: transport) "PKP INTERCITY"
+  bank[r20260919a] = (on: 2026-09-19, kind: spending, leg cash from konto to niewyjasnione amount 899.99 PLN, cat: other) "MEDIA EXPERT"
+  bank[r20260921a] = (on: 2026-09-21, kind: health_pay_pays, leg cash from konto to zus amount 830.58 PLN, fulfils: health_pay[2026-08]) "ZUS SKLADKA ZDROWOTNA 08/2026"
+  bank[r20260921b] = (on: 2026-09-21, kind: transfers, leg cash from konto to urzad_skarbowy amount 1990.00 PLN, fulfils: ryczalt_pay[2026-08]) "URZAD SKARBOWY RYCZALT 08/2026"
+  bank[r20260923a] = (on: 2026-09-23, kind: spending, leg cash from konto to niewyjasnione amount 348.62 PLN, cat: groceries) "BIEDRONKA KRAKOW"
+  bank[r20260925a] = (on: 2026-09-25, kind: transfers, leg cash from konto to urzad_skarbowy amount 3818.00 PLN, fulfils: vat_pay[2026-08]) "URZAD SKARBOWY VAT 08/2026"
+  bank[r20260926a] = (on: 2026-09-26, kind: spending, leg cash from konto to niewyjasnione amount 120.00 PLN, cat: other) "RESTAURACJA"
+  bank[r20260929a] = (on: 2026-09-29, kind: spending, leg cash from konto to niewyjasnione amount 401.09 PLN, cat: groceries) "BIEDRONKA KRAKOW"
+  stated[konto] = 41386.27 at 2026-09-30 end "saldo końcowe"
+,27:m1/goldens/law/golden.tally,1413:part golden_law
+  tally 2
+  note "T, M1 (issue #108), DONE gate 2: the pins my_tax/net[2026-10] 8 509.87, my_tax/net[2027-03] 8 837.78, wife_tax/net[2026-10] 5 101.67 and pit_joint/due[2026], [2027] (pins-1-7.json), and G6's first figure, restated on household X's change 1 (integration/amendments/real11/c1), whose employment law is the prototype's employment_pl@2022 (04-employment.json; X's wife at 7 000 gross is the prototype's wife_job). Added here: the prototype's my_job (01-month.json: job_pl@1, gross 12 000, person me; my_tax: employment_pl@2022, paid to konto). Its gross is in.gross * p.index.wage, and index.wage is 1 until 2027-01-01, then before * 1.04 (assume.wage_growth), so the rows state 12 000 for 2026 and 12 480 from 2027."
+
+source prototype "the prototype's blocks 01-month.json and 04-employment.json (engine/spec/verification/blocks)"
+
+version golden_my_job
+  cite prototype
+  governs always
+  known 2025-12-31
+  job + [my_job] lives 2026-01-01..
+  works_for[my_job] = me "01-month.json: my_job, person me"
+  salary[my_job] = 12000 governs 2026-01..2026-12 "my_job, gross 12 000 (index.wage 1)"
+  salary[my_job] = 12480 governs 2027-01.. "12 000 * index.wage, 1.04 from 2027-01-01"
+
+ask g_my_net: emp_net[my_job, m] for m in [2026-10, 2027-03] law cut
+
+ask g_wife_net: emp_net[wife_acme, 2026-10] law cut
+
+ask g_pit37: pit37_due[p, y] for p in person over .., y in [2026, 2027] law cut
+,,1:0,14013:g_my_net (m = 2026-10): 8 509.87 PLN
+  law date 2027-01-20, cut 2027-01-20
+g_my_net (m = 2027-03): 8 837.78 PLN
+  assumed: indeks płac +4% rocznie, założenie prototypu (wage_growth)
+  missing record counted by wage_fc_2026
+  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-02-01
+  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-03-01
+  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-02-01
+  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-03-01
+  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-02-01
+  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-03-01
+  held: health_rate = 0.09 (health_2022), read for 2027-03-01
+  held: kup_month = 250.00 PLN (pit_2022), read for 2027-02-01
+  held: kup_month = 250.00 PLN (pit_2022), read for 2027-03-01
+  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-03-01
+  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-03-01
+  held: salary[my_job, 2027-02] = 12 480.00 PLN (golden_my_job), read for 2027-02
+  held: salary[my_job, 2027-03] = 12 480.00 PLN (golden_my_job), read for 2027-03
+  law date 2027-01-20, cut 2027-01-20
+g_wife_net: 5 101.67 PLN
+  law date 2027-01-20, cut 2027-01-20
+g_pit37 (p = me, y = 2026): -5.00 PLN
+  law date 2027-01-20, cut 2027-01-20
+g_pit37 (p = me, y = 2027): 3.00 PLN
+  assumed: indeks płac +4% rocznie, założenie prototypu (wage_growth)
+  missing record counted by wage_fc_2026
+  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-02-01
+  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-03-01
+  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-04-01
+  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-05-01
+  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-06-01
+  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-07-01
+  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-08-01
+  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-09-01
+  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-10-01
+  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-11-01
+  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-12-01
+  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-02-01
+  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-03-01
+  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-04-01
+  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-05-01
+  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-06-01
+  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-07-01
+  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-08-01
+  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-09-01
+  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-10-01
+  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-11-01
+  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-12-01
+  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-02-01
+  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-03-01
+  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-04-01
+  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-05-01
+  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-06-01
+  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-07-01
+  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-08-01
+  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-09-01
+  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-10-01
+  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-11-01
+  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-12-01
+  held: kup_month = 250.00 PLN (pit_2022), read for 2027-02-01
+  held: kup_month = 250.00 PLN (pit_2022), read for 2027-03-01
+  held: kup_month = 250.00 PLN (pit_2022), read for 2027-04-01
+  held: kup_month = 250.00 PLN (pit_2022), read for 2027-05-01
+  held: kup_month = 250.00 PLN (pit_2022), read for 2027-06-01
+  held: kup_month = 250.00 PLN (pit_2022), read for 2027-07-01
+  held: kup_month = 250.00 PLN (pit_2022), read for 2027-08-01
+  held: kup_month = 250.00 PLN (pit_2022), read for 2027-09-01
+  held: kup_month = 250.00 PLN (pit_2022), read for 2027-10-01
+  held: kup_month = 250.00 PLN (pit_2022), read for 2027-11-01
+  held: kup_month = 250.00 PLN (pit_2022), read for 2027-12-01
+  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-02-01
+  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-03-01
+  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-04-01
+  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-05-01
+  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-06-01
+  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-07-01
+  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-08-01
+  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-09-01
+  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-10-01
+  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-11-01
+  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-12-01
+  held: pit_scale row (120 000, inf) (pit_2022), read for 2027-12-01
+  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-02-01
+  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-03-01
+  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-04-01
+  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-05-01
+  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-06-01
+  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-07-01
+  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-08-01
+  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-09-01
+  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-10-01
+  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-11-01
+  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-12-01
+  held: residence[me, 2027-02] = pl (people_2026), read for 2027-02
+  held: residence[me, 2027-03] = pl (people_2026), read for 2027-03
+  held: residence[me, 2027-04] = pl (people_2026), read for 2027-04
+  held: residence[me, 2027-05] = pl (people_2026), read for 2027-05
+  held: residence[me, 2027-06] = pl (people_2026), read for 2027-06
+  held: residence[me, 2027-07] = pl (people_2026), read for 2027-07
+  held: residence[me, 2027-08] = pl (people_2026), read for 2027-08
+  held: residence[me, 2027-09] = pl (people_2026), read for 2027-09
+  held: residence[me, 2027-10] = pl (people_2026), read for 2027-10
+  held: residence[me, 2027-11] = pl (people_2026), read for 2027-11
+  held: residence[me, 2027-12] = pl (people_2026), read for 2027-12
+  held: salary[my_job, 2027-02] = 12 480.00 PLN (golden_my_job), read for 2027-02
+  held: salary[my_job, 2027-03] = 12 480.00 PLN (golden_my_job), read for 2027-03
+  held: salary[my_job, 2027-04] = 12 480.00 PLN (golden_my_job), read for 2027-04
+  held: salary[my_job, 2027-05] = 12 480.00 PLN (golden_my_job), read for 2027-05
+  held: salary[my_job, 2027-06] = 12 480.00 PLN (golden_my_job), read for 2027-06
+  held: salary[my_job, 2027-07] = 12 480.00 PLN (golden_my_job), read for 2027-07
+  held: salary[my_job, 2027-08] = 12 480.00 PLN (golden_my_job), read for 2027-08
+  held: salary[my_job, 2027-09] = 12 480.00 PLN (golden_my_job), read for 2027-09
+  held: salary[my_job, 2027-10] = 12 480.00 PLN (golden_my_job), read for 2027-10
+  held: salary[my_job, 2027-11] = 12 480.00 PLN (golden_my_job), read for 2027-11
+  held: salary[my_job, 2027-12] = 12 480.00 PLN (golden_my_job), read for 2027-12
+  law date 2027-01-20, cut 2027-01-20
+g_pit37 (p = wife, y = 2026): -2.00 PLN
+  law date 2027-01-20, cut 2027-01-20
+g_pit37 (p = wife, y = 2027): -2.00 PLN
+  assumed: indeks płac +4% rocznie, założenie prototypu (wage_growth)
+  missing record counted by wage_fc_2026
+  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-02-01
+  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-03-01
+  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-04-01
+  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-05-01
+  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-06-01
+  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-07-01
+  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-08-01
+  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-09-01
+  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-10-01
+  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-11-01
+  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-12-01
+  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-02-01
+  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-03-01
+  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-04-01
+  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-05-01
+  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-06-01
+  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-07-01
+  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-08-01
+  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-09-01
+  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-10-01
+  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-11-01
+  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-12-01
+  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-02-01
+  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-03-01
+  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-04-01
+  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-05-01
+  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-06-01
+  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-07-01
+  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-08-01
+  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-09-01
+  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-10-01
+  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-11-01
+  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-12-01
+  held: kup_month = 250.00 PLN (pit_2022), read for 2027-02-01
+  held: kup_month = 250.00 PLN (pit_2022), read for 2027-03-01
+  held: kup_month = 250.00 PLN (pit_2022), read for 2027-04-01
+  held: kup_month = 250.00 PLN (pit_2022), read for 2027-05-01
+  held: kup_month = 250.00 PLN (pit_2022), read for 2027-06-01
+  held: kup_month = 250.00 PLN (pit_2022), read for 2027-07-01
+  held: kup_month = 250.00 PLN (pit_2022), read for 2027-08-01
+  held: kup_month = 250.00 PLN (pit_2022), read for 2027-09-01
+  held: kup_month = 250.00 PLN (pit_2022), read for 2027-10-01
+  held: kup_month = 250.00 PLN (pit_2022), read for 2027-11-01
+  held: kup_month = 250.00 PLN (pit_2022), read for 2027-12-01
+  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-02-01
+  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-03-01
+  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-04-01
+  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-05-01
+  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-06-01
+  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-07-01
+  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-08-01
+  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-09-01
+  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-10-01
+  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-11-01
+  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-12-01
+  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-02-01
+  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-03-01
+  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-04-01
+  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-05-01
+  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-06-01
+  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-07-01
+  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-08-01
+  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-09-01
+  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-10-01
+  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-11-01
+  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-12-01
+  held: residence[wife, 2027-02] = pl (people_2026), read for 2027-02
+  held: residence[wife, 2027-03] = pl (people_2026), read for 2027-03
+  held: residence[wife, 2027-04] = pl (people_2026), read for 2027-04
+  held: residence[wife, 2027-05] = pl (people_2026), read for 2027-05
+  held: residence[wife, 2027-06] = pl (people_2026), read for 2027-06
+  held: residence[wife, 2027-07] = pl (people_2026), read for 2027-07
+  held: residence[wife, 2027-08] = pl (people_2026), read for 2027-08
+  held: residence[wife, 2027-09] = pl (people_2026), read for 2027-09
+  held: residence[wife, 2027-10] = pl (people_2026), read for 2027-10
+  held: residence[wife, 2027-11] = pl (people_2026), read for 2027-11
+  held: residence[wife, 2027-12] = pl (people_2026), read for 2027-12
+  held: salary[wife_acme, 2027-02] = 7 000.00 PLN (home_2026), read for 2027-02
+  held: salary[wife_acme, 2027-03] = 7 000.00 PLN (home_2026), read for 2027-03
+  held: salary[wife_acme, 2027-04] = 7 000.00 PLN (home_2026), read for 2027-04
+  held: salary[wife_acme, 2027-05] = 7 000.00 PLN (home_2026), read for 2027-05
+  held: salary[wife_acme, 2027-06] = 7 000.00 PLN (home_2026), read for 2027-06
+  held: salary[wife_acme, 2027-07] = 7 000.00 PLN (home_2026), read for 2027-07
+  held: salary[wife_acme, 2027-08] = 7 000.00 PLN (home_2026), read for 2027-08
+  held: salary[wife_acme, 2027-09] = 7 000.00 PLN (home_2026), read for 2027-09
+  held: salary[wife_acme, 2027-10] = 7 000.00 PLN (home_2026), read for 2027-10
+  held: salary[wife_acme, 2027-11] = 7 000.00 PLN (home_2026), read for 2027-11
+  held: salary[wife_acme, 2027-12] = 7 000.00 PLN (home_2026), read for 2027-12
+  law date 2027-01-20, cut 2027-01-20
+,16:goldens/g6_raise,10:goldens-g6,790:run integration/amendments/real11/c1/asks/core.tally integration/amendments/real11/c1/facts/2026.tally integration/amendments/real11/c1/facts/2027.tally integration/amendments/real11/c1/law/pl/benefits.tally integration/amendments/real11/c1/law/pl/business.tally integration/amendments/real11/c1/law/pl/common.tally integration/amendments/real11/c1/law/pl/employment.tally integration/amendments/real11/c1/law/pl/wrappers.tally integration/amendments/real11/c1/loans.tally integration/amendments/real11/c1/pays.tally integration/amendments/real11/c1/people.tally integration/amendments/real11/c1/places.tally integration/amendments/real11/c1/reality.tally integration/amendments/real11/c1/records/mbank/2026-09.tally m1/goldens/law/golden.tally m1/goldens/law/raise.tally --ask g6_raise_net,52527:48:integration/amendments/real11/c1/asks/core.tally,1264:part asks_core
+  tally 2
+  note "Zapisane pytania gospodarstwa. Plan zmiany (OPERATIONS §7) porównuje je przed i po."
+
+ask explain_room: explain room[2026-11] law cut
+
+ask health_settlement: health_settle[y] for y in [2026, 2027, 2028] law cut
+
+ask ike_left: ike_limit[y] - flows(invest[ike], y) for y in [2026, 2027, 2028] law cut
+
+ask konto_balance: bal(konto, d) with uncertain, bal(konto, d) with uncertain - vat_owed[d] for d in [2026-10-31, 2026-12-31, 2027-06-30, 2027-12-31] law cut
+
+ask net_worth: sum(bal(x, d) with uncertain for x in places over .. where not x in outside and ((x in accounts or x in cash or x in claims or x in debts) and unit(x) == PLN)) + sum(value(wunits[w], d) in PLN by etf_price[month_of(d)] for w in wrapper) for d in [2026-12-31, 2031-12-31, 2041-12-31, 2059-12-31] law cut
+
+ask pit28: pit28_due[y] for y in [2026, 2027, 2028] law cut
+
+ask pit37: pit37_due[p, y] for p in person over .., y in [2026, 2027, 2028] law cut
+
+ask replay_september: residuals konto 2026-09 law cut
+
+ask social_and_health: zus_social[m], health_month[m] for m in [2026-10, 2027-01, 2028-09] law cut
+
+ask taxes_paid: flows(urzad_skarbowy, y) for y in [2026, 2027, 2028] law cut
+
+ask wife_net: emp_net[wife_acme, m] for m in [2026-10, 2027-01] law cut
+,49:integration/amendments/real11/c1/facts/2026.tally,4255:part facts_2026
+  tally 2
+  note "Fakty gospodarstwa z 2026 roku: umowy, rejestracje, wybory, założenia prognozy."
+
+source broker "Wyciągi z rachunku maklerskiego i IKE (notowania jednostek ETF)"
+
+kind waivers: event certain
+
+input spend_waive_on: date
+
+move spend_waive_spend_2026_09[a in adjustments on spend_waive_on where a.adjusts in spend_pays]: waivers
+  on a.day
+  fulfils a
+
+version forecast_2026
+  cite modeller
+  governs always
+  known 2025-12-31
+  cost_net = 0 assumed "przed wpisem do CEIDG nie znamy kosztów firmy; wpis je poda" governs 2026-03..
+  cost_vat = 0 assumed "przed wpisem do CEIDG nie znamy kosztów firmy; wpis je poda" governs 2026-03..
+  etf_return = 0.06 assumed "zwrot ETF 6% rocznie (prototyp)" governs 2027..
+  fee_net = 0 assumed "przed umowami B2B nie znamy faktur; umowy je podadzą" governs 2026-03..
+  inflation = 0 assumed "indeks cen równy 1 do 2027 roku (prototyp)" governs 2026..2027
+  inflation = 0.03 assumed "ceny +3% rocznie (prototyp)" governs 2028..
+  oki_from = none assumed "na początek 2026 OKI nie istnieje w prawie"
+
+version home_2026
+  cite household
+  governs always
+  known 2025-12-31
+  cost_net = 0 governs 2026-01..2026-02 "przed założeniem działalności"
+  cost_vat = 0 governs 2026-01..2026-02 "przed założeniem działalności"
+  fee_net = 0 governs 2026-01..2026-02 "przed założeniem działalności"
+  keep_floor = 1000 "reguła 15.: zostawiamy 1 000 zł"
+  oki_holds = foreign "na OKI będzie ETF zagraniczny"
+  rent = 3200 governs 2026-01.. "umowa najmu, § 4"
+  salary[wife_acme] = 7000 governs 2026-01.. "umowa o pracę żony, § 3"
+  spend_budget[groceries] = 2200 assumed "budżet gospodarstwa na 2026, przed pierwszym wyciągiem"
+  spend_budget[health_care] = 300 assumed "budżet gospodarstwa na 2026, przed pierwszym wyciągiem"
+  spend_budget[other] = 1500 assumed "budżet gospodarstwa na 2026, przed pierwszym wyciągiem"
+  spend_budget[transport] = 600 assumed "budżet gospodarstwa na 2026, przed pierwszym wyciągiem"
+  spend_window = none "nie ma jeszcze wyciągu"
+  zus_stage = inactive governs 2026-01..2026-02 "przed założeniem działalności"
+
+version broker_2026_01
+  cite broker
+  governs 2026-01..2026-06
+  known 2026-01-02
+  etf_mark = 121 "notowanie z początku stycznia"
+
+version dg_2026
+  cite household
+  governs always
+  known 2026-02-20
+  note "wpis do CEIDG od 2026-03-01, umowy B2B z klientami A i B, zgłoszenie do ZUS"
+  replace cost_net = 400 governs 2026-03.. "oprogramowanie i biuro, netto"
+  replace cost_vat = 92 governs 2026-03.. "VAT naliczony od kosztów"
+  fee_net[client_a] = 14000 governs 2026-03.. "umowa B2B z klientem A, § 5"
+  fee_net[client_b] = 3000 governs 2026-03.. "umowa B2B z klientem B, § 4"
+  sickness_opt = true "ZUS ZUA: dobrowolne ubezpieczenie chorobowe"
+  tax_form = ryczalt governs 2026.. "CEIDG: ryczałt od przychodów ewidencjonowanych"
+  terms[client_a] = 14 "umowa B2B z klientem A, § 6"
+  terms[client_b] = 30 "umowa B2B z klientem B, § 5"
+  zus_stage = relief governs 2026-03..2026-08 "ZUS ZZA: ulga na start, 6 miesięcy"
+  zus_stage = preferential governs 2026-09..2028-08 "ZUS ZUA: 24 miesiące składek preferencyjnych"
+  zus_stage = standard governs 2028-09.. "pełne składki po okresie preferencyjnym"
+
+version marek_lend_2026
+  cite household
+  governs always
+  known 2026-03-12
+  lend_amt[lend1] = 2000 "przelew do Marka"
+  lend_day[lend1] = 2026-03-12
+
+version marek_back_2026_06
+  cite household
+  governs always
+  known 2026-06-30
+  marek_amt[back1] = 700 "zwrot od Marka"
+  marek_day[back1] = 2026-06-30
+
+version broker_2026_07
+  cite broker
+  governs 2026-07..
+  known 2026-07-01
+  etf_mark = 126 "notowanie z początku lipca"
+
+version marek_back_2026_09
+  cite household
+  governs always
+  known 2026-09-15
+  marek_amt[back2] = 500 "zwrot od Marka"
+  marek_day[back2] = 2026-09-15
+  marek_promise = (amt: 800, due: 2026-12-31) "Marek obiecał resztę do końca roku"
+
+version spend_2026_09
+  cite household
+  governs always
+  known 2026-10-02
+  note "średnia z wyciągu zmienia prognozę, nie przeszłość: zaksięgowane dni wydatków zostają"
+  replace spend_window = 2026-09 "pierwszy pełny wyciąg konta"
+  spend_waive_on = 2026-10-02 "dzień, w którym wyciąg zmienił prognozę"
+,49:integration/amendments/real11/c1/facts/2027.tally,346:part facts_2027
+  tally 2
+
+source contract_c "Umowa B2B z klientem C, 2027-01-20"
+
+version client_c_2027
+  cite contract_c
+  governs always
+  known 2027-01-20
+  client + [client_c] lives 2027-01-20..
+  fee_net[client_c] = 0 governs 2026-01..2027-01 "przed umową"
+  fee_net[client_c] = 6000 governs 2027-02.. "§ 5"
+  terms[client_c] = 21 "§ 6"
+,54:integration/amendments/real11/c1/law/pl/benefits.tally,1827:part pl_benefits
+  tally 2
+  law
+  note "Świadczenie wychowawcze 800+: na każde dziecko do 18 lat mieszkające w Polsce, od miesiąca wniosku albo od miesiąca urodzenia, gdy wniosek złożono w ciągu 3 miesięcy."
+  note "Wycinek przykładowy; nie przeszedł bramki."
+
+source b800_act "Ustawa o pomocy państwa w wychowywaniu dzieci (tekst jednolity)"
+
+kind b800_pay_pays: event certain
+  leg cash: any
+
+input b800_age: int
+
+input b800_amount: money PLN
+
+input b800_pay_20: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input b800_window: int
+
+input claim_800[c in person]: date question "Kiedy złożono wniosek o 800+ dla tego dziecka?"
+
+def b800_due[c in person, m in month]: bool at start_of(m)
+  note "wniosek '-': jeszcze nie złożony; wtedy świadczenia nie ma, a wniosek złożony później dopłaca miesiące wstecz przez 'arrears' swojej wersji"
+  rule base v b800_2024 = is_child[c] and born[c] < end_of(m) and residence[c, m] == pl and claim_800[c] != none and m >= b800_from[c] and age(born[c], add_days(end_of(m), -1)) < b800_age
+
+def b800_from[c in person]: month at reader
+  rule base v b800_2024 = month_of(claim_800[c])
+  rule early beats base v b800_2024 = month_of(born[c]) when claim_800[c] <= add_months(born[c], b800_window)
+
+def is_child[c in person]: bool = any(parent[c, p] for p in person over ..) at reader
+
+move b800_pay[c in person over .., m in month]: b800_pay_pays
+  on if is_business(day_of(m, b800_pay_20), holidays_pl) then day_of(m, b800_pay_20) else add_business(day_of(m, b800_pay_20), 1, holidays_pl)
+  at start_of(m)
+  for m
+  when b800_due[c, m]
+  leg cash from zus to konto amount b800_amount
+
+version b800_2024
+  cite b800_act
+  governs 2024..
+  known 2023-08-30
+  b800_age = 18 "art. 4 ust. 2"
+  b800_amount = 800 "art. 5 ust. 1"
+  b800_window = 3 "art. 26 ust. 2"
+,54:integration/amendments/real11/c1/law/pl/business.tally,10080:part pl_business
+  tally 2
+  law
+  note "Jednoosobowa działalność (B2B): ryczałt, składki ZUS przedsiębiorcy (ulga na start, preferencyjne, pełne), zdrowotna na ryczałcie z rozliczeniem rocznym, VAT miesięczny."
+  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki."
+
+source ryczalt_act "Ustawa o zryczałtowanym podatku dochodowym od niektórych przychodów (tekst jednolity)"
+
+source vat_act "Ustawa o podatku od towarów i usług (tekst jednolity)"
+
+kind health_pay_pays: event certain
+  leg cash: any
+
+index form = [ryczalt, scale, linear]
+
+index stage = [inactive, relief, preferential, standard]
+
+index tier = [low, mid, high]
+
+input health_settle_day_16: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input health_settle_day_19: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input health_share[t in tier]: num
+
+input pref_share: num
+
+input ryczalt_health_ded: num
+
+input ryczalt_pay_20: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input ryczalt_rate: num
+
+input standard_share: num
+
+input vat_day_25: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input vat_rate: num
+
+input zus_due[z in zus_part, s in stage]: bool
+
+input zus_rate[z in zus_part]: num
+
+input zus_pay_dom: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+band health_tier(rev: num PLN): key tier
+  note "próg przychodów roku dla składki zdrowotnej na ryczałcie"
+
+def active_months[y in tax_year]: int = count(m in month where year_of(m) == y and zus_stage[m] != inactive) at start_of(y)
+
+def health_month[m in month]: money PLN at start_of(m)
+  note "składka miesięczna według przychodów od początku roku"
+  rule base v health_ryczalt_2022 = round(health_rate * health_share[health_tier(rev_ytd[m])] * health_base_y[year_of(m)], minor(PLN), half-up)
+
+def health_paid[y in tax_year]: money PLN = sum(flows(health_pay[m], start_of(m)..health_settle_day[y]) for m in month where year_of(m) == y) at start_of(y)
+
+def health_settle[y in tax_year]: money PLN = health_year[y] - health_paid[y] at start_of(y)
+
+def health_settle_day[y in tax_year]: date at start_of(y)
+  rule base v health_ryczalt_2022 = if is_business(add_days(add_months(start_of(y), health_settle_day_16), health_settle_day_19), holidays_pl) then add_days(add_months(start_of(y), health_settle_day_16), health_settle_day_19) else add_business(add_days(add_months(start_of(y), health_settle_day_16), health_settle_day_19), 1, holidays_pl)
+
+def health_year[y in tax_year]: money PLN at start_of(y)
+  note "rozliczenie roczne: składka miesięczna według przychodów całego roku, razy miesiące działalności"
+  rule base v health_ryczalt_2022 = active_months[y] * round(health_rate * health_share[health_tier(revenue_year[y])] * health_base_y[y], minor(PLN), half-up)
+
+def invoice_gross[c in client, m in month]: money PLN = fee_net[c, m] + vat_out[c, m] at start_of(m)
+
+def issue_day[m in month]: date = add_days(end_of(m), -1) at start_of(m)
+
+def pay_day[c in client, m in month]: date = if is_business(add_days(issue_day[m], terms[c]), holidays_pl) then add_days(issue_day[m], terms[c]) else add_business(add_days(issue_day[m], terms[c]), 1, holidays_pl) at start_of(m)
+
+def pit28_due[y in tax_year]: money PLN = pit28_tax[y] - sum(flows(ryczalt_pay[m], start_of(m)..return_day[y]) for m in month where year_of(m) == y) at start_of(y)
+
+def pit28_tax[y in tax_year]: money PLN at start_of(y)
+  rule base v ryczalt_2022 = round(round(max(0, revenue_year[y] - flows(zus_social_pay, y) - flows(health_pay, y) * ryczalt_health_ded), 1, half-up) * ryczalt_rate, 1, half-up)
+  rule other_form beats base v ryczalt_2022 = ?"Zeznanie dla innej formy opodatkowania niż ryczałt nie jest opisane." when revenue_year[y] > 0 and tax_form[y] != ryczalt
+
+def rev_ytd[m in month]: money PLN = sum(revenue[k] for k in month where year_of(k) == year_of(m) and k <= m) at start_of(m)
+
+def revenue[m in month]: money PLN = sum(fee_net[c, m] for c in client over ..) at start_of(m)
+
+def revenue_year[y in tax_year]: money PLN = sum(revenue[m] for m in month where year_of(m) == y) at start_of(y)
+
+def ryczalt_adv[m in month]: money PLN at start_of(m)
+  note "zaliczka: stawka od przychodu miesiąca po odliczeniu składek społecznych i połowy zdrowotnej zapłaconych w miesiącu"
+  rule base v ryczalt_2022 = round(round(max(0, revenue[m] - flows(zus_social_pay, m) - flows(health_pay, m) * ryczalt_health_ded), 1, half-up) * ryczalt_rate, 1, half-up)
+  rule other_form beats base v ryczalt_2022 = ?"Zaliczki dla innej formy opodatkowania niż ryczałt nie są opisane." when revenue[m] > 0 and tax_form[year_of(m)] != ryczalt
+
+def vat_day[m in month]: date at start_of(m)
+  rule base v vat_2026 = if is_business(add_months(day_of(m, vat_day_25), 1), holidays_pl) then add_months(day_of(m, vat_day_25), 1) else add_business(add_months(day_of(m, vat_day_25), 1), 1, holidays_pl)
+
+def vat_due[m in month]: money PLN at start_of(m)
+  rule base v vat_2026 = round(sum(vat_out[c, m] for c in client over ..) - cost_vat[m], 1, half-up)
+  rule surplus beats base v vat_2026 = ?"Nadwyżka VAT naliczonego: przeniesienie na następny miesiąc czy zwrot (art. 87)?" when sum(vat_out[c, m] for c in client over ..) < cost_vat[m]
+
+def vat_out[c in client, m in month]: money PLN at start_of(m)
+  rule base v vat_2026 = round(fee_net[c, m] * vat_rate, minor(PLN), half-up)
+
+def vat_owed[d in day]: money PLN at start_of(d)
+  note "VAT należny z faktur już zapłaconych przez klientów, a jeszcze nie wpłacony do urzędu: nie nasz"
+  rule base = sum(vat_out[c, m] for c in client over .., m in month where fee_net[c, m] > 0 and pay_day[c, m] <= d and vat_day[m] > d)
+
+def zus_base[m in month]: money PLN at start_of(m)
+  rule nobase v sus_rates_2026 = 0 when zus_stage[m] == inactive or zus_stage[m] == relief
+  rule pref v sus_rates_2026 = round(min_wage_y[year_of(m)] * pref_share, minor(PLN), half-up) when zus_stage[m] == preferential
+  rule standard v sus_rates_2026 = round(proj_wage_y[year_of(m)] * standard_share, minor(PLN), half-up) when zus_stage[m] == standard
+
+def zus_social[m in month]: money PLN = sum(round(zus_base[m] * zus_rate[z], minor(PLN), half-up) for z in zus_part where zus_due[z, zus_stage[m]] and (z != sickness or sickness_opt)) at start_of(m)
+
+move client_pay[c in client over .., m in month]: transfers
+  on pay_day[c, m]
+  at start_of(m)
+  for m
+  when fee_net[c, m] > 0
+  leg cash from klienci to konto amount invoice_gross[c, m]
+
+move health_pay[m in month]: health_pay_pays
+  on if is_business(add_months(day_of(m, zus_pay_dom), 1), holidays_pl) then add_months(day_of(m, zus_pay_dom), 1) else add_business(add_months(day_of(m, zus_pay_dom), 1), 1, holidays_pl)
+  at start_of(m)
+  for m
+  when zus_stage[m] != inactive
+  leg cash from konto to zus amount health_month[m]
+
+move health_settle_back[y in tax_year]: transfers
+  on health_settle_day[y]
+  at start_of(y)
+  for y
+  when health_settle[y] < 0
+  leg cash from zus to konto amount -health_settle[y]
+
+move health_settle_pay[y in tax_year]: transfers
+  on health_settle_day[y]
+  at start_of(y)
+  for y
+  when health_settle[y] > 0
+  leg cash from konto to zus amount health_settle[y]
+
+move pit28_pay[y in tax_year]: transfers
+  on return_day[y]
+  at start_of(y)
+  for y
+  when pit28_due[y] > 0
+  leg cash from konto to urzad_skarbowy amount pit28_due[y]
+
+move pit28_refund[y in tax_year]: transfers
+  on add_days(return_day[y], refund_days)
+  at start_of(y)
+  for y
+  when pit28_due[y] < 0
+  leg cash from urzad_skarbowy to konto amount -pit28_due[y]
+
+move ryczalt_pay[m in month]: transfers
+  on if is_business(add_months(day_of(m, ryczalt_pay_20), 1), holidays_pl) then add_months(day_of(m, ryczalt_pay_20), 1) else add_business(add_months(day_of(m, ryczalt_pay_20), 1), 1, holidays_pl)
+  at start_of(m)
+  for m
+  when ryczalt_adv[m] > 0
+  leg cash from konto to urzad_skarbowy amount ryczalt_adv[m]
+
+move vat_pay[m in month]: transfers
+  on vat_day[m]
+  at start_of(m)
+  for m
+  when vat_due[m] > 0
+  leg cash from konto to urzad_skarbowy amount vat_due[m]
+
+move zus_social_pay[m in month]: transfers
+  on if is_business(add_months(day_of(m, zus_pay_dom), 1), holidays_pl) then add_months(day_of(m, zus_pay_dom), 1) else add_business(add_months(day_of(m, zus_pay_dom), 1), 1, holidays_pl)
+  at start_of(m)
+  for m
+  when zus_social[m] > 0
+  leg cash from konto to zus amount zus_social[m]
+
+version health_ryczalt_2022
+  cite health_act
+  governs 2022..
+  known 2021-11-15
+  health_share[high] = 1.8 "art. 81 ust. 2i pkt 3"
+  health_share[low] = 0.6 "art. 81 ust. 2i pkt 1"
+  health_share[mid] = 1 "art. 81 ust. 2i pkt 2"
+  health_tier: [0, 60000] = low "art. 81 ust. 2i pkt 1"
+  health_tier: (60000, 300000] = mid "art. 81 ust. 2i pkt 2"
+  health_tier: (300000, inf) = high "art. 81 ust. 2i pkt 3"
+
+version ryczalt_2022
+  cite ryczalt_act
+  governs 2022..
+  known 2021-11-15
+  ryczalt_health_ded = 0.5 "art. 11 ust. 1c"
+  ryczalt_rate = 0.12 "art. 12 ust. 1 pkt 2b"
+
+version sus_rates_2026
+  cite sus_act
+  governs 2026..
+  known 2025-12-31
+  pref_share = 0.3 "art. 18a ust. 1"
+  standard_share = 0.6 "art. 18 ust. 8"
+  zus_due = false "poza wymienionymi niżej"
+  zus_due[accident, preferential] = true "art. 12"
+  zus_due[accident, standard] = true "art. 12"
+  zus_due[disability, preferential] = true "art. 6"
+  zus_due[disability, standard] = true "art. 6"
+  zus_due[labour_fund, standard] = true "ustawa o rynku pracy, art. 255"
+  zus_due[pension, preferential] = true "art. 6"
+  zus_due[pension, standard] = true "art. 6"
+  zus_due[sickness, preferential] = true "art. 11 ust. 2, dobrowolna"
+  zus_due[sickness, standard] = true "art. 11 ust. 2, dobrowolna"
+  zus_rate[accident] = 0.0167 "art. 15 ust. 1, stawka dla płatnika do 9 ubezpieczonych"
+  zus_rate[disability] = 0.08 "art. 22 ust. 1 pkt b"
+  zus_rate[labour_fund] = 0.0245 "ustawa o rynku pracy, art. 255"
+  zus_rate[pension] = 0.1952 "art. 22 ust. 1 pkt a"
+  zus_rate[sickness] = 0.0245 "art. 22 ust. 1 pkt c"
+
+version vat_2026
+  cite vat_act
+  governs 2026..
+  known 2025-12-31
+  vat_rate = 0.23 "art. 146ef ust. 1"
+,52:integration/amendments/real11/c1/law/pl/common.tally,4896:part pl_common
+  tally 2
+  law
+  note "Wskaźniki wspólne: płaca minimalna, prognozowane przeciętne wynagrodzenie, podstawa zdrowotnej, kalendarz świąt, termin zeznania rocznego."
+  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §3)."
+
+source dz_2025_1242 "Rozporządzenie RM w sprawie minimalnego wynagrodzenia za pracę w 2026 r., Dz.U. 2025 poz. 1242"
+
+source health_act "Ustawa o świadczeniach opieki zdrowotnej finansowanych ze środków publicznych (tekst jednolity)"
+
+source holidays_act "Ustawa z 18 stycznia 1951 r. o dniach wolnych od pracy (tekst jednolity)"
+
+source mp_2025_1206 "Obwieszczenie w sprawie prognozowanego przeciętnego wynagrodzenia na 2026 r., M.P. 2025 poz. 1206"
+
+source mp_2026_117 "Komunikat Prezesa GUS o przeciętnym wynagrodzeniu w IV kwartale 2025 r., M.P. 2026 poz. 117"
+
+source ordynacja "Ustawa Ordynacja podatkowa (tekst jednolity)"
+
+source pit_act "Ustawa o podatku dochodowym od osób fizycznych (tekst jednolity)"
+
+source sus_act "Ustawa o systemie ubezpieczeń społecznych (tekst jednolity)"
+
+index zus_part = [pension, disability, sickness, accident, labour_fund]
+
+input health_base_wage: money PLN question "Ile wynosi przeciętne wynagrodzenie w IV kwartale poprzedniego roku (podstawa składki zdrowotnej)?"
+
+input health_rate: num
+
+input holidays_pl: calendar
+
+input min_wage: money PLN question "Ile wynosi płaca minimalna w tym roku?"
+
+input proj_wage: money PLN question "Ile wynosi prognozowane przeciętne wynagrodzenie na ten rok?"
+
+input refund_days: int
+
+input return_day_16: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input wage_growth: num
+
+def health_base_y[y in tax_year]: money PLN at start_of(y)
+  note "opublikowana kwota roku; bez niej rzut z poprzedniego roku"
+  rule projected beats published v wage_fc_2026 = round(health_base_y[y - 1] * (1 + wage_growth), minor(PLN), half-up) when missing(health_base_wage) and pos(y) > 1
+  rule published = health_base_wage
+
+def min_wage_y[y in tax_year]: money PLN at start_of(y)
+  note "opublikowana kwota roku; bez niej rzut z poprzedniego roku"
+  rule projected beats published v wage_fc_2026 = round(min_wage_y[y - 1] * (1 + wage_growth), minor(PLN), half-up) when missing(min_wage) and pos(y) > 1
+  rule published = min_wage
+
+def proj_wage_y[y in tax_year]: money PLN at start_of(y)
+  note "opublikowana kwota roku; bez niej rzut z poprzedniego roku"
+  rule projected beats published v wage_fc_2026 = round(proj_wage_y[y - 1] * (1 + wage_growth), minor(PLN), half-up) when missing(proj_wage) and pos(y) > 1
+  rule published = proj_wage
+
+def return_day[y in tax_year]: date at start_of(y)
+  note "30 kwietnia roku następnego, przesunięty na dzień roboczy"
+  rule base v pit_return_2022 = if is_business(add_days(add_months(start_of(y), return_day_16), -1), holidays_pl) then add_days(add_months(start_of(y), return_day_16), -1) else add_business(add_days(add_months(start_of(y), return_day_16), -1), 1, holidays_pl)
+
+version health_2022
+  cite health_act
+  governs 2022..
+  known 2021-11-15
+  health_rate = 0.09 "art. 79 ust. 1"
+
+version pit_return_2022
+  cite pit_act
+  governs 2022..
+  known 2022-06-24
+  note "termin zeznania rocznego, art. 45 ust. 1"
+
+version min_wage_2026
+  cite dz_2025_1242
+  governs 2026
+  known 2025-09-15
+  min_wage = 4806 "§ 1"
+
+version proj_wage_2026
+  cite mp_2025_1206
+  governs 2026
+  known 2025-12-19
+  proj_wage = 9420 "pkt 1"
+
+version holidays_2026_2030
+  cite holidays_act
+  governs 2026..2030
+  known 2025-12-31
+  holidays_pl = calendar(weekends [sat, sun], added [2026-01-01, 2026-01-06, 2026-04-06, 2026-05-01, 2026-06-04, 2026-11-11, 2026-12-24, 2026-12-25, 2027-01-01, 2027-01-06, 2027-03-29, 2027-05-03, 2027-05-27, 2027-11-01, 2027-11-11, 2027-12-24, 2028-01-06, 2028-04-17, 2028-05-01, 2028-05-03, 2028-06-15, 2028-08-15, 2028-11-01, 2028-12-25, 2028-12-26, 2029-01-01, 2029-04-02, 2029-05-01, 2029-05-03, 2029-05-31, 2029-08-15, 2029-11-01, 2029-12-24, 2029-12-25, 2029-12-26, 2030-01-01, 2030-04-22, 2030-05-01, 2030-05-03, 2030-06-20, 2030-08-15, 2030-11-01, 2030-11-11, 2030-12-24, 2030-12-25, 2030-12-26]) governs 2026..2030 "art. 1 pkt 1; święta w dni robocze"
+
+version holidays_later
+  cite modeller
+  governs 2031..
+  known 2025-12-31
+  holidays_pl = calendar(weekends [sat, sun]) assumed "kalendarz świąt po 2030 nie jest wpisany; terminy przesuwają tylko soboty i niedziele"
+
+version refund_rule
+  cite ordynacja
+  governs always
+  known 2025-12-31
+  refund_days = 45 "art. 77b § 1 pkt 1"
+
+version wage_fc_2026
+  cite modeller
+  governs 2026..
+  known 2025-12-31
+  note "rzut wskaźników płacowych na lata bez opublikowanej kwoty (prototyp: indeks płac +4% rocznie)"
+  wage_growth = 0.04 assumed "indeks płac +4% rocznie, założenie prototypu"
+
+version health_base_2026
+  cite mp_2026_117
+  governs 2026
+  known 2026-02-10
+  health_base_wage = 9228.64 "pkt 1"
+,56:integration/amendments/real11/c1/law/pl/employment.tally,5600:part pl_employment
+  tally 2
+  law
+  note "Umowa o pracę: składki pracownika, zdrowotna, zaliczka PIT, zeznanie PIT-37 z ulgą na dziecko."
+  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki."
+
+input ee_rate[z in zus_part]: num
+
+input kup_month: money PLN
+
+input pit_reduction_month: money PLN
+
+input relief_limit: money PLN
+
+input relief_month: money PLN
+
+input relief_months_18: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input relief_parent[c in person]: key person question "Który z rodziców odlicza ulgę na to dziecko?"
+
+input salary[j in job, m in month]: money PLN question "Ile wynosi pensja brutto z tej pracy w tym miesiącu?"
+
+input wage_10: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input zus_cap_30: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+band pit_scale(x: num PLN): num PLN
+  note "skala podatkowa, art. 27 ust. 1: podatek przed ulgami, po kwocie zmniejszającej"
+
+def child_relief[p in person, y in tax_year]: money PLN at start_of(y)
+  rule base v pit_2022 = sum(relief_months[c, y] for c in person over .. where parent[c, p] and relief_parent[c] == p) * relief_month
+  rule over_limit beats base v pit_2022 = 0 when pit37_base[p, y] > relief_limit
+
+def emp_base_capped[j in job, m in month]: money PLN = max(0, min(salary[j, m], zus_cap[year_of(m)] - emp_ytd[j, m])) at start_of(m)
+
+def emp_cum[j in job, m in month]: money PLN = sum(emp_pit_base[j, k] for k in month where year_of(k) == year_of(m) and k <= m) at start_of(m)
+
+def emp_health[j in job, m in month]: money PLN at start_of(m)
+  rule base v health_2022 = round((salary[j, m] - emp_zus[j, m]) * health_rate, minor(PLN), half-up)
+
+def emp_net[j in job, m in month]: money PLN = salary[j, m] - emp_zus[j, m] - emp_health[j, m] - emp_pit_adv[j, m] at start_of(m)
+
+def emp_pit_adv[j in job, m in month]: money PLN at start_of(m)
+  note "art. 32: zaliczka od narastającej podstawy, minus 1/12 kwoty zmniejszającej, do pełnych złotych"
+  rule base v pit_2022 = max(0, round(pit_scale(emp_cum[j, m]) - pit_scale(emp_cum[j, m] - emp_pit_base[j, m]) - pit_reduction_month, 1, half-up))
+
+def emp_pit_base[j in job, m in month]: money PLN at start_of(m)
+  rule base v pit_2022 = round(max(0, salary[j, m] - emp_zus[j, m] - kup_month), 1, half-up)
+
+def emp_ytd[j in job, m in month]: money PLN = sum(salary[j, k] for k in month where year_of(k) == year_of(m) and k < m) at start_of(m)
+
+def emp_zus[j in job, m in month]: money PLN at start_of(m)
+  note "emerytalna i rentowa do rocznej granicy 30-krotności, chorobowa bez granicy"
+  rule base v sus_2026 = round(emp_base_capped[j, m] * ee_rate[pension], minor(PLN), half-up) + round(emp_base_capped[j, m] * ee_rate[disability], minor(PLN), half-up) + round(salary[j, m] * ee_rate[sickness], minor(PLN), half-up)
+
+def pit37_base[p in person, y in tax_year]: money PLN at start_of(y)
+  rule base v pit_2022 = round(max(0, sum(salary[j, m] - emp_zus[j, m] - (if salary[j, m] > 0 then kup_month else 0) for j in job over .., m in month where works_for[j] == p and year_of(m) == y)), 1, half-up)
+
+def pit37_due[p in person, y in tax_year]: money PLN = pit37_tax[p, y] - sum(emp_pit_adv[j, m] for j in job over .., m in month where works_for[j] == p and year_of(m) == y) at start_of(y)
+
+def pit37_tax[p in person, y in tax_year]: money PLN at start_of(y)
+  rule abroad beats base, unused v pit_2022 = ?"Zmiana rezydencji podatkowej w roku nie jest opisana (art. 3, umowa o unikaniu podwójnego opodatkowania)." when any(residence[p, m] != pl for m in month where year_of(m) == y)
+  rule base v pit_2022 = round(max(0, pit_scale(pit37_base[p, y]) - child_relief[p, y]), 1, half-up)
+  rule unused beats base v pit_2022 = ?"Niewykorzystana ulga na dziecko (art. 27f ust. 8): zwrot nie jest opisany." when child_relief[p, y] > max(0, pit_scale(pit37_base[p, y]))
+
+def relief_months[c in person, y in tax_year]: int = count(m in month where year_of(m) == y and born[c] < end_of(m) and age(born[c], add_days(end_of(m), -1)) < relief_months_18) at start_of(y)
+
+def zus_cap[y in tax_year]: money PLN at start_of(y)
+  rule base v sus_2026 = zus_cap_30 * proj_wage_y[y]
+
+move pit37_pay[p in person over .., y in tax_year]: transfers
+  on return_day[y]
+  at start_of(y)
+  for y
+  when pit37_due[p, y] > 0
+  leg cash from konto to urzad_skarbowy amount pit37_due[p, y]
+
+move pit37_refund[p in person over .., y in tax_year]: transfers
+  on add_days(return_day[y], refund_days)
+  at start_of(y)
+  for y
+  when pit37_due[p, y] < 0
+  leg cash from urzad_skarbowy to konto amount -pit37_due[p, y]
+
+move wage[j in job over .., m in month]: transfers
+  on if is_business(add_months(day_of(m, wage_10), 1), holidays_pl) then add_months(day_of(m, wage_10), 1) else add_business(add_months(day_of(m, wage_10), 1), 1, holidays_pl)
+  at start_of(m)
+  for m
+  leg cash from pracodawcy to konto amount emp_net[j, m]
+
+version pit_2022
+  cite pit_act
+  governs 2022..
+  known 2022-06-24
+  kup_month = 250 "art. 22 ust. 2 pkt 1"
+  pit_reduction_month = 300 "art. 32 ust. 3"
+  pit_scale: [0, 120000] = x * 0.12 - 3600 "art. 27 ust. 1, pierwszy próg"
+  pit_scale: (120000, inf) = 10800 + (x - 120000) * 0.32 "art. 27 ust. 1, drugi próg"
+  relief_limit = 112000 "art. 27f ust. 1 pkt 1 lit. a"
+  relief_month = 92.67 "art. 27f ust. 1 pkt 1: 1/6 z 556,02 zł za miesiąc"
+
+version sus_2026
+  cite sus_act
+  governs 2026..
+  known 2025-12-31
+  ee_rate[disability] = 0.015 "art. 22 ust. 1 pkt b, część pracownika"
+  ee_rate[pension] = 0.0976 "art. 22 ust. 1 pkt a, część pracownika"
+  ee_rate[sickness] = 0.0245 "art. 22 ust. 1 pkt c"
+,54:integration/amendments/real11/c1/law/pl/wrappers.tally,3500:part pl_wrappers
+  tally 2
+  law
+  note "IKE: roczny limit wpłat. OKI: od 2027, podatek od średniej wartości rachunku ponad kwotę wolną, płatny do 31 maja."
+  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki."
+
+source ike_act "Ustawa o indywidualnych kontach emerytalnych oraz indywidualnych kontach zabezpieczenia emerytalnego (tekst jednolity)"
+
+source oki_act "Ustawa o osobistych kontach inwestycyjnych, Dz.U. 2026 poz. 1098 (z prototypu)"
+
+source rpp "Komunikaty Rady Polityki Pieniężnej o stopach procentowych NBP"
+
+index oki_asset = [pln_funds, deposits_bonds, foreign]
+
+input ike_limit_3: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input nbp_oct_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input nbp_ref: num question "Ile wynosi stopa referencyjna NBP?"
+
+input oki_exempt[a in oki_asset]: money PLN
+
+input oki_from: month
+
+input oki_rate_0_0001: num
+  note "lifted from an inline figure of tally 1.0.1"
+
+input oki_rate_first: num
+
+input oki_rate_floor: num
+
+input oki_ref_share: num
+
+input oki_tax_pay_17: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+def ike_limit[y in tax_year]: money PLN at start_of(y)
+  rule base v ike_2004 = ike_limit_3 * proj_wage_y[y]
+
+def nbp_oct[y in tax_year]: num = nbp_ref at add_days(add_months(start_of(y), -nbp_oct_2), -1)
+
+def oki_avg[y in tax_year]: num PLN at start_of(y)
+  rule base v oki_rules = sum(value(wunits[oki], d) in PLN by etf_price[month_of(d)] + bal(wcash[oki], d) for d in day where year_of(d) == y) / days_between(start_of(y), end_of(y))
+
+def oki_rate[y in tax_year]: num at start_of(y)
+  rule base v oki_2027 = oki_rate_first
+
+def oki_tax[y in tax_year]: money PLN at start_of(y)
+  rule base v oki_rules = round(max(0, oki_avg[y] - oki_exempt[oki_holds]) * oki_rate[y], 1, half-up)
+
+move oki_tax_pay[y in tax_year]: transfers
+  on if is_business(add_days(add_months(start_of(y), oki_tax_pay_17), -1), holidays_pl) then add_days(add_months(start_of(y), oki_tax_pay_17), -1) else add_business(add_days(add_months(start_of(y), oki_tax_pay_17), -1), 1, holidays_pl)
+  at start_of(y)
+  for y
+  when oki_from != none and start_of(y) >= start_of(oki_from) and oki_tax[y] > 0
+  reads wcash, wunits
+  leg cash from konto to urzad_skarbowy amount oki_tax[y]
+
+version ike_2004
+  cite ike_act
+  governs 2004..
+  known 2004-04-20
+  note "art. 13 ust. 1: limit wpłat to trzykrotność prognozowanego przeciętnego wynagrodzenia"
+
+version nbp_2026_03
+  cite rpp
+  governs 2026-03-05..
+  known 2026-03-04
+  nbp_ref = 0.0375 "decyzja RPP z 4 marca 2026 r., utrzymana w październiku"
+
+version oki_2027
+  cite oki_act
+  governs 2027
+  known 2026-07-15
+  note "art. 43: stawka przejściowa na pierwszy rok"
+  oki_rate_first = 0.0085 "art. 43"
+
+version oki_2028
+  cite oki_act
+  governs 2028..
+  known 2026-07-15
+  note "art. 25: 19% stopy referencyjnej NBP z 31 października roku poprzedniego, w dół do 0,01 pp, nie mniej niż 0,1%"
+  replace rule oki_rate.base v oki_2028 = max(oki_rate_floor, round(oki_ref_share * nbp_oct[y], oki_rate_0_0001, floor))
+
+version oki_rules
+  cite oki_act
+  governs 2027..
+  known 2026-07-15
+  oki_exempt[deposits_bonds] = 25000 "art. 26"
+  oki_exempt[foreign] = 0 "art. 26: brak kwoty wolnej"
+  oki_exempt[pln_funds] = 100000 "art. 26"
+  oki_rate_floor = 0.001 "art. 25 ust. 2"
+  oki_ref_share = 0.19 "art. 25 ust. 1"
+
+version oki_start
+  cite oki_act
+  governs always
+  known 2026-07-15
+  replace oki_from = 2027-01 "przepis o wejściu w życie"
+,44:integration/amendments/real11/c1/loans.tally,3307:part loans
+  tally 2
+  note "Kredyty gospodarstwa: rata równa (annuitet), odsetki od salda, nadpłata skraca okres. Wypłata trafia do sprzedawcy."
+
+kind loan_payments: event certain
+  leg principal: PLN
+  leg interest: PLN
+  leg overpay: PLN
+  note "rata kredytu: część kapitałowa, odsetki i nadpłata, jednego dnia"
+
+kind seller
+
+index inst = int 1..480
+
+index overpay_mode = [shorten, reduce]
+
+place loan_debt[l in loan]: debts PLN lives 2026-01-01..
+
+place sellers[s in seller]: outside lives 2026-01-01..
+
+input loan_seller[l in loan]: key seller
+
+input loan_terms[l in loan]: (principal money PLN, n int, apr rate, first_month month, due int)
+
+input overpay[l in loan, k in inst]: money PLN
+
+input overpay_choice[l in loan]: key overpay_mode
+
+def annuity[l in loan]: money PLN at reader
+  rule base = round(loan_terms[l].principal * inst_rate[l] * factor(loan_terms[l].apr, loan_terms[l].n, month, nominal 12) / (factor(loan_terms[l].apr, loan_terms[l].n, month, nominal 12) - 1), minor(PLN), half-up)
+  rule zero beats base = round(loan_terms[l].principal / loan_terms[l].n, minor(PLN), half-up) when inst_rate[l] == 0
+
+def debt_before[l in loan, k in inst]: money PLN at reader
+  rule initial = loan_terms[l].principal when k == 1
+  rule later = debt_before[l, k - 1] - principal_part[l, k - 1] - overpay_paid[l, k - 1] when k > 1
+
+def inst_day[l in loan, k in inst]: date = day_of(loan_terms[l].first_month + (k - 1), loan_terms[l].due)
+
+def inst_rate[l in loan]: num = periodic(loan_terms[l].apr, month, nominal 12) at reader
+
+def instalment[l in loan, k in inst]: money PLN at reader
+  rule reduce beats shorten = ?"Nadpłata ze zmniejszeniem raty: bank przelicza ratę; zasada przeliczenia nie jest wpisana." when overpay_choice[l] == reduce
+  rule shorten = annuity[l]
+
+def interest_part[l in loan, k in inst]: money PLN = round(debt_before[l, k] * inst_rate[l], minor(PLN), half-up) at reader
+
+def overpay_paid[l in loan, k in inst]: money PLN = min(overpay[l, k], debt_before[l, k] - principal_part[l, k]) at reader
+
+def principal_part[l in loan, k in inst]: money PLN at reader
+  note "ostatnia rata umowy spłaca resztę, także grosze z zaokrąglenia raty"
+  rule base = min(debt_before[l, k], instalment[l, k] - interest_part[l, k])
+  rule last beats base = debt_before[l, k] when k >= loan_terms[l].n
+
+move loan_instalment[l in loan over .., k in inst]: loan_payments
+  on inst_day[l, k]
+  at inst_day[l, k]
+  when debt_before[l, k] > 0
+  leg principal from konto to loan_debt[l] amount principal_part[l, k]
+  leg interest from konto to kredytodawcy amount interest_part[l, k]
+  leg overpay from konto to loan_debt[l] amount overpay_paid[l, k]
+
+move loan_out[l in loan over ..]: transfers
+  on day_of(loan_terms[l].first_month - 1, loan_terms[l].due)
+  at day_of(loan_terms[l].first_month - 1, loan_terms[l].due)
+  leg cash from loan_debt[l] to sellers[loan_seller[l]] amount loan_terms[l].principal
+
+version laptop_loan
+  cite household
+  governs always
+  known 2026-05-05
+  loan + [laptop] lives 2026-05-05..
+  loan_seller[laptop] = electro "umowa ratalna, sprzedawca"
+  loan_terms[laptop] = (principal: 3000, n: 10, apr: 0 1/year, first_month: 2026-06, due: 5) "umowa ratalna 0%, § 2"
+  overpay = 0 "brak nadpłat"
+  overpay_choice = shorten "regulamin: nadpłata skraca okres"
+,43:integration/amendments/real11/c1/pays.tally,5559:part pays
+  tally 2
+  note "Ruchy gospodarstwa poza prawem: czynsz, wydatki, koszty firmy, reguła 15., zakup jednostek, pożyczka Markowi."
+
+kind etf_buys: event certain
+  leg cash: PLN
+  leg units: etf_unit
+
+kind promises: transfers uncertain
+
+kind spend_pays: event certain
+  leg cash: any
+
+input buy_dom: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input cost_net[m in month]: money PLN question "Ile netto wynoszą koszty firmy w tym miesiącu?"
+
+input cost_vat[m in month]: money PLN question "Ile VAT naliczonego jest w kosztach firmy w tym miesiącu?"
+
+input costs_pay_5: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input etf_mark: num PLN/etf_unit question "Jaka jest ostatnia znana cena jednostki ETF?"
+
+input etf_return: num
+
+input fee_net[c in client, m in month]: money PLN question "Ile netto wynosi faktura dla tego klienta za ten miesiąc?"
+
+input inflation: num
+
+input invest_dom: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input keep_floor: money PLN
+
+input lend_amt[k in marek_loan]: money PLN
+
+input lend_day[k in marek_loan]: date
+
+input marek_amt[k in marek_part]: money PLN
+
+input marek_day[k in marek_part]: date
+
+input marek_promise: (amt money PLN, due date)
+
+input oki_holds: key oki_asset question "Co jest na OKI: fundusze w PLN, lokaty i obligacje czy ETF zagraniczny?"
+
+input rent: money PLN prices 2026 by cpi question "Ile wynosi czynsz najmu?"
+
+input sickness_opt: bool
+
+input spend_budget[c in category]: money PLN
+
+input spend_price_year: year
+  note "lifted from an inline figure of tally 1.0.1"
+
+input spend_window: month
+
+input tax_form[y in tax_year]: key form question "Jaką formę opodatkowania wybrano na ten rok?"
+
+input terms[c in client]: int question "Ile dni ma termin płatności tego klienta?"
+
+input zus_stage[m in month]: key stage question "Na jakim etapie składek ZUS jest działalność w tym miesiącu?"
+
+def cpi[y in tax_year]: num at start_of(y)
+  rule initial = 1 when pos(y) == 1
+  rule next = cpi[y - 1] * (1 + inflation) when pos(y) > 1
+
+def etf_growth[y in tax_year]: num at start_of(y)
+  rule initial = 1 when pos(y) == 1
+  rule next = etf_growth[y - 1] * (1 + etf_return) when pos(y) > 1
+
+def etf_price[m in month]: num PLN/etf_unit = etf_mark * etf_growth[year_of(m)] at start_of(m)
+
+def invest_amt[w in wrapper, m in month]: money PLN at start_of(m)
+  note "reguła 15.: najpierw IKE do limitu roku, reszta na rachunek maklerski, od OKI na OKI"
+  rule ike = min(room[m], max(0, ike_limit[year_of(m)] - flows(invest[ike], start_of(year_of(m))..day_of(m, invest_dom)))) when w == ike
+  rule mak = if oki_from != none and m >= oki_from then 0 else room[m] when w == mak
+  rule oki = if oki_from != none and m >= oki_from then room[m] else 0 when w == oki
+
+def room[m in month]: money PLN at start_of(m)
+  note "wolne środki ponad 1 000 zł do następnego uruchomienia reguły (dzień przed kolejnym 15.); VAT do zapłaty nie jest nasz"
+  rule base = max(0, min(bal(konto, d) from day_of(m, invest_dom) - vat_owed[d] for d in day_of(m, invest_dom) .. add_days(add_months(day_of(m, invest_dom), 1), -1) step 1 day) - keep_floor)
+
+def spend_day[d in day]: money PLN = round(sum(spend_month[c] for c in category) * cpi[year_of(d)] / cpi[spend_price_year] / days_between(start_of(month_of(d)), end_of(month_of(d))), minor(PLN), half-up) at start_of(d)
+
+def spend_month[c in category]: money PLN at reader
+  note "wydatki miesiąca w cenach 2026: z wyciągu za miesiąc estymacji, gdy go mamy; wcześniej budżet gospodarstwa"
+  rule budget = spend_budget[c]
+  rule learned beats budget = round((sum(o.cash.amount for o in bank over spend_window where o.fulfils == none and o in spending and o.cat == c and o.cash.from == konto) - sum(o.cash.amount for o in bank over spend_window where o.fulfils == none and o in spending and o.cat == c and o.cash.to == konto)) * cpi[spend_price_year] / cpi[year_of(spend_window)], minor(PLN), half-up) when spend_window != none and covered(konto, spend_window)
+
+def units_to_buy[w in wrapper, m in month]: num etf_unit = round(bal(wcash[w]) / etf_price[m], 1 etf_unit, down) at start_of(m)
+
+move buy[w in wrapper, m in month]: etf_buys
+  on day_of(m, buy_dom)
+  at start_of(m)
+  reads wcash
+  ties by pos(w)
+  leg cash from wcash[w] to rynek amount round(units_to_buy[w, m] * etf_price[m], minor(PLN), half-up)
+  leg units from rynek to wunits[w] amount units_to_buy[w, m]
+
+move costs_pay[m in month]: transfers
+  on if is_business(day_of(m, costs_pay_5), holidays_pl) then day_of(m, costs_pay_5) else add_business(day_of(m, costs_pay_5), 1, holidays_pl)
+  at start_of(m)
+  for m
+  when cost_net[m] > 0
+  leg cash from konto to dostawcy amount cost_net[m] + cost_vat[m]
+
+move invest[w in wrapper, m in month]: transfers
+  on day_of(m, invest_dom)
+  at start_of(m)
+  reads invest, konto
+  ties by pos(w)
+  leg cash from konto to wcash[w] amount invest_amt[w, m]
+
+move marek_back[k in marek_part]: transfers
+  on marek_day[k]
+  at marek_day[k]
+  leg cash from marek to konto amount marek_amt[k]
+
+move marek_last: promises
+  on marek_promise.due
+  at marek_promise.due
+  leg cash from marek to konto amount marek_promise.amt
+
+move marek_lend[k in marek_loan]: transfers
+  on lend_day[k]
+  at lend_day[k]
+  leg cash from konto to marek amount lend_amt[k]
+
+move rent_pay[m in month]: transfers
+  on day_of(m, 1)
+  at start_of(m)
+  for m
+  leg cash from konto to wynajmujacy amount round(rent, minor(PLN), half-up)
+
+move spend[d in day]: spend_pays
+  on d
+  at start_of(d)
+  leg cash from konto to sklepy amount spend_day[d]
+,45:integration/amendments/real11/c1/people.tally,641:part people
+  tally 2
+
+input born[p in person]: date question "Kiedy urodziła się ta osoba?"
+
+input parent[c in person, k in person]: bool question "Czy ta osoba jest dzieckiem tej drugiej?"
+
+input residence[p in person, m in month]: key country question "W jakim kraju ta osoba mieszka w tym miesiącu?"
+
+input works_for[j in job]: key person
+
+version people_2026
+  cite household
+  governs always
+  known 2025-12-31
+  born[me] = 1991-02-14 "dowód osobisty"
+  born[wife] = 1992-07-03 "dowód osobisty"
+  parent = false "brak dzieci"
+  residence = pl governs 2026-01.. "meldunek w Krakowie"
+  works_for[wife_acme] = wife "umowa o pracę"
+,45:integration/amendments/real11/c1/places.tally,2067:part places
+  tally 2
+  note "Miejsca gospodarstwa i schemat wyciągów. Miejsca na zewnątrz nazywają, skąd i dokąd płyną pieniądze."
+
+kind spending: transfers
+  attr cat: key category
+  note "wiersz wyciągu, którego nie wyjaśnia żaden zaplanowany ruch, z kategorią wydatku"
+
+index category = [groceries, transport, health_care, other]
+
+place dostawcy: outside lives 2026-01-01..
+
+kind tax_offices: place PLN signed outside
+  note "urzad_skarbowy beyond the model (tally 1 outside PLN); every leg into or out of it is PLN"
+
+place gotowka: cash PLN lives 2026-01-01..
+
+place klienci: outside lives 2026-01-01..
+
+place konto: accounts PLN lives 2026-01-01..
+
+place kredytodawcy: outside lives 2026-01-01..
+
+place marek: claims PLN lives 2026-01-01..
+
+place niewyjasnione: outside lives 2026-01-01..
+
+place pracodawcy: outside lives 2026-01-01..
+
+place rynek: outside lives 2026-01-01..
+
+place sklepy: outside lives 2026-01-01..
+
+place urzad_skarbowy: tax_offices lives 2026-01-01..
+
+place wcash[w in wrapper]: accounts PLN lives 2026-01-01..
+
+place wunits[w in wrapper]: holdings etf_unit priced etf_price lives 2026-01-01..
+
+place wynajmujacy: outside lives 2026-01-01..
+
+place zus: outside lives 2026-01-01..
+
+input bank: observed
+  note "wiersze wyciągów; wiersz bez powiązania z zaplanowanym ruchem idzie z konta do miejsca niewyjasnione"
+
+version openings_2026
+  cite household
+  governs always
+  known 2025-12-31
+  opening[gotowka] = 600 at 2026-01-01 start "portfel"
+  opening[konto] = 24000 at 2026-01-01 start "wyciąg za grudzień 2025, saldo końcowe"
+  opening[marek] = 0 at 2026-01-01 start
+  opening[wcash[ike]] = 0 at 2026-01-01 start "rachunek IKE, gotówka"
+  opening[wcash[mak]] = 0 at 2026-01-01 start "rachunek maklerski, gotówka"
+  opening[wcash[oki]] = 0 at 2026-01-01 start "OKI jeszcze nie istnieje"
+  opening[wunits[ike]] = 150 at 2026-01-01 start "rachunek IKE, jednostki"
+  opening[wunits[mak]] = 80 at 2026-01-01 start "rachunek maklerski, jednostki"
+  opening[wunits[oki]] = 0 at 2026-01-01 start "OKI jeszcze nie istnieje"
+,46:integration/amendments/real11/c1/reality.tally,3063:model tropek
+  tally 2
+  on 2027-01-20
+  start 2026-01-01
+  end 2059-12-31
+  note "Syntetyczne gospodarstwo z prototypu (spec §12, kwoty przykładowe). To nie są dane gospodarstwa."
+  note "Główna praca: działalność B2B na ryczałcie. Żona: umowa o pracę."
+
+source household "Oświadczenia gospodarstwa: umowy, rejestracje, decyzje i wybory"
+
+source index_keys_1_0_1 "Keys tally 1.0.1 listed in index declarations"
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
+
+source modeller "Założenia modelu, każde z powodem"
+
+unit PLN: currency minor 0.01
+
+unit etf_unit "jednostka funduszu ETF"
+
+kind client
+
+kind job
+
+kind loan
+
+kind person
+
+index country = [pl, de]
+
+index day = day 2026-01-01..2059-12-31
+
+index marek_loan: open
+
+index marek_part: open
+
+index month = month 2026-01..2059-12
+
+index tax_year = year 2026..2059
+
+index wrapper = [ike, oki, mak]
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2004-04-20
+  b800_pay_20 = 20 "inline in tally 1.0.1: b800_pay line 31, argument 2 of day_of"
+  buy_dom = 16 "inline in tally 1.0.1: buy_cash line 78 and buy_units line 85, argument 2 of day_of; one fact, the day units are bought"
+  costs_pay_5 = 5 "inline in tally 1.0.1: costs_pay line 92, argument 2 of day_of"
+  health_settle_day_16 = 16 "inline in tally 1.0.1: health_settle_day line 46, argument 2 of add_months"
+  health_settle_day_19 = 19 "inline in tally 1.0.1: health_settle_day line 46, argument 2 of add_days"
+  ike_limit_3 = 3 "inline in tally 1.0.1: ike_limit line 26, factor"
+  invest_dom = 15 "inline in tally 1.0.1: invest_amt line 57, room line 63 (twice), invest line 100, argument 2 of day_of; one fact, the day of the rule of the 15th"
+  nbp_oct_2 = 2 "inline in tally 1.0.1: nbp_oct line 28, argument 2 of add_months"
+  oki_rate_0_0001 = 0.0001 "inline in tally 1.0.1: oki_rate line 35, round step"
+  oki_tax_pay_17 = 17 "inline in tally 1.0.1: oki_tax_pay line 44, argument 2 of add_months"
+  relief_months_18 = 18 "inline in tally 1.0.1: relief_months line 60, operand"
+  return_day_16 = 16 "inline in tally 1.0.1: return_day line 49, argument 2 of add_months"
+  ryczalt_pay_20 = 20 "inline in tally 1.0.1: ryczalt_pay line 148, argument 2 of day_of"
+  spend_price_year = 2026 "inline in tally 1.0.1: spend_day line 65 and spend_month line 70, a year key; one fact, the price year of the spending figures"
+  vat_day_25 = 25 "inline in tally 1.0.1: vat_day line 76, argument 2 of day_of"
+  wage_10 = 10 "inline in tally 1.0.1: wage line 85, argument 2 of day_of"
+  zus_cap_30 = 30 "inline in tally 1.0.1: zus_cap line 63, factor"
+  zus_pay_dom = 20 "inline in tally 1.0.1: health_pay line 108 and zus_social_pay line 164, argument 2 of day_of; one fact, the day ZUS contributions are due"
+
+version things_1_0_1
+  cite index_keys_1_0_1
+  known 2004-04-20
+  client + [client_a] lives 2026-01-01..
+  client + [client_b] lives 2026-01-01..
+  job + [wife_acme] lives 2026-01-01..
+  person + [me] lives 1991-02-14..
+  person + [wife] lives 1992-07-03..
+  seller + [electro] lives 2026-01-01..
+,60:integration/amendments/real11/c1/records/mbank/2026-09.tally,3289:part mbank_2026_09
+  tally 2
+  note "Wyciąg konta wspólnego za wrzesień 2026, syntetyczny. Faktura klienta B za sierpień (płatna 30 września) nie wpłynęła."
+
+source mbank_export "Eksport wyciągu mBank, konto wspólne"
+
+version mbank_2026_09
+  cite mbank_export
+  governs 2026-09
+  known 2026-10-02
+  covers konto
+  anchor konto
+  bank[r20260901a] = (on: 2026-09-01, kind: transfers, leg cash from konto to wynajmujacy amount 3200.00 PLN, fulfils: rent_pay[2026-09]) "CZYNSZ WRZESIEN"
+  bank[r20260902a] = (on: 2026-09-02, kind: spending, leg cash from konto to niewyjasnione amount 412.37 PLN, cat: groceries) "BIEDRONKA KRAKOW"
+  bank[r20260903a] = (on: 2026-09-03, kind: spending, leg cash from konto to niewyjasnione amount 250.00 PLN, cat: transport) "ORLEN STACJA 4021"
+  bank[r20260907a] = (on: 2026-09-07, kind: transfers, leg cash from konto to dostawcy amount 492.00 PLN, fulfils: costs_pay[2026-09]) "DOSTAWCA FV 09/2026"
+  bank[r20260909a] = (on: 2026-09-09, kind: spending, leg cash from konto to niewyjasnione amount 286.15 PLN, cat: groceries) "LIDL KRAKOW"
+  bank[r20260910a] = (on: 2026-09-10, kind: transfers, leg cash from pracodawcy to konto amount 5101.67 PLN, fulfils: wage[wife_acme, 2026-08]) "ACME SP Z O O WYNAGR 08/2026"
+  bank[r20260911a] = (on: 2026-09-11, kind: spending, leg cash from konto to niewyjasnione amount 145.00 PLN, cat: health_care) "APTEKA"
+  bank[r20260914a] = (on: 2026-09-14, kind: transfers, leg cash from klienci to konto amount 17220.00 PLN, fulfils: client_pay[client_a, 2026-08]) "KLIENT A FV 08/2026"
+  bank[r20260915a] = (on: 2026-09-15, kind: transfers, leg cash from marek to konto amount 500.00 PLN, fulfils: marek_back[back2]) "MAREK ZWROT"
+  bank[r20260915b] = (on: 2026-09-15, kind: transfers, leg cash from konto to wcash[ike] amount 6000.00 PLN, fulfils: invest[ike, 2026-09]) "PRZELEW NA IKE"
+  bank[r20260916a] = (on: 2026-09-16, kind: spending, leg cash from konto to niewyjasnione amount 530.80 PLN, cat: groceries) "AUCHAN KRAKOW"
+  bank[r20260918a] = (on: 2026-09-18, kind: spending, leg cash from konto to niewyjasnione amount 180.00 PLN, cat: transport) "PKP INTERCITY"
+  bank[r20260919a] = (on: 2026-09-19, kind: spending, leg cash from konto to niewyjasnione amount 899.99 PLN, cat: other) "MEDIA EXPERT"
+  bank[r20260921a] = (on: 2026-09-21, kind: health_pay_pays, leg cash from konto to zus amount 830.58 PLN, fulfils: health_pay[2026-08]) "ZUS SKLADKA ZDROWOTNA 08/2026"
+  bank[r20260921b] = (on: 2026-09-21, kind: transfers, leg cash from konto to urzad_skarbowy amount 1990.00 PLN, fulfils: ryczalt_pay[2026-08]) "URZAD SKARBOWY RYCZALT 08/2026"
+  bank[r20260923a] = (on: 2026-09-23, kind: spending, leg cash from konto to niewyjasnione amount 348.62 PLN, cat: groceries) "BIEDRONKA KRAKOW"
+  bank[r20260925a] = (on: 2026-09-25, kind: transfers, leg cash from konto to urzad_skarbowy amount 3818.00 PLN, fulfils: vat_pay[2026-08]) "URZAD SKARBOWY VAT 08/2026"
+  bank[r20260926a] = (on: 2026-09-26, kind: spending, leg cash from konto to niewyjasnione amount 120.00 PLN, cat: other) "RESTAURACJA"
+  bank[r20260929a] = (on: 2026-09-29, kind: spending, leg cash from konto to niewyjasnione amount 401.09 PLN, cat: groceries) "BIEDRONKA KRAKOW"
+  stated[konto] = 41386.27 at 2026-09-30 end "saldo końcowe"
+,27:m1/goldens/law/golden.tally,1413:part golden_law
+  tally 2
+  note "T, M1 (issue #108), DONE gate 2: the pins my_tax/net[2026-10] 8 509.87, my_tax/net[2027-03] 8 837.78, wife_tax/net[2026-10] 5 101.67 and pit_joint/due[2026], [2027] (pins-1-7.json), and G6's first figure, restated on household X's change 1 (integration/amendments/real11/c1), whose employment law is the prototype's employment_pl@2022 (04-employment.json; X's wife at 7 000 gross is the prototype's wife_job). Added here: the prototype's my_job (01-month.json: job_pl@1, gross 12 000, person me; my_tax: employment_pl@2022, paid to konto). Its gross is in.gross * p.index.wage, and index.wage is 1 until 2027-01-01, then before * 1.04 (assume.wage_growth), so the rows state 12 000 for 2026 and 12 480 from 2027."
+
+source prototype "the prototype's blocks 01-month.json and 04-employment.json (engine/spec/verification/blocks)"
+
+version golden_my_job
+  cite prototype
+  governs always
+  known 2025-12-31
+  job + [my_job] lives 2026-01-01..
+  works_for[my_job] = me "01-month.json: my_job, person me"
+  salary[my_job] = 12000 governs 2026-01..2026-12 "my_job, gross 12 000 (index.wage 1)"
+  salary[my_job] = 12480 governs 2027-01.. "12 000 * index.wage, 1.04 from 2027-01-01"
+
+ask g_my_net: emp_net[my_job, m] for m in [2026-10, 2027-03] law cut
+
+ask g_wife_net: emp_net[wife_acme, 2026-10] law cut
+
+ask g_pit37: pit37_due[p, y] for p in person over .., y in [2026, 2027] law cut
+,26:m1/goldens/law/raise.tally,510:scenario raise over tropek
+  tally 2
+  from 2027-03-01
+  note "G6 (09-raise.json: a 5 % raise from March 2027), stated on top of indexation (the coordinator's pick P7, L-03): 12 480 * 1.05 = 13 104 from March 2027; my_tax/net[2027-03] goes 8 837.78 -> 9 262.77."
+
+version raise_2027
+  cite prototype
+  governs 2027-03-01..
+  known 2026-10-19
+  replace salary[my_job] = 13104 governs 2027-03.. "a 5 % raise from March 2027, on top of the wage index"
+
+ask g6_raise_net: emp_net[my_job, 2027-03] in raise law cut
+,,1:0,1085:g6_raise_net: 9 262.77 PLN
+  assumed: indeks płac +4% rocznie, założenie prototypu (wage_growth)
+  missing record counted by wage_fc_2026
+  world: raise
+  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-02-01
+  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-03-01
+  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-02-01
+  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-03-01
+  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-02-01
+  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-03-01
+  held: health_rate = 0.09 (health_2022), read for 2027-03-01
+  held: kup_month = 250.00 PLN (pit_2022), read for 2027-02-01
+  held: kup_month = 250.00 PLN (pit_2022), read for 2027-03-01
+  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-03-01
+  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-03-01
+  held: salary[my_job, 2027-02] = 12 480.00 PLN (golden_my_job), read for 2027-02
+  held: salary[my_job, 2027-03] = 13 104.00 PLN (raise_2027), read for 2027-03
+  law date 2027-01-20, cut 2027-01-20
+,21:goldens/g7_price_year,10:goldens-g7,34:run model.tally --ask g7_rent_2028,2181:11:model.tally,2160:model golden_rent
+  tally 2
+  on 2026-10-17
+  start 2026-01-01
+  end 2031-12-31
+  note "T, M1 (issue #108), DONE gate 2: goldens G10 (its rent) and G7, restated from the prototype's blocks (engine/spec/verification/blocks/cases). 01-month.json: the rent najem@1 is in.rent * p.index.prices, rent 3 200; index.prices is 1 from 2000-01-01, then before * (1 + assume.inflation) each year from 2027-01-01; assume.inflation is 0.03 from 2027-01-01. G10: the rent of 2030 is 3 601.63, and 3 889.62 at 5 % inflation (the scenario infl5). G7 (12-rent-vs-buy.json): a rent of 2 500 from 2028 must not book 2 652.25; its price year is stated, so it books 2 500.00 (rent_2028), and the same figure stated in 2026 money books 2 652.25 (rent_2026_money, the twin)."
+
+source prototype "the prototype's blocks 01-month.json and 12-rent-vs-buy.json"
+
+unit PLN: currency minor 0.01
+
+index ys = year 2026..2031
+
+input inflation: num
+
+input rent: money PLN prices 2026 by cpi question "Ile wynosi czynsz najmu?"
+
+input rent_2028: money PLN prices 2028 by cpi question "Ile wynosi czynsz od 2028 roku, w cenach 2028 roku?"
+
+input rent_2026_money: money PLN prices 2026 by cpi question "Ile wynosi ten czynsz w cenach 2026 roku?"
+
+def cpi[y in ys]: num at start_of(y)
+  rule initial = 1 when pos(y) == 1
+  rule next = cpi[y - 1] * (1 + inflation) when pos(y) > 1
+
+def rent_due[y in ys]: money PLN = round(rent, minor(PLN), half-up) at start_of(y)
+
+def rent_2028_due[y in ys]: money PLN = round(rent_2028, minor(PLN), half-up) at start_of(y)
+
+def rent_2026_money_due[y in ys]: money PLN = round(rent_2026_money, minor(PLN), half-up) at start_of(y)
+
+version prototype_2026
+  cite prototype
+  governs always
+  known 2026-10-17
+  inflation = 0 governs 2026 "index.prices is 1 until 2027-01-01"
+  inflation = 0.03 governs 2027.. "assume.inflation from 2027-01-01"
+  rent = 3200 "najem@1, rent"
+  rent_2028 = 2500 governs 2028.. "12-rent-vs-buy.json: rent 2 500 from 2028, in 2028 money"
+  rent_2026_money = 2500 governs 2028.. "the same figure stated in 2026 money: the reading G7 forbids"
+
+ask g10_rent: rent_due[2030]
+
+ask g7_rent_2028: rent_2028_due[2028], rent_2026_money_due[2028]
+,,1:0,334:g7_rent_2028: (2 500.00 PLN, 2 652.25 PLN)
+  held: inflation = 0.03 (prototype_2026), read for 2027-01-01
+  held: inflation = 0.03 (prototype_2026), read for 2028-01-01
+  held: rent_2026_money = 2 500.00 PLN (prototype_2026), read for 2028-01-01
+  held: rent_2028 = 2 500.00 PLN (prototype_2026), read for 2028-01-01
+  cut 2026-10-17
+,16:goldens/g10_rent,11:goldens-g10,57:run model.tally infl5.tally --ask g10_rent g10_rent_infl5,2572:11:model.tally,2160:model golden_rent
+  tally 2
+  on 2026-10-17
+  start 2026-01-01
+  end 2031-12-31
+  note "T, M1 (issue #108), DONE gate 2: goldens G10 (its rent) and G7, restated from the prototype's blocks (engine/spec/verification/blocks/cases). 01-month.json: the rent najem@1 is in.rent * p.index.prices, rent 3 200; index.prices is 1 from 2000-01-01, then before * (1 + assume.inflation) each year from 2027-01-01; assume.inflation is 0.03 from 2027-01-01. G10: the rent of 2030 is 3 601.63, and 3 889.62 at 5 % inflation (the scenario infl5). G7 (12-rent-vs-buy.json): a rent of 2 500 from 2028 must not book 2 652.25; its price year is stated, so it books 2 500.00 (rent_2028), and the same figure stated in 2026 money books 2 652.25 (rent_2026_money, the twin)."
+
+source prototype "the prototype's blocks 01-month.json and 12-rent-vs-buy.json"
+
+unit PLN: currency minor 0.01
+
+index ys = year 2026..2031
+
+input inflation: num
+
+input rent: money PLN prices 2026 by cpi question "Ile wynosi czynsz najmu?"
+
+input rent_2028: money PLN prices 2028 by cpi question "Ile wynosi czynsz od 2028 roku, w cenach 2028 roku?"
+
+input rent_2026_money: money PLN prices 2026 by cpi question "Ile wynosi ten czynsz w cenach 2026 roku?"
+
+def cpi[y in ys]: num at start_of(y)
+  rule initial = 1 when pos(y) == 1
+  rule next = cpi[y - 1] * (1 + inflation) when pos(y) > 1
+
+def rent_due[y in ys]: money PLN = round(rent, minor(PLN), half-up) at start_of(y)
+
+def rent_2028_due[y in ys]: money PLN = round(rent_2028, minor(PLN), half-up) at start_of(y)
+
+def rent_2026_money_due[y in ys]: money PLN = round(rent_2026_money, minor(PLN), half-up) at start_of(y)
+
+version prototype_2026
+  cite prototype
+  governs always
+  known 2026-10-17
+  inflation = 0 governs 2026 "index.prices is 1 until 2027-01-01"
+  inflation = 0.03 governs 2027.. "assume.inflation from 2027-01-01"
+  rent = 3200 "najem@1, rent"
+  rent_2028 = 2500 governs 2028.. "12-rent-vs-buy.json: rent 2 500 from 2028, in 2028 money"
+  rent_2026_money = 2500 governs 2028.. "the same figure stated in 2026 money: the reading G7 forbids"
+
+ask g10_rent: rent_due[2030]
+
+ask g7_rent_2028: rent_2028_due[2028], rent_2026_money_due[2028]
+,11:infl5.tally,371:scenario infl5 over golden_rent
+  tally 2
+  from 2027-01-01
+  note "G10's scenario: 5 % inflation a year from 2027 (the prototype's 5 % what-if); the rent of 2030 is 3 889.62."
+
+version infl5_rates
+  cite prototype
+  governs 2027-01-01..
+  known 2026-10-17
+  replace inflation = 0.05 governs 2027.. "the scenario's inflation"
+
+ask g10_rent_infl5: rent_due[2030] in infl5
+,,1:0,593:g10_rent: 3 601.63 PLN
+  held: inflation = 0.03 (prototype_2026), read for 2027-01-01
+  held: inflation = 0.03 (prototype_2026), read for 2028-01-01
+  held: inflation = 0.03 (prototype_2026), read for 2029-01-01
+  held: inflation = 0.03 (prototype_2026), read for 2030-01-01
+  cut 2026-10-17
+g10_rent_infl5: 3 889.62 PLN
+  world: infl5
+  held: inflation = 0.05 (infl5_rates), read for 2027-01-01
+  held: inflation = 0.05 (infl5_rates), read for 2028-01-01
+  held: inflation = 0.05 (infl5_rates), read for 2029-01-01
+  held: inflation = 0.05 (infl5_rates), read for 2030-01-01
+  cut 2026-10-17
 ,

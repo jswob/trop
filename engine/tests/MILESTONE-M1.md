@@ -9,14 +9,14 @@ The checks M1 (the household forecast) must turn green, from BUILD-ORDER § M1 (
 | # | What | Ids, vectors | Run by | Gate | For | Today |
 |---|---|---|---|---|---|---|
 | 1 | the 90 checks of § M1, whole output = refcore's | 26 already held by `s_kernel` (gating; pick P5); the other 64 and #36's `inputs_of_balance` in `m1/vectors.refcore` (65 vectors) | `cargo nextest run -p tally-runner --test m1_checks` (12 tests: one per builder group, one for the checks green before M1, one that every group has its test); `m1/vectors.py --check` in `run.py --self-test` (8j) | 1, 3 | G1–G8, G10, G11 | 43 of 90 green (26 in `s_kernel`, 17 in `checks-green`); 47 red |
-| 2 | goldens G1, G2, G3, G6–G10 and the 36 pins on tally 2's canonical form | `m1_goldens` (chunks C2, C3) | | 2 | G8, G10, G14 | not written |
+| 2 | goldens G1, G2, G3, G6–G10 and the 36 pins on tally 2's canonical form | `GOLDENS.md` records each against the prototype's figure; chunk C2: 4 vectors in `m1/vectors.refcore` (groups `goldens-…`); G8, G9, the business and 2022 pins in chunk C3; 20 pins and G1, G2, G3 and the net-worth halves of G6 and G10 blocked (the prototype's bank history isn't in the repository) | `cargo nextest run -p tally-runner --test m1_goldens` (5 tests: one per golden's group, one that every group has its test) | 2 | G1 | 2 of 4 green (G6's raise, G7); G1: the pins' PIT-37 returns over `tax_year` and G10's `infl5` row on its base row's `known` day |
 | 3 | the hole and run codes of M1's constructs, one fixture each, and the forms of M1's constructs no output prints (pick P9) | `m1_codes` (chunk C4) | | 5 | G2–G5, G8, G10 | not written |
 | 4 | the properties of § M1 and #98's "a key moved by whole steps lands on a key" (pick P10) | `m1_properties` (chunk C6) | | 6 | G1–G14 | not written |
 | 5 | the budgets P8-2 (1×), P8-5 with P8-M4 and F5, P8-9 | P8-2's 1× twin is `I:X:pit37@c7_fast`, the slowest M1 check of X on refcore (1.40 s; pick P11); its digest goes into `perf-digests.tsv` when the rules step points P8-2's recipe at it | `engine/tools/perf row P8-2`; the gate's timing run | 12 | G9 (P8-5) | P8-2's recipe still `waits:` |
 | 6 | the items pre-M1 left for M1 (brief §1 1–8) | `m1_carried` (chunk C5) | | 1, 5 | G1–G4, G6, G10, G12, G13 | not written |
 | 7 | #109: a canonical text with rows keyed by two literal kinds reprints as itself | `m1/format/key_kinds.tally` (minimised from the format fuzz target's find) | `cargo nextest run -p tally-runner --test m1_format` (1 test) | 6 | G1 | red: the engine's reprint of its own output moves the integer-keyed row |
 
-`check`'s report line counts the `m1_…` targets' tests: `milestone-report: M1: 2/13 green (gates once M1 is tagged)` after chunk C1.
+`check`'s report line counts the `m1_…` targets' tests: `milestone-report: M1: 2/13 green (gates once M1 is tagged)` after chunk C1, `M1: 5/18 green` after chunk C2.
 
 ## Row 1: the 90
 

@@ -62,8 +62,8 @@ mod tests {
     use std::collections::BTreeSet;
 
     /// The runner tests' groups, `<target>-<group>`: `checks-…` for `m1_checks`, `carried-…`
-    /// for `m1_carried`.
-    const TARGETS: [&str; 2] = ["checks-", "carried-"];
+    /// for `m1_carried`, `goldens-…` for `m1_goldens`.
+    const TARGETS: [&str; 3] = ["checks-", "carried-", "goldens-"];
 
     #[test]
     fn the_m1_vectors_read_and_their_tables_hold_every_path_they_name() {

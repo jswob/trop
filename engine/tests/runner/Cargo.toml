@@ -84,3 +84,9 @@ test = false
 name = "m1_format"
 path = "milestone/m1_format.rs"
 test = false
+
+# M1: the prototype's goldens and pins restated in tally 2 (GOLDENS.md; MILESTONE-M1.md row 2)
+[[test]]
+name = "m1_goldens"
+path = "milestone/m1_goldens.rs"
+test = false
