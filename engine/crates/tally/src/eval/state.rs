@@ -359,6 +359,9 @@ pub struct Engine {
     pub(crate) booked: BTreeMap<(String, Day), crate::walk::Booked>,
     /// Each main walk's signature once it is done, by its place in `walks` (E §9 item 4).
     pub(crate) signatures: BTreeMap<usize, crate::invariant::Signature>,
+    /// The legs each combination's main walk of a cut refused, where the main walk read an
+    /// axis the timeline sets no option of (E §3.3, §4.2 step 5).
+    pub(crate) each_refused: BTreeMap<Day, Vec<super::timelines::LegRefusals>>,
     /// The pass a business-day function runs now over the days its calendar's added windows
     /// can take (L §4.2, §4.4).
     pub(super) calendar_pass: Option<super::business::CalendarPass>,
@@ -419,6 +422,7 @@ impl Engine {
             adjust_all_active: BTreeSet::new(),
             booked: BTreeMap::new(),
             signatures: BTreeMap::new(),
+            each_refused: BTreeMap::new(),
             calendar_pass: None,
             splits: super::prorata::Splits::default(),
             layers: Layers::default(),

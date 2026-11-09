@@ -269,6 +269,10 @@ impl Default for Layers {
     }
 }
 
+/// The stop of an axis read where its context sets no option of it: outside the ask's line,
+/// or in a walk whose timeline sets none, which then reads each combination's (L §5.5).
+pub(crate) const UNSET_AXIS: &str = "an axis read outside the combinations its ask fans out over";
+
 /// The node kinds the walk reads from: whatever they reach, the timeline depends on
 /// (E §3.3).
 const WALKERS: [NodeKind; 6] = [
@@ -503,9 +507,7 @@ impl Engine {
             self.layer_data(ctx.layer)?.axes.get(axis).cloned()
         };
         let Some(name) = option else {
-            return Err(Stop::NotBuilt(
-                "an axis read outside the combinations its ask fans out over",
-            ));
+            return Err(Stop::NotBuilt(UNSET_AXIS));
         };
         Ok(Value::Key(KeyVal::Key {
             index: axis.to_owned(),

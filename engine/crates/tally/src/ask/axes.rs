@@ -23,7 +23,7 @@ use super::answer::{env_text, form_line};
 use super::check::Printed;
 use super::register::{check_register_lines, register_lines};
 use crate::base::{Code, Refusal};
-use crate::eval::{Collected, Ctx, Engine, Entry, Env, Member};
+use crate::eval::{Collected, Ctx, Engine, Entry, Env, Member, combinations};
 use crate::hole::{Hole, spread};
 use crate::model::{Reality, Value};
 use crate::syntax::{Ask, Stop};
@@ -69,21 +69,15 @@ impl Axes {
         Ok(Some(Axes { axes }))
     }
 
-    /// Every combination of the options, the first axis slowest (refcore's `combos`).
-    fn combinations(&self) -> Vec<Combo> {
-        let mut combos: Vec<Combo> = vec![Vec::new()];
-        for (_, options) in &self.axes {
-            let mut next = Vec::new();
-            for combo in &combos {
-                for at in 0..options.len() {
-                    let mut longer = combo.clone();
-                    longer.push(at);
-                    next.push(longer);
-                }
-            }
-            combos = next;
-        }
-        combos
+    /// Every combination of the options, the first axis slowest (refcore's `combos`), at most
+    /// load's 64 (`LOAD-FORKS`).
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for more combinations than load lets through.
+    fn combinations(&self) -> Result<Vec<Combo>, Stop> {
+        let counts: Vec<usize> = self.axes.iter().map(|(_, options)| options.len()).collect();
+        combinations(&counts, 64).ok_or_else(|| invariant("more combinations than load's 64"))
     }
 
     /// Combination `combo` as each axis's id with its option's name.
@@ -197,7 +191,7 @@ pub(super) fn fanned_lines(
     (ctx, pinned): (Ctx, &Collected),
     axes: &Axes,
 ) -> Result<Vec<String>, Stop> {
-    let combos = axes.combinations();
+    let combos = axes.combinations()?;
     let mut options = Vec::with_capacity(combos.len());
     for combo in &combos {
         options.push(axes.options_of(combo)?);
@@ -537,7 +531,7 @@ mod tests {
     #[test]
     fn a_product_stays_one_line() {
         let two = axes(&[2, 3]);
-        let all = two.combinations();
+        let all = two.combinations().expect("six combinations");
         assert_eq!(all.len(), 6, "every combination");
         assert_eq!(all.first(), Some(&vec![0, 0]), "the first axis slowest");
         assert_eq!(all.get(1), Some(&vec![0, 1]), "the last axis fastest");

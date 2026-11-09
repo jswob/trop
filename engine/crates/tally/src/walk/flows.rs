@@ -18,7 +18,7 @@ use super::point::At;
 use super::reads::{expr_text, refuse};
 use super::state::{ALL, Change, Ent, Progress, Walk};
 use crate::base::{Refusal, Run};
-use crate::eval::{Collected, Ctx, Engine, Entry, Env};
+use crate::eval::{Collected, Ctx, Engine, Entry, Env, UNSET_AXIS};
 use crate::hole::{Hole, spread};
 use crate::model::{KeyVal, MoveInfo, Reality, Span, Value};
 use crate::num::Num;
@@ -436,8 +436,8 @@ impl Engine {
     }
 
     /// The refusal of a leg the walk refused: inside a decision, what its walk and the walks
-    /// it continues refused so far; at the ask's cut, the main walk's, or where the walk
-    /// reads axes the timeline sets no option of, each of their combinations' (refcore's
+    /// it continues refused so far; at the ask's cut, the main walk's, or where that walk
+    /// reads an axis the timeline sets no option of, each combination's walk's (refcore's
     /// `leg_refused`). E §4.2 step 5, §4.3, §3.3.
     pub(crate) fn leg_refused(
         &mut self,
@@ -453,6 +453,10 @@ impl Engine {
         let busy = !self.plan_active.is_empty()
             || !self.adjust_active.is_empty()
             || !self.walking.is_empty();
+        let ours = !busy && ctx.cut == self.ask_cut;
+        if ours && let Some(read) = self.refused_by_each(&wanted, ctx.cut) {
+            return read;
+        }
         let unfinished = match id {
             None => true,
             Some(w) => matches!(
@@ -460,18 +464,17 @@ impl Engine {
                 Progress::Planning | Progress::Walking | Progress::Walked
             ),
         };
-        if !busy && ctx.cut == self.ask_cut && unfinished {
-            // a walk reading axes the timeline sets no option of: each combination's (E §3.3)
-            let combos = self.unset_combinations(m)?;
-            if !combos.is_empty() {
-                return self.refused_in_each(m, &wanted, ctx.cut, &combos);
-            }
+        if ours && unfinished {
             let outer = self.guarded.replace(self.active.clone());
             let built = self.main_walk(m, ctx.cut);
             self.guarded = outer;
             id = match built {
                 Ok(w) => Some(w),
                 Err(Stop::Refused(_)) => return Ok(None),
+                // the walk read an axis the timeline sets no option of (E §3.3)
+                Err(Stop::NotBuilt(why)) if why == UNSET_AXIS => {
+                    return self.refused_in_each(m, &wanted, ctx.cut, Stop::NotBuilt(why));
+                }
                 Err(stop) => return Err(stop),
             };
         }
@@ -484,11 +487,7 @@ impl Engine {
     /// The refusal of leg `wanted` in walk `id` or in a walk it continues, the nearest first:
     /// a projection's walk keeps what the walks it continues have refused so far (refcore's
     /// `leg_refused`, its loop over `w.base`). E §4.2 step 5, §4.3 step 1.
-    pub(crate) fn chain_refusal(
-        &self,
-        id: usize,
-        wanted: &(String, String),
-    ) -> Result<Option<Refusal>, Stop> {
+    fn chain_refusal(&self, id: usize, wanted: &(String, String)) -> Result<Option<Refusal>, Stop> {
         for wid in self.chain(id)? {
             if let Some(refusal) = self.walk(wid)?.bad_legs.get(wanted) {
                 return Ok(Some(refusal.clone()));

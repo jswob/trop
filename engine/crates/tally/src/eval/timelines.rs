@@ -21,7 +21,7 @@ use std::rc::Rc;
 
 use super::context::Layer;
 use super::state::{Ctx, Engine, invariant};
-use crate::base::Refusal;
+use crate::base::{Refusal, Warn};
 use crate::book::{Adjustment, Coverage, Linked, Obs};
 use crate::model::{Reality, World};
 use crate::syntax::Stop;
@@ -86,6 +86,53 @@ pub(crate) struct Timeline {
     booked: BTreeMap<(String, Day), Booked>,
     /// Each main walk's signature once it is done.
     signatures: BTreeMap<usize, crate::invariant::Signature>,
+    /// The legs each combination's main walk of a cut refused, where the main walk read an
+    /// axis the timeline sets no option of.
+    each_refused: BTreeMap<Day, Vec<LegRefusals>>,
+}
+
+/// The legs a walk refused, by (move, leg).
+pub(crate) type LegRefusals = BTreeMap<(String, String), Refusal>;
+
+/// Every combination of positions in lists of `counts` options, the first list slowest
+/// (refcore's `combos`); `None` past `cap` combinations, counted as they are made, so a
+/// product past it is never built. L §5.5.
+pub(crate) fn combinations(counts: &[usize], cap: usize) -> Option<Vec<Vec<usize>>> {
+    let mut combos: Vec<Vec<usize>> = vec![Vec::new()];
+    for count in counts {
+        if combos.len().checked_mul(*count)? > cap {
+            return None;
+        }
+        let mut next = Vec::with_capacity(combos.len().checked_mul(*count)?);
+        for combo in &combos {
+            for at in 0..*count {
+                let mut longer = combo.clone();
+                longer.push(at);
+                next.push(longer);
+            }
+        }
+        combos = next;
+    }
+    Some(combos)
+}
+
+/// The refusal of leg `wanted` in every walk of `each`, which must be the same (P48).
+///
+/// # Errors
+///
+/// `NotBuilt` where two walks differ on it, the line being then one per combination.
+fn agreed(each: &[LegRefusals], wanted: &(String, String)) -> Result<Option<Refusal>, Stop> {
+    let mut seen: Option<Option<&Refusal>> = None;
+    for legs in each {
+        let got = legs.get(wanted);
+        if seen.is_some_and(|first| first != got) {
+            return Err(Stop::NotBuilt(
+                "a leg's refusal that differs by an axis its ask doesn't fan out over",
+            ));
+        }
+        seen = Some(got);
+    }
+    Ok(seen.flatten().cloned())
 }
 
 impl Timeline {
@@ -190,92 +237,98 @@ impl Engine {
         Ok(())
     }
 
-    /// Each combination of the options of the axes the walk reaches that the timeline in
-    /// force sets none of, the first axis slowest, as each axis's id with its option's name;
-    /// none when it sets them all. Outside its ask's fan-out a read can need the walk, which
-    /// reads them: a move's flows asks whether the walk refused its leg (E §3.3: a timeline
-    /// per combination of the axes the moves reach; L §5.5).
-    ///
-    /// # Errors
-    ///
-    /// `ENGINE-INVARIANT` for a freed layer or an axis load didn't build.
-    pub(crate) fn unset_combinations(
-        &mut self,
-        m: &Reality,
-    ) -> Result<Vec<Vec<(String, String)>>, Stop> {
-        let unset = self.unset_walk_axes(m, self.timelines.now.pins)?;
-        if unset.is_empty() {
-            return Ok(Vec::new());
-        }
-        let mut combos: Vec<Vec<(String, String)>> = vec![Vec::new()];
-        for id in &unset {
-            let axis = m
-                .axes
-                .get(id)
-                .ok_or_else(|| invariant("an axis load didn't build"))?;
-            let mut next = Vec::new();
-            for combo in &combos {
-                for (name, _) in &axis.options {
-                    let mut longer = combo.clone();
-                    longer.push((id.clone(), name.clone()));
-                    next.push(longer);
-                }
-            }
-            combos = next;
-        }
-        Ok(combos)
+    /// The refusal of leg `wanted` in the walks of cut `cut` of each combination of the axes
+    /// the walk reaches and the timeline in force sets no option of, once they are walked for
+    /// it (`refused_in_each`); `None` before. E §3.3, §4.2 step 5; L §5.5.
+    pub(crate) fn refused_by_each(
+        &self,
+        wanted: &(String, String),
+        cut: Day,
+    ) -> Option<Result<Option<Refusal>, Stop>> {
+        Some(agreed(self.each_refused.get(&cut)?, wanted))
     }
 
-    /// The refusal of leg `wanted` read outside its ask's fan-out while the walk reaches axes
-    /// the timeline in force sets no option of: the main walk of cut `cut` in each of their
-    /// combinations `combos`, which must agree, so the line reads no option (P48); a walk
-    /// that refuses refuses none of its legs to this read, as at the ask's own timeline
-    /// (refcore's `leg_refused`). E §3.3, §4.2 step 5; L §5.5.
+    /// The refusal of leg `wanted` read outside its ask's fan-out, where the main walk of cut
+    /// `cut` in the timeline in force stopped at `stop`, an axis it sets no option of: the
+    /// main walk of each combination of the axes the walk reaches and it sets none of, each
+    /// walked once for every leg read here, their refused legs kept with the timeline. They
+    /// must agree, so the line reads no option (P48); a walk that refuses refuses none of its
+    /// legs to this read, as at the ask's own timeline (refcore's `leg_refused`). These walks
+    /// are a check, not the line's: a warning every combination's walk gives reads none of
+    /// the axes and is the run's, as refcore's walk to the leg's day meets it before its
+    /// guard (its `guarded_walk`, `prefix_walk`); one that only some give is dropped, as
+    /// refcore warns nothing past its guard. Their timelines are freed with their layers.
+    /// E §3.3, §4.2 step 5; L §5.5, §8.5.
     ///
     /// # Errors
     ///
-    /// `NotBuilt` where two combinations' walks differ on the leg, the line being then one
-    /// per combination, or past 64 combinations (`LOAD-FORKS`'s); the stops of each walk but
-    /// a refusal.
+    /// `stop` where the walk reaches no such axis; `NotBuilt` past 64 combinations
+    /// (`LOAD-FORKS`'s) and where two combinations' walks differ on the leg, the line being
+    /// then one per combination; the stops of each walk but a refusal.
     pub(crate) fn refused_in_each(
         &mut self,
         m: &Reality,
         wanted: &(String, String),
         cut: Day,
-        combos: &[Vec<(String, String)>],
+        stop: Stop,
     ) -> Result<Option<Refusal>, Stop> {
-        if combos.len() > 64 {
-            return Err(Stop::NotBuilt(
-                "a leg's refusal over more combinations of the walk's axes than an ask's 64",
-            ));
+        let unset = self.unset_walk_axes(m, self.timelines.now.pins)?;
+        if unset.is_empty() {
+            return Err(stop);
         }
+        let mut options: Vec<Vec<String>> = Vec::with_capacity(unset.len());
+        for id in &unset {
+            let axis = m
+                .axes
+                .get(id)
+                .ok_or_else(|| invariant("an axis load didn't build"))?;
+            options.push(axis.options.iter().map(|(name, _)| name.clone()).collect());
+        }
+        let counts: Vec<usize> = options.iter().map(Vec::len).collect();
+        let combos = combinations(&counts, 64).ok_or(Stop::NotBuilt(
+            "a leg's refusal over more combinations of the walk's axes than an ask's 64",
+        ))?;
         let here = self.timeline_ctx(None, cut);
-        // a check, not the run's walk: its walks' warnings aren't the run's (L §8.5), and a
-        // read that walks a combination's timeline itself warns, these being freed
         let warned = self.walk_warnings.len();
-        let mut seen: Option<Option<Refusal>> = None;
-        for combo in combos {
-            let inside = self.with_options(here, combo)?;
+        let mut common: Option<Vec<(Warn, String)>> = None;
+        let mut each = Vec::with_capacity(combos.len());
+        for combo in &combos {
+            let mut named = Vec::with_capacity(combo.len());
+            for ((id, names), at) in unset.iter().zip(&options).zip(combo) {
+                let name: &String = names
+                    .get(*at)
+                    .ok_or_else(|| invariant("a combination's option its axis lacks"))?;
+                named.push((id.clone(), name.clone()));
+            }
+            let inside = self.with_options(here, &named)?;
             self.open_layer(m, inside)?;
             let outer = self.guarded.replace(self.active.clone());
             let built = self.main_walk(m, cut);
             self.guarded = outer;
-            let read = match built {
-                Ok(id) => self.chain_refusal(id, wanted),
-                Err(Stop::Refused(_)) => Ok(None),
-                Err(stop) => Err(stop),
+            // a main walk continues no other walk: its own refused legs are its chain's
+            let legs = match built {
+                Ok(id) => self.walk(id).map(|w| w.bad_legs.clone()),
+                Err(Stop::Refused(_)) => Ok(BTreeMap::new()),
+                Err(other) => Err(other),
             };
-            self.end_layer(inside.layer, read.as_ref().err())?;
+            self.end_layer(inside.layer, legs.as_ref().err())?;
+            let met: Vec<(Warn, String)> =
+                self.walk_warnings.iter().skip(warned).cloned().collect();
             self.walk_warnings.truncate(warned);
-            let got = read?;
-            if seen.as_ref().is_some_and(|first| *first != got) {
-                return Err(Stop::NotBuilt(
-                    "a leg's refusal that differs by an axis its ask doesn't fan out over",
-                ));
-            }
-            seen = Some(got);
+            common = Some(match common {
+                None => met,
+                Some(before) => before.into_iter().filter(|w| met.contains(w)).collect(),
+            });
+            each.push(legs?);
         }
-        Ok(seen.flatten())
+        for w in common.into_iter().flatten() {
+            if !self.walk_warnings.contains(&w) {
+                self.walk_warnings.push(w);
+            }
+        }
+        let read = agreed(&each, wanted);
+        self.each_refused.insert(cut, each);
+        read
     }
 
     /// Drops each parked timeline whose pins are a layer freed (numbered in `freed`), its
@@ -354,6 +407,7 @@ impl Engine {
     /// The walk fields' state as a timeline, the fields left empty.
     fn park(&mut self) -> Timeline {
         Timeline {
+            each_refused: core::mem::take(&mut self.each_refused),
             walks: core::mem::take(&mut self.walks),
             main_walks: core::mem::take(&mut self.main_walks),
             walking: core::mem::take(&mut self.walking),
@@ -377,6 +431,7 @@ impl Engine {
 
     /// The walk fields set to timeline `t`'s state.
     fn unpark(&mut self, t: Timeline) {
+        self.each_refused = t.each_refused;
         self.walks = t.walks;
         self.main_walks = t.main_walks;
         self.walking = t.walking;
