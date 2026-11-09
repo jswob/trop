@@ -361,7 +361,7 @@ impl Engine {
             .checked_add(&tree.lowest_change(counts, (first, last))?)
             .map_err(num_stop)?;
         let mut met = tree.register(counts, last);
-        let lines = counted_lines(&tree.counted, (t, last));
+        let lines = counted_lines(&tree.counted, (t, last))?;
         for line in lines {
             self.note("left out", line, String::new());
         }
@@ -593,6 +593,9 @@ impl Gathered {
                 });
             }
         }
+        for days in tree.counted.values_mut() {
+            days.sort();
+        }
         self.legs.sort_by_key(|(d, _, _)| *d);
         let mut steps: Vec<Num> = Vec::new();
         for (d, q, coll) in self.legs {
@@ -662,16 +665,21 @@ fn count_left_out(tree: &mut Tree, mv: &MoveInfo, inst: &Inst) {
 }
 
 /// The `left out:` line of each left-out move with an instance in t through `last` (refcore's
-/// `proj_regs`). L §5.14.1, §8.2; E §4.3 step 3.
-fn counted_lines(counted: &BTreeMap<String, Vec<Day>>, (t, last): (Day, Day)) -> Vec<String> {
+/// `proj_regs`), each move's days sorted, so a read finds its own by halving, not by a pass
+/// over them all. L §5.14.1, §8.2; E §4.3 step 3; P §2.3.
+fn counted_lines(
+    counted: &BTreeMap<String, Vec<Day>>,
+    (t, last): (Day, Day),
+) -> Result<Vec<String>, Stop> {
     let mut lines = Vec::new();
     for (mid, days) in counted {
-        let inside: Vec<Day> = days
-            .iter()
-            .copied()
-            .filter(|d| t <= *d && *d <= last)
-            .collect();
-        if let Some(first) = inside.iter().min() {
+        let from = days.partition_point(|d| *d < t);
+        let to = days.partition_point(|d| *d <= last);
+        // none where t is past `last`, as no day lies in t through `last` then
+        let inside = days
+            .get(from..to.max(from))
+            .ok_or_else(|| invariant("a left-out move's days in a window"))?;
+        if let Some(first) = inside.first() {
             lines.push(format!(
                 "{mid}, {} instances, first {}",
                 inside.len(),
@@ -679,7 +687,7 @@ fn counted_lines(counted: &BTreeMap<String, Vec<Day>>, (t, last): (Day, Day)) ->
             ));
         }
     }
-    lines
+    Ok(lines)
 }
 
 /// Whether a leg has an end at `place`. E §4.2.
