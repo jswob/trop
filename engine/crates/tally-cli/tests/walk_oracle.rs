@@ -36,6 +36,14 @@ mod tests {
     /// Its scenario `richer`, from June: a higher pay, and two projections read in its world.
     const LOWS_SCENARIO: &str = include_str!("lows/richer.tally");
 
+    /// Projections read from many days before the cut: across a version that raises the rent
+    /// (the same days, new sums) and one that moves a bonus (new days), and back again.
+    const LOWS_CUTS: &str = include_str!("lows/cuts.tally");
+
+    /// G9's review's `fail_cut`: a projection's walk refused on a decision's day, read through
+    /// a window that reaches it and one that ends before it, in both orders (pick P54, #127).
+    const LOWS_FAILED: &str = include_str!("lows/failed.tally");
+
     /// One netstring `N:text,` at the head of `s`, and the rest after it.
     fn take(s: &str) -> (&str, &str) {
         let (len, rest) = s.split_once(':').expect("a netstring's length");
@@ -359,6 +367,39 @@ mod tests {
             "s_low [pay_reading = low]: 281.25 DUK",
         ] {
             assert!(lines.iter().any(|l| l == line), "{line} is printed");
+        }
+    }
+
+    #[test]
+    fn the_tree_prints_what_the_projections_walk_prints_across_cuts_and_after_a_failure() {
+        for (name, text, pinned) in [
+            (
+                "cuts.tally",
+                LOWS_CUTS,
+                // refcore's, byte for byte
+                &[
+                    "c_low: 600.00 DUK",
+                    "c_sum: 222 150.00 DUK",
+                    "c_back: (1 550.00 DUK, 1 950.00 DUK, 800.00 DUK, 1 500.00 DUK)",
+                ][..],
+            ),
+            (
+                "failed.tally",
+                LOWS_FAILED,
+                // P54: a read ending before the failed day is answered, in either order
+                &[
+                    "f_long_short: (refused: RUN-TIE pick: its ties by is a hole, 800.00 DUK)",
+                    "f_short_long: (800.00 DUK, refused: RUN-TIE pick: its ties by is a hole)",
+                ][..],
+            ),
+        ] {
+            let files = [(name.to_owned(), text.to_owned())];
+            let tree = lows_answer(&files, Lows::Tree);
+            assert_eq!(tree, lows_answer(&files, Lows::Walk), "{name}");
+            let lines = tree.expect("answered");
+            for line in pinned {
+                assert!(lines.iter().any(|l| l == line), "{name}: {line} is printed");
+            }
         }
     }
 }

@@ -17,6 +17,7 @@
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 
+use super::agenda::left_out_lines;
 use super::lows::{Base, Lows};
 use super::plan::invariant;
 use super::point::At;
@@ -370,21 +371,7 @@ impl Engine {
             .proj
             .as_ref()
             .ok_or_else(|| invariant("a projection read of a main walk"))?;
-        let mut lines = Vec::new();
-        for (mid, days) in &p.counted {
-            let inside: Vec<Day> = days
-                .iter()
-                .copied()
-                .filter(|x| t <= *x && *x <= d)
-                .collect();
-            if let Some(first) = inside.iter().min() {
-                lines.push(format!(
-                    "{mid}, {} instances, first {}",
-                    inside.len(),
-                    first.text()
-                ));
-            }
-        }
+        let lines = left_out_lines(&p.counted, (t, d))?;
         for line in lines {
             self.note("left out", line, String::new());
         }

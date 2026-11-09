@@ -98,13 +98,16 @@ impl Engine {
     }
 
     /// [`Engine::advance_to`], what it reads the walk's own, not the reading cell's: every
-    /// cell that reads the walk shares it (E §3.2, §3.3). E §4.2, §4.3, §9 item 4.
+    /// cell that reads the walk shares it (E §3.2, §3.3). A walk that failed on a day refuses
+    /// the reads that reach it, and a read through an earlier day reads the walk as it stood
+    /// there, so a read's answer is the same whichever read walked the walk first (pick P54,
+    /// #127). E §4.2, §4.3, §9 item 4; L §8.4.
     fn walk_through(&mut self, m: &Reality, id: usize, last: Option<Day>) -> Result<(), Stop> {
         loop {
             let walk = self.walk(id)?;
             let step = match &walk.progress {
                 Progress::Done => return Ok(()),
-                Progress::Failed(stop) => return Err(stop.clone()),
+                Progress::Failed(stop, on) => return before_failure(stop, *on, last),
                 Progress::Planning => self.plan_alone(m, id),
                 Progress::Walking if walk.paused_after(self.days, last) => return Ok(()),
                 Progress::Walking => self.step_day(m, id),
@@ -114,7 +117,15 @@ impl Engine {
                 Ok(()) => {}
                 Err(Stop::Deep) => return Err(Stop::Deep),
                 Err(stop) => {
-                    self.walk_mut(id)?.progress = Progress::Failed(stop.clone());
+                    let failed = self.walk_mut(id)?;
+                    let on = match failed.progress {
+                        Progress::Walking => failed.today.as_ref().map(|t| t.day),
+                        Progress::Planning
+                        | Progress::Walked
+                        | Progress::Done
+                        | Progress::Failed(..) => None,
+                    };
+                    failed.progress = Progress::Failed(stop.clone(), on);
                     return Err(stop);
                 }
             }
@@ -986,8 +997,19 @@ fn signed(q: &Num, sign: i64) -> Result<Num, Stop> {
     Ok(q.clone())
 }
 
+/// A failed walk's answer to a read through day `last`: the walk as it stood, for a read that
+/// ends before the day the walk failed on; its refusal for one that reaches it, for a read to
+/// the walk's end, and for a failure of no day, its plan pass or its close (pick P54, #127).
+/// E §4.3, L §8.4.
+fn before_failure(stop: &Stop, on: Option<Day>, last: Option<Day>) -> Result<(), Stop> {
+    match (on, last) {
+        (Some(failed), Some(read)) if read < failed => Ok(()),
+        (Some(_) | None, Some(_) | None) => Err(stop.clone()),
+    }
+}
+
 /// A place's kind's sign rule (L §5.10).
-fn place_sign(m: &Reality, place: &str) -> Option<Sign> {
+pub(super) fn place_sign(m: &Reality, place: &str) -> Option<Sign> {
     let base = m.things.get(place)?.base.as_deref()?;
     m.kind_sign(base)
 }

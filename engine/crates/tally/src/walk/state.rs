@@ -162,8 +162,11 @@ pub enum Progress {
     Walked,
     /// Every day is walked and closed.
     Done,
-    /// A refusal the walk met: every read of it is refused (L §8.4).
-    Failed(Stop),
+    /// A refusal the walk met, with the day it was walking: every read of it that reaches
+    /// that day is refused, and a read that ends before it is read as the walk stood there;
+    /// none for a refusal of its plan pass or its close, which refuses every read (L §8.4,
+    /// E §4.3; pick P54, #127).
+    Failed(Stop, Option<Day>),
 }
 
 /// The legs a check of the sign rule tests together: per (place, unit), each movement's leg

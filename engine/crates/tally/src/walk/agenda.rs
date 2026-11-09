@@ -226,6 +226,12 @@ impl Engine {
         for adj in adjustments {
             schedule_adjustment(m, walk, &adj)?;
         }
+        if let Some(p) = walk.proj.as_mut() {
+            // sorted, so a read finds its window's by halving (`left_out_lines`)
+            for days in p.counted.values_mut() {
+                days.sort();
+            }
+        }
         walk.endings = endings(m, walk);
         after_the_point(walk);
         walk.progress = Progress::Walking;
@@ -258,18 +264,54 @@ fn left_out_of(walk: &Walk, move_id: &str) -> bool {
 /// An instance a projection's walk leaves out, kept by its day for the `left out:` line of
 /// a read whose window holds it (refcore's `count_leftout`). E §4.3 step 3, L §8.2.
 fn count_left_out(walk: &mut Walk, inst: &Inst) -> Result<(), Stop> {
-    let Some(day) = inst.day.as_ref().and_then(Dated::day) else {
-        return Ok(());
-    };
     let p = walk
         .proj
         .as_mut()
         .ok_or_else(|| super::plan::invariant("an instance left out of a main walk"))?;
-    p.counted
-        .entry(inst.move_id.clone())
-        .or_insert_with(Vec::new)
-        .push(day);
+    left_out_day(&mut p.counted, inst);
     Ok(())
+}
+
+/// A left-out instance's day kept among its move's, for the `left out:` line of a read whose
+/// window holds it; none for an instance with no day (refcore's `count_leftout`). Shared by
+/// the projection's walk and fence F5 (`lows.rs`). E §4.3 step 3, L §8.2.
+pub(super) fn left_out_day(counted: &mut BTreeMap<String, Vec<Day>>, inst: &Inst) {
+    if let Some(day) = inst.day.as_ref().and_then(Dated::day) {
+        counted
+            .entry(inst.move_id.clone())
+            .or_insert_with(Vec::new)
+            .push(day);
+    }
+}
+
+/// The `left out:` line of each left-out move with an instance dated t through `last`, each
+/// move's days sorted, so a read finds its own by halving (refcore's `proj_regs`). Shared by
+/// the projection's walk and fence F5. L §5.14.1, §8.2; E §4.3 step 3; P §2.3.
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` where a window's days can't be taken from a move's.
+pub(super) fn left_out_lines(
+    counted: &BTreeMap<String, Vec<Day>>,
+    (t, last): (Day, Day),
+) -> Result<Vec<String>, Stop> {
+    let mut lines = Vec::new();
+    for (mid, days) in counted {
+        let from = days.partition_point(|d| *d < t);
+        let to = days.partition_point(|d| *d <= last);
+        // none where t is past `last`, as no day lies in t through `last` then
+        let inside = days
+            .get(from..to.max(from))
+            .ok_or_else(|| super::plan::invariant("a left-out move's days in a window"))?;
+        if let Some(first) = inside.first() {
+            lines.push(format!(
+                "{mid}, {} instances, first {}",
+                inside.len(),
+                first.text()
+            ));
+        }
+    }
+    Ok(lines)
 }
 
 /// A projection's walk read at a decision's point: on its first day only the decisions after
@@ -646,11 +688,31 @@ fn schedule_adjustment(
 /// An instance left out of the walk, counted for its move's `left out:` line and its places
 /// (refcore's `note_leftout`). E §4.1 step 3, L §8.2.
 fn note_left_out(walk: &mut Walk, inst: &Inst) -> Result<(), Stop> {
+    one_more_left_out(&mut walk.left_out, inst)?;
+    for leg in &inst.legs {
+        for place in [&leg.from, &leg.to].into_iter().filter_map(End::place) {
+            walk.left_out_at
+                .entry(place.to_owned())
+                .or_insert_with(BTreeSet::new)
+                .insert(inst.move_id.clone());
+        }
+    }
+    Ok(())
+}
+
+/// One more instance of a move left out of the run, counted with its first day, for its
+/// `left out:` line (refcore's `note_leftout`). Shared by the walk and fence F5 (`lows.rs`).
+/// L §8.2, E §4.1 step 3.
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for a count past what a `u32` holds.
+pub(super) fn one_more_left_out(
+    left_out: &mut BTreeMap<String, (u32, Option<Day>)>,
+    inst: &Inst,
+) -> Result<(), Stop> {
     let day = inst.day.as_ref().and_then(Dated::day);
-    let entry = walk
-        .left_out
-        .entry(inst.move_id.clone())
-        .or_insert((0, None));
+    let entry = left_out.entry(inst.move_id.clone()).or_insert((0, None));
     entry.0 = entry
         .0
         .checked_add(1)
@@ -660,14 +722,6 @@ fn note_left_out(walk: &mut Walk, inst: &Inst) -> Result<(), Stop> {
         (None, b) => b,
         (a, None) => a,
     };
-    for leg in &inst.legs {
-        for place in [&leg.from, &leg.to].into_iter().filter_map(End::place) {
-            walk.left_out_at
-                .entry(place.to_owned())
-                .or_insert_with(BTreeSet::new)
-                .insert(inst.move_id.clone());
-        }
-    }
     Ok(())
 }
 

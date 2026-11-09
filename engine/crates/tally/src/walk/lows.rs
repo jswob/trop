@@ -11,7 +11,9 @@
 //! x in the window but whole plan legs in x's unit, inside both ends' lifespans and sign
 //! rules, and run no decision; it then gives that walk's value and register, and every other
 //! read is the walk's; one tree per (place, unit, moves left out) in a timeline, built from the
-//! instances at the read's cut and built again at another cut.
+//! instances at the read's cut, holding for every cut that sees no more than that one, and
+//! updated in place at a cut that does; a read the projection's walk refuses on a day it
+//! reaches is the walk's (pick P54, #127).
 //! PERF: P8-5, P8-M4 (one read of a written projection in E §4.3's common case: O(log n) in
 //! the n days x moves, where the walk plans and walks the window and reads each of its days;
 //! S measured P8-M4's read at 72.9 ms); plain twin: projection.rs (`projection`,
@@ -23,15 +25,22 @@
 //! positions are the days x moves on; each holds that day's legs summed, and each node the sum
 //! of its positions and the least running sum inside them. A read from t through b is then
 //! the start balance, plus the legs from t to the window's first day, plus the least running
-//! sum after it, if below zero: two walks down the tree. P §2.3's range add from a day on is
-//! one position's change here; F is built again when the cut changes, since the plan pass
-//! computes the cut's instances anyway, one evaluation each.
+//! sum after it, if below zero: two queries of the tree, each O(log n). F changes only on the
+//! days a cut starts to see more (a version's `known`, a row's own): a tree built at cut c
+//! holds for every later cut before the next such day, and at a cut past it the plan pass's
+//! instances are gathered again and each position whose sum changed is updated in place, O(log
+//! n) each (P §2.3's range add from a day on is one position's change here); the tree is built
+//! again only where x's days change or the cut goes back.
 
+use core::ops::Bound;
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 
+use super::agenda::{left_out_day, left_out_lines, one_more_left_out};
+use super::day::place_sign;
 use super::plan::{Amount, Dated, End, Exists, Inst, LegVal, Status, invariant, qty_value};
 use super::point::At;
+use super::state::Progress;
 use crate::eval::{Collected, Engine, Entry, num_stop};
 use crate::model::{MoveInfo, Reality, Value, World};
 use crate::num::Num;
@@ -67,6 +76,20 @@ pub(crate) struct Trees {
     /// The trees being built: a read that meets one again is a read of a walk while it is
     /// walked, as the projection's walk's own plan pass meets it.
     building: BTreeSet<TreeKey>,
+    /// The days a cut starts to see more on, once a tree needs them.
+    known: Option<BTreeSet<Day>>,
+}
+
+impl Trees {
+    /// The first day after `cut` on which a cut sees more than `cut` does; none past the
+    /// last. P §2.3.
+    fn next_known(&mut self, m: &Reality, cut: Day) -> Option<Day> {
+        self.known
+            .get_or_insert_with(|| knowledge_days(m))
+            .range((Bound::Excluded(cut), Bound::Unbounded))
+            .next()
+            .copied()
+    }
 }
 
 /// One place's running sums in one unit at one cut, and what keeps a read from them (E §4.3,
@@ -75,6 +98,10 @@ pub(crate) struct Trees {
 struct Tree {
     /// The cut min(t, K) its instances are read at.
     cut: Day,
+    /// The first day after the cut on which a cut sees more: every cut from `cut` up to it
+    /// gives the instances it counts the same, so the tree holds there too; none past the
+    /// last such day.
+    upto: Option<Day>,
     /// Whether any read may take it: not where x's kind has a sign rule, a decision has no
     /// day, a hole or refusal stands from the walk's start, or the legs carry too many
     /// registers.
@@ -107,6 +134,7 @@ impl Tree {
     fn new(cut: Day) -> Tree {
         Tree {
             cut,
+            upto: None,
             open: true,
             days: Vec::new(),
             sums: Sums {
@@ -132,14 +160,21 @@ impl Tree {
             && !holds_one(&self.runs, (t, last))
     }
 
-    /// The number of positions on or before `day`, and before it. P §2.3.
+    /// Whether the tree holds at cut `cut`: one at or after its own and before the next day a
+    /// cut sees more on, so the plan pass gives the instances a read counts the same (P §2.3:
+    /// the cut never goes back during a walk, so a cut before its own builds it again).
+    fn holds_at(&self, cut: Day) -> bool {
+        self.cut <= cut && self.upto.is_none_or(|next| cut < next)
+    }
+
+    /// The number of positions on or before `day`. P §2.3.
     fn through(&self, day: Day) -> usize {
         self.days.partition_point(|d| *d <= day)
     }
 
     /// The legs counted from day `counts` through `first`, then the least running sum of the
     /// days after it through `last`, if below zero: the lowest end-of-day balance of the days
-    /// `first` through `last`, less the start (P §2.3: three walks down the tree). E §4.3.
+    /// `first` through `last`, less the start (P §2.3: two queries of the tree). E §4.3.
     fn lowest_change(&self, counts: Day, (first, last): (Day, Day)) -> Result<Num, Stop> {
         let before = self.days.partition_point(|d| *d < counts);
         let (from, to) = (self.through(first), self.through(last));
@@ -240,24 +275,53 @@ impl Sums {
         let size = width
             .checked_mul(2)
             .ok_or_else(|| invariant("a tree past the positions there can be"))?;
-        let mut nodes = vec![Node::empty(); size];
+        let mut sums = Sums {
+            width,
+            nodes: vec![Node::empty(); size],
+        };
         for (i, q) in steps.into_iter().enumerate() {
-            let at = width.checked_add(i).ok_or_else(|| invariant("a leaf"))?;
-            let leaf = nodes.get_mut(at).ok_or_else(|| invariant("a leaf"))?;
-            *leaf = Node::day(q);
+            let at = sums.leaf(i)?;
+            *sums.node_mut(at)? = Node::day(q);
         }
-        let mut parent = width;
-        while let Some(i) = parent.checked_sub(1).filter(|i| *i > 0) {
-            let below = i.checked_mul(2).ok_or_else(|| invariant("a node"))?;
-            let left = nodes.get(below).ok_or_else(|| invariant("a node"))?;
-            let right = nodes
-                .get(below.checked_add(1).ok_or_else(|| invariant("a node"))?)
-                .ok_or_else(|| invariant("a node"))?;
-            let joined = left.then(right)?;
-            *nodes.get_mut(i).ok_or_else(|| invariant("a node"))? = joined;
-            parent = i;
+        for i in (1..width).rev() {
+            sums.join(i)?;
         }
-        Ok(Sums { width, nodes })
+        Ok(sums)
+    }
+
+    /// The tree with each position whose sum `steps` changes set to it and the nodes above
+    /// it joined again: P §2.3's range add on F from that position on, in place, O(log n)
+    /// each. `steps` holds a sum for each of the tree's positions.
+    fn updated(mut self, steps: Vec<Num>) -> Result<Sums, Stop> {
+        for (i, q) in steps.into_iter().enumerate() {
+            let at = self.leaf(i)?;
+            if self.node(at)?.sum == q {
+                continue;
+            }
+            *self.node_mut(at)? = Node::day(q);
+            let mut below = at;
+            while let Some(up) = below.checked_shr(1).filter(|up| *up > 0) {
+                self.join(up)?;
+                below = up;
+            }
+        }
+        Ok(self)
+    }
+
+    /// Node `i` made again from the two below it. P §2.3.
+    fn join(&mut self, i: usize) -> Result<(), Stop> {
+        let below = i.checked_mul(2).ok_or_else(|| invariant("a node"))?;
+        let right = below.checked_add(1).ok_or_else(|| invariant("a node"))?;
+        let joined = self.node(below)?.then(self.node(right)?)?;
+        *self.node_mut(i)? = joined;
+        Ok(())
+    }
+
+    /// The node at `i`, to change. P §2.3.
+    fn node_mut(&mut self, i: usize) -> Result<&mut Node, Stop> {
+        self.nodes
+            .get_mut(i)
+            .ok_or_else(|| invariant("a node of the tree"))
     }
 
     /// The positions `from` up to `to` (not included) as one node, their legs in order: the
@@ -301,9 +365,11 @@ struct Gathered {
     tree: Tree,
     /// Each counted leg's end at x: its day, its signed quantity, its register.
     legs: Vec<(Day, Num, Collected)>,
-    /// Each move with instances outside the run: how many, the first day, and whether one
-    /// touches x (refcore's `note_leftout`).
-    outside: BTreeMap<String, (u32, Option<Day>, bool)>,
+    /// Each move with instances outside the run: how many, and the first day (refcore's
+    /// `note_leftout`).
+    outside: BTreeMap<String, (u32, Option<Day>)>,
+    /// The moves outside the run with an instance whose leg touches x.
+    touching: BTreeSet<String>,
 }
 
 impl Engine {
@@ -339,6 +405,12 @@ impl Engine {
         if world != self.timeline_world() {
             return Ok(None);
         }
+        // the projection's own walk, failed on a day the read reaches, refuses it (P54)
+        if let Some(id) = self.proj_walks.get(&(base, point, c, left_out.clone()))
+            && fails_by(&self.walk(*id)?.progress, last)
+        {
+            return Ok(None);
+        }
         let key = (place.to_owned(), unit.to_owned(), left_out.clone());
         self.tree_at(m, (place, unit), (c, world), &key)?;
         let tree = self
@@ -361,7 +433,7 @@ impl Engine {
             .checked_add(&tree.lowest_change(counts, (first, last))?)
             .map_err(num_stop)?;
         let mut met = tree.register(counts, last);
-        let lines = counted_lines(&tree.counted, (t, last))?;
+        let lines = left_out_lines(&tree.counted, (t, last))?;
         for line in lines {
             self.note("left out", line, String::new());
         }
@@ -380,7 +452,7 @@ impl Engine {
         (cut, world): (Day, World),
         key: &TreeKey,
     ) -> Result<(), Stop> {
-        if self.trees.built.get(key).is_some_and(|t| t.cut == cut) {
+        if self.trees.built.get(key).is_some_and(|t| t.holds_at(cut)) {
             return Ok(());
         }
         if self.trees.building.contains(key) {
@@ -393,7 +465,14 @@ impl Engine {
         self.pop_alone();
         self.reads_back(mark);
         self.trees.building.remove(key);
-        self.trees.built.insert(key.clone(), built?);
+        let (mut tree, steps) = built?;
+        tree.upto = self.trees.next_known(m, cut);
+        // P §2.3: the same days, so each changed position is one update in place
+        tree.sums = match self.trees.built.remove(key) {
+            Some(old) if old.days == tree.days => old.sums.updated(steps)?,
+            Some(_) | None => Sums::of(steps)?,
+        };
+        self.trees.built.insert(key.clone(), tree);
         Ok(())
     }
 
@@ -406,13 +485,14 @@ impl Engine {
         (place, unit): (&str, &str),
         (cut, world): (Day, World),
         left_out: &BTreeSet<String>,
-    ) -> Result<Tree, Stop> {
+    ) -> Result<(Tree, Vec<Num>), Stop> {
         // the projection's walk reads its cut's first readings before its plan pass
         crate::book::first_readings(m, (cut, world))?;
         let mut got = Gathered {
             tree: Tree::new(cut),
             legs: Vec::new(),
             outside: BTreeMap::new(),
+            touching: BTreeSet::new(),
         };
         for mv in m.moves_in(world) {
             let insts = self.move_instances(m, mv, cut)?;
@@ -442,24 +522,8 @@ impl Gathered {
         inst: &Inst,
     ) -> Result<(), Stop> {
         let day = inst.day.as_ref().and_then(Dated::day);
-        let touches = inst.legs.iter().any(|lg| at_place(lg, place));
         match inst.status {
-            Status::LeftOut => {
-                let entry = self
-                    .outside
-                    .entry(inst.move_id.clone())
-                    .or_insert((0, None, false));
-                entry.0 = entry
-                    .0
-                    .checked_add(1)
-                    .ok_or_else(|| invariant("a count of instances"))?;
-                entry.1 = match (entry.1, day) {
-                    (Some(a), Some(b)) => Some(a.min(b)),
-                    (None, b) => b,
-                    (a, None) => a,
-                };
-                entry.2 = entry.2 || touches;
-            }
+            Status::LeftOut => self.outside_run(inst, place)?,
             Status::Modelled if inst.obs.is_empty() => self.marks(inst, place),
             Status::Refused => self.refused(inst, day, place),
             Status::Hole => self.hole(inst, day, place),
@@ -473,6 +537,16 @@ impl Gathered {
             | Status::Decision
             | Status::Open
             | Status::Uncertain => {}
+        }
+        Ok(())
+    }
+
+    /// An instance outside the run: counted with its move's, which keeps a `left out:` entry
+    /// at x where one of its legs touches x (refcore's `note_leftout`). L §8.2, E §4.1 step 3.
+    fn outside_run(&mut self, inst: &Inst, place: &str) -> Result<(), Stop> {
+        one_more_left_out(&mut self.outside, inst)?;
+        if inst.legs.iter().any(|lg| at_place(lg, place)) {
+            self.touching.insert(inst.move_id.clone());
         }
         Ok(())
     }
@@ -567,11 +641,17 @@ impl Gathered {
         Ok(())
     }
 
-    /// The tree made from what was gathered: x's sign rule and lifespan's end, its `left out:`
-    /// entries, the legs summed by day and their registers by position. P §2.3, L §8.2.
-    fn finish(mut self, m: &Reality, place: &str, seen: (Day, World)) -> Result<Tree, Stop> {
+    /// The tree made from what was gathered, with each position's legs summed, its sums still
+    /// to make: x's sign rule and lifespan's end, its `left out:` entries, the positions and
+    /// their registers. P §2.3, L §8.2.
+    fn finish(
+        mut self,
+        m: &Reality,
+        place: &str,
+        seen: (Day, World),
+    ) -> Result<(Tree, Vec<Num>), Stop> {
         let mut tree = self.tree;
-        if matches!(sign_of(m, place), Some(Sign::Min0 | Sign::Max0)) {
+        if matches!(place_sign(m, place), Some(Sign::Min0 | Sign::Max0)) {
             tree.open = false;
         }
         if let Some(last) = m
@@ -583,8 +663,8 @@ impl Gathered {
         {
             tree.runs.insert(last);
         }
-        for (mid, (n, first, touches)) in &self.outside {
-            if *touches {
+        for (mid, (n, first)) in &self.outside {
+            if self.touching.contains(mid) {
                 let first = first.map_or_else(|| "None".to_owned(), Day::text);
                 tree.left_out.push(Entry {
                     word: "left out",
@@ -613,8 +693,7 @@ impl Gathered {
                 .ok_or_else(|| invariant("a position"))?;
             carried(&mut tree, coll, at);
         }
-        tree.sums = Sums::of(steps)?;
-        Ok(tree)
+        Ok((tree, steps))
     }
 }
 
@@ -653,41 +732,61 @@ fn judge_decision(tree: &mut Tree, inst: &Inst) {
 /// a read whose window holds it: a plan's when it exists, a decision's always (refcore's
 /// `count_leftout`). E §4.3 step 3, L §8.2.
 fn count_left_out(tree: &mut Tree, mv: &MoveInfo, inst: &Inst) {
-    if !mv.decision && inst.status == Status::None {
-        return;
-    }
-    if let Some(d) = inst.day.as_ref().and_then(Dated::day) {
-        tree.counted
-            .entry(mv.id.clone())
-            .or_insert_with(Vec::new)
-            .push(d);
+    if mv.decision || inst.status != Status::None {
+        left_out_day(&mut tree.counted, inst);
     }
 }
 
-/// The `left out:` line of each left-out move with an instance in t through `last` (refcore's
-/// `proj_regs`), each move's days sorted, so a read finds its own by halving, not by a pass
-/// over them all. L §5.14.1, §8.2; E §4.3 step 3; P §2.3.
-fn counted_lines(
-    counted: &BTreeMap<String, Vec<Day>>,
-    (t, last): (Day, Day),
-) -> Result<Vec<String>, Stop> {
-    let mut lines = Vec::new();
-    for (mid, days) in counted {
-        let from = days.partition_point(|d| *d < t);
-        let to = days.partition_point(|d| *d <= last);
-        // none where t is past `last`, as no day lies in t through `last` then
-        let inside = days
-            .get(from..to.max(from))
-            .ok_or_else(|| invariant("a left-out move's days in a window"))?;
-        if let Some(first) = inside.first() {
-            lines.push(format!(
-                "{mid}, {} instances, first {}",
-                inside.len(),
-                first.text()
-            ));
+/// Whether a projection's walk in `progress` refuses a read through day `last`: it failed on
+/// that day or before it, or in its plan pass or close (pick P54, #127). E §4.3, L §8.4.
+fn fails_by(progress: &Progress, last: Day) -> bool {
+    match progress {
+        Progress::Failed(_, on) => on.is_none_or(|d| d <= last),
+        Progress::Planning | Progress::Walking | Progress::Walked | Progress::Done => false,
+    }
+}
+
+/// Every day on which a cut starts to see more, and the day after it: each version's `known`
+/// and its window's last day, each row's, given's and observation's own (L §4.5, §5.3, §5.19;
+/// E §5). Every cut between two of them sees the same versions, rows and observations, so
+/// the plan pass gives the instances counted from it the same days, amounts and statuses.
+/// P §2.3.
+fn knowledge_days(m: &Reality) -> BTreeSet<Day> {
+    let mut days = BTreeSet::new();
+    for (_, v) in m.versions.entries() {
+        mark(&mut days, Some(v.known));
+        mark(&mut days, v.window);
+        for moved in &v.moved_by {
+            mark(&mut days, Some(moved.known));
+            mark(&mut days, moved.window);
         }
     }
-    Ok(lines)
+    for (_, input) in m.inputs.entries() {
+        for row in input.rows.iter().chain(&input.part_rows) {
+            mark(&mut days, row.own_known);
+            mark(&mut days, row.own_window);
+        }
+        for obs in &input.observations {
+            mark(&mut days, obs.own_known);
+            mark(&mut days, obs.own_window);
+        }
+    }
+    for (_, def) in m.defs.entries() {
+        for row in &def.givens {
+            mark(&mut days, row.own_known);
+            mark(&mut days, row.own_window);
+        }
+    }
+    days
+}
+
+/// Notes a day a cut starts to see more on, and the day after it, whichever of `known <= cut`
+/// and `known < cut` a test reads. P §2.3.
+fn mark(days: &mut BTreeSet<Day>, day: Option<Day>) {
+    if let Some(d) = day {
+        days.insert(d);
+        days.extend(d.next());
+    }
 }
 
 /// Whether a leg has an end at `place`. E §4.2.
@@ -714,19 +813,13 @@ fn end_books(m: &Reality, end: &End, d: Day, seen: (Day, World)) -> bool {
     };
     span.contains(d)
         && span.end_question().is_none()
-        && !matches!(sign_of(m, p), Some(Sign::Min0 | Sign::Max0))
+        && !matches!(place_sign(m, p), Some(Sign::Min0 | Sign::Max0))
 }
 
 /// Whether a day of `days` lies in `from` through `last`, none where `from` is past `last`
 /// (a read at a decision's point on its window's only day). P §2.3.
 fn holds_one(days: &BTreeSet<Day>, (from, last): (Day, Day)) -> bool {
     days.range(from..).next().is_some_and(|d| *d <= last)
-}
-
-/// A place's sign rule, by its kind (refcore's `kind_sign`). L §5.10.
-fn sign_of(m: &Reality, place: &str) -> Option<Sign> {
-    let base = m.things.get(place)?.base.as_deref()?;
-    m.kind_sign(base)
 }
 
 #[cfg(test)]
@@ -738,6 +831,7 @@ mod tests {
     use crate::model::{Reality, Value};
     use crate::num::Num;
     use crate::syntax::{AskBody, parse_reality};
+    use crate::time::Day;
     use core::cmp::Ordering;
 
     /// A place paid monthly and charged monthly, an amount nobody has stated from August,
@@ -793,6 +887,10 @@ ask low_hole: low(konto, 2026-04-01 .. 2026-09-30) from 2026-04-01
 
 ask low_unc: low(konto, 2026-02-01 .. 2026-06-30) from 2026-01-20 with uncertain
 
+ask low_feb: low(konto, 2026-02-01 .. 2026-06-30) from 2026-02-01
+
+ask low_mar: low(konto, 2026-03-01 .. 2026-06-30) from 2026-03-01
+
 version facts
   cite card
   governs always
@@ -802,6 +900,12 @@ version facts
   rent_off = 9
   gift_day = 2026-08-10
   opening[konto] = 500.00 at 2026-01-01 start
+
+version rise
+  cite card
+  governs 2026-05-01..
+  known 2026-02-15
+  replace rent = 1250.00 "the rent rose"
 "#;
 
     fn reality() -> Reality {
@@ -844,6 +948,81 @@ version facts
                 "{id}: the tree, no projection's walk"
             );
             assert_eq!((twin_walks, twin_trees), (1, 0), "{id}: the twin walks it");
+        }
+    }
+
+    /// Asks `ids` read in order by one engine reading a projection's common case as `lows`
+    /// says: each value, and the cut of the engine's one tree after it, none for no tree.
+    fn read_in_order(m: &Reality, ids: &[&str], lows: Lows) -> Vec<(Value, Option<Day>)> {
+        let first = ids.first().expect("an ask");
+        let holder = m.asks.iter().find(|a| a.id == *first).expect("the ask");
+        let mut engine = Engine::new(m.on)
+            .with_how((Memo::Classes, lows))
+            .for_ask(holder);
+        let ctx = Ctx::new(None, m.on).in_world(m.scenarios.model_world());
+        engine.enter_timeline(m, ctx).expect("its timeline");
+        let mut out = Vec::new();
+        for id in ids {
+            let ask = m.asks.iter().find(|a| a.id == *id).expect("the ask");
+            let AskBody::Exprs(exprs) = &ask.body else {
+                panic!("{id} asks for a value");
+            };
+            let expr = exprs.first().expect("a value");
+            let v = engine.value(m, expr, &Env::empty(), ctx).expect("a value");
+            out.push((v, engine.trees.built.values().next().map(|t| t.cut)));
+        }
+        out
+    }
+
+    #[test]
+    fn a_tree_holds_until_a_cut_sees_more_then_is_updated_in_place() {
+        let m = reality();
+        // from 01-20, then 02-01 (the same facts), 03-01 (past `rise`, known 02-15), and back
+        let ids = ["low_from", "low_feb", "low_mar", "low_from"];
+        let tree = read_in_order(&m, &ids, Lows::Tree);
+        let walk = read_in_order(&m, &ids, Lows::Walk);
+        let values = |reads: &[(Value, Option<Day>)]| -> Vec<Value> {
+            reads.iter().map(|(v, _)| v.clone()).collect()
+        };
+        assert_eq!(values(&tree), values(&walk), "the walk's values");
+        let day = |month: u8, d: u8| Day::from_ymd(2026, month, d).expect("a day");
+        let cuts: Vec<Option<Day>> = tree.iter().map(|(_, cut)| *cut).collect();
+        assert_eq!(
+            cuts,
+            [
+                Some(day(1, 20)),
+                Some(day(1, 20)),
+                Some(day(3, 1)),
+                Some(day(1, 20))
+            ],
+            "kept for 02-01, updated for 03-01, built again going back"
+        );
+    }
+
+    #[test]
+    fn a_tree_updated_in_place_is_the_tree_built_anew() {
+        for steps in steps(20_261_110) {
+            let changed: Vec<Num> = steps
+                .iter()
+                .enumerate()
+                .map(|(i, q)| {
+                    if i.checked_rem_euclid(3) == Some(0) {
+                        q.checked_add(&Num::int(-37)).expect("a sum")
+                    } else {
+                        q.clone()
+                    }
+                })
+                .collect();
+            let updated = Sums::of(steps.clone())
+                .expect("a tree")
+                .updated(changed.clone())
+                .expect("updated");
+            assert_eq!(
+                updated,
+                Sums::of(changed).expect("a tree"),
+                "{} positions",
+                steps.len()
+            );
         }
     }
 

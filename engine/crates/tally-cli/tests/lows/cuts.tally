@@ -1,0 +1,71 @@
+model cuts
+  tally 2
+  on 2026-09-30
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented for F5's cuts"
+
+unit DUK: currency minor 0.01
+
+index month = month 2026-01..2026-12
+
+place konto: accounts DUK lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input pay: money DUK
+
+input rent: money DUK
+
+input bonus: money DUK
+
+input bonus_day: date
+
+input rent_off: int
+
+move salary[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount pay
+
+move rent_pay[m in month]: transfers
+  on add_days(start_of(m), rent_off)
+  at start_of(m)
+  leg cash from konto to world amount rent
+
+move bonus_pay: transfers
+  on bonus_day
+  at bonus_day
+  leg cash from world to konto amount bonus
+
+ask c_low: min(low(konto, d .. 2026-12-31) from d for d in 2026-01-01 .. 2026-09-30 step 1 day)
+
+ask c_sum: sum(bal(konto, 2026-12-31) from d for d in 2026-02-20 .. 2026-07-10 step 1 day)
+
+ask c_back: bal(konto, 2026-12-31) from 2026-08-01, bal(konto, 2026-12-31) from 2026-02-01, low(konto, 2026-03-01 .. 2026-12-31) from 2026-03-01, bal(konto, 2026-11-30) from 2026-07-01
+
+ask c_one: low(konto, 2026-06-01 .. 2026-12-31) from 2026-06-01
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 1000.00
+  rent = 900.00
+  bonus = 250.00
+  bonus_day = 2026-11-15
+  rent_off = 9
+  opening[konto] = 500.00 at 2026-01-01 start
+
+version raise
+  cite card
+  governs 2026-05-01..
+  known 2026-03-01
+  replace rent = 950.00 "the rent rose"
+
+version moved
+  cite card
+  governs always
+  known 2026-06-15
+  replace bonus_day = 2026-11-20 "the bonus moved"

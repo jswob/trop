@@ -433,7 +433,7 @@ pub(crate) fn unmoved(walks: &[Walk], signatures: &BTreeMap<usize, Signature>) -
                 "a signature of a walk the timeline lacks".to_owned(),
             ))
         })?;
-        if matches!(walk.progress, Progress::Failed(_)) {
+        if matches!(walk.progress, Progress::Failed(..)) {
             continue;
         }
         if Signature::of(walk) != *kept {
