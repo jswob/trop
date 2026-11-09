@@ -88,12 +88,13 @@ impl Engine {
 
     /// `low(x, a .. b) [from t] [clauses]`: the lowest end-of-day balance of x on the days a
     /// through b, the first of equal lows; with `from t` each day's balance in the walk
-    /// continued from day t, with the read's clauses, else the plain balance; a hole where any
-    /// day's balance is one, with every day's questions (refcore's `m_e_low`). L §5.14.1 (the
-    /// built-ins' table), E §4.3.
+    /// continued from day t, else the plain balance, with the read's clauses either way; a
+    /// hole where any day's balance is one, with every day's questions (refcore's `m_e_low`).
+    /// L §5.14.1 (the built-ins' table), E §4.3.
     ///
     /// # Errors
     ///
+    /// `RUN-EMPTY` for a window with no day (b before a: L §5.11, `min` over no keys);
     /// `RUN-DOMAIN` for a first day before the projection's start, a start that isn't a day;
     /// `LOAD-UNIT` for a place of unit `any`; `RUN-FUTURE` for a decision's projection from a
     /// later day; the refusals of the walk; `NotBuilt` for `windows each`.
@@ -117,6 +118,10 @@ impl Engine {
             .start()
             .ok_or_else(|| invariant("a span with no start"))?;
         let last = super::flows::span_last(m, &span)?;
+        if last < first {
+            // `min(bal(x, d) … for d in a .. b step 1 day)` over no day: its terms are never read
+            return Err(refuse(Run::Empty, "low over no keys".to_owned()));
+        }
         if read.proj.windows_each {
             return Err(Stop::NotBuilt("`windows each` on a balance read"));
         }
@@ -144,7 +149,7 @@ impl Engine {
                 }
                 self.projected_days(m, (&place, &unit), (start, days), (read, ctx))?
             }
-            None => self.plain_days(m, (&place, &unit), days, ctx)?,
+            None => self.plain_days(m, (&place, &unit), days, (read, ctx))?,
         };
         lowest(balances)
     }
@@ -182,19 +187,25 @@ impl Engine {
         Ok(out)
     }
 
-    /// The plain end-of-day balances of a place on the days of a `low` with no `from`
-    /// (refcore's `m_e_low`, its plain form). L §5.14.1.
+    /// The plain end-of-day balances of a place on the days of a `low` with no `from`, each
+    /// with the clauses a plain `bal` takes: `with uncertain` (refcore's `m_e_low`, its plain
+    /// form; pick P51, #125). L §5.14.1 (`low` "with the same clauses"), §5.14.
     fn plain_days(
         &mut self,
         m: &Reality,
         (place, unit): (&str, &str),
         days: Days,
-        ctx: Ctx,
+        (read, ctx): (&Low, Ctx),
     ) -> Result<Vec<Value>, Stop> {
         let mut out = Vec::new();
         let mut day = Some(days.first);
         while let Some(d) = day.filter(|d| *d <= days.last) {
-            out.push(self.bal_day(m, (place, unit), d, At::end(d), ctx)?);
+            let v = self.bal_day(m, (place, unit), d, At::end(d), ctx)?;
+            out.push(if read.proj.uncertain {
+                self.with_uncertain(m, (place, unit), d, &v, ctx)?
+            } else {
+                v
+            });
             day = d.next();
         }
         Ok(out)

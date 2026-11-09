@@ -204,6 +204,7 @@ pub mod walk {
     mod reads;
     mod state;
     mod tuples;
+    mod value;
 
     pub use agenda::{Act, Mv, Reading, endings, reading_point};
     pub use day::{Broke, Ends};

@@ -56,7 +56,7 @@ impl Engine {
             return Ok(Value::Hole(Hole::asked("before the run's start", &figure)));
         }
         if f.for_key.is_some() || f.convert.is_some() {
-            return Err(Stop::NotBuilt("flows for a period or converted (G7)"));
+            return Err(Stop::NotBuilt("flows for a period or converted"));
         }
         let Some((mv, posts)) = named else {
             return match self.place_arg(m, &f.target, env, ctx)? {
