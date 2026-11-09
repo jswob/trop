@@ -446,6 +446,11 @@ fn ask_body(m: &Reality, ask: &Ask, engine: &mut Engine, cut: Day) -> Result<Vec
         AskBody::Exprs(_) | AskBody::Check(..) | AskBody::Solve(_) => {
             tuple_lines(m, ask, engine, (ctx, &pinned))
         }
+        // a diff or residuals ask doesn't fan out yet: its lines over the axes it reaches are
+        // unwritten (L §5.5, §5.18; P47, #122)
+        AskBody::Residuals(_) | AskBody::Diff(_) if Axes::of(m, ask)?.is_some() => Err(
+            Stop::NotBuilt("a diff or residuals ask over the axes it reaches"),
+        ),
         AskBody::Residuals(r) => residual_lines(m, ask, r, engine, (ctx, &pinned)),
         AskBody::Diff(diff) => diff_lines(m, (ask, diff), engine, (ctx, &pinned)),
         AskBody::Explain(_) | AskBody::InputsOf(_) | AskBody::ReadersOf(_) => Err(beyond_built()),

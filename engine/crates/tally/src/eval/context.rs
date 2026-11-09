@@ -470,6 +470,24 @@ impl Engine {
         axes
     }
 
+    /// The axes the walk's readers reach that layer `layer` sets no option of, in id order
+    /// (E §3.3).
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a freed layer.
+    pub(super) fn unset_walk_axes(
+        &mut self,
+        m: &Reality,
+        layer: Layer,
+    ) -> Result<Vec<String>, Stop> {
+        let cone = self.walk_cone(m);
+        let axes = self.walk_axes(m, &cone);
+        self.layers.timeline = Some(cone);
+        let set = &self.layer_data(layer)?.axes;
+        Ok(axes.into_iter().filter(|a| !set.contains_key(a)).collect())
+    }
+
     /// The option axis `axis` takes in context `ctx`: a combination of the ask's fan-out or
     /// an axis pin (refcore's `axis_option`). L §5.5.
     ///

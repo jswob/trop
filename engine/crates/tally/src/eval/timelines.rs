@@ -4,9 +4,11 @@
 //! each timeline's walks keep their signatures until the ask ends or the scope that made them
 //! is freed); L §5.11 ("`flows` inside sees the recomputed movements"), §6.4 (a scenario's
 //! world: its moves, places and versions), §5.14.1 (a decision's running reads stay in its
-//! own timeline); P §3.2 (a pin set's layer freed when its `as if` or `solve` step ends).
-//! Twin: engine/tools/refcore/walk.py (`m_main_walk`, its walks keyed by `wkey(ctx)`) and
-//! moves.py (`wkey`: the cut, the pins, the world).
+//! own timeline); P §3.2 (a pin set's layer freed when its `as if` or `solve` step ends);
+//! L §5.5 (a read outside its ask's fan-out that needs the walk reads each combination's of
+//! the axes the walk reaches and its timeline sets none of, P48).
+//! Twin: engine/tools/refcore/walk.py (`m_main_walk`, its walks keyed by `wkey(ctx)`),
+//! moves.py (`wkey`: the cut, the pins, the world) and mreads.py (`leg_refused`).
 //! Invariants: the engine's walk fields hold the timeline in force and every other one is
 //! parked under its key; a key is a world and the pins of the reader's layer on items the
 //! walk reaches, so a pin no move reaches shares its reader's timeline; a scope that changes
@@ -186,6 +188,94 @@ impl Engine {
             .ok_or_else(|| invariant("a timeline left that no scope entered"))?;
         self.use_timeline(key);
         Ok(())
+    }
+
+    /// Each combination of the options of the axes the walk reaches that the timeline in
+    /// force sets none of, the first axis slowest, as each axis's id with its option's name;
+    /// none when it sets them all. Outside its ask's fan-out a read can need the walk, which
+    /// reads them: a move's flows asks whether the walk refused its leg (E §3.3: a timeline
+    /// per combination of the axes the moves reach; L §5.5).
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a freed layer or an axis load didn't build.
+    pub(crate) fn unset_combinations(
+        &mut self,
+        m: &Reality,
+    ) -> Result<Vec<Vec<(String, String)>>, Stop> {
+        let unset = self.unset_walk_axes(m, self.timelines.now.pins)?;
+        if unset.is_empty() {
+            return Ok(Vec::new());
+        }
+        let mut combos: Vec<Vec<(String, String)>> = vec![Vec::new()];
+        for id in &unset {
+            let axis = m
+                .axes
+                .get(id)
+                .ok_or_else(|| invariant("an axis load didn't build"))?;
+            let mut next = Vec::new();
+            for combo in &combos {
+                for (name, _) in &axis.options {
+                    let mut longer = combo.clone();
+                    longer.push((id.clone(), name.clone()));
+                    next.push(longer);
+                }
+            }
+            combos = next;
+        }
+        Ok(combos)
+    }
+
+    /// The refusal of leg `wanted` read outside its ask's fan-out while the walk reaches axes
+    /// the timeline in force sets no option of: the main walk of cut `cut` in each of their
+    /// combinations `combos`, which must agree, so the line reads no option (P48); a walk
+    /// that refuses refuses none of its legs to this read, as at the ask's own timeline
+    /// (refcore's `leg_refused`). E §3.3, §4.2 step 5; L §5.5.
+    ///
+    /// # Errors
+    ///
+    /// `NotBuilt` where two combinations' walks differ on the leg, the line being then one
+    /// per combination, or past 64 combinations (`LOAD-FORKS`'s); the stops of each walk but
+    /// a refusal.
+    pub(crate) fn refused_in_each(
+        &mut self,
+        m: &Reality,
+        wanted: &(String, String),
+        cut: Day,
+        combos: &[Vec<(String, String)>],
+    ) -> Result<Option<Refusal>, Stop> {
+        if combos.len() > 64 {
+            return Err(Stop::NotBuilt(
+                "a leg's refusal over more combinations of the walk's axes than an ask's 64",
+            ));
+        }
+        let here = self.timeline_ctx(None, cut);
+        // a check, not the run's walk: its walks' warnings aren't the run's (L §8.5), and a
+        // read that walks a combination's timeline itself warns, these being freed
+        let warned = self.walk_warnings.len();
+        let mut seen: Option<Option<Refusal>> = None;
+        for combo in combos {
+            let inside = self.with_options(here, combo)?;
+            self.open_layer(m, inside)?;
+            let outer = self.guarded.replace(self.active.clone());
+            let built = self.main_walk(m, cut);
+            self.guarded = outer;
+            let read = match built {
+                Ok(id) => self.chain_refusal(id, wanted),
+                Err(Stop::Refused(_)) => Ok(None),
+                Err(stop) => Err(stop),
+            };
+            self.end_layer(inside.layer, read.as_ref().err())?;
+            self.walk_warnings.truncate(warned);
+            let got = read?;
+            if seen.as_ref().is_some_and(|first| *first != got) {
+                return Err(Stop::NotBuilt(
+                    "a leg's refusal that differs by an axis its ask doesn't fan out over",
+                ));
+            }
+            seen = Some(got);
+        }
+        Ok(seen.flatten())
     }
 
     /// Drops each parked timeline whose pins are a layer freed (numbered in `freed`), its

@@ -436,8 +436,9 @@ impl Engine {
     }
 
     /// The refusal of a leg the walk refused: inside a decision, what its walk and the walks
-    /// it continues refused so far; at the ask's cut, the main walk's (refcore's
-    /// `leg_refused`). E §4.2 step 5, §4.3.
+    /// it continues refused so far; at the ask's cut, the main walk's, or where the walk
+    /// reads axes the timeline sets no option of, each of their combinations' (refcore's
+    /// `leg_refused`). E §4.2 step 5, §4.3, §3.3.
     pub(crate) fn leg_refused(
         &mut self,
         m: &Reality,
@@ -460,6 +461,11 @@ impl Engine {
             ),
         };
         if !busy && ctx.cut == self.ask_cut && unfinished {
+            // a walk reading axes the timeline sets no option of: each combination's (E §3.3)
+            let combos = self.unset_combinations(m)?;
+            if !combos.is_empty() {
+                return self.refused_in_each(m, &wanted, ctx.cut, &combos);
+            }
             let outer = self.guarded.replace(self.active.clone());
             let built = self.main_walk(m, ctx.cut);
             self.guarded = outer;
@@ -478,7 +484,11 @@ impl Engine {
     /// The refusal of leg `wanted` in walk `id` or in a walk it continues, the nearest first:
     /// a projection's walk keeps what the walks it continues have refused so far (refcore's
     /// `leg_refused`, its loop over `w.base`). E §4.2 step 5, §4.3 step 1.
-    fn chain_refusal(&self, id: usize, wanted: &(String, String)) -> Result<Option<Refusal>, Stop> {
+    pub(crate) fn chain_refusal(
+        &self,
+        id: usize,
+        wanted: &(String, String),
+    ) -> Result<Option<Refusal>, Stop> {
         for wid in self.chain(id)? {
             if let Some(refusal) = self.walk(wid)?.bad_legs.get(wanted) {
                 return Ok(Some(refusal.clone()));
