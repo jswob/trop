@@ -78,8 +78,9 @@ impl Engine {
 
     /// Walks timeline `id` through day `last`, or to its last day for none: a later day is
     /// left until a read needs it, so a refusal past `last` refuses no read of it (refcore's
-    /// `run_to`); a main walk's signature is kept once it is done (refcore's `w.sig`). E §4.2,
-    /// §4.3, §9 item 4, P §2.2.
+    /// `run_to`); a main walk's signature is kept once it is done (refcore's `w.sig`), and a
+    /// scenario's checked against the world under it (refcore's `m_inv3`). E §4.2, §4.3, §9
+    /// items 3 and 4, P §2.2.
     ///
     /// # Errors
     ///
@@ -119,6 +120,8 @@ impl Engine {
             if self.walk(id)?.progress == Progress::Done {
                 self.gather_warnings(id)?;
                 self.keep_signature(id)?;
+                // E §9 item 3, once, as refcore's `m_main_walk`: its refusal refuses this read
+                self.scenario_unchanged(m, id)?;
             }
         }
     }
