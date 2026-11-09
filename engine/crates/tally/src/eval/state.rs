@@ -18,10 +18,11 @@ use crate::base::{Code, Refusal, Run, Warn};
 use crate::book::{Adjustment, Coverage, Linked, Obs};
 use crate::model::{Domain, KeyVal, Node, NodeKind, Reality, UnitError, Value};
 use crate::num::NumError;
-use crate::syntax::{Ask, Stop};
+use crate::syntax::{Ask, Expr, Stop};
 use crate::time::Day;
 use crate::walk::{Inst, ProjKey, Walk, WalkAt};
 
+use super::bindings::reads_name;
 use super::context::{Layer, Layers};
 use super::memo::{CellId, Cells, Frame, Memo, Open, Reads};
 
@@ -171,6 +172,13 @@ impl Env {
         let mut out = self.clone();
         out.bind(name, value, domain);
         out
+    }
+
+    /// Whether expression `e` may read a variable of this scope (refcore's `_pertuple`'s
+    /// test: a binding in scope whose variable the expression names).
+    #[must_use]
+    pub(crate) fn read_by(&self, e: &Expr) -> bool {
+        self.vars.iter().any(|v| reads_name(e, &v.name))
     }
 
     /// Binds `name` to `value` in this scope.

@@ -239,7 +239,7 @@ impl CellKey {
             .cmp(&other.cut)
             .then_with(|| walk_at_order(self.at, other.at))
             .then_with(|| self.unc.cmp(&other.unc))
-            .then_with(|| self.layer.cmp(&other.layer))
+            .then_with(|| self.layer.number().cmp(&other.layer.number()))
     }
 }
 
@@ -525,9 +525,11 @@ impl Cells {
         Ok(class)
     }
 
-    /// Frees the cells kept under the layers `freed`, whose scopes have ended (P §3.5).
-    pub(super) fn free(&mut self, freed: &BTreeSet<Layer>) {
-        self.kept.retain(|key, _| !freed.contains(&key.layer));
+    /// Frees the cells kept under the layers numbered in `freed`, whose scopes have ended
+    /// (P §3.5).
+    pub(super) fn free(&mut self, freed: &BTreeSet<u32>) {
+        self.kept
+            .retain(|key, _| !freed.contains(&key.layer.number()));
     }
 }
 

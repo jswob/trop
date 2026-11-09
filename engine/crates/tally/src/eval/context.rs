@@ -25,11 +25,13 @@ use crate::model::{
     Class, KeyVal, NameKind, Node, NodeKind, Number, Reality, Ty, Unit, Value, currency_id,
     money_num, num_money,
 };
-use crate::syntax::{Expr, Key, Lit, Pin, PinForm, Stop};
+use crate::syntax::{Expr, Key, Lit, PRef, Pin, PinForm, Stop};
 use crate::time::Day;
 
 /// A context's layer above its law date and cut: an interned set of pins (E §3.2, P §3.1).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+/// It has no order of its own (R-47): a map keyed by layers is keyed by their numbers, the
+/// order they were interned in, and no output is sorted by it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Layer(u32);
 
 impl Layer {
@@ -91,7 +93,7 @@ impl Pinned {
                 .keys
                 .iter()
                 .zip(keys)
-                .all(|(pinned, key)| pinned.as_ref().is_none_or(|p| p == key))
+                .all(|(pinned, key)| pinned.is_none() || pinned.as_ref() == Some(key))
     }
 }
 
@@ -114,10 +116,13 @@ impl LayerData {
 
     /// Whether every pin and wording pin of this layer is one of `other`'s.
     fn within(&self, other: &LayerData) -> bool {
-        self.pins
-            .iter()
-            .all(|p| other.pins.iter().any(|o| p.same(o)))
+        self.pins.iter().all(|p| other.holds(p))
             && self.wording.iter().all(|w| other.wording.contains(w))
+    }
+
+    /// Whether `pin` is one of the layer's pins, by target and value.
+    fn holds(&self, pin: &Pinned) -> bool {
+        self.pins.iter().any(|p| p.same(pin))
     }
 
     /// Whether the two layers hold the same pins, as sets.
@@ -158,8 +163,8 @@ impl LayerData {
 pub(crate) struct Layers {
     /// Each layer by its id; a freed one is empty. The base is slot 0.
     slots: Vec<Option<LayerData>>,
-    /// Each def's trimmed layer of a layer (E §3.2).
-    trimmed: BTreeMap<(String, Layer), Layer>,
+    /// Each def's trimmed layer of a layer, by the def's id and the layer's number (E §3.2).
+    trimmed: BTreeMap<(String, u32), Layer>,
     /// The layers of the scopes open now: an ask's `with`, an `as if`, a `solve` step.
     open: Vec<Layer>,
     /// The items the moves, places, prices, parts and fills reach, once computed.
@@ -212,13 +217,12 @@ impl Engine {
         if data.is_empty() {
             return Ok(Layer::BASE);
         }
-        let found = self
-            .layers
-            .slots
-            .iter()
-            .position(|slot| slot.as_ref().is_some_and(|held| held.same(&data)));
-        if let Some(at) = found {
-            return layer_at(at);
+        for (at, slot) in self.layers.slots.iter().enumerate() {
+            if let Some(held) = slot
+                && held.same(&data)
+            {
+                return layer_at(at);
+            }
         }
         self.layers.slots.push(Some(data));
         let at = self
@@ -284,7 +288,7 @@ impl Engine {
         if ctx.layer.is_base() {
             return Ok(ctx);
         }
-        let key = (def.to_owned(), ctx.layer);
+        let key = (def.to_owned(), ctx.layer.number());
         if let Some(layer) = self.layers.trimmed.get(&key) {
             return Ok(Ctx {
                 layer: *layer,
@@ -293,7 +297,7 @@ impl Engine {
         }
         let data = self.layer_data(ctx.layer)?;
         let from = Node::new(NodeKind::Def, def);
-        let reached = |item: &str| item_node(m, item).is_none_or(|to| m.graph.reaches(&from, &to));
+        let reached = |item: &str| reaches_item(m, &from, item);
         let kept = LayerData {
             pins: data
                 .pins
@@ -386,7 +390,7 @@ impl Engine {
                     if *sample {
                         return Err(Stop::NotBuilt("a sample pin at run"));
                     }
-                    let set = SetPin { target, value };
+                    let set = (target, value);
                     if let Some(pinned) = self.value_pin(m, set, env, ctx, (how, &mut holes))? {
                         data.pin(pinned);
                     }
@@ -468,7 +472,7 @@ impl Engine {
                 continue;
             };
             if !open.iter().any(|o| data.within(o)) {
-                freed.insert(layer_at(at)?);
+                freed.insert(layer_at(at)?.number());
                 *slot = None;
             }
         }
@@ -477,7 +481,7 @@ impl Engine {
         }
         self.layers
             .trimmed
-            .retain(|(_, from), to| !freed.contains(from) && !freed.contains(to));
+            .retain(|(_, from), to| !freed.contains(from) && !freed.contains(&to.number()));
         self.cells.free(&freed);
         Ok(())
     }
@@ -542,12 +546,12 @@ impl Engine {
     fn value_pin(
         &mut self,
         m: &Reality,
-        set: SetPin<'_>,
+        (target, written): (&PRef, &Expr),
         env: &Env,
         ctx: Ctx,
         (how, holes): (Pinning, &mut Vec<Hole>),
     ) -> Result<Option<Pinned>, Stop> {
-        let id = set.target.id.as_str();
+        let id = target.id.as_str();
         let (binds, declared) = match m.names.kind(id) {
             Some(NameKind::Input) => {
                 let input = m
@@ -563,9 +567,15 @@ impl Engine {
             Some(NameKind::Axis) => return Err(Stop::NotBuilt("an axis pin at run")),
             _ => return Err(invariant("a pin load didn't check")),
         };
+        let keyed = |key: &Key| matches!(key, Key::Expr(e) if env.read_by(e));
+        if env.read_by(written) || target.keys.iter().flatten().any(keyed) {
+            // L §8.2: a pin formed per binding tuple prints once, as written, with its
+            // binding (refcore's `_pertuple`)
+            return Err(Stop::NotBuilt("a pin formed per binding tuple at run"));
+        }
         let mut keys = Vec::with_capacity(binds.len());
         let mut texts = Vec::with_capacity(binds.len());
-        for (key, bind) in set.target.keys.iter().flatten().zip(binds) {
+        for (key, bind) in target.keys.iter().flatten().zip(binds) {
             let Key::Expr(e) = key else {
                 keys.push(None);
                 texts.push("*".to_owned());
@@ -587,21 +597,21 @@ impl Engine {
             }
         }
         let mut ty = declared;
-        for field in &set.target.fields {
+        for field in &target.fields {
             ty = ty.and_then(|t| t.field(field).cloned());
         }
         self.push();
-        let v = self.ev(m, set.value, env, ctx);
+        let v = self.ev(m, written, env, ctx);
         let met = self.pop_alone();
         let value = pin_typed(m, v?, ty.as_ref())?;
-        if !plain_literal(m, set.value) {
+        if !plain_literal(m, written) {
             self.absorb(&met);
         }
         let mut head = id.to_owned();
         if !texts.is_empty() {
             head = format!("{head}[{}]", texts.join(", "));
         }
-        for field in &set.target.fields {
+        for field in &target.fields {
             head = format!("{head}.{field}");
         }
         let text = format!("{head} = {}", value.typed_text(m).map_err(num_stop)?);
@@ -613,7 +623,7 @@ impl Engine {
             solve: false,
             item: id.to_owned(),
             keys,
-            fields: set.target.fields.clone(),
+            fields: target.fields.clone(),
             value,
             text,
         }))
@@ -632,9 +642,8 @@ impl Engine {
             None => timeline_cone(m),
         };
         let data = self.layer_data(layer)?;
-        let in_cone = |item: &str| item_node(m, item).is_none_or(|node| cone.contains(&node));
-        let touches = data.pins.iter().any(|p| in_cone(&p.item))
-            || data.wording.iter().any(|(item, _)| in_cone(item));
+        let touches = data.pins.iter().any(|p| in_cone(m, &cone, &p.item))
+            || data.wording.iter().any(|(item, _)| in_cone(m, &cone, item));
         self.layers.timeline = Some(cone);
         if !touches {
             return Ok(());
@@ -670,13 +679,22 @@ pub(crate) enum Pinning {
     AsIf,
 }
 
-/// A value pin as written: its target and its value.
-#[derive(Debug, Clone, Copy)]
-struct SetPin<'a> {
-    /// What is pinned.
-    target: &'a crate::syntax::PRef,
-    /// Its value.
-    value: &'a Expr,
+/// Whether the def at `from` reaches the item `item`, as the graph's edges tell; an item the
+/// graph has no node for is kept, as reached (E §3.2: a cell is keyed by the pins it reads).
+fn reaches_item(m: &Reality, from: &Node, item: &str) -> bool {
+    match item_node(m, item) {
+        Some(to) => m.graph.reaches(from, &to),
+        None => true,
+    }
+}
+
+/// Whether item `item` is in the timeline's cone `cone`; an item the graph has no node for is
+/// taken as in it.
+fn in_cone(m: &Reality, cone: &BTreeSet<Node>, item: &str) -> bool {
+    match item_node(m, item) {
+        Some(node) => cone.contains(&node),
+        None => true,
+    }
 }
 
 /// The graph's node of an input, a def or a band named `item`; none for another name.

@@ -24,7 +24,7 @@ use crate::eval::{
     Collected, Ctx, Engine, Entry, Env, Item, Member, Memo, a_day, num_stop, past_days,
 };
 use crate::model::{Reality, Value};
-use crate::syntax::{Ask, AskBody, Bind, Domain, Expr, Solve, Stop};
+use crate::syntax::{Ask, AskBody, Bind, Domain, Stop};
 use crate::time::{Day, PeriodKind};
 use crate::walk::Booked;
 use crate::{Asks, Days};
@@ -430,37 +430,26 @@ fn ask_body(m: &Reality, ask: &Ask, engine: &mut Engine, cut: Day) -> Result<Vec
         inside
     };
     match &ask.body {
-        AskBody::Exprs(exprs) => form_lines(m, ask, Form::Values(exprs), engine, (ctx, &pinned)),
-        AskBody::Check(left, right) => {
-            form_lines(m, ask, Form::Check(left, right), engine, (ctx, &pinned))
+        AskBody::Exprs(_) | AskBody::Check(..) | AskBody::Solve(_) => {
+            tuple_lines(m, ask, engine, (ctx, &pinned))
         }
-        AskBody::Solve(form) => form_lines(m, ask, Form::Solve(form), engine, (ctx, &pinned)),
         AskBody::Residuals(r) => residual_lines(m, ask, r, engine, (ctx, &pinned)),
         AskBody::Explain(_) | AskBody::InputsOf(_) | AskBody::ReadersOf(_) | AskBody::Diff(_) => {
-            Err(Stop::NotBuilt(
-                "an ask's form beyond values, check, solve and residuals",
-            ))
+            Err(beyond_built())
         }
     }
 }
 
-/// What an ask's line reads for each binding tuple (refcore's `evaluate`, its forms). L §5.18.
-#[derive(Debug, Clone, Copy)]
-enum Form<'a> {
-    /// Its values, `e, f, …`.
-    Values(&'a [Expr]),
-    /// `check e == f`.
-    Check(&'a Expr, &'a Expr),
-    /// `solve f == g for v in [lo, hi] to u`.
-    Solve(&'a Solve),
+/// An ask's form the run doesn't answer yet: `explain`, `inputs of`, `readers of`, `diff`.
+fn beyond_built() -> Stop {
+    Stop::NotBuilt("an ask's form beyond values, check, solve and residuals")
 }
 
-/// An ask's lines: a line per binding tuple with the register under it (refcore's
-/// `_answer_in`, `print_line`). L §5.18.
-fn form_lines(
+/// An ask's lines of values, of a check or of a solve: a line per binding tuple with the
+/// register under it (refcore's `_answer_in`, `print_line`). L §5.18.
+fn tuple_lines(
     m: &Reality,
     ask: &Ask,
-    form: Form<'_>,
     engine: &mut Engine,
     (ctx, pinned): (Ctx, &Collected),
 ) -> Result<Vec<String>, Stop> {
@@ -483,7 +472,7 @@ fn form_lines(
             out.push(format!("{head}: {}", hole.text()));
             continue;
         }
-        let mut line = form_line(m, form, engine, &tuple.env, ctx)?;
+        let mut line = form_line(m, &ask.body, engine, &tuple.env, ctx)?;
         out.push(format!("{head}: {}", line.text));
         line.met.merge(&tuple.brought);
         line.met.merge(pinned);
@@ -496,17 +485,17 @@ fn form_lines(
     Ok(out)
 }
 
-/// One tuple's line after its head, with the register entries it met (refcore's `evaluate`).
-/// L §5.18.
+/// One tuple's line after its head, with the register entries it met: the values of
+/// `e, f, …`, a `check`'s or a `solve`'s (refcore's `evaluate`). L §5.18.
 fn form_line(
     m: &Reality,
-    form: Form<'_>,
+    body: &AskBody,
     engine: &mut Engine,
     env: &Env,
     ctx: Ctx,
 ) -> Result<Printed, Stop> {
-    match form {
-        Form::Values(exprs) => {
+    match body {
+        AskBody::Exprs(exprs) => {
             let (items, met) = engine.line(m, exprs, env, ctx)?;
             Ok(Printed {
                 text: line_values(m, &items)?,
@@ -514,8 +503,8 @@ fn form_line(
                 laws: None,
             })
         }
-        Form::Check(left, right) => check_line(m, engine, (left, right), env, ctx),
-        Form::Solve(solve) => {
+        AskBody::Check(left, right) => check_line(m, engine, (left, right), env, ctx),
+        AskBody::Solve(solve) => {
             let (item, met) = engine.solve_line(m, solve, env, ctx)?;
             Ok(Printed {
                 text: item_text(m, &item)?,
@@ -523,6 +512,11 @@ fn form_line(
                 laws: None,
             })
         }
+        AskBody::Residuals(_)
+        | AskBody::Explain(_)
+        | AskBody::InputsOf(_)
+        | AskBody::ReadersOf(_)
+        | AskBody::Diff(_) => Err(beyond_built()),
     }
 }
 

@@ -67,14 +67,22 @@ pub(crate) fn check_register_lines(
     (left, right): (Option<Day>, Option<Day>),
 ) -> Result<Vec<String>, Stop> {
     let mut out = entry_lines(met)?;
-    let law = |day: Option<Day>| day.map_or_else(|| "none".to_owned(), Day::text);
     out.push(format!(
         "law date {} (left), {} (right), cut {}",
-        law(left),
-        law(right),
+        side_law_text(left),
+        side_law_text(right),
         ctx.cut.text()
     ));
     Ok(out)
+}
+
+/// A check's side's law date as its register line prints it: the day, or `none` (refcore's
+/// `laws[i] or 'none'`). L §5.18.
+fn side_law_text(day: Option<Day>) -> String {
+    match day {
+        Some(day) => day.text(),
+        None => "none".to_owned(),
+    }
 }
 
 /// The register's entries' lines: `assumed` merged by reason, then the other words in their
@@ -136,12 +144,16 @@ fn merged_pins(pins: &[&str]) -> BTreeSet<String> {
     let mut out = BTreeSet::new();
     let mut days: BTreeMap<&str, BTreeSet<Day>> = BTreeMap::new();
     for text in pins {
-        match pin_day(text) {
-            Some((head, day)) => {
-                days.entry(head).or_default().insert(day);
+        let Some((head, day)) = pin_day(text) else {
+            out.insert((*text).to_owned());
+            continue;
+        };
+        match days.get_mut(head) {
+            Some(set) => {
+                set.insert(day);
             }
             None => {
-                out.insert((*text).to_owned());
+                days.insert(head, BTreeSet::from([day]));
             }
         }
     }
