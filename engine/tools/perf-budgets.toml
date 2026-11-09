@@ -381,3 +381,18 @@ less = "P8-M4-plain"
 wall_s = 0.00222
 instructions = 3263720006
 blocks = "pr"
+
+# B1 (pick P11; G4's review, follow-up G4-b; issue #108, 2026-11-09): #97's list lookup at
+# 100 000 keys, T's vector carried/big/b1_sum, a sum over the index read through its lookup
+# once per key. No counter sees a lookup's steps (def_misses and days_stepped don't move), so
+# the row is a timing row with an instruction count, not a count row: a lookup that scans
+# instead of halving is about 5 x 10^9 key comparisons, halving about 1.7 x 10^6. Its wall is
+# the rules step's first AC figure x 1.2: 193.15 ms (criterion, load 6.6) -> 0.232 s; its
+# gungraun limit waits for its first Linux figure, and the bench reports until then.
+[[row]]
+id = "B1"
+group = "M"
+what = "a sum over a list index of 100 000 keys, each key read through the index's lookup"
+recipe = "bench:b1_list"
+wall_s = 0.232
+blocks = "pr"

@@ -42,5 +42,10 @@ harness = false
 name = "p8_m4"
 harness = false
 
+# B1, a list index's lookup at 100 000 keys (pick P11, G4's review G4-b, 2026-11-09)
+[[bench]]
+name = "b1_list"
+harness = false
+
 [lints]
 workspace = true
