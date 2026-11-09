@@ -510,9 +510,15 @@ pub(super) fn round_values(m: &Reality, x: &Value, u: &Value, mode: &Value) -> R
 }
 
 /// A rounding mode of function `what` (`round`, `prorata`): a code word of the rounding
-/// family (L §7.2, §5.13).
+/// family, or an axis at its option where every option is one (L §7.2, §5.13, §5.5).
 pub(super) fn rounding_mode(m: &Reality, what: &str, v: &Value) -> Result<Mode, Stop> {
-    let (Value::Word(word) | Value::Code(Code::Word(word))) = v else {
+    let word = if let Value::Word(word) | Value::Code(Code::Word(word)) = v {
+        word
+    } else if let Value::Key(KeyVal::Key { index, name }) = v
+        && m.axes.contains(index)
+    {
+        name
+    } else {
         return Err(wrong_type(m, &format!("{what}: the mode is"), v));
     };
     Mode::from_word(word)

@@ -4,7 +4,8 @@
 //! date), §4.5 (the cut), §5.11 (an ask's `law`, `as known` or pin that is a hole makes the ask
 //! line that hole), §8.2 (the register), §8.4 (a run-time refusal prints as the ask's line),
 //! §8.5 (warnings last), §6.4 (the line's world: its `in`, else the model's; `law` and
-//! `as known` in the model's); E §11 (`REQ-ASK`, tally 2.1.3; `REQ-CLOCK`).
+//! `as known` in the model's), §5.5 (an ask that reaches axes fans out, `axes.rs`); E §11
+//! (`REQ-ASK`, tally 2.1.3; `REQ-CLOCK`).
 //! Twin: engine/tools/refcore/ask.py (`Asker.run`, `req_ask`, `answer`, `_answer`,
 //! `_answer_in`, `evaluate`, `one`, `one_solve`, `print_line`, `fmt_value`, `fmt_bind`) and
 //! evaluate.py (`date_of`, `apply_pins`); refcore answers an `as known` after `on` where E §11
@@ -17,6 +18,7 @@
 
 use std::collections::BTreeMap;
 
+use super::axes::{Axes, fanned_lines};
 use super::check::{Printed, check_line};
 use super::diff::diff_lines;
 use super::register::{check_register_lines, register_lines, warning_lines};
@@ -268,17 +270,14 @@ fn keeps_parts(m: &Reality) -> bool {
 }
 
 /// A form load checks (M0) that the run doesn't evaluate yet, where the ask meets it: a random
-/// ask, `orient`, an axis it reaches, a fill or a `same` line of the reality, or a joint
-/// model's merged reality (L §5.5, §5.12, §5.16, §5.18, §6.1).
+/// ask, `orient`, a fill or a `same` line of the reality, or a joint model's merged reality
+/// (L §5.12, §5.16, §5.18, §6.1).
 fn unbuilt_at_run(m: &Reality, ask: &Ask) -> Option<&'static str> {
     if ask.random.is_some() || ask.paths.is_some() || ask.path.is_some() {
         return Some("a random ask at run");
     }
     if ask.orient.is_some() {
         return Some("orient at run");
-    }
-    if m.graph.ask_axes.get(&ask.id).is_some_and(|a| !a.is_empty()) {
-        return Some("an axis at run");
     }
     if !m.fills.is_empty() {
         return Some("fills at run");
@@ -471,13 +470,17 @@ fn beyond_built() -> Stop {
 }
 
 /// An ask's lines of values, of a check or of a solve: a line per binding tuple with the
-/// register under it (refcore's `_answer_in`, `print_line`). L §5.18.
+/// register under it, fanned out over the axes the ask reaches (refcore's `_answer_in`,
+/// `print_line`). L §5.18, §5.5.
 fn tuple_lines(
     m: &Reality,
     ask: &Ask,
     engine: &mut Engine,
     (ctx, pinned): (Ctx, &Collected),
 ) -> Result<Vec<String>, Stop> {
+    if let Some(axes) = Axes::of(m, ask)? {
+        return fanned_lines(m, ask, engine, (ctx, pinned), &axes);
+    }
     let tuples = if ask.binds.is_empty() {
         vec![Member {
             env: Env::empty(),
@@ -513,7 +516,7 @@ fn tuple_lines(
 /// One tuple's line after its head, with the register entries it met: the values of
 /// `e, f, …`, a `check`'s or a `solve`'s (refcore's `evaluate`). A line holding a bare key
 /// literal meets its `LOAD-KEY ambiguous key` where it is evaluated (L §2.5, §8.3; P39).
-fn form_line(
+pub(super) fn form_line(
     m: &Reality,
     ask: &Ask,
     engine: &mut Engine,
@@ -619,7 +622,7 @@ fn shown(m: &Reality, v: &Value) -> Result<String, Stop> {
 
 /// A tuple's variables as its line's head prints them, ` (v = x, w = y)`: an integer key of a
 /// key list as written (refcore's `fmt_bind`). L §5.18, §2.5.
-fn env_text(m: &Reality, binds: &[Bind], env: &Env) -> Result<String, Stop> {
+pub(super) fn env_text(m: &Reality, binds: &[Bind], env: &Env) -> Result<String, Stop> {
     if binds.is_empty() {
         return Ok(String::new());
     }

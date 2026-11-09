@@ -1,22 +1,25 @@
-//! The context's layers over its law date and cut, interned as one small id: the pins and wording pins of an ask's `with`, an `as if` or a `solve` step.
+//! The context's layers over its law date and cut, interned as one small id: its pins, its wording pins and its axis options.
 //! Spec: E §3.2 (the context; trimmed to what the item can depend on: an item that no pin
-//! reaches shares the unpinned cell; a pin set is keyed by the pins' values; a pin given by an
+//! reaches shares the unpinned cell, one that reaches no axis has no axis options; a pin set is keyed by the pins' values; a pin given by an
 //! expression is evaluated first, without that `as if`), §3.3 (a timeline per pin set the
 //! moves reach); P §3.1 (the context interned once as a small id, after it is trimmed), §3.2
 //! (a pin set's layer, freed when its `as if` or `solve` step ends), §3.5 (one memo per
 //! context, freed when its scope ends); L §5.11 (`as if` and its pins: a pin's value and keys,
 //! a hole pin, nested pins don't leak to their siblings), §4.3 (the `law` and `wording`
 //! pins), §5.18 (an ask's `with` pins), §8.2 (`pinned:`, `world:`); §6.4 (`as if {scenario
-//! s}` is x in s).
-//! Twin: engine/tools/refcore/evaluate.py (`PinVal`, `Ctx.pins`, `Ctx.wording`, `apply_pins`,
-//! `e_asif`, `pin_value`, `wording_ok`, `coerce_to`, `world_chain`).
+//! s}` is x in s); §5.5 (an axis read at its option; `with a = opt` fixes it, listed
+//! `pinned:`).
+//! Twin: engine/tools/refcore/evaluate.py (`PinVal`, `Ctx.pins`, `Ctx.wording`, `Ctx.axes`,
+//! `apply_pins`, `e_asif`, `pin_value`, `wording_ok`, `coerce_to`, `world_chain`,
+//! `axis_option`, `def_axes`).
 //! Invariants: layer 0 is the unpinned context; two pin sets with the same targets and values
 //! are one layer, whatever their texts; a def's cell is kept under its context trimmed to the
 //! pins its def reaches, and to every pin the walk reaches where it reads the timeline; a
 //! layer no open scope holds is freed with its cells and timelines when the scope that made it
 //! ends, never while a read that unwound past the counted depth still needs it; a scope's
 //! reads of the walk read the timeline of its world and walk pins (`timelines.rs`). The world
-//! is the context's own field, never trimmed; the axis options (G7) join the layer.
+//! is the context's own field, never trimmed; an axis option is the layer's, trimmed as pins
+//! are, and set for one combination of an ask's fan-out or by an axis pin.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -122,8 +125,8 @@ impl Pinned {
     }
 }
 
-/// What a layer holds: its pins and its wording pins (E §3.2; refcore's `Ctx.pins` and
-/// `Ctx.wording`).
+/// What a layer holds: its pins, its wording pins and its axis options (E §3.2; refcore's
+/// `Ctx.pins`, `Ctx.wording` and `Ctx.axes`).
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(crate) struct LayerData {
     /// The pins, in the order applied: a later pin of the same target replaces an earlier.
@@ -131,18 +134,25 @@ pub(crate) struct LayerData {
     /// Each item a `wording D for […]` pin names, with D; the first pin naming an item holds
     /// (refcore's `wording_ok`).
     wording: Vec<(String, Day)>,
+    /// The option each axis takes, by the axis's id: one combination of an ask's fan-out, or
+    /// an axis pin (L §5.5).
+    axes: BTreeMap<String, String>,
 }
 
 impl LayerData {
-    /// Whether it pins nothing: the unpinned context.
+    /// Whether it pins nothing and sets no axis: the unpinned context.
     fn is_empty(&self) -> bool {
-        self.pins.is_empty() && self.wording.is_empty()
+        self.pins.is_empty() && self.wording.is_empty() && self.axes.is_empty()
     }
 
-    /// Whether every pin and wording pin of this layer is one of `other`'s.
+    /// Whether every pin, wording pin and axis option of this layer is one of `other`'s.
     fn within(&self, other: &LayerData) -> bool {
         self.pins.iter().all(|p| other.holds(p))
             && self.wording.iter().all(|w| other.wording.contains(w))
+            && self
+                .axes
+                .iter()
+                .all(|(axis, option)| other.axes.get(axis) == Some(option))
     }
 
     /// Whether `pin` is one of the layer's pins, by target and value.
@@ -150,11 +160,44 @@ impl LayerData {
         self.pins.iter().any(|p| p.same(pin))
     }
 
-    /// Whether the two layers hold the same pins, as sets.
+    /// Whether the two layers hold the same pins and axis options, as sets.
     fn same(&self, other: &LayerData) -> bool {
         self.pins.len() == other.pins.len()
             && self.wording.len() == other.wording.len()
+            && self.axes.len() == other.axes.len()
             && self.within(other)
+    }
+
+    /// The items its pins and wording pins name, each once.
+    fn items(&self) -> BTreeSet<&str> {
+        let mut out: BTreeSet<&str> = self.pins.iter().map(|p| p.item.as_str()).collect();
+        out.extend(self.wording.iter().map(|(item, _)| item.as_str()));
+        out
+    }
+
+    /// The layer with only the pins and wording pins on `items` and the options of `axes`
+    /// (E §3.2: the context trimmed to what a reader can depend on).
+    fn kept(&self, items: &BTreeSet<&str>, axes: &BTreeSet<String>) -> LayerData {
+        LayerData {
+            pins: self
+                .pins
+                .iter()
+                .filter(|p| items.contains(p.item.as_str()))
+                .cloned()
+                .collect(),
+            wording: self
+                .wording
+                .iter()
+                .filter(|(item, _)| items.contains(item.as_str()))
+                .cloned()
+                .collect(),
+            axes: self
+                .axes
+                .iter()
+                .filter(|(axis, _)| axes.contains(*axis))
+                .map(|(axis, option)| (axis.clone(), option.clone()))
+                .collect(),
+        }
     }
 
     /// Adds pin `pin`, replacing one of the same target.
@@ -197,7 +240,12 @@ pub(crate) struct Layers {
     timeline: Option<BTreeSet<Node>>,
     /// Whether each def reads the timeline, once computed.
     walkers: BTreeMap<Node, bool>,
-    /// Each layer's pins on items the walk reaches, by the layer's number (E §3.3).
+    /// The axes each def reaches on the graph, once computed (L §5.5, E §3.2).
+    def_axes: BTreeMap<String, BTreeSet<String>>,
+    /// The axes the walk's readers reach, once computed (E §3.3).
+    walk_axes: Option<BTreeSet<String>>,
+    /// Each layer's pins on items the walk reaches and its options of the axes the walk
+    /// reaches, by the layer's number (E §3.3).
     walk_pins: BTreeMap<u32, Layer>,
     /// The layers of the scopes a read unwound through past the counted depth: their cells
     /// stay until the outermost read ends, since its replay and its read again need them
@@ -213,6 +261,8 @@ impl Default for Layers {
             open: Vec::new(),
             timeline: None,
             walkers: BTreeMap::new(),
+            def_axes: BTreeMap::new(),
+            walk_axes: None,
             walk_pins: BTreeMap::new(),
             kept: Vec::new(),
         }
@@ -318,9 +368,10 @@ impl Engine {
     }
 
     /// Context `ctx` trimmed for a cell of def `def`: only the pins and wording pins whose
-    /// item the def reaches, and where the def reads the timeline every one the walk reaches
-    /// too, so a def no pin reaches shares the unpinned cell (E §3.2, §3.3; P §3.1). The
-    /// world is kept whole: a cell of one world is never another's.
+    /// item the def reaches and the options of the axes it reaches, and where the def reads
+    /// the timeline every one the walk reaches too, so a def no pin or axis reaches shares
+    /// the unpinned cell (E §3.2: "an item that reaches no axis has no axis options", §3.3;
+    /// P §3.1). The world is kept whole: a cell of one world is never another's.
     ///
     /// # Errors
     ///
@@ -339,32 +390,28 @@ impl Engine {
         let from = Node::new(NodeKind::Def, def);
         let walks = self.reads_walk(m, &from);
         let cone = self.walk_cone(m);
+        let mut axes = self.def_axes(m, def);
+        if walks {
+            axes.extend(self.walk_axes(m, &cone));
+        }
         let data = self.layer_data(ctx.layer)?;
-        let reached =
-            |item: &str| reaches_item(m, &from, item) || (walks && in_cone(m, &cone, item));
-        let kept = LayerData {
-            pins: data
-                .pins
-                .iter()
-                .filter(|p| reached(&p.item))
-                .cloned()
-                .collect(),
-            wording: data
-                .wording
-                .iter()
-                .filter(|(item, _)| reached(item))
-                .cloned()
-                .collect(),
-        };
+        let mut items = BTreeSet::new();
+        for item in data.items() {
+            if reaches_item(m, &from, item) || (walks && in_cone(m, &cone, item)) {
+                items.insert(item);
+            }
+        }
+        let kept = data.kept(&items, &axes);
         self.layers.timeline = Some(cone);
         let layer = self.intern(kept)?;
         self.layers.trimmed.insert(key, layer);
         Ok(Ctx { layer, ..ctx })
     }
 
-    /// The pins and wording pins of `layer` on items the walk reaches: the pins a timeline
-    /// of a reader in `layer` is kept under (E §3.3: "a timeline per pin set the moves
-    /// reach").
+    /// The pins and wording pins of `layer` on items the walk reaches, and its options of the
+    /// axes the walk reaches: the layer a timeline of a reader in `layer` is kept under
+    /// (E §3.3: "a timeline per pin set the moves reach", "the axis options are those of the
+    /// axes the moves reach").
     ///
     /// # Errors
     ///
@@ -377,25 +424,94 @@ impl Engine {
             return Ok(*kept);
         }
         let cone = self.walk_cone(m);
+        let axes = self.walk_axes(m, &cone);
         let data = self.layer_data(layer)?;
-        let kept = LayerData {
-            pins: data
-                .pins
-                .iter()
-                .filter(|p| in_cone(m, &cone, &p.item))
-                .cloned()
-                .collect(),
-            wording: data
-                .wording
-                .iter()
-                .filter(|(item, _)| in_cone(m, &cone, item))
-                .cloned()
-                .collect(),
-        };
+        let mut items = BTreeSet::new();
+        for item in data.items() {
+            if in_cone(m, &cone, item) {
+                items.insert(item);
+            }
+        }
+        let kept = data.kept(&items, &axes);
         self.layers.timeline = Some(cone);
         let pins = self.intern(kept)?;
         self.layers.walk_pins.insert(layer.number(), pins);
         Ok(pins)
+    }
+
+    /// The axes def `def` reaches on the graph, once computed (refcore's `def_axes`, as load
+    /// counts an ask's, `reach_axes`). L §5.5, E §3.2.
+    fn def_axes(&mut self, m: &Reality, def: &str) -> BTreeSet<String> {
+        if let Some(axes) = self.layers.def_axes.get(def) {
+            return axes.clone();
+        }
+        let axes = crate::load::reach_axes(m, &m.graph, &Node::new(NodeKind::Def, def));
+        self.layers.def_axes.insert(def.to_owned(), axes.clone());
+        axes
+    }
+
+    /// The axes the walk's readers reach, `cone` being the items they reach, once computed:
+    /// what each of them reads by id, as a key or as a mode (E §3.3).
+    fn walk_axes(&mut self, m: &Reality, cone: &BTreeSet<Node>) -> BTreeSet<String> {
+        if let Some(axes) = &self.layers.walk_axes {
+            return axes.clone();
+        }
+        let mut axes = BTreeSet::new();
+        let walkers = m.graph.axes_of.keys().filter(|n| WALKERS.contains(&n.kind));
+        for node in cone.iter().chain(walkers) {
+            if let Some(read) = m.graph.axes_of.get(node) {
+                axes.extend(read.iter().cloned());
+            }
+            if node.kind == NodeKind::Axis {
+                axes.insert(node.id.clone());
+            }
+        }
+        self.layers.walk_axes = Some(axes.clone());
+        axes
+    }
+
+    /// The option axis `axis` takes in context `ctx`: a combination of the ask's fan-out or
+    /// an axis pin (refcore's `axis_option`). L §5.5.
+    ///
+    /// # Errors
+    ///
+    /// `NotBuilt` for an axis the context sets no option of: read outside the ask's line
+    /// (its `law`, `as known` or `with` pins, which refcore reads without the axes, its
+    /// interpreter guard); `ENGINE-INVARIANT` for a freed layer.
+    pub(super) fn axis_option(&self, axis: &str, ctx: Ctx) -> Result<Value, Stop> {
+        let option = if ctx.layer.is_base() {
+            None
+        } else {
+            self.layer_data(ctx.layer)?.axes.get(axis).cloned()
+        };
+        let Some(name) = option else {
+            return Err(Stop::NotBuilt(
+                "an axis read outside the combinations its ask fans out over",
+            ));
+        };
+        Ok(Value::Key(KeyVal::Key {
+            index: axis.to_owned(),
+            name,
+        }))
+    }
+
+    /// Context `ctx` with each axis of `combination` at its option: one combination of an
+    /// ask's fan-out (L §5.5).
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a freed layer.
+    pub(crate) fn with_options(
+        &mut self,
+        ctx: Ctx,
+        combination: &[(String, String)],
+    ) -> Result<Ctx, Stop> {
+        let mut data = self.layer_data(ctx.layer)?.clone();
+        for (axis, option) in combination {
+            data.axes.insert(axis.clone(), option.clone());
+        }
+        let layer = self.intern(data)?;
+        Ok(Ctx { layer, ..ctx })
     }
 
     /// The items the walk's readers reach, once computed; the caller puts it back in
@@ -425,7 +541,7 @@ impl Engine {
     ///
     /// # Errors
     ///
-    /// The refusals the pins and e meet; `NotBuilt` for an axis or a sample pin, a world of
+    /// The refusals the pins and e meet; `NotBuilt` for a sample pin, a world of
     /// another stack of scenarios, and a decision's running read that would change timeline.
     pub(super) fn as_if(
         &mut self,
@@ -455,7 +571,7 @@ impl Engine {
     ///
     /// # Errors
     ///
-    /// The refusals the pins meet; `NotBuilt` for an axis or a sample pin and for a world of
+    /// The refusals the pins meet; `NotBuilt` for a sample pin and for a world of
     /// another stack of scenarios.
     pub(crate) fn pinned(
         &mut self,
@@ -493,6 +609,14 @@ impl Engine {
                 } => {
                     if *sample {
                         return Err(Stop::NotBuilt("a sample pin at run"));
+                    }
+                    if m.names.kind(&target.id) == Some(NameKind::Axis) {
+                        // `ax = option` fixes the axis, listed under `pinned:` (L §5.5)
+                        let option = axis_pinned(value)?;
+                        let text = format!("{} = {option}", target.id);
+                        data.axes.insert(target.id.clone(), option);
+                        self.note("pinned", text, String::new());
+                        continue;
                     }
                     let set = (target, value);
                     if let Some(pinned) = self.value_pin(m, set, env, ctx, (how, &mut holes))? {
@@ -718,7 +842,6 @@ impl Engine {
                 let def = m.defs.get(id).ok_or_else(|| invariant("a pinned def"))?;
                 (&def.binds, Some(def.ty.clone()))
             }
-            Some(NameKind::Axis) => return Err(Stop::NotBuilt("an axis pin at run")),
             _ => return Err(invariant("a pin load didn't check")),
         };
         let keyed = |key: &Key| matches!(key, Key::Expr(e) if env.read_by(e));
@@ -794,6 +917,17 @@ pub(crate) fn world_named(m: &Reality, id: &str) -> Result<World, Stop> {
     m.scenarios.world(id, &m.header.id).ok_or(Stop::NotBuilt(
         "a world on another stack of scenarios than the ask's (refcore's cross evaluation)",
     ))
+}
+
+/// The option an axis pin `ax = option` names, a key literal load checked (refcore's
+/// `p.option`). L §5.5.
+fn axis_pinned(value: &Expr) -> Result<String, Stop> {
+    let (Expr::Name(option) | Expr::Lit(Lit::Key(option))) = value else {
+        return Err(invariant(
+            "an axis pin that names no option, which load refuses",
+        ));
+    };
+    Ok(option.clone())
 }
 
 /// What applies a set of pins: an ask's `with`, whose value pins are listed whether read or

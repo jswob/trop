@@ -244,6 +244,7 @@ pub mod book {
 /// run's warnings (L §8.5). The module's code is its files under `ask/`.
 pub mod ask {
     mod answer;
+    mod axes;
     mod check;
     mod diff;
     mod register;
@@ -307,6 +308,7 @@ pub mod load {
     pub use joint::member_paths;
     pub(crate) use joint::reprint_members;
     pub use keys::index_key_of;
+    pub(crate) use pins::reach_axes;
     pub(crate) use srows::ask_worlds;
     pub use steps::load;
     pub(crate) use texts::text as expr_text;

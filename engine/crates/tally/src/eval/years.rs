@@ -13,7 +13,7 @@
 use super::state::invariant;
 use crate::model::{Class, Number, Value};
 use crate::syntax::{Expr, Lit, Number as Written, Stop};
-use crate::time::Period;
+use crate::time::{Period, PeriodKind, Step};
 
 /// Whether `e` is written in a year form: a four-digit figure, or an `if` with one among its
 /// arms, at any depth of `if`s and brackets (L §2.1).
@@ -44,6 +44,28 @@ pub(super) fn as_year(e: Option<&Expr>, v: &Value) -> Option<Period> {
         return None;
     }
     int_year(v)
+}
+
+/// Calendar year `year` as the key it labels on the grid of `like`, a key of a year index:
+/// the period of `like`'s index whose first day falls in that year, an anchored year
+/// included (`index cy = year 2025..2026 from 02-01`: 2026 is 2026-02-01 to 2027-01-31); the
+/// calendar year itself beside any other period, or where no key of that grid starts in it
+/// (refcore's `resolve_key_literal` of a year literal beside a key of a year index). L §2.1,
+/// §2.5, §4.1.
+pub(super) fn year_like(like: Period, year: Period) -> Period {
+    if like.kind() != PeriodKind::Year {
+        return year;
+    }
+    let Step::Months(n) = like.step() else {
+        return year;
+    };
+    let years = i64::from(year.start().year()).checked_sub(i64::from(like.start().year()));
+    let months = years.and_then(|y| y.checked_mul(12));
+    let steps = months.and_then(|k| {
+        let n = i64::from(n);
+        (k.checked_rem_euclid(n)? == 0).then_some(k.checked_div_euclid(n)?)
+    });
+    steps.and_then(|k| like.shift(k)).unwrap_or(year)
 }
 
 /// The year an int names at a span's end. Load lets an int stand there only as a year: a

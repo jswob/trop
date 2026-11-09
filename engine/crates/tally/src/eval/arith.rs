@@ -12,6 +12,7 @@
 
 use core::cmp::Ordering;
 
+use super::read::option_at;
 use super::state::{invariant, num_stop, past_days, refuse, refuse_load, unit_stop};
 use crate::base::{Load, Run};
 use crate::model::{
@@ -871,8 +872,8 @@ fn compare_factor(
     }
 }
 
-/// Two keys' order: by position in their index; things and an open index's keys have none
-/// (L §5.6, §5.7; `RUN-DOMAIN`).
+/// Two keys' order: by position in their index, an axis's options in the order written;
+/// things and an open index's keys have none (L §5.5, §5.6, §5.7; `RUN-DOMAIN`).
 fn key_order(m: &Reality, lhs: &KeyVal, rhs: &KeyVal, test: Test) -> Result<Ordering, Stop> {
     if lhs == rhs {
         return Ok(Ordering::Equal);
@@ -881,6 +882,20 @@ fn key_order(m: &Reality, lhs: &KeyVal, rhs: &KeyVal, test: Test) -> Result<Orde
         return Ok(Ordering::Greater);
     }
     match (lhs, rhs) {
+        (
+            KeyVal::Key { index, name: left },
+            KeyVal::Key {
+                index: j,
+                name: right,
+            },
+        ) if index == j && m.axes.contains(index) => {
+            let (Some(first), Some(second)) =
+                (option_at(m, index, left), option_at(m, index, right))
+            else {
+                return Err(invariant("an axis's option it lacks"));
+            };
+            Ok(first.cmp(&second))
+        }
         (KeyVal::Key { index, .. }, KeyVal::Key { index: j, .. }) if index == j => {
             let ix = m
                 .indexes

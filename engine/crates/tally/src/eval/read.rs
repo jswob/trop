@@ -613,11 +613,13 @@ fn plain_unit(v: &Value) -> Unit {
     Unit::one()
 }
 
-/// A value made a key of `domain` (refcore's `to_key`). L §2.5, §4.2.
+/// A value made a key of `domain`, an axis's option included (refcore's `to_key`). L §2.5,
+/// §4.2, §5.5.
 ///
 /// # Errors
 ///
-/// `RUN-NONE` for `none`, `RUN-KEY` for a value the domain doesn't hold.
+/// `RUN-NONE` for `none`, `RUN-KEY` for a value the domain doesn't hold; `NotBuilt` for a key
+/// list or a range.
 pub(crate) fn to_key(m: &Reality, item: &str, v: &Value, domain: &Domain) -> Result<KeyVal, Stop> {
     if *v == Value::None {
         return Err(refuse(Run::None, "a key is none here: a key".to_owned()));
@@ -650,9 +652,21 @@ pub(crate) fn to_key(m: &Reality, item: &str, v: &Value, domain: &Domain) -> Res
             }
             Ok(KeyVal::Thing(name.clone()))
         }
-        Domain::List(_) | Domain::Range | Domain::Axis(_) => {
-            Err(Stop::NotBuilt("a key of a key list, a range or an axis"))
+        Domain::Axis(axis) => {
+            // the axis id in a key position reads at the current option (L §5.5)
+            let Value::Key(key @ KeyVal::Key { index, name }) = v else {
+                let shown = v.text(m).map_err(num_stop)?;
+                return Err(refuse(Run::Key, format!("{shown} is not a key of {axis}")));
+            };
+            if index != axis {
+                return Err(refuse(Run::Key, format!("{name} is not a key of {axis}")));
+            }
+            if !axis_has(m, axis, name) {
+                return Err(invariant("an axis's option it lacks"));
+            }
+            Ok(key.clone())
         }
+        Domain::List(_) | Domain::Range => Err(Stop::NotBuilt("a key of a key list or a range")),
     }
 }
 
@@ -732,14 +746,13 @@ pub(super) fn shown(m: &Reality, v: &Value) -> Result<String, Stop> {
 }
 
 /// A key literal resolved in `domain`: a key of an index, an integer or a period by its
-/// label or a key by its text, a thing of a kind by its name (refcore's
+/// label or a key by its text, a thing of a kind by its name, an option of an axis (refcore's
 /// `resolve_key_literal`); `None` for a literal the domain doesn't hold, which its caller
-/// refuses. L §2.5.
+/// refuses. L §2.5, §5.5.
 ///
 /// # Errors
 ///
-/// An invariant for an index load didn't build; `NotBuilt` for a key list, a range or an
-/// axis.
+/// An invariant for an index load didn't build; `NotBuilt` for a key list or a range.
 pub(super) fn literal_key(m: &Reality, lit: &Lit, domain: &Domain) -> Result<Option<KeyVal>, Stop> {
     let text = lit.text();
     match domain {
@@ -751,10 +764,27 @@ pub(super) fn literal_key(m: &Reality, lit: &Lit, domain: &Domain) -> Result<Opt
             Ok(index_key_of(ix, lit))
         }
         Domain::Kind(kind) => Ok(m.thing_in(&text, kind).then_some(KeyVal::Thing(text))),
-        Domain::List(_) | Domain::Range | Domain::Axis(_) => Err(Stop::NotBuilt(
-            "a key literal of a key list, a range or an axis",
-        )),
+        Domain::Axis(axis) => Ok(axis_has(m, axis, &text).then_some(KeyVal::Key {
+            index: axis.clone(),
+            name: text,
+        })),
+        Domain::List(_) | Domain::Range => {
+            Err(Stop::NotBuilt("a key literal of a key list or a range"))
+        }
     }
+}
+
+/// Whether axis `axis` has an option named `name` (refcore's `k in m.axes[ax].options`).
+/// L §5.5.
+fn axis_has(m: &Reality, axis: &str, name: &str) -> bool {
+    option_at(m, axis, name).is_some()
+}
+
+/// The place of option `name` among axis `axis`'s, in the order written (refcore's
+/// `m.axes[ax].options.index`); none for an axis or an option the reality lacks. L §5.5.
+pub(super) fn option_at(m: &Reality, axis: &str, name: &str) -> Option<usize> {
+    let options = &m.axes.get(axis)?.options;
+    options.iter().position(|(option, _)| option == name)
 }
 
 /// Whether the cut and the world of `seen` see key `key` of `domain`: a key its index holds

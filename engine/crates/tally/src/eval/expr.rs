@@ -19,7 +19,7 @@ use super::state::{
 };
 use super::ty::{figure_like, sample};
 use super::windows::{as_window, window_arith, window_compare, window_negated};
-use super::years::{as_year, year_literal};
+use super::years::{as_year, year_like, year_literal};
 use crate::base::{Load, Run};
 use crate::hole::{Hole, spread};
 use crate::model::{
@@ -89,8 +89,9 @@ impl Engine {
         }
     }
 
-    /// A name: a bound variable, a read of an input or a def with no keys, `cut`, a thing,
-    /// else a key literal its use resolves (refcore's `e_name`). L §2.5.
+    /// A name: a bound variable, a read of an input or a def with no keys, `cut`, an axis at
+    /// its option, a thing, else a key literal its use resolves (refcore's `e_name`). L §2.5,
+    /// §5.5.
     pub(super) fn name(
         &mut self,
         m: &Reality,
@@ -104,6 +105,7 @@ impl Engine {
         match m.names.kind(name) {
             Some(NameKind::Input | NameKind::Def) => self.read_item(m, name, &[], env, ctx),
             Some(NameKind::Cut) => Ok(Value::Day(ctx.cut)),
+            Some(NameKind::Axis) => self.axis_option(name, ctx),
             Some(_) | None => {
                 if m.things.get(name).is_some() {
                     return Ok(Value::Key(KeyVal::Thing(name.to_owned())));
@@ -669,13 +671,15 @@ enum Logic {
     All,
 }
 
-/// A side of a comparison written in a year form beside a period: the year it names (refcore's
-/// `_year` mark of `compare`). L §2.1.
+/// A side of a comparison written in a year form beside a period: the year it names; beside a
+/// key of a year index, the key that year labels on the index's grid, an anchored year
+/// included (refcore's `_year` mark of `compare`, and its `resolve_key_literal` of a year
+/// literal beside a key of a year index). L §2.1, §2.5, §4.1.
 fn year_beside(e: &Expr, v: Value, other: &Value) -> Value {
-    if let Value::Period(_) = other
+    if let Value::Period(like) = other
         && let Some(year) = as_year(Some(e), &v)
     {
-        return Value::Period(year);
+        return Value::Period(year_like(*like, year));
     }
     v
 }
@@ -784,8 +788,16 @@ pub(super) fn resolve_pair(m: &Reality, lhs: Value, rhs: Value) -> Result<(Value
     Ok((lhs, rhs))
 }
 
-/// Key literal `word` as a key of the index or kind of value `other`, or a code beside a code.
+/// Key literal `word` as a key of the index or kind of value `other`, an option of its axis
+/// (L §5.5), or a code beside a code.
 fn resolve_word(m: &Reality, word: &str, other: &Value) -> Result<Value, Stop> {
+    if let Value::Key(KeyVal::Key { index, .. }) = other
+        && m.axes.contains(index)
+    {
+        let key = literal_key(m, &Lit::Name(word.to_owned()), &Domain::Axis(index.clone()))?
+            .ok_or_else(lacks_at_run)?;
+        return Ok(Value::of_key(&key));
+    }
     if let Value::Key(KeyVal::Key { index, .. }) = other {
         let key = literal_key(
             m,
