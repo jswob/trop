@@ -17,7 +17,9 @@ mod tests {
     use tally_runner::m1::VECTORS;
 
     /// The groups this target tests, one `#[test]` each.
-    const GROUPS: [&str; 3] = ["fixes-g1", "fixes-g2", "fixes-g3"];
+    const GROUPS: [&str; 6] = [
+        "fixes-g1", "fixes-g2", "fixes-g3", "fixes-g4", "fixes-g5", "fixes-g6",
+    ];
 
     /// Runs every vector of `group` on the engine and holds it to refcore's run.
     fn group_holds(group: &str) {
@@ -87,5 +89,33 @@ mod tests {
     #[test]
     fn m1_fixes_g3_order_and_last() {
         group_holds("fixes-g3");
+    }
+
+    /// G4's (`m1/fixes/g4/`): MB1's eight missed `num/split.rs` mutants, a `rest last` split
+    /// and a `rest largest` one with distinct remainders, steps left over and a negative total
+    /// (L §5.13); the G5 review's sign case, a positive and a negative `rest largest` total in
+    /// one ask (its blocking 1, G4's touch-up).
+    #[test]
+    fn m1_fixes_g4_prorata() {
+        group_holds("fixes-g4");
+    }
+
+    /// G5's (`m1/fixes/g5/`): MB2's six wording-pin mutants (`bands.rs:67`, `rules.rs:43`);
+    /// the review's blocking 2 (a deep chain under a top-level `as if`), 3 (`solve` to a step
+    /// that is `none`), 4 (a step that isn't positive), 5 (#120, held); P38's two pins at one
+    /// cell, P39's bare word, P41's `with known` after `on` (#112, held).
+    #[test]
+    fn m1_fixes_g5_pins_and_solve() {
+        group_holds("fixes-g5");
+    }
+
+    /// G6's (`m1/fixes/g6/`): the review's blocking 1, a scenario's move in the model's world
+    /// (an adjustment, a binding, a diff); 2 and 3, E §9 item 3's listed movement (#121,
+    /// held); MB2's two survivors, a scenario's `replace rule` and band table read in the
+    /// model's world (`read/rules.rs:39`, `read/bands.rs:65`); and C6's find, a decision
+    /// before `from` beside a listed movement (#121, held; red for G6 in `m1_properties`).
+    #[test]
+    fn m1_fixes_g6_worlds() {
+        group_holds("fixes-g6");
     }
 }

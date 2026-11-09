@@ -1,0 +1,11 @@
+scenario more over hh
+  tally 2
+  from 2026-07-01
+
+version more_fee
+  cite card
+  governs 2026-07-01..
+  known 2026-01-01
+  replace fee = 150.00 PLN "more"
+
+ask deep: bal(konto, 2026-12-31) in more

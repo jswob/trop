@@ -61,7 +61,10 @@ mod tests {
                 .get(&(r.case.clone(), r.variant.clone()))
                 .is_some_and(|x| x.code == 0);
             if answered && first.code != 0 {
-                let line = first.out.lines().next().unwrap_or("");
+                let line = first
+                    .out
+                    .split_once('\n')
+                    .map_or(first.out.as_str(), |(line, _)| line);
                 bad.push(format!(
                     "{}/{}: exit {}: {line}",
                     r.case, r.variant, first.code

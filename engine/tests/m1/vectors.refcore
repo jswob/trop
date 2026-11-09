@@ -34596,4 +34596,2210 @@ version v1
   u[k1] = window(2025-02-01, 2025-02-10) "c"
   u[k2] = window(2025-02-05, 2025-02-15) "c"
 ,,1:1,74:refused: LOAD-UNIT window(2025-02-01, 2025-02-10) and 2025-01-01 compared
+,19:fixes/g4/rest_t_rem,8:fixes-g4,26:run rest.tally --ask t_rem,802:10:rest.tally,783:model for_t
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "probe card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2, k3]
+
+input amt: money PLN
+
+input neg: money PLN
+
+input w[k in ks]: num
+
+def big_rem[k in ks]: money PLN = prorata(amt, w[j] for j in ks, k, 1 PLN, rest largest)
+
+def big_rem_neg[k in ks]: money PLN = prorata(neg, w[j] for j in ks, k, 1 PLN, rest largest)
+
+def last_[k in ks]: money PLN = prorata(amt, 1 for j in ks, k, minor(PLN), half-up, rest last)
+
+ask t_rem: big_rem[k] for k in ks
+
+ask t_rem_neg: big_rem_neg[k] for k in ks
+
+ask t_last: last_[k] for k in ks
+
+version card_v
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "c"
+  neg = -10.00 PLN "c"
+  w[k1] = 1 "c"
+  w[k2] = 2 "c"
+  w[k3] = 4 "c"
+,,1:0,126:t_rem (k = k1): 1.00 PLN
+  cut 2026-03-01
+t_rem (k = k2): 3.00 PLN
+  cut 2026-03-01
+t_rem (k = k3): 6.00 PLN
+  cut 2026-03-01
+,23:fixes/g4/rest_t_rem_neg,8:fixes-g4,30:run rest.tally --ask t_rem_neg,802:10:rest.tally,783:model for_t
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "probe card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2, k3]
+
+input amt: money PLN
+
+input neg: money PLN
+
+input w[k in ks]: num
+
+def big_rem[k in ks]: money PLN = prorata(amt, w[j] for j in ks, k, 1 PLN, rest largest)
+
+def big_rem_neg[k in ks]: money PLN = prorata(neg, w[j] for j in ks, k, 1 PLN, rest largest)
+
+def last_[k in ks]: money PLN = prorata(amt, 1 for j in ks, k, minor(PLN), half-up, rest last)
+
+ask t_rem: big_rem[k] for k in ks
+
+ask t_rem_neg: big_rem_neg[k] for k in ks
+
+ask t_last: last_[k] for k in ks
+
+version card_v
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "c"
+  neg = -10.00 PLN "c"
+  w[k1] = 1 "c"
+  w[k2] = 2 "c"
+  w[k3] = 4 "c"
+,,1:0,141:t_rem_neg (k = k1): -1.00 PLN
+  cut 2026-03-01
+t_rem_neg (k = k2): -3.00 PLN
+  cut 2026-03-01
+t_rem_neg (k = k3): -6.00 PLN
+  cut 2026-03-01
+,20:fixes/g4/rest_t_last,8:fixes-g4,27:run rest.tally --ask t_last,802:10:rest.tally,783:model for_t
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "probe card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2, k3]
+
+input amt: money PLN
+
+input neg: money PLN
+
+input w[k in ks]: num
+
+def big_rem[k in ks]: money PLN = prorata(amt, w[j] for j in ks, k, 1 PLN, rest largest)
+
+def big_rem_neg[k in ks]: money PLN = prorata(neg, w[j] for j in ks, k, 1 PLN, rest largest)
+
+def last_[k in ks]: money PLN = prorata(amt, 1 for j in ks, k, minor(PLN), half-up, rest last)
+
+ask t_rem: big_rem[k] for k in ks
+
+ask t_rem_neg: big_rem_neg[k] for k in ks
+
+ask t_last: last_[k] for k in ks
+
+version card_v
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "c"
+  neg = -10.00 PLN "c"
+  w[k1] = 1 "c"
+  w[k2] = 2 "c"
+  w[k3] = 4 "c"
+,,1:0,129:t_last (k = k1): 3.33 PLN
+  cut 2026-03-01
+t_last (k = k2): 3.33 PLN
+  cut 2026-03-01
+t_last (k = k3): 3.34 PLN
+  cut 2026-03-01
+,15:fixes/g4/neg_m1,8:fixes-g4,22:run neg.tally --ask m1,478:9:neg.tally,461:model neg
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2, q3]
+
+input amt: money PLN
+
+def s[k in qs]: money PLN = prorata(amt, 1 for j in qs, k, minor(PLN), rest largest ties by pos(j))
+
+ask m1: s[q1], (s[q1] as if {amt = -100.00 PLN})
+
+ask m2: (s[q1] as if {amt = -100.00 PLN}), s[q1]
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "card"
+,,1:0,73:m1: (33.34 PLN, -33.34 PLN)
+  pinned: amt = -100.00 PLN
+  cut 2026-03-01
+,15:fixes/g4/neg_m2,8:fixes-g4,22:run neg.tally --ask m2,478:9:neg.tally,461:model neg
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2, q3]
+
+input amt: money PLN
+
+def s[k in qs]: money PLN = prorata(amt, 1 for j in qs, k, minor(PLN), rest largest ties by pos(j))
+
+ask m1: s[q1], (s[q1] as if {amt = -100.00 PLN})
+
+ask m2: (s[q1] as if {amt = -100.00 PLN}), s[q1]
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "card"
+,,1:0,73:m2: (-33.34 PLN, 33.34 PLN)
+  pinned: amt = -100.00 PLN
+  cut 2026-03-01
+,14:fixes/g4/pr_p1,8:fixes-g4,21:run pr.tally --ask p1,1413:8:pr.tally,1396:model pr
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2, q3]
+
+index rs = [r1, r2, r3]
+
+input amt: money PLN
+
+input w[k in qs]: num
+
+input v[k in rs]: num
+
+input o[k in qs]: int
+
+input orr[k in rs]: int
+
+def a[k in qs]: money PLN = prorata(amt, w[j] for j in qs, k, minor(PLN), rest largest ties by pos(j))
+
+def b[k in qs]: money PLN = prorata(amt, w[j] for j in qs, k, minor(PLN), rest largest ties by o[j])
+
+def c[k in rs]: money PLN = prorata(amt, v[j] for j in rs, k, minor(PLN), rest largest ties by orr[j])
+
+def d[k in qs]: money PLN = prorata(0 PLN - amt, w[j] for j in qs, k, minor(PLN), rest largest ties by pos(j))
+
+def e[k in qs]: money PLN = prorata(amt, w[j] for j in qs, k, 1 PLN, rest largest ties by pos(j))
+
+ask p1: a[k], b[k], d[k], e[k] for k in qs
+
+ask p2: c[k] for k in rs
+
+ask p3: a[k], b[k] for k in qs with amt = 10.00 PLN
+
+ask p4: a[k] as if {w[q2] = 2}, a[k] for k in qs
+
+ask p6: d[k] for k in qs
+
+ask p7: d[k], a[k] for k in qs
+
+ask p5: a[k], b[k] for k in qs
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "card"
+  w[q1] = 1 "card"
+  w[q2] = 1 "card"
+  w[q3] = 1 "card"
+  v[r1] = 1 "card"
+  v[r2] = 1 "card"
+  v[r3] = 1 "card"
+  o[q1] = 3 "card"
+  o[q2] = 2 "card"
+  o[q3] = 1 "card"
+  orr[r1] = 3 "card"
+  orr[r2] = 2 "card"
+  orr[r3] = 1 "card"
+,,1:0,228:p1 (k = q1): (33.34 PLN, 33.33 PLN, -33.34 PLN, 34.00 PLN)
+  cut 2026-03-01
+p1 (k = q2): (33.33 PLN, 33.33 PLN, -33.33 PLN, 33.00 PLN)
+  cut 2026-03-01
+p1 (k = q3): (33.33 PLN, 33.34 PLN, -33.33 PLN, 33.00 PLN)
+  cut 2026-03-01
+,14:fixes/g4/pr_p7,8:fixes-g4,21:run pr.tally --ask p7,1413:8:pr.tally,1396:model pr
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2, q3]
+
+index rs = [r1, r2, r3]
+
+input amt: money PLN
+
+input w[k in qs]: num
+
+input v[k in rs]: num
+
+input o[k in qs]: int
+
+input orr[k in rs]: int
+
+def a[k in qs]: money PLN = prorata(amt, w[j] for j in qs, k, minor(PLN), rest largest ties by pos(j))
+
+def b[k in qs]: money PLN = prorata(amt, w[j] for j in qs, k, minor(PLN), rest largest ties by o[j])
+
+def c[k in rs]: money PLN = prorata(amt, v[j] for j in rs, k, minor(PLN), rest largest ties by orr[j])
+
+def d[k in qs]: money PLN = prorata(0 PLN - amt, w[j] for j in qs, k, minor(PLN), rest largest ties by pos(j))
+
+def e[k in qs]: money PLN = prorata(amt, w[j] for j in qs, k, 1 PLN, rest largest ties by pos(j))
+
+ask p1: a[k], b[k], d[k], e[k] for k in qs
+
+ask p2: c[k] for k in rs
+
+ask p3: a[k], b[k] for k in qs with amt = 10.00 PLN
+
+ask p4: a[k] as if {w[q2] = 2}, a[k] for k in qs
+
+ask p6: d[k] for k in qs
+
+ask p7: d[k], a[k] for k in qs
+
+ask p5: a[k], b[k] for k in qs
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "card"
+  w[q1] = 1 "card"
+  w[q2] = 1 "card"
+  w[q3] = 1 "card"
+  v[r1] = 1 "card"
+  v[r2] = 1 "card"
+  v[r3] = 1 "card"
+  o[q1] = 3 "card"
+  o[q2] = 2 "card"
+  o[q3] = 1 "card"
+  orr[r1] = 3 "card"
+  orr[r2] = 2 "card"
+  orr[r3] = 1 "card"
+,,1:0,162:p7 (k = q1): (-33.34 PLN, 33.34 PLN)
+  cut 2026-03-01
+p7 (k = q2): (-33.33 PLN, 33.33 PLN)
+  cut 2026-03-01
+p7 (k = q3): (-33.33 PLN, 33.33 PLN)
+  cut 2026-03-01
+,28:fixes/g5/band_wording_worded,8:fixes-g5,35:run band_wording.tally --ask worded,1272:18:band_wording.tally,1244:model bandword
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+  note "G5 probe: a band in two versions of disjoint spans, read under a wording pin."
+
+source card "a synthetic card"
+
+unit DUK: currency minor 0.01
+
+input revenue: money DUK
+
+band contribution(x: money DUK): money DUK
+  note "the contribution by revenue"
+
+ask plain: contribution(revenue) law 2026-08-01
+
+ask worded: contribution(revenue) as if {wording 2026-06-30 for [contribution]} law 2026-08-01
+
+ask worded_june: contribution(revenue) as if {wording 2026-06-30 for [contribution]} law 2026-06-15
+
+ask worded_later: contribution(revenue) as if {wording 2026-07-01 for [contribution]} law 2026-08-01
+
+ask check_june: check contribution(revenue) == contribution(revenue) as if {wording 2026-06-30 for [contribution]} law 2026-06-15
+
+version v_old
+  cite card
+  governs ..2026-06-30
+  known 2026-01-01
+  contribution: (-inf, 60000] = 300 "old: 300.00"
+  contribution: (60000, inf) = 500 "old: 500.00"
+
+version v_new
+  cite card
+  governs 2026-07-01..
+  known 2026-01-01
+  contribution: (-inf, 60000] = 400 "new: 400.00"
+  contribution: (60000, inf) = 600 "new: 600.00"
+
+version facts
+  cite card
+  governs always
+  known 2026-01-01
+  revenue = 50000 "the revenue"
+,,1:0,149:worded: ?"contribution: no value at 2026-08-01" (contribution)
+  pinned: wording 2026-06-30 for [contribution]
+  law date 2026-08-01, cut 2026-10-25
+,34:fixes/g5/band_wording_worded_later,8:fixes-g5,41:run band_wording.tally --ask worded_later,1272:18:band_wording.tally,1244:model bandword
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+  note "G5 probe: a band in two versions of disjoint spans, read under a wording pin."
+
+source card "a synthetic card"
+
+unit DUK: currency minor 0.01
+
+input revenue: money DUK
+
+band contribution(x: money DUK): money DUK
+  note "the contribution by revenue"
+
+ask plain: contribution(revenue) law 2026-08-01
+
+ask worded: contribution(revenue) as if {wording 2026-06-30 for [contribution]} law 2026-08-01
+
+ask worded_june: contribution(revenue) as if {wording 2026-06-30 for [contribution]} law 2026-06-15
+
+ask worded_later: contribution(revenue) as if {wording 2026-07-01 for [contribution]} law 2026-08-01
+
+ask check_june: check contribution(revenue) == contribution(revenue) as if {wording 2026-06-30 for [contribution]} law 2026-06-15
+
+version v_old
+  cite card
+  governs ..2026-06-30
+  known 2026-01-01
+  contribution: (-inf, 60000] = 300 "old: 300.00"
+  contribution: (60000, inf) = 500 "old: 500.00"
+
+version v_new
+  cite card
+  governs 2026-07-01..
+  known 2026-01-01
+  contribution: (-inf, 60000] = 400 "new: 400.00"
+  contribution: (60000, inf) = 600 "new: 600.00"
+
+version facts
+  cite card
+  governs always
+  known 2026-01-01
+  revenue = 50000 "the revenue"
+,,1:0,111:worded_later: 400.00 DUK
+  pinned: wording 2026-07-01 for [contribution]
+  law date 2026-08-01, cut 2026-10-25
+,28:fixes/g5/rule_wording_worded,8:fixes-g5,35:run rule_wording.tally --ask worded,871:18:rule_wording.tally,844:model ruleword
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+  note "G5 probe: a def whose transitional rule enters into force on 2026-07-01, read under a wording pin."
+
+source card "a synthetic card"
+
+unit DUK: currency minor 0.01
+
+input base_pay: money DUK
+
+input bonus: money DUK
+
+def pay: money DUK at reader
+  rule base = base_pay
+  rule raise beats base v v_raise = base_pay + bonus
+
+ask plain: pay law 2026-08-01
+
+ask worded: pay as if {wording 2026-06-30 for [pay]} law 2026-08-01
+
+ask worded_later: pay as if {wording 2026-07-01 for [pay]} law 2026-08-01
+
+ask worded_early: pay as if {wording 2026-07-02 for [pay]} law 2026-08-01
+
+version v_raise
+  cite card
+  governs 2026-07-01..
+  known 2026-01-01
+
+version facts
+  cite card
+  governs always
+  known 2026-01-01
+  base_pay = 1000 "the base"
+  bonus = 100 "the raise"
+,,1:0,98:worded: 1 000.00 DUK
+  pinned: wording 2026-06-30 for [pay]
+  law date 2026-08-01, cut 2026-10-25
+,34:fixes/g5/rule_wording_worded_later,8:fixes-g5,41:run rule_wording.tally --ask worded_later,871:18:rule_wording.tally,844:model ruleword
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+  note "G5 probe: a def whose transitional rule enters into force on 2026-07-01, read under a wording pin."
+
+source card "a synthetic card"
+
+unit DUK: currency minor 0.01
+
+input base_pay: money DUK
+
+input bonus: money DUK
+
+def pay: money DUK at reader
+  rule base = base_pay
+  rule raise beats base v v_raise = base_pay + bonus
+
+ask plain: pay law 2026-08-01
+
+ask worded: pay as if {wording 2026-06-30 for [pay]} law 2026-08-01
+
+ask worded_later: pay as if {wording 2026-07-01 for [pay]} law 2026-08-01
+
+ask worded_early: pay as if {wording 2026-07-02 for [pay]} law 2026-08-01
+
+version v_raise
+  cite card
+  governs 2026-07-01..
+  known 2026-01-01
+
+version facts
+  cite card
+  governs always
+  known 2026-01-01
+  base_pay = 1000 "the base"
+  bonus = 100 "the raise"
+,,1:0,104:worded_later: 1 100.00 DUK
+  pinned: wording 2026-07-01 for [pay]
+  law date 2026-08-01, cut 2026-10-25
+,34:fixes/g5/rule_wording_worded_early,8:fixes-g5,41:run rule_wording.tally --ask worded_early,871:18:rule_wording.tally,844:model ruleword
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+  note "G5 probe: a def whose transitional rule enters into force on 2026-07-01, read under a wording pin."
+
+source card "a synthetic card"
+
+unit DUK: currency minor 0.01
+
+input base_pay: money DUK
+
+input bonus: money DUK
+
+def pay: money DUK at reader
+  rule base = base_pay
+  rule raise beats base v v_raise = base_pay + bonus
+
+ask plain: pay law 2026-08-01
+
+ask worded: pay as if {wording 2026-06-30 for [pay]} law 2026-08-01
+
+ask worded_later: pay as if {wording 2026-07-01 for [pay]} law 2026-08-01
+
+ask worded_early: pay as if {wording 2026-07-02 for [pay]} law 2026-08-01
+
+version v_raise
+  cite card
+  governs 2026-07-01..
+  known 2026-01-01
+
+version facts
+  cite card
+  governs always
+  known 2026-01-01
+  base_pay = 1000 "the base"
+  bonus = 100 "the raise"
+,,1:0,104:worded_early: 1 100.00 DUK
+  pinned: wording 2026-07-02 for [pay]
+  law date 2026-08-01, cut 2026-10-25
+,24:fixes/g5/deep_asif_deep1,8:fixes-g5,31:run deep_asif.tally --ask deep1,1430:15:deep_asif.tally,1405:model probe
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "reviewer probe (invented)"
+
+source card "probe card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index ns = 0..33
+
+input a: num
+
+input b: num
+
+input ten: num
+
+input w[k in qs]: num
+
+input stp: money PLN
+
+input stz: money PLN
+
+input amt: money PLN
+
+input target: money PLN
+
+def c: num = b + b
+
+def d: num = a + w[q2]
+
+def tot: num = w[q1] + w[q2]
+
+def r[i in ns]: num = if i == 0 then a else r[i - 1] + (c as if {b = 1})
+
+def r2[i in ns]: num = if i == 0 then a else r2[i - 1] + 1
+
+def fee: money PLN = amt
+
+ask m1: d, d as if {a = 5}, d
+
+ask m2: (d as if {a = 1}) + (d as if {a = 2})
+
+ask m3: d as if {w[q2] = 100}
+
+ask m4: (d as if {a = 5}) + d
+
+ask s1: solve tot == ten for w[q1] in [0, 100] to 1 with w[*] = 3
+
+ask s2: solve fee == target for amt in [0.00 PLN, 1000.00 PLN] to stp
+
+ask s3: solve fee == target for amt in [0.00 PLN, 1000.00 PLN] to stz
+
+ask s4: solve fee == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+ask deep0: r2[33] as if {a = 5}
+
+ask deep1: r[33] as if {a = 5}
+
+ask deep2: r[33]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  a = 1 "the card"
+  b = 2 "the card"
+  ten = 10 "the card"
+  w[q1] = 1 "the card"
+  w[q2] = 2 "the card"
+  stp = -0.01 PLN "the card"
+  stz = 0 PLN "the card"
+  amt = 1.00 PLN "the card"
+  target = 20.00 PLN "the card"
+,,1:0,59:deep1: 71
+  pinned: a = 5
+  pinned: b = 1
+  cut 2026-03-01
+,22:fixes/g5/solve_none_s5,8:fixes-g5,29:run solve_none.tally --ask s5,1705:16:solve_none.tally,1679:model probe
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "reviewer probe (invented)"
+
+source card "probe card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index ns = 0..31
+
+input a: num
+
+input b: num
+
+input ten: num
+
+input w[k in qs]: num
+
+input stp: money PLN
+
+input stz: money PLN
+
+input stn: money PLN
+
+input sth: money PLN
+
+input amt: money PLN
+
+input target: money PLN
+
+def c: num = b + b
+
+def d: num = a + w[q2]
+
+def tot: num = w[q1] + w[q2]
+
+def r[i in ns]: num = if i == 0 then a else r[i - 1] + (c as if {b = 1})
+
+def r2[i in ns]: num = if i == 0 then a else r2[i - 1] + 1
+
+def fee: money PLN = amt
+
+ask m1: d, d as if {a = 5}, d
+
+ask m2: (d as if {a = 1}) + (d as if {a = 2})
+
+ask m3: d as if {w[q2] = 100}
+
+ask m4: (d as if {a = 5}) + d
+
+ask s1: solve tot == ten for w[q1] in [0, 100] to 1 with w[*] = 3
+
+ask s2: solve fee == target for amt in [0.00 PLN, 1000.00 PLN] to stp
+
+ask s3: solve fee == target for amt in [0.00 PLN, 1000.00 PLN] to stz
+
+ask s4: solve fee == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+ask deep0: r2[31] as if {a = 5}
+
+ask deep1: r[31] as if {a = 5}
+
+ask deep2: r[31]
+
+ask s5: solve fee == target for amt in [0.00 PLN, 1000.00 PLN] to stn
+
+ask s6: solve fee == target for amt in [0.00 PLN, 1000.00 PLN] to sth
+
+ask c1: d as known 2026-06-01
+
+ask c2: d with known 2026-06-01
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  a = 1 "the card"
+  b = 2 "the card"
+  ten = 10 "the card"
+  w[q1] = 1 "the card"
+  w[q2] = 2 "the card"
+  stp = -0.01 PLN "the card"
+  stz = 0 PLN "the card"
+  amt = 1.00 PLN "the card"
+  target = 20.00 PLN "the card"
+  stn = none "the card"
+,,1:1,42:refused: LOAD-UNIT the step of to is none
+,22:fixes/g5/solve_none_c1,8:fixes-g5,29:run solve_none.tally --ask c1,1705:16:solve_none.tally,1679:model probe
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "reviewer probe (invented)"
+
+source card "probe card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index ns = 0..31
+
+input a: num
+
+input b: num
+
+input ten: num
+
+input w[k in qs]: num
+
+input stp: money PLN
+
+input stz: money PLN
+
+input stn: money PLN
+
+input sth: money PLN
+
+input amt: money PLN
+
+input target: money PLN
+
+def c: num = b + b
+
+def d: num = a + w[q2]
+
+def tot: num = w[q1] + w[q2]
+
+def r[i in ns]: num = if i == 0 then a else r[i - 1] + (c as if {b = 1})
+
+def r2[i in ns]: num = if i == 0 then a else r2[i - 1] + 1
+
+def fee: money PLN = amt
+
+ask m1: d, d as if {a = 5}, d
+
+ask m2: (d as if {a = 1}) + (d as if {a = 2})
+
+ask m3: d as if {w[q2] = 100}
+
+ask m4: (d as if {a = 5}) + d
+
+ask s1: solve tot == ten for w[q1] in [0, 100] to 1 with w[*] = 3
+
+ask s2: solve fee == target for amt in [0.00 PLN, 1000.00 PLN] to stp
+
+ask s3: solve fee == target for amt in [0.00 PLN, 1000.00 PLN] to stz
+
+ask s4: solve fee == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+ask deep0: r2[31] as if {a = 5}
+
+ask deep1: r[31] as if {a = 5}
+
+ask deep2: r[31]
+
+ask s5: solve fee == target for amt in [0.00 PLN, 1000.00 PLN] to stn
+
+ask s6: solve fee == target for amt in [0.00 PLN, 1000.00 PLN] to sth
+
+ask c1: d as known 2026-06-01
+
+ask c2: d with known 2026-06-01
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  a = 1 "the card"
+  b = 2 "the card"
+  ten = 10 "the card"
+  w[q1] = 1 "the card"
+  w[q2] = 2 "the card"
+  stp = -0.01 PLN "the card"
+  stz = 0 PLN "the card"
+  amt = 1.00 PLN "the card"
+  target = 20.00 PLN "the card"
+  stn = none "the card"
+,,1:0,23:c1: 3
+  cut 2026-06-01
+,22:fixes/g5/solve_none_c2,8:fixes-g5,29:run solve_none.tally --ask c2,1705:16:solve_none.tally,1679:model probe
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "reviewer probe (invented)"
+
+source card "probe card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index ns = 0..31
+
+input a: num
+
+input b: num
+
+input ten: num
+
+input w[k in qs]: num
+
+input stp: money PLN
+
+input stz: money PLN
+
+input stn: money PLN
+
+input sth: money PLN
+
+input amt: money PLN
+
+input target: money PLN
+
+def c: num = b + b
+
+def d: num = a + w[q2]
+
+def tot: num = w[q1] + w[q2]
+
+def r[i in ns]: num = if i == 0 then a else r[i - 1] + (c as if {b = 1})
+
+def r2[i in ns]: num = if i == 0 then a else r2[i - 1] + 1
+
+def fee: money PLN = amt
+
+ask m1: d, d as if {a = 5}, d
+
+ask m2: (d as if {a = 1}) + (d as if {a = 2})
+
+ask m3: d as if {w[q2] = 100}
+
+ask m4: (d as if {a = 5}) + d
+
+ask s1: solve tot == ten for w[q1] in [0, 100] to 1 with w[*] = 3
+
+ask s2: solve fee == target for amt in [0.00 PLN, 1000.00 PLN] to stp
+
+ask s3: solve fee == target for amt in [0.00 PLN, 1000.00 PLN] to stz
+
+ask s4: solve fee == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+ask deep0: r2[31] as if {a = 5}
+
+ask deep1: r[31] as if {a = 5}
+
+ask deep2: r[31]
+
+ask s5: solve fee == target for amt in [0.00 PLN, 1000.00 PLN] to stn
+
+ask s6: solve fee == target for amt in [0.00 PLN, 1000.00 PLN] to sth
+
+ask c1: d as known 2026-06-01
+
+ask c2: d with known 2026-06-01
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  a = 1 "the card"
+  b = 2 "the card"
+  ten = 10 "the card"
+  w[q1] = 1 "the card"
+  w[q2] = 2 "the card"
+  stp = -0.01 PLN "the card"
+  stz = 0 PLN "the card"
+  amt = 1.00 PLN "the card"
+  target = 20.00 PLN "the card"
+  stn = none "the card"
+,,1:0,50:c2: 3
+  pinned: known 2026-06-01
+  cut 2026-06-01
+,22:fixes/g5/solve_step_s1,8:fixes-g5,29:run solve_step.tally --ask s1,1435:16:solve_step.tally,1409:model probe
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "reviewer probe (invented)"
+
+source card "probe card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index ns = 0..100
+
+input a: num
+
+input b: num
+
+input ten: num
+
+input w[k in qs]: num
+
+input stp: money PLN
+
+input stz: money PLN
+
+input amt: money PLN
+
+input target: money PLN
+
+def c: num = b + b
+
+def d: num = a + w[q2]
+
+def tot: num = w[q1] + w[q2]
+
+def r[i in ns]: num = if i == 0 then a else r[i - 1] + (c as if {b = 1})
+
+def r2[i in ns]: num = if i == 0 then a else r2[i - 1] + 1
+
+def fee: money PLN = amt
+
+ask m1: d, d as if {a = 5}, d
+
+ask m2: (d as if {a = 1}) + (d as if {a = 2})
+
+ask m3: d as if {w[q2] = 100}
+
+ask m4: (d as if {a = 5}) + d
+
+ask s1: solve tot == ten for w[q1] in [0, 100] to 1 with w[*] = 3
+
+ask s2: solve fee == target for amt in [0.00 PLN, 1000.00 PLN] to stp
+
+ask s3: solve fee == target for amt in [0.00 PLN, 1000.00 PLN] to stz
+
+ask s4: solve fee == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+ask deep0: r2[100] as if {a = 5}
+
+ask deep1: r[100] as if {a = 5}
+
+ask deep2: r[100]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  a = 1 "the card"
+  b = 2 "the card"
+  ten = 10 "the card"
+  w[q1] = 1 "the card"
+  w[q2] = 2 "the card"
+  stp = -0.01 PLN "the card"
+  stz = 0 PLN "the card"
+  amt = 1.00 PLN "the card"
+  target = 20.00 PLN "the card"
+,,1:0,42:s1: 8
+  pinned: w[*] = 3
+  cut 2026-03-01
+,22:fixes/g5/solve_step_s2,8:fixes-g5,29:run solve_step.tally --ask s2,1435:16:solve_step.tally,1409:model probe
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "reviewer probe (invented)"
+
+source card "probe card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index ns = 0..100
+
+input a: num
+
+input b: num
+
+input ten: num
+
+input w[k in qs]: num
+
+input stp: money PLN
+
+input stz: money PLN
+
+input amt: money PLN
+
+input target: money PLN
+
+def c: num = b + b
+
+def d: num = a + w[q2]
+
+def tot: num = w[q1] + w[q2]
+
+def r[i in ns]: num = if i == 0 then a else r[i - 1] + (c as if {b = 1})
+
+def r2[i in ns]: num = if i == 0 then a else r2[i - 1] + 1
+
+def fee: money PLN = amt
+
+ask m1: d, d as if {a = 5}, d
+
+ask m2: (d as if {a = 1}) + (d as if {a = 2})
+
+ask m3: d as if {w[q2] = 100}
+
+ask m4: (d as if {a = 5}) + d
+
+ask s1: solve tot == ten for w[q1] in [0, 100] to 1 with w[*] = 3
+
+ask s2: solve fee == target for amt in [0.00 PLN, 1000.00 PLN] to stp
+
+ask s3: solve fee == target for amt in [0.00 PLN, 1000.00 PLN] to stz
+
+ask s4: solve fee == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+ask deep0: r2[100] as if {a = 5}
+
+ask deep1: r[100] as if {a = 5}
+
+ask deep2: r[100]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  a = 1 "the card"
+  b = 2 "the card"
+  ten = 10 "the card"
+  w[q1] = 1 "the card"
+  w[q2] = 2 "the card"
+  stp = -0.01 PLN "the card"
+  stz = 0 PLN "the card"
+  amt = 1.00 PLN "the card"
+  target = 20.00 PLN "the card"
+,,1:0,83:s2: refused: RUN-DOMAIN to -0.01 PLN: a step that is not positive
+  cut 2026-03-01
+,22:fixes/g5/solve_step_s3,8:fixes-g5,29:run solve_step.tally --ask s3,1435:16:solve_step.tally,1409:model probe
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "reviewer probe (invented)"
+
+source card "probe card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index ns = 0..100
+
+input a: num
+
+input b: num
+
+input ten: num
+
+input w[k in qs]: num
+
+input stp: money PLN
+
+input stz: money PLN
+
+input amt: money PLN
+
+input target: money PLN
+
+def c: num = b + b
+
+def d: num = a + w[q2]
+
+def tot: num = w[q1] + w[q2]
+
+def r[i in ns]: num = if i == 0 then a else r[i - 1] + (c as if {b = 1})
+
+def r2[i in ns]: num = if i == 0 then a else r2[i - 1] + 1
+
+def fee: money PLN = amt
+
+ask m1: d, d as if {a = 5}, d
+
+ask m2: (d as if {a = 1}) + (d as if {a = 2})
+
+ask m3: d as if {w[q2] = 100}
+
+ask m4: (d as if {a = 5}) + d
+
+ask s1: solve tot == ten for w[q1] in [0, 100] to 1 with w[*] = 3
+
+ask s2: solve fee == target for amt in [0.00 PLN, 1000.00 PLN] to stp
+
+ask s3: solve fee == target for amt in [0.00 PLN, 1000.00 PLN] to stz
+
+ask s4: solve fee == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+ask deep0: r2[100] as if {a = 5}
+
+ask deep1: r[100] as if {a = 5}
+
+ask deep2: r[100]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  a = 1 "the card"
+  b = 2 "the card"
+  ten = 10 "the card"
+  w[q1] = 1 "the card"
+  w[q2] = 2 "the card"
+  stp = -0.01 PLN "the card"
+  stz = 0 PLN "the card"
+  amt = 1.00 PLN "the card"
+  target = 20.00 PLN "the card"
+,,1:0,82:s3: refused: RUN-DOMAIN to 0.00 PLN: a step that is not positive
+  cut 2026-03-01
+,24:fixes/g5/overlap_payroll,8:fixes-g5,31:run overlap.tally --ask payroll,2321:13:overlap.tally,2298:model surf04
+  tally 2
+  on 2025-01-01
+  start 2025-01-01
+  end 2025-12-31
+  note "SURF-04: the contribution formula stated once, as the def contrib, and read in three places: the monthly payroll (a move), the yearly return's check (a check ask) and a what-if with a raise (a with pin). The scenario file redefine states contrib again and is refused at load (LOAD-DUP)."
+
+source contract "The employment contract's gross"
+
+source contrib_law "The contribution law: 9.76 % of gross, on gross only until the year's gross to date reaches the cap, rounded half up to 0.01"
+
+source what_if "The household's what-if: a raise"
+
+unit DUK: currency minor 0.01
+
+place fund: outside lives 2025-01-01..
+
+place konto: accounts DUK lives 2025-01-01..
+
+input contrib_cap: money DUK
+
+input contrib_rate: num
+
+input pay_dom: int
+
+input raised_salary: money DUK
+
+input salary: money DUK
+
+def contrib[m in months]: money DUK at start_of(m)
+  rule base v contrib_2025 = round(contrib_rate * max(0, min(gross[m], contrib_cap - gross_before[m])), minor(DUK), half-up)
+
+def gross[m in months]: money DUK = salary at start_of(m)
+
+def gross_before[m in months]: money DUK = sum(gross[k] for k in months where year_of(k) == year_of(m) and k < m) at start_of(m)
+
+move contrib_pay[m in months]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from konto to fund amount contrib[m]
+
+ask payroll: gross[2025-03] as if {gross[2025-03] = 2000.00 DUK, gross[*] = 1000.00 DUK} law 2025-01-01
+
+ask raise: gross[2025-03] as if {gross[*] = 1000.00 DUK, gross[2025-03] = 2000.00 DUK} law 2025-01-01
+
+ask return_check: (gross[2025-03] as if {gross[2025-03] = 2000.00 DUK}) as if {gross[*] = 1000.00 DUK} law 2025-01-01
+
+version contrib_2025
+  cite contrib_law
+  governs 2025..
+  known 2025-01-01
+  contrib_cap = 100000 assumed "illustration: the card names a cap but gives no figure" "the cap"
+  contrib_rate = 9.76 % "9.76 % of gross"
+
+version gross_2025
+  cite contract
+  governs always
+  known 2025-01-01
+  pay_dom = 10 assumed "the card gives no payday" "the payroll's day"
+  salary = 12000 assumed "illustration: the card gives no gross" "monthly gross"
+
+version raise_2025
+  cite what_if
+  governs always
+  known 2025-01-01
+  raised_salary = 13000 assumed "illustration: the card gives no raise" "the what-if's gross"
+,,1:0,160:payroll: 2 000.00 DUK
+  pinned: gross[2025-03] = 2 000.00 DUK
+  law date 2025-01-01, cut 2025-01-01
+warning: WARN-UNREAD input raised_salary is read by nothing
+,22:fixes/g5/overlap_raise,8:fixes-g5,29:run overlap.tally --ask raise,2321:13:overlap.tally,2298:model surf04
+  tally 2
+  on 2025-01-01
+  start 2025-01-01
+  end 2025-12-31
+  note "SURF-04: the contribution formula stated once, as the def contrib, and read in three places: the monthly payroll (a move), the yearly return's check (a check ask) and a what-if with a raise (a with pin). The scenario file redefine states contrib again and is refused at load (LOAD-DUP)."
+
+source contract "The employment contract's gross"
+
+source contrib_law "The contribution law: 9.76 % of gross, on gross only until the year's gross to date reaches the cap, rounded half up to 0.01"
+
+source what_if "The household's what-if: a raise"
+
+unit DUK: currency minor 0.01
+
+place fund: outside lives 2025-01-01..
+
+place konto: accounts DUK lives 2025-01-01..
+
+input contrib_cap: money DUK
+
+input contrib_rate: num
+
+input pay_dom: int
+
+input raised_salary: money DUK
+
+input salary: money DUK
+
+def contrib[m in months]: money DUK at start_of(m)
+  rule base v contrib_2025 = round(contrib_rate * max(0, min(gross[m], contrib_cap - gross_before[m])), minor(DUK), half-up)
+
+def gross[m in months]: money DUK = salary at start_of(m)
+
+def gross_before[m in months]: money DUK = sum(gross[k] for k in months where year_of(k) == year_of(m) and k < m) at start_of(m)
+
+move contrib_pay[m in months]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from konto to fund amount contrib[m]
+
+ask payroll: gross[2025-03] as if {gross[2025-03] = 2000.00 DUK, gross[*] = 1000.00 DUK} law 2025-01-01
+
+ask raise: gross[2025-03] as if {gross[*] = 1000.00 DUK, gross[2025-03] = 2000.00 DUK} law 2025-01-01
+
+ask return_check: (gross[2025-03] as if {gross[2025-03] = 2000.00 DUK}) as if {gross[*] = 1000.00 DUK} law 2025-01-01
+
+version contrib_2025
+  cite contrib_law
+  governs 2025..
+  known 2025-01-01
+  contrib_cap = 100000 assumed "illustration: the card names a cap but gives no figure" "the cap"
+  contrib_rate = 9.76 % "9.76 % of gross"
+
+version gross_2025
+  cite contract
+  governs always
+  known 2025-01-01
+  pay_dom = 10 assumed "the card gives no payday" "the payroll's day"
+  salary = 12000 assumed "illustration: the card gives no gross" "monthly gross"
+
+version raise_2025
+  cite what_if
+  governs always
+  known 2025-01-01
+  raised_salary = 13000 assumed "illustration: the card gives no raise" "the what-if's gross"
+,,1:0,158:raise: 2 000.00 DUK
+  pinned: gross[2025-03] = 2 000.00 DUK
+  law date 2025-01-01, cut 2025-01-01
+warning: WARN-UNREAD input raised_salary is read by nothing
+,29:fixes/g5/overlap_return_check,8:fixes-g5,36:run overlap.tally --ask return_check,2321:13:overlap.tally,2298:model surf04
+  tally 2
+  on 2025-01-01
+  start 2025-01-01
+  end 2025-12-31
+  note "SURF-04: the contribution formula stated once, as the def contrib, and read in three places: the monthly payroll (a move), the yearly return's check (a check ask) and a what-if with a raise (a with pin). The scenario file redefine states contrib again and is refused at load (LOAD-DUP)."
+
+source contract "The employment contract's gross"
+
+source contrib_law "The contribution law: 9.76 % of gross, on gross only until the year's gross to date reaches the cap, rounded half up to 0.01"
+
+source what_if "The household's what-if: a raise"
+
+unit DUK: currency minor 0.01
+
+place fund: outside lives 2025-01-01..
+
+place konto: accounts DUK lives 2025-01-01..
+
+input contrib_cap: money DUK
+
+input contrib_rate: num
+
+input pay_dom: int
+
+input raised_salary: money DUK
+
+input salary: money DUK
+
+def contrib[m in months]: money DUK at start_of(m)
+  rule base v contrib_2025 = round(contrib_rate * max(0, min(gross[m], contrib_cap - gross_before[m])), minor(DUK), half-up)
+
+def gross[m in months]: money DUK = salary at start_of(m)
+
+def gross_before[m in months]: money DUK = sum(gross[k] for k in months where year_of(k) == year_of(m) and k < m) at start_of(m)
+
+move contrib_pay[m in months]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from konto to fund amount contrib[m]
+
+ask payroll: gross[2025-03] as if {gross[2025-03] = 2000.00 DUK, gross[*] = 1000.00 DUK} law 2025-01-01
+
+ask raise: gross[2025-03] as if {gross[*] = 1000.00 DUK, gross[2025-03] = 2000.00 DUK} law 2025-01-01
+
+ask return_check: (gross[2025-03] as if {gross[2025-03] = 2000.00 DUK}) as if {gross[*] = 1000.00 DUK} law 2025-01-01
+
+version contrib_2025
+  cite contrib_law
+  governs 2025..
+  known 2025-01-01
+  contrib_cap = 100000 assumed "illustration: the card names a cap but gives no figure" "the cap"
+  contrib_rate = 9.76 % "9.76 % of gross"
+
+version gross_2025
+  cite contract
+  governs always
+  known 2025-01-01
+  pay_dom = 10 assumed "the card gives no payday" "the payroll's day"
+  salary = 12000 assumed "illustration: the card gives no gross" "monthly gross"
+
+version raise_2025
+  cite what_if
+  governs always
+  known 2025-01-01
+  raised_salary = 13000 assumed "illustration: the card gives no raise" "the what-if's gross"
+,,1:0,165:return_check: 2 000.00 DUK
+  pinned: gross[2025-03] = 2 000.00 DUK
+  law date 2025-01-01, cut 2025-01-01
+warning: WARN-UNREAD input raised_salary is read by nothing
+,18:fixes/g5/m0plain_q,8:fixes-g5,25:run m0plain.tally --ask q,100:13:m0plain.tally,79:model m
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+ask q: x
+,,1:1,52:refused: LOAD-KEY ambiguous key x (m0plain.tally:6)
+,17:fixes/g5/m0pins_q,8:fixes-g5,24:run m0pins.tally --ask q,119:12:m0pins.tally,99:model m
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+ask q: x with law 2026-01-01
+,,1:1,51:refused: LOAD-KEY ambiguous key x (m0pins.tally:6)
+,26:fixes/g6/adj_leak_in_model,8:fixes-g6,50:run adj_leak.tally adj_leak_s.tally --ask in_model,1057:14:adj_leak.tally,681:model adj
+  tally 2
+  on 2026-06-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probe: a scenario move's adjustment must not reach the model's world"
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+
+input pay_day: date
+
+ask base_end: bal(konto, 2026-12-31) in adj
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 40.00 PLN "the card"
+  pay_day = 2026-03-15 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+
+version card_may
+  cite card
+  governs always
+  known 2026-05-01
+  replace fee = 50.00 PLN "the fee rose"
+,16:adj_leak_s.tally,328:scenario extra over adj
+  tally 2
+  from 2026-01-01
+  note "review probe: one more fee payment"
+
+move pay_extra: transfers
+  on pay_day
+  leg cash from konto to world amount fee
+
+ask in_model: bal(konto, 2026-12-31) in adj
+
+ask in_extra: bal(konto, 2026-12-31) in extra
+
+ask d: diff(bal(konto, 2026-12-31)) in extra against adj
+,,1:0,51:in_model: 500.00 PLN
+  world: adj
+  cut 2026-06-01
+,19:fixes/g6/adj_leak_d,8:fixes-g6,43:run adj_leak.tally adj_leak_s.tally --ask d,1057:14:adj_leak.tally,681:model adj
+  tally 2
+  on 2026-06-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probe: a scenario move's adjustment must not reach the model's world"
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+
+input pay_day: date
+
+ask base_end: bal(konto, 2026-12-31) in adj
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 40.00 PLN "the card"
+  pay_day = 2026-03-15 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+
+version card_may
+  cite card
+  governs always
+  known 2026-05-01
+  replace fee = 50.00 PLN "the fee rose"
+,16:adj_leak_s.tally,328:scenario extra over adj
+  tally 2
+  from 2026-01-01
+  note "review probe: one more fee payment"
+
+move pay_extra: transfers
+  on pay_day
+  leg cash from konto to world amount fee
+
+ask in_model: bal(konto, 2026-12-31) in adj
+
+ask in_extra: bal(konto, 2026-12-31) in extra
+
+ask d: diff(bal(konto, 2026-12-31)) in extra against adj
+,,1:0,399:d: diff in extra against adj: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed bal(konto, 2026-12-31): ?"pay_extra on 2026-03-15 changed after it was paid (version card_may); is back pay due, and when?" (pay_extra) against 500.00 PLN
+  world: adj
+  world: extra
+  adjustment: pay_extra by 10.00 PLN on 2026-05-01 (version card_may), remaining 10.00 PLN
+  unfulfilled: pay_extra
+  cut 2026-06-01
+,25:fixes/g6/ev_leak_in_model,8:fixes-g6,48:run ev_leak.tally ev_leak_s.tally --ask in_model,1006:13:ev_leak.tally,726:model ev
+  tally 2
+  on 2026-06-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probe: a scenario move's movements must not be bound in the model's world"
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+
+input pay_day: date
+
+input d0: date
+
+input d1: date
+
+def n_moves: money PLN = sum(x.cash.amount for x in transfers over d0..d1)
+
+ask base_n: n_moves in ev
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 40.00 PLN "the card"
+  pay_day = 2026-03-15 "the card"
+  d0 = 2026-01-01 "the card"
+  d1 = 2026-12-31 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,15:ev_leak_s.tally,234:scenario more over ev
+  tally 2
+  from 2026-01-01
+  note "review probe: one more fee payment"
+
+move pay_more: transfers
+  on pay_day
+  leg cash from konto to world amount fee
+
+ask in_model: n_moves in ev
+
+ask in_more: n_moves in more
+,,1:0,48:in_model: 0.00 PLN
+  world: ev
+  cut 2026-06-01
+,21:fixes/g6/law_after_b1,8:fixes-g6,46:run law_after.tally law_after_s.tally --ask b1,908:15:law_after.tally,662:model hh
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G6 review B1: a base move before from, read at a law date after it"
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+
+input pay_day: date
+
+input law_day: date
+
+move pay: transfers
+  on pay_day
+  at law_day
+  leg cash from world to konto amount fee
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 100.00 PLN "the card"
+  pay_day = 2026-03-01 "the card"
+  law_day = 2026-08-01 "the card"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "the card"
+,17:law_after_s.tally,196:scenario more over hh
+  tally 2
+  from 2026-07-01
+
+version more_fee
+  cite card
+  governs 2026-07-01..
+  known 2026-01-01
+  replace fee = 150.00 PLN "more"
+
+ask b1: bal(konto, 2026-12-31) in more
+,,1:0,165:b1: refused: ENGINE-INVARIANT scenario more: konto holds 150.00 PLN at the end of 2026-06-30, the base 100.00 PLN (E §9 invariant 3)
+  world: more
+  cut 2026-03-01
+,18:fixes/g6/deep_deep,8:fixes-g6,38:run deep.tally deep_s.tally --ask deep,2324:10:deep.tally,2085:model hh
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G6 review B1: a base move before from, read at a law date after it"
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+
+input pay_day: date
+
+input law_day: date
+
+def d1: money PLN = fee at law_day
+def d2: money PLN = d1 at law_day
+def d3: money PLN = d2 at law_day
+def d4: money PLN = d3 at law_day
+def d5: money PLN = d4 at law_day
+def d6: money PLN = d5 at law_day
+def d7: money PLN = d6 at law_day
+def d8: money PLN = d7 at law_day
+def d9: money PLN = d8 at law_day
+def d10: money PLN = d9 at law_day
+def d11: money PLN = d10 at law_day
+def d12: money PLN = d11 at law_day
+def d13: money PLN = d12 at law_day
+def d14: money PLN = d13 at law_day
+def d15: money PLN = d14 at law_day
+def d16: money PLN = d15 at law_day
+def d17: money PLN = d16 at law_day
+def d18: money PLN = d17 at law_day
+def d19: money PLN = d18 at law_day
+def d20: money PLN = d19 at law_day
+def d21: money PLN = d20 at law_day
+def d22: money PLN = d21 at law_day
+def d23: money PLN = d22 at law_day
+def d24: money PLN = d23 at law_day
+def d25: money PLN = d24 at law_day
+def d26: money PLN = d25 at law_day
+def d27: money PLN = d26 at law_day
+def d28: money PLN = d27 at law_day
+def d29: money PLN = d28 at law_day
+def d30: money PLN = d29 at law_day
+def d31: money PLN = d30 at law_day
+def d32: money PLN = d31 at law_day
+def d33: money PLN = d32 at law_day
+def d34: money PLN = d33 at law_day
+def d35: money PLN = d34 at law_day
+def d36: money PLN = d35 at law_day
+def d37: money PLN = d36 at law_day
+def d38: money PLN = d37 at law_day
+def d39: money PLN = d38 at law_day
+def d40: money PLN = d39 at law_day
+
+move pay: transfers
+  on pay_day
+  at law_day
+  leg cash from world to konto amount d40
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 100.00 PLN "the card"
+  pay_day = 2026-03-01 "the card"
+  law_day = 2026-08-01 "the card"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "the card"
+,12:deep_s.tally,198:scenario more over hh
+  tally 2
+  from 2026-07-01
+
+version more_fee
+  cite card
+  governs 2026-07-01..
+  known 2026-01-01
+  replace fee = 150.00 PLN "more"
+
+ask deep: bal(konto, 2026-12-31) in more
+,,1:0,167:deep: refused: ENGINE-INVARIANT scenario more: konto holds 150.00 PLN at the end of 2026-06-30, the base 100.00 PLN (E §9 invariant 3)
+  world: more
+  cut 2026-03-01
+,24:fixes/g6/inv3_law_hi_end,8:fixes-g6,49:run inv3_law.tally inv3_law_hi.tally --ask hi_end,1053:14:inv3_law.tally,754:model inv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probe: a plan move before from reads a fact at a law date from from"
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+
+input pay_day: date
+
+input rate_day: date
+
+def fee_then: money PLN = fee at rate_day
+
+move pay: transfers
+  on pay_day
+  leg cash from konto to world amount fee_then
+
+ask base_end: bal(konto, 2026-06-30) in inv
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 40.00 PLN "the card"
+  pay_day = 2026-03-15 "the card"
+  rate_day = 2026-09-01 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,17:inv3_law_hi.tally,250:scenario hi over inv
+  tally 2
+  from 2026-07-01
+  note "review probe: the fee rises from July"
+
+version hi_fee
+  cite card
+  governs 2026-07-01..
+  known 2026-01-01
+  replace fee = 100.00 PLN "the scenario"
+
+ask hi_end: bal(konto, 2026-06-30) in hi
+,,1:0,165:hi_end: refused: ENGINE-INVARIANT scenario hi: konto holds 400.00 PLN at the end of 2026-06-30, the base 460.00 PLN (E §9 invariant 3)
+  world: hi
+  cut 2026-03-01
+,25:fixes/g6/worlds_w_rule_up,8:fixes-g6,48:run worlds.tally worlds_up.tally --ask w_rule_up,1715:12:worlds.tally,895:model worlds
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+  note "T's vectors for MB2's two G6 survivors (issue #108, invented): a scenario's replace rule and its band table are its own; read in the model's world, from the scenario's file or through a diff against the model, the model's rule and table answer (L §6.4; read/rules.rs:39, read/bands.rs:65)"
+
+source card "T's card (invented)"
+
+unit DUK: currency minor 0.01
+
+input base_pay: money DUK
+
+input bonus: money DUK
+
+input revenue: money DUK
+
+band contribution(x: money DUK): money DUK
+
+def pay: money DUK at reader
+  rule base = base_pay
+
+version facts
+  cite card
+  governs always
+  known 2026-01-01
+  base_pay = 1000 "the base pay"
+  bonus = 100 "the raise"
+  revenue = 50000 "the revenue"
+  contribution: (-inf, 60000] = 300 "the model's table: 300.00"
+  contribution: (60000, inf) = 500 "the model's table: 500.00"
+,15:worlds_up.tally,775:scenario up over worlds
+  tally 2
+  from 2026-07-01
+  note "a scenario that adds a rule to pay and gives contribution a new table from July"
+
+version up_law
+  cite card
+  governs 2026-07-01..
+  known 2026-02-01
+  replace rule pay.raise beats base = base_pay + bonus
+  replace contribution: (-inf, 60000] = 400 "the scenario's table: 400.00"
+  replace contribution: (60000, inf) = 500 "the scenario's table: 500.00"
+
+ask w_rule_up: pay in up law 2026-08-01
+
+ask w_rule_model: pay in worlds law 2026-08-01
+
+ask w_rule_diff: diff(pay) in up against worlds law 2026-08-01
+
+ask w_band_up: contribution(revenue) in up law 2026-08-01
+
+ask w_band_model: contribution(revenue) in worlds law 2026-08-01
+
+ask w_band_diff: diff(contribution(revenue)) in up against worlds law 2026-08-01
+,,1:0,74:w_rule_up: 1 100.00 DUK
+  world: up
+  law date 2026-08-01, cut 2026-10-25
+,28:fixes/g6/worlds_w_rule_model,8:fixes-g6,51:run worlds.tally worlds_up.tally --ask w_rule_model,1715:12:worlds.tally,895:model worlds
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+  note "T's vectors for MB2's two G6 survivors (issue #108, invented): a scenario's replace rule and its band table are its own; read in the model's world, from the scenario's file or through a diff against the model, the model's rule and table answer (L §6.4; read/rules.rs:39, read/bands.rs:65)"
+
+source card "T's card (invented)"
+
+unit DUK: currency minor 0.01
+
+input base_pay: money DUK
+
+input bonus: money DUK
+
+input revenue: money DUK
+
+band contribution(x: money DUK): money DUK
+
+def pay: money DUK at reader
+  rule base = base_pay
+
+version facts
+  cite card
+  governs always
+  known 2026-01-01
+  base_pay = 1000 "the base pay"
+  bonus = 100 "the raise"
+  revenue = 50000 "the revenue"
+  contribution: (-inf, 60000] = 300 "the model's table: 300.00"
+  contribution: (60000, inf) = 500 "the model's table: 500.00"
+,15:worlds_up.tally,775:scenario up over worlds
+  tally 2
+  from 2026-07-01
+  note "a scenario that adds a rule to pay and gives contribution a new table from July"
+
+version up_law
+  cite card
+  governs 2026-07-01..
+  known 2026-02-01
+  replace rule pay.raise beats base = base_pay + bonus
+  replace contribution: (-inf, 60000] = 400 "the scenario's table: 400.00"
+  replace contribution: (60000, inf) = 500 "the scenario's table: 500.00"
+
+ask w_rule_up: pay in up law 2026-08-01
+
+ask w_rule_model: pay in worlds law 2026-08-01
+
+ask w_rule_diff: diff(pay) in up against worlds law 2026-08-01
+
+ask w_band_up: contribution(revenue) in up law 2026-08-01
+
+ask w_band_model: contribution(revenue) in worlds law 2026-08-01
+
+ask w_band_diff: diff(contribution(revenue)) in up against worlds law 2026-08-01
+,,1:0,81:w_rule_model: 1 000.00 DUK
+  world: worlds
+  law date 2026-08-01, cut 2026-10-25
+,27:fixes/g6/worlds_w_rule_diff,8:fixes-g6,50:run worlds.tally worlds_up.tally --ask w_rule_diff,1715:12:worlds.tally,895:model worlds
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+  note "T's vectors for MB2's two G6 survivors (issue #108, invented): a scenario's replace rule and its band table are its own; read in the model's world, from the scenario's file or through a diff against the model, the model's rule and table answer (L §6.4; read/rules.rs:39, read/bands.rs:65)"
+
+source card "T's card (invented)"
+
+unit DUK: currency minor 0.01
+
+input base_pay: money DUK
+
+input bonus: money DUK
+
+input revenue: money DUK
+
+band contribution(x: money DUK): money DUK
+
+def pay: money DUK at reader
+  rule base = base_pay
+
+version facts
+  cite card
+  governs always
+  known 2026-01-01
+  base_pay = 1000 "the base pay"
+  bonus = 100 "the raise"
+  revenue = 50000 "the revenue"
+  contribution: (-inf, 60000] = 300 "the model's table: 300.00"
+  contribution: (60000, inf) = 500 "the model's table: 500.00"
+,15:worlds_up.tally,775:scenario up over worlds
+  tally 2
+  from 2026-07-01
+  note "a scenario that adds a rule to pay and gives contribution a new table from July"
+
+version up_law
+  cite card
+  governs 2026-07-01..
+  known 2026-02-01
+  replace rule pay.raise beats base = base_pay + bonus
+  replace contribution: (-inf, 60000] = 400 "the scenario's table: 400.00"
+  replace contribution: (60000, inf) = 500 "the scenario's table: 500.00"
+
+ask w_rule_up: pay in up law 2026-08-01
+
+ask w_rule_model: pay in worlds law 2026-08-01
+
+ask w_rule_diff: diff(pay) in up against worlds law 2026-08-01
+
+ask w_band_up: contribution(revenue) in up law 2026-08-01
+
+ask w_band_model: contribution(revenue) in worlds law 2026-08-01
+
+ask w_band_diff: diff(contribution(revenue)) in up against worlds law 2026-08-01
+,,1:0,198:w_rule_diff: diff in up against worlds: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed pay: 1 100.00 DUK against 1 000.00 DUK
+  world: up
+  world: worlds
+  law date 2026-08-01, cut 2026-10-25
+,25:fixes/g6/worlds_w_band_up,8:fixes-g6,48:run worlds.tally worlds_up.tally --ask w_band_up,1715:12:worlds.tally,895:model worlds
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+  note "T's vectors for MB2's two G6 survivors (issue #108, invented): a scenario's replace rule and its band table are its own; read in the model's world, from the scenario's file or through a diff against the model, the model's rule and table answer (L §6.4; read/rules.rs:39, read/bands.rs:65)"
+
+source card "T's card (invented)"
+
+unit DUK: currency minor 0.01
+
+input base_pay: money DUK
+
+input bonus: money DUK
+
+input revenue: money DUK
+
+band contribution(x: money DUK): money DUK
+
+def pay: money DUK at reader
+  rule base = base_pay
+
+version facts
+  cite card
+  governs always
+  known 2026-01-01
+  base_pay = 1000 "the base pay"
+  bonus = 100 "the raise"
+  revenue = 50000 "the revenue"
+  contribution: (-inf, 60000] = 300 "the model's table: 300.00"
+  contribution: (60000, inf) = 500 "the model's table: 500.00"
+,15:worlds_up.tally,775:scenario up over worlds
+  tally 2
+  from 2026-07-01
+  note "a scenario that adds a rule to pay and gives contribution a new table from July"
+
+version up_law
+  cite card
+  governs 2026-07-01..
+  known 2026-02-01
+  replace rule pay.raise beats base = base_pay + bonus
+  replace contribution: (-inf, 60000] = 400 "the scenario's table: 400.00"
+  replace contribution: (60000, inf) = 500 "the scenario's table: 500.00"
+
+ask w_rule_up: pay in up law 2026-08-01
+
+ask w_rule_model: pay in worlds law 2026-08-01
+
+ask w_rule_diff: diff(pay) in up against worlds law 2026-08-01
+
+ask w_band_up: contribution(revenue) in up law 2026-08-01
+
+ask w_band_model: contribution(revenue) in worlds law 2026-08-01
+
+ask w_band_diff: diff(contribution(revenue)) in up against worlds law 2026-08-01
+,,1:0,72:w_band_up: 400.00 DUK
+  world: up
+  law date 2026-08-01, cut 2026-10-25
+,28:fixes/g6/worlds_w_band_model,8:fixes-g6,51:run worlds.tally worlds_up.tally --ask w_band_model,1715:12:worlds.tally,895:model worlds
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+  note "T's vectors for MB2's two G6 survivors (issue #108, invented): a scenario's replace rule and its band table are its own; read in the model's world, from the scenario's file or through a diff against the model, the model's rule and table answer (L §6.4; read/rules.rs:39, read/bands.rs:65)"
+
+source card "T's card (invented)"
+
+unit DUK: currency minor 0.01
+
+input base_pay: money DUK
+
+input bonus: money DUK
+
+input revenue: money DUK
+
+band contribution(x: money DUK): money DUK
+
+def pay: money DUK at reader
+  rule base = base_pay
+
+version facts
+  cite card
+  governs always
+  known 2026-01-01
+  base_pay = 1000 "the base pay"
+  bonus = 100 "the raise"
+  revenue = 50000 "the revenue"
+  contribution: (-inf, 60000] = 300 "the model's table: 300.00"
+  contribution: (60000, inf) = 500 "the model's table: 500.00"
+,15:worlds_up.tally,775:scenario up over worlds
+  tally 2
+  from 2026-07-01
+  note "a scenario that adds a rule to pay and gives contribution a new table from July"
+
+version up_law
+  cite card
+  governs 2026-07-01..
+  known 2026-02-01
+  replace rule pay.raise beats base = base_pay + bonus
+  replace contribution: (-inf, 60000] = 400 "the scenario's table: 400.00"
+  replace contribution: (60000, inf) = 500 "the scenario's table: 500.00"
+
+ask w_rule_up: pay in up law 2026-08-01
+
+ask w_rule_model: pay in worlds law 2026-08-01
+
+ask w_rule_diff: diff(pay) in up against worlds law 2026-08-01
+
+ask w_band_up: contribution(revenue) in up law 2026-08-01
+
+ask w_band_model: contribution(revenue) in worlds law 2026-08-01
+
+ask w_band_diff: diff(contribution(revenue)) in up against worlds law 2026-08-01
+,,1:0,79:w_band_model: 300.00 DUK
+  world: worlds
+  law date 2026-08-01, cut 2026-10-25
+,27:fixes/g6/worlds_w_band_diff,8:fixes-g6,50:run worlds.tally worlds_up.tally --ask w_band_diff,1715:12:worlds.tally,895:model worlds
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+  note "T's vectors for MB2's two G6 survivors (issue #108, invented): a scenario's replace rule and its band table are its own; read in the model's world, from the scenario's file or through a diff against the model, the model's rule and table answer (L §6.4; read/rules.rs:39, read/bands.rs:65)"
+
+source card "T's card (invented)"
+
+unit DUK: currency minor 0.01
+
+input base_pay: money DUK
+
+input bonus: money DUK
+
+input revenue: money DUK
+
+band contribution(x: money DUK): money DUK
+
+def pay: money DUK at reader
+  rule base = base_pay
+
+version facts
+  cite card
+  governs always
+  known 2026-01-01
+  base_pay = 1000 "the base pay"
+  bonus = 100 "the raise"
+  revenue = 50000 "the revenue"
+  contribution: (-inf, 60000] = 300 "the model's table: 300.00"
+  contribution: (60000, inf) = 500 "the model's table: 500.00"
+,15:worlds_up.tally,775:scenario up over worlds
+  tally 2
+  from 2026-07-01
+  note "a scenario that adds a rule to pay and gives contribution a new table from July"
+
+version up_law
+  cite card
+  governs 2026-07-01..
+  known 2026-02-01
+  replace rule pay.raise beats base = base_pay + bonus
+  replace contribution: (-inf, 60000] = 400 "the scenario's table: 400.00"
+  replace contribution: (60000, inf) = 500 "the scenario's table: 500.00"
+
+ask w_rule_up: pay in up law 2026-08-01
+
+ask w_rule_model: pay in worlds law 2026-08-01
+
+ask w_rule_diff: diff(pay) in up against worlds law 2026-08-01
+
+ask w_band_up: contribution(revenue) in up law 2026-08-01
+
+ask w_band_model: contribution(revenue) in worlds law 2026-08-01
+
+ask w_band_diff: diff(contribution(revenue)) in up against worlds law 2026-08-01
+,,1:0,212:w_band_diff: diff in up against worlds: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed contribution(revenue): 400.00 DUK against 300.00 DUK
+  world: up
+  world: worlds
+  law date 2026-08-01, cut 2026-10-25
+,19:fixes/g6/decided_b0,8:fixes-g6,42:run decided.tally decided_s.tally --ask b0,1555:13:decided.tally,1297:model decided
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's vector from M1's property scenario-before-19 (issue #108, invented): law_after.tally's movement before from, read at a law date after it, with a decision before from beside it; E 9 item 3 lists the movement whatever else ran before from"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input fee: money PLN
+
+input floor: money PLN
+
+input law_day: date
+
+input pay_day: date
+
+input sweep_day: date
+
+move pay: transfers
+  on pay_day
+  at law_day
+  leg cash from world to konto amount fee
+
+move sweep: transfers
+  on sweep_day
+  reads konto
+  leg cash from konto to savings amount max(0 PLN, bal(konto) - floor)
+
+ask b0: bal(konto, 2026-06-30)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 100.00 "the fee"
+  floor = 50.00 "the sweep's floor"
+  law_day = 2026-08-01 "the pay's law date, after from"
+  opening[konto] = 200.00 at 2026-01-01 start "the opening"
+  opening[savings] = 0.00 at 2026-01-01 start "the opening"
+  pay_day = 2026-03-01 "the pay's day, before from"
+  sweep_day = 2026-02-01 "the decision's day, before from"
+,15:decided_s.tally,211:scenario more over decided
+  tally 2
+  from 2026-07-01
+
+version more_fee
+  cite card
+  governs 2026-07-01..
+  known 2026-01-01
+  replace fee = 150.00 "the scenario's fee"
+
+ask b1: bal(konto, 2026-06-30) in more
+,,1:0,53:b0: 150.00 PLN
+  unfulfilled: sweep
+  cut 2026-03-01
+,19:fixes/g6/decided_b1,8:fixes-g6,42:run decided.tally decided_s.tally --ask b1,1555:13:decided.tally,1297:model decided
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's vector from M1's property scenario-before-19 (issue #108, invented): law_after.tally's movement before from, read at a law date after it, with a decision before from beside it; E 9 item 3 lists the movement whatever else ran before from"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input fee: money PLN
+
+input floor: money PLN
+
+input law_day: date
+
+input pay_day: date
+
+input sweep_day: date
+
+move pay: transfers
+  on pay_day
+  at law_day
+  leg cash from world to konto amount fee
+
+move sweep: transfers
+  on sweep_day
+  reads konto
+  leg cash from konto to savings amount max(0 PLN, bal(konto) - floor)
+
+ask b0: bal(konto, 2026-06-30)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 100.00 "the fee"
+  floor = 50.00 "the sweep's floor"
+  law_day = 2026-08-01 "the pay's law date, after from"
+  opening[konto] = 200.00 at 2026-01-01 start "the opening"
+  opening[savings] = 0.00 at 2026-01-01 start "the opening"
+  pay_day = 2026-03-01 "the pay's day, before from"
+  sweep_day = 2026-02-01 "the decision's day, before from"
+,15:decided_s.tally,211:scenario more over decided
+  tally 2
+  from 2026-07-01
+
+version more_fee
+  cite card
+  governs 2026-07-01..
+  known 2026-01-01
+  replace fee = 150.00 "the scenario's fee"
+
+ask b1: bal(konto, 2026-06-30) in more
+,,1:0,124:b1: 200.00 PLN
+  world: more
+  unfulfilled: sweep
+  held: fee = 150.00 PLN (more_fee), read for 2026-08-01
+  cut 2026-03-01
 ,

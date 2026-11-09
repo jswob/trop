@@ -20,8 +20,8 @@ HOLE-CALENDAR	L §8.1	S	*	3	S	kernel/g14/past_64_counts
 HOLE-CALENDAR	L §8.1	S	calendar <c> doesn't cover <year>	3	S	kernel/g14/past_64_counts
 HOLE-IMPRECISE	L §8.1	M1	*	37	M1	U:time/TIME-01
 HOLE-IMPRECISE	L §8.1	M1	date within <window> not precise enough for <comparison or use>	37	M1	U:time/TIME-01
-HOLE-CHANGED	L §8.1	S	*	4	S	kernel/g11/adjust
-HOLE-CHANGED	L §8.1	S	<move> on <t> changed after it was paid (version V); is back pay due, and when?	4	S	kernel/g11/adjust
+HOLE-CHANGED	L §8.1	S	*	5	S	kernel/g11/adjust
+HOLE-CHANGED	L §8.1	S	<move> on <t> changed after it was paid (version V); is back pay due, and when?	5	S	kernel/g11/adjust
 HOLE-SAME	L §8.1	M2	*	0	-	-
 HOLE-SAME	L §8.1	M2	<p> and <q> are one, but <x> differs on <d>: <a> (<row>) and <b> (<row>)	0	-	-
 HOLE-SAME	L §8.1	M2	<movement> crosses to <member> with no link	0	-	-
@@ -57,9 +57,9 @@ LOAD-NAME	L §8.3	M0	unknown id <x> (a unit)	1	M0	codes/m0/basic/name-kind-unit
 LOAD-NAME	L §8.3	M0	rule <d>.<r>: v <x> names no version	1	M0	codes/m0/basic/name-rule-v
 LOAD-SHADOW	L §8.3	M0	*	1	M0	codes/m0/basic/shadow
 LOAD-SHADOW	L §8.3	M0	bound variable <k> has the name of a top-level id	1	M0	codes/m0/basic/shadow
-LOAD-KEY	L §8.3	M0	*	35	S	kernel/g13/key_band_bad
+LOAD-KEY	L §8.3	M0	*	37	S	kernel/g13/key_band_bad
 LOAD-KEY	L §8.3	M0	<key> is not a key of <index or kind>	25	S	kernel/g13/key_band_bad
-LOAD-KEY	L §8.3	M0	ambiguous key <key>	1	M0	codes/order/passes-control
+LOAD-KEY	L §8.3	M0	ambiguous key <key>	3	M0	codes/order/passes-control
 LOAD-KEY	L §8.3	M0	a key is also an id	1	M0	codes/m0/basic/key-id
 LOAD-KEY	L §8.3	M0	wrong number of keys	1	M0	codes/m0/basic/key-count
 LOAD-KEY	L §8.3	M0	range <a>..<b> is out of order	1	M0	codes/m0/basic/key-range
@@ -106,14 +106,14 @@ LOAD-DOMAIN	L §8.3	M0	day_of of a key of the anchored index <x> has no meaning	
 LOAD-DOMAIN	L §8.3	M0	schedule of a key of the anchored index <x> has no meaning	1	M0	codes/m0/basic/domain-anchored-schedule
 LOAD-DOMAIN	L §8.3	M0	discrete over a key list or a stepped range	1	M0	codes/m0/basic/domain-discrete
 LOAD-DOMAIN	L §8.3	M0	?	5	M0	codes/m0/lifepath/path-past-64
-LOAD-UNIT	L §8.3	M0	*	39	S	kernel/g1/rate_duration
+LOAD-UNIT	L §8.3	M0	*	40	S	kernel/g1/rate_duration
 LOAD-UNIT	L §8.3	M0	<a> and <b> have different units	1	M0	codes/m0/basic/unit-mixed
 LOAD-UNIT	L §8.3	M0	<operation> on things of kind <K> has no meaning: they have no order a rule can read	1	M0	codes/m0/basic/unit-orders
 LOAD-UNIT	L §8.3	M0	settlement <s> of <adjustment> is in <u>, not <u'>	2	M0	codes/m0/adjust/unit-settlement
 LOAD-UNIT	L §8.3	M0	axis <a> is used as a mode, but <o> is not a mode name	1	M0	codes/m0/basic/unit-mode
 LOAD-UNIT	L §8.3	M0	<function>: the mode is <type>, not a rounding code	1	M0	codes/m0/basic/flows-mode
 LOAD-UNIT	L §8.3	M0	money in an undeclared currency	1	M0	codes/m0/basic/unit-currency
-LOAD-UNIT	L §8.3	M0	?	32	S	kernel/g1/rate_duration
+LOAD-UNIT	L §8.3	M0	?	33	S	kernel/g1/rate_duration
 LOAD-PRECISION	L §8.3	M0	*	3	M0	codes/m0/basic/precision
 LOAD-PRECISION	L §8.3	M0	<literal> is finer than the minor unit	2	M0	codes/m0/basic/precision
 LOAD-PRECISION	L §8.3	M0	<a/b> terminates; write it as a decimal	1	M0	codes/m0/basic/precision-fraction
@@ -285,7 +285,7 @@ RUN-LIMIT	L §8.4	S	a day comes before 0001-01-01	2	S	kernel/g14/days
 RUN-LIMIT	L §8.4	S	<a> .. <b> holds more than 1 000 000 keys	6	S	kernel/g14/day_range_end
 RUN-DIV	L §8.4	S	*	23	S	kernel/g1/text
 RUN-DIV	L §8.4	S	division by zero	23	S	kernel/g1/text
-RUN-DOMAIN	L §8.4	S	*	5	S	kernel/g1/step
+RUN-DOMAIN	L §8.4	S	*	7	S	kernel/g1/step
 RUN-DOMAIN	L §8.4	S	ln, sqrt or pow outside its domain	0	-	-
 RUN-DOMAIN	L §8.4	S	<operation> with a step <s> that is not positive	1	S	kernel/g1/step
 RUN-DOMAIN	L §8.4	S	<operation> has no meaning for <values>	0	-	-
@@ -293,7 +293,7 @@ RUN-DOMAIN	L §8.4	S	<a> and <b> are in different keys <u> and <u'> of <K>	0	-	-
 RUN-DOMAIN	L §8.4	S	<code> is not a <family> code	0	-	-
 RUN-DOMAIN	L §8.4	S	of <q> at <x>, which keeps no labels of its sort	0	-	-
 RUN-DOMAIN	L §8.4	S	calendar <c> has no business day	2	S	kernel/g14/calendar
-RUN-DOMAIN	L §8.4	S	?	3	S	kernel/g14/by_n
+RUN-DOMAIN	L §8.4	S	?	5	S	kernel/g14/by_n
 RUN-UNDECIDED	L §8.4	M6	*	0	-	-
 RUN-UNDECIDED	L §8.4	M6	<function> to <u> not decided within the precision cap	0	-	-
 RUN-PARAM	L §8.4	M6	*	1	M6	I:M:CH-03
@@ -342,8 +342,8 @@ RUN-RECORD	L §8.4	S	the stated parts of <x> at <instant> sum to <a>, over its t
 RUN-RECORD	L §8.4	S	reading <r> of <x> at <d> start pads and states parts while the day's first batch moves <x>	0	-	-
 WARN-NEGATIVE	L §8.5	S	*	69	S	I:X:konto_balance@b_r1
 WARN-NEGATIVE	L §8.5	S	<account> is below zero from <d>	69	S	I:X:konto_balance@b_r1
-WARN-UNREAD	L §8.5	S	*	89	S	kernel/I:M:RC-06
-WARN-UNREAD	L §8.5	S	<source, input, def or place> is read by nothing	89	S	kernel/I:M:RC-06
+WARN-UNREAD	L §8.5	S	*	92	S	kernel/I:M:RC-06
+WARN-UNREAD	L §8.5	S	<source, input, def or place> is read by nothing	92	S	kernel/I:M:RC-06
 WARN-LEGS	L §8.5	S	*	1	S	kernel/g10/observe
 WARN-LEGS	L §8.5	S	the two observations of <movement> disagree: <input>[<row>] (<a>) and <input>[<row>] (<b>)	1	S	kernel/g10/observe
 WARN-LABELS	L §8.5	M5b	*	4	M5b	I:S4:S4-01~s4
@@ -354,4 +354,4 @@ REQ-ASK	E §11	S	*	324	S	kernel/g13/range_key_unasked_ask
 REQ-ASK	E §11	S	no ask <q>	324	S	kernel/g13/range_key_unasked_ask
 REQ-CLOCK	E §11	M1	*	0	-	-
 REQ-PATHS	E §11	M7	*	0	-	-
-ENGINE-INVARIANT	E §11	M1	*	1	M1	codes/m1/decide/conservation
+ENGINE-INVARIANT	E §11	M1	*	4	M1	codes/m1/decide/conservation

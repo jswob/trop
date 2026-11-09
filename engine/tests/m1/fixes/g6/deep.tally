@@ -1,0 +1,75 @@
+model hh
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G6 review B1: a base move before from, read at a law date after it"
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+
+input pay_day: date
+
+input law_day: date
+
+def d1: money PLN = fee at law_day
+def d2: money PLN = d1 at law_day
+def d3: money PLN = d2 at law_day
+def d4: money PLN = d3 at law_day
+def d5: money PLN = d4 at law_day
+def d6: money PLN = d5 at law_day
+def d7: money PLN = d6 at law_day
+def d8: money PLN = d7 at law_day
+def d9: money PLN = d8 at law_day
+def d10: money PLN = d9 at law_day
+def d11: money PLN = d10 at law_day
+def d12: money PLN = d11 at law_day
+def d13: money PLN = d12 at law_day
+def d14: money PLN = d13 at law_day
+def d15: money PLN = d14 at law_day
+def d16: money PLN = d15 at law_day
+def d17: money PLN = d16 at law_day
+def d18: money PLN = d17 at law_day
+def d19: money PLN = d18 at law_day
+def d20: money PLN = d19 at law_day
+def d21: money PLN = d20 at law_day
+def d22: money PLN = d21 at law_day
+def d23: money PLN = d22 at law_day
+def d24: money PLN = d23 at law_day
+def d25: money PLN = d24 at law_day
+def d26: money PLN = d25 at law_day
+def d27: money PLN = d26 at law_day
+def d28: money PLN = d27 at law_day
+def d29: money PLN = d28 at law_day
+def d30: money PLN = d29 at law_day
+def d31: money PLN = d30 at law_day
+def d32: money PLN = d31 at law_day
+def d33: money PLN = d32 at law_day
+def d34: money PLN = d33 at law_day
+def d35: money PLN = d34 at law_day
+def d36: money PLN = d35 at law_day
+def d37: money PLN = d36 at law_day
+def d38: money PLN = d37 at law_day
+def d39: money PLN = d38 at law_day
+def d40: money PLN = d39 at law_day
+
+move pay: transfers
+  on pay_day
+  at law_day
+  leg cash from world to konto amount d40
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 100.00 PLN "the card"
+  pay_day = 2026-03-01 "the card"
+  law_day = 2026-08-01 "the card"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "the card"

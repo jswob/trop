@@ -1,0 +1,78 @@
+model probe
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "reviewer probe (invented)"
+
+source card "probe card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index ns = 0..100
+
+input a: num
+
+input b: num
+
+input ten: num
+
+input w[k in qs]: num
+
+input stp: money PLN
+
+input stz: money PLN
+
+input amt: money PLN
+
+input target: money PLN
+
+def c: num = b + b
+
+def d: num = a + w[q2]
+
+def tot: num = w[q1] + w[q2]
+
+def r[i in ns]: num = if i == 0 then a else r[i - 1] + (c as if {b = 1})
+
+def r2[i in ns]: num = if i == 0 then a else r2[i - 1] + 1
+
+def fee: money PLN = amt
+
+ask m1: d, d as if {a = 5}, d
+
+ask m2: (d as if {a = 1}) + (d as if {a = 2})
+
+ask m3: d as if {w[q2] = 100}
+
+ask m4: (d as if {a = 5}) + d
+
+ask s1: solve tot == ten for w[q1] in [0, 100] to 1 with w[*] = 3
+
+ask s2: solve fee == target for amt in [0.00 PLN, 1000.00 PLN] to stp
+
+ask s3: solve fee == target for amt in [0.00 PLN, 1000.00 PLN] to stz
+
+ask s4: solve fee == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+ask deep0: r2[100] as if {a = 5}
+
+ask deep1: r[100] as if {a = 5}
+
+ask deep2: r[100]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  a = 1 "the card"
+  b = 2 "the card"
+  ten = 10 "the card"
+  w[q1] = 1 "the card"
+  w[q2] = 2 "the card"
+  stp = -0.01 PLN "the card"
+  stz = 0 PLN "the card"
+  amt = 1.00 PLN "the card"
+  target = 20.00 PLN "the card"

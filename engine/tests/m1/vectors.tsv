@@ -184,3 +184,41 @@ fixes/g3/f7_register_q3	fixes-g3		engine/tests/m1/fixes/g3	engine/tests/m1/fixes
 fixes/g3/f3_ties_window_decided_a	fixes-g3		engine/tests/m1/fixes/g3	engine/tests/m1/fixes/g3/f3_ties_window_decided.tally	a		G3
 fixes/g3/f3_ties_window_decided_b	fixes-g3		engine/tests/m1/fixes/g3	engine/tests/m1/fixes/g3/f3_ties_window_decided.tally	b		G3
 fixes/g3/f3_ties_window_decided_c	fixes-g3		engine/tests/m1/fixes/g3	engine/tests/m1/fixes/g3/f3_ties_window_decided.tally	c		G3
+fixes/g4/rest_t_rem	fixes-g4		engine/tests/m1/fixes/g4	engine/tests/m1/fixes/g4/rest.tally	t_rem		G4
+fixes/g4/rest_t_rem_neg	fixes-g4		engine/tests/m1/fixes/g4	engine/tests/m1/fixes/g4/rest.tally	t_rem_neg		G4
+fixes/g4/rest_t_last	fixes-g4		engine/tests/m1/fixes/g4	engine/tests/m1/fixes/g4/rest.tally	t_last		G4
+fixes/g4/neg_m1	fixes-g4		engine/tests/m1/fixes/g4	engine/tests/m1/fixes/g4/neg.tally	m1		G4
+fixes/g4/neg_m2	fixes-g4		engine/tests/m1/fixes/g4	engine/tests/m1/fixes/g4/neg.tally	m2		G4
+fixes/g4/pr_p1	fixes-g4		engine/tests/m1/fixes/g4	engine/tests/m1/fixes/g4/pr.tally	p1		G4
+fixes/g4/pr_p7	fixes-g4		engine/tests/m1/fixes/g4	engine/tests/m1/fixes/g4/pr.tally	p7		G4
+fixes/g5/band_wording_worded	fixes-g5		engine/tests/m1/fixes/g5	engine/tests/m1/fixes/g5/band_wording.tally	worded		G5
+fixes/g5/band_wording_worded_later	fixes-g5		engine/tests/m1/fixes/g5	engine/tests/m1/fixes/g5/band_wording.tally	worded_later		G5
+fixes/g5/rule_wording_worded	fixes-g5		engine/tests/m1/fixes/g5	engine/tests/m1/fixes/g5/rule_wording.tally	worded		G5
+fixes/g5/rule_wording_worded_later	fixes-g5		engine/tests/m1/fixes/g5	engine/tests/m1/fixes/g5/rule_wording.tally	worded_later		G5
+fixes/g5/rule_wording_worded_early	fixes-g5		engine/tests/m1/fixes/g5	engine/tests/m1/fixes/g5/rule_wording.tally	worded_early		G5
+fixes/g5/deep_asif_deep1	fixes-g5		engine/tests/m1/fixes/g5	engine/tests/m1/fixes/g5/deep_asif.tally	deep1		G5
+fixes/g5/solve_none_s5	fixes-g5		engine/tests/m1/fixes/g5	engine/tests/m1/fixes/g5/solve_none.tally	s5		G5
+fixes/g5/solve_none_c1	fixes-g5		engine/tests/m1/fixes/g5	engine/tests/m1/fixes/g5/solve_none.tally	c1		G5
+fixes/g5/solve_none_c2	fixes-g5		engine/tests/m1/fixes/g5	engine/tests/m1/fixes/g5/solve_none.tally	c2		G5
+fixes/g5/solve_step_s1	fixes-g5		engine/tests/m1/fixes/g5	engine/tests/m1/fixes/g5/solve_step.tally	s1		G5
+fixes/g5/solve_step_s2	fixes-g5		engine/tests/m1/fixes/g5	engine/tests/m1/fixes/g5/solve_step.tally	s2		G5
+fixes/g5/solve_step_s3	fixes-g5		engine/tests/m1/fixes/g5	engine/tests/m1/fixes/g5/solve_step.tally	s3		G5
+fixes/g5/overlap_payroll	fixes-g5		engine/tests/m1/fixes/g5	engine/tests/m1/fixes/g5/overlap.tally	payroll		G5
+fixes/g5/overlap_raise	fixes-g5		engine/tests/m1/fixes/g5	engine/tests/m1/fixes/g5/overlap.tally	raise		G5
+fixes/g5/overlap_return_check	fixes-g5		engine/tests/m1/fixes/g5	engine/tests/m1/fixes/g5/overlap.tally	return_check		G5
+fixes/g5/m0plain_q	fixes-g5		engine/tests/m1/fixes/g5	engine/tests/m1/fixes/g5/m0plain.tally	q		G5
+fixes/g5/m0pins_q	fixes-g5		engine/tests/m1/fixes/g5	engine/tests/m1/fixes/g5/m0pins.tally	q		G5
+fixes/g6/adj_leak_in_model	fixes-g6		engine/tests/m1/fixes/g6	engine/tests/m1/fixes/g6/adj_leak.tally engine/tests/m1/fixes/g6/adj_leak_s.tally	in_model		G6
+fixes/g6/adj_leak_d	fixes-g6		engine/tests/m1/fixes/g6	engine/tests/m1/fixes/g6/adj_leak.tally engine/tests/m1/fixes/g6/adj_leak_s.tally	d		G6
+fixes/g6/ev_leak_in_model	fixes-g6		engine/tests/m1/fixes/g6	engine/tests/m1/fixes/g6/ev_leak.tally engine/tests/m1/fixes/g6/ev_leak_s.tally	in_model		G6
+fixes/g6/law_after_b1	fixes-g6		engine/tests/m1/fixes/g6	engine/tests/m1/fixes/g6/law_after.tally engine/tests/m1/fixes/g6/law_after_s.tally	b1		G6
+fixes/g6/deep_deep	fixes-g6		engine/tests/m1/fixes/g6	engine/tests/m1/fixes/g6/deep.tally engine/tests/m1/fixes/g6/deep_s.tally	deep		G6
+fixes/g6/inv3_law_hi_end	fixes-g6		engine/tests/m1/fixes/g6	engine/tests/m1/fixes/g6/inv3_law.tally engine/tests/m1/fixes/g6/inv3_law_hi.tally	hi_end		G6
+fixes/g6/worlds_w_rule_up	fixes-g6		engine/tests/m1/fixes/g6	engine/tests/m1/fixes/g6/worlds.tally engine/tests/m1/fixes/g6/worlds_up.tally	w_rule_up		G6
+fixes/g6/worlds_w_rule_model	fixes-g6		engine/tests/m1/fixes/g6	engine/tests/m1/fixes/g6/worlds.tally engine/tests/m1/fixes/g6/worlds_up.tally	w_rule_model		G6
+fixes/g6/worlds_w_rule_diff	fixes-g6		engine/tests/m1/fixes/g6	engine/tests/m1/fixes/g6/worlds.tally engine/tests/m1/fixes/g6/worlds_up.tally	w_rule_diff		G6
+fixes/g6/worlds_w_band_up	fixes-g6		engine/tests/m1/fixes/g6	engine/tests/m1/fixes/g6/worlds.tally engine/tests/m1/fixes/g6/worlds_up.tally	w_band_up		G6
+fixes/g6/worlds_w_band_model	fixes-g6		engine/tests/m1/fixes/g6	engine/tests/m1/fixes/g6/worlds.tally engine/tests/m1/fixes/g6/worlds_up.tally	w_band_model		G6
+fixes/g6/worlds_w_band_diff	fixes-g6		engine/tests/m1/fixes/g6	engine/tests/m1/fixes/g6/worlds.tally engine/tests/m1/fixes/g6/worlds_up.tally	w_band_diff		G6
+fixes/g6/decided_b0	fixes-g6		engine/tests/m1/fixes/g6	engine/tests/m1/fixes/g6/decided.tally engine/tests/m1/fixes/g6/decided_s.tally	b0		G6
+fixes/g6/decided_b1	fixes-g6		engine/tests/m1/fixes/g6	engine/tests/m1/fixes/g6/decided.tally engine/tests/m1/fixes/g6/decided_s.tally	b1		G6

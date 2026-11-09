@@ -1,0 +1,38 @@
+model ruleword
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+  note "G5 probe: a def whose transitional rule enters into force on 2026-07-01, read under a wording pin."
+
+source card "a synthetic card"
+
+unit DUK: currency minor 0.01
+
+input base_pay: money DUK
+
+input bonus: money DUK
+
+def pay: money DUK at reader
+  rule base = base_pay
+  rule raise beats base v v_raise = base_pay + bonus
+
+ask plain: pay law 2026-08-01
+
+ask worded: pay as if {wording 2026-06-30 for [pay]} law 2026-08-01
+
+ask worded_later: pay as if {wording 2026-07-01 for [pay]} law 2026-08-01
+
+ask worded_early: pay as if {wording 2026-07-02 for [pay]} law 2026-08-01
+
+version v_raise
+  cite card
+  governs 2026-07-01..
+  known 2026-01-01
+
+version facts
+  cite card
+  governs always
+  known 2026-01-01
+  base_pay = 1000 "the base"
+  bonus = 100 "the raise"

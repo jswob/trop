@@ -1,0 +1,12 @@
+scenario hi over inv
+  tally 2
+  from 2026-07-01
+  note "review probe: the fee rises from July"
+
+version hi_fee
+  cite card
+  governs 2026-07-01..
+  known 2026-01-01
+  replace fee = 100.00 PLN "the scenario"
+
+ask hi_end: bal(konto, 2026-06-30) in hi

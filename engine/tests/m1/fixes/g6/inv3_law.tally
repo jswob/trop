@@ -1,0 +1,37 @@
+model inv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probe: a plan move before from reads a fact at a law date from from"
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+
+input pay_day: date
+
+input rate_day: date
+
+def fee_then: money PLN = fee at rate_day
+
+move pay: transfers
+  on pay_day
+  leg cash from konto to world amount fee_then
+
+ask base_end: bal(konto, 2026-06-30) in inv
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 40.00 PLN "the card"
+  pay_day = 2026-03-15 "the card"
+  rate_day = 2026-09-01 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
