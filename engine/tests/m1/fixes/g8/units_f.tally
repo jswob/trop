@@ -1,0 +1,4 @@
+part asks_f
+  tally 2
+
+ask u_flat_wrong: value(flat, 2026-05-31) in PLN by last(px)

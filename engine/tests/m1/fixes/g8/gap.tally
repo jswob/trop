@@ -1,0 +1,70 @@
+model g1
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-06-30
+  note "G8's gap and pad probes (invented): a pad, an anchor, a hole reading, two readings on one day, a hole movement before a pad"
+
+source card "probe card"
+
+unit PLN: currency minor 0.01
+
+kind spending: place PLN signed outside
+
+place spent: spending lives 2026-01-01..
+
+place bank: outside lives 2026-01-01..
+
+place wallet: cash PLN lives 2026-01-01..
+
+place jar: cash PLN lives 2026-01-01..
+
+place box: cash PLN lives 2026-01-01..
+
+input atm_amt: money PLN
+
+input atm_day: date
+
+input box_amt: money PLN
+
+move atm: transfers
+  on atm_day
+  leg cash from bank to wallet amount atm_amt
+
+move topbox: transfers
+  on atm_day
+  leg cash from bank to box amount box_amt
+
+ask g_pad: gap(wallet, 2026-01-31), flows(wallet, 2026-01), flows(spent, 2026-01)
+
+ask g_anchor: gap(jar, 2026-01-31), flows(jar, 2026-01), bal(jar, 2026-01-31)
+
+ask g_none: gap(wallet, 2026-01-30)
+
+ask g_two: gap(wallet, 2026-02-28), flows(wallet, 2026-02), bal(wallet, 2026-02-28)
+
+ask g_hole: gap(box, 2026-01-31), flows(box, 2026-01), flows(box, 2026-02), bal(box, 2026-02-28)
+
+ask g_holeread: gap(jar, 2026-02-28), flows(jar, 2026-02)
+
+ask g_span: flows(wallet, 2026-01-31 .. 2026-01-31), flows(wallet, 2026-02-01 .. 2026-02-28)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  pad wallet from spent
+  pad box from spent
+  anchor jar
+  atm_amt = 300.00 PLN "the card"
+  atm_day = 2026-01-10 "the card"
+  box_amt = ?"what went into the box?" "the card"
+  opening[box] = 50.00 PLN at 2026-01-01 start "the card"
+  opening[jar] = 80.00 PLN at 2026-01-01 start "the card"
+  opening[wallet] = 400.00 PLN at 2026-01-01 start "the card"
+  stated[box] = 120.00 PLN at 2026-01-31 end "counted"
+  stated[jar] = 70.00 PLN at 2026-01-31 end "counted"
+  stated[jar] = ?"what did the jar hold?" at 2026-02-28 end "not counted"
+  stated[wallet] = 250.00 PLN at 2026-01-31 end "counted"
+  stated[wallet] = 260.00 PLN at 2026-02-28 start "counted in the morning"
+  stated[wallet] = 240.00 PLN at 2026-02-28 end "counted at night"

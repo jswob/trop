@@ -1,0 +1,113 @@
+model forms
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "value's price forms no probe reached (invented; review-g8.md's list and MB3's missed): a clause keyed by a kind that holds neither the place nor its unit, a clause per another unit, a price def, a law-dated price, a carried price before its first reading, an unkeyed price past its row, a place alive before the start with no reading"
+
+source card "probe card"
+
+unit PLN: currency minor 0.01
+
+unit etf "a fund unit"
+
+unit gold "an ounce"
+
+kind funds: place one min 0 priced unit_price
+
+kind boxes: holdings
+
+kind vaults: place one min 0 priced bprice
+
+kind goldfunds: place one min 0 priced gprice
+
+kind unit_buys: event certain
+  leg units: etf
+
+index month = month 2026-01..2026-12
+
+place fund: funds etf lives 2026-01-01..
+
+place box: boxes etf lives 2026-01-01..
+
+place vault: vaults etf lives 2026-01-01..
+
+place gfund: goldfunds etf lives 2026-01-01..
+
+place hut2: assets PLN priced hut_def lives 2026-01-01..
+
+place konto: accounts PLN lives 2026-01-01..
+
+place konto2: accounts PLN lives 2025-01-01..
+
+place market: outside lives 2026-01-01..
+
+input unit_price[x in funds]: num PLN/etf
+
+input bprice[x in boxes]: num PLN/etf
+
+input gprice[x in goldfunds]: num PLN/gold
+
+input lprice[m in month]: num PLN/etf
+
+input upx: num PLN/etf
+
+input px: num PLN/etf reading
+
+input hut_base: money PLN
+
+input hut_extra: money PLN
+
+input buy_day: date
+
+input n_box: num etf
+
+def hut_def: money PLN = hut_base + hut_extra
+
+move buy: unit_buys
+  on buy_day
+  leg units from market to fund amount n_box
+
+move buy2: unit_buys
+  on buy_day
+  leg units from market to box amount n_box
+
+move buy3: unit_buys
+  on buy_day
+  leg units from market to vault amount n_box
+
+move buy4: unit_buys
+  on buy_day
+  leg units from market to gfund amount n_box
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  buy_day = 2026-02-10 "the card"
+  hut_base = 1000.00 PLN "the card"
+  hut_extra = 250.00 PLN "the card"
+  n_box = 4 etf "the card"
+  bprice[box] = 120 PLN/etf "the card"
+  gprice[gfund] = 9000 PLN/gold "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  unit_price[fund] = 140 PLN/etf "the card"
+
+version prices_q1
+  cite card
+  governs 2026-01..2026-03
+  known 2026-01-01
+  lprice[2026-03] = 150 PLN/etf "the q1 list"
+  upx = 145 PLN/etf "the q1 list"
+
+version prices_q2
+  cite card
+  governs 2026-04..2026-12
+  known 2026-01-01
+  lprice[2026-03] = 170 PLN/etf "the q2 list"
+
+version readings_2026
+  cite card
+  governs 2026-01..2026-12
+  known 2026-01-01
+  px = 151 PLN/etf at 2026-04-01 "quoted"

@@ -1,0 +1,4 @@
+part asks_d
+  tally 2
+
+ask n_def: value(eur_acc, 2026-03-31) in USD by fxd

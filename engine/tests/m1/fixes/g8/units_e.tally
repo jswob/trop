@@ -1,0 +1,4 @@
+part asks_e
+  tally 2
+
+ask u_expr_eur: value(box, 2026-03-31) in EUR by mprice[month_of(2026-03-31)]

@@ -1,0 +1,102 @@
+model p
+  tally 2
+  on 2026-09-30
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented probe for G9's fix"
+
+unit DUK: currency minor 0.01
+
+index month = month 2026-01..2026-12
+
+kind sav: place DUK min 0
+
+place konto: accounts DUK lives 2026-01-01..
+
+place spare: accounts DUK lives 2026-01-01..
+
+kind accs: place DUK signed
+
+place world: outside lives 2026-01-01..
+
+input pay: money DUK
+
+input rent: money DUK
+
+input bonus: money DUK
+
+input bonus_day: date
+
+input rent_off: int
+
+input off_a: int
+
+input off_b: int
+
+input off_c: int
+
+input amt_a: money DUK
+
+move salary[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount pay
+
+move rent_pay[m in month]: transfers
+  on add_days(start_of(m), rent_off)
+  at start_of(m)
+  leg cash from konto to world amount rent
+
+move bonus_pay: transfers
+  on bonus_day
+  at bonus_day
+  leg cash from world to konto amount bonus
+
+move to_k2[m in month]: transfers
+  on add_days(start_of(m), off_b)
+  at start_of(m)
+  leg cash from konto to k2 amount amt_a
+
+move from_k2[m in month]: transfers
+  on add_days(start_of(m), off_c)
+  at start_of(m)
+  leg cash from k2 to world amount amt_a
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 1000.00
+  rent = 900.00
+  bonus = 250.00
+  bonus_day = 2026-11-01
+  rent_off = 9
+  off_a = 14
+  off_b = 3
+  off_c = 20
+  amt_a = 100.00
+  opening[konto] = 500.00 at 2026-01-01 start
+  opening[spare] = 0.00 at 2026-01-01 start
+
+version k2v
+  cite card
+  known 2026-01-01
+  accs + [k2] lives 2026-01-01..
+
+version k2end
+  cite card
+  known 2026-05-20
+  replace accs + [k2] lives 2026-01-01..2026-10-31
+
+ask q_sum_bal: sum(bal(k2, 2026-12-31) from d for d in 2026-01-01 .. 2026-09-30 step 1 day)
+
+ask q_sum_low: sum(low(k2, d .. 2026-12-31) from d for d in 2026-01-01 .. 2026-09-30 step 1 day)
+
+ask q_min_low: min(low(k2, d .. 2026-12-31) from d for d in 2026-01-01 .. 2026-09-30 step 1 day)
+
+ask q_back: bal(k2, 2026-12-31) from 2026-08-01, bal(k2, 2026-12-31) from 2026-05-25, low(k2, 2026-02-01 .. 2026-12-31) from 2026-02-01, bal(k2, 2026-11-30) from 2026-06-20, low(k2, 2026-01-05 .. 2026-12-31) from 2026-01-05, bal(k2, 2026-12-31) from 2026-09-30
+
+ask q_fwd: low(k2, 2026-01-05 .. 2026-12-31) from 2026-01-05, low(k2, 2026-04-11 .. 2026-12-31) from 2026-04-11, low(k2, 2026-05-21 .. 2026-12-31) from 2026-05-21, low(k2, 2026-06-16 .. 2026-12-31) from 2026-06-16, low(k2, 2026-04-09 .. 2026-12-31) from 2026-04-09
+
+ask q_edge: bal(k2, 2026-12-31) from 2026-04-09, bal(k2, 2026-12-31) from 2026-04-10, bal(k2, 2026-12-31) from 2026-04-11, bal(k2, 2026-12-31) from 2026-04-12, bal(k2, 2026-12-31) from 2026-04-10

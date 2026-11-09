@@ -1,0 +1,93 @@
+model c64
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "made up"
+
+unit DUK: currency minor 0.01
+
+axis xa
+  xa1 "one"
+  xa2 "two"
+
+axis xb
+  xb1 "one"
+  xb2 "two"
+
+axis xc
+  xc1 "one"
+  xc2 "two"
+
+axis xd
+  xd1 "one"
+  xd2 "two"
+
+axis xe
+  xe1 "one"
+  xe2 "two"
+
+axis xf
+  xf1 "one"
+  xf2 "two"
+
+place konto: accounts DUK lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input d1: date
+
+input fee: money DUK
+
+input p0: money DUK
+
+input p1: money DUK
+
+input p2: money DUK
+
+input p3: money DUK
+
+input p4: money DUK
+
+input p5: money DUK
+
+input p6: money DUK
+
+
+def pay: money DUK at d1
+  rule base = p0
+  rule ra beats base = p1 when xa == xa2
+  rule rb beats base = p2 when xb == xb2
+  rule rc beats base = p3 when xc == xc2
+  rule rd beats base = p4 when xd == xd2
+  rule re beats base = p5 when xe == xe2
+  rule rf beats base = p6 when xf == xf2
+
+move salary: transfers
+  on d1
+  leg cash from world to konto amount pay
+
+move charge[mo in months]: transfers
+  on start_of(mo)
+  leg cash from konto to world amount fee
+
+ask q_one: flows(charge, 2026-03-01) law 2026-10-25
+
+ask q_year: flows(charge, 2026) law 2026-10-25
+
+ask q_bal: bal(konto, 2026-12-31) law 2026-10-25
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d1 = 2026-03-01
+  fee = 10.00
+  p0 = 1000.00
+  p1 = 1001.00
+  p2 = 1002.00
+  p3 = 1003.00
+  p4 = 1004.00
+  p5 = 1005.00
+  p6 = 1006.00

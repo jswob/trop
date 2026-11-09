@@ -1,0 +1,16 @@
+part asks_a
+  tally 2
+
+ask fa_fund: value(fund, 2026-03-31) in PLN
+
+ask fa_def: value(hut2, 2026-03-31) in PLN
+
+ask fa_law: value(box, 2026-03-31) in PLN by lprice[month_of(2026-03-31)]
+
+ask fa_law_ask: value(box, 2026-03-31) in PLN by lprice[month_of(2026-03-31)] law 2026-05-01
+
+ask fa_early: value(box, 2026-03-31) in PLN by last(px)
+
+ask fa_anchor: value(konto2, 2026-03-31) in PLN
+
+ask fa_konto: value(konto, 2026-03-31) in PLN

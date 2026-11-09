@@ -74,3 +74,20 @@ fixes/g8/z3_z_flat_expr	m1_fixes	#126	P53 (G8 review B3): the same place valued 
 fixes/g9/fail_cut_f_long_short	m1_fixes	#127	P54 (G9 review B1): a projection's walk refused on a decision's day, read through a window that reaches it, then one that ends before it; refcore refuses both, the spec only the first (800.00 DUK for the second): the engine follows since G9's fix; refcore at M2's round
 fixes/g9/f_reg_g_a	m1_fixes	#127	P54 (G9 fix review NB3): six reads of one projection whose walk fails on 2026-05-01, a move left out; refcore refuses every read after the failing one, the spec only those reaching that day: the engine follows; refcore at M2's round
 fixes/g9/f_reg_g_b	m1_fixes	#127	P54: the same reads in another order; refcore answers the reads before the failing one and refuses every later one, the spec answers the last bal(konto, 2026-04-30) too: the engine follows; refcore at M2's round
+fixes/g8/f1_f_unset	m1_fixes	#126	P53 (G8 review B3, the fix's f1): a place priced whole in EUR valued by a written fx[d] unset that day; refcore refuses the file LOAD-PRICE states no by, L 5.10 gives the row's hole: the engine follows since G8's fix; refcore at M2's round
+fixes/g8/f1_f_expr	m1_fixes	#126	P53: the same by a written fx[d] that is set, 425 000 PLN; refcore LOAD-PRICE
+fixes/g8/f1_f_last_k	m1_fixes	#126	P53: the same by last(fxu[EUR]), a keyed price through its carry; refcore LOAD-PRICE, the spec 430 000 PLN with its held: line (P49)
+fixes/g8/f1_f_wrong_expr	m1_fixes	#126	P53 (G8 review B2's written twin): a written price per etf for a place priced in EUR; refcore LOAD-PRICE, the spec a unit refusal, RUN-DOMAIN
+fixes/g8/f1_f_wrong_last	m1_fixes	#126	P53 (G8 review B2): by last(px), px per etf; refcore 15 100 000 PLN, the spec RUN-DOMAIN
+fixes/g8/f1_f_keyed_last	m1_fixes	#123	P49: a whole-priced place by last(fxu), a price keyed by unit read past its reading; refcore drops the held: line
+fixes/g8/f1_f_unkeyed_last	m1_fixes	#123	P49: the same by an unkeyed last(fxr); refcore drops the held: line
+fixes/g8/f1_f_unc	m1_fixes	#125	P51: low with uncertain without from beside its plain twin; refcore drops the clause and its uncertain: line, the engine lists it since G8's fix
+fixes/g8/f1_f_unc_late	m1_fixes	#125	P51: the same over a later window; refcore drops the uncertain: line
+fixes/g8/f1_f_unc_gift	m1_fixes	#125	P51: the same over a window the uncertain gift raises; refcore -1 500.00 PLN, the spec -1 100.00 PLN, equal to f_unc_gift_bal's min(bal(konto, d) with uncertain ...)
+fixes/g8/lowu_p_plain_unc	m1_fixes	#125	P51: low with uncertain without from over the window of p_from; refcore drops the clause
+fixes/g8/forms_x_fx_upx_last	m1_fixes	#123	P49: by last(upx), an unkeyed state price read past its row's span; refcore drops the held: line
+fixes/g8/units_f_u_flat_wrong	m1_fixes	#126	P53 (G8 review B2): a place priced whole in EUR valued in PLN by last(px), px per etf; refcore 15 100 000 PLN, the spec RUN-DOMAIN: the engine follows since G8's fix
+fixes/g8/keyed_n_n_name	m1_fixes	#126	G8 fix review NB1: value(eur_acc, d) in USD by fxs, fxs a num PLN/u keyed by unit; refcore and the engine print 4 250 USD, a PLN figure labelled USD, where L 5.10 asks a num USD/u: refused as the written form is (LOAD-UNIT); red for G14 in m1_fixes_g8_a_price_in_another_currency_is_refused; refcore at M2's round
+fixes/g8/keyed_d_n_def	m1_fixes	#126	G8 fix review NB1: the same by fxd, a def keyed by unit; 4 250 USD on both, the spec a refusal (G14)
+fixes/g8/keyed_l_n_last	m1_fixes	#126	G8 fix review NB1: the same by last(fxu); 4 300 USD on both (the engine with P49's held: line), the spec a refusal (G14)
+fixes/g8/keyed_s_n_safe	m1_fixes	#126	G8 fix review NB1: a place of unit any by fxs in USD; a hole at fxs[PLN] on both, the spec a refusal of the price's currency (G14)

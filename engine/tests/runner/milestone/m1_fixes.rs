@@ -120,27 +120,76 @@ mod tests {
         group_holds("fixes-g6");
     }
 
-    /// G7's (`m1/fixes/g7/`): a diff over an axis (P47) and a leg refused under some options
-    /// read outside the fan-out (the fix review's NB2, NB3), both held for #122; a bracketed
-    /// period literal beside a key of a `by 3` index (#113, held).
+    /// G7's (`m1/fixes/g7/`): the review's B1 and the fix reviews' texts (`fl`, `fl2`, `tl`: a
+    /// move's flows beside another move's axis; `wn`: a warning kept where the walk reads no
+    /// unset axis; `c64`, `c64d`: 64 combinations by month and by day; `pr1`, `pr2` pinned);
+    /// a diff over an axis (P47) and a leg refused under some options read outside the fan-out
+    /// (the fix review's NB2, NB3), both held for #122; a bracketed period literal beside a key
+    /// of a `by 3` index (#113, held).
     #[test]
     fn m1_fixes_g7_axes() {
         group_holds("fixes-g7");
     }
 
-    /// G8's (`m1/fixes/g8/`): `held:` on `by last(p)` and `priced last(p)` (P49, #123); `last`
-    /// over an `always` row (P50, #118); `low … with uncertain` without `from` (P51, #125); `low`
-    /// over no day and a whole-priced `value` by a wrong unit or a written expression (P53, #126);
-    /// all held, the engine following the rulings.
+    /// G8's (`m1/fixes/g8/`): the fixes' `f1` and the review's forms no probe reached: `low`
+    /// plain, with its clauses, one day, in a decision on its own day (`RUN-CYCLE`); `gap` and a
+    /// pad's flows, in a scenario's world beside its own reading; `value` by a clause keyed by
+    /// a kind holding neither the place nor its unit (`LOAD-KEY`), per another unit
+    /// (`LOAD-UNIT`), a price def, a law-dated price, a carry before its first reading, an
+    /// unkeyed price past its row, a place alive before the start with no reading. Held:
+    /// `held:` on a price read through its carry (P49, #123); `last` over an `always` row
+    /// (P50, #118); `low … with uncertain` without `from` (P51, #125); a whole-priced `value`
+    /// by a wrong unit or a written expression (P53, #126); a price keyed by unit in another
+    /// currency (the fix review's NB1, #126, red for G14 below).
     #[test]
     fn m1_fixes_g8_projections_and_prices() {
         group_holds("fixes-g8");
     }
 
-    /// G9's (`m1/fixes/g9/`): a failed projection walk read through windows on both sides of its
-    /// day, in either order (P54, #127, held).
+    /// G9's (`m1/fixes/g9/`): the fix reviews' texts: a lifespan's end in a projection
+    /// (`f_life`), a rent a version covers read from two cuts (`cov_x`, `cov_nocov`, B1), a
+    /// booked A0 without its instance's day (`inv_min`, B2), a tree updated in place (`u_*`);
+    /// a failed projection walk read through windows on both sides of its day, in either order
+    /// (P54, #127, held where refcore differs).
     #[test]
     fn m1_fixes_g9_the_tree_and_its_twin() {
         group_holds("fixes-g9");
+    }
+
+    /// A price of another currency is refused, never a figure in the wrong unit (L 5.10: `by p`
+    /// is a `num CUR/u` in the asked CUR; L 3.2; pick P53, "a number from mismatched units is
+    /// never right"): every vector of `fixes/g8/units_*` and `fixes/g8/keyed_*` refuses its ask,
+    /// `LOAD-UNIT` or `RUN-DOMAIN`, the spec's reading, not refcore's bytes. The clause, the
+    /// written price and the carried one, and a whole-priced place, refuse on the engine; a price
+    /// keyed by unit (`by fxs`, `by fxd`, `by last(fxu)`, G8's fix review NB1) prints a PLN figure
+    /// labelled USD on both, held for #126 in its group: red for G14.
+    #[test]
+    fn m1_fixes_g8_a_price_in_another_currency_is_refused() {
+        let all = vectors(VECTORS).expect("m1/vectors.refcore reads");
+        let mine: Vec<_> = all
+            .iter()
+            .filter(|v| v.id.starts_with("fixes/g8/units_") || v.id.starts_with("fixes/g8/keyed_"))
+            .collect();
+        assert!(mine.len() >= 8, "the unit vectors are in the store");
+        let failed: Vec<String> = mine
+            .iter()
+            .filter_map(|v| {
+                let out = run_args(&v.args, &v.files).out;
+                let Some(line) = out.lines().find(|l| !l.starts_with("warning: ")) else {
+                    return Some(format!("{}: no answer line", v.id));
+                };
+                let refused = ["refused: LOAD-UNIT ", "refused: RUN-DOMAIN "]
+                    .iter()
+                    .any(|code| line.contains(code));
+                (!refused).then(|| format!("{}: {line}", v.id))
+            })
+            .collect();
+        assert!(
+            failed.is_empty(),
+            "{} of {} asks answer a price of another currency:\n{}",
+            failed.len(),
+            mine.len(),
+            failed.join("\n")
+        );
     }
 }
