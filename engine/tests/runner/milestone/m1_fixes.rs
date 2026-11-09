@@ -3,7 +3,7 @@
 //! builder group's review fixed, and each mutant its `mutants-local` left for T, as a fixture
 //! under `m1/fixes/g<n>/`, refcore's whole output in `m1/vectors.refcore` (groups `fixes-g<n>`),
 //! the engine's held to it byte for byte. Where refcore and the spec differ, the vector keeps
-//! refcore's bytes and is held "for #n" in `held.tsv` (#115 to #118). One test per group, so a
+//! refcore's bytes and is held "for #n" in `held.tsv` (#112 to #127). One test per group, so a
 //! failure names the group whose fix it undoes. `test = false` until M1's marker (pick P4).
 
 #![forbid(unsafe_code)]
@@ -17,8 +17,9 @@ mod tests {
     use tally_runner::m1::VECTORS;
 
     /// The groups this target tests, one `#[test]` each.
-    const GROUPS: [&str; 6] = [
-        "fixes-g1", "fixes-g2", "fixes-g3", "fixes-g4", "fixes-g5", "fixes-g6",
+    const GROUPS: [&str; 9] = [
+        "fixes-g1", "fixes-g2", "fixes-g3", "fixes-g4", "fixes-g5", "fixes-g6", "fixes-g7",
+        "fixes-g8", "fixes-g9",
     ];
 
     /// Runs every vector of `group` on the engine and holds it to refcore's run.
@@ -117,5 +118,29 @@ mod tests {
     #[test]
     fn m1_fixes_g6_worlds() {
         group_holds("fixes-g6");
+    }
+
+    /// G7's (`m1/fixes/g7/`): a diff over an axis (P47) and a leg refused under some options
+    /// read outside the fan-out (the fix review's NB2, NB3), both held for #122; a bracketed
+    /// period literal beside a key of a `by 3` index (#113, held).
+    #[test]
+    fn m1_fixes_g7_axes() {
+        group_holds("fixes-g7");
+    }
+
+    /// G8's (`m1/fixes/g8/`): `held:` on `by last(p)` and `priced last(p)` (P49, #123); `last`
+    /// over an `always` row (P50, #118); `low … with uncertain` without `from` (P51, #125); `low`
+    /// over no day and a whole-priced `value` by a wrong unit or a written expression (P53, #126);
+    /// all held, the engine following the rulings.
+    #[test]
+    fn m1_fixes_g8_projections_and_prices() {
+        group_holds("fixes-g8");
+    }
+
+    /// G9's (`m1/fixes/g9/`): a failed projection walk read through windows on both sides of its
+    /// day, in either order (P54, #127, held).
+    #[test]
+    fn m1_fixes_g9_the_tree_and_its_twin() {
+        group_holds("fixes-g9");
     }
 }

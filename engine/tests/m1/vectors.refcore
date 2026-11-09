@@ -36802,4 +36802,1529 @@ ask b1: bal(konto, 2026-06-30) in more
   unfulfilled: sweep
   held: fee = 150.00 PLN (more_fee), read for 2026-08-01
   cut 2026-03-01
+,18:fixes/g7/sc_w_diff,8:fixes-g7,40:run sc.tally sc_cheap.tally --ask w_diff,1226:8:sc.tally,964:model axw
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+axis rm
+  down "down"
+  half-up "half up"
+
+axis share
+  one "one"
+  two "two"
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input asked_on: date
+
+input rate[k in qs]: num
+
+input double: int
+
+def fee[k in qs]: money PLN at asked_on
+  rule base = round(amt * rate[k], minor(PLN), rm)
+  rule twice beats base = round(amt * rate[k] * double, minor(PLN), rm) when share == two
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+ask w_base: total
+
+ask w_as_if: total, total as if {scenario cheap}
+
+ask w_diff: diff(fee[k] for k in qs) in cheap against axw
+
+ask w_pin_diff: diff(total) in cheap against axw with rm = down, share = one
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.05 PLN "the card"
+  asked_on = 2026-06-01 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0.2 "the card"
+  double = 2 "the card"
+,14:sc_cheap.tally,223:scenario cheap over axw
+  tally 2
+  from 2026-01-01
+
+version cheap_rates
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  replace rate[q1] = 0.05 "a cheaper rate"
+
+ask c_in: total in cheap
+
+ask c_model: total in axw
+,,1:0,123:w_diff: diff in cheap against axw: 0 changed, 0 added, 0 removed, 2 unchanged
+  world: axw
+  world: cheap
+  cut 2026-03-01
+,17:fixes/g7/pr1_q_fc,8:fixes-g7,24:run pr1.tally --ask q_fc,972:9:pr1.tally,955:model pr
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "made up"
+
+unit DUK: currency minor 0.01
+
+axis pa
+  lo "lower pay"
+  hi "higher pay"
+
+place kasa: claims DUK lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input p_lo: money DUK
+
+input p_hi: money DUK
+
+input d1: date
+
+input d2: date
+
+input fee: money DUK
+
+def pay: money DUK at d1
+  rule base = p_lo
+  rule hi beats base = p_hi when pa == hi
+
+move salary: transfers
+  on d1
+  leg cash from world to kasa amount pay
+
+move charge: transfers
+  on d2
+  leg cash from kasa to world amount fee
+
+ask q_fc: flows(charge, 2026-03-02) law 2026-10-25
+
+ask q_fc_lo: flows(charge, 2026-03-02) with pa = lo law 2026-10-25
+
+ask q_fc_hi: flows(charge, 2026-03-02) with pa = hi law 2026-10-25
+
+ask q_bal: bal(kasa, 2026-12-31) law 2026-10-25
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p_lo = 5.00
+  p_hi = 20.00
+  d1 = 2026-03-01
+  d2 = 2026-03-02
+  fee = 10.00
+,,1:0,76:q_fc: 10.00 DUK
+  unfulfilled: charge
+  law date 2026-10-25, cut 2026-10-25
+,17:fixes/g7/pr2_q_fc,8:fixes-g7,24:run pr2.tally --ask q_fc,971:9:pr2.tally,954:model pr
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "made up"
+
+unit DUK: currency minor 0.01
+
+axis pa
+  lo "lower pay"
+  hi "higher pay"
+
+place kasa: claims DUK lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input p_lo: money DUK
+
+input p_hi: money DUK
+
+input d1: date
+
+input d2: date
+
+input fee: money DUK
+
+def pay: money DUK at d1
+  rule base = p_lo
+  rule hi beats base = p_hi when pa == hi
+
+move salary: transfers
+  on d1
+  leg cash from world to kasa amount pay
+
+move charge: transfers
+  on d2
+  leg cash from kasa to world amount fee
+
+ask q_fc: flows(charge, 2026-03-02) law 2026-10-25
+
+ask q_fc_lo: flows(charge, 2026-03-02) with pa = lo law 2026-10-25
+
+ask q_fc_hi: flows(charge, 2026-03-02) with pa = hi law 2026-10-25
+
+ask q_bal: bal(kasa, 2026-12-31) law 2026-10-25
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p_lo = 5.00
+  p_hi = 2.00
+  d1 = 2026-03-01
+  d2 = 2026-03-02
+  fee = 10.00
+,,1:0,76:q_fc: 10.00 DUK
+  unfulfilled: charge
+  law date 2026-10-25, cut 2026-10-25
+,21:fixes/g7/by3c_a_paren,8:fixes-g7,28:run by3c.tally --ask a_paren,899:10:by3c.tally,880:model by3b
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "made up"
+
+index qm = month 2026-01..2026-12 by 3
+
+index mm = month 2026-01..2026-12
+
+
+index fy = year 2024..2027 from 04-06
+
+input from_q: date
+
+input from_y: date
+
+def first_q: key qm = first(q in qm where start_of(q) >= from_q) at reader
+
+def first_m: key mm = first(q in mm where start_of(q) >= from_q) at reader
+
+
+def fy_of: key fy = first(y in fy where start_of(y) >= from_y) at reader
+
+ask a_paren: first_q == (2026-04) law 2026-10-18
+
+ask a_ne: first_q != 2026-04, first_q != 2026-07 law 2026-10-18
+
+ask a_lt: first_q < 2026-07, first_q > 2026-01 law 2026-10-18
+
+ask a_plain: first_m == 2026-04, first_m == 2026-05 law 2026-10-18
+
+
+ask a_fy_lt: fy_of < 2026, fy_of >= 2025 law 2026-10-18
+
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  from_q = 2026-04-01
+  from_y = 2025-01-01
+,,1:0,53:a_paren: false
+  law date 2026-10-18, cut 2026-10-18
+,22:fixes/g8/v1_a_box_last,8:fixes-g8,29:run v1.tally --ask a_box_last,2814:8:v1.tally,2797:model v1
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "G8's value probes (invented): holdings priced per unit, by an expression, by last, an asset in another currency, a place of unit any"
+
+source card "probe card"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+unit etf "a fund unit"
+
+unit gold "an ounce"
+
+kind funds: place one min 0 priced unit_price
+
+kind boxes: holdings
+
+kind safes: place any signed
+
+kind unit_buys: event certain
+  leg units: etf
+
+index month = month 2026-01..2026-12
+
+index day = day 2026-01-01..2026-12-31
+
+place fund: funds etf lives 2026-01-01..
+
+place box: boxes etf lives 2026-01-01..
+
+place safe: safes lives 2026-01-01..
+
+place konto: accounts PLN lives 2026-01-01..
+
+place eur_acc: accounts EUR lives 2026-01-01..
+
+place flat: assets EUR priced flat_eur lives 2026-01-01..
+
+place hut: assets PLN priced last(hut_val) lives 2026-01-01..
+
+place market: outside lives 2026-01-01..
+
+input unit_price[x in funds]: num PLN/etf
+
+input mprice[m in month]: num PLN/etf
+
+input px: num PLN/etf reading
+
+input fx[d in day]: num PLN/EUR
+
+input eurpx: num PLN/EUR
+
+input flat_eur: money EUR
+
+input hut_val: money PLN reading
+
+input buy_day: date
+
+input n_fund: num etf
+
+input n_box: num etf
+
+move buy: unit_buys
+  on buy_day
+  leg units from market to fund amount n_fund
+
+move buy2: unit_buys
+  on buy_day
+  leg units from market to box amount n_box
+
+ask a_fund: value(fund, 2026-03-31) in PLN
+
+ask a_box_expr: value(box, 2026-03-31) in PLN by mprice[month_of(2026-03-31)]
+
+ask a_box_last: value(box, 2026-05-31) in PLN by last(px)
+
+ask a_konto: value(konto, 2026-03-31) in PLN
+
+ask a_eur: value(eur_acc, 2026-03-31) in PLN by fx[2026-03-31]
+
+ask a_flat: value(flat, 2026-03-31) in PLN by last(eurpx)
+
+ask a_hut: value(hut, 2026-04-30) in PLN
+
+ask a_hut_early: value(hut, 2026-01-15) in PLN
+
+ask a_box_none: value(box, 2026-02-28) in PLN by mprice[month_of(2026-02-28)]
+
+ask a_box_before: value(box, 2026-01-31) in PLN by mprice[month_of(2026-01-31)]
+
+ask a_sum: sum(value(x, 2026-03-31) in PLN by fx[2026-03-31] for x in accounts on 2026-03-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  buy_day = 2026-02-10 "the card"
+  n_box = 4 etf "the card"
+  n_fund = 10 etf "the card"
+  eurpx = 4.30 PLN/EUR "the card"
+  flat_eur = 100000.00 EUR "the card"
+  fx[2026-03-31] = 4.25 PLN/EUR "the card"
+  mprice[2026-02] = none "the card"
+  mprice[2026-03] = 150 PLN/etf "the card"
+  opening[eur_acc] = 1000.00 EUR at 2026-01-01 start "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  unit_price[fund] = 140 PLN/etf "the card"
+
+version readings_2026
+  cite card
+  governs 2026-01..2026-12
+  known 2026-01-01
+  hut_val = 250000.00 PLN at 2026-02-01 "valued"
+  px = 151 PLN/etf at 2026-04-01 "quoted"
+,,1:0,108:a_box_last: 604 PLN
+  unfulfilled: buy2
+  cut 2026-06-30
+warning: WARN-UNREAD place safe is read by nothing
+,17:fixes/g8/v1_a_hut,8:fixes-g8,24:run v1.tally --ask a_hut,2814:8:v1.tally,2797:model v1
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "G8's value probes (invented): holdings priced per unit, by an expression, by last, an asset in another currency, a place of unit any"
+
+source card "probe card"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+unit etf "a fund unit"
+
+unit gold "an ounce"
+
+kind funds: place one min 0 priced unit_price
+
+kind boxes: holdings
+
+kind safes: place any signed
+
+kind unit_buys: event certain
+  leg units: etf
+
+index month = month 2026-01..2026-12
+
+index day = day 2026-01-01..2026-12-31
+
+place fund: funds etf lives 2026-01-01..
+
+place box: boxes etf lives 2026-01-01..
+
+place safe: safes lives 2026-01-01..
+
+place konto: accounts PLN lives 2026-01-01..
+
+place eur_acc: accounts EUR lives 2026-01-01..
+
+place flat: assets EUR priced flat_eur lives 2026-01-01..
+
+place hut: assets PLN priced last(hut_val) lives 2026-01-01..
+
+place market: outside lives 2026-01-01..
+
+input unit_price[x in funds]: num PLN/etf
+
+input mprice[m in month]: num PLN/etf
+
+input px: num PLN/etf reading
+
+input fx[d in day]: num PLN/EUR
+
+input eurpx: num PLN/EUR
+
+input flat_eur: money EUR
+
+input hut_val: money PLN reading
+
+input buy_day: date
+
+input n_fund: num etf
+
+input n_box: num etf
+
+move buy: unit_buys
+  on buy_day
+  leg units from market to fund amount n_fund
+
+move buy2: unit_buys
+  on buy_day
+  leg units from market to box amount n_box
+
+ask a_fund: value(fund, 2026-03-31) in PLN
+
+ask a_box_expr: value(box, 2026-03-31) in PLN by mprice[month_of(2026-03-31)]
+
+ask a_box_last: value(box, 2026-05-31) in PLN by last(px)
+
+ask a_konto: value(konto, 2026-03-31) in PLN
+
+ask a_eur: value(eur_acc, 2026-03-31) in PLN by fx[2026-03-31]
+
+ask a_flat: value(flat, 2026-03-31) in PLN by last(eurpx)
+
+ask a_hut: value(hut, 2026-04-30) in PLN
+
+ask a_hut_early: value(hut, 2026-01-15) in PLN
+
+ask a_box_none: value(box, 2026-02-28) in PLN by mprice[month_of(2026-02-28)]
+
+ask a_box_before: value(box, 2026-01-31) in PLN by mprice[month_of(2026-01-31)]
+
+ask a_sum: sum(value(x, 2026-03-31) in PLN by fx[2026-03-31] for x in accounts on 2026-03-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  buy_day = 2026-02-10 "the card"
+  n_box = 4 etf "the card"
+  n_fund = 10 etf "the card"
+  eurpx = 4.30 PLN/EUR "the card"
+  flat_eur = 100000.00 EUR "the card"
+  fx[2026-03-31] = 4.25 PLN/EUR "the card"
+  mprice[2026-02] = none "the card"
+  mprice[2026-03] = 150 PLN/etf "the card"
+  opening[eur_acc] = 1000.00 EUR at 2026-01-01 start "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  unit_price[fund] = 140 PLN/etf "the card"
+
+version readings_2026
+  cite card
+  governs 2026-01..2026-12
+  known 2026-01-01
+  hut_val = 250000.00 PLN at 2026-02-01 "valued"
+  px = 151 PLN/etf at 2026-04-01 "quoted"
+,,1:0,87:a_hut: 250 000 PLN
+  cut 2026-06-30
+warning: WARN-UNREAD place safe is read by nothing
+,18:fixes/g8/v3_k_last,8:fixes-g8,25:run v3.tally --ask k_last,1945:8:v3.tally,1928:model v3
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "G8's value probes (invented): a price keyed by unit, by name and by last, an input and a def, a place of unit any"
+
+source card "probe card"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+unit USD: currency minor 0.01
+
+kind safes: place any signed
+
+place eur_acc: accounts EUR lives 2026-01-01..
+
+place usd_acc: accounts USD lives 2026-01-01..
+
+place safe: safes lives 2026-01-01..
+
+place market: outside lives 2026-01-01..
+
+input fxu[u in currencies]: num PLN/u reading
+
+input fxs[u in currencies]: num PLN/u
+
+input put_day: date
+
+input amt_eur: money EUR
+
+input amt_pln: money PLN
+
+def fxd[u in currencies]: num PLN/u = fxs[u]
+
+move put_eur: transfers
+  on put_day
+  leg cash from market to safe amount amt_eur
+
+move put_pln: transfers
+  on put_day
+  leg cash from market to safe amount amt_pln
+
+ask k_name: value(eur_acc, 2026-03-31) in PLN by fxs
+
+ask k_last: value(eur_acc, 2026-03-31) in PLN by last(fxu)
+
+ask k_def: value(eur_acc, 2026-03-31) in PLN by fxd
+
+ask k_none: value(usd_acc, 2026-03-31) in PLN by fxs
+
+ask k_lastnone: value(usd_acc, 2026-03-31) in PLN by last(fxu)
+
+ask k_early: value(eur_acc, 2026-02-15) in PLN by last(fxu)
+
+ask k_safe: value(safe, 2026-03-31) in PLN by last(fxu)
+
+ask k_safe_name: value(safe, 2026-03-31) in PLN by fxs
+
+ask k_lx: last(fxu[EUR], 2026-03-31)
+
+ask k_fs: fxs[EUR]
+
+ask k_fl: fxu[EUR] law 2026-03-01
+
+ask k_fd: fxd[EUR]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  put_day = 2026-02-20 "the card"
+  amt_eur = 200.00 EUR "the card"
+  amt_pln = 300.00 PLN "the card"
+  fxs[EUR] = 4.25 PLN/EUR "the card"
+  opening[eur_acc] = 1000.00 EUR at 2026-01-01 start "the card"
+  opening[usd_acc] = 50.00 USD at 2026-01-01 start "the card"
+
+version readings_2026
+  cite card
+  governs 2026-01..2026-12
+  known 2026-01-01
+  fxu[EUR] = 4.30 PLN/EUR at 2026-03-01 "quoted"
+
+
+,,1:0,35:k_last: 4 300 PLN
+  cut 2026-06-30
+,18:fixes/g8/v3_k_safe,8:fixes-g8,25:run v3.tally --ask k_safe,1945:8:v3.tally,1928:model v3
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "G8's value probes (invented): a price keyed by unit, by name and by last, an input and a def, a place of unit any"
+
+source card "probe card"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+unit USD: currency minor 0.01
+
+kind safes: place any signed
+
+place eur_acc: accounts EUR lives 2026-01-01..
+
+place usd_acc: accounts USD lives 2026-01-01..
+
+place safe: safes lives 2026-01-01..
+
+place market: outside lives 2026-01-01..
+
+input fxu[u in currencies]: num PLN/u reading
+
+input fxs[u in currencies]: num PLN/u
+
+input put_day: date
+
+input amt_eur: money EUR
+
+input amt_pln: money PLN
+
+def fxd[u in currencies]: num PLN/u = fxs[u]
+
+move put_eur: transfers
+  on put_day
+  leg cash from market to safe amount amt_eur
+
+move put_pln: transfers
+  on put_day
+  leg cash from market to safe amount amt_pln
+
+ask k_name: value(eur_acc, 2026-03-31) in PLN by fxs
+
+ask k_last: value(eur_acc, 2026-03-31) in PLN by last(fxu)
+
+ask k_def: value(eur_acc, 2026-03-31) in PLN by fxd
+
+ask k_none: value(usd_acc, 2026-03-31) in PLN by fxs
+
+ask k_lastnone: value(usd_acc, 2026-03-31) in PLN by last(fxu)
+
+ask k_early: value(eur_acc, 2026-02-15) in PLN by last(fxu)
+
+ask k_safe: value(safe, 2026-03-31) in PLN by last(fxu)
+
+ask k_safe_name: value(safe, 2026-03-31) in PLN by fxs
+
+ask k_lx: last(fxu[EUR], 2026-03-31)
+
+ask k_fs: fxs[EUR]
+
+ask k_fl: fxu[EUR] law 2026-03-01
+
+ask k_fd: fxd[EUR]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  put_day = 2026-02-20 "the card"
+  amt_eur = 200.00 EUR "the card"
+  amt_pln = 300.00 PLN "the card"
+  fxs[EUR] = 4.25 PLN/EUR "the card"
+  opening[eur_acc] = 1000.00 EUR at 2026-01-01 start "the card"
+  opening[usd_acc] = 50.00 USD at 2026-01-01 start "the card"
+
+version readings_2026
+  cite card
+  governs 2026-01..2026-12
+  known 2026-01-01
+  fxu[EUR] = 4.30 PLN/EUR at 2026-03-01 "quoted"
+
+
+,,1:0,81:k_safe: 1 160 PLN
+  unfulfilled: put_eur
+  unfulfilled: put_pln
+  cut 2026-06-30
+,17:fixes/g8/v2_l_eur,8:fixes-g8,24:run v2.tally --ask l_eur,2920:8:v2.tally,2903:model v1
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "G8's value probes (invented): holdings priced per unit, by an expression, by last, an asset in another currency, a place of unit any"
+
+source card "probe card"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+unit etf "a fund unit"
+
+unit gold "an ounce"
+
+kind funds: place one min 0 priced unit_price
+
+kind boxes: holdings
+
+kind safes: place any signed
+
+kind unit_buys: event certain
+  leg units: etf
+
+index month = month 2026-01..2026-12
+
+index day = day 2026-01-01..2026-12-31
+
+place fund: funds etf lives 2026-01-01..
+
+place box: boxes etf lives 2026-01-01..
+
+place safe: safes lives 2026-01-01..
+
+place konto: accounts PLN lives 2026-01-01..
+
+place eur_acc: accounts EUR lives 2026-01-01..
+
+place flat: assets EUR priced flat_eur lives 2026-01-01..
+
+place hut: assets PLN priced last(hut_val) lives 2026-01-01..
+
+place market: outside lives 2026-01-01..
+
+input unit_price[x in funds]: num PLN/etf
+
+input mprice[m in month]: num PLN/etf
+
+input px: num PLN/etf reading
+
+input fx[d in day]: num PLN/EUR
+
+input eurpx: num PLN/EUR
+
+input flat_eur: money EUR
+
+input hut_val: money PLN reading
+
+input buy_day: date
+
+input n_fund: num etf
+
+input n_box: num etf
+
+move buy: unit_buys
+  on buy_day
+  leg units from market to fund amount n_fund
+
+move buy2: unit_buys
+  on buy_day
+  leg units from market to box amount n_box
+
+ask l_eur: last(eurpx, 2026-03-31)
+
+ask l_px: last(px, 2026-05-31)
+
+ask l_hut: last(hut_val, 2026-01-15)
+
+ask a_fund: value(fund, 2026-03-31) in PLN
+
+ask a_box_expr: value(box, 2026-03-31) in PLN by mprice[month_of(2026-03-31)]
+
+ask a_box_last: value(box, 2026-05-31) in PLN by last(px)
+
+ask a_konto: value(konto, 2026-03-31) in PLN
+
+ask a_eur: value(eur_acc, 2026-03-31) in PLN by fx[2026-03-31]
+
+ask a_flat: value(flat, 2026-03-31) in PLN by last(eurpx)
+
+ask a_hut: value(hut, 2026-04-30) in PLN
+
+ask a_hut_early: value(hut, 2026-01-15) in PLN
+
+ask a_box_none: value(box, 2026-02-28) in PLN by mprice[month_of(2026-02-28)]
+
+ask a_box_before: value(box, 2026-01-31) in PLN by mprice[month_of(2026-01-31)]
+
+ask a_sum: sum(value(x, 2026-03-31) in PLN by fx[2026-03-31] for x in accounts on 2026-03-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  buy_day = 2026-02-10 "the card"
+  n_box = 4 etf "the card"
+  n_fund = 10 etf "the card"
+  eurpx = 4.30 PLN/EUR "the card"
+  flat_eur = 100000.00 EUR "the card"
+  fx[2026-03-31] = 4.25 PLN/EUR "the card"
+  mprice[2026-02] = none "the card"
+  mprice[2026-03] = 150 PLN/etf "the card"
+  opening[eur_acc] = 1000.00 EUR at 2026-01-01 start "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  unit_price[fund] = 140 PLN/etf "the card"
+
+version readings_2026
+  cite card
+  governs 2026-01..2026-12
+  known 2026-01-01
+  hut_val = 250000.00 PLN at 2026-02-01 "valued"
+  px = 151 PLN/etf at 2026-04-01 "quoted"
+,,1:0,116:l_eur: ?"eurpx: no value at 2026-03-31" (eurpx)
+  cut 2026-06-30
+warning: WARN-UNREAD place safe is read by nothing
+,18:fixes/g8/v2_a_flat,8:fixes-g8,25:run v2.tally --ask a_flat,2920:8:v2.tally,2903:model v1
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "G8's value probes (invented): holdings priced per unit, by an expression, by last, an asset in another currency, a place of unit any"
+
+source card "probe card"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+unit etf "a fund unit"
+
+unit gold "an ounce"
+
+kind funds: place one min 0 priced unit_price
+
+kind boxes: holdings
+
+kind safes: place any signed
+
+kind unit_buys: event certain
+  leg units: etf
+
+index month = month 2026-01..2026-12
+
+index day = day 2026-01-01..2026-12-31
+
+place fund: funds etf lives 2026-01-01..
+
+place box: boxes etf lives 2026-01-01..
+
+place safe: safes lives 2026-01-01..
+
+place konto: accounts PLN lives 2026-01-01..
+
+place eur_acc: accounts EUR lives 2026-01-01..
+
+place flat: assets EUR priced flat_eur lives 2026-01-01..
+
+place hut: assets PLN priced last(hut_val) lives 2026-01-01..
+
+place market: outside lives 2026-01-01..
+
+input unit_price[x in funds]: num PLN/etf
+
+input mprice[m in month]: num PLN/etf
+
+input px: num PLN/etf reading
+
+input fx[d in day]: num PLN/EUR
+
+input eurpx: num PLN/EUR
+
+input flat_eur: money EUR
+
+input hut_val: money PLN reading
+
+input buy_day: date
+
+input n_fund: num etf
+
+input n_box: num etf
+
+move buy: unit_buys
+  on buy_day
+  leg units from market to fund amount n_fund
+
+move buy2: unit_buys
+  on buy_day
+  leg units from market to box amount n_box
+
+ask l_eur: last(eurpx, 2026-03-31)
+
+ask l_px: last(px, 2026-05-31)
+
+ask l_hut: last(hut_val, 2026-01-15)
+
+ask a_fund: value(fund, 2026-03-31) in PLN
+
+ask a_box_expr: value(box, 2026-03-31) in PLN by mprice[month_of(2026-03-31)]
+
+ask a_box_last: value(box, 2026-05-31) in PLN by last(px)
+
+ask a_konto: value(konto, 2026-03-31) in PLN
+
+ask a_eur: value(eur_acc, 2026-03-31) in PLN by fx[2026-03-31]
+
+ask a_flat: value(flat, 2026-03-31) in PLN by last(eurpx)
+
+ask a_hut: value(hut, 2026-04-30) in PLN
+
+ask a_hut_early: value(hut, 2026-01-15) in PLN
+
+ask a_box_none: value(box, 2026-02-28) in PLN by mprice[month_of(2026-02-28)]
+
+ask a_box_before: value(box, 2026-01-31) in PLN by mprice[month_of(2026-01-31)]
+
+ask a_sum: sum(value(x, 2026-03-31) in PLN by fx[2026-03-31] for x in accounts on 2026-03-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  buy_day = 2026-02-10 "the card"
+  n_box = 4 etf "the card"
+  n_fund = 10 etf "the card"
+  eurpx = 4.30 PLN/EUR "the card"
+  flat_eur = 100000.00 EUR "the card"
+  fx[2026-03-31] = 4.25 PLN/EUR "the card"
+  mprice[2026-02] = none "the card"
+  mprice[2026-03] = 150 PLN/etf "the card"
+  opening[eur_acc] = 1000.00 EUR at 2026-01-01 start "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  unit_price[fund] = 140 PLN/etf "the card"
+
+version readings_2026
+  cite card
+  governs 2026-01..2026-12
+  known 2026-01-01
+  hut_val = 250000.00 PLN at 2026-02-01 "valued"
+  px = 151 PLN/etf at 2026-04-01 "quoted"
+,,1:0,127:a_flat: ?"EUR has no price in PLN on 2026-03-31" (eurpx[])
+  cut 2026-06-30
+warning: WARN-UNREAD place safe is read by nothing
+,18:fixes/g8/lowu_p_u2,8:fixes-g8,25:run lowu.tally --ask p_u2,2845:10:lowu.tally,2825:model l1
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-06-30
+  note "G8's low probes (invented): the plain form, the clauses, the refusals and holes, a def that leaves a move out"
+
+source card "probe card"
+
+unit PLN: currency minor 0.01
+
+kind promises: transfers uncertain
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input rent_amt: money PLN
+
+input rent_day: date
+
+input wage_amt: money PLN
+
+input wage_day: date
+
+input gift_amt: money PLN
+
+input gift_day: date
+
+input odd_amt: money PLN
+
+input a_day: date
+
+input b_day: date
+
+input top_day: date
+
+input odd_day: date
+
+def floor_ahead: money PLN = low(konto, a_day .. b_day) from a_day
+
+def top_up: money PLN = max(0 PLN, -floor_ahead)
+
+move rent: transfers
+  on rent_day
+  leg cash from konto to world amount rent_amt
+
+move wage: transfers
+  on wage_day
+  leg cash from world to konto amount wage_amt
+
+move gift: promises
+  on gift_day
+  leg cash from world to konto amount gift_amt
+
+move topup: transfers
+  on top_day
+  reads konto
+  leg cash from world to konto amount top_up
+
+move odd: transfers
+  on odd_day
+  leg cash from konto to world amount odd_amt
+
+ask p_plain: low(konto, 2026-01-01 .. 2026-03-31)
+
+ask p_from: low(konto, 2026-03-01 .. 2026-04-30) from 2026-03-01
+
+ask p_unc: low(konto, 2026-03-01 .. 2026-04-30) from 2026-03-01 with uncertain
+
+ask p_plain_unc: low(konto, 2026-03-01 .. 2026-04-30) with uncertain
+
+ask p_before: low(konto, 2026-02-01 .. 2026-04-30) from 2026-03-01
+
+ask p_prerun: low(konto, 2026-01-01 .. 2026-04-30) from 2025-12-01
+
+ask p_hole: low(konto, 2026-03-01 .. 2026-05-31) from 2026-03-01
+
+ask p_hole_short: low(konto, 2026-03-01 .. 2026-05-09) from 2026-03-01
+
+ask p_def: floor_ahead, top_up
+
+ask p_one: low(konto, 2026-04-15 .. 2026-04-15) from 2026-03-01
+
+ask p_bal: bal(konto, 2026-04-30) from 2026-03-01, bal(konto, 2026-04-30) from 2026-03-01 with uncertain
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  a_day = 2026-03-01 "the card"
+  b_day = 2026-04-30 "the card"
+  odd_day = 2026-05-10 "the card"
+  top_day = 2026-04-20 "the card"
+  gift_amt = 400.00 PLN "the card"
+  gift_day = 2026-03-20 "the card"
+  odd_amt = ?"what does the odd bill come to?" "the card"
+  opening[konto] = 1000.00 PLN at 2026-01-01 start "the card"
+  rent_amt = 2500.00 PLN "the card"
+  rent_day = 2026-03-10 "the card"
+  wage_amt = 3000.00 PLN "the card"
+  wage_day = 2026-04-10 "the card"
+
+ask p_u1: bal(konto, 2026-04-30) with uncertain, bal(konto, 2026-04-30)
+
+ask p_u2: low(konto, 2026-04-30 .. 2026-04-30) with uncertain, low(konto, 2026-04-30 .. 2026-04-30)
+
+ask p_arg: argmin(bal(konto, d) from 2026-03-01 for d in 2026-03-01 .. 2026-04-30 step 1 day) ties by d
+
+ask p_min: min(bal(konto, d) from 2026-03-01 with uncertain for d in 2026-03-01 .. 2026-04-30 step 1 day)
+,,1:0,160:p_u2: (3 000.00 PLN, 3 000.00 PLN)
+  left out: topup, 1 instances, first 2026-04-20
+  cut 2026-03-01
+warning: WARN-NEGATIVE konto is below zero from 2026-03-10
+,19:fixes/g8/z2_z_wrong,8:fixes-g8,26:run z2.tally --ask z_wrong,2986:8:z2.tally,2969:model v1
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "G8's value probes (invented): holdings priced per unit, by an expression, by last, an asset in another currency, a place of unit any"
+
+source card "probe card"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+unit etf "a fund unit"
+
+unit gold "an ounce"
+
+kind funds: place one min 0 priced unit_price
+
+kind boxes: holdings
+
+kind safes: place any signed
+
+kind unit_buys: event certain
+  leg units: etf
+
+index month = month 2026-01..2026-12
+
+index day = day 2026-01-01..2026-12-31
+
+place fund: funds etf lives 2026-01-01..
+
+place box: boxes etf lives 2026-01-01..
+
+place safe: safes lives 2026-01-01..
+
+place konto: accounts PLN lives 2026-01-01..
+
+place eur_acc: accounts EUR lives 2026-01-01..
+
+place flat: assets EUR priced flat_eur lives 2026-01-01..
+
+place hut: assets PLN priced last(hut_val) lives 2026-01-01..
+
+place market: outside lives 2026-01-01..
+
+input unit_price[x in funds]: num PLN/etf
+
+input mprice[m in month]: num PLN/etf
+
+input px: num PLN/etf reading
+
+input fx[d in day]: num PLN/EUR
+
+input eurpx: num PLN/EUR
+
+input flat_eur: money EUR
+
+input hut_val: money PLN reading
+
+input buy_day: date
+
+input n_fund: num etf
+
+input n_box: num etf
+
+move buy: unit_buys
+  on buy_day
+  leg units from market to fund amount n_fund
+
+move buy2: unit_buys
+  on buy_day
+  leg units from market to box amount n_box
+
+ask a_fund: value(fund, 2026-03-31) in PLN
+
+ask a_box_expr: value(box, 2026-03-31) in PLN by mprice[month_of(2026-03-31)]
+
+ask a_box_last: value(box, 2026-05-31) in PLN by last(px)
+
+ask a_konto: value(konto, 2026-03-31) in PLN
+
+ask a_eur: value(eur_acc, 2026-03-31) in PLN by fx[2026-03-31]
+
+ask a_flat: value(flat, 2026-03-31) in PLN by last(eurpx)
+
+ask a_hut: value(hut, 2026-04-30) in PLN
+
+ask a_hut_early: value(hut, 2026-01-15) in PLN
+
+ask a_box_none: value(box, 2026-02-28) in PLN by mprice[month_of(2026-02-28)]
+
+ask a_box_before: value(box, 2026-01-31) in PLN by mprice[month_of(2026-01-31)]
+
+ask a_sum: sum(value(x, 2026-03-31) in PLN by fx[2026-03-31] for x in accounts on 2026-03-31)
+
+
+ask z_wrong: value(flat, 2026-05-31) in PLN by last(px)
+
+ask z_ok: value(flat, 2026-05-31) in PLN by last(eurpx)
+
+ask z_box: value(box, 2026-05-31) in PLN by last(eurpx)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  buy_day = 2026-02-10 "the card"
+  n_box = 4 etf "the card"
+  n_fund = 10 etf "the card"
+  eurpx = 4.30 PLN/EUR "the card"
+  flat_eur = 100000.00 EUR "the card"
+  fx[2026-03-31] = 4.25 PLN/EUR "the card"
+  mprice[2026-02] = none "the card"
+  mprice[2026-03] = 150 PLN/etf "the card"
+  opening[eur_acc] = 1000.00 EUR at 2026-01-01 start "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  unit_price[fund] = 140 PLN/etf "the card"
+
+version readings_2026
+  cite card
+  governs 2026-01..2026-12
+  known 2026-01-01
+  hut_val = 250000.00 PLN at 2026-02-01 "valued"
+  px = 151 PLN/etf at 2026-04-01 "quoted"
+,,1:0,92:z_wrong: 15 100 000 PLN
+  cut 2026-06-30
+warning: WARN-UNREAD place safe is read by nothing
+,23:fixes/g8/z3_z_flat_expr,8:fixes-g8,30:run z3.tally --ask z_flat_expr,2959:8:z3.tally,2942:model v1
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "G8's value probes (invented): holdings priced per unit, by an expression, by last, an asset in another currency, a place of unit any"
+
+source card "probe card"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+unit etf "a fund unit"
+
+unit gold "an ounce"
+
+kind funds: place one min 0 priced unit_price
+
+kind boxes: holdings
+
+kind safes: place any signed
+
+kind unit_buys: event certain
+  leg units: etf
+
+index month = month 2026-01..2026-12
+
+index day = day 2026-01-01..2026-12-31
+
+place fund: funds etf lives 2026-01-01..
+
+place box: boxes etf lives 2026-01-01..
+
+place safe: safes lives 2026-01-01..
+
+place konto: accounts PLN lives 2026-01-01..
+
+place eur_acc: accounts EUR lives 2026-01-01..
+
+place flat: assets EUR priced flat_eur lives 2026-01-01..
+
+place hut: assets PLN priced last(hut_val) lives 2026-01-01..
+
+place market: outside lives 2026-01-01..
+
+input unit_price[x in funds]: num PLN/etf
+
+input mprice[m in month]: num PLN/etf
+
+input px: num PLN/etf reading
+
+input fx[d in day]: num PLN/EUR
+
+input eurpx: num PLN/EUR
+
+input flat_eur: money EUR
+
+input hut_val: money PLN reading
+
+input buy_day: date
+
+input n_fund: num etf
+
+input n_box: num etf
+
+move buy: unit_buys
+  on buy_day
+  leg units from market to fund amount n_fund
+
+move buy2: unit_buys
+  on buy_day
+  leg units from market to box amount n_box
+
+ask a_fund: value(fund, 2026-03-31) in PLN
+
+ask a_box_expr: value(box, 2026-03-31) in PLN by mprice[month_of(2026-03-31)]
+
+ask a_box_last: value(box, 2026-05-31) in PLN by last(px)
+
+ask a_konto: value(konto, 2026-03-31) in PLN
+
+ask a_eur: value(eur_acc, 2026-03-31) in PLN by fx[2026-03-31]
+
+ask a_flat: value(flat, 2026-03-31) in PLN by last(eurpx)
+
+ask a_hut: value(hut, 2026-04-30) in PLN
+
+ask a_hut_early: value(hut, 2026-01-15) in PLN
+
+ask a_box_none: value(box, 2026-02-28) in PLN by mprice[month_of(2026-02-28)]
+
+ask a_box_before: value(box, 2026-01-31) in PLN by mprice[month_of(2026-01-31)]
+
+ask a_sum: sum(value(x, 2026-03-31) in PLN by fx[2026-03-31] for x in accounts on 2026-03-31)
+
+
+ask z_flat_expr: value(flat, 2026-03-31) in PLN by fx[2026-03-31]
+
+ask z_box_fx: value(box, 2026-03-31) in PLN by mprice[month_of(2026-03-31)]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  buy_day = 2026-02-10 "the card"
+  n_box = 4 etf "the card"
+  n_fund = 10 etf "the card"
+  eurpx = 4.30 PLN/EUR "the card"
+  flat_eur = 100000.00 EUR "the card"
+  fx[2026-03-31] = 4.25 PLN/EUR "the card"
+  mprice[2026-02] = none "the card"
+  mprice[2026-03] = 150 PLN/etf "the card"
+  opening[eur_acc] = 1000.00 EUR at 2026-01-01 start "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  unit_price[fund] = 140 PLN/etf "the card"
+
+version readings_2026
+  cite card
+  governs 2026-01..2026-12
+  known 2026-01-01
+  hut_val = 250000.00 PLN at 2026-02-01 "valued"
+  px = 151 PLN/etf at 2026-04-01 "quoted"
+,,1:1,75:refused: LOAD-PRICE value(flat) in PLN holds units in EUR and states no by
+,30:fixes/g9/fail_cut_f_long_short,8:fixes-g9,37:run fail_cut.tally --ask f_long_short,1436:14:fail_cut.tally,1412:model p
+  tally 2
+  on 2026-04-15
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented probe for F5"
+
+unit DUK: currency minor 0.01
+
+index month = month 2026-01..2026-12
+
+place konto: accounts DUK lives 2026-01-01..
+
+input prio: int
+
+input amt: money DUK
+
+input dec_day: date
+
+place world: outside lives 2026-01-01..
+
+input pay: money DUK
+
+input rent: money DUK
+
+input off: int
+
+move salary[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount pay
+
+move rent_pay[m in month]: transfers
+  on add_days(start_of(m), off)
+  at start_of(m)
+  leg cash from konto to world amount rent
+
+move pick[k in month]: transfers
+  on dec_day
+  at dec_day
+  reads konto
+  ties by add_days(start_of(k), prio)
+  leg cash from world to konto amount amt + 0 * bal(konto, dec_day start)
+
+ask f_long_short: low(konto, 2026-01-20 .. 2026-06-30) from 2026-01-20, bal(konto, 2026-03-31) from 2026-01-20
+
+ask f_short_long: bal(konto, 2026-03-31) from 2026-01-20, low(konto, 2026-01-20 .. 2026-06-30) from 2026-01-20
+
+ask f_short: bal(konto, 2026-03-31) from 2026-01-20
+
+ask f_long: low(konto, 2026-01-20 .. 2026-06-30) from 2026-01-20
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 1000.00
+  rent = 900.00
+  off = 9
+  opening[konto] = 500.00 at 2026-01-01 start
+  amt = 5.00
+  dec_day = 2026-05-01
+
+version later
+  cite card
+  governs always
+  known 2026-02-01
+  prio = 1
+,,1:0,124:f_long_short: (refused: RUN-TIE pick: its ties by is a hole, refused: RUN-TIE pick: its ties by is a hole)
+  cut 2026-04-15
+,18:fixes/g9/f_reg_g_a,8:fixes-g9,25:run f_reg.tally --ask g_a,2167:11:f_reg.tally,2146:model p
+  tally 2
+  on 2026-04-15
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented probe for F5"
+
+unit DUK: currency minor 0.01
+
+index month = month 2026-01..2026-12
+
+place konto: accounts DUK lives 2026-01-01..
+
+input prio: int
+
+input amt: money DUK
+
+input dec_day: date
+
+place world: outside lives 2026-01-01..
+
+input pay: money DUK
+
+input rent: money DUK
+
+input off: int
+
+move salary[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount pay
+
+move rent_pay[m in month]: transfers
+  on add_days(start_of(m), off)
+  at start_of(m)
+  leg cash from konto to world amount rent
+
+move pick[k in month]: transfers
+  on dec_day
+  at dec_day
+  reads konto
+  ties by add_days(start_of(k), prio)
+  leg cash from world to konto amount amt + 0 * bal(konto, dec_day start)
+
+input far_day: date
+
+move far: transfers
+  on far_day
+  at far_day
+  leg cash from world to konto amount amt
+
+ask g_a: low(konto, 2026-01-20 .. 2026-06-30) from 2026-01-20, low(konto, 2026-04-01 .. 2026-04-30) from 2026-01-20, bal(konto, 2026-04-30) from 2026-01-20, bal(konto, 2026-05-01 start) from 2026-01-20, bal(konto, 2026-05-01) from 2026-01-20, low(konto, 2026-05-15 .. 2026-06-30) from 2026-01-20
+
+ask g_b: bal(konto, 2026-04-30) from 2026-01-20, low(konto, 2026-04-01 .. 2026-04-30) from 2026-01-20, bal(konto, 2026-05-01) from 2026-01-20, low(konto, 2026-01-20 .. 2026-06-30) from 2026-01-20, bal(konto, 2026-04-30) from 2026-01-20
+
+ask g_c: low(konto, 2026-01-20 .. 2026-04-30) from 2026-01-20
+
+ask g_d: bal(konto, 2026-04-30) from 2026-01-20
+
+ask g_e: low(konto, 2026-04-01 .. 2026-04-30) from 2026-01-20
+
+ask g_f: bal(konto, 2026-05-01 start) from 2026-01-20
+
+ask g_g: sum(bal(konto, d) from 2026-01-20 for d in 2026-01-20 .. 2026-06-30 step 1 day)
+
+ask g_h: sum(bal(konto, d) from 2026-01-20 for d in 2026-01-20 .. 2026-04-30 step 1 day)
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 1000.00
+  rent = 900.00
+  off = 9
+  opening[konto] = 500.00 at 2026-01-01 start
+  amt = 5.00
+  dec_day = 2026-05-01
+  far_day = 2027-02-01
+
+version later
+  cite card
+  governs always
+  known 2026-02-01
+  prio = 1
+,,1:0,299:g_a: (refused: RUN-TIE pick: its ties by is a hole, refused: RUN-TIE pick: its ties by is a hole, refused: RUN-TIE pick: its ties by is a hole, refused: RUN-TIE pick: its ties by is a hole, refused: RUN-TIE pick: its ties by is a hole, refused: RUN-TIE pick: its ties by is a hole)
+  cut 2026-04-15
+,18:fixes/g9/f_reg_g_b,8:fixes-g9,25:run f_reg.tally --ask g_b,2167:11:f_reg.tally,2146:model p
+  tally 2
+  on 2026-04-15
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented probe for F5"
+
+unit DUK: currency minor 0.01
+
+index month = month 2026-01..2026-12
+
+place konto: accounts DUK lives 2026-01-01..
+
+input prio: int
+
+input amt: money DUK
+
+input dec_day: date
+
+place world: outside lives 2026-01-01..
+
+input pay: money DUK
+
+input rent: money DUK
+
+input off: int
+
+move salary[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount pay
+
+move rent_pay[m in month]: transfers
+  on add_days(start_of(m), off)
+  at start_of(m)
+  leg cash from konto to world amount rent
+
+move pick[k in month]: transfers
+  on dec_day
+  at dec_day
+  reads konto
+  ties by add_days(start_of(k), prio)
+  leg cash from world to konto amount amt + 0 * bal(konto, dec_day start)
+
+input far_day: date
+
+move far: transfers
+  on far_day
+  at far_day
+  leg cash from world to konto amount amt
+
+ask g_a: low(konto, 2026-01-20 .. 2026-06-30) from 2026-01-20, low(konto, 2026-04-01 .. 2026-04-30) from 2026-01-20, bal(konto, 2026-04-30) from 2026-01-20, bal(konto, 2026-05-01 start) from 2026-01-20, bal(konto, 2026-05-01) from 2026-01-20, low(konto, 2026-05-15 .. 2026-06-30) from 2026-01-20
+
+ask g_b: bal(konto, 2026-04-30) from 2026-01-20, low(konto, 2026-04-01 .. 2026-04-30) from 2026-01-20, bal(konto, 2026-05-01) from 2026-01-20, low(konto, 2026-01-20 .. 2026-06-30) from 2026-01-20, bal(konto, 2026-04-30) from 2026-01-20
+
+ask g_c: low(konto, 2026-01-20 .. 2026-04-30) from 2026-01-20
+
+ask g_d: bal(konto, 2026-04-30) from 2026-01-20
+
+ask g_e: low(konto, 2026-04-01 .. 2026-04-30) from 2026-01-20
+
+ask g_f: bal(konto, 2026-05-01 start) from 2026-01-20
+
+ask g_g: sum(bal(konto, d) from 2026-01-20 for d in 2026-01-20 .. 2026-06-30 step 1 day)
+
+ask g_h: sum(bal(konto, d) from 2026-01-20 for d in 2026-01-20 .. 2026-04-30 step 1 day)
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 1000.00
+  rent = 900.00
+  off = 9
+  opening[konto] = 500.00 at 2026-01-01 start
+  amt = 5.00
+  dec_day = 2026-05-01
+  far_day = 2027-02-01
+
+version later
+  cite card
+  governs always
+  known 2026-02-01
+  prio = 1
+,,1:0,296:g_b: (900.00 DUK, 900.00 DUK, refused: RUN-TIE pick: its ties by is a hole, refused: RUN-TIE pick: its ties by is a hole, refused: RUN-TIE pick: its ties by is a hole)
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  left out: far, 1 instances, first 2027-02-01
+  cut 2026-04-15
 ,

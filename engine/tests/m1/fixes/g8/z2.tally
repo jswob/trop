@@ -1,0 +1,125 @@
+model v1
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "G8's value probes (invented): holdings priced per unit, by an expression, by last, an asset in another currency, a place of unit any"
+
+source card "probe card"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+unit etf "a fund unit"
+
+unit gold "an ounce"
+
+kind funds: place one min 0 priced unit_price
+
+kind boxes: holdings
+
+kind safes: place any signed
+
+kind unit_buys: event certain
+  leg units: etf
+
+index month = month 2026-01..2026-12
+
+index day = day 2026-01-01..2026-12-31
+
+place fund: funds etf lives 2026-01-01..
+
+place box: boxes etf lives 2026-01-01..
+
+place safe: safes lives 2026-01-01..
+
+place konto: accounts PLN lives 2026-01-01..
+
+place eur_acc: accounts EUR lives 2026-01-01..
+
+place flat: assets EUR priced flat_eur lives 2026-01-01..
+
+place hut: assets PLN priced last(hut_val) lives 2026-01-01..
+
+place market: outside lives 2026-01-01..
+
+input unit_price[x in funds]: num PLN/etf
+
+input mprice[m in month]: num PLN/etf
+
+input px: num PLN/etf reading
+
+input fx[d in day]: num PLN/EUR
+
+input eurpx: num PLN/EUR
+
+input flat_eur: money EUR
+
+input hut_val: money PLN reading
+
+input buy_day: date
+
+input n_fund: num etf
+
+input n_box: num etf
+
+move buy: unit_buys
+  on buy_day
+  leg units from market to fund amount n_fund
+
+move buy2: unit_buys
+  on buy_day
+  leg units from market to box amount n_box
+
+ask a_fund: value(fund, 2026-03-31) in PLN
+
+ask a_box_expr: value(box, 2026-03-31) in PLN by mprice[month_of(2026-03-31)]
+
+ask a_box_last: value(box, 2026-05-31) in PLN by last(px)
+
+ask a_konto: value(konto, 2026-03-31) in PLN
+
+ask a_eur: value(eur_acc, 2026-03-31) in PLN by fx[2026-03-31]
+
+ask a_flat: value(flat, 2026-03-31) in PLN by last(eurpx)
+
+ask a_hut: value(hut, 2026-04-30) in PLN
+
+ask a_hut_early: value(hut, 2026-01-15) in PLN
+
+ask a_box_none: value(box, 2026-02-28) in PLN by mprice[month_of(2026-02-28)]
+
+ask a_box_before: value(box, 2026-01-31) in PLN by mprice[month_of(2026-01-31)]
+
+ask a_sum: sum(value(x, 2026-03-31) in PLN by fx[2026-03-31] for x in accounts on 2026-03-31)
+
+
+ask z_wrong: value(flat, 2026-05-31) in PLN by last(px)
+
+ask z_ok: value(flat, 2026-05-31) in PLN by last(eurpx)
+
+ask z_box: value(box, 2026-05-31) in PLN by last(eurpx)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  buy_day = 2026-02-10 "the card"
+  n_box = 4 etf "the card"
+  n_fund = 10 etf "the card"
+  eurpx = 4.30 PLN/EUR "the card"
+  flat_eur = 100000.00 EUR "the card"
+  fx[2026-03-31] = 4.25 PLN/EUR "the card"
+  mprice[2026-02] = none "the card"
+  mprice[2026-03] = 150 PLN/etf "the card"
+  opening[eur_acc] = 1000.00 EUR at 2026-01-01 start "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  unit_price[fund] = 140 PLN/etf "the card"
+
+version readings_2026
+  cite card
+  governs 2026-01..2026-12
+  known 2026-01-01
+  hut_val = 250000.00 PLN at 2026-02-01 "valued"
+  px = 151 PLN/etf at 2026-04-01 "quoted"

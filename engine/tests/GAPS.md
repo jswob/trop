@@ -71,3 +71,11 @@ last. A held fixture stays written (`codes/m0/held.tsv`, `m0/format/held.tsv`); 
 - **What I tried:** nothing on refcore or the engine. I judge the six refusals refcore's: P6 and P12 read L §2.1 as making each the bare literal's meaning. The `if` is less clear: L doesn't say an `if`'s arms take the key type the read wants.
 - **What I ask:** **(a) Recommended:** refcore is fixed at the next spec round for the six (refcore's half of P6), and the spec says an `if`'s arms take the type of the place it stands in (or that it doesn't, and N1's `if` is struck); until then the forms stay in `m1/carried/held.tsv`, and the builder builds P6 by the spec in G1 without their vectors. (b) The six are stored now with their bare twin's output as the expected bytes (refcore's run of the same text without the parentheses), so G1 is held to L §2.1 at once; a T script change, every byte still refcore's.
 - **State:** held out of `m1/vectors.tsv`; the three refcore answers are its vectors (`carried/years/p_compare`, `p_month`, `p_day`).
+
+## STOP-REPORT 2026-11-10: refcore crashes on `low` over a window whose last day is before its first; L §5.14.1 refuses it `RUN-EMPTY` (ruled: P53, #126)
+
+- **Kind:** refcore and the spec disagree; already ruled (the M1 coordinator's pick P53 on G8's review B1), so a record of the held fixtures, not a new question (M1, chunk C8, issue #108)
+- **Where:** L §5.14.1 (`low(x, a .. b)` is `min(bal(x, d) … for d in a .. b step 1 day)`), §2.5 (a stepped range holds none here), §5.11 and §8.4 (`min` over no keys: `RUN-EMPTY`); `codes/m1/held.tsv` `decide/low-empty`, `decide/low-empty-from`.
+- **What happens:** `codes/m1/decide/base.tally` with `ask q_decide: low(konto, 2026-03-31 .. 2026-03-01)`, with and without `from 2026-03-01`: refcore `q_decide: refused: REFCORE-NOT-YET an input this interpreter can't handle (IndexError: list index out of range)`; the engine `q_decide: refused: RUN-EMPTY low over no keys` since G8's fix (678d88a). Refcore prints no bytes a vector could keep (`m1/vectors.py` refuses `REFCORE-NOT-YET`), so the review's `z_rev` and `z_revf` are held here, not in `held.tsv`.
+- **What I ask:** nothing new: refcore's `m_e_low` is fixed at M2's round (#126); T then moves both rows to `edits.tsv` with refcore's bytes.
+- **State:** held in `codes/m1/held.tsv`; no vector depends on it.

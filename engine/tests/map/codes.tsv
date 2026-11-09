@@ -13,8 +13,8 @@ HOLE-ANCHOR	L §8.1	S	<place> has no balance before <d>	10	S	kernel/U:own/OWN-01
 HOLE-ANCHOR	L §8.1	S	<place> has no opening or stated reading	1	M1	codes/m1/rules/no-anchor
 HOLE-LOTS	L §8.1	M5a	*	0	-	-
 HOLE-LOTS	L §8.1	M5a	<place>: the lots held before <S> sum to <a>, the opening reading states <b>	0	-	-
-HOLE-PRICE	L §8.1	M1	*	2	M1	codes/m1/prices/no-price
-HOLE-PRICE	L §8.1	M1	<unit> has no price in <CUR> on <d>	1	M1	codes/m1/prices/no-price
+HOLE-PRICE	L §8.1	M1	*	3	M1	codes/m1/prices/no-price
+HOLE-PRICE	L §8.1	M1	<unit> has no price in <CUR> on <d>	2	M1	codes/m1/prices/no-price
 HOLE-PRICE	L §8.1	M1	<x> is in Y prices; no index moves it to <d>	1	M1	codes/m1/prices/price-year
 HOLE-CALENDAR	L §8.1	S	*	3	S	kernel/g14/past_64_counts
 HOLE-CALENDAR	L §8.1	S	calendar <c> doesn't cover <year>	3	S	kernel/g14/past_64_counts
@@ -192,8 +192,8 @@ LOAD-ORDER	L §8.3	M0	… read each other with no before or after	1	M0	codes/m0/
 LOAD-ORDER	L §8.3	M0	<a> before <b> contradicts a read of <b>'s legs	1	M0	codes/m0/basic/order-legs
 LOAD-ORDER	L §8.3	M0	<a> before <m>: <m> is a plan or an observation	1	M0	codes/m0/basic/order-plan
 LOAD-ORDER	L §8.3	M0	<x> after <m>: <m> is a plan or an observation	1	M0	codes/m0/basic/order
-LOAD-PRICE	L §8.3	M0	*	3	M0	codes/m0/basic/price
-LOAD-PRICE	L §8.3	M0	value(<x>) in <CUR> holds units in <u> and states no by	1	M0	codes/m0/basic/price-by
+LOAD-PRICE	L §8.3	M0	*	4	M0	codes/m0/basic/price
+LOAD-PRICE	L §8.3	M0	value(<x>) in <CUR> holds units in <u> and states no by	2	M0	codes/m0/basic/price-by
 LOAD-PRICE	L §8.3	M0	asset <x> names no price input	1	M0	codes/m0/basic/price
 LOAD-PRICE	L §8.3	M0	<x> names a price input on its kind <K> and on itself	1	M0	codes/m0/basic/price-twice
 LOAD-COVERS	L §8.3	M0	*	2	M0	codes/m0/adjust/covers-outside
@@ -270,11 +270,12 @@ RUN-NO-RULE	L §8.4	S	no rule applies to <x>[k] on <d>	2	S	kernel/g2/read
 RUN-LABEL	L §8.4	M5b	*	0	-	-
 RUN-LABEL	L §8.4	M5b	the shares of <movement>'s arrival at <place> sum to <s>, not 1	0	-	-
 RUN-LABEL	L §8.4	M5b	the share of <party> in <movement>'s arrival at <place> is below 0	0	-	-
-RUN-TIE	L §8.4	M5b	*	3	S	kernel/g5/order
+RUN-TIE	L §8.4	M5b	*	6	S	kernel/g5/order
 RUN-TIE	L §8.4	M5b	<aggregate, fill, move> has a tie at <keys> that changes the result, and no ties by	2	S	kernel/g5/order
 RUN-TIE	L §8.4	M5b	<first or last> over <things, movements or open-index keys> has no ties by	0	-	-
 RUN-TIE	L §8.4	M5b	<outflows> tie for a part of <place> that can't cover both	1	M5b	U:own/OWN-11/p19
 RUN-TIE	L §8.4	M5b	the split of <movement> at <place> ties at <labels>	0	-	-
+RUN-TIE	L §8.4	M5b	?	3	M1	m1/fixes/g9/f_reg_g_a
 RUN-EMPTY	L §8.4	M1	*	1	M1	codes/m1/rules/empty
 RUN-EMPTY	L §8.4	M1	<min, max, first, last, argmin, argmax, mean, share, quantile> over no keys	1	M1	codes/m1/rules/empty
 RUN-DIGITS	L §8.4	S	*	2	S	kernel/g1/cap
@@ -340,10 +341,10 @@ RUN-RECORD	L §8.4	S	same <p> = <q>: <p> doesn't exist	0	-	-
 RUN-RECORD	L §8.4	S	<r> and <r'> state one transfer and both fulfil <instance>: state them same	0	-	-
 RUN-RECORD	L §8.4	S	the stated parts of <x> at <instant> sum to <a>, over its total <b>	0	-	-
 RUN-RECORD	L §8.4	S	reading <r> of <x> at <d> start pads and states parts while the day's first batch moves <x>	0	-	-
-WARN-NEGATIVE	L §8.5	S	*	69	S	I:X:konto_balance@b_r1
-WARN-NEGATIVE	L §8.5	S	<account> is below zero from <d>	69	S	I:X:konto_balance@b_r1
-WARN-UNREAD	L §8.5	S	*	92	S	kernel/I:M:RC-06
-WARN-UNREAD	L §8.5	S	<source, input, def or place> is read by nothing	92	S	kernel/I:M:RC-06
+WARN-NEGATIVE	L §8.5	S	*	70	S	I:X:konto_balance@b_r1
+WARN-NEGATIVE	L §8.5	S	<account> is below zero from <d>	70	S	I:X:konto_balance@b_r1
+WARN-UNREAD	L §8.5	S	*	97	S	kernel/I:M:RC-06
+WARN-UNREAD	L §8.5	S	<source, input, def or place> is read by nothing	97	S	kernel/I:M:RC-06
 WARN-LEGS	L §8.5	S	*	1	S	kernel/g10/observe
 WARN-LEGS	L §8.5	S	the two observations of <movement> disagree: <input>[<row>] (<a>) and <input>[<row>] (<b>)	1	S	kernel/g10/observe
 WARN-LABELS	L §8.5	M5b	*	4	M5b	I:S4:S4-01~s4

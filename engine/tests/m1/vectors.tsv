@@ -222,3 +222,19 @@ fixes/g6/worlds_w_band_model	fixes-g6		engine/tests/m1/fixes/g6	engine/tests/m1/
 fixes/g6/worlds_w_band_diff	fixes-g6		engine/tests/m1/fixes/g6	engine/tests/m1/fixes/g6/worlds.tally engine/tests/m1/fixes/g6/worlds_up.tally	w_band_diff		G6
 fixes/g6/decided_b0	fixes-g6		engine/tests/m1/fixes/g6	engine/tests/m1/fixes/g6/decided.tally engine/tests/m1/fixes/g6/decided_s.tally	b0		G6
 fixes/g6/decided_b1	fixes-g6		engine/tests/m1/fixes/g6	engine/tests/m1/fixes/g6/decided.tally engine/tests/m1/fixes/g6/decided_s.tally	b1		G6
+fixes/g7/sc_w_diff	fixes-g7		engine/tests/m1/fixes/g7	engine/tests/m1/fixes/g7/sc.tally engine/tests/m1/fixes/g7/sc_cheap.tally	w_diff		G7
+fixes/g7/pr1_q_fc	fixes-g7		engine/tests/m1/fixes/g7	engine/tests/m1/fixes/g7/pr1.tally	q_fc		G7
+fixes/g7/pr2_q_fc	fixes-g7		engine/tests/m1/fixes/g7	engine/tests/m1/fixes/g7/pr2.tally	q_fc		G7
+fixes/g7/by3c_a_paren	fixes-g7		engine/tests/m1/fixes/g7	engine/tests/m1/fixes/g7/by3c.tally	a_paren		G7
+fixes/g8/v1_a_box_last	fixes-g8		engine/tests/m1/fixes/g8	engine/tests/m1/fixes/g8/v1.tally	a_box_last		G8
+fixes/g8/v1_a_hut	fixes-g8		engine/tests/m1/fixes/g8	engine/tests/m1/fixes/g8/v1.tally	a_hut		G8
+fixes/g8/v3_k_last	fixes-g8		engine/tests/m1/fixes/g8	engine/tests/m1/fixes/g8/v3.tally	k_last		G8
+fixes/g8/v3_k_safe	fixes-g8		engine/tests/m1/fixes/g8	engine/tests/m1/fixes/g8/v3.tally	k_safe		G8
+fixes/g8/v2_l_eur	fixes-g8		engine/tests/m1/fixes/g8	engine/tests/m1/fixes/g8/v2.tally	l_eur		G8
+fixes/g8/v2_a_flat	fixes-g8		engine/tests/m1/fixes/g8	engine/tests/m1/fixes/g8/v2.tally	a_flat		G8
+fixes/g8/lowu_p_u2	fixes-g8		engine/tests/m1/fixes/g8	engine/tests/m1/fixes/g8/lowu.tally	p_u2		G8
+fixes/g8/z2_z_wrong	fixes-g8		engine/tests/m1/fixes/g8	engine/tests/m1/fixes/g8/z2.tally	z_wrong		G8
+fixes/g8/z3_z_flat_expr	fixes-g8		engine/tests/m1/fixes/g8	engine/tests/m1/fixes/g8/z3.tally	z_flat_expr		G8
+fixes/g9/fail_cut_f_long_short	fixes-g9		engine/tests/m1/fixes/g9	engine/tests/m1/fixes/g9/fail_cut.tally	f_long_short		G9
+fixes/g9/f_reg_g_a	fixes-g9		engine/tests/m1/fixes/g9	engine/tests/m1/fixes/g9/f_reg.tally	g_a		G9
+fixes/g9/f_reg_g_b	fixes-g9		engine/tests/m1/fixes/g9	engine/tests/m1/fixes/g9/f_reg.tally	g_b		G9
