@@ -1,8 +1,9 @@
 //! The written year forms: a four-digit figure the checker read as a year, met at run as the year it names.
 //! Spec: L §2.1 (a four-digit literal is a year where a period is expected, an int elsewhere;
 //! a parenthesised literal is that literal; an `if`'s arms take the type of the place the `if`
-//! stands in, tally 2.1.6 and the ruling on #113), §2.5 (a key literal its position resolves),
-//! §4.1 (periods), §4.2 (period arguments).
+//! stands in, tally 2.1.6 and the ruling on #113), §2.5 (a key literal its position resolves;
+//! a bare key elsewhere takes the index of the other operand), §4.1 (periods, anchored and
+//! `by n`), §4.2 (period arguments).
 //! Twin: engine/tools/refcore/evaluate.py (`e_num`'s `_year` and period readings) and check.py
 //! (`ambig`, `compare`, `span`, `tdate_or_period`, which set the marks).
 //! Invariants: load lets a whole number reach a place that reads a year only as a year, so the
@@ -13,7 +14,7 @@
 use super::state::invariant;
 use crate::model::{Class, Number, Value};
 use crate::syntax::{Expr, Lit, Number as Written, Stop};
-use crate::time::{Period, PeriodKind, Step};
+use crate::time::{Day, Period, Step};
 
 /// Whether `e` is written in a year form: a four-digit figure, or an `if` with one among its
 /// arms, at any depth of `if`s and brackets (L §2.1).
@@ -46,26 +47,54 @@ pub(super) fn as_year(e: Option<&Expr>, v: &Value) -> Option<Period> {
     int_year(v)
 }
 
-/// Calendar year `year` as the key it labels on the grid of `like`, a key of a year index:
-/// the period of `like`'s index whose first day falls in that year, an anchored year
-/// included (`index cy = year 2025..2026 from 02-01`: 2026 is 2026-02-01 to 2027-01-31); the
-/// calendar year itself beside any other period, or where no key of that grid starts in it
-/// (refcore's `resolve_key_literal` of a year literal beside a key of a year index). L §2.1,
-/// §2.5, §4.1.
-pub(super) fn year_like(like: Period, year: Period) -> Period {
-    if like.kind() != PeriodKind::Year {
-        return year;
+/// A written period `written` (a year, a month, a quarter) as the key it labels on the grid
+/// of `like`, a key of a period index of its kind: the key of `like`'s index whose label is
+/// `written`'s, an anchored year or a period `by n` included (`index cy = year 2025..2026
+/// from 02-01`: 2026 is 2026-02-01 to 2027-01-31; `index qm = month 2026-01..2026-12 by 3`:
+/// 2026-04 is April to June); `written` itself beside a period of another kind, or where no
+/// key of that grid has its label (refcore's `resolve_key_literal` of a literal beside a key
+/// of a period index, its `compare`). L §2.1, §2.5, §4.1.
+pub(super) fn period_like(like: Period, written: Period) -> Period {
+    if like.kind() != written.kind() || like == written {
+        return written;
     }
     let Step::Months(n) = like.step() else {
-        return year;
+        return written;
     };
-    let years = i64::from(year.start().year()).checked_sub(i64::from(like.start().year()));
-    let months = years.and_then(|y| y.checked_mul(12));
-    let steps = months.and_then(|k| {
-        let n = i64::from(n);
-        (k.checked_rem_euclid(n)? == 0).then_some(k.checked_div_euclid(n)?)
-    });
-    steps.and_then(|k| like.shift(k)).unwrap_or(year)
+    let near = months_between(like.start(), written.start())
+        .and_then(|k| k.checked_div_euclid(i64::from(n)));
+    let Some(near) = near else {
+        return written;
+    };
+    let label = written.label();
+    for k in [Some(near), near.checked_add(1), near.checked_sub(1)]
+        .into_iter()
+        .flatten()
+    {
+        if let Some(key) = like.shift(k)
+            && key.label() == label
+        {
+            return key;
+        }
+    }
+    written
+}
+
+/// The months from the month of `from` to the month of `to`, whatever their days.
+fn months_between(from: Day, to: Day) -> Option<i64> {
+    let years = i64::from(to.year()).checked_sub(i64::from(from.year()))?;
+    let months = i64::from(to.month()).checked_sub(i64::from(from.month()))?;
+    years.checked_mul(12)?.checked_add(months)
+}
+
+/// Whether `e` is a written month or quarter, bracketed or not (L §2.1: a parenthesised
+/// literal is that literal).
+pub(super) fn period_literal(e: &Expr) -> bool {
+    let mut at = e;
+    while let Expr::Paren(inner) = at {
+        at = inner;
+    }
+    matches!(at, Expr::Lit(Lit::Month(..) | Lit::Quarter(..)))
 }
 
 /// The year an int names at a span's end. Load lets an int stand there only as a year: a

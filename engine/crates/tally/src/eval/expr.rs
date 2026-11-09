@@ -19,7 +19,7 @@ use super::state::{
 };
 use super::ty::{figure_like, sample};
 use super::windows::{as_window, window_arith, window_compare, window_negated};
-use super::years::{as_year, year_like, year_literal};
+use super::years::{as_year, period_like, period_literal, year_literal};
 use crate::base::{Load, Run};
 use crate::hole::{Hole, spread};
 use crate::model::{
@@ -671,15 +671,22 @@ enum Logic {
     All,
 }
 
-/// A side of a comparison written in a year form beside a period: the year it names; beside a
-/// key of a year index, the key that year labels on the index's grid, an anchored year
-/// included (refcore's `_year` mark of `compare`, and its `resolve_key_literal` of a year
-/// literal beside a key of a year index). L §2.1, §2.5, §4.1.
+/// A side of a comparison written in a year form, or as a month or quarter, beside a period:
+/// the year it names, and beside a key of a period index of its kind the key it labels on the
+/// index's grid, an anchored year or a period `by n` included (refcore's `_year` mark of
+/// `compare`, and its `resolve_key_literal` of a literal beside a key of a period index).
+/// L §2.1, §2.5, §4.1.
 fn year_beside(e: &Expr, v: Value, other: &Value) -> Value {
-    if let Value::Period(like) = other
-        && let Some(year) = as_year(Some(e), &v)
+    let Value::Period(like) = other else {
+        return v;
+    };
+    if let Some(year) = as_year(Some(e), &v) {
+        return Value::Period(period_like(*like, year));
+    }
+    if let Value::Period(written) = &v
+        && period_literal(e)
     {
-        return Value::Period(year_like(*like, year));
+        return Value::Period(period_like(*like, *written));
     }
     v
 }
