@@ -21,7 +21,8 @@ A micro row (`bench:<name>`, P8-M*) runs its criterion bench, crates/tally/bench
 whose id is the row's: the wall time is criterion's median (less the median of the bench id
 the row's `less` names, if any: P8-M4's run less the plain run), and the bench itself fails
 the run when a result isn't its known value. Its instructions run under gungraun on Linux CI
-(tools/gungraun/benches/<name>.rs); a bench with no criterion twin is left to CI.
+(tools/gungraun/benches/<name>.rs), where it has one (P8-5 has none: its instruction limit
+is P8-M4's); a bench with no criterion twin is left to CI.
 
 Until the lead sets the kernel at S (tools/kernel.toml), every number is proposed
 (PERFORMANCE §8): perf reports misses and exits 0. After S a miss exits 1. A wrong answer
@@ -51,6 +52,7 @@ KERNEL = os.path.join(TOOLS, "kernel.toml")
 CHECKS = os.path.join(ENGINE, "tests", "checks.tsv")
 DIGESTS = os.path.join(ENGINE, "tests", "perf-digests.tsv")
 BENCHES = os.path.join(ENGINE, "crates", "tally", "benches")
+GUNGRAUN = os.path.join(TOOLS, "gungraun", "benches")
 OUT = os.path.join(ENGINE, "target", "perf")
 CEILING_KB = 8 * 1024 * 1024  # D4-7: 8 GB on any run
 TIMEOUT_S = 90.0  # the user's hard budget for one run
@@ -223,7 +225,9 @@ def criterion_row(r, name):
         wall, how = criterion_wall(r, target)
     except LookupError as e:
         return f"BUDGET {r['id']}: criterion wrote no median at {e}", True
-    note = f"wall(1w): median {seconds(wall)} ({how}; its instructions under gungraun on Linux CI)"
+    counted = ("its instructions under gungraun on Linux CI" if os.path.isfile(os.path.join(GUNGRAUN, f"{name}.rs"))
+               else "no gungraun twin")
+    note = f"wall(1w): median {seconds(wall)} ({how}; {counted})"
     if "wall_s" in r and wall > r["wall_s"]:
         return (f"BUDGET {r['id']} wall(1w): median {seconds(wall)} > {seconds(r['wall_s'])} "
                 f"(+{(wall / r['wall_s'] - 1) * 100:.0f} %, {how})"), set_at_s()

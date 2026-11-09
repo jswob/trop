@@ -75,10 +75,14 @@ what = "one look-ahead decision: one range minimum over F (P §2.3, about 14 ste
 # in walk/lows.rs over n = 12 054 one-a-day legs, the read through an ask left out (about
 # 2.3 us before F5 starts, G9's STOP-REPORT); its budget is PERFORMANCE §8.1's 0.3 us, kept as
 # written, and a miss is reported at the gate. G9's fix measured 0.91 us (tmp/m1/g9/
-# prof_low.txt, samply). The bench is a rules file (crates/tally/benches/p8_5.rs) that reaches
-# the library only through its public API, and the tree is private to its fence: it waits for
-# the builder's public entry to it.
-recipe = "waits: bench:p8_5 (Tree::lowest_change, n = 12 054), once the builder makes the tree reachable from a bench"
+# prof_low.txt, samply), G9's last fix 0.27-0.35 us (whole minor units, P56; samply). The
+# bench (crates/tally/benches/p8_5.rs, since 2026-11-10) reaches the tree through the
+# builder's public entry, tally::walk::RangeMinimum (238fbfb): 12 054 days, 1.25 a day and
+# 9.00 out every seventh, each read low(x, d .. E) from d for the next d in turn, every
+# answer checked against a plain walk first. The rules step's figure, AC power, load 2.3:
+# 266.6 ns (criterion's median of 100 samples, 19 M reads in 5 s, interval 266.1-267.1 ns).
+# Its instruction limit is P8-M4's (PERFORMANCE 8.1), so the bench has no gungraun twin.
+recipe = "bench:p8_5"
 wall_s = 0.0000003
 blocks = "tag"
 
@@ -376,9 +380,12 @@ what = "a run with one read of a written projection less the plain run, E §4.3'
 # gungraun's on the whole run, its first Linux figure after F5 x 1.2: 2 719 766 671 Ir
 # (projection; plain 2 681 374 274; CI run 42687645678, d145ef2) -> 3 263 720 006, which
 # holds the plain run too. S's figures were 72.9 ms and 795 765 251 Ir.
+# Pick P58 (2026-11-10): the instruction limit is the guard (every PR, Linux) and the wall is
+# information: the row sets no wall_s, and tools/perf prints the difference unjudged. Two
+# medians about 200 ms wide leave the 2.22 ms set above in their noise: G9's last fix
+# measured 2.87 and then 1.91 ms, the rules step 3.69, 0.99, 0.72 and -8.94 ms.
 recipe = "bench:p8_m4"
 less = "P8-M4-plain"
-wall_s = 0.00222
 instructions = 3263720006
 blocks = "pr"
 
