@@ -13,6 +13,9 @@
 #     "check:<id>"   one row of engine/tests/checks.tsv, run as run.py runs it
 #     "bench:<name>" a gungraun bench in engine/tools/gungraun/benches/ (Linux CI), and its
 #                    criterion twin in crates/tally/benches/ for the Mac's wall time, if any
+#     "test:<target> <name>…"  T's runner tests that hold the row's law (P8-9); they pass or
+#                    fail, never timed: check's `gating` step runs them from their
+#                    milestone's marker (R-77), and perf only names them
 #     "waits: ..."   nothing runs it yet; the text says what it waits for
 #   wall_s, footprint_mb, workers: the Mac's budget (absent: the row sets none)
 #   less: a micro row's criterion bench id whose median is subtracted from its own (P8-M4:
@@ -36,7 +39,10 @@ blocks = "tag"
 id = "P8-2"
 group = "I"
 what = "a deterministic run, cold: 33 years daily at 10x the household"
-recipe = "waits: T's generator (SO8-10); its 1x twin from M1"
+# its 1x twin from M1 (pick P11, 2026-11-09): T's slowest M1 check of household X on refcore,
+# I:X:pit37@c7_fast (1.40 s there; engine/tests/MILESTONE-M1.md row 5), until T's generator
+# (SO8-10) gives the 10x run; T writes its digest in engine/tests/perf-digests.tsv
+recipe = "check:I:X:pit37@c7_fast"
 wall_s = 1.0
 footprint_mb = 1024
 blocks = "tag"
@@ -107,7 +113,10 @@ blocks = "tag"
 id = "P8-9"
 group = "I"
 what = "determinism: equal result hashes with W in {1, 2, 3, 5, 6, 7}, Mac and Linux"
-recipe = "waits: T's runner (gate 6)"
+# from M1 (pick P11, 2026-11-09): m1_properties' determinism law, every record of
+# properties/m1.corpus run twice to the same bytes and in any order of files and sections,
+# on the Mac (check) and Linux (CI); W > 1 waits for the thread module (P8-4's milestone)
+recipe = "test:m1_properties m1_determinism_across_runs m1_determinism_files_and_sections_in_any_order"
 blocks = "pr"
 
 # 8.2 Group C: the six measured checks at 1x, cold, 1 worker
