@@ -153,7 +153,10 @@ pub enum Progress {
     Planning,
     /// The days are being walked.
     Walking,
-    /// Every day is walked.
+    /// Every day is walked, its close still to run (its warnings, its signature, E §9 item
+    /// 3), so a read cut short past the counted depth runs it again on replay (R-16).
+    Walked,
+    /// Every day is walked and closed.
     Done,
     /// A refusal the walk met: every read of it is refused (L §8.4).
     Failed(Stop),
@@ -267,6 +270,9 @@ pub struct Walk {
     /// A main walk's checkpoints, one at the start of each month it walked into, in day
     /// order (P §2.4).
     pub(crate) checkpoints: Vec<Checkpoint>,
+    /// A scenario's main walk's movements before its `from` that read the scenario's facts,
+    /// each a `before from:` text its reads list (E §9 item 3, ruling P43).
+    pub(crate) listed: Vec<String>,
 }
 
 /// A main walk's state at the start of a month, kept for a walk to start from later: each
@@ -406,6 +412,7 @@ impl Walk {
             modelled: Vec::new(),
             less_obs: None,
             checkpoints: Vec::new(),
+            listed: Vec::new(),
         }
     }
 

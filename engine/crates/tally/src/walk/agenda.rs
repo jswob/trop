@@ -34,7 +34,7 @@ use crate::base::Refusal;
 use crate::book::Seen;
 use crate::eval::{Collected, Engine, Entry};
 use crate::hole::Hole;
-use crate::model::{Reality, World};
+use crate::model::Reality;
 use crate::num::Num;
 use crate::syntax::{Edge, Stop};
 use crate::time::Day;
@@ -178,7 +178,7 @@ impl Engine {
         }
         let mut plans = Vec::new();
         let mut decisions = Vec::new();
-        for mv in sorted_moves(m, world) {
+        for mv in m.moves_in(world) {
             let insts = self.move_instances(m, mv, cut)?.to_vec();
             if mv.decision {
                 decisions.push((mv.id.clone(), mv.stratum, insts));
@@ -298,19 +298,6 @@ fn not_yet(m: &Reality) -> Result<(), Stop> {
         return Err(Stop::NotBuilt("a written order with a plan"));
     }
     Ok(())
-}
-
-/// The moves world `world` holds, by id: a move a scenario's file declares exists only in that
-/// scenario and those over it (refcore's `m_plan_moves`, `item_in_world`). E §4.1, L §6.4.
-fn sorted_moves(m: &Reality, world: World) -> Vec<&crate::model::MoveInfo> {
-    let mut out: Vec<&crate::model::MoveInfo> = m
-        .moves
-        .entries()
-        .map(|(_, mv)| mv)
-        .filter(|mv| m.scenarios.sees(world, Some(&mv.id)))
-        .collect();
-    out.sort_by(|a, b| a.id.cmp(&b.id));
-    out
 }
 
 /// The decision moves by id (refcore's decision day keys). E §4.2 step 3.

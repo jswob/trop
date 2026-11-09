@@ -283,9 +283,9 @@ impl Engine {
             (Expr::Name(prefix), [Postfix::Field(name), rest @ ..])
                 if env.get(prefix).is_none() && self.reads_base(prefix) =>
             {
-                match self.base_read(m, (name, rest), env, ctx)? {
-                    (value, true) => (value, rest.get(1..).unwrap_or(&[])),
-                    (value, false) => (value, rest),
+                match (self.base_read(m, (name, rest), env, ctx)?, rest) {
+                    ((value, true), [_, after @ ..]) => (value, after),
+                    ((value, _), _) => (value, rest),
                 }
             }
             (Expr::Name(name), [Postfix::Keys(keys), rest @ ..])

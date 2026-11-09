@@ -3,8 +3,10 @@
 //! the asks are answered"); E §9's opening (a failure refuses with `ENGINE-INVARIANT`, never an
 //! answer). Items 1 and 2 are checked at each day's close (`walk/day.rs`), item 5 where a plan
 //! instance is booked (`walk/plan.rs`); item 6 holds by the walk's `RUN-LIFESPAN` refusals
-//! (`walk/day.rs`). Item 3 ("Scenarios change nothing before their `from`"; L §6.4): a main
-//! walk in a scenario's world, once done, against the world under it.
+//! (`walk/day.rs`). Item 3 ("A scenario changes nothing before its `from` that it doesn't
+//! list"; L §6.4): a main walk in a scenario's world, once walked, against the world under
+//! it, entry by entry before `from`; the movements that read the scenario's versions listed
+//! as `before from:` lines (ruling P43).
 //! Twin: engine/tools/refcore/walk.py (`Walk.signature`; `m_main_walk` keeps `w.sig` once the
 //! walk is done, then `m_inv3`) and ask.py (`Asker._answer`'s last step, its text).
 //! Invariants: a signature is every entry of every place's log, (place, unit) in text order and
@@ -17,14 +19,10 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::base::{Code, Refusal};
 use crate::eval::{Engine, world_named};
-use crate::model::Reality;
-use crate::num::Num;
+use crate::model::{Reality, World};
 use crate::syntax::Stop;
 use crate::time::Day;
-use crate::walk::{At, Change, Progress, St, Walk, qty_value};
-
-/// Each (place, unit)'s state at one point of a walk.
-type States = BTreeMap<(String, String), St>;
+use crate::walk::{At, Change, Ent, Progress, Walk};
 
 /// One booked entry as the signature holds it: its point, what it does, its movement.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -84,17 +82,19 @@ impl Engine {
 }
 
 impl Engine {
-    /// E §9 item 3 once main walk `id` is done in a scenario's world: every balance at the end
-    /// of the day before the scenario's `from` is the balance the world under it has there,
-    /// the same cut and pins, unless a decision ran before `from` (refcore's `m_inv3`, which
-    /// checks nothing then); a place either walk leaves a hole, a refusal or no number at is
-    /// passed by, and so is a base walk that refuses. L §6.4.
+    /// E §9 item 3 once main walk `id` is walked in a scenario's world: every entry of every
+    /// place dated before the scenario's `from` is one the world under it books there, the
+    /// same cut and pins, except a movement whose evaluation read a version of the scenario
+    /// (a law date from `from`, a binding reaching it), which the walk lists as `before from:
+    /// <movement> on <day> reads <versions>` (ruling P43), and what differs from that day on,
+    /// which follows from it; a walk in which a decision ran before `from` is passed (refcore's
+    /// `m_inv3`), and so is a base walk that refuses. L §6.4.
     ///
     /// # Errors
     ///
-    /// `ENGINE-INVARIANT scenario s: x holds … at the end of d, the base … (E §9 invariant 3)`
-    /// for the first place, in text order, whose balance differs; `Deep` and `NotBuilt` from
-    /// the base world's walk.
+    /// `ENGINE-INVARIANT scenario s: x on d: … differs from the base's, reading nothing of
+    /// the scenario (E §9 invariant 3)` for the first such entry, by day; `Deep` and
+    /// `NotBuilt` from the base world's walk.
     pub(crate) fn scenario_unchanged(&mut self, m: &Reality, id: usize) -> Result<(), Stop> {
         let world = self.timeline_world();
         let Some(scenario) = m.scenarios.scenario_of(world) else {
@@ -107,104 +107,203 @@ impl Engine {
         if from <= m.start || walk.proj.is_some() || walk.runs.iter().any(|r| r.point.day < from) {
             return Ok(());
         }
-        let Some(before) = from.previous() else {
-            return Ok(());
-        };
-        let last = before.min(m.end);
         let cut = walk.cut;
-        let mut places: BTreeSet<(String, String)> = walk.logs.keys().cloned().collect();
         let below = m
             .scenarios
             .over
             .get(scenario)
             .and_then(Option::as_deref)
             .unwrap_or(&m.header.id);
-        let under = self
-            .timeline_ctx(None, cut)
-            .in_world(world_named(m, below)?);
-        self.enter_timeline(m, under)?;
-        let base = self.base_states(m, (cut, last), &mut places);
+        let under = world_named(m, below)?;
+        let ours = before(m, walk, (from, Some(under)));
+        let ctx = self.timeline_ctx(None, cut).in_world(under);
+        self.enter_timeline(m, ctx)?;
+        let base = self.base_before(m, cut, from);
         self.leave_timeline()?;
         let Some(base) = base? else {
             return Ok(());
         };
-        let own = self.walk(id)?;
-        for (place, unit) in &places {
-            let (ours, _) = own.state(m, place, unit, At::end(last));
-            let theirs = base.get(&(place.clone(), unit.clone()));
-            if let Some(theirs) = theirs
-                && differ(m, (place, unit), (&ours, theirs))
-                && let (Some(a), Some(b)) = (&ours.val, &theirs.val)
-            {
-                return Err(changed(m, (scenario, place, unit), (a, b), last));
-            }
-        }
+        let listed = listed(scenario, &ours, &base)?;
+        self.walk_mut(id)?.listed = listed;
         Ok(())
     }
 
-    /// The states of the world in force's main walk of cut `cut` at the end of day `last`, for
-    /// every place either walk logs, the base's added to `places`; none for a base walk that
-    /// refuses (refcore's `m_inv3`, its `bw`). E §9 item 3.
-    fn base_states(
-        &mut self,
-        m: &Reality,
-        (cut, last): (Day, Day),
-        places: &mut BTreeSet<(String, String)>,
-    ) -> Result<Option<States>, Stop> {
+    /// The entries before `from` of the world in force's main walk of cut `cut`; none for a
+    /// base walk that refuses (refcore's `m_inv3`, its `bw`). E §9 item 3.
+    fn base_before(&mut self, m: &Reality, cut: Day, from: Day) -> Result<Option<Before>, Stop> {
         let id = match self.main_walk(m, cut) {
             Ok(id) => id,
             Err(Stop::Refused(_)) => return Ok(None),
             Err(stop) => return Err(stop),
         };
-        let walk = self.walk(id)?;
-        places.extend(walk.logs.keys().cloned());
-        let mut states = BTreeMap::new();
-        for (place, unit) in places.iter() {
-            let (st, _) = walk.state(m, place, unit, At::end(last));
-            states.insert((place.clone(), unit.clone()), st);
+        Ok(Some(before(m, self.walk(id)?, (from, None))))
+    }
+}
+
+/// Each (place, unit)'s entries before a scenario's `from`, by day, each day's in walk order.
+type Before = BTreeMap<(String, String), BTreeMap<Day, Vec<Moved>>>;
+
+/// An entry as E §9 item 3 compares it: what it does and its movement, not its rank among
+/// the day's acts, which a scenario's own moves shift; and the versions its movement's
+/// evaluation read that the world under the scenario doesn't see.
+#[derive(Debug, Clone)]
+struct Moved {
+    /// What it does to the place's state.
+    change: Change,
+    /// The movement it books, by id.
+    mv: Option<String>,
+    /// The scenario's versions its movement read (the scenario's walk's only).
+    reads: BTreeSet<String>,
+}
+
+/// An entry before `from` that only one of the two walks books.
+struct Odd {
+    /// Its place.
+    place: String,
+    /// Its day.
+    day: Day,
+    /// Its movement, by id; none for a reading.
+    mv: Option<String>,
+}
+
+/// The entries of `walk` dated before `from` at each thing's place (`*` is the walk's own
+/// row of every place), with the versions of the scenario each read where `under`, the
+/// world under it, is given. E §9 item 3, L §6.4.
+fn before(m: &Reality, walk: &Walk, (from, under): (Day, Option<World>)) -> Before {
+    let mut out = BTreeMap::new();
+    for ((place, unit), log) in &walk.logs {
+        if place == "*" || unit == "*" || !m.things.contains(place) {
+            continue;
         }
-        Ok(Some(states))
+        let mut days: BTreeMap<Day, Vec<Moved>> = BTreeMap::new();
+        for ent in log.ents.iter().filter(|e| e.at.day < from) {
+            days.entry(ent.at.day).or_insert_with(Vec::new).push(Moved {
+                change: ent.change.clone(),
+                mv: ent.mv.clone(),
+                reads: unseen(m, ent, under),
+            });
+        }
+        out.insert((place.clone(), unit.clone()), days);
     }
+    out
 }
 
-/// Whether the balances of a place the scenario's walk and its base's hold differ: both
-/// numbers of a thing's place, neither with a hole or a refusal (refcore's `m_inv3`, its
-/// skips; `*` is the walk's own row of every place). E §9 item 3.
-fn differ(m: &Reality, (place, unit): (&str, &str), (ours, theirs): (&St, &St)) -> bool {
-    if place == "*" || unit == "*" || !m.things.contains(place) {
-        return false;
-    }
-    let flagged = |st: &St| st.hole.is_some() || st.perm.is_some() || st.bad.is_some();
-    if flagged(ours) || flagged(theirs) {
-        return false;
-    }
-    matches!((&ours.val, &theirs.val), (Some(a), Some(b)) if a != b)
+/// The versions entry `ent`'s movement read that world `under` doesn't see: the scenario's
+/// own (L §6.4); none without a world. E §9 item 3.
+fn unseen(m: &Reality, ent: &Ent, under: Option<World>) -> BTreeSet<String> {
+    let (Some(under), Some(coll)) = (under, &ent.coll) else {
+        return BTreeSet::new();
+    };
+    coll.versions
+        .iter()
+        .filter(|v| !m.scenarios.sees(under, Some(v.as_str())))
+        .cloned()
+        .collect()
 }
 
-/// A balance of `unit` as a message prints it (refcore's `fmt`).
-fn balance_text(m: &Reality, q: &Num, unit: &str) -> Result<String, Stop> {
-    qty_value(m, q, unit)?
-        .text(m)
-        .map_err(crate::eval::num_stop)
+/// The `before from:` texts of the scenario's walk `ours` against its base's, sorted: one
+/// per movement that differs and read a version of the scenario, `<movement> on <day> reads
+/// <versions>`, its first day that differs (ruling P43). E §9 item 3, L §6.4.
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for the first entry, by day, that differs from the base's before every
+/// listed movement and read nothing of the scenario.
+fn listed(scenario: &str, ours: &Before, base: &Before) -> Result<Vec<String>, Stop> {
+    let mut reads: BTreeMap<&str, BTreeSet<&str>> = BTreeMap::new();
+    for moved in ours.values().flat_map(BTreeMap::values).flatten() {
+        if let Some(mv) = &moved.mv {
+            let held = reads.entry(mv.as_str()).or_insert_with(BTreeSet::new);
+            held.extend(moved.reads.iter().map(String::as_str));
+        }
+    }
+    let mut odds = Vec::new();
+    let keys: BTreeSet<&(String, String)> = ours.keys().chain(base.keys()).collect();
+    for key in keys {
+        let (mine, theirs) = (ours.get(key), base.get(key));
+        let days: BTreeSet<&Day> = mine
+            .into_iter()
+            .chain(theirs)
+            .flat_map(BTreeMap::keys)
+            .collect();
+        for day in days {
+            let a = mine.and_then(|d| d.get(day)).map(Vec::as_slice);
+            let b = theirs.and_then(|d| d.get(day)).map(Vec::as_slice);
+            day_odds((&key.0, *day), (a, b), &mut odds);
+        }
+    }
+    let mut found: BTreeMap<&str, (Day, &BTreeSet<&str>)> = BTreeMap::new();
+    let mut first_odd: Option<&Odd> = None;
+    for odd in &odds {
+        let read = odd.mv.as_deref().and_then(|mv| reads.get_key_value(mv));
+        match read.filter(|(_, versions)| !versions.is_empty()) {
+            Some((mv, versions)) => {
+                let held = found.entry(mv).or_insert((odd.day, versions));
+                held.0 = held.0.min(odd.day);
+            }
+            None if first_odd.is_none_or(|f| odd.day < f.day) => first_odd = Some(odd),
+            None => {}
+        }
+    }
+    let first_listed = found.values().map(|(day, _)| *day).min();
+    if let Some(odd) = first_odd
+        && first_listed.is_none_or(|day| odd.day < day)
+    {
+        return Err(unexplained(scenario, odd));
+    }
+    let mut out: Vec<String> = found
+        .iter()
+        .map(|(mv, (day, versions))| {
+            let names: Vec<&str> = versions.iter().copied().collect();
+            format!("{mv} on {} reads {}", day.text(), names.join(", "))
+        })
+        .collect();
+    out.sort();
+    Ok(out)
 }
 
-/// The refusal of a balance a scenario changed before its `from`, as refcore words it. E §9
-/// item 3.
-fn changed(
-    m: &Reality,
-    (scenario, place, unit): (&str, &str, &str),
-    (a, b): (&Num, &Num),
-    last: Day,
-) -> Stop {
-    let (a, b) = match (balance_text(m, a, unit), balance_text(m, b, unit)) {
-        (Ok(a), Ok(b)) => (a, b),
-        (Err(stop), _) | (_, Err(stop)) => return stop,
+/// The entries of one place on one day that only one walk books, the two walks' entries
+/// `(ours, base)`, none where a walk books nothing there, matched by what they do and their
+/// movement. E §9 item 3.
+fn day_odds(
+    (place, day): (&str, Day),
+    (ours, base): (Option<&[Moved]>, Option<&[Moved]>),
+    out: &mut Vec<Odd>,
+) {
+    let base: Vec<&Moved> = base.into_iter().flatten().collect();
+    let mut used = vec![false; base.len()];
+    let odd = |moved: &Moved| Odd {
+        place: place.to_owned(),
+        day,
+        mv: moved.mv.clone(),
+    };
+    for moved in ours.into_iter().flatten() {
+        let hit = base
+            .iter()
+            .zip(used.iter_mut())
+            .find(|(b, u)| !**u && b.change == moved.change && b.mv == moved.mv);
+        match hit {
+            Some((_, u)) => *u = true,
+            None => out.push(odd(moved)),
+        }
+    }
+    let left = base.iter().zip(&used).filter(|(_, u)| !**u);
+    out.extend(left.map(|(b, _)| odd(b)));
+}
+
+/// The refusal of an entry a scenario changed before its `from` that read nothing of it.
+/// E §9 item 3.
+fn unexplained(scenario: &str, odd: &Odd) -> Stop {
+    let what = match &odd.mv {
+        Some(mv) => format!("movement {mv}"),
+        None => "a reading".to_owned(),
     };
     Stop::Refused(Refusal::new(
         Code::EngineInvariant,
         format!(
-            "scenario {scenario}: {place} holds {a} at the end of {}, the base {b} (E §9 invariant 3)",
-            last.text()
+            "scenario {scenario}: {} on {}: {what} differs from the base's, reading nothing of the scenario (E §9 invariant 3)",
+            odd.place,
+            odd.day.text()
         ),
     ))
 }

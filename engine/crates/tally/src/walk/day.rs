@@ -108,6 +108,7 @@ impl Engine {
                 Progress::Planning => self.plan_alone(m, id),
                 Progress::Walking if walk.paused_after(self.days, last) => return Ok(()),
                 Progress::Walking => self.step_day(m, id),
+                Progress::Walked => self.close_walk(m, id),
             };
             match step {
                 Ok(()) => {}
@@ -117,13 +118,19 @@ impl Engine {
                     return Err(stop);
                 }
             }
-            if self.walk(id)?.progress == Progress::Done {
-                self.gather_warnings(id)?;
-                self.keep_signature(id)?;
-                // E §9 item 3, once, as refcore's `m_main_walk`: its refusal refuses this read
-                self.scenario_unchanged(m, id)?;
-            }
         }
+    }
+
+    /// A walked walk's close, once: its warnings, its signature, and a scenario's E §9 item 3
+    /// (refcore's `m_main_walk`); done only once all three hold, so a close cut short past the
+    /// counted depth runs again on replay (R-16), and its refusal refuses every read of the
+    /// walk. E §9 items 3 and 4, L §8.5.
+    fn close_walk(&mut self, m: &Reality, id: usize) -> Result<(), Stop> {
+        self.gather_warnings(id)?;
+        self.keep_signature(id)?;
+        self.scenario_unchanged(m, id)?;
+        self.walk_mut(id)?.progress = Progress::Done;
+        Ok(())
     }
 
     /// A walk's plan pass, what its evaluation met kept apart from the read that started it
@@ -157,7 +164,7 @@ impl Engine {
             let next = walk.next_day(days, &walk.endings);
             walk.keep_checkpoints(next)?;
             let Some(day) = next else {
-                walk.progress = Progress::Done;
+                walk.progress = Progress::Walked;
                 return Ok(());
             };
             let mut acts = walk.agenda.remove(&day).unwrap_or_else(Vec::new);

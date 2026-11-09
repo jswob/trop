@@ -453,10 +453,10 @@ impl Engine {
             || !self.walking.is_empty();
         let unfinished = match id {
             None => true,
-            Some(w) => {
-                self.walk(w)?.progress == Progress::Walking
-                    || self.walk(w)?.progress == Progress::Planning
-            }
+            Some(w) => matches!(
+                self.walk(w)?.progress,
+                Progress::Planning | Progress::Walking | Progress::Walked
+            ),
         };
         if !busy && ctx.cut == self.ask_cut && unfinished {
             let outer = self.guarded.replace(self.active.clone());

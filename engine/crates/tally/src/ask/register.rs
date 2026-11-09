@@ -22,13 +22,14 @@ enum Style {
 }
 
 /// The words printed after `assumed:`, in the register's order, each with its style
-/// (refcore's `register`: given, missing, pinned, world, then the walk's words, then held).
-/// L §8.2.
-const WORDS: [(&str, Style); 12] = [
+/// (refcore's `register`: given, missing, pinned, world, then the walk's words, then held;
+/// `before from` after `world`, by ruling P43, refcore having none). L §8.2, E §9 item 3.
+const WORDS: [(&str, Style); 13] = [
     ("given", Style::Plain),
     ("missing", Style::Missing),
     ("pinned", Style::Plain),
     ("world", Style::Plain),
+    ("before from", Style::Plain),
     ("anchor", Style::Plain),
     ("pad", Style::Plain),
     ("adjustment", Style::Plain),

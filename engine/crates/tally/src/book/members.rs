@@ -352,22 +352,16 @@ impl Engine {
         {
             return in_order(adjs.iter().cloned().map(Moving::Adj).collect());
         }
-        let decided = m
-            .moves
-            .entries()
-            .any(|(_, mv)| mv.decision && sub.contains(&mv.kind));
+        // the moves the read's world holds: a scenario's only in its world and those over it
+        // (L §6.4)
+        let mut moves = m.moves_in(ctx.world);
+        moves.retain(|mv| sub.contains(&mv.kind));
+        let decided = moves.iter().any(|mv| mv.decision);
         if sub.contains("pads") || decided {
             return Err(Stop::NotBuilt(
                 "a binding over pads or decisions (the walk's own movements)",
             ));
         }
-        let mut moves: Vec<&crate::model::MoveInfo> = m
-            .moves
-            .entries()
-            .map(|(_, mv)| mv)
-            .filter(|mv| !mv.decision && sub.contains(&mv.kind))
-            .collect();
-        moves.sort_by(|a, b| a.id.cmp(&b.id));
         let mut out = Vec::new();
         for mv in moves {
             for i in self.move_instances(m, mv, cut)?.iter() {

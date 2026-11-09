@@ -445,6 +445,20 @@ impl Reality {
         Some(Span::between(start, end))
     }
 
+    /// The moves world `world` holds, by id: a move a scenario's file declares exists only in
+    /// that scenario and those over it (refcore's `m_plan_moves`, `item_in_world`). L §6.4.
+    #[must_use]
+    pub fn moves_in(&self, world: World) -> Vec<&MoveInfo> {
+        let mut out: Vec<&MoveInfo> = self
+            .moves
+            .entries()
+            .map(|(_, mv)| mv)
+            .filter(|mv| self.scenarios.sees(world, Some(&mv.id)))
+            .collect();
+        out.sort_by(|a, b| a.id.cmp(&b.id));
+        out
+    }
+
     /// A thing's lifespan in its base kind under cut `cut` in world `world` (refcore's
     /// `lifespan`). L §5.7, §6.4.
     #[must_use]

@@ -269,13 +269,9 @@ impl Engine {
         let fulfilled: BTreeSet<String> = obs.iter().filter_map(Obs::target_id).collect();
         let mut model = Vec::new();
         let mut undated = Vec::new();
-        let mut moves: Vec<&crate::model::MoveInfo> = m
-            .moves
-            .entries()
-            .map(|(_, mv)| mv)
-            .filter(|mv| !mv.decision)
-            .collect();
-        moves.sort_by(|a, b| a.id.cmp(&b.id));
+        // the plan moves the timeline's world holds (L §6.4)
+        let mut moves = m.moves_in(self.timeline_world());
+        moves.retain(|mv| !mv.decision);
         let mut insts = Vec::new();
         for mv in moves {
             insts.extend(self.move_instances(m, mv, cut)?.iter().cloned());

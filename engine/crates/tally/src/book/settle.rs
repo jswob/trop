@@ -17,7 +17,7 @@ use super::adjust::{Adjustment, Settled};
 use super::observe::inst_id;
 use crate::base::{Code, Load, Refusal, Run};
 use crate::eval::Engine;
-use crate::model::{Domain, Fulfils, MoveInfo, Reality, Value};
+use crate::model::{Domain, Fulfils, MoveInfo, Reality, Value, World};
 use crate::num::Num;
 use crate::syntax::{Expr, Stop};
 use crate::time::Day;
@@ -61,7 +61,7 @@ impl Engine {
     /// E §5 step 2.
     fn measure_all(&mut self, m: &Reality, cut: Day) -> Result<Vec<Adjustment>, Stop> {
         let mut out = Vec::new();
-        for mv in plan_moves(m) {
+        for mv in plan_moves(m, self.timeline_world()) {
             if settlement_move(m, mv)? {
                 continue;
             }
@@ -85,7 +85,7 @@ impl Engine {
     ) -> Result<Vec<Adjustment>, Stop> {
         self.unsettled_adjustments(m, cut)?;
         let mut out = Vec::new();
-        for mv in plan_moves(m) {
+        for mv in plan_moves(m, self.timeline_world()) {
             if settlement_move(m, mv)? {
                 continue;
             }
@@ -149,7 +149,7 @@ impl Engine {
         if adjs.is_empty() {
             return Ok(());
         }
-        for mv in plan_moves(m) {
+        for mv in plan_moves(m, self.timeline_world()) {
             if mv.decl.fulfils.is_none() {
                 continue;
             }
@@ -196,15 +196,11 @@ impl Engine {
     }
 }
 
-/// The plan moves, by id (refcore's `plan_moves`). E §4.1.
-fn plan_moves(m: &Reality) -> Vec<&MoveInfo> {
-    let mut out: Vec<&MoveInfo> = m
-        .moves
-        .entries()
-        .map(|(_, mv)| mv)
-        .filter(|mv| !mv.decision)
-        .collect();
-    out.sort_by(|a, b| a.id.cmp(&b.id));
+/// The plan moves world `world` holds, by id: a scenario's move only in its world and those
+/// over it (refcore's `plan_moves`, `m_plan_moves`, `item_in_world`). E §4.1, L §6.4.
+fn plan_moves(m: &Reality, world: World) -> Vec<&MoveInfo> {
+    let mut out = m.moves_in(world);
+    out.retain(|mv| !mv.decision);
     out
 }
 
