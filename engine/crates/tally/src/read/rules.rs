@@ -24,6 +24,12 @@ fn holds(span: &Span, law: Option<Day>) -> Result<bool, Stop> {
     }
 }
 
+/// Whether a rule's version `version`, if it names one, is a section the read's world hides:
+/// a scenario's, read in a world under it (refcore's `in_world`). L §6.4.
+fn unseen(m: &Reality, version: Option<&str>, clocks: Clocks) -> bool {
+    version.is_some_and(|v| !m.scenarios.sees(clocks.world, Some(v)))
+}
+
 /// Whether a version of a rule exists at the law date under the cut of `clocks`: its version
 /// (the `replace rule` line's, else `v V`'s) is seen in the read's world, known by the cut,
 /// entered into force by the day of a `wording` pin naming its def, if one does, and governs
@@ -31,12 +37,7 @@ fn holds(span: &Span, law: Option<Day>) -> Result<bool, Stop> {
 /// scenario its rule is never a candidate; refcore's `rule_exists`).
 fn rule_exists(m: &Reality, rule: &RuleVer, clocks: Clocks) -> Result<bool, Stop> {
     let (law, cut, wording) = (clocks.law, clocks.cut, clocks.wording);
-    let unseen = |version: &Option<String>| {
-        version
-            .as_deref()
-            .is_some_and(|v| !m.scenarios.sees(clocks.world, Some(v)))
-    };
-    if unseen(&rule.version) || unseen(&rule.v) {
+    if unseen(m, rule.version.as_deref(), clocks) || unseen(m, rule.v.as_deref(), clocks) {
         return Ok(false);
     }
     let own_time = match &rule.span {

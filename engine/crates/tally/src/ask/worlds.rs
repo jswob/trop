@@ -110,11 +110,7 @@ fn world_turn(
         let base_at = at.ok_or_else(|| invariant("a scenario's ask that names no world"))?;
         return Ok(Turn::Ask(0, base_at));
     }
-    let deepest = named.iter().find_map(|world| {
-        let reality = w.loaded.get(world)?;
-        let over = &reality.scenarios.over;
-        named.iter().all(|n| over.contains_key(n)).then_some(world)
-    });
+    let deepest = named.iter().find(|world| stack_holds(w, world, named));
     let Some(deepest) = deepest else {
         return Err(Stop::NotBuilt(
             "an ask whose worlds are on two stacks of scenarios (refcore's cross evaluation)",
@@ -128,18 +124,32 @@ fn world_turn(
     let Some((place, (_, reality))) = found else {
         return Err(invariant("the deepest world an ask names isn't loaded"));
     };
-    // the ask as its own file states it, a base's or a scenario's (refcore's `ra`)
-    let file = (!own.is_empty()).then_some(own);
-    let ask_at = reality
-        .asks
-        .iter()
-        .position(|ask| ask.id == id && reality.scenarios.of(&ask.id) == file)
-        .or_else(|| reality.asks.iter().position(|ask| ask.id == id))
+    let ask_at = ask_in(reality, id, own)
         .ok_or_else(|| invariant("a scenario's reality holds no ask its world names"))?;
     let place = place
         .checked_add(1)
         .ok_or_else(|| invariant("a count of worlds"))?;
     Ok(Turn::Ask(place, ask_at))
+}
+
+/// Whether world `world` is a loaded scenario whose stack holds every world of `named`
+/// (refcore's `cands`: need ⊆ chain(w)). L §6.4.
+fn stack_holds(w: &Worlds, world: &str, named: &BTreeSet<String>) -> bool {
+    let Some(reality) = w.loaded.get(world) else {
+        return false;
+    };
+    named.iter().all(|n| reality.scenarios.over.contains_key(n))
+}
+
+/// The place of ask `id` in `reality` as the file of world `own` states it, a base's for none,
+/// else the first ask of that id (refcore's `ra`). L §6.4.
+fn ask_in(reality: &Reality, id: &str, own: &str) -> Option<usize> {
+    let file = (!own.is_empty()).then_some(own);
+    let stated = |ask: &Ask| ask.id == id && reality.scenarios.of(&ask.id) == file;
+    if let Some(at) = reality.asks.iter().position(stated) {
+        return Some(at);
+    }
+    reality.asks.iter().position(|ask| ask.id == id)
 }
 
 /// The lines a load prints when no ask is answered: a reality's warnings, or each refused

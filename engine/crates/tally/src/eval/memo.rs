@@ -238,10 +238,12 @@ impl Ord for CellKey {
 impl CellKey {
     /// The contexts' order: the cut, the walk point, the clause, the pins, the world.
     fn context_order(&self, other: &CellKey) -> Ordering {
-        self.cut
+        let clocks = self
+            .cut
             .cmp(&other.cut)
             .then_with(|| walk_at_order(self.at, other.at))
-            .then_with(|| self.unc.cmp(&other.unc))
+            .then_with(|| self.unc.cmp(&other.unc));
+        clocks
             .then_with(|| self.layer.number().cmp(&other.layer.number()))
             .then_with(|| world_order(self.world, other.world))
     }

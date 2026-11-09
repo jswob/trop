@@ -367,8 +367,7 @@ impl Reality {
     /// `in_world` of the entry's version, `item_in_world`). L §6.4.
     #[must_use]
     pub fn entry_seen(&self, thing: &Thing, entry: &Entry, world: World) -> bool {
-        let own = || thing.place.as_ref().map_or(&thing.name, |p| &p.place);
-        let section = entry.version.as_ref().unwrap_or_else(own);
+        let section = entry.version.as_ref().unwrap_or_else(|| own_section(thing));
         self.scenarios.sees(world, Some(section))
     }
 
@@ -447,5 +446,14 @@ impl Reality {
     #[must_use]
     pub fn lifespan(&self, thing: &Thing, seen: (Day, World)) -> Option<Span> {
         self.span_in(thing, thing.base.as_deref()?, seen)
+    }
+}
+
+/// The section that declares a thing's own entries: its place's, for a place's thing, else
+/// its own name's (refcore's `item_in_world`). L §6.4.
+fn own_section(thing: &Thing) -> &String {
+    match &thing.place {
+        Some(p) => &p.place,
+        None => &thing.name,
     }
 }

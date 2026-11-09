@@ -133,7 +133,8 @@ impl Engine {
             let (ours, _) = own.state(m, place, unit, At::end(last));
             let theirs = base.get(&(place.clone(), unit.clone()));
             if let Some(theirs) = theirs
-                && let Some((a, b)) = differ(m, (place, unit), (&ours, theirs))
+                && differ(m, (place, unit), (&ours, theirs))
+                && let (Some(a), Some(b)) = (&ours.val, &theirs.val)
             {
                 return Err(changed(m, (scenario, place, unit), (a, b), last));
             }
@@ -166,25 +167,25 @@ impl Engine {
     }
 }
 
-/// The two balances of a place the scenario's walk and its base's hold, when they differ: both
+/// Whether the balances of a place the scenario's walk and its base's hold differ: both
 /// numbers of a thing's place, neither with a hole or a refusal (refcore's `m_inv3`, its
 /// skips; `*` is the walk's own row of every place). E §9 item 3.
-fn differ<'a>(
-    m: &Reality,
-    (place, unit): (&str, &str),
-    (ours, theirs): (&'a St, &'a St),
-) -> Option<(&'a Num, &'a Num)> {
+fn differ(m: &Reality, (place, unit): (&str, &str), (ours, theirs): (&St, &St)) -> bool {
     if place == "*" || unit == "*" || !m.things.contains(place) {
-        return None;
+        return false;
     }
     let flagged = |st: &St| st.hole.is_some() || st.perm.is_some() || st.bad.is_some();
     if flagged(ours) || flagged(theirs) {
-        return None;
+        return false;
     }
-    match (&ours.val, &theirs.val) {
-        (Some(a), Some(b)) if a != b => Some((a, b)),
-        _ => None,
-    }
+    matches!((&ours.val, &theirs.val), (Some(a), Some(b)) if a != b)
+}
+
+/// A balance of `unit` as a message prints it (refcore's `fmt`).
+fn balance_text(m: &Reality, q: &Num, unit: &str) -> Result<String, Stop> {
+    qty_value(m, q, unit)?
+        .text(m)
+        .map_err(crate::eval::num_stop)
 }
 
 /// The refusal of a balance a scenario changed before its `from`, as refcore words it. E §9
@@ -195,9 +196,7 @@ fn changed(
     (a, b): (&Num, &Num),
     last: Day,
 ) -> Stop {
-    let shown =
-        |q: &Num| qty_value(m, q, unit).and_then(|v| v.text(m).map_err(crate::eval::num_stop));
-    let (a, b) = match (shown(a), shown(b)) {
+    let (a, b) = match (balance_text(m, a, unit), balance_text(m, b, unit)) {
         (Ok(a), Ok(b)) => (a, b),
         (Err(stop), _) | (_, Err(stop)) => return stop,
     };

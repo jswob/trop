@@ -533,9 +533,15 @@ mod tests {
             ("s.tally", Some(under.as_bytes())),
         ]);
         assert_eq!(
-            run(hidden, &every()),
-            Err(NotImplemented),
-            "s's ask in the model's world hides s's layer: M1's overlays"
+            lines(hidden, &every()),
+            [
+                "a: 12.50 PLN",
+                "  cut 2026-01-01",
+                "b: 12.50 PLN",
+                "  world: m",
+                "  cut 2026-01-01"
+            ],
+            "s's ask in the model's world, on s's reality, s's layer hidden (refcore's bytes)"
         );
         let fromless = "scenario s over m\n  tally 2\n\nask b: fee in s\n";
         let refused = given(&[

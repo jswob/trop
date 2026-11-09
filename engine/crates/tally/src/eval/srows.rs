@@ -70,31 +70,30 @@ impl Engine {
     }
 
     /// `<base>.name` and the postfixes after it in an expression row: the item read in the
-    /// base, at keys made where the row is read; the postfixes left (refcore's `read`, its
-    /// `_world` arm). L §6.4.
+    /// base, at keys made where the row is read; whether it took the keys that follow it
+    /// (refcore's `read`, its `_world` arm). L §6.4.
     ///
     /// # Errors
     ///
     /// The refusals of the read.
-    pub(super) fn base_read<'p>(
+    pub(super) fn base_read(
         &mut self,
         m: &Reality,
-        name: &str,
-        rest: &'p [Postfix],
+        (name, rest): (&str, &[Postfix]),
         env: &Env,
         ctx: Ctx,
-    ) -> Result<(Value, &'p [Postfix]), Stop> {
+    ) -> Result<(Value, bool), Stop> {
         let (_, world) = self
             .row_base
             .clone()
             .ok_or_else(|| invariant("a base read outside an expression row"))?;
         let read = ctx.in_world(world);
         match rest {
-            [Postfix::Keys(keys), after @ ..] if is_read(m, name) => {
+            [Postfix::Keys(keys), ..] if is_read(m, name) => {
                 let value = self.read_item_in(m, (name, keys), env, (ctx, read))?;
-                Ok((value, after))
+                Ok((value, true))
             }
-            _ => Ok((self.name(m, name, env, read)?, rest)),
+            _ => Ok((self.name(m, name, env, read)?, false)),
         }
     }
 }
