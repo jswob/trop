@@ -204,6 +204,7 @@ impl Loader {
                 all_worlds: BTreeSet::new(),
                 elsewhere: BTreeMap::new(),
                 asks_alone: BTreeMap::new(),
+                asks_unresolved: BTreeMap::new(),
                 list_keys: BTreeMap::new(),
                 narrow_tests: BTreeSet::new(),
                 sames: Vec::new(),

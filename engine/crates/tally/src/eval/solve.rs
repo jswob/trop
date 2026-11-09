@@ -300,11 +300,17 @@ impl Engine {
                 Value::Money(Money::from_minor(1, currency_of(m, cur)?)),
                 false,
             ),
-            Step::Ref(e) => (self.value(m, e, env, ctx)?, false),
+            Step::Ref(e) => {
+                let read = self.value(m, e, env, ctx)?;
+                if let Value::Hole(hole) = read {
+                    return Ok(Err(hole));
+                }
+                let (q, unit) = step_number(m, &read)?;
+                let grid = Grid::of(ty, &read)
+                    .ok_or_else(|| invariant("a solve's type or step load didn't check"))?;
+                return Ok(Ok((step_in_grid(m, (&read, q, unit), &grid)?, grid)));
+            }
         };
-        if let Value::Hole(hole) = written {
-            return Ok(Err(hole));
-        }
         let grid = Grid::of(ty, &written)
             .ok_or_else(|| invariant("a solve's type or step load didn't check"))?;
         let step = grid_number(m, (&written, is_bare), &grid)?;
@@ -325,7 +331,7 @@ impl Engine {
         let step = self.solve_step((&target.aim.item, &target.aim.keys), value, ctx)?;
         self.open_layer(m, step)?;
         let sides = self.sides(m, form, env, step);
-        self.close_layer(step.layer)?;
+        self.end_layer(step.layer, sides.as_ref().err())?;
         let (left, right) = sides?;
         if left.as_hole().is_some() || right.as_hole().is_some() {
             let hole = spread(&[left.as_hole(), right.as_hole()])
@@ -360,6 +366,63 @@ impl Engine {
         let right = self.value(m, &form.right, env, ctx)?;
         Ok((left, right))
     }
+}
+
+/// A step `to u` read at run, its number and unit (refcore's `m_step_value`): a value that
+/// isn't a number or money is `LOAD-UNIT the step of to is <v>`; one that isn't positive is
+/// `RUN-DOMAIN to <v>: a step that is not positive` (L §7.1 precision steps, §8.4).
+///
+/// # Errors
+///
+/// `LOAD-UNIT`, `RUN-DOMAIN`, as above.
+fn step_number(m: &Reality, v: &Value) -> Result<(Num, Unit), Stop> {
+    let (q, unit) = if let Value::Money(money) = v {
+        (
+            money_num(m, money).map_err(num_stop)?,
+            currency_unit(m, money.currency()).map_err(num_stop)?,
+        )
+    } else if let Value::Number(n) = v {
+        (n.q.clone(), n.unit())
+    } else {
+        let text = v.text(m).map_err(num_stop)?;
+        return Err(refuse_load(Load::Unit, format!("the step of to is {text}")));
+    };
+    if q.compare(&Num::zero()).map_err(num_stop)? != Ordering::Greater {
+        let text = v.text(m).map_err(num_stop)?;
+        return Err(refuse(
+            Run::Domain,
+            format!("to {text}: a step that is not positive"),
+        ));
+    }
+    Ok((q, unit))
+}
+
+/// A step read at run as a number of the grid's unit (refcore's `m_step_value`): a number
+/// with no unit as it is, a rate as its grid takes it, else converted to v's unit, or
+/// `LOAD-UNIT to <v>: the step and the value (<unit>) have different units`. L §7.1.
+///
+/// # Errors
+///
+/// `LOAD-UNIT`, as above.
+fn step_in_grid(m: &Reality, (v, q, unit): (&Value, Num, Unit), grid: &Grid) -> Result<Num, Stop> {
+    if let Grid::Rate(_) = grid {
+        return grid_number(m, (v, false), grid);
+    }
+    let to = grid.unit(m)?;
+    if unit == Unit::one() || unit == to {
+        return Ok(q);
+    }
+    let Some(factor) = unit.conv(&to).map_err(num_stop)? else {
+        let text = v.text(m).map_err(num_stop)?;
+        return Err(refuse_load(
+            Load::Unit,
+            format!(
+                "to {text}: the step and the value ({}) have different units",
+                to.text()
+            ),
+        ));
+    };
+    q.checked_mul(&factor).map_err(num_stop)
 }
 
 /// Whether a bracket's literal is a bare figure, which takes v's type (L §5.18, §7.1).

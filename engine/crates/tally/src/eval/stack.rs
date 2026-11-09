@@ -54,7 +54,10 @@ impl Engine {
         loop {
             match self.ev(m, e, env, ctx) {
                 Err(Stop::Deep) if mark.outermost => self.replay(m, &mark)?,
-                result => return result,
+                result => {
+                    self.read_ended(&mark)?;
+                    return result;
+                }
             }
         }
     }
@@ -76,7 +79,10 @@ impl Engine {
         loop {
             match self.read_def_at(m, def, keys, ctx) {
                 Err(Stop::Deep) if mark.outermost => self.replay(m, &mark)?,
-                result => return result,
+                result => {
+                    self.read_ended(&mark)?;
+                    return result;
+                }
             }
         }
     }
@@ -98,7 +104,10 @@ impl Engine {
         loop {
             match self.given_key(m, e, env, ctx) {
                 Err(Stop::Deep) if mark.outermost => self.replay(m, &mark)?,
-                result => return result,
+                result => {
+                    self.read_ended(&mark)?;
+                    return result;
+                }
             }
         }
     }
@@ -120,7 +129,10 @@ impl Engine {
         loop {
             match self.pinned(m, pins, &Env::empty(), ctx, Pinning::Ask) {
                 Err(Stop::Deep) if mark.outermost => self.replay(m, &mark)?,
-                result => return result,
+                result => {
+                    self.read_ended(&mark)?;
+                    return result;
+                }
             }
         }
     }
@@ -143,7 +155,10 @@ impl Engine {
         loop {
             match self.members(m, binds, &Env::empty(), ctx, Brings::ToTuple) {
                 Err(Stop::Deep) if mark.outermost => self.replay(m, &mark)?,
-                result => return result,
+                result => {
+                    self.read_ended(&mark)?;
+                    return result;
+                }
             }
         }
     }
@@ -160,7 +175,10 @@ impl Engine {
         loop {
             match self.ledger_of(m, r, ctx) {
                 Err(Stop::Deep) if mark.outermost => self.replay(m, &mark)?,
-                result => return result,
+                result => {
+                    self.read_ended(&mark)?;
+                    return result;
+                }
             }
         }
     }
@@ -199,6 +217,15 @@ impl Engine {
             Some(stop) => Err(stop),
             None => Ok((items, met)),
         }
+    }
+
+    /// Ends a read: the outermost lets go of the layers its unwinding kept, which its replay
+    /// and its read again needed (R-16, P §3.5).
+    fn read_ended(&mut self, mark: &Mark) -> Result<(), Stop> {
+        if mark.outermost {
+            return self.release_kept();
+        }
+        Ok(())
     }
 
     /// What the read finds as it begins.

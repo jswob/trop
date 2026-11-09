@@ -339,17 +339,7 @@ fn ask_lines(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<
             return Ok(vec![format!("{}: {}", ask.id, shown(m, &v)?)]);
         }
         cut = date_of(&v, "as known")?;
-        if cut > m.on {
-            // E §11: an `as known` after the model's `on` refuses the request (P22's line)
-            return Err(Stop::Refused(Refusal::new(
-                Code::Req(Req::Clock),
-                format!(
-                    "as known {} is after the model's on {}",
-                    cut.text(),
-                    m.on.text()
-                ),
-            )));
-        }
+        before_clock(m, "as known", cut)?;
         known_engine = Some(engine);
     }
     let mut engine = Engine::new(cut)
@@ -366,6 +356,23 @@ fn ask_lines(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<
     }
     engine.asks_moved_no_money()?;
     Ok(lines)
+}
+
+/// The request's cut `cut`, set by an ask's `as known` or its `with known` (`what`), on or
+/// before the model's `on`: past it, the request is refused, the run's one result,
+/// `REQ-CLOCK <what> <cut> is after the model's on <on>` (E §11; picks P22 and P41, #112).
+fn before_clock(m: &Reality, what: &str, cut: Day) -> Result<(), Stop> {
+    if cut <= m.on {
+        return Ok(());
+    }
+    Err(Stop::Refused(Refusal::new(
+        Code::Req(Req::Clock),
+        format!(
+            "{what} {} is after the model's on {}",
+            cut.text(),
+            m.on.text()
+        ),
+    )))
 }
 
 /// The walk warnings an ask's engine met, each once, in the order met (refcore's
@@ -430,6 +437,8 @@ fn ask_body(m: &Reality, ask: &Ask, engine: &mut Engine, cut: Day) -> Result<Vec
             Err(hole) => return Ok(vec![format!("{}: {}", ask.id, hole.text())]),
             Ok(inside) => inside,
         };
+        // the ask's own cut is the clock's or before it, so a later cut is a `with known`'s
+        before_clock(m, "with known", inside.cut)?;
         engine.ask_cut = inside.cut;
         engine.open_layer(m, inside)?;
         inside
@@ -488,7 +497,7 @@ fn tuple_lines(
             out.push(format!("{head}: {}", hole.text()));
             continue;
         }
-        let mut line = form_line(m, &ask.body, engine, &tuple.env, ctx)?;
+        let mut line = form_line(m, ask, engine, &tuple.env, ctx)?;
         out.push(format!("{head}: {}", line.text));
         line.met.merge(&tuple.brought);
         line.met.merge(pinned);
@@ -502,16 +511,20 @@ fn tuple_lines(
 }
 
 /// One tuple's line after its head, with the register entries it met: the values of
-/// `e, f, …`, a `check`'s or a `solve`'s (refcore's `evaluate`). L §5.18.
+/// `e, f, …`, a `check`'s or a `solve`'s (refcore's `evaluate`). A line holding a bare key
+/// literal meets its `LOAD-KEY ambiguous key` where it is evaluated (L §2.5, §8.3; P39).
 fn form_line(
     m: &Reality,
-    body: &AskBody,
+    ask: &Ask,
     engine: &mut Engine,
     env: &Env,
     ctx: Ctx,
 ) -> Result<Printed, Stop> {
-    match body {
+    match &ask.body {
         AskBody::Exprs(exprs) => {
+            if let Some(refusal) = m.asks_unresolved.get(&ask.id) {
+                return Err(Stop::Refused(refusal.clone()));
+            }
             let (items, met) = engine.line(m, exprs, env, ctx)?;
             Ok(Printed {
                 text: line_values(m, &items)?,

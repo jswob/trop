@@ -126,6 +126,10 @@ pub struct Reality {
     /// The asks refused alone, each with its refusal: one that names a world the run doesn't
     /// load (refcore's `asks_alone`). L §6.4, §8.
     pub asks_alone: BTreeMap<String, Refusal>,
+    /// Each ask whose line holds a bare key literal no position resolves, with the
+    /// `LOAD-KEY ambiguous key <k>` its line meets where it is evaluated, at the ask's line
+    /// (refcore's `e_name`, its `keylit` arm; pick P39). L §2.5, §8.3.
+    pub asks_unresolved: BTreeMap<String, Refusal>,
     /// Each key list's binding site (file, line, token) with the index its key positions
     /// fixed: its keys are that index's (refcore's `b._var.fixed`). L §2.5.
     pub list_keys: BTreeMap<(String, u32, usize), String>,

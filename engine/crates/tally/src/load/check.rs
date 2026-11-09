@@ -20,7 +20,7 @@ use super::pins::unloaded_world;
 use super::prices::price_twice;
 use super::random::{DrawKey, QueryAt};
 use super::srows::{BaseWorld, SrowAt, ask_worlds, top_scenario};
-use super::types::{is_date, key_value_kind, lit_rule, refused, uerr};
+use super::types::{is_date, key_lit_of, key_value_kind, lit_rule, refused, uerr};
 use crate::base::{Code, Load, Place as At, Reach, Refusal};
 use crate::model::{
     BandInfo, BindInfo, Domain, Graph, KeyVal, Mark, NameKind, Node, NodeKind, Reality, Rel, Shift,
@@ -456,6 +456,9 @@ pub(super) struct Walked {
     pub(super) day_reads: Vec<DayRead>,
     /// The asks refused alone, with their refusals (refcore's `asks_alone`). L §6.4, §8.
     pub(super) alone: BTreeMap<String, Refusal>,
+    /// Each ask whose line holds a bare key literal, with the `LOAD-KEY ambiguous key`
+    /// refusal its evaluation meets (refcore's `e_name`, its `keylit` arm). L §2.5.
+    pub(super) unresolved: BTreeMap<String, Refusal>,
     /// The queries and path scores over random values, in the order typed (refcore's
     /// `queries`). L §5.16.
     pub(super) queries: Vec<QueryAt>,
@@ -517,6 +520,8 @@ pub(super) struct Checker {
     pub(super) direct: Option<Vec<Node>>,
     /// Each ask's reads in the order first made.
     ask_reads: BTreeMap<String, Vec<Node>>,
+    /// Each ask whose line holds a key literal no position resolves, with its refusal.
+    unresolved: BTreeMap<String, Refusal>,
     /// The decisions' plain balance reads.
     pub(super) day_reads: Vec<DayRead>,
     /// The fills: each one's sides, typed once (refcore's `fill_infos`).
@@ -647,6 +652,7 @@ pub(super) fn walk(m: &Reality, sections: &[(String, Section)]) -> Result<Walked
         at_reads: checker.at_reads,
         move_at: checker.move_at,
         ask_reads: checker.ask_reads,
+        unresolved: checker.unresolved,
         day_reads: checker.day_reads,
         alone,
         queries: checker.queries,
@@ -1078,6 +1084,27 @@ impl Checker {
         self.ask_body(m, &scope, ask)
     }
 
+    /// Keeps, for ask `id`, the refusal of a line's value `e` typed `typed` that is a bare key
+    /// literal no position resolves: refcore refuses it where the line is evaluated, at the
+    /// ask's line, `LOAD-KEY ambiguous key <k>` (refcore's `e_name`, its `keylit` arm; pick
+    /// P39); the first such value of the line is the one met. L §2.5, §8.3.
+    fn unresolved_key(&mut self, scope: &Scope, id: &str, (e, typed): (&Expr, &Ty)) {
+        let Ty::KeyLit(written) = typed else {
+            return;
+        };
+        let mut bare = e;
+        while let Expr::Paren(inner) = bare {
+            bare = inner;
+        }
+        if key_lit_of(bare).is_none() || self.unresolved.contains_key(id) {
+            return;
+        }
+        let message = format!("ambiguous key {written}");
+        if let Stop::Refused(refusal) = scope.place(refused(Load::Key, message).naming(written)) {
+            self.unresolved.insert(id.to_owned(), refusal);
+        }
+    }
+
     /// What an ask asks: values; `check a == b`; `explain` or `inputs-of` a reference;
     /// `readers-of` an id; `solve`; a `diff` between two worlds of the run; residuals
     /// (refcore's `check_ask`, its forms). L §5.18, §6.4.
@@ -1085,7 +1112,8 @@ impl Checker {
         match &ask.body {
             AskBody::Exprs(exprs) => {
                 for e in exprs {
-                    self.expr(m, scope, e, None, 0)?;
+                    let typed = self.expr(m, scope, e, None, 0)?;
+                    self.unresolved_key(scope, &ask.id, (e, &typed));
                 }
                 Ok(())
             }

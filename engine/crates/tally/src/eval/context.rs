@@ -87,6 +87,29 @@ impl Pinned {
         self.same_target(other) && self.value == other.value
     }
 
+    /// Whether the pin is wider than `other` at a cell both hold at: at the first key position
+    /// where one names a key and the other `*`, `other` names it. The narrower pin wins, as a
+    /// row does (L §4.6 step 2; pick P38, #119), whatever the order the pins were written
+    /// in; refcore's pins, sorted by their keys' text, put a named key before `*` alike.
+    fn wider_than(&self, other: &Pinned) -> bool {
+        for (mine, theirs) in self.keys.iter().zip(&other.keys) {
+            if mine.is_some() != theirs.is_some() {
+                return theirs.is_some();
+            }
+        }
+        false
+    }
+
+    /// Whether the pin names exactly the cell at `keys`, every key named, none `*`.
+    fn names_cell(&self, keys: &[KeyVal]) -> bool {
+        self.keys.len() == keys.len()
+            && self
+                .keys
+                .iter()
+                .zip(keys)
+                .all(|(pinned, key)| pinned.as_ref() == Some(key))
+    }
+
     /// Whether the pin holds at `keys` of its item: every key it names is the key read.
     fn holds_at(&self, item: &str, keys: &[KeyVal]) -> bool {
         self.item == item
@@ -176,6 +199,10 @@ pub(crate) struct Layers {
     walkers: BTreeMap<Node, bool>,
     /// Each layer's pins on items the walk reaches, by the layer's number (E §3.3).
     walk_pins: BTreeMap<u32, Layer>,
+    /// The layers of the scopes a read unwound through past the counted depth: their cells
+    /// stay until the outermost read ends, since its replay and its read again need them
+    /// (R-16).
+    kept: Vec<Layer>,
 }
 
 impl Default for Layers {
@@ -187,6 +214,7 @@ impl Default for Layers {
             timeline: None,
             walkers: BTreeMap::new(),
             walk_pins: BTreeMap::new(),
+            kept: Vec::new(),
         }
     }
 }
@@ -240,9 +268,9 @@ impl Engine {
         layer_at(at)
     }
 
-    /// The value a pin of the context gives `item` at `keys`, the latest pin that holds there,
-    /// its `pinned:` entry noted unless it is a `solve` step's (refcore's `pin_value`).
-    /// L §5.11, §5.18, §8.2.
+    /// The value a pin of the context gives `item` at `keys`: of the pins that hold there,
+    /// the narrowest (P38), its `pinned:` entry noted unless it is a `solve` step's (refcore's
+    /// `pin_value`). L §5.11, §5.18, §8.2, §4.6 step 2.
     ///
     /// # Errors
     ///
@@ -257,12 +285,18 @@ impl Engine {
             return Ok(None);
         }
         let data = self.layer_data(ctx.layer)?;
-        let Some(pin) = data.pins.iter().rev().find(|p| p.holds_at(item, keys)) else {
+        let mut narrowest: Option<&Pinned> = None;
+        for pin in data.pins.iter().filter(|p| p.holds_at(item, keys)) {
+            if !pin.fields.is_empty() {
+                return Err(Stop::NotBuilt("a pin on a record field at run"));
+            }
+            if narrowest.is_none_or(|held| held.wider_than(pin)) {
+                narrowest = Some(pin);
+            }
+        }
+        let Some(pin) = narrowest else {
             return Ok(None);
         };
-        if !pin.fields.is_empty() {
-            return Err(Stop::NotBuilt("a pin on a record field at run"));
-        }
         let (value, text, solve) = (pin.value.clone(), pin.text.clone(), pin.solve);
         if !solve {
             self.note("pinned", text, String::new());
@@ -406,11 +440,7 @@ impl Engine {
         };
         self.open_layer(m, inside)?;
         let v = self.ev(m, inner, env, inside);
-        if matches!(v, Err(Stop::Deep)) {
-            self.leave_layer(inside.layer)?;
-        } else {
-            self.close_layer(inside.layer)?;
-        }
+        self.end_layer(inside.layer, v.as_ref().err())?;
         v
     }
 
@@ -479,9 +509,10 @@ impl Engine {
         Ok(Ok(inside))
     }
 
-    /// The context of a `solve` step: `ctx` with `item` at `keys` pinned to `value`, any
-    /// other pin of the item set aside, listed nowhere (refcore's `m_solve_value`, `F`).
-    /// L §5.18.
+    /// The context of a `solve` step: `ctx` with `item` at `keys` pinned to `value`, listed
+    /// nowhere; a pin of that one cell is set aside, and the item's other pins stay, so a
+    /// `with` pin of the item still holds at its other cells (L §5.18: "only that cell is
+    /// pinned"; pick P40, #120, where refcore's `m_solve_value` drops every pin of the item).
     ///
     /// # Errors
     ///
@@ -493,7 +524,8 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Ctx, Stop> {
         let mut data = self.layer_data(ctx.layer)?.clone();
-        data.pins.retain(|p| p.item != item);
+        data.pins
+            .retain(|p| !(p.item == item && p.fields.is_empty() && p.names_cell(keys)));
         data.pins.push(Pinned {
             solve: true,
             item: item.to_owned(),
@@ -534,6 +566,24 @@ impl Engine {
         self.leave_timeline()
     }
 
+    /// Ends the scope that holds `layer`, whose read stopped with `stop` if it stopped:
+    /// closed, or, where the read unwound past the counted depth, left with its cells kept
+    /// until the outermost read ends (R-16, P §3.5).
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::close_layer`].
+    pub(crate) fn end_layer(&mut self, layer: Layer, stop: Option<&Stop>) -> Result<(), Stop> {
+        if !matches!(stop, Some(Stop::Deep)) {
+            return self.close_layer(layer);
+        }
+        self.leave_layer(layer)?;
+        if !self.layers.kept.contains(&layer) {
+            self.layers.kept.push(layer);
+        }
+        Ok(())
+    }
+
     /// Closes the scope that holds `layer`: every layer no open scope holds is freed with its
     /// cells and the timelines kept under it (P §3.2, §3.5: freed when its `as if` or
     /// `solve` step ends).
@@ -544,16 +594,41 @@ impl Engine {
     /// money: …` for a freed timeline's walk whose entries changed.
     pub(crate) fn close_layer(&mut self, layer: Layer) -> Result<(), Stop> {
         self.leave_layer(layer)?;
-        let mut open = Vec::with_capacity(self.layers.open.len());
-        for held in &self.layers.open {
-            open.push(self.layer_data(*held)?.clone());
+        self.free_layers()
+    }
+
+    /// Ends an outermost read: the layers its unwinding kept are let go, and every layer no
+    /// open scope holds is freed (R-16, P §3.5).
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::close_layer`].
+    pub(super) fn release_kept(&mut self) -> Result<(), Stop> {
+        if self.layers.kept.is_empty() {
+            return Ok(());
+        }
+        self.layers.kept.clear();
+        self.free_layers()
+    }
+
+    /// Frees every layer that no open scope, no scope a read unwound through and no cell on
+    /// the work stack holds, with its cells and the timelines kept under it (P §3.5).
+    fn free_layers(&mut self) -> Result<(), Stop> {
+        let mut holders: Vec<Layer> = self.layers.open.clone();
+        holders.extend(&self.layers.kept);
+        for task in &self.work {
+            holders.push(task.ctx.layer);
+        }
+        let mut held = Vec::with_capacity(holders.len());
+        for layer in holders {
+            held.push(self.layer_data(layer)?.clone());
         }
         let mut freed = BTreeSet::new();
         for (at, slot) in self.layers.slots.iter_mut().enumerate().skip(1) {
             let Some(data) = slot else {
                 continue;
             };
-            if !open.iter().any(|o| data.within(o)) {
+            if !held.iter().any(|o| data.within(o)) {
                 freed.insert(layer_at(at)?.number());
                 *slot = None;
             }
