@@ -109,3 +109,10 @@ test = false
 name = "m1_fixes"
 path = "milestone/m1_fixes.rs"
 test = false
+
+# M1: the properties of M1 on a seeded corpus (properties/m1.corpus; PROPERTIES.md § M1;
+# MILESTONE-M1.md row 4)
+[[test]]
+name = "m1_properties"
+path = "milestone/m1_properties.rs"
+test = false
