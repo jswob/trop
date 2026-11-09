@@ -133,9 +133,20 @@ pub(super) struct Splits {
     by: BTreeMap<SplitAt, Vec<Kept>>,
 }
 
-/// The total and the step of a split, each as its numerator's and denominator's digits: its
-/// exact value, since a number is kept reduced (L §7.1).
-type SplitAt = [(String, String); 2];
+/// The total and the step of a split, each its exact value (`exact`).
+type SplitAt = [Exact; 2];
+
+/// A number's exact value: its sign, and its numerator's and denominator's digits, since a
+/// number is kept reduced (L §7.1). The sign is kept apart because `fraction_parts` gives the
+/// numerator without it, and a negative total's shares are the negatives of its absolute
+/// value's (L §5.13 step 2).
+type Exact = (bool, String, String);
+
+/// The exact value of `q`, as a kept split is found by it (L §7.1, §5.13 Cost).
+fn exact(q: &Num) -> Exact {
+    let (numerator, denominator) = q.fraction_parts();
+    (q.is_negative(), numerator, denominator)
+}
 
 /// A split kept: its weights, the split before its tie is broken, and its shares by the tied
 /// keys a `ties by` chose, none where it has no tie (L §5.13 step 2).
@@ -161,7 +172,7 @@ impl Splits {
     /// Where the split of `total` by `weights` to `step` is kept, made the first time it is
     /// sought (L §5.13 step 2, Cost); a refused split is not kept.
     fn made(&mut self, weights: &Weights, total: &Num, step: &Num) -> Result<KeptAt, SplitError> {
-        let at = [total.fraction_parts(), step.fraction_parts()];
+        let at = [exact(total), exact(step)];
         if let Some(kept) = self.by.get(&at)
             && let Some(place) = kept.iter().position(|k| k.weights == *weights)
         {
@@ -750,5 +761,21 @@ mod tests {
         );
         assert_eq!(kept.share(&[1], None), Ok(Num::zero()), "a key left out");
         assert_eq!(kept.shares.len(), 1, "the shares made once");
+    }
+
+    #[test]
+    fn a_negative_total_is_a_split_of_its_own() {
+        let mut splits = Splits::default();
+        let thirds = Weights::new(vec![Num::int(1); 3]).expect("weights");
+        let (plus, minus, step) = (Num::int(10), Num::int(-10), Num::int(1));
+        let up = splits.made(&thirds, &plus, &step).expect("split");
+        let down = splits.made(&thirds, &minus, &step).expect("split");
+        assert_ne!(up.at, down.at, "the sign is part of what finds a split");
+        let kept = splits.kept(&down).expect("kept");
+        assert_eq!(
+            kept.share(&[0], Some(0)),
+            Ok(Num::int(-4)),
+            "the negative's"
+        );
     }
 }
