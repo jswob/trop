@@ -23,8 +23,8 @@ use crate::base::{Load, Run};
 use crate::hole::Hole;
 use crate::load::index_key_of;
 use crate::model::{
-    BindInfo, Domain, IndexInfo, InputInfo, KeyVal, Number, Reality, Row, RowInstant, TimePos,
-    Unit, Value,
+    BindInfo, Class, Domain, IndexInfo, InputInfo, KeyVal, Number, Reality, Row, RowInstant,
+    TimePos, Unit, Value,
 };
 use crate::read::{Asked, Clocks, Found, held, origin, read_input, read_last, time_point};
 use crate::syntax::{Call, Expr, Lit, Stop, Value as Written};
@@ -209,7 +209,7 @@ impl Engine {
             law: point.day.or(ctx.law),
             ..ctx
         };
-        let value = self.row_converted(m, (input, row), &figure, at)?;
+        let value = self.row_converted(m, (input, row, keys), &figure, at)?;
         let is_held = held(m, row, point.day, self.clocks(ctx, &input.id)?)?;
         if let (Some(day), false) = (ctx.law, matches!(input.time_pos, TimePos::At(_))) {
             if is_held {
@@ -293,7 +293,7 @@ impl Engine {
             law: Some(latest.day),
             ..ctx
         };
-        let value = self.row_converted(m, (input, row), &figure, at)?;
+        let value = self.row_converted(m, (input, row, &latest.keys), &figure, at)?;
         let always = row.instant.is_none()
             && crate::read::row_span(m, row, ctx.cut)?.is_some_and(|span| span.is_always());
         if !always {
@@ -471,7 +471,7 @@ impl Engine {
     fn row_converted(
         &mut self,
         m: &Reality,
-        (input, row): (&InputInfo, &Row),
+        (input, row, keys): (&InputInfo, &Row, &[KeyVal]),
         figure: &str,
         at: Ctx,
     ) -> Result<Value, Stop> {
@@ -507,6 +507,7 @@ impl Engine {
                 w.figure = Some(figure.clone());
                 Value::Window(w)
             }
+            Converted::Value(Value::Number(n)) => Value::Number(at_keys(n, &input.binds, keys)?),
             Converted::Value(v) => v,
         };
         Ok(value)
@@ -959,4 +960,26 @@ pub(super) fn lacks_at_run() -> Stop {
 /// Whether a unit has a term `$v`, a bound variable's key (L §3.2).
 pub(super) fn keyed(unit: &Unit) -> bool {
     unit.terms().iter().any(|(base, _)| base.starts_with('$'))
+}
+
+/// A row's number read at `keys`: a per-unit price `num CUR/u` takes the unit of the key it
+/// is read at, the type's `$u` replaced (refcore's `row_value`, its end). L §3.2 (Per-unit
+/// prices of a unit kind).
+fn at_keys(n: Number, binds: &[BindInfo], keys: &[KeyVal]) -> Result<Number, Stop> {
+    let Class::Num(unit, shown) = &n.class else {
+        return Ok(n);
+    };
+    if !keyed(unit) {
+        return Ok(n);
+    }
+    let env: Vec<(String, String)> = binds
+        .iter()
+        .zip(keys)
+        .map(|(bind, key)| (bind.var.clone(), key.text()))
+        .collect();
+    let unit = unit.subst(&env).map_err(super::state::unit_stop)?;
+    Ok(Number {
+        q: n.q,
+        class: Class::Num(unit, *shown),
+    })
 }
