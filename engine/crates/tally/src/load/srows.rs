@@ -68,7 +68,7 @@ pub(super) fn top_scenario(m: &Reality) -> Option<&str> {
 /// The worlds an ask's line is evaluated in: its file's scenario, its `in`, a diff's two
 /// worlds, its `{scenario s}` pins, and `as if {scenario s}` in its line or in a def it reaches,
 /// the defs its line names and then the graph's edges (refcore's `ask_worlds`). L §6.4, §5.18.
-pub(super) fn ask_worlds(m: &Reality, graph: &Graph, ask: &Ask) -> BTreeSet<String> {
+pub(crate) fn ask_worlds(m: &Reality, graph: &Graph, ask: &Ask) -> BTreeSet<String> {
     let mut out = BTreeSet::new();
     if let Some(own) = m.scenarios.of(&ask.id) {
         out.insert(own.to_owned());

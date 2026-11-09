@@ -1,7 +1,8 @@
 //! The read rule for bands: the table a read takes, replaced rows patched in, and the questions of a read with no table or row.
 //! Spec: L §5.9 (a version's table as one row of the read rule; rows replaced), §4.6 steps
 //! 2, 4 and 5, §4.3 (a band read with no law date; a `wording` pin's tables), §8.1
-//! (`HOLE-UNGOVERNED`), §8.2 (`held`), §5.3 (entry into force).
+//! (`HOLE-UNGOVERNED`), §8.2 (`held`), §5.3 (entry into force), §6.4 (a scenario's table is
+//! read only in its world and those over it).
 //! Twin: engine/tools/refcore/evaluate.py (`band_table`, `_table_of`, `band_origin`,
 //! `band_rows`, `band_no_row`, `band_value`'s held mark), model.py (`Table.replace`,
 //! `BandRow.same_interval`).
@@ -48,9 +49,10 @@ fn table_at(band: &BandInfo, at: usize) -> Result<&Table, Stop> {
         .ok_or_else(|| invariant("a band table past its tables"))
 }
 
-/// The tables a read of band `band` at `key` may take: its version is known by the cut and
-/// governs the law date, or governs `always` for a read with no law date, and under a
-/// `wording D` pin entered into force by D (L §5.9, §4.6 step 1, §4.3, §5.3).
+/// The tables a read of band `band` at `key` may take: its version is seen in the read's
+/// world, known by the cut and governs the law date, or governs `always` for a read with no
+/// law date, and under a `wording D` pin entered into force by D (L §5.9, §4.6 step 1, §4.3,
+/// §5.3, §6.4).
 fn table_candidates(
     m: &Reality,
     band: &BandInfo,
@@ -59,7 +61,10 @@ fn table_candidates(
 ) -> Result<Vec<usize>, Stop> {
     let mut out = Vec::new();
     for (at, table) in band.tables.iter().enumerate() {
-        if table.key.as_ref() != key || version_known(m, &table.version)? > clocks.cut {
+        if table.key.as_ref() != key
+            || !m.scenarios.sees(clocks.world, Some(&table.version))
+            || version_known(m, &table.version)? > clocks.cut
+        {
             continue;
         }
         // a `wording D` pin keeps the tables that entered into force by D (L §4.3)

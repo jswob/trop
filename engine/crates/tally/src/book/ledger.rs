@@ -383,8 +383,9 @@ impl Engine {
         cut: Day,
     ) -> Result<(), Stop> {
         let id = self.main_walk(m, cut)?;
-        let walked = readings(m, cut)?;
-        for seen in readings(m, m.on)? {
+        let world = self.timeline_world();
+        let walked = readings(m, (cut, world))?;
+        for seen in readings(m, (m.on, world))? {
             if seen.input != "stated" || seen.place != lines.place || !span.contains(seen.day) {
                 continue;
             }

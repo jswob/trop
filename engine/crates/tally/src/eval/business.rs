@@ -441,7 +441,7 @@ impl Engine {
             .get(name)
             .ok_or(Stop::NotBuilt("a calendar that isn't an input's read"))?;
         let given = self.given_keys(m, written, env, ctx)?;
-        let keys = match make_keys(m, name, &input.binds, given, ctx.cut)? {
+        let keys = match make_keys(m, name, &input.binds, given, ctx)? {
             Err(hole) => return Ok(Value::Hole(hole)),
             Ok(made) => made,
         };

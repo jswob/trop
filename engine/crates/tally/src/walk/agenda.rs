@@ -34,7 +34,7 @@ use crate::base::Refusal;
 use crate::book::Seen;
 use crate::eval::{Collected, Engine, Entry};
 use crate::hole::Hole;
-use crate::model::Reality;
+use crate::model::{Reality, World};
 use crate::num::Num;
 use crate::syntax::{Edge, Stop};
 use crate::time::Day;
@@ -153,13 +153,13 @@ impl Engine {
     /// The refusals the plan pass meets; `NotBuilt` for a reading after a movement or at a
     /// day with no edge, and for a written order with a plan.
     pub(crate) fn plan_walk(&mut self, m: &Reality, id: usize) -> Result<(), Stop> {
-        let (cut, main) = {
+        let (cut, main, world) = {
             let walk = self.walk(id)?;
-            (walk.cut, walk.proj.is_none())
+            (walk.cut, walk.proj.is_none(), walk.world)
         };
         not_yet(m)?;
         let readings = if main {
-            crate::book::readings(m, cut)?
+            crate::book::readings(m, (cut, world))?
         } else {
             Vec::new()
         };
@@ -178,7 +178,7 @@ impl Engine {
         }
         let mut plans = Vec::new();
         let mut decisions = Vec::new();
-        for mv in sorted_moves(m) {
+        for mv in sorted_moves(m, world) {
             let insts = self.move_instances(m, mv, cut)?.to_vec();
             if mv.decision {
                 decisions.push((mv.id.clone(), mv.stratum, insts));
@@ -300,9 +300,15 @@ fn not_yet(m: &Reality) -> Result<(), Stop> {
     Ok(())
 }
 
-/// The moves, by id. E §4.1.
-fn sorted_moves(m: &Reality) -> Vec<&crate::model::MoveInfo> {
-    let mut out: Vec<&crate::model::MoveInfo> = m.moves.entries().map(|(_, mv)| mv).collect();
+/// The moves world `world` holds, by id: a move a scenario's file declares exists only in that
+/// scenario and those over it (refcore's `m_plan_moves`, `item_in_world`). E §4.1, L §6.4.
+fn sorted_moves(m: &Reality, world: World) -> Vec<&crate::model::MoveInfo> {
+    let mut out: Vec<&crate::model::MoveInfo> = m
+        .moves
+        .entries()
+        .map(|(_, mv)| mv)
+        .filter(|mv| m.scenarios.sees(world, Some(&mv.id)))
+        .collect();
     out.sort_by(|a, b| a.id.cmp(&b.id));
     out
 }
@@ -684,7 +690,10 @@ fn note_left_out(walk: &mut Walk, inst: &Inst) -> Result<(), Stop> {
 pub fn endings(m: &Reality, walk: &Walk) -> BTreeMap<Day, Vec<String>> {
     let mut out: BTreeMap<Day, Vec<String>> = BTreeMap::new();
     for (_, thing) in m.things.entries().filter(|(_, t)| m.is_place(t)) {
-        let Some(end) = m.lifespan(thing, walk.cut).and_then(|sp| sp.end()) else {
+        let Some(end) = m
+            .lifespan(thing, (walk.cut, walk.world))
+            .and_then(|sp| sp.end())
+        else {
             continue;
         };
         let Some(last) = end.previous() else {

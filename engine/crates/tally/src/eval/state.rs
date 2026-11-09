@@ -4,7 +4,8 @@
 //! L §4.3 (the law date), §4.5 (the cut), §5.18 (the ask line's `with uncertain`, in its own
 //! reads' context only), §8.2 (the register); §7.6 items 1 and 4 (a day past the calendar and
 //! the end of time read as a day, `past_days` and `a_day`; a unit's power past 64); §4.4 (a
-//! read's world, `Ctx::world`: two reads of one item at the same keys in it are one value).
+//! read's world, `Ctx::world`: two reads of one item at the same keys in it are one value);
+//! L §6.4 (the scenario world a read is in: the layers of the stack it sees).
 //! Twin: engine/tools/refcore/evaluate.py (`Ctx`, `Coll`, `Engine` and its collector stack,
 //! `past_days`).
 //! Invariants: a cell is computed once per context and its result, refusal included, is kept;
@@ -16,7 +17,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::Days;
 use crate::base::{Code, Refusal, Run, Warn};
 use crate::book::{Adjustment, Coverage, Linked, Obs};
-use crate::model::{Domain, KeyVal, Node, NodeKind, Reality, UnitError, Value};
+use crate::model::{Domain, KeyVal, Node, NodeKind, Reality, UnitError, Value, World};
 use crate::num::NumError;
 use crate::syntax::{Ask, Expr, Stop};
 use crate::time::Day;
@@ -25,6 +26,7 @@ use crate::walk::{Inst, ProjKey, Walk, WalkAt};
 use super::bindings::reads_name;
 use super::context::{Layer, Layers};
 use super::memo::{CellId, Cells, Frame, Memo, Open, Reads};
+use super::timelines::Timelines;
 
 /// The deepest chain of def cells computed by plain calls; past it the cell demanded waits on
 /// the work stack (R-16, BUILDER §4). U-15, measured at S: a debug build uses about 19 KB of
@@ -46,13 +48,16 @@ pub struct Ctx {
     /// without it, so no decision sees it (L §5.14: "the clause is the read's").
     pub unc: bool,
     /// The pins and wording pins in force, as one interned layer (E §3.2; `context.rs`). A
-    /// timeline's and a decision's contexts are made anew without them.
+    /// timeline's and a decision's contexts take the timeline's: the pins the walk reaches.
     pub layer: Layer,
+    /// The world read in: the reality's whole stack of scenarios, or the layers under one of
+    /// them (L §6.4; refcore's `Ctx.world`). A timeline's contexts take the timeline's.
+    pub world: World,
 }
 
 impl Ctx {
     /// The context of law date `law` and cut `cut`, at no walk point, without `with
-    /// uncertain`: a timeline's and a decision's context (L §5.14).
+    /// uncertain`, unpinned, in the reality's whole world (L §5.14).
     #[must_use]
     pub fn new(law: Option<Day>, cut: Day) -> Ctx {
         Ctx {
@@ -61,7 +66,14 @@ impl Ctx {
             at: None,
             unc: false,
             layer: Layer::BASE,
+            world: World::Whole,
         }
+    }
+
+    /// The context in world `world` (L §6.4).
+    #[must_use]
+    pub fn in_world(self, world: World) -> Ctx {
+        Ctx { world, ..self }
     }
 
     /// The context under the ask line's `with uncertain` (L §5.18).
@@ -84,8 +96,8 @@ impl Ctx {
     }
 
     /// The world a read is made in, as text: its law date, cut, walk point, `with
-    /// uncertain` and pins; two reads of one item at the same keys in one world are one value
-    /// (L §4.4).
+    /// uncertain`, pins and scenario world; two reads of one item at the same keys in one
+    /// world are one value (L §4.4, §6.4).
     pub(super) fn world(self) -> String {
         let law = self.law.map_or_else(|| "-".to_owned(), Day::text);
         let unc = if self.unc { "|uncertain" } else { "" };
@@ -93,6 +105,10 @@ impl Ctx {
             String::new()
         } else {
             format!("|pins {}", self.layer.number())
+        };
+        let pins = match self.world {
+            World::Whole => pins,
+            World::Lowest(depth) => format!("{pins}|world {depth}"),
         };
         match self.at {
             None => format!("{law}|{}{unc}{pins}", self.cut.text()),
@@ -347,6 +363,9 @@ pub struct Engine {
     /// The context's interned layers: the pin sets and wording pins met, the open scopes
     /// (E §3.2, P §3.1, §3.5).
     pub(super) layers: Layers,
+    /// The timeline in force, and the others parked: one per world and pins the walk reaches
+    /// (E §3.3; `timelines.rs`). The walk fields above hold the one in force.
+    pub(super) timelines: Timelines,
     /// What this engine did, in P §1.1's units: the `counters` build only (BUILDER §13.2).
     #[cfg(feature = "counters")]
     pub(crate) counts: crate::Counters,
@@ -392,6 +411,7 @@ impl Engine {
             calendar_pass: None,
             splits: super::prorata::Splits::default(),
             layers: Layers::default(),
+            timelines: Timelines::default(),
             #[cfg(feature = "counters")]
             counts: crate::Counters::default(),
         }
@@ -402,12 +422,6 @@ impl Engine {
     #[must_use]
     pub fn with_booked(self, booked: BTreeMap<(String, Day), crate::walk::Booked>) -> Engine {
         Engine { booked, ..self }
-    }
-
-    /// The booked plan amounts this engine met and those it was given, handed on to the run's
-    /// next ask (E §9 item 5).
-    pub fn take_booked(&mut self) -> BTreeMap<(String, Day), crate::walk::Booked> {
-        core::mem::take(&mut self.booked)
     }
 
     /// What this engine did, in P §1.1's units: the `counters` build only (BUILDER §13.2).

@@ -132,7 +132,7 @@ pub mod model {
         Class, Code, MvRef, MvSrc, Number, ReadOf, Value, Window, currency, currency_id,
         currency_unit, money_num, num_money,
     };
-    pub use world::Scenarios;
+    pub use world::{Scenarios, World};
 }
 
 /// Holes (L §8.1): a missing fact and the questions it carries, built only here (R-116), with
@@ -166,6 +166,7 @@ pub mod eval {
     mod solve;
     mod stack;
     mod state;
+    mod timelines;
     mod ty;
     mod windows;
     mod years;
@@ -174,6 +175,7 @@ pub mod eval {
     pub use arith::{Op, Test, arith, compare, currency_of, int_of, negate, same_value};
     pub(crate) use bindings::{order_text, reads_name};
     pub use context::Layer;
+    pub(crate) use context::world_named;
     pub(crate) use convert::{ConvertFor, Converted, convert, convert_row, field_literal};
     pub(crate) use expr::equal_sides;
     pub use memo::Memo;
@@ -242,6 +244,7 @@ pub mod book {
 pub mod ask {
     mod answer;
     mod check;
+    mod diff;
     mod register;
     mod residuals;
     mod worlds;
@@ -303,6 +306,7 @@ pub mod load {
     pub use joint::member_paths;
     pub(crate) use joint::reprint_members;
     pub use keys::index_key_of;
+    pub(crate) use srows::ask_worlds;
     pub use steps::load;
     pub(crate) use texts::text as expr_text;
     pub use worlds::{Loaded, Split, Worlds, load_run, split_files};

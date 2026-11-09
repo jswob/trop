@@ -442,7 +442,8 @@ impl Engine {
             *id
         } else {
             let id = self.walks.len();
-            self.walks.push(Walk::new(cut, m.start, m.end));
+            self.walks
+                .push(Walk::new(cut, (m.start, m.end), self.timeline_world()));
             #[cfg(feature = "counters")]
             self.counts.add(crate::Unit::Walk);
             self.main_walks.insert(cut, id);

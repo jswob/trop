@@ -13,7 +13,7 @@
 mod tests {
     use tally::Source;
     use tally::load::load;
-    use tally::model::{BandEnd, BandRow, Domain, KeyVal, Reality};
+    use tally::model::{BandEnd, BandRow, Domain, KeyVal, Reality, World};
     use tally::read::{
         Asked, Clocks, Found, band_rows, held, read_input, rule_in_force, time_point,
     };
@@ -223,8 +223,7 @@ band|scale||2025-06-01|2026-03-01|rows v2 [0, 100]; v1 (100, inf)
             .iter()
             .find(|(l, _)| l == label)
             .expect("the label");
-        let Some(at) = rule_in_force(m, id, label, versions, (clocks.law, clocks.cut), None)?
-        else {
+        let Some(at) = rule_in_force(m, id, label, versions, clocks)? else {
             return Ok("no rule".to_owned());
         };
         let rule = versions.get(at).expect("the version");
@@ -295,6 +294,7 @@ band|scale||2025-06-01|2026-03-01|rows v2 [0, 100]; v1 (100, inf)
                 cut: day(cut),
                 ask_cut: m.on,
                 wording: None,
+                world: World::Whole,
             };
             let got = outcome(&m, kind, id, &texts, clocks);
             assert_eq!(got, *expected, "{line}");
@@ -320,6 +320,7 @@ band|scale||2025-06-01|2026-03-01|rows v2 [0, 100]; v1 (100, inf)
             cut: m.on,
             ask_cut: m.on,
             wording: None,
+            world: World::Whole,
         }
     }
 

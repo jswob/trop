@@ -125,7 +125,7 @@ impl Engine {
             given.push(self.given_key(m, e, env, ctx)?);
         }
         if let Some(input) = m.inputs.get(id) {
-            return match make_keys(m, id, &input.binds, given, ctx.cut)? {
+            return match make_keys(m, id, &input.binds, given, ctx)? {
                 Err(hole) => Ok(Value::Hole(hole)),
                 Ok(made) => {
                     self.movement_keys(m, &input.binds, &made, ctx)?;
@@ -137,7 +137,7 @@ impl Engine {
             .defs
             .get(id)
             .ok_or_else(|| invariant("a read of an item that is neither an input nor a def"))?;
-        match make_keys(m, id, &def.binds, given, ctx.cut)? {
+        match make_keys(m, id, &def.binds, given, ctx)? {
             Err(hole) => Ok(Value::Hole(hole)),
             Ok(made) => {
                 self.movement_keys(m, &def.binds, &made, ctx)?;
@@ -167,7 +167,7 @@ impl Engine {
             };
             given.push(self.given_key(m, e, env, ctx)?);
         }
-        let made = match make_keys(m, id, &place.binds, given, ctx.cut)? {
+        let made = match make_keys(m, id, &place.binds, given, ctx)? {
             Err(hole) => return Ok(Value::Hole(hole)),
             Ok(made) => made,
         };
@@ -496,7 +496,8 @@ impl Engine {
                 return Ok(Value::Hole(h));
             }
             let day = crate::ask::date_of(&day, "the day of a membership test")?;
-            let alive = member_span(m, thing, kind, ctx.cut).is_some_and(|s| s.contains(day));
+            let alive =
+                member_span(m, thing, kind, (ctx.cut, ctx.world)).is_some_and(|s| s.contains(day));
             return Ok(Value::Bool(alive));
         }
         if based_in(m, thing, kind) {

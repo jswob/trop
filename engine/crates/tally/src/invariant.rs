@@ -73,26 +73,32 @@ impl Engine {
         self.signatures.insert(id, signature);
         Ok(())
     }
+}
 
-    /// Asks move no money: every main walk this engine walked, unless it failed, has the
-    /// signature it had when it was done (refcore's `Asker._answer`, its last step). E §9 item 4.
-    ///
-    /// # Errors
-    ///
-    /// `ENGINE-INVARIANT asks move no money: …` for the first walk whose entries changed, by
-    /// the order the walks were made.
-    pub(crate) fn asks_moved_no_money(&self) -> Result<(), Stop> {
-        for (id, kept) in &self.signatures {
-            let walk = self.walk(*id)?;
-            if matches!(walk.progress, Progress::Failed(_)) {
-                continue;
-            }
-            if Signature::of(walk) != *kept {
-                return Err(moved(walk.cut));
-            }
+/// Asks move no money in one timeline: every main walk of `walks` that kept a signature,
+/// unless it failed, has the signature it had when it was done (refcore's `Asker._answer`,
+/// its last step). E §9 item 4.
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT asks move no money: …` for the first walk whose entries changed, by
+/// the order the walks were made; `ENGINE-INVARIANT` for a signature of a walk not held.
+pub(crate) fn unmoved(walks: &[Walk], signatures: &BTreeMap<usize, Signature>) -> Result<(), Stop> {
+    for (id, kept) in signatures {
+        let walk = walks.get(*id).ok_or_else(|| {
+            Stop::Refused(Refusal::new(
+                Code::EngineInvariant,
+                "a signature of a walk the timeline lacks".to_owned(),
+            ))
+        })?;
+        if matches!(walk.progress, Progress::Failed(_)) {
+            continue;
         }
-        Ok(())
+        if Signature::of(walk) != *kept {
+            return Err(moved(walk.cut));
+        }
     }
+    Ok(())
 }
 
 /// The refusal of a timeline that changed while an ask was answered, as refcore words it.
@@ -214,6 +220,7 @@ ask bank_end: bal(bank, 2025-03-31)
             counted: BTreeMap::new(),
             levels: Vec::new(),
             root: (m.on, m.start),
+            world: crate::model::World::Whole,
         }));
         let projected = engine.walks.len();
         engine.walks.push(walk);

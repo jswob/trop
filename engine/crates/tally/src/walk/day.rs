@@ -485,7 +485,7 @@ impl Engine {
                 .things
                 .get(p)
                 .ok_or_else(|| invariant("a leg's place load didn't build"))?;
-            let span = m.lifespan(thing, cut);
+            let span = m.lifespan(thing, (cut, self.timeline_world()));
             if let Some(sp) = &span
                 && let Some(question) = sp.end_question()
                 && sp.contains(at.day)

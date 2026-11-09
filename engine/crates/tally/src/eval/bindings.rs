@@ -2,7 +2,8 @@
 //! Spec: L §2.5 (binding order: an index's order, a kind's things by the text of `kind:key`;
 //! a key list's literals as keys of the index its key positions fix), §5.7 (a binding over a
 //! kind `on d` or `over s`, alive by its memberships), §5.6 (an index's keys), §4.5 (the keys
-//! and things a cut sees), §7.6 item 1 (the end of time is no day to end a span on). The
+//! and things a cut sees), §6.4 (and the world: a scenario's keys and things only in its
+//! world and those over it), §7.6 item 1 (the end of time is no day to end a span on). The
 //! aggregates over these values are `aggregate.rs`'s; a stepped range's keys `ranges.rs`'s;
 //! movements `book/members.rs`'s.
 //! Twin: engine/tools/refcore/evaluate.py (`bind_values`, `span_value`, `span_start`,
@@ -17,7 +18,7 @@ use super::state::{Ctx, Engine, Env, a_day, invariant, not_typed, refuse, wrong_
 use super::years::span_year;
 use crate::base::Run;
 use crate::hole::Hole;
-use crate::model::{Class, Domain, IndexInfo, KeyVal, Number, Reality, Span, Thing, Value};
+use crate::model::{Class, Domain, IndexInfo, KeyVal, Number, Reality, Span, Thing, Value, World};
 use crate::syntax::{
     Bind, Domain as Over, Expr, Field, FieldValue, Key, Lit, Postfix, Span as SpanText, Stop,
 };
@@ -55,7 +56,7 @@ impl Engine {
                     if bind.on.is_some() || bind.over.is_some() {
                         return Err(Stop::NotBuilt("a binding over an index with a day or span"));
                     }
-                    return index_values(m, ix, ctx.cut).map(Values::Known);
+                    return index_values(m, ix, (ctx.cut, ctx.world)).map(Values::Known);
                 }
                 if m.kinds
                     .get(id)
@@ -104,7 +105,9 @@ impl Engine {
             .things
             .entries()
             .map(|(_, t)| t)
-            .filter(|t| super::read::thing_seen(m, t, ctx.cut) && m.thing_in(&t.name, kind))
+            .filter(|t| {
+                super::read::thing_seen(m, t, (ctx.cut, ctx.world)) && m.thing_in(&t.name, kind)
+            })
             .collect();
         let when = match (&bind.on, &bind.over) {
             (Some(on), _) => {
@@ -124,7 +127,7 @@ impl Engine {
         };
         let mut alive: Vec<&Thing> = Vec::with_capacity(things.len());
         for thing in things {
-            if is_alive(m, thing, kind, &when, ctx.cut)? {
+            if is_alive(m, thing, kind, &when, (ctx.cut, ctx.world))? {
                 alive.push(thing);
             }
         }
@@ -191,8 +194,13 @@ pub(super) fn bind_domain(m: &Reality, bind: &Bind) -> Option<Domain> {
     m.kinds.get(id).map(|_| Domain::Kind(id.clone()))
 }
 
-/// The keys of an index the cut sees, in its order (refcore's `keys_at`). L §4.5, §2.5.
-fn index_values(m: &Reality, ix: &IndexInfo, cut: Day) -> Result<Vec<(Value, Option<Hole>)>, Stop> {
+/// The keys of an index the cut and the world of `seen` see, in its order (refcore's
+/// `keys_at`, `IndexInfo.visible`). L §4.5, §2.5, §6.4.
+fn index_values(
+    m: &Reality,
+    ix: &IndexInfo,
+    (cut, world): (Day, World),
+) -> Result<Vec<(Value, Option<Hole>)>, Stop> {
     let mut out = Vec::with_capacity(ix.keys().len());
     for key in ix.keys() {
         if let Some(version) = ix.added_by(key) {
@@ -201,7 +209,7 @@ fn index_values(m: &Reality, ix: &IndexInfo, cut: Day) -> Result<Vec<(Value, Opt
                 .get(version)
                 .map(|v| v.known)
                 .ok_or_else(|| invariant("a key added by a version load didn't build"))?;
-            if known > cut {
+            if known > cut || !m.scenarios.sees(world, Some(version)) {
                 continue;
             }
         }
@@ -318,9 +326,15 @@ fn empty_or_unknown(bind: &Bind, things: &[&Thing], h: Hole) -> Result<Values, S
     Ok(Values::Unknown(h))
 }
 
-/// Whether a thing is of the kind on the day or over the span: one of its memberships holds
-/// it (refcore's `_alive`). L §5.7.
-fn is_alive(m: &Reality, thing: &Thing, kind: &str, when: &When, cut: Day) -> Result<bool, Stop> {
+/// Whether a thing is of the kind on the day or over the span, in the world of `seen`: one
+/// of its memberships holds it (refcore's `_alive`). L §5.7, §6.4.
+fn is_alive(
+    m: &Reality,
+    thing: &Thing,
+    kind: &str,
+    when: &When,
+    seen: (Day, World),
+) -> Result<bool, Stop> {
     let subtree = m.subtree(kind);
     let kinds: BTreeSet<&str> = thing
         .entries
@@ -329,7 +343,7 @@ fn is_alive(m: &Reality, thing: &Thing, kind: &str, when: &When, cut: Day) -> Re
         .map(|e| e.kind.as_str())
         .collect();
     for k in kinds {
-        let Some(span) = m.span_in(thing, k, cut) else {
+        let Some(span) = m.span_in(thing, k, seen) else {
             continue;
         };
         let holds = match when {

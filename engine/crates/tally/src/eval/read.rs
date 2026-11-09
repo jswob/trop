@@ -8,7 +8,8 @@
 //! holes asked of its row). A row's value converted to its input's type is `convert.rs`'s.
 //! Twin: engine/tools/refcore/evaluate.py (`key_values`, `to_key`, `check_key`, `read_input`,
 //! `row_value`, `e_lastx`, `e_call_since`, `prices`, `index_assumed`).
-//! Invariants: a key a read takes is a key its domain holds and the cut sees; a row's value
+//! Invariants: a key a read takes is a key its domain holds and the cut and the read's world
+//! see (L §6.4); a row's value
 //! has its input's declared type; a hole is built in the hole module.
 
 use super::arith::{Op, arith, int_of};
@@ -80,7 +81,7 @@ fn latest_of(input: &InputInfo, at: usize) -> Result<&Row, Stop> {
 
 impl Engine {
     /// The clocks of a read of `item` in context `ctx`: the law date, the cut, the ask's cut,
-    /// and the day a `wording` pin names the item with (L §4.3, §4.5).
+    /// the day a `wording` pin names the item with, and the world (L §4.3, §4.5, §6.4).
     ///
     /// # Errors
     ///
@@ -91,6 +92,7 @@ impl Engine {
             cut: ctx.cut,
             ask_cut: self.ask_cut,
             wording: self.wording_of(item, ctx)?,
+            world: ctx.world,
         })
     }
 
@@ -345,7 +347,7 @@ impl Engine {
             .get(name)
             .ok_or_else(|| invariant("an input of last load didn't build"))?;
         let given = self.given_keys(m, written, env, ctx)?;
-        let keys = match make_keys(m, name, &input.binds, given, ctx.cut)? {
+        let keys = match make_keys(m, name, &input.binds, given, ctx)? {
             Err(hole) => return Ok(Err(Value::Hole(hole))),
             Ok(keys) => keys,
         };
@@ -540,8 +542,8 @@ impl Engine {
 }
 
 /// The keys of a read: each given key made a key of its position's domain, checked
-/// against the domain and the cut; a hole key makes the read that hole, carrying the
-/// keys' questions only (refcore's `key_values`). L §2.5, §8.1.
+/// against the domain, the cut and the world of `ctx`; a hole key makes the read that hole,
+/// carrying the keys' questions only (refcore's `key_values`). L §2.5, §8.1, §6.4.
 ///
 /// # Errors
 ///
@@ -551,7 +553,7 @@ pub(crate) fn make_keys(
     item: &str,
     binds: &[BindInfo],
     given: Vec<Given>,
-    cut: Day,
+    ctx: Ctx,
 ) -> Result<Result<Vec<KeyVal>, Hole>, Stop> {
     if given.len() != binds.len() {
         return Err(Stop::NotBuilt("a read with fewer or more keys than binds"));
@@ -567,7 +569,7 @@ pub(crate) fn make_keys(
             Given::Value(v) => to_key(m, item, &v, &bind.domain)?,
             Given::Literal(lit) => literal_key(m, &lit, &bind.domain)?.ok_or_else(lacks_at_run)?,
         };
-        check_key(m, &key, &bind.domain, cut)?;
+        check_key(m, &key, &bind.domain, (ctx.cut, ctx.world))?;
         keys.push(key);
     }
     let operands: Vec<Option<&Hole>> = holes.iter().map(Some).collect();
@@ -739,13 +741,19 @@ pub(super) fn literal_key(m: &Reality, lit: &Lit, domain: &Domain) -> Result<Opt
     }
 }
 
-/// Whether the cut sees key `key` of `domain`: a key its index holds and no version known
-/// after the cut added, a thing an entry the cut sees brings (refcore's `check_key`). L §4.5.
+/// Whether the cut and the world of `seen` see key `key` of `domain`: a key its index holds
+/// and no version known after the cut or unseen in the world added, a thing an entry they
+/// see brings (refcore's `check_key`, `IndexInfo.visible`). L §4.5, §6.4.
 ///
 /// # Errors
 ///
 /// `RUN-KEY`.
-pub(super) fn check_key(m: &Reality, key: &KeyVal, domain: &Domain, cut: Day) -> Result<(), Stop> {
+pub(super) fn check_key(
+    m: &Reality,
+    key: &KeyVal,
+    domain: &Domain,
+    (cut, world): (Day, crate::model::World),
+) -> Result<(), Stop> {
     match domain {
         Domain::Index(id) => {
             let ix = m
@@ -761,7 +769,7 @@ pub(super) fn check_key(m: &Reality, key: &KeyVal, domain: &Domain, cut: Day) ->
                     .get(version)
                     .map(|v| v.known)
                     .ok_or_else(|| invariant("a key added by a version load didn't build"))?;
-                if known > cut {
+                if known > cut || !m.scenarios.sees(world, Some(version)) {
                     return Err(refuse(
                         Run::Key,
                         format!("{} was added after the cut", key.text()),
@@ -784,7 +792,7 @@ pub(super) fn check_key(m: &Reality, key: &KeyVal, domain: &Domain, cut: Day) ->
                 .things
                 .get(name)
                 .ok_or_else(|| refuse(Run::Key, format!("{name} is not a key of {kind}")))?;
-            if !thing_seen(m, thing, cut) {
+            if !thing_seen(m, thing, (cut, world)) {
                 return Err(refuse(Run::Key, format!("{name} was added after the cut")));
             }
             Ok(())
@@ -793,18 +801,31 @@ pub(super) fn check_key(m: &Reality, key: &KeyVal, domain: &Domain, cut: Day) ->
     }
 }
 
-/// Whether the cut sees an entry of `thing`: one with no version, or whose version is known by
-/// the cut (refcore's `thing_seen`). L §4.5, §5.7.
+/// Whether the cut and the world of `seen` see an entry of `thing`: one with no version, or
+/// whose version is known by the cut, in a file the world sees (refcore's `thing_seen`,
+/// `in_world`). L §4.5, §5.7, §6.4.
 #[must_use]
-pub(crate) fn thing_seen(m: &Reality, thing: &crate::model::Thing, cut: Day) -> bool {
+pub(crate) fn thing_seen(
+    m: &Reality,
+    thing: &crate::model::Thing,
+    (cut, world): (Day, crate::model::World),
+) -> bool {
     if let Some(keys) = &thing.place {
-        return keys
-            .key_things
-            .iter()
-            .filter_map(|name| m.things.get(name))
-            .all(|t| thing_seen(m, t, cut));
+        let own = thing
+            .entries
+            .first()
+            .is_none_or(|e| m.entry_seen(thing, e, world));
+        return own
+            && keys
+                .key_things
+                .iter()
+                .filter_map(|name| m.things.get(name))
+                .all(|t| thing_seen(m, t, (cut, world)));
     }
     for entry in &thing.entries {
+        if !m.entry_seen(thing, entry, world) {
+            continue;
+        }
         let Some(version) = &entry.version else {
             return true;
         };

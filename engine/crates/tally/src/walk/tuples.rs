@@ -156,7 +156,7 @@ impl Engine {
         keys: &[KeyVal],
         cut: Day,
     ) -> Result<Option<Env>, Stop> {
-        let tctx = Ctx::new(None, cut);
+        let tctx = self.timeline_ctx(None, cut);
         for tuple in self.move_tuples(m, mv, tctx)? {
             if tuple.keys != keys {
                 continue;
@@ -215,7 +215,7 @@ impl Engine {
         env: &Env,
         cut: Day,
     ) -> Result<std::collections::BTreeSet<String>, Stop> {
-        let tctx = Ctx::new(None, cut);
+        let tctx = self.timeline_ctx(None, cut);
         let none = std::collections::BTreeSet::new();
         let law = match self.move_law(m, mv, env, tctx) {
             Ok(Law::Hole(_)) => return Ok(none),

@@ -160,7 +160,7 @@ impl Engine {
                 p.root
             }
         };
-        let mut first_reading = crate::book::first_readings(m, c)?;
+        let mut first_reading = crate::book::first_readings(m, (c, from.world))?;
         for (place, day) in &from.first_reading {
             first_reading.entry(place.clone()).or_insert(*day);
         }
@@ -171,6 +171,7 @@ impl Engine {
             counted: BTreeMap::new(),
             levels,
             root,
+            world: from.world,
         };
         Ok(Walk::projection(c, (t, m.end), projected, first_reading))
     }

@@ -4,7 +4,8 @@
 //! links written, judged by existence at the ask's cut, `RUN-RECORD` for a link to nothing or
 //! a record that lacks the instance's leg); E §4.1 step 3 (an instance an observation fulfils,
 //! or one on a covered day before K, is modelled past), §6.1 (each end of an observed leg booked
-//! from the observation of the version that covers its place that day; `WARN-LEGS`).
+//! from the observation of the version that covers its place that day; `WARN-LEGS`); L §6.4
+//! (the observations and coverage the timeline's world sees).
 //! Twin: engine/tools/refcore/moves.py (`ObsMv`, `coverage`, `covering`, `covered_on`,
 //! `observations`, `obs_links`, `link_targets`, `obs_links_for`, `link_tuple`, `link_places`,
 //! `touches_covered`) and walk.py (`obs_end_on`, `prepare`'s `WARN-LEGS`).
@@ -16,7 +17,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::base::{Code, Refusal, Run, Warn};
 use crate::eval::{Collected, Engine};
-use crate::model::{Fulfils, KeyVal, Reality, Span, Value};
+use crate::model::{Fulfils, KeyVal, Reality, Span, Value, World};
 use crate::syntax::Stop;
 use crate::time::Day;
 use crate::walk::{Amount, Dated, End, Inst, LegVal, Term, invariant};
@@ -98,10 +99,11 @@ impl Engine {
     /// `ENGINE-INVARIANT` for a row load left without its day, kind or version; `NotBuilt` for
     /// a row known in a window.
     pub(crate) fn observations(&mut self, m: &Reality, cut: Day) -> Result<&[Obs], Stop> {
+        let world = self.timeline_world();
         match self.observed.entry(cut) {
             std::collections::btree_map::Entry::Occupied(seen) => Ok(seen.into_mut().as_slice()),
             std::collections::btree_map::Entry::Vacant(slot) => {
-                Ok(slot.insert(seen_observations(m, cut)?).as_slice())
+                Ok(slot.insert(seen_observations(m, (cut, world))?).as_slice())
             }
         }
     }
@@ -109,9 +111,10 @@ impl Engine {
     /// The versions cut `cut` sees that cover each place, with the span each covers
     /// (refcore's `coverage`). L §5.19 Coverage.
     pub(crate) fn coverage(&mut self, m: &Reality, cut: Day) -> &Coverage {
+        let world = self.timeline_world();
         self.covered
             .entry(cut)
-            .or_insert_with(|| seen_coverage(m, cut))
+            .or_insert_with(|| seen_coverage(m, (cut, world)))
     }
 
     /// The versions that cover `place` on `day` under cut `cut` (refcore's `covering`).
@@ -546,9 +549,10 @@ fn record(message: String) -> Refusal {
     Refusal::new(Code::Run(Run::Record), message)
 }
 
-/// The observations cut `cut` sees: per observed input, each row id's latest restatement known
-/// by the cut, `none` removing it; sorted by day and id (refcore's `observations`). L §5.19.
-fn seen_observations(m: &Reality, cut: Day) -> Result<Vec<Obs>, Stop> {
+/// The observations the cut and the world of `seen` see: per observed input, each row id's
+/// latest restatement known by the cut in a version the world sees, `none` removing it; sorted
+/// by day and id (refcore's `observations`). L §5.19, §6.4.
+fn seen_observations(m: &Reality, (cut, world): (Day, World)) -> Result<Vec<Obs>, Stop> {
     let mut out = Vec::new();
     for (_, input) in m.inputs.entries() {
         let mut latest: BTreeMap<&str, (Day, &crate::model::Observation)> = BTreeMap::new();
@@ -558,7 +562,7 @@ fn seen_observations(m: &Reality, cut: Day) -> Result<Vec<Obs>, Stop> {
                 .get(&o.version)
                 .ok_or_else(|| invariant("an observation of a version load didn't build"))?;
             let known = o.own_known.unwrap_or(version.known);
-            if known > cut {
+            if known > cut || !m.scenarios.sees(world, Some(&o.version)) {
                 continue;
             }
             if latest.get(o.key.as_str()).is_none_or(|(k, _)| known > *k) {
@@ -613,15 +617,16 @@ fn observation(o: &crate::model::Observation) -> Result<Obs, Stop> {
     })
 }
 
-/// The versions cut `cut` sees that cover each place, by version id: each place with its span,
-/// the one written or the version's `governs` (refcore's `coverage`). L §5.19 Coverage.
-fn seen_coverage(m: &Reality, cut: Day) -> Coverage {
+/// The versions the cut and the world of `seen` see that cover each place, by version id: each
+/// place with its span, the one written or the version's `governs` (refcore's `coverage`).
+/// L §5.19 Coverage, §6.4.
+fn seen_coverage(m: &Reality, (cut, world): (Day, World)) -> Coverage {
     let mut out = Coverage::new();
     let mut versions: Vec<&crate::model::VersionInfo> =
         m.versions.entries().map(|(_, v)| v).collect();
     versions.sort_by(|a, b| a.id.cmp(&b.id));
     for v in versions {
-        if v.covers.is_empty() || v.known > cut {
+        if v.covers.is_empty() || v.known > cut || !m.scenarios.sees(world, Some(&v.id)) {
             continue;
         }
         for (place, span) in &v.covers {

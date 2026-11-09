@@ -1,9 +1,10 @@
 //! Answering the asks: each ask's cut, law date and `with` pins, its binding tuples, its line's values, check or solve, and each line's register.
-//! Spec: L §5.18 (asks: `as known`, `law`, `in`, `with`, `for`, `check`, `solve`, one line
+//! Spec: L §5.18 (asks: `as known`, `law`, `in`, `with`, `for`, `check`, `solve`, `diff`, one line
 //! per binding tuple, a tuple whose `where` is a hole printed as that hole); L §4.3 (the law
 //! date), §4.5 (the cut), §5.11 (an ask's `law`, `as known` or pin that is a hole makes the ask
 //! line that hole), §8.2 (the register), §8.4 (a run-time refusal prints as the ask's line),
-//! §8.5 (warnings last); E §11 (`REQ-ASK`, tally 2.1.3; `REQ-CLOCK`).
+//! §8.5 (warnings last), §6.4 (the line's world: its `in`, else the model's; `law` and
+//! `as known` in the model's); E §11 (`REQ-ASK`, tally 2.1.3; `REQ-CLOCK`).
 //! Twin: engine/tools/refcore/ask.py (`Asker.run`, `req_ask`, `answer`, `_answer`,
 //! `_answer_in`, `evaluate`, `one`, `one_solve`, `print_line`, `fmt_value`, `fmt_bind`) and
 //! evaluate.py (`date_of`, `apply_pins`); refcore answers an `as known` after `on` where E §11
@@ -17,11 +18,12 @@
 use std::collections::BTreeMap;
 
 use super::check::{Printed, check_line};
+use super::diff::diff_lines;
 use super::register::{check_register_lines, register_lines, warning_lines};
 use super::residuals::residual_lines;
 use crate::base::{Code, Refusal, Req, Run, Warn};
 use crate::eval::{
-    Collected, Ctx, Engine, Entry, Env, Item, Member, Memo, a_day, num_stop, past_days,
+    Collected, Ctx, Engine, Entry, Env, Item, Member, Memo, a_day, num_stop, past_days, world_named,
 };
 use crate::model::{Reality, Value};
 use crate::syntax::{Ask, AskBody, Bind, Domain, Stop};
@@ -329,7 +331,8 @@ fn ask_lines(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<
             .with_memo(seen.memo)
             .for_ask(ask)
             .with_booked(core::mem::take(&mut seen.booked));
-        let v = engine.value(m, known, &Env::empty(), Ctx::new(None, cut));
+        let v = model_ctx(m, &mut engine, (None, cut))
+            .and_then(|ctx| engine.value(m, known, &Env::empty(), ctx));
         gather(seen, &mut engine);
         let v = v?;
         if let Value::Hole(_) = v {
@@ -385,33 +388,35 @@ fn gather(seen: &mut Seen, engine: &mut Engine) {
 fn ask_body(m: &Reality, ask: &Ask, engine: &mut Engine, cut: Day) -> Result<Vec<String>, Stop> {
     let mut law = None;
     if let Some(e) = &ask.law {
-        let v = engine.value(m, e, &Env::empty(), Ctx::new(None, cut))?;
+        let in_model = model_ctx(m, engine, (None, cut))?;
+        let v = engine.value(m, e, &Env::empty(), in_model)?;
         if let Value::Hole(_) = v {
             return Ok(vec![format!("{}: {}", ask.id, shown(m, &v)?)]);
         }
         law = Some(date_of(&v, "the law of an ask")?);
     }
     let mut pinned = Collected::default();
-    if let Some(world) = &ask.world {
-        // the reality's own world, its whole stack seen: a world under it (the model's, a
-        // lower scenario's) hides the layers over it, M1's overlays
-        let own = m.scenarios.own().unwrap_or(m.header.id.as_str());
-        if world != own {
-            return Err(Stop::NotBuilt("an ask in a scenario's world"));
+    // `in s` names the line's world, the model's when it names none; a world under the
+    // reality's own hides the layers over it (L §5.18, §6.4)
+    let world = match &ask.world {
+        Some(id) => {
+            pinned.entries.insert(Entry {
+                word: "world",
+                text: id.clone(),
+                figure: String::new(),
+            });
+            world_named(m, id)?
         }
-        pinned.entries.insert(Entry {
-            word: "world",
-            text: world.clone(),
-            figure: String::new(),
-        });
-    }
+        None => m.scenarios.model_world(),
+    };
     // the line's own reads take its `with uncertain`; `as known` and `law` don't (L §5.18)
-    let plain = Ctx::new(law, cut);
+    let plain = Ctx::new(law, cut).in_world(world);
     let ctx = if ask.uncertain {
         plain.with_uncertain()
     } else {
         plain
     };
+    engine.enter_timeline(m, ctx)?;
     let ctx = if ask.pins.is_empty() {
         ctx
     } else {
@@ -426,7 +431,7 @@ fn ask_body(m: &Reality, ask: &Ask, engine: &mut Engine, cut: Day) -> Result<Vec
             Ok(inside) => inside,
         };
         engine.ask_cut = inside.cut;
-        engine.open_layer(inside.layer);
+        engine.open_layer(m, inside)?;
         inside
     };
     match &ask.body {
@@ -434,15 +439,26 @@ fn ask_body(m: &Reality, ask: &Ask, engine: &mut Engine, cut: Day) -> Result<Vec
             tuple_lines(m, ask, engine, (ctx, &pinned))
         }
         AskBody::Residuals(r) => residual_lines(m, ask, r, engine, (ctx, &pinned)),
-        AskBody::Explain(_) | AskBody::InputsOf(_) | AskBody::ReadersOf(_) | AskBody::Diff(_) => {
-            Err(beyond_built())
-        }
+        AskBody::Diff(diff) => diff_lines(m, (ask, diff), engine, (ctx, &pinned)),
+        AskBody::Explain(_) | AskBody::InputsOf(_) | AskBody::ReadersOf(_) => Err(beyond_built()),
     }
 }
 
-/// An ask's form the run doesn't answer yet: `explain`, `inputs of`, `readers of`, `diff`.
+/// A context of the model's world, its timeline entered: where an ask's `law` and `as known`
+/// are evaluated (refcore's `Ctx(None, K)` in the base's world). L §5.18, §6.4.
+fn model_ctx(
+    m: &Reality,
+    engine: &mut Engine,
+    (law, cut): (Option<Day>, Day),
+) -> Result<Ctx, Stop> {
+    let ctx = Ctx::new(law, cut).in_world(m.scenarios.model_world());
+    engine.enter_timeline(m, ctx)?;
+    Ok(ctx)
+}
+
+/// An ask's form the run doesn't answer yet: `explain`, `inputs of`, `readers of`.
 fn beyond_built() -> Stop {
-    Stop::NotBuilt("an ask's form beyond values, check, solve and residuals")
+    Stop::NotBuilt("an ask's form beyond values, check, solve, residuals and diff")
 }
 
 /// An ask's lines of values, of a check or of a solve: a line per binding tuple with the
@@ -534,7 +550,7 @@ fn line_values(m: &Reality, items: &[Item]) -> Result<String, Stop> {
 
 /// A value as a line prints it: by its type, a key outside its index and a refusal as
 /// `refused: <code> <message>` (refcore's `fmt_value`). L §5.18, §8.4.
-fn item_text(m: &Reality, item: &Item) -> Result<String, Stop> {
+pub(super) fn item_text(m: &Reality, item: &Item) -> Result<String, Stop> {
     match item {
         Item::Refused(r) => Ok(format!("refused: {}", r.text())),
         Item::Value(Value::OutKey { index, text }) => Ok(format!(
@@ -564,6 +580,12 @@ fn env_text(m: &Reality, binds: &[Bind], env: &Env) -> Result<String, Stop> {
     if binds.is_empty() {
         return Ok(String::new());
     }
+    Ok(format!(" {}", tuple_key(m, binds, env)?))
+}
+
+/// A tuple's variables in parentheses, `(v = x, w = y)`: its line's head, a `diff`'s key
+/// (refcore's `fmt_bind`). L §5.18, §2.5.
+pub(super) fn tuple_key(m: &Reality, binds: &[Bind], env: &Env) -> Result<String, Stop> {
     let mut parts = Vec::with_capacity(binds.len());
     for bind in binds {
         let var = env.get(&bind.var).ok_or_else(|| {
@@ -578,7 +600,7 @@ fn env_text(m: &Reality, binds: &[Bind], env: &Env) -> Result<String, Stop> {
             bound_text(m, bind, &var.value)?
         ));
     }
-    Ok(format!(" ({})", parts.join(", ")))
+    Ok(format!("({})", parts.join(", ")))
 }
 
 /// A bound value as a line's head prints it: an integer key of a key list as written, any

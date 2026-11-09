@@ -181,7 +181,7 @@ impl Engine {
         let cut = self.walk(id)?.cut.min(day);
         let mut scored: Vec<(Vec<Value>, Inst)> = Vec::with_capacity(insts.len());
         for inst in insts {
-            let ctx = Ctx::new(inst.law, cut);
+            let ctx = self.timeline_ctx(inst.law, cut);
             let mut vals = Vec::with_capacity(ties.len());
             for x in ties {
                 let v = self.ev(m, x, &inst.env, ctx)?;
@@ -270,7 +270,7 @@ impl Engine {
                 walk: id,
                 point: key,
             }),
-            ..Ctx::new(inst.law, t.min(cut))
+            ..self.timeline_ctx(inst.law, t.min(cut))
         };
         let own = self.own_earlier_obs(m, id, &inst, t)?;
         let prev_less = core::mem::replace(&mut self.walk_mut(id)?.less_obs, own);

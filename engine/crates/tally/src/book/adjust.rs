@@ -20,7 +20,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::base::{Code, Refusal, Run};
-use crate::eval::{Collected, Ctx, Engine};
+use crate::eval::{Collected, Engine};
 use crate::hole::{Hole, spread};
 use crate::model::{MoveInfo, Reality};
 use crate::syntax::Stop;
@@ -291,7 +291,7 @@ impl Engine {
                 exists: Exists::Yes,
                 at_cut: Some(c),
             };
-            let Some(j) = self.eval_inst(m, mv, &seed, Ctx::new(None, cut))? else {
+            let Some(j) = self.eval_inst(m, mv, &seed, self.timeline_ctx(None, cut))? else {
                 continue;
             };
             let step = Step {

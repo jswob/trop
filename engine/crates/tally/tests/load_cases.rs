@@ -32,7 +32,7 @@
 mod tests {
     use tally::Source;
     use tally::load::load;
-    use tally::model::Reality;
+    use tally::model::{Reality, World};
     use tally::syntax::{Stop, parse_reality};
 
     /// A reality with a subkind, list, range and open indexes, a keyed place, a `replace`, an
@@ -129,7 +129,7 @@ ask q1: pay[ana, 2026-01], code[x1]
         }
         for (name, t) in m.things.entries() {
             let span = m
-                .lifespan(t, m.on)
+                .lifespan(t, (m.on, World::Whole))
                 .map_or_else(|| "-".to_owned(), |s| s.text());
             let base = t.base.as_deref().unwrap_or("None");
             out.push(format!("thing {name} {base} {span}"));

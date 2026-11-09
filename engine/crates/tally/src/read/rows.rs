@@ -2,7 +2,7 @@
 //! Spec: L §4.6 steps 1–4 (candidates, replacement, precedence, ties), §4.5 (the cut sees
 //! what is known by it), §4.3 (the law date; a read with none; a `wording D` pin keeps the
 //! candidates that entered into force by D), §5.3 (entry into force), §6.4 (a scenario's rows
-//! stand above its base's).
+//! stand above its base's, and are candidates only in its world and those over it).
 //! Twin: engine/tools/refcore/evaluate.py (`time_point`, `need_law`, `row_matches`,
 //! `key_ord`, `unstated_ok`, `row_visible`, `candidates`, `choose`), loader.py
 //! (`pattern_norm`, `_pos_rel`, `narrower`, `key_order`), model.py (`Row.span`, `Row.known`,
@@ -18,6 +18,7 @@
 use crate::base::{Code, Load, Refusal};
 use crate::model::{
     BindInfo, Domain, InputInfo, KeyVal, OwnTime, Pat, Reality, Row, RowInstant, Span, TimePos,
+    World,
 };
 use crate::syntax::Stop;
 use crate::time::Day;
@@ -34,6 +35,8 @@ pub struct Clocks {
     /// The day a `wording D for […]` pin names the item read with: only rows that entered
     /// into force by D are its candidates (L §4.3); none outside such a pin.
     pub wording: Option<Day>,
+    /// The world read in: a row, a key or an entry of a scenario above it isn't seen (L §6.4).
+    pub world: World,
 }
 
 /// Which rows a read takes as candidates by their time (L §4.6 step 1, Readings).
@@ -282,9 +285,15 @@ fn row_matches(m: &Reality, row: &Row, binds: &[BindInfo], keys: &[KeyVal]) -> b
     true
 }
 
-/// Whether index `id` had `key` on day `known`: a key a version added counts from that
-/// version's `known` (L §4.6 step 1, §6.2).
-fn index_had(m: &Reality, id: &str, key: &KeyVal, known: Day) -> Result<bool, Stop> {
+/// Whether index `id` had `key` on day `known` in world `world`: a key a version added
+/// counts from that version's `known`, and only where its scenario is seen (L §4.6 step 1,
+/// §6.2, §6.4).
+fn index_had(
+    m: &Reality,
+    id: &str,
+    key: &KeyVal,
+    (known, world): (Day, World),
+) -> Result<bool, Stop> {
     let index = m
         .indexes
         .get(id)
@@ -292,12 +301,18 @@ fn index_had(m: &Reality, id: &str, key: &KeyVal, known: Day) -> Result<bool, St
     let Some(by) = index.added_by(key) else {
         return Ok(true);
     };
-    Ok(version_known(m, by)? <= known)
+    Ok(m.scenarios.sees(world, Some(by)) && version_known(m, by)? <= known)
 }
 
-/// Whether `kind` (or a subkind) had thing `key` on day `known`: one of its entries there,
-/// other than a `replace`, is known by then (L §4.6 step 1, §6.2).
-fn kind_had(m: &Reality, kind: &str, key: &KeyVal, known: Day) -> Result<bool, Stop> {
+/// Whether `kind` (or a subkind) had thing `key` on day `known` in world `world`: one of its
+/// entries there, other than a `replace`, is known by then, in a version the world sees
+/// (L §4.6 step 1, §6.2, §6.4).
+fn kind_had(
+    m: &Reality,
+    kind: &str,
+    key: &KeyVal,
+    (known, world): (Day, World),
+) -> Result<bool, Stop> {
     let KeyVal::Thing(name) = key else {
         return Ok(false);
     };
@@ -312,7 +327,7 @@ fn kind_had(m: &Reality, kind: &str, key: &KeyVal, known: Day) -> Result<bool, S
         let Some(version) = &entry.version else {
             return Ok(true);
         };
-        if version_known(m, version)? <= known {
+        if m.scenarios.sees(world, Some(version)) && version_known(m, version)? <= known {
             return Ok(true);
         }
     }
@@ -320,17 +335,22 @@ fn kind_had(m: &Reality, kind: &str, key: &KeyVal, known: Day) -> Result<bool, S
 }
 
 /// Whether each key a row leaves unstated, or covers with `*`, is one its index or kind
-/// had on the row's `known` date: a row for every key, stated before a key was added,
-/// doesn't cover it (L §4.6 step 1, §6.2).
-fn unstated_ok(m: &Reality, row: &Row, binds: &[BindInfo], keys: &[KeyVal]) -> Result<bool, Stop> {
+/// had on the row's `known` date in world `world`: a row for every key, stated before a key
+/// was added, doesn't cover it (L §4.6 step 1, §6.2, §6.4).
+fn unstated_ok(
+    m: &Reality,
+    row: &Row,
+    (binds, keys): (&[BindInfo], &[KeyVal]),
+    world: World,
+) -> Result<bool, Stop> {
     let known = row_known(m, row)?;
     for ((pat, key), bind) in row.pattern.iter().zip(keys).zip(binds) {
         if *pat != Pat::Star {
             continue;
         }
         let had = match &bind.domain {
-            Domain::Index(id) => index_had(m, id, key, known)?,
-            Domain::Kind(kind) => kind_had(m, kind, key, known)?,
+            Domain::Index(id) => index_had(m, id, key, (known, world))?,
+            Domain::Kind(kind) => kind_had(m, kind, key, (known, world))?,
             Domain::Axis(_) | Domain::List(_) | Domain::Range => true,
         };
         if !had {
@@ -390,9 +410,10 @@ pub(super) fn row_start(m: &Reality, row: &Row, cut: Day) -> Result<Option<Day>,
     Ok(span.start())
 }
 
-/// The candidates of a read among `rows`, by position: every key it states matches, the
-/// keys it leaves unstated were there when it was known, it is known by the cut, and its
-/// span holds the read's time (L §4.6 step 1).
+/// The candidates of a read among `rows`, by position: its version is seen in the read's
+/// world, every key it states matches, the keys it leaves unstated were there when it was
+/// known, it is known by the cut, and its span holds the read's time (L §4.6 step 1, §6.4;
+/// refcore's `row_visible`).
 ///
 /// # Errors
 ///
@@ -401,15 +422,16 @@ pub(super) fn row_start(m: &Reality, row: &Row, cut: Day) -> Result<Option<Day>,
 pub fn candidates(
     m: &Reality,
     rows: &[Row],
-    binds: &[BindInfo],
-    keys: &[KeyVal],
+    (binds, keys): (&[BindInfo], &[KeyVal]),
     test: Test,
-    cut: Day,
+    clocks: Clocks,
 ) -> Result<Vec<usize>, Stop> {
+    let cut = clocks.cut;
     let mut out = Vec::new();
     for (at, row) in rows.iter().enumerate() {
-        if row_matches(m, row, binds, keys)
-            && unstated_ok(m, row, binds, keys)?
+        if m.scenarios.sees(clocks.world, Some(&row.version))
+            && row_matches(m, row, binds, keys)
+            && unstated_ok(m, row, (binds, keys), clocks.world)?
             && row_known(m, row)? <= cut
             && in_time(m, row, test, cut)?
         {

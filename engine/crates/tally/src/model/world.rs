@@ -5,7 +5,9 @@
 //! Twin: engine/tools/refcore/loader.py (`Loader.build`'s pass 1: `scenario_over`,
 //! `tag_scenario`).
 //! Invariants: a reality loaded alone, or a base, holds no scenario; a scenario's reality holds
-//! its stack, each scenario over the model or over another of the stack.
+//! its stack, each scenario over the model or over another of the stack; a world is the layers
+//! of that stack a read sees, the lowest ones or the whole, so a world below the top hides the
+//! sections of the scenarios over it (refcore's `world_chain`, `in_world`).
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -53,4 +55,82 @@ impl Scenarios {
             .map(String::as_str)
             .find(|id| !under.contains(id))
     }
+
+    /// The world `id` names in this reality: the model's (`model`, its own id), a scenario of
+    /// its stack, or none for a world the stack doesn't hold (another stack's scenario). The
+    /// world of the top of the stack is the reality's whole. L §6.4 (`in s`, `as if {scenario
+    /// s}`, `over s0`).
+    #[must_use]
+    pub fn world(&self, id: &str, model: &str) -> Option<World> {
+        let depth = if id == model {
+            0
+        } else {
+            let mut depth = 0;
+            let mut at = Some(id);
+            while let Some(scenario) = at {
+                if depth > self.over.len() {
+                    return None;
+                }
+                at = self.over.get(scenario)?.as_deref();
+                depth = depth.checked_add(1)?;
+            }
+            depth
+        };
+        if depth >= self.over.len() {
+            return Some(World::Whole);
+        }
+        Some(World::Lowest(depth))
+    }
+
+    /// The model's world in this reality: the base alone, its whole for a reality with no
+    /// scenario. L §6.4 (`in household`, the model's id).
+    #[must_use]
+    pub fn model_world(&self) -> World {
+        if self.over.is_empty() {
+            World::Whole
+        } else {
+            World::Lowest(0)
+        }
+    }
+
+    /// Whether a read in world `world` sees the section `id` (a version's, an item's, a row's
+    /// version): the base's always, a scenario's in that scenario and those over it (refcore's
+    /// `in_world`, `item_in_world`). L §6.4.
+    #[must_use]
+    pub fn sees(&self, world: World, id: Option<&str>) -> bool {
+        match world {
+            World::Whole => true,
+            World::Lowest(depth) => self.layer(id) <= depth,
+        }
+    }
+
+    /// The scenario world `world` is, its id: none for the model's (L §6.4).
+    #[must_use]
+    pub fn scenario_of(&self, world: World) -> Option<&str> {
+        let depth = match world {
+            World::Whole => self.over.len(),
+            World::Lowest(depth) => depth,
+        };
+        let mut at = self.own();
+        let mut level = self.over.len();
+        while let Some(scenario) = at {
+            if level == depth {
+                return Some(scenario);
+            }
+            at = self.over.get(scenario).and_then(Option::as_deref);
+            level = level.checked_sub(1)?;
+        }
+        None
+    }
+}
+
+/// A world of a reality: the layers of its stack of scenarios a read sees (L §6.4: "worlds
+/// below it are evaluated in the same reality with the higher layers hidden", refcore's
+/// `world_chain`). A reality with no scenario has one world, its whole.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum World {
+    /// Every layer: the reality's own world, the top of its stack.
+    Whole,
+    /// The model and the lowest scenarios of the stack, this many; 0 is the model's world.
+    Lowest(usize),
 }

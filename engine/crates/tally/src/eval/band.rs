@@ -248,7 +248,7 @@ impl Engine {
             return Err(invariant("a keyed band called with no key"));
         };
         let given: Given = self.given_key(m, e, env, ctx)?;
-        Ok(make_keys(m, &band.id, &band.binds, vec![given], ctx.cut)?
+        Ok(make_keys(m, &band.id, &band.binds, vec![given], ctx)?
             .map(|keys| keys.into_iter().next()))
     }
 

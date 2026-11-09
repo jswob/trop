@@ -5,7 +5,8 @@
 //! reading's point, a pad's in the point's group with its leg, an anchor's through
 //! `walk/day.rs`; tally 2.1.2); E §6.1 (Readings: the gap is the reading less the booked
 //! balance at its instant; a pad is a movement of `pads`, an anchor sets the balance; holes),
-//! §4.2 step 0 and step 4 (where readings apply), step 5 (the sign rule at a reading's point).
+//! §4.2 step 0 and step 4 (where readings apply), step 5 (the sign rule at a reading's point);
+//! L §6.4 (the readings a walk's world sees).
 //! Twin: engine/tools/refcore/moves.py (`readings`, `instant_text`, `PadMv`) and walk.py
 //! (`apply_reading`, `booked_coll`, `sub`, `st_value`, `gtext`).
 //! Invariants: a reading applies only before the cut but an opening at the run's start; after
@@ -18,7 +19,7 @@ use std::collections::BTreeMap;
 use crate::base::{Code, Load, Refusal};
 use crate::eval::{Collected, Engine, Entry};
 use crate::hole::{Hole, spread};
-use crate::model::{GapRole, Reality, RowInstant, Shown, Ty, Unit};
+use crate::model::{GapRole, Reality, RowInstant, Shown, Ty, Unit, World};
 use crate::num::Num;
 use crate::read::row_known;
 use crate::syntax::{Edge, Stop};
@@ -58,21 +59,24 @@ pub struct Pad {
 /// row (L §5.19).
 type Kept = (Day, Day, Edge, crate::model::Row);
 
-/// The readings cut `cut` sees: each `opening` and `stated` row known by the cut, a restated
-/// one replaced by the latest, sorted by place, instant and input (refcore's `readings`).
-/// L §5.19, §4.6.
+/// The readings cut `cut` sees in world `world`: each `opening` and `stated` row known by
+/// the cut, of a version the world sees, a restated one replaced by the latest, sorted by
+/// place, instant and input (refcore's `readings`, `world_ok`). L §5.19, §4.6, §6.4.
 ///
 /// # Errors
 ///
 /// A row load left without its version; `NotBuilt` for a reading `after` a movement or at a
 /// day with no edge, and for a place of unit `any`.
-pub fn readings(m: &Reality, cut: Day) -> Result<Vec<Seen>, Stop> {
+pub fn readings(m: &Reality, (cut, world): (Day, World)) -> Result<Vec<Seen>, Stop> {
     let mut keep: BTreeMap<(String, String, String), Kept> = BTreeMap::new();
     for input in ["opening", "stated"] {
         let Some(info) = m.inputs.get(input) else {
             continue;
         };
         for row in &info.rows {
+            if !m.scenarios.sees(world, Some(&row.version)) {
+                continue;
+            }
             let known = row_known(m, row)?;
             if known > cut {
                 continue;
@@ -140,15 +144,15 @@ pub fn reading_rank(walked: &[Seen], seen: &Seen) -> Result<u32, Stop> {
     Ok(before)
 }
 
-/// Each place's first reading day among the readings cut `cut` sees, for `HOLE-ANCHOR`
-/// (refcore's `anchor_question`, its days). L §8.1.
+/// Each place's first reading day among the readings the cut and the world of `by` see,
+/// for `HOLE-ANCHOR` (refcore's `anchor_question`, its days). L §8.1, §6.4.
 ///
 /// # Errors
 ///
 /// As [`readings`].
-pub fn first_readings(m: &Reality, cut: Day) -> Result<BTreeMap<String, Day>, Stop> {
+pub fn first_readings(m: &Reality, by: (Day, World)) -> Result<BTreeMap<String, Day>, Stop> {
     let mut out: BTreeMap<String, Day> = BTreeMap::new();
-    for seen in readings(m, cut)? {
+    for seen in readings(m, by)? {
         let first = out.entry(seen.place).or_insert(seen.day);
         *first = (*first).min(seen.day);
     }

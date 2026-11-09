@@ -250,7 +250,7 @@ impl Engine {
         let (name, written) = read_parts(arg).ok_or_else(not_read)?;
         let input = m.inputs.get(name).ok_or_else(not_read)?;
         let given = self.given_keys(m, written, env, ctx)?;
-        let Ok(keys) = make_keys(m, name, &input.binds, given, ctx.cut)? else {
+        let Ok(keys) = make_keys(m, name, &input.binds, given, ctx)? else {
             return Ok(Value::Bool(false));
         };
         self.movement_keys(m, &input.binds, &keys, ctx)?;

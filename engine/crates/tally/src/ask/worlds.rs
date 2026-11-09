@@ -4,12 +4,13 @@
 //! scenarios over one base each declare their own asks), §5.18, §8 (a scenario's refusal
 //! refuses only that scenario and those over it), §8.5 (an item is unread only where every
 //! world that declares it leaves it unread); E §11 (`REQ-ASK`, tally 2.1.3).
-//! Twin: engine/tools/refcore/cli.py (`run_worlds`, from its `REQ-ASK` check on, and its
-//! `unread_everywhere`).
+//! Twin: engine/tools/refcore/cli.py (`run_worlds`, from its `REQ-ASK` check on, its
+//! `unread_everywhere` and `asif_worlds`).
 //! Invariants: every id the run names is checked before any ask is answered; the refused
 //! scenarios print first, by id; the asks go by id, then by world, the base's first; an ask
-//! evaluated in one loaded scenario's world is answered on that scenario's reality, with its own
-//! engines and memo; one evaluated in two worlds stops the run `NotBuilt` (M1's overlays).
+//! that names scenarios is answered on the reality of the deepest, whose stack holds the
+//! others, each world under it seen with the layers over it hidden; one whose worlds are on two
+//! stacks stops the run `NotBuilt` (refcore's cross evaluation).
 
 use super::answer::{Answered, Turn, answer_turns, no_ask};
 use super::register::warning_lines;
@@ -74,7 +75,7 @@ pub fn answer_worlds(w: &Worlds, asks: &Asks, days: Days, memo: Memo) -> Result<
             turns.push(Turn::Ask(0, base_at));
             continue;
         }
-        let named = worlds_named(ask, world, model);
+        let named = worlds_named(w, ask, world, model);
         if let Some((_, refusal)) = w.refused.iter().find(|(id, _)| named.contains(*id)) {
             turns.push(Turn::Line(format!(
                 "{}: refused: {}",
@@ -83,48 +84,57 @@ pub fn answer_worlds(w: &Worlds, asks: &Asks, days: Days, memo: Memo) -> Result<
             )));
             continue;
         }
-        turns.push(world_turn(w, &named, *at, &ask.id)?);
+        turns.push(world_turn(w, &named, (*at, world), &ask.id)?);
     }
     // the base's reality first, then each loaded scenario's by id, as `world_turn` counts them
     let realities: Vec<&Reality> = core::iter::once(&w.base).chain(w.loaded.values()).collect();
     answer_turns(&realities, &turns, merged_warnings(w), days, memo)
 }
 
-/// The turn of an ask that names at most one world besides the model's: the base's ask at
-/// `at` in the base, or, in a loaded scenario's world, the ask `id` as that scenario's reality
-/// holds it, the base and the scenarios under it all seen (refcore's `run_worlds`: `cands`,
-/// `ra`). L §6.4, §5.18.
+/// The turn of an ask: the base's ask at `at` in the base when it names no world besides the
+/// model's, else the ask `id` in the reality of the deepest world it names, the one whose stack
+/// holds every other, as that reality holds it (refcore's `run_worlds`: `need`, `cands`, `ra`).
+/// L §6.4, §5.18.
 ///
 /// # Errors
 ///
-/// `NotBuilt` for an ask whose line is evaluated in two worlds (a difference, an ask `in` a
-/// world under its own file's scenario): M1's overlays.
+/// `NotBuilt` for an ask whose worlds are on two stacks of scenarios (refcore's
+/// `cross_stack_diff`, `make_cross`).
 fn world_turn(
     w: &Worlds,
     named: &BTreeSet<String>,
-    at: Option<usize>,
+    (at, own): (Option<usize>, &str),
     id: &str,
 ) -> Result<Turn, Stop> {
-    let mut worlds = named.iter();
-    let one = match (worlds.next(), worlds.next(), at) {
-        (None, _, Some(base_at)) => return Ok(Turn::Ask(0, base_at)),
-        (Some(world), None, _) => world,
-        (None, _, None) | (Some(_), Some(_), _) => {
-            return Err(Stop::NotBuilt("an ask in a scenario's world"));
-        }
+    if named.is_empty() {
+        let base_at = at.ok_or_else(|| invariant("a scenario's ask that names no world"))?;
+        return Ok(Turn::Ask(0, base_at));
+    }
+    let deepest = named.iter().find_map(|world| {
+        let reality = w.loaded.get(world)?;
+        let over = &reality.scenarios.over;
+        named.iter().all(|n| over.contains_key(n)).then_some(world)
+    });
+    let Some(deepest) = deepest else {
+        return Err(Stop::NotBuilt(
+            "an ask whose worlds are on two stacks of scenarios (refcore's cross evaluation)",
+        ));
     };
     let found = w
         .loaded
         .iter()
         .enumerate()
-        .find(|(_, (world, _))| *world == one);
+        .find(|(_, (world, _))| *world == deepest);
     let Some((place, (_, reality))) = found else {
-        return Err(Stop::NotBuilt("an ask in a scenario's world"));
+        return Err(invariant("the deepest world an ask names isn't loaded"));
     };
+    // the ask as its own file states it, a base's or a scenario's (refcore's `ra`)
+    let file = (!own.is_empty()).then_some(own);
     let ask_at = reality
         .asks
         .iter()
-        .position(|ask| ask.id == id)
+        .position(|ask| ask.id == id && reality.scenarios.of(&ask.id) == file)
+        .or_else(|| reality.asks.iter().position(|ask| ask.id == id))
         .ok_or_else(|| invariant("a scenario's reality holds no ask its world names"))?;
     let place = place
         .checked_add(1)
@@ -170,9 +180,10 @@ fn has_ask(m: &Reality, id: &str) -> bool {
 }
 
 /// The worlds an ask is evaluated in besides the model's: its file's scenario, its `in`, a
-/// diff's two worlds and its `{scenario s}` pins (refcore's `need`; an `as if {scenario s}` is
-/// evaluated `NotBuilt` until M1). L §6.4, §5.18.
-fn worlds_named(ask: &Ask, own: &str, model: &str) -> BTreeSet<String> {
+/// diff's two worlds, its `{scenario s}` pins, and each scenario of the run an `as if
+/// {scenario s}` names in its line or in a def it reaches, as the base's item graph tells
+/// (refcore's `need`, `asif_worlds`). L §6.4, §5.18.
+fn worlds_named(w: &Worlds, ask: &Ask, own: &str, model: &str) -> BTreeSet<String> {
     let mut named = BTreeSet::new();
     if !own.is_empty() {
         named.insert(own.to_owned());
@@ -187,6 +198,12 @@ fn worlds_named(ask: &Ask, own: &str, model: &str) -> BTreeSet<String> {
     for pin in &ask.pins {
         if let PinForm::Scenario(id) = &pin.form {
             named.insert(id.clone());
+        }
+    }
+    // `x as if {scenario s}` is x in s (L §6.4 Asking)
+    for id in crate::load::ask_worlds(&w.base, &w.base.graph, ask) {
+        if w.loaded.contains_key(&id) || w.refused.contains_key(&id) {
+            named.insert(id);
         }
     }
     named.remove(model);

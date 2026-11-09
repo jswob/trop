@@ -18,8 +18,8 @@ use crate::base::{Code, Load, Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Env, order_text, thing_seen};
 use crate::hole::{Hole, spread};
 use crate::model::{
-    Domain, KeyVal, MoveInfo, Node, NodeKind, Number, Reality, Value, currency_id, money_num,
-    num_money,
+    Domain, KeyVal, MoveInfo, Node, NodeKind, Number, Reality, Value, World, currency_id,
+    money_num, num_money,
 };
 use crate::num::Num;
 use crate::syntax::{Certainty, Stop};
@@ -502,7 +502,7 @@ impl Engine {
         mv: &MoveInfo,
         cut: Day,
     ) -> Result<Vec<Inst>, Stop> {
-        let tctx = Ctx::new(None, cut);
+        let tctx = self.timeline_ctx(None, cut);
         let mut out = Vec::new();
         for tuple in self.move_tuples(m, mv, tctx)? {
             if let Some(err) = tuple.refused.clone() {
@@ -657,7 +657,7 @@ impl Engine {
         }
         let day = inst.day.as_ref().and_then(Dated::day);
         let cut = day.map_or(tctx.cut, |d| d.min(tctx.cut));
-        if let Some(legs) = self.refused_places(m, mv, inst, Ctx::new(inst.law, cut))? {
+        if let Some(legs) = self.refused_places(m, mv, inst, self.timeline_ctx(inst.law, cut))? {
             inst.legs = legs;
         }
         Ok(())
@@ -787,11 +787,17 @@ impl Engine {
             (None, Dated::Hole(_)) => tctx.cut,
         };
         inst.cut = Some(cut);
-        if !keys_seen(m, mv, &inst.keys, cut) {
+        if !keys_seen(m, mv, &inst.keys, (cut, self.timeline_world())) {
             inst.exists = Exists::No;
             return Ok(true);
         }
-        let body = self.inst_body(m, mv, inst, Ctx::new(law, cut), seed.exists.clone())?;
+        let body = self.inst_body(
+            m,
+            mv,
+            inst,
+            self.timeline_ctx(law, cut),
+            seed.exists.clone(),
+        )?;
         inst.exists = body.exists;
         inst.legs = body.legs;
         inst.attrs = body.attrs;
@@ -908,26 +914,27 @@ pub(super) fn join(ex: Exists, h: &Hole) -> Exists {
     }
 }
 
-/// Whether the keys of an instance were there at cut `cut`: an index's key added by a later
-/// version, or a thing entered after it, makes the instance one that didn't exist then
-/// (refcore's `keys_seen`). E §5 steps 1–3.
-fn keys_seen(m: &Reality, mv: &MoveInfo, keys: &[KeyVal], cut: Day) -> bool {
+/// Whether the keys of an instance were there at cut `cut` in world `world`: an index's key
+/// added by a later version or one the world doesn't see, or a thing entered after it, makes
+/// the instance one that didn't exist then (refcore's `keys_seen`). E §5 steps 1–3; L §6.4.
+fn keys_seen(m: &Reality, mv: &MoveInfo, keys: &[KeyVal], (cut, world): (Day, World)) -> bool {
     for (bind, key) in mv.binds.iter().zip(keys) {
         match &bind.domain {
             Domain::Index(id) => {
-                let added = m
-                    .indexes
-                    .get(id)
-                    .and_then(|ix| ix.added_by(key))
-                    .and_then(|v| m.versions.get(v));
-                if added.is_some_and(|v| v.known > cut) {
+                let added = m.indexes.get(id).and_then(|ix| ix.added_by(key));
+                let unseen = added.is_some_and(|v| !m.scenarios.sees(world, Some(v)));
+                if unseen
+                    || added
+                        .and_then(|v| m.versions.get(v))
+                        .is_some_and(|v| v.known > cut)
+                {
                     return false;
                 }
             }
             Domain::Kind(_) => {
                 if let KeyVal::Thing(name) = key
                     && let Some(thing) = m.things.get(name)
-                    && !thing_seen(m, thing, cut)
+                    && !thing_seen(m, thing, (cut, world))
                 {
                     return false;
                 }

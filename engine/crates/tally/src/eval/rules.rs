@@ -19,7 +19,7 @@ use crate::model::{
     Class, DefInfo, KeyVal, Node, NodeKind, Number, Reality, RuleVer, Shown, Ty, Unit, Value,
     pattern_text,
 };
-use crate::read::{Test, candidates, choose, origin, rule_in_force, worded};
+use crate::read::{Clocks, Test, candidates, choose, origin, rule_in_force, worded};
 use crate::syntax::{LawDate, RuleValue, Stop};
 use crate::time::Day;
 
@@ -226,7 +226,7 @@ impl Engine {
             let class = rules_class(m, def, ctx.cut, day)?;
             self.narrow(ctx.law, class);
         }
-        let live = in_force(m, def, ctx, self.wording_of(&def.id, ctx)?)?;
+        let live = in_force(m, def, self.clocks(ctx, &def.id)?)?;
         let order = beats_order(def, &live)?;
         let mut applicable: Vec<InForce> = Vec::new();
         let mut unknown: Vec<(InForce, Hole)> = Vec::new();
@@ -366,8 +366,10 @@ impl Engine {
             let class = rows_class(m, &def.givens, ctx.cut, day)?;
             self.narrow(ctx.law, class);
         }
-        let cands = candidates(m, &def.givens, &def.binds, keys, Test::At(ctx.law), ctx.cut)?;
-        let cands = worded(m, &def.givens, cands, self.clocks(ctx, &def.id)?)?;
+        let clocks = self.clocks(ctx, &def.id)?;
+        let binds = (def.binds.as_slice(), keys);
+        let cands = candidates(m, &def.givens, binds, Test::At(ctx.law), clocks)?;
+        let cands = worded(m, &def.givens, cands, clocks)?;
         let Some(at) = choose(m, &def.givens, &def.binds, &cands, ctx.cut, &def.id)? else {
             return Ok(None);
         };
@@ -405,18 +407,12 @@ impl Engine {
 /// among the label's versions (L §5.11 step 2).
 type InForce = (usize, usize);
 
-/// The rules in force at the context's law date and cut, under its `wording` pin of the def
-/// if one names it, in the def's order of labels (L §5.11 step 2, §4.3).
-fn in_force(
-    m: &Reality,
-    def: &DefInfo,
-    ctx: Ctx,
-    wording: Option<Day>,
-) -> Result<Vec<InForce>, Stop> {
+/// The rules in force at the law date and cut of `clocks`, under its `wording` pin of the def
+/// if one names it, in its world, in the def's order of labels (L §5.11 step 2, §4.3, §6.4).
+fn in_force(m: &Reality, def: &DefInfo, clocks: Clocks) -> Result<Vec<InForce>, Stop> {
     let mut live = Vec::new();
     for (label_at, (label, versions)) in def.rules.iter().enumerate() {
-        let when = (ctx.law, ctx.cut);
-        if let Some(at) = rule_in_force(m, &def.id, label, versions, when, wording)? {
+        if let Some(at) = rule_in_force(m, &def.id, label, versions, clocks)? {
             live.push((label_at, at));
         }
     }

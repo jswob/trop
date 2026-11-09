@@ -31,7 +31,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use super::context::Layer;
 use super::state::{Cell, Ctx, Engine, invariant};
-use crate::model::{BandInfo, DefInfo, KeyVal, Reality, Row, RuleVer, Span};
+use crate::model::{BandInfo, DefInfo, KeyVal, Reality, Row, RuleVer, Span, World};
 use crate::read::row_span;
 use crate::syntax::Stop;
 use crate::time::Day;
@@ -206,6 +206,8 @@ pub(crate) struct CellKey {
     unc: bool,
     /// The pins in force, trimmed to those the def reaches (E §3.2, P §3.1).
     layer: Layer,
+    /// The world the cell is read in (L §6.4), never trimmed: no cell is shared across worlds.
+    world: World,
 }
 
 impl CellKey {
@@ -218,6 +220,7 @@ impl CellKey {
             at: ctx.at,
             unc: ctx.unc,
             layer: ctx.layer,
+            world: ctx.world,
         }
     }
 }
@@ -233,13 +236,24 @@ impl Ord for CellKey {
 }
 
 impl CellKey {
-    /// The contexts' order: the cut, the walk point, the clause, the pins.
+    /// The contexts' order: the cut, the walk point, the clause, the pins, the world.
     fn context_order(&self, other: &CellKey) -> Ordering {
         self.cut
             .cmp(&other.cut)
             .then_with(|| walk_at_order(self.at, other.at))
             .then_with(|| self.unc.cmp(&other.unc))
             .then_with(|| self.layer.number().cmp(&other.layer.number()))
+            .then_with(|| world_order(self.world, other.world))
+    }
+}
+
+/// Two worlds in the memo's order: the lowest layers first, the whole stack last.
+fn world_order(a: World, b: World) -> Ordering {
+    match (a, b) {
+        (World::Whole, World::Whole) => Ordering::Equal,
+        (World::Lowest(_), World::Whole) => Ordering::Less,
+        (World::Whole, World::Lowest(_)) => Ordering::Greater,
+        (World::Lowest(x), World::Lowest(y)) => x.cmp(&y),
     }
 }
 

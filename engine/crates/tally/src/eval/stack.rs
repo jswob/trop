@@ -238,7 +238,10 @@ impl Engine {
             let waiting = self.work.len();
             self.depth = 0;
             self.push();
+            // the task's own timeline, whatever scope it unwound through (E §3.3)
+            self.replay_timeline(m, ctx)?;
             let result = self.def_cell(m, def, &keys, &env, ctx);
+            self.leave_timeline()?;
             self.stack.truncate(mark.collectors);
             if result == Err(Stop::Deep) {
                 if self.work.len() <= waiting {

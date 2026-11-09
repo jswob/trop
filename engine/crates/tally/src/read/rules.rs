@@ -1,13 +1,14 @@
 //! The read rule for dated rules: which version of a def's rule is in force at the law date.
 //! Spec: L §4.6 (one rule for rows, givens, band rows and dated rules: replacement, ties),
 //! §5.11 step 2 (the versions of one rule that exist at d and K), §4.3 (a rule read with no
-//! law date; a `wording` pin's versions), §5.3 (entry into force).
+//! law date; a `wording` pin's versions), §5.3 (entry into force), §6.4 (a scenario's rule
+//! version is seen only in its world and those over it).
 //! Twin: engine/tools/refcore/evaluate.py (`rule_exists`, `rule_in_force`), model.py
 //! (`RuleVer.known`).
 //! Invariants: a label's versions are scanned in the order versions state them; two
 //! `replace` versions known the same day both in force are refused, never broken by order.
 
-use super::rows::{enters, invariant, no_law_date, version_known, version_span};
+use super::rows::{Clocks, enters, invariant, no_law_date, version_known, version_span};
 use crate::base::{Code, Load, Refusal};
 use crate::model::{OwnTime, Reality, RuleVer, Span};
 use crate::syntax::Stop;
@@ -23,17 +24,21 @@ fn holds(span: &Span, law: Option<Day>) -> Result<bool, Stop> {
     }
 }
 
-/// Whether a version of a rule exists at law date `law` under cut `cut`: its version (the
-/// `replace rule` line's, else `v V`'s) is known by the cut, entered into force by the day of
-/// a `wording` pin naming its def (`wording`, if one does), and governs the law date, and so
-/// does its own span (L §5.11 step 2, §4.6 step 1, §4.3; refcore's `rule_exists`).
-fn rule_exists(
-    m: &Reality,
-    rule: &RuleVer,
-    law: Option<Day>,
-    cut: Day,
-    wording: Option<Day>,
-) -> Result<bool, Stop> {
+/// Whether a version of a rule exists at the law date under the cut of `clocks`: its version
+/// (the `replace rule` line's, else `v V`'s) is seen in the read's world, known by the cut,
+/// entered into force by the day of a `wording` pin naming its def, if one does, and governs
+/// the law date, and so does its own span (L §5.11 step 2, §4.6 step 1, §4.3, §6.4: outside a
+/// scenario its rule is never a candidate; refcore's `rule_exists`).
+fn rule_exists(m: &Reality, rule: &RuleVer, clocks: Clocks) -> Result<bool, Stop> {
+    let (law, cut, wording) = (clocks.law, clocks.cut, clocks.wording);
+    let unseen = |version: &Option<String>| {
+        version
+            .as_deref()
+            .is_some_and(|v| !m.scenarios.sees(clocks.world, Some(v)))
+    };
+    if unseen(&rule.version) || unseen(&rule.v) {
+        return Ok(false);
+    }
     let own_time = match &rule.span {
         Some(span) => OwnTime::Stated(span.start()),
         None => OwnTime::Version,
@@ -82,10 +87,11 @@ fn rule_known(m: &Reality, rule: &RuleVer) -> Result<Option<Day>, Stop> {
     }
 }
 
-/// The version of rule `label` of def `def` in force at law date `law` under cut `cut`, by
-/// its position among `versions`: the latest-known `replace` among those that exist, else
-/// the one that exists; none where none does; under a `wording` pin naming the def, only
-/// versions that entered into force by its day (L §5.11 step 2, §4.6 steps 2 and 4, §4.3).
+/// The version of rule `label` of def `def` in force at the law date under the cut of
+/// `clocks`, by its position among `versions`: the latest-known `replace` among those that
+/// exist, else the one that exists; none where none does; under a `wording` pin naming the
+/// def, only versions that entered into force by its day; in a world, only versions it sees
+/// (L §5.11 step 2, §4.6 steps 2 and 4, §4.3, §6.4).
 ///
 /// # Errors
 ///
@@ -97,13 +103,12 @@ pub fn rule_in_force(
     def: &str,
     label: &str,
     versions: &[RuleVer],
-    (law, cut): (Option<Day>, Day),
-    wording: Option<Day>,
+    clocks: Clocks,
 ) -> Result<Option<usize>, Stop> {
     let mut live = Vec::new();
     let mut replacing = Vec::new();
     for (at, rule) in versions.iter().enumerate() {
-        if !rule_exists(m, rule, law, cut, wording)? {
+        if !rule_exists(m, rule, clocks)? {
             continue;
         }
         live.push(at);

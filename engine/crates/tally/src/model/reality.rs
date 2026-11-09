@@ -4,7 +4,8 @@
 //! Twin: engine/tools/refcore/model.py (`Reality`, `BUILTIN_INPUTS`, `BUILTIN_INDEXES`,
 //! `ThingInfo.span_in`, `kind_unit` to `lifespan`).
 //! Invariants: every name is in the namespace once; a kind's chain of parents ends; a thing's
-//! lifespan under a cut is its latest entry the cut sees, a `replace` line winning.
+//! lifespan under a cut is its latest entry the cut and the read's world see, a `replace` line
+//! winning (L §6.4: a scenario's entry is seen in its world and those over it).
 
 use super::decl::{BandInfo, DefInfo, InputInfo, MoveInfo, PlaceInfo};
 use super::graph::Graph;
@@ -15,7 +16,7 @@ use super::ids::{
 use super::index::{IndexInfo, VersionInfo};
 use super::key::{KeyVal, Span};
 use super::kind::{Entry, KindInfo, KindSpec, Thing};
-use super::world::Scenarios;
+use super::world::{Scenarios, World};
 use crate::base::{Internal, Interner, Refusal, Table, Warn};
 use crate::num::Num;
 use crate::syntax::{Ask, Axis, Fill, Header, Price, Sign, Source, Type};
@@ -361,17 +362,32 @@ impl Reality {
         own.or_else(|| self.kind_priced(base).cloned())
     }
 
-    /// The span over which `thing` is of `kind` under cut `cut`: its latest entry the cut
-    /// sees, a `replace` line winning (refcore's `ThingInfo.span_in`; a keyed place's is the
-    /// overlap of its section's span and its key things', `PlaceThing.span_in`). L §5.7.
+    /// Whether a read in `world` sees `entry` of `thing`: a version's entry where its scenario
+    /// is seen, a thing's own entry where the file declaring its section is (refcore's
+    /// `in_world` of the entry's version, `item_in_world`). L §6.4.
     #[must_use]
-    pub fn span_in(&self, thing: &Thing, kind: &str, cut: Day) -> Option<Span> {
+    pub fn entry_seen(&self, thing: &Thing, entry: &Entry, world: World) -> bool {
+        let own = || thing.place.as_ref().map_or(&thing.name, |p| &p.place);
+        let section = entry.version.as_ref().unwrap_or_else(own);
+        self.scenarios.sees(world, Some(section))
+    }
+
+    /// The span over which `thing` is of `kind` under cut `cut` in world `world`: its latest
+    /// entry the cut and the world see, a `replace` line winning (refcore's
+    /// `ThingInfo.span_in`; a keyed place's is the overlap of its section's span and its key
+    /// things', `PlaceThing.span_in`). L §5.7, §6.4.
+    #[must_use]
+    pub fn span_in(&self, thing: &Thing, kind: &str, (cut, world): (Day, World)) -> Option<Span> {
         if let Some(keys) = &thing.place {
-            return self.place_span(thing, keys.key_things.as_slice(), kind, cut);
+            return self.place_span(thing, keys.key_things.as_slice(), kind, (cut, world));
         }
         let mut best: Option<&Entry> = None;
         let mut best_known: Option<Day> = None;
-        for entry in thing.entries.iter().filter(|e| e.kind == kind) {
+        let seen = thing
+            .entries
+            .iter()
+            .filter(|e| e.kind == kind && self.entry_seen(thing, e, world));
+        for entry in seen {
             let known = match &entry.version {
                 None => None,
                 Some(v) => match self.versions.get(v) {
@@ -390,20 +406,24 @@ impl Reality {
         best.map(|entry| entry.span.clone())
     }
 
-    /// A keyed place's span: its section's, cut to its key things' lifespans.
+    /// A keyed place's span in world `world`: its section's, cut to its key things'
+    /// lifespans.
     fn place_span(
         &self,
         thing: &Thing,
         key_things: &[String],
         kind: &str,
-        cut: Day,
+        (cut, world): (Day, World),
     ) -> Option<Span> {
-        let own = thing.entries.first().filter(|e| e.kind == kind)?;
+        let own = thing
+            .entries
+            .first()
+            .filter(|e| e.kind == kind && self.entry_seen(thing, e, world))?;
         let mut start = own.span.start();
         let mut end = own.span.end();
         for name in key_things {
             let key = self.things.get(name)?;
-            let span = self.span_in(key, key.base.as_deref()?, cut)?;
+            let span = self.span_in(key, key.base.as_deref()?, (cut, world))?;
             if span.is_always() {
                 continue;
             }
@@ -422,9 +442,10 @@ impl Reality {
         Some(Span::between(start, end))
     }
 
-    /// A thing's lifespan in its base kind under cut `cut` (refcore's `lifespan`). L §5.7.
+    /// A thing's lifespan in its base kind under cut `cut` in world `world` (refcore's
+    /// `lifespan`). L §5.7, §6.4.
     #[must_use]
-    pub fn lifespan(&self, thing: &Thing, cut: Day) -> Option<Span> {
-        self.span_in(thing, thing.base.as_deref()?, cut)
+    pub fn lifespan(&self, thing: &Thing, seen: (Day, World)) -> Option<Span> {
+        self.span_in(thing, thing.base.as_deref()?, seen)
     }
 }

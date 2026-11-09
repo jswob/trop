@@ -270,7 +270,7 @@ impl Engine {
             };
             given.push(self.key_given(m, e, env, ctx)?);
         }
-        Ok(match make_keys(m, item, binds, given, ctx.cut)? {
+        Ok(match make_keys(m, item, binds, given, ctx)? {
             Err(hole) => Err(hole),
             Ok(keys) => Ok(Aim {
                 item: item.to_owned(),
@@ -322,8 +322,8 @@ impl Engine {
         (env, ctx): (&Env, Ctx),
     ) -> Result<Sign, Stop> {
         let value = target.grid.value(m, point)?;
-        let step = self.solve_step(m, (&target.aim.item, &target.aim.keys), value, ctx)?;
-        self.open_layer(step.layer);
+        let step = self.solve_step((&target.aim.item, &target.aim.keys), value, ctx)?;
+        self.open_layer(m, step)?;
         let sides = self.sides(m, form, env, step);
         self.close_layer(step.layer)?;
         let (left, right) = sides?;

@@ -3,7 +3,8 @@
 //! the walk; a refused leg refuses its place from that point), §4.3 step 1 (a projection's walk
 //! starts from the walk it continues, at a point), §6.1 (readings anchor a place); L §5.10 (a
 //! place's balance: zero from its lifespan's start, else `HOLE-ANCHOR` until its first
-//! reading), §8.1 (`HOLE-ANCHOR`'s questions), §8.2 (the register: what a balance rests on);
+//! reading), §8.1 (`HOLE-ANCHOR`'s questions), §8.2 (the register: what a balance rests on),
+//! §6.4 (a walk is walked in one world: the places and lifespans it sees);
 //! P §2.4 (monthly checkpoints: every place's state and the legs booked ahead, a state that
 //! didn't change shared, not copied; D2-6).
 //! Twin: engine/tools/refcore/walk.py (`St`, `Ent`, `Log`, `apply`, `Walk.log`, `default`,
@@ -30,7 +31,7 @@ use super::point::{At, Step};
 use crate::base::{Refusal, Warn};
 use crate::eval::{Collected, Entry};
 use crate::hole::{Hole, spread};
-use crate::model::Reality;
+use crate::model::{Reality, World};
 use crate::num::Num;
 use crate::syntax::Stop;
 use crate::time::Day;
@@ -192,6 +193,8 @@ pub struct Today {
 pub struct Walk {
     /// Its cut K.
     pub cut: Day,
+    /// Its world: the moves, places and versions of the scenarios it sees (L §6.4).
+    pub world: World,
     /// Its first day.
     pub start: Day,
     /// Its last day.
@@ -311,6 +314,8 @@ pub struct Projected {
     pub levels: Vec<BTreeMap<(String, String), St>>,
     /// The cut and the first day of the main walk at the chain's end.
     pub root: (Day, Day),
+    /// The world the chain's walks are walked in (L §6.4).
+    pub world: World,
 }
 
 impl Projected {
@@ -338,14 +343,15 @@ impl Projected {
                 st.rst = None;
                 st
             }
-            Some(_) | None => opening_state(m, place, unit, self.root),
+            Some(_) | None => opening_state(m, place, unit, (self.root, self.world)),
         }
     }
 }
 
 impl Walk {
-    /// A projection's walk of cut `cut` from `start` to `end`, continuing `projected`, each
-    /// place's first reading as `first_reading` gives it; nothing planned yet. E §4.3.
+    /// A projection's walk of cut `cut` from `start` to `end`, continuing `projected` in its
+    /// world, each place's first reading as `first_reading` gives it; nothing planned yet.
+    /// E §4.3.
     #[must_use]
     pub fn projection(
         cut: Day,
@@ -353,18 +359,21 @@ impl Walk {
         projected: Projected,
         first_reading: BTreeMap<String, Day>,
     ) -> Walk {
+        let world = projected.world;
         Walk {
             proj: Some(Box::new(projected)),
             first_reading,
-            ..Walk::new(cut, start, end)
+            ..Walk::new(cut, (start, end), world)
         }
     }
 
-    /// A walk of cut `cut` from `start` to `end`, nothing planned yet. E §4.2.
+    /// A walk of cut `cut` from `start` to `end` in world `world`, nothing planned yet.
+    /// E §4.2; L §6.4.
     #[must_use]
-    pub fn new(cut: Day, start: Day, end: Day) -> Walk {
+    pub fn new(cut: Day, (start, end): (Day, Day), world: World) -> Walk {
         Walk {
             cut,
+            world,
             start,
             end,
             logs: BTreeMap::new(),
@@ -440,7 +449,7 @@ impl Walk {
     /// (refcore's `default`). L §5.10, E §4.3 step 1.
     fn default_state(&self, m: &Reality, place: &str, unit: &str) -> St {
         match &self.proj {
-            None => opening_state(m, place, unit, (self.cut, self.start)),
+            None => opening_state(m, place, unit, ((self.cut, self.start), self.world)),
             Some(p) => {
                 let mut st = p.state_at(m, place, unit, 0);
                 st.rst = None;
@@ -782,18 +791,26 @@ fn fold(mut st: St, any: St, all: St) -> St {
     st
 }
 
-/// A place's state where a main walk of cut and first day `root` starts: every place's
-/// total zero, a unit's position unknown until booked, a place zero from its lifespan's start
-/// when that is on or after the walk's first day, else unknown until a reading (refcore's
-/// `default`). L §5.10.
-fn opening_state(m: &Reality, place: &str, unit: &str, (cut, start): (Day, Day)) -> St {
+/// A place's state where a main walk of cut and first day `root` starts in `world`: every
+/// place's total zero, a unit's position unknown until booked, a place zero from its
+/// lifespan's start when that is on or after the walk's first day, else unknown until a
+/// reading (refcore's `default`). L §5.10, §6.4.
+fn opening_state(
+    m: &Reality,
+    place: &str,
+    unit: &str,
+    ((cut, start), world): ((Day, Day), World),
+) -> St {
     if place == ALL {
         return St::of(Some(Num::zero()));
     }
     if unit == ALL {
         return St::of(None);
     }
-    let span = m.things.get(place).and_then(|th| m.lifespan(th, cut));
+    let span = m
+        .things
+        .get(place)
+        .and_then(|th| m.lifespan(th, (cut, world)));
     match span.and_then(|sp| sp.start()) {
         Some(s) if s >= start => St::of(Some(Num::zero())),
         Some(_) | None => St::of(None),

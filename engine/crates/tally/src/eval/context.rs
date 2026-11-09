@@ -6,15 +6,17 @@
 //! (a pin set's layer, freed when its `as if` or `solve` step ends), §3.5 (one memo per
 //! context, freed when its scope ends); L §5.11 (`as if` and its pins: a pin's value and keys,
 //! a hole pin, nested pins don't leak to their siblings), §4.3 (the `law` and `wording`
-//! pins), §5.18 (an ask's `with` pins), §8.2 (`pinned:`).
+//! pins), §5.18 (an ask's `with` pins), §8.2 (`pinned:`, `world:`); §6.4 (`as if {scenario
+//! s}` is x in s).
 //! Twin: engine/tools/refcore/evaluate.py (`PinVal`, `Ctx.pins`, `Ctx.wording`, `apply_pins`,
-//! `e_asif`, `pin_value`, `wording_ok`, `coerce_to`).
+//! `e_asif`, `pin_value`, `wording_ok`, `coerce_to`, `world_chain`).
 //! Invariants: layer 0 is the unpinned context; two pin sets with the same targets and values
 //! are one layer, whatever their texts; a def's cell is kept under its context trimmed to the
-//! pins its def reaches; a layer no open scope holds is freed with its cells when the scope
-//! that made it ends, never while a read that unwound past the counted depth still needs it;
-//! a pin the moves reach, where the walk is read, stops `NotBuilt` (one timeline per pin set
-//! is the world layer's, with it). The world (G6) and the axis options (G7) join the layer.
+//! pins its def reaches, and to every pin the walk reaches where it reads the timeline; a
+//! layer no open scope holds is freed with its cells and timelines when the scope that made it
+//! ends, never while a read that unwound past the counted depth still needs it; a scope's
+//! reads of the walk read the timeline of its world and walk pins (`timelines.rs`). The world
+//! is the context's own field, never trimmed; the axis options (G7) join the layer.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -22,7 +24,7 @@ use super::read::make_keys;
 use super::state::{Ctx, Engine, Env, invariant, num_stop};
 use crate::hole::{Hole, spread};
 use crate::model::{
-    Class, KeyVal, NameKind, Node, NodeKind, Number, Reality, Ty, Unit, Value, currency_id,
+    Class, KeyVal, NameKind, Node, NodeKind, Number, Reality, Ty, Unit, Value, World, currency_id,
     money_num, num_money,
 };
 use crate::syntax::{Expr, Key, Lit, PRef, Pin, PinForm, Stop};
@@ -165,12 +167,15 @@ pub(crate) struct Layers {
     slots: Vec<Option<LayerData>>,
     /// Each def's trimmed layer of a layer, by the def's id and the layer's number (E §3.2).
     trimmed: BTreeMap<(String, u32), Layer>,
-    /// The layers of the scopes open now: an ask's `with`, an `as if`, a `solve` step.
+    /// The layers of the scopes open now: an ask's `with`, an `as if`, a `solve` step, a
+    /// line's world.
     open: Vec<Layer>,
     /// The items the moves, places, prices, parts and fills reach, once computed.
     timeline: Option<BTreeSet<Node>>,
-    /// Whether each item that held a pin reads the timeline, once computed.
+    /// Whether each def reads the timeline, once computed.
     walkers: BTreeMap<Node, bool>,
+    /// Each layer's pins on items the walk reaches, by the layer's number (E §3.3).
+    walk_pins: BTreeMap<u32, Layer>,
 }
 
 impl Default for Layers {
@@ -181,6 +186,7 @@ impl Default for Layers {
             open: Vec::new(),
             timeline: None,
             walkers: BTreeMap::new(),
+            walk_pins: BTreeMap::new(),
         }
     }
 }
@@ -278,8 +284,9 @@ impl Engine {
     }
 
     /// Context `ctx` trimmed for a cell of def `def`: only the pins and wording pins whose
-    /// item the def reaches, so a def no pin reaches shares the unpinned cell (E §3.2,
-    /// P §3.1).
+    /// item the def reaches, and where the def reads the timeline every one the walk reaches
+    /// too, so a def no pin reaches shares the unpinned cell (E §3.2, §3.3; P §3.1). The
+    /// world is kept whole: a cell of one world is never another's.
     ///
     /// # Errors
     ///
@@ -295,9 +302,12 @@ impl Engine {
                 ..ctx
             });
         }
-        let data = self.layer_data(ctx.layer)?;
         let from = Node::new(NodeKind::Def, def);
-        let reached = |item: &str| reaches_item(m, &from, item);
+        let walks = self.reads_walk(m, &from);
+        let cone = self.walk_cone(m);
+        let data = self.layer_data(ctx.layer)?;
+        let reached =
+            |item: &str| reaches_item(m, &from, item) || (walks && in_cone(m, &cone, item));
         let kept = LayerData {
             pins: data
                 .pins
@@ -312,19 +322,77 @@ impl Engine {
                 .cloned()
                 .collect(),
         };
+        self.layers.timeline = Some(cone);
         let layer = self.intern(kept)?;
         self.layers.trimmed.insert(key, layer);
         Ok(Ctx { layer, ..ctx })
     }
 
-    /// `e as if {pins}`: e evaluated in the context the pins give, their values evaluated
-    /// first in the context outside (refcore's `e_asif`); a pin whose key or date is a hole
-    /// makes the value that hole, nothing inside evaluated. L §5.11.
+    /// The pins and wording pins of `layer` on items the walk reaches: the pins a timeline
+    /// of a reader in `layer` is kept under (E §3.3: "a timeline per pin set the moves
+    /// reach").
     ///
     /// # Errors
     ///
-    /// The refusals the pins and e meet; `NotBuilt` for a scenario, an axis or a sample pin,
-    /// and for a pin the moves reach where the walk is read.
+    /// `ENGINE-INVARIANT` for a freed layer.
+    pub(super) fn walk_pins(&mut self, m: &Reality, layer: Layer) -> Result<Layer, Stop> {
+        if layer.is_base() {
+            return Ok(layer);
+        }
+        if let Some(kept) = self.layers.walk_pins.get(&layer.number()) {
+            return Ok(*kept);
+        }
+        let cone = self.walk_cone(m);
+        let data = self.layer_data(layer)?;
+        let kept = LayerData {
+            pins: data
+                .pins
+                .iter()
+                .filter(|p| in_cone(m, &cone, &p.item))
+                .cloned()
+                .collect(),
+            wording: data
+                .wording
+                .iter()
+                .filter(|(item, _)| in_cone(m, &cone, item))
+                .cloned()
+                .collect(),
+        };
+        self.layers.timeline = Some(cone);
+        let pins = self.intern(kept)?;
+        self.layers.walk_pins.insert(layer.number(), pins);
+        Ok(pins)
+    }
+
+    /// The items the walk's readers reach, once computed; the caller puts it back in
+    /// `layers.timeline` when done (E §3.1 step 5, §3.3).
+    fn walk_cone(&mut self, m: &Reality) -> BTreeSet<Node> {
+        match self.layers.timeline.take() {
+            Some(cone) => cone,
+            None => timeline_cone(m),
+        }
+    }
+
+    /// Whether `item` reads the timeline, once judged (E §3.3).
+    fn reads_walk(&mut self, m: &Reality, item: &Node) -> bool {
+        if let Some(known) = self.layers.walkers.get(item) {
+            return *known;
+        }
+        let reads = reads_timeline(m, item);
+        self.layers.walkers.insert(item.clone(), reads);
+        reads
+    }
+
+    /// `e as if {pins}`: e evaluated in the context the pins give, their values evaluated
+    /// first in the context outside (refcore's `e_asif`); a pin whose key or date is a hole
+    /// makes the value that hole, nothing inside evaluated; `{scenario s}` evaluates e in s
+    /// (L §6.4), the moves recomputed in a timeline of their own where a pin or the world
+    /// reaches them. L §5.11.
+    ///
+    /// # Errors
+    ///
+    /// The refusals the pins and e meet; `NotBuilt` for an axis or a sample pin, a world of
+    /// another stack of scenarios, and a decision's running read that would change timeline.
     pub(super) fn as_if(
         &mut self,
         m: &Reality,
@@ -336,7 +404,7 @@ impl Engine {
             Err(hole) => return Ok(Value::Hole(hole)),
             Ok(inside) => inside,
         };
-        self.open_layer(inside.layer);
+        self.open_layer(m, inside)?;
         let v = self.ev(m, inner, env, inside);
         if matches!(v, Err(Stop::Deep)) {
             self.leave_layer(inside.layer)?;
@@ -353,10 +421,12 @@ impl Engine {
     /// pins are listed whether read or not. A pin whose key, or a date pin whose date, is a
     /// hole makes the result that hole, with every such pin's questions. L §5.11, §5.18, §8.2.
     ///
+    /// `scenario s` sets the world, listed `world: s` (L §6.4, §8.2).
+    ///
     /// # Errors
     ///
-    /// The refusals the pins meet; `NotBuilt` for a scenario, an axis or a sample pin, and for
-    /// a pin the moves reach where the walk is read.
+    /// The refusals the pins meet; `NotBuilt` for an axis or a sample pin and for a world of
+    /// another stack of scenarios.
     pub(crate) fn pinned(
         &mut self,
         m: &Reality,
@@ -370,7 +440,11 @@ impl Engine {
         let mut holes: Vec<Hole> = Vec::new();
         for pin in pins {
             match &pin.form {
-                PinForm::Scenario(_) => return Err(Stop::NotBuilt("a scenario pin at run")),
+                PinForm::Scenario(id) => {
+                    // `x as if {scenario s}` is x in s (L §6.4 Asking; refcore's `apply_pins_`)
+                    inside.world = world_named(m, id)?;
+                    self.note("world", id.clone(), String::new());
+                }
                 PinForm::Law(e) | PinForm::Known(e) | PinForm::Wording(e, _) => {
                     let Some(day) = self.date_pin(m, pin, e, env, ctx, &mut holes)? else {
                         continue;
@@ -402,7 +476,6 @@ impl Engine {
             return Ok(Err(hole));
         }
         inside.layer = self.intern(data)?;
-        self.no_pinned_walk(m, inside.layer)?;
         Ok(Ok(inside))
     }
 
@@ -412,11 +485,9 @@ impl Engine {
     ///
     /// # Errors
     ///
-    /// `NotBuilt` for a pin the moves reach where the walk is read; `ENGINE-INVARIANT` for a
-    /// freed layer.
+    /// `ENGINE-INVARIANT` for a freed layer.
     pub(super) fn solve_step(
         &mut self,
-        m: &Reality,
         (item, keys): (&str, &[KeyVal]),
         value: Value,
         ctx: Ctx,
@@ -432,17 +503,26 @@ impl Engine {
             text: String::new(),
         });
         let layer = self.intern(data)?;
-        self.no_pinned_walk(m, layer)?;
         Ok(Ctx { layer, ..ctx })
     }
 
-    /// Opens a scope holding `layer`: its cells stay while it is open (P §3.5).
-    pub(crate) fn open_layer(&mut self, layer: Layer) {
-        self.layers.open.push(layer);
+    /// Opens a scope of context `inside`: its layer's cells stay while it is open (P §3.5),
+    /// and its reads of the walk read the timeline of its world and of the pins its walk
+    /// reaches (E §3.3).
+    ///
+    /// # Errors
+    ///
+    /// `NotBuilt` for a decision's running read that would change timeline;
+    /// `ENGINE-INVARIANT` for a freed layer.
+    pub(crate) fn open_layer(&mut self, m: &Reality, inside: Ctx) -> Result<(), Stop> {
+        self.enter_timeline(m, inside)?;
+        self.layers.open.push(inside.layer);
+        Ok(())
     }
 
     /// Leaves the scope that holds `layer` without freeing anything: a read unwound past the
-    /// counted depth through it, and its replay needs the layer's cells (R-16).
+    /// counted depth through it, and its replay needs the layer's cells (R-16); the timeline
+    /// before it is back.
     ///
     /// # Errors
     ///
@@ -451,15 +531,17 @@ impl Engine {
         if self.layers.open.pop() != Some(layer) {
             return Err(invariant("a layer's scope closed out of order"));
         }
-        Ok(())
+        self.leave_timeline()
     }
 
     /// Closes the scope that holds `layer`: every layer no open scope holds is freed with its
-    /// cells (P §3.2, §3.5: freed when its `as if` or `solve` step ends).
+    /// cells and the timelines kept under it (P §3.2, §3.5: freed when its `as if` or
+    /// `solve` step ends).
     ///
     /// # Errors
     ///
-    /// `ENGINE-INVARIANT` for a scope closed out of order.
+    /// `ENGINE-INVARIANT` for a scope closed out of order; `ENGINE-INVARIANT asks move no
+    /// money: …` for a freed timeline's walk whose entries changed.
     pub(crate) fn close_layer(&mut self, layer: Layer) -> Result<(), Stop> {
         self.leave_layer(layer)?;
         let mut open = Vec::with_capacity(self.layers.open.len());
@@ -482,8 +564,11 @@ impl Engine {
         self.layers
             .trimmed
             .retain(|(_, from), to| !freed.contains(from) && !freed.contains(&to.number()));
+        self.layers
+            .walk_pins
+            .retain(|from, to| !freed.contains(from) && !freed.contains(&to.number()));
         self.cells.free(&freed);
-        Ok(())
+        self.free_timelines(&freed)
     }
 
     /// A `law`, `known` or `wording` pin's day, its `pinned:` entry noted, with what an
@@ -582,7 +667,7 @@ impl Engine {
                 continue;
             };
             let given = self.given_key(m, e, env, ctx)?;
-            match make_keys(m, id, core::slice::from_ref(bind), vec![given], ctx.cut)? {
+            match make_keys(m, id, core::slice::from_ref(bind), vec![given], ctx)? {
                 Err(hole) => {
                     holes.push(hole);
                     return Ok(None);
@@ -628,45 +713,18 @@ impl Engine {
             text,
         }))
     }
+}
 
-    /// Stops `NotBuilt` where a pin of `layer` is on an item the walk reads (a move's, a
-    /// place's, a price's, parts' or a fill's cone) and the item holding the pin reads the
-    /// timeline: the walk is one per cut, not yet one per pin set (E §3.3; L §5.11
-    /// "`flows` inside sees the recomputed movements").
-    fn no_pinned_walk(&mut self, m: &Reality, layer: Layer) -> Result<(), Stop> {
-        if layer.is_base() {
-            return Ok(());
-        }
-        let cone = match self.layers.timeline.take() {
-            Some(cone) => cone,
-            None => timeline_cone(m),
-        };
-        let data = self.layer_data(layer)?;
-        let touches = data.pins.iter().any(|p| in_cone(m, &cone, &p.item))
-            || data.wording.iter().any(|(item, _)| in_cone(m, &cone, item));
-        self.layers.timeline = Some(cone);
-        if !touches {
-            return Ok(());
-        }
-        let reads = match self.holder.clone() {
-            None => true,
-            Some(holder) => {
-                if let Some(known) = self.layers.walkers.get(&holder) {
-                    *known
-                } else {
-                    let reads = reads_timeline(m, &holder);
-                    self.layers.walkers.insert(holder, reads);
-                    reads
-                }
-            }
-        };
-        if reads {
-            return Err(Stop::NotBuilt(
-                "a pin the moves reach, where the walk is read (a timeline per pin set)",
-            ));
-        }
-        Ok(())
-    }
+/// The world scenario `id` names in reality `m`: the model's, one of its stack's (L §6.4).
+///
+/// # Errors
+///
+/// `NotBuilt` for a scenario of another stack, which the run answers in the reality holding
+/// it (refcore's `make_cross`): not built.
+pub(crate) fn world_named(m: &Reality, id: &str) -> Result<World, Stop> {
+    m.scenarios.world(id, &m.header.id).ok_or(Stop::NotBuilt(
+        "a world on another stack of scenarios than the ask's (refcore's cross evaluation)",
+    ))
 }
 
 /// What applies a set of pins: an ask's `with`, whose value pins are listed whether read or
