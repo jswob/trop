@@ -1913,3 +1913,18 @@ G6's builder, the last fix turn, after G5's last fix (2daab6e), on the review of
 - **Exceptions:** +0 (6); report-only hits 8, as locked.
 - **Check:** check full on the code of this commit: "check full: green, 31 steps (650s)"; `milestone-report: M1: 39/51 green`, unchanged. The run before it was red only on a nested closure in `listed` (report-only), lifted out as `follows`; the probes ran on the code before that lift, which changes no behaviour.
 - **Cost:** G6's session about 2.48 % of the week (`engine/tools/usage`), 2.27 % at the first fix: about 0.2 % for this turn, inside the brief's 0.6 %, with three `check full` runs.
+
+## 2026-11-09 M1, G6's third fix: a decision before `from` no longer switches item 3 off, P46 (issue #108)
+
+G6's builder, a short turn after T's C6 and C7 (3e3cd91, f8467e5), on T's find (law scenario-before-19, vector `fixes/g6/decided_b1`) and pick P46. A third addendum to G6's entry above.
+
+- **Cause:** `scenario_unchanged` still passed the whole walk when any decision ran before `from` (refcore's `m_inv3` skip, kept in both fixes). `decided`'s `sweep` (`reads konto`) is a decision, so `pay`, booked before `from` with the scenario's fee read at a law date after it, was printed with no `before from:` line: a silent wrong result.
+- **Fix (`invariant.rs` `scenario_unchanged`, `instance_facts`, `add_read`, `listed`):** the skip is gone. A decision's instance as the walk ran it (`walk.runs`) joins the plan instances' read sets, so a decision is checked like any movement and listed by what it read, through the balances it read too. A decision that differs and whose read set holds nothing of the scenario stops `NotBuilt` ("its projection's reads untraced"), never `ENGINE-INVARIANT`: a decision's projection doesn't merge its rows into the decision's read set yet (P45's untraced kind).
+- **Other movements before `from` that read a balance:** `tmp/m1/g6/fix/dec/after.tally` (the sweep moved after `pay`, so it reads the balance `pay` changed) and `viadef.tally` (the same, through `def excess = max(0, bal(konto) - floor)`) both list `pay … reads fee` and `sweep on 2026-04-01 reads fee`; before, both printed `50.00 PLN` with no line. A plan move doesn't read a balance (only a decision's `reads` does), so the decision covers the transfer that reads a balance.
+- **Vector and law:** `decided_b1` now prints `before from: pay on 2026-03-01 reads fee` (it differs from refcore, as its held row for #121 expects); `m1_properties`' scenario-before-19 is green; `milestone-report: M1: 51/68 green` (50 before).
+- **Probes, before → after (the 110 asks of the last fix, plus `dec/`'s and the vector's 6):** before 83 byte-equal, 33 differ; after 80 byte-equal, 36 differ; none past 60 s. The three new differences are the three `b1`s above (the ruled answer, #121); the other 33 are the last fix's, unchanged.
+- **Size:** 1 file, `invariant.rs`, +46 −19 in engine/crates.
+- **Exceptions:** +0 (6); report-only hits 8, as locked.
+- **Check:** check full on the code of this commit: "check full: green, 31 steps (624s)"; `milestone-report: M1: 51/68 green`.
+- **Cost:** G6's session about 2.55 % of the week (`engine/tools/usage`), 2.48 % at the second fix: about 0.07 % for this turn, inside the brief's 0.2 %.
+- **Not done, for G14 and T (#121):** a decision's projection doesn't merge its reads into the decision's read set, so a decision that differs only through its projection stops `NotBuilt` instead of being listed; no mutation batch this turn.

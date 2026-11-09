@@ -84,17 +84,17 @@ impl Engine {
 impl Engine {
     /// E §9 item 3 once main walk `id` is walked in a scenario's world: every entry of every
     /// place dated before the scenario's `from` is one the world under it books there, the
-    /// same cut and pins, except a plan instance whose read set (E §3.2) holds a fact of the
-    /// scenario, through its defs and the balances it read, which the walk lists (ruling P45),
-    /// and a reading or pad at a place such an instance changed earlier; a hole, a hole no
-    /// reading answers and a refusal pass, as they answer the read; a walk in which a decision
-    /// ran before `from` is passed (refcore's `m_inv3`), and so is a base walk that refuses.
-    /// L §6.4.
+    /// same cut and pins, except an instance, a plan's or a decision's as it ran, whose read
+    /// set (E §3.2) holds a fact of the scenario, through its defs and the balances it read,
+    /// which the walk lists (rulings P45, P46: whatever else ran before `from`), and a reading
+    /// or pad at a place such an instance changed earlier; a hole, a hole no reading answers
+    /// and a refusal pass, as they answer the read; a base walk that refuses is passed. L §6.4.
     ///
     /// # Errors
     ///
     /// `ENGINE-INVARIANT scenario s: x on d: … differs from the base's, and nothing it read
-    /// is the scenario's (E §9 invariant 3)` for the first such entry, by day; `Deep` and
+    /// is the scenario's (E §9 invariant 3)` for the first such entry, by day; `NotBuilt`
+    /// when that entry is a decision's (its projection's reads aren't traced); `Deep` and
     /// `NotBuilt` from the instances and the base world's walk.
     pub(crate) fn scenario_unchanged(&mut self, m: &Reality, id: usize) -> Result<(), Stop> {
         let world = self.timeline_world();
@@ -105,7 +105,7 @@ impl Engine {
             return Ok(());
         };
         let walk = self.walk(id)?;
-        if from <= m.start || walk.proj.is_some() || walk.runs.iter().any(|r| r.point.day < from) {
+        if from <= m.start || walk.proj.is_some() {
             return Ok(());
         }
         let cut = walk.cut;
@@ -117,7 +117,7 @@ impl Engine {
             .unwrap_or(&m.header.id);
         let under = world_named(m, below)?;
         let ours = before(m, self.walk(id)?, from);
-        let facts = self.instance_facts(m, cut, under)?;
+        let facts = self.instance_facts(m, (id, cut), under)?;
         let ctx = self.timeline_ctx(None, cut).in_world(under);
         self.enter_timeline(m, ctx)?;
         let base = self.base_before(m, cut, from);
@@ -134,20 +134,23 @@ impl Engine {
     /// instance id: the items of its read set and its day's (E §3.2) whose sections world
     /// `under` doesn't see, an instance that doesn't exist or is refused included. E §9 item
     /// 3, L §6.4.
-    fn instance_facts(&mut self, m: &Reality, cut: Day, under: World) -> Result<Facts, Stop> {
+    fn instance_facts(
+        &mut self,
+        m: &Reality,
+        (id, cut): (usize, Day),
+        under: World,
+    ) -> Result<Facts, Stop> {
         let mut out = BTreeMap::new();
         for mv in m.moves_in(self.timeline_world()) {
             if mv.decision {
                 continue;
             }
             for inst in self.move_instances(m, mv, cut)?.iter() {
-                let mut items = scenario_items(m, &inst.coll, under);
-                items.extend(scenario_items(m, &inst.day_coll, under));
-                if !items.is_empty() {
-                    let answers = answers_itself(inst);
-                    out.insert(inst.id.clone(), Read { items, answers });
-                }
+                add_read(&mut out, m, inst, (under, false));
             }
+        }
+        for run in &self.walk(id)?.runs {
+            add_read(&mut out, m, &run.inst, (under, true));
         }
         Ok(out)
     }
@@ -170,13 +173,30 @@ type Before = BTreeMap<(String, String), BTreeMap<Day, Vec<Moved>>>;
 /// The scenario's facts each plan instance read, by instance id.
 type Facts = BTreeMap<String, Read>;
 
-/// What a plan instance read of the scenario: the items, and whether the instance is a hole
-/// or a refusal, which answers the read in its place.
+/// What an instance read of the scenario: the items, whether the instance is a hole or a
+/// refusal, which answers the read in its place, and whether it is a decision's as it ran.
 struct Read {
     /// The scenario's items it read, sorted.
     items: BTreeSet<String>,
     /// Whether its evaluation, its existence or a leg's amount is a hole or a refusal.
     answers: bool,
+    /// Whether it is a decision instance the walk ran (E §4.2 step 3).
+    decision: bool,
+}
+
+/// Adds instance `inst`'s read of the scenario, the items of its read set and its day's
+/// whose sections world `under` doesn't see, to `out`, marked a decision's when `decision`.
+/// E §9 item 3, L §6.4.
+fn add_read(out: &mut Facts, m: &Reality, inst: &Inst, (under, decision): (World, bool)) {
+    let held = out.entry(inst.id.clone()).or_insert_with(|| Read {
+        items: BTreeSet::new(),
+        answers: false,
+        decision,
+    });
+    held.items.extend(scenario_items(m, &inst.coll, under));
+    held.items.extend(scenario_items(m, &inst.day_coll, under));
+    held.answers = held.answers || answers_itself(inst);
+    held.decision = held.decision || decision;
 }
 
 /// An entry as E §9 item 3 compares it: what it does and its movement, not its rank among
@@ -289,7 +309,8 @@ fn listed(
     }
     let mut found: BTreeMap<String, Found> = BTreeMap::new();
     for odd in &odds {
-        let Some((mv, read)) = odd.mv.as_deref().and_then(|mv| facts.get_key_value(mv)) else {
+        let read = odd.mv.as_deref().and_then(|mv| facts.get_key_value(mv));
+        let Some((mv, read)) = read.filter(|(_, r)| !r.items.is_empty()) else {
             continue;
         };
         let held = found.entry(mv.clone()).or_insert_with(|| Found {
@@ -313,6 +334,12 @@ fn listed(
         }
     }
     if let Some(odd) = first {
+        let decided = odd.mv.as_deref().and_then(|mv| facts.get(mv));
+        if decided.is_some_and(|r| r.decision) {
+            return Err(Stop::NotBuilt(
+                "a decision before a scenario's from that differs from the base's, its read set holding no fact of the scenario (E §9 item 3: its projection's reads untraced)",
+            ));
+        }
         return Err(unexplained(scenario, odd));
     }
     let mut out = Vec::new();
