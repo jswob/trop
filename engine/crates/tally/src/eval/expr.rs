@@ -91,7 +91,13 @@ impl Engine {
 
     /// A name: a bound variable, a read of an input or a def with no keys, `cut`, a thing,
     /// else a key literal its use resolves (refcore's `e_name`). L §2.5.
-    fn name(&mut self, m: &Reality, name: &str, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
+    pub(super) fn name(
+        &mut self,
+        m: &Reality,
+        name: &str,
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Value, Stop> {
         if let Some(var) = env.get(name) {
             return Ok(var.value.clone());
         }
@@ -117,6 +123,19 @@ impl Engine {
         env: &Env,
         ctx: Ctx,
     ) -> Result<Value, Stop> {
+        self.read_item_in(m, (id, keys), env, (ctx, ctx))
+    }
+
+    /// [`Engine::read_item`], its keys made in context `ctx` and the item read in `read`: a
+    /// scenario row's prefixed name is read in the base, its keys made where the row is read
+    /// (refcore's `read`, its `_world` arm). L §4.6, §6.4.
+    pub(super) fn read_item_in(
+        &mut self,
+        m: &Reality,
+        (id, keys): (&str, &[Key]),
+        env: &Env,
+        (ctx, read): (Ctx, Ctx),
+    ) -> Result<Value, Stop> {
         let mut given = Vec::with_capacity(keys.len());
         for key in keys {
             let Key::Expr(e) = key else {
@@ -129,7 +148,7 @@ impl Engine {
                 Err(hole) => Ok(Value::Hole(hole)),
                 Ok(made) => {
                     self.movement_keys(m, &input.binds, &made, ctx)?;
-                    self.read_input_at(m, input, &made, ctx, Asked::Plain)
+                    self.read_input_at(m, input, &made, read, Asked::Plain)
                 }
             };
         }
@@ -141,7 +160,7 @@ impl Engine {
             Err(hole) => Ok(Value::Hole(hole)),
             Ok(made) => {
                 self.movement_keys(m, &def.binds, &made, ctx)?;
-                self.read_def_at(m, def, &made, ctx)
+                self.read_def_at(m, def, &made, read)
             }
         }
     }
@@ -261,6 +280,11 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let (mut value, rest) = match (base, posts) {
+            (Expr::Name(prefix), [Postfix::Field(name), rest @ ..])
+                if env.get(prefix).is_none() && self.reads_base(prefix) =>
+            {
+                self.base_read(m, name, rest, env, ctx)?
+            }
             (Expr::Name(name), [Postfix::Keys(keys), rest @ ..])
                 if env.get(name).is_none() && is_read(m, name) =>
             {
@@ -692,7 +716,7 @@ fn based_in(m: &Reality, thing: &crate::model::Thing, kind: &str) -> bool {
 }
 
 /// Whether `name` names an input or a def.
-fn is_read(m: &Reality, name: &str) -> bool {
+pub(super) fn is_read(m: &Reality, name: &str) -> bool {
     matches!(m.names.kind(name), Some(NameKind::Input | NameKind::Def))
 }
 

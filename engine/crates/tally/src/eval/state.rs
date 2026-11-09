@@ -366,6 +366,12 @@ pub struct Engine {
     /// The timeline in force, and the others parked: one per world and pins the walk reaches
     /// (E §3.3; `timelines.rs`). The walk fields above hold the one in force.
     pub(super) timelines: Timelines,
+    /// The base a scenario's expression row being evaluated names by its prefix, and the
+    /// world it is read in (L §6.4; `read.rs` `row_expr`).
+    pub(super) row_base: Option<(String, World)>,
+    /// The expression rows being evaluated, by row, the read's figure and its law date: one met
+    /// again reads itself (refcore's `_sexpr_active`, `RUN-CYCLE`).
+    pub(super) rows_active: BTreeSet<(String, String, Option<Day>)>,
     /// What this engine did, in P §1.1's units: the `counters` build only (BUILDER §13.2).
     #[cfg(feature = "counters")]
     pub(crate) counts: crate::Counters,
@@ -412,6 +418,8 @@ impl Engine {
             splits: super::prorata::Splits::default(),
             layers: Layers::default(),
             timelines: Timelines::default(),
+            row_base: None,
+            rows_active: BTreeSet::new(),
             #[cfg(feature = "counters")]
             counts: crate::Counters::default(),
         }

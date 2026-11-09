@@ -164,6 +164,7 @@ pub mod eval {
     mod read;
     mod rules;
     mod solve;
+    mod srows;
     mod stack;
     mod state;
     mod timelines;

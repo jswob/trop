@@ -384,9 +384,14 @@ impl Engine {
             sid: row.sid.clone(),
         });
         let of = ConvertFor::row(&def.unit_factor, &def.ty, &def.binds, &row.pattern);
-        let value = match convert(m, &row.value, &def.ty, &def.id, &of)? {
-            Converted::Hole(text) => Value::Hole(Hole::asked(&text, &figure)),
-            Converted::Value(v) => v,
+        let value = if let crate::syntax::Value::Expr(e) = &row.value {
+            // a scenario's expression row, at the def's law date (L §6.4)
+            self.row_expr(m, (row, e), &figure, ctx)?
+        } else {
+            match convert(m, &row.value, &def.ty, &def.id, &of)? {
+                Converted::Hole(text) => Value::Hole(Hole::asked(&text, &figure)),
+                Converted::Value(v) => v,
+            }
         };
         let shown = shown(m, &value)?;
         self.note(

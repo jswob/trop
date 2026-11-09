@@ -5,7 +5,8 @@
 //! §8.2 (the register entries a read makes), §8.4 (`RUN-KEY`, `RUN-NONE`), §7.6 items 1 and 3
 //! (the end of time is no key; a key offset's 18 digits), `last(x, d)` and `since(x, d)`
 //! (§4.6 Past the last row, Readings; §5.3); §4.4 (a window read is that read's value, its
-//! holes asked of its row). A row's value converted to its input's type is `convert.rs`'s.
+//! holes asked of its row). A row's value converted to its input's type is `convert.rs`'s; a
+//! scenario's expression row evaluated, `srows.rs`'s (§6.4).
 //! Twin: engine/tools/refcore/evaluate.py (`key_values`, `to_key`, `check_key`, `read_input`,
 //! `row_value`, `e_lastx`, `e_call_since`, `prices`, `index_assumed`).
 //! Invariants: a key a read takes is a key its domain holds and the cut and the read's world
@@ -26,7 +27,7 @@ use crate::model::{
     Unit, Value,
 };
 use crate::read::{Asked, Clocks, Found, held, origin, read_input, read_last, time_point};
-use crate::syntax::{Call, Expr, Lit, Stop};
+use crate::syntax::{Call, Expr, Lit, Stop, Value as Written};
 use crate::time::{Day, PeriodKind};
 
 /// Which read past a row's span: `last(x, d)` or `since(x, d)` (L §4.6).
@@ -200,8 +201,12 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let figure = origin(&input.id, keys);
-        let value = self.row_converted(m, input, row, &figure)?;
         let point = time_point(input, keys, ctx.law)?;
+        let at = Ctx {
+            law: point.day.or(ctx.law),
+            ..ctx
+        };
+        let value = self.row_converted(m, (input, row), &figure, at)?;
         let is_held = held(m, row, point.day, self.clocks(ctx, &input.id)?)?;
         if let (Some(day), false) = (ctx.law, matches!(input.time_pos, TimePos::At(_))) {
             if is_held {
@@ -276,7 +281,11 @@ impl Engine {
             .ok_or_else(|| invariant("an input of last load didn't build"))?;
         let row = latest_of(input, latest.at)?;
         let figure = origin(&input.id, &latest.keys);
-        let value = self.row_converted(m, input, row, &figure)?;
+        let at = Ctx {
+            law: Some(latest.day),
+            ..ctx
+        };
+        let value = self.row_converted(m, (input, row), &figure, at)?;
         let always = row.instant.is_none()
             && crate::read::row_span(m, row, ctx.cut)?.is_some_and(|span| span.is_always());
         if !always {
@@ -388,14 +397,15 @@ impl Engine {
     }
 
     /// A chosen row's value with the register entries every read of it makes: `assumed`, its
-    /// own and its version's, and its keys' indexes' (refcore's `row_value`, before `held`).
-    /// L §4.6, §8.2.
+    /// own and its version's, and its keys' indexes' (refcore's `row_value`, before `held`);
+    /// a scenario's expression row evaluated in `at`, at the row's law date. L §4.6, §8.2,
+    /// §6.4.
     fn row_converted(
         &mut self,
         m: &Reality,
-        input: &InputInfo,
-        row: &Row,
+        (input, row): (&InputInfo, &Row),
         figure: &str,
+        at: Ctx,
     ) -> Result<Value, Stop> {
         let figure = figure.to_owned();
         self.note_version(&row.version);
@@ -410,6 +420,9 @@ impl Engine {
             self.note("assumed", reason.clone(), figure.clone());
         }
         self.index_assumed(m, &input.binds);
+        if let Written::Expr(e) = &row.value {
+            return self.row_expr(m, (row, e), &figure, at);
+        }
         let ty = input
             .ty
             .as_ref()
