@@ -55,7 +55,7 @@ impl Engine {
             match self.ev(m, e, env, ctx) {
                 Err(Stop::Deep) if mark.outermost => self.replay(m, &mark)?,
                 result => {
-                    self.read_ended(&mark)?;
+                    self.read_ended(&mark);
                     return result;
                 }
             }
@@ -80,7 +80,7 @@ impl Engine {
             match self.read_def_at(m, def, keys, ctx) {
                 Err(Stop::Deep) if mark.outermost => self.replay(m, &mark)?,
                 result => {
-                    self.read_ended(&mark)?;
+                    self.read_ended(&mark);
                     return result;
                 }
             }
@@ -105,7 +105,7 @@ impl Engine {
             match self.given_key(m, e, env, ctx) {
                 Err(Stop::Deep) if mark.outermost => self.replay(m, &mark)?,
                 result => {
-                    self.read_ended(&mark)?;
+                    self.read_ended(&mark);
                     return result;
                 }
             }
@@ -130,7 +130,7 @@ impl Engine {
             match self.pinned(m, pins, &Env::empty(), ctx, Pinning::Ask) {
                 Err(Stop::Deep) if mark.outermost => self.replay(m, &mark)?,
                 result => {
-                    self.read_ended(&mark)?;
+                    self.read_ended(&mark);
                     return result;
                 }
             }
@@ -156,7 +156,7 @@ impl Engine {
             match self.members(m, binds, &Env::empty(), ctx, Brings::ToTuple) {
                 Err(Stop::Deep) if mark.outermost => self.replay(m, &mark)?,
                 result => {
-                    self.read_ended(&mark)?;
+                    self.read_ended(&mark);
                     return result;
                 }
             }
@@ -176,7 +176,7 @@ impl Engine {
             match self.ledger_of(m, r, ctx) {
                 Err(Stop::Deep) if mark.outermost => self.replay(m, &mark)?,
                 result => {
-                    self.read_ended(&mark)?;
+                    self.read_ended(&mark);
                     return result;
                 }
             }
@@ -221,11 +221,10 @@ impl Engine {
 
     /// Ends a read: the outermost lets go of the layers its unwinding kept, which its replay
     /// and its read again needed (R-16, P §3.5).
-    fn read_ended(&mut self, mark: &Mark) -> Result<(), Stop> {
+    fn read_ended(&mut self, mark: &Mark) {
         if mark.outermost {
-            return self.release_kept();
+            self.release_kept();
         }
-        Ok(())
     }
 
     /// What the read finds as it begins.
@@ -247,11 +246,21 @@ impl Engine {
         Ok(())
     }
 
+    /// The replay of an outermost read; one that fails ends the read, which lets go of the
+    /// layers its unwinding kept (R-16, P §3.5).
+    fn replay(&mut self, m: &Reality, mark: &Mark) -> Result<(), Stop> {
+        let replayed = self.replay_tasks(m, mark);
+        if replayed.is_err() {
+            self.read_ended(mark);
+        }
+        replayed
+    }
+
     /// Computes the cells on the work stack, the latest first, each from depth 0 while the
     /// cells that unwound above it stay in progress; a task that unwinds again waits for the
     /// one it pushed. A task done, the cells that waited on it leave progress, to be read
     /// again by the read below it (R-16, BUILDER §4).
-    fn replay(&mut self, m: &Reality, mark: &Mark) -> Result<(), Stop> {
+    fn replay_tasks(&mut self, m: &Reality, mark: &Mark) -> Result<(), Stop> {
         if self.work.is_empty() {
             return Err(invariant("a read unwound with no cell on the work stack"));
         }

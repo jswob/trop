@@ -21,7 +21,7 @@ use super::check::{Printed, check_line};
 use super::diff::diff_lines;
 use super::register::{check_register_lines, register_lines, warning_lines};
 use super::residuals::residual_lines;
-use crate::base::{Code, Refusal, Req, Run, Warn};
+use crate::base::{Code, Load, Place, Reach, Refusal, Req, Run, Warn};
 use crate::eval::{
     Collected, Ctx, Engine, Entry, Env, Item, Member, Memo, a_day, num_stop, past_days, world_named,
 };
@@ -522,10 +522,10 @@ fn form_line(
 ) -> Result<Printed, Stop> {
     match &ask.body {
         AskBody::Exprs(exprs) => {
-            if let Some(refusal) = m.asks_unresolved.get(&ask.id) {
-                return Err(Stop::Refused(refusal.clone()));
-            }
             let (items, met) = engine.line(m, exprs, env, ctx)?;
+            if let Some(place) = m.asks_unresolved.get(&ask.id) {
+                unresolved_word(&items, place)?;
+            }
             Ok(Printed {
                 text: line_values(m, &items)?,
                 met,
@@ -547,6 +547,36 @@ fn form_line(
         | AskBody::ReadersOf(_)
         | AskBody::Diff(_) => Err(beyond_built()),
     }
+}
+
+/// `LOAD-KEY ambiguous key <k>` at the ask's line `place` for the first of a line's values
+/// that holds a key literal no position resolved, bare (an `if` may have chosen it) or as a
+/// list's item: refcore refuses the literal where it is evaluated (its `e_name`, the `keylit`
+/// arm; pick P39). L §2.5, §8.3.
+fn unresolved_word(items: &[Item], place: &Place) -> Result<(), Stop> {
+    let Some(word) = items.iter().find_map(item_word) else {
+        return Ok(());
+    };
+    let message = format!("ambiguous key {word}");
+    let refusal = Refusal::at(Code::Load(Load::Key), message, place.clone());
+    Err(Stop::Refused(refusal.reaching(Reach::Id(word.clone()))))
+}
+
+/// The key literal a line's value is, or the first a list holds. L §2.5.
+fn item_word(item: &Item) -> Option<&String> {
+    match item {
+        Item::Value(Value::List(values)) => values.iter().find_map(value_word),
+        Item::Value(value) => value_word(value),
+        Item::Refused(_) => None,
+    }
+}
+
+/// The key literal a value is, unresolved. L §2.5.
+fn value_word(value: &Value) -> Option<&String> {
+    let Value::Word(word) = value else {
+        return None;
+    };
+    Some(word)
 }
 
 /// A line's values: one alone, several in parentheses (refcore's `print_line`). L §5.18.

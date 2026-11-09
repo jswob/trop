@@ -20,7 +20,7 @@ use super::pins::unloaded_world;
 use super::prices::price_twice;
 use super::random::{DrawKey, QueryAt};
 use super::srows::{BaseWorld, SrowAt, ask_worlds, top_scenario};
-use super::types::{is_date, key_lit_of, key_value_kind, lit_rule, refused, uerr};
+use super::types::{is_date, key_value_kind, lit_rule, refused, uerr};
 use crate::base::{Code, Load, Place as At, Reach, Refusal};
 use crate::model::{
     BandInfo, BindInfo, Domain, Graph, KeyVal, Mark, NameKind, Node, NodeKind, Reality, Rel, Shift,
@@ -456,9 +456,10 @@ pub(super) struct Walked {
     pub(super) day_reads: Vec<DayRead>,
     /// The asks refused alone, with their refusals (refcore's `asks_alone`). L §6.4, §8.
     pub(super) alone: BTreeMap<String, Refusal>,
-    /// Each ask whose line holds a bare key literal, with the `LOAD-KEY ambiguous key`
-    /// refusal its evaluation meets (refcore's `e_name`, its `keylit` arm). L §2.5.
-    pub(super) unresolved: BTreeMap<String, Refusal>,
+    /// Each ask whose line can hold a key literal no position resolves, with the ask's line,
+    /// where its evaluation meets `LOAD-KEY ambiguous key` (refcore's `e_name`, its `keylit`
+    /// arm). L §2.5.
+    pub(super) unresolved: BTreeMap<String, At>,
     /// The queries and path scores over random values, in the order typed (refcore's
     /// `queries`). L §5.16.
     pub(super) queries: Vec<QueryAt>,
@@ -520,8 +521,8 @@ pub(super) struct Checker {
     pub(super) direct: Option<Vec<Node>>,
     /// Each ask's reads in the order first made.
     ask_reads: BTreeMap<String, Vec<Node>>,
-    /// Each ask whose line holds a key literal no position resolves, with its refusal.
-    unresolved: BTreeMap<String, Refusal>,
+    /// Each ask whose line can hold a key literal no position resolves, with its line.
+    unresolved: BTreeMap<String, At>,
     /// The decisions' plain balance reads.
     pub(super) day_reads: Vec<DayRead>,
     /// The fills: each one's sides, typed once (refcore's `fill_infos`).
@@ -1084,24 +1085,17 @@ impl Checker {
         self.ask_body(m, &scope, ask)
     }
 
-    /// Keeps, for ask `id`, the refusal of a line's value `e` typed `typed` that is a bare key
-    /// literal no position resolves: refcore refuses it where the line is evaluated, at the
-    /// ask's line, `LOAD-KEY ambiguous key <k>` (refcore's `e_name`, its `keylit` arm; pick
-    /// P39); the first such value of the line is the one met. L §2.5, §8.3.
-    fn unresolved_key(&mut self, scope: &Scope, id: &str, (e, typed): (&Expr, &Ty)) {
-        let Ty::KeyLit(written) = typed else {
-            return;
-        };
-        let mut bare = e;
-        while let Expr::Paren(inner) = bare {
-            bare = inner;
-        }
-        if key_lit_of(bare).is_none() || self.unresolved.contains_key(id) {
-            return;
-        }
-        let message = format!("ambiguous key {written}");
-        if let Stop::Refused(refusal) = scope.place(refused(Load::Key, message).naming(written)) {
-            self.unresolved.insert(id.to_owned(), refusal);
+    /// Keeps the place of ask `id` when a value of its line is typed `typed`, a key literal no
+    /// position resolves or a list that may hold one (a bare key, an `if` choosing one, `[q1]`):
+    /// refcore refuses such a literal where it is evaluated, `LOAD-KEY ambiguous key <k>` at
+    /// the ask's line (refcore's `e_name`, its `keylit` arm; pick P39), and the run does where
+    /// the line's value holds it. L §2.5, §8.3.
+    fn unresolved_key(&mut self, scope: &Scope, id: &str, typed: &Ty) {
+        // a list literal types as a list whatever its items: the run finds the literal in it
+        let literal = matches!(typed, Ty::KeyLit(_) | Ty::List(_));
+        if literal && !self.unresolved.contains_key(id) {
+            let place = At::Line(scope.at.0.clone(), scope.at.1);
+            self.unresolved.insert(id.to_owned(), place);
         }
     }
 
@@ -1113,7 +1107,7 @@ impl Checker {
             AskBody::Exprs(exprs) => {
                 for e in exprs {
                     let typed = self.expr(m, scope, e, None, 0)?;
-                    self.unresolved_key(scope, &ask.id, (e, &typed));
+                    self.unresolved_key(scope, &ask.id, &typed);
                 }
                 Ok(())
             }

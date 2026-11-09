@@ -17,7 +17,7 @@ use super::index::{IndexInfo, VersionInfo};
 use super::key::{KeyVal, Span};
 use super::kind::{Entry, KindInfo, KindSpec, Thing};
 use super::world::{Scenarios, World};
-use crate::base::{Internal, Interner, Refusal, Table, Warn};
+use crate::base::{Internal, Interner, Place, Refusal, Table, Warn};
 use crate::num::Num;
 use crate::syntax::{Ask, Axis, Fill, Header, Price, Sign, Source, Type};
 use crate::time::Day;
@@ -126,10 +126,11 @@ pub struct Reality {
     /// The asks refused alone, each with its refusal: one that names a world the run doesn't
     /// load (refcore's `asks_alone`). L §6.4, §8.
     pub asks_alone: BTreeMap<String, Refusal>,
-    /// Each ask whose line holds a bare key literal no position resolves, with the
-    /// `LOAD-KEY ambiguous key <k>` its line meets where it is evaluated, at the ask's line
-    /// (refcore's `e_name`, its `keylit` arm; pick P39). L §2.5, §8.3.
-    pub asks_unresolved: BTreeMap<String, Refusal>,
+    /// Each ask whose line can hold a key literal no position resolves (bare, chosen by an
+    /// `if`, a list's item), with the ask's line, where a value holding one meets
+    /// `LOAD-KEY ambiguous key <k>` as it is evaluated (refcore's `e_name`, its `keylit` arm;
+    /// pick P39). L §2.5, §8.3.
+    pub asks_unresolved: BTreeMap<String, Place>,
     /// Each key list's binding site (file, line, token) with the index its key positions
     /// fixed: its keys are that index's (refcore's `b._var.fixed`). L §2.5.
     pub list_keys: BTreeMap<(String, u32, usize), String>,

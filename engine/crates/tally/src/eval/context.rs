@@ -597,18 +597,12 @@ impl Engine {
         self.free_layers()
     }
 
-    /// Ends an outermost read: the layers its unwinding kept are let go, and every layer no
-    /// open scope holds is freed (R-16, P §3.5).
-    ///
-    /// # Errors
-    ///
-    /// As [`Engine::close_layer`].
-    pub(super) fn release_kept(&mut self) -> Result<(), Stop> {
-        if self.layers.kept.is_empty() {
-            return Ok(());
-        }
+    /// Ends an outermost read: the layers its unwinding kept are let go, to be freed at the
+    /// next scope's end that no scope holds them past (R-16, P §3.5). Nothing is freed here: a
+    /// read may hand back a layer it has just made, such as an ask's `with` pins', which its
+    /// caller opens next.
+    pub(super) fn release_kept(&mut self) {
         self.layers.kept.clear();
-        self.free_layers()
     }
 
     /// Frees every layer that no open scope, no scope a read unwound through and no cell on
