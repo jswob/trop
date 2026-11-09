@@ -2,7 +2,8 @@
 //! Spec: L §5.14.3 (`flows(x, span)`, `flows(m, span)`: their units, holes and refusals; a
 //! move's flows at some of its keys; a modelled instance counted by the observations that stand
 //! in for it, `open:` when none does; settlements dated in the span, `HOLE-CHANGED` where
-//! nothing settles); §8.2 (the register: `unfulfilled:`, `left out:`, `adjustment:`, `open:`);
+//! nothing settles); §5.19 (a pad's flow at its reading's place, on the reset); §8.2 (the
+//! register: `unfulfilled:`, `left out:`, `adjustment:`, `open:`);
 //! E §4.2 (a refused leg refuses every read of it), E §4.3 (a read of a projection's walk
 //! rests on the walks it continues).
 //! Twin: engine/tools/refcore/mreads.py (`e_flows`, `flows_place`, `flows_place_walk`,

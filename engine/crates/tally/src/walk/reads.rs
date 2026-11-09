@@ -5,10 +5,13 @@
 //! the balances less its own observations booked before its day); §8.2 (the register:
 //! `unfulfilled:`, `left out:`, `adjustment:`, `uncertain:`, `open:`); E §4.2 (a refused leg
 //! refuses every read of it; holes in the walk), E §4.3 (a read of a projection's walk rests on the walks it continues), E §3.3 (the
-//! main walk of a timeline). The flows reads (L §5.14.3) are `flows.rs`'s.
+//! main walk of a timeline); §5.19 (`gap(x, d)`, `HOLE-NOREADING`); §5.10 (`value(x, d) in CUR
+//! [by p]`, a priced place, `HOLE-PRICE`, `LOAD-PRICE`), §3.4 (a price's year), §4.6 (a price
+//! read through its carry). The flows reads (L §5.14.3) are `flows.rs`'s.
 //! Twin: engine/tools/refcore/mreads.py (`place_arg`, `bal_unit`, `read_state`,
 //! `merge_cum`, `e_bal`, `note_read`, `bal_day`, `with_uncertain`, `proj_uncertain`,
-//! `less_own_obs`) and walk.py (`m_main_walk`).
+//! `less_own_obs`, `m_c_gap`, `m_e_value`, `m_priced_read`, `m_price_read`) and walk.py
+//! (`m_main_walk`).
 //! Invariants: a read inside a decision sees the walk only up to its point; a read at the cut
 //! sees the whole main walk; a hole a read meets is printed with every question it rests on;
 //! a refused `with uncertain` keeps the register it met before the refusal, as refcore

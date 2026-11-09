@@ -1,14 +1,17 @@
-//! The written projection `bal(x, d) from t`: a walk of its own from day t, its holder's dependents left out.
+//! The written projection `bal(x, d) from t`, a walk of its own from day t without its holder's dependents, and `low`, its least day.
 //! Spec: L §5.14.1 (The projection is written: its start at t, or at a decision's point on t;
 //! the movements dated t through d counted as known on t; those that depend on the holder left
-//! out and listed; `with uncertain`; `HOLE-PRERUN` before S; `RUN-FUTURE`), E §4.3 (steps 1–3;
-//! nesting is finite), §3.2 (the projection in a cell's context), L §8.2 (`left out:`).
+//! out and listed; `with uncertain`; `HOLE-PRERUN` before S; `RUN-FUTURE`; `low` the minimum
+//! of the end-of-day balances, `RUN-DOMAIN` for a day before t), E §4.3 (steps 1–3; nesting is
+//! finite; `low` read day by day here, the plain twin of fence F5), §3.2 (the projection in a
+//! cell's context), L §8.2 (`left out:`).
 //! Twin: engine/tools/refcore/mreads.py (`proj_bal`, `proj_regs`, `proj_uncertain`,
-//! `proj_clauses`) and walk.py (`proj_walk`).
+//! `proj_clauses`, `m_e_low`) and walk.py (`proj_walk`).
 //! Invariants: a projection's walk starts each place as the walk it continues stood at its
 //! point and books nothing of a move that depends on its holder; there is one walk per (walk
 //! continued, point, cut, moves left out), walked only as far as a read needs; a decision
-//! reads no projection from a day after its own.
+//! reads no projection from a day after its own; `low` is the first of equal lows, a hole
+//! where any day's balance is one.
 
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
