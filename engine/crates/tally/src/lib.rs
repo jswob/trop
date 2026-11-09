@@ -23,7 +23,7 @@ mod oracle;
 
 pub use api::{
     Answer, Asks, Given, Pin, Request, Source, load_report, reprint, reprint_in, run, run_in,
-    run_with_memo,
+    run_with_lows, run_with_memo,
 };
 #[cfg(feature = "counters")]
 pub use counters::Counters;
@@ -198,6 +198,7 @@ pub mod walk {
     mod day;
     mod flows;
     mod legs;
+    mod lows;
     mod order;
     mod plan;
     mod point;
@@ -209,6 +210,8 @@ pub mod walk {
 
     pub use agenda::{Act, Mv, Reading, endings, reading_point};
     pub use day::{Broke, Ends};
+    pub use lows::Lows;
+    pub(crate) use lows::Trees;
     pub use order::{Run, WalkAt};
     pub use plan::{
         Amount, Booked, Dated, End, Exists, Inst, LegVal, Order, Seed, Status, Term,

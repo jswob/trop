@@ -3,19 +3,21 @@
 //! the movements dated t through d counted as known on t; those that depend on the holder left
 //! out and listed; `with uncertain`; `HOLE-PRERUN` before S; `RUN-FUTURE`; `low` the minimum
 //! of the end-of-day balances, `RUN-DOMAIN` for a day before t), E §4.3 (steps 1–3; nesting is
-//! finite; `low` read day by day here, the plain twin of fence F5), §3.2 (the projection in a
-//! cell's context), L §8.2 (`left out:`).
+//! finite; `low` read day by day here, the plain twin of fence F5; the common case offered to
+//! F5 first, `lows.rs`), §3.2 (the projection in a cell's context), L §8.2 (`left out:`).
 //! Twin: engine/tools/refcore/mreads.py (`proj_bal`, `proj_regs`, `proj_uncertain`,
 //! `proj_clauses`, `m_e_low`) and walk.py (`proj_walk`).
 //! Invariants: a projection's walk starts each place as the walk it continues stood at its
 //! point and books nothing of a move that depends on its holder; there is one walk per (walk
 //! continued, point, cut, moves left out), walked only as far as a read needs; a decision
 //! reads no projection from a day after its own; `low` is the first of equal lows, a hole
-//! where any day's balance is one.
+//! where any day's balance is one; a read F5 answers is answered as this walk would, and every
+//! read F5 leaves is read here unchanged.
 
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 
+use super::lows::{Base, Lows};
 use super::plan::invariant;
 use super::point::At;
 use super::state::{Projected, St, Walk};
@@ -70,6 +72,12 @@ impl Engine {
         }
         if start < m.start {
             return Ok(Value::Hole(Hole::asked("before the run's start", place)));
+        }
+        let uncertain = read.proj.uncertain || ctx.unc;
+        if let Some(v) =
+            self.common_case(m, (place, unit), (start, (day, day)), (uncertain, ctx))?
+        {
+            return Ok(v);
         }
         let left_out = self.holder_left_out(m)?;
         let id = self.proj_walk(m, ctx, start, left_out)?;
@@ -147,6 +155,11 @@ impl Engine {
                 if start < m.start {
                     return Ok(Value::Hole(Hole::asked("before the run's start", &place)));
                 }
+                let uncertain = read.proj.uncertain || ctx.unc;
+                let window = (start, (days.first, days.last));
+                if let Some(v) = self.common_case(m, (&place, &unit), window, (uncertain, ctx))? {
+                    return Ok(v);
+                }
                 self.projected_days(m, (&place, &unit), (start, days), (read, ctx))?
             }
             None => self.plain_days(m, (&place, &unit), days, (read, ctx))?,
@@ -223,17 +236,32 @@ impl Engine {
             .ok_or_else(|| invariant("a projection's holder the item graph lacks"))
     }
 
-    /// The walk of a projection from day `t`: from the main walk at the start of t, or from
-    /// the reading decision's walk, at its point on t or at the start of an earlier t; its
-    /// cut min(t, K) (refcore's `proj_walk`). E §4.3 step 1, L §5.14.1.
-    fn proj_walk(
+    /// E §4.3's common case read from fence F5's tree (`lows.rs`), where the engine reads it
+    /// so and the read takes no `with uncertain`; none for the projection's own walk to read
+    /// (P §2.3). E §4.3, L §5.14.1.
+    fn common_case(
         &mut self,
         m: &Reality,
-        ctx: Ctx,
-        t: Day,
-        left_out: BTreeSet<String>,
-    ) -> Result<usize, Stop> {
-        let (cut, base, point) = match ctx.at {
+        (place, unit): (&str, &str),
+        window: (Day, (Day, Day)),
+        (uncertain, ctx): (bool, Ctx),
+    ) -> Result<Option<Value>, Stop> {
+        if uncertain || self.lows == Lows::Walk {
+            return Ok(None);
+        }
+        let left_out = self.holder_left_out(m)?;
+        let base = self.proj_base(m, ctx, window.0)?;
+        if let Some(at) = ctx.at {
+            self.note_live(at.walk, place)?;
+        }
+        self.common_low(m, (place, unit), window, base, &left_out)
+    }
+
+    /// Where the projection from day `t` starts: the main walk at the start of t, or the
+    /// reading decision's walk, at its point on t or at the start of an earlier t, with that
+    /// walk's cut (refcore's `proj_walk`, its start). E §4.3 step 1, L §5.14.1.
+    fn proj_base(&mut self, m: &Reality, ctx: Ctx, t: Day) -> Result<Base, Stop> {
+        match ctx.at {
             Some(at) => {
                 let day = at.point.day;
                 if t > day {
@@ -247,10 +275,22 @@ impl Engine {
                     ));
                 }
                 let point = if t == day { at.point } else { At::start(t) };
-                (self.walk(at.walk)?.cut, at.walk, point)
+                Ok((self.walk(at.walk)?.cut, at.walk, point))
             }
-            None => (ctx.cut, self.main_walk(m, ctx.cut)?, At::start(t)),
-        };
+            None => Ok((ctx.cut, self.main_walk(m, ctx.cut)?, At::start(t))),
+        }
+    }
+
+    /// The walk of a projection from day `t`, from where [`Engine::proj_base`] starts it; its
+    /// cut min(t, K) (refcore's `proj_walk`). E §4.3 step 1, L §5.14.1.
+    fn proj_walk(
+        &mut self,
+        m: &Reality,
+        ctx: Ctx,
+        t: Day,
+        left_out: BTreeSet<String>,
+    ) -> Result<usize, Stop> {
+        let (cut, base, point) = self.proj_base(m, ctx, t)?;
         let c = t.min(cut);
         let key: ProjKey = (base, point, c, left_out);
         if let Some(id) = self.proj_walks.get(&key) {

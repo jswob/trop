@@ -332,6 +332,11 @@ pub struct Engine {
     pub(crate) walk_warnings: Vec<(Warn, String)>,
     /// The projections' walks, by what makes each (E §4.3).
     pub(crate) proj_walks: BTreeMap<ProjKey, usize>,
+    /// How a written projection's common case is read: fence F5's tree, or its plain twin,
+    /// the projection's own walk (E §4.3, P §2.3).
+    pub(crate) lows: crate::walk::Lows,
+    /// Fence F5's trees in the timeline in force (E §4.3, P §2.3; `walk/lows.rs`).
+    pub(crate) trees: crate::walk::Trees,
     /// The item whose expression is evaluated now: a projection's holder, whose dependents
     /// it leaves out (L §5.14.1).
     pub(crate) holder: Option<Node>,
@@ -410,6 +415,8 @@ impl Engine {
             guarded: None,
             walk_warnings: Vec::new(),
             proj_walks: BTreeMap::new(),
+            lows: crate::walk::Lows::Tree,
+            trees: crate::walk::Trees::default(),
             holder: None,
             observed: BTreeMap::new(),
             covered: BTreeMap::new(),
@@ -454,12 +461,15 @@ impl Engine {
         Engine { days, ..self }
     }
 
-    /// The engine keeping its cells as `memo` says: shared by a law date class, or at each
-    /// exact law date, the plain twin (E §3.2, P §3.3).
+    /// The engine computing as its fences say: keeping its cells as `memo` says, shared by a
+    /// law date class or at each exact law date, the plain twin (E §3.2, P §3.3); and reading
+    /// a written projection's common case as `lows` says, from fence F5's tree or through the
+    /// projection's own walk, the plain twin (E §4.3, P §2.3).
     #[must_use]
-    pub fn with_memo(self, memo: Memo) -> Engine {
+    pub fn with_how(self, (memo, lows): (Memo, crate::walk::Lows)) -> Engine {
         Engine {
             cells: Cells::new(memo),
+            lows,
             ..self
         }
     }

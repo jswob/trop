@@ -1,24 +1,40 @@
-//! Twins on the kernel corpus and on X's three S checks: the event walk against the every-day walk, cells shared by law date class against cells at each law date.
+//! Twins on the corpora and on X's three S checks: the event walk against the every-day walk, cells by law date class against exact, F5's tree against the projection's walk.
 //! Spec: P §2.2 (the oracle: a step-every-day walk beside the event-driven one, built from the
 //! same step functions, prints the same bytes; a property test compares them on every case);
-//! E §4.2 (the day walk), §4.3 (a projection's walk); E §3.2 (the law date is a class), P §3.3
-//! (the trimming's check: every case run with it on and off, the bytes compared);
+//! E §4.2 (the day walk), §4.3 (a projection's walk; its common case from a running sum,
+//! fence F5); E §3.2 (the law date is a class), P §3.3 (the trimming's check: every case run
+//! with it on and off, the bytes compared), P §2.3 (F5's tree);
 //! BUILD-ORDER § S, Green ("the event walk equals the step-every-day walk on every S check").
 //! Twin: engine/tools/refcore/walk.py (`run_to`, which steps every day), evaluate.py
-//! (`def_cell`, its memo keyed by the exact law date).
-//! Invariants: reads the corpus's realities and X's files only, never an answer key or a
-//! baseline (R-93); every record and every check answers, both walks print each alike (SQ-3),
-//! and so do both memos on the corpus.
+//! (`def_cell`, its memo keyed by the exact law date), mreads.py (`proj_bal`, `m_e_low`).
+//! Invariants: reads the corpora's realities, X's files and its own reality only, never an
+//! answer key or a baseline (R-93); every record and every check answers, both walks print
+//! each alike (SQ-3), and so do both memos on the kernel corpus, and F5's tree and the
+//! projection's own walk on the kernel and M1 corpora and on a projection under an axis and in
+//! a scenario's world.
 
 #![forbid(unsafe_code)]
 
 #[cfg(test)]
 mod tests {
     use tally::eval::Memo;
-    use tally::{Asks, Days, Given, NotImplemented, Pin, Request, run_with_memo};
+    use tally::walk::Lows;
+    use tally::{Asks, Days, Given, NotImplemented, Pin, Request, run_with_lows, run_with_memo};
 
     /// T's generated realities: netstring records of law, case, variant, arguments, files.
     const CORPUS: &str = include_str!("../../../tests/properties/kernel.corpus");
+
+    /// T's M1 realities (chunk C6), in the kernel corpus's form: each M1 law's records, the
+    /// `low` laws' among them (`low-min`, `foresight-low`).
+    const M1_CORPUS: &str = include_str!("../../../tests/properties/m1.corpus");
+
+    /// F5's own reality: a pay that differs by an axis's option, a rent that a later version
+    /// raises, a monthly look-ahead decision reading `low` from its own day, and projections
+    /// from days before and after the cut, one with the axis pinned.
+    const LOWS_MODEL: &str = include_str!("lows/lows.tally");
+
+    /// Its scenario `richer`, from June: a higher pay, and two projections read in its world.
+    const LOWS_SCENARIO: &str = include_str!("lows/richer.tally");
 
     /// One netstring `N:text,` at the head of `s`, and the rest after it.
     fn take(s: &str) -> (&str, &str) {
@@ -287,6 +303,62 @@ mod tests {
                 record.variant,
                 record.law
             );
+        }
+    }
+
+    /// Files' lines, every ask, with a written projection's common case read as `lows` says;
+    /// none past what the engine builds.
+    fn lows_answer(files: &[(String, String)], lows: Lows) -> Option<Vec<String>> {
+        let given = files
+            .iter()
+            .map(|(path, body)| Given {
+                path: path.clone(),
+                bytes: Some(body.as_bytes().to_vec()),
+            })
+            .collect();
+        let request = Request {
+            asks: Asks::Every,
+            pin: Pin::Canonical,
+            days: Days::Events,
+        };
+        match run_with_lows(given, &request, lows) {
+            Ok(out) => Some(out.lines().to_vec()),
+            Err(NotImplemented) => None,
+        }
+    }
+
+    #[test]
+    fn the_tree_prints_what_the_projections_walk_prints_on_both_corpora() {
+        for (corpus, count) in [(CORPUS, 312), (M1_CORPUS, 648)] {
+            let all = records(corpus);
+            assert_eq!(all.len(), count, "the corpus's records");
+            for record in &all {
+                let tree = lows_answer(&record.files, Lows::Tree);
+                let walk = lows_answer(&record.files, Lows::Walk);
+                assert_eq!(
+                    tree, walk,
+                    "{} {} ({})",
+                    record.case, record.variant, record.law
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn the_tree_prints_what_the_projections_walk_prints_under_axes_and_in_a_scenario() {
+        let files = [
+            ("lows.tally".to_owned(), LOWS_MODEL.to_owned()),
+            ("richer.tally".to_owned(), LOWS_SCENARIO.to_owned()),
+        ];
+        let tree = lows_answer(&files, Lows::Tree);
+        assert_eq!(tree, lows_answer(&files, Lows::Walk), "F5's reality");
+        let lines = tree.expect("F5's reality is answered");
+        // two of refcore's lines, one per world, so the two aren't the same refusal
+        for line in [
+            "q_low [pay_reading = low]: 300.05 DUK",
+            "s_low [pay_reading = low]: 281.25 DUK",
+        ] {
+            assert!(lines.iter().any(|l| l == line), "{line} is printed");
         }
     }
 }

@@ -21,7 +21,7 @@ use crate::load::{Loaded, Worlds};
 use crate::model::Reality;
 use crate::oracle::Days;
 use crate::syntax::{Ask, AskBody, PinForm, Stop};
-use crate::walk::invariant;
+use crate::walk::{Lows, invariant};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// The lines a run of a reality with scenarios prints (refcore's `run_worlds`, its asks): each
@@ -32,7 +32,12 @@ use std::collections::{BTreeMap, BTreeSet};
 ///
 /// `REQ-ASK` for the first id the run names that no world's ask has (E §11); `NotBuilt` for an
 /// ask evaluated in two worlds, a load refusal met at run, and a construct not built yet.
-pub fn answer_worlds(w: &Worlds, asks: &Asks, days: Days, memo: Memo) -> Result<Answered, Stop> {
+pub fn answer_worlds(
+    w: &Worlds,
+    asks: &Asks,
+    days: Days,
+    how: (Memo, Lows),
+) -> Result<Answered, Stop> {
     if let Asks::Named(ids) = asks
         && let Some(id) = ids.iter().find(|id| !knows(w, id))
     {
@@ -88,7 +93,7 @@ pub fn answer_worlds(w: &Worlds, asks: &Asks, days: Days, memo: Memo) -> Result<
     }
     // the base's reality first, then each loaded scenario's by id, as `world_turn` counts them
     let realities: Vec<&Reality> = core::iter::once(&w.base).chain(w.loaded.values()).collect();
-    answer_turns(&realities, &turns, merged_warnings(w), days, memo)
+    answer_turns(&realities, &turns, merged_warnings(w), days, how)
 }
 
 /// The turn of an ask: the base's ask at `at` in the base when it names no world besides the

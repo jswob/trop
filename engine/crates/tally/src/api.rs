@@ -17,6 +17,7 @@ use crate::eval::Memo;
 use crate::load::{Loaded, load_run, split_files};
 use crate::oracle::Days;
 use crate::syntax::Stop;
+use crate::walk::Lows;
 use std::collections::{BTreeMap, BTreeSet};
 
 /// One file the run is given: its path as the run names it, and its bytes, or none when the
@@ -132,7 +133,7 @@ pub fn run_in(
     disk: &BTreeMap<&str, &[u8]>,
     request: &Request,
 ) -> Result<Answer, NotImplemented> {
-    answered(given, disk, request, Memo::Classes)
+    answered(given, disk, request, (Memo::Classes, Lows::Tree))
 }
 
 /// Loads a reality's files and answers with what load prints when no ask is answered: its one
@@ -166,7 +167,22 @@ pub fn run_with_memo(
     request: &Request,
     memo: Memo,
 ) -> Result<Answer, NotImplemented> {
-    answered(given, &BTreeMap::new(), request, memo)
+    answered(given, &BTreeMap::new(), request, (memo, Lows::Tree))
+}
+
+/// [`run`] with each ask's engine reading a written projection's common case as `lows` says:
+/// from fence F5's running sums, as [`run`] reads it, or through the projection's own walk,
+/// the plain twin the equivalence test compares it with (E §4.3, P §2.3).
+///
+/// # Errors
+///
+/// As [`run`].
+pub fn run_with_lows(
+    given: Vec<Given>,
+    request: &Request,
+    lows: Lows,
+) -> Result<Answer, NotImplemented> {
+    answered(given, &BTreeMap::new(), request, (Memo::Classes, lows))
 }
 
 /// The run's answer, its members read from the files given, then from `disk`; a joint model's
@@ -175,13 +191,13 @@ fn answered(
     given: Vec<Given>,
     disk: &BTreeMap<&str, &[u8]>,
     request: &Request,
-    memo: Memo,
+    how: (Memo, Lows),
 ) -> Result<Answer, NotImplemented> {
     let (asks, days) = (&request.asks, request.days);
     finish(loaded(given, disk, request.pin).and_then(|loaded| {
         let mut out = match &loaded {
-            Loaded::One(m) => answer(m, asks, days, memo),
-            Loaded::Worlds(w) => answer_worlds(w, asks, days, memo),
+            Loaded::One(m) => answer(m, asks, days, how),
+            Loaded::Worlds(w) => answer_worlds(w, asks, days, how),
         }?;
         if is_joint(&loaded) {
             out.lines = joint_lines(out.lines);

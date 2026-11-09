@@ -286,6 +286,21 @@ impl Engine {
                 met.entries.insert(entry.clone());
             }
         }
+        self.chain_register(m, (id, at), (place, unit), &mut met)?;
+        self.absorb(&met);
+        state_value(m, &st, unit, &anchor)
+    }
+
+    /// A balance's register through point `at` of walk `id` and of each walk it continues
+    /// before its point, until one met a reading there (refcore's `read_state`, its chain).
+    /// L §8.2, E §4.3 step 1.
+    pub(super) fn chain_register(
+        &mut self,
+        m: &Reality,
+        (id, at): (usize, At),
+        (place, unit): (&str, &str),
+        met: &mut Collected,
+    ) -> Result<(), Stop> {
         let mut next = Some((id, at));
         let mut links = 0_usize;
         while let Some((wid, point)) = next {
@@ -293,10 +308,9 @@ impl Engine {
                 .checked_add(1)
                 .filter(|n| *n <= self.walks.len())
                 .ok_or_else(|| invariant("a chain of walks that loops"))?;
-            next = self.chain_link(m, (wid, point), (place, unit), &mut met)?;
+            next = self.chain_link(m, (wid, point), (place, unit), met)?;
         }
-        self.absorb(&met);
-        state_value(m, &st, unit, &anchor)
+        Ok(())
     }
 
     /// One walk of a read's chain: the moves left out there that touch the place, the register

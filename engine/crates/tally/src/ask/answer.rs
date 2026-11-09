@@ -30,7 +30,7 @@ use crate::eval::{
 use crate::model::{Reality, Value};
 use crate::syntax::{Ask, AskBody, Bind, Domain, Stop};
 use crate::time::{Day, PeriodKind};
-use crate::walk::Booked;
+use crate::walk::{Booked, Lows};
 use crate::{Asks, Days};
 
 /// What a run's asks print, and, in the `counters` build, what their engines did.
@@ -54,6 +54,8 @@ struct Seen {
     booked: BTreeMap<(String, Day), Booked>,
     /// How each ask's engine keeps its cells across law dates (E §3.2).
     memo: Memo,
+    /// How each ask's engine reads a written projection's common case (E §4.3, P §2.3).
+    lows: Lows,
     /// The engines' counts together.
     #[cfg(feature = "counters")]
     counts: crate::Counters,
@@ -84,13 +86,14 @@ pub(crate) enum Turn {
 
 /// The lines a run prints for its asks: each ask's lines, the asks in id order or in the order
 /// the run names them, then the run's warnings (refcore's `Asker.run`), each ask's engine
-/// walking `days` and keeping its cells as `memo` says. L §5.18, §8.5.
+/// walking `days`, keeping its cells as `memo` says and reading a projection's common case
+/// as `lows` says. L §5.18, §8.5.
 ///
 /// # Errors
 ///
 /// `REQ-ASK` for the first ask the run names that the reality lacks, before any is answered
 /// (E §11); a load refusal met at run; `NotBuilt` for a construct not built yet.
-pub fn answer(m: &Reality, asks: &Asks, days: Days, memo: Memo) -> Result<Answered, Stop> {
+pub fn answer(m: &Reality, asks: &Asks, days: Days, how: (Memo, Lows)) -> Result<Answered, Stop> {
     let turns = match asks {
         Asks::Every => {
             let mut all: Vec<(&str, usize)> = m
@@ -118,7 +121,7 @@ pub fn answer(m: &Reality, asks: &Asks, days: Days, memo: Memo) -> Result<Answer
             named
         }
     };
-    answer_turns(&[m], &turns, m.warnings.clone(), days, memo)
+    answer_turns(&[m], &turns, m.warnings.clone(), days, how)
 }
 
 /// `REQ-ASK no ask <q>`: the request names an ask that doesn't exist. E §11 (tally 2.1.3).
@@ -126,8 +129,9 @@ pub(crate) fn no_ask(id: &str) -> Refusal {
     Refusal::new(Code::Req(Req::Ask), format!("no ask {id}"))
 }
 
-/// The lines of `turns` in order, each ask's engine walking `days` and keeping its cells as
-/// `memo` says, then `warnings` with the walks' own (refcore's `Asker.run`, `run_worlds`).
+/// The lines of `turns` in order, each ask's engine walking `days`, keeping its cells as
+/// `memo` says and reading a projection's common case as `lows` says, then `warnings` with the
+/// walks' own (refcore's `Asker.run`, `run_worlds`).
 /// L §5.18, §8.5.
 ///
 /// # Errors
@@ -138,12 +142,12 @@ pub(crate) fn answer_turns(
     turns: &[Turn],
     warnings: Vec<(Warn, String)>,
     days: Days,
-    memo: Memo,
+    how: (Memo, Lows),
 ) -> Result<Answered, Stop> {
     let mut out = Vec::new();
     // each world's asks share what their engines gather, apart from another world's
     // (refcore's one `Asker` per world)
-    let mut worlds: Vec<World> = realities.iter().map(|m| World::of(m, memo)).collect();
+    let mut worlds: Vec<World> = realities.iter().map(|m| World::of(m, how)).collect();
     for turn in turns {
         match turn {
             Turn::Ask(world, at) => {
@@ -198,13 +202,14 @@ struct World {
 
 impl World {
     /// The world of reality `m` before any of its asks, its engines keeping cells as `memo`
-    /// says.
-    fn of(m: &Reality, memo: Memo) -> World {
+    /// says and reading a projection's common case as `lows` says.
+    fn of(m: &Reality, (memo, lows): (Memo, Lows)) -> World {
         World {
             seen: Seen {
                 warnings: Vec::new(),
                 booked: BTreeMap::new(),
                 memo,
+                lows,
                 #[cfg(feature = "counters")]
                 counts: crate::Counters::default(),
             },
@@ -327,7 +332,7 @@ fn ask_lines(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<
     if let Some(known) = &ask.known {
         let mut engine = Engine::new(m.on)
             .with_days(days)
-            .with_memo(seen.memo)
+            .with_how((seen.memo, seen.lows))
             .for_ask(ask)
             .with_booked(core::mem::take(&mut seen.booked));
         let v = model_ctx(m, &mut engine, (None, cut))
@@ -343,7 +348,7 @@ fn ask_lines(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<
     }
     let mut engine = Engine::new(cut)
         .with_days(days)
-        .with_memo(seen.memo)
+        .with_how((seen.memo, seen.lows))
         .for_ask(ask)
         .with_booked(core::mem::take(&mut seen.booked));
     let out = ask_body(m, ask, &mut engine, cut);
