@@ -3,9 +3,9 @@ HOLE-STATED	L §8.1	M1	*	1	M1	codes/m1/rules/stated
 HOLE-UNGOVERNED	L §8.1	S	*	2	S	kernel/g3/band
 HOLE-UNGOVERNED	L §8.1	S	x at k: no value for <period>	1	S	kernel/g4/holes
 HOLE-UNGOVERNED	L §8.1	S	<b>: no row holds <x> at <law date>	1	S	kernel/g3/band
-HOLE-NOREADING	L §8.1	M2	*	10	M1	m1/fixes/g3/last_q5
+HOLE-NOREADING	L §8.1	M2	*	11	M1	m1/fixes/g3/last_q5
 HOLE-NOREADING	L §8.1	M2	<x>[k] has no reading at <instant>	1	M1	m1/fixes/g8/gap_g_none
-HOLE-NOREADING	L §8.1	M2	<x>[k] has no reading on or before <d>	9	M1	m1/fixes/g3/last_q5
+HOLE-NOREADING	L §8.1	M2	<x>[k] has no reading on or before <d>	10	M1	m1/fixes/g3/last_q5
 HOLE-NOTYET	L §8.1	M1	*	1	M1	codes/m1/rules/notyet
 HOLE-NOTYET	L §8.1	M1	<x>: no <event> yet, and its span reaches past the cut	1	M1	codes/m1/rules/notyet
 HOLE-ANCHOR	L §8.1	S	*	12	S	kernel/U:own/OWN-01
@@ -13,8 +13,8 @@ HOLE-ANCHOR	L §8.1	S	<place> has no balance before <d>	10	S	kernel/U:own/OWN-01
 HOLE-ANCHOR	L §8.1	S	<place> has no opening or stated reading	2	M1	codes/m1/rules/no-anchor
 HOLE-LOTS	L §8.1	M5a	*	0	-	-
 HOLE-LOTS	L §8.1	M5a	<place>: the lots held before <S> sum to <a>, the opening reading states <b>	0	-	-
-HOLE-PRICE	L §8.1	M1	*	6	M1	codes/m1/prices/no-price
-HOLE-PRICE	L §8.1	M1	<unit> has no price in <CUR> on <d>	5	M1	codes/m1/prices/no-price
+HOLE-PRICE	L §8.1	M1	*	9	M1	codes/m1/prices/no-price
+HOLE-PRICE	L §8.1	M1	<unit> has no price in <CUR> on <d>	8	M1	codes/m1/prices/no-price
 HOLE-PRICE	L §8.1	M1	<x> is in Y prices; no index moves it to <d>	1	M1	codes/m1/prices/price-year
 HOLE-CALENDAR	L §8.1	S	*	3	S	kernel/g14/past_64_counts
 HOLE-CALENDAR	L §8.1	S	calendar <c> doesn't cover <year>	3	S	kernel/g14/past_64_counts
@@ -106,14 +106,14 @@ LOAD-DOMAIN	L §8.3	M0	day_of of a key of the anchored index <x> has no meaning	
 LOAD-DOMAIN	L §8.3	M0	schedule of a key of the anchored index <x> has no meaning	1	M0	codes/m0/basic/domain-anchored-schedule
 LOAD-DOMAIN	L §8.3	M0	discrete over a key list or a stepped range	1	M0	codes/m0/basic/domain-discrete
 LOAD-DOMAIN	L §8.3	M0	?	5	M0	codes/m0/lifepath/path-past-64
-LOAD-UNIT	L §8.3	M0	*	44	S	kernel/g1/rate_duration
+LOAD-UNIT	L §8.3	M0	*	47	S	kernel/g1/rate_duration
 LOAD-UNIT	L §8.3	M0	<a> and <b> have different units	1	M0	codes/m0/basic/unit-mixed
 LOAD-UNIT	L §8.3	M0	<operation> on things of kind <K> has no meaning: they have no order a rule can read	1	M0	codes/m0/basic/unit-orders
 LOAD-UNIT	L §8.3	M0	settlement <s> of <adjustment> is in <u>, not <u'>	2	M0	codes/m0/adjust/unit-settlement
 LOAD-UNIT	L §8.3	M0	axis <a> is used as a mode, but <o> is not a mode name	1	M0	codes/m0/basic/unit-mode
 LOAD-UNIT	L §8.3	M0	<function>: the mode is <type>, not a rounding code	1	M0	codes/m0/basic/flows-mode
 LOAD-UNIT	L §8.3	M0	money in an undeclared currency	1	M0	codes/m0/basic/unit-currency
-LOAD-UNIT	L §8.3	M0	?	37	S	kernel/g1/rate_duration
+LOAD-UNIT	L §8.3	M0	?	40	S	kernel/g1/rate_duration
 LOAD-PRECISION	L §8.3	M0	*	3	M0	codes/m0/basic/precision
 LOAD-PRECISION	L §8.3	M0	<literal> is finer than the minor unit	2	M0	codes/m0/basic/precision
 LOAD-PRECISION	L §8.3	M0	<a/b> terminates; write it as a decimal	1	M0	codes/m0/basic/precision-fraction
@@ -249,9 +249,10 @@ LOAD-MISSING	L §8.3	M0	missing() outside the when of a cited rule	1	M0	codes/m0
 LOAD-MISSING	L §8.3	M0	missing(<r>): <r> is not a read of an input	1	M0	codes/m0/basic/missing-read
 LOAD-ORIENT	L §8.3	M0	*	1	M0	codes/m0/basic/orient
 LOAD-ORIENT	L §8.3	M0	ask <q> reaches crps or pdf without orient	1	M0	codes/m0/basic/orient
-RUN-NONE	L §8.4	S	*	2	S	kernel/g12/members
+RUN-NONE	L §8.4	S	*	3	S	kernel/g12/members
 RUN-NONE	L §8.4	S	<x>[k] is none here: <arithmetic, ordering, aggregate or comparison with a value>	1	M1	codes/m1/rules/none
 RUN-NONE	L §8.4	S	never in <a use>	1	S	kernel/g12/members
+RUN-NONE	L §8.4	S	?	1	M1	m1/fixes/g8/v1_a_box_none
 RUN-NOT-INT	L §8.4	S	*	2	S	kernel/g14/past_64_counts
 RUN-NOT-INT	L §8.4	S	<value> is not an integer	2	S	kernel/g14/past_64_counts
 RUN-KEY	L §8.4	S	*	6	S	kernel/g14/keys_past_64
@@ -270,12 +271,12 @@ RUN-NO-RULE	L §8.4	S	no rule applies to <x>[k] on <d>	2	S	kernel/g2/read
 RUN-LABEL	L §8.4	M5b	*	0	-	-
 RUN-LABEL	L §8.4	M5b	the shares of <movement>'s arrival at <place> sum to <s>, not 1	0	-	-
 RUN-LABEL	L §8.4	M5b	the share of <party> in <movement>'s arrival at <place> is below 0	0	-	-
-RUN-TIE	L §8.4	M5b	*	10	S	kernel/g5/order
+RUN-TIE	L §8.4	M5b	*	13	S	kernel/g5/order
 RUN-TIE	L §8.4	M5b	<aggregate, fill, move> has a tie at <keys> that changes the result, and no ties by	2	S	kernel/g5/order
 RUN-TIE	L §8.4	M5b	<first or last> over <things, movements or open-index keys> has no ties by	0	-	-
 RUN-TIE	L §8.4	M5b	<outflows> tie for a part of <place> that can't cover both	1	M5b	U:own/OWN-11/p19
 RUN-TIE	L §8.4	M5b	the split of <movement> at <place> ties at <labels>	0	-	-
-RUN-TIE	L §8.4	M5b	?	7	M1	m1/fixes/g9/f_reg_g_a
+RUN-TIE	L §8.4	M5b	?	10	M1	m1/fixes/g9/f_reg_g_a
 RUN-EMPTY	L §8.4	M1	*	2	M1	codes/m1/rules/empty
 RUN-EMPTY	L §8.4	M1	<min, max, first, last, argmin, argmax, mean, share, quantile> over no keys	2	M1	codes/m1/rules/empty
 RUN-DIGITS	L §8.4	S	*	2	S	kernel/g1/cap
@@ -284,8 +285,8 @@ RUN-LIMIT	L §8.4	S	*	11	S	kernel/g14/by_n
 RUN-LIMIT	L §8.4	S	a day passes 9999-12-31	7	S	kernel/g14/by_n
 RUN-LIMIT	L §8.4	S	a day comes before 0001-01-01	2	S	kernel/g14/days
 RUN-LIMIT	L §8.4	S	<a> .. <b> holds more than 1 000 000 keys	6	S	kernel/g14/day_range_end
-RUN-DIV	L §8.4	S	*	23	S	kernel/g1/text
-RUN-DIV	L §8.4	S	division by zero	23	S	kernel/g1/text
+RUN-DIV	L §8.4	S	*	29	S	kernel/g1/text
+RUN-DIV	L §8.4	S	division by zero	29	S	kernel/g1/text
 RUN-DOMAIN	L §8.4	S	*	8	S	kernel/g1/step
 RUN-DOMAIN	L §8.4	S	ln, sqrt or pow outside its domain	0	-	-
 RUN-DOMAIN	L §8.4	S	<operation> with a step <s> that is not positive	1	S	kernel/g1/step
@@ -311,15 +312,15 @@ RUN-WEIGHTS	L §8.4	M1	prorata weights <w> are negative or sum to 0	1	M1	codes/m
 RUN-PRORATA	L §8.4	M1	*	1	M1	codes/m1/rules/prorata
 RUN-PRORATA	L §8.4	M1	<total> isn't a whole number of <u>	1	M1	codes/m1/rules/prorata
 RUN-PRORATA	L §8.4	M1	<amount> arriving at or taken from <place> isn't a whole number of its step <u>	0	-	-
-RUN-PLACE	L §8.4	S	*	13	S	kernel/U:ask/ASK-03
+RUN-PLACE	L §8.4	S	*	17	S	kernel/U:ask/ASK-03
 RUN-PLACE	L §8.4	S	<movement> takes <debt> above 0	1	M1	codes/m1/rules/debt-above
 RUN-PLACE	L §8.4	S	<claim> below 0	3	S	kernel/g9/reading_close
 RUN-PLACE	L §8.4	S	<holding> below 0 units	1	S	kernel/g9/sign
-RUN-PLACE	L §8.4	S	<place> is <b> after the day's observations and plans of <d>	11	S	kernel/U:ask/ASK-03
+RUN-PLACE	L §8.4	S	<place> is <b> after the day's observations and plans of <d>	15	S	kernel/U:ask/ASK-03
 RUN-PLACE	L §8.4	S	<place> is <b> after its reading at <instant>	3	S	kernel/g9/reading_close
-RUN-LIFESPAN	L §8.4	S	*	27	S	kernel/g5/agenda
-RUN-LIFESPAN	L §8.4	S	<leg> moves into or out of <thing> outside its lifespan	25	S	kernel/g6/refusal_keys
-RUN-LIFESPAN	L §8.4	S	<place> ends on <d> holding <positions>	2	S	kernel/g5/agenda
+RUN-LIFESPAN	L §8.4	S	*	32	S	kernel/g5/agenda
+RUN-LIFESPAN	L §8.4	S	<leg> moves into or out of <thing> outside its lifespan	29	S	kernel/g6/refusal_keys
+RUN-LIFESPAN	L §8.4	S	<place> ends on <d> holding <positions>	3	S	kernel/g5/agenda
 RUN-LIFESPAN	L §8.4	S	<movement> labels a part of <place> to <party> outside its lifespan	0	-	-
 RUN-LIFESPAN	L §8.4	S	<party> ends on <d> holding parts of <place>	1	M5b	U:own/OWN-10/p24
 RUN-FUTURE	L §8.4	S	*	3	S	kernel/g7/running
@@ -341,10 +342,10 @@ RUN-RECORD	L §8.4	S	same <p> = <q>: <p> doesn't exist	0	-	-
 RUN-RECORD	L §8.4	S	<r> and <r'> state one transfer and both fulfil <instance>: state them same	0	-	-
 RUN-RECORD	L §8.4	S	the stated parts of <x> at <instant> sum to <a>, over its total <b>	0	-	-
 RUN-RECORD	L §8.4	S	reading <r> of <x> at <d> start pads and states parts while the day's first batch moves <x>	0	-	-
-WARN-NEGATIVE	L §8.5	S	*	105	S	I:X:konto_balance@b_r1
-WARN-NEGATIVE	L §8.5	S	<account> is below zero from <d>	105	S	I:X:konto_balance@b_r1
-WARN-UNREAD	L §8.5	S	*	162	S	kernel/I:M:RC-06
-WARN-UNREAD	L §8.5	S	<source, input, def or place> is read by nothing	162	S	kernel/I:M:RC-06
+WARN-NEGATIVE	L §8.5	S	*	106	S	I:X:konto_balance@b_r1
+WARN-NEGATIVE	L §8.5	S	<account> is below zero from <d>	106	S	I:X:konto_balance@b_r1
+WARN-UNREAD	L §8.5	S	*	177	S	kernel/I:M:RC-06
+WARN-UNREAD	L §8.5	S	<source, input, def or place> is read by nothing	177	S	kernel/I:M:RC-06
 WARN-LEGS	L §8.5	S	*	1	S	kernel/g10/observe
 WARN-LEGS	L §8.5	S	the two observations of <movement> disagree: <input>[<row>] (<a>) and <input>[<row>] (<b>)	1	S	kernel/g10/observe
 WARN-LABELS	L §8.5	M5b	*	4	M5b	I:S4:S4-01~s4

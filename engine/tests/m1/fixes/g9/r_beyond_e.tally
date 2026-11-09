@@ -1,0 +1,51 @@
+model p
+  tally 2
+  on 2026-04-15
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented probe for F5"
+
+unit DUK: currency minor 0.01
+
+index month = month 2026-01..2026-12
+
+place konto: accounts DUK lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input pay: money DUK
+
+input rent: money DUK
+
+input off: int
+
+move salary[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount pay
+
+move rent_pay[m in month]: transfers
+  on add_days(start_of(m), off)
+  at start_of(m)
+  leg cash from konto to world amount rent
+
+
+ask e_bal: bal(konto, 2027-03-31) from 2026-06-01
+
+ask e_low: low(konto, 2026-06-01 .. 2027-03-31) from 2026-06-01
+
+ask e_t_at_k: bal(konto, 2026-09-30) from 2026-04-15
+
+ask e_t_at_s: low(konto, 2026-01-01 .. 2026-03-31) from 2026-01-01
+
+ask e_t_end: bal(konto, 2026-12-31) from 2026-12-31
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 1000.00
+  rent = 900.00
+  off = 9
+  opening[konto] = 500.00 at 2026-01-01 start
