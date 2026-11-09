@@ -34,3 +34,29 @@ wall_s = 0.0000000555
 instructions = 1000
 --- run
 tools/perf limits p8_m1
+
+# Pick P56 (issue #128, 2026-11-09): P8-M4's wall is its run with the projection less the
+# plain run, so perf subtracts the median of the bench id the row's `less` names. The planted
+# medians are 202 ms and 200 ms: the row's wall is the 2 ms between them, under its budget,
+# and 205 ms against 200 ms is over it.
+
+case: less-subtracts-the-plain-median
+tool: run
+exit: any
+expect: R-97 less: 2.00 ms (criterion, 202.00 ms less P8-M4-plain's 200.00 ms) within; 5.00 ms over
+--- write zz-crit/criterion/P8-M4/new/estimates.json
+{"median": {"point_estimate": 202000000.0}}
+--- write zz-crit/criterion/P8-M4-plain/new/estimates.json
+{"median": {"point_estimate": 200000000.0}}
+--- write zz-crit-over/criterion/P8-M4/new/estimates.json
+{"median": {"point_estimate": 205000000.0}}
+--- write zz-crit-over/criterion/P8-M4-plain/new/estimates.json
+{"median": {"point_estimate": 200000000.0}}
+--- run
+python3 -I -B -c "
+import sys; sys.path.insert(0, 'tools'); import perf
+r = perf.row_of('P8-M4')
+w, how = perf.criterion_wall(r, 'zz-crit')
+o, _ = perf.criterion_wall(r, 'zz-crit-over')
+print(f'R-97 less: {perf.seconds(w)} ({how}) ' + ('within' if w <= r['wall_s'] else 'over') + f'; {perf.seconds(o)} ' + ('over' if o > r['wall_s'] else 'within'))
+"
