@@ -90,3 +90,37 @@ import sys; sys.path.insert(0, 'tools'); import mutants_local as m
 e, g, r = m.next_filter(open('zz-next-baseline.log').read(), ['m1_planted'])
 print('R-88 --next: no filter from a baseline that didn\'t run' if e is None else 'R-88 --next broken: ' + repr(e))
 "
+
+# P55 (issue #108, 2026-11-09): `mutants-local --fences` adds the fences' equivalence tests,
+# tools/milestones.toml's `fence_catchers`, as catchers of a local batch: F5's `walk_oracle`
+# whole and `tally`'s `walk::lows::tests`. The filter selects each test target by its binary
+# and each lib module by its tests' path; an entry that names both a target and a module is
+# refused.
+
+case: fences-select-their-tests
+tool: run
+exit: any
+expect: R-88 --fences: binary_id(=tally-cli::walk_oracle) | (binary_id(=tally) & test(/^walk::lows::tests::/))
+--- run
+python3 -I -B -c "
+import sys; sys.path.insert(0, 'tools'); import milestones, mutants_local as m
+print('R-88 --fences: ' + m.fence_filter_of(milestones.fence_catchers()))
+"
+
+case: fence-catcher-naming-both-is-refused
+tool: run
+exit: any
+expect: each fence_catchers entry is { package, test } or
+--- replace tools/milestones.toml
+  { package = "tally", lib = "walk::lows::tests::" },
+--- with
+  { package = "tally", lib = "walk::lows::tests::", test = "walk_oracle" },
+--- run
+python3 -I -B -c "
+import sys; sys.path.insert(0, 'tools'); import milestones
+try:
+    milestones.fence_catchers()
+    print('R-88 --fences: accepted')
+except milestones.MilestoneError as e:
+    print(e)
+"

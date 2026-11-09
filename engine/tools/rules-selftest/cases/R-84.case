@@ -117,3 +117,14 @@ fn planted_red() {
 }
 --- run
 tools/milestones args --mutants
+
+# P55 (issue #108, 2026-11-09): the fences' equivalence tests are the builder's, so they are a
+# local batch's catchers only (`mutants-local --fences`): the mutants baseline and shards take
+# `tools/milestones args`, which names none of them, and gate 8 counts T's tests (R-84).
+
+case: fence-catchers-stay-out-of-ci
+tool: run
+exit: any
+expect: R-84: CI's mutation targets name no fence catcher
+--- run
+a="$(tools/milestones args) $(tools/milestones args --mutants)"; case "$a" in *walk_oracle*|*tally-cli*|*walk::lows*) echo "R-84 broken: $a" ;; *) echo "R-84: CI's mutation targets name no fence catcher" ;; esac

@@ -1,6 +1,6 @@
 """mutants-local: CI's mutation run on a few kernel files, for T's loop (issue #40).
 
-    engine/tools/mutants-local [--next] FILE… [-F REGEX]
+    engine/tools/mutants-local [--next] [--fences] FILE… [-F REGEX]
 
 FILE is a kernel file (tools/kernel.toml, .cargo/mutants.toml's examine_globs), relative to
 engine/ or to the repository. -F keeps the mutants whose name matches REGEX (cargo-mutants
@@ -21,6 +21,12 @@ profile, no fail-fast, the features their targets require). A test red there wou
 as catching every mutant (pre-M1's P13), so it is left out, and listed; the rest are
 kept through a nextest filter (`-E`) on the mutants' test runs. Without --next the run is
 CI's, the next milestone's tests left out.
+
+--fences (R-88, R-130; pick P55, 2026-11-09) adds the fences' equivalence tests that
+tools/milestones.toml's `fence_catchers` lists (F5's: `tally-cli`'s `walk_oracle`, `tally`'s
+`walk::lows::tests`), once they pass unmutated: when a fence answers T's reads, only its
+equivalence test reaches its plain twin. They are the builder's tests, so a local batch only:
+CI's shards and gate 8 count T's tests (R-84).
 
 The environment is check's (R-82); only CARGO_BUILD_JOBS and NEXTEST_TEST_THREADS pass
 through, which change how many jobs run at once, never a result.
@@ -106,8 +112,8 @@ def main(argv):
     if not argv or argv[0] in ("-h", "--help"):
         print(__doc__.strip())
         return 0 if argv else 64
-    regex, nxt = None, "--next" in argv
-    argv = [a for a in argv if a != "--next"]
+    regex, nxt, fences = None, "--next" in argv, "--fences" in argv
+    argv = [a for a in argv if a not in ("--next", "--fences")]
     if "-F" in argv:
         at = argv.index("-F")
         if at + 1 >= len(argv):
@@ -139,11 +145,27 @@ def main(argv):
     if base.returncode != 0:
         print("mutants-local: T's tests fail unmutated; no mutant is run", file=sys.stderr)
         return 1
+    # one nextest filter over the mutants' test runs: the runner's tests (those of the next
+    # milestone green at the baseline, with --next), then the fences' (--fences)
+    runner_filter, fence_filter = None, None
     if nxt:
         added = next_targets(env)
         if added is None:
             return 1
-        targets += added
+        selected, runner_filter = added
+        targets += [f"-C={a}" for a in selected]
+    if fences:
+        added = fence_targets(env)
+        if added is None:
+            return 1
+        selected, fence_filter = added
+        # `--lib` is the runner's already, and cargo takes it once for every package selected
+        targets += [f"-C={a}" for a in selected if f"-C={a}" not in targets]
+    if fence_filter is not None:
+        runner = f"package({milestones.RUNNER})" + (f" & ({runner_filter})" if runner_filter else "")
+        targets += ["--cargo-test-arg=-E", f"--cargo-test-arg={runner} | {fence_filter}"]
+    elif runner_filter is not None:
+        targets += ["--cargo-test-arg=-E", f"--cargo-test-arg={runner_filter}"]
     os.makedirs(OUT, exist_ok=True)
     local = os.path.join(OUT, "mutants.toml")
     with open(local, "w", encoding="utf-8") as f:
@@ -156,8 +178,9 @@ def main(argv):
 
 
 def next_targets(env):
-    """--next: cargo-mutants' arguments that add the next milestone's tests green at the
-    batch's baseline, or None when they can't be told (R-88)."""
+    """--next: the cargo arguments that add the next milestone's targets, and the nextest
+    filter that keeps of them the tests green at the batch's baseline (none when no test is:
+    the targets are then left out); None when they can't be told (R-88)."""
     try:
         m, names = milestones.next_milestone(env)
         features = milestones.required_features(env, names) if names else []
@@ -172,6 +195,7 @@ def next_targets(env):
     run = subprocess.run(["cargo", "nextest", "run", "--locked", "-p", "tally-runner", "--cargo-profile", "mutants",
                           "--profile", "mutants", "--no-fail-fast", *selected], cwd=ENGINE, env=env,
                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, check=False)
+    os.makedirs(check.LOGS, exist_ok=True)
     with open(os.path.join(check.LOGS, "mutants-local-next.log"), "w", encoding="utf-8") as f:
         f.write(run.stdout)
     expr, green, red = next_filter(run.stdout, names)
@@ -183,8 +207,48 @@ def next_targets(env):
     for b, t in red:
         print(f"mutants-local: left out, red at the baseline (R-88): {b} {t}")
     if not green:
-        return []
-    return [*(f"-C={a}" for a in selected), "--cargo-test-arg=-E", f"--cargo-test-arg={expr}"]
+        return [], None
+    return selected, expr
+
+
+def fence_filter_of(catchers):
+    """The nextest filter that selects the fences' tests: each test target whole, each lib
+    module's tests by their path (R-88, R-130)."""
+    parts = []
+    for package, test, lib in catchers:
+        if test is not None:
+            parts.append(f"binary_id(={package}::{test})")
+        else:
+            parts.append(f"(binary_id(={package}) & test(/^{lib}/))")
+    return " | ".join(parts)
+
+
+def fence_targets(env):
+    """--fences (pick P55, 2026-11-09): the cargo arguments that add the fences' equivalence
+    tests (tools/milestones.toml's `fence_catchers`) as catchers, and their nextest filter,
+    once they pass unmutated; None when they can't be read or fail there. The builder's own
+    tests: advisory, never gate 8's (R-84)."""
+    try:
+        catchers = milestones.fence_catchers()
+    except milestones.MilestoneError as e:
+        print(f"mutants-local: --fences: {e}", file=sys.stderr)
+        return None
+    if not catchers:
+        print("mutants-local: --fences: tools/milestones.toml lists no fence catcher", file=sys.stderr)
+        return None
+    packages = sorted({p for p, _, _ in catchers})
+    selected = [*(f"--package={p}" for p in packages), *(f"--test={t}" for _, t, _ in catchers if t is not None)]
+    if any(lib is not None for _, _, lib in catchers):
+        selected.append("--lib")
+    expr = fence_filter_of(catchers)
+    print(f"mutants-local: the fences' tests, unmutated ({expr})", flush=True)
+    run = subprocess.run(["cargo", "nextest", "run", "--locked", "--cargo-profile", "mutants", "--profile", "mutants",
+                          *selected, "-E", expr], cwd=ENGINE, env=env, check=False)
+    if run.returncode != 0:
+        print("mutants-local: --fences: the fences' tests fail unmutated; no mutant is run", file=sys.stderr)
+        return None
+    print(f"mutants-local: kept as catchers, the builder's, not counted at gate 8 (R-84): {expr}")
+    return selected, expr
 
 
 if __name__ == "__main__":

@@ -57,8 +57,11 @@ def marker():
             data = tomllib.load(f)
     except (OSError, tomllib.TOMLDecodeError) as e:
         raise MilestoneError(f"tools/milestones.toml can't be read: {e}") from e
-    if sorted(data) != ["gating", "milestones", "mutants_leave_out"]:
-        raise MilestoneError("tools/milestones.toml holds exactly `milestones`, `gating` and `mutants_leave_out`")
+    # `fence_catchers` is `mutants-local --fences`'s alone (fence_catchers()), so CI's
+    # reader doesn't ask for it
+    if sorted(set(data) - {"fence_catchers"}) != ["gating", "milestones", "mutants_leave_out"]:
+        raise MilestoneError("tools/milestones.toml holds exactly `milestones`, `gating` and `mutants_leave_out`, "
+                             "and `mutants-local --fences`'s `fence_catchers`")
     milestones, gating, leave_out = data["milestones"], data["gating"], data["mutants_leave_out"]
     if not isinstance(leave_out, list) or not all(isinstance(t, str) for t in leave_out):
         raise MilestoneError("tools/milestones.toml: mutants_leave_out is a list of test target names")
@@ -78,6 +81,31 @@ def marker():
         raise MilestoneError("tools/milestones.toml: gating must be the first milestones in build order, "
                              f"each added when its gate session tags it, not {', '.join(gating)}")
     return milestones, gating, leave_out
+
+
+def fence_catchers():
+    """The fences' equivalence tests that `mutants-local --fences` adds as catchers (R-88,
+    R-130; pick P55, 2026-11-09), as (package, test target or None, lib module prefix or
+    None), checked: each names a package and exactly one of a test target (every test in it)
+    and a module of the package's lib (`walk::lows::tests::`, its tests). Not CI's: gate 8
+    counts T's tests only (R-84)."""
+    try:
+        with open(MARKER, "rb") as f:
+            listed = tomllib.load(f).get("fence_catchers")
+    except (OSError, tomllib.TOMLDecodeError) as e:
+        raise MilestoneError(f"tools/milestones.toml can't be read: {e}") from e
+    if not isinstance(listed, list) or not listed:
+        raise MilestoneError("tools/milestones.toml: fence_catchers, `mutants-local --fences`'s, is a "
+                             "non-empty list of tables")
+    out = []
+    for c in listed:
+        ok = isinstance(c, dict) and isinstance(c.get("package"), str) and sorted(c) in (["package", "test"], ["lib", "package"])
+        name = c.get("test", c.get("lib")) if isinstance(c, dict) else None
+        if not ok or not isinstance(name, str) or not re.fullmatch(r"[A-Za-z0-9_-]+|([a-z0-9_]+::)+", name):
+            raise MilestoneError("tools/milestones.toml: each fence_catchers entry is { package, test } or "
+                                 f"{{ package, lib = \"<module>::\" }}, not {c!r}")
+        out.append((c["package"], c.get("test"), c.get("lib")))
+    return out
 
 
 def runner_package(env):

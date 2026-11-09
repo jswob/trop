@@ -26,3 +26,13 @@ gating = ["S", "M0"]
 # 42138863547's 1 229 caught mutants they alone caught 3, for which T adds direct
 # tests (the 2.1.6 round). They still run in `check` and CI's test jobs
 mutants_leave_out = ["m0_load"]
+# The fences' equivalence tests (R-130), catchers of a local mutation batch only, with
+# `mutants-local --fences` (R-88; pick P55, issue #108, 2026-11-09): once a fence answers T's
+# reads, only its equivalence test reaches its plain twin. Not the mutants shards' or their
+# baseline's: gate 8 counts T's tests only (R-84). Each entry names a package and a test
+# target (every test in it) or a module of its lib (the tests under it).
+fence_catchers = [
+  # F5 (walk/lows.rs): the tree against the projection's walk on T's corpora, byte for byte
+  { package = "tally-cli", test = "walk_oracle" },
+  { package = "tally", lib = "walk::lows::tests::" },
+]
