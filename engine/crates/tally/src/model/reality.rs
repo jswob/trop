@@ -466,6 +466,33 @@ impl Reality {
     pub fn lifespan(&self, thing: &Thing, seen: (Day, World)) -> Option<Span> {
         self.span_in(thing, thing.base.as_deref()?, seen)
     }
+
+    /// The sections of a scenario that state thing `thing` in world `world`: its own section
+    /// or the versions of its entries, and those of a keyed place's key things, sorted (L §5.7,
+    /// a lifespan is a fact; §6.4). E §9 item 3.
+    #[must_use]
+    pub fn thing_scenario_sections(&self, thing: &Thing, world: World) -> BTreeSet<String> {
+        let mut holders = vec![thing];
+        if let Some(keys) = &thing.place {
+            holders.extend(keys.key_things.iter().filter_map(|k| self.things.get(k)));
+        }
+        let mut out = BTreeSet::new();
+        for held in holders {
+            let own = own_section(held);
+            if self.scenarios.of(own).is_some() && self.scenarios.sees(world, Some(own)) {
+                out.insert(own.clone());
+            }
+            let versions = held.entries.iter().filter_map(|e| e.version.as_ref());
+            out.extend(
+                versions
+                    .filter(|v| {
+                        self.scenarios.of(v).is_some() && self.scenarios.sees(world, Some(v))
+                    })
+                    .cloned(),
+            );
+        }
+        out
+    }
 }
 
 /// The section that declares a thing's own entries: its place's, for a place's thing, else

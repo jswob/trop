@@ -523,6 +523,7 @@ impl Engine {
                 return Ok(Value::Hole(h));
             }
             let day = crate::ask::date_of(&day, "the day of a membership test")?;
+            self.note_thing(m, thing, ctx.world);
             let alive =
                 member_span(m, thing, kind, (ctx.cut, ctx.world)).is_some_and(|s| s.contains(day));
             return Ok(Value::Bool(alive));

@@ -364,6 +364,10 @@ impl Engine {
         }
         let mut out = Vec::new();
         for mv in moves {
+            // a scenario's move the binding ranges over is a fact of it (E §9 item 3)
+            if m.scenarios.of(&mv.id).is_some() {
+                self.note_scenario(&mv.id, &mv.id);
+            }
             for i in self.move_instances(m, mv, cut)?.iter() {
                 match i.status {
                     Status::None | Status::Modelled | Status::Uncertain if !ctx.unc => {}

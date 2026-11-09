@@ -379,6 +379,9 @@ impl Engine {
             .ok_or_else(|| invariant("the read rule took a given the def lacks"))?;
         let figure = origin(&def.id, keys);
         self.note_version(&row.version);
+        if m.scenarios.of(&row.version).is_some() {
+            self.note_scenario(&row.version, &def.id);
+        }
         self.read(Read::Row {
             version: row.version.clone(),
             sid: row.sid.clone(),

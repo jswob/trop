@@ -18,11 +18,11 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::base::{Code, Refusal};
-use crate::eval::{Engine, world_named};
+use crate::eval::{Collected, Engine, world_named};
 use crate::model::{Reality, World};
 use crate::syntax::Stop;
 use crate::time::Day;
-use crate::walk::{At, Change, Ent, Progress, Walk};
+use crate::walk::{Amount, At, Change, Exists, Inst, Progress, Walk};
 
 /// One booked entry as the signature holds it: its point, what it does, its movement.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -84,17 +84,18 @@ impl Engine {
 impl Engine {
     /// E §9 item 3 once main walk `id` is walked in a scenario's world: every entry of every
     /// place dated before the scenario's `from` is one the world under it books there, the
-    /// same cut and pins, except a movement whose evaluation read a version of the scenario
-    /// (a law date from `from`, a binding reaching it), which the walk lists as `before from:
-    /// <movement> on <day> reads <versions>` (ruling P43), and what differs from that day on,
-    /// which follows from it; a walk in which a decision ran before `from` is passed (refcore's
-    /// `m_inv3`), and so is a base walk that refuses. L §6.4.
+    /// same cut and pins, except a plan instance whose read set (E §3.2) holds a fact of the
+    /// scenario, through its defs and the balances it read, which the walk lists (ruling P45),
+    /// and a reading or pad at a place such an instance changed earlier; a hole, a hole no
+    /// reading answers and a refusal pass, as they answer the read; a walk in which a decision
+    /// ran before `from` is passed (refcore's `m_inv3`), and so is a base walk that refuses.
+    /// L §6.4.
     ///
     /// # Errors
     ///
-    /// `ENGINE-INVARIANT scenario s: x on d: … differs from the base's, reading nothing of
-    /// the scenario (E §9 invariant 3)` for the first such entry, by day; `Deep` and
-    /// `NotBuilt` from the base world's walk.
+    /// `ENGINE-INVARIANT scenario s: x on d: … differs from the base's, and nothing it read
+    /// is the scenario's (E §9 invariant 3)` for the first such entry, by day; `Deep` and
+    /// `NotBuilt` from the instances and the base world's walk.
     pub(crate) fn scenario_unchanged(&mut self, m: &Reality, id: usize) -> Result<(), Stop> {
         let world = self.timeline_world();
         let Some(scenario) = m.scenarios.scenario_of(world) else {
@@ -115,7 +116,8 @@ impl Engine {
             .and_then(Option::as_deref)
             .unwrap_or(&m.header.id);
         let under = world_named(m, below)?;
-        let ours = before(m, walk, (from, Some(under)));
+        let ours = before(m, self.walk(id)?, from);
+        let facts = self.instance_facts(m, cut, under)?;
         let ctx = self.timeline_ctx(None, cut).in_world(under);
         self.enter_timeline(m, ctx)?;
         let base = self.base_before(m, cut, from);
@@ -123,9 +125,31 @@ impl Engine {
         let Some(base) = base? else {
             return Ok(());
         };
-        let listed = listed(scenario, &ours, &base)?;
+        let listed = listed(scenario, (&ours, &base), &facts)?;
         self.walk_mut(id)?.listed = listed;
         Ok(())
+    }
+
+    /// The scenario's facts each plan instance of cut `cut` in the world in force read, by
+    /// instance id: the items of its read set and its day's (E §3.2) whose sections world
+    /// `under` doesn't see, an instance that doesn't exist or is refused included. E §9 item
+    /// 3, L §6.4.
+    fn instance_facts(&mut self, m: &Reality, cut: Day, under: World) -> Result<Facts, Stop> {
+        let mut out = BTreeMap::new();
+        for mv in m.moves_in(self.timeline_world()) {
+            if mv.decision {
+                continue;
+            }
+            for inst in self.move_instances(m, mv, cut)?.iter() {
+                let mut items = scenario_items(m, &inst.coll, under);
+                items.extend(scenario_items(m, &inst.day_coll, under));
+                if !items.is_empty() {
+                    let answers = answers_itself(inst);
+                    out.insert(inst.id.clone(), Read { items, answers });
+                }
+            }
+        }
+        Ok(out)
     }
 
     /// The entries before `from` of the world in force's main walk of cut `cut`; none for a
@@ -136,24 +160,33 @@ impl Engine {
             Err(Stop::Refused(_)) => return Ok(None),
             Err(stop) => return Err(stop),
         };
-        Ok(Some(before(m, self.walk(id)?, (from, None))))
+        Ok(Some(before(m, self.walk(id)?, from)))
     }
 }
 
 /// Each (place, unit)'s entries before a scenario's `from`, by day, each day's in walk order.
 type Before = BTreeMap<(String, String), BTreeMap<Day, Vec<Moved>>>;
 
+/// The scenario's facts each plan instance read, by instance id.
+type Facts = BTreeMap<String, Read>;
+
+/// What a plan instance read of the scenario: the items, and whether the instance is a hole
+/// or a refusal, which answers the read in its place.
+struct Read {
+    /// The scenario's items it read, sorted.
+    items: BTreeSet<String>,
+    /// Whether its evaluation, its existence or a leg's amount is a hole or a refusal.
+    answers: bool,
+}
+
 /// An entry as E §9 item 3 compares it: what it does and its movement, not its rank among
-/// the day's acts, which a scenario's own moves shift; and the versions its movement's
-/// evaluation read that the world under the scenario doesn't see.
+/// the day's acts, which a scenario's own moves shift.
 #[derive(Debug, Clone)]
 struct Moved {
     /// What it does to the place's state.
     change: Change,
     /// The movement it books, by id.
     mv: Option<String>,
-    /// The scenario's versions its movement read (the scenario's walk's only).
-    reads: BTreeSet<String>,
 }
 
 /// An entry before `from` that only one of the two walks books.
@@ -164,12 +197,28 @@ struct Odd {
     day: Day,
     /// Its movement, by id; none for a reading.
     mv: Option<String>,
+    /// Whether the scenario's walk books it.
+    ours: bool,
+    /// Whether it is a hole, a hole no reading answers or a refusal, which answers the read.
+    flagged: bool,
+}
+
+/// A movement whose read set holds a scenario fact: its first day that differs, whether the
+/// scenario's walk books it, the places it differs at, whether it is flagged.
+struct Found {
+    /// The first day it differs.
+    day: Day,
+    /// Whether the scenario's walk books it at all.
+    ours: bool,
+    /// The places it differs at.
+    places: BTreeSet<String>,
+    /// Whether an entry of it is a hole or a refusal, which answers the read: not listed.
+    flagged: bool,
 }
 
 /// The entries of `walk` dated before `from` at each thing's place (`*` is the walk's own
-/// row of every place), with the versions of the scenario each read where `under`, the
-/// world under it, is given. E §9 item 3, L §6.4.
-fn before(m: &Reality, walk: &Walk, (from, under): (Day, Option<World>)) -> Before {
+/// row of every place). E §9 item 3, L §6.4.
+fn before(m: &Reality, walk: &Walk, from: Day) -> Before {
     let mut out = BTreeMap::new();
     for ((place, unit), log) in &walk.logs {
         if place == "*" || unit == "*" || !m.things.contains(place) {
@@ -180,7 +229,6 @@ fn before(m: &Reality, walk: &Walk, (from, under): (Day, Option<World>)) -> Befo
             days.entry(ent.at.day).or_insert_with(Vec::new).push(Moved {
                 change: ent.change.clone(),
                 mv: ent.mv.clone(),
-                reads: unseen(m, ent, under),
             });
         }
         out.insert((place.clone(), unit.clone()), days);
@@ -188,35 +236,42 @@ fn before(m: &Reality, walk: &Walk, (from, under): (Day, Option<World>)) -> Befo
     out
 }
 
-/// The versions entry `ent`'s movement read that world `under` doesn't see: the scenario's
-/// own (L §6.4); none without a world. E §9 item 3.
-fn unseen(m: &Reality, ent: &Ent, under: Option<World>) -> BTreeSet<String> {
-    let (Some(under), Some(coll)) = (under, &ent.coll) else {
-        return BTreeSet::new();
-    };
-    coll.versions
-        .iter()
-        .filter(|v| !m.scenarios.sees(under, Some(v.as_str())))
-        .cloned()
-        .collect()
+/// Whether plan instance `inst` is a hole or a refusal: its evaluation refused, its `when` a
+/// hole, a leg's amount a hole or a refusal (E §4.2 step 5). E §9 item 3.
+fn answers_itself(inst: &Inst) -> bool {
+    inst.err.is_some()
+        || matches!(inst.exists, Exists::Unknown(_))
+        || inst
+            .legs
+            .iter()
+            .any(|lg| matches!(lg.amount, Amount::Hole(_) | Amount::Refused(_)))
 }
 
-/// The `before from:` texts of the scenario's walk `ours` against its base's, sorted: one
-/// per movement that differs and read a version of the scenario, `<movement> on <day> reads
-/// <versions>`, its first day that differs (ruling P43). E §9 item 3, L §6.4.
+/// The items of the scenario's facts read set `coll` holds whose sections world `under`
+/// doesn't see (L §6.4). E §9 item 3.
+fn scenario_items(m: &Reality, coll: &Collected, under: World) -> BTreeSet<String> {
+    let unseen = coll
+        .scenario
+        .iter()
+        .filter(|(section, _)| !m.scenarios.sees(under, Some(section.as_str())));
+    unseen.map(|(_, item)| item.clone()).collect()
+}
+
+/// The `before from:` texts of the scenario's walk against its base's, sorted: one per plan
+/// instance that differs and read a fact of the scenario, `<instance> on <day> reads
+/// <items>`, or `<instance> on <day> removed by <scenario>` for one the scenario's walk no
+/// longer books, its first day that differs (ruling P45). E §9 item 3, L §6.4.
 ///
 /// # Errors
 ///
-/// `ENGINE-INVARIANT` for the first entry, by day, that differs from the base's before every
-/// listed movement and read nothing of the scenario.
-fn listed(scenario: &str, ours: &Before, base: &Before) -> Result<Vec<String>, Stop> {
-    let mut reads: BTreeMap<&str, BTreeSet<&str>> = BTreeMap::new();
-    for moved in ours.values().flat_map(BTreeMap::values).flatten() {
-        if let Some(mv) = &moved.mv {
-            let held = reads.entry(mv.as_str()).or_insert_with(BTreeSet::new);
-            held.extend(moved.reads.iter().map(String::as_str));
-        }
-    }
+/// `ENGINE-INVARIANT` for the first entry, by day, that differs from the base's, isn't
+/// flagged, isn't a listed instance's, and isn't at a place a listed instance changed on that
+/// day or before.
+fn listed(
+    scenario: &str,
+    (ours, base): (&Before, &Before),
+    facts: &Facts,
+) -> Result<Vec<String>, Stop> {
     let mut odds = Vec::new();
     let keys: BTreeSet<&(String, String)> = ours.keys().chain(base.keys()).collect();
     for key in keys {
@@ -232,34 +287,56 @@ fn listed(scenario: &str, ours: &Before, base: &Before) -> Result<Vec<String>, S
             day_odds((&key.0, *day), (a, b), &mut odds);
         }
     }
-    let mut found: BTreeMap<&str, (Day, &BTreeSet<&str>)> = BTreeMap::new();
-    let mut first_odd: Option<&Odd> = None;
+    let mut found: BTreeMap<String, Found> = BTreeMap::new();
     for odd in &odds {
-        let read = odd.mv.as_deref().and_then(|mv| reads.get_key_value(mv));
-        match read.filter(|(_, versions)| !versions.is_empty()) {
-            Some((mv, versions)) => {
-                let held = found.entry(mv).or_insert((odd.day, versions));
-                held.0 = held.0.min(odd.day);
-            }
-            None if first_odd.is_none_or(|f| odd.day < f.day) => first_odd = Some(odd),
-            None => {}
+        let Some((mv, read)) = odd.mv.as_deref().and_then(|mv| facts.get_key_value(mv)) else {
+            continue;
+        };
+        let held = found.entry(mv.clone()).or_insert_with(|| Found {
+            day: odd.day,
+            ours: false,
+            places: BTreeSet::new(),
+            flagged: false,
+        });
+        held.day = held.day.min(odd.day);
+        held.ours = held.ours || odd.ours;
+        held.places.insert(odd.place.clone());
+        held.flagged = held.flagged || odd.flagged || read.answers;
+    }
+    let mut first: Option<&Odd> = None;
+    for odd in &odds {
+        let explained = odd.flagged
+            || odd.mv.as_deref().is_some_and(|mv| found.contains_key(mv))
+            || follows(&found, odd);
+        if !explained && first.is_none_or(|f| odd.day < f.day) {
+            first = Some(odd);
         }
     }
-    let first_listed = found.values().map(|(day, _)| *day).min();
-    if let Some(odd) = first_odd
-        && first_listed.is_none_or(|day| odd.day < day)
-    {
+    if let Some(odd) = first {
         return Err(unexplained(scenario, odd));
     }
-    let mut out: Vec<String> = found
-        .iter()
-        .map(|(mv, (day, versions))| {
-            let names: Vec<&str> = versions.iter().copied().collect();
-            format!("{mv} on {} reads {}", day.text(), names.join(", "))
-        })
-        .collect();
+    let mut out = Vec::new();
+    for (mv, f) in found.iter().filter(|(_, f)| !f.flagged) {
+        let day = f.day.text();
+        let items = facts.get(mv).map(|read| {
+            let names: Vec<&str> = read.items.iter().map(String::as_str).collect();
+            names.join(", ")
+        });
+        out.push(match (f.ours, items) {
+            (true, Some(items)) => format!("{mv} on {day} reads {items}"),
+            (true, None) | (false, _) => format!("{mv} on {day} removed by {scenario}"),
+        });
+    }
     out.sort();
     Ok(out)
+}
+
+/// Whether entry `odd` follows from a listed instance: one that changed its place on its day
+/// or before (E §9 item 3, "what follows from them").
+fn follows(found: &BTreeMap<String, Found>, odd: &Odd) -> bool {
+    found
+        .values()
+        .any(|f| f.day <= odd.day && f.places.contains(&odd.place))
 }
 
 /// The entries of one place on one day that only one walk books, the two walks' entries
@@ -272,10 +349,15 @@ fn day_odds(
 ) {
     let base: Vec<&Moved> = base.into_iter().flatten().collect();
     let mut used = vec![false; base.len()];
-    let odd = |moved: &Moved| Odd {
+    let odd = |moved: &Moved, mine: bool| Odd {
         place: place.to_owned(),
         day,
         mv: moved.mv.clone(),
+        ours: mine,
+        flagged: matches!(
+            moved.change,
+            Change::Hole(_) | Change::Perm(_) | Change::Bad(_)
+        ),
     };
     for moved in ours.into_iter().flatten() {
         let hit = base
@@ -284,15 +366,15 @@ fn day_odds(
             .find(|(b, u)| !**u && b.change == moved.change && b.mv == moved.mv);
         match hit {
             Some((_, u)) => *u = true,
-            None => out.push(odd(moved)),
+            None => out.push(odd(moved, true)),
         }
     }
     let left = base.iter().zip(&used).filter(|(_, u)| !**u);
-    out.extend(left.map(|(b, _)| odd(b)));
+    out.extend(left.map(|(b, _)| odd(b, false)));
 }
 
-/// The refusal of an entry a scenario changed before its `from` that read nothing of it.
-/// E §9 item 3.
+/// The refusal of an entry a scenario changed before its `from` whose read set holds
+/// nothing of it. E §9 item 3.
 fn unexplained(scenario: &str, odd: &Odd) -> Stop {
     let what = match &odd.mv {
         Some(mv) => format!("movement {mv}"),
@@ -301,7 +383,7 @@ fn unexplained(scenario: &str, odd: &Odd) -> Stop {
     Stop::Refused(Refusal::new(
         Code::EngineInvariant,
         format!(
-            "scenario {scenario}: {} on {}: {what} differs from the base's, reading nothing of the scenario (E §9 invariant 3)",
+            "scenario {scenario}: {} on {}: {what} differs from the base's, and nothing it read is the scenario's (E §9 invariant 3)",
             odd.place,
             odd.day.text()
         ),

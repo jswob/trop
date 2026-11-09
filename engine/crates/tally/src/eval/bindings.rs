@@ -127,6 +127,7 @@ impl Engine {
         };
         let mut alive: Vec<&Thing> = Vec::with_capacity(things.len());
         for thing in things {
+            self.note_thing(m, thing, ctx.world);
             if is_alive(m, thing, kind, &when, (ctx.cut, ctx.world))? {
                 alive.push(thing);
             }

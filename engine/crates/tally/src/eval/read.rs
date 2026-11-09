@@ -409,6 +409,9 @@ impl Engine {
     ) -> Result<Value, Stop> {
         let figure = figure.to_owned();
         self.note_version(&row.version);
+        if m.scenarios.of(&row.version).is_some() {
+            self.note_scenario(&row.version, &input.id);
+        }
         if let Some(reason) = &row.assumed {
             self.note("assumed", reason.clone(), figure.clone());
         }

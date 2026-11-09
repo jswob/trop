@@ -17,7 +17,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::Days;
 use crate::base::{Code, Refusal, Run, Warn};
 use crate::book::{Adjustment, Coverage, Linked, Obs};
-use crate::model::{Domain, KeyVal, Node, NodeKind, Reality, UnitError, Value, World};
+use crate::model::{Domain, KeyVal, Node, NodeKind, Reality, Thing, UnitError, Value, World};
 use crate::num::NumError;
 use crate::syntax::{Ask, Expr, Stop};
 use crate::time::Day;
@@ -246,6 +246,10 @@ pub struct Collected {
     /// The versions of the rows read (refcore's `Coll.rows`, their versions): which versions
     /// a later step's adjustment names (E §5 step 4).
     pub versions: BTreeSet<String>,
+    /// The scenarios' facts read, each (its section, its item): a row of a scenario's
+    /// version, a thing's entry or place a scenario states, a scenario's move a binding
+    /// ranges over: the read set E §9 item 3 lists a movement by (L §6.4, ruling P45).
+    pub scenario: BTreeSet<(String, String)>,
 }
 
 impl Collected {
@@ -253,6 +257,7 @@ impl Collected {
     pub fn merge(&mut self, other: &Collected) {
         self.entries.extend(other.entries.iter().cloned());
         self.versions.extend(other.versions.iter().cloned());
+        self.scenario.extend(other.scenario.iter().cloned());
     }
 }
 
@@ -495,6 +500,23 @@ impl Engine {
     pub(crate) fn note(&mut self, word: &'static str, text: String, figure: String) {
         if let Some(top) = self.stack.last_mut() {
             top.entries.insert(Entry { word, text, figure });
+        }
+    }
+
+    /// Records that a scenario's fact was read, its section and its item, in the innermost
+    /// collector: the read set E §9 item 3 lists a movement by (L §6.4, ruling P45).
+    pub(crate) fn note_scenario(&mut self, section: &str, item: &str) {
+        if let Some(top) = self.stack.last_mut() {
+            top.scenario.insert((section.to_owned(), item.to_owned()));
+        }
+    }
+
+    /// Records the scenarios' facts of thing `thing` a read in world `world` met: the
+    /// sections of its entries, its place and its key things a scenario states (L §5.7: a
+    /// lifespan is a fact; §6.4). E §9 item 3.
+    pub(crate) fn note_thing(&mut self, m: &Reality, thing: &Thing, world: World) {
+        for section in m.thing_scenario_sections(thing, world) {
+            self.note_scenario(&section, &thing.name);
         }
     }
 
