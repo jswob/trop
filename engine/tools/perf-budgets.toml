@@ -394,5 +394,8 @@ id = "B1"
 group = "M"
 what = "a sum over a list index of 100 000 keys, each key read through the index's lookup"
 recipe = "bench:b1_list"
+# its instruction limit is gungraun's first Linux figure x 1.2: 2 316 331 383 Ir (CI run
+# 42698577780, 85467b8) -> 2 779 597 660; a scanning lookup is about 5 x 10^9 comparisons.
 wall_s = 0.232
+instructions = 2779597660
 blocks = "pr"
