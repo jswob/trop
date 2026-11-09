@@ -15,7 +15,7 @@ use super::order::WalkAt;
 use super::plan::{Amount, Dated, Exists, Inst, Status, invariant, qty_value};
 use super::point::At;
 use super::reads::{expr_text, refuse};
-use super::state::{ALL, Change, Progress, Walk};
+use super::state::{ALL, Change, Ent, Progress, Walk};
 use crate::base::{Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Entry, Env};
 use crate::hole::{Hole, spread};
@@ -659,16 +659,34 @@ impl Sums {
                         self.met.merge(c);
                     }
                 }
-                Change::Delta(f) => {
-                    self.met.entries.extend(e.reg.iter().cloned());
-                    if let Some(c) = &e.coll {
-                        self.met.merge(c);
-                    }
-                    let sum = self.totals.entry(unit.to_owned()).or_insert_with(Num::zero);
-                    *sum = sum.checked_add(f).map_err(crate::eval::num_stop)?;
-                }
-                Change::Reset { .. } | Change::Mark => {}
+                Change::Delta(f) => self.count(e, unit, Ok(f))?,
+                // a pad's end at its reading's own place (E §6.1); an anchor's or an
+                // opening's reset carries no flow, and `flows` doesn't count it
+                Change::Reset { .. } => match &e.flow {
+                    Some(Amount::Qty(f)) => self.count(e, unit, Ok(f))?,
+                    Some(Amount::Hole(h)) => self.count(e, unit, Err(h))?,
+                    Some(Amount::Refused(_)) | None => {}
+                },
+                Change::Mark => {}
             }
+        }
+        Ok(())
+    }
+
+    /// One booked flow of the span counted: its register, and its quantity added to its unit's
+    /// total, or its hole kept (refcore's `flows_place_walk`, its `delta` and `reset` kinds).
+    /// L §5.14.3, §8.2.
+    fn count(&mut self, e: &Ent, unit: &str, flow: Result<&Num, &Hole>) -> Result<(), Stop> {
+        self.met.entries.extend(e.reg.iter().cloned());
+        if let Some(c) = &e.coll {
+            self.met.merge(c);
+        }
+        match flow {
+            Ok(f) => {
+                let sum = self.totals.entry(unit.to_owned()).or_insert_with(Num::zero);
+                *sum = sum.checked_add(f).map_err(crate::eval::num_stop)?;
+            }
+            Err(h) => self.holes.push(h.clone()),
         }
         Ok(())
     }
@@ -702,7 +720,7 @@ fn one_unit(
 }
 
 /// A span's last day: the day before its end, or the run's last day (refcore's `last`). L §5.14.3.
-fn span_last(m: &Reality, sp: &Span) -> Result<Day, Stop> {
+pub(super) fn span_last(m: &Reality, sp: &Span) -> Result<Day, Stop> {
     match sp.end() {
         Some(end) => end
             .previous()

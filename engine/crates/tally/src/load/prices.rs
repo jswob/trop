@@ -14,18 +14,9 @@ use super::texts::text;
 use super::types::{Typed, is_date, name_word, refused, uerr};
 use crate::base::{Code, Load, Place as At, Refusal};
 use crate::model::{
-    Entry, Mark, NameKind, Node, NodeKind, PlaceInfo, Reality, Rel, Shown, Thing, Ty, Unit,
+    Entry, Mark, NameKind, Node, NodeKind, PlaceInfo, Priced, Reality, Rel, Shown, Thing, Ty, Unit,
 };
 use crate::syntax::{Expr, Postfix, Price, Stop, Valuation};
-
-/// How a price input values a place (refcore's `pn._mode`, `pn._cur`). L §5.10.
-#[derive(Debug, Clone, PartialEq, Eq)]
-enum Priced {
-    /// `num CUR` or `money CUR`: the value of the place's one position.
-    Whole(String),
-    /// `num CUR/u`: a price per unit of its positions.
-    PerUnit,
-}
 
 /// What a value with no `by` finds its place priced by (refcore's `priced`).
 enum Found {
@@ -138,37 +129,6 @@ pub(super) fn section_of(m: &Reality, thing: &Thing) -> Option<String> {
     }
     let unkeyed = m.names.kind(&thing.name) == Some(NameKind::Place);
     unkeyed.then(|| thing.name.clone())
-}
-
-/// How a price input of type `ty` values a place: `num CUR` (or `money CUR`) whole, `num
-/// CUR/u` per unit, else not a price (refcore's `m_resolve_price`, its type test). L §5.10.
-fn price_mode(m: &Reality, ty: Option<&Ty>) -> Option<Priced> {
-    let ty = ty?;
-    let terms: Vec<(String, i64)> = if let Ty::Money(cur) = ty {
-        vec![(cur.clone(), 1)]
-    } else if let Ty::Num(unit, _) = ty {
-        unit.terms().to_vec()
-    } else {
-        return None;
-    };
-    let curs: Vec<&String> = terms
-        .iter()
-        .filter(|(base, exp)| *exp == 1 && m.currencies.contains_key(base))
-        .map(|(base, _)| base)
-        .collect();
-    let per = terms.iter().any(|(_, exp)| *exp == -1);
-    match (terms.as_slice(), curs.as_slice()) {
-        ([_], [cur]) => Some(Priced::Whole((*cur).clone())),
-        ([_, _], [_]) if per => Some(Priced::PerUnit),
-        _ => None,
-    }
-}
-
-/// How a price clause values its place, from its input's declared type.
-fn clause_mode(m: &Reality, price: &Price) -> Option<Priced> {
-    let (id, _) = named_parts(&price.input)?;
-    let (_, ty, _) = input_or_def_info(m, id)?;
-    price_mode(m, ty.as_ref())
 }
 
 /// Whether `t` is `num CUR/u`: a currency to the first power over one other unit.
@@ -334,7 +294,7 @@ impl Checker {
             let message = format!("{what} is priced by last({id}): last reads an input (L §4.6)");
             return Err(at_clause(uerr(message)));
         }
-        if price_mode(m, ty.as_ref()).is_none() {
+        if m.price_mode(ty.as_ref()).is_none() {
             let shown = ty.as_ref().map_or_else(|| "?".to_owned(), Ty::show);
             let message = format!(
                 "{what} is priced by {id} of type {shown}, not num CUR (a value) or num CUR/u (a price per unit)"
@@ -582,7 +542,7 @@ fn no_by(
         ));
     }
     if let Found::Price(price) = &found
-        && let Some(Priced::Whole(whole)) = clause_mode(m, price)
+        && let Some((_, Priced::Whole(whole))) = m.clause_mode(price)
         && whole != *cur
     {
         return Err(refused(
@@ -616,7 +576,7 @@ fn all_priced(m: &Reality, scope: &Scope, place: &Expr, cands: &[String], cur: &
     things.iter().all(|thing| match m.price_of(thing) {
         None => m.place_unit(thing).as_deref() == Some(cur),
         Some(price) => {
-            !matches!(clause_mode(m, &price), Some(Priced::Whole(whole)) if whole != cur)
+            !matches!(m.clause_mode(&price), Some((_, Priced::Whole(whole))) if whole != cur)
         }
     })
 }

@@ -26,7 +26,7 @@ use std::rc::Rc;
 
 use super::agenda::{Act, Mv};
 use super::order::Run;
-use super::plan::{Inst, LegVal, Order, invariant};
+use super::plan::{Amount, Inst, LegVal, Order, invariant};
 use super::point::{At, Step};
 use crate::base::{Refusal, Warn};
 use crate::eval::{Collected, Entry};
@@ -116,6 +116,9 @@ pub struct Ent {
     pub reg: Vec<Entry>,
     /// What its movement's evaluation met.
     pub coll: Option<Collected>,
+    /// A pad's flow at its reading's own place, where the reset books it: the gap, a number
+    /// or a hole, which `flows` of the place counts (E §6.1; L §5.19).
+    pub flow: Option<Amount>,
     /// The state after it.
     pub st: St,
 }
@@ -131,6 +134,7 @@ impl Ent {
             leg: None,
             reg: Vec::new(),
             coll: None,
+            flow: None,
             st: St::of(None),
         }
     }
@@ -273,6 +277,23 @@ pub struct Walk {
     /// A scenario's main walk's movements before its `from` that read the scenario's facts,
     /// each a `before from:` text its reads list (E §9 item 3, ruling P43).
     pub(crate) listed: Vec<String>,
+    /// The gaps of the `stated` readings it applied, per (place, day), in the order applied
+    /// (L §5.19 `gap(x, d)`, E §6.1).
+    pub(crate) gaps: BTreeMap<(String, Day), Vec<GapAt>>,
+}
+
+/// A stated reading's gap, as the walk met it: the reading less the booked balance at its
+/// instant, and what that rests on (refcore's `Walk.gaps`). L §5.19, E §6.1, L §8.2.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct GapAt {
+    /// The reading's point.
+    pub at: At,
+    /// The gap: a number, a hole, or the refusal the booked balance is.
+    pub gap: Amount,
+    /// The reading's unit.
+    pub unit: String,
+    /// The register of the booked balance and the reading's row.
+    pub coll: Collected,
 }
 
 /// A main walk's state at the start of a month, kept for a walk to start from later: each
@@ -413,6 +434,7 @@ impl Walk {
             less_obs: None,
             checkpoints: Vec::new(),
             listed: Vec::new(),
+            gaps: BTreeMap::new(),
         }
     }
 

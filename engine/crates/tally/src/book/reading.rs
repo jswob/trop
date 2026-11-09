@@ -11,8 +11,9 @@
 //! (`apply_reading`, `booked_coll`, `sub`, `st_value`, `gtext`).
 //! Invariants: a reading applies only before the cut but an opening at the run's start; after
 //! a reading the place's balance is the reading; a pad books only its other end, the reading's
-//! end is the reset; a gap is used where it is met (worth, the register, a pad's amount) and
-//! not kept: the ledger's balance line computes its own from the reading (`book/ledger.rs`).
+//! end is the reset, which carries the pad's flow there; a gap is used where it is met (worth,
+//! the register, a pad's amount) and kept per (place, day) for `gap(x, d)`; the ledger's
+//! balance line computes its own from the reading (`book/ledger.rs`).
 
 use std::collections::BTreeMap;
 
@@ -25,7 +26,7 @@ use crate::read::row_known;
 use crate::syntax::{Edge, Stop};
 use crate::time::Day;
 use crate::walk::{
-    Amount, At, Change, Dated, End, Ends, Ent, LegVal, Reading, St, invariant, qty_value,
+    Amount, At, Change, Dated, End, Ends, Ent, GapAt, LegVal, Reading, St, invariant, qty_value,
 };
 
 /// A reading the cut sees: its day, its edge, its place, its input, and what it states (none
@@ -256,7 +257,20 @@ impl Engine {
         let before = walk.pstate(m, &r.place, &r.unit, at);
         let booked = booked_amount(&before, &walk.anchor_question(&r.place));
         let gap = gap_of(&r.value, &booked)?;
+        // the gap rests on what the booked balance rests on, and on the reading's row (L §8.2);
+        // so does a pad, whose amount it is; kept for `gap(x, d)` (L §5.19)
+        let mut bc = self.booked_coll(m, id, &r.place, &r.unit, at)?;
+        bc.merge(&r.coll);
         let read = self.walk_mut(id)?;
+        read.gaps
+            .entry((r.place.clone(), at.day))
+            .or_insert_with(Vec::new)
+            .push(GapAt {
+                at,
+                gap: gap.clone(),
+                unit: r.unit.clone(),
+                coll: bc.clone(),
+            });
         // E §9 item 2: an anchor's gap, or a pad's from outside, moves worth; a pad from an
         // inside place moves it between two inside places
         if read.inside(m, &r.place) {
@@ -300,9 +314,6 @@ impl Engine {
                 anchored.sign_anchor(m, at, r)
             }
             GapRole::Pad(other) => {
-                // the pad's amount rests on the booked balance's register and the reading's
-                let mut bc = self.booked_coll(m, id, &r.place, &r.unit, at)?;
-                bc.merge(&r.coll);
                 let pad = make_pad(r, &other, &gap, bc, at)?;
                 let text = format!(
                     "{} {}, {} of {}",
@@ -351,6 +362,12 @@ impl Engine {
                 ent.coll = Some(r.coll.clone());
                 ent.reg = reg;
                 ent.mv = Some(pad.id.clone());
+                // the reading's end of the pad, which `flows` of the place counts: the gap, a
+                // number or a hole (refcore's reset `flow`)
+                ent.flow = match gap {
+                    Amount::Refused(_) => None,
+                    Amount::Qty(_) | Amount::Hole(_) => Some(gap),
+                };
                 padded.add(m, &r.place, &r.unit, ent)
             }
         }

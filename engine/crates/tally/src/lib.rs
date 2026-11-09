@@ -124,7 +124,8 @@ pub mod model {
     pub use key::{KeyVal, Pat, Span, pattern_text};
     pub use kind::{Entry, KindInfo, KindSpec, Labels, PRELUDE_KINDS, PlaceKeys, Thing, prelude};
     pub use reality::{
-        BUILTIN_INDEXES, BUILTIN_INPUTS, Joint, MemberAsks, NameKind, Reality, SamePair,
+        BUILTIN_INDEXES, BUILTIN_INPUTS, Joint, MemberAsks, NameKind, Priced, Reality, SamePair,
+        price_id,
     };
     pub use ty::{CodeKind, PeriodWord, Shown, Ty};
     pub use unit::{PERIODS, Scaled, Unit, UnitError, is_currency_code};
@@ -214,6 +215,7 @@ pub mod walk {
     pub(crate) use plan::{invariant, quantity};
     pub use point::{At, Step};
     pub use projection::ProjKey;
+    pub(crate) use state::GapAt;
     pub use state::{
         ALL, Change, Checkpoint, Ent, Group, Log, Progress, Projected, St, Taken, Today, Walk,
         WalkObs,

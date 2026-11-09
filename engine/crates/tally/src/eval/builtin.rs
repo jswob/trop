@@ -66,9 +66,18 @@ impl Engine {
             "pos" => self.pos(m, call, env, ctx),
             "missing" => self.missing(m, call, env, ctx),
             "since" => self.since_read(m, call, env, ctx),
+            "gap" => self.gap_call(m, call, env, ctx),
             "periodic" | "factor" => self.rate_call(m, call, env, ctx),
             _ => Err(Stop::NotBuilt("a built-in M1's realities don't call")),
         }
+    }
+
+    /// `gap(x, d)`: its two arguments, read by the walk (refcore's `m_c_gap`). L §5.19.
+    fn gap_call(&mut self, m: &Reality, call: &Call, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
+        let [place, day] = call.args.as_slice() else {
+            return Err(arity());
+        };
+        self.gap(m, (place, day), env, ctx)
     }
 
     /// The arguments of a call, evaluated in order.

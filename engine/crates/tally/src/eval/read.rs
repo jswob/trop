@@ -37,13 +37,16 @@ enum Past {
     Last,
     /// `since(x, d)`.
     Since,
+    /// `value(…) by last(p)` or `priced last(p)`: `last(p, d)` read as a price, where no row
+    /// on or before d is no price, `none` (L §5.10).
+    Price,
 }
 
 impl Past {
     /// Its word, as a message names it.
     fn word(self) -> &'static str {
         match self {
-            Past::Last => "last",
+            Past::Last | Past::Price => "last",
             Past::Since => "since",
         }
     }
@@ -264,17 +267,22 @@ impl Engine {
     /// which is never `held`; a reading's latest on or before d (refcore's `e_lastx`). A key
     /// or a day that is a hole makes it that hole. L §4.6 (Past the last row, Readings), §5.3,
     /// §8.2.
-    pub(super) fn last_read(
+    pub(crate) fn last_read(
         &mut self,
         m: &Reality,
         (read, day): (&Expr, &Expr),
         env: &Env,
         ctx: Ctx,
     ) -> Result<Value, Stop> {
-        let latest = match self.latest_row(m, (read, day), Past::Last, env, ctx)? {
-            Err(value) => return Ok(value),
-            Ok(latest) => latest,
-        };
+        match self.latest_row(m, (read, day), Past::Last, env, ctx)? {
+            Err(value) => Ok(value),
+            Ok(latest) => self.last_value(m, &latest, ctx),
+        }
+    }
+
+    /// The value of the row `last(x[k], d)` took: as read for d, `held` for d in the register
+    /// but where the row governs `always` (refcore's `e_lastx`, its end). L §4.6, §8.2.
+    fn last_value(&mut self, m: &Reality, latest: &Latest, ctx: Ctx) -> Result<Value, Stop> {
         let input = m
             .inputs
             .get(&latest.input)
@@ -369,7 +377,21 @@ impl Engine {
             Ok(day) => day,
             Err(hole) => return Ok(Err(Value::Hole(hole))),
         };
-        if past == Past::Last
+        self.latest_at(m, (input, keys), day, past, ctx)
+    }
+
+    /// The row of `input` at `keys` that `last` or `since` takes for day `day`, recorded as
+    /// read; or the value it is instead: a pin of the input at its keys (`last`'s), `none`,
+    /// the gap rule's hole (refcore's `last_of`). L §4.6, §5.11.
+    fn latest_at(
+        &mut self,
+        m: &Reality,
+        (input, keys): (&InputInfo, Vec<KeyVal>),
+        day: Day,
+        past: Past,
+        ctx: Ctx,
+    ) -> Result<Result<Latest, Value>, Stop> {
+        if past != Past::Since
             && let Some(pinned) = self.pin_of(&input.id, &keys, ctx)?
         {
             return Ok(Err(pinned));
@@ -381,6 +403,9 @@ impl Engine {
         let at = match read_last(m, input, &keys, day, self.clocks(ctx, &input.id)?)? {
             Found::Row(at) => at,
             Found::None => return Ok(Err(Value::None)),
+            // a price with no row on or before d: no price, which `value` names (refcore's
+            // `last_of`)
+            Found::Hole(_) if past == Past::Price => return Ok(Err(Value::None)),
             Found::Hole(q) => return Ok(Err(Value::Hole(Hole::asked(&q.text, &q.origin)))),
         };
         let row = latest_of(input, at)?;
@@ -389,11 +414,54 @@ impl Engine {
             sid: row.sid.clone(),
         });
         Ok(Ok(Latest {
-            input: name.to_owned(),
+            input: input.id.clone(),
             keys,
             at,
             day,
         }))
+    }
+
+    /// A price's read on day `day`: input or def `id` at the keys `given` (a thing, or a
+    /// position's unit), at law date `day`, or the input through its carry, `last(id[keys],
+    /// day)` (refcore's `m_price_read`, `m_priced_read`, their reads). L §5.10, §4.6.
+    ///
+    /// # Errors
+    ///
+    /// The refusals of the keys, the read rule and the row's value; `ENGINE-INVARIANT` for
+    /// an id that load checked is an input or a def.
+    pub(crate) fn price_at(
+        &mut self,
+        m: &Reality,
+        (id, given): (&str, Vec<Value>),
+        (day, last): (Day, bool),
+        ctx: Ctx,
+    ) -> Result<Value, Stop> {
+        let at = Ctx {
+            law: Some(day),
+            ..ctx
+        };
+        let given: Vec<Given> = given.into_iter().map(Given::Value).collect();
+        if let Some(input) = m.inputs.get(id) {
+            let keys = match make_keys(m, id, &input.binds, given, at)? {
+                Err(hole) => return Ok(Value::Hole(hole)),
+                Ok(keys) => keys,
+            };
+            if !last {
+                return self.read_input_at(m, input, &keys, at, Asked::Plain);
+            }
+            return match self.latest_at(m, (input, keys), day, Past::Price, at)? {
+                Err(value) => Ok(value),
+                Ok(latest) => self.last_value(m, &latest, at),
+            };
+        }
+        let def = m
+            .defs
+            .get(id)
+            .ok_or_else(|| invariant("a price that is neither an input nor a def"))?;
+        match make_keys(m, id, &def.binds, given, at)? {
+            Err(hole) => Ok(Value::Hole(hole)),
+            Ok(keys) => self.read_def_at(m, def, &keys, at),
+        }
     }
 
     /// A chosen row's value with the register entries every read of it makes: `assumed`, its

@@ -16,10 +16,11 @@ use super::ids::{
 use super::index::{IndexInfo, VersionInfo};
 use super::key::{KeyVal, Span};
 use super::kind::{Entry, KindInfo, KindSpec, Thing};
+use super::ty::Ty;
 use super::world::{Scenarios, World};
 use crate::base::{Internal, Interner, Place, Refusal, Table, Warn};
 use crate::num::Num;
-use crate::syntax::{Ask, Axis, Fill, Header, Price, Sign, Source, Type};
+use crate::syntax::{Ask, Axis, Expr, Fill, Header, Price, Sign, Source, Type};
 use crate::time::Day;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -55,6 +56,29 @@ pub enum NameKind {
     Source,
     /// `cut`.
     Cut,
+}
+
+/// How a price input values a place (refcore's `pn._mode`, `pn._cur`, `pn._per`). L §5.10.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Priced {
+    /// `num CUR` or `money CUR`: the value of the place's one position, in CUR.
+    Whole(String),
+    /// `num CUR/u`: a price in CUR per unit u of its positions, (CUR, u).
+    PerUnit(String, String),
+}
+
+/// The id a price written as a reference names, `px` or `px[k]` (L §2.3 `price`).
+#[must_use]
+pub fn price_id(input: &Expr) -> Option<&str> {
+    if let Expr::Name(id) = input {
+        return Some(id);
+    }
+    if let Expr::Post(base, _) = input
+        && let Expr::Name(id) = base.as_ref()
+    {
+        return Some(id);
+    }
+    None
 }
 
 /// The inputs the language declares (refcore's `BUILTIN_INPUTS`). L §5.19.
@@ -351,6 +375,48 @@ impl Reality {
             Some("one") | None => None,
             Some(unit) => Some(unit.to_owned()),
         }
+    }
+
+    /// How a price input of type `ty` values a place: `num CUR` (or `money CUR`) whole, `num
+    /// CUR/u` per unit u, else not a price (refcore's `m_resolve_price`, its type test).
+    /// L §5.10.
+    #[must_use]
+    pub fn price_mode(&self, ty: Option<&Ty>) -> Option<Priced> {
+        let ty = ty?;
+        let terms: Vec<(String, i64)> = if let Ty::Money(cur) = ty {
+            vec![(cur.clone(), 1)]
+        } else if let Ty::Num(unit, _) = ty {
+            unit.terms().to_vec()
+        } else {
+            return None;
+        };
+        let cur = terms
+            .iter()
+            .find(|(base, exp)| *exp == 1 && self.currencies.contains_key(base));
+        let per = terms.iter().find(|(_, exp)| *exp == -1);
+        match (terms.as_slice(), cur, per) {
+            ([_], Some((cur, _)), _) => Some(Priced::Whole(cur.clone())),
+            ([_, _], Some((cur, _)), Some((per, _))) => {
+                Some(Priced::PerUnit(cur.clone(), per.clone()))
+            }
+            _ => None,
+        }
+    }
+
+    /// The input or def a price clause names, and how it values its place, from its declared
+    /// type (refcore's `pn._r`, `pn._mode`). L §5.10.
+    #[must_use]
+    pub fn clause_mode(&self, price: &Price) -> Option<(String, Priced)> {
+        let id = price_id(&price.input)?;
+        let kind = self.names.kind(id)?;
+        let ty = if kind == NameKind::Input {
+            self.inputs.get(id)?.ty.clone()
+        } else if kind == NameKind::Def {
+            Some(self.defs.get(id)?.ty.clone())
+        } else {
+            return None;
+        };
+        Some((id.to_owned(), self.price_mode(ty.as_ref())?))
     }
 
     /// The price a place is valued by: on its entry or `place` section, else on its kind
