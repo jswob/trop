@@ -171,8 +171,10 @@ pub fn run_with_memo(
 }
 
 /// [`run`] with each ask's engine reading a written projection's common case as `lows` says:
-/// from fence F5's running sums, as [`run`] reads it, or through the projection's own walk,
-/// the plain twin the equivalence test compares it with (E §4.3, P §2.3).
+/// from fence F5's running sums, as [`run`] reads it (`Lows::Tree`), or through the
+/// projection's own walk (`Lows::Walk`), the plain twin the equivalence test compares it with
+/// (E §4.3, P §2.3). Both print the same bytes for every reality and request: a difference is
+/// a fault of the fence (R-130), which is how a test of the fence uses it.
 ///
 /// # Errors
 ///

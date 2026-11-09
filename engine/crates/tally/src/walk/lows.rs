@@ -11,9 +11,10 @@
 //! x in the window but whole plan legs in x's unit, inside both ends' lifespans and sign
 //! rules, and run no decision; it then gives that walk's value and register, and every other
 //! read is the walk's; one tree per (place, unit, moves left out) in a timeline, built from the
-//! instances at the read's cut, holding for every cut that sees no more than that one, and
-//! updated in place at a cut that does; a read the projection's walk refuses on a day it
-//! reaches is the walk's (pick P54, #127).
+//! instances at the read's cut, held for reads at that cut, and gathered again at any other
+//! cut, updated in place where x's days are the same; a read the projection's walk refuses on
+//! a day it reaches is the walk's (pick P54, #127); the sums are whole minor units of x's unit
+//! only where every position's legs are, and exact otherwise (pick P56, #128).
 //! PERF: P8-5, P8-M4 (one read of a written projection in E §4.3's common case: O(log n) in
 //! the n days x moves, where the walk plans and walks the window and reads each of its days;
 //! S measured P8-M4's read at 72.9 ms); plain twin: projection.rs (`projection`,
@@ -25,14 +26,17 @@
 //! positions are the days x moves on; each holds that day's legs summed, and each node the sum
 //! of its positions and the least running sum inside them. A read from t through b is then
 //! the start balance, plus the legs from t to the window's first day, plus the least running
-//! sum after it, if below zero: two queries of the tree, each O(log n). F changes only on the
-//! days a cut starts to see more (a version's `known`, a row's own): a tree built at cut c
-//! holds for every later cut before the next such day, and at a cut past it the plan pass's
-//! instances are gathered again and each position whose sum changed is updated in place, O(log
-//! n) each (P §2.3's range add from a day on is one position's change here); the tree is built
-//! again only where x's days change or the cut goes back.
+//! sum after it, if below zero: two queries of the tree, each O(log n). F changes with the
+//! cut alone, not only where a cut sees more facts: an instance dated before the cut is past,
+//! or modelled where a version covers its place (E §4.1 step 3, L §5.19), and an amount at
+//! the cut may read that (`flows`), a balance, or the cut itself (G9's fix review, B1). So a
+//! tree holds for reads at its own cut only; at another cut the plan pass's instances are
+//! gathered again, and where x's days are the same each position whose sum changed is updated
+//! in place, O(log n) each (P §2.3's range add from a day on is one position's change here),
+//! else the tree is built again. Where every position's legs are a whole number of the
+//! unit's minor units, and their sizes together fit a machine integer, the nodes hold those
+//! integers, so no running sum can pass it; otherwise they hold exact rationals (pick P56).
 
-use core::ops::Bound;
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -76,32 +80,15 @@ pub(crate) struct Trees {
     /// The trees being built: a read that meets one again is a read of a walk while it is
     /// walked, as the projection's walk's own plan pass meets it.
     building: BTreeSet<TreeKey>,
-    /// The days a cut starts to see more on, once a tree needs them.
-    known: Option<BTreeSet<Day>>,
-}
-
-impl Trees {
-    /// The first day after `cut` on which a cut sees more than `cut` does; none past the
-    /// last. P §2.3.
-    fn next_known(&mut self, m: &Reality, cut: Day) -> Option<Day> {
-        self.known
-            .get_or_insert_with(|| knowledge_days(m))
-            .range((Bound::Excluded(cut), Bound::Unbounded))
-            .next()
-            .copied()
-    }
 }
 
 /// One place's running sums in one unit at one cut, and what keeps a read from them (E §4.3,
 /// P §2.3).
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Tree {
-    /// The cut min(t, K) its instances are read at.
+    /// The cut min(t, K) its instances are read at: the only cut it holds for, since a
+    /// status, an amount reading one, and the cut itself change with the cut alone.
     cut: Day,
-    /// The first day after the cut on which a cut sees more: every cut from `cut` up to it
-    /// gives the instances it counts the same, so the tree holds there too; none past the
-    /// last such day.
-    upto: Option<Day>,
     /// Whether any read may take it: not where x's kind has a sign rule, a decision has no
     /// day, a hole or refusal stands from the walk's start, or the legs carry too many
     /// registers.
@@ -134,11 +121,11 @@ impl Tree {
     fn new(cut: Day) -> Tree {
         Tree {
             cut,
-            upto: None,
             open: true,
             days: Vec::new(),
             sums: Sums {
                 width: 1,
+                minor: None,
                 nodes: Vec::new(),
             },
             registers: Vec::new(),
@@ -160,13 +147,6 @@ impl Tree {
             && !holds_one(&self.runs, (t, last))
     }
 
-    /// Whether the tree holds at cut `cut`: one at or after its own and before the next day a
-    /// cut sees more on, so the plan pass gives the instances a read counts the same (P §2.3:
-    /// the cut never goes back during a walk, so a cut before its own builds it again).
-    fn holds_at(&self, cut: Day) -> bool {
-        self.cut <= cut && self.upto.is_none_or(|next| cut < next)
-    }
-
     /// The number of positions on or before `day`. P §2.3.
     fn through(&self, day: Day) -> usize {
         self.days.partition_point(|d| *d <= day)
@@ -174,17 +154,18 @@ impl Tree {
 
     /// The legs counted from day `counts` through `first`, then the least running sum of the
     /// days after it through `last`, if below zero: the lowest end-of-day balance of the days
-    /// `first` through `last`, less the start (P §2.3: two queries of the tree). E §4.3.
+    /// `first` through `last`, less the start (P §2.3: two queries of the tree), in x's unit.
+    /// E §4.3.
     fn lowest_change(&self, counts: Day, (first, last): (Day, Day)) -> Result<Num, Stop> {
         let before = self.days.partition_point(|d| *d < counts);
         let (from, to) = (self.through(first), self.through(last));
         let head = self.sums.over(before, from)?;
         let tail = self.sums.over(from, to)?;
-        let dip = match tail.least {
-            Some(l) if l.is_negative() => l,
-            Some(_) | None => Num::zero(),
+        let change = match &tail.least {
+            Some(dip) if dip.is_negative() => head.sum.plus(dip)?,
+            Some(_) | None => head.sum,
         };
-        head.sum.checked_add(&dip).map_err(num_stop)
+        change.quantity(self.sums.minor.as_ref())
     }
 
     /// The register of the legs at x booked from day `counts` through `last`: each register
@@ -207,27 +188,137 @@ impl Tree {
     }
 }
 
+/// A sum the tree holds: a whole number of x's unit's minor units, or an exact quantity in
+/// the unit (pick P56). A tree's figures are all of one kind.
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum Fig {
+    /// Minor units, never past the bound the tree was made under.
+    Minor(i64),
+    /// An exact rational.
+    Exact(Num),
+}
+
+impl Fig {
+    /// No legs: zero, of the kind a tree whose minor unit is `minor` holds. P §2.3.
+    fn zero(minor: Option<&Num>) -> Fig {
+        match minor {
+            Some(_) => Fig::Minor(0),
+            None => Fig::Exact(Num::zero()),
+        }
+    }
+
+    /// The two figures added. P §2.3.
+    fn plus(&self, other: &Fig) -> Result<Fig, Stop> {
+        match (self, other) {
+            (Fig::Minor(a), Fig::Minor(b)) => a
+                .checked_add(*b)
+                .map(Fig::Minor)
+                .ok_or_else(|| invariant("a running sum past the bound its tree was made under")),
+            (Fig::Exact(a), Fig::Exact(b)) => a.checked_add(b).map(Fig::Exact).map_err(num_stop),
+            (Fig::Minor(_), Fig::Exact(_)) | (Fig::Exact(_), Fig::Minor(_)) => {
+                Err(invariant("a tree's sums of two kinds"))
+            }
+        }
+    }
+
+    /// Whether this figure is below `other`. P §2.3.
+    fn below(&self, other: &Fig) -> Result<bool, Stop> {
+        match (self, other) {
+            (Fig::Minor(a), Fig::Minor(b)) => Ok(a < b),
+            (Fig::Exact(a), Fig::Exact(b)) => Ok(a.compare(b).map_err(num_stop)? == Ordering::Less),
+            (Fig::Minor(_), Fig::Exact(_)) | (Fig::Exact(_), Fig::Minor(_)) => {
+                Err(invariant("a tree's sums of two kinds"))
+            }
+        }
+    }
+
+    /// Whether the figure is below zero. P §2.3.
+    fn is_negative(&self) -> bool {
+        match self {
+            Fig::Minor(n) => *n < 0,
+            Fig::Exact(q) => q.is_negative(),
+        }
+    }
+
+    /// The figure as a quantity in x's unit: its minor units times the minor unit `minor`, or
+    /// itself where the tree is exact (pick P56). L §7.2.
+    fn quantity(&self, minor: Option<&Num>) -> Result<Num, Stop> {
+        match (self, minor) {
+            (Fig::Minor(n), Some(unit)) => Num::int(*n).checked_mul(unit).map_err(num_stop),
+            (Fig::Exact(q), None) => Ok(q.clone()),
+            (Fig::Minor(_), None) | (Fig::Exact(_), Some(_)) => {
+                Err(invariant("a tree's sums of two kinds"))
+            }
+        }
+    }
+}
+
+/// The positions' sums as a tree holds them, and the minor unit they count where they are
+/// whole minor units (pick P56).
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct Figures {
+    /// The unit's minor unit, where every figure counts it; none where they are exact.
+    minor: Option<Num>,
+    /// One figure for each position, in order.
+    figs: Vec<Fig>,
+}
+
+/// Positions whose legs sum to `steps`, in a unit whose minor unit is `minor` (none for a
+/// unit without one): whole minor units where every step is a whole number of them and
+/// their sizes together fit an `i64`, so no running sum of them can pass it; exact otherwise
+/// (pick P56). L §7.2, P §2.3.
+fn figures(steps: Vec<Num>, minor: Option<&Num>) -> Figures {
+    if let Some(unit) = minor
+        && let Some(counts) = in_minor_units(&steps, unit)
+    {
+        return Figures {
+            minor: Some(unit.clone()),
+            figs: counts.into_iter().map(Fig::Minor).collect(),
+        };
+    }
+    Figures {
+        minor: None,
+        figs: steps.into_iter().map(Fig::Exact).collect(),
+    }
+}
+
+/// Each step as a whole number of minor units `unit`; none where one isn't, or where their
+/// sizes added pass an `i64` (pick P56). L §7.2.
+fn in_minor_units(steps: &[Num], unit: &Num) -> Option<Vec<i64>> {
+    let mut size: i64 = 0;
+    let mut out = Vec::with_capacity(steps.len());
+    for q in steps {
+        let Ok(units) = q.checked_div(unit) else {
+            return None;
+        };
+        let n = units.to_i64()?;
+        size = size.checked_add(n.checked_abs()?)?;
+        out.push(n);
+    }
+    Some(out)
+}
+
 /// One node of the tree: the sum of its positions' legs and the least running sum inside
 /// them, none for no position (P §2.3).
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Node {
     /// The sum.
-    sum: Num,
+    sum: Fig,
     /// The least running sum, from its first position.
-    least: Option<Num>,
+    least: Option<Fig>,
 }
 
 impl Node {
     /// No position: the sum zero, no running sum. P §2.3.
-    fn empty() -> Node {
+    fn empty(minor: Option<&Num>) -> Node {
         Node {
-            sum: Num::zero(),
+            sum: Fig::zero(minor),
             least: None,
         }
     }
 
     /// One position whose legs sum to `q`. P §2.3.
-    fn day(q: Num) -> Node {
+    fn day(q: Fig) -> Node {
         Node {
             least: Some(q.clone()),
             sum: q,
@@ -237,16 +328,13 @@ impl Node {
     /// This node's positions, then `right`'s: the sums added; the least running sum this
     /// one's, or its sum plus the right's least (P §2.3).
     fn then(&self, right: &Node) -> Result<Node, Stop> {
-        let sum = self.sum.checked_add(&right.sum).map_err(num_stop)?;
+        let sum = self.sum.plus(&right.sum)?;
         let shifted = match &right.least {
-            Some(l) => Some(self.sum.checked_add(l).map_err(num_stop)?),
+            Some(l) => Some(self.sum.plus(l)?),
             None => None,
         };
         let least = match (self.least.clone(), shifted) {
-            (Some(a), Some(b)) => Some(match b.compare(&a).map_err(num_stop)? {
-                Ordering::Less => b,
-                Ordering::Equal | Ordering::Greater => a,
-            }),
+            (Some(a), Some(b)) => Some(if b.below(&a)? { b } else { a }),
             (a, None) => a,
             (None, b) => b,
         };
@@ -260,14 +348,17 @@ impl Node {
 struct Sums {
     /// The leaves' count, a power of two at least the positions'.
     width: usize,
+    /// The minor unit the figures count, where they are whole minor units (pick P56).
+    minor: Option<Num>,
     /// The nodes: 1 the root, `2i` and `2i + 1` the two below `i`; 0 unused.
     nodes: Vec<Node>,
 }
 
 impl Sums {
-    /// The tree over the positions' sums `steps`, built from the leaves up, O(n). P §2.3.
-    fn of(steps: Vec<Num>) -> Result<Sums, Stop> {
-        let width = steps
+    /// The tree over the positions' figures, built from the leaves up, O(n). P §2.3.
+    fn of(figures: Figures) -> Result<Sums, Stop> {
+        let Figures { minor, figs } = figures;
+        let width = figs
             .len()
             .max(1)
             .checked_next_power_of_two()
@@ -277,9 +368,10 @@ impl Sums {
             .ok_or_else(|| invariant("a tree past the positions there can be"))?;
         let mut sums = Sums {
             width,
-            nodes: vec![Node::empty(); size],
+            nodes: vec![Node::empty(minor.as_ref()); size],
+            minor,
         };
-        for (i, q) in steps.into_iter().enumerate() {
+        for (i, q) in figs.into_iter().enumerate() {
             let at = sums.leaf(i)?;
             *sums.node_mut(at)? = Node::day(q);
         }
@@ -289,11 +381,15 @@ impl Sums {
         Ok(sums)
     }
 
-    /// The tree with each position whose sum `steps` changes set to it and the nodes above
-    /// it joined again: P §2.3's range add on F from that position on, in place, O(log n)
-    /// each. `steps` holds a sum for each of the tree's positions.
-    fn updated(mut self, steps: Vec<Num>) -> Result<Sums, Stop> {
-        for (i, q) in steps.into_iter().enumerate() {
+    /// The tree with each position whose figure `figures` changes set to it and the nodes
+    /// above it joined again: P §2.3's range add on F from that position on, in place,
+    /// O(log n) each; built again where the figures are of another kind (pick P56).
+    /// `figures` holds one for each of the tree's positions.
+    fn updated(mut self, figures: Figures) -> Result<Sums, Stop> {
+        if figures.minor != self.minor {
+            return Sums::of(figures);
+        }
+        for (i, q) in figures.figs.into_iter().enumerate() {
             let at = self.leaf(i)?;
             if self.node(at)?.sum == q {
                 continue;
@@ -327,7 +423,8 @@ impl Sums {
     /// The positions `from` up to `to` (not included) as one node, their legs in order: the
     /// nodes that cover them, met from both ends up the tree, O(log n). P §2.3.
     fn over(&self, from: usize, to: usize) -> Result<Node, Stop> {
-        let (mut left, mut right) = (Node::empty(), Node::empty());
+        let empty = Node::empty(self.minor.as_ref());
+        let (mut left, mut right) = (empty.clone(), empty);
         let (mut l, mut r) = (self.leaf(from)?, self.leaf(to)?);
         while l < r {
             if l & 1 == 1 {
@@ -356,6 +453,58 @@ impl Sums {
         self.nodes
             .get(i)
             .ok_or_else(|| invariant("a node of the tree"))
+    }
+}
+
+/// Fence F5's range minimum alone, the tree a served read queries, for P8-5's bench (pick P56,
+/// #128): positions of x's legs summed by day, as a tree gathers them, and the lowest change of
+/// x's balance over a window. P §2.3, E §4.3.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RangeMinimum {
+    /// The tree, its days and sums set, nothing keeping a read from it.
+    tree: Tree,
+}
+
+impl RangeMinimum {
+    /// The tree over `days`, in order, one position each, whose legs sum to `steps` in a
+    /// unit whose minor unit is `minor` (none for a unit without one): whole minor units
+    /// where every step is a whole number of them, else exact, as a gathered tree holds them.
+    /// P §2.3.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for no day, days out of order or repeated, or a step count other
+    /// than the days'.
+    pub fn of(days: Vec<Day>, steps: Vec<Num>, minor: Option<&Num>) -> Result<RangeMinimum, Stop> {
+        let Some(first) = days.first().copied() else {
+            return Err(invariant("a range minimum over no day"));
+        };
+        if steps.len() != days.len() || days.iter().zip(days.iter().skip(1)).any(|(a, b)| a >= b) {
+            return Err(invariant(
+                "a range minimum's days out of order, or not one step each",
+            ));
+        }
+        let mut tree = Tree::new(first);
+        tree.days = days;
+        tree.sums = Sums::of(figures(steps, minor))?;
+        Ok(RangeMinimum { tree })
+    }
+
+    /// The legs counted from day `counts` through `first`, then the least running sum of the
+    /// days after it through `last`, if below zero: what a served `low(x, first .. last) from
+    /// t` adds to its start balance, two queries of the tree. P §2.3, E §4.3.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a node the tree lacks; a number past the cap.
+    pub fn lowest_change(&self, counts: Day, window: (Day, Day)) -> Result<Num, Stop> {
+        self.tree.lowest_change(counts, window)
+    }
+
+    /// Whether the sums are whole minor units, not exact rationals (pick P56). P §2.3.
+    #[must_use]
+    pub fn in_minor_units(&self) -> bool {
+        self.tree.sums.minor.is_some()
     }
 }
 
@@ -442,9 +591,10 @@ impl Engine {
         qty_value(m, &low, unit).map(Some)
     }
 
-    /// The tree of `key` at cut `cut`, built from the cut's instances unless it is already,
+    /// The tree of `key` at cut `cut`, gathered from the cut's instances unless it is already,
     /// its reads kept apart from the reading cell's as the projection's walk keeps its plan
-    /// pass's (E §3.2, §4.1). P §2.3.
+    /// pass's (E §3.2, §4.1); the tree of another cut updated in place where x's days are the
+    /// same. P §2.3.
     fn tree_at(
         &mut self,
         m: &Reality,
@@ -452,7 +602,7 @@ impl Engine {
         (cut, world): (Day, World),
         key: &TreeKey,
     ) -> Result<(), Stop> {
-        if self.trees.built.get(key).is_some_and(|t| t.holds_at(cut)) {
+        if self.trees.built.get(key).is_some_and(|t| t.cut == cut) {
             return Ok(());
         }
         if self.trees.building.contains(key) {
@@ -466,11 +616,11 @@ impl Engine {
         self.reads_back(mark);
         self.trees.building.remove(key);
         let (mut tree, steps) = built?;
-        tree.upto = self.trees.next_known(m, cut);
+        let figs = figures(steps, m.currencies.get(unit));
         // P §2.3: the same days, so each changed position is one update in place
         tree.sums = match self.trees.built.remove(key) {
-            Some(old) if old.days == tree.days => old.sums.updated(steps)?,
-            Some(_) | None => Sums::of(steps)?,
+            Some(old) if old.days == tree.days => old.sums.updated(figs)?,
+            Some(_) | None => Sums::of(figs)?,
         };
         self.trees.built.insert(key.clone(), tree);
         Ok(())
@@ -746,49 +896,6 @@ fn fails_by(progress: &Progress, last: Day) -> bool {
     }
 }
 
-/// Every day on which a cut starts to see more, and the day after it: each version's `known`
-/// and its window's last day, each row's, given's and observation's own (L §4.5, §5.3, §5.19;
-/// E §5). Every cut between two of them sees the same versions, rows and observations, so
-/// the plan pass gives the instances counted from it the same days, amounts and statuses.
-/// P §2.3.
-fn knowledge_days(m: &Reality) -> BTreeSet<Day> {
-    let mut days = BTreeSet::new();
-    for (_, v) in m.versions.entries() {
-        mark(&mut days, Some(v.known));
-        mark(&mut days, v.window);
-        for moved in &v.moved_by {
-            mark(&mut days, Some(moved.known));
-            mark(&mut days, moved.window);
-        }
-    }
-    for (_, input) in m.inputs.entries() {
-        for row in input.rows.iter().chain(&input.part_rows) {
-            mark(&mut days, row.own_known);
-            mark(&mut days, row.own_window);
-        }
-        for obs in &input.observations {
-            mark(&mut days, obs.own_known);
-            mark(&mut days, obs.own_window);
-        }
-    }
-    for (_, def) in m.defs.entries() {
-        for row in &def.givens {
-            mark(&mut days, row.own_known);
-            mark(&mut days, row.own_window);
-        }
-    }
-    days
-}
-
-/// Notes a day a cut starts to see more on, and the day after it, whichever of `known <= cut`
-/// and `known < cut` a test reads. P §2.3.
-fn mark(days: &mut BTreeSet<Day>, day: Option<Day>) {
-    if let Some(d) = day {
-        days.insert(d);
-        days.extend(d.next());
-    }
-}
-
 /// Whether a leg has an end at `place`. E §4.2.
 fn at_place(lg: &LegVal, place: &str) -> bool {
     lg.from.place() == Some(place) || lg.to.place() == Some(place)
@@ -824,7 +931,7 @@ fn holds_one(days: &BTreeSet<Day>, (from, last): (Day, Day)) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{Lows, Node, Sums};
+    use super::{Lows, Node, RangeMinimum, Sums, figures};
     use crate::api::Source;
     use crate::eval::{Ctx, Engine, Env, Memo};
     use crate::load::load;
@@ -975,9 +1082,10 @@ version rise
     }
 
     #[test]
-    fn a_tree_holds_until_a_cut_sees_more_then_is_updated_in_place() {
+    fn a_tree_is_gathered_again_at_each_new_cut() {
         let m = reality();
-        // from 01-20, then 02-01 (the same facts), 03-01 (past `rise`, known 02-15), and back
+        // from 01-20, then 02-01 (the same facts, the January plans past), 03-01 (past
+        // `rise`, known 02-15), and back
         let ids = ["low_from", "low_feb", "low_mar", "low_from"];
         let tree = read_in_order(&m, &ids, Lows::Tree);
         let walk = read_in_order(&m, &ids, Lows::Walk);
@@ -991,12 +1099,17 @@ version rise
             cuts,
             [
                 Some(day(1, 20)),
-                Some(day(1, 20)),
+                Some(day(2, 1)),
                 Some(day(3, 1)),
                 Some(day(1, 20))
             ],
-            "kept for 02-01, updated for 03-01, built again going back"
+            "each read's own cut"
         );
+    }
+
+    /// The two kinds of sums a tree holds: none, exact; a minor unit of 1, whole units.
+    fn kinds() -> [Option<Num>; 2] {
+        [None, Some(Num::int(1))]
     }
 
     #[test]
@@ -1013,16 +1126,71 @@ version rise
                     }
                 })
                 .collect();
-            let updated = Sums::of(steps.clone())
-                .expect("a tree")
-                .updated(changed.clone())
-                .expect("updated");
-            assert_eq!(
-                updated,
-                Sums::of(changed).expect("a tree"),
-                "{} positions",
-                steps.len()
+            for (old, new) in [(0, 0), (1, 1), (1, 0), (0, 1)] {
+                let (old, new) = (&kinds()[old], &kinds()[new]);
+                let updated = Sums::of(figures(steps.clone(), old.as_ref()))
+                    .expect("a tree")
+                    .updated(figures(changed.clone(), new.as_ref()))
+                    .expect("updated");
+                assert_eq!(
+                    updated,
+                    Sums::of(figures(changed.clone(), new.as_ref())).expect("a tree"),
+                    "{} positions, {old:?} to {new:?}",
+                    steps.len()
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn whole_minor_units_give_the_exact_range_minimum() {
+        let cent = Num::ratio(1, 100).expect("a cent");
+        let first = Day::from_ymd(2026, 1, 1).expect("a day");
+        for steps in steps(20_261_111) {
+            let days: Vec<Day> = (0..steps.len())
+                .map(|i| {
+                    first
+                        .add_days(i64::try_from(i).expect("a day"))
+                        .expect("a day")
+                })
+                .collect();
+            let cents: Vec<Num> = steps
+                .iter()
+                .map(|q| q.checked_mul(&cent).expect("cents"))
+                .collect();
+            let Ok(minor) = RangeMinimum::of(days.clone(), cents.clone(), Some(&cent)) else {
+                continue;
+            };
+            let exact = RangeMinimum::of(days.clone(), cents, None).expect("a tree");
+            assert!(
+                minor.in_minor_units() && !exact.in_minor_units(),
+                "one tree of each kind"
             );
+            for (i, a) in days.iter().enumerate() {
+                same_changes((&minor, &exact), &days, (first, *a, i));
+            }
+        }
+        // a step that isn't a whole number of cents keeps the tree exact
+        let tenth = Num::ratio(1, 1000).expect("a tenth of a cent");
+        let odd = RangeMinimum::of(vec![first], vec![tenth], Some(&cent)).expect("a tree");
+        assert!(!odd.in_minor_units(), "a tenth of a cent is exact");
+    }
+
+    /// The two trees' changes over every window from day `a`, the `i`th, counted from `first`
+    /// and from `a`.
+    fn same_changes(
+        (minor, exact): (&RangeMinimum, &RangeMinimum),
+        days: &[Day],
+        (first, a, i): (Day, Day, usize),
+    ) {
+        for b in days.iter().skip(i) {
+            for counts in [first, a] {
+                assert_eq!(
+                    minor.lowest_change(counts, (a, *b)).expect("a change"),
+                    exact.lowest_change(counts, (a, *b)).expect("a change"),
+                    "{counts:?} {a:?} {b:?}"
+                );
+            }
         }
     }
 
@@ -1062,8 +1230,9 @@ version rise
             .collect()
     }
 
-    /// The node of positions `from..to` folded one by one: the plain twin of [`Sums::over`].
-    fn folded(steps: &[Num], from: usize, to: usize) -> Node {
+    /// The positions `from..to` folded one by one, their sum and least running sum: the plain
+    /// twin of [`Sums::over`].
+    fn folded(steps: &[Num], from: usize, to: usize) -> (Num, Option<Num>) {
         let mut sum = Num::zero();
         let mut least: Option<Num> = None;
         for q in &steps[from..to] {
@@ -1075,24 +1244,40 @@ version rise
                 least = Some(sum.clone());
             }
         }
-        Node { sum, least }
+        (sum, least)
+    }
+
+    /// A node's sum and least running sum as quantities.
+    fn plain(node: &Node, minor: Option<&Num>) -> (Num, Option<Num>) {
+        let least = node
+            .least
+            .as_ref()
+            .map(|l| l.quantity(minor).expect("a quantity"));
+        (node.sum.quantity(minor).expect("a quantity"), least)
     }
 
     #[test]
     fn the_tree_folds_each_range_as_one_by_one() {
         for steps in steps(20_261_109) {
-            let sums = Sums::of(steps.clone()).expect("a tree");
-            for from in 0..=steps.len() {
-                for to in from..=steps.len() {
-                    let got = sums.over(from, to).expect("a node");
-                    assert_eq!(
-                        got,
-                        folded(&steps, from, to),
-                        "{from}..{to} of {}",
-                        steps.len()
-                    );
+            for minor in kinds() {
+                let sums = Sums::of(figures(steps.clone(), minor.as_ref())).expect("a tree");
+                for from in 0..=steps.len() {
+                    folds_from(&sums, &steps, (from, minor.as_ref()));
                 }
             }
+        }
+    }
+
+    /// Each range of `sums` from position `from` against the positions folded one by one.
+    fn folds_from(sums: &Sums, steps: &[Num], (from, minor): (usize, Option<&Num>)) {
+        for to in from..=steps.len() {
+            let got = sums.over(from, to).expect("a node");
+            assert_eq!(
+                plain(&got, minor),
+                folded(steps, from, to),
+                "{from}..{to} of {}, {minor:?}",
+                steps.len()
+            );
         }
     }
 }

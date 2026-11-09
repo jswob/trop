@@ -210,11 +210,11 @@ pub mod walk {
 
     pub use agenda::{Act, Mv, Reading, endings, reading_point};
     pub use day::{Broke, Ends};
-    pub use lows::Lows;
     pub(crate) use lows::Trees;
+    pub use lows::{Lows, RangeMinimum};
     pub use order::{Run, WalkAt};
     pub use plan::{
-        Amount, Booked, Dated, End, Exists, Inst, LegVal, Order, Seed, Status, Term,
+        Amount, Booked, BookedLeg, Dated, End, Exists, Inst, LegVal, Order, Seed, Status, Term,
         kind_certainty, qty_value,
     };
     pub(crate) use plan::{invariant, quantity};

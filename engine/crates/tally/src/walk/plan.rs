@@ -96,17 +96,36 @@ pub struct LegVal {
     pub day: Dated,
 }
 
-/// A booked plan instance's amount A₀, its existence and legs, with the cut that first booked
-/// it: what every later cut that books it at the same booking cut must give again (E §9
-/// item 5).
+/// A booked plan instance's amount A₀, its existence and legs as read at its booking cut,
+/// with the cut that first booked it: what every later cut that books it at the same booking
+/// cut must give again (E §9 item 5).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Booked {
     /// Whether it exists.
     pub exists: Exists,
     /// Its legs.
-    pub legs: Vec<LegVal>,
+    pub legs: Vec<BookedLeg>,
     /// The cut that first booked it.
     pub cut: Day,
+}
+
+/// One leg of a booked A₀: its places, amount and unit, and its own day where it states one.
+/// A leg without its own `on` takes its instance's day, which is read at the ask's cut K,
+/// not at the booking cut, so a later K may move it (E §4.1 step 2; refcore's `body_key`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BookedLeg {
+    /// The leg's name.
+    pub name: String,
+    /// The place it leaves.
+    pub from: End,
+    /// The place it enters.
+    pub to: End,
+    /// Its amount.
+    pub amount: Amount,
+    /// Its unit.
+    pub unit: Option<String>,
+    /// Its own day; none where it takes its instance's.
+    pub own_day: Option<Dated>,
 }
 
 /// Whether an instance exists: its `when` and its binding tuple's (L §5.14 `when`).
@@ -528,7 +547,7 @@ impl Engine {
                     && inst.err.is_none()
                     && let Some(booking) = inst.cut
                 {
-                    self.check_booked(&inst, booking, cut)?;
+                    self.check_booked(mv, &inst, (booking, cut))?;
                 }
                 inst.coll.merge(&tuple.coll);
                 out.push(inst);
@@ -578,21 +597,28 @@ impl Engine {
         Ok(Some(inst))
     }
 
-    /// A booked plan amount never changes: an instance's A₀, its existence and legs, is the
-    /// same under every cut that books it at booking cut `booking`, across the asks of a run
-    /// (refcore's `inv5`). E §9 item 5.
-    fn check_booked(&mut self, inst: &Inst, booking: Day, cut: Day) -> Result<(), Stop> {
+    /// A booked plan amount never changes: an instance's A₀, its existence and legs as read at
+    /// its booking cut, is the same under every cut that books it at booking cut `booking`,
+    /// across the asks of a run (refcore's `inv5`). Its day is read at the cut K, so a leg's
+    /// day counts only where the leg states its own (E §4.1 step 2). E §9 item 5.
+    fn check_booked(
+        &mut self,
+        mv: &MoveInfo,
+        inst: &Inst,
+        (booking, cut): (Day, Day),
+    ) -> Result<(), Stop> {
         let key = (inst.id.clone(), booking);
+        let legs = booked_legs(mv, &inst.legs);
         let Some(old) = self.booked.get(&key) else {
             let first = Booked {
                 exists: inst.exists.clone(),
-                legs: inst.legs.clone(),
+                legs,
                 cut,
             };
             self.booked.insert(key, first);
             return Ok(());
         };
-        if old.exists == inst.exists && old.legs == inst.legs {
+        if old.exists == inst.exists && old.legs == legs {
             return Ok(());
         }
         Err(invariant(&format!(
@@ -943,6 +969,29 @@ fn keys_seen(m: &Reality, mv: &MoveInfo, keys: &[KeyVal], (cut, world): (Day, Wo
         }
     }
     true
+}
+
+/// A₀'s legs: each leg as read at its booking cut, its day kept only where it states its own
+/// `on`, since one it takes from its instance is read at the cut K (refcore's `body_key`).
+/// E §4.1 step 2, E §9 item 5.
+fn booked_legs(mv: &MoveInfo, legs: &[LegVal]) -> Vec<BookedLeg> {
+    let mut out = Vec::with_capacity(legs.len());
+    for lg in legs {
+        let own = mv
+            .decl
+            .legs
+            .iter()
+            .any(|decl| decl.name == lg.name && decl.on.is_some());
+        out.push(BookedLeg {
+            name: lg.name.clone(),
+            from: lg.from.clone(),
+            to: lg.to.clone(),
+            amount: lg.amount.clone(),
+            unit: lg.unit.clone(),
+            own_day: own.then(|| lg.day.clone()),
+        });
+    }
+    out
 }
 
 /// Whether `inst` is an instance of a move a scenario declares whose day, or a leg's own day,

@@ -44,6 +44,19 @@ mod tests {
     /// a window that reaches it and one that ends before it, in both orders (pick P54, #127).
     const LOWS_FAILED: &str = include_str!("lows/failed.tally");
 
+    /// G9's fix review's `cov_x` (B1): a sweep whose amount reads `flows` of a rent a version
+    /// covers, read from two cuts with no new fact between them, so the rent turns past and
+    /// modelled with the cut alone.
+    const LOWS_COVERED: &str = include_str!("lows/cov_x.tally");
+
+    /// Its `cov_nocov`: the same without `covers`, so the past rent stays unfulfilled, and the
+    /// register says so.
+    const LOWS_UNCOVERED: &str = include_str!("lows/cov_nocov.tally");
+
+    /// Its `inv_min` (B2): a rent's day read at the ask's cut moves between the cut and the
+    /// projection's while its booking cut stays, so its A₀ must not count the day.
+    const LOWS_BOOKED: &str = include_str!("lows/inv_min.tally");
+
     /// One netstring `N:text,` at the head of `s`, and the rest after it.
     fn take(s: &str) -> (&str, &str) {
         let (len, rest) = s.split_once(':').expect("a netstring's length");
@@ -392,6 +405,30 @@ mod tests {
                     "f_short_long: (800.00 DUK, refused: RUN-TIE pick: its ties by is a hole)",
                 ][..],
             ),
+            (
+                "cov_x.tally",
+                LOWS_COVERED,
+                // refcore's: from 03-15 the March rent is modelled, so the sweep is 0.00
+                &[
+                    "cov_two: (100.00 DUK, 800.00 DUK)",
+                    "cov_two_rev: (800.00 DUK, 100.00 DUK)",
+                ][..],
+            ),
+            (
+                "cov_nocov.tally",
+                LOWS_UNCOVERED,
+                // refcore's: the register follows the line
+                &[
+                    "cov_two: (900.00 DUK, 900.00 DUK)",
+                    "  unfulfilled: rent_pay[2026-03]",
+                ][..],
+            ),
+            (
+                "inv_min.tally",
+                LOWS_BOOKED,
+                // refcore's: no invariant broken
+                &["z: 1 950.00 DUK"][..],
+            ),
         ] {
             let files = [(name.to_owned(), text.to_owned())];
             let tree = lows_answer(&files, Lows::Tree);
@@ -401,5 +438,19 @@ mod tests {
                 assert!(lines.iter().any(|l| l == line), "{name}: {line} is printed");
             }
         }
+        // the register of cov_two's second read: the tree's own, not its first read's cut
+        let files = [("cov_nocov.tally".to_owned(), LOWS_UNCOVERED.to_owned())];
+        let lines = lows_answer(&files, Lows::Tree).expect("answered");
+        let at = lines
+            .iter()
+            .position(|l| l == "cov_two: (900.00 DUK, 900.00 DUK)")
+            .expect("cov_two");
+        assert_eq!(
+            lines
+                .get(at.checked_add(1).expect("a line"))
+                .map(String::as_str),
+            Some("  unfulfilled: rent_pay[2026-03]"),
+            "cov_two's register"
+        );
     }
 }
