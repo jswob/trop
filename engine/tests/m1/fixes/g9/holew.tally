@@ -1,0 +1,67 @@
+model holew
+  tally 2
+  on 2026-04-15
+  start 2026-01-01
+  end 2026-12-31
+  note "MB3's hole instances (invented): counted instances that are holes after t: a dated one whose when is a hole and one whose day is a hole, both at x, and a dated one away from x"
+
+source card "invented probe for F5's hole instances"
+
+unit DUK: currency minor 0.01
+
+index month = month 2026-01..2026-12
+
+place konto: accounts DUK lives 2026-01-01..
+
+place other: accounts DUK lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input pay: money DUK
+
+input rent: money DUK
+
+input off: int
+
+input from_m: date
+
+input keep: bool
+
+move salary[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount pay
+
+move dues[m in month]: transfers
+  on add_days(start_of(m), off)
+  at start_of(m)
+  when start_of(m) < from_m or keep
+  leg cash from konto to world amount rent
+
+move away[m in month]: transfers
+  on add_days(start_of(m), off)
+  at start_of(m)
+  when start_of(m) < from_m or keep
+  leg cash from other to world amount rent
+
+ask h_low: low(konto, 2026-05-20 .. 2026-08-31) from 2026-05-20
+
+ask h_low_before: low(konto, 2026-05-20 .. 2026-07-05) from 2026-05-20
+
+ask h_bal: bal(konto, 2026-07-31) from 2026-05-20
+
+ask h_other: bal(other, 2026-07-31) from 2026-05-20
+
+ask h_other_low: low(other, 2026-05-20 .. 2026-08-31) from 2026-05-20
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 1000.00
+  rent = 300.00
+  off = 9
+  from_m = 2026-07-01
+  keep = ?"does the july plan keep going?"
+  opening[konto] = 500.00 at 2026-01-01 start
+  opening[other] = 2000.00 at 2026-01-01 start

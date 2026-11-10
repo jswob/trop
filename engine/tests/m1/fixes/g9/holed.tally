@@ -1,0 +1,52 @@
+model holed
+  tally 2
+  on 2026-04-15
+  start 2026-01-01
+  end 2026-12-31
+  note "MB3's hole instances (invented): a counted instance whose day is a hole, at x"
+
+source card "invented probe for F5's hole instances"
+
+unit DUK: currency minor 0.01
+
+index month = month 2026-01..2026-12
+
+place konto: accounts DUK lives 2026-01-01..
+
+place other: accounts DUK lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input pay: money DUK
+
+input rent: money DUK
+
+input off: int
+
+input odd_day: date
+
+move salary[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount pay
+
+move odd: transfers
+  on odd_day
+  leg cash from konto to world amount rent
+
+ask h_low: low(konto, 2026-05-20 .. 2026-08-31) from 2026-05-20
+
+ask h_low_before: low(konto, 2026-05-20 .. 2026-07-05) from 2026-05-20
+
+ask h_bal: bal(konto, 2026-07-31) from 2026-05-20
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 1000.00
+  rent = 300.00
+  off = 9
+  odd_day = ?"when is the odd bill due?"
+  opening[konto] = 500.00 at 2026-01-01 start
+  opening[other] = 2000.00 at 2026-01-01 start
