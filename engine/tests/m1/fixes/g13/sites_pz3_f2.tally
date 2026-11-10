@@ -1,0 +1,4 @@
+part f2
+  tally 2
+
+ask f2: fee with fee = 0.005 PLN

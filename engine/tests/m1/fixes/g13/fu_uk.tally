@@ -1,0 +1,14 @@
+part f3
+  tally 2
+
+unit g "a gram"
+
+input kgw: num kg
+
+ask uk: w + r
+
+version v3
+  cite card
+  governs always
+  known 2026-01-01
+  kgw = 1 kg "c"

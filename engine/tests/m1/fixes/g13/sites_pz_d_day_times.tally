@@ -1,0 +1,11 @@
+scenario d_day_times over sites
+  tally 2
+  from 2026-01-01
+
+version dv_day_times
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  replace d0 = sites.d0 * sites.n1 "x"
+
+ask d_day_times: d0 in d_day_times

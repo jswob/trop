@@ -1,0 +1,6 @@
+part j5
+  tally 2
+
+def j5_x: key qs = q1 + n1
+
+ask j5: j5_x

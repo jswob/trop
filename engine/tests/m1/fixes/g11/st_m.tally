@@ -1,0 +1,57 @@
+model st
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+input x: num
+
+input y: num
+
+input alt: num
+
+input flag: bool
+
+input on: bool
+
+def cf: num
+  rule a = x
+  rule b = y
+
+def uk: num
+  rule a beats b = x when flag
+  rule b = y
+
+def uk2: num
+  rule a = x when flag
+  rule b beats a = y when on
+
+def nr: num
+  rule a = x when on
+
+def wrap: num = (cf as if {x = alt}) + 1
+
+def wrap2: num = min(uk2, x) as if {y = alt}
+
+ask e_cf: explain cf
+
+ask e_uk: explain uk
+
+ask e_uk2: explain uk2
+
+ask e_nr: explain nr
+
+ask e_wrap: explain wrap
+
+ask e_wrap2: explain wrap2
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  x = 1
+  y = 2
+  alt = 3
+  on = false

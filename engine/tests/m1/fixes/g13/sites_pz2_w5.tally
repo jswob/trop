@@ -1,0 +1,8 @@
+part w5
+  tally 2
+
+def w5_x: int = sum(n1 for k in [q1, q9])
+
+def w5_y: num = sum(rate[k] for k in [q1, q9])
+
+ask w5: w5_x, w5_y

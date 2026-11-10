@@ -1,0 +1,14 @@
+part k2
+  tally 2
+
+input kq: key qs
+
+def k2_x: bool = kq == q1 + 1
+
+ask k2: k2_x
+
+version vv
+  cite card
+  governs always
+  known 2026-01-01
+  kq = q2 "c"

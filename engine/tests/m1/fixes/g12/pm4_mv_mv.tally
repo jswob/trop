@@ -1,0 +1,73 @@
+model steps
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 6 (issue #108, invented): #97's N4, pos(k + n) on an integer index, and N7, the calendar built-ins and explain over a movement"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = 1..4
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+
+input holidays: calendar
+
+input last_k: int
+
+input n_add: int
+
+input n_last: int
+
+input pay_day: date
+
+input windowed: calendar
+
+def nxt[k in ks]: int = pos(k + 1)
+
+def nxt_guarded[k in ks]: int = if k < last_k then pos(k + 1) else pos(k)
+
+move pay: transfers
+  on pay_day
+  leg cash from konto to world amount fee
+
+ask n4_inside: nxt[2]
+
+ask n4_past: nxt[4]
+
+ask n4_guard: nxt_guarded[k] for k in ks
+
+ask n7_weekday: weekday(2026-06-01), weekday(2026-06-07)
+
+ask n7_last_business: last_business(2026-06, n_last - 1, holidays), last_business(2026-05, n_last, holidays)
+
+ask n7_window_agrees: add_business(2026-06-01, n_add, windowed)
+
+ask n7_window_differs: add_business(2026-06-19, n_add, windowed)
+
+ask n7_explain_before: explain bal(konto, 2026-06-09)
+
+ask n7_explain_after: explain bal(konto, 2026-06-30)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 40.00 PLN "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  last_k = 4 "the card"
+  n_add = 3 "the card"
+  n_last = 2 "the card"
+  pay_day = 2026-06-10 "the card"
+  windowed = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26)]) "the card: one more holiday in the week of 22 June, its day not yet fixed"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+
+ask e_pay: explain pay
+
+ask zm1: explain pay

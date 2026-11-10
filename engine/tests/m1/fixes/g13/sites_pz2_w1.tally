@@ -1,0 +1,14 @@
+part w1
+  tally 2
+
+input kq: key qs
+
+def w1_x: key qs = q1 + 1
+
+ask w1: w1_x, kq with kq = q1 + 1
+
+version vw1
+  cite card
+  governs always
+  known 2026-01-01
+  kq = q1 "c"

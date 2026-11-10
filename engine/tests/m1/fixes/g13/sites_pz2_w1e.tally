@@ -1,0 +1,6 @@
+part w1e
+  tally 2
+
+def w1e_x: key qs = q1 + 2
+
+ask w1e: w1e_x

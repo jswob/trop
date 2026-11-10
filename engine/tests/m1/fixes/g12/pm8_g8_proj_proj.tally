@@ -1,0 +1,302 @@
+model g8_proj
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G8: projections (L §5.14.1, §5.14, E §4.3, D-6): bal(x, d) from t with t before the run's start, on it, before and after the cut; a read's own with uncertain and the ask line's, uncertain movements on t, between, on d and after it; a place first stated after t, read before and after; a decision's projection from a later day (RUN-FUTURE) and from an earlier one; #35, a decision reading a projection, asked with and without the line's with uncertain; #37 T1, a decision reading flows of an earlier decision, read through a projection; #37 N2, a decision in a projection's walk reading flows of a move whose leg the main walk refused; a decision projecting from its own point while an unrelated one runs after it that day, whose effect reaches the projected place the next day, read alone and inside a projection from an earlier day, where no movement touches the place before it; a decision reading its own move's flows through its own day."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+kind maybe: transfers uncertain
+
+kind pays: event certain
+  leg cash: PLN
+
+index month = month 2026-01..2026-03
+
+place konto: accounts PLN lives 2026-01-01..
+
+place late: accounts PLN lives 2025-06-01..
+
+place save: accounts PLN lives 2026-01-01..
+
+place save2: accounts PLN lives 2026-01-01..
+
+place p_n2: accounts PLN lives 2026-01-01..
+
+place p_pf: accounts PLN lives 2026-01-01..
+
+place p_pe: accounts PLN lives 2026-01-01..
+
+place p_self: accounts PLN lives 2026-01-01..
+
+place p_pq: accounts PLN lives 2026-01-01..
+
+place side_jar: accounts PLN lives 2026-01-01..
+
+place old: accounts PLN lives 2026-01-01..2026-01-31
+
+place world: outside lives 2026-01-01..
+
+place shop: outside lives 2026-01-01..
+
+input rent_day: date
+
+input rent_amt: money PLN
+
+input g_t: date
+
+input g_mid: date
+
+input g_d: date
+
+input g_before: date
+
+input g_after: date
+
+input g_amt: money PLN
+
+input pf_day: date
+
+input pf_t: date
+
+input pf_d: date
+
+input pe_t: date
+
+input small: money PLN
+
+input big: money PLN
+
+input floor: money PLN
+
+input d1_day: date
+
+input d2_day: date
+
+input jan_start: date
+
+input jan_end: date
+
+input m_day: date
+
+input m_t: date
+
+input m_d: date
+
+input pay_day: date
+
+input pay_amt: money PLN
+
+input n2_day: date
+
+input feb_start: date
+
+input feb_end: date
+
+input self_dom: int
+
+input q_day: date
+
+input q_t: date
+
+input q_feed: date
+
+move rent: transfers
+  on rent_day
+  leg cash from konto to shop amount rent_amt
+
+move g_on_t: maybe
+  on g_t
+  leg cash from world to konto amount g_amt
+
+move g_between: maybe
+  on g_mid
+  leg cash from konto to shop amount small
+
+move g_on_d: maybe
+  on g_d
+  leg cash from world to konto amount g_amt
+
+move g_early: maybe
+  on g_before
+  leg cash from world to konto amount g_amt
+
+move g_later: maybe
+  on g_after
+  leg cash from world to konto amount g_amt
+
+move g_late: maybe
+  on g_mid
+  leg cash from world to late amount g_amt
+
+move pf: transfers
+  on pf_day
+  reads konto
+  leg cash from world to p_pf amount bal(konto, pf_d) from pf_t
+
+move pe: transfers
+  on pf_day
+  reads konto
+  leg cash from world to p_pe amount bal(konto, pf_d) from pe_t
+
+move d1: transfers
+  on d1_day
+  reads konto
+  leg cash from konto to save2 amount max(0, bal(konto) - floor)
+
+move d2: transfers
+  on d2_day
+  reads d1
+  leg cash from konto to save2 amount flows(d1, jan_start .. jan_end)
+
+move pmatch: transfers
+  on m_day
+  reads konto
+  leg cash from world to save amount bal(konto, m_d) from m_t
+
+move pay: transfers
+  on pay_day
+  leg cash from world to old amount pay_amt
+
+move n2: transfers
+  on n2_day
+  reads p_n2
+  leg cash from world to p_n2 amount max(bal(p_n2), flows(pay, feb_start .. feb_end))
+
+move selfy[m in month]: pays
+  on day_of(m, self_dom)
+  reads selfy
+  leg cash from world to p_self amount small + flows(selfy, jan_start .. day_of(m, self_dom))
+
+move pq: transfers
+  on q_day
+  reads konto
+  leg cash from world to p_pq amount bal(konto, m_d) from q_t
+
+move qz: transfers
+  on q_day
+  reads side_jar
+  leg cash from world to side_jar amount if bal(side_jar) > 0 then small else big
+
+move qz_feed: transfers
+  on q_feed
+  reads side_jar
+  leg cash from world to konto amount bal(side_jar)
+
+ask q_from: bal(konto, 2026-02-12) from 2026-02-10, bal(konto, 2026-02-12) from 2026-01-01, bal(konto, 2026-01-10) from 2025-12-20, bal(konto, 2026-03-10) from 2026-02-20, bal(late, 2026-02-11) from 2026-02-10, bal(late, 2026-03-10) from 2026-02-10, bal(late, 2026-02-11), bal(late, 2026-03-10) law cut
+
+ask q_unc: bal(konto, 2026-02-12) from 2026-02-10 with uncertain, bal(late, 2026-02-11) from 2026-02-10 with uncertain, bal(late, 2026-03-10) from 2026-02-10 with uncertain law cut
+
+ask q_line: bal(konto, 2026-02-12) from 2026-02-10, bal(late, 2026-03-10) from 2026-02-10 law cut with uncertain
+
+ask q_dec: bal(p_pf, d), bal(p_pe, d) for d in [2026-01-19, 2026-01-20] law cut
+
+ask q35: bal(save, 2026-03-31) from 2026-02-18 law cut
+
+ask q35u: bal(save, 2026-03-31) from 2026-02-18 law cut with uncertain
+
+ask q_t1: bal(save2, 2026-03-31), bal(save2, 2026-03-31) from 2026-02-10, bal(save2, 2026-03-31) from 2026-01-10, flows(d1, 2026-01-01 .. 2026-03-31) law cut
+
+ask q_n2: bal(p_n2, 2026-03-31), bal(p_n2, 2026-03-31) from 2026-02-10 law cut
+
+ask q_after: bal(p_pq, 2026-03-31), bal(side_jar, 2026-03-31), bal(konto, 2026-03-31) law cut
+
+ask q_nest: bal(p_pq, 2026-03-31) from 2026-03-01, bal(p_pq, 2026-03-31) from 2026-03-05 law cut
+
+ask q_self: bal(p_self, 2026-03-31), bal(p_self, 2026-03-31) from 2026-02-10, bal(p_self, 2026-03-31) from 2026-02-20 law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  rent_day = 2026-01-05 "konto moves before every projection's start"
+  rent_amt = 100.00
+  g_t = 2026-02-10 "uncertain, on t"
+  g_mid = 2026-02-11 "uncertain, between t and d, out of konto"
+  g_d = 2026-02-12 "uncertain, on d"
+  g_before = 2026-02-05 "uncertain, before t"
+  g_after = 2026-02-13 "uncertain, after d"
+  g_amt = 10.00
+  pf_day = 2026-01-20 "two decisions reading projections"
+  pf_t = 2026-01-25 "from a later day: RUN-FUTURE"
+  pf_d = 2026-01-31
+  pe_t = 2026-01-15 "from an earlier day"
+  small = 1.00
+  big = 100.00
+  floor = 600.00
+  d1_day = 2026-01-20 "#37 T1: D1"
+  d2_day = 2026-02-20 "#37 T1: D2 reads flows of D1"
+  jan_start = 2026-01-01
+  jan_end = 2026-01-31
+  m_day = 2026-02-20 "#35: a decision reading a projection"
+  m_t = 2026-02-20
+  m_d = 2026-03-31
+  pay_day = 2026-02-05 "#37 N2: into old after its lifespan, refused"
+  pay_amt = 50.00
+  n2_day = 2026-02-20
+  feb_start = 2026-02-01
+  feb_end = 2026-02-28
+  q_day = 2026-03-05 "pq projects konto from its own point; qz runs after it that day"
+  q_t = 2026-03-05
+  q_feed = 2026-03-06 "qz_feed moves side_jar's balance into konto"
+  self_dom = 20 "each selfy reads its own move's flows through its own day"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  anchor late
+  opening[konto] = 1000 at 2026-01-01 start
+  opening[save] = 0 at 2026-01-01 start
+  opening[save2] = 0 at 2026-01-01 start
+  opening[p_n2] = 0 at 2026-01-01 start
+  opening[p_pf] = 0 at 2026-01-01 start
+  opening[p_pe] = 0 at 2026-01-01 start
+  opening[p_self] = 0 at 2026-01-01 start
+  opening[p_pq] = 0 at 2026-01-01 start
+  opening[side_jar] = 0 at 2026-01-01 start
+  opening[old] = 0 at 2026-01-01 start
+  stated[late] = 50.00 at 2026-02-12 end "late's first reading, after t and before the cut"
+
+ask zm1: explain rent
+
+ask zm2: explain g_on_t
+
+ask zm3: explain g_between
+
+ask zm4: explain g_on_d
+
+ask zm5: explain g_early
+
+ask zm6: explain g_later
+
+ask zm7: explain g_late
+
+ask zm8: explain pf
+
+ask zm9: explain pe
+
+ask zm10: explain d1
+
+ask zm11: explain d2
+
+ask zm12: explain pmatch
+
+ask zm13: explain pay
+
+ask zm14: explain n2
+
+ask zm15: explain selfy[2026-01]
+
+ask zm16: explain selfy[2026-02]
+
+ask zm17: explain selfy[2026-03]
+
+ask zm18: explain pq
+
+ask zm19: explain qz
+
+ask zm20: explain qz_feed

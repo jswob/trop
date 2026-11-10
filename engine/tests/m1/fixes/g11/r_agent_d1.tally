@@ -1,0 +1,63 @@
+model d1
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+index ms = int 1..90
+
+index qs = [q1, q2, q3]
+
+input inc: num
+
+input alt: num
+
+input w[k in qs]: num
+
+def acc[k in ms]: num
+  rule first beats next = inc when pos(k) == 1
+  rule next = acc[k - 1] + inc
+
+def lo2: num = min(acc[80], acc[70])
+
+def hi2: num = max(acc[70], acc[80])
+
+def pickm: key qs = argmin(acc[80] * w[k] for k in qs)
+
+def lo3: num = min(acc[50] * w[k] for k in qs)
+
+def sh: num = acc[75] as if {inc = alt}
+
+def both: num = (acc[60] as if {inc = alt}) + acc[60]
+
+def mix: num = min(acc[45], acc[45] as if {inc = alt})
+
+ask v: lo2, hi2, pickm, lo3, sh, both, mix
+
+ask e_lo2: explain lo2
+
+ask e_hi2: explain hi2
+
+ask e_pickm: explain pickm
+
+ask e_lo3: explain lo3
+
+ask e_sh: explain sh
+
+ask e_both: explain both
+
+ask e_mix: explain mix
+
+ask e_w: explain lo3 with inc = alt
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  inc = 1
+  alt = 2
+  w[q1] = 3
+  w[q2] = 1
+  w[q3] = 1

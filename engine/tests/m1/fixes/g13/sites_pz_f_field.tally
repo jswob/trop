@@ -1,0 +1,9 @@
+part f_field
+  tally 2
+
+move dm_field: transfers
+  on d0
+  reads konto
+  leg cash from konto to world amount min(sum(m.zz for m in transfers over d0..d0), bal(konto))
+
+ask f_field: bal(konto, 2026-12-31)

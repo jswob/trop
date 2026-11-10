@@ -1,0 +1,58 @@
+model g9_leg_hole
+  tally 2
+  on 2025-12-31
+  start 2025-01-01
+  end 2025-12-31
+  note "T, tally 2.1.2 (issue #31), G9: L §5.14 Legs, E §4.2, E §9 invariant 1: a leg whose place is a hole (dest, no row) books its known side, acc_0 = 500.00 - 100.00, and every read of the unknown side is a hole naming it (bal(dest, d); a leg's field, mv_0.cash.to, isn't read: S builds no read of a leg's fields); a place the hole could stand for is no made-up place, so acc_1 stands at its opening. Invariant 1 leaves the leg out, as a leg booked by its ends. The twin mv_1 books the same leg between known places (acc_2 to acc_3, by dest2's row). tally 2.1.1 refused every ask ENGINE-INVARIANT (conservation)."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit DUK: currency minor 0.01
+
+input amt: money DUK
+
+input d0: date
+
+input dest: key accounts
+
+input dest2: key accounts
+
+place acc_0: accounts DUK lives 2025-01-01..
+
+place acc_1: accounts DUK lives 2025-01-01..
+
+place acc_2: accounts DUK lives 2025-01-01..
+
+place acc_3: accounts DUK lives 2025-01-01..
+
+move mv_0: transfers
+  on d0
+  leg cash from acc_0 to dest amount amt
+
+move mv_1: transfers
+  on d0
+  leg cash from acc_2 to dest2 amount amt
+
+ask a_known: bal(acc_0, 2025-01-09), bal(acc_0, 2025-01-10), bal(acc_0, 2025-01-31)
+
+ask a_other: bal(acc_1, 2025-01-31)
+
+ask a_hole: bal(dest, 2025-01-31)
+
+ask a_twin: bal(acc_2, 2025-01-31), bal(acc_3, 2025-01-31)
+
+version facts
+  cite fixture
+  governs always
+  known 2025-01-01
+  amt = 100.00 DUK
+  d0 = 2025-01-10
+  dest2 = acc_3
+  opening[acc_0] = 500.00 DUK at 2025-01-01 start
+  opening[acc_1] = 0 DUK at 2025-01-01 start
+  opening[acc_2] = 500.00 DUK at 2025-01-01 start
+  opening[acc_3] = 0 DUK at 2025-01-01 start
+
+ask zm1: explain mv_0
+
+ask zm2: explain mv_1

@@ -1,0 +1,88 @@
+model g9_sweep
+  tally 2
+  on 2026-03-25
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G9 (the sweep): the closing readings' sign rule (L §5.10 item 3, E §4.2 step 4): two readings at one day's end padded from one claim, which the two pads together take below zero, so both are refused (RUN-PLACE), beside a twin whose two pads take its claim to 0; read on the day before, on that day and the day after. An account below zero whose balance a refused leg refuses that day, so not warned (E §4.2 step 5: a warning is tested only where the balance is known), beside its twin, below zero and warned."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+place acct: accounts PLN lives 2026-01-01..
+
+place zacct: accounts PLN lives 2026-01-01..
+
+place lent: claims PLN lives 2026-01-01..
+
+place acct2: accounts PLN lives 2026-01-01..
+
+place zacct2: accounts PLN lives 2026-01-01..
+
+place lent2: claims PLN lives 2026-01-01..
+
+place konto9: accounts PLN lives 2026-01-01..
+
+place konto10: accounts PLN lives 2026-01-01..
+
+place lent9: claims PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input day9: date
+
+input out9: money PLN
+
+input in9: money PLN
+
+move spend9: transfers
+  on day9
+  leg cash from konto9 to world amount out9
+
+move repay9: transfers
+  on day9
+  leg cash from lent9 to konto9 amount in9
+
+move spend10: transfers
+  on day9
+  leg cash from konto10 to world amount out9
+
+ask q_close: bal(acct, d), bal(zacct, d), bal(lent, d), bal(acct2, d), bal(zacct2, d), bal(lent2, d) for d in [2026-01-30, 2026-01-31, 2026-02-01] law cut
+
+ask q_refused: bal(konto9, d), bal(lent9, d), bal(konto10, d) for d in [2026-01-19, 2026-01-20, 2026-01-21] law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  opening[acct] = 0 at 2026-01-01 start
+  opening[zacct] = 0 at 2026-01-01 start
+  opening[lent] = 20 at 2026-01-01 start
+  opening[acct2] = 0 at 2026-01-01 start
+  opening[zacct2] = 0 at 2026-01-01 start
+  opening[lent2] = 40 at 2026-01-01 start
+  opening[konto9] = 0 at 2026-01-01 start
+  opening[konto10] = 0 at 2026-01-01 start
+  opening[lent9] = 0 at 2026-01-01 start
+  day9 = 2026-01-20 "the batch's day"
+  out9 = 20.00 "konto9 and konto10 go to -20"
+  in9 = 5.00 "out of lent9, at 0: refused, so konto9 is refused from that day"
+
+version stmts
+  cite fixture
+  governs 2026-01
+  known 2026-02-02
+  pad acct from lent
+  pad zacct from lent
+  pad acct2 from lent2
+  pad zacct2 from lent2
+  stated[acct] = 10.00 at 2026-01-31 end "a pad of 10 out of lent"
+  stated[zacct] = 30.00 at 2026-01-31 end "a pad of 30 out of lent: together they take it to -20, refused"
+  stated[acct2] = 10.00 at 2026-01-31 end "the twin: a pad of 10 out of lent2"
+  stated[zacct2] = 30.00 at 2026-01-31 end "the twin: a pad of 30 out of lent2, which ends at 0"
+
+ask zm1: explain spend9
+
+ask zm2: explain repay9
+
+ask zm3: explain spend10

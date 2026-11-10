@@ -1,0 +1,12 @@
+part g_test
+  tally 2
+
+axis gx_test
+  lo "low"
+  hi "high"
+
+def g_test_x: int
+  rule base = n1
+  rule other beats base = if fee then n1 else n1 when gx_test == hi
+
+ask g_test: g_test_x

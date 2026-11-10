@@ -1,0 +1,94 @@
+model ai
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2, q3]
+
+input amt: money PLN
+
+input rate[k in qs]: num
+
+input cap: num
+
+input alt: num
+
+input alt3: num
+
+input amt2: money PLN
+
+input lawday: date
+
+def fee[k in qs]: money PLN = round(amt * rate[k], minor(PLN), half-up)
+
+def low_fee: money PLN = min(fee[k] for k in qs)
+
+def high_fee: money PLN = max(fee[k] for k in qs)
+
+def cheapest: key qs = argmin(fee[k] for k in qs)
+
+def dearest: key qs = argmax(fee[k] for k in qs)
+
+def capped: num = min(rate[q1], cap, rate[q2])
+
+def tied: num = max(rate[q2], rate[q3])
+
+def bare_min: key qs = min(k for k in qs)
+
+def lifted: money PLN = fee[q1] as if {rate[q1] = alt}
+
+def lifted2: money PLN = fee[q1] as if {rate[q1] = rate[q2] * alt, amt = amt2}
+
+def lifted_law: money PLN = fee[q2] as if {law lawday}
+
+def nested: money PLN = (fee[q1] as if {rate[q1] = alt3}) + low_fee
+
+def outer: money PLN = lifted + fee[q1]
+
+ask e_low: explain low_fee
+
+ask e_high: explain high_fee
+
+ask e_cheap: explain cheapest
+
+ask e_dear: explain dearest
+
+ask e_capped: explain capped
+
+ask e_tied: explain tied
+
+ask e_bare: explain bare_min
+
+ask e_lift: explain lifted
+
+ask e_lift2: explain lifted2
+
+ask e_law: explain lifted_law
+
+ask e_nested: explain nested
+
+ask e_outer: explain outer
+
+
+ask e_with: explain fee[q1] with rate[q1] = 0.4
+
+ask v: low_fee, high_fee, cheapest, dearest, capped, lifted, lifted2
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN
+  rate[q1] = 0.1
+  rate[q2] = 0.05
+  rate[q3] = 0.05
+  cap = 0.07
+  alt = 0.5
+  alt3 = 0.3
+  amt2 = 200.00 PLN
+  lawday = 2026-06-01

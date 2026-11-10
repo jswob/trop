@@ -1,0 +1,6 @@
+part j3
+  tally 2
+
+def j3_x: int = q1 + 1
+
+ask j3: j3_x

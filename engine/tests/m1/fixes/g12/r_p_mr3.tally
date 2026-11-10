@@ -1,0 +1,96 @@
+model mr
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review G12: a move read by its name outside explain"
+
+source card "card (invented)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+
+input pay_day: date
+
+input low_mark: money PLN
+
+input rent_dom: int
+
+input top_dom: int
+
+move pay: transfers
+  on pay_day
+  leg cash from konto to world amount fee
+
+move rent[m in month]: transfers
+  on day_of(m, rent_dom)
+  leg cash from konto to world amount fee
+
+move top[m in month]: transfers
+  on day_of(m, top_dom)
+  reads konto
+  when bal(konto) < low_mark
+  leg cash from world to konto amount fee
+
+def pay_amt: money PLN = pay.cash.amount
+
+def pay_on: date = pay.day
+
+
+
+ask q1: pay.cash.amount, pay.day
+
+ask q2: pay_amt, pay_on
+
+ask q3: rent[2026-03].cash.amount
+
+ask q4: top[2026-01].cash.amount, top[2026-02].day
+
+
+ask e1: explain pay
+
+ask e2: explain rent[2026-02]
+
+ask e3: explain top[2026-01]
+
+ask e4: explain top[2026-03]
+
+ask e5: explain pay_amt
+
+ask e6: explain bal(konto, 2026-02-20)
+
+ask e7: explain bal(konto, 2026-03-01) from 2026-02-01
+
+ask e8: explain low(konto, 2026-01-01 .. 2026-03-31)
+
+ask e9: explain bal(konto, 2026-02-20 start)
+
+ask z1: sum(x.cash.amount for x in transfers over 2026-06-01 .. 2026-06-30 where x == pay)
+
+ask z2: sum(x.cash.amount for x in transfers over 2026-01-01 .. 2026-03-31 where x == rent[2026-02])
+
+ask z3: pay == pay
+
+ask z4: rent[2026-01] == rent[2026-02]
+
+ask z5: top[2026-01] == top[2026-01]
+
+ask z6: pay in transfers
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 40.00 PLN "the card"
+  pay_day = 2026-06-10 "the card"
+  low_mark = 400.00 PLN "the card"
+  rent_dom = 5 "the card"
+  top_dom = 20 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"

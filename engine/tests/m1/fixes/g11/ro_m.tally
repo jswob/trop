@@ -1,0 +1,76 @@
+model ro
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+kind fees: transfers
+
+input amt: money PLN
+
+input d: date
+
+input rate[k in qs]: num
+
+band tax(x: num): num
+
+def fee[k in qs]: money PLN = round(amt * rate[k], minor(PLN), half-up)
+
+def t: num = tax(1)
+
+def total: money PLN = fee[q1] + fee[q2]
+
+def b: money PLN = bal(konto, d + 1 day)
+
+ask nfa: count(f in fees over 2026)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: fees
+  on d
+  leg cash from konto to world amount fee[q1]
+
+ask r_amt: readers-of amt
+
+ask r_d: readers-of d
+
+ask r_qs: readers-of qs
+
+ask r_fees: readers-of fees
+
+ask r_pay: readers-of pay
+
+ask r_konto: readers-of konto
+
+ask r_tax: readers-of tax
+
+ask r_card: readers-of card_2026
+
+ask r_src: readers-of card
+
+
+ask r_total: readers-of total
+
+ask r_self: readers-of r_amt
+
+ask v: b, total, t
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN
+  d = 2026-02-10
+  rate[q1] = 0.1
+  rate[q2] = 0.2
+  tax: [0, 100) = 0.1 "low"
+  tax: [100, inf) = 0.2
+  opening[konto] = 500.00 PLN at 2026-01-01 start

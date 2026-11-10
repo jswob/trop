@@ -1,0 +1,13 @@
+part n_if
+  tally 2
+
+kind evs: event certain
+  leg what: any
+
+move mv: evs
+  on d0
+  leg what from konto to world amount fee
+
+def n_if_x: int = sum(if m.what.amount then 1 else 0 for m in evs over d0..d0)
+
+ask n_if: n_if_x

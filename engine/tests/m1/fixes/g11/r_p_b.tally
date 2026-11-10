@@ -1,0 +1,115 @@
+model pb
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+source bk "the bank"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+kind fees: transfers
+
+input amt: money PLN
+
+input d: date
+
+input d2: date
+
+input go: bool
+
+input yr: year
+
+input rate[k in qs]: num
+
+input px: num reading
+
+input bank: observed
+
+def fee[k in qs]: money PLN = round(amt * rate[k], minor(PLN), half-up)
+
+def b: money PLN = bal(konto, d + 1 day)
+
+def b2: money PLN = bal(konto, d2 + 1 day)
+
+def bo: money PLN = bal(box, d2 + 1 day)
+
+def nf: int = count(f in fees over yr)
+
+def lastpx: num = last(px, d2)
+
+def lifted: money PLN = fee[q1] as if {rate[q1] = rate[q2]}
+
+def lifted2: money PLN = fee[q1] as if {amt = fee[q2]}
+
+def bl: money PLN = b as if {go = false}
+
+place konto: accounts PLN lives 2026-01-01..
+
+place box: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: fees
+  on d
+  when go
+  leg cash from konto to world amount fee[q1]
+
+move pay2: transfers
+  on d2
+  leg cash from konto to box amount fee[q2]
+
+ask ib: inputs-of b
+ask ib2: inputs-of b2
+ask ibo: inputs-of bo
+ask inn: inputs-of nf
+ask enn: explain nf
+ask ilp: inputs-of lastpx
+ask ili: inputs-of lifted
+ask ili2: inputs-of lifted2
+ask ibl: inputs-of bl
+ask iw: inputs-of fee[q1] with rate[q1] = rate[q2]
+ask iw2: inputs-of fee[q1] with amt = fee[q2]
+ask ik: inputs-of b as known 2026-02-01
+ask el: explain lifted
+ask el2: explain lifted2
+ask ew: explain fee[q1] with amt = fee[q2]
+ask elp: explain lastpx
+ask v: b, b2, bo, nf, lastpx, lifted, lifted2, bl
+ask r_go: readers-of go
+ask r_rate: readers-of rate
+ask r_konto: readers-of konto
+ask r_pay: readers-of pay
+ask r_px: readers-of px
+ask r_bank: readers-of bank
+ask r_d2: readers-of d2
+ask r_fee: readers-of fee
+ask r_b: readers-of b
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN
+  d = 2026-02-10
+  d2 = 2026-05-01
+  go = true
+  yr = 2026
+  rate[q1] = 0.1
+  rate[q2] = 0.2
+  opening[konto] = 500.00 PLN at 2026-01-01 start
+  opening[box] = 0 at 2026-01-01 start
+  px = 3 at 2026-03-01 "march price"
+  px = 4 at 2026-04-01
+
+version bank_apr
+  cite bk
+  governs always
+  known 2026-04-10
+  anchor konto
+  bank[r1] = (on: 2026-04-05, kind: transfers, leg cash from konto to world amount 7.00 PLN) "april"
+  stated[konto] = 400.00 PLN at 2026-04-06 end "statement"

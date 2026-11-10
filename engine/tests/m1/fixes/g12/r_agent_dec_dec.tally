@@ -1,0 +1,65 @@
+model dec
+  tally 2
+  on 2026-03-15
+  start 2026-01-01
+  end 2026-06-30
+  note "review G12: a decision read by its name from another decision and from a def"
+
+source card "card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind pays: event certain
+  leg cash: PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place jar: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input d1: date
+
+input d2: date
+
+input cap: money PLN
+
+input big: money PLN
+
+input small: money PLN
+
+move first: pays
+  on d1
+  reads konto
+  leg cash from konto to jar amount if bal(konto) > cap then big else small
+
+move second: pays
+  on d2
+  reads first
+  leg cash from jar to world amount first.cash.amount
+
+def f_amt: money PLN = first.cash.amount
+
+def s_day: date = second.day
+
+ask a1: f_amt, s_day, first, second
+
+ask a2: explain first
+
+ask a3: explain second
+
+ask a4: bal(jar, 2026-04-30), bal(konto, 2026-04-30)
+
+ask a5: explain bal(jar, 2026-04-30)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-10 "the card"
+  d2 = 2026-04-12 "the card"
+  cap = 100.00 PLN "the card"
+  big = 10.00 PLN "the card"
+  small = 1.00 PLN "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[jar] = 0 PLN at 2026-01-01 start "the card"

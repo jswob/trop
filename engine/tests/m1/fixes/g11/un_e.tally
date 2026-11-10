@@ -1,0 +1,11 @@
+model m
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+place a: accounts PLN lives 2026-01-01..
+
+unit PLN: currency minor 0.01
+
+ask x: explain bal(a, 2026-02-01)

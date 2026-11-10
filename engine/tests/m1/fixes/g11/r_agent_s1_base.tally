@@ -1,0 +1,29 @@
+model base
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+input a: num
+
+input b: num
+
+input ld: date
+
+def c: num = b + a at ld
+
+ask r_a: readers-of a
+
+ask r_b: readers-of b
+
+ask v: c
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  a = 3
+  b = 4
+  ld = 2026-06-01

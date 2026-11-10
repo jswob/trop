@@ -1,0 +1,14 @@
+part w3
+  tally 2
+
+input kq: key qs
+
+def w3_x: num = rate[kq] as if {kq = q9}
+
+ask w3: w3_x, rate[kq] with kq = q9
+
+version vw3
+  cite card
+  governs always
+  known 2026-01-01
+  kq = q1 "c"

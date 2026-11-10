@@ -1,0 +1,11 @@
+scenario w4 over sites
+  tally 2
+  from 2026-01-01
+
+version vw4
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  replace rate[q1] = sites.rate[q9] "x"
+
+ask w4: rate[q1] in w4

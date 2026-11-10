@@ -1,0 +1,68 @@
+model u
+  tally 2
+  on 2026-03-15
+  start 2026-01-01
+  end 2026-06-30
+  note "review G12: two units of one place among a def's causes"
+
+source card "card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+kind wallets: place any signed
+
+kind pays: event certain
+  leg cash: PLN
+
+kind payseur: event certain
+  leg cash: EUR
+
+place wallet: wallets lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input a_pl: money PLN
+
+input a_eu: money EUR
+
+input dd: date
+
+input d1: date
+
+input d2: date
+
+move inpl: pays
+  on d1
+  leg cash from world to wallet amount a_pl
+
+move ineu: payseur
+  on d2
+  leg cash from world to wallet amount a_eu
+
+def two: money PLN = if bal(wallet, EUR, dd) > 0 EUR then bal(wallet, PLN, dd) else 0 PLN
+
+def one: money PLN = bal(wallet, PLN, dd)
+
+ask e1: explain two
+
+ask e5: explain one with a_pl = 30.00 PLN
+
+ask e6: explain one with dd = 2026-02-11, a_pl = 30.00 PLN
+
+ask e2: explain bal(wallet, EUR, 2026-02-28)
+
+ask e3: explain inpl
+
+ask e4: two, inpl, inpl == inpl
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  a_pl = 10.00 PLN "the card"
+  a_eu = 20.00 EUR "the card"
+  dd = 2026-02-28 "the card"
+  d1 = 2026-02-10 "the card"
+  d2 = 2026-02-12 "the card"

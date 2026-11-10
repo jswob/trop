@@ -1,0 +1,12 @@
+part g_rate
+  tally 2
+
+axis gx_rate
+  lo "low"
+  hi "high"
+
+def g_rate_x: num PLN
+  rule base = r5
+  rule other beats base = r5 * r5 when gx_rate == hi
+
+ask g_rate: g_rate_x

@@ -1,0 +1,4 @@
+part b_day_times
+  tally 2
+
+ask b_day_times: d0 with d0 = d0 * n1

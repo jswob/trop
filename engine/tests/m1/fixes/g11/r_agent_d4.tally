@@ -1,0 +1,51 @@
+model d4
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+index ms = int 1..80
+
+index qs = [q1, q2]
+
+input inc: num
+
+input w[k in qs]: num
+
+def acc[k in ms]: num
+  rule first beats next = inc when pos(k) == 1
+  rule next = acc[k - 1] + inc
+
+def s1: num = acc[40] + acc[70]
+
+def s2: num
+  rule big beats small = 1 when acc[70] > acc[40]
+  rule small = 0
+
+def s3: num = sum(acc[70] * w[k] for k in qs)
+
+def s4: num = min(acc[40] * w[k] for k in qs)
+
+def s5: key qs = argmax(acc[40] * w[k] for k in qs)
+
+ask v: s1, s2, s3, s4, s5
+
+ask e1: explain s1
+
+ask e2: explain s2
+
+ask e3: explain s3
+
+ask e4: explain s4
+
+ask e5: explain s5
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  inc = 1
+  w[q1] = 1
+  w[q2] = 2

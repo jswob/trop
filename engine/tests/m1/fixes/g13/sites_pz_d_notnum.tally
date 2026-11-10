@@ -1,0 +1,11 @@
+scenario d_notnum over sites
+  tally 2
+  from 2026-01-01
+
+version dv_notnum
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  replace n1 = sites.n1 + sites.txt "x"
+
+ask d_notnum: n1 in d_notnum

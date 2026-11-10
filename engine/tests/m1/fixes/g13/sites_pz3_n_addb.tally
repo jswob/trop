@@ -1,0 +1,13 @@
+part n_addb
+  tally 2
+
+kind evs: event certain
+  leg what: any
+
+move mv: evs
+  on d0
+  leg what from konto to world amount fee
+
+def n_addb_x: int = count(m for m in evs over d0..d0 where (add_business(d0, m.what.amount, txt)) == d0)
+
+ask n_addb: n_addb_x

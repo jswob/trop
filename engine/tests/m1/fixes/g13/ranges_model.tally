@@ -1,0 +1,48 @@
+model ranges
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 3 (issue #108, invented): ranges an ask steps through (L §5.6, §7.6): a small fractional step, an end computed from a row, the 1 000 000-key limit on each side"
+
+source card "T's card (invented)"
+
+input fine: num
+
+input half: num
+
+input hi: num
+
+input lo: num
+
+input many: int
+
+input mult: num
+
+input one: int
+
+input over_many: int
+
+input rate: num
+
+ask r_small_step: count(v in lo .. hi step fine)
+
+ask r_computed_end: count(v in lo .. mult * rate step half)
+
+ask r_at_limit: count(v in one .. many step one)
+
+ask r_past_limit: count(v in one .. over_many step one)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fine = 0.001 "the card"
+  half = 0.5 "the card"
+  hi = 1 "the card"
+  lo = 0 "the card"
+  many = 1000000 "the card"
+  mult = 20 "the card"
+  one = 1 "the card"
+  over_many = 1000001 "the card"
+  rate = 0.1 "the card"

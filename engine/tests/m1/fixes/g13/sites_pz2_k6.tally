@@ -1,0 +1,6 @@
+part k6
+  tally 2
+
+def k6_x: key qs = q2 - 2
+
+ask k6: k6_x

@@ -96,3 +96,26 @@ fixes/g10/f_min_with_f_min_s	m1_fixes	#121	P43 (G10 fix, B1): lifespan(k) read b
 fixes/g10/f_law_with_f_law_s	m1_fixes	#121	P43 (G10 fix, B1's neighbour): the same read at a law date; the engine lists before from: pay on 2026-02-01 reads ola (E §9 item 3), refcore prints no listing: the engine follows the spec; refcore at M2's round
 fixes/g10/f_life_with_f_life_s	m1_fixes	#121	P43 (G10 fix, B1's neighbour): a lifespan read before from and a movement the scenario removes; refcore refuses b1 ENGINE-INVARIANT (invariant 3), the engine answers 10.00 PLN and lists both (E §9 item 3): the engine follows the spec; refcore at M2's round
 fixes/g10/agent_life_base_with_agent_life_scen	m1_fixes	#121	P43 (G10 review B1, the agent's text): a scenario replacing a person's lifespan read before from; refcore refuses b1 ENGINE-INVARIANT (invariant 3), the engine answers 200.00 PLN and lists before from: (E §9 item 3): the engine follows the spec; refcore at M2's round
+fixes/g11/ro_m	m1_fixes	#133	G11 review B2: readers-of d lists pay once (P64, E §10 each item once), refcore twice
+fixes/g11/ro_m2	m1_fixes	#133	G11 review B2: readers-of d lists pay once (P64, E §10 each item once), refcore twice
+fixes/g11/ro_m4	m1_fixes	#132	G11 STOP-REPORT, P63: explain of a def whose cause is a balance prints the balance in its own form (E §10), refcore the walk's reads
+fixes/g11/r_agent_r1	m1_fixes	#133	G11 review B2: readers-of d lists pay once (P64), refcore twice
+fixes/g11/r_agent_s1_base_with_r_agent_s1_sc	m1_fixes	#133	G11 review B3: readers-of a in sc gives b, c, c_sc (P64: no scenario row's node), refcore prints its pseudo-node
+fixes/g11/r_p_c	m1_fixes	#133	G11 review B2: readers-of d2 of a move whose day reads it, pay2 once (P64), refcore twice
+fixes/g11/r_p_c2	m1_fixes	#133	G11 review B2: readers-of d2, the move's day and amount reading it, pay2 once (P64), refcore twice
+fixes/g12/pm6_adjust_adjust	m1_fixes	#100	the key as written: LOAD-KEY 2025-12 is not a key of months; refcore prints (2025, 12)
+fixes/g12/pm9_adjust_adjust	m1_fixes	#100	the key as written: LOAD-KEY 2025-12 is not a key of months; refcore prints (2025, 12)
+fixes/g12/r_agent_u_u	m1_fixes	#132	P63: a def's balance cause in its own form, here in EUR (E §10), refcore the walk's reads
+fixes/g12/r_p_bc	m1_fixes	#132	G12 review B2, P63: a def's balance cause by its read (E §10), refcore the walk's reads
+fixes/g12/r_p_bc2	m1_fixes	#132	G12 review B2, P63: a def's balance cause by its read under pins (E §10), refcore the walk's reads
+fixes/g12/r_p_rid	m1_fixes	#132	G12 review B3, P63: a balance cause at two cuts (E §10), refcore the walk's reads
+fixes/g13/fu_base_with_fu_rq	m1_fixes	#100	the key as written: LOAD-KEY inf is not a value of a stepped range; refcore prints None
+fixes/g13/pz_p2	m1_fixes	#134	G13 STOP-REPORT: an int key at a range stepped by 0.5 is a value of it (L §2.5), answered 3; refcore refuses LOAD-KEY 1
+fixes/g13/pz_p3	m1_fixes	#134	G13 STOP-REPORT: an int key at a fractional range is taken (L §2.5), so the first LOAD-KEY is 4 at 1 .. 9 step 2; refcore stops at 2
+fixes/g11/r_p_b_r_d2	m1_fixes	#133	G11 review B2: readers-of d2 lists pay2 once (P64), refcore twice
+fixes/g12/r_agent_lw_lw_l0	m1_fixes	#125	G12 review NB2, P51: low with uncertain without from keeps its clause, 330.00 PLN with uncertain: gift; refcore drops it, 315.00 PLN
+fixes/g12/r_agent_lw_lw_e1	m1_fixes	#132	P63: a def's balance cause in its own form (E §10), refcore the walk's reads
+fixes/g12/r_agent_lw_lw_e2	m1_fixes	#132	P63: a def's balance cause in its own form (E §10), refcore the walk's reads
+fixes/g12/r_agent_lw_lw_e3	m1_fixes	#132	P63: a def's balance cause in its own form (E §10), refcore the walk's reads
+fixes/g12/r_agent_lw_lw_r1	m1_fixes	#132	G12 review NB12, P63: readers-of pays lists n_pays, the binding over it (E §10); refcore nothing reads pays
+fixes/g12/r_agent_lw_lw_r2	m1_fixes	#132	G12 review NB12, P63: readers-of subpays lists n_pays, subkinds included (E §10); refcore nothing reads subpays

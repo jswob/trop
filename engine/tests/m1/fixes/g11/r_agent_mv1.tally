@@ -1,0 +1,51 @@
+model mv1
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+kind fees: transfers
+
+input d: date
+
+input amt: money PLN
+
+input y0: date
+
+input y1: date
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: fees
+  on d
+  leg cash from konto to world amount amt
+
+def n: int = count(f in fees over y0..y1)
+
+def s: money PLN = sum(f.cash.amount for f in fees over y0..y1)
+
+def fl: money PLN = flows(konto, y0..y1)
+
+ask i_n: inputs-of n
+
+ask is: inputs-of s
+
+ask ifl: inputs-of fl
+
+ask v: n, s, fl
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN
+  d = 2026-02-10
+  y0 = 2026-01-01
+  y1 = 2026-12-31
+  opening[konto] = 500.00 PLN at 2026-01-01 start

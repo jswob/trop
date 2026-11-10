@@ -1,0 +1,13 @@
+part f5
+  tally 2
+
+band fc(x: money PLN): money PLN
+
+ask f5: fc(fee)
+
+version vf5
+  cite card
+  governs always
+  known 2026-01-01
+  fc: (-inf, 60000] = x * 0.0005 + 0.001 "c"
+  fc: (60000, inf) = 5 "c"

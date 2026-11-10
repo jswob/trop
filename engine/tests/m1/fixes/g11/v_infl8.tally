@@ -1,0 +1,10 @@
+scenario infl8 over scen03
+  tally 2
+  from 2025-01-01
+  note "The override: the price index rises 8 % a year in 2025-2027; after them the base path resumes."
+
+version override_8
+  cite what_if
+  governs 2025..2027
+  known 2025-01-01
+  cpi_change[2025..2027] = 0.08 "8 % for 2025-2027"

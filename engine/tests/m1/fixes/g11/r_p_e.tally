@@ -1,0 +1,46 @@
+model pe
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+source statute "statute"
+
+input x: num
+
+input y: num
+
+input flag: bool question "Is it so?"
+
+input lo: bool
+
+def pk: num at reader
+  rule a beats b = x when flag
+  rule b = y when lo
+  rule c beats a v act = y * x
+
+def via: num at reader
+  rule base v act = pk + x
+
+ask e_pk: explain pk law 2026-05-01
+ask v_pk: pk law 2026-05-01
+ask e_via: explain via law 2026-05-01
+ask e_via0: explain via law 2026-01-15
+ask v_via0: via law 2026-01-15
+ask r_e_pk: readers-of e_pk
+ask r_x: readers-of x
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  x = 2
+  y = 3
+  lo = true
+
+version act
+  cite statute
+  governs 2026-02-01..
+  known 2026-01-10

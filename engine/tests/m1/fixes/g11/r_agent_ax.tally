@@ -1,0 +1,32 @@
+model ax
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+input xa: num
+
+input xb: num
+
+axis reading
+  ra "reading A"
+  rb "reading B"
+
+def pick: num
+  rule pa = xa when reading == ra
+  rule pb = xb when reading == rb
+
+ask v: pick
+
+ask e: explain pick
+
+ask i: inputs-of pick
+
+version c1
+  cite card
+  governs always
+  known 2026-01-01
+  xa = 10
+  xb = 10

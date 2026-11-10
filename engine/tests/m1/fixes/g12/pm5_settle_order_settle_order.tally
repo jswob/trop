@@ -1,0 +1,69 @@
+model g11_settle_order
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.2 (issue #44), G11: L §5.14.3 How a settlement leg counts, E §5 step 5, E §3.2: turn swaps t[2026-03]'s places, so bank[r1], settling its adjustment, is refused (RUN-RECORD, the leg is turned round), and linking is all or nothing: every read that counts the adjustment meets that refusal, in either order, two reads in one ask (q_fb: flows then a balance; q_bf: the balance then flows; q_ff: flows twice). The twin g11/settle_order_twin moves only the leg's from place, and its row settles: both orders answer the same numbers. tally 2.1.1's refcore linked the adjustment before the refusal, so the later read of an ask took the HOLE-CHANGED hole, and swapping the reads swapped the answers."
+
+source plan "T's invented plan"
+
+source act "T's invented act"
+
+source bank_feed "T's invented bank feed"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place konto2: accounts PLN lives 2026-01-01..
+
+input amt: money PLN
+
+input dom: int
+
+input src: key accounts
+
+input dst: key accounts
+
+input bank: observed
+
+def s_[m in months]: key accounts = src at start_of(m)
+
+def d_[m in months]: key accounts = dst at start_of(m)
+
+move t[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from s_[m] to d_[m] amount amt
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  amt = 100.00 PLN
+  dom = 10
+  src = konto
+  dst = konto2
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start
+  opening[konto2] = 0 PLN at 2026-01-01 start
+
+version turn
+  cite act
+  governs 2026-03
+  known 2026-05-01
+  replace src = konto2
+  replace dst = konto
+
+version settle
+  cite bank_feed
+  governs 2026-05
+  known 2026-05-20
+  bank[r1] = (on: 2026-05-15, kind: transfers, leg cash from konto2 to konto amount 100.00 PLN, fulfils: adjustments[t[2026-03].cash, turn]) "line 1"
+
+ask q_fb: flows(t, 2026-05-01 .. 2026-05-31), bal(konto, 2026-06-30)
+
+ask q_bf: bal(konto, 2026-06-30), flows(t, 2026-05-01 .. 2026-05-31)
+
+ask q_ff: flows(t, 2026-05-01 .. 2026-05-31), flows(t, 2026-05-01 .. 2026-05-31)
+
+

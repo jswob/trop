@@ -1,0 +1,13 @@
+part n_week
+  tally 2
+
+kind evs: event certain
+  leg what: any
+
+move mv: evs
+  on d0
+  leg what from konto to world amount fee
+
+def n_week_x: int = sum(weekday(m.what.amount) for m in evs over d0..d0)
+
+ask n_week: n_week_x

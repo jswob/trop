@@ -1,0 +1,14 @@
+part f4
+  tally 2
+
+input one_kg: num kg
+
+def s: num PLN = r + one_kg
+
+ask uk2: s
+
+version v4
+  cite card
+  governs always
+  known 2026-01-01
+  one_kg = 1 kg "c"

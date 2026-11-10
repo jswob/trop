@@ -1,0 +1,6 @@
+part c_notnum
+  tally 2
+
+def c_notnum_x: int = n1 as if {n1 = n1 + txt}
+
+ask c_notnum: c_notnum_x

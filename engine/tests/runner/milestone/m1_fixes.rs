@@ -17,7 +17,7 @@ mod tests {
     use tally_runner::m1::VECTORS;
 
     /// The groups this target tests, one `#[test]` each.
-    const GROUPS: [&str; 10] = [
+    const GROUPS: [&str; 13] = [
         "fixes-g1",
         "fixes-g2",
         "fixes-g3",
@@ -28,6 +28,9 @@ mod tests {
         "fixes-g8",
         "fixes-g9",
         "fixes-g10",
+        "fixes-g11",
+        "fixes-g12",
+        "fixes-g13",
     ];
 
     /// Runs every vector of `group` on the engine and holds it to refcore's run.
@@ -183,6 +186,41 @@ mod tests {
     #[test]
     fn m1_fixes_g10_decisions() {
         group_holds("fixes-g10");
+    }
+
+    /// G11's (`m1/fixes/g11/`): the builder's and the review's probe texts of `explain` (a def
+    /// cell's rules and their states, rows, band rows, `given`, the extremes, `as if` and `with`
+    /// pins), `inputs-of` (observed rows, `r_agent_o1`) and `readers-of`; the review's B1, an
+    /// extreme whose winner's chain runs past the counted depth (`r_agent_deep*`). Held: B2,
+    /// `readers-of` lists each item once (P64, #133: `ro_m`, `r_p_c`, `r_p_c2`, …) and B3, no
+    /// scenario row's node (#133); a def's balance cause in its own form (P63, #132, `ro_m4`).
+    #[test]
+    fn m1_fixes_g11_explain_inputs_and_readers() {
+        group_holds("fixes-g11");
+    }
+
+    /// G12's (`m1/fixes/g12/`): the builder's probes of `explain` over the walk, a balance, a
+    /// projection, a `low`, a plan and a decision instance (`pm*`, `pp*`, `pb*`, `pr*`), and the
+    /// review's: a move read by name, a field of a decision instance that doesn't exist
+    /// (`RUN-NONE`, `r_p_mr2_x4`); B1's texts, a reading's instant, wait for a ruling on the row's
+    /// id (GAPS.md 2026-11-10, its instant on the engine). Held: a def's balance cause by its
+    /// read (P63, #132, `r_p_bc*`, `r_p_rid`, `r_agent_u_u`) and `readers-of` an event kind (#132);
+    /// `low … with uncertain` without `from` (P51, #125, `r_agent_lw_lw_l0`); a month key printed
+    /// as written in `LOAD-KEY` (#100).
+    #[test]
+    fn m1_fixes_g12_explain_over_the_walk() {
+        group_holds("fixes-g12");
+    }
+
+    /// G13's (`m1/fixes/g13/`): reads at run and ranges an ask steps through (`reads_*`,
+    /// `ranges_*`), and the 26 sites' probes (`sites_*`): bin (ii), a key literal in key
+    /// arithmetic (`sites_pz2_*`), built with refcore's bytes; bin (i)'s load refusals met before
+    /// each site (`LOAD-UNIT`, `LOAD-FIELD`, `LOAD-PRECISION`, `LOAD-KEY`, `RUN-KEY` for a key
+    /// added after the cut). Held: an int key at a fractional range (#134); a key printed as
+    /// written (#100).
+    #[test]
+    fn m1_fixes_g13_reads_ranges_and_sites() {
+        group_holds("fixes-g13");
     }
 
     /// A price of another currency is refused, never a figure in the wrong unit (L 5.10: `by p`

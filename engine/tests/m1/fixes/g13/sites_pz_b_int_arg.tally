@@ -1,0 +1,4 @@
+part b_int_arg
+  tally 2
+
+ask b_int_arg: d0 with d0 = add_months(d0, txt)

@@ -1,0 +1,8 @@
+part e_day_times
+  tally 2
+
+move m_day_times: transfers
+  on d0 * n1
+  leg cash from konto to world amount fee
+
+ask e_day_times: bal(konto, 2026-12-31)

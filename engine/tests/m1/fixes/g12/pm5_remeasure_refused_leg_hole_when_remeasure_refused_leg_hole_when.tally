@@ -1,0 +1,68 @@
+model g11_remeasure_refused_leg_hole_when
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#52, P3), G11: E §5 step 3, L §5.14.3, L §8.4: late (known 2026-05-01) makes rent[2026-03]'s when a hole (seats unknown) and its cash leg's amount refused (no tenants: RUN-DIV), while its charge leg's amount stands (the fee). A refusal outranks a hole, per leg: the cash leg's adjustment is refused and reaches what konto_c's reads count from 2026-05-01; the charge leg's is a hole with the seats question, and konto_f's reads from 2026-05-01 hold it. Before 2026-05-01 both stand. refcore 2.1.5 made both legs' adjustments the seats' hole."
+
+source plan "T's invented plan"
+
+source act "T's invented act"
+
+unit PLN: currency minor 0.01
+
+kind rentals: event certain
+  leg cash: PLN
+  leg charge: PLN
+
+place konto_c: accounts PLN lives 2026-01-01..
+
+place konto_f: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+input total: money PLN
+
+input fee: money PLN
+
+input tenants[m in months]: int
+
+input dom: int
+
+input seats[m in months]: int
+
+move rent[m in months]: rentals
+  on day_of(m, dom)
+  at start_of(m)
+  when seats[m] > 0
+  leg cash from konto_c to landlord amount round(total / tenants[m], minor(PLN), half-even)
+  leg charge from konto_f to landlord amount fee
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  total = 900.00 PLN
+  fee = 20.00 PLN
+  tenants[*] = 3
+  dom = 10
+  seats[*] = 1
+  opening[konto_c] = 5 000.00 PLN at 2026-01-01 start
+  opening[konto_f] = 1 000.00 PLN at 2026-01-01 start
+
+version late
+  cite act
+  governs 2026-03
+  known 2026-05-01
+  replace seats[*] = ?"were the seats taken in March?"
+  replace tenants[*] = 0
+
+ask before: bal(konto_c, 2026-04-30), bal(konto_f, 2026-04-30)
+
+ask after_c: bal(konto_c, 2026-05-31)
+
+ask after_f: bal(konto_f, 2026-05-31)
+
+ask l: a.change for a in adjustments over ..
+
+

@@ -1,0 +1,6 @@
+part k7
+  tally 2
+
+def k7_x: num = sum(rate[k] for k in qs where k == q1 + 1)
+
+ask k7: k7_x

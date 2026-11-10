@@ -1,0 +1,234 @@
+model g9_reading_close
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.2 (issue #46), G9: L §5.10 point 3, §8.4 RUN-PLACE, E §4.2 step 5: a reading's own place is tested at the close like any balance. y (claims, min 0) is stated at -5.00 PLN with a pad from w_y: the pad is refused, <pad> takes y below 0, and so are the places it touches from there, w_y included (q_y). z is anchored at -5.00 PLN: an anchor books no leg, so z's balance is refused from there, <place> is <b> after its reading at <instant>, the next day's start too (q_z). The twins at 0, which keeps a claim's rule: y0's pad of -20.00 PLN from w_y0 and z0's anchor stand (q_zero). tally 2.1.1 tested a pad's other place only: y and z stood at -5.00 PLN."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+source bank_feed "T's invented bank feed"
+
+unit PLN: currency minor 0.01
+
+place y: claims PLN lives 2026-01-01..
+
+place z: claims PLN lives 2026-01-01..
+
+place y0: claims PLN lives 2026-01-01..
+
+place z0: claims PLN lives 2026-01-01..
+
+place w_y: outside lives 2026-01-01..
+
+place w_y0: outside lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input amt: money PLN
+
+input top_day: date
+
+move top: transfers
+  on top_day
+  leg cash from world to z amount amt
+
+move top0: transfers
+  on top_day
+  leg cash from world to z0 amount amt
+
+ask q_y: bal(y, 2026-01-30), bal(y, 2026-01-31), bal(w_y, PLN, 2026-01-31)
+
+ask q_z: bal(z, 2026-01-30), bal(z, 2026-01-31), bal(z, 2026-02-01 start)
+
+ask q_zero: bal(y0, 2026-01-31), bal(w_y0, PLN, 2026-01-31), bal(z0, 2026-01-31), bal(z0, 2026-02-01 start)
+
+version facts
+  cite fixture
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN
+  top_day = 2026-01-15
+  opening[y] = 20.00 PLN at 2026-01-01 start
+  opening[z] = 20.00 PLN at 2026-01-01 start
+  opening[y0] = 20.00 PLN at 2026-01-01 start
+  opening[z0] = 20.00 PLN at 2026-01-01 start
+
+version statement_01
+  cite bank_feed
+  governs 2026-01
+  known 2026-03-02
+  pad y from w_y
+  pad y0 from w_y0
+  anchor z
+  anchor z0
+  stated[y] = -5.00 PLN at 2026-01-31 end
+  stated[z] = -5.00 PLN at 2026-01-31 end
+  stated[y0] = 0 PLN at 2026-01-31 end
+  stated[z0] = 0 PLN at 2026-01-31 end
+
+ask zx1: explain bal(y, 2026-01-01)
+
+ask zx2: explain bal(y, 2026-01-15)
+
+ask zx3: explain bal(y, 2026-01-30)
+
+ask zx4: explain bal(y, 2026-01-30 start)
+
+ask zx5: explain bal(y, 2026-01-31)
+
+ask zx6: explain bal(y, 2026-02-01)
+
+ask zx7: explain bal(y, 2026-02-01 start)
+
+ask zx8: explain bal(y, 2026-03-02)
+
+ask zx9: explain bal(y, 2026-06-30)
+
+ask zx10: explain bal(y, 2026-06-30 start)
+
+ask zx11: explain bal(y, 2026-12-31)
+
+ask zx12: explain bal(z, 2026-01-01)
+
+ask zx13: explain bal(z, 2026-01-01 start)
+
+ask zx14: explain bal(z, 2026-01-15)
+
+ask zx15: explain bal(z, 2026-01-30)
+
+ask zx16: explain bal(z, 2026-01-30 start)
+
+ask zx17: explain bal(z, 2026-01-31)
+
+ask zx18: explain bal(z, 2026-02-01)
+
+ask zx19: explain bal(z, 2026-02-01 start)
+
+ask zx20: explain bal(z, 2026-03-02)
+
+ask zx21: explain bal(z, 2026-06-30)
+
+ask zx22: explain bal(z, 2026-06-30 start)
+
+ask zx23: explain bal(z, 2026-12-31)
+
+ask zx24: explain bal(y0, 2026-01-01)
+
+ask zx25: explain bal(y0, 2026-01-01 start)
+
+ask zx26: explain bal(y0, 2026-01-15)
+
+ask zx27: explain bal(y0, 2026-01-30)
+
+ask zx28: explain bal(y0, 2026-01-30 start)
+
+ask zx29: explain bal(y0, 2026-01-31)
+
+ask zx30: explain bal(y0, 2026-02-01)
+
+ask zx31: explain bal(y0, 2026-02-01 start)
+
+ask zx32: explain bal(y0, 2026-03-02)
+
+ask zx33: explain bal(y0, 2026-06-30)
+
+ask zx34: explain bal(y0, 2026-06-30 start)
+
+ask zx35: explain bal(y0, 2026-12-31)
+
+ask zx36: explain bal(z0, 2026-01-01)
+
+ask zx37: explain bal(z0, 2026-01-01 start)
+
+ask zx38: explain bal(z0, 2026-01-15)
+
+ask zx39: explain bal(z0, 2026-01-30)
+
+ask zx40: explain bal(z0, 2026-01-30 start)
+
+ask zx41: explain bal(z0, 2026-01-31)
+
+ask zx42: explain bal(z0, 2026-02-01)
+
+ask zx43: explain bal(z0, 2026-02-01 start)
+
+ask zx44: explain bal(z0, 2026-03-02)
+
+ask zx45: explain bal(z0, 2026-06-30)
+
+ask zx46: explain bal(z0, 2026-06-30 start)
+
+ask zx47: explain bal(z0, 2026-12-31)
+
+ask zx48: explain bal(w_y, 2026-01-01)
+
+ask zx49: explain bal(w_y, 2026-01-01 start)
+
+ask zx50: explain bal(w_y, 2026-01-15)
+
+ask zx51: explain bal(w_y, 2026-01-30)
+
+ask zx52: explain bal(w_y, 2026-01-30 start)
+
+ask zx53: explain bal(w_y, 2026-01-31)
+
+ask zx54: explain bal(w_y, 2026-02-01)
+
+ask zx55: explain bal(w_y, 2026-02-01 start)
+
+ask zx56: explain bal(w_y, 2026-03-02)
+
+ask zx57: explain bal(w_y, 2026-06-30)
+
+ask zx58: explain bal(w_y, 2026-06-30 start)
+
+ask zx59: explain bal(w_y, 2026-12-31)
+
+ask zx60: explain bal(w_y0, 2026-01-01)
+
+ask zx61: explain bal(w_y0, 2026-01-01 start)
+
+ask zx62: explain bal(w_y0, 2026-01-15)
+
+ask zx63: explain bal(w_y0, 2026-01-30)
+
+ask zx64: explain bal(w_y0, 2026-01-30 start)
+
+ask zx65: explain bal(w_y0, 2026-01-31)
+
+ask zx66: explain bal(w_y0, 2026-02-01)
+
+ask zx67: explain bal(w_y0, 2026-02-01 start)
+
+ask zx68: explain bal(w_y0, 2026-03-02)
+
+ask zx69: explain bal(w_y0, 2026-06-30)
+
+ask zx70: explain bal(w_y0, 2026-06-30 start)
+
+ask zx71: explain bal(w_y0, 2026-12-31)
+
+ask zx72: explain bal(world, 2026-01-01)
+
+ask zx73: explain bal(world, 2026-01-01 start)
+
+ask zx74: explain bal(world, 2026-01-15)
+
+ask zx75: explain bal(world, 2026-01-30)
+
+ask zx76: explain bal(world, 2026-01-30 start)
+
+ask zx77: explain bal(world, 2026-01-31)
+
+ask zx78: explain bal(world, 2026-02-01)
+
+ask zx79: explain bal(world, 2026-02-01 start)
+
+ask zx80: explain bal(world, 2026-03-02)
+
+ask zx81: explain bal(world, 2026-06-30)
+
+ask zx82: explain bal(world, 2026-06-30 start)
+
+ask zx83: explain bal(world, 2026-12-31)

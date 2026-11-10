@@ -1,0 +1,12 @@
+part g_notnum
+  tally 2
+
+axis gx_notnum
+  lo "low"
+  hi "high"
+
+def g_notnum_x: int
+  rule base = n1
+  rule other beats base = n1 + txt when gx_notnum == hi
+
+ask g_notnum: g_notnum_x

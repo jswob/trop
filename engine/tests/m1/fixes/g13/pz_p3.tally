@@ -1,0 +1,87 @@
+model p1
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+unit kg "a kilogram"
+
+input at_frac: num
+input at_int: int
+input at_money: money PLN
+input at_bad: num
+input cap: money PLN
+input hole_end: int
+input two: int
+input lo_f: num
+input hi_f: num
+input one: int
+input eleven: int
+input half_n: num
+input two_pln: money PLN
+input half_pln: money PLN
+input nine_pln: money PLN
+input by_frac[f in 0.5 .. 2.5 step 0.5]: num
+input by_money[a in 0 PLN .. 10 PLN step 1 PLN]: num
+input by_cap[a in 0 PLN .. cap step 1 PLN]: num
+input by_hole[k in 1 .. hole_end]: num
+input rr[k in 1 .. 9 step 2]: num
+input by_kg[w in 1 kg .. 5 kg step 0.5 kg]: num
+
+def dbl[g in 0 PLN .. cap step 1 PLN]: money PLN = g * two
+def half[f in lo_f .. hi_f step half_n]: num = f * two
+
+ask a_int_of_frac: by_frac[1]
+ask a_int_of_frac_v: by_frac[at_int]
+ask a_frac_missing: by_frac[2]
+ask a_frac_bad: by_frac[at_bad]
+ask a_money_v_unstated: by_money[at_money + two_pln]
+ask a_money_bad: by_money[at_money + half_pln]
+ask a_cap: by_cap[at_money]
+ask a_cap_bad: by_cap[at_money + nine_pln]
+ask a_hole_end: by_hole[2]
+ask a_rr_bad: rr[at_int + one]
+ask a_rr_out: rr[at_int + eleven]
+ask a_dbl: dbl[at_money]
+ask a_half: half[at_frac]
+ask a_sum_half: sum(half[f] for f in 0.5 .. 2.5 step 0.5)
+ask a_sum_money: sum(v for v in 0 PLN .. 3 PLN step 1 PLN)
+ask a_count_kg: count(w in 1 kg .. 5 kg step 0.5 kg)
+ask a_frac_star: by_frac[at_frac + half_n]
+ask a_money_txt: by_money[at_money * two]
+ask a_rr_lit_bad: rr[4]
+ask a_rr_lit_out: rr[11]
+ask a_sum_frac: sum(by_frac[f] for f in lo_f .. hi_f step half_n)
+ask a_min_money: min(v for v in at_money .. cap step two_pln)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  at_frac = 1.5 "c"
+  at_int = 2 "c"
+  at_money = 3.00 PLN "c"
+  at_bad = 1.7 "c"
+  cap = 6.00 PLN "c"
+  two = 2 "c"
+  lo_f = 0.5 "c"
+  hi_f = 2.5 "c"
+  one = 1 "c"
+  eleven = 11 "c"
+  half_n = 0.5 "c"
+  two_pln = 2.00 PLN "c"
+  half_pln = 0.50 PLN "c"
+  nine_pln = 9.00 PLN "c"
+  by_frac[1.5] = 0.15 "c"
+  by_frac[2.0] = 0.2 "c"
+  by_money[3 PLN] = 0.3 "c"
+  by_money[6 PLN] = 0.6 "c"
+  by_cap[3 PLN] = 3 "c"
+  by_hole[2] = 2 "c"
+  rr[3] = 0.3 "c"
+  by_kg[2.5 kg] = 25 "c"
+  by_kg[1 kg] = 1 "c"

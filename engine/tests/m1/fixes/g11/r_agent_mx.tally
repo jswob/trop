@@ -1,0 +1,52 @@
+model mx
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+index qs = [q1, q2, q3]
+
+input p[k in qs]: num
+
+input alt: num
+
+input w[k in qs]: num
+
+def flag[k in qs]: bool
+  rule nr beats base v law1 = true when missing(p[k])
+  rule base = false
+
+def cnt: int = count(k in qs where flag[k])
+
+def best: key qs = argmax(w[k] for k in qs) ties by p[k]
+
+def hx: num = p[q3] as if {alt = p[q1]}
+
+def mm: num = max(p[q1], p[q2] as if {p[q2] = alt})
+
+ask v: cnt, best, hx, mm
+
+ask e1: explain cnt
+
+ask e2: explain best
+
+ask e3: explain hx
+
+ask e4: explain mm
+
+ask e5: explain flag[q3]
+
+ask e6: explain p[q3]
+
+version law1
+  cite card
+  governs always
+  known 2026-01-01
+  p[q1] = 4
+  p[q2] = 5
+  alt = 9
+  w[q1] = 1
+  w[q2] = 3
+  w[q3] = 3

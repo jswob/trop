@@ -1,0 +1,8 @@
+part e_field
+  tally 2
+
+move m_field: transfers
+  on d0
+  leg cash from konto to world amount sum(m.zz for m in transfers over d0..d0)
+
+ask e_field: bal(konto, 2026-12-31)

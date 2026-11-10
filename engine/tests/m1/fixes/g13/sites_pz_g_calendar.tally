@@ -1,0 +1,12 @@
+part g_calendar
+  tally 2
+
+axis gx_calendar
+  lo "low"
+  hi "high"
+
+def g_calendar_x: date
+  rule base = d0
+  rule other beats base = add_business(d0, n1, txt) when gx_calendar == hi
+
+ask g_calendar: g_calendar_x

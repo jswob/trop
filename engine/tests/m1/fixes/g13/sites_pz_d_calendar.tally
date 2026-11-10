@@ -1,0 +1,11 @@
+scenario d_calendar over sites
+  tally 2
+  from 2026-01-01
+
+version dv_calendar
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  replace d0 = add_business(sites.d0, sites.n1, sites.txt) "x"
+
+ask d_calendar: d0 in d_calendar

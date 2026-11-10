@@ -1,0 +1,6 @@
+part s_day_of
+  tally 2
+
+def s_day_of_x: date = day_of(2026, txt)
+
+ask s_day_of: s_day_of_x

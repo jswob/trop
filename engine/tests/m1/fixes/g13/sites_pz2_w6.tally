@@ -1,0 +1,6 @@
+part w6
+  tally 2
+
+def w6_x: num = sum(rate[k] + k for k in [q1, q2])
+
+ask w6: w6_x

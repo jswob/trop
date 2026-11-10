@@ -1,0 +1,33 @@
+model val03
+  tally 2
+  on 2026-10-25
+  start 2022-01-01
+  end 2022-12-31
+
+source lim_draft "VAL-03 card: the 2022 income limit LIM, draft, published 20 May 2022"
+
+source lim_final "VAL-03 card: the 2022 income limit LIM, final, published 15 July 2022"
+
+unit DUK: currency minor 0.01
+
+input lim: money DUK
+
+ask known_aug: lim law 2022-12-31 as known 2022-08-01
+
+ask known_may: lim law 2022-12-31 as known 2022-05-31
+
+ask src_aug: explain lim law 2022-12-31 as known 2022-08-01
+
+ask src_may: explain lim law 2022-12-31 as known 2022-05-31
+
+version v_draft
+  cite lim_draft
+  governs 2022-01-01..2022-12-31
+  known 2022-05-20
+  lim = 85000.00 "draft: in force for all of 2022"
+
+version v_final
+  cite lim_final
+  governs 2022-01-01..2022-12-31
+  known 2022-07-15
+  replace lim = 88000.00 "final: in force for all of 2022"

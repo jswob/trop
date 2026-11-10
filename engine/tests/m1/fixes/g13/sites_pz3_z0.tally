@@ -1,0 +1,26 @@
+part z0
+  tally 2
+
+input ry: num 1/year
+
+input rr: rate
+
+place w2: outside lives 1900-01-01..
+
+kind evs: event certain
+  leg what: any
+
+move mv: evs
+  on d0
+  leg what from world to w2 amount ry
+
+def z0_x: num = sum(m.what.amount for m in evs over d0..d0)
+
+ask z0: z0_x
+
+version vz
+  cite card
+  governs always
+  known 2026-01-01
+  ry = 0.05/year "c"
+  rr = 5 %/year "c"

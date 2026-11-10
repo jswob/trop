@@ -1,0 +1,13 @@
+part y2
+  tally 2
+
+kind evs: event certain
+  leg what: any
+
+move mv: evs
+  on d0
+  leg what from konto to world amount fee
+
+def y2_x: num = sum(m.what.amount * r5 for m in evs over d0..d0)
+
+ask y2: y2_x

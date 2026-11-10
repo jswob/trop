@@ -1,0 +1,6 @@
+part s_int_arg
+  tally 2
+
+def s_int_arg_x: date = add_months(d0, txt)
+
+ask s_int_arg: s_int_arg_x

@@ -1,0 +1,14 @@
+part w1c
+  tally 2
+
+input kq: key qs
+
+def w1c_x: num = rate[kq + 1]
+
+ask w1c: w1c_x
+
+version vw1c
+  cite card
+  governs always
+  known 2026-01-01
+  kq = q1 "c"

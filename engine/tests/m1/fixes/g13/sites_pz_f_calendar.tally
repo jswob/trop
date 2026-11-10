@@ -1,0 +1,9 @@
+part f_calendar
+  tally 2
+
+move dm_calendar: transfers
+  on add_business(d0, n1, txt)
+  reads konto
+  leg cash from konto to world amount min(fee, bal(konto))
+
+ask f_calendar: bal(konto, 2026-12-31)
