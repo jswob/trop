@@ -11,14 +11,17 @@
 //! (`Checker.readers_of`).
 //! Invariants: an explanation prints from its trace in the order refcore prints it, each node
 //! numbered where it first prints and a cause met again referenced by its number, a row by
-//! its stable id; nothing recurses (a worklist, R-16); the walk's forms (a movement, a
-//! balance, a projection, a walk-bound def) stop `NotBuilt` (G12); rows print in the text
-//! order of their stable ids; readers by depth, each depth by id.
+//! its stable id, a balance by its read; nothing recurses (a worklist, R-16); a balance, a
+//! projection and a `low` are `walked.rs`'s, a balance among the causes prints in their
+//! balance form (P63); a movement instance and a walk-bound def stop `NotBuilt`; rows print in
+//! the text order of their stable ids; readers by depth, each depth by id, an event kind's
+//! bindings first (P63).
 
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::answer::unresolved_word;
 use super::check::Printed;
+use super::walked::{Read, balance_line, plain_lines};
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Env, Item, Trace, TraceKind, num_stop};
 use crate::model::{NameKind, Node, NodeKind, Reality, Value};
@@ -39,6 +42,12 @@ pub(super) fn explain_line(
     env: &Env,
     ctx: Ctx,
 ) -> Result<Printed, Stop> {
+    if let Expr::Bal(b) = reference {
+        return balance_line(m, (ask, Read::Bal(b), reference), engine, env, ctx);
+    }
+    if let Expr::Low(l) = reference {
+        return balance_line(m, (ask, Read::Low(l), reference), engine, env, ctx);
+    }
     if let Some(form) = walk_form(m, reference) {
         return Err(Stop::NotBuilt(form));
     }
@@ -61,7 +70,7 @@ pub(super) fn explain_line(
     };
     Ok(Printed {
         text,
-        body: derivation(m, &trace)?,
+        body: derivation(m, engine, &trace)?,
         bare: false,
         met,
         laws: None,
@@ -130,12 +139,9 @@ fn outside_pins(
     trace.beside_pins(outside_trace, pins, (inside, value))
 }
 
-/// The explain form a reference names that the walk explains, G12's: a balance, a
-/// projection or `low`, a movement instance, a walk-bound def (E §10).
+/// The explain form a reference names that the walk explains and isn't built: a movement
+/// instance, a walk-bound def (E §10).
 fn walk_form(m: &Reality, reference: &Expr) -> Option<&'static str> {
-    if matches!(reference, Expr::Bal(_) | Expr::Low(_)) {
-        return Some("explain of a balance or a projection");
-    }
     // a name, or a name at keys
     let named = if let Expr::Post(base, _) = reference {
         base.as_ref()
@@ -206,20 +212,37 @@ fn row_lines(m: &Reality, met: &Collected) -> Result<Vec<String>, Stop> {
 }
 
 /// The line of `readers-of reference`: every item with a path of edges to it in the item
-/// graph, the direct readers first, then by depth, each depth by id; `nothing reads x` when
-/// none (refcore's `readers_of`, `Checker.readers_of`). An index, a kind, a unit, a version
-/// or a source is no node of the graph, so nothing reads it. L §5.18, E §10, §3.1 step 5.
+/// graph, the direct readers first, then by depth, each depth by id; of an event kind, the
+/// items holding a binding over it or over a kind it is a subkind of first, then their
+/// readers so (a move of the kind is no reader: its kind is its type); `nothing reads x`
+/// when none (refcore's `readers_of`, `Checker.readers_of`; ruling P63, #132). An index, a
+/// kind of things, a unit, a version or a source is no node of the graph, so nothing reads
+/// it. L §5.18, E §10, §3.1 step 5.
 ///
 /// # Errors
 ///
-/// `NotBuilt` for an event kind, whose readers are the bindings over it (L §5.18, D-15).
+/// `ENGINE-INVARIANT` for a reference that is no id.
 pub(super) fn readers_line(m: &Reality, ask: &Ask, reference: &Expr) -> Result<String, Stop> {
     let Expr::Name(id) = reference else {
         return Err(invariant("readers-of of other than an id"));
     };
-    let names = match node_of(m, id)? {
-        Some(node) => readers(m, &node),
-        None => Vec::new(),
+    let names = match node_of(m, id) {
+        Of::Node(node) => readers(m, vec![&node]),
+        Of::Event => {
+            let mut first: Vec<&Node> = m
+                .graph
+                .bound_kinds
+                .iter()
+                .filter(|(bound, _)| m.subtree(bound).contains(id.as_str()))
+                .flat_map(|(_, items)| items.iter())
+                .collect();
+            first.sort_by(|a, b| by_id(a, b));
+            first.dedup();
+            let mut out: Vec<String> = first.iter().map(|n| n.id.clone()).collect();
+            out.extend(readers(m, first));
+            out
+        }
+        Of::Nothing => Vec::new(),
     };
     if names.is_empty() {
         return Ok(format!("{}: nothing reads {id}", ask.id));
@@ -227,8 +250,18 @@ pub(super) fn readers_line(m: &Reality, ask: &Ask, reference: &Expr) -> Result<S
     Ok(format!("{}: {}", ask.id, names.join(", ")))
 }
 
-/// The node of the graph `id` names; none for a name that is no node.
-fn node_of(m: &Reality, id: &str) -> Result<Option<Node>, Stop> {
+/// What `readers-of` finds a name to be: a node of the graph, an event kind, or neither.
+enum Of {
+    /// A node of the item graph.
+    Node(Node),
+    /// An event kind: its readers are the items holding a binding over it.
+    Event,
+    /// No node: nothing reads it.
+    Nothing,
+}
+
+/// What `id` names, for `readers-of`. E §10, §3.1 step 5.
+fn node_of(m: &Reality, id: &str) -> Of {
     let kind = match m.names.kind(id) {
         Some(NameKind::Input) => NodeKind::Input,
         Some(NameKind::Def) => NodeKind::Def,
@@ -239,7 +272,7 @@ fn node_of(m: &Reality, id: &str) -> Result<Option<Node>, Stop> {
         Some(NameKind::Fill) => NodeKind::Fill,
         Some(NameKind::Ask) => NodeKind::Ask,
         Some(NameKind::Kind) if m.kinds.get(id).is_some_and(|k| k.certainty.is_some()) => {
-            return Err(Stop::NotBuilt("readers-of an event kind"));
+            return Of::Event;
         }
         Some(
             NameKind::Kind
@@ -249,14 +282,20 @@ fn node_of(m: &Reality, id: &str) -> Result<Option<Node>, Stop> {
             | NameKind::Source
             | NameKind::Cut,
         )
-        | None => return Ok(None),
+        | None => return Of::Nothing,
     };
-    Ok(Some(Node::new(kind, id)))
+    Of::Node(Node::new(kind, id))
 }
 
-/// The ids of the items with a path of edges to `node`, by depth, each depth in the order of
-/// its ids, then its kinds' words (refcore's `Checker.readers_of`). E §10.
-fn readers(m: &Reality, node: &Node) -> Vec<String> {
+/// Two nodes in the order a layer of readers prints: by id, then by their kinds' words.
+fn by_id(a: &Node, b: &Node) -> core::cmp::Ordering {
+    (a.id.as_str(), a.kind.word()).cmp(&(b.id.as_str(), b.kind.word()))
+}
+
+/// The ids of the items with a path of edges to one of `start`, by depth, each depth in the
+/// order of its ids, then its kinds' words; `start` itself not among them (refcore's
+/// `Checker.readers_of`). E §10.
+fn readers<'a>(m: &'a Reality, start: Vec<&'a Node>) -> Vec<String> {
     let mut inverse: BTreeMap<&Node, Vec<&Node>> = BTreeMap::new();
     for (reader, targets) in &m.graph.edges {
         for target in targets.keys() {
@@ -268,9 +307,8 @@ fn readers(m: &Reality, node: &Node) -> Vec<String> {
             }
         }
     }
-    let mut seen: BTreeSet<&Node> = BTreeSet::new();
-    seen.insert(node);
-    let mut frontier: Vec<&Node> = vec![node];
+    let mut seen: BTreeSet<&Node> = start.iter().copied().collect();
+    let mut frontier = start;
     let mut out = Vec::new();
     while !frontier.is_empty() {
         let mut layer: Vec<&Node> = Vec::new();
@@ -281,7 +319,7 @@ fn readers(m: &Reality, node: &Node) -> Vec<String> {
                 }
             }
         }
-        layer.sort_by(|a, b| (a.id.as_str(), a.kind.word()).cmp(&(b.id.as_str(), b.kind.word())));
+        layer.sort_by(|a, b| by_id(a, b));
         out.extend(layer.iter().map(|n| n.id.clone()));
         frontier = layer;
     }
@@ -300,9 +338,10 @@ enum Step {
 /// `explain_node`): each node numbered `[n]` where it first prints, its depth two spaces a
 /// level; a def cell with its value and law date, its lines, each rule in its labels' order
 /// with its state, under the rule the causes its `when` and, for the winner, its value read,
-/// then what the cell read beside its rules; a row with its value and provenance; a node met
-/// again as `(<label>: see [n])`, a row by its stable id. L §5.18, E §10.
-fn derivation(m: &Reality, trace: &Trace) -> Result<Vec<String>, Stop> {
+/// then what the cell read beside its rules; a row with its value and provenance; a balance
+/// in the balance form, from the walk it read (P63); a node met again as `(<label>: see
+/// [n])`, a row by its stable id, a balance by its read. L §5.18, E §10.
+fn derivation(m: &Reality, engine: &Engine, trace: &Trace) -> Result<Vec<String>, Stop> {
     let mut out = Vec::new();
     let mut numbered: BTreeMap<usize, usize> = BTreeMap::new();
     let mut rows: BTreeMap<String, usize> = BTreeMap::new();
@@ -319,7 +358,10 @@ fn derivation(m: &Reality, trace: &Trace) -> Result<Vec<String>, Stop> {
         };
         let node = trace.node(at)?;
         let ind = indent(depth);
-        let leaf = matches!(node.kind, TraceKind::Row | TraceKind::BandRow);
+        let leaf = matches!(
+            node.kind,
+            TraceKind::Row | TraceKind::BandRow | TraceKind::Balance(_)
+        );
         let met = if leaf {
             rows.get(&node.label).copied()
         } else {
@@ -337,7 +379,7 @@ fn derivation(m: &Reality, trace: &Trace) -> Result<Vec<String>, Stop> {
         } else {
             numbered.insert(at, count);
         }
-        let (head, below) = node_lines(m, trace, (at, depth), count)?;
+        let (head, below) = node_lines((m, engine), trace, (at, depth), count)?;
         out.extend(head);
         todo.extend(below.into_iter().rev());
     }
@@ -350,9 +392,10 @@ fn indent(depth: usize) -> String {
 }
 
 /// A node's own lines, numbered `no` at its depth, and the steps that print under it in
-/// order (refcore's `explain_node`). L §5.18.
+/// order (refcore's `explain_node`); a balance's in the balance form, from the walk it read,
+/// but for a refused one (ruling P63, #132). L §5.18, E §10.
 fn node_lines(
-    m: &Reality,
+    (m, engine): (&Reality, &Engine),
     trace: &Trace,
     (at, depth): (usize, usize),
     no: usize,
@@ -369,6 +412,23 @@ fn node_lines(
                 value_text(m, node.value.as_ref())?
             ));
             head.extend(node.lines.iter().map(|l| format!("{ind}    {l}")));
+        }
+        TraceKind::Balance(read) => {
+            head.push(format!(
+                "{ind}[{no}] {} = {}",
+                node.label,
+                value_text(m, node.value.as_ref())?
+            ));
+            if let Some(walk) = read.walk {
+                let lines = plain_lines(
+                    m,
+                    engine,
+                    walk,
+                    (&read.place, &read.unit),
+                    (read.day, read.start, read.uncertain),
+                )?;
+                head.extend(lines.iter().map(|l| format!("{ind}    {l}")));
+            }
         }
         TraceKind::BandRow => head.push(format!("{ind}[{no}] band row {}", node.label)),
         TraceKind::Def(law) => {
@@ -433,7 +493,7 @@ fn value_text(m: &Reality, item: Option<&Item>) -> Result<String, Stop> {
 /// A line's value by no static type, as `explain` prints its head (refcore's `fmt_value`
 /// with none): a key outside its index and a refusal as `refused: <code> <message>`.
 /// L §5.18, §8.4.
-fn plain_text(m: &Reality, item: &Item) -> Result<String, Stop> {
+pub(super) fn plain_text(m: &Reality, item: &Item) -> Result<String, Stop> {
     match item {
         Item::Refused(r) => Ok(format!("refused: {}", r.text())),
         Item::Value(Value::OutKey { index, text }) => Ok(format!(
@@ -460,6 +520,6 @@ fn side_text(m: &Reality, item: &Item) -> Result<String, Stop> {
 }
 
 /// An `ENGINE-INVARIANT` refusal: an explanation's own structure broke.
-fn invariant(what: &str) -> Stop {
+pub(super) fn invariant(what: &str) -> Stop {
     Stop::Refused(Refusal::new(Code::EngineInvariant, what.to_owned()))
 }

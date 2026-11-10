@@ -169,7 +169,7 @@ pub fn first_readings(m: &Reality, by: (Day, World)) -> Result<BTreeMap<String, 
 }
 
 /// A reading's instant as text, `2026-09-30 end` (refcore's `instant_text`). L §4.6.
-fn instant_text(day: Day, edge: Edge) -> String {
+pub(crate) fn instant_text(day: Day, edge: Edge) -> String {
     let word = match edge {
         Edge::Start => "start",
         Edge::End => "end",

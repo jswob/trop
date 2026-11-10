@@ -19,7 +19,7 @@ use crate::base::{Code, Refusal, Run, Warn};
 use crate::book::{Adjustment, Coverage, Linked, Obs};
 use crate::model::{Domain, KeyVal, Node, NodeKind, Reality, Thing, UnitError, Value, World};
 use crate::num::NumError;
-use crate::syntax::{Ask, Expr, Stop};
+use crate::syntax::{Ask, AskBody, Expr, Stop};
 use crate::time::Day;
 use crate::walk::{Inst, ProjKey, Walk, WalkAt};
 
@@ -556,10 +556,15 @@ impl Engine {
     pub fn for_ask(self, ask: &Ask) -> Engine {
         Engine {
             holder: Some(Node::new(NodeKind::Ask, &ask.id)),
-            keep_rows: if let crate::syntax::AskBody::InputsOf(_) = ask.body {
-                Rows::Kept
-            } else {
-                Rows::Unkept
+            // `explain` prints the row a balance's reading came from (E §10)
+            keep_rows: match ask.body {
+                AskBody::InputsOf(_) | AskBody::Explain(_) => Rows::Kept,
+                AskBody::Exprs(_)
+                | AskBody::Residuals(_)
+                | AskBody::ReadersOf(_)
+                | AskBody::Check(..)
+                | AskBody::Solve(_)
+                | AskBody::Diff(_) => Rows::Unkept,
             },
             ..self
         }

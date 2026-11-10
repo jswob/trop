@@ -225,6 +225,27 @@ impl Engine {
         Ok(out)
     }
 
+    /// The plain twin's walk of a projection from day `t`, as the item holding it now leaves
+    /// moves out, walked through day `through`: what `explain` of a projection reads, never
+    /// F5's tree (refcore's `_explain_projection`, its `proj_walk` and `run_to`). E §10,
+    /// E §4.3, L §5.14.1.
+    ///
+    /// # Errors
+    ///
+    /// `RUN-FUTURE` for a decision's projection from a later day; the refusals of its walk.
+    pub(crate) fn projection_walk(
+        &mut self,
+        m: &Reality,
+        ctx: Ctx,
+        t: Day,
+        through: Day,
+    ) -> Result<usize, Stop> {
+        let left_out = self.holder_left_out(m)?;
+        let id = self.proj_walk(m, ctx, t, left_out)?;
+        self.walk_projection(m, id, through)?;
+        Ok(id)
+    }
+
     /// The moves a projection leaves out: those that depend on the item holding it, none for
     /// an ask's line (refcore's `_leftout`, from the item graph). L §5.14.1, E §4.3 step 3.
     fn holder_left_out(&self, m: &Reality) -> Result<BTreeSet<String>, Stop> {
@@ -419,7 +440,7 @@ fn lowest(balances: Vec<Value>) -> Result<Value, Stop> {
 
 /// A place's own unit, for a read that names none: `LOAD-UNIT` for a place of unit `any`
 /// (refcore's `m_bal_unit`, with no unit written). L §5.10.
-pub(super) fn own_unit(m: &Reality, place: &str) -> Result<String, Stop> {
+pub(crate) fn own_unit(m: &Reality, place: &str) -> Result<String, Stop> {
     m.things
         .get(place)
         .and_then(|t| m.place_unit(t))

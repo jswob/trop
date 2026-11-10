@@ -286,6 +286,12 @@ impl Checker {
     /// input; one over a decision's movements or over `pads` is a running read (refcore's
     /// `m_bind_movements`). L §5.14.1.
     fn bind_movements(&mut self, m: &Reality, scope: &Scope, kind: &str) {
+        // `readers-of` the kind lists the item (E §10, ruling P63)
+        self.graph
+            .bound_kinds
+            .entry(kind.to_owned())
+            .or_insert_with(std::collections::BTreeSet::new)
+            .insert(scope.item.clone());
         let sub = m.subtree(kind);
         for (id, mv) in m.moves.entries() {
             if !sub.contains(&mv.kind) {

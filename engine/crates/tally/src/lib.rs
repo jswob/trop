@@ -191,7 +191,7 @@ pub mod eval {
     pub use state::{Collected, Ctx, Engine, Entry, Env, RowSeen, Rows};
     pub(crate) use state::{a_day, num_stop, past_days};
     pub(crate) use timelines::combinations;
-    pub(crate) use trace::{Kind as TraceKind, Trace};
+    pub(crate) use trace::{Balance as TracedBalance, Kind as TraceKind, Trace, Walked};
     pub(crate) use years::year_form;
 }
 
@@ -218,6 +218,7 @@ pub mod walk {
     #[cfg(feature = "fault-injection")]
     pub use day::Fault;
     pub use day::{Broke, Ends};
+    pub(crate) use flows::span_last;
     pub(crate) use lows::Trees;
     pub use lows::{Lows, RangeMinimum};
     pub use order::{Run, WalkAt};
@@ -228,6 +229,8 @@ pub mod walk {
     pub(crate) use plan::{invariant, quantity};
     pub use point::{At, Step};
     pub use projection::ProjKey;
+    pub(crate) use projection::own_unit;
+    pub(crate) use reads::state_value;
     pub(crate) use state::GapAt;
     pub use state::{
         ALL, Change, Checkpoint, Ent, Group, Log, Progress, Projected, St, Taken, Today, Walk,
@@ -252,6 +255,7 @@ pub mod book {
     pub(crate) use members::{MvDom, MvMember};
     pub use observe::{Coverage, Linked, Obs, inst_id};
     pub use reading::{Pad, Seen, first_readings, reading_rank, readings};
+    pub(crate) use reading::{gap_text, instant_text};
     pub(crate) use settle::settlement_move;
 }
 
@@ -265,6 +269,7 @@ pub mod ask {
     mod explain;
     mod register;
     mod residuals;
+    mod walked;
     mod worlds;
 
     pub(crate) use answer::date_of;

@@ -490,7 +490,7 @@ impl Walk {
     /// when that is on or after the walk's start, else unknown until a reading; in a
     /// projection's walk, the state of the walk it continues at the point it starts from
     /// (refcore's `default`). L §5.10, E §4.3 step 1.
-    fn default_state(&self, m: &Reality, place: &str, unit: &str) -> St {
+    pub(crate) fn default_state(&self, m: &Reality, place: &str, unit: &str) -> St {
         match &self.proj {
             None => opening_state(m, place, unit, ((self.cut, self.start), self.world)),
             Some(p) => {

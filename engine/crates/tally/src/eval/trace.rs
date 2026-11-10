@@ -11,7 +11,8 @@
 //! `trace_winner`); ask.py (`evaluate`'s explain arm swaps the memo out, `explain_pins`).
 //! Invariants: a node is added under the innermost open one, and none while a shared
 //! structure (a walk, a plan, adjustments, links) evaluates, whose reads are its own (E §3.2);
-//! a read that reaches one is noted, for the walk's forms; a def cell traced once is a
+//! a read that reaches one is noted, for the walk's forms, but a plain balance read, which is
+//! a node of its own, printed in the balance form (ruling P63); a def cell traced once is a
 //! reference to its node after; a cell computed from the work stack is traced apart, then
 //! referenced by the read that replays; a read that replays starts its children again; a def
 //! cell's rules show once its candidates are known, as refcore records them; the traced
@@ -46,6 +47,31 @@ pub(crate) enum Kind {
     /// An `as if`'s derivation inside its pins or outside them, its value printed after its
     /// label once known.
     Side,
+    /// A plain balance read, printed in E §10's balance form from the walk it read (ruling
+    /// P63, #132).
+    Balance(Balance),
+}
+
+/// Whether a trace had noted a read of the walk, kept across a balance read (E §10).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct Walked(bool);
+
+/// A traced balance read: the place and unit, the day and whether at its start, whether
+/// `with uncertain`, and the walk it read, by its place in the engine's list (E §10).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct Balance {
+    /// The place.
+    pub place: String,
+    /// The unit.
+    pub unit: String,
+    /// The day.
+    pub day: Day,
+    /// Whether the balance is at the day's start.
+    pub start: bool,
+    /// Whether the read counts uncertain movements (`with uncertain`).
+    pub uncertain: bool,
+    /// The walk read; none for a refused read.
+    pub walk: Option<usize>,
 }
 
 /// One rule of a traced def cell, as `explain` prints it: its label, its state, and the
@@ -283,7 +309,7 @@ impl Trace {
 impl Engine {
     /// Whether a read now is traced: an `explain` is being traced and no shared structure is
     /// evaluating (E §3.2, §10).
-    pub(super) fn tracing(&self) -> bool {
+    pub(crate) fn tracing(&self) -> bool {
         self.trace.is_some() && !self.reads.iter().any(|o| matches!(o, Open::Apart))
     }
 
@@ -352,6 +378,33 @@ impl Engine {
         if let Some(trace) = self.traced() {
             trace.walked = true;
         }
+    }
+
+    /// Whether the trace has noted a read of the walk, false with none: what a balance read
+    /// gives back once its own read of the walk is its node (E §10).
+    pub(crate) fn trace_walked(&self) -> Walked {
+        Walked(self.trace.as_ref().is_some_and(|t| t.walked))
+    }
+
+    /// Adds a plain balance read and what it gave, refused or not, as a node printed in the
+    /// balance form, where a read now is traced; its read of the walk is that node, so the
+    /// note of a walk read goes back to `before`, as it stood before the read (ruling P63,
+    /// #132). E §10.
+    pub(crate) fn trace_balance(&mut self, before: Walked, read: Balance, got: Item) {
+        let Some(trace) = self.traced() else {
+            return;
+        };
+        trace.walked = before.0;
+        let start = if read.start { " start" } else { "" };
+        let with = if read.uncertain {
+            " with uncertain"
+        } else {
+            ""
+        };
+        let label = format!("bal({}, {}{start}){with}", read.place, read.day.text());
+        let mut node = Node::new(Kind::Balance(read), label);
+        node.value = Some(got);
+        trace.added(node);
     }
 
     /// Whether a read now is traced and the trace has met def cell `key` at law date `law`,

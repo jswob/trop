@@ -71,11 +71,51 @@ impl Engine {
             return self.projection(m, b, (&place, &unit), d, (env, ctx));
         }
         let key = if b.start { At::start(d) } else { At::end(d) };
-        let v = self.bal_day(m, (&place, &unit), d, key, ctx)?;
-        if b.proj.uncertain {
-            return self.with_uncertain(m, (&place, &unit), d, &v, ctx);
+        let walked = self.trace_walked();
+        let got = self.bal_day(m, (&place, &unit), d, key, ctx).and_then(|v| {
+            if b.proj.uncertain {
+                self.with_uncertain(m, (&place, &unit), d, &v, ctx)
+            } else {
+                Ok(v)
+            }
+        });
+        if ctx.at.is_none() && self.tracing() {
+            self.trace_bal(m, walked, (place, unit, ctx.cut), (d, b), &got)?;
         }
-        Ok(v)
+        got
+    }
+
+    /// A plain balance read at cut `cut`, traced as a node `explain` prints in the balance
+    /// form from the main walk it read, a refused one alone; none for a refusal of load's or
+    /// a form not built (ruling P63, #132). E §10.
+    fn trace_bal(
+        &mut self,
+        m: &Reality,
+        walked: crate::eval::Walked,
+        (place, unit, cut): (String, String, Day),
+        (day, b): (Day, &Bal),
+        got: &Result<Value, Stop>,
+    ) -> Result<(), Stop> {
+        let (item, walk) = match got {
+            Ok(v) => (
+                crate::eval::Item::Value(v.clone()),
+                Some(self.main_walk(m, cut)?),
+            ),
+            Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {
+                (crate::eval::Item::Refused(r.clone()), None)
+            }
+            Err(_) => return Ok(()),
+        };
+        let read = crate::eval::TracedBalance {
+            place,
+            unit,
+            day,
+            start: b.start,
+            uncertain: b.proj.uncertain,
+            walk,
+        };
+        self.trace_balance(walked, read, item);
+        Ok(())
     }
 
     /// A read's place: a place, or the hole it is (refcore's `place_arg`). L §5.10.
@@ -107,7 +147,7 @@ impl Engine {
 
     /// A balance read's unit: the one written, or the place's (refcore's `bal_unit`).
     /// L §5.10 Kind and unit.
-    fn bal_unit(
+    pub(crate) fn bal_unit(
         &mut self,
         m: &Reality,
         b: &Bal,
@@ -651,7 +691,7 @@ impl Uncertain {
 
 /// A state's value: the refusal, a hole with every question it rests on, or the balance
 /// (refcore's `st_value`). L §5.10, §8.1.
-fn state_value(m: &Reality, st: &St, unit: &str, anchor: &Hole) -> Result<Value, Stop> {
+pub(crate) fn state_value(m: &Reality, st: &St, unit: &str, anchor: &Hole) -> Result<Value, Stop> {
     if let Some(r) = &st.bad {
         return Err(Stop::Refused(r.clone()));
     }

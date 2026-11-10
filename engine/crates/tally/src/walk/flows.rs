@@ -750,7 +750,7 @@ fn one_unit(
 }
 
 /// A span's last day: the day before its end, or the run's last day (refcore's `last`). L §5.14.3.
-pub(super) fn span_last(m: &Reality, sp: &Span) -> Result<Day, Stop> {
+pub(crate) fn span_last(m: &Reality, sp: &Span) -> Result<Day, Stop> {
     match sp.end() {
         Some(end) => end
             .previous()
