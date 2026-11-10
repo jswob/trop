@@ -222,7 +222,10 @@ impl Engine {
             .things
             .get(&name)
             .ok_or_else(|| invariant("a thing load didn't build"))?;
-        let Some(span) = m.lifespan(thing, (ctx.cut, self.timeline_world())) else {
+        // a lifespan is a fact (L §5.7): its read is recorded, so a scenario that changes it
+        // lists the movements before its `from` that read it (E §9 item 3)
+        self.note_thing(m, thing, ctx.world);
+        let Some(span) = m.lifespan(thing, (ctx.cut, ctx.world)) else {
             return Err(refuse(Run::Key, format!("{name} was added after the cut")));
         };
         let from = span

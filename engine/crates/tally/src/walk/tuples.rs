@@ -137,6 +137,14 @@ impl Engine {
                 format!("the law date of {} is none here", mv.id),
             ));
         }
+        // an open end of a lifespan, `at lifespan(p).to` for a living p (L §3.6): only this
+        // value is refused, as refcore's `date_of` does, and the other asks are answered
+        if v == Value::Never {
+            return Err(refuse(
+                Run::None,
+                format!("never in the law date of {}", mv.id),
+            ));
+        }
         Ok(Law::Day(date_of(&v)?))
     }
 
