@@ -849,20 +849,23 @@ fn arith_words(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Result<(Value, 
 /// Key literal `word` as a key of the one index that holds it: the index its position named
 /// at load, which load checked holds it (L §2.5, `LOAD-KEY`).
 fn held_key(m: &Reality, word: &str) -> Result<Value, Stop> {
-    let mut held = m.indexes.entries().filter_map(|(id, ix)| {
+    let mut held = Vec::new();
+    for (id, ix) in m.indexes.entries() {
         let key = KeyVal::Key {
             index: id.clone(),
             name: word.to_owned(),
         };
-        ix.pos(&key).map(|_| key)
-    });
-    match (held.next(), held.next()) {
-        (Some(key), None) => Ok(Value::of_key(&key)),
+        if ix.pos(&key).is_some() {
+            held.push(key);
+        }
+    }
+    match held.as_slice() {
+        [key] => Ok(Value::of_key(key)),
         // the run keeps no position's type: which of them load chose isn't seen here
-        (Some(_), Some(_)) => Err(Stop::NotBuilt(
+        [_, _, ..] => Err(Stop::NotBuilt(
             "a key literal more indexes hold, moved by an offset",
         )),
-        (None, _) => Err(invariant(
+        [] => Err(invariant(
             "a key literal in key arithmetic no index holds: load refuses it (LOAD-KEY)",
         )),
     }

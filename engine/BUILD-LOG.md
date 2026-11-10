@@ -2412,3 +2412,64 @@ The builder of the M1 run, group G12 of `tmp/m1/build-plan.md`, on c82ef44. Each
 - **Check:** `check full: green, 31 steps (1144s)` on the code of this addendum's commit; `milestone-report: M1: 69/72 green (gates once M1 is tagged)`, as before the turn.
 - **Cost:** about 0.17 % of the week for this turn, 2.02 % for the session at this addendum (`engine/tools/usage`).
 - **STOP-REPORTs:** none new; G11's fold stays open (P62).
+
+## STOP-REPORT 2026-11-10: an integer key at a range stepped by a fraction: L §2.5 takes it, refcore refuses it
+
+- **Kind:** the spec and refcore disagree
+- **Where:** L §2.5 (at a stepped range's position a key is a value of the range's type, one of a + i·s ≤ b for a whole i ≥ 0); refcore `evaluate.py` `range_values` (a value's `isint` is `a.isint and step.denominator == 1`) and `vkey`, which keys a value by its `isint` too; the engine's `eval/ranges.rs` `range_holds`, `value_key`.
+- **Rule or gate:** L §2.5, §5.6; DONE rule 3.
+- **What happens:** `tmp/m1/g13/pz/p3.tally`, `input by_frac[f in 0.5 .. 2.5 step 0.5]: num` with rows `by_frac[1.5] = 0.15`, `by_frac[2.0] = 0.2`. `ask a_frac_missing: by_frac[2]`: refcore `refused: LOAD-KEY 2 is not a value of 0.5 .. 2.5 step 0.5` (exit 1); the engine `a_frac_missing: 0.2`. With `at_int = 2`, `by_frac[at_int]`: refcore `RUN-KEY 2 is not a value of …`, the engine `0.2`. `by_frac[1]`: refcore `LOAD-KEY 1 is not a value of …`, the engine the hole `?"by_frac at 1: no value"` (1 is 0.5 + 1·0.5, a value with no row).
+- **What I tried:** the spec's test is numeric: 2 = 0.5 + 3·0.5 is one of the range's values, and an int is a number (L §3.2). Refcore's refusal comes from its value carrying a flag the spec doesn't name: 2 the integer and 2.0 the range's value are two keys to it.
+- **What I ask:** (Recommended) the spec stands: a key at a stepped range is tested by its number, so an int key of a fractional range is the value it equals. Refcore is fixed at the round; T holds the three forms "for #n".
+- **What I did not do:** refuse an int key by its class, which no section says.
+- **State:** 4e593bf, green; this report is committed with G13's entry.
+
+## STOP-REPORT 2026-11-10: a day over a period, and a rate times money, met at run: the spec refuses them, refcore's run computes them
+
+- **Kind:** the spec and refcore disagree
+- **Where:** L §3.2 Period units ("`day` is a dimension of its own, so `1 day / 1 year` is refused (`LOAD-UNIT`)"); L §3.3 ("Anything else (`rate × money`, `rate + num`) is refused at load"); L §8.4 What isn't defined is refused ("at load where the types show it … and otherwise at the key (`RUN-DOMAIN`)"); refcore `check.py` `_arith` (a `dyn` operand, a leg of unit `any`, is checked "as it is computed") and `evaluate.py` `binop`, which then computes it; the engine's `eval/arith.rs` `arith` (the day-over-period stop), `rate_mul` and `add_sub` (rate arithmetic outside L §3.3).
+- **Rule or gate:** L §3.2, §3.3, §8.4; DONE rule 3.
+- **What happens:** `tmp/m1/g13/sites/pz3/` (`gen3.py`, `y1.tally`, `y5.tally`): `kind evs: event certain` with `leg what: any`, `move mv: evs` with `leg what from konto to world amount fee` (10.00 PLN). `sum(m.what.amount * 1 day / 1 year for m in evs over d0..d0)`: refcore `10 PLN*day/year`, `… / 1 day * 1 year` `10 PLN*year/day`, `… * 1 day / 1 month` `10 PLN*day/month`; with `input rr: rate` (5 %/year), `m.what.amount * rr` `0.5 PLN/year`, `rr / m.what.amount` `0.005 1/PLN/year`, `m.what.amount * rr * 1 month` `1/24 (0.0416666666666667) PLN`, `rr * m.what.amount / m.what.amount` `0.05 1/year` (all exit 0). The engine stops each `not implemented` (exit 69). Every other use of such a leg (a test, a date argument, a key, a comparison, a field: 18 probes, `gen4.py`) is refused at load by both, byte-equal.
+- **What I tried:** the spec refuses both operations by their units; load can't see a leg of unit `any`, so §8.4 puts the refusal at the key. The code is either `RUN-DOMAIN` (§8.4) or `LOAD-UNIT` met at run, as G4a's N6 made `a rate times a duration of another period dimension`. The text is unwritten.
+- **What I ask:** (Recommended) refused at the key: `LOAD-UNIT` with refcore's load texts (`… day is a dimension of its own (1 day / 1 year is refused, L §3.2)`, `rate × money` as `rates of different periods`' sibling), met at run as N6's are; refcore's run checks a `dyn` product's units at the round. Until then the two sites stay "not implemented".
+- **What I did not do:** compute the product (the spec refuses it); choose the code or the text.
+- **State:** 4e593bf, green; this report is committed with G13's entry.
+
+## 2026-11-10 M1, G13: reads at run, ranges an ask steps through, the 26 sites (issue #108)
+
+The builder of the M1 run, group G13 of `tmp/m1/build-plan.md`, on 54a95ca's successor d1fd733. Every form was probed on refcore and the engine outside the tests (`tmp/m1/g13/`, copies of the fixtures), byte for byte with the exit code, unless said.
+
+- **Ids green** (the eight rows `for` G13 in `engine/tests/m1/vectors.tsv`): `carried/ranges/r_small_step`, `r_computed_end`; `carried/reads/d_kind_key` (answered already), `d_places`, `d_unstated`, `d_star`, `d_money`, `d_frac`. `codes/m1/` holds none for G13. T's tests `m1_carried_2_reads_at_run` and `m1_carried_3_ranges_an_ask_steps_through` turned green: `milestone-report: M1: 69/72` → `71/72`. The one red is G8's fix's `m1_fixes_g8_a_price_in_another_currency_is_refused`.
+- **A key at a stepped range** (L §2.5, §5.6; `eval/ranges.rs` `range_key`, `Stepped`): a value of the range's type, one of a + i·s ≤ b. A literal where the range's ends and step are literals is checked at load, placed at its row (`load/keys.rs` `range_key_of`, `LOAD-KEY`); any other at run (`RUN-KEY`). A key of a kind read at run, a place's key, `rr[*]`, money and fraction ranges, and a range end that reads an earlier key (the read's keys bound left to right, `eval/keys.rs` `make_keys`, now the engine's) read as refcore.
+- **Ranges an ask steps through** (L §5.6, §7.6 item 2): a small fractional step (`0.001`), a computed end, money and unit ranges (`1 kg .. 5 kg step 0.5 kg`), up to 1 000 000 keys. **The twins**, debug build, `/usr/bin/time -l`: `r_at_limit` 0.73 s, 766 MB peak; `r_past_limit` (`RUN-LIMIT`) 0.00 s, 10 MB. Inside 60 s and 8 GB.
+- **Not built, stopping `not implemented`:** a money range stepped finer than its minor unit, and a row keyed by a range of values that aren't integers (refcore's range rows there stop `REFCORE-NOT-YET`, `'>' not supported between Num`).
+- **The 26 sites** (G4a's fix entry, by its file:line then; T's 11 classes in `carried/sites/`). Re-probed on the paths G5–G12 opened: a pin, an `as if`, a scenario's `replace`, a move's `on` and amount, a decision move, an axis rule (`sites/gen.py`, 58 probes), key literals (`sites/pz2/`, 25), a leg of unit `any`, whose unit only the run knows (`gen3.py`, `gen4.py`, `pz3/y*.tally`, 31), a key added after the cut and money finer than its minor unit (`pz3/o*`, `f*`, 7). 121 probes, 112 refcore's bytes; the 9 others are below.
+  - **Bin (i), `ENGINE-INVARIANT` with the reason load refuses first: 23.**
+    - `wrong_type`'s callers and the other type stops, 11 (`builtin.rs` :316 :461 :640 :659 :699 :813, `aggregate.rs` :250 :455 :1064, `expr.rs` :303 :589): all through `eval/state.rs` `not_typed`, now `a value of a type its place doesn't take: load's types refuse it first (LOAD-UNIT)`. Its other callers today (`dates.rs`, `bindings.rs`, `business.rs`, `prorata.rs`, `expr.rs`) are the same type stop.
+    - `int_of` of a non-number (`arith.rs:429`, now `arith.rs` `int_of`), `day_of` with no month-day (`builtin.rs:159`, now `dates.rs`), a calendar argument (`builtin.rs:386`, now `business.rs`), a period argument and a period word (`builtin.rs:1015`, `:1030`): `LOAD-UNIT` first.
+    - A leg in a record (`expr.rs:517`), a field a record lacks (`expr.rs:723`): `LOAD-FIELD` first.
+    - Money finer than its minor unit (`expr.rs:808`, `:828`, a literal and a figure): `LOAD-PRECISION` first (a pin, a scenario row, a band row).
+    - A literal key its index or kind lacks (`read.rs:493`, `:498`, now `eval/keys.rs` `lacks_at_run`): `LOAD-KEY` first; a key a version adds after the cut is `RUN-KEY` before it (`… was added after the cut`, refcore's bytes).
+    - A day stepped to no day (`aggregate.rs:1035`, now `ranges.rs` `day_step`): `arith` refuses a step that isn't a duration first.
+  - **Bin (ii), built with refcore's bytes: 1.** The ambiguous key (`expr.rs:608`, now `binop`): a key literal in key arithmetic, `q1 + 1`, `kq - q1`, `kq == q1 + 1`, `rate[q1 + 1]`, `if … then q2 - 1 …`, outside the index `RUN-KEY q1 + 2 is outside qs`. The literal is the key of the key beside it, else, moved by an offset, a key of the one index holding it (`arith_words`, `held_key`); a key-typed def's literal is a key of its index (`eval/rules.rs` `coerce_def`, `index_word`), so a read of the def moves by offsets too. A literal no position resolves is `ENGINE-INVARIANT` (load refuses it, `LOAD-UNIT`).
+  - **Reached, held by the STOP-REPORT above: 2.** A day over a period (`arith.rs:143`) and rate arithmetic outside L §3.3 (`arith.rs:356`, two uses), through a leg of unit `any`: refcore's run computes them (7 probes), the spec refuses them. They stay "not implemented".
+  - **Bin (iii): 0.** No user's text reaches a site as `ENGINE-INVARIANT`: none of the 121 probes prints it.
+- **Left, for G14 and the round:**
+  - A key literal two indexes hold, moved by an offset, where load chose the index by the position (`index ps = [p0, q1]`, `def x: key qs = q1 + 1`: refcore `q2`). The run keeps no position's type, so it stops `not implemented` (`held_key`). A literal from a def read (`x + 1` with `x` typed `key qs`) is a key of its index, so only a literal in the expression itself meets it.
+  - `rr[inf]` as a row's key: refcore prints `None`, the engine `inf` (#100's class).
+  - A band row finer than its minor unit: both `LOAD-PRECISION`, refcore's text `601/200 is finer than the minor unit`, the engine's `3.005 …` (a Python fraction printed; for the round).
+  - `konto[konto[ana]]` and `1 kg` in a unit text: refcore's bytes already; nothing to build.
+- **Files** (under `crates/tally/src/`), for the map (P19):
+  - **New:** `eval/keys.rs` (a read's keys made keys of their positions, from `eval/read.rs`, 2e9b54e).
+  - **Rewritten:** `eval/ranges.rs` (a stepped range's values and keys: `Stepped`, `range_key`, `value_key`, `range_literal_key`, the limit).
+  - **Changed:** `eval/read.rs` (661 lines, keys moved out), `eval/arith.rs` (`in_unit`, `range_int` to `ranges.rs`), `eval/expr.rs`, `eval/rules.rs`, `eval/state.rs`, `eval/builtin.rs`, `eval/business.rs`, `eval/dates.rs`, `eval/band.rs`, `eval/context.rs`, `eval/memo.rs`, `eval/solve.rs`, `eval/bindings.rs`, `eval/convert.rs`, `eval/prorata.rs`, `eval/stack.rs`; `model/key.rs` (`KeyVal::Value`, `RangeValue`), `model/value.rs`, `model/index.rs`; `load/keys.rs`, `load/rows.rs`, `load/parts.rs`, `load/overlap.rs`, `load/bands.rs`; `lib.rs`.
+  - **Kernel:** `read/rows.rs`, `walk/flows.rs`.
+- **Size:** 29 files, +1 026 −614 in engine/crates from d1fd733; less the moved code (393 lines), about +633 −249, against a plan of +350 −150 and an expected +560 −240.
+- **Kernel functions touched:** `read/rows.rs` `rank` (an arm for a range's value key), `walk/flows.rs` `move_keys` (the engine's `make_keys`). **Mutants** (`mutants-local --next -F '\brank\b|move_keys'` over the two files, niced): 5 mutants in 2 min, 2 caught, 2 unviable, 1 missed: `rank`'s `==` → `!=` (`rows.rs:241`, the key list's arm, code from before G13), listed already as `MUTANTS-SURVIVORS.md` row 94 (an input keyed by a key list, not built).
+- **Exceptions:** +0 (6: kernel 1/3, cli 3/3, deny 2); report-only hits unchanged.
+- **Check:** `check full: green, 31 steps (1610s)` on the code of this entry's commit; `milestone-report: M1: 71/72 green (gates once M1 is tagged)`. The first check full was red on `exceptions` and `rules-selftest`, both on one new report-only hit (`held_key`'s closure in a closure), rewritten as a loop.
+- **Commits:** 2e9b54e (keys.rs split), d343e36 (a key at a stepped range; money and fraction ranges), 4e593bf (the 26 sites), and this entry's.
+- **Cost:** about 1.3 % of the week for the session at this entry (`engine/tools/usage`), inside the brief's 2.2 % stop and its 1.0–1.6 % estimate.
+- **STOP-REPORTs:** two new, above (an int key at a fractional range; a day over a period and rate arithmetic met at run). Open from before: G11's fold, G9's P8-5, G8's three, G7's, G5's (ruled by P38), G4's (#116), G1's.
+
+- 2026-11-10T16:11:42Z CONFIG-CHANGE BLOCKED: source skills /Users/jswob/.claude-personal/skills/synced/eea50a48-ef05-45fd-a077-2f30fee77fdd_b08d67ee-f5da-4e8a-8360-24723a436a14/artifact-emulator/SKILL.md (R-81)
