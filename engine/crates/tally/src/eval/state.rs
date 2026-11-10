@@ -19,11 +19,11 @@ use crate::base::{Code, Refusal, Run, Warn};
 use crate::book::{Adjustment, Coverage, Linked, Obs};
 use crate::model::{Domain, KeyVal, Node, NodeKind, Reality, Thing, UnitError, Value, World};
 use crate::num::NumError;
-use crate::syntax::{Ask, AskBody, Expr, Stop};
+use crate::syntax::{Ask, AskBody, Bind, Expr, Stop};
 use crate::time::Day;
 use crate::walk::{Inst, ProjKey, Walk, WalkAt};
 
-use super::bindings::reads_name;
+use super::bindings::{names_in, reads_name};
 use super::context::{Layer, Layers};
 use super::memo::{CellId, Cells, Frame, Memo, Open, Reads};
 use super::timelines::Timelines;
@@ -145,6 +145,9 @@ pub struct Var {
     pub value: Value,
     /// The index or kind it is a key of.
     pub domain: Option<Domain>,
+    /// The binding as written, an aggregate's, an ask's `for` or a def's key bind: what a pin
+    /// formed per binding tuple prints beside itself (L §8.2); none for a band's argument.
+    pub written: Option<String>,
 }
 
 /// What a bare literal is where it stands: in a def, a rule or an ask only `0`, `1` and `-1`
@@ -184,6 +187,7 @@ impl Env {
                 name: arg.to_owned(),
                 value: x,
                 domain: None,
+                written: None,
             }],
             figures: Figures::Band,
         }
@@ -203,11 +207,50 @@ impl Env {
         out
     }
 
+    /// This scope with binding `bind` bound to `value` too, its written form kept (L §8.2).
+    #[must_use]
+    pub fn with_bind(&self, bind: &Bind, value: Value, domain: Option<Domain>) -> Env {
+        let mut out = self.clone();
+        out.bind_written((&bind.var, &bind.text), value, domain);
+        out
+    }
+
     /// Whether expression `e` may read a variable of this scope (refcore's `_pertuple`'s
     /// test: a binding in scope whose variable the expression names).
     #[must_use]
     pub(crate) fn read_by(&self, e: &Expr) -> bool {
         self.vars.iter().any(|v| reads_name(e, &v.name))
+    }
+
+    /// The written bindings in scope that `parts`, a pin's value then its keys, name, each
+    /// once, by the first part naming it (refcore's `_pertuple`); none where a part names
+    /// two, whose order refcore's walk gives, or holds a form whose names aren't walked here.
+    /// L §8.2.
+    #[must_use]
+    pub(crate) fn binds_named(&self, parts: &[&Expr]) -> Option<Vec<String>> {
+        let mut out: Vec<String> = Vec::new();
+        for part in parts {
+            let names = names_in(part)?;
+            let mut found: Vec<&String> = Vec::new();
+            for name in &names {
+                let written = self.get(name).and_then(|v| v.written.as_ref());
+                if let Some(text) = written
+                    && !found.contains(&text)
+                {
+                    found.push(text);
+                }
+            }
+            match found.as_slice() {
+                [] => {}
+                [one] => {
+                    if !out.contains(one) {
+                        out.push((*one).clone());
+                    }
+                }
+                _ => return None,
+            }
+        }
+        Some(out)
     }
 
     /// Binds `name` to `value` in this scope.
@@ -216,6 +259,22 @@ impl Env {
             name: name.to_owned(),
             value,
             domain,
+            written: None,
+        });
+    }
+
+    /// Binds `name` to `value` in this scope, the binding written `text`.
+    pub fn bind_written(
+        &mut self,
+        (name, text): (&str, &str),
+        value: Value,
+        domain: Option<Domain>,
+    ) {
+        self.vars.push(Var {
+            name: name.to_owned(),
+            value,
+            domain,
+            written: Some(text.to_owned()),
         });
     }
 }

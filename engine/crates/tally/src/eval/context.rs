@@ -796,7 +796,7 @@ impl Engine {
                         self.note("pinned", text, String::new());
                         continue;
                     }
-                    let set = (target, value);
+                    let set = (target, value, pin.text.as_str());
                     if let Some(pinned) = self.value_pin(m, set, env, ctx, (how, &mut holes))? {
                         data.pin(pinned);
                     }
@@ -997,12 +997,20 @@ impl Engine {
 
     /// A value pin `x[keys].f = v`: its keys and value evaluated in `ctx`, the value in its
     /// target's type; an ask's noted `pinned:`; none, its hole kept in `holes`, for a key
-    /// that is a hole (refcore's `apply_pins_`, its target arm, and `coerce_to`). L §5.11,
-    /// §8.2.
+    /// that is a hole (refcore's `apply_pins_`, its target arm, and `coerce_to`). A pin formed
+    /// per binding tuple, its value or a key naming a binding in scope, prints once as written
+    /// `pin`, with its bindings (`salary = gross[m] for m in months`, refcore's `_pertuple`).
+    /// L §5.11, §8.2.
+    ///
+    /// # Errors
+    ///
+    /// The refusals its keys and value meet; `NotBuilt` for a pin per binding tuple whose
+    /// value or one key names two bindings, or reads through a form whose names aren't
+    /// walked (an aggregate, a walk's read), whose bindings' order refcore's walk gives.
     fn value_pin(
         &mut self,
         m: &Reality,
-        (target, written): (&PRef, &Expr),
+        (target, written, pin): (&PRef, &Expr, &str),
         env: &Env,
         ctx: Ctx,
         (how, holes): (Pinning, &mut Vec<Hole>),
@@ -1023,11 +1031,22 @@ impl Engine {
             _ => return Err(invariant("a pin load didn't check")),
         };
         let keyed = |key: &Key| matches!(key, Key::Expr(e) if env.read_by(e));
-        if env.read_by(written) || target.keys.iter().flatten().any(keyed) {
+        let per_tuple = if env.read_by(written) || target.keys.iter().flatten().any(keyed) {
             // L §8.2: a pin formed per binding tuple prints once, as written, with its
-            // binding (refcore's `_pertuple`)
-            return Err(Stop::NotBuilt("a pin formed per binding tuple at run"));
-        }
+            // binding (refcore's `_pertuple`): the value's, then each key's
+            let mut parts = vec![written];
+            for key in target.keys.iter().flatten() {
+                if let Key::Expr(e) = key {
+                    parts.push(e);
+                }
+            }
+            let named = env.binds_named(&parts).ok_or(Stop::NotBuilt(
+                "a pin per binding tuple naming two bindings in one part, or through an aggregate",
+            ))?;
+            (!named.is_empty()).then(|| format!("{pin} for {}", named.join(", ")))
+        } else {
+            None
+        };
         let mut keys = Vec::with_capacity(binds.len());
         let mut texts = Vec::with_capacity(binds.len());
         for (key, bind) in target.keys.iter().flatten().zip(binds) {
@@ -1069,7 +1088,10 @@ impl Engine {
         for field in &target.fields {
             head = format!("{head}.{field}");
         }
-        let text = format!("{head} = {}", value.typed_text(m).map_err(num_stop)?);
+        let text = match per_tuple {
+            Some(text) => text,
+            None => format!("{head} = {}", value.typed_text(m).map_err(num_stop)?),
+        };
         if how == Pinning::Ask {
             // an ask's `with` pins print with every line (L §5.18 The world of an ask)
             self.note("pinned", text.clone(), String::new());

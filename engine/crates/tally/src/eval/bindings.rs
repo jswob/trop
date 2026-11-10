@@ -445,6 +445,64 @@ pub(crate) fn reads_name(e: &Expr, name: &str) -> bool {
     false
 }
 
+/// The names expression `e` reads, its parts walked as [`reads_name`] walks them; none for a
+/// form whose names aren't walked here (an aggregate, a walk's read, an `as if`), where
+/// `reads_name` counts a read. L §8.2 (a pin formed per binding tuple).
+pub(crate) fn names_in(e: &Expr) -> Option<Vec<&str>> {
+    let mut out: Vec<&str> = Vec::new();
+    let mut work: Vec<&Expr> = vec![e];
+    while let Some(x) = work.pop() {
+        match x {
+            Expr::Name(n) => out.push(n.as_str()),
+            Expr::Lit(_) | Expr::Str(_) | Expr::None | Expr::Never | Expr::Cut | Expr::List(_) => {}
+            Expr::If(parts) => work.extend(parts.iter()),
+            Expr::Or(terms) | Expr::And(terms) => work.extend(terms.iter()),
+            Expr::Not(y) | Expr::Neg(y) | Expr::Paren(y) => work.push(y),
+            Expr::Cmp(c) => work.extend([&c.0, &c.2]),
+            Expr::In(i) => {
+                work.extend([&i.member, &i.set]);
+                work.extend(i.on.iter());
+            }
+            Expr::Sum(first, rest) => {
+                work.push(first);
+                work.extend(rest.iter().map(|(_, y)| y));
+            }
+            Expr::Prod(first, rest) => {
+                work.push(first);
+                work.extend(rest.iter().map(|(_, y)| y));
+            }
+            Expr::Post(base, posts) => {
+                work.push(base);
+                work.extend(posts.iter().flat_map(post_exprs));
+            }
+            Expr::Call(call) => {
+                work.extend(call.args.iter());
+                if let Some(Key::Expr(k)) = &call.band_key {
+                    work.push(k);
+                }
+            }
+            Expr::Record(fields) => work.extend(fields.iter().filter_map(field_expr)),
+            Expr::Agg(_)
+            | Expr::LegOf(..)
+            | Expr::To(..)
+            | Expr::Last(_)
+            | Expr::Bal(_)
+            | Expr::Flows(_)
+            | Expr::Covered(_)
+            | Expr::Calendar(_)
+            | Expr::Value(_)
+            | Expr::Query(_)
+            | Expr::Low(_)
+            | Expr::Crps(_)
+            | Expr::DistFn(_)
+            | Expr::Dist(_)
+            | Expr::Prorata(_)
+            | Expr::AsIf(..) => return None,
+        }
+    }
+    Some(out)
+}
+
 /// The key expressions of a postfix.
 fn post_exprs(post: &Postfix) -> Vec<&Expr> {
     match post {

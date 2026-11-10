@@ -26,10 +26,11 @@ use super::register::{check_register_lines, register_lines, warning_lines};
 use super::residuals::residual_lines;
 use crate::base::{Code, Load, Place, Reach, Refusal, Req, Run, Warn};
 use crate::eval::{
-    Collected, Ctx, Engine, Entry, Env, Item, Member, Memo, a_day, num_stop, past_days, world_named,
+    Collected, Ctx, Engine, Entry, Env, Item, Member, Memo, a_day, names_in, num_stop, past_days,
+    world_named,
 };
 use crate::model::{Reality, Value};
-use crate::syntax::{Ask, AskBody, Bind, Domain, Stop};
+use crate::syntax::{Ask, AskBody, Bind, Domain, Expr, Key, PinForm, Stop};
 use crate::time::{Day, PeriodKind};
 use crate::walk::{Bookings, Lows};
 use crate::{Asks, Days};
@@ -481,6 +482,13 @@ fn ask_body(m: &Reality, ask: &Ask, engine: &mut Engine, cut: Day) -> Result<Vec
         // the ask's `with` pins: evaluated once, outside the line, their register under every
         // line (refcore's `apply_pins` with `ask=True`); a pin whose key or date is a hole makes
         // the ask line that hole (L §5.11)
+        if pins_name_for(ask) {
+            // a pin formed per the ask's own binding tuple (L §8.2) needs the line's context
+            // per tuple; refcore stops there too (`KeyError`)
+            return Err(Stop::NotBuilt(
+                "an ask's with pin formed per its own for's binding tuple",
+            ));
+        }
         engine.push();
         let read = engine.with_pins(m, &ask.pins, ctx);
         pinned.merge(&engine.pop_alone());
@@ -757,4 +765,29 @@ pub(crate) fn date_of(v: &Value, what: &str) -> Result<Day, Stop> {
     Err(Stop::NotBuilt(
         "a law date or a cut that isn't a date, met at run",
     ))
+}
+
+/// Whether one of ask `ask`'s `with` pins names a variable of its own `for`, by its value, a
+/// key or a date: a pin formed per binding tuple (L §8.2), which the ask's pins, evaluated
+/// once outside the line, can't take. A form whose names aren't walked keeps its path.
+fn pins_name_for(ask: &Ask) -> bool {
+    let named = |e: &Expr| {
+        names_in(e).is_some_and(|names| {
+            names
+                .iter()
+                .any(|name| ask.binds.iter().any(|b| b.var == *name))
+        })
+    };
+    ask.pins.iter().any(|pin| match &pin.form {
+        PinForm::Set { target, value, .. } => {
+            named(value)
+                || target
+                    .keys
+                    .iter()
+                    .flatten()
+                    .any(|key| matches!(key, Key::Expr(e) if named(e)))
+        }
+        PinForm::Law(e) | PinForm::Known(e) | PinForm::Wording(e, _) => named(e),
+        PinForm::Scenario(_) => false,
+    })
 }

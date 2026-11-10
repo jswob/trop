@@ -707,7 +707,8 @@ fn index_word(m: &Reality, ix: &str, word: String) -> Value {
 pub(super) fn key_env(def: &DefInfo, keys: &[KeyVal]) -> Env {
     let mut env = Env::empty();
     for (bind, key) in def.binds.iter().zip(keys) {
-        env.bind(&bind.var, Value::of_key(key), Some(bind.domain.clone()));
+        let written = (bind.var.as_str(), bind.node.text.as_str());
+        env.bind_written(written, Value::of_key(key), Some(bind.domain.clone()));
     }
     env
 }
