@@ -23,9 +23,9 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::answer::unresolved_word;
 use super::check::Printed;
 use super::instance::instance_line;
-use super::walked::{Read, balance_line, plain_lines};
+use super::walked::{Read, balance_line};
 use crate::base::{Code, Refusal, Run};
-use crate::eval::{Collected, Ctx, Engine, Env, Item, Trace, TraceKind, num_stop};
+use crate::eval::{Collected, Ctx, Engine, Env, Item, Trace, TraceKind, TracedBalance, num_stop};
 use crate::model::{NameKind, Node, NodeKind, Reality, Value};
 use crate::syntax::{Ask, Expr, PinForm, Postfix, Stop};
 
@@ -74,7 +74,7 @@ pub(super) fn explain_line(
     };
     Ok(Printed {
         text,
-        body: derivation(m, engine, &trace)?,
+        body: derivation(m, &trace)?,
         bare: false,
         met,
         laws: None,
@@ -402,10 +402,13 @@ enum Step {
 /// then what the cell read beside its rules; a row with its value and provenance; a balance
 /// in the balance form, from the walk it read (P63); a node met again as `(<label>: see
 /// [n])`, a row by its stable id, a balance by its read. L §5.18, E §10.
-pub(super) fn derivation(m: &Reality, engine: &Engine, trace: &Trace) -> Result<Vec<String>, Stop> {
+pub(super) fn derivation(m: &Reality, trace: &Trace) -> Result<Vec<String>, Stop> {
     let mut out = Vec::new();
     let mut numbered: BTreeMap<usize, usize> = BTreeMap::new();
     let mut rows: BTreeMap<String, usize> = BTreeMap::new();
+    // the balances printed, by their read: a timeline has no order (R-47), so they're found
+    // by equality
+    let mut balances: Vec<(&TracedBalance, usize)> = Vec::new();
     let mut count: usize = 0;
     let top = trace.top()?;
     let mut todo: Vec<Step> = top.iter().rev().map(|c| Step::Node(*c, 1)).collect();
@@ -419,14 +422,14 @@ pub(super) fn derivation(m: &Reality, engine: &Engine, trace: &Trace) -> Result<
         };
         let node = trace.node(at)?;
         let ind = indent(depth);
-        let leaf = matches!(
-            node.kind,
-            TraceKind::Row | TraceKind::BandRow | TraceKind::Balance(_)
-        );
-        let met = if leaf {
-            rows.get(&node.label).copied()
-        } else {
-            numbered.get(&at).copied()
+        // a row is met again by its stable id; a balance only as the same read, its unit, cut
+        // and timeline too, since its label has none of them (P63)
+        let met = match &node.kind {
+            TraceKind::Row | TraceKind::BandRow => rows.get(&node.label).copied(),
+            TraceKind::Balance(read) => balances.iter().find(|(b, _)| *b == read).map(|(_, n)| *n),
+            TraceKind::Def(_) | TraceKind::Root | TraceKind::Group | TraceKind::Side => {
+                numbered.get(&at).copied()
+            }
         };
         if let Some(no) = met {
             out.push(format!("{ind}({}: see [{no}])", node.label));
@@ -435,12 +438,16 @@ pub(super) fn derivation(m: &Reality, engine: &Engine, trace: &Trace) -> Result<
         count = count
             .checked_add(1)
             .ok_or_else(|| invariant("a count of a derivation's lines"))?;
-        if leaf {
-            rows.insert(node.label.clone(), count);
-        } else {
-            numbered.insert(at, count);
+        match &node.kind {
+            TraceKind::Row | TraceKind::BandRow => {
+                rows.insert(node.label.clone(), count);
+            }
+            TraceKind::Balance(read) => balances.push((read, count)),
+            TraceKind::Def(_) | TraceKind::Root | TraceKind::Group | TraceKind::Side => {
+                numbered.insert(at, count);
+            }
         }
-        let (head, below) = node_lines((m, engine), trace, (at, depth), count)?;
+        let (head, below) = node_lines(m, trace, (at, depth), count)?;
         out.extend(head);
         todo.extend(below.into_iter().rev());
     }
@@ -456,7 +463,7 @@ fn indent(depth: usize) -> String {
 /// order (refcore's `explain_node`); a balance's in the balance form, from the walk it read,
 /// but for a refused one (ruling P63, #132). L §5.18, E §10.
 fn node_lines(
-    (m, engine): (&Reality, &Engine),
+    m: &Reality,
     trace: &Trace,
     (at, depth): (usize, usize),
     no: usize,
@@ -474,22 +481,14 @@ fn node_lines(
             ));
             head.extend(node.lines.iter().map(|l| format!("{ind}    {l}")));
         }
-        TraceKind::Balance(read) => {
+        TraceKind::Balance(_) => {
             head.push(format!(
                 "{ind}[{no}] {} = {}",
                 node.label,
                 value_text(m, node.value.as_ref())?
             ));
-            if let Some(walk) = read.walk {
-                let lines = plain_lines(
-                    m,
-                    engine,
-                    walk,
-                    (&read.place, &read.unit),
-                    (read.day, read.start, read.uncertain),
-                )?;
-                head.extend(lines.iter().map(|l| format!("{ind}    {l}")));
-            }
+            // its balance form, rendered from the walk it read when it was read
+            head.extend(node.lines.iter().map(|l| format!("{ind}    {l}")));
         }
         TraceKind::BandRow => head.push(format!("{ind}[{no}] band row {}", node.label)),
         TraceKind::Def(law) => {

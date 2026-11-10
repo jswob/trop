@@ -265,7 +265,7 @@ fn low_lines(
 ///
 /// `ENGINE-INVARIANT` for a walk the engine lacks; `NotBuilt` for a reading at an instant
 /// other than a day's start or end.
-pub(super) fn plain_lines(
+pub(crate) fn plain_lines(
     m: &Reality,
     engine: &Engine,
     id: usize,

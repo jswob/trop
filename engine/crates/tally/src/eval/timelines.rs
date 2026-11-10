@@ -186,6 +186,12 @@ impl Engine {
         self.timelines.now.world
     }
 
+    /// The key of the timeline in force: its world and pins (E §3.3).
+    #[must_use]
+    pub(crate) fn timeline_key(&self) -> TimelineKey {
+        self.timelines.now
+    }
+
     /// Enters the timeline of context `inside` for a scope: its world and the pins of its
     /// layer the walk reaches; the key in force before is kept for `leave_timeline`. A
     /// decision's running read stays in its own timeline (L §5.14.1), so a scope there that

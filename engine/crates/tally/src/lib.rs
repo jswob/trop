@@ -276,6 +276,7 @@ pub mod ask {
     pub(crate) use answer::date_of;
     pub use answer::{Answered, How, answer};
     pub use register::{register_lines, warning_lines};
+    pub(crate) use walked::plain_lines;
     pub use worlds::{answer_worlds, report_lines};
 }
 

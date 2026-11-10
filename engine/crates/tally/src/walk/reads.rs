@@ -122,9 +122,10 @@ impl Engine {
             day,
             start: b.start,
             uncertain: b.proj.uncertain,
-            walk,
+            cut,
+            timeline: self.timeline_key(),
         };
-        self.trace_balance(walked, read, item);
+        self.trace_balance(m, walked, read, (item, walk));
         Ok(())
     }
 

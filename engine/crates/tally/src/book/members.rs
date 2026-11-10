@@ -730,9 +730,27 @@ impl Engine {
         if let Moving::Plan(i) = src
             && (i.exists == Exists::No || i.status == Status::None)
         {
-            return Err(Stop::NotBuilt(
-                "a leg of an instance a later version made exist",
-            ));
+            // a later version may have made it exist (E §5 step 1): a plan's leg some
+            // adjustment of the cut changes; else it is none here (refcore's
+            // `made_to_exist_leg`, then `RUN-NONE`)
+            let mv = m
+                .moves
+                .get(&i.move_id)
+                .ok_or_else(|| invariant("an instance of a move load didn't build"))?;
+            if !mv.decision
+                && self
+                    .adjust_move(m, mv, ctx.cut)?
+                    .iter()
+                    .any(|a| a.inst_id == i.id && a.leg.name == name)
+            {
+                return Err(Stop::NotBuilt(
+                    "a leg of an instance a later version made exist",
+                ));
+            }
+            return Err(Stop::Refused(Refusal::new(
+                Code::Run(Run::None),
+                format!("{} doesn't exist: a field read of it", src.id()),
+            )));
         }
         if let Some(h) = body_hole(src) {
             return Ok(Value::Hole(h));

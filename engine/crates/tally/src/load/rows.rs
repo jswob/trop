@@ -611,7 +611,9 @@ fn row_instant(
     }
 }
 
-/// The stable ids of one target's rows.
+/// The stable ids of one target's rows: `version:target[keys]`, with the row's own `governs`
+/// span or its instant where its version holds more than one row of that target at those
+/// keys (refcore's loader, its stable ids). L §2.5, §4.6.
 fn set_sids(id: &str, rows: &mut [Row]) {
     let mut count: BTreeMap<(String, String), usize> = BTreeMap::new();
     for row in rows.iter() {
@@ -632,9 +634,14 @@ fn set_sids(id: &str, rows: &mut [Row]) {
             if let Some(span) = &row.own_span {
                 sid.push(' ');
                 sid.push_str(&span.text());
-            } else if let Some(RowInstant::At(day, _)) = &row.instant {
+            } else if let Some(RowInstant::At(day, edge)) = &row.instant {
+                // its instant, a day's start or end (L §4.6): two readings of one day are two
+                // rows (refcore's id gives the day alone)
                 sid.push(' ');
-                sid.push_str(&day.text());
+                sid.push_str(&match edge {
+                    Some(edge) => crate::book::instant_text(*day, *edge),
+                    None => day.text(),
+                });
             }
         }
         row.sid = sid;

@@ -56,8 +56,9 @@ pub(crate) enum Kind {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct Walked(bool);
 
-/// A traced balance read: the place and unit, the day and whether at its start, whether
-/// `with uncertain`, and the walk it read, by its place in the engine's list (E §10).
+/// A traced balance read, what makes two reads one: the place and unit, the day and whether
+/// at its start, whether `with uncertain`, the cut and the timeline it was read in (E §10,
+/// §3.3). Its balance form is rendered on its node as it is read, from the walk it read.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Balance {
     /// The place.
@@ -70,8 +71,10 @@ pub(crate) struct Balance {
     pub start: bool,
     /// Whether the read counts uncertain movements (`with uncertain`).
     pub uncertain: bool,
-    /// The walk read; none for a refused read.
-    pub walk: Option<usize>,
+    /// The cut.
+    pub cut: Day,
+    /// The timeline: its world and pins.
+    pub timeline: super::timelines::TimelineKey,
 }
 
 /// One rule of a traced def cell, as `explain` prints it: its label, its state, and the
@@ -390,7 +393,32 @@ impl Engine {
     /// balance form, where a read now is traced; its read of the walk is that node, so the
     /// note of a walk read goes back to `before`, as it stood before the read (ruling P63,
     /// #132). E §10.
-    pub(crate) fn trace_balance(&mut self, before: Walked, read: Balance, got: Item) {
+    pub(crate) fn trace_balance(
+        &mut self,
+        m: &Reality,
+        before: Walked,
+        read: Balance,
+        (got, walk): (Item, Option<usize>),
+    ) {
+        // the balance form now, from the walk the read used, in the timeline it is in force
+        // in: the derivation prints after the line's reads, when another may be
+        let lines = match walk {
+            Some(id) => crate::ask::plain_lines(
+                m,
+                self,
+                id,
+                (&read.place, &read.unit),
+                (read.day, read.start, read.uncertain),
+            ),
+            None => Ok(Vec::new()),
+        };
+        let lines = match lines {
+            Ok(lines) => lines,
+            Err(stop) => {
+                self.trace_kept(stop);
+                return;
+            }
+        };
         let Some(trace) = self.traced() else {
             return;
         };
@@ -404,6 +432,7 @@ impl Engine {
         let label = format!("bal({}, {}{start}){with}", read.place, read.day.text());
         let mut node = Node::new(Kind::Balance(read), label);
         node.value = Some(got);
+        node.lines = lines;
         trace.added(node);
     }
 

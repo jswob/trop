@@ -289,7 +289,7 @@ fn booked_derivation(
             "explain of an instance whose derivation reads what the walk computes",
         ));
     }
-    let sub = derivation(m, engine, &trace)?;
+    let sub = derivation(m, &trace)?;
     if sub.is_empty() {
         return Ok(sub);
     }
