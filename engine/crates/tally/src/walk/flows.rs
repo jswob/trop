@@ -15,7 +15,7 @@
 use super::order::WalkAt;
 use super::plan::{Amount, Dated, Exists, Inst, Status, invariant, qty_value};
 use super::point::At;
-use super::reads::{expr_text, refuse};
+use super::reads::{Sees, expr_text, refuse};
 use super::state::{ALL, Change, Ent, Progress, Walk};
 use crate::base::{Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Entry, Env, GUARDED, UNSET_AXIS};
@@ -84,9 +84,12 @@ impl Engine {
         let id = match ctx.at {
             Some(at) => {
                 let t = at.point.day;
-                if last >= t {
-                    self.note_live(at.walk, place)?;
-                }
+                let sees = if last >= t {
+                    Sees::AtPoint
+                } else {
+                    Sees::Before
+                };
+                self.note_read(at.walk, place, sees)?;
                 if last > t {
                     return Err(refuse(
                         Run::Future,

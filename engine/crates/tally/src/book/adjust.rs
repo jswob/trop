@@ -161,7 +161,7 @@ impl Adjustment {
     }
 
     /// An amount of the adjusted leg's unit as the register prints it (L §8.2).
-    fn amount_text(&self, m: &Reality, a: &Amount) -> Result<String, Stop> {
+    pub(crate) fn amount_text(&self, m: &Reality, a: &Amount) -> Result<String, Stop> {
         match a {
             Amount::Qty(q) => {
                 let unit = self

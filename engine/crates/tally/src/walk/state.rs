@@ -232,6 +232,9 @@ pub struct Walk {
     pub(crate) run_ids: BTreeMap<String, usize>,
     /// The running decision's live reads: the places it reads at its point (L §5.14.2).
     pub(crate) live: Option<BTreeSet<String>>,
+    /// The running decision's reads: every place it reads, at its point or before it, which
+    /// `explain` prints (E §10).
+    pub(crate) reads: Option<BTreeSet<String>>,
     /// The moves of an unordered cycle whose instances due each day ran together, by (move,
     /// day): the cycle's other moves' acts that day run nothing more (L §5.14.2).
     pub(crate) cycles_run: BTreeSet<(String, Day)>,
@@ -425,6 +428,7 @@ impl Walk {
             runs: Vec::new(),
             run_ids: BTreeMap::new(),
             live: None,
+            reads: None,
             cycles_run: BTreeSet::new(),
             left_out: BTreeMap::new(),
             left_out_at: BTreeMap::new(),

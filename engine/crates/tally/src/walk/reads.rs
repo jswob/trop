@@ -26,6 +26,16 @@ use crate::num::Num;
 use crate::syntax::{Bal, Expr, Stop};
 use crate::time::Day;
 
+/// How a running read sees its place: as it stands at the decision's point, or only before
+/// it (refcore's `note_read`, its `live`). L §5.14.2.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum Sees {
+    /// At the decision's point: it orders the day's decisions.
+    AtPoint,
+    /// Only before its point.
+    Before,
+}
+
 impl Engine {
     /// A balance read (refcore's `e_bal`). L §5.10, §5.14.1.
     ///
@@ -58,7 +68,7 @@ impl Engine {
                     format!("bal({place}) with no day outside a decision"),
                 )));
             };
-            self.note_live(at.walk, &place)?;
+            self.note_read(at.walk, &place, Sees::AtPoint)?;
             let v = self.read_state(m, at.walk, &place, &unit, at.point)?;
             return self.less_own_obs(m, at.walk, (&place, &unit), at.point, v);
         };
@@ -211,6 +221,7 @@ impl Engine {
     ) -> Result<Value, Stop> {
         if let Some(at) = ctx.at {
             let t = at.point.day;
+            self.note_read(at.walk, place, Sees::Before)?;
             if key.day > t || (key.day == t && key.at_or_after_decisions()) {
                 if d > t {
                     return Err(refuse(
@@ -294,12 +305,21 @@ impl Engine {
         }
     }
 
-    /// Notes a running decision's read of a place: where it sees the place at its point, for
-    /// the order of the day's decisions (refcore's `note_read`). L §5.14.2.
-    pub(super) fn note_live(&mut self, id: usize, place: &str) -> Result<(), Stop> {
+    /// Notes a running decision's read of a place: every read, for `explain`'s "read at its
+    /// walk point" (E §10), and where it sees the place at its point, for the order of the
+    /// day's decisions (refcore's `note_read`). L §5.14.2.
+    pub(super) fn note_read(&mut self, id: usize, place: &str, sees: Sees) -> Result<(), Stop> {
         let walk = self.walk_mut(id)?;
-        if let Some(set) = &mut walk.live {
+        if let Some(set) = &mut walk.reads {
             set.insert(place.to_owned());
+        }
+        match sees {
+            Sees::AtPoint => {
+                if let Some(set) = &mut walk.live {
+                    set.insert(place.to_owned());
+                }
+            }
+            Sees::Before => {}
         }
         Ok(())
     }

@@ -43,9 +43,9 @@ pub(super) enum Read<'a> {
     Low(&'a Low),
 }
 
-impl<'a> Read<'a> {
+impl Read<'_> {
     /// The read's projection clauses. L §5.14.1.
-    fn proj(self) -> &'a Proj {
+    fn proj(&self) -> &Proj {
         match self {
             Read::Bal(b) => &b.proj,
             Read::Low(l) => &l.proj,
@@ -53,7 +53,7 @@ impl<'a> Read<'a> {
     }
 
     /// The place read. L §5.10.
-    fn place(self) -> &'a Expr {
+    fn place(&self) -> &Expr {
         match self {
             Read::Bal(b) => &b.place,
             Read::Low(l) => &l.place,
@@ -284,28 +284,36 @@ pub(super) fn plain_lines(
     )];
     let (st, last) = walk.state(m, place, unit, key);
     let log = walk.entries(place, unit);
-    let reset = st.rst.and_then(|r| log.get(r).map(|e| (r, e)));
+    let reset = match st.rst {
+        Some(r) => log.get(r).map(|e| (r, e)),
+        None => None,
+    };
     let since = reset.map(|(_, e)| e.at);
     out.push(match reset {
         Some((_, e)) => format!("from: {}", reading_text(m, walk, (place, unit), e)?),
         None => opening_text(m, walk, (place, unit)),
     });
-    let first = reset.map_or(Some(0), |(r, _)| r.checked_add(1));
+    // the entries after the last reset, through the last the state counts
+    let first = match reset {
+        Some((r, _)) => r.checked_add(1).ok_or_else(|| invariant("a log's place"))?,
+        None => 0,
+    };
     let mut ents: Vec<(&Ent, &str)> = Vec::new();
-    if let (Some(first), Some(last)) = (first, last) {
-        let n = last.checked_add(1).and_then(|n| n.checked_sub(first));
-        ents.extend(
-            log.iter()
-                .skip(first)
-                .take(n.unwrap_or(0))
-                .map(|e| (e, unit)),
-        );
+    if let Some(last) = last {
+        let counted = last
+            .checked_add(1)
+            .ok_or_else(|| invariant("a log's length"))?;
+        ents.extend(log.iter().take(counted).skip(first).map(|e| (e, unit)));
     }
-    let all = walk.entries(place, ALL).iter();
-    ents.extend(
-        all.filter(|e| since.is_none_or(|s| e.at > s) && e.at <= key)
-            .map(|e| (e, ALL)),
-    );
+    for e in walk.entries(place, ALL) {
+        let after = match since {
+            Some(s) => e.at > s,
+            None => true,
+        };
+        if after && e.at <= key {
+            ents.push((e, ALL));
+        }
+    }
     let mut rows = entry_rows(m, engine, walk, ents)?;
     if uncertain {
         uncertain_rows(m, walk, (place, end, since), &mut rows)?;
@@ -381,8 +389,10 @@ fn projection_lines(
     out.extend(by_day(rows).into_iter().map(|l| format!("  {l}")));
     let left = walk
         .proj
-        .as_ref()
-        .is_some_and(|p| p.counted.values().flatten().any(|d| t <= *d && *d <= end));
+        .iter()
+        .flat_map(|p| p.counted.values())
+        .flatten()
+        .any(|d| t <= *d && *d <= end);
     if left {
         // an ask's line leaves out nothing; only a def's projection lists instances
         return Err(Stop::NotBuilt(
@@ -504,11 +514,14 @@ fn reading_text(
         return Ok(s);
     };
     let gap_shown = gap_text(m, &gap.gap, unit)?;
-    let role = m
-        .versions
-        .get(&seen.version)
-        .and_then(|v| v.gap_roles.iter().find(|(p, _)| p == place))
-        .map(|(_, role)| role);
+    let role = match m.versions.get(&seen.version) {
+        Some(v) => v
+            .gap_roles
+            .iter()
+            .find(|(p, _)| p == place)
+            .map(|(_, role)| role),
+        None => None,
+    };
     Ok(match role {
         Some(GapRole::Pad(other)) => {
             let pad = e.mv.as_deref().unwrap_or("pad");
@@ -521,12 +534,16 @@ fn reading_text(
 
 /// A reading row's instant as text, `2026-01-01 start` (refcore's `instant_text`). L §4.6.
 fn reading_instant(m: &Reality, sid: &str) -> Result<String, Stop> {
-    let row = ["opening", "stated"]
-        .into_iter()
-        .filter_map(|input| m.inputs.get(input))
-        .flat_map(|info| info.rows.iter())
-        .find(|r| r.sid == sid)
-        .ok_or_else(|| invariant("a reading's row load didn't build"))?;
+    // an opening's row, else a stated reading's
+    let mut found = None;
+    for input in ["opening", "stated"] {
+        if found.is_none()
+            && let Some(info) = m.inputs.get(input)
+        {
+            found = info.rows.iter().find(|r| r.sid == sid);
+        }
+    }
+    let row = found.ok_or_else(|| invariant("a reading's row load didn't build"))?;
     match &row.instant {
         Some(RowInstant::At(day, Some(edge))) => Ok(instant_text(*day, *edge)),
         Some(_) | None => Err(Stop::NotBuilt(
@@ -598,12 +615,11 @@ fn entry_text(
 /// observation or an adjustment; none for one the walk doesn't name (refcore's
 /// `mv.status`). E §4.1 step 3, §4.2.
 fn status_word(engine: &Engine, walk: &Walk, id: &str) -> Option<&'static str> {
-    let status = walk
-        .run_ids
-        .get(id)
-        .and_then(|i| walk.runs.get(*i))
-        .map(|r| r.inst.status)
-        .or_else(|| walk.insts.iter().find(|i| i.id == id).map(|i| i.status));
+    let run = walk.run_ids.get(id).and_then(|i| walk.runs.get(*i));
+    let status = match run {
+        Some(r) => Some(r.inst.status),
+        None => walk.insts.iter().find(|i| i.id == id).map(|i| i.status),
+    };
     if let Some(status) = status {
         return status_text(status);
     }
@@ -615,7 +631,7 @@ fn status_word(engine: &Engine, walk: &Walk, id: &str) -> Option<&'static str> {
 }
 
 /// A status's word (refcore's status texts). E §4.1 step 3.
-fn status_text(status: Status) -> Option<&'static str> {
+pub(super) fn status_text(status: Status) -> Option<&'static str> {
     match status {
         Status::Open => None,
         Status::None => Some("none"),
@@ -694,7 +710,7 @@ fn amount_text(m: &Reality, lg: &LegVal, side: Side) -> Result<String, Stop> {
 }
 
 /// A quantity of unit `unit` as `explain` prints it. L §5.18.
-fn quantity_text(m: &Reality, q: &Num, unit: &str) -> Result<String, Stop> {
+pub(super) fn quantity_text(m: &Reality, q: &Num, unit: &str) -> Result<String, Stop> {
     if unit == ALL {
         return Err(invariant("a quantity booked in every unit"));
     }

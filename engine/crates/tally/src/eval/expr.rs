@@ -1,12 +1,13 @@
 //! The evaluator's walk over an expression: one arm per node kind, each calling the step that computes it.
 //! Spec: E §3.2 (a tree-walk over the resolved tree); L §2.5 (names: a bound variable, an item,
-//! a key literal), §3.1 (the absences), §3.2 (inline figures), §5.11 (logic under Kleene
+//! a key literal, a movement instance by its move and keys), §3.1 (the absences), §3.2 (inline figures), §5.11 (logic under Kleene
 //! rules, `if` with a hole condition), §5.14 (a movement's fields and kind, `in` over a
 //! movement kind, movements equal by identity), §5.19 (`covered`), §4.1 (a keyed place
 //! `name[keys]`), §8.1 (holes spread), §8.4 (`RUN-NONE`).
 //! Twin: engine/tools/refcore/evaluate.py (`ev`, `e_num`, `e_name`, `e_index`, `e_field`,
 //! `read`, `binop`, `e_not`, `e_and`, `e_or`, `e_if`, `e_cmp`, `compare`, `e_in`, `e_record`)
-//! and mreads.py (`m_mv_field`, `m_mv_kind_in`, `m_c_covered`).
+//! and mreads.py (`m_mv_field`, `m_mv_kind_in`, `m_c_covered`, `m_e_moveref`); moves.py
+//! (`m_find_inst`).
 //! Invariants: an operation that meets a hole is the hole of its operands' questions (the hole
 //! module's one rule); `none` only compares; every node kind S doesn't build stops `NotBuilt`.
 
@@ -21,10 +22,11 @@ use super::ty::{figure_like, sample};
 use super::windows::{as_window, window_arith, window_compare, window_negated};
 use super::years::{as_year, period_like, period_literal, year_literal};
 use crate::base::{Load, Run};
+use crate::book::inst_ref;
 use crate::hole::{Hole, spread};
 use crate::model::{
-    Class, Code, Domain, KeyVal, NameKind, Number, Reality, Shown, Ty, Unit, Value, currency_id,
-    num_money,
+    Class, Code, Domain, KeyVal, MvRef, MvSrc, NameKind, Number, Reality, Shown, Ty, Unit, Value,
+    currency_id, num_money,
 };
 use crate::read::{Asked, member_span};
 use crate::syntax::{AddOp, CmpOp, Expr, Field, FieldValue, In, Key, Lit, MulOp, Postfix, Stop};
@@ -104,6 +106,7 @@ impl Engine {
         }
         match m.names.kind(name) {
             Some(NameKind::Input | NameKind::Def) => self.read_item(m, name, &[], env, ctx),
+            Some(NameKind::Move) => self.move_ref(m, name, &[], env, ctx),
             Some(NameKind::Cut) => Ok(Value::Day(ctx.cut)),
             Some(NameKind::Axis) => self.axis_option(name, ctx),
             Some(_) | None => {
@@ -113,6 +116,43 @@ impl Engine {
                 Ok(Value::Word(name.to_owned()))
             }
         }
+    }
+
+    /// A movement instance named by move `id` and the keys written: the instance the cut sees
+    /// at those keys, else a movement known by its id alone; a hole key makes it that hole
+    /// (refcore's `e_moveref`, `find_inst`). L §2.5, §5.14.
+    fn move_ref(
+        &mut self,
+        m: &Reality,
+        id: &str,
+        keys: &[Key],
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Value, Stop> {
+        let mv = m
+            .moves
+            .get(id)
+            .ok_or_else(|| invariant("a movement named by a move load didn't build"))?;
+        let given = self.given_keys(m, keys, env, ctx)?;
+        let made = match make_keys(m, id, &mv.binds, given, ctx)? {
+            Err(hole) => return Ok(Value::Hole(hole)),
+            Ok(made) => made,
+        };
+        let insts = self.move_instances(m, mv, ctx.cut)?;
+        if let Some(inst) = insts.iter().find(|i| i.keys == made) {
+            return Ok(Value::Mv(Box::new(inst_ref(inst))));
+        }
+        let id = if made.is_empty() {
+            id.to_owned()
+        } else {
+            let texts: Vec<String> = made.iter().map(KeyVal::text).collect();
+            format!("{id}[{}]", texts.join(", "))
+        };
+        Ok(Value::Mv(Box::new(MvRef {
+            id,
+            day: None,
+            src: MvSrc::Missing,
+        })))
     }
 
     /// A read of input or def `id` at the keys written (refcore's `read`): each key made a key
@@ -299,6 +339,11 @@ impl Engine {
                 if env.get(name).is_none() && m.places.get(name).is_some() =>
             {
                 (self.place_at(m, name, keys, env, ctx)?, rest)
+            }
+            (Expr::Name(name), [Postfix::Keys(keys), rest @ ..])
+                if env.get(name).is_none() && m.names.kind(name) == Some(NameKind::Move) =>
+            {
+                (self.move_ref(m, name, keys, env, ctx)?, rest)
             }
             (Expr::Name(name), [Postfix::Keys(_), ..]) if env.get(name).is_none() => {
                 return Err(Stop::NotBuilt("keys of a place, a move or a member"));

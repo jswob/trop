@@ -37,6 +37,8 @@ pub struct Run {
     pub point: At,
     /// The places it read as they stand at its point (L §5.14.2).
     pub live: BTreeSet<String>,
+    /// Every place it read, at its point or before it (E §10, `explain`).
+    pub read: BTreeSet<String>,
     /// The places its legs name.
     pub changed: BTreeSet<String>,
 }
@@ -398,6 +400,7 @@ impl Engine {
             inst,
             point: key,
             live: BTreeSet::new(),
+            read: BTreeSet::new(),
             changed: BTreeSet::new(),
         });
         Ok(())
@@ -568,6 +571,7 @@ impl Engine {
         let own = self.own_earlier_obs(m, id, &inst, t)?;
         let prev_less = core::mem::replace(&mut self.walk_mut(id)?.less_obs, own);
         let prev_live = self.walk_mut(id)?.live.replace(BTreeSet::new());
+        let prev_reads = self.walk_mut(id)?.reads.replace(BTreeSet::new());
         self.push();
         let body = self.inst_body(m, mv, &inst, ctx, inst.exists.clone());
         let met = self.pop_alone();
@@ -575,11 +579,15 @@ impl Engine {
         let Some(live) = core::mem::replace(&mut self.walk_mut(id)?.live, prev_live) else {
             return Err(invariant("a run's live reads taken"));
         };
+        let Some(read) = core::mem::replace(&mut self.walk_mut(id)?.reads, prev_reads) else {
+            return Err(invariant("a run's reads taken"));
+        };
         let linked = self.obs_links_for(m, &inst.id, cut)?;
         let mut run = Run {
             inst,
             point: key,
             live,
+            read,
             changed: BTreeSet::new(),
         };
         run.inst.coll.merge(&met);

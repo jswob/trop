@@ -848,7 +848,7 @@ fn amount_value(m: &Reality, a: &Amount, unit: Option<&str>) -> Result<Value, St
 }
 
 /// A plan instance as a value. L §5.14.
-fn inst_ref(i: &Inst) -> MvRef {
+pub(crate) fn inst_ref(i: &Inst) -> MvRef {
     MvRef {
         id: i.id.clone(),
         day: i.day.as_ref().and_then(Dated::day),

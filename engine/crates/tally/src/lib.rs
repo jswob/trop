@@ -252,7 +252,7 @@ pub mod book {
 
     pub use adjust::{Adjustment, Settled};
     pub use ledger::{Fig, Group, GroupKey, Ledger, Line, fig_text};
-    pub(crate) use members::{MvDom, MvMember};
+    pub(crate) use members::{MvDom, MvMember, inst_ref};
     pub use observe::{Coverage, Linked, Obs, inst_id};
     pub use reading::{Pad, Seen, first_readings, reading_rank, readings};
     pub(crate) use reading::{gap_text, instant_text};
@@ -267,6 +267,7 @@ pub mod ask {
     mod check;
     mod diff;
     mod explain;
+    mod instance;
     mod register;
     mod residuals;
     mod walked;

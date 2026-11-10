@@ -21,6 +21,7 @@ use super::agenda::left_out_lines;
 use super::lows::{Base, Lows};
 use super::plan::invariant;
 use super::point::At;
+use super::reads::Sees;
 use super::state::{Projected, St, Walk};
 use crate::base::{Code, Load, Refusal, Run};
 use crate::eval::{Ctx, Engine, Env};
@@ -83,7 +84,7 @@ impl Engine {
         let left_out = self.holder_left_out(m)?;
         let id = self.proj_walk(m, ctx, start, left_out)?;
         if let Some(at) = ctx.at {
-            self.note_live(at.walk, place)?;
+            self.note_read(at.walk, place, Sees::AtPoint)?;
         }
         self.walk_projection(m, id, day)?;
         let value = self.read_state(m, id, place, unit, At::end(day))?;
@@ -183,7 +184,7 @@ impl Engine {
         let left_out = self.holder_left_out(m)?;
         let id = self.proj_walk(m, ctx, start, left_out)?;
         if let Some(at) = ctx.at {
-            self.note_live(at.walk, place)?;
+            self.note_read(at.walk, place, Sees::AtPoint)?;
         }
         self.walk_projection(m, id, days.last)?;
         self.proj_regs(id, start, days.last)?;
@@ -274,7 +275,7 @@ impl Engine {
         let left_out = self.holder_left_out(m)?;
         let base = self.proj_base(m, ctx, window.0)?;
         if let Some(at) = ctx.at {
-            self.note_live(at.walk, place)?;
+            self.note_read(at.walk, place, Sees::AtPoint)?;
         }
         self.common_low(m, (place, unit), window, base, &left_out)
     }

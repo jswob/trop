@@ -2303,3 +2303,68 @@ The builder of the M1 run, group G11 of `tmp/m1/build-plan.md`, on 00b5df9. Each
 - **What I ask:** (Recommended) the cause prints in E §10's balance form under the def: the last reading or the opening and the movements since, grouped by day, each with its status and id. G12 builds it; refcore is fixed at the round, and T holds such vectors "for #n" meanwhile.
 - **What I did not do:** trace inside the walk; print a derivation without its cause.
 - **State:** 666cfdc, green; this report is committed with G11's entry.
+
+## 2026-11-10 M1, G12: `explain` of a balance, a projection, a `low` and a movement instance; `readers-of` an event kind (issue #108)
+
+The builder of the M1 run, group G12 of `tmp/m1/build-plan.md`, on c82ef44. Each red id was reproduced first on the debug binary. The forms were probed on refcore and the engine outside the tests (`tmp/m1/g12/`, copies of the fixtures), byte for byte with the exit code, unless said.
+
+- **A balance** (E §10, L §5.18; `ask/walked.rs`, new): `explain bal(x, d)`, `bal(x, d start)`, `bal(x, u, d)`, `with uncertain`.
+  - **First:** the value, then `balance of P (U) at the start|end of D`.
+  - **`from:`** the last reading, with its word, row id, value, instant, version, source and locator, and an anchor's or a pad's gap role and gap. Without one, the opening: `0 at the start of its lifespan, D`, or `no reading or opening before it`.
+  - **Then the movements since, by day:** each `id[.leg] (status): ±amount`, or a hole, a refusal or a reading. An uncertain instance's legs show where the clause counts them.
+  - **No body** for a refused value, for `bal(x)` outside a decision, or for a hole day. A refusal met in the body prints as `refused: …`.
+- **A projection** (`bal(x, d) from t`, `low(…) from t`), from the plain twin's walk, never F5's tree (`walk/projection.rs` `projection_walk`, the walk a read builds). It prints:
+  - `holder: ask <id> (an ask line leaves out nothing, L §5.14.1)`;
+  - `clauses: windows none, random none, with|without uncertain`;
+  - `start:`, the state at the start of t;
+  - `counted:`, by day;
+  - `left out: none`;
+  - for a `low`, also `lowest: Q at the end of D`.
+
+  From before S: no lines, but the main walk is built, and its warnings print as refcore's do.
+- **A `low` without `from`** (L §5.18): `lowest end-of-day balance of P on A .. B: V, on D1[ (through D2)]`, then D1's balance form.
+- **P63 (#132), the balance cause:** a `bal` among a def's causes prints as the node `[n] bal(place, day[ start])[ with uncertain] = v`. The balance form follows under it, indented, from the walk the read used (`eval/trace.rs` `Kind::Balance`, `trace_balance`; `walk/reads.rs` `trace_bal`). The indent and the node's label are my own design: the ruling gives the form, and refcore prints the walk's own reads there. For T and the next round.
+- **P63's other half, `readers-of` an event kind:** the first layer is the items that hold a binding over k, or over a kind k is a subkind of (`Graph.bound_kinds`, noted at load in `load/binds.rs`). Their readers follow as for any node, each layer by id. A move of kind k is no reader.
+- **A movement instance** (E §10; `ask/instance.rs`, new): `explain m`, `explain m[keys]`.
+  - **A plan:** `plan, day D, booking cut C, status S`.
+  - **A decision:** `decision, day D, status S`, then `stratum N, walk point (D, stratum s, m|nnnnnn)`, or `stratum N, not run`. An unordered cycle's run is `first|nnnnnn|m`. Then `read at its walk point:`, with every place it read there.
+  - **Then for each:** `exists:`, `refused:`, each leg as `leg L from F to T amount A[ on D]`, the `attr`s.
+  - **For a plan, after that:** `derivation at C:`, the instance evaluated again at its booking cut with tracing on. Then each adjustment of it: `change δ on c (version v), settled by …|waived; remaining r`, or `change refused: …`.
+  - **No instance at the cut:** `(id: no instance at the cut)`.
+  - **The register:** what the lines meet outside the derivation joins the line's register, as refcore's line collects it (an assumption that a measured move reads).
+  - **A move read by its name** (L §2.5; refcore's `e_moveref`, `find_inst`; `eval/expr.rs` `move_ref`): the instance the cut sees at those keys, else a movement known by its id alone. Before, a bare name read as a word, and keys stopped `not implemented`.
+  - **A decision's reads:** the walk keeps every place a running decision reads (`Walk.reads`, `Run.read`). The places it reads live, which order a day's decisions, stay apart (`note_read` with `Sees::AtPoint | Before`, refcore's `note_read(w, place, live)`).
+- **Ids:** green now are `m1_carried_6_the_later_list` (N7's `explain` of a balance a movement moves), `m1_asks_move_no_money_beside_explain`, `m1_a_hole_never_becomes_zero_through_explain`, and `m1_determinism_across_runs` (its 72 explain records). `milestone-report: M1: 65/72` → `69/72`. The 3 still red belong to G13 and to G8's fix: `m1_carried` 2 and 3, and `m1_fixes_g8_a_price_in_another_currency_is_refused`. No T vector holds the instance form; the probes stand for it.
+- **Probes** (`tmp/m1/g12/`):
+  - **Corpus:** the corpus's 72 explain records and N7 ×2 are the same.
+  - **Balances** (`probe_bal.py`): 1 733 asks over seven fixtures, 1 708 the same, and 25 that differ by the row id below alone.
+  - **Projections and `low`s:** four fixtures, the same but for that row id.
+  - **Instances** (`probe_mv.py`, `pm4`, `pm6`): 223 asks over 14 fixtures and 12 of G11's adjustment fixtures. They cover plans, decisions, cycles, RUN-TIE, holes, refusals, modelled instances, and settled and hole adjustments. All are the same but 17 load refusals of a month outside its index (below).
+  - **Once more, after the report-only restructure:** 1 184 balance and projection asks (10 differ by the row id) and 30 instance asks.
+- **Not built:**
+  - **`explain` of a walk-bound def.** Refcore keeps the def's cell at each walk point where a decision read it (`walk_cells`, filled in `read_def`). It then evaluates each cell again just before its reader's booking, with running reads traced. The engine keeps neither the per-point record nor a running read's trace node. It needs both, in the evaluator and the trace; it has no T vector, and it is past this group's budget. It stops `not implemented`.
+  - **`explain` under an axis pin whose outside read has no option for the axis:** refcore prints its own `REFCORE-NOT-YET` there, so there is no form to match. Unchanged since G11.
+  - **A projection's `left out:` other than `none`:** an ask line leaves out nothing, and a projection that counts a left-out day stops `not implemented`.
+- **Seen on the way, refcore's (for the next round):**
+  - **One row id for two readings:** refcore gives two readings of one place in one version one row id (`stated[konto]`), against L §2.5's one stable id per row. The engine's id carries the reading's day (`stated[konto] 2026-02-01`). All 35 balance diffs are this; G11's `inputs-of` meets it too.
+  - **A month outside its index:** refcore refuses it as `LOAD-KEY (2025, 12) is not a key of months`, a Python tuple; the engine's message reads `2025-12`.
+- **Files** (under `crates/tally/src/`), for the map (P19):
+  - **New:** `ask/walked.rs` (the balance, projection and `low` forms); `ask/instance.rs` (the instance form).
+  - **Changed:** `ask/explain.rs` (the forms' dispatch, the balance cause, `readers-of` a kind); `eval/trace.rs` (the balance node); `eval/state.rs` (rows kept for `explain`); `eval/expr.rs` (a move read by its name); `model/graph.rs` (`bound_kinds`); `load/binds.rs` (the bound kind noted); `lib.rs`.
+  - **Kernel:** `walk/reads.rs`, `walk/projection.rs`, `walk/flows.rs`, `walk/order.rs`, `walk/state.rs`, `book/reading.rs`, `book/members.rs`, `book/adjust.rs`.
+- **Size:** 17 files, +1 454 −85 in engine/crates from c82ef44, against a plan of +380 −30 and an expected +610 −50: about 2.4× the expected. The instance form, the move read and the decision's reads weren't in the line plan, and `walked.rs` alone is 739 lines. The kernel's share is +121 −24.
+- **Kernel functions touched:**
+  - **`walk/reads.rs`:** `bal` (the balance node), `trace_bal` (new), `bal_day` (a running read noted), `note_read` (was `note_live`: every read, the live ones apart), and `bal_unit` and `state_value` (visibility).
+  - **`walk/projection.rs`:** `projection_walk` (new); `projection`, `projected_days` and `common_case` (`note_read`); `own_unit` (visibility).
+  - **`walk/flows.rs`:** `flows_place` (`note_read`), `span_last` (visibility).
+  - **`walk/order.rs`:** `run_one_body` (the run's reads), `refused_run` (the field).
+  - **`walk/state.rs`:** `Walk.reads`; `default_state` (visibility).
+  - **Visibility only:** `book/reading.rs` `instant_text`, `book/members.rs` `inst_ref`, `book/adjust.rs` `Adjustment::amount_text`.
+- **Mutants** (`mutants-local --next -F '<regex>'` over `walk/reads.rs` and `walk/projection.rs`, niced; the regex is in `tmp/m1/g12/mb-regex.txt`). The batch covers the kernel functions G12 wrote or changed in substance: `trace_bal`, `bal_day`, `note_read`, `projection_walk`. The large functions that gained one `note_read` call are left out, as G11 left `plan_walk` out. 17 mutants in 18 min: 10 caught (`bal_day`'s nine, `note_read` → `Ok(())`), 6 missed, 1 unviable. **Missed, for T:**
+  - **`projection_walk` → `Ok(0)`, `Ok(1)`** (`projection.rs:244`). Only `explain bal(x, d) from t` and `explain low(…) from t` reach it, and no T vector holds a projection's explain. Needed: an `explain` of a projection from a day after S, beside its plain twin, whose `counted:` lines differ from the main walk's.
+  - **`trace_bal` → `Ok(())`, and its guard's three mutants** (`reads.rs:109`, `:114`): the P63 balance cause, which no T vector holds. Needed: `explain` of a def whose cause is `bal(x, d)` (G11's `ro/m4.tally` `e_b` is the case), and one whose balance read is refused at run (`RUN-…`), where the node prints its refusal with no balance form under it.
+- **Exceptions:** +0 (6: kernel 1/3, cli 3/3, deny 2). Report-only hits went from 8 to 9; the new one is `ask/walked.rs`'s `enum Read<'a>`, a short-lived view of the ask's syntax (R-124's case), locked by `exceptions --write`. The first check full found 12 new report-only hits, nested closures, a long chain, three named lifetimes and an `unwrap_or(0)`. All but `Read<'a>` were restructured away; the `unwrap_or(0)` became an empty range.
+- **Check:** `check full: green, 31 steps (2840s)` on the code of this entry's commit; `milestone-report: M1: 69/72 green (gates once M1 is tagged)`. The first check full was red on `exceptions` and `rules-selftest`, both on those report-only hits.
+- **Commits:** 9a1bc5b (the balance, projection and `low` forms, P63), and this entry's (the instance form, the move read, the report-only restructure).
+- **Cost:** about 1.5 % of the week at this entry (`engine/tools/usage`), inside the brief's 2.0 % stop.
+- **STOP-REPORTs:** none new. Of G11's three, P63's two are built to the ruling (#132), and the fold stays open. Open from before: G9's P8-5, G8's three, G7's, G5's (ruled by P38), G4's (#116), G1's.

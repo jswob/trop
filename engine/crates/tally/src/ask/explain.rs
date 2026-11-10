@@ -13,7 +13,8 @@
 //! numbered where it first prints and a cause met again referenced by its number, a row by
 //! its stable id, a balance by its read; nothing recurses (a worklist, R-16); a balance, a
 //! projection and a `low` are `walked.rs`'s, a balance among the causes prints in their
-//! balance form (P63); a movement instance and a walk-bound def stop `NotBuilt`; rows print in
+//! balance form (P63); a movement instance is `instance.rs`'s, by its move's name alone or
+//! at keys; a walk-bound def stops `NotBuilt`; rows print in
 //! the text order of their stable ids; readers by depth, each depth by id, an event kind's
 //! bindings first (P63).
 
@@ -21,11 +22,12 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use super::answer::unresolved_word;
 use super::check::Printed;
+use super::instance::instance_line;
 use super::walked::{Read, balance_line, plain_lines};
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Env, Item, Trace, TraceKind, num_stop};
 use crate::model::{NameKind, Node, NodeKind, Reality, Value};
-use crate::syntax::{Ask, Expr, PinForm, Stop};
+use crate::syntax::{Ask, Expr, PinForm, Postfix, Stop};
 
 /// The line of `explain reference` of ask `ask` in scope `env` and context `ctx`: the value,
 /// then its derivation, traced while the reference is evaluated again; under the ask's `with`
@@ -48,8 +50,10 @@ pub(super) fn explain_line(
     if let Expr::Low(l) = reference {
         return balance_line(m, (ask, Read::Low(l), reference), engine, env, ctx);
     }
-    if let Some(form) = walk_form(m, reference) {
-        return Err(Stop::NotBuilt(form));
+    match walk_form(m, reference) {
+        Form::Instance => return instance_line(m, (ask, reference), engine, env, ctx),
+        Form::WalkBound => return Err(Stop::NotBuilt("explain of a walk-bound def")),
+        Form::Traced => {}
     }
     let (item, met, trace) = traced(m, engine, reference, env, ctx)?;
     // a bare key literal no position resolved is refused where it is read (P39)
@@ -139,24 +143,36 @@ fn outside_pins(
     trace.beside_pins(outside_trace, pins, (inside, value))
 }
 
-/// The explain form a reference names that the walk explains and isn't built: a movement
-/// instance, a walk-bound def (E §10).
-fn walk_form(m: &Reality, reference: &Expr) -> Option<&'static str> {
+/// The form `explain` gives a reference by what it names (refcore's `evaluate`, its explain
+/// arms). E §10.
+enum Form {
+    /// A movement instance: a move's name, at its keys.
+    Instance,
+    /// A walk-bound def's cell: its name, at its keys.
+    WalkBound,
+    /// Anything else: its derivation, traced.
+    Traced,
+}
+
+/// The form `explain` gives `reference`: a move's or a walk-bound def's name, alone or at
+/// keys, is the walk's; anything else is traced (refcore's `evaluate`, its explain arms).
+/// E §10.
+fn walk_form(m: &Reality, reference: &Expr) -> Form {
     // a name, or a name at keys
-    let named = if let Expr::Post(base, _) = reference {
+    let named = if let Expr::Post(base, post) = reference
+        && matches!(post.as_slice(), [Postfix::Keys(_)])
+    {
         base.as_ref()
     } else {
         reference
     };
     let Expr::Name(id) = named else {
-        return None;
+        return Form::Traced;
     };
     match m.names.kind(id) {
-        Some(NameKind::Move) => Some("explain of a movement instance"),
-        Some(NameKind::Def) if m.graph.walk_bound.contains(id) => {
-            Some("explain of a walk-bound def")
-        }
-        _ => None,
+        Some(NameKind::Move) => Form::Instance,
+        Some(NameKind::Def) if m.graph.walk_bound.contains(id) => Form::WalkBound,
+        _ => Form::Traced,
     }
 }
 
@@ -227,7 +243,7 @@ pub(super) fn readers_line(m: &Reality, ask: &Ask, reference: &Expr) -> Result<S
         return Err(invariant("readers-of of other than an id"));
     };
     let names = match node_of(m, id) {
-        Of::Node(node) => readers(m, vec![&node]),
+        Of::Node(node) => readers(m, &[&node]),
         Of::Event => {
             let mut first: Vec<&Node> = m
                 .graph
@@ -239,7 +255,7 @@ pub(super) fn readers_line(m: &Reality, ask: &Ask, reference: &Expr) -> Result<S
             first.sort_by(|a, b| by_id(a, b));
             first.dedup();
             let mut out: Vec<String> = first.iter().map(|n| n.id.clone()).collect();
-            out.extend(readers(m, first));
+            out.extend(readers(m, &first));
             out
         }
         Of::Nothing => Vec::new(),
@@ -295,7 +311,7 @@ fn by_id(a: &Node, b: &Node) -> core::cmp::Ordering {
 /// The ids of the items with a path of edges to one of `start`, by depth, each depth in the
 /// order of its ids, then its kinds' words; `start` itself not among them (refcore's
 /// `Checker.readers_of`). E §10.
-fn readers<'a>(m: &'a Reality, start: Vec<&'a Node>) -> Vec<String> {
+fn readers(m: &Reality, start: &[&Node]) -> Vec<String> {
     let mut inverse: BTreeMap<&Node, Vec<&Node>> = BTreeMap::new();
     for (reader, targets) in &m.graph.edges {
         for target in targets.keys() {
@@ -308,7 +324,7 @@ fn readers<'a>(m: &'a Reality, start: Vec<&'a Node>) -> Vec<String> {
         }
     }
     let mut seen: BTreeSet<&Node> = start.iter().copied().collect();
-    let mut frontier = start;
+    let mut frontier: Vec<&Node> = start.to_vec();
     let mut out = Vec::new();
     while !frontier.is_empty() {
         let mut layer: Vec<&Node> = Vec::new();
@@ -341,7 +357,7 @@ enum Step {
 /// then what the cell read beside its rules; a row with its value and provenance; a balance
 /// in the balance form, from the walk it read (P63); a node met again as `(<label>: see
 /// [n])`, a row by its stable id, a balance by its read. L §5.18, E §10.
-fn derivation(m: &Reality, engine: &Engine, trace: &Trace) -> Result<Vec<String>, Stop> {
+pub(super) fn derivation(m: &Reality, engine: &Engine, trace: &Trace) -> Result<Vec<String>, Stop> {
     let mut out = Vec::new();
     let mut numbered: BTreeMap<usize, usize> = BTreeMap::new();
     let mut rows: BTreeMap<String, usize> = BTreeMap::new();
