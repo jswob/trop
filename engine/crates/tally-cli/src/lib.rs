@@ -19,6 +19,11 @@ use core::ops::Bound;
 use std::collections::BTreeMap;
 use std::ffi::OsString;
 
+/// The library, re-exported for T's runner and nothing else: the fence test `m1_lows` calls
+/// `tally_cli::tally::run_with_lows` to run each record under both of F5's forms (pick P57),
+/// with no dependency of its own on `tally` (pick P59).
+pub use tally;
+
 /// What one run of the command prints, and the code it exits with.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Output {
