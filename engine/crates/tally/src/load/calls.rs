@@ -448,6 +448,16 @@ impl Checker {
         if !of_a_kind && !matches!(t, Ty::Unseen) {
             return Err(uerr(format!("lifespan of {}, not a thing", t.show())));
         }
+        // a movement's lifespan only places it on its day for bindings; what a rule reads of
+        // it is its day (L §5.7 Reads and lifespans, §8.4; G13 review B6)
+        if let Ty::Key(ix) = &t
+            && m.subtree("events").contains(ix)
+        {
+            return Err(uerr(format!(
+                "lifespan of {}: a movement has its day, not a lifespan (L §5.7)",
+                t.show()
+            )));
+        }
         Ok(span())
     }
 
