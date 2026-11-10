@@ -13,7 +13,7 @@
 //! range's position is one of its values, the same key whether a row writes it or a read
 //! computes it.
 
-use super::arith::{Kind, Op, Operand, arith, finish, int_of, operand};
+use super::arith::{Kind, Op, Operand, arith, duration, finish, int_of, operand};
 use super::bindings::{Values, date_of};
 use super::expr::literal;
 use super::keys::Given;
@@ -613,8 +613,9 @@ fn range_text(m: &Reality, (a, b, s): &Ends) -> Result<String, Stop> {
 }
 
 /// Whether a range counted within the key limit holds `key`, as refcore's set of its values
-/// does (`range_member`): days by stepping to it, numbers by `a + i·s` for a whole `i ≥ 0`
-/// up to `b`, a value of another kind never. L §2.5, §5.6.
+/// does (`range_member`): days stepped by days as `a + i·s`, days stepped by months by
+/// stepping to it, numbers by `a + i·s` for a whole `i ≥ 0` up to `b`, a value of another
+/// kind never. L §2.5, §5.6, §4.2.
 fn range_holds(m: &Reality, (first, last, by): &Ends, key: &Value) -> Result<bool, Stop> {
     if let Value::Day(start) = first {
         let Some(by) = by else {
@@ -624,13 +625,62 @@ fn range_holds(m: &Reality, (first, last, by): &Ends, key: &Value) -> Result<boo
             return Ok(false);
         };
         let last = range_last(m, last)?;
-        let mut current = *start;
+        if *day <= *start || *start > last {
+            return Ok(*day == *start && *start <= last);
+        }
+        // the first step, refused as stepping refuses it (no duration, or not forward)
+        let next = day_step(m, *start, by)?;
+        if steps_by_days(by) {
+            return holds_by_days(m, (*start, next, last), by, *day);
+        }
+        let mut current = next;
         while current < *day && current <= last {
             current = day_step(m, current, by)?;
         }
         return Ok(current == *day && current <= last);
     }
     Stepped::of(m, (first, last, by.as_ref()))?.holds(m, key)
+}
+
+/// Whether a range's step moves a day by days alone: a whole number of days, or a count
+/// (refcore's `date_arith`). L §4.2.
+fn steps_by_days(by: &Value) -> bool {
+    let Value::Number(n) = by else {
+        return false;
+    };
+    duration(n).is_none_or(|(word, _)| word == "day")
+}
+
+/// Whether day `day`, after `start`, is one of a range's days `start + i·s` up to `last`, the
+/// step s the days from `start` to `next`: the value before `day` found by its index, then
+/// the range's step from it, refused where stepping one by one refuses (past the end of
+/// time). One read of a long range costs a step, not the range (G13 review NB5). L §2.5,
+/// §4.2, §5.6.
+fn holds_by_days(
+    m: &Reality,
+    (start, next, last): (Day, Day, Day),
+    by: &Value,
+    day: Day,
+) -> Result<bool, Stop> {
+    let bad = || invariant("a forward step of days: `day_step` refuses one that isn't");
+    let step = start.days_to(next).ok_or_else(bad)?;
+    let gap = start.days_to(day).ok_or_else(bad)?;
+    // Python's (gap - 1) // step * step: the offset of the range's last day before `day`
+    let before = gap
+        .checked_sub(1)
+        .and_then(|g| g.checked_div_euclid(step))
+        .and_then(|i| i.checked_mul(step))
+        .ok_or_else(bad)?;
+    let below = start.add_days(before).ok_or_else(bad)?;
+    if below > last {
+        return Ok(false);
+    }
+    let reached = if before == 0 {
+        next
+    } else {
+        day_step(m, below, by)?
+    };
+    Ok(reached == day && reached <= last)
 }
 
 /// The days from `start` to `end`, stepped, a range counted within the key limit (refcore's
@@ -658,9 +708,13 @@ fn range_last(m: &Reality, end: &Value) -> Result<Day, Stop> {
 }
 
 /// A day of a range moved by its step (refcore's `date_arith` in `range_values`): a step
-/// that isn't a duration is `LOAD-UNIT`, one that doesn't move forward `RUN-DOMAIN`. L §4.2,
-/// §5.11.
+/// that isn't a duration is `LOAD-UNIT`, an interval of durations included, which moves a
+/// day to no one day (L §4.4); one that doesn't move forward `RUN-DOMAIN`. L §4.2, §5.11.
 fn day_step(m: &Reality, day: Day, step: &Value) -> Result<Day, Stop> {
+    if let Value::Window(_) = step {
+        let shown = step.text(m).map_err(num_stop)?;
+        return Err(refuse_load(Load::Unit, format!("{} + {shown}", day.text())));
+    }
     let Value::Day(next) = arith(m, Op::Add, &Value::Day(day), step)? else {
         return Err(invariant(
             "a day stepped to no day: `arith` refuses a step that isn't a duration first",
