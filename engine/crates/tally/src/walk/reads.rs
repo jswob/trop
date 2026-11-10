@@ -475,6 +475,64 @@ impl Engine {
         Ok(id)
     }
 
+    /// The walk of the timeline of cut `cut` from S through `day`, its plan pass listing no
+    /// plan's instance dated after it: what a leg read that day needs while the main walk
+    /// needs a cell still being computed outside it. Kept per day, a walk to a later day
+    /// serving an earlier one; none where it is refused (refcore's `prefix_walk`,
+    /// `plan_list`). E §3.2 (evaluation is demand-driven), §4.1, §4.2 step 5.
+    ///
+    /// # Errors
+    ///
+    /// `Deep` while a cell it needs waits on the work stack; `NotBuilt` for a leg whose day
+    /// is a hole, and for a read of a walk while it is walked.
+    pub(crate) fn prefix_walk(
+        &mut self,
+        m: &Reality,
+        cut: Day,
+        day: Option<Day>,
+    ) -> Result<Option<usize>, Stop> {
+        let Some(day) = day else {
+            return Err(Stop::NotBuilt(
+                "a leg's read whose walk needs a cell still being computed, its day a hole",
+            ));
+        };
+        let kept = self
+            .prefixes
+            .walks
+            .range((cut, day)..)
+            .next()
+            .filter(|((c, _), _)| *c == cut)
+            .map(|((_, upto), id)| (*upto, *id));
+        let (upto, id) = if let Some(found) = kept {
+            found
+        } else {
+            let id = self.walks.len();
+            let end = day.min(m.end);
+            let mut walk = Walk::new(cut, (m.start, end), self.timeline_world());
+            walk.upto = Some(day);
+            self.walks.push(walk);
+            #[cfg(feature = "counters")]
+            self.counts.add(crate::Unit::Walk);
+            self.prefixes.walks.insert((cut, day), id);
+            (day, id)
+        };
+        if self.walking.contains(&id) {
+            return Err(Stop::NotBuilt("a read of a walk while it is walked"));
+        }
+        let outer = self.body_upto.replace(upto);
+        self.walking.insert(id);
+        self.push();
+        let walked = self.advance(m, id);
+        self.pop_alone();
+        self.walking.remove(&id);
+        self.body_upto = outer;
+        match walked {
+            Ok(()) => Ok(Some(id)),
+            Err(Stop::Refused(_)) => Ok(None),
+            Err(stop) => Err(stop),
+        }
+    }
+
     /// `gap(x, d)`: the gap at the last `stated` reading of x on day d in the main walk at
     /// the cut, with what it rests on; `HOLE-NOREADING` where no reading of x falls that day
     /// (refcore's `m_c_gap`). L §5.19, E §6.1, L §8.1.

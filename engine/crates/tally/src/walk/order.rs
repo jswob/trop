@@ -14,7 +14,7 @@
 //! is run again from its start; the instances of one move run in the order of its `ties by`.
 
 use core::cmp::Ordering;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use super::agenda::{Act, Mv};
 use super::day::{Broke, ends};
@@ -24,7 +24,7 @@ use super::state::{ALL, Change, Ent, Group, Taken, WalkObs};
 use crate::base::{Code, Refusal, Run as RunCode};
 use crate::eval::{Ctx, Engine, Entry};
 use crate::hole::spread;
-use crate::model::{MoveInfo, Reality, Value};
+use crate::model::{KeyVal, MoveInfo, Reality, Target, Value};
 use crate::syntax::{Certainty, Stop};
 use crate::time::Day;
 
@@ -66,22 +66,24 @@ impl Engine {
             .moves
             .get(move_id)
             .ok_or_else(|| invariant("a decision act of a move load didn't build"))?;
+        if self
+            .walk(id)?
+            .cycles_run
+            .contains(&(move_id.to_owned(), day))
+        {
+            return Ok(());
+        }
         let mut insts = self
             .walk(id)?
             .due
             .get(&(move_id.to_owned(), day))
             .cloned()
             .ok_or_else(|| invariant("a decision act with no instance due"))?;
-        let mut cycle = false;
-        for group in m.graph.order_groups.iter().filter(|g| g.contains(move_id)) {
-            for q in group {
-                cycle = cycle || (q != move_id && self.is_due(id, q, day));
-            }
-        }
-        if cycle {
-            return Err(Stop::NotBuilt(
-                "an unordered cycle of decisions due on one day",
-            ));
+        let cycle = m.graph.order_groups.iter().find(|g| {
+            g.contains(move_id) && g.iter().any(|q| q != move_id && self.is_due(id, q, day))
+        });
+        if let Some(group) = cycle {
+            return self.run_cycle(m, id, group, day, at);
         }
         if insts.len() > 1 && mv.decl.ties.is_some() {
             insts = self.tie_order(m, id, mv, insts, day)?;
@@ -108,6 +110,294 @@ impl Engine {
         self.walks
             .get(id)
             .is_some_and(|w| w.due.contains_key(&(q.to_owned(), day)))
+    }
+
+    /// The instances of an unordered cycle's decisions due on `day`, run once, at the act of
+    /// the first of its moves to come: each move's instances in the order of its `ties by`,
+    /// the refused ones first, then the rest in the order their reads give, each at its own
+    /// point after the act's (refcore's `run_group`). L §5.14.2 (Cycles), E §4.2 step 3.
+    fn run_cycle(
+        &mut self,
+        m: &Reality,
+        id: usize,
+        group: &BTreeSet<String>,
+        day: Day,
+        at: At,
+    ) -> Result<(), Stop> {
+        let judged = self.today(id)?.cycle.clone();
+        let items = if let Some(items) = judged {
+            items
+        } else {
+            let items = self.cycle_order(m, id, group, day, at)?;
+            self.today_mut(id)?.cycle = Some(items.clone());
+            items
+        };
+        let start = self.today(id)?.next_inst;
+        for (n, item) in items.into_iter().enumerate().skip(start) {
+            let n32 = u32::try_from(n).map_err(|_| invariant("an instance's rank"))?;
+            let key = At { n: n32, ..at };
+            match item.refused {
+                Some(err) => self.refused_run(m, id, item.inst, key, err, item.changes)?,
+                None => {
+                    self.run_one(m, id, item.inst, key)?;
+                }
+            }
+            self.today_mut(id)?.next_inst = n
+                .checked_add(1)
+                .ok_or_else(|| invariant("a count of runs"))?;
+        }
+        let walk = self.walk_mut(id)?;
+        for q in group {
+            walk.cycles_run.insert((q.clone(), day));
+        }
+        Ok(())
+    }
+
+    /// The order of an unordered cycle's instances due on `day`, read before any of them
+    /// runs: one whose `when` is false, and stays so whatever another changes that day,
+    /// orders nothing; one that reads a place another changes, or another's legs, runs after
+    /// it, and a written `before` or `after` between two moves decides; two that read each
+    /// other are refused, `RUN-ORDER`, or of one move go by its `ties by` (`RUN-TIE`
+    /// without one); what no read orders runs by its move's id, then its place (refcore's
+    /// `run_group`). L §5.14.2 (Cycles), E §4.2 step 3.
+    fn cycle_order(
+        &mut self,
+        m: &Reality,
+        id: usize,
+        group: &BTreeSet<String>,
+        day: Day,
+        at: At,
+    ) -> Result<Vec<CycleItem>, Stop> {
+        let mut members = Vec::new();
+        for q in group {
+            let mq = m
+                .moves
+                .get(q)
+                .ok_or_else(|| invariant("a cycle's move load didn't build"))?;
+            let mut insts = self
+                .walk(id)?
+                .due
+                .get(&(q.clone(), day))
+                .cloned()
+                .unwrap_or_else(Vec::new);
+            if insts.len() > 1 && mq.decl.ties.is_some() {
+                insts = self.tie_order(m, id, mq, insts, day)?;
+            }
+            for inst in insts {
+                members.push(self.cycle_member(m, id, mq, inst, (day, at))?);
+            }
+        }
+        let tied: BTreeSet<&str> = group
+            .iter()
+            .filter(|q| m.moves.get(q).is_some_and(|mq| mq.decl.ties.is_some()))
+            .map(String::as_str)
+            .collect();
+        let (order, bad) = cycle_ranks(&members, &tied, &m.graph.written_order, day)?;
+        let mut refused: Vec<(usize, Refusal)> = bad.into_iter().collect();
+        refused.sort_by(|a, b| rank_cmp(&members, a.0, b.0));
+        let mut items = Vec::with_capacity(members.len());
+        for (x, err) in refused {
+            let member = members
+                .get(x)
+                .ok_or_else(|| invariant("a cycle's member past its list"))?;
+            items.push(CycleItem {
+                inst: member.inst.clone(),
+                refused: Some(err),
+                changes: member.changes.clone(),
+            });
+        }
+        for x in order {
+            let member = members
+                .get(x)
+                .ok_or_else(|| invariant("a cycle's member past its list"))?;
+            items.push(CycleItem {
+                inst: member.inst.clone(),
+                refused: None,
+                changes: member.changes.clone(),
+            });
+        }
+        Ok(items)
+    }
+
+    /// What orders one instance of a cycle: the places its legs give that day, the places
+    /// and moves it declares it reads, read at min(t, K) and its law date, none where one
+    /// can't be read there; its `when` read at the act's point with running reads, and the
+    /// places it read (refcore's `inst_places`, `run_group`'s `when`). L §5.14.1, §5.14.2.
+    fn cycle_member(
+        &mut self,
+        m: &Reality,
+        id: usize,
+        mv: &MoveInfo,
+        inst: Inst,
+        (day, at): (Day, At),
+    ) -> Result<CycleMember, Stop> {
+        let cut = self.walk(id)?.cut;
+        let ctx = self.timeline_ctx(inst.law, day.min(cut));
+        self.push();
+        let read = self.cycle_reads(m, mv, &inst, ctx);
+        let running = Ctx {
+            at: Some(WalkAt {
+                walk: id,
+                point: at,
+            }),
+            ..ctx
+        };
+        let when = if read.is_ok() {
+            self.when_before(m, id, mv, &inst, running)
+        } else {
+            Ok((false, BTreeSet::new()))
+        };
+        self.pop_alone();
+        let (changes, reads, moves) = read?;
+        let (off, seen) = when?;
+        Ok(CycleMember {
+            inst,
+            changes,
+            reads,
+            moves,
+            off,
+            seen,
+        })
+    }
+
+    /// The places an instance's legs give, and the places and moves it declares it reads,
+    /// each none where one can't be read (refcore's `inst_places`). L §5.14.1, §5.14.2.
+    fn cycle_reads(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        inst: &Inst,
+        ctx: Ctx,
+    ) -> Result<Reads, Stop> {
+        let changes = self.leg_places(m, mv, inst, ctx)?;
+        let mut reads = BTreeSet::new();
+        let mut moves = BTreeSet::new();
+        for (read, target) in mv.decl.reads.iter().zip(&mv.read_targets) {
+            match target {
+                Target::Move(q) => {
+                    moves.insert(q.clone());
+                }
+                Target::Kind(kind) => moves.extend(decisions_of(m, kind)),
+                Target::PlaceSec(section) => reads.extend(things_of(m, section)),
+                Target::Thing(_) | Target::Unknown => {
+                    let Some(Value::Key(KeyVal::Thing(place))) =
+                        self.run_read(m, read, &inst.env, ctx)?
+                    else {
+                        // a place that can't be read here meets every place; the reads after
+                        // it aren't read (refcore's `inst_places`)
+                        return Ok((changes, None, moves));
+                    };
+                    reads.insert(place);
+                }
+            }
+        }
+        Ok((changes, Some(reads), moves))
+    }
+
+    /// The places an instance's legs give; a hole place gives none, and none where one is
+    /// neither a thing nor a hole, or refused (refcore's `inst_places`, its changes).
+    /// L §5.14.2, §8.4.
+    fn leg_places(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        inst: &Inst,
+        ctx: Ctx,
+    ) -> Result<Option<BTreeSet<String>>, Stop> {
+        let mut changes = BTreeSet::new();
+        for end in mv.decl.legs.iter().flat_map(|leg| [&leg.from, &leg.to]) {
+            match self.run_read(m, end, &inst.env, ctx)? {
+                Some(Value::Key(KeyVal::Thing(place))) => {
+                    changes.insert(place);
+                }
+                Some(Value::Hole(_)) => {}
+                Some(_) | None => return Ok(None),
+            }
+        }
+        Ok(Some(changes))
+    }
+
+    /// Whether an instance's `when` is false at point `ctx.at`, read before any of the
+    /// cycle runs, and the places it read there; a refusal there orders as true (refcore's
+    /// `run_group`, its `when`). L §5.14.1, §5.14.2.
+    fn when_before(
+        &mut self,
+        m: &Reality,
+        id: usize,
+        mv: &MoveInfo,
+        inst: &Inst,
+        ctx: Ctx,
+    ) -> Result<(bool, BTreeSet<String>), Stop> {
+        let Some(when) = &mv.decl.when else {
+            return Ok((false, BTreeSet::new()));
+        };
+        let prev = self.walk_mut(id)?.live.replace(BTreeSet::new());
+        let value = self.ev(m, when, &inst.env, ctx);
+        let Some(live) = core::mem::replace(&mut self.walk_mut(id)?.live, prev) else {
+            return Err(invariant("a when's live reads taken"));
+        };
+        match value {
+            Ok(v) => Ok((v == Value::Bool(false), live)),
+            Err(Stop::Refused(r)) if run_time(&r) => Ok((false, BTreeSet::new())),
+            Err(stop) => Err(stop),
+        }
+    }
+
+    /// The value of `e` at `ctx`, or none where a run-time refusal stops it; a load refusal
+    /// met at run, `ENGINE-INVARIANT` and the walk's other stops go on (R-66; refcore's
+    /// `try: ev … except TallyError`). L §8.4.
+    fn run_read(
+        &mut self,
+        m: &Reality,
+        e: &crate::syntax::Expr,
+        env: &crate::eval::Env,
+        ctx: Ctx,
+    ) -> Result<Option<Value>, Stop> {
+        match self.ev(m, e, env, ctx) {
+            Ok(v) => Ok(Some(v)),
+            Err(Stop::Refused(r)) if run_time(&r) => Ok(None),
+            Err(stop) => Err(stop),
+        }
+    }
+
+    /// A cycle's instance refused before it runs, `RUN-ORDER` or `RUN-TIE`: the places its
+    /// legs give refused from its point, every place where none is known, and its run kept
+    /// with no legs, so every read of it is refused too (refcore's `run_group`, its bad, and
+    /// `refused_run`). L §5.14.2, §8.4; E §4.2 step 5.
+    fn refused_run(
+        &mut self,
+        m: &Reality,
+        id: usize,
+        mut inst: Inst,
+        key: At,
+        err: Refusal,
+        changes: Option<BTreeSet<String>>,
+    ) -> Result<(), Stop> {
+        let walk = self.walk_mut(id)?;
+        match changes.filter(|c| !c.is_empty()) {
+            Some(places) => {
+                for place in places {
+                    let unit = m
+                        .things
+                        .get(&place)
+                        .and_then(|t| m.place_unit(t))
+                        .unwrap_or_else(|| ALL.to_owned());
+                    walk.add(m, &place, &unit, Ent::new(key, Change::Bad(err.clone())))?;
+                }
+            }
+            None => walk.add(m, ALL, ALL, Ent::new(key, Change::Bad(err.clone())))?,
+        }
+        inst.legs = Vec::new();
+        inst.attrs = Vec::new();
+        inst.err = Some(err);
+        inst.status = Status::Refused;
+        walk.record(Run {
+            inst,
+            point: key,
+            live: BTreeSet::new(),
+            changed: BTreeSet::new(),
+        });
+        Ok(())
     }
 
     /// Instances of one move that read the places another of them changes, with no `ties by`:
@@ -329,9 +619,11 @@ impl Engine {
         self.push();
         let read = self.refused_places(m, mv, inst, ctx);
         inst.coll.merge(&self.pop_alone());
+        // a place a run-time refusal stops is none here; a load refusal met at run and
+        // ENGINE-INVARIANT go on (R-66)
         inst.legs = match read {
             Ok(Some(legs)) => legs,
-            Ok(None) | Err(Stop::Refused(_)) => Vec::new(),
+            Ok(None) => Vec::new(),
             Err(stop) => return Err(stop),
         };
         Ok(())
@@ -526,6 +818,248 @@ impl super::state::Walk {
         self.run_ids.insert(run.inst.id.clone(), ix);
         self.runs.push(run);
     }
+}
+
+/// One instance of an unordered cycle as its order judged it: refused before it runs, or run
+/// (refcore's `run_group`, its order and its bad). L §5.14.2.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CycleItem {
+    /// The instance.
+    pub inst: Inst,
+    /// Its refusal, `RUN-ORDER` or `RUN-TIE`, where it doesn't run.
+    pub refused: Option<Refusal>,
+    /// The places its legs give that day; none where one can't be read there.
+    pub changes: Option<BTreeSet<String>>,
+}
+
+/// What orders one instance of a cycle (refcore's `run_group`, its `info`). L §5.14.2.
+struct CycleMember {
+    /// The instance.
+    inst: Inst,
+    /// The places its legs give that day; none where one can't be read there.
+    changes: Option<BTreeSet<String>>,
+    /// The places it declares it reads; none where one can't be read there.
+    reads: Option<BTreeSet<String>>,
+    /// The decision moves whose legs it declares it reads.
+    moves: BTreeSet<String>,
+    /// Whether its `when` is false before any of the cycle runs.
+    off: bool,
+    /// The places its `when` read.
+    seen: BTreeSet<String>,
+}
+
+/// The places an instance's legs give, the places it declares it reads, each none where one
+/// can't be read, and the moves whose legs it reads (refcore's `inst_places`).
+type Reads = (
+    Option<BTreeSet<String>>,
+    Option<BTreeSet<String>>,
+    BTreeSet<String>,
+);
+
+/// The order of a cycle's members and the refused ones with their refusal (refcore's
+/// `run_group`, after its `info`): see `Engine::cycle_order`. L §5.14.2 (Cycles).
+fn cycle_ranks(
+    members: &[CycleMember],
+    tied: &BTreeSet<&str>,
+    written: &BTreeSet<(String, String)>,
+    day: Day,
+) -> Result<(Vec<usize>, BTreeMap<usize, Refusal>), Stop> {
+    let mut after = cycle_after(members, written);
+    let mut bad: BTreeMap<usize, Refusal> = BTreeMap::new();
+    for (x, mx) in members.iter().enumerate() {
+        let ys: Vec<usize> = set_of(&after, x)?.iter().copied().collect();
+        for y in ys {
+            if y < x || !set_of(&after, y)?.contains(&x) {
+                continue;
+            }
+            let my = members
+                .get(y)
+                .ok_or_else(|| invariant("a cycle's member past its list"))?;
+            let (a, b) = (mx.inst.move_id.as_str(), my.inst.move_id.as_str());
+            if a == b && tied.contains(a) {
+                // one move's instances go by its ties by
+                if let Some(set) = after.get_mut(x) {
+                    set.remove(&y);
+                }
+                continue;
+            }
+            let err = mutual(a, b, day);
+            bad.entry(x).or_insert_with(|| err.clone());
+            bad.entry(y).or_insert(err);
+        }
+    }
+    let mut left: BTreeSet<usize> = (0..members.len())
+        .filter(|x| !bad.contains_key(x))
+        .collect();
+    let mut order = Vec::with_capacity(left.len());
+    while !left.is_empty() {
+        let mut ranked: Vec<usize> = left.iter().copied().collect();
+        ranked.sort_by(|a, b| rank_cmp(members, *a, *b));
+        let mut ready = None;
+        for x in ranked {
+            if set_of(&after, x)?.is_disjoint(&left) {
+                ready = Some(x);
+                break;
+            }
+        }
+        let Some(x) = ready else {
+            let moves: BTreeSet<&str> = left
+                .iter()
+                .filter_map(|x| members.get(*x))
+                .map(|mx| mx.inst.move_id.as_str())
+                .collect();
+            let names: Vec<&str> = moves.into_iter().collect();
+            let err = refusal(
+                RunCode::Order,
+                format!(
+                    "decisions {} read each other on {}",
+                    names.join(" and "),
+                    day.text()
+                ),
+            );
+            for x in &left {
+                bad.insert(*x, err.clone());
+            }
+            break;
+        };
+        order.push(x);
+        left.remove(&x);
+    }
+    Ok((order, bad))
+}
+
+/// Two members that read each other: of one move with no `ties by`, `RUN-TIE`; of two moves,
+/// `RUN-ORDER` (refcore's `run_group`, its bad). L §5.14.2.
+fn mutual(a: &str, b: &str, day: Day) -> Refusal {
+    if a == b {
+        return refusal(
+            RunCode::Tie,
+            format!(
+                "{a} has a tie at {} that changes the result, and no ties by",
+                day.text()
+            ),
+        );
+    }
+    let (first, second) = if a < b { (a, b) } else { (b, a) };
+    refusal(
+        RunCode::Order,
+        format!(
+            "decisions {first} and {second} read each other on {}",
+            day.text()
+        ),
+    )
+}
+
+/// Each member's members to run after: those whose places it reads, or whose legs, unless a
+/// `when` false whatever they change takes either out; a written `before` or `after` between
+/// their moves decides (refcore's `run_group`, its `after`). L §5.14.2 (Cycles).
+fn cycle_after(
+    members: &[CycleMember],
+    written: &BTreeSet<(String, String)>,
+) -> Vec<BTreeSet<usize>> {
+    let off: Vec<bool> = members
+        .iter()
+        .enumerate()
+        .map(|(x, mx)| mx.off && stays_off(members, x, mx))
+        .collect();
+    let on = |x: usize| off.get(x) == Some(&false);
+    let mut after: Vec<BTreeSet<usize>> = vec![BTreeSet::new(); members.len()];
+    for (x, set) in after.iter_mut().enumerate() {
+        let Some(mx) = members.get(x) else {
+            continue;
+        };
+        for (y, my) in members.iter().enumerate() {
+            if x != y && on(x) && on(y) && reads_of(mx, my) {
+                set.insert(y);
+            }
+        }
+    }
+    for (x, mx) in members.iter().enumerate() {
+        for (y, my) in members.iter().enumerate() {
+            let pair = (mx.inst.move_id.clone(), my.inst.move_id.clone());
+            if x == y || !on(x) || !on(y) || !written.contains(&pair) {
+                continue;
+            }
+            if let Some(set) = after.get_mut(x) {
+                set.insert(y);
+            }
+            if let Some(set) = after.get_mut(y) {
+                set.remove(&x);
+            }
+        }
+    }
+    after
+}
+
+/// Whether member `x`'s false `when` read nothing another member changes that day, so it
+/// stays false whatever runs first (refcore's `run_group`, its `off`). L §5.14.2.
+fn stays_off(members: &[CycleMember], x: usize, mx: &CycleMember) -> bool {
+    members
+        .iter()
+        .enumerate()
+        .all(|(y, my)| y == x || !meets(&mx.seen, my.changes.as_ref()))
+}
+
+/// Whether a member reads what another changes that day, or its legs; a set that can't be
+/// read meets every place (refcore's `run_group`, `reads_of`). L §5.14.2.
+fn reads_of(x: &CycleMember, y: &CycleMember) -> bool {
+    if x.moves.contains(&y.inst.move_id) {
+        return true;
+    }
+    match (&x.reads, &y.changes) {
+        (Some(reads), Some(changes)) => !reads.is_disjoint(changes),
+        _ => true,
+    }
+}
+
+/// Whether places `read` meet the places a member changes; changes that can't be read meet
+/// every place. L §5.14.2.
+fn meets(read: &BTreeSet<String>, changes: Option<&BTreeSet<String>>) -> bool {
+    changes.is_none_or(|c| !read.is_disjoint(c))
+}
+
+/// Member `x`'s members to run after. L §5.14.2.
+fn set_of(after: &[BTreeSet<usize>], x: usize) -> Result<&BTreeSet<usize>, Stop> {
+    after
+        .get(x)
+        .ok_or_else(|| invariant("a cycle's member past its list"))
+}
+
+/// Two cycle members in the order no read gives: by move id, then by their place in the
+/// list, each move's in its `ties by` order (refcore's `rank`). L §5.14.2.
+fn rank_cmp(members: &[CycleMember], a: usize, b: usize) -> Ordering {
+    let id = |x: usize| members.get(x).map(|mx| mx.inst.move_id.as_str());
+    (id(a), a).cmp(&(id(b), b))
+}
+
+/// The decision moves of event kind `kind` or a subkind. L §5.14.1 (`reads K`).
+fn decisions_of(m: &Reality, kind: &str) -> Vec<String> {
+    let sub = m.subtree(kind);
+    m.moves
+        .entries()
+        .filter(|(_, mv)| mv.decision && sub.contains(&mv.kind))
+        .map(|(_, mv)| mv.id.clone())
+        .collect()
+}
+
+/// Every instance of keyed place `section`. L §5.14.1 (`reads x` of a keyed place).
+fn things_of(m: &Reality, section: &str) -> Vec<String> {
+    m.things
+        .entries()
+        .filter(|(_, t)| t.place.as_ref().is_some_and(|keys| keys.place == section))
+        .map(|(_, t)| t.name.clone())
+        .collect()
+}
+
+/// Whether a refusal is a run-time one, which a read that may fail takes as unknown there;
+/// a load refusal met at run and `ENGINE-INVARIANT` stop the run (R-66). L §8.3, §8.4.
+pub(super) fn run_time(r: &Refusal) -> bool {
+    !matches!(r.code(), Code::Load(_) | Code::EngineInvariant)
+}
+
+/// A run-time refusal (L §8.4).
+fn refusal(code: RunCode, message: String) -> Refusal {
+    Refusal::new(Code::Run(code), message)
 }
 
 /// Two `ties by` keys in order: numbers and money by value, days by date, texts and keys by

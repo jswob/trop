@@ -393,6 +393,9 @@ pub struct Seed {
     pub exists: Exists,
     /// The cut it is measured at; none for its booking cut min(t, K).
     pub at_cut: Option<Day>,
+    /// For a walk up to a day, that day: an instance dated after it is none, its body never
+    /// evaluated (refcore's `eval_inst`, `upto`). E §4.1.
+    pub upto: Option<Day>,
 }
 
 /// What an instance's body gives: whether it exists, its legs, attributes and period.
@@ -437,7 +440,7 @@ impl Engine {
             )));
         }
         self.plan_active.insert(key.clone());
-        let made = self.make_instances(m, mv, cut);
+        let made = self.make_instances(m, mv, cut, None);
         self.plan_active.remove(&key);
         let mut out = made?;
         // refcore computes a status when it is first read, after the instances are kept
@@ -447,6 +450,57 @@ impl Engine {
         }
         let shared = Rc::new(out);
         self.plans.insert(key, Rc::clone(&shared));
+        Ok(shared)
+    }
+
+    /// A move's instances for the walk being planned: all of them, or, for a walk up to a
+    /// day, a plan's dated on or before it, the others' bodies never evaluated; a decision, a
+    /// move whose legs state their own days, or one whose instances are all known already, is
+    /// taken whole (refcore's `plan_list`). E §4.1, §3.2.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::move_instances`].
+    pub(crate) fn plan_list(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        cut: Day,
+    ) -> Result<Rc<Vec<Inst>>, Stop> {
+        let Some(upto) = self.body_upto else {
+            return self.move_instances(m, mv, cut);
+        };
+        let active = (mv.id.clone(), cut);
+        let whole = mv.decision
+            || self.plans.contains_key(&active)
+            || mv.decl.legs.iter().any(|leg| leg.on.is_some());
+        if whole {
+            return self.move_instances(m, mv, cut);
+        }
+        let key = (mv.id.clone(), cut, upto);
+        if let Some(hit) = self.prefixes.plans.get(&key) {
+            return Ok(Rc::clone(hit));
+        }
+        if self.plan_active.contains(&active) {
+            self.narrow_open_to_days();
+            return Err(Stop::Refused(Refusal::new(
+                Code::Run(Run::Cycle),
+                format!("{} reads its own instances", mv.id),
+            )));
+        }
+        self.plan_active.insert(active.clone());
+        let made = self.make_instances(m, mv, cut, Some(upto));
+        self.plan_active.remove(&active);
+        let mut out = made?;
+        // kept before their status, as the whole list is
+        self.prefixes
+            .plans
+            .insert(key.clone(), Rc::new(out.clone()));
+        for inst in &mut out {
+            inst.status = self.status(m, mv, inst, cut)?;
+        }
+        let shared = Rc::new(out);
+        self.prefixes.plans.insert(key, Rc::clone(&shared));
         Ok(shared)
     }
 
@@ -503,10 +557,11 @@ impl Engine {
         m: &Reality,
         mv: &MoveInfo,
         cut: Day,
+        upto: Option<Day>,
     ) -> Result<Vec<Inst>, Stop> {
         let outer = self.holding(Node::new(NodeKind::Move, &mv.id));
         let mark = self.reads_apart();
-        let made = self.make_instances_held(m, mv, cut);
+        let made = self.make_instances_held(m, mv, cut, upto);
         self.reads_back(mark);
         self.holder = outer;
         made
@@ -520,12 +575,13 @@ impl Engine {
         m: &Reality,
         mv: &MoveInfo,
         cut: Day,
+        upto: Option<Day>,
     ) -> Result<Vec<Inst>, Stop> {
         let tctx = self.timeline_ctx(None, cut);
         let mut out = Vec::new();
         for tuple in self.move_tuples(m, mv, tctx)? {
             if let Some(err) = tuple.refused.clone() {
-                out.extend(self.refused_tuple(m, mv, tuple, err, tctx)?);
+                out.extend(self.refused_tuple(m, mv, (tuple, upto), err, tctx)?);
                 continue;
             }
             if let Some(hole) = tuple.domain_hole {
@@ -541,6 +597,7 @@ impl Engine {
                 keys: tuple.keys,
                 exists: tuple.exists,
                 at_cut: None,
+                upto,
             };
             if let Some(mut inst) = self.eval_inst(m, mv, &seed, tctx)? {
                 if !mv.decision
@@ -573,7 +630,7 @@ impl Engine {
         &mut self,
         m: &Reality,
         mv: &MoveInfo,
-        tuple: Tuple,
+        (tuple, upto): (Tuple, Option<Day>),
         err: Refusal,
         tctx: Ctx,
     ) -> Result<Option<Inst>, Stop> {
@@ -585,6 +642,7 @@ impl Engine {
             keys: tuple.keys,
             exists: Exists::Yes,
             at_cut: None,
+            upto,
         };
         let Some(mut inst) = self.eval_inst(m, mv, &seed, tctx)? else {
             return Ok(None);
@@ -737,7 +795,8 @@ impl Engine {
     }
 
     /// The value of `e` at `ctx`, or none where it is refused at run (refcore's `try: ev …
-    /// except TallyError`, a load refusal raised). L §8.4.
+    /// except TallyError`); a load refusal met at run and `ENGINE-INVARIANT` go on (R-66).
+    /// L §8.4.
     fn read_or_refused(
         &mut self,
         m: &Reality,
@@ -747,7 +806,7 @@ impl Engine {
     ) -> Result<Option<Value>, Stop> {
         match self.ev(m, e, env, ctx) {
             Ok(v) => Ok(Some(v)),
-            Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => Ok(None),
+            Err(Stop::Refused(r)) if super::order::run_time(&r) => Ok(None),
             Err(stop) => Err(stop),
         }
     }
@@ -806,6 +865,12 @@ impl Engine {
         inst.exists = seed.exists.clone();
         if mv.decision {
             return Ok(true);
+        }
+        if let (Some(upto), Dated::Day(d)) = (seed.upto, &day)
+            && *d > upto
+        {
+            // a walk up to a day books nothing after it (refcore's `eval_inst`, `upto`)
+            return Ok(false);
         }
         let cut = match (seed.at_cut, &day) {
             (Some(c), _) => c,

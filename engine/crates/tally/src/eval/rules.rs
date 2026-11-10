@@ -138,9 +138,9 @@ impl Engine {
             self.narrow_open_to_days();
             self.read(Read::Cell(id.clone()));
             if self.guarded.as_ref().is_some_and(|g| g.contains(&id)) {
-                return Err(Stop::NotBuilt(
-                    "a leg's read whose walk needs a cell still being computed (a prefix walk)",
-                ));
+                // the walk a leg's read started inside this cell needs it: that walk's
+                // attempt is given up (refcore's `outer_hit`)
+                return Err(Stop::Guarded);
             }
             return Err(refuse(
                 Run::Cycle,
@@ -188,6 +188,10 @@ impl Engine {
             return result;
         }
         self.active.remove(&id);
+        if result == Err(Stop::Guarded) {
+            // a walk's attempt given up: nothing it reached is kept (refcore's journal)
+            return result;
+        }
         self.absorb(&met);
         #[cfg(feature = "counters")]
         self.counts.miss(&def.id);

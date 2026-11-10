@@ -179,7 +179,7 @@ impl Engine {
         let mut plans = Vec::new();
         let mut decisions = Vec::new();
         for mv in m.moves_in(world) {
-            let insts = self.move_instances(m, mv, cut)?.to_vec();
+            let insts = self.plan_list(m, mv, cut)?.to_vec();
             if mv.decision {
                 decisions.push((mv.id.clone(), mv.stratum, insts));
             } else {

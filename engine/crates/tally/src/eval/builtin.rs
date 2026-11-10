@@ -68,6 +68,7 @@ impl Engine {
             "since" => self.since_read(m, call, env, ctx),
             "gap" => self.gap_call(m, call, env, ctx),
             "periodic" | "factor" => self.rate_call(m, call, env, ctx),
+            "next" => self.next_movement(m, call, env, ctx),
             _ => Err(Stop::NotBuilt("a built-in M1's realities don't call")),
         }
     }

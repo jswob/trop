@@ -115,7 +115,9 @@ impl Engine {
             };
             match step {
                 Ok(()) => {}
-                Err(Stop::Deep) => return Err(Stop::Deep),
+                // a walk cut short past the counted depth resumes where it stopped; one
+                // given up for a cell outside it (`Guarded`) is walked on when read again
+                Err(stop @ (Stop::Deep | Stop::Guarded)) => return Err(stop),
                 Err(stop) => {
                     let failed = self.walk_mut(id)?;
                     let on = match failed.progress {
@@ -135,11 +137,14 @@ impl Engine {
     /// A walked walk's close, once: its warnings, its signature, and a scenario's E §9 item 3
     /// (refcore's `m_main_walk`); done only once all three hold, so a close cut short past the
     /// counted depth runs again on replay (R-16), and its refusal refuses every read of the
-    /// walk. E §9 items 3 and 4, L §8.5.
+    /// walk. A walk up to a day has none of the three: it is no timeline's walk, only what a
+    /// leg's read needs (refcore's `prefix_walk`). E §9 items 3 and 4, L §8.5, E §3.2.
     fn close_walk(&mut self, m: &Reality, id: usize) -> Result<(), Stop> {
-        self.gather_warnings(id)?;
-        self.keep_signature(id)?;
-        self.scenario_unchanged(m, id)?;
+        if self.walk(id)?.upto.is_none() {
+            self.gather_warnings(id)?;
+            self.keep_signature(id)?;
+            self.scenario_unchanged(m, id)?;
+        }
         self.walk_mut(id)?.progress = Progress::Done;
         Ok(())
     }
@@ -192,6 +197,7 @@ impl Engine {
                 next: 0,
                 next_inst: 0,
                 runs: Vec::new(),
+                cycle: None,
                 batch: Some(Group::new()),
                 closing: None,
                 anchors: BTreeMap::new(),
@@ -231,6 +237,7 @@ impl Engine {
                 .ok_or_else(|| invariant("a day's acts"))?;
             open.next_inst = 0;
             open.runs.clear();
+            open.cycle = None;
         }
         let day = self.today(id)?.day;
         if self.today(id)?.batch.is_some() {

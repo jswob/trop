@@ -110,6 +110,7 @@ ask q1: pay[ana, 2026-01], code[x1]
             Err(Stop::Refused(r)) => r.text(),
             Err(Stop::NotBuilt(what)) => format!("not built: {what}"),
             Err(Stop::Deep) => "deep".to_owned(),
+            Err(Stop::Guarded) => "guarded".to_owned(),
             Ok(_) => "loaded".to_owned(),
         }
     }

@@ -301,7 +301,7 @@ impl Scope {
             Stop::Refused(refusal) => {
                 Stop::Refused(refusal.placed(At::Line(self.at.0.clone(), self.at.1)))
             }
-            other @ (Stop::NotBuilt(_) | Stop::Deep) => other,
+            other @ (Stop::NotBuilt(_) | Stop::Deep | Stop::Guarded) => other,
         }
     }
 

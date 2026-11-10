@@ -189,7 +189,7 @@ impl Engine {
         }
         self.plan_active.insert(key.clone());
         let before = self.adj_restrict.replace(adjs.to_vec());
-        let made = self.make_instances(m, mv, cut);
+        let made = self.make_instances(m, mv, cut, None);
         self.adj_restrict = before;
         self.plan_active.remove(&key);
         made

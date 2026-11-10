@@ -192,7 +192,7 @@ impl Loader {
                 Err(Stop::Refused(r)) if r.code() == Code::EngineInvariant => {
                     return Err(Stop::Refused(r));
                 }
-                Err(Stop::Deep) => return Err(Stop::Deep),
+                Err(stop @ (Stop::Deep | Stop::Guarded)) => return Err(stop),
                 Err(Stop::Refused(_) | Stop::NotBuilt(_)) => break,
             }
         }

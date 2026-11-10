@@ -229,7 +229,7 @@ impl Engine {
     ) -> Result<Vec<Adjustment>, Stop> {
         let steps_all = known_dates(m);
         let mut out = Vec::new();
-        for inst in self.move_instances(m, mv, cut)?.iter() {
+        for inst in self.plan_list(m, mv, cut)?.iter() {
             if !matches!(inst.status, Status::Past | Status::Hole | Status::None) {
                 continue;
             }
@@ -290,6 +290,7 @@ impl Engine {
                 keys: inst.keys.clone(),
                 exists: Exists::Yes,
                 at_cut: Some(c),
+                upto: None,
             };
             let Some(j) = self.eval_inst(m, mv, &seed, self.timeline_ctx(None, cut))? else {
                 continue;

@@ -508,6 +508,6 @@ fn unplaced(code: Load, message: String) -> Stop {
 fn placed(stop: Stop, file: &str, line: u32) -> Stop {
     match stop {
         Stop::Refused(refusal) => Stop::Refused(refusal.placed(At::Line(file.to_owned(), line))),
-        other @ (Stop::NotBuilt(_) | Stop::Deep) => other,
+        other @ (Stop::NotBuilt(_) | Stop::Deep | Stop::Guarded) => other,
     }
 }

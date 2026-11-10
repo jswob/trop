@@ -25,7 +25,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::rc::Rc;
 
 use super::agenda::{Act, Mv};
-use super::order::Run;
+use super::order::{CycleItem, Run};
 use super::plan::{Amount, Inst, LegVal, Order, invariant};
 use super::point::{At, Step};
 use crate::base::{Refusal, Warn};
@@ -187,6 +187,9 @@ pub struct Today {
     pub next_inst: usize,
     /// The runs of the decision act being taken, by their place in the walk's list.
     pub runs: Vec<usize>,
+    /// The order of an unordered cycle's instances due that day, once judged, so a day cut
+    /// short past the counted depth runs the rest of it as judged (L §5.14.2).
+    pub cycle: Option<Vec<CycleItem>>,
     /// The legs of the day's first batch, while it is open.
     pub batch: Option<Group>,
     /// The closing readings' legs, once the day's end is reached.
@@ -229,6 +232,9 @@ pub struct Walk {
     pub(crate) run_ids: BTreeMap<String, usize>,
     /// The running decision's live reads: the places it reads at its point (L §5.14.2).
     pub(crate) live: Option<BTreeSet<String>>,
+    /// The moves of an unordered cycle whose instances due each day ran together, by (move,
+    /// day): the cycle's other moves' acts that day run nothing more (L §5.14.2).
+    pub(crate) cycles_run: BTreeSet<(String, Day)>,
     /// The instances left out, per move: how many, and the first day (L §8.2 `left out:`).
     pub(crate) left_out: BTreeMap<String, (u32, Option<Day>)>,
     /// The moves left out that touch each place.
@@ -283,6 +289,9 @@ pub struct Walk {
     /// The gaps of the `stated` readings it applied, per (place, day), in the order applied
     /// (L §5.19 `gap(x, d)`, E §6.1).
     pub(crate) gaps: BTreeMap<(String, Day), Vec<GapAt>>,
+    /// A walk up to a day: that day, past which its plan pass listed no plan's instance
+    /// (refcore's prefix walk; E §3.2, §4.1); none for a main walk or a projection's.
+    pub(crate) upto: Option<Day>,
 }
 
 /// A stated reading's gap, as the walk met it: the reading less the booked balance at its
@@ -416,6 +425,7 @@ impl Walk {
             runs: Vec::new(),
             run_ids: BTreeMap::new(),
             live: None,
+            cycles_run: BTreeSet::new(),
             left_out: BTreeMap::new(),
             left_out_at: BTreeMap::new(),
             adj_regs: BTreeMap::new(),
@@ -438,6 +448,7 @@ impl Walk {
             checkpoints: Vec::new(),
             listed: Vec::new(),
             gaps: BTreeMap::new(),
+            upto: None,
         }
     }
 

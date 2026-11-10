@@ -88,6 +88,8 @@ pub(crate) struct Timeline {
     booked: BTreeMap<(String, Day), Booked>,
     /// Each main walk's signature once it is done.
     signatures: BTreeMap<usize, crate::invariant::Signature>,
+    /// The walks up to a day.
+    prefixes: super::state::Prefixes,
     /// The legs each combination's main walk of a cut refused, where the main walk read an
     /// axis the timeline sets no option of.
     each_refused: BTreeMap<Day, Vec<LegRefusals>>,
@@ -311,6 +313,10 @@ impl Engine {
             let legs = match built {
                 Ok(id) => self.walk(id).map(|w| w.bad_legs.clone()),
                 Err(Stop::Refused(_)) => Ok(BTreeMap::new()),
+                Err(Stop::Guarded) => Err(Stop::NotBuilt(
+                    "a leg's refusal over the walk's axes whose walk needs a cell still being \
+                     computed",
+                )),
                 Err(other) => Err(other),
             };
             self.end_layer(inside.layer, legs.as_ref().err())?;
@@ -429,6 +435,7 @@ impl Engine {
             adjust_all_active: core::mem::take(&mut self.adjust_all_active),
             booked: core::mem::take(&mut self.booked),
             signatures: core::mem::take(&mut self.signatures),
+            prefixes: core::mem::take(&mut self.prefixes),
         }
     }
 
@@ -454,5 +461,6 @@ impl Engine {
         self.adjust_all_active = t.adjust_all_active;
         self.booked = t.booked;
         self.signatures = t.signatures;
+        self.prefixes = t.prefixes;
     }
 }

@@ -286,8 +286,9 @@ impl Engine {
                     }
                     Amount::Qty(q) => q,
                 };
+                let leg_day = lg.day.day().or(Some(day));
                 if !q.is_zero()
-                    && let Some(err) = self.leg_refused(m, (&i.id, &lg.name), ctx)?
+                    && let Some(err) = self.leg_refused(m, (&i.id, &lg.name), leg_day, ctx)?
                 {
                     return Err(Stop::Refused(err));
                 }
@@ -410,7 +411,11 @@ impl Engine {
     /// The run of decision instance `inst` in walk `id` or in a walk it continues, the
     /// nearest first: a projection's walk counts the runs the walks it continues made
     /// (refcore's `flows_move`, its loop over `ww.base`). L §5.14.1, E §4.3 step 1.
-    fn chain_run(&self, id: usize, inst: &str) -> Result<Option<&super::order::Run>, Stop> {
+    pub(crate) fn chain_run(
+        &self,
+        id: usize,
+        inst: &str,
+    ) -> Result<Option<&super::order::Run>, Stop> {
         for wid in self.chain(id)? {
             let walk = self.walk(wid)?;
             if let Some(run) = walk.run_ids.get(inst).and_then(|ix| walk.runs.get(*ix)) {
@@ -435,14 +440,17 @@ impl Engine {
         Ok(out)
     }
 
-    /// The refusal of a leg the walk refused: inside a decision, what its walk and the walks
-    /// it continues refused so far; at the ask's cut, the main walk's, or where that walk
-    /// reads an axis the timeline sets no option of, each combination's walk's (refcore's
-    /// `leg_refused`). E §4.2 step 5, §4.3, §3.3.
+    /// The refusal of a leg the walk refused, the leg dated `day`: inside a decision, what its
+    /// walk and the walks it continues refused so far; at the ask's cut, the main walk's, or
+    /// where that walk reads an axis the timeline sets no option of, each combination's
+    /// walk's; where the main walk needs a cell still being computed outside it, the walk up
+    /// to the leg's day, since a leg's refusal rests on the walk up to its day only (refcore's
+    /// `leg_refused`, `guarded_walk`). E §4.2 step 5, §4.3, §3.3, §3.2.
     pub(crate) fn leg_refused(
         &mut self,
         m: &Reality,
         key: (&str, &str),
+        day: Option<Day>,
         ctx: Ctx,
     ) -> Result<Option<Refusal>, Stop> {
         let wanted = (key.0.to_owned(), key.1.to_owned());
@@ -464,13 +472,25 @@ impl Engine {
                 Progress::Planning | Progress::Walking | Progress::Walked
             ),
         };
-        if ours && unfinished {
+        let blocked = self
+            .prefixes
+            .blocked
+            .get(&ctx.cut)
+            .is_some_and(|cells| !cells.is_disjoint(&self.active));
+        if ours && unfinished && blocked {
+            id = self.prefix_walk(m, ctx.cut, day)?;
+        } else if ours && unfinished {
             let outer = self.guarded.replace(self.active.clone());
             let built = self.main_walk(m, ctx.cut);
             self.guarded = outer;
             id = match built {
                 Ok(w) => Some(w),
                 Err(Stop::Refused(_)) => return Ok(None),
+                // the walk needs a cell this read is inside: the walk up to the leg's day
+                Err(Stop::Guarded) => {
+                    self.prefixes.blocked.insert(ctx.cut, self.active.clone());
+                    self.prefix_walk(m, ctx.cut, day)?
+                }
                 // the walk read an axis the timeline sets no option of (E §3.3)
                 Err(Stop::NotBuilt(why)) if why == UNSET_AXIS => {
                     return self.refused_in_each(m, &wanted, ctx.cut, Stop::NotBuilt(why));

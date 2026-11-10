@@ -55,6 +55,19 @@ pub struct Ctx {
     pub world: World,
 }
 
+/// The walks up to a day of one timeline (refcore's `prefix_walks`, `plan_list`'s cache and
+/// `_walk_blocked`). E §3.2, §4.1, §4.2 step 5.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub(crate) struct Prefixes {
+    /// Each walk up to a day, by (cut, its last day), by its place in the walks.
+    pub(crate) walks: BTreeMap<(Day, Day), usize>,
+    /// Each plan move's instances dated on or before a day, by (move, cut, day).
+    pub(crate) plans: BTreeMap<(String, Day, Day), std::rc::Rc<Vec<Inst>>>,
+    /// The cells in progress when each cut's main walk was last given up: while one of them
+    /// still is, a leg's read takes the walk up to its day without trying the main walk.
+    pub(crate) blocked: BTreeMap<Day, BTreeSet<CellId>>,
+}
+
 impl Ctx {
     /// The context of law date `law` and cut `cut`, at no walk point, without `with
     /// uncertain`, unpinned, in the reality's whole world (L §5.14).
@@ -326,8 +339,15 @@ pub struct Engine {
     /// The moves whose adjustments are being computed (RUN-CYCLE).
     pub(crate) adjust_active: BTreeSet<(String, Day)>,
     /// The cells in progress when a leg's read started its walk: a walk that needs one of them
-    /// is refcore's guarded walk, not built.
+    /// is given up for the walk up to the leg's day (refcore's `guarded_walk`).
     pub(crate) guarded: Option<BTreeSet<CellId>>,
+    /// The walks up to a day in the timeline in force, what their plan passes list, and the
+    /// cells that last made a cut's main walk be given up (refcore's `prefix_walks`,
+    /// `plan_list`, `_walk_blocked`; E §3.2, §4.1).
+    pub(crate) prefixes: Prefixes,
+    /// While a walk up to a day plans: that day, past which its plan pass lists no plan's
+    /// instance (refcore's `_body_upto`). E §4.1.
+    pub(crate) body_upto: Option<Day>,
     /// The warnings of the walks done, in the order met (L §8.5).
     pub(crate) walk_warnings: Vec<(Warn, String)>,
     /// The projections' walks, by what makes each (E §4.3).
@@ -413,6 +433,8 @@ impl Engine {
             adjustments: BTreeMap::new(),
             adjust_active: BTreeSet::new(),
             guarded: None,
+            prefixes: Prefixes::default(),
+            body_upto: None,
             walk_warnings: Vec::new(),
             proj_walks: BTreeMap::new(),
             lows: crate::walk::Lows::Tree,
