@@ -10,9 +10,9 @@
 //! does, and ends with no cell in progress.
 
 use super::aggregate::{Brings, Member};
-use super::context::Pinning;
 use super::keys::Given;
 use super::memo::{CellId, CellKey};
+use super::pins::Pinning;
 use super::rules::key_env;
 use super::state::{Collected, Ctx, Engine, Env, invariant};
 use crate::base::{Code, Refusal};

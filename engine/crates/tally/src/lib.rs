@@ -165,6 +165,7 @@ pub mod eval {
     mod extremes;
     mod keys;
     mod memo;
+    mod pins;
     mod prorata;
     mod ranges;
     mod read;
