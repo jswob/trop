@@ -771,23 +771,36 @@ pub(crate) fn date_of(v: &Value, what: &str) -> Result<Day, Stop> {
 /// key or a date: a pin formed per binding tuple (L §8.2), which the ask's pins, evaluated
 /// once outside the line, can't take. A form whose names aren't walked keeps its path.
 fn pins_name_for(ask: &Ask) -> bool {
-    let named = |e: &Expr| {
-        names_in(e).is_some_and(|names| {
-            names
-                .iter()
-                .any(|name| ask.binds.iter().any(|b| b.var == *name))
-        })
-    };
-    ask.pins.iter().any(|pin| match &pin.form {
-        PinForm::Set { target, value, .. } => {
-            named(value)
-                || target
-                    .keys
-                    .iter()
-                    .flatten()
-                    .any(|key| matches!(key, Key::Expr(e) if named(e)))
+    for pin in &ask.pins {
+        let named = match &pin.form {
+            PinForm::Set { target, value, .. } => {
+                names_a_for(ask, value)
+                    || target
+                        .keys
+                        .iter()
+                        .flatten()
+                        .any(|key| matches!(key, Key::Expr(e) if names_a_for(ask, e)))
+            }
+            PinForm::Law(e) | PinForm::Known(e) | PinForm::Wording(e, _) => names_a_for(ask, e),
+            PinForm::Scenario(_) => false,
+        };
+        if named {
+            return true;
         }
-        PinForm::Law(e) | PinForm::Known(e) | PinForm::Wording(e, _) => named(e),
-        PinForm::Scenario(_) => false,
-    })
+    }
+    false
+}
+
+/// Whether expression `e` names a variable of ask `ask`'s own `for`, by the walk of the names
+/// it reads; a form whose names aren't walked names none. L §8.2.
+fn names_a_for(ask: &Ask, e: &Expr) -> bool {
+    let Some(names) = names_in(e) else {
+        return false;
+    };
+    for name in names {
+        if ask.binds.iter().any(|b| b.var == name) {
+            return true;
+        }
+    }
+    false
 }

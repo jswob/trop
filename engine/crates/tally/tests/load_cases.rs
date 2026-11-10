@@ -4750,10 +4750,12 @@ version v1
                 "def ls: date = argmax(1 for a in adjustments over ..).adjusts",
                 "refused: LOAD-UNIT rule base of ls is key events, not date (a.tally:27)",
             ),
+            // G14, G13 fix's B6: `.adjusts` is a movement, whose lifespan load refuses (L §5.7,
+            // §8.4), where refcore loads it and its run crashes (G14's STOP-REPORT)
             (
                 "of-adjusts",
                 "def ls: date = lifespan(argmax(1 for a in adjustments over ..).adjusts).from",
-                no_ask,
+                "refused: LOAD-UNIT lifespan of key events: a movement has its day, not a lifespan (L §5.7) (a.tally:27)",
             ),
             (
                 "adjusts-day",
