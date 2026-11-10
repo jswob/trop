@@ -16,6 +16,7 @@ use super::bindings::{Values, bind_domain};
 use super::expr::hole_of;
 use super::extremes::{bare_key, min_max};
 use super::state::{Collected, Ctx, Engine, Env, invariant, not_typed, refuse};
+use super::trace::Snap;
 use super::ty::zero_of;
 use super::windows::End;
 use crate::base::{Code, Refusal, Run};
@@ -200,6 +201,10 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let word = agg.func.word();
+        let snap = match (agg.func, &agg.term) {
+            (AggFn::Min | AggFn::Max | AggFn::Argmin | AggFn::Argmax, Some(_)) => self.trace_snap(),
+            _ => None,
+        };
         let mut terms: Vec<(&Env, Value)> = Vec::with_capacity(members.len());
         let mut holes: Vec<Hole> = Vec::new();
         for member in members {
@@ -244,7 +249,11 @@ impl Engine {
                 let terms = terms.into_iter().map(|(_, t)| t).collect();
                 return sum_terms(m, agg, terms, env, ctx);
             }
-            AggFn::Argmin | AggFn::Argmax => return self.arg_extreme(m, agg, &terms, ctx),
+            AggFn::Argmin | AggFn::Argmax => {
+                let key = self.arg_extreme(m, agg, &terms, ctx)?;
+                self.winning_term(m, (snap, &key), agg, &terms, ctx)?;
+                return Ok(key);
+            }
             AggFn::Min => End::Low,
             AggFn::Max => End::High,
             AggFn::First | AggFn::Last | AggFn::Any | AggFn::All => {
@@ -254,7 +263,39 @@ impl Engine {
         if terms.is_empty() {
             return Err(refuse(Run::Empty, format!("{word} over no keys")));
         }
-        min_max(m, terms.into_iter().map(|(_, t)| t).collect(), pick)
+        if snap.is_none() {
+            return min_max(m, terms.into_iter().map(|(_, t)| t).collect(), pick);
+        }
+        let extreme = min_max(m, terms.iter().map(|(_, t)| t.clone()).collect(), pick)?;
+        self.winning_term(m, (snap, &extreme), agg, &terms, ctx)?;
+        Ok(extreme)
+    }
+
+    /// Explains the `min`, `max`, `argmin` or `argmax` of `terms` whose result is `result` by
+    /// its first winning term in binding order, where `snap` holds the trace before its terms
+    /// were read (refcore's `e_agg`, its `trace_winner` calls). L §5.18, E §10.
+    fn winning_term(
+        &mut self,
+        m: &Reality,
+        (snap, result): (Option<Snap>, &Value),
+        agg: &Agg,
+        terms: &[(&Env, Value)],
+        ctx: Ctx,
+    ) -> Result<(), Stop> {
+        let (Some(snap), Some(term)) = (snap, &agg.term) else {
+            return Ok(());
+        };
+        let keyed = matches!(agg.func, AggFn::Argmin | AggFn::Argmax);
+        let mut gives = Vec::with_capacity(terms.len());
+        for (env, t) in terms {
+            let given = if keyed {
+                bare_key(agg, env)?
+            } else {
+                t.clone()
+            };
+            gives.push((term, *env, given));
+        }
+        self.trace_winner(m, (snap, result), &gives, ctx)
     }
 
     /// `any(c for …)`, `all(c for …)` under Kleene logic (refcore's `agg_anyall`). L §5.11.

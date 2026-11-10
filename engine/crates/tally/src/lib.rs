@@ -173,6 +173,7 @@ pub mod eval {
     mod stack;
     mod state;
     mod timelines;
+    mod trace;
     mod ty;
     mod windows;
     mod years;
@@ -187,9 +188,10 @@ pub mod eval {
     pub use memo::Memo;
     pub(crate) use read::{make_keys, thing_seen, to_key};
     pub use stack::Item;
-    pub use state::{Collected, Ctx, Engine, Entry, Env};
+    pub use state::{Collected, Ctx, Engine, Entry, Env, RowSeen, Rows};
     pub(crate) use state::{a_day, num_stop, past_days};
     pub(crate) use timelines::combinations;
+    pub(crate) use trace::{Kind as TraceKind, Trace};
     pub(crate) use years::year_form;
 }
 
@@ -260,6 +262,7 @@ pub mod ask {
     mod axes;
     mod check;
     mod diff;
+    mod explain;
     mod register;
     mod residuals;
     mod worlds;

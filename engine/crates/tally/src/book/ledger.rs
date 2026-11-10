@@ -21,7 +21,7 @@ use super::adjust::Adjustment;
 use super::observe::{Obs, inst_id};
 use super::reading::{Seen, booked_amount, reading_rank, readings};
 use crate::base::{Code, Load, Refusal};
-use crate::eval::{Ctx, Engine, Env, num_stop};
+use crate::eval::{Ctx, Engine, Env, Rows, num_stop};
 use crate::hole::{Hole, spread};
 use crate::model::{Fulfils, GapRole, Reality, Span};
 use crate::num::Num;
@@ -380,8 +380,8 @@ impl Engine {
     ) -> Result<(), Stop> {
         let id = self.main_walk(m, cut)?;
         let world = self.timeline_world();
-        let walked = readings(m, (cut, world))?;
-        for seen in readings(m, (m.on, world))? {
+        let walked = readings(m, (cut, world), Rows::Unkept)?;
+        for seen in readings(m, (m.on, world), Rows::Unkept)? {
             if seen.input != "stated" || seen.place != lines.place || !span.contains(seen.day) {
                 continue;
             }

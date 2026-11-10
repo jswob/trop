@@ -16,7 +16,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::base::{Code, Refusal, Run, Warn};
-use crate::eval::{Collected, Engine};
+use crate::eval::{Collected, Engine, Rows};
 use crate::model::{Fulfils, KeyVal, Reality, Span, Value, World};
 use crate::syntax::Stop;
 use crate::time::Day;
@@ -103,7 +103,8 @@ impl Engine {
         match self.observed.entry(cut) {
             std::collections::btree_map::Entry::Occupied(seen) => Ok(seen.into_mut().as_slice()),
             std::collections::btree_map::Entry::Vacant(slot) => {
-                Ok(slot.insert(seen_observations(m, (cut, world))?).as_slice())
+                let seen = seen_observations(m, (cut, world), self.keep_rows)?;
+                Ok(slot.insert(seen).as_slice())
             }
         }
     }
@@ -551,8 +552,13 @@ fn record(message: String) -> Refusal {
 
 /// The observations the cut and the world of `seen` see: per observed input, each row id's
 /// latest restatement known by the cut in a version the world sees, `none` removing it; sorted
-/// by day and id (refcore's `observations`). L §5.19, §6.4.
-fn seen_observations(m: &Reality, (cut, world): (Day, World)) -> Result<Vec<Obs>, Stop> {
+/// by day and id, each with its row among what it met where `rows` says so (refcore's
+/// `observations`). L §5.19, §6.4; E §10.
+fn seen_observations(
+    m: &Reality,
+    (cut, world): (Day, World),
+    rows: Rows,
+) -> Result<Vec<Obs>, Stop> {
     let mut out = Vec::new();
     for (_, input) in m.inputs.entries() {
         let mut latest: BTreeMap<&str, (Day, &crate::model::Observation)> = BTreeMap::new();
@@ -573,7 +579,12 @@ fn seen_observations(m: &Reality, (cut, world): (Day, World)) -> Result<Vec<Obs>
             if o.removed {
                 continue;
             }
-            out.push(observation(o)?);
+            let mut seen = observation(o)?;
+            // the row as `inputs-of` lists it, kept by an engine answering one (E §10)
+            if rows == Rows::Kept {
+                seen.coll.note_row(&seen.id, &o.version, o.locator.as_ref());
+            }
+            out.push(seen);
         }
     }
     out.sort_by(|a, b| (a.day, &a.id).cmp(&(b.day, &b.id)));

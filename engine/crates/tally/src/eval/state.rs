@@ -263,14 +263,51 @@ pub struct Collected {
     /// version, a thing's entry or place a scenario states, a scenario's move a binding
     /// ranges over: the read set E §9 item 3 lists a movement by (L §6.4, ruling P45).
     pub scenario: BTreeSet<(String, String)>,
+    /// The rows read, by stable id, each with its version and locator: an input's, a given,
+    /// a band row, a reading and an observed row, the walk's counted movements' included
+    /// (refcore's `Coll.rows`). Kept only by an engine answering `inputs-of` (E §3.2, §10).
+    pub rows: BTreeMap<String, RowSeen>,
+}
+
+/// A row read, as `inputs-of` lists it: its version and its locator (E §10).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RowSeen {
+    /// The version that states it.
+    pub version: String,
+    /// Its locator, where it states one.
+    pub locator: Option<String>,
+}
+
+/// Whether the collectors keep the rows read: an engine answering `inputs-of` keeps them,
+/// any other doesn't (E §10).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Rows {
+    /// The rows read are kept with what each read met.
+    Kept,
+    /// They aren't.
+    Unkept,
 }
 
 impl Collected {
-    /// Adds the register entries and versions `other` met (its `missing` stays its own).
+    /// Adds the register entries, versions and rows `other` met (its `missing` stays its own).
     pub fn merge(&mut self, other: &Collected) {
         self.entries.extend(other.entries.iter().cloned());
         self.versions.extend(other.versions.iter().cloned());
         self.scenario.extend(other.scenario.iter().cloned());
+        for (sid, seen) in &other.rows {
+            self.rows.insert(sid.clone(), seen.clone());
+        }
+    }
+
+    /// Records row `sid` of `version` with its `locator` as read (E §10 `inputs-of`).
+    pub(crate) fn note_row(&mut self, sid: &str, version: &str, locator: Option<&String>) {
+        self.rows.insert(
+            sid.to_owned(),
+            RowSeen {
+                version: version.to_owned(),
+                locator: locator.cloned(),
+            },
+        );
     }
 }
 
@@ -409,6 +446,14 @@ pub struct Engine {
     /// The expression rows being evaluated, by row, the read's figure and its law date: one met
     /// again reads itself (refcore's `_sexpr_active`, `RUN-CYCLE`).
     pub(super) rows_active: BTreeSet<(String, String, Option<Day>)>,
+    /// Whether the collectors keep the rows read: an engine answering `inputs-of` (E §10).
+    pub(crate) keep_rows: Rows,
+    /// The explanation being traced: an engine answering `explain` while its cone is
+    /// evaluated again (E §10; `trace.rs`).
+    pub(super) trace: Option<super::trace::Trace>,
+    /// The ask line's context outside its `with` pins, where it has any: an `explain`'s
+    /// derivation outside them (E §10; refcore's `_outside_ctx`).
+    pub(crate) unpinned: Option<Ctx>,
     /// What this engine did, in P §1.1's units: the `counters` build only (BUILDER §13.2).
     #[cfg(feature = "counters")]
     pub(crate) counts: crate::Counters,
@@ -464,6 +509,9 @@ impl Engine {
             timelines: Timelines::default(),
             row_base: None,
             rows_active: BTreeSet::new(),
+            keep_rows: Rows::Unkept,
+            trace: None,
+            unpinned: None,
             #[cfg(feature = "counters")]
             counts: crate::Counters::default(),
         }
@@ -508,6 +556,11 @@ impl Engine {
     pub fn for_ask(self, ask: &Ask) -> Engine {
         Engine {
             holder: Some(Node::new(NodeKind::Ask, &ask.id)),
+            keep_rows: if let crate::syntax::AskBody::InputsOf(_) = ask.body {
+                Rows::Kept
+            } else {
+                Rows::Unkept
+            },
             ..self
         }
     }
@@ -567,6 +620,17 @@ impl Engine {
     pub(super) fn note_version(&mut self, version: &str) {
         if let Some(top) = self.stack.last_mut() {
             top.versions.insert(version.to_owned());
+        }
+    }
+
+    /// Records that row `sid` of `version`, with its `locator`, was read, in the innermost
+    /// collector of an engine answering `inputs-of` (E §10).
+    pub(super) fn note_row(&mut self, sid: &str, version: &str, locator: Option<&String>) {
+        if self.keep_rows == Rows::Unkept {
+            return;
+        }
+        if let Some(top) = self.stack.last_mut() {
+            top.note_row(sid, version, locator);
         }
     }
 

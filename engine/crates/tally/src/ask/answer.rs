@@ -21,6 +21,7 @@ use std::collections::BTreeMap;
 use super::axes::{Axes, fanned_lines};
 use super::check::{Printed, check_line};
 use super::diff::diff_lines;
+use super::explain::{explain_line, inputs_line, readers_line};
 use super::register::{check_register_lines, register_lines, warning_lines};
 use super::residuals::residual_lines;
 use crate::base::{Code, Load, Place, Reach, Refusal, Req, Run, Warn};
@@ -490,12 +491,25 @@ fn ask_body(m: &Reality, ask: &Ask, engine: &mut Engine, cut: Day) -> Result<Vec
         // the ask's own cut is the clock's or before it, so a later cut is a `with known`'s
         before_clock(m, "with known", inside.cut)?;
         engine.ask_cut = inside.cut;
+        engine.unpinned = Some(ctx);
         engine.open_layer(m, inside)?;
         inside
     };
     match &ask.body {
-        AskBody::Exprs(_) | AskBody::Check(..) | AskBody::Solve(_) => {
-            tuple_lines(m, ask, engine, (ctx, &pinned))
+        AskBody::Exprs(_)
+        | AskBody::Check(..)
+        | AskBody::Solve(_)
+        | AskBody::Explain(_)
+        | AskBody::InputsOf(_) => tuple_lines(m, ask, engine, (ctx, &pinned)),
+        // `readers-of` is static: its tuples are read for a domain that is a hole, and it
+        // fans out over no axis (refcore's `_answer_in`, its readers-of return)
+        AskBody::ReadersOf(reference) => {
+            if !ask.binds.is_empty()
+                && let Err(hole) = engine.tuples(m, &ask.binds, ctx)?
+            {
+                return Ok(vec![format!("{}: {}", ask.id, hole.text())]);
+            }
+            Ok(vec![readers_line(m, ask, reference)?])
         }
         // a diff or residuals ask doesn't fan out yet: its lines over the axes it reaches are
         // unwritten (L §5.5, §5.18; P47, #122)
@@ -504,7 +518,6 @@ fn ask_body(m: &Reality, ask: &Ask, engine: &mut Engine, cut: Day) -> Result<Vec
         ),
         AskBody::Residuals(r) => residual_lines(m, ask, r, engine, (ctx, &pinned)),
         AskBody::Diff(diff) => diff_lines(m, (ask, diff), engine, (ctx, &pinned)),
-        AskBody::Explain(_) | AskBody::InputsOf(_) | AskBody::ReadersOf(_) => Err(beyond_built()),
     }
 }
 
@@ -520,9 +533,9 @@ fn model_ctx(
     Ok(ctx)
 }
 
-/// An ask's form the run doesn't answer yet: `explain`, `inputs of`, `readers of`.
+/// An ask's form a tuple's line doesn't hold: a residual ledger, a diff, `readers-of`.
 fn beyond_built() -> Stop {
-    Stop::NotBuilt("an ask's form beyond values, check, solve, residuals and diff")
+    Stop::NotBuilt("an ask's form beyond values, check, solve, explain and inputs-of")
 }
 
 /// An ask's lines of values, of a check or of a solve: a line per binding tuple with the
@@ -557,7 +570,7 @@ fn tuple_lines(
             continue;
         }
         let mut line = form_line(m, ask, engine, &tuple.env, ctx)?;
-        out.push(format!("{head}: {}", line.text));
+        out.extend(line.lines(&head));
         line.met.merge(&tuple.brought);
         line.met.merge(pinned);
         let register = match line.laws {
@@ -587,6 +600,8 @@ pub(super) fn form_line(
             }
             Ok(Printed {
                 text: line_values(m, &items)?,
+                body: Vec::new(),
+                bare: false,
                 met,
                 laws: None,
             })
@@ -596,15 +611,15 @@ pub(super) fn form_line(
             let (item, met) = engine.solve_line(m, solve, env, ctx)?;
             Ok(Printed {
                 text: item_text(m, &item)?,
+                body: Vec::new(),
+                bare: false,
                 met,
                 laws: None,
             })
         }
-        AskBody::Residuals(_)
-        | AskBody::Explain(_)
-        | AskBody::InputsOf(_)
-        | AskBody::ReadersOf(_)
-        | AskBody::Diff(_) => Err(beyond_built()),
+        AskBody::Explain(reference) => explain_line(m, (ask, reference), engine, env, ctx),
+        AskBody::InputsOf(reference) => inputs_line(m, engine, reference, env, ctx),
+        AskBody::Residuals(_) | AskBody::ReadersOf(_) | AskBody::Diff(_) => Err(beyond_built()),
     }
 }
 

@@ -39,6 +39,9 @@ struct Mark {
     /// Begun with no def cell open, none in progress and no task waiting: it replays when it
     /// unwinds past the counted depth; an inner read unwinds on (R-16).
     outermost: bool,
+    /// Under a trace, the node open and its children then: a replay starts them again
+    /// (E §10).
+    trace: Option<(usize, usize)>,
 }
 
 impl Engine {
@@ -232,6 +235,7 @@ impl Engine {
         Mark {
             collectors: self.stack.len(),
             outermost: self.depth == 0 && self.active.is_empty() && self.work.is_empty(),
+            trace: self.trace_mark(),
         }
     }
 
@@ -249,7 +253,12 @@ impl Engine {
     /// The replay of an outermost read; one that fails ends the read, which lets go of the
     /// layers its unwinding kept (R-16, P §3.5).
     fn replay(&mut self, m: &Reality, mark: &Mark) -> Result<(), Stop> {
+        // under a trace, the read's children start again, and what the work stack computes
+        // hangs apart until the read references it (E §10)
+        self.trace_apart();
         let replayed = self.replay_tasks(m, mark);
+        self.trace_join();
+        self.trace_restart(mark.trace);
         if replayed.is_err() {
             self.read_ended(mark);
         }

@@ -477,6 +477,7 @@ impl Engine {
     ) -> Result<Value, Stop> {
         let figure = figure.to_owned();
         self.note_version(&row.version);
+        self.note_row(&row.sid, &row.version, row.locator.as_ref());
         if m.scenarios.of(&row.version).is_some() {
             self.note_scenario(&row.version, &input.id);
         }
@@ -491,26 +492,15 @@ impl Engine {
             self.note("assumed", reason.clone(), figure.clone());
         }
         self.index_assumed(m, &input.binds);
-        if let Written::Expr(e) = &row.value {
-            return self.row_expr(m, (row, e), &figure, at);
-        }
-        let ty = input
-            .ty
-            .as_ref()
-            .ok_or(Stop::NotBuilt("the value of an observed row"))?;
-        let of = ConvertFor::row(&input.unit_factor, ty, &input.binds, &row.pattern);
-        let value = match convert(m, &row.value, ty, &input.id, &of)? {
-            Converted::Hole(text) => Value::Hole(Hole::asked(&text, &figure)),
-            Converted::Value(Value::Window(mut w)) => {
-                // its holes are asked of this row (L §8.1); the read that made it is stamped
-                // by `read_input_at`
-                w.figure = Some(figure.clone());
-                Value::Window(w)
-            }
-            Converted::Value(Value::Number(n)) => Value::Number(at_keys(n, &input.binds, keys)?),
-            Converted::Value(v) => v,
+        // the row's node under a trace, its value once known (E §10)
+        let traced = self.trace_row(m, row);
+        let value = if let Written::Expr(e) = &row.value {
+            self.row_expr(m, (row, e), &figure, at)
+        } else {
+            row_value(m, (input, row, keys), &figure)
         };
-        Ok(value)
+        self.trace_value(traced, &value);
+        value
     }
 
     /// Narrows the reading cell's law date class, for a row read for law date `day` and not
@@ -960,6 +950,33 @@ pub(super) fn lacks_at_run() -> Stop {
 /// Whether a unit has a term `$v`, a bound variable's key (L §3.2).
 pub(super) fn keyed(unit: &Unit) -> bool {
     unit.terms().iter().any(|(base, _)| base.starts_with('$'))
+}
+
+/// A written row's value read at `keys` as `figure`, in its input's type: a stated hole asked
+/// of it, a window's holes asked of it, a number at its keys (refcore's `row_value`). L §4.6,
+/// §8.1.
+fn row_value(
+    m: &Reality,
+    (input, row, keys): (&InputInfo, &Row, &[KeyVal]),
+    figure: &str,
+) -> Result<Value, Stop> {
+    let ty = input
+        .ty
+        .as_ref()
+        .ok_or(Stop::NotBuilt("the value of an observed row"))?;
+    let of = ConvertFor::row(&input.unit_factor, ty, &input.binds, &row.pattern);
+    let value = match convert(m, &row.value, ty, &input.id, &of)? {
+        Converted::Hole(text) => Value::Hole(Hole::asked(&text, figure)),
+        Converted::Value(Value::Window(mut w)) => {
+            // its holes are asked of this row (L §8.1); the read that made it is stamped by
+            // `read_input_at`
+            w.figure = Some(figure.to_owned());
+            Value::Window(w)
+        }
+        Converted::Value(Value::Number(n)) => Value::Number(at_keys(n, &input.binds, keys)?),
+        Converted::Value(v) => v,
+    };
+    Ok(value)
 }
 
 /// A row's number read at `keys`: a per-unit price `num CUR/u` takes the unit of the key it

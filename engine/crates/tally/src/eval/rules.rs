@@ -26,6 +26,7 @@ use crate::time::Day;
 use super::convert::{ConvertFor, Converted, convert};
 use super::memo::{CellId, CellKey, LawClass, Read, rows_class, rules_class};
 use super::read::shown;
+use super::trace::Seen;
 use super::windows::as_read;
 
 impl Engine {
@@ -123,12 +124,22 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let key = CellKey::new(&def.id, keys, ctx);
-        if let Some((cell, class)) = self.cells.get(&key, ctx.law) {
+        // under a trace the cone is evaluated again: the memo gives only a cell the trace
+        // has met, which is referenced by its node (E §10)
+        let seen = self.trace_seen(&key, ctx.law);
+        if let Some((cell, class)) = self
+            .cells
+            .get(&key, ctx.law)
+            .filter(|_| seen != Seen::Unmet)
+        {
             let result = cell.result.clone();
             let met = cell.met.clone();
             self.absorb(&met);
             self.narrow(ctx.law, class);
             self.read(Read::Cell(CellId::new(key, ctx.law)));
+            if let Seen::Met(at) = seen {
+                self.trace_again(at);
+            }
             #[cfg(feature = "counters")]
             self.counts.add(crate::Unit::DefHit);
             return result;
@@ -168,9 +179,12 @@ impl Engine {
         self.open_class(ctx.law);
         self.open_reads();
         let outer = self.holding(Node::new(NodeKind::Def, &def.id));
+        let node = self.trace_def(&id, (&def.id, keys), ctx.law);
         let result = self
-            .rules(m, def, keys, env, ctx)
+            .rules(m, def, (keys, env, ctx), node)
             .and_then(|v| coerce_def(m, def, v));
+        self.trace_close(node);
+        self.trace_value(node, &result);
         self.holder = outer;
         let reads = self.close_reads();
         let class = self.close_class();
@@ -213,17 +227,17 @@ impl Engine {
     }
 
     /// A def's value at its keys: a given that governs, else the rule that wins (refcore's
-    /// `eval_rules`). L §5.11 steps 1–5.
+    /// `eval_rules`); under a trace, each rule's state on the def cell's node `node` (E §10).
+    /// L §5.11 steps 1–5.
     fn rules(
         &mut self,
         m: &Reality,
         def: &DefInfo,
-        keys: &[KeyVal],
-        env: &Env,
-        ctx: Ctx,
+        (keys, env, ctx): (&[KeyVal], &Env, Ctx),
+        node: Option<usize>,
     ) -> Result<Value, Stop> {
         let figure = origin(&def.id, keys);
-        if let Some(given) = self.given(m, def, keys, ctx)? {
+        if let Some(given) = self.given(m, def, keys, ctx, node)? {
             return Ok(given);
         }
         if let Some(day) = ctx.law {
@@ -238,6 +252,7 @@ impl Engine {
         for at in order {
             let rule = version_of(def, at)?;
             if beaten_by_any(def, &applicable, at) {
+                self.trace_beaten(def, node, at, &applicable);
                 continue;
             }
             let Some(when) = &rule.rule.when else {
@@ -245,13 +260,16 @@ impl Engine {
                 continue;
             };
             self.push();
+            let group = self.trace_group();
             let w = self.ev(m, when, env, ctx);
+            self.trace_close(group);
             let met = self.pop_alone();
             self.absorb(&met);
             if met.missing {
                 missing_true.push(at);
             }
             let tested = w?;
+            self.trace_tested(node, (&rule.label, group), &tested);
             if let Value::Hole(h) = tested {
                 unknown.push((at, h));
                 continue;
@@ -289,6 +307,7 @@ impl Engine {
                 ),
             ));
         }
+        self.trace_candidates(def, node, &applicable, &cands);
         let mut relevant: Vec<Option<&Hole>> = Vec::new();
         for (at, hole) in &unknown {
             let beats_cand = cands.iter().any(|c| beats(def, *at, *c));
@@ -298,6 +317,9 @@ impl Engine {
             }
         }
         if let Some(hole) = spread(&relevant) {
+            if let Some(first) = cands.first() {
+                self.trace_state(node, label_of(def, *first), "candidate".to_owned());
+            }
             return Ok(Value::Hole(hole));
         }
         let Some(win) = cands.first().copied() else {
@@ -308,14 +330,84 @@ impl Engine {
             ));
         };
         let rule = version_of(def, win)?;
+        self.trace_won(m, node, rule);
         self.rule_entries(m, def, rule, &missing_true, win)?;
         match &rule.rule.value {
             RuleValue::Hole(text) => Ok(Value::Hole(Hole::asked(text, &figure))),
             RuleValue::Expr(e) => {
-                let v = self.ev(m, e, env, ctx)?;
-                whole_value(m, &def.ty, v)
+                let group = self.trace_group();
+                let value = self.ev(m, e, env, ctx);
+                self.trace_close(group);
+                self.trace_groups(node, &rule.label, (None, group));
+                value.and_then(|v| whole_value(m, &def.ty, v))
             }
             RuleValue::Solve(_) => Err(Stop::NotBuilt("`solve`")),
+        }
+    }
+
+    /// Under a trace, rule `at`'s state on the def cell's node `node`: beaten, by the rules
+    /// among `applicable` that beat it (refcore's `eval_rules`, its states). L §5.18.
+    fn trace_beaten(
+        &mut self,
+        def: &DefInfo,
+        node: Option<usize>,
+        at: InForce,
+        applicable: &[InForce],
+    ) {
+        if node.is_some() {
+            self.trace_state(node, label_of(def, at), beaten_text(def, applicable, at));
+        }
+    }
+
+    /// Under a trace, the state the `when` of the rule labelled `label` gives it on the def
+    /// cell's node `node`, `tested` its value: `unknown` for a hole, `not applicable` for
+    /// false, none yet for true; and the group the `when` read (refcore's `eval_rules`).
+    /// L §5.18.
+    fn trace_tested(
+        &mut self,
+        node: Option<usize>,
+        (label, group): (&str, Option<usize>),
+        tested: &Value,
+    ) {
+        if node.is_none() {
+            return;
+        }
+        if let Value::Hole(_) = tested {
+            self.trace_state(node, label, "unknown".to_owned());
+        } else if *tested == Value::Bool(false) {
+            self.trace_state(node, label, "not applicable".to_owned());
+        }
+        self.trace_groups(node, label, (group, None));
+    }
+
+    /// Under a trace, the candidates `cands` of the def cell's node `node` are known: each
+    /// rule of `applicable` that isn't one is beaten, and the rules show (refcore's
+    /// `eval_rules`, where it sets `rule_states`). L §5.18.
+    fn trace_candidates(
+        &mut self,
+        def: &DefInfo,
+        node: Option<usize>,
+        applicable: &[InForce],
+        cands: &[InForce],
+    ) {
+        if node.is_none() {
+            return;
+        }
+        for at in applicable.iter().filter(|at| !cands.contains(at)) {
+            self.trace_beaten(def, node, *at, applicable);
+        }
+        self.trace_shown(node);
+    }
+
+    /// Under a trace, rule `rule` won on the def cell's node `node`, with the version that
+    /// states it and its source (refcore's `explain_node`). L §5.18, E §10.
+    fn trace_won(&mut self, m: &Reality, node: Option<usize>, rule: &RuleVer) {
+        if node.is_none() {
+            return;
+        }
+        match won_text(m, rule) {
+            Ok(state) => self.trace_state(node, &rule.label, state),
+            Err(stop) => self.trace_kept(stop),
         }
     }
 
@@ -351,13 +443,15 @@ impl Engine {
     }
 
     /// The `given` row that governs the def at its keys, as a value with its `given` entry
-    /// (L §5.11 step 1).
+    /// (L §5.11 step 1); under a trace, the row and a `given` line on the def cell's node
+    /// `node` (E §10).
     fn given(
         &mut self,
         m: &Reality,
         def: &DefInfo,
         keys: &[KeyVal],
         ctx: Ctx,
+        node: Option<usize>,
     ) -> Result<Option<Value>, Stop> {
         if def.givens.is_empty() {
             return Ok(None);
@@ -383,6 +477,7 @@ impl Engine {
             .ok_or_else(|| invariant("the read rule took a given the def lacks"))?;
         let figure = origin(&def.id, keys);
         self.note_version(&row.version);
+        self.note_row(&row.sid, &row.version, row.locator.as_ref());
         if m.scenarios.of(&row.version).is_some() {
             self.note_scenario(&row.version, &def.id);
         }
@@ -390,6 +485,7 @@ impl Engine {
             version: row.version.clone(),
             sid: row.sid.clone(),
         });
+        let traced = self.trace_row(m, row);
         let of = ConvertFor::row(&def.unit_factor, &def.ty, &def.binds, &row.pattern);
         let value = if let crate::syntax::Value::Expr(e) = &row.value {
             // a scenario's expression row, at the def's law date (L §6.4)
@@ -401,16 +497,17 @@ impl Engine {
             }
         };
         let shown = shown(m, &value)?;
+        let keys_text = pattern_text(&row.pattern);
         self.note(
             "given",
-            format!(
-                "{}{} = {shown} ({})",
-                def.id,
-                pattern_text(&row.pattern),
-                row.version
-            ),
+            format!("{}{keys_text} = {shown} ({})", def.id, row.version),
             String::new(),
         );
+        if traced.is_some() {
+            self.trace_value(traced, &Ok(value.clone()));
+            let line = format!("given {}{keys_text} (version {})", def.id, row.version);
+            self.trace_line(node, line);
+        }
         Ok(Some(value))
     }
 }
@@ -429,6 +526,35 @@ fn in_force(m: &Reality, def: &DefInfo, clocks: Clocks) -> Result<Vec<InForce>, 
         }
     }
     Ok(live)
+}
+
+/// `beaten by a, b`: the rules among `applicable` that beat rule `at`, by label (refcore's
+/// `eval_rules`, its states). L §5.18.
+fn beaten_text(def: &DefInfo, applicable: &[InForce], at: InForce) -> String {
+    // the labels in their text's order, each once
+    let by: std::collections::BTreeSet<&str> = applicable
+        .iter()
+        .filter(|o| **o != at && beats(def, **o, at))
+        .map(|o| label_of(def, *o))
+        .collect();
+    format!(
+        "beaten by {}",
+        by.into_iter().collect::<Vec<_>>().join(", ")
+    )
+}
+
+/// `won`, with the version that states the rule and its source where it cites one: its `v`,
+/// else the version holding it (refcore's `explain_node`, `rv.v or rv.version`). E §10.
+fn won_text(m: &Reality, rule: &RuleVer) -> Result<String, Stop> {
+    let Some(version) = rule.v.as_ref().or(rule.version.as_ref()) else {
+        return Ok("won".to_owned());
+    };
+    let cite = &m
+        .versions
+        .get(version)
+        .ok_or_else(|| invariant("a rule names a version load didn't build"))?
+        .cite;
+    Ok(format!("won (version {version}, source {cite})"))
 }
 
 /// The version of a rule in force.

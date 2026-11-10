@@ -166,7 +166,7 @@ impl Engine {
             (walk.cut, walk.proj.is_none(), walk.world)
         };
         let readings = if main {
-            crate::book::readings(m, (cut, world))?
+            crate::book::readings(m, (cut, world), self.keep_rows)?
         } else {
             Vec::new()
         };

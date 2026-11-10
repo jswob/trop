@@ -13,15 +13,44 @@ use crate::model::{Reality, Value};
 use crate::syntax::{Expr, PinForm, Stop};
 use crate::time::Day;
 
-/// What an ask's line prints after its head: its text, the register entries it met, and, for a
-/// `check`, each side's law date where they differ.
+/// What an ask's line prints after its head: its text, the lines under it, the register
+/// entries it met, and, for a `check`, each side's law date where they differ.
 pub(super) struct Printed {
     /// The line's values, or a check's `ok`, `differs: …` or both sides.
     pub text: String,
+    /// The lines under the head, before the register: an `explain`'s derivation, an
+    /// `inputs-of`'s rows (L §5.18).
+    pub body: Vec<String>,
+    /// Whether the head stands alone and the lines under it are the result: `inputs-of`'s
+    /// (refcore's `print_line`, its `RowSet`).
+    pub bare: bool,
     /// The register entries the line met.
     pub met: Collected,
     /// A check's sides' law dates, where a side's own `as if {law D}` makes them differ.
     pub laws: Option<(Option<Day>, Option<Day>)>,
+}
+
+impl Printed {
+    /// The line's head `head` with its text, then the lines under it (refcore's
+    /// `print_line`). L §5.18.
+    pub(super) fn lines(&self, head: &str) -> Vec<String> {
+        let first = if self.bare {
+            format!("{head}:")
+        } else {
+            format!("{head}: {}", self.text)
+        };
+        let mut out = vec![first];
+        out.extend(self.body.iter().cloned());
+        out
+    }
+
+    /// Whether `other` gives the same result: the same text, and the same lines under a bare
+    /// head (refcore's `Result.key`, `rkey`). L §5.5.
+    pub(super) fn same(&self, other: &Printed) -> bool {
+        self.text == other.text
+            && self.bare == other.bare
+            && (!self.bare || self.body == other.body)
+    }
 }
 
 /// The line of `check left == right` in scope `env` and context `ctx` (refcore's `check`,
@@ -49,6 +78,8 @@ pub(super) fn check_line(
     let (text, laws) = read?;
     Ok(Printed {
         text,
+        body: Vec::new(),
+        bare: false,
         met,
         laws: (laws.0 != laws.1).then_some(laws),
     })

@@ -17,7 +17,7 @@ use super::expr::{hole_of, typed};
 use super::memo::{LawClass, Read, may_hold, tables_class};
 use super::read::{Given, make_keys};
 use super::state::{
-    Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load, unit_stop, wrong_type,
+    Ctx, Engine, Env, Rows, invariant, num_stop, refuse, refuse_load, unit_stop, wrong_type,
 };
 use crate::base::{Load, Run};
 use crate::hole::Hole;
@@ -288,6 +288,14 @@ impl Engine {
             .ok_or_else(|| invariant("a band table of a version load didn't build"))?;
         if let Some(reason) = &version.assumed {
             self.note("assumed", reason.clone(), figure.to_owned());
+        }
+        if self.keep_rows == Rows::Kept || self.tracing() {
+            // the band row as `inputs-of` lists it and `explain` prints it (refcore's
+            // `BandRowRef`, `band_value`'s trace node). E §10.
+            let interval = interval_text(row)?;
+            let sid = format!("{}:{figure} {interval}", table.version);
+            self.note_row(&sid, &table.version, row.locator.as_ref());
+            self.trace_band_row(figure, &interval, (&table.version, row.locator.as_ref()));
         }
         if table_held(m, table, self.clocks(ctx, &band.id)?)? {
             // the `held` entry names the law date (L §8.2)

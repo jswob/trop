@@ -18,7 +18,7 @@
 use std::collections::BTreeMap;
 
 use crate::base::{Code, Load, Refusal};
-use crate::eval::{Collected, Engine, Entry};
+use crate::eval::{Collected, Engine, Entry, Rows};
 use crate::hole::{Hole, spread};
 use crate::model::{GapRole, Reality, RowInstant, Shown, Ty, Unit, World};
 use crate::num::Num;
@@ -62,13 +62,14 @@ type Kept = (Day, Day, Edge, crate::model::Row);
 
 /// The readings cut `cut` sees in world `world`: each `opening` and `stated` row known by
 /// the cut, of a version the world sees, a restated one replaced by the latest, sorted by
-/// place, instant and input (refcore's `readings`, `world_ok`). L §5.19, §4.6, §6.4.
+/// place, instant and input, each with its row among what it met where `rows` says so
+/// (refcore's `readings`, `world_ok`). L §5.19, §4.6, §6.4; E §10.
 ///
 /// # Errors
 ///
 /// A row load left without its version; `NotBuilt` for a reading `after` a movement or at a
 /// day with no edge, and for a place of unit `any`.
-pub fn readings(m: &Reality, (cut, world): (Day, World)) -> Result<Vec<Seen>, Stop> {
+pub fn readings(m: &Reality, (cut, world): (Day, World), rows: Rows) -> Result<Vec<Seen>, Stop> {
     let mut keep: BTreeMap<(String, String, String), Kept> = BTreeMap::new();
     for input in ["opening", "stated"] {
         let Some(info) = m.inputs.get(input) else {
@@ -103,7 +104,14 @@ pub fn readings(m: &Reality, (cut, world): (Day, World)) -> Result<Vec<Seen>, St
     }
     let mut out = Vec::with_capacity(keep.len());
     for ((place, instant, input), (_, day, edge, row)) in keep {
-        let reading = reading_of(m, &input, &place, &instant, &row)?;
+        let mut reading = reading_of(m, &input, &place, &instant, &row)?;
+        // the row as `inputs-of` lists it, kept by an engine answering one (E §10)
+        if rows == Rows::Kept
+            && let Some(r) = &mut reading
+        {
+            r.coll
+                .note_row(&row.sid, &row.version, row.locator.as_ref());
+        }
         out.push(Seen {
             day,
             edge,
@@ -153,7 +161,7 @@ pub fn reading_rank(walked: &[Seen], seen: &Seen) -> Result<u32, Stop> {
 /// As [`readings`].
 pub fn first_readings(m: &Reality, by: (Day, World)) -> Result<BTreeMap<String, Day>, Stop> {
     let mut out: BTreeMap<String, Day> = BTreeMap::new();
-    for seen in readings(m, by)? {
+    for seen in readings(m, by, Rows::Unkept)? {
         let first = out.entry(seen.place).or_insert(seen.day);
         *first = (*first).min(seen.day);
     }

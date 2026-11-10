@@ -8,10 +8,11 @@
 //! a hole pin, nested pins don't leak to their siblings), §4.3 (the `law` and `wording`
 //! pins), §5.18 (an ask's `with` pins), §8.2 (`pinned:`, `world:`); §6.4 (`as if {scenario
 //! s}` is x in s); §5.5 (an axis read at its option; `with a = opt` fixes it, listed
-//! `pinned:`).
+//! `pinned:`); E §10 (an `as if` explained: the pins with their values and the derivation
+//! inside them beside the one outside).
 //! Twin: engine/tools/refcore/evaluate.py (`PinVal`, `Ctx.pins`, `Ctx.wording`, `Ctx.axes`,
-//! `apply_pins`, `e_asif`, `pin_value`, `wording_ok`, `coerce_to`, `world_chain`,
-//! `axis_option`, `def_axes`).
+//! `apply_pins`, `e_asif`, `asif_traced`, `pin_lines`, `pin_value`, `wording_ok`,
+//! `coerce_to`, `world_chain`, `axis_option`, `def_axes`).
 //! Invariants: layer 0 is the unpinned context; two pin sets with the same targets and values
 //! are one layer, whatever their texts; a def's cell is kept under its context trimmed to the
 //! pins its def reaches, and to every pin the walk reaches where it reads the timeline; a
@@ -25,6 +26,8 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use super::read::make_keys;
 use super::state::{Ctx, Engine, Env, invariant, num_stop};
+use super::trace::Kind as TraceKind;
+use crate::base::Code;
 use crate::hole::{Hole, spread};
 use crate::model::{
     Class, KeyVal, NameKind, Node, NodeKind, Number, Reality, Ty, Unit, Value, World, currency_id,
@@ -577,6 +580,9 @@ impl Engine {
         env: &Env,
         ctx: Ctx,
     ) -> Result<Value, Stop> {
+        if self.tracing() {
+            return self.as_if_traced(m, (inner, pins), env, ctx);
+        }
         let inside = match self.pinned(m, pins, env, ctx, Pinning::AsIf)? {
             Err(hole) => return Ok(Value::Hole(hole)),
             Ok(inside) => inside,
@@ -585,6 +591,152 @@ impl Engine {
         let v = self.ev(m, inner, env, inside);
         self.end_layer(inside.layer, v.as_ref().err())?;
         v
+    }
+
+    /// `e as if {pins}` explained, under its node `as if {...}`: the pins with their values,
+    /// each pin given by an expression with its derivation, read outside the `as if`; then the
+    /// derivation inside the pins with its value; then the one outside them with its value,
+    /// which brings nothing to the result's register and whose refusal stands in its place
+    /// (refcore's `asif_traced`). E §10.
+    fn as_if_traced(
+        &mut self,
+        m: &Reality,
+        (inner, pins): (&Expr, &[Pin]),
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Value, Stop> {
+        let node = self.trace_open(TraceKind::Group, "as if {...}");
+        let group = self.trace_open(TraceKind::Group, "the pins, evaluated outside the as if");
+        let pinned = self.pinned(m, pins, env, ctx, Pinning::AsIf);
+        let inside = match pinned {
+            Ok(Ok(inside)) => inside,
+            Ok(Err(hole)) => {
+                self.trace_close(group);
+                self.trace_close(node);
+                return Ok(Value::Hole(hole));
+            }
+            Err(stop) => {
+                self.trace_close(group);
+                self.trace_close(node);
+                return Err(stop);
+            }
+        };
+        match self.pin_lines(m, ctx, inside) {
+            Ok(lines) => {
+                for line in lines {
+                    self.trace_leaf(format!("pin {line}"));
+                }
+            }
+            Err(stop) => self.trace_kept(stop),
+        }
+        self.trace_close(group);
+        let within = self.trace_open(TraceKind::Side, "inside the as if");
+        let read = self.open_layer(m, inside).and_then(|()| {
+            let v = self.ev(m, inner, env, inside);
+            self.end_layer(inside.layer, v.as_ref().err())?;
+            v
+        });
+        self.trace_close(within);
+        // a read that stops leaves the side as it is and nothing outside (refcore's raise)
+        let v = match read {
+            Ok(v) => v,
+            Err(stop) => {
+                self.trace_close(node);
+                return Err(stop);
+            }
+        };
+        self.trace_value(within, &Ok(v.clone()));
+        let without = self.trace_open(TraceKind::Side, "outside the as if");
+        self.push();
+        let outside = self.ev(m, inner, env, ctx);
+        self.pop_alone();
+        self.trace_close(without);
+        self.trace_close(node);
+        match outside {
+            Err(Stop::Refused(r)) if matches!(r.code(), Code::Load(_)) => Err(Stop::Refused(r)),
+            Err(Stop::Refused(r)) => {
+                self.trace_value(without, &Err(Stop::Refused(r)));
+                Ok(v)
+            }
+            Err(stop) => Err(stop),
+            Ok(o) => {
+                self.trace_value(without, &Ok(o));
+                Ok(v)
+            }
+        }
+    }
+
+    /// The context of an ask's line of context `line` outside the ask's `with` pins:
+    /// `unpinned`, the line's context before them, with the options of the axes the line fans
+    /// out over, those in `fixed`, which the pins fix, left out (refcore's `explain_pins`, its
+    /// `octx`). E §10, L §5.5.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a freed layer.
+    pub(crate) fn outside_pins(
+        &mut self,
+        (unpinned, line): (Ctx, Ctx),
+        fixed: &BTreeSet<String>,
+    ) -> Result<Ctx, Stop> {
+        let axes = &self.layer_data(line.layer)?.axes;
+        let options: Vec<(String, String)> = axes
+            .iter()
+            .filter(|(axis, _)| !fixed.contains(*axis))
+            .map(|(axis, option)| (axis.clone(), option.clone()))
+            .collect();
+        self.with_options(unpinned, &options)
+    }
+
+    /// What the pins of `inside` change from `outside`, each as text: the value pins with
+    /// their values, the law date, the cut, the wording pins, the axis options and the world
+    /// (refcore's `pin_lines`). E §10.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a freed layer.
+    pub(crate) fn pin_lines(
+        &self,
+        m: &Reality,
+        outside: Ctx,
+        inside: Ctx,
+    ) -> Result<Vec<String>, Stop> {
+        let (before, after) = (
+            self.layer_data(outside.layer)?,
+            self.layer_data(inside.layer)?,
+        );
+        // refcore's pins are sorted by their keys' text, the item's id first
+        let mut new: Vec<&Pinned> = after
+            .pins
+            .iter()
+            .filter(|p| !p.solve && !before.holds(p))
+            .collect();
+        new.sort_by(|a, b| (&a.item, &a.text).cmp(&(&b.item, &b.text)));
+        let mut out: Vec<String> = new.iter().map(|p| p.text.clone()).collect();
+        if let (true, Some(day)) = (inside.law != outside.law, inside.law) {
+            out.push(format!("law {}", day.text()));
+        }
+        if inside.cut != outside.cut {
+            out.push(format!("known {}", inside.cut.text()));
+        }
+        for (item, day) in &after.wording {
+            if !before.wording.contains(&(item.clone(), *day)) {
+                out.push(format!("wording {} for {item}", day.text()));
+            }
+        }
+        for (axis, option) in &after.axes {
+            if before.axes.get(axis) != Some(option) {
+                out.push(format!("{axis} = {option}"));
+            }
+        }
+        if inside.world != outside.world {
+            let world = m
+                .scenarios
+                .scenario_of(inside.world)
+                .unwrap_or(&m.header.id);
+            out.push(format!("scenario {world}"));
+        }
+        Ok(out)
     }
 
     /// The context inside `pins` (refcore's `apply_pins`): each pin's date, keys and value

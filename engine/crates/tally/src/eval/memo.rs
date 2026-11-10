@@ -497,6 +497,11 @@ impl Cells {
         }
     }
 
+    /// An empty memo sharing cells as this one does: a trace's own (E §10).
+    pub(super) fn emptied(&self) -> Cells {
+        Cells::new(self.memo)
+    }
+
     /// The cell kept for `key` that holds law date `law`, with its class.
     pub(super) fn get(&self, key: &CellKey, law: Option<Day>) -> Option<(&Cell, LawClass)> {
         let kept = self.kept.get(key)?;
@@ -581,6 +586,7 @@ impl Engine {
     /// nothing, so its reads aren't the reading cell's; returns the mark
     /// [`Engine::reads_back`] takes (E §3.2, P §4).
     pub(crate) fn reads_apart(&mut self) -> usize {
+        self.trace_walk();
         let mark = self.reads.len();
         self.reads.push(Open::Apart);
         mark

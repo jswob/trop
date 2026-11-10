@@ -447,6 +447,7 @@ impl Engine {
     /// The refusal the walk met; `Deep` while a cell it needs waits on the work stack;
     /// `NotBuilt` for a read of a walk while it is walked.
     pub(crate) fn main_walk(&mut self, m: &Reality, cut: Day) -> Result<usize, Stop> {
+        self.trace_walk();
         let id = if let Some(id) = self.main_walks.get(&cut) {
             *id
         } else {

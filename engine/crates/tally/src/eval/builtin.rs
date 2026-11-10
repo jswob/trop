@@ -124,6 +124,7 @@ impl Engine {
     /// of windows, the window of the extremes of their ends (refcore's `c_min`, `coerce_flex`,
     /// `agg_minmax`, `extreme`). L §5.11, §4.4.
     fn extreme(&mut self, m: &Reality, call: &Call, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
+        let snap = self.trace_snap();
         let vals = self.args(m, call, env, ctx)?;
         let holes: Vec<Option<&crate::hole::Hole>> = vals.iter().map(Value::as_hole).collect();
         if holes.iter().any(Option::is_some) || vals.contains(&Value::None) {
@@ -143,7 +144,20 @@ impl Engine {
         } else {
             End::High
         };
-        min_max(m, coerce_flex(m, vals)?, pick)
+        let vals = coerce_flex(m, vals)?;
+        let Some(snap) = snap else {
+            return min_max(m, vals, pick);
+        };
+        let extreme = min_max(m, vals.clone(), pick)?;
+        // explained by its first winning term, the arguments in the order written (L §5.18)
+        let terms: Vec<(&Expr, &Env, Value)> = call
+            .args
+            .iter()
+            .zip(vals)
+            .map(|(a, v)| (a, env, v))
+            .collect();
+        self.trace_winner(m, (snap, &extreme), &terms, ctx)?;
+        Ok(extreme)
     }
 
     /// `pow(x, n)`: x to the integer power n, exact, its unit to the n-th power, a `num`; a

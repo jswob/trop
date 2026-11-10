@@ -343,11 +343,11 @@ fn tuple_lines(
     }
     let mut out = Vec::new();
     for line in grouped(axes, combos, &tuple.results)? {
-        out.push(format!(
-            "{head} [{}]: {}",
-            axes.head(&line.product)?,
-            line.text
-        ));
+        let (_, first) = tuple
+            .results
+            .get(line.first)
+            .ok_or_else(|| invariant("a line's result past the results"))?;
+        out.extend(first.lines(&format!("{head} [{}]", axes.head(&line.product)?)));
         let mut met = line.met;
         met.merge(pinned);
         for reading in axes.readings(&line.product)? {
@@ -370,8 +370,9 @@ fn tuple_lines(
 struct Grouped {
     /// Each axis's options the line names.
     product: Product,
-    /// The result's text after the line's head.
-    text: String,
+    /// The first combination's result, by its place among the tuple's results: its text
+    /// after the line's head, the lines under it.
+    first: usize,
     /// What the line's combinations met, together.
     met: Collected,
     /// A check's sides' law dates, as its first combination read them.
@@ -387,11 +388,11 @@ fn grouped(
     combos: &[Combo],
     results: &[(usize, Printed)],
 ) -> Result<Vec<Grouped>, Stop> {
-    let mut by_text: Vec<(&str, Vec<usize>)> = Vec::new();
+    let mut by_text: Vec<(&Printed, Vec<usize>)> = Vec::new();
     for (at, (_, printed)) in results.iter().enumerate() {
-        match by_text.iter_mut().find(|(text, _)| *text == printed.text) {
+        match by_text.iter_mut().find(|(seen, _)| seen.same(printed)) {
             Some((_, members)) => members.push(at),
-            None => by_text.push((printed.text.as_str(), vec![at])),
+            None => by_text.push((printed, vec![at])),
         }
     }
     let mut lines = Vec::new();
@@ -428,7 +429,7 @@ fn product_line(
     (combos, results): (&[Combo], &[(usize, Printed)]),
 ) -> Result<Grouped, Stop> {
     let mut met = Collected::default();
-    let mut first: Option<&Printed> = None;
+    let mut first: Option<(usize, &Printed)> = None;
     for at in members {
         let combo = combo_of(combos, results, *at)?;
         if !product
@@ -443,13 +444,14 @@ fn product_line(
             .ok_or_else(|| invariant("a result past the results"))?;
         met.merge(&printed.met);
         if first.is_none() {
-            first = Some(printed);
+            first = Some((*at, printed));
         }
     }
-    let first = first.ok_or_else(|| invariant("a product of options no combination gives"))?;
+    let (at, first) =
+        first.ok_or_else(|| invariant("a product of options no combination gives"))?;
     Ok(Grouped {
         product,
-        text: first.text.clone(),
+        first: at,
         met,
         laws: first.laws,
     })
