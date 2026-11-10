@@ -618,7 +618,7 @@ pub(super) fn form_line(
             })
         }
         AskBody::Explain(reference) => explain_line(m, (ask, reference), engine, env, ctx),
-        AskBody::InputsOf(reference) => inputs_line(m, engine, reference, env, ctx),
+        AskBody::InputsOf(reference) => inputs_line(m, (ask, reference), engine, env, ctx),
         AskBody::Residuals(_) | AskBody::ReadersOf(_) | AskBody::Diff(_) => Err(beyond_built()),
     }
 }
@@ -627,7 +627,7 @@ pub(super) fn form_line(
 /// that holds a key literal no position resolved, bare (an `if` may have chosen it) or as a
 /// list's item: refcore refuses the literal where it is evaluated (its `e_name`, the `keylit`
 /// arm; pick P39). L §2.5, §8.3.
-fn unresolved_word(items: &[Item], place: &Place) -> Result<(), Stop> {
+pub(super) fn unresolved_word(items: &[Item], place: &Place) -> Result<(), Stop> {
     let Some(word) = items.iter().find_map(item_word) else {
         return Ok(());
     };

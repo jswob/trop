@@ -561,14 +561,19 @@ mod tests {
             ),
             "a parse refusal"
         );
-        let later = [MODEL, b"\nask x: explain y\n"].concat();
+        let later = [
+            MODEL,
+            b"\nsource s \"s\"\ninput r: num\nask x: pow(r, r) to 0.01\n",
+            b"version v\n  cite s\n  governs always\n  known 2026-01-01\n  r = 0.5\n",
+        ]
+        .concat();
         assert_eq!(
             out(&["run", "m.tally"], &[("m.tally", &later)]),
             (
                 "tally run: not implemented\n".to_owned(),
                 EXIT_NOT_IMPLEMENTED
             ),
-            "explain is built later"
+            "a transcendental value is built later (M6)"
         );
     }
 

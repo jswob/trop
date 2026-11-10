@@ -17,6 +17,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use super::answer::unresolved_word;
 use super::check::Printed;
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Env, Item, Trace, TraceKind, num_stop};
@@ -42,6 +43,10 @@ pub(super) fn explain_line(
         return Err(Stop::NotBuilt(form));
     }
     let (item, met, trace) = traced(m, engine, reference, env, ctx)?;
+    // a bare key literal no position resolved is refused where it is read (P39)
+    if let Some(place) = m.asks_unresolved.get(&ask.id) {
+        unresolved_word(core::slice::from_ref(&item), place)?;
+    }
     let text = plain_text(m, &item)?;
     let trace = match engine.unpinned {
         Some(unpinned) if !ask.pins.is_empty() => outside_pins(
@@ -158,12 +163,16 @@ fn walk_form(m: &Reality, reference: &Expr) -> Option<&'static str> {
 /// A load refusal met at run; `NotBuilt` for a node not built yet.
 pub(super) fn inputs_line(
     m: &Reality,
+    (ask, reference): (&Ask, &Expr),
     engine: &mut Engine,
-    reference: &Expr,
     env: &Env,
     ctx: Ctx,
 ) -> Result<Printed, Stop> {
-    let (_, met) = engine.line(m, core::slice::from_ref(reference), env, ctx)?;
+    let (items, met) = engine.line(m, core::slice::from_ref(reference), env, ctx)?;
+    // a bare key literal no position resolved is refused where it is read (P39)
+    if let Some(place) = m.asks_unresolved.get(&ask.id) {
+        unresolved_word(&items, place)?;
+    }
     Ok(Printed {
         text: String::new(),
         body: row_lines(m, &met)?,

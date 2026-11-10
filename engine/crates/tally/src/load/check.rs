@@ -1116,7 +1116,8 @@ impl Checker {
                 compared.map(|_| ()).map_err(|stop| scope.place(stop))
             }
             AskBody::Explain(reference) | AskBody::InputsOf(reference) => {
-                self.expr(m, scope, reference, None, 0)?;
+                let typed = self.expr(m, scope, reference, None, 0)?;
+                self.unresolved_key(scope, &ask.id, &typed);
                 let explain = matches!(ask.body, AskBody::Explain(_));
                 let plain = matches!(reference, Expr::Name(_) | Expr::Post(..));
                 let read = explain && matches!(reference, Expr::Bal(_) | Expr::Low(_));

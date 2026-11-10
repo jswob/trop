@@ -373,11 +373,14 @@ ask early: flows(out_0, 2025-01-01 .. 2025-03-31), bal(acc_0, 2025-03-31) as kno
 
     #[test]
     fn a_construct_built_later_is_not_implemented() {
-        let text = format!("{HEADER}ask x: explain y\n");
+        let text = format!(
+            "{HEADER}source s \"s\"\ninput r: num\nask x: pow(r, r) to 0.01\n\
+             version v\n  cite s\n  governs always\n  known 2026-01-01\n  r = 0.5\n"
+        );
         assert_eq!(
             run_one(&text),
             Err(NotImplemented),
-            "explain is built later"
+            "a transcendental value is built later (M6)"
         );
         assert_eq!(run_one(HEADER), Ok(Vec::new()), "no ask, nothing printed");
     }
