@@ -187888,4 +187888,911 @@ def y5_x: num = sum(m.what.amount / 1 day * 1 year for m in evs over d0..d0)
 
 ask y5: y5_x
 ,,1:0,95:scenario f4: refused: LOAD-PRECISION 0.005 is finer than the minor unit (sites_pz3_f4.tally:9)
+,22:fixes/g12/t_tb_m4_e_bn,9:fixes-g12,28:run t_tb_m4.tally --ask e_bn,1503:13:t_tb_m4.tally,1480:model ro
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+kind fees: transfers
+
+input amt: money PLN
+
+input d: date
+
+input rate[k in qs]: num
+
+band tax(x: num): num
+
+def fee[k in qs]: money PLN = round(amt * rate[k], minor(PLN), half-up)
+
+def t: num = tax(1)
+
+def total: money PLN = fee[q1] + fee[q2]
+
+def b: money PLN = bal(konto, d + 1 day)
+
+def bn: money PLN = bal(neg, d + 1 day)
+
+def bh: money PLN = bal(hk, d + 1 day)
+
+ask nfa: count(f in fees over 2026)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place neg: accounts PLN lives 2026-01-01..
+
+place hk: accounts PLN lives 2026-01-01..
+
+move bad: transfers
+  on d
+  leg cash from world to neg amount amt - amt - amt
+
+move hole: transfers
+  on d
+  leg cash from world to hk amount nope
+
+input nope: money PLN
+
+place world: outside lives 1900-01-01..
+
+move pay: fees
+  on d
+  leg cash from konto to world amount fee[q1]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN
+  d = 2026-02-10
+  rate[q1] = 0.1
+  rate[q2] = 0.2
+  tax: [0, 100) = 0.1 "low"
+  tax: [100, inf) = 0.2
+  opening[konto] = 500.00 PLN at 2026-01-01 start
+  opening[neg] = 0 PLN at 2026-01-01 start
+  opening[hk] = 0 PLN at 2026-01-01 start
+
+ask e_b: explain b
+
+ask e_bn: explain bn
+
+ask e_bh: explain bh
+
+ask i_bn: inputs-of bn
+
+ask i_b: inputs-of b
+
+ask e_total: explain total
+
+ask e_t: explain t
+
+ask i_t: inputs-of t
+
+,,1:0,834:e_bn: refused: RUN-NEG negative amount -100.00 PLN for leg cash of bad
+  [1] bn = refused: RUN-NEG negative amount -100.00 PLN for leg cash of bad
+      rule base: won
+        [2] row card_2026:d = 2026-02-10
+            version card_2026, source card, "card", governs always, known 2026-01-01
+        (card_2026:d: see [2])
+        [3] row card_2026:amt = 100.00 PLN
+            version card_2026, source card, "card", governs always, known 2026-01-01
+        (card_2026:amt: see [3])
+        (card_2026:amt: see [3])
+        (card_2026:d: see [2])
+        (card_2026:d: see [2])
+        [4] fee[q1] = 10.00 PLN
+            rule base: won
+              (card_2026:amt: see [3])
+              [5] row card_2026:rate[q1] = 0.1
+                  version card_2026, source card, "card", governs always, known 2026-01-01
+  cut 2026-12-31
+,22:fixes/g12/t_tb_m4_e_bh,9:fixes-g12,28:run t_tb_m4.tally --ask e_bh,1503:13:t_tb_m4.tally,1480:model ro
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+kind fees: transfers
+
+input amt: money PLN
+
+input d: date
+
+input rate[k in qs]: num
+
+band tax(x: num): num
+
+def fee[k in qs]: money PLN = round(amt * rate[k], minor(PLN), half-up)
+
+def t: num = tax(1)
+
+def total: money PLN = fee[q1] + fee[q2]
+
+def b: money PLN = bal(konto, d + 1 day)
+
+def bn: money PLN = bal(neg, d + 1 day)
+
+def bh: money PLN = bal(hk, d + 1 day)
+
+ask nfa: count(f in fees over 2026)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place neg: accounts PLN lives 2026-01-01..
+
+place hk: accounts PLN lives 2026-01-01..
+
+move bad: transfers
+  on d
+  leg cash from world to neg amount amt - amt - amt
+
+move hole: transfers
+  on d
+  leg cash from world to hk amount nope
+
+input nope: money PLN
+
+place world: outside lives 1900-01-01..
+
+move pay: fees
+  on d
+  leg cash from konto to world amount fee[q1]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN
+  d = 2026-02-10
+  rate[q1] = 0.1
+  rate[q2] = 0.2
+  tax: [0, 100) = 0.1 "low"
+  tax: [100, inf) = 0.2
+  opening[konto] = 500.00 PLN at 2026-01-01 start
+  opening[neg] = 0 PLN at 2026-01-01 start
+  opening[hk] = 0 PLN at 2026-01-01 start
+
+ask e_b: explain b
+
+ask e_bn: explain bn
+
+ask e_bh: explain bh
+
+ask i_bn: inputs-of bn
+
+ask i_b: inputs-of b
+
+ask e_total: explain total
+
+ask e_t: explain t
+
+ask i_t: inputs-of t
+
+,,1:0,774:e_bh: ?"nope: no value" (nope)
+  [1] bh = ?"nope: no value" (nope)
+      rule base: won
+        [2] row card_2026:d = 2026-02-10
+            version card_2026, source card, "card", governs always, known 2026-01-01
+        (card_2026:d: see [2])
+        [3] row card_2026:amt = 100.00 PLN
+            version card_2026, source card, "card", governs always, known 2026-01-01
+        (card_2026:amt: see [3])
+        (card_2026:amt: see [3])
+        (card_2026:d: see [2])
+        (card_2026:d: see [2])
+        [4] fee[q1] = 10.00 PLN
+            rule base: won
+              (card_2026:amt: see [3])
+              [5] row card_2026:rate[q1] = 0.1
+                  version card_2026, source card, "card", governs always, known 2026-01-01
+  unfulfilled: hole
+  cut 2026-12-31
+,22:fixes/g12/t_tb_m4_i_bn,9:fixes-g12,28:run t_tb_m4.tally --ask i_bn,1503:13:t_tb_m4.tally,1480:model ro
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+kind fees: transfers
+
+input amt: money PLN
+
+input d: date
+
+input rate[k in qs]: num
+
+band tax(x: num): num
+
+def fee[k in qs]: money PLN = round(amt * rate[k], minor(PLN), half-up)
+
+def t: num = tax(1)
+
+def total: money PLN = fee[q1] + fee[q2]
+
+def b: money PLN = bal(konto, d + 1 day)
+
+def bn: money PLN = bal(neg, d + 1 day)
+
+def bh: money PLN = bal(hk, d + 1 day)
+
+ask nfa: count(f in fees over 2026)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place neg: accounts PLN lives 2026-01-01..
+
+place hk: accounts PLN lives 2026-01-01..
+
+move bad: transfers
+  on d
+  leg cash from world to neg amount amt - amt - amt
+
+move hole: transfers
+  on d
+  leg cash from world to hk amount nope
+
+input nope: money PLN
+
+place world: outside lives 1900-01-01..
+
+move pay: fees
+  on d
+  leg cash from konto to world amount fee[q1]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN
+  d = 2026-02-10
+  rate[q1] = 0.1
+  rate[q2] = 0.2
+  tax: [0, 100) = 0.1 "low"
+  tax: [100, inf) = 0.2
+  opening[konto] = 500.00 PLN at 2026-01-01 start
+  opening[neg] = 0 PLN at 2026-01-01 start
+  opening[hk] = 0 PLN at 2026-01-01 start
+
+ask e_b: explain b
+
+ask e_bn: explain bn
+
+ask e_bh: explain bh
+
+ask i_bn: inputs-of bn
+
+ask i_b: inputs-of b
+
+ask e_total: explain total
+
+ask e_t: explain t
+
+ask i_t: inputs-of t
+
+,,1:0,104:i_bn:
+  card_2026:d (source card "card")
+  card_2026:opening[neg] (source card "card")
+  cut 2026-12-31
+,21:fixes/g12/t_tb_m4_e_b,9:fixes-g12,27:run t_tb_m4.tally --ask e_b,1503:13:t_tb_m4.tally,1480:model ro
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+kind fees: transfers
+
+input amt: money PLN
+
+input d: date
+
+input rate[k in qs]: num
+
+band tax(x: num): num
+
+def fee[k in qs]: money PLN = round(amt * rate[k], minor(PLN), half-up)
+
+def t: num = tax(1)
+
+def total: money PLN = fee[q1] + fee[q2]
+
+def b: money PLN = bal(konto, d + 1 day)
+
+def bn: money PLN = bal(neg, d + 1 day)
+
+def bh: money PLN = bal(hk, d + 1 day)
+
+ask nfa: count(f in fees over 2026)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place neg: accounts PLN lives 2026-01-01..
+
+place hk: accounts PLN lives 2026-01-01..
+
+move bad: transfers
+  on d
+  leg cash from world to neg amount amt - amt - amt
+
+move hole: transfers
+  on d
+  leg cash from world to hk amount nope
+
+input nope: money PLN
+
+place world: outside lives 1900-01-01..
+
+move pay: fees
+  on d
+  leg cash from konto to world amount fee[q1]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN
+  d = 2026-02-10
+  rate[q1] = 0.1
+  rate[q2] = 0.2
+  tax: [0, 100) = 0.1 "low"
+  tax: [100, inf) = 0.2
+  opening[konto] = 500.00 PLN at 2026-01-01 start
+  opening[neg] = 0 PLN at 2026-01-01 start
+  opening[hk] = 0 PLN at 2026-01-01 start
+
+ask e_b: explain b
+
+ask e_bn: explain bn
+
+ask e_bh: explain bh
+
+ask i_bn: inputs-of bn
+
+ask i_b: inputs-of b
+
+ask e_total: explain total
+
+ask e_t: explain t
+
+ask i_t: inputs-of t
+
+,,1:0,743:e_b: 490.00 PLN
+  [1] b = 490.00 PLN
+      rule base: won
+        [2] row card_2026:d = 2026-02-10
+            version card_2026, source card, "card", governs always, known 2026-01-01
+        (card_2026:d: see [2])
+        [3] row card_2026:amt = 100.00 PLN
+            version card_2026, source card, "card", governs always, known 2026-01-01
+        (card_2026:amt: see [3])
+        (card_2026:amt: see [3])
+        (card_2026:d: see [2])
+        (card_2026:d: see [2])
+        [4] fee[q1] = 10.00 PLN
+            rule base: won
+              (card_2026:amt: see [3])
+              [5] row card_2026:rate[q1] = 0.1
+                  version card_2026, source card, "card", governs always, known 2026-01-01
+  unfulfilled: pay
+  cut 2026-12-31
+,15:fixes/g10/t_c11,9:fixes-g10,15:run t_c11.tally,1939:11:t_c11.tally,1918:model cyc
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T C9 (invented): a two-member cycle a written before breaks, a third member after it by its read, a fourth apart; x and y unordered, v before x reads x's place"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+input d1: date
+
+input keep: money PLN
+
+input extra: money PLN
+
+input one: money PLN
+
+place a1: accounts PLN lives 2026-01-01..
+place a2: accounts PLN lives 2026-01-01..
+place a3: accounts PLN lives 2026-01-01..
+place a4: accounts PLN lives 2026-01-01..
+place a5: accounts PLN lives 2026-01-01..
+place a6: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+move x: transfers
+  on d1
+  reads a2
+  leg cash from a1 to a3 amount bal(a2) - keep
+
+move y: transfers
+  on d1
+  reads a3
+  leg cash from a2 to a4 amount bal(a3) + extra
+
+move z: transfers
+  on d1
+  reads a4
+  leg cash from world to a5 amount bal(a4)
+
+move v: transfers
+  on d1
+  reads a3
+  before x
+  leg cash from world to a5 amount bal(a3) + extra
+
+move w: transfers
+  on d1
+  reads a6
+  leg cash from world to a6 amount bal(a6) + one
+
+ask q: bal(a1, 2026-06-30), bal(a2, 2026-06-30), bal(a3, 2026-06-30), bal(a4, 2026-06-30), bal(a5, 2026-06-30), bal(a6, 2026-06-30)
+ask fl: flows(x, 2026-01-01..2026-12-31), flows(y, 2026-01-01..2026-12-31), flows(z, 2026-01-01..2026-12-31), flows(v, 2026-01-01..2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  keep = 400.00 PLN "the card"
+  extra = 50.00 PLN "the card"
+  one = 1.00 PLN "the card"
+  opening[a1] = 1000.00 PLN at 2026-01-01 start "the card"
+  opening[a2] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[a3] = 0 PLN at 2026-01-01 start "the card"
+  opening[a4] = 0 PLN at 2026-01-01 start "the card"
+  opening[a5] = 0 PLN at 2026-01-01 start "the card"
+  opening[a6] = 7.00 PLN at 2026-01-01 start "the card"
+,,1:0,609:fl: (refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15, 50.00 PLN)
+  cut 2026-03-01
+q: (refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15, 15.00 PLN)
+  cut 2026-03-01
+,16:fixes/g10/t_c11a,9:fixes-g10,16:run t_c11a.tally,1938:12:t_c11a.tally,1916:model cyc
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T C9 (invented): a two-member cycle a written before breaks, a third member after it by its read, a fourth apart; x and y unordered, v after x reads x's place"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+input d1: date
+
+input keep: money PLN
+
+input extra: money PLN
+
+input one: money PLN
+
+place a1: accounts PLN lives 2026-01-01..
+place a2: accounts PLN lives 2026-01-01..
+place a3: accounts PLN lives 2026-01-01..
+place a4: accounts PLN lives 2026-01-01..
+place a5: accounts PLN lives 2026-01-01..
+place a6: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+move x: transfers
+  on d1
+  reads a2
+  leg cash from a1 to a3 amount bal(a2) - keep
+
+move y: transfers
+  on d1
+  reads a3
+  leg cash from a2 to a4 amount bal(a3) + extra
+
+move z: transfers
+  on d1
+  reads a4
+  leg cash from world to a5 amount bal(a4)
+
+move v: transfers
+  on d1
+  reads a3
+  after x
+  leg cash from world to a5 amount bal(a3) + extra
+
+move w: transfers
+  on d1
+  reads a6
+  leg cash from world to a6 amount bal(a6) + one
+
+ask q: bal(a1, 2026-06-30), bal(a2, 2026-06-30), bal(a3, 2026-06-30), bal(a4, 2026-06-30), bal(a5, 2026-06-30), bal(a6, 2026-06-30)
+ask fl: flows(x, 2026-01-01..2026-12-31), flows(y, 2026-01-01..2026-12-31), flows(z, 2026-01-01..2026-12-31), flows(v, 2026-01-01..2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  keep = 400.00 PLN "the card"
+  extra = 50.00 PLN "the card"
+  one = 1.00 PLN "the card"
+  opening[a1] = 1000.00 PLN at 2026-01-01 start "the card"
+  opening[a2] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[a3] = 0 PLN at 2026-01-01 start "the card"
+  opening[a4] = 0 PLN at 2026-01-01 start "the card"
+  opening[a5] = 0 PLN at 2026-01-01 start "the card"
+  opening[a6] = 7.00 PLN at 2026-01-01 start "the card"
+,,1:0,666:fl: (refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15)
+  cut 2026-03-01
+q: (refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15, 15.00 PLN)
+  cut 2026-03-01
+,16:fixes/g10/t_c11b,9:fixes-g10,16:run t_c11b.tally,1833:12:t_c11b.tally,1811:model cyc
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T C9 (invented): a two-member cycle a written before breaks, a third member after it by its read, a fourth apart; x's when false until y runs, no written order"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+input d1: date
+
+input keep: money PLN
+
+input extra: money PLN
+
+input one: money PLN
+
+place a1: accounts PLN lives 2026-01-01..
+place a2: accounts PLN lives 2026-01-01..
+place a3: accounts PLN lives 2026-01-01..
+place a4: accounts PLN lives 2026-01-01..
+place a5: accounts PLN lives 2026-01-01..
+place a6: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+move x: transfers
+  on d1
+  reads a2, a4
+  when bal(a4) > extra
+  leg cash from a1 to a3 amount bal(a2) - keep
+
+move y: transfers
+  on d1
+  reads a3
+  leg cash from a2 to a4 amount bal(a3) + extra
+
+move z: transfers
+  on d1
+  reads a4
+  leg cash from world to a5 amount bal(a4)
+
+move w: transfers
+  on d1
+  reads a6
+  leg cash from world to a6 amount bal(a6) + one
+
+ask q: bal(a1, 2026-06-30), bal(a2, 2026-06-30), bal(a3, 2026-06-30), bal(a4, 2026-06-30), bal(a5, 2026-06-30), bal(a6, 2026-06-30)
+ask fl: flows(x, 2026-01-01..2026-12-31), flows(y, 2026-01-01..2026-12-31), flows(z, 2026-01-01..2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  keep = 400.00 PLN "the card"
+  extra = 50.00 PLN "the card"
+  one = 1.00 PLN "the card"
+  opening[a1] = 1000.00 PLN at 2026-01-01 start "the card"
+  opening[a2] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[a3] = 0 PLN at 2026-01-01 start "the card"
+  opening[a4] = 0 PLN at 2026-01-01 start "the card"
+  opening[a5] = 0 PLN at 2026-01-01 start "the card"
+  opening[a6] = 7.00 PLN at 2026-01-01 start "the card"
+,,1:0,598:fl: (refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15)
+  cut 2026-03-01
+q: (refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15, 15.00 PLN)
+  cut 2026-03-01
+,16:fixes/g10/t_c11c,9:fixes-g10,16:run t_c11c.tally,1842:12:t_c11c.tally,1820:model cyc
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T C9 (invented): a two-member cycle a written before breaks, a third member after it by its read, a fourth apart; x's when false whatever y does, no written order"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+input d1: date
+
+input keep: money PLN
+
+input extra: money PLN
+
+input one: money PLN
+
+place a1: accounts PLN lives 2026-01-01..
+place a2: accounts PLN lives 2026-01-01..
+place a3: accounts PLN lives 2026-01-01..
+place a4: accounts PLN lives 2026-01-01..
+place a5: accounts PLN lives 2026-01-01..
+place a6: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+move x: transfers
+  on d1
+  reads a2, a4
+  when bal(a4) > keep + keep
+  leg cash from a1 to a3 amount bal(a2) - keep
+
+move y: transfers
+  on d1
+  reads a3
+  leg cash from a2 to a4 amount bal(a3) + extra
+
+move z: transfers
+  on d1
+  reads a4
+  leg cash from world to a5 amount bal(a4)
+
+move w: transfers
+  on d1
+  reads a6
+  leg cash from world to a6 amount bal(a6) + one
+
+ask q: bal(a1, 2026-06-30), bal(a2, 2026-06-30), bal(a3, 2026-06-30), bal(a4, 2026-06-30), bal(a5, 2026-06-30), bal(a6, 2026-06-30)
+ask fl: flows(x, 2026-01-01..2026-12-31), flows(y, 2026-01-01..2026-12-31), flows(z, 2026-01-01..2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  keep = 400.00 PLN "the card"
+  extra = 50.00 PLN "the card"
+  one = 1.00 PLN "the card"
+  opening[a1] = 1000.00 PLN at 2026-01-01 start "the card"
+  opening[a2] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[a3] = 0 PLN at 2026-01-01 start "the card"
+  opening[a4] = 0 PLN at 2026-01-01 start "the card"
+  opening[a5] = 0 PLN at 2026-01-01 start "the card"
+  opening[a6] = 7.00 PLN at 2026-01-01 start "the card"
+,,1:0,598:fl: (refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15)
+  cut 2026-03-01
+q: (refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15, 15.00 PLN)
+  cut 2026-03-01
+,16:fixes/g10/t_c11d,9:fixes-g10,16:run t_c11d.tally,2008:12:t_c11d.tally,1986:model cyc
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T C9 (invented): a two-member cycle a written before breaks, a third member after it by its read, a fourth apart; keyed x by its ties by, the first gets less, y after x"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+input d1: date
+
+input prio[k in ks]: int
+
+input keep: money PLN
+
+input extra: money PLN
+
+input one: money PLN
+
+place a1: accounts PLN lives 2026-01-01..
+place a2: accounts PLN lives 2026-01-01..
+place a3: accounts PLN lives 2026-01-01..
+place a4: accounts PLN lives 2026-01-01..
+place a5: accounts PLN lives 2026-01-01..
+place a6: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+move x[k in ks]: transfers
+  on d1
+  reads a2, a3
+  ties by prio[k]
+  before y
+  leg cash from a1 to a3 amount bal(a2) - keep + bal(a3)
+
+move y: transfers
+  on d1
+  reads a3
+  leg cash from a2 to a4 amount bal(a3) + extra
+
+move z: transfers
+  on d1
+  reads a4
+  leg cash from world to a5 amount bal(a4)
+
+move w: transfers
+  on d1
+  reads a6
+  leg cash from world to a6 amount bal(a6) + one
+
+ask q: bal(a1, 2026-06-30), bal(a2, 2026-06-30), bal(a3, 2026-06-30), bal(a4, 2026-06-30), bal(a5, 2026-06-30), bal(a6, 2026-06-30)
+ask fl: flows(x[k1], 2026-01-01..2026-12-31), flows(x[k2], 2026-01-01..2026-12-31), flows(y, 2026-01-01..2026-12-31), flows(z, 2026-01-01..2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  keep = 400.00 PLN "the card"
+  extra = 50.00 PLN "the card"
+  one = 1.00 PLN "the card"
+  opening[a1] = 1000.00 PLN at 2026-01-01 start "the card"
+  opening[a2] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[a3] = 0 PLN at 2026-01-01 start "the card"
+  opening[a4] = 0 PLN at 2026-01-01 start "the card"
+  opening[a5] = 0 PLN at 2026-01-01 start "the card"
+  opening[a6] = 7.00 PLN at 2026-01-01 start "the card"
+,,1:0,162:fl: (200.00 PLN, 100.00 PLN, 350.00 PLN, 350.00 PLN)
+  cut 2026-03-01
+q: (700.00 PLN, 150.00 PLN, 300.00 PLN, 350.00 PLN, 350.00 PLN, 15.00 PLN)
+  cut 2026-03-01
+,16:fixes/g10/t_c11e,9:fixes-g10,16:run t_c11e.tally,2129:12:t_c11e.tally,2107:model cyc
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T C9 (invented): a two-member cycle a written before breaks, a third member after it by its read, a fourth apart; keyed x by its ties by, unordered with y, v before x"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+input d1: date
+
+input prio[k in ks]: int
+
+input keep: money PLN
+
+input extra: money PLN
+
+input one: money PLN
+
+place a1: accounts PLN lives 2026-01-01..
+place a2: accounts PLN lives 2026-01-01..
+place a3: accounts PLN lives 2026-01-01..
+place a4: accounts PLN lives 2026-01-01..
+place a5: accounts PLN lives 2026-01-01..
+place a6: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+move x[k in ks]: transfers
+  on d1
+  reads a2, a3
+  ties by prio[k]
+  leg cash from a1 to a3 amount bal(a2) - keep + bal(a3)
+
+move y: transfers
+  on d1
+  reads a3
+  leg cash from a2 to a4 amount bal(a3) + extra
+
+move z: transfers
+  on d1
+  reads a4
+  leg cash from world to a5 amount bal(a4)
+
+move v: transfers
+  on d1
+  reads a3
+  before x
+  leg cash from world to a5 amount bal(a3) + extra
+
+move w: transfers
+  on d1
+  reads a6
+  leg cash from world to a6 amount bal(a6) + one
+
+ask q: bal(a1, 2026-06-30), bal(a2, 2026-06-30), bal(a3, 2026-06-30), bal(a4, 2026-06-30), bal(a5, 2026-06-30), bal(a6, 2026-06-30)
+ask fl: flows(x[k1], 2026-01-01..2026-12-31), flows(x[k2], 2026-01-01..2026-12-31), flows(y, 2026-01-01..2026-12-31), flows(z, 2026-01-01..2026-12-31), flows(v, 2026-01-01..2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  keep = 400.00 PLN "the card"
+  extra = 50.00 PLN "the card"
+  one = 1.00 PLN "the card"
+  opening[a1] = 1000.00 PLN at 2026-01-01 start "the card"
+  opening[a2] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[a3] = 0 PLN at 2026-01-01 start "the card"
+  opening[a4] = 0 PLN at 2026-01-01 start "the card"
+  opening[a5] = 0 PLN at 2026-01-01 start "the card"
+  opening[a6] = 7.00 PLN at 2026-01-01 start "the card"
+,,1:0,677:fl: (refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15, 50.00 PLN)
+  cut 2026-03-01
+q: (refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15, refused: RUN-ORDER decisions x and y read each other on 2026-04-15, 15.00 PLN)
+  cut 2026-03-01
 ,

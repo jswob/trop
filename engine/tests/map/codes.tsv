@@ -304,11 +304,11 @@ RUN-PARAM	L §8.4	M6	*	1	M6	I:M:CH-03
 RUN-PARAM	L §8.4	M6	<distribution> parameter <p> = <v> is invalid	1	M6	I:M:CH-03
 RUN-ZERO	L §8.4	M1	*	1	M1	codes/m1/rules/zero
 RUN-ZERO	L §8.4	M1	add_business(<d>, 0, <cal>)	1	M1	codes/m1/rules/zero
-RUN-NEG	L §8.4	S	*	7	S	kernel/g11/adjust
-RUN-NEG	L §8.4	S	negative amount <v> for <leg or fill>	7	S	kernel/g11/adjust
-RUN-ORDER	L §8.4	M1	*	22	M1	codes/m1/decide/order
+RUN-NEG	L §8.4	S	*	8	S	kernel/g11/adjust
+RUN-NEG	L §8.4	S	negative amount <v> for <leg or fill>	8	S	kernel/g11/adjust
+RUN-ORDER	L §8.4	M1	*	27	M1	codes/m1/decide/order
 RUN-ORDER	L §8.4	M1	fill <f>: the order of <arc> is a hole	1	M5a	U:rule/RULE-03
-RUN-ORDER	L §8.4	M1	decisions <a> and <b> read each other on <d>	18	M1	codes/m1/decide/order
+RUN-ORDER	L §8.4	M1	decisions <a> and <b> read each other on <d>	23	M1	codes/m1/decide/order
 RUN-ORDER	L §8.4	M1	?	3	M1	m1/fixes/g10/agent_projid_k
 RUN-WEIGHTS	L §8.4	M1	*	1	M1	codes/m1/rules/weights
 RUN-WEIGHTS	L §8.4	M1	prorata weights <w> are negative or sum to 0	1	M1	codes/m1/rules/weights

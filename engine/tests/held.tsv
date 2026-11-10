@@ -119,3 +119,6 @@ fixes/g12/r_agent_lw_lw_e2	m1_fixes	#132	P63: a def's balance cause in its own f
 fixes/g12/r_agent_lw_lw_e3	m1_fixes	#132	P63: a def's balance cause in its own form (E §10), refcore the walk's reads
 fixes/g12/r_agent_lw_lw_r1	m1_fixes	#132	G12 review NB12, P63: readers-of pays lists n_pays, the binding over it (E §10); refcore nothing reads pays
 fixes/g12/r_agent_lw_lw_r2	m1_fixes	#132	G12 review NB12, P63: readers-of subpays lists n_pays, subkinds included (E §10); refcore nothing reads subpays
+fixes/g12/t_tb_m4_e_b	m1_fixes	#132	P63 (G12's trace_bal mutants): explain of a def whose cause is bal(konto, d + 1 day) prints the balance in its own form (E §10); refcore the walk's reads
+fixes/g12/t_tb_m4_e_bn	m1_fixes	#132	P63 (G12's trace_bal mutants): a balance cause refused at run, RUN-NEG, prints its refusal with no balance form under it (E §10); refcore the walk's reads
+fixes/g12/t_tb_m4_e_bh	m1_fixes	#132	P63 (G12's trace_bal mutants): a balance cause that is a hole prints the hole and its balance form (E §10); refcore the walk's reads

@@ -182,7 +182,9 @@ mod tests {
     /// refused (`t_c4*`); two days (`t_c5*`); keyed members with and without `ties by` (`t_c6*`,
     /// `t_c7*`); the decisions' day outside [S, E], on the cut, under scenarios and projections
     /// (`t_c8*`); bindings over decisions, uncertain ones and `RUN-FUTURE` (`t_c9*`); legs that
-    /// state their own days (`t_c10`).
+    /// state their own days (`t_c10`); groups run time orders, a written `before` into an
+    /// unordered pair, a `when` false until another member runs, a keyed member's `ties by`
+    /// order (`t_c11*`).
     #[test]
     fn m1_fixes_g10_decisions() {
         group_holds("fixes-g10");
@@ -204,7 +206,8 @@ mod tests {
     /// review's: a move read by name, a field of a decision instance that doesn't exist
     /// (`RUN-NONE`, `r_p_mr2_x4`); B1's texts, a reading's instant, wait for a ruling on the row's
     /// id (GAPS.md 2026-11-10, its instant on the engine). Held: a def's balance cause by its
-    /// read (P63, #132, `r_p_bc*`, `r_p_rid`, `r_agent_u_u`) and `readers-of` an event kind (#132);
+    /// read (P63, #132, `r_p_bc*`, `r_p_rid`, `r_agent_u_u`; `t_tb_m4`, a balance cause plain,
+    /// refused and a hole, `trace_bal`'s inputs) and `readers-of` an event kind (#132);
     /// `low … with uncertain` without `from` (P51, #125, `r_agent_lw_lw_l0`); a month key printed
     /// as written in `LOAD-KEY` (#100).
     #[test]

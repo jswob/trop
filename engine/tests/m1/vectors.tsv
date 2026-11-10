@@ -1114,3 +1114,13 @@ fixes/g13/sites_pz3_model_with_sites_pz3_y1_base	fixes-g13		engine/tests/m1/fixe
 fixes/g13/sites_pz3_model_with_sites_pz3_y1_f4	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/sites_pz3_model.tally engine/tests/m1/fixes/g13/sites_pz3_f4.tally engine/tests/m1/fixes/g13/sites_pz3_y1.tally	f4		G13
 fixes/g13/sites_pz3_model_with_sites_pz3_y5_base	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/sites_pz3_model.tally engine/tests/m1/fixes/g13/sites_pz3_f4.tally engine/tests/m1/fixes/g13/sites_pz3_y5.tally	base		G13
 fixes/g13/sites_pz3_model_with_sites_pz3_y5_f4	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/sites_pz3_model.tally engine/tests/m1/fixes/g13/sites_pz3_f4.tally engine/tests/m1/fixes/g13/sites_pz3_y5.tally	f4		G13
+fixes/g12/t_tb_m4_e_bn	fixes-g12		engine/tests/m1/fixes/g12	engine/tests/m1/fixes/g12/t_tb_m4.tally	e_bn		G12
+fixes/g12/t_tb_m4_e_bh	fixes-g12		engine/tests/m1/fixes/g12	engine/tests/m1/fixes/g12/t_tb_m4.tally	e_bh		G12
+fixes/g12/t_tb_m4_i_bn	fixes-g12		engine/tests/m1/fixes/g12	engine/tests/m1/fixes/g12/t_tb_m4.tally	i_bn		G12
+fixes/g12/t_tb_m4_e_b	fixes-g12		engine/tests/m1/fixes/g12	engine/tests/m1/fixes/g12/t_tb_m4.tally	e_b		G12
+fixes/g10/t_c11	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c11.tally			G10
+fixes/g10/t_c11a	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c11a.tally			G10
+fixes/g10/t_c11b	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c11b.tally			G10
+fixes/g10/t_c11c	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c11c.tally			G10
+fixes/g10/t_c11d	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c11d.tally			G10
+fixes/g10/t_c11e	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c11e.tally			G10
