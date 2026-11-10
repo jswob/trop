@@ -561,9 +561,15 @@ fn wrong_number(n: &crate::syntax::Number, ty: &Ty) -> Stop {
     ))
 }
 
-/// `LOAD-UNIT <n> and <type> have different units`.
-fn different_units(n: &crate::syntax::Number, ty: &Ty) -> Stop {
-    unit_refusal(format!("{} and {} have different units", n.text, ty.show()))
+/// `LOAD-UNIT <n> <unit> and <type> have different units`, the literal with its unit as
+/// written (refcore's `_txt_node`, tally 2.1.6 issue #71).
+fn different_units(n: &crate::syntax::Number, written: &Unit, ty: &Ty) -> Stop {
+    unit_refusal(format!(
+        "{} {} and {} have different units",
+        n.text,
+        written.text(),
+        ty.show()
+    ))
 }
 
 /// A money literal in its currency, whole in its minor unit (refcore's `convert_value`, its
@@ -580,7 +586,7 @@ fn money_value(
         None => n.value.checked_mul(&of.factor).map_err(num_stop)?,
         Some((unit, f)) => {
             if unit.terms() != [(cur.to_owned(), 1)] {
-                return Err(different_units(n, ty));
+                return Err(different_units(n, unit, ty));
             }
             n.value.checked_mul(f).map_err(num_stop)?
         }
@@ -619,7 +625,7 @@ fn number_in(
                 ty.show()
             )));
         }
-        return Err(different_units(n, ty));
+        return Err(different_units(n, from, ty));
     };
     n.value
         .checked_mul(f)

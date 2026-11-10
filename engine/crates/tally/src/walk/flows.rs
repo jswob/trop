@@ -32,7 +32,8 @@ impl Engine {
     /// # Errors
     ///
     /// The refusals of the walk and of the movements counted; `RUN-DOMAIN` for flows in no
-    /// one unit; `NotBuilt` for a conversion and `for k` (G7).
+    /// one unit; `NotBuilt` for a conversion (`in CUR at fx mode`, BUILD-ORDER M4) and for
+    /// `for k` (the instances of a period, N-305), neither built in M1.
     pub(crate) fn flows(
         &mut self,
         m: &Reality,
