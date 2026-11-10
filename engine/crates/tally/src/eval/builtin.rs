@@ -14,7 +14,7 @@
 use super::arith::int_of;
 use super::expr::hole_of;
 use super::extremes::min_max;
-use super::keys::{Given, make_keys};
+use super::keys::Given;
 use super::state::{
     Ctx, Engine, Env, invariant, not_typed, num_stop, refuse, refuse_load, wrong_type,
 };
@@ -329,7 +329,7 @@ impl Engine {
         let (name, written) = read_parts(arg).ok_or_else(not_read)?;
         let input = m.inputs.get(name).ok_or_else(not_read)?;
         let given = self.given_keys(m, written, env, ctx)?;
-        let Ok(keys) = make_keys(m, name, &input.binds, given, ctx)? else {
+        let Ok(keys) = self.make_keys(m, name, &input.binds, given, ctx)? else {
             return Ok(Value::Bool(false));
         };
         self.movement_keys(m, &input.binds, &keys, ctx)?;

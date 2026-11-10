@@ -17,7 +17,6 @@ use super::arith::whole_of;
 use super::builtin::read_parts;
 use super::dates::period_arg;
 use super::expr::hole_of;
-use super::keys::make_keys;
 use super::state::{Ctx, Engine, Env, invariant, not_typed, past_days, refuse, refuse_load};
 use super::windows::one_day;
 use crate::base::{Load, Run};
@@ -441,7 +440,7 @@ impl Engine {
             .get(name)
             .ok_or(Stop::NotBuilt("a calendar that isn't an input's read"))?;
         let given = self.given_keys(m, written, env, ctx)?;
-        let keys = match make_keys(m, name, &input.binds, given, ctx)? {
+        let keys = match self.make_keys(m, name, &input.binds, given, ctx)? {
             Err(hole) => return Ok(Value::Hole(hole)),
             Ok(made) => made,
         };

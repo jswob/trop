@@ -125,7 +125,7 @@ pub mod model {
         SourceId, ThingId, VersionId,
     };
     pub use index::{GapRole, IndexForm, IndexInfo, Moved, OwnTime, VersionInfo};
-    pub use key::{KeyVal, Pat, Span, pattern_text};
+    pub use key::{KeyVal, Pat, RangeValue, Span, pattern_text};
     pub use kind::{Entry, KindInfo, KindSpec, Labels, PRELUDE_KINDS, PlaceKeys, Thing, prelude};
     pub use reality::{
         BUILTIN_INDEXES, BUILTIN_INPUTS, Joint, MemberAsks, NameKind, Priced, Reality, SamePair,
@@ -186,8 +186,9 @@ pub mod eval {
     pub(crate) use context::{GUARDED, UNSET_AXIS, world_named};
     pub(crate) use convert::{ConvertFor, Converted, convert, convert_row, field_literal};
     pub(crate) use expr::equal_sides;
-    pub(crate) use keys::{make_keys, thing_seen, to_key};
+    pub(crate) use keys::{thing_seen, to_key};
     pub use memo::Memo;
+    pub(crate) use ranges::range_literal_key;
     pub use stack::Item;
     pub use state::{Collected, Ctx, Engine, Entry, Env, RowSeen, Rows};
     pub(crate) use state::{a_day, num_stop, past_days};
@@ -332,6 +333,7 @@ pub mod load {
     pub use joint::member_paths;
     pub(crate) use joint::reprint_members;
     pub use keys::index_key_of;
+    pub(crate) use keys::literal_end;
     pub(crate) use pins::reach_axes;
     pub(crate) use srows::ask_worlds;
     pub use steps::load;

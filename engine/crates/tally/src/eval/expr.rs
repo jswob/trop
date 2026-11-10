@@ -14,7 +14,7 @@
 use core::cmp::Ordering;
 
 use super::arith::{Op, Test, arith, compare, duration, negate, same_value};
-use super::keys::{Given, lacks_at_run, literal_key, make_keys};
+use super::keys::{Given, lacks_at_run, literal_key};
 use super::state::{
     Ctx, Engine, Env, Figures, invariant, not_typed, num_stop, refuse, refuse_load, unit_stop,
 };
@@ -134,7 +134,7 @@ impl Engine {
             .get(id)
             .ok_or_else(|| invariant("a movement named by a move load didn't build"))?;
         let given = self.given_keys(m, keys, env, ctx)?;
-        let made = match make_keys(m, id, &mv.binds, given, ctx)? {
+        let made = match self.make_keys(m, id, &mv.binds, given, ctx)? {
             Err(hole) => return Ok(Value::Hole(hole)),
             Ok(made) => made,
         };
@@ -186,7 +186,7 @@ impl Engine {
             given.push(self.given_key(m, e, env, ctx)?);
         }
         if let Some(input) = m.inputs.get(id) {
-            return match make_keys(m, id, &input.binds, given, ctx)? {
+            return match self.make_keys(m, id, &input.binds, given, ctx)? {
                 Err(hole) => Ok(Value::Hole(hole)),
                 Ok(made) => {
                     self.movement_keys(m, &input.binds, &made, ctx)?;
@@ -198,7 +198,7 @@ impl Engine {
             .defs
             .get(id)
             .ok_or_else(|| invariant("a read of an item that is neither an input nor a def"))?;
-        match make_keys(m, id, &def.binds, given, ctx)? {
+        match self.make_keys(m, id, &def.binds, given, ctx)? {
             Err(hole) => Ok(Value::Hole(hole)),
             Ok(made) => {
                 self.movement_keys(m, &def.binds, &made, ctx)?;
@@ -228,7 +228,7 @@ impl Engine {
             };
             given.push(self.given_key(m, e, env, ctx)?);
         }
-        let made = match make_keys(m, id, &place.binds, given, ctx)? {
+        let made = match self.make_keys(m, id, &place.binds, given, ctx)? {
             Err(hole) => return Ok(Value::Hole(hole)),
             Ok(made) => made,
         };

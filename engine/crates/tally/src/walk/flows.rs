@@ -362,7 +362,7 @@ impl Engine {
             };
             given.push(self.given_key(m, e, env, ctx)?);
         }
-        crate::eval::make_keys(m, &mv.id, binds, given, ctx)
+        self.make_keys(m, &mv.id, binds, given, ctx)
     }
 
     /// A decision move's runs a flows read counts: the main walk's, or inside a decision the

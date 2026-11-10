@@ -14,7 +14,7 @@ use core::cmp::Ordering;
 
 use super::convert::key_value;
 use super::expr::{hole_of, typed};
-use super::keys::{Given, make_keys};
+use super::keys::Given;
 use super::memo::{LawClass, Read, may_hold, tables_class};
 use super::state::{
     Ctx, Engine, Env, Rows, invariant, num_stop, refuse, refuse_load, unit_stop, wrong_type,
@@ -248,7 +248,8 @@ impl Engine {
             return Err(invariant("a keyed band called with no key"));
         };
         let given: Given = self.given_key(m, e, env, ctx)?;
-        Ok(make_keys(m, &band.id, &band.binds, vec![given], ctx)?
+        Ok(self
+            .make_keys(m, &band.id, &band.binds, vec![given], ctx)?
             .map(|keys| keys.into_iter().next()))
     }
 

@@ -397,7 +397,7 @@ fn rank(m: &Reality, domain: &Domain, key: &KeyVal, compare: Compare) -> Option<
             KeyVal::Int(n) => Some(Rank::Int(*n)),
             KeyVal::Day(day) => Some(Rank::Day(*day)),
             KeyVal::Period(p) => (compare == Compare::Before).then(|| Rank::Day(p.start())),
-            KeyVal::Key { .. } | KeyVal::Thing(_) | KeyVal::Mv(_) => None,
+            KeyVal::Key { .. } | KeyVal::Thing(_) | KeyVal::Mv(_) | KeyVal::Value(_) => None,
         },
         Domain::Axis(_) => None,
     }

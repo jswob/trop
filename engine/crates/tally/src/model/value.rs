@@ -240,7 +240,7 @@ impl Value {
     }
 
     /// A key as a value (refcore's `keyval`): an integer key is an int, a day key a day, a
-    /// period key a period (L §4.2 Keys as values).
+    /// period key a period, a stepped range's value that value (L §4.2 Keys as values, §2.5).
     #[must_use]
     pub fn of_key(key: &KeyVal) -> Value {
         match key {
@@ -249,6 +249,7 @@ impl Value {
             KeyVal::Period(p) => Value::Period(*p),
             KeyVal::Key { .. } | KeyVal::Thing(_) => Value::Key(key.clone()),
             KeyVal::Mv(mv) => Value::Mv(mv.clone()),
+            KeyVal::Value(v) => v.value.clone(),
         }
     }
 

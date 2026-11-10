@@ -15,7 +15,6 @@ use core::cmp::Ordering;
 
 use super::arith::{Op, arith, currency_of};
 use super::expr::literal;
-use super::keys::make_keys;
 use super::stack::Item;
 use super::state::{Collected, Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load};
 use crate::base::{Code, Load, Run};
@@ -270,7 +269,7 @@ impl Engine {
             };
             given.push(self.key_given(m, e, env, ctx)?);
         }
-        Ok(match make_keys(m, item, binds, given, ctx)? {
+        Ok(match self.make_keys(m, item, binds, given, ctx)? {
             Err(hole) => Err(hole),
             Ok(keys) => Ok(Aim {
                 item: item.to_owned(),

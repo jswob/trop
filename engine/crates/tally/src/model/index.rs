@@ -183,7 +183,11 @@ impl IndexInfo {
         self.keys.iter().find(|k| match k {
             KeyVal::Day(d) => *d == day,
             KeyVal::Period(p) => p.contains(day),
-            KeyVal::Key { .. } | KeyVal::Thing(_) | KeyVal::Int(_) | KeyVal::Mv(_) => false,
+            KeyVal::Key { .. }
+            | KeyVal::Thing(_)
+            | KeyVal::Int(_)
+            | KeyVal::Mv(_)
+            | KeyVal::Value(_) => false,
         })
     }
 }
@@ -208,6 +212,7 @@ fn lookup_order(one: &KeyVal, other: &KeyVal) -> Ordering {
         }
         (KeyVal::Int(n), KeyVal::Int(other_n)) => n.cmp(other_n),
         (KeyVal::Mv(mv), KeyVal::Mv(other_mv)) => mv.id.cmp(&other_mv.id),
+        (KeyVal::Value(v), KeyVal::Value(other_v)) => v.text.cmp(&other_v.text),
         _ => kind_rank(one).cmp(&kind_rank(other)),
     }
 }
@@ -221,6 +226,7 @@ fn kind_rank(k: &KeyVal) -> u8 {
         KeyVal::Period(_) => 3,
         KeyVal::Int(_) => 4,
         KeyVal::Mv(_) => 5,
+        KeyVal::Value(_) => 6,
     }
 }
 

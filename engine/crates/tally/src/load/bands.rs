@@ -93,7 +93,24 @@ fn key_end(m: &Reality, key: &KeyVal) -> Result<BandEnd, Stop> {
             Load::Unit,
             format!("a band over things ({})", mv.id),
         )),
+        KeyVal::Value(v) => range_end(m, &v.value),
     }
+}
+
+/// A stepped range's value as a band's end: its number, money's in its currency's units
+/// (refcore's `order_key` of a `Num`). L §5.9, §2.5.
+fn range_end(m: &Reality, value: &Value) -> Result<BandEnd, Stop> {
+    if let Value::Money(money) = value {
+        return money_num(m, money)
+            .map(BandEnd::Num)
+            .map_err(super::steps::num_stop);
+    }
+    let Value::Number(n) = value else {
+        return Err(invariant(
+            "a stepped range's value that is no number".to_owned(),
+        ));
+    };
+    Ok(BandEnd::Num(n.q.clone()))
 }
 
 /// Every band's tables (refcore's `check_bands`): each table whole, then the tables of one

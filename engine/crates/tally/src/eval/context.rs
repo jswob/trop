@@ -24,7 +24,6 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use super::keys::make_keys;
 use super::state::{Ctx, Engine, Env, invariant, num_stop};
 use super::trace::Kind as TraceKind;
 use crate::base::Code;
@@ -1038,7 +1037,7 @@ impl Engine {
                 continue;
             };
             let given = self.given_key(m, e, env, ctx)?;
-            match make_keys(m, id, core::slice::from_ref(bind), vec![given], ctx)? {
+            match self.make_keys(m, id, core::slice::from_ref(bind), vec![given], ctx)? {
                 Err(hole) => {
                     holes.push(hole);
                     return Ok(None);

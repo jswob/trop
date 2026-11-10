@@ -50,7 +50,7 @@ impl Op {
 
 /// A number's class with money among them: the static types refcore's `_arith` reads.
 #[derive(Debug, Clone, PartialEq, Eq)]
-enum Kind {
+pub(super) enum Kind {
     /// `money CUR`.
     Money(Currency),
     /// Any other number.
@@ -59,16 +59,16 @@ enum Kind {
 
 /// A numeric operand: its value in its own unit and its class.
 #[derive(Debug, Clone, PartialEq, Eq)]
-struct Operand {
+pub(super) struct Operand {
     /// The value.
-    q: Num,
+    pub(super) q: Num,
     /// The class.
-    kind: Kind,
+    pub(super) kind: Kind,
 }
 
 impl Operand {
     /// The operand's unit: a currency's, or its class's (L §3.2).
-    fn unit(&self, m: &Reality) -> Result<Unit, Stop> {
+    pub(super) fn unit(&self, m: &Reality) -> Result<Unit, Stop> {
         match &self.kind {
             Kind::Money(cur) => currency_unit(m, *cur).map_err(num_stop),
             Kind::Plain(Class::Num(u, _) | Class::Rate(u)) => Ok(u.clone()),
@@ -83,7 +83,7 @@ impl Operand {
 }
 
 /// The value of a number or money as an operand, or `None` for any other value.
-fn operand(m: &Reality, v: &Value) -> Result<Option<Operand>, Stop> {
+pub(super) fn operand(m: &Reality, v: &Value) -> Result<Option<Operand>, Stop> {
     if let Value::Money(money) = v {
         return Ok(Some(Operand {
             q: money_num(m, money).map_err(num_stop)?,
@@ -100,7 +100,7 @@ fn operand(m: &Reality, v: &Value) -> Result<Option<Operand>, Stop> {
 }
 
 /// An operand of class `kind` and value `q` as a value: money in its minor units.
-fn finish(m: &Reality, q: Num, kind: Kind) -> Result<Value, Stop> {
+pub(super) fn finish(m: &Reality, q: Num, kind: Kind) -> Result<Value, Stop> {
     match kind {
         Kind::Money(cur) => Ok(Value::Money(num_money(m, &q, cur).map_err(num_stop)?)),
         Kind::Plain(class) => Ok(Value::Number(Number { q, class })),
@@ -451,71 +451,6 @@ pub(super) fn whole_of(m: &Reality, v: &Value) -> Result<Num, Stop> {
         return Ok(n.q.clone());
     }
     int_of(m, v).map(Num::int)
-}
-
-/// Whether the numbers `a .. b [step s]` hold more than `limit` keys, counted and never
-/// stepped (refcore's `range_values`, its checks before `too_many`, in its order): with no
-/// step, the ends' integers; with one, a step that isn't positive is `RUN-DOMAIN`, then the
-/// last end and the step are brought into the first end's unit. L §5.11, §7.6 item 2.
-///
-/// # Errors
-///
-/// `int_of`'s for an end with no step that isn't an integer; `RUN-DOMAIN`; `LOAD-UNIT` for
-/// units that can't be brought together; "not built" for a stepped range of other values.
-pub(super) fn numbers_past(
-    m: &Reality,
-    (first, last, by): (&Value, &Value, Option<&Value>),
-    limit: u64,
-) -> Result<bool, Stop> {
-    let Some(by) = by else {
-        let (lo, hi) = (range_int(m, first)?, range_int(m, last)?);
-        return lo.range_past(&hi, &Num::int(1), limit).map_err(num_stop);
-    };
-    let (Some(a), Some(b), Some(s)) = (operand(m, first)?, operand(m, last)?, operand(m, by)?)
-    else {
-        return Err(Stop::NotBuilt("a stepped range of values not numbers"));
-    };
-    if s.q.is_negative() || s.q.is_zero() {
-        let step = by.text(m).map_err(num_stop)?;
-        return Err(refuse(
-            Run::Domain,
-            format!("a stepped range whose step {step} is not positive"),
-        ));
-    }
-    let unit = a.unit(m)?;
-    let (stop, step) = (in_unit(m, &b, &unit)?, in_unit(m, &s, &unit)?);
-    a.q.range_past(&stop, &step, limit).map_err(num_stop)
-}
-
-/// A range end with no step as an integer, whatever its unit, money's amount among them
-/// (refcore's `int_of` in `range_values`). L §5.11.
-fn range_int(m: &Reality, v: &Value) -> Result<Num, Stop> {
-    match operand(m, v)? {
-        Some(o) if o.q.is_integer() => Ok(o.q),
-        Some(_) => Err(refuse(
-            Run::NotInt,
-            format!("{} is not an integer", v.text(m).map_err(num_stop)?),
-        )),
-        None => int_of(m, v).map(Num::int),
-    }
-}
-
-/// A range's last end or step in its first end's unit (refcore's `U.conv` in
-/// `range_values`); `LOAD-UNIT` where they can't be brought together. L §3.2, §5.11.
-fn in_unit(m: &Reality, o: &Operand, unit: &Unit) -> Result<Num, Stop> {
-    let own = o.unit(m)?;
-    let factor = if own == *unit {
-        Some(Num::int(1))
-    } else {
-        own.conv(unit).map_err(num_stop)?
-    };
-    let Some(factor) = factor else {
-        return Err(refuse_load(
-            Load::Unit,
-            "a range of quantities in different units".to_owned(),
-        ));
-    };
-    o.q.checked_mul(&factor).map_err(num_stop)
 }
 
 /// A count of days, months or business days to step a day by, an integer times `per`

@@ -455,6 +455,12 @@ impl Loader {
                     }
                     let lo = self.pattern_key(&KeyLit::Lit(a.clone()), bind, None, file, line)?;
                     let hi = self.pattern_key(&KeyLit::Lit(b.clone()), bind, None, file, line)?;
+                    if matches!((&lo, &hi), (KeyVal::Value(_), _) | (_, KeyVal::Value(_))) {
+                        // refcore stops on it (2.1.6: `Num` has no order)
+                        return Err(Stop::NotBuilt(
+                            "a row's key range over a stepped range's values not integers",
+                        ));
+                    }
                     if key_order(&self.m, &lo, &bind.domain) > key_order(&self.m, &hi, &bind.domain)
                     {
                         return Err(refuse(
@@ -469,7 +475,7 @@ impl Loader {
                 RowKey::Lit(lit) => {
                     let written = KeyLit::Lit(lit.clone());
                     if bind.domain == Domain::Range {
-                        let value = range_key_of(&written, file, line)?;
+                        let value = range_key_of(&self.m, &written, file, line)?;
                         self.range_keys.extend(RangeKey::of(bind, lit, file, line));
                         Pat::Key(value)
                     } else {

@@ -10,7 +10,8 @@
 //! see (L §6.4); a hole key makes the read that hole, built in the hole module.
 
 use super::arith::int_of;
-use super::state::{Ctx, Engine, a_day, invariant, num_stop, refuse};
+use super::ranges::value_key;
+use super::state::{Ctx, Engine, Env, a_day, invariant, num_stop, refuse};
 use crate::base::Run;
 use crate::hole::Hole;
 use crate::load::index_key_of;
@@ -54,53 +55,72 @@ impl Engine {
         }
         Ok(())
     }
-}
 
-/// The keys of a read: each given key made a key of its position's domain, checked
-/// against the domain, the cut and the world of `ctx`; a hole key makes the read that hole,
-/// carrying the keys' questions only (refcore's `key_values`). L §2.5, §8.1, §6.4.
-///
-/// # Errors
-///
-/// `RUN-KEY`, `RUN-NONE` and the conversions' refusals.
-pub(crate) fn make_keys(
-    m: &Reality,
-    item: &str,
-    binds: &[BindInfo],
-    given: Vec<Given>,
-    ctx: Ctx,
-) -> Result<Result<Vec<KeyVal>, Hole>, Stop> {
-    if given.len() != binds.len() {
-        return Err(Stop::NotBuilt("a read with fewer or more keys than binds"));
-    }
-    let mut keys = Vec::with_capacity(binds.len());
-    let mut holes: Vec<Hole> = Vec::new();
-    for (bind, key) in binds.iter().zip(given) {
-        let key = match key {
-            Given::Value(Value::Hole(h)) => {
-                holes.push(h);
-                continue;
+    /// The keys of a read: each given key made a key of its position's domain, checked
+    /// against the domain, the cut and the world of `ctx`, a stepped range's against its
+    /// values with the read's earlier keys bound; a hole key makes the read that hole,
+    /// carrying the keys' questions only (refcore's `key_values`). L §2.5, §8.1, §6.4.
+    ///
+    /// # Errors
+    ///
+    /// `RUN-KEY`, `RUN-NONE` and the conversions' refusals.
+    pub(crate) fn make_keys(
+        &mut self,
+        m: &Reality,
+        item: &str,
+        binds: &[BindInfo],
+        given: Vec<Given>,
+        ctx: Ctx,
+    ) -> Result<Result<Vec<KeyVal>, Hole>, Stop> {
+        if given.len() != binds.len() {
+            return Err(Stop::NotBuilt("a read with fewer or more keys than binds"));
+        }
+        // a range's ends may read the keys before it (refcore's `benv`)
+        let ranged = binds.iter().any(|b| b.domain == Domain::Range);
+        let mut earlier = Env::empty();
+        let mut keys = Vec::with_capacity(binds.len());
+        let mut holes: Vec<Hole> = Vec::new();
+        for (bind, written) in binds.iter().zip(given) {
+            let key = match written {
+                Given::Value(Value::Hole(h)) => {
+                    holes.push(h);
+                    continue;
+                }
+                at_range if bind.domain == Domain::Range => {
+                    match self.range_key(m, bind, at_range, (&earlier, ctx))? {
+                        Ok(made) => made,
+                        Err(h) => {
+                            holes.push(h);
+                            continue;
+                        }
+                    }
+                }
+                Given::Value(v) => to_key(m, item, &v, &bind.domain)?,
+                Given::Literal(lit) => {
+                    literal_key(m, &lit, &bind.domain)?.ok_or_else(lacks_at_run)?
+                }
+            };
+            check_key(m, &key, &bind.domain, (ctx.cut, ctx.world))?;
+            if ranged {
+                earlier.bind(&bind.var, Value::of_key(&key), Some(bind.domain.clone()));
             }
-            Given::Value(v) => to_key(m, item, &v, &bind.domain)?,
-            Given::Literal(lit) => literal_key(m, &lit, &bind.domain)?.ok_or_else(lacks_at_run)?,
-        };
-        check_key(m, &key, &bind.domain, (ctx.cut, ctx.world))?;
-        keys.push(key);
+            keys.push(key);
+        }
+        let operands: Vec<Option<&Hole>> = holes.iter().map(Some).collect();
+        if let Some(hole) = crate::hole::spread(&operands) {
+            return Ok(Err(hole));
+        }
+        Ok(Ok(keys))
     }
-    let operands: Vec<Option<&Hole>> = holes.iter().map(Some).collect();
-    if let Some(hole) = crate::hole::spread(&operands) {
-        return Ok(Err(hole));
-    }
-    Ok(Ok(keys))
 }
 
-/// A value made a key of `domain`, an axis's option included (refcore's `to_key`). L §2.5,
-/// §4.2, §5.5.
+/// A value made a key of `domain`, an axis's option included, a stepped range's value as its
+/// key, unchecked against the range (refcore's `to_key`). L §2.5, §4.2, §5.5.
 ///
 /// # Errors
 ///
 /// `RUN-NONE` for `none`, `RUN-KEY` for a value the domain doesn't hold; `NotBuilt` for a key
-/// list or a range.
+/// list.
 pub(crate) fn to_key(m: &Reality, item: &str, v: &Value, domain: &Domain) -> Result<KeyVal, Stop> {
     if *v == Value::None {
         return Err(refuse(Run::None, "a key is none here: a key".to_owned()));
@@ -147,7 +167,17 @@ pub(crate) fn to_key(m: &Reality, item: &str, v: &Value, domain: &Domain) -> Res
             }
             Ok(key.clone())
         }
-        Domain::List(_) | Domain::Range => Err(Stop::NotBuilt("a key of a key list or a range")),
+        Domain::Range => match value_key(m, v)? {
+            Some(key) => Ok(key),
+            None => Err(refuse(
+                Run::Key,
+                format!(
+                    "{} is not a value of a stepped range",
+                    v.text(m).map_err(num_stop)?
+                ),
+            )),
+        },
+        Domain::List(_) => Err(Stop::NotBuilt("a key of a key list")),
     }
 }
 
@@ -210,7 +240,8 @@ fn period_key(m: &Reality, item: &str, ix: &IndexInfo, v: &Value) -> Result<KeyV
                 | KeyVal::Key { .. }
                 | KeyVal::Thing(_)
                 | KeyVal::Int(_)
-                | KeyVal::Mv(_) => {}
+                | KeyVal::Mv(_)
+                | KeyVal::Value(_) => {}
             }
         }
         return Err(outside(p.label()));

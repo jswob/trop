@@ -15,7 +15,7 @@
 use super::arith::{Op, arith};
 use super::builtin::read_parts;
 use super::convert::{ConvertFor, Converted, convert};
-use super::keys::{Given, make_keys};
+use super::keys::Given;
 use super::memo::{LawClass, Read, may_hold, rows_class};
 use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load};
 use super::windows::{as_read, one_day};
@@ -327,7 +327,7 @@ impl Engine {
             .get(name)
             .ok_or_else(|| invariant("an input of last load didn't build"))?;
         let given = self.given_keys(m, written, env, ctx)?;
-        let keys = match make_keys(m, name, &input.binds, given, ctx)? {
+        let keys = match self.make_keys(m, name, &input.binds, given, ctx)? {
             Err(hole) => return Ok(Err(Value::Hole(hole))),
             Ok(keys) => keys,
         };
@@ -405,7 +405,7 @@ impl Engine {
         };
         let given: Vec<Given> = given.into_iter().map(Given::Value).collect();
         if let Some(input) = m.inputs.get(id) {
-            let keys = match make_keys(m, id, &input.binds, given, at)? {
+            let keys = match self.make_keys(m, id, &input.binds, given, at)? {
                 Err(hole) => return Ok(Value::Hole(hole)),
                 Ok(keys) => keys,
             };
@@ -421,7 +421,7 @@ impl Engine {
             .defs
             .get(id)
             .ok_or_else(|| invariant("a price that is neither an input nor a def"))?;
-        match make_keys(m, id, &def.binds, given, at)? {
+        match self.make_keys(m, id, &def.binds, given, at)? {
             Err(hole) => Ok(Value::Hole(hole)),
             Ok(keys) => self.read_def_at(m, def, &keys, at),
         }

@@ -152,6 +152,7 @@ fn key_order(a: &KeyVal, b: &KeyVal) -> Ordering {
             .then_with(|| x.end().cmp(&y.end())),
         (KeyVal::Int(x), KeyVal::Int(y)) => x.cmp(y),
         (KeyVal::Mv(x), KeyVal::Mv(y)) => x.id.cmp(&y.id),
+        (KeyVal::Value(x), KeyVal::Value(y)) => x.text.cmp(&y.text),
         _ => kind_rank(a).cmp(&kind_rank(b)),
     }
 }
@@ -165,6 +166,7 @@ fn kind_rank(k: &KeyVal) -> u8 {
         KeyVal::Period(_) => 3,
         KeyVal::Int(_) => 4,
         KeyVal::Mv(_) => 5,
+        KeyVal::Value(_) => 6,
     }
 }
 
