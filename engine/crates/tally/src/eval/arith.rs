@@ -146,8 +146,15 @@ pub fn arith(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Result<Value, Sto
     if let Value::Number(n) = &out
         && n.unit().day_and_period()
     {
-        // load refuses `1 day / 1 year` (L §3.2); refcore's run computes what load missed
-        return Err(Stop::NotBuilt("a day times or over a period met at run"));
+        // load refuses `1 day / 1 year` (L §3.2); an operand whose unit only the run knows (a
+        // leg of unit any) is refused where it is computed, with load's text (pick P66, #134)
+        return Err(refuse_load(
+            Load::Unit,
+            format!(
+                "{}: day is a dimension of its own (1 day / 1 year is refused, L §3.2)",
+                shown(m, lhs, op, rhs)?
+            ),
+        ));
     }
     Ok(out)
 }
@@ -197,10 +204,8 @@ fn add_sub(
             if lhs.unit(m)? != rhs.unit(m)? {
                 return Err(rate_periods(m, op, values)?);
             }
-            // refcore's run adds them as a rate; load refuses the sum (L §3.3)
-            return Err(Stop::NotBuilt(
-                "a rate and a number of its unit added at run",
-            ));
+            // load refuses a rate beside a number (L §3.3), so the run does, with its text
+            return Err(outside_rates(m, op, values)?);
         }
         (Kind::Plain(Class::Int), Kind::Plain(Class::Int)) => Kind::Plain(Class::Int),
         (Kind::Money(cur), Kind::Plain(Class::Num(..)))
@@ -230,6 +235,15 @@ fn add_sub(
     }
     .map_err(num_stop)?;
     finish(m, q, kind)
+}
+
+/// `<a> <op> <b>: rate arithmetic outside L §3.3`, load's text (refcore's `_arith`), met at
+/// run where an operand's unit only the run knows (a leg of unit any; pick P66, #134).
+fn outside_rates(m: &Reality, op: Op, (a, b): (&Value, &Value)) -> Result<Stop, Stop> {
+    Ok(refuse_load(
+        Load::Unit,
+        format!("{}: rate arithmetic outside L §3.3", shown(m, a, op, b)?),
+    ))
 }
 
 /// `rates of different periods: <a> <op> <b>` (L §3.3; refcore's `arith`).
@@ -359,10 +373,9 @@ fn rate_mul(
         (_, Kind::Plain(Class::Rate(u))) => (u, lhs),
         _ => return Ok(None),
     };
-    // load refuses rate arithmetic outside L §3.3; refcore's run computes what load missed
-    let refused = || Stop::NotBuilt("rate arithmetic outside L §3.3 met at run");
+    // load refuses rate arithmetic outside L §3.3, so the run does, with its text
     if op != Op::Mul {
-        return Err(refused());
+        return Err(outside_rates(m, op, (a, b))?);
     }
     let q = lhs.q.checked_mul(&rhs.q).map_err(num_stop)?;
     if scalar(&other.kind) {
@@ -372,7 +385,7 @@ fn rate_mul(
     let one_period = matches!(duration.terms(), [(base, 1)]
         if matches!(base.as_str(), "day" | "month" | "quarter" | "year"));
     if !one_period {
-        return Err(refused());
+        return Err(outside_rates(m, op, (a, b))?);
     }
     let (unit, factor) = lhs.unit(m)?.mul(&rhs.unit(m)?).map_err(unit_stop)?;
     if !unit.is_one() {
