@@ -21,7 +21,7 @@ use super::plan::{Amount, End, Inst, LegVal, Status, invariant, qty_value};
 use super::point::At;
 use super::state::{ALL, Change, Ent, Group, Progress, Taken, Today, Walk, WalkObs};
 use crate::base::{Code, Refusal, Run, Warn};
-use crate::eval::{Collected, Engine, Entry};
+use crate::eval::{Collected, Engine, Entry, GUARDED};
 use crate::hole::{Hole, spread};
 use crate::model::Reality;
 use crate::num::Num;
@@ -128,8 +128,9 @@ impl Engine {
             match step {
                 Ok(()) => {}
                 // a walk cut short past the counted depth resumes where it stopped; one
-                // given up for a cell outside it (`Guarded`) is walked on when read again
-                Err(stop @ (Stop::Deep | Stop::Guarded)) => return Err(stop),
+                // given up for a cell outside it (`GUARDED`) is walked on when read again
+                Err(Stop::Deep) => return Err(Stop::Deep),
+                Err(Stop::NotBuilt(why)) if why == GUARDED => return Err(Stop::NotBuilt(why)),
                 Err(stop) => {
                     let failed = self.walk_mut(id)?;
                     let on = match failed.progress {

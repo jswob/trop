@@ -525,7 +525,7 @@ fn tagged(stop: Stop, chain: &[String]) -> Stop {
         Stop::Refused(refusal) if refusal.is_member() => Stop::Refused(refusal),
         Stop::Refused(refusal) if chain.is_empty() => Stop::Refused(refusal.shown()),
         Stop::Refused(refusal) => Stop::Refused(refusal.of_member(chain.join("."))),
-        other @ (Stop::NotBuilt(_) | Stop::Deep | Stop::Guarded) => other,
+        other @ (Stop::NotBuilt(_) | Stop::Deep) => other,
     }
 }
 

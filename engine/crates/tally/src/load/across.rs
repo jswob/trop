@@ -290,7 +290,7 @@ pub(super) fn check_literal_ranges(m: &Reality, files: &Files) -> Result<(), Sto
                 Err(Stop::Refused(r)) if r.code() == Code::EngineInvariant => {
                     return Err(Stop::Refused(r));
                 }
-                Err(stop @ (Stop::Deep | Stop::Guarded)) => return Err(stop),
+                Err(Stop::Deep) => return Err(Stop::Deep),
                 Ok(()) | Err(Stop::Refused(_) | Stop::NotBuilt(_)) => {}
             }
         }

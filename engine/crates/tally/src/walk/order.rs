@@ -79,11 +79,14 @@ impl Engine {
             .get(&(move_id.to_owned(), day))
             .cloned()
             .ok_or_else(|| invariant("a decision act with no instance due"))?;
-        let cycle = m.graph.order_groups.iter().find(|g| {
-            g.contains(move_id) && g.iter().any(|q| q != move_id && self.is_due(id, q, day))
-        });
-        if let Some(group) = cycle {
-            return self.run_cycle(m, id, group, day, at);
+        for group in &m.graph.order_groups {
+            if group.contains(move_id)
+                && group
+                    .iter()
+                    .any(|q| q != move_id && self.is_due(id, q, day))
+            {
+                return self.run_cycle(m, id, group, day, at);
+            }
         }
         if insts.len() > 1 && mv.decl.ties.is_some() {
             insts = self.tie_order(m, id, mv, insts, day)?;
@@ -189,7 +192,7 @@ impl Engine {
         }
         let tied: BTreeSet<&str> = group
             .iter()
-            .filter(|q| m.moves.get(q).is_some_and(|mq| mq.decl.ties.is_some()))
+            .filter(|q| m.moves.get(q).is_some_and(has_ties))
             .map(String::as_str)
             .collect();
         let (order, bad) = cycle_ranks(&members, &tied, &m.graph.written_order, day)?;
@@ -1028,8 +1031,17 @@ fn set_of(after: &[BTreeSet<usize>], x: usize) -> Result<&BTreeSet<usize>, Stop>
 /// Two cycle members in the order no read gives: by move id, then by their place in the
 /// list, each move's in its `ties by` order (refcore's `rank`). L §5.14.2.
 fn rank_cmp(members: &[CycleMember], a: usize, b: usize) -> Ordering {
-    let id = |x: usize| members.get(x).map(|mx| mx.inst.move_id.as_str());
-    (id(a), a).cmp(&(id(b), b))
+    (member_move(members, a), a).cmp(&(member_move(members, b), b))
+}
+
+/// The move of the cycle member at `x`. L §5.14.2.
+fn member_move(members: &[CycleMember], x: usize) -> Option<&str> {
+    members.get(x).map(|mx| mx.inst.move_id.as_str())
+}
+
+/// Whether a move states a `ties by`. L §5.14.2.
+fn has_ties(mv: &MoveInfo) -> bool {
+    mv.decl.ties.is_some()
 }
 
 /// The decision moves of event kind `kind` or a subkind. L §5.14.1 (`reads K`).
@@ -1044,11 +1056,15 @@ fn decisions_of(m: &Reality, kind: &str) -> Vec<String> {
 
 /// Every instance of keyed place `section`. L §5.14.1 (`reads x` of a keyed place).
 fn things_of(m: &Reality, section: &str) -> Vec<String> {
-    m.things
-        .entries()
-        .filter(|(_, t)| t.place.as_ref().is_some_and(|keys| keys.place == section))
-        .map(|(_, t)| t.name.clone())
-        .collect()
+    let mut out = Vec::new();
+    for (_, t) in m.things.entries() {
+        if let Some(keys) = &t.place
+            && keys.place == section
+        {
+            out.push(t.name.clone());
+        }
+    }
+    out
 }
 
 /// Whether a refusal is a run-time one, which a read that may fail takes as unknown there;

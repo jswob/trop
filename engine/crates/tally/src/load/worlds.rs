@@ -222,7 +222,7 @@ fn load_worlds(files: &[Split], joint: Option<&Joint>) -> Result<Worlds, Stop> {
                 worlds.refused_asks.extend(declared_asks(&file.text));
                 worlds.refused.insert((*id).to_owned(), refusal);
             }
-            Err(stop @ (Stop::NotBuilt(_) | Stop::Deep | Stop::Guarded)) => return Err(stop),
+            Err(stop @ (Stop::NotBuilt(_) | Stop::Deep)) => return Err(stop),
         }
     }
     Ok(worlds)
@@ -443,7 +443,7 @@ mod tests {
     fn refusal(files: &[(&str, &str)]) -> String {
         match loaded(files) {
             Err(Stop::Refused(r)) => r.text(),
-            Ok(_) | Err(Stop::NotBuilt(_) | Stop::Deep | Stop::Guarded) => String::new(),
+            Ok(_) | Err(Stop::NotBuilt(_) | Stop::Deep) => String::new(),
         }
     }
 

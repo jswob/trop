@@ -191,7 +191,7 @@ mod tests {
         .expect("it parses");
         match load(files) {
             Err(Stop::Refused(r)) => r.text(),
-            Ok(_) | Err(Stop::NotBuilt(_) | Stop::Deep | Stop::Guarded) => String::new(),
+            Ok(_) | Err(Stop::NotBuilt(_) | Stop::Deep) => String::new(),
         }
     }
 

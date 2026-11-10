@@ -271,7 +271,7 @@ fn finish(outcome: Result<Answered, Stop>) -> Result<Answer, NotImplemented> {
             counters: answered.counts,
         }),
         Err(Stop::Refused(refusal)) => Ok(Answer::refused(&refusal)),
-        Err(Stop::NotBuilt(_) | Stop::Deep | Stop::Guarded) => Err(NotImplemented),
+        Err(Stop::NotBuilt(_) | Stop::Deep) => Err(NotImplemented),
     }
 }
 
@@ -322,7 +322,7 @@ pub fn reprint_in(
     }) {
         Ok(printed) => printed,
         Err(Stop::Refused(refusal)) => return Ok(Answer::refused(&refusal)),
-        Err(Stop::NotBuilt(_) | Stop::Deep | Stop::Guarded) => return Err(NotImplemented),
+        Err(Stop::NotBuilt(_) | Stop::Deep) => return Err(NotImplemented),
     };
     let mut lines = Vec::new();
     for (name, text) in &printed {

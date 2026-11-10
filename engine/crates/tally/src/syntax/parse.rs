@@ -28,12 +28,6 @@ pub enum Stop {
     /// work stack and the outermost read replays once it is computed (R-16, E §3.2). The
     /// parser never stops so; no read's answer is ever this.
     Deep,
-    /// A walk that a leg's read started inside a cell's evaluation needed a cell still being
-    /// computed outside it: the walk's attempt is given up there, nothing past that point is
-    /// kept, and the read takes the walk up to the leg's day instead (E §3.2, evaluation is
-    /// demand-driven; E §4.2 step 5; refcore's `guarded_walk`). The parser never stops so;
-    /// no read's answer is ever this.
-    Guarded,
 }
 
 impl From<Refusal> for Stop {
@@ -57,7 +51,7 @@ impl Stop {
     pub fn naming(self, id: &str) -> Stop {
         match self {
             Stop::Refused(refusal) => Stop::Refused(refusal.reaching(Reach::Id(id.to_owned()))),
-            Stop::NotBuilt(_) | Stop::Deep | Stop::Guarded => self,
+            Stop::NotBuilt(_) | Stop::Deep => self,
         }
     }
 }

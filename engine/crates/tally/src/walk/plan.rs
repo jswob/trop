@@ -744,7 +744,11 @@ impl Engine {
         let day = inst.day.as_ref().and_then(Dated::day);
         // the cut its body is measured at: a later version's, for a re-measure (E §5 step 1),
         // else min(t, K)
-        let cut = at_cut.unwrap_or_else(|| day.map_or(tctx.cut, |d| d.min(tctx.cut)));
+        let cut = match (at_cut, day) {
+            (Some(c), _) => c,
+            (None, Some(d)) => d.min(tctx.cut),
+            (None, None) => tctx.cut,
+        };
         if let Some(legs) = self.refused_places(m, mv, inst, self.timeline_ctx(inst.law, cut))? {
             inst.legs = legs;
         }

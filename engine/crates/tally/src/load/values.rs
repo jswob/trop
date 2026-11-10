@@ -202,7 +202,7 @@ fn converted(
 ) -> Result<(), Stop> {
     match convert(&loader.m, value, ty, target, of) {
         Ok(_) | Err(Stop::NotBuilt(_)) => Ok(()),
-        Err(stop @ (Stop::Refused(_) | Stop::Deep | Stop::Guarded)) => Err(stop),
+        Err(stop @ (Stop::Refused(_) | Stop::Deep)) => Err(stop),
     }
 }
 
@@ -218,7 +218,7 @@ fn converted_value(
     match convert(&loader.m, value, ty, target, of) {
         Ok(Converted::Value(v)) => Ok(Some(v)),
         Ok(Converted::Hole(_)) | Err(Stop::NotBuilt(_)) => Ok(None),
-        Err(stop @ (Stop::Refused(_) | Stop::Deep | Stop::Guarded)) => Err(stop),
+        Err(stop @ (Stop::Refused(_) | Stop::Deep)) => Err(stop),
     }
 }
 
@@ -236,7 +236,7 @@ pub(super) fn row_file(files: &BTreeMap<String, String>, row: &Row) -> Result<St
 pub(super) fn at_row(stop: Stop, file: &str, line: u32) -> Stop {
     match stop {
         Stop::Refused(refusal) => Stop::Refused(refusal.placed(At::Line(file.to_owned(), line))),
-        other @ (Stop::NotBuilt(_) | Stop::Deep | Stop::Guarded) => other,
+        other @ (Stop::NotBuilt(_) | Stop::Deep) => other,
     }
 }
 

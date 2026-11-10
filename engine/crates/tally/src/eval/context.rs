@@ -273,6 +273,13 @@ impl Default for Layers {
 /// or in a walk whose timeline sets none, which then reads each combination's (L §5.5).
 pub(crate) const UNSET_AXIS: &str = "an axis read outside the combinations its ask fans out over";
 
+/// The stop of a walk that a leg's read started inside a cell's evaluation, and that needed a
+/// cell still being computed outside it: the walk's attempt is given up there, nothing past
+/// that point is kept, and the read takes the walk up to the leg's day instead (E §3.2,
+/// evaluation is demand-driven; E §4.2 step 5; refcore's `guarded_walk`). Only the read that
+/// started the walk meets it; a run that met it anywhere else would print not implemented.
+pub(crate) const GUARDED: &str = "a walk given up for a cell still being computed outside it";
+
 /// The node kinds the walk reads from: whatever they reach, the timeline depends on
 /// (E §3.3).
 const WALKERS: [NodeKind; 6] = [

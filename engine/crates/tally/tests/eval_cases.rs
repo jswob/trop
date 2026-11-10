@@ -201,7 +201,6 @@ whole = 2
             Err(Stop::Refused(r)) => format!("! {}", r.text()),
             Err(Stop::NotBuilt(what)) => format!("~ {what}"),
             Err(Stop::Deep) => "~ deep".to_owned(),
-            Err(Stop::Guarded) => "~ guarded".to_owned(),
         };
         let mut out = vec![format!("{label} {shown}")];
         let mut entries: Vec<String> = engine

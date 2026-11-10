@@ -313,7 +313,7 @@ impl Engine {
             let legs = match built {
                 Ok(id) => self.walk(id).map(|w| w.bad_legs.clone()),
                 Err(Stop::Refused(_)) => Ok(BTreeMap::new()),
-                Err(Stop::Guarded) => Err(Stop::NotBuilt(
+                Err(Stop::NotBuilt(why)) if why == super::GUARDED => Err(Stop::NotBuilt(
                     "a leg's refusal over the walk's axes whose walk needs a cell still being \
                      computed",
                 )),

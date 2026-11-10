@@ -140,7 +140,7 @@ impl Engine {
             if self.guarded.as_ref().is_some_and(|g| g.contains(&id)) {
                 // the walk a leg's read started inside this cell needs it: that walk's
                 // attempt is given up (refcore's `outer_hit`)
-                return Err(Stop::Guarded);
+                return Err(Stop::NotBuilt(super::GUARDED));
             }
             return Err(refuse(
                 Run::Cycle,
@@ -188,7 +188,7 @@ impl Engine {
             return result;
         }
         self.active.remove(&id);
-        if result == Err(Stop::Guarded) {
+        if result == Err(Stop::NotBuilt(super::GUARDED)) {
             // a walk's attempt given up: nothing it reached is kept (refcore's journal)
             return result;
         }

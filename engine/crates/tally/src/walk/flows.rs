@@ -18,7 +18,7 @@ use super::point::At;
 use super::reads::{expr_text, refuse};
 use super::state::{ALL, Change, Ent, Progress, Walk};
 use crate::base::{Refusal, Run};
-use crate::eval::{Collected, Ctx, Engine, Entry, Env, UNSET_AXIS};
+use crate::eval::{Collected, Ctx, Engine, Entry, Env, GUARDED, UNSET_AXIS};
 use crate::hole::{Hole, spread};
 use crate::model::{KeyVal, MoveInfo, Reality, Span, Value};
 use crate::num::Num;
@@ -487,7 +487,7 @@ impl Engine {
                 Ok(w) => Some(w),
                 Err(Stop::Refused(_)) => return Ok(None),
                 // the walk needs a cell this read is inside: the walk up to the leg's day
-                Err(Stop::Guarded) => {
+                Err(Stop::NotBuilt(why)) if why == GUARDED => {
                     self.prefixes.blocked.insert(ctx.cut, self.active.clone());
                     self.prefix_walk(m, ctx.cut, day)?
                 }
