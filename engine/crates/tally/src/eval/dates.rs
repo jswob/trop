@@ -82,7 +82,11 @@ impl Engine {
         if let Value::Window(_) = v {
             return lifted(m, f, &[v]);
         }
-        let period = period_arg((call.args.first(), &v), name)?;
+        if v == Value::Never && matches!(f, DateFn::Year | DateFn::Month | DateFn::Quarter) {
+            // refcore's `_of` reads its argument through `date_of`
+            return Err(refuse(Run::None, format!("never in {name}")));
+        }
+        let period = period_arg(m, (call.args.first(), &v), name)?;
         if f == DateFn::End {
             return Ok(Value::Day(period.end()));
         }
@@ -105,7 +109,7 @@ impl Engine {
         if a.as_hole().is_some() || b.as_hole().is_some() {
             return hole_of(&[a.as_hole(), b.as_hole()]);
         }
-        let period = period_arg((call.args.first(), &a), "day_of")?;
+        let period = period_arg(m, (call.args.first(), &a), "day_of")?;
         let anchored = || {
             refuse(
                 Run::Domain,
@@ -179,6 +183,12 @@ impl Engine {
         }
         let name = call.name.as_str();
         let first = date_or_window(a, name)?;
+        if matches!(name, "add_days" | "add_months" | "add_years")
+            && let Some(w) = as_window(&b)
+        {
+            // a count that is an interval, where one value is needed (L §4.4)
+            return Ok(Value::Hole(imprecise(m, w, name)?));
+        }
         match name {
             "days_between" => lifted(m, DateFn::Between, &[first, date_or_window(b, name)?]),
             "add_days" => lifted(m, DateFn::AddDays(step_count(m, &b, 1)?), &[first]),
@@ -208,7 +218,7 @@ impl Engine {
         }
         let from = date_or_window(a, "overlap_days")?;
         let to = date_or_window(b, "overlap_days")?;
-        let period = period_arg((call.args.get(2), &k), "overlap_days")?;
+        let period = period_arg(m, (call.args.get(2), &k), "overlap_days")?;
         if let (Value::Window(w), Value::Window(_)) = (&from, &to) {
             return Ok(Value::Hole(imprecise(m, w, "overlap_days of two windows")?));
         }
@@ -406,8 +416,13 @@ fn window_weekday(w: &Window) -> Result<Value, Stop> {
 
 /// A period argument: a period, a day as its day period, or a four-digit figure written as
 /// the argument, which the checker read as a year (refcore's `period_arg`, and the `_year`
-/// mark of `tdate_or_period`). L §2.1, §4.2.
-pub(super) fn period_arg((arg, v): (Option<&Expr>, &Value), what: &str) -> Result<Period, Stop> {
+/// mark of `tdate_or_period`); another value, `never` or a window among them, is refcore's
+/// `LOAD-UNIT <what> is <v>, not a period`, met at run. L §2.1, §4.2, §8.4.
+pub(super) fn period_arg(
+    m: &Reality,
+    (arg, v): (Option<&Expr>, &Value),
+    what: &str,
+) -> Result<Period, Stop> {
     if let Value::Period(p) = v {
         return Ok(*p);
     }
@@ -420,7 +435,11 @@ pub(super) fn period_arg((arg, v): (Option<&Expr>, &Value), what: &str) -> Resul
     if *v == Value::None {
         return Err(refuse(Run::None, format!("a value is none here: {what}")));
     }
-    Err(not_typed())
+    let shown = v.text(m).map_err(num_stop)?;
+    Err(refuse_load(
+        Load::Unit,
+        format!("{what} is {shown}, not a period"),
+    ))
 }
 
 /// A date argument, or a window: a day, a day period's day (refcore's `as_date_or_iv`).

@@ -832,15 +832,22 @@ pub(super) fn binop(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Result<Val
 }
 
 /// Key literals in arithmetic, resolved as load resolved them (L §2.5): by the key, thing or
-/// code beside them, else, moved by an offset, as a key of the one index that holds them
-/// (L §4.2 Key arithmetic).
+/// code beside them, or the index of a key arithmetic left outside it; else, moved by an
+/// offset (a number, or an interval of them, L §4.4), as a key of the one index that holds
+/// them (L §4.2 Key arithmetic).
 fn arith_words(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Result<(Value, Value), Stop> {
     let (a, b) = resolve_pair(m, lhs.clone(), rhs.clone())?;
-    let offset = matches!(op, Op::Add | Op::Sub) && matches!(b, Value::Number(_));
+    let offset =
+        matches!(op, Op::Add | Op::Sub) && matches!(b, Value::Number(_) | Value::Window(_));
     match (&a, &b) {
         (Value::Word(word), _) if offset => Ok((held_key(m, word)?, b)),
-        (Value::Word(_), _) | (_, Value::Word(_)) => Err(invariant(
-            "a key literal in arithmetic no position resolves: load refuses it (LOAD-UNIT)",
+        (Value::OutKey { index, .. }, Value::Word(word)) => {
+            let key = literal_key(m, &Lit::Name(word.clone()), &Domain::Index(index.clone()))?
+                .ok_or_else(lacks_at_run)?;
+            Ok((a.clone(), Value::of_key(&key)))
+        }
+        (Value::Word(_), _) | (_, Value::Word(_)) => Err(Stop::NotBuilt(
+            "a key literal in arithmetic no position resolves, met at run",
         )),
         _ => Ok((a, b)),
     }
@@ -865,8 +872,8 @@ fn held_key(m: &Reality, word: &str) -> Result<Value, Stop> {
         [_, _, ..] => Err(Stop::NotBuilt(
             "a key literal more indexes hold, moved by an offset",
         )),
-        [] => Err(invariant(
-            "a key literal in key arithmetic no index holds: load refuses it (LOAD-KEY)",
+        [] => Err(Stop::NotBuilt(
+            "a key literal in key arithmetic no index holds, met at run",
         )),
     }
 }

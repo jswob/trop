@@ -22,7 +22,7 @@
 
 use super::aggregate::{Brings, Candidate, Kept, Step, Way};
 use super::arith::{Test, compare};
-use super::bindings::{day_of_binding, reads_name, span_reads};
+use super::bindings::{date_of, reads_name, span_reads};
 use super::expr::hole_of;
 use super::state::{Ctx, Engine, Env, a_day, invariant, num_stop, refuse};
 use super::windows::{End, as_window, decided_order, imprecise, one_read, window_end};
@@ -664,7 +664,10 @@ impl Engine {
             if matches!(day, Value::Hole(_) | Value::None) {
                 return Ok(false);
             }
-            return Ok(day_of_binding(&day)? > ctx.cut);
+            // a window is the binding's hole, as a hole day is
+            return Ok(
+                date_of(m, &day, "the day of a binding")?.is_ok_and(|day_on| day_on > ctx.cut)
+            );
         }
         let Some(over) = &bind.over else {
             return Ok(false);

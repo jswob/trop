@@ -18,7 +18,7 @@ use super::keys::Given;
 use super::state::{
     Ctx, Engine, Env, invariant, not_typed, num_stop, refuse, refuse_load, wrong_type,
 };
-use super::windows::{End, imprecise};
+use super::windows::{End, as_window, imprecise};
 use crate::base::{Load, Run};
 use crate::model::{
     Class, Code, Domain, KeyVal, Number, Reality, Shown, Unit, Value, currency_unit, money_num,
@@ -177,6 +177,11 @@ impl Engine {
         if some_hole {
             return hole_of(&[x.as_hole(), k.as_hole()]);
         }
+        if let Some(w) = as_window(&x).or_else(|| as_window(&k)) {
+            // an interval where one value is needed (L §4.4), as `round` of one is
+            return Ok(Value::Hole(imprecise(m, w, "pow")?));
+        }
+        let not_number = || Stop::NotBuilt("pow of a value that is no number, met at run");
         let (base, unit) = if let Value::Money(money) = &x {
             (
                 money_num(m, money).map_err(num_stop)?,
@@ -185,10 +190,10 @@ impl Engine {
         } else if let Value::Number(n) = &x {
             (n.q.clone(), n.unit())
         } else {
-            return Err(not_typed());
+            return Err(not_number());
         };
         let Value::Number(power) = &k else {
-            return Err(not_typed());
+            return Err(not_number());
         };
         if !power.q.is_integer() {
             return Err(Stop::NotBuilt(
@@ -230,7 +235,11 @@ impl Engine {
             ));
         }
         let Value::Key(KeyVal::Thing(name)) = v else {
-            return Err(not_typed());
+            // a movement bound over an event kind has no lifespan (L §5.7): load lets it
+            // through, and neither the spec nor refcore gives its run's text
+            return Err(Stop::NotBuilt(
+                "lifespan of a value that is no thing, met at run",
+            ));
         };
         let thing = m
             .things
@@ -271,6 +280,10 @@ impl Engine {
         if v == Value::None {
             return Err(refuse(Run::None, "a value is none here: abs".to_owned()));
         }
+        if let Some(w) = as_window(&v) {
+            // an interval where one value is needed (L §4.4), as `round` of one is
+            return Ok(Value::Hole(imprecise(m, w, "abs")?));
+        }
         if let Value::Money(money) = &v {
             if money.is_negative() {
                 return Ok(Value::Money(money.checked_neg().map_err(num_stop)?));
@@ -278,7 +291,9 @@ impl Engine {
             return Ok(v);
         }
         let Value::Number(n) = v else {
-            return Err(not_typed());
+            return Err(Stop::NotBuilt(
+                "abs of a value that is no number, met at run",
+            ));
         };
         if n.q.is_negative() {
             return Ok(Value::Number(Number {

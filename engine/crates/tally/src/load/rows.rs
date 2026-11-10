@@ -20,8 +20,8 @@ use crate::model::{
     RuleVer, pattern_text,
 };
 use crate::syntax::{
-    BandRow as WrittenBand, Gap, Instant, Item, ItemForm, Known, Row as WrittenRow, RowKey, Rule,
-    Section, Stop,
+    BandRow as WrittenBand, Domain as WrittenDomain, Expr, Gap, Instant, Item, ItemForm, Known,
+    Lit, Row as WrittenRow, RowKey, Rule, Section, Stop,
 };
 use crate::time::Day;
 use std::collections::BTreeMap;
@@ -455,7 +455,9 @@ impl Loader {
                     }
                     let lo = self.pattern_key(&KeyLit::Lit(a.clone()), bind, None, file, line)?;
                     let hi = self.pattern_key(&KeyLit::Lit(b.clone()), bind, None, file, line)?;
-                    if matches!((&lo, &hi), (KeyVal::Value(_), _) | (_, KeyVal::Value(_))) {
+                    if matches!((&lo, &hi), (KeyVal::Value(_), _) | (_, KeyVal::Value(_)))
+                        || !whole_steps(&bind.node.domain)
+                    {
                         // refcore stops on it (2.1.6: `Num` has no order)
                         return Err(Stop::NotBuilt(
                             "a row's key range over a stepped range's values not integers",
@@ -651,6 +653,20 @@ fn set_sids(id: &str, rows: &mut [Row]) {
             }
         }
         row.sid = sid;
+    }
+}
+
+/// Whether a bind's values are integers as written, so a row's key range orders them as
+/// keys: any domain but a range, a range with no step, or one whose first end and step are
+/// whole figures of no unit (L §4.6 step 1, §5.6).
+fn whole_steps(domain: &WrittenDomain) -> bool {
+    let WrittenDomain::Range(parts) = domain else {
+        return true;
+    };
+    let whole = |e: &Expr| matches!(e, Expr::Lit(Lit::Num(n)) if n.whole && n.unit.is_none());
+    match parts.as_ref() {
+        (_, _, None) => true,
+        (first, _, Some(step)) => whole(first) && whole(step),
     }
 }
 

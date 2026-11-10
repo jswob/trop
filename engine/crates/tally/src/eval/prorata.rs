@@ -23,7 +23,7 @@ use super::builtin::rounding_mode;
 use super::expr::{hole_of, literal};
 use super::extremes::{Scored, pick_extreme};
 use super::keys::literal_key;
-use super::state::{Ctx, Engine, Env, invariant, not_typed, num_stop, refuse, refuse_load};
+use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load};
 use super::years::year_literal;
 use crate::base::{Load, Run};
 use crate::hole::Hole;
@@ -55,7 +55,10 @@ impl Amount {
             });
         }
         let Value::Number(n) = v else {
-            return Err(not_typed());
+            // an interval among them (L §4.4), whose answer here no section gives
+            return Err(Stop::NotBuilt(
+                "a prorata amount that is no number, met at run",
+            ));
         };
         Ok(Amount {
             q: n.q.clone(),

@@ -14,9 +14,10 @@
 //! cut is no value.
 
 use super::keys::{lacks_at_run, literal_key};
-use super::state::{Ctx, Engine, Env, a_day, invariant, not_typed, refuse, wrong_type};
+use super::state::{Ctx, Engine, Env, a_day, invariant, num_stop, refuse, refuse_load, wrong_type};
+use super::windows::imprecise;
 use super::years::span_year;
-use crate::base::Run;
+use crate::base::{Load, Run};
 use crate::hole::Hole;
 use crate::model::{Class, Domain, IndexInfo, KeyVal, Number, Reality, Span, Thing, Value, World};
 use crate::syntax::{
@@ -115,7 +116,10 @@ impl Engine {
                 if let Value::Hole(h) = day {
                     return empty_or_unknown(bind, &things, h);
                 }
-                When::Day(day_of_binding(&day)?)
+                match date_of(m, &day, "the day of a binding")? {
+                    Ok(day_on) => When::Day(day_on),
+                    Err(h) => return empty_or_unknown(bind, &things, h),
+                }
             }
             (None, Some(over)) => match self.span_value(m, over, env, ctx)? {
                 Err(h) => return empty_or_unknown(bind, &things, h),
@@ -225,7 +229,7 @@ fn index_values(
 ///
 /// # Errors
 ///
-/// `NotBuilt` for a key the index lacks, which load refuses first.
+/// `ENGINE-INVARIANT` for a key the index lacks, which load refuses first (`LOAD-KEY`).
 fn list_values(
     m: &Reality,
     lits: &[Lit],
@@ -269,23 +273,32 @@ fn list_value(lit: &Lit) -> Value {
     }
 }
 
-/// A binding's day: a day, or a day period's (refcore's `date_of`). L §5.7.
-pub(super) fn day_of_binding(v: &Value) -> Result<Day, Stop> {
+/// A day read where `what` needs one (refcore's `date_of`): a day, or a day period's; a
+/// window is the hole of its imprecision (L §4.4); `none` and `never` are `RUN-NONE` (L §3.1);
+/// another value is refcore's `LOAD-UNIT <what> is <v>, not a date`, met at run. L §5.7, §8.4.
+pub(super) fn date_of(m: &Reality, v: &Value, what: &str) -> Result<Result<Day, Hole>, Stop> {
     if let Value::Day(d) = v {
-        return a_day(*d);
+        return a_day(*d).map(Ok);
+    }
+    if let Value::Window(w) = v {
+        return imprecise(m, w, what).map(Err);
+    }
+    if *v == Value::None {
+        return Err(refuse(Run::None, format!("a value is none here: {what}")));
+    }
+    if *v == Value::Never {
+        return Err(refuse(Run::None, format!("never in {what}")));
     }
     if let Value::Period(p) = v
         && p.kind() == crate::time::PeriodKind::Day
     {
-        return Ok(p.start());
+        return Ok(Ok(p.start()));
     }
-    if *v == Value::None {
-        return Err(refuse(
-            Run::None,
-            "a value is none here: the day of a binding".to_owned(),
-        ));
-    }
-    Err(not_typed())
+    let shown = v.text(m).map_err(num_stop)?;
+    Err(refuse_load(
+        Load::Unit,
+        format!("{what} is {shown}, not a date"),
+    ))
 }
 
 /// A span's first day: a day, a period's start (refcore's `span_start`). L §5.7.

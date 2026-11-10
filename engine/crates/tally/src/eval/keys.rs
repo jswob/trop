@@ -81,23 +81,25 @@ impl Engine {
         let mut keys = Vec::with_capacity(binds.len());
         let mut holes: Vec<Hole> = Vec::new();
         for (bind, written) in binds.iter().zip(given) {
-            let key = match written {
-                Given::Value(Value::Hole(h)) => {
+            let made = match written {
+                Given::Value(Value::Hole(h)) => Err(h),
+                at_range if bind.domain == Domain::Range => {
+                    self.range_key(m, bind, at_range, (&earlier, ctx))?
+                }
+                Given::Value(v) => Ok(to_key(m, item, &v, &bind.domain)?),
+                Given::Literal(lit) => {
+                    Ok(literal_key(m, &lit, &bind.domain)?.ok_or_else(lacks_at_run)?)
+                }
+            };
+            let key = match made {
+                Ok(key) => key,
+                Err(h) => {
+                    // a later range end that reads this key reads its hole (L §8.1)
+                    if ranged {
+                        earlier.bind(&bind.var, Value::Hole(h.clone()), Some(bind.domain.clone()));
+                    }
                     holes.push(h);
                     continue;
-                }
-                at_range if bind.domain == Domain::Range => {
-                    match self.range_key(m, bind, at_range, (&earlier, ctx))? {
-                        Ok(made) => made,
-                        Err(h) => {
-                            holes.push(h);
-                            continue;
-                        }
-                    }
-                }
-                Given::Value(v) => to_key(m, item, &v, &bind.domain)?,
-                Given::Literal(lit) => {
-                    literal_key(m, &lit, &bind.domain)?.ok_or_else(lacks_at_run)?
                 }
             };
             check_key(m, &key, &bind.domain, (ctx.cut, ctx.world))?;

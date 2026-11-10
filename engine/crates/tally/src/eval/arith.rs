@@ -432,8 +432,9 @@ pub fn int_of(m: &Reality, v: &Value) -> Result<i64, Stop> {
             "a value is none here: an integer argument".to_owned(),
         ));
     }
-    Err(invariant(
-        "an integer argument that isn't a number: load's types refuse it first (LOAD-UNIT)",
+    // an interval reaches here where its caller takes no window (L §4.4)
+    Err(Stop::NotBuilt(
+        "an integer argument that isn't a number, met at run",
     ))
 }
 

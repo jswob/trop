@@ -14,7 +14,7 @@
 //! computes it.
 
 use super::arith::{Kind, Op, Operand, arith, finish, int_of, operand};
-use super::bindings::{Values, day_of_binding};
+use super::bindings::{Values, date_of};
 use super::expr::literal;
 use super::keys::Given;
 use super::state::{
@@ -28,7 +28,7 @@ use crate::model::{
     BindInfo, Class, KeyVal, Number, RangeValue, Reality, Shown, Unit, Value, currency,
     currency_id, num_money,
 };
-use crate::num::Num;
+use crate::num::{Num, NumError};
 use crate::syntax::{Domain as Written, Expr, Lit, Stop};
 use crate::time::Day;
 use core::cmp::Ordering;
@@ -150,10 +150,20 @@ impl Engine {
             last.as_hole(),
             by.as_ref().and_then(Value::as_hole),
         ];
-        Ok(match spread(&holes) {
-            Some(h) => Err(h),
-            None => Ok((first, last, by)),
-        })
+        if let Some(h) = spread(&holes) {
+            return Ok(Err(h));
+        }
+        for end in [&first, &last] {
+            // a range end is one value: a window is the hole of its imprecision (L §4.4),
+            // `never` no day (L §3.1; refcore's `date_of(z, 'a range end')`)
+            if let Some(w) = as_window(end) {
+                return Ok(Err(imprecise(m, w, "a range end")?));
+            }
+            if *end == Value::Never {
+                return Err(refuse(Run::None, "never in a range end".to_owned()));
+            }
+        }
+        Ok(Ok((first, last, by)))
     }
 
     /// A key given at the position of `bind`, a stepped range: the value, written or computed,
@@ -306,8 +316,19 @@ impl Stepped {
         let mut value = self.lo.clone();
         while value.compare(&self.stop).map_err(num_stop)? != Ordering::Greater {
             let next = value.checked_add(&self.step).map_err(num_stop)?;
-            let member = finish(m, value, self.kind.clone())
-                .map_err(|_| Stop::NotBuilt("a money range stepped finer than its minor unit"))?;
+            let member = match &self.kind {
+                // a value between two minor units: refcore has no form for it yet
+                Kind::Money(cur) => match num_money(m, &value, *cur) {
+                    Ok(money) => Value::Money(money),
+                    Err(NumError::Domain) => {
+                        return Err(Stop::NotBuilt(
+                            "a money range stepped finer than its minor unit",
+                        ));
+                    }
+                    Err(other) => return Err(num_stop(other)),
+                },
+                Kind::Plain(_) => finish(m, value, self.kind.clone())?,
+            };
             out.push((member, None));
             value = next;
         }
@@ -398,14 +419,11 @@ pub(crate) fn value_key(m: &Reality, v: &Value) -> Result<Option<KeyVal>, Stop> 
             {
                 return Ok(Some(KeyVal::Int(int)));
             }
-            let class = if let Class::Rate(period) = &n.class {
-                Class::Rate(period.clone())
-            } else {
-                Class::Num(unit, Shown::Plain)
-            };
+            // a rate is keyed as the number of its unit it equals, as a written `2 %/year`
+            // is: a key at a stepped range is tested by its number (L §2.5, P65)
             Value::Number(Number {
                 q: n.q.clone(),
-                class,
+                class: Class::Num(unit, Shown::Plain),
             })
         }
         Value::Bool(_)
@@ -552,7 +570,7 @@ fn days_past(m: &Reality, start: Day, end: &Value, by: Option<&Value>) -> Result
     let Some(by) = by else {
         return Err(Stop::NotBuilt("a range of days with no step"));
     };
-    let last = day_of_binding(end)?;
+    let last = range_last(m, end)?;
     if start > last {
         return Ok(false);
     }
@@ -605,7 +623,7 @@ fn range_holds(m: &Reality, (first, last, by): &Ends, key: &Value) -> Result<boo
         let Value::Day(day) = key else {
             return Ok(false);
         };
-        let last = day_of_binding(last)?;
+        let last = range_last(m, last)?;
         let mut current = *start;
         while current < *day && current <= last {
             current = day_step(m, current, by)?;
@@ -622,7 +640,7 @@ fn day_range(
     start: Day,
     (end, step): (&Value, &Value),
 ) -> Result<Vec<(Value, Option<Hole>)>, Stop> {
-    let last = day_of_binding(end)?;
+    let last = range_last(m, end)?;
     let mut out = Vec::new();
     let mut current = start;
     while current <= last {
@@ -630,6 +648,13 @@ fn day_range(
         current = day_step(m, current, step)?;
     }
     Ok(out)
+}
+
+/// A day range's last day (refcore's `date_of(z, 'a range end')`): `never` is `RUN-NONE`; a
+/// window `range_ends` made the read's hole first. L §5.6.
+fn range_last(m: &Reality, end: &Value) -> Result<Day, Stop> {
+    date_of(m, end, "a range end")?
+        .map_err(|_| invariant("a window as a range end, which `range_ends` makes a hole first"))
 }
 
 /// A day of a range moved by its step (refcore's `date_arith` in `range_values`): a step

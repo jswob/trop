@@ -137,7 +137,7 @@ impl Engine {
         if of.as_hole().is_some() || nth.as_hole().is_some() {
             return hole_of(&[of.as_hole(), nth.as_hole()]);
         }
-        let period = period_arg((call.args.first(), &of), "last_business")?;
+        let period = period_arg(m, (call.args.first(), &of), "last_business")?;
         let count = whole_of(m, &nth)?;
         let text = count.integer_text().ok_or_else(|| invariant("a count"))?;
         if count.is_negative() || count.is_zero() {
@@ -171,7 +171,7 @@ impl Engine {
         if let Some(h) = spread(&[month.as_hole(), dom.as_hole(), word.as_hole()]) {
             return Ok(Value::Hole(h));
         }
-        let period = period_arg((call.args.first(), &month), "schedule")?;
+        let period = period_arg(m, (call.args.first(), &month), "schedule")?;
         let start = period.start();
         // a day number past the month's, 64 bits or not, is none
         let Some(day) = whole_of(m, &dom)?
