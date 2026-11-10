@@ -214,6 +214,11 @@ impl Engine {
         let Some((id, Priced::PerUnit(pc, per))) = m.clause_mode(price) else {
             return Err(invariant("a place priced by no price load let by"));
         };
+        // a clause keyed by a kind of units (`num PLN/u`, its unit `$u`) takes the unit of the
+        // key it is read at, the position's, when that kind holds it (L §3.2; pick P61, #130)
+        let keyed_by_unit = per.starts_with('$')
+            && matches!(first_domain(m, &id), Some(Domain::Kind(kind)) if unit_in(m, Some(u), &kind));
+        let per = if keyed_by_unit { u } else { per.as_str() };
         if pc != cur || per != u {
             return Err(Stop::Refused(Refusal::new(
                 Code::Load(Load::Unit),
@@ -243,7 +248,12 @@ impl Engine {
             (Vec::new(), format!("{pid}[]"))
         };
         let p = self.price_at(m, (pid, given), (valued.day, last), ctx)?;
-        priced_value(m, (read, valued), p, &figure, u)
+        if matches!(p, Value::Hole(_) | Value::None) {
+            return priced_value(m, (read, valued), p, &figure, u);
+        }
+        // load saw the price's currency; the run sees its unit at the position's key
+        // (L §3.2: a price read at another key than the quantity's is refused, RUN-DOMAIN)
+        per_unit_price(m, &p, (valued.place.as_str(), read.currency.as_str(), u)).map(Ok)
     }
 
     /// A place's own price clause read on the value's day: at the place's thing, or at its

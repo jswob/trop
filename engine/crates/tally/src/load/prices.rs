@@ -407,6 +407,19 @@ impl Checker {
                     "value by last({id}): last reads an input (L §4.6)"
                 )));
             }
+            // a price keyed by unit is a num CUR/u in the value's own currency, as the
+            // written form is (L §5.10; pick P61, #130)
+            if !ty.as_ref().is_some_and(|t| per_unit_of(t, cur)) {
+                let shown = ty.as_ref().map_or_else(|| "?".to_owned(), Ty::show);
+                let named = if by.last {
+                    format!("last({id})")
+                } else {
+                    (*id).to_owned()
+                };
+                return Err(uerr(format!(
+                    "value by {named}: the price is {shown}, not num {cur}/u"
+                )));
+            }
             self.edge(&scope.item, item_node(id, *kind), Rel::Explicit);
             return Ok(());
         }
