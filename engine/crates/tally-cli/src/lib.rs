@@ -97,6 +97,26 @@ pub fn run(args: &[OsString], files: &[u8]) -> Output {
     command(args, files)
 }
 
+/// [`run`] with `fault` planted in the engine, its twin for the fixture of `ENGINE-INVARIANT`
+/// (INTERFACE §4, pick P8): a `run` command answered by [`tally::run_faulted`]; any other
+/// command as [`run`] answers it, since only a run walks. Only with the `fault-injection`
+/// feature.
+#[cfg(feature = "fault-injection")]
+#[must_use]
+pub fn run_faulted(args: &[OsString], files: &[u8], fault: tally::Fault) -> Output {
+    let Some(Command::Run { paths, request }) = parse(args) else {
+        return command(args, files);
+    };
+    let Ok(table) = table(files) else {
+        return bad_table();
+    };
+    let given = resolve(&paths, &table);
+    match tally::run_faulted(given, &request, fault) {
+        Ok(answer) => answered(&answer),
+        Err(tally::NotImplemented) => not_implemented("run"),
+    }
+}
+
 /// A command with the counters' line after its output on standard error: the run's counts,
 /// or all 0 for a command that runs no engine (D4-8).
 #[cfg(feature = "counters")]

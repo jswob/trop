@@ -56,9 +56,40 @@ struct Seen {
     memo: Memo,
     /// How each ask's engine reads a written projection's common case (E §4.3, P §2.3).
     lows: Lows,
+    /// The fault planted in the run while it waits for its day (INTERFACE §4).
+    #[cfg(feature = "fault-injection")]
+    plant: Option<crate::walk::Fault>,
     /// The engines' counts together.
     #[cfg(feature = "counters")]
     counts: crate::Counters,
+}
+
+/// How a run's engines compute: keeping their cells as `memo` says and reading a written
+/// projection's common case as `lows` says, the fences' forms or their plain twins (E §3.2,
+/// §4.3, P §2.3, §3.3); with the `fault-injection` feature, the fault planted in the run
+/// (INTERFACE §4).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct How {
+    /// How the engines keep their cells across law dates.
+    pub memo: Memo,
+    /// How the engines read a written projection's common case.
+    pub lows: Lows,
+    /// The fault planted, if any.
+    #[cfg(feature = "fault-injection")]
+    pub fault: Option<crate::walk::Fault>,
+}
+
+impl How {
+    /// The engines computing as `memo` and `lows` say, no fault planted.
+    #[must_use]
+    pub fn new(memo: Memo, lows: Lows) -> How {
+        How {
+            memo,
+            lows,
+            #[cfg(feature = "fault-injection")]
+            fault: None,
+        }
+    }
 }
 
 impl Answered {
@@ -93,7 +124,7 @@ pub(crate) enum Turn {
 ///
 /// `REQ-ASK` for the first ask the run names that the reality lacks, before any is answered
 /// (E §11); a load refusal met at run; `NotBuilt` for a construct not built yet.
-pub fn answer(m: &Reality, asks: &Asks, days: Days, how: (Memo, Lows)) -> Result<Answered, Stop> {
+pub fn answer(m: &Reality, asks: &Asks, days: Days, how: How) -> Result<Answered, Stop> {
     let turns = match asks {
         Asks::Every => {
             let mut all: Vec<(&str, usize)> = m
@@ -142,7 +173,7 @@ pub(crate) fn answer_turns(
     turns: &[Turn],
     warnings: Vec<(Warn, String)>,
     days: Days,
-    how: (Memo, Lows),
+    how: How,
 ) -> Result<Answered, Stop> {
     let mut out = Vec::new();
     // each world's asks share what their engines gather, apart from another world's
@@ -164,6 +195,13 @@ pub(crate) fn answer_turns(
                 }
             }
             Turn::Line(line) => out.push(line.clone()),
+        }
+        // the fault is planted once per run, whichever world's walk met its day
+        #[cfg(feature = "fault-injection")]
+        if worlds.iter().any(|w| w.seen.plant.is_none()) {
+            for w in &mut worlds {
+                w.seen.plant = None;
+            }
         }
     }
     // the realities' warnings, then each world's walks' own, the base's first, each once
@@ -203,13 +241,15 @@ struct World {
 impl World {
     /// The world of reality `m` before any of its asks, its engines keeping cells as `memo`
     /// says and reading a projection's common case as `lows` says.
-    fn of(m: &Reality, (memo, lows): (Memo, Lows)) -> World {
+    fn of(m: &Reality, how: How) -> World {
         World {
             seen: Seen {
                 warnings: Vec::new(),
                 booked: BTreeMap::new(),
-                memo,
-                lows,
+                memo: how.memo,
+                lows: how.lows,
+                #[cfg(feature = "fault-injection")]
+                plant: how.fault,
                 #[cfg(feature = "counters")]
                 counts: crate::Counters::default(),
             },
@@ -335,6 +375,8 @@ fn ask_lines(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<
             .with_how((seen.memo, seen.lows))
             .for_ask(ask)
             .with_booked(core::mem::take(&mut seen.booked));
+        #[cfg(feature = "fault-injection")]
+        engine.plant.clone_from(&seen.plant);
         let v = model_ctx(m, &mut engine, (None, cut))
             .and_then(|ctx| engine.value(m, known, &Env::empty(), ctx));
         gather(seen, &mut engine);
@@ -351,6 +393,8 @@ fn ask_lines(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<
         .with_how((seen.memo, seen.lows))
         .for_ask(ask)
         .with_booked(core::mem::take(&mut seen.booked));
+    #[cfg(feature = "fault-injection")]
+    engine.plant.clone_from(&seen.plant);
     let out = ask_body(m, ask, &mut engine, cut);
     gather(seen, &mut engine);
     let lines = out?;
@@ -389,6 +433,8 @@ fn gather(seen: &mut Seen, engine: &mut Engine) {
         }
     }
     seen.booked = engine.take_booked();
+    #[cfg(feature = "fault-injection")]
+    seen.plant.clone_from(&engine.plant);
     #[cfg(feature = "counters")]
     seen.counts.merge(engine.counters());
 }

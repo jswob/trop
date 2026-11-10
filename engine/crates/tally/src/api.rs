@@ -11,7 +11,7 @@
 //! (R-49).
 
 use crate::NotImplemented;
-use crate::ask::{Answered, answer, answer_worlds, report_lines};
+use crate::ask::{Answered, How, answer, answer_worlds, report_lines};
 use crate::base::Refusal;
 use crate::eval::Memo;
 use crate::load::{Loaded, load_run, split_files};
@@ -133,7 +133,7 @@ pub fn run_in(
     disk: &BTreeMap<&str, &[u8]>,
     request: &Request,
 ) -> Result<Answer, NotImplemented> {
-    answered(given, disk, request, (Memo::Classes, Lows::Tree))
+    answered(given, disk, request, How::new(Memo::Classes, Lows::Tree))
 }
 
 /// Loads a reality's files and answers with what load prints when no ask is answered: its one
@@ -167,7 +167,7 @@ pub fn run_with_memo(
     request: &Request,
     memo: Memo,
 ) -> Result<Answer, NotImplemented> {
-    answered(given, &BTreeMap::new(), request, (memo, Lows::Tree))
+    answered(given, &BTreeMap::new(), request, How::new(memo, Lows::Tree))
 }
 
 /// [`run`] with each ask's engine reading a written projection's common case as `lows` says:
@@ -184,7 +184,32 @@ pub fn run_with_lows(
     request: &Request,
     lows: Lows,
 ) -> Result<Answer, NotImplemented> {
-    answered(given, &BTreeMap::new(), request, (Memo::Classes, lows))
+    answered(
+        given,
+        &BTreeMap::new(),
+        request,
+        How::new(Memo::Classes, lows),
+    )
+}
+
+/// [`run`] with `fault` planted, its twin for the fixture of `ENGINE-INVARIANT`, which only an
+/// engine bug prints (E §9, §11; INTERFACE §4, pick P8): the same answer but where the fault
+/// breaks an invariant. Only with the `fault-injection` feature.
+///
+/// # Errors
+///
+/// As [`run`].
+#[cfg(feature = "fault-injection")]
+pub fn run_faulted(
+    given: Vec<Given>,
+    request: &Request,
+    fault: crate::walk::Fault,
+) -> Result<Answer, NotImplemented> {
+    let how = How {
+        fault: Some(fault),
+        ..How::new(Memo::Classes, Lows::Tree)
+    };
+    answered(given, &BTreeMap::new(), request, how)
 }
 
 /// The run's answer, its members read from the files given, then from `disk`; a joint model's
@@ -193,7 +218,7 @@ fn answered(
     given: Vec<Given>,
     disk: &BTreeMap<&str, &[u8]>,
     request: &Request,
-    how: (Memo, Lows),
+    how: How,
 ) -> Result<Answer, NotImplemented> {
     let (asks, days) = (&request.asks, request.days);
     finish(loaded(given, disk, request.pin).and_then(|loaded| {

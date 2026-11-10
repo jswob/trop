@@ -12,16 +12,15 @@
 //! others, each world under it seen with the layers over it hidden; one whose worlds are on two
 //! stacks stops the run `NotBuilt` (refcore's cross evaluation).
 
-use super::answer::{Answered, Turn, answer_turns, no_ask};
+use super::answer::{Answered, How, Turn, answer_turns, no_ask};
 use super::register::warning_lines;
 use crate::Asks;
 use crate::base::Warn;
-use crate::eval::Memo;
 use crate::load::{Loaded, Worlds};
 use crate::model::Reality;
 use crate::oracle::Days;
 use crate::syntax::{Ask, AskBody, PinForm, Stop};
-use crate::walk::{Lows, invariant};
+use crate::walk::invariant;
 use std::collections::{BTreeMap, BTreeSet};
 
 /// The lines a run of a reality with scenarios prints (refcore's `run_worlds`, its asks): each
@@ -32,12 +31,7 @@ use std::collections::{BTreeMap, BTreeSet};
 ///
 /// `REQ-ASK` for the first id the run names that no world's ask has (E §11); `NotBuilt` for an
 /// ask evaluated in two worlds, a load refusal met at run, and a construct not built yet.
-pub fn answer_worlds(
-    w: &Worlds,
-    asks: &Asks,
-    days: Days,
-    how: (Memo, Lows),
-) -> Result<Answered, Stop> {
+pub fn answer_worlds(w: &Worlds, asks: &Asks, days: Days, how: How) -> Result<Answered, Stop> {
     if let Asks::Named(ids) = asks
         && let Some(id) = ids.iter().find(|id| !knows(w, id))
     {

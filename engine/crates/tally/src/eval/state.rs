@@ -355,6 +355,10 @@ pub struct Engine {
     /// How a written projection's common case is read: fence F5's tree, or its plain twin,
     /// the projection's own walk (E §4.3, P §2.3).
     pub(crate) lows: crate::walk::Lows,
+    /// The fault planted in the run, while it waits for its day: none once planted, and
+    /// always none without it (INTERFACE §4, pick P8).
+    #[cfg(feature = "fault-injection")]
+    pub(crate) plant: Option<crate::walk::Fault>,
     /// Fence F5's trees in the timeline in force (E §4.3, P §2.3; `walk/lows.rs`).
     pub(crate) trees: crate::walk::Trees,
     /// The item whose expression is evaluated now: a projection's holder, whose dependents
@@ -438,6 +442,8 @@ impl Engine {
             walk_warnings: Vec::new(),
             proj_walks: BTreeMap::new(),
             lows: crate::walk::Lows::Tree,
+            #[cfg(feature = "fault-injection")]
+            plant: None,
             trees: crate::walk::Trees::default(),
             holder: None,
             observed: BTreeMap::new(),

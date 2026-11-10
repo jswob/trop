@@ -28,6 +28,18 @@ use crate::num::Num;
 use crate::syntax::{Sign, Stop};
 use crate::time::Day;
 
+/// A fault planted in a run, so a test sees the refusal an engine bug gives, `ENGINE-INVARIANT`
+/// with its evidence (E §9, §11; INTERFACE §4, pick P8): only with the `fault-injection`
+/// feature, which only builds with debug assertions have (R-51).
+#[cfg(feature = "fault-injection")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Fault {
+    /// On the first day a walk books a leg whole, the day's close adds one minor unit (0.01)
+    /// to that day's conservation sum before invariant 1 is checked, once per run (E §9 item 1;
+    /// refcore's twin, `codes/m1_fault.py`).
+    Conservation,
+}
+
 /// Which ends of a leg a booking books, and whether the leg counts whole for conservation
 /// (refcore's `book_leg` `ends`, and its pads). E §6.1, E §9 item 1.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -680,11 +692,35 @@ impl Engine {
         Ok(true)
     }
 
+    /// The planted fault, once per run: on the first day a walk that is no projection's books
+    /// a leg whole, one minor unit (0.01) added to the day's conservation sum in its first unit,
+    /// so invariant 1 refuses as on an engine bug (refcore's twin, `codes/m1_fault.py`; INTERFACE
+    /// §4). E §9 item 1, §11.
+    #[cfg(feature = "fault-injection")]
+    fn plant_fault(&mut self, id: usize) -> Result<(), Stop> {
+        let Some(Fault::Conservation) = self.plant else {
+            return Ok(());
+        };
+        let walk = self.walk_mut(id)?;
+        if walk.proj.is_some() {
+            return Ok(());
+        }
+        let Some(sum) = walk.conserved.values_mut().next() else {
+            return Ok(());
+        };
+        let minor = Num::ratio(1, 100).map_err(crate::eval::num_stop)?;
+        *sum = sum.checked_add(&minor).map_err(crate::eval::num_stop)?;
+        self.plant = None;
+        Ok(())
+    }
+
     /// The day's close: conservation, `WARN-NEGATIVE` at the accounts and cash it touched, and
     /// `RUN-LIFESPAN` for a place whose lifespan ends holding something (refcore's
     /// `close_day`). E §4.2 steps 4–5, E §9 items 1 and 6.
     fn close_day(&mut self, m: &Reality, id: usize, day: Day) -> Result<(), Stop> {
         let at = At::close(day);
+        #[cfg(feature = "fault-injection")]
+        self.plant_fault(id)?;
         let walk = self.walk_mut(id)?;
         for (unit, sum) in &walk.conserved {
             if !sum.is_zero() {

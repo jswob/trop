@@ -21,6 +21,8 @@ mod counters;
 mod invariant;
 mod oracle;
 
+#[cfg(feature = "fault-injection")]
+pub use api::run_faulted;
 pub use api::{
     Answer, Asks, Given, Pin, Request, Source, load_report, reprint, reprint_in, run, run_in,
     run_with_lows, run_with_memo,
@@ -30,6 +32,8 @@ pub use counters::Counters;
 #[cfg(feature = "counters")]
 pub(crate) use counters::Unit;
 pub use oracle::Days;
+#[cfg(feature = "fault-injection")]
+pub use walk::Fault;
 
 /// The foundations every other module stands on: the catalogue of codes (L §8, E §11) and
 /// the refusal that carries one. The module's code is its files under `base/`.
@@ -209,6 +213,8 @@ pub mod walk {
     mod value;
 
     pub use agenda::{Act, Mv, Reading, endings, reading_point};
+    #[cfg(feature = "fault-injection")]
+    pub use day::Fault;
     pub use day::{Broke, Ends};
     pub(crate) use lows::Trees;
     pub use lows::{Lows, RangeMinimum};
@@ -259,7 +265,7 @@ pub mod ask {
     mod worlds;
 
     pub(crate) use answer::date_of;
-    pub use answer::{Answered, answer};
+    pub use answer::{Answered, How, answer};
     pub use register::{register_lines, warning_lines};
     pub use worlds::{answer_worlds, report_lines};
 }
