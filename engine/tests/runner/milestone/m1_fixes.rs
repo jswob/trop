@@ -172,7 +172,14 @@ mod tests {
     /// the written order (`p_a*`, `before`, `after`, `RUN-ORDER`), `ties by` (`p_b*`, `RUN-TIE`),
     /// `next` (`p_c*`, `HOLE-NOTYET`), bindings over decisions (`p_d*`, `RUN-FUTURE`,
     /// `LOAD-READS`), hole days (`p_e*`); a decision's keyed and unkeyed instance read by id
-    /// and by name (`p_g*`, `agent_projid_*`); the builder's probes (`b_*`).
+    /// and by name (`p_g*`, `agent_projid_*`); the builder's probes (`b_*`). T's cycles that run,
+    /// for MB4's missed (`t_*`): two members a written `before` or `after` orders, a third after
+    /// them by its read, one apart (`t_c1`, `t_c1b`); unordered, refused beside one that runs
+    /// (`t_c2`); a 3-ring broken and not (`t_c3`, `t_c3b`); `when`s true, false, staying off and
+    /// refused (`t_c4*`); two days (`t_c5*`); keyed members with and without `ties by` (`t_c6*`,
+    /// `t_c7*`); the decisions' day outside [S, E], on the cut, under scenarios and projections
+    /// (`t_c8*`); bindings over decisions, uncertain ones and `RUN-FUTURE` (`t_c9*`); legs that
+    /// state their own days (`t_c10`).
     #[test]
     fn m1_fixes_g10_decisions() {
         group_holds("fixes-g10");

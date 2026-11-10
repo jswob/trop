@@ -627,3 +627,31 @@ fixes/g10/b_nb3_model	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes
 fixes/g10/b_notyet_base	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/b_notyet_base.tally			G10
 fixes/g10/b_order_base	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/b_order_base.tally			G10
 fixes/g10/b_rbase_base	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/b_rbase_base.tally			G10
+fixes/g10/t_c1	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c1.tally			G10
+fixes/g10/t_c1b	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c1b.tally			G10
+fixes/g10/t_c2	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c2.tally			G10
+fixes/g10/t_c3	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c3.tally			G10
+fixes/g10/t_c3b	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c3b.tally			G10
+fixes/g10/t_c4	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c4.tally			G10
+fixes/g10/t_c4b	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c4b.tally			G10
+fixes/g10/t_c4c	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c4c.tally			G10
+fixes/g10/t_c4d	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c4d.tally			G10
+fixes/g10/t_c5	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c5.tally			G10
+fixes/g10/t_c5b	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c5b.tally			G10
+fixes/g10/t_c5c	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c5c.tally			G10
+fixes/g10/t_c6	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c6.tally			G10
+fixes/g10/t_c6b	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c6b.tally			G10
+fixes/g10/t_c6c	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c6c.tally			G10
+fixes/g10/t_c7	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c7.tally			G10
+fixes/g10/t_c7b	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c7b.tally			G10
+fixes/g10/t_c8a	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c8a.tally			G10
+fixes/g10/t_c8b	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c8b.tally			G10
+fixes/g10/t_c8c	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c8c.tally			G10
+fixes/g10/t_c8d	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c8d.tally			G10
+fixes/g10/t_c8e	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c8e.tally			G10
+fixes/g10/t_c8h	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c8h.tally			G10
+fixes/g10/t_c9	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c9.tally			G10
+fixes/g10/t_c9b	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c9b.tally			G10
+fixes/g10/t_c10	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c10.tally			G10
+fixes/g10/t_c8f_with_t_c8f_s	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c8f.tally engine/tests/m1/fixes/g10/t_c8f_s.tally			G10
+fixes/g10/t_c8g_with_t_c8g_s	fixes-g10		engine/tests/m1/fixes/g10	engine/tests/m1/fixes/g10/t_c8g.tally engine/tests/m1/fixes/g10/t_c8g_s.tally			G10
