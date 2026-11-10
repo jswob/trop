@@ -2,9 +2,10 @@
 //! issue #108). Every ask of T's corpora (`properties/kernel.corpus`, 312 records;
 //! `properties/m1.corpus`, 648), of every fix vector of `m1/vectors.refcore` (groups
 //! `fixes-…`) and of F5's own realities (`m1/lows/`, G9's `tally-cli/tests/lows/` copied) runs
-//! through `tally::run_with_lows` twice, with `Lows::Tree` (fence F5's tree of running sums,
-//! P §2.3, as `run` reads) and with `Lows::Walk` (the projection's own walk, its plain twin,
-//! E §4.3), and the two print the same lines. A difference is the fence's fault
+//! through `tally_cli::tally::run_with_lows` twice (the CLI re-exports the library, pick
+//! P59), with `Lows::Tree` (fence F5's tree of running sums, P §2.3, as `run` reads) and with
+//! `Lows::Walk` (the projection's own walk, its plain twin, E §4.3), and the two print the
+//! same lines. A difference is the fence's fault
 //! (`run_with_lows`'s doc). Since F5 answers T's projection reads, T's vectors reach the twin
 //! only where the tree declines; this target reaches it on every read, so the twin's mutants
 //! are T's to catch (R-84 counts T's tests at gate 8; `mutants-local --next` counts this
@@ -15,8 +16,8 @@
 
 #[cfg(test)]
 mod tests {
-    use tally::walk::Lows;
-    use tally::{Asks, Days, Given, NotImplemented, Pin, Request, run_with_lows};
+    use tally_cli::tally::walk::Lows;
+    use tally_cli::tally::{Asks, Days, Given, NotImplemented, Pin, Request, run_with_lows};
     use tally_runner::corpus::{KERNEL_CORPUS, netstrings, records};
     use tally_runner::kernel::vectors;
     use tally_runner::laws_m1::M1_CORPUS;

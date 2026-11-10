@@ -116,3 +116,10 @@ test = false
 name = "m1_properties"
 path = "milestone/m1_properties.rs"
 test = false
+
+# M1: fence F5 on T's realities, the tree against its twin through the CLI's re-export of the
+# library (picks P57, P59; MILESTONE-M1.md row 9)
+[[test]]
+name = "m1_lows"
+path = "milestone/m1_lows.rs"
+test = false
