@@ -9,6 +9,11 @@ publish.workspace = true
 [dependencies]
 tally-cli = { workspace = true }
 
+# The planted fault of `tally_cli::run_faulted` (INTERFACE §4; the coordinator's pick P8), for
+# `m1_invariant` alone (`required-features`), so no other build of the runner has it.
+[features]
+fault-injection = ["tally-cli/fault-injection"]
+
 [lints]
 workspace = true
 
@@ -123,3 +128,11 @@ test = false
 name = "m1_lows"
 path = "milestone/m1_lows.rs"
 test = false
+
+# M1: the ENGINE-INVARIANT fixture under the planted fault (codes/m1_invariant.refcore; rules
+# turn 2's R1; MILESTONE-M1.md row 3)
+[[test]]
+name = "m1_invariant"
+path = "milestone/m1_invariant.rs"
+test = false
+required-features = ["fault-injection"]

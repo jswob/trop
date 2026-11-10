@@ -15,7 +15,13 @@ pub fn run_record(record: &Record) -> Run {
 /// is read as a line saying so, which no test accepts.
 pub fn run_args(args: &[String], files: &[u8]) -> Run {
     let args: Vec<OsString> = args.iter().map(OsString::from).collect();
-    let output = tally_cli::run(&args, files);
+    read_output(tally_cli::run(&args, files))
+}
+
+/// One run's output read as `run.py` reads it: standard output then standard error, as
+/// UTF-8, with `\r\n` and `\r` read as `\n` (also `m1_invariant`'s, through
+/// `tally_cli::run_faulted`).
+pub fn read_output(output: tally_cli::Output) -> Run {
     let mut bytes = output.stdout;
     bytes.extend_from_slice(&output.stderr);
     let out = match String::from_utf8(bytes) {
