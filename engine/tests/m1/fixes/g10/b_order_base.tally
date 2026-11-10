@@ -1,0 +1,53 @@
+model decide
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's decision-order fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+input holidays: calendar
+
+input horizon: date
+
+input lag: int
+
+input month_start: date
+
+input save_cap: money PLN
+
+input spend_cap: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move save: transfers
+  on add_business(month_start, lag, holidays)
+  reads konto
+  leg cash from konto to savings amount min(save_cap, bal(konto))
+
+move spend: transfers
+  on add_business(month_start, lag, holidays)
+  reads konto
+  leg cash from konto to world amount min(spend_cap, bal(konto))
+
+ask q_decide: bal(konto, horizon), bal(savings, horizon)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  horizon = 2026-12-31 "the card"
+  lag = 10 "the card"
+  month_start = 2026-04-01 "the card"
+  save_cap = 100.00 PLN "the card"
+  spend_cap = 50.00 PLN "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"

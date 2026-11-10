@@ -1,0 +1,12 @@
+scenario ends over life
+  tally 2
+  from 2026-07-01
+
+version ends_v
+  cite card
+  known 2026-01-01
+  replace persons + [ola] lives 1980-01-01..2026-09-30
+
+ask b1: bal(konto, 2026-06-30) in ends
+
+ask l1: lifespan(ola).to in ends

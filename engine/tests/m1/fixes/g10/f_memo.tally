@@ -1,0 +1,55 @@
+model lifememo
+  tally 2
+  on 2026-12-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented): a def reading lifespan(k), read at two booking cuts"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind persons: parties
+
+index mos = month 2026-01..2026-06
+
+input dom: int
+
+input a: money PLN
+
+input b: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+def ends: date = lifespan(ola).to
+
+def amt: money PLN = if lifespan(ola).to == never then a else b
+
+move pay[mo in mos]: transfers
+  on day_of(mo, dom)
+  leg cash from world to konto amount amt
+
+move pay2[mo in mos]: transfers
+  on day_of(mo, dom)
+  leg cash from world to konto amount if lifespan(ola).to == never then a else b
+
+ask q2: flows(pay2[m], 2026-01-01..2026-06-30) for m in mos
+
+ask q3: flows(pay[m], 2026-01-01..2026-06-30) for m in mos
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ola] lives 1980-01-01..
+  dom = 15 "the card"
+  a = 10.00 PLN "the card"
+  b = 1.00 PLN "the card"
+  opening[konto] = 0 PLN at 2026-01-01 start "the card"
+
+version later
+  cite card
+  known 2026-03-01
+  replace persons + [ola] lives 1980-01-01..2026-11-30

@@ -17,9 +17,17 @@ mod tests {
     use tally_runner::m1::VECTORS;
 
     /// The groups this target tests, one `#[test]` each.
-    const GROUPS: [&str; 9] = [
-        "fixes-g1", "fixes-g2", "fixes-g3", "fixes-g4", "fixes-g5", "fixes-g6", "fixes-g7",
-        "fixes-g8", "fixes-g9",
+    const GROUPS: [&str; 10] = [
+        "fixes-g1",
+        "fixes-g2",
+        "fixes-g3",
+        "fixes-g4",
+        "fixes-g5",
+        "fixes-g6",
+        "fixes-g7",
+        "fixes-g8",
+        "fixes-g9",
+        "fixes-g10",
     ];
 
     /// Runs every vector of `group` on the engine and holds it to refcore's run.
@@ -154,6 +162,20 @@ mod tests {
     #[test]
     fn m1_fixes_g9_the_tree_and_its_twin() {
         group_holds("fixes-g9");
+    }
+
+    /// G10's (`m1/fixes/g10/`): the review's B1 (`lifespan(k)` read before `from` under a
+    /// scenario that changes it, `f_min`, `f_dec`, `f_life`, `agent_life_*`; held for #121
+    /// where the engine lists E §9 item 3's `before from:`) and B2 (`at lifespan(p).to` for a
+    /// living p refuses only that value, `RUN-NONE`, `f_law`; closed, `f_law2`); the `lifespan`
+    /// memo by cut (`f_memo`); the decision cycle's forms the review checked against refcore:
+    /// the written order (`p_a*`, `before`, `after`, `RUN-ORDER`), `ties by` (`p_b*`, `RUN-TIE`),
+    /// `next` (`p_c*`, `HOLE-NOTYET`), bindings over decisions (`p_d*`, `RUN-FUTURE`,
+    /// `LOAD-READS`), hole days (`p_e*`); a decision's keyed and unkeyed instance read by id
+    /// and by name (`p_g*`, `agent_projid_*`); the builder's probes (`b_*`).
+    #[test]
+    fn m1_fixes_g10_decisions() {
+        group_holds("fixes-g10");
     }
 
     /// A price of another currency is refused, never a figure in the wrong unit (L 5.10: `by p`

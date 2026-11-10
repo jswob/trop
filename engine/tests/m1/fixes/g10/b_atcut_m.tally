@@ -1,0 +1,48 @@
+model atcut
+  tally 2
+  on 2026-06-01
+  start 2026-01-01
+  end 2026-12-31
+  note "a refused re-measure's places (invented)"
+
+source card "the builder's card (invented)"
+
+unit PLN: currency minor 0.01
+
+input dest: key accounts
+
+input total: money PLN
+
+input parts: int
+
+input pay_day: date
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on pay_day
+  leg cash from world to dest amount total / parts
+
+ask q: bal(konto, 2026-03-01), bal(savings, 2026-03-01), bal(konto, 2026-05-31), bal(savings, 2026-05-31)
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  dest = konto "the card"
+  total = 100.00 PLN "the card"
+  parts = 2 "the card"
+  pay_day = 2026-02-01 "the card"
+  opening[konto] = 0 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+
+version v2
+  cite card
+  governs always
+  known 2026-04-01
+  replace dest = savings "the card"
+  replace parts = 0 "the card"

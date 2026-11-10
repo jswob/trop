@@ -1,0 +1,95 @@
+model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input e1: date
+
+input e2: date
+
+input e3: date
+
+input e4: date
+
+input s0: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move p1: pays
+  on d1
+  leg cash from world to konto amount a
+
+move p2: pays
+  on d3
+  leg cash from world to konto amount b
+
+move p3: transfers
+  on next(pays, e2).day
+  leg cash from world to savings amount next(pays, e2).cash.amount
+
+ask q: next(pays, e2).day, next(pays, e2).cash.amount, next(pays, e4).day
+
+ask q3: bal(savings, 2026-12-31), flows(p3, 2026-01-01..2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  d2 = 2026-04-15 "the card"
+  d3 = 2026-05-20 "the card"
+  e1 = 2026-04-10 "the card"
+  e2 = 2026-04-16 "the card"
+  e3 = 2026-04-20 "the card"
+  e4 = 2026-05-21 "the card"
+  s0 = 2026-01-01 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"

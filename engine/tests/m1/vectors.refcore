@@ -74852,4 +74852,5412 @@ version card_2026
   cut 2026-04-15
 warning: WARN-UNREAD input off is read by nothing
 warning: WARN-UNREAD place other is read by nothing
+,14:fixes/g10/p_a2,9:fixes-g10,14:run p_a2.tally,1542:10:p_a2.tally,1522:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move sweep: transfers
+  on d2
+  reads savings
+  leg cash from savings to sink amount bal(savings)
+
+move save: transfers
+  on d1
+  reads konto
+  leg cash from konto to savings amount min(cap[k2], bal(konto))
+
+ask q: bal(konto, 2026-06-30), bal(savings, 2026-06-30), bal(sink, 2026-06-30)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  d2 = 2026-04-15 "the card"
+  d3 = 2026-05-20 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,454:q: (200.00 PLN, 0.00 PLN, 300.00 PLN)
+  cut 2026-03-01
+warning: WARN-UNREAD input a is read by nothing
+warning: WARN-UNREAD input b is read by nothing
+warning: WARN-UNREAD input big is read by nothing
+warning: WARN-UNREAD input d3 is read by nothing
+warning: WARN-UNREAD input keep is read by nothing
+warning: WARN-UNREAD input prio is read by nothing
+warning: WARN-UNREAD input ten is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,14:fixes/g10/p_a3,9:fixes-g10,14:run p_a3.tally,1571:10:p_a3.tally,1551:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move save: transfers
+  on d1
+  when cap[k1] > big
+  reads konto
+  leg cash from konto to savings amount min(cap[k2], bal(konto))
+
+move spend: transfers
+  on d2
+  reads konto
+  leg cash from konto to sink amount min(cap[k2], bal(konto))
+
+ask q: bal(konto, 2026-06-30), bal(savings, 2026-06-30), bal(sink, 2026-06-30)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  d2 = 2026-04-15 "the card"
+  d3 = 2026-05-20 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,404:q: (200.00 PLN, 0.00 PLN, 300.00 PLN)
+  cut 2026-03-01
+warning: WARN-UNREAD input a is read by nothing
+warning: WARN-UNREAD input b is read by nothing
+warning: WARN-UNREAD input d3 is read by nothing
+warning: WARN-UNREAD input keep is read by nothing
+warning: WARN-UNREAD input prio is read by nothing
+warning: WARN-UNREAD input ten is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,14:fixes/g10/p_a4,9:fixes-g10,14:run p_a4.tally,1543:10:p_a4.tally,1523:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move save: transfers
+  on d1
+  reads konto
+  leg cash from konto to savings amount min(cap[k2], bal(konto))
+
+move spend: transfers
+  on d2
+  reads konto
+  leg cash from konto to sink amount bal(konto) - keep
+
+ask q: bal(konto, 2026-06-30), bal(savings, 2026-06-30), bal(sink, 2026-06-30)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  d2 = 2026-04-16 "the card"
+  d3 = 2026-05-20 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,517:q: (refused: RUN-NEG negative amount -100.00 PLN for leg cash of spend, 300.00 PLN, refused: RUN-NEG negative amount -100.00 PLN for leg cash of spend)
+  cut 2026-03-01
+warning: WARN-UNREAD input a is read by nothing
+warning: WARN-UNREAD input b is read by nothing
+warning: WARN-UNREAD input big is read by nothing
+warning: WARN-UNREAD input d3 is read by nothing
+warning: WARN-UNREAD input prio is read by nothing
+warning: WARN-UNREAD input ten is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,15:fixes/g10/p_a4b,9:fixes-g10,15:run p_a4b.tally,1544:11:p_a4b.tally,1523:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move save: transfers
+  on d1
+  reads konto
+  leg cash from konto to savings amount min(cap[k2], bal(konto))
+
+move spend: transfers
+  on d2
+  reads konto
+  leg cash from konto to sink amount bal(konto) - keep
+
+ask q: bal(konto, 2026-06-30), bal(savings, 2026-06-30), bal(sink, 2026-06-30)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  d2 = 2026-04-15 "the card"
+  d3 = 2026-05-20 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,594:q: (refused: RUN-ORDER decisions save and spend read each other on 2026-04-15, refused: RUN-ORDER decisions save and spend read each other on 2026-04-15, refused: RUN-ORDER decisions save and spend read each other on 2026-04-15)
+  cut 2026-03-01
+warning: WARN-UNREAD input a is read by nothing
+warning: WARN-UNREAD input b is read by nothing
+warning: WARN-UNREAD input big is read by nothing
+warning: WARN-UNREAD input d3 is read by nothing
+warning: WARN-UNREAD input prio is read by nothing
+warning: WARN-UNREAD input ten is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,14:fixes/g10/p_a6,9:fixes-g10,14:run p_a6.tally,1570:10:p_a6.tally,1550:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move save: transfers
+  on d1
+  reads konto
+  before spend
+  leg cash from konto to savings amount min(cap[k2], bal(konto))
+
+move spend: transfers
+  on d2
+  reads konto
+  leg cash from konto to sink amount max(0 PLN, bal(konto) - keep)
+
+ask q: bal(konto, 2026-06-30), bal(savings, 2026-06-30), bal(sink, 2026-06-30)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  d2 = 2026-04-15 "the card"
+  d3 = 2026-05-20 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,403:q: (200.00 PLN, 300.00 PLN, 0.00 PLN)
+  cut 2026-03-01
+warning: WARN-UNREAD input a is read by nothing
+warning: WARN-UNREAD input b is read by nothing
+warning: WARN-UNREAD input big is read by nothing
+warning: WARN-UNREAD input d3 is read by nothing
+warning: WARN-UNREAD input prio is read by nothing
+warning: WARN-UNREAD input ten is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,14:fixes/g10/p_a7,9:fixes-g10,14:run p_a7.tally,1661:10:p_a7.tally,1641:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move save: transfers
+  on d1
+  reads konto
+  leg cash from konto to savings amount min(cap[k2], bal(konto))
+
+move spend: transfers
+  on d2
+  reads konto
+  leg cash from konto to sink amount max(0 PLN, bal(konto) - keep)
+
+move top: transfers
+  on d2
+  reads savings
+  leg cash from savings to konto amount min(b, bal(savings))
+
+ask q: bal(konto, 2026-06-30), bal(savings, 2026-06-30), bal(sink, 2026-06-30)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  d2 = 2026-04-15 "the card"
+  d3 = 2026-05-20 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,546:q: (refused: RUN-ORDER decisions save and spend read each other on 2026-04-15, refused: RUN-ORDER decisions save and spend read each other on 2026-04-15, refused: RUN-ORDER decisions save and spend read each other on 2026-04-15)
+  cut 2026-03-01
+warning: WARN-UNREAD input a is read by nothing
+warning: WARN-UNREAD input big is read by nothing
+warning: WARN-UNREAD input d3 is read by nothing
+warning: WARN-UNREAD input prio is read by nothing
+warning: WARN-UNREAD input ten is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,14:fixes/g10/p_a8,9:fixes-g10,14:run p_a8.tally,1639:10:p_a8.tally,1619:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move save: transfers
+  on d1
+  reads konto
+  leg cash from konto to savings amount min(cap[k2], bal(konto))
+
+move top: transfers
+  on d2
+  reads savings
+  leg cash from savings to sink amount min(b, bal(savings))
+
+move drain: transfers
+  on d2
+  reads sink
+  leg cash from sink to konto amount bal(sink)
+
+ask q: bal(konto, 2026-06-30), bal(savings, 2026-06-30), bal(sink, 2026-06-30)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  d2 = 2026-04-15 "the card"
+  d3 = 2026-05-20 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,621:q: (refused: RUN-ORDER decisions drain and save and top read each other on 2026-04-15, refused: RUN-ORDER decisions drain and save and top read each other on 2026-04-15, refused: RUN-ORDER decisions drain and save and top read each other on 2026-04-15)
+  cut 2026-03-01
+warning: WARN-UNREAD input a is read by nothing
+warning: WARN-UNREAD input big is read by nothing
+warning: WARN-UNREAD input d3 is read by nothing
+warning: WARN-UNREAD input keep is read by nothing
+warning: WARN-UNREAD input prio is read by nothing
+warning: WARN-UNREAD input ten is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,14:fixes/g10/p_b1,9:fixes-g10,14:run p_b1.tally,1499:10:p_b1.tally,1479:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pull[k in ks]: transfers
+  on d1
+  reads konto
+  ties by prio[k]
+  leg cash from konto to sink amount min(cap[k], bal(konto))
+
+ask q: flows(pull[k1], 2026-01-01..2026-12-31), flows(pull[k2], 2026-01-01..2026-12-31), bal(konto, 2026-06-30)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  d2 = 2026-04-15 "the card"
+  d3 = 2026-05-20 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,506:q: (200.00 PLN, 300.00 PLN, 0.00 PLN)
+  cut 2026-03-01
+warning: WARN-UNREAD input a is read by nothing
+warning: WARN-UNREAD input b is read by nothing
+warning: WARN-UNREAD input big is read by nothing
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input d3 is read by nothing
+warning: WARN-UNREAD input keep is read by nothing
+warning: WARN-UNREAD input ten is read by nothing
+warning: WARN-UNREAD place savings is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,14:fixes/g10/p_b3,9:fixes-g10,14:run p_b3.tally,1499:10:p_b3.tally,1479:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pull[k in ks]: transfers
+  on d1
+  reads konto
+  ties by prio[k]
+  leg cash from konto to sink amount min(cap[k], bal(konto))
+
+ask q: flows(pull[k1], 2026-01-01..2026-12-31), flows(pull[k2], 2026-01-01..2026-12-31), bal(konto, 2026-06-30)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  d2 = 2026-04-15 "the card"
+  d3 = 2026-05-20 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 1 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,787:q: (refused: RUN-TIE pull has a tie at 2026-04-15 that changes the result, and its ties by doesn't break it, refused: RUN-TIE pull has a tie at 2026-04-15 that changes the result, and its ties by doesn't break it, refused: RUN-TIE pull has a tie at 2026-04-15 that changes the result, and its ties by doesn't break it)
+  cut 2026-03-01
+warning: WARN-UNREAD input a is read by nothing
+warning: WARN-UNREAD input b is read by nothing
+warning: WARN-UNREAD input big is read by nothing
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input d3 is read by nothing
+warning: WARN-UNREAD input keep is read by nothing
+warning: WARN-UNREAD input ten is read by nothing
+warning: WARN-UNREAD place savings is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,14:fixes/g10/p_b5,9:fixes-g10,14:run p_b5.tally,1605:10:p_b5.tally,1585:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pull[k in ks]: transfers
+  on d1
+  reads konto
+  ties by prio[k]
+  leg cash from konto to sink amount min(cap[k], bal(konto))
+
+move refill: transfers
+  on d1
+  reads sink
+  before pull
+  leg cash from sink to konto amount bal(sink)
+
+ask q: flows(pull[k1], 2026-01-01..2026-12-31), flows(pull[k2], 2026-01-01..2026-12-31), bal(konto, 2026-06-30)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  d2 = 2026-04-15 "the card"
+  d3 = 2026-05-20 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,506:q: (200.00 PLN, 300.00 PLN, 0.00 PLN)
+  cut 2026-03-01
+warning: WARN-UNREAD input a is read by nothing
+warning: WARN-UNREAD input b is read by nothing
+warning: WARN-UNREAD input big is read by nothing
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input d3 is read by nothing
+warning: WARN-UNREAD input keep is read by nothing
+warning: WARN-UNREAD input ten is read by nothing
+warning: WARN-UNREAD place savings is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,14:fixes/g10/p_c1,9:fixes-g10,14:run p_c1.tally,1498:10:p_c1.tally,1478:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move p1: pays
+  on d1
+  leg cash from world to konto amount a
+
+move p2: pays
+  on d2
+  leg cash from world to konto amount b
+
+ask q_tie: next(pays, 2026-02-01).day
+
+ask q_after: next(pays, 2026-04-16).day
+
+ask q_on: next(pays, 2026-04-15).day
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  d2 = 2026-04-15 "the card"
+  d3 = 2026-05-20 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,775:q_after: ?"m: no pays yet, and its span reaches past the cut" (pays)
+  cut 2026-03-01
+q_on: refused: RUN-TIE next(pays, 2026-04-15) has a tie at p1, p2 that changes the result, and its ties by doesn't break it
+  cut 2026-03-01
+q_tie: refused: RUN-TIE next(pays, 2026-02-01) has a tie at p1, p2 that changes the result, and its ties by doesn't break it
+  cut 2026-03-01
+warning: WARN-UNREAD input big is read by nothing
+warning: WARN-UNREAD input cap is read by nothing
+warning: WARN-UNREAD input d3 is read by nothing
+warning: WARN-UNREAD input keep is read by nothing
+warning: WARN-UNREAD input prio is read by nothing
+warning: WARN-UNREAD input ten is read by nothing
+warning: WARN-UNREAD place savings is read by nothing
+warning: WARN-UNREAD place sink is read by nothing
+,15:fixes/g10/p_c10,9:fixes-g10,15:run p_c10.tally,1851:11:p_c10.tally,1830:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input e1: date
+
+input e2: date
+
+input e3: date
+
+input e4: date
+
+input s0: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move p1: pays
+  on d1
+  reads konto
+  leg cash from konto to sink amount min(a, bal(konto))
+
+move p2: pays
+  on d3
+  reads konto
+  leg cash from konto to sink amount min(b, bal(konto))
+
+move peek: transfers
+  on e3
+  reads konto, pays
+  leg cash from konto to savings amount min(bal(konto), sum(o.cash.amount for o in pays over s0..e3))
+
+ask q: bal(savings, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  d2 = 2026-04-15 "the card"
+  d3 = 2026-05-20 "the card"
+  e1 = 2026-04-10 "the card"
+  e2 = 2026-04-16 "the card"
+  e3 = 2026-04-20 "the card"
+  e4 = 2026-05-21 "the card"
+  s0 = 2026-01-01 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,529:q: 5.00 PLN
+  cut 2026-03-01
+warning: WARN-UNREAD input big is read by nothing
+warning: WARN-UNREAD input cap is read by nothing
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input e1 is read by nothing
+warning: WARN-UNREAD input e2 is read by nothing
+warning: WARN-UNREAD input e4 is read by nothing
+warning: WARN-UNREAD input keep is read by nothing
+warning: WARN-UNREAD input prio is read by nothing
+warning: WARN-UNREAD input ten is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,14:fixes/g10/p_c2,9:fixes-g10,14:run p_c2.tally,1860:10:p_c2.tally,1840:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input e1: date
+
+input e2: date
+
+input e3: date
+
+input e4: date
+
+input s0: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move p1: pays
+  on d1
+  leg cash from world to konto amount a
+
+move p2: pays
+  on d3
+  leg cash from world to konto amount b
+
+move p3: transfers
+  on next(pays, e2).day
+  leg cash from world to savings amount next(pays, e2).cash.amount
+
+ask q: next(pays, e2).day, next(pays, e2).cash.amount, next(pays, e4).day
+
+ask q3: bal(savings, 2026-12-31), flows(p3, 2026-01-01..2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  d2 = 2026-04-15 "the card"
+  d3 = 2026-05-20 "the card"
+  e1 = 2026-04-10 "the card"
+  e2 = 2026-04-16 "the card"
+  e3 = 2026-04-20 "the card"
+  e4 = 2026-05-21 "the card"
+  s0 = 2026-01-01 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,645:q: (2026-05-20, 7.00 PLN, ?"m: no pays yet, and its span reaches past the cut" (pays))
+  cut 2026-03-01
+q3: (7.00 PLN, 7.00 PLN)
+  cut 2026-03-01
+warning: WARN-UNREAD input big is read by nothing
+warning: WARN-UNREAD input cap is read by nothing
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input e1 is read by nothing
+warning: WARN-UNREAD input e3 is read by nothing
+warning: WARN-UNREAD input keep is read by nothing
+warning: WARN-UNREAD input prio is read by nothing
+warning: WARN-UNREAD input s0 is read by nothing
+warning: WARN-UNREAD input ten is read by nothing
+warning: WARN-UNREAD place sink is read by nothing
+,14:fixes/g10/p_c3,9:fixes-g10,14:run p_c3.tally,1438:10:p_c3.tally,1418:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move p1: pays
+  on d1
+  leg cash from world to konto amount a
+
+move p2: pays
+  on d2
+  leg cash from world to konto amount b
+
+ask q: next(pays, 2026-02-01).day
+
+ask q2: next(pays, 2026-04-16).day
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  d2 = ?"when?"
+  d3 = 2026-05-20 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,475:q: ?"when?" (d2)
+  cut 2026-03-01
+q2: ?"when?" (d2)
+  cut 2026-03-01
+warning: WARN-UNREAD input big is read by nothing
+warning: WARN-UNREAD input cap is read by nothing
+warning: WARN-UNREAD input d3 is read by nothing
+warning: WARN-UNREAD input keep is read by nothing
+warning: WARN-UNREAD input prio is read by nothing
+warning: WARN-UNREAD input ten is read by nothing
+warning: WARN-UNREAD place savings is read by nothing
+warning: WARN-UNREAD place sink is read by nothing
+,14:fixes/g10/p_c6,9:fixes-g10,14:run p_c6.tally,1380:10:p_c6.tally,1360:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move p1: pays
+  on d1
+  leg cash from world to konto amount a
+
+ask q: next(pays, 2026-02-16).day, next(pays, 2026-01-01).day
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-02-15 "the card"
+  d2 = 2026-04-15 "the card"
+  d3 = 2026-05-20 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,615:q: (?"m: no pays yet, and its span reaches past the cut" (pays), 2026-02-15)
+  unfulfilled: p1
+  cut 2026-03-01
+warning: WARN-UNREAD input b is read by nothing
+warning: WARN-UNREAD input big is read by nothing
+warning: WARN-UNREAD input cap is read by nothing
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input d3 is read by nothing
+warning: WARN-UNREAD input keep is read by nothing
+warning: WARN-UNREAD input prio is read by nothing
+warning: WARN-UNREAD input ten is read by nothing
+warning: WARN-UNREAD place savings is read by nothing
+warning: WARN-UNREAD place sink is read by nothing
+,14:fixes/g10/p_c7,9:fixes-g10,14:run p_c7.tally,1766:10:p_c7.tally,1746:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input e1: date
+
+input e2: date
+
+input e3: date
+
+input e4: date
+
+input s0: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move p1: pays
+  on d1
+  leg cash from world to konto amount a
+
+move p2: pays
+  on d3
+  leg cash from world to konto amount b
+
+move peek: transfers
+  on e3
+  reads konto
+  leg cash from konto to savings amount min(bal(konto), next(pays, e2).cash.amount)
+
+ask q: bal(savings, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  d2 = 2026-04-15 "the card"
+  d3 = 2026-05-20 "the card"
+  e1 = 2026-04-10 "the card"
+  e2 = 2026-04-16 "the card"
+  e3 = 2026-04-20 "the card"
+  e4 = 2026-05-21 "the card"
+  s0 = 2026-01-01 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,528:q: 7.00 PLN
+  cut 2026-03-01
+warning: WARN-UNREAD input big is read by nothing
+warning: WARN-UNREAD input cap is read by nothing
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input e1 is read by nothing
+warning: WARN-UNREAD input e4 is read by nothing
+warning: WARN-UNREAD input keep is read by nothing
+warning: WARN-UNREAD input prio is read by nothing
+warning: WARN-UNREAD input s0 is read by nothing
+warning: WARN-UNREAD input ten is read by nothing
+warning: WARN-UNREAD place sink is read by nothing
+,14:fixes/g10/p_c8,9:fixes-g10,14:run p_c8.tally,1749:10:p_c8.tally,1729:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input e1: date
+
+input e2: date
+
+input e3: date
+
+input e4: date
+
+input s0: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move p1: pays
+  on d1
+  leg cash from world to konto amount a
+
+move p2: pays
+  on d3
+  leg cash from world to konto amount b
+
+move p3: transfers
+  on next(pays, e2).day
+  leg cash from world to savings amount a
+
+ask q: bal(savings, 2026-12-31), flows(p3, 2026-01-01..2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = ?"when p1?"
+  d2 = 2026-04-15 "the card"
+  d3 = 2026-05-20 "the card"
+  e1 = 2026-04-10 "the card"
+  e2 = 2026-04-16 "the card"
+  e3 = 2026-04-20 "the card"
+  e4 = 2026-05-21 "the card"
+  s0 = 2026-01-01 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,605:q: (?"when p1?" (d1), ?"when p1?" (d1))
+  cut 2026-03-01
+warning: WARN-UNREAD input big is read by nothing
+warning: WARN-UNREAD input cap is read by nothing
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input e1 is read by nothing
+warning: WARN-UNREAD input e3 is read by nothing
+warning: WARN-UNREAD input e4 is read by nothing
+warning: WARN-UNREAD input keep is read by nothing
+warning: WARN-UNREAD input prio is read by nothing
+warning: WARN-UNREAD input s0 is read by nothing
+warning: WARN-UNREAD input ten is read by nothing
+warning: WARN-UNREAD place sink is read by nothing
+,14:fixes/g10/p_d1,9:fixes-g10,14:run p_d1.tally,1887:10:p_d1.tally,1867:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input e1: date
+
+input e2: date
+
+input e3: date
+
+input e4: date
+
+input s0: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move p1: pays
+  on d1
+  leg cash from world to konto amount a
+
+move p2: pays
+  on d3
+  leg cash from world to konto amount b
+
+move m[mo in mos]: pays
+  on start_of(mo)
+  leg cash from world to konto amount a
+
+def tot: money PLN = sum(o.cash.amount for o in pays over e1..e4)
+
+ask q: tot, count(o in pays over e1..e4), sum(o.cash.amount for o in pays over d3..d3), first(o in pays over e1..e4) ties by o.day
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  d2 = 2026-04-15 "the card"
+  d3 = 2026-05-20 "the card"
+  e1 = 2026-04-10 "the card"
+  e2 = 2026-04-16 "the card"
+  e3 = 2026-04-20 "the card"
+  e4 = 2026-05-21 "the card"
+  s0 = 2026-01-01 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,602:q: (17.00 PLN, 3, 7.00 PLN, p1)
+  cut 2026-03-01
+warning: WARN-UNREAD input big is read by nothing
+warning: WARN-UNREAD input cap is read by nothing
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input e2 is read by nothing
+warning: WARN-UNREAD input e3 is read by nothing
+warning: WARN-UNREAD input keep is read by nothing
+warning: WARN-UNREAD input prio is read by nothing
+warning: WARN-UNREAD input s0 is read by nothing
+warning: WARN-UNREAD input ten is read by nothing
+warning: WARN-UNREAD place savings is read by nothing
+warning: WARN-UNREAD place sink is read by nothing
+,15:fixes/g10/p_d10,9:fixes-g10,15:run p_d10.tally,1832:11:p_d10.tally,1811:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input e1: date
+
+input e2: date
+
+input e3: date
+
+input e4: date
+
+input s0: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input dom: int
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move save[mo in mos]: pays
+  on day_of(mo, dom)
+  reads konto
+  leg cash from konto to savings amount min(cap[k2], bal(konto)) - a
+
+move top: transfers
+  on e3
+  reads pays
+  leg cash from savings to sink amount sum(o.cash.amount for o in pays over s0..e3)
+
+ask q: bal(sink, 2026-12-31), bal(savings, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  d2 = 2026-04-15 "the card"
+  d3 = 2026-05-20 "the card"
+  e1 = 2026-04-10 "the card"
+  e2 = 2026-04-16 "the card"
+  e3 = 2026-04-20 "the card"
+  e4 = 2026-05-21 "the card"
+  s0 = 2026-01-01 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  dom = 15 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,697:q: (495.00 PLN, 0.00 PLN)
+  unfulfilled: save[2026-01]
+  unfulfilled: save[2026-02]
+  cut 2026-03-01
+warning: WARN-UNREAD input b is read by nothing
+warning: WARN-UNREAD input big is read by nothing
+warning: WARN-UNREAD input d1 is read by nothing
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input d3 is read by nothing
+warning: WARN-UNREAD input e1 is read by nothing
+warning: WARN-UNREAD input e2 is read by nothing
+warning: WARN-UNREAD input e4 is read by nothing
+warning: WARN-UNREAD input keep is read by nothing
+warning: WARN-UNREAD input prio is read by nothing
+warning: WARN-UNREAD input ten is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,14:fixes/g10/p_d2,9:fixes-g10,14:run p_d2.tally,1879:10:p_d2.tally,1859:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+kind savs: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input e1: date
+
+input e2: date
+
+input e3: date
+
+input e4: date
+
+input s0: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input dom: int
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move save[mo in mos]: savs
+  on day_of(mo, dom)
+  reads konto
+  leg cash from konto to savings amount min(a, bal(konto))
+
+move top: transfers
+  on d1
+  reads savs
+  leg cash from savings to sink amount sum(o.cash.amount for o in savs over s0..d1)
+
+ask q: bal(savings, 2026-12-31), bal(sink, 2026-12-31), flows(top, 2026-01-01..2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  d2 = 2026-04-15 "the card"
+  d3 = 2026-05-20 "the card"
+  e1 = 2026-04-10 "the card"
+  e2 = 2026-04-16 "the card"
+  e3 = 2026-04-20 "the card"
+  e4 = 2026-05-21 "the card"
+  s0 = 2026-01-01 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  dom = 15 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,758:q: (40.00 PLN, 20.00 PLN, 20.00 PLN)
+  unfulfilled: save[2026-01]
+  unfulfilled: save[2026-02]
+  cut 2026-03-01
+warning: WARN-UNREAD input b is read by nothing
+warning: WARN-UNREAD input big is read by nothing
+warning: WARN-UNREAD input cap is read by nothing
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input d3 is read by nothing
+warning: WARN-UNREAD input e1 is read by nothing
+warning: WARN-UNREAD input e2 is read by nothing
+warning: WARN-UNREAD input e3 is read by nothing
+warning: WARN-UNREAD input e4 is read by nothing
+warning: WARN-UNREAD input keep is read by nothing
+warning: WARN-UNREAD input prio is read by nothing
+warning: WARN-UNREAD input ten is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,14:fixes/g10/p_d3,9:fixes-g10,14:run p_d3.tally,1820:10:p_d3.tally,1800:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+kind savs: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input e1: date
+
+input e2: date
+
+input e3: date
+
+input e4: date
+
+input s0: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input dom: int
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move save[mo in mos]: savs
+  on day_of(mo, dom)
+  reads konto
+  leg cash from konto to savings amount min(a, bal(konto))
+
+move top: transfers
+  on d1
+  reads savs
+  leg cash from savings to sink amount sum(o.cash.amount for o in savs over s0..e4)
+
+ask q: bal(savings, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  d2 = 2026-04-15 "the card"
+  d3 = 2026-05-20 "the card"
+  e1 = 2026-04-10 "the card"
+  e2 = 2026-04-16 "the card"
+  e3 = 2026-04-20 "the card"
+  e4 = 2026-05-21 "the card"
+  s0 = 2026-01-01 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  dom = 15 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,770:q: refused: RUN-FUTURE a decision on 2026-04-15 binds over savs through 2026-05-21, after its day
+  unfulfilled: save[2026-01]
+  unfulfilled: save[2026-02]
+  cut 2026-03-01
+warning: WARN-UNREAD input b is read by nothing
+warning: WARN-UNREAD input big is read by nothing
+warning: WARN-UNREAD input cap is read by nothing
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input d3 is read by nothing
+warning: WARN-UNREAD input e1 is read by nothing
+warning: WARN-UNREAD input e2 is read by nothing
+warning: WARN-UNREAD input e3 is read by nothing
+warning: WARN-UNREAD input keep is read by nothing
+warning: WARN-UNREAD input prio is read by nothing
+warning: WARN-UNREAD input ten is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,14:fixes/g10/p_d4,9:fixes-g10,14:run p_d4.tally,1801:10:p_d4.tally,1781:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input e1: date
+
+input e2: date
+
+input e3: date
+
+input e4: date
+
+input s0: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input dom: int
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move save[mo in mos]: pays
+  on day_of(mo, dom)
+  reads konto
+  leg cash from konto to savings amount min(a, bal(konto))
+
+move top: transfers
+  on d1
+  reads savings
+  leg cash from savings to sink amount sum(o.cash.amount for o in pays over s0..d1)
+
+ask q: bal(savings, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  d2 = 2026-04-15 "the card"
+  d3 = 2026-05-20 "the card"
+  e1 = 2026-04-10 "the card"
+  e2 = 2026-04-16 "the card"
+  e3 = 2026-04-20 "the card"
+  e4 = 2026-05-21 "the card"
+  s0 = 2026-01-01 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  dom = 15 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+,,1:1,104:refused: LOAD-READS top reaches a running read or projection of save without reads save (p_d4.tally:63)
+,14:fixes/g10/p_d5,9:fixes-g10,14:run p_d5.tally,1782:10:p_d5.tally,1762:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input e1: date
+
+input e2: date
+
+input e3: date
+
+input e4: date
+
+input s0: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input dom: int
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pl[mo in mos]: pays
+  on day_of(mo, dom)
+  leg cash from world to konto amount a
+
+move top: transfers
+  on d1
+  reads konto
+  leg cash from konto to savings amount min(bal(konto), sum(o.cash.amount for o in pays over s0..e4))
+
+ask q: bal(savings, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  d2 = 2026-04-15 "the card"
+  d3 = 2026-05-20 "the card"
+  e1 = 2026-04-10 "the card"
+  e2 = 2026-04-16 "the card"
+  e3 = 2026-04-20 "the card"
+  e4 = 2026-05-21 "the card"
+  s0 = 2026-01-01 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  dom = 15 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,680:q: 25.00 PLN
+  unfulfilled: pl[2026-01]
+  unfulfilled: pl[2026-02]
+  cut 2026-03-01
+warning: WARN-UNREAD input b is read by nothing
+warning: WARN-UNREAD input big is read by nothing
+warning: WARN-UNREAD input cap is read by nothing
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input d3 is read by nothing
+warning: WARN-UNREAD input e1 is read by nothing
+warning: WARN-UNREAD input e2 is read by nothing
+warning: WARN-UNREAD input e3 is read by nothing
+warning: WARN-UNREAD input keep is read by nothing
+warning: WARN-UNREAD input prio is read by nothing
+warning: WARN-UNREAD input ten is read by nothing
+warning: WARN-UNREAD place sink is read by nothing
+,14:fixes/g10/p_d7,9:fixes-g10,14:run p_d7.tally,1781:10:p_d7.tally,1761:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+kind savs: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input e1: date
+
+input e2: date
+
+input e3: date
+
+input e4: date
+
+input s0: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input dom: int
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move save[mo in mos]: savs
+  on day_of(mo, dom)
+  reads konto
+  leg cash from konto to savings amount min(cap[k2], bal(konto))
+
+ask q: s.day, s.cash.amount for s in savs over s0..e4
+
+ask q2: last(s in savs over s0..2026-12-31) ties by s.day
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  d2 = 2026-04-15 "the card"
+  d3 = 2026-05-20 "the card"
+  e1 = 2026-04-10 "the card"
+  e2 = 2026-04-16 "the card"
+  e3 = 2026-04-20 "the card"
+  e4 = 2026-05-21 "the card"
+  s0 = 2026-01-01 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  dom = 15 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,1368:q (s = save[2026-01]): (2026-01-15, 300.00 PLN)
+  unfulfilled: save[2026-01]
+  cut 2026-03-01
+q (s = save[2026-02]): (2026-02-15, 200.00 PLN)
+  unfulfilled: save[2026-01]
+  unfulfilled: save[2026-02]
+  cut 2026-03-01
+q (s = save[2026-03]): (2026-03-15, 0.00 PLN)
+  unfulfilled: save[2026-01]
+  unfulfilled: save[2026-02]
+  cut 2026-03-01
+q (s = save[2026-04]): (2026-04-15, 0.00 PLN)
+  unfulfilled: save[2026-01]
+  unfulfilled: save[2026-02]
+  cut 2026-03-01
+q (s = save[2026-05]): (2026-05-15, 0.00 PLN)
+  unfulfilled: save[2026-01]
+  unfulfilled: save[2026-02]
+  cut 2026-03-01
+q2: save[2026-12]
+  unfulfilled: save[2026-01]
+  unfulfilled: save[2026-02]
+  cut 2026-03-01
+warning: WARN-UNREAD input a is read by nothing
+warning: WARN-UNREAD input b is read by nothing
+warning: WARN-UNREAD input big is read by nothing
+warning: WARN-UNREAD input d1 is read by nothing
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input d3 is read by nothing
+warning: WARN-UNREAD input e1 is read by nothing
+warning: WARN-UNREAD input e2 is read by nothing
+warning: WARN-UNREAD input e3 is read by nothing
+warning: WARN-UNREAD input keep is read by nothing
+warning: WARN-UNREAD input prio is read by nothing
+warning: WARN-UNREAD input ten is read by nothing
+warning: WARN-UNREAD place sink is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,14:fixes/g10/p_d8,9:fixes-g10,14:run p_d8.tally,1775:10:p_d8.tally,1755:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+kind savs: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input e1: date
+
+input e2: date
+
+input e3: date
+
+input e4: date
+
+input s0: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input dom: int
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move save[mo in mos]: savs
+  on day_of(mo, dom)
+  reads konto, savs
+  leg cash from konto to savings amount min(bal(konto), a * count(o in savs over s0..start_of(mo)) + a)
+
+ask q: s.day, s.cash.amount for s in savs over s0..2026-06-30
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  d2 = 2026-04-15 "the card"
+  d3 = 2026-05-20 "the card"
+  e1 = 2026-04-10 "the card"
+  e2 = 2026-04-16 "the card"
+  e3 = 2026-04-20 "the card"
+  e4 = 2026-05-21 "the card"
+  s0 = 2026-01-01 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  dom = 15 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,1448:q (s = save[2026-01]): (2026-01-15, 5.00 PLN)
+  unfulfilled: save[2026-01]
+  cut 2026-03-01
+q (s = save[2026-02]): (2026-02-15, 10.00 PLN)
+  unfulfilled: save[2026-01]
+  unfulfilled: save[2026-02]
+  cut 2026-03-01
+q (s = save[2026-03]): (2026-03-15, 15.00 PLN)
+  unfulfilled: save[2026-01]
+  unfulfilled: save[2026-02]
+  cut 2026-03-01
+q (s = save[2026-04]): (2026-04-15, 20.00 PLN)
+  unfulfilled: save[2026-01]
+  unfulfilled: save[2026-02]
+  cut 2026-03-01
+q (s = save[2026-05]): (2026-05-15, 25.00 PLN)
+  unfulfilled: save[2026-01]
+  unfulfilled: save[2026-02]
+  cut 2026-03-01
+q (s = save[2026-06]): (2026-06-15, 30.00 PLN)
+  unfulfilled: save[2026-01]
+  unfulfilled: save[2026-02]
+  cut 2026-03-01
+warning: WARN-UNREAD input b is read by nothing
+warning: WARN-UNREAD input big is read by nothing
+warning: WARN-UNREAD input cap is read by nothing
+warning: WARN-UNREAD input d1 is read by nothing
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input d3 is read by nothing
+warning: WARN-UNREAD input e1 is read by nothing
+warning: WARN-UNREAD input e2 is read by nothing
+warning: WARN-UNREAD input e3 is read by nothing
+warning: WARN-UNREAD input e4 is read by nothing
+warning: WARN-UNREAD input keep is read by nothing
+warning: WARN-UNREAD input prio is read by nothing
+warning: WARN-UNREAD input ten is read by nothing
+warning: WARN-UNREAD place sink is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,14:fixes/g10/p_d9,9:fixes-g10,14:run p_d9.tally,1919:10:p_d9.tally,1899:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input e1: date
+
+input e2: date
+
+input e3: date
+
+input e4: date
+
+input s0: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input dom: int
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move p1: pays
+  on d1
+  leg cash from world to konto amount a - b
+
+move p2: pays
+  on d3
+  leg cash from world to konto amount b
+
+move p3: pays
+  on e3
+  leg cash from world to konto amount a
+
+ask q: sum(o.cash.amount for o in pays over s0..e4), count(o in pays over e3..2027-12-31), sum(o.cash.amount for o in pays over e3..2027-12-31)
+
+ask q2: o.day, o.cash.amount for o in pays over s0..2027-12-31
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  d2 = 2026-04-15 "the card"
+  d3 = 2027-02-01 "the card"
+  e1 = 2026-04-10 "the card"
+  e2 = 2026-04-16 "the card"
+  e3 = 2026-04-20 "the card"
+  e4 = 2026-05-21 "the card"
+  s0 = 2026-01-01 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  dom = 15 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,864:q: (refused: RUN-NEG negative amount -2.00 PLN for leg cash of p1, 2, 12.00 PLN)
+  cut 2026-03-01
+q2 (o = p1): (2026-04-15, refused: RUN-NEG negative amount -2.00 PLN for leg cash of p1)
+  cut 2026-03-01
+q2 (o = p3): (2026-04-20, 5.00 PLN)
+  cut 2026-03-01
+q2 (o = p2): (2027-02-01, 7.00 PLN)
+  cut 2026-03-01
+warning: WARN-UNREAD input big is read by nothing
+warning: WARN-UNREAD input cap is read by nothing
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input dom is read by nothing
+warning: WARN-UNREAD input e1 is read by nothing
+warning: WARN-UNREAD input e2 is read by nothing
+warning: WARN-UNREAD input keep is read by nothing
+warning: WARN-UNREAD input prio is read by nothing
+warning: WARN-UNREAD input ten is read by nothing
+warning: WARN-UNREAD place savings is read by nothing
+warning: WARN-UNREAD place sink is read by nothing
+,14:fixes/g10/p_e1,9:fixes-g10,14:run p_e1.tally,1936:10:p_e1.tally,1916:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input e1: date
+
+input e2: date
+
+input e3: date
+
+input e4: date
+
+input s0: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input dom: int
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move save: transfers
+  on d1
+  reads konto
+  leg cash from konto to savings amount min(a, bal(konto))
+
+move other: transfers
+  on e3
+  reads sink
+  leg cash from sink to world amount min(a, bal(sink))
+
+move pl: transfers
+  on e1
+  leg cash from world to sink amount b
+
+ask q: bal(konto, 2026-01-31), bal(savings, 2026-01-31), bal(sink, 2026-06-30)
+
+ask q2: flows(save, 2026-01-01..2026-12-31), flows(other, 2026-01-01..2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = ?"when?"
+  d2 = 2026-04-15 "the card"
+  d3 = 2026-05-20 "the card"
+  e1 = 2026-04-10 "the card"
+  e2 = 2026-04-16 "the card"
+  e3 = 2026-04-20 "the card"
+  e4 = 2026-05-21 "the card"
+  s0 = 2026-01-01 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  dom = 15 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,655:q: (?"when?" (d1), ?"when?" (d1), 2.00 PLN)
+  cut 2026-03-01
+q2: (?"when?" (d1), 5.00 PLN)
+  cut 2026-03-01
+warning: WARN-UNREAD input big is read by nothing
+warning: WARN-UNREAD input cap is read by nothing
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input d3 is read by nothing
+warning: WARN-UNREAD input dom is read by nothing
+warning: WARN-UNREAD input e2 is read by nothing
+warning: WARN-UNREAD input e4 is read by nothing
+warning: WARN-UNREAD input keep is read by nothing
+warning: WARN-UNREAD input prio is read by nothing
+warning: WARN-UNREAD input s0 is read by nothing
+warning: WARN-UNREAD input ten is read by nothing
+,14:fixes/g10/p_e2,9:fixes-g10,14:run p_e2.tally,1994:10:p_e2.tally,1974:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input e1: date
+
+input e2: date
+
+input e3: date
+
+input e4: date
+
+input s0: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input dom: int
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+place pot[k in ks]: accounts PLN lives 2026-01-01..
+
+input dest: key ks
+
+move save: transfers
+  on d1
+  reads konto
+  leg cash from konto to pot[dest] amount min(a, bal(konto))
+
+move pl: transfers
+  on e1
+  leg cash from world to sink amount b
+
+ask q: bal(konto, 2026-01-31), bal(pot[k1], 2026-01-31), bal(pot[k2], 2026-01-31), bal(sink, 2026-06-30)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = ?"when?"
+  d2 = 2026-04-15 "the card"
+  d3 = 2026-05-20 "the card"
+  e1 = 2026-04-10 "the card"
+  e2 = 2026-04-16 "the card"
+  e3 = 2026-04-20 "the card"
+  e4 = 2026-05-21 "the card"
+  s0 = 2026-01-01 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  dom = 15 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+  dest = k1 "the card"
+  opening[pot[k1]] = 0 PLN at 2026-01-01 start "the card"
+  opening[pot[k2]] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,721:q: (?"when?" (d1), ?"when?" (d1), 0.00 PLN, 7.00 PLN)
+  cut 2026-03-01
+warning: WARN-UNREAD input big is read by nothing
+warning: WARN-UNREAD input cap is read by nothing
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input d3 is read by nothing
+warning: WARN-UNREAD input dom is read by nothing
+warning: WARN-UNREAD input e2 is read by nothing
+warning: WARN-UNREAD input e3 is read by nothing
+warning: WARN-UNREAD input e4 is read by nothing
+warning: WARN-UNREAD input keep is read by nothing
+warning: WARN-UNREAD input prio is read by nothing
+warning: WARN-UNREAD input s0 is read by nothing
+warning: WARN-UNREAD input ten is read by nothing
+warning: WARN-UNREAD place savings is read by nothing
+,14:fixes/g10/p_e3,9:fixes-g10,14:run p_e3.tally,1685:10:p_e3.tally,1665:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input e1: date
+
+input e2: date
+
+input e3: date
+
+input e4: date
+
+input s0: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input dom: int
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move save: transfers
+  on d1
+  when cap[k1] > big
+  reads konto
+  leg cash from konto to savings amount min(a, bal(konto))
+
+ask q: bal(konto, 2026-01-31), bal(savings, 2026-01-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = ?"when?"
+  d2 = 2026-04-15 "the card"
+  d3 = 2026-05-20 "the card"
+  e1 = 2026-04-10 "the card"
+  e2 = 2026-04-16 "the card"
+  e3 = 2026-04-20 "the card"
+  e4 = 2026-05-21 "the card"
+  s0 = 2026-01-01 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  dom = 15 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,747:q: (?"when?" (d1), ?"when?" (d1))
+  cut 2026-03-01
+warning: WARN-UNREAD input b is read by nothing
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input d3 is read by nothing
+warning: WARN-UNREAD input dom is read by nothing
+warning: WARN-UNREAD input e1 is read by nothing
+warning: WARN-UNREAD input e2 is read by nothing
+warning: WARN-UNREAD input e3 is read by nothing
+warning: WARN-UNREAD input e4 is read by nothing
+warning: WARN-UNREAD input keep is read by nothing
+warning: WARN-UNREAD input prio is read by nothing
+warning: WARN-UNREAD input s0 is read by nothing
+warning: WARN-UNREAD input ten is read by nothing
+warning: WARN-UNREAD place sink is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,14:fixes/g10/p_e4,9:fixes-g10,14:run p_e4.tally,1759:10:p_e4.tally,1739:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input e1: date
+
+input e2: date
+
+input e3: date
+
+input e4: date
+
+input s0: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input dom: int
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move save: transfers
+  on d1
+  reads konto
+  leg cash from konto to savings amount min(a, bal(konto))
+
+move sweep: transfers
+  on e3
+  reads savings
+  leg cash from savings to sink amount bal(savings)
+
+ask q: bal(sink, 2026-06-30), bal(sink, 2026-04-01)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = ?"when?"
+  d2 = 2026-04-15 "the card"
+  d3 = 2026-05-20 "the card"
+  e1 = 2026-04-10 "the card"
+  e2 = 2026-04-16 "the card"
+  e3 = 2026-04-20 "the card"
+  e4 = 2026-05-21 "the card"
+  s0 = 2026-01-01 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  dom = 15 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,742:q: (?"when?" (d1), 0.00 PLN)
+  cut 2026-03-01
+warning: WARN-UNREAD input b is read by nothing
+warning: WARN-UNREAD input big is read by nothing
+warning: WARN-UNREAD input cap is read by nothing
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input d3 is read by nothing
+warning: WARN-UNREAD input dom is read by nothing
+warning: WARN-UNREAD input e1 is read by nothing
+warning: WARN-UNREAD input e2 is read by nothing
+warning: WARN-UNREAD input e4 is read by nothing
+warning: WARN-UNREAD input keep is read by nothing
+warning: WARN-UNREAD input prio is read by nothing
+warning: WARN-UNREAD input s0 is read by nothing
+warning: WARN-UNREAD input ten is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,14:fixes/g10/p_f1,9:fixes-g10,14:run p_f1.tally,1236:10:p_f1.tally,1216:model life
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented): a movement before from reads lifespan(k) of a thing the scenario changes"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind persons: parties
+
+input pay_day: date
+
+input amt: money PLN
+
+input cutoff: date
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on pay_day
+  when lifespan(ola).to != never
+  leg cash from world to konto amount amt
+
+move pay2: transfers
+  on pay_day
+  when lifespan(ola).to == never
+  leg cash from world to konto amount amt + amt
+
+ask b0: bal(konto, 2026-06-30)
+
+ask l0: lifespan(ola).to
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ola] lives 1980-01-01..
+  pay_day = 2026-02-01 "the card"
+  amt = 10.00 PLN "the card"
+  cutoff = 2026-07-01 "the card"
+  opening[konto] = 0 PLN at 2026-01-01 start "the card"
+scenario ends over life
+  tally 2
+  from 2026-07-01
+
+version ends_v
+  cite card
+  governs 2026-07-01..
+  known 2026-01-01
+  persons + [ola] lives 1980-01-01..2026-09-30
+
+ask b1: bal(konto, 2026-06-30) in ends
+
+ask l1: lifespan(ola).to in ends
+,,1:1,83:refused: LOAD-PARSE cannot parse: expected a section, got scenario (p_f1.tally:47)
+,14:fixes/g10/p_g1,9:fixes-g10,14:run p_g1.tally,1741:10:p_g1.tally,1721:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+kind savs: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input e1: date
+
+input e2: date
+
+input e3: date
+
+input e4: date
+
+input s0: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input dom: int
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move save[mo in mos]: savs
+  on day_of(mo, dom)
+  reads konto
+  leg cash from konto to savings amount min(a, bal(konto))
+
+ask q: save[2026-04].cash.amount, save[2026-04].day, save[2026-12].cash.amount
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  d2 = 2026-04-15 "the card"
+  d3 = 2026-05-20 "the card"
+  e1 = 2026-04-10 "the card"
+  e2 = 2026-04-16 "the card"
+  e3 = 2026-04-20 "the card"
+  e4 = 2026-05-21 "the card"
+  s0 = 2026-01-01 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  dom = 15 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,906:q: (5.00 PLN, 2026-04-15, 5.00 PLN)
+  unfulfilled: save[2026-01]
+  unfulfilled: save[2026-02]
+  cut 2026-03-01
+warning: WARN-UNREAD input b is read by nothing
+warning: WARN-UNREAD input big is read by nothing
+warning: WARN-UNREAD input cap is read by nothing
+warning: WARN-UNREAD input d1 is read by nothing
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input d3 is read by nothing
+warning: WARN-UNREAD input e1 is read by nothing
+warning: WARN-UNREAD input e2 is read by nothing
+warning: WARN-UNREAD input e3 is read by nothing
+warning: WARN-UNREAD input e4 is read by nothing
+warning: WARN-UNREAD input keep is read by nothing
+warning: WARN-UNREAD input prio is read by nothing
+warning: WARN-UNREAD input s0 is read by nothing
+warning: WARN-UNREAD input ten is read by nothing
+warning: WARN-UNREAD place sink is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,14:fixes/g10/p_g2,9:fixes-g10,14:run p_g2.tally,2036:10:p_g2.tally,2016:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented)"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+index mos = month 2026-01..2026-12
+
+kind pays: transfers
+
+kind savs: transfers
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input e1: date
+
+input e2: date
+
+input e3: date
+
+input e4: date
+
+input s0: date
+
+input a: money PLN
+
+input b: money PLN
+
+input big: money PLN
+
+input keep: money PLN
+
+input ten: num
+
+input dom: int
+
+input m4: key mos
+
+input m5: key mos
+
+input cap[k in ks]: money PLN
+
+input prio[k in ks]: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place sink: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move save[mo in mos]: savs
+  on day_of(mo, dom)
+  reads konto
+  leg cash from konto to savings amount min(a, bal(konto))
+
+move peek: transfers
+  on e3
+  reads save
+  leg cash from world to sink amount save[m4].cash.amount
+
+move peek2: transfers
+  on e3
+  reads save
+  leg cash from world to sink amount save[m5].cash.amount
+
+ask q: flows(peek, 2026-01-01..2026-12-31), flows(peek2, 2026-01-01..2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  d2 = 2026-04-15 "the card"
+  d3 = 2026-05-20 "the card"
+  e1 = 2026-04-10 "the card"
+  e2 = 2026-04-16 "the card"
+  e3 = 2026-04-20 "the card"
+  e4 = 2026-05-21 "the card"
+  s0 = 2026-01-01 "the card"
+  a = 5.00 PLN "the card"
+  b = 7.00 PLN "the card"
+  big = 1000.00 PLN "the card"
+  keep = 300.00 PLN "the card"
+  ten = 10 "the card"
+  dom = 15 "the card"
+  m4 = 2026-04 "the card"
+  m5 = 2026-05 "the card"
+  cap[k1] = 400.00 PLN "the card"
+  cap[k2] = 300.00 PLN "the card"
+  prio[k1] = 2 "the card"
+  prio[k2] = 1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[sink] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,801:q: (5.00 PLN, refused: RUN-ORDER decision save[2026-05] is read before it has run)
+  unfulfilled: save[2026-01]
+  unfulfilled: save[2026-02]
+  cut 2026-03-01
+warning: WARN-UNREAD input b is read by nothing
+warning: WARN-UNREAD input big is read by nothing
+warning: WARN-UNREAD input cap is read by nothing
+warning: WARN-UNREAD input d1 is read by nothing
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input d3 is read by nothing
+warning: WARN-UNREAD input e1 is read by nothing
+warning: WARN-UNREAD input e2 is read by nothing
+warning: WARN-UNREAD input e4 is read by nothing
+warning: WARN-UNREAD input keep is read by nothing
+warning: WARN-UNREAD input prio is read by nothing
+warning: WARN-UNREAD input s0 is read by nothing
+warning: WARN-UNREAD input ten is read by nothing
+,15:fixes/g10/f_dec,9:fixes-g10,15:run f_dec.tally,855:11:f_dec.tally,835:model life
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented): a movement before from reads lifespan(k) of a thing the scenario changes"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind persons: parties
+
+input pay_day: date
+
+input amt: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on pay_day
+  when lifespan(ola).to != never
+  reads konto
+  leg cash from world to konto amount amt + 0 * bal(konto)
+
+ask b0: bal(konto, 2026-06-30)
+
+ask l0: lifespan(ola).to
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ola] lives 1980-01-01..
+  pay_day = 2026-02-01 "the card"
+  amt = 10.00 PLN "the card"
+  opening[konto] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,57:b0: 0.00 PLN
+  cut 2026-03-01
+l0: never
+  cut 2026-03-01
+,28:fixes/g10/f_dec_with_f_min_s,9:fixes-g10,29:run f_dec.tally f_min_s.tally,1105:11:f_dec.tally,835:model life
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented): a movement before from reads lifespan(k) of a thing the scenario changes"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind persons: parties
+
+input pay_day: date
+
+input amt: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on pay_day
+  when lifespan(ola).to != never
+  reads konto
+  leg cash from world to konto amount amt + 0 * bal(konto)
+
+ask b0: bal(konto, 2026-06-30)
+
+ask l0: lifespan(ola).to
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ola] lives 1980-01-01..
+  pay_day = 2026-02-01 "the card"
+  amt = 10.00 PLN "the card"
+  opening[konto] = 0 PLN at 2026-01-01 start "the card"
+,13:f_min_s.tally,228:scenario ends over life
+  tally 2
+  from 2026-07-01
+
+version ends_v
+  cite card
+  known 2026-01-01
+  replace persons + [ola] lives 1980-01-01..2026-09-30
+
+ask b1: bal(konto, 2026-06-30) in ends
+
+ask l1: lifespan(ola).to in ends
+,,1:0,167:b0: 0.00 PLN
+  cut 2026-03-01
+b1: 10.00 PLN
+  world: ends
+  unfulfilled: pay
+  cut 2026-03-01
+l0: never
+  cut 2026-03-01
+l1: 2026-09-30
+  world: ends
+  cut 2026-03-01
+,15:fixes/g10/f_min,9:fixes-g10,15:run f_min.tally,824:11:f_min.tally,804:model life
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented): a movement before from reads lifespan(k) of a thing the scenario changes"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind persons: parties
+
+input pay_day: date
+
+input amt: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on pay_day
+  when lifespan(ola).to != never
+  leg cash from world to konto amount amt
+
+ask b0: bal(konto, 2026-06-30)
+
+ask l0: lifespan(ola).to
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ola] lives 1980-01-01..
+  pay_day = 2026-02-01 "the card"
+  amt = 10.00 PLN "the card"
+  opening[konto] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,57:b0: 0.00 PLN
+  cut 2026-03-01
+l0: never
+  cut 2026-03-01
+,28:fixes/g10/f_min_with_f_min_s,9:fixes-g10,29:run f_min.tally f_min_s.tally,1074:11:f_min.tally,804:model life
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented): a movement before from reads lifespan(k) of a thing the scenario changes"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind persons: parties
+
+input pay_day: date
+
+input amt: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on pay_day
+  when lifespan(ola).to != never
+  leg cash from world to konto amount amt
+
+ask b0: bal(konto, 2026-06-30)
+
+ask l0: lifespan(ola).to
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ola] lives 1980-01-01..
+  pay_day = 2026-02-01 "the card"
+  amt = 10.00 PLN "the card"
+  opening[konto] = 0 PLN at 2026-01-01 start "the card"
+,13:f_min_s.tally,228:scenario ends over life
+  tally 2
+  from 2026-07-01
+
+version ends_v
+  cite card
+  known 2026-01-01
+  replace persons + [ola] lives 1980-01-01..2026-09-30
+
+ask b1: bal(konto, 2026-06-30) in ends
+
+ask l1: lifespan(ola).to in ends
+,,1:0,265:b0: 0.00 PLN
+  cut 2026-03-01
+b1: refused: ENGINE-INVARIANT scenario ends: konto holds 10.00 PLN at the end of 2026-06-30, the base 0.00 PLN (E §9 invariant 3)
+  world: ends
+  cut 2026-03-01
+l0: never
+  cut 2026-03-01
+l1: 2026-09-30
+  world: ends
+  cut 2026-03-01
+,15:fixes/g10/f_law,9:fixes-g10,15:run f_law.tally,813:11:f_law.tally,793:model life
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented): a movement before from reads lifespan(k) of a thing the scenario changes"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind persons: parties
+
+input pay_day: date
+
+input amt: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on pay_day
+  at lifespan(ola).to
+  leg cash from world to konto amount amt
+
+ask b0: bal(konto, 2026-06-30)
+
+ask l0: lifespan(ola).to
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ola] lives 1980-01-01..
+  pay_day = 2026-02-01 "the card"
+  amt = 10.00 PLN "the card"
+  opening[konto] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,95:b0: refused: RUN-NONE never in the law date of pay
+  cut 2026-03-01
+l0: never
+  cut 2026-03-01
+,28:fixes/g10/f_law_with_f_law_s,9:fixes-g10,29:run f_law.tally f_law_s.tally,1063:11:f_law.tally,793:model life
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented): a movement before from reads lifespan(k) of a thing the scenario changes"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind persons: parties
+
+input pay_day: date
+
+input amt: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on pay_day
+  at lifespan(ola).to
+  leg cash from world to konto amount amt
+
+ask b0: bal(konto, 2026-06-30)
+
+ask l0: lifespan(ola).to
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ola] lives 1980-01-01..
+  pay_day = 2026-02-01 "the card"
+  amt = 10.00 PLN "the card"
+  opening[konto] = 0 PLN at 2026-01-01 start "the card"
+,13:f_law_s.tally,228:scenario ends over life
+  tally 2
+  from 2026-07-01
+
+version ends_v
+  cite card
+  known 2026-01-01
+  replace persons + [ola] lives 1980-01-01..2026-09-30
+
+ask b1: bal(konto, 2026-06-30) in ends
+
+ask l1: lifespan(ola).to in ends
+,,1:0,205:b0: refused: RUN-NONE never in the law date of pay
+  cut 2026-03-01
+b1: 10.00 PLN
+  world: ends
+  unfulfilled: pay
+  cut 2026-03-01
+l0: never
+  cut 2026-03-01
+l1: 2026-09-30
+  world: ends
+  cut 2026-03-01
+,16:fixes/g10/f_law2,9:fixes-g10,16:run f_law2.tally,824:12:f_law2.tally,803:model life
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented): a movement before from reads lifespan(k) of a thing the scenario changes"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind persons: parties
+
+input pay_day: date
+
+input amt: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on pay_day
+  at lifespan(ola).to
+  leg cash from world to konto amount amt
+
+ask b0: bal(konto, 2026-06-30)
+
+ask l0: lifespan(ola).to
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ola] lives 1980-01-01..2026-11-30
+  pay_day = 2026-02-01 "the card"
+  amt = 10.00 PLN "the card"
+  opening[konto] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,82:b0: 10.00 PLN
+  unfulfilled: pay
+  cut 2026-03-01
+l0: 2026-11-30
+  cut 2026-03-01
+,29:fixes/g10/f_law2_with_f_law_s,9:fixes-g10,30:run f_law2.tally f_law_s.tally,1074:12:f_law2.tally,803:model life
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented): a movement before from reads lifespan(k) of a thing the scenario changes"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind persons: parties
+
+input pay_day: date
+
+input amt: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on pay_day
+  at lifespan(ola).to
+  leg cash from world to konto amount amt
+
+ask b0: bal(konto, 2026-06-30)
+
+ask l0: lifespan(ola).to
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ola] lives 1980-01-01..2026-11-30
+  pay_day = 2026-02-01 "the card"
+  amt = 10.00 PLN "the card"
+  opening[konto] = 0 PLN at 2026-01-01 start "the card"
+,13:f_law_s.tally,228:scenario ends over life
+  tally 2
+  from 2026-07-01
+
+version ends_v
+  cite card
+  known 2026-01-01
+  replace persons + [ola] lives 1980-01-01..2026-09-30
+
+ask b1: bal(konto, 2026-06-30) in ends
+
+ask l1: lifespan(ola).to in ends
+,,1:0,192:b0: 10.00 PLN
+  unfulfilled: pay
+  cut 2026-03-01
+b1: 10.00 PLN
+  world: ends
+  unfulfilled: pay
+  cut 2026-03-01
+l0: 2026-11-30
+  cut 2026-03-01
+l1: 2026-09-30
+  world: ends
+  cut 2026-03-01
+,16:fixes/g10/f_life,9:fixes-g10,16:run f_life.tally,994:12:f_life.tally,973:model life
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented): a movement before from reads lifespan(k) of a thing the scenario changes"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind persons: parties
+
+input pay_day: date
+
+input amt: money PLN
+
+input cutoff: date
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on pay_day
+  when lifespan(ola).to != never
+  leg cash from world to konto amount amt
+
+move pay2: transfers
+  on pay_day
+  when lifespan(ola).to == never
+  leg cash from world to konto amount amt + amt
+
+ask b0: bal(konto, 2026-06-30)
+
+ask l0: lifespan(ola).to
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ola] lives 1980-01-01..
+  pay_day = 2026-02-01 "the card"
+  amt = 10.00 PLN "the card"
+  cutoff = 2026-07-01 "the card"
+  opening[konto] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,131:b0: 20.00 PLN
+  unfulfilled: pay2
+  cut 2026-03-01
+l0: never
+  cut 2026-03-01
+warning: WARN-UNREAD input cutoff is read by nothing
+,30:fixes/g10/f_life_with_f_life_s,9:fixes-g10,31:run f_life.tally f_life_s.tally,1245:12:f_life.tally,973:model life
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented): a movement before from reads lifespan(k) of a thing the scenario changes"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind persons: parties
+
+input pay_day: date
+
+input amt: money PLN
+
+input cutoff: date
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on pay_day
+  when lifespan(ola).to != never
+  leg cash from world to konto amount amt
+
+move pay2: transfers
+  on pay_day
+  when lifespan(ola).to == never
+  leg cash from world to konto amount amt + amt
+
+ask b0: bal(konto, 2026-06-30)
+
+ask l0: lifespan(ola).to
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ola] lives 1980-01-01..
+  pay_day = 2026-02-01 "the card"
+  amt = 10.00 PLN "the card"
+  cutoff = 2026-07-01 "the card"
+  opening[konto] = 0 PLN at 2026-01-01 start "the card"
+,14:f_life_s.tally,228:scenario ends over life
+  tally 2
+  from 2026-07-01
+
+version ends_v
+  cite card
+  known 2026-01-01
+  replace persons + [ola] lives 1980-01-01..2026-09-30
+
+ask b1: bal(konto, 2026-06-30) in ends
+
+ask l1: lifespan(ola).to in ends
+,,1:0,340:b0: 20.00 PLN
+  unfulfilled: pay2
+  cut 2026-03-01
+b1: refused: ENGINE-INVARIANT scenario ends: konto holds 10.00 PLN at the end of 2026-06-30, the base 20.00 PLN (E §9 invariant 3)
+  world: ends
+  cut 2026-03-01
+l0: never
+  cut 2026-03-01
+l1: 2026-09-30
+  world: ends
+  cut 2026-03-01
+warning: WARN-UNREAD input cutoff is read by nothing
+,16:fixes/g10/f_memo,9:fixes-g10,16:run f_memo.tally,1255:12:f_memo.tally,1233:model lifememo
+  tally 2
+  on 2026-12-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G10 review probe (invented): a def reading lifespan(k), read at two booking cuts"
+
+source card "the reviewer's card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind persons: parties
+
+index mos = month 2026-01..2026-06
+
+input dom: int
+
+input a: money PLN
+
+input b: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+def ends: date = lifespan(ola).to
+
+def amt: money PLN = if lifespan(ola).to == never then a else b
+
+move pay[mo in mos]: transfers
+  on day_of(mo, dom)
+  leg cash from world to konto amount amt
+
+move pay2[mo in mos]: transfers
+  on day_of(mo, dom)
+  leg cash from world to konto amount if lifespan(ola).to == never then a else b
+
+ask q2: flows(pay2[m], 2026-01-01..2026-06-30) for m in mos
+
+ask q3: flows(pay[m], 2026-01-01..2026-06-30) for m in mos
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ola] lives 1980-01-01..
+  dom = 15 "the card"
+  a = 10.00 PLN "the card"
+  b = 1.00 PLN "the card"
+  opening[konto] = 0 PLN at 2026-01-01 start "the card"
+
+version later
+  cite card
+  known 2026-03-01
+  replace persons + [ola] lives 1980-01-01..2026-11-30
+,,1:0,1347:q2 (m = 2026-01): ?"pay2[2026-01] on 2026-01-15 changed after it was paid (version later); is back pay due, and when?" (pay2[2026-01])
+  unfulfilled: pay2[2026-01]
+  cut 2026-12-01
+q2 (m = 2026-02): ?"pay2[2026-02] on 2026-02-15 changed after it was paid (version later); is back pay due, and when?" (pay2[2026-02])
+  unfulfilled: pay2[2026-02]
+  cut 2026-12-01
+q2 (m = 2026-03): 1.00 PLN
+  unfulfilled: pay2[2026-03]
+  cut 2026-12-01
+q2 (m = 2026-04): 1.00 PLN
+  unfulfilled: pay2[2026-04]
+  cut 2026-12-01
+q2 (m = 2026-05): 1.00 PLN
+  unfulfilled: pay2[2026-05]
+  cut 2026-12-01
+q2 (m = 2026-06): 1.00 PLN
+  unfulfilled: pay2[2026-06]
+  cut 2026-12-01
+q3 (m = 2026-01): ?"pay[2026-01] on 2026-01-15 changed after it was paid (version later); is back pay due, and when?" (pay[2026-01])
+  unfulfilled: pay[2026-01]
+  cut 2026-12-01
+q3 (m = 2026-02): ?"pay[2026-02] on 2026-02-15 changed after it was paid (version later); is back pay due, and when?" (pay[2026-02])
+  unfulfilled: pay[2026-02]
+  cut 2026-12-01
+q3 (m = 2026-03): 1.00 PLN
+  unfulfilled: pay[2026-03]
+  cut 2026-12-01
+q3 (m = 2026-04): 1.00 PLN
+  unfulfilled: pay[2026-04]
+  cut 2026-12-01
+q3 (m = 2026-05): 1.00 PLN
+  unfulfilled: pay[2026-05]
+  cut 2026-12-01
+q3 (m = 2026-06): 1.00 PLN
+  unfulfilled: pay[2026-06]
+  cut 2026-12-01
+warning: WARN-UNREAD def ends is read by nothing
+,26:fixes/g10/agent_adjcache_m,9:fixes-g10,26:run agent_adjcache_m.tally,1130:22:agent_adjcache_m.tally,1098:model m
+  tally 2
+  on 2028-12-31
+  start 2027-01-01
+  end 2028-12-31
+  note "review probe: adjustments measured inside a walk up to a day"
+source card "card (invented)"
+unit PLN: currency minor 0.01
+kind ovs: event certain
+  leg cash: PLN
+place acct: accounts PLN lives 2027-01-01..
+place bank: outside lives 2027-01-01..
+input fee: money PLN
+input bill_day: date
+def p[m in months]: money PLN = if pos(m) == 1 then 0 else p[m - 1] - sum(o.cash.amount for o in ovs over m)
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from acct to bank amount p[m]
+move op[m in months]: ovs
+  on start_of(m)
+  leg cash from acct to bank amount 0
+move bill: transfers
+  on bill_day
+  leg cash from bank to acct amount fee
+ask t: p[m] for m in [2028-01, 2028-07]
+ask u: p[2028-01] + bal(acct, 2028-12-31)
+ask v: bal(acct, 2028-12-31)
+version v1
+  cite card
+  governs always
+  known 2027-01-01
+  fee = 10.00 "the card"
+  bill_day = 2028-03-01 "the card"
+  opening[acct] = 0 PLN at 2027-01-01 start "the card"
+version v2
+  cite card
+  governs always
+  known 2028-05-01
+  replace fee = 20.00 "the card"
+,,1:0,1652:t (m = 2028-01): 0.00 PLN
+  unfulfilled: op[2027-02]
+  unfulfilled: op[2027-03]
+  unfulfilled: op[2027-04]
+  unfulfilled: op[2027-05]
+  unfulfilled: op[2027-06]
+  unfulfilled: op[2027-07]
+  unfulfilled: op[2027-08]
+  unfulfilled: op[2027-09]
+  unfulfilled: op[2027-10]
+  unfulfilled: op[2027-11]
+  unfulfilled: op[2027-12]
+  unfulfilled: op[2028-01]
+  cut 2028-12-31
+t (m = 2028-07): 0.00 PLN
+  unfulfilled: op[2027-02]
+  unfulfilled: op[2027-03]
+  unfulfilled: op[2027-04]
+  unfulfilled: op[2027-05]
+  unfulfilled: op[2027-06]
+  unfulfilled: op[2027-07]
+  unfulfilled: op[2027-08]
+  unfulfilled: op[2027-09]
+  unfulfilled: op[2027-10]
+  unfulfilled: op[2027-11]
+  unfulfilled: op[2027-12]
+  unfulfilled: op[2028-01]
+  unfulfilled: op[2028-02]
+  unfulfilled: op[2028-03]
+  unfulfilled: op[2028-04]
+  unfulfilled: op[2028-05]
+  unfulfilled: op[2028-06]
+  unfulfilled: op[2028-07]
+  cut 2028-12-31
+u: ?"bill on 2028-03-01 changed after it was paid (version v2); is back pay due, and when?" (bill)
+  adjustment: bill by 10.00 PLN on 2028-05-01 (version v2), remaining 10.00 PLN
+  unfulfilled: bill
+  unfulfilled: op[2027-02]
+  unfulfilled: op[2027-03]
+  unfulfilled: op[2027-04]
+  unfulfilled: op[2027-05]
+  unfulfilled: op[2027-06]
+  unfulfilled: op[2027-07]
+  unfulfilled: op[2027-08]
+  unfulfilled: op[2027-09]
+  unfulfilled: op[2027-10]
+  unfulfilled: op[2027-11]
+  unfulfilled: op[2027-12]
+  unfulfilled: op[2028-01]
+  cut 2028-12-31
+v: ?"bill on 2028-03-01 changed after it was paid (version v2); is back pay due, and when?" (bill)
+  adjustment: bill by 10.00 PLN on 2028-05-01 (version v2), remaining 10.00 PLN
+  unfulfilled: bill
+  cut 2028-12-31
+,26:fixes/g10/agent_adjcache_z,9:fixes-g10,26:run agent_adjcache_z.tally,1131:22:agent_adjcache_z.tally,1099:model m
+  tally 2
+  on 2028-12-31
+  start 2027-01-01
+  end 2028-12-31
+  note "review probe: adjustments measured inside a walk up to a day"
+source card "card (invented)"
+unit PLN: currency minor 0.01
+kind ovs: event certain
+  leg cash: PLN
+place acct: accounts PLN lives 2027-01-01..
+place bank: outside lives 2027-01-01..
+input fee: money PLN
+input bill_day: date
+def p[m in months]: money PLN = if pos(m) == 1 then 0 else p[m - 1] - sum(o.cash.amount for o in ovs over m)
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from acct to bank amount p[m]
+move op[m in months]: ovs
+  on start_of(m)
+  leg cash from acct to bank amount 0
+move zbill: transfers
+  on bill_day
+  leg cash from bank to acct amount fee
+ask t: p[m] for m in [2028-01, 2028-07]
+ask u: p[2028-01] + bal(acct, 2028-12-31)
+ask v: bal(acct, 2028-12-31)
+version v1
+  cite card
+  governs always
+  known 2027-01-01
+  fee = 10.00 "the card"
+  bill_day = 2028-03-01 "the card"
+  opening[acct] = 0 PLN at 2027-01-01 start "the card"
+version v2
+  cite card
+  governs always
+  known 2028-05-01
+  replace fee = 20.00 "the card"
+,,1:0,1660:t (m = 2028-01): 0.00 PLN
+  unfulfilled: op[2027-02]
+  unfulfilled: op[2027-03]
+  unfulfilled: op[2027-04]
+  unfulfilled: op[2027-05]
+  unfulfilled: op[2027-06]
+  unfulfilled: op[2027-07]
+  unfulfilled: op[2027-08]
+  unfulfilled: op[2027-09]
+  unfulfilled: op[2027-10]
+  unfulfilled: op[2027-11]
+  unfulfilled: op[2027-12]
+  unfulfilled: op[2028-01]
+  cut 2028-12-31
+t (m = 2028-07): 0.00 PLN
+  unfulfilled: op[2027-02]
+  unfulfilled: op[2027-03]
+  unfulfilled: op[2027-04]
+  unfulfilled: op[2027-05]
+  unfulfilled: op[2027-06]
+  unfulfilled: op[2027-07]
+  unfulfilled: op[2027-08]
+  unfulfilled: op[2027-09]
+  unfulfilled: op[2027-10]
+  unfulfilled: op[2027-11]
+  unfulfilled: op[2027-12]
+  unfulfilled: op[2028-01]
+  unfulfilled: op[2028-02]
+  unfulfilled: op[2028-03]
+  unfulfilled: op[2028-04]
+  unfulfilled: op[2028-05]
+  unfulfilled: op[2028-06]
+  unfulfilled: op[2028-07]
+  cut 2028-12-31
+u: ?"zbill on 2028-03-01 changed after it was paid (version v2); is back pay due, and when?" (zbill)
+  adjustment: zbill by 10.00 PLN on 2028-05-01 (version v2), remaining 10.00 PLN
+  unfulfilled: op[2027-02]
+  unfulfilled: op[2027-03]
+  unfulfilled: op[2027-04]
+  unfulfilled: op[2027-05]
+  unfulfilled: op[2027-06]
+  unfulfilled: op[2027-07]
+  unfulfilled: op[2027-08]
+  unfulfilled: op[2027-09]
+  unfulfilled: op[2027-10]
+  unfulfilled: op[2027-11]
+  unfulfilled: op[2027-12]
+  unfulfilled: op[2028-01]
+  unfulfilled: zbill
+  cut 2028-12-31
+v: ?"zbill on 2028-03-01 changed after it was paid (version v2); is back pay due, and when?" (zbill)
+  adjustment: zbill by 10.00 PLN on 2028-05-01 (version v2), remaining 10.00 PLN
+  unfulfilled: zbill
+  cut 2028-12-31
+,22:fixes/g10/agent_cyc_ab,9:fixes-g10,22:run agent_cyc_ab.tally,952:18:agent_cyc_ab.tally,925:model cyc
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probe: a cycle member whose when reads the other's flows"
+source card "card (invented)"
+unit PLN: currency minor 0.01
+kind pays: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2026-01-01..
+place spare: accounts PLN lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input amt: money PLN
+input the_day: date
+input d1: date
+move a: pays
+  on the_day
+  reads b
+  when flows(b, the_day .. the_day) > 0 PLN
+  leg cash from world to konto amount amt
+move b: pays
+  on the_day
+  reads konto
+  leg cash from world to spare amount max(amt, bal(konto) - amt)
+ask q: bal(konto, d1)
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 10.00 "card"
+  the_day = 2026-05-05 "card"
+  d1 = 2026-06-30 "card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "card"
+  opening[spare] = 0 PLN at 2026-01-01 start "card"
+,,1:0,31:q: 110.00 PLN
+  cut 2026-03-01
+,22:fixes/g10/agent_cyc_zb,9:fixes-g10,22:run agent_cyc_zb.tally,953:18:agent_cyc_zb.tally,926:model cyc
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probe: a cycle member whose when reads the other's flows"
+source card "card (invented)"
+unit PLN: currency minor 0.01
+kind pays: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2026-01-01..
+place spare: accounts PLN lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input amt: money PLN
+input the_day: date
+input d1: date
+move zz: pays
+  on the_day
+  reads b
+  when flows(b, the_day .. the_day) > 0 PLN
+  leg cash from world to konto amount amt
+move b: pays
+  on the_day
+  reads konto
+  leg cash from world to spare amount max(amt, bal(konto) - amt)
+ask q: bal(konto, d1)
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 10.00 "card"
+  the_day = 2026-05-05 "card"
+  d1 = 2026-06-30 "card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "card"
+  opening[spare] = 0 PLN at 2026-01-01 start "card"
+,,1:0,31:q: 110.00 PLN
+  cut 2026-03-01
+,25:fixes/g10/agent_life_base,9:fixes-g10,25:run agent_life_base.tally,882:21:agent_life_base.tally,852:model lifeb
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probe: a plan before from reads lifespan(k) of a thing the scenario ends"
+
+source card "card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind persons: parties
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input pay_day: date
+
+input horizon: date
+
+input hi: money PLN
+
+input lo: money PLN
+
+move pay: transfers
+  on pay_day
+  leg cash from world to konto amount if lifespan(olek).to < horizon then hi else lo
+
+ask b0: bal(konto, 2026-06-30)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [olek] lives 1990-01-01..
+  pay_day = 2026-02-01 "the card"
+  horizon = 2027-01-01 "the card"
+  hi = 200.00 "the card"
+  lo = 100.00 "the card"
+  opening[konto] = 0 PLN at 2026-01-01 start "the opening"
+,,1:0,51:b0: 100.00 PLN
+  unfulfilled: pay
+  cut 2026-03-01
+,25:fixes/g10/agent_projid_b2,9:fixes-g10,25:run agent_projid_b2.tally,1060:21:agent_projid_b2.tally,1029:model projid
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probe: a decision in a projection's walk reads a later decision's leg by id"
+source card "card (invented)"
+unit PLN: currency minor 0.01
+kind pays: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input amt: money PLN
+input floor: money PLN
+input x_day: date
+input y_day: date
+input t0: date
+input d1: date
+move y: pays
+  on y_day
+  reads konto
+  leg cash from world to konto amount max(floor, bal(konto) - floor)
+move x: pays
+  on x_day
+  reads y
+  leg cash from world to konto amount y.cash.amount
+ask a_main: bal(konto, d1)
+ask a_x: x.cash.amount
+ask a_y: y.cash.amount
+ask a_proj: bal(konto, d1) from t0
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 10.00 "card"
+  floor = 5.00 "card"
+  x_day = 2026-05-05 "card"
+  y_day = 2026-05-02 "card"
+  t0 = 2026-05-01 "card"
+  d1 = 2026-06-30 "card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "card"
+,,1:0,186:a_main: 290.00 PLN
+  cut 2026-03-01
+a_proj: 290.00 PLN
+  cut 2026-03-01
+a_x: 95.00 PLN
+  cut 2026-03-01
+a_y: 95.00 PLN
+  cut 2026-03-01
+warning: WARN-UNREAD input amt is read by nothing
+,25:fixes/g10/agent_projid_b3,9:fixes-g10,25:run agent_projid_b3.tally,1106:21:agent_projid_b3.tally,1075:model projid
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probe: a decision in a projection's walk reads a later decision's leg by id"
+source card "card (invented)"
+unit PLN: currency minor 0.01
+kind pays: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input amt: money PLN
+input floor: money PLN
+input x_day: date
+input y_day: date
+input t0: date
+input d1: date
+move y: pays
+  on y_day
+  reads konto
+  leg cash from world to konto amount max(floor, bal(konto) - floor)
+move x: pays
+  on x_day
+  reads y
+  leg cash from world to konto amount y.cash.amount
+ask a_main: bal(konto, d1)
+ask a_s: sum(s.cash.amount for s in pays over t0..d1)
+ask a_d: y.day
+ask a_y: y.cash.amount
+ask a_proj: bal(konto, d1) from t0
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 10.00 "card"
+  floor = 5.00 "card"
+  x_day = 2026-05-05 "card"
+  y_day = 2026-05-02 "card"
+  t0 = 2026-05-01 "card"
+  d1 = 2026-06-30 "card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "card"
+,,1:0,220:a_d: 2026-05-02
+  cut 2026-03-01
+a_main: 290.00 PLN
+  cut 2026-03-01
+a_proj: 290.00 PLN
+  cut 2026-03-01
+a_s: 190.00 PLN
+  cut 2026-03-01
+a_y: 95.00 PLN
+  cut 2026-03-01
+warning: WARN-UNREAD input amt is read by nothing
+,29:fixes/g10/agent_projid_before,9:fixes-g10,29:run agent_projid_before.tally,1017:25:agent_projid_before.tally,983:model projid
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probe: a decision in a projection's walk reads a later decision's leg by id"
+source card "card (invented)"
+unit PLN: currency minor 0.01
+kind pays: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input amt: money PLN
+input floor: money PLN
+input x_day: date
+input y_day: date
+input t0: date
+input d1: date
+move y: pays
+  on y_day
+  reads konto
+  leg cash from world to konto amount max(floor, bal(konto) - floor)
+move x: pays
+  on x_day
+  reads y
+  leg cash from world to konto amount y.cash.amount
+ask a_main: bal(konto, d1)
+ask a_proj: bal(konto, d1) from t0
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 10.00 "card"
+  floor = 5.00 "card"
+  x_day = 2026-05-05 "card"
+  y_day = 2026-05-02 "card"
+  t0 = 2026-05-01 "card"
+  d1 = 2026-06-30 "card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "card"
+,,1:0,122:a_main: 290.00 PLN
+  cut 2026-03-01
+a_proj: 290.00 PLN
+  cut 2026-03-01
+warning: WARN-UNREAD input amt is read by nothing
+,24:fixes/g10/agent_projid_k,9:fixes-g10,24:run agent_projid_k.tally,1109:20:agent_projid_k.tally,1079:model projk
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probe: a decision in a projection's walk reads a later decision's leg by id"
+source card "card (invented)"
+unit PLN: currency minor 0.01
+kind pays: event certain
+  leg cash: PLN
+kind outs: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input floor: money PLN
+input x_day: date
+input y_day: date
+input t0: date
+input d1: date
+move y[m in months]: pays
+  on y_day
+  when month_of(y_day) == m
+  reads konto
+  leg cash from world to konto amount max(floor, bal(konto) - floor)
+move x: outs
+  on x_day
+  reads y
+  leg cash from world to konto amount y[month_of(y_day)].cash.amount
+ask a_main: bal(konto, d1)
+ask a_proj: bal(konto, d1) from t0
+ask a_y: y[month_of(y_day)].cash.amount
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  floor = 5.00 "card"
+  x_day = 2026-05-05 "card"
+  y_day = 2026-05-10 "card"
+  t0 = 2026-05-01 "card"
+  d1 = 2026-06-30 "card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "card"
+,,1:0,267:a_main: refused: RUN-ORDER decision y[2026-05] is read before it has run
+  cut 2026-03-01
+a_proj: refused: RUN-ORDER decision y[2026-05] is read before it has run
+  cut 2026-03-01
+a_y: refused: RUN-ORDER decision y[2026-05] is read before it has run
+  cut 2026-03-01
+,24:fixes/g10/agent_projid_m,9:fixes-g10,24:run agent_projid_m.tally,1012:20:agent_projid_m.tally,983:model projid
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probe: a decision in a projection's walk reads a later decision's leg by id"
+source card "card (invented)"
+unit PLN: currency minor 0.01
+kind pays: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input amt: money PLN
+input floor: money PLN
+input x_day: date
+input y_day: date
+input t0: date
+input d1: date
+move y: pays
+  on y_day
+  reads konto
+  leg cash from world to konto amount max(floor, bal(konto) - floor)
+move x: pays
+  on x_day
+  reads y
+  leg cash from world to konto amount y.cash.amount
+ask a_main: bal(konto, d1)
+ask a_proj: bal(konto, d1) from t0
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 10.00 "card"
+  floor = 5.00 "card"
+  x_day = 2026-05-05 "card"
+  y_day = 2026-05-10 "card"
+  t0 = 2026-05-01 "card"
+  d1 = 2026-06-30 "card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "card"
+,,1:0,212:a_main: refused: RUN-ORDER decision y is read before it has run
+  cut 2026-03-01
+a_proj: refused: RUN-ORDER decision y is read before it has run
+  cut 2026-03-01
+warning: WARN-UNREAD input amt is read by nothing
+,26:fixes/g10/agent_projid_nox,9:fixes-g10,26:run agent_projid_nox.tally,1036:22:agent_projid_nox.tally,1004:model projid
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probe: a decision in a projection's walk reads a later decision's leg by id"
+source card "card (invented)"
+unit PLN: currency minor 0.01
+kind pays: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input amt: money PLN
+input floor: money PLN
+input x_day: date
+input y_day: date
+input t0: date
+input d1: date
+move y: pays
+  on y_day
+  reads konto
+  leg cash from world to konto amount max(floor, bal(konto) - floor)
+move x: pays
+  on x_day
+  reads konto
+  leg cash from world to konto amount max(floor, bal(konto) - floor)
+ask a_main: bal(konto, d1)
+ask a_proj: bal(konto, d1) from t0
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 10.00 "card"
+  floor = 5.00 "card"
+  x_day = 2026-05-05 "card"
+  y_day = 2026-05-02 "card"
+  t0 = 2026-05-01 "card"
+  d1 = 2026-06-30 "card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "card"
+,,1:0,122:a_main: 385.00 PLN
+  cut 2026-03-01
+a_proj: 385.00 PLN
+  cut 2026-03-01
+warning: WARN-UNREAD input amt is read by nothing
+,46:fixes/g10/agent_life_base_with_agent_life_scen,9:fixes-g10,47:run agent_life_base.tally agent_life_scen.tally,1111:21:agent_life_base.tally,852:model lifeb
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probe: a plan before from reads lifespan(k) of a thing the scenario ends"
+
+source card "card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind persons: parties
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input pay_day: date
+
+input horizon: date
+
+input hi: money PLN
+
+input lo: money PLN
+
+move pay: transfers
+  on pay_day
+  leg cash from world to konto amount if lifespan(olek).to < horizon then hi else lo
+
+ask b0: bal(konto, 2026-06-30)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [olek] lives 1990-01-01..
+  pay_day = 2026-02-01 "the card"
+  horizon = 2027-01-01 "the card"
+  hi = 200.00 "the card"
+  lo = 100.00 "the card"
+  opening[konto] = 0 PLN at 2026-01-01 start "the opening"
+,21:agent_life_scen.tally,199:scenario ends over lifeb
+  tally 2
+  from 2026-07-01
+
+version olek_ends
+  cite card
+  known 2026-01-01
+  replace persons + [olek] lives 1990-01-01..2026-09-30
+
+ask b1: bal(konto, 2026-06-30) in ends
+,,1:0,216:b0: 100.00 PLN
+  unfulfilled: pay
+  cut 2026-03-01
+b1: refused: ENGINE-INVARIANT scenario ends: konto holds 200.00 PLN at the end of 2026-06-30, the base 100.00 PLN (E §9 invariant 3)
+  world: ends
+  cut 2026-03-01
+,19:fixes/g10/b_atcut_m,9:fixes-g10,19:run b_atcut_m.tally,1057:15:b_atcut_m.tally,1032:model atcut
+  tally 2
+  on 2026-06-01
+  start 2026-01-01
+  end 2026-12-31
+  note "a refused re-measure's places (invented)"
+
+source card "the builder's card (invented)"
+
+unit PLN: currency minor 0.01
+
+input dest: key accounts
+
+input total: money PLN
+
+input parts: int
+
+input pay_day: date
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on pay_day
+  leg cash from world to dest amount total / parts
+
+ask q: bal(konto, 2026-03-01), bal(savings, 2026-03-01), bal(konto, 2026-05-31), bal(savings, 2026-05-31)
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  dest = konto "the card"
+  total = 100.00 PLN "the card"
+  parts = 2 "the card"
+  pay_day = 2026-02-01 "the card"
+  opening[konto] = 0 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+
+version v2
+  cite card
+  governs always
+  known 2026-04-01
+  replace dest = savings "the card"
+  replace parts = 0 "the card"
+,,1:0,106:q: (50.00 PLN, 0.00 PLN, refused: RUN-DIV division by zero, 0.00 PLN)
+  unfulfilled: pay
+  cut 2026-06-01
+,21:fixes/g10/b_base_base,9:fixes-g10,21:run b_base_base.tally,1404:17:b_base_base.tally,1377:model decide
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's decision-order fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+input holidays: calendar
+
+input horizon: date
+
+input lag: int
+
+input month_start: date
+
+input save_cap: money PLN
+
+input spend_cap: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move save: transfers
+  on add_business(month_start, lag, holidays)
+  reads konto
+  leg cash from konto to savings amount min(save_cap, bal(konto))
+
+move spend: transfers
+  on add_business(month_start, lag, holidays)
+  reads konto
+  after save
+  leg cash from konto to world amount min(spend_cap, bal(konto))
+
+ask q_decide: bal(konto, horizon), bal(savings, horizon)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  horizon = 2026-12-31 "the card"
+  lag = 10 "the card"
+  month_start = 2026-04-01 "the card"
+  save_cap = 100.00 PLN "the card"
+  spend_cap = 50.00 PLN "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,100:q_decide: (350.00 PLN, 100.00 PLN)
+  assumed: the card names no holiday (holidays)
+  cut 2026-03-01
+,19:fixes/g10/b_dhole_m,9:fixes-g10,19:run b_dhole_m.tally,1186:15:b_dhole_m.tally,1161:model dhole
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "a decision whose day is a hole (invented)"
+
+source card "the builder's card (invented)"
+
+unit PLN: currency minor 0.01
+
+input save_day: date
+
+input save_cap: money PLN
+
+input rent_day: date
+
+input rent_amt: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place other: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move save: transfers
+  on save_day
+  reads konto
+  leg cash from konto to savings amount min(save_cap, bal(konto))
+
+move rent: transfers
+  on rent_day
+  leg cash from other to world amount rent_amt
+
+ask q: bal(konto, 2026-06-30), bal(savings, 2026-06-30), bal(other, 2026-06-30)
+
+ask q_flows: flows(save, 2026-01-01..2026-07-01)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  save_cap = 100.00 PLN "the card"
+  rent_day = 2026-04-10 "the card"
+  rent_amt = 40.00 PLN "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[other] = 300.00 PLN at 2026-01-01 start "the card"
+,,1:0,160:q: (?"save_day: no value" (save_day), ?"save_day: no value" (save_day), 260.00 PLN)
+  cut 2026-03-01
+q_flows: ?"save_day: no value" (save_day)
+  cut 2026-03-01
+,22:fixes/g10/b_fault_base,9:fixes-g10,22:run b_fault_base.tally,1405:18:b_fault_base.tally,1377:model decide
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's decision-order fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+input holidays: calendar
+
+input horizon: date
+
+input lag: int
+
+input month_start: date
+
+input save_cap: money PLN
+
+input spend_cap: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move save: transfers
+  on add_business(month_start, lag, holidays)
+  reads konto
+  leg cash from konto to savings amount min(save_cap, bal(konto))
+
+move spend: transfers
+  on add_business(month_start, lag, holidays)
+  reads konto
+  after save
+  leg cash from konto to world amount min(spend_cap, bal(konto))
+
+ask q_decide: bal(konto, horizon), bal(savings, horizon)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  horizon = 2026-12-31 "the card"
+  lag = 10 "the card"
+  month_start = 2026-04-01 "the card"
+  save_cap = 100.00 PLN "the card"
+  spend_cap = 50.00 PLN "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,100:q_decide: (350.00 PLN, 100.00 PLN)
+  assumed: the card names no holiday (holidays)
+  cut 2026-03-01
+,19:fixes/g10/b_fault_f,9:fixes-g10,19:run b_fault_f.tally,908:15:b_fault_f.tally,884:model fault
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-06-30
+  note "the builder's own reality for the planted fault (invented)"
+
+source card "the builder's card (invented)"
+
+unit PLN: currency minor 0.01
+
+input rent_day: date
+
+input pay_day: date
+
+input rent_amt: money PLN
+
+input pay_amt: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move rent: transfers
+  on rent_day
+  leg cash from konto to world amount rent_amt
+
+move pay: transfers
+  on pay_day
+  leg cash from world to konto amount pay_amt
+
+ask q: bal(konto, 2026-01-31), bal(konto, 2026-05-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  rent_day = 2026-02-10 "the card"
+  pay_day = 2026-04-10 "the card"
+  rent_amt = 40.00 PLN "the card"
+  pay_amt = 100.00 PLN "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:0,65:q: (500.00 PLN, 560.00 PLN)
+  unfulfilled: rent
+  cut 2026-03-01
+,23:fixes/g10/b_future_base,9:fixes-g10,23:run b_future_base.tally,1469:19:b_future_base.tally,1440:model decide
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's decision-order fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+input holidays: calendar
+
+input horizon: date
+
+input lag: int
+
+input month_start: date
+
+input save_cap: money PLN
+
+input spend_cap: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move save: transfers
+  on add_business(month_start, lag, holidays)
+  reads konto, save, spend
+  leg cash from konto to savings amount min(save_cap * count(m in transfers over month_start..horizon), bal(konto))
+
+move spend: transfers
+  on add_business(month_start, lag, holidays)
+  reads konto
+  after save
+  leg cash from konto to world amount min(spend_cap, bal(konto))
+
+ask q_decide: bal(konto, horizon), bal(savings, horizon)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  horizon = 2026-12-31 "the card"
+  lag = 10 "the card"
+  month_start = 2026-04-01 "the card"
+  save_cap = 100.00 PLN "the card"
+  spend_cap = 50.00 PLN "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,230:q_decide: (refused: RUN-FUTURE a decision on 2026-04-15 binds over transfers through 2026-12-31, after its day, refused: RUN-FUTURE a decision on 2026-04-15 binds over transfers through 2026-12-31, after its day)
+  cut 2026-03-01
+,20:fixes/g10/b_gapdec_m,9:fixes-g10,20:run b_gapdec_m.tally,2531:16:b_gapdec_m.tally,2505:model g1
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-06-30
+  note "G8's gap and pad probes (invented): a pad, an anchor, a hole reading, two readings on one day, a hole movement before a pad"
+
+source card "probe card"
+
+unit PLN: currency minor 0.01
+
+kind spending: place PLN signed outside
+
+place spent: spending lives 2026-01-01..
+
+place bank: outside lives 2026-01-01..
+
+place wallet: cash PLN lives 2026-01-01..
+
+place jar: cash PLN lives 2026-01-01..
+
+place box: cash PLN lives 2026-01-01..
+
+input atm_amt: money PLN
+
+input atm_day: date
+
+input box_amt: money PLN
+
+move atm: transfers
+  on atm_day
+  leg cash from bank to wallet amount atm_amt
+
+input top_day: date
+
+input top_ref: date
+
+move topup: transfers
+  on top_day
+  reads wallet
+  leg cash from bank to pot amount min(bal(wallet), abs(gap(wallet, top_ref)))
+
+place pot: cash PLN lives 2026-01-01..
+
+ask g_dec: bal(pot, 2026-03-31), bal(wallet, 2026-03-31)
+
+ask g_late: bal(pot, 2026-06-30)
+
+move topbox: transfers
+  on atm_day
+  leg cash from bank to box amount box_amt
+
+ask g_pad: gap(wallet, 2026-01-31), flows(wallet, 2026-01), flows(spent, 2026-01)
+
+ask g_anchor: gap(jar, 2026-01-31), flows(jar, 2026-01), bal(jar, 2026-01-31)
+
+ask g_none: gap(wallet, 2026-01-30)
+
+ask g_two: gap(wallet, 2026-02-28), flows(wallet, 2026-02), bal(wallet, 2026-02-28)
+
+ask g_hole: gap(box, 2026-01-31), flows(box, 2026-01), flows(box, 2026-02), bal(box, 2026-02-28)
+
+ask g_holeread: gap(jar, 2026-02-28), flows(jar, 2026-02)
+
+ask g_span: flows(wallet, 2026-01-31 .. 2026-01-31), flows(wallet, 2026-02-01 .. 2026-02-28)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  pad wallet from spent
+  pad box from spent
+  anchor jar
+  atm_amt = 300.00 PLN "the card"
+  atm_day = 2026-01-10 "the card"
+  top_day = 2026-03-05 "the card"
+  top_ref = 2026-01-31 "the card"
+  box_amt = ?"what went into the box?" "the card"
+  opening[box] = 50.00 PLN at 2026-01-01 start "the card"
+  opening[jar] = 80.00 PLN at 2026-01-01 start "the card"
+  opening[pot] = 0 PLN at 2026-01-01 start "the card"
+  opening[wallet] = 400.00 PLN at 2026-01-01 start "the card"
+  stated[box] = 120.00 PLN at 2026-01-31 end "counted"
+  stated[jar] = 70.00 PLN at 2026-01-31 end "counted"
+  stated[jar] = ?"what did the jar hold?" at 2026-02-28 end "not counted"
+  stated[wallet] = 250.00 PLN at 2026-01-31 end "counted"
+  stated[wallet] = 260.00 PLN at 2026-02-28 start "counted in the morning"
+  stated[wallet] = 240.00 PLN at 2026-02-28 end "counted at night"
+,,1:0,1782:g_anchor: (-10.00 PLN, 0.00 PLN, 70.00 PLN)
+  anchor: jar 2026-01-31 end, stated 70.00 PLN, difference -10.00 PLN
+  cut 2026-06-30
+g_dec: (240.00 PLN, 240.00 PLN)
+  pad: wallet 2026-02-28 end, pads:card_2026:wallet@2026-02-28 end of -20.00 PLN
+  unfulfilled: atm
+  unfulfilled: topup
+  cut 2026-06-30
+g_hole: (?"what went into the box?" (box_amt), ?"what went into the box?" (box_amt), 0.00 PLN, 120.00 PLN)
+  pad: box 2026-01-31 end, pads:card_2026:box@2026-01-31 end of ?"what went into the box?" (box_amt)
+  unfulfilled: topbox
+  cut 2026-06-30
+g_holeread: (?"what did the jar hold?" (stated[jar]), 0.00 PLN)
+  anchor: jar 2026-01-31 end, stated 70.00 PLN, difference -10.00 PLN
+  cut 2026-06-30
+g_late: 240.00 PLN
+  pad: wallet 2026-02-28 end, pads:card_2026:wallet@2026-02-28 end of -20.00 PLN
+  unfulfilled: atm
+  unfulfilled: topup
+  cut 2026-06-30
+g_none: ?"stated[wallet] has no reading at 2026-01-30" (stated[wallet])
+  cut 2026-06-30
+g_pad: (-450.00 PLN, -150.00 PLN, ?"what went into the box?" (box_amt))
+  pad: box 2026-01-31 end, pads:card_2026:box@2026-01-31 end of ?"what went into the box?" (box_amt)
+  pad: wallet 2026-01-31 end, pads:card_2026:wallet@2026-01-31 end of -450.00 PLN
+  unfulfilled: atm
+  unfulfilled: topbox
+  cut 2026-06-30
+g_span: (-450.00 PLN, -10.00 PLN)
+  pad: wallet 2026-01-31 end, pads:card_2026:wallet@2026-01-31 end of -450.00 PLN
+  pad: wallet 2026-02-28 end, pads:card_2026:wallet@2026-02-28 end of -20.00 PLN
+  pad: wallet 2026-02-28 start, pads:card_2026:wallet@2026-02-28 start of 10.00 PLN
+  cut 2026-06-30
+g_two: (-20.00 PLN, -10.00 PLN, 240.00 PLN)
+  pad: wallet 2026-02-28 end, pads:card_2026:wallet@2026-02-28 end of -20.00 PLN
+  pad: wallet 2026-02-28 start, pads:card_2026:wallet@2026-02-28 start of 10.00 PLN
+  cut 2026-06-30
+,21:fixes/g10/b_nb3_model,9:fixes-g10,21:run b_nb3_model.tally,733:17:b_nb3_model.tally,707:model gifts
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+kind gifts: event certain
+  leg cash: PLN
+
+kind big: gifts
+  attr size: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input amt: money PLN
+
+input sz: int
+
+move small_gift[m in months]: gifts
+  on start_of(m)
+  leg cash from world to konto amount amt
+
+move big_gift[m in months]: big
+  on start_of(m)
+  attr size = sz
+  leg cash from world to konto amount amt
+
+ask q: bal(konto, 2026-12-31)
+
+version plan
+  cite card
+  governs always
+  known 2025-12-01
+  amt = 10.00 "x"
+  sz = 3 "x"
+  opening[konto] = 0 at 2026-01-01 start "the card"
+,,1:0,711:q: 240.00 PLN
+  unfulfilled: big_gift[2026-01]
+  unfulfilled: big_gift[2026-02]
+  unfulfilled: big_gift[2026-03]
+  unfulfilled: big_gift[2026-04]
+  unfulfilled: big_gift[2026-05]
+  unfulfilled: big_gift[2026-06]
+  unfulfilled: big_gift[2026-07]
+  unfulfilled: big_gift[2026-08]
+  unfulfilled: big_gift[2026-09]
+  unfulfilled: big_gift[2026-10]
+  unfulfilled: small_gift[2026-01]
+  unfulfilled: small_gift[2026-02]
+  unfulfilled: small_gift[2026-03]
+  unfulfilled: small_gift[2026-04]
+  unfulfilled: small_gift[2026-05]
+  unfulfilled: small_gift[2026-06]
+  unfulfilled: small_gift[2026-07]
+  unfulfilled: small_gift[2026-08]
+  unfulfilled: small_gift[2026-09]
+  unfulfilled: small_gift[2026-10]
+  cut 2026-10-20
+,23:fixes/g10/b_notyet_base,9:fixes-g10,23:run b_notyet_base.tally,2384:19:b_notyet_base.tally,2355:model rules
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's run-code fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index feb = day 2026-02-01..2026-02-28
+
+input amt: money PLN
+
+input day: date
+
+input holidays: calendar
+
+input lag: int
+
+input target: money PLN
+
+input rate[k in qs]: num
+
+input weight[k in qs]: num
+
+input from_day: date
+
+input step: money PLN
+
+input to_day: date
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def lowest: money PLN = min(fee[k] for k in qs where rate[k] > 0)
+
+def due: date = add_business(day, lag, holidays)
+
+def split[k in qs]: money PLN = prorata(amt, weight[j] for j in qs, k, step, rest largest ties by pos(j))
+
+def open_day[d in feb]: date = d
+
+def first_pay: key transfers = first(m in transfers over from_day..to_day) ties by m.day
+
+def opened: date = open_day[day]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place loan: debts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+move repay: transfers
+  on due
+  reads loan
+  leg cash from konto to loan amount max(fee[q1], bal(loan))
+
+ask q_total: total, bal(konto, 2026-12-31)
+
+ask q_loan: bal(loan, 2026-12-31)
+
+ask q_lowest: lowest
+
+ask q_due: due
+
+ask q_split: split[k] for k in qs
+
+ask q_opened: opened
+
+ask q_first: first_pay
+
+ask q_solve: solve total == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  lag = 3 "the card"
+  target = 20.00 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  from_day = 2026-03-02 "the card"
+  step = 0.01 PLN "the card"
+  to_day = 2026-12-31 "the card"
+  weight[q1] = 1 "the card"
+  weight[q2] = 3 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[loan] = -1000.00 PLN at 2026-01-01 start "the card"
+,,1:0,625:q_due: 2026-02-13
+  assumed: the card names no holiday (holidays)
+  cut 2026-03-01
+q_first: ?"m: no transfers yet, and its span reaches past the cut" (transfers)
+  cut 2026-03-01
+q_loan: -990.00 PLN
+  assumed: the card names no holiday (holidays)
+  unfulfilled: repay
+  cut 2026-03-01
+q_lowest: 10.00 PLN
+  cut 2026-03-01
+q_opened: 2026-02-10
+  cut 2026-03-01
+q_solve: 199.99 PLN
+  cut 2026-03-01
+q_split (k = q1): 25.00 PLN
+  cut 2026-03-01
+q_split (k = q2): 75.00 PLN
+  cut 2026-03-01
+q_total: (10.00 PLN, 480.00 PLN)
+  assumed: the card names no holiday (holidays)
+  unfulfilled: pay
+  unfulfilled: repay
+  cut 2026-03-01
+,22:fixes/g10/b_order_base,9:fixes-g10,22:run b_order_base.tally,1392:18:b_order_base.tally,1364:model decide
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's decision-order fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+input holidays: calendar
+
+input horizon: date
+
+input lag: int
+
+input month_start: date
+
+input save_cap: money PLN
+
+input spend_cap: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move save: transfers
+  on add_business(month_start, lag, holidays)
+  reads konto
+  leg cash from konto to savings amount min(save_cap, bal(konto))
+
+move spend: transfers
+  on add_business(month_start, lag, holidays)
+  reads konto
+  leg cash from konto to world amount min(spend_cap, bal(konto))
+
+ask q_decide: bal(konto, horizon), bal(savings, horizon)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  horizon = 2026-12-31 "the card"
+  lag = 10 "the card"
+  month_start = 2026-04-01 "the card"
+  save_cap = 100.00 PLN "the card"
+  spend_cap = 50.00 PLN "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,178:q_decide: (refused: RUN-ORDER decisions save and spend read each other on 2026-04-15, refused: RUN-ORDER decisions save and spend read each other on 2026-04-15)
+  cut 2026-03-01
+,22:fixes/g10/b_rbase_base,9:fixes-g10,22:run b_rbase_base.tally,2383:18:b_rbase_base.tally,2355:model rules
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's run-code fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index feb = day 2026-02-01..2026-02-28
+
+input amt: money PLN
+
+input day: date
+
+input holidays: calendar
+
+input lag: int
+
+input target: money PLN
+
+input rate[k in qs]: num
+
+input weight[k in qs]: num
+
+input from_day: date
+
+input step: money PLN
+
+input to_day: date
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def lowest: money PLN = min(fee[k] for k in qs where rate[k] > 0)
+
+def due: date = add_business(day, lag, holidays)
+
+def split[k in qs]: money PLN = prorata(amt, weight[j] for j in qs, k, step, rest largest ties by pos(j))
+
+def open_day[d in feb]: date = d
+
+def first_pay: key transfers = first(m in transfers over from_day..to_day) ties by m.day
+
+def opened: date = open_day[day]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place loan: debts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+move repay: transfers
+  on due
+  reads loan
+  leg cash from konto to loan amount max(fee[q1], bal(loan))
+
+ask q_total: total, bal(konto, 2026-12-31)
+
+ask q_loan: bal(loan, 2026-12-31)
+
+ask q_lowest: lowest
+
+ask q_due: due
+
+ask q_split: split[k] for k in qs
+
+ask q_opened: opened
+
+ask q_first: first_pay
+
+ask q_solve: solve total == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  lag = 3 "the card"
+  target = 20.00 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  from_day = 2026-02-01 "the card"
+  step = 0.01 PLN "the card"
+  to_day = 2026-12-31 "the card"
+  weight[q1] = 1 "the card"
+  weight[q2] = 3 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[loan] = -1000.00 PLN at 2026-01-01 start "the card"
+,,1:0,626:q_due: 2026-02-13
+  assumed: the card names no holiday (holidays)
+  cut 2026-03-01
+q_first: pay
+  assumed: the card names no holiday (holidays)
+  unfulfilled: pay
+  cut 2026-03-01
+q_loan: -990.00 PLN
+  assumed: the card names no holiday (holidays)
+  unfulfilled: repay
+  cut 2026-03-01
+q_lowest: 10.00 PLN
+  cut 2026-03-01
+q_opened: 2026-02-10
+  cut 2026-03-01
+q_solve: 199.99 PLN
+  cut 2026-03-01
+q_split (k = q1): 25.00 PLN
+  cut 2026-03-01
+q_split (k = q2): 75.00 PLN
+  cut 2026-03-01
+q_total: (10.00 PLN, 480.00 PLN)
+  assumed: the card names no holiday (holidays)
+  unfulfilled: pay
+  unfulfilled: repay
+  cut 2026-03-01
 ,
