@@ -799,10 +799,12 @@ version card_2026
                 "def worth: num PLN = value(st, day) in PLN by last(zz)",
                 "LOAD-NAME unknown price input zz (a.tally:57)",
             ),
+            // G14, #130 (P61): a price keyed by a key that isn't a unit, of type `num`, is
+            // not a `num CUR/u` (L §5.10), where refcore loads it
             (
                 worth,
                 "def worth: num PLN = value(st, day) in PLN by rate",
-                "loaded",
+                "LOAD-UNIT value by rate: the price is num, not num PLN/u (a.tally:57)",
             ),
             (
                 worth,
