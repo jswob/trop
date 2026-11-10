@@ -309,8 +309,10 @@ fn by_id(a: &Node, b: &Node) -> core::cmp::Ordering {
 }
 
 /// The ids of the items with a path of edges to one of `start`, by depth, each depth in the
-/// order of its ids, then its kinds' words; `start` itself not among them (refcore's
-/// `Checker.readers_of`). E §10.
+/// order of its ids, then its kinds' words; `start` itself not among them. Each item prints
+/// once, in the first depth that reaches one of its nodes: a move's day node is its move, and
+/// a scenario's expression row its input or def (refcore's `Checker.readers_of`, which prints
+/// nodes; ruling P64, #133). L §5.18 ("each once"), E §10, §3.1 step 5.
 fn readers(m: &Reality, start: &[&Node]) -> Vec<String> {
     let mut inverse: BTreeMap<&Node, Vec<&Node>> = BTreeMap::new();
     for (reader, targets) in &m.graph.edges {
@@ -323,23 +325,66 @@ fn readers(m: &Reality, start: &[&Node]) -> Vec<String> {
             }
         }
     }
-    let mut seen: BTreeSet<&Node> = start.iter().copied().collect();
-    let mut frontier: Vec<&Node> = start.to_vec();
+    let mut seen: BTreeSet<Node> = start.iter().map(|n| item_of(n, &inverse)).collect();
+    let mut frontier: Vec<Node> = seen.iter().flat_map(|i| nodes_of(m, i)).collect();
     let mut out = Vec::new();
     while !frontier.is_empty() {
-        let mut layer: Vec<&Node> = Vec::new();
+        let mut layer: Vec<Node> = Vec::new();
         for x in &frontier {
             for r in inverse.get(x).into_iter().flatten() {
-                if seen.insert(r) {
-                    layer.push(r);
+                let item = item_of(r, &inverse);
+                if !seen.contains(&item) {
+                    seen.insert(item.clone());
+                    layer.push(item);
                 }
             }
         }
-        layer.sort_by(|a, b| by_id(a, b));
+        layer.sort_by(by_id);
         out.extend(layer.iter().map(|n| n.id.clone()));
-        frontier = layer;
+        frontier = layer.iter().flat_map(|i| nodes_of(m, i)).collect();
     }
     out
+}
+
+/// The item node `node` stands for: a move's day is its move, a scenario's expression row the
+/// input or def that reads it, alone (`inverse`, the graph's readers), any other node itself
+/// (ruling P64, #133). E §3.1 step 5, L §6.4.
+fn item_of(node: &Node, inverse: &BTreeMap<&Node, Vec<&Node>>) -> Node {
+    match node.kind {
+        NodeKind::MoveOn => Node::new(NodeKind::Move, &node.id),
+        NodeKind::Srow => inverse
+            .get(node)
+            .and_then(|readers| readers.first())
+            .map_or_else(|| node.clone(), |n| (*n).clone()),
+        NodeKind::Input
+        | NodeKind::Def
+        | NodeKind::Band
+        | NodeKind::Move
+        | NodeKind::Place
+        | NodeKind::Ask
+        | NodeKind::Price
+        | NodeKind::Balances
+        | NodeKind::Parts
+        | NodeKind::Axis
+        | NodeKind::Fill => node.clone(),
+    }
+}
+
+/// The nodes of the graph that stand for `item`: itself, a move's day node, and the
+/// expression rows an input or def reads. E §3.1 step 5, L §6.4.
+fn nodes_of(m: &Reality, item: &Node) -> Vec<Node> {
+    let mut nodes = vec![item.clone()];
+    if item.kind == NodeKind::Move {
+        nodes.push(Node::new(NodeKind::MoveOn, &item.id));
+    }
+    let rows = m
+        .graph
+        .edges
+        .get(item)
+        .into_iter()
+        .flat_map(|targets| targets.keys());
+    nodes.extend(rows.filter(|n| n.kind == NodeKind::Srow).cloned());
+    nodes
 }
 
 /// One step of printing a derivation: a node at its depth, or a line made already.

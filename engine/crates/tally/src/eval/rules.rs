@@ -184,7 +184,7 @@ impl Engine {
             .rules(m, def, (keys, env, ctx), node)
             .and_then(|v| coerce_def(m, def, v));
         self.trace_close(node);
-        self.trace_value(node, &result);
+        self.trace_cell(&id, node, &result);
         self.holder = outer;
         let reads = self.close_reads();
         let class = self.close_class();

@@ -2368,3 +2368,25 @@ The builder of the M1 run, group G12 of `tmp/m1/build-plan.md`, on c82ef44. Each
 - **Commits:** 9a1bc5b (the balance, projection and `low` forms, P63), and this entry's (the instance form, the move read, the report-only restructure).
 - **Cost:** about 1.5 % of the week at this entry (`engine/tools/usage`), inside the brief's 2.0 % stop.
 - **STOP-REPORTs:** none new. Of G11's three, P63's two are built to the ruling (#132), and the fold stays open. Open from before: G9's P8-5, G8's three, G7's, G5's (ruled by P38), G4's (#116), G1's.
+
+### Addendum 2026-11-10: G11 review's B1, B2 and B3 (`tmp/m1/review-g11.md`; ruling P64, #133)
+
+- **B1, an extreme's winner past the counted depth.** An extreme explains its first winning term by reading it again alone (`trace_winner`), once `trace_drop` has forgotten the cells the terms traced. That read evaluates the recurrence anew, a cell deeper than the term's own read, so it can pass depth 32 and unwind. The nodes it made on the way kept no value and stayed in the trace's cell map. The memo already held those cells, so the read after the replay referenced the value-less nodes: `= ?`, and a chain cut short. Now `def_cell` calls `eval/trace.rs` `trace_cell` in place of `trace_value`; it forgets a cell whose node ends on a stop that is no refusal, so the read after the replay evaluates it again under the trace. Each replay leaves the cells it computed in the trace, so the chain the re-read walks shortens until it fits. `agent/deep_max` (34 steps), `deep_agg` (the aggregate form), `deep_max300` (300 steps) and `d1` `e_hi2` (80 steps) now print refcore's bytes.
+- **B2 and B3, each item once (P64).** `ask/explain.rs` `readers` now walks items, not graph nodes. `item_of` takes a move's day node (`MoveOn`) to its move, and a scenario's expression row (`Srow`) to the input or def that reads it. `nodes_of` gives an item's nodes back, so its readers are those of all its nodes. Each item prints once, in the first layer that reaches one of its nodes, by id. Results: `p/c` and `c2` `r_d2: pay2`; `p/b` `r_d2: b2, bo, lastpx, pay2, elp, ib2, ibo, ilp, v`; `ro/m` and `m2` `r_d: b, pay, nfa, v`; `agent/r1` `r_d: b, pay, v`; `agent/s1` `r_a2: b, c, c_sc`. Refcore prints `pay2, pay2`, `…, ilp, pay2, v`, `b, pay, pay, v, nfa`, `b, pay, pay, v` and `c, input, b, c_sc` there, so T holds those seven for #133.
+- **NB1, left for the round.** The item graph has no edge from a balance read to the moves that book into it, and refcore agrees. A static inverse would make every balance reader a reader of every move, which is wider than `inputs-of`'s traced list. Not cheap, and the review calls it a spec question.
+- **NB8, no change: not a defect.** A label is one rule in force at a cell's law date. `in_force` keeps at most one version per label (L §5.11 step 2), and two rules of one label, neither a `replace`, are refused at load (`LOAD-LABEL`). Refcore keys its states by label too.
+- **NB10, left for the round**, as the brief says.
+- **Probes.** `tmp/m1/g11/tools/sweep.sh` runs each ask against refcore (365 asks):
+  - the review's `p/` (`a`, `b`, `c`, `c2`, `d`, `e`, `pr/sign`) and `agent/` (`ax`, `b1`, `d1`–`d5`, `deep_agg`, `deep_max`, `deep_max300`, `ip`, `mv1`, `mv2`, `mvs`, `mx`, `o1`, `o2`, `r1`, `s1/`);
+  - mine in `g11/`: `v/` (the five ids' files), `ai`, `ai2`, `st`, `ro`, `g7`, `un`, `a13`.
+  - The full bytes are in `before.txt` and `after.txt`, one line per ask in `before-sum.txt` and `after-sum.txt`.
+  - Before (c4c2bfb): 338 SAME, 27 DIFF. After: 337 SAME, 28 DIFF.
+  - 12 asks changed: B1's 5 went DIFF → SAME; B2/B3's 6 went SAME → DIFF, and `s1` `r_a2` stayed DIFF with new bytes, all by P64.
+  - The other 21 DIFFs are byte-for-byte as before: not built (`agent/b1` (bands over dates), `mv2`, `mvs`, `p/b` `enn`, `ai2` `e_pick_a`, `un/t`, `un/w`); the review's item 13 (`mx`, a tie broken by a hole); and G12's open `ro/m` `r_fees` and `ro/m4` `e_b`.
+  - After the restructure for check full's report-only hit, the 61 `readers-of` asks were re-run, byte-equal to `after.txt`.
+- **For T:** the B1 vectors are refcore-equal (`deep_max`, `deep_agg`, `deep_max300`). The P64 vectors are against the ruling, since refcore is wrong there: a move whose day and amount read x (`p/c2`), a reader through the day (`ro/m`), a scenario row (`agent/s1`).
+- **Mutants:** not run this turn, to stay within two heavy jobs. The kernel functions are `trace_cell`, `readers`, `item_of` and `nodes_of`.
+- **Files:** `eval/trace.rs`, `eval/rules.rs`, `ask/explain.rs`. **Exceptions:** +0. The first check full was red on one new report-only hit (a named lifetime on a list helper), which was restructured away.
+- **Check:** `check full: green, 31 steps (1144s)` on the code of this addendum's commit; `milestone-report: M1: 69/72 green (gates once M1 is tagged)`, as before the turn.
+- **Cost:** about 0.17 % of the week for this turn, 2.02 % for the session at this addendum (`engine/tools/usage`).
+- **STOP-REPORTs:** none new; G11's fold stays open (P62).

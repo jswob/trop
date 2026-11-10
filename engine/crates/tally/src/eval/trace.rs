@@ -496,6 +496,28 @@ impl Engine {
         }
     }
 
+    /// Sets the value of def cell `id`'s node at `at`, as [`Engine::trace_value`]; a stop that
+    /// is no refusal also forgets the cell, so a later read evaluates it again rather than
+    /// reference a node that holds no value. The memo may hold the cell's value from before
+    /// the trace dropped it (`trace_drop`): the read past the counted depth unwinds, and its
+    /// replay reads the cell again (E §3.2, §10).
+    pub(super) fn trace_cell(
+        &mut self,
+        id: &CellId,
+        at: Option<usize>,
+        result: &Result<Value, Stop>,
+    ) {
+        self.trace_value(at, result);
+        if matches!(result, Ok(_) | Err(Stop::Refused(_))) {
+            return;
+        }
+        if let Some(trace) = self.trace.as_mut()
+            && trace.cells.get(id).copied() == at
+        {
+            trace.cells.remove(id);
+        }
+    }
+
     /// Adds a line about the node at `at`: a def's `given`.
     pub(super) fn trace_line(&mut self, at: Option<usize>, line: String) {
         let Some((trace, at)) = self.traced_node(at) else {
