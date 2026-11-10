@@ -202,17 +202,38 @@ impl Env {
     /// This scope with `name` bound to `value` too.
     #[must_use]
     pub fn with(&self, name: &str, value: Value, domain: Option<Domain>) -> Env {
-        let mut out = self.clone();
-        out.bind(name, value, domain);
-        out
+        self.and(Var {
+            name: name.to_owned(),
+            value,
+            domain,
+            written: None,
+        })
     }
 
     /// This scope with binding `bind` bound to `value` too, its written form kept (L §8.2).
     #[must_use]
     pub fn with_bind(&self, bind: &Bind, value: Value, domain: Option<Domain>) -> Env {
-        let mut out = self.clone();
-        out.bind_written((&bind.var, &bind.text), value, domain);
-        out
+        self.and(Var {
+            name: bind.var.clone(),
+            value,
+            domain,
+            written: Some(bind.text.clone()),
+        })
+    }
+
+    /// This scope with `var` bound too, holding room for its bindings and no more: an
+    /// aggregate keeps each member's scope while it runs, a list of up to 1 000 000 keys as
+    /// many scopes (L §7.6 item 2).
+    fn and(&self, var: Var) -> Env {
+        Env {
+            vars: self
+                .vars
+                .iter()
+                .cloned()
+                .chain(core::iter::once(var))
+                .collect(),
+            figures: self.figures,
+        }
     }
 
     /// Whether expression `e` may read a variable of this scope (refcore's `_pertuple`'s
