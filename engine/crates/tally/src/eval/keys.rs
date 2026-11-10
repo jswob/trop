@@ -386,8 +386,8 @@ pub(crate) fn thing_seen(
     false
 }
 
-/// A literal key its index or kind lacks, met at run: load refuses it with its place
-/// (`key_value`), refcore's run with `RUN-KEY`, so the run stops "not implemented".
+/// A literal key its index or kind lacks: load refuses it with its place (`LOAD-KEY`), and a
+/// key a version adds after the cut is `RUN-KEY` before it comes here (L §2.5, §5.6).
 pub(super) fn lacks_at_run() -> Stop {
-    Stop::NotBuilt("a literal key its index or kind lacks, met at run")
+    invariant("a literal key its index or kind lacks: load refuses it first (LOAD-KEY)")
 }

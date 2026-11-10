@@ -827,9 +827,8 @@ fn rate_parts(
         ));
     };
     let Value::Word(target) = period else {
-        // load's types refuse it; refcore's run has no twin of this text
-        return Err(Stop::NotBuilt(
-            "a period argument that isn't a period word, met at run",
+        return Err(invariant(
+            "a period argument that isn't a period word: load's types refuse it first (LOAD-UNIT)",
         ));
     };
     let share = if target == "day" || per == "day" {
@@ -843,9 +842,9 @@ fn rate_parts(
         }
         Num::int(1)
     } else {
-        let months = period_months(target).ok_or(Stop::NotBuilt(
-            "a period word that is no period, met at run",
-        ))?;
+        let months = period_months(target).ok_or_else(|| {
+            invariant("a period word that is no period: load takes only day, month, quarter, year")
+        })?;
         let per_months = period_months(per).ok_or_else(|| invariant("a rate's period"))?;
         Num::ratio(months, per_months).map_err(num_stop)?
     };

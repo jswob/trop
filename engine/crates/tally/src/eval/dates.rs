@@ -146,9 +146,8 @@ impl Engine {
             return Err(anchored());
         }
         let Value::MonthDay(month, day) = b else {
-            // load's types refuse it; refcore's run has no twin of this text
-            return Err(Stop::NotBuilt(
-                "day_of(y, md) with no month-day, met at run",
+            return Err(invariant(
+                "day_of(y, md) with no month-day: load's types refuse it first (LOAD-UNIT)",
             ));
         };
         Day::from_ymd(period.start().year(), month, day)

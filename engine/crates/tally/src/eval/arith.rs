@@ -432,9 +432,8 @@ pub fn int_of(m: &Reality, v: &Value) -> Result<i64, Stop> {
             "a value is none here: an integer argument".to_owned(),
         ));
     }
-    // load's types refuse it; refcore's run takes the value as it is
-    Err(Stop::NotBuilt(
-        "an integer argument that isn't a number, met at run",
+    Err(invariant(
+        "an integer argument that isn't a number: load's types refuse it first (LOAD-UNIT)",
     ))
 }
 

@@ -692,8 +692,9 @@ impl Engine {
         let mut out = Vec::with_capacity(fields.len());
         for f in fields {
             let Field::Named(name, value) = f else {
-                // load refuses it; refcore's run has no twin of this text
-                return Err(Stop::NotBuilt("a leg in a record, met at run"));
+                return Err(invariant(
+                    "a leg in a record: load refuses it first (LOAD-FIELD)",
+                ));
             };
             let v = match value {
                 FieldValue::Hole(text) => Value::Hole(Hole::asked(text, "")),
@@ -811,19 +812,60 @@ pub(super) fn binop(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Result<Val
                 "a value is none here: arithmetic".to_owned(),
             ));
         }
-        if let Value::Word(_) = v {
-            // load resolves a key word; refcore's run refuses it with its place, which a
-            // value here doesn't carry
-            return Err(Stop::NotBuilt("an ambiguous key met at run"));
-        }
     }
     if lhs.as_hole().is_some() || rhs.as_hole().is_some() {
         return hole_of(&[lhs.as_hole(), rhs.as_hole()]);
     }
-    if as_window(lhs).is_some() || as_window(rhs).is_some() {
-        return window_arith(m, op, lhs, rhs);
+    let words = if matches!(lhs, Value::Word(_)) || matches!(rhs, Value::Word(_)) {
+        Some(arith_words(m, op, lhs, rhs)?)
+    } else {
+        None
+    };
+    let (a, b) = match &words {
+        Some((x, y)) => (x, y),
+        None => (lhs, rhs),
+    };
+    if as_window(a).is_some() || as_window(b).is_some() {
+        return window_arith(m, op, a, b);
     }
-    arith(m, op, lhs, rhs)
+    arith(m, op, a, b)
+}
+
+/// Key literals in arithmetic, resolved as load resolved them (L §2.5): by the key, thing or
+/// code beside them, else, moved by an offset, as a key of the one index that holds them
+/// (L §4.2 Key arithmetic).
+fn arith_words(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Result<(Value, Value), Stop> {
+    let (a, b) = resolve_pair(m, lhs.clone(), rhs.clone())?;
+    let offset = matches!(op, Op::Add | Op::Sub) && matches!(b, Value::Number(_));
+    match (&a, &b) {
+        (Value::Word(word), _) if offset => Ok((held_key(m, word)?, b)),
+        (Value::Word(_), _) | (_, Value::Word(_)) => Err(invariant(
+            "a key literal in arithmetic no position resolves: load refuses it (LOAD-UNIT)",
+        )),
+        _ => Ok((a, b)),
+    }
+}
+
+/// Key literal `word` as a key of the one index that holds it: the index its position named
+/// at load, which load checked holds it (L §2.5, `LOAD-KEY`).
+fn held_key(m: &Reality, word: &str) -> Result<Value, Stop> {
+    let mut held = m.indexes.entries().filter_map(|(id, ix)| {
+        let key = KeyVal::Key {
+            index: id.clone(),
+            name: word.to_owned(),
+        };
+        ix.pos(&key).map(|_| key)
+    });
+    match (held.next(), held.next()) {
+        (Some(key), None) => Ok(Value::of_key(&key)),
+        // the run keeps no position's type: which of them load chose isn't seen here
+        (Some(_), Some(_)) => Err(Stop::NotBuilt(
+            "a key literal more indexes hold, moved by an offset",
+        )),
+        (None, _) => Err(invariant(
+            "a key literal in key arithmetic no index holds: load refuses it (LOAD-KEY)",
+        )),
+    }
 }
 
 /// Two values that meet, a key literal on either side resolved in the key on the other's
@@ -949,8 +991,9 @@ fn field(m: &Reality, v: Value, name: &str) -> Result<Value, Stop> {
         .into_iter()
         .find(|(f, _)| f == name)
         .map(|(_, value)| value)
-        // load's types refuse it; refcore's run names the record by its id
-        .ok_or(Stop::NotBuilt("a field a record lacks, met at run"))
+        .ok_or_else(|| {
+            invariant("a field a record lacks: load's types refuse it first (LOAD-FIELD)")
+        })
 }
 
 /// A literal's value (refcore's `e_num` and the literal nodes): a number with a currency is
@@ -1023,10 +1066,9 @@ fn number(m: &Reality, n: &crate::syntax::Number, figures: Figures) -> Result<Va
         && let [(cur, _)] = u.terms()
     {
         let id = currency_id(m, cur).map_err(num_stop)?;
-        // load refuses a figure finer than the minor unit with its place
-        return num_money(m, &q, id)
-            .map(Value::Money)
-            .map_err(|_| Stop::NotBuilt("money finer than its minor unit, met at run"));
+        return num_money(m, &q, id).map(Value::Money).map_err(|_| {
+            invariant("money finer than its minor unit: load refuses it first (LOAD-PRECISION)")
+        });
     }
     Ok(Value::Number(Number {
         q,
@@ -1044,9 +1086,11 @@ pub(super) fn typed(m: &Reality, q: &crate::num::Num, ty: &Ty) -> Result<Option<
     match ty {
         Ty::Money(cur) => {
             let id = currency_id(m, cur).map_err(num_stop)?;
-            // load refuses a figure finer than the minor unit with its place
-            let money = num_money(m, q, id)
-                .map_err(|_| Stop::NotBuilt("a figure finer than the minor unit, met at run"))?;
+            let money = num_money(m, q, id).map_err(|_| {
+                invariant(
+                    "a figure finer than the minor unit: load refuses it first (LOAD-PRECISION)",
+                )
+            })?;
             Ok(Some(Value::Money(money)))
         }
         Ty::Int => Ok(Some(Value::Number(Number {

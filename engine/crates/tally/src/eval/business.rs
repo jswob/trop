@@ -452,9 +452,8 @@ impl Engine {
             if value == Value::None {
                 return Err(refuse(Run::None, "the calendar is none here".to_owned()));
             }
-            // load's types refuse it; refcore's run has no twin of this text
-            return Err(Stop::NotBuilt(
-                "a calendar argument that isn't a calendar, met at run",
+            return Err(invariant(
+                "a calendar argument that isn't a calendar: load's types refuse it first (LOAD-UNIT)",
             ));
         };
         if seek && !c.has_business_day(day) {

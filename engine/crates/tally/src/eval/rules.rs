@@ -681,8 +681,25 @@ fn coerce_def(m: &Reality, def: &DefInfo, v: Value) -> Result<Value, Stop> {
                 format!("a num stored as money in {}", def.id),
             ))
         }
+        (Ty::Key(ix), Value::Word(word)) => Ok(index_word(m, ix, word)),
         (_, v) => Ok(v),
     }
+}
+
+/// Key literal `word` as a key of index `ix` where `ix` holds it; else the literal as it
+/// stands, which a kind's or an axis's position resolves (L §2.5).
+fn index_word(m: &Reality, ix: &str, word: String) -> Value {
+    let key = KeyVal::Key {
+        index: ix.to_owned(),
+        name: word.clone(),
+    };
+    if m.indexes
+        .get(ix)
+        .is_some_and(|index| index.pos(&key).is_some())
+    {
+        return Value::of_key(&key);
+    }
+    Value::Word(word)
 }
 
 /// A def's scope at its keys: each key variable bound to its key, with its domain (refcore's

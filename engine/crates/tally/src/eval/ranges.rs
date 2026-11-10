@@ -637,9 +637,8 @@ fn day_range(
 /// §5.11.
 fn day_step(m: &Reality, day: Day, step: &Value) -> Result<Day, Stop> {
     let Value::Day(next) = arith(m, Op::Add, &Value::Day(day), step)? else {
-        // `arith` refuses a day moved by anything but a duration first
-        return Err(Stop::NotBuilt(
-            "a range of days stepped by no duration, met at run",
+        return Err(invariant(
+            "a day stepped to no day: `arith` refuses a step that isn't a duration first",
         ));
     };
     if next <= day {
