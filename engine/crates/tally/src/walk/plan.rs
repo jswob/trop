@@ -797,7 +797,7 @@ impl Engine {
     /// The value of `e` at `ctx`, or none where it is refused at run (refcore's `try: ev …
     /// except TallyError`); a load refusal met at run and `ENGINE-INVARIANT` go on (R-66).
     /// L §8.4.
-    fn read_or_refused(
+    pub(super) fn read_or_refused(
         &mut self,
         m: &Reality,
         e: &crate::syntax::Expr,

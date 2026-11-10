@@ -418,6 +418,12 @@ impl Engine {
                 ent.mv = Some(adj);
                 self.walk_mut(id)?.add(m, &place, ALL, ent)
             }
+            Act::PlaceHole(place, h, movement, coll) => {
+                let mut ent = Ent::new(at, Change::Perm(h));
+                ent.mv = Some(movement);
+                ent.coll = Some(coll);
+                self.walk_mut(id)?.add(m, &place, ALL, ent)
+            }
             Act::GlobalHole(h) => {
                 self.walk_mut(id)?
                     .add(m, ALL, ALL, Ent::new(at, Change::Perm(h)))
