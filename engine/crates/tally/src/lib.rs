@@ -225,8 +225,8 @@ pub mod walk {
     pub use lows::{Lows, RangeMinimum};
     pub use order::{Run, WalkAt};
     pub use plan::{
-        Amount, Booked, BookedLeg, Dated, End, Exists, Inst, LegVal, Order, Seed, Status, Term,
-        kind_certainty, qty_value,
+        Amount, Booked, BookedLeg, Bookings, Dated, End, Exists, Inst, LegVal, Order, Seed, Status,
+        Term, kind_certainty, qty_value,
     };
     pub(crate) use plan::{invariant, quantity};
     pub use point::{At, Step};

@@ -31,7 +31,7 @@ use crate::eval::{
 use crate::model::{Reality, Value};
 use crate::syntax::{Ask, AskBody, Bind, Domain, Stop};
 use crate::time::{Day, PeriodKind};
-use crate::walk::{Booked, Lows};
+use crate::walk::{Bookings, Lows};
 use crate::{Asks, Days};
 
 /// What a run's asks print, and, in the `counters` build, what their engines did.
@@ -52,7 +52,7 @@ struct Seen {
     warnings: Vec<(Warn, String)>,
     /// The booked plan amounts the asks met, each ask's engine checked against the earlier
     /// asks' (E §9 item 5).
-    booked: BTreeMap<(String, Day), Booked>,
+    booked: Bookings,
     /// How each ask's engine keeps its cells across law dates (E §3.2).
     memo: Memo,
     /// How each ask's engine reads a written projection's common case (E §4.3, P §2.3).

@@ -448,7 +448,9 @@ impl Engine {
     /// where that walk reads an axis the timeline sets no option of, each combination's
     /// walk's; where the main walk needs a cell still being computed outside it, the walk up
     /// to the leg's day, since a leg's refusal rests on the walk up to its day only (refcore's
-    /// `leg_refused`, `guarded_walk`). E §4.2 step 5, §4.3, §3.3, §3.2.
+    /// `leg_refused`, `guarded_walk`). A walk refused at run gives no refusal of the leg; a
+    /// load refusal met at run and `ENGINE-INVARIANT` stop the read (R-66). E §4.2 step 5,
+    /// §4.3, §3.3, §3.2.
     pub(crate) fn leg_refused(
         &mut self,
         m: &Reality,
@@ -488,7 +490,7 @@ impl Engine {
             self.guarded = outer;
             id = match built {
                 Ok(w) => Some(w),
-                Err(Stop::Refused(_)) => return Ok(None),
+                Err(Stop::Refused(r)) if super::order::run_time(&r) => return Ok(None),
                 // the walk needs a cell this read is inside: the walk up to the leg's day
                 Err(Stop::NotBuilt(why)) if why == GUARDED => {
                     self.prefixes.blocked.insert(ctx.cut, self.active.clone());

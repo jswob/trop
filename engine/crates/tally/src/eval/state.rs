@@ -420,9 +420,9 @@ pub struct Engine {
     pub(crate) unsettled: BTreeMap<Day, Vec<Adjustment>>,
     /// The cuts whose adjustments are being measured (RUN-CYCLE).
     pub(crate) adjust_all_active: BTreeSet<Day>,
-    /// Each booked plan instance's amount A₀ by (instance, booking cut), kept across a run's
-    /// asks (E §9 item 5).
-    pub(crate) booked: BTreeMap<(String, Day), crate::walk::Booked>,
+    /// Each booked plan instance's amount A₀ by (instance, booking cut, a walk's limit), kept
+    /// across a run's asks (E §9 item 5).
+    pub(crate) booked: crate::walk::Bookings,
     /// Each main walk's signature once it is done, by its place in `walks` (E §9 item 4).
     pub(crate) signatures: BTreeMap<usize, crate::invariant::Signature>,
     /// The legs each combination's main walk of a cut refused, where the main walk read an
@@ -520,7 +520,7 @@ impl Engine {
     /// The engine holding the booked plan amounts a run's earlier asks met, so a later ask's
     /// cut is checked against them (E §9 item 5).
     #[must_use]
-    pub fn with_booked(self, booked: BTreeMap<(String, Day), crate::walk::Booked>) -> Engine {
+    pub fn with_booked(self, booked: crate::walk::Bookings) -> Engine {
         Engine { booked, ..self }
     }
 

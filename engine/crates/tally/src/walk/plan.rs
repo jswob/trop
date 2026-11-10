@@ -25,6 +25,7 @@ use crate::num::Num;
 use crate::syntax::{Certainty, Stop};
 use crate::time::{Day, PeriodKind};
 use core::cmp::Ordering;
+use std::collections::BTreeMap;
 use std::rc::Rc;
 
 /// A leg's end: a place by name, or a hole, a place nobody has told us (L §5.14 Legs).
@@ -95,6 +96,12 @@ pub struct LegVal {
     /// Its day.
     pub day: Dated,
 }
+
+/// The booked plan amounts of one timeline, by (instance, booking cut, the day a walk up to a
+/// day stops at): a walk up to a day books its partial plan list while cells outside it are
+/// still being computed, so its A₀ are checked against its own kind only, never against the
+/// whole walk's (E §9 item 5, §3.2, §4.1; refcore's `inv5` keys by the timeline).
+pub type Bookings = BTreeMap<(String, Day, Option<Day>), Booked>;
 
 /// A booked plan instance's amount A₀, its existence and legs as read at its booking cut,
 /// with the cut that first booked it: what every later cut that books it at the same booking
@@ -604,7 +611,7 @@ impl Engine {
                     && inst.err.is_none()
                     && let Some(booking) = inst.cut
                 {
-                    self.check_booked(mv, &inst, (booking, cut))?;
+                    self.check_booked(mv, &inst, (booking, cut), upto)?;
                 }
                 inst.coll.merge(&tuple.coll);
                 out.push(inst);
@@ -664,8 +671,9 @@ impl Engine {
         mv: &MoveInfo,
         inst: &Inst,
         (booking, cut): (Day, Day),
+        upto: Option<Day>,
     ) -> Result<(), Stop> {
-        let key = (inst.id.clone(), booking);
+        let key = (inst.id.clone(), booking, upto);
         let legs = booked_legs(mv, &inst.legs);
         let Some(old) = self.booked.get(&key) else {
             let first = Booked {

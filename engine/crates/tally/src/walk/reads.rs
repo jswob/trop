@@ -540,13 +540,14 @@ impl Engine {
     /// The walk of the timeline of cut `cut` from S through `day`, its plan pass listing no
     /// plan's instance dated after it: what a leg read that day needs while the main walk
     /// needs a cell still being computed outside it. Kept per day, a walk to a later day
-    /// serving an earlier one; none where it is refused (refcore's `prefix_walk`,
+    /// serving an earlier one; none where it is refused at run (refcore's `prefix_walk`,
     /// `plan_list`). E §3.2 (evaluation is demand-driven), §4.1, §4.2 step 5.
     ///
     /// # Errors
     ///
-    /// `Deep` while a cell it needs waits on the work stack; `NotBuilt` for a leg whose day
-    /// is a hole, and for a read of a walk while it is walked.
+    /// A load refusal met at run and `ENGINE-INVARIANT`, which stop the read (R-66); `Deep`
+    /// while a cell it needs waits on the work stack; `NotBuilt` for a leg whose day is a
+    /// hole, and for a read of a walk while it is walked.
     pub(crate) fn prefix_walk(
         &mut self,
         m: &Reality,
@@ -590,7 +591,7 @@ impl Engine {
         self.body_upto = outer;
         match walked {
             Ok(()) => Ok(Some(id)),
-            Err(Stop::Refused(_)) => Ok(None),
+            Err(Stop::Refused(r)) if super::order::run_time(&r) => Ok(None),
             Err(stop) => Err(stop),
         }
     }

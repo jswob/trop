@@ -26,7 +26,7 @@ use crate::book::{Adjustment, Coverage, Linked, Obs};
 use crate::model::{Reality, World};
 use crate::syntax::Stop;
 use crate::time::Day;
-use crate::walk::{Booked, Inst, ProjKey, Trees, Walk};
+use crate::walk::{Bookings, Inst, ProjKey, Trees, Walk};
 
 /// A timeline's key: the world its walks are walked in and the pins on items they reach
 /// (E §3.3). It has no order of its own (R-47): timelines are found by equality.
@@ -84,8 +84,8 @@ pub(crate) struct Timeline {
     unsettled: BTreeMap<Day, Vec<Adjustment>>,
     /// The cuts whose adjustments are being measured.
     adjust_all_active: BTreeSet<Day>,
-    /// Each booked plan instance's amount by (instance, booking cut).
-    booked: BTreeMap<(String, Day), Booked>,
+    /// Each booked plan instance's amount by (instance, booking cut, a walk's limit).
+    booked: Bookings,
     /// Each main walk's signature once it is done.
     signatures: BTreeMap<usize, crate::invariant::Signature>,
     /// The walks up to a day.
@@ -380,7 +380,7 @@ impl Engine {
 
     /// The booked plan amounts of the reality's own timeline, handed on to the run's next ask
     /// (E §9 item 5): the timelines of another world or of pins are its ask's alone.
-    pub fn take_booked(&mut self) -> BTreeMap<(String, Day), Booked> {
+    pub fn take_booked(&mut self) -> Bookings {
         if self.timelines.now == TimelineKey::BASE {
             return core::mem::take(&mut self.booked);
         }
