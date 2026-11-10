@@ -69,6 +69,7 @@ impl Engine {
             "gap" => self.gap_call(m, call, env, ctx),
             "periodic" | "factor" => self.rate_call(m, call, env, ctx),
             "next" => self.next_movement(m, call, env, ctx),
+            "lifespan" => self.lifespan_of(m, call, env, ctx),
             _ => Err(Stop::NotBuilt("a built-in M1's realities don't call")),
         }
     }
@@ -188,6 +189,57 @@ impl Engine {
                 .map_err(|e| e.refusal(num_stop, None))?
         };
         Ok(Value::Number(Number::plain(q, unit)))
+    }
+
+    /// `lifespan(k)`: thing k's lifespan as the cut sees it, a record of its first day `from`
+    /// and its last `to`, `never` for an open end and the stated hole for an end not yet known
+    /// (`HOLE-STATED`); a thing added after the cut is `RUN-KEY` (refcore's `c_lifespan`).
+    /// L §5.7.
+    fn lifespan_of(
+        &mut self,
+        m: &Reality,
+        call: &Call,
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Value, Stop> {
+        let [v] = self
+            .args(m, call, env, ctx)?
+            .try_into()
+            .map_err(|_| arity())?;
+        if let Value::Hole(_) = v {
+            return Ok(v);
+        }
+        if v == Value::None {
+            return Err(refuse(
+                Run::None,
+                "a value is none here: lifespan".to_owned(),
+            ));
+        }
+        let Value::Key(KeyVal::Thing(name)) = v else {
+            return Err(not_typed());
+        };
+        let thing = m
+            .things
+            .get(&name)
+            .ok_or_else(|| invariant("a thing load didn't build"))?;
+        let Some(span) = m.lifespan(thing, (ctx.cut, self.timeline_world())) else {
+            return Err(refuse(Run::Key, format!("{name} was added after the cut")));
+        };
+        let from = span
+            .start()
+            .ok_or_else(|| invariant("a lifespan with no start (LOAD-LIFESPAN)"))?;
+        let to = match (span.end_question(), span.end()) {
+            (Some(question), _) => Value::Hole(crate::hole::Hole::asked(question, &name)),
+            (None, None) => Value::Never,
+            (None, Some(end)) => Value::Day(
+                end.previous()
+                    .ok_or_else(|| invariant("a lifespan ending before the first day"))?,
+            ),
+        };
+        Ok(Value::Record(vec![
+            ("from".to_owned(), Value::Day(from)),
+            ("to".to_owned(), to),
+        ]))
     }
 
     /// `abs(x)` (refcore's `c_abs`). L §5.11.
