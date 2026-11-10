@@ -710,7 +710,8 @@ impl Engine {
         let made = match self.inst_parts(m, mv, &mut inst, tctx, seed) {
             Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {
                 inst.err = Some(r);
-                self.refused_legs(m, mv, &mut inst, tctx).map(|()| true)
+                self.refused_legs(m, mv, &mut inst, (tctx, seed.at_cut))
+                    .map(|()| true)
             }
             made => made,
         };
@@ -720,7 +721,8 @@ impl Engine {
     }
 
     /// A refused plan instance's legs, its evaluation stopped before them: their places read
-    /// at its booking cut and law date, each leg's amount the refusal; none where a place
+    /// at the cut its body is measured at (its booking cut, or a later version's for a
+    /// re-measure, where refcore reads min(t, K)) and its law date, each leg's amount the refusal; none where a place
     /// can't be read here, so the walk refuses every place from its day (refcore's
     /// `eval_inst`, its refusal). A refused movement reaches as a hole movement does: its day
     /// and its legs' places are still read, since neither depends on whether it exists (L §8.4,
@@ -734,13 +736,15 @@ impl Engine {
         m: &Reality,
         mv: &MoveInfo,
         inst: &mut Inst,
-        tctx: Ctx,
+        (tctx, at_cut): (Ctx, Option<Day>),
     ) -> Result<(), Stop> {
         if mv.decision {
             return Ok(());
         }
         let day = inst.day.as_ref().and_then(Dated::day);
-        let cut = day.map_or(tctx.cut, |d| d.min(tctx.cut));
+        // the cut its body is measured at: a later version's, for a re-measure (E §5 step 1),
+        // else min(t, K)
+        let cut = at_cut.unwrap_or_else(|| day.map_or(tctx.cut, |d| d.min(tctx.cut)));
         if let Some(legs) = self.refused_places(m, mv, inst, self.timeline_ctx(inst.law, cut))? {
             inst.legs = legs;
         }
