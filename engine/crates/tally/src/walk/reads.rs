@@ -556,7 +556,12 @@ impl Engine {
             return Ok(d);
         }
         let d = crate::ask::date_of(&d, "the day of gap")?;
-        let id = self.main_walk(m, ctx.cut)?;
+        // a decision inside the main walk reads the gaps it has met so far, the walk as it
+        // stands (refcore's `main_walk` of a running walk)
+        let id = match self.main_walks.get(&ctx.cut) {
+            Some(id) if self.walking.contains(id) => *id,
+            _ => self.main_walk(m, ctx.cut)?,
+        };
         let gaps = self.walk(id)?.gaps.get(&(place.clone(), d));
         let Some(last) = gaps.map(Vec::as_slice).and_then(latest_gap).cloned() else {
             let text = format!("stated[{place}] has no reading at {}", d.text());
