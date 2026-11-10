@@ -14,8 +14,8 @@ use core::cmp::Ordering;
 
 use super::convert::key_value;
 use super::expr::{hole_of, typed};
+use super::keys::{Given, make_keys};
 use super::memo::{LawClass, Read, may_hold, tables_class};
-use super::read::{Given, make_keys};
 use super::state::{
     Ctx, Engine, Env, Rows, invariant, num_stop, refuse, refuse_load, unit_stop, wrong_type,
 };

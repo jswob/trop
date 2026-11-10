@@ -163,6 +163,7 @@ pub mod eval {
     mod dates;
     mod expr;
     mod extremes;
+    mod keys;
     mod memo;
     mod prorata;
     mod ranges;
@@ -185,8 +186,8 @@ pub mod eval {
     pub(crate) use context::{GUARDED, UNSET_AXIS, world_named};
     pub(crate) use convert::{ConvertFor, Converted, convert, convert_row, field_literal};
     pub(crate) use expr::equal_sides;
+    pub(crate) use keys::{make_keys, thing_seen, to_key};
     pub use memo::Memo;
-    pub(crate) use read::{make_keys, thing_seen, to_key};
     pub use stack::Item;
     pub use state::{Collected, Ctx, Engine, Entry, Env, RowSeen, Rows};
     pub(crate) use state::{a_day, num_stop, past_days};

@@ -8,7 +8,8 @@
 //! Invariants: a converted value has its target's declared type; a stated hole stays its
 //! text; money is whole in its minor unit; a hole is built in the hole module.
 
-use super::read::{keyed, literal_key};
+use super::keys::literal_key;
+use super::read::keyed;
 use super::state::{invariant, num_stop, refuse_load, unit_stop};
 use crate::base::Load;
 use crate::model::{

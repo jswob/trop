@@ -22,7 +22,7 @@ use super::bindings::bind_domain;
 use super::builtin::rounding_mode;
 use super::expr::{hole_of, literal};
 use super::extremes::{Scored, pick_extreme};
-use super::read::literal_key;
+use super::keys::literal_key;
 use super::state::{Ctx, Engine, Env, invariant, not_typed, num_stop, refuse, refuse_load};
 use super::years::year_literal;
 use crate::base::{Load, Run};
