@@ -150,14 +150,25 @@ mod tests {
         }
     }
 
-    /// Every record of `corpus` alike under the tree and the twin; at least `answered` of them
-    /// answered by both (no vacuous pass).
-    fn corpus_holds(corpus: &[u8], records_in: usize, answered: usize) {
+    /// Every record of `corpus` whose place is `part` modulo `parts` alike under the tree and
+    /// the twin; at least `answered` of them answered by both (no vacuous pass).
+    fn corpus_holds(
+        corpus: &[u8],
+        (part, parts): (usize, usize),
+        records_in: usize,
+        answered: usize,
+    ) {
         let all = records(corpus).expect("the corpus reads");
         assert_eq!(all.len(), records_in, "the corpus's records");
+        let mine: Vec<_> = all
+            .iter()
+            .enumerate()
+            .filter(|(i, _)| i.checked_rem(parts) == Some(part))
+            .map(|(_, r)| r)
+            .collect();
         let mut answered_by_both = Vec::new();
         let mut failed = Vec::new();
-        for r in &all {
+        for r in &mine {
             let run = request_of(&r.args)
                 .and_then(|(paths, request)| Ok((given_of(&paths, &r.files)?, request)))
                 .and_then(|(files, request)| same(&files, &request));
@@ -171,7 +182,7 @@ mod tests {
             failed.is_empty(),
             "{} of {} records differ:\n{}",
             failed.len(),
-            all.len(),
+            mine.len(),
             failed.join("\n")
         );
         assert!(both >= answered, "{both} records answered by both");
@@ -179,12 +190,19 @@ mod tests {
 
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_the_kernel_corpus() {
-        corpus_holds(KERNEL_CORPUS, 312, 312);
+        corpus_holds(KERNEL_CORPUS, (0, 1), 312, 312);
     }
 
+    /// The m1 corpus, part 1 of 2 (records at 0 modulo 2, pick P70).
     #[test]
-    fn m1_lows_the_tree_prints_the_walk_on_the_m1_corpus() {
-        corpus_holds(M1_CORPUS, 648, 480);
+    fn m1_lows_the_tree_prints_the_walk_on_the_m1_corpus_part_1() {
+        corpus_holds(M1_CORPUS, (0, 2), 648, 324);
+    }
+
+    /// Part 2 of 2.
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_the_m1_corpus_part_2() {
+        corpus_holds(M1_CORPUS, (1, 2), 648, 324);
     }
 
     /// The fix vectors' groups of `m1/vectors.refcore`, one test each below, so that each runs
@@ -272,106 +290,286 @@ mod tests {
         fixes_hold("fixes-g1", (0, 1), 17);
     }
 
-    /// G2's.
+    /// G2's fix vectors (`m1/fixes/g2/`), alike under the tree and the twin.
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_g2() {
         fixes_hold("fixes-g2", (0, 1), 22);
     }
 
-    /// G3's.
+    /// G3's fix vectors (`m1/fixes/g3/`), alike under the tree and the twin.
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_g3() {
         fixes_hold("fixes-g3", (0, 1), 27);
     }
 
-    /// G4's.
+    /// G4's fix vectors (`m1/fixes/g4/`), alike under the tree and the twin.
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_g4() {
         fixes_hold("fixes-g4", (0, 1), 7);
     }
 
-    /// G5's.
+    /// G5's fix vectors (`m1/fixes/g5/`), alike under the tree and the twin.
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_g5() {
         fixes_hold("fixes-g5", (0, 1), 17);
     }
 
-    /// G6's.
+    /// G6's fix vectors (`m1/fixes/g6/`), alike under the tree and the twin.
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_g6() {
         fixes_hold("fixes-g6", (0, 1), 14);
     }
 
-    /// G7's.
+    /// G7's fix vectors, part 1 of 4 (at 0 modulo 4).
     #[test]
-    fn m1_lows_the_tree_prints_the_walk_on_fixes_g7() {
-        fixes_hold("fixes-g7", (0, 1), 30);
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g7_part_1() {
+        fixes_hold("fixes-g7", (0, 4), 8);
     }
 
-    /// G8's.
+    /// G7's fix vectors, part 2 of 4 (at 1 modulo 4).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g7_part_2() {
+        fixes_hold("fixes-g7", (1, 4), 7);
+    }
+
+    /// G7's fix vectors, part 3 of 4 (at 2 modulo 4).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g7_part_3() {
+        fixes_hold("fixes-g7", (2, 4), 7);
+    }
+
+    /// G7's fix vectors, part 4 of 4 (at 3 modulo 4).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g7_part_4() {
+        fixes_hold("fixes-g7", (3, 4), 8);
+    }
+
+    /// G8's fix vectors (`m1/fixes/g8/`), alike under the tree and the twin.
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_g8() {
         fixes_hold("fixes-g8", (0, 1), 95);
     }
 
-    /// G9's, its review's probes among them, part 1 of 2 (every G9 vector at 0 modulo 2).
+    /// G9's fix vectors, part 1 of 12 (at 0 modulo 12).
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_g9_part_1() {
-        fixes_hold("fixes-g9", (0, 2), 105);
+        fixes_hold("fixes-g9", (0, 12), 18);
     }
 
-    /// G9's, its review's probes among them, part 2 of 2 (every G9 vector at 1 modulo 2).
+    /// G9's fix vectors, part 2 of 12 (at 1 modulo 12).
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_g9_part_2() {
-        fixes_hold("fixes-g9", (1, 2), 105);
+        fixes_hold("fixes-g9", (1, 12), 18);
     }
 
-    /// G10's.
+    /// G9's fix vectors, part 3 of 12 (at 2 modulo 12).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g9_part_3() {
+        fixes_hold("fixes-g9", (2, 12), 18);
+    }
+
+    /// G9's fix vectors, part 4 of 12 (at 3 modulo 12).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g9_part_4() {
+        fixes_hold("fixes-g9", (3, 12), 18);
+    }
+
+    /// G9's fix vectors, part 5 of 12 (at 4 modulo 12).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g9_part_5() {
+        fixes_hold("fixes-g9", (4, 12), 18);
+    }
+
+    /// G9's fix vectors, part 6 of 12 (at 5 modulo 12).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g9_part_6() {
+        fixes_hold("fixes-g9", (5, 12), 18);
+    }
+
+    /// G9's fix vectors, part 7 of 12 (at 6 modulo 12).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g9_part_7() {
+        fixes_hold("fixes-g9", (6, 12), 17);
+    }
+
+    /// G9's fix vectors, part 8 of 12 (at 7 modulo 12).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g9_part_8() {
+        fixes_hold("fixes-g9", (7, 12), 17);
+    }
+
+    /// G9's fix vectors, part 9 of 12 (at 8 modulo 12).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g9_part_9() {
+        fixes_hold("fixes-g9", (8, 12), 17);
+    }
+
+    /// G9's fix vectors, part 10 of 12 (at 9 modulo 12).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g9_part_10() {
+        fixes_hold("fixes-g9", (9, 12), 17);
+    }
+
+    /// G9's fix vectors, part 11 of 12 (at 10 modulo 12).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g9_part_11() {
+        fixes_hold("fixes-g9", (10, 12), 17);
+    }
+
+    /// G9's fix vectors, part 12 of 12 (at 11 modulo 12).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g9_part_12() {
+        fixes_hold("fixes-g9", (11, 12), 17);
+    }
+
+    /// G10's fix vectors (`m1/fixes/g10/`), alike under the tree and the twin.
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_g10() {
         fixes_hold("fixes-g10", (0, 1), 101);
     }
 
-    /// G11's.
+    /// G11's fix vectors (`m1/fixes/g11/`), alike under the tree and the twin.
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_g11() {
         fixes_hold("fixes-g11", (0, 1), 91);
     }
 
-    /// G12's, part 1 of 4 (every G12 vector at 0 modulo 4).
+    /// G12's fix vectors, part 1 of 16 (at 0 modulo 16).
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_g12_part_1() {
-        fixes_hold("fixes-g12", (0, 4), 59);
+        fixes_hold("fixes-g12", (0, 16), 15);
     }
 
-    /// G12's, part 2 of 4 (every G12 vector at 1 modulo 4).
+    /// G12's fix vectors, part 2 of 16 (at 1 modulo 16).
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_g12_part_2() {
-        fixes_hold("fixes-g12", (1, 4), 59);
+        fixes_hold("fixes-g12", (1, 16), 15);
     }
 
-    /// G12's, part 3 of 4 (every G12 vector at 2 modulo 4).
+    /// G12's fix vectors, part 3 of 16 (at 2 modulo 16).
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_g12_part_3() {
-        fixes_hold("fixes-g12", (2, 4), 59);
+        fixes_hold("fixes-g12", (2, 16), 15);
     }
 
-    /// G12's, part 4 of 4 (every G12 vector at 3 modulo 4).
+    /// G12's fix vectors, part 4 of 16 (at 3 modulo 16).
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_g12_part_4() {
-        fixes_hold("fixes-g12", (3, 4), 58);
+        fixes_hold("fixes-g12", (3, 16), 15);
     }
 
-    /// G13's.
+    /// G12's fix vectors, part 5 of 16 (at 4 modulo 16).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g12_part_5() {
+        fixes_hold("fixes-g12", (4, 16), 15);
+    }
+
+    /// G12's fix vectors, part 6 of 16 (at 5 modulo 16).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g12_part_6() {
+        fixes_hold("fixes-g12", (5, 16), 15);
+    }
+
+    /// G12's fix vectors, part 7 of 16 (at 6 modulo 16).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g12_part_7() {
+        fixes_hold("fixes-g12", (6, 16), 15);
+    }
+
+    /// G12's fix vectors, part 8 of 16 (at 7 modulo 16).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g12_part_8() {
+        fixes_hold("fixes-g12", (7, 16), 15);
+    }
+
+    /// G12's fix vectors, part 9 of 16 (at 8 modulo 16).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g12_part_9() {
+        fixes_hold("fixes-g12", (8, 16), 15);
+    }
+
+    /// G12's fix vectors, part 10 of 16 (at 9 modulo 16).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g12_part_10() {
+        fixes_hold("fixes-g12", (9, 16), 15);
+    }
+
+    /// G12's fix vectors, part 11 of 16 (at 10 modulo 16).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g12_part_11() {
+        fixes_hold("fixes-g12", (10, 16), 15);
+    }
+
+    /// G12's fix vectors, part 12 of 16 (at 11 modulo 16).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g12_part_12() {
+        fixes_hold("fixes-g12", (11, 16), 14);
+    }
+
+    /// G12's fix vectors, part 13 of 16 (at 12 modulo 16).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g12_part_13() {
+        fixes_hold("fixes-g12", (12, 16), 14);
+    }
+
+    /// G12's fix vectors, part 14 of 16 (at 13 modulo 16).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g12_part_14() {
+        fixes_hold("fixes-g12", (13, 16), 14);
+    }
+
+    /// G12's fix vectors, part 15 of 16 (at 14 modulo 16).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g12_part_15() {
+        fixes_hold("fixes-g12", (14, 16), 14);
+    }
+
+    /// G12's fix vectors, part 16 of 16 (at 15 modulo 16).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g12_part_16() {
+        fixes_hold("fixes-g12", (15, 16), 14);
+    }
+
+    /// G13's fix vectors (`m1/fixes/g13/`), alike under the tree and the twin.
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_g13() {
         fixes_hold("fixes-g13", (0, 1), 337);
     }
 
-    /// G14's.
+    /// G14's fix vectors, part 1 of 6 (at 0 modulo 6).
     #[test]
-    fn m1_lows_the_tree_prints_the_walk_on_fixes_g14() {
-        fixes_hold("fixes-g14", (0, 1), 189);
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g14_part_1() {
+        fixes_hold("fixes-g14", (0, 6), 32);
+    }
+
+    /// G14's fix vectors, part 2 of 6 (at 1 modulo 6).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g14_part_2() {
+        fixes_hold("fixes-g14", (1, 6), 32);
+    }
+
+    /// G14's fix vectors, part 3 of 6 (at 2 modulo 6).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g14_part_3() {
+        fixes_hold("fixes-g14", (2, 6), 32);
+    }
+
+    /// G14's fix vectors, part 4 of 6 (at 3 modulo 6).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g14_part_4() {
+        fixes_hold("fixes-g14", (3, 6), 31);
+    }
+
+    /// G14's fix vectors, part 5 of 6 (at 4 modulo 6).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g14_part_5() {
+        fixes_hold("fixes-g14", (4, 6), 31);
+    }
+
+    /// G14's fix vectors, part 6 of 6 (at 5 modulo 6).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g14_part_6() {
+        fixes_hold("fixes-g14", (5, 6), 31);
     }
 
     /// The reviews' findings kept apart from their groups (`fixes-open`).

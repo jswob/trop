@@ -12,11 +12,16 @@
 
 #[cfg(test)]
 mod tests {
-    use tally_runner::m0::group_failures;
+    use tally_runner::m0::group_part_failures;
 
     /// Holds every vector of `group` to refcore's reprint and to the round trip.
     fn formats_as_refcore(group: &str) {
-        let (failed, of) = group_failures(group).expect("m0/format.refcore reads");
+        formats_part_as_refcore(group, (0, 1));
+    }
+
+    /// As `formats_as_refcore`, over the vectors of `group` at `part` modulo `parts` (pick P70).
+    fn formats_part_as_refcore(group: &str, part: (usize, usize)) {
+        let (failed, of) = group_part_failures(group, part).expect("m0/format.refcore reads");
         assert!(
             failed.is_empty(),
             "{} of {of} sets of {group} fail:\n{}",
@@ -70,8 +75,14 @@ mod tests {
 
     /// Household C's runs.
     #[test]
-    fn m0_format_household_c() {
-        formats_as_refcore("household-C");
+    fn m0_format_household_c_part_1() {
+        formats_part_as_refcore("household-C", (0, 2));
+    }
+
+    /// Part 2 of 2.
+    #[test]
+    fn m0_format_household_c_part_2() {
+        formats_part_as_refcore("household-C", (1, 2));
     }
 
     /// Household D's runs.

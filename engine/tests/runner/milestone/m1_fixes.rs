@@ -35,11 +35,22 @@ mod tests {
         "fixes-open",
     ];
 
-    /// Runs every vector of `group` on the engine and holds it to refcore's run.
-    fn group_holds(group: &str) {
+    /// Runs every vector of `group` whose place in the group is `part` modulo `parts` (a
+    /// slow group runs as several tests, together every vector, pick P70) on the engine and
+    /// holds it to refcore's run.
+    fn group_holds(group: &str, (part, parts): (usize, usize)) {
         let all = vectors(VECTORS).expect("m1/vectors.refcore reads");
-        let mine: Vec<_> = all.iter().filter(|v| v.group == group).collect();
-        assert!(!mine.is_empty(), "the group {group} has vectors");
+        let mine: Vec<_> = all
+            .iter()
+            .filter(|v| v.group == group)
+            .enumerate()
+            .filter(|(i, _)| i.checked_rem(parts) == Some(part))
+            .map(|(_, v)| v)
+            .collect();
+        assert!(
+            !mine.is_empty(),
+            "the group {group} has vectors in part {part} of {parts}"
+        );
         let failed: Vec<String> = mine
             .iter()
             .filter(|v| !is_held("m1_fixes", &v.id))
@@ -82,7 +93,7 @@ mod tests {
     /// law date, `LOAD-LAWDATE`).
     #[test]
     fn m1_fixes_g1_narrowing_and_replacement() {
-        group_holds("fixes-g1");
+        group_holds("fixes-g1", (0, 1));
     }
 
     /// G2's review fixes (`m1/fixes/g2/`): a window's identity, two reads of one item at the
@@ -92,7 +103,7 @@ mod tests {
     /// note 9).
     #[test]
     fn m1_fixes_g2_windows_and_powers() {
-        group_holds("fixes-g2");
+        group_holds("fixes-g2", (0, 1));
     }
 
     /// G3's review fixes (`m1/fixes/g3/`): a window in a `ties by` (a hole where undecided,
@@ -102,7 +113,7 @@ mod tests {
     /// mutant); the fix review's `where` holes and register.
     #[test]
     fn m1_fixes_g3_order_and_last() {
-        group_holds("fixes-g3");
+        group_holds("fixes-g3", (0, 1));
     }
 
     /// G4's (`m1/fixes/g4/`): MB1's eight missed `num/split.rs` mutants, a `rest last` split
@@ -111,7 +122,7 @@ mod tests {
     /// one ask (its blocking 1, G4's touch-up).
     #[test]
     fn m1_fixes_g4_prorata() {
-        group_holds("fixes-g4");
+        group_holds("fixes-g4", (0, 1));
     }
 
     /// G5's (`m1/fixes/g5/`): MB2's six wording-pin mutants (`bands.rs:67`, `rules.rs:43`);
@@ -120,7 +131,7 @@ mod tests {
     /// cell, P39's bare word, P41's `with known` after `on` (#112, held).
     #[test]
     fn m1_fixes_g5_pins_and_solve() {
-        group_holds("fixes-g5");
+        group_holds("fixes-g5", (0, 1));
     }
 
     /// G6's (`m1/fixes/g6/`): the review's blocking 1, a scenario's move in the model's world
@@ -130,7 +141,7 @@ mod tests {
     /// before `from` beside a listed movement (#121, held; red for G6 in `m1_properties`).
     #[test]
     fn m1_fixes_g6_worlds() {
-        group_holds("fixes-g6");
+        group_holds("fixes-g6", (0, 1));
     }
 
     /// G7's (`m1/fixes/g7/`): the review's B1 and the fix reviews' texts (`fl`, `fl2`, `tl`: a
@@ -141,7 +152,7 @@ mod tests {
     /// of a `by 3` index (#113, held).
     #[test]
     fn m1_fixes_g7_axes() {
-        group_holds("fixes-g7");
+        group_holds("fixes-g7", (0, 1));
     }
 
     /// G8's (`m1/fixes/g8/`): the fixes' `f1` and the review's forms no probe reached: `low`
@@ -156,7 +167,7 @@ mod tests {
     /// currency (the fix review's NB1, #126, red for G14 below).
     #[test]
     fn m1_fixes_g8_projections_and_prices() {
-        group_holds("fixes-g8");
+        group_holds("fixes-g8", (0, 1));
     }
 
     /// G9's (`m1/fixes/g9/`): the fix reviews' texts: a lifespan's end in a projection
@@ -166,7 +177,7 @@ mod tests {
     /// (P54, #127, held where refcore differs).
     #[test]
     fn m1_fixes_g9_the_tree_and_its_twin() {
-        group_holds("fixes-g9");
+        group_holds("fixes-g9", (0, 1));
     }
 
     /// G10's (`m1/fixes/g10/`): the review's B1 (`lifespan(k)` read before `from` under a
@@ -189,7 +200,7 @@ mod tests {
     /// order (`t_c11*`).
     #[test]
     fn m1_fixes_g10_decisions() {
-        group_holds("fixes-g10");
+        group_holds("fixes-g10", (0, 1));
     }
 
     /// G11's (`m1/fixes/g11/`): the builder's and the review's probe texts of `explain` (a def
@@ -200,7 +211,7 @@ mod tests {
     /// scenario row's node (#133); a def's balance cause in its own form (P63, #132, `ro_m4`).
     #[test]
     fn m1_fixes_g11_explain_inputs_and_readers() {
-        group_holds("fixes-g11");
+        group_holds("fixes-g11", (0, 1));
     }
 
     /// G12's (`m1/fixes/g12/`): the builder's probes of `explain` over the walk, a balance, a
@@ -212,9 +223,52 @@ mod tests {
     /// refused and a hole, `trace_bal`'s inputs) and `readers-of` an event kind (#132);
     /// `low … with uncertain` without `from` (P51, #125, `r_agent_lw_lw_l0`); a month key printed
     /// as written in `LOAD-KEY` (#100).
+    /// Part 1 of 8 (each part the vectors at one place modulo 8).
     #[test]
-    fn m1_fixes_g12_explain_over_the_walk() {
-        group_holds("fixes-g12");
+    fn m1_fixes_g12_explain_over_the_walk_part_1() {
+        group_holds("fixes-g12", (0, 8));
+    }
+
+    /// G12's, part 2 of 8.
+    #[test]
+    fn m1_fixes_g12_explain_over_the_walk_part_2() {
+        group_holds("fixes-g12", (1, 8));
+    }
+
+    /// G12's, part 3 of 8.
+    #[test]
+    fn m1_fixes_g12_explain_over_the_walk_part_3() {
+        group_holds("fixes-g12", (2, 8));
+    }
+
+    /// G12's, part 4 of 8.
+    #[test]
+    fn m1_fixes_g12_explain_over_the_walk_part_4() {
+        group_holds("fixes-g12", (3, 8));
+    }
+
+    /// G12's, part 5 of 8.
+    #[test]
+    fn m1_fixes_g12_explain_over_the_walk_part_5() {
+        group_holds("fixes-g12", (4, 8));
+    }
+
+    /// G12's, part 6 of 8.
+    #[test]
+    fn m1_fixes_g12_explain_over_the_walk_part_6() {
+        group_holds("fixes-g12", (5, 8));
+    }
+
+    /// G12's, part 7 of 8.
+    #[test]
+    fn m1_fixes_g12_explain_over_the_walk_part_7() {
+        group_holds("fixes-g12", (6, 8));
+    }
+
+    /// G12's, part 8 of 8.
+    #[test]
+    fn m1_fixes_g12_explain_over_the_walk_part_8() {
+        group_holds("fixes-g12", (7, 8));
     }
 
     /// G13's (`m1/fixes/g13/`): reads at run and ranges an ask steps through (`reads_*`,
@@ -225,7 +279,7 @@ mod tests {
     /// written (#100).
     #[test]
     fn m1_fixes_g13_reads_ranges_and_sites() {
-        group_holds("fixes-g13");
+        group_holds("fixes-g13", (0, 1));
     }
 
     /// G14's (`m1/fixes/g14/`): the builder's and the review's probes of the sweep and its fix:
@@ -243,7 +297,7 @@ mod tests {
     /// clause keyed by a unit kind; law-dated price rows.
     #[test]
     fn m1_fixes_g14_the_sweep() {
-        group_holds("fixes-g14");
+        group_holds("fixes-g14", (0, 1));
     }
 
     /// The reviews' findings the engine still gets wrong, apart from their groups so each
@@ -253,7 +307,7 @@ mod tests {
     /// up to a day (`r_agent_inv5_n`; E §4.2 step 5, L §8.5; STOP-REPORT in GAPS.md).
     #[test]
     fn m1_fixes_the_open_findings() {
-        group_holds("fixes-open");
+        group_holds("fixes-open", (0, 1));
     }
 
     /// Where refcore crashes (`REFCORE-NOT-YET`), the spec's answer (`m1/spec.tsv`, each row's

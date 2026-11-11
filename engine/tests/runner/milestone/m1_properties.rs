@@ -46,13 +46,21 @@ mod tests {
         );
     }
 
-    /// Every record run twice prints the same bytes, and the engine answers every record
-    /// refcore answers (no vacuous pass).
-    #[test]
-    fn m1_determinism_across_runs() {
+    /// Every record whose place in the corpus is `part` modulo `parts` run twice prints the
+    /// same bytes, and the engine answers every such record refcore answers (no vacuous
+    /// pass); the corpus runs as several tests, together every record (pick P70).
+    fn determinism_holds((part, parts): (usize, usize)) {
         let refcore = refcore_runs(M1_REFCORE).expect("refcore's runs read");
         let mut bad = Vec::new();
-        for r in records(M1_CORPUS).expect("the corpus reads") {
+        let all = records(M1_CORPUS).expect("the corpus reads");
+        let mine: Vec<_> = all
+            .into_iter()
+            .enumerate()
+            .filter(|(i, _)| i.checked_rem(parts) == Some(part))
+            .map(|(_, r)| r)
+            .collect();
+        assert!(!mine.is_empty(), "part {part} of {parts} has records");
+        for r in mine {
             let first = run_record(&r);
             if first != run_record(&r) {
                 bad.push(format!("{}/{}: two runs differ", r.case, r.variant));
@@ -72,6 +80,18 @@ mod tests {
             }
         }
         assert!(bad.is_empty(), "{} records:\n{}", bad.len(), bad.join("\n"));
+    }
+
+    /// Part 1 of 2 of the records, run twice.
+    #[test]
+    fn m1_determinism_across_runs_part_1() {
+        determinism_holds((0, 2));
+    }
+
+    /// Part 2 of 2.
+    #[test]
+    fn m1_determinism_across_runs_part_2() {
+        determinism_holds((1, 2));
     }
 
     #[test]
