@@ -842,15 +842,28 @@ fn arith_words(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Result<(Value, 
     match (&a, &b) {
         (Value::Word(word), _) if offset => Ok((held_key(m, word)?, b)),
         (Value::OutKey { index, .. }, Value::Word(word)) => {
-            let key = literal_key(m, &Lit::Name(word.clone()), &Domain::Index(index.clone()))?
-                .ok_or_else(lacks_at_run)?;
-            Ok((a.clone(), Value::of_key(&key)))
+            Ok((a.clone(), outside_key(m, index, word)?))
+        }
+        (Value::Word(word), Value::OutKey { index, .. }) => {
+            Ok((outside_key(m, index, word)?, b.clone()))
         }
         (Value::Word(_), _) | (_, Value::Word(_)) => Err(Stop::NotBuilt(
             "a key literal in arithmetic no position resolves, met at run",
         )),
         _ => Ok((a, b)),
     }
+}
+
+/// Key literal `word` as a key of `index`, the index of a key arithmetic left outside it
+/// that the literal meets (L §2.5, §4.2).
+fn outside_key(m: &Reality, index: &str, word: &str) -> Result<Value, Stop> {
+    let key = literal_key(
+        m,
+        &Lit::Name(word.to_owned()),
+        &Domain::Index(index.to_owned()),
+    )?
+    .ok_or_else(lacks_at_run)?;
+    Ok(Value::of_key(&key))
 }
 
 /// Key literal `word` as a key of the one index that holds it: the index its position named

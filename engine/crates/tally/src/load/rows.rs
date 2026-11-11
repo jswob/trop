@@ -16,8 +16,8 @@ use super::steps::{Loader, refuse};
 use super::worlds::no_version;
 use crate::base::Load;
 use crate::model::{
-    BandRow, BandTable, Domain, GapRole, IndexForm, KeyVal, NameKind, Pat, Row, RowInstant,
-    RuleVer, pattern_text,
+    BandRow, BandTable, Domain, GapRole, IndexForm, KeyVal, NameKind, Pat, Reality, Row,
+    RowInstant, RuleVer, Ty, pattern_text,
 };
 use crate::syntax::{
     BandRow as WrittenBand, Domain as WrittenDomain, Expr, Gap, Instant, Item, ItemForm, Known,
@@ -456,7 +456,7 @@ impl Loader {
                     let lo = self.pattern_key(&KeyLit::Lit(a.clone()), bind, None, file, line)?;
                     let hi = self.pattern_key(&KeyLit::Lit(b.clone()), bind, None, file, line)?;
                     if matches!((&lo, &hi), (KeyVal::Value(_), _) | (_, KeyVal::Value(_)))
-                        || !whole_steps(&bind.node.domain)
+                        || !whole_steps(&self.m, &bind.node.domain)
                     {
                         // refcore stops on it (2.1.6: `Num` has no order)
                         return Err(Stop::NotBuilt(
@@ -656,18 +656,60 @@ fn set_sids(id: &str, rows: &mut [Row]) {
     }
 }
 
-/// Whether a bind's values are integers as written, so a row's key range orders them as
-/// keys: any domain but a range, a range with no step, or one whose first end and step are
-/// whole figures of no unit (L §4.6 step 1, §5.6).
-fn whole_steps(domain: &WrittenDomain) -> bool {
+/// Whether a bind's values are days, periods or integers, so a row's key range orders them
+/// as keys (L §4.6 step 1, §5.6): any domain but a range; a range whose first end is a day,
+/// a month, a quarter or the read of a `date` or period item, whatever its step; a range
+/// whose first end and step (if it has one) are whole: a whole figure of no unit, negated
+/// or not, or the read of an `int` item. Any other first end or step (a fraction, a unit,
+/// an expression, a `num` read) may give fractions at run, which a key range doesn't order.
+fn whole_steps(m: &Reality, domain: &WrittenDomain) -> bool {
     let WrittenDomain::Range(parts) = domain else {
         return true;
     };
-    let whole = |e: &Expr| matches!(e, Expr::Lit(Lit::Num(n)) if n.whole && n.unit.is_none());
-    match parts.as_ref() {
-        (_, _, None) => true,
-        (first, _, Some(step)) => whole(first) && whole(step),
+    let (first, _, step) = parts.as_ref();
+    if dated(m, first) {
+        return true;
     }
+    whole(m, first) && step.as_ref().is_none_or(|s| whole(m, s))
+}
+
+/// Whether a range's first end is a day or a period as written: a literal, or the read of
+/// an item of that type. L §5.6.
+fn dated(m: &Reality, e: &Expr) -> bool {
+    if matches!(
+        e,
+        Expr::Lit(Lit::Day(_) | Lit::Month(..) | Lit::Quarter(..))
+    ) {
+        return true;
+    }
+    let Expr::Name(name) = e else {
+        return false;
+    };
+    matches!(declared(m, name), Some(Ty::Date | Ty::Period(_)))
+}
+
+/// Whether a range's end or step is whole as written: a whole figure of no unit, negated or
+/// bracketed, or the read of an `int` item. L §3.2, §5.6.
+fn whole(m: &Reality, e: &Expr) -> bool {
+    let mut node = e;
+    while let Expr::Neg(inner) | Expr::Paren(inner) = node {
+        node = inner;
+    }
+    if matches!(node, Expr::Lit(Lit::Num(n)) if n.whole && n.unit.is_none()) {
+        return true;
+    }
+    let Expr::Name(name) = node else {
+        return false;
+    };
+    matches!(declared(m, name), Some(Ty::Int))
+}
+
+/// The declared type of input or def `name`.
+fn declared(m: &Reality, name: &str) -> Option<Ty> {
+    if let Some(input) = m.inputs.get(name) {
+        return input.ty.clone();
+    }
+    m.defs.get(name).map(|def| def.ty.clone())
 }
 
 /// A row's pattern as load's messages print it: every position, trailing stars too, and

@@ -116,6 +116,10 @@ impl Engine {
                 format!("day_of of {}, a key of an anchored index", period.label()),
             )
         };
+        if let Some(w) = as_window(&b) {
+            // a day number that is an interval, where one value is needed (L §4.4)
+            return Ok(Value::Hole(imprecise(m, w, "day_of")?));
+        }
         if !matches!(b, Value::MonthDay(..)) {
             let number = whole_of(m, &b)?;
             if period.kind() != PeriodKind::Month || period.start().day() != 1 {
