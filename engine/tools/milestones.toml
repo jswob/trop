@@ -14,12 +14,14 @@
 # order. S is the exception (issue #26, 2026-11-02, "S in gating, last commit"): it joins
 # `gating` in the last commit of build/s, so it gates from its merge and S's mutants run
 # counts its tests. M0 likewise (issue #56, G-M0, 2026-11-04, "gating: Yes, last commit"):
-# it joins in the last commit of build/m0.
+# it joins in the last commit of build/m0. M1 likewise (issue #108, 2026-11-11, under those
+# words and the M1 brief): it joins in build/m1's commit before its gate, all 84 tests green;
+# the gate's fixes may follow it on the branch.
 
 # BUILD-ORDER's milestones, in build order (as engine/tests/map/placement.py's ORDER)
 milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
 # the milestones whose tests gate
-gating = ["S", "M0"]
+gating = ["S", "M0", "M1"]
 # the gating targets a mutation run leaves out, from its build as well as its run (R-84,
 # R-88; the user, 2026-11-06, "Yes, approve it, add it to the 2.1.6 brief"): M0's load
 # tests exercise load, not the kernel, and took about 55 % of each shard's time; of run

@@ -169,7 +169,8 @@ def next_milestone(env):
 def selection(env):
     """The nextest arguments for a mutation run: the runner's default targets and every gating
     milestone's but the marker's `mutants_leave_out` (`--tests` can't be used: it leaves out
-    every target with test = false)."""
+    every target with test = false), with the runner's features those targets require
+    (M1's m1_invariant: fault-injection), or cargo would refuse them (issue #108, R2)."""
     milestones, gating, leave_out = marker()
     defaults, by_milestone = targets(env, milestones)
     gated = [t for m in gating for t in by_milestone[m]]
@@ -177,7 +178,9 @@ def selection(env):
         if t not in gated:
             raise MilestoneError(f"tools/milestones.toml: mutants_leave_out names {t}, which is no gating "
                                  "milestone's test target")
-    return defaults + [f"--test={t}" for t in gated if t not in leave_out]
+    chosen = [t for t in gated if t not in leave_out]
+    features = [f"--features={RUNNER}/{f}" for f in required_features(env, chosen)]
+    return defaults + features + [f"--test={t}" for t in chosen]
 
 
 def tally(out):

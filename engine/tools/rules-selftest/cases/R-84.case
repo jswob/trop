@@ -128,3 +128,45 @@ exit: any
 expect: R-84: CI's mutation targets name no fence catcher
 --- run
 a="$(tools/milestones args) $(tools/milestones args --mutants)"; case "$a" in *walk_oracle*|*tally-cli*|*walk::lows*) echo "R-84 broken: $a" ;; *) echo "R-84: CI's mutation targets name no fence catcher" ;; esac
+
+# Since 2026-11-11 (issue #108, R2): a gating target with `required-features` (M1's
+# m1_invariant: fault-injection) is selected with the runner's features it requires, or
+# cargo refuses the baseline and every shard; a selection whose targets require none turns
+# none on.
+
+case: mutants-select-a-target-with-its-features
+tool: run
+exit: any
+expect: -C=--features=tally-runner/fault-injection
+expect: -C=--test=s_planted
+--- write tools/milestones.toml
+milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
+gating = ["S"]
+mutants_leave_out = []
+--- append tests/runner/Cargo.toml
+
+[[test]]
+name = "s_planted"
+path = "milestone/s_planted.rs"
+test = false
+required-features = ["fault-injection"]
+--- write tests/runner/milestone/s_planted.rs
+//! Planted: a test of milestone S that needs the runner's fault-injection feature.
+
+#[test]
+fn planted_green() {
+    assert!(core::hint::black_box(true), "planted");
+}
+--- run
+tools/milestones args --mutants
+
+case: mutants-select-no-feature-none-requires
+tool: run
+exit: any
+expect: R-84: no feature selected
+--- write tools/milestones.toml
+milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
+gating = ["S"]
+mutants_leave_out = []
+--- run
+bash -c 'case "$(tools/milestones args --mutants)" in *--features*) echo "R-84: a feature selected";; *) echo "R-84: no feature selected";; esac'

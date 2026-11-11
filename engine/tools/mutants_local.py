@@ -15,12 +15,13 @@ failing test (nextest's `mutants` profile, tools/test-memcap). The output is eng
 cargo-mutants' (0 all caught, 2 some missed, 3 some timed out).
 
 --next (R-88, issue #108; the M1 coordinator's pick P13) adds the next milestone's test
-targets (tools/milestones: M1's `m1_…` while M1 builds), each test only if it passes in an
+targets (tools/milestones: the first milestone not gating, M1's `m1_…` while M1 built; M2's,
+once it has one, since M1 gates), each test only if it passes in an
 unmutated run of those targets just before the mutants, the batch's baseline (the mutants
 profile, no fail-fast, the features their targets require). A test red there would count
 as catching every mutant (pre-M1's P13), so it is left out, and listed; the rest are
 kept through a nextest filter (`-E`) on the mutants' test runs. Without --next the run is
-CI's, the next milestone's tests left out.
+CI's, the next milestone's tests left out, the gating ones' required features on (R2).
 
 --fences (R-88, R-130; pick P55, 2026-11-09) adds the fences' equivalence tests that
 tools/milestones.toml's `fence_catchers` lists (F5's: `tally-cli`'s `walk_oracle`, `tally`'s
