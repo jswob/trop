@@ -1,0 +1,4 @@
+part px1
+  tally 2
+
+ask x1: f[k] for k in qs with v[q1] = sum(v[k] for j in qs)

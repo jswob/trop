@@ -1,0 +1,21 @@
+part a4
+  tally 2
+
+index ps = [p0, q1, p2]
+
+input kq: key qs
+
+def x1: key qs = q1 + 1
+def x2: key ps = q1 + 1
+def x3: bool = kq == q1 + 1
+def x4: num = rate[q2 - 1] + rate[kq]
+def x5: key qs = if n1 > 0 then q2 - 1 else q1
+def x7: bool = x1 == q2
+
+ask a4: x2
+
+version v_a4
+  cite card
+  governs always
+  known 2026-01-01
+  kq = q2 "c"

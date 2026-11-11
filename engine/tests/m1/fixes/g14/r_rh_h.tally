@@ -1,0 +1,59 @@
+model rhh
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probes: range_holds from a hole day, a count step, a long range"
+
+source card "card (invented)"
+
+input ds: date
+
+input de: date
+
+input dg: date
+
+input dz: date
+
+input k1: date
+
+input k2: date
+
+input t7[d in 2026-01-31 .. 2026-12-31 step 7 days]: int
+
+
+input tl[d in 1900-01-01 .. 9999-12-31 step 3 days]: int
+
+input sv: int
+
+input st: num day
+
+def h[d in ds .. de step st]: int = sv
+
+def g[d in dg .. dz step st]: int = sv
+
+ask b1: h[k1]
+
+ask b2: g[k1]
+
+ask b3: t7[k1], t7[k2]
+
+ask b4: tl[k1], tl[k2]
+
+ask b5: count(d in 2026-01-31 .. 2026-12-31 step 7 days where d == k1)
+
+ask b6: tl[9999-12-31]
+
+ask b7: tl[9999-12-29]
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  k1 = 2026-02-14 "card"
+  k2 = 2026-02-15 "card"
+  sv = 3 "card"
+  st = 7 day "card"
+  de = 2026-12-31 "card"
+  dg = 2026-01-31 "card"
+  tl[2026-02-14] = 6 "card"

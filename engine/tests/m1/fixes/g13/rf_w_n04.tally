@@ -1,0 +1,4 @@
+part n04
+  tally 2
+
+ask n04: overlap_days(lifespan(konto).to, d2, 2026)

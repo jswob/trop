@@ -1,0 +1,4 @@
+part n02
+  tally 2
+
+ask n02: days_between(d1, lifespan(konto).to)

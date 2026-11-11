@@ -1,0 +1,4 @@
+part pn2
+  tally 2
+
+ask pn2: year_of(d2) as if {d2 = window(2026-03-03, 2026-03-20)}

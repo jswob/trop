@@ -1,0 +1,4 @@
+part w17
+  tally 2
+
+ask w17: sum(r2[1, f] for f in 0 .. age(w, d2) step 0.5)

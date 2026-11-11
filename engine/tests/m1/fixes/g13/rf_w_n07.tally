@@ -1,0 +1,4 @@
+part n07
+  tally 2
+
+ask n07: age(d1, lifespan(konto).to)

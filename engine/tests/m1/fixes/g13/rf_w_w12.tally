@@ -1,0 +1,4 @@
+part w12
+  tally 2
+
+ask w12: abs(w)

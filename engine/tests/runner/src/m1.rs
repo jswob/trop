@@ -8,6 +8,7 @@
 //! `milestone/m1_format.rs` holds #109's law.
 //!
 //! - [`VECTORS`]: the stored vectors;
+//! - [`SPEC`]: the vectors where refcore crashes, the spec's answers T wrote (`m1/spec.py`);
 //! - [`KEY_KINDS`]: #109's text, rows keyed by literals of different kinds;
 //! - [`fixed_point`]: the law it is held to, a canonical text reprints as itself.
 
@@ -17,6 +18,10 @@ use crate::laws_m0::again_of;
 
 /// The vectors `m1/vectors.py` writes from refcore's runs (`kernel/vectors.refcore`'s form).
 pub const VECTORS: &[u8] = include_bytes!("../../m1/vectors.refcore");
+
+/// The vectors where refcore crashes (`REFCORE-NOT-YET`): each the spec's answer, its section
+/// named in `m1/spec.tsv`, written by `m1/spec.py` in the same form.
+pub const SPEC: &[u8] = include_bytes!("../../m1/spec.vectors");
 
 /// #109, minimised from the format fuzz target's find (`tmp/m1-rules/crash-1fc61e46…`): a
 /// part whose input keyed by days has a row keyed by the integer `20240` beside day keys and

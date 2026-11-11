@@ -1,0 +1,8 @@
+part lit
+  tally 2
+
+version v2
+  cite card
+  governs always
+  known 2026-01-01
+  t3[2026-01-22] = 9 "card"

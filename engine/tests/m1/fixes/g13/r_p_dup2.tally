@@ -1,0 +1,34 @@
+model dup
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+unit kg "a kilogram"
+
+input at_f: num
+input at_m: money PLN
+input at_w: num kg
+input by_frac[f in 0.5 .. 2.5 step 0.5]: num
+input by_m[a in 0 PLN .. 10 PLN step 0.50 PLN]: num
+input by_kg[w in 1 kg .. 5 kg step 0.5 kg]: num
+
+ask m1: by_frac[at_f]
+ask m2: by_m[at_m]
+ask m3: by_kg[at_w]
+ask m4: sum(by_m[a] for a in 2 PLN .. 3 PLN step 0.5 PLN)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  at_f = 2 "c"
+  at_m = 2.5 PLN "c"
+  at_w = 2.50 kg "c"
+  by_frac[2.0] = 2 "c"
+  by_m[2.50 PLN] = 25 "c"
+  by_m[3 PLN] = 3 "c"
+  by_kg[2.5 kg] = 7 "c"

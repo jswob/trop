@@ -1,0 +1,13 @@
+part rg5
+  tally 2
+
+input dy[d in 2026-01-01 .. 2026-01-31 step 1 day]: num
+input dq: date
+ask rg5: dy[dq]
+
+version v_rg5
+  cite card
+  governs always
+  known 2026-01-01
+  dq = 2026-01-07 "c"
+  dy[2026-01-05 .. 2026-01-10] = 4 "c"

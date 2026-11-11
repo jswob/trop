@@ -1,0 +1,4 @@
+part w10
+  tally 2
+
+ask w10: count(d in d1 .. d2 step age(w, d2) * 1 month)

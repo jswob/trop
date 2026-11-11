@@ -1,0 +1,51 @@
+model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"

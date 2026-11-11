@@ -1,0 +1,26 @@
+model dz
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+input d_a: date
+input d_b: date
+
+def gap: num day = days_between(d_a, d_a) * 1 day
+def back: num day = days_between(d_b, d_a) * 1 day
+
+ask z1: count(d in d_a .. d_b step gap)
+ask z2: count(d in d_a .. d_b step back)
+ask z3: count(d in d_a .. d_b step days_between(d_a, d_b) * 1 day)
+ask z4: count(d in d_a .. d_b step 1 month)
+ask z5: count(d in d_a .. d_b step 1 day)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d_a = 2026-01-31 "c"
+  d_b = 2026-12-31 "c"

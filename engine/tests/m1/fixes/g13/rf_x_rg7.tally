@@ -1,0 +1,13 @@
+part rg7
+  tally 2
+
+input hm[k in 0 .. 100 step 10]: num
+input kq: int
+ask rg7: hm[kq]
+
+version v_rg7
+  cite card
+  governs always
+  known 2026-01-01
+  kq = 30 "c"
+  hm[20 .. 40] = 4 "c"

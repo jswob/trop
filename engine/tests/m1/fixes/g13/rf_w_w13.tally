@@ -1,0 +1,4 @@
+part w13
+  tally 2
+
+ask w13: add_years(w, age(w, d2))

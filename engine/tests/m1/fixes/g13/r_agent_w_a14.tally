@@ -1,0 +1,4 @@
+part a14
+  tally 2
+
+ask a14: count(d in w .. 2026-12-31 step 1 month)

@@ -1,0 +1,5 @@
+part f1
+  tally 2
+
+
+ask f1: add_months(d1, age(w, d2))

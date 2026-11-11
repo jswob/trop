@@ -1,0 +1,4 @@
+part l4
+  tally 2
+
+ask l4: lifespan(konto).from, lifespan(world).to, count(x in accounts on 2026-02-01 where lifespan(x).to == never)

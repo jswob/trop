@@ -1,0 +1,13 @@
+part rg2
+  tally 2
+
+input dd[d in 2026-01-01 .. 2026-12-01 step 1 month]: num
+input dq: date
+ask rg2: dd[dq]
+
+version v_rg2
+  cite card
+  governs always
+  known 2026-01-01
+  dq = 2026-03-01 "c"
+  dd[2026-02-01 .. 2026-05-01] = 4 "c"

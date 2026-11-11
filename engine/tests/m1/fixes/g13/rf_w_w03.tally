@@ -1,0 +1,4 @@
+part w03
+  tally 2
+
+ask w03: r2[age(w, d2), 1]

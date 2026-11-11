@@ -1,0 +1,4 @@
+part a6
+  tally 2
+
+ask a6: pow(year_of(wy), n2)

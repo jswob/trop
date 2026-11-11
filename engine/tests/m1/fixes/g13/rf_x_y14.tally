@@ -1,0 +1,19 @@
+part y14
+  tally 2
+
+kind evs: event certain
+  leg what: any
+
+input fee: money PLN
+
+move mv: evs
+  on d1
+  leg what from konto to world amount fee
+ask y14: count(m in evs over d1 .. d2 where lifespan(m.what.amount).from > d1)
+
+version v_y14
+  cite card
+  governs always
+  known 2026-01-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start "c"
+  fee = 10.00 PLN "c"

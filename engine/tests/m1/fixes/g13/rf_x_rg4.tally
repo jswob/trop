@@ -1,0 +1,11 @@
+part rg4
+  tally 2
+
+input z[k in 0 .. 3]: num
+ask rg4: z[n2]
+
+version v_rg4
+  cite card
+  governs always
+  known 2026-01-01
+  z[1 .. 2] = 4 "c"

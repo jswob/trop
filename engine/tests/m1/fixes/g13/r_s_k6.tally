@@ -1,0 +1,5 @@
+part k6
+  tally 2
+
+
+ask k6: bal(konto, 2026-12-31) as if {fee = 3.005}

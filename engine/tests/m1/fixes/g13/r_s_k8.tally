@@ -1,0 +1,12 @@
+part k8
+  tally 2
+
+input ch: key qs
+
+ask k8: rate[ch] as if {ch = q9}
+
+version v_k8
+  cite card
+  governs always
+  known 2026-01-01
+  ch = q1 "c"

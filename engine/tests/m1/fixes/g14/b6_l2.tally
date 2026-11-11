@@ -1,0 +1,16 @@
+part l2
+  tally 2
+
+input fee2: money PLN
+
+move mv2: transfers
+  on d1
+  leg cash from konto to world amount fee2
+
+ask l2: count(m in transfers over d1 .. d2 where lifespan(m).to == never)
+
+version vl2
+  cite card
+  governs always
+  known 2026-01-01
+  fee2 = 10.00 PLN "c"

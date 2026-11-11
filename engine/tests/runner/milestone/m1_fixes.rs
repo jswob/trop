@@ -14,10 +14,10 @@ mod tests {
     use tally_runner::engine::run_args;
     use tally_runner::held::is_held;
     use tally_runner::kernel::{difference, vectors};
-    use tally_runner::m1::VECTORS;
+    use tally_runner::m1::{SPEC, VECTORS};
 
     /// The groups this target tests, one `#[test]` each.
-    const GROUPS: [&str; 13] = [
+    const GROUPS: [&str; 14] = [
         "fixes-g1",
         "fixes-g2",
         "fixes-g3",
@@ -31,6 +31,7 @@ mod tests {
         "fixes-g11",
         "fixes-g12",
         "fixes-g13",
+        "fixes-g14",
     ];
 
     /// Runs every vector of `group` on the engine and holds it to refcore's run.
@@ -224,6 +225,45 @@ mod tests {
     #[test]
     fn m1_fixes_g13_reads_ranges_and_sites() {
         group_holds("fixes-g13");
+    }
+
+    /// G14's (`m1/fixes/g14/`): the builder's and the review's probes of the sweep and its fix:
+    /// #130's keyed `by` price (`p130_*`; refcore's refusal of a clause keyed by a unit kind and
+    /// its answer to a `by` of another currency's type held for #130, a `by last` price's
+    /// `held:` line for #123), the review's B1 and N6 (a per-unit def's figure at its key,
+    /// `r_agent_p130_*`, `b1_*`, held for #130) and B2 (a `with` pin naming the ask's `for`
+    /// through an aggregate, `b2_*`); G10's NB8 (`g10fix`'s forms in `fixes-g10`); the pins per
+    /// binding tuple (`pt_*`, `r_p_*`; P40's `solve` held for #120); `range_holds` (`rh_*`);
+    /// G6 fix 3's listing (`g6f3_*`, held for #121). Red: the review's N8, a day range stepped
+    /// by a count refused `LOAD-UNIT` with no `(file:line)` (`r_agent_rh_*`).
+    #[test]
+    fn m1_fixes_g14_the_sweep() {
+        group_holds("fixes-g14");
+    }
+
+    /// Where refcore crashes (`REFCORE-NOT-YET`), the spec's answer (`m1/spec.tsv`, each row's
+    /// section named; T reads the engine's run against it before storing it): G13 fix's holes
+    /// of a window or an interval (L §4.4), `never` as a range end (L §5.7), the key-input
+    /// twins of key arithmetic (L §2.5, §3.2), row ranges of whole values (L §4.6 step 1), and
+    /// `lifespan` of a movement refused at load (P68, #136).
+    #[test]
+    fn m1_fixes_the_spec_where_refcore_crashes() {
+        let all = vectors(SPEC).expect("m1/spec.vectors reads");
+        assert!(!all.is_empty(), "the spec's store holds its vectors");
+        let failed: Vec<String> = all
+            .iter()
+            .filter_map(|v| {
+                difference(&v.refcore, &run_args(&v.args, &v.files))
+                    .map(|d| format!("{}: {d}", v.id))
+            })
+            .collect();
+        assert!(
+            failed.is_empty(),
+            "{} of {} vectors differ from the spec's answer:\n{}",
+            failed.len(),
+            all.len(),
+            failed.join("\n")
+        );
     }
 
     /// A price of another currency is refused, never a figure in the wrong unit (L 5.10: `by p`

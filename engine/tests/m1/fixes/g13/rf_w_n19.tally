@@ -1,0 +1,4 @@
+part n19
+  tally 2
+
+ask n19: add_months(lifespan(konto).to, 1)

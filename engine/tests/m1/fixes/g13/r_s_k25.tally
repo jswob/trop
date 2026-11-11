@@ -1,0 +1,11 @@
+scenario k25 over sites
+  tally 2
+  from 2026-07-01
+
+version v_k25
+  cite card
+  governs 2026-07-01..
+  known 2026-01-01
+  replace n1 = 2.5 "s"
+
+ask k25: bal(konto, 2026-12-31) in k25, rate[q1] in k25

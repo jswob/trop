@@ -1,0 +1,5 @@
+part k16
+  tally 2
+
+
+ask k16: n1 as if {n1 = 1.5}

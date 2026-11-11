@@ -1,0 +1,4 @@
+part n18
+  tally 2
+
+ask n18: abs(lifespan(konto).to)

@@ -1,0 +1,4 @@
+part n09
+  tally 2
+
+ask n09: day_of(lifespan(konto).to, 1)

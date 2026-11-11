@@ -1,0 +1,4 @@
+part w20
+  tally 2
+
+ask w20: pos(age(w, d2))

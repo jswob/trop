@@ -1,0 +1,5 @@
+part f2
+  tally 2
+
+
+ask f2: pow(n5, age(w, d2))

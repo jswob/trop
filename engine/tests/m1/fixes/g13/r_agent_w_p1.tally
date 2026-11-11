@@ -1,0 +1,8 @@
+part p1
+  tally 2
+
+input p[x in 1 % .. 5 % step 1 %]: num
+
+input pv: num %
+
+ask p1: p[pv]

@@ -1,0 +1,19 @@
+part y09
+  tally 2
+
+kind evs: event certain
+  leg what: any
+
+input fee: money PLN
+
+move mv: evs
+  on d1
+  leg what from konto to world amount fee
+ask y09: sum(count(d in d1 .. m.what.amount step 1 month) for m in evs over d1 .. d2)
+
+version v_y09
+  cite card
+  governs always
+  known 2026-01-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start "c"
+  fee = 10.00 PLN "c"

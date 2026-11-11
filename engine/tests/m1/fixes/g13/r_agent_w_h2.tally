@@ -1,0 +1,6 @@
+part h2
+  tally 2
+
+input t6[d in 2026-01-01 .. 2046-01-01 step 1 day]: int
+
+ask h2: count(d in 2026-01-01 .. 2046-01-01 step 1 day where t6[d] == n5)

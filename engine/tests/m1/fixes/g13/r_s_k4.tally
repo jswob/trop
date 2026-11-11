@@ -1,0 +1,11 @@
+scenario k4 over sites
+  tally 2
+  from 2026-07-01
+
+version v_k4
+  cite card
+  governs 2026-07-01..
+  known 2026-01-01
+  replace fee = 3.005 PLN "s"
+
+ask k4: bal(konto, 2026-12-31) in k4, rate[q1] in k4

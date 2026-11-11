@@ -1,0 +1,5 @@
+part k17
+  tally 2
+
+
+ask k17: rate[q1] as if {rate[*] = q1}

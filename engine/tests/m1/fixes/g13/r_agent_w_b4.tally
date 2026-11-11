@@ -1,0 +1,5 @@
+part b4
+  tally 2
+
+
+ask b4: overlap_days(d1, d1, lifespan(konto).to)

@@ -1,0 +1,21 @@
+model c
+  tally 2
+  on 2027-01-01
+  start 2027-01-01
+  end 2027-12-31
+unit PLN: currency minor 0.01
+kind ovs: event certain
+  leg cash: PLN
+kind boxes: place one min 0
+place acct: boxes PLN lives 2027-01-01..
+place bank: outside lives 2027-01-01..
+def p[m in months]: money PLN = sum(o.cash.amount for o in ovs over m)
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from bank to acct amount p[m]
+move op[m in months]: ovs
+  on start_of(m)
+  leg cash from acct to bank amount 1 PLN
+ask t1: p[2027-06]
+ask t2: p[m] for m in [2027-02, 2027-03]
+ask t3: bal(acct, 2027-06-30)

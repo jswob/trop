@@ -1,0 +1,12 @@
+part k7
+  tally 2
+
+input ch: key qs
+
+ask k7: rate[ch]
+
+version v_k7
+  cite card
+  governs always
+  known 2026-01-01
+  ch = q9 "c"

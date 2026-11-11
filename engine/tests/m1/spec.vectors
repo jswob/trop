@@ -1,0 +1,2091 @@
+48:fixes/g13/r_agent_w_model_with_r_agent_w_a11_a11,4:spec,55:run r_agent_w_model.tally r_agent_w_a11.tally --ask a11,863:21:r_agent_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,19:r_agent_w_a11.tally,39:part a11
+  tally 2
+
+ask a11: r2[kh, 1]
+,,1:0,342:a11: ?"kh: no value" (kh)
+  cut 2026-03-01
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,48:fixes/g13/r_agent_w_model_with_r_agent_w_a14_a14,4:spec,55:run r_agent_w_model.tally r_agent_w_a14.tally --ask a14,894:21:r_agent_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,19:r_agent_w_a14.tally,70:part a14
+  tally 2
+
+ask a14: count(d in w .. 2026-12-31 step 1 month)
+,,1:0,504:a14: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range end" (w)
+  cut 2026-03-01
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,46:fixes/g13/r_agent_w_model_with_r_agent_w_c1_c1,4:spec,53:run r_agent_w_model.tally r_agent_w_c1.tally --ask c1,867:21:r_agent_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,18:r_agent_w_c1.tally,44:part c1
+  tally 2
+
+
+ask c1: abs(age(w, d2))
+,,1:0,446:c1: ?"date within window(2026-03-03, 2026-03-20) not precise enough for abs" (w)
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,46:fixes/g13/r_agent_w_model_with_r_agent_w_c3_c3,4:spec,53:run r_agent_w_model.tally r_agent_w_c3.tally --ask c3,871:21:r_agent_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,18:r_agent_w_c3.tally,48:part c3
+  tally 2
+
+
+ask c3: pow(age(w, d2), n2)
+,,1:0,397:c3: ?"date within window(2026-03-03, 2026-03-20) not precise enough for pow" (w)
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,46:fixes/g13/r_agent_w_model_with_r_agent_w_c4_c4,4:spec,53:run r_agent_w_model.tally r_agent_w_c4.tally --ask c4,901:21:r_agent_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,18:r_agent_w_c4.tally,78:part c4
+  tally 2
+
+
+ask c4: count(d in lifespan(konto).to .. d2 step 1 month)
+,,1:0,356:c4: refused: RUN-NONE never in a range end
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,46:fixes/g13/r_agent_w_model_with_r_agent_w_c5_c5,4:spec,53:run r_agent_w_model.tally r_agent_w_c5.tally --ask c5,872:21:r_agent_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,18:r_agent_w_c5.tally,49:part c5
+  tally 2
+
+
+ask c5: abs(age(w, d2) - n5)
+,,1:0,446:c5: ?"date within window(2026-03-03, 2026-03-20) not precise enough for abs" (w)
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,46:fixes/g13/r_agent_w_model_with_r_agent_w_e1_e1,4:spec,53:run r_agent_w_model.tally r_agent_w_e1.tally --ask e1,887:21:r_agent_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,18:r_agent_w_e1.tally,64:part e1
+  tally 2
+
+def dx: key qs = q1 + age(w, d2)
+
+ask e1: dx
+,,1:0,450:e1: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a print" (w)
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,46:fixes/g13/r_agent_w_model_with_r_agent_w_e2_e2,4:spec,53:run r_agent_w_model.tally r_agent_w_e2.tally --ask e2,980:21:r_agent_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,18:r_agent_w_e2.tally,156:part e2
+  tally 2
+
+input kq: key qs
+
+def dy: key qs = kq + age(w, d2)
+
+version vk
+  cite card
+  governs always
+  known 2026-01-01
+  kq = q1 "c"
+
+ask e2: dy
+,,1:0,450:e2: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a print" (w)
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,46:fixes/g13/r_agent_w_model_with_r_agent_w_f1_f1,4:spec,53:run r_agent_w_model.tally r_agent_w_f1.tally --ask f1,878:21:r_agent_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,18:r_agent_w_f1.tally,55:part f1
+  tally 2
+
+
+ask f1: add_months(d1, age(w, d2))
+,,1:0,453:f1: ?"date within window(2026-03-03, 2026-03-20) not precise enough for add_months" (w)
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,46:fixes/g13/r_agent_w_model_with_r_agent_w_f2_f2,4:spec,53:run r_agent_w_model.tally r_agent_w_f2.tally --ask f2,871:21:r_agent_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,18:r_agent_w_f2.tally,48:part f2
+  tally 2
+
+
+ask f2: pow(n5, age(w, d2))
+,,1:0,446:f2: ?"date within window(2026-03-03, 2026-03-20) not precise enough for pow" (w)
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,46:fixes/g13/r_agent_w_model_with_r_agent_w_f3_f3,4:spec,53:run r_agent_w_model.tally r_agent_w_f3.tally --ask f3,876:21:r_agent_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,18:r_agent_w_f3.tally,53:part f3
+  tally 2
+
+
+ask f3: add_days(d1, age(w, d2))
+,,1:0,451:f3: ?"date within window(2026-03-03, 2026-03-20) not precise enough for add_days" (w)
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,46:fixes/g13/r_agent_w_model_with_r_agent_w_i1_i1,4:spec,53:run r_agent_w_model.tally r_agent_w_i1.tally --ask i1,975:21:r_agent_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,18:r_agent_w_i1.tally,151:part i1
+  tally 2
+
+def z1: int = (kq + 1) - q1
+
+input kq: key qs
+
+version vk
+  cite card
+  governs always
+  known 2026-01-01
+  kq = q2 "c"
+
+ask i1: z1
+,,1:1,31:refused: LOAD-UNIT q2 + 1 - q1
+,46:fixes/g13/r_agent_w_model_with_r_agent_w_i2_i2,4:spec,53:run r_agent_w_model.tally r_agent_w_i2.tally --ask i2,1007:21:r_agent_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,18:r_agent_w_i2.tally,183:part i2
+  tally 2
+
+input kp: key qs
+
+def z2: int = (kq + 1) - kp
+
+input kq: key qs
+
+version vk
+  cite card
+  governs always
+  known 2026-01-01
+  kq = q2 "c"
+  kp = q1 "c"
+
+ask i2: z2
+,,1:1,31:refused: LOAD-UNIT q2 + 1 - q1
+,46:fixes/g13/r_agent_w_model_with_r_agent_w_l1_l1,4:spec,53:run r_agent_w_model.tally r_agent_w_l1.tally --ask l1,1173:21:r_agent_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,18:r_agent_w_l1.tally,349:part l1
+  tally 2
+
+kind evs: event certain
+  leg cash: PLN
+
+input fee: money PLN
+
+move mv: evs
+  on d1
+  leg cash from konto to world amount fee
+
+ask l1: count(m in evs over d1 .. d2 where lifespan(m).from <= d2)
+
+version vl
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 10.00 PLN "c"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "c"
+,,1:1,113:refused: LOAD-UNIT lifespan of key evs: a movement has its day, not a lifespan (L §5.7) (r_agent_w_l1.tally:13)
+,38:fixes/g13/rf_w_model_with_rf_w_n11_n11,4:spec,45:run rf_w_model.tally rf_w_n11.tally --ask n11,893:16:rf_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,14:rf_w_n11.tally,79:part n11
+  tally 2
+
+ask n11: count(d in lifespan(konto).to .. d2 step 1 month)
+,,1:0,357:n11: refused: RUN-NONE never in a range end
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,38:fixes/g13/rf_w_model_with_rf_w_w01_w01,4:spec,45:run rf_w_model.tally rf_w_w01.tally --ask w01,871:16:rf_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,14:rf_w_w01.tally,57:part w01
+  tally 2
+
+ask w01: day_of(2026-03, age(w, d2))
+,,1:0,450:w01: ?"date within window(2026-03-03, 2026-03-20) not precise enough for day_of" (w)
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,38:fixes/g13/rf_w_model_with_rf_w_w08_w08,4:spec,45:run rf_w_model.tally rf_w_w08.tally --ask w08,871:16:rf_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,14:rf_w_w08.tally,57:part w08
+  tally 2
+
+ask w08: count(n in 1 .. age(w, d2))
+,,1:0,455:w08: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range end" (w)
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,38:fixes/g13/rf_w_model_with_rf_w_w09_w09,4:spec,45:run rf_w_model.tally rf_w_w09.tally --ask w09,871:16:rf_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,14:rf_w_w09.tally,57:part w09
+  tally 2
+
+ask w09: count(n in age(w, d2) .. 5)
+,,1:0,455:w09: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range end" (w)
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,38:fixes/g13/rf_w_model_with_rf_w_w11_w11,4:spec,45:run rf_w_model.tally rf_w_w11.tally --ask w11,871:16:rf_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,14:rf_w_w11.tally,57:part w11
+  tally 2
+
+ask w11: pow(age(w, d2), age(w, d2))
+,,1:0,447:w11: ?"date within window(2026-03-03, 2026-03-20) not precise enough for pow" (w)
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,38:fixes/g13/rf_w_model_with_rf_w_w13_w13,4:spec,45:run rf_w_model.tally rf_w_w13.tally --ask w13,868:16:rf_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,14:rf_w_w13.tally,54:part w13
+  tally 2
+
+ask w13: add_years(w, age(w, d2))
+,,1:0,453:w13: ?"date within window(2026-03-03, 2026-03-20) not precise enough for add_years" (w)
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,38:fixes/g13/rf_w_model_with_rf_w_w17_w17,4:spec,45:run rf_w_model.tally rf_w_w17.tally --ask w17,891:16:rf_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,14:rf_w_w17.tally,77:part w17
+  tally 2
+
+ask w17: sum(r2[1, f] for f in 0 .. age(w, d2) step 0.5)
+,,1:0,406:w17: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range end" (w)
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,38:fixes/g13/rf_x_model_with_rf_x_rg1_rg1,4:spec,45:run rf_x_model.tally rf_x_rg1.tally --ask rg1,995:16:rf_x_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,14:rf_x_rg1.tally,180:part rg1
+  tally 2
+
+input g[k in -2 .. 2 step 1]: num
+input kz: int
+ask rg1: g[kz]
+
+version v_rg1
+  cite card
+  governs always
+  known 2026-01-01
+  kz = 0 "c"
+  g[-1 .. 1] = 4 "c"
+,,1:0,421:rg1: 4
+  cut 2026-03-01
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,38:fixes/g13/rf_x_model_with_rf_x_rg3_rg3,4:spec,45:run rf_x_model.tally rf_x_rg3.tally --ask rg3,966:16:rf_x_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,14:rf_x_rg3.tally,151:part rg3
+  tally 2
+
+input u[k in 1 .. 9 step 2]: num
+ask rg3: u[n5]
+
+version v_rg3
+  cite card
+  governs always
+  known 2026-01-01
+  u[3 .. 7] = 4 "c"
+,,1:0,421:rg3: 4
+  cut 2026-03-01
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,38:fixes/g13/rf_x_model_with_rf_x_rg4_rg4,4:spec,45:run rf_x_model.tally rf_x_rg4.tally --ask rg4,959:16:rf_x_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,14:rf_x_rg4.tally,144:part rg4
+  tally 2
+
+input z[k in 0 .. 3]: num
+ask rg4: z[n2]
+
+version v_rg4
+  cite card
+  governs always
+  known 2026-01-01
+  z[1 .. 2] = 4 "c"
+,,1:0,372:rg4: 4
+  cut 2026-03-01
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,38:fixes/g13/rf_x_model_with_rf_x_rg6_rg6,4:spec,45:run rf_x_model.tally rf_x_rg6.tally --ask rg6,967:16:rf_x_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,14:rf_x_rg6.tally,152:part rg6
+  tally 2
+
+input h[k in n2 .. 9 step 1]: num
+ask rg6: h[n5]
+
+version v_rg6
+  cite card
+  governs always
+  known 2026-01-01
+  h[3 .. 6] = 4 "c"
+,,1:0,372:rg6: 4
+  cut 2026-03-01
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,38:fixes/g13/rf_x_model_with_rf_x_rg7_rg7,4:spec,45:run rf_x_model.tally rf_x_rg7.tally --ask rg7,1002:16:rf_x_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,14:rf_x_rg7.tally,187:part rg7
+  tally 2
+
+input hm[k in 0 .. 100 step 10]: num
+input kq: int
+ask rg7: hm[kq]
+
+version v_rg7
+  cite card
+  governs always
+  known 2026-01-01
+  kq = 30 "c"
+  hm[20 .. 40] = 4 "c"
+,,1:0,421:rg7: 4
+  cut 2026-03-01
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,32:fixes/g14/b6_model_with_b6_l1_l1,4:spec,39:run b6_model.tally b6_l1.tally --ask l1,1159:14:b6_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,11:b6_l1.tally,349:part l1
+  tally 2
+
+kind evs: event certain
+  leg cash: PLN
+
+input fee: money PLN
+
+move mv: evs
+  on d1
+  leg cash from konto to world amount fee
+
+ask l1: count(m in evs over d1 .. d2 where lifespan(m).from <= d2)
+
+version vl
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 10.00 PLN "c"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "c"
+,,1:1,106:refused: LOAD-UNIT lifespan of key evs: a movement has its day, not a lifespan (L §5.7) (b6_l1.tally:13)
+,32:fixes/g14/b6_model_with_b6_l2_l2,4:spec,39:run b6_model.tally b6_l2.tally --ask l2,1082:14:b6_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,11:b6_l2.tally,272:part l2
+  tally 2
+
+input fee2: money PLN
+
+move mv2: transfers
+  on d1
+  leg cash from konto to world amount fee2
+
+ask l2: count(m in transfers over d1 .. d2 where lifespan(m).to == never)
+
+version vl2
+  cite card
+  governs always
+  known 2026-01-01
+  fee2 = 10.00 PLN "c"
+,,1:1,112:refused: LOAD-UNIT lifespan of key transfers: a movement has its day, not a lifespan (L §5.7) (b6_l2.tally:10)
+,32:fixes/g14/b6_model_with_b6_l3_l3,4:spec,39:run b6_model.tally b6_l3.tally --ask l3,1035:14:b6_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,11:b6_l3.tally,225:part l3
+  tally 2
+
+input fee3: money PLN
+
+move mv3: transfers
+  on d1
+  leg cash from konto to world amount fee3
+
+ask l3: lifespan(mv3).from
+
+version vl3
+  cite card
+  governs always
+  known 2026-01-01
+  fee3 = 10.00 PLN "c"
+,,1:1,112:refused: LOAD-UNIT lifespan of key transfers: a movement has its day, not a lifespan (L §5.7) (b6_l3.tally:10)
+,40:fixes/g13/fix_i3_model_with_fix_i3_i3_i3,4:spec,47:run fix_i3_model.tally fix_i3_i3.tally --ask i3,1046:18:fix_i3_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,15:fix_i3_i3.tally,228:part i3
+  tally 2
+
+input kq: key qs
+
+input kq1: key qs
+
+def z3: int = q1 - (kq + 1)
+
+def z4: int = kq1 - (kq + 1)
+
+ask i3: z3
+
+ask i4: z4
+
+version vi3
+  cite card
+  governs always
+  known 2026-01-01
+  kq = q2 "c"
+  kq1 = q1 "c"
+,,1:1,31:refused: LOAD-UNIT q1 - q2 + 1
+,40:fixes/g13/fix_i3_model_with_fix_i3_i3_i4,4:spec,47:run fix_i3_model.tally fix_i3_i3.tally --ask i4,1046:18:fix_i3_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,15:fix_i3_i3.tally,228:part i3
+  tally 2
+
+input kq: key qs
+
+input kq1: key qs
+
+def z3: int = q1 - (kq + 1)
+
+def z4: int = kq1 - (kq + 1)
+
+ask i3: z3
+
+ask i4: z4
+
+version vi3
+  cite card
+  governs always
+  known 2026-01-01
+  kq = q2 "c"
+  kq1 = q1 "c"
+,,1:1,31:refused: LOAD-UNIT q1 - q2 + 1
+,

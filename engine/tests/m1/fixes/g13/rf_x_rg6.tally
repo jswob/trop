@@ -1,0 +1,11 @@
+part rg6
+  tally 2
+
+input h[k in n2 .. 9 step 1]: num
+ask rg6: h[n5]
+
+version v_rg6
+  cite card
+  governs always
+  known 2026-01-01
+  h[3 .. 6] = 4 "c"

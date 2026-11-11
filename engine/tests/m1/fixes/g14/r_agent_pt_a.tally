@@ -1,0 +1,14 @@
+part pa
+  tally 2
+
+ask x1: f[k] for k in qs with v[q1] = sum(v[k] for j in qs)
+
+ask x2: f[k] for k in qs with v[q1] = count(j in qs where j == k)
+
+ask x3: f[k] for k in qs with v[q1] = (if k == q1 then 3 else 4)
+
+ask x4: sum(f[k] as if {v[q1] = sum(v[k] for j in qs)} for k in qs)
+
+ask x5: f[k] as if {v[k] = count(j in qs where j == k)} for k in qs
+
+ask x6: f[k] as if {v[q1] = count(j in qs where j == k)} for k in qs

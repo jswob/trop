@@ -1,0 +1,21 @@
+part r_bm_key
+  tally 2
+
+input bm[a in 0 PLN .. 20 PLN step 1 PLN]: num
+
+kind evs: event certain
+  leg what: any
+
+move mv: evs
+  on d0
+  leg what from konto to world amount fee
+
+def r_bm_key_x: num = sum(bm[m.what.amount] for m in evs over d0..d0)
+
+ask r_bm_key: r_bm_key_x
+
+version v_r_bm_key
+  cite card
+  governs always
+  known 2026-01-01
+  bm[10 PLN] = 0.5 "c"

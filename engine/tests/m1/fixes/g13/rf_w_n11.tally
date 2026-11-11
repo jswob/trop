@@ -1,0 +1,4 @@
+part n11
+  tally 2
+
+ask n11: count(d in lifespan(konto).to .. d2 step 1 month)

@@ -1,0 +1,5 @@
+part k15
+  tally 2
+
+
+ask k15: bal(konto, 2026-12-31) as if {d0 = 5}

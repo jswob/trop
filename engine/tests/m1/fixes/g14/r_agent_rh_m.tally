@@ -1,0 +1,53 @@
+model rh2
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probes: range_holds at a non-aligned last, a count step"
+
+source card "card (invented)"
+
+input t3[d in 2026-01-01 .. 2026-01-20 step 3 days]: int
+
+input k1: date
+
+input k2: date
+
+input k3: date
+
+input k4: date
+
+input k5: date
+
+input k6: date
+
+input k7: date
+
+ask b1: t3[k1]
+
+ask b2: t3[k2]
+
+ask b3: t3[k3]
+
+ask b4: t3[k4]
+
+ask b5: t3[k5]
+
+ask b6: t3[k6]
+
+ask b7: t3[k7]
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  k1 = 2026-01-19 "card"
+  k2 = 2026-01-20 "card"
+  k3 = 2026-01-22 "card"
+  k4 = 2026-01-01 "card"
+  k5 = 2026-01-02 "card"
+  k6 = 2026-01-04 "card"
+  k7 = 2025-12-29 "card"
+  t3[2026-01-19] = 1 "card"
+  t3[2026-01-01] = 2 "card"
+  t3[2026-01-04] = 3 "card"

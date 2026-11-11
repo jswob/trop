@@ -1,0 +1,5 @@
+part b7
+  tally 2
+
+
+ask b7: month_of(lifespan(konto).to)

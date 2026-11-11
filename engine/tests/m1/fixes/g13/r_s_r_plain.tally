@@ -1,0 +1,6 @@
+part r_plain
+  tally 2
+
+def r_plain_x: money PLN = fee + r5
+
+ask r_plain: r_plain_x

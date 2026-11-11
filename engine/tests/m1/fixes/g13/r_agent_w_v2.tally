@@ -1,0 +1,6 @@
+part v2
+  tally 2
+
+def vx[mm in months]: int = count(d in d1 .. mm step 1 day)
+
+ask v2: vx[2026-03]

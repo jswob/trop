@@ -1,0 +1,4 @@
+part a8
+  tally 2
+
+ask a8: count(x for x in places on w)

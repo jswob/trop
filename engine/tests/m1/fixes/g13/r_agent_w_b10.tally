@@ -1,0 +1,5 @@
+part b10
+  tally 2
+
+
+ask b10: first(x in places on lifespan(konto).to ties by x)

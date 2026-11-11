@@ -1,0 +1,13 @@
+part rg1
+  tally 2
+
+input g[k in -2 .. 2 step 1]: num
+input kz: int
+ask rg1: g[kz]
+
+version v_rg1
+  cite card
+  governs always
+  known 2026-01-01
+  kz = 0 "c"
+  g[-1 .. 1] = 4 "c"

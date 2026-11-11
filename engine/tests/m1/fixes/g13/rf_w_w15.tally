@@ -1,0 +1,4 @@
+part w15
+  tally 2
+
+ask w15: round(age(w, d2) * 1.00 PLN, 0.01 PLN, down)
