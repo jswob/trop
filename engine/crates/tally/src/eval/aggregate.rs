@@ -495,9 +495,10 @@ impl Engine {
         };
         let mut colls = frame.colls.into_iter();
         let mut out = Vec::with_capacity(frame.values.len());
+        let written = self.bind_text(&bind.text);
         for (value, own) in frame.values {
             out.push(Candidate {
-                env: env.with_bind(bind, value, bind_domain(m, bind)),
+                env: env.with_bind((&bind.var, &written), value, bind_domain(m, bind)),
                 own,
                 brings: colls.next(),
             });
@@ -558,12 +559,13 @@ impl Engine {
             }
         };
         let mut out = Vec::with_capacity(values.len());
+        let written = self.bind_text(&bind.text);
         for (i, (value, own)) in values.into_iter().enumerate() {
             let mut read = domain.clone();
             if let Some(c) = brings.get(i) {
                 read.merge(c);
             }
-            let inner = env.with_bind(bind, value, bind_domain(m, bind));
+            let inner = env.with_bind((&bind.var, &written), value, bind_domain(m, bind));
             self.push();
             let kept = self.where_keeps(m, bind, &inner, ctx);
             read.merge(&self.pop_alone());
@@ -594,7 +596,8 @@ impl Engine {
         unknown: Option<Hole>,
         ctx: Ctx,
     ) -> Result<Option<(Env, Option<Hole>)>, Stop> {
-        let inner = scope.with_bind(bind, value, bind_domain(m, bind));
+        let written = self.bind_text(&bind.text);
+        let inner = scope.with_bind((&bind.var, &written), value, bind_domain(m, bind));
         Ok(match self.where_keeps(m, bind, &inner, ctx)? {
             Kept::Out => None,
             Kept::In(h) => Some((inner, joined(unknown, h))),

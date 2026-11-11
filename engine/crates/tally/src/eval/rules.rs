@@ -25,7 +25,7 @@ use crate::time::Day;
 
 use super::convert::{ConvertFor, Converted, convert};
 use super::memo::{CellId, CellKey, LawClass, Read, rows_class, rules_class};
-use super::read::shown;
+use super::read::{at_keys, shown};
 use super::trace::Seen;
 use super::windows::as_read;
 
@@ -339,7 +339,7 @@ impl Engine {
                 let value = self.ev(m, e, env, ctx);
                 self.trace_close(group);
                 self.trace_groups(node, &rule.label, (None, group));
-                value.and_then(|v| whole_value(m, &def.ty, v))
+                at_cell(m, (def, keys), value)
             }
             RuleValue::Solve(_) => Err(Stop::NotBuilt("`solve`")),
         }
@@ -611,6 +611,24 @@ fn beats_order(def: &DefInfo, live: &[InForce]) -> Result<Vec<InForce>, Stop> {
     Ok(done)
 }
 
+/// A def cell's value at its `keys`: a number whose unit names a key's variable, a figure in
+/// a per-unit price's declared type `num CUR/u` or one typed like a branch read at the key,
+/// is in CUR per the key's unit (L §3.2 Per-unit prices of a unit kind, Inline figures).
+/// Refcore keeps `$u` (its `_flexto` and `typed`).
+/// The rule's value `value` is first a whole value in the def's type ([`whole_value`]). Its own
+/// function, so the def's recursive evaluation keeps its frame (R-16).
+fn at_cell(
+    m: &Reality,
+    (def, keys): (&DefInfo, &[KeyVal]),
+    value: Result<Value, Stop>,
+) -> Result<Value, Stop> {
+    let v = whole_value(m, &def.ty, value?)?;
+    if let Value::Number(n) = v {
+        return Ok(Value::Number(at_keys(n, &def.binds, keys)?));
+    }
+    Ok(v)
+}
+
 /// A whole value takes its target's type: a bare figure becomes the def's number type, `1`
 /// in a `num %` def being 1 % (L §3.2 Inline figures; refcore's `_flexto` and `typed`).
 fn whole_value(m: &Reality, ty: &Ty, v: Value) -> Result<Value, Stop> {
@@ -707,8 +725,12 @@ fn index_word(m: &Reality, ix: &str, word: String) -> Value {
 pub(super) fn key_env(def: &DefInfo, keys: &[KeyVal]) -> Env {
     let mut env = Env::empty();
     for (bind, key) in def.binds.iter().zip(keys) {
-        let written = (bind.var.as_str(), bind.node.text.as_str());
-        env.bind_written(written, Value::of_key(key), Some(bind.domain.clone()));
+        let written = std::rc::Rc::from(bind.node.text.as_str());
+        env.bind_written(
+            (&bind.var, &written),
+            Value::of_key(key),
+            Some(bind.domain.clone()),
+        );
     }
     env
 }

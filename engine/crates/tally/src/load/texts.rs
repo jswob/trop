@@ -288,7 +288,7 @@ pub(super) fn covered_spans(e: Option<&Expr>, out: &mut std::collections::BTreeS
 }
 
 /// The expressions directly under `e`, for a walk over a whole tree.
-pub(super) fn children(e: &Expr) -> Vec<&Expr> {
+pub(crate) fn children(e: &Expr) -> Vec<&Expr> {
     let mut out = Vec::new();
     match e {
         Expr::If(parts) => out.extend(parts.iter()),

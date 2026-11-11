@@ -372,6 +372,13 @@ fn ask_lines(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<
     let mut cut = m.on;
     let mut known_engine = None;
     if let Some(known) = &ask.known {
+        if names_a_for(ask, known) {
+            // a cut per the ask's own binding tuple (L §5.18) needs the line's context per
+            // tuple; refcore stops there too (`KeyError`)
+            return Err(Stop::NotBuilt(
+                "an ask's as known formed per its own for's binding tuple",
+            ));
+        }
         let mut engine = Engine::new(m.on)
             .with_days(days)
             .with_how((seen.memo, seen.lows))
@@ -447,6 +454,11 @@ fn gather(seen: &mut Seen, engine: &mut Engine) {
 fn ask_body(m: &Reality, ask: &Ask, engine: &mut Engine, cut: Day) -> Result<Vec<String>, Stop> {
     let mut law = None;
     if let Some(e) = &ask.law {
+        if names_a_for(ask, e) {
+            return Err(Stop::NotBuilt(
+                "an ask's law formed per its own for's binding tuple",
+            ));
+        }
         let in_model = model_ctx(m, engine, (None, cut))?;
         let v = engine.value(m, e, &Env::empty(), in_model)?;
         if let Value::Hole(_) = v {
@@ -792,15 +804,77 @@ fn pins_name_for(ask: &Ask) -> bool {
 }
 
 /// Whether expression `e` names a variable of ask `ask`'s own `for`, by the walk of the names
-/// it reads; a form whose names aren't walked names none. L §8.2.
+/// it reads; a form whose names that walk doesn't follow (an aggregate, a walk's read) is
+/// walked by [`mentions`]. L §8.2.
 fn names_a_for(ask: &Ask, e: &Expr) -> bool {
     let Some(names) = names_in(e) else {
-        return false;
+        return ask.binds.iter().any(|b| mentions(e, &b.var));
     };
     for name in names {
         if ask.binds.iter().any(|b| b.var == name) {
             return true;
         }
+    }
+    false
+}
+
+/// Whether expression `e` may name variable `var`: every part walked, an aggregate's term,
+/// its bindings' ranges, `on` and `where`, and its `ties by`, a binding of its own of that
+/// name included; a form whose parts aren't all walked here may (a conservative test: such a
+/// pin stops "not implemented" rather than read the variable as a key literal). L §8.2.
+fn mentions(e: &Expr, var: &str) -> bool {
+    let mut work = vec![e];
+    while let Some(x) = work.pop() {
+        match x {
+            Expr::Name(n) if n == var => return true,
+            Expr::Agg(agg) => {
+                for bind in &agg.binds {
+                    if let Domain::Range(ends) = &bind.domain {
+                        work.extend([&ends.0, &ends.1]);
+                        work.extend(ends.2.iter());
+                    }
+                    work.extend(bind.on.iter());
+                    work.extend(bind.filter.iter());
+                }
+                work.extend(agg.ties.iter().flatten());
+            }
+            Expr::LegOf(..)
+            | Expr::To(..)
+            | Expr::Last(_)
+            | Expr::Bal(_)
+            | Expr::Flows(_)
+            | Expr::Covered(_)
+            | Expr::Calendar(_)
+            | Expr::Value(_)
+            | Expr::Query(_)
+            | Expr::Low(_)
+            | Expr::Crps(_)
+            | Expr::DistFn(_)
+            | Expr::Dist(_)
+            | Expr::Prorata(_)
+            | Expr::AsIf(..) => return true,
+            Expr::Lit(_)
+            | Expr::Str(_)
+            | Expr::Name(_)
+            | Expr::None
+            | Expr::Never
+            | Expr::Cut
+            | Expr::List(_)
+            | Expr::If(_)
+            | Expr::Or(_)
+            | Expr::And(_)
+            | Expr::Not(_)
+            | Expr::Neg(_)
+            | Expr::Paren(_)
+            | Expr::Cmp(_)
+            | Expr::In(_)
+            | Expr::Sum(..)
+            | Expr::Prod(..)
+            | Expr::Post(..)
+            | Expr::Call(_)
+            | Expr::Record(_) => {}
+        }
+        work.extend(crate::load::expr_children(x));
     }
     false
 }

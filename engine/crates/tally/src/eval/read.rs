@@ -637,10 +637,10 @@ fn row_value(
     Ok(value)
 }
 
-/// A row's number read at `keys`: a per-unit price `num CUR/u` takes the unit of the key it
-/// is read at, the type's `$u` replaced (refcore's `row_value`, its end). L §3.2 (Per-unit
-/// prices of a unit kind).
-fn at_keys(n: Number, binds: &[BindInfo], keys: &[KeyVal]) -> Result<Number, Stop> {
+/// A row's number, or a def's figure in its declared type, read at `keys`: a per-unit price
+/// `num CUR/u` takes the unit of the key it is read at, the type's `$u` replaced (refcore's
+/// `row_value`, its end). L §3.2 (Per-unit prices of a unit kind; Inline figures).
+pub(super) fn at_keys(n: Number, binds: &[BindInfo], keys: &[KeyVal]) -> Result<Number, Stop> {
     let Class::Num(unit, shown) = &n.class else {
         return Ok(n);
     };

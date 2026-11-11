@@ -13,13 +13,14 @@
 //! counted, and past its limit the cell demanded waits on the work stack (R-16).
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::rc::Rc;
 
 use crate::Days;
 use crate::base::{Code, Refusal, Run, Warn};
 use crate::book::{Adjustment, Coverage, Linked, Obs};
 use crate::model::{Domain, KeyVal, Node, NodeKind, Reality, Thing, UnitError, Value, World};
 use crate::num::NumError;
-use crate::syntax::{Ask, AskBody, Bind, Expr, Stop};
+use crate::syntax::{Ask, AskBody, Expr, Stop};
 use crate::time::Day;
 use crate::walk::{Inst, ProjKey, Walk, WalkAt};
 
@@ -62,7 +63,7 @@ pub(crate) struct Prefixes {
     /// Each walk up to a day, by (cut, its last day), by its place in the walks.
     pub(crate) walks: BTreeMap<(Day, Day), usize>,
     /// Each plan move's instances dated on or before a day, by (move, cut, day).
-    pub(crate) plans: BTreeMap<(String, Day, Day), std::rc::Rc<Vec<Inst>>>,
+    pub(crate) plans: BTreeMap<(String, Day, Day), Rc<Vec<Inst>>>,
     /// The cells in progress when each cut's main walk was last given up: while one of them
     /// still is, a leg's read takes the walk up to its day without trying the main walk.
     pub(crate) blocked: BTreeMap<Day, BTreeSet<CellId>>,
@@ -147,7 +148,8 @@ pub struct Var {
     pub domain: Option<Domain>,
     /// The binding as written, an aggregate's, an ask's `for` or a def's key bind: what a pin
     /// formed per binding tuple prints beside itself (L §8.2); none for a band's argument.
-    pub written: Option<String>,
+    /// One text per binding, shared by every member's scope (L §7.6 item 2).
+    pub written: Option<Rc<str>>,
 }
 
 /// What a bare literal is where it stands: in a def, a rule or an ask only `0`, `1` and `-1`
@@ -210,14 +212,20 @@ impl Env {
         })
     }
 
-    /// This scope with binding `bind` bound to `value` too, its written form kept (L §8.2).
+    /// This scope with variable `var` bound to `value` too, its binding written `written`,
+    /// the text shared (L §8.2).
     #[must_use]
-    pub fn with_bind(&self, bind: &Bind, value: Value, domain: Option<Domain>) -> Env {
+    pub fn with_bind(
+        &self,
+        (var, written): (&str, &Rc<str>),
+        value: Value,
+        domain: Option<Domain>,
+    ) -> Env {
         self.and(Var {
-            name: bind.var.clone(),
+            name: var.to_owned(),
             value,
             domain,
-            written: Some(bind.text.clone()),
+            written: Some(Rc::clone(written)),
         })
     }
 
@@ -252,9 +260,9 @@ impl Env {
         let mut out: Vec<String> = Vec::new();
         for part in parts {
             let names = names_in(part)?;
-            let mut found: Vec<&String> = Vec::new();
+            let mut found: Vec<&str> = Vec::new();
             for name in &names {
-                let written = self.get(name).and_then(|v| v.written.as_ref());
+                let written = self.get(name).and_then(|v| v.written.as_deref());
                 if let Some(text) = written
                     && !found.contains(&text)
                 {
@@ -264,8 +272,8 @@ impl Env {
             match found.as_slice() {
                 [] => {}
                 [one] => {
-                    if !out.contains(one) {
-                        out.push((*one).clone());
+                    if !out.iter().any(|o| o == one) {
+                        out.push((*one).to_owned());
                     }
                 }
                 _ => return None,
@@ -287,7 +295,7 @@ impl Env {
     /// Binds `name` to `value` in this scope, the binding written `text`.
     pub fn bind_written(
         &mut self,
-        (name, text): (&str, &str),
+        (name, text): (&str, &Rc<str>),
         value: Value,
         domain: Option<Domain>,
     ) {
@@ -295,7 +303,7 @@ impl Env {
             name: name.to_owned(),
             value,
             domain,
-            written: Some(text.to_owned()),
+            written: Some(Rc::clone(text)),
         });
     }
 }
@@ -448,7 +456,7 @@ pub struct Engine {
     /// The day source: the event walk, or the oracle's every day (P §2.2).
     pub(crate) days: Days,
     /// Each move's instances per cut (E §4.1).
-    pub(crate) plans: BTreeMap<(String, Day), std::rc::Rc<Vec<Inst>>>,
+    pub(crate) plans: BTreeMap<(String, Day), Rc<Vec<Inst>>>,
     /// The moves whose instances are being computed (RUN-CYCLE).
     pub(crate) plan_active: BTreeSet<(String, Day)>,
     /// Each plan move's adjustments per cut (E §5).
@@ -534,6 +542,9 @@ pub struct Engine {
     /// The ask line's context outside its `with` pins, where it has any: an `explain`'s
     /// derivation outside them (E §10; refcore's `_outside_ctx`).
     pub(crate) unpinned: Option<Ctx>,
+    /// Each binding's written text, once: the member scopes of its aggregate share it, up to
+    /// 1 000 000 of them (L §7.6 item 2, §8.2).
+    pub(super) bind_texts: BTreeMap<String, Rc<str>>,
     /// What this engine did, in P §1.1's units: the `counters` build only (BUILDER §13.2).
     #[cfg(feature = "counters")]
     pub(crate) counts: crate::Counters,
@@ -592,9 +603,21 @@ impl Engine {
             keep_rows: Rows::Unkept,
             trace: None,
             unpinned: None,
+            bind_texts: BTreeMap::new(),
             #[cfg(feature = "counters")]
             counts: crate::Counters::default(),
         }
+    }
+
+    /// Binding text `text`, shared: the one copy every member scope of its binding holds
+    /// (L §7.6 item 2, §8.2).
+    pub(super) fn bind_text(&mut self, text: &str) -> Rc<str> {
+        if let Some(shared) = self.bind_texts.get(text) {
+            return Rc::clone(shared);
+        }
+        let shared: Rc<str> = Rc::from(text);
+        self.bind_texts.insert(text.to_owned(), Rc::clone(&shared));
+        shared
     }
 
     /// The engine holding the booked plan amounts a run's earlier asks met, so a later ask's
