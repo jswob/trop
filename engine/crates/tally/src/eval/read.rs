@@ -121,7 +121,7 @@ impl Engine {
         self.index_assumed(m, &input.binds);
         // a `with` or `as if` pin replaces every read of the input at its keys (L §5.11)
         if let Some(pinned) = self.pin_of(&input.id, keys, ctx)? {
-            return Ok(pinned);
+            return pinned_at(pinned, &input.binds, keys);
         }
         let clocks = self.clocks(ctx, &input.id)?;
         #[cfg(feature = "counters")]
@@ -357,7 +357,7 @@ impl Engine {
         if past != Past::Since
             && let Some(pinned) = self.pin_of(&input.id, &keys, ctx)?
         {
-            return Ok(Err(pinned));
+            return Ok(Err(pinned_at(pinned, &input.binds, &keys)?));
         }
         self.read(Read::Input {
             id: input.id.clone(),
@@ -635,6 +635,15 @@ fn row_value(
         Converted::Value(v) => v,
     };
     Ok(value)
+}
+
+/// A pin's value as a read at `keys` takes it: a per-unit price pinned at `*` is in CUR per
+/// the read key's unit, as a row is (L §3.2 Per-unit prices of a unit kind; §5.11).
+pub(super) fn pinned_at(v: Value, binds: &[BindInfo], keys: &[KeyVal]) -> Result<Value, Stop> {
+    if let Value::Number(n) = &v {
+        return Ok(Value::Number(at_keys(n.clone(), binds, keys)?));
+    }
+    Ok(v)
 }
 
 /// A row's number, or a def's figure in its declared type, read at `keys`: a per-unit price

@@ -388,6 +388,20 @@ impl Engine {
         let Value::Hole(cond_hole) = test else {
             return Err(not_typed());
         };
+        // both branches are read in a frame of their own, so a decided `if` keeps a small one
+        // (R-16)
+        self.choice_unknown(m, (&cond_hole, yes, no), env, ctx)
+    }
+
+    /// `if c then a else b` with hole condition `cond_hole`: both branches evaluated, the
+    /// `if` a hole unless they are equal (refcore's `e_if`). L §5.11 Logic, §8.1.
+    fn choice_unknown(
+        &mut self,
+        m: &Reality,
+        (cond_hole, yes, no): (&Hole, &Expr, &Expr),
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Value, Stop> {
         let first = self.ev(m, yes, env, ctx)?;
         let second = self.ev(m, no, env, ctx)?;
         let first = flex_branch(m, first, no, env, ctx)?;
@@ -398,7 +412,7 @@ impl Engine {
         {
             return Ok(first);
         }
-        hole_of(&[Some(&cond_hole), first.as_hole(), second.as_hole()])
+        hole_of(&[Some(cond_hole), first.as_hole(), second.as_hole()])
     }
 
     /// `a or b or …` (`any`) and `a and b and …` (`all`) under Kleene logic, left to right as

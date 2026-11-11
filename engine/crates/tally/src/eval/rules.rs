@@ -25,7 +25,7 @@ use crate::time::Day;
 
 use super::convert::{ConvertFor, Converted, convert};
 use super::memo::{CellId, CellKey, LawClass, Read, rows_class, rules_class};
-use super::read::{at_keys, shown};
+use super::read::{at_keys, pinned_at, shown};
 use super::trace::Seen;
 use super::windows::as_read;
 
@@ -60,6 +60,29 @@ impl Engine {
         keys: &[KeyVal],
         ctx: Ctx,
     ) -> Result<Value, Stop> {
+        // the cell's context is made in a frame of its own, gone while the cell reads on
+        // (R-16)
+        let env = key_env(def, keys);
+        let cell = match self.cell_ctx(m, def, (keys, &env), ctx)? {
+            Err(read) => return Ok(read),
+            Ok(cell) => cell,
+        };
+        let value = self.def_cell(m, def, keys, &env, cell)?;
+        // a window the def computed is this read's value, in the world its cell is computed
+        // in; one it passes on keeps the read that made it (L §4.4)
+        Ok(as_read(value, (&def.id, keys), cell, None))
+    }
+
+    /// The context def `def`'s cell at its keys is computed in, `env` binding them: its law
+    /// date by its `at`, after its key binds' `where`; else the read's value already: a pin
+    /// of the cell, or a hole law date (refcore's `read_def`). L §5.11, §4.3, §5.14.1.
+    fn cell_ctx(
+        &mut self,
+        m: &Reality,
+        def: &DefInfo,
+        (keys, env): (&[KeyVal], &Env),
+        ctx: Ctx,
+    ) -> Result<Result<Ctx, Value>, Stop> {
         let ctx = if m.graph.walk_bound.contains(&def.id) {
             ctx
         } else {
@@ -69,15 +92,14 @@ impl Engine {
         // a pin wins over the def's rules and givens (L §5.11); the def's cell keeps only the
         // pins its def reaches (E §3.2)
         if let Some(pinned) = self.pin_of(&def.id, keys, ctx)? {
-            return Ok(pinned);
+            return pinned_at(pinned, &def.binds, keys).map(Err);
         }
         let ctx = self.trimmed(m, &def.id, ctx)?;
-        let env = key_env(def, keys);
         for bind in &def.binds {
             let Some(filter) = &bind.node.filter else {
                 continue;
             };
-            if self.ev(m, filter, &env, ctx.at_law(None))? != Value::Bool(true) {
+            if self.ev(m, filter, env, ctx.at_law(None))? != Value::Bool(true) {
                 return Err(refuse(
                     Run::Domain,
                     format!("{} read at a key its key bind's where leaves out", def.id),
@@ -96,9 +118,9 @@ impl Engine {
                 ctx
             }
             Some(LawDate::Expr(e)) => {
-                let law = self.ev(m, e, &env, ctx)?;
+                let law = self.ev(m, e, env, ctx)?;
                 if let Value::Hole(_) = law {
-                    return Ok(law);
+                    return Ok(Err(law));
                 }
                 let Value::Day(day) = law else {
                     return Err(bad_law_date(m, def, &law)?);
@@ -106,10 +128,7 @@ impl Engine {
                 ctx.at_law(Some(a_day(day)?))
             }
         };
-        let value = self.def_cell(m, def, keys, &env, cell)?;
-        // a window the def computed is this read's value, in the world its cell is computed
-        // in; one it passes on keeps the read that made it (L §4.4)
-        Ok(as_read(value, (&def.id, keys), cell, None))
+        Ok(Ok(cell))
     }
 
     /// A def's cell: the memo's result, or the rules evaluated now and kept (refcore's
@@ -123,6 +142,29 @@ impl Engine {
         env: &Env,
         ctx: Ctx,
     ) -> Result<Value, Stop> {
+        // the memo's lookup and the keeping run in frames of their own, gone while the rules
+        // read on (R-16)
+        let id = match self.open_cell(def, keys, ctx)? {
+            Err(read) => return read,
+            Ok(id) => id,
+        };
+        let outer = self.holding(Node::new(NodeKind::Def, &def.id));
+        let node = self.trace_def(&id, (&def.id, keys), ctx.law);
+        let result = self
+            .rules(m, def, (keys, env, ctx), node)
+            .and_then(|v| coerce_def(m, def, v));
+        self.close_cell(id, (node, outer), ctx, result)
+    }
+
+    /// The start of def `def`'s cell at its keys: the memo's result, a cell read while it is
+    /// computed, or a cell past the counted depth, waiting on the work stack, as the read's
+    /// result; else the cell opened and counted (refcore's `def_cell`). E §3.2.
+    fn open_cell(
+        &mut self,
+        def: &DefInfo,
+        keys: &[KeyVal],
+        ctx: Ctx,
+    ) -> Result<Result<CellId, Result<Value, Stop>>, Stop> {
         let key = CellKey::new(&def.id, keys, ctx);
         // under a trace the cone is evaluated again: the memo gives only a cell the trace
         // has met, which is referenced by its node (E §10)
@@ -142,7 +184,7 @@ impl Engine {
             }
             #[cfg(feature = "counters")]
             self.counts.add(crate::Unit::DefHit);
-            return result;
+            return Ok(Err(result));
         }
         let id = CellId::new(key, ctx.law);
         if self.active.contains(&id) {
@@ -151,15 +193,15 @@ impl Engine {
             if self.guarded.as_ref().is_some_and(|g| g.contains(&id)) {
                 // the walk a leg's read started inside this cell needs it: that walk's
                 // attempt is given up (refcore's `outer_hit`)
-                return Err(Stop::NotBuilt(super::GUARDED));
+                return Ok(Err(Err(Stop::NotBuilt(super::GUARDED))));
             }
-            return Err(refuse(
+            return Ok(Err(Err(refuse(
                 Run::Cycle,
                 format!(
                     "{} reads itself through a computed key",
                     origin(&def.id, keys)
                 ),
-            ));
+            ))));
         }
         if self.depth >= DEPTH_LIMIT {
             self.work.push(Task {
@@ -168,7 +210,7 @@ impl Engine {
                 ctx,
                 unwound: Vec::new(),
             });
-            return Err(Stop::Deep);
+            return Ok(Err(Err(Stop::Deep)));
         }
         self.active.insert(id.clone());
         self.depth = self
@@ -178,11 +220,20 @@ impl Engine {
         self.push();
         self.open_class(ctx.law);
         self.open_reads();
-        let outer = self.holding(Node::new(NodeKind::Def, &def.id));
-        let node = self.trace_def(&id, (&def.id, keys), ctx.law);
-        let result = self
-            .rules(m, def, (keys, env, ctx), node)
-            .and_then(|v| coerce_def(m, def, v));
+        Ok(Ok(id))
+    }
+
+    /// The end of cell `id`, its rules' `result` computed under trace node `node`, the
+    /// holder `outer` restored: uncounted, and kept in the memo with the register entries
+    /// and reads it met, unless it waits on the work stack or a walk's attempt was given up
+    /// (refcore's `def_cell`). E §3.2.
+    fn close_cell(
+        &mut self,
+        id: CellId,
+        (node, outer): (Option<usize>, Option<Node>),
+        ctx: Ctx,
+        result: Result<Value, Stop>,
+    ) -> Result<Value, Stop> {
         self.trace_close(node);
         self.trace_cell(&id, node, &result);
         self.holder = outer;
@@ -208,7 +259,7 @@ impl Engine {
         }
         self.absorb(&met);
         #[cfg(feature = "counters")]
-        self.counts.miss(&def.id);
+        self.counts.miss(id.key.def());
         // a walk-bound cell is kept at its own point and law date (E §3.2)
         let class = match (ctx.at, ctx.law) {
             (Some(_), Some(day)) => LawClass::day(day),
@@ -236,9 +287,37 @@ impl Engine {
         (keys, env, ctx): (&[KeyVal], &Env, Ctx),
         node: Option<usize>,
     ) -> Result<Value, Stop> {
+        // the rule is chosen in its own frame, gone before its value reads on (R-16)
+        let rule = match self.winning(m, def, (keys, env, ctx), node)? {
+            Err(decided) => return Ok(decided),
+            Ok(win) => version_of(def, win)?,
+        };
+        match &rule.rule.value {
+            RuleValue::Hole(text) => Ok(Value::Hole(Hole::asked(text, &origin(&def.id, keys)))),
+            RuleValue::Expr(e) => {
+                let group = self.trace_group();
+                let value = self.ev(m, e, env, ctx);
+                self.trace_close(group);
+                self.trace_groups(node, &rule.label, (None, group));
+                at_cell(m, (def, keys), value)
+            }
+            RuleValue::Solve(_) => Err(Stop::NotBuilt("`solve`")),
+        }
+    }
+
+    /// The rule of def `def` that wins at its keys (L §5.11 steps 1–4), with its register
+    /// entries; else the value already decided: a given that governs, or a hole `when` that
+    /// keeps the def a hole (refcore's `eval_rules`). L §5.11.
+    fn winning(
+        &mut self,
+        m: &Reality,
+        def: &DefInfo,
+        (keys, env, ctx): (&[KeyVal], &Env, Ctx),
+        node: Option<usize>,
+    ) -> Result<Result<InForce, Value>, Stop> {
         let figure = origin(&def.id, keys);
         if let Some(given) = self.given(m, def, keys, ctx, node)? {
-            return Ok(given);
+            return Ok(Err(given));
         }
         if let Some(day) = ctx.law {
             let class = rules_class(m, def, ctx.cut, day)?;
@@ -320,7 +399,7 @@ impl Engine {
             if let Some(first) = cands.first() {
                 self.trace_state(node, label_of(def, *first), "candidate".to_owned());
             }
-            return Ok(Value::Hole(hole));
+            return Ok(Err(Value::Hole(hole)));
         }
         let Some(win) = cands.first().copied() else {
             self.narrow_to_day(ctx.law);
@@ -332,17 +411,7 @@ impl Engine {
         let rule = version_of(def, win)?;
         self.trace_won(m, node, rule);
         self.rule_entries(m, def, rule, &missing_true, win)?;
-        match &rule.rule.value {
-            RuleValue::Hole(text) => Ok(Value::Hole(Hole::asked(text, &figure))),
-            RuleValue::Expr(e) => {
-                let group = self.trace_group();
-                let value = self.ev(m, e, env, ctx);
-                self.trace_close(group);
-                self.trace_groups(node, &rule.label, (None, group));
-                at_cell(m, (def, keys), value)
-            }
-            RuleValue::Solve(_) => Err(Stop::NotBuilt("`solve`")),
-        }
+        Ok(Ok(win))
     }
 
     /// Under a trace, rule `at`'s state on the def cell's node `node`: beaten, by the rules

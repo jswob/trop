@@ -19,7 +19,8 @@ use super::trace::Kind as TraceKind;
 use crate::base::Code;
 use crate::hole::{Hole, spread};
 use crate::model::{
-    Class, NameKind, Number, Reality, Ty, Unit, Value, currency_id, money_num, num_money,
+    BindInfo, Class, KeyVal, NameKind, Number, Reality, Ty, Unit, Value, currency_id, money_num,
+    num_money,
 };
 use crate::syntax::{Expr, Key, Lit, PRef, Pin, PinForm, Stop};
 use crate::time::Day;
@@ -409,7 +410,7 @@ impl Engine {
         self.push();
         let v = self.ev(m, written, env, ctx);
         let met = self.pop_alone();
-        let value = pin_typed(m, v?, ty.as_ref())?;
+        let value = at_pin_keys(pin_typed(m, v?, ty.as_ref())?, binds, &keys)?;
         if !plain_literal(m, written) {
             self.absorb(&met);
         }
@@ -470,9 +471,24 @@ fn plain_literal(m: &Reality, e: &Expr) -> bool {
     matches!(e, Expr::Lit(_) | Expr::Neg(_) | Expr::Str(_))
 }
 
+/// A pin's value at the keys it names, every key named: a per-unit price's figure is in CUR
+/// per the key's unit, as a def cell's is (L §3.2 Per-unit prices of a unit kind). A pin with
+/// a `*` keeps the type's `$u`.
+fn at_pin_keys(v: Value, binds: &[BindInfo], keys: &[Option<KeyVal>]) -> Result<Value, Stop> {
+    let named: Option<Vec<KeyVal>> = keys.iter().cloned().collect();
+    if let (Value::Number(n), Some(named)) = (&v, named) {
+        return Ok(Value::Number(super::read::at_keys(
+            n.clone(),
+            binds,
+            &named,
+        )?));
+    }
+    Ok(v)
+}
+
 /// A pin's value in its target's type: a number pinned on money is money where it is whole
-/// minor units, an int or money pinned on a `num` takes its unit (refcore's `coerce_to`).
-/// L §3.2 Inline figures, §5.11.
+/// minor units, an int, a bare figure or money pinned on a `num` takes its unit (refcore's
+/// `coerce_to`). L §3.2 Inline figures, §5.11.
 fn pin_typed(m: &Reality, v: Value, ty: Option<&Ty>) -> Result<Value, Stop> {
     match (ty, v) {
         (Some(Ty::Money(cur)), Value::Number(n)) => {
@@ -486,7 +502,9 @@ fn pin_typed(m: &Reality, v: Value, ty: Option<&Ty>) -> Result<Value, Stop> {
             let id = currency_id(m, cur).map_err(num_stop)?;
             Ok(Value::Money(num_money(m, &n.q, id).map_err(num_stop)?))
         }
-        (Some(Ty::Num(unit, shown)), Value::Number(n)) if n.class == Class::Int => {
+        (Some(Ty::Num(unit, shown)), Value::Number(n))
+            if matches!(n.class, Class::Int | Class::Flex) =>
+        {
             Ok(Value::Number(Number {
                 q: n.q,
                 class: Class::Num(unit.clone(), *shown),

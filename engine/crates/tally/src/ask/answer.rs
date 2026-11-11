@@ -30,7 +30,7 @@ use crate::eval::{
     world_named,
 };
 use crate::model::{Reality, Value};
-use crate::syntax::{Ask, AskBody, Bind, Domain, Expr, Key, PinForm, Stop};
+use crate::syntax::{Ask, AskBody, Bind, Domain, Expr, Key, OfQ, Pin, PinForm, Step, Stop};
 use crate::time::{Day, PeriodKind};
 use crate::walk::{Bookings, Lows};
 use crate::{Asks, Days};
@@ -818,63 +818,131 @@ fn names_a_for(ask: &Ask, e: &Expr) -> bool {
     false
 }
 
-/// Whether expression `e` may name variable `var`: every part walked, an aggregate's term,
-/// its bindings' ranges, `on` and `where`, and its `ties by`, a binding of its own of that
-/// name included; a form whose parts aren't all walked here may (a conservative test: such a
-/// pin stops "not implemented" rather than read the variable as a key literal). L §8.2.
+/// Whether expression `e` may name variable `var`: every part walked, those [`extra_parts`]
+/// adds to the walk's children included, a binding of its own of that name too; a form whose
+/// parts aren't walked here may (a conservative test: such a pin stops "not implemented"
+/// rather than read the variable as a key literal). L §8.2.
 fn mentions(e: &Expr, var: &str) -> bool {
     let mut work = vec![e];
     while let Some(x) = work.pop() {
-        match x {
-            Expr::Name(n) if n == var => return true,
-            Expr::Agg(agg) => {
-                for bind in &agg.binds {
-                    if let Domain::Range(ends) = &bind.domain {
-                        work.extend([&ends.0, &ends.1]);
-                        work.extend(ends.2.iter());
-                    }
-                    work.extend(bind.on.iter());
-                    work.extend(bind.filter.iter());
-                }
-                work.extend(agg.ties.iter().flatten());
-            }
-            Expr::LegOf(..)
-            | Expr::To(..)
-            | Expr::Last(_)
-            | Expr::Bal(_)
-            | Expr::Flows(_)
-            | Expr::Covered(_)
-            | Expr::Calendar(_)
-            | Expr::Value(_)
-            | Expr::Query(_)
-            | Expr::Low(_)
-            | Expr::Crps(_)
-            | Expr::DistFn(_)
-            | Expr::Dist(_)
-            | Expr::Prorata(_)
-            | Expr::AsIf(..) => return true,
-            Expr::Lit(_)
-            | Expr::Str(_)
-            | Expr::Name(_)
-            | Expr::None
-            | Expr::Never
-            | Expr::Cut
-            | Expr::List(_)
-            | Expr::If(_)
-            | Expr::Or(_)
-            | Expr::And(_)
-            | Expr::Not(_)
-            | Expr::Neg(_)
-            | Expr::Paren(_)
-            | Expr::Cmp(_)
-            | Expr::In(_)
-            | Expr::Sum(..)
-            | Expr::Prod(..)
-            | Expr::Post(..)
-            | Expr::Call(_)
-            | Expr::Record(_) => {}
+        if let Expr::Name(n) = x
+            && n == var
+        {
+            return true;
         }
+        if matches!(
+            x,
+            Expr::Calendar(_)
+                | Expr::Query(_)
+                | Expr::Low(_)
+                | Expr::Crps(_)
+                | Expr::DistFn(_)
+                | Expr::Dist(_)
+                | Expr::Prorata(_)
+        ) {
+            return true;
+        }
+        work.extend(extra_parts(x));
         work.extend(crate::load::expr_children(x));
     }
     false
+}
+
+/// The parts of read form `x` the walk's children leave out: an aggregate's bindings' ranges,
+/// `on` and `where` and its `ties by`; a balance's `from` and `of`; a value's `by` and `of`;
+/// a leg's `of`; a step read from an expression; a span's ends; an `as if`'s pins. L §8.2.
+fn extra_parts(x: &Expr) -> Vec<&Expr> {
+    let mut out: Vec<&Expr> = Vec::new();
+    match x {
+        Expr::Agg(agg) => {
+            for bind in &agg.binds {
+                if let Domain::Range(ends) = &bind.domain {
+                    out.extend([&ends.0, &ends.1]);
+                    out.extend(ends.2.iter());
+                }
+                out.extend(bind.on.iter());
+                out.extend(bind.filter.iter());
+            }
+            out.extend(agg.ties.iter().flatten());
+        }
+        Expr::Bal(bal) => {
+            out.extend(bal.proj.from.iter());
+            out.extend(bal.of.iter().flat_map(of_parts));
+        }
+        Expr::Value(v) => {
+            out.extend(v.by.iter().map(|p| &p.input));
+            out.extend(v.of.iter().flat_map(of_parts));
+        }
+        Expr::LegOf(_, of) => out.extend(of_parts(of)),
+        Expr::To(_, step) => {
+            if let Step::Ref(e) = step.as_ref() {
+                out.push(e);
+            }
+        }
+        Expr::Flows(flows) => {
+            out.extend([&flows.span.from, &flows.span.to].into_iter().flatten());
+            out.extend(flows.for_key.iter());
+            out.extend(flows.convert.iter().flat_map(|(_, a, b)| [a, b]));
+        }
+        Expr::Covered(pair) => out.extend([&pair.1.from, &pair.1.to].into_iter().flatten()),
+        Expr::AsIf(_, pins) => {
+            for pin in pins {
+                out.extend(pin_parts(pin));
+            }
+        }
+        Expr::Last(_)
+        | Expr::Calendar(_)
+        | Expr::Query(_)
+        | Expr::Low(_)
+        | Expr::Crps(_)
+        | Expr::DistFn(_)
+        | Expr::Dist(_)
+        | Expr::Prorata(_)
+        | Expr::Lit(_)
+        | Expr::Str(_)
+        | Expr::Name(_)
+        | Expr::None
+        | Expr::Never
+        | Expr::Cut
+        | Expr::List(_)
+        | Expr::If(_)
+        | Expr::Or(_)
+        | Expr::And(_)
+        | Expr::Not(_)
+        | Expr::Neg(_)
+        | Expr::Paren(_)
+        | Expr::Cmp(_)
+        | Expr::In(_)
+        | Expr::Sum(..)
+        | Expr::Prod(..)
+        | Expr::Post(..)
+        | Expr::Call(_)
+        | Expr::Record(_) => {}
+    }
+    out
+}
+
+/// The expressions of an `of q`: one reference, or a pair's two.
+fn of_parts(of: &OfQ) -> Vec<&Expr> {
+    match of {
+        OfQ::Ref(e) => vec![e],
+        OfQ::Pair(a, b) => vec![a, b],
+    }
+}
+
+/// The expressions of pin `pin`: a value pin's value and keys, a date pin's date.
+fn pin_parts(pin: &Pin) -> Vec<&Expr> {
+    match &pin.form {
+        PinForm::Set { target, value, .. } => {
+            let mut out = vec![value];
+            for key in target.keys.iter().flatten() {
+                if let Key::Expr(e) = key {
+                    out.push(e);
+                }
+            }
+            out
+        }
+        PinForm::Law(e) | PinForm::Known(e) | PinForm::Wording(e, _) => vec![e],
+        PinForm::Scenario(_) => Vec::new(),
+    }
 }

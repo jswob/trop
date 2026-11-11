@@ -213,6 +213,12 @@ pub(crate) struct CellKey {
 }
 
 impl CellKey {
+    /// The def of the cell, for the counted build's misses by def (P §1.1).
+    #[cfg(feature = "counters")]
+    pub(super) fn def(&self) -> &str {
+        &self.def
+    }
+
     /// The key of def `def` at `keys` in context `ctx`, its law date apart.
     pub(super) fn new(def: &str, keys: &[KeyVal], ctx: Ctx) -> CellKey {
         CellKey {

@@ -1005,7 +1005,11 @@ impl Checker {
                             bind.var
                         )));
                     };
-                    (self.range_type(m, &scope, range, 0)?, VarDom::Range)
+                    // placed at the declaration's line, as refcore places it (L §8.3)
+                    let ty = self
+                        .range_type(m, &scope, range, 0)
+                        .map_err(|stop| scope.place(stop))?;
+                    (ty, VarDom::Range)
                 }
             };
             let mut var = self.new_var(&bind.var, ty, dom, Vec::new())?;
