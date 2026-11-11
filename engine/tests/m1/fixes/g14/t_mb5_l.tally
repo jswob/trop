@@ -1,0 +1,88 @@
+model lf
+  tally 2
+  on 2027-03-15
+  start 2027-01-01
+  end 2027-12-31
+  note "T C10 (invented): a leg read by name of a plan's and a decision's instance that doesn't exist, that exists, and before and after the cut (MB5's leg_field)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind twos: event certain
+  leg cash: PLN
+  leg fee: PLN
+
+input q[m in months]: money PLN
+
+input big: money PLN
+
+input fee2: money PLN
+
+input skip: int
+
+input d5: date
+
+place acct: accounts PLN lives 2027-01-01..
+
+place bank: outside lives 2027-01-01..
+
+move pay[m in months]: transfers
+  on start_of(m)
+  when pos(m) != skip
+  leg cash from bank to acct amount q[m]
+
+move dec[m in months]: transfers
+  on add_days(start_of(m), skip)
+  reads acct
+  when bal(acct) > big
+  leg cash from acct to bank amount q[m]
+
+move two: twos
+  on d5
+  leg cash from bank to acct amount big
+  leg fee from acct to bank amount fee2
+
+move two2[m in months]: twos
+  on start_of(m)
+  when pos(m) != skip
+  leg cash from bank to acct amount q[m]
+  leg fee from acct to bank amount big
+
+move one: transfers
+  on d5
+  leg cash from bank to acct amount big
+
+ask x1: pay[2027-02].cash.amount
+
+ask x2: pay[2027-03].cash.amount, pay[2027-03].day
+
+ask x3: pay[2027-02].day
+
+ask x4: dec[2027-02].cash.amount
+
+ask x5: dec[2027-06].cash.amount, dec[2027-06].day
+
+ask x6: pay[2027-06].cash.amount
+
+ask x7: one.cash.amount, one.day
+
+ask x8: pay[2027-01].cash.amount
+
+ask x9: two.fee.amount, two.cash.amount, two2[2027-04].fee.amount, two2[2027-02].fee.amount
+
+version v
+  cite card
+  governs always
+  known 2027-01-01
+  big = 150.00 PLN "c"
+  fee2 = 7.00 PLN "c"
+  skip = 2 "c"
+  d5 = 2027-05-01 "c"
+  q[2027-01] = 10.00 PLN "c"
+  q[2027-02] = 20.00 PLN "c"
+  q[2027-03] = 30.00 PLN "c"
+  q[2027-04] = 40.00 PLN "c"
+  q[2027-05] = 50.00 PLN "c"
+  q[2027-06] = 60.00 PLN "c"
+  opening[acct] = 0 PLN at 2027-01-01 start "c"

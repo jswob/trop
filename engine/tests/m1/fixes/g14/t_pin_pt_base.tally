@@ -1,0 +1,21 @@
+model two
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G14 probes: pins formed per binding tuple over two bindings (L §8.2)"
+
+source card "card (invented)"
+
+index qs = [q1, q2]
+
+input v[k in qs]: num
+
+input w2[j in qs, k in qs]: num
+
+def e2[j in qs, k in qs]: num = w2[j, k] + 1
+
+def f[k in qs]: num = v[k] + v[k]
+
+def ge[k in qs]: num = f[k] as if {v[k] = 1}
+

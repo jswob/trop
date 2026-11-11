@@ -1,0 +1,108 @@
+model unitkind
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "a place priced by a clause keyed by a kind of units (invented; MB3's unit_in): fxs[u in currencies] prices a place in EUR per its unit"
+
+source card "probe card"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+unit USD: currency minor 0.01
+
+kind safes: place any signed
+
+kind fxheld: place one min 0 priced fxs
+
+kind fxone: place one min 0 priced fxe
+
+kind fxlaw: place one min 0 priced fxl
+
+place eur_acc: accounts EUR lives 2026-01-01..
+
+place usd_acc: accounts USD lives 2026-01-01..
+
+place safe: safes lives 2026-01-01..
+
+place eurcash: fxheld EUR lives 2026-01-01..
+
+place usdone: fxone USD lives 2026-01-01..
+
+place eurone: fxone EUR lives 2026-01-01..
+
+place eurl: fxlaw EUR lives 2026-01-01..
+
+place market: outside lives 2026-01-01..
+
+input fxu[u in currencies]: num PLN/u reading
+
+input fxs[u in currencies]: num PLN/u
+
+input fxe[u in currencies]: num PLN/EUR
+
+input fxl: num PLN/EUR
+
+input put_day: date
+
+input amt_eur: money EUR
+
+input amt_pln: money PLN
+
+def fxd[u in currencies]: num PLN/u = fxs[u]
+
+move put_eur: transfers
+  on put_day
+  leg cash from market to safe amount amt_eur
+
+move put_pln: transfers
+  on put_day
+  leg cash from market to safe amount amt_pln
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  put_day = 2026-02-20 "the card"
+  amt_eur = 200.00 EUR "the card"
+  amt_pln = 300.00 PLN "the card"
+  fxs[EUR] = 4.25 PLN/EUR "the card"
+  fxe[USD] = 4.00 PLN/EUR "the card"
+  fxe[EUR] = 4.10 PLN/EUR "the card"
+  opening[eur_acc] = 1000.00 EUR at 2026-01-01 start "the card"
+  opening[usd_acc] = 50.00 USD at 2026-01-01 start "the card"
+  opening[eurcash] = 100.00 EUR at 2026-01-01 start "the card"
+  opening[usdone] = 50.00 USD at 2026-01-01 start "the card"
+  opening[eurone] = 20.00 EUR at 2026-01-01 start "the card"
+  opening[eurl] = 10.00 EUR at 2026-01-01 start "the card"
+
+version readings_2026
+  cite card
+  governs 2026-01..2026-12
+  known 2026-01-01
+  fxu[EUR] = 4.30 PLN/EUR at 2026-03-01 "quoted"
+
+
+
+
+
+
+version law_h1
+  cite card
+  governs 2026-01-01..2026-06-30
+  known 2026-01-01
+  fxl = 4.00 PLN/EUR "the card"
+
+version law_h2
+  cite card
+  governs 2026-07-01..
+  known 2026-01-01
+  fxl = 5.00 PLN/EUR "the card"
+
+ask l1: value(eurl, 2026-03-31) in PLN law 2026-03-31
+
+ask l2: value(eurl, 2026-03-31) in PLN law 2026-08-01
+
+ask l3: value(eurl, 2026-09-30) in PLN law 2026-03-31

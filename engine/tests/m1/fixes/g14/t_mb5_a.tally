@@ -1,0 +1,51 @@
+model pw
+  tally 2
+  on 2027-01-01
+  start 2027-01-01
+  end 2028-12-31
+  note "T C10 (invented): F4g's form with legs that aren't 0: a plan's amount reads a def summing an event kind's legs over its month, so the read needs the walk up to its day (MB5's prefix walk)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind ovs: event certain
+  leg cash: PLN
+
+input q[m in months]: money PLN
+
+input base: money PLN
+
+place acct: accounts PLN lives 2027-01-01..
+
+place bank: outside lives 2027-01-01..
+
+def p[m in months]: money PLN = if pos(m) == 1 then base else p[m - 1] - sum(o.cash.amount for o in ovs over m)
+
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from acct to bank amount p[m]
+
+move op[m in months]: ovs
+  on start_of(m)
+  leg cash from bank to acct amount q[m]
+
+ask t: p[m] for m in [2027-03, 2027-07]
+
+ask t2: p[2027-04]
+
+ask b: bal(acct, 2027-06-30), flows(pay[2027-03], 2027-01-01..2027-12-31)
+
+version v
+  cite card
+  governs always
+  known 2027-01-01
+  base = 1000.00 PLN "c"
+  q[2027-01] = 10.00 PLN "c"
+  q[2027-02] = 20.00 PLN "c"
+  q[2027-03] = 30.00 PLN "c"
+  q[2027-04] = 40.00 PLN "c"
+  q[2027-05] = 50.00 PLN "c"
+  q[2027-06] = 60.00 PLN "c"
+  q[2027-07] = 70.00 PLN "c"
+  opening[acct] = 0 PLN at 2027-01-01 start "c"

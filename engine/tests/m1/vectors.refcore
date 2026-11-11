@@ -220837,4 +220837,724 @@ warning: WARN-UNREAD input rr is read by nothing
 warning: WARN-UNREAD input t is read by nothing
 warning: WARN-UNREAD place konto is read by nothing
 warning: WARN-UNREAD place world is read by nothing
+,17:fixes/g14/t_mb5_a,9:fixes-g14,17:run t_mb5_a.tally,1300:13:t_mb5_a.tally,1277:model pw
+  tally 2
+  on 2027-01-01
+  start 2027-01-01
+  end 2028-12-31
+  note "T C10 (invented): F4g's form with legs that aren't 0: a plan's amount reads a def summing an event kind's legs over its month, so the read needs the walk up to its day (MB5's prefix walk)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind ovs: event certain
+  leg cash: PLN
+
+input q[m in months]: money PLN
+
+input base: money PLN
+
+place acct: accounts PLN lives 2027-01-01..
+
+place bank: outside lives 2027-01-01..
+
+def p[m in months]: money PLN = if pos(m) == 1 then base else p[m - 1] - sum(o.cash.amount for o in ovs over m)
+
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from acct to bank amount p[m]
+
+move op[m in months]: ovs
+  on start_of(m)
+  leg cash from bank to acct amount q[m]
+
+ask t: p[m] for m in [2027-03, 2027-07]
+
+ask t2: p[2027-04]
+
+ask b: bal(acct, 2027-06-30), flows(pay[2027-03], 2027-01-01..2027-12-31)
+
+version v
+  cite card
+  governs always
+  known 2027-01-01
+  base = 1000.00 PLN "c"
+  q[2027-01] = 10.00 PLN "c"
+  q[2027-02] = 20.00 PLN "c"
+  q[2027-03] = 30.00 PLN "c"
+  q[2027-04] = 40.00 PLN "c"
+  q[2027-05] = 50.00 PLN "c"
+  q[2027-06] = 60.00 PLN "c"
+  q[2027-07] = 70.00 PLN "c"
+  opening[acct] = 0 PLN at 2027-01-01 start "c"
+,,1:0,228:b: (-5 290.00 PLN, 950.00 PLN)
+  cut 2027-01-01
+t (m = 2027-03): 950.00 PLN
+  cut 2027-01-01
+t (m = 2027-07): 730.00 PLN
+  cut 2027-01-01
+t2: 910.00 PLN
+  cut 2027-01-01
+warning: WARN-NEGATIVE acct is below zero from 2027-01-01
+,17:fixes/g14/t_mb5_b,9:fixes-g14,17:run t_mb5_b.tally,1542:13:t_mb5_b.tally,1519:model pw
+  tally 2
+  on 2027-01-01
+  start 2027-01-01
+  end 2028-12-31
+  note "T C10 (invented): F4g's form with legs that are refused RUN-DIV in one month: a plan's amount reads a def summing an event kind's legs over its month, so the read needs the walk up to its day (MB5's prefix walk)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind ovs: event certain
+  leg cash: PLN
+
+input q[m in months]: money PLN
+
+input base: money PLN
+
+input dz[m in months]: num
+
+place acct: accounts PLN lives 2027-01-01..
+
+place bank: outside lives 2027-01-01..
+
+def p[m in months]: money PLN = if pos(m) == 1 then base else p[m - 1] - sum(o.cash.amount for o in ovs over m)
+
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from acct to bank amount p[m]
+
+move op[m in months]: ovs
+  on start_of(m)
+  leg cash from bank to acct amount round(q[m] / dz[m], minor(PLN), half-up)
+
+ask t: p[m] for m in [2027-03, 2027-07]
+
+ask t2: p[2027-04]
+
+ask b: bal(acct, 2027-06-30), flows(pay[2027-03], 2027-01-01..2027-12-31)
+
+version v
+  cite card
+  governs always
+  known 2027-01-01
+  base = 1000.00 PLN "c"
+  q[2027-01] = 10.00 PLN "c"
+  q[2027-02] = 20.00 PLN "c"
+  q[2027-03] = 30.00 PLN "c"
+  q[2027-04] = 40.00 PLN "c"
+  q[2027-05] = 50.00 PLN "c"
+  q[2027-06] = 60.00 PLN "c"
+  q[2027-07] = 70.00 PLN "c"
+  dz[2027-01] = 1 "c"
+  dz[2027-02] = 1 "c"
+  dz[2027-03] = 1 "c"
+  dz[2027-04] = 1 "c"
+  dz[2027-05] = 0 "c"
+  dz[2027-06] = 1 "c"
+  dz[2027-07] = 1 "c"
+  opening[acct] = 0 PLN at 2027-01-01 start "c"
+,,1:0,271:b: (refused: RUN-DIV division by zero, 950.00 PLN)
+  cut 2027-01-01
+t (m = 2027-03): 950.00 PLN
+  cut 2027-01-01
+t (m = 2027-07): refused: RUN-DIV division by zero
+  cut 2027-01-01
+t2: 910.00 PLN
+  cut 2027-01-01
+warning: WARN-NEGATIVE acct is below zero from 2027-01-01
+,17:fixes/g14/t_mb5_l,9:fixes-g14,17:run t_mb5_l.tally,1913:13:t_mb5_l.tally,1890:model lf
+  tally 2
+  on 2027-03-15
+  start 2027-01-01
+  end 2027-12-31
+  note "T C10 (invented): a leg read by name of a plan's and a decision's instance that doesn't exist, that exists, and before and after the cut (MB5's leg_field)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind twos: event certain
+  leg cash: PLN
+  leg fee: PLN
+
+input q[m in months]: money PLN
+
+input big: money PLN
+
+input fee2: money PLN
+
+input skip: int
+
+input d5: date
+
+place acct: accounts PLN lives 2027-01-01..
+
+place bank: outside lives 2027-01-01..
+
+move pay[m in months]: transfers
+  on start_of(m)
+  when pos(m) != skip
+  leg cash from bank to acct amount q[m]
+
+move dec[m in months]: transfers
+  on add_days(start_of(m), skip)
+  reads acct
+  when bal(acct) > big
+  leg cash from acct to bank amount q[m]
+
+move two: twos
+  on d5
+  leg cash from bank to acct amount big
+  leg fee from acct to bank amount fee2
+
+move two2[m in months]: twos
+  on start_of(m)
+  when pos(m) != skip
+  leg cash from bank to acct amount q[m]
+  leg fee from acct to bank amount big
+
+move one: transfers
+  on d5
+  leg cash from bank to acct amount big
+
+ask x1: pay[2027-02].cash.amount
+
+ask x2: pay[2027-03].cash.amount, pay[2027-03].day
+
+ask x3: pay[2027-02].day
+
+ask x4: dec[2027-02].cash.amount
+
+ask x5: dec[2027-06].cash.amount, dec[2027-06].day
+
+ask x6: pay[2027-06].cash.amount
+
+ask x7: one.cash.amount, one.day
+
+ask x8: pay[2027-01].cash.amount
+
+ask x9: two.fee.amount, two.cash.amount, two2[2027-04].fee.amount, two2[2027-02].fee.amount
+
+version v
+  cite card
+  governs always
+  known 2027-01-01
+  big = 150.00 PLN "c"
+  fee2 = 7.00 PLN "c"
+  skip = 2 "c"
+  d5 = 2027-05-01 "c"
+  q[2027-01] = 10.00 PLN "c"
+  q[2027-02] = 20.00 PLN "c"
+  q[2027-03] = 30.00 PLN "c"
+  q[2027-04] = 40.00 PLN "c"
+  q[2027-05] = 50.00 PLN "c"
+  q[2027-06] = 60.00 PLN "c"
+  opening[acct] = 0 PLN at 2027-01-01 start "c"
+,,1:0,809:x1: refused: RUN-NONE pay[2027-02] doesn't exist: a field read of it
+  cut 2027-03-15
+x2: (30.00 PLN, 2027-03-01)
+  cut 2027-03-15
+x3: 2027-02-01
+  cut 2027-03-15
+x4: refused: RUN-NONE dec[2027-02] doesn't exist: a field read of it
+  unfulfilled: pay[2027-01]
+  unfulfilled: two2[2027-01]
+  cut 2027-03-15
+x5: (refused: RUN-NONE dec[2027-06] doesn't exist: a field read of it, 2027-06-03)
+  unfulfilled: pay[2027-01]
+  unfulfilled: pay[2027-03]
+  unfulfilled: two2[2027-01]
+  unfulfilled: two2[2027-03]
+  cut 2027-03-15
+x6: 60.00 PLN
+  cut 2027-03-15
+x7: (150.00 PLN, 2027-05-01)
+  cut 2027-03-15
+x8: 10.00 PLN
+  cut 2027-03-15
+x9: (7.00 PLN, 150.00 PLN, 150.00 PLN, refused: RUN-NONE two2[2027-02] doesn't exist: a field read of it)
+  cut 2027-03-15
+warning: WARN-NEGATIVE acct is below zero from 2027-01-01
+,18:fixes/g14/t_mb5_pp,9:fixes-g14,18:run t_mb5_pp.tally,2015:14:t_mb5_pp.tally,1991:model unitkind
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "a place priced by a clause keyed by a kind of units (invented; MB3's unit_in): fxs[u in currencies] prices a place in EUR per its unit"
+
+source card "probe card"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+unit USD: currency minor 0.01
+
+kind safes: place any signed
+
+kind fxheld: place one min 0 priced fxs
+
+kind fxone: place one min 0 priced fxe
+
+place eur_acc: accounts EUR lives 2026-01-01..
+
+place usd_acc: accounts USD lives 2026-01-01..
+
+place safe: safes lives 2026-01-01..
+
+place eurcash: fxheld EUR lives 2026-01-01..
+
+place usdone: fxone USD lives 2026-01-01..
+
+place eurone: fxone EUR lives 2026-01-01..
+
+place market: outside lives 2026-01-01..
+
+input fxu[u in currencies]: num PLN/u reading
+
+input fxs[u in currencies]: num PLN/u
+
+input fxe[u in currencies]: num PLN/EUR
+
+input put_day: date
+
+input amt_eur: money EUR
+
+input amt_pln: money PLN
+
+def fxd[u in currencies]: num PLN/u = fxs[u]
+
+move put_eur: transfers
+  on put_day
+  leg cash from market to safe amount amt_eur
+
+move put_pln: transfers
+  on put_day
+  leg cash from market to safe amount amt_pln
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  put_day = 2026-02-20 "the card"
+  amt_eur = 200.00 EUR "the card"
+  amt_pln = 300.00 PLN "the card"
+  fxs[EUR] = 4.25 PLN/EUR "the card"
+  fxe[USD] = 4.00 PLN/EUR "the card"
+  fxe[EUR] = 4.10 PLN/EUR "the card"
+  opening[eur_acc] = 1000.00 EUR at 2026-01-01 start "the card"
+  opening[usd_acc] = 50.00 USD at 2026-01-01 start "the card"
+  opening[eurcash] = 100.00 EUR at 2026-01-01 start "the card"
+  opening[usdone] = 50.00 USD at 2026-01-01 start "the card"
+  opening[eurone] = 20.00 EUR at 2026-01-01 start "the card"
+
+version readings_2026
+  cite card
+  governs 2026-01..2026-12
+  known 2026-01-01
+  fxu[EUR] = 4.30 PLN/EUR at 2026-03-01 "quoted"
+
+
+
+
+ask pp_usd: value(usdone, 2026-03-31) in PLN
+
+ask pp_eur: value(eurone, 2026-03-31) in PLN
+,,1:1,82:refused: LOAD-UNIT value(usdone) in PLN: usdone is priced in PLN/EUR, not PLN/USD
+,19:fixes/g14/t_mb5_pp2,9:fixes-g14,19:run t_mb5_pp2.tally,1971:15:t_mb5_pp2.tally,1946:model unitkind
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "a place priced by a clause keyed by a kind of units (invented; MB3's unit_in): fxs[u in currencies] prices a place in EUR per its unit"
+
+source card "probe card"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+unit USD: currency minor 0.01
+
+kind safes: place any signed
+
+kind fxheld: place one min 0 priced fxs
+
+kind fxone: place one min 0 priced fxe
+
+place eur_acc: accounts EUR lives 2026-01-01..
+
+place usd_acc: accounts USD lives 2026-01-01..
+
+place safe: safes lives 2026-01-01..
+
+place eurcash: fxheld EUR lives 2026-01-01..
+
+place usdone: fxone USD lives 2026-01-01..
+
+place eurone: fxone EUR lives 2026-01-01..
+
+place market: outside lives 2026-01-01..
+
+input fxu[u in currencies]: num PLN/u reading
+
+input fxs[u in currencies]: num PLN/u
+
+input fxe[u in currencies]: num PLN/EUR
+
+input put_day: date
+
+input amt_eur: money EUR
+
+input amt_pln: money PLN
+
+def fxd[u in currencies]: num PLN/u = fxs[u]
+
+move put_eur: transfers
+  on put_day
+  leg cash from market to safe amount amt_eur
+
+move put_pln: transfers
+  on put_day
+  leg cash from market to safe amount amt_pln
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  put_day = 2026-02-20 "the card"
+  amt_eur = 200.00 EUR "the card"
+  amt_pln = 300.00 PLN "the card"
+  fxs[EUR] = 4.25 PLN/EUR "the card"
+  fxe[USD] = 4.00 PLN/EUR "the card"
+  fxe[EUR] = 4.10 PLN/EUR "the card"
+  opening[eur_acc] = 1000.00 EUR at 2026-01-01 start "the card"
+  opening[usd_acc] = 50.00 USD at 2026-01-01 start "the card"
+  opening[eurcash] = 100.00 EUR at 2026-01-01 start "the card"
+  opening[usdone] = 50.00 USD at 2026-01-01 start "the card"
+  opening[eurone] = 20.00 EUR at 2026-01-01 start "the card"
+
+version readings_2026
+  cite card
+  governs 2026-01..2026-12
+  known 2026-01-01
+  fxu[EUR] = 4.30 PLN/EUR at 2026-03-01 "quoted"
+
+
+
+
+
+ask pp_eur: value(eurone, 2026-03-31) in PLN
+,,1:0,345:pp_eur: 82 PLN
+  cut 2026-06-30
+warning: WARN-UNREAD def fxd is read by nothing
+warning: WARN-UNREAD input fxu is read by nothing
+warning: WARN-UNREAD place eur_acc is read by nothing
+warning: WARN-UNREAD place eurcash is read by nothing
+warning: WARN-UNREAD place usd_acc is read by nothing
+warning: WARN-UNREAD place usdone is read by nothing
+,19:fixes/g14/t_mb5_pp3,9:fixes-g14,19:run t_mb5_pp3.tally,2495:15:t_mb5_pp3.tally,2470:model unitkind
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "a place priced by a clause keyed by a kind of units (invented; MB3's unit_in): fxs[u in currencies] prices a place in EUR per its unit"
+
+source card "probe card"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+unit USD: currency minor 0.01
+
+kind safes: place any signed
+
+kind fxheld: place one min 0 priced fxs
+
+kind fxone: place one min 0 priced fxe
+
+kind fxlaw: place one min 0 priced fxl
+
+place eur_acc: accounts EUR lives 2026-01-01..
+
+place usd_acc: accounts USD lives 2026-01-01..
+
+place safe: safes lives 2026-01-01..
+
+place eurcash: fxheld EUR lives 2026-01-01..
+
+place usdone: fxone USD lives 2026-01-01..
+
+place eurone: fxone EUR lives 2026-01-01..
+
+place eurl: fxlaw EUR lives 2026-01-01..
+
+place market: outside lives 2026-01-01..
+
+input fxu[u in currencies]: num PLN/u reading
+
+input fxs[u in currencies]: num PLN/u
+
+input fxe[u in currencies]: num PLN/EUR
+
+input fxl[u in currencies]: num PLN/u
+
+input put_day: date
+
+input amt_eur: money EUR
+
+input amt_pln: money PLN
+
+def fxd[u in currencies]: num PLN/u = fxs[u]
+
+move put_eur: transfers
+  on put_day
+  leg cash from market to safe amount amt_eur
+
+move put_pln: transfers
+  on put_day
+  leg cash from market to safe amount amt_pln
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  put_day = 2026-02-20 "the card"
+  amt_eur = 200.00 EUR "the card"
+  amt_pln = 300.00 PLN "the card"
+  fxs[EUR] = 4.25 PLN/EUR "the card"
+  fxe[USD] = 4.00 PLN/EUR "the card"
+  fxe[EUR] = 4.10 PLN/EUR "the card"
+  opening[eur_acc] = 1000.00 EUR at 2026-01-01 start "the card"
+  opening[usd_acc] = 50.00 USD at 2026-01-01 start "the card"
+  opening[eurcash] = 100.00 EUR at 2026-01-01 start "the card"
+  opening[usdone] = 50.00 USD at 2026-01-01 start "the card"
+  opening[eurone] = 20.00 EUR at 2026-01-01 start "the card"
+  opening[eurl] = 10.00 EUR at 2026-01-01 start "the card"
+
+version readings_2026
+  cite card
+  governs 2026-01..2026-12
+  known 2026-01-01
+  fxu[EUR] = 4.30 PLN/EUR at 2026-03-01 "quoted"
+
+
+
+
+
+
+version law_h1
+  cite card
+  governs 2026-01-01..2026-06-30
+  known 2026-01-01
+  fxl[EUR] = 4.00 PLN/EUR "the card"
+
+version law_h2
+  cite card
+  governs 2026-07-01..
+  known 2026-01-01
+  fxl[EUR] = 5.00 PLN/EUR "the card"
+
+ask l1: value(eurl, 2026-03-31) in PLN law 2026-03-31
+
+ask l2: value(eurl, 2026-03-31) in PLN law 2026-08-01
+
+ask l3: value(eurl, 2026-09-30) in PLN law 2026-03-31
+,,1:1,77:refused: LOAD-UNIT value(eurl) in PLN: eurl is priced in PLN/$u, not PLN/EUR
+,19:fixes/g14/t_mb5_pp4,9:fixes-g14,19:run t_mb5_pp4.tally,2470:15:t_mb5_pp4.tally,2445:model unitkind
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "a place priced by a clause keyed by a kind of units (invented; MB3's unit_in): fxs[u in currencies] prices a place in EUR per its unit"
+
+source card "probe card"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+unit USD: currency minor 0.01
+
+kind safes: place any signed
+
+kind fxheld: place one min 0 priced fxs
+
+kind fxone: place one min 0 priced fxe
+
+kind fxlaw: place one min 0 priced fxl
+
+place eur_acc: accounts EUR lives 2026-01-01..
+
+place usd_acc: accounts USD lives 2026-01-01..
+
+place safe: safes lives 2026-01-01..
+
+place eurcash: fxheld EUR lives 2026-01-01..
+
+place usdone: fxone USD lives 2026-01-01..
+
+place eurone: fxone EUR lives 2026-01-01..
+
+place eurl: fxlaw EUR lives 2026-01-01..
+
+place market: outside lives 2026-01-01..
+
+input fxu[u in currencies]: num PLN/u reading
+
+input fxs[u in currencies]: num PLN/u
+
+input fxe[u in currencies]: num PLN/EUR
+
+input fxl: num PLN/EUR
+
+input put_day: date
+
+input amt_eur: money EUR
+
+input amt_pln: money PLN
+
+def fxd[u in currencies]: num PLN/u = fxs[u]
+
+move put_eur: transfers
+  on put_day
+  leg cash from market to safe amount amt_eur
+
+move put_pln: transfers
+  on put_day
+  leg cash from market to safe amount amt_pln
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  put_day = 2026-02-20 "the card"
+  amt_eur = 200.00 EUR "the card"
+  amt_pln = 300.00 PLN "the card"
+  fxs[EUR] = 4.25 PLN/EUR "the card"
+  fxe[USD] = 4.00 PLN/EUR "the card"
+  fxe[EUR] = 4.10 PLN/EUR "the card"
+  opening[eur_acc] = 1000.00 EUR at 2026-01-01 start "the card"
+  opening[usd_acc] = 50.00 USD at 2026-01-01 start "the card"
+  opening[eurcash] = 100.00 EUR at 2026-01-01 start "the card"
+  opening[usdone] = 50.00 USD at 2026-01-01 start "the card"
+  opening[eurone] = 20.00 EUR at 2026-01-01 start "the card"
+  opening[eurl] = 10.00 EUR at 2026-01-01 start "the card"
+
+version readings_2026
+  cite card
+  governs 2026-01..2026-12
+  known 2026-01-01
+  fxu[EUR] = 4.30 PLN/EUR at 2026-03-01 "quoted"
+
+
+
+
+
+
+version law_h1
+  cite card
+  governs 2026-01-01..2026-06-30
+  known 2026-01-01
+  fxl = 4.00 PLN/EUR "the card"
+
+version law_h2
+  cite card
+  governs 2026-07-01..
+  known 2026-01-01
+  fxl = 5.00 PLN/EUR "the card"
+
+ask l1: value(eurl, 2026-03-31) in PLN law 2026-03-31
+
+ask l2: value(eurl, 2026-03-31) in PLN law 2026-08-01
+
+ask l3: value(eurl, 2026-09-30) in PLN law 2026-03-31
+,,1:0,617:l1: 40 PLN
+  law date 2026-03-31, cut 2026-06-30
+l2: 40 PLN
+  law date 2026-08-01, cut 2026-06-30
+l3: 50 PLN
+  held: fxl = 5 PLN/EUR (law_h2), read for 2026-09-30
+  law date 2026-03-31, cut 2026-06-30
+warning: WARN-UNREAD def fxd is read by nothing
+warning: WARN-UNREAD input fxe is read by nothing
+warning: WARN-UNREAD input fxu is read by nothing
+warning: WARN-UNREAD place eur_acc is read by nothing
+warning: WARN-UNREAD place eurcash is read by nothing
+warning: WARN-UNREAD place eurone is read by nothing
+warning: WARN-UNREAD place usd_acc is read by nothing
+warning: WARN-UNREAD place usdone is read by nothing
+,24:fixes/g14/r_agent_inv5_n,9:fixes-g14,24:run r_agent_inv5_n.tally,690:20:r_agent_inv5_n.tally,661:model m
+  tally 2
+  on 2027-01-01
+  start 2027-01-01
+  end 2028-12-31
+unit PLN: currency minor 0.01
+kind ovs: event certain
+  leg cash: PLN
+place acct: accounts PLN lives 2027-01-01..
+place bank: outside lives 2027-01-01..
+def p[m in months]: money PLN = if pos(m) == 1 then 0 else p[m - 1] + sum(o.cash.amount for o in ovs over m)
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from acct to bank amount p[m]
+move op[m in months]: ovs
+  on start_of(m)
+  leg cash from acct to bank amount 1 PLN
+ask t1: p[2028-07]
+ask t2: p[2028-01]
+ask t3: p[2027-03], p[2027-02]
+ask t4: p[m] for m in [2027-05, 2027-04, 2028-02]
+ask t5: sum(p[m] for m in months)
+,,1:0,327:t1: 18.00 PLN
+  cut 2027-01-01
+t2: 12.00 PLN
+  cut 2027-01-01
+t3: (2.00 PLN, 1.00 PLN)
+  cut 2027-01-01
+t4 (m = 2027-05): 4.00 PLN
+  cut 2027-01-01
+t4 (m = 2027-04): 3.00 PLN
+  cut 2027-01-01
+t4 (m = 2028-02): 13.00 PLN
+  cut 2027-01-01
+t5: 276.00 PLN
+  cut 2027-01-01
+warning: WARN-NEGATIVE acct is below zero from 2027-01-01
+,38:fixes/g14/t_pin_pt_base_with_t_pin_pg2,9:fixes-g14,39:run t_pin_pt_base.tally t_pin_pg2.tally,487:19:t_pin_pt_base.tally,387:model two
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G14 probes: pins formed per binding tuple over two bindings (L §8.2)"
+
+source card "card (invented)"
+
+index qs = [q1, q2]
+
+input v[k in qs]: num
+
+input w2[j in qs, k in qs]: num
+
+def e2[j in qs, k in qs]: num = w2[j, k] + 1
+
+def f[k in qs]: num = v[k] + v[k]
+
+def ge[k in qs]: num = f[k] as if {v[k] = 1}
+
+,15:t_pin_pg2.tally,49:part pg2
+  tally 2
+
+ask g2: f[q2] with v[q1] = 3
+,,1:0,216:g2: ?"v at q2: no value" (v[q2])
+  pinned: v[q1] = 3
+  cut 2026-03-01
+warning: WARN-UNREAD def e2 is read by nothing
+warning: WARN-UNREAD def ge is read by nothing
+warning: WARN-UNREAD source card is read by nothing
 ,

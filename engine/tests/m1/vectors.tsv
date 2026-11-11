@@ -1502,3 +1502,12 @@ fixes/g14/r_rh_h_b3	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g
 fixes/g14/r_rh_h_b5	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/r_rh_h.tally	b5		G14
 fixes/g14/r_rh_h_b6	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/r_rh_h.tally	b6		G14
 fixes/g13/fix_i3_model_with_fix_i3_i3_base	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/fix_i3_model.tally engine/tests/m1/fixes/g13/fix_i3_i3.tally	base		G13
+fixes/g14/t_mb5_a	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/t_mb5_a.tally			G14
+fixes/g14/t_mb5_b	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/t_mb5_b.tally			G14
+fixes/g14/t_mb5_l	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/t_mb5_l.tally			G14
+fixes/g14/t_mb5_pp	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/t_mb5_pp.tally			G14
+fixes/g14/t_mb5_pp2	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/t_mb5_pp2.tally			G14
+fixes/g14/t_mb5_pp3	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/t_mb5_pp3.tally			G14
+fixes/g14/t_mb5_pp4	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/t_mb5_pp4.tally			G14
+fixes/g14/r_agent_inv5_n	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/r_agent_inv5_n.tally			G14
+fixes/g14/t_pin_pt_base_with_t_pin_pg2	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/t_pin_pt_base.tally engine/tests/m1/fixes/g14/t_pin_pg2.tally			G14

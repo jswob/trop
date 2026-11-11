@@ -1,0 +1,4 @@
+part pg2
+  tally 2
+
+ask g2: f[q2] with v[q1] = 3
