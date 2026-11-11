@@ -122,6 +122,12 @@ impl Engine {
                 if let Value::Hole(_) = law {
                     return Ok(Err(law));
                 }
+                if let Value::Window(_) = law {
+                    // a window `at` reads the def once per law-date class the window overlaps
+                    // (L §4.3, §5.14 `at e`): not a load refusal, and not built (M2, with
+                    // `windows each`)
+                    return Err(Stop::NotBuilt("a def's law date set by a window"));
+                }
                 let Value::Day(day) = law else {
                     return Err(bad_law_date(m, def, &law)?);
                 };

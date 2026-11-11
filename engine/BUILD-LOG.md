@@ -2636,3 +2636,13 @@ The builder, on the gate's review of `origin/master..b38e23f` (`tmp/m1/gate-revi
 - **Not done:** N3's other copies and N5's splits (M2's code-health pass, the coordinator's list).
 - **Cost:** about 0.4 % of the week for this turn, 3.03 % for the session (`engine/tools/usage`), inside the brief's 0.5 %.
 - **STOP-REPORTs:** none new.
+
+### Addendum 2026-11-11: a def's window `at`, a leg's window day (`tmp/m1/review-gate-fix.md` item 1)
+
+- **A def whose `at` is a window** (`eval/rules.rs` `cell_ctx`; L §4.3, §5.14 `at e`) stops `NotBuilt("a def's law date set by a window")`, where it refused the whole run with a false `LOAD-UNIT the law date of f is window(…)` (before 21e7502 too). L reads such a def once per law-date class the window overlaps; refcore answers (`gatefix-review/da.tally` a1, the hole "for the law date of f"; `db.tally`, a window inside one class, `1`). Not built: M2, with a move's window `at` and `windows each` (P52). Both are for the pull request's list.
+- **The other site of the same kind:** a leg whose own day is a window (`walk/legs.rs`) refused the run `LOAD-UNIT a day that isn't a date`. It now stops `NotBuilt("a movement dated by a window")`, as an instance dated by a window already did (`walk/plan.rs`). No other site I found gives a `LOAD-*` code for a window: every one-day site goes through `one_day`.
+- **Beta clippy** (advisory): `syntax/expr.rs` clears `fixes` where it assigned a new empty `Vec`, two lines.
+- **Probes** (`gatefix/sweep2.sh`: before 21e7502's build, after this one; the gate's texts, `gatefix/` and `gatefix-review/` probes, every G14 probe; `sweep2.txt`): 425 asks. 294 SAME/SAME, 131 DIFF/DIFF, none SAME → DIFF, none DIFF → SAME, none prints `ENGINE-INVARIANT`. Only da's and db's a1 changed, `LOAD-UNIT` → "not implemented".
+- **Files:** `eval/rules.rs`, `walk/legs.rs` (kernel), `syntax/expr.rs`. **Exceptions:** +0.
+- **Check:** `check full: green, 31 steps (933s)` on the code of this commit.
+- **Cost:** about 0.06 % of the week for this turn, 3.09 % for the session (`engine/tools/usage`), inside the brief's 0.15 %.
