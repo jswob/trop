@@ -1,0 +1,15 @@
+# Mutation study (branch rules/mutation-study only): one LLVM profile per test, through
+# cov-wrap.sh, for the coverage-selected gate-8 experiment. Not the repo's nextest config.
+experimental = ["wrapper-scripts"]
+
+[profile.cov]
+retries = 0
+fail-fast = false
+slow-timeout = { period = "120s", terminate-after = 10 }
+
+[scripts.wrapper.cov]
+command = { command-line = "../mutation-study/cov-wrap.sh", relative-to = "workspace-root" }
+
+[[profile.cov.scripts]]
+filter = "all()"
+run-wrapper = "cov"
