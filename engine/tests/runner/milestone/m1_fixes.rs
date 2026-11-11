@@ -17,7 +17,7 @@ mod tests {
     use tally_runner::m1::{SPEC, VECTORS};
 
     /// The groups this target tests, one `#[test]` each.
-    const GROUPS: [&str; 14] = [
+    const GROUPS: [&str; 15] = [
         "fixes-g1",
         "fixes-g2",
         "fixes-g3",
@@ -32,6 +32,7 @@ mod tests {
         "fixes-g12",
         "fixes-g13",
         "fixes-g14",
+        "fixes-open",
     ];
 
     /// Runs every vector of `group` on the engine and holds it to refcore's run.
@@ -234,11 +235,23 @@ mod tests {
     /// `r_agent_p130_*`, `b1_*`, held for #130) and B2 (a `with` pin naming the ask's `for`
     /// through an aggregate, `b2_*`); G10's NB8 (`g10fix`'s forms in `fixes-g10`); the pins per
     /// binding tuple (`pt_*`, `r_p_*`; P40's `solve` held for #120); `range_holds` (`rh_*`);
-    /// G6 fix 3's listing (`g6f3_*`, held for #121). Red: the review's N8, a day range stepped
-    /// by a count refused `LOAD-UNIT` with no `(file:line)` (`r_agent_rh_*`).
+    /// G6 fix 3's listing (`g6f3_*`, held for #121); T's inputs for MB5's missed (`t_mb5_*`):
+    /// the walk up to a leg's day, answered, refused at run, read at two days, meeting the
+    /// walk's refusal of the leg (`RUN-PLACE`) and read again at an earlier cut (`t_mb5_pl`);
+    /// leg reads by name; a clause keyed by a unit kind; law-dated price rows.
     #[test]
     fn m1_fixes_g14_the_sweep() {
         group_holds("fixes-g14");
+    }
+
+    /// The reviews' findings the engine still gets wrong, apart from their groups so each
+    /// group's test counts under `mutants-local --next` (the builder's to turn green): G14
+    /// review's N8, a day range stepped by a count refused `LOAD-UNIT` with no `(file:line)`
+    /// (`r_agent_rh_*`), and N3, `WARN-NEGATIVE` missing when the answer comes through the walk
+    /// up to a day (`r_agent_inv5_n`; E §4.2 step 5, L §8.5; STOP-REPORT in GAPS.md).
+    #[test]
+    fn m1_fixes_the_open_findings() {
+        group_holds("fixes-open");
     }
 
     /// Where refcore crashes (`REFCORE-NOT-YET`), the spec's answer (`m1/spec.tsv`, each row's

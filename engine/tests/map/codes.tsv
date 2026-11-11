@@ -1,7 +1,7 @@
 code	section	built	form	outputs	first	example
 HOLE-STATED	L §8.1	M1	*	1	M1	codes/m1/rules/stated
-HOLE-UNGOVERNED	L §8.1	S	*	2	S	kernel/g3/band
-HOLE-UNGOVERNED	L §8.1	S	x at k: no value for <period>	1	S	kernel/g4/holes
+HOLE-UNGOVERNED	L §8.1	S	*	3	S	kernel/g3/band
+HOLE-UNGOVERNED	L §8.1	S	x at k: no value for <period>	2	S	kernel/g4/holes
 HOLE-UNGOVERNED	L §8.1	S	<b>: no row holds <x> at <law date>	1	S	kernel/g3/band
 HOLE-NOREADING	L §8.1	M2	*	12	M1	m1/fixes/g10/b_gapdec_m
 HOLE-NOREADING	L §8.1	M2	<x>[k] has no reading at <instant>	2	M1	m1/fixes/g10/b_gapdec_m
@@ -316,11 +316,11 @@ RUN-WEIGHTS	L §8.4	M1	prorata weights <w> are negative or sum to 0	1	M1	codes/m
 RUN-PRORATA	L §8.4	M1	*	1	M1	codes/m1/rules/prorata
 RUN-PRORATA	L §8.4	M1	<total> isn't a whole number of <u>	1	M1	codes/m1/rules/prorata
 RUN-PRORATA	L §8.4	M1	<amount> arriving at or taken from <place> isn't a whole number of its step <u>	0	-	-
-RUN-PLACE	L §8.4	S	*	33	S	kernel/U:ask/ASK-03
+RUN-PLACE	L §8.4	S	*	35	S	kernel/U:ask/ASK-03
 RUN-PLACE	L §8.4	S	<movement> takes <debt> above 0	1	M1	codes/m1/rules/debt-above
 RUN-PLACE	L §8.4	S	<claim> below 0	16	S	kernel/g9/reading_close
 RUN-PLACE	L §8.4	S	<holding> below 0 units	5	S	kernel/g9/sign
-RUN-PLACE	L §8.4	S	<place> is <b> after the day's observations and plans of <d>	25	S	kernel/U:ask/ASK-03
+RUN-PLACE	L §8.4	S	<place> is <b> after the day's observations and plans of <d>	27	S	kernel/U:ask/ASK-03
 RUN-PLACE	L §8.4	S	<place> is <b> after its reading at <instant>	12	S	kernel/g9/reading_close
 RUN-LIFESPAN	L §8.4	S	*	42	S	kernel/g5/agenda
 RUN-LIFESPAN	L §8.4	S	<leg> moves into or out of <thing> outside its lifespan	36	S	kernel/g6/refusal_keys

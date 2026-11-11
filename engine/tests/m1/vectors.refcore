@@ -208579,7 +208579,7 @@ version v1
 
 ask x6: f[k] as if {v[q1] = count(j in qs where j == k)} for k in qs
 ,,1:1,57:refused: LOAD-NAME unknown id qs (r_agent_pt_x6.tally:4)
-,22:fixes/g14/r_agent_rh_c,9:fixes-g14,22:run r_agent_rh_c.tally,798:18:r_agent_rh_c.tally,771:model rh3
+,22:fixes/g14/r_agent_rh_c,10:fixes-open,22:run r_agent_rh_c.tally,798:18:r_agent_rh_c.tally,771:model rh3
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -208700,7 +208700,7 @@ b6: 3
   cut 2026-03-01
 b7: refused: RUN-KEY 2025-12-29 is not a value of 2026-01-01 .. 2026-01-20 step 3 day
   cut 2026-03-01
-,40:fixes/g14/r_agent_rh_c_with_r_agent_rh_l,9:fixes-g14,41:run r_agent_rh_c.tally r_agent_rh_l.tally,932:18:r_agent_rh_c.tally,771:model rh3
+,40:fixes/g14/r_agent_rh_c_with_r_agent_rh_l,10:fixes-open,41:run r_agent_rh_c.tally r_agent_rh_l.tally,932:18:r_agent_rh_c.tally,771:model rh3
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -220897,6 +220897,120 @@ t (m = 2027-07): 730.00 PLN
 t2: 910.00 PLN
   cut 2027-01-01
 warning: WARN-NEGATIVE acct is below zero from 2027-01-01
+,23:fixes/g14/t_mb5_pl_t_t3,9:fixes-g14,29:run t_mb5_pl.tally --ask t t3,1421:14:t_mb5_pl.tally,1397:model pl
+  tally 2
+  on 2027-01-01
+  start 2027-01-01
+  end 2028-12-31
+  note "T C10 (invented): F4g's form where the walk refuses an event's leg (RUN-PLACE, its place min 0): the def read through the walk up to the leg's day meets the walk's refusal of the leg; and an ask at an earlier cut, whose own walk up to that day refuses nothing (MB5's prefix walk)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind pot: place PLN min 0
+
+kind ovs: event certain
+  leg cash: PLN
+
+input q[m in months]: money PLN
+
+input base: money PLN
+
+place acct: accounts PLN lives 2027-01-01..
+
+place sav: pot lives 2027-01-01..
+
+place bank: outside lives 2027-01-01..
+
+def p[m in months]: money PLN = if pos(m) == 1 then base else p[m - 1] - sum(o.cash.amount for o in ovs over m)
+
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from acct to bank amount p[m]
+
+move op[m in months]: ovs
+  on start_of(m)
+  leg cash from sav to acct amount q[m]
+
+ask t: p[m] for m in [2027-01, 2027-04]
+
+ask t2: bal(sav, 2027-03-31), bal(acct, 2027-01-31)
+
+ask t3: p[2027-03] as known 2026-12-31
+
+version v
+  cite card
+  governs always
+  known 2027-01-01
+  base = 1000.00 PLN "c"
+  q[2027-01] = 10.00 PLN "c"
+  q[2027-02] = 20.00 PLN "c"
+  q[2027-03] = 5.00 PLN "c"
+  q[2027-04] = 40.00 PLN "c"
+  opening[acct] = 5000.00 PLN at 2027-01-01 start "c"
+  opening[sav] = 25.00 PLN at 2027-01-01 start "c"
+,,1:0,318:t (m = 2027-01): 1 000.00 PLN
+  cut 2027-01-01
+t (m = 2027-04): refused: RUN-PLACE sav is -5.00 PLN after the day's observations and plans of 2027-02-01
+  cut 2027-01-01
+t3: ?"base: no value" (base) ?"q at 2027-02: no value for 2027-02" (q[2027-02]) ?"q at 2027-03: no value for 2027-03" (q[2027-03])
+  cut 2026-12-31
+,21:fixes/g14/t_mb5_pl_t2,9:fixes-g14,27:run t_mb5_pl.tally --ask t2,1421:14:t_mb5_pl.tally,1397:model pl
+  tally 2
+  on 2027-01-01
+  start 2027-01-01
+  end 2028-12-31
+  note "T C10 (invented): F4g's form where the walk refuses an event's leg (RUN-PLACE, its place min 0): the def read through the walk up to the leg's day meets the walk's refusal of the leg; and an ask at an earlier cut, whose own walk up to that day refuses nothing (MB5's prefix walk)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind pot: place PLN min 0
+
+kind ovs: event certain
+  leg cash: PLN
+
+input q[m in months]: money PLN
+
+input base: money PLN
+
+place acct: accounts PLN lives 2027-01-01..
+
+place sav: pot lives 2027-01-01..
+
+place bank: outside lives 2027-01-01..
+
+def p[m in months]: money PLN = if pos(m) == 1 then base else p[m - 1] - sum(o.cash.amount for o in ovs over m)
+
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from acct to bank amount p[m]
+
+move op[m in months]: ovs
+  on start_of(m)
+  leg cash from sav to acct amount q[m]
+
+ask t: p[m] for m in [2027-01, 2027-04]
+
+ask t2: bal(sav, 2027-03-31), bal(acct, 2027-01-31)
+
+ask t3: p[2027-03] as known 2026-12-31
+
+version v
+  cite card
+  governs always
+  known 2027-01-01
+  base = 1000.00 PLN "c"
+  q[2027-01] = 10.00 PLN "c"
+  q[2027-02] = 20.00 PLN "c"
+  q[2027-03] = 5.00 PLN "c"
+  q[2027-04] = 40.00 PLN "c"
+  opening[acct] = 5000.00 PLN at 2027-01-01 start "c"
+  opening[sav] = 25.00 PLN at 2027-01-01 start "c"
+,,1:0,126:t2: (refused: RUN-PLACE sav is -5.00 PLN after the day's observations and plans of 2027-02-01, 4 010.00 PLN)
+  cut 2027-01-01
 ,17:fixes/g14/t_mb5_b,9:fixes-g14,17:run t_mb5_b.tally,1542:13:t_mb5_b.tally,1519:model pw
   tally 2
   on 2027-01-01
@@ -221489,7 +221603,7 @@ warning: WARN-UNREAD place eurcash is read by nothing
 warning: WARN-UNREAD place eurone is read by nothing
 warning: WARN-UNREAD place usd_acc is read by nothing
 warning: WARN-UNREAD place usdone is read by nothing
-,24:fixes/g14/r_agent_inv5_n,9:fixes-g14,24:run r_agent_inv5_n.tally,690:20:r_agent_inv5_n.tally,661:model m
+,24:fixes/g14/r_agent_inv5_n,10:fixes-open,24:run r_agent_inv5_n.tally,690:20:r_agent_inv5_n.tally,661:model m
   tally 2
   on 2027-01-01
   start 2027-01-01
