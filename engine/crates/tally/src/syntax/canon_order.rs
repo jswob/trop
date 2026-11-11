@@ -9,7 +9,7 @@
 //! `Tie`, `Keys`, `Rev`, `cmp_comp`, `cmp_keys`, `key_comp`, `key_at`, `span_key`).
 //! Invariants: a component compares only with one of its own form (a mismatch is
 //! `ENGINE-INVARIANT`, where refcore would crash); a member's key is compared by text only when
-//! two are equal, otherwise its order waits for joint models (G9).
+//! two are equal, otherwise its order waits for joint models (L §6.1, M5c).
 
 use super::lex::cannot;
 use super::parse::Stop;
@@ -55,7 +55,7 @@ pub(super) enum KeyOrder {
     Value,
     /// By text.
     Text,
-    /// By the order of a member's index or kind (G9).
+    /// By the order of a member's index or kind (joint models, L §6.1, M5c).
     Member,
 }
 
@@ -377,7 +377,8 @@ fn key_value(key: &Lit, place: &Place) -> Val {
 ///
 /// # Errors
 ///
-/// Two members' keys that differ (their order is G9's); two components of different forms,
+/// Two members' keys that differ (their order waits for joint models, M5c); two components of
+/// different forms,
 /// or numbers past the cap (`ENGINE-INVARIANT`).
 pub(super) fn compare(left: &Val, right: &Val) -> Result<Ordering, Stop> {
     if let Val::Member(text) = right {
@@ -489,7 +490,7 @@ pub(super) fn compare(left: &Val, right: &Val) -> Result<Ordering, Stop> {
 }
 
 /// A member's key against another component: equal to the same key, otherwise its order is
-/// the member's, which waits for joint models (G9).
+/// the member's, which waits for joint models (L §6.1, M5c).
 fn member(other: &Val, text: &str) -> Result<Ordering, Stop> {
     if let Val::Member(same) = other
         && same == text
@@ -497,7 +498,7 @@ fn member(other: &Val, text: &str) -> Result<Ordering, Stop> {
         return Ok(Ordering::Equal);
     }
     Err(Stop::NotBuilt(
-        "the canonical order of keys of a member's index or kind (G9)",
+        "the canonical order of keys of a member's index or kind (M5c)",
     ))
 }
 

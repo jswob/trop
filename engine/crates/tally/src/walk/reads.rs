@@ -53,7 +53,7 @@ impl Engine {
             Ok(u) => u,
         };
         if b.of.is_some() {
-            return Err(Stop::NotBuilt("bal of a party or a batch (G9)"));
+            return Err(Stop::NotBuilt("bal of a party or a batch (M5a)"));
         }
         if b.modelled {
             return Err(Stop::NotBuilt("a modelled balance (the ledger)"));
@@ -76,7 +76,19 @@ impl Engine {
         if let Value::Hole(_) = d {
             return Ok(d);
         }
-        let d = crate::ask::date_of(&d, "the day of bal")?;
+        // a window left a window (no `windows each`) is the hole of its imprecision for this
+        // read, named with its place (refcore's `m_e_bal`); else the one-day reader's text
+        let named;
+        let what = if let Value::Window(_) = d {
+            named = format!("the day of bal({place}, d)");
+            named.as_str()
+        } else {
+            "the day of bal"
+        };
+        let d = match crate::eval::one_day(m, &d, what)? {
+            Ok(d) => d,
+            Err(imprecise) => return Ok(Value::Hole(imprecise)),
+        };
         if b.proj.from.is_some() {
             return self.projection(m, b, (&place, &unit), d, (env, ctx));
         }
@@ -618,7 +630,10 @@ impl Engine {
         if let Value::Hole(_) = d {
             return Ok(d);
         }
-        let d = crate::ask::date_of(&d, "the day of gap")?;
+        let d = match crate::eval::one_day(m, &d, "the day of gap")? {
+            Ok(d) => d,
+            Err(h) => return Ok(Value::Hole(h)),
+        };
         // a decision inside the main walk reads the gaps it has met so far, the walk as it
         // stands (refcore's `main_walk` of a running walk)
         let id = match self.main_walks.get(&ctx.cut) {

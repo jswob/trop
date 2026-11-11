@@ -3,7 +3,7 @@
 //! Twin: engine/tools/refcore/cli.py.
 //! Invariants: the library reads no clock, environment or file (R-38, R-39); [`run`] answers
 //! a read, parse or load refusal and the asks a loaded reality's evaluator can read, and
-//! `NotImplemented` for anything past the part built (milestones S and M0).
+//! `NotImplemented` for anything past the part built (milestones S, M0 and M1).
 //!
 //! Milestone S built it in groups (`engine/BUILD-LOG.md`, the S plan): the exact numbers,
 //! [`num`]; the code catalogue and refusals, [`base`]; the entry and its read step, [`run`];
@@ -195,6 +195,7 @@ pub mod eval {
     pub(crate) use state::{a_day, num_stop, past_days};
     pub(crate) use timelines::combinations;
     pub(crate) use trace::{Balance as TracedBalance, Kind as TraceKind, Trace, Walked};
+    pub(crate) use windows::one_day;
     pub(crate) use years::year_form;
 }
 
@@ -276,7 +277,6 @@ pub mod ask {
     mod walked;
     mod worlds;
 
-    pub(crate) use answer::date_of;
     pub use answer::{Answered, How, answer};
     pub use register::{register_lines, warning_lines};
     pub(crate) use walked::plain_lines;

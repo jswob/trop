@@ -158,7 +158,10 @@ impl Engine {
                 if let Value::Hole(h) = v {
                     return self.unknown_day(m, bind, dom, h, ctx);
                 }
-                let d = crate::ask::date_of(&v, "the day of a binding")?;
+                let d = match crate::eval::one_day(m, &v, "the day of a binding")? {
+                    Ok(d) => d,
+                    Err(h) => return self.unknown_day(m, bind, dom, h, ctx),
+                };
                 let next = d
                     .next()
                     .ok_or_else(|| invariant("a binding's day past the calendar"))?;
@@ -295,7 +298,10 @@ impl Engine {
         if let Value::Hole(_) = d {
             return Ok(d);
         }
-        let d = crate::ask::date_of(&d, "the day of next")?;
+        let d = match crate::eval::one_day(m, &d, "the day of next")? {
+            Ok(d) => d,
+            Err(h) => return Ok(Value::Hole(h)),
+        };
         let members =
             self.span_members(m, (MvDom::Event, kind), &Span::between(Some(d), None), ctx)?;
         let hole_days: Vec<Option<&Hole>> = members

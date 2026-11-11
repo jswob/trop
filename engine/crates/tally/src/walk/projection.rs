@@ -61,7 +61,10 @@ impl Engine {
         if let Value::Hole(_) = start {
             return Ok(start);
         }
-        let start = crate::ask::date_of(&start, "the day of a projection")?;
+        let start = match crate::eval::one_day(m, &start, "the day of a projection")? {
+            Ok(start) => start,
+            Err(h) => return Ok(Value::Hole(h)),
+        };
         if day < start {
             return Err(refuse(
                 Run::Domain,
@@ -142,7 +145,10 @@ impl Engine {
                 if let Value::Hole(_) = start {
                     return Ok(start);
                 }
-                let start = crate::ask::date_of(&start, "the day of a projection")?;
+                let start = match crate::eval::one_day(m, &start, "the day of a projection")? {
+                    Ok(start) => start,
+                    Err(h) => return Ok(Value::Hole(h)),
+                };
                 if first < start {
                     return Err(refuse(
                         Run::Domain,

@@ -583,7 +583,10 @@ impl Engine {
             if let Value::Hole(h) = day {
                 return Ok(Value::Hole(h));
             }
-            let day = crate::ask::date_of(&day, "the day of a membership test")?;
+            let day = match super::windows::one_day(m, &day, "the day of a membership test")? {
+                Ok(day) => day,
+                Err(h) => return Ok(Value::Hole(h)),
+            };
             self.note_thing(m, thing, ctx.world);
             let alive =
                 member_span(m, thing, kind, (ctx.cut, ctx.world)).is_some_and(|s| s.contains(day));

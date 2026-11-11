@@ -262,14 +262,14 @@ fn one_of_holds(w: &Window, v: &Value) -> bool {
     }
 }
 
-/// One day where one is needed: a day (the end of time is none), a day period's day; a window
-/// is its `HOLE-IMPRECISE` for `what`; `none` and `never` refused (refcore's `date_of`). L §4.2,
-/// §4.4, §7.6 item 1.
+/// One day where one is needed, the one reader every such site uses (`what` names the site):
+/// a day (the end of time is none), a day period's day; a window is its `HOLE-IMPRECISE` for
+/// `what`; `none` and `never` refused (refcore's `date_of`). L §4.2, §4.4, §7.6 item 1.
 ///
 /// # Errors
 ///
 /// `RUN-NONE`, `RUN-LIMIT`; `LOAD-UNIT` for a value that is no date.
-pub(super) fn one_day(m: &Reality, v: &Value, what: &str) -> Result<Result<Day, Hole>, Stop> {
+pub(crate) fn one_day(m: &Reality, v: &Value, what: &str) -> Result<Result<Day, Hole>, Stop> {
     if let Value::Day(d) = v {
         return Ok(Ok(super::state::a_day(*d)?));
     }

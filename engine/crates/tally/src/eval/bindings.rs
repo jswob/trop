@@ -14,10 +14,9 @@
 //! cut is no value.
 
 use super::keys::{lacks_at_run, literal_key};
-use super::state::{Ctx, Engine, Env, a_day, invariant, num_stop, refuse, refuse_load, wrong_type};
-use super::windows::imprecise;
+use super::state::{Ctx, Engine, Env, a_day, invariant, wrong_type};
+use super::windows::{imprecise, one_day};
 use super::years::span_year;
-use crate::base::{Load, Run};
 use crate::hole::Hole;
 use crate::model::{Class, Domain, IndexInfo, KeyVal, Number, Reality, Span, Thing, Value, World};
 use crate::syntax::{
@@ -116,7 +115,7 @@ impl Engine {
                 if let Value::Hole(h) = day {
                     return empty_or_unknown(bind, &things, h);
                 }
-                match date_of(m, &day, "the day of a binding")? {
+                match one_day(m, &day, "the day of a binding")? {
                     Ok(day_on) => When::Day(day_on),
                     Err(h) => return empty_or_unknown(bind, &things, h),
                 }
@@ -169,12 +168,21 @@ impl Engine {
         }
         let [from, to] = <[Option<Value>; 2]>::try_from(ends)
             .map_err(|_| invariant("a span with other than two ends"))?;
-        let start = from.as_ref().map(|v| span_start(m, v)).transpose()?;
-        if !sp.dots {
-            let end = from.as_ref().map(|v| span_end(m, v)).transpose()?;
-            return Ok(Ok(Span::between(start, end)));
-        }
-        let end = to.as_ref().map(|v| span_end(m, v)).transpose()?;
+        // one day or period alone is the span from its start to its end
+        let last = if sp.dots { to.as_ref() } else { from.as_ref() };
+        let start = match from
+            .as_ref()
+            .map(|v| span_start(m, v))
+            .transpose()?
+            .transpose()
+        {
+            Err(h) => return Ok(Err(h)),
+            Ok(start) => start,
+        };
+        let end = match last.map(|v| span_end(m, v)).transpose()?.transpose() {
+            Err(h) => return Ok(Err(h)),
+            Ok(end) => end,
+        };
         Ok(Ok(Span::between(start, end)))
     }
 }
@@ -273,55 +281,36 @@ fn list_value(lit: &Lit) -> Value {
     }
 }
 
-/// A day read where `what` needs one (refcore's `date_of`): a day, or a day period's; a
-/// window is the hole of its imprecision (L §4.4); `none` and `never` are `RUN-NONE` (L §3.1);
-/// another value is refcore's `LOAD-UNIT <what> is <v>, not a date`, met at run. L §5.7, §8.4.
-pub(super) fn date_of(m: &Reality, v: &Value, what: &str) -> Result<Result<Day, Hole>, Stop> {
+/// A span's first day: a day, a period's start; a window is its `HOLE-IMPRECISE` for a span
+/// end (refcore's `span_start`). L §5.7, §4.4.
+fn span_start(m: &Reality, v: &Value) -> Result<Result<Day, Hole>, Stop> {
     if let Value::Day(d) = v {
-        return a_day(*d).map(Ok);
-    }
-    if let Value::Window(w) = v {
-        return imprecise(m, w, what).map(Err);
-    }
-    if *v == Value::None {
-        return Err(refuse(Run::None, format!("a value is none here: {what}")));
-    }
-    if *v == Value::Never {
-        return Err(refuse(Run::None, format!("never in {what}")));
-    }
-    if let Value::Period(p) = v
-        && p.kind() == crate::time::PeriodKind::Day
-    {
-        return Ok(Ok(p.start()));
-    }
-    let shown = v.text(m).map_err(num_stop)?;
-    Err(refuse_load(
-        Load::Unit,
-        format!("{what} is {shown}, not a date"),
-    ))
-}
-
-/// A span's first day: a day, a period's start (refcore's `span_start`). L §5.7.
-fn span_start(m: &Reality, v: &Value) -> Result<Day, Stop> {
-    if let Value::Day(d) = v {
-        return Ok(*d);
+        return Ok(Ok(*d));
     }
     if let Value::Period(p) = v {
-        return Ok(p.start());
+        return Ok(Ok(p.start()));
+    }
+    if let Value::Window(w) = v {
+        return imprecise(m, w, "a span end").map(Err);
     }
     Err(wrong_type(m, "a span end is", v))
 }
 
-/// The first day after a span's end: the day after a day, a period's end (refcore's
-/// `span_end`); the end of time is no day to end on, `RUN-LIMIT`. L §5.7, §7.6 item 1.
-fn span_end(m: &Reality, v: &Value) -> Result<Day, Stop> {
+/// The first day after a span's end: the day after a day, a period's end; a window is its
+/// `HOLE-IMPRECISE` for a span end (refcore's `span_end`); the end of time is no day to end on,
+/// `RUN-LIMIT`. L §5.7, §4.4, §7.6 item 1.
+fn span_end(m: &Reality, v: &Value) -> Result<Result<Day, Hole>, Stop> {
     if let Value::Day(d) = v {
         return a_day(*d)?
             .end_days(1)
+            .map(Ok)
             .ok_or_else(|| invariant("a day past the end of time"));
     }
     if let Value::Period(p) = v {
-        return Ok(p.end());
+        return Ok(Ok(p.end()));
+    }
+    if let Value::Window(w) = v {
+        return imprecise(m, w, "a span end").map(Err);
     }
     Err(wrong_type(m, "a span end is", v))
 }

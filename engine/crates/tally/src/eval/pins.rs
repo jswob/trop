@@ -14,6 +14,7 @@
 use std::collections::BTreeSet;
 
 use super::context::{Pinned, world_named};
+use super::keys::Given;
 use super::state::{Ctx, Engine, Env, invariant, num_stop};
 use super::trace::Kind as TraceKind;
 use crate::base::Code;
@@ -300,7 +301,13 @@ impl Engine {
             PinForm::Known(_) => "known",
             PinForm::Wording(..) | PinForm::Scenario(_) | PinForm::Set { .. } => "wording",
         };
-        let day = crate::ask::date_of(&v, &format!("the {word} pin"))?;
+        let day = match super::windows::one_day(m, &v, &format!("the {word} pin"))? {
+            Ok(day) => day,
+            Err(hole) => {
+                holes.push(hole);
+                return Ok(None);
+            }
+        };
         let expr = !matches!(
             e,
             Expr::Lit(Lit::Day(_) | Lit::Month(..) | Lit::Quarter(..) | Lit::Num(_))
@@ -382,7 +389,36 @@ impl Engine {
         };
         let mut keys = Vec::with_capacity(binds.len());
         let mut texts = Vec::with_capacity(binds.len());
+        let all_written = match target.keys.as_deref() {
+            Some(at) if at.len() == binds.len() && at.iter().all(is_written) => Some(at),
+            Some(_) | None => None,
+        };
+        if let Some(at) = all_written {
+            // every key written: made in one call, so a range's ends read the keys before it
+            // (L §2.5, §5.11)
+            let given = match self.written_keys(m, at, env, ctx)? {
+                Err(hole) => {
+                    holes.push(hole);
+                    return Ok(None);
+                }
+                Ok(given) => given,
+            };
+            match self.make_keys(m, id, binds, given, ctx)? {
+                Err(hole) => {
+                    holes.push(hole);
+                    return Ok(None);
+                }
+                Ok(made) => {
+                    texts.extend(made.iter().map(KeyVal::text));
+                    keys.extend(made.into_iter().map(Some));
+                }
+            }
+        }
+        // a `*` leaves its position open: each written key is made alone
         for (key, bind) in target.keys.iter().flatten().zip(binds) {
+            if keys.len() == binds.len() {
+                break;
+            }
             let Key::Expr(e) = key else {
                 keys.push(None);
                 texts.push("*".to_owned());
@@ -438,6 +474,35 @@ impl Engine {
             text,
         }))
     }
+
+    /// A pin's keys, every one written, as given in order; the first that is a hole makes
+    /// the pin that hole, and the keys after it are not read (refcore's `apply_pins`, its
+    /// `keyhole`). L §5.11, §8.1.
+    fn written_keys(
+        &mut self,
+        m: &Reality,
+        written: &[Key],
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Result<Vec<Given>, Hole>, Stop> {
+        let mut given = Vec::with_capacity(written.len());
+        for key in written {
+            let Key::Expr(e) = key else {
+                return Err(invariant("a pin's `*` key made with the written ones"));
+            };
+            let one = self.given_key(m, e, env, ctx)?;
+            if let Given::Value(Value::Hole(hole)) = one {
+                return Ok(Err(hole));
+            }
+            given.push(one);
+        }
+        Ok(Ok(given))
+    }
+}
+
+/// Whether a pin's key is written, not `*` (L §5.11).
+fn is_written(key: &Key) -> bool {
+    matches!(key, Key::Expr(_))
 }
 
 /// The option an axis pin `ax = option` names, a key literal load checked (refcore's

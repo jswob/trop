@@ -160,7 +160,9 @@ fn balance_lines(
             if matches!(d, Value::Hole(_) | Value::Window(_)) {
                 return Ok(Vec::new());
             }
-            let end = super::date_of(&d, "the day of bal")?;
+            let Ok(end) = crate::eval::one_day(m, &d, "the day of bal")? else {
+                return Ok(Vec::new());
+            };
             (end, end)
         }
         Read::Low(l) => {
@@ -178,7 +180,10 @@ fn balance_lines(
         if matches!(t, Value::Hole(_)) {
             return Ok(Vec::new());
         }
-        let t = super::date_of(&t, "the day of a projection")?;
+        // a window as the start is the read's hole: it needs no walk
+        let Ok(t) = crate::eval::one_day(m, &t, "the day of a projection")? else {
+            return Ok(Vec::new());
+        };
         let low = matches!(read, Read::Low(_)).then_some(first);
         let unc = read.proj().uncertain || ctx.unc;
         return projection_lines(m, engine, (ask, &place, &unit), (t, low, end), (unc, ctx));

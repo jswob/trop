@@ -52,7 +52,10 @@ impl Engine {
         if let Value::Hole(_) = d {
             return Ok(d);
         }
-        let day = crate::ask::date_of(&d, "the day of value")?;
+        let day = match crate::eval::one_day(m, &d, "the day of value")? {
+            Ok(day) => day,
+            Err(h) => return Ok(Value::Hole(h)),
+        };
         let valued = Valued {
             place: place.clone(),
             day,
@@ -60,7 +63,7 @@ impl Engine {
             by: read.by.as_ref().map(|by| by_form(m, env, by)),
         };
         if read.of.is_some() {
-            return Err(Stop::NotBuilt("value of a party or a batch (G9)"));
+            return Err(Stop::NotBuilt("value of a party or a batch (M5a)"));
         }
         if let Some(price) = &valued.priced
             && let Some((id, Priced::Whole(whole))) = m.clause_mode(price)

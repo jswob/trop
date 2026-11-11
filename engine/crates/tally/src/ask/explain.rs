@@ -36,7 +36,8 @@ use crate::syntax::{Ask, Expr, PinForm, Postfix, Stop};
 ///
 /// # Errors
 ///
-/// A load refusal met at run; `NotBuilt` for the walk's forms, G12's.
+/// A load refusal met at run; `NotBuilt` for a cause the walk computes (a balance, a
+/// projection, a movement), which E §10 prints in the walk's own form.
 pub(super) fn explain_line(
     m: &Reality,
     (ask, reference): (&Ask, &Expr),
@@ -96,7 +97,7 @@ fn traced(
     let trace = engine.end_trace()?;
     if trace.walked {
         // a balance, a projection or a movement among the causes prints in the walk's own
-        // form (E §10), G12's
+        // form (E §10), not built
         return Err(Stop::NotBuilt(
             "explain of a cause the walk computes: a balance, a projection, a movement",
         ));

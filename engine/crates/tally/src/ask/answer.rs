@@ -26,12 +26,12 @@ use super::register::{check_register_lines, register_lines, warning_lines};
 use super::residuals::residual_lines;
 use crate::base::{Code, Load, Place, Reach, Refusal, Req, Run, Warn};
 use crate::eval::{
-    Collected, Ctx, Engine, Entry, Env, Item, Member, Memo, a_day, names_in, num_stop, past_days,
+    Collected, Ctx, Engine, Entry, Env, Item, Member, Memo, names_in, num_stop, one_day, past_days,
     world_named,
 };
 use crate::model::{Reality, Value};
 use crate::syntax::{Ask, AskBody, Bind, Domain, Expr, Key, OfQ, Pin, PinForm, Step, Stop};
-use crate::time::{Day, PeriodKind};
+use crate::time::Day;
 use crate::walk::{Bookings, Lows};
 use crate::{Asks, Days};
 
@@ -281,7 +281,7 @@ impl World {
 }
 
 /// Whether the reality holds a known window (a version's, a row's or an observation's own) or
-/// a `moves` line: load checks them (L §4.5, §5.3), the run doesn't take them yet (M1's), so
+/// a `moves` line: load checks them (L §4.5, §5.3), the run doesn't take them (not built), so
 /// an ask that would read them stops `NotBuilt`.
 fn windows_or_moves(m: &Reality) -> bool {
     let versions = m
@@ -393,7 +393,10 @@ fn ask_lines(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<
         if let Value::Hole(_) = v {
             return Ok(vec![format!("{}: {}", ask.id, shown(m, &v)?)]);
         }
-        cut = date_of(&v, "as known")?;
+        cut = match one_day(m, &v, "as known")? {
+            Ok(known_day) => known_day,
+            Err(h) => return Ok(vec![format!("{}: {}", ask.id, shown(m, &Value::Hole(h))?)]),
+        };
         before_clock(m, "as known", cut)?;
         known_engine = Some(engine);
     }
@@ -464,7 +467,10 @@ fn ask_body(m: &Reality, ask: &Ask, engine: &mut Engine, cut: Day) -> Result<Vec
         if let Value::Hole(_) = v {
             return Ok(vec![format!("{}: {}", ask.id, shown(m, &v)?)]);
         }
-        law = Some(date_of(&v, "the law of an ask")?);
+        law = match one_day(m, &v, "the law of an ask")? {
+            Ok(day) => Some(day),
+            Err(h) => return Ok(vec![format!("{}: {}", ask.id, shown(m, &Value::Hole(h))?)]),
+        };
     }
     let mut pinned = Collected::default();
     // `in s` names the line's world, the model's when it names none; a world under the
@@ -749,34 +755,6 @@ fn bound_text(m: &Reality, bind: &Bind, v: &Value) -> Result<String, Stop> {
         return Ok(whole.to_string());
     }
     shown(m, v)
-}
-
-/// The day a value names, for an ask's `law` or `as known` (refcore's `date_of`). L §4.3, §4.5.
-pub(crate) fn date_of(v: &Value, what: &str) -> Result<Day, Stop> {
-    if let Value::Day(day) = v {
-        return a_day(*day);
-    }
-    if let Value::Period(p) = v
-        && p.kind() == PeriodKind::Day
-    {
-        return Ok(p.start());
-    }
-    if *v == Value::None {
-        return Err(Stop::Refused(Refusal::new(
-            Code::Run(Run::None),
-            format!("a value is none here: {what}"),
-        )));
-    }
-    if *v == Value::Never {
-        return Err(Stop::Refused(Refusal::new(
-            Code::Run(Run::None),
-            format!("never in {what}"),
-        )));
-    }
-    // refcore's `LOAD-UNIT <what> is <v>, not a date`, which load's types meet first
-    Err(Stop::NotBuilt(
-        "a law date or a cut that isn't a date, met at run",
-    ))
 }
 
 /// Whether one of ask `ask`'s `with` pins names a variable of its own `for`, by its value, a

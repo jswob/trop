@@ -14,13 +14,13 @@
 //! computes it.
 
 use super::arith::{Kind, Op, Operand, arith, duration, finish, int_of, operand};
-use super::bindings::{Values, date_of};
+use super::bindings::Values;
 use super::expr::literal;
 use super::keys::Given;
 use super::state::{
     Ctx, Engine, Env, Figures, invariant, num_stop, refuse, refuse_load, unit_stop,
 };
-use super::windows::{as_window, imprecise};
+use super::windows::{as_window, imprecise, one_day};
 use crate::base::{Load, Run};
 use crate::hole::{Hole, spread};
 use crate::load::literal_end;
@@ -703,7 +703,7 @@ fn day_range(
 /// A day range's last day (refcore's `date_of(z, 'a range end')`): `never` is `RUN-NONE`; a
 /// window `range_ends` made the read's hole first. L §5.6.
 fn range_last(m: &Reality, end: &Value) -> Result<Day, Stop> {
-    date_of(m, end, "a range end")?
+    one_day(m, end, "a range end")?
         .map_err(|_| invariant("a window as a range end, which `range_ends` makes a hole first"))
 }
 

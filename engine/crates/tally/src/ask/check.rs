@@ -7,7 +7,7 @@
 //! Invariants: each side is read once, as an ask line reads a value; a load refusal met at
 //! run refuses the run; a side's text is refcore's `_txt` of the expression.
 
-use crate::base::{Code, Run};
+use crate::base::{Code, Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Env, Item, Op, arith, equal_sides, num_stop};
 use crate::model::{Reality, Value};
 use crate::syntax::{Expr, PinForm, Stop};
@@ -215,17 +215,26 @@ fn side_law(
     }) else {
         return Ok(ctx.law);
     };
+    // a refusal leaves the side with no law date; a load refusal and an engine invariant are
+    // the run's, as in `check_line` (R-66)
     let v = match engine.value(m, law, env, ctx) {
         Ok(v) => v,
-        Err(Stop::Refused(_)) => return Ok(None),
+        Err(Stop::Refused(r)) if side_keeps(&r) => return Ok(None),
         Err(stop) => return Err(stop),
     };
     if v.as_hole().is_some() {
         return Ok(None);
     }
-    match crate::ask::date_of(&v, "the law pin") {
-        Ok(day) => Ok(Some(day)),
-        Err(Stop::Refused(_)) => Ok(None),
+    match crate::eval::one_day(m, &v, "the law pin") {
+        Ok(Ok(day)) => Ok(Some(day)),
+        Ok(Err(_)) => Ok(None),
+        Err(Stop::Refused(r)) if side_keeps(&r) => Ok(None),
         Err(stop) => Err(stop),
     }
+}
+
+/// Whether refusal `r` of a side's law pin leaves the side with no law date: every refusal
+/// but a load refusal met at run and an engine invariant, which are the run's (L §8.3, R-66).
+fn side_keeps(r: &Refusal) -> bool {
+    !matches!(r.code(), Code::Load(_) | Code::EngineInvariant)
 }

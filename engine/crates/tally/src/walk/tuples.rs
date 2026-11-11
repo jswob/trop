@@ -145,6 +145,11 @@ impl Engine {
                 format!("never in the law date of {}", mv.id),
             ));
         }
+        if let Value::Window(_) = v {
+            // a window `at` makes the instance once per law-date class the window overlaps
+            // (L §5.14 `at e`, §4.3; refcore's `m_move_law`): no one-day read, and not built
+            return Err(Stop::NotBuilt("a movement's law date set by a window"));
+        }
         Ok(Law::Day(date_of(&v)?))
     }
 
