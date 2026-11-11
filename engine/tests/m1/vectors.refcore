@@ -221011,6 +221011,173 @@ version v
   opening[sav] = 25.00 PLN at 2027-01-01 start "c"
 ,,1:0,126:t2: (refused: RUN-PLACE sav is -5.00 PLN after the day's observations and plans of 2027-02-01, 4 010.00 PLN)
   cut 2027-01-01
+,18:fixes/g14/t_mb5_wr,9:fixes-g14,18:run t_mb5_wr.tally,1020:14:t_mb5_wr.tally,997:model wr
+  tally 2
+  on 2027-01-01
+  start 2027-01-01
+  end 2027-12-31
+  note "T C10 (invented): a leg read by name while the main walk meets a run-time refusal on the way: a move whose when reads its own kind's instances (MB5's leg_refused, a walk refused at run)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind ovs: event certain
+  leg cash: PLN
+
+input q[m in months]: money PLN
+
+place acct: accounts PLN lives 2027-01-01..
+
+place bank: outside lives 2027-01-01..
+
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from bank to acct amount q[m]
+
+move bad[m in months]: ovs
+  on start_of(m)
+  when count(o in ovs over m) == 0
+  leg cash from bank to acct amount q[m]
+
+ask x1: pay[2027-02].cash.amount
+
+ask x2: bal(acct, 2027-03-31)
+
+ask x3: bad[2027-02].cash.amount
+
+version v
+  cite card
+  governs always
+  known 2027-01-01
+  q[2027-01] = 10.00 PLN "c"
+  q[2027-02] = 20.00 PLN "c"
+  q[2027-03] = 30.00 PLN "c"
+  opening[acct] = 0 PLN at 2027-01-01 start "c"
+,,1:0,167:x1: 20.00 PLN
+  cut 2027-01-01
+x2: refused: RUN-CYCLE bad reads its own instances
+  cut 2027-01-01
+x3: refused: RUN-CYCLE bad reads its own instances
+  cut 2027-01-01
+,25:fixes/g14/t_mb5_plc_ta_t3,9:fixes-g14,31:run t_mb5_plc.tally --ask ta t3,1541:15:t_mb5_plc.tally,1516:model plc
+  tally 2
+  on 2027-01-01
+  start 2027-01-01
+  end 2028-12-31
+  note "T C10 (invented): F4g's form where the walk refuses an event's leg (RUN-PLACE, its place min 0): the def read through the walk up to the leg's day meets the walk's refusal of the leg; and an ask at an earlier cut, whose version refuses another leg, after the later cut's walks up to those days (MB5's prefix walk, the kept walk's cut)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind pot: place PLN min 0
+
+kind ovs: event certain
+  leg cash: PLN
+
+input q[m in months]: money PLN
+
+input base: money PLN
+
+place acct: accounts PLN lives 2027-01-01..
+
+place sav: pot lives 2027-01-01..
+
+place bank: outside lives 2027-01-01..
+
+def p[m in months]: money PLN = if pos(m) == 1 then base else p[m - 1] - sum(o.cash.amount for o in ovs over m)
+
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from acct to bank amount p[m]
+
+move op[m in months]: ovs
+  on start_of(m)
+  leg cash from sav to acct amount q[m]
+
+ask t: p[m] for m in [2027-01, 2027-04]
+
+ask ta: p[2027-03]
+
+ask t3: p[2027-03] as known 2026-12-31
+
+version v0
+  cite card
+  governs always
+  known 2026-12-01
+  base = 1000.00 PLN "c"
+  q[2027-01] = 10.00 PLN "c"
+  q[2027-02] = 20.00 PLN "c"
+  q[2027-03] = 5.00 PLN "c"
+  q[2027-04] = 40.00 PLN "c"
+  opening[acct] = 5000.00 PLN at 2027-01-01 start "c"
+  opening[sav] = 25.00 PLN at 2027-01-01 start "c"
+
+version v
+  cite card
+  governs always
+  known 2027-01-01
+  replace q[2027-02] = 2.00 PLN "c"
+,,1:0,142:ta: 993.00 PLN
+  cut 2027-01-01
+t3: refused: RUN-PLACE sav is -5.00 PLN after the day's observations and plans of 2027-02-01
+  cut 2026-12-31
+,27:fixes/g14/t_mb5_lx_x2_x3_x4,9:fixes-g14,33:run t_mb5_lx.tally --ask x2 x3 x4,1065:14:t_mb5_lx.tally,1041:model lx
+  tally 2
+  on 2027-03-15
+  start 2027-01-01
+  end 2027-12-31
+  note "T C10 (invented): a leg read by name of a plan's instance that didn't exist at its booking cut and a later version made exist (E §5 step 1), and of one no version makes exist (MB5's leg_field)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+input q[m in months]: money PLN
+
+place acct: accounts PLN lives 2027-01-01..
+
+place bank: outside lives 2027-01-01..
+
+move pay[m in months]: transfers
+  on start_of(m)
+  when q[m] > 0
+  leg cash from bank to acct amount q[m]
+
+ask x1: pay[2027-02].cash.amount
+
+ask x2: pay[2027-04].cash.amount
+
+ask x3: bal(acct, 2027-03-31)
+
+ask x4: pay[2027-05].cash.amount
+
+version v1
+  cite card
+  governs always
+  known 2027-01-01
+  q[2027-01] = 10.00 PLN "c"
+  q[2027-02] = 0 PLN "c"
+  q[2027-03] = 30.00 PLN "c"
+  q[2027-04] = 0 PLN "c"
+  q[2027-05] = 50.00 PLN "c"
+  opening[acct] = 0 PLN at 2027-01-01 start "c"
+
+version v2
+  cite card
+  governs always
+  known 2027-03-01
+  replace q[2027-02] = 20.00 PLN "c"
+,,1:0,394:x2: refused: RUN-NONE pay[2027-04] doesn't exist: a field read of it
+  cut 2027-03-15
+x3: ?"pay[2027-02] on 2027-02-01 changed after it was paid (version v2); is back pay due, and when?" (pay[2027-02])
+  adjustment: pay[2027-02] by 20.00 PLN on 2027-03-01 (version v2), remaining 20.00 PLN
+  unfulfilled: pay[2027-01]
+  unfulfilled: pay[2027-03]
+  cut 2027-03-15
+x4: 50.00 PLN
+  cut 2027-03-15
 ,17:fixes/g14/t_mb5_b,9:fixes-g14,17:run t_mb5_b.tally,1542:13:t_mb5_b.tally,1519:model pw
   tally 2
   on 2027-01-01

@@ -20,8 +20,8 @@ HOLE-CALENDAR	L §8.1	S	*	3	S	kernel/g14/past_64_counts
 HOLE-CALENDAR	L §8.1	S	calendar <c> doesn't cover <year>	3	S	kernel/g14/past_64_counts
 HOLE-IMPRECISE	L §8.1	M1	*	50	M1	U:time/TIME-01
 HOLE-IMPRECISE	L §8.1	M1	date within <window> not precise enough for <comparison or use>	50	M1	U:time/TIME-01
-HOLE-CHANGED	L §8.1	S	*	18	S	kernel/g11/adjust
-HOLE-CHANGED	L §8.1	S	<move> on <t> changed after it was paid (version V); is back pay due, and when?	18	S	kernel/g11/adjust
+HOLE-CHANGED	L §8.1	S	*	19	S	kernel/g11/adjust
+HOLE-CHANGED	L §8.1	S	<move> on <t> changed after it was paid (version V); is back pay due, and when?	19	S	kernel/g11/adjust
 HOLE-SAME	L §8.1	M2	*	0	-	-
 HOLE-SAME	L §8.1	M2	<p> and <q> are one, but <x> differs on <d>: <a> (<row>) and <b> (<row>)	0	-	-
 HOLE-SAME	L §8.1	M2	<movement> crosses to <member> with no link	0	-	-
@@ -250,10 +250,10 @@ LOAD-MISSING	L §8.3	M0	missing() outside the when of a cited rule	1	M0	codes/m0
 LOAD-MISSING	L §8.3	M0	missing(<r>): <r> is not a read of an input	1	M0	codes/m0/basic/missing-read
 LOAD-ORIENT	L §8.3	M0	*	1	M0	codes/m0/basic/orient
 LOAD-ORIENT	L §8.3	M0	ask <q> reaches crps or pdf without orient	1	M0	codes/m0/basic/orient
-RUN-NONE	L §8.4	S	*	25	S	kernel/g12/members
+RUN-NONE	L §8.4	S	*	26	S	kernel/g12/members
 RUN-NONE	L §8.4	S	<x>[k] is none here: <arithmetic, ordering, aggregate or comparison with a value>	1	M1	codes/m1/rules/none
 RUN-NONE	L §8.4	S	never in <a use>	18	S	kernel/g12/members
-RUN-NONE	L §8.4	S	?	6	M1	m1/fixes/g12/r_p_mr2_q4
+RUN-NONE	L §8.4	S	?	7	M1	m1/fixes/g12/r_p_mr2_q4
 RUN-NOT-INT	L §8.4	S	*	2	S	kernel/g14/past_64_counts
 RUN-NOT-INT	L §8.4	S	<value> is not an integer	2	S	kernel/g14/past_64_counts
 RUN-KEY	L §8.4	S	*	33	S	kernel/g14/keys_past_64
@@ -262,11 +262,11 @@ RUN-KEY	L §8.4	S	<key> was added after the cut	2	M1	m1/fixes/g13/sites_pz3_mode
 RUN-KEY	L §8.4	S	<d> is outside the days of <def>	1	M1	codes/m1/rules/outside-days
 RUN-KEY	L §8.4	S	draw <n> of <x> passes the last slot of <index>	0	-	-
 RUN-KEY	L §8.4	S	?	17	M1	m1/fixes/g13/r_agent_w_model_with_r_agent_w_a10_a10
-RUN-CYCLE	L §8.4	M5b	*	5	S	kernel/g7/running
+RUN-CYCLE	L §8.4	M5b	*	6	S	kernel/g7/running
 RUN-CYCLE	L §8.4	M5b	<x>[k] reads itself through <path>	3	S	kernel/g7/running
 RUN-CYCLE	L §8.4	M5b	bal(<y>, <d> start) of <q> has no one point: its start pad takes with the day's first batch	0	-	-
 RUN-CYCLE	L §8.4	M5b	the takes of <movements> at <places> read each other in one batch	0	-	-
-RUN-CYCLE	L §8.4	M5b	?	2	M1	m1/fixes/g12/r_agent_mv_mv_a6
+RUN-CYCLE	L §8.4	M5b	?	3	M1	m1/fixes/g12/r_agent_mv_mv_a6
 RUN-CONFLICT	L §8.4	M1	*	5	M1	codes/m1/rules/conflict
 RUN-CONFLICT	L §8.4	M1	rules <a> and <b> both win for <x>[k] on <d>	5	M1	codes/m1/rules/conflict
 RUN-NO-RULE	L §8.4	S	*	4	S	kernel/g2/read
@@ -316,11 +316,11 @@ RUN-WEIGHTS	L §8.4	M1	prorata weights <w> are negative or sum to 0	1	M1	codes/m
 RUN-PRORATA	L §8.4	M1	*	1	M1	codes/m1/rules/prorata
 RUN-PRORATA	L §8.4	M1	<total> isn't a whole number of <u>	1	M1	codes/m1/rules/prorata
 RUN-PRORATA	L §8.4	M1	<amount> arriving at or taken from <place> isn't a whole number of its step <u>	0	-	-
-RUN-PLACE	L §8.4	S	*	35	S	kernel/U:ask/ASK-03
+RUN-PLACE	L §8.4	S	*	36	S	kernel/U:ask/ASK-03
 RUN-PLACE	L §8.4	S	<movement> takes <debt> above 0	1	M1	codes/m1/rules/debt-above
 RUN-PLACE	L §8.4	S	<claim> below 0	16	S	kernel/g9/reading_close
 RUN-PLACE	L §8.4	S	<holding> below 0 units	5	S	kernel/g9/sign
-RUN-PLACE	L §8.4	S	<place> is <b> after the day's observations and plans of <d>	27	S	kernel/U:ask/ASK-03
+RUN-PLACE	L §8.4	S	<place> is <b> after the day's observations and plans of <d>	28	S	kernel/U:ask/ASK-03
 RUN-PLACE	L §8.4	S	<place> is <b> after its reading at <instant>	12	S	kernel/g9/reading_close
 RUN-LIFESPAN	L §8.4	S	*	42	S	kernel/g5/agenda
 RUN-LIFESPAN	L §8.4	S	<leg> moves into or out of <thing> outside its lifespan	36	S	kernel/g6/refusal_keys

@@ -237,8 +237,10 @@ mod tests {
     /// binding tuple (`pt_*`, `r_p_*`; P40's `solve` held for #120); `range_holds` (`rh_*`);
     /// G6 fix 3's listing (`g6f3_*`, held for #121); T's inputs for MB5's missed (`t_mb5_*`):
     /// the walk up to a leg's day, answered, refused at run, read at two days, meeting the
-    /// walk's refusal of the leg (`RUN-PLACE`) and read again at an earlier cut (`t_mb5_pl`);
-    /// leg reads by name; a clause keyed by a unit kind; law-dated price rows.
+    /// walk's refusal of the leg (`RUN-PLACE`) and read again at an earlier cut, its version
+    /// another (`t_mb5_pl`, `t_mb5_plc`); leg reads by name, one while the main walk is refused
+    /// at run (`t_mb5_wr`, `RUN-CYCLE`), of instances no version makes exist (`t_mb5_lx`); a
+    /// clause keyed by a unit kind; law-dated price rows.
     #[test]
     fn m1_fixes_g14_the_sweep() {
         group_holds("fixes-g14");

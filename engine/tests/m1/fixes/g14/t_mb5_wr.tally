@@ -1,0 +1,43 @@
+model wr
+  tally 2
+  on 2027-01-01
+  start 2027-01-01
+  end 2027-12-31
+  note "T C10 (invented): a leg read by name while the main walk meets a run-time refusal on the way: a move whose when reads its own kind's instances (MB5's leg_refused, a walk refused at run)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind ovs: event certain
+  leg cash: PLN
+
+input q[m in months]: money PLN
+
+place acct: accounts PLN lives 2027-01-01..
+
+place bank: outside lives 2027-01-01..
+
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from bank to acct amount q[m]
+
+move bad[m in months]: ovs
+  on start_of(m)
+  when count(o in ovs over m) == 0
+  leg cash from bank to acct amount q[m]
+
+ask x1: pay[2027-02].cash.amount
+
+ask x2: bal(acct, 2027-03-31)
+
+ask x3: bad[2027-02].cash.amount
+
+version v
+  cite card
+  governs always
+  known 2027-01-01
+  q[2027-01] = 10.00 PLN "c"
+  q[2027-02] = 20.00 PLN "c"
+  q[2027-03] = 30.00 PLN "c"
+  opening[acct] = 0 PLN at 2027-01-01 start "c"

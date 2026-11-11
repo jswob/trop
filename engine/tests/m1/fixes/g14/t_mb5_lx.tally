@@ -1,0 +1,46 @@
+model lx
+  tally 2
+  on 2027-03-15
+  start 2027-01-01
+  end 2027-12-31
+  note "T C10 (invented): a leg read by name of a plan's instance that didn't exist at its booking cut and a later version made exist (E §5 step 1), and of one no version makes exist (MB5's leg_field)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+input q[m in months]: money PLN
+
+place acct: accounts PLN lives 2027-01-01..
+
+place bank: outside lives 2027-01-01..
+
+move pay[m in months]: transfers
+  on start_of(m)
+  when q[m] > 0
+  leg cash from bank to acct amount q[m]
+
+ask x1: pay[2027-02].cash.amount
+
+ask x2: pay[2027-04].cash.amount
+
+ask x3: bal(acct, 2027-03-31)
+
+ask x4: pay[2027-05].cash.amount
+
+version v1
+  cite card
+  governs always
+  known 2027-01-01
+  q[2027-01] = 10.00 PLN "c"
+  q[2027-02] = 0 PLN "c"
+  q[2027-03] = 30.00 PLN "c"
+  q[2027-04] = 0 PLN "c"
+  q[2027-05] = 50.00 PLN "c"
+  opening[acct] = 0 PLN at 2027-01-01 start "c"
+
+version v2
+  cite card
+  governs always
+  known 2027-03-01
+  replace q[2027-02] = 20.00 PLN "c"
