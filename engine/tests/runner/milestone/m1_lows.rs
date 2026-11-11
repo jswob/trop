@@ -9,13 +9,14 @@
 //! (`run_with_lows`'s doc). Since F5 answers T's projection reads, T's vectors reach the twin
 //! only where the tree declines; this target reaches it on every read, so the twin's mutants
 //! are T's to catch (R-84 counts T's tests at gate 8; `mutants-local --next` counts this
-//! target). One test per source, so a failure names it. `test = false` until M1's marker
-//! (pick P4).
+//! target). One test per source, and the fix vectors one per group (pick P69), so a failure
+//! names it. `test = false` until M1's marker (pick P4).
 
 #![forbid(unsafe_code)]
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeSet;
     use tally_cli::tally::walk::Lows;
     use tally_cli::tally::{Asks, Days, Given, NotImplemented, Pin, Request, run_with_lows};
     use tally_runner::corpus::{KERNEL_CORPUS, netstrings, records};
@@ -186,16 +187,44 @@ mod tests {
         corpus_holds(M1_CORPUS, 648, 480);
     }
 
-    /// Every fix vector of `m1/vectors.refcore` (groups `fixes-g1` to `fixes-g9`, G9's review
-    /// probes among them), each ask alike under the tree and the twin.
-    #[test]
-    fn m1_lows_the_tree_prints_the_walk_on_the_fix_vectors() {
+    /// The fix vectors' groups of `m1/vectors.refcore`, one test each below, so that each runs
+    /// well inside the mutants profile's time per test (pick P69: the whole store in one test
+    /// passed 120 s on CI's runner).
+    const FIX_GROUPS: [&str; 15] = [
+        "fixes-g1",
+        "fixes-g2",
+        "fixes-g3",
+        "fixes-g4",
+        "fixes-g5",
+        "fixes-g6",
+        "fixes-g7",
+        "fixes-g8",
+        "fixes-g9",
+        "fixes-g10",
+        "fixes-g11",
+        "fixes-g12",
+        "fixes-g13",
+        "fixes-g14",
+        "fixes-open",
+    ];
+
+    /// Every fix vector of `group` in `m1/vectors.refcore` whose place in the group is `part`
+    /// modulo `parts` (a large group runs as several tests, together every vector), each ask
+    /// alike under the tree and the twin; at least `answered` of them answered by both (no
+    /// vacuous pass).
+    fn fixes_hold(group: &str, (part, parts): (usize, usize), answered: usize) {
         let all = vectors(VECTORS).expect("m1/vectors.refcore reads");
         let mine: Vec<_> = all
             .iter()
-            .filter(|v| v.group.starts_with("fixes-"))
+            .filter(|v| v.group == group)
+            .enumerate()
+            .filter(|(i, _)| i.checked_rem(parts) == Some(part))
+            .map(|(_, v)| v)
             .collect();
-        assert!(mine.len() >= 400, "the fix vectors are in the store");
+        assert!(
+            !mine.is_empty(),
+            "the group {group} has vectors in part {part} of {parts}"
+        );
         let mut answered_by_both = Vec::new();
         let mut failed = Vec::new();
         for v in &mine {
@@ -210,12 +239,145 @@ mod tests {
         let both = answered_by_both.iter().filter(|a| **a).count();
         assert!(
             failed.is_empty(),
-            "{} of {} vectors differ:\n{}",
+            "{} of {} vectors of {group} differ:\n{}",
             failed.len(),
             mine.len(),
             failed.join("\n")
         );
-        assert!(both >= 380, "{both} vectors answered by both");
+        assert!(
+            both >= answered,
+            "{both} of {} vectors of {group} answered by both",
+            mine.len()
+        );
+    }
+
+    #[test]
+    fn m1_lows_every_fix_group_is_tested() {
+        let named: BTreeSet<String> = vectors(VECTORS)
+            .expect("m1/vectors.refcore reads")
+            .into_iter()
+            .map(|v| v.group)
+            .filter(|g| g.starts_with("fixes-"))
+            .collect();
+        let tested: BTreeSet<String> = FIX_GROUPS.iter().map(|g| (*g).to_owned()).collect();
+        assert_eq!(
+            named, tested,
+            "each fixes- group of m1/vectors.tsv has its test here"
+        );
+    }
+
+    /// G1's fix vectors (`m1/fixes/g1/`), alike under the tree and the twin.
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g1() {
+        fixes_hold("fixes-g1", (0, 1), 17);
+    }
+
+    /// G2's.
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g2() {
+        fixes_hold("fixes-g2", (0, 1), 22);
+    }
+
+    /// G3's.
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g3() {
+        fixes_hold("fixes-g3", (0, 1), 27);
+    }
+
+    /// G4's.
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g4() {
+        fixes_hold("fixes-g4", (0, 1), 7);
+    }
+
+    /// G5's.
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g5() {
+        fixes_hold("fixes-g5", (0, 1), 17);
+    }
+
+    /// G6's.
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g6() {
+        fixes_hold("fixes-g6", (0, 1), 14);
+    }
+
+    /// G7's.
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g7() {
+        fixes_hold("fixes-g7", (0, 1), 30);
+    }
+
+    /// G8's.
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g8() {
+        fixes_hold("fixes-g8", (0, 1), 95);
+    }
+
+    /// G9's, its review's probes among them, part 1 of 2 (every G9 vector at 0 modulo 2).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g9_part_1() {
+        fixes_hold("fixes-g9", (0, 2), 105);
+    }
+
+    /// G9's, its review's probes among them, part 2 of 2 (every G9 vector at 1 modulo 2).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g9_part_2() {
+        fixes_hold("fixes-g9", (1, 2), 105);
+    }
+
+    /// G10's.
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g10() {
+        fixes_hold("fixes-g10", (0, 1), 101);
+    }
+
+    /// G11's.
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g11() {
+        fixes_hold("fixes-g11", (0, 1), 91);
+    }
+
+    /// G12's, part 1 of 4 (every G12 vector at 0 modulo 4).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g12_part_1() {
+        fixes_hold("fixes-g12", (0, 4), 59);
+    }
+
+    /// G12's, part 2 of 4 (every G12 vector at 1 modulo 4).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g12_part_2() {
+        fixes_hold("fixes-g12", (1, 4), 59);
+    }
+
+    /// G12's, part 3 of 4 (every G12 vector at 2 modulo 4).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g12_part_3() {
+        fixes_hold("fixes-g12", (2, 4), 59);
+    }
+
+    /// G12's, part 4 of 4 (every G12 vector at 3 modulo 4).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g12_part_4() {
+        fixes_hold("fixes-g12", (3, 4), 58);
+    }
+
+    /// G13's.
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g13() {
+        fixes_hold("fixes-g13", (0, 1), 337);
+    }
+
+    /// G14's.
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_g14() {
+        fixes_hold("fixes-g14", (0, 1), 189);
+    }
+
+    /// The reviews' findings kept apart from their groups (`fixes-open`).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_open() {
+        fixes_hold("fixes-open", (0, 1), 3);
     }
 
     /// F5's own realities, every ask of each.
