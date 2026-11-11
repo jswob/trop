@@ -9,7 +9,7 @@ jobs run, with the same flags (R-84, R-88): T's tests unmutated first, the defau
 targets and every gating milestone's but the marker's mutants_leave_out (tools/milestones
 args); then cargo-mutants with
 .cargo/mutants.toml, its kernel list narrowed to FILE, the gating milestones' targets, a
-fixed proptest seed, no failure files, the baseline skipped, `--timeout 300
+fixed proptest seed, no failure files, the baseline skipped, `--timeout 600
 --build-timeout 600`, and each test under the memory cap, each mutant ended at its first
 failing test (nextest's `mutants` profile, tools/test-memcap). The output is engine/target/mutants-local/mutants.out/; the exit is
 cargo-mutants' (0 all caught, 2 some missed, 3 some timed out).
@@ -50,7 +50,7 @@ CONFIG = os.path.join(ENGINE, ".cargo", "mutants.toml")
 OUT = os.path.join(ENGINE, "target", "mutants-local")
 PASSED = ("CARGO_BUILD_JOBS", "NEXTEST_TEST_THREADS")
 # CI's flags (.github/workflows/engine.yml's mutants jobs), the shard aside
-FLAGS = ["--no-shuffle", "--baseline", "skip", "--timeout", "300", "--build-timeout", "600"]
+FLAGS = ["--no-shuffle", "--baseline", "skip", "--timeout", "600", "--build-timeout", "600"]
 
 
 # nextest's line for a finished test: `FAIL [   0.009s] (1/3) tally-runner::m1_format tests::name`

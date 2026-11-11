@@ -25,5 +25,6 @@ examine_globs = [
 skip_calls = []
 # Hung mutants are ended, and counted as not caught (R-87, R-88). The baseline is skipped
 # (above), so no timeout can be derived from it: every command line sets them explicitly,
-# `--timeout 300 --build-timeout 600` (seconds; root package.json and engine.yml). The
+# `--timeout 600 --build-timeout 600` (seconds; root package.json and engine.yml; 300 until
+# pick P72, 2026-11-11: a slow runner's missed mutant ran past it). The
 # lead revisits them once T's suite exists.
