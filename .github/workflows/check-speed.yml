@@ -1,0 +1,118 @@
+# The check-speed study's experiment (tmp/check-speed, 2026-11-12): today's `check full`
+# timed step by step on a GitHub runner, and the same steps split into parallel jobs.
+# On the study's branch only; never merged.
+name: check-speed experiment
+
+on:
+  push:
+    branches: [rules/check-speed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-speed-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: never
+  NIGHTLY: nightly-2026-10-21
+  TOOLS: cargo-nextest@0.9.149 cargo-deny@0.20.2 ast-grep@0.51.0 cargo-fuzz@0.13.2 cargo-mutants@27.1.0 cargo-llvm-cov@0.9.1
+  CARGO_BUILD_JOBS: 4
+  NEXTEST_TEST_THREADS: 4
+
+jobs:
+  timed:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: serial-full-fresh, mode: full, fresh: --fresh, steps: '', cache: true }
+          - { name: lint, mode: full, fresh: '', cache: true, steps: 'fmt,clippy-lib,clippy-tests,doc,build,gungraun-build,exceptions,check-frozen,check-rules,headers,trace,ast-grep-scan,ast-grep-test,deny,deny-tally,tree-probe,special-casing,spec-loadcheck-selftest,spec-loadcheck,guard-test,milestone-report' }
+          - { name: dev-tests, mode: full, fresh: '', cache: true, steps: 'runner,gating,test-dev,doctest' }
+          - { name: dev-tests-nocache, mode: full, fresh: '', cache: false, steps: 'runner,gating,test-dev,doctest' }
+          - { name: release-tests, mode: full, fresh: '', cache: true, steps: 'test-release' }
+          - { name: release-gating, mode: full, fresh: '', cache: true, steps: 'gating-release' }
+          - { name: release-binary, mode: full, fresh: '', cache: true, steps: 'release-binary,fault-injection-probe' }
+          - { name: fuzz, mode: full, fresh: '', cache: true, steps: 'fuzz' }
+          - { name: selftest-whole, mode: full, fresh: --fresh, cache: true, steps: 'rules-selftest' }
+          - { name: gating-part-1, part: 'count:1/3', cache: true }
+          - { name: gating-part-2, part: 'count:2/3', cache: true }
+          - { name: gating-part-3, part: 'count:3/3', cache: true }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cargo-tools
+          key: engine-tools-${{ runner.os }}-${{ env.TOOLS }}
+      - name: Install the toolchains and the cargo tools
+        working-directory: engine
+        run: |
+          t0=$(date +%s)
+          rustup toolchain install
+          rustup toolchain install "$NIGHTLY" --profile minimal
+          for tool in $TOOLS; do
+            if [ ! -x "$HOME/.cargo-tools/bin/${tool%@*}" ]; then
+              cargo install --locked --root "$HOME/.cargo-tools" "${tool%@*}" --version "${tool#*@}"
+            fi
+          done
+          echo "$HOME/.cargo-tools/bin" >> "$GITHUB_PATH"
+          echo "{\"setup_tools_s\": $(( $(date +%s) - t0 ))}" >> "$RUNNER_TEMP/timing.jsonl"
+      # the build outputs a pull request restores today (the newest nightly's engine/target)
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: matrix.cache
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            engine/target
+            !engine/target/walls-green
+            !engine/target/check-logs
+            !engine/target/rules-selftest
+            !engine/target/mutants
+            !engine/target/mutants-local
+          key: engine-build-${{ runner.os }}-${{ env.NIGHTLY }}-${{ hashFiles('engine/Cargo.lock', 'engine/rust-toolchain.toml') }}-none
+          restore-keys: engine-build-${{ runner.os }}-${{ env.NIGHTLY }}-${{ hashFiles('engine/Cargo.lock', 'engine/rust-toolchain.toml') }}-
+      - name: The steps, each timed
+        if: ${{ !matrix.part }}
+        env:
+          WT: ${{ github.workspace }}
+        run: |
+          set -o pipefail
+          args="${{ matrix.mode }} ${{ matrix.fresh }} --out $RUNNER_TEMP/timing.jsonl"
+          if [ -n "${{ matrix.steps }}" ]; then args="$args --steps ${{ matrix.steps }}"; fi
+          python3 -I -B .github/check-speed/timed_check.py $args
+      # T's gating tests in thirds (nextest's partitions), each job compiling its own dev build
+      - name: A third of the gating tests
+        if: ${{ matrix.part }}
+        working-directory: engine
+        env:
+          PROPTEST_RNG_SEED: '20261022'
+          PROPTEST_DISABLE_FAILURE_PERSISTENCE: '1'
+          RUST_BACKTRACE: '1'
+          CARGO_INCREMENTAL: '0'
+        run: |
+          set -o pipefail
+          targets=$(python3 -I -B -c "import sys; sys.path.insert(0, 'tools'); import milestones, os; print(' '.join('--test=' + t for t in milestones.gating_targets(dict(os.environ))[1]))")
+          t0=$(date +%s)
+          cargo nextest run --locked -p tally-runner --all-features --no-run $targets
+          t1=$(date +%s)
+          cargo nextest run --locked -p tally-runner --all-features --partition ${{ matrix.part }} $targets 2>&1 | tail -n 5
+          t2=$(date +%s)
+          echo "{\"step\": \"gating ${{ matrix.part }}\", \"build_s\": $(( t1 - t0 )), \"run_s\": $(( t2 - t1 ))}" >> "$RUNNER_TEMP/timing.jsonl"
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: timing-${{ matrix.name }}
+          path: |
+            ${{ runner.temp }}/timing.jsonl
+            engine/target/check-logs/
+            engine/target/rules-selftest/logs/
+          retention-days: 14
