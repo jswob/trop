@@ -222743,4 +222743,556 @@ version card_2026
   opening[konto] = 0 PLN at 2026-01-01 start "the card"
   opening[kasa] = 0 EUR at 2026-01-01 start "the card"
 ,,1:1,91:refused: LOAD-UNIT the amount of leg cash of nil[kasa, konto] (0) is in no unit of a place
+,21:fixes/gate8/r137_none,11:fixes-gate8,69:run r137_base.tally r137_none.tally --ask s3a s3b s3c s3d s3e s3f s3g,2563:15:r137_base.tally,1561:model rb
+  tally 2
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T C15 (invented, the #137 review's base): two anchored readings of konto, a padded reading of ko2 from w, openings, a top-up between; the scenarios below replace them (L §6.4, §4.6 step 2, §5.19; issue #137)"
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place ko2: accounts PLN lives 2026-01-01..
+place world: outside lives 2026-01-01..
+place w: outside lives 2026-01-01..
+
+input amt: money PLN
+input dd: date
+
+move top: transfers
+  on dd
+  leg cash from world to konto amount amt
+
+move top2: transfers
+  on dd
+  leg cash from world to ko2 amount amt
+
+ask b1: bal(konto, 2026-02-27), bal(konto, 2026-02-28), bal(konto, 2026-03-31), bal(konto, 2026-01-15 start), bal(konto, 2026-01-15)
+ask b2: bal(ko2, 2026-02-09), bal(ko2, 2026-02-10), bal(ko2, 2026-02-28), bal(w, PLN, 2026-02-28)
+ask b3: gap(konto, 2026-02-28), gap(ko2, 2026-02-28)
+ask b4: explain bal(konto, 2026-03-31)
+ask b5: explain bal(ko2, 2026-03-31)
+ask b6: bal(konto, 2026-02-28), bal(ko2, 2026-02-28) as known 2026-03-01
+
+version v
+  cite card
+  governs 2026-01..2026-02
+  known 2026-03-05
+  anchor konto
+  pad ko2 from w
+  opening[konto] = 0 at 2026-01-01 start "base"
+  opening[ko2] = 5.00 PLN at 2026-01-01 start "base"
+  stated[konto] = 100 at 2026-02-28 end "base"
+  stated[konto] = 30 at 2026-01-15 end "base"
+  stated[ko2] = 40 at 2026-02-28 end "base"
+
+version facts
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN
+  dd = 2026-02-10
+,15:r137_none.tally,953:scenario s3 over rb
+  tally 2
+  from 2026-01-01
+  note "T C15 (the #137 review's s3): replace = none removes the readings and their pad; the balance is booked on from the earlier reading (L §5.19; issue #137)"
+
+version s3_v
+  cite card
+  governs 2026-01..2026-02
+  known 2026-03-01
+  anchor konto
+  pad ko2 from w
+  replace stated[konto] = none at 2026-02-28 end "s3"
+  replace stated[ko2] = none at 2026-02-28 end "s3"
+
+ask s3a: bal(konto, 2026-01-15), bal(konto, 2026-02-20), bal(konto, 2026-02-28), bal(konto, 2026-03-31) in s3
+ask s3b: bal(ko2, 2026-01-01 start), bal(ko2, 2026-02-28), bal(ko2, 2026-03-31), bal(w, PLN, 2026-03-31) in s3
+ask s3c: gap(konto, 2026-02-28), gap(ko2, 2026-02-28) in s3
+ask s3d: explain bal(konto, 2026-03-31) in s3
+ask s3e: explain bal(ko2, 2026-03-31) in s3
+ask s3f: bal(konto, 2026-02-28), bal(ko2, 2026-02-28) in s3 as known 2026-03-15
+ask s3g: bal(konto, 2026-02-28), bal(ko2, 2026-02-28) in s3 as known 2026-04-15
+,,1:0,1612:s3a: (30.00 PLN, 40.00 PLN, 100.00 PLN, 100.00 PLN)
+  world: s3
+  anchor: konto 2026-01-15 end, stated 30.00 PLN, difference 30.00 PLN
+  anchor: konto 2026-02-28 end, stated 100.00 PLN, difference 60.00 PLN
+  unfulfilled: top
+  cut 2026-04-30
+s3b: (5.00 PLN, 40.00 PLN, 40.00 PLN, -25.00 PLN)
+  world: s3
+  pad: ko2 2026-02-28 end, pads:v:ko2@2026-02-28 end of 25.00 PLN
+  unfulfilled: top2
+  cut 2026-04-30
+s3c: (60.00 PLN, 25.00 PLN)
+  world: s3
+  anchor: konto 2026-01-15 end, stated 30.00 PLN, difference 30.00 PLN
+  unfulfilled: top
+  unfulfilled: top2
+  cut 2026-04-30
+s3d: 100.00 PLN
+  balance of konto (PLN) at the end of 2026-03-31
+  from: anchor v:stated[konto] = 100.00 PLN, 2026-02-28 end (version v, source card, locator "base"), gap role anchor, gap 60.00 PLN
+  no movement
+  world: s3
+  anchor: konto 2026-02-28 end, stated 100.00 PLN, difference 60.00 PLN
+  cut 2026-04-30
+s3e: 40.00 PLN
+  balance of ko2 (PLN) at the end of 2026-03-31
+  from: pad v:stated[ko2] = 40.00 PLN, 2026-02-28 end (version v, source card, locator "base"), gap role pad from w, gap 25.00 PLN (pads:v:ko2@2026-02-28 end)
+  no movement
+  world: s3
+  pad: ko2 2026-02-28 end, pads:v:ko2@2026-02-28 end of 25.00 PLN
+  cut 2026-04-30
+s3f: (100.00 PLN, 40.00 PLN)
+  world: s3
+  anchor: konto 2026-02-28 end, stated 100.00 PLN, difference 60.00 PLN
+  pad: ko2 2026-02-28 end, pads:v:ko2@2026-02-28 end of 25.00 PLN
+  cut 2026-03-15
+s3g: (100.00 PLN, 40.00 PLN)
+  world: s3
+  anchor: konto 2026-02-28 end, stated 100.00 PLN, difference 60.00 PLN
+  pad: ko2 2026-02-28 end, pads:v:ko2@2026-02-28 end of 25.00 PLN
+  cut 2026-04-15
+,24:fixes/gate8/r137_opening,11:fixes-gate8,72:run r137_base.tally r137_opening.tally --ask s5a s5b s5c s5d s5e s5f s5g,2493:15:r137_base.tally,1561:model rb
+  tally 2
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T C15 (invented, the #137 review's base): two anchored readings of konto, a padded reading of ko2 from w, openings, a top-up between; the scenarios below replace them (L §6.4, §4.6 step 2, §5.19; issue #137)"
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place ko2: accounts PLN lives 2026-01-01..
+place world: outside lives 2026-01-01..
+place w: outside lives 2026-01-01..
+
+input amt: money PLN
+input dd: date
+
+move top: transfers
+  on dd
+  leg cash from world to konto amount amt
+
+move top2: transfers
+  on dd
+  leg cash from world to ko2 amount amt
+
+ask b1: bal(konto, 2026-02-27), bal(konto, 2026-02-28), bal(konto, 2026-03-31), bal(konto, 2026-01-15 start), bal(konto, 2026-01-15)
+ask b2: bal(ko2, 2026-02-09), bal(ko2, 2026-02-10), bal(ko2, 2026-02-28), bal(w, PLN, 2026-02-28)
+ask b3: gap(konto, 2026-02-28), gap(ko2, 2026-02-28)
+ask b4: explain bal(konto, 2026-03-31)
+ask b5: explain bal(ko2, 2026-03-31)
+ask b6: bal(konto, 2026-02-28), bal(ko2, 2026-02-28) as known 2026-03-01
+
+version v
+  cite card
+  governs 2026-01..2026-02
+  known 2026-03-05
+  anchor konto
+  pad ko2 from w
+  opening[konto] = 0 at 2026-01-01 start "base"
+  opening[ko2] = 5.00 PLN at 2026-01-01 start "base"
+  stated[konto] = 100 at 2026-02-28 end "base"
+  stated[konto] = 30 at 2026-01-15 end "base"
+  stated[ko2] = 40 at 2026-02-28 end "base"
+
+version facts
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN
+  dd = 2026-02-10
+,18:r137_opening.tally,880:scenario s5 over rb
+  tally 2
+  from 2026-01-01
+  note "T C15 (the #137 review's s5): the openings replaced, known the base's day; the pad follows (L §6.4; issue #137)"
+
+version s5_v
+  cite card
+  governs 2026-01..2026-02
+  known 2026-03-05
+  replace opening[konto] = 7 at 2026-01-01 start "s5"
+  replace opening[ko2] = 9 at 2026-01-01 start "s5"
+
+ask s5a: bal(konto, 2026-01-15), bal(konto, 2026-02-20), bal(konto, 2026-02-28), bal(konto, 2026-03-31) in s5
+ask s5b: bal(ko2, 2026-01-01 start), bal(ko2, 2026-02-28), bal(ko2, 2026-03-31), bal(w, PLN, 2026-03-31) in s5
+ask s5c: gap(konto, 2026-02-28), gap(ko2, 2026-02-28) in s5
+ask s5d: explain bal(konto, 2026-03-31) in s5
+ask s5e: explain bal(ko2, 2026-03-31) in s5
+ask s5f: bal(konto, 2026-02-28), bal(ko2, 2026-02-28) in s5 as known 2026-03-15
+ask s5g: bal(konto, 2026-02-28), bal(ko2, 2026-02-28) in s5 as known 2026-04-15
+,,1:0,1612:s5a: (30.00 PLN, 40.00 PLN, 100.00 PLN, 100.00 PLN)
+  world: s5
+  anchor: konto 2026-01-15 end, stated 30.00 PLN, difference 30.00 PLN
+  anchor: konto 2026-02-28 end, stated 100.00 PLN, difference 60.00 PLN
+  unfulfilled: top
+  cut 2026-04-30
+s5b: (5.00 PLN, 40.00 PLN, 40.00 PLN, -25.00 PLN)
+  world: s5
+  pad: ko2 2026-02-28 end, pads:v:ko2@2026-02-28 end of 25.00 PLN
+  unfulfilled: top2
+  cut 2026-04-30
+s5c: (60.00 PLN, 25.00 PLN)
+  world: s5
+  anchor: konto 2026-01-15 end, stated 30.00 PLN, difference 30.00 PLN
+  unfulfilled: top
+  unfulfilled: top2
+  cut 2026-04-30
+s5d: 100.00 PLN
+  balance of konto (PLN) at the end of 2026-03-31
+  from: anchor v:stated[konto] = 100.00 PLN, 2026-02-28 end (version v, source card, locator "base"), gap role anchor, gap 60.00 PLN
+  no movement
+  world: s5
+  anchor: konto 2026-02-28 end, stated 100.00 PLN, difference 60.00 PLN
+  cut 2026-04-30
+s5e: 40.00 PLN
+  balance of ko2 (PLN) at the end of 2026-03-31
+  from: pad v:stated[ko2] = 40.00 PLN, 2026-02-28 end (version v, source card, locator "base"), gap role pad from w, gap 25.00 PLN (pads:v:ko2@2026-02-28 end)
+  no movement
+  world: s5
+  pad: ko2 2026-02-28 end, pads:v:ko2@2026-02-28 end of 25.00 PLN
+  cut 2026-04-30
+s5f: (100.00 PLN, 40.00 PLN)
+  world: s5
+  anchor: konto 2026-02-28 end, stated 100.00 PLN, difference 60.00 PLN
+  pad: ko2 2026-02-28 end, pads:v:ko2@2026-02-28 end of 25.00 PLN
+  cut 2026-03-15
+s5g: (100.00 PLN, 40.00 PLN)
+  world: s5
+  anchor: konto 2026-02-28 end, stated 100.00 PLN, difference 60.00 PLN
+  pad: ko2 2026-02-28 end, pads:v:ko2@2026-02-28 end of 25.00 PLN
+  cut 2026-04-15
+,29:fixes/gate8/r137_opening_none,11:fixes-gate8,67:run r137_base.tally r137_opening_none.tally --ask s14ba s14bk s14bm,2243:15:r137_base.tally,1561:model rb
+  tally 2
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T C15 (invented, the #137 review's base): two anchored readings of konto, a padded reading of ko2 from w, openings, a top-up between; the scenarios below replace them (L §6.4, §4.6 step 2, §5.19; issue #137)"
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place ko2: accounts PLN lives 2026-01-01..
+place world: outside lives 2026-01-01..
+place w: outside lives 2026-01-01..
+
+input amt: money PLN
+input dd: date
+
+move top: transfers
+  on dd
+  leg cash from world to konto amount amt
+
+move top2: transfers
+  on dd
+  leg cash from world to ko2 amount amt
+
+ask b1: bal(konto, 2026-02-27), bal(konto, 2026-02-28), bal(konto, 2026-03-31), bal(konto, 2026-01-15 start), bal(konto, 2026-01-15)
+ask b2: bal(ko2, 2026-02-09), bal(ko2, 2026-02-10), bal(ko2, 2026-02-28), bal(w, PLN, 2026-02-28)
+ask b3: gap(konto, 2026-02-28), gap(ko2, 2026-02-28)
+ask b4: explain bal(konto, 2026-03-31)
+ask b5: explain bal(ko2, 2026-03-31)
+ask b6: bal(konto, 2026-02-28), bal(ko2, 2026-02-28) as known 2026-03-01
+
+version v
+  cite card
+  governs 2026-01..2026-02
+  known 2026-03-05
+  anchor konto
+  pad ko2 from w
+  opening[konto] = 0 at 2026-01-01 start "base"
+  opening[ko2] = 5.00 PLN at 2026-01-01 start "base"
+  stated[konto] = 100 at 2026-02-28 end "base"
+  stated[konto] = 30 at 2026-01-15 end "base"
+  stated[ko2] = 40 at 2026-02-28 end "base"
+
+version facts
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN
+  dd = 2026-02-10
+,23:r137_opening_none.tally,625:scenario s14b over rb
+  tally 2
+  from 2026-01-01
+  note "T C15 (the #137 review's s14b): ko2's opening replaced with none, known before the base's (L §6.4, §5.19; issue #137)"
+
+version x_v
+  cite card
+  governs 2026-01..2026-02
+  known 2026-03-01
+  replace opening[ko2] = none at 2026-01-01 start "ko2 opening removed"
+
+ask s14ba: bal(konto, 2026-01-10), bal(konto, 2026-01-15), bal(konto, 2026-02-28), bal(ko2, 2026-01-10), bal(ko2, 2026-02-28) in s14b
+ask s14bk: bal(konto, 2026-02-28), bal(ko2, 2026-02-28) in s14b as known 2026-03-03
+ask s14bm: bal(konto, 2026-02-28), bal(ko2, 2026-02-28) in s14b as known 2026-03-20
+,,1:0,602:s14ba: (0.00 PLN, 30.00 PLN, 100.00 PLN, 5.00 PLN, 40.00 PLN)
+  world: s14b
+  anchor: konto 2026-01-15 end, stated 30.00 PLN, difference 30.00 PLN
+  anchor: konto 2026-02-28 end, stated 100.00 PLN, difference 60.00 PLN
+  pad: ko2 2026-02-28 end, pads:v:ko2@2026-02-28 end of 25.00 PLN
+  cut 2026-04-30
+s14bk: (10.00 PLN, 10.00 PLN)
+  world: s14b
+  unfulfilled: top
+  unfulfilled: top2
+  cut 2026-03-03
+s14bm: (100.00 PLN, 40.00 PLN)
+  world: s14b
+  anchor: konto 2026-02-28 end, stated 100.00 PLN, difference 60.00 PLN
+  pad: ko2 2026-02-28 end, pads:v:ko2@2026-02-28 end of 25.00 PLN
+  cut 2026-03-20
+,22:fixes/gate8/r137_stack,11:fixes-gate8,84:run r137_base.tally r137_s1.tally r137_stack.tally --ask s6a s6b s6c s6d s6e s6f s6g,3356:15:r137_base.tally,1561:model rb
+  tally 2
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T C15 (invented, the #137 review's base): two anchored readings of konto, a padded reading of ko2 from w, openings, a top-up between; the scenarios below replace them (L §6.4, §4.6 step 2, §5.19; issue #137)"
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place ko2: accounts PLN lives 2026-01-01..
+place world: outside lives 2026-01-01..
+place w: outside lives 2026-01-01..
+
+input amt: money PLN
+input dd: date
+
+move top: transfers
+  on dd
+  leg cash from world to konto amount amt
+
+move top2: transfers
+  on dd
+  leg cash from world to ko2 amount amt
+
+ask b1: bal(konto, 2026-02-27), bal(konto, 2026-02-28), bal(konto, 2026-03-31), bal(konto, 2026-01-15 start), bal(konto, 2026-01-15)
+ask b2: bal(ko2, 2026-02-09), bal(ko2, 2026-02-10), bal(ko2, 2026-02-28), bal(w, PLN, 2026-02-28)
+ask b3: gap(konto, 2026-02-28), gap(ko2, 2026-02-28)
+ask b4: explain bal(konto, 2026-03-31)
+ask b5: explain bal(ko2, 2026-03-31)
+ask b6: bal(konto, 2026-02-28), bal(ko2, 2026-02-28) as known 2026-03-01
+
+version v
+  cite card
+  governs 2026-01..2026-02
+  known 2026-03-05
+  anchor konto
+  pad ko2 from w
+  opening[konto] = 0 at 2026-01-01 start "base"
+  opening[ko2] = 5.00 PLN at 2026-01-01 start "base"
+  stated[konto] = 100 at 2026-02-28 end "base"
+  stated[konto] = 30 at 2026-01-15 end "base"
+  stated[ko2] = 40 at 2026-02-28 end "base"
+
+version facts
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN
+  dd = 2026-02-10
+,13:r137_s1.tally,804:scenario s1 over rb
+  tally 2
+  from 2026-01-01
+  note "T C15 (the #137 review's s1): the 01-15 reading replaced alone (issue #137)"
+
+version s1_v
+  cite card
+  governs 2026-01..2026-02
+  known 2026-03-05
+  anchor konto
+  replace stated[konto] = 33 at 2026-01-15 end "s1"
+
+ask s1a: bal(konto, 2026-01-15), bal(konto, 2026-02-20), bal(konto, 2026-02-28), bal(konto, 2026-03-31) in s1
+ask s1b: bal(ko2, 2026-01-01 start), bal(ko2, 2026-02-28), bal(ko2, 2026-03-31), bal(w, PLN, 2026-03-31) in s1
+ask s1c: gap(konto, 2026-02-28), gap(ko2, 2026-02-28) in s1
+ask s1d: explain bal(konto, 2026-03-31) in s1
+ask s1e: explain bal(ko2, 2026-03-31) in s1
+ask s1f: bal(konto, 2026-02-28), bal(ko2, 2026-02-28) in s1 as known 2026-03-15
+ask s1g: bal(konto, 2026-02-28), bal(ko2, 2026-02-28) in s1 as known 2026-04-15
+,16:r137_stack.tally,919:scenario s6 over s1
+  tally 2
+  from 2026-01-01
+  note "T C15 (the #137 review's s6): a scenario over s1 whose replace, known before s1's, beats it and the base's (a stack; L §6.4; issue #137)"
+
+version s6_v
+  cite card
+  governs 2026-01..2026-02
+  known 2026-03-01
+  anchor konto
+  replace stated[konto] = 44 at 2026-01-15 end "s6"
+  replace stated[konto] = 300 at 2026-02-28 end "s6"
+
+ask s6a: bal(konto, 2026-01-15), bal(konto, 2026-02-20), bal(konto, 2026-02-28), bal(konto, 2026-03-31) in s6
+ask s6b: bal(ko2, 2026-01-01 start), bal(ko2, 2026-02-28), bal(ko2, 2026-03-31), bal(w, PLN, 2026-03-31) in s6
+ask s6c: gap(konto, 2026-02-28), gap(ko2, 2026-02-28) in s6
+ask s6d: explain bal(konto, 2026-03-31) in s6
+ask s6e: explain bal(ko2, 2026-03-31) in s6
+ask s6f: bal(konto, 2026-02-28), bal(ko2, 2026-02-28) in s6 as known 2026-03-15
+ask s6g: bal(konto, 2026-02-28), bal(ko2, 2026-02-28) in s6 as known 2026-04-15
+,,1:0,1612:s6a: (30.00 PLN, 40.00 PLN, 100.00 PLN, 100.00 PLN)
+  world: s6
+  anchor: konto 2026-01-15 end, stated 30.00 PLN, difference 30.00 PLN
+  anchor: konto 2026-02-28 end, stated 100.00 PLN, difference 60.00 PLN
+  unfulfilled: top
+  cut 2026-04-30
+s6b: (5.00 PLN, 40.00 PLN, 40.00 PLN, -25.00 PLN)
+  world: s6
+  pad: ko2 2026-02-28 end, pads:v:ko2@2026-02-28 end of 25.00 PLN
+  unfulfilled: top2
+  cut 2026-04-30
+s6c: (60.00 PLN, 25.00 PLN)
+  world: s6
+  anchor: konto 2026-01-15 end, stated 30.00 PLN, difference 30.00 PLN
+  unfulfilled: top
+  unfulfilled: top2
+  cut 2026-04-30
+s6d: 100.00 PLN
+  balance of konto (PLN) at the end of 2026-03-31
+  from: anchor v:stated[konto] = 100.00 PLN, 2026-02-28 end (version v, source card, locator "base"), gap role anchor, gap 60.00 PLN
+  no movement
+  world: s6
+  anchor: konto 2026-02-28 end, stated 100.00 PLN, difference 60.00 PLN
+  cut 2026-04-30
+s6e: 40.00 PLN
+  balance of ko2 (PLN) at the end of 2026-03-31
+  from: pad v:stated[ko2] = 40.00 PLN, 2026-02-28 end (version v, source card, locator "base"), gap role pad from w, gap 25.00 PLN (pads:v:ko2@2026-02-28 end)
+  no movement
+  world: s6
+  pad: ko2 2026-02-28 end, pads:v:ko2@2026-02-28 end of 25.00 PLN
+  cut 2026-04-30
+s6f: (100.00 PLN, 40.00 PLN)
+  world: s6
+  anchor: konto 2026-02-28 end, stated 100.00 PLN, difference 60.00 PLN
+  pad: ko2 2026-02-28 end, pads:v:ko2@2026-02-28 end of 25.00 PLN
+  cut 2026-03-15
+s6g: (100.00 PLN, 40.00 PLN)
+  world: s6
+  anchor: konto 2026-02-28 end, stated 100.00 PLN, difference 60.00 PLN
+  pad: ko2 2026-02-28 end, pads:v:ko2@2026-02-28 end of 25.00 PLN
+  cut 2026-04-15
+,21:fixes/gate8/r137_role,11:fixes-gate8,69:run r137_base.tally r137_role.tally --ask s7a s7b s7c s7d s7e s7f s7g,2512:15:r137_base.tally,1561:model rb
+  tally 2
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T C15 (invented, the #137 review's base): two anchored readings of konto, a padded reading of ko2 from w, openings, a top-up between; the scenarios below replace them (L §6.4, §4.6 step 2, §5.19; issue #137)"
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place ko2: accounts PLN lives 2026-01-01..
+place world: outside lives 2026-01-01..
+place w: outside lives 2026-01-01..
+
+input amt: money PLN
+input dd: date
+
+move top: transfers
+  on dd
+  leg cash from world to konto amount amt
+
+move top2: transfers
+  on dd
+  leg cash from world to ko2 amount amt
+
+ask b1: bal(konto, 2026-02-27), bal(konto, 2026-02-28), bal(konto, 2026-03-31), bal(konto, 2026-01-15 start), bal(konto, 2026-01-15)
+ask b2: bal(ko2, 2026-02-09), bal(ko2, 2026-02-10), bal(ko2, 2026-02-28), bal(w, PLN, 2026-02-28)
+ask b3: gap(konto, 2026-02-28), gap(ko2, 2026-02-28)
+ask b4: explain bal(konto, 2026-03-31)
+ask b5: explain bal(ko2, 2026-03-31)
+ask b6: bal(konto, 2026-02-28), bal(ko2, 2026-02-28) as known 2026-03-01
+
+version v
+  cite card
+  governs 2026-01..2026-02
+  known 2026-03-05
+  anchor konto
+  pad ko2 from w
+  opening[konto] = 0 at 2026-01-01 start "base"
+  opening[ko2] = 5.00 PLN at 2026-01-01 start "base"
+  stated[konto] = 100 at 2026-02-28 end "base"
+  stated[konto] = 30 at 2026-01-15 end "base"
+  stated[ko2] = 40 at 2026-02-28 end "base"
+
+version facts
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN
+  dd = 2026-02-10
+,15:r137_role.tally,902:scenario s7 over rb
+  tally 2
+  from 2026-01-01
+  note "T C15 (the #137 review's s7): ko2's reading replaced in a version that anchors ko2, where the base pads it: the replacing row takes its own version's role (L §5.19; issue #137)"
+
+version s7_v
+  cite card
+  governs 2026-01..2026-02
+  known 2026-03-01
+  anchor ko2
+  replace stated[ko2] = 90 at 2026-02-28 end "s7"
+
+ask s7a: bal(konto, 2026-01-15), bal(konto, 2026-02-20), bal(konto, 2026-02-28), bal(konto, 2026-03-31) in s7
+ask s7b: bal(ko2, 2026-01-01 start), bal(ko2, 2026-02-28), bal(ko2, 2026-03-31), bal(w, PLN, 2026-03-31) in s7
+ask s7c: gap(konto, 2026-02-28), gap(ko2, 2026-02-28) in s7
+ask s7d: explain bal(konto, 2026-03-31) in s7
+ask s7e: explain bal(ko2, 2026-03-31) in s7
+ask s7f: bal(konto, 2026-02-28), bal(ko2, 2026-02-28) in s7 as known 2026-03-15
+ask s7g: bal(konto, 2026-02-28), bal(ko2, 2026-02-28) in s7 as known 2026-04-15
+,,1:0,1612:s7a: (30.00 PLN, 40.00 PLN, 100.00 PLN, 100.00 PLN)
+  world: s7
+  anchor: konto 2026-01-15 end, stated 30.00 PLN, difference 30.00 PLN
+  anchor: konto 2026-02-28 end, stated 100.00 PLN, difference 60.00 PLN
+  unfulfilled: top
+  cut 2026-04-30
+s7b: (5.00 PLN, 40.00 PLN, 40.00 PLN, -25.00 PLN)
+  world: s7
+  pad: ko2 2026-02-28 end, pads:v:ko2@2026-02-28 end of 25.00 PLN
+  unfulfilled: top2
+  cut 2026-04-30
+s7c: (60.00 PLN, 25.00 PLN)
+  world: s7
+  anchor: konto 2026-01-15 end, stated 30.00 PLN, difference 30.00 PLN
+  unfulfilled: top
+  unfulfilled: top2
+  cut 2026-04-30
+s7d: 100.00 PLN
+  balance of konto (PLN) at the end of 2026-03-31
+  from: anchor v:stated[konto] = 100.00 PLN, 2026-02-28 end (version v, source card, locator "base"), gap role anchor, gap 60.00 PLN
+  no movement
+  world: s7
+  anchor: konto 2026-02-28 end, stated 100.00 PLN, difference 60.00 PLN
+  cut 2026-04-30
+s7e: 40.00 PLN
+  balance of ko2 (PLN) at the end of 2026-03-31
+  from: pad v:stated[ko2] = 40.00 PLN, 2026-02-28 end (version v, source card, locator "base"), gap role pad from w, gap 25.00 PLN (pads:v:ko2@2026-02-28 end)
+  no movement
+  world: s7
+  pad: ko2 2026-02-28 end, pads:v:ko2@2026-02-28 end of 25.00 PLN
+  cut 2026-04-30
+s7f: (100.00 PLN, 40.00 PLN)
+  world: s7
+  anchor: konto 2026-02-28 end, stated 100.00 PLN, difference 60.00 PLN
+  pad: ko2 2026-02-28 end, pads:v:ko2@2026-02-28 end of 25.00 PLN
+  cut 2026-03-15
+s7g: (100.00 PLN, 40.00 PLN)
+  world: s7
+  anchor: konto 2026-02-28 end, stated 100.00 PLN, difference 60.00 PLN
+  pad: ko2 2026-02-28 end, pads:v:ko2@2026-02-28 end of 25.00 PLN
+  cut 2026-04-15
 ,

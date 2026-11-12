@@ -1,0 +1,52 @@
+model rb
+  tally 2
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T C15 (invented, the #137 review's base): two anchored readings of konto, a padded reading of ko2 from w, openings, a top-up between; the scenarios below replace them (L §6.4, §4.6 step 2, §5.19; issue #137)"
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place ko2: accounts PLN lives 2026-01-01..
+place world: outside lives 2026-01-01..
+place w: outside lives 2026-01-01..
+
+input amt: money PLN
+input dd: date
+
+move top: transfers
+  on dd
+  leg cash from world to konto amount amt
+
+move top2: transfers
+  on dd
+  leg cash from world to ko2 amount amt
+
+ask b1: bal(konto, 2026-02-27), bal(konto, 2026-02-28), bal(konto, 2026-03-31), bal(konto, 2026-01-15 start), bal(konto, 2026-01-15)
+ask b2: bal(ko2, 2026-02-09), bal(ko2, 2026-02-10), bal(ko2, 2026-02-28), bal(w, PLN, 2026-02-28)
+ask b3: gap(konto, 2026-02-28), gap(ko2, 2026-02-28)
+ask b4: explain bal(konto, 2026-03-31)
+ask b5: explain bal(ko2, 2026-03-31)
+ask b6: bal(konto, 2026-02-28), bal(ko2, 2026-02-28) as known 2026-03-01
+
+version v
+  cite card
+  governs 2026-01..2026-02
+  known 2026-03-05
+  anchor konto
+  pad ko2 from w
+  opening[konto] = 0 at 2026-01-01 start "base"
+  opening[ko2] = 5.00 PLN at 2026-01-01 start "base"
+  stated[konto] = 100 at 2026-02-28 end "base"
+  stated[konto] = 30 at 2026-01-15 end "base"
+  stated[ko2] = 40 at 2026-02-28 end "base"
+
+version facts
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN
+  dd = 2026-02-10

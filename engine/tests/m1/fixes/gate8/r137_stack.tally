@@ -1,0 +1,20 @@
+scenario s6 over s1
+  tally 2
+  from 2026-01-01
+  note "T C15 (the #137 review's s6): a scenario over s1 whose replace, known before s1's, beats it and the base's (a stack; L §6.4; issue #137)"
+
+version s6_v
+  cite card
+  governs 2026-01..2026-02
+  known 2026-03-01
+  anchor konto
+  replace stated[konto] = 44 at 2026-01-15 end "s6"
+  replace stated[konto] = 300 at 2026-02-28 end "s6"
+
+ask s6a: bal(konto, 2026-01-15), bal(konto, 2026-02-20), bal(konto, 2026-02-28), bal(konto, 2026-03-31) in s6
+ask s6b: bal(ko2, 2026-01-01 start), bal(ko2, 2026-02-28), bal(ko2, 2026-03-31), bal(w, PLN, 2026-03-31) in s6
+ask s6c: gap(konto, 2026-02-28), gap(ko2, 2026-02-28) in s6
+ask s6d: explain bal(konto, 2026-03-31) in s6
+ask s6e: explain bal(ko2, 2026-03-31) in s6
+ask s6f: bal(konto, 2026-02-28), bal(ko2, 2026-02-28) in s6 as known 2026-03-15
+ask s6g: bal(konto, 2026-02-28), bal(ko2, 2026-02-28) in s6 as known 2026-04-15

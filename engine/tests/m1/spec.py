@@ -2,7 +2,9 @@
 MILESTONE-M1.md row 8). Standard library only.
 
 A vector of m1/vectors.tsv holds refcore's bytes, and refcore can't hold an input it crashes on (`REFCORE-NOT-YET`,
-INTERFACE.md §3). Where the spec gives the answer, spec.tsv holds it, one vector per row:
+INTERFACE.md §3). Where the spec gives the answer, spec.tsv holds it, one vector per row. It also holds the spec's
+answer where refcore answers otherwise and the vector of m1/vectors.tsv of the same id keeps refcore's bytes, held
+"for #n" in held.tsv (C15: the #137 review's probes, `fixes/gate8/r137_*`); `--refcore` then lists those too:
 
     id  group  check  cwd  files  asks  options  section  code  out
 

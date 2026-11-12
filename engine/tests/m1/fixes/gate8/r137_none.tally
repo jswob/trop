@@ -1,0 +1,21 @@
+scenario s3 over rb
+  tally 2
+  from 2026-01-01
+  note "T C15 (the #137 review's s3): replace = none removes the readings and their pad; the balance is booked on from the earlier reading (L §5.19; issue #137)"
+
+version s3_v
+  cite card
+  governs 2026-01..2026-02
+  known 2026-03-01
+  anchor konto
+  pad ko2 from w
+  replace stated[konto] = none at 2026-02-28 end "s3"
+  replace stated[ko2] = none at 2026-02-28 end "s3"
+
+ask s3a: bal(konto, 2026-01-15), bal(konto, 2026-02-20), bal(konto, 2026-02-28), bal(konto, 2026-03-31) in s3
+ask s3b: bal(ko2, 2026-01-01 start), bal(ko2, 2026-02-28), bal(ko2, 2026-03-31), bal(w, PLN, 2026-03-31) in s3
+ask s3c: gap(konto, 2026-02-28), gap(ko2, 2026-02-28) in s3
+ask s3d: explain bal(konto, 2026-03-31) in s3
+ask s3e: explain bal(ko2, 2026-03-31) in s3
+ask s3f: bal(konto, 2026-02-28), bal(ko2, 2026-02-28) in s3 as known 2026-03-15
+ask s3g: bal(konto, 2026-02-28), bal(ko2, 2026-02-28) in s3 as known 2026-04-15

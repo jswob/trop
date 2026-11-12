@@ -1,0 +1,14 @@
+scenario s14b over rb
+  tally 2
+  from 2026-01-01
+  note "T C15 (the #137 review's s14b): ko2's opening replaced with none, known before the base's (L §6.4, §5.19; issue #137)"
+
+version x_v
+  cite card
+  governs 2026-01..2026-02
+  known 2026-03-01
+  replace opening[ko2] = none at 2026-01-01 start "ko2 opening removed"
+
+ask s14ba: bal(konto, 2026-01-10), bal(konto, 2026-01-15), bal(konto, 2026-02-28), bal(ko2, 2026-01-10), bal(ko2, 2026-02-28) in s14b
+ask s14bk: bal(konto, 2026-02-28), bal(ko2, 2026-02-28) in s14b as known 2026-03-03
+ask s14bm: bal(konto, 2026-02-28), bal(ko2, 2026-02-28) in s14b as known 2026-03-20

@@ -542,7 +542,10 @@ mod tests {
     /// section named; T reads the engine's run against it before storing it): G13 fix's holes
     /// of a window or an interval (L §4.4), `never` as a range end (L §5.7), the key-input
     /// twins of key arithmetic (L §2.5, §3.2), row ranges of whole values (L §4.6 step 1), and
-    /// `lifespan` of a movement refused at load (P68, #136).
+    /// `lifespan` of a movement refused at load (P68, #136). Also where refcore answers otherwise,
+    /// its vector held for #137 (C15, the #137 review's probes `fixes/gate8/r137_*`): a scenario's
+    /// `replace` of base readings with `none`, of the openings, a scenario over a scenario, and a
+    /// replacing row's own version's gap role (L §6.4, §4.6 step 2, §5.19).
     #[test]
     fn m1_fixes_the_spec_where_refcore_crashes() {
         let all = vectors(SPEC).expect("m1/spec.vectors reads");

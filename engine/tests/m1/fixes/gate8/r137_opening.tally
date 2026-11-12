@@ -1,0 +1,19 @@
+scenario s5 over rb
+  tally 2
+  from 2026-01-01
+  note "T C15 (the #137 review's s5): the openings replaced, known the base's day; the pad follows (L §6.4; issue #137)"
+
+version s5_v
+  cite card
+  governs 2026-01..2026-02
+  known 2026-03-05
+  replace opening[konto] = 7 at 2026-01-01 start "s5"
+  replace opening[ko2] = 9 at 2026-01-01 start "s5"
+
+ask s5a: bal(konto, 2026-01-15), bal(konto, 2026-02-20), bal(konto, 2026-02-28), bal(konto, 2026-03-31) in s5
+ask s5b: bal(ko2, 2026-01-01 start), bal(ko2, 2026-02-28), bal(ko2, 2026-03-31), bal(w, PLN, 2026-03-31) in s5
+ask s5c: gap(konto, 2026-02-28), gap(ko2, 2026-02-28) in s5
+ask s5d: explain bal(konto, 2026-03-31) in s5
+ask s5e: explain bal(ko2, 2026-03-31) in s5
+ask s5f: bal(konto, 2026-02-28), bal(ko2, 2026-02-28) in s5 as known 2026-03-15
+ask s5g: bal(konto, 2026-02-28), bal(ko2, 2026-02-28) in s5 as known 2026-04-15

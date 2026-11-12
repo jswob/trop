@@ -1,0 +1,19 @@
+scenario s7 over rb
+  tally 2
+  from 2026-01-01
+  note "T C15 (the #137 review's s7): ko2's reading replaced in a version that anchors ko2, where the base pads it: the replacing row takes its own version's role (L §5.19; issue #137)"
+
+version s7_v
+  cite card
+  governs 2026-01..2026-02
+  known 2026-03-01
+  anchor ko2
+  replace stated[ko2] = 90 at 2026-02-28 end "s7"
+
+ask s7a: bal(konto, 2026-01-15), bal(konto, 2026-02-20), bal(konto, 2026-02-28), bal(konto, 2026-03-31) in s7
+ask s7b: bal(ko2, 2026-01-01 start), bal(ko2, 2026-02-28), bal(ko2, 2026-03-31), bal(w, PLN, 2026-03-31) in s7
+ask s7c: gap(konto, 2026-02-28), gap(ko2, 2026-02-28) in s7
+ask s7d: explain bal(konto, 2026-03-31) in s7
+ask s7e: explain bal(ko2, 2026-03-31) in s7
+ask s7f: bal(konto, 2026-02-28), bal(ko2, 2026-02-28) in s7 as known 2026-03-15
+ask s7g: bal(konto, 2026-02-28), bal(ko2, 2026-02-28) in s7 as known 2026-04-15
