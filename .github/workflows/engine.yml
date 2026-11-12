@@ -260,13 +260,17 @@ jobs:
           [ -f "$history" ] || history=tools/mutants-gate-seed.json
           echo "mutants-gate: the plan from $history"
           tools/mutants-gate plan target/mutants-plan/mutants.json "$history" 100 target/mutants-plan/plan.json
+          # the 20 s check measures the runner against the same history (pick P73)
+          cp "$history" target/mutants-plan/history.json
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: mutants-plan
           path: engine/target/mutants-plan/
 
-  # a T test over 20 s in the baseline fails the run (R-88), but stops no shard: the verdicts
-  # are judged all the same, and T splits the test
+  # a T test over 20 s on the median runner fails the run (R-88), but stops no shard: the
+  # verdicts are judged all the same, and T splits the test. Each baseline time counts over the
+  # runner's speed against the plan's history; a single vector tools/milestones.toml names
+  # has its 40 s ceiling (pick P73)
   mutants-slow-tests:
     name: mutants baseline, 20 s a test
     needs: mutants-baseline
@@ -278,8 +282,8 @@ jobs:
         with:
           name: mutants-plan
           path: engine/target/mutants-plan
-      - name: No T test in the mutation set over 20 s
-        run: engine/tools/mutants-gate slow engine/target/mutants-plan/times.json
+      - name: No T test in the mutation set over 20 s on the median runner
+        run: engine/tools/mutants-gate slow engine/target/mutants-plan/times.json engine/target/mutants-plan/history.json
 
   # the coverage map, from the commit under test and never reused (R-133): T's mutation
   # targets built with -C instrument-coverage and run once, each test with its own profile

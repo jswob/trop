@@ -28,6 +28,17 @@ gating = ["S", "M0", "M1"]
 # 42138863547's 1 229 caught mutants they alone caught 3, for which T adds direct
 # tests (the 2.1.6 round). They still run in `check` and CI's test jobs
 mutants_leave_out = ["m0_load"]
+# Gate 8's 20 s check (R-88; pick P73, issue #108, 2026-11-12): each T test of the mutation
+# set takes at most 20 s on the median runner (its baseline time over the runner's speed,
+# which tools/mutants-gate finds against the plan's history), but these, each a single
+# vector T can't split, at most their ceiling there, 40 s (3x is the 120 s kill). A name
+# that is no longer a test of the run fails the check, so the list stays true.
+mutants_slow_tests = [
+  # the vector shifts alone
+  { test = "tally-runner::s_kernel tests::s_kernel_g14_capacity_part_1", seconds = 35.3, ceiling = 40, measured = "run 43180053789's baseline: 48.3 s at 1.37x the median runner" },
+  # the vector ex_m alone
+  { test = "tally-runner::m1_lows tests::m1_lows_the_tree_prints_the_walk_on_fixes_g14_part_3", seconds = 38.4, ceiling = 40, measured = "run 43180053789's baseline: 52.6 s at 1.37x the median runner" },
+]
 # The fences' equivalence tests (R-130), catchers of a local mutation batch only, with
 # `mutants-local --fences` (R-88; pick P55, issue #108, 2026-11-09): once a fence answers T's
 # reads, only its equivalence test reaches its plain twin. Not the mutants shards' or their
