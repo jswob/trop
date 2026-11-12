@@ -128,7 +128,7 @@ package = { "*" = { opt-level = 2 } }
 
 [profile.quick]
 inherits = "release-test"
-lto = false
+lto = "off"
 codegen-units = 16
 incremental = true
 
