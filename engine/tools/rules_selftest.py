@@ -21,7 +21,8 @@ here. Then:
 
 Cases that only add Rust files are linted together, one cargo run per package and pass;
 a case that misses there runs again alone before it counts as a failure. Nothing needs
-the network after the first `cargo fetch`: the crates the cases plant are fakes, built
+the network after the first `cargo fetch` (the engine's crates and the gungraun benches',
+so a CI shard needs no other step before it): the crates the cases plant are fakes, built
 in engine/target/rules-selftest/fakes/.
 
 A case file holds one or more cases:
@@ -963,10 +964,13 @@ def main():
         print(f"FAIL setup: the scratch repository: {e}")
         return 1
     with open(os.path.join(LOGS, "clean.log"), "w", encoding="utf-8") as log:
-        fetched = run(["cargo", "fetch", "--locked"], log, env(fetching=False) | {"CARGO_NET_OFFLINE": "false"})
-        if fetched.returncode != 0:
-            print("FAIL setup: cargo fetch --locked failed (see target/rules-selftest/logs/clean.log)")
-            return 1
+        # the engine's crates and the gungraun benches' (R-77's gungraun case builds them):
+        # a CI shard runs alone, with no earlier step that fetched them (2026-11-13)
+        for manifest in ([], ["--manifest-path", "tools/gungraun/Cargo.toml"]):
+            fetched = run(["cargo", "fetch", "--locked", *manifest], log, env(fetching=False) | {"CARGO_NET_OFFLINE": "false"})
+            if fetched.returncode != 0:
+                print(f"FAIL setup: cargo fetch --locked {' '.join(manifest)} failed (see target/rules-selftest/logs/clean.log)")
+                return 1
         clean = clean_run(log)
     if clean:
         for p in clean:
