@@ -80,7 +80,7 @@ def target_args(binaries):
     out = [FEATURES]
     for b in sorted(binaries):
         out.append("--lib" if b == "tally_runner" else f"--test={b}")
-    return out or ["--lib"]
+    return out if binaries else out + ["--lib"]
 
 
 def filterset(tests):
@@ -101,6 +101,8 @@ def main():
     ap.add_argument("--all-tests", action="store_true",
                     help="a full run's emulation: every test of every target, no selection")
     ap.add_argument("--prio")
+    ap.add_argument("--plan", help="make_plan.py's shards (with --shard i/n) and the mutants "
+                                   "built with the kernel at opt-level 1")
     ap.add_argument("--timeout", type=float, default=600)
     ap.add_argument("--build-timeout", type=float, default=600)
     o = ap.parse_args()
@@ -124,8 +126,19 @@ def main():
     if dirty:
         raise SystemExit(f"the crates aren't clean, a mutant may be left in place:\n{dirty}")
     signal.signal(signal.SIGTERM, lambda *_: (_ for _ in ()).throw(SystemExit("SIGTERM")))
+    plan = json.load(open(o.plan)) if o.plan else {"o1": []}
+    o1 = set(plan["o1"])
     if o.names:
         names = [l.rstrip("\n") for l in open(o.names) if l.strip()]
+    elif o.plan:
+        # every listed mutant in exactly one shard, no other name (R-86: no skips)
+        planned = [x for s in plan["shards"] for x in s]
+        if sorted(planned) != sorted(muts) or not o1 <= set(muts):
+            raise SystemExit("the plan's mutants aren't cargo-mutants' list")
+        i, n = map(int, o.shard.split("/"))
+        if n != len(plan["shards"]):
+            raise SystemExit(f"the plan has {len(plan['shards'])} shards, not {n}")
+        names = plan["shards"][i]
     else:
         i, n = map(int, o.shard.split("/"))
         names = [m["name"] for k, m in enumerate(json.load(open(o.mutants))) if k % n == i]
@@ -152,10 +165,15 @@ def main():
         log = os.path.join(o.out, f"{n:04d}.log")
         open(log, "w").write(f"{name}\nselected {len(tests)}: {tests}\n")
         rec = {"name": name, "selected": len(tests), "targets": sorted(bins)}
+        # a likely survivor runs every selected test: its kernel at opt-level 1 runs them
+        # faster; overflow checks and debug assertions stay on, so the verdict is the same
+        opt = ["--config", "profile.mutants.package.tally.opt-level=1"] if name in o1 else []
+        if opt:
+            rec["o1"] = True
         try:
             open(path, "w").write(apply(orig, m["diff"]))
             base = ["cargo", "nextest", "run", "--cargo-profile=mutants",
-                    "--package=tally-runner@0.1.0", "--locked"] + target_args(bins)
+                    "--package=tally-runner@0.1.0", "--locked"] + opt + target_args(bins)
             code, bt = run(base[:3] + ["--no-run"] + base[3:], o.engine, o.build_timeout, log)
             rec["build"] = round(bt, 1)
             if code != 0:

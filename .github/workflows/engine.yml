@@ -70,17 +70,19 @@ jobs:
           name: study-coverage
           path: engine/target/cov.json
 
-  # every mutant of `cargo mutants --list`, round-robin as cargo-mutants shards them
-  # (mutant i on shard i % 24); each on its selected tests, killers first
+  # every mutant of `cargo mutants --list`, in the 100 shards of mutation-study/plan.json
+  # (balanced by each mutant's cost in run 43112710673; GitHub runs 20 at once and starts a
+  # queued one when a job ends); each on its selected tests, killers first, the plan's
+  # likely survivors with the kernel at opt-level 1
   study-mutants:
-    name: study mutants ${{ matrix.shard }}/24
+    name: study mutants ${{ matrix.shard }}/100
     needs: study-coverage
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
-        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -99,7 +101,7 @@ jobs:
         run: |
           cargo mutants --list --json > target/mutants.json
           start=$(date +%s)
-          python3 -I ../mutation-study/gate8_select.py --engine crates --mutants target/mutants.json --cov target/cov.json --prio ../mutation-study/prio.json --shard ${{ matrix.shard }}/24 --out target/study --timeout 600 --build-timeout 600
+          python3 -I ../mutation-study/gate8_select.py --engine crates --mutants target/mutants.json --cov target/cov.json --prio ../mutation-study/prio.json --plan ../mutation-study/plan.json --shard ${{ matrix.shard }}/100 --out target/study --timeout 600 --build-timeout 600
           echo "study: shard $(( $(date +%s) - start )) s"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
