@@ -222427,4 +222427,108 @@ x2: pay[2026-01]
   read at its walk point: konto
   leg cash from konto to shop amount 80.00 PLN
   cut 2026-02-15
+,24:fixes/gate8/reading_same,11:fixes-gate8,65:run reading.tally reading_same.tally reading_early.tally --ask qs,1302:13:reading.tally,670:model rd
+  tally 2
+  on 2026-03-10
+  start 2026-01-01
+  end 2026-12-31
+  note "T C14 (invented): a scenario's replace of a base reading at the same instant, its version known the base's day or earlier; it wins whatever the known dates (L §6.4, §4.6 step 2; issue #137)"
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+ask q: bal(konto, 2026-02-28) in rd
+
+ask qs: bal(konto, 2026-02-28) in same
+
+ask qe: bal(konto, 2026-02-28) in early
+
+version v
+  cite card
+  governs 2026-01..2026-02
+  known 2026-03-05
+  anchor konto
+  opening[konto] = 0 at 2026-01-01 start "base"
+  stated[konto] = 100 at 2026-02-28 end "base"
+,18:reading_same.tally,275:scenario same over rd
+  tally 2
+  from 2026-01-01
+  note "T C14 (invented): its version known the base's day (issue #137)"
+
+version same_v
+  cite card
+  governs 2026-01..2026-02
+  known 2026-03-05
+  anchor konto
+  replace stated[konto] = 200 at 2026-02-28 end "the scenario"
+,19:reading_early.tally,280:scenario early over rd
+  tally 2
+  from 2026-01-01
+  note "T C14 (invented): its version known before the base's (issue #137)"
+
+version early_v
+  cite card
+  governs 2026-01..2026-02
+  known 2026-03-01
+  anchor konto
+  replace stated[konto] = 200 at 2026-02-28 end "the scenario"
+,,1:0,119:qs: 100.00 PLN
+  world: same
+  anchor: konto 2026-02-28 end, stated 100.00 PLN, difference 100.00 PLN
+  cut 2026-03-10
+,25:fixes/gate8/reading_early,11:fixes-gate8,65:run reading.tally reading_same.tally reading_early.tally --ask qe,1302:13:reading.tally,670:model rd
+  tally 2
+  on 2026-03-10
+  start 2026-01-01
+  end 2026-12-31
+  note "T C14 (invented): a scenario's replace of a base reading at the same instant, its version known the base's day or earlier; it wins whatever the known dates (L §6.4, §4.6 step 2; issue #137)"
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+ask q: bal(konto, 2026-02-28) in rd
+
+ask qs: bal(konto, 2026-02-28) in same
+
+ask qe: bal(konto, 2026-02-28) in early
+
+version v
+  cite card
+  governs 2026-01..2026-02
+  known 2026-03-05
+  anchor konto
+  opening[konto] = 0 at 2026-01-01 start "base"
+  stated[konto] = 100 at 2026-02-28 end "base"
+,18:reading_same.tally,275:scenario same over rd
+  tally 2
+  from 2026-01-01
+  note "T C14 (invented): its version known the base's day (issue #137)"
+
+version same_v
+  cite card
+  governs 2026-01..2026-02
+  known 2026-03-05
+  anchor konto
+  replace stated[konto] = 200 at 2026-02-28 end "the scenario"
+,19:reading_early.tally,280:scenario early over rd
+  tally 2
+  from 2026-01-01
+  note "T C14 (invented): its version known before the base's (issue #137)"
+
+version early_v
+  cite card
+  governs 2026-01..2026-02
+  known 2026-03-01
+  anchor konto
+  replace stated[konto] = 200 at 2026-02-28 end "the scenario"
+,,1:0,120:qe: 100.00 PLN
+  world: early
+  anchor: konto 2026-02-28 end, stated 100.00 PLN, difference 100.00 PLN
+  cut 2026-03-10
 ,

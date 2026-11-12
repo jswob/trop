@@ -486,10 +486,46 @@ mod tests {
     /// equivalents review's (C14): a money def whose winning rule turns from a written 0.01 PLN
     /// to `minor(PLN)` in a scenario, which `diff` counts unchanged (`tier`: `money.rs`
     /// `Units::from_i128`, pick P76); a past decision fulfilled by an observation on its own day,
-    /// read at its point (`own_obs`: `point.rs` `At::with_sub`).
+    /// read at its point (`own_obs`: `point.rs` `At::with_sub`); a scenario's `replace` of a base
+    /// reading (`reading_same`, `reading_early`), held for #137 here and tested by
+    /// `m1_fixes_a_scenario_replace_of_a_reading_wins`.
     #[test]
     fn m1_fixes_gate8_survivors() {
         group_holds("fixes-gate8", (0, 1));
+    }
+
+    /// A scenario's `replace` of a base row wins on its span whatever the two rows' `known`
+    /// dates (L §6.4, §4.6 step 2; issue #137, pick P75): its reading of `konto` at 2026-02-28's
+    /// end, 200.00 PLN against the base's 100.00 PLN, anchors the balance in the scenario, its
+    /// version known the base's day (`reading_same`) or before it (`reading_early`). The vectors
+    /// keep refcore's bytes (the base's 100.00 PLN), held for #137 in their group; the spec's
+    /// answer is this test's: red until the builder's fix.
+    #[test]
+    fn m1_fixes_a_scenario_replace_of_a_reading_wins() {
+        let all = vectors(VECTORS).expect("m1/vectors.refcore reads");
+        let mine: Vec<_> = all
+            .iter()
+            .filter(|v| v.id.starts_with("fixes/gate8/reading_"))
+            .collect();
+        assert_eq!(mine.len(), 2, "#137's two vectors are in the store");
+        let anchor = "  anchor: konto 2026-02-28 end, stated 200.00 PLN, difference 200.00 PLN";
+        let failed: Vec<String> = mine
+            .iter()
+            .filter_map(|v| {
+                let out = run_args(&v.args, &v.files).out;
+                let answer = out.lines().next().unwrap_or_default();
+                let wins = answer.ends_with(": 200.00 PLN") && out.lines().any(|l| l == anchor);
+                (!wins)
+                    .then(|| format!("{}: {}", v.id, out.lines().collect::<Vec<_>>().join(" / ")))
+            })
+            .collect();
+        assert!(
+            failed.is_empty(),
+            "{} of {} vectors differ from the spec's answer:\n{}",
+            failed.len(),
+            mine.len(),
+            failed.join("\n")
+        );
     }
 
     /// Where refcore crashes (`REFCORE-NOT-YET`), the spec's answer (`m1/spec.tsv`, each row's

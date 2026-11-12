@@ -1,0 +1,11 @@
+scenario early over rd
+  tally 2
+  from 2026-01-01
+  note "T C14 (invented): its version known before the base's (issue #137)"
+
+version early_v
+  cite card
+  governs 2026-01..2026-02
+  known 2026-03-01
+  anchor konto
+  replace stated[konto] = 200 at 2026-02-28 end "the scenario"
