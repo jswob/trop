@@ -222281,4 +222281,150 @@ p3: refused: RUN-LIFESPAN late[2026-06].cash moves into or out of old outside it
   cut 2026-01-01
 p4: refused: RUN-LIFESPAN late[2026-06].cash moves into or out of old outside its lifespan
   cut 2026-01-01
+,16:fixes/gate8/tier,11:fixes-gate8,29:run tier.tally tier_alt.tally,1204:10:tier.tally,936:model zp
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T C14 (invented): a money def whose winning rule changes in a scenario from a written 0.01 PLN to minor(PLN), the same value; diff counts it unchanged (gate 8's equivalents review, row 9: money.rs Units::from_i128, pick P76)"
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+input flag: int
+
+input asked_on: date
+
+input amt: money PLN
+
+input cent: money PLN
+
+def x: money PLN at asked_on
+  rule base = amt
+  rule zero beats base = 0 when flag == 1
+
+def y: money PLN at asked_on
+  rule base = cent
+  rule one beats base = minor(PLN) when flag == 1
+
+ask d: diff(x) in alt against zp
+
+ask e: diff(y) in alt against zp
+
+ask f: x, y
+
+version v
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  flag = 0 "base"
+  amt = 0.00 PLN "base"
+  cent = 0.01 PLN "base"
+
+version w
+  cite card
+  governs always
+  known 2026-01-01
+  asked_on = 2026-06-01 "base"
+,14:tier_alt.tally,226:scenario alt over zp
+  tally 2
+  from 2026-01-01
+  note "T C14 (invented): the scenario that turns the flag on (pick P76)"
+
+version alt_v
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  replace flag = 1 "the scenario"
+,,1:0,677:d: diff in alt against zp: 0 changed, 0 added, 0 removed, 1 unchanged
+  world: alt
+  world: zp
+  held: amt = 0.00 PLN (v), read for 2026-06-01
+  held: flag = 0 (v), read for 2026-06-01
+  held: flag = 1 (alt_v), read for 2026-06-01
+  cut 2026-03-01
+e: diff in alt against zp: 0 changed, 0 added, 0 removed, 1 unchanged
+  world: alt
+  world: zp
+  held: cent = 0.01 PLN (v), read for 2026-06-01
+  held: flag = 0 (v), read for 2026-06-01
+  held: flag = 1 (alt_v), read for 2026-06-01
+  cut 2026-03-01
+f: (0.00 PLN, 0.01 PLN)
+  held: amt = 0.00 PLN (v), read for 2026-06-01
+  held: cent = 0.01 PLN (v), read for 2026-06-01
+  held: flag = 0 (v), read for 2026-06-01
+  cut 2026-03-01
+,19:fixes/gate8/own_obs,11:fixes-gate8,17:run own_obs.tally,1370:13:own_obs.tally,1347:model own_obs
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T C14 (invented): a past decision fulfilled by an observation on its own day, its own legs and the observation's at one point (E §4.2 step 3, L §5.19; gate 8's open survivor, point.rs At::with_sub)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+kind pot: place PLN min 0
+
+place konto: pot lives 2026-01-01..
+
+place shop: outside lives 2026-01-01..
+
+input bank: observed
+
+input plan_amt: money PLN
+
+input low_mark: money PLN
+
+input pay_dom: int
+
+move pay[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  reads konto
+  leg cash from konto to shop amount if bal(konto) > low_mark then plan_amt else low_mark
+
+ask b1: bal(konto, 2026-01-31)
+
+ask l1: low(konto, 2026-01-01 .. 2026-01-31)
+
+ask x1: explain bal(konto, 2026-01-31)
+
+ask x2: explain pay[2026-01]
+
+version facts
+  cite card
+  governs always
+  known 2025-12-01
+  plan_amt = 80.00 PLN "the plan"
+  low_mark = 50.00 PLN "the mark"
+  pay_dom = 10 "the day"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "the card"
+
+version bank_jan
+  cite card
+  governs 2026-01
+  known 2026-02-02
+  bank[b20260110] = (on: 2026-01-10, kind: transfers, leg cash from konto to shop amount 60.00 PLN, fulfils: pay[2026-01]) "paid less than planned"
+,,1:0,539:b1: 40.00 PLN
+  cut 2026-02-15
+l1: 40.00 PLN
+  cut 2026-02-15
+x1: 40.00 PLN
+  balance of konto (PLN) at the end of 2026-01-31
+  from: opening facts:opening[konto] = 100.00 PLN, 2026-01-01 start (version facts, source card, locator "the card")
+  2026-01-10:
+    bank[b20260110].cash (observed): -60.00 PLN
+  cut 2026-02-15
+x2: pay[2026-01]
+  decision, day 2026-01-10, status modelled
+  stratum 1, walk point (2026-01-10, stratum 1, pay|000000)
+  read at its walk point: konto
+  leg cash from konto to shop amount 80.00 PLN
+  cut 2026-02-15
 ,

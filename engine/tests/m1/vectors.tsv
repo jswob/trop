@@ -1523,3 +1523,5 @@ fixes/gate8/linkdiv	fixes-gate8		engine/tests/m1/fixes/gate8	engine/tests/m1/fix
 fixes/gate8/linkdiv2	fixes-gate8		engine/tests/m1/fixes/gate8	engine/tests/m1/fixes/gate8/linkdiv2.tally			-
 fixes/gate8/sec2	fixes-gate8		engine/tests/m1/fixes/gate8	engine/tests/m1/fixes/gate8/sec2.tally			-
 fixes/gate8/floor3	fixes-gate8		engine/tests/m1/fixes/gate8	engine/tests/m1/fixes/gate8/floor3.tally			-
+fixes/gate8/tier	fixes-gate8		engine/tests/m1/fixes/gate8	engine/tests/m1/fixes/gate8/tier.tally engine/tests/m1/fixes/gate8/tier_alt.tally			-
+fixes/gate8/own_obs	fixes-gate8		engine/tests/m1/fixes/gate8	engine/tests/m1/fixes/gate8/own_obs.tally			-

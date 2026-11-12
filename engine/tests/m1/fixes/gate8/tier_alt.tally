@@ -1,0 +1,10 @@
+scenario alt over zp
+  tally 2
+  from 2026-01-01
+  note "T C14 (invented): the scenario that turns the flag on (pick P76)"
+
+version alt_v
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  replace flag = 1 "the scenario"

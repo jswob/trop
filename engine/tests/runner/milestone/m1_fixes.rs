@@ -482,7 +482,11 @@ mod tests {
     /// legs are such (`floor`, `floor2`, `floor3`: `lows.rs` `Gathered::leg`); a decision reading a keyed place's section after one booking
     /// to its thing, and the two reading each other, `RUN-ORDER` (`sec`, `sec2`: `order.rs`
     /// `things_of`); a row fulfilling a move whose `when` is refused at the cut, alone and true
-    /// at its booking cut (`linkdiv`, `linkdiv2`: `tuples.rs` `link_tuple`).
+    /// at its booking cut (`linkdiv`, `linkdiv2`: `tuples.rs` `link_tuple`). Then the
+    /// equivalents review's (C14): a money def whose winning rule turns from a written 0.01 PLN
+    /// to `minor(PLN)` in a scenario, which `diff` counts unchanged (`tier`: `money.rs`
+    /// `Units::from_i128`, pick P76); a past decision fulfilled by an observation on its own day,
+    /// read at its point (`own_obs`: `point.rs` `At::with_sub`).
     #[test]
     fn m1_fixes_gate8_survivors() {
         group_holds("fixes-gate8", (0, 1));
