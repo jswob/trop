@@ -1527,3 +1527,7 @@ fixes/gate8/tier	fixes-gate8		engine/tests/m1/fixes/gate8	engine/tests/m1/fixes/
 fixes/gate8/own_obs	fixes-gate8		engine/tests/m1/fixes/gate8	engine/tests/m1/fixes/gate8/own_obs.tally			-
 fixes/gate8/reading_same	fixes-gate8		engine/tests/m1/fixes/gate8	engine/tests/m1/fixes/gate8/reading.tally engine/tests/m1/fixes/gate8/reading_same.tally engine/tests/m1/fixes/gate8/reading_early.tally	qs		-
 fixes/gate8/reading_early	fixes-gate8		engine/tests/m1/fixes/gate8	engine/tests/m1/fixes/gate8/reading.tally engine/tests/m1/fixes/gate8/reading_same.tally engine/tests/m1/fixes/gate8/reading_early.tally	qe		-
+fixes/gate8/due_alone	fixes-gate8		engine/tests/m1/fixes/gate8	engine/tests/m1/fixes/gate8/due_alone.tally			-
+fixes/gate8/restate3	fixes-gate8		engine/tests/m1/fixes/gate8	engine/tests/m1/fixes/gate8/restate3.tally			-
+fixes/gate8/reading_restated	fixes-gate8		engine/tests/m1/fixes/gate8	engine/tests/m1/fixes/gate8/reading_restated.tally engine/tests/m1/fixes/gate8/reading_restated_alt.tally	qr		-
+fixes/gate8/zero2	fixes-gate8		engine/tests/m1/fixes/gate8	engine/tests/m1/fixes/gate8/zero2.tally			-

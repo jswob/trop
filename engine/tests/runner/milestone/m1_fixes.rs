@@ -488,18 +488,25 @@ mod tests {
     /// `Units::from_i128`, pick P76); a past decision fulfilled by an observation on its own day,
     /// read at its point (`own_obs`: `point.rs` `At::with_sub`); a scenario's `replace` of a base
     /// reading (`reading_same`, `reading_early`), held for #137 here and tested by
-    /// `m1_fixes_a_scenario_replace_of_a_reading_wins`.
+    /// `m1_fixes_a_scenario_replace_of_a_reading_wins`. Then C15's, for the rows 1cd5847 left
+    /// open: a move of an order group due alone with two instances, the second reading the jar
+    /// the first books, one way, `RUN-TIE` (`due_alone`: `order.rs` `run_decisions`, `is_due`);
+    /// three readings of one place and instant, the second and third `replace`, the third's
+    /// standing (`restate3`), and a base reading restated after a scenario's `replace` of it
+    /// (`reading_restated`, held for #137): `reading.rs` `replaced`; a 0 with no unit between
+    /// two bound places of two units (`zero2`: `legs.rs` `leg_amount`).
     #[test]
     fn m1_fixes_gate8_survivors() {
         group_holds("fixes-gate8", (0, 1));
     }
 
     /// A scenario's `replace` of a base row wins on its span whatever the two rows' `known`
-    /// dates (L §6.4, §4.6 step 2; issue #137, pick P75): its reading of `konto` at 2026-02-28's
-    /// end, 200.00 PLN against the base's 100.00 PLN, anchors the balance in the scenario, its
-    /// version known the base's day (`reading_same`) or before it (`reading_early`). The vectors
-    /// keep refcore's bytes (the base's 100.00 PLN), held for #137 in their group; the spec's
-    /// answer is this test's: red until the builder's fix.
+    /// dates (L §6.4, §4.6 step 2; issue #137, pick P75): its reading of `konto`, 200.00 PLN
+    /// against the base's 100.00 PLN, anchors the balance in the scenario, its version known the
+    /// base's day (`reading_same`) or before it (`reading_early`); and against the base's 150.00
+    /// PLN where the base restates its own reading with `replace` after the scenario's is known
+    /// (`reading_restated`, C15). The vectors keep refcore's bytes (the base's), held for #137 in
+    /// their group; the spec's answer is this test's (the engine's since bf92d27).
     #[test]
     fn m1_fixes_a_scenario_replace_of_a_reading_wins() {
         let all = vectors(VECTORS).expect("m1/vectors.refcore reads");
@@ -507,14 +514,17 @@ mod tests {
             .iter()
             .filter(|v| v.id.starts_with("fixes/gate8/reading_"))
             .collect();
-        assert_eq!(mine.len(), 2, "#137's two vectors are in the store");
-        let anchor = "  anchor: konto 2026-02-28 end, stated 200.00 PLN, difference 200.00 PLN";
+        assert_eq!(mine.len(), 3, "#137's three vectors are in the store");
+        let anchor = ", stated 200.00 PLN, difference 200.00 PLN";
         let failed: Vec<String> = mine
             .iter()
             .filter_map(|v| {
                 let out = run_args(&v.args, &v.files).out;
                 let answer = out.lines().next().unwrap_or_default();
-                let wins = answer.ends_with(": 200.00 PLN") && out.lines().any(|l| l == anchor);
+                let wins = answer.ends_with(": 200.00 PLN")
+                    && out
+                        .lines()
+                        .any(|l| l.starts_with("  anchor: konto ") && l.ends_with(anchor));
                 (!wins)
                     .then(|| format!("{}: {}", v.id, out.lines().collect::<Vec<_>>().join(" / ")))
             })

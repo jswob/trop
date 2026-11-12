@@ -222531,4 +222531,216 @@ version early_v
   world: early
   anchor: konto 2026-02-28 end, stated 100.00 PLN, difference 100.00 PLN
   cut 2026-03-10
+,21:fixes/gate8/due_alone,11:fixes-gate8,19:run due_alone.tally,1610:15:due_alone.tally,1585:model due_alone
+  tally 2
+  on 2026-03-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T C15 (invented): a move of an order group due alone on its day, two instances, no ties by, the second reading the jar the first books, one way only (L §5.14.2; gate 8's open survivors, order.rs run_decisions and is_due)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+index box = [first, second]
+
+place jar[b in box]: accounts PLN lives 2026-01-01..
+
+place pool: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input a_dom: int
+
+input b_dom: int
+
+input mark: money PLN
+
+input small: money PLN
+
+input big: money PLN
+
+move a_put[b in box, m in month]: transfers
+  on day_of(m, a_dom)
+  at start_of(m)
+  reads jar, pool
+  leg cash from world to jar[b] amount if bal(jar[first]) + bal(pool) > mark then small else big
+
+move b_feed[m in month]: transfers
+  on day_of(m, b_dom)
+  at start_of(m)
+  reads jar
+  leg cash from world to pool amount if bal(jar[first]) > mark then small else big
+
+ask j1: bal(jar[first], 2026-01-31)
+
+ask j2: bal(jar[second], 2026-01-31)
+
+ask p1: bal(pool, 2026-01-31)
+
+ask x1: explain a_put[second, 2026-01]
+
+version facts
+  cite card
+  governs always
+  known 2025-12-01
+  a_dom = 10 "a_put's day"
+  b_dom = 20 "b_feed's day"
+  mark = 50.00 PLN "the mark"
+  small = 10.00 PLN "the small put"
+  big = 100.00 PLN "the big put"
+  opening[jar[first]] = 0 at 2026-01-01 start "the card"
+  opening[jar[second]] = 0 at 2026-01-01 start "the card"
+  opening[pool] = 0 at 2026-01-01 start "the card"
+,,1:0,784:j1: refused: RUN-TIE a_put has a tie at a_put[first, 2026-01], a_put[second, 2026-01] that changes the result, and no ties by
+  unfulfilled: a_put[first, 2026-01]
+  cut 2026-03-15
+j2: refused: RUN-TIE a_put has a tie at a_put[first, 2026-01], a_put[second, 2026-01] that changes the result, and no ties by
+  unfulfilled: a_put[first, 2026-01]
+  unfulfilled: a_put[second, 2026-01]
+  cut 2026-03-15
+p1: refused: RUN-TIE a_put has a tie at a_put[first, 2026-01], a_put[second, 2026-01] that changes the result, and no ties by
+  cut 2026-03-15
+x1: a_put[second, 2026-01]
+  decision, day 2026-01-10, status past
+  stratum 1, walk point (2026-01-10, stratum 1, a_put|000001)
+  read at its walk point: jar[first], pool
+  leg cash from world to jar[second] amount 10.00 PLN
+  cut 2026-03-15
+,20:fixes/gate8/restate3,11:fixes-gate8,18:run restate3.tally,928:14:restate3.tally,905:model restate3
+  tally 2
+  on 2026-03-10
+  start 2026-01-01
+  end 2026-12-31
+  note "T C15 (invented): three readings of one place at one instant, no scenario, the second and third say replace, known on three days; the third's stands (L §4.6 step 2; gate 8's open survivor, reading.rs replaced)"
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+ask q: bal(konto, 2026-01-15)
+
+ask x: explain bal(konto, 2026-01-15)
+
+version v1
+  cite card
+  governs 2026-01
+  known 2026-01-20
+  anchor konto
+  opening[konto] = 0 at 2026-01-01 start "base"
+  stated[konto] = 100 at 2026-01-15 end "first"
+
+version v2
+  cite card
+  governs 2026-01
+  known 2026-02-10
+  anchor konto
+  replace stated[konto] = 150 at 2026-01-15 end "second"
+
+version v3
+  cite card
+  governs 2026-01
+  known 2026-03-05
+  anchor konto
+  replace stated[konto] = 200 at 2026-01-15 end "third"
+,,1:0,409:q: 200.00 PLN
+  anchor: konto 2026-01-15 end, stated 200.00 PLN, difference 200.00 PLN
+  cut 2026-03-10
+x: 200.00 PLN
+  balance of konto (PLN) at the end of 2026-01-15
+  from: anchor v3:stated[konto] = 200.00 PLN, 2026-01-15 end (version v3, source card, locator "third"), gap role anchor, gap 200.00 PLN
+  no movement
+  anchor: konto 2026-01-15 end, stated 200.00 PLN, difference 200.00 PLN
+  cut 2026-03-10
+,28:fixes/gate8/reading_restated,11:fixes-gate8,62:run reading_restated.tally reading_restated_alt.tally --ask qr,1175:22:reading_restated.tally,840:model rs
+  tally 2
+  on 2026-03-10
+  start 2026-01-01
+  end 2026-12-31
+  note "T C15 (invented): a base reading restated with replace known in March, after a scenario's replace of it known in February, one place and instant; the scenario's stands (L §6.4, §4.6 step 2; issue #137; gate 8's open survivor, reading.rs replaced)"
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+ask q: bal(konto, 2026-01-15) in rs
+
+ask qr: bal(konto, 2026-01-15) in restate
+
+version v1
+  cite card
+  governs 2026-01
+  known 2026-01-20
+  anchor konto
+  opening[konto] = 0 at 2026-01-01 start "base"
+  stated[konto] = 100 at 2026-01-15 end "base, January"
+
+version v2
+  cite card
+  governs 2026-01
+  known 2026-03-05
+  anchor konto
+  replace stated[konto] = 150 at 2026-01-15 end "base, restated in March"
+,26:reading_restated_alt.tally,269:scenario restate over rs
+  tally 2
+  from 2026-01-01
+  note "T C15 (invented): its replace known in February (issue #137)"
+
+version restate_v
+  cite card
+  governs 2026-01
+  known 2026-02-10
+  anchor konto
+  replace stated[konto] = 200 at 2026-01-15 end "the scenario"
+,,1:0,122:qr: 150.00 PLN
+  world: restate
+  anchor: konto 2026-01-15 end, stated 150.00 PLN, difference 150.00 PLN
+  cut 2026-03-10
+,17:fixes/gate8/zero2,11:fixes-gate8,15:run zero2.tally,975:11:zero2.tally,955:model zero2
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T C15 (invented): a leg of unit any whose amount is a number 0 with no unit, between two places of two units that load can't see, bound over the accounts (gate 8's open survivor, legs.rs leg_amount)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+kind anys: event certain
+  leg cash: any
+
+input d1: date
+
+input z: num
+
+place konto: accounts PLN lives 2026-01-01..
+
+place kasa: accounts EUR lives 2026-01-01..
+
+move nil[p in accounts on d1, q in accounts on d1 where p != q]: anys
+  on d1
+  leg cash from p to q amount z
+
+ask b: bal(konto, 2026-06-30)
+
+ask f: flows(nil, 2026-01-01 .. 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-03-01 "the card"
+  z = 0 "the card"
+  opening[konto] = 0 PLN at 2026-01-01 start "the card"
+  opening[kasa] = 0 EUR at 2026-01-01 start "the card"
+,,1:1,91:refused: LOAD-UNIT the amount of leg cash of nil[kasa, konto] (0) is in no unit of a place
 ,

@@ -1,0 +1,63 @@
+model due_alone
+  tally 2
+  on 2026-03-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T C15 (invented): a move of an order group due alone on its day, two instances, no ties by, the second reading the jar the first books, one way only (L §5.14.2; gate 8's open survivors, order.rs run_decisions and is_due)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+index box = [first, second]
+
+place jar[b in box]: accounts PLN lives 2026-01-01..
+
+place pool: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input a_dom: int
+
+input b_dom: int
+
+input mark: money PLN
+
+input small: money PLN
+
+input big: money PLN
+
+move a_put[b in box, m in month]: transfers
+  on day_of(m, a_dom)
+  at start_of(m)
+  reads jar, pool
+  leg cash from world to jar[b] amount if bal(jar[first]) + bal(pool) > mark then small else big
+
+move b_feed[m in month]: transfers
+  on day_of(m, b_dom)
+  at start_of(m)
+  reads jar
+  leg cash from world to pool amount if bal(jar[first]) > mark then small else big
+
+ask j1: bal(jar[first], 2026-01-31)
+
+ask j2: bal(jar[second], 2026-01-31)
+
+ask p1: bal(pool, 2026-01-31)
+
+ask x1: explain a_put[second, 2026-01]
+
+version facts
+  cite card
+  governs always
+  known 2025-12-01
+  a_dom = 10 "a_put's day"
+  b_dom = 20 "b_feed's day"
+  mark = 50.00 PLN "the mark"
+  small = 10.00 PLN "the small put"
+  big = 100.00 PLN "the big put"
+  opening[jar[first]] = 0 at 2026-01-01 start "the card"
+  opening[jar[second]] = 0 at 2026-01-01 start "the card"
+  opening[pool] = 0 at 2026-01-01 start "the card"

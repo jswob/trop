@@ -1,0 +1,11 @@
+scenario restate over rs
+  tally 2
+  from 2026-01-01
+  note "T C15 (invented): its replace known in February (issue #137)"
+
+version restate_v
+  cite card
+  governs 2026-01
+  known 2026-02-10
+  anchor konto
+  replace stated[konto] = 200 at 2026-01-15 end "the scenario"

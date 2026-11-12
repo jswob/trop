@@ -932,7 +932,7 @@ mod tests {
     /// Gate 8's open survivors' texts (`m1/fixes/gate8/`).
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_gate8() {
-        fixes_hold("fixes-gate8", (0, 1), 11);
+        fixes_hold("fixes-gate8", (0, 1), 15);
     }
 
     /// F5's own realities, every ask of each.

@@ -1,0 +1,38 @@
+model restate3
+  tally 2
+  on 2026-03-10
+  start 2026-01-01
+  end 2026-12-31
+  note "T C15 (invented): three readings of one place at one instant, no scenario, the second and third say replace, known on three days; the third's stands (L §4.6 step 2; gate 8's open survivor, reading.rs replaced)"
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+ask q: bal(konto, 2026-01-15)
+
+ask x: explain bal(konto, 2026-01-15)
+
+version v1
+  cite card
+  governs 2026-01
+  known 2026-01-20
+  anchor konto
+  opening[konto] = 0 at 2026-01-01 start "base"
+  stated[konto] = 100 at 2026-01-15 end "first"
+
+version v2
+  cite card
+  governs 2026-01
+  known 2026-02-10
+  anchor konto
+  replace stated[konto] = 150 at 2026-01-15 end "second"
+
+version v3
+  cite card
+  governs 2026-01
+  known 2026-03-05
+  anchor konto
+  replace stated[konto] = 200 at 2026-01-15 end "third"
