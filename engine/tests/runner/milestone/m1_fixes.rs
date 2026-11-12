@@ -150,9 +150,40 @@ mod tests {
     /// a diff over an axis (P47) and a leg refused under some options read outside the fan-out
     /// (the fix review's NB2, NB3), both held for #122; a bracketed period literal beside a key
     /// of a `by 3` index (#113, held).
+    /// Part 1 of 6 (each part the vectors at one place modulo 6, pick P74).
     #[test]
-    fn m1_fixes_g7_axes() {
-        group_holds("fixes-g7", (0, 1));
+    fn m1_fixes_g7_axes_part_1() {
+        group_holds("fixes-g7", (0, 6));
+    }
+
+    /// Part 2 of 6.
+    #[test]
+    fn m1_fixes_g7_axes_part_2() {
+        group_holds("fixes-g7", (1, 6));
+    }
+
+    /// Part 3 of 6.
+    #[test]
+    fn m1_fixes_g7_axes_part_3() {
+        group_holds("fixes-g7", (2, 6));
+    }
+
+    /// Part 4 of 6.
+    #[test]
+    fn m1_fixes_g7_axes_part_4() {
+        group_holds("fixes-g7", (3, 6));
+    }
+
+    /// Part 5 of 6.
+    #[test]
+    fn m1_fixes_g7_axes_part_5() {
+        group_holds("fixes-g7", (4, 6));
+    }
+
+    /// Part 6 of 6.
+    #[test]
+    fn m1_fixes_g7_axes_part_6() {
+        group_holds("fixes-g7", (5, 6));
     }
 
     /// G8's (`m1/fixes/g8/`): the fixes' `f1` and the review's forms no probe reached: `low`
@@ -175,9 +206,28 @@ mod tests {
     /// booked A0 without its instance's day (`inv_min`, B2), a tree updated in place (`u_*`);
     /// a failed projection walk read through windows on both sides of its day, in either order
     /// (P54, #127, held where refcore differs).
+    /// Part 1 of 4 (each part the vectors at one place modulo 4, pick P74).
     #[test]
-    fn m1_fixes_g9_the_tree_and_its_twin() {
-        group_holds("fixes-g9", (0, 1));
+    fn m1_fixes_g9_the_tree_and_its_twin_part_1() {
+        group_holds("fixes-g9", (0, 4));
+    }
+
+    /// Part 2 of 4.
+    #[test]
+    fn m1_fixes_g9_the_tree_and_its_twin_part_2() {
+        group_holds("fixes-g9", (1, 4));
+    }
+
+    /// Part 3 of 4.
+    #[test]
+    fn m1_fixes_g9_the_tree_and_its_twin_part_3() {
+        group_holds("fixes-g9", (2, 4));
+    }
+
+    /// Part 4 of 4.
+    #[test]
+    fn m1_fixes_g9_the_tree_and_its_twin_part_4() {
+        group_holds("fixes-g9", (3, 4));
     }
 
     /// G10's (`m1/fixes/g10/`): the review's B1 (`lifespan(k)` read before `from` under a
@@ -223,52 +273,148 @@ mod tests {
     /// refused and a hole, `trace_bal`'s inputs) and `readers-of` an event kind (#132);
     /// `low … with uncertain` without `from` (P51, #125, `r_agent_lw_lw_l0`); a month key printed
     /// as written in `LOAD-KEY` (#100).
-    /// Part 1 of 8 (each part the vectors at one place modulo 8).
+    /// Part 1 of 24 (each part the vectors at one place modulo 24, picks P70, P74).
     #[test]
     fn m1_fixes_g12_explain_over_the_walk_part_1() {
-        group_holds("fixes-g12", (0, 8));
+        group_holds("fixes-g12", (0, 24));
     }
 
-    /// G12's, part 2 of 8.
+    /// Part 2 of 24.
     #[test]
     fn m1_fixes_g12_explain_over_the_walk_part_2() {
-        group_holds("fixes-g12", (1, 8));
+        group_holds("fixes-g12", (1, 24));
     }
 
-    /// G12's, part 3 of 8.
+    /// Part 3 of 24.
     #[test]
     fn m1_fixes_g12_explain_over_the_walk_part_3() {
-        group_holds("fixes-g12", (2, 8));
+        group_holds("fixes-g12", (2, 24));
     }
 
-    /// G12's, part 4 of 8.
+    /// Part 4 of 24.
     #[test]
     fn m1_fixes_g12_explain_over_the_walk_part_4() {
-        group_holds("fixes-g12", (3, 8));
+        group_holds("fixes-g12", (3, 24));
     }
 
-    /// G12's, part 5 of 8.
+    /// Part 5 of 24.
     #[test]
     fn m1_fixes_g12_explain_over_the_walk_part_5() {
-        group_holds("fixes-g12", (4, 8));
+        group_holds("fixes-g12", (4, 24));
     }
 
-    /// G12's, part 6 of 8.
+    /// Part 6 of 24.
     #[test]
     fn m1_fixes_g12_explain_over_the_walk_part_6() {
-        group_holds("fixes-g12", (5, 8));
+        group_holds("fixes-g12", (5, 24));
     }
 
-    /// G12's, part 7 of 8.
+    /// Part 7 of 24.
     #[test]
     fn m1_fixes_g12_explain_over_the_walk_part_7() {
-        group_holds("fixes-g12", (6, 8));
+        group_holds("fixes-g12", (6, 24));
     }
 
-    /// G12's, part 8 of 8.
+    /// Part 8 of 24.
     #[test]
     fn m1_fixes_g12_explain_over_the_walk_part_8() {
-        group_holds("fixes-g12", (7, 8));
+        group_holds("fixes-g12", (7, 24));
+    }
+
+    /// Part 9 of 24.
+    #[test]
+    fn m1_fixes_g12_explain_over_the_walk_part_9() {
+        group_holds("fixes-g12", (8, 24));
+    }
+
+    /// Part 10 of 24.
+    #[test]
+    fn m1_fixes_g12_explain_over_the_walk_part_10() {
+        group_holds("fixes-g12", (9, 24));
+    }
+
+    /// Part 11 of 24.
+    #[test]
+    fn m1_fixes_g12_explain_over_the_walk_part_11() {
+        group_holds("fixes-g12", (10, 24));
+    }
+
+    /// Part 12 of 24.
+    #[test]
+    fn m1_fixes_g12_explain_over_the_walk_part_12() {
+        group_holds("fixes-g12", (11, 24));
+    }
+
+    /// Part 13 of 24.
+    #[test]
+    fn m1_fixes_g12_explain_over_the_walk_part_13() {
+        group_holds("fixes-g12", (12, 24));
+    }
+
+    /// Part 14 of 24.
+    #[test]
+    fn m1_fixes_g12_explain_over_the_walk_part_14() {
+        group_holds("fixes-g12", (13, 24));
+    }
+
+    /// Part 15 of 24.
+    #[test]
+    fn m1_fixes_g12_explain_over_the_walk_part_15() {
+        group_holds("fixes-g12", (14, 24));
+    }
+
+    /// Part 16 of 24.
+    #[test]
+    fn m1_fixes_g12_explain_over_the_walk_part_16() {
+        group_holds("fixes-g12", (15, 24));
+    }
+
+    /// Part 17 of 24.
+    #[test]
+    fn m1_fixes_g12_explain_over_the_walk_part_17() {
+        group_holds("fixes-g12", (16, 24));
+    }
+
+    /// Part 18 of 24.
+    #[test]
+    fn m1_fixes_g12_explain_over_the_walk_part_18() {
+        group_holds("fixes-g12", (17, 24));
+    }
+
+    /// Part 19 of 24.
+    #[test]
+    fn m1_fixes_g12_explain_over_the_walk_part_19() {
+        group_holds("fixes-g12", (18, 24));
+    }
+
+    /// Part 20 of 24.
+    #[test]
+    fn m1_fixes_g12_explain_over_the_walk_part_20() {
+        group_holds("fixes-g12", (19, 24));
+    }
+
+    /// Part 21 of 24.
+    #[test]
+    fn m1_fixes_g12_explain_over_the_walk_part_21() {
+        group_holds("fixes-g12", (20, 24));
+    }
+
+    /// Part 22 of 24.
+    #[test]
+    fn m1_fixes_g12_explain_over_the_walk_part_22() {
+        group_holds("fixes-g12", (21, 24));
+    }
+
+    /// Part 23 of 24.
+    #[test]
+    fn m1_fixes_g12_explain_over_the_walk_part_23() {
+        group_holds("fixes-g12", (22, 24));
+    }
+
+    /// Part 24 of 24.
+    #[test]
+    fn m1_fixes_g12_explain_over_the_walk_part_24() {
+        group_holds("fixes-g12", (23, 24));
     }
 
     /// G13's (`m1/fixes/g13/`): reads at run and ranges an ask steps through (`reads_*`,
@@ -295,9 +441,28 @@ mod tests {
     /// another (`t_mb5_pl`, `t_mb5_plc`); leg reads by name, one while the main walk is refused
     /// at run (`t_mb5_wr`, `RUN-CYCLE`), of instances no version makes exist (`t_mb5_lx`); a
     /// clause keyed by a unit kind; law-dated price rows.
+    /// Part 1 of 4 (each part the vectors at one place modulo 4, pick P74).
     #[test]
-    fn m1_fixes_g14_the_sweep() {
-        group_holds("fixes-g14", (0, 1));
+    fn m1_fixes_g14_the_sweep_part_1() {
+        group_holds("fixes-g14", (0, 4));
+    }
+
+    /// Part 2 of 4.
+    #[test]
+    fn m1_fixes_g14_the_sweep_part_2() {
+        group_holds("fixes-g14", (1, 4));
+    }
+
+    /// Part 3 of 4.
+    #[test]
+    fn m1_fixes_g14_the_sweep_part_3() {
+        group_holds("fixes-g14", (2, 4));
+    }
+
+    /// Part 4 of 4.
+    #[test]
+    fn m1_fixes_g14_the_sweep_part_4() {
+        group_holds("fixes-g14", (3, 4));
     }
 
     /// The reviews' findings the engine still gets wrong, apart from their groups so each
