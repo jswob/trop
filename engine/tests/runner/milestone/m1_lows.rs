@@ -17,7 +17,9 @@
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeSet;
-    use tally_cli::tally::walk::Lows;
+    use tally_cli::tally::num::Num;
+    use tally_cli::tally::time::Day;
+    use tally_cli::tally::walk::{Lows, RangeMinimum};
     use tally_cli::tally::{Asks, Days, Given, NotImplemented, Pin, Request, run_with_lows};
     use tally_runner::corpus::{KERNEL_CORPUS, netstrings, records};
     use tally_runner::kernel::vectors;
@@ -208,7 +210,7 @@ mod tests {
     /// The fix vectors' groups of `m1/vectors.refcore`, one test each below, so that each runs
     /// well inside the mutants profile's time per test (pick P69: the whole store in one test
     /// passed 120 s on CI's runner).
-    const FIX_GROUPS: [&str; 15] = [
+    const FIX_GROUPS: [&str; 16] = [
         "fixes-g1",
         "fixes-g2",
         "fixes-g3",
@@ -224,6 +226,7 @@ mod tests {
         "fixes-g13",
         "fixes-g14",
         "fixes-open",
+        "fixes-gate8",
     ];
 
     /// Every fix vector of `group` in `m1/vectors.refcore` whose place in the group is `part`
@@ -926,6 +929,12 @@ mod tests {
         fixes_hold("fixes-open", (0, 1), 3);
     }
 
+    /// Gate 8's open survivors' texts (`m1/fixes/gate8/`).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_gate8() {
+        fixes_hold("fixes-gate8", (0, 1), 7);
+    }
+
     /// F5's own realities, every ask of each.
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_f5s_realities() {
@@ -951,5 +960,52 @@ mod tests {
             })
             .collect();
         assert!(failed.is_empty(), "F5's realities:\n{}", failed.join("\n"));
+    }
+
+    /// Fence F5's range minimum through its public entry (`tally::walk::RangeMinimum`, P8-5's
+    /// bench's, pick P56): built over days in order, one step each, it answers every window's
+    /// lowest change as the plain running sums give it (the least balance change from `counts`
+    /// on a day `first` through `last`, P §2.3, E §4.3); days out of order, repeated, or a step
+    /// count other than the days' are refused (gate 8's open survivor, `RangeMinimum::of`).
+    #[test]
+    fn m1_lows_the_range_minimum_answers_as_the_running_sums() {
+        let cents: [i64; 6] = [-500, 300, -1000, 250, 400, -50];
+        let days: Vec<Day> = (1..=6)
+            .map(|d| Day::from_ymd(2026, 1, d).expect("a day of January"))
+            .collect();
+        let num = |c: i64| Num::ratio(c, 100).expect("a figure in cents");
+        let steps: Vec<Num> = cents.iter().map(|c| num(*c)).collect();
+        let cent = num(1);
+        let tree = RangeMinimum::of(days.clone(), steps.clone(), Some(&cent))
+            .expect("a range minimum over days in order");
+        assert!(tree.in_minor_units(), "steps of whole cents sum in cents");
+        for c in 0..days.len() {
+            for f in c..days.len() {
+                for l in f..days.len() {
+                    let running = |to: usize| -> i64 { cents[c..=to].iter().sum() };
+                    let plain = (f..=l).map(running).min().expect("a window's days");
+                    let got = tree
+                        .lowest_change(days[c], (days[f], days[l]))
+                        .expect("a window's lowest change");
+                    assert_eq!(got, num(plain), "counts day {c}, window {f}..{l}");
+                }
+            }
+        }
+        let mut swapped = days.clone();
+        swapped.swap(1, 2);
+        assert!(
+            RangeMinimum::of(swapped, steps.clone(), Some(&cent)).is_err(),
+            "days out of order"
+        );
+        let mut repeated = days.clone();
+        repeated[2] = repeated[1];
+        assert!(
+            RangeMinimum::of(repeated, steps.clone(), Some(&cent)).is_err(),
+            "a day repeated"
+        );
+        assert!(
+            RangeMinimum::of(days, steps[1..].to_vec(), Some(&cent)).is_err(),
+            "a step short"
+        );
     }
 }

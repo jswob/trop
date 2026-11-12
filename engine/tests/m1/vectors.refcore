@@ -221838,4 +221838,447 @@ ask g2: f[q2] with v[q1] = 3
 warning: WARN-UNREAD def e2 is read by nothing
 warning: WARN-UNREAD def ge is read by nothing
 warning: WARN-UNREAD source card is read by nothing
+,17:fixes/gate8/floor,11:fixes-gate8,15:run floor.tally,1767:11:floor.tally,1746:model floor
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T C13 (invented): low of a place whose plan leg's other end is a place with a sign rule (min 0), the walk refusing the leg once that place would go below zero; and a leg from a place past its lifespan (gate 8's open survivor, lows.rs Gathered::leg)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind pot: place PLN min 0
+
+input amt: money PLN
+
+input spend: money PLN
+
+input off1: int
+
+input off2: int
+
+place acct: accounts PLN lives 2026-01-01..
+place sav: pot lives 2026-01-01..
+place old: accounts PLN lives 2026-01-01..2026-05-31
+place world: outside lives 1900-01-01..
+
+move topup[m in months]: transfers
+  on start_of(m)
+  leg cash from sav to acct amount amt
+
+move drain[m in months]: transfers
+  on add_days(start_of(m), off1)
+  leg cash from acct to world amount spend
+
+move late[m in months]: transfers
+  on add_days(start_of(m), off2)
+  leg cash from old to acct amount amt
+
+ask l1: low(acct, 2026-01-01 .. 2026-03-31)
+
+ask l2: low(acct, 2026-01-01 .. 2026-12-31)
+
+ask l3: low(acct, 2026-02-01 .. 2026-02-28), low(acct, 2026-04-01 .. 2026-08-31)
+
+ask p1: low(acct, 2026-01-01 .. 2026-03-31) from 2026-01-01
+
+ask p2: low(acct, 2026-01-01 .. 2026-12-31) from 2026-01-01
+
+ask p3: low(acct, 2026-04-01 .. 2026-08-31) from 2026-02-01
+
+ask b: bal(acct, 2026-03-31), bal(sav, 2026-03-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  spend = 30.00 PLN "the card"
+  off1 = 14 "the card"
+  off2 = 20 "the card"
+  opening[acct] = 50.00 PLN at 2026-01-01 start "the card"
+  opening[sav] = 150.00 PLN at 2026-01-01 start "the card"
+  opening[old] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:0,962:b: (refused: RUN-PLACE sav is -50.00 PLN after the day's observations and plans of 2026-02-01, refused: RUN-PLACE sav is -50.00 PLN after the day's observations and plans of 2026-02-01)
+  cut 2026-01-01
+l1: refused: RUN-PLACE sav is -50.00 PLN after the day's observations and plans of 2026-02-01
+  cut 2026-01-01
+l2: refused: RUN-PLACE sav is -50.00 PLN after the day's observations and plans of 2026-02-01
+  cut 2026-01-01
+l3: (refused: RUN-PLACE sav is -50.00 PLN after the day's observations and plans of 2026-02-01, refused: RUN-PLACE sav is -50.00 PLN after the day's observations and plans of 2026-02-01)
+  cut 2026-01-01
+p1: refused: RUN-PLACE sav is -50.00 PLN after the day's observations and plans of 2026-02-01
+  cut 2026-01-01
+p2: refused: RUN-PLACE sav is -50.00 PLN after the day's observations and plans of 2026-02-01
+  cut 2026-01-01
+p3: refused: RUN-PLACE sav is -50.00 PLN after the day's observations and plans of 2026-02-01
+  cut 2026-01-01
+,18:fixes/gate8/floor2,11:fixes-gate8,16:run floor2.tally,1725:12:floor2.tally,1703:model floor2
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T C13 (invented): low of a place whose plan leg's other end is a place with a sign rule (min 0), its rule holding, and a leg from a place past its lifespan (gate 8's open survivor, lows.rs Gathered::leg)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind pot: place PLN min 0
+
+input amt: money PLN
+
+input spend: money PLN
+
+input off1: int
+
+input off2: int
+
+place acct: accounts PLN lives 2026-01-01..
+place sav: pot lives 2026-01-01..
+place old: accounts PLN lives 2026-01-01..2026-05-31
+place world: outside lives 1900-01-01..
+
+move topup[m in months]: transfers
+  on start_of(m)
+  leg cash from sav to acct amount amt
+
+move drain[m in months]: transfers
+  on add_days(start_of(m), off1)
+  leg cash from acct to world amount spend
+
+move late[m in months]: transfers
+  on add_days(start_of(m), off2)
+  leg cash from old to acct amount amt
+
+ask l1: low(acct, 2026-01-01 .. 2026-03-31)
+
+ask l2: low(acct, 2026-01-01 .. 2026-12-31)
+
+ask l3: low(acct, 2026-02-01 .. 2026-02-28), low(acct, 2026-04-01 .. 2026-08-31)
+
+ask p1: low(acct, 2026-01-01 .. 2026-03-31) from 2026-01-01
+
+ask p2: low(acct, 2026-01-01 .. 2026-12-31) from 2026-01-01
+
+ask p3: low(acct, 2026-04-01 .. 2026-08-31) from 2026-02-01
+
+ask b: bal(acct, 2026-03-31), bal(sav, 2026-03-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  spend = 30.00 PLN "the card"
+  off1 = 14 "the card"
+  off2 = 20 "the card"
+  opening[acct] = 50.00 PLN at 2026-01-01 start "the card"
+  opening[sav] = 5000.00 PLN at 2026-01-01 start "the card"
+  opening[old] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:0,557:b: (560.00 PLN, 4 700.00 PLN)
+  cut 2026-01-01
+l1: 120.00 PLN
+  cut 2026-01-01
+l2: refused: RUN-LIFESPAN late[2026-06].cash moves into or out of old outside its lifespan
+  cut 2026-01-01
+l3: (290.00 PLN, refused: RUN-LIFESPAN late[2026-06].cash moves into or out of old outside its lifespan)
+  cut 2026-01-01
+p1: 120.00 PLN
+  cut 2026-01-01
+p2: refused: RUN-LIFESPAN late[2026-06].cash moves into or out of old outside its lifespan
+  cut 2026-01-01
+p3: refused: RUN-LIFESPAN late[2026-06].cash moves into or out of old outside its lifespan
+  cut 2026-01-01
+,15:fixes/gate8/sec,11:fixes-gate8,13:run sec.tally,1364:9:sec.tally,1346:model sec
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T C13 (invented): a decision that reads a keyed place's section, and one that books to one of its things on the same day: the section links the pair (L 5.14.1), so the reader runs after the booking (gate 8's open survivor, order.rs things_of)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index box = [first, second]
+
+input d1: date
+
+input put: money PLN
+
+place jar[b in box]: accounts PLN lives 2026-01-01..
+place a6: accounts PLN lives 2026-01-01..
+place a5: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+move a_read: transfers
+  on d1
+  reads jar
+  leg cash from world to a5 amount bal(jar[first]) + bal(jar[second])
+
+move b_book: transfers
+  on d1
+  reads a6
+  leg cash from world to jar[first] amount put + bal(a6)
+
+ask q: bal(a5, 2026-06-30), bal(jar[first], 2026-06-30)
+
+ask fl: flows(a_read, 2026-01-01..2026-12-31), flows(b_book, 2026-01-01..2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  put = 10.00 PLN "the card"
+  opening[jar[first]] = 0 PLN at 2026-01-01 start "the card"
+  opening[jar[second]] = 0 PLN at 2026-01-01 start "the card"
+  opening[a5] = 0 PLN at 2026-01-01 start "the card"
+  opening[a6] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,87:fl: (10.00 PLN, 10.00 PLN)
+  cut 2026-03-01
+q: (10.00 PLN, 10.00 PLN)
+  cut 2026-03-01
+,19:fixes/gate8/linkdiv,11:fixes-gate8,17:run linkdiv.tally,1292:13:linkdiv.tally,1269:model linkdiv
+  tally 2
+  on 2026-03-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T C13 (invented): an observed row that fulfils a move whose when is refused at the cut (RUN-DIV, a divisor 0): the link is taken as existing and judged where its instance is (L 5.19 Links; gate 8's open survivor, tuples.rs link_tuple)"
+
+source fixture "T's fixture (invented values)"
+
+unit PLN: currency minor 0.01
+
+place k6: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 2026-01-01..
+
+input bank: observed
+
+input rare_day: date
+
+input rare_n: num
+
+input rare_d: num
+
+input rare_amt: money PLN
+
+move rare: transfers
+  on rare_day
+  when rare_n / rare_d > 0
+  leg cash from k6 to shop amount rare_amt
+
+ask q_k6: bal(k6, 2026-02-28) law cut
+
+ask q_fl: flows(rare, 2026-01-01 .. 2026-03-31) law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-31
+  rare_day = 2026-02-03
+  rare_n = 1
+  rare_d = 0
+  rare_amt = 12.00
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[k6] = 100 at 2026-01-01 start
+
+version bank_6
+  cite fixture
+  governs 2026-02
+  known 2026-03-02
+  covers k6
+  bank[k6_rare] = (on: 2026-02-03, kind: transfers, leg cash from k6 to shop amount 12.00 PLN, fulfils: rare) "the rare payment, whose when is refused"
+,,1:0,156:q_fl: refused: RUN-DIV division by zero
+  law date 2026-03-15, cut 2026-03-15
+q_k6: refused: RUN-DIV division by zero
+  law date 2026-03-15, cut 2026-03-15
+,20:fixes/gate8/linkdiv2,11:fixes-gate8,18:run linkdiv2.tally,1442:14:linkdiv2.tally,1418:model linkdiv2
+  tally 2
+  on 2026-03-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T C13 (invented): an observed row that fulfils a move whose when is refused at the cut (RUN-DIV, a divisor a later version makes 0) but true at the instance's booking cut: the link is taken as existing and judged where its instance is (L 5.19 Links; gate 8's open survivor, tuples.rs link_tuple)"
+
+source fixture "T's fixture (invented values)"
+
+unit PLN: currency minor 0.01
+
+place k6: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 2026-01-01..
+
+input bank: observed
+
+input rare_day: date
+
+input rare_n: num
+
+input rare_d: num
+
+input rare_amt: money PLN
+
+move rare: transfers
+  on rare_day
+  when rare_n / rare_d > 0
+  leg cash from k6 to shop amount rare_amt
+
+ask q_k6: bal(k6, 2026-02-28) law cut
+
+ask q_fl: flows(rare, 2026-01-01 .. 2026-03-31) law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-31
+  rare_day = 2026-02-03
+  rare_n = 1
+  rare_d = 1
+  rare_amt = 12.00
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[k6] = 100 at 2026-01-01 start
+
+version bank_6
+  cite fixture
+  governs 2026-02
+  known 2026-03-02
+  covers k6
+  bank[k6_rare] = (on: 2026-02-03, kind: transfers, leg cash from k6 to shop amount 12.00 PLN, fulfils: rare) "the rare payment, whose when is refused"
+
+version later
+  cite fixture
+  governs always
+  known 2026-03-01
+  replace rare_d = 0
+,,1:0,108:q_fl: 12.00 PLN
+  law date 2026-03-15, cut 2026-03-15
+q_k6: 88.00 PLN
+  law date 2026-03-15, cut 2026-03-15
+,16:fixes/gate8/sec2,11:fixes-gate8,14:run sec2.tally,1383:10:sec2.tally,1363:model sec2
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T C13 (invented): two decisions on one day, one reading a keyed place's section the other books to, the other reading what the first books: a cycle the section links both ways, refused RUN-ORDER (L 5.14.1, 5.14.2) (gate 8's open survivor, order.rs things_of)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index box = [first, second]
+
+input d1: date
+
+input put: money PLN
+
+place jar[b in box]: accounts PLN lives 2026-01-01..
+place a6: accounts PLN lives 2026-01-01..
+place a5: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+move a_read: transfers
+  on d1
+  reads jar
+  leg cash from world to a5 amount bal(jar[first]) + bal(jar[second])
+
+move b_book: transfers
+  on d1
+  reads a5
+  leg cash from world to jar[first] amount put + bal(a5)
+
+ask q: bal(a5, 2026-06-30), bal(jar[first], 2026-06-30)
+
+ask fl: flows(a_read, 2026-01-01..2026-12-31), flows(b_book, 2026-01-01..2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  put = 10.00 PLN "the card"
+  opening[jar[first]] = 0 PLN at 2026-01-01 start "the card"
+  opening[jar[second]] = 0 PLN at 2026-01-01 start "the card"
+  opening[a5] = 0 PLN at 2026-01-01 start "the card"
+  opening[a6] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,404:fl: (refused: RUN-ORDER decisions a_read and b_book read each other on 2026-04-15, refused: RUN-ORDER decisions a_read and b_book read each other on 2026-04-15)
+  cut 2026-03-01
+q: (refused: RUN-ORDER decisions a_read and b_book read each other on 2026-04-15, refused: RUN-ORDER decisions a_read and b_book read each other on 2026-04-15)
+  cut 2026-03-01
+warning: WARN-UNREAD place a6 is read by nothing
+,18:fixes/gate8/floor3,11:fixes-gate8,16:run floor3.tally,1565:12:floor3.tally,1543:model floor3
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T C13 (invented): low of places whose only legs have their other end at a place the walk can't sum: one with a sign rule (min 0) the walk breaks, one past its lifespan; read plain and from a projection's day (gate 8's open survivor, lows.rs Gathered::leg)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind pot: place PLN min 0
+
+input amt: money PLN
+
+input off2: int
+
+place acct: accounts PLN lives 2026-01-01..
+place acct2: accounts PLN lives 2026-01-01..
+place sav: pot lives 2026-01-01..
+place old: accounts PLN lives 2026-01-01..2026-05-31
+
+move topup[m in months]: transfers
+  on start_of(m)
+  leg cash from sav to acct amount amt
+
+move late[m in months]: transfers
+  on add_days(start_of(m), off2)
+  leg cash from old to acct2 amount amt
+
+ask l1: low(acct, 2026-01-01 .. 2026-03-31)
+
+ask l2: low(acct2, 2026-01-01 .. 2026-08-31)
+
+ask p1: low(acct, 2026-01-01 .. 2026-03-31) from 2026-01-01
+
+ask p2: low(acct, 2026-02-01 .. 2026-06-30) from 2026-02-01
+
+ask p3: low(acct2, 2026-01-01 .. 2026-08-31) from 2026-01-01
+
+ask p4: low(acct2, 2026-04-01 .. 2026-07-31) from 2026-03-01
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  off2 = 20 "the card"
+  opening[acct] = 50.00 PLN at 2026-01-01 start "the card"
+  opening[acct2] = 50.00 PLN at 2026-01-01 start "the card"
+  opening[sav] = 150.00 PLN at 2026-01-01 start "the card"
+  opening[old] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:0,657:l1: refused: RUN-PLACE sav is -50.00 PLN after the day's observations and plans of 2026-02-01
+  cut 2026-01-01
+l2: refused: RUN-LIFESPAN late[2026-06].cash moves into or out of old outside its lifespan
+  cut 2026-01-01
+p1: refused: RUN-PLACE sav is -50.00 PLN after the day's observations and plans of 2026-02-01
+  cut 2026-01-01
+p2: refused: RUN-PLACE sav is -50.00 PLN after the day's observations and plans of 2026-02-01
+  cut 2026-01-01
+p3: refused: RUN-LIFESPAN late[2026-06].cash moves into or out of old outside its lifespan
+  cut 2026-01-01
+p4: refused: RUN-LIFESPAN late[2026-06].cash moves into or out of old outside its lifespan
+  cut 2026-01-01
 ,

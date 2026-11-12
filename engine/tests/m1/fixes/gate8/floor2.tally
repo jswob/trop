@@ -1,0 +1,63 @@
+model floor2
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T C13 (invented): low of a place whose plan leg's other end is a place with a sign rule (min 0), its rule holding, and a leg from a place past its lifespan (gate 8's open survivor, lows.rs Gathered::leg)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind pot: place PLN min 0
+
+input amt: money PLN
+
+input spend: money PLN
+
+input off1: int
+
+input off2: int
+
+place acct: accounts PLN lives 2026-01-01..
+place sav: pot lives 2026-01-01..
+place old: accounts PLN lives 2026-01-01..2026-05-31
+place world: outside lives 1900-01-01..
+
+move topup[m in months]: transfers
+  on start_of(m)
+  leg cash from sav to acct amount amt
+
+move drain[m in months]: transfers
+  on add_days(start_of(m), off1)
+  leg cash from acct to world amount spend
+
+move late[m in months]: transfers
+  on add_days(start_of(m), off2)
+  leg cash from old to acct amount amt
+
+ask l1: low(acct, 2026-01-01 .. 2026-03-31)
+
+ask l2: low(acct, 2026-01-01 .. 2026-12-31)
+
+ask l3: low(acct, 2026-02-01 .. 2026-02-28), low(acct, 2026-04-01 .. 2026-08-31)
+
+ask p1: low(acct, 2026-01-01 .. 2026-03-31) from 2026-01-01
+
+ask p2: low(acct, 2026-01-01 .. 2026-12-31) from 2026-01-01
+
+ask p3: low(acct, 2026-04-01 .. 2026-08-31) from 2026-02-01
+
+ask b: bal(acct, 2026-03-31), bal(sav, 2026-03-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  spend = 30.00 PLN "the card"
+  off1 = 14 "the card"
+  off2 = 20 "the card"
+  opening[acct] = 50.00 PLN at 2026-01-01 start "the card"
+  opening[sav] = 5000.00 PLN at 2026-01-01 start "the card"
+  opening[old] = 500.00 PLN at 2026-01-01 start "the card"

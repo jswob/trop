@@ -17,7 +17,7 @@ mod tests {
     use tally_runner::m1::{SPEC, VECTORS};
 
     /// The groups this target tests, one `#[test]` each.
-    const GROUPS: [&str; 15] = [
+    const GROUPS: [&str; 16] = [
         "fixes-g1",
         "fixes-g2",
         "fixes-g3",
@@ -33,6 +33,7 @@ mod tests {
         "fixes-g13",
         "fixes-g14",
         "fixes-open",
+        "fixes-gate8",
     ];
 
     /// Runs every vector of `group` whose place in the group is `part` modulo `parts` (a
@@ -473,6 +474,18 @@ mod tests {
     #[test]
     fn m1_fixes_the_open_findings() {
         group_holds("fixes-open", (0, 1));
+    }
+
+    /// Gate 8's open survivors under its method (c2de5c2's list, `tmp/m1-survivors-for-t.md`'s
+    /// blocks; `m1/fixes/gate8/`): `low`, plain and from a projection's day, beside a leg whose
+    /// other end has a sign rule the walk breaks, or is past its lifespan, and a place whose only
+    /// legs are such (`floor`, `floor2`, `floor3`: `lows.rs` `Gathered::leg`); a decision reading a keyed place's section after one booking
+    /// to its thing, and the two reading each other, `RUN-ORDER` (`sec`, `sec2`: `order.rs`
+    /// `things_of`); a row fulfilling a move whose `when` is refused at the cut, alone and true
+    /// at its booking cut (`linkdiv`, `linkdiv2`: `tuples.rs` `link_tuple`).
+    #[test]
+    fn m1_fixes_gate8_survivors() {
+        group_holds("fixes-gate8", (0, 1));
     }
 
     /// Where refcore crashes (`REFCORE-NOT-YET`), the spec's answer (`m1/spec.tsv`, each row's

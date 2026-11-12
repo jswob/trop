@@ -1516,3 +1516,10 @@ fixes/g14/t_mb5_pp3	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g
 fixes/g14/t_mb5_pp4	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/t_mb5_pp4.tally			G14
 fixes/g14/r_agent_inv5_n	fixes-open		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/r_agent_inv5_n.tally			G14
 fixes/g14/t_pin_pt_base_with_t_pin_pg2	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/t_pin_pt_base.tally engine/tests/m1/fixes/g14/t_pin_pg2.tally			G14
+fixes/gate8/floor	fixes-gate8		engine/tests/m1/fixes/gate8	engine/tests/m1/fixes/gate8/floor.tally			-
+fixes/gate8/floor2	fixes-gate8		engine/tests/m1/fixes/gate8	engine/tests/m1/fixes/gate8/floor2.tally			-
+fixes/gate8/sec	fixes-gate8		engine/tests/m1/fixes/gate8	engine/tests/m1/fixes/gate8/sec.tally			-
+fixes/gate8/linkdiv	fixes-gate8		engine/tests/m1/fixes/gate8	engine/tests/m1/fixes/gate8/linkdiv.tally			-
+fixes/gate8/linkdiv2	fixes-gate8		engine/tests/m1/fixes/gate8	engine/tests/m1/fixes/gate8/linkdiv2.tally			-
+fixes/gate8/sec2	fixes-gate8		engine/tests/m1/fixes/gate8	engine/tests/m1/fixes/gate8/sec2.tally			-
+fixes/gate8/floor3	fixes-gate8		engine/tests/m1/fixes/gate8	engine/tests/m1/fixes/gate8/floor3.tally			-
