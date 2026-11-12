@@ -61,16 +61,17 @@ pub struct Pad {
 type Kept = (Day, Day, Edge, crate::model::Row);
 
 /// The readings cut `cut` sees in world `world`: each `opening` and `stated` row known by
-/// the cut, of a version the world sees, a restated one replaced by the latest, sorted by
-/// place, instant and input, each with its row among what it met where `rows` says so
-/// (refcore's `readings`, `world_ok`). L §5.19, §4.6, §6.4; E §10.
+/// the cut, of a version the world sees, a restated one replaced as `replace` says (a
+/// scenario's over its base's whatever their `known` dates, as `standing` takes it), sorted
+/// by place, instant and input, each with its row among what it met where `rows` says so
+/// (refcore's `readings`, `world_ok`). L §5.19, §4.6 step 2, §6.4; E §10.
 ///
 /// # Errors
 ///
 /// A row load left without its version; `NotBuilt` for a reading `after` a movement or at a
 /// day with no edge, and for a place of unit `any`.
 pub fn readings(m: &Reality, (cut, world): (Day, World), rows: Rows) -> Result<Vec<Seen>, Stop> {
-    let mut keep: BTreeMap<(String, String, String), Kept> = BTreeMap::new();
+    let mut cands: BTreeMap<(String, String, String), Vec<Kept>> = BTreeMap::new();
     for input in ["opening", "stated"] {
         let Some(info) = m.inputs.get(input) else {
             continue;
@@ -97,13 +98,17 @@ pub fn readings(m: &Reality, (cut, world): (Day, World), rows: Rows) -> Result<V
                 }
             };
             let key = (place.clone(), instant_text(day, edge), input.to_owned());
-            if keep.get(&key).is_none_or(|(k, ..)| known > *k) {
-                keep.insert(key, (known, day, edge, row.clone()));
-            }
+            cands
+                .entry(key)
+                .or_insert_with(Vec::new)
+                .push((known, day, edge, row.clone()));
         }
     }
-    let mut out = Vec::with_capacity(keep.len());
-    for ((place, instant, input), (_, day, edge, row)) in keep {
+    let mut out = Vec::with_capacity(cands.len());
+    for ((place, instant, input), rows_at) in cands {
+        let Some((_, day, edge, row)) = standing(m, rows_at) else {
+            continue;
+        };
         let mut reading = reading_of(m, &input, &place, &instant, &row)?;
         // the row as `inputs-of` lists it, kept by an engine answering one (E §10)
         if rows == Rows::Kept
@@ -121,6 +126,42 @@ pub fn readings(m: &Reality, (cut, world): (Day, World), rows: Rows) -> Result<V
         });
     }
     Ok(out)
+}
+
+/// The row that stands among the readings `rows_at` of one place, instant and input: of the
+/// rows no `replace` row beats, the latest known, the first at a tie (refcore's `choose`,
+/// its replacement, as `read/rows.rs` `unreplaced` weighs other rows). L §4.6 step 2, §6.4.
+fn standing(m: &Reality, rows_at: Vec<Kept>) -> Option<Kept> {
+    let mut best: Option<usize> = None;
+    for (at, (known, .., row)) in rows_at.iter().enumerate() {
+        if replaced(m, &rows_at, (*known, row)) {
+            continue;
+        }
+        let later = best
+            .and_then(|b| rows_at.get(b))
+            .is_none_or(|(k, ..)| known > k);
+        if later {
+            best = Some(at);
+        }
+    }
+    best.and_then(|b| rows_at.into_iter().nth(b))
+}
+
+/// Whether a `replace` row among `rows_at` beats row `row`, known on `known`: one of a layer
+/// above its own, whatever the two rows' `known` dates (a branch stands above its base), or
+/// one of its own layer known after it. L §4.6 step 2, §6.4.
+fn replaced(m: &Reality, rows_at: &[Kept], (known, row): (Day, &crate::model::Row)) -> bool {
+    let layer = m.scenarios.layer(Some(&row.version));
+    for (k, .., other) in rows_at {
+        if !other.replace {
+            continue;
+        }
+        let above = m.scenarios.layer(Some(&other.version));
+        if above > layer || (above == layer && *k > known) {
+            return true;
+        }
+    }
+    false
 }
 
 /// A reading's place among the readings `walked` a walk's cut sees, as the walk ranks them on
