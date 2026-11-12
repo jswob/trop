@@ -175,6 +175,15 @@ debug-assertions = true
 [profile.dev.package."*"]
 opt-level = 2
 
+# `check quick`'s profile for every test (R-82, 2026-11-13): optimised as in release, with
+# debug assertions and overflow checks on as in dev, no LTO, so a rebuild after an edit is
+# seconds; CI's dev and release-test runs still gate every pull request (R-77)
+[profile.quick]
+inherits = "release-test"
+lto = false
+codegen-units = 16
+incremental = true
+
 # cargo-mutants (R-88)
 [profile.mutants]
 inherits = "test"

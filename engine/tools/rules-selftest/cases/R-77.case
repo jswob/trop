@@ -249,3 +249,40 @@ exit: any
 expect: pr-body: the six sections in order, and the folded For sessions block
 --- run
 tools/pr-body templates/pr.md
+
+# R-77 as amended 2026-11-13 (issue #138): CI runs `check full` as one job per group, and
+# `check groups`, which makes the jobs' matrix, fails unless every step of `full` is in
+# exactly one group. A step dropped from the groups, or put in two, fails it, and no matrix
+# is printed.
+case: groups-step-dropped
+tool: run
+exit: any
+expect: FAIL groups: the step gating-release is in no group
+expect: no matrix: 0 bytes
+--- replace tools/check.py
+    "release-gating": ["gating-release"],
+--- with
+    "release-gating": [],
+--- run
+tools/check groups
+tools/check groups --matrix > zz_matrix.txt || echo "no matrix: $(wc -c < zz_matrix.txt | tr -d ' ') bytes"
+
+case: groups-step-twice
+tool: run
+expect: FAIL groups: the step fuzz is in 2 groups
+--- replace tools/check.py
+    "release-binary": ["release-binary", "fault-injection-probe"],
+--- with
+    "release-binary": ["release-binary", "fault-injection-probe", "fuzz"],
+--- run
+tools/check groups
+
+case: groups-unknown-step
+tool: run
+expect: FAIL groups: the group step tests isn't a step of full
+--- replace tools/check.py
+    "fuzz": ["fuzz"],
+--- with
+    "fuzz": ["fuzz", "tests"],
+--- run
+tools/check groups
