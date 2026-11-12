@@ -1,12 +1,15 @@
 """The Stop hook (R-83), in the build role only.
 
-A build turn can't end while `engine/tools/check fast` is red, unless a STOP-REPORT
-in engine/BUILD-LOG.md is newer than the last commit (added since it, or by it).
+A build turn can't end while `engine/tools/check quick` is red, unless a STOP-REPORT
+in engine/BUILD-LOG.md is newer than the last commit (added since it, or by it). On a tree
+a green check has seen, `check quick` answers from its memo in one line (R-82, R-83;
+2026-11-13).
 After three identical blocks the fourth stop is let through, and "STOPPED RED" is
 logged, so a session that can't go green doesn't loop.
 
 Logged red doesn't hold a turn (R-83 and R-77, issue #108, 2026-11-08): when the only
-red steps are the ones that run T's tests (`runner`, `gating`) and every failing test
+red step is the one that runs T's tests (`tests`; `runner` and `gating` until 2026-11-13)
+and every failing test
 there is logged red, the turn ends. A failing test is logged red when it is named on a
 `Logged-Red:` line of a commit on this branch (origin/master..HEAD), or when its message
 counts its failing vectors ("2 of 9 vectors of g6 differ from refcore:") and that many
@@ -31,10 +34,10 @@ STATE = os.path.join(ENGINE, "target", "check-logs", "stop-state.json")
 LOGS = os.path.join(ENGINE, "target", "check-logs")
 BLOCKS = 3
 HEADING = re.compile(r"^\+#+\s*STOP-REPORT\b", re.MULTILINE)
-# logged red (R-77): the commits on this branch, and check fast's steps that run T's tests
+# logged red (R-77): the commits on this branch, and check quick's step that runs T's tests
 BASE = "origin/master"
 LOGGED_RED = re.compile(r"^Logged-Red:[ \t]*(\S.*?)[ \t]*$", re.MULTILINE)
-TEST_STEPS = ("runner", "gating")
+TEST_STEPS = ("tests",)
 FAILED_STEP = re.compile(r"^FAIL ([\w-]+): ")
 # nextest's line for a finished test: `FAIL [   0.009s] (1/3) tally-runner::s_kernel tests::name`
 STATUS = re.compile(r"^\s*([A-Z][A-Z-]*)\s+\[\s*[\d.]+s\]\s+(?:\(\s*\d+/\d+\)\s+)?(\S+)\s+(\S+)\s*$")
@@ -110,7 +113,7 @@ def is_logged(test, blocks, logged):
 
 
 def not_logged(out, logged):
-    """What of check fast's red isn't logged red: [] when every failure is a test of a
+    """What of check quick's red isn't logged red: [] when every failure is a test of a
     test step that is logged red."""
     left = []
     for line in [l for l in out.splitlines() if l.startswith("FAIL")] or ["FAIL (no failing step named)"]:
@@ -155,7 +158,7 @@ def main():
     if (os.environ.get("TALLY_ROLE") or "unset") != "build":
         return 0
     sys.stdin.read()
-    run = subprocess.run([os.path.join(TOOLS, "check"), "fast"], capture_output=True, text=True, cwd=ENGINE, check=False)
+    run = subprocess.run([os.path.join(TOOLS, "check"), "quick"], capture_output=True, text=True, cwd=ENGINE, check=False)
     if run.returncode == 0:
         save({})
         return 0
@@ -165,7 +168,7 @@ def main():
     left = not_logged(run.stdout, logged_ids())
     if not left:
         save({})
-        print("engine stop-check: `check fast` is red only on logged red (a Logged-Red line of this branch names "
+        print("engine stop-check: `check quick` is red only on logged red (a Logged-Red line of this branch names "
               "each failing vector); the turn may end (R-83, R-77).")
         return 0
     failures = [l for l in run.stdout.splitlines() if l.startswith("FAIL")] or run.stdout.splitlines()[-5:]
@@ -179,7 +182,7 @@ def main():
         return 0
     save({"digest": digest, "count": count})
     print(
-        f"engine stop-check (block {count} of {BLOCKS}): `engine/tools/check fast` is red:\n{summary}\n"
+        f"engine stop-check (block {count} of {BLOCKS}): `engine/tools/check quick` is red:\n{summary}\n"
         + "".join(f"not logged red: {l}\n" for l in left[:20] if l not in failures)
         + "Fix it, or write a STOP-REPORT in engine/BUILD-LOG.md if a test, the spec or a rule seems wrong (R-83).",
         file=sys.stderr,

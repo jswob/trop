@@ -1045,9 +1045,9 @@ def launch_usage_checks(root, expect, failures):
             failures.append(f"usage: lacks {says!r}: {r.stdout.strip()[:300]}")
 
 
-# nextest's log of check fast's `gating` step, two of three tests red (R-83, issue #108):
+# nextest's log of check quick's `tests` step, two of three tests red (R-83, issue #108):
 # one counts its 3 failing vectors (one's reason runs over two lines), one names none
-GATING_LOG = """$ cargo nextest run --locked -p tally-runner --all-features --test=s_kernel --test=s_properties
+GATING_LOG = """$ cargo nextest run --locked --workspace --all-features --tests --cargo-profile quick --test=s_kernel --test=s_properties
     Starting 3 tests across 2 binaries
         FAIL [   0.412s] (1/3) tally-runner::s_kernel tests::s_kernel_g6_plan_pass
   stdout ───
@@ -1130,16 +1130,18 @@ def setup(root):
                          ("link-to-brief.md", "../active/issue5-brief.md"), ("link-to-spec.md", "../../engine/spec/DONE.md"),
                          ("link-to-tests", "../../engine/tests"), ("link-to-tools", "../../engine/tools")):
         os.symlink(target, os.path.join(root, "tmp/notes", name))
+    # a stand-in for check: it answers only `check quick`, the Stop hook's (R-83, 2026-11-13)
     with open(os.path.join(root, "engine/tools/check"), "w", encoding="utf-8") as f:
         f.write('#!/usr/bin/env bash\n'
+                '[ "$*" = quick ] || { echo "FAIL usage: the hook ran check $*, not check quick"; exit 1; }\n'
                 'case "${FAKE_CHECK:-green}" in\n'
-                '  green) echo "check fast: green"; exit 0 ;;\n'
+                '  green) echo "check quick: green"; exit 0 ;;\n'
                 '  red) echo "FAIL clippy-lib: error[E0001] something"; exit 1 ;;\n'
                 '  red2) echo "FAIL fmt: Diff in lib.rs"; exit 1 ;;\n'
                 # T's tests red (R-77, R-83, issue #108): the gating log is planted beside it
-                '  gating) echo "FAIL gating: S, M0 gate, and 2 of their 3 tests are red  (target/check-logs/gating.log)"; exit 1 ;;\n'
+                '  gating) echo "FAIL tests: 2 of 3 tests are red (the workspace\'s and the gating S, M0\'s)  (target/check-logs/tests.log)"; exit 1 ;;\n'
                 '  gating-and-lint) echo "FAIL clippy-lib: error[E0001] something"\n'
-                '    echo "FAIL gating: S, M0 gate, and 2 of their 3 tests are red  (target/check-logs/gating.log)"; exit 1 ;;\n'
+                '    echo "FAIL tests: 2 of 3 tests are red (the workspace\'s and the gating S, M0\'s)  (target/check-logs/tests.log)"; exit 1 ;;\n'
                 'esac\n')
     os.chmod(os.path.join(root, "engine/tools/check"), 0o755)
     git = ["git", "-C", root, "-c", "user.name=guard-test", "-c", "user.email=guard-test@example.invalid"]
@@ -1504,7 +1506,7 @@ def main():
         # failing vector on a Logged-Red line of a commit on this branch, lets the turn end;
         # an unlogged vector, another red step, or the lines on master hold it as before
         os.makedirs(os.path.join(root, "engine/target/check-logs"), exist_ok=True)
-        with open(os.path.join(root, "engine/target/check-logs/gating.log"), "w", encoding="utf-8") as f:
+        with open(os.path.join(root, "engine/target/check-logs/tests.log"), "w", encoding="utf-8") as f:
             f.write(GATING_LOG)
         subprocess.run([*git, "switch", "-q", "-c", "logged-red"], check=True)
         subprocess.run([*git, "commit", "-q", "--allow-empty", "-m", "fix(walk): no logged red yet"], check=True)
@@ -1514,7 +1516,7 @@ def main():
                         "-m", "Logged-Red: g6/when\nLogged-Red: s_money_conserved"], check=True)
         code, err = call(root, ["stop-check"], stop, "build", {"FAKE_CHECK": "gating"})
         expect("Stop as build, T's tests red, a vector not logged", code, 2, err)
-        if "not logged red: gating: tally-runner::s_kernel tests::s_kernel_g6_plan_pass" not in err:
+        if "not logged red: tests: tally-runner::s_kernel tests::s_kernel_g6_plan_pass" not in err:
             failures.append(f"Stop: an unlogged vector's test isn't named: {err.strip()[:300]}")
         total += 1
         before = open(log, encoding="utf-8").read()
