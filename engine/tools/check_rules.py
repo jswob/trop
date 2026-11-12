@@ -1,4 +1,4 @@
-"""check-rules: the files the builder edits keep the rules (R-80, R-85, R-86, R-93).
+"""check-rules: the files the builder edits keep the rules (R-80, R-85, R-86, R-93, R-133).
 
     engine/tools/check-rules                  check
     engine/tools/check-rules --write-frozen   rewrite engine/tools/frozen-lints.toml from
@@ -7,7 +7,8 @@
 The builder edits the Cargo manifests, the lock and the engine's code, so the guard
 can't protect them. This checks what in them is a rule: the lint and profile tables,
 the pins, the root package.json's engine:* scripts, the members and their lints, no
-patches, build scripts or stray config files, and the text the code may not hold.
+patches, build scripts or stray config files, the text the code may not hold, and no
+code in the kernel that runs at compile time (R-133: gate 8's coverage map can't see it).
 """
 
 import fnmatch
@@ -540,6 +541,33 @@ def check_kernel(problems):
         problems.append("engine/.cargo/mutants.toml examine_globs differs from tools/kernel.toml's kernel (R-85)")
 
 
+# R-133 (2026-11-12): code the compiler runs, which no test's profile records: a `const fn`,
+# or a `static` set by a call (`static X: T = f();`). A mutant there changes a test that
+# never enters it, so the coverage map would leave that test out. Build scripts are R-80's.
+COMPILE_TIME = [
+    (re.compile(r"\bconst\s+(?:unsafe\s+)?(?:extern\s+(?:\"\"\s+)?)?fn\b"), "a `const fn`"),
+    (re.compile(r"\bstatic\s+(?:mut\s+)?[A-Za-z_][A-Za-z0-9_]*\s*:[^;=]*=[^;]*\("), "a `static` set by a call"),
+]
+
+
+def check_compile_time_code(problems):
+    try:
+        k = load(KERNEL)
+    except OSError:
+        return  # check_kernel reports it
+    kernel = k.get("kernel", [])
+    for path in rust_files(os.path.join(ENGINE, "crates", "tally", "src")):
+        r = os.path.relpath(path, ENGINE).replace(os.sep, "/")
+        if not any(fnmatch.fnmatchcase(r, g) for g in kernel):
+            continue
+        code, _ = lex(open(path, encoding="utf-8").read())
+        for pattern, what in COMPILE_TIME:
+            for m in pattern.finditer(code):
+                line = code.count("\n", 0, m.start()) + 1
+                problems.append(f"engine/{r}:{line}: {what} in the kernel: code run at compile time, which gate 8's "
+                                "coverage map can't see (R-133)")
+
+
 def main():
     args = sys.argv[1:]
     if args == ["--write-frozen"]:
@@ -551,7 +579,8 @@ def main():
         return 64
     problems = []
     for check in (check_frozen_tables, check_manifests, check_build_scripts_and_config, check_code_text,
-                  check_ban_paths, check_num_bigint, check_generated, check_kernel, check_cli_io):
+                  check_ban_paths, check_num_bigint, check_generated, check_kernel, check_compile_time_code,
+                  check_cli_io):
         try:
             check(problems)
         except (OSError, ValueError, KeyError, TypeError) as e:

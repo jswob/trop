@@ -105,7 +105,7 @@ ELSEWHERE = {
 REVIEW = {"R-28", "R-31", "R-40", "R-47", "R-63", "R-76", "R-99", "R-113",
           "R-114", "R-115", "R-116", "R-117", "R-119", "R-121", "R-126", "R-129", "R-131"}
 # the rulebook's last row
-LAST_RULE = 132
+LAST_RULE = 133
 DROPPED = {"R-17", "R-32", "R-33", "R-34", "R-35", "R-101", "R-102"}
 # rules the ban coverage proves on its own
 BY_COVERAGE = {"R-25", "R-26", "R-46"}
