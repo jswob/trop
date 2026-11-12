@@ -585,6 +585,13 @@ BASH = [
 ]
 
 
+# the Engine workflow's jobs that make up check full (R-77, 2026-11-13), each with a job id
+ENGINE_GROUPS = ["lint", "dev-tests", "release-tests", "release-gating", "release-binary", "fuzz",
+                 "rules-selftest-1", "rules-selftest-2", "rules-selftest-3", "rules-selftest-4"]
+ENGINE_STEPS = {"check groups": "engine/tools/check groups",
+                **{f"check {g}": f"engine/tools/check group {g}" for g in ENGINE_GROUPS},
+                "engine gate": "The engine jobs passed or were skipped"}
+ENGINE_JOB_IDS = {name: str(124674870333 + i) for i, name in enumerate(ENGINE_STEPS)}
 # merge-pr's input, recorded from GitHub for PR #17 on 2026-10-31 (`gh pr view 17 --json
 # …`, `gh api …/pulls/17/files`, `gh api …/actions/jobs/124674870333`) and trimmed; its
 # state and mergeable set as an open PR's would be, and a status added (issue #18)
@@ -596,8 +603,10 @@ RECORDED_PR = {
     "statusCheckRollup": [
         {"__typename": "CheckRun", "conclusion": "SUCCESS", "name": "changes", "status": "COMPLETED", "workflowName": "CI",
          "detailsUrl": "https://github.com/jswob/trop/actions/runs/41247837439/job/124674870431"},
-        {"__typename": "CheckRun", "conclusion": "SUCCESS", "name": "check full", "status": "COMPLETED", "workflowName": "Engine",
-         "detailsUrl": "https://github.com/jswob/trop/actions/runs/41247837446/job/124674870333"},
+        # check full as CI's jobs (R-77, 2026-11-13): written in the recorded form, one per job
+        *({"__typename": "CheckRun", "conclusion": "SUCCESS", "name": name, "status": "COMPLETED", "workflowName": "Engine",
+           "detailsUrl": f"https://github.com/jswob/trop/actions/runs/41247837446/job/{job_id}"}
+          for name, job_id in ENGINE_JOB_IDS.items()),
         {"__typename": "CheckRun", "conclusion": "SKIPPED", "name": "lint-and-typecheck", "status": "COMPLETED", "workflowName": "CI",
          "detailsUrl": "https://github.com/jswob/trop/actions/runs/41247837439/job/124674907210"},
         {"__typename": "CheckRun", "conclusion": "SUCCESS", "name": "counts and instructions (gate 12, Linux)", "status": "COMPLETED",
@@ -612,17 +621,23 @@ RECORDED_FILES = [
     {"filename": "engine/tests/README.md", "previous_filename": None, "status": "modified"},
     {"filename": "engine/tests/TESTS.sha256", "previous_filename": None, "status": "added"},
 ]
-RECORDED_JOB = {
-    "id": 124674870333, "head_sha": HEAD_SHA, "name": "check full", "status": "completed", "conclusion": "success",
-    "workflow_name": "Engine",
-    "steps": [
-        {"conclusion": "success", "name": "Set up job", "status": "completed"},
-        {"conclusion": "success", "name": "Install the toolchains and the cargo tools", "status": "completed"},
-        {"conclusion": "success", "name": "engine/tools/check full", "status": "completed"},
-        {"conclusion": "success", "name": "engine/tools/commit-check", "status": "completed"},
-        {"conclusion": "skipped", "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9", "status": "completed"},
-        {"conclusion": "success", "name": "Complete job", "status": "completed"},
-    ],
+# each Engine job in the recorded form of check full's job (`gh api …/actions/jobs/124674870333`),
+# its main step renamed (R-77, 2026-11-13); commit-check runs in `check groups`
+RECORDED_JOBS = {
+    job_id: {
+        "id": int(job_id), "head_sha": HEAD_SHA, "name": name, "status": "completed", "conclusion": "success",
+        "workflow_name": "Engine",
+        "steps": [
+            {"conclusion": "success", "name": "Set up job", "status": "completed"},
+            {"conclusion": "success", "name": "Install the toolchains and the cargo tools", "status": "completed"},
+            {"conclusion": "success", "name": ENGINE_STEPS[name], "status": "completed"},
+            *([{"conclusion": "success", "name": "engine/tools/commit-check", "status": "completed"}]
+              if name == "check groups" else []),
+            {"conclusion": "skipped", "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9", "status": "completed"},
+            {"conclusion": "success", "name": "Complete job", "status": "completed"},
+        ],
+    }
+    for name, job_id in ENGINE_JOB_IDS.items()
 }
 # a stand-in for gh: it answers from the recorded files in $FAKE_GH and logs every call
 FAKE_GH = '''#!/usr/bin/env python3
@@ -646,17 +661,21 @@ elif a[:1] == ["api"] and any(x.endswith("/files?per_page=100") for x in a):
     files = json.load(open(os.path.join(d, "files.json")))
     sys.stdout.write("".join(json.dumps(f) + "\\n" for f in files))
 elif a[:1] == ["api"] and any("/actions/jobs/" in x for x in a):
-    out("job.json")
+    job_id = [x for x in a if "/actions/jobs/" in x][0].rsplit("/", 1)[1]
+    jobs = json.load(open(os.path.join(d, "jobs.json")))
+    if job_id not in jobs:
+        sys.exit(f"fake gh: no job {job_id}")
+    sys.stdout.write(json.dumps(jobs[job_id]))
 else:
     sys.exit(f"fake gh: unexpected call {a}")
 '''
 
 
 def mutate(change):
-    """The recorded (pr, files, job), changed by `change`, a function of the three."""
-    pr, files, job = json.loads(json.dumps([RECORDED_PR, RECORDED_FILES, RECORDED_JOB]))
-    change(pr, files, job)
-    return pr, files, job
+    """The recorded (pr, files, jobs), changed by `change`, a function of the three."""
+    pr, files, jobs = json.loads(json.dumps([RECORDED_PR, RECORDED_FILES, RECORDED_JOBS]))
+    change(pr, files, jobs)
+    return pr, files, jobs
 
 
 def set_check(name, **fields):
@@ -675,16 +694,17 @@ def touch(*paths, previous=None):
     return change
 
 
-def set_step(name, conclusion):
-    def change(pr, files, job):
-        for s in job["steps"]:
+def set_step(job_name, name, conclusion):
+    def change(pr, files, jobs):
+        for s in jobs[ENGINE_JOB_IDS[job_name]]["steps"]:
             if s["name"] == name:
                 s["conclusion"] = conclusion
     return change
 
 
-def drop_step(name):
-    def change(pr, files, job):
+def drop_step(job_name, name):
+    def change(pr, files, jobs):
+        job = jobs[ENGINE_JOB_IDS[job_name]]
         job["steps"] = [s for s in job["steps"] if s["name"] != name]
     return change
 
@@ -695,8 +715,18 @@ def app_only(pr, files, job):
     pr["statusCheckRollup"] = [c for c in pr["statusCheckRollup"] if c.get("workflowName") != "Engine"]
 
 
-def drop_check_full(pr, files, job):
-    pr["statusCheckRollup"] = [c for c in pr["statusCheckRollup"] if c.get("name") != "check full"]
+def drop_check(name):
+    def change(pr, files, jobs):
+        pr["statusCheckRollup"] = [c for c in pr["statusCheckRollup"] if c.get("name") != name]
+    return change
+
+
+def old_check_full(pr, files, jobs):
+    """The workflow before 2026-11-13: one `check full` job and the gate, no groups."""
+    rollup = [c for c in pr["statusCheckRollup"] if c.get("name") not in ENGINE_STEPS or c.get("name") == "engine gate"]
+    pr["statusCheckRollup"] = rollup + [{"__typename": "CheckRun", "conclusion": "SUCCESS", "name": "check full",
+                                         "status": "COMPLETED", "workflowName": "Engine",
+                                         "detailsUrl": "https://github.com/jswob/trop/actions/runs/41247837446/job/124674870333"}]
 
 
 def both(*changes):
@@ -712,9 +742,9 @@ def field(key, value):
     return change
 
 
-def job_field(key, value):
-    def change(pr, files, job):
-        job[key] = value
+def job_field(job_name, key, value):
+    def change(pr, files, jobs):
+        jobs[ENGINE_JOB_IDS[job_name]][key] = value
     return change
 
 
@@ -724,8 +754,8 @@ MERGES = [
     ("an app-only PR without check full", app_only, None),
     ("a neutral and a skipped check", set_check("lint-and-typecheck", conclusion="SKIPPED"), None),
     ("Closes in lower case", field("body", "Some work.\n\ncloses #12"), None),
-    ("commit-check skipped", set_step("engine/tools/commit-check", "skipped"), None),
-    ("commit-check absent", drop_step("engine/tools/commit-check"), None),
+    ("commit-check skipped", set_step("check groups", "engine/tools/commit-check", "skipped"), None),
+    ("commit-check absent", drop_step("check groups", "engine/tools/commit-check"), None),
     ("a merged PR", field("state", "MERGED"), "not open"),
     ("a closed PR", field("state", "CLOSED"), "not open"),
     ("a base other than master", field("baseRefName", "engine"), "not master"),
@@ -743,21 +773,34 @@ MERGES = [
     ("a timed-out check", set_check("changes", conclusion="TIMED_OUT"), "ended TIMED_OUT"),
     ("an action-required check", set_check("changes", conclusion="ACTION_REQUIRED"), "ended ACTION_REQUIRED"),
     ("a queued check", set_check("changes", status="QUEUED", conclusion=""), "pending"),
-    ("a running check", set_check("check full", status="IN_PROGRESS", conclusion=""), "pending"),
+    ("a running check", set_check("check lint", status="IN_PROGRESS", conclusion=""), "pending"),
     ("a pending status", set_check("ci/extra", state="PENDING"), "pending"),
     ("an expected status", set_check("ci/extra", state="EXPECTED"), "pending"),
     ("a failed status", set_check("ci/extra", state="FAILURE"), "is FAILURE"),
     ("an errored status", set_check("ci/extra", state="ERROR"), "is ERROR"),
     ("no checks at all", field("statusCheckRollup", []), "no check ran"),
     ("a check of an unknown kind", field("statusCheckRollup", [{"__typename": "Other"}]), "unknown kind"),
-    ("an engine PR without check full", drop_check_full, "didn't run"),
-    ("check full in another workflow", set_check("check full", workflowName="CI"), "didn't run"),
-    ("check full with no job link", set_check("check full", detailsUrl="https://example.invalid/x"), "couldn't be read"),
-    ("check full's job on another commit", job_field("head_sha", "0" * 40), "not on the head commit"),
-    ("check full's job failed", job_field("conclusion", "failure"), "job ended failure"),
-    ("check full's step failed", set_step("engine/tools/check full", "failure"), "check full` didn't pass"),
-    ("check full's step absent", drop_step("engine/tools/check full"), "check full` didn't pass"),
-    ("commit-check failed", set_step("engine/tools/commit-check", "failure"), "commit-check` ended failure"),
+    # check full as CI's jobs (R-77, 2026-11-13): each group's job, the groups' check and the
+    # gate, every one on the head commit with its step passed
+    ("an engine PR without a group's job", drop_check("check release-gating"), "`check release-gating` didn't run"),
+    ("an engine PR without a shard's job", drop_check("check rules-selftest-4"), "`check rules-selftest-4` didn't run"),
+    ("an engine PR without the groups' check", drop_check("check groups"), "`check groups` didn't run"),
+    ("an engine PR without the gate", drop_check("engine gate"), "`engine gate` didn't run"),
+    ("a group's job in another workflow", set_check("check fuzz", workflowName="CI"), "`check fuzz` didn't run"),
+    ("a group's job with no job link", set_check("check lint", detailsUrl="https://example.invalid/x"), "couldn't be read"),
+    ("a group's job on another commit", job_field("check dev-tests", "head_sha", "0" * 40), "not on the head commit"),
+    ("the gate's job on another commit", job_field("engine gate", "head_sha", "0" * 40), "not on the head commit"),
+    ("a group's job failed", job_field("check release-tests", "conclusion", "failure"), "job ended failure"),
+    ("a group's step failed", set_step("check lint", "engine/tools/check group lint", "failure"),
+     "step `engine/tools/check group lint` didn't pass"),
+    ("a group's step absent", drop_step("check rules-selftest-2", "engine/tools/check group rules-selftest-2"),
+     "step `engine/tools/check group rules-selftest-2` didn't pass (missing)"),
+    ("the groups' check failed", set_step("check groups", "engine/tools/check groups", "failure"),
+     "step `engine/tools/check groups` didn't pass"),
+    ("the gate's step failed", set_step("engine gate", "The engine jobs passed or were skipped", "failure"),
+     "`engine gate` job's step"),
+    ("the old single check full only", old_check_full, "`check lint` didn't run"),
+    ("commit-check failed", set_step("check groups", "engine/tools/commit-check", "failure"), "commit-check` ended failure"),
     ("files missing from GitHub's list", field("changedFiles", 4000), "can't be checked"),
     ("an app-only PR changing the CI", both(app_only, touch(".github/workflows/engine.yml")), "walls"),
 ]
@@ -782,10 +825,10 @@ def merge_pr_checks(root, expect, failures):
     os.chmod(os.path.join(bin_dir, "gh"), 0o755)
     data = os.path.join(root, "fake-gh")
 
-    def run(argv, role, pr, files, job, extra=None):
+    def run(argv, role, pr, files, jobs, extra=None):
         shutil.rmtree(data, ignore_errors=True)
         os.makedirs(data)
-        for name, value in (("pr.json", pr), ("files.json", files), ("job.json", job),
+        for name, value in (("pr.json", pr), ("files.json", files), ("jobs.json", jobs),
                             ("merged.json", {"mergeCommit": {"oid": "f00d" * 10}})):
             with open(os.path.join(data, name), "w", encoding="utf-8") as f:
                 json.dump(value, f)
@@ -1043,9 +1086,10 @@ def setup(root):
               "engine/crates/tally/src",
               "engine/crates/tally/benches", "engine/crates/tally-cli/src", "engine/fuzz", "engine/target", ".claude"):
         os.makedirs(os.path.join(root, d), exist_ok=True)
+    # check.py and milestones.py for merge-pr, which reads CI's groups from check (R-77, 2026-11-13)
     for name in ("guard", "guard.py", "stop-check", "stop_check.py", "merge-pr", "merge_pr.py", "worktree-done", "worktree_done.py",
                  "session-start", "launch", "launch.py", "usage", "usage.py",
-                 "commit-check", "commit_check.py", "check_frozen.py"):
+                 "commit-check", "commit_check.py", "check_frozen.py", "check.py", "milestones.py"):
         shutil.copy2(os.path.join(TOOLS, name), os.path.join(root, "engine/tools", name))
     files = {
         "engine/spec/DONE.md": "the contract\n",

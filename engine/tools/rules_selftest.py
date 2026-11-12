@@ -10,7 +10,8 @@ here. Then:
 
   1. the clean run: the engine as it is passes every tool; the clippy and cargo output
      holds none of the messages that mean a rule silently does nothing; ast-grep has
-     every rule on; the CI workflow runs the full check;
+     every rule on; the CI workflow runs the full check, as `check groups` and one job per
+     group;
   2. the ban coverage: one planted use of every entry in clippy.toml's three ban lists,
      each of which must fail with its own lint on its own line;
   3. the cases, tools/rules-selftest/cases/R-<n>.case: each plants one violation, runs
@@ -84,7 +85,7 @@ BLOCKS = {"module", "write", "append", "replace", "delete", "fake", "fakefile", 
 ELSEWHERE = {
     "R-53": "cargo-deny's advisories, daily in CI: a planted advisory needs the RustSec database, so there is no offline case",
     "R-74": "the advisory report (engine/tools/advisory), which never fails",
-    "R-77": "the clean run: the workflow runs `engine/tools/check full`, whose steps are R-77's list",
+    "R-77": "the clean run: the workflow runs `engine/tools/check full`, whose steps are R-77's list, as `check groups` and one job per group",
     "R-78": "this script",
     "R-79": "engine/tools/guard-test",
     "R-81": "engine/tools/guard-test (the guard and the hook strings)",
@@ -784,7 +785,9 @@ def clean_run(log):
 
 
 def ci_problems():
-    """R-77: every pull request runs the full check, whose steps are R-77's list."""
+    """R-77: every pull request runs the full check, whose steps are R-77's list, as parallel
+    jobs (2026-11-13): `check groups`, whose output is the matrix of the jobs that each run
+    `check group <name>`, and the gate that needs them."""
     problems = []
     names = [s[0] for s in check.steps("full")]
     for step in PR_STEPS:
@@ -795,16 +798,24 @@ def ci_problems():
         problems.append("R-77: .github/workflows/engine.yml is missing")
     else:
         text = open(workflow, encoding="utf-8").read()
-        if "engine/tools/check full" not in text:
-            problems.append("R-77: .github/workflows/engine.yml doesn't run `engine/tools/check full`")
+        # the full check as parallel jobs (R-77, 2026-11-13): no group can be left out of the
+        # matrix, since `check groups` makes it and fails unless the groups cover `full`
+        if not re.search(r"\n  groups:\n    name: check groups\n(    [^\n]*\n|\n)*?        run: engine/tools/check groups\n", text):
+            problems.append("R-77: .github/workflows/engine.yml has no `check groups` job running `engine/tools/check groups`")
+        if not re.search(r'\n          matrix="\$\(engine/tools/check groups --matrix\)"\n          echo "matrix=\$matrix" >> "\$GITHUB_OUTPUT"\n', text):
+            problems.append("R-77: .github/workflows/engine.yml doesn't take the jobs' matrix from `engine/tools/check groups --matrix`")
+        if not re.search(r"\n  check:\n    name: check \$\{\{ matrix.group \}\}\n    needs: \[changes, groups\]\n(    [^\n]*\n|\n)*?"
+                         r"      matrix:\n        group: \$\{\{ fromJSON\(needs.groups.outputs.matrix\) \}\}\n(    [^\n]*\n|\n)*?"
+                         r"        run: engine/tools/check group \$\{\{ matrix.group \}\} ", text):
+            problems.append("R-77: .github/workflows/engine.yml has no `check` job running `engine/tools/check group` over the groups' matrix")
         if not re.search(r"\n  pull_request:\n    branches: \[master\]\n", text):
             problems.append("R-77: .github/workflows/engine.yml doesn't run on pull requests into master")
         # issue #6 (2026-11-03): every pull request runs the workflow, and `engine gate`
         # always reports, so it can be required
         if re.search(r"\n  pull_request:\n(    [^\n]*\n)*?    paths(-ignore)?:", text):
             problems.append("R-77: .github/workflows/engine.yml filters pull requests by path, so `engine gate` can't be required")
-        if not re.search(r"\n  gate:\n    name: engine gate\n    needs: \[changes, check, instructions, pr-body\]\n    if: always\(\)\n", text):
-            problems.append("R-77: .github/workflows/engine.yml has no `engine gate` job that needs check full and the pr body and always runs")
+        if not re.search(r"\n  gate:\n    name: engine gate\n    needs: \[changes, groups, check, instructions, pr-body\]\n    if: always\(\)\n", text):
+            problems.append("R-77: .github/workflows/engine.yml has no `engine gate` job that needs check full's groups and the pr body and always runs")
         # the retro after M0, decision 7: an engine pull request's description is checked
         if not re.search(r"\n  pr-body:\n    name: pr body\n(    [^\n]*\n|\n)*?        run: \|\n[^\n]*\n          engine/tools/pr-body ", text):
             problems.append("R-100: .github/workflows/engine.yml has no `pr body` job running engine/tools/pr-body")

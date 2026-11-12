@@ -1,7 +1,8 @@
 # The Tally engine's CI (engine/SCAFFOLD.md; rulebook R-77, R-87, R-92 to R-98). A rule
 # file: only the `rules` role edits it, and engine/tools/RULES.sha256 holds its checksum.
-# Every pull request runs `engine/tools/check full`, the same command the builder runs,
-# with T's tests of every milestone engine/tools/milestones.toml says gates (issue #14);
+# Every pull request runs `engine/tools/check full`, with T's tests of every milestone
+# engine/tools/milestones.toml says gates (issue #14), as parallel jobs: `check groups`,
+# then one `engine/tools/check group <name>` job per group (R-77, 2026-11-13);
 # the nightly jobs write reports, and only mutants and the benchmarks are evidence that
 # can fail. It runs on every pull request into master: the `changes` job decides whether
 # the engine's files changed, the pull-request jobs run only then, and `engine gate`
@@ -76,15 +77,49 @@ jobs:
           fi
           printf '%s\n' "$files" | grep -cE '^(engine/|\.github/workflows/engine\.yml$|\.claude/settings\.json$)' || true
 
-  # on pull requests the walls' self-tests (guard-test, rules-selftest) are skipped when
-  # their inputs are those of a green run (R-77, issue #6); nightly and on demand the whole
-  # check runs fresh
-  check:
-    name: check full
+  # `check full` as parallel jobs (R-77, R-78; the check-speed study, the user's "yes, write
+  # brief", 2026-11-13). `check groups` fails unless every step of `check full` is in exactly
+  # one group and every rule with a selftest case in exactly one rules-selftest shard, and
+  # hands the groups to the matrix, so no group can be left out of it; commit-check reads
+  # the pull request's commits
+  groups:
+    name: check groups
     needs: changes
     if: needs.changes.outputs.engine == 'true' && (github.event_name != 'schedule' || github.event.schedule == '17 2 * * *') && !inputs.mutants-only
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 10
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+      - name: engine/tools/check groups
+        run: engine/tools/check groups
+      - name: The groups, as the jobs' matrix
+        id: matrix
+        run: |
+          matrix="$(engine/tools/check groups --matrix)"
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+      # the commits themselves: attribution lines (R-100) and rule changes' trailers (R-112)
+      - name: engine/tools/commit-check
+        if: github.event_name == 'pull_request'
+        run: engine/tools/commit-check "origin/${{ github.base_ref }}"
+
+  # one job per group, each the same commands as in `check full`, on the head commit. On pull
+  # requests the walls' self-tests (guard-test in lint, rules-selftest's shards) are skipped
+  # when their inputs are those of a green run (R-77, issue #6); nightly and on demand every
+  # group runs fresh
+  check:
+    name: check ${{ matrix.group }}
+    needs: [changes, groups]
+    if: needs.changes.outputs.engine == 'true' && (github.event_name != 'schedule' || github.event.schedule == '17 2 * * *') && !inputs.mutants-only
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        group: ${{ fromJSON(needs.groups.outputs.matrix) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -108,20 +143,23 @@ jobs:
           echo "$HOME/.cargo-tools/bin" >> "$GITHUB_PATH"
       # the gating milestones' tests fail it (`gating`, `gating-release`); the next one's
       # are reported in a line such as `milestone-report: S: 3/7 green`, never failing
-      # the hash of every input of the walls' self-tests; a green run's is kept in the cache
+      # the hash of every input of the walls' self-tests; a green run's is kept in the cache,
+      # one entry per group
       - name: The walls' self-tests' inputs
         id: walls
+        if: matrix.group == 'lint' || startsWith(matrix.group, 'rules-selftest-')
         run: echo "key=$(engine/tools/check walls-key)" >> "$GITHUB_OUTPUT"
       - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         id: walls-green
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.walls.outputs.key
         with:
           path: engine/target/walls-green
-          key: engine-walls-${{ steps.walls.outputs.key }}
-      # the build outputs (issue #6): a pull request restores the newest nightly's; the
-      # nightly builds cold and saves its own, so a stale cache can't hide a failure there
+          key: engine-walls-${{ matrix.group }}-${{ steps.walls.outputs.key }}
+      # the build outputs (issue #6), one cache per group: a pull request restores the
+      # newest nightly's; the nightly builds cold and saves its own, so a stale cache can't
+      # hide a failure there. rules-selftest's shards build in their own scratch target
       - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && !startsWith(matrix.group, 'rules-selftest-')
         with:
           path: &build-paths |
             ~/.cargo/registry/index
@@ -130,31 +168,28 @@ jobs:
             engine/target
             !engine/target/walls-green
             !engine/target/check-logs
+            !engine/target/check-memo
             !engine/target/rules-selftest
             !engine/target/mutants
             !engine/target/mutants-local
-          key: engine-build-${{ runner.os }}-${{ env.NIGHTLY }}-${{ hashFiles('engine/Cargo.lock', 'engine/rust-toolchain.toml') }}-${{ github.run_id }}
-          restore-keys: engine-build-${{ runner.os }}-${{ env.NIGHTLY }}-${{ hashFiles('engine/Cargo.lock', 'engine/rust-toolchain.toml') }}-
-      - name: engine/tools/check full
-        run: engine/tools/check full ${{ github.event_name != 'pull_request' && '--fresh' || '' }}
+          key: engine-build-${{ runner.os }}-${{ env.NIGHTLY }}-${{ hashFiles('engine/Cargo.lock', 'engine/rust-toolchain.toml') }}-${{ matrix.group }}-${{ github.run_id }}
+          restore-keys: engine-build-${{ runner.os }}-${{ env.NIGHTLY }}-${{ hashFiles('engine/Cargo.lock', 'engine/rust-toolchain.toml') }}-${{ matrix.group }}-
+      - name: engine/tools/check group ${{ matrix.group }}
+        run: engine/tools/check group ${{ matrix.group }} ${{ github.event_name != 'pull_request' && '--fresh' || '' }}
       - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        if: success() && github.event_name == 'schedule'
+        if: success() && github.event_name == 'schedule' && !startsWith(matrix.group, 'rules-selftest-')
         with:
           path: *build-paths
-          key: engine-build-${{ runner.os }}-${{ env.NIGHTLY }}-${{ hashFiles('engine/Cargo.lock', 'engine/rust-toolchain.toml') }}-${{ github.run_id }}
+          key: engine-build-${{ runner.os }}-${{ env.NIGHTLY }}-${{ hashFiles('engine/Cargo.lock', 'engine/rust-toolchain.toml') }}-${{ matrix.group }}-${{ github.run_id }}
       - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        if: success() && steps.walls-green.outputs.cache-hit != 'true'
+        if: success() && steps.walls.outputs.key && steps.walls-green.outputs.cache-hit != 'true'
         with:
           path: engine/target/walls-green
-          key: engine-walls-${{ steps.walls.outputs.key }}
-      # the commits themselves: attribution lines (R-100) and rule changes' trailers (R-112)
-      - name: engine/tools/commit-check
-        if: github.event_name == 'pull_request'
-        run: engine/tools/commit-check "origin/${{ github.base_ref }}"
+          key: engine-walls-${{ matrix.group }}-${{ steps.walls.outputs.key }}
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: check-logs
+          name: check-logs-${{ matrix.group }}
           path: |
             engine/target/check-logs/
             engine/target/rules-selftest/logs/
@@ -608,11 +643,12 @@ jobs:
           engine/tools/pr-body "$RUNNER_TEMP/body.md"
 
   # the one check a pull request into master can require (issue #6): it always runs, fails
-  # when a job it needs failed or was cancelled, and passes when they passed or were
-  # skipped because the pull request doesn't touch the engine
+  # when a job it needs failed or was cancelled (a group's job among them: the matrix's
+  # result is its worst), and passes when they passed or were skipped because the pull
+  # request doesn't touch the engine
   gate:
     name: engine gate
-    needs: [changes, check, instructions, pr-body]
+    needs: [changes, groups, check, instructions, pr-body]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -620,22 +656,23 @@ jobs:
       - name: The engine jobs passed or were skipped
         env:
           CHANGES: ${{ needs.changes.result }}
+          GROUPS: ${{ needs.groups.result }}
           CHECK: ${{ needs.check.result }}
           INSTRUCTIONS: ${{ needs.instructions.result }}
           PR_BODY: ${{ needs.pr-body.result }}
           ENGINE: ${{ needs.changes.outputs.engine }}
           EVENT: ${{ github.event_name }}
         run: |
-          echo "changes $CHANGES, check full $CHECK, counts and instructions $INSTRUCTIONS, pr body $PR_BODY; engine files changed: ${ENGINE:-unknown}"
+          echo "changes $CHANGES, check groups $GROUPS, check full's groups $CHECK, counts and instructions $INSTRUCTIONS, pr body $PR_BODY; engine files changed: ${ENGINE:-unknown}"
           if [ "$CHANGES" != success ]; then echo "engine gate: the changes job ended $CHANGES"; exit 1; fi
-          for r in "$CHECK" "$INSTRUCTIONS" "$PR_BODY"; do
+          for r in "$GROUPS" "$CHECK" "$INSTRUCTIONS" "$PR_BODY"; do
             case "$r" in
               success|skipped) ;;
               *) echo "engine gate: a needed job ended $r"; exit 1 ;;
             esac
           done
-          if [ "$EVENT" = pull_request ] && [ "$ENGINE" = true ] && [ "$CHECK" != success ]; then
-            echo "engine gate: the pull request changes engine files but check full didn't run"; exit 1
+          if [ "$EVENT" = pull_request ] && [ "$ENGINE" = true ] && { [ "$GROUPS" != success ] || [ "$CHECK" != success ]; }; then
+            echo "engine gate: the pull request changes engine files but check full's groups didn't all run"; exit 1
           fi
           if [ "$EVENT" = pull_request ] && [ "$ENGINE" = true ] && [ "$PR_BODY" != success ]; then
             echo "engine gate: the pull request changes engine files but its description wasn't checked"; exit 1
