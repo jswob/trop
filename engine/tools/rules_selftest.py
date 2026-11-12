@@ -89,7 +89,7 @@ ELSEWHERE = {
     "R-79": "engine/tools/guard-test",
     "R-81": "engine/tools/guard-test (the guard and the hook strings)",
     "R-83": "engine/tools/guard-test (the Stop hook)",
-    "R-84": "the protected mutants config (test_package), checksummed; the clean run: the workflow's mutants jobs run the gating milestones' tests",
+    "R-84": "the protected mutants config (test_package), checksummed; the clean run: the workflow's mutants jobs run tools/mutants-gate, whose baseline runs the gating milestones' tests",
     "R-88": "the protected mutants and nextest configs; checksummed",
     "R-91": "engine/tools/guard-test",
     "R-92": "check full's fuzz step and the workflow's long fuzz job",
@@ -105,7 +105,7 @@ ELSEWHERE = {
 REVIEW = {"R-28", "R-31", "R-40", "R-47", "R-63", "R-76", "R-99", "R-113",
           "R-114", "R-115", "R-116", "R-117", "R-119", "R-121", "R-126", "R-129", "R-131"}
 # the rulebook's last row
-LAST_RULE = 132
+LAST_RULE = 133
 DROPPED = {"R-17", "R-32", "R-33", "R-34", "R-35", "R-101", "R-102"}
 # rules the ban coverage proves on its own
 BY_COVERAGE = {"R-25", "R-26", "R-46"}
@@ -812,15 +812,22 @@ def ci_problems():
         # quarantine, so a corpus grown over hours can't report an out-of-memory that isn't a bug
         if not re.search(r"\n  long-fuzz:\n(    [^\n]*\n|\n)*?        env:\n(          [^\n]*\n)*?          ASAN_OPTIONS: quarantine_size_mb=64\n", text):
             problems.append("R-92: .github/workflows/engine.yml's long fuzz job doesn't set ASAN_OPTIONS: quarantine_size_mb=64")
-        # R-84: the mutants baseline and shards run the gating milestones' tests too
-        if not re.search(r'args="\$\(tools/milestones args\)"\n.*cargo nextest run [^\n]*--profile mutants \$args\n',
-                         text, re.S):
-            problems.append("R-84: .github/workflows/engine.yml's mutants baseline doesn't run `tools/milestones args`'s targets")
-        if not re.search(r'targets="\$\(tools/milestones args --mutants\)"\n.*cargo mutants -C=--locked \$targets ',
-                         text, re.S):
-            problems.append(
-                "R-84: .github/workflows/engine.yml's mutants shards don't run `tools/milestones args --mutants`'s targets"
-            )
+        # R-84, R-88, R-133 (2026-11-12): gate 8 runs through tools/mutants-gate. The baseline
+        # runs T's tests (tools/milestones args) and fails a test over 20 s; the coverage map
+        # comes from the commit; 100 planned shards; the nightly's twin map
+        gate = {
+            "R-84: the mutants baseline doesn't run `tools/mutants-gate baseline`": r"\n  mutants-baseline:\n(    [^\n]*\n|\n)*?        run: tools/mutants-gate baseline ",
+            "R-88: no job fails a baseline test over 20 s (`tools/mutants-gate slow`)": r"\n        run: engine/tools/mutants-gate slow ",
+            "R-133: the shards don't wait for this run's coverage map": r"\n  mutants:\n    name: mutants \$\{\{ matrix.shard \}\}/100\n    needs: \[mutants-baseline, mutants-coverage\]\n",
+            "R-133: no job makes the coverage map (`tools/mutants-gate coverage`)": r"\n  mutants-coverage:\n(    [^\n]*\n|\n)*?        run: tools/mutants-gate coverage ",
+            "R-84: the shards don't run `tools/mutants-gate shard`": r"\n        run: tools/mutants-gate shard \$\{\{ matrix.shard \}\}/100 ",
+            "R-88: a shard's job isn't capped at 45 minutes": r"\n  mutants:\n(    [^\n]*\n)*?    timeout-minutes: 45\n",
+            "R-88: the survivors job doesn't need all 100 shards": r'\[ "\$shards" -eq 100 \]',
+            "R-133: the nightly doesn't compare twin maps (`tools/mutants-gate same-map`)": r"\n  mutants-twin-map:\n(    [^\n]*\n|\n)*?    if: github.event_name == 'schedule'\n(    [^\n]*\n|\n)*?          tools/mutants-gate same-map ",
+        }
+        for problem, pattern in gate.items():
+            if not re.search(pattern, text):
+                problems.append(f"{problem} (.github/workflows/engine.yml)")
     return problems
 
 

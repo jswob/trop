@@ -1,0 +1,20 @@
+# cargo-nextest for gate 8's coverage map (R-133). A rule file: only the `rules` role edits
+# it. tools/mutants-gate passes it with --config-file, in place of .config/nextest.toml, for
+# the coverage run alone: T's mutation targets once, instrumented, each test through
+# tools/mutants-cov-wrap, which gives it its own LLVM profile. No retries; every test runs.
+
+# the wrapper below needs it at nextest 0.9.149
+experimental = ["wrapper-scripts"]
+
+[profile.cov]
+retries = 0
+fail-fast = false
+# an instrumented test runs slower; a hung one is still ended, and the map then fails
+slow-timeout = { period = "120s", terminate-after = 10 }
+
+[scripts.wrapper.cov]
+command = { command-line = "tools/mutants-cov-wrap", relative-to = "workspace-root" }
+
+[[profile.cov.scripts]]
+filter = "all()"
+run-wrapper = "cov"
