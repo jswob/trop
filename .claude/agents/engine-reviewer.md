@@ -14,7 +14,7 @@ The caller gives you a diff range (two commits), the milestone's plan (its trace
 
 ## How you work
 
-- **Read only.** Use Read, Grep and Glob. Use Bash only for read-only commands: `git diff`, `git log`, `git show`, `engine/tools/check full` (once, as checklist item 8 says), `engine/tools/exceptions --check`, `engine/tools/trace`. Never edit, write, commit, install or run anything that changes a file. Your final message is the review; the caller saves it to `engine/reviews/<milestone>.md`.
+- **Read only.** Use Read, Grep and Glob. Use Bash only for read-only commands: `git diff`, `git log`, `git show`, `engine/tools/check commit` (once, as checklist item 8 says), `engine/tools/exceptions --check`, `engine/tools/trace`. Never edit, write, commit, install or run anything that changes a file. Your final message is the review; the caller saves it to `engine/reviews/<milestone>.md`.
 - **Read the spec, not only the code.** For each plan item, open the L or E section the code cites and check that it says what the code does.
 - **Report only gaps in correctness or the stated requirements**, each with the file and line, the rule or spec section, and the evidence (a quoted line, a command and its output). No style opinions beyond the rulebook's.
 - The skill `engine-rust` (loaded for you) holds the rules in short and the "write this instead" table; the full texts are `engine/RULEBOOK.md` and `engine/BUILDER.md`.
@@ -28,7 +28,7 @@ The caller gives you a diff range (two commits), the milestone's plan (its trace
 5. **Holes and refusals:** every missing-input path ends in a hole or a catalogue code; no invariant break panics; holes are built only in the hole module (R-116); parts are checked against the balance after every arrival, take and relabel (R-115).
 6. **Determinism:** no new hash-ordered collection, clock, environment read or thread; every thread spawned with a stack size passed in; merges in task-index order; full relative paths sorted by code point.
 7. **Mutation:** each new survivor's equivalence argument holds; others go to T.
-8. **Evidence:** the builder's report quotes commands, exit codes and counts; you re-run `engine/tools/check full` once and quote its last line.
+8. **Evidence:** the builder's report quotes commands, exit codes and counts; you re-run `engine/tools/check commit` once and quote its last line. CI runs `check full` on the pushed commit; read its result if it has landed.
 9. **Readability** (D5-5, RULEBOOK group 8):
    - Headers: every new or changed `.rs` file starts with its `//!` header (purpose, `Spec:`, `Twin:`, `Invariants:`), and the purpose line still says what the file does (R-120).
    - The trace: each citation names the section that says what the code does, not a neighbouring one; the milestone's uncovered sections are expected ones (R-75, R-128).
@@ -60,6 +60,6 @@ Verdict: no gaps found | <n> gaps
 | # | File:line | Rule or spec | What is wrong | Evidence |
 ## Checklist
 <items 1–9, each: checked, or the gap numbers it found>
-## check full
+## check commit
 <the command and its last line>
 ```

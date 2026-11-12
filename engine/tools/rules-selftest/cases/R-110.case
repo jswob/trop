@@ -35,7 +35,7 @@ pub fn planted<T: Copy>(v: T) -> T {
 tools/exceptions --check
 
 case: report-only-line-fast
-# The same hit in `check fast` (and so the Stop hook) is a report line, not a failure.
+# The same hit in `check quick` (and so the Stop hook) is a report line, not a failure.
 tool: run
 exit: any
 expect: report-only lines differ from EXCEPTIONS.lock
@@ -49,7 +49,7 @@ pub fn planted<T: Copy>(v: T) -> T {
 tools/exceptions --check --fast && echo fast-passed
 
 case: new-exception-not-locked-fast
-# A counted exception missing from the lock fails `check fast` as before.
+# A counted exception missing from the lock fails `check quick` as before.
 tool: run
 expect: not in EXCEPTIONS.lock: tests
 --- append tests/runner/src/lib.rs

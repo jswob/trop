@@ -4,7 +4,7 @@
 # Each milestone's Rust tests are a `tally-runner` test target named for it (`s_properties`,
 # then `m0_…`, `m5a_…`) with `test = false`: red until the milestone is built, so a plain
 # run leaves them out. A milestone in `gating` has its tests run as failing steps by
-# `check fast`, `check full`, CI and the mutants run; the first milestone not in it is
+# `check quick`, `check full`, CI and the mutants run; the first milestone not in it is
 # reported (`S: 3/7 green`), never failing.
 #
 # The rules role adds a milestone to `gating` in the commit right after the gate session
