@@ -1,17 +1,18 @@
-"""mutants-local: CI's mutation run on a few kernel files, for T's loop (issue #40).
+"""mutants-local: gate 8's mutation run on a few kernel files, for T's loop (issue #40).
 
     engine/tools/mutants-local [--next] [--fences] FILE… [-F REGEX]
 
 FILE is a kernel file (tools/kernel.toml, .cargo/mutants.toml's examine_globs), relative to
-engine/ or to the repository. -F keeps the mutants whose name matches REGEX (cargo-mutants
-27.1.0 keeps a file's struct-field deletions whatever -F says). It runs what CI's mutants
-jobs run, with the same flags (R-84, R-88): T's tests unmutated first, the default
-targets and every gating milestone's but the marker's mutants_leave_out (tools/milestones
-args); then cargo-mutants with
-.cargo/mutants.toml, its kernel list narrowed to FILE, the gating milestones' targets, a
-fixed proptest seed, no failure files, the baseline skipped, `--timeout 600
---build-timeout 600`, and each test under the memory cap, each mutant ended at its first
-failing test (nextest's `mutants` profile, tools/test-memcap). The output is engine/target/mutants-local/mutants.out/; the exit is
+engine/ or to the repository. -F keeps the mutants whose name matches REGEX, a struct
+field's deletion included. It is tools/mutants-gate's local mode, CI's method on this
+machine (R-84, R-88, R-133; 2026-11-12): T's tests unmutated first (the default targets
+and every gating milestone's but the marker's mutants_leave_out, tools/milestones args; a
+test over the 20 s CI's baseline allows is a notice here); the mutants of FILE; a fresh
+coverage map; then each mutant built with the targets of the T tests that enter its
+function and run on those tests, under `--timeout 600 --build-timeout 600`, a fixed
+proptest seed, no failure files and the memory cap, ended at its first failing test
+(nextest's `mutants` profile, tools/test-memcap). A mutant no test enters is built and, if
+viable, missed. The output is engine/target/mutants-local/mutants.out/; the exit is
 cargo-mutants' (0 all caught, 2 some missed, 3 some timed out).
 
 --next (R-88, issue #108; the M1 coordinator's pick P13) adds the next milestone's test
@@ -20,8 +21,9 @@ once it has one, since M1 gates), each test only if it passes in an
 unmutated run of those targets just before the mutants, the batch's baseline (the mutants
 profile, no fail-fast, the features their targets require). A test red there would count
 as catching every mutant (pre-M1's P13), so it is left out, and listed; the rest are
-kept through a nextest filter (`-E`) on the mutants' test runs. Without --next the run is
-CI's, the next milestone's tests left out, the gating ones' required features on (R2).
+kept through a nextest filter (`-E`) on the baseline and the coverage run, so the map, and
+with it each mutant's tests, holds only them. Without --next the run is CI's, the next
+milestone's tests left out, the gating ones' required features on (R2).
 
 --fences (R-88, R-130; pick P55, 2026-11-09) adds the fences' equivalence tests that
 tools/milestones.toml's `fence_catchers` lists (F5's: `tally-cli`'s `walk_oracle`, `tally`'s
@@ -33,24 +35,17 @@ The environment is check's (R-82); only CARGO_BUILD_JOBS and NEXTEST_TEST_THREAD
 through, which change how many jobs run at once, never a result.
 """
 
-import fnmatch
 import os
 import re
 import subprocess
 import sys
-import tomllib
 
 TOOLS = os.path.dirname(os.path.realpath(__file__))
 ENGINE = os.path.dirname(TOOLS)
 sys.path.insert(0, TOOLS)
 import check  # noqa: E402  the clean environment and the fixed seeds (R-82, R-88)
 import milestones  # noqa: E402  the next milestone's targets (--next)
-
-CONFIG = os.path.join(ENGINE, ".cargo", "mutants.toml")
-OUT = os.path.join(ENGINE, "target", "mutants-local")
-PASSED = ("CARGO_BUILD_JOBS", "NEXTEST_TEST_THREADS")
-# CI's flags (.github/workflows/engine.yml's mutants jobs), the shard aside
-FLAGS = ["--no-shuffle", "--baseline", "skip", "--timeout", "600", "--build-timeout", "600"]
+import mutants_gate  # noqa: E402  gate 8's method, its local mode (R-88)
 
 
 # nextest's line for a finished test: `FAIL [   0.009s] (1/3) tally-runner::m1_format tests::name`
@@ -82,33 +77,6 @@ def next_filter(out, names):
     return f"not ({others}){kept}", green, red
 
 
-def toml_value(v):
-    if isinstance(v, bool):
-        return "true" if v else "false"
-    if isinstance(v, str):
-        return '"' + v.replace("\\", "\\\\").replace('"', '\\"') + '"'
-    if isinstance(v, list):
-        return "[" + ", ".join(toml_value(x) for x in v) + "]"
-    raise ValueError(f"mutants-local: .cargo/mutants.toml holds a value it can't copy: {v!r}")
-
-
-def narrowed(config, files):
-    """.cargo/mutants.toml with its examine_globs narrowed to `files`."""
-    lines = [f"# written by tools/mutants-local from .cargo/mutants.toml; examine_globs narrowed\n"]
-    for key, value in config.items():
-        lines.append(f"{key} = {toml_value(files if key == 'examine_globs' else value)}\n")
-    return "".join(lines)
-
-
-def kernel_file(arg, globs):
-    rel = arg.removeprefix("engine/")
-    if not os.path.isfile(os.path.join(ENGINE, rel)):
-        return None, f"{arg}: no such file under engine/"
-    if not any(fnmatch.fnmatchcase(rel, g) for g in globs):
-        return None, f"{arg}: not a kernel file (.cargo/mutants.toml's examine_globs)"
-    return rel, None
-
-
 def main(argv):
     if not argv or argv[0] in ("-h", "--help"):
         print(__doc__.strip())
@@ -122,60 +90,38 @@ def main(argv):
             return 64
         regex = argv[at + 1]
         argv = argv[:at] + argv[at + 2:]
-    with open(CONFIG, "rb") as f:
-        config = tomllib.load(f)
-    files, problems = [], []
-    for arg in argv:
-        rel, problem = kernel_file(arg, config.get("examine_globs", []))
-        files.append(rel)
-        if problem:
-            problems.append(problem)
+    files, problems = mutants_gate.kernel_files(argv)
     if problems or not files:
         for p in problems or ["name at least one kernel file"]:
             print(f"mutants-local: {p}", file=sys.stderr)
         return 64
-    env = check.clean_env()
-    env.update({k: os.environ[k] for k in PASSED if k in os.environ})
-    args = subprocess.run([os.path.join(TOOLS, "milestones"), "args"], cwd=ENGINE, env=env, capture_output=True,
-                          text=True, check=True).stdout.split()
-    targets = subprocess.run([os.path.join(TOOLS, "milestones"), "args", "--mutants"], cwd=ENGINE, env=env,
-                             capture_output=True, text=True, check=True).stdout.split()
-    print("mutants-local: T's tests, unmutated", flush=True)
-    base = subprocess.run(["cargo", "nextest", "run", "--locked", "-p", "tally-runner", "--cargo-profile", "mutants",
-                           "--profile", "mutants", *args], cwd=ENGINE, env=env, check=False)
-    if base.returncode != 0:
-        print("mutants-local: T's tests fail unmutated; no mutant is run", file=sys.stderr)
-        return 1
-    # one nextest filter over the mutants' test runs: the runner's tests (those of the next
-    # milestone green at the baseline, with --next), then the fences' (--fences)
-    runner_filter, fence_filter = None, None
+    env = mutants_gate.run_env()
+    # the targets added to T's (with --next, --fences) and one nextest filter over the
+    # baseline and the coverage run: the runner's tests (those of the next milestone green at
+    # the batch's baseline, with --next), then the fences' (--fences)
+    extra, runner_filter, fence_filter = [], None, None
     if nxt:
         added = next_targets(env)
         if added is None:
             return 1
         selected, runner_filter = added
-        targets += [f"-C={a}" for a in selected]
+        extra += selected
     if fences:
         added = fence_targets(env)
         if added is None:
             return 1
         selected, fence_filter = added
         # `--lib` is the runner's already, and cargo takes it once for every package selected
-        targets += [f"-C={a}" for a in selected if f"-C={a}" not in targets]
+        extra += [a for a in selected if a not in extra and a != "--lib"]
+    expr = runner_filter
     if fence_filter is not None:
         runner = f"package({milestones.RUNNER})" + (f" & ({runner_filter})" if runner_filter else "")
-        targets += ["--cargo-test-arg=-E", f"--cargo-test-arg={runner} | {fence_filter}"]
-    elif runner_filter is not None:
-        targets += ["--cargo-test-arg=-E", f"--cargo-test-arg={runner_filter}"]
-    os.makedirs(OUT, exist_ok=True)
-    local = os.path.join(OUT, "mutants.toml")
-    with open(local, "w", encoding="utf-8") as f:
-        f.write(narrowed(config, files))
-    argv = ["cargo", "mutants", "--config", local, "-C=--locked", *targets, *FLAGS, "--output", OUT]
-    if regex is not None:
-        argv += ["-F", regex]
-    print(f"mutants-local: {' '.join(argv[2:])}", flush=True)
-    return subprocess.run(argv, cwd=ENGINE, env=env, check=False).returncode
+        expr = f"{runner} | {fence_filter}"
+    try:
+        return mutants_gate.local(files, regex, extra, expr)
+    except mutants_gate.GateError as e:
+        print(f"FAIL mutants-local: {e}", file=sys.stderr)
+        return 1
 
 
 def next_targets(env):

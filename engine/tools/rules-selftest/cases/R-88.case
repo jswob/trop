@@ -124,3 +124,73 @@ try:
 except milestones.MilestoneError as e:
     print(e)
 "
+
+# 2026-11-12 (the mutation study; the user's "Okay, let's make these changes"): gate 8 runs
+# through tools/mutants-gate. The baseline fails on a T test slower than 20 s, which T then
+# splits: on a runner 3x slower it would take 60 s, half the profile's 120 s kill, so a kill
+# means a hang, not a slow runner.
+
+case: baseline-test-over-20-s
+tool: run
+expect: FAIL R-88: tally-runner::s_kernel tests::planted_slow took 21.5 s in the baseline, over 20 s
+--- write zz-gate/times.json
+{"tally-runner::s_kernel tests::planted_slow": 21.5, "tally-runner::s_kernel tests::planted_fast": 3.2}
+--- run
+tools/mutants-gate slow zz-gate/times.json
+
+# A shard runs only from a plan that holds every listed mutant exactly once (no skip, R-86).
+
+case: plan-misses-a-listed-mutant
+tool: run
+expect: FAIL mutants-gate: the plan doesn't hold every listed mutant exactly once (R-88)
+--- write crates/tally/src/walk/zz_gate.rs
+//! Planted for R-133's cases.
+pub fn planted() -> u8 {
+    7
+}
+--- write zz-gate/list.in
+{"key": "@KEY@", "mutants": [{"name": "crates/tally/src/walk/zz_gate.rs:3:5: replace planted -> u8 with 0", "file": "crates/tally/src/walk/zz_gate.rs", "package": "tally", "genre": "FnValue", "replacement": "0", "function": {"function_name": "planted", "return_type": "-> u8", "span": {"start": {"line": 2, "column": 1}, "end": {"line": 4, "column": 2}}}, "span": {"start": {"line": 3, "column": 5}, "end": {"line": 3, "column": 6}}, "diff": "--- crates/tally/src/walk/zz_gate.rs\n+++ replace planted -> u8 with 0\n@@ -1,4 +1,4 @@\n //! Planted for R-133's cases.\n pub fn planted() -> u8 {\n-    7\n+    0\n }\n"}]}
+--- write zz-gate/plan.in
+{"key": "@KEY@", "shards": [[]], "o1": [], "killers": {}, "order": []}
+--- write zz-gate/map.in
+{"key": "@KEY@", "args": [], "tests": {}}
+--- run
+k="$(tools/mutants-gate key)" || exit 1
+for f in list plan map; do sed "s/@KEY@/$k/g" "zz-gate/$f.in" > "zz-gate/$f.json"; done
+tools/mutants-gate shard 0/1 zz-gate/list.json zz-gate/map.json zz-gate/plan.json zz-gate/out
+
+# The plan builds the last run's survivors with the kernel at opt-level 1 (overflow checks
+# and debug assertions stay on), and nextest's exit 100 is a catch. The planted history
+# says the mutant was missed; the fake cargo records what it was asked to build.
+
+case: survivor-at-opt-level-1-caught-on-100
+tool: run
+exit: any
+expect: --config profile.mutants.package.tally.opt-level=1
+expect: "summary": "CaughtMutant"
+--- write crates/tally/src/walk/zz_gate.rs
+//! Planted for R-133's cases.
+pub fn planted() -> u8 {
+    7
+}
+--- write zz-bin/cargo
+#!/bin/sh
+# a fake cargo: nextest's build passes and is recorded, its test run fails a test (exit 100); anything else is the real cargo's
+if [ "$1" != nextest ]; then exec "$REAL_CARGO" "$@"; fi
+case " $* " in *" --no-run "*) echo "$*" >> zz-gate/builds.txt; exit 0 ;; esac
+echo "        FAIL [   0.010s] (1/1) tally-runner::s_kernel tests::planted_t"
+exit 100
+--- write zz-gate/list.in
+{"key": "@KEY@", "mutants": [{"name": "crates/tally/src/walk/zz_gate.rs:3:5: replace planted -> u8 with 0", "file": "crates/tally/src/walk/zz_gate.rs", "package": "tally", "genre": "FnValue", "replacement": "0", "function": {"function_name": "planted", "return_type": "-> u8", "span": {"start": {"line": 2, "column": 1}, "end": {"line": 4, "column": 2}}}, "span": {"start": {"line": 3, "column": 5}, "end": {"line": 3, "column": 6}}, "diff": "--- crates/tally/src/walk/zz_gate.rs\n+++ replace planted -> u8 with 0\n@@ -1,4 +1,4 @@\n //! Planted for R-133's cases.\n pub fn planted() -> u8 {\n-    7\n+    0\n }\n"}]}
+--- write zz-gate/history.json
+{"mutants": {"crates/tally/src/walk/zz_gate.rs:3:5: replace planted -> u8 with 0": {"build": 10.0, "test": 40.0, "o1": false, "summary": "MissedMutant", "killer": null}}, "tests": {}}
+--- write zz-gate/map.in
+{"key": "@KEY@", "args": [], "tests": {"tally-runner::s_kernel tests::planted_t": {"crates/tally/src/walk/zz_gate.rs": [[2, 4]]}}}
+--- run
+k="$(tools/mutants-gate key)" || exit 1
+for f in list map; do sed "s/@KEY@/$k/g" "zz-gate/$f.in" > "zz-gate/$f.json"; done
+tools/mutants-gate plan zz-gate/list.json zz-gate/history.json 1 zz-gate/plan.json
+chmod +x zz-bin/cargo
+REAL_CARGO="$(command -v cargo)" PATH="$PWD/zz-bin:$PATH" tools/mutants-gate shard 0/1 zz-gate/list.json zz-gate/map.json zz-gate/plan.json zz-gate/out
+cat zz-gate/builds.txt
+grep -o '"summary": "CaughtMutant"' zz-gate/out/mutants.out/outcomes.json

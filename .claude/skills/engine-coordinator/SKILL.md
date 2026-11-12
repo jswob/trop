@@ -94,7 +94,7 @@ Before a budget stop, a wait on the user, or the end of a turn that leaves work:
 1. one `engine-reviewer` review of the whole diff (the groups were reviewed one by one); blocking findings back to the builder, then a review of the fix alone;
 2. each green row checked against its evidence;
 3. three 30-minute fuzz runs, one target at a time, niced, with `ASAN_OPTIONS=quarantine_size_mb=64`, a fresh corpus from the seeds and the regressions; a crash becomes a regression;
-4. the full mutation run on the final commit: `gh workflow run engine.yml --ref <branch>`, the survivors job green (gate 8);
+4. the full mutation run on the final commit: `gh workflow run engine.yml --ref <branch> -f mutants-only=true` (gate 8 alone, about an hour; R-88, 2026-11-12), the survivors job and `mutants baseline, 20 s a test` green (gate 8);
 5. the timing run on the reference Mac when the milestone has P8 rows (`engine/tools/perf milestone M<n>`), the Mac otherwise idle;
 6. the milestone report `engine/perf/M<n>.md` (R-129) and `engine/ARCHITECTURE.md` (R-119);
 7. the milestone into `gating` (`engine/tools/milestones.toml`) as the branch's last commit, in a rules step, when the brief says so.
