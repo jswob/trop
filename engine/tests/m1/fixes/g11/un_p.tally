@@ -1,0 +1,7 @@
+model m
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+ask x: pow(2, 0.5)

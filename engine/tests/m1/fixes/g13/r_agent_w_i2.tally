@@ -1,0 +1,17 @@
+part i2
+  tally 2
+
+input kp: key qs
+
+def z2: int = (kq + 1) - kp
+
+input kq: key qs
+
+version vk
+  cite card
+  governs always
+  known 2026-01-01
+  kq = q2 "c"
+  kp = q1 "c"
+
+ask i2: z2

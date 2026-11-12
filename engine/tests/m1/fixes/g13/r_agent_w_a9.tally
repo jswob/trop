@@ -1,0 +1,4 @@
+part a9
+  tally 2
+
+ask a9: count(x for x in places on lifespan(konto).to)

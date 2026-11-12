@@ -1,0 +1,6 @@
+part s_test
+  tally 2
+
+def s_test_x: bool = if fee then true else false
+
+ask s_test: s_test_x

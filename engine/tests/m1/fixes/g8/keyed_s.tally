@@ -1,0 +1,4 @@
+part asks_s
+  tally 2
+
+ask n_safe: value(safe, 2026-03-31) in USD by fxs

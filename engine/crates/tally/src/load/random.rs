@@ -103,7 +103,7 @@ fn discrete_max(m: &Reality, bind: &Bind) -> Option<Num> {
     };
     let index = m.indexes.get(id).filter(|index| index.is_int)?;
     let mut keys = Vec::new();
-    for key in &index.keys {
+    for key in index.keys() {
         let KeyVal::Int(k) = key else {
             return None;
         };

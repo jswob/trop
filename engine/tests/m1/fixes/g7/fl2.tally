@@ -1,0 +1,58 @@
+model fl2
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "made up"
+
+unit DUK: currency minor 0.01
+
+axis pa
+  lo "lower pay"
+  hi "higher pay"
+
+place konto: accounts DUK lives 2026-01-01..
+
+place kasa: accounts DUK lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input p_lo: money DUK
+
+input p_hi: money DUK
+
+input d1: date
+
+input fee: money DUK
+
+def pay: money DUK at d1
+  rule base = p_lo
+  rule hi beats base = p_hi when pa == hi
+
+move salary: transfers
+  on d1
+  leg cash from world to konto amount pay
+
+move gift: transfers
+  on d1
+  leg cash from world to kasa amount fee
+
+def kasa_end: money DUK = bal(kasa, d1) at d1
+
+ask q_kasa: bal(kasa, 2026-12-31) law 2026-10-25
+
+ask q_kasa_def: kasa_end law 2026-10-25
+
+ask q_flows_gift: flows(gift, 2026-03-01) law 2026-10-25
+
+ask q_konto: bal(konto, 2026-12-31) law 2026-10-25
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p_lo = 1000.00
+  p_hi = 1200.00
+  d1 = 2026-03-01
+  fee = 10.00

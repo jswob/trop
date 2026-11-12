@@ -1,0 +1,76 @@
+model pd
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index ms = [m1, m2, m3]
+
+kind persons: parties
+
+input d: date
+
+input inc[p in persons]: money PLN
+
+input base: num
+
+input grow: num
+
+input opt[p in persons]: num
+
+def n_on: int = count(p in persons on d)
+
+def tot_inc: money PLN = sum(inc[p] for p in persons on d)
+
+def life_end: date = lifespan(ola).to
+
+def alive: bool = lifespan(ola).to != never
+
+def kut: date = min(d, cut)
+
+def acc[m in ms]: num
+  rule first = base when m == m1
+  rule next beats first = acc[m - 1] * grow when m > m1
+
+def none_or: num = if opt[ola] == none then base else opt[ola]
+
+def top: key persons = argmax(inc[p] for p in persons on d)
+
+def hi: money PLN = max(inc[p] for p in persons on d)
+
+ask e_n: explain n_on
+ask e_tot: explain tot_inc
+ask e_life: explain life_end
+ask e_alive: explain alive
+ask e_kut: explain kut
+ask e_acc: explain acc[m3]
+ask e_acc1: explain acc[m1]
+ask e_none: explain none_or
+ask e_top: explain top
+ask e_hi: explain hi
+ask i_tot: inputs-of tot_inc
+ask i_life: inputs-of life_end
+ask i_acc: inputs-of acc[m3]
+ask i_top: inputs-of top
+ask r_inc: readers-of inc
+ask r_persons: readers-of persons
+ask r_acc: readers-of acc
+ask r_base: readers-of base
+ask v: n_on, tot_inc, life_end, alive, kut, acc[m3], none_or, top, hi
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ola] lives 1980-01-01..
+  persons + [jan] lives 1985-01-01..2026-06-30
+  d = 2026-03-01
+  base = 2
+  grow = 3
+  inc[ola] = 100.00 PLN
+  inc[jan] = 300.00 PLN "jan's pay"
+  opt[ola] = none

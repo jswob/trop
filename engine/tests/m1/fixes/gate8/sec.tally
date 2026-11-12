@@ -1,0 +1,46 @@
+model sec
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T C13 (invented): a decision that reads a keyed place's section, and one that books to one of its things on the same day: the section links the pair (L 5.14.1), so the reader runs after the booking (gate 8's open survivor, order.rs things_of)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index box = [first, second]
+
+input d1: date
+
+input put: money PLN
+
+place jar[b in box]: accounts PLN lives 2026-01-01..
+place a6: accounts PLN lives 2026-01-01..
+place a5: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+move a_read: transfers
+  on d1
+  reads jar
+  leg cash from world to a5 amount bal(jar[first]) + bal(jar[second])
+
+move b_book: transfers
+  on d1
+  reads a6
+  leg cash from world to jar[first] amount put + bal(a6)
+
+ask q: bal(a5, 2026-06-30), bal(jar[first], 2026-06-30)
+
+ask fl: flows(a_read, 2026-01-01..2026-12-31), flows(b_book, 2026-01-01..2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  put = 10.00 PLN "the card"
+  opening[jar[first]] = 0 PLN at 2026-01-01 start "the card"
+  opening[jar[second]] = 0 PLN at 2026-01-01 start "the card"
+  opening[a5] = 0 PLN at 2026-01-01 start "the card"
+  opening[a6] = 0 PLN at 2026-01-01 start "the card"

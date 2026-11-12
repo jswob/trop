@@ -1,0 +1,27 @@
+model p3
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+index qs = [q1, q2]
+
+input d0: date
+
+input rank[k in qs]: int
+
+def pick: key qs = argmin(d0 for o in qs) ties by rank[o]
+
+ask a: pick
+
+ask b: d0 < d0, d0 == d0
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  d0 = window(2026-02-01, 2026-02-10) "card"
+  rank[q1] = 1 "card"
+  rank[q2] = 2 "card"

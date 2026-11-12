@@ -1,0 +1,4 @@
+part n13
+  tally 2
+
+ask n13: if lifespan(konto).to > d1 then 1 else 2

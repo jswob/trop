@@ -18,7 +18,7 @@ Accepted by the user on 2026-11-05 (the retro after M0, decisions 6 to 8). Every
 | R-91: the format target counts a "not built" stop as the load target does, until M5c (issue #56) | `ci(fuzz): format fuzzing allows planned "not built" stops` |
 | tally 2.1.4: a prefixed call prints a.b(x), touching its (; refcore follows (issue #80)          | `spec(format): a prefixed call prints as a.f(x), no space`  |
 
-`engine/tools/commit-check` (CI, on a pull request) fails a commit that touches `engine/`, `.github/workflows/engine.yml` or `.claude/skills/engine-*` with a subject off this form; a commit whose parent has no `engine/CONVENTIONS.md` is listed, never failed.
+`engine/tools/commit-check` (CI, on a pull request; the guard, before every `git push`, over what it sends) fails a commit that touches `engine/`, `.github/workflows/engine.yml` or `.claude/skills/engine-*` with a subject off this form; a commit whose parent has no `engine/CONVENTIONS.md` is listed, never failed.
 
 ## Pull requests
 

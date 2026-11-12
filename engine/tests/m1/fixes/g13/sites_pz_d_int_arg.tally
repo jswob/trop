@@ -1,0 +1,11 @@
+scenario d_int_arg over sites
+  tally 2
+  from 2026-01-01
+
+version dv_int_arg
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  replace d0 = add_months(sites.d0, sites.txt) "x"
+
+ask d_int_arg: d0 in d_int_arg

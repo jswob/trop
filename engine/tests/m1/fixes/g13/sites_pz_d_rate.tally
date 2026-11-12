@@ -1,0 +1,11 @@
+scenario d_rate over sites
+  tally 2
+  from 2026-01-01
+
+version dv_rate
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  replace r5 = sites.r5 * sites.r5 "x"
+
+ask d_rate: r5 in d_rate

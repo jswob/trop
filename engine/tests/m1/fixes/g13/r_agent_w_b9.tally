@@ -1,0 +1,6 @@
+part b9
+  tally 2
+
+input t3[d in d1 .. w step 1 month]: num
+
+ask b9: t3[d1]

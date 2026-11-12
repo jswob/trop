@@ -1,0 +1,13 @@
+part p_row_key
+  tally 2
+
+input extra[y in ys]: num
+
+ask p_row_key: extra[2026], extra[2027]
+
+version card_extra
+  cite card
+  governs always
+  known 2026-01-01
+  extra[(2026)] = 0.3 "the card"
+  extra[2027] = 0.4 "the card"

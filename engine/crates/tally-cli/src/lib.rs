@@ -19,6 +19,11 @@ use core::ops::Bound;
 use std::collections::BTreeMap;
 use std::ffi::OsString;
 
+/// The library, re-exported for T's runner and nothing else: the fence test `m1_lows` calls
+/// `tally_cli::tally::run_with_lows` to run each record under both of F5's forms (pick P57),
+/// with no dependency of its own on `tally` (pick P59).
+pub use tally;
+
 /// What one run of the command prints, and the code it exits with.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Output {
@@ -90,6 +95,26 @@ pub fn run(args: &[OsString], files: &[u8]) -> Output {
         return counted(&rest, files);
     }
     command(args, files)
+}
+
+/// [`run`] with `fault` planted in the engine, its twin for the fixture of `ENGINE-INVARIANT`
+/// (INTERFACE §4, pick P8): a `run` command answered by [`tally::run_faulted`]; any other
+/// command as [`run`] answers it, since only a run walks. Only with the `fault-injection`
+/// feature.
+#[cfg(feature = "fault-injection")]
+#[must_use]
+pub fn run_faulted(args: &[OsString], files: &[u8], fault: tally::Fault) -> Output {
+    let Some(Command::Run { paths, request }) = parse(args) else {
+        return command(args, files);
+    };
+    let Ok(table) = table(files) else {
+        return bad_table();
+    };
+    let given = resolve(&paths, &table);
+    match tally::run_faulted(given, &request, fault) {
+        Ok(answer) => answered(&answer),
+        Err(tally::NotImplemented) => not_implemented("run"),
+    }
 }
 
 /// A command with the counters' line after its output on standard error: the run's counts,
@@ -536,14 +561,19 @@ mod tests {
             ),
             "a parse refusal"
         );
-        let later = [MODEL, b"\nask x: explain y\n"].concat();
+        let later = [
+            MODEL,
+            b"\nsource s \"s\"\ninput r: num\nask x: pow(r, r) to 0.01\n",
+            b"version v\n  cite s\n  governs always\n  known 2026-01-01\n  r = 0.5\n",
+        ]
+        .concat();
         assert_eq!(
             out(&["run", "m.tally"], &[("m.tally", &later)]),
             (
                 "tally run: not implemented\n".to_owned(),
                 EXIT_NOT_IMPLEMENTED
             ),
-            "explain is built later"
+            "a transcendental value is built later (M6)"
         );
     }
 

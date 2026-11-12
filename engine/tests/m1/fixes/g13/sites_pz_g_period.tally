@@ -1,0 +1,12 @@
+part g_period
+  tally 2
+
+axis gx_period
+  lo "low"
+  hi "high"
+
+def g_period_x: date
+  rule base = d0
+  rule other beats base = start_of(fee) when gx_period == hi
+
+ask g_period: g_period_x

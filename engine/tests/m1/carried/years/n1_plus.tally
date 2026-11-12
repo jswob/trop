@@ -1,0 +1,4 @@
+part n1_plus
+  tally 2
+
+ask n1_plus: rate[2026 + 1 year]

@@ -294,6 +294,9 @@ pub struct Graph {
     /// Each item's reads of inputs and defs by role: a sample, a distribution, a read in a
     /// query, a plain value, each role once (refcore's `rand_edges`). L §5.16.
     pub rand_edges: BTreeMap<Node, BTreeMap<Node, Vec<ReadRole>>>,
+    /// The items holding a binding over each event kind, by the kind bound: `readers-of` an
+    /// event kind's first layer (E §10, ruling P63, #132).
+    pub bound_kinds: BTreeMap<String, BTreeSet<Node>>,
 }
 
 impl Graph {

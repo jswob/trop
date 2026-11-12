@@ -1,0 +1,5 @@
+part c5
+  tally 2
+
+
+ask c5: abs(age(w, d2) - n5)

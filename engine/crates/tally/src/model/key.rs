@@ -1,12 +1,24 @@
 //! Key values and spans: what a key position holds, what a row's pattern states, and the days a span covers.
-//! Spec: L §2.5 (keys by position), §4.1 (indexes and their keys), §4.6 step 1 (a row's keys,
-//! `*`, `a..b`), §5.7 (things), §4.5 (spans: `always`, `a..b`, a lifespan's hole end).
-//! Twin: engine/tools/refcore/values.py (`Key`, `Thing`), model.py (`_kv`, `Span`, `ALWAYS`,
-//! `Row.keys_text`, `key_text`).
-//! Invariants: two key values are equal when refcore's `_kv` is; a span's end is the first day
-//! after it; `always` holds every day.
+//! Spec: L §2.5 (keys by position; a stepped range's keys are its values), §4.1 (indexes and
+//! their keys), §4.6 step 1 (a row's keys, `*`, `a..b`), §5.6 (a stepped range), §5.7
+//! (things), §4.5 (spans: `always`, `a..b`, a lifespan's hole end).
+//! Twin: engine/tools/refcore/values.py (`Key`, `Thing`, a `Num` as a key), model.py (`_kv`,
+//! `Span`, `ALWAYS`, `Row.keys_text`, `key_text`).
+//! Invariants: two key values are equal when refcore's `_kv` is, a range's value by its
+//! number and unit; a span's end is the first day after it; `always` holds every day.
 
+use super::value::Value;
 use crate::time::{Day, Period};
+
+/// A value of a stepped range that is no integer of no unit: a fraction, a quantity or money,
+/// by its exact value, and its text as it prints (L §2.5, §5.6).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RangeValue {
+    /// The value: a number of its unit shown plainly, or money.
+    pub value: Value,
+    /// The value as it prints.
+    pub text: String,
+}
 
 /// A key value (refcore's `_kv` cases).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -28,6 +40,8 @@ pub enum KeyVal {
     Int(i64),
     /// A movement, the key of a binding over an event kind (L §5.14.3).
     Mv(Box<super::value::MvRef>),
+    /// A value of a stepped range that is no integer of no unit (L §2.5, §5.6).
+    Value(Box<RangeValue>),
 }
 
 impl KeyVal {
@@ -40,6 +54,7 @@ impl KeyVal {
             KeyVal::Period(period) => period.label(),
             KeyVal::Int(n) => n.to_string(),
             KeyVal::Mv(mv) => mv.id.clone(),
+            KeyVal::Value(v) => v.text.clone(),
         }
     }
 
@@ -49,7 +64,11 @@ impl KeyVal {
         match self {
             KeyVal::Day(day) => Some(*day),
             KeyVal::Period(period) => Some(period.start()),
-            KeyVal::Key { .. } | KeyVal::Thing(_) | KeyVal::Int(_) | KeyVal::Mv(_) => None,
+            KeyVal::Key { .. }
+            | KeyVal::Thing(_)
+            | KeyVal::Int(_)
+            | KeyVal::Mv(_)
+            | KeyVal::Value(_) => None,
         }
     }
 }

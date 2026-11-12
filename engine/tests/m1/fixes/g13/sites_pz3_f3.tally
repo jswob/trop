@@ -1,0 +1,4 @@
+part f3
+  tally 2
+
+ask f3: fee + 0.005 PLN

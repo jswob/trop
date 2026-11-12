@@ -1,0 +1,4 @@
+part p_c_lot
+  tally 2
+
+ask c_lot: value(lot, 2026-03-31) in PLN

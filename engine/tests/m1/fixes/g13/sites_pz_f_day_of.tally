@@ -1,0 +1,9 @@
+part f_day_of
+  tally 2
+
+move dm_day_of: transfers
+  on day_of(2026, txt)
+  reads konto
+  leg cash from konto to world amount min(fee, bal(konto))
+
+ask f_day_of: bal(konto, 2026-12-31)

@@ -1,0 +1,4 @@
+part b_field
+  tally 2
+
+ask b_field: fee with fee = sum(m.zz for m in transfers over d0..d0)

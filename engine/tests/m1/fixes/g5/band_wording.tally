@@ -1,0 +1,45 @@
+model bandword
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+  note "G5 probe: a band in two versions of disjoint spans, read under a wording pin."
+
+source card "a synthetic card"
+
+unit DUK: currency minor 0.01
+
+input revenue: money DUK
+
+band contribution(x: money DUK): money DUK
+  note "the contribution by revenue"
+
+ask plain: contribution(revenue) law 2026-08-01
+
+ask worded: contribution(revenue) as if {wording 2026-06-30 for [contribution]} law 2026-08-01
+
+ask worded_june: contribution(revenue) as if {wording 2026-06-30 for [contribution]} law 2026-06-15
+
+ask worded_later: contribution(revenue) as if {wording 2026-07-01 for [contribution]} law 2026-08-01
+
+ask check_june: check contribution(revenue) == contribution(revenue) as if {wording 2026-06-30 for [contribution]} law 2026-06-15
+
+version v_old
+  cite card
+  governs ..2026-06-30
+  known 2026-01-01
+  contribution: (-inf, 60000] = 300 "old: 300.00"
+  contribution: (60000, inf) = 500 "old: 500.00"
+
+version v_new
+  cite card
+  governs 2026-07-01..
+  known 2026-01-01
+  contribution: (-inf, 60000] = 400 "new: 400.00"
+  contribution: (60000, inf) = 600 "new: 600.00"
+
+version facts
+  cite card
+  governs always
+  known 2026-01-01
+  revenue = 50000 "the revenue"

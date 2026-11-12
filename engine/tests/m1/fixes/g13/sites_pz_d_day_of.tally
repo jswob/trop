@@ -1,0 +1,11 @@
+scenario d_day_of over sites
+  tally 2
+  from 2026-01-01
+
+version dv_day_of
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  replace d0 = day_of(2026, sites.txt) "x"
+
+ask d_day_of: d0 in d_day_of

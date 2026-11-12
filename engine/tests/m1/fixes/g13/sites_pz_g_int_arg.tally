@@ -1,0 +1,12 @@
+part g_int_arg
+  tally 2
+
+axis gx_int_arg
+  lo "low"
+  hi "high"
+
+def g_int_arg_x: date
+  rule base = d0
+  rule other beats base = add_months(d0, txt) when gx_int_arg == hi
+
+ask g_int_arg: g_int_arg_x

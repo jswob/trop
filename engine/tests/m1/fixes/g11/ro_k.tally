@@ -1,0 +1,55 @@
+model rk
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+axis mode
+  lo "low"
+  hi "high"
+
+kind wallets: accounts
+
+input rate[k in qs]: num
+
+input w[p in persons]: num
+
+def nq: int = count(k in qs where rate[k] > 0)
+
+def np: int = count(p in persons where w[p] > 0)
+
+def mm: num = if mode == lo then rate[q1] else rate[q2]
+
+place konto: wallets PLN lives 2026-01-01..
+
+index persons = [ola, piotr]
+
+ask r_qs: readers-of qs
+
+ask r_wal: readers-of wallets
+
+ask r_per: readers-of persons
+
+ask r_mode: readers-of mode
+
+
+
+ask r_ver: readers-of card_2026
+
+ask v: nq, np, mm
+
+ask isw: konto in wallets
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  rate[q1] = 0.1
+  rate[q2] = 0.2
+  w[ola] = 1

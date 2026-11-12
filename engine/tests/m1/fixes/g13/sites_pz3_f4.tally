@@ -1,0 +1,11 @@
+scenario f4 over sites
+  tally 2
+  from 2026-01-01
+
+version fv4
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  replace fee = sites.fee + 0.005 PLN "x"
+
+ask f4: fee in f4

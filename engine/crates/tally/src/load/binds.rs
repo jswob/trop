@@ -250,6 +250,9 @@ impl Checker {
             }
         };
         let mut var = self.new_var(&bind.var, ty.clone(), dom, keylist)?;
+        if let Written::List(_) = &bind.domain {
+            var.site = Some(bind.site.key());
+        }
         if let Written::Range(range) = &bind.domain {
             var.end = Some(range.1.clone());
         }
@@ -283,6 +286,12 @@ impl Checker {
     /// input; one over a decision's movements or over `pads` is a running read (refcore's
     /// `m_bind_movements`). L §5.14.1.
     fn bind_movements(&mut self, m: &Reality, scope: &Scope, kind: &str) {
+        // `readers-of` the kind lists the item (E §10, ruling P63)
+        self.graph
+            .bound_kinds
+            .entry(kind.to_owned())
+            .or_insert_with(std::collections::BTreeSet::new)
+            .insert(scope.item.clone());
         let sub = m.subtree(kind);
         for (id, mv) in m.moves.entries() {
             if !sub.contains(&mv.kind) {
@@ -670,7 +679,7 @@ mod tests {
     use crate::api::Source;
     use crate::load::load;
     use crate::model::Reality;
-    use crate::syntax::{Bind, Domain, Expr, Lit, Stop, parse_reality};
+    use crate::syntax::{Bind, Domain, Expr, Lit, Site, Stop, parse_reality};
 
     /// A reality with an index, an input, a place kind and an observed input.
     fn reality() -> Reality {
@@ -697,6 +706,7 @@ mod tests {
             over: None,
             filter: None,
             text: String::new(),
+            site: Site::default(),
         }
     }
 

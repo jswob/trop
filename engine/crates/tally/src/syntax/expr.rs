@@ -271,6 +271,7 @@ impl P<'_> {
         let world = self.ask_for && self.depth_is_zero() && self.world_in();
         if self.at("in", 0) && ends != Ends::AtIn && !world {
             self.force(&left, from, Under::Comparison);
+            let site = self.site();
             self.skip(1)?;
             let set_from = self.i;
             let set = self.sum(ends)?;
@@ -288,6 +289,7 @@ impl P<'_> {
                 member: left,
                 set,
                 on,
+                site,
             })));
         }
         Ok(left)
@@ -456,7 +458,7 @@ impl P<'_> {
                         .map_err(|_| self.err("one key of a keyed band"))?;
                     let name = names.pop().ok_or_else(|| self.cannot("a band"))?;
                     base = self.band_call(name, names, Some(band_key))?;
-                    fixes = Vec::new();
+                    fixes.clear();
                     continue;
                 }
                 fixes.push(Postfix::Keys(keys));
@@ -478,7 +480,7 @@ impl P<'_> {
                     self.mark(self.back(), |m| m.read = Read::Name);
                     let name = names.pop().ok_or_else(|| self.cannot("a band"))?;
                     base = self.band_call(name, names, None)?;
-                    fixes = Vec::new();
+                    fixes.clear();
                 }
             } else {
                 break;

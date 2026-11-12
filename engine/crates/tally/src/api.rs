@@ -11,12 +11,13 @@
 //! (R-49).
 
 use crate::NotImplemented;
-use crate::ask::{Answered, answer, answer_worlds, report_lines};
+use crate::ask::{Answered, How, answer, answer_worlds, report_lines};
 use crate::base::Refusal;
 use crate::eval::Memo;
 use crate::load::{Loaded, load_run, split_files};
 use crate::oracle::Days;
 use crate::syntax::Stop;
+use crate::walk::Lows;
 use std::collections::{BTreeMap, BTreeSet};
 
 /// One file the run is given: its path as the run names it, and its bytes, or none when the
@@ -132,7 +133,7 @@ pub fn run_in(
     disk: &BTreeMap<&str, &[u8]>,
     request: &Request,
 ) -> Result<Answer, NotImplemented> {
-    answered(given, disk, request, Memo::Classes)
+    answered(given, disk, request, How::new(Memo::Classes, Lows::Tree))
 }
 
 /// Loads a reality's files and answers with what load prints when no ask is answered: its one
@@ -166,7 +167,49 @@ pub fn run_with_memo(
     request: &Request,
     memo: Memo,
 ) -> Result<Answer, NotImplemented> {
-    answered(given, &BTreeMap::new(), request, memo)
+    answered(given, &BTreeMap::new(), request, How::new(memo, Lows::Tree))
+}
+
+/// [`run`] with each ask's engine reading a written projection's common case as `lows` says:
+/// from fence F5's running sums, as [`run`] reads it (`Lows::Tree`), or through the
+/// projection's own walk (`Lows::Walk`), the plain twin the equivalence test compares it with
+/// (E §4.3, P §2.3). Both print the same bytes for every reality and request: a difference is
+/// a fault of the fence (R-130), which is how a test of the fence uses it.
+///
+/// # Errors
+///
+/// As [`run`].
+pub fn run_with_lows(
+    given: Vec<Given>,
+    request: &Request,
+    lows: Lows,
+) -> Result<Answer, NotImplemented> {
+    answered(
+        given,
+        &BTreeMap::new(),
+        request,
+        How::new(Memo::Classes, lows),
+    )
+}
+
+/// [`run`] with `fault` planted, its twin for the fixture of `ENGINE-INVARIANT`, which only an
+/// engine bug prints (E §9, §11; INTERFACE §4, pick P8): the same answer but where the fault
+/// breaks an invariant. Only with the `fault-injection` feature.
+///
+/// # Errors
+///
+/// As [`run`].
+#[cfg(feature = "fault-injection")]
+pub fn run_faulted(
+    given: Vec<Given>,
+    request: &Request,
+    fault: crate::walk::Fault,
+) -> Result<Answer, NotImplemented> {
+    let how = How {
+        fault: Some(fault),
+        ..How::new(Memo::Classes, Lows::Tree)
+    };
+    answered(given, &BTreeMap::new(), request, how)
 }
 
 /// The run's answer, its members read from the files given, then from `disk`; a joint model's
@@ -175,13 +218,13 @@ fn answered(
     given: Vec<Given>,
     disk: &BTreeMap<&str, &[u8]>,
     request: &Request,
-    memo: Memo,
+    how: How,
 ) -> Result<Answer, NotImplemented> {
     let (asks, days) = (&request.asks, request.days);
     finish(loaded(given, disk, request.pin).and_then(|loaded| {
         let mut out = match &loaded {
-            Loaded::One(m) => answer(m, asks, days, memo),
-            Loaded::Worlds(w) => answer_worlds(w, asks, days, memo),
+            Loaded::One(m) => answer(m, asks, days, how),
+            Loaded::Worlds(w) => answer_worlds(w, asks, days, how),
         }?;
         if is_joint(&loaded) {
             out.lines = joint_lines(out.lines);
@@ -246,10 +289,10 @@ pub fn reprint(files: Vec<(Given, String)>) -> Result<Answer, NotImplemented> {
 }
 
 /// [`reprint`] with the file table's files, `disk`: a joint model's members are found among
-/// the files given, by the names they print under, then on `disk` where it holds the model's
-/// file, and pinned as `run` pins them, before anything prints; each member's files given are
-/// a reality of their own (E §3.1 step 1; INTERFACE §1; tally 2.1.6, #74, #91). The CLI's
-/// entry.
+/// the files given, by their full paths, then on `disk` where it holds the model's file, and
+/// pinned as `run` pins them, before anything prints; each member's files given are a reality
+/// of their own, printed under the names given (E §3.1 step 1; INTERFACE §1; tally 2.1.6,
+/// #74, #91). The CLI's entry.
 ///
 /// # Errors
 ///
@@ -533,9 +576,15 @@ mod tests {
             ("s.tally", Some(under.as_bytes())),
         ]);
         assert_eq!(
-            run(hidden, &every()),
-            Err(NotImplemented),
-            "s's ask in the model's world hides s's layer: M1's overlays"
+            lines(hidden, &every()),
+            [
+                "a: 12.50 PLN",
+                "  cut 2026-01-01",
+                "b: 12.50 PLN",
+                "  world: m",
+                "  cut 2026-01-01"
+            ],
+            "s's ask in the model's world, on s's reality, s's layer hidden (refcore's bytes)"
         );
         let fromless = "scenario s over m\n  tally 2\n\nask b: fee in s\n";
         let refused = given(&[

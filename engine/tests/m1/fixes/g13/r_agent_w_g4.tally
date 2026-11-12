@@ -1,0 +1,5 @@
+part g4
+  tally 2
+
+
+ask g4: count(d in d1 .. d2 step age(w, d2) * 1 month)

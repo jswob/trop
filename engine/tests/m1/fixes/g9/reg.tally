@@ -1,0 +1,87 @@
+model reg
+  tally 2
+  on 2026-04-15
+  start 2026-01-01
+  end 2026-12-31
+  note "MB3's register bounds (invented): projections whose counted legs carry a held: mark only on the window's first counted day, or only on its last, read through windows that take in one, the other, both or neither"
+
+source card "invented probe for F5's registers"
+
+unit DUK: currency minor 0.01
+
+index month = month 2026-01..2026-12
+
+place konto: accounts DUK lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input pay: money DUK
+
+input bonus_amt: money DUK
+
+input fee_amt: money DUK
+
+input bonus_day: date
+
+input fee_day: date
+
+move salary[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount pay
+
+move bonus: transfers
+  on bonus_day
+  at bonus_day
+  leg cash from world to konto amount bonus_amt
+
+move fee: transfers
+  on fee_day
+  at fee_day
+  leg cash from konto to world amount fee_amt
+
+ask r_both: low(konto, 2026-05-10 .. 2026-06-20) from 2026-05-01
+
+ask r_first: low(konto, 2026-05-10 .. 2026-06-19) from 2026-05-01
+
+ask r_last: low(konto, 2026-05-11 .. 2026-06-20) from 2026-05-01
+
+ask r_none: low(konto, 2026-05-11 .. 2026-06-19) from 2026-05-01
+
+ask r_bal_last: bal(konto, 2026-06-20) from 2026-05-01
+
+ask r_bal_before: bal(konto, 2026-06-19) from 2026-05-01
+
+ask r_bal_first: bal(konto, 2026-05-10) from 2026-05-01
+
+ask r_bal_early: bal(konto, 2026-05-09) from 2026-05-01
+
+ask r_t_on: low(konto, 2026-05-10 .. 2026-06-20) from 2026-05-10
+
+ask r_t_after: low(konto, 2026-05-11 .. 2026-06-20) from 2026-05-11
+
+ask r_b_before: low(konto, 2026-05-10 .. 2026-06-19) from 2026-05-10
+
+ask r_bt_on: bal(konto, 2026-06-20) from 2026-05-10
+
+ask r_bt_after: bal(konto, 2026-06-20) from 2026-05-11
+
+ask r_bt_before: bal(konto, 2026-06-19) from 2026-05-10
+
+ask r_bt_same: bal(konto, 2026-05-10) from 2026-05-10
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 1000.00
+  bonus_day = 2026-05-10
+  fee_day = 2026-06-20
+  opening[konto] = 500.00 at 2026-01-01 start
+
+version rates
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  bonus_amt = 300.00
+  fee_amt = 40.00

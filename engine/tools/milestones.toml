@@ -14,15 +14,38 @@
 # order. S is the exception (issue #26, 2026-11-02, "S in gating, last commit"): it joins
 # `gating` in the last commit of build/s, so it gates from its merge and S's mutants run
 # counts its tests. M0 likewise (issue #56, G-M0, 2026-11-04, "gating: Yes, last commit"):
-# it joins in the last commit of build/m0.
+# it joins in the last commit of build/m0. M1 likewise (issue #108, 2026-11-11, under those
+# words and the M1 brief): it joins in build/m1's commit before its gate, all 84 tests green;
+# the gate's fixes may follow it on the branch.
 
 # BUILD-ORDER's milestones, in build order (as engine/tests/map/placement.py's ORDER)
 milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
 # the milestones whose tests gate
-gating = ["S", "M0"]
+gating = ["S", "M0", "M1"]
 # the gating targets a mutation run leaves out, from its build as well as its run (R-84,
 # R-88; the user, 2026-11-06, "Yes, approve it, add it to the 2.1.6 brief"): M0's load
 # tests exercise load, not the kernel, and took about 55 % of each shard's time; of run
 # 42138863547's 1 229 caught mutants they alone caught 3, for which T adds direct
 # tests (the 2.1.6 round). They still run in `check` and CI's test jobs
 mutants_leave_out = ["m0_load"]
+# Gate 8's 20 s check (R-88; pick P73, issue #108, 2026-11-12): each T test of the mutation
+# set takes at most 20 s on the median runner (its baseline time over the runner's speed,
+# which tools/mutants-gate finds against the plan's history), but these, each a single
+# vector T can't split, at most their ceiling there, 40 s (3x is the 120 s kill). A name
+# that is no longer a test of the run fails the check, so the list stays true.
+mutants_slow_tests = [
+  # the vector shifts alone
+  { test = "tally-runner::s_kernel tests::s_kernel_g14_capacity_part_1", seconds = 35.3, ceiling = 40, measured = "run 43180053789's baseline: 48.3 s at 1.37x the median runner" },
+  # the vector ex_m alone
+  { test = "tally-runner::m1_lows tests::m1_lows_the_tree_prints_the_walk_on_fixes_g14_part_3", seconds = 38.4, ceiling = 40, measured = "run 43180053789's baseline: 52.6 s at 1.37x the median runner" },
+]
+# The fences' equivalence tests (R-130), catchers of a local mutation batch only, with
+# `mutants-local --fences` (R-88; pick P55, issue #108, 2026-11-09): once a fence answers T's
+# reads, only its equivalence test reaches its plain twin. Not the mutants shards' or their
+# baseline's: gate 8 counts T's tests only (R-84). Each entry names a package and a test
+# target (every test in it) or a module of its lib (the tests under it).
+fence_catchers = [
+  # F5 (walk/lows.rs): the tree against the projection's walk on T's corpora, byte for byte
+  { package = "tally-cli", test = "walk_oracle" },
+  { package = "tally", lib = "walk::lows::tests::" },
+]

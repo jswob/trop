@@ -32,7 +32,7 @@
 mod tests {
     use tally::Source;
     use tally::load::load;
-    use tally::model::Reality;
+    use tally::model::{Reality, World};
     use tally::syntax::{Stop, parse_reality};
 
     /// A reality with a subkind, list, range and open indexes, a keyed place, a `replace`, an
@@ -119,17 +119,17 @@ ask q1: pay[ana, 2026-01], code[x1]
         let mut out = Vec::new();
         for (id, ix) in m.indexes.entries() {
             let first = ix
-                .keys
+                .keys()
                 .first()
                 .map_or_else(|| "-".to_owned(), tally::model::KeyVal::text);
-            out.push(format!("index {id} {} {first}", ix.keys.len()));
+            out.push(format!("index {id} {} {first}", ix.keys().len()));
         }
         for (id, p) in m.places.entries() {
             out.push(format!("place {id} {} {}", p.kind, p.things.len()));
         }
         for (name, t) in m.things.entries() {
             let span = m
-                .lifespan(t, m.on)
+                .lifespan(t, (m.on, World::Whole))
                 .map_or_else(|| "-".to_owned(), |s| s.text());
             let base = t.base.as_deref().unwrap_or("None");
             out.push(format!("thing {name} {base} {span}"));
@@ -799,10 +799,12 @@ version card_2026
                 "def worth: num PLN = value(st, day) in PLN by last(zz)",
                 "LOAD-NAME unknown price input zz (a.tally:57)",
             ),
+            // G14, #130 (P61): a price keyed by a key that isn't a unit, of type `num`, is
+            // not a `num CUR/u` (L §5.10), where refcore loads it
             (
                 worth,
                 "def worth: num PLN = value(st, day) in PLN by rate",
-                "loaded",
+                "LOAD-UNIT value by rate: the price is num, not num PLN/u (a.tally:57)",
             ),
             (
                 worth,
@@ -4750,10 +4752,12 @@ version v1
                 "def ls: date = argmax(1 for a in adjustments over ..).adjusts",
                 "refused: LOAD-UNIT rule base of ls is key events, not date (a.tally:27)",
             ),
+            // G14, G13 fix's B6: `.adjusts` is a movement, whose lifespan load refuses (L §5.7,
+            // §8.4), where refcore loads it and its run crashes (G14's STOP-REPORT)
             (
                 "of-adjusts",
                 "def ls: date = lifespan(argmax(1 for a in adjustments over ..).adjusts).from",
-                no_ask,
+                "refused: LOAD-UNIT lifespan of key events: a movement has its day, not a lifespan (L §5.7) (a.tally:27)",
             ),
             (
                 "adjusts-day",

@@ -1,0 +1,55 @@
+model q3
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+input zero_n: num
+input neg_n: num
+input third: num
+input two_i: int
+input two_f: num
+input three_pln: money PLN
+input lo_f: num
+input half_n: num
+input hi_f: num
+input big_hi: int
+input d_a: date
+input d_b: date
+input by_frac[f in 0.5 .. 2.5 step 0.5]: num
+input by_money[a in 0 PLN .. 10 PLN step 1 PLN]: num
+input by_third[t in 0 .. 1 step third]: num
+
+ask e1: explain by_frac[two_f]
+ask e2: explain twice[two_f]
+ask e3: explain by_third[third * two_i]
+ask e5: explain twice[two_i * two_i]
+ask e6: explain by_money[three_pln]
+
+def twice[f in lo_f .. hi_f step half_n]: num = f * two_i
+
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  zero_n = 0 "c"
+  neg_n = -0.5 "c"
+  third = 0.333 "c"
+  two_i = 2 "c"
+  two_f = 2.0 "c"
+  three_pln = 3.00 PLN "c"
+  lo_f = 0.5 "c"
+  half_n = 0.5 "c"
+  hi_f = 2.5 "c"
+  big_hi = 999999 "c"
+  d_a = 2026-01-31 "c"
+  d_b = 2026-12-31 "c"
+  by_frac[1.5] = 0.15 "c"
+  by_frac[2.0] = 0.2 "c"
+  by_money[3 PLN] = 0.3 "c"
+  by_third[0.666] = 6 "c"

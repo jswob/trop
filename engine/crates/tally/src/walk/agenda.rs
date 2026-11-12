@@ -34,7 +34,7 @@ use crate::base::Refusal;
 use crate::book::Seen;
 use crate::eval::{Collected, Engine, Entry};
 use crate::hole::Hole;
-use crate::model::Reality;
+use crate::model::{KeyVal, MoveInfo, Reality, Value};
 use crate::num::Num;
 use crate::syntax::{Edge, Stop};
 use crate::time::Day;
@@ -68,6 +68,10 @@ pub struct Reading {
     pub instant: String,
 }
 
+/// The places a decision instance whose day is a hole makes holes, or none for every place
+/// (refcore's `dec_hole`). E §4.2 Holes in the walk.
+type HolePlaces = Option<BTreeSet<String>>;
+
 /// One act of the walk on a day (refcore's scheduled acts).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Act {
@@ -86,6 +90,9 @@ pub enum Act {
     /// An adjustment whose change is refused: the place, in every unit, is refused from its
     /// day, by the adjustment (E §5 step 5, tally 2.1.2).
     ChangeRefused(String, Refusal, String),
+    /// A hole at one place in every unit from the walk's start, by a decision instance whose
+    /// day is a hole, with its id and what it met (refcore's `placehole`).
+    PlaceHole(String, Hole, String, Collected),
     /// A hole that holds for every place.
     GlobalHole(Hole),
     /// A refusal that holds for every place.
@@ -151,15 +158,15 @@ impl Engine {
     /// # Errors
     ///
     /// The refusals the plan pass meets; `NotBuilt` for a reading after a movement or at a
-    /// day with no edge, and for a written order with a plan.
+    /// day with no edge. A written order never names a plan here: load refuses `before` a
+    /// plan and drops `after` one, as plans come first (L §5.14.2).
     pub(crate) fn plan_walk(&mut self, m: &Reality, id: usize) -> Result<(), Stop> {
-        let (cut, main) = {
+        let (cut, main, world) = {
             let walk = self.walk(id)?;
-            (walk.cut, walk.proj.is_none())
+            (walk.cut, walk.proj.is_none(), walk.world)
         };
-        not_yet(m)?;
         let readings = if main {
-            crate::book::readings(m, cut)?
+            crate::book::readings(m, (cut, world), self.keep_rows)?
         } else {
             Vec::new()
         };
@@ -178,9 +185,13 @@ impl Engine {
         }
         let mut plans = Vec::new();
         let mut decisions = Vec::new();
-        for mv in sorted_moves(m) {
-            let insts = self.move_instances(m, mv, cut)?.to_vec();
+        let mut hole_places = BTreeMap::new();
+        for mv in m.moves_in(world) {
+            let insts = self.plan_list(m, mv, cut)?.to_vec();
             if mv.decision {
+                if !left_out_of(self.walk(id)?, &mv.id) {
+                    hole_places.extend(self.hole_days(m, mv, &insts, cut)?);
+                }
                 decisions.push((mv.id.clone(), mv.stratum, insts));
             } else {
                 plans.extend(insts);
@@ -220,16 +231,72 @@ impl Engine {
                     count_left_out(walk, &inst)?;
                     continue;
                 }
-                schedule_decision(m, walk, (&move_id, stratum, rank), inst)?;
+                let places = hole_places.remove(&inst.id);
+                schedule_decision(m, walk, (&move_id, stratum, rank), (inst, places))?;
             }
         }
         for adj in adjustments {
             schedule_adjustment(m, walk, &adj)?;
         }
+        if let Some(p) = walk.proj.as_mut() {
+            // sorted, so a read finds its window's by halving (`left_out_lines`)
+            for days in p.counted.values_mut() {
+                days.sort();
+            }
+        }
         walk.endings = endings(m, walk);
         after_the_point(walk);
         walk.progress = Progress::Walking;
         Ok(())
+    }
+
+    /// The decision instances of `insts` whose day is a hole, each with the places its legs
+    /// name (refcore's `prepare`, its decisions). E §4.2 Holes in the walk, L §5.14.
+    fn hole_days(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        insts: &[Inst],
+        cut: Day,
+    ) -> Result<Vec<(String, HolePlaces)>, Stop> {
+        let mut out = Vec::new();
+        for inst in insts {
+            if inst.exists != Exists::No && matches!(inst.day, Some(Dated::Hole(_))) {
+                out.push((inst.id.clone(), self.hole_places(m, mv, inst, cut)?));
+            }
+        }
+        Ok(out)
+    }
+
+    /// The places the legs of decision instance `inst`, whose day is a hole, name, read at the
+    /// cut as its day is: each a hole from the walk's start, the others standing; a leg whose
+    /// place is itself a hole books nothing known. None where they can't be read here: a key
+    /// the hole left unbound, a place that is refused or no thing (refcore's `dec_hole`).
+    /// E §4.2 Holes in the walk, L §5.14.
+    fn hole_places(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        inst: &Inst,
+        cut: Day,
+    ) -> Result<HolePlaces, Stop> {
+        if mv.decl.binds.iter().any(|b| inst.env.get(&b.var).is_none()) {
+            return Ok(None);
+        }
+        let ctx = self.timeline_ctx(None, cut);
+        let mut places = BTreeSet::new();
+        for leg in &mv.decl.legs {
+            for end in [&leg.from, &leg.to] {
+                match self.read_or_refused(m, end, &inst.env, ctx)? {
+                    Some(Value::Key(KeyVal::Thing(p))) => {
+                        places.insert(p);
+                    }
+                    Some(Value::Hole(_)) => {}
+                    Some(_) | None => return Ok(None),
+                }
+            }
+        }
+        Ok(Some(places))
     }
 }
 
@@ -258,18 +325,54 @@ fn left_out_of(walk: &Walk, move_id: &str) -> bool {
 /// An instance a projection's walk leaves out, kept by its day for the `left out:` line of
 /// a read whose window holds it (refcore's `count_leftout`). E §4.3 step 3, L §8.2.
 fn count_left_out(walk: &mut Walk, inst: &Inst) -> Result<(), Stop> {
-    let Some(day) = inst.day.as_ref().and_then(Dated::day) else {
-        return Ok(());
-    };
     let p = walk
         .proj
         .as_mut()
         .ok_or_else(|| super::plan::invariant("an instance left out of a main walk"))?;
-    p.counted
-        .entry(inst.move_id.clone())
-        .or_insert_with(Vec::new)
-        .push(day);
+    left_out_day(&mut p.counted, inst);
     Ok(())
+}
+
+/// A left-out instance's day kept among its move's, for the `left out:` line of a read whose
+/// window holds it; none for an instance with no day (refcore's `count_leftout`). Shared by
+/// the projection's walk and fence F5 (`lows.rs`). E §4.3 step 3, L §8.2.
+pub(super) fn left_out_day(counted: &mut BTreeMap<String, Vec<Day>>, inst: &Inst) {
+    if let Some(day) = inst.day.as_ref().and_then(Dated::day) {
+        counted
+            .entry(inst.move_id.clone())
+            .or_insert_with(Vec::new)
+            .push(day);
+    }
+}
+
+/// The `left out:` line of each left-out move with an instance dated t through `last`, each
+/// move's days sorted, so a read finds its own by halving (refcore's `proj_regs`). Shared by
+/// the projection's walk and fence F5. L §5.14.1, §8.2; E §4.3 step 3; P §2.3.
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` where a window's days can't be taken from a move's.
+pub(super) fn left_out_lines(
+    counted: &BTreeMap<String, Vec<Day>>,
+    (t, last): (Day, Day),
+) -> Result<Vec<String>, Stop> {
+    let mut lines = Vec::new();
+    for (mid, days) in counted {
+        let from = days.partition_point(|d| *d < t);
+        let to = days.partition_point(|d| *d <= last);
+        // none where t is past `last`, as no day lies in t through `last` then
+        let inside = days
+            .get(from..to.max(from))
+            .ok_or_else(|| super::plan::invariant("a left-out move's days in a window"))?;
+        if let Some(first) = inside.first() {
+            lines.push(format!(
+                "{mid}, {} instances, first {}",
+                inside.len(),
+                first.text()
+            ));
+        }
+    }
+    Ok(lines)
 }
 
 /// A projection's walk read at a decision's point: on its first day only the decisions after
@@ -286,25 +389,6 @@ fn after_the_point(walk: &mut Walk) {
     if let Some(acts) = walk.agenda.get_mut(&first) {
         acts.retain(|(at, act)| matches!(act, Act::Decide(..)) && *at > point);
     }
-}
-
-/// What S doesn't walk: a written order with a plan. E §4.1.
-fn not_yet(m: &Reality) -> Result<(), Stop> {
-    if m.graph
-        .written_order
-        .iter()
-        .any(|(a, b)| is_plan(m, a) || is_plan(m, b))
-    {
-        return Err(Stop::NotBuilt("a written order with a plan"));
-    }
-    Ok(())
-}
-
-/// The moves, by id. E §4.1.
-fn sorted_moves(m: &Reality) -> Vec<&crate::model::MoveInfo> {
-    let mut out: Vec<&crate::model::MoveInfo> = m.moves.entries().map(|(_, mv)| mv).collect();
-    out.sort_by(|a, b| a.id.cmp(&b.id));
-    out
 }
 
 /// The decision moves by id (refcore's decision day keys). E §4.2 step 3.
@@ -535,13 +619,14 @@ fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
 /// which books nothing there (L §6.4); one refused before its point (its key's `where`) is
 /// put on its day as any instance is, so its refusal takes its place in the day's movement
 /// order (E §4.1; L §8.4, tally 2.1.6), the scenario's rule first; one whose day is a hole
-/// makes its places holes from the walk's start (refcore's `prepare`, its decisions, and
-/// `dec_hole`). E §4.2 step 3, Holes in the walk; L §6.4.
+/// makes `places` holes from the walk's start, every place where they can't be read
+/// (refcore's `prepare`, its decisions, and `dec_hole`). E §4.2 step 3, Holes in the walk;
+/// L §6.4.
 fn schedule_decision(
     m: &Reality,
     walk: &mut Walk,
     (move_id, stratum, rank): (&str, u32, usize),
-    inst: Inst,
+    (inst, places): (Inst, Option<HolePlaces>),
 ) -> Result<(), Stop> {
     if inst.exists == Exists::No {
         return Ok(());
@@ -573,8 +658,19 @@ fn schedule_decision(
             }
             walk.due.entry(key).or_insert_with(Vec::new).push(inst);
         }
-        Some(Dated::Hole(_)) => {
-            return Err(Stop::NotBuilt("a decision whose day is a hole"));
+        Some(Dated::Hole(h)) => {
+            let at = At::before(walk.start);
+            let places = places.ok_or_else(|| {
+                super::plan::invariant("a decision's hole day with no places read")
+            })?;
+            let Some(places) = places else {
+                walk.at(at, Act::GlobalHole(h));
+                return Ok(());
+            };
+            for place in places {
+                let act = Act::PlaceHole(place, h.clone(), inst.id.clone(), inst.coll.clone());
+                walk.at(at, act);
+            }
         }
         None => {
             let err = inst
@@ -653,20 +749,7 @@ fn schedule_adjustment(
 /// An instance left out of the walk, counted for its move's `left out:` line and its places
 /// (refcore's `note_leftout`). E §4.1 step 3, L §8.2.
 fn note_left_out(walk: &mut Walk, inst: &Inst) -> Result<(), Stop> {
-    let day = inst.day.as_ref().and_then(Dated::day);
-    let entry = walk
-        .left_out
-        .entry(inst.move_id.clone())
-        .or_insert((0, None));
-    entry.0 = entry
-        .0
-        .checked_add(1)
-        .ok_or_else(|| super::plan::invariant("a count of instances"))?;
-    entry.1 = match (entry.1, day) {
-        (Some(a), Some(b)) => Some(a.min(b)),
-        (None, b) => b,
-        (a, None) => a,
-    };
+    one_more_left_out(&mut walk.left_out, inst)?;
     for leg in &inst.legs {
         for place in [&leg.from, &leg.to].into_iter().filter_map(End::place) {
             walk.left_out_at
@@ -678,13 +761,41 @@ fn note_left_out(walk: &mut Walk, inst: &Inst) -> Result<(), Stop> {
     Ok(())
 }
 
+/// One more instance of a move left out of the run, counted with its first day, for its
+/// `left out:` line (refcore's `note_leftout`). Shared by the walk and fence F5 (`lows.rs`).
+/// L §8.2, E §4.1 step 3.
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for a count past what a `u32` holds.
+pub(super) fn one_more_left_out(
+    left_out: &mut BTreeMap<String, (u32, Option<Day>)>,
+    inst: &Inst,
+) -> Result<(), Stop> {
+    let day = inst.day.as_ref().and_then(Dated::day);
+    let entry = left_out.entry(inst.move_id.clone()).or_insert((0, None));
+    entry.0 = entry
+        .0
+        .checked_add(1)
+        .ok_or_else(|| super::plan::invariant("a count of instances"))?;
+    entry.1 = match (entry.1, day) {
+        (Some(a), Some(b)) => Some(a.min(b)),
+        (None, b) => b,
+        (a, None) => a,
+    };
+    Ok(())
+}
+
 /// Each place's last day of its lifespan inside the walk, under its cut (refcore's `ending`).
 /// E §4.2 step 5.
 #[must_use]
 pub fn endings(m: &Reality, walk: &Walk) -> BTreeMap<Day, Vec<String>> {
     let mut out: BTreeMap<Day, Vec<String>> = BTreeMap::new();
     for (_, thing) in m.things.entries().filter(|(_, t)| m.is_place(t)) {
-        let Some(end) = m.lifespan(thing, walk.cut).and_then(|sp| sp.end()) else {
+        let Some(end) = m
+            .lifespan(thing, (walk.cut, walk.world))
+            .and_then(|sp| sp.end())
+        else {
             continue;
         };
         let Some(last) = end.previous() else {
@@ -698,11 +809,6 @@ pub fn endings(m: &Reality, walk: &Walk) -> BTreeMap<Day, Vec<String>> {
         names.sort();
     }
     out
-}
-
-/// Whether `id` names a plan move (L §5.14.2: a written order with a plan). L §5.14.2.
-fn is_plan(m: &Reality, id: &str) -> bool {
-    m.moves.get(id).is_some_and(|mv| !mv.decision)
 }
 
 #[cfg(test)]

@@ -1,0 +1,11 @@
+scenario d_period over sites
+  tally 2
+  from 2026-01-01
+
+version dv_period
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  replace d0 = start_of(sites.fee) "x"
+
+ask d_period: d0 in d_period

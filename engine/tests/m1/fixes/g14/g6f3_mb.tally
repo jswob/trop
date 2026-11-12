@@ -1,0 +1,50 @@
+model decided
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G14 probe, G6 fix 3: a decision whose projection reads the scenario's rows; from T's vector from M1's property scenario-before-19 (issue #108, invented): law_after.tally's movement before from, read at a law date after it, with a decision before from beside it; E 9 item 3 lists the movement whatever else ran before from"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input fee: money PLN
+
+input floor: money PLN
+
+input bill_day: date
+
+input horizon: date
+
+input sweep_day: date
+
+move bill: transfers
+  on bill_day
+  at bill_day
+  leg cash from konto to world amount fee
+
+move sweep: transfers
+  on sweep_day
+  reads konto
+  leg cash from konto to savings amount max(0 PLN, bal(konto, horizon) from sweep_day - floor)
+
+ask b0: bal(konto, 2026-06-30)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 100.00 "the fee"
+  floor = 50.00 "the sweep's floor"
+  opening[konto] = 200.00 at 2026-01-01 start "the opening"
+  opening[savings] = 0.00 at 2026-01-01 start "the opening"
+  horizon = 2026-12-31 "the horizon"
+  bill_day = 2026-09-01 "the bill's day, after from"
+  sweep_day = 2026-04-01 "the decision's day, before from"

@@ -1,0 +1,13 @@
+part n_start
+  tally 2
+
+kind evs: event certain
+  leg what: any
+
+move mv: evs
+  on d0
+  leg what from konto to world amount fee
+
+def n_start_x: int = count(m for m in evs over d0..d0 where (start_of(m.what.amount)) == d0)
+
+ask n_start: n_start_x

@@ -1,0 +1,12 @@
+part g_field
+  tally 2
+
+axis gx_field
+  lo "low"
+  hi "high"
+
+def g_field_x: money PLN
+  rule base = fee
+  rule other beats base = sum(m.zz for m in transfers over d0..d0) when gx_field == hi
+
+ask g_field: g_field_x

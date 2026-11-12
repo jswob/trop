@@ -349,9 +349,24 @@ fn against_refcore(v: &FormatVector, run: &Run, got: &Printed) -> Option<String>
 /// Every vector of `group` the engine fails, each with why, and how many vectors the group
 /// holds.
 pub fn group_failures(group: &str) -> Result<(Vec<String>, usize), String> {
+    group_part_failures(group, (0, 1))
+}
+
+/// As [`group_failures`], over the vectors of `group` whose place in it is `part` modulo
+/// `parts`: a slow group runs as several tests, together every vector (pick P70).
+pub fn group_part_failures(
+    group: &str,
+    (part, parts): (usize, usize),
+) -> Result<(Vec<String>, usize), String> {
     let vs = format_vectors(FORMAT)?;
     let texts = texts();
-    let mine: Vec<&FormatVector> = vs.iter().filter(|v| v.group == group).collect();
+    let mine: Vec<&FormatVector> = vs
+        .iter()
+        .filter(|v| v.group == group)
+        .enumerate()
+        .filter(|(i, _)| i.checked_rem(parts) == Some(part))
+        .map(|(_, v)| v)
+        .collect();
     if mine.is_empty() {
         return Err(format!("m0/format.refcore holds no vector of {group}"));
     }
@@ -393,24 +408,41 @@ pub fn load_failure(v: &LoadVector, texts: &BTreeMap<&str, &str>) -> Option<Stri
 /// Every load vector of `group` the engine fails, each with why, and how many vectors the
 /// group holds.
 pub fn load_group_failures(group: &str) -> Result<(Vec<String>, usize), String> {
-    group_failures_in(LOAD, "m0/load.refcore", group)
+    load_group_part_failures(group, (0, 1))
+}
+
+/// As [`load_group_failures`], over the vectors of `group` whose place in it is `part`
+/// modulo `parts`: a slow group runs as several tests, together every vector (pick P70).
+pub fn load_group_part_failures(
+    group: &str,
+    part: (usize, usize),
+) -> Result<(Vec<String>, usize), String> {
+    group_failures_in(LOAD, "m0/load.refcore", group, part)
 }
 
 /// Every reality of row 3's `group` (`models`, `household`, `changes`) whose load probe the
 /// engine fails, each with why, and how many the group holds.
 pub fn loadcheck_group_failures(group: &str) -> Result<(Vec<String>, usize), String> {
-    group_failures_in(LOADCHECK, "m0/loadcheck.refcore", group)
+    group_failures_in(LOADCHECK, "m0/loadcheck.refcore", group, (0, 1))
 }
 
-/// The failures of `group`'s vectors of `bytes` (named `name`), in [`LOAD`]'s layout.
+/// The failures of `group`'s vectors of `bytes` (named `name`), in [`LOAD`]'s layout, those
+/// whose place in the group is `part` modulo `parts`.
 fn group_failures_in(
     bytes: &[u8],
     name: &str,
     group: &str,
+    (part, parts): (usize, usize),
 ) -> Result<(Vec<String>, usize), String> {
     let vs = load_vectors(bytes)?;
     let texts = texts();
-    let mine: Vec<&LoadVector> = vs.iter().filter(|v| v.group == group).collect();
+    let mine: Vec<&LoadVector> = vs
+        .iter()
+        .filter(|v| v.group == group)
+        .enumerate()
+        .filter(|(i, _)| i.checked_rem(parts) == Some(part))
+        .map(|(_, v)| v)
+        .collect();
     if mine.is_empty() {
         return Err(format!("{name} holds no vector of {group}"));
     }

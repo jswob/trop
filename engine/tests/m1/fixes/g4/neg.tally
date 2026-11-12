@@ -1,0 +1,25 @@
+model neg
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2, q3]
+
+input amt: money PLN
+
+def s[k in qs]: money PLN = prorata(amt, 1 for j in qs, k, minor(PLN), rest largest ties by pos(j))
+
+ask m1: s[q1], (s[q1] as if {amt = -100.00 PLN})
+
+ask m2: (s[q1] as if {amt = -100.00 PLN}), s[q1]
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "card"

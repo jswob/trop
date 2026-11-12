@@ -1,0 +1,4 @@
+part p_up_eur_own
+  tally 2
+
+ask up_eur_own: value(eur_acc, 2026-03-31) in EUR by unit_price

@@ -51,13 +51,27 @@ import vectors as V  # noqa: E402
 sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'tools'))
 import xref_check as X  # noqa: E402
 
-FAMILIES = os.path.join(HERE, 'm0')
-EDITS = os.path.join(FAMILIES, 'edits.tsv')
-STORE = os.path.join(HERE, 'm0.refcore')
 COLS = ['id', 'code', 'family', 'file', 'old', 'new', 'asks', 'rule', 'form']
-REL = 'engine/tests/codes/m0/'
-BUILT = 'engine/tests/out/m0/codes/'   # run output: git ignores out/, check-frozen skips it
 JOBS = 2
+
+
+def configure(name):
+    """Points the script at the store `name` (m0, or m1 for codes/m1.py): its families, edits and store."""
+    global NAME, FAMILIES, EDITS, STORE, REL, BUILT
+    NAME = name
+    FAMILIES = os.path.join(HERE, name)
+    EDITS = os.path.join(FAMILIES, 'edits.tsv')
+    STORE = os.path.join(HERE, name + '.refcore')
+    REL = 'engine/tests/codes/%s/' % name
+    BUILT = 'engine/tests/out/%s/codes/' % name   # run output: git ignores out/, check-frozen skips it
+
+
+configure('m0')
+
+
+def is_twin(vid):
+    """Whether a vector is a family's twin, not a fixture: its base (codes/m1.py adds its answers)."""
+    return vid.endswith('/base')
 
 
 def family(name):
@@ -77,7 +91,7 @@ def vectors():
     with open(EDITS, encoding='utf-8', newline='') as f:
         rows = list(csv.DictReader(f, delimiter='\t', quoting=csv.QUOTE_NONE))
     if not rows or list(rows[0]) != COLS:
-        sys.exit('codes/m0/edits.tsv\'s columns are ' + ', '.join(COLS))
+        sys.exit('codes/%s/edits.tsv\'s columns are ' % NAME + ', '.join(COLS))
     names = sorted({r['family'] for r in rows})
     out = []
     for name in names:
@@ -204,21 +218,21 @@ def main(argv):
     for b in bad:
         print('FAIL ' + b)
     if bad:
-        print('codes/m0: %d of %d vectors fail on refcore: fix the fixture, or a STOP-REPORT' % (len(bad), len(vs)))
+        print('codes/%s: %d of %d vectors fail on refcore: fix the fixture, or a STOP-REPORT' % (NAME, len(bad), len(vs)))
         return 1
     data = stored(vs, res)
-    codes = sorted({v[1] for v in vs if not v[0].endswith('/base')})
+    codes = sorted({v[1] for v in vs if not is_twin(v[0])})
     if '--check' in argv:
         old = open(STORE, 'rb').read() if os.path.exists(STORE) else b''
         if old != data:
-            print('codes/m0.refcore is not what refcore\'s runs give: run codes/m0.py')
+            print('codes/%s.refcore is not what refcore\'s runs give: run codes/%s.py' % (NAME, NAME))
             return 1
-        print('codes/m0.refcore: %d vectors (%d codes), refcore\'s bytes' % (len(vs), len(codes)))
+        print('codes/%s.refcore: %d vectors (%d codes), refcore\'s bytes' % (NAME, len(vs), len(codes)))
         return 0
     with open(STORE, 'wb') as f:
         f.write(data)
-    print('codes/m0.refcore: %d vectors written: %d bases, %d fixtures of %d codes' % (
-        len(vs), sum(v[0].endswith('/base') for v in vs), sum(not v[0].endswith('/base') for v in vs), len(codes)))
+    print('codes/%s.refcore: %d vectors written: %d twins, %d fixtures of %d codes' % (
+        NAME, len(vs), sum(is_twin(v[0]) for v in vs), sum(not is_twin(v[0]) for v in vs), len(codes)))
     return 0
 
 

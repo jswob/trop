@@ -1,0 +1,6 @@
+part c_test
+  tally 2
+
+def c_test_x: int = n1 as if {n1 = if fee then n1 else n1}
+
+ask c_test: c_test_x

@@ -291,8 +291,8 @@ impl Declared {
 }
 
 /// The names the merge renames, by member (refcore's `rename`, `rename_j`, `alias`,
-/// `keynames` and `own_cal`).
-struct Names {
+/// `keynames` and `own_cal`); not the reality's namespace (`model::Names`).
+struct Renames {
     /// What each member declares, its own units and, where its run differs, its calendar.
     rename: BTreeMap<String, BTreeSet<String>>,
     /// The same, with the names a member that is a joint model joined to its members'.
@@ -305,17 +305,17 @@ struct Names {
     own_cal: BTreeMap<String, (Day, Day)>,
 }
 
-impl Names {
+impl Renames {
     /// The names of every member (refcore's `joint_texts`, its renaming sets). L §6.1, §2.2.
     fn of(
         jlines: &[FileLines],
         members: &[Member],
         decls: &BTreeMap<String, Decls>,
-    ) -> Result<Names, Stop> {
+    ) -> Result<Renames, Stop> {
         let span = |ls: &[Line]| (clause(ls, Clause::Start), clause(ls, Clause::End));
         let jmodel = jlines.iter().find(|(_, ls)| first_word(ls) == "model");
         let jspan = jmodel.map_or((None, None), |(_, ls)| span(ls));
-        let mut names = Names {
+        let mut names = Renames {
             rename: BTreeMap::new(),
             rename_j: BTreeMap::new(),
             alias: BTreeMap::new(),
@@ -467,7 +467,7 @@ pub(super) fn merge(jfile: &str, own: &[Source], members: Vec<Member>) -> Result
     members.sort_by(|a, b| a.alias.cmp(&b.alias));
     check_tally(&jlines, &members)?;
     shared_law(&members)?;
-    let names = Names::of(&jlines, &members, &decls)?;
+    let names = Renames::of(&jlines, &members, &decls)?;
     for (_, ls) in &mut jlines {
         for line in ls.iter_mut() {
             line.toks = names.joint_reads(&line.toks)?;
@@ -507,7 +507,7 @@ pub(super) fn merge(jfile: &str, own: &[Source], members: Vec<Member>) -> Result
 /// # Errors
 ///
 /// `ENGINE-INVARIANT` for a member without its names or its model's file.
-fn hoisted_sames(members: &[Member], names: &Names, plan: &Plan) -> Result<Vec<Line>, Stop> {
+fn hoisted_sames(members: &[Member], names: &Renames, plan: &Plan) -> Result<Vec<Line>, Stop> {
     let mut hoisted = Vec::new();
     for m in members.iter().filter(|m| m.nested) {
         let own = names.of_member(&m.alias)?;
@@ -540,7 +540,7 @@ fn hoisted_sames(members: &[Member], names: &Names, plan: &Plan) -> Result<Vec<L
 /// `ENGINE-INVARIANT` for a member without its names.
 fn members_merged(
     members: &[Member],
-    names: &Names,
+    names: &Renames,
     plan: &Plan,
 ) -> Result<(Vec<FileLines>, BTreeMap<String, String>), Stop> {
     let mut out = Vec::new();

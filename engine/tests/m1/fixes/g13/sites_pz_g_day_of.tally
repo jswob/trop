@@ -1,0 +1,12 @@
+part g_day_of
+  tally 2
+
+axis gx_day_of
+  lo "low"
+  hi "high"
+
+def g_day_of_x: date
+  rule base = d0
+  rule other beats base = day_of(2026, txt) when gx_day_of == hi
+
+ask g_day_of: g_day_of_x

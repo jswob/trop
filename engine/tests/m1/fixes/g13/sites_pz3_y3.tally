@@ -1,0 +1,13 @@
+part y3
+  tally 2
+
+kind evs: event certain
+  leg what: any
+
+move mv: evs
+  on d0
+  leg what from konto to world amount fee
+
+def y3_x: date = add_months(d0, sum(m.what.amount for m in evs over d0..d0))
+
+ask y3: y3_x

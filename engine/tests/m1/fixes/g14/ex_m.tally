@@ -1,0 +1,28 @@
+model ex
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G14 probe: explain of an extreme inside a recurrence's own rule (G11 fix review 1)"
+
+source card "card (invented)"
+
+index ks = 0 .. 60
+
+input inc: num
+
+def acc[k in ks]: num = if pos(k) == 1 then inc else max(acc[k - 1], inc) + inc
+
+ask e10: explain acc[10]
+
+ask e14: explain acc[14]
+
+ask e12: explain acc[12]
+
+ask e16: explain acc[16]
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  inc = 1 "card"

@@ -1,0 +1,4 @@
+part a4
+  tally 2
+
+ask a4: day_of(w, n5)

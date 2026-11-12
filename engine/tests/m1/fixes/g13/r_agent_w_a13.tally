@@ -1,0 +1,4 @@
+part a13
+  tally 2
+
+ask a13: round(year_of(wy), 1, down)

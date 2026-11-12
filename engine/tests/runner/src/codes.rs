@@ -22,6 +22,17 @@ pub const FIXTURES: &str = include_str!("../../codes/fixtures.tsv");
 /// netstrings per vector (`codes/m0.py`): each family's base, then each fixture.
 pub const M0: &[u8] = include_bytes!("../../codes/m0.refcore");
 
+/// `codes/m1.refcore`: M1's fixtures of the codes and message forms of M1's constructs no
+/// other output prints (`codes/m1.py`, issue #108), in [`M0`]'s seven netstrings: each
+/// family's base (the load probe), each family's answers (`<family>/answers/<ask>`, a run of each
+/// ask it declares, clean), then each fixture, and #90's two fixtures on M0's families.
+pub const M1: &[u8] = include_bytes!("../../codes/m1.refcore");
+
+/// `codes/m1_invariant.refcore`: the `ENGINE-INVARIANT` fixture, a family's answers run on
+/// refcore with E §9 invariant 1's planted fault (`codes/m1_fault.py`), in [`M0`]'s form; the
+/// engine's twin is `run_faulted` (`INTERFACE.md` §4, the coordinator's pick P8).
+pub const M1_INVARIANT: &[u8] = include_bytes!("../../codes/m1_invariant.refcore");
+
 /// One vector of `codes/m0.refcore`: a family's base text, which loads clean, or a fixture
 /// written off it by one edit.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -164,7 +175,7 @@ pub fn fixtures(tsv: &str) -> Result<Vec<Fixture>, String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{FIXTURES, M0, fixtures, m0_fixtures};
+    use super::{FIXTURES, M0, M1, M1_INVARIANT, fixtures, m0_fixtures};
     use crate::corpus::paths;
     use std::collections::BTreeSet;
 
@@ -229,6 +240,55 @@ mod tests {
             (vs.len(), codes.len()),
             (251, 52),
             "237 fixtures of 52 codes"
+        );
+    }
+
+    /// M1's stores (issue #108, chunk C4): 3 families' bases load clean and their 11 answers
+    /// print no refusal and no hole; 18 fixtures of 16 codes, #90's two on M0's families
+    /// (`m0:adjust`, `m0:gifts`, their bases beside them); and one `ENGINE-INVARIANT`
+    /// fixture, the family `decide`'s answers under the planted fault.
+    #[test]
+    fn the_m1_fixtures_read_and_print_their_codes() {
+        let vs = m0_fixtures(M1).expect("codes/m1.refcore reads");
+        let mut ids = BTreeSet::new();
+        for v in &vs {
+            assert!(ids.insert(v.id.clone()), "{}: twice", v.id);
+            assert!(!v.run.out.contains("warning: "), "{}: no warning", v.id);
+            if v.id.contains("/answers/") {
+                assert!(
+                    v.run.code == 0
+                        && !v.run.out.contains("refused: ")
+                        && !v.run.out.contains("?\""),
+                    "{}: a family answers clean",
+                    v.id
+                );
+            } else if !v.is_base() && !v.code.starts_with("HOLE-") {
+                assert!(
+                    v.run.out.contains(&format!("refused: {} ", v.code)),
+                    "{}: prints {}",
+                    v.id,
+                    v.code
+                );
+            }
+        }
+        let codes: BTreeSet<&str> = vs
+            .iter()
+            .filter(|v| !v.is_base() && !v.id.contains("/answers/"))
+            .map(|v| v.code.as_str())
+            .collect();
+        assert_eq!(
+            (vs.len(), codes.len()),
+            (34, 16),
+            "5 bases, 11 answers, 18 fixtures of 16 codes"
+        );
+        let faulted = m0_fixtures(M1_INVARIANT).expect("codes/m1_invariant.refcore reads");
+        assert!(
+            faulted.len() == 1
+                && faulted.iter().all(|v| v
+                    .run
+                    .out
+                    .contains("refused: ENGINE-INVARIANT conservation: ")),
+            "one fixture, refused ENGINE-INVARIANT under the plant"
         );
     }
 

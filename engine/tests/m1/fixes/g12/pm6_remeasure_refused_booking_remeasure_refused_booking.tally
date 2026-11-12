@@ -1,0 +1,70 @@
+model g11_remeasure_refused_booking
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.2 (issue #34, the user's 1: refused stays refused), G11: E §5 step 1: zero (known 2026-02-01) makes rent[2026-03]'s amount refused at its booking cut (0 tenants, RUN-DIV). A booking refused at its first measure stays refused and its later re-measurements record nothing, as a hole booking's refused steps: late1 (4 tenants) and late2 (5 tenants) make no adjustment (n, l), and konto stays refused from 2026-03-10 (b). The twin is rent in July, untouched by them: its flows stand (q). tally 2.1.1 skipped late1's step and measured late2's against it, one adjustment of -50.00 PLN dated 2026-07-01, unsettled, so q was the HOLE-CHANGED hole."
+
+source plan "T's invented plan"
+
+source act "T's invented act"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+input total: money PLN
+
+input tenants[m in months]: int
+
+input dom: int
+
+move rent[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to landlord amount round(total / tenants[m], minor(PLN), half-even)
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  total = 1 000.00 PLN
+  dom = 10
+  tenants[*] = 2
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start
+
+version zero
+  cite act
+  governs 2026-03
+  known 2026-02-01
+  replace tenants[*] = 0
+
+version late1
+  cite act
+  governs 2026-03
+  known 2026-05-01
+  replace tenants[*] = 4
+
+version late2
+  cite act
+  governs 2026-03
+  known 2026-07-01
+  replace tenants[*] = 5
+
+ask b: bal(konto, 2026-02-28), bal(konto, 2026-03-31)
+
+ask q: flows(rent, 2026-07-01 .. 2026-07-31)
+
+ask n: count(a in adjustments over ..)
+
+ask l: a.change for a in adjustments over ..
+
+ask zm1: explain rent[2026-01]
+
+ask zm2: explain rent[2026-02]
+
+ask zm3: explain rent[2026-03]
+
+ask zm4: explain rent[2026-04]

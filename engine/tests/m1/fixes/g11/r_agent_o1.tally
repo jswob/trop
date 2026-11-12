@@ -1,0 +1,55 @@
+model o1
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+source bankx "bank export"
+
+unit PLN: currency minor 0.01
+
+input d: date
+
+input d0: date
+
+input d1: date
+
+input amt: money PLN
+
+input bank: observed
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on d
+  leg cash from konto to world amount amt
+
+def b: money PLN = bal(konto, d1)
+
+def b0: money PLN = bal(konto, d0)
+
+ask ib: inputs-of b
+
+ask ib0: inputs-of b0
+
+ask v: b, b0
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN
+  d = 2026-02-10
+  d0 = 2026-01-15
+  d1 = 2026-12-31
+  opening[konto] = 500.00 PLN at 2026-01-01 start
+
+version st1
+  cite bankx
+  governs 2026-03
+  known 2026-04-01
+  bank[r1] = (on: 2026-03-03, kind: transfers, leg cash from konto to world amount 20.00 PLN) "line 1"

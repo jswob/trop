@@ -9,6 +9,11 @@ publish.workspace = true
 [dependencies]
 tally-cli = { workspace = true }
 
+# The planted fault of `tally_cli::run_faulted` (INTERFACE §4; the coordinator's pick P8), for
+# `m1_invariant` alone (`required-features`), so no other build of the runner has it.
+[features]
+fault-injection = ["tally-cli/fault-injection"]
+
 [lints]
 workspace = true
 
@@ -71,3 +76,63 @@ test = false
 name = "m0_properties"
 path = "milestone/m0_properties.rs"
 test = false
+
+# M1: the checks of BUILD-ORDER § M1 that s_kernel doesn't hold, refcore's whole output for
+# each (m1/vectors.refcore; MILESTONE-M1.md row 1), one test per builder group
+[[test]]
+name = "m1_checks"
+path = "milestone/m1_checks.rs"
+test = false
+
+# M1: a canonical text reprints as itself, on #109's text (m1/format/; MILESTONE-M1.md row 7)
+[[test]]
+name = "m1_format"
+path = "milestone/m1_format.rs"
+test = false
+
+# M1: the prototype's goldens and pins restated in tally 2 (GOLDENS.md; MILESTONE-M1.md row 2)
+[[test]]
+name = "m1_goldens"
+path = "milestone/m1_goldens.rs"
+test = false
+
+# M1: a fixture for each code and message form of M1's constructs no other output prints
+# (codes/m1/; MILESTONE-M1.md row 3)
+[[test]]
+name = "m1_codes"
+path = "milestone/m1_codes.rs"
+test = false
+
+# M1: the items the pre-M1 run left for M1 (m1/carried/; MILESTONE-M1.md row 6)
+[[test]]
+name = "m1_carried"
+path = "milestone/m1_carried.rs"
+test = false
+
+# M1: the builder groups' review fixes (m1/fixes/; MILESTONE-M1.md row 8)
+[[test]]
+name = "m1_fixes"
+path = "milestone/m1_fixes.rs"
+test = false
+
+# M1: the properties of M1 on a seeded corpus (properties/m1.corpus; PROPERTIES.md § M1;
+# MILESTONE-M1.md row 4)
+[[test]]
+name = "m1_properties"
+path = "milestone/m1_properties.rs"
+test = false
+
+# M1: fence F5 on T's realities, the tree against its twin through the CLI's re-export of the
+# library (picks P57, P59; MILESTONE-M1.md row 9)
+[[test]]
+name = "m1_lows"
+path = "milestone/m1_lows.rs"
+test = false
+
+# M1: the ENGINE-INVARIANT fixture under the planted fault (codes/m1_invariant.refcore; rules
+# turn 2's R1; MILESTONE-M1.md row 3)
+[[test]]
+name = "m1_invariant"
+path = "milestone/m1_invariant.rs"
+test = false
+required-features = ["fault-injection"]

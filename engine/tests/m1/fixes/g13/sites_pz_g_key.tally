@@ -1,0 +1,20 @@
+part g_key
+  tally 2
+
+input xr: num
+
+axis gx_key
+  lo "low"
+  hi "high"
+
+def g_key_x: num
+  rule base = xr
+  rule other beats base = rate[q9] when gx_key == hi
+
+ask g_key: g_key_x
+
+version v_key
+  cite card
+  governs always
+  known 2026-01-01
+  xr = 1 "c"

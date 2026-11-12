@@ -14,11 +14,16 @@
 
 #[cfg(test)]
 mod tests {
-    use tally_runner::m0::load_group_failures;
+    use tally_runner::m0::load_group_part_failures;
 
     /// Holds every load vector of `group` to refcore's run.
     fn loads_as_refcore(group: &str) {
-        let (failed, of) = load_group_failures(group).expect("m0/load.refcore reads");
+        loads_part_as_refcore(group, (0, 1));
+    }
+
+    /// As `loads_as_refcore`, over the vectors of `group` at `part` modulo `parts` (pick P70).
+    fn loads_part_as_refcore(group: &str, part: (usize, usize)) {
+        let (failed, of) = load_group_part_failures(group, part).expect("m0/load.refcore reads");
         assert!(
             failed.is_empty(),
             "{} of {of} load vectors of {group} fail:\n{}",
@@ -126,21 +131,45 @@ mod tests {
 
     /// Household A's runs, with their scenarios and law files.
     #[test]
-    fn m0_load_household_a() {
-        loads_as_refcore("household-A");
+    fn m0_load_household_a_part_1() {
+        loads_part_as_refcore("household-A", (0, 2));
+    }
+
+    /// Part 2 of 2.
+    #[test]
+    fn m0_load_household_a_part_2() {
+        loads_part_as_refcore("household-A", (1, 2));
     }
 
     /// Household B's runs; `b10_v3`'s scenario `hr2_v3` refused alone (`LOAD-CYCLE`), asked
     /// its own ask.
     #[test]
-    fn m0_load_household_b() {
-        loads_as_refcore("household-B");
+    fn m0_load_household_b_part_1() {
+        loads_part_as_refcore("household-B", (0, 2));
+    }
+
+    /// Part 2 of 2.
+    #[test]
+    fn m0_load_household_b_part_2() {
+        loads_part_as_refcore("household-B", (1, 2));
     }
 
     /// Household C's runs.
     #[test]
-    fn m0_load_household_c() {
-        loads_as_refcore("household-C");
+    fn m0_load_household_c_part_1() {
+        loads_part_as_refcore("household-C", (0, 3));
+    }
+
+    /// Part 2 of 3.
+    #[test]
+    fn m0_load_household_c_part_2() {
+        loads_part_as_refcore("household-C", (1, 3));
+    }
+
+    /// Part 3 of 3.
+    #[test]
+    fn m0_load_household_c_part_3() {
+        loads_part_as_refcore("household-C", (2, 3));
     }
 
     /// Household D's runs.

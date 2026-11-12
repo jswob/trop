@@ -12,6 +12,7 @@
 
 use core::cmp::Ordering;
 
+use super::keys::option_at;
 use super::state::{invariant, num_stop, past_days, refuse, refuse_load, unit_stop};
 use crate::base::{Load, Run};
 use crate::model::{
@@ -49,7 +50,7 @@ impl Op {
 
 /// A number's class with money among them: the static types refcore's `_arith` reads.
 #[derive(Debug, Clone, PartialEq, Eq)]
-enum Kind {
+pub(super) enum Kind {
     /// `money CUR`.
     Money(Currency),
     /// Any other number.
@@ -58,16 +59,16 @@ enum Kind {
 
 /// A numeric operand: its value in its own unit and its class.
 #[derive(Debug, Clone, PartialEq, Eq)]
-struct Operand {
+pub(super) struct Operand {
     /// The value.
-    q: Num,
+    pub(super) q: Num,
     /// The class.
-    kind: Kind,
+    pub(super) kind: Kind,
 }
 
 impl Operand {
     /// The operand's unit: a currency's, or its class's (L §3.2).
-    fn unit(&self, m: &Reality) -> Result<Unit, Stop> {
+    pub(super) fn unit(&self, m: &Reality) -> Result<Unit, Stop> {
         match &self.kind {
             Kind::Money(cur) => currency_unit(m, *cur).map_err(num_stop),
             Kind::Plain(Class::Num(u, _) | Class::Rate(u)) => Ok(u.clone()),
@@ -82,7 +83,7 @@ impl Operand {
 }
 
 /// The value of a number or money as an operand, or `None` for any other value.
-fn operand(m: &Reality, v: &Value) -> Result<Option<Operand>, Stop> {
+pub(super) fn operand(m: &Reality, v: &Value) -> Result<Option<Operand>, Stop> {
     if let Value::Money(money) = v {
         return Ok(Some(Operand {
             q: money_num(m, money).map_err(num_stop)?,
@@ -99,7 +100,7 @@ fn operand(m: &Reality, v: &Value) -> Result<Option<Operand>, Stop> {
 }
 
 /// An operand of class `kind` and value `q` as a value: money in its minor units.
-fn finish(m: &Reality, q: Num, kind: Kind) -> Result<Value, Stop> {
+pub(super) fn finish(m: &Reality, q: Num, kind: Kind) -> Result<Value, Stop> {
     match kind {
         Kind::Money(cur) => Ok(Value::Money(num_money(m, &q, cur).map_err(num_stop)?)),
         Kind::Plain(class) => Ok(Value::Number(Number { q, class })),
@@ -124,6 +125,12 @@ fn shown(m: &Reality, a: &Value, op: Op, b: &Value) -> Result<String, Stop> {
 /// The refusal of L §8.4 the operation meets (`RUN-DIV`, `RUN-NOT-INT`, `RUN-KEY`,
 /// `RUN-DOMAIN`, `RUN-DIGITS`), or the unit refusal refcore raises (`LOAD-UNIT`).
 pub fn arith(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Result<Value, Stop> {
+    if matches!(lhs, Value::Window(_)) || matches!(rhs, Value::Window(_)) {
+        // the evaluator's arithmetic takes a window (`windows.rs`); a sum or a walk doesn't yet
+        return Err(Stop::NotBuilt(
+            "a window in arithmetic outside an expression",
+        ));
+    }
     if matches!(lhs, Value::Day(_) | Value::Period(_) | Value::Key(_))
         || matches!(rhs, Value::Day(_) | Value::Period(_) | Value::Key(_))
     {
@@ -139,8 +146,15 @@ pub fn arith(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Result<Value, Sto
     if let Value::Number(n) = &out
         && n.unit().day_and_period()
     {
-        // load refuses `1 day / 1 year` (L §3.2); refcore's run computes what load missed
-        return Err(Stop::NotBuilt("a day times or over a period met at run"));
+        // load refuses `1 day / 1 year` (L §3.2); an operand whose unit only the run knows (a
+        // leg of unit any) is refused where it is computed, with load's text (pick P66, #134)
+        return Err(refuse_load(
+            Load::Unit,
+            format!(
+                "{}: day is a dimension of its own (1 day / 1 year is refused, L §3.2)",
+                shown(m, lhs, op, rhs)?
+            ),
+        ));
     }
     Ok(out)
 }
@@ -190,10 +204,8 @@ fn add_sub(
             if lhs.unit(m)? != rhs.unit(m)? {
                 return Err(rate_periods(m, op, values)?);
             }
-            // refcore's run adds them as a rate; load refuses the sum (L §3.3)
-            return Err(Stop::NotBuilt(
-                "a rate and a number of its unit added at run",
-            ));
+            // load refuses a rate beside a number (L §3.3), so the run does, with its text
+            return Err(outside_rates(m, op, values)?);
         }
         (Kind::Plain(Class::Int), Kind::Plain(Class::Int)) => Kind::Plain(Class::Int),
         (Kind::Money(cur), Kind::Plain(Class::Num(..)))
@@ -223,6 +235,15 @@ fn add_sub(
     }
     .map_err(num_stop)?;
     finish(m, q, kind)
+}
+
+/// `<a> <op> <b>: rate arithmetic outside L §3.3`, load's text (refcore's `_arith`), met at
+/// run where an operand's unit only the run knows (a leg of unit any; pick P66, #134).
+fn outside_rates(m: &Reality, op: Op, (a, b): (&Value, &Value)) -> Result<Stop, Stop> {
+    Ok(refuse_load(
+        Load::Unit,
+        format!("{}: rate arithmetic outside L §3.3", shown(m, a, op, b)?),
+    ))
 }
 
 /// `rates of different periods: <a> <op> <b>` (L §3.3; refcore's `arith`).
@@ -352,10 +373,9 @@ fn rate_mul(
         (_, Kind::Plain(Class::Rate(u))) => (u, lhs),
         _ => return Ok(None),
     };
-    // load refuses rate arithmetic outside L §3.3; refcore's run computes what load missed
-    let refused = || Stop::NotBuilt("rate arithmetic outside L §3.3 met at run");
+    // load refuses rate arithmetic outside L §3.3, so the run does, with its text
     if op != Op::Mul {
-        return Err(refused());
+        return Err(outside_rates(m, op, (a, b))?);
     }
     let q = lhs.q.checked_mul(&rhs.q).map_err(num_stop)?;
     if scalar(&other.kind) {
@@ -365,7 +385,7 @@ fn rate_mul(
     let one_period = matches!(duration.terms(), [(base, 1)]
         if matches!(base.as_str(), "day" | "month" | "quarter" | "year"));
     if !one_period {
-        return Err(refused());
+        return Err(outside_rates(m, op, (a, b))?);
     }
     let (unit, factor) = lhs.unit(m)?.mul(&rhs.unit(m)?).map_err(unit_stop)?;
     if !unit.is_one() {
@@ -425,7 +445,7 @@ pub fn int_of(m: &Reality, v: &Value) -> Result<i64, Stop> {
             "a value is none here: an integer argument".to_owned(),
         ));
     }
-    // load's types refuse it; refcore's run takes the value as it is
+    // an interval reaches here where its caller takes no window (L §4.4)
     Err(Stop::NotBuilt(
         "an integer argument that isn't a number, met at run",
     ))
@@ -444,71 +464,6 @@ pub(super) fn whole_of(m: &Reality, v: &Value) -> Result<Num, Stop> {
         return Ok(n.q.clone());
     }
     int_of(m, v).map(Num::int)
-}
-
-/// Whether the numbers `a .. b [step s]` hold more than `limit` keys, counted and never
-/// stepped (refcore's `range_values`, its checks before `too_many`, in its order): with no
-/// step, the ends' integers; with one, a step that isn't positive is `RUN-DOMAIN`, then the
-/// last end and the step are brought into the first end's unit. L §5.11, §7.6 item 2.
-///
-/// # Errors
-///
-/// `int_of`'s for an end with no step that isn't an integer; `RUN-DOMAIN`; `LOAD-UNIT` for
-/// units that can't be brought together; "not built" for a stepped range of other values.
-pub(super) fn numbers_past(
-    m: &Reality,
-    (first, last, by): (&Value, &Value, Option<&Value>),
-    limit: u64,
-) -> Result<bool, Stop> {
-    let Some(by) = by else {
-        let (lo, hi) = (range_int(m, first)?, range_int(m, last)?);
-        return lo.range_past(&hi, &Num::int(1), limit).map_err(num_stop);
-    };
-    let (Some(a), Some(b), Some(s)) = (operand(m, first)?, operand(m, last)?, operand(m, by)?)
-    else {
-        return Err(Stop::NotBuilt("a stepped range of values not numbers"));
-    };
-    if s.q.is_negative() || s.q.is_zero() {
-        let step = by.text(m).map_err(num_stop)?;
-        return Err(refuse(
-            Run::Domain,
-            format!("a stepped range whose step {step} is not positive"),
-        ));
-    }
-    let unit = a.unit(m)?;
-    let (stop, step) = (in_unit(m, &b, &unit)?, in_unit(m, &s, &unit)?);
-    a.q.range_past(&stop, &step, limit).map_err(num_stop)
-}
-
-/// A range end with no step as an integer, whatever its unit, money's amount among them
-/// (refcore's `int_of` in `range_values`). L §5.11.
-fn range_int(m: &Reality, v: &Value) -> Result<Num, Stop> {
-    match operand(m, v)? {
-        Some(o) if o.q.is_integer() => Ok(o.q),
-        Some(_) => Err(refuse(
-            Run::NotInt,
-            format!("{} is not an integer", v.text(m).map_err(num_stop)?),
-        )),
-        None => int_of(m, v).map(Num::int),
-    }
-}
-
-/// A range's last end or step in its first end's unit (refcore's `U.conv` in
-/// `range_values`); `LOAD-UNIT` where they can't be brought together. L §3.2, §5.11.
-fn in_unit(m: &Reality, o: &Operand, unit: &Unit) -> Result<Num, Stop> {
-    let own = o.unit(m)?;
-    let factor = if own == *unit {
-        Some(Num::int(1))
-    } else {
-        own.conv(unit).map_err(num_stop)?
-    };
-    let Some(factor) = factor else {
-        return Err(refuse_load(
-            Load::Unit,
-            "a range of quantities in different units".to_owned(),
-        ));
-    };
-    o.q.checked_mul(&factor).map_err(num_stop)
 }
 
 /// A count of days, months or business days to step a day by, an integer times `per`
@@ -533,7 +488,7 @@ fn steps_of(count: &Num, per: i64) -> Result<i64, Stop> {
 
 /// The period word of a duration `5 years`, `-1 day`, and its count, or `None` when the
 /// number isn't one (L §4.2).
-fn duration(n: &Number) -> Option<(&str, &Num)> {
+pub(super) fn duration(n: &Number) -> Option<(&str, &Num)> {
     let Class::Num(unit, _) = &n.class else {
         return None;
     };
@@ -734,7 +689,7 @@ fn key_shift(
     let step = k.checked_mul(&Num::int(sign)).map_err(num_stop)?;
     let to = Num::int(pos).checked_add(&step).map_err(num_stop)?;
     let at = to.to_i64().and_then(|at| usize::try_from(at).ok());
-    if let Some(found) = at.and_then(|at| ix.keys.get(at)) {
+    if let Some(found) = at.and_then(|at| ix.keys().get(at)) {
         return Ok(Value::of_key(found));
     }
     let size = if k.is_negative() {
@@ -784,6 +739,10 @@ pub enum Test {
 /// `RUN-DOMAIN` for an order that has no meaning; `LOAD-UNIT` for values of different units
 /// or types.
 pub fn compare(m: &Reality, lhs: &Value, rhs: &Value, test: Test) -> Result<Ordering, Stop> {
+    if matches!(lhs, Value::Window(_)) || matches!(rhs, Value::Window(_)) {
+        // a comparison decides a window (`windows.rs`); an aggregate's order doesn't yet
+        return Err(Stop::NotBuilt("a window ordered outside a comparison"));
+    }
     if let (Some(l), Some(r)) = (operand(m, lhs)?, operand(m, rhs)?) {
         if let (Kind::Plain(Class::Rate(per)), Kind::Plain(Class::Rate(other_per))) =
             (&l.kind, &r.kind)
@@ -861,8 +820,8 @@ fn compare_factor(
     }
 }
 
-/// Two keys' order: by position in their index; things and an open index's keys have none
-/// (L §5.6, §5.7; `RUN-DOMAIN`).
+/// Two keys' order: by position in their index, an axis's options in the order written;
+/// things and an open index's keys have none (L §5.5, §5.6, §5.7; `RUN-DOMAIN`).
 fn key_order(m: &Reality, lhs: &KeyVal, rhs: &KeyVal, test: Test) -> Result<Ordering, Stop> {
     if lhs == rhs {
         return Ok(Ordering::Equal);
@@ -871,6 +830,20 @@ fn key_order(m: &Reality, lhs: &KeyVal, rhs: &KeyVal, test: Test) -> Result<Orde
         return Ok(Ordering::Greater);
     }
     match (lhs, rhs) {
+        (
+            KeyVal::Key { index, name: left },
+            KeyVal::Key {
+                index: j,
+                name: right,
+            },
+        ) if index == j && m.axes.contains(index) => {
+            let (Some(first), Some(second)) =
+                (option_at(m, index, left), option_at(m, index, right))
+            else {
+                return Err(invariant("an axis's option it lacks"));
+            };
+            Ok(first.cmp(&second))
+        }
         (KeyVal::Key { index, .. }, KeyVal::Key { index: j, .. }) if index == j => {
             let ix = m
                 .indexes

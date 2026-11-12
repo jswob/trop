@@ -1,0 +1,4 @@
+part b_notnum
+  tally 2
+
+ask b_notnum: n1 with n1 = n1 + txt

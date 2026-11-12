@@ -1,0 +1,14 @@
+part m1
+  tally 2
+
+input fee: money PLN
+
+ask m1: round(fee, 0.005 PLN, down)
+
+ask m2: fee * 1.005
+
+version vm
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 10.00 PLN "c"

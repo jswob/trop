@@ -1,0 +1,13 @@
+part n_not
+  tally 2
+
+kind evs: event certain
+  leg what: any
+
+move mv: evs
+  on d0
+  leg what from konto to world amount fee
+
+def n_not_x: int = count(m for m in evs over d0..d0 where not m.what.amount)
+
+ask n_not: n_not_x

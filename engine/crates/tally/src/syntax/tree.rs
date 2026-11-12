@@ -189,6 +189,24 @@ impl AggFn {
     }
 }
 
+impl Expr {
+    /// The literal that brackets hold, the brackets aside: a parenthesised literal is that
+    /// literal wherever the bare one stands (`(2026)` is `2026`; L §2.1, the M1 run's pick
+    /// P12); any other expression as it is. The tree keeps the brackets, as a message prints
+    /// the expression as written.
+    #[must_use]
+    pub fn unbracketed(&self) -> &Expr {
+        let mut inner = self;
+        while let Expr::Paren(bracketed) = inner {
+            inner = bracketed;
+        }
+        if let Expr::Lit(_) = inner {
+            return inner;
+        }
+        self
+    }
+}
+
 /// An expression (L §2.3 `expr`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Expr {
@@ -502,6 +520,9 @@ pub struct In {
     pub set: Expr,
     /// The day, for a kind.
     pub on: Option<Expr>,
+    /// Where its `in` is written, so the run finds the kind tests whose narrowing load used
+    /// (L §5.7).
+    pub site: Site,
 }
 
 /// A call: a built-in's name or a band's id, with the prefixes that name a band.
@@ -619,7 +640,42 @@ pub struct Bind {
     pub filter: Option<Expr>,
     /// The binding as written, for the register.
     pub text: String,
+    /// Where it is written, so what load decides about it reaches the run.
+    pub site: Site,
 }
+
+/// Where a binding or a membership test is written: its file, its line and its first token's
+/// place in the line, the key load's decisions about it are found by at run (a key list's
+/// index, L §2.5; a kind test's narrowing, §5.7). A site takes no part in a tree's equality:
+/// two trees are the same text wherever written.
+#[derive(Debug, Clone, Default)]
+pub struct Site {
+    /// The file, as the run names it.
+    pub file: String,
+    /// The line.
+    pub line: u32,
+    /// The first token's place in the line.
+    pub at: usize,
+}
+
+/// A site as a map's key: its file, its line, its token's place.
+pub type SiteKey = (String, u32, usize);
+
+impl Site {
+    /// The site as a map's key.
+    #[must_use]
+    pub fn key(&self) -> SiteKey {
+        (self.file.clone(), self.line, self.at)
+    }
+}
+
+impl PartialEq for Site {
+    fn eq(&self, _: &Site) -> bool {
+        true
+    }
+}
+
+impl Eq for Site {}
 
 /// What a binding ranges over.
 #[derive(Debug, Clone, PartialEq, Eq)]

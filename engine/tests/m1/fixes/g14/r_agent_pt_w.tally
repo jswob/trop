@@ -1,0 +1,23 @@
+model w
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card (invented)"
+
+input r[m in months]: num
+
+def g[m in months]: num = r[m] + r[m]
+
+ask w1: g[m] for m in [2026-02, 2026-03] as known end_of(m)
+
+ask w2: g[m] for m in [2026-02, 2026-03] with known end_of(m)
+
+ask w3: g[m] for m in [2026-02, 2026-03] law end_of(m)
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  r[*] = 2 "card"

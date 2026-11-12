@@ -1,0 +1,5 @@
+part k1
+  tally 2
+
+
+ask k1: rate[q1] as if {rate[q9] = 0.5}

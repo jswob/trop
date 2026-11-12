@@ -1,0 +1,18 @@
+part h_rate
+  tally 2
+
+input lo_s: num
+
+input hi_s: num
+
+input tol: num
+
+ask h_rate: solve(r5 * r5 == r5 for r5 in [lo_s, hi_s] to tol)
+
+version v_h
+  cite card
+  governs always
+  known 2026-01-01
+  lo_s = 0 "c"
+  hi_s = 1 "c"
+  tol = 0.1 "c"

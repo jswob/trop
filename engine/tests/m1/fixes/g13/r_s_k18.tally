@@ -1,0 +1,5 @@
+part k18
+  tally 2
+
+
+ask k18: n1 + n1 as if {n1 = 2026-01-01}

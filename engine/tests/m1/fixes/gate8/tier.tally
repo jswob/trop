@@ -1,0 +1,46 @@
+model zp
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T C14 (invented): a money def whose winning rule changes in a scenario from a written 0.01 PLN to minor(PLN), the same value; diff counts it unchanged (gate 8's equivalents review, row 9: money.rs Units::from_i128, pick P76)"
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+input flag: int
+
+input asked_on: date
+
+input amt: money PLN
+
+input cent: money PLN
+
+def x: money PLN at asked_on
+  rule base = amt
+  rule zero beats base = 0 when flag == 1
+
+def y: money PLN at asked_on
+  rule base = cent
+  rule one beats base = minor(PLN) when flag == 1
+
+ask d: diff(x) in alt against zp
+
+ask e: diff(y) in alt against zp
+
+ask f: x, y
+
+version v
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  flag = 0 "base"
+  amt = 0.00 PLN "base"
+  cent = 0.01 PLN "base"
+
+version w
+  cite card
+  governs always
+  known 2026-01-01
+  asked_on = 2026-06-01 "base"

@@ -2,7 +2,8 @@
 //! Spec: L §5.14.3 (`flows(x, span)`, `flows(m, span)`: their units, holes and refusals; a
 //! move's flows at some of its keys; a modelled instance counted by the observations that stand
 //! in for it, `open:` when none does; settlements dated in the span, `HOLE-CHANGED` where
-//! nothing settles); §8.2 (the register: `unfulfilled:`, `left out:`, `adjustment:`, `open:`);
+//! nothing settles); §5.19 (a pad's flow at its reading's place, on the reset); §8.2 (the
+//! register: `unfulfilled:`, `left out:`, `adjustment:`, `open:`);
 //! E §4.2 (a refused leg refuses every read of it), E §4.3 (a read of a projection's walk
 //! rests on the walks it continues).
 //! Twin: engine/tools/refcore/mreads.py (`e_flows`, `flows_place`, `flows_place_walk`,
@@ -14,10 +15,10 @@
 use super::order::WalkAt;
 use super::plan::{Amount, Dated, Exists, Inst, Status, invariant, qty_value};
 use super::point::At;
-use super::reads::{expr_text, refuse};
-use super::state::{ALL, Change, Progress, Walk};
+use super::reads::{Sees, expr_text, refuse};
+use super::state::{ALL, Change, Ent, Progress, Walk};
 use crate::base::{Refusal, Run};
-use crate::eval::{Collected, Ctx, Engine, Entry, Env};
+use crate::eval::{Collected, Ctx, Engine, Entry, Env, GUARDED, UNSET_AXIS};
 use crate::hole::{Hole, spread};
 use crate::model::{KeyVal, MoveInfo, Reality, Span, Value};
 use crate::num::Num;
@@ -31,7 +32,8 @@ impl Engine {
     /// # Errors
     ///
     /// The refusals of the walk and of the movements counted; `RUN-DOMAIN` for flows in no
-    /// one unit; `NotBuilt` for a conversion and `for k` (G7).
+    /// one unit; `NotBuilt` for a conversion (`in CUR at fx mode`, BUILD-ORDER M4) and for
+    /// `for k` (the instances of a period, N-305), neither built in M1.
     pub(crate) fn flows(
         &mut self,
         m: &Reality,
@@ -55,7 +57,7 @@ impl Engine {
             return Ok(Value::Hole(Hole::asked("before the run's start", &figure)));
         }
         if f.for_key.is_some() || f.convert.is_some() {
-            return Err(Stop::NotBuilt("flows for a period or converted (G7)"));
+            return Err(Stop::NotBuilt("flows for a period or converted"));
         }
         let Some((mv, posts)) = named else {
             return match self.place_arg(m, &f.target, env, ctx)? {
@@ -83,9 +85,12 @@ impl Engine {
         let id = match ctx.at {
             Some(at) => {
                 let t = at.point.day;
-                if last >= t {
-                    self.note_live(at.walk, place)?;
-                }
+                let sees = if last >= t {
+                    Sees::AtPoint
+                } else {
+                    Sees::Before
+                };
+                self.note_read(at.walk, place, sees)?;
                 if last > t {
                     return Err(refuse(
                         Run::Future,
@@ -285,8 +290,9 @@ impl Engine {
                     }
                     Amount::Qty(q) => q,
                 };
+                let leg_day = lg.day.day().or(Some(day));
                 if !q.is_zero()
-                    && let Some(err) = self.leg_refused(m, (&i.id, &lg.name), ctx)?
+                    && let Some(err) = self.leg_refused(m, (&i.id, &lg.name), leg_day, ctx)?
                 {
                     return Err(Stop::Refused(err));
                 }
@@ -357,7 +363,7 @@ impl Engine {
             };
             given.push(self.given_key(m, e, env, ctx)?);
         }
-        crate::eval::make_keys(m, &mv.id, binds, given, ctx.cut)
+        self.make_keys(m, &mv.id, binds, given, ctx)
     }
 
     /// A decision move's runs a flows read counts: the main walk's, or inside a decision the
@@ -409,7 +415,11 @@ impl Engine {
     /// The run of decision instance `inst` in walk `id` or in a walk it continues, the
     /// nearest first: a projection's walk counts the runs the walks it continues made
     /// (refcore's `flows_move`, its loop over `ww.base`). L §5.14.1, E §4.3 step 1.
-    fn chain_run(&self, id: usize, inst: &str) -> Result<Option<&super::order::Run>, Stop> {
+    pub(crate) fn chain_run(
+        &self,
+        id: usize,
+        inst: &str,
+    ) -> Result<Option<&super::order::Run>, Stop> {
         for wid in self.chain(id)? {
             let walk = self.walk(wid)?;
             if let Some(run) = walk.run_ids.get(inst).and_then(|ix| walk.runs.get(*ix)) {
@@ -434,13 +444,19 @@ impl Engine {
         Ok(out)
     }
 
-    /// The refusal of a leg the walk refused: inside a decision, what its walk and the walks
-    /// it continues refused so far; at the ask's cut, the main walk's (refcore's
-    /// `leg_refused`). E §4.2 step 5, §4.3.
+    /// The refusal of a leg the walk refused, the leg dated `day`: inside a decision, what its
+    /// walk and the walks it continues refused so far; at the ask's cut, the main walk's, or
+    /// where that walk reads an axis the timeline sets no option of, each combination's
+    /// walk's; where the main walk needs a cell still being computed outside it, the walk up
+    /// to the leg's day, since a leg's refusal rests on the walk up to its day only (refcore's
+    /// `leg_refused`, `guarded_walk`). A walk refused at run gives no refusal of the leg; a
+    /// load refusal met at run and `ENGINE-INVARIANT` stop the read (R-66). E §4.2 step 5,
+    /// §4.3, §3.3, §3.2.
     pub(crate) fn leg_refused(
         &mut self,
         m: &Reality,
         key: (&str, &str),
+        day: Option<Day>,
         ctx: Ctx,
     ) -> Result<Option<Refusal>, Stop> {
         let wanted = (key.0.to_owned(), key.1.to_owned());
@@ -451,20 +467,40 @@ impl Engine {
         let busy = !self.plan_active.is_empty()
             || !self.adjust_active.is_empty()
             || !self.walking.is_empty();
+        let ours = !busy && ctx.cut == self.ask_cut;
+        if ours && let Some(read) = self.refused_by_each(&wanted, ctx.cut) {
+            return read;
+        }
         let unfinished = match id {
             None => true,
-            Some(w) => {
-                self.walk(w)?.progress == Progress::Walking
-                    || self.walk(w)?.progress == Progress::Planning
-            }
+            Some(w) => matches!(
+                self.walk(w)?.progress,
+                Progress::Planning | Progress::Walking | Progress::Walked
+            ),
         };
-        if !busy && ctx.cut == self.ask_cut && unfinished {
+        let blocked = self
+            .prefixes
+            .blocked
+            .get(&ctx.cut)
+            .is_some_and(|cells| !cells.is_disjoint(&self.active));
+        if ours && unfinished && blocked {
+            id = self.prefix_walk(m, ctx.cut, day)?;
+        } else if ours && unfinished {
             let outer = self.guarded.replace(self.active.clone());
             let built = self.main_walk(m, ctx.cut);
             self.guarded = outer;
             id = match built {
                 Ok(w) => Some(w),
-                Err(Stop::Refused(_)) => return Ok(None),
+                Err(Stop::Refused(r)) if super::order::run_time(&r) => return Ok(None),
+                // the walk needs a cell this read is inside: the walk up to the leg's day
+                Err(Stop::NotBuilt(why)) if why == GUARDED => {
+                    self.prefixes.blocked.insert(ctx.cut, self.active.clone());
+                    self.prefix_walk(m, ctx.cut, day)?
+                }
+                // the walk read an axis the timeline sets no option of (E §3.3)
+                Err(Stop::NotBuilt(why)) if why == UNSET_AXIS => {
+                    return self.refused_in_each(m, &wanted, ctx.cut, Stop::NotBuilt(why));
+                }
                 Err(stop) => return Err(stop),
             };
         }
@@ -659,16 +695,34 @@ impl Sums {
                         self.met.merge(c);
                     }
                 }
-                Change::Delta(f) => {
-                    self.met.entries.extend(e.reg.iter().cloned());
-                    if let Some(c) = &e.coll {
-                        self.met.merge(c);
-                    }
-                    let sum = self.totals.entry(unit.to_owned()).or_insert_with(Num::zero);
-                    *sum = sum.checked_add(f).map_err(crate::eval::num_stop)?;
-                }
-                Change::Reset { .. } | Change::Mark => {}
+                Change::Delta(f) => self.count(e, unit, Ok(f))?,
+                // a pad's end at its reading's own place (E §6.1); an anchor's or an
+                // opening's reset carries no flow, and `flows` doesn't count it
+                Change::Reset { .. } => match &e.flow {
+                    Some(Amount::Qty(f)) => self.count(e, unit, Ok(f))?,
+                    Some(Amount::Hole(h)) => self.count(e, unit, Err(h))?,
+                    Some(Amount::Refused(_)) | None => {}
+                },
+                Change::Mark => {}
             }
+        }
+        Ok(())
+    }
+
+    /// One booked flow of the span counted: its register, and its quantity added to its unit's
+    /// total, or its hole kept (refcore's `flows_place_walk`, its `delta` and `reset` kinds).
+    /// L §5.14.3, §8.2.
+    fn count(&mut self, e: &Ent, unit: &str, flow: Result<&Num, &Hole>) -> Result<(), Stop> {
+        self.met.entries.extend(e.reg.iter().cloned());
+        if let Some(c) = &e.coll {
+            self.met.merge(c);
+        }
+        match flow {
+            Ok(f) => {
+                let sum = self.totals.entry(unit.to_owned()).or_insert_with(Num::zero);
+                *sum = sum.checked_add(f).map_err(crate::eval::num_stop)?;
+            }
+            Err(h) => self.holes.push(h.clone()),
         }
         Ok(())
     }
@@ -702,7 +756,7 @@ fn one_unit(
 }
 
 /// A span's last day: the day before its end, or the run's last day (refcore's `last`). L §5.14.3.
-fn span_last(m: &Reality, sp: &Span) -> Result<Day, Stop> {
+pub(crate) fn span_last(m: &Reality, sp: &Span) -> Result<Day, Stop> {
     match sp.end() {
         Some(end) => end
             .previous()

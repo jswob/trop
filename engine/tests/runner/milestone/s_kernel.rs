@@ -21,10 +21,19 @@ mod tests {
     ];
 
     /// Runs every vector of `group` on the engine and holds it to refcore's run.
-    fn group_holds(group: &str) {
+    fn group_holds(group: &str, (part, parts): (usize, usize)) {
         let all = vectors(VECTORS).expect("kernel/vectors.refcore reads");
-        let mine: Vec<_> = all.iter().filter(|v| v.group == group).collect();
-        assert!(!mine.is_empty(), "the group {group} has vectors");
+        let mine: Vec<_> = all
+            .iter()
+            .filter(|v| v.group == group)
+            .enumerate()
+            .filter(|(i, _)| i.checked_rem(parts) == Some(part))
+            .map(|(_, v)| v)
+            .collect();
+        assert!(
+            !mine.is_empty(),
+            "the group {group} has vectors in part {part} of {parts}"
+        );
         let failed: Vec<String> = mine
             .iter()
             .filter(|v| !is_held("s_kernel", &v.id))
@@ -84,9 +93,22 @@ mod tests {
 
     /// The checks of `checks.tsv` the engine at S answers: 33 unit probes, 5 models and 5 of
     /// household X's checks, each compared whole (a household check's warnings included).
+    /// Part 1 of 3 (each part the vectors at one place modulo 3, pick P70).
     #[test]
-    fn s_kernel_checks_whole_output() {
-        group_holds("checks");
+    fn s_kernel_checks_whole_output_part_1() {
+        group_holds("checks", (0, 3));
+    }
+
+    /// Part 2 of 3.
+    #[test]
+    fn s_kernel_checks_whole_output_part_2() {
+        group_holds("checks", (1, 3));
+    }
+
+    /// Part 3 of 3.
+    #[test]
+    fn s_kernel_checks_whole_output_part_3() {
+        group_holds("checks", (2, 3));
     }
 
     /// G1, exact numbers, their text and rounding (L §7.1, §7.2, §5.18): every rounding mode
@@ -102,7 +124,7 @@ mod tests {
     /// (`kernel/g1/`).
     #[test]
     fn s_kernel_g1_numbers() {
-        group_holds("g1");
+        group_holds("g1", (0, 1));
     }
 
     /// G2, the read rule (L §4.6, §4.5, §5.3, §5.11): rows by literal, range, `*` and a
@@ -110,14 +132,14 @@ mod tests {
     /// things a later version adds; dated rules; `held` past the cut (`kernel/g2/`).
     #[test]
     fn s_kernel_g2_read_rule() {
-        group_holds("g2");
+        group_holds("g2", (0, 1));
     }
 
     /// G3, bands (L §5.9): open, closed and infinite ends, a hole row, patches chained by
     /// known date, an argument no row holds, a band governing always (`kernel/g3/`).
     #[test]
     fn s_kernel_g3_bands() {
-        group_holds("g3");
+        group_holds("g3", (0, 1));
     }
 
     /// G4, holes in the answer (L §8.1, §4.6 step 5): one question at two figures, two
@@ -125,7 +147,7 @@ mod tests {
     /// its lifespan read as none (`kernel/g4/`).
     #[test]
     fn s_kernel_g4_holes() {
-        group_holds("g4");
+        group_holds("g4", (0, 1));
     }
 
     /// G5, the day walk's agenda and the order within a day (E §4.2 steps 0–4, L §5.10,
@@ -142,7 +164,7 @@ mod tests {
     /// no legs; three held for #104) (`kernel/g5/`).
     #[test]
     fn s_kernel_g5_agenda() {
-        group_holds("g5");
+        group_holds("g5", (0, 1));
     }
 
     /// G6, the plan pass (E §4.1, L §5.14): a daily move's ledger lines in a covered month; a
@@ -161,7 +183,7 @@ mod tests {
     /// over an open index (held for #103) (P13's recipes; `kernel/g6/`).
     #[test]
     fn s_kernel_g6_plan_pass() {
-        group_holds("g6");
+        group_holds("g6", (0, 1));
     }
 
     /// G7, reads inside the walk and at the ask (L §5.10, §5.14, §5.14.1, §5.14.3, §8.2): a
@@ -183,7 +205,7 @@ mod tests {
     /// every place from the start, each beside its answered twin (`kernel/g7/`).
     #[test]
     fn s_kernel_g7_reads() {
-        group_holds("g7");
+        group_holds("g7", (0, 1));
     }
 
     /// G8, projections (L §5.14.1, E §4.3, D-6): `bal(x, d) from t` from before the run's
@@ -199,7 +221,7 @@ mod tests {
     /// (`kernel/g8/`).
     #[test]
     fn s_kernel_g8_projections() {
-        group_holds("g8");
+        group_holds("g8", (0, 1));
     }
 
     /// G9, booking a leg and the sign rule (L §5.10, §5.14, E §4.2 steps 4–5): claims, debts
@@ -212,7 +234,7 @@ mod tests {
     /// start (a pad, a twin that nets in its batch) and at an opening (#46) (`kernel/g9/`).
     #[test]
     fn s_kernel_g9_sign_rule() {
-        group_holds("g9");
+        group_holds("g9", (0, 1));
     }
 
     /// G10, observations, readings and the residual ledger (L §5.19, E §6.1–§6.3): a transfer
@@ -228,7 +250,7 @@ mod tests {
     /// a move instance of its kind (tally 2.1.6, #86) (`kernel/g10/`).
     #[test]
     fn s_kernel_g10_observations() {
-        group_holds("g10");
+        group_holds("g10", (0, 1));
     }
 
     /// G11, adjustments and their settlement (L §5.14.3, E §5): a version's change measured on
@@ -246,7 +268,7 @@ mod tests {
     /// (`kernel/g11/`).
     #[test]
     fn s_kernel_g11_adjustments() {
-        group_holds("g11");
+        group_holds("g11", (0, 1));
     }
 
     /// G12, bindings over movements and things (L §5.19 Bindings, §5.7, §8.4): a `for` over an
@@ -259,7 +281,7 @@ mod tests {
     /// then their keys in index order, positions 2, 3 and 11 (#39) (`kernel/g12/`).
     #[test]
     fn s_kernel_g12_members() {
-        group_holds("g12");
+        group_holds("g12", (0, 1));
     }
 
     /// G13, what load checks at S (tally 2.1.2): `LOAD-DEPTH` counts a `from` term one level
@@ -273,7 +295,7 @@ mod tests {
     /// (`kernel/g13/`).
     #[test]
     fn s_kernel_g13_load() {
-        group_holds("g13");
+        group_holds("g13", (0, 1));
     }
 
     /// G14, capacity at run (L §7.6; tally 2.1.6, #89 and #48): a day computed past
@@ -301,8 +323,40 @@ mod tests {
     /// beside one whose next key is still a day; literal ranges of 1 000 000 keys counted at
     /// load, a fractional step, money by its minor unit and days, and two counted at run
     /// (G1a's review, B1) (`kernel/g14/`).
+    /// Part 1 of 6 (each part the vectors at one place modulo 6, pick P70: `shifts`, `edges`
+    /// and `near_cap`, the slowest, each in a part of its own).
     #[test]
-    fn s_kernel_g14_capacity() {
-        group_holds("g14");
+    fn s_kernel_g14_capacity_part_1() {
+        group_holds("g14", (0, 6));
+    }
+
+    /// Part 2 of 6.
+    #[test]
+    fn s_kernel_g14_capacity_part_2() {
+        group_holds("g14", (1, 6));
+    }
+
+    /// Part 3 of 6.
+    #[test]
+    fn s_kernel_g14_capacity_part_3() {
+        group_holds("g14", (2, 6));
+    }
+
+    /// Part 4 of 6.
+    #[test]
+    fn s_kernel_g14_capacity_part_4() {
+        group_holds("g14", (3, 6));
+    }
+
+    /// Part 5 of 6.
+    #[test]
+    fn s_kernel_g14_capacity_part_5() {
+        group_holds("g14", (4, 6));
+    }
+
+    /// Part 6 of 6.
+    #[test]
+    fn s_kernel_g14_capacity_part_6() {
+        group_holds("g14", (5, 6));
     }
 }

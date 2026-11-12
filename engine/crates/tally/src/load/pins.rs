@@ -105,7 +105,7 @@ fn too_many(error: NumError) -> Stop {
 /// The axes `start` reaches: those each item on the way reads directly, and the axes it
 /// reads by id; a read of the balances reaches every move and what the parts clauses read
 /// (refcore's `reach_axes`). L §5.5; E §3.1 step 5, §3.3.
-pub(super) fn reach_axes(m: &Reality, graph: &Graph, start: &Node) -> BTreeSet<String> {
+pub(crate) fn reach_axes(m: &Reality, graph: &Graph, start: &Node) -> BTreeSet<String> {
     let mut seen = BTreeSet::new();
     let mut stack = vec![start.clone()];
     let mut out = BTreeSet::new();

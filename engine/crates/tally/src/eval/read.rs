@@ -1,46 +1,93 @@
-//! Reads of inputs: a read's keys made keys of their positions, the row the read rule takes, and the row's value with its register entries.
-//! Spec: L §4.6 (the read rule; a row's value, `assumed`, `held`), §2.5 (keys by position),
-//! §4.2 (keys as values), §5.6 (`assumed` on an index), §5.8 (inputs and their values), §3.4
-//! (a figure in Y prices), §8.1 (a read whose key is a hole carries the key's questions only),
-//! §8.2 (the register entries a read makes), §8.4 (`RUN-KEY`, `RUN-NONE`), §7.6 items 1 and 3
-//! (the end of time is no key; a key offset's 18 digits). A row's value converted to its
-//! input's type is `convert.rs`'s.
-//! Twin: engine/tools/refcore/evaluate.py (`key_values`, `to_key`, `check_key`, `read_input`,
-//! `row_value`, `prices`, `index_assumed`).
-//! Invariants: a key a read takes is a key its domain holds and the cut sees; a row's value
-//! has its input's declared type; a hole is built in the hole module.
+//! Reads of inputs: the row the read rule takes for keys already made, and the row's value with its register entries.
+//! Spec: L §4.6 (the read rule; a row's value, `assumed`, `held`), §5.6 (`assumed` on an
+//! index), §5.8 (inputs and their values), §3.4 (a figure in Y prices), §8.1 (a read whose
+//! key is a hole carries the key's questions only), §8.2 (the register entries a read makes),
+//! §8.4 (`RUN-KEY`, `RUN-NONE`), `last(x, d)` and `since(x, d)` (§4.6 Past the last row,
+//! Readings; §5.3); §4.4 (a window read is that read's value, its holes asked of its row). A
+//! read's keys made keys of their positions are `keys.rs`'s (§2.5); a row's value converted
+//! to its input's type is `convert.rs`'s; a scenario's expression row evaluated, `srows.rs`'s
+//! (§6.4).
+//! Twin: engine/tools/refcore/evaluate.py (`read_input`, `row_value`, `e_lastx`,
+//! `e_call_since`, `prices`, `index_assumed`).
+//! Invariants: a row's value has its input's declared type; a hole is built in the hole
+//! module.
 
-use super::arith::{Op, arith, int_of};
+use super::arith::{Op, arith};
+use super::builtin::read_parts;
 use super::convert::{ConvertFor, Converted, convert};
+use super::keys::Given;
 use super::memo::{LawClass, Read, may_hold, rows_class};
-use super::state::{Ctx, Engine, a_day, invariant, num_stop, refuse, refuse_load};
+use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load};
+use super::windows::{as_read, one_day};
 use crate::base::{Load, Run};
 use crate::hole::Hole;
-use crate::load::index_key_of;
 use crate::model::{
-    BindInfo, Domain, IndexInfo, InputInfo, KeyVal, Number, Reality, Row, TimePos, Unit, Value,
+    BindInfo, Class, Domain, InputInfo, KeyVal, Number, Reality, Row, RowInstant, TimePos, Unit,
+    Value,
 };
-use crate::read::{Asked, Clocks, Found, held, origin, read_input, time_point};
-use crate::syntax::{Lit, Stop};
+use crate::read::{Asked, Clocks, Found, held, origin, read_input, read_last, time_point};
+use crate::syntax::{Call, Expr, Stop, Value as Written};
 use crate::time::{Day, PeriodKind};
 
-/// A key a read is given: a value, or a key literal its position resolves (L §2.5).
+/// Which read past a row's span: `last(x, d)` or `since(x, d)` (L §4.6).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Past {
+    /// `last(x, d)`.
+    Last,
+    /// `since(x, d)`.
+    Since,
+    /// `value(…) by last(p)` or `priced last(p)`: `last(p, d)` read as a price, where no row
+    /// on or before d is no price, `none` (L §5.10).
+    Price,
+}
+
+impl Past {
+    /// Its word, as a message names it.
+    fn word(self) -> &'static str {
+        match self {
+            Past::Last | Past::Price => "last",
+            Past::Since => "since",
+        }
+    }
+}
+
+/// The row `last(x[k], d)` or `since(x[k], d)` reads: its input, its keys, its position
+/// among the input's rows and d (L §4.6).
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum Given {
-    /// A value.
-    Value(Value),
-    /// A key literal, resolved in the position's domain.
-    Literal(Lit),
+struct Latest {
+    /// The input x.
+    input: String,
+    /// Its keys, made.
+    keys: Vec<KeyVal>,
+    /// The row's position among the input's rows.
+    at: usize,
+    /// The day d.
+    day: Day,
+}
+
+/// The row at position `at` of `input`, which the read rule took (L §4.6).
+fn latest_of(input: &InputInfo, at: usize) -> Result<&Row, Stop> {
+    input
+        .rows
+        .get(at)
+        .ok_or_else(|| invariant("the read rule took a row the input lacks"))
 }
 
 impl Engine {
-    /// The clocks of a read in context `ctx` (L §4.3, §4.5).
-    pub(super) fn clocks(&self, ctx: Ctx) -> Clocks {
-        Clocks {
+    /// The clocks of a read of `item` in context `ctx`: the law date, the cut, the ask's cut,
+    /// the day a `wording` pin names the item with, and the world (L §4.3, §4.5, §6.4).
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a context whose layer was freed.
+    pub(super) fn clocks(&self, ctx: Ctx, item: &str) -> Result<Clocks, Stop> {
+        Ok(Clocks {
             law: ctx.law,
             cut: ctx.cut,
             ask_cut: self.ask_cut,
-        }
+            wording: self.wording_of(item, ctx)?,
+            world: ctx.world,
+        })
     }
 
     /// An index with `assumed` lists `assumed: <index>: <reason>` for every figure keyed by
@@ -72,7 +119,11 @@ impl Engine {
         asked: Asked,
     ) -> Result<Value, Stop> {
         self.index_assumed(m, &input.binds);
-        let clocks = self.clocks(ctx);
+        // a `with` or `as if` pin replaces every read of the input at its keys (L §5.11)
+        if let Some(pinned) = self.pin_of(&input.id, keys, ctx)? {
+            return pinned_at(pinned, &input.binds, keys);
+        }
+        let clocks = self.clocks(ctx, &input.id)?;
         #[cfg(feature = "counters")]
         self.counts
             .read(format!("{}|{}", origin(&input.id, keys), ctx.key()));
@@ -86,7 +137,7 @@ impl Engine {
             // a thing's lifespan or the question's text: the day itself (L §4.6 step 5)
             self.narrow_to_day(ctx.law);
         }
-        match found {
+        let value = match found {
             Found::Row(at) => {
                 let row = input
                     .rows
@@ -97,11 +148,12 @@ impl Engine {
                     sid: row.sid.clone(),
                 });
                 let value = self.row_value(m, input, row, keys, ctx)?;
-                self.priced(m, input, keys, ctx, value)
+                self.priced(m, input, keys, ctx, value)?
             }
-            Found::None => Ok(Value::None),
-            Found::Hole(q) => Ok(Value::Hole(Hole::asked(&q.text, &q.origin))),
-        }
+            Found::None => Value::None,
+            Found::Hole(q) => Value::Hole(Hole::asked(&q.text, &q.origin)),
+        };
+        Ok(as_read(value, (&input.id, keys), ctx, None))
     }
 
     /// Narrows the reading cell's law date class by what a read of `input` tests its law
@@ -142,29 +194,13 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let figure = origin(&input.id, keys);
-        self.note_version(&row.version);
-        if let Some(reason) = &row.assumed {
-            self.note("assumed", reason.clone(), figure.clone());
-        }
-        let version = m
-            .versions
-            .get(&row.version)
-            .ok_or_else(|| invariant("a row names a version load didn't build"))?;
-        if let Some(reason) = &version.assumed {
-            self.note("assumed", reason.clone(), figure.clone());
-        }
-        self.index_assumed(m, &input.binds);
-        let ty = input
-            .ty
-            .as_ref()
-            .ok_or(Stop::NotBuilt("the value of an observed row"))?;
-        let of = ConvertFor::row(&input.unit_factor, ty, &input.binds, &row.pattern);
-        let value = match convert(m, &row.value, ty, &input.id, &of)? {
-            Converted::Hole(text) => Value::Hole(Hole::asked(&text, &figure)),
-            Converted::Value(v) => v,
-        };
         let point = time_point(input, keys, ctx.law)?;
-        let is_held = held(m, row, point.day, self.clocks(ctx))?;
+        let at = Ctx {
+            law: point.day.or(ctx.law),
+            ..ctx
+        };
+        let value = self.row_converted(m, (input, row, keys), &figure, at)?;
+        let is_held = held(m, row, point.day, self.clocks(ctx, &input.id)?)?;
         if let (Some(day), false) = (ctx.law, matches!(input.time_pos, TimePos::At(_))) {
             if is_held {
                 // the `held` entry names the day (L §8.2)
@@ -187,6 +223,247 @@ impl Engine {
             );
         }
         Ok(value)
+    }
+
+    /// `last(x[k], d)`: the row of x whose span began latest on or before d, past its end
+    /// too, its value marked `held` for d in the register, except a row that governs `always`,
+    /// which is never `held`; a reading's latest on or before d (refcore's `e_lastx`). A key
+    /// or a day that is a hole makes it that hole. L §4.6 (Past the last row, Readings), §5.3,
+    /// §8.2.
+    pub(crate) fn last_read(
+        &mut self,
+        m: &Reality,
+        (read, day): (&Expr, &Expr),
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Value, Stop> {
+        match self.latest_row(m, (read, day), Past::Last, env, ctx)? {
+            Err(value) => Ok(value),
+            Ok(latest) => self.last_value(m, &latest, ctx),
+        }
+    }
+
+    /// The value of the row `last(x[k], d)` took: as read for d, `held` for d in the register
+    /// but where the row governs `always` (refcore's `e_lastx`, its end). L §4.6, §8.2.
+    fn last_value(&mut self, m: &Reality, latest: &Latest, ctx: Ctx) -> Result<Value, Stop> {
+        let input = m
+            .inputs
+            .get(&latest.input)
+            .ok_or_else(|| invariant("an input of last load didn't build"))?;
+        let row = latest_of(input, latest.at)?;
+        let figure = origin(&input.id, &latest.keys);
+        let at = Ctx {
+            law: Some(latest.day),
+            ..ctx
+        };
+        let value = self.row_converted(m, (input, row, &latest.keys), &figure, at)?;
+        let always = row.instant.is_none()
+            && crate::read::row_span(m, row, ctx.cut)?.is_some_and(|span| span.is_always());
+        if !always {
+            let text = format!(
+                "{figure} = {} ({}), read for {}",
+                shown(m, &value)?,
+                row.version,
+                latest.day.text()
+            );
+            self.note("held", text, String::new());
+        }
+        // a read of x at its keys, its day d part of the read (L §4.4, §4.6)
+        Ok(as_read(
+            value,
+            (&input.id, &latest.keys),
+            ctx,
+            Some(latest.day),
+        ))
+    }
+
+    /// `since(x[k], d)`: the days from the last reading of x on or before d to d, a hole
+    /// where `last(x[k], d)` is one (refcore's `e_call_since`). L §4.6 Readings.
+    pub(super) fn since_read(
+        &mut self,
+        m: &Reality,
+        call: &Call,
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Value, Stop> {
+        let [read, day] = call.args.as_slice() else {
+            return Err(invariant("since's two arguments, which load counts"));
+        };
+        let latest = match self.latest_row(m, (read, day), Past::Since, env, ctx)? {
+            Err(value) => return Ok(value),
+            Ok(latest) => latest,
+        };
+        let input = m
+            .inputs
+            .get(&latest.input)
+            .ok_or_else(|| invariant("an input of since load didn't build"))?;
+        let Some(RowInstant::At(at, _)) = &latest_of(input, latest.at)?.instant else {
+            return Err(invariant("since read a reading with no day"));
+        };
+        let days = at
+            .days_to(latest.day)
+            .ok_or_else(|| invariant("the days from a reading"))?;
+        Ok(Value::int(days))
+    }
+
+    /// The row `last(x[k], d)` and `since(x[k], d)` read, recorded as read, with its keys and
+    /// d; or the value they are instead: the hole of a key or of d, a window d's
+    /// `HOLE-IMPRECISE`, a pin of x at its keys (`last`'s, as refcore's `e_lastx`), `none`,
+    /// the gap rule's hole. A movement of another kind as a key is refused (`RUN-KEY`, as
+    /// every read). L §4.6 (Past the last row, Readings), §4.4, §5.7, §5.11.
+    fn latest_row(
+        &mut self,
+        m: &Reality,
+        (read, day): (&Expr, &Expr),
+        past: Past,
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Result<Latest, Value>, Stop> {
+        let what = past.word();
+        let (name, written) =
+            read_parts(read).ok_or_else(|| invariant("a read of last load didn't check"))?;
+        let input = m
+            .inputs
+            .get(name)
+            .ok_or_else(|| invariant("an input of last load didn't build"))?;
+        let given = self.given_keys(m, written, env, ctx)?;
+        let keys = match self.make_keys(m, name, &input.binds, given, ctx)? {
+            Err(hole) => return Ok(Err(Value::Hole(hole))),
+            Ok(keys) => keys,
+        };
+        self.movement_keys(m, &input.binds, &keys, ctx)?;
+        let day = self.ev(m, day, env, ctx)?;
+        if let Value::Hole(_) = day {
+            return Ok(Err(day));
+        }
+        let day = match one_day(m, &day, &format!("the day of {what}"))? {
+            Ok(day) => day,
+            Err(hole) => return Ok(Err(Value::Hole(hole))),
+        };
+        self.latest_at(m, (input, keys), day, past, ctx)
+    }
+
+    /// The row of `input` at `keys` that `last` or `since` takes for day `day`, recorded as
+    /// read; or the value it is instead: a pin of the input at its keys (`last`'s), `none`,
+    /// the gap rule's hole (refcore's `last_of`). L §4.6, §5.11.
+    fn latest_at(
+        &mut self,
+        m: &Reality,
+        (input, keys): (&InputInfo, Vec<KeyVal>),
+        day: Day,
+        past: Past,
+        ctx: Ctx,
+    ) -> Result<Result<Latest, Value>, Stop> {
+        if past != Past::Since
+            && let Some(pinned) = self.pin_of(&input.id, &keys, ctx)?
+        {
+            return Ok(Err(pinned_at(pinned, &input.binds, &keys)?));
+        }
+        self.read(Read::Input {
+            id: input.id.clone(),
+            keys: keys.clone(),
+        });
+        let at = match read_last(m, input, &keys, day, self.clocks(ctx, &input.id)?)? {
+            Found::Row(at) => at,
+            Found::None => return Ok(Err(Value::None)),
+            // a price with no row on or before d: no price, which `value` names (refcore's
+            // `last_of`)
+            Found::Hole(_) if past == Past::Price => return Ok(Err(Value::None)),
+            Found::Hole(q) => return Ok(Err(Value::Hole(Hole::asked(&q.text, &q.origin)))),
+        };
+        let row = latest_of(input, at)?;
+        self.read(Read::Row {
+            version: row.version.clone(),
+            sid: row.sid.clone(),
+        });
+        Ok(Ok(Latest {
+            input: input.id.clone(),
+            keys,
+            at,
+            day,
+        }))
+    }
+
+    /// A price's read on day `day`: input or def `id` at the keys `given` (a thing, or a
+    /// position's unit), at law date `day`, or the input through its carry, `last(id[keys],
+    /// day)` (refcore's `m_price_read`, `m_priced_read`, their reads). L §5.10, §4.6.
+    ///
+    /// # Errors
+    ///
+    /// The refusals of the keys, the read rule and the row's value; `ENGINE-INVARIANT` for
+    /// an id that load checked is an input or a def.
+    pub(crate) fn price_at(
+        &mut self,
+        m: &Reality,
+        (id, given): (&str, Vec<Value>),
+        (day, last): (Day, bool),
+        ctx: Ctx,
+    ) -> Result<Value, Stop> {
+        let at = Ctx {
+            law: Some(day),
+            ..ctx
+        };
+        let given: Vec<Given> = given.into_iter().map(Given::Value).collect();
+        if let Some(input) = m.inputs.get(id) {
+            let keys = match self.make_keys(m, id, &input.binds, given, at)? {
+                Err(hole) => return Ok(Value::Hole(hole)),
+                Ok(keys) => keys,
+            };
+            if !last {
+                return self.read_input_at(m, input, &keys, at, Asked::Plain);
+            }
+            return match self.latest_at(m, (input, keys), day, Past::Price, at)? {
+                Err(value) => Ok(value),
+                Ok(latest) => self.last_value(m, &latest, at),
+            };
+        }
+        let def = m
+            .defs
+            .get(id)
+            .ok_or_else(|| invariant("a price that is neither an input nor a def"))?;
+        match self.make_keys(m, id, &def.binds, given, at)? {
+            Err(hole) => Ok(Value::Hole(hole)),
+            Ok(keys) => self.read_def_at(m, def, &keys, at),
+        }
+    }
+
+    /// A chosen row's value with the register entries every read of it makes: `assumed`, its
+    /// own and its version's, and its keys' indexes' (refcore's `row_value`, before `held`);
+    /// a scenario's expression row evaluated in `at`, at the row's law date. L §4.6, §8.2,
+    /// §6.4.
+    fn row_converted(
+        &mut self,
+        m: &Reality,
+        (input, row, keys): (&InputInfo, &Row, &[KeyVal]),
+        figure: &str,
+        at: Ctx,
+    ) -> Result<Value, Stop> {
+        let figure = figure.to_owned();
+        self.note_version(&row.version);
+        self.note_row(&row.sid, &row.version, row.locator.as_ref());
+        if m.scenarios.of(&row.version).is_some() {
+            self.note_scenario(&row.version, &input.id);
+        }
+        if let Some(reason) = &row.assumed {
+            self.note("assumed", reason.clone(), figure.clone());
+        }
+        let version = m
+            .versions
+            .get(&row.version)
+            .ok_or_else(|| invariant("a row names a version load didn't build"))?;
+        if let Some(reason) = &version.assumed {
+            self.note("assumed", reason.clone(), figure.clone());
+        }
+        self.index_assumed(m, &input.binds);
+        // the row's node under a trace, its value once known (E §10)
+        let traced = self.trace_row(m, row);
+        let value = if let Written::Expr(e) = &row.value {
+            self.row_expr(m, (row, e), &figure, at)
+        } else {
+            row_value(m, (input, row, keys), &figure)
+        };
+        self.trace_value(traced, &value);
+        value
     }
 
     /// Narrows the reading cell's law date class, for a row read for law date `day` and not
@@ -270,8 +547,8 @@ impl Engine {
             return Err(not_built());
         };
         let ix = m.indexes.get(ix_id).ok_or_else(not_built)?;
-        let at_year = ix
-            .keys
+        let keys = ix.keys();
+        let at_year = keys
             .iter()
             .find(|k| {
                 matches!(k, KeyVal::Period(p)
@@ -302,44 +579,6 @@ impl Engine {
     }
 }
 
-/// The keys of a read: each given key made a key of its position's domain, checked
-/// against the domain and the cut; a hole key makes the read that hole, carrying the
-/// keys' questions only (refcore's `key_values`). L §2.5, §8.1.
-///
-/// # Errors
-///
-/// `RUN-KEY`, `RUN-NONE` and the conversions' refusals.
-pub(crate) fn make_keys(
-    m: &Reality,
-    item: &str,
-    binds: &[BindInfo],
-    given: Vec<Given>,
-    cut: Day,
-) -> Result<Result<Vec<KeyVal>, Hole>, Stop> {
-    if given.len() != binds.len() {
-        return Err(Stop::NotBuilt("a read with fewer or more keys than binds"));
-    }
-    let mut keys = Vec::with_capacity(binds.len());
-    let mut holes: Vec<Hole> = Vec::new();
-    for (bind, key) in binds.iter().zip(given) {
-        let key = match key {
-            Given::Value(Value::Hole(h)) => {
-                holes.push(h);
-                continue;
-            }
-            Given::Value(v) => to_key(m, item, &v, &bind.domain)?,
-            Given::Literal(lit) => literal_key(m, &lit, &bind.domain)?.ok_or_else(lacks_at_run)?,
-        };
-        check_key(m, &key, &bind.domain, cut)?;
-        keys.push(key);
-    }
-    let operands: Vec<Option<&Hole>> = holes.iter().map(Some).collect();
-    if let Some(hole) = crate::hole::spread(&operands) {
-        return Ok(Err(hole));
-    }
-    Ok(Ok(keys))
-}
-
 /// A money value as a `num CUR`, anything else as it is (L §3.2).
 fn as_plain(m: &Reality, v: &Value) -> Result<Value, Stop> {
     if let Value::Money(money) = v {
@@ -358,111 +597,6 @@ fn plain_unit(v: &Value) -> Unit {
     Unit::one()
 }
 
-/// A value made a key of `domain` (refcore's `to_key`). L §2.5, §4.2.
-///
-/// # Errors
-///
-/// `RUN-NONE` for `none`, `RUN-KEY` for a value the domain doesn't hold.
-pub(crate) fn to_key(m: &Reality, item: &str, v: &Value, domain: &Domain) -> Result<KeyVal, Stop> {
-    if *v == Value::None {
-        return Err(refuse(Run::None, "a key is none here: a key".to_owned()));
-    }
-    if let Value::OutKey { index, text } = v {
-        return Err(refuse(Run::Key, format!("{text} is outside {index}")));
-    }
-    match domain {
-        Domain::Index(id) => {
-            let ix = m
-                .indexes
-                .get(id)
-                .ok_or_else(|| invariant("a bind over an index load didn't build"))?;
-            index_key(m, item, ix, v)
-        }
-        Domain::Kind(kind) => {
-            let Value::Key(KeyVal::Thing(name)) = v else {
-                return Err(refuse(
-                    Run::Key,
-                    format!("{} is not a key of {kind}", v.text(m).map_err(num_stop)?),
-                ));
-            };
-            if !m.thing_in(name, kind) {
-                return Err(refuse(Run::Key, format!("{name} is not a key of {kind}")));
-            }
-            Ok(KeyVal::Thing(name.clone()))
-        }
-        Domain::List(_) | Domain::Range | Domain::Axis(_) => {
-            Err(Stop::NotBuilt("a key of a key list, a range or an axis"))
-        }
-    }
-}
-
-/// A value made a key of index `ix`: an int of an integer index, the key holding a day or a
-/// period of a period index, a key of a list or open index as it is (refcore's `to_key`);
-/// an integer past 64 bits is no key of an integer index, whose keys have at most 18 digits
-/// (L §7.6 item 3), `RUN-KEY`.
-fn index_key(m: &Reality, item: &str, ix: &IndexInfo, v: &Value) -> Result<KeyVal, Stop> {
-    if ix.is_int {
-        if let Value::Number(n) = v
-            && n.q.to_i64().is_none()
-            && let Some(text) = n.q.integer_text()
-        {
-            return Err(refuse(Run::Key, format!("{text} is outside {}", ix.id)));
-        }
-        return Ok(KeyVal::Int(int_of(m, v)?));
-    }
-    if ix.period.is_some() {
-        return period_key(m, item, ix, v);
-    }
-    if let Value::Key(key @ KeyVal::Key { .. }) = v {
-        return Ok(key.clone());
-    }
-    Err(refuse(
-        Run::Key,
-        format!("{} is outside {}", v.text(m).map_err(num_stop)?, ix.id),
-    ))
-}
-
-/// The key of a period index a day or a period stands for: the key holding the day, the
-/// key equal to the period or holding it (refcore's `to_key`, `holding` and `period`); the
-/// end of time is no day a key holds, `RUN-LIMIT`. L §4.6, §7.6 item 1.
-fn period_key(m: &Reality, item: &str, ix: &IndexInfo, v: &Value) -> Result<KeyVal, Stop> {
-    let outside = |text: String| refuse(Run::Key, format!("{text} is outside {}", ix.id));
-    if let Value::Day(day) = v {
-        let day = a_day(*day)?;
-        return ix.holding(day).cloned().ok_or_else(|| {
-            let def_days = m.defs.get(item).is_some() && ix.period == Some(PeriodKind::Day);
-            if def_days {
-                refuse(
-                    Run::Key,
-                    format!("{} is outside the days of {item}", day.text()),
-                )
-            } else {
-                outside(day.text())
-            }
-        });
-    }
-    if let Value::Period(p) = v {
-        for key in &ix.keys {
-            match key {
-                KeyVal::Day(d) if p.kind() == PeriodKind::Day && *d == p.start() => {
-                    return Ok(key.clone());
-                }
-                KeyVal::Period(k) if k == p || (k.start() <= p.start() && p.end() <= k.end()) => {
-                    return Ok(key.clone());
-                }
-                KeyVal::Day(_)
-                | KeyVal::Period(_)
-                | KeyVal::Key { .. }
-                | KeyVal::Thing(_)
-                | KeyVal::Int(_)
-                | KeyVal::Mv(_) => {}
-            }
-        }
-        return Err(outside(p.label()));
-    }
-    Err(outside(v.text(m).map_err(num_stop)?))
-}
-
 /// A value as a register entry shows it: a hole as `?` (L §8.2).
 pub(super) fn shown(m: &Reality, v: &Value) -> Result<String, Stop> {
     if let Value::Hole(_) = v {
@@ -471,112 +605,65 @@ pub(super) fn shown(m: &Reality, v: &Value) -> Result<String, Stop> {
     v.text(m).map_err(num_stop)
 }
 
-/// A key literal resolved in `domain`: a key of an index, an integer or a period by its
-/// label or a key by its text, a thing of a kind by its name (refcore's
-/// `resolve_key_literal`); `None` for a literal the domain doesn't hold, which its caller
-/// refuses. L §2.5.
-///
-/// # Errors
-///
-/// An invariant for an index load didn't build; `NotBuilt` for a key list, a range or an
-/// axis.
-pub(super) fn literal_key(m: &Reality, lit: &Lit, domain: &Domain) -> Result<Option<KeyVal>, Stop> {
-    let text = lit.text();
-    match domain {
-        Domain::Index(id) => {
-            let ix = m
-                .indexes
-                .get(id)
-                .ok_or_else(|| invariant("a bind over an index load didn't build"))?;
-            Ok(index_key_of(ix, lit))
-        }
-        Domain::Kind(kind) => Ok(m.thing_in(&text, kind).then_some(KeyVal::Thing(text))),
-        Domain::List(_) | Domain::Range | Domain::Axis(_) => Err(Stop::NotBuilt(
-            "a key literal of a key list, a range or an axis",
-        )),
-    }
-}
-
-/// Whether the cut sees key `key` of `domain`: a key its index holds and no version known
-/// after the cut added, a thing an entry the cut sees brings (refcore's `check_key`). L §4.5.
-///
-/// # Errors
-///
-/// `RUN-KEY`.
-pub(super) fn check_key(m: &Reality, key: &KeyVal, domain: &Domain, cut: Day) -> Result<(), Stop> {
-    match domain {
-        Domain::Index(id) => {
-            let ix = m
-                .indexes
-                .get(id)
-                .ok_or_else(|| invariant("a bind over an index load didn't build"))?;
-            if ix.pos(key).is_none() {
-                return Err(refuse(Run::Key, format!("{} is outside {id}", key.text())));
-            }
-            if let Some(version) = ix.added_by(key) {
-                let known = m
-                    .versions
-                    .get(version)
-                    .map(|v| v.known)
-                    .ok_or_else(|| invariant("a key added by a version load didn't build"))?;
-                if known > cut {
-                    return Err(refuse(
-                        Run::Key,
-                        format!("{} was added after the cut", key.text()),
-                    ));
-                }
-            }
-            Ok(())
-        }
-        Domain::Kind(kind) => {
-            let KeyVal::Thing(name) = key else {
-                return Err(refuse(
-                    Run::Key,
-                    format!("{} is not a key of {kind}", key.text()),
-                ));
-            };
-            let thing = m
-                .things
-                .get(name)
-                .ok_or_else(|| refuse(Run::Key, format!("{name} is not a key of {kind}")))?;
-            if !thing_seen(m, thing, cut) {
-                return Err(refuse(Run::Key, format!("{name} was added after the cut")));
-            }
-            Ok(())
-        }
-        Domain::List(_) | Domain::Range | Domain::Axis(_) => Ok(()),
-    }
-}
-
-/// Whether the cut sees an entry of `thing`: one with no version, or whose version is known by
-/// the cut (refcore's `thing_seen`). L §4.5, §5.7.
-#[must_use]
-pub(crate) fn thing_seen(m: &Reality, thing: &crate::model::Thing, cut: Day) -> bool {
-    if let Some(keys) = &thing.place {
-        return keys
-            .key_things
-            .iter()
-            .filter_map(|name| m.things.get(name))
-            .all(|t| thing_seen(m, t, cut));
-    }
-    for entry in &thing.entries {
-        let Some(version) = &entry.version else {
-            return true;
-        };
-        if m.versions.get(version).is_some_and(|v| v.known <= cut) {
-            return true;
-        }
-    }
-    false
-}
-
-/// A literal key its index or kind lacks, met at run: load refuses it with its place
-/// (`key_value`), refcore's run with `RUN-KEY`, so the run stops "not implemented".
-pub(super) fn lacks_at_run() -> Stop {
-    Stop::NotBuilt("a literal key its index or kind lacks, met at run")
-}
-
 /// Whether a unit has a term `$v`, a bound variable's key (L §3.2).
 pub(super) fn keyed(unit: &Unit) -> bool {
     unit.terms().iter().any(|(base, _)| base.starts_with('$'))
+}
+
+/// A written row's value read at `keys` as `figure`, in its input's type: a stated hole asked
+/// of it, a window's holes asked of it, a number at its keys (refcore's `row_value`). L §4.6,
+/// §8.1.
+fn row_value(
+    m: &Reality,
+    (input, row, keys): (&InputInfo, &Row, &[KeyVal]),
+    figure: &str,
+) -> Result<Value, Stop> {
+    let ty = input
+        .ty
+        .as_ref()
+        .ok_or(Stop::NotBuilt("the value of an observed row"))?;
+    let of = ConvertFor::row(&input.unit_factor, ty, &input.binds, &row.pattern);
+    let value = match convert(m, &row.value, ty, &input.id, &of)? {
+        Converted::Hole(text) => Value::Hole(Hole::asked(&text, figure)),
+        Converted::Value(Value::Window(mut w)) => {
+            // its holes are asked of this row (L §8.1); the read that made it is stamped by
+            // `read_input_at`
+            w.figure = Some(figure.to_owned());
+            Value::Window(w)
+        }
+        Converted::Value(Value::Number(n)) => Value::Number(at_keys(n, &input.binds, keys)?),
+        Converted::Value(v) => v,
+    };
+    Ok(value)
+}
+
+/// A pin's value as a read at `keys` takes it: a per-unit price pinned at `*` is in CUR per
+/// the read key's unit, as a row is (L §3.2 Per-unit prices of a unit kind; §5.11).
+pub(super) fn pinned_at(v: Value, binds: &[BindInfo], keys: &[KeyVal]) -> Result<Value, Stop> {
+    if let Value::Number(n) = &v {
+        return Ok(Value::Number(at_keys(n.clone(), binds, keys)?));
+    }
+    Ok(v)
+}
+
+/// A row's number, or a def's figure in its declared type, read at `keys`: a per-unit price
+/// `num CUR/u` takes the unit of the key it is read at, the type's `$u` replaced (refcore's
+/// `row_value`, its end). L §3.2 (Per-unit prices of a unit kind; Inline figures).
+pub(super) fn at_keys(n: Number, binds: &[BindInfo], keys: &[KeyVal]) -> Result<Number, Stop> {
+    let Class::Num(unit, shown) = &n.class else {
+        return Ok(n);
+    };
+    if !keyed(unit) {
+        return Ok(n);
+    }
+    let env: Vec<(String, String)> = binds
+        .iter()
+        .zip(keys)
+        .map(|(bind, key)| (bind.var.clone(), key.text()))
+        .collect();
+    let unit = unit.subst(&env).map_err(super::state::unit_stop)?;
+    Ok(Number {
+        q: n.q,
+        class: Class::Num(unit, *shown),
+    })
 }

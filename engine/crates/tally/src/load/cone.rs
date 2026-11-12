@@ -621,7 +621,7 @@ fn check_draw_slots(m: &Reality, items: &BTreeSet<Node>, draws: &[DrawKey]) -> R
             continue;
         };
         let mut last: Option<i64> = None;
-        for key in &index.keys {
+        for key in index.keys() {
             if let crate::model::KeyVal::Int(k) = key {
                 last = Some(last.map_or(*k, |top| top.max(*k)));
             }

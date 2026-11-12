@@ -1,0 +1,55 @@
+model own_obs
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T C14 (invented): a past decision fulfilled by an observation on its own day, its own legs and the observation's at one point (E §4.2 step 3, L §5.19; gate 8's open survivor, point.rs At::with_sub)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+kind pot: place PLN min 0
+
+place konto: pot lives 2026-01-01..
+
+place shop: outside lives 2026-01-01..
+
+input bank: observed
+
+input plan_amt: money PLN
+
+input low_mark: money PLN
+
+input pay_dom: int
+
+move pay[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  reads konto
+  leg cash from konto to shop amount if bal(konto) > low_mark then plan_amt else low_mark
+
+ask b1: bal(konto, 2026-01-31)
+
+ask l1: low(konto, 2026-01-01 .. 2026-01-31)
+
+ask x1: explain bal(konto, 2026-01-31)
+
+ask x2: explain pay[2026-01]
+
+version facts
+  cite card
+  governs always
+  known 2025-12-01
+  plan_amt = 80.00 PLN "the plan"
+  low_mark = 50.00 PLN "the mark"
+  pay_dom = 10 "the day"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "the card"
+
+version bank_jan
+  cite card
+  governs 2026-01
+  known 2026-02-02
+  bank[b20260110] = (on: 2026-01-10, kind: transfers, leg cash from konto to shop amount 60.00 PLN, fulfils: pay[2026-01]) "paid less than planned"

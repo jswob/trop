@@ -1,0 +1,8 @@
+part e_int_arg
+  tally 2
+
+move m_int_arg: transfers
+  on add_months(d0, txt)
+  leg cash from konto to world amount fee
+
+ask e_int_arg: bal(konto, 2026-12-31)

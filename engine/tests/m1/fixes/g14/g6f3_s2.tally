@@ -1,0 +1,11 @@
+scenario more over decided
+  tally 2
+  from 2026-07-01
+
+version more_fee
+  cite card
+  governs 2026-07-01..
+  known 2026-01-01
+  replace fee = 120.00 "the scenario's fee"
+
+ask b1: bal(konto, 2026-06-30) in more

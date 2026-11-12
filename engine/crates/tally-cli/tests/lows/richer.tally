@@ -1,0 +1,13 @@
+scenario richer over lows
+  tally 2
+  from 2026-06-01
+
+version richer_pay
+  cite card
+  governs 2026-06-01..
+  known 2026-01-01
+  replace pay_low = 1100.00 "a raise"
+
+ask s_low: low(konto, 2026-05-01 .. 2026-12-31) from 2026-05-01 in richer
+
+ask s_bal: bal(konto, 2026-12-31) from 2026-07-01 in richer

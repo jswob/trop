@@ -20,10 +20,12 @@ use super::observe::Obs;
 use crate::base::{Code, Load, Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Entry, Env};
 use crate::hole::{Hole, spread};
-use crate::model::{Fulfils, KeyVal, MvRef, MvSrc, Reality, Span, Value};
-use crate::syntax::{Bind, Stop};
+use crate::model::{Fulfils, KeyVal, MoveInfo, MvRef, MvSrc, Reality, Span, Value};
+use crate::syntax::{Bind, Call, Expr, Stop};
 use crate::time::Day;
-use crate::walk::{Amount, Dated, End, Exists, Inst, LegVal, Status, Term, invariant, qty_value};
+use crate::walk::{
+    Amount, Dated, End, Exists, Inst, LegVal, Status, Term, WalkAt, invariant, qty_value,
+};
 
 /// What a binding over movements ranges over (refcore's `_dom`, `event` or `obs`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -55,6 +57,10 @@ pub(crate) struct MvMember {
     pub unknown: Option<Hole>,
     /// Its register and what made it.
     pub coll: Collected,
+    /// Its day: a day or a hole (none was dropped before it became a member).
+    pub day: Dated,
+    /// Its stable id (L §2.5).
+    pub id: String,
 }
 
 impl Moving {
@@ -152,7 +158,10 @@ impl Engine {
                 if let Value::Hole(h) = v {
                     return self.unknown_day(m, bind, dom, h, ctx);
                 }
-                let d = crate::ask::date_of(&v, "the day of a binding")?;
+                let d = match crate::eval::one_day(m, &v, "the day of a binding")? {
+                    Ok(d) => d,
+                    Err(h) => return self.unknown_day(m, bind, dom, h, ctx),
+                };
                 let next = d
                     .next()
                     .ok_or_else(|| invariant("a binding's day past the calendar"))?;
@@ -195,13 +204,14 @@ impl Engine {
     /// The movements of the domain dated in span `sp`, an instance and the observations that
     /// fulfil it counted once, each with what it brings to a reader (refcore's
     /// `span_members`). L §5.19 Bindings, §5.14, §8.2.
-    fn span_members(
+    pub(crate) fn span_members(
         &mut self,
         m: &Reality,
         dom: (MvDom, &str),
         sp: &Span,
         ctx: Ctx,
     ) -> Result<Vec<MvMember>, Stop> {
+        binds_future(m, dom, sp, ctx)?;
         let mut out: Vec<(Moving, Option<Hole>)> = Vec::new();
         let mut fulfilled: BTreeSet<String> = BTreeSet::new();
         for x in self.movements_of(m, dom, ctx)? {
@@ -240,7 +250,7 @@ impl Engine {
             let mut coll = Collected::default();
             match &x {
                 Moving::Plan(i) => {
-                    if i.status == Status::Past && i.obs.is_empty() {
+                    if unfulfilled(m, i, ctx.cut) {
                         coll.entries.insert(entry("unfulfilled", &i.id));
                     }
                     if i.status == Status::Uncertain {
@@ -251,13 +261,83 @@ impl Engine {
                 Moving::Obs(o) => coll.merge(&o.coll),
                 Moving::Adj(a) => coll.merge(&a.coll),
             }
+            let day = x
+                .day()
+                .ok_or_else(|| invariant("a member of a binding with no day"))?;
             res.push(MvMember {
                 value: x.value(),
                 unknown,
                 coll,
+                day,
+                id: x.id().to_owned(),
             });
         }
         Ok(res)
+    }
+
+    /// `next(K, d)`: `first(m in K over d ..) ties by m.day`, the first movement of event kind
+    /// K dated on or after d. A member whose day is a hole may come first, so the result is
+    /// that hole; two on the first day are a tie (`RUN-TIE`); none at the cut is
+    /// `HOLE-NOTYET`, since `d ..` reaches past every cut (refcore's `m_c_next`,
+    /// `first_by_day`). L §5.14.1 (its table), §3.1, §8.1, §8.4; E §4.3.
+    ///
+    /// # Errors
+    ///
+    /// `RUN-TIE`; the refusals the day and the members meet.
+    pub(crate) fn next_movement(
+        &mut self,
+        m: &Reality,
+        call: &Call,
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Value, Stop> {
+        let [Expr::Name(kind), day] = call.args.as_slice() else {
+            return Err(invariant("a next(K, d) load didn't check"));
+        };
+        let d = self.ev(m, day, env, ctx)?;
+        if let Value::Hole(_) = d {
+            return Ok(d);
+        }
+        let d = match crate::eval::one_day(m, &d, "the day of next")? {
+            Ok(d) => d,
+            Err(h) => return Ok(Value::Hole(h)),
+        };
+        let members =
+            self.span_members(m, (MvDom::Event, kind), &Span::between(Some(d), None), ctx)?;
+        let hole_days: Vec<Option<&Hole>> = members
+            .iter()
+            .filter(|x| matches!(x.day, Dated::Hole(_)))
+            .map(|x| x.unknown.as_ref())
+            .collect();
+        if let Some(h) = spread(&hole_days) {
+            return Ok(Value::Hole(h));
+        }
+        let Some(top) = members.iter().filter_map(|x| x.day.day()).min() else {
+            let text = format!("m: no {kind} yet, and its span reaches past the cut");
+            return Ok(Value::Hole(Hole::asked(&text, kind)));
+        };
+        let firsts: Vec<&MvMember> = members
+            .iter()
+            .filter(|x| x.day.day() == Some(top))
+            .collect();
+        let unknown: Vec<Option<&Hole>> = firsts.iter().map(|x| x.unknown.as_ref()).collect();
+        if let Some(h) = spread(&unknown) {
+            return Ok(Value::Hole(h));
+        }
+        let [first] = firsts.as_slice() else {
+            let ids: Vec<&str> = firsts.iter().map(|x| x.id.as_str()).collect();
+            return Err(Stop::Refused(Refusal::new(
+                Code::Run(Run::Tie),
+                format!(
+                    "next({kind}, {}) has a tie at {} that changes the result, and its ties by \
+                     doesn't break it",
+                    d.text(),
+                    ids.join(", ")
+                ),
+            )));
+        };
+        self.absorb(&first.coll);
+        Ok(first.value.clone())
     }
 
     /// The members a binding over an event kind leaves out so that a planned instance and the
@@ -352,24 +432,26 @@ impl Engine {
         {
             return in_order(adjs.iter().cloned().map(Moving::Adj).collect());
         }
-        let decided = m
-            .moves
-            .entries()
-            .any(|(_, mv)| mv.decision && sub.contains(&mv.kind));
-        if sub.contains("pads") || decided {
+        // the moves the read's world holds: a scenario's only in its world and those over it
+        // (L §6.4)
+        let mut moves = m.moves_in(ctx.world);
+        moves.retain(|mv| sub.contains(&mv.kind));
+        if sub.contains("pads") {
             return Err(Stop::NotBuilt(
-                "a binding over pads or decisions (the walk's own movements)",
+                "a binding over pads (the walk's own movements)",
             ));
         }
-        let mut moves: Vec<&crate::model::MoveInfo> = m
-            .moves
-            .entries()
-            .map(|(_, mv)| mv)
-            .filter(|mv| !mv.decision && sub.contains(&mv.kind))
-            .collect();
-        moves.sort_by(|a, b| a.id.cmp(&b.id));
         let mut out = Vec::new();
+        let mut decided = Vec::new();
         for mv in moves {
+            // a scenario's move the binding ranges over is a fact of it (E §9 item 3)
+            if m.scenarios.of(&mv.id).is_some() {
+                self.note_scenario(&mv.id, &mv.id);
+            }
+            if mv.decision {
+                decided.push(mv);
+                continue;
+            }
             for i in self.move_instances(m, mv, cut)?.iter() {
                 match i.status {
                     Status::None | Status::Modelled | Status::Uncertain if !ctx.unc => {}
@@ -401,7 +483,56 @@ impl Engine {
                     .map(Moving::Adj),
             );
         }
+        out.extend(self.decided_members(m, &decided, ctx)?);
         in_order(out)
+    }
+
+    /// The runs of the decision moves `decided` that a binding over their kind ranges over,
+    /// as the walk ran them: inside a decision, its walk's and those it continues', the ones
+    /// before its point; else the main walk's of the read's timeline. One that doesn't exist
+    /// or is modelled past is no member, nor is an uncertain one without `with uncertain`
+    /// (refcore's `movements_of`, its decisions). L §5.14.1 Running reads, §5.19 Bindings.
+    fn decided_members(
+        &mut self,
+        m: &Reality,
+        decided: &[&MoveInfo],
+        ctx: Ctx,
+    ) -> Result<Vec<Moving>, Stop> {
+        if decided.is_empty() {
+            return Ok(Vec::new());
+        }
+        let (walk, limit) = match ctx.at {
+            Some(WalkAt { walk, point }) => (walk, Some(point)),
+            None => (self.main_walk(m, ctx.cut)?, None),
+        };
+        let mut out = Vec::new();
+        for mv in decided {
+            for inst in self.move_instances(m, mv, ctx.cut)?.iter() {
+                let Some(run) = self.chain_run(walk, &inst.id)? else {
+                    continue;
+                };
+                if limit.is_some_and(|point| run.point >= point) || run.inst.exists == Exists::No {
+                    continue;
+                }
+                match run.inst.status {
+                    Status::Modelled | Status::None => {}
+                    Status::Uncertain if !ctx.unc => {}
+                    Status::Uncertain => {
+                        return Err(Stop::NotBuilt(
+                            "a binding over uncertain movements under `with uncertain`",
+                        ));
+                    }
+                    Status::Open
+                    | Status::LeftOut
+                    | Status::Refused
+                    | Status::Hole
+                    | Status::Decision
+                    | Status::Past
+                    | Status::Plan => out.push(Moving::Plan(run.inst.clone())),
+                }
+            }
+        }
+        Ok(out)
     }
 
     /// The record behind a movement value at the reader's cut: an instance, an observation or
@@ -410,7 +541,7 @@ impl Engine {
     fn mv_record(&mut self, m: &Reality, v: &MvRef, ctx: Ctx) -> Result<Option<Moving>, Stop> {
         let cut = ctx.cut;
         match &v.src {
-            MvSrc::Inst(move_id, _) => self.instance_by_id(m, move_id, &v.id, cut),
+            MvSrc::Inst(move_id, _) => self.instance_by_id(m, move_id, &v.id, ctx),
             MvSrc::Obs => Ok(self.observation_by_id(m, &v.id, cut)?),
             MvSrc::Adj { .. } => {
                 if let Some(r) = &self.adj_restrict
@@ -425,30 +556,47 @@ impl Engine {
             MvSrc::Missing => {
                 let name = v.id.split_once('[').map_or(v.id.as_str(), |(n, _)| n);
                 if m.moves.get(name).is_some() {
-                    return self.instance_by_id(m, name, &v.id, cut);
+                    return self.instance_by_id(m, name, &v.id, ctx);
                 }
                 self.observation_by_id(m, &v.id, cut)
             }
         }
     }
 
-    /// A move's instance by id at the cut (refcore's `mv_by_id`, a move). L §5.14.
+    /// A move's instance by id at the read's cut; a decision's as the walk ran it: inside a
+    /// decision, in its walk or one it continues, `RUN-ORDER` where it hasn't run yet; else in
+    /// the main walk of the read's timeline, or the instance as planned where that walk didn't
+    /// run it (refcore's `mv_by_id`, a move, and `mv_record`). L §5.14, §5.14.1, §5.14.2.
     fn instance_by_id(
         &mut self,
         m: &Reality,
         move_id: &str,
         id: &str,
-        cut: Day,
+        ctx: Ctx,
     ) -> Result<Option<Moving>, Stop> {
         let mv = m
             .moves
             .get(move_id)
             .ok_or_else(|| invariant("a movement of a move load didn't build"))?;
-        if mv.decision {
-            return Err(Stop::NotBuilt("a read of a decision's movement (the walk)"));
+        let insts = self.move_instances(m, mv, ctx.cut)?;
+        let Some(inst) = insts.iter().find(|i| i.id == id).cloned() else {
+            return Ok(None);
+        };
+        if !mv.decision {
+            return Ok(Some(Moving::Plan(inst)));
         }
-        let insts = self.move_instances(m, mv, cut)?;
-        Ok(insts.iter().find(|i| i.id == id).cloned().map(Moving::Plan))
+        let (walk, running) = match ctx.at {
+            Some(WalkAt { walk, .. }) => (walk, true),
+            None => (self.main_walk(m, ctx.cut)?, false),
+        };
+        match self.chain_run(walk, id)? {
+            Some(run) => Ok(Some(Moving::Plan(run.inst.clone()))),
+            None if running => Err(Stop::Refused(Refusal::new(
+                Code::Run(Run::Order),
+                format!("decision {id} is read before it has run"),
+            ))),
+            None => Ok(Some(Moving::Plan(inst))),
+        }
     }
 
     /// An observation by id at the cut (refcore's `mv_by_id`, an observation). L §5.19.
@@ -576,7 +724,11 @@ impl Engine {
             if let Amount::Refused(r) = &lg.amount {
                 return Err(Stop::Refused(r.clone()));
             }
-            if let Some(err) = self.leg_refused(m, (src.id(), name), ctx)? {
+            let day = lg
+                .day
+                .day()
+                .or_else(|| src.day().as_ref().and_then(Dated::day));
+            if let Some(err) = self.leg_refused(m, (src.id(), name), day, ctx)? {
                 return Err(Stop::Refused(err));
             }
             return leg_record(m, lg);
@@ -584,9 +736,27 @@ impl Engine {
         if let Moving::Plan(i) = src
             && (i.exists == Exists::No || i.status == Status::None)
         {
-            return Err(Stop::NotBuilt(
-                "a leg of an instance a later version made exist",
-            ));
+            // a later version may have made it exist (E §5 step 1): a plan's leg some
+            // adjustment of the cut changes; else it is none here (refcore's
+            // `made_to_exist_leg`, then `RUN-NONE`)
+            let mv = m
+                .moves
+                .get(&i.move_id)
+                .ok_or_else(|| invariant("an instance of a move load didn't build"))?;
+            if !mv.decision
+                && self
+                    .adjust_move(m, mv, ctx.cut)?
+                    .iter()
+                    .any(|a| a.inst_id == i.id && a.leg.name == name)
+            {
+                return Err(Stop::NotBuilt(
+                    "a leg of an instance a later version made exist",
+                ));
+            }
+            return Err(Stop::Refused(Refusal::new(
+                Code::Run(Run::None),
+                format!("{} doesn't exist: a field read of it", src.id()),
+            )));
         }
         if let Some(h) = body_hole(src) {
             return Ok(Value::Hole(h));
@@ -702,7 +872,7 @@ fn amount_value(m: &Reality, a: &Amount, unit: Option<&str>) -> Result<Value, St
 }
 
 /// A plan instance as a value. L §5.14.
-fn inst_ref(i: &Inst) -> MvRef {
+pub(crate) fn inst_ref(i: &Inst) -> MvRef {
     MvRef {
         id: i.id.clone(),
         day: i.day.as_ref().and_then(Dated::day),
@@ -716,6 +886,55 @@ pub(super) fn row_key(o: &Obs) -> &str {
         .and_then(|r| r.strip_prefix('['))
         .and_then(|r| r.strip_suffix(']'))
         .unwrap_or(&o.id)
+}
+
+/// A running read's binding over a kind the walk itself books, decisions or pads, through a
+/// day after the reader's: its future, `RUN-FUTURE` (refcore's `span_members`, its first
+/// test). L §5.14.1 Running reads ("a span past the reader's day, in a binding or in flows,
+/// is its future"), §8.4.
+fn binds_future(m: &Reality, (dom, kind): (MvDom, &str), sp: &Span, ctx: Ctx) -> Result<(), Stop> {
+    let Some(WalkAt { point, .. }) = ctx.at else {
+        return Ok(());
+    };
+    let sub = m.subtree(kind);
+    let walked = sub.contains("pads")
+        || m.moves
+            .entries()
+            .any(|(_, mv)| mv.decision && sub.contains(&mv.kind));
+    let t = point.day;
+    let after = t
+        .next()
+        .ok_or_else(|| invariant("the day after a decision's"))?;
+    if dom != MvDom::Event || !walked || sp.end().is_some_and(|end| end <= after) {
+        return Ok(());
+    }
+    let through = match sp.end() {
+        Some(end) => end
+            .previous()
+            .ok_or_else(|| invariant("a span that ends before the calendar"))?
+            .text(),
+        None => "the end".to_owned(),
+    };
+    Err(Stop::Refused(Refusal::new(
+        Code::Run(Run::Future),
+        format!(
+            "a decision on {} binds over {kind} through {through}, after its day",
+            t.text()
+        ),
+    )))
+}
+
+/// Whether a member brings `unfulfilled:` to its reader: a plan's past instance, or a
+/// decision's run dated before the read's cut, that no observation fulfils (refcore's
+/// `span_members`, its registers). L §5.19, §8.2.
+fn unfulfilled(m: &Reality, i: &Inst, cut: Day) -> bool {
+    if !i.obs.is_empty() {
+        return false;
+    }
+    if m.moves.get(&i.move_id).is_some_and(|mv| mv.decision) {
+        return i.day.as_ref().and_then(Dated::day).is_some_and(|d| d < cut);
+    }
+    i.status == Status::Past
 }
 
 /// A register entry with no figure (L §8.2).

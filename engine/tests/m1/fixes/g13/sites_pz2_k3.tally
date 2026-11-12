@@ -1,0 +1,14 @@
+part k3
+  tally 2
+
+input kq: key qs
+
+def k3_x: key qs = if kq == q2 then q2 - 1 else q1
+
+ask k3: k3_x
+
+version vv
+  cite card
+  governs always
+  known 2026-01-01
+  kq = q2 "c"

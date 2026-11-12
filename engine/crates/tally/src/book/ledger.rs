@@ -21,7 +21,7 @@ use super::adjust::Adjustment;
 use super::observe::{Obs, inst_id};
 use super::reading::{Seen, booked_amount, reading_rank, readings};
 use crate::base::{Code, Load, Refusal};
-use crate::eval::{Ctx, Engine, Env, num_stop};
+use crate::eval::{Ctx, Engine, Env, Rows, num_stop};
 use crate::hole::{Hole, spread};
 use crate::model::{Fulfils, GapRole, Reality, Span};
 use crate::num::Num;
@@ -269,13 +269,9 @@ impl Engine {
         let fulfilled: BTreeSet<String> = obs.iter().filter_map(Obs::target_id).collect();
         let mut model = Vec::new();
         let mut undated = Vec::new();
-        let mut moves: Vec<&crate::model::MoveInfo> = m
-            .moves
-            .entries()
-            .map(|(_, mv)| mv)
-            .filter(|mv| !mv.decision)
-            .collect();
-        moves.sort_by(|a, b| a.id.cmp(&b.id));
+        // the plan moves the timeline's world holds (L §6.4)
+        let mut moves = m.moves_in(self.timeline_world());
+        moves.retain(|mv| !mv.decision);
         let mut insts = Vec::new();
         for mv in moves {
             insts.extend(self.move_instances(m, mv, cut)?.iter().cloned());
@@ -383,8 +379,9 @@ impl Engine {
         cut: Day,
     ) -> Result<(), Stop> {
         let id = self.main_walk(m, cut)?;
-        let walked = readings(m, cut)?;
-        for seen in readings(m, m.on)? {
+        let world = self.timeline_world();
+        let walked = readings(m, (cut, world), Rows::Unkept)?;
+        for seen in readings(m, (m.on, world), Rows::Unkept)? {
             if seen.input != "stated" || seen.place != lines.place || !span.contains(seen.day) {
                 continue;
             }

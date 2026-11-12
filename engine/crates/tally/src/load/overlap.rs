@@ -397,7 +397,7 @@ fn rank(m: &Reality, domain: &Domain, key: &KeyVal, compare: Compare) -> Option<
             KeyVal::Int(n) => Some(Rank::Int(*n)),
             KeyVal::Day(day) => Some(Rank::Day(*day)),
             KeyVal::Period(p) => (compare == Compare::Before).then(|| Rank::Day(p.start())),
-            KeyVal::Key { .. } | KeyVal::Thing(_) | KeyVal::Mv(_) => None,
+            KeyVal::Key { .. } | KeyVal::Thing(_) | KeyVal::Mv(_) | KeyVal::Value(_) => None,
         },
         Domain::Axis(_) => None,
     }
@@ -580,17 +580,10 @@ fn version_known(m: &Reality, id: &str) -> Result<Day, Stop> {
         .ok_or_else(|| invariant(format!("version {id} isn't built")))
 }
 
-/// A version's layer in its stack of scenarios: 0 for the base's, else its scenario's depth
-/// (refcore's `version_layer`). L §4.6 step 3.1, §6.4.
+/// A version's layer in its stack of scenarios (refcore's `version_layer`). L §4.6 step 3.1,
+/// §6.4.
 fn layer(m: &Reality, version: &str) -> usize {
-    let mut at = m.scenarios.of(version);
-    for depth in 0..=m.scenarios.over.len() {
-        let Some(scenario) = at else {
-            return depth;
-        };
-        at = m.scenarios.over.get(scenario).and_then(Option::as_deref);
-    }
-    m.scenarios.over.len()
+    m.scenarios.layer(Some(version))
 }
 
 /// The file and line a version's item stands at.

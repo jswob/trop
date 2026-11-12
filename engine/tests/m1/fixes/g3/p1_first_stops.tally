@@ -1,0 +1,21 @@
+model p1
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+index ks = 1..3
+
+input base: int
+
+def found: key ks = first(k in ks where k == 1 or base / (k - 2) > 0)
+
+ask a: found
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  base = 6 "card"

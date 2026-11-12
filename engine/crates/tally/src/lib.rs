@@ -3,7 +3,7 @@
 //! Twin: engine/tools/refcore/cli.py.
 //! Invariants: the library reads no clock, environment or file (R-38, R-39); [`run`] answers
 //! a read, parse or load refusal and the asks a loaded reality's evaluator can read, and
-//! `NotImplemented` for anything past the part built (milestones S and M0).
+//! `NotImplemented` for anything past the part built (milestones S, M0 and M1).
 //!
 //! Milestone S built it in groups (`engine/BUILD-LOG.md`, the S plan): the exact numbers,
 //! [`num`]; the code catalogue and refusals, [`base`]; the entry and its read step, [`run`];
@@ -21,15 +21,19 @@ mod counters;
 mod invariant;
 mod oracle;
 
+#[cfg(feature = "fault-injection")]
+pub use api::run_faulted;
 pub use api::{
     Answer, Asks, Given, Pin, Request, Source, load_report, reprint, reprint_in, run, run_in,
-    run_with_memo,
+    run_with_lows, run_with_memo,
 };
 #[cfg(feature = "counters")]
 pub use counters::Counters;
 #[cfg(feature = "counters")]
 pub(crate) use counters::Unit;
 pub use oracle::Days;
+#[cfg(feature = "fault-injection")]
+pub use walk::Fault;
 
 /// The foundations every other module stands on: the catalogue of codes (L §8, E §11) and
 /// the refusal that carries one. The module's code is its files under `base/`.
@@ -79,8 +83,8 @@ pub mod syntax {
         Item, ItemForm, Key, KindDecl, KindSpec, Known, LSpan, LawDate, Leg, Lit, Low, Move,
         MoveLines, MulOp, Number, OfQ, OfRow, Order, Orient, PRef, PartsClause, Pin, PinForm,
         Place, Postfix, Price, Proj, Prorata, Query, QueryFn, RChoice, Residuals, Rest, Row,
-        RowKey, Rule, RuleValue, Section, Sign, Solve, Source, Span, Step, Takes, Type, TypedInput,
-        Unit, UnitDecl, UnitForm, UnitTerm, Valuation, Value, Version,
+        RowKey, Rule, RuleValue, Section, Sign, Site, SiteKey, Solve, Source, Span, Step, Takes,
+        Type, TypedInput, Unit, UnitDecl, UnitForm, UnitTerm, Valuation, Value, Version,
     };
 }
 
@@ -90,7 +94,7 @@ pub mod time {
     mod day;
     mod period;
 
-    pub use calendar::{Calendar, FirstYear, weekday_number};
+    pub use calendar::{Added, Calendar, FirstYear, weekday_number};
     pub use day::Day;
     pub use period::{Period, PeriodKind, Step, age, age_months, overlap_days};
 }
@@ -121,18 +125,19 @@ pub mod model {
         SourceId, ThingId, VersionId,
     };
     pub use index::{GapRole, IndexForm, IndexInfo, Moved, OwnTime, VersionInfo};
-    pub use key::{KeyVal, Pat, Span, pattern_text};
+    pub use key::{KeyVal, Pat, RangeValue, Span, pattern_text};
     pub use kind::{Entry, KindInfo, KindSpec, Labels, PRELUDE_KINDS, PlaceKeys, Thing, prelude};
     pub use reality::{
-        BUILTIN_INDEXES, BUILTIN_INPUTS, Joint, MemberAsks, NameKind, Reality, SamePair,
+        BUILTIN_INDEXES, BUILTIN_INPUTS, Joint, MemberAsks, NameKind, Priced, Reality, SamePair,
+        price_id,
     };
     pub use ty::{CodeKind, PeriodWord, Shown, Ty};
-    pub use unit::{PERIODS, Scaled, Unit, UnitError, is_currency_code, power_past_limit};
+    pub use unit::{PERIODS, Scaled, Unit, UnitError, is_currency_code};
     pub use value::{
-        Class, Code, MvRef, MvSrc, Number, Value, currency, currency_id, currency_unit, money_num,
-        num_money,
+        Class, Code, MvRef, MvSrc, Number, ReadOf, Value, Window, currency, currency_id,
+        currency_unit, money_num, num_money,
     };
-    pub use world::Scenarios;
+    pub use world::{Scenarios, World};
 }
 
 /// Holes (L §8.1): a missing fact and the questions it carries, built only here (R-116), with
@@ -150,26 +155,48 @@ pub mod eval {
     mod aggregate;
     mod arith;
     mod band;
+    mod bindings;
     mod builtin;
+    mod business;
+    mod context;
     mod convert;
+    mod dates;
     mod expr;
+    mod extremes;
+    mod keys;
     mod memo;
+    mod pins;
+    mod prorata;
     mod ranges;
     mod read;
     mod rules;
+    mod solve;
+    mod srows;
     mod stack;
     mod state;
+    mod timelines;
+    mod trace;
     mod ty;
+    mod windows;
+    mod years;
 
     pub use aggregate::Member;
-    pub(crate) use aggregate::{order_text, reads_name};
     pub use arith::{Op, Test, arith, compare, currency_of, int_of, negate, same_value};
+    pub(crate) use bindings::{names_in, order_text, reads_name};
+    pub use context::Layer;
+    pub(crate) use context::{GUARDED, UNSET_AXIS, world_named};
     pub(crate) use convert::{ConvertFor, Converted, convert, convert_row, field_literal};
+    pub(crate) use expr::equal_sides;
+    pub(crate) use keys::{thing_seen, to_key};
     pub use memo::Memo;
-    pub(crate) use read::{make_keys, thing_seen, to_key};
+    pub(crate) use ranges::range_literal_key;
     pub use stack::Item;
-    pub use state::{Collected, Ctx, Engine, Entry, Env};
+    pub use state::{Collected, Ctx, Engine, Entry, Env, RowSeen, Rows};
     pub(crate) use state::{a_day, num_stop, past_days};
+    pub(crate) use timelines::combinations;
+    pub(crate) use trace::{Balance as TracedBalance, Kind as TraceKind, Trace, Walked};
+    pub(crate) use windows::one_day;
+    pub(crate) use years::year_form;
 }
 
 /// The walk (E §4): the plan pass's instances and their order (E §4.1), the day walk's
@@ -181,6 +208,7 @@ pub mod walk {
     mod day;
     mod flows;
     mod legs;
+    mod lows;
     mod order;
     mod plan;
     mod point;
@@ -188,17 +216,26 @@ pub mod walk {
     mod reads;
     mod state;
     mod tuples;
+    mod value;
 
     pub use agenda::{Act, Mv, Reading, endings, reading_point};
+    #[cfg(feature = "fault-injection")]
+    pub use day::Fault;
     pub use day::{Broke, Ends};
+    pub(crate) use flows::span_last;
+    pub(crate) use lows::Trees;
+    pub use lows::{Lows, RangeMinimum};
     pub use order::{Run, WalkAt};
     pub use plan::{
-        Amount, Booked, Dated, End, Exists, Inst, LegVal, Order, Seed, Status, Term,
-        kind_certainty, qty_value,
+        Amount, Booked, BookedLeg, Bookings, Dated, End, Exists, Inst, LegVal, Order, Seed, Status,
+        Term, kind_certainty, qty_value,
     };
     pub(crate) use plan::{invariant, quantity};
     pub use point::{At, Step};
     pub use projection::ProjKey;
+    pub(crate) use projection::own_unit;
+    pub(crate) use reads::state_value;
+    pub(crate) use state::GapAt;
     pub use state::{
         ALL, Change, Checkpoint, Ent, Group, Log, Progress, Projected, St, Taken, Today, Walk,
         WalkObs,
@@ -219,9 +256,10 @@ pub mod book {
 
     pub use adjust::{Adjustment, Settled};
     pub use ledger::{Fig, Group, GroupKey, Ledger, Line, fig_text};
-    pub(crate) use members::{MvDom, MvMember};
+    pub(crate) use members::{MvDom, MvMember, inst_ref};
     pub use observe::{Coverage, Linked, Obs, inst_id};
     pub use reading::{Pad, Seen, first_readings, reading_rank, readings};
+    pub(crate) use reading::{gap_text, instant_text};
     pub(crate) use settle::settlement_move;
 }
 
@@ -229,13 +267,19 @@ pub mod book {
 /// run's warnings (L §8.5). The module's code is its files under `ask/`.
 pub mod ask {
     mod answer;
+    mod axes;
+    mod check;
+    mod diff;
+    mod explain;
+    mod instance;
     mod register;
     mod residuals;
+    mod walked;
     mod worlds;
 
-    pub(crate) use answer::date_of;
-    pub use answer::{Answered, answer};
+    pub use answer::{Answered, How, answer};
     pub use register::{register_lines, warning_lines};
+    pub(crate) use walked::plain_lines;
     pub use worlds::{answer_worlds, report_lines};
 }
 
@@ -290,7 +334,11 @@ pub mod load {
     pub use joint::member_paths;
     pub(crate) use joint::reprint_members;
     pub use keys::index_key_of;
+    pub(crate) use keys::literal_end;
+    pub(crate) use pins::reach_axes;
+    pub(crate) use srows::ask_worlds;
     pub use steps::load;
+    pub(crate) use texts::{children as expr_children, text as expr_text};
     pub use worlds::{Loaded, Split, Worlds, load_run, split_files};
 }
 
@@ -305,16 +353,19 @@ pub mod read {
     mod rules;
 
     pub use bands::{BandAt, band_no_row, band_no_table, band_origin, band_rows, table_held};
-    pub use gap::{Asked, Found, Question, member_span, no_candidate, origin, read_input};
+    pub use gap::{
+        Asked, Found, Question, member_span, no_candidate, origin, read_input, read_last,
+    };
     pub use rows::{
         Clocks, Point, Test, candidates, choose, held, lawless, need_law, row_known, row_place,
-        row_span, time_point,
+        row_span, time_point, worded,
     };
     pub use rules::rule_in_force;
 }
 
 /// Exact numbers (L §7.1, §7.2): `Num`, a reduced fraction held small or big; `Money`, a
-/// whole number of a currency's minor units; rounding by the seven modes. The module's
+/// whole number of a currency's minor units; rounding by the seven modes; the split of a
+/// total by weights to a step (L §5.13), the largest remainder written once. The module's
 /// code is its files under `num/`, the kernel's (gate 8); this block only names them.
 pub mod num {
     mod big;
@@ -323,11 +374,13 @@ pub mod num {
     mod rational;
     mod round;
     mod small;
+    mod split;
     mod text;
 
     pub use money::{Currency, Money};
     pub use rational::{Num, NumError};
     pub use round::Mode;
+    pub use split::{Largest, SplitError, Tie, Weights};
 }
 
 #[cfg(all(feature = "fault-injection", not(debug_assertions)))]

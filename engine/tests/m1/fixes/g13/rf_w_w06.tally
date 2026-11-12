@@ -1,0 +1,4 @@
+part w06
+  tally 2
+
+ask w06: if w > d1 then 1 else 2

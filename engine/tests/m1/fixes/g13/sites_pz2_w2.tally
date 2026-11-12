@@ -1,0 +1,8 @@
+part w2
+  tally 2
+
+index ps = [q1, p2]
+
+def w2_x: int = if q1 == q1 then n1 else n1
+
+ask w2: w2_x

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Gate 8's mutation run, each mutant on the T tests that enter its function (R-84, R-88, R-133): engine/tools/mutants-gate CMD …
+d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || exit 1
+exec python3 -I -B "$d/mutants_gate.py" "$@"

@@ -1,0 +1,21 @@
+model p5
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+input at_money: money PLN
+input by_money[g in 0 PLN .. 10 PLN step 1 PLN]: num
+
+ask a: by_money[at_money]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  at_money = 3.00 PLN "c"
+  by_money[3.005 PLN] = 0.3 "c"

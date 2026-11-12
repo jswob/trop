@@ -1,0 +1,4 @@
+part g9_pay
+  tally 2
+
+ask g9_pay: bal(konto, 2026-12-31) as if {move gift: transfers on 2026-11-02 leg cash from konto to world amount 100}

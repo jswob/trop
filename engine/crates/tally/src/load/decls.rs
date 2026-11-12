@@ -12,11 +12,11 @@ use super::check::invariant;
 use super::spans::lspan_to_span;
 use super::steps::{Loader, num_stop, refuse};
 use super::worlds::no_version;
-use crate::base::Load;
+use crate::base::{Load, Place as At};
 use crate::model::{
     BandInfo, BindInfo, CodeKind, DefInfo, Domain, InputInfo, KindSpec, MoveInfo, NameKind,
     PERIODS, PeriodWord, PlaceInfo, RuleVer, Shown, Span, TimePos, Ty, Unit, UnitError,
-    is_currency_code, power_past_limit,
+    is_currency_code,
 };
 use crate::num::Num;
 use crate::syntax::{
@@ -582,9 +582,8 @@ impl Loader {
             };
             terms.push((term, power.clone()));
         }
-        Unit::from_syntax(terms).map_err(|error| match error {
-            UnitError::Power(base) => refuse(Load::Limit, power_past_limit(&base), file, line),
-            UnitError::Num(error) => num_stop(error),
+        Unit::from_syntax(terms).map_err(|error: UnitError| {
+            error.refusal(num_stop, Some(At::Line(file.to_owned(), line)))
         })
     }
 }

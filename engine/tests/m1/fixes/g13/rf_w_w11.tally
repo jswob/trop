@@ -1,0 +1,4 @@
+part w11
+  tally 2
+
+ask w11: pow(age(w, d2), age(w, d2))

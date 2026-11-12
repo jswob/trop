@@ -1,0 +1,4 @@
+part w14
+  tally 2
+
+ask w14: min(age(w, d2), 3)

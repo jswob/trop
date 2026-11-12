@@ -20,7 +20,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::base::{Code, Refusal, Run};
-use crate::eval::{Collected, Ctx, Engine};
+use crate::eval::{Collected, Engine};
 use crate::hole::{Hole, spread};
 use crate::model::{MoveInfo, Reality};
 use crate::syntax::Stop;
@@ -161,7 +161,7 @@ impl Adjustment {
     }
 
     /// An amount of the adjusted leg's unit as the register prints it (L §8.2).
-    fn amount_text(&self, m: &Reality, a: &Amount) -> Result<String, Stop> {
+    pub(crate) fn amount_text(&self, m: &Reality, a: &Amount) -> Result<String, Stop> {
         match a {
             Amount::Qty(q) => {
                 let unit = self
@@ -229,7 +229,7 @@ impl Engine {
     ) -> Result<Vec<Adjustment>, Stop> {
         let steps_all = known_dates(m);
         let mut out = Vec::new();
-        for inst in self.move_instances(m, mv, cut)?.iter() {
+        for inst in self.plan_list(m, mv, cut)?.iter() {
             if !matches!(inst.status, Status::Past | Status::Hole | Status::None) {
                 continue;
             }
@@ -290,8 +290,9 @@ impl Engine {
                 keys: inst.keys.clone(),
                 exists: Exists::Yes,
                 at_cut: Some(c),
+                upto: None,
             };
-            let Some(j) = self.eval_inst(m, mv, &seed, Ctx::new(None, cut))? else {
+            let Some(j) = self.eval_inst(m, mv, &seed, self.timeline_ctx(None, cut))? else {
                 continue;
             };
             let step = Step {

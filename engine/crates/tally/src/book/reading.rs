@@ -5,26 +5,28 @@
 //! reading's point, a pad's in the point's group with its leg, an anchor's through
 //! `walk/day.rs`; tally 2.1.2); E §6.1 (Readings: the gap is the reading less the booked
 //! balance at its instant; a pad is a movement of `pads`, an anchor sets the balance; holes),
-//! §4.2 step 0 and step 4 (where readings apply), step 5 (the sign rule at a reading's point).
+//! §4.2 step 0 and step 4 (where readings apply), step 5 (the sign rule at a reading's point);
+//! L §6.4 (the readings a walk's world sees).
 //! Twin: engine/tools/refcore/moves.py (`readings`, `instant_text`, `PadMv`) and walk.py
 //! (`apply_reading`, `booked_coll`, `sub`, `st_value`, `gtext`).
 //! Invariants: a reading applies only before the cut but an opening at the run's start; after
 //! a reading the place's balance is the reading; a pad books only its other end, the reading's
-//! end is the reset; a gap is used where it is met (worth, the register, a pad's amount) and
-//! not kept: the ledger's balance line computes its own from the reading (`book/ledger.rs`).
+//! end is the reset, which carries the pad's flow there; a gap is used where it is met (worth,
+//! the register, a pad's amount) and kept per (place, day) for `gap(x, d)`; the ledger's
+//! balance line computes its own from the reading (`book/ledger.rs`).
 
 use std::collections::BTreeMap;
 
 use crate::base::{Code, Load, Refusal};
-use crate::eval::{Collected, Engine, Entry};
+use crate::eval::{Collected, Engine, Entry, Rows};
 use crate::hole::{Hole, spread};
-use crate::model::{GapRole, Reality, RowInstant, Shown, Ty, Unit};
+use crate::model::{GapRole, Reality, RowInstant, Shown, Ty, Unit, World};
 use crate::num::Num;
 use crate::read::row_known;
 use crate::syntax::{Edge, Stop};
 use crate::time::Day;
 use crate::walk::{
-    Amount, At, Change, Dated, End, Ends, Ent, LegVal, Reading, St, invariant, qty_value,
+    Amount, At, Change, Dated, End, Ends, Ent, GapAt, LegVal, Reading, St, invariant, qty_value,
 };
 
 /// A reading the cut sees: its day, its edge, its place, its input, and what it states (none
@@ -58,21 +60,26 @@ pub struct Pad {
 /// row (L §5.19).
 type Kept = (Day, Day, Edge, crate::model::Row);
 
-/// The readings cut `cut` sees: each `opening` and `stated` row known by the cut, a restated
-/// one replaced by the latest, sorted by place, instant and input (refcore's `readings`).
-/// L §5.19, §4.6.
+/// The readings cut `cut` sees in world `world`: each `opening` and `stated` row known by
+/// the cut, of a version the world sees, a restated one replaced as `replace` says (a
+/// scenario's over its base's whatever their `known` dates, as `standing` takes it), sorted
+/// by place, instant and input, each with its row among what it met where `rows` says so
+/// (refcore's `readings`, `world_ok`). L §5.19, §4.6 step 2, §6.4; E §10.
 ///
 /// # Errors
 ///
 /// A row load left without its version; `NotBuilt` for a reading `after` a movement or at a
 /// day with no edge, and for a place of unit `any`.
-pub fn readings(m: &Reality, cut: Day) -> Result<Vec<Seen>, Stop> {
-    let mut keep: BTreeMap<(String, String, String), Kept> = BTreeMap::new();
+pub fn readings(m: &Reality, (cut, world): (Day, World), rows: Rows) -> Result<Vec<Seen>, Stop> {
+    let mut cands: BTreeMap<(String, String, String), Vec<Kept>> = BTreeMap::new();
     for input in ["opening", "stated"] {
         let Some(info) = m.inputs.get(input) else {
             continue;
         };
         for row in &info.rows {
+            if !m.scenarios.sees(world, Some(&row.version)) {
+                continue;
+            }
             let known = row_known(m, row)?;
             if known > cut {
                 continue;
@@ -91,14 +98,25 @@ pub fn readings(m: &Reality, cut: Day) -> Result<Vec<Seen>, Stop> {
                 }
             };
             let key = (place.clone(), instant_text(day, edge), input.to_owned());
-            if keep.get(&key).is_none_or(|(k, ..)| known > *k) {
-                keep.insert(key, (known, day, edge, row.clone()));
-            }
+            cands
+                .entry(key)
+                .or_insert_with(Vec::new)
+                .push((known, day, edge, row.clone()));
         }
     }
-    let mut out = Vec::with_capacity(keep.len());
-    for ((place, instant, input), (_, day, edge, row)) in keep {
-        let reading = reading_of(m, &input, &place, &instant, &row)?;
+    let mut out = Vec::with_capacity(cands.len());
+    for ((place, instant, input), rows_at) in cands {
+        let Some((_, day, edge, row)) = standing(m, rows_at) else {
+            continue;
+        };
+        let mut reading = reading_of(m, &input, &place, &instant, &row)?;
+        // the row as `inputs-of` lists it, kept by an engine answering one (E §10)
+        if rows == Rows::Kept
+            && let Some(r) = &mut reading
+        {
+            r.coll
+                .note_row(&row.sid, &row.version, row.locator.as_ref());
+        }
         out.push(Seen {
             day,
             edge,
@@ -108,6 +126,42 @@ pub fn readings(m: &Reality, cut: Day) -> Result<Vec<Seen>, Stop> {
         });
     }
     Ok(out)
+}
+
+/// The row that stands among the readings `rows_at` of one place, instant and input: of the
+/// rows no `replace` row beats, the latest known, the first at a tie (refcore's `choose`,
+/// its replacement, as `read/rows.rs` `unreplaced` weighs other rows). L §4.6 step 2, §6.4.
+fn standing(m: &Reality, rows_at: Vec<Kept>) -> Option<Kept> {
+    let mut best: Option<usize> = None;
+    for (at, (known, .., row)) in rows_at.iter().enumerate() {
+        if replaced(m, &rows_at, (*known, row)) {
+            continue;
+        }
+        let later = best
+            .and_then(|b| rows_at.get(b))
+            .is_none_or(|(k, ..)| known > k);
+        if later {
+            best = Some(at);
+        }
+    }
+    best.and_then(|b| rows_at.into_iter().nth(b))
+}
+
+/// Whether a `replace` row among `rows_at` beats row `row`, known on `known`: one of a layer
+/// above its own, whatever the two rows' `known` dates (a branch stands above its base), or
+/// one of its own layer known after it. L §4.6 step 2, §6.4.
+fn replaced(m: &Reality, rows_at: &[Kept], (known, row): (Day, &crate::model::Row)) -> bool {
+    let layer = m.scenarios.layer(Some(&row.version));
+    for (k, .., other) in rows_at {
+        if !other.replace {
+            continue;
+        }
+        let above = m.scenarios.layer(Some(&other.version));
+        if above > layer || (above == layer && *k > known) {
+            return true;
+        }
+    }
+    false
 }
 
 /// A reading's place among the readings `walked` a walk's cut sees, as the walk ranks them on
@@ -140,15 +194,15 @@ pub fn reading_rank(walked: &[Seen], seen: &Seen) -> Result<u32, Stop> {
     Ok(before)
 }
 
-/// Each place's first reading day among the readings cut `cut` sees, for `HOLE-ANCHOR`
-/// (refcore's `anchor_question`, its days). L §8.1.
+/// Each place's first reading day among the readings the cut and the world of `by` see,
+/// for `HOLE-ANCHOR` (refcore's `anchor_question`, its days). L §8.1, §6.4.
 ///
 /// # Errors
 ///
 /// As [`readings`].
-pub fn first_readings(m: &Reality, cut: Day) -> Result<BTreeMap<String, Day>, Stop> {
+pub fn first_readings(m: &Reality, by: (Day, World)) -> Result<BTreeMap<String, Day>, Stop> {
     let mut out: BTreeMap<String, Day> = BTreeMap::new();
-    for seen in readings(m, cut)? {
+    for seen in readings(m, by, Rows::Unkept)? {
         let first = out.entry(seen.place).or_insert(seen.day);
         *first = (*first).min(seen.day);
     }
@@ -156,7 +210,7 @@ pub fn first_readings(m: &Reality, cut: Day) -> Result<BTreeMap<String, Day>, St
 }
 
 /// A reading's instant as text, `2026-09-30 end` (refcore's `instant_text`). L §4.6.
-fn instant_text(day: Day, edge: Edge) -> String {
+pub(crate) fn instant_text(day: Day, edge: Edge) -> String {
     let word = match edge {
         Edge::Start => "start",
         Edge::End => "end",
@@ -252,7 +306,20 @@ impl Engine {
         let before = walk.pstate(m, &r.place, &r.unit, at);
         let booked = booked_amount(&before, &walk.anchor_question(&r.place));
         let gap = gap_of(&r.value, &booked)?;
+        // the gap rests on what the booked balance rests on, and on the reading's row (L §8.2);
+        // so does a pad, whose amount it is; kept for `gap(x, d)` (L §5.19)
+        let mut bc = self.booked_coll(m, id, &r.place, &r.unit, at)?;
+        bc.merge(&r.coll);
         let read = self.walk_mut(id)?;
+        read.gaps
+            .entry((r.place.clone(), at.day))
+            .or_insert_with(Vec::new)
+            .push(GapAt {
+                at,
+                gap: gap.clone(),
+                unit: r.unit.clone(),
+                coll: bc.clone(),
+            });
         // E §9 item 2: an anchor's gap, or a pad's from outside, moves worth; a pad from an
         // inside place moves it between two inside places
         if read.inside(m, &r.place) {
@@ -296,9 +363,6 @@ impl Engine {
                 anchored.sign_anchor(m, at, r)
             }
             GapRole::Pad(other) => {
-                // the pad's amount rests on the booked balance's register and the reading's
-                let mut bc = self.booked_coll(m, id, &r.place, &r.unit, at)?;
-                bc.merge(&r.coll);
                 let pad = make_pad(r, &other, &gap, bc, at)?;
                 let text = format!(
                     "{} {}, {} of {}",
@@ -347,6 +411,12 @@ impl Engine {
                 ent.coll = Some(r.coll.clone());
                 ent.reg = reg;
                 ent.mv = Some(pad.id.clone());
+                // the reading's end of the pad, which `flows` of the place counts: the gap, a
+                // number or a hole (refcore's reset `flow`)
+                ent.flow = match gap {
+                    Amount::Refused(_) => None,
+                    Amount::Qty(_) | Amount::Hole(_) => Some(gap),
+                };
                 padded.add(m, &r.place, &r.unit, ent)
             }
         }

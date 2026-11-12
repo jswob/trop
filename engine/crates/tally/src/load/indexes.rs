@@ -12,7 +12,7 @@ use std::collections::BTreeSet;
 use super::check::invariant;
 use super::keys::{KeyLit, int_of, key_source_text, lit_text};
 use super::steps::{Loader, num_stop, refuse};
-use crate::base::Load;
+use crate::base::{Code, Load};
 use crate::model::{Domain, IndexForm as Form, IndexInfo, KeyVal, NameKind};
 use crate::num::Num;
 use crate::syntax::{IndexForm, IndexFrom, ItemForm, Lit, Row, Section, Stop};
@@ -45,10 +45,12 @@ impl Loader {
         let mut days = IndexInfo::new("days", Form::Builtin);
         days.period = Some(PeriodKind::Day);
         let mut day = Some(self.m.start);
+        let mut day_list = Vec::new();
         while let Some(d) = day.filter(|x| *x <= self.m.end) {
-            days.keys.push(KeyVal::Day(d));
+            day_list.push(KeyVal::Day(d));
             day = d.next();
         }
+        days.set_keys(day_list);
         let mut months = IndexInfo::new("months", Form::Builtin);
         months.period = Some(PeriodKind::Month);
         let mut years = IndexInfo::new("years", Form::Builtin);
@@ -58,11 +60,12 @@ impl Loader {
             (&mut years, Period::year_of(self.m.start)),
         ] {
             let mut period = first.ok_or(not_built.clone())?;
-            index.keys.push(KeyVal::Period(period));
+            let mut periods = vec![KeyVal::Period(period)];
             while period.end() <= self.m.end {
                 period = period.shift(1).ok_or(not_built.clone())?;
-                index.keys.push(KeyVal::Period(period));
+                periods.push(KeyVal::Period(period));
             }
+            index.set_keys(periods);
         }
         for index in [
             days,
@@ -113,7 +116,6 @@ impl Loader {
             index.v.clone_from(&decl.v);
             index.line = Some(decl.line);
             index.anchored = matches!(&decl.form, IndexForm::Range { from: Some(_), .. });
-            index.finish();
             self.m.indexes.push(&mut self.m.symbols, &decl.id, index)?;
         }
         Ok(())
@@ -121,43 +123,56 @@ impl Loader {
 
     /// The keys of open indexes the rows of inputs keyed by them bring, before places keyed by
     /// such an index are built (refcore's `prescan_open_keys`). L §4.1.
-    pub(super) fn prescan_open_keys(&mut self) {
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT`, or a depth stop, that a row's key meets; a key's own refusal waits
+    /// for its row.
+    pub(super) fn prescan_open_keys(&mut self) -> Result<(), Stop> {
         if !self
             .m
             .indexes
             .entries()
             .any(|(_, ix)| ix.form == Form::Open)
         {
-            return;
+            return Ok(());
         }
         let sections = core::mem::take(&mut self.sections);
-        for (file, section) in &sections {
+        let met = self.prescan_sections(&sections);
+        self.sections = sections;
+        met
+    }
+
+    /// The versions' rows of `sections`, each prescanned in turn.
+    fn prescan_sections(&mut self, sections: &[(String, Section)]) -> Result<(), Stop> {
+        for (file, section) in sections {
             let Section::Version(version) = section else {
                 continue;
             };
             for item in &version.items {
                 if let ItemForm::Row(row) = &item.form {
-                    self.prescan_row(&version.id, row, file, item.line);
+                    self.prescan_row(&version.id, row, file, item.line)?;
                 }
             }
         }
-        self.sections = sections;
+        Ok(())
     }
 
-    /// The open keys one row of an input brings; a key refused here is refused again at its
-    /// row (refcore's `pass`).
-    fn prescan_row(&mut self, vid: &str, row: &Row, file: &str, line: u32) {
+    /// The open keys one row of an input brings; a key refused here, or not built, is met
+    /// again at its row (refcore's `pass`), so the row's other keys wait for it; an invariant
+    /// or a depth stop is no such refusal and stops load (R-66).
+    fn prescan_row(&mut self, vid: &str, row: &Row, file: &str, line: u32) -> Result<(), Stop> {
         if row.given || row.qual.is_some() {
-            return;
+            return Ok(());
         }
         let Some(keys) = &row.keys else {
-            return;
+            return Ok(());
         };
         if self.m.names.kind(&row.target) != Some(NameKind::Input) {
-            return;
+            return Ok(());
         }
         let Some(input) = self.m.inputs.get(&row.target).filter(|i| !i.observed) else {
-            return;
+            return Ok(());
         };
         let binds = input.binds.clone();
         for (key, bind) in keys.iter().zip(&binds) {
@@ -172,13 +187,16 @@ impl Loader {
             let Some(written) = KeyLit::of_row_key(key).filter(|_| open) else {
                 continue;
             };
-            if self
-                .pattern_key(&written, bind, Some(vid), file, line)
-                .is_err()
-            {
-                break;
+            match self.pattern_key(&written, bind, Some(vid), file, line) {
+                Ok(_) => {}
+                Err(Stop::Refused(r)) if r.code() == Code::EngineInvariant => {
+                    return Err(Stop::Refused(r));
+                }
+                Err(Stop::Deep) => return Err(Stop::Deep),
+                Err(Stop::Refused(_) | Stop::NotBuilt(_)) => break,
             }
         }
+        Ok(())
     }
 }
 
@@ -187,6 +205,7 @@ impl Loader {
 fn list_index(id: &str, keys: &[Lit], file: &str, line: u32) -> Result<IndexInfo, Stop> {
     let mut list = IndexInfo::new(id, Form::List);
     let mut seen = BTreeSet::new();
+    let mut values = Vec::with_capacity(keys.len());
     for key in keys {
         let text = key_source_text(key, file, line)?;
         if !seen.insert(text.clone()) {
@@ -202,9 +221,10 @@ fn list_index(id: &str, keys: &[Lit], file: &str, line: u32) -> Result<IndexInfo
             name: text.clone(),
         };
         list.texts.push((text, value.clone()));
-        list.keys.push(value);
+        values.push(value);
     }
-    if list.keys.len() > 1_000_000 {
+    list.set_keys(values);
+    if list.keys().len() > 1_000_000 {
         let message = format!("index {id} holds more than 1 000 000 keys");
         return Err(refuse(Load::Limit, message, file, line));
     }
@@ -259,27 +279,29 @@ fn build_range(range: &Range) -> Result<IndexInfo, Stop> {
             range.count(b.checked_sub(a).and_then(|d| d.checked_div_euclid(by)))?;
             index.is_int = true;
             let mut at = a;
+            let mut ints = Vec::new();
             while at <= b {
-                index.keys.push(KeyVal::Int(at));
+                ints.push(KeyVal::Int(at));
                 at = at
                     .checked_add(by)
                     .ok_or(Stop::NotBuilt("a range past i64"))?;
             }
+            index.set_keys(ints);
         }
         "year" => {
             range.digits(&range.by)?;
             index.period = Some(PeriodKind::Year);
-            index.keys = year_keys(range)?;
+            index.set_keys(year_keys(range)?);
         }
         "month" => {
             range.digits(&range.by)?;
             index.period = Some(PeriodKind::Month);
-            index.keys = month_keys(range)?;
+            index.set_keys(month_keys(range)?);
         }
         "day" => {
             range.digits(&range.by)?;
             index.period = Some(PeriodKind::Day);
-            index.keys = day_keys(range)?;
+            index.set_keys(day_keys(range)?);
         }
         _ => {
             return Err(invariant(

@@ -1,0 +1,40 @@
+model zero2
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T C15 (invented): a leg of unit any whose amount is a number 0 with no unit, between two places of two units that load can't see, bound over the accounts (gate 8's open survivor, legs.rs leg_amount)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+kind anys: event certain
+  leg cash: any
+
+input d1: date
+
+input z: num
+
+place konto: accounts PLN lives 2026-01-01..
+
+place kasa: accounts EUR lives 2026-01-01..
+
+move nil[p in accounts on d1, q in accounts on d1 where p != q]: anys
+  on d1
+  leg cash from p to q amount z
+
+ask b: bal(konto, 2026-06-30)
+
+ask f: flows(nil, 2026-01-01 .. 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-03-01 "the card"
+  z = 0 "the card"
+  opening[konto] = 0 PLN at 2026-01-01 start "the card"
+  opening[kasa] = 0 EUR at 2026-01-01 start "the card"

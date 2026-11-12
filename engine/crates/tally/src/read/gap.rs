@@ -1,17 +1,21 @@
 //! The gap rule and the read of an input: the row a read takes, `none` outside a lifespan, or the question of the hole a read with no row is.
-//! Spec: L §4.6 step 5 (no candidate: `HOLE-UNGOVERNED`'s questions, outside a lifespan),
-//! Readings (a plain read of a reading, `HOLE-NOREADING`), §4.2 (a calendar's question),
-//! §5.7 (lifespans and memberships), §8.1.
+//! Spec: L §4.6 step 5 (no candidate: `HOLE-UNGOVERNED`'s questions, outside a lifespan; the
+//! candidates a `wording` pin keeps, L §4.3),
+//! Readings (a plain read of a reading, `HOLE-NOREADING`), Past the last row (`last(x, d)`),
+//! §4.2 (a calendar's question), §5.7 (lifespans and memberships), §8.1, §6.4 (the rows,
+//! lifespans and memberships a read's world sees).
 //! Twin: engine/tools/refcore/evaluate.py (`origin`, `no_candidate`, `read_input`,
-//! `read_reading`), model.py (`member_span`).
+//! `read_reading`, `e_lastx`), model.py (`member_span`).
 //! Invariants: a question is text and the item it is asked of; the hole itself is built in
 //! the hole module (R-116). A thing stated `same` belongs to a joint model, which S doesn't
 //! build.
 
 use std::collections::BTreeSet;
 
-use super::rows::{Clocks, Point, Test, candidates, choose, invariant, need_law, time_point};
-use crate::model::{Domain, InputInfo, KeyVal, Reality, Span, Thing};
+use super::rows::{
+    Clocks, Point, Test, candidates, choose, invariant, need_law, row_start, time_point, worded,
+};
+use crate::model::{Domain, InputInfo, KeyVal, Reality, Span, Thing, World};
 use crate::syntax::Stop;
 use crate::time::Day;
 
@@ -58,10 +62,10 @@ fn keys_text(keys: &[KeyVal]) -> String {
     keys.iter().map(KeyVal::text).collect::<Vec<_>>().join(", ")
 }
 
-/// The span over which `thing` is of `kind` or a subkind under cut `cut`: its one
-/// membership there, or the hull of several (L §5.7).
+/// The span over which `thing` is of `kind` or a subkind under the cut and in the world of
+/// `seen`: its one membership there, or the hull of several (L §5.7, §6.4).
 #[must_use]
-pub fn member_span(m: &Reality, thing: &Thing, kind: &str, cut: Day) -> Option<Span> {
+pub fn member_span(m: &Reality, thing: &Thing, kind: &str, seen: (Day, World)) -> Option<Span> {
     let subtree = m.subtree(kind);
     let kinds: BTreeSet<&str> = thing
         .entries
@@ -71,7 +75,7 @@ pub fn member_span(m: &Reality, thing: &Thing, kind: &str, cut: Day) -> Option<S
         .collect();
     let spans: Vec<Span> = kinds
         .iter()
-        .filter_map(|k| m.span_in(thing, k, cut))
+        .filter_map(|k| m.span_in(thing, k, seen))
         .collect();
     if let [one] = spans.as_slice() {
         return Some(one.clone());
@@ -87,9 +91,14 @@ pub fn member_span(m: &Reality, thing: &Thing, kind: &str, cut: Day) -> Option<S
     Some(Span::between(start, end))
 }
 
-/// Whether a key names a thing outside its lifespan on `day`, so a read with no row is
-/// `none` (L §4.6 step 5, Outside a lifespan).
-fn outside_lifespan(m: &Reality, input: &InputInfo, keys: &[KeyVal], day: Day, cut: Day) -> bool {
+/// Whether a key names a thing outside its lifespan on `day` in the world of `seen`, so a
+/// read with no row is `none` (L §4.6 step 5, Outside a lifespan; §6.4).
+fn outside_lifespan(
+    m: &Reality,
+    (input, keys): (&InputInfo, &[KeyVal]),
+    day: Day,
+    seen: (Day, World),
+) -> bool {
     for (bind, key) in input.binds.iter().zip(keys) {
         let (Domain::Kind(kind), KeyVal::Thing(name)) = (&bind.domain, key) else {
             continue;
@@ -97,7 +106,7 @@ fn outside_lifespan(m: &Reality, input: &InputInfo, keys: &[KeyVal], day: Day, c
         let Some(thing) = m.things.get(name) else {
             continue;
         };
-        if !member_span(m, thing, kind, cut).is_some_and(|span| span.contains(day)) {
+        if !member_span(m, thing, kind, seen).is_some_and(|span| span.contains(day)) {
             return true;
         }
     }
@@ -117,11 +126,11 @@ pub fn no_candidate(
     input: &InputInfo,
     keys: &[KeyVal],
     point: &Point,
-    cut: Day,
+    seen: (Day, World),
     asked: Asked,
 ) -> Result<Found, Stop> {
     if let Some(day) = point.day
-        && outside_lifespan(m, input, keys, day, cut)
+        && outside_lifespan(m, (input, keys), day, seen)
     {
         return Ok(Found::None);
     }
@@ -178,10 +187,71 @@ pub fn read_input(
     let point = time_point(input, keys, clocks.law)?;
     need_law(m, input, point.day)?;
     let test = Test::At(point.day);
-    let cands = candidates(m, &input.rows, &input.binds, keys, test, clocks.cut)?;
+    let cands = candidates(m, &input.rows, (&input.binds, keys), test, clocks)?;
+    let cands = worded(m, &input.rows, cands, clocks)?;
     match choose(m, &input.rows, &input.binds, &cands, clocks.cut, &input.id)? {
         Some(at) => Ok(Found::Row(at)),
-        None => no_candidate(m, input, keys, &point, clocks.cut, asked),
+        None => no_candidate(m, input, keys, &point, (clocks.cut, clocks.world), asked),
+    }
+}
+
+/// `last(x[k], d)`'s read: among the rows of `input` at `keys` whose span began on or before
+/// `day` (a span with no start before every day; a reading's instants on or before it),
+/// those that began latest, and of them the row the read rule takes; with none,
+/// `HOLE-NOREADING` for a reading, else the gap rule's question at `day` (L §4.6 step 5,
+/// Readings, Past the last row; §5.3; refcore's `e_lastx`).
+///
+/// # Errors
+///
+/// `LOAD-OVERLAP` for rows still tied; `ENGINE-INVARIANT` where load's promises break.
+pub fn read_last(
+    m: &Reality,
+    input: &InputInfo,
+    keys: &[KeyVal],
+    day: Day,
+    clocks: Clocks,
+) -> Result<Found, Stop> {
+    let test = Test::Last(day);
+    let cands = candidates(m, &input.rows, (&input.binds, keys), test, clocks)?;
+    let cands = worded(m, &input.rows, cands, clocks)?;
+    if cands.is_empty() {
+        if input.reading {
+            let figure = origin(&input.id, keys);
+            return Ok(Found::Hole(Question {
+                text: format!("{figure} has no reading on or before {}", day.text()),
+                origin: figure,
+            }));
+        }
+        let point = Point {
+            day: Some(day),
+            period: None,
+        };
+        return no_candidate(
+            m,
+            input,
+            keys,
+            &point,
+            (clocks.cut, clocks.world),
+            Asked::Plain,
+        );
+    }
+    let mut starts = Vec::with_capacity(cands.len());
+    for &at in &cands {
+        let row = input
+            .rows
+            .get(at)
+            .ok_or_else(|| invariant("a candidate past its rows"))?;
+        starts.push((at, row_start(m, row, clocks.cut)?));
+    }
+    let latest = starts.iter().map(|(_, start)| *start).max();
+    let kept: Vec<usize> = starts
+        .into_iter()
+        .filter(|(_, start)| Some(*start) == latest)
+        .map(|(at, _)| at)
+        .collect();
+    match choose(m, &input.rows, &input.binds, &kept, clocks.cut, &input.id)? {
+        Some(at) => Ok(Found::Row(at)),
+        None => Err(invariant("last's candidates chose no row")),
     }
 }
 
@@ -198,7 +268,8 @@ fn read_reading(
         .law
         .ok_or_else(|| invariant("a reading read with no law date"))?;
     let test = Test::Instant(day);
-    let cands = candidates(m, &input.rows, &input.binds, keys, test, clocks.cut)?;
+    let cands = candidates(m, &input.rows, (&input.binds, keys), test, clocks)?;
+    let cands = worded(m, &input.rows, cands, clocks)?;
     if let Some(at) = choose(m, &input.rows, &input.binds, &cands, clocks.cut, &input.id)? {
         return Ok(Found::Row(at));
     }

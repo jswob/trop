@@ -1,0 +1,6 @@
+part k22
+  tally 2
+
+def kk: key qs = if n1 > 0 then q2 else q1
+
+ask k22: rate[kk + 1], rate[kk - 1], kk + 1

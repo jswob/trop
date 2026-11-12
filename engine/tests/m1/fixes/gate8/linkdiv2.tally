@@ -1,0 +1,61 @@
+model linkdiv2
+  tally 2
+  on 2026-03-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T C13 (invented): an observed row that fulfils a move whose when is refused at the cut (RUN-DIV, a divisor a later version makes 0) but true at the instance's booking cut: the link is taken as existing and judged where its instance is (L 5.19 Links; gate 8's open survivor, tuples.rs link_tuple)"
+
+source fixture "T's fixture (invented values)"
+
+unit PLN: currency minor 0.01
+
+place k6: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 2026-01-01..
+
+input bank: observed
+
+input rare_day: date
+
+input rare_n: num
+
+input rare_d: num
+
+input rare_amt: money PLN
+
+move rare: transfers
+  on rare_day
+  when rare_n / rare_d > 0
+  leg cash from k6 to shop amount rare_amt
+
+ask q_k6: bal(k6, 2026-02-28) law cut
+
+ask q_fl: flows(rare, 2026-01-01 .. 2026-03-31) law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-31
+  rare_day = 2026-02-03
+  rare_n = 1
+  rare_d = 1
+  rare_amt = 12.00
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[k6] = 100 at 2026-01-01 start
+
+version bank_6
+  cite fixture
+  governs 2026-02
+  known 2026-03-02
+  covers k6
+  bank[k6_rare] = (on: 2026-02-03, kind: transfers, leg cash from k6 to shop amount 12.00 PLN, fulfils: rare) "the rare payment, whose when is refused"
+
+version later
+  cite fixture
+  governs always
+  known 2026-03-01
+  replace rare_d = 0

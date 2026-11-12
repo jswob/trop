@@ -1,0 +1,4 @@
+part f1
+  tally 2
+
+ask kk: bal(konto[konto[ana]], 2026-06-30)

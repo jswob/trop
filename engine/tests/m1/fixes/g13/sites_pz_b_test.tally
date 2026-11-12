@@ -1,0 +1,4 @@
+part b_test
+  tally 2
+
+ask b_test: n1 with n1 = if fee then n1 else n1

@@ -1,0 +1,16 @@
+scenario cheap over layers
+  tally 2
+  from 2026-01-01
+  note "T's carried item 1: a cheaper rate for q1, a layer over the base"
+
+version cheap_rates
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  replace rate[q1] = 0.05 "a cheaper rate"
+
+ask l_in_scenario: total in cheap
+
+ask l_in_model: total in layers
+
+ask l_two_worlds: diff(total) in cheap against layers

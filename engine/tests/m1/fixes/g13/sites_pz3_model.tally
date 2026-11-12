@@ -1,0 +1,47 @@
+model sites
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 4 (issue #108, invented): the 26 run sites G4a's fix left 'not implemented', one probe per cause class, each a file beside this base; where load refuses the class first, the site is unreachable (bin i)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input d0: date
+
+input fee: money PLN
+
+input n1: int
+
+input r5: num PLN
+
+input rate[k in qs]: num
+
+input txt: text
+
+move pay: transfers
+  on d0
+  leg cash from konto to world amount fee
+
+ask base: d0, fee, n1, r5, rate[q1], rate[q2], txt, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d0 = 2026-02-10 "the card"
+  fee = 10.00 PLN "the card"
+  n1 = 3 "the card"
+  r5 = 2.50 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0.2 "the card"
+  txt = "a note" "the card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "the card"

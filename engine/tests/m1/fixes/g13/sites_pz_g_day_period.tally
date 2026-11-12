@@ -1,0 +1,12 @@
+part g_day_period
+  tally 2
+
+axis gx_day_period
+  lo "low"
+  hi "high"
+
+def g_day_period_x: date
+  rule base = d0
+  rule other beats base = d0 + d0 when gx_day_period == hi
+
+ask g_day_period: g_day_period_x

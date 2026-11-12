@@ -1,0 +1,4 @@
+part n06
+  tally 2
+
+ask n06: quarter_of(lifespan(konto).to)

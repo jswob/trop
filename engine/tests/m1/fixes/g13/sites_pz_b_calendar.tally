@@ -1,0 +1,4 @@
+part b_calendar
+  tally 2
+
+ask b_calendar: d0 with d0 = add_business(d0, n1, txt)

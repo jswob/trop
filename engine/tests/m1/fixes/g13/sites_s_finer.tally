@@ -1,0 +1,12 @@
+part s_finer
+  tally 2
+
+input fine: money PLN
+
+ask s_finer: fee + fine
+
+version card_fine
+  cite card
+  governs always
+  known 2026-01-01
+  fine = 0.005 PLN "the card"

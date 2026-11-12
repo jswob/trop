@@ -1,0 +1,6 @@
+part pb2
+  tally 2
+
+ask y1: f[k] for k in qs with v[q1] = sum(v[j] for j in qs)
+
+ask y2: f[k] for k in qs with v[q1] = count(j in qs where j == q2)

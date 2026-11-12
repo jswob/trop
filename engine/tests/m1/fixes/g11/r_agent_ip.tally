@@ -1,0 +1,67 @@
+model ip
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+source card2 "card two"
+
+index qs = [q1, q2]
+
+input a: num
+
+input b: num
+
+input c: num
+
+input r[k in qs]: num
+
+axis reading
+  ra "reading A"
+  rb "reading B"
+
+def t: num = r[q1] + r[q2]
+
+def p: num
+  rule pa = a when reading == ra
+  rule pb = b when reading == rb
+
+def lifted: num = t as if {r[q1] = c}
+
+def g: num = sum(r[k] for k in qs)
+
+ask i1: inputs-of t with r[q1] = c
+
+ask i2: inputs-of lifted
+
+ask i3: inputs-of p
+
+ask i4: inputs-of p with reading = rb
+
+ask i5: inputs-of t as known 2026-03-01
+
+ask i6: inputs-of r[k] for k in qs
+
+ask e6: explain r[k] for k in qs
+
+ask e7: explain g as known 2026-03-01
+
+ask v: t, p, lifted
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  a = 1
+  b = 2
+  c = 5
+  r[q1] = 10 "row one"
+  r[q2] = 20
+
+version card_2
+  cite card2
+  governs always
+  known 2026-06-01
+  replace r[q1] = 11 "row one later"

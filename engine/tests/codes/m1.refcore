@@ -1,0 +1,2864 @@
+11:decide/base,7:REQ-ASK,6:decide,32:run base.tally --ask zz_m0_probe,1397:10:base.tally,1377:model decide
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's decision-order fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+input holidays: calendar
+
+input horizon: date
+
+input lag: int
+
+input month_start: date
+
+input save_cap: money PLN
+
+input spend_cap: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move save: transfers
+  on add_business(month_start, lag, holidays)
+  reads konto
+  leg cash from konto to savings amount min(save_cap, bal(konto))
+
+move spend: transfers
+  on add_business(month_start, lag, holidays)
+  reads konto
+  after save
+  leg cash from konto to world amount min(spend_cap, bal(konto))
+
+ask q_decide: bal(konto, horizon), bal(savings, horizon)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  horizon = 2026-12-31 "the card"
+  lag = 10 "the card"
+  month_start = 2026-04-01 "the card"
+  save_cap = 100.00 PLN "the card"
+  spend_cap = 50.00 PLN "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+,,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,14:m0:adjust/base,7:REQ-ASK,9:m0:adjust,32:run base.tally --ask zz_m0_probe,1299:10:base.tally,1279:model adjust
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): a wage raised after it was paid, and the back pay that settles the adjustment; it loads clean"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+kind wages: event certain
+  leg cash: PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input wage_amt: money PLN
+
+input wage_dom: int
+
+def net[m in months]: money PLN = wage_amt at start_of(m)
+
+move wage[m in months]: wages
+  on day_of(m, wage_dom)
+  at start_of(m)
+  leg cash from world to konto amount net[m]
+
+ask q: bal(konto, 2026-12-31)
+
+version plan
+  cite card
+  governs always
+  known 2025-12-01
+  wage_amt = 5 000.00 "a wage"
+  wage_dom = 10 "paid on the 10th"
+  opening[konto] = 0 at 2026-01-01 start "the card"
+
+version raise
+  cite card
+  governs 2026-03..2026-04
+  known 2026-05-01
+  replace wage_amt = 5 500.00 "a raise for March and April"
+
+version bank_a
+  cite card
+  governs 2026-05
+  known 2026-06-01
+  bank[r1] = (on: 2026-05-15, kind: wages, leg cash from world to konto amount 500.00 PLN, fulfils: adjustments[wage[2026-03].cash, raise]) "back pay for March"
+,,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,13:m0:gifts/base,7:REQ-ASK,8:m0:gifts,32:run base.tally --ask zz_m0_probe,1587:10:base.tally,1567:model gifts
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): adjust's text, an event kind with a giver, and lifespan of a bound name's field over events and under a kind test; it loads clean"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+kind wages: event certain
+  leg cash: PLN
+
+kind gifts: event certain
+  leg cash: PLN
+  attr giver: key accounts
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input wage_amt: money PLN
+
+input wage_dom: int
+
+def net[m in months]: money PLN = wage_amt at start_of(m)
+
+def early: int = count(e in events over .. where lifespan(e.giver).from < e.day)
+
+def early_gifts: int = count(e in events over .. where e in gifts and lifespan(e.giver).to > e.day)
+
+move wage[m in months]: wages
+  on day_of(m, wage_dom)
+  at start_of(m)
+  leg cash from world to konto amount net[m]
+
+ask q: bal(konto, 2026-12-31)
+
+version plan
+  cite card
+  governs always
+  known 2025-12-01
+  wage_amt = 5 000.00 "a wage"
+  wage_dom = 10 "paid on the 10th"
+  opening[konto] = 0 at 2026-01-01 start "the card"
+
+version raise
+  cite card
+  governs 2026-03..2026-04
+  known 2026-05-01
+  replace wage_amt = 5 500.00 "a raise for March and April"
+
+version bank_a
+  cite card
+  governs 2026-05
+  known 2026-06-01
+  bank[r1] = (on: 2026-05-15, kind: wages, leg cash from world to konto amount 500.00 PLN, fulfils: adjustments[wage[2026-03].cash, raise]) "back pay for March"
+,,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,11:prices/base,7:REQ-ASK,6:prices,32:run base.tally --ask zz_m0_probe,824:10:base.tally,805:model prices
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's price-hole fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+place car: assets PLN priced car_value lives 2026-01-01..
+
+input asked_on: date
+
+input car_value: money PLN
+
+input rent: money PLN prices 2026
+
+input rent_day: date
+
+def car_worth: num PLN = value(car, asked_on) in PLN
+
+def rent_then: money PLN = rent at rent_day
+
+ask q_car: car_worth
+
+ask q_rent: rent_then
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  asked_on = 2026-02-01 "the card"
+  car_value = 30000.00 PLN "the card"
+  rent = 3200.00 PLN "the card"
+  rent_day = 2026-06-01 "the card"
+,,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,10:rules/base,7:REQ-ASK,5:rules,32:run base.tally --ask zz_m0_probe,2375:10:base.tally,2355:model rules
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's run-code fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index feb = day 2026-02-01..2026-02-28
+
+input amt: money PLN
+
+input day: date
+
+input holidays: calendar
+
+input lag: int
+
+input target: money PLN
+
+input rate[k in qs]: num
+
+input weight[k in qs]: num
+
+input from_day: date
+
+input step: money PLN
+
+input to_day: date
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def lowest: money PLN = min(fee[k] for k in qs where rate[k] > 0)
+
+def due: date = add_business(day, lag, holidays)
+
+def split[k in qs]: money PLN = prorata(amt, weight[j] for j in qs, k, step, rest largest ties by pos(j))
+
+def open_day[d in feb]: date = d
+
+def first_pay: key transfers = first(m in transfers over from_day..to_day) ties by m.day
+
+def opened: date = open_day[day]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place loan: debts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+move repay: transfers
+  on due
+  reads loan
+  leg cash from konto to loan amount max(fee[q1], bal(loan))
+
+ask q_total: total, bal(konto, 2026-12-31)
+
+ask q_loan: bal(loan, 2026-12-31)
+
+ask q_lowest: lowest
+
+ask q_due: due
+
+ask q_split: split[k] for k in qs
+
+ask q_opened: opened
+
+ask q_first: first_pay
+
+ask q_solve: solve total == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  lag = 3 "the card"
+  target = 20.00 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  from_day = 2026-02-01 "the card"
+  step = 0.01 PLN "the card"
+  to_day = 2026-12-31 "the card"
+  weight[q1] = 1 "the card"
+  weight[q2] = 3 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[loan] = -1000.00 PLN at 2026-01-01 start "the card"
+,,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,23:decide/answers/q_decide,1:-,6:decide,29:run base.tally --ask q_decide,1397:10:base.tally,1377:model decide
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's decision-order fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+input holidays: calendar
+
+input horizon: date
+
+input lag: int
+
+input month_start: date
+
+input save_cap: money PLN
+
+input spend_cap: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move save: transfers
+  on add_business(month_start, lag, holidays)
+  reads konto
+  leg cash from konto to savings amount min(save_cap, bal(konto))
+
+move spend: transfers
+  on add_business(month_start, lag, holidays)
+  reads konto
+  after save
+  leg cash from konto to world amount min(spend_cap, bal(konto))
+
+ask q_decide: bal(konto, horizon), bal(savings, horizon)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  horizon = 2026-12-31 "the card"
+  lag = 10 "the card"
+  month_start = 2026-04-01 "the card"
+  save_cap = 100.00 PLN "the card"
+  spend_cap = 50.00 PLN "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,100:q_decide: (350.00 PLN, 100.00 PLN)
+  assumed: the card names no holiday (holidays)
+  cut 2026-03-01
+,20:prices/answers/q_car,1:-,6:prices,26:run base.tally --ask q_car,824:10:base.tally,805:model prices
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's price-hole fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+place car: assets PLN priced car_value lives 2026-01-01..
+
+input asked_on: date
+
+input car_value: money PLN
+
+input rent: money PLN prices 2026
+
+input rent_day: date
+
+def car_worth: num PLN = value(car, asked_on) in PLN
+
+def rent_then: money PLN = rent at rent_day
+
+ask q_car: car_worth
+
+ask q_rent: rent_then
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  asked_on = 2026-02-01 "the card"
+  car_value = 30000.00 PLN "the card"
+  rent = 3200.00 PLN "the card"
+  rent_day = 2026-06-01 "the card"
+,,1:0,35:q_car: 30 000 PLN
+  cut 2026-03-01
+,21:prices/answers/q_rent,1:-,6:prices,27:run base.tally --ask q_rent,824:10:base.tally,805:model prices
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's price-hole fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+place car: assets PLN priced car_value lives 2026-01-01..
+
+input asked_on: date
+
+input car_value: money PLN
+
+input rent: money PLN prices 2026
+
+input rent_day: date
+
+def car_worth: num PLN = value(car, asked_on) in PLN
+
+def rent_then: money PLN = rent at rent_day
+
+ask q_car: car_worth
+
+ask q_rent: rent_then
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  asked_on = 2026-02-01 "the card"
+  car_value = 30000.00 PLN "the card"
+  rent = 3200.00 PLN "the card"
+  rent_day = 2026-06-01 "the card"
+,,1:0,38:q_rent: 3 200.00 PLN
+  cut 2026-03-01
+,21:rules/answers/q_total,1:-,5:rules,28:run base.tally --ask q_total,2375:10:base.tally,2355:model rules
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's run-code fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index feb = day 2026-02-01..2026-02-28
+
+input amt: money PLN
+
+input day: date
+
+input holidays: calendar
+
+input lag: int
+
+input target: money PLN
+
+input rate[k in qs]: num
+
+input weight[k in qs]: num
+
+input from_day: date
+
+input step: money PLN
+
+input to_day: date
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def lowest: money PLN = min(fee[k] for k in qs where rate[k] > 0)
+
+def due: date = add_business(day, lag, holidays)
+
+def split[k in qs]: money PLN = prorata(amt, weight[j] for j in qs, k, step, rest largest ties by pos(j))
+
+def open_day[d in feb]: date = d
+
+def first_pay: key transfers = first(m in transfers over from_day..to_day) ties by m.day
+
+def opened: date = open_day[day]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place loan: debts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+move repay: transfers
+  on due
+  reads loan
+  leg cash from konto to loan amount max(fee[q1], bal(loan))
+
+ask q_total: total, bal(konto, 2026-12-31)
+
+ask q_loan: bal(loan, 2026-12-31)
+
+ask q_lowest: lowest
+
+ask q_due: due
+
+ask q_split: split[k] for k in qs
+
+ask q_opened: opened
+
+ask q_first: first_pay
+
+ask q_solve: solve total == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  lag = 3 "the card"
+  target = 20.00 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  from_day = 2026-02-01 "the card"
+  step = 0.01 PLN "the card"
+  to_day = 2026-12-31 "the card"
+  weight[q1] = 1 "the card"
+  weight[q2] = 3 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[loan] = -1000.00 PLN at 2026-01-01 start "the card"
+,,1:0,138:q_total: (10.00 PLN, 480.00 PLN)
+  assumed: the card names no holiday (holidays)
+  unfulfilled: pay
+  unfulfilled: repay
+  cut 2026-03-01
+,20:rules/answers/q_loan,1:-,5:rules,27:run base.tally --ask q_loan,2375:10:base.tally,2355:model rules
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's run-code fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index feb = day 2026-02-01..2026-02-28
+
+input amt: money PLN
+
+input day: date
+
+input holidays: calendar
+
+input lag: int
+
+input target: money PLN
+
+input rate[k in qs]: num
+
+input weight[k in qs]: num
+
+input from_day: date
+
+input step: money PLN
+
+input to_day: date
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def lowest: money PLN = min(fee[k] for k in qs where rate[k] > 0)
+
+def due: date = add_business(day, lag, holidays)
+
+def split[k in qs]: money PLN = prorata(amt, weight[j] for j in qs, k, step, rest largest ties by pos(j))
+
+def open_day[d in feb]: date = d
+
+def first_pay: key transfers = first(m in transfers over from_day..to_day) ties by m.day
+
+def opened: date = open_day[day]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place loan: debts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+move repay: transfers
+  on due
+  reads loan
+  leg cash from konto to loan amount max(fee[q1], bal(loan))
+
+ask q_total: total, bal(konto, 2026-12-31)
+
+ask q_loan: bal(loan, 2026-12-31)
+
+ask q_lowest: lowest
+
+ask q_due: due
+
+ask q_split: split[k] for k in qs
+
+ask q_opened: opened
+
+ask q_first: first_pay
+
+ask q_solve: solve total == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  lag = 3 "the card"
+  target = 20.00 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  from_day = 2026-02-01 "the card"
+  step = 0.01 PLN "the card"
+  to_day = 2026-12-31 "the card"
+  weight[q1] = 1 "the card"
+  weight[q2] = 3 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[loan] = -1000.00 PLN at 2026-01-01 start "the card"
+,,1:0,106:q_loan: -990.00 PLN
+  assumed: the card names no holiday (holidays)
+  unfulfilled: repay
+  cut 2026-03-01
+,22:rules/answers/q_lowest,1:-,5:rules,29:run base.tally --ask q_lowest,2375:10:base.tally,2355:model rules
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's run-code fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index feb = day 2026-02-01..2026-02-28
+
+input amt: money PLN
+
+input day: date
+
+input holidays: calendar
+
+input lag: int
+
+input target: money PLN
+
+input rate[k in qs]: num
+
+input weight[k in qs]: num
+
+input from_day: date
+
+input step: money PLN
+
+input to_day: date
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def lowest: money PLN = min(fee[k] for k in qs where rate[k] > 0)
+
+def due: date = add_business(day, lag, holidays)
+
+def split[k in qs]: money PLN = prorata(amt, weight[j] for j in qs, k, step, rest largest ties by pos(j))
+
+def open_day[d in feb]: date = d
+
+def first_pay: key transfers = first(m in transfers over from_day..to_day) ties by m.day
+
+def opened: date = open_day[day]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place loan: debts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+move repay: transfers
+  on due
+  reads loan
+  leg cash from konto to loan amount max(fee[q1], bal(loan))
+
+ask q_total: total, bal(konto, 2026-12-31)
+
+ask q_loan: bal(loan, 2026-12-31)
+
+ask q_lowest: lowest
+
+ask q_due: due
+
+ask q_split: split[k] for k in qs
+
+ask q_opened: opened
+
+ask q_first: first_pay
+
+ask q_solve: solve total == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  lag = 3 "the card"
+  target = 20.00 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  from_day = 2026-02-01 "the card"
+  step = 0.01 PLN "the card"
+  to_day = 2026-12-31 "the card"
+  weight[q1] = 1 "the card"
+  weight[q2] = 3 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[loan] = -1000.00 PLN at 2026-01-01 start "the card"
+,,1:0,37:q_lowest: 10.00 PLN
+  cut 2026-03-01
+,19:rules/answers/q_due,1:-,5:rules,26:run base.tally --ask q_due,2375:10:base.tally,2355:model rules
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's run-code fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index feb = day 2026-02-01..2026-02-28
+
+input amt: money PLN
+
+input day: date
+
+input holidays: calendar
+
+input lag: int
+
+input target: money PLN
+
+input rate[k in qs]: num
+
+input weight[k in qs]: num
+
+input from_day: date
+
+input step: money PLN
+
+input to_day: date
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def lowest: money PLN = min(fee[k] for k in qs where rate[k] > 0)
+
+def due: date = add_business(day, lag, holidays)
+
+def split[k in qs]: money PLN = prorata(amt, weight[j] for j in qs, k, step, rest largest ties by pos(j))
+
+def open_day[d in feb]: date = d
+
+def first_pay: key transfers = first(m in transfers over from_day..to_day) ties by m.day
+
+def opened: date = open_day[day]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place loan: debts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+move repay: transfers
+  on due
+  reads loan
+  leg cash from konto to loan amount max(fee[q1], bal(loan))
+
+ask q_total: total, bal(konto, 2026-12-31)
+
+ask q_loan: bal(loan, 2026-12-31)
+
+ask q_lowest: lowest
+
+ask q_due: due
+
+ask q_split: split[k] for k in qs
+
+ask q_opened: opened
+
+ask q_first: first_pay
+
+ask q_solve: solve total == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  lag = 3 "the card"
+  target = 20.00 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  from_day = 2026-02-01 "the card"
+  step = 0.01 PLN "the card"
+  to_day = 2026-12-31 "the card"
+  weight[q1] = 1 "the card"
+  weight[q2] = 3 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[loan] = -1000.00 PLN at 2026-01-01 start "the card"
+,,1:0,83:q_due: 2026-02-13
+  assumed: the card names no holiday (holidays)
+  cut 2026-03-01
+,21:rules/answers/q_split,1:-,5:rules,28:run base.tally --ask q_split,2375:10:base.tally,2355:model rules
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's run-code fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index feb = day 2026-02-01..2026-02-28
+
+input amt: money PLN
+
+input day: date
+
+input holidays: calendar
+
+input lag: int
+
+input target: money PLN
+
+input rate[k in qs]: num
+
+input weight[k in qs]: num
+
+input from_day: date
+
+input step: money PLN
+
+input to_day: date
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def lowest: money PLN = min(fee[k] for k in qs where rate[k] > 0)
+
+def due: date = add_business(day, lag, holidays)
+
+def split[k in qs]: money PLN = prorata(amt, weight[j] for j in qs, k, step, rest largest ties by pos(j))
+
+def open_day[d in feb]: date = d
+
+def first_pay: key transfers = first(m in transfers over from_day..to_day) ties by m.day
+
+def opened: date = open_day[day]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place loan: debts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+move repay: transfers
+  on due
+  reads loan
+  leg cash from konto to loan amount max(fee[q1], bal(loan))
+
+ask q_total: total, bal(konto, 2026-12-31)
+
+ask q_loan: bal(loan, 2026-12-31)
+
+ask q_lowest: lowest
+
+ask q_due: due
+
+ask q_split: split[k] for k in qs
+
+ask q_opened: opened
+
+ask q_first: first_pay
+
+ask q_solve: solve total == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  lag = 3 "the card"
+  target = 20.00 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  from_day = 2026-02-01 "the card"
+  step = 0.01 PLN "the card"
+  to_day = 2026-12-31 "the card"
+  weight[q1] = 1 "the card"
+  weight[q2] = 3 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[loan] = -1000.00 PLN at 2026-01-01 start "the card"
+,,1:0,90:q_split (k = q1): 25.00 PLN
+  cut 2026-03-01
+q_split (k = q2): 75.00 PLN
+  cut 2026-03-01
+,22:rules/answers/q_opened,1:-,5:rules,29:run base.tally --ask q_opened,2375:10:base.tally,2355:model rules
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's run-code fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index feb = day 2026-02-01..2026-02-28
+
+input amt: money PLN
+
+input day: date
+
+input holidays: calendar
+
+input lag: int
+
+input target: money PLN
+
+input rate[k in qs]: num
+
+input weight[k in qs]: num
+
+input from_day: date
+
+input step: money PLN
+
+input to_day: date
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def lowest: money PLN = min(fee[k] for k in qs where rate[k] > 0)
+
+def due: date = add_business(day, lag, holidays)
+
+def split[k in qs]: money PLN = prorata(amt, weight[j] for j in qs, k, step, rest largest ties by pos(j))
+
+def open_day[d in feb]: date = d
+
+def first_pay: key transfers = first(m in transfers over from_day..to_day) ties by m.day
+
+def opened: date = open_day[day]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place loan: debts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+move repay: transfers
+  on due
+  reads loan
+  leg cash from konto to loan amount max(fee[q1], bal(loan))
+
+ask q_total: total, bal(konto, 2026-12-31)
+
+ask q_loan: bal(loan, 2026-12-31)
+
+ask q_lowest: lowest
+
+ask q_due: due
+
+ask q_split: split[k] for k in qs
+
+ask q_opened: opened
+
+ask q_first: first_pay
+
+ask q_solve: solve total == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  lag = 3 "the card"
+  target = 20.00 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  from_day = 2026-02-01 "the card"
+  step = 0.01 PLN "the card"
+  to_day = 2026-12-31 "the card"
+  weight[q1] = 1 "the card"
+  weight[q2] = 3 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[loan] = -1000.00 PLN at 2026-01-01 start "the card"
+,,1:0,38:q_opened: 2026-02-10
+  cut 2026-03-01
+,21:rules/answers/q_first,1:-,5:rules,28:run base.tally --ask q_first,2375:10:base.tally,2355:model rules
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's run-code fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index feb = day 2026-02-01..2026-02-28
+
+input amt: money PLN
+
+input day: date
+
+input holidays: calendar
+
+input lag: int
+
+input target: money PLN
+
+input rate[k in qs]: num
+
+input weight[k in qs]: num
+
+input from_day: date
+
+input step: money PLN
+
+input to_day: date
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def lowest: money PLN = min(fee[k] for k in qs where rate[k] > 0)
+
+def due: date = add_business(day, lag, holidays)
+
+def split[k in qs]: money PLN = prorata(amt, weight[j] for j in qs, k, step, rest largest ties by pos(j))
+
+def open_day[d in feb]: date = d
+
+def first_pay: key transfers = first(m in transfers over from_day..to_day) ties by m.day
+
+def opened: date = open_day[day]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place loan: debts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+move repay: transfers
+  on due
+  reads loan
+  leg cash from konto to loan amount max(fee[q1], bal(loan))
+
+ask q_total: total, bal(konto, 2026-12-31)
+
+ask q_loan: bal(loan, 2026-12-31)
+
+ask q_lowest: lowest
+
+ask q_due: due
+
+ask q_split: split[k] for k in qs
+
+ask q_opened: opened
+
+ask q_first: first_pay
+
+ask q_solve: solve total == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  lag = 3 "the card"
+  target = 20.00 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  from_day = 2026-02-01 "the card"
+  step = 0.01 PLN "the card"
+  to_day = 2026-12-31 "the card"
+  weight[q1] = 1 "the card"
+  weight[q2] = 3 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[loan] = -1000.00 PLN at 2026-01-01 start "the card"
+,,1:0,97:q_first: pay
+  assumed: the card names no holiday (holidays)
+  unfulfilled: pay
+  cut 2026-03-01
+,21:rules/answers/q_solve,1:-,5:rules,28:run base.tally --ask q_solve,2375:10:base.tally,2355:model rules
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's run-code fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index feb = day 2026-02-01..2026-02-28
+
+input amt: money PLN
+
+input day: date
+
+input holidays: calendar
+
+input lag: int
+
+input target: money PLN
+
+input rate[k in qs]: num
+
+input weight[k in qs]: num
+
+input from_day: date
+
+input step: money PLN
+
+input to_day: date
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def lowest: money PLN = min(fee[k] for k in qs where rate[k] > 0)
+
+def due: date = add_business(day, lag, holidays)
+
+def split[k in qs]: money PLN = prorata(amt, weight[j] for j in qs, k, step, rest largest ties by pos(j))
+
+def open_day[d in feb]: date = d
+
+def first_pay: key transfers = first(m in transfers over from_day..to_day) ties by m.day
+
+def opened: date = open_day[day]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place loan: debts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+move repay: transfers
+  on due
+  reads loan
+  leg cash from konto to loan amount max(fee[q1], bal(loan))
+
+ask q_total: total, bal(konto, 2026-12-31)
+
+ask q_loan: bal(loan, 2026-12-31)
+
+ask q_lowest: lowest
+
+ask q_due: due
+
+ask q_split: split[k] for k in qs
+
+ask q_opened: opened
+
+ask q_first: first_pay
+
+ask q_solve: solve total == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  lag = 3 "the card"
+  target = 20.00 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  from_day = 2026-02-01 "the card"
+  step = 0.01 PLN "the card"
+  to_day = 2026-12-31 "the card"
+  weight[q1] = 1 "the card"
+  weight[q2] = 3 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[loan] = -1000.00 PLN at 2026-01-01 start "the card"
+,,1:0,37:q_solve: 199.99 PLN
+  cut 2026-03-01
+,14:rules/conflict,12:RUN-CONFLICT,5:rules,28:run base.tally --ask q_total,2364:10:base.tally,2344:model rules
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's run-code fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index feb = day 2026-02-01..2026-02-28
+
+input amt: money PLN
+
+input day: date
+
+input holidays: calendar
+
+input lag: int
+
+input target: money PLN
+
+input rate[k in qs]: num
+
+input weight[k in qs]: num
+
+input from_day: date
+
+input step: money PLN
+
+input to_day: date
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def lowest: money PLN = min(fee[k] for k in qs where rate[k] > 0)
+
+def due: date = add_business(day, lag, holidays)
+
+def split[k in qs]: money PLN = prorata(amt, weight[j] for j in qs, k, step, rest largest ties by pos(j))
+
+def open_day[d in feb]: date = d
+
+def first_pay: key transfers = first(m in transfers over from_day..to_day) ties by m.day
+
+def opened: date = open_day[day]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place loan: debts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+move repay: transfers
+  on due
+  reads loan
+  leg cash from konto to loan amount max(fee[q1], bal(loan))
+
+ask q_total: total, bal(konto, 2026-12-31)
+
+ask q_loan: bal(loan, 2026-12-31)
+
+ask q_lowest: lowest
+
+ask q_due: due
+
+ask q_split: split[k] for k in qs
+
+ask q_opened: opened
+
+ask q_first: first_pay
+
+ask q_solve: solve total == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  lag = 3 "the card"
+  target = 20.00 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  from_day = 2026-02-01 "the card"
+  step = 0.01 PLN "the card"
+  to_day = 2026-12-31 "the card"
+  weight[q1] = 1 "the card"
+  weight[q2] = 3 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[loan] = -1000.00 PLN at 2026-01-01 start "the card"
+,,1:0,208:q_total: (refused: RUN-CONFLICT rules base and waived both win for fee[q2] on no law date, 480.00 PLN)
+  assumed: the card names no holiday (holidays)
+  unfulfilled: pay
+  unfulfilled: repay
+  cut 2026-03-01
+,11:rules/empty,9:RUN-EMPTY,5:rules,29:run base.tally --ask q_lowest,2375:10:base.tally,2355:model rules
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's run-code fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index feb = day 2026-02-01..2026-02-28
+
+input amt: money PLN
+
+input day: date
+
+input holidays: calendar
+
+input lag: int
+
+input target: money PLN
+
+input rate[k in qs]: num
+
+input weight[k in qs]: num
+
+input from_day: date
+
+input step: money PLN
+
+input to_day: date
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def lowest: money PLN = min(fee[k] for k in qs where rate[k] > 1)
+
+def due: date = add_business(day, lag, holidays)
+
+def split[k in qs]: money PLN = prorata(amt, weight[j] for j in qs, k, step, rest largest ties by pos(j))
+
+def open_day[d in feb]: date = d
+
+def first_pay: key transfers = first(m in transfers over from_day..to_day) ties by m.day
+
+def opened: date = open_day[day]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place loan: debts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+move repay: transfers
+  on due
+  reads loan
+  leg cash from konto to loan amount max(fee[q1], bal(loan))
+
+ask q_total: total, bal(konto, 2026-12-31)
+
+ask q_loan: bal(loan, 2026-12-31)
+
+ask q_lowest: lowest
+
+ask q_due: due
+
+ask q_split: split[k] for k in qs
+
+ask q_opened: opened
+
+ask q_first: first_pay
+
+ask q_solve: solve total == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  lag = 3 "the card"
+  target = 20.00 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  from_day = 2026-02-01 "the card"
+  step = 0.01 PLN "the card"
+  to_day = 2026-12-31 "the card"
+  weight[q1] = 1 "the card"
+  weight[q2] = 3 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[loan] = -1000.00 PLN at 2026-01-01 start "the card"
+,,1:0,63:q_lowest: refused: RUN-EMPTY min over no keys
+  cut 2026-03-01
+,12:rules/stated,11:HOLE-STATED,5:rules,28:run base.tally --ask q_total,2404:10:base.tally,2384:model rules
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's run-code fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index feb = day 2026-02-01..2026-02-28
+
+input amt: money PLN
+
+input day: date
+
+input holidays: calendar
+
+input lag: int
+
+input target: money PLN
+
+input rate[k in qs]: num
+
+input weight[k in qs]: num
+
+input from_day: date
+
+input step: money PLN
+
+input to_day: date
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def lowest: money PLN = min(fee[k] for k in qs where rate[k] > 0)
+
+def due: date = add_business(day, lag, holidays)
+
+def split[k in qs]: money PLN = prorata(amt, weight[j] for j in qs, k, step, rest largest ties by pos(j))
+
+def open_day[d in feb]: date = d
+
+def first_pay: key transfers = first(m in transfers over from_day..to_day) ties by m.day
+
+def opened: date = open_day[day]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place loan: debts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+move repay: transfers
+  on due
+  reads loan
+  leg cash from konto to loan amount max(fee[q1], bal(loan))
+
+ask q_total: total, bal(konto, 2026-12-31)
+
+ask q_loan: bal(loan, 2026-12-31)
+
+ask q_lowest: lowest
+
+ask q_due: due
+
+ask q_split: split[k] for k in qs
+
+ask q_opened: opened
+
+ask q_first: first_pay
+
+ask q_solve: solve total == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  lag = 3 "the card"
+  target = 20.00 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = ?"q2's rate isn't on the card" "the card"
+  from_day = 2026-02-01 "the card"
+  step = 0.01 PLN "the card"
+  to_day = 2026-12-31 "the card"
+  weight[q1] = 1 "the card"
+  weight[q2] = 3 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[loan] = -1000.00 PLN at 2026-01-01 start "the card"
+,,1:0,170:q_total: (?"q2's rate isn't on the card" (rate[q2]), 480.00 PLN)
+  assumed: the card names no holiday (holidays)
+  unfulfilled: pay
+  unfulfilled: repay
+  cut 2026-03-01
+,12:rules/notyet,11:HOLE-NOTYET,5:rules,28:run base.tally --ask q_first,2375:10:base.tally,2355:model rules
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's run-code fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index feb = day 2026-02-01..2026-02-28
+
+input amt: money PLN
+
+input day: date
+
+input holidays: calendar
+
+input lag: int
+
+input target: money PLN
+
+input rate[k in qs]: num
+
+input weight[k in qs]: num
+
+input from_day: date
+
+input step: money PLN
+
+input to_day: date
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def lowest: money PLN = min(fee[k] for k in qs where rate[k] > 0)
+
+def due: date = add_business(day, lag, holidays)
+
+def split[k in qs]: money PLN = prorata(amt, weight[j] for j in qs, k, step, rest largest ties by pos(j))
+
+def open_day[d in feb]: date = d
+
+def first_pay: key transfers = first(m in transfers over from_day..to_day) ties by m.day
+
+def opened: date = open_day[day]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place loan: debts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+move repay: transfers
+  on due
+  reads loan
+  leg cash from konto to loan amount max(fee[q1], bal(loan))
+
+ask q_total: total, bal(konto, 2026-12-31)
+
+ask q_loan: bal(loan, 2026-12-31)
+
+ask q_lowest: lowest
+
+ask q_due: due
+
+ask q_split: split[k] for k in qs
+
+ask q_opened: opened
+
+ask q_first: first_pay
+
+ask q_solve: solve total == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  lag = 3 "the card"
+  target = 20.00 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  from_day = 2026-03-02 "the card"
+  step = 0.01 PLN "the card"
+  to_day = 2026-12-31 "the card"
+  weight[q1] = 1 "the card"
+  weight[q2] = 3 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[loan] = -1000.00 PLN at 2026-01-01 start "the card"
+,,1:0,96:q_first: ?"m: no transfers yet, and its span reaches past the cut" (transfers)
+  cut 2026-03-01
+,10:rules/zero,8:RUN-ZERO,5:rules,26:run base.tally --ask q_due,2375:10:base.tally,2355:model rules
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's run-code fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index feb = day 2026-02-01..2026-02-28
+
+input amt: money PLN
+
+input day: date
+
+input holidays: calendar
+
+input lag: int
+
+input target: money PLN
+
+input rate[k in qs]: num
+
+input weight[k in qs]: num
+
+input from_day: date
+
+input step: money PLN
+
+input to_day: date
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def lowest: money PLN = min(fee[k] for k in qs where rate[k] > 0)
+
+def due: date = add_business(day, lag, holidays)
+
+def split[k in qs]: money PLN = prorata(amt, weight[j] for j in qs, k, step, rest largest ties by pos(j))
+
+def open_day[d in feb]: date = d
+
+def first_pay: key transfers = first(m in transfers over from_day..to_day) ties by m.day
+
+def opened: date = open_day[day]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place loan: debts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+move repay: transfers
+  on due
+  reads loan
+  leg cash from konto to loan amount max(fee[q1], bal(loan))
+
+ask q_total: total, bal(konto, 2026-12-31)
+
+ask q_loan: bal(loan, 2026-12-31)
+
+ask q_lowest: lowest
+
+ask q_due: due
+
+ask q_split: split[k] for k in qs
+
+ask q_opened: opened
+
+ask q_first: first_pay
+
+ask q_solve: solve total == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  lag = 0 "the card"
+  target = 20.00 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  from_day = 2026-02-01 "the card"
+  step = 0.01 PLN "the card"
+  to_day = 2026-12-31 "the card"
+  weight[q1] = 1 "the card"
+  weight[q2] = 3 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[loan] = -1000.00 PLN at 2026-01-01 start "the card"
+,,1:0,80:q_due: refused: RUN-ZERO add_business(2026-02-10, 0, holidays)
+  cut 2026-03-01
+,13:rules/weights,11:RUN-WEIGHTS,5:rules,28:run base.tally --ask q_split,2376:10:base.tally,2356:model rules
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's run-code fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index feb = day 2026-02-01..2026-02-28
+
+input amt: money PLN
+
+input day: date
+
+input holidays: calendar
+
+input lag: int
+
+input target: money PLN
+
+input rate[k in qs]: num
+
+input weight[k in qs]: num
+
+input from_day: date
+
+input step: money PLN
+
+input to_day: date
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def lowest: money PLN = min(fee[k] for k in qs where rate[k] > 0)
+
+def due: date = add_business(day, lag, holidays)
+
+def split[k in qs]: money PLN = prorata(amt, weight[j] for j in qs, k, step, rest largest ties by pos(j))
+
+def open_day[d in feb]: date = d
+
+def first_pay: key transfers = first(m in transfers over from_day..to_day) ties by m.day
+
+def opened: date = open_day[day]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place loan: debts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+move repay: transfers
+  on due
+  reads loan
+  leg cash from konto to loan amount max(fee[q1], bal(loan))
+
+ask q_total: total, bal(konto, 2026-12-31)
+
+ask q_loan: bal(loan, 2026-12-31)
+
+ask q_lowest: lowest
+
+ask q_due: due
+
+ask q_split: split[k] for k in qs
+
+ask q_opened: opened
+
+ask q_first: first_pay
+
+ask q_solve: solve total == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  lag = 3 "the card"
+  target = 20.00 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  from_day = 2026-02-01 "the card"
+  step = 0.01 PLN "the card"
+  to_day = 2026-12-31 "the card"
+  weight[q1] = 1 "the card"
+  weight[q2] = -1 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[loan] = -1000.00 PLN at 2026-01-01 start "the card"
+,,1:0,210:q_split (k = q1): refused: RUN-WEIGHTS prorata weights [1, -1] are negative or sum to 0
+  cut 2026-03-01
+q_split (k = q2): refused: RUN-WEIGHTS prorata weights [1, -1] are negative or sum to 0
+  cut 2026-03-01
+,13:rules/prorata,11:RUN-PRORATA,5:rules,28:run base.tally --ask q_split,2375:10:base.tally,2355:model rules
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's run-code fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index feb = day 2026-02-01..2026-02-28
+
+input amt: money PLN
+
+input day: date
+
+input holidays: calendar
+
+input lag: int
+
+input target: money PLN
+
+input rate[k in qs]: num
+
+input weight[k in qs]: num
+
+input from_day: date
+
+input step: money PLN
+
+input to_day: date
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def lowest: money PLN = min(fee[k] for k in qs where rate[k] > 0)
+
+def due: date = add_business(day, lag, holidays)
+
+def split[k in qs]: money PLN = prorata(amt, weight[j] for j in qs, k, step, rest largest ties by pos(j))
+
+def open_day[d in feb]: date = d
+
+def first_pay: key transfers = first(m in transfers over from_day..to_day) ties by m.day
+
+def opened: date = open_day[day]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place loan: debts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+move repay: transfers
+  on due
+  reads loan
+  leg cash from konto to loan amount max(fee[q1], bal(loan))
+
+ask q_total: total, bal(konto, 2026-12-31)
+
+ask q_loan: bal(loan, 2026-12-31)
+
+ask q_lowest: lowest
+
+ask q_due: due
+
+ask q_split: split[k] for k in qs
+
+ask q_opened: opened
+
+ask q_first: first_pay
+
+ask q_solve: solve total == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  lag = 3 "the card"
+  target = 20.00 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  from_day = 2026-02-01 "the card"
+  step = 0.03 PLN "the card"
+  to_day = 2026-12-31 "the card"
+  weight[q1] = 1 "the card"
+  weight[q2] = 3 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[loan] = -1000.00 PLN at 2026-01-01 start "the card"
+,,1:0,200:q_split (k = q1): refused: RUN-PRORATA 100.00 PLN isn't a whole number of 0.03 PLN
+  cut 2026-03-01
+q_split (k = q2): refused: RUN-PRORATA 100.00 PLN isn't a whole number of 0.03 PLN
+  cut 2026-03-01
+,11:rules/solve,9:RUN-SOLVE,5:rules,28:run base.tally --ask q_solve,2377:10:base.tally,2357:model rules
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's run-code fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index feb = day 2026-02-01..2026-02-28
+
+input amt: money PLN
+
+input day: date
+
+input holidays: calendar
+
+input lag: int
+
+input target: money PLN
+
+input rate[k in qs]: num
+
+input weight[k in qs]: num
+
+input from_day: date
+
+input step: money PLN
+
+input to_day: date
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def lowest: money PLN = min(fee[k] for k in qs where rate[k] > 0)
+
+def due: date = add_business(day, lag, holidays)
+
+def split[k in qs]: money PLN = prorata(amt, weight[j] for j in qs, k, step, rest largest ties by pos(j))
+
+def open_day[d in feb]: date = d
+
+def first_pay: key transfers = first(m in transfers over from_day..to_day) ties by m.day
+
+def opened: date = open_day[day]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place loan: debts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+move repay: transfers
+  on due
+  reads loan
+  leg cash from konto to loan amount max(fee[q1], bal(loan))
+
+ask q_total: total, bal(konto, 2026-12-31)
+
+ask q_loan: bal(loan, 2026-12-31)
+
+ask q_lowest: lowest
+
+ask q_due: due
+
+ask q_split: split[k] for k in qs
+
+ask q_opened: opened
+
+ask q_first: first_pay
+
+ask q_solve: solve total == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  lag = 3 "the card"
+  target = 2000.00 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  from_day = 2026-02-01 "the card"
+  step = 0.01 PLN "the card"
+  to_day = 2026-12-31 "the card"
+  weight[q1] = 1 "the card"
+  weight[q2] = 3 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[loan] = -1000.00 PLN at 2026-01-01 start "the card"
+,,1:0,88:q_solve: refused: RUN-SOLVE no sign change on [0.00 PLN, 1 000.00 PLN]
+  cut 2026-03-01
+,10:rules/none,8:RUN-NONE,5:rules,28:run base.tally --ask q_total,2378:10:base.tally,2358:model rules
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's run-code fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index feb = day 2026-02-01..2026-02-28
+
+input amt: money PLN
+
+input day: date
+
+input holidays: calendar
+
+input lag: int
+
+input target: money PLN
+
+input rate[k in qs]: num
+
+input weight[k in qs]: num
+
+input from_day: date
+
+input step: money PLN
+
+input to_day: date
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def lowest: money PLN = min(fee[k] for k in qs where rate[k] > 0)
+
+def due: date = add_business(day, lag, holidays)
+
+def split[k in qs]: money PLN = prorata(amt, weight[j] for j in qs, k, step, rest largest ties by pos(j))
+
+def open_day[d in feb]: date = d
+
+def first_pay: key transfers = first(m in transfers over from_day..to_day) ties by m.day
+
+def opened: date = open_day[day]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place loan: debts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+move repay: transfers
+  on due
+  reads loan
+  leg cash from konto to loan amount max(fee[q1], bal(loan))
+
+ask q_total: total, bal(konto, 2026-12-31)
+
+ask q_loan: bal(loan, 2026-12-31)
+
+ask q_lowest: lowest
+
+ask q_due: due
+
+ask q_split: split[k] for k in qs
+
+ask q_opened: opened
+
+ask q_first: first_pay
+
+ask q_solve: solve total == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  lag = 3 "the card"
+  target = 20.00 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = none "the card"
+  from_day = 2026-02-01 "the card"
+  step = 0.01 PLN "the card"
+  to_day = 2026-12-31 "the card"
+  weight[q1] = 1 "the card"
+  weight[q2] = 3 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[loan] = -1000.00 PLN at 2026-01-01 start "the card"
+,,1:0,179:q_total: (refused: RUN-NONE a value is none here: arithmetic, 480.00 PLN)
+  assumed: the card names no holiday (holidays)
+  unfulfilled: pay
+  unfulfilled: repay
+  cut 2026-03-01
+,18:rules/outside-days,7:RUN-KEY,5:rules,29:run base.tally --ask q_opened,2375:10:base.tally,2355:model rules
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's run-code fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index feb = day 2026-03-01..2026-03-31
+
+input amt: money PLN
+
+input day: date
+
+input holidays: calendar
+
+input lag: int
+
+input target: money PLN
+
+input rate[k in qs]: num
+
+input weight[k in qs]: num
+
+input from_day: date
+
+input step: money PLN
+
+input to_day: date
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def lowest: money PLN = min(fee[k] for k in qs where rate[k] > 0)
+
+def due: date = add_business(day, lag, holidays)
+
+def split[k in qs]: money PLN = prorata(amt, weight[j] for j in qs, k, step, rest largest ties by pos(j))
+
+def open_day[d in feb]: date = d
+
+def first_pay: key transfers = first(m in transfers over from_day..to_day) ties by m.day
+
+def opened: date = open_day[day]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place loan: debts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+move repay: transfers
+  on due
+  reads loan
+  leg cash from konto to loan amount max(fee[q1], bal(loan))
+
+ask q_total: total, bal(konto, 2026-12-31)
+
+ask q_loan: bal(loan, 2026-12-31)
+
+ask q_lowest: lowest
+
+ask q_due: due
+
+ask q_split: split[k] for k in qs
+
+ask q_opened: opened
+
+ask q_first: first_pay
+
+ask q_solve: solve total == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  lag = 3 "the card"
+  target = 20.00 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  from_day = 2026-02-01 "the card"
+  step = 0.01 PLN "the card"
+  to_day = 2026-12-31 "the card"
+  weight[q1] = 1 "the card"
+  weight[q2] = 3 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[loan] = -1000.00 PLN at 2026-01-01 start "the card"
+,,1:0,87:q_opened: refused: RUN-KEY 2026-02-10 is outside the days of open_day
+  cut 2026-03-01
+,15:prices/no-price,10:HOLE-PRICE,6:prices,26:run base.tally --ask q_car,816:10:base.tally,797:model prices
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's price-hole fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+place car: assets PLN priced car_value lives 2026-01-01..
+
+input asked_on: date
+
+input car_value: money PLN
+
+input rent: money PLN prices 2026
+
+input rent_day: date
+
+def car_worth: num PLN = value(car, asked_on) in PLN
+
+def rent_then: money PLN = rent at rent_day
+
+ask q_car: car_worth
+
+ask q_rent: rent_then
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  asked_on = 2026-02-01 "the card"
+  car_value = none "the card"
+  rent = 3200.00 PLN "the card"
+  rent_day = 2026-06-01 "the card"
+,,1:0,79:q_car: ?"car has no price in PLN on 2026-02-01" (car_value[])
+  cut 2026-03-01
+,17:prices/price-year,10:HOLE-PRICE,6:prices,27:run base.tally --ask q_rent,824:10:base.tally,805:model prices
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's price-hole fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+place car: assets PLN priced car_value lives 2026-01-01..
+
+input asked_on: date
+
+input car_value: money PLN
+
+input rent: money PLN prices 2026
+
+input rent_day: date
+
+def car_worth: num PLN = value(car, asked_on) in PLN
+
+def rent_then: money PLN = rent at rent_day
+
+ask q_car: car_worth
+
+ask q_rent: rent_then
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  asked_on = 2026-02-01 "the card"
+  car_value = 30000.00 PLN "the card"
+  rent = 3200.00 PLN "the card"
+  rent_day = 2027-06-01 "the card"
+,,1:0,91:q_rent: ?"rent is in 2026 prices; no index moves it to 2027-06-01" (rent)
+  cut 2026-03-01
+,12:decide/order,9:RUN-ORDER,6:decide,29:run base.tally --ask q_decide,1384:10:base.tally,1364:model decide
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's decision-order fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+input holidays: calendar
+
+input horizon: date
+
+input lag: int
+
+input month_start: date
+
+input save_cap: money PLN
+
+input spend_cap: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move save: transfers
+  on add_business(month_start, lag, holidays)
+  reads konto
+  leg cash from konto to savings amount min(save_cap, bal(konto))
+
+move spend: transfers
+  on add_business(month_start, lag, holidays)
+  reads konto
+  leg cash from konto to world amount min(spend_cap, bal(konto))
+
+ask q_decide: bal(konto, horizon), bal(savings, horizon)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  horizon = 2026-12-31 "the card"
+  lag = 10 "the card"
+  month_start = 2026-04-01 "the card"
+  save_cap = 100.00 PLN "the card"
+  spend_cap = 50.00 PLN "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,178:q_decide: (refused: RUN-ORDER decisions save and spend read each other on 2026-04-15, refused: RUN-ORDER decisions save and spend read each other on 2026-04-15)
+  cut 2026-03-01
+,15:rules/no-anchor,11:HOLE-ANCHOR,5:rules,28:run base.tally --ask q_total,2314:10:base.tally,2294:model rules
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's run-code fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index feb = day 2026-02-01..2026-02-28
+
+input amt: money PLN
+
+input day: date
+
+input holidays: calendar
+
+input lag: int
+
+input target: money PLN
+
+input rate[k in qs]: num
+
+input weight[k in qs]: num
+
+input from_day: date
+
+input step: money PLN
+
+input to_day: date
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def lowest: money PLN = min(fee[k] for k in qs where rate[k] > 0)
+
+def due: date = add_business(day, lag, holidays)
+
+def split[k in qs]: money PLN = prorata(amt, weight[j] for j in qs, k, step, rest largest ties by pos(j))
+
+def open_day[d in feb]: date = d
+
+def first_pay: key transfers = first(m in transfers over from_day..to_day) ties by m.day
+
+def opened: date = open_day[day]
+
+place konto: accounts PLN lives 2025-01-01..
+
+place loan: debts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+move repay: transfers
+  on due
+  reads loan
+  leg cash from konto to loan amount max(fee[q1], bal(loan))
+
+ask q_total: total, bal(konto, 2026-12-31)
+
+ask q_loan: bal(loan, 2026-12-31)
+
+ask q_lowest: lowest
+
+ask q_due: due
+
+ask q_split: split[k] for k in qs
+
+ask q_opened: opened
+
+ask q_first: first_pay
+
+ask q_solve: solve total == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  lag = 3 "the card"
+  target = 20.00 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  from_day = 2026-02-01 "the card"
+  step = 0.01 PLN "the card"
+  to_day = 2026-12-31 "the card"
+  weight[q1] = 1 "the card"
+  weight[q2] = 3 "the card"
+  opening[loan] = -1000.00 PLN at 2026-01-01 start "the card"
+,,1:0,177:q_total: (10.00 PLN, ?"konto has no opening or stated reading" (konto))
+  assumed: the card names no holiday (holidays)
+  unfulfilled: pay
+  unfulfilled: repay
+  cut 2026-03-01
+,19:decide/binds-future,10:RUN-FUTURE,6:decide,29:run base.tally --ask q_decide,1460:10:base.tally,1440:model decide
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's decision-order fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+input holidays: calendar
+
+input horizon: date
+
+input lag: int
+
+input month_start: date
+
+input save_cap: money PLN
+
+input spend_cap: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move save: transfers
+  on add_business(month_start, lag, holidays)
+  reads konto, save, spend
+  leg cash from konto to savings amount min(save_cap * count(m in transfers over month_start..horizon), bal(konto))
+
+move spend: transfers
+  on add_business(month_start, lag, holidays)
+  reads konto
+  after save
+  leg cash from konto to world amount min(spend_cap, bal(konto))
+
+ask q_decide: bal(konto, horizon), bal(savings, horizon)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  horizon = 2026-12-31 "the card"
+  lag = 10 "the card"
+  month_start = 2026-04-01 "the card"
+  save_cap = 100.00 PLN "the card"
+  spend_cap = 50.00 PLN "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,230:q_decide: (refused: RUN-FUTURE a decision on 2026-04-15 binds over transfers through 2026-12-31, after its day, refused: RUN-FUTURE a decision on 2026-04-15 binds over transfers through 2026-12-31, after its day)
+  cut 2026-03-01
+,18:adjust/bound-field,10:LOAD-FIELD,9:m0:adjust,32:run base.tally --ask zz_m0_probe,1365:10:base.tally,1345:model adjust
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): a wage raised after it was paid, and the back pay that settles the adjustment; it loads clean"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+kind wages: event certain
+  leg cash: PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input wage_amt: money PLN
+
+input wage_dom: int
+
+def net[m in months]: money PLN = wage_amt at start_of(m)
+
+def ls: date = argmax(1 for a in adjustments over .. where a.zz)
+
+move wage[m in months]: wages
+  on day_of(m, wage_dom)
+  at start_of(m)
+  leg cash from world to konto amount net[m]
+
+ask q: bal(konto, 2026-12-31)
+
+version plan
+  cite card
+  governs always
+  known 2025-12-01
+  wage_amt = 5 000.00 "a wage"
+  wage_dom = 10 "paid on the 10th"
+  opening[konto] = 0 at 2026-01-01 start "the card"
+
+version raise
+  cite card
+  governs 2026-03..2026-04
+  known 2026-05-01
+  replace wage_amt = 5 500.00 "a raise for March and April"
+
+version bank_a
+  cite card
+  governs 2026-05
+  known 2026-06-01
+  bank[r1] = (on: 2026-05-15, kind: wages, leg cash from world to konto amount 500.00 PLN, fulfils: adjustments[wage[2026-03].cash, raise]) "back pay for March"
+,,1:1,69:refused: LOAD-FIELD zz is not a field of adjustments (base.tally:29)
+,17:gifts/lifespan-zz,10:LOAD-FIELD,8:m0:gifts,32:run base.tally --ask zz_m0_probe,1584:10:base.tally,1564:model gifts
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): adjust's text, an event kind with a giver, and lifespan of a bound name's field over events and under a kind test; it loads clean"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+kind wages: event certain
+  leg cash: PLN
+
+kind gifts: event certain
+  leg cash: PLN
+  attr giver: key accounts
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input wage_amt: money PLN
+
+input wage_dom: int
+
+def net[m in months]: money PLN = wage_amt at start_of(m)
+
+def early: int = count(e in events over .. where lifespan(e.zz).from < e.day)
+
+def early_gifts: int = count(e in events over .. where e in gifts and lifespan(e.giver).to > e.day)
+
+move wage[m in months]: wages
+  on day_of(m, wage_dom)
+  at start_of(m)
+  leg cash from world to konto amount net[m]
+
+ask q: bal(konto, 2026-12-31)
+
+version plan
+  cite card
+  governs always
+  known 2025-12-01
+  wage_amt = 5 000.00 "a wage"
+  wage_dom = 10 "paid on the 10th"
+  opening[konto] = 0 at 2026-01-01 start "the card"
+
+version raise
+  cite card
+  governs 2026-03..2026-04
+  known 2026-05-01
+  replace wage_amt = 5 500.00 "a raise for March and April"
+
+version bank_a
+  cite card
+  governs 2026-05
+  known 2026-06-01
+  bank[r1] = (on: 2026-05-15, kind: wages, leg cash from world to konto amount 500.00 PLN, fulfils: adjustments[wage[2026-03].cash, raise]) "back pay for March"
+,,1:1,64:refused: LOAD-FIELD zz is not a field of events (base.tally:33)
+,16:rules/debt-above,9:RUN-PLACE,5:rules,27:run base.tally --ask q_loan,2372:10:base.tally,2352:model rules
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's run-code fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index feb = day 2026-02-01..2026-02-28
+
+input amt: money PLN
+
+input day: date
+
+input holidays: calendar
+
+input lag: int
+
+input target: money PLN
+
+input rate[k in qs]: num
+
+input weight[k in qs]: num
+
+input from_day: date
+
+input step: money PLN
+
+input to_day: date
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def lowest: money PLN = min(fee[k] for k in qs where rate[k] > 0)
+
+def due: date = add_business(day, lag, holidays)
+
+def split[k in qs]: money PLN = prorata(amt, weight[j] for j in qs, k, step, rest largest ties by pos(j))
+
+def open_day[d in feb]: date = d
+
+def first_pay: key transfers = first(m in transfers over from_day..to_day) ties by m.day
+
+def opened: date = open_day[day]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place loan: debts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+move repay: transfers
+  on due
+  reads loan
+  leg cash from konto to loan amount max(fee[q1], bal(loan))
+
+ask q_total: total, bal(konto, 2026-12-31)
+
+ask q_loan: bal(loan, 2026-12-31)
+
+ask q_lowest: lowest
+
+ask q_due: due
+
+ask q_split: split[k] for k in qs
+
+ask q_opened: opened
+
+ask q_first: first_pay
+
+ask q_solve: solve total == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  lag = 3 "the card"
+  target = 20.00 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  from_day = 2026-02-01 "the card"
+  step = 0.01 PLN "the card"
+  to_day = 2026-12-31 "the card"
+  weight[q1] = 1 "the card"
+  weight[q2] = 3 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[loan] = -5.00 PLN at 2026-01-01 start "the card"
+,,1:0,69:q_loan: refused: RUN-PLACE repay takes loan above 0
+  cut 2026-03-01
+,

@@ -1002,13 +1002,50 @@ def launch_usage_checks(root, expect, failures):
             failures.append(f"usage: lacks {says!r}: {r.stdout.strip()[:300]}")
 
 
+# nextest's log of check fast's `gating` step, two of three tests red (R-83, issue #108):
+# one counts its 3 failing vectors (one's reason runs over two lines), one names none
+GATING_LOG = """$ cargo nextest run --locked -p tally-runner --all-features --test=s_kernel --test=s_properties
+    Starting 3 tests across 2 binaries
+        FAIL [   0.412s] (1/3) tally-runner::s_kernel tests::s_kernel_g6_plan_pass
+  stdout ───
+
+    running 1 test
+    test tests::s_kernel_g6_plan_pass ... FAILED
+
+  stderr ───
+
+    thread 'tests::s_kernel_g6_plan_pass' (1) panicked at milestone/s_kernel.rs:36:9:
+    3 of 9 vectors of g6 differ from refcore:
+    g6/when: exit 0, refcore 1
+      line 2 of the reason
+    g6/where_refused: output differs at line 3
+    g6/refusal_order: output differs at line 1
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        PASS [   0.069s] (2/3) tally-runner::s_properties tests::s_a_hole_never_becomes_zero
+        FAIL [   0.070s] (3/3) tally-runner::s_properties tests::s_money_conserved
+  stderr ───
+
+    thread 'tests::s_money_conserved' (2) panicked at milestone/s_properties.rs:12:5:
+    money moved
+────────────
+     Summary [   0.500s] 3 tests run: 1 passed, 2 failed, 0 skipped
+        FAIL [   0.412s] (1/3) tally-runner::s_kernel tests::s_kernel_g6_plan_pass
+        FAIL [   0.070s] (3/3) tally-runner::s_properties tests::s_money_conserved
+error: test run failed
+
+[exit 100]
+"""
+
+
 def setup(root):
     for d in ("engine/tools", "engine/spec", "engine/tests/runner", "engine/tests/cases", "tmp/cases-holdout",
               "engine/crates/tally/src",
               "engine/crates/tally/benches", "engine/crates/tally-cli/src", "engine/fuzz", "engine/target", ".claude"):
         os.makedirs(os.path.join(root, d), exist_ok=True)
     for name in ("guard", "guard.py", "stop-check", "stop_check.py", "merge-pr", "merge_pr.py", "worktree-done", "worktree_done.py",
-                 "session-start", "launch", "launch.py", "usage", "usage.py"):
+                 "session-start", "launch", "launch.py", "usage", "usage.py",
+                 "commit-check", "commit_check.py", "check_frozen.py"):
         shutil.copy2(os.path.join(TOOLS, name), os.path.join(root, "engine/tools", name))
     files = {
         "engine/spec/DONE.md": "the contract\n",
@@ -1018,6 +1055,8 @@ def setup(root):
         "engine/BUILD-LOG.md": "# Build log\n",
         "engine/CLAUDE.md": "# The Tally engine: rules for the build session (planted)\n",
         ".claude/settings.json": "{}\n",
+        # commit-check's subjects apply once a commit's parent has the conventions (R-100)
+        "engine/CONVENTIONS.md": "# The engine's conventions (planted)\n",
         # a cargo workspace like the engine's, for the cargo writers (F-4)
         "engine/Cargo.toml": '[workspace]\nmembers = ["crates/tally", "crates/tally-cli", "tests/runner"]\nexclude = ["fuzz"]\n',
         "engine/crates/tally/Cargo.toml": '[package]\nname = "tally"\n',
@@ -1053,12 +1092,18 @@ def setup(root):
                 '  green) echo "check fast: green"; exit 0 ;;\n'
                 '  red) echo "FAIL clippy-lib: error[E0001] something"; exit 1 ;;\n'
                 '  red2) echo "FAIL fmt: Diff in lib.rs"; exit 1 ;;\n'
+                # T's tests red (R-77, R-83, issue #108): the gating log is planted beside it
+                '  gating) echo "FAIL gating: S, M0 gate, and 2 of their 3 tests are red  (target/check-logs/gating.log)"; exit 1 ;;\n'
+                '  gating-and-lint) echo "FAIL clippy-lib: error[E0001] something"\n'
+                '    echo "FAIL gating: S, M0 gate, and 2 of their 3 tests are red  (target/check-logs/gating.log)"; exit 1 ;;\n'
                 'esac\n')
     os.chmod(os.path.join(root, "engine/tools/check"), 0o755)
     git = ["git", "-C", root, "-c", "user.name=guard-test", "-c", "user.email=guard-test@example.invalid"]
     subprocess.run(["git", "init", "-q", "--initial-branch=master", root], check=True)  # R-132's rows need master checked out
     subprocess.run([*git, "add", "-A"], check=True)
     subprocess.run([*git, "commit", "-q", "-m", "fixture"], check=True)
+    # the base a push's commits are checked against (R-100, issue #108), as after a fetch
+    subprocess.run([*git, "update-ref", "refs/remotes/origin/master", "HEAD"], check=True)
 
 
 def call(root, args, payload, role, extra_env=None, raw=None):
@@ -1145,6 +1190,31 @@ def main():
             for role in ROLES:
                 code, err = call(root, ["guard"], {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": root}, role)
                 expect(f"Bash `{command}` on branch feature as {role}", code, 0 if role in allowed else 2, err)
+        # R-100 before a push (issue #108): the commits a push sends pass commit-check first,
+        # in every role; a subject over 72 characters (pre-M1's two) is refused, and the
+        # same commit reworded on the conventions passes
+        with open(os.path.join(root, "engine/crates/tally/src/lib.rs"), "a", encoding="utf-8") as f:
+            f.write("// planted\n")
+        long = "test(walk): a planted subject over the limit, seventy-six characters in all."
+        assert len(long) == 76, len(long)
+        subprocess.run([*git, "commit", "-q", "-am", long, "-m", "Issue: #108"], check=True)
+        for command in ("git push -u origin HEAD", "git push origin feature", "git push origin +feature:feature",
+                        "git -C engine push", "git push --dry-run origin HEAD"):
+            for role in ROLES:
+                code, err = call(root, ["guard"], {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": root}, role)
+                expect(f"Bash `{command}` with a 76-character subject as {role}", code, 2, err)
+                if code == 2 and "over 72" not in err:
+                    failures.append(f"Bash `{command}` with a 76-character subject as {role}: doesn't say why: {err.strip()[:200]}")
+        for command, want in (("git push origin --delete feature", 0), ("git push origin :feature", 0),
+                              ("git push origin master~0:old", 0), ("git push origin nosuch", 0)):
+            code, err = call(root, ["guard"], {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": root}, "rules")
+            expect(f"Bash `{command}` with a 76-character subject on feature (it sends none of it)", code, want, err)
+        subprocess.run([*git, "commit", "-q", "--amend", "-m", "test(walk): a planted subject on the conventions",
+                        "-m", "Issue: #108"], check=True)
+        for role in ROLES:
+            code, err = call(root, ["guard"], {"tool_name": "Bash", "tool_input": {"command": "git push -u origin HEAD"},
+                                               "cwd": root}, role)
+            expect(f"Bash `git push -u origin HEAD` with the subject reworded as {role}", code, 0, err)
         subprocess.run([*git, "switch", "-q", "master"], check=True)
         # every checkout of the repo is judged alike (F-1): a linked worktree beside the
         # throwaway and one inside it, the way Claude Code makes them
@@ -1386,6 +1456,36 @@ def main():
         subprocess.run([*git, "commit", "-q", "--allow-empty", "-m", "later work"], check=True)
         code, err = call(root, ["stop-check"], stop, "build", {"FAKE_CHECK": "red"})
         expect("Stop as build, red, STOP-REPORT older than the last commit", code, 2, err)
+        # logged red (R-83 as amended 2026-11-08, issue #108): red only on T's tests, each
+        # failing vector on a Logged-Red line of a commit on this branch, lets the turn end;
+        # an unlogged vector, another red step, or the lines on master hold it as before
+        os.makedirs(os.path.join(root, "engine/target/check-logs"), exist_ok=True)
+        with open(os.path.join(root, "engine/target/check-logs/gating.log"), "w", encoding="utf-8") as f:
+            f.write(GATING_LOG)
+        subprocess.run([*git, "switch", "-q", "-c", "logged-red"], check=True)
+        subprocess.run([*git, "commit", "-q", "--allow-empty", "-m", "fix(walk): no logged red yet"], check=True)
+        code, err = call(root, ["stop-check"], stop, "build", {"FAKE_CHECK": "gating"})
+        expect("Stop as build, T's tests red, none logged", code, 2, err)
+        subprocess.run([*git, "commit", "-q", "--allow-empty", "-m", "test(walk): two of three logged",
+                        "-m", "Logged-Red: g6/when\nLogged-Red: s_money_conserved"], check=True)
+        code, err = call(root, ["stop-check"], stop, "build", {"FAKE_CHECK": "gating"})
+        expect("Stop as build, T's tests red, a vector not logged", code, 2, err)
+        if "not logged red: gating: tally-runner::s_kernel tests::s_kernel_g6_plan_pass" not in err:
+            failures.append(f"Stop: an unlogged vector's test isn't named: {err.strip()[:300]}")
+        total += 1
+        before = open(log, encoding="utf-8").read()
+        subprocess.run([*git, "commit", "-q", "--allow-empty", "-m", "test(walk): the rest logged",
+                        "-m", "Logged-Red: g6/where_refused\nLogged-Red: g6/refusal_order"], check=True)
+        code, err = call(root, ["stop-check"], stop, "build", {"FAKE_CHECK": "gating"})
+        expect("Stop as build, T's tests red, every failing vector logged", code, 0, err)
+        code, err = call(root, ["stop-check"], stop, "build", {"FAKE_CHECK": "gating-and-lint"})
+        expect("Stop as build, logged red and clippy red", code, 2, err)
+        subprocess.run([*git, "update-ref", "refs/remotes/origin/master", "HEAD"], check=True)
+        code, err = call(root, ["stop-check"], stop, "build", {"FAKE_CHECK": "gating"})
+        expect("Stop as build, T's tests red, the Logged-Red lines already on master", code, 2, err)
+        if open(log, encoding="utf-8").read() != before:
+            failures.append("Stop: logged red wrote to BUILD-LOG.md")
+        total += 1
 
     for f in failures:
         print("FAIL " + f)

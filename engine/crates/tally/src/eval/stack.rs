@@ -10,14 +10,16 @@
 //! does, and ends with no cell in progress.
 
 use super::aggregate::{Brings, Member};
+use super::keys::Given;
 use super::memo::{CellId, CellKey};
+use super::pins::Pinning;
 use super::rules::key_env;
 use super::state::{Collected, Ctx, Engine, Env, invariant};
 use crate::base::{Code, Refusal};
 use crate::book::Ledger;
 use crate::hole::Hole;
 use crate::model::{DefInfo, KeyVal, Reality, Value};
-use crate::syntax::{Bind, Expr, Residuals, Stop};
+use crate::syntax::{Bind, Expr, Pin, Residuals, Stop};
 
 /// One value of an ask's line: a value, or the run-time refusal it met, which the line prints
 /// in its place (refcore's `one`). L §5.18.
@@ -37,6 +39,9 @@ struct Mark {
     /// Begun with no def cell open, none in progress and no task waiting: it replays when it
     /// unwinds past the counted depth; an inner read unwinds on (R-16).
     outermost: bool,
+    /// Under a trace, the node open and its children then: a replay starts them again
+    /// (E §10).
+    trace: Option<(usize, usize)>,
 }
 
 impl Engine {
@@ -52,7 +57,10 @@ impl Engine {
         loop {
             match self.ev(m, e, env, ctx) {
                 Err(Stop::Deep) if mark.outermost => self.replay(m, &mark)?,
-                result => return result,
+                result => {
+                    self.read_ended(&mark);
+                    return result;
+                }
             }
         }
     }
@@ -74,7 +82,60 @@ impl Engine {
         loop {
             match self.read_def_at(m, def, keys, ctx) {
                 Err(Stop::Deep) if mark.outermost => self.replay(m, &mark)?,
-                result => return result,
+                result => {
+                    self.read_ended(&mark);
+                    return result;
+                }
+            }
+        }
+    }
+
+    /// A key as written, read from outside the evaluator: as [`Engine::value`], for a key
+    /// (L §2.5).
+    ///
+    /// # Errors
+    ///
+    /// The refusals the key's expression meets.
+    pub(crate) fn key_given(
+        &mut self,
+        m: &Reality,
+        e: &Expr,
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Given, Stop> {
+        let mark = self.mark();
+        loop {
+            match self.given_key(m, e, env, ctx) {
+                Err(Stop::Deep) if mark.outermost => self.replay(m, &mark)?,
+                result => {
+                    self.read_ended(&mark);
+                    return result;
+                }
+            }
+        }
+    }
+
+    /// The context inside an ask's `with` pins, read from outside the evaluator: as
+    /// [`Engine::value`], for the pins' dates, keys and values; or the hole of a pin whose key
+    /// or date is one (L §5.11, §5.18).
+    ///
+    /// # Errors
+    ///
+    /// The refusals the pins meet; `NotBuilt` for a pin form not built yet.
+    pub fn with_pins(
+        &mut self,
+        m: &Reality,
+        pins: &[Pin],
+        ctx: Ctx,
+    ) -> Result<Result<Ctx, Hole>, Stop> {
+        let mark = self.mark();
+        loop {
+            match self.pinned(m, pins, &Env::empty(), ctx, Pinning::Ask) {
+                Err(Stop::Deep) if mark.outermost => self.replay(m, &mark)?,
+                result => {
+                    self.read_ended(&mark);
+                    return result;
+                }
             }
         }
     }
@@ -97,7 +158,10 @@ impl Engine {
         loop {
             match self.members(m, binds, &Env::empty(), ctx, Brings::ToTuple) {
                 Err(Stop::Deep) if mark.outermost => self.replay(m, &mark)?,
-                result => return result,
+                result => {
+                    self.read_ended(&mark);
+                    return result;
+                }
             }
         }
     }
@@ -114,7 +178,10 @@ impl Engine {
         loop {
             match self.ledger_of(m, r, ctx) {
                 Err(Stop::Deep) if mark.outermost => self.replay(m, &mark)?,
-                result => return result,
+                result => {
+                    self.read_ended(&mark);
+                    return result;
+                }
             }
         }
     }
@@ -155,11 +222,20 @@ impl Engine {
         }
     }
 
+    /// Ends a read: the outermost lets go of the layers its unwinding kept, which its replay
+    /// and its read again needed (R-16, P §3.5).
+    fn read_ended(&mut self, mark: &Mark) {
+        if mark.outermost {
+            self.release_kept();
+        }
+    }
+
     /// What the read finds as it begins.
     fn mark(&self) -> Mark {
         Mark {
             collectors: self.stack.len(),
             outermost: self.depth == 0 && self.active.is_empty() && self.work.is_empty(),
+            trace: self.trace_mark(),
         }
     }
 
@@ -174,11 +250,26 @@ impl Engine {
         Ok(())
     }
 
+    /// The replay of an outermost read; one that fails ends the read, which lets go of the
+    /// layers its unwinding kept (R-16, P §3.5).
+    fn replay(&mut self, m: &Reality, mark: &Mark) -> Result<(), Stop> {
+        // under a trace, the read's children start again, and what the work stack computes
+        // hangs apart until the read references it (E §10)
+        self.trace_apart();
+        let replayed = self.replay_tasks(m, mark);
+        self.trace_join();
+        self.trace_restart(mark.trace);
+        if replayed.is_err() {
+            self.read_ended(mark);
+        }
+        replayed
+    }
+
     /// Computes the cells on the work stack, the latest first, each from depth 0 while the
     /// cells that unwound above it stay in progress; a task that unwinds again waits for the
     /// one it pushed. A task done, the cells that waited on it leave progress, to be read
     /// again by the read below it (R-16, BUILDER §4).
-    fn replay(&mut self, m: &Reality, mark: &Mark) -> Result<(), Stop> {
+    fn replay_tasks(&mut self, m: &Reality, mark: &Mark) -> Result<(), Stop> {
         if self.work.is_empty() {
             return Err(invariant("a read unwound with no cell on the work stack"));
         }
@@ -192,7 +283,10 @@ impl Engine {
             let waiting = self.work.len();
             self.depth = 0;
             self.push();
+            // the task's own timeline, whatever scope it unwound through (E §3.3)
+            self.replay_timeline(m, ctx)?;
             let result = self.def_cell(m, def, &keys, &env, ctx);
+            self.leave_timeline()?;
             self.stack.truncate(mark.collectors);
             if result == Err(Stop::Deep) {
                 if self.work.len() <= waiting {

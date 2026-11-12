@@ -1,0 +1,4 @@
+part w01
+  tally 2
+
+ask w01: day_of(2026-03, age(w, d2))

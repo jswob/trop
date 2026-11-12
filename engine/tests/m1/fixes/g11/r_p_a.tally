@@ -1,0 +1,145 @@
+model pa
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+source statute "the law"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2, q3]
+
+input amt: money PLN
+
+input rate[k in qs]: num
+
+input missing: num question "What is the missing number?"
+
+input flag: bool
+
+input cday: date
+
+input lim: money PLN
+
+band tax(x: num): num
+
+def fee[k in qs]: money PLN = round(amt * rate[k], minor(PLN), half-up)
+
+def tot: money PLN at reader
+  rule base = sum(fee[k] for k in qs)
+
+def twice: money PLN at reader
+  rule base = fee[q1] + fee[q1] + tot
+
+def holey: num at reader
+  rule base = rate[q1] + missing
+
+def pick: num at reader
+  rule a beats b = rate[q1] when flag
+  rule b = rate[q2]
+  rule c beats b = rate[q3] when rate[q1] > rate[q3]
+
+def gv[k in qs]: num at reader
+  rule base = rate[k] * amt / lim
+
+def gvsum: num at reader
+  rule base = gv[q1] + gv[q2]
+
+def taxed: num at reader
+  rule base = tax(rate[q1] * amt / lim)
+
+def cond: num at reader
+  rule base = if flag then missing else rate[q2]
+
+def shorty: bool at reader
+  rule base = flag and missing > rate[q1]
+
+def shorty2: bool at reader
+  rule base = flag or missing > rate[q1]
+
+def capped: money PLN at cday
+  rule base = min(lim, tot)
+
+def capped_r: money PLN at reader
+  rule base = min(lim, tot)
+
+def am: key qs at reader
+  rule base = argmin(fee[k] for k in qs)
+
+def holeymin: num at reader
+  rule base = min(rate[q1], missing)
+
+ask e_tot: explain tot law 2026-03-01
+ask v_tot: tot law 2026-03-01
+ask e_twice: explain twice law 2026-03-01
+ask v_twice: twice law 2026-03-01
+ask e_holey: explain holey law 2026-03-01
+ask v_holey: holey law 2026-03-01
+ask e_pick: explain pick law 2026-03-01
+ask v_pick: pick law 2026-03-01
+ask e_gv: explain gv[q1] law 2026-03-01
+ask v_gv: gv[q1] law 2026-03-01
+ask e_gvsum: explain gvsum law 2026-03-01
+ask v_gvsum: gvsum law 2026-03-01
+ask e_taxed: explain taxed law 2026-03-01
+ask v_taxed: taxed law 2026-03-01
+ask e_cond: explain cond law 2026-03-01
+ask v_cond: cond law 2026-03-01
+ask e_sh: explain shorty law 2026-03-01
+ask v_sh: shorty law 2026-03-01
+ask e_sh2: explain shorty2 law 2026-03-01
+ask v_sh2: shorty2 law 2026-03-01
+ask e_cap: explain capped law 2026-03-01
+ask v_cap: capped law 2026-03-01
+ask e_capr: explain capped_r law 2026-08-01
+ask v_capr: capped_r law 2026-08-01
+ask e_capk: explain capped_r law 2026-08-01 as known 2026-02-01
+ask v_capk: capped_r law 2026-08-01 as known 2026-02-01
+ask e_am: explain am law 2026-03-01
+ask v_am: am law 2026-03-01
+ask e_hm: explain holeymin law 2026-03-01
+ask v_hm: holeymin law 2026-03-01
+ask e_fee: explain fee[k] for k in qs law 2026-03-01
+ask v_fee: fee[k] for k in qs law 2026-03-01
+ask i_twice: inputs-of twice law 2026-03-01
+ask i_holey: inputs-of holey law 2026-03-01
+ask i_pick: inputs-of pick law 2026-03-01
+ask i_gvsum: inputs-of gvsum law 2026-03-01
+ask i_taxed: inputs-of taxed law 2026-03-01
+ask i_cap: inputs-of capped_r law 2026-08-01
+ask i_capk: inputs-of capped_r law 2026-08-01 as known 2026-02-01
+ask i_cond: inputs-of cond law 2026-03-01
+ask i_sh: inputs-of shorty law 2026-03-01
+ask i_fee: inputs-of fee[k] for k in qs law 2026-03-01
+ask r_rate: readers-of rate
+ask r_missing: readers-of missing
+ask r_flag: readers-of flag
+ask r_tax: readers-of tax
+ask r_fee: readers-of fee
+ask r_lim: readers-of lim
+ask r_amt: readers-of amt
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN
+  rate[q1] = 0.1
+  rate[q2] = 0.05 "the q2 rate"
+  rate[q3] = 0.07
+  flag = false
+  cday = 2026-03-01
+  given gv[q2] = 9 "stated"
+  lim = 20.00 PLN governs 2026-01-01..2026-06-30 "first half"
+
+version law_2026
+  cite statute
+  governs 2026-01-01..2026-12-31
+  known 2026-01-15
+  lim = 15.00 PLN governs 2026-07-01..2026-12-31 "second half"
+  tax: [0, 5) = 1 "low"
+  tax: [5, 20) = 2 "mid"
+  tax: [20, inf) = 3

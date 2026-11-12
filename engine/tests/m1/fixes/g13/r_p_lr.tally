@@ -1,0 +1,35 @@
+model lr
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+input n5: int
+input one: int
+input half_n: num
+input at_a: int
+input at_b: num
+input tri[a in 1 .. 5, b in a .. n5 step half_n]: num
+
+def g2[a in one .. n5, b in a .. n5 step half_n]: num = a * b
+
+ask l1: g2[at_a, at_b]
+ask l2: sum(sum(g2[a, b] for b in a .. n5 step half_n) for a in one .. n5)
+ask l3: g2[at_a + one, at_b]
+ask l4: tri[at_a, at_b]
+ask l5: tri[at_a + one, at_b]
+ask l6: count(b in at_b .. at_a step half_n)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  n5 = 5 "c"
+  one = 1 "c"
+  half_n = 0.5 "c"
+  at_a = 2 "c"
+  at_b = 2.5 "c"
+  tri[2, 2.5] = 9 "c"
+  tri[3, *] = 4 "c"

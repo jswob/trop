@@ -1,0 +1,4 @@
+part px6
+  tally 2
+
+ask x6: f[k] as if {v[q1] = count(j in qs where j == k)} for k in qs

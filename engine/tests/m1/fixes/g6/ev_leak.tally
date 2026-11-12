@@ -1,0 +1,36 @@
+model ev
+  tally 2
+  on 2026-06-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probe: a scenario move's movements must not be bound in the model's world"
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+
+input pay_day: date
+
+input d0: date
+
+input d1: date
+
+def n_moves: money PLN = sum(x.cash.amount for x in transfers over d0..d1)
+
+ask base_n: n_moves in ev
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 40.00 PLN "the card"
+  pay_day = 2026-03-15 "the card"
+  d0 = 2026-01-01 "the card"
+  d1 = 2026-12-31 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"

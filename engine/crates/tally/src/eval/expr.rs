@@ -1,28 +1,32 @@
 //! The evaluator's walk over an expression: one arm per node kind, each calling the step that computes it.
 //! Spec: E §3.2 (a tree-walk over the resolved tree); L §2.5 (names: a bound variable, an item,
-//! a key literal), §3.1 (the absences), §3.2 (inline figures), §5.11 (logic under Kleene
+//! a key literal, a movement instance by its move and keys), §3.1 (the absences), §3.2 (inline figures), §5.11 (logic under Kleene
 //! rules, `if` with a hole condition), §5.14 (a movement's fields and kind, `in` over a
 //! movement kind, movements equal by identity), §5.19 (`covered`), §4.1 (a keyed place
 //! `name[keys]`), §8.1 (holes spread), §8.4 (`RUN-NONE`).
 //! Twin: engine/tools/refcore/evaluate.py (`ev`, `e_num`, `e_name`, `e_index`, `e_field`,
 //! `read`, `binop`, `e_not`, `e_and`, `e_or`, `e_if`, `e_cmp`, `compare`, `e_in`, `e_record`)
-//! and mreads.py (`m_mv_field`, `m_mv_kind_in`, `m_c_covered`).
+//! and mreads.py (`m_mv_field`, `m_mv_kind_in`, `m_c_covered`, `m_e_moveref`); moves.py
+//! (`m_find_inst`).
 //! Invariants: an operation that meets a hole is the hole of its operands' questions (the hole
 //! module's one rule); `none` only compares; every node kind S doesn't build stops `NotBuilt`.
 
 use core::cmp::Ordering;
 
-use super::arith::{Op, Test, arith, compare, negate, same_value};
-use super::read::{Given, lacks_at_run, literal_key, make_keys};
+use super::arith::{Op, Test, arith, compare, duration, negate, same_value};
+use super::keys::{Given, lacks_at_run, literal_key};
 use super::state::{
     Ctx, Engine, Env, Figures, invariant, not_typed, num_stop, refuse, refuse_load, unit_stop,
 };
 use super::ty::{figure_like, sample};
+use super::windows::{as_window, window_arith, window_compare, window_negated};
+use super::years::{as_year, period_like, period_literal, year_literal};
 use crate::base::{Load, Run};
+use crate::book::inst_ref;
 use crate::hole::{Hole, spread};
 use crate::model::{
-    Class, Code, Domain, KeyVal, NameKind, Number, Reality, Shown, Ty, Unit, Value, currency_id,
-    num_money,
+    Class, Code, Domain, KeyVal, MvRef, MvSrc, NameKind, Number, Reality, Shown, Ty, Unit, Value,
+    currency_id, num_money,
 };
 use crate::read::{Asked, member_span};
 use crate::syntax::{AddOp, CmpOp, Expr, Field, FieldValue, In, Key, Lit, MulOp, Postfix, Stop};
@@ -58,7 +62,7 @@ impl Engine {
             Expr::Or(terms) => self.logic(m, terms, Logic::Any, env, ctx),
             Expr::And(terms) => self.logic(m, terms, Logic::All, env, ctx),
             Expr::Not(x) => self.not(m, x, env, ctx),
-            Expr::Cmp(c) => self.comparison(m, &c.0, c.1, &c.2, env, ctx),
+            Expr::Cmp(c) => self.comparison(m, (e, &c.0, c.1, &c.2), env, ctx),
             Expr::In(x) => self.membership(m, x, env, ctx),
             Expr::Sum(first, rest) => self.sum(m, first, rest, env, ctx),
             Expr::Prod(first, rest) => self.product(m, first, rest, env, ctx),
@@ -67,35 +71,44 @@ impl Engine {
             Expr::Call(call) => self.call(m, call, env, ctx),
             Expr::Paren(x) => self.ev(m, x, env, ctx),
             Expr::Record(fields) => self.record(m, fields, env, ctx),
-            Expr::List(items) => list(m, items),
+            Expr::List(items) => self.list(m, items, env, ctx),
             Expr::Agg(agg) => self.aggregate(m, agg, env, ctx),
             Expr::LegOf(..) => Err(Stop::NotBuilt("a leg's amount of a party or a batch")),
             Expr::To(..) => Err(Stop::NotBuilt("`to u`, a transcendental value")),
-            Expr::Last(..) => Err(Stop::NotBuilt("`last(x, d)`")),
+            Expr::Last(last) => self.last_read(m, (&last.0, &last.1), env, ctx),
             Expr::Bal(b) => self.bal(m, b, env, ctx),
             Expr::Flows(f) => self.flows(m, f, env, ctx),
             Expr::Covered(c) => self.covered_call(m, (&c.0, &c.1), env, ctx),
             Expr::Calendar(..) => Err(Stop::NotBuilt("a calendar written in a rule")),
-            Expr::Value(..) => Err(Stop::NotBuilt("value (the walk)")),
+            Expr::Value(v) => self.valuation(m, v, env, ctx),
             Expr::Query(..) => Err(Stop::NotBuilt("a query (mean, share, quantile)")),
-            Expr::Low(..) => Err(Stop::NotBuilt("`low(x, span)`")),
+            Expr::Low(low) => self.low(m, low, env, ctx),
             Expr::Crps(..) => Err(Stop::NotBuilt("`crps`")),
             Expr::DistFn(..) => Err(Stop::NotBuilt("`cdf`, `pdf` and `pmf`")),
             Expr::Dist(..) => Err(Stop::NotBuilt("distributions")),
-            Expr::Prorata(..) => Err(Stop::NotBuilt("`prorata`")),
-            Expr::AsIf(..) => Err(Stop::NotBuilt("`as if`")),
+            Expr::Prorata(p) => self.prorata(m, p, env, ctx),
+            Expr::AsIf(inner, pins) => self.as_if(m, (inner, pins), env, ctx),
         }
     }
 
-    /// A name: a bound variable, a read of an input or a def with no keys, `cut`, a thing,
-    /// else a key literal its use resolves (refcore's `e_name`). L §2.5.
-    fn name(&mut self, m: &Reality, name: &str, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
+    /// A name: a bound variable, a read of an input or a def with no keys, `cut`, an axis at
+    /// its option, a thing, else a key literal its use resolves (refcore's `e_name`). L §2.5,
+    /// §5.5.
+    pub(super) fn name(
+        &mut self,
+        m: &Reality,
+        name: &str,
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Value, Stop> {
         if let Some(var) = env.get(name) {
             return Ok(var.value.clone());
         }
         match m.names.kind(name) {
             Some(NameKind::Input | NameKind::Def) => self.read_item(m, name, &[], env, ctx),
+            Some(NameKind::Move) => self.move_ref(m, name, &[], env, ctx),
             Some(NameKind::Cut) => Ok(Value::Day(ctx.cut)),
+            Some(NameKind::Axis) => self.axis_option(name, ctx),
             Some(_) | None => {
                 if m.things.get(name).is_some() {
                     return Ok(Value::Key(KeyVal::Thing(name.to_owned())));
@@ -103,6 +116,43 @@ impl Engine {
                 Ok(Value::Word(name.to_owned()))
             }
         }
+    }
+
+    /// A movement instance named by move `id` and the keys written: the instance the cut sees
+    /// at those keys, else a movement known by its id alone; a hole key makes it that hole
+    /// (refcore's `e_moveref`, `find_inst`). L §2.5, §5.14.
+    fn move_ref(
+        &mut self,
+        m: &Reality,
+        id: &str,
+        keys: &[Key],
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Value, Stop> {
+        let mv = m
+            .moves
+            .get(id)
+            .ok_or_else(|| invariant("a movement named by a move load didn't build"))?;
+        let given = self.given_keys(m, keys, env, ctx)?;
+        let made = match self.make_keys(m, id, &mv.binds, given, ctx)? {
+            Err(hole) => return Ok(Value::Hole(hole)),
+            Ok(made) => made,
+        };
+        let insts = self.move_instances(m, mv, ctx.cut)?;
+        if let Some(inst) = insts.iter().find(|i| i.keys == made) {
+            return Ok(Value::Mv(Box::new(inst_ref(inst))));
+        }
+        let id = if made.is_empty() {
+            id.to_owned()
+        } else {
+            let texts: Vec<String> = made.iter().map(KeyVal::text).collect();
+            format!("{id}[{}]", texts.join(", "))
+        };
+        Ok(Value::Mv(Box::new(MvRef {
+            id,
+            day: None,
+            src: MvSrc::Missing,
+        })))
     }
 
     /// A read of input or def `id` at the keys written (refcore's `read`): each key made a key
@@ -115,6 +165,19 @@ impl Engine {
         env: &Env,
         ctx: Ctx,
     ) -> Result<Value, Stop> {
+        self.read_item_in(m, (id, keys), env, (ctx, ctx))
+    }
+
+    /// [`Engine::read_item`], its keys made in context `ctx` and the item read in `read`: a
+    /// scenario row's prefixed name is read in the base, its keys made where the row is read
+    /// (refcore's `read`, its `_world` arm). L §4.6, §6.4.
+    pub(super) fn read_item_in(
+        &mut self,
+        m: &Reality,
+        (id, keys): (&str, &[Key]),
+        env: &Env,
+        (ctx, read): (Ctx, Ctx),
+    ) -> Result<Value, Stop> {
         let mut given = Vec::with_capacity(keys.len());
         for key in keys {
             let Key::Expr(e) = key else {
@@ -123,18 +186,24 @@ impl Engine {
             given.push(self.given_key(m, e, env, ctx)?);
         }
         if let Some(input) = m.inputs.get(id) {
-            return match make_keys(m, id, &input.binds, given, ctx.cut)? {
+            return match self.make_keys(m, id, &input.binds, given, ctx)? {
                 Err(hole) => Ok(Value::Hole(hole)),
-                Ok(made) => self.read_input_at(m, input, &made, ctx, Asked::Plain),
+                Ok(made) => {
+                    self.movement_keys(m, &input.binds, &made, ctx)?;
+                    self.read_input_at(m, input, &made, read, Asked::Plain)
+                }
             };
         }
         let def = m
             .defs
             .get(id)
             .ok_or_else(|| invariant("a read of an item that is neither an input nor a def"))?;
-        match make_keys(m, id, &def.binds, given, ctx.cut)? {
+        match self.make_keys(m, id, &def.binds, given, ctx)? {
             Err(hole) => Ok(Value::Hole(hole)),
-            Ok(made) => self.read_def_at(m, def, &made, ctx),
+            Ok(made) => {
+                self.movement_keys(m, &def.binds, &made, ctx)?;
+                self.read_def_at(m, def, &made, read)
+            }
         }
     }
 
@@ -159,7 +228,7 @@ impl Engine {
             };
             given.push(self.given_key(m, e, env, ctx)?);
         }
-        let made = match make_keys(m, id, &place.binds, given, ctx.cut)? {
+        let made = match self.make_keys(m, id, &place.binds, given, ctx)? {
             Err(hole) => return Ok(Value::Hole(hole)),
             Ok(made) => made,
         };
@@ -173,8 +242,9 @@ impl Engine {
         ))
     }
 
-    /// A key as written: a literal or a name no variable or item holds is a key literal its
-    /// position resolves; anything else is evaluated (L §2.5).
+    /// A key as written: a literal, bracketed or not, or a name no variable or item holds is a
+    /// key literal its position resolves; so is an int a year form gives; anything else is
+    /// evaluated (L §2.1, §2.5).
     pub(crate) fn given_key(
         &mut self,
         m: &Reality,
@@ -182,7 +252,7 @@ impl Engine {
         env: &Env,
         ctx: Ctx,
     ) -> Result<Given, Stop> {
-        match e {
+        match e.unbracketed() {
             Expr::Lit(
                 lit @ (Lit::Num(_)
                 | Lit::Day(_)
@@ -233,6 +303,9 @@ impl Engine {
                 if let Value::Word(word) = v {
                     return Ok(Given::Literal(Lit::Name(word)));
                 }
+                if let Some(lit) = year_literal(e, &v)? {
+                    return Ok(Given::Literal(lit));
+                }
                 Ok(Given::Value(v))
             }
         }
@@ -249,6 +322,14 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let (mut value, rest) = match (base, posts) {
+            (Expr::Name(prefix), [Postfix::Field(name), rest @ ..])
+                if env.get(prefix).is_none() && self.reads_base(prefix) =>
+            {
+                match (self.base_read(m, (name, rest), env, ctx)?, rest) {
+                    ((value, true), [_, after @ ..]) => (value, after),
+                    ((value, _), _) => (value, rest),
+                }
+            }
             (Expr::Name(name), [Postfix::Keys(keys), rest @ ..])
                 if env.get(name).is_none() && is_read(m, name) =>
             {
@@ -258,6 +339,11 @@ impl Engine {
                 if env.get(name).is_none() && m.places.get(name).is_some() =>
             {
                 (self.place_at(m, name, keys, env, ctx)?, rest)
+            }
+            (Expr::Name(name), [Postfix::Keys(keys), rest @ ..])
+                if env.get(name).is_none() && m.names.kind(name) == Some(NameKind::Move) =>
+            {
+                (self.move_ref(m, name, keys, env, ctx)?, rest)
             }
             (Expr::Name(name), [Postfix::Keys(_), ..]) if env.get(name).is_none() => {
                 return Err(Stop::NotBuilt("keys of a place, a move or a member"));
@@ -302,6 +388,20 @@ impl Engine {
         let Value::Hole(cond_hole) = test else {
             return Err(not_typed());
         };
+        // both branches are read in a frame of their own, so a decided `if` keeps a small one
+        // (R-16)
+        self.choice_unknown(m, (&cond_hole, yes, no), env, ctx)
+    }
+
+    /// `if c then a else b` with hole condition `cond_hole`: both branches evaluated, the
+    /// `if` a hole unless they are equal (refcore's `e_if`). L §5.11 Logic, §8.1.
+    fn choice_unknown(
+        &mut self,
+        m: &Reality,
+        (cond_hole, yes, no): (&Hole, &Expr, &Expr),
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Value, Stop> {
         let first = self.ev(m, yes, env, ctx)?;
         let second = self.ev(m, no, env, ctx)?;
         let first = flex_branch(m, first, no, env, ctx)?;
@@ -312,7 +412,7 @@ impl Engine {
         {
             return Ok(first);
         }
-        hole_of(&[Some(&cond_hole), first.as_hole(), second.as_hole()])
+        hole_of(&[Some(cond_hole), first.as_hole(), second.as_hole()])
     }
 
     /// `a or b or …` (`any`) and `a and b and …` (`all`) under Kleene logic, left to right as
@@ -330,6 +430,12 @@ impl Engine {
             Logic::Any => ("or", true),
             Logic::All => ("and", false),
         };
+        if kind == Logic::All
+            && !m.narrow_tests.is_empty()
+            && self.narrowed_false(m, terms, env, ctx)?
+        {
+            return Ok(Value::Bool(false));
+        }
         let mut acc: Option<Value> = None;
         for term in terms {
             if let Some(Value::Bool(b)) = &acc
@@ -353,6 +459,35 @@ impl Engine {
         acc.ok_or_else(|| invariant("a logic chain of no terms"))
     }
 
+    /// Whether a kind test of conjunction `terms` whose narrowing a field read uses is false,
+    /// the tests taken first, left to right: a conjunct that reads the narrowed fields is
+    /// evaluated only where the test holds, and the conjunction is false where it doesn't
+    /// (refcore's `e_and`, its `_narrow`). L §5.7.
+    fn narrowed_false(
+        &mut self,
+        m: &Reality,
+        terms: &[Expr],
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<bool, Stop> {
+        let mut work: Vec<&Expr> = terms.iter().rev().collect();
+        while let Some(node) = work.pop() {
+            if let Expr::Paren(inner) = node {
+                work.push(inner);
+            }
+            if let Expr::And(inner) = node {
+                work.extend(inner.iter().rev());
+            }
+            if let Expr::In(test) = node
+                && m.narrow_tests.contains(&test.site.key())
+                && self.membership(m, test, env, ctx)? == Value::Bool(false)
+            {
+                return Ok(true);
+            }
+        }
+        Ok(false)
+    }
+
     /// `not e` (refcore's `e_not`). L §5.11.
     fn not(&mut self, m: &Reality, x: &Expr, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
         let v = self.ev(m, x, env, ctx)?;
@@ -364,23 +499,45 @@ impl Engine {
     }
 
     /// `a op b` (refcore's `e_cmp`, `compare`): `none` only tests equal, a hole spreads,
-    /// `never` is later than every date, a key literal resolves against the other side.
-    /// L §3.1, §5.11, §8.4.
+    /// `never` is later than every date, a key literal resolves against the other side, a
+    /// window decides or is `HOLE-IMPRECISE` naming the comparison `written`. L §3.1, §4.4,
+    /// §5.11, §8.4.
     fn comparison(
         &mut self,
         m: &Reality,
-        lhs: &Expr,
-        op: CmpOp,
-        rhs: &Expr,
+        (written, lhs, op, rhs): (&Expr, &Expr, CmpOp, &Expr),
         env: &Env,
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let left = self.ev(m, lhs, env, ctx)?;
         let right = self.ev(m, rhs, env, ctx)?;
+        let left = year_beside(lhs, left, &right);
+        let right = year_beside(rhs, right, &left);
         let (left, right) = resolve_pair(m, left, right)?;
-        compare_values(m, op, &left, &right)
+        compare_values(m, op, (&left, &right), written)
     }
+}
 
+/// `e == f` of two values already read, as a comparison of the two expressions decides it
+/// (refcore's `compare('==', …)` in `check`): true, false or the hole of an undecided
+/// comparison. L §5.18, §5.11.
+///
+/// # Errors
+///
+/// The refusals of a comparison, `RUN-NONE` and `LOAD-UNIT` among them.
+pub(crate) fn equal_sides(
+    m: &Reality,
+    (lhs, left): (&Expr, &Value),
+    (rhs, right): (&Expr, &Value),
+) -> Result<Value, Stop> {
+    let left_year = year_beside(lhs, left.clone(), right);
+    let right_year = year_beside(rhs, right.clone(), &left_year);
+    let (a, b) = resolve_pair(m, left_year, right_year)?;
+    let written = Expr::Cmp(Box::new((lhs.clone(), CmpOp::Eq, rhs.clone())));
+    compare_values(m, CmpOp::Eq, (&a, &b), &written)
+}
+
+impl Engine {
     /// `x in K [on d]`: a thing's membership of a kind; `x in [a, b]`: a list's (refcore's
     /// `e_in`). A `d` that is a hole makes the test that hole; one that is `none`, `never` or
     /// no day is refused as `date_of` refuses it, and a day period stands for its first day.
@@ -410,7 +567,13 @@ impl Engine {
             return Ok(Value::Bool(self.mv_kind_in(m, mv, kind, ctx)?));
         }
         let Value::Key(KeyVal::Thing(name)) = &member else {
-            return Err(Stop::NotBuilt("membership of a value in a kind"));
+            return Err(refuse_load(
+                Load::Unit,
+                format!(
+                    "membership of {} in a kind",
+                    member.text(m).map_err(num_stop)?
+                ),
+            ));
         };
         let Some(thing) = m.things.get(name) else {
             return Ok(Value::Bool(false));
@@ -420,8 +583,13 @@ impl Engine {
             if let Value::Hole(h) = day {
                 return Ok(Value::Hole(h));
             }
-            let day = crate::ask::date_of(&day, "the day of a membership test")?;
-            let alive = member_span(m, thing, kind, ctx.cut).is_some_and(|s| s.contains(day));
+            let day = match super::windows::one_day(m, &day, "the day of a membership test")? {
+                Ok(day) => day,
+                Err(h) => return Ok(Value::Hole(h)),
+            };
+            self.note_thing(m, thing, ctx.world);
+            let alive =
+                member_span(m, thing, kind, (ctx.cut, ctx.world)).is_some_and(|s| s.contains(day));
             return Ok(Value::Bool(alive));
         }
         if based_in(m, thing, kind) {
@@ -449,8 +617,15 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let mut acc = self.ev(m, first, env, ctx)?;
+        let mut written = Some(first);
         for (op, x) in rest {
             let b = self.ev(m, x, env, ctx)?;
+            if let Some(e) = written.take()
+                && moves_a_year(&b)
+                && let Some(year) = as_year(Some(e), &acc)
+            {
+                acc = Value::Period(year);
+            }
             let op = match op {
                 AddOp::Add => Op::Add,
                 AddOp::Sub => Op::Sub,
@@ -493,13 +668,34 @@ impl Engine {
                 "a value is none here: arithmetic".to_owned(),
             ));
         }
-        match negate(&v)? {
+        let negated = if let Value::Window(w) = &v {
+            window_negated(w)?
+        } else {
+            negate(&v)?
+        };
+        match negated {
             Some(n) => Ok(n),
             None => Err(refuse_load(
                 Load::Unit,
                 format!("unary minus on {}", v.text(m).map_err(num_stop)?),
             )),
         }
+    }
+
+    /// A list `[a, b]` (refcore's `e_list`): each item's value, a name evaluated as any name
+    /// is (a read of an input, a bound variable, a thing, else its word), as load typed it.
+    /// L §2.5, §4.4.
+    fn list(&mut self, m: &Reality, items: &[Lit], env: &Env, ctx: Ctx) -> Result<Value, Stop> {
+        let mut out = Vec::with_capacity(items.len());
+        for lit in items {
+            let v = if let Lit::Name(name) = lit {
+                self.name(m, name, env, ctx)?
+            } else {
+                literal(m, lit, Figures::Rule)?
+            };
+            out.push(v);
+        }
+        Ok(Value::List(out))
     }
 
     /// A record literal `(a: x, b: y)` (refcore's `e_record`). L §3.1.
@@ -513,8 +709,9 @@ impl Engine {
         let mut out = Vec::with_capacity(fields.len());
         for f in fields {
             let Field::Named(name, value) = f else {
-                // load refuses it; refcore's run has no twin of this text
-                return Err(Stop::NotBuilt("a leg in a record, met at run"));
+                return Err(invariant(
+                    "a leg in a record: load refuses it first (LOAD-FIELD)",
+                ));
             };
             let v = match value {
                 FieldValue::Hole(text) => Value::Hole(Hole::asked(text, "")),
@@ -535,6 +732,36 @@ enum Logic {
     Any,
     /// `and`.
     All,
+}
+
+/// A side of a comparison written in a year form, or as a month or quarter, beside a period:
+/// the year it names, and beside a key of a period index of its kind the key it labels on the
+/// index's grid, an anchored year or a period `by n` included (refcore's `_year` mark of
+/// `compare`, and its `resolve_key_literal` of a literal beside a key of a period index).
+/// L §2.1, §2.5, §4.1.
+fn year_beside(e: &Expr, v: Value, other: &Value) -> Value {
+    let Value::Period(like) = other else {
+        return v;
+    };
+    if let Some(year) = as_year(Some(e), &v) {
+        return Value::Period(period_like(*like, year));
+    }
+    if let Value::Period(written) = &v
+        && period_literal(e)
+    {
+        return Value::Period(period_like(*like, *written));
+    }
+    v
+}
+
+/// Whether a value moves or measures a year in a sum: a period, or a duration. A four-digit
+/// figure before one reads as a year, the one reading its arithmetic takes (refcore's
+/// `ambig`). L §2.1, §4.2.
+fn moves_a_year(v: &Value) -> bool {
+    if let Value::Number(n) = v {
+        return duration(n).is_some();
+    }
+    matches!(v, Value::Period(_))
 }
 
 /// A bare figure that is an `if`'s branch, in the type of the other branch (refcore's
@@ -567,7 +794,7 @@ fn based_in(m: &Reality, thing: &crate::model::Thing, kind: &str) -> bool {
 }
 
 /// Whether `name` names an input or a def.
-fn is_read(m: &Reality, name: &str) -> bool {
+pub(super) fn is_read(m: &Reality, name: &str) -> bool {
     matches!(m.names.kind(name), Some(NameKind::Input | NameKind::Def))
 }
 
@@ -602,16 +829,83 @@ pub(super) fn binop(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Result<Val
                 "a value is none here: arithmetic".to_owned(),
             ));
         }
-        if let Value::Word(_) = v {
-            // load resolves a key word; refcore's run refuses it with its place, which a
-            // value here doesn't carry
-            return Err(Stop::NotBuilt("an ambiguous key met at run"));
-        }
     }
     if lhs.as_hole().is_some() || rhs.as_hole().is_some() {
         return hole_of(&[lhs.as_hole(), rhs.as_hole()]);
     }
-    arith(m, op, lhs, rhs)
+    let words = if matches!(lhs, Value::Word(_)) || matches!(rhs, Value::Word(_)) {
+        Some(arith_words(m, op, lhs, rhs)?)
+    } else {
+        None
+    };
+    let (a, b) = match &words {
+        Some((x, y)) => (x, y),
+        None => (lhs, rhs),
+    };
+    if as_window(a).is_some() || as_window(b).is_some() {
+        return window_arith(m, op, a, b);
+    }
+    arith(m, op, a, b)
+}
+
+/// Key literals in arithmetic, resolved as load resolved them (L §2.5): by the key, thing or
+/// code beside them, or the index of a key arithmetic left outside it; else, moved by an
+/// offset (a number, or an interval of them, L §4.4), as a key of the one index that holds
+/// them (L §4.2 Key arithmetic).
+fn arith_words(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Result<(Value, Value), Stop> {
+    let (a, b) = resolve_pair(m, lhs.clone(), rhs.clone())?;
+    let offset =
+        matches!(op, Op::Add | Op::Sub) && matches!(b, Value::Number(_) | Value::Window(_));
+    match (&a, &b) {
+        (Value::Word(word), _) if offset => Ok((held_key(m, word)?, b)),
+        (Value::OutKey { index, .. }, Value::Word(word)) => {
+            Ok((a.clone(), outside_key(m, index, word)?))
+        }
+        (Value::Word(word), Value::OutKey { index, .. }) => {
+            Ok((outside_key(m, index, word)?, b.clone()))
+        }
+        (Value::Word(_), _) | (_, Value::Word(_)) => Err(Stop::NotBuilt(
+            "a key literal in arithmetic no position resolves, met at run",
+        )),
+        _ => Ok((a, b)),
+    }
+}
+
+/// Key literal `word` as a key of `index`, the index of a key arithmetic left outside it
+/// that the literal meets (L §2.5, §4.2).
+fn outside_key(m: &Reality, index: &str, word: &str) -> Result<Value, Stop> {
+    let key = literal_key(
+        m,
+        &Lit::Name(word.to_owned()),
+        &Domain::Index(index.to_owned()),
+    )?
+    .ok_or_else(lacks_at_run)?;
+    Ok(Value::of_key(&key))
+}
+
+/// Key literal `word` as a key of the one index that holds it: the index its position named
+/// at load, which load checked holds it (L §2.5, `LOAD-KEY`).
+fn held_key(m: &Reality, word: &str) -> Result<Value, Stop> {
+    let mut held = Vec::new();
+    for (id, ix) in m.indexes.entries() {
+        let key = KeyVal::Key {
+            index: id.clone(),
+            name: word.to_owned(),
+        };
+        if ix.pos(&key).is_some() {
+            held.push(key);
+        }
+    }
+    match held.as_slice() {
+        [key] => Ok(Value::of_key(key)),
+        // the run keeps no position's type: which of them load chose isn't seen here
+        [_, _, ..] => Err(Stop::NotBuilt(
+            "a key literal more indexes hold, moved by an offset",
+        )),
+        [] => Err(Stop::NotBuilt(
+            "a key literal in key arithmetic no index holds, met at run",
+        )),
+    }
 }
 
 /// Two values that meet, a key literal on either side resolved in the key on the other's
@@ -628,8 +922,16 @@ pub(super) fn resolve_pair(m: &Reality, lhs: Value, rhs: Value) -> Result<(Value
     Ok((lhs, rhs))
 }
 
-/// Key literal `word` as a key of the index or kind of value `other`, or a code beside a code.
+/// Key literal `word` as a key of the index or kind of value `other`, an option of its axis
+/// (L §5.5), or a code beside a code.
 fn resolve_word(m: &Reality, word: &str, other: &Value) -> Result<Value, Stop> {
+    if let Value::Key(KeyVal::Key { index, .. }) = other
+        && m.axes.contains(index)
+    {
+        let key = literal_key(m, &Lit::Name(word.to_owned()), &Domain::Axis(index.clone()))?
+            .ok_or_else(lacks_at_run)?;
+        return Ok(Value::of_key(&key));
+    }
     if let Value::Key(KeyVal::Key { index, .. }) = other {
         let key = literal_key(
             m,
@@ -648,8 +950,14 @@ fn resolve_word(m: &Reality, word: &str, other: &Value) -> Result<Value, Stop> {
     Ok(Value::Word(word.to_owned()))
 }
 
-/// The comparison `a op b` of two values, keys resolved (refcore's `compare`). L §3.1, §8.4.
-pub(super) fn compare_values(m: &Reality, op: CmpOp, a: &Value, b: &Value) -> Result<Value, Stop> {
+/// The comparison `a op b` of two values, keys resolved, as `written` (refcore's `compare`).
+/// L §3.1, §4.4, §8.4.
+pub(super) fn compare_values(
+    m: &Reality,
+    op: CmpOp,
+    (a, b): (&Value, &Value),
+    written: &Expr,
+) -> Result<Value, Stop> {
     let eq = matches!(op, CmpOp::Eq | CmpOp::Ne);
     let holds = |same: bool| Value::Bool(same == (op == CmpOp::Eq));
     if *a == Value::None || *b == Value::None {
@@ -680,6 +988,9 @@ pub(super) fn compare_values(m: &Reality, op: CmpOp, a: &Value, b: &Value) -> Re
             CmpOp::Lt | CmpOp::Le => !later,
             CmpOp::Gt | CmpOp::Ge | CmpOp::Eq | CmpOp::Ne => later,
         }));
+    }
+    if as_window(a).is_some() || as_window(b).is_some() {
+        return window_compare(m, op, (a, b), &crate::load::expr_text(written));
     }
     if let (Value::Word(x), Value::Word(y)) = (a, b) {
         return Ok(holds(x == y));
@@ -720,17 +1031,9 @@ fn field(m: &Reality, v: Value, name: &str) -> Result<Value, Stop> {
         .into_iter()
         .find(|(f, _)| f == name)
         .map(|(_, value)| value)
-        // load's types refuse it; refcore's run names the record by its id
-        .ok_or(Stop::NotBuilt("a field a record lacks, met at run"))
-}
-
-/// A key list `[a, b]` as written.
-fn list(m: &Reality, items: &[Lit]) -> Result<Value, Stop> {
-    let mut out = Vec::with_capacity(items.len());
-    for lit in items {
-        out.push(literal(m, lit, Figures::Rule)?);
-    }
-    Ok(Value::List(out))
+        .ok_or_else(|| {
+            invariant("a field a record lacks: load's types refuse it first (LOAD-FIELD)")
+        })
 }
 
 /// A literal's value (refcore's `e_num` and the literal nodes): a number with a currency is
@@ -803,10 +1106,9 @@ fn number(m: &Reality, n: &crate::syntax::Number, figures: Figures) -> Result<Va
         && let [(cur, _)] = u.terms()
     {
         let id = currency_id(m, cur).map_err(num_stop)?;
-        // load refuses a figure finer than the minor unit with its place
-        return num_money(m, &q, id)
-            .map(Value::Money)
-            .map_err(|_| Stop::NotBuilt("money finer than its minor unit, met at run"));
+        return num_money(m, &q, id).map(Value::Money).map_err(|_| {
+            invariant("money finer than its minor unit: load refuses it first (LOAD-PRECISION)")
+        });
     }
     Ok(Value::Number(Number {
         q,
@@ -824,9 +1126,11 @@ pub(super) fn typed(m: &Reality, q: &crate::num::Num, ty: &Ty) -> Result<Option<
     match ty {
         Ty::Money(cur) => {
             let id = currency_id(m, cur).map_err(num_stop)?;
-            // load refuses a figure finer than the minor unit with its place
-            let money = num_money(m, q, id)
-                .map_err(|_| Stop::NotBuilt("a figure finer than the minor unit, met at run"))?;
+            let money = num_money(m, q, id).map_err(|_| {
+                invariant(
+                    "a figure finer than the minor unit: load refuses it first (LOAD-PRECISION)",
+                )
+            })?;
             Ok(Some(Value::Money(money)))
         }
         Ty::Int => Ok(Some(Value::Number(Number {

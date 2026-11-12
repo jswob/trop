@@ -27,10 +27,11 @@
 //! the kernel corpus under both (crates/tally-cli/tests/walk_oracle.rs).
 
 use core::cmp::Ordering;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
+use super::context::Layer;
 use super::state::{Cell, Ctx, Engine, invariant};
-use crate::model::{BandInfo, DefInfo, KeyVal, Reality, Row, RuleVer, Span};
+use crate::model::{BandInfo, DefInfo, KeyVal, Reality, Row, RuleVer, Span, World};
 use crate::read::row_span;
 use crate::syntax::Stop;
 use crate::time::Day;
@@ -151,6 +152,7 @@ fn key_order(a: &KeyVal, b: &KeyVal) -> Ordering {
             .then_with(|| x.end().cmp(&y.end())),
         (KeyVal::Int(x), KeyVal::Int(y)) => x.cmp(y),
         (KeyVal::Mv(x), KeyVal::Mv(y)) => x.id.cmp(&y.id),
+        (KeyVal::Value(x), KeyVal::Value(y)) => x.text.cmp(&y.text),
         _ => kind_rank(a).cmp(&kind_rank(b)),
     }
 }
@@ -164,6 +166,7 @@ fn kind_rank(k: &KeyVal) -> u8 {
         KeyVal::Period(_) => 3,
         KeyVal::Int(_) => 4,
         KeyVal::Mv(_) => 5,
+        KeyVal::Value(_) => 6,
     }
 }
 
@@ -203,9 +206,19 @@ pub(crate) struct CellKey {
     at: Option<WalkAt>,
     /// Whether the cell is read under the ask line's `with uncertain` (L §5.18).
     unc: bool,
+    /// The pins in force, trimmed to those the def reaches (E §3.2, P §3.1).
+    layer: Layer,
+    /// The world the cell is read in (L §6.4), never trimmed: no cell is shared across worlds.
+    world: World,
 }
 
 impl CellKey {
+    /// The def of the cell, for the counted build's misses by def (P §1.1).
+    #[cfg(feature = "counters")]
+    pub(super) fn def(&self) -> &str {
+        &self.def
+    }
+
     /// The key of def `def` at `keys` in context `ctx`, its law date apart.
     pub(super) fn new(def: &str, keys: &[KeyVal], ctx: Ctx) -> CellKey {
         CellKey {
@@ -214,6 +227,8 @@ impl CellKey {
             cut: ctx.cut,
             at: ctx.at,
             unc: ctx.unc,
+            layer: ctx.layer,
+            world: ctx.world,
         }
     }
 }
@@ -229,12 +244,26 @@ impl Ord for CellKey {
 }
 
 impl CellKey {
-    /// The contexts' order: the cut, the walk point, the clause.
+    /// The contexts' order: the cut, the walk point, the clause, the pins, the world.
     fn context_order(&self, other: &CellKey) -> Ordering {
-        self.cut
+        let clocks = self
+            .cut
             .cmp(&other.cut)
             .then_with(|| walk_at_order(self.at, other.at))
-            .then_with(|| self.unc.cmp(&other.unc))
+            .then_with(|| self.unc.cmp(&other.unc));
+        clocks
+            .then_with(|| self.layer.number().cmp(&other.layer.number()))
+            .then_with(|| world_order(self.world, other.world))
+    }
+}
+
+/// Two worlds in the memo's order: the lowest layers first, the whole stack last.
+fn world_order(a: World, b: World) -> Ordering {
+    match (a, b) {
+        (World::Whole, World::Whole) => Ordering::Equal,
+        (World::Lowest(_), World::Whole) => Ordering::Less,
+        (World::Whole, World::Lowest(_)) => Ordering::Greater,
+        (World::Lowest(x), World::Lowest(y)) => x.cmp(&y),
     }
 }
 
@@ -476,6 +505,11 @@ impl Cells {
         }
     }
 
+    /// An empty memo sharing cells as this one does: a trace's own (E §10).
+    pub(super) fn emptied(&self) -> Cells {
+        Cells::new(self.memo)
+    }
+
     /// The cell kept for `key` that holds law date `law`, with its class.
     pub(super) fn get(&self, key: &CellKey, law: Option<Day>) -> Option<(&Cell, LawClass)> {
         let kept = self.kept.get(key)?;
@@ -519,6 +553,13 @@ impl Cells {
         }
         Ok(class)
     }
+
+    /// Frees the cells kept under the layers numbered in `freed`, whose scopes have ended
+    /// (P §3.5).
+    pub(super) fn free(&mut self, freed: &BTreeSet<u32>) {
+        self.kept
+            .retain(|key, _| !freed.contains(&key.layer.number()));
+    }
 }
 
 /// An open def cell's class: the law date it is computed at and the law dates its reads so
@@ -553,6 +594,7 @@ impl Engine {
     /// nothing, so its reads aren't the reading cell's; returns the mark
     /// [`Engine::reads_back`] takes (E §3.2, P §4).
     pub(crate) fn reads_apart(&mut self) -> usize {
+        self.trace_walk();
         let mark = self.reads.len();
         self.reads.push(Open::Apart);
         mark

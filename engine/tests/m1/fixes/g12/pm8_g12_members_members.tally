@@ -1,0 +1,310 @@
+model g12_members
+  tally 2
+  on 2025-03-10
+  start 2025-01-01
+  end 2025-03-31
+  note "T, issue #41, G12: bindings over movements (L §5.19 Bindings, §5.7, §8.4): a for over an event kind with members on several days and one whose day is a hole, which sorts last (#37 N1); members of a span and pairs of two spans; a where over a leg's field; an instance and the observations that fulfil it counted once, by the observation where it is booked (a covered day), by the instance where it isn't (no cover, or dated after the cut); an uncertain instance left out; a binding whose day is a hole; an attribute of a movement and of one whose day is a hole; fulfils of rows; members of a kind of things on a day, a hole day, a day before their lifespan, and never (#37 N3); instances before and after the run fulfilled by a row on a covered day, on an uncovered one, and dated after the cut; a ledger with two unexplained rows on a day, keys against their order; moves bound over a kind of things on an assumed day and on a hole day, one whose law date is a hole read through an assumed row, and one whose day is a hole read so; sums over a member whose day is a hole and whose amount is 0, and one whose amount isn't; rows of two inputs on a day, one input's name the other's and more."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit DUK: currency minor 0.01
+
+kind tagged: event certain
+  leg cash: DUK
+  attr size: num
+
+kind maybe: transfers uncertain
+
+kind zeros: transfers
+
+kind nonzeros: transfers
+
+kind person
+
+kind adult: person
+
+index sizes = [s1, s2]
+
+place out: outside lives 2024-01-01..
+
+place bank: accounts DUK lives 2024-01-01..
+
+place bank2: accounts DUK lives 2024-01-01..
+
+place bank3: accounts DUK lives 2024-01-01..
+
+input card: observed
+
+input card2: observed
+
+input fee_day: date question "When is the fee charged?"
+
+input rent_day: date
+
+input tip_day: date
+
+input late_day: date
+
+input pre_a_day: date
+
+input pre_b_day: date
+
+input post_day: date
+
+input tag_day: date
+
+input mb_day: date
+
+input check_day: date question "When is the check?"
+
+input stop_day: date
+
+input dues_day: date
+
+input flag: bool
+
+input law_day: date question "When does the law apply?"
+
+input joined[p in adult]: date
+
+input fee_amt: money DUK
+
+input zero_amt: money DUK
+
+input three_amt: money DUK
+
+input rent_amt: money DUK
+
+input tip_amt: money DUK
+
+input mb_amt: money DUK
+
+input limit: money DUK
+
+input tag_size[s in sizes]: num
+
+move fee: transfers
+  on fee_day
+  leg cash from bank to out amount fee_amt
+
+move rent: transfers
+  on rent_day
+  leg cash from bank to out amount rent_amt
+
+move tip: transfers
+  on tip_day
+  leg cash from out to bank amount tip_amt
+
+move rent2: transfers
+  on rent_day
+  leg cash from bank2 to out amount rent_amt
+
+move late: transfers
+  on late_day
+  leg cash from bank2 to out amount tip_amt
+
+move pre_a: transfers
+  on pre_a_day
+  leg cash from out to bank amount tip_amt
+
+move pre_b: transfers
+  on pre_b_day
+  leg cash from bank2 to out amount tip_amt
+
+move post: transfers
+  on post_day
+  leg cash from bank2 to out amount tip_amt
+
+move rentx[s in sizes]: transfers
+  on rent_day
+  leg cash from bank3 to out amount rent_amt
+
+move dues[p in adult on dues_day]: transfers
+  on dues_day
+  leg cash from bank3 to out amount fee_amt
+
+move dues2[p in adult on check_day]: transfers
+  on rent_day
+  leg cash from bank3 to out amount fee_amt
+
+move dues3[p in adult on dues_day]: transfers
+  on dues_day
+  at if flag then law_day else dues_day
+  leg cash from bank3 to out amount fee_amt
+
+move dues4[p in adult on if flag then check_day else dues_day]: transfers
+  on rent_day
+  leg cash from bank3 to out amount fee_amt
+
+move free: zeros
+  on fee_day
+  leg cash from bank3 to out amount zero_amt
+
+move paid: zeros
+  on rent_day
+  leg cash from bank3 to out amount mb_amt
+
+move odd: nonzeros
+  on fee_day
+  leg cash from bank3 to out amount three_amt
+
+move paid2: nonzeros
+  on rent_day
+  leg cash from bank3 to out amount mb_amt
+
+move mb: maybe
+  on mb_day
+  leg cash from bank3 to out amount mb_amt
+
+move tag[s in sizes]: tagged
+  on tag_day
+  attr size = tag_size[s]
+  leg cash from out to bank3 amount tip_amt
+
+move tag0: tagged
+  on fee_day
+  attr size = tag_size[s1]
+  leg cash from out to bank3 amount tip_amt
+
+ask members: m.cash.amount for m in transfers over 2025-01 .. 2025-03
+
+ask members_all: m.cash.amount for m in transfers over 2024-12-01 .. 2025-04-30
+
+ask res_bank: residuals bank 2025-01 law cut
+
+ask q_dues: flows(dues, 2025-02-01 .. 2025-02-28), flows(dues2, 2025-02-01 .. 2025-02-28) law cut
+
+ask q_dues3: flows(dues3, 2025-02-01 .. 2025-02-28), flows(rent, 2025-02-01 .. 2025-02-28) law cut
+
+ask q_dues4: flows(dues4, 2025-02-01 .. 2025-02-28), flows(rent, 2025-02-01 .. 2025-02-28) law cut
+
+ask sums_q: sum(m.cash.amount for m in zeros over 2025-01 .. 2025-03), sum(m.cash.amount for m in nonzeros over 2025-01 .. 2025-03)
+
+ask total: count(m in transfers over 2025-01 .. 2025-03), count(m in transfers over 2025-01-01 .. 2025-02-28)
+
+ask pairs: m.cash.amount + n.cash.amount for m in transfers over 2025-01, n in transfers over 2025-02 .. 2025-03
+
+ask big: m.cash.amount for m in transfers over 2025-01 .. 2025-03 where m.cash.amount > limit
+
+ask hole_day: count(m in transfers on check_day), count(m in maybe on check_day)
+
+ask sizes_q: m.size for m in tagged over 2025-01 .. 2025-03
+
+ask fulfils_q: o.fulfils for o in card over 2025-01 .. 2025-03
+
+ask known_day: ana in adult on joined[ana]
+
+ask late_member: cid in adult on joined[cid]
+
+ask early_member: cid in adult on joined[ana]
+
+ask hole_member: bob in adult on check_day
+
+ask never_day: ana in adult on stop_day
+
+version facts
+  cite fixture
+  governs always
+  known 2025-01-01
+  adult + [ana, bob] lives 2024-01-01..
+  adult + [cid, dan] lives 2025-02-01..
+  joined[ana] = 2025-01-10
+  joined[cid] = 2025-02-05
+  stop_day = never
+  flag = true assumed "the flag is a guess"
+  dues_day = 2025-02-15 assumed "the dues day isn't set yet"
+  rent_day = 2025-02-03
+  tip_day = 2025-01-14
+  late_day = 2025-03-20
+  pre_a_day = 2024-12-20
+  pre_b_day = 2024-12-21
+  post_day = 2025-04-05
+  tag_day = 2025-02-10
+  mb_day = 2025-02-12
+  fee_amt = 15.00
+  zero_amt = 0.00 "nothing, on a day nobody knows"
+  three_amt = 3.00
+  rent_amt = 300.00
+  tip_amt = 40.00
+  mb_amt = 7.00
+  limit = 100.00
+  tag_size[s1] = 2
+  tag_size[s2] = 3
+  opening[bank] = 1 000.00 at 2025-01-01 start
+  opening[bank2] = 1 000.00 at 2025-01-01 start
+  opening[bank3] = 1 000.00 at 2025-01-01 start
+
+version stmt0
+  cite fixture
+  governs 2024-12
+  known 2025-01-01
+  covers bank
+  card[c_pre_a] = (on: 2024-12-20, kind: transfers, leg cash from out to bank amount 40.00 DUK, fulfils: pre_a) "pre_a, before the run, on a covered day"
+  card[c_pre_b] = (on: 2024-12-21, kind: transfers, leg cash from bank2 to out amount 40.00 DUK, fulfils: pre_b) "pre_b, before the run, on a day no statement covers"
+
+version stmt_c2
+  cite fixture
+  governs 2025-01
+  known 2025-02-01
+  card2[x] = (on: 2025-01-20, kind: transfers, leg cash from out to bank2 amount 3.00 DUK) "a row of another input on the day of card's two, its name card's and more"
+
+version stmt3
+  cite fixture
+  governs 2025-04
+  known 2025-03-01
+  covers bank 2025-04-01..2025-04-30
+  card[c_post] = (on: 2025-04-05, kind: transfers, leg cash from bank2 to bank amount 40.00 DUK, fulfils: post) "post, after the run and the cut, into a covered place"
+
+version stmt
+  cite fixture
+  governs 2025-01
+  known 2025-02-01
+  covers bank
+  card[c_tip] = (on: 2025-01-14, kind: transfers, leg cash from out to bank amount 40.00 DUK, fulfils: tip) "the tip, on a covered day"
+  card[z1] = (on: 2025-01-20, kind: transfers, leg cash from out to bank amount 1.00 DUK) "unexplained, listed first"
+  card[a1] = (on: 2025-01-20, kind: transfers, leg cash from out to bank amount 2.00 DUK) "unexplained, listed second"
+
+version stmt2
+  cite fixture
+  governs 2025-02..2025-03
+  known 2025-03-01
+  covers bank 2025-03-01..2025-03-31
+  card[c_rent2] = (on: 2025-02-03, kind: transfers, leg cash from bank2 to out amount 300.00 DUK, fulfils: rent2) "rent2, on a day no statement covers"
+  card[c_rx] = (on: 2025-02-03, kind: transfers, leg cash from bank3 to out amount 300.00 DUK, fulfils: rentx[s2]) "the second of an indexed move"
+  card[c_late] = (on: 2025-03-20, kind: transfers, leg cash from bank2 to bank amount 40.00 DUK, fulfils: late) "late, dated after the cut, into a covered place"
+
+ask zm1: explain fee
+
+ask zm2: explain rent
+
+ask zm3: explain tip
+
+ask zm4: explain rent2
+
+ask zm5: explain late
+
+ask zm6: explain pre_a
+
+ask zm7: explain pre_b
+
+ask zm8: explain post
+
+ask zm9: explain rentx[s1]
+
+ask zm10: explain rentx[s2]
+
+ask zm11: explain free
+
+ask zm12: explain paid
+
+ask zm13: explain odd
+
+ask zm14: explain paid2
+
+ask zm15: explain mb
+
+ask zm16: explain tag[s1]
+
+ask zm17: explain tag[s2]
+
+ask zm18: explain tag0

@@ -1,0 +1,9 @@
+part f_period
+  tally 2
+
+move dm_period: transfers
+  on start_of(fee)
+  reads konto
+  leg cash from konto to world amount min(fee, bal(konto))
+
+ask f_period: bal(konto, 2026-12-31)

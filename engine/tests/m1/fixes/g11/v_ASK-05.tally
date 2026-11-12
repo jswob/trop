@@ -1,0 +1,64 @@
+model ask05
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+  note "Probe ASK-05: a net pay and its causes."
+
+source contract "Ania's contract (made-up): gross pay for May 2025"
+
+source probe_card "Probe card ASK-05 (made-up story and rules)"
+
+unit DUK: currency minor 0.01
+
+input gross: money DUK
+
+input health_rate: num
+
+input pension_rate: num
+
+input tax_rate: num
+
+def health: money DUK at reader
+  rule base v rule_2 = round(health_rate * (gross - pension), minor(DUK), half-up)
+
+def net_pay: money DUK at reader
+  note "gross pay less the three deductions"
+  rule base = gross - pension - health - tax_advance
+
+def pension: money DUK at reader
+  rule base v rule_1 = round(pension_rate * gross, minor(DUK), half-up)
+
+def tax_advance: money DUK at reader
+  rule base v rule_3 = round(tax_rate * (gross - pension), 1, half-up)
+
+ask q_causes: explain net_pay law 2026-10-25
+
+ask q_net: net_pay law 2026-10-25
+
+version contract_may
+  cite contract
+  governs always
+  known 2026-10-25
+  gross = 8000.00 "gross pay for May 2025"
+
+version rule_1
+  cite probe_card
+  governs always
+  known 2026-10-25
+  note "rule 1: pension contribution, 9.76 % of gross, rounded half up to 0.01"
+  pension_rate = 0.0976 "rule 1"
+
+version rule_2
+  cite probe_card
+  governs always
+  known 2026-10-25
+  note "rule 2: health contribution, 9 % of gross minus the pension contribution, rounded half up to 0.01"
+  health_rate = 0.09 "rule 2"
+
+version rule_3
+  cite probe_card
+  governs always
+  known 2026-10-25
+  note "rule 3: tax advance, 12 % of gross minus the pension contribution, rounded half up to whole DUK"
+  tax_rate = 0.12 "rule 3"

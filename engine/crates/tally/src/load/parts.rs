@@ -395,9 +395,13 @@ fn owns_rows(m: &Reality, kept: &[String], files: &Files) -> Result<(), Stop> {
             .map(|pat| match pat {
                 Pat::Key(KeyVal::Thing(name) | KeyVal::Key { name, .. }) => name.clone(),
                 // refcore's key value with no name prints as Python's `None`.
-                Pat::Key(KeyVal::Day(_) | KeyVal::Period(_) | KeyVal::Int(_) | KeyVal::Mv(_)) => {
-                    "None".to_owned()
-                }
+                Pat::Key(
+                    KeyVal::Day(_)
+                    | KeyVal::Period(_)
+                    | KeyVal::Int(_)
+                    | KeyVal::Mv(_)
+                    | KeyVal::Value(_),
+                ) => "None".to_owned(),
                 Pat::Star | Pat::Range(..) => "*".to_owned(),
             })
             .collect();

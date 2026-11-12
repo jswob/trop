@@ -1,0 +1,6 @@
+part k10
+  tally 2
+
+def dk: key qs = q2
+
+ask k10: explain rate[dk - 1]

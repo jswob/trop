@@ -1,0 +1,581 @@
+model g10_ledger
+  tally 2
+  on 2026-03-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G10: stated readings and the residual ledger (L §5.19, E §6.1–§6.3): konto padded from buffer up, by nothing and down, a later version restating the middle reading, read before and after it is known; buffer padded from konto at the instant of konto's last pad, so the readings' rank on that day decides what each sees; save anchored; matched lines, a certain instance observed short, uncertain ones partly and fully fulfilled, expected but missing ones, twelve of one move on one day ordered by the movement order, an observation paid a month early, one that fulfils nothing, two whose links are refused, one beside an instance of its move that exists, decisions on covered days in the span and after it; on k4, instances whose day is a hole, matched and missing; on k5, two moves whose amounts are holes, their questions sorting against their names."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+kind maybe: transfers uncertain
+
+index month = month 2026-01..2026-02
+
+index tips = [t01, t02, t03, t04, t05, t06, t07, t08, t09, t10, t11, t12]
+
+index ab = [a, b]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place buffer: accounts PLN lives 2026-01-01..
+
+place save: accounts PLN lives 2026-01-01..
+
+place k4: accounts PLN lives 2026-01-01..
+
+place k5: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input rent_amt: money PLN
+
+input rent_dom: int
+
+input fee_day: date
+
+input fee_amt: money PLN
+
+input part_day: date
+
+input part_amt: money PLN
+
+input prom_day: date
+
+input prom_amt: money PLN
+
+input prom2_day: date
+
+input prom2_amt: money PLN
+
+input flag: bool
+
+input flag_day: date
+
+input flag_amt: money PLN
+
+input flag2[m in month]: bool
+
+input flag2_dom: int
+
+input tip_day: date
+
+input tip_amt: money PLN
+
+input sweep_dom: int
+
+input small: money PLN
+
+input big: money PLN
+
+input odd_day[k in ab]: date question "When does the odd payment go out?"
+
+input odd_amt: money PLN
+
+input odd2_day: date question "When does the second odd payment go out?"
+
+input odd2_amt: money PLN
+
+input odd0_day: date question "When does nothing go out?"
+
+input hz_day: date
+
+input hz_amt: money PLN question "Aa: how much is the first repair?"
+
+input ha_day: date
+
+input ha_amt: money PLN question "Zz: how much is the second repair?"
+
+move rent[m in month]: transfers
+  on day_of(m, rent_dom)
+  leg cash from konto to shop amount rent_amt
+
+move fee: transfers
+  on fee_day
+  leg cash from konto to shop amount fee_amt
+
+move short: transfers
+  on part_day
+  leg cash from konto to shop amount part_amt
+
+move promise: maybe
+  on prom_day
+  leg cash from world to konto amount prom_amt
+
+move promise2: maybe
+  on prom2_day
+  leg cash from world to konto amount prom2_amt
+
+move flagged: transfers
+  on flag_day
+  when flag
+  leg cash from konto to shop amount flag_amt
+
+move flagged2[m in month]: transfers
+  on day_of(m, flag2_dom)
+  when flag2[m]
+  leg cash from konto to shop amount flag_amt
+
+move tip[t in tips]: transfers
+  on tip_day
+  leg cash from konto to shop amount tip_amt
+
+move sweep[m in month]: transfers
+  on day_of(m, sweep_dom)
+  reads konto
+  leg cash from konto to save amount if bal(konto) > 0 then small else big
+
+move odd[k in ab]: transfers
+  on odd_day[k]
+  leg cash from k4 to shop amount odd_amt
+
+move odd2: transfers
+  on odd2_day
+  leg cash from k4 to shop amount odd2_amt
+
+move odd0: transfers
+  on odd0_day
+  leg cash from k4 to shop amount 0
+
+move hz: transfers
+  on hz_day
+  leg cash from k5 to shop amount hz_amt
+
+move ha: transfers
+  on ha_day
+  leg cash from k5 to shop amount ha_amt
+
+ask q_res: residuals konto 2026-01 law cut
+
+ask q_res_feb: residuals konto 2026-02 law cut
+
+ask q_res4: residuals k4 2026-01 law cut
+
+ask q_res5: residuals k5 2026-01 law cut
+
+ask q_bal: bal(konto, d), bal(buffer, d), bal(save, d) for d in [2026-01-09, 2026-01-20, 2026-01-28] law cut
+
+ask q_buf: bal(buffer, 2026-01-09) law cut
+
+ask q_bal_early: bal(konto, 2026-01-20), bal(buffer, 2026-01-20) law cut as known 2026-02-10
+
+ask q_res_buf: residuals buffer 2026-01 law cut
+
+ask q_res_save: residuals save 2026-01 law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  rent_amt = 600.00
+  rent_dom = 5 "rent on the 5th"
+  fee_day = 2026-01-12 "a fee nobody paid"
+  fee_amt = 5.00
+  part_day = 2026-01-14 "a certain payment observed short"
+  part_amt = 100.00
+  prom_day = 2026-01-22 "an uncertain one, partly fulfilled"
+  prom_amt = 100.00
+  prom2_day = 2026-01-23 "an uncertain one, fully fulfilled"
+  prom2_amt = 50.00
+  flag = false "flagged doesn't exist"
+  flag_day = 2026-01-29
+  flag_amt = 8.00
+  flag2[2026-01] = false "January's doesn't exist"
+  flag2[2026-02] = true "February's does"
+  flag2_dom = 27
+  tip_day = 2026-01-08 "twelve tips on one day"
+  tip_amt = 1.00
+  sweep_dom = 25 "a decision on the 25th"
+  small = 10.00
+  big = 100.00
+  odd_day[b] = 2026-01-25 "odd[a]'s day is a hole"
+  odd_amt = 7.00
+  odd2_amt = 4.00
+  hz_day = 2026-01-10
+  ha_day = 2026-01-12
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 3000 at 2026-01-01 start
+  opening[buffer] = 1000 at 2026-01-01 start
+  opening[save] = 0 at 2026-01-01 start
+  opening[k4] = 500 at 2026-01-01 start
+  opening[k5] = 500 at 2026-01-01 start
+
+version bank_k
+  cite fixture
+  governs 2026-01
+  known 2026-02-05
+  covers konto
+  pad konto from buffer
+  pad buffer from konto
+  anchor save
+  bank[k_rent] = (on: 2026-01-05, kind: transfers, leg cash from konto to shop amount 600.00 PLN, fulfils: rent[2026-01]) "the rent"
+  bank[k_part] = (on: 2026-01-14, kind: transfers, leg cash from konto to shop amount 90.00 PLN, fulfils: short) "ten short"
+  bank[k_prom] = (on: 2026-01-22, kind: transfers, leg cash from world to konto amount 60.00 PLN, fulfils: promise) "short of the promise"
+  bank[k_prom2] = (on: 2026-01-23, kind: transfers, leg cash from world to konto amount 50.00 PLN, fulfils: promise2) "all of it"
+  bank[k_int] = (on: 2026-01-27, kind: transfers, leg cash from world to konto amount 3.00 PLN) "interest nobody planned"
+  bank[k_early] = (on: 2026-01-30, kind: transfers, leg cash from konto to shop amount 600.00 PLN, fulfils: rent[2026-02]) "February's rent, paid early"
+  bank[k_flag] = (on: 2026-01-31, kind: transfers, leg cash from konto to shop amount 8.00 PLN, fulfils: flagged) "names flagged, which doesn't exist"
+  bank[k_flag2] = (on: 2026-01-31, kind: transfers, leg cash from konto to shop amount 8.00 PLN, fulfils: flagged2[2026-01]) "names January's flagged2, which doesn't exist while February's does"
+  stated[konto] = 2430.00 at 2026-01-09 end "thirty above the booked balance"
+  stated[konto] = 2340.00 at 2026-01-20 end "as booked"
+  stated[konto] = 2433.00 at 2026-01-28 end "twenty below"
+  stated[buffer] = 990.00 at 2026-01-28 end "the buffer counted at the instant of konto's last statement"
+  stated[save] = 15.00 at 2026-01-28 end "save counted"
+
+version bank_kfix
+  cite fixture
+  governs 2026-01
+  known 2026-02-20
+  pad konto from buffer
+  replace stated[konto] = 2345.00 at 2026-01-20 end "the statement corrected: five above"
+
+version bank_k2
+  cite fixture
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+
+version bank_4
+  cite fixture
+  governs 2026-01
+  known 2026-02-05
+  covers k4
+  bank[o_a] = (on: 2026-01-25, kind: transfers, leg cash from k4 to shop amount 7.00 PLN, fulfils: odd[a]) "the undated one, paid"
+  bank[o_b] = (on: 2026-01-25, kind: transfers, leg cash from k4 to shop amount 7.00 PLN, fulfils: odd[b]) "the dated one, paid"
+
+version bank_5
+  cite fixture
+  governs 2026-01
+  known 2026-02-05
+  covers k5
+
+ask zx1: explain low(konto, 2025-12-01 .. 2026-01-25)
+
+ask zx2: explain low(konto, 2025-12-31 .. 2026-01-27)
+
+ask zx3: explain low(konto, 2026-01-01 .. 2026-01-27)
+
+ask zx4: explain low(konto, 2026-01-05 .. 2026-01-28)
+
+ask zx5: explain low(konto, 2026-01-08 .. 2026-01-28)
+
+ask zx6: explain low(konto, 2026-01-09 .. 2026-01-29)
+
+ask zx7: explain low(konto, 2026-01-10 .. 2026-01-29)
+
+ask zx8: explain low(konto, 2026-01-12 .. 2026-01-30)
+
+ask zx9: explain low(konto, 2026-01-14 .. 2026-01-30)
+
+ask zx10: explain low(konto, 2026-01-20 .. 2026-01-31)
+
+ask zx11: explain low(konto, 2026-01-22 .. 2026-01-31)
+
+ask zx12: explain low(konto, 2026-01-23 .. 2026-02-05)
+
+ask zx13: explain low(konto, 2026-01-25 .. 2026-02-05)
+
+ask zx14: explain low(konto, 2026-01-27 .. 2026-02-10)
+
+ask zx15: explain low(konto, 2026-01-28 .. 2026-02-10)
+
+ask zx16: explain low(konto, 2026-01-29 .. 2026-02-20)
+
+ask zx17: explain low(konto, 2026-01-30 .. 2026-02-20)
+
+ask zx18: explain low(konto, 2026-01-31 .. 2026-03-02)
+
+ask zx19: explain low(konto, 2026-02-05 .. 2026-03-02)
+
+ask zx20: explain low(konto, 2026-02-10 .. 2026-03-15)
+
+ask zx21: explain low(konto, 2026-02-20 .. 2026-03-15)
+
+ask zx22: explain low(konto, 2026-03-02 .. 2026-03-31)
+
+ask zx23: explain low(konto, 2026-03-15 .. 2026-03-31)
+
+ask zx25: explain low(buffer, 2025-12-01 .. 2026-01-25)
+
+ask zx26: explain low(buffer, 2025-12-31 .. 2026-01-27)
+
+ask zx27: explain low(buffer, 2026-01-01 .. 2026-01-27)
+
+ask zx28: explain low(buffer, 2026-01-05 .. 2026-01-28)
+
+ask zx29: explain low(buffer, 2026-01-08 .. 2026-01-28)
+
+ask zx30: explain low(buffer, 2026-01-09 .. 2026-01-29)
+
+ask zx31: explain low(buffer, 2026-01-10 .. 2026-01-29)
+
+ask zx32: explain low(buffer, 2026-01-12 .. 2026-01-30)
+
+ask zx33: explain low(buffer, 2026-01-14 .. 2026-01-30)
+
+ask zx34: explain low(buffer, 2026-01-20 .. 2026-01-31)
+
+ask zx35: explain low(buffer, 2026-01-22 .. 2026-01-31)
+
+ask zx36: explain low(buffer, 2026-01-23 .. 2026-02-05)
+
+ask zx37: explain low(buffer, 2026-01-25 .. 2026-02-05)
+
+ask zx38: explain low(buffer, 2026-01-27 .. 2026-02-10)
+
+ask zx39: explain low(buffer, 2026-01-28 .. 2026-02-10)
+
+ask zx40: explain low(buffer, 2026-01-29 .. 2026-02-20)
+
+ask zx41: explain low(buffer, 2026-01-30 .. 2026-02-20)
+
+ask zx42: explain low(buffer, 2026-01-31 .. 2026-03-02)
+
+ask zx43: explain low(buffer, 2026-02-05 .. 2026-03-02)
+
+ask zx44: explain low(buffer, 2026-02-10 .. 2026-03-15)
+
+ask zx45: explain low(buffer, 2026-02-20 .. 2026-03-15)
+
+ask zx46: explain low(buffer, 2026-03-02 .. 2026-03-31)
+
+ask zx47: explain low(buffer, 2026-03-15 .. 2026-03-31)
+
+ask zx49: explain low(save, 2025-12-01 .. 2026-01-25)
+
+ask zx50: explain low(save, 2025-12-31 .. 2026-01-27)
+
+ask zx51: explain low(save, 2026-01-01 .. 2026-01-27)
+
+ask zx52: explain low(save, 2026-01-05 .. 2026-01-28)
+
+ask zx53: explain low(save, 2026-01-08 .. 2026-01-28)
+
+ask zx54: explain low(save, 2026-01-09 .. 2026-01-29)
+
+ask zx55: explain low(save, 2026-01-10 .. 2026-01-29)
+
+ask zx56: explain low(save, 2026-01-12 .. 2026-01-30)
+
+ask zx57: explain low(save, 2026-01-14 .. 2026-01-30)
+
+ask zx58: explain low(save, 2026-01-20 .. 2026-01-31)
+
+ask zx59: explain low(save, 2026-01-22 .. 2026-01-31)
+
+ask zx60: explain low(save, 2026-01-23 .. 2026-02-05)
+
+ask zx61: explain low(save, 2026-01-25 .. 2026-02-05)
+
+ask zx62: explain low(save, 2026-01-27 .. 2026-02-10)
+
+ask zx63: explain low(save, 2026-01-28 .. 2026-02-10)
+
+ask zx64: explain low(save, 2026-01-29 .. 2026-02-20)
+
+ask zx65: explain low(save, 2026-01-30 .. 2026-02-20)
+
+ask zx66: explain low(save, 2026-01-31 .. 2026-03-02)
+
+ask zx67: explain low(save, 2026-02-05 .. 2026-03-02)
+
+ask zx68: explain low(save, 2026-02-10 .. 2026-03-15)
+
+ask zx69: explain low(save, 2026-02-20 .. 2026-03-15)
+
+ask zx70: explain low(save, 2026-03-02 .. 2026-03-31)
+
+ask zx71: explain low(save, 2026-03-15 .. 2026-03-31)
+
+ask zx73: explain low(k4, 2025-12-01 .. 2026-01-25)
+
+ask zx74: explain low(k4, 2025-12-31 .. 2026-01-27)
+
+ask zx75: explain low(k4, 2026-01-01 .. 2026-01-27)
+
+ask zx76: explain low(k4, 2026-01-05 .. 2026-01-28)
+
+ask zx77: explain low(k4, 2026-01-08 .. 2026-01-28)
+
+ask zx78: explain low(k4, 2026-01-09 .. 2026-01-29)
+
+ask zx79: explain low(k4, 2026-01-10 .. 2026-01-29)
+
+ask zx80: explain low(k4, 2026-01-12 .. 2026-01-30)
+
+ask zx81: explain low(k4, 2026-01-14 .. 2026-01-30)
+
+ask zx82: explain low(k4, 2026-01-20 .. 2026-01-31)
+
+ask zx83: explain low(k4, 2026-01-22 .. 2026-01-31)
+
+ask zx84: explain low(k4, 2026-01-23 .. 2026-02-05)
+
+ask zx85: explain low(k4, 2026-01-25 .. 2026-02-05)
+
+ask zx86: explain low(k4, 2026-01-27 .. 2026-02-10)
+
+ask zx87: explain low(k4, 2026-01-28 .. 2026-02-10)
+
+ask zx88: explain low(k4, 2026-01-29 .. 2026-02-20)
+
+ask zx89: explain low(k4, 2026-01-30 .. 2026-02-20)
+
+ask zx90: explain low(k4, 2026-01-31 .. 2026-03-02)
+
+ask zx91: explain low(k4, 2026-02-05 .. 2026-03-02)
+
+ask zx92: explain low(k4, 2026-02-10 .. 2026-03-15)
+
+ask zx93: explain low(k4, 2026-02-20 .. 2026-03-15)
+
+ask zx94: explain low(k4, 2026-03-02 .. 2026-03-31)
+
+ask zx95: explain low(k4, 2026-03-15 .. 2026-03-31)
+
+ask zx97: explain low(k5, 2025-12-01 .. 2026-01-25)
+
+ask zx98: explain low(k5, 2025-12-31 .. 2026-01-27)
+
+ask zx99: explain low(k5, 2026-01-01 .. 2026-01-27)
+
+ask zx100: explain low(k5, 2026-01-05 .. 2026-01-28)
+
+ask zx101: explain low(k5, 2026-01-08 .. 2026-01-28)
+
+ask zx102: explain low(k5, 2026-01-09 .. 2026-01-29)
+
+ask zx103: explain low(k5, 2026-01-10 .. 2026-01-29)
+
+ask zx104: explain low(k5, 2026-01-12 .. 2026-01-30)
+
+ask zx105: explain low(k5, 2026-01-14 .. 2026-01-30)
+
+ask zx106: explain low(k5, 2026-01-20 .. 2026-01-31)
+
+ask zx107: explain low(k5, 2026-01-22 .. 2026-01-31)
+
+ask zx108: explain low(k5, 2026-01-23 .. 2026-02-05)
+
+ask zx109: explain low(k5, 2026-01-25 .. 2026-02-05)
+
+ask zx110: explain low(k5, 2026-01-27 .. 2026-02-10)
+
+ask zx111: explain low(k5, 2026-01-28 .. 2026-02-10)
+
+ask zx112: explain low(k5, 2026-01-29 .. 2026-02-20)
+
+ask zx113: explain low(k5, 2026-01-30 .. 2026-02-20)
+
+ask zx114: explain low(k5, 2026-01-31 .. 2026-03-02)
+
+ask zx115: explain low(k5, 2026-02-05 .. 2026-03-02)
+
+ask zx116: explain low(k5, 2026-02-10 .. 2026-03-15)
+
+ask zx117: explain low(k5, 2026-02-20 .. 2026-03-15)
+
+ask zx118: explain low(k5, 2026-03-02 .. 2026-03-31)
+
+ask zx119: explain low(k5, 2026-03-15 .. 2026-03-31)
+
+ask zx121: explain low(shop, 2025-12-01 .. 2026-01-25)
+
+ask zx122: explain low(shop, 2025-12-31 .. 2026-01-27)
+
+ask zx123: explain low(shop, 2026-01-01 .. 2026-01-27)
+
+ask zx124: explain low(shop, 2026-01-05 .. 2026-01-28)
+
+ask zx125: explain low(shop, 2026-01-08 .. 2026-01-28)
+
+ask zx126: explain low(shop, 2026-01-09 .. 2026-01-29)
+
+ask zx127: explain low(shop, 2026-01-10 .. 2026-01-29)
+
+ask zx128: explain low(shop, 2026-01-12 .. 2026-01-30)
+
+ask zx129: explain low(shop, 2026-01-14 .. 2026-01-30)
+
+ask zx130: explain low(shop, 2026-01-20 .. 2026-01-31)
+
+ask zx131: explain low(shop, 2026-01-22 .. 2026-01-31)
+
+ask zx132: explain low(shop, 2026-01-23 .. 2026-02-05)
+
+ask zx133: explain low(shop, 2026-01-25 .. 2026-02-05)
+
+ask zx134: explain low(shop, 2026-01-27 .. 2026-02-10)
+
+ask zx135: explain low(shop, 2026-01-28 .. 2026-02-10)
+
+ask zx136: explain low(shop, 2026-01-29 .. 2026-02-20)
+
+ask zx137: explain low(shop, 2026-01-30 .. 2026-02-20)
+
+ask zx138: explain low(shop, 2026-01-31 .. 2026-03-02)
+
+ask zx139: explain low(shop, 2026-02-05 .. 2026-03-02)
+
+ask zx140: explain low(shop, 2026-02-10 .. 2026-03-15)
+
+ask zx141: explain low(shop, 2026-02-20 .. 2026-03-15)
+
+ask zx142: explain low(shop, 2026-03-02 .. 2026-03-31)
+
+ask zx143: explain low(shop, 2026-03-15 .. 2026-03-31)
+
+ask zx145: explain low(world, 2025-12-01 .. 2026-01-25)
+
+ask zx146: explain low(world, 2025-12-31 .. 2026-01-27)
+
+ask zx147: explain low(world, 2026-01-01 .. 2026-01-27)
+
+ask zx148: explain low(world, 2026-01-05 .. 2026-01-28)
+
+ask zx149: explain low(world, 2026-01-08 .. 2026-01-28)
+
+ask zx150: explain low(world, 2026-01-09 .. 2026-01-29)
+
+ask zx151: explain low(world, 2026-01-10 .. 2026-01-29)
+
+ask zx152: explain low(world, 2026-01-12 .. 2026-01-30)
+
+ask zx153: explain low(world, 2026-01-14 .. 2026-01-30)
+
+ask zx154: explain low(world, 2026-01-20 .. 2026-01-31)
+
+ask zx155: explain low(world, 2026-01-22 .. 2026-01-31)
+
+ask zx156: explain low(world, 2026-01-23 .. 2026-02-05)
+
+ask zx157: explain low(world, 2026-01-25 .. 2026-02-05)
+
+ask zx158: explain low(world, 2026-01-27 .. 2026-02-10)
+
+ask zx159: explain low(world, 2026-01-28 .. 2026-02-10)
+
+ask zx160: explain low(world, 2026-01-29 .. 2026-02-20)
+
+ask zx161: explain low(world, 2026-01-30 .. 2026-02-20)
+
+ask zx162: explain low(world, 2026-01-31 .. 2026-03-02)
+
+ask zx163: explain low(world, 2026-02-05 .. 2026-03-02)
+
+ask zx164: explain low(world, 2026-02-10 .. 2026-03-15)
+
+ask zx165: explain low(world, 2026-02-20 .. 2026-03-15)
+
+ask zx166: explain low(world, 2026-03-02 .. 2026-03-31)
+
+ask zx167: explain low(world, 2026-03-15 .. 2026-03-31)

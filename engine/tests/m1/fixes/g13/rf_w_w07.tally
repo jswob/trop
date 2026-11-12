@@ -1,0 +1,4 @@
+part w07
+  tally 2
+
+ask w07: last_business(w, 1)

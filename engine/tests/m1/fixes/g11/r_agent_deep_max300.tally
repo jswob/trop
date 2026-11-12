@@ -1,0 +1,27 @@
+model d2
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+index ms = int 1..300
+
+input inc: num
+
+def acc[k in ms]: num
+  rule first beats next = inc when pos(k) == 1
+  rule next = acc[k - 1] + inc
+
+def h: num = max(acc[290], acc[300])
+
+ask v: h
+
+ask e_h: explain h
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  inc = 1

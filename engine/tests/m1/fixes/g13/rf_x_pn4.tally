@@ -1,0 +1,4 @@
+part pn4
+  tally 2
+
+ask pn4: count(x in places on d2) as if {d2 = window(2026-03-03, 2026-03-20)}

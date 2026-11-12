@@ -1,0 +1,11 @@
+scenario d_field over sites
+  tally 2
+  from 2026-01-01
+
+version dv_field
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  replace fee = sum(m.zz for m in transfers over sites.d0..sites.d0) "x"
+
+ask d_field: fee in d_field

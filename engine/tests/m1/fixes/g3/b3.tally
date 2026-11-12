@@ -1,0 +1,83 @@
+model fx
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+index ks = 1..4
+
+kind persons
+
+input base: int
+
+input lim: int
+
+input h[k in ks]: int
+
+input w[k in ks]: int
+
+input born[p in persons]: date
+
+input rank[p in persons]: int
+
+input sub[p in persons]: int
+
+input gate[p in persons]: int
+
+ask l1: last(k in ks where k == 4 or base / (k - 3) > 0)
+
+ask l2: first(k in ks where h[k] > 0)
+
+ask l3: first(k in ks where w[k] > 0)
+
+ask l4: last(k in ks where h[k] > 0)
+
+ask l5: first(k in ks where w[k] > lim)
+
+ask l6: first(k in ks where h[k] > lim)
+
+ask l7: count(k in ks where h[k] > 0)
+
+ask t1: first(p in persons on 2026-02-01 where p == bob or base / gate[p] > 0) ties by born[p]
+
+ask t2: last(p in persons on 2026-02-01 where p == ana or base / gate[p] > 0) ties by born[p]
+
+ask t3: first(p in persons on 2026-02-01) ties by (rank[p], sub[p])
+
+ask t4: last(p in persons on 2026-02-01) ties by (rank[p], sub[p])
+
+ask t5: first(p in persons on 2026-02-01 where rank[p] > 1) ties by (rank[p], sub[p])
+
+ask t6: argmax(rank[p] for p in persons on 2026-02-01) ties by (born[p], sub[p])
+
+ask t7: first(p in persons on 2026-02-01 where h[1] > 0) ties by born[p]
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ana] lives 2026-01-01..
+  persons + [bob] lives 2026-01-01..
+  persons + [cid] lives 2026-01-01..
+  base = 6 "c"
+  lim = 9 "c"
+  h[2] = 1 "c"
+  h[3] = 1 "c"
+  h[4] = 1 "c"
+  w[1] = 1 "c"
+  w[2] = 1 "c"
+  w[3] = 1 "c"
+  w[4] = 1 "c"
+  born[ana] = 2000-01-01 "x"
+  born[bob] = 1990-01-01 "x"
+  born[cid] = 1995-01-01 "x"
+  rank[ana] = 1 "x"
+  rank[bob] = 2 "x"
+  rank[cid] = 2 "x"
+  sub[bob] = 5 "x"
+  sub[cid] = 4 "x"
+  gate[ana] = 0 "x"
+  gate[bob] = 0 "x"
+  gate[cid] = 0 "x"

@@ -1,0 +1,4 @@
+part p_day_of
+  tally 2
+
+ask p_day_of: day_of((2026), 12-31)

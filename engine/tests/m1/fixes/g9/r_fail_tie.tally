@@ -1,0 +1,62 @@
+model p
+  tally 2
+  on 2026-04-15
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented probe for F5"
+
+unit DUK: currency minor 0.01
+
+index month = month 2026-01..2026-12
+
+place konto: accounts DUK lives 2026-01-01..
+
+input prio: int
+
+input amt: money DUK
+
+input dec_day: date
+
+place world: outside lives 2026-01-01..
+
+input pay: money DUK
+
+input rent: money DUK
+
+input off: int
+
+move salary[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount pay
+
+move rent_pay[m in month]: transfers
+  on add_days(start_of(m), off)
+  at start_of(m)
+  leg cash from konto to world amount rent
+
+move pick[k in month]: transfers
+  on dec_day
+  at dec_day
+  reads konto
+  ties by prio
+  leg cash from world to konto amount amt + 0 * bal(konto, dec_day start)
+
+ask f_long_short: low(konto, 2026-06-01 .. 2026-12-31) from 2026-06-01, bal(konto, 2026-07-31) from 2026-06-01
+
+ask f_short_long: bal(konto, 2026-07-31) from 2026-06-01, low(konto, 2026-06-01 .. 2026-12-31) from 2026-06-01
+
+ask f_short: bal(konto, 2026-07-31) from 2026-06-01
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 1000.00
+  rent = 900.00
+  off = 9
+  opening[konto] = 500.00 at 2026-01-01 start
+  prio = 1
+  amt = 5.00
+  dec_day = 2026-08-20

@@ -1,0 +1,51 @@
+model nb2
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G14 probe: G9 fix review NB2, a walk paused on a day by a deep read, resumed by a read before that day"
+
+source card "card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind pays: event certain
+  leg cash: PLN
+
+index ks = 0 .. 50
+
+place konto: claims PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input d0: date
+
+input dd: date
+
+input cap: money PLN
+
+def rec[k in ks]: money PLN = if pos(k) == 1 then bal(konto, d0) else rec[k - 1]
+
+def deep[k in ks]: money PLN = if pos(k) == 1 then bal(konto, dd) else deep[k - 1]
+
+move dec: pays
+  on dd
+  reads konto
+  leg cash from konto to world amount rec[50] + cap
+
+ask a_late: bal(konto, dd)
+
+ask b_early: bal(konto, d0)
+
+ask c_rec: rec[50]
+
+ask z_deep: deep[30]
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  d0 = 2026-04-01 "card"
+  dd = 2026-05-02 "card"
+  cap = 10.00 PLN "card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "card"

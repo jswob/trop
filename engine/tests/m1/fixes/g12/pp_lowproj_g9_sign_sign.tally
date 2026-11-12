@@ -1,0 +1,835 @@
+model g9_sign
+  tally 2
+  on 2026-03-25
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G9: booking a leg and the sign rule (L §5.10, §5.14, E §4.2 steps 4-5): claims, debts and a holding broken by a first-batch plan and by a decision's legs, each refused (RUN-PLACE) beside a twin that stays at 0 or nets to 0 in its batch; a claim anchored below zero at a close, which refcore and the engine leave at -5.00 unrefused (S keeps refcore's bytes; the spec round decides, #46), beside a twin anchored at 0; a leg out of a place outside its lifespan (RUN-LIFESPAN) beside a leg of 0 that books nothing; cash below zero in two stretches (WARN-NEGATIVE twice); a hole amount and a hole day, each on places of their own."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+unit etf_unit "a fund unit"
+
+index month = month 2026-01..2026-03
+
+place konto: accounts PLN lives 2026-01-01..
+
+place wallet: cash PLN lives 2026-01-01..
+
+place lent: claims PLN lives 2026-01-01..
+
+place lent2: claims PLN lives 2026-01-01..
+
+place lent3: claims PLN lives 2026-01-01..
+
+place lent4: claims PLN lives 2026-01-01..
+
+place owed: debts PLN lives 2026-01-01..
+
+place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+
+place fund2: holdings etf_unit priced fund_price lives 2026-01-01..
+
+place gone: accounts PLN lives 2026-01-01..2026-02-27
+
+place gone2: accounts PLN lives 2026-01-01..2026-02-27
+
+place box_h: accounts PLN lives 2026-01-01..
+
+place box_d: accounts PLN lives 2026-01-01..
+
+place market: outside lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input fund_price[m in month]: num PLN/etf_unit
+
+input back_amt[m in month]: money PLN
+
+input lend_amt[m in month]: money PLN
+
+input swing_amt[m in month]: money PLN
+
+input gone2_amt[m in month]: money PLN
+
+input over_amt: money PLN
+
+input payoff_amt[m in month]: money PLN
+
+input sell_units[m in month]: num etf_unit
+
+input spend_amt[m in month]: money PLN
+
+input refill_amt: money PLN
+
+input gone_amt[m in month]: money PLN
+
+input hole_amt: money PLN question "How much came in?"
+
+input hole_day: date question "When does it come?"
+
+input small_amt: money PLN
+
+input mystery_day: date
+
+input first_day: date
+
+input pay_dom: int
+
+input dec_dom: int
+
+input spend_dom: int
+
+input refill_dom: int
+
+move back[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from lent to konto amount back_amt[m]
+
+move swing_out[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from lent2 to konto amount swing_amt[m]
+
+move swing_in[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from konto to lent2 amount lend_amt[m]
+
+move repay[m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads lent3
+  leg cash from lent3 to world amount if bal(lent3) > small_amt then bal(lent3) + over_amt else bal(lent3)
+
+move payoff[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from konto to owed amount payoff_amt[m]
+
+move sell[m in month]: etf_sells
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg units from fund to market amount sell_units[m]
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from wallet to world amount spend_amt[m]
+
+move refill[m in month]: transfers
+  on day_of(m, refill_dom)
+  at start_of(m)
+  leg cash from world to wallet amount refill_amt
+
+move into_gone[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from gone to world amount gone_amt[m]
+
+move into_gone2[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from world to gone2 amount gone2_amt[m]
+
+move dump[m in month]: etf_sells
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads fund2
+  leg units from fund2 to market amount if bal(fund2) > sell_units[m] then sell_units[m] else bal(fund2) + sell_units[m]
+
+move mystery: transfers
+  on mystery_day
+  at mystery_day
+  leg cash from world to box_h amount hole_amt
+
+move vague: transfers
+  on hole_day
+  at first_day
+  leg cash from world to box_d amount small_amt
+
+kind etf_sells: event certain
+  leg units: etf_unit
+
+ask q_claims: bal(lent, d), bal(lent2, d), bal(lent3, d), bal(lent4, d) for d in [2026-01-31, 2026-02-28, 2026-03-10, 2026-03-20, 2026-03-31] law cut
+
+ask q_more: bal(owed, d), bal(fund, d), bal(gone, d), bal(gone2, d), bal(konto, d), bal(fund2, d) for d in [2026-01-31, 2026-02-28, 2026-03-31] law cut
+
+ask q_wallet: bal(wallet, d) for d in [2026-01-14, 2026-01-15, 2026-01-25, 2026-02-15, 2026-02-25, 2026-03-15] law cut
+
+ask q_holes: bal(box_h, d), bal(box_d, d) for d in [2026-01-10, 2026-01-31, 2026-02-01, 2026-03-31] law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  fund_price[2026-01] = 10 "a unit's price"
+  fund_price[2026-02] = 10
+  fund_price[2026-03] = 10
+  back_amt[2026-01] = 50.00 "lent: 100 to 50"
+  back_amt[2026-02] = 50.00 "lent: 50 to 0, the twin that stays at 0"
+  back_amt[2026-03] = 30.00 "lent: 0 to -30, refused"
+  lend_amt[2026-01] = 0.00 "nothing lent"
+  lend_amt[2026-02] = 0.00
+  lend_amt[2026-03] = 40.00 "lent2 nets -30 + 40 in its batch"
+  swing_amt[2026-01] = 0.00 "nothing back"
+  swing_amt[2026-02] = 0.00
+  swing_amt[2026-03] = 30.00 "lent2: 0 - 30 + 40, never checked between"
+  over_amt = 10.00 "repay takes 10 more than lent3 holds"
+  payoff_amt[2026-01] = 40.00 "owed: -100 to -60"
+  payoff_amt[2026-02] = 60.00 "owed: -60 to 0, the twin"
+  payoff_amt[2026-03] = 20.00 "owed: 0 to 20, refused"
+  sell_units[2026-01] = 4 "fund: 10 to 6 units"
+  sell_units[2026-02] = 6 "fund: 6 to 0 units, the twin"
+  sell_units[2026-03] = 2 "fund: 0 to -2 units, refused"
+  spend_amt[2026-01] = 80.00 "wallet 50 to -30"
+  spend_amt[2026-02] = 100.00 "wallet 70 to -30 again"
+  spend_amt[2026-03] = 10.00
+  refill_amt = 100.00 "back above zero"
+  gone_amt[2026-01] = 5.00 "out of gone while it lives"
+  gone_amt[2026-02] = 5.00 "gone ends empty"
+  gone_amt[2026-03] = 0.00 "a leg of 0 out of gone after its lifespan: it books nothing"
+  gone2_amt[2026-01] = 0.00
+  gone2_amt[2026-02] = 0.00
+  gone2_amt[2026-03] = 5.00 "into gone2 after its lifespan, refused"
+  small_amt = 1.00 "a small amount"
+  mystery_day = 2026-02-01 "the hole amount's day"
+  first_day = 2026-01-01 "the law date of the hole day's move"
+  pay_dom = 10 "the plans' day"
+  dec_dom = 20 "the decisions' day"
+  spend_dom = 15 "the spending's day"
+  refill_dom = 25 "the refill's day"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 1000 at 2026-01-01 start
+  opening[wallet] = 50 at 2026-01-01 start
+  opening[lent] = 100 at 2026-01-01 start
+  opening[lent2] = 0 at 2026-01-01 start
+  opening[lent3] = 30 at 2026-01-01 start "repay takes it to -10 on 2026-01-20, refused"
+  opening[lent4] = 20 at 2026-01-01 start
+  opening[owed] = -100 at 2026-01-01 start
+  opening[fund] = 10 at 2026-01-01 start
+  opening[gone] = 10 at 2026-01-01 start
+  opening[gone2] = 0 at 2026-01-01 start
+  opening[fund2] = 5 at 2026-01-01 start "dump sells 4, then 1 + 6 of 1 held"
+  opening[box_h] = 0 at 2026-01-01 start
+  opening[box_d] = 0 at 2026-01-01 start
+
+version lent4_jan
+  cite fixture
+  governs 2026-01
+  known 2026-02-02
+  anchor lent4
+  stated[lent4] = -5.00 at 2026-01-31 end "a claim stated below zero at the close"
+
+version lent4_feb
+  cite fixture
+  governs 2026-02
+  known 2026-03-02
+  anchor lent4
+  stated[lent4] = 0.00 at 2026-02-28 end "the twin: a claim stated at 0"
+
+ask zx1: explain low(konto, 2025-12-01 .. 2026-02-15) from 2025-12-01
+
+ask zx2: explain low(konto, 2025-12-31 .. 2026-02-15) from 2025-12-31
+
+ask zx3: explain low(konto, 2026-01-01 .. 2026-02-25) from 2026-01-01
+
+ask zx4: explain low(konto, 2026-01-10 .. 2026-02-25) from 2026-01-10
+
+ask zx5: explain low(konto, 2026-01-14 .. 2026-02-27) from 2026-01-14
+
+ask zx6: explain low(konto, 2026-01-15 .. 2026-02-27) from 2026-01-15
+
+ask zx7: explain low(konto, 2026-01-20 .. 2026-02-28) from 2026-01-20
+
+ask zx8: explain low(konto, 2026-01-25 .. 2026-02-28) from 2026-01-25
+
+ask zx9: explain low(konto, 2026-01-31 .. 2026-03-02) from 2026-01-31
+
+ask zx10: explain low(konto, 2026-02-01 .. 2026-03-02) from 2026-02-01
+
+ask zx11: explain low(konto, 2026-02-02 .. 2026-03-10) from 2026-02-02
+
+ask zx12: explain low(konto, 2026-02-15 .. 2026-03-10) from 2026-02-15
+
+ask zx13: explain low(konto, 2026-02-25 .. 2026-03-15) from 2026-02-25
+
+ask zx14: explain low(konto, 2026-02-27 .. 2026-03-15) from 2026-02-27
+
+ask zx15: explain low(konto, 2026-02-28 .. 2026-03-20) from 2026-02-28
+
+ask zx16: explain low(konto, 2026-03-02 .. 2026-03-20) from 2026-03-02
+
+ask zx17: explain low(konto, 2026-03-10 .. 2026-03-25) from 2026-03-10
+
+ask zx18: explain low(konto, 2026-03-15 .. 2026-03-25) from 2026-03-15
+
+ask zx19: explain low(konto, 2026-03-20 .. 2026-03-31) from 2026-03-20
+
+ask zx20: explain low(konto, 2026-03-25 .. 2026-03-31) from 2026-03-25
+
+ask zx22: explain low(wallet, 2025-12-01 .. 2026-02-15) from 2025-12-01
+
+ask zx23: explain low(wallet, 2025-12-31 .. 2026-02-15) from 2025-12-31
+
+ask zx24: explain low(wallet, 2026-01-01 .. 2026-02-25) from 2026-01-01
+
+ask zx25: explain low(wallet, 2026-01-10 .. 2026-02-25) from 2026-01-10
+
+ask zx26: explain low(wallet, 2026-01-14 .. 2026-02-27) from 2026-01-14
+
+ask zx27: explain low(wallet, 2026-01-15 .. 2026-02-27) from 2026-01-15
+
+ask zx28: explain low(wallet, 2026-01-20 .. 2026-02-28) from 2026-01-20
+
+ask zx29: explain low(wallet, 2026-01-25 .. 2026-02-28) from 2026-01-25
+
+ask zx30: explain low(wallet, 2026-01-31 .. 2026-03-02) from 2026-01-31
+
+ask zx31: explain low(wallet, 2026-02-01 .. 2026-03-02) from 2026-02-01
+
+ask zx32: explain low(wallet, 2026-02-02 .. 2026-03-10) from 2026-02-02
+
+ask zx33: explain low(wallet, 2026-02-15 .. 2026-03-10) from 2026-02-15
+
+ask zx34: explain low(wallet, 2026-02-25 .. 2026-03-15) from 2026-02-25
+
+ask zx35: explain low(wallet, 2026-02-27 .. 2026-03-15) from 2026-02-27
+
+ask zx36: explain low(wallet, 2026-02-28 .. 2026-03-20) from 2026-02-28
+
+ask zx37: explain low(wallet, 2026-03-02 .. 2026-03-20) from 2026-03-02
+
+ask zx38: explain low(wallet, 2026-03-10 .. 2026-03-25) from 2026-03-10
+
+ask zx39: explain low(wallet, 2026-03-15 .. 2026-03-25) from 2026-03-15
+
+ask zx40: explain low(wallet, 2026-03-20 .. 2026-03-31) from 2026-03-20
+
+ask zx41: explain low(wallet, 2026-03-25 .. 2026-03-31) from 2026-03-25
+
+ask zx43: explain low(lent, 2025-12-01 .. 2026-02-15) from 2025-12-01
+
+ask zx44: explain low(lent, 2025-12-31 .. 2026-02-15) from 2025-12-31
+
+ask zx45: explain low(lent, 2026-01-01 .. 2026-02-25) from 2026-01-01
+
+ask zx46: explain low(lent, 2026-01-10 .. 2026-02-25) from 2026-01-10
+
+ask zx47: explain low(lent, 2026-01-14 .. 2026-02-27) from 2026-01-14
+
+ask zx48: explain low(lent, 2026-01-15 .. 2026-02-27) from 2026-01-15
+
+ask zx49: explain low(lent, 2026-01-20 .. 2026-02-28) from 2026-01-20
+
+ask zx50: explain low(lent, 2026-01-25 .. 2026-02-28) from 2026-01-25
+
+ask zx51: explain low(lent, 2026-01-31 .. 2026-03-02) from 2026-01-31
+
+ask zx52: explain low(lent, 2026-02-01 .. 2026-03-02) from 2026-02-01
+
+ask zx53: explain low(lent, 2026-02-02 .. 2026-03-10) from 2026-02-02
+
+ask zx54: explain low(lent, 2026-02-15 .. 2026-03-10) from 2026-02-15
+
+ask zx55: explain low(lent, 2026-02-25 .. 2026-03-15) from 2026-02-25
+
+ask zx56: explain low(lent, 2026-02-27 .. 2026-03-15) from 2026-02-27
+
+ask zx57: explain low(lent, 2026-02-28 .. 2026-03-20) from 2026-02-28
+
+ask zx58: explain low(lent, 2026-03-02 .. 2026-03-20) from 2026-03-02
+
+ask zx59: explain low(lent, 2026-03-10 .. 2026-03-25) from 2026-03-10
+
+ask zx60: explain low(lent, 2026-03-15 .. 2026-03-25) from 2026-03-15
+
+ask zx61: explain low(lent, 2026-03-20 .. 2026-03-31) from 2026-03-20
+
+ask zx62: explain low(lent, 2026-03-25 .. 2026-03-31) from 2026-03-25
+
+ask zx64: explain low(lent2, 2025-12-01 .. 2026-02-15) from 2025-12-01
+
+ask zx65: explain low(lent2, 2025-12-31 .. 2026-02-15) from 2025-12-31
+
+ask zx66: explain low(lent2, 2026-01-01 .. 2026-02-25) from 2026-01-01
+
+ask zx67: explain low(lent2, 2026-01-10 .. 2026-02-25) from 2026-01-10
+
+ask zx68: explain low(lent2, 2026-01-14 .. 2026-02-27) from 2026-01-14
+
+ask zx69: explain low(lent2, 2026-01-15 .. 2026-02-27) from 2026-01-15
+
+ask zx70: explain low(lent2, 2026-01-20 .. 2026-02-28) from 2026-01-20
+
+ask zx71: explain low(lent2, 2026-01-25 .. 2026-02-28) from 2026-01-25
+
+ask zx72: explain low(lent2, 2026-01-31 .. 2026-03-02) from 2026-01-31
+
+ask zx73: explain low(lent2, 2026-02-01 .. 2026-03-02) from 2026-02-01
+
+ask zx74: explain low(lent2, 2026-02-02 .. 2026-03-10) from 2026-02-02
+
+ask zx75: explain low(lent2, 2026-02-15 .. 2026-03-10) from 2026-02-15
+
+ask zx76: explain low(lent2, 2026-02-25 .. 2026-03-15) from 2026-02-25
+
+ask zx77: explain low(lent2, 2026-02-27 .. 2026-03-15) from 2026-02-27
+
+ask zx78: explain low(lent2, 2026-02-28 .. 2026-03-20) from 2026-02-28
+
+ask zx79: explain low(lent2, 2026-03-02 .. 2026-03-20) from 2026-03-02
+
+ask zx80: explain low(lent2, 2026-03-10 .. 2026-03-25) from 2026-03-10
+
+ask zx81: explain low(lent2, 2026-03-15 .. 2026-03-25) from 2026-03-15
+
+ask zx82: explain low(lent2, 2026-03-20 .. 2026-03-31) from 2026-03-20
+
+ask zx83: explain low(lent2, 2026-03-25 .. 2026-03-31) from 2026-03-25
+
+ask zx85: explain low(lent3, 2025-12-01 .. 2026-02-15) from 2025-12-01
+
+ask zx86: explain low(lent3, 2025-12-31 .. 2026-02-15) from 2025-12-31
+
+ask zx87: explain low(lent3, 2026-01-01 .. 2026-02-25) from 2026-01-01
+
+ask zx88: explain low(lent3, 2026-01-10 .. 2026-02-25) from 2026-01-10
+
+ask zx89: explain low(lent3, 2026-01-14 .. 2026-02-27) from 2026-01-14
+
+ask zx90: explain low(lent3, 2026-01-15 .. 2026-02-27) from 2026-01-15
+
+ask zx91: explain low(lent3, 2026-01-20 .. 2026-02-28) from 2026-01-20
+
+ask zx92: explain low(lent3, 2026-01-25 .. 2026-02-28) from 2026-01-25
+
+ask zx93: explain low(lent3, 2026-01-31 .. 2026-03-02) from 2026-01-31
+
+ask zx94: explain low(lent3, 2026-02-01 .. 2026-03-02) from 2026-02-01
+
+ask zx95: explain low(lent3, 2026-02-02 .. 2026-03-10) from 2026-02-02
+
+ask zx96: explain low(lent3, 2026-02-15 .. 2026-03-10) from 2026-02-15
+
+ask zx97: explain low(lent3, 2026-02-25 .. 2026-03-15) from 2026-02-25
+
+ask zx98: explain low(lent3, 2026-02-27 .. 2026-03-15) from 2026-02-27
+
+ask zx99: explain low(lent3, 2026-02-28 .. 2026-03-20) from 2026-02-28
+
+ask zx100: explain low(lent3, 2026-03-02 .. 2026-03-20) from 2026-03-02
+
+ask zx101: explain low(lent3, 2026-03-10 .. 2026-03-25) from 2026-03-10
+
+ask zx102: explain low(lent3, 2026-03-15 .. 2026-03-25) from 2026-03-15
+
+ask zx103: explain low(lent3, 2026-03-20 .. 2026-03-31) from 2026-03-20
+
+ask zx104: explain low(lent3, 2026-03-25 .. 2026-03-31) from 2026-03-25
+
+ask zx106: explain low(lent4, 2025-12-01 .. 2026-02-15) from 2025-12-01
+
+ask zx107: explain low(lent4, 2025-12-31 .. 2026-02-15) from 2025-12-31
+
+ask zx108: explain low(lent4, 2026-01-01 .. 2026-02-25) from 2026-01-01
+
+ask zx109: explain low(lent4, 2026-01-10 .. 2026-02-25) from 2026-01-10
+
+ask zx110: explain low(lent4, 2026-01-14 .. 2026-02-27) from 2026-01-14
+
+ask zx111: explain low(lent4, 2026-01-15 .. 2026-02-27) from 2026-01-15
+
+ask zx112: explain low(lent4, 2026-01-20 .. 2026-02-28) from 2026-01-20
+
+ask zx113: explain low(lent4, 2026-01-25 .. 2026-02-28) from 2026-01-25
+
+ask zx114: explain low(lent4, 2026-01-31 .. 2026-03-02) from 2026-01-31
+
+ask zx115: explain low(lent4, 2026-02-01 .. 2026-03-02) from 2026-02-01
+
+ask zx116: explain low(lent4, 2026-02-02 .. 2026-03-10) from 2026-02-02
+
+ask zx117: explain low(lent4, 2026-02-15 .. 2026-03-10) from 2026-02-15
+
+ask zx118: explain low(lent4, 2026-02-25 .. 2026-03-15) from 2026-02-25
+
+ask zx119: explain low(lent4, 2026-02-27 .. 2026-03-15) from 2026-02-27
+
+ask zx120: explain low(lent4, 2026-02-28 .. 2026-03-20) from 2026-02-28
+
+ask zx121: explain low(lent4, 2026-03-02 .. 2026-03-20) from 2026-03-02
+
+ask zx122: explain low(lent4, 2026-03-10 .. 2026-03-25) from 2026-03-10
+
+ask zx123: explain low(lent4, 2026-03-15 .. 2026-03-25) from 2026-03-15
+
+ask zx124: explain low(lent4, 2026-03-20 .. 2026-03-31) from 2026-03-20
+
+ask zx125: explain low(lent4, 2026-03-25 .. 2026-03-31) from 2026-03-25
+
+ask zx127: explain low(owed, 2025-12-01 .. 2026-02-15) from 2025-12-01
+
+ask zx128: explain low(owed, 2025-12-31 .. 2026-02-15) from 2025-12-31
+
+ask zx129: explain low(owed, 2026-01-01 .. 2026-02-25) from 2026-01-01
+
+ask zx130: explain low(owed, 2026-01-10 .. 2026-02-25) from 2026-01-10
+
+ask zx131: explain low(owed, 2026-01-14 .. 2026-02-27) from 2026-01-14
+
+ask zx132: explain low(owed, 2026-01-15 .. 2026-02-27) from 2026-01-15
+
+ask zx133: explain low(owed, 2026-01-20 .. 2026-02-28) from 2026-01-20
+
+ask zx134: explain low(owed, 2026-01-25 .. 2026-02-28) from 2026-01-25
+
+ask zx135: explain low(owed, 2026-01-31 .. 2026-03-02) from 2026-01-31
+
+ask zx136: explain low(owed, 2026-02-01 .. 2026-03-02) from 2026-02-01
+
+ask zx137: explain low(owed, 2026-02-02 .. 2026-03-10) from 2026-02-02
+
+ask zx138: explain low(owed, 2026-02-15 .. 2026-03-10) from 2026-02-15
+
+ask zx139: explain low(owed, 2026-02-25 .. 2026-03-15) from 2026-02-25
+
+ask zx140: explain low(owed, 2026-02-27 .. 2026-03-15) from 2026-02-27
+
+ask zx141: explain low(owed, 2026-02-28 .. 2026-03-20) from 2026-02-28
+
+ask zx142: explain low(owed, 2026-03-02 .. 2026-03-20) from 2026-03-02
+
+ask zx143: explain low(owed, 2026-03-10 .. 2026-03-25) from 2026-03-10
+
+ask zx144: explain low(owed, 2026-03-15 .. 2026-03-25) from 2026-03-15
+
+ask zx145: explain low(owed, 2026-03-20 .. 2026-03-31) from 2026-03-20
+
+ask zx146: explain low(owed, 2026-03-25 .. 2026-03-31) from 2026-03-25
+
+ask zx148: explain low(fund, 2025-12-01 .. 2026-02-15) from 2025-12-01
+
+ask zx149: explain low(fund, 2025-12-31 .. 2026-02-15) from 2025-12-31
+
+ask zx150: explain low(fund, 2026-01-01 .. 2026-02-25) from 2026-01-01
+
+ask zx151: explain low(fund, 2026-01-10 .. 2026-02-25) from 2026-01-10
+
+ask zx152: explain low(fund, 2026-01-14 .. 2026-02-27) from 2026-01-14
+
+ask zx153: explain low(fund, 2026-01-15 .. 2026-02-27) from 2026-01-15
+
+ask zx154: explain low(fund, 2026-01-20 .. 2026-02-28) from 2026-01-20
+
+ask zx155: explain low(fund, 2026-01-25 .. 2026-02-28) from 2026-01-25
+
+ask zx156: explain low(fund, 2026-01-31 .. 2026-03-02) from 2026-01-31
+
+ask zx157: explain low(fund, 2026-02-01 .. 2026-03-02) from 2026-02-01
+
+ask zx158: explain low(fund, 2026-02-02 .. 2026-03-10) from 2026-02-02
+
+ask zx159: explain low(fund, 2026-02-15 .. 2026-03-10) from 2026-02-15
+
+ask zx160: explain low(fund, 2026-02-25 .. 2026-03-15) from 2026-02-25
+
+ask zx161: explain low(fund, 2026-02-27 .. 2026-03-15) from 2026-02-27
+
+ask zx162: explain low(fund, 2026-02-28 .. 2026-03-20) from 2026-02-28
+
+ask zx163: explain low(fund, 2026-03-02 .. 2026-03-20) from 2026-03-02
+
+ask zx164: explain low(fund, 2026-03-10 .. 2026-03-25) from 2026-03-10
+
+ask zx165: explain low(fund, 2026-03-15 .. 2026-03-25) from 2026-03-15
+
+ask zx166: explain low(fund, 2026-03-20 .. 2026-03-31) from 2026-03-20
+
+ask zx167: explain low(fund, 2026-03-25 .. 2026-03-31) from 2026-03-25
+
+ask zx169: explain low(fund2, 2025-12-01 .. 2026-02-15) from 2025-12-01
+
+ask zx170: explain low(fund2, 2025-12-31 .. 2026-02-15) from 2025-12-31
+
+ask zx171: explain low(fund2, 2026-01-01 .. 2026-02-25) from 2026-01-01
+
+ask zx172: explain low(fund2, 2026-01-10 .. 2026-02-25) from 2026-01-10
+
+ask zx173: explain low(fund2, 2026-01-14 .. 2026-02-27) from 2026-01-14
+
+ask zx174: explain low(fund2, 2026-01-15 .. 2026-02-27) from 2026-01-15
+
+ask zx175: explain low(fund2, 2026-01-20 .. 2026-02-28) from 2026-01-20
+
+ask zx176: explain low(fund2, 2026-01-25 .. 2026-02-28) from 2026-01-25
+
+ask zx177: explain low(fund2, 2026-01-31 .. 2026-03-02) from 2026-01-31
+
+ask zx178: explain low(fund2, 2026-02-01 .. 2026-03-02) from 2026-02-01
+
+ask zx179: explain low(fund2, 2026-02-02 .. 2026-03-10) from 2026-02-02
+
+ask zx180: explain low(fund2, 2026-02-15 .. 2026-03-10) from 2026-02-15
+
+ask zx181: explain low(fund2, 2026-02-25 .. 2026-03-15) from 2026-02-25
+
+ask zx182: explain low(fund2, 2026-02-27 .. 2026-03-15) from 2026-02-27
+
+ask zx183: explain low(fund2, 2026-02-28 .. 2026-03-20) from 2026-02-28
+
+ask zx184: explain low(fund2, 2026-03-02 .. 2026-03-20) from 2026-03-02
+
+ask zx185: explain low(fund2, 2026-03-10 .. 2026-03-25) from 2026-03-10
+
+ask zx186: explain low(fund2, 2026-03-15 .. 2026-03-25) from 2026-03-15
+
+ask zx187: explain low(fund2, 2026-03-20 .. 2026-03-31) from 2026-03-20
+
+ask zx188: explain low(fund2, 2026-03-25 .. 2026-03-31) from 2026-03-25
+
+ask zx190: explain low(gone, 2025-12-01 .. 2026-02-15) from 2025-12-01
+
+ask zx191: explain low(gone, 2025-12-31 .. 2026-02-15) from 2025-12-31
+
+ask zx192: explain low(gone, 2026-01-01 .. 2026-02-25) from 2026-01-01
+
+ask zx193: explain low(gone, 2026-01-10 .. 2026-02-25) from 2026-01-10
+
+ask zx194: explain low(gone, 2026-01-14 .. 2026-02-27) from 2026-01-14
+
+ask zx195: explain low(gone, 2026-01-15 .. 2026-02-27) from 2026-01-15
+
+ask zx196: explain low(gone, 2026-01-20 .. 2026-02-28) from 2026-01-20
+
+ask zx197: explain low(gone, 2026-01-25 .. 2026-02-28) from 2026-01-25
+
+ask zx198: explain low(gone, 2026-01-31 .. 2026-03-02) from 2026-01-31
+
+ask zx199: explain low(gone, 2026-02-01 .. 2026-03-02) from 2026-02-01
+
+ask zx200: explain low(gone, 2026-02-02 .. 2026-03-10) from 2026-02-02
+
+ask zx201: explain low(gone, 2026-02-15 .. 2026-03-10) from 2026-02-15
+
+ask zx202: explain low(gone, 2026-02-25 .. 2026-03-15) from 2026-02-25
+
+ask zx203: explain low(gone, 2026-02-27 .. 2026-03-15) from 2026-02-27
+
+ask zx204: explain low(gone, 2026-02-28 .. 2026-03-20) from 2026-02-28
+
+ask zx205: explain low(gone, 2026-03-02 .. 2026-03-20) from 2026-03-02
+
+ask zx206: explain low(gone, 2026-03-10 .. 2026-03-25) from 2026-03-10
+
+ask zx207: explain low(gone, 2026-03-15 .. 2026-03-25) from 2026-03-15
+
+ask zx208: explain low(gone, 2026-03-20 .. 2026-03-31) from 2026-03-20
+
+ask zx209: explain low(gone, 2026-03-25 .. 2026-03-31) from 2026-03-25
+
+ask zx211: explain low(gone2, 2025-12-01 .. 2026-02-15) from 2025-12-01
+
+ask zx212: explain low(gone2, 2025-12-31 .. 2026-02-15) from 2025-12-31
+
+ask zx213: explain low(gone2, 2026-01-01 .. 2026-02-25) from 2026-01-01
+
+ask zx214: explain low(gone2, 2026-01-10 .. 2026-02-25) from 2026-01-10
+
+ask zx215: explain low(gone2, 2026-01-14 .. 2026-02-27) from 2026-01-14
+
+ask zx216: explain low(gone2, 2026-01-15 .. 2026-02-27) from 2026-01-15
+
+ask zx217: explain low(gone2, 2026-01-20 .. 2026-02-28) from 2026-01-20
+
+ask zx218: explain low(gone2, 2026-01-25 .. 2026-02-28) from 2026-01-25
+
+ask zx219: explain low(gone2, 2026-01-31 .. 2026-03-02) from 2026-01-31
+
+ask zx220: explain low(gone2, 2026-02-01 .. 2026-03-02) from 2026-02-01
+
+ask zx221: explain low(gone2, 2026-02-02 .. 2026-03-10) from 2026-02-02
+
+ask zx222: explain low(gone2, 2026-02-15 .. 2026-03-10) from 2026-02-15
+
+ask zx223: explain low(gone2, 2026-02-25 .. 2026-03-15) from 2026-02-25
+
+ask zx224: explain low(gone2, 2026-02-27 .. 2026-03-15) from 2026-02-27
+
+ask zx225: explain low(gone2, 2026-02-28 .. 2026-03-20) from 2026-02-28
+
+ask zx226: explain low(gone2, 2026-03-02 .. 2026-03-20) from 2026-03-02
+
+ask zx227: explain low(gone2, 2026-03-10 .. 2026-03-25) from 2026-03-10
+
+ask zx228: explain low(gone2, 2026-03-15 .. 2026-03-25) from 2026-03-15
+
+ask zx229: explain low(gone2, 2026-03-20 .. 2026-03-31) from 2026-03-20
+
+ask zx230: explain low(gone2, 2026-03-25 .. 2026-03-31) from 2026-03-25
+
+ask zx232: explain low(box_h, 2025-12-01 .. 2026-02-15) from 2025-12-01
+
+ask zx233: explain low(box_h, 2025-12-31 .. 2026-02-15) from 2025-12-31
+
+ask zx234: explain low(box_h, 2026-01-01 .. 2026-02-25) from 2026-01-01
+
+ask zx235: explain low(box_h, 2026-01-10 .. 2026-02-25) from 2026-01-10
+
+ask zx236: explain low(box_h, 2026-01-14 .. 2026-02-27) from 2026-01-14
+
+ask zx237: explain low(box_h, 2026-01-15 .. 2026-02-27) from 2026-01-15
+
+ask zx238: explain low(box_h, 2026-01-20 .. 2026-02-28) from 2026-01-20
+
+ask zx239: explain low(box_h, 2026-01-25 .. 2026-02-28) from 2026-01-25
+
+ask zx240: explain low(box_h, 2026-01-31 .. 2026-03-02) from 2026-01-31
+
+ask zx241: explain low(box_h, 2026-02-01 .. 2026-03-02) from 2026-02-01
+
+ask zx242: explain low(box_h, 2026-02-02 .. 2026-03-10) from 2026-02-02
+
+ask zx243: explain low(box_h, 2026-02-15 .. 2026-03-10) from 2026-02-15
+
+ask zx244: explain low(box_h, 2026-02-25 .. 2026-03-15) from 2026-02-25
+
+ask zx245: explain low(box_h, 2026-02-27 .. 2026-03-15) from 2026-02-27
+
+ask zx246: explain low(box_h, 2026-02-28 .. 2026-03-20) from 2026-02-28
+
+ask zx247: explain low(box_h, 2026-03-02 .. 2026-03-20) from 2026-03-02
+
+ask zx248: explain low(box_h, 2026-03-10 .. 2026-03-25) from 2026-03-10
+
+ask zx249: explain low(box_h, 2026-03-15 .. 2026-03-25) from 2026-03-15
+
+ask zx250: explain low(box_h, 2026-03-20 .. 2026-03-31) from 2026-03-20
+
+ask zx251: explain low(box_h, 2026-03-25 .. 2026-03-31) from 2026-03-25
+
+ask zx253: explain low(box_d, 2025-12-01 .. 2026-02-15) from 2025-12-01
+
+ask zx254: explain low(box_d, 2025-12-31 .. 2026-02-15) from 2025-12-31
+
+ask zx255: explain low(box_d, 2026-01-01 .. 2026-02-25) from 2026-01-01
+
+ask zx256: explain low(box_d, 2026-01-10 .. 2026-02-25) from 2026-01-10
+
+ask zx257: explain low(box_d, 2026-01-14 .. 2026-02-27) from 2026-01-14
+
+ask zx258: explain low(box_d, 2026-01-15 .. 2026-02-27) from 2026-01-15
+
+ask zx259: explain low(box_d, 2026-01-20 .. 2026-02-28) from 2026-01-20
+
+ask zx260: explain low(box_d, 2026-01-25 .. 2026-02-28) from 2026-01-25
+
+ask zx261: explain low(box_d, 2026-01-31 .. 2026-03-02) from 2026-01-31
+
+ask zx262: explain low(box_d, 2026-02-01 .. 2026-03-02) from 2026-02-01
+
+ask zx263: explain low(box_d, 2026-02-02 .. 2026-03-10) from 2026-02-02
+
+ask zx264: explain low(box_d, 2026-02-15 .. 2026-03-10) from 2026-02-15
+
+ask zx265: explain low(box_d, 2026-02-25 .. 2026-03-15) from 2026-02-25
+
+ask zx266: explain low(box_d, 2026-02-27 .. 2026-03-15) from 2026-02-27
+
+ask zx267: explain low(box_d, 2026-02-28 .. 2026-03-20) from 2026-02-28
+
+ask zx268: explain low(box_d, 2026-03-02 .. 2026-03-20) from 2026-03-02
+
+ask zx269: explain low(box_d, 2026-03-10 .. 2026-03-25) from 2026-03-10
+
+ask zx270: explain low(box_d, 2026-03-15 .. 2026-03-25) from 2026-03-15
+
+ask zx271: explain low(box_d, 2026-03-20 .. 2026-03-31) from 2026-03-20
+
+ask zx272: explain low(box_d, 2026-03-25 .. 2026-03-31) from 2026-03-25
+
+ask zx274: explain low(market, 2025-12-01 .. 2026-02-15) from 2025-12-01
+
+ask zx275: explain low(market, 2025-12-31 .. 2026-02-15) from 2025-12-31
+
+ask zx276: explain low(market, 2026-01-01 .. 2026-02-25) from 2026-01-01
+
+ask zx277: explain low(market, 2026-01-10 .. 2026-02-25) from 2026-01-10
+
+ask zx278: explain low(market, 2026-01-14 .. 2026-02-27) from 2026-01-14
+
+ask zx279: explain low(market, 2026-01-15 .. 2026-02-27) from 2026-01-15
+
+ask zx280: explain low(market, 2026-01-20 .. 2026-02-28) from 2026-01-20
+
+ask zx281: explain low(market, 2026-01-25 .. 2026-02-28) from 2026-01-25
+
+ask zx282: explain low(market, 2026-01-31 .. 2026-03-02) from 2026-01-31
+
+ask zx283: explain low(market, 2026-02-01 .. 2026-03-02) from 2026-02-01
+
+ask zx284: explain low(market, 2026-02-02 .. 2026-03-10) from 2026-02-02
+
+ask zx285: explain low(market, 2026-02-15 .. 2026-03-10) from 2026-02-15
+
+ask zx286: explain low(market, 2026-02-25 .. 2026-03-15) from 2026-02-25
+
+ask zx287: explain low(market, 2026-02-27 .. 2026-03-15) from 2026-02-27
+
+ask zx288: explain low(market, 2026-02-28 .. 2026-03-20) from 2026-02-28
+
+ask zx289: explain low(market, 2026-03-02 .. 2026-03-20) from 2026-03-02
+
+ask zx290: explain low(market, 2026-03-10 .. 2026-03-25) from 2026-03-10
+
+ask zx291: explain low(market, 2026-03-15 .. 2026-03-25) from 2026-03-15
+
+ask zx292: explain low(market, 2026-03-20 .. 2026-03-31) from 2026-03-20
+
+ask zx293: explain low(market, 2026-03-25 .. 2026-03-31) from 2026-03-25
+
+ask zx295: explain low(world, 2025-12-01 .. 2026-02-15) from 2025-12-01
+
+ask zx296: explain low(world, 2025-12-31 .. 2026-02-15) from 2025-12-31
+
+ask zx297: explain low(world, 2026-01-01 .. 2026-02-25) from 2026-01-01
+
+ask zx298: explain low(world, 2026-01-10 .. 2026-02-25) from 2026-01-10
+
+ask zx299: explain low(world, 2026-01-14 .. 2026-02-27) from 2026-01-14
+
+ask zx300: explain low(world, 2026-01-15 .. 2026-02-27) from 2026-01-15
+
+ask zx301: explain low(world, 2026-01-20 .. 2026-02-28) from 2026-01-20
+
+ask zx302: explain low(world, 2026-01-25 .. 2026-02-28) from 2026-01-25
+
+ask zx303: explain low(world, 2026-01-31 .. 2026-03-02) from 2026-01-31
+
+ask zx304: explain low(world, 2026-02-01 .. 2026-03-02) from 2026-02-01
+
+ask zx305: explain low(world, 2026-02-02 .. 2026-03-10) from 2026-02-02
+
+ask zx306: explain low(world, 2026-02-15 .. 2026-03-10) from 2026-02-15
+
+ask zx307: explain low(world, 2026-02-25 .. 2026-03-15) from 2026-02-25
+
+ask zx308: explain low(world, 2026-02-27 .. 2026-03-15) from 2026-02-27
+
+ask zx309: explain low(world, 2026-02-28 .. 2026-03-20) from 2026-02-28
+
+ask zx310: explain low(world, 2026-03-02 .. 2026-03-20) from 2026-03-02
+
+ask zx311: explain low(world, 2026-03-10 .. 2026-03-25) from 2026-03-10
+
+ask zx312: explain low(world, 2026-03-15 .. 2026-03-25) from 2026-03-15
+
+ask zx313: explain low(world, 2026-03-20 .. 2026-03-31) from 2026-03-20
+
+ask zx314: explain low(world, 2026-03-25 .. 2026-03-31) from 2026-03-25

@@ -1,0 +1,8 @@
+part k4
+  tally 2
+
+index ps = [p0, q1]
+
+def k4_x: key qs = q1 + 1
+
+ask k4: k4_x

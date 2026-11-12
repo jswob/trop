@@ -1,0 +1,11 @@
+scenario d_test over sites
+  tally 2
+  from 2026-01-01
+
+version dv_test
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  replace n1 = if sites.fee then sites.n1 else sites.n1 "x"
+
+ask d_test: n1 in d_test

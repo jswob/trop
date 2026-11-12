@@ -21,12 +21,24 @@ use super::plan::{Amount, End, Inst, LegVal, Status, invariant, qty_value};
 use super::point::At;
 use super::state::{ALL, Change, Ent, Group, Progress, Taken, Today, Walk, WalkObs};
 use crate::base::{Code, Refusal, Run, Warn};
-use crate::eval::{Collected, Engine, Entry};
+use crate::eval::{Collected, Engine, Entry, GUARDED};
 use crate::hole::{Hole, spread};
 use crate::model::Reality;
 use crate::num::Num;
 use crate::syntax::{Sign, Stop};
 use crate::time::Day;
+
+/// A fault planted in a run, so a test sees the refusal an engine bug gives, `ENGINE-INVARIANT`
+/// with its evidence (E §9, §11; INTERFACE §4, pick P8): only with the `fault-injection`
+/// feature, which only builds with debug assertions have (R-51).
+#[cfg(feature = "fault-injection")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Fault {
+    /// On the first day a walk books a leg whole, the day's close adds one minor unit (0.01)
+    /// to that day's conservation sum before invariant 1 is checked, once per run (E §9 item 1;
+    /// refcore's twin, `codes/m1_fault.py`).
+    Conservation,
+}
 
 /// Which ends of a leg a booking books, and whether the leg counts whole for conservation
 /// (refcore's `book_leg` `ends`, and its pads). E §6.1, E §9 item 1.
@@ -78,8 +90,9 @@ impl Engine {
 
     /// Walks timeline `id` through day `last`, or to its last day for none: a later day is
     /// left until a read needs it, so a refusal past `last` refuses no read of it (refcore's
-    /// `run_to`); a main walk's signature is kept once it is done (refcore's `w.sig`). E §4.2,
-    /// §4.3, §9 item 4, P §2.2.
+    /// `run_to`); a main walk's signature is kept once it is done (refcore's `w.sig`), and a
+    /// scenario's checked against the world under it (refcore's `m_inv3`). E §4.2, §4.3, §9
+    /// items 3 and 4, P §2.2.
     ///
     /// # Errors
     ///
@@ -97,30 +110,58 @@ impl Engine {
     }
 
     /// [`Engine::advance_to`], what it reads the walk's own, not the reading cell's: every
-    /// cell that reads the walk shares it (E §3.2, §3.3). E §4.2, §4.3, §9 item 4.
+    /// cell that reads the walk shares it (E §3.2, §3.3). A walk that failed on a day refuses
+    /// the reads that reach it, and a read through an earlier day reads the walk as it stood
+    /// there, so a read's answer is the same whichever read walked the walk first (pick P54,
+    /// #127). E §4.2, §4.3, §9 item 4; L §8.4.
     fn walk_through(&mut self, m: &Reality, id: usize, last: Option<Day>) -> Result<(), Stop> {
         loop {
             let walk = self.walk(id)?;
             let step = match &walk.progress {
                 Progress::Done => return Ok(()),
-                Progress::Failed(stop) => return Err(stop.clone()),
+                Progress::Failed(stop, on) => return before_failure(stop, *on, last),
                 Progress::Planning => self.plan_alone(m, id),
                 Progress::Walking if walk.paused_after(self.days, last) => return Ok(()),
                 Progress::Walking => self.step_day(m, id),
+                Progress::Walked => self.close_walk(m, id),
             };
             match step {
                 Ok(()) => {}
+                // a walk cut short past the counted depth resumes where it stopped; one
+                // given up for a cell outside it (`GUARDED`) is walked on when read again
                 Err(Stop::Deep) => return Err(Stop::Deep),
+                Err(Stop::NotBuilt(why)) if why == GUARDED => return Err(Stop::NotBuilt(why)),
                 Err(stop) => {
-                    self.walk_mut(id)?.progress = Progress::Failed(stop.clone());
+                    let failed = self.walk_mut(id)?;
+                    let on = match failed.progress {
+                        Progress::Walking => failed.today.as_ref().map(|t| t.day),
+                        Progress::Planning
+                        | Progress::Walked
+                        | Progress::Done
+                        | Progress::Failed(..) => None,
+                    };
+                    failed.progress = Progress::Failed(stop.clone(), on);
                     return Err(stop);
                 }
             }
-            if self.walk(id)?.progress == Progress::Done {
-                self.gather_warnings(id)?;
-                self.keep_signature(id)?;
-            }
         }
+    }
+
+    /// A walked walk's close, once: its warnings, its signature, and a scenario's E §9 item 3
+    /// (refcore's `m_main_walk`); done only once all three hold, so a close cut short past the
+    /// counted depth runs again on replay (R-16), and its refusal refuses every read of the
+    /// walk. A walk up to a day keeps its warnings, since its days are the timeline's first
+    /// days and a place's warning is its walk's, whichever read reached it (E §4.2 step 5);
+    /// it has no signature and no item 3: it is no timeline's walk, only what a leg's read
+    /// needs (refcore's `prefix_walk`). E §9 items 3 and 4, L §8.5, E §3.2.
+    fn close_walk(&mut self, m: &Reality, id: usize) -> Result<(), Stop> {
+        self.gather_warnings(id)?;
+        if self.walk(id)?.upto.is_none() {
+            self.keep_signature(id)?;
+            self.scenario_unchanged(m, id)?;
+        }
+        self.walk_mut(id)?.progress = Progress::Done;
+        Ok(())
     }
 
     /// A walk's plan pass, what its evaluation met kept apart from the read that started it
@@ -154,7 +195,7 @@ impl Engine {
             let next = walk.next_day(days, &walk.endings);
             walk.keep_checkpoints(next)?;
             let Some(day) = next else {
-                walk.progress = Progress::Done;
+                walk.progress = Progress::Walked;
                 return Ok(());
             };
             let mut acts = walk.agenda.remove(&day).unwrap_or_else(Vec::new);
@@ -171,6 +212,7 @@ impl Engine {
                 next: 0,
                 next_inst: 0,
                 runs: Vec::new(),
+                cycle: None,
                 batch: Some(Group::new()),
                 closing: None,
                 anchors: BTreeMap::new(),
@@ -210,6 +252,7 @@ impl Engine {
                 .ok_or_else(|| invariant("a day's acts"))?;
             open.next_inst = 0;
             open.runs.clear();
+            open.cycle = None;
         }
         let day = self.today(id)?.day;
         if self.today(id)?.batch.is_some() {
@@ -378,6 +421,12 @@ impl Engine {
                 ent.mv = Some(adj);
                 self.walk_mut(id)?.add(m, &place, ALL, ent)
             }
+            Act::PlaceHole(place, h, movement, coll) => {
+                let mut ent = Ent::new(at, Change::Perm(h));
+                ent.mv = Some(movement);
+                ent.coll = Some(coll);
+                self.walk_mut(id)?.add(m, &place, ALL, ent)
+            }
             Act::GlobalHole(h) => {
                 self.walk_mut(id)?
                     .add(m, ALL, ALL, Ent::new(at, Change::Perm(h)))
@@ -485,7 +534,7 @@ impl Engine {
                 .things
                 .get(p)
                 .ok_or_else(|| invariant("a leg's place load didn't build"))?;
-            let span = m.lifespan(thing, cut);
+            let span = m.lifespan(thing, (cut, self.timeline_world()));
             if let Some(sp) = &span
                 && let Some(question) = sp.end_question()
                 && sp.contains(at.day)
@@ -652,11 +701,35 @@ impl Engine {
         Ok(true)
     }
 
+    /// The planted fault, once per run: on the first day a walk that is no projection's books
+    /// a leg whole, one minor unit (0.01) added to the day's conservation sum in its first unit,
+    /// so invariant 1 refuses as on an engine bug (refcore's twin, `codes/m1_fault.py`; INTERFACE
+    /// §4). E §9 item 1, §11.
+    #[cfg(feature = "fault-injection")]
+    fn plant_fault(&mut self, id: usize) -> Result<(), Stop> {
+        let Some(Fault::Conservation) = self.plant else {
+            return Ok(());
+        };
+        let walk = self.walk_mut(id)?;
+        if walk.proj.is_some() {
+            return Ok(());
+        }
+        let Some(sum) = walk.conserved.values_mut().next() else {
+            return Ok(());
+        };
+        let minor = Num::ratio(1, 100).map_err(crate::eval::num_stop)?;
+        *sum = sum.checked_add(&minor).map_err(crate::eval::num_stop)?;
+        self.plant = None;
+        Ok(())
+    }
+
     /// The day's close: conservation, `WARN-NEGATIVE` at the accounts and cash it touched, and
     /// `RUN-LIFESPAN` for a place whose lifespan ends holding something (refcore's
     /// `close_day`). E §4.2 steps 4–5, E §9 items 1 and 6.
     fn close_day(&mut self, m: &Reality, id: usize, day: Day) -> Result<(), Stop> {
         let at = At::close(day);
+        #[cfg(feature = "fault-injection")]
+        self.plant_fault(id)?;
         let walk = self.walk_mut(id)?;
         for (unit, sum) in &walk.conserved {
             if !sum.is_zero() {
@@ -976,8 +1049,19 @@ fn signed(q: &Num, sign: i64) -> Result<Num, Stop> {
     Ok(q.clone())
 }
 
+/// A failed walk's answer to a read through day `last`: the walk as it stood, for a read that
+/// ends before the day the walk failed on; its refusal for one that reaches it, for a read to
+/// the walk's end, and for a failure of no day, its plan pass or its close (pick P54, #127).
+/// E §4.3, L §8.4.
+fn before_failure(stop: &Stop, on: Option<Day>, last: Option<Day>) -> Result<(), Stop> {
+    match (on, last) {
+        (Some(failed), Some(read)) if read < failed => Ok(()),
+        (Some(_) | None, Some(_) | None) => Err(stop.clone()),
+    }
+}
+
 /// A place's kind's sign rule (L §5.10).
-fn place_sign(m: &Reality, place: &str) -> Option<Sign> {
+pub(super) fn place_sign(m: &Reality, place: &str) -> Option<Sign> {
     let base = m.things.get(place)?.base.as_deref()?;
     m.kind_sign(base)
 }

@@ -13,7 +13,7 @@ use crate::base::Load;
 use crate::eval::Engine;
 use crate::model::{BindInfo, Domain, IndexForm, IndexInfo, KeyVal, NameKind, Reality};
 use crate::syntax::{Domain as Written, Expr, Key, Lit, Postfix, RowKey, Stop};
-use crate::time::{Day, Period, PeriodKind};
+use crate::time::{Day, PeriodKind};
 
 /// A key as written at a key position: a literal, a keyed place `konto[ana]`, or an
 /// expression, which names no key.
@@ -185,7 +185,7 @@ pub(super) fn resolve_key(
                 KeyVal::Int,
             ))
         }
-        Domain::Range => range_key_of(key, file, line),
+        Domain::Range => range_key_of(m, key, file, line),
     }
 }
 
@@ -222,7 +222,7 @@ impl RangeKey {
 
 /// Whether a range's end or step is a literal: a number (a duration included), a day, a
 /// month or a quarter, negated or in parentheses (refcore's `range_is_literal`). L §2.5.
-pub(super) fn literal_end(e: &Expr) -> bool {
+pub(crate) fn literal_end(e: &Expr) -> bool {
     let mut node = e;
     while let Expr::Neg(inner) | Expr::Paren(inner) = node {
         node = inner;
@@ -253,43 +253,31 @@ pub(super) fn check_range_keys(m: &Reality, keys: &[RangeKey]) -> Result<(), Sto
     Ok(())
 }
 
-/// The index name a stepped range's key that is a number other than an integer is kept
-/// under, by its text, as a key list's keys are under `[list]`: no read finds it, and load
-/// checks it against the range's values (refcore's `range_literal`, a `Num`).
-pub(super) const RANGE_KEYS: &str = "[range]";
-
-/// A key literal at a stepped range's position: a value as written, a day, a period or a
-/// number (refcore's `range_literal`); whether the range holds it is checked once load is done
-/// (`check_range_keys`). L §2.5, §5.6.
+/// A key literal at a stepped range's position: a value as written, a day, a period, a
+/// number or money, as the key a read of that value takes (refcore's `range_literal`);
+/// whether the range holds it is checked once load is done (`check_range_keys`). L §2.5,
+/// §5.6.
 ///
 /// # Errors
 ///
 /// `LOAD-KEY <key> is not a value of a stepped range` for a key that is no value, as written
-/// (tally 2.1.6's #100, pick P2).
-pub(super) fn range_key_of(key: &KeyLit, file: &str, line: u32) -> Result<KeyVal, Stop> {
+/// (tally 2.1.6's #100, pick P2); the literal's unit's refusal at the row.
+pub(super) fn range_key_of(
+    m: &Reality,
+    key: &KeyLit,
+    file: &str,
+    line: u32,
+) -> Result<KeyVal, Stop> {
     let KeyLit::Lit(lit) = key else {
         return Err(not_a_range_value(key, file, line));
     };
-    let value = match lit {
-        Lit::Day(day) => Some(KeyVal::Day(*day)),
-        Lit::Month(year, month) => Period::month(*year, *month).map(KeyVal::Period),
-        Lit::Quarter(year, quarter) => Period::quarter(*year, *quarter).map(KeyVal::Period),
-        Lit::Num(_) => Some(int_of(lit).map_or_else(
-            || KeyVal::Key {
-                index: RANGE_KEYS.to_owned(),
-                name: lit_text(lit),
-            },
-            KeyVal::Int,
+    match crate::eval::range_literal_key(m, lit) {
+        Ok(found) => found.ok_or_else(|| not_a_range_value(key, file, line)),
+        Err(Stop::Refused(refusal)) => Err(Stop::Refused(
+            refusal.placed(crate::base::Place::Line(file.to_owned(), line)),
         )),
-        Lit::MonthDay(..)
-        | Lit::Key(_)
-        | Lit::Cur(_)
-        | Lit::Bool(_)
-        | Lit::Inf { .. }
-        | Lit::Nominal(_)
-        | Lit::Name(_) => None,
-    };
-    value.ok_or_else(|| not_a_range_value(key, file, line))
+        Err(stop) => Err(stop),
+    }
 }
 
 /// `LOAD-KEY <key> is not a value of a stepped range`, the key as written (refcore's
@@ -350,7 +338,7 @@ pub fn index_key_of(index: &IndexInfo, lit: &Lit) -> Option<KeyVal> {
             .filter(|v| index.pos(v).is_some());
     }
     if index.period.is_some() {
-        return period_key(&index.keys, lit);
+        return period_key(index.keys(), lit);
     }
     index_text(lit).and_then(|t| index.by_text(&t)).cloned()
 }
@@ -376,7 +364,11 @@ fn period_key(keys: &[KeyVal], lit: &Lit) -> Option<KeyVal> {
         .find(|k| match k {
             KeyVal::Day(day) => kind == PeriodKind::Day && day.text() == label,
             KeyVal::Period(p) => p.kind() == kind && p.label() == label,
-            KeyVal::Key { .. } | KeyVal::Thing(_) | KeyVal::Int(_) | KeyVal::Mv(_) => false,
+            KeyVal::Key { .. }
+            | KeyVal::Thing(_)
+            | KeyVal::Int(_)
+            | KeyVal::Mv(_)
+            | KeyVal::Value(_) => false,
         })
         .cloned()
 }
@@ -605,9 +597,8 @@ impl Loader {
             name: text.clone(),
         };
         open.texts.push((text, value.clone()));
-        open.keys.push(value.clone());
         open.added.push((value.clone(), version.to_owned()));
-        open.finish();
+        open.add_keys(vec![value.clone()]);
         Ok(value)
     }
 }

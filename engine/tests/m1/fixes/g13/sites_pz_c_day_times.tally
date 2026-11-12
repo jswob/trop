@@ -1,0 +1,6 @@
+part c_day_times
+  tally 2
+
+def c_day_times_x: date = d0 as if {d0 = d0 * n1}
+
+ask c_day_times: c_day_times_x

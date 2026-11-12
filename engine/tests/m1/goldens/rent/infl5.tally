@@ -1,0 +1,12 @@
+scenario infl5 over golden_rent
+  tally 2
+  from 2027-01-01
+  note "G10's scenario: 5 % inflation a year from 2027 (the prototype's 5 % what-if); the rent of 2030 is 3 889.62."
+
+version infl5_rates
+  cite prototype
+  governs 2027-01-01..
+  known 2026-10-17
+  replace inflation = 0.05 governs 2027.. "the scenario's inflation"
+
+ask g10_rent_infl5: rent_due[2030] in infl5

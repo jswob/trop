@@ -1,0 +1,4 @@
+part n10
+  tally 2
+
+ask n10: last_business(lifespan(konto).to, 1)

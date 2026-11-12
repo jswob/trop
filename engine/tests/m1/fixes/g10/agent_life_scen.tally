@@ -1,0 +1,10 @@
+scenario ends over lifeb
+  tally 2
+  from 2026-07-01
+
+version olek_ends
+  cite card
+  known 2026-01-01
+  replace persons + [olek] lives 1990-01-01..2026-09-30
+
+ask b1: bal(konto, 2026-06-30) in ends

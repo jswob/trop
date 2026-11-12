@@ -1,0 +1,4 @@
+part w09
+  tally 2
+
+ask w09: count(n in age(w, d2) .. 5)

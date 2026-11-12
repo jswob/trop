@@ -14,7 +14,7 @@ Printed by the build role's SessionStart hook at the start and after each compac
 2. Never special-case an input: no branch on a case id, an ask text, a path or an expected value. _The special-casing scan (R-94); review._
 3. Never add a crate or a feature. _cargo-deny's allow-lists (R-52)._
 4. Never weaken a check: no `#[allow]`, no config edit, no `cfg(not(clippy))`, no `ast-grep-ignore`, no mutation skip, no raised timeout, no retry. _R-103 to R-109, R-86, R-90; CI fails._
-5. A STOP-REPORT is a good outcome. When a test, the spec or a rule seems to conflict with correct behaviour, stop and file one. _The Stop hook lets a turn end only when `check fast` is green or a STOP-REPORT is newer than the last commit (R-83)._
+5. A STOP-REPORT is a good outcome. When a test, the spec or a rule seems to conflict with correct behaviour, stop and file one. _The Stop hook lets a turn end only when `check fast` is green, a STOP-REPORT is newer than the last commit, or the only red is T's tests logged red on a `Logged-Red:` line of this branch (R-83)._
 
 **The STOP-REPORT protocol:**
 
@@ -30,8 +30,8 @@ Printed by the build role's SessionStart hook at the start and after each compac
 - `check` prints a line such as `milestone-report: S: 3/7 green`: T's Rust tests of the next milestone, your work list, never failing. Once a milestone is in `gating` (`engine/tools/milestones.toml`: after its tag, or for S and M0 from their branch's last commit), its tests gate like any other, so they can't go red again.
 - Work: the next group of red vectors in plan order; implement; `engine/tools/check fast`; commit when green.
 - After each group's commit, a review session runs `engine-reviewer` on that group's diff alone; you fix its blocking findings in the same group before the next one starts, and T turns each fix into tests. The gate reviews the whole once.
-- Before each commit: `engine/tools/check full`. Never commit red. (T's re-run commit after a spec ruling may be red on the ids its `Logged-Red:` lines name; your commits then turn them green, R-77.)
-- When a group turns green: `engine/tools/mutants-local -F '<regex of the functions you changed or added>' <their kernel files>`; caught and missed go into the group's BUILD-LOG entry, the missed ones for T. Advisory, never blocking (R-88).
+- Before each commit inside a group: `engine/tools/check fast`; before the group's last commit, the one its review reads: `engine/tools/check full` (since 2026-11-08; CI runs the full check on every push, R-77). Never commit red. (T's re-run commit after a spec ruling may be red on the ids its `Logged-Red:` lines name; your commits then turn them green, R-77.)
+- When a group turns green: `engine/tools/mutants-local -F '<regex of the functions you changed or added>' <their kernel files>` (add `--next` to count the next milestone's tests green at that moment, and `--fences` to count a fence's equivalence test, which alone reaches its twin); caught and missed go into the group's BUILD-LOG entry, the missed ones for T. Advisory, never blocking (R-88).
 - Only `engine/tools/check`, never raw `cargo` with your own flags. Read the one-line failures; open a log only when needed. A failure that doesn't reproduce is reported, not "fixed".
 - To format: `cargo fmt -p tally -p tally-cli`. A plain `cargo fmt` is refused, since the workspace also holds T's runner.
 - The Stop hook runs `check fast` at the end of every turn.

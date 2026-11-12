@@ -1,0 +1,6 @@
+part c_int_arg
+  tally 2
+
+def c_int_arg_x: date = d0 as if {d0 = add_months(d0, txt)}
+
+ask c_int_arg: c_int_arg_x

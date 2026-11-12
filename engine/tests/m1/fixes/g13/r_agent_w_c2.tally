@@ -1,0 +1,5 @@
+part c2
+  tally 2
+
+
+ask c2: round(age(w, d2), 1, down)

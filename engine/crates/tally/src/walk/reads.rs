@@ -5,10 +5,11 @@
 //! the balances less its own observations booked before its day); §8.2 (the register:
 //! `unfulfilled:`, `left out:`, `adjustment:`, `uncertain:`, `open:`); E §4.2 (a refused leg
 //! refuses every read of it; holes in the walk), E §4.3 (a read of a projection's walk rests on the walks it continues), E §3.3 (the
-//! main walk of a timeline). The flows reads (L §5.14.3) are `flows.rs`'s.
+//! main walk of a timeline); §5.19 (`gap(x, d)`, `HOLE-NOREADING`). The flows reads
+//! (L §5.14.3) are `flows.rs`'s, `value` (L §5.10) is `value.rs`'s.
 //! Twin: engine/tools/refcore/mreads.py (`place_arg`, `bal_unit`, `read_state`,
 //! `merge_cum`, `e_bal`, `note_read`, `bal_day`, `with_uncertain`, `proj_uncertain`,
-//! `less_own_obs`) and walk.py (`m_main_walk`).
+//! `less_own_obs`, `m_c_gap`) and walk.py (`m_main_walk`).
 //! Invariants: a read inside a decision sees the walk only up to its point; a read at the cut
 //! sees the whole main walk; a hole a read meets is printed with every question it rests on;
 //! a refused `with uncertain` keeps the register it met before the refusal, as refcore
@@ -16,7 +17,7 @@
 
 use super::plan::{Amount, Dated, Inst, invariant, qty_value};
 use super::point::At;
-use super::state::{ALL, St, Walk};
+use super::state::{ALL, GapAt, St, Walk};
 use crate::base::{Code, Load, Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Entry, Env};
 use crate::hole::{Hole, spread};
@@ -24,6 +25,16 @@ use crate::model::{KeyVal, Reality, Value};
 use crate::num::Num;
 use crate::syntax::{Bal, Expr, Stop};
 use crate::time::Day;
+
+/// How a running read sees its place: as it stands at the decision's point, or only before
+/// it (refcore's `note_read`, its `live`). L §5.14.2.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum Sees {
+    /// At the decision's point: it orders the day's decisions.
+    AtPoint,
+    /// Only before its point.
+    Before,
+}
 
 impl Engine {
     /// A balance read (refcore's `e_bal`). L §5.10, §5.14.1.
@@ -42,7 +53,7 @@ impl Engine {
             Ok(u) => u,
         };
         if b.of.is_some() {
-            return Err(Stop::NotBuilt("bal of a party or a batch (G9)"));
+            return Err(Stop::NotBuilt("bal of a party or a batch (M5a)"));
         }
         if b.modelled {
             return Err(Stop::NotBuilt("a modelled balance (the ledger)"));
@@ -57,7 +68,7 @@ impl Engine {
                     format!("bal({place}) with no day outside a decision"),
                 )));
             };
-            self.note_live(at.walk, &place)?;
+            self.note_read(at.walk, &place, Sees::AtPoint)?;
             let v = self.read_state(m, at.walk, &place, &unit, at.point)?;
             return self.less_own_obs(m, at.walk, (&place, &unit), at.point, v);
         };
@@ -65,16 +76,69 @@ impl Engine {
         if let Value::Hole(_) = d {
             return Ok(d);
         }
-        let d = crate::ask::date_of(&d, "the day of bal")?;
+        // a window left a window (no `windows each`) is the hole of its imprecision for this
+        // read, named with its place (refcore's `m_e_bal`); else the one-day reader's text
+        let named;
+        let what = if let Value::Window(_) = d {
+            named = format!("the day of bal({place}, d)");
+            named.as_str()
+        } else {
+            "the day of bal"
+        };
+        let d = match crate::eval::one_day(m, &d, what)? {
+            Ok(d) => d,
+            Err(imprecise) => return Ok(Value::Hole(imprecise)),
+        };
         if b.proj.from.is_some() {
             return self.projection(m, b, (&place, &unit), d, (env, ctx));
         }
         let key = if b.start { At::start(d) } else { At::end(d) };
-        let v = self.bal_day(m, (&place, &unit), d, key, ctx)?;
-        if b.proj.uncertain {
-            return self.with_uncertain(m, (&place, &unit), d, &v, ctx);
+        let walked = self.trace_walked();
+        let got = self.bal_day(m, (&place, &unit), d, key, ctx).and_then(|v| {
+            if b.proj.uncertain {
+                self.with_uncertain(m, (&place, &unit), d, &v, ctx)
+            } else {
+                Ok(v)
+            }
+        });
+        if ctx.at.is_none() && self.tracing() {
+            self.trace_bal(m, walked, (place, unit, ctx.cut), (d, b), &got)?;
         }
-        Ok(v)
+        got
+    }
+
+    /// A plain balance read at cut `cut`, traced as a node `explain` prints in the balance
+    /// form from the main walk it read, a refused one alone; none for a refusal of load's or
+    /// a form not built (ruling P63, #132). E §10.
+    fn trace_bal(
+        &mut self,
+        m: &Reality,
+        walked: crate::eval::Walked,
+        (place, unit, cut): (String, String, Day),
+        (day, b): (Day, &Bal),
+        got: &Result<Value, Stop>,
+    ) -> Result<(), Stop> {
+        let (item, walk) = match got {
+            Ok(v) => (
+                crate::eval::Item::Value(v.clone()),
+                Some(self.main_walk(m, cut)?),
+            ),
+            Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {
+                (crate::eval::Item::Refused(r.clone()), None)
+            }
+            Err(_) => return Ok(()),
+        };
+        let read = crate::eval::TracedBalance {
+            place,
+            unit,
+            day,
+            start: b.start,
+            uncertain: b.proj.uncertain,
+            cut,
+            timeline: self.timeline_key(),
+        };
+        self.trace_balance(m, walked, read, (item, walk));
+        Ok(())
     }
 
     /// A read's place: a place, or the hole it is (refcore's `place_arg`). L §5.10.
@@ -106,7 +170,7 @@ impl Engine {
 
     /// A balance read's unit: the one written, or the place's (refcore's `bal_unit`).
     /// L §5.10 Kind and unit.
-    fn bal_unit(
+    pub(crate) fn bal_unit(
         &mut self,
         m: &Reality,
         b: &Bal,
@@ -126,6 +190,7 @@ impl Engine {
             }
             let name = match &u {
                 Value::Key(k) => k.text(),
+                Value::Window(_) => return Err(Stop::NotBuilt("a unit read as a window")),
                 Value::Number(_)
                 | Value::Money(_)
                 | Value::Bool(_)
@@ -154,18 +219,12 @@ impl Engine {
             }
             return Ok(Ok(name));
         }
-        let Some(pu) = own else {
-            return Err(Stop::Refused(Refusal::new(
-                Code::Load(Load::Unit),
-                format!("bal({place}, d) of a place of unit any states its unit: bal(x, u, d)"),
-            )));
-        };
-        Ok(Ok(pu))
+        super::projection::own_unit(m, place).map(Ok)
     }
 
     /// A plain balance on a day: at the cut, from the main walk; inside a decision, a running
     /// read of a day before its own (refcore's `bal_day`). L §5.14.1.
-    fn bal_day(
+    pub(super) fn bal_day(
         &mut self,
         m: &Reality,
         (place, unit): (&str, &str),
@@ -175,6 +234,7 @@ impl Engine {
     ) -> Result<Value, Stop> {
         if let Some(at) = ctx.at {
             let t = at.point.day;
+            self.note_read(at.walk, place, Sees::Before)?;
             if key.day > t || (key.day == t && key.at_or_after_decisions()) {
                 if d > t {
                     return Err(refuse(
@@ -258,12 +318,21 @@ impl Engine {
         }
     }
 
-    /// Notes a running decision's read of a place: where it sees the place at its point, for
-    /// the order of the day's decisions (refcore's `note_read`). L §5.14.2.
-    pub(super) fn note_live(&mut self, id: usize, place: &str) -> Result<(), Stop> {
+    /// Notes a running decision's read of a place: every read, for `explain`'s "read at its
+    /// walk point" (E §10), and where it sees the place at its point, for the order of the
+    /// day's decisions (refcore's `note_read`). L §5.14.2.
+    pub(super) fn note_read(&mut self, id: usize, place: &str, sees: Sees) -> Result<(), Stop> {
         let walk = self.walk_mut(id)?;
-        if let Some(set) = &mut walk.live {
+        if let Some(set) = &mut walk.reads {
             set.insert(place.to_owned());
+        }
+        match sees {
+            Sees::AtPoint => {
+                if let Some(set) = &mut walk.live {
+                    set.insert(place.to_owned());
+                }
+            }
+            Sees::Before => {}
         }
         Ok(())
     }
@@ -290,6 +359,21 @@ impl Engine {
                 met.entries.insert(entry.clone());
             }
         }
+        self.chain_register(m, (id, at), (place, unit), &mut met)?;
+        self.absorb(&met);
+        state_value(m, &st, unit, &anchor)
+    }
+
+    /// A balance's register through point `at` of walk `id` and of each walk it continues
+    /// before its point, until one met a reading there (refcore's `read_state`, its chain).
+    /// L §8.2, E §4.3 step 1.
+    pub(super) fn chain_register(
+        &mut self,
+        m: &Reality,
+        (id, at): (usize, At),
+        (place, unit): (&str, &str),
+        met: &mut Collected,
+    ) -> Result<(), Stop> {
         let mut next = Some((id, at));
         let mut links = 0_usize;
         while let Some((wid, point)) = next {
@@ -297,10 +381,9 @@ impl Engine {
                 .checked_add(1)
                 .filter(|n| *n <= self.walks.len())
                 .ok_or_else(|| invariant("a chain of walks that loops"))?;
-            next = self.chain_link(m, (wid, point), (place, unit), &mut met)?;
+            next = self.chain_link(m, (wid, point), (place, unit), met)?;
         }
-        self.absorb(&met);
-        state_value(m, &st, unit, &anchor)
+        Ok(())
     }
 
     /// One walk of a read's chain: the moves left out there that touch the place, the register
@@ -339,7 +422,7 @@ impl Engine {
 
     /// `bal(x, d) with uncertain`: the balance plus the movements of uncertain kinds dated
     /// through d since its last reading (refcore's `with_uncertain`). L §5.14.
-    fn with_uncertain(
+    pub(super) fn with_uncertain(
         &mut self,
         m: &Reality,
         (place, unit): (&str, &str),
@@ -437,11 +520,13 @@ impl Engine {
     /// The refusal the walk met; `Deep` while a cell it needs waits on the work stack;
     /// `NotBuilt` for a read of a walk while it is walked.
     pub(crate) fn main_walk(&mut self, m: &Reality, cut: Day) -> Result<usize, Stop> {
+        self.trace_walk();
         let id = if let Some(id) = self.main_walks.get(&cut) {
             *id
         } else {
             let id = self.walks.len();
-            self.walks.push(Walk::new(cut, m.start, m.end));
+            self.walks
+                .push(Walk::new(cut, (m.start, m.end), self.timeline_world()));
             #[cfg(feature = "counters")]
             self.counts.add(crate::Unit::Walk);
             self.main_walks.insert(cut, id);
@@ -456,8 +541,123 @@ impl Engine {
         self.pop_alone();
         self.walking.remove(&id);
         walked?;
+        // a scenario's movements before its from that read its facts, listed with every
+        // result read from the walk (E §9 item 3)
+        for text in self.walk(id)?.listed.clone() {
+            self.note("before from", text, String::new());
+        }
         Ok(id)
     }
+
+    /// The walk of the timeline of cut `cut` from S through `day`, its plan pass listing no
+    /// plan's instance dated after it: what a leg read that day needs while the main walk
+    /// needs a cell still being computed outside it. Kept per day, a walk to a later day
+    /// serving an earlier one; none where it is refused at run (refcore's `prefix_walk`,
+    /// `plan_list`). E §3.2 (evaluation is demand-driven), §4.1, §4.2 step 5.
+    ///
+    /// # Errors
+    ///
+    /// A load refusal met at run and `ENGINE-INVARIANT`, which stop the read (R-66); `Deep`
+    /// while a cell it needs waits on the work stack; `NotBuilt` for a leg whose day is a
+    /// hole, and for a read of a walk while it is walked.
+    pub(crate) fn prefix_walk(
+        &mut self,
+        m: &Reality,
+        cut: Day,
+        day: Option<Day>,
+    ) -> Result<Option<usize>, Stop> {
+        let Some(day) = day else {
+            return Err(Stop::NotBuilt(
+                "a leg's read whose walk needs a cell still being computed, its day a hole",
+            ));
+        };
+        let kept = self
+            .prefixes
+            .walks
+            .range((cut, day)..)
+            .next()
+            .filter(|((c, _), _)| *c == cut)
+            .map(|((_, upto), id)| (*upto, *id));
+        let (upto, id) = if let Some(found) = kept {
+            found
+        } else {
+            let id = self.walks.len();
+            let end = day.min(m.end);
+            let mut walk = Walk::new(cut, (m.start, end), self.timeline_world());
+            walk.upto = Some(day);
+            self.walks.push(walk);
+            #[cfg(feature = "counters")]
+            self.counts.add(crate::Unit::Walk);
+            self.prefixes.walks.insert((cut, day), id);
+            (day, id)
+        };
+        if self.walking.contains(&id) {
+            return Err(Stop::NotBuilt("a read of a walk while it is walked"));
+        }
+        let outer = self.body_upto.replace(upto);
+        self.walking.insert(id);
+        self.push();
+        let walked = self.advance(m, id);
+        self.pop_alone();
+        self.walking.remove(&id);
+        self.body_upto = outer;
+        match walked {
+            Ok(()) => Ok(Some(id)),
+            Err(Stop::Refused(r)) if super::order::run_time(&r) => Ok(None),
+            Err(stop) => Err(stop),
+        }
+    }
+
+    /// `gap(x, d)`: the gap at the last `stated` reading of x on day d in the main walk at
+    /// the cut, with what it rests on; `HOLE-NOREADING` where no reading of x falls that day
+    /// (refcore's `m_c_gap`). L §5.19, E §6.1, L §8.1.
+    ///
+    /// # Errors
+    ///
+    /// The refusal the booked balance at the reading is; the refusals of the walk.
+    pub(crate) fn gap(
+        &mut self,
+        m: &Reality,
+        (place_arg, day_arg): (&Expr, &Expr),
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Value, Stop> {
+        let place = match self.place_arg(m, place_arg, env, ctx)? {
+            Err(h) => return Ok(Value::Hole(h)),
+            Ok(p) => p,
+        };
+        let d = self.ev(m, day_arg, env, ctx)?;
+        if let Value::Hole(_) = d {
+            return Ok(d);
+        }
+        let d = match crate::eval::one_day(m, &d, "the day of gap")? {
+            Ok(d) => d,
+            Err(h) => return Ok(Value::Hole(h)),
+        };
+        // a decision inside the main walk reads the gaps it has met so far, the walk as it
+        // stands (refcore's `main_walk` of a running walk)
+        let id = match self.main_walks.get(&ctx.cut) {
+            Some(id) if self.walking.contains(id) => *id,
+            _ => self.main_walk(m, ctx.cut)?,
+        };
+        let gaps = self.walk(id)?.gaps.get(&(place.clone(), d));
+        let Some(last) = gaps.map(Vec::as_slice).and_then(latest_gap).cloned() else {
+            let text = format!("stated[{place}] has no reading at {}", d.text());
+            return Ok(Value::Hole(Hole::asked(&text, &format!("stated[{place}]"))));
+        };
+        self.absorb(&last.coll);
+        match last.gap {
+            Amount::Qty(q) => qty_value(m, &q, &last.unit),
+            Amount::Hole(h) => Ok(Value::Hole(h)),
+            Amount::Refused(r) => Err(Stop::Refused(r)),
+        }
+    }
+}
+
+/// The gap of a day's last applied reading: of the latest instant, the last applied there
+/// (refcore sorts them by instant, stably, and takes the last). L §5.19 `gap(x, d)`.
+fn latest_gap(gaps: &[GapAt]) -> Option<&GapAt> {
+    gaps.iter().max_by_key(|g| g.at)
 }
 
 /// What `with uncertain` adds to a balance: the uncertain movements' signed amounts, their
@@ -528,7 +728,7 @@ impl Uncertain {
 
 /// A state's value: the refusal, a hole with every question it rests on, or the balance
 /// (refcore's `st_value`). L §5.10, §8.1.
-fn state_value(m: &Reality, st: &St, unit: &str, anchor: &Hole) -> Result<Value, Stop> {
+pub(crate) fn state_value(m: &Reality, st: &St, unit: &str, anchor: &Hole) -> Result<Value, Stop> {
     if let Some(r) = &st.bad {
         return Err(Stop::Refused(r.clone()));
     }

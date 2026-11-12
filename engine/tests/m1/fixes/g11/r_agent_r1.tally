@@ -1,0 +1,39 @@
+model r1
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+input d: date
+
+input amt: money PLN
+
+def a2: money PLN = amt
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on d
+  leg cash from konto to world amount amt
+
+def b: money PLN = bal(konto, d + 1 day)
+
+ask r_d: readers-of d
+
+ask r_amt: readers-of amt
+
+ask v: b, a2
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN
+  d = 2026-02-10
+  opening[konto] = 500.00 PLN at 2026-01-01 start

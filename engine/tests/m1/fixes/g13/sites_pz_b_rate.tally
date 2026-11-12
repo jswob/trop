@@ -1,0 +1,4 @@
+part b_rate
+  tally 2
+
+ask b_rate: r5 with r5 = r5 * r5

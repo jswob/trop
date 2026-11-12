@@ -1,0 +1,12 @@
+scenario raise over tropek
+  tally 2
+  from 2027-03-01
+  note "G6 (09-raise.json: a 5 % raise from March 2027), stated on top of indexation (the coordinator's pick P7, L-03): 12 480 * 1.05 = 13 104 from March 2027; my_tax/net[2027-03] goes 8 837.78 -> 9 262.77."
+
+version raise_2027
+  cite prototype
+  governs 2027-03-01..
+  known 2026-10-19
+  replace salary[my_job] = 13104 governs 2027-03.. "a 5 % raise from March 2027, on top of the wage index"
+
+ask g6_raise_net: emp_net[my_job, 2027-03] in raise law cut

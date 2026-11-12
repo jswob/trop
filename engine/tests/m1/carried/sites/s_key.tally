@@ -1,0 +1,6 @@
+part s_key
+  tally 2
+
+def s_key_x: num = rate[q9]
+
+ask s_key: s_key_x

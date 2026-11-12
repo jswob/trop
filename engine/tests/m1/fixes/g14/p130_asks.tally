@@ -1,0 +1,22 @@
+part asks
+  tally 2
+
+ask k_pln: value(ike, 2026-03-31) in PLN by px
+
+ask k_eur: value(ike, 2026-03-31) in EUR by px
+
+ask k_last: value(ike, 2026-03-31) in PLN by last(pl)
+
+ask k_last_eur: value(ike, 2026-03-31) in EUR by last(pl)
+
+ask k_wrong: value(ike, 2026-03-31) in PLN by qx
+
+ask c_pln: value(pike, 2026-03-31) in PLN
+
+ask c_eur: value(pike, 2026-03-31) in EUR
+
+ask c_wrong: value(wike, 2026-03-31) in PLN
+
+ask c_lot: value(lot, 2026-03-31) in PLN
+
+ask c_lot_eur: value(lot, 2026-03-31) in EUR

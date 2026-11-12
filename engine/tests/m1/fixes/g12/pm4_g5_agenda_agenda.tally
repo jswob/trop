@@ -1,0 +1,285 @@
+model g5_agenda
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G5: the day walk's agenda (E §4.2 steps 0-4, L §5.10, §5.19): openings before the start and on it; stated readings at a day's start and end, before the cut, on its day and after it; observations before the start, inside the run, on the cut's day and after it, two on one day; a month the bank covers; plans before, inside and after the run; decisions in two strata, one due twice on a day with a ties clause."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+index box = [first, second]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place pocket: cash PLN lives 2026-01-01..
+
+place jar[b in box]: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place tin: accounts PLN lives 2026-01-01..2026-02-27
+
+place tin0: accounts PLN lives 2026-01-01..2026-02-27
+
+place jar3: accounts PLN lives 2026-03-01..
+
+place oops_box: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+place shop: outside lives 2026-01-01..
+
+input bank: observed
+
+input rent: money PLN
+
+input early_day: date
+
+input late_day: date
+
+input first_day: date
+
+input pay_dom: int
+
+input dec_dom: int
+
+input early_amt: money PLN
+
+input late_amt: money PLN
+
+input low_mark: money PLN
+
+input high_mark: money PLN
+
+input top_amt: money PLN
+
+input big_put: money PLN
+
+input small_put: money PLN
+
+input bill_dom: int
+
+input bill_amt: money PLN
+
+input keep_floor: money PLN
+
+input fee_amt: money PLN
+
+input divisor[m in month]: num
+
+def room[m in month]: money PLN at start_of(m)
+  note "a written projection: konto on the bill's day, from the decisions' day, above the floor"
+  rule base = max(0, bal(konto, day_of(m, bill_dom)) from day_of(m, dec_dom) - keep_floor)
+
+move rent_pay[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from konto to world amount rent
+
+move early: transfers
+  on early_day
+  at early_day
+  leg cash from world to konto amount early_amt
+
+move late: transfers
+  on late_day
+  at late_day
+  leg cash from world to konto amount late_amt
+
+move topup[m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads pocket
+  when bal(pocket) < low_mark
+  leg cash from world to konto amount top_amt
+
+move stash[b in box, m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads konto
+  ties by pos(b)
+  leg cash from konto to jar[b] amount if bal(konto) > high_mark then big_put else small_put
+
+move newyear: transfers
+  on first_day
+  at first_day
+  leg cash from konto to shop amount fee_amt
+
+move fee[m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  leg cash from konto to shop amount fee_amt
+
+move oops[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from world to oops_box amount round(fee_amt / divisor[m], minor(PLN), half-up)
+
+move early_dec: transfers
+  on early_day
+  at early_day
+  reads pocket
+  leg cash from world to pocket amount if bal(pocket) > big_put then small_put else fee_amt
+
+move late_dec: transfers
+  on late_day
+  at late_day
+  reads pocket
+  leg cash from world to pocket amount if bal(pocket) > big_put then small_put else fee_amt
+
+move bill[m in month]: transfers
+  on day_of(m, bill_dom)
+  at start_of(m)
+  leg cash from konto to shop amount bill_amt
+
+move save[m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads konto
+  leg cash from world to savings amount room[m]
+
+move sweep[m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads savings
+  leg cash from savings to shop amount if bal(savings) > big_put then small_put else max(0, small_put - small_put)
+
+ask q_room: room[m] for m in month law cut
+
+ask q_tin: bal(tin, d), bal(tin0, d), bal(savings, d), bal(jar3, d), bal(oops_box, d) for d in [2026-02-26, 2026-02-27, 2026-02-28, 2026-03-31] law cut
+
+ask q_bal: bal(konto, d), bal(pocket, d), bal(jar[first], d), bal(jar[second], d) for d in [2026-01-01, 2026-01-05, 2026-01-10, 2026-01-20, 2026-01-25, 2026-01-28, 2026-01-31, 2026-02-10, 2026-02-15, 2026-02-20, 2026-03-01, 2026-03-20, 2026-03-31] law cut
+
+ask q_res: residuals konto 2026-01 law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  rent = 600.00 "the rent"
+  early_day = 2025-12-15 "a day before the start"
+  late_day = 2026-04-15 "a day after the end"
+  first_day = 2026-01-01 "the first day of the run"
+  pay_dom = 5 "the rent's day of the month"
+  dec_dom = 20 "the decisions' day of the month"
+  early_amt = 7.00 "an amount before the start"
+  late_amt = 9.00 "an amount after the end"
+  low_mark = 48.00 "top up while the pocket is below this"
+  high_mark = 2300.00 "stash 100 above this"
+  top_amt = 1000.00 "the top-up"
+  big_put = 100.00 "a big stash"
+  small_put = 1.00 "a small stash"
+  bill_dom = 25 "the bill's day of the month"
+  bill_amt = 50.00 "the bill"
+  keep_floor = 2000.00 "keep this on konto"
+  fee_amt = 3.00 "a fee"
+  divisor[2026-01] = 1 "a whole fee"
+  divisor[2026-02] = 0 "a division by zero, refused"
+  divisor[2026-03] = 2 "half a fee"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 3000 at 2026-01-01 start "the account on the first day"
+  opening[pocket] = 50 at 2025-12-31 start "the pocket, a day before the start"
+  opening[jar[first]] = 0 at 2026-01-01 start
+  opening[jar[second]] = 0 at 2026-01-01 start
+  opening[savings] = 0 at 2026-01-01 start
+  opening[tin] = 10 at 2026-01-01 start "a tin that ends with money in it"
+  opening[tin0] = 0 at 2026-01-01 start "a tin that ends empty"
+  opening[jar3] = 70 at 2026-03-01 start "a jar opened after the cut"
+  opening[oops_box] = 0 at 2026-01-01 start
+
+version bank_dec
+  cite fixture
+  governs 2025-12
+  known 2026-01-02
+  covers konto
+  bank[b20251230] = (on: 2025-12-30, kind: transfers, leg cash from konto to shop amount 11.00 PLN) "before the start"
+
+version bank_jan
+  cite fixture
+  governs 2026-01
+  known 2026-02-02
+  covers konto
+  anchor konto
+  bank[b20260101] = (on: 2026-01-01, kind: transfers, leg cash from konto to shop amount 5.00 PLN) "on the first day"
+  bank[b20260105] = (on: 2026-01-05, kind: transfers, leg cash from konto to world amount 600.00 PLN, fulfils: rent_pay[2026-01]) "the rent"
+  bank[b20260110b] = (on: 2026-01-10, kind: transfers, leg cash from konto to shop amount 20.00 PLN) "the second of the day"
+  bank[b20260110a] = (on: 2026-01-10, kind: transfers, leg cash from konto to shop amount 30.00 PLN) "the first of the day"
+  stated[konto] = 2350.00 at 2026-01-31 end "the month's closing balance"
+
+version bank_feb
+  cite fixture
+  governs 2026-02
+  known 2026-02-15
+  anchor pocket
+  bank[b20260210] = (on: 2026-02-10, kind: transfers, leg cash from konto to shop amount 40.00 PLN) "inside the run, before the cut"
+  bank[b20260215] = (on: 2026-02-15, kind: transfers, leg cash from konto to shop amount 50.00 PLN) "on the cut's day"
+  stated[pocket] = 45.00 at 2026-02-10 start "the pocket counted in the morning"
+  stated[pocket] = 44.00 at 2026-02-15 end "on the cut's day"
+
+ask zm1: explain rent_pay[2026-01]
+
+ask zm2: explain rent_pay[2026-02]
+
+ask zm3: explain rent_pay[2026-03]
+
+ask zm4: explain early
+
+ask zm5: explain late
+
+ask zm6: explain topup[2026-01]
+
+ask zm7: explain topup[2026-02]
+
+ask zm8: explain topup[2026-03]
+
+ask zm9: explain stash[first, 2026-01]
+
+ask zm10: explain stash[first, 2026-02]
+
+ask zm11: explain stash[first, 2026-03]
+
+ask zm12: explain stash[second, 2026-01]
+
+ask zm13: explain newyear
+
+ask zm14: explain fee[2026-01]
+
+ask zm15: explain fee[2026-02]
+
+ask zm16: explain fee[2026-03]
+
+ask zm17: explain oops[2026-01]
+
+ask zm18: explain oops[2026-02]
+
+ask zm19: explain oops[2026-03]
+
+ask zm20: explain early_dec
+
+ask zm21: explain late_dec
+
+ask zm22: explain bill[2026-01]
+
+ask zm23: explain bill[2026-02]
+
+ask zm24: explain bill[2026-03]
+
+ask zm25: explain save[2026-01]
+
+ask zm26: explain save[2026-02]
+
+ask zm27: explain save[2026-03]
+
+ask zm28: explain sweep[2026-01]
+
+ask zm29: explain sweep[2026-02]
+
+ask zm30: explain sweep[2026-03]

@@ -1,0 +1,71 @@
+model refw
+  tally 2
+  on 2026-04-15
+  start 2026-01-01
+  end 2026-12-31
+  note "MB3's refused instances (invented): counted instances refused through their when, not a leg's amount, dated after t: between two places, and from x to the outside"
+
+source card "invented probe for F5's refused instances"
+
+unit DUK: currency minor 0.01
+
+index month = month 2026-01..2026-12
+
+place konto: accounts DUK lives 2026-01-01..
+
+place savings: accounts DUK lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input pay: money DUK
+
+input rent: money DUK
+
+input zero: num
+
+input off: int
+
+input from_m: date
+
+move salary[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount pay
+
+move stash[m in month]: transfers
+  on add_days(start_of(m), off)
+  at start_of(m)
+  when start_of(m) < from_m or rent / zero > 0 DUK
+  leg cash from konto to savings amount rent
+
+move spend[m in month]: transfers
+  on add_days(start_of(m), off)
+  at start_of(m)
+  when start_of(m) < from_m or rent / zero > 0 DUK
+  leg cash from konto to world amount rent
+
+ask w_low: low(konto, 2026-05-20 .. 2026-08-31) from 2026-05-20
+
+ask w_low_before: low(konto, 2026-05-20 .. 2026-07-05) from 2026-05-20
+
+ask w_bal: bal(konto, 2026-07-31) from 2026-05-20
+
+ask w_bal_before: bal(konto, 2026-07-05) from 2026-05-20
+
+ask w_savings: bal(savings, 2026-07-31) from 2026-05-20
+
+ask w_low_savings: low(savings, 2026-05-20 .. 2026-08-31) from 2026-05-20
+
+ask w_plain: bal(konto, 2026-07-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 1000.00
+  rent = 300.00
+  zero = 0
+  off = 9
+  from_m = 2026-07-01
+  opening[konto] = 500.00 at 2026-01-01 start
+  opening[savings] = 0 at 2026-01-01 start

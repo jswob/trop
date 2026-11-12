@@ -9,7 +9,7 @@
 //! `Tie`, `Keys`, `Rev`, `cmp_comp`, `cmp_keys`, `key_comp`, `key_at`, `span_key`).
 //! Invariants: a component compares only with one of its own form (a mismatch is
 //! `ENGINE-INVARIANT`, where refcore would crash); a member's key is compared by text only when
-//! two are equal, otherwise its order waits for joint models (G9).
+//! two are equal, otherwise its order waits for joint models (L §6.1, M5c).
 
 use super::lex::cannot;
 use super::parse::Stop;
@@ -55,7 +55,7 @@ pub(super) enum KeyOrder {
     Value,
     /// By text.
     Text,
-    /// By the order of a member's index or kind (G9).
+    /// By the order of a member's index or kind (joint models, L §6.1, M5c).
     Member,
 }
 
@@ -284,10 +284,18 @@ pub(super) fn key_comp(key: &KeyRef, order: &KeyOrder, place: &Place) -> Result<
             Val::Int(0),
             Val::Rev(Box::new(key_at(b, order, place)?)),
         ])),
-        KeyRef::Place(text) => Ok(Val::Tup(vec![
-            Val::Tup(vec![Val::Int(2), Val::Text(text.clone())]),
-            Val::Int(1),
-        ])),
+        KeyRef::Place(text) => {
+            // one key, sorted as things are: by text, among the keys in text order
+            let rank = if *order == KeyOrder::Text {
+                KEY_RANK
+            } else {
+                2
+            };
+            Ok(Val::Tup(vec![
+                Val::Tup(vec![Val::Int(rank), Val::Text(text.clone())]),
+                Val::Int(1),
+            ]))
+        }
         KeyRef::One(lit) => Ok(Val::Tup(vec![key_at(lit, order, place)?, Val::Int(1)])),
         KeyRef::Star => Ok(Val::Tup(vec![Val::Tup(vec![Val::Int(-1)])])),
     }
@@ -306,8 +314,46 @@ fn key_at(key: &Lit, order: &KeyOrder, place: &Place) -> Result<Val, Stop> {
             ))),
         },
         KeyOrder::Value => Ok(key_value(key, place)),
-        KeyOrder::Text | KeyOrder::Member => Ok(Val::Tup(vec![Val::Int(2), Val::Text(text)])),
+        KeyOrder::Text | KeyOrder::Member => Ok(kind_first(key, text, place)),
     }
+}
+
+/// The rank of a key, a name or a code in [`kind_first`]'s order (and of a place keyed by
+/// things, which sorts as things do).
+const KEY_RANK: i64 = 3;
+
+/// A key in text order: its literal's kind first, in the grammar's order of literals (a number,
+/// a date, a month-day, a key, a duration, `true` / `false`; L §2.3 `lit`), then within its
+/// kind a number or a duration by value, a date by its first day then its text, any other by
+/// its text. Its own reprint keeps it: a number's text may change, its value doesn't (pick P3
+/// on #109).
+fn kind_first(key: &Lit, text: String, place: &Place) -> Val {
+    match key {
+        Lit::Num(n) => {
+            let rank = if is_duration(n) { 4 } else { 0 };
+            Val::Tup(vec![Val::Int(rank), Val::Num(n.value.clone())])
+        }
+        Lit::Day(_) | Lit::Month(..) | Lit::Quarter(..) => {
+            Val::Tup(vec![Val::Int(1), day_val(key, place), Val::Text(text)])
+        }
+        Lit::MonthDay(..) => Val::Tup(vec![Val::Int(2), Val::Text(text)]),
+        Lit::Key(_) | Lit::Name(_) | Lit::Cur(_) => {
+            Val::Tup(vec![Val::Int(KEY_RANK), Val::Text(text)])
+        }
+        Lit::Bool(_) => Val::Tup(vec![Val::Int(5), Val::Text(text)]),
+        Lit::Inf { .. } | Lit::Nominal(_) => Val::Tup(vec![Val::Int(6), Val::Text(text)]),
+    }
+}
+
+/// Whether a number is a duration: an int and one period word (L §2.3 `lit`).
+fn is_duration(n: &super::tree::Number) -> bool {
+    let Some(unit) = &n.unit else {
+        return false;
+    };
+    let [term] = unit.terms.as_slice() else {
+        return false;
+    };
+    n.whole && term.power == Num::int(1) && crate::model::PERIODS.contains(&term.base.as_str())
 }
 
 /// A key by value: numbers, then dates, then text.
@@ -331,7 +377,8 @@ fn key_value(key: &Lit, place: &Place) -> Val {
 ///
 /// # Errors
 ///
-/// Two members' keys that differ (their order is G9's); two components of different forms,
+/// Two members' keys that differ (their order waits for joint models, M5c); two components of
+/// different forms,
 /// or numbers past the cap (`ENGINE-INVARIANT`).
 pub(super) fn compare(left: &Val, right: &Val) -> Result<Ordering, Stop> {
     if let Val::Member(text) = right {
@@ -443,7 +490,7 @@ pub(super) fn compare(left: &Val, right: &Val) -> Result<Ordering, Stop> {
 }
 
 /// A member's key against another component: equal to the same key, otherwise its order is
-/// the member's, which waits for joint models (G9).
+/// the member's, which waits for joint models (L §6.1, M5c).
 fn member(other: &Val, text: &str) -> Result<Ordering, Stop> {
     if let Val::Member(same) = other
         && same == text
@@ -451,7 +498,7 @@ fn member(other: &Val, text: &str) -> Result<Ordering, Stop> {
         return Ok(Ordering::Equal);
     }
     Err(Stop::NotBuilt(
-        "the canonical order of keys of a member's index or kind (G9)",
+        "the canonical order of keys of a member's index or kind (M5c)",
     ))
 }
 

@@ -1,0 +1,8 @@
+part asks_x
+  tally 2
+
+ask fx_upx: value(box, 2026-04-30) in PLN by upx law 2026-04-30
+
+ask fx_upx_last: value(box, 2026-04-30) in PLN by last(upx) law 2026-04-30
+
+ask fx_upx_in: value(box, 2026-03-31) in PLN by upx law 2026-03-31

@@ -1,0 +1,118 @@
+model e7
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "G8 review probes (invented): a plain low's tie, value positions, a scenario's world"
+
+source card "probe card"
+
+unit PLN: currency minor 0.01
+
+unit etf "a fund unit"
+
+kind spending: place PLN signed outside
+
+kind funds: place one min 0 priced unit_price
+
+kind unit_buys: event certain
+  leg units: etf
+
+place wallet: cash PLN lives 2026-01-01..
+
+place konto: accounts PLN lives 2026-01-01..
+
+place loan: debts PLN lives 2026-01-01..
+
+place fund: funds etf lives 2026-01-01..
+
+place spent: spending lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+place market: outside lives 2026-01-01..
+
+input unit_price[x in funds]: num PLN/etf
+
+input out_day: date
+
+input back_day: date
+
+input out_amt: money PLN
+
+input rent_day: date
+
+input rent_amt: money PLN
+
+input borrow_day: date
+
+input borrow_amt: money PLN
+
+input buy_day: date
+
+input hole_day: date
+
+input sell_day: date
+
+input n_buy: num etf
+
+input n_sell: num etf
+
+move outw: transfers
+  on out_day
+  leg cash from wallet to world amount out_amt
+
+move backw: transfers
+  on back_day
+  leg cash from world to wallet amount out_amt
+
+move rent: transfers
+  on rent_day
+  leg cash from konto to world amount rent_amt
+
+move borrow: transfers
+  on borrow_day
+  leg cash from loan to konto amount borrow_amt
+
+move buy: unit_buys
+  on buy_day
+  leg units from market to fund amount n_buy
+
+move sell: unit_buys
+  on sell_day
+  leg units from fund to market amount n_sell
+
+ask z_rev: low(konto, 2026-03-31 .. 2026-03-01)
+
+ask z_revf: low(konto, 2026-03-31 .. 2026-03-01) from 2026-03-01
+
+ask z_min: min(bal(konto, d) for d in 2026-03-31 .. 2026-03-01 step 1 day)
+
+ask z_rk: low(konto, hole_day .. 2026-03-01)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  pad wallet from spent
+  back_day = 2026-02-05 "the card"
+  borrow_amt = 500.00 PLN "the card"
+  hole_day = ?"which day?" "the card"
+  borrow_day = 2026-04-01 "the card"
+  buy_day = 2026-02-01 "the card"
+  n_buy = 10 etf "the card"
+  n_sell = 10 etf "the card"
+  opening[konto] = 1000.00 PLN at 2026-01-01 start "the card"
+  opening[wallet] = 100.00 PLN at 2026-01-01 start "the card"
+  out_amt = 40.00 PLN "the card"
+  out_day = 2026-02-03 "the card"
+  rent_amt = 800.00 PLN "the card"
+  rent_day = 2026-03-15 "the card"
+  sell_day = 2026-04-10 "the card"
+  stated[wallet] = 60.00 PLN at 2026-02-10 end "counted"
+
+version prices_2026
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  unit_price[fund] = 12.5 PLN/etf "the card"

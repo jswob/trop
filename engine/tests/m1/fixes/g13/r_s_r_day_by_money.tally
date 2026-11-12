@@ -1,0 +1,21 @@
+part r_day_by_money
+  tally 2
+
+input bm[a in 0 PLN .. 20 PLN step 1 PLN]: num
+
+kind evs: event certain
+  leg what: any
+
+move mv: evs
+  on d0
+  leg what from konto to world amount fee
+
+def r_day_by_money_x: int = sum(count(v in d0 .. d0 step m.what.amount) for m in evs over d0..d0)
+
+ask r_day_by_money: r_day_by_money_x
+
+version v_r_day_by_money
+  cite card
+  governs always
+  known 2026-01-01
+  bm[10 PLN] = 0.5 "c"

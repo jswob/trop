@@ -1,0 +1,6 @@
+part k9
+  tally 2
+
+def dk: key qs = q2
+
+ask k9: rate[dk + 1]

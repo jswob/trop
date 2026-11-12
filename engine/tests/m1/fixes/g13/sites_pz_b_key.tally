@@ -1,0 +1,12 @@
+part b_key
+  tally 2
+
+input xr: num
+
+ask b_key: xr with xr = rate[q9]
+
+version v_key
+  cite card
+  governs always
+  known 2026-01-01
+  xr = 1 "c"

@@ -1,0 +1,16 @@
+part f7
+  tally 2
+
+input one_kg: num kg
+
+ask ub2: count(v in one_kg .. r step one_kg)
+
+ask ub3: round(w, one_kg, half-up) == r
+
+ask ub4: count(v in one_kg .. w step r)
+
+version v7
+  cite card
+  governs always
+  known 2026-01-01
+  one_kg = 1 kg "c"

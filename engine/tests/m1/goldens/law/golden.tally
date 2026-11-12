@@ -1,0 +1,20 @@
+part golden_law
+  tally 2
+  note "T, M1 (issue #108), DONE gate 2: the pins my_tax/net[2026-10] 8 509.87, my_tax/net[2027-03] 8 837.78, wife_tax/net[2026-10] 5 101.67 and pit_joint/due[2026], [2027] (pins-1-7.json), and G6's first figure, restated on household X's change 1 (integration/amendments/real11/c1), whose employment law is the prototype's employment_pl@2022 (04-employment.json; X's wife at 7 000 gross is the prototype's wife_job). Added here: the prototype's my_job (01-month.json: job_pl@1, gross 12 000, person me; my_tax: employment_pl@2022, paid to konto). Its gross is in.gross * p.index.wage, and index.wage is 1 until 2027-01-01, then before * 1.04 (assume.wage_growth), so the rows state 12 000 for 2026 and 12 480 from 2027."
+
+source prototype "the prototype's blocks 01-month.json and 04-employment.json (engine/spec/verification/blocks)"
+
+version golden_my_job
+  cite prototype
+  governs always
+  known 2025-12-31
+  job + [my_job] lives 2026-01-01..
+  works_for[my_job] = me "01-month.json: my_job, person me"
+  salary[my_job] = 12000 governs 2026-01..2026-12 "my_job, gross 12 000 (index.wage 1)"
+  salary[my_job] = 12480 governs 2027-01.. "12 000 * index.wage, 1.04 from 2027-01-01"
+
+ask g_my_net: emp_net[my_job, m] for m in [2026-10, 2027-03] law cut
+
+ask g_wife_net: emp_net[wife_acme, 2026-10] law cut
+
+ask g_pit37: pit37_due[p, y] for p in person over .., y in [2026, 2027] law cut

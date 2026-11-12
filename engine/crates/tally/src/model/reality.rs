@@ -4,7 +4,8 @@
 //! Twin: engine/tools/refcore/model.py (`Reality`, `BUILTIN_INPUTS`, `BUILTIN_INDEXES`,
 //! `ThingInfo.span_in`, `kind_unit` to `lifespan`).
 //! Invariants: every name is in the namespace once; a kind's chain of parents ends; a thing's
-//! lifespan under a cut is its latest entry the cut sees, a `replace` line winning.
+//! lifespan under a cut is its latest entry the cut and the read's world see, a `replace` line
+//! winning (L §6.4: a scenario's entry is seen in its world and those over it).
 
 use super::decl::{BandInfo, DefInfo, InputInfo, MoveInfo, PlaceInfo};
 use super::graph::Graph;
@@ -15,10 +16,11 @@ use super::ids::{
 use super::index::{IndexInfo, VersionInfo};
 use super::key::{KeyVal, Span};
 use super::kind::{Entry, KindInfo, KindSpec, Thing};
-use super::world::Scenarios;
-use crate::base::{Internal, Interner, Refusal, Table, Warn};
+use super::ty::Ty;
+use super::world::{Scenarios, World};
+use crate::base::{Internal, Interner, Place, Refusal, Table, Warn};
 use crate::num::Num;
-use crate::syntax::{Ask, Axis, Fill, Header, Price, Sign, Source, Type};
+use crate::syntax::{Ask, Axis, Expr, Fill, Header, Price, Sign, Source, Type};
 use crate::time::Day;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -54,6 +56,29 @@ pub enum NameKind {
     Source,
     /// `cut`.
     Cut,
+}
+
+/// How a price input values a place (refcore's `pn._mode`, `pn._cur`, `pn._per`). L §5.10.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Priced {
+    /// `num CUR` or `money CUR`: the value of the place's one position, in CUR.
+    Whole(String),
+    /// `num CUR/u`: a price in CUR per unit u of its positions, (CUR, u).
+    PerUnit(String, String),
+}
+
+/// The id a price written as a reference names, `px` or `px[k]` (L §2.3 `price`).
+#[must_use]
+pub fn price_id(input: &Expr) -> Option<&str> {
+    if let Expr::Name(id) = input {
+        return Some(id);
+    }
+    if let Expr::Post(base, _) = input
+        && let Expr::Name(id) = base.as_ref()
+    {
+        return Some(id);
+    }
+    None
 }
 
 /// The inputs the language declares (refcore's `BUILTIN_INPUTS`). L §5.19.
@@ -125,6 +150,17 @@ pub struct Reality {
     /// The asks refused alone, each with its refusal: one that names a world the run doesn't
     /// load (refcore's `asks_alone`). L §6.4, §8.
     pub asks_alone: BTreeMap<String, Refusal>,
+    /// Each ask whose line can hold a key literal no position resolves (bare, chosen by an
+    /// `if`, a list's item), with the ask's line, where a value holding one meets
+    /// `LOAD-KEY ambiguous key <k>` as it is evaluated (refcore's `e_name`, its `keylit` arm;
+    /// pick P39). L §2.5, §8.3.
+    pub asks_unresolved: BTreeMap<String, Place>,
+    /// Each key list's binding site (file, line, token) with the index its key positions
+    /// fixed: its keys are that index's (refcore's `b._var.fixed`). L §2.5.
+    pub list_keys: BTreeMap<(String, u32, usize), String>,
+    /// The sites (file, line, token) of the kind tests whose narrowing a field read uses: the
+    /// run evaluates them first in their conjunction (refcore's `narrow_mark`). L §5.7.
+    pub narrow_tests: BTreeSet<crate::syntax::SiteKey>,
     /// The rows and movements stated `same`, in the order written (refcore's `same_rows` and
     /// `same_moves`): read together at run. L §6.1, §5.19.
     pub sames: Vec<SamePair>,
@@ -341,6 +377,48 @@ impl Reality {
         }
     }
 
+    /// How a price input of type `ty` values a place: `num CUR` (or `money CUR`) whole, `num
+    /// CUR/u` per unit u, else not a price (refcore's `m_resolve_price`, its type test).
+    /// L §5.10.
+    #[must_use]
+    pub fn price_mode(&self, ty: Option<&Ty>) -> Option<Priced> {
+        let ty = ty?;
+        let terms: Vec<(String, i64)> = if let Ty::Money(cur) = ty {
+            vec![(cur.clone(), 1)]
+        } else if let Ty::Num(unit, _) = ty {
+            unit.terms().to_vec()
+        } else {
+            return None;
+        };
+        let cur = terms
+            .iter()
+            .find(|(base, exp)| *exp == 1 && self.currencies.contains_key(base));
+        let per = terms.iter().find(|(_, exp)| *exp == -1);
+        match (terms.as_slice(), cur, per) {
+            ([_], Some((cur, _)), _) => Some(Priced::Whole(cur.clone())),
+            ([_, _], Some((cur, _)), Some((per, _))) => {
+                Some(Priced::PerUnit(cur.clone(), per.clone()))
+            }
+            _ => None,
+        }
+    }
+
+    /// The input or def a price clause names, and how it values its place, from its declared
+    /// type (refcore's `pn._r`, `pn._mode`). L §5.10.
+    #[must_use]
+    pub fn clause_mode(&self, price: &Price) -> Option<(String, Priced)> {
+        let id = price_id(&price.input)?;
+        let kind = self.names.kind(id)?;
+        let ty = if kind == NameKind::Input {
+            self.inputs.get(id)?.ty.clone()
+        } else if kind == NameKind::Def {
+            Some(self.defs.get(id)?.ty.clone())
+        } else {
+            return None;
+        };
+        Some((id.to_owned(), self.price_mode(ty.as_ref())?))
+    }
+
     /// The price a place is valued by: on its entry or `place` section, else on its kind
     /// (refcore's `price_of`). L §5.10.
     #[must_use]
@@ -355,17 +433,31 @@ impl Reality {
         own.or_else(|| self.kind_priced(base).cloned())
     }
 
-    /// The span over which `thing` is of `kind` under cut `cut`: its latest entry the cut
-    /// sees, a `replace` line winning (refcore's `ThingInfo.span_in`; a keyed place's is the
-    /// overlap of its section's span and its key things', `PlaceThing.span_in`). L §5.7.
+    /// Whether a read in `world` sees `entry` of `thing`: a version's entry where its scenario
+    /// is seen, a thing's own entry where the file declaring its section is (refcore's
+    /// `in_world` of the entry's version, `item_in_world`). L §6.4.
     #[must_use]
-    pub fn span_in(&self, thing: &Thing, kind: &str, cut: Day) -> Option<Span> {
+    pub fn entry_seen(&self, thing: &Thing, entry: &Entry, world: World) -> bool {
+        let section = entry.version.as_ref().unwrap_or_else(|| own_section(thing));
+        self.scenarios.sees(world, Some(section))
+    }
+
+    /// The span over which `thing` is of `kind` under cut `cut` in world `world`: its latest
+    /// entry the cut and the world see, a `replace` line winning (refcore's
+    /// `ThingInfo.span_in`; a keyed place's is the overlap of its section's span and its key
+    /// things', `PlaceThing.span_in`). L §5.7, §6.4.
+    #[must_use]
+    pub fn span_in(&self, thing: &Thing, kind: &str, (cut, world): (Day, World)) -> Option<Span> {
         if let Some(keys) = &thing.place {
-            return self.place_span(thing, keys.key_things.as_slice(), kind, cut);
+            return self.place_span(thing, keys.key_things.as_slice(), kind, (cut, world));
         }
         let mut best: Option<&Entry> = None;
         let mut best_known: Option<Day> = None;
-        for entry in thing.entries.iter().filter(|e| e.kind == kind) {
+        let seen = thing
+            .entries
+            .iter()
+            .filter(|e| e.kind == kind && self.entry_seen(thing, e, world));
+        for entry in seen {
             let known = match &entry.version {
                 None => None,
                 Some(v) => match self.versions.get(v) {
@@ -384,20 +476,24 @@ impl Reality {
         best.map(|entry| entry.span.clone())
     }
 
-    /// A keyed place's span: its section's, cut to its key things' lifespans.
+    /// A keyed place's span in world `world`: its section's, cut to its key things'
+    /// lifespans.
     fn place_span(
         &self,
         thing: &Thing,
         key_things: &[String],
         kind: &str,
-        cut: Day,
+        (cut, world): (Day, World),
     ) -> Option<Span> {
-        let own = thing.entries.first().filter(|e| e.kind == kind)?;
+        let own = thing
+            .entries
+            .first()
+            .filter(|e| e.kind == kind && self.entry_seen(thing, e, world))?;
         let mut start = own.span.start();
         let mut end = own.span.end();
         for name in key_things {
             let key = self.things.get(name)?;
-            let span = self.span_in(key, key.base.as_deref()?, cut)?;
+            let span = self.span_in(key, key.base.as_deref()?, (cut, world))?;
             if span.is_always() {
                 continue;
             }
@@ -416,9 +512,60 @@ impl Reality {
         Some(Span::between(start, end))
     }
 
-    /// A thing's lifespan in its base kind under cut `cut` (refcore's `lifespan`). L §5.7.
+    /// The moves world `world` holds, by id: a move a scenario's file declares exists only in
+    /// that scenario and those over it (refcore's `m_plan_moves`, `item_in_world`). L §6.4.
     #[must_use]
-    pub fn lifespan(&self, thing: &Thing, cut: Day) -> Option<Span> {
-        self.span_in(thing, thing.base.as_deref()?, cut)
+    pub fn moves_in(&self, world: World) -> Vec<&MoveInfo> {
+        let mut out: Vec<&MoveInfo> = self
+            .moves
+            .entries()
+            .map(|(_, mv)| mv)
+            .filter(|mv| self.scenarios.sees(world, Some(&mv.id)))
+            .collect();
+        out.sort_by(|a, b| a.id.cmp(&b.id));
+        out
+    }
+
+    /// A thing's lifespan in its base kind under cut `cut` in world `world` (refcore's
+    /// `lifespan`). L §5.7, §6.4.
+    #[must_use]
+    pub fn lifespan(&self, thing: &Thing, seen: (Day, World)) -> Option<Span> {
+        self.span_in(thing, thing.base.as_deref()?, seen)
+    }
+
+    /// The sections of a scenario that state thing `thing` in world `world`: its own section
+    /// or the versions of its entries, and those of a keyed place's key things, sorted (L §5.7,
+    /// a lifespan is a fact; §6.4). E §9 item 3.
+    #[must_use]
+    pub fn thing_scenario_sections(&self, thing: &Thing, world: World) -> BTreeSet<String> {
+        let mut holders = vec![thing];
+        if let Some(keys) = &thing.place {
+            holders.extend(keys.key_things.iter().filter_map(|k| self.things.get(k)));
+        }
+        let mut out = BTreeSet::new();
+        for held in holders {
+            let own = own_section(held);
+            if self.scenarios.of(own).is_some() && self.scenarios.sees(world, Some(own)) {
+                out.insert(own.clone());
+            }
+            let versions = held.entries.iter().filter_map(|e| e.version.as_ref());
+            out.extend(
+                versions
+                    .filter(|v| {
+                        self.scenarios.of(v).is_some() && self.scenarios.sees(world, Some(v))
+                    })
+                    .cloned(),
+            );
+        }
+        out
+    }
+}
+
+/// The section that declares a thing's own entries: its place's, for a place's thing, else
+/// its own name's (refcore's `item_in_world`). L §6.4.
+fn own_section(thing: &Thing) -> &String {
+    match &thing.place {
+        Some(p) => &p.place,
+        None => &thing.name,
     }
 }

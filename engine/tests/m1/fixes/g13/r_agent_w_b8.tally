@@ -1,0 +1,6 @@
+part b8
+  tally 2
+
+input t2[d in d1 .. lifespan(konto).to step 1 month]: num
+
+ask b8: t2[d1]

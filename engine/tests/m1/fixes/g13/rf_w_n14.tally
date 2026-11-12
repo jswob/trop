@@ -1,0 +1,4 @@
+part n14
+  tally 2
+
+ask n14: min(lifespan(konto).to, d1)

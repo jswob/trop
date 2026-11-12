@@ -1,0 +1,4 @@
+part a1
+  tally 2
+
+ask a1: year_of(lifespan(konto).to)

@@ -1,0 +1,6 @@
+part c_rate
+  tally 2
+
+def c_rate_x: num PLN = r5 as if {r5 = r5 * r5}
+
+ask c_rate: c_rate_x

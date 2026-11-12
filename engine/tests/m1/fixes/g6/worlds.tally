@@ -1,0 +1,31 @@
+model worlds
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+  note "T's vectors for MB2's two G6 survivors (issue #108, invented): a scenario's replace rule and its band table are its own; read in the model's world, from the scenario's file or through a diff against the model, the model's rule and table answer (L §6.4; read/rules.rs:39, read/bands.rs:65)"
+
+source card "T's card (invented)"
+
+unit DUK: currency minor 0.01
+
+input base_pay: money DUK
+
+input bonus: money DUK
+
+input revenue: money DUK
+
+band contribution(x: money DUK): money DUK
+
+def pay: money DUK at reader
+  rule base = base_pay
+
+version facts
+  cite card
+  governs always
+  known 2026-01-01
+  base_pay = 1000 "the base pay"
+  bonus = 100 "the raise"
+  revenue = 50000 "the revenue"
+  contribution: (-inf, 60000] = 300 "the model's table: 300.00"
+  contribution: (60000, inf) = 500 "the model's table: 500.00"

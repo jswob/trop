@@ -1,0 +1,102 @@
+model rules
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's run-code fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index feb = day 2026-02-01..2026-02-28
+
+input amt: money PLN
+
+input day: date
+
+input holidays: calendar
+
+input lag: int
+
+input target: money PLN
+
+input rate[k in qs]: num
+
+input weight[k in qs]: num
+
+input from_day: date
+
+input step: money PLN
+
+input to_day: date
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def lowest: money PLN = min(fee[k] for k in qs where rate[k] > 0)
+
+def due: date = add_business(day, lag, holidays)
+
+def split[k in qs]: money PLN = prorata(amt, weight[j] for j in qs, k, step, rest largest ties by pos(j))
+
+def open_day[d in feb]: date = d
+
+def first_pay: key transfers = first(m in transfers over from_day..to_day) ties by m.day
+
+def opened: date = open_day[day]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place loan: debts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+move repay: transfers
+  on due
+  reads loan
+  leg cash from konto to loan amount max(fee[q1], bal(loan))
+
+ask q_total: total, bal(konto, 2026-12-31)
+
+ask q_loan: bal(loan, 2026-12-31)
+
+ask q_lowest: lowest
+
+ask q_due: due
+
+ask q_split: split[k] for k in qs
+
+ask q_opened: opened
+
+ask q_first: first_pay
+
+ask q_solve: solve total == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  lag = 3 "the card"
+  target = 20.00 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  from_day = 2026-02-01 "the card"
+  step = 0.01 PLN "the card"
+  to_day = 2026-12-31 "the card"
+  weight[q1] = 1 "the card"
+  weight[q2] = 3 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[loan] = -1000.00 PLN at 2026-01-01 start "the card"

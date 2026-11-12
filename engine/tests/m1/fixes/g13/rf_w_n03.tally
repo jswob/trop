@@ -1,0 +1,4 @@
+part n03
+  tally 2
+
+ask n03: weekday(lifespan(konto).to)

@@ -1,0 +1,113 @@
+model p7
+  tally 2
+  on 2025-04-01
+  start 2025-03-01
+  end 2025-03-31
+
+source card "invented"
+
+unit DUK: currency minor 0.01
+
+place p0: accounts DUK lives 2025-03-01..
+
+place p1: accounts DUK lives 2025-03-01..
+
+place p2: accounts DUK lives 2025-03-01..
+
+place p3: accounts DUK lives 2025-03-01..
+
+place p4: accounts DUK lives 2025-03-01..
+
+place p5: accounts DUK lives 2025-03-01..
+
+place p6: accounts DUK lives 2025-03-01..
+
+place p7: accounts DUK lives 2025-03-01..
+
+place p8: accounts DUK lives 2025-03-01..
+
+place p9: accounts DUK lives 2025-03-01..
+
+place p10: accounts DUK lives 2025-03-01..
+
+place p11: accounts DUK lives 2025-03-01..
+
+place p12: accounts DUK lives 2025-03-01..
+
+place p13: accounts DUK lives 2025-03-01..
+
+place p14: accounts DUK lives 2025-03-01..
+
+place p15: accounts DUK lives 2025-03-01..
+
+place p16: accounts DUK lives 2025-03-01..
+
+place p17: accounts DUK lives 2025-03-01..
+
+place p18: accounts DUK lives 2025-03-01..
+
+place p19: accounts DUK lives 2025-03-01..
+
+place p20: accounts DUK lives 2025-03-01..
+
+place p21: accounts DUK lives 2025-03-01..
+
+place p22: accounts DUK lives 2025-03-01..
+
+place p23: accounts DUK lives 2025-03-01..
+
+place p24: accounts DUK lives 2025-03-01..
+
+place p25: accounts DUK lives 2025-03-01..
+
+place p26: accounts DUK lives 2025-03-01..
+
+place p27: accounts DUK lives 2025-03-01..
+
+place p28: accounts DUK lives 2025-03-01..
+
+place p29: accounts DUK lives 2025-03-01..
+
+input w[p in accounts]: date
+
+input day: date
+
+def f: key accounts = first(p in accounts on day) ties by w[p]
+
+ask a: f
+
+version v1
+  cite card
+  governs always
+  known 2025-03-01
+  day = 2025-03-15 "c"
+  w[p0] = window(2025-01-01, 2025-01-10) "c"
+  w[p1] = window(2025-01-02, 2025-01-17) "c"
+  w[p2] = window(2025-01-03, 2025-01-11) "c"
+  w[p3] = window(2025-01-04, 2025-01-18) "c"
+  w[p4] = window(2025-01-05, 2025-01-12) "c"
+  w[p5] = window(2025-01-01, 2025-01-19) "c"
+  w[p6] = window(2025-01-02, 2025-01-13) "c"
+  w[p7] = window(2025-01-03, 2025-01-20) "c"
+  w[p8] = window(2025-01-04, 2025-01-14) "c"
+  w[p9] = window(2025-01-05, 2025-01-21) "c"
+  w[p10] = window(2025-01-01, 2025-01-15) "c"
+  w[p11] = window(2025-01-02, 2025-01-22) "c"
+  w[p12] = window(2025-01-03, 2025-01-16) "c"
+  w[p13] = window(2025-01-04, 2025-01-10) "c"
+  w[p14] = window(2025-01-05, 2025-01-17) "c"
+  w[p15] = window(2025-01-01, 2025-01-11) "c"
+  w[p16] = window(2025-01-02, 2025-01-18) "c"
+  w[p17] = window(2025-01-03, 2025-01-12) "c"
+  w[p18] = window(2025-01-04, 2025-01-19) "c"
+  w[p19] = window(2025-01-05, 2025-01-13) "c"
+  w[p20] = window(2025-01-01, 2025-01-20) "c"
+  w[p21] = window(2025-01-02, 2025-01-14) "c"
+  w[p22] = window(2025-01-03, 2025-01-21) "c"
+  w[p23] = window(2025-01-04, 2025-01-15) "c"
+  w[p24] = window(2025-01-05, 2025-01-22) "c"
+  w[p25] = window(2025-01-01, 2025-01-16) "c"
+  w[p26] = window(2025-01-02, 2025-01-10) "c"
+  w[p27] = window(2025-01-03, 2025-01-17) "c"
+  w[p28] = window(2025-01-04, 2025-01-11) "c"
+  w[p29] = window(2025-01-05, 2025-01-18) "c"

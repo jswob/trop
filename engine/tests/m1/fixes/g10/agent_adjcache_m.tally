@@ -1,0 +1,39 @@
+model m
+  tally 2
+  on 2028-12-31
+  start 2027-01-01
+  end 2028-12-31
+  note "review probe: adjustments measured inside a walk up to a day"
+source card "card (invented)"
+unit PLN: currency minor 0.01
+kind ovs: event certain
+  leg cash: PLN
+place acct: accounts PLN lives 2027-01-01..
+place bank: outside lives 2027-01-01..
+input fee: money PLN
+input bill_day: date
+def p[m in months]: money PLN = if pos(m) == 1 then 0 else p[m - 1] - sum(o.cash.amount for o in ovs over m)
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from acct to bank amount p[m]
+move op[m in months]: ovs
+  on start_of(m)
+  leg cash from acct to bank amount 0
+move bill: transfers
+  on bill_day
+  leg cash from bank to acct amount fee
+ask t: p[m] for m in [2028-01, 2028-07]
+ask u: p[2028-01] + bal(acct, 2028-12-31)
+ask v: bal(acct, 2028-12-31)
+version v1
+  cite card
+  governs always
+  known 2027-01-01
+  fee = 10.00 "the card"
+  bill_day = 2028-03-01 "the card"
+  opening[acct] = 0 PLN at 2027-01-01 start "the card"
+version v2
+  cite card
+  governs always
+  known 2028-05-01
+  replace fee = 20.00 "the card"

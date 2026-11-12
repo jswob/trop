@@ -1,0 +1,49 @@
+model f7
+  tally 2
+  on 2025-04-01
+  start 2025-03-01
+  end 2025-03-31
+
+source card "invented"
+
+unit DUK: currency minor 0.01
+
+place p0: accounts DUK lives 2025-03-01..
+
+place p1: accounts DUK lives 2025-03-01..
+
+index ks = [k0, k1, k2]
+
+input v[k in ks]: int
+
+input t: int
+
+input r1[p in accounts]: int
+
+input ok[p in accounts]: bool
+
+input day: date
+
+ask q1: first(k in ks where v[k] > t)
+ask q2: last(k in ks where v[k] > t)
+ask q3: first(p in accounts on day where ok[p]) ties by r1[p]
+
+version v1
+  cite card
+  governs always
+  known 2025-03-01
+  day = 2025-03-15 "c"
+  t = 0 "c"
+  v[k0] = 1 "c"
+  v[k1] = 1 "c"
+  r1[p0] = 1 "c"
+  ok[p0] = true "c"
+  ok[p1] = false "c"
+
+version va
+  cite card
+  governs always
+  known 2025-03-01
+  assumed "a guess past the key"
+  v[k2] = 1 "c"
+  r1[p1] = 2 "c"

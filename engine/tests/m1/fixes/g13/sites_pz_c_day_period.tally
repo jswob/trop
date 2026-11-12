@@ -1,0 +1,6 @@
+part c_day_period
+  tally 2
+
+def c_day_period_x: date = d0 as if {d0 = d0 + d0}
+
+ask c_day_period: c_day_period_x

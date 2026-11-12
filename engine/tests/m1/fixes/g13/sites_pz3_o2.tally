@@ -1,0 +1,24 @@
+part o2
+  tally 2
+
+index ls = [l1, l2]
+
+input lv[k in ls]: num
+
+def o2_x: num = lv[l3]
+
+ask o2: o2_x as known 2026-02-01
+
+version vo3
+  cite card
+  governs always
+  known 2026-01-01
+  lv[l1] = 1 "c"
+  lv[l2] = 2 "c"
+
+version vo4
+  cite card
+  governs always
+  known 2026-02-15
+  ls + [l3]
+  lv[l3] = 3 "c"

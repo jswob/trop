@@ -1,0 +1,4 @@
+part px2
+  tally 2
+
+ask x2: f[k] for k in qs with v[q1] = count(j in qs where j == k)

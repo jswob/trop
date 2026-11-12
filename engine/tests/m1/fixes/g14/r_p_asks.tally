@@ -1,0 +1,26 @@
+part asks
+  tally 2
+
+ask a1: sum(f[k] as if {v[k] = 3} for k in qs)
+
+ask a2: ge[q1], ge[q2]
+
+ask a3: gk[q1], gk[q2]
+
+ask a4: gw[q1], gw[q2]
+
+ask a5: f[k] as if {v[k] = m[k]} for k in qs
+
+ask a6: f[k] as if {v[q2] = 9} for k in qs
+
+ask a7: max(f[k] as if {v[k] = m[k] + m[k]} for k in qs)
+
+ask a8: (f[k] as if {v[k] = 3}) + f[k] for k in qs
+
+ask a9: explain gk[q2]
+
+ask a10: count(k in qs where (f[k] as if {v[k] = m[k]}) > m[k])
+
+ask a11: gk[q1] as if {v[q1] = 10}
+
+ask a12: f[k] as if {v[k] = 5} for k in qs with v[q1] = 0

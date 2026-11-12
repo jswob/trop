@@ -1,0 +1,11 @@
+scenario sk2 over fu
+  tally 2
+  from 2026-01-01
+
+version skv2
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  replace r = fu.w * 1 kg "x"
+
+ask s2: r in sk2

@@ -1,0 +1,14 @@
+part c_key
+  tally 2
+
+input xr: num
+
+def c_key_x: num = xr as if {xr = rate[q9]}
+
+ask c_key: c_key_x
+
+version v_key
+  cite card
+  governs always
+  known 2026-01-01
+  xr = 1 "c"

@@ -3,7 +3,8 @@
 //! the walk; a refused leg refuses its place from that point), §4.3 step 1 (a projection's walk
 //! starts from the walk it continues, at a point), §6.1 (readings anchor a place); L §5.10 (a
 //! place's balance: zero from its lifespan's start, else `HOLE-ANCHOR` until its first
-//! reading), §8.1 (`HOLE-ANCHOR`'s questions), §8.2 (the register: what a balance rests on);
+//! reading), §8.1 (`HOLE-ANCHOR`'s questions), §8.2 (the register: what a balance rests on),
+//! §6.4 (a walk is walked in one world: the places and lifespans it sees);
 //! P §2.4 (monthly checkpoints: every place's state and the legs booked ahead, a state that
 //! didn't change shared, not copied; D2-6).
 //! Twin: engine/tools/refcore/walk.py (`St`, `Ent`, `Log`, `apply`, `Walk.log`, `default`,
@@ -24,13 +25,13 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::rc::Rc;
 
 use super::agenda::{Act, Mv};
-use super::order::Run;
-use super::plan::{Inst, LegVal, Order, invariant};
+use super::order::{CycleItem, Run};
+use super::plan::{Amount, Inst, LegVal, Order, invariant};
 use super::point::{At, Step};
 use crate::base::{Refusal, Warn};
 use crate::eval::{Collected, Entry};
 use crate::hole::{Hole, spread};
-use crate::model::Reality;
+use crate::model::{Reality, World};
 use crate::num::Num;
 use crate::syntax::Stop;
 use crate::time::Day;
@@ -115,6 +116,9 @@ pub struct Ent {
     pub reg: Vec<Entry>,
     /// What its movement's evaluation met.
     pub coll: Option<Collected>,
+    /// A pad's flow at its reading's own place, where the reset books it: the gap, a number
+    /// or a hole, which `flows` of the place counts (E §6.1; L §5.19).
+    pub flow: Option<Amount>,
     /// The state after it.
     pub st: St,
 }
@@ -130,6 +134,7 @@ impl Ent {
             leg: None,
             reg: Vec::new(),
             coll: None,
+            flow: None,
             st: St::of(None),
         }
     }
@@ -152,10 +157,16 @@ pub enum Progress {
     Planning,
     /// The days are being walked.
     Walking,
-    /// Every day is walked.
+    /// Every day is walked, its close still to run (its warnings, its signature, E §9 item
+    /// 3), so a read cut short past the counted depth runs it again on replay (R-16).
+    Walked,
+    /// Every day is walked and closed.
     Done,
-    /// A refusal the walk met: every read of it is refused (L §8.4).
-    Failed(Stop),
+    /// A refusal the walk met, with the day it was walking: every read of it that reaches
+    /// that day is refused, and a read that ends before it is read as the walk stood there;
+    /// none for a refusal of its plan pass or its close, which refuses every read (L §8.4,
+    /// E §4.3; pick P54, #127).
+    Failed(Stop, Option<Day>),
 }
 
 /// The legs a check of the sign rule tests together: per (place, unit), each movement's leg
@@ -176,6 +187,9 @@ pub struct Today {
     pub next_inst: usize,
     /// The runs of the decision act being taken, by their place in the walk's list.
     pub runs: Vec<usize>,
+    /// The order of an unordered cycle's instances due that day, once judged, so a day cut
+    /// short past the counted depth runs the rest of it as judged (L §5.14.2).
+    pub cycle: Option<Vec<CycleItem>>,
     /// The legs of the day's first batch, while it is open.
     pub batch: Option<Group>,
     /// The closing readings' legs, once the day's end is reached.
@@ -192,6 +206,8 @@ pub struct Today {
 pub struct Walk {
     /// Its cut K.
     pub cut: Day,
+    /// Its world: the moves, places and versions of the scenarios it sees (L §6.4).
+    pub world: World,
     /// Its first day.
     pub start: Day,
     /// Its last day.
@@ -216,6 +232,12 @@ pub struct Walk {
     pub(crate) run_ids: BTreeMap<String, usize>,
     /// The running decision's live reads: the places it reads at its point (L §5.14.2).
     pub(crate) live: Option<BTreeSet<String>>,
+    /// The running decision's reads: every place it reads, at its point or before it, which
+    /// `explain` prints (E §10).
+    pub(crate) reads: Option<BTreeSet<String>>,
+    /// The moves of an unordered cycle whose instances due each day ran together, by (move,
+    /// day): the cycle's other moves' acts that day run nothing more (L §5.14.2).
+    pub(crate) cycles_run: BTreeSet<(String, Day)>,
     /// The instances left out, per move: how many, and the first day (L §8.2 `left out:`).
     pub(crate) left_out: BTreeMap<String, (u32, Option<Day>)>,
     /// The moves left out that touch each place.
@@ -264,6 +286,29 @@ pub struct Walk {
     /// A main walk's checkpoints, one at the start of each month it walked into, in day
     /// order (P §2.4).
     pub(crate) checkpoints: Vec<Checkpoint>,
+    /// A scenario's main walk's movements before its `from` that read the scenario's facts,
+    /// each a `before from:` text its reads list (E §9 item 3, ruling P43).
+    pub(crate) listed: Vec<String>,
+    /// The gaps of the `stated` readings it applied, per (place, day), in the order applied
+    /// (L §5.19 `gap(x, d)`, E §6.1).
+    pub(crate) gaps: BTreeMap<(String, Day), Vec<GapAt>>,
+    /// A walk up to a day: that day, past which its plan pass listed no plan's instance
+    /// (refcore's prefix walk; E §3.2, §4.1); none for a main walk or a projection's.
+    pub(crate) upto: Option<Day>,
+}
+
+/// A stated reading's gap, as the walk met it: the reading less the booked balance at its
+/// instant, and what that rests on (refcore's `Walk.gaps`). L §5.19, E §6.1, L §8.2.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct GapAt {
+    /// The reading's point.
+    pub at: At,
+    /// The gap: a number, a hole, or the refusal the booked balance is.
+    pub gap: Amount,
+    /// The reading's unit.
+    pub unit: String,
+    /// The register of the booked balance and the reading's row.
+    pub coll: Collected,
 }
 
 /// A main walk's state at the start of a month, kept for a walk to start from later: each
@@ -311,6 +356,8 @@ pub struct Projected {
     pub levels: Vec<BTreeMap<(String, String), St>>,
     /// The cut and the first day of the main walk at the chain's end.
     pub root: (Day, Day),
+    /// The world the chain's walks are walked in (L §6.4).
+    pub world: World,
 }
 
 impl Projected {
@@ -338,14 +385,15 @@ impl Projected {
                 st.rst = None;
                 st
             }
-            Some(_) | None => opening_state(m, place, unit, self.root),
+            Some(_) | None => opening_state(m, place, unit, (self.root, self.world)),
         }
     }
 }
 
 impl Walk {
-    /// A projection's walk of cut `cut` from `start` to `end`, continuing `projected`, each
-    /// place's first reading as `first_reading` gives it; nothing planned yet. E §4.3.
+    /// A projection's walk of cut `cut` from `start` to `end`, continuing `projected` in its
+    /// world, each place's first reading as `first_reading` gives it; nothing planned yet.
+    /// E §4.3.
     #[must_use]
     pub fn projection(
         cut: Day,
@@ -353,18 +401,21 @@ impl Walk {
         projected: Projected,
         first_reading: BTreeMap<String, Day>,
     ) -> Walk {
+        let world = projected.world;
         Walk {
             proj: Some(Box::new(projected)),
             first_reading,
-            ..Walk::new(cut, start, end)
+            ..Walk::new(cut, (start, end), world)
         }
     }
 
-    /// A walk of cut `cut` from `start` to `end`, nothing planned yet. E §4.2.
+    /// A walk of cut `cut` from `start` to `end` in world `world`, nothing planned yet.
+    /// E §4.2; L §6.4.
     #[must_use]
-    pub fn new(cut: Day, start: Day, end: Day) -> Walk {
+    pub fn new(cut: Day, (start, end): (Day, Day), world: World) -> Walk {
         Walk {
             cut,
+            world,
             start,
             end,
             logs: BTreeMap::new(),
@@ -377,6 +428,8 @@ impl Walk {
             runs: Vec::new(),
             run_ids: BTreeMap::new(),
             live: None,
+            reads: None,
+            cycles_run: BTreeSet::new(),
             left_out: BTreeMap::new(),
             left_out_at: BTreeMap::new(),
             adj_regs: BTreeMap::new(),
@@ -397,6 +450,9 @@ impl Walk {
             modelled: Vec::new(),
             less_obs: None,
             checkpoints: Vec::new(),
+            listed: Vec::new(),
+            gaps: BTreeMap::new(),
+            upto: None,
         }
     }
 
@@ -438,9 +494,9 @@ impl Walk {
     /// when that is on or after the walk's start, else unknown until a reading; in a
     /// projection's walk, the state of the walk it continues at the point it starts from
     /// (refcore's `default`). L §5.10, E §4.3 step 1.
-    fn default_state(&self, m: &Reality, place: &str, unit: &str) -> St {
+    pub(crate) fn default_state(&self, m: &Reality, place: &str, unit: &str) -> St {
         match &self.proj {
-            None => opening_state(m, place, unit, (self.cut, self.start)),
+            None => opening_state(m, place, unit, ((self.cut, self.start), self.world)),
             Some(p) => {
                 let mut st = p.state_at(m, place, unit, 0);
                 st.rst = None;
@@ -782,18 +838,26 @@ fn fold(mut st: St, any: St, all: St) -> St {
     st
 }
 
-/// A place's state where a main walk of cut and first day `root` starts: every place's
-/// total zero, a unit's position unknown until booked, a place zero from its lifespan's start
-/// when that is on or after the walk's first day, else unknown until a reading (refcore's
-/// `default`). L §5.10.
-fn opening_state(m: &Reality, place: &str, unit: &str, (cut, start): (Day, Day)) -> St {
+/// A place's state where a main walk of cut and first day `root` starts in `world`: every
+/// place's total zero, a unit's position unknown until booked, a place zero from its
+/// lifespan's start when that is on or after the walk's first day, else unknown until a
+/// reading (refcore's `default`). L §5.10, §6.4.
+fn opening_state(
+    m: &Reality,
+    place: &str,
+    unit: &str,
+    ((cut, start), world): ((Day, Day), World),
+) -> St {
     if place == ALL {
         return St::of(Some(Num::zero()));
     }
     if unit == ALL {
         return St::of(None);
     }
-    let span = m.things.get(place).and_then(|th| m.lifespan(th, cut));
+    let span = m
+        .things
+        .get(place)
+        .and_then(|th| m.lifespan(th, (cut, world)));
     match span.and_then(|sp| sp.start()) {
         Some(s) if s >= start => St::of(Some(Num::zero())),
         Some(_) | None => St::of(None),

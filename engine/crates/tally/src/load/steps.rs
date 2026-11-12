@@ -11,7 +11,7 @@ use super::check::invariant;
 use super::keys::{RangeKey, check_range_keys};
 use super::same::SameLine;
 use crate::base::{Code, Interner, Load, Place as At, Refusal, Run, Table, Warn};
-use crate::model::{Graph, Joint, Names, PERIODS, Reality, Scenarios, UnitError, power_past_limit};
+use crate::model::{Graph, Joint, Names, PERIODS, Reality, Scenarios, UnitError};
 use crate::num::{Num, NumError};
 use crate::syntax::{File, HeaderKind, Lit, Section, Stop, UnitForm};
 use std::collections::{BTreeMap, BTreeSet};
@@ -41,17 +41,10 @@ pub(super) fn refuse(code: Load, message: String, file: &str, line: u32) -> Stop
     ))
 }
 
-/// A unit operation's error met while loading a row: a power past 64 in size is `LOAD-LIMIT
-/// unit <u> has a power past 64`, placed by the caller (refcore's `at`); a number error is
-/// `num_stop`'s. L §7.6 item 4, §8.3 `LOAD-LIMIT`.
+/// A unit operation's error met while loading a row (`UnitError::refusal`), placed by the
+/// caller (refcore's `at`); a number error is `num_stop`'s. L §7.6 item 4, §8.3 `LOAD-LIMIT`.
 pub(super) fn unit_num_stop(error: UnitError) -> Stop {
-    match error {
-        UnitError::Power(base) => Stop::Refused(Refusal::new(
-            Code::Load(Load::Limit),
-            power_past_limit(&base),
-        )),
-        UnitError::Num(error) => num_stop(error),
-    }
+    error.refusal(num_stop, None)
 }
 
 /// A number error met while loading: its code, as at a read (L §8.4).
@@ -107,7 +100,7 @@ pub(super) fn load_among(
     loader.unread_sources();
     loader.build_entries()?;
     loader.build_decls()?;
-    loader.prescan_open_keys();
+    loader.prescan_open_keys()?;
     loader.build_places()?;
     loader.joint_place_sames()?;
     loader.check_key_ids()?;
@@ -211,6 +204,9 @@ impl Loader {
                 all_worlds: BTreeSet::new(),
                 elsewhere: BTreeMap::new(),
                 asks_alone: BTreeMap::new(),
+                asks_unresolved: BTreeMap::new(),
+                list_keys: BTreeMap::new(),
+                narrow_tests: BTreeSet::new(),
                 sames: Vec::new(),
                 joint: joint.cloned(),
             },

@@ -1,0 +1,10 @@
+scenario a13_apr over a13_calc
+  tally 2
+  from 2023-01-01
+  note "A-13 (c): as (a), Ania stopping work for Kalina from 1 April 2023 instead (questions.md A-13). The rules are a13_calc's; this layer states the day."
+
+version a13_apr_stop
+  cite questions
+  governs 2023-01-01..
+  known 2023-01-01
+  replace a13_stop = 2023-04-01 "questions.md A-13 (c): from 1 April 2023"

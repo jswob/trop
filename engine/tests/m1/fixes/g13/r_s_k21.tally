@@ -1,0 +1,5 @@
+part k21
+  tally 2
+
+
+ask k21: txt as if {txt = 5}

@@ -1,0 +1,37 @@
+model prices
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's price-hole fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+place car: assets PLN priced car_value lives 2026-01-01..
+
+input asked_on: date
+
+input car_value: money PLN
+
+input rent: money PLN prices 2026
+
+input rent_day: date
+
+def car_worth: num PLN = value(car, asked_on) in PLN
+
+def rent_then: money PLN = rent at rent_day
+
+ask q_car: car_worth
+
+ask q_rent: rent_then
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  asked_on = 2026-02-01 "the card"
+  car_value = 30000.00 PLN "the card"
+  rent = 3200.00 PLN "the card"
+  rent_day = 2026-06-01 "the card"

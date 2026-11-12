@@ -1,0 +1,4 @@
+part n08
+  tally 2
+
+ask n08: dcf(d1, lifespan(konto).to, act_365)

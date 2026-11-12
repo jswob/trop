@@ -18,9 +18,11 @@ output's SHA-256 is compared with T's expected digest (engine/tests/perf-digests
 digest per line), and a row with no digest yet is reported unjudged.
 
 A micro row (`bench:<name>`, P8-M*) runs its criterion bench, crates/tally/benches/<name>.rs,
-whose id is the row's: the wall time is criterion's median, and the bench itself fails the
-run when a result isn't its known value. Its instructions run under gungraun on Linux CI
-(tools/gungraun/benches/<name>.rs); a bench with no criterion twin is left to CI.
+whose id is the row's: the wall time is criterion's median (less the median of the bench id
+the row's `less` names, if any: P8-M4's run less the plain run), and the bench itself fails
+the run when a result isn't its known value. Its instructions run under gungraun on Linux CI
+(tools/gungraun/benches/<name>.rs), where it has one (P8-5 has none: its instruction limit
+is P8-M4's); a bench with no criterion twin is left to CI.
 
 Until the lead sets the kernel at S (tools/kernel.toml), every number is proposed
 (PERFORMANCE §8): perf reports misses and exits 0. After S a miss exits 1. A wrong answer
@@ -50,6 +52,7 @@ KERNEL = os.path.join(TOOLS, "kernel.toml")
 CHECKS = os.path.join(ENGINE, "tests", "checks.tsv")
 DIGESTS = os.path.join(ENGINE, "tests", "perf-digests.tsv")
 BENCHES = os.path.join(ENGINE, "crates", "tally", "benches")
+GUNGRAUN = os.path.join(TOOLS, "gungraun", "benches")
 OUT = os.path.join(ENGINE, "target", "perf")
 CEILING_KB = 8 * 1024 * 1024  # D4-7: 8 GB on any run
 TIMEOUT_S = 90.0  # the user's hard budget for one run
@@ -90,6 +93,8 @@ def budget_text(r):
 
 
 def seconds(s):
+    if s < 0:
+        return f"-{seconds(-s)}"
     if s < 0.000001:
         return f"{s * 1e9:.1f} ns"
     if s < 0.001:
@@ -216,17 +221,39 @@ def criterion_row(r, name):
         return (f"BUDGET {r['id']}: WRONG or unbuilt: {' '.join(argv)} exited {done.returncode}: "
                 f"{check.first_error(done.stdout + done.stderr)}"), True
     target = os.path.join(ENGINE, os.environ.get("CARGO_TARGET_DIR") or "target")
-    estimates = os.path.join(target, "criterion", r["id"], "new", "estimates.json")
     try:
-        with open(estimates, encoding="utf-8") as f:
-            wall = json.load(f)["median"]["point_estimate"] / 1e9
-    except (OSError, ValueError, KeyError, TypeError):
-        return f"BUDGET {r['id']}: criterion wrote no median at {os.path.relpath(estimates, ROOT)}", True
-    note = f"wall(1w): median {seconds(wall)} (criterion; its instructions under gungraun on Linux CI)"
+        wall, how = criterion_wall(r, target)
+    except LookupError as e:
+        return f"BUDGET {r['id']}: criterion wrote no median at {e}", True
+    counted = ("its instructions under gungraun on Linux CI" if os.path.isfile(os.path.join(GUNGRAUN, f"{name}.rs"))
+               else "no gungraun twin")
+    note = f"wall(1w): median {seconds(wall)} ({how}; {counted})"
     if "wall_s" in r and wall > r["wall_s"]:
         return (f"BUDGET {r['id']} wall(1w): median {seconds(wall)} > {seconds(r['wall_s'])} "
-                f"(+{(wall / r['wall_s'] - 1) * 100:.0f} %, criterion)"), set_at_s()
+                f"(+{(wall / r['wall_s'] - 1) * 100:.0f} %, {how})"), set_at_s()
     return f"ok {r['id']} {note} (budget: {budget_text(r)})", False
+
+
+def criterion_median(target, bench_id):
+    """Criterion's median, in seconds, of the bench id `bench_id` under `target`; a
+    LookupError naming the file when it wrote none."""
+    estimates = os.path.join(target, "criterion", bench_id, "new", "estimates.json")
+    try:
+        with open(estimates, encoding="utf-8") as f:
+            return json.load(f)["median"]["point_estimate"] / 1e9
+    except (OSError, ValueError, KeyError, TypeError):
+        raise LookupError(os.path.relpath(estimates, ROOT)) from None
+
+
+def criterion_wall(r, target):
+    """A micro row's wall time and how it was read: its own bench id's median, less the
+    median of the bench id its `less` names, when it names one (P8-M4: the run with the
+    projection less the plain run, P §8.4; pick P56, 2026-11-09)."""
+    wall = criterion_median(target, r["id"])
+    if "less" not in r:
+        return wall, "criterion"
+    plain = criterion_median(target, r["less"])
+    return wall - plain, f"criterion, {seconds(wall)} less {r['less']}'s {seconds(plain)}"
 
 
 def time_row(r, binary, runs, warmups):

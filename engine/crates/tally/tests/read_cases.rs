@@ -13,7 +13,7 @@
 mod tests {
     use tally::Source;
     use tally::load::load;
-    use tally::model::{BandEnd, BandRow, Domain, KeyVal, Reality};
+    use tally::model::{BandEnd, BandRow, Domain, KeyVal, Reality, World};
     use tally::read::{
         Asked, Clocks, Found, band_rows, held, read_input, rule_in_force, time_point,
     };
@@ -172,7 +172,7 @@ band|scale||2025-06-01|2026-03-01|rows v2 [0, 100]; v1 (100, inf)
             Domain::Index(id) => m
                 .indexes
                 .get(id)
-                .and_then(|ix| ix.keys.iter().find(|k| k.text() == text))
+                .and_then(|ix| ix.keys().iter().find(|k| k.text() == text))
                 .cloned()
                 .expect("a key of the index"),
             Domain::Kind(_) => KeyVal::Thing(text.to_owned()),
@@ -223,7 +223,7 @@ band|scale||2025-06-01|2026-03-01|rows v2 [0, 100]; v1 (100, inf)
             .iter()
             .find(|(l, _)| l == label)
             .expect("the label");
-        let Some(at) = rule_in_force(m, id, label, versions, clocks.law, clocks.cut)? else {
+        let Some(at) = rule_in_force(m, id, label, versions, clocks)? else {
             return Ok("no rule".to_owned());
         };
         let rule = versions.get(at).expect("the version");
@@ -293,6 +293,8 @@ band|scale||2025-06-01|2026-03-01|rows v2 [0, 100]; v1 (100, inf)
                 law: (*law != "-").then(|| day(law)),
                 cut: day(cut),
                 ask_cut: m.on,
+                wording: None,
+                world: World::Whole,
             };
             let got = outcome(&m, kind, id, &texts, clocks);
             assert_eq!(got, *expected, "{line}");
@@ -317,6 +319,8 @@ band|scale||2025-06-01|2026-03-01|rows v2 [0, 100]; v1 (100, inf)
             law: Some(day(law)),
             cut: m.on,
             ask_cut: m.on,
+            wording: None,
+            world: World::Whole,
         }
     }
 

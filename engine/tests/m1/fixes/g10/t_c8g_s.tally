@@ -1,0 +1,15 @@
+scenario early over cyc
+  tally 2
+  from 2026-04-01
+
+version early_v
+  cite card
+  governs 2026-04-01..
+  known 2026-01-01
+  replace keep = 300.00 PLN "the card"
+
+ask s1: bal(a3, 2026-06-30) in early
+
+ask s2: bal(a4, 2026-06-30) in early
+
+ask s3: flows(x, 2026-01-01..2026-12-31) in early

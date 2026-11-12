@@ -1,0 +1,14 @@
+scenario extra over adj
+  tally 2
+  from 2026-01-01
+  note "review probe: one more fee payment"
+
+move pay_extra: transfers
+  on pay_day
+  leg cash from konto to world amount fee
+
+ask in_model: bal(konto, 2026-12-31) in adj
+
+ask in_extra: bal(konto, 2026-12-31) in extra
+
+ask d: diff(bal(konto, 2026-12-31)) in extra against adj

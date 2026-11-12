@@ -1,0 +1,4 @@
+part a5
+  tally 2
+
+ask a5: abs(year_of(wy))

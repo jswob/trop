@@ -137,6 +137,19 @@ impl Engine {
                 format!("the law date of {} is none here", mv.id),
             ));
         }
+        // an open end of a lifespan, `at lifespan(p).to` for a living p (L §3.6): only this
+        // value is refused, as refcore's `date_of` does, and the other asks are answered
+        if v == Value::Never {
+            return Err(refuse(
+                Run::None,
+                format!("never in the law date of {}", mv.id),
+            ));
+        }
+        if let Value::Window(_) = v {
+            // a window `at` makes the instance once per law-date class the window overlaps
+            // (L §5.14 `at e`, §4.3; refcore's `m_move_law`): no one-day read, and not built
+            return Err(Stop::NotBuilt("a movement's law date set by a window"));
+        }
         Ok(Law::Day(date_of(&v)?))
     }
 
@@ -156,7 +169,7 @@ impl Engine {
         keys: &[KeyVal],
         cut: Day,
     ) -> Result<Option<Env>, Stop> {
-        let tctx = Ctx::new(None, cut);
+        let tctx = self.timeline_ctx(None, cut);
         for tuple in self.move_tuples(m, mv, tctx)? {
             if tuple.keys != keys {
                 continue;
@@ -215,7 +228,7 @@ impl Engine {
         env: &Env,
         cut: Day,
     ) -> Result<std::collections::BTreeSet<String>, Stop> {
-        let tctx = Ctx::new(None, cut);
+        let tctx = self.timeline_ctx(None, cut);
         let none = std::collections::BTreeSet::new();
         let law = match self.move_law(m, mv, env, tctx) {
             Ok(Law::Hole(_)) => return Ok(none),

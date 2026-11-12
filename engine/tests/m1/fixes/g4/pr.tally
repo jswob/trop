@@ -1,0 +1,65 @@
+model pr
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2, q3]
+
+index rs = [r1, r2, r3]
+
+input amt: money PLN
+
+input w[k in qs]: num
+
+input v[k in rs]: num
+
+input o[k in qs]: int
+
+input orr[k in rs]: int
+
+def a[k in qs]: money PLN = prorata(amt, w[j] for j in qs, k, minor(PLN), rest largest ties by pos(j))
+
+def b[k in qs]: money PLN = prorata(amt, w[j] for j in qs, k, minor(PLN), rest largest ties by o[j])
+
+def c[k in rs]: money PLN = prorata(amt, v[j] for j in rs, k, minor(PLN), rest largest ties by orr[j])
+
+def d[k in qs]: money PLN = prorata(0 PLN - amt, w[j] for j in qs, k, minor(PLN), rest largest ties by pos(j))
+
+def e[k in qs]: money PLN = prorata(amt, w[j] for j in qs, k, 1 PLN, rest largest ties by pos(j))
+
+ask p1: a[k], b[k], d[k], e[k] for k in qs
+
+ask p2: c[k] for k in rs
+
+ask p3: a[k], b[k] for k in qs with amt = 10.00 PLN
+
+ask p4: a[k] as if {w[q2] = 2}, a[k] for k in qs
+
+ask p6: d[k] for k in qs
+
+ask p7: d[k], a[k] for k in qs
+
+ask p5: a[k], b[k] for k in qs
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "card"
+  w[q1] = 1 "card"
+  w[q2] = 1 "card"
+  w[q3] = 1 "card"
+  v[r1] = 1 "card"
+  v[r2] = 1 "card"
+  v[r3] = 1 "card"
+  o[q1] = 3 "card"
+  o[q2] = 2 "card"
+  o[q3] = 1 "card"
+  orr[r1] = 3 "card"
+  orr[r2] = 2 "card"
+  orr[r3] = 1 "card"

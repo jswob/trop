@@ -3,7 +3,9 @@
 //! results, a value or a refusal, with the register entries the cell met and its read set);
 //! L §4.3 (the law date), §4.5 (the cut), §5.18 (the ask line's `with uncertain`, in its own
 //! reads' context only), §8.2 (the register); §7.6 items 1 and 4 (a day past the calendar and
-//! the end of time read as a day, `past_days` and `a_day`; a unit's power past 64).
+//! the end of time read as a day, `past_days` and `a_day`; a unit's power past 64); §4.4 (a
+//! read's world, `Ctx::world`: two reads of one item at the same keys in it are one value);
+//! L §6.4 (the scenario world a read is in: the layers of the stack it sees).
 //! Twin: engine/tools/refcore/evaluate.py (`Ctx`, `Coll`, `Engine` and its collector stack,
 //! `past_days`).
 //! Invariants: a cell is computed once per context and its result, refusal included, is kept;
@@ -11,17 +13,21 @@
 //! counted, and past its limit the cell demanded waits on the work stack (R-16).
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::rc::Rc;
 
 use crate::Days;
 use crate::base::{Code, Refusal, Run, Warn};
 use crate::book::{Adjustment, Coverage, Linked, Obs};
-use crate::model::{Domain, KeyVal, Node, NodeKind, Reality, UnitError, Value, power_past_limit};
+use crate::model::{Domain, KeyVal, Node, NodeKind, Reality, Thing, UnitError, Value, World};
 use crate::num::NumError;
-use crate::syntax::{Ask, Stop};
+use crate::syntax::{Ask, AskBody, Expr, Stop};
 use crate::time::Day;
 use crate::walk::{Inst, ProjKey, Walk, WalkAt};
 
+use super::bindings::{names_in, reads_name};
+use super::context::{Layer, Layers};
 use super::memo::{CellId, Cells, Frame, Memo, Open, Reads};
+use super::timelines::Timelines;
 
 /// The deepest chain of def cells computed by plain calls; past it the cell demanded waits on
 /// the work stack (R-16, BUILDER §4). U-15, measured at S: a debug build uses about 19 KB of
@@ -42,11 +48,30 @@ pub struct Ctx {
     /// reads reach takes (L §5.18). A timeline's and a decision's contexts are made anew
     /// without it, so no decision sees it (L §5.14: "the clause is the read's").
     pub unc: bool,
+    /// The pins and wording pins in force, as one interned layer (E §3.2; `context.rs`). A
+    /// timeline's and a decision's contexts take the timeline's: the pins the walk reaches.
+    pub layer: Layer,
+    /// The world read in: the reality's whole stack of scenarios, or the layers under one of
+    /// them (L §6.4; refcore's `Ctx.world`). A timeline's contexts take the timeline's.
+    pub world: World,
+}
+
+/// The walks up to a day of one timeline (refcore's `prefix_walks`, `plan_list`'s cache and
+/// `_walk_blocked`). E §3.2, §4.1, §4.2 step 5.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub(crate) struct Prefixes {
+    /// Each walk up to a day, by (cut, its last day), by its place in the walks.
+    pub(crate) walks: BTreeMap<(Day, Day), usize>,
+    /// Each plan move's instances dated on or before a day, by (move, cut, day).
+    pub(crate) plans: BTreeMap<(String, Day, Day), Rc<Vec<Inst>>>,
+    /// The cells in progress when each cut's main walk was last given up: while one of them
+    /// still is, a leg's read takes the walk up to its day without trying the main walk.
+    pub(crate) blocked: BTreeMap<Day, BTreeSet<CellId>>,
 }
 
 impl Ctx {
     /// The context of law date `law` and cut `cut`, at no walk point, without `with
-    /// uncertain`: a timeline's and a decision's context (L §5.14).
+    /// uncertain`, unpinned, in the reality's whole world (L §5.14).
     #[must_use]
     pub fn new(law: Option<Day>, cut: Day) -> Ctx {
         Ctx {
@@ -54,7 +79,15 @@ impl Ctx {
             cut,
             at: None,
             unc: false,
+            layer: Layer::BASE,
+            world: World::Whole,
         }
+    }
+
+    /// The context in world `world` (L §6.4).
+    #[must_use]
+    pub fn in_world(self, world: World) -> Ctx {
+        Ctx { world, ..self }
     }
 
     /// The context under the ask line's `with uncertain` (L §5.18).
@@ -73,12 +106,28 @@ impl Ctx {
     /// read's cells are kept per walk point (E §3.2).
     #[cfg(feature = "counters")]
     pub(super) fn key(self) -> String {
+        self.world()
+    }
+
+    /// The world a read is made in, as text: its law date, cut, walk point, `with
+    /// uncertain`, pins and scenario world; two reads of one item at the same keys in one
+    /// world are one value (L §4.4, §6.4).
+    pub(super) fn world(self) -> String {
         let law = self.law.map_or_else(|| "-".to_owned(), Day::text);
         let unc = if self.unc { "|uncertain" } else { "" };
+        let pins = if self.layer.is_base() {
+            String::new()
+        } else {
+            format!("|pins {}", self.layer.number())
+        };
+        let pins = match self.world {
+            World::Whole => pins,
+            World::Lowest(depth) => format!("{pins}|world {depth}"),
+        };
         match self.at {
-            None => format!("{law}|{}{unc}", self.cut.text()),
+            None => format!("{law}|{}{unc}{pins}", self.cut.text()),
             Some(at) => format!(
-                "{law}|{}|{}@{}{unc}",
+                "{law}|{}|{}@{}{unc}{pins}",
                 self.cut.text(),
                 at.walk,
                 at.point.text()
@@ -97,6 +146,10 @@ pub struct Var {
     pub value: Value,
     /// The index or kind it is a key of.
     pub domain: Option<Domain>,
+    /// The binding as written, an aggregate's, an ask's `for` or a def's key bind: what a pin
+    /// formed per binding tuple prints beside itself (L §8.2); none for a band's argument.
+    /// One text per binding, shared by every member's scope (L §7.6 item 2).
+    pub written: Option<Rc<str>>,
 }
 
 /// What a bare literal is where it stands: in a def, a rule or an ask only `0`, `1` and `-1`
@@ -136,6 +189,7 @@ impl Env {
                 name: arg.to_owned(),
                 value: x,
                 domain: None,
+                written: None,
             }],
             figures: Figures::Band,
         }
@@ -150,9 +204,82 @@ impl Env {
     /// This scope with `name` bound to `value` too.
     #[must_use]
     pub fn with(&self, name: &str, value: Value, domain: Option<Domain>) -> Env {
-        let mut out = self.clone();
-        out.bind(name, value, domain);
-        out
+        self.and(Var {
+            name: name.to_owned(),
+            value,
+            domain,
+            written: None,
+        })
+    }
+
+    /// This scope with variable `var` bound to `value` too, its binding written `written`,
+    /// the text shared (L §8.2).
+    #[must_use]
+    pub fn with_bind(
+        &self,
+        (var, written): (&str, &Rc<str>),
+        value: Value,
+        domain: Option<Domain>,
+    ) -> Env {
+        self.and(Var {
+            name: var.to_owned(),
+            value,
+            domain,
+            written: Some(Rc::clone(written)),
+        })
+    }
+
+    /// This scope with `var` bound too, holding room for its bindings and no more: an
+    /// aggregate keeps each member's scope while it runs, a list of up to 1 000 000 keys as
+    /// many scopes (L §7.6 item 2).
+    fn and(&self, var: Var) -> Env {
+        Env {
+            vars: self
+                .vars
+                .iter()
+                .cloned()
+                .chain(core::iter::once(var))
+                .collect(),
+            figures: self.figures,
+        }
+    }
+
+    /// Whether expression `e` may read a variable of this scope (refcore's `_pertuple`'s
+    /// test: a binding in scope whose variable the expression names).
+    #[must_use]
+    pub(crate) fn read_by(&self, e: &Expr) -> bool {
+        self.vars.iter().any(|v| reads_name(e, &v.name))
+    }
+
+    /// The written bindings in scope that `parts`, a pin's value then its keys, name, each
+    /// once, by the first part naming it (refcore's `_pertuple`); none where a part names
+    /// two, whose order refcore's walk gives, or holds a form whose names aren't walked here.
+    /// L §8.2.
+    #[must_use]
+    pub(crate) fn binds_named(&self, parts: &[&Expr]) -> Option<Vec<String>> {
+        let mut out: Vec<String> = Vec::new();
+        for part in parts {
+            let names = names_in(part)?;
+            let mut found: Vec<&str> = Vec::new();
+            for name in &names {
+                let written = self.get(name).and_then(|v| v.written.as_deref());
+                if let Some(text) = written
+                    && !found.contains(&text)
+                {
+                    found.push(text);
+                }
+            }
+            match found.as_slice() {
+                [] => {}
+                [one] => {
+                    if !out.iter().any(|o| o == one) {
+                        out.push((*one).to_owned());
+                    }
+                }
+                _ => return None,
+            }
+        }
+        Some(out)
     }
 
     /// Binds `name` to `value` in this scope.
@@ -161,6 +288,22 @@ impl Env {
             name: name.to_owned(),
             value,
             domain,
+            written: None,
+        });
+    }
+
+    /// Binds `name` to `value` in this scope, the binding written `text`.
+    pub fn bind_written(
+        &mut self,
+        (name, text): (&str, &Rc<str>),
+        value: Value,
+        domain: Option<Domain>,
+    ) {
+        self.vars.push(Var {
+            name: name.to_owned(),
+            value,
+            domain,
+            written: Some(Rc::clone(text)),
         });
     }
 }
@@ -204,13 +347,55 @@ pub struct Collected {
     /// The versions of the rows read (refcore's `Coll.rows`, their versions): which versions
     /// a later step's adjustment names (E §5 step 4).
     pub versions: BTreeSet<String>,
+    /// The scenarios' facts read, each (its section, its item): a row of a scenario's
+    /// version, a thing's entry or place a scenario states, a scenario's move a binding
+    /// ranges over: the read set E §9 item 3 lists a movement by (L §6.4, ruling P45).
+    pub scenario: BTreeSet<(String, String)>,
+    /// The rows read, by stable id, each with its version and locator: an input's, a given,
+    /// a band row, a reading and an observed row, the walk's counted movements' included
+    /// (refcore's `Coll.rows`). Kept only by an engine answering `inputs-of` (E §3.2, §10).
+    pub rows: BTreeMap<String, RowSeen>,
+}
+
+/// A row read, as `inputs-of` lists it: its version and its locator (E §10).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RowSeen {
+    /// The version that states it.
+    pub version: String,
+    /// Its locator, where it states one.
+    pub locator: Option<String>,
+}
+
+/// Whether the collectors keep the rows read: an engine answering `inputs-of` keeps them,
+/// any other doesn't (E §10).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Rows {
+    /// The rows read are kept with what each read met.
+    Kept,
+    /// They aren't.
+    Unkept,
 }
 
 impl Collected {
-    /// Adds the register entries and versions `other` met (its `missing` stays its own).
+    /// Adds the register entries, versions and rows `other` met (its `missing` stays its own).
     pub fn merge(&mut self, other: &Collected) {
         self.entries.extend(other.entries.iter().cloned());
         self.versions.extend(other.versions.iter().cloned());
+        self.scenario.extend(other.scenario.iter().cloned());
+        for (sid, seen) in &other.rows {
+            self.rows.insert(sid.clone(), seen.clone());
+        }
+    }
+
+    /// Records row `sid` of `version` with its `locator` as read (E §10 `inputs-of`).
+    pub(crate) fn note_row(&mut self, sid: &str, version: &str, locator: Option<&String>) {
+        self.rows.insert(
+            sid.to_owned(),
+            RowSeen {
+                version: version.to_owned(),
+                locator: locator.cloned(),
+            },
+        );
     }
 }
 
@@ -271,7 +456,7 @@ pub struct Engine {
     /// The day source: the event walk, or the oracle's every day (P §2.2).
     pub(crate) days: Days,
     /// Each move's instances per cut (E §4.1).
-    pub(crate) plans: BTreeMap<(String, Day), std::rc::Rc<Vec<Inst>>>,
+    pub(crate) plans: BTreeMap<(String, Day), Rc<Vec<Inst>>>,
     /// The moves whose instances are being computed (RUN-CYCLE).
     pub(crate) plan_active: BTreeSet<(String, Day)>,
     /// Each plan move's adjustments per cut (E §5).
@@ -279,12 +464,28 @@ pub struct Engine {
     /// The moves whose adjustments are being computed (RUN-CYCLE).
     pub(crate) adjust_active: BTreeSet<(String, Day)>,
     /// The cells in progress when a leg's read started its walk: a walk that needs one of them
-    /// is refcore's guarded walk, not built.
+    /// is given up for the walk up to the leg's day (refcore's `guarded_walk`).
     pub(crate) guarded: Option<BTreeSet<CellId>>,
+    /// The walks up to a day in the timeline in force, what their plan passes list, and the
+    /// cells that last made a cut's main walk be given up (refcore's `prefix_walks`,
+    /// `plan_list`, `_walk_blocked`; E §3.2, §4.1).
+    pub(crate) prefixes: Prefixes,
+    /// While a walk up to a day plans: that day, past which its plan pass lists no plan's
+    /// instance (refcore's `_body_upto`). E §4.1.
+    pub(crate) body_upto: Option<Day>,
     /// The warnings of the walks done, in the order met (L §8.5).
     pub(crate) walk_warnings: Vec<(Warn, String)>,
     /// The projections' walks, by what makes each (E §4.3).
     pub(crate) proj_walks: BTreeMap<ProjKey, usize>,
+    /// How a written projection's common case is read: fence F5's tree, or its plain twin,
+    /// the projection's own walk (E §4.3, P §2.3).
+    pub(crate) lows: crate::walk::Lows,
+    /// The fault planted in the run, while it waits for its day: none once planted, and
+    /// always none without it (INTERFACE §4, pick P8).
+    #[cfg(feature = "fault-injection")]
+    pub(crate) plant: Option<crate::walk::Fault>,
+    /// Fence F5's trees in the timeline in force (E §4.3, P §2.3; `walk/lows.rs`).
+    pub(crate) trees: crate::walk::Trees,
     /// The item whose expression is evaluated now: a projection's holder, whose dependents
     /// it leaves out (L §5.14.1).
     pub(crate) holder: Option<Node>,
@@ -307,11 +508,43 @@ pub struct Engine {
     pub(crate) unsettled: BTreeMap<Day, Vec<Adjustment>>,
     /// The cuts whose adjustments are being measured (RUN-CYCLE).
     pub(crate) adjust_all_active: BTreeSet<Day>,
-    /// Each booked plan instance's amount A₀ by (instance, booking cut), kept across a run's
-    /// asks (E §9 item 5).
-    pub(crate) booked: BTreeMap<(String, Day), crate::walk::Booked>,
+    /// Each booked plan instance's amount A₀ by (instance, booking cut, a walk's limit), kept
+    /// across a run's asks (E §9 item 5).
+    pub(crate) booked: crate::walk::Bookings,
     /// Each main walk's signature once it is done, by its place in `walks` (E §9 item 4).
     pub(crate) signatures: BTreeMap<usize, crate::invariant::Signature>,
+    /// The legs each combination's main walk of a cut refused, where the main walk read an
+    /// axis the timeline sets no option of (E §3.3, §4.2 step 5).
+    pub(crate) each_refused: BTreeMap<Day, Vec<super::timelines::LegRefusals>>,
+    /// The pass a business-day function runs now over the days its calendar's added windows
+    /// can take (L §4.2, §4.4).
+    pub(super) calendar_pass: Option<super::business::CalendarPass>,
+    /// The splits `prorata`'s `rest largest` made, once per total, step and weights (L §5.13
+    /// Cost).
+    pub(super) splits: super::prorata::Splits,
+    /// The context's interned layers: the pin sets and wording pins met, the open scopes
+    /// (E §3.2, P §3.1, §3.5).
+    pub(super) layers: Layers,
+    /// The timeline in force, and the others parked: one per world and pins the walk reaches
+    /// (E §3.3; `timelines.rs`). The walk fields above hold the one in force.
+    pub(super) timelines: Timelines,
+    /// The base a scenario's expression row being evaluated names by its prefix, and the
+    /// world it is read in (L §6.4; `read.rs` `row_expr`).
+    pub(super) row_base: Option<(String, World)>,
+    /// The expression rows being evaluated, by row, the read's figure and its law date: one met
+    /// again reads itself (refcore's `_sexpr_active`, `RUN-CYCLE`).
+    pub(super) rows_active: BTreeSet<(String, String, Option<Day>)>,
+    /// Whether the collectors keep the rows read: an engine answering `inputs-of` (E §10).
+    pub(crate) keep_rows: Rows,
+    /// The explanation being traced: an engine answering `explain` while its cone is
+    /// evaluated again (E §10; `trace.rs`).
+    pub(super) trace: Option<super::trace::Trace>,
+    /// The ask line's context outside its `with` pins, where it has any: an `explain`'s
+    /// derivation outside them (E §10; refcore's `_outside_ctx`).
+    pub(crate) unpinned: Option<Ctx>,
+    /// Each binding's written text, once: the member scopes of its aggregate share it, up to
+    /// 1 000 000 of them (L §7.6 item 2, §8.2).
+    pub(super) bind_texts: BTreeMap<String, Rc<str>>,
     /// What this engine did, in P §1.1's units: the `counters` build only (BUILDER §13.2).
     #[cfg(feature = "counters")]
     pub(crate) counts: crate::Counters,
@@ -340,8 +573,14 @@ impl Engine {
             adjustments: BTreeMap::new(),
             adjust_active: BTreeSet::new(),
             guarded: None,
+            prefixes: Prefixes::default(),
+            body_upto: None,
             walk_warnings: Vec::new(),
             proj_walks: BTreeMap::new(),
+            lows: crate::walk::Lows::Tree,
+            #[cfg(feature = "fault-injection")]
+            plant: None,
+            trees: crate::walk::Trees::default(),
             holder: None,
             observed: BTreeMap::new(),
             covered: BTreeMap::new(),
@@ -354,22 +593,38 @@ impl Engine {
             adjust_all_active: BTreeSet::new(),
             booked: BTreeMap::new(),
             signatures: BTreeMap::new(),
+            each_refused: BTreeMap::new(),
+            calendar_pass: None,
+            splits: super::prorata::Splits::default(),
+            layers: Layers::default(),
+            timelines: Timelines::default(),
+            row_base: None,
+            rows_active: BTreeSet::new(),
+            keep_rows: Rows::Unkept,
+            trace: None,
+            unpinned: None,
+            bind_texts: BTreeMap::new(),
             #[cfg(feature = "counters")]
             counts: crate::Counters::default(),
         }
     }
 
+    /// Binding text `text`, shared: the one copy every member scope of its binding holds
+    /// (L §7.6 item 2, §8.2).
+    pub(super) fn bind_text(&mut self, text: &str) -> Rc<str> {
+        if let Some(shared) = self.bind_texts.get(text) {
+            return Rc::clone(shared);
+        }
+        let shared: Rc<str> = Rc::from(text);
+        self.bind_texts.insert(text.to_owned(), Rc::clone(&shared));
+        shared
+    }
+
     /// The engine holding the booked plan amounts a run's earlier asks met, so a later ask's
     /// cut is checked against them (E §9 item 5).
     #[must_use]
-    pub fn with_booked(self, booked: BTreeMap<(String, Day), crate::walk::Booked>) -> Engine {
+    pub fn with_booked(self, booked: crate::walk::Bookings) -> Engine {
         Engine { booked, ..self }
-    }
-
-    /// The booked plan amounts this engine met and those it was given, handed on to the run's
-    /// next ask (E §9 item 5).
-    pub fn take_booked(&mut self) -> BTreeMap<(String, Day), crate::walk::Booked> {
-        core::mem::take(&mut self.booked)
     }
 
     /// What this engine did, in P §1.1's units: the `counters` build only (BUILDER §13.2).
@@ -385,12 +640,15 @@ impl Engine {
         Engine { days, ..self }
     }
 
-    /// The engine keeping its cells as `memo` says: shared by a law date class, or at each
-    /// exact law date, the plain twin (E §3.2, P §3.3).
+    /// The engine computing as its fences say: keeping its cells as `memo` says, shared by a
+    /// law date class or at each exact law date, the plain twin (E §3.2, P §3.3); and reading
+    /// a written projection's common case as `lows` says, from fence F5's tree or through the
+    /// projection's own walk, the plain twin (E §4.3, P §2.3).
     #[must_use]
-    pub fn with_memo(self, memo: Memo) -> Engine {
+    pub fn with_how(self, (memo, lows): (Memo, crate::walk::Lows)) -> Engine {
         Engine {
             cells: Cells::new(memo),
+            lows,
             ..self
         }
     }
@@ -401,6 +659,16 @@ impl Engine {
     pub fn for_ask(self, ask: &Ask) -> Engine {
         Engine {
             holder: Some(Node::new(NodeKind::Ask, &ask.id)),
+            // `explain` prints the row a balance's reading came from (E §10)
+            keep_rows: match ask.body {
+                AskBody::InputsOf(_) | AskBody::Explain(_) => Rows::Kept,
+                AskBody::Exprs(_)
+                | AskBody::Residuals(_)
+                | AskBody::ReadersOf(_)
+                | AskBody::Check(..)
+                | AskBody::Solve(_)
+                | AskBody::Diff(_) => Rows::Unkept,
+            },
             ..self
         }
     }
@@ -438,11 +706,39 @@ impl Engine {
         }
     }
 
+    /// Records that a scenario's fact was read, its section and its item, in the innermost
+    /// collector: the read set E §9 item 3 lists a movement by (L §6.4, ruling P45).
+    pub(crate) fn note_scenario(&mut self, section: &str, item: &str) {
+        if let Some(top) = self.stack.last_mut() {
+            top.scenario.insert((section.to_owned(), item.to_owned()));
+        }
+    }
+
+    /// Records the scenarios' facts of thing `thing` a read in world `world` met: the
+    /// sections of its entries, its place and its key things a scenario states (L §5.7: a
+    /// lifespan is a fact; §6.4). E §9 item 3.
+    pub(crate) fn note_thing(&mut self, m: &Reality, thing: &Thing, world: World) {
+        for section in m.thing_scenario_sections(thing, world) {
+            self.note_scenario(&section, &thing.name);
+        }
+    }
+
     /// Records that a row of version `version` was read, in the innermost collector (E §5
     /// step 4: the versions an adjustment names).
     pub(super) fn note_version(&mut self, version: &str) {
         if let Some(top) = self.stack.last_mut() {
             top.versions.insert(version.to_owned());
+        }
+    }
+
+    /// Records that row `sid` of `version`, with its `locator`, was read, in the innermost
+    /// collector of an engine answering `inputs-of` (E §10).
+    pub(super) fn note_row(&mut self, sid: &str, version: &str, locator: Option<&String>) {
+        if self.keep_rows == Rows::Unkept {
+            return;
+        }
+        if let Some(top) = self.stack.last_mut() {
+            top.note_row(sid, version, locator);
         }
     }
 
@@ -496,10 +792,13 @@ pub(super) fn refuse_load(code: crate::base::Load, message: String) -> Stop {
     Stop::Refused(Refusal::new(Code::Load(code), message))
 }
 
-/// A value of a type its place doesn't take, met at run where refcore's run has no twin of
-/// the text: load's types refuse it first, so the run stops "not implemented".
+/// A value of a type its place doesn't take, at a place whose every run-time value load
+/// types: a test (a bool, a hole, `none`; a window's comparison is a hole), a date
+/// `date_or_window` checked, the number `round` takes, `pos`'s key, a schedule's roll code.
+/// Load refuses it first (`LOAD-UNIT`, L §8.4). A place that `never`, a window or an
+/// interval can reach answers them itself (L §3.1, §4.4), or stops "not implemented".
 pub(super) fn not_typed() -> Stop {
-    Stop::NotBuilt("a value of a type its place doesn't take, met at run")
+    invariant("a value of a type its place doesn't take: load's types refuse it first (LOAD-UNIT)")
 }
 
 /// A value of a type its place doesn't take: `LOAD-UNIT` with `what` and the value as it
@@ -548,12 +847,9 @@ pub(crate) fn num_stop(error: NumError) -> Stop {
     }
 }
 
-/// A unit operation's error met at run: a power past 64 in size is the load refusal
-/// refcore's `power_limit` raises where it meets it (a unit a key gives, L §3.2); a number
-/// error is `num_stop`'s. L §7.6 item 4.
+/// A unit operation's error met at run (`UnitError::refusal`): a power past 64 in size is the
+/// load refusal refcore's `power_limit` raises where it meets it (a unit a key gives,
+/// L §3.2); a number error is `num_stop`'s. L §7.6 item 4.
 pub(crate) fn unit_stop(error: UnitError) -> Stop {
-    match error {
-        UnitError::Power(base) => refuse_load(crate::base::Load::Limit, power_past_limit(&base)),
-        UnitError::Num(error) => num_stop(error),
-    }
+    error.refusal(num_stop, None)
 }

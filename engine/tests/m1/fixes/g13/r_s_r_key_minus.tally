@@ -1,0 +1,21 @@
+part r_key_minus
+  tally 2
+
+input bm[a in 0 PLN .. 20 PLN step 1 PLN]: num
+
+kind evs: event certain
+  leg what: any
+
+move mv: evs
+  on d0
+  leg what from konto to world amount fee
+
+def r_key_minus_x: int = count(m for m in evs over d0..d0 where m.what.amount == q1 + 1)
+
+ask r_key_minus: r_key_minus_x
+
+version v_r_key_minus
+  cite card
+  governs always
+  known 2026-01-01
+  bm[10 PLN] = 0.5 "c"

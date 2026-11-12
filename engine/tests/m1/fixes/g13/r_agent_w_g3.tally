@@ -1,0 +1,5 @@
+part g3
+  tally 2
+
+
+ask g3: lifespan(konto).from + age(w, d2)

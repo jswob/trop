@@ -1,0 +1,10 @@
+part j7
+  tally 2
+
+index ps = [p0, q1]
+
+def j7_a: key qs = q1
+
+def j7_x: key qs = j7_a + 1
+
+ask j7: j7_x

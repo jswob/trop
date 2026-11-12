@@ -1,0 +1,81 @@
+model memo
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+index ns = 0..100
+
+index qs = [q1, q2]
+
+input a: num
+
+input b: num
+
+input ten: num
+
+input w[k in qs]: num
+
+def c: num = b + b
+
+def d: num = a + a
+
+def r[i in ns]: num = if i == 0 then a else r[i - 1] + (c as if {b = 1})
+
+def r2[i in ns]: num = if i == 0 then a else r2[i - 1] + c
+
+def s[i in ns]: num = if i == 0 then 0 else s[i - 1] + (d as if {a = i})
+
+def u[i in ns]: num = if i == 0 then w[q1] + w[q2] else u[i - 1] + 1
+
+def tot: num = w[q1] + w[q2]
+
+ask t1: r[100] as if {a = 5}, r[100], r[100] as if {a = 7}, r[100], r[100] as if {a = 5}, c, d
+
+ask t2: (r[100] as if {a = 5}) + r[100]
+
+ask t3: ((r[100] as if {a = 7}) + r[100]) as if {a = 5}
+
+ask t4: r2[100] as if {b = 10}, r2[100], c, c as if {b = 1}, r2[100] as if {b = 10}
+
+ask t5: (r2[100] as if {b = 10}) + r2[100] + c + (c as if {b = 10})
+
+ask t6: s[100], d, s[100] as if {a = 1000}, d
+
+ask u1: d as if {a = 3}
+
+ask u3: s[5] + (d as if {a = 3})
+
+ask u4: (d as if {a = 3}) + s[5]
+
+ask u5: s[5] + (d as if {a = 300})
+
+ask t7: (s[100] as if {a = 1000}) + d + (d as if {a = 3}) + s[100]
+
+ask t8: r2[100] with b = 3
+
+ask t9: r2[100], c
+
+ask t10: (r2[100] as if {b = 10}) + (r2[100] as if {b = 11}) + (r2[100] as if {b = 10}) + r2[100]
+
+ask t11: u[100] as if {w[*] = 3}, u[100] as if {w[q1] = 10}, u[100], (u[100] as if {w[q1] = 10}) as if {w[*] = 3}, (u[100] as if {w[*] = 3}) as if {w[q1] = 10}
+
+ask t12: solve u[100] == ten for w[q1] in [-1000, 1000] to 1
+
+ask t13: solve u[100] == ten for w[q1] in [-1000, 1000] to 1 with w[*] = 50
+
+ask t14: u[100], tot
+
+ask t15: (r2[100] as if {b = 10}) as if {known 2026-02-01}, r2[100] as if {known 2026-02-01}, r2[100]
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  a = 1 "card"
+  b = 2 "card"
+  ten = 150 "card"
+  w[q1] = 1 "card"
+  w[q2] = 2 "card"

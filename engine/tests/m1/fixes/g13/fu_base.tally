@@ -1,0 +1,37 @@
+model fu
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+unit kg "a kilogram"
+
+kind persons
+
+
+
+place konto[p in persons]: accounts PLN lives 2026-01-01..
+
+input rr[k in 1 .. 9 step 2]: num
+
+input w: num kg
+
+input r: num PLN
+
+ask ok: rr[3]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  rr[3] = 0.3 "c"
+  persons + [ana] lives 2026-01-01..
+  persons + [ben] lives 2026-01-01..
+  w = 2 kg "c"
+  r = 3 PLN "c"
+  opening[konto[ana]] = 0.00 PLN at 2026-01-01 start "c"
+  opening[konto[ben]] = 0.00 PLN at 2026-01-01 start "c"

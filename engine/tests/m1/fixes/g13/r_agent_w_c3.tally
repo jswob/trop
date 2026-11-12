@@ -1,0 +1,5 @@
+part c3
+  tally 2
+
+
+ask c3: pow(age(w, d2), n2)

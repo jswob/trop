@@ -1,19 +1,24 @@
 //! The read rule's rows: which rows of an input or of a def's givens are candidates for a read, and which one it takes.
 //! Spec: L §4.6 steps 1–4 (candidates, replacement, precedence, ties), §4.5 (the cut sees
-//! what is known by it), §4.3 (the law date; a read with none).
+//! what is known by it), §4.3 (the law date; a read with none; a `wording D` pin keeps the
+//! candidates that entered into force by D), §5.3 (entry into force), §6.4 (a scenario's rows
+//! stand above its base's, and are candidates only in its world and those over it).
 //! Twin: engine/tools/refcore/evaluate.py (`time_point`, `need_law`, `row_matches`,
 //! `key_ord`, `unstated_ok`, `row_visible`, `candidates`, `choose`), loader.py
 //! (`pattern_norm`, `_pos_rel`, `narrower`, `key_order`), model.py (`Row.span`, `Row.known`,
-//! `row_timeless`, `InputInfo.lawless`).
+//! `row_timeless`, `InputInfo.lawless`, `VersionInfo.enters_at`), evaluate.py (`wording_ok`).
 //! Invariants: a plain scan of the target's rows in the order versions state them; the
-//! candidates keep that order; two rows still tied are refused, never broken by order.
-//! Scenarios, joint models, `wording` pins and known windows stop before load ends
-//! (`NotBuilt`), so every row here is the base's, known on one day, and no pin narrows it; a
-//! dated read with no law date is refused by load (`LOAD-LAWDATE`), so here it is an invariant.
+//! candidates keep that order; two rows still tied are refused, never broken by order; a
+//! scenario's `replace` beats its base's row at the same keys whatever their `known` dates.
+//! Joint models and known windows stop before load ends (`NotBuilt`), so every row is known
+//! on one day; a `wording` pin narrows the candidates by their entry into force alone; a
+//! dated read with no law date is refused by load (`LOAD-LAWDATE`), so here it is an
+//! invariant.
 
 use crate::base::{Code, Load, Refusal};
 use crate::model::{
-    BindInfo, Domain, InputInfo, KeyVal, Pat, Reality, Row, RowInstant, Span, TimePos,
+    BindInfo, Domain, InputInfo, KeyVal, OwnTime, Pat, Reality, Row, RowInstant, Span, TimePos,
+    World,
 };
 use crate::syntax::Stop;
 use crate::time::Day;
@@ -27,6 +32,11 @@ pub struct Clocks {
     pub cut: Day,
     /// The ask's cut, past which a row read for a later day is `held` (L §8.2).
     pub ask_cut: Day,
+    /// The day a `wording D for […]` pin names the item read with: only rows that entered
+    /// into force by D are its candidates (L §4.3); none outside such a pin.
+    pub wording: Option<Day>,
+    /// The world read in: a row, a key or an entry of a scenario above it isn't seen (L §6.4).
+    pub world: World,
 }
 
 /// Which rows a read takes as candidates by their time (L §4.6 step 1, Readings).
@@ -37,6 +47,9 @@ pub enum Test {
     At(Option<Day>),
     /// A reading at this instant.
     Instant(Day),
+    /// `last(x, d)`: a row whose span began on or before this day, past its end too; a
+    /// reading at an instant on or before it.
+    Last(Day),
 }
 
 /// The day a read's spans are tested at, and its time key's period (L §4.6 step 1).
@@ -238,7 +251,7 @@ fn rank(m: &Reality, domain: &Domain, key: &KeyVal) -> Option<Rank> {
             KeyVal::Int(n) => Some(Rank::Int(*n)),
             KeyVal::Day(day) => Some(Rank::Day(*day)),
             KeyVal::Period(period) => Some(Rank::Day(period.start())),
-            KeyVal::Key { .. } | KeyVal::Thing(_) | KeyVal::Mv(_) => None,
+            KeyVal::Key { .. } | KeyVal::Thing(_) | KeyVal::Mv(_) | KeyVal::Value(_) => None,
         },
         Domain::Axis(_) => None,
     }
@@ -272,9 +285,15 @@ fn row_matches(m: &Reality, row: &Row, binds: &[BindInfo], keys: &[KeyVal]) -> b
     true
 }
 
-/// Whether index `id` had `key` on day `known`: a key a version added counts from that
-/// version's `known` (L §4.6 step 1, §6.2).
-fn index_had(m: &Reality, id: &str, key: &KeyVal, known: Day) -> Result<bool, Stop> {
+/// Whether index `id` had `key` on day `known` in world `world`: a key a version added
+/// counts from that version's `known`, and only where its scenario is seen (L §4.6 step 1,
+/// §6.2, §6.4).
+fn index_had(
+    m: &Reality,
+    id: &str,
+    key: &KeyVal,
+    (known, world): (Day, World),
+) -> Result<bool, Stop> {
     let index = m
         .indexes
         .get(id)
@@ -282,12 +301,18 @@ fn index_had(m: &Reality, id: &str, key: &KeyVal, known: Day) -> Result<bool, St
     let Some(by) = index.added_by(key) else {
         return Ok(true);
     };
-    Ok(version_known(m, by)? <= known)
+    Ok(m.scenarios.sees(world, Some(by)) && version_known(m, by)? <= known)
 }
 
-/// Whether `kind` (or a subkind) had thing `key` on day `known`: one of its entries there,
-/// other than a `replace`, is known by then (L §4.6 step 1, §6.2).
-fn kind_had(m: &Reality, kind: &str, key: &KeyVal, known: Day) -> Result<bool, Stop> {
+/// Whether `kind` (or a subkind) had thing `key` on day `known` in world `world`: one of its
+/// entries there, other than a `replace`, is known by then, in a version the world sees
+/// (L §4.6 step 1, §6.2, §6.4).
+fn kind_had(
+    m: &Reality,
+    kind: &str,
+    key: &KeyVal,
+    (known, world): (Day, World),
+) -> Result<bool, Stop> {
     let KeyVal::Thing(name) = key else {
         return Ok(false);
     };
@@ -302,7 +327,7 @@ fn kind_had(m: &Reality, kind: &str, key: &KeyVal, known: Day) -> Result<bool, S
         let Some(version) = &entry.version else {
             return Ok(true);
         };
-        if version_known(m, version)? <= known {
+        if m.scenarios.sees(world, Some(version)) && version_known(m, version)? <= known {
             return Ok(true);
         }
     }
@@ -310,17 +335,22 @@ fn kind_had(m: &Reality, kind: &str, key: &KeyVal, known: Day) -> Result<bool, S
 }
 
 /// Whether each key a row leaves unstated, or covers with `*`, is one its index or kind
-/// had on the row's `known` date: a row for every key, stated before a key was added,
-/// doesn't cover it (L §4.6 step 1, §6.2).
-fn unstated_ok(m: &Reality, row: &Row, binds: &[BindInfo], keys: &[KeyVal]) -> Result<bool, Stop> {
+/// had on the row's `known` date in world `world`: a row for every key, stated before a key
+/// was added, doesn't cover it (L §4.6 step 1, §6.2, §6.4).
+fn unstated_ok(
+    m: &Reality,
+    row: &Row,
+    (binds, keys): (&[BindInfo], &[KeyVal]),
+    world: World,
+) -> Result<bool, Stop> {
     let known = row_known(m, row)?;
     for ((pat, key), bind) in row.pattern.iter().zip(keys).zip(binds) {
         if *pat != Pat::Star {
             continue;
         }
         let had = match &bind.domain {
-            Domain::Index(id) => index_had(m, id, key, known)?,
-            Domain::Kind(kind) => kind_had(m, kind, key, known)?,
+            Domain::Index(id) => index_had(m, id, key, (known, world))?,
+            Domain::Kind(kind) => kind_had(m, kind, key, (known, world))?,
             Domain::Axis(_) | Domain::List(_) | Domain::Range => true,
         };
         if !had {
@@ -339,13 +369,16 @@ fn instant_day(instant: &RowInstant) -> Option<Day> {
 }
 
 /// Whether a row holds the read's time: a reading at its instant; a state when its span
-/// holds the day, or governs `always` for a read with no law date (L §4.6 step 1,
-/// Readings).
+/// holds the day, or governs `always` for a read with no law date; for `last(x, d)`, a
+/// reading at an instant on or before d, a state whose span began on or before d, a span
+/// with no start (`always`, `..e`) before every d (L §4.6 step 1, Readings, Past the last
+/// row; §5.3 `governs always` governs every day).
 fn in_time(m: &Reality, row: &Row, test: Test, cut: Day) -> Result<bool, Stop> {
     if let Some(instant) = &row.instant {
         return Ok(match test {
             Test::At(_) => true,
             Test::Instant(at) => instant_day(instant) == Some(at),
+            Test::Last(at) => instant_day(instant).is_some_and(|day| day <= at),
         });
     }
     let Some(span) = row_span(m, row, cut)? else {
@@ -355,12 +388,32 @@ fn in_time(m: &Reality, row: &Row, test: Test, cut: Day) -> Result<bool, Stop> {
         Test::At(None) if span.is_always() => Ok(true),
         Test::At(None) => Err(no_law_date()),
         Test::At(Some(day)) | Test::Instant(day) => Ok(span.contains(day)),
+        Test::Last(at) => Ok(span.start().is_none_or(|day| day <= at)),
     }
 }
 
-/// The candidates of a read among `rows`, by position: every key it states matches, the
-/// keys it leaves unstated were there when it was known, it is known by the cut, and its
-/// span holds the read's time (L §4.6 step 1).
+/// When a candidate of `last(x, d)` began: a reading's instant, a state's first day, none for
+/// a span from the start of time (`always`, `..e`), which began before every other (L §4.6
+/// Readings, Past the last row; §5.3).
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for a reading with no day or a state with no span, which `in_time`
+/// never takes, or a row whose version is missing.
+pub(super) fn row_start(m: &Reality, row: &Row, cut: Day) -> Result<Option<Day>, Stop> {
+    if let Some(instant) = &row.instant {
+        let day = instant_day(instant).ok_or_else(|| invariant("a reading of last with no day"))?;
+        return Ok(Some(day));
+    }
+    let span =
+        row_span(m, row, cut)?.ok_or_else(|| invariant("a candidate of last with no span"))?;
+    Ok(span.start())
+}
+
+/// The candidates of a read among `rows`, by position: its version is seen in the read's
+/// world, every key it states matches, the keys it leaves unstated were there when it was
+/// known, it is known by the cut, and its span holds the read's time (L §4.6 step 1, §6.4;
+/// refcore's `row_visible`).
 ///
 /// # Errors
 ///
@@ -369,15 +422,16 @@ fn in_time(m: &Reality, row: &Row, test: Test, cut: Day) -> Result<bool, Stop> {
 pub fn candidates(
     m: &Reality,
     rows: &[Row],
-    binds: &[BindInfo],
-    keys: &[KeyVal],
+    (binds, keys): (&[BindInfo], &[KeyVal]),
     test: Test,
-    cut: Day,
+    clocks: Clocks,
 ) -> Result<Vec<usize>, Stop> {
+    let cut = clocks.cut;
     let mut out = Vec::new();
     for (at, row) in rows.iter().enumerate() {
-        if row_matches(m, row, binds, keys)
-            && unstated_ok(m, row, binds, keys)?
+        if m.scenarios.sees(clocks.world, Some(&row.version))
+            && row_matches(m, row, binds, keys)
+            && unstated_ok(m, row, (binds, keys), clocks.world)?
             && row_known(m, row)? <= cut
             && in_time(m, row, test, cut)?
         {
@@ -385,6 +439,57 @@ pub fn candidates(
         }
     }
     Ok(out)
+}
+
+/// The candidates among `cands` that entered into force by the day of the read's `wording`
+/// pin, each row by its own time where it states one; all of them outside such a pin
+/// (L §4.3, §5.3; refcore's `wording_ok`).
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for a candidate past the rows, or a row whose version is missing.
+pub fn worded(
+    m: &Reality,
+    rows: &[Row],
+    cands: Vec<usize>,
+    clocks: Clocks,
+) -> Result<Vec<usize>, Stop> {
+    let Some(by) = clocks.wording else {
+        return Ok(cands);
+    };
+    let mut out = Vec::with_capacity(cands.len());
+    for at in cands {
+        let row = rows
+            .get(at)
+            .ok_or_else(|| invariant("a candidate past its rows"))?;
+        if enters(m, &row.version, own_time(row), clocks.cut)? <= by {
+            out.push(at);
+        }
+    }
+    Ok(out)
+}
+
+/// A row's own time for its entry into force: its own span's start, else the day of its
+/// instant; else its version's governs (L §5.3; refcore's `read_input`, its `own`).
+fn own_time(row: &Row) -> OwnTime {
+    if let Some(span) = &row.own_span {
+        return OwnTime::Stated(span.start());
+    }
+    match &row.instant {
+        Some(RowInstant::At(day, _)) => OwnTime::Stated(Some(*day)),
+        Some(RowInstant::After(_)) | None => OwnTime::Version,
+    }
+}
+
+/// Version `id`'s entry into force for a row or a rule of own time `own`, as the cut sees
+/// its governs (L §5.3).
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for a version load didn't build.
+pub(super) fn enters(m: &Reality, id: &str, own: OwnTime, cut: Day) -> Result<Day, Stop> {
+    let version = m.versions.get(id).ok_or_else(no_version)?;
+    Ok(version.enters_at(cut, own))
 }
 
 /// How one key position of a row relates to another's (L §4.6 steps 2 and 3.2).
@@ -435,8 +540,9 @@ fn narrower(m: &Reality, binds: &[BindInfo], a: &[Pat], b: &[Pat]) -> bool {
     strict
 }
 
-/// The candidates no `replace` row beats: a later-known row at the same keys that says
-/// `replace` wins over the rows known before it (L §4.6 step 2).
+/// The candidates no `replace` row beats: a row at the same keys that says `replace` wins
+/// over the rows known before it, and a scenario's over its base's whatever their `known`
+/// dates (refcore's `choose`, its replacement). L §4.6 step 2, §6.4.
 fn unreplaced(m: &Reality, rows: &[Row], cands: &[usize]) -> Result<Vec<usize>, Stop> {
     let mut keep = Vec::new();
     for &at in cands {
@@ -444,12 +550,17 @@ fn unreplaced(m: &Reality, rows: &[Row], cands: &[usize]) -> Result<Vec<usize>, 
             .get(at)
             .ok_or_else(|| invariant("a candidate past its rows"))?;
         let known = row_known(m, row)?;
+        let layer = m.scenarios.layer(Some(&row.version));
         let mut beaten = false;
         for &other in cands {
             let Some(o) = rows.get(other) else {
                 return Err(invariant("a candidate past its rows"));
             };
-            if other != at && o.replace && o.pattern == row.pattern && row_known(m, o)? > known {
+            if other == at || !o.replace || o.pattern != row.pattern {
+                continue;
+            }
+            let above = m.scenarios.layer(Some(&o.version));
+            if above > layer || (above == layer && row_known(m, o)? > known) {
                 beaten = true;
                 break;
             }

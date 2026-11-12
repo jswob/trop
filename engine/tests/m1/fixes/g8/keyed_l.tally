@@ -1,0 +1,4 @@
+part asks_l
+  tally 2
+
+ask n_last: value(eur_acc, 2026-03-31) in USD by last(fxu)

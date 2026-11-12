@@ -1,0 +1,39 @@
+model for_t
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "probe card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2, k3]
+
+input amt: money PLN
+
+input neg: money PLN
+
+input w[k in ks]: num
+
+def big_rem[k in ks]: money PLN = prorata(amt, w[j] for j in ks, k, 1 PLN, rest largest)
+
+def big_rem_neg[k in ks]: money PLN = prorata(neg, w[j] for j in ks, k, 1 PLN, rest largest)
+
+def last_[k in ks]: money PLN = prorata(amt, 1 for j in ks, k, minor(PLN), half-up, rest last)
+
+ask t_rem: big_rem[k] for k in ks
+
+ask t_rem_neg: big_rem_neg[k] for k in ks
+
+ask t_last: last_[k] for k in ks
+
+version card_v
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "c"
+  neg = -10.00 PLN "c"
+  w[k1] = 1 "c"
+  w[k2] = 2 "c"
+  w[k3] = 4 "c"

@@ -1,0 +1,57 @@
+model pr
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "made up"
+
+unit DUK: currency minor 0.01
+
+axis pa
+  lo "lower pay"
+  hi "higher pay"
+
+place kasa: claims DUK lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input p_lo: money DUK
+
+input p_hi: money DUK
+
+input d1: date
+
+input d2: date
+
+input fee: money DUK
+
+def pay: money DUK at d1
+  rule base = p_lo
+  rule hi beats base = p_hi when pa == hi
+
+move salary: transfers
+  on d1
+  leg cash from world to kasa amount pay
+
+move charge: transfers
+  on d2
+  leg cash from kasa to world amount fee
+
+ask q_fc: flows(charge, 2026-03-02) law 2026-10-25
+
+ask q_fc_lo: flows(charge, 2026-03-02) with pa = lo law 2026-10-25
+
+ask q_fc_hi: flows(charge, 2026-03-02) with pa = hi law 2026-10-25
+
+ask q_bal: bal(kasa, 2026-12-31) law 2026-10-25
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p_lo = 5.00
+  p_hi = 20.00
+  d1 = 2026-03-01
+  d2 = 2026-03-02
+  fee = 10.00

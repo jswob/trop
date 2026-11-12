@@ -1,0 +1,4 @@
+part p_day
+  tally 2
+
+ask p_day: bal(konto, (2026-01-05))

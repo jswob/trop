@@ -154,6 +154,36 @@ impl Num {
         self.to_big().compare(&o.to_big())
     }
 
+    /// `self^k` for a whole `k`, exactly, by repeated squaring: `RUN-DIV` for 0 to a power
+    /// below 0 (the reciprocal of 0^|k|), `RUN-DIGITS` past the cap (Python's `Fraction **
+    /// int`, refcore's `c_pow`). Each factor and square is a part of the power, so none passes
+    /// the cap before it does. L §3.3 (a power that is an integer is exact), §7.1.
+    pub fn checked_pow(&self, k: i64) -> Result<Num, NumError> {
+        let mut out = Num::int(1);
+        let mut square = self.clone();
+        let mut left = k.unsigned_abs();
+        while left > 0 {
+            if left.checked_rem_euclid(2).ok_or(NumError::Invariant)? == 1 {
+                out = out.checked_mul(&square)?;
+            }
+            left = left.checked_div_euclid(2).ok_or(NumError::Invariant)?;
+            if left > 0 {
+                square = square.checked_mul(&square)?;
+            }
+        }
+        if k < 0 {
+            return Num::int(1).checked_div(&out);
+        }
+        Ok(out)
+    }
+
+    /// The larger bit length of the numerator's absolute value and the denominator, reduced
+    /// (Python's `bit_length` of each part), which bounds the digits of a power. L §7.1.
+    pub fn bits(&self) -> u64 {
+        let big = self.to_big();
+        big.numer().bits().max(big.denom().bits())
+    }
+
     /// The keys of the integer range `self .. hi step step`, as refcore's Python integers:
     /// the keys are counted on the big tier, uncapped, so ends near the 4 096-digit cap count
     /// as any others, and each key made lies between the ends, under the cap; no key when
@@ -298,6 +328,50 @@ mod tests {
             Num::int(i64::MAX).checked_add(&Num::int(1)).expect("2^63"),
             "-i64::MIN"
         );
+    }
+
+    #[test]
+    fn a_whole_power_is_exact() {
+        // L §3.3: pow(1 + r, n) with an integer n is exact
+        let r = n("1.01");
+        assert_eq!(r.checked_pow(2).expect("1.01^2"), n("1.0201"), "squared");
+        assert_eq!(
+            r.checked_pow(3).expect("1.01^3"),
+            n("1.030301"),
+            "an odd power"
+        );
+        assert_eq!(r.checked_pow(0).expect("x^0"), Num::int(1), "x^0");
+        assert_eq!(
+            Num::int(2).checked_pow(-3).expect("2^-3"),
+            Num::ratio(1, 8).expect("1/8"),
+            "below 0"
+        );
+        assert_eq!(
+            Num::int(-2).checked_pow(5).expect("(-2)^5"),
+            Num::int(-32),
+            "a negative base"
+        );
+        assert_eq!(Num::zero().checked_pow(-1), Err(NumError::Div), "0^-1");
+        assert_eq!(Num::zero().checked_pow(2), Ok(Num::zero()), "0^2");
+        assert_eq!(
+            Num::int(10).checked_pow(4_096),
+            Err(NumError::Digits),
+            "10^4096 has 4 097 digits"
+        );
+        assert!(
+            Num::int(10).checked_pow(4_095).is_ok(),
+            "10^4095 has 4 096 digits"
+        );
+    }
+
+    #[test]
+    fn bits_are_the_larger_part_s() {
+        assert_eq!(Num::zero().bits(), 1, "0/1: the denominator's one bit");
+        assert_eq!(Num::int(1).bits(), 1, "1");
+        assert_eq!(Num::int(-1).bits(), 1, "-1");
+        assert_eq!(Num::ratio(1, 2).expect("1/2").bits(), 2, "1/2");
+        assert_eq!(Num::int(-255).bits(), 8, "-255");
+        assert_eq!(power_of_two(200).bits(), 200, "a big value");
     }
 
     #[test]

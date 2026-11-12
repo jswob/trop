@@ -1,0 +1,87 @@
+model lows
+  tally 2
+  on 2026-04-15
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented for F5's twin"
+
+unit DUK: currency minor 0.01
+
+axis pay_reading
+  low "the lower pay"
+  high "the higher pay"
+
+index month = month 2026-01..2026-12
+
+place konto: accounts DUK lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input pay_low: money DUK
+
+input pay_high: money DUK
+
+input rent: money DUK
+
+input floor: money DUK
+
+input rent_off: int
+
+input sweep_off: int
+
+input reach: int
+
+input share: num
+
+def pay: money DUK at reader
+  rule base = pay_low
+  rule hi beats base = pay_high when pay_reading == high
+
+def room[m in month]: money DUK = low(konto, add_days(start_of(m), sweep_off) .. add_days(start_of(m), reach)) from add_days(start_of(m), sweep_off) at start_of(m)
+
+move salary[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount pay
+
+move rent_pay[m in month]: transfers
+  on add_days(start_of(m), rent_off)
+  at start_of(m)
+  leg cash from konto to world amount rent
+
+move sweep[m in month]: transfers
+  on add_days(start_of(m), sweep_off)
+  at start_of(m)
+  reads konto
+  leg cash from konto to world amount round(max(0, room[m] - floor) * share, minor(DUK), down)
+
+ask q_low: low(konto, 2026-01-01 .. 2026-12-31) from 2026-01-01
+
+ask q_low_late: low(konto, 2026-05-01 .. 2026-11-30) from 2026-04-20
+
+ask q_bal: bal(konto, 2026-09-30) from 2026-02-01
+
+ask q_swept: flows(sweep, 2026-01-01 .. 2026-12-31)
+
+ask q_hi: low(konto, 2026-03-01 .. 2026-08-31) from 2026-03-01 with pay_reading = high
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  pay_low = 1000.00
+  pay_high = 1300.00
+  rent = 900.00
+  floor = 200.00
+  rent_off = 9
+  sweep_off = 20
+  reach = 50
+  share = 0.5
+  opening[konto] = 500.00 at 2026-01-01 start
+
+version later
+  cite card
+  governs 2026-05-01..
+  known 2026-03-01
+  replace rent = 950.00 "the rent rose"

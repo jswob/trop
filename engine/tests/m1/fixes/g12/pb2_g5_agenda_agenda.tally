@@ -1,0 +1,845 @@
+model g5_agenda
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G5: the day walk's agenda (E §4.2 steps 0-4, L §5.10, §5.19): openings before the start and on it; stated readings at a day's start and end, before the cut, on its day and after it; observations before the start, inside the run, on the cut's day and after it, two on one day; a month the bank covers; plans before, inside and after the run; decisions in two strata, one due twice on a day with a ties clause."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+index box = [first, second]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place pocket: cash PLN lives 2026-01-01..
+
+place jar[b in box]: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place tin: accounts PLN lives 2026-01-01..2026-02-27
+
+place tin0: accounts PLN lives 2026-01-01..2026-02-27
+
+place jar3: accounts PLN lives 2026-03-01..
+
+place oops_box: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+place shop: outside lives 2026-01-01..
+
+input bank: observed
+
+input rent: money PLN
+
+input early_day: date
+
+input late_day: date
+
+input first_day: date
+
+input pay_dom: int
+
+input dec_dom: int
+
+input early_amt: money PLN
+
+input late_amt: money PLN
+
+input low_mark: money PLN
+
+input high_mark: money PLN
+
+input top_amt: money PLN
+
+input big_put: money PLN
+
+input small_put: money PLN
+
+input bill_dom: int
+
+input bill_amt: money PLN
+
+input keep_floor: money PLN
+
+input fee_amt: money PLN
+
+input divisor[m in month]: num
+
+def room[m in month]: money PLN at start_of(m)
+  note "a written projection: konto on the bill's day, from the decisions' day, above the floor"
+  rule base = max(0, bal(konto, day_of(m, bill_dom)) from day_of(m, dec_dom) - keep_floor)
+
+move rent_pay[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from konto to world amount rent
+
+move early: transfers
+  on early_day
+  at early_day
+  leg cash from world to konto amount early_amt
+
+move late: transfers
+  on late_day
+  at late_day
+  leg cash from world to konto amount late_amt
+
+move topup[m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads pocket
+  when bal(pocket) < low_mark
+  leg cash from world to konto amount top_amt
+
+move stash[b in box, m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads konto
+  ties by pos(b)
+  leg cash from konto to jar[b] amount if bal(konto) > high_mark then big_put else small_put
+
+move newyear: transfers
+  on first_day
+  at first_day
+  leg cash from konto to shop amount fee_amt
+
+move fee[m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  leg cash from konto to shop amount fee_amt
+
+move oops[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from world to oops_box amount round(fee_amt / divisor[m], minor(PLN), half-up)
+
+move early_dec: transfers
+  on early_day
+  at early_day
+  reads pocket
+  leg cash from world to pocket amount if bal(pocket) > big_put then small_put else fee_amt
+
+move late_dec: transfers
+  on late_day
+  at late_day
+  reads pocket
+  leg cash from world to pocket amount if bal(pocket) > big_put then small_put else fee_amt
+
+move bill[m in month]: transfers
+  on day_of(m, bill_dom)
+  at start_of(m)
+  leg cash from konto to shop amount bill_amt
+
+move save[m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads konto
+  leg cash from world to savings amount room[m]
+
+move sweep[m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads savings
+  leg cash from savings to shop amount if bal(savings) > big_put then small_put else max(0, small_put - small_put)
+
+ask q_room: room[m] for m in month law cut
+
+ask q_tin: bal(tin, d), bal(tin0, d), bal(savings, d), bal(jar3, d), bal(oops_box, d) for d in [2026-02-26, 2026-02-27, 2026-02-28, 2026-03-31] law cut
+
+ask q_bal: bal(konto, d), bal(pocket, d), bal(jar[first], d), bal(jar[second], d) for d in [2026-01-01, 2026-01-05, 2026-01-10, 2026-01-20, 2026-01-25, 2026-01-28, 2026-01-31, 2026-02-10, 2026-02-15, 2026-02-20, 2026-03-01, 2026-03-20, 2026-03-31] law cut
+
+ask q_res: residuals konto 2026-01 law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  rent = 600.00 "the rent"
+  early_day = 2025-12-15 "a day before the start"
+  late_day = 2026-04-15 "a day after the end"
+  first_day = 2026-01-01 "the first day of the run"
+  pay_dom = 5 "the rent's day of the month"
+  dec_dom = 20 "the decisions' day of the month"
+  early_amt = 7.00 "an amount before the start"
+  late_amt = 9.00 "an amount after the end"
+  low_mark = 48.00 "top up while the pocket is below this"
+  high_mark = 2300.00 "stash 100 above this"
+  top_amt = 1000.00 "the top-up"
+  big_put = 100.00 "a big stash"
+  small_put = 1.00 "a small stash"
+  bill_dom = 25 "the bill's day of the month"
+  bill_amt = 50.00 "the bill"
+  keep_floor = 2000.00 "keep this on konto"
+  fee_amt = 3.00 "a fee"
+  divisor[2026-01] = 1 "a whole fee"
+  divisor[2026-02] = 0 "a division by zero, refused"
+  divisor[2026-03] = 2 "half a fee"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 3000 at 2026-01-01 start "the account on the first day"
+  opening[pocket] = 50 at 2025-12-31 start "the pocket, a day before the start"
+  opening[jar[first]] = 0 at 2026-01-01 start
+  opening[jar[second]] = 0 at 2026-01-01 start
+  opening[savings] = 0 at 2026-01-01 start
+  opening[tin] = 10 at 2026-01-01 start "a tin that ends with money in it"
+  opening[tin0] = 0 at 2026-01-01 start "a tin that ends empty"
+  opening[jar3] = 70 at 2026-03-01 start "a jar opened after the cut"
+  opening[oops_box] = 0 at 2026-01-01 start
+
+version bank_dec
+  cite fixture
+  governs 2025-12
+  known 2026-01-02
+  covers konto
+  bank[b20251230] = (on: 2025-12-30, kind: transfers, leg cash from konto to shop amount 11.00 PLN) "before the start"
+
+version bank_jan
+  cite fixture
+  governs 2026-01
+  known 2026-02-02
+  covers konto
+  anchor konto
+  bank[b20260101] = (on: 2026-01-01, kind: transfers, leg cash from konto to shop amount 5.00 PLN) "on the first day"
+  bank[b20260105] = (on: 2026-01-05, kind: transfers, leg cash from konto to world amount 600.00 PLN, fulfils: rent_pay[2026-01]) "the rent"
+  bank[b20260110b] = (on: 2026-01-10, kind: transfers, leg cash from konto to shop amount 20.00 PLN) "the second of the day"
+  bank[b20260110a] = (on: 2026-01-10, kind: transfers, leg cash from konto to shop amount 30.00 PLN) "the first of the day"
+  stated[konto] = 2350.00 at 2026-01-31 end "the month's closing balance"
+
+version bank_feb
+  cite fixture
+  governs 2026-02
+  known 2026-02-15
+  anchor pocket
+  bank[b20260210] = (on: 2026-02-10, kind: transfers, leg cash from konto to shop amount 40.00 PLN) "inside the run, before the cut"
+  bank[b20260215] = (on: 2026-02-15, kind: transfers, leg cash from konto to shop amount 50.00 PLN) "on the cut's day"
+  stated[pocket] = 45.00 at 2026-02-10 start "the pocket counted in the morning"
+  stated[pocket] = 44.00 at 2026-02-15 end "on the cut's day"
+
+ask zx1: explain bal(konto, 2025-12-01)
+
+ask zx2: explain bal(konto, 2025-12-15)
+
+ask zx3: explain bal(konto, 2025-12-30)
+
+ask zx4: explain bal(konto, 2025-12-30 start)
+
+ask zx5: explain bal(konto, 2025-12-31)
+
+ask zx6: explain bal(konto, 2026-01-01)
+
+ask zx7: explain bal(konto, 2026-01-01 start)
+
+ask zx8: explain bal(konto, 2026-01-02)
+
+ask zx9: explain bal(konto, 2026-01-05)
+
+ask zx10: explain bal(konto, 2026-01-05 start)
+
+ask zx11: explain bal(konto, 2026-01-10)
+
+ask zx12: explain bal(konto, 2026-01-20)
+
+ask zx13: explain bal(konto, 2026-01-20 start)
+
+ask zx14: explain bal(konto, 2026-01-25)
+
+ask zx15: explain bal(konto, 2026-01-28)
+
+ask zx16: explain bal(konto, 2026-01-28 start)
+
+ask zx17: explain bal(konto, 2026-01-31)
+
+ask zx18: explain bal(konto, 2026-02-02)
+
+ask zx19: explain bal(konto, 2026-02-02 start)
+
+ask zx20: explain bal(konto, 2026-02-10)
+
+ask zx21: explain bal(konto, 2026-02-15)
+
+ask zx22: explain bal(konto, 2026-02-15 start)
+
+ask zx23: explain bal(konto, 2026-02-20)
+
+ask zx24: explain bal(konto, 2026-02-26)
+
+ask zx25: explain bal(konto, 2026-02-26 start)
+
+ask zx26: explain bal(konto, 2026-02-27)
+
+ask zx27: explain bal(konto, 2026-02-28)
+
+ask zx28: explain bal(konto, 2026-02-28 start)
+
+ask zx29: explain bal(konto, 2026-03-01)
+
+ask zx30: explain bal(konto, 2026-03-20)
+
+ask zx31: explain bal(konto, 2026-03-20 start)
+
+ask zx32: explain bal(konto, 2026-03-31)
+
+ask zx33: explain bal(konto, 2026-04-15)
+
+ask zx34: explain bal(konto, 2026-04-15 start)
+
+ask zx35: explain bal(pocket, 2025-12-01)
+
+ask zx36: explain bal(pocket, 2025-12-15)
+
+ask zx37: explain bal(pocket, 2025-12-15 start)
+
+ask zx38: explain bal(pocket, 2025-12-30)
+
+ask zx39: explain bal(pocket, 2025-12-31)
+
+ask zx40: explain bal(pocket, 2025-12-31 start)
+
+ask zx41: explain bal(pocket, 2026-01-01)
+
+ask zx42: explain bal(pocket, 2026-01-02)
+
+ask zx43: explain bal(pocket, 2026-01-02 start)
+
+ask zx44: explain bal(pocket, 2026-01-05)
+
+ask zx45: explain bal(pocket, 2026-01-10)
+
+ask zx46: explain bal(pocket, 2026-01-10 start)
+
+ask zx47: explain bal(pocket, 2026-01-20)
+
+ask zx48: explain bal(pocket, 2026-01-25)
+
+ask zx49: explain bal(pocket, 2026-01-25 start)
+
+ask zx50: explain bal(pocket, 2026-01-28)
+
+ask zx51: explain bal(pocket, 2026-01-31)
+
+ask zx52: explain bal(pocket, 2026-01-31 start)
+
+ask zx53: explain bal(pocket, 2026-02-02)
+
+ask zx54: explain bal(pocket, 2026-02-10)
+
+ask zx55: explain bal(pocket, 2026-02-10 start)
+
+ask zx56: explain bal(pocket, 2026-02-15)
+
+ask zx57: explain bal(pocket, 2026-02-20)
+
+ask zx58: explain bal(pocket, 2026-02-20 start)
+
+ask zx59: explain bal(pocket, 2026-02-26)
+
+ask zx60: explain bal(pocket, 2026-02-27)
+
+ask zx61: explain bal(pocket, 2026-02-27 start)
+
+ask zx62: explain bal(pocket, 2026-02-28)
+
+ask zx63: explain bal(pocket, 2026-03-01)
+
+ask zx64: explain bal(pocket, 2026-03-01 start)
+
+ask zx65: explain bal(pocket, 2026-03-20)
+
+ask zx66: explain bal(pocket, 2026-03-31)
+
+ask zx67: explain bal(pocket, 2026-03-31 start)
+
+ask zx68: explain bal(pocket, 2026-04-15)
+
+ask zx69: explain bal(savings, 2025-12-01)
+
+ask zx70: explain bal(savings, 2025-12-01 start)
+
+ask zx71: explain bal(savings, 2025-12-15)
+
+ask zx72: explain bal(savings, 2025-12-30)
+
+ask zx73: explain bal(savings, 2025-12-30 start)
+
+ask zx74: explain bal(savings, 2025-12-31)
+
+ask zx75: explain bal(savings, 2026-01-01)
+
+ask zx76: explain bal(savings, 2026-01-01 start)
+
+ask zx77: explain bal(savings, 2026-01-02)
+
+ask zx78: explain bal(savings, 2026-01-05)
+
+ask zx79: explain bal(savings, 2026-01-05 start)
+
+ask zx80: explain bal(savings, 2026-01-10)
+
+ask zx81: explain bal(savings, 2026-01-20)
+
+ask zx82: explain bal(savings, 2026-01-20 start)
+
+ask zx83: explain bal(savings, 2026-01-25)
+
+ask zx84: explain bal(savings, 2026-01-28)
+
+ask zx85: explain bal(savings, 2026-01-28 start)
+
+ask zx86: explain bal(savings, 2026-01-31)
+
+ask zx87: explain bal(savings, 2026-02-02)
+
+ask zx88: explain bal(savings, 2026-02-02 start)
+
+ask zx89: explain bal(savings, 2026-02-10)
+
+ask zx90: explain bal(savings, 2026-02-15)
+
+ask zx91: explain bal(savings, 2026-02-15 start)
+
+ask zx92: explain bal(savings, 2026-02-20)
+
+ask zx93: explain bal(savings, 2026-02-26)
+
+ask zx94: explain bal(savings, 2026-02-26 start)
+
+ask zx95: explain bal(savings, 2026-02-27)
+
+ask zx96: explain bal(savings, 2026-02-28)
+
+ask zx97: explain bal(savings, 2026-02-28 start)
+
+ask zx98: explain bal(savings, 2026-03-01)
+
+ask zx99: explain bal(savings, 2026-03-20)
+
+ask zx100: explain bal(savings, 2026-03-20 start)
+
+ask zx101: explain bal(savings, 2026-03-31)
+
+ask zx102: explain bal(savings, 2026-04-15)
+
+ask zx103: explain bal(savings, 2026-04-15 start)
+
+ask zx104: explain bal(tin, 2025-12-01)
+
+ask zx105: explain bal(tin, 2025-12-15)
+
+ask zx106: explain bal(tin, 2025-12-15 start)
+
+ask zx107: explain bal(tin, 2025-12-30)
+
+ask zx108: explain bal(tin, 2025-12-31)
+
+ask zx109: explain bal(tin, 2025-12-31 start)
+
+ask zx110: explain bal(tin, 2026-01-01)
+
+ask zx111: explain bal(tin, 2026-01-02)
+
+ask zx112: explain bal(tin, 2026-01-02 start)
+
+ask zx113: explain bal(tin, 2026-01-05)
+
+ask zx114: explain bal(tin, 2026-01-10)
+
+ask zx115: explain bal(tin, 2026-01-10 start)
+
+ask zx116: explain bal(tin, 2026-01-20)
+
+ask zx117: explain bal(tin, 2026-01-25)
+
+ask zx118: explain bal(tin, 2026-01-25 start)
+
+ask zx119: explain bal(tin, 2026-01-28)
+
+ask zx120: explain bal(tin, 2026-01-31)
+
+ask zx121: explain bal(tin, 2026-01-31 start)
+
+ask zx122: explain bal(tin, 2026-02-02)
+
+ask zx123: explain bal(tin, 2026-02-10)
+
+ask zx124: explain bal(tin, 2026-02-10 start)
+
+ask zx125: explain bal(tin, 2026-02-15)
+
+ask zx126: explain bal(tin, 2026-02-20)
+
+ask zx127: explain bal(tin, 2026-02-20 start)
+
+ask zx128: explain bal(tin, 2026-02-26)
+
+ask zx129: explain bal(tin, 2026-02-27)
+
+ask zx130: explain bal(tin, 2026-02-27 start)
+
+ask zx131: explain bal(tin, 2026-02-28)
+
+ask zx132: explain bal(tin, 2026-03-01)
+
+ask zx133: explain bal(tin, 2026-03-01 start)
+
+ask zx134: explain bal(tin, 2026-03-20)
+
+ask zx135: explain bal(tin, 2026-03-31)
+
+ask zx136: explain bal(tin, 2026-03-31 start)
+
+ask zx137: explain bal(tin, 2026-04-15)
+
+ask zx138: explain bal(tin0, 2025-12-01)
+
+ask zx139: explain bal(tin0, 2025-12-01 start)
+
+ask zx140: explain bal(tin0, 2025-12-15)
+
+ask zx141: explain bal(tin0, 2025-12-30)
+
+ask zx142: explain bal(tin0, 2025-12-30 start)
+
+ask zx143: explain bal(tin0, 2025-12-31)
+
+ask zx144: explain bal(tin0, 2026-01-01)
+
+ask zx145: explain bal(tin0, 2026-01-01 start)
+
+ask zx146: explain bal(tin0, 2026-01-02)
+
+ask zx147: explain bal(tin0, 2026-01-05)
+
+ask zx148: explain bal(tin0, 2026-01-05 start)
+
+ask zx149: explain bal(tin0, 2026-01-10)
+
+ask zx150: explain bal(tin0, 2026-01-20)
+
+ask zx151: explain bal(tin0, 2026-01-20 start)
+
+ask zx152: explain bal(tin0, 2026-01-25)
+
+ask zx153: explain bal(tin0, 2026-01-28)
+
+ask zx154: explain bal(tin0, 2026-01-28 start)
+
+ask zx155: explain bal(tin0, 2026-01-31)
+
+ask zx156: explain bal(tin0, 2026-02-02)
+
+ask zx157: explain bal(tin0, 2026-02-02 start)
+
+ask zx158: explain bal(tin0, 2026-02-10)
+
+ask zx159: explain bal(tin0, 2026-02-15)
+
+ask zx160: explain bal(tin0, 2026-02-15 start)
+
+ask zx161: explain bal(tin0, 2026-02-20)
+
+ask zx162: explain bal(tin0, 2026-02-26)
+
+ask zx163: explain bal(tin0, 2026-02-26 start)
+
+ask zx164: explain bal(tin0, 2026-02-27)
+
+ask zx165: explain bal(tin0, 2026-02-28)
+
+ask zx166: explain bal(tin0, 2026-02-28 start)
+
+ask zx167: explain bal(tin0, 2026-03-01)
+
+ask zx168: explain bal(tin0, 2026-03-20)
+
+ask zx169: explain bal(tin0, 2026-03-20 start)
+
+ask zx170: explain bal(tin0, 2026-03-31)
+
+ask zx171: explain bal(tin0, 2026-04-15)
+
+ask zx172: explain bal(tin0, 2026-04-15 start)
+
+ask zx173: explain bal(jar3, 2025-12-01)
+
+ask zx174: explain bal(jar3, 2025-12-15)
+
+ask zx175: explain bal(jar3, 2025-12-15 start)
+
+ask zx176: explain bal(jar3, 2025-12-30)
+
+ask zx177: explain bal(jar3, 2025-12-31)
+
+ask zx178: explain bal(jar3, 2025-12-31 start)
+
+ask zx179: explain bal(jar3, 2026-01-01)
+
+ask zx180: explain bal(jar3, 2026-01-02)
+
+ask zx181: explain bal(jar3, 2026-01-02 start)
+
+ask zx182: explain bal(jar3, 2026-01-05)
+
+ask zx183: explain bal(jar3, 2026-01-10)
+
+ask zx184: explain bal(jar3, 2026-01-10 start)
+
+ask zx185: explain bal(jar3, 2026-01-20)
+
+ask zx186: explain bal(jar3, 2026-01-25)
+
+ask zx187: explain bal(jar3, 2026-01-25 start)
+
+ask zx188: explain bal(jar3, 2026-01-28)
+
+ask zx189: explain bal(jar3, 2026-01-31)
+
+ask zx190: explain bal(jar3, 2026-01-31 start)
+
+ask zx191: explain bal(jar3, 2026-02-02)
+
+ask zx192: explain bal(jar3, 2026-02-10)
+
+ask zx193: explain bal(jar3, 2026-02-10 start)
+
+ask zx194: explain bal(jar3, 2026-02-15)
+
+ask zx195: explain bal(jar3, 2026-02-20)
+
+ask zx196: explain bal(jar3, 2026-02-20 start)
+
+ask zx197: explain bal(jar3, 2026-02-26)
+
+ask zx198: explain bal(jar3, 2026-02-27)
+
+ask zx199: explain bal(jar3, 2026-02-27 start)
+
+ask zx200: explain bal(jar3, 2026-02-28)
+
+ask zx201: explain bal(jar3, 2026-03-01)
+
+ask zx202: explain bal(jar3, 2026-03-01 start)
+
+ask zx203: explain bal(jar3, 2026-03-20)
+
+ask zx204: explain bal(jar3, 2026-03-31)
+
+ask zx205: explain bal(jar3, 2026-03-31 start)
+
+ask zx206: explain bal(jar3, 2026-04-15)
+
+ask zx207: explain bal(oops_box, 2025-12-01)
+
+ask zx208: explain bal(oops_box, 2025-12-01 start)
+
+ask zx209: explain bal(oops_box, 2025-12-15)
+
+ask zx210: explain bal(oops_box, 2025-12-30)
+
+ask zx211: explain bal(oops_box, 2025-12-30 start)
+
+ask zx212: explain bal(oops_box, 2025-12-31)
+
+ask zx213: explain bal(oops_box, 2026-01-01)
+
+ask zx214: explain bal(oops_box, 2026-01-01 start)
+
+ask zx215: explain bal(oops_box, 2026-01-02)
+
+ask zx216: explain bal(oops_box, 2026-01-05)
+
+ask zx217: explain bal(oops_box, 2026-01-05 start)
+
+ask zx218: explain bal(oops_box, 2026-01-10)
+
+ask zx219: explain bal(oops_box, 2026-01-20)
+
+ask zx220: explain bal(oops_box, 2026-01-20 start)
+
+ask zx221: explain bal(oops_box, 2026-01-25)
+
+ask zx222: explain bal(oops_box, 2026-01-28)
+
+ask zx223: explain bal(oops_box, 2026-01-28 start)
+
+ask zx224: explain bal(oops_box, 2026-01-31)
+
+ask zx225: explain bal(oops_box, 2026-02-02)
+
+ask zx226: explain bal(oops_box, 2026-02-02 start)
+
+ask zx227: explain bal(oops_box, 2026-02-10)
+
+ask zx228: explain bal(oops_box, 2026-02-15)
+
+ask zx229: explain bal(oops_box, 2026-02-15 start)
+
+ask zx230: explain bal(oops_box, 2026-02-20)
+
+ask zx231: explain bal(oops_box, 2026-02-26)
+
+ask zx232: explain bal(oops_box, 2026-02-26 start)
+
+ask zx233: explain bal(oops_box, 2026-02-27)
+
+ask zx234: explain bal(oops_box, 2026-02-28)
+
+ask zx235: explain bal(oops_box, 2026-02-28 start)
+
+ask zx236: explain bal(oops_box, 2026-03-01)
+
+ask zx237: explain bal(oops_box, 2026-03-20)
+
+ask zx238: explain bal(oops_box, 2026-03-20 start)
+
+ask zx239: explain bal(oops_box, 2026-03-31)
+
+ask zx240: explain bal(oops_box, 2026-04-15)
+
+ask zx241: explain bal(oops_box, 2026-04-15 start)
+
+ask zx242: explain bal(world, 2025-12-01)
+
+ask zx243: explain bal(world, 2025-12-15)
+
+ask zx244: explain bal(world, 2025-12-15 start)
+
+ask zx245: explain bal(world, 2025-12-30)
+
+ask zx246: explain bal(world, 2025-12-31)
+
+ask zx247: explain bal(world, 2025-12-31 start)
+
+ask zx248: explain bal(world, 2026-01-01)
+
+ask zx249: explain bal(world, 2026-01-02)
+
+ask zx250: explain bal(world, 2026-01-02 start)
+
+ask zx251: explain bal(world, 2026-01-05)
+
+ask zx252: explain bal(world, 2026-01-10)
+
+ask zx253: explain bal(world, 2026-01-10 start)
+
+ask zx254: explain bal(world, 2026-01-20)
+
+ask zx255: explain bal(world, 2026-01-25)
+
+ask zx256: explain bal(world, 2026-01-25 start)
+
+ask zx257: explain bal(world, 2026-01-28)
+
+ask zx258: explain bal(world, 2026-01-31)
+
+ask zx259: explain bal(world, 2026-01-31 start)
+
+ask zx260: explain bal(world, 2026-02-02)
+
+ask zx261: explain bal(world, 2026-02-10)
+
+ask zx262: explain bal(world, 2026-02-10 start)
+
+ask zx263: explain bal(world, 2026-02-15)
+
+ask zx264: explain bal(world, 2026-02-20)
+
+ask zx265: explain bal(world, 2026-02-20 start)
+
+ask zx266: explain bal(world, 2026-02-26)
+
+ask zx267: explain bal(world, 2026-02-27)
+
+ask zx268: explain bal(world, 2026-02-27 start)
+
+ask zx269: explain bal(world, 2026-02-28)
+
+ask zx270: explain bal(world, 2026-03-01)
+
+ask zx271: explain bal(world, 2026-03-01 start)
+
+ask zx272: explain bal(world, 2026-03-20)
+
+ask zx273: explain bal(world, 2026-03-31)
+
+ask zx274: explain bal(world, 2026-03-31 start)
+
+ask zx275: explain bal(world, 2026-04-15)
+
+ask zx276: explain bal(shop, 2025-12-01)
+
+ask zx277: explain bal(shop, 2025-12-01 start)
+
+ask zx278: explain bal(shop, 2025-12-15)
+
+ask zx279: explain bal(shop, 2025-12-30)
+
+ask zx280: explain bal(shop, 2025-12-30 start)
+
+ask zx281: explain bal(shop, 2025-12-31)
+
+ask zx282: explain bal(shop, 2026-01-01)
+
+ask zx283: explain bal(shop, 2026-01-01 start)
+
+ask zx284: explain bal(shop, 2026-01-02)
+
+ask zx285: explain bal(shop, 2026-01-05)
+
+ask zx286: explain bal(shop, 2026-01-05 start)
+
+ask zx287: explain bal(shop, 2026-01-10)
+
+ask zx288: explain bal(shop, 2026-01-20)
+
+ask zx289: explain bal(shop, 2026-01-20 start)
+
+ask zx290: explain bal(shop, 2026-01-25)
+
+ask zx291: explain bal(shop, 2026-01-28)
+
+ask zx292: explain bal(shop, 2026-01-28 start)
+
+ask zx293: explain bal(shop, 2026-01-31)
+
+ask zx294: explain bal(shop, 2026-02-02)
+
+ask zx295: explain bal(shop, 2026-02-02 start)
+
+ask zx296: explain bal(shop, 2026-02-10)
+
+ask zx297: explain bal(shop, 2026-02-15)
+
+ask zx298: explain bal(shop, 2026-02-15 start)
+
+ask zx299: explain bal(shop, 2026-02-20)
+
+ask zx300: explain bal(shop, 2026-02-26)
+
+ask zx301: explain bal(shop, 2026-02-26 start)
+
+ask zx302: explain bal(shop, 2026-02-27)
+
+ask zx303: explain bal(shop, 2026-02-28)
+
+ask zx304: explain bal(shop, 2026-02-28 start)
+
+ask zx305: explain bal(shop, 2026-03-01)
+
+ask zx306: explain bal(shop, 2026-03-20)
+
+ask zx307: explain bal(shop, 2026-03-20 start)
+
+ask zx308: explain bal(shop, 2026-03-31)
+
+ask zx309: explain bal(shop, 2026-04-15)
+
+ask zx310: explain bal(shop, 2026-04-15 start)

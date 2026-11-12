@@ -1,0 +1,37 @@
+model layers
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's carried item 1 (issue #108, invented): scenarios as layers (D1-3, L §6.4): asks in two worlds, an as if world, a difference by key"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input asked_on: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN = round(amt * rate[k], minor(PLN), half-up) at asked_on
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+ask l_base: total, fee[q1], fee[q2]
+
+ask l_as_if: total, total as if {scenario cheap}
+
+ask l_by_key: diff(fee[k] for k in qs) in cheap against layers
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  asked_on = 2026-06-01 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0.2 "the card"

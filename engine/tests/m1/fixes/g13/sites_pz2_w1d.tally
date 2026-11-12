@@ -1,0 +1,6 @@
+part w1d
+  tally 2
+
+def w1d_x: num = rate[q1 + 1]
+
+ask w1d: w1d_x

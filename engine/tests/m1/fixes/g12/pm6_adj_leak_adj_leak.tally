@@ -1,0 +1,36 @@
+model adj
+  tally 2
+  on 2026-06-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review probe: a scenario move's adjustment must not reach the model's world"
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+
+input pay_day: date
+
+ask base_end: bal(konto, 2026-12-31) in adj
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 40.00 PLN "the card"
+  pay_day = 2026-03-15 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+
+version card_may
+  cite card
+  governs always
+  known 2026-05-01
+  replace fee = 50.00 PLN "the fee rose"
+
+

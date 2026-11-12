@@ -1,0 +1,50 @@
+model dhole
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "a decision whose day is a hole (invented)"
+
+source card "the builder's card (invented)"
+
+unit PLN: currency minor 0.01
+
+input save_day: date
+
+input save_cap: money PLN
+
+input rent_day: date
+
+input rent_amt: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place other: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move save: transfers
+  on save_day
+  reads konto
+  leg cash from konto to savings amount min(save_cap, bal(konto))
+
+move rent: transfers
+  on rent_day
+  leg cash from other to world amount rent_amt
+
+ask q: bal(konto, 2026-06-30), bal(savings, 2026-06-30), bal(other, 2026-06-30)
+
+ask q_flows: flows(save, 2026-01-01..2026-07-01)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  save_cap = 100.00 PLN "the card"
+  rent_day = 2026-04-10 "the card"
+  rent_amt = 40.00 PLN "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+  opening[other] = 300.00 PLN at 2026-01-01 start "the card"

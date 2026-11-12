@@ -1,0 +1,4 @@
+part n05
+  tally 2
+
+ask n05: end_of(lifespan(konto).to)

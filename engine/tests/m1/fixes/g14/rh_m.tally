@@ -1,0 +1,149 @@
+model rh
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G14 probes: a key read at a day range, stepped by days, by a count and by months (range_holds)"
+
+source card "card (invented)"
+
+input t7[d in 2026-01-31 .. 2026-12-31 step 7 days]: int
+
+input t1[d in 2026-01-01 .. 2026-03-31 step 1 day]: int
+
+input tm[d in 2026-01-31 .. 2026-12-31 step 1 month]: int
+
+input tq[d in 2026-01-31 .. 2027-12-31 step 1 quarter]: int
+
+input te[d in 9999-12-01 .. 9999-12-31 step 20 days]: int
+
+input te2[d in 9999-12-01 .. 9999-12-31 step 30 days]: int
+
+input dd: date
+
+input k_a1: date
+
+input k_a2: date
+
+input k_a3: date
+
+input k_a4: date
+
+input k_a4b: date
+
+input k_a4c: date
+
+input k_a6: date
+
+input k_a6b: date
+
+input k_a8: date
+
+input k_a9: date
+
+input k_a10: date
+
+input k_a11: date
+
+input k_a12: date
+
+input k_a12b: date
+
+input k_a13: date
+
+input k_a13b: date
+
+input k_a13c: date
+
+input k_a14: date
+
+input k_a14b: date
+
+ask a1: t7[k_a1]
+
+ask a2: t7[k_a2]
+
+ask a3: t7[k_a3]
+
+ask a4: t7[k_a4]
+
+ask a4b: t7[k_a4b]
+
+ask a4c: t7[k_a4c]
+
+ask a6: t1[k_a6]
+
+ask a6b: t1[k_a6b]
+
+ask a8: tm[k_a8]
+
+ask a9: tm[k_a9]
+
+ask a10: tm[k_a10]
+
+ask a11: tq[k_a11]
+
+ask a12: tq[k_a12]
+
+ask a12b: tq[k_a12b]
+
+ask a13: te[k_a13]
+
+ask a13b: te[k_a13b]
+
+ask a13c: te[k_a13c]
+
+ask a14: te2[k_a14]
+
+ask a14b: te2[k_a14b]
+
+ask a5: t7[dd]
+
+ask a7: t1[dd]
+
+ask a15: count(d in 2026-01-31 .. 2026-12-31 step 7 days where t7[d] == 1)
+
+ask a16: sum(t7[d] for d in 2026-01-31 .. 2026-03-31 step 7 days)
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  dd = 2026-03-14 "card"
+  k_a1 = 2026-01-31 "card"
+  k_a2 = 2026-02-07 "card"
+  k_a3 = 2026-02-08 "card"
+  k_a4 = 2026-12-26 "card"
+  k_a4b = 2027-01-02 "card"
+  k_a4c = 2026-01-30 "card"
+  k_a6 = 2026-03-31 "card"
+  k_a6b = 2026-04-01 "card"
+  k_a8 = 2026-02-28 "card"
+  k_a9 = 2026-03-28 "card"
+  k_a10 = 2026-03-31 "card"
+  k_a11 = 2026-04-30 "card"
+  k_a12 = 2027-10-30 "card"
+  k_a12b = 2027-10-31 "card"
+  k_a13 = 9999-12-21 "card"
+  k_a13b = 9999-12-25 "card"
+  k_a13c = 9999-12-31 "card"
+  k_a14 = 9999-12-31 "card"
+  k_a14b = 9999-12-30 "card"
+  t7[2026-01-31] = 1 "card"
+  t7[2026-02-07] = 1 "card"
+  t7[2026-02-14] = 2 "card"
+  t7[2026-02-21] = 1 "card"
+  t7[2026-02-28] = 3 "card"
+  t7[2026-03-07] = 1 "card"
+  t7[2026-03-14] = 4 "card"
+  t7[2026-03-21] = 1 "card"
+  t7[2026-03-28] = 1 "card"
+  t7[2026-12-26] = 9 "card"
+  t1[2026-03-14] = 5 "card"
+  t1[2026-03-31] = 6 "card"
+  tm[2026-02-28] = 7 "card"
+  tm[2026-03-28] = 8 "card"
+  tq[2026-04-30] = 10 "card"
+  tq[2027-10-30] = 11 "card"
+  te[9999-12-21] = 12 "card"
+  te2[9999-12-31] = 13 "card"

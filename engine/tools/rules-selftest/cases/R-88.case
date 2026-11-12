@@ -45,3 +45,265 @@ mod planted_failfast {
 }
 --- run
 cargo nextest run --locked -p tally-runner --cargo-profile mutants --profile mutants --lib -E 'test(/^planted_failfast::/)'
+
+# P13 (issue #108, 2026-11-08): `mutants-local --next` adds the next milestone's tests, each
+# only if it is green in the unmutated run just before the mutants: a test red there would
+# count as catching every mutant. The planted baseline holds one green and one red test of a
+# next-milestone target; the filter keeps the green one and leaves the red one out, and a
+# baseline whose summary doesn't match its lines keeps none.
+
+case: next-red-at-the-baseline-is-left-out
+tool: run
+exit: any
+expect: R-88 --next: kept tests::m1_green; left out tests::m1_red
+--- write zz-next-baseline.log
+        PASS [   0.104s] (1/2) tally-runner::m1_planted tests::m1_green
+        FAIL [   0.110s] (2/2) tally-runner::m1_planted tests::m1_red
+  stderr ───
+
+    thread 'tests::m1_red' panicked at milestone/m1_planted.rs:9:5:
+    1 of 3 vectors of g1 differ from refcore:
+    g1/planted: exit 0, refcore 1
+
+────────────
+     Summary [   0.214s] 2 tests run: 1 passed, 1 failed, 0 skipped
+        FAIL [   0.110s] (2/2) tally-runner::m1_planted tests::m1_red
+error: test run failed
+--- run
+python3 -I -B -c "
+import sys; sys.path.insert(0, 'tools'); import mutants_local as m
+e, g, r = m.next_filter(open('zz-next-baseline.log').read(), ['m1_planted', 'm1_other'])
+ok = e is not None and 'test(=tests::m1_green)' in e and 'm1_red' not in e and e.startswith('not (')
+print('R-88 --next: kept ' + ' '.join(t for _, t in g) + '; left out ' + ' '.join(t for _, t in r) if ok else 'R-88 --next broken: ' + repr(e))
+"
+
+case: next-unreadable-baseline-keeps-none
+tool: run
+exit: any
+expect: R-88 --next: no filter from a baseline that didn't run
+--- write zz-next-baseline.log
+error[E0425]: cannot find function `run_faulted` in crate `tally_cli`
+error: could not compile `tally-runner` (test "m1_planted") due to 1 previous error
+--- run
+python3 -I -B -c "
+import sys; sys.path.insert(0, 'tools'); import mutants_local as m
+e, g, r = m.next_filter(open('zz-next-baseline.log').read(), ['m1_planted'])
+print('R-88 --next: no filter from a baseline that didn\'t run' if e is None else 'R-88 --next broken: ' + repr(e))
+"
+
+# P55 (issue #108, 2026-11-09): `mutants-local --fences` adds the fences' equivalence tests,
+# tools/milestones.toml's `fence_catchers`, as catchers of a local batch: F5's `walk_oracle`
+# whole and `tally`'s `walk::lows::tests`. The filter selects each test target by its binary
+# and each lib module by its tests' path; an entry that names both a target and a module is
+# refused.
+
+case: fences-select-their-tests
+tool: run
+exit: any
+expect: R-88 --fences: binary_id(=tally-cli::walk_oracle) | (binary_id(=tally) & test(/^walk::lows::tests::/))
+--- run
+python3 -I -B -c "
+import sys; sys.path.insert(0, 'tools'); import milestones, mutants_local as m
+print('R-88 --fences: ' + m.fence_filter_of(milestones.fence_catchers()))
+"
+
+case: fence-catcher-naming-both-is-refused
+tool: run
+exit: any
+expect: each fence_catchers entry is { package, test } or
+--- replace tools/milestones.toml
+  { package = "tally", lib = "walk::lows::tests::" },
+--- with
+  { package = "tally", lib = "walk::lows::tests::", test = "walk_oracle" },
+--- run
+python3 -I -B -c "
+import sys; sys.path.insert(0, 'tools'); import milestones
+try:
+    milestones.fence_catchers()
+    print('R-88 --fences: accepted')
+except milestones.MilestoneError as e:
+    print(e)
+"
+
+# 2026-11-12 (the mutation study; the user's "Okay, let's make these changes"): gate 8 runs
+# through tools/mutants-gate. The baseline fails on a T test slower than 20 s, which T then
+# splits: on a runner 3x slower it would take 60 s, half the profile's 120 s kill, so a kill
+# means a hang, not a slow runner.
+
+# Since 2026-11-12 (pick P73, issue #108): the limit is on the median runner. The baseline
+# runner's speed is the median, over the tests the plan's history also times, of the
+# baseline's time over the history's; each test's time counts over that speed, a test the
+# history lacks too. On a runner 1.75x slower every test passes; a test over 20 s there
+# still fails, and so does a history too thin to tell the speed.
+
+case: baseline-test-over-20-s
+tool: run
+expect: FAIL R-88: tally-runner::s_kernel tests::planted_slow took 21.5 s on the median runner, over 20 s
+--- write tools/milestones.toml
+milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
+gating = ["S", "M0", "M1"]
+mutants_leave_out = ["m0_load"]
+--- write zz-gate/times.json
+{"tally-runner::s_kernel tests::fill_0": 4.0, "tally-runner::s_kernel tests::fill_1": 4.0, "tally-runner::s_kernel tests::fill_2": 4.0, "tally-runner::s_kernel tests::fill_3": 4.0, "tally-runner::s_kernel tests::fill_4": 4.0, "tally-runner::s_kernel tests::fill_5": 4.0, "tally-runner::s_kernel tests::fill_6": 4.0, "tally-runner::s_kernel tests::fill_7": 4.0, "tally-runner::s_kernel tests::fill_8": 4.0, "tally-runner::s_kernel tests::fill_9": 4.0, "tally-runner::s_kernel tests::planted_slow": 21.5}
+--- write zz-gate/history.json
+{"mutants": {}, "tests": {"tally-runner::s_kernel tests::fill_0": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_1": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_2": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_3": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_4": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_5": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_6": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_7": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_8": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_9": {"kills": 0, "seconds": 4.0}}, "speeds": {}}
+--- run
+tools/mutants-gate slow zz-gate/times.json zz-gate/history.json
+
+case: slow-runner-1-75x-passes
+tool: run
+exit: any
+expect: the baseline runner's speed 1.75x the median runner's, over 11 tests
+expect: 0 T tests over its limit on the median runner, 0 stale names
+--- write tools/milestones.toml
+milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
+gating = ["S", "M0", "M1"]
+mutants_leave_out = ["m0_load"]
+--- write zz-gate/times.json
+{"tally-runner::s_kernel tests::fill_0": 7.0, "tally-runner::s_kernel tests::fill_1": 7.0, "tally-runner::s_kernel tests::fill_2": 7.0, "tally-runner::s_kernel tests::fill_3": 7.0, "tally-runner::s_kernel tests::fill_4": 7.0, "tally-runner::s_kernel tests::fill_5": 7.0, "tally-runner::s_kernel tests::fill_6": 7.0, "tally-runner::s_kernel tests::fill_7": 7.0, "tally-runner::s_kernel tests::fill_8": 7.0, "tally-runner::s_kernel tests::fill_9": 7.0, "tally-runner::s_kernel tests::planted_slow": 33.25, "tally-runner::s_kernel tests::planted_new": 33.25}
+--- write zz-gate/history.json
+{"mutants": {}, "tests": {"tally-runner::s_kernel tests::fill_0": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_1": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_2": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_3": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_4": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_5": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_6": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_7": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_8": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_9": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::planted_slow": {"kills": 0, "seconds": 19.0}}, "speeds": {}}
+--- run
+tools/mutants-gate slow zz-gate/times.json zz-gate/history.json
+
+case: slow-runner-test-over-20-s-on-the-median-runner
+tool: run
+expect: FAIL R-88: tally-runner::s_kernel tests::planted_slow took 21.0 s on the median runner, over 20 s
+--- write tools/milestones.toml
+milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
+gating = ["S", "M0", "M1"]
+mutants_leave_out = ["m0_load"]
+--- write zz-gate/times.json
+{"tally-runner::s_kernel tests::fill_0": 7.0, "tally-runner::s_kernel tests::fill_1": 7.0, "tally-runner::s_kernel tests::fill_2": 7.0, "tally-runner::s_kernel tests::fill_3": 7.0, "tally-runner::s_kernel tests::fill_4": 7.0, "tally-runner::s_kernel tests::fill_5": 7.0, "tally-runner::s_kernel tests::fill_6": 7.0, "tally-runner::s_kernel tests::fill_7": 7.0, "tally-runner::s_kernel tests::fill_8": 7.0, "tally-runner::s_kernel tests::fill_9": 7.0, "tally-runner::s_kernel tests::planted_slow": 36.75}
+--- write zz-gate/history.json
+{"mutants": {}, "tests": {"tally-runner::s_kernel tests::fill_0": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_1": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_2": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_3": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_4": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_5": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_6": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_7": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_8": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_9": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::planted_slow": {"kills": 0, "seconds": 19.0}}, "speeds": {}}
+--- run
+tools/mutants-gate slow zz-gate/times.json zz-gate/history.json
+
+case: runner-speed-on-too-few-tests
+tool: run
+expect: FAIL R-88: the runner's speed rests on 0 tests the history also times, under 10
+--- write tools/milestones.toml
+milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
+gating = ["S", "M0", "M1"]
+mutants_leave_out = ["m0_load"]
+--- write zz-gate/times.json
+{"tally-runner::s_kernel tests::planted_slow": 3.0}
+--- write zz-gate/history.json
+{"mutants": {}, "tests": {"tally-runner::s_kernel tests::fill_0": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_1": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_2": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_3": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_4": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_5": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_6": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_7": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_8": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_9": {"kills": 0, "seconds": 4.0}}, "speeds": {}}
+--- run
+tools/mutants-gate slow zz-gate/times.json zz-gate/history.json
+
+# (a) A single vector T can't split is named in tools/milestones.toml's mutants_slow_tests
+# with its ceiling on the median runner, 40 s: at 35 s it passes, at 41 s it fails, and a
+# name the baseline didn't run fails, so the list stays true.
+
+case: named-test-at-35-s-passes
+tool: run
+exit: any
+expect: tally-runner::s_kernel tests::planted_vector: 35.0 s on the median runner (35.0 s here), ceiling 40 s
+expect: 0 T tests over its limit on the median runner, 0 stale names
+--- write tools/milestones.toml
+milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
+gating = ["S", "M0", "M1"]
+mutants_leave_out = ["m0_load"]
+mutants_slow_tests = [
+  { test = "tally-runner::s_kernel tests::planted_vector", seconds = 35.0, ceiling = 40, measured = "planted" },
+]
+--- write zz-gate/times.json
+{"tally-runner::s_kernel tests::fill_0": 4.0, "tally-runner::s_kernel tests::fill_1": 4.0, "tally-runner::s_kernel tests::fill_2": 4.0, "tally-runner::s_kernel tests::fill_3": 4.0, "tally-runner::s_kernel tests::fill_4": 4.0, "tally-runner::s_kernel tests::fill_5": 4.0, "tally-runner::s_kernel tests::fill_6": 4.0, "tally-runner::s_kernel tests::fill_7": 4.0, "tally-runner::s_kernel tests::fill_8": 4.0, "tally-runner::s_kernel tests::fill_9": 4.0, "tally-runner::s_kernel tests::planted_vector": 35.0}
+--- write zz-gate/history.json
+{"mutants": {}, "tests": {"tally-runner::s_kernel tests::fill_0": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_1": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_2": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_3": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_4": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_5": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_6": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_7": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_8": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_9": {"kills": 0, "seconds": 4.0}}, "speeds": {}}
+--- run
+tools/mutants-gate slow zz-gate/times.json zz-gate/history.json
+
+case: named-test-at-41-s-fails
+tool: run
+expect: FAIL R-88: tally-runner::s_kernel tests::planted_vector took 41.0 s on the median runner, over 40 s: its ceiling
+--- write tools/milestones.toml
+milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
+gating = ["S", "M0", "M1"]
+mutants_leave_out = ["m0_load"]
+mutants_slow_tests = [
+  { test = "tally-runner::s_kernel tests::planted_vector", seconds = 35.0, ceiling = 40, measured = "planted" },
+]
+--- write zz-gate/times.json
+{"tally-runner::s_kernel tests::fill_0": 4.0, "tally-runner::s_kernel tests::fill_1": 4.0, "tally-runner::s_kernel tests::fill_2": 4.0, "tally-runner::s_kernel tests::fill_3": 4.0, "tally-runner::s_kernel tests::fill_4": 4.0, "tally-runner::s_kernel tests::fill_5": 4.0, "tally-runner::s_kernel tests::fill_6": 4.0, "tally-runner::s_kernel tests::fill_7": 4.0, "tally-runner::s_kernel tests::fill_8": 4.0, "tally-runner::s_kernel tests::fill_9": 4.0, "tally-runner::s_kernel tests::planted_vector": 41.0}
+--- write zz-gate/history.json
+{"mutants": {}, "tests": {"tally-runner::s_kernel tests::fill_0": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_1": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_2": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_3": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_4": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_5": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_6": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_7": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_8": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_9": {"kills": 0, "seconds": 4.0}}, "speeds": {}}
+--- run
+tools/mutants-gate slow zz-gate/times.json zz-gate/history.json
+
+case: named-test-not-in-the-run-fails
+tool: run
+expect: FAIL R-88: tools/milestones.toml's mutants_slow_tests names tally-runner::s_kernel tests::planted_gone, which the baseline didn't run
+--- write tools/milestones.toml
+milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
+gating = ["S", "M0", "M1"]
+mutants_leave_out = ["m0_load"]
+mutants_slow_tests = [
+  { test = "tally-runner::s_kernel tests::planted_gone", seconds = 35.0, ceiling = 40, measured = "planted" },
+]
+--- write zz-gate/times.json
+{"tally-runner::s_kernel tests::fill_0": 4.0, "tally-runner::s_kernel tests::fill_1": 4.0, "tally-runner::s_kernel tests::fill_2": 4.0, "tally-runner::s_kernel tests::fill_3": 4.0, "tally-runner::s_kernel tests::fill_4": 4.0, "tally-runner::s_kernel tests::fill_5": 4.0, "tally-runner::s_kernel tests::fill_6": 4.0, "tally-runner::s_kernel tests::fill_7": 4.0, "tally-runner::s_kernel tests::fill_8": 4.0, "tally-runner::s_kernel tests::fill_9": 4.0}
+--- write zz-gate/history.json
+{"mutants": {}, "tests": {"tally-runner::s_kernel tests::fill_0": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_1": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_2": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_3": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_4": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_5": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_6": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_7": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_8": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_9": {"kills": 0, "seconds": 4.0}}, "speeds": {}}
+--- run
+tools/mutants-gate slow zz-gate/times.json zz-gate/history.json
+
+# A shard runs only from a plan that holds every listed mutant exactly once (no skip, R-86).
+
+case: plan-misses-a-listed-mutant
+tool: run
+expect: FAIL mutants-gate: the plan doesn't hold every listed mutant exactly once (R-88)
+--- write crates/tally/src/walk/zz_gate.rs
+//! Planted for R-133's cases.
+pub fn planted() -> u8 {
+    7
+}
+--- write zz-gate/list.in
+{"key": "@KEY@", "mutants": [{"name": "crates/tally/src/walk/zz_gate.rs:3:5: replace planted -> u8 with 0", "file": "crates/tally/src/walk/zz_gate.rs", "package": "tally", "genre": "FnValue", "replacement": "0", "function": {"function_name": "planted", "return_type": "-> u8", "span": {"start": {"line": 2, "column": 1}, "end": {"line": 4, "column": 2}}}, "span": {"start": {"line": 3, "column": 5}, "end": {"line": 3, "column": 6}}, "diff": "--- crates/tally/src/walk/zz_gate.rs\n+++ replace planted -> u8 with 0\n@@ -1,4 +1,4 @@\n //! Planted for R-133's cases.\n pub fn planted() -> u8 {\n-    7\n+    0\n }\n"}]}
+--- write zz-gate/plan.in
+{"key": "@KEY@", "shards": [[]], "o1": [], "killers": {}, "order": []}
+--- write zz-gate/map.in
+{"key": "@KEY@", "args": [], "tests": {}}
+--- run
+k="$(tools/mutants-gate key)" || exit 1
+for f in list plan map; do sed "s/@KEY@/$k/g" "zz-gate/$f.in" > "zz-gate/$f.json"; done
+tools/mutants-gate shard 0/1 zz-gate/list.json zz-gate/map.json zz-gate/plan.json zz-gate/out
+
+# The plan builds the last run's survivors with the kernel at opt-level 1 (overflow checks
+# and debug assertions stay on), and nextest's exit 100 is a catch. The planted history
+# says the mutant was missed; the fake cargo records what it was asked to build.
+
+case: survivor-at-opt-level-1-caught-on-100
+tool: run
+exit: any
+expect: --config profile.mutants.package.tally.opt-level=1
+expect: "summary": "CaughtMutant"
+--- write crates/tally/src/walk/zz_gate.rs
+//! Planted for R-133's cases.
+pub fn planted() -> u8 {
+    7
+}
+--- write zz-bin/cargo
+#!/bin/sh
+# a fake cargo: nextest's build passes and is recorded, its test run fails a test (exit 100); anything else is the real cargo's
+if [ "$1" != nextest ]; then exec "$REAL_CARGO" "$@"; fi
+case " $* " in *" --no-run "*) echo "$*" >> zz-gate/builds.txt; exit 0 ;; esac
+echo "        FAIL [   0.010s] (1/1) tally-runner::s_kernel tests::planted_t"
+exit 100
+--- write zz-gate/list.in
+{"key": "@KEY@", "mutants": [{"name": "crates/tally/src/walk/zz_gate.rs:3:5: replace planted -> u8 with 0", "file": "crates/tally/src/walk/zz_gate.rs", "package": "tally", "genre": "FnValue", "replacement": "0", "function": {"function_name": "planted", "return_type": "-> u8", "span": {"start": {"line": 2, "column": 1}, "end": {"line": 4, "column": 2}}}, "span": {"start": {"line": 3, "column": 5}, "end": {"line": 3, "column": 6}}, "diff": "--- crates/tally/src/walk/zz_gate.rs\n+++ replace planted -> u8 with 0\n@@ -1,4 +1,4 @@\n //! Planted for R-133's cases.\n pub fn planted() -> u8 {\n-    7\n+    0\n }\n"}]}
+--- write zz-gate/history.json
+{"mutants": {"crates/tally/src/walk/zz_gate.rs:3:5: replace planted -> u8 with 0": {"build": 10.0, "test": 40.0, "o1": false, "summary": "MissedMutant", "killer": null}}, "tests": {}}
+--- write zz-gate/map.in
+{"key": "@KEY@", "args": [], "tests": {"tally-runner::s_kernel tests::planted_t": {"crates/tally/src/walk/zz_gate.rs": [[2, 4]]}}}
+--- run
+k="$(tools/mutants-gate key)" || exit 1
+for f in list map; do sed "s/@KEY@/$k/g" "zz-gate/$f.in" > "zz-gate/$f.json"; done
+tools/mutants-gate plan zz-gate/list.json zz-gate/history.json 1 zz-gate/plan.json
+chmod +x zz-bin/cargo
+REAL_CARGO="$(command -v cargo)" PATH="$PWD/zz-bin:$PATH" tools/mutants-gate shard 0/1 zz-gate/list.json zz-gate/map.json zz-gate/plan.json zz-gate/out
+cat zz-gate/builds.txt
+grep -o '"summary": "CaughtMutant"' zz-gate/out/mutants.out/outcomes.json

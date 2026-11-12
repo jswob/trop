@@ -29,7 +29,7 @@ use crate::model::{
 use crate::num::Num;
 use crate::syntax::{
     AddOp, Ask, AskBody, Bal, CmpOp, Domain as Written, Expr, Key, Lit, Number, RChoice, Section,
-    Stop,
+    SiteKey, Stop,
 };
 use crate::time::PeriodKind;
 use std::collections::{BTreeMap, BTreeSet};
@@ -126,6 +126,8 @@ pub(super) struct Var {
     /// A range's end, as written, for a variable bound over a range (refcore's `v.node.dom.b`):
     /// a slot key whose range ends at a draw (L §5.16).
     pub(super) end: Option<Expr>,
+    /// A key list's binding site, by which the run finds the index its key positions fix.
+    pub(super) site: Option<(String, u32, usize)>,
 }
 
 impl Var {
@@ -174,6 +176,19 @@ pub(super) struct Scope {
     /// values (refcore's `in_query`, which a child keeps and which outranks the role).
     /// L §5.16.
     pub(super) read_in: ReadIn,
+    /// Each variable a kind test narrows here, with the subkind it is narrowed to: its legs
+    /// and attributes are readable (refcore's `Scope.narrow`). L §5.7.
+    pub(super) narrow: BTreeMap<String, Narrowed>,
+}
+
+/// A variable's narrowing: the subkind, and the site of the kind test that narrows it, which
+/// the run evaluates first once a field read uses it (refcore's `(K, [used])`). L §5.7.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct Narrowed {
+    /// The subkind.
+    pub(super) kind: String,
+    /// The kind test's site.
+    pub(super) test: SiteKey,
 }
 
 /// How a read of a random fact is taken in a scope (refcore's `dist_role`, `in_query`).
@@ -204,7 +219,53 @@ impl Scope {
             covered: BTreeSet::new(),
             guards: BTreeSet::new(),
             read_in: ReadIn::Plain,
+            narrow: BTreeMap::new(),
         }
+    }
+
+    /// This scope with each variable that a kind test of condition `c` narrows to a strict
+    /// subkind of its kind narrowed to it: a test `v in K` with no `on`, alone or a conjunct of
+    /// an `and`; `or`, `not` and `on` narrow nothing (refcore's `narrow_tests`, `narrowed`).
+    /// L §5.7.
+    pub(super) fn narrowed(&self, m: &Reality, c: Option<&Expr>) -> Scope {
+        let mut out = self.clone();
+        // left to right, as refcore's `narrow_tests` lists the conjuncts
+        let mut work: Vec<&Expr> = c.into_iter().collect();
+        while let Some(node) = work.pop() {
+            if let Expr::Paren(inner) = node {
+                work.push(inner);
+            }
+            if let Expr::And(terms) = node {
+                work.extend(terms.iter().rev());
+            }
+            if let Expr::In(test) = node
+                && let (Expr::Name(v), Expr::Name(k), None) = (&test.member, &test.set, &test.on)
+                && self.narrows(m, v, k)
+            {
+                let test = test.site.key();
+                out.narrow.insert(
+                    v.clone(),
+                    Narrowed {
+                        kind: k.clone(),
+                        test,
+                    },
+                );
+            }
+        }
+        out
+    }
+
+    /// Whether a kind test `v in k` narrows `v` to `k`: a strict subkind of the kind it is
+    /// bound over, or narrowed to here (refcore's `narrowed`, its loop). L §5.7.
+    fn narrows(&self, m: &Reality, v: &str, k: &str) -> bool {
+        let Some(Ty::Key(bound)) = self.vars.get(v).map(|var| &var.ty) else {
+            return false;
+        };
+        if m.kinds.get(bound).is_none() || m.kinds.get(k).is_none() {
+            return false;
+        }
+        let parent = self.narrow.get(v).map_or(bound, |n| &n.kind);
+        k != parent && m.subtree(parent).contains(k)
     }
 
     /// A child of this scope, as refcore's `child`: no figure allowed, no dist role.
@@ -395,6 +456,10 @@ pub(super) struct Walked {
     pub(super) day_reads: Vec<DayRead>,
     /// The asks refused alone, with their refusals (refcore's `asks_alone`). L §6.4, §8.
     pub(super) alone: BTreeMap<String, Refusal>,
+    /// Each ask whose line can hold a key literal no position resolves, with the ask's line,
+    /// where its evaluation meets `LOAD-KEY ambiguous key` (refcore's `e_name`, its `keylit`
+    /// arm). L §2.5.
+    pub(super) unresolved: BTreeMap<String, At>,
     /// The queries and path scores over random values, in the order typed (refcore's
     /// `queries`). L §5.16.
     pub(super) queries: Vec<QueryAt>,
@@ -413,6 +478,10 @@ pub(super) struct Walked {
     /// The asks a scenario's reality doesn't hold: those whose lines are evaluated in other
     /// worlds (refcore's filter of `m.asks`). L §6.4.
     pub(super) dropped: BTreeSet<String>,
+    /// Each key list's binding site with the index its key positions fixed. L §2.5.
+    pub(super) list_keys: BTreeMap<(String, u32, usize), String>,
+    /// The sites of the kind tests whose narrowing a field read used. L §5.7.
+    pub(super) narrow_used: BTreeSet<SiteKey>,
 }
 
 /// The checker's state over the walk (refcore's `Checker`).
@@ -424,6 +493,12 @@ pub(super) struct Checker {
     pub(super) year4: Vec<Year4>,
     /// Each key-list variable's index, fixed by its first key position.
     pub(super) kl_fixed: BTreeMap<usize, Domain>,
+    /// Each key list's binding site with the index its key positions fixed, for the run
+    /// (refcore's `b._var.fixed`). L §2.5.
+    pub(super) list_keys: BTreeMap<(String, u32, usize), String>,
+    /// The sites of the kind tests whose narrowing a field read used, which the run evaluates
+    /// first in their conjunction (refcore's `narrow_mark`). L §5.7.
+    pub(super) narrow_used: BTreeSet<SiteKey>,
     /// Key-list variables read as values.
     pub(super) kl_uses: Vec<KeyListUse>,
     /// Each def's key offsets, by its id.
@@ -446,6 +521,8 @@ pub(super) struct Checker {
     pub(super) direct: Option<Vec<Node>>,
     /// Each ask's reads in the order first made.
     ask_reads: BTreeMap<String, Vec<Node>>,
+    /// Each ask whose line can hold a key literal no position resolves, with its line.
+    unresolved: BTreeMap<String, At>,
     /// The decisions' plain balance reads.
     pub(super) day_reads: Vec<DayRead>,
     /// The fills: each one's sides, typed once (refcore's `fill_infos`).
@@ -576,6 +653,7 @@ pub(super) fn walk(m: &Reality, sections: &[(String, Section)]) -> Result<Walked
         at_reads: checker.at_reads,
         move_at: checker.move_at,
         ask_reads: checker.ask_reads,
+        unresolved: checker.unresolved,
         day_reads: checker.day_reads,
         alone,
         queries: checker.queries,
@@ -585,6 +663,8 @@ pub(super) fn walk(m: &Reality, sections: &[(String, Section)]) -> Result<Walked
         srows: checker.srows,
         read_order: checker.read_order,
         dropped,
+        list_keys: checker.list_keys,
+        narrow_used: checker.narrow_used,
     })
 }
 
@@ -779,6 +859,7 @@ impl Checker {
             keylist,
             id,
             end: None,
+            site: None,
         })
     }
 
@@ -887,7 +968,7 @@ impl Checker {
                 return Err(refuse(Load::Key, message));
             };
             let label = format!("{year:04}");
-            let has_year = index.keys.iter().any(|key| {
+            let has_year = index.keys().iter().any(|key| {
                 matches!(key, KeyVal::Period(p) if p.kind() == PeriodKind::Year && p.label() == label)
             });
             if !has_year {
@@ -924,7 +1005,11 @@ impl Checker {
                             bind.var
                         )));
                     };
-                    (self.range_type(m, &scope, range, 0)?, VarDom::Range)
+                    // placed at the declaration's line, as refcore places it (L §8.3)
+                    let ty = self
+                        .range_type(m, &scope, range, 0)
+                        .map_err(|stop| scope.place(stop))?;
+                    (ty, VarDom::Range)
                 }
             };
             let mut var = self.new_var(&bind.var, ty, dom, Vec::new())?;
@@ -1004,6 +1089,20 @@ impl Checker {
         self.ask_body(m, &scope, ask)
     }
 
+    /// Keeps the place of ask `id` when a value of its line is typed `typed`, a key literal no
+    /// position resolves or a list that may hold one (a bare key, an `if` choosing one, `[q1]`):
+    /// refcore refuses such a literal where it is evaluated, `LOAD-KEY ambiguous key <k>` at
+    /// the ask's line (refcore's `e_name`, its `keylit` arm; pick P39), and the run does where
+    /// the line's value holds it. L §2.5, §8.3.
+    fn unresolved_key(&mut self, scope: &Scope, id: &str, typed: &Ty) {
+        // a list literal types as a list whatever its items: the run finds the literal in it
+        let literal = matches!(typed, Ty::KeyLit(_) | Ty::List(_));
+        if literal && !self.unresolved.contains_key(id) {
+            let place = At::Line(scope.at.0.clone(), scope.at.1);
+            self.unresolved.insert(id.to_owned(), place);
+        }
+    }
+
     /// What an ask asks: values; `check a == b`; `explain` or `inputs-of` a reference;
     /// `readers-of` an id; `solve`; a `diff` between two worlds of the run; residuals
     /// (refcore's `check_ask`, its forms). L §5.18, §6.4.
@@ -1011,7 +1110,8 @@ impl Checker {
         match &ask.body {
             AskBody::Exprs(exprs) => {
                 for e in exprs {
-                    self.expr(m, scope, e, None, 0)?;
+                    let typed = self.expr(m, scope, e, None, 0)?;
+                    self.unresolved_key(scope, &ask.id, &typed);
                 }
                 Ok(())
             }
@@ -1020,7 +1120,8 @@ impl Checker {
                 compared.map(|_| ()).map_err(|stop| scope.place(stop))
             }
             AskBody::Explain(reference) | AskBody::InputsOf(reference) => {
-                self.expr(m, scope, reference, None, 0)?;
+                let typed = self.expr(m, scope, reference, None, 0)?;
+                self.unresolved_key(scope, &ask.id, &typed);
                 let explain = matches!(ask.body, AskBody::Explain(_));
                 let plain = matches!(reference, Expr::Name(_) | Expr::Post(..));
                 let read = explain && matches!(reference, Expr::Bal(_) | Expr::Low(_));
@@ -1216,6 +1317,7 @@ mod tests {
             keylist: Vec::new(),
             id: 0,
             end: None,
+            site: None,
         }
     }
 

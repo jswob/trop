@@ -1,0 +1,12 @@
+scenario more over ev
+  tally 2
+  from 2026-01-01
+  note "review probe: one more fee payment"
+
+move pay_more: transfers
+  on pay_day
+  leg cash from konto to world amount fee
+
+ask in_model: n_moves in ev
+
+ask in_more: n_moves in more

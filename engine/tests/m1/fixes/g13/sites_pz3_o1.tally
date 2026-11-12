@@ -1,0 +1,24 @@
+part o1
+  tally 2
+
+index os: open
+
+input ov[k in os]: num
+
+def o1_x: num = ov[oc]
+
+ask o1: o1_x as known 2026-02-01
+
+ask o1b: ov[oc] as known 2026-02-01
+
+version vo1
+  cite card
+  governs always
+  known 2026-01-01
+  ov[oa] = 1 "c"
+
+version vo2
+  cite card
+  governs always
+  known 2026-02-15
+  ov[oc] = 3 "c"

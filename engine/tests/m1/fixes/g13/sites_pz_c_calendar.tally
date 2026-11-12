@@ -1,0 +1,6 @@
+part c_calendar
+  tally 2
+
+def c_calendar_x: date = d0 as if {d0 = add_business(d0, n1, txt)}
+
+ask c_calendar: c_calendar_x

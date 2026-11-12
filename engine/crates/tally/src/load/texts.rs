@@ -14,7 +14,7 @@ use crate::syntax::{
 };
 
 /// An expression's text, as a message names it (refcore's `_txt`).
-pub(super) fn text(e: &Expr) -> String {
+pub(crate) fn text(e: &Expr) -> String {
     match e {
         Expr::Name(id) => id.clone(),
         Expr::Lit(lit) => lit_txt(lit),
@@ -288,7 +288,7 @@ pub(super) fn covered_spans(e: Option<&Expr>, out: &mut std::collections::BTreeS
 }
 
 /// The expressions directly under `e`, for a walk over a whole tree.
-pub(super) fn children(e: &Expr) -> Vec<&Expr> {
+pub(crate) fn children(e: &Expr) -> Vec<&Expr> {
     let mut out = Vec::new();
     match e {
         Expr::If(parts) => out.extend(parts.iter()),

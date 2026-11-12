@@ -1,0 +1,13 @@
+part n_cmp
+  tally 2
+
+kind evs: event certain
+  leg what: any
+
+move mv: evs
+  on d0
+  leg what from konto to world amount fee
+
+def n_cmp_x: int = count(m for m in evs over d0..d0 where m.what.amount < d0)
+
+ask n_cmp: n_cmp_x

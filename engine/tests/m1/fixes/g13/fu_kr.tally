@@ -1,0 +1,12 @@
+part f5
+  tally 2
+
+input lim[a in accounts]: num
+
+ask kr: lim[konto[ana]]
+
+version v5
+  cite card
+  governs always
+  known 2026-01-01
+  lim[konto[konto[ana]]] = 1 "c"

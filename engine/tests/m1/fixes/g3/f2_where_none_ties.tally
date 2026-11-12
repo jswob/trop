@@ -1,0 +1,33 @@
+model f2
+  tally 2
+  on 2025-04-01
+  start 2025-03-01
+  end 2025-03-31
+
+source card "invented"
+
+unit DUK: currency minor 0.01
+
+place p0: accounts DUK lives 2025-03-01..
+
+place p1: accounts DUK lives 2025-03-01..
+
+input rank[p in accounts]: int
+
+input act[p in accounts]: bool
+
+input day: date
+
+def f: key accounts = first(p in accounts on day where rank[p] != none) ties by rank[p]
+
+ask a: f
+
+version v1
+  cite card
+  governs always
+  known 2025-03-01
+  day = 2025-03-15 "c"
+  act[p0] = true "c"
+  act[p1] = false "c"
+  rank[p0] = 2 "c"
+  rank[p1] = none "c"

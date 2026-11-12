@@ -1,0 +1,24 @@
+scenario up over worlds
+  tally 2
+  from 2026-07-01
+  note "a scenario that adds a rule to pay and gives contribution a new table from July"
+
+version up_law
+  cite card
+  governs 2026-07-01..
+  known 2026-02-01
+  replace rule pay.raise beats base = base_pay + bonus
+  replace contribution: (-inf, 60000] = 400 "the scenario's table: 400.00"
+  replace contribution: (60000, inf) = 500 "the scenario's table: 500.00"
+
+ask w_rule_up: pay in up law 2026-08-01
+
+ask w_rule_model: pay in worlds law 2026-08-01
+
+ask w_rule_diff: diff(pay) in up against worlds law 2026-08-01
+
+ask w_band_up: contribution(revenue) in up law 2026-08-01
+
+ask w_band_model: contribution(revenue) in worlds law 2026-08-01
+
+ask w_band_diff: diff(contribution(revenue)) in up against worlds law 2026-08-01

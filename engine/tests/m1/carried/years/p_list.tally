@@ -1,0 +1,4 @@
+part p_list
+  tally 2
+
+ask p_list: rate[y] for y in [(2026), 2027]

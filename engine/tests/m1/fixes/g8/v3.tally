@@ -1,0 +1,87 @@
+model v3
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "G8's value probes (invented): a price keyed by unit, by name and by last, an input and a def, a place of unit any"
+
+source card "probe card"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+unit USD: currency minor 0.01
+
+kind safes: place any signed
+
+place eur_acc: accounts EUR lives 2026-01-01..
+
+place usd_acc: accounts USD lives 2026-01-01..
+
+place safe: safes lives 2026-01-01..
+
+place market: outside lives 2026-01-01..
+
+input fxu[u in currencies]: num PLN/u reading
+
+input fxs[u in currencies]: num PLN/u
+
+input put_day: date
+
+input amt_eur: money EUR
+
+input amt_pln: money PLN
+
+def fxd[u in currencies]: num PLN/u = fxs[u]
+
+move put_eur: transfers
+  on put_day
+  leg cash from market to safe amount amt_eur
+
+move put_pln: transfers
+  on put_day
+  leg cash from market to safe amount amt_pln
+
+ask k_name: value(eur_acc, 2026-03-31) in PLN by fxs
+
+ask k_last: value(eur_acc, 2026-03-31) in PLN by last(fxu)
+
+ask k_def: value(eur_acc, 2026-03-31) in PLN by fxd
+
+ask k_none: value(usd_acc, 2026-03-31) in PLN by fxs
+
+ask k_lastnone: value(usd_acc, 2026-03-31) in PLN by last(fxu)
+
+ask k_early: value(eur_acc, 2026-02-15) in PLN by last(fxu)
+
+ask k_safe: value(safe, 2026-03-31) in PLN by last(fxu)
+
+ask k_safe_name: value(safe, 2026-03-31) in PLN by fxs
+
+ask k_lx: last(fxu[EUR], 2026-03-31)
+
+ask k_fs: fxs[EUR]
+
+ask k_fl: fxu[EUR] law 2026-03-01
+
+ask k_fd: fxd[EUR]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  put_day = 2026-02-20 "the card"
+  amt_eur = 200.00 EUR "the card"
+  amt_pln = 300.00 PLN "the card"
+  fxs[EUR] = 4.25 PLN/EUR "the card"
+  opening[eur_acc] = 1000.00 EUR at 2026-01-01 start "the card"
+  opening[usd_acc] = 50.00 USD at 2026-01-01 start "the card"
+
+version readings_2026
+  cite card
+  governs 2026-01..2026-12
+  known 2026-01-01
+  fxu[EUR] = 4.30 PLN/EUR at 2026-03-01 "quoted"
+
+

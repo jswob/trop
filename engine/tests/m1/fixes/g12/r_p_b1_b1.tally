@@ -1,0 +1,23 @@
+model b1
+  tally 2
+  on 2026-03-15
+  start 2026-01-01
+  end 2026-06-30
+  note "review G12 B1: two readings of one place on one day, at its start and its end"
+
+source card "card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+ask a: explain bal(konto, 2026-02-20)
+
+version bank
+  cite card
+  governs always
+  known 2026-03-01
+  anchor konto
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  stated[konto] = 400.00 PLN at 2026-02-20 start "morning"
+  stated[konto] = 395.00 PLN at 2026-02-20 end "evening"

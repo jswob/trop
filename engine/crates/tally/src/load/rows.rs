@@ -16,12 +16,12 @@ use super::steps::{Loader, refuse};
 use super::worlds::no_version;
 use crate::base::Load;
 use crate::model::{
-    BandRow, BandTable, Domain, GapRole, IndexForm, KeyVal, NameKind, Pat, Row, RowInstant,
-    RuleVer, pattern_text,
+    BandRow, BandTable, Domain, GapRole, IndexForm, KeyVal, NameKind, Pat, Reality, Row,
+    RowInstant, RuleVer, Ty, pattern_text,
 };
 use crate::syntax::{
-    BandRow as WrittenBand, Gap, Instant, Item, ItemForm, Known, Row as WrittenRow, RowKey, Rule,
-    Section, Stop,
+    BandRow as WrittenBand, Domain as WrittenDomain, Expr, Gap, Instant, Item, ItemForm, Known,
+    Lit, Row as WrittenRow, RowKey, Rule, Section, Stop,
 };
 use crate::time::Day;
 use std::collections::BTreeMap;
@@ -455,6 +455,14 @@ impl Loader {
                     }
                     let lo = self.pattern_key(&KeyLit::Lit(a.clone()), bind, None, file, line)?;
                     let hi = self.pattern_key(&KeyLit::Lit(b.clone()), bind, None, file, line)?;
+                    if matches!((&lo, &hi), (KeyVal::Value(_), _) | (_, KeyVal::Value(_)))
+                        || !whole_steps(&self.m, &bind.node.domain)
+                    {
+                        // refcore stops on it (2.1.6: `Num` has no order)
+                        return Err(Stop::NotBuilt(
+                            "a row's key range over a stepped range's values not integers",
+                        ));
+                    }
                     if key_order(&self.m, &lo, &bind.domain) > key_order(&self.m, &hi, &bind.domain)
                     {
                         return Err(refuse(
@@ -469,7 +477,7 @@ impl Loader {
                 RowKey::Lit(lit) => {
                     let written = KeyLit::Lit(lit.clone());
                     if bind.domain == Domain::Range {
-                        let value = range_key_of(&written, file, line)?;
+                        let value = range_key_of(&self.m, &written, file, line)?;
                         self.range_keys.extend(RangeKey::of(bind, lit, file, line));
                         Pat::Key(value)
                     } else {
@@ -611,7 +619,9 @@ fn row_instant(
     }
 }
 
-/// The stable ids of one target's rows.
+/// The stable ids of one target's rows: `version:target[keys]`, with the row's own `governs`
+/// span or its instant where its version holds more than one row of that target at those
+/// keys (refcore's loader, its stable ids). L §2.5, §4.6.
 fn set_sids(id: &str, rows: &mut [Row]) {
     let mut count: BTreeMap<(String, String), usize> = BTreeMap::new();
     for row in rows.iter() {
@@ -632,13 +642,74 @@ fn set_sids(id: &str, rows: &mut [Row]) {
             if let Some(span) = &row.own_span {
                 sid.push(' ');
                 sid.push_str(&span.text());
-            } else if let Some(RowInstant::At(day, _)) = &row.instant {
+            } else if let Some(RowInstant::At(day, edge)) = &row.instant {
+                // its instant, a day's start or end (L §4.6): two readings of one day are two
+                // rows (refcore's id gives the day alone)
                 sid.push(' ');
-                sid.push_str(&day.text());
+                sid.push_str(&match edge {
+                    Some(edge) => crate::book::instant_text(*day, *edge),
+                    None => day.text(),
+                });
             }
         }
         row.sid = sid;
     }
+}
+
+/// Whether a bind's values are days, periods or integers, so a row's key range orders them
+/// as keys (L §4.6 step 1, §5.6): any domain but a range; a range whose first end is a day,
+/// a month, a quarter or the read of a `date` or period item, whatever its step; a range
+/// whose first end and step (if it has one) are whole: a whole figure of no unit, negated
+/// or not, or the read of an `int` item. Any other first end or step (a fraction, a unit,
+/// an expression, a `num` read) may give fractions at run, which a key range doesn't order.
+fn whole_steps(m: &Reality, domain: &WrittenDomain) -> bool {
+    let WrittenDomain::Range(parts) = domain else {
+        return true;
+    };
+    let (first, _, step) = parts.as_ref();
+    if dated(m, first) {
+        return true;
+    }
+    whole(m, first) && step.as_ref().is_none_or(|s| whole(m, s))
+}
+
+/// Whether a range's first end is a day or a period as written: a literal, or the read of
+/// an item of that type. L §5.6.
+fn dated(m: &Reality, e: &Expr) -> bool {
+    if matches!(
+        e,
+        Expr::Lit(Lit::Day(_) | Lit::Month(..) | Lit::Quarter(..))
+    ) {
+        return true;
+    }
+    let Expr::Name(name) = e else {
+        return false;
+    };
+    matches!(declared(m, name), Some(Ty::Date | Ty::Period(_)))
+}
+
+/// Whether a range's end or step is whole as written: a whole figure of no unit, negated or
+/// bracketed, or the read of an `int` item. L §3.2, §5.6.
+fn whole(m: &Reality, e: &Expr) -> bool {
+    let mut node = e;
+    while let Expr::Neg(inner) | Expr::Paren(inner) = node {
+        node = inner;
+    }
+    if matches!(node, Expr::Lit(Lit::Num(n)) if n.whole && n.unit.is_none()) {
+        return true;
+    }
+    let Expr::Name(name) = node else {
+        return false;
+    };
+    matches!(declared(m, name), Some(Ty::Int))
+}
+
+/// The declared type of input or def `name`.
+fn declared(m: &Reality, name: &str) -> Option<Ty> {
+    if let Some(input) = m.inputs.get(name) {
+        return input.ty.clone();
+    }
+    m.defs.get(name).map(|def| def.ty.clone())
 }
 
 /// A row's pattern as load's messages print it: every position, trailing stars too, and

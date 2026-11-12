@@ -1,0 +1,6 @@
+part s_period
+  tally 2
+
+def s_period_x: date = start_of(fee)
+
+ask s_period: s_period_x

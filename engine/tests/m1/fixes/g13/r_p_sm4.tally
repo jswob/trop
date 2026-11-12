@@ -1,0 +1,30 @@
+model sm
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+input lo_f: num
+input hi_f: num
+input half_n: num
+input at_f: num
+input by_frac[f in 0.5 .. 2.5 step 0.5]: num
+input by_cf[f in lo_f .. hi_f step half_n]: num
+
+ask m1: by_frac[at_f]
+ask m2: by_cf[at_f]
+ask m3: sum(by_cf[f] for f in lo_f .. hi_f step half_n)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  lo_f = 0.5 "c"
+  hi_f = 2.5 "c"
+  half_n = 0.5 "c"
+  at_f = 2.0 "c"
+  by_frac[1.5] = 0.15 "c"
+  by_cf[1.5] = 0.15 "c"
+  by_cf[1.7] = 0.17 "c"

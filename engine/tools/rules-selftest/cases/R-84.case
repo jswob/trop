@@ -117,3 +117,93 @@ fn planted_red() {
 }
 --- run
 tools/milestones args --mutants
+
+# P55 (issue #108, 2026-11-09): the fences' equivalence tests are the builder's, so they are a
+# local batch's catchers only (`mutants-local --fences`): the mutants baseline and shards take
+# `tools/milestones args`, which names none of them, and gate 8 counts T's tests (R-84).
+
+case: fence-catchers-stay-out-of-ci
+tool: run
+exit: any
+expect: R-84: CI's mutation targets name no fence catcher
+--- run
+a="$(tools/milestones args) $(tools/milestones args --mutants)"; case "$a" in *walk_oracle*|*tally-cli*|*walk::lows*) echo "R-84 broken: $a" ;; *) echo "R-84: CI's mutation targets name no fence catcher" ;; esac
+
+# Since 2026-11-11 (issue #108, R2): a gating target with `required-features` (M1's
+# m1_invariant: fault-injection) is selected with the runner's features it requires, or
+# cargo refuses the baseline and every shard; a selection whose targets require none turns
+# none on.
+
+case: mutants-select-a-target-with-its-features
+tool: run
+exit: any
+expect: -C=--features=tally-runner/fault-injection
+expect: -C=--test=s_planted
+--- write tools/milestones.toml
+milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
+gating = ["S"]
+mutants_leave_out = []
+--- append tests/runner/Cargo.toml
+
+[[test]]
+name = "s_planted"
+path = "milestone/s_planted.rs"
+test = false
+required-features = ["fault-injection"]
+--- write tests/runner/milestone/s_planted.rs
+//! Planted: a test of milestone S that needs the runner's fault-injection feature.
+
+#[test]
+fn planted_green() {
+    assert!(core::hint::black_box(true), "planted");
+}
+--- run
+tools/milestones args --mutants
+
+case: mutants-select-no-feature-none-requires
+tool: run
+exit: any
+expect: R-84: no feature selected
+--- write tools/milestones.toml
+milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
+gating = ["S"]
+mutants_leave_out = []
+--- run
+bash -c 'case "$(tools/milestones args --mutants)" in *--features*) echo "R-84: a feature selected";; *) echo "R-84: no feature selected";; esac'
+
+# 2026-11-12 (the mutation study; the user's "Okay, let's make these changes"): each mutant
+# runs the T tests that enter its function in the run's coverage map (R-133), from their own
+# targets. The planted map has one test that enters the mutated function and one that
+# doesn't; the fake cargo records the test run's filter, which names the first alone, and
+# its priorities' tool config, by an absolute path as nextest requires (run 43177332468's
+# shards gave a relative one, and nextest exited 2).
+
+case: mutant-runs-the-tests-that-enter-its-function
+tool: run
+exit: any
+expect: R-84: selected planted_in alone, from --test=s_kernel
+--- write crates/tally/src/walk/zz_gate.rs
+//! Planted for R-133's cases.
+pub fn planted() -> u8 {
+    7
+}
+--- write zz-bin/cargo
+#!/bin/sh
+# a fake cargo: nextest's build passes, its test run is recorded and fails a test (exit 100); anything else is the real cargo's
+if [ "$1" != nextest ]; then exec "$REAL_CARGO" "$@"; fi
+case " $* " in *" --no-run "*) exit 0 ;; esac
+echo "$*" >> zz-gate/tests.txt
+exit 100
+--- write zz-gate/list.in
+{"key": "@KEY@", "mutants": [{"name": "crates/tally/src/walk/zz_gate.rs:3:5: replace planted -> u8 with 0", "file": "crates/tally/src/walk/zz_gate.rs", "package": "tally", "genre": "FnValue", "replacement": "0", "function": {"function_name": "planted", "return_type": "-> u8", "span": {"start": {"line": 2, "column": 1}, "end": {"line": 4, "column": 2}}}, "span": {"start": {"line": 3, "column": 5}, "end": {"line": 3, "column": 6}}, "diff": "--- crates/tally/src/walk/zz_gate.rs\n+++ replace planted -> u8 with 0\n@@ -1,4 +1,4 @@\n //! Planted for R-133's cases.\n pub fn planted() -> u8 {\n-    7\n+    0\n }\n"}]}
+--- write zz-gate/plan.in
+{"key": "@KEY@", "shards": [["crates/tally/src/walk/zz_gate.rs:3:5: replace planted -> u8 with 0"]], "o1": [], "killers": {}, "order": []}
+--- write zz-gate/map.in
+{"key": "@KEY@", "args": [], "tests": {"tally-runner::s_kernel tests::planted_in": {"crates/tally/src/walk/zz_gate.rs": [[2, 4]]}, "tally-runner::m0_codes tests::planted_out": {"crates/tally/src/walk/agenda.rs": [[3, 9]]}}}
+--- run
+k="$(tools/mutants-gate key)" || exit 1
+for f in list plan map; do sed "s/@KEY@/$k/g" "zz-gate/$f.in" > "zz-gate/$f.json"; done
+chmod +x zz-bin/cargo
+REAL_CARGO="$(command -v cargo)" PATH="$PWD/zz-bin:$PATH" tools/mutants-gate shard 0/1 zz-gate/list.json zz-gate/map.json zz-gate/plan.json zz-gate/out
+t="$(cat zz-gate/tests.txt)"
+case "$t" in *planted_out*|*m0_codes*) echo "R-84 broken: $t" ;; *"--test=s_kernel"*"--tool-config-file=mutants-gate:/"*"test(=tests::planted_in)"*) echo "R-84: selected planted_in alone, from --test=s_kernel" ;; *) echo "R-84 broken: $t" ;; esac

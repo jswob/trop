@@ -1,0 +1,31 @@
+model golden_g8
+  tally 2
+  on 2026-10-17
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M1 (issue #108), DONE gate 2: G8's first half, a job without its law warns (goldens.md: changes form; tally 2 has no composite, so a job without its law is a job whose pay no def reads). Restated from 11-wife-works.json's wife_job2 (job_pl@1, gross 6 000, person wife) with no employment_pl@2022 beside it: the loader warns that its salary is read by nothing."
+
+source prototype "the prototype's block 11-wife-works.json (engine/spec/verification/blocks)"
+
+unit PLN: currency minor 0.01
+
+kind job
+
+kind person
+
+input salary[j in job, m in month]: money PLN
+
+input works_for[j in job]: key person
+
+index month = month 2026-01..2026-12
+
+ask g8_jobs: count(j in job over .. where works_for[j] == wife)
+
+version g8_household
+  cite prototype
+  governs always
+  known 2026-10-17
+  person + [wife] lives 2026-01-01..
+  job + [wife_job2] lives 2026-10-17..
+  works_for[wife_job2] = wife "11-wife-works.json: wife_job2, person wife"
+  salary[wife_job2] = 6000 governs 2026-10..2026-12 "11-wife-works.json: wife_job2, gross 6 000"

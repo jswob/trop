@@ -34,7 +34,7 @@ engine/tools/launch <role> tmp/<run>/notes/<prompt>.txt <worktree> --ids tmp/<ru
 It fixes the session id in advance (`--session-id`) and adds it to `ids.txt`, then starts `claude -p … --output-format json` detached with `TALLY_ROLE`, `CARGO_BUILD_JOBS=6`, `NEXTEST_TEST_THREADS=6`, `CARGO_INCREMENTAL=0` and `nice -n 10`. It refuses under 30 GB free and warns when two heavy jobs already run. `--dry-run` shows the command. The answer lands in `tmp/<run>/out/<id>.<n>.json` (`.result` is the session's last message); watch for it with Monitor, never sit idle on it.
 
 - **One sub-session at a time,** unless the brief allows two; never more than two heavy jobs on the Mac (yours included).
-- **Every start message** names: the run's issue; its part of the brief by absolute path (a worktree's `tmp/` is empty); the role and effort; what to read first; the step and where it ends ("until a green commit (`check full`)"); "end your turn with N lines: …" (what you need back); and these rules, verbatim:
+- **Every start message** names: the run's issue; its part of the brief by absolute path (a worktree's `tmp/` is empty); the role and effort; what to read first; the step and where it ends ("until a green commit": a builder's last commit of its group on `check full`, its commits inside the group on `check fast`); "end your turn with N lines: …" (what you need back); and these rules, verbatim:
   - the seal (§9);
   - no agents, subagents or forks (the gate's single `engine-reviewer` agent excepted, told to spawn none);
   - never install anything: take a path that needs none, or say it's blocked;
@@ -44,12 +44,12 @@ It fixes the session id in advance (`--session-id`) and adds it to `ids.txt`, th
   - its budget, and where it stops with a hand-off.
 - **Resume** with `--resume <id>` and the same flags: say what changed since its last turn, then the next step.
 
-## 3. The build: one fresh builder per group, then its review (decisions 1, 4)
+## 3. The build: one fresh builder per group, its review beside the next group's builder (decisions 1, 4)
 
 1. **The plans first:** T's plan ("plan only, write no tests"), then the builder's ("plan only, write no code", T's plan as input): a traceability table, the module list (a new kernel file is a rules step, R-85), the order of groups, the fuzz targets and benches it asks for, a size guess with its basis (§5's rates), the spec questions it sees. The user approves both at one gate, if the brief has one.
 2. **T writes the tests,** in chunks, each ending on a green commit. The next milestone's `milestone-report:` line is the builder's work list.
-3. **Each builder group is a fresh session** (`build`, xhigh): the start message names the group, the plan's rows for it, the rulings that bind it (§4), the last BUILD-LOG entries. It ends on a green commit with its BUILD-LOG entry.
-4. **Then the group's review, before the next group starts:** a fresh review session runs `engine-reviewer` (one agent, told to spawn none) on that group's diff alone (`<last reviewed commit>..<group's commit>`, `engine/crates/`), against BUILDER §12 and the plan's rows. A blocking finding (a wrong result, a refusal of a valid text, a crash or `ENGINE-INVARIANT` from a user's text, a broken rule) goes back to the same builder (`--resume`), fixed in the same group; T then turns each fix into tests. The rest goes on the run's follow-up issue as a list.
+3. **Each builder group is a fresh session** (`build`, xhigh): the start message names the group, the plan's rows for it, the rulings that bind it (§4), the last BUILD-LOG entries. Inside the group it commits on `check fast`; it ends on a green commit with its BUILD-LOG entry, the group's last, on `check full` (2026-11-08, the user's "Yes"; CI runs the full check on every push, R-77).
+4. **Then the group's review, beside the next group's builder** (2026-11-08, the user's "Yes"): after group N's green last commit, launch group N+1's builder and group N's review together. That's two heavy jobs at most, so `mutants-local` and T's runs wait for a gap. A fresh review session, in its own worktree at group N's commit, writing nothing on the branch, runs `engine-reviewer` (one agent, told to spawn none) on that group's diff alone (`<last reviewed commit>..<group N's commit>`, `engine/crates/`), against BUILDER §12 and the plan's rows. A blocking finding (a wrong result, a refusal of a valid text, a crash or `ENGINE-INVARIANT` from a user's text, a broken rule) goes back to group N's builder (`--resume`) once group N+1's builder has ended its turn on a green commit, the fix on top; then its fix review. Only one session writes in the worktree at a time, so T's vectors for the fixes go between builder turns too. When a finding touches code group N+1 built on, the fix covers that too, and the fix review checks both. The rest goes on the run's follow-up issue as a list.
 5. **After each chunk:** push, measure (§5), and report a size overrun against the plan at that chunk.
 6. Rules steps (fuzz targets, benches, the kernel list, the gating marker) run between groups, in the `rules` role.
 
@@ -94,7 +94,7 @@ Before a budget stop, a wait on the user, or the end of a turn that leaves work:
 1. one `engine-reviewer` review of the whole diff (the groups were reviewed one by one); blocking findings back to the builder, then a review of the fix alone;
 2. each green row checked against its evidence;
 3. three 30-minute fuzz runs, one target at a time, niced, with `ASAN_OPTIONS=quarantine_size_mb=64`, a fresh corpus from the seeds and the regressions; a crash becomes a regression;
-4. the full mutation run on the final commit: `gh workflow run engine.yml --ref <branch>`, the survivors job green (gate 8);
+4. the full mutation run on the final commit: `gh workflow run engine.yml --ref <branch> -f mutants-only=true` (gate 8 alone, about an hour; R-88, 2026-11-12), the survivors job and `mutants baseline, 20 s a test` green (gate 8);
 5. the timing run on the reference Mac when the milestone has P8 rows (`engine/tools/perf milestone M<n>`), the Mac otherwise idle;
 6. the milestone report `engine/perf/M<n>.md` (R-129) and `engine/ARCHITECTURE.md` (R-119);
 7. the milestone into `gating` (`engine/tools/milestones.toml`) as the branch's last commit, in a rules step, when the brief says so.
@@ -112,5 +112,5 @@ Before a budget stop, a wait on the user, or the end of a turn that leaves work:
 
 - **Seal:** never open, list or search `tmp/holdout/` or `tmp/cases-holdout/`, and never open `engine/tests/cases/*-hidden.md`. The root `.ignore` keeps ripgrep and the Grep tool off them; the guard refuses a recursive `grep`, `rg -u`/`--no-ignore`/`-g`, `find`, `ls -R` or `git grep` that reaches them unexcluded (exclude with `--exclude='*-hidden.md'` or `-g '!**/*-hidden.md'`: a glob holding a `/` is anchored at the start folder). Never run a recursive search or listing over the main folder's `tmp/`; name its files by absolute path. Audit every transcript at the end.
 - **CPU:** at most two heavy jobs at once on the Mac, the sessions' and yours together; heavy commands prefixed `CARGO_BUILD_JOBS=6 NEXTEST_TEST_THREADS=6 nice -n 10`; each run within 8 GB (the watchdog `engine/tests/tools/memcap.py`); 30 GB free before a launch.
-- **Git:** no push to master, no `gh pr merge` (only `merge-pr`, for what it accepts); no AI attribution; `check full` green before every commit.
+- **Git:** no push to master, no `gh pr merge` (only `merge-pr`, for what it accepts); no AI attribution; `check full` green before every commit, but a builder's commits inside a group, which need `check fast` (its group's last commit `check full`; CI runs the full check on every push, R-77).
 - **Chat:** about 5 plain lines a message; the details go in `progress.md`.

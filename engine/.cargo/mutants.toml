@@ -1,8 +1,9 @@
 # cargo-mutants (R-84 to R-88; DONE gate 8). A rule file: only the `rules` role edits it.
-# The score counts T's tests only (R-84): the runner is the one test package. cargo-mutants
-# 27.1.0 runs its baseline on the mutated package (tally, which has no tests) whatever
-# test_package says, so every run passes --baseline skip after running the baseline
-# itself: `cargo nextest run -p tally-runner --cargo-profile mutants --profile mutants`.
+# The score counts T's tests only (R-84): the runner is the one test package. Since
+# 2026-11-12 gate 8 runs through tools/mutants-gate (R-88, R-133): cargo-mutants lists the
+# mutants from this file (`--list --json`), and the tool runs T's baseline itself (cargo-mutants
+# 27.1.0 would run it on the mutated package, tally, which has no tests), then builds each
+# mutant with this file's profile and cap_lints and runs the T tests that enter its function.
 test_package = ["tally-runner"]
 test_tool = "nextest"
 profile = "mutants"
@@ -23,7 +24,8 @@ examine_globs = [
 ]
 # No skip list of our own (R-86); the defaults only skip with_capacity's argument
 skip_calls = []
-# Hung mutants are ended, and counted as not caught (R-87, R-88). The baseline is skipped
-# (above), so no timeout can be derived from it: every command line sets them explicitly,
-# `--timeout 300 --build-timeout 600` (seconds; root package.json and engine.yml). The
-# lead revisits them once T's suite exists.
+# Hung mutants are ended, and counted as not caught (R-87, R-88). No timeout is derived from
+# a baseline: tools/mutants-gate sets them, 600 s for a mutant's tests and 600 s for its build
+# (its TIMEOUT and BUILD_TIMEOUT), and engine.yml caps each shard's job at 45 minutes (R-88,
+# 2026-11-12; until then `--timeout 600` on cargo-mutants' command lines, 300 before pick P72,
+# 2026-11-11, and 24 shards' jobs capped at 300 minutes).

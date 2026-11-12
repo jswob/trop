@@ -1,0 +1,6 @@
+part c_day_of
+  tally 2
+
+def c_day_of_x: date = d0 as if {d0 = day_of(2026, txt)}
+
+ask c_day_of: c_day_of_x

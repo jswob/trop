@@ -479,7 +479,7 @@ fn dyn_sample() -> Value {
 
 /// An index's first key as a value.
 fn first_key(ix: &IndexInfo) -> Option<Value> {
-    ix.keys.first().map(Value::of_key)
+    ix.keys().first().map(Value::of_key)
 }
 
 /// A sample value of declared type `ty`; none for a type S's samples don't take.

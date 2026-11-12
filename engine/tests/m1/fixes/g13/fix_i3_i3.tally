@@ -1,0 +1,21 @@
+part i3
+  tally 2
+
+input kq: key qs
+
+input kq1: key qs
+
+def z3: int = q1 - (kq + 1)
+
+def z4: int = kq1 - (kq + 1)
+
+ask i3: z3
+
+ask i4: z4
+
+version vi3
+  cite card
+  governs always
+  known 2026-01-01
+  kq = q2 "c"
+  kq1 = q1 "c"

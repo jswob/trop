@@ -1,0 +1,69 @@
+model cyc
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T C9 (invented): a two-member cycle a written before breaks, a third member after it by its read, a fourth apart; y's when refused (RUN-DIV), z reads its place"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+input d1: date
+
+input keep: money PLN
+
+input extra: money PLN
+
+input one: money PLN
+
+input zero: num
+
+place a1: accounts PLN lives 2026-01-01..
+place a2: accounts PLN lives 2026-01-01..
+place a3: accounts PLN lives 2026-01-01..
+place a4: accounts PLN lives 2026-01-01..
+place a5: accounts PLN lives 2026-01-01..
+place a6: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+move x: transfers
+  on d1
+  reads a2
+  before y
+  leg cash from a1 to a3 amount bal(a2) - keep
+
+move y: transfers
+  on d1
+  reads a3
+  when bal(a3) / zero > extra
+  leg cash from a2 to a4 amount bal(a3) + extra
+
+move z: transfers
+  on d1
+  reads a4
+  leg cash from world to a5 amount bal(a4)
+
+move w: transfers
+  on d1
+  reads a6
+  leg cash from world to a6 amount bal(a6) + one
+
+ask q: bal(a1, 2026-06-30), bal(a2, 2026-06-30), bal(a3, 2026-06-30), bal(a4, 2026-06-30), bal(a5, 2026-06-30), bal(a6, 2026-06-30)
+ask fl: flows(x, 2026-01-01..2026-12-31), flows(y, 2026-01-01..2026-12-31), flows(z, 2026-01-01..2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-04-15 "the card"
+  keep = 400.00 PLN "the card"
+  extra = 50.00 PLN "the card"
+  one = 1.00 PLN "the card"
+  zero = 0 "the card"
+  opening[a1] = 1000.00 PLN at 2026-01-01 start "the card"
+  opening[a2] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[a3] = 0 PLN at 2026-01-01 start "the card"
+  opening[a4] = 0 PLN at 2026-01-01 start "the card"
+  opening[a5] = 0 PLN at 2026-01-01 start "the card"
+  opening[a6] = 7.00 PLN at 2026-01-01 start "the card"

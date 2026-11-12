@@ -226,7 +226,7 @@ whole = 2
                 None => vec![Vec::new()],
                 Some(Domain::Index(ix)) => {
                     let index = m.indexes.get(ix).expect("an index");
-                    index.keys.iter().map(|k| vec![k.clone()]).collect()
+                    index.keys().iter().map(|k| vec![k.clone()]).collect()
                 }
                 Some(_) => panic!("a def keyed by an index"),
             };

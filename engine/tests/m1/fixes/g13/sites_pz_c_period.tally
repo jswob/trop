@@ -1,0 +1,6 @@
+part c_period
+  tally 2
+
+def c_period_x: date = d0 as if {d0 = start_of(fee)}
+
+ask c_period: c_period_x

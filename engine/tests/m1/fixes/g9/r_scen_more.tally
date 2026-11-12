@@ -1,0 +1,28 @@
+scenario more over p
+  tally 2
+  from 2026-06-01
+
+input gift_amt: money DUK
+
+move gift[m in month]: transfers
+  on add_days(start_of(m), off)
+  at start_of(m)
+  leg cash from world to konto amount gift_amt
+
+version more_v
+  cite card
+  governs 2026-06-01..
+  known 2026-01-01
+  gift_amt = 300.00
+
+version more_rent
+  cite card
+  governs 2026-08-01..
+  known 2026-01-01
+  replace rent = 50.00 "cheaper"
+
+ask s_early: bal(konto, 2026-09-30) from 2026-02-01 in more
+
+ask s_late: low(konto, 2026-07-01 .. 2026-12-31) from 2026-07-01 in more
+
+ask s_mixed: bal(konto, 2026-09-30) from 2026-06-01 in more

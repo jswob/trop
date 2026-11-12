@@ -1,0 +1,95 @@
+model p
+  tally 2
+  on 2026-09-30
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented probe for G9's fix"
+
+unit DUK: currency minor 0.01
+
+index month = month 2026-01..2026-12
+
+kind sav: place DUK min 0
+
+place konto: accounts DUK lives 2026-01-01..
+
+place spare: accounts DUK lives 2026-01-01..
+
+kind shops: place DUK signed outside
+
+place world: outside lives 2026-01-01..
+
+input pay: money DUK
+
+input rent: money DUK
+
+input bonus: money DUK
+
+input bonus_day: date
+
+input rent_off: int
+
+input off_a: int
+
+input off_b: int
+
+input off_c: int
+
+input amt_a: money DUK
+
+move salary[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount pay
+
+move rent_pay[m in month]: transfers
+  on add_days(start_of(m), rent_off)
+  at start_of(m)
+  leg cash from konto to world amount rent
+
+move bonus_pay: transfers
+  on bonus_day
+  at bonus_day
+  leg cash from world to konto amount bonus
+
+move groceries[m in month]: transfers
+  on add_days(start_of(m), off_b)
+  at start_of(m)
+  leg cash from konto to shop amount amt_a
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 1000.00
+  rent = 900.00
+  bonus = 250.00
+  bonus_day = 2026-11-01
+  rent_off = 9
+  off_a = 14
+  off_b = 3
+  off_c = 20
+  amt_a = 100.00
+  opening[konto] = 500.00 at 2026-01-01 start
+  opening[spare] = 0.00 at 2026-01-01 start
+
+version shopv
+  cite card
+  known 2026-01-01
+  shops + [shop] lives 2026-01-01..
+
+version closed
+  cite card
+  known 2026-05-20
+  replace shops + [shop] lives 2026-01-01..2026-08-31
+
+ask l_ls: bal(konto, 2026-12-31) from 2026-06-20, bal(konto, 2026-08-31) from 2026-06-20, low(konto, 2026-06-20 .. 2026-09-03) from 2026-06-20, low(konto, 2026-07-01 .. 2026-09-04) from 2026-06-20
+
+ask l_sl: low(konto, 2026-06-20 .. 2026-09-03) from 2026-06-20, bal(konto, 2026-08-31) from 2026-06-20, bal(konto, 2026-12-31) from 2026-06-20, low(konto, 2026-07-01 .. 2026-09-04) from 2026-06-20
+
+ask l_a: bal(konto, 2026-08-31) from 2026-06-20
+
+ask l_b: low(konto, 2026-06-20 .. 2026-09-03) from 2026-06-20
+
+ask l_sum: sum(bal(konto, d) from 2026-06-20 for d in 2026-06-20 .. 2026-09-03 step 1 day), sum(bal(konto, d) from 2026-06-20 for d in 2026-06-20 .. 2026-09-30 step 1 day), sum(bal(konto, d) from 2026-06-20 for d in 2026-06-20 .. 2026-09-03 step 1 day)

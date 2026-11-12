@@ -1,0 +1,13 @@
+scenario cheap over axw
+  tally 2
+  from 2026-01-01
+
+version cheap_rates
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  replace rate[q1] = 0.05 "a cheaper rate"
+
+ask c_in: total in cheap
+
+ask c_model: total in axw

@@ -1,0 +1,51 @@
+model axw
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+axis rm
+  down "down"
+  half-up "half up"
+
+axis share
+  one "one"
+  two "two"
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input asked_on: date
+
+input rate[k in qs]: num
+
+input double: int
+
+def fee[k in qs]: money PLN at asked_on
+  rule base = round(amt * rate[k], minor(PLN), rm)
+  rule twice beats base = round(amt * rate[k] * double, minor(PLN), rm) when share == two
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+ask w_base: total
+
+ask w_as_if: total, total as if {scenario cheap}
+
+ask w_diff: diff(fee[k] for k in qs) in cheap against axw
+
+ask w_pin_diff: diff(total) in cheap against axw with rm = down, share = one
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.05 PLN "the card"
+  asked_on = 2026-06-01 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0.2 "the card"
+  double = 2 "the card"

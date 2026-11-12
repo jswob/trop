@@ -1,0 +1,16 @@
+part l3
+  tally 2
+
+input fee3: money PLN
+
+move mv3: transfers
+  on d1
+  leg cash from konto to world amount fee3
+
+ask l3: lifespan(mv3).from
+
+version vl3
+  cite card
+  governs always
+  known 2026-01-01
+  fee3 = 10.00 PLN "c"

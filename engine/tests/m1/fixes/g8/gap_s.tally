@@ -1,0 +1,19 @@
+scenario recount over g1
+  tally 2
+  from 2026-03-01
+  note "a recount of the wallet in the scenario's world (invented; review-g8.md's list): gap beside a scenario reading and a base one"
+
+version recount_2026
+  cite card
+  governs always
+  known 2026-01-01
+  pad wallet from spent
+  stated[wallet] = 230.00 PLN at 2026-03-31 end "recounted"
+
+ask s_gap: gap(wallet, 2026-03-31) in recount
+
+ask s_gap_base: gap(wallet, 2026-01-31) in recount
+
+ask s_flows: flows(wallet, 2026-03) in recount
+
+ask s_bal: bal(wallet, 2026-03-31) in recount

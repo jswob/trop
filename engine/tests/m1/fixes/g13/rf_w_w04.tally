@@ -1,0 +1,4 @@
+part w04
+  tally 2
+
+ask w04: count(d in d1 .. d2 step 1 month where d < w)

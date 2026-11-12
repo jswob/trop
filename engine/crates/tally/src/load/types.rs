@@ -23,7 +23,7 @@ use super::worlds::read_elsewhere;
 use crate::base::{Code, Load, Refusal};
 use crate::model::{
     CodeKind, Domain, IndexForm, KeyVal, NameKind, PeriodWord, Reality, Rel, Shown, Ty, Unit,
-    UnitError, power_past_limit,
+    UnitError,
 };
 use crate::num::{Num, NumError};
 use crate::syntax::{
@@ -44,14 +44,10 @@ pub(super) fn uerr(message: String) -> Stop {
     refused(Load::Unit, message)
 }
 
-/// A unit operation's refusal at load: a power past 64 in size is `LOAD-LIMIT unit <u> has
-/// a power past 64` (refcore's `power_limit`), placed where it was met; a number error is
-/// `unit_stop`'s. L §7.6 item 4, §8.3 `LOAD-LIMIT`.
+/// A unit operation's refusal while typing (`UnitError::refusal`), placed where it was met;
+/// a number error is `unit_stop`'s. L §7.6 item 4, §8.3 `LOAD-LIMIT`.
 pub(super) fn unit_error(error: UnitError) -> Stop {
-    match error {
-        UnitError::Power(base) => refused(Load::Limit, power_past_limit(&base)),
-        UnitError::Num(error) => unit_stop(error),
-    }
+    error.refusal(unit_stop, None)
 }
 
 /// A number error met while typing a unit: a literal scaled by its unit past the digit cap is
@@ -151,7 +147,7 @@ pub(super) fn key_value_kind(m: &Reality, t: &Ty) -> Option<&'static str> {
         return Some("int");
     }
     let dated = index
-        .keys
+        .keys()
         .first()
         .is_none_or(|key| matches!(key, KeyVal::Day(_)));
     match index.period {

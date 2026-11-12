@@ -18,13 +18,14 @@ use crate::base::{Code, Load, Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Env, order_text, thing_seen};
 use crate::hole::{Hole, spread};
 use crate::model::{
-    Domain, KeyVal, MoveInfo, Node, NodeKind, Number, Reality, Value, currency_id, money_num,
-    num_money,
+    Domain, KeyVal, MoveInfo, Node, NodeKind, Number, Reality, Value, World, currency_id,
+    money_num, num_money,
 };
 use crate::num::Num;
 use crate::syntax::{Certainty, Stop};
 use crate::time::{Day, PeriodKind};
 use core::cmp::Ordering;
+use std::collections::BTreeMap;
 use std::rc::Rc;
 
 /// A leg's end: a place by name, or a hole, a place nobody has told us (L §5.14 Legs).
@@ -96,17 +97,42 @@ pub struct LegVal {
     pub day: Dated,
 }
 
-/// A booked plan instance's amount A₀, its existence and legs, with the cut that first booked
-/// it: what every later cut that books it at the same booking cut must give again (E §9
-/// item 5).
+/// The booked plan amounts of one timeline, by (instance, booking cut, the day a walk up to a
+/// day stops at): a walk up to a day books its partial plan list while cells outside it are
+/// still being computed, so its A₀ are checked against its own kind only, never against the
+/// whole walk's (E §9 item 5, §3.2, §4.1; refcore's `inv5` keys by the timeline).
+pub type Bookings = BTreeMap<(String, Day, Option<Day>), Booked>;
+
+/// A booked plan instance's amount A₀, its existence and legs as read at its booking cut,
+/// with the cut that first booked it: what every later cut that books it at the same booking
+/// cut must give again (E §9 item 5).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Booked {
     /// Whether it exists.
     pub exists: Exists,
     /// Its legs.
-    pub legs: Vec<LegVal>,
+    pub legs: Vec<BookedLeg>,
     /// The cut that first booked it.
     pub cut: Day,
+}
+
+/// One leg of a booked A₀: its places, amount and unit, and its own day where it states one.
+/// A leg without its own `on` takes its instance's day, which is read at the ask's cut K,
+/// not at the booking cut, so a later K may move it (E §4.1 step 2; refcore's `body_key`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BookedLeg {
+    /// The leg's name.
+    pub name: String,
+    /// The place it leaves.
+    pub from: End,
+    /// The place it enters.
+    pub to: End,
+    /// Its amount.
+    pub amount: Amount,
+    /// Its unit.
+    pub unit: Option<String>,
+    /// Its own day; none where it takes its instance's.
+    pub own_day: Option<Dated>,
 }
 
 /// Whether an instance exists: its `when` and its binding tuple's (L §5.14 `when`).
@@ -374,6 +400,9 @@ pub struct Seed {
     pub exists: Exists,
     /// The cut it is measured at; none for its booking cut min(t, K).
     pub at_cut: Option<Day>,
+    /// For a walk up to a day, that day: an instance dated after it is none, its body never
+    /// evaluated (refcore's `eval_inst`, `upto`). E §4.1.
+    pub upto: Option<Day>,
 }
 
 /// What an instance's body gives: whether it exists, its legs, attributes and period.
@@ -418,7 +447,7 @@ impl Engine {
             )));
         }
         self.plan_active.insert(key.clone());
-        let made = self.make_instances(m, mv, cut);
+        let made = self.make_instances(m, mv, cut, None);
         self.plan_active.remove(&key);
         let mut out = made?;
         // refcore computes a status when it is first read, after the instances are kept
@@ -428,6 +457,57 @@ impl Engine {
         }
         let shared = Rc::new(out);
         self.plans.insert(key, Rc::clone(&shared));
+        Ok(shared)
+    }
+
+    /// A move's instances for the walk being planned: all of them, or, for a walk up to a
+    /// day, a plan's dated on or before it, the others' bodies never evaluated; a decision, a
+    /// move whose legs state their own days, or one whose instances are all known already, is
+    /// taken whole (refcore's `plan_list`). E §4.1, §3.2.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::move_instances`].
+    pub(crate) fn plan_list(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        cut: Day,
+    ) -> Result<Rc<Vec<Inst>>, Stop> {
+        let Some(upto) = self.body_upto else {
+            return self.move_instances(m, mv, cut);
+        };
+        let active = (mv.id.clone(), cut);
+        let whole = mv.decision
+            || self.plans.contains_key(&active)
+            || mv.decl.legs.iter().any(|leg| leg.on.is_some());
+        if whole {
+            return self.move_instances(m, mv, cut);
+        }
+        let key = (mv.id.clone(), cut, upto);
+        if let Some(hit) = self.prefixes.plans.get(&key) {
+            return Ok(Rc::clone(hit));
+        }
+        if self.plan_active.contains(&active) {
+            self.narrow_open_to_days();
+            return Err(Stop::Refused(Refusal::new(
+                Code::Run(Run::Cycle),
+                format!("{} reads its own instances", mv.id),
+            )));
+        }
+        self.plan_active.insert(active.clone());
+        let made = self.make_instances(m, mv, cut, Some(upto));
+        self.plan_active.remove(&active);
+        let mut out = made?;
+        // kept before their status, as the whole list is
+        self.prefixes
+            .plans
+            .insert(key.clone(), Rc::new(out.clone()));
+        for inst in &mut out {
+            inst.status = self.status(m, mv, inst, cut)?;
+        }
+        let shared = Rc::new(out);
+        self.prefixes.plans.insert(key, Rc::clone(&shared));
         Ok(shared)
     }
 
@@ -484,10 +564,11 @@ impl Engine {
         m: &Reality,
         mv: &MoveInfo,
         cut: Day,
+        upto: Option<Day>,
     ) -> Result<Vec<Inst>, Stop> {
         let outer = self.holding(Node::new(NodeKind::Move, &mv.id));
         let mark = self.reads_apart();
-        let made = self.make_instances_held(m, mv, cut);
+        let made = self.make_instances_held(m, mv, cut, upto);
         self.reads_back(mark);
         self.holder = outer;
         made
@@ -501,12 +582,13 @@ impl Engine {
         m: &Reality,
         mv: &MoveInfo,
         cut: Day,
+        upto: Option<Day>,
     ) -> Result<Vec<Inst>, Stop> {
-        let tctx = Ctx::new(None, cut);
+        let tctx = self.timeline_ctx(None, cut);
         let mut out = Vec::new();
         for tuple in self.move_tuples(m, mv, tctx)? {
             if let Some(err) = tuple.refused.clone() {
-                out.extend(self.refused_tuple(m, mv, tuple, err, tctx)?);
+                out.extend(self.refused_tuple(m, mv, (tuple, upto), err, tctx)?);
                 continue;
             }
             if let Some(hole) = tuple.domain_hole {
@@ -522,13 +604,14 @@ impl Engine {
                 keys: tuple.keys,
                 exists: tuple.exists,
                 at_cut: None,
+                upto,
             };
             if let Some(mut inst) = self.eval_inst(m, mv, &seed, tctx)? {
                 if !mv.decision
                     && inst.err.is_none()
                     && let Some(booking) = inst.cut
                 {
-                    self.check_booked(&inst, booking, cut)?;
+                    self.check_booked(mv, &inst, (booking, cut), upto)?;
                 }
                 inst.coll.merge(&tuple.coll);
                 out.push(inst);
@@ -554,7 +637,7 @@ impl Engine {
         &mut self,
         m: &Reality,
         mv: &MoveInfo,
-        tuple: Tuple,
+        (tuple, upto): (Tuple, Option<Day>),
         err: Refusal,
         tctx: Ctx,
     ) -> Result<Option<Inst>, Stop> {
@@ -566,6 +649,7 @@ impl Engine {
             keys: tuple.keys,
             exists: Exists::Yes,
             at_cut: None,
+            upto,
         };
         let Some(mut inst) = self.eval_inst(m, mv, &seed, tctx)? else {
             return Ok(None);
@@ -578,21 +662,29 @@ impl Engine {
         Ok(Some(inst))
     }
 
-    /// A booked plan amount never changes: an instance's A₀, its existence and legs, is the
-    /// same under every cut that books it at booking cut `booking`, across the asks of a run
-    /// (refcore's `inv5`). E §9 item 5.
-    fn check_booked(&mut self, inst: &Inst, booking: Day, cut: Day) -> Result<(), Stop> {
-        let key = (inst.id.clone(), booking);
+    /// A booked plan amount never changes: an instance's A₀, its existence and legs as read at
+    /// its booking cut, is the same under every cut that books it at booking cut `booking`,
+    /// across the asks of a run (refcore's `inv5`). Its day is read at the cut K, so a leg's
+    /// day counts only where the leg states its own (E §4.1 step 2). E §9 item 5.
+    fn check_booked(
+        &mut self,
+        mv: &MoveInfo,
+        inst: &Inst,
+        (booking, cut): (Day, Day),
+        upto: Option<Day>,
+    ) -> Result<(), Stop> {
+        let key = (inst.id.clone(), booking, upto);
+        let legs = booked_legs(mv, &inst.legs);
         let Some(old) = self.booked.get(&key) else {
             let first = Booked {
                 exists: inst.exists.clone(),
-                legs: inst.legs.clone(),
+                legs,
                 cut,
             };
             self.booked.insert(key, first);
             return Ok(());
         };
-        if old.exists == inst.exists && old.legs == inst.legs {
+        if old.exists == inst.exists && old.legs == legs {
             return Ok(());
         }
         Err(invariant(&format!(
@@ -626,7 +718,8 @@ impl Engine {
         let made = match self.inst_parts(m, mv, &mut inst, tctx, seed) {
             Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {
                 inst.err = Some(r);
-                self.refused_legs(m, mv, &mut inst, tctx).map(|()| true)
+                self.refused_legs(m, mv, &mut inst, (tctx, seed.at_cut))
+                    .map(|()| true)
             }
             made => made,
         };
@@ -636,7 +729,8 @@ impl Engine {
     }
 
     /// A refused plan instance's legs, its evaluation stopped before them: their places read
-    /// at its booking cut and law date, each leg's amount the refusal; none where a place
+    /// at the cut its body is measured at (its booking cut, or a later version's for a
+    /// re-measure, where refcore reads min(t, K)) and its law date, each leg's amount the refusal; none where a place
     /// can't be read here, so the walk refuses every place from its day (refcore's
     /// `eval_inst`, its refusal). A refused movement reaches as a hole movement does: its day
     /// and its legs' places are still read, since neither depends on whether it exists (L §8.4,
@@ -650,14 +744,20 @@ impl Engine {
         m: &Reality,
         mv: &MoveInfo,
         inst: &mut Inst,
-        tctx: Ctx,
+        (tctx, at_cut): (Ctx, Option<Day>),
     ) -> Result<(), Stop> {
         if mv.decision {
             return Ok(());
         }
         let day = inst.day.as_ref().and_then(Dated::day);
-        let cut = day.map_or(tctx.cut, |d| d.min(tctx.cut));
-        if let Some(legs) = self.refused_places(m, mv, inst, Ctx::new(inst.law, cut))? {
+        // the cut its body is measured at: a later version's, for a re-measure (E §5 step 1),
+        // else min(t, K)
+        let cut = match (at_cut, day) {
+            (Some(c), _) => c,
+            (None, Some(d)) => d.min(tctx.cut),
+            (None, None) => tctx.cut,
+        };
+        if let Some(legs) = self.refused_places(m, mv, inst, self.timeline_ctx(inst.law, cut))? {
             inst.legs = legs;
         }
         Ok(())
@@ -711,8 +811,9 @@ impl Engine {
     }
 
     /// The value of `e` at `ctx`, or none where it is refused at run (refcore's `try: ev …
-    /// except TallyError`, a load refusal raised). L §8.4.
-    fn read_or_refused(
+    /// except TallyError`); a load refusal met at run and `ENGINE-INVARIANT` go on (R-66).
+    /// L §8.4.
+    pub(super) fn read_or_refused(
         &mut self,
         m: &Reality,
         e: &crate::syntax::Expr,
@@ -721,7 +822,7 @@ impl Engine {
     ) -> Result<Option<Value>, Stop> {
         match self.ev(m, e, env, ctx) {
             Ok(v) => Ok(Some(v)),
-            Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => Ok(None),
+            Err(Stop::Refused(r)) if super::order::run_time(&r) => Ok(None),
             Err(stop) => Err(stop),
         }
     }
@@ -757,6 +858,7 @@ impl Engine {
         }
         let day = match v {
             Value::Hole(h) => Dated::Hole(h),
+            Value::Window(_) => return Err(Stop::NotBuilt("a movement dated by a window")),
             Value::Number(_)
             | Value::Money(_)
             | Value::Bool(_)
@@ -780,17 +882,29 @@ impl Engine {
         if mv.decision {
             return Ok(true);
         }
+        if let (Some(upto), Dated::Day(d)) = (seed.upto, &day)
+            && *d > upto
+        {
+            // a walk up to a day books nothing after it (refcore's `eval_inst`, `upto`)
+            return Ok(false);
+        }
         let cut = match (seed.at_cut, &day) {
             (Some(c), _) => c,
             (None, Dated::Day(d)) => (*d).min(tctx.cut),
             (None, Dated::Hole(_)) => tctx.cut,
         };
         inst.cut = Some(cut);
-        if !keys_seen(m, mv, &inst.keys, cut) {
+        if !keys_seen(m, mv, &inst.keys, (cut, self.timeline_world())) {
             inst.exists = Exists::No;
             return Ok(true);
         }
-        let body = self.inst_body(m, mv, inst, Ctx::new(law, cut), seed.exists.clone())?;
+        let body = self.inst_body(
+            m,
+            mv,
+            inst,
+            self.timeline_ctx(law, cut),
+            seed.exists.clone(),
+        )?;
         inst.exists = body.exists;
         inst.legs = body.legs;
         inst.attrs = body.attrs;
@@ -907,26 +1021,27 @@ pub(super) fn join(ex: Exists, h: &Hole) -> Exists {
     }
 }
 
-/// Whether the keys of an instance were there at cut `cut`: an index's key added by a later
-/// version, or a thing entered after it, makes the instance one that didn't exist then
-/// (refcore's `keys_seen`). E §5 steps 1–3.
-fn keys_seen(m: &Reality, mv: &MoveInfo, keys: &[KeyVal], cut: Day) -> bool {
+/// Whether the keys of an instance were there at cut `cut` in world `world`: an index's key
+/// added by a later version or one the world doesn't see, or a thing entered after it, makes
+/// the instance one that didn't exist then (refcore's `keys_seen`). E §5 steps 1–3; L §6.4.
+fn keys_seen(m: &Reality, mv: &MoveInfo, keys: &[KeyVal], (cut, world): (Day, World)) -> bool {
     for (bind, key) in mv.binds.iter().zip(keys) {
         match &bind.domain {
             Domain::Index(id) => {
-                let added = m
-                    .indexes
-                    .get(id)
-                    .and_then(|ix| ix.added_by(key))
-                    .and_then(|v| m.versions.get(v));
-                if added.is_some_and(|v| v.known > cut) {
+                let added = m.indexes.get(id).and_then(|ix| ix.added_by(key));
+                let unseen = added.is_some_and(|v| !m.scenarios.sees(world, Some(v)));
+                if unseen
+                    || added
+                        .and_then(|v| m.versions.get(v))
+                        .is_some_and(|v| v.known > cut)
+                {
                     return false;
                 }
             }
             Domain::Kind(_) => {
                 if let KeyVal::Thing(name) = key
                     && let Some(thing) = m.things.get(name)
-                    && !thing_seen(m, thing, cut)
+                    && !thing_seen(m, thing, (cut, world))
                 {
                     return false;
                 }
@@ -935,6 +1050,29 @@ fn keys_seen(m: &Reality, mv: &MoveInfo, keys: &[KeyVal], cut: Day) -> bool {
         }
     }
     true
+}
+
+/// A₀'s legs: each leg as read at its booking cut, its day kept only where it states its own
+/// `on`, since one it takes from its instance is read at the cut K (refcore's `body_key`).
+/// E §4.1 step 2, E §9 item 5.
+fn booked_legs(mv: &MoveInfo, legs: &[LegVal]) -> Vec<BookedLeg> {
+    let mut out = Vec::with_capacity(legs.len());
+    for lg in legs {
+        let own = mv
+            .decl
+            .legs
+            .iter()
+            .any(|decl| decl.name == lg.name && decl.on.is_some());
+        out.push(BookedLeg {
+            name: lg.name.clone(),
+            from: lg.from.clone(),
+            to: lg.to.clone(),
+            amount: lg.amount.clone(),
+            unit: lg.unit.clone(),
+            own_day: own.then(|| lg.day.clone()),
+        });
+    }
+    out
 }
 
 /// Whether `inst` is an instance of a move a scenario declares whose day, or a leg's own day,

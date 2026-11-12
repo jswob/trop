@@ -57,8 +57,12 @@ def marker():
             data = tomllib.load(f)
     except (OSError, tomllib.TOMLDecodeError) as e:
         raise MilestoneError(f"tools/milestones.toml can't be read: {e}") from e
-    if sorted(data) != ["gating", "milestones", "mutants_leave_out"]:
-        raise MilestoneError("tools/milestones.toml holds exactly `milestones`, `gating` and `mutants_leave_out`")
+    # `fence_catchers` is `mutants-local --fences`'s alone (fence_catchers()), and
+    # `mutants_slow_tests` gate 8's 20 s check's (slow_tests()), so this reader doesn't ask
+    # for them
+    if sorted(set(data) - {"fence_catchers", "mutants_slow_tests"}) != ["gating", "milestones", "mutants_leave_out"]:
+        raise MilestoneError("tools/milestones.toml holds exactly `milestones`, `gating` and `mutants_leave_out`, "
+                             "and `mutants-local --fences`'s `fence_catchers`")
     milestones, gating, leave_out = data["milestones"], data["gating"], data["mutants_leave_out"]
     if not isinstance(leave_out, list) or not all(isinstance(t, str) for t in leave_out):
         raise MilestoneError("tools/milestones.toml: mutants_leave_out is a list of test target names")
@@ -80,8 +84,60 @@ def marker():
     return milestones, gating, leave_out
 
 
-def targets(env, milestones):
-    """The runner's default targets, as cargo arguments, and each milestone's test targets."""
+def fence_catchers():
+    """The fences' equivalence tests that `mutants-local --fences` adds as catchers (R-88,
+    R-130; pick P55, 2026-11-09), as (package, test target or None, lib module prefix or
+    None), checked: each names a package and exactly one of a test target (every test in it)
+    and a module of the package's lib (`walk::lows::tests::`, its tests). Not CI's: gate 8
+    counts T's tests only (R-84)."""
+    try:
+        with open(MARKER, "rb") as f:
+            listed = tomllib.load(f).get("fence_catchers")
+    except (OSError, tomllib.TOMLDecodeError) as e:
+        raise MilestoneError(f"tools/milestones.toml can't be read: {e}") from e
+    if not isinstance(listed, list) or not listed:
+        raise MilestoneError("tools/milestones.toml: fence_catchers, `mutants-local --fences`'s, is a "
+                             "non-empty list of tables")
+    out = []
+    for c in listed:
+        ok = isinstance(c, dict) and isinstance(c.get("package"), str) and sorted(c) in (["package", "test"], ["lib", "package"])
+        name = c.get("test", c.get("lib")) if isinstance(c, dict) else None
+        if not ok or not isinstance(name, str) or not re.fullmatch(r"[A-Za-z0-9_-]+|([a-z0-9_]+::)+", name):
+            raise MilestoneError("tools/milestones.toml: each fence_catchers entry is { package, test } or "
+                                 f"{{ package, lib = \"<module>::\" }}, not {c!r}")
+        out.append((c["package"], c.get("test"), c.get("lib")))
+    return out
+
+
+def slow_tests():
+    """The T tests gate 8's 20 s check names, each a single vector T can't split (R-88; pick
+    P73, issue #108, 2026-11-12): {test: (seconds, ceiling)}, its time and its ceiling on the
+    median runner, checked: each entry is exactly { test, seconds, ceiling, measured }, the
+    time under the ceiling, no test twice. None listed is an empty list, so every test
+    keeps the 20 s."""
+    try:
+        with open(MARKER, "rb") as f:
+            listed = tomllib.load(f).get("mutants_slow_tests", [])
+    except (OSError, tomllib.TOMLDecodeError) as e:
+        raise MilestoneError(f"tools/milestones.toml can't be read: {e}") from e
+    if not isinstance(listed, list):
+        raise MilestoneError("tools/milestones.toml: mutants_slow_tests is a list of tables")
+    out = {}
+    for c in listed:
+        ok = isinstance(c, dict) and sorted(c) == ["ceiling", "measured", "seconds", "test"]
+        ok = ok and isinstance(c["test"], str) and isinstance(c["measured"], str) and c["measured"].strip() != ""
+        ok = ok and all(isinstance(c[k], (int, float)) and not isinstance(c[k], bool) for k in ("seconds", "ceiling"))
+        if not ok or not 0 < c["seconds"] < c["ceiling"]:
+            raise MilestoneError("tools/milestones.toml: each mutants_slow_tests entry is { test, seconds, ceiling, "
+                                 f"measured }}, its seconds under its ceiling, not {c!r}")
+        if c["test"] in out:
+            raise MilestoneError(f"tools/milestones.toml: mutants_slow_tests names {c['test']} twice")
+        out[c["test"]] = (float(c["seconds"]), float(c["ceiling"]))
+    return out
+
+
+def runner_package(env):
+    """The runner's package, from cargo metadata."""
     r = subprocess.run(["cargo", "metadata", "--no-deps", "--format-version", "1", "--locked"], cwd=ENGINE, env=env,
                        capture_output=True, text=True, check=False)
     if r.returncode != 0:
@@ -89,6 +145,20 @@ def targets(env, milestones):
     runner = [p for p in json.loads(r.stdout)["packages"] if p["name"] == RUNNER]
     if len(runner) != 1:
         raise MilestoneError(f"the workspace has no {RUNNER} package")
+    return runner
+
+
+def required_features(env, names):
+    """The features the runner's test targets `names` require (`required-features`, such
+    as M1's m1_invariant and fault-injection), sorted: a run that selects one by name
+    has to turn them on, or cargo refuses it."""
+    wanted = set(names)
+    return sorted({f for t in runner_package(env)[0]["targets"] if t["name"] in wanted for f in t.get("required-features", [])})
+
+
+def targets(env, milestones):
+    """The runner's default targets, as cargo arguments, and each milestone's test targets."""
+    runner = runner_package(env)
     by_prefix = {m.casefold(): m for m in milestones}
     defaults, by_milestone = [], {m: [] for m in milestones}
     for t in sorted(runner[0]["targets"], key=lambda t: t["name"]):
@@ -127,7 +197,8 @@ def next_milestone(env):
 def selection(env):
     """The nextest arguments for a mutation run: the runner's default targets and every gating
     milestone's but the marker's `mutants_leave_out` (`--tests` can't be used: it leaves out
-    every target with test = false)."""
+    every target with test = false), with the runner's features those targets require
+    (M1's m1_invariant: fault-injection), or cargo would refuse them (issue #108, R2)."""
     milestones, gating, leave_out = marker()
     defaults, by_milestone = targets(env, milestones)
     gated = [t for m in gating for t in by_milestone[m]]
@@ -135,7 +206,9 @@ def selection(env):
         if t not in gated:
             raise MilestoneError(f"tools/milestones.toml: mutants_leave_out names {t}, which is no gating "
                                  "milestone's test target")
-    return defaults + [f"--test={t}" for t in gated if t not in leave_out]
+    chosen = [t for t in gated if t not in leave_out]
+    features = [f"--features={RUNNER}/{f}" for f in required_features(env, chosen)]
+    return defaults + features + [f"--test={t}" for t in chosen]
 
 
 def tally(out):

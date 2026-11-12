@@ -1,0 +1,6 @@
+part c_field
+  tally 2
+
+def c_field_x: money PLN = fee as if {fee = sum(m.zz for m in transfers over d0..d0)}
+
+ask c_field: c_field_x

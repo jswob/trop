@@ -1,0 +1,15 @@
+part p2
+  tally 2
+
+input p[x in 1 % .. 5 % step 1 %]: num
+
+input pv: num %
+
+version vp
+  cite card
+  governs always
+  known 2026-01-01
+  pv = 2 % "c"
+  p[3 %] = 9 "c"
+
+ask p2: p[pv]

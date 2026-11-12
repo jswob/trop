@@ -1,0 +1,19 @@
+scenario s1 over rb
+  tally 2
+  from 2026-01-01
+  note "T C15 (the #137 review's s1): the 01-15 reading replaced alone (issue #137)"
+
+version s1_v
+  cite card
+  governs 2026-01..2026-02
+  known 2026-03-05
+  anchor konto
+  replace stated[konto] = 33 at 2026-01-15 end "s1"
+
+ask s1a: bal(konto, 2026-01-15), bal(konto, 2026-02-20), bal(konto, 2026-02-28), bal(konto, 2026-03-31) in s1
+ask s1b: bal(ko2, 2026-01-01 start), bal(ko2, 2026-02-28), bal(ko2, 2026-03-31), bal(w, PLN, 2026-03-31) in s1
+ask s1c: gap(konto, 2026-02-28), gap(ko2, 2026-02-28) in s1
+ask s1d: explain bal(konto, 2026-03-31) in s1
+ask s1e: explain bal(ko2, 2026-03-31) in s1
+ask s1f: bal(konto, 2026-02-28), bal(ko2, 2026-02-28) in s1 as known 2026-03-15
+ask s1g: bal(konto, 2026-02-28), bal(ko2, 2026-02-28) in s1 as known 2026-04-15

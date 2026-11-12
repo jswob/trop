@@ -1,0 +1,9 @@
+part f_int_arg
+  tally 2
+
+move dm_int_arg: transfers
+  on add_months(d0, txt)
+  reads konto
+  leg cash from konto to world amount min(fee, bal(konto))
+
+ask f_int_arg: bal(konto, 2026-12-31)

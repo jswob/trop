@@ -1,0 +1,74 @@
+model p
+  tally 2
+  on 2026-04-15
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented probe for F5"
+
+unit DUK: currency minor 0.01
+
+index month = month 2026-01..2026-12
+
+place konto: accounts DUK lives 2026-01-01..
+
+place sav: accounts DUK lives 2026-01-01..
+
+input sweep_day: date
+
+input f_from: date
+
+input f_to: date
+
+place world: outside lives 2026-01-01..
+
+input pay: money DUK
+
+input rent: money DUK
+
+input off: int
+
+move salary[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount pay
+
+move rent_pay[m in month]: transfers
+  on add_days(start_of(m), off)
+  at start_of(m)
+  leg cash from konto to world amount rent
+
+
+move sweep: transfers
+  on sweep_day
+  at sweep_day
+  leg cash from konto to sav amount flows(rent_pay, f_from .. f_to)
+
+ask cov_two: bal(konto, 2026-06-30) from 2026-02-01, bal(konto, 2026-06-30) from 2026-03-15
+
+ask cov_two_rev: bal(konto, 2026-06-30) from 2026-03-15, bal(konto, 2026-06-30) from 2026-02-01
+
+ask cov_a: bal(konto, 2026-06-30) from 2026-02-01
+
+ask cov_b: bal(konto, 2026-06-30) from 2026-03-15
+
+ask cov_low: low(konto, 2026-02-01 .. 2026-06-30) from 2026-02-01, low(konto, 2026-03-15 .. 2026-06-30) from 2026-03-15
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 1000.00
+  rent = 900.00
+  off = 9
+  opening[konto] = 500.00 at 2026-01-01 start
+  opening[sav] = 0.00 at 2026-01-01 start
+  sweep_day = 2026-06-15
+  f_from = 2026-03-01
+  f_to = 2026-03-31
+
+version stmt
+  cite card
+  governs 2026-01-01..2026-12-31
+  known 2026-01-01
+  covers konto

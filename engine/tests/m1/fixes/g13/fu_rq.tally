@@ -1,0 +1,10 @@
+part f6
+  tally 2
+
+ask rq: rr[3]
+
+version v6
+  cite card
+  governs always
+  known 2026-01-02
+  rr[inf] = 1 "c"

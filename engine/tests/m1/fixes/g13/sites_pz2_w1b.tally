@@ -1,0 +1,12 @@
+part w1b
+  tally 2
+
+input kq: key qs
+
+ask w1b: kq with kq = q1 + 1
+
+version vw1b
+  cite card
+  governs always
+  known 2026-01-01
+  kq = q1 "c"

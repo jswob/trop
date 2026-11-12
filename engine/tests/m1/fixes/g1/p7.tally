@@ -1,0 +1,4 @@
+part p7
+  tally 2
+
+ask p7: count(g in gifts over .. where (if g.extra > 0 and g in big and g in bigger then 1 else 0) > 0)

@@ -77,6 +77,8 @@ impl Checker {
                 scope.cited = version.v.is_some();
                 scope.guards = guards.get(label).map_or_else(BTreeSet::new, Clone::clone);
                 covered_spans(rule.when.as_ref(), &mut scope.covered);
+                // a kind test of the `when` narrows throughout its value and its when (L §5.7)
+                let scope = scope.narrowed(m, rule.when.as_ref());
                 if let Some(when) = &rule.when {
                     self.when(m, &scope, &scope, when, &format!("when of rule {label}"))?;
                 }
