@@ -42,7 +42,10 @@ the program means the same.
 mutants of FILE… (every kernel file when none is named) matching REGEX, a fresh map, one
 shard, every mutant at opt-level 0. Its output is target/mutants-local/mutants.out/, its
 exit cargo-mutants' (0 all caught, 2 some missed, 3 some timed out). tools/mutants-local
-adds --next and --fences to it.
+adds --next and --fences to it. The baseline and the map are paid once per tree: a later
+local run on the same tree (check's memo key) with the same targets reuses them (R-88,
+2026-11-13). Locally it is for a single-mutant proof of a few minutes; a batch of mutants
+goes to a gate-8 dispatch on GitHub (the user, 2026-11-12).
 
 The environment is check's (R-82): only CARGO_BUILD_JOBS and NEXTEST_TEST_THREADS pass
 through, which change how many jobs run at once, never a result.
@@ -769,14 +772,45 @@ def slow_check(times, past):
 # --- on this machine -------------------------------------------------------------------
 
 
+def local_key(args, expr):
+    """This tree's key for a local run's baseline and map (R-88, 2026-11-13): check's memo key
+    (every file git sees, the tags, the environment, the tools' versions) with the targets
+    and the filter; None when it can't be read, and then nothing is reused."""
+    try:
+        tree = check.memo_key()
+    except OSError:
+        return None
+    return hashlib.sha256(json.dumps({"tree": tree, "args": args, "expr": expr}).encode()).hexdigest()
+
+
+def reusable(work, key):
+    """Whether `work` holds a green baseline and a map made on the tree `key` names."""
+    try:
+        kept = load_json(os.path.join(work, "reuse.json")).get("key")
+    except (GateError, AttributeError):
+        return False
+    return kept == key and all(os.path.isfile(os.path.join(work, f)) for f in ("times.json", "map.json"))
+
+
 def local(files=None, regex=None, extra=(), expr=None):
-    """The whole method here, one shard (tools/mutants-local, the root engine:mutants)."""
+    """The whole method here, one shard (tools/mutants-local, the root engine:mutants). The
+    baseline and the coverage map are paid once per tree: a later run on the same tree, with
+    the same targets, reuses them (R-88, 2026-11-13)."""
     put_back()
     args = [*selection(), *extra]
     work = os.path.join(WORK, "local")
-    print("mutants-gate: T's tests, unmutated", flush=True)
-    if not baseline(work, extra, expr):
-        return 1
+    key = local_key(args, expr)
+    reused = key is not None and reusable(work, key)
+    if reused:
+        print(f"mutants-gate: T's tests and the coverage map as made on this tree (sha256 {key[:16]}): reused")
+    else:
+        try:
+            os.remove(os.path.join(work, "reuse.json"))
+        except OSError:
+            pass
+        print("mutants-gate: T's tests, unmutated", flush=True)
+        if not baseline(work, extra, expr):
+            return 1
     for s, t, limit in slow(load_json(os.path.join(work, "times.json")), named=milestones.slow_tests())[0]:
         print(f"mutants-gate: notice: {t} took {s:.1f} s here, over the {limit:.0f} s CI's baseline allows on "
               "the median runner (R-88)")
@@ -784,7 +818,11 @@ def local(files=None, regex=None, extra=(), expr=None):
     if not listed:
         print("mutants-gate: no mutant to run")
         return 0
-    coverage(os.path.join(work, "map.json"), extra, expr)
+    if not reused:
+        coverage(os.path.join(work, "map.json"), extra, expr)
+        # kept only when the tree didn't change while the two ran
+        if key is not None and local_key(args, expr) == key:
+            dump_json(os.path.join(work, "reuse.json"), {"key": key})
     cov = load_json(os.path.join(work, "map.json"))
     mutants = {m["name"]: m for m in listed}
     counts = judge_all([m["name"] for m in listed], mutants, cov, {}, features_of(args), LOCAL, "local")
