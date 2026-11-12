@@ -174,7 +174,9 @@ bash -c 'case "$(tools/milestones args --mutants)" in *--features*) echo "R-84: 
 # 2026-11-12 (the mutation study; the user's "Okay, let's make these changes"): each mutant
 # runs the T tests that enter its function in the run's coverage map (R-133), from their own
 # targets. The planted map has one test that enters the mutated function and one that
-# doesn't; the fake cargo records the test run's filter, which names the first alone.
+# doesn't; the fake cargo records the test run's filter, which names the first alone, and
+# its priorities' tool config, by an absolute path as nextest requires (run 43177332468's
+# shards gave a relative one, and nextest exited 2).
 
 case: mutant-runs-the-tests-that-enter-its-function
 tool: run
@@ -204,4 +206,4 @@ for f in list plan map; do sed "s/@KEY@/$k/g" "zz-gate/$f.in" > "zz-gate/$f.json
 chmod +x zz-bin/cargo
 REAL_CARGO="$(command -v cargo)" PATH="$PWD/zz-bin:$PATH" tools/mutants-gate shard 0/1 zz-gate/list.json zz-gate/map.json zz-gate/plan.json zz-gate/out
 t="$(cat zz-gate/tests.txt)"
-case "$t" in *planted_out*|*m0_codes*) echo "R-84 broken: $t" ;; *"--test=s_kernel"*"test(=tests::planted_in)"*) echo "R-84: selected planted_in alone, from --test=s_kernel" ;; *) echo "R-84 broken: $t" ;; esac
+case "$t" in *planted_out*|*m0_codes*) echo "R-84 broken: $t" ;; *"--test=s_kernel"*"--tool-config-file=mutants-gate:/"*"test(=tests::planted_in)"*) echo "R-84: selected planted_in alone, from --test=s_kernel" ;; *) echo "R-84 broken: $t" ;; esac

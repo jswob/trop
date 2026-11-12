@@ -466,6 +466,7 @@ def outcome(m, rec, log_rel):
 def judge_all(names, mutants, cov, plan, features, out, label):
     """The mutants `names`, each judged; DIR/mutants.out/outcomes.json as cargo-mutants writes
     it, the logs beside it, and DIR/results.jsonl (each mutant's times, for the history)."""
+    out = os.path.abspath(out)  # nextest takes the priorities' tool config by its absolute path
     select = Selector(cov)
     o1, killers = set(plan.get("o1", [])), plan.get("killers", {})
     rank = {t: k for k, t in enumerate(plan.get("order", []))}
