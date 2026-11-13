@@ -1142,7 +1142,17 @@ def m_decision_instances(self, mi, ctx):
     tuples = self.move_tuples(mi, tctx)
     out = []
     for env, keys, st, c in tuples:
-        if isinstance(st, tuple):
+        if isinstance(st, tuple) and st[0] == 'refused':
+            # tally 2.1.7 R2 (#104): a refusal is the instance's status, not a way of reading it: an instance its
+            # key's `where` refuses is kept, with its day, and refused for every read of it (L §8, §8.4), as a plan's
+            # is (insts_of_tuples); the walk refuses the places its legs give from its day (Walk dec_bad)
+            if None in keys:
+                raise st[1]
+            inst = self.eval_inst(mi, env, keys, tctx)
+            if inst is None:
+                continue
+            inst.err = st[1]
+        elif isinstance(st, tuple):
             inst = Inst(mi, keys, env)
             inst.day = st[1]
             inst.exists = st[1]
@@ -1602,10 +1612,10 @@ def m_adjust_move_compute(self, mi, ctx):
                 j = self.eval_inst(mi, i.env, i.keys, tctx, at_cut=c)
                 if j is None:
                     continue
-                if j.err is not None and hole0:
-                    # a refused version doesn't answer a hole movement, which stays the hole it is (E §5 step 1)
-                    continue
                 if j.err is not None:
+                    # tally 2.1.7 R2 (#94): a version answers a hole movement with a value or with a refusal (E §5
+                    # step 1; L §8: a refusal outranks a hole), so a refused re-measurement of a hole booking answers
+                    # it with its refusal, from that version's known, as it does a booking that had a value
                     # re-measured and refused (its day, `when` or a place): each leg's adjustment is refused, and so
                     # is the next step's, measured against it; tally 2.1.1 skipped the step
                     for lg in self.step_legs(i, prev, j):

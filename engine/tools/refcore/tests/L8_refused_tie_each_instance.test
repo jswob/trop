@@ -1,0 +1,48 @@
+# L §8 Refusals outrank holes (tally 2.1.7 R2, issue #141; G7, GAPS l.113): pull[k1] and pull[k2] fall on one day
+# with no ties by, and each reads the balance the other changes, so their order changes a result: RUN-TIE (L
+# §5.14.2), which refuses each tied instance, so flows of each is refused as bal(konto) is. 2.1.6's refcore refused
+# only the balance and printed 700.00 PLN and 0.00 PLN, a silent key order.
+=== m.tally
+model g7
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+input dday: date
+
+input fee: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+move pull[k in ks]: transfers
+  on dday
+  reads konto
+  leg cash from konto to world amount bal(konto) - fee
+
+ask b: bal(konto, 2026-03-01)
+ask f1: flows(pull[k1], 2026-01-01 .. 2026-12-31)
+ask f2: flows(pull[k2], 2026-01-01 .. 2026-12-31)
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  dday = 2026-02-01 "c"
+  fee = 100.00 PLN "c"
+  opening[konto] = 800.00 PLN at 2026-01-01 start "c"
+=== expect
+b: refused: RUN-TIE pull has a tie at pull[k1], pull[k2] that changes the result, and no ties by
+...
+f1: refused: RUN-TIE pull has a tie at pull[k1], pull[k2] that changes the result, and no ties by
+...
+f2: refused: RUN-TIE pull has a tie at pull[k1], pull[k2] that changes the result, and no ties by
+...

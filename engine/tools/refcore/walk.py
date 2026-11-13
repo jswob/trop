@@ -511,12 +511,9 @@ class Walk:
                 d = i.day
                 if i.exists is False:
                     continue
-                if i.err is not None and not isinstance(i.err, RandomLine) and isinstance(d, datetime.date):
-                    # tally 2.1.6 (issue #51): a decision instance refused before its point (its key's `where`) is
-                    # refused at the places its legs name from its day, as a hole movement would be (L §8.4, E §4.2)
-                    if S <= d <= self.end:
-                        self.dec_bad(i, K_before(d), i.err, ctx)
-                    continue
+                # tally 2.1.7 R2 (#104): a decision instance refused before its point (its key's `where`) is scheduled
+                # at its point like any other, where run_one_body reads its legs' places and refuses those from there
+                # (L §8, §8.4; E §4.2 step 3: its places are read at its point, its law date and min(t, K))
                 if isinstance(d, datetime.date):
                     if eng.before_scen_from(i, d):
                         # a scenario's move books nothing before its from (L §6.4): left out
@@ -1550,6 +1547,12 @@ class Walk:
                         for r in group:
                             for p in r.changed:
                                 self.add(p, m.place_unit(m.things[p]) or '*', Ent(k, 'bad', err=err))
+                            # tally 2.1.7 R2 (G7): the tie refuses each tied instance, so every read of it is
+                            # refused (its legs, its flows), not only the balances it changes (L §8, §5.14.2)
+                            r.err = err
+                            r.status = 'refused'
+                            for lg in r.legs:
+                                self.leg_bad(r, lg, err, k)
                         return
 
     def refused_run(self, i, key, err):
@@ -1835,12 +1838,19 @@ class Walk:
         eng.stack.append(run.coll)
         try:
             try:
+                if inst.err is not None:
+                    # refused before its point (its key's `where`): nothing of its body is read but its places
+                    raise inst.err
                 b = eng.body_over_law(mi, inst.env, run, ctx, inst.law, inst.exists)
                 run.exists, run.legs, run.attrs, run.forp, run.fulfils = b
             except TallyError as e:
                 if load_now(e):
                     raise
                 run.err = e
+                if not run.legs and mi.legs:
+                    # tally 2.1.7 R2 (#104): a refused instance's day and legs' places are still read, at its point
+                    # (L §8.4), so the refusal reaches the places its legs give
+                    run.legs = eng.refused_places(mi, inst.env, run, ctx)
         finally:
             eng.stack.pop()
             self.wp, self.reads, self.less_obs, self.live = old
@@ -1852,7 +1862,8 @@ class Walk:
             if known:
                 for lg in known:
                     self.leg_bad(run, lg, run.err, key)
-            else:
+            elif mi.legs:
+                # a leg whose place can't be read could book anywhere: every place (L §8.4)
                 self.add('*', '*', Ent(key, 'bad', err=run.err))
             self.same_release(run, key)
             return run

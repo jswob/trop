@@ -1361,7 +1361,9 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ct
         for e in glog.ents:
             if e.key > limit:
                 continue
-            if e.kind == 'bad' and (e.key > lo or e.key == k0):
+            if e.kind == 'bad' and (e.key >= lo or e.key == k0):
+                # tally 2.1.7 R2 (#107): a refusal keyed before a day's first event is the refusal "from its day"
+                # (K_before): a span that starts on that day may hold the movement, so its flows is refused too
                 raise e.err
             if e.kind in ('perm', 'hole') and e.qs:
                 holes.append(Hole(e.qs))
