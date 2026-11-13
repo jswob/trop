@@ -921,7 +921,13 @@ def m_e_bal(self, n, env, ctx):
 
 def m_bal_at(self, n, place, unit, d, env, ctx, regs_to=None):
     """bal(x, d) with the read's own clauses (L §5.14.1): the one read `bal` and the forms defined by it (`low`, L §5,
-    a form defined by another; tally 2.1.7 R6, #125) make."""
+    a form defined by another; tally 2.1.7 R6, #125) make. The walk holds the days S to E: a day outside them is a
+    hole naming the end it passes (L §8.1 HOLE-PRERUN, HOLE-POSTRUN; E §2; tally 2.1.7 S1, #93)."""
+    if isinstance(d, datetime.date):
+        if d < self.m.S:
+            return Hole([('before the run\'s start', place)])
+        if d > self.m.E:
+            return Hole([('after the run\'s end', place)])
     form = n._form
     if form == 'proj':
         return self.proj_bal(n, place, unit, d, env, ctx, regs_to)
@@ -1331,6 +1337,8 @@ def m_flows_place(self, place, sp, conv, env, ctx, fk=None):
     holes = []
     for w, limit in chain:
         self.flows_place_walk(w, limit, place, units, lo, sp, last, conv, env, ctx, fk, other_for, totals, holes)
+    if last > m.E:
+        self.flows_post_e(chain[-1][0], place, sp, last, conv, env, ctx, fk, totals, holes)
     w, limit = chain[0]
     for (ad, e) in w.adj_regs.get(place, ()):
         if ad <= last:
@@ -1356,6 +1364,62 @@ def m_flows_place(self, place, sp, conv, env, ctx, fk=None):
         raise refuse('RUN-DOMAIN', 'flows of %s over a span with no movement: its unit is unknown' % place)
     u, q = list(totals.items())[0]
     return qty(q, u)
+
+
+def m_flows_post_e(self, w, place, sp, last, conv, env, ctx, fk, totals, holes):
+    """flows of a place over days after E (E §2 Movements outside [S, E]; tally 2.1.7 S1, #93): the walk books none
+    of them (walk.note_post_e), and flows counts them, a plan's instance with its amount and a decision's instance as
+    a hole movement, HOLE-POSTRUN, since its amount reads a walk that doesn't hold its day (L §8.1)."""
+    from .evaluate import HoleSignal
+    for i in w.post_e:
+        if fk is not None and (mv_for(i) is None or vkey(mv_for(i)) != vkey(fk)):
+            continue
+        if i.decision:
+            if not sp.contains(i.day):
+                continue
+            try:
+                ps = set()
+                for ln, _d in i.move.legs:
+                    for e in (ln.frm, ln.to):
+                        p = self.ev(e, i.env, ctx)
+                        ps.add(p.name if isinstance(p, Thing) else None)
+            except (TallyError, HoleSignal):
+                ps = {None}
+            if place in ps or None in ps:
+                holes.append(Hole([('after the run\'s end', i.id)]))
+            continue
+        for lg in i.legs or ():
+            lo, hi = day_lo(lg.day), day_hi(lg.day)
+            if not isinstance(lo, datetime.date) or hi < sp.start or lo > last:
+                continue
+            sides = [s for q, s in ((lg.frm, -1), (lg.to, 1)) if isinstance(q, Thing) and q.name == place]
+            if not sides:
+                continue
+            if i.err is not None:
+                raise i.err
+            if i.coll is not None:
+                self.cur.merge(i.coll)
+            if isinstance(i.exists, Hole):
+                holes.append(i.exists)
+                continue
+            if lo != hi and not (sp.contains(lo) and hi <= last):
+                holes.append(Hole([('date within %s not precise enough for flows of %s' % (
+                    lg.day.window_text(), place), i.id)]))
+                continue
+            a = lg.amount
+            if isinstance(a, TallyError):
+                raise a
+            if isinstance(a, Hole):
+                holes.append(a)
+                continue
+            if conv is not None:
+                a = self.convert(a, lo, conv, env, ctx)
+                if isinstance(a, Hole):
+                    holes.append(a)
+                    continue
+            u = conv[0] if conv is not None else unit_of_value(a)
+            for s in sides:
+                totals[u] = totals.get(u, Fraction(0)) + s * a.q
 
 
 def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ctx, fk, other_for, totals, holes):
@@ -1506,6 +1570,12 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
                 run = ww.decs.get(i.id)
                 ww = ww.base
             if run is None:
+                if isinstance(i.day, datetime.date) and i.day > m.E and i.exists is not False:
+                    # a decision instance after E: never walked, so its amount is a hole flows counts (E §2 Movements
+                    # outside [S, E], HOLE-POSTRUN; tally 2.1.7 S1, #93), as a place's flows does (flows_post_e)
+                    i._postrun = True
+                    insts.append(i)
+                    continue
                 if isinstance(i.day, Hole) and i.exists is not False:
                     # L §5.14 on d (TX2-F2, writer 10): "A movement whose day is a hole makes every flows and binding
                     # over a span it might fall in a hole (G-MP-2). A day that is a hole and not a window has no
@@ -1530,6 +1600,10 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
             if i.err is not None:
                 raise i.err
             holes.append(i.day)
+            continue
+        if getattr(i, '_postrun', False):
+            if sp.contains(i.day) and (fk is None or (i.forp is not None and vkey(i.forp) == vkey(fk))):
+                holes.append(Hole([('after the run\'s end', i.id)]))
             continue
         st = i.status if mi.decision else self.status(i, ctx)
         if st in ('none', 'uncertain'):

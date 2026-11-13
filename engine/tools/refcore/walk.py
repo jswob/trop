@@ -205,6 +205,7 @@ class Walk:
         self.live = None
         self.counted_leftout = {}
         self.leftout_insts = []     # (day, instance id) of the movements a projection leaves out (E §10)
+        self.post_e = []            # the instances dated after E, which flows counts (E §2; tally 2.1.7 S1, #93)
         self.bad_legs = {}          # (movement id, leg) -> the refusal of a leg the walk refused (E §4.2 step 5)
         self.running = False
 
@@ -470,6 +471,7 @@ class Walk:
             st = i.status
             if st == 'leftout':
                 self.note_leftout(i)
+                self.note_post_e(i, day_lo(i.day))
                 continue
             if st in ('none', 'modelled'):
                 if st == 'modelled':
@@ -523,6 +525,7 @@ class Walk:
                     if d < S or d > self.end:
                         if not self.proj and (d < m.S or d > m.E):
                             self.note_leftout(i)
+                            self.note_post_e(i, d)
                         continue
                     k = (qid, d)
                     if k not in self.decday:
@@ -612,6 +615,12 @@ class Walk:
             for p in (lg.frm, lg.to):
                 if isinstance(p, Thing):
                     self.leftout_by_place.setdefault(p.name, set()).add(mid)
+
+    def note_post_e(self, i, d):
+        """An instance dated after E: never booked, counted by flows (E §2 Movements outside [S, E]; tally 2.1.7 S1,
+        #93), a plan's with its amount and a decision's as a hole movement (mreads.flows_post_e)."""
+        if not self.proj and isinstance(d, datetime.date) and d > self.m.E:
+            self.post_e.append(i)
 
     def count_leftout(self, i):
         """A movement a projection leaves out (L §5.14.1): listed when dated in its window."""

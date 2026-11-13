@@ -1,0 +1,99 @@
+# tally 2.1.7 S1 (#93): E §6.3 "A period that E cuts holds its days through E; the days after E are one line, a
+# hole `after the run's end`" (HOLE-POSTRUN, L §8.1). E6_3_residuals.test's reality with the run ending 2026-03-15:
+# March holds rent[2026-03] (matched) and wage[2026-03] (expected but missing) through E; the stated balance at
+# 2026-03-31 end lies after E, so it is in the one hole line for 2026-03-16 .. 2026-03-31, its group first among the
+# groups (a hole difference, E §6.3 Order). led2: a ledger reaching two months past E, one line for all the days
+# after E. The layout is this interpreter's. Was (2.1.6): a balance line booked 13 800.00 PLN at 2026-03-31, a day
+# the walk doesn't hold.
+=== r3.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-03-15
+
+source plan "plan"
+source bank_2026_02 "bank"
+source bank_2026_03 "bank"
+unit PLN: currency minor 0.01
+kind wages: event certain
+  leg cash: PLN
+kind groceries: transfers
+  attr payee: text
+input bank: observed
+input wage_amt: money PLN
+input rent_amt: money PLN
+input wage_dom: int
+input rent_dom: int
+place konto: accounts PLN lives 2019-05-01..
+place landlord: outside lives 1900-01-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+move wage[m in months]: wages
+  on day_of(m, wage_dom)
+  at start_of(m)
+  leg cash from world to konto amount wage_amt
+
+move rent[m in months]: transfers
+  on day_of(m, rent_dom)
+  at start_of(m)
+  leg cash from konto to landlord amount rent_amt
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  wage_amt = 5 000.00 PLN "umowa"
+  rent_amt = 2 000.00 PLN "umowa najmu"
+  wage_dom = 10 "umowa"
+  rent_dom = 3 "umowa najmu"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "wyciąg"
+
+version statement_02
+  cite bank_2026_02
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+  pad konto from unexplained
+  bank[r1] = (on: 2026-02-03, kind: transfers, leg cash from konto to landlord amount 2 000.00 PLN, fulfils: rent[2026-02]) "line 1"
+  bank[r2] = (on: 2026-02-12, kind: wages, leg cash from world to konto amount 5 300.00 PLN, fulfils: wage[2026-02]) "line 2"
+  bank[r3] = (on: 2026-02-20, kind: groceries, leg cash from konto to world amount 400.00 PLN, payee: "BIEDRONKA") "line 3"
+  stated[konto] = 15 800.00 PLN at 2026-02-28 end "saldo"
+
+version statement_03
+  cite bank_2026_03
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  pad konto from unexplained
+  bank[r4] = (on: 2026-03-03, kind: transfers, leg cash from konto to landlord amount 2 000.00 PLN, fulfils: rent[2026-03]) "line 4"
+  stated[konto] = 13 800.00 PLN at 2026-03-31 end "saldo"
+
+ask led: residuals konto 2026-01..2026-03
+ask led2: residuals konto 2026-03..2026-05
+=== expect
+led: residuals konto 2026-01 .. 2026-03
+  after the run's end: model ?"after the run's end" (konto), observed ?"after the run's end" (konto), difference ?"after the run's end" (konto)
+    days 2026-03-16 .. 2026-03-31: ?"after the run's end" (konto)
+  2026-03 move wage: model 5 000.00 PLN, observed 0.00 PLN, difference -5 000.00 PLN
+    expected but missing wage[2026-03] on 2026-03-10: model 5 000.00 PLN
+  2026-02 unexplained: model 0.00 PLN, observed -400.00 PLN, difference -400.00 PLN
+    unexplained bank[r3] on 2026-02-20: observed -400.00 PLN
+  2026-02 move wage: model 5 000.00 PLN, observed 5 300.00 PLN, difference 300.00 PLN
+    matched wage[2026-02] on 2026-02-10: model 5 000.00 PLN, observed 5 300.00 PLN, difference 300.00 PLN, timing +2 days
+  2026-02 balance: model 15 900.00 PLN, observed 15 800.00 PLN, difference -100.00 PLN
+    balance konto 2026-02-28 end (padded): booked 15 900.00 PLN, stated 15 800.00 PLN, gap -100.00 PLN
+  2026-02 move rent: model -2 000.00 PLN, observed -2 000.00 PLN, difference 0.00 PLN
+    matched rent[2026-02] on 2026-02-03: model -2 000.00 PLN, observed -2 000.00 PLN, difference 0.00 PLN, timing +0 days
+  2026-03 move rent: model -2 000.00 PLN, observed -2 000.00 PLN, difference 0.00 PLN
+    matched rent[2026-03] on 2026-03-03: model -2 000.00 PLN, observed -2 000.00 PLN, difference 0.00 PLN, timing +0 days
+  cut 2026-10-20
+led2: residuals konto 2026-03 .. 2026-05
+  after the run's end: model ?"after the run's end" (konto), observed ?"after the run's end" (konto), difference ?"after the run's end" (konto)
+    days 2026-03-16 .. 2026-05-31: ?"after the run's end" (konto)
+  2026-03 move wage: model 5 000.00 PLN, observed 0.00 PLN, difference -5 000.00 PLN
+    expected but missing wage[2026-03] on 2026-03-10: model 5 000.00 PLN
+  2026-03 move rent: model -2 000.00 PLN, observed -2 000.00 PLN, difference 0.00 PLN
+    matched rent[2026-03] on 2026-03-03: model -2 000.00 PLN, observed -2 000.00 PLN, difference 0.00 PLN, timing +0 days
+  cut 2026-10-20

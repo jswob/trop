@@ -408,6 +408,15 @@ def m_residuals(self, place, span, by, ctx, unit=None):
                                                                           unit))
         lines.append(RLine('balance', d, (month_period(d.year, d.month), 'balance'), booked, stated, gap, txt,
                            (d, 9)))
+    # E §6.3 (tally 2.1.7 S1, #93): a period that E cuts holds its days through E; the days after E are one line, a
+    # hole `after the run's end` (HOLE-POSTRUN, L §8.1), since the walk holds none of them
+    last = span.end - datetime.timedelta(days=1) if span.end is not None else None
+    if last is not None and last > m.E:
+        lines = [ln for ln in lines if not (isinstance(ln.day, datetime.date) and ln.day > m.E)]
+        a = max(m.E + datetime.timedelta(days=1), span.start)
+        h = Hole([('after the run\'s end', place)])
+        lines.append(RLine('after', a, (None, 'after the run\'s end'), h, h, h,
+                           'days %s .. %s: %s' % (a, last, self.rtext(h, unit)), (a, 0)))
     # groups, totals, order (E §6.3)
     groups = {}
     for ln in lines:
