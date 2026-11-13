@@ -84,14 +84,14 @@ The four clocks of the spec (T-16, N-1219):
 |---|---|---|
 | **S**, run start | the header's `start` | the first day walked. Balances open at S from `opening` readings (LANGUAGE §5.10). Nothing before S is walked: a walked value or a `flows` of a day before S is `HOLE-PRERUN` (LANGUAGE §8.1) |
 | **K**, knowledge date | the ask's `as known D`, else the model's `on` | masks every version and row known after K: law, facts, observations, readings, entries of things. It splits the past (before K) from the plan (from K) |
-| **[K, E]**, evaluation window | E is the header's `end` | the plan runs to E, and nothing after E is walked: a walked value of a day after E is a hole (`HOLE-POSTRUN`, LANGUAGE §8.1): `after the run's end` (tally 2.1.7). Observations in [K, E] are never read by the run at cut K; only the evaluation layer compares them (§8) |
+| **[K, E]**, evaluation window | E is the header's `end` | the plan runs to E, and nothing after E is walked: a walked value of a day after E is `HOLE-POSTRUN` (LANGUAGE §8.1). Observations in [K, E] are never read by the run at cut K; only the evaluation layer compares them (§8) |
 | **R**, record time | the store: the reality's files as they stood at R | "what did we think in March?" is the reality at R = March, asked as known in March (N-1222). The language has no R; the store keeps the history of the files (`OPERATIONS.md` §1) |
 
 - **A plain forecast** has K = `on`. S is the header's start. Covered days before K replay observations, and the plan starts at K.
 - **A backtest** sets K in the past with `as known`. The run sees only what was known then, and the evaluation layer judges it against what happened in [K, E] (N-1218).
 - **K before S** is allowed. The whole run is then plan.
 - **K after E** is allowed. The whole run is then past.
-- **Movements outside [S, E]** are bound and read by bindings like any other, those after E by `flows` too (a plan's instance with its amount, a decision's instance as a hole movement, `HOLE-POSTRUN`, since its amount reads a walk that doesn't hold its day), and never booked; the register lists them (`left out:`, LANGUAGE §5.14.3, D-13). `flows` over days before S is a hole whatever is dated there (`HOLE-PRERUN`, above).
+- **Movements outside [S, E]** are bound and read by bindings like any other, those after E by `flows` too (a decision's instance as a hole movement, LANGUAGE §8.1 `HOLE-POSTRUN`), and never booked; the register lists them (`left out:`, LANGUAGE §5.14.3, D-13).
 
 **Dates inside a run.** These aren't clocks of the run, but every evaluation carries them:
 
@@ -472,7 +472,7 @@ The test suite adds **determinism**: every case is run twice, with 1 and with 6 
 - `explain` re-evaluates the cell's cone with tracing on. The run is deterministic, so the traced value equals the stored one, and the memo supplies the cells it read.
 - A path is replayed alone (N-2004).
 
-**Long derivations fold.** A cause that is a chain of more than 3 cells of one def, each read by the one before it (a recurrence, whatever its keys' steps), prints its first step, then one line `… <n> more steps of <x>, <k₂> .. <kₙ₋₁> …` where its second step would print, then its last step there; a cause only the folded steps read prints where it is next met. A chain of different defs doesn't fold: its steps aren't alike, so there is no count of like steps, and each is a definition the reader needs to see (tally 2.1.7). Any step can be asked for with `explain x[k]`. A cause met again prints once and is referenced by its line.
+**Long derivations fold.** A cause that is a chain of more than 3 cells of one def, each read by the one before it (a recurrence), prints its first step, then one line `… <n> more steps of <x>, <k₂> .. <kₙ₋₁> …` where its second step would print, then its last step there; a cause only the folded steps read prints where it is next met. A chain of different defs doesn't fold (tally 2.1.7). Any step can be asked for with `explain x[k]`. A cause met again prints once and is referenced by its line.
 
 **`inputs-of ref`** (LANGUAGE §5.18) gives the rows of the read set; a walk or movement read in it stands for the rows behind what it counts: the openings, readings and observed rows of the places it reads, and the rows the movements it counts read for their days, `when`s and amounts (§3.2).
 
