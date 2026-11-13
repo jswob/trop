@@ -1991,21 +1991,27 @@ class Checker:
         # a period literal compared with a key of a period index is that index's key: "a bare key used elsewhere
         # takes the index ... of the other operand" (L §2.5; §7.1 a comparison with a key)
         for side, t, other in ((ln, lt, rt), (rn, rt, lt)):
-            if other.k == 'key' and other.ix in self.m.indexes and \
-                    self.m.indexes[other.ix].pk in ('year', 'quarter', 'month') \
-                    and (t.k == 'year4' or (t.k == 'period' and side.k in ('month', 'quarter'))) and \
-                    side.k in ('num', 'month', 'quarter'):
-                ix = self.m.indexes[other.ix]
-                if {'num': 'year'}.get(side.k, side.k) != ix.pk:
-                    continue
-                lsc = getattr(side, '_litsc', None)
+            if not (other.k == 'key' and other.ix in self.m.indexes and
+                    self.m.indexes[other.ix].pk in ('year', 'quarter', 'month')):
+                continue
+            ix = self.m.indexes[other.ix]
+            # the position reaches through ( ) and into both branches of an if (L §2.5 Keys; tally 2.1.7 R10, T's
+            # SR-13: `first_q == (2026-04)`), so each literal it reaches is the key, as a bare one is
+            leaves = self.reach_leaves(side)
+            if not all(lf.k in ('num', 'month', 'quarter') and lf._t is not None and
+                       (lf._t.k == 'year4' or (lf._t.k == 'period' and lf.k in ('month', 'quarter'))) and
+                       {'num': 'year'}.get(lf.k, lf.k) == ix.pk for lf in leaves):
+                continue
+            for lf in leaves:
+                lsc = getattr(lf, '_litsc', None)
                 if lsc is not None:
-                    self.lit_rule(lsc, side, 'date')
-                side._r = ('key', resolve_key_literal(self.m, side, ('index', ix.id), side.loc))
-                side._t = T.key(ix.id)
-                side._year = False
-                side._keylit = True
-                return
+                    self.lit_rule(lsc, lf, 'date')
+                lf._r = ('key', resolve_key_literal(self.m, lf, ('index', ix.id), lf.loc))
+                lf._t = T.key(ix.id)
+                lf._year = False
+                lf._keylit = True
+            side._t = T.key(ix.id)
+            return
         if lk == 'year4' or rk == 'year4':
             other = rt if lk == 'year4' else lt
             side = ln if lk == 'year4' else rn

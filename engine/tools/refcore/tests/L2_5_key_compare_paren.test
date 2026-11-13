@@ -1,0 +1,58 @@
+# L §2.5 Keys (tally 2.1.7 R10, issue #149; T's SR-13): a literal takes the type its position gives, and the position
+# reaches through parentheses and into both branches of an if. first_q is a key of qm, a month index by 3, so in
+# first_q == (2026-04) the literal is qm's key 2026-04, as in the bare first_q != 2026-04 (a_ne): true (a_paren), and
+# so in each branch of an if (a_if). 2.1.7's first refcore compared a month period: false.
+=== sr13.tally
+model sr13
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "made up"
+
+index qm = month 2026-01..2026-12 by 3
+
+index mm = month 2026-01..2026-12
+
+
+index fy = year 2024..2027 from 04-06
+
+input from_q: date
+
+input from_y: date
+
+def first_q: key qm = first(q in qm where start_of(q) >= from_q) at reader
+
+def first_m: key mm = first(q in mm where start_of(q) >= from_q) at reader
+
+
+def fy_of: key fy = first(y in fy where start_of(y) >= from_y) at reader
+
+ask a_paren: first_q == (2026-04) law 2026-10-18
+
+ask a_if: first_q == (if first_q > 2026-01 then 2026-04 else 2026-07) law 2026-10-18
+
+ask a_ne: first_q != 2026-04, first_q != 2026-07 law 2026-10-18
+
+ask a_lt: first_q < 2026-07, first_q > 2026-01 law 2026-10-18
+
+ask a_plain: first_m == 2026-04, first_m == 2026-05 law 2026-10-18
+
+
+ask a_fy_lt: fy_of < 2026, fy_of >= 2025 law 2026-10-18
+
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  from_q = 2026-04-01
+  from_y = 2025-01-01
+=== expect a_paren a_if a_ne
+a_paren: true
+  law date 2026-10-18, cut 2026-10-18
+a_if: true
+  law date 2026-10-18, cut 2026-10-18
+a_ne: (false, true)
+  law date 2026-10-18, cut 2026-10-18
