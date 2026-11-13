@@ -3,8 +3,8 @@ model member_absent
   on 2026-01-01
   start 2026-01-01
   end 2026-12-31
-  use gone = "members/gone" sha256 "fd28f024b84f6517db3c67b3d07c27277c91b238417ec994f6c379224e247f8d"
-  use zeta = "members/zeta" sha256 "fd28f024b84f6517db3c67b3d07c27277c91b238417ec994f6c379224e247f8d"
+  use gone = "members/gone" sha256 "e998309b16278bdeb1cde806dde80d30867210abbb961e59fef115c68ad5ea37"
+  use zeta = "members/zeta" sha256 "e998309b16278bdeb1cde806dde80d30867210abbb961e59fef115c68ad5ea37"
   note "T, tally 2.1.6 (#74, P15): reprint reads and pins a joint model's members as run does; gone names no file"
 
 source s "s"

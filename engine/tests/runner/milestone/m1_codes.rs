@@ -5,7 +5,8 @@
 //! family's base (the load probe) and the answers of its asks on the base (each answered
 //! clean), so a code's test needs only the constructs its asks read. `tools/xref_check.py
 //! --gate M1` counts them. One test per code, its fixtures and the builder group that turns
-//! it green named (8 of the 16 are green before M1); the `ENGINE-INVARIANT` fixture runs
+//! it green named (8 of the 16 are green before M1; tally 2.1.7 adds `HOLE-POSTRUN` and
+//! `REQ-CLOCK`, 18); the `ENGINE-INVARIANT` fixture runs
 //! through `run_faulted` in the rules step's `m1_invariant` target (the coordinator's pick
 //! P8), not here. `test = false` until M1's marker (pick P4).
 
@@ -20,12 +21,14 @@ mod tests {
     use tally_runner::kernel::difference;
 
     /// The codes this target tests, one `#[test]` each.
-    const CODES: [&str; 16] = [
+    const CODES: [&str; 18] = [
         "HOLE-ANCHOR",
         "HOLE-NOTYET",
+        "HOLE-POSTRUN",
         "HOLE-PRICE",
         "HOLE-STATED",
         "LOAD-FIELD",
+        "REQ-CLOCK",
         "RUN-CONFLICT",
         "RUN-EMPTY",
         "RUN-FUTURE",
@@ -106,6 +109,13 @@ mod tests {
         code_as_refcore("HOLE-NOTYET");
     }
 
+    /// `HOLE-POSTRUN`'s `after the run's end`: `decide/post-run`, a balance read on a day
+    /// after the run's end (tally 2.1.7, S1, issue #93; L §8.1, E §2).
+    #[test]
+    fn m1_code_hole_postrun() {
+        code_as_refcore("HOLE-POSTRUN");
+    }
+
     /// `HOLE-PRICE`, both forms: `prices/no-price` (`value`), `prices/price-year` (a `prices Y`
     /// figure with no index). For G8.
     #[test]
@@ -126,6 +136,13 @@ mod tests {
         code_as_refcore("LOAD-FIELD");
     }
 
+    /// `REQ-CLOCK`'s `as known <d> is after the model's on <d'>`: `rules/clock`, released by
+    /// tally 2.1.7 (R5's phase distinction, issue #144; held for #112 until then).
+    #[test]
+    fn m1_code_req_clock() {
+        code_as_refcore("REQ-CLOCK");
+    }
+
     /// `RUN-CONFLICT`: `rules/conflict`, two rules win and neither beats the other. Green before M1.
     #[test]
     fn m1_code_run_conflict() {
@@ -133,6 +150,8 @@ mod tests {
     }
 
     /// `RUN-EMPTY`: `rules/empty`, `min` over a `where` that leaves no key. Green before M1.
+    /// tally 2.1.7 releases `decide/low-empty` and `decide/low-empty-from`, `low` over a window
+    /// whose last day is before its first.
     #[test]
     fn m1_code_run_empty() {
         code_as_refcore("RUN-EMPTY");

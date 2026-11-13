@@ -1,0 +1,43 @@
+model r7_f18
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.7, R7 (#146; F18, the G12 review's NB4): a value whose cause is a movement's day: explain prints that cause in E §10's form for a movement instance, and inputs-of lists the rows the day reads"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+
+input dom[m in month]: int
+
+move pay[m in month]: transfers
+  on day_of(m, dom[m])
+  at start_of(m)
+  leg cash from world to konto amount fee
+
+def last_day: date = (last(t in transfers over ..) ties by t.day).day
+
+ask v: last_day
+
+ask e: explain last_day
+
+ask i: inputs-of last_day
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 100.00 PLN "the card"
+  dom[2026-01] = 5 "the card"
+  dom[2026-02] = 10 "the card"
+  dom[2026-03] = 15 "the card"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "the card"

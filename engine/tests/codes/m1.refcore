@@ -2861,4 +2861,276 @@ version card_2026
   opening[loan] = -5.00 PLN at 2026-01-01 start "the card"
 ,,1:0,69:q_loan: refused: RUN-PLACE repay takes loan above 0
   cut 2026-03-01
+,11:rules/clock,9:REQ-CLOCK,5:rules,26:run base.tally --ask q_due,2395:10:base.tally,2375:model rules
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's run-code fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index feb = day 2026-02-01..2026-02-28
+
+input amt: money PLN
+
+input day: date
+
+input holidays: calendar
+
+input lag: int
+
+input target: money PLN
+
+input rate[k in qs]: num
+
+input weight[k in qs]: num
+
+input from_day: date
+
+input step: money PLN
+
+input to_day: date
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def lowest: money PLN = min(fee[k] for k in qs where rate[k] > 0)
+
+def due: date = add_business(day, lag, holidays)
+
+def split[k in qs]: money PLN = prorata(amt, weight[j] for j in qs, k, step, rest largest ties by pos(j))
+
+def open_day[d in feb]: date = d
+
+def first_pay: key transfers = first(m in transfers over from_day..to_day) ties by m.day
+
+def opened: date = open_day[day]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place loan: debts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+move repay: transfers
+  on due
+  reads loan
+  leg cash from konto to loan amount max(fee[q1], bal(loan))
+
+ask q_total: total, bal(konto, 2026-12-31)
+
+ask q_loan: bal(loan, 2026-12-31)
+
+ask q_lowest: lowest
+
+ask q_due: due as known 2026-06-01
+
+ask q_split: split[k] for k in qs
+
+ask q_opened: opened
+
+ask q_first: first_pay
+
+ask q_solve: solve total == target for amt in [0.00 PLN, 1000.00 PLN] to minor(PLN)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  lag = 3 "the card"
+  target = 20.00 PLN "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  from_day = 2026-02-01 "the card"
+  step = 0.01 PLN "the card"
+  to_day = 2026-12-31 "the card"
+  weight[q1] = 1 "the card"
+  weight[q2] = 3 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[loan] = -1000.00 PLN at 2026-01-01 start "the card"
+,,1:1,74:refused: REQ-CLOCK as known 2026-06-01 is after the model's on 2026-03-01
+,16:decide/low-empty,9:RUN-EMPTY,6:decide,29:run base.tally --ask q_decide,1388:10:base.tally,1368:model decide
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's decision-order fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+input holidays: calendar
+
+input horizon: date
+
+input lag: int
+
+input month_start: date
+
+input save_cap: money PLN
+
+input spend_cap: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move save: transfers
+  on add_business(month_start, lag, holidays)
+  reads konto
+  leg cash from konto to savings amount min(save_cap, bal(konto))
+
+move spend: transfers
+  on add_business(month_start, lag, holidays)
+  reads konto
+  after save
+  leg cash from konto to world amount min(spend_cap, bal(konto))
+
+ask q_decide: low(konto, horizon .. 2026-03-01)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  horizon = 2026-12-31 "the card"
+  lag = 10 "the card"
+  month_start = 2026-04-01 "the card"
+  save_cap = 100.00 PLN "the card"
+  spend_cap = 50.00 PLN "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,63:q_decide: refused: RUN-EMPTY low over no keys
+  cut 2026-03-01
+,21:decide/low-empty-from,9:RUN-EMPTY,6:decide,29:run base.tally --ask q_decide,1404:10:base.tally,1384:model decide
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's decision-order fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+input holidays: calendar
+
+input horizon: date
+
+input lag: int
+
+input month_start: date
+
+input save_cap: money PLN
+
+input spend_cap: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move save: transfers
+  on add_business(month_start, lag, holidays)
+  reads konto
+  leg cash from konto to savings amount min(save_cap, bal(konto))
+
+move spend: transfers
+  on add_business(month_start, lag, holidays)
+  reads konto
+  after save
+  leg cash from konto to world amount min(spend_cap, bal(konto))
+
+ask q_decide: low(konto, horizon .. 2026-03-01) from 2026-03-01
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  horizon = 2026-12-31 "the card"
+  lag = 10 "the card"
+  month_start = 2026-04-01 "the card"
+  save_cap = 100.00 PLN "the card"
+  spend_cap = 50.00 PLN "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,63:q_decide: refused: RUN-EMPTY low over no keys
+  cut 2026-03-01
+,15:decide/post-run,12:HOLE-POSTRUN,6:decide,29:run base.tally --ask q_decide,1400:10:base.tally,1380:model decide
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's decision-order fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+input holidays: calendar
+
+input horizon: date
+
+input lag: int
+
+input month_start: date
+
+input save_cap: money PLN
+
+input spend_cap: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move save: transfers
+  on add_business(month_start, lag, holidays)
+  reads konto
+  leg cash from konto to savings amount min(save_cap, bal(konto))
+
+move spend: transfers
+  on add_business(month_start, lag, holidays)
+  reads konto
+  after save
+  leg cash from konto to world amount min(spend_cap, bal(konto))
+
+ask q_decide: bal(konto, 2027-01-31), bal(savings, horizon)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  horizon = 2026-12-31 "the card"
+  lag = 10 "the card"
+  month_start = 2026-04-01 "the card"
+  save_cap = 100.00 PLN "the card"
+  spend_cap = 50.00 PLN "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+,,1:0,120:q_decide: (?"after the run's end" (konto), 100.00 PLN)
+  assumed: the card names no holiday (holidays)
+  cut 2026-03-01
 ,

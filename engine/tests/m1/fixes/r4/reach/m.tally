@@ -1,0 +1,30 @@
+model r4_reach
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.7, R4's reach (#143), from L §4.6 step 2 alone: the claim in the innermost layer wins, the innermost as if, then outward, then the ask's with pins, then the scenarios over the base, then the base, whatever the claims' known dates; narrowness only decides inside one layer. Features no item of R4 names: an as if inside a with (p_*, twin p_with alone) and a scenario's wide row over the base's narrower one (s_*, twin s_base in the base)"
+
+source card "T's card (invented)"
+
+index ks = [k1, k2]
+
+input r[k in ks]: num
+
+input reader: date
+
+def tot: num = r[k1] + r[k2] at reader
+
+ask p_inner: tot as if {r[k1] = 5} with r[k1] = 9 law 2026-06-30
+
+ask p_with: tot with r[k1] = 9 law 2026-06-30
+
+ask s_base: r[k1], r[k2] law 2026-06-30
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  r[*] = 1 "c"
+  r[k1] = 2 "the narrower row"
+  reader = 2026-06-30 "the day tot reads at"

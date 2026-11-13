@@ -210,7 +210,7 @@ mod tests {
     /// The fix vectors' groups of `m1/vectors.refcore`, one test each below, so that each runs
     /// well inside the mutants profile's time per test (pick P69: the whole store in one test
     /// passed 120 s on CI's runner).
-    const FIX_GROUPS: [&str; 16] = [
+    const FIX_GROUPS: [&str; 28] = [
         "fixes-g1",
         "fixes-g2",
         "fixes-g3",
@@ -227,6 +227,18 @@ mod tests {
         "fixes-g14",
         "fixes-open",
         "fixes-gate8",
+        "fixes-r1",
+        "fixes-r2",
+        "fixes-r3",
+        "fixes-r4",
+        "fixes-r5",
+        "fixes-r6",
+        "fixes-r7",
+        "fixes-r8",
+        "fixes-r9",
+        "fixes-r10",
+        "fixes-b",
+        "fixes-s",
     ];
 
     /// Every fix vector of `group` in `m1/vectors.refcore` whose place in the group is `part`
@@ -933,6 +945,78 @@ mod tests {
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_gate8() {
         fixes_hold("fixes-gate8", (0, 1), 20);
+    }
+
+    /// tally 2.1.7's rule R1: its items' vectors and its reach (`m1/fixes/r1/`).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_r1() {
+        fixes_hold("fixes-r1", (0, 1), 9);
+    }
+
+    /// tally 2.1.7's rule R2: its items' vectors and its reach (`m1/fixes/r2/`).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_r2() {
+        fixes_hold("fixes-r2", (0, 1), 7);
+    }
+
+    /// tally 2.1.7's rule R3: its items' vectors and its reach (`m1/fixes/r3/`).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_r3() {
+        fixes_hold("fixes-r3", (0, 1), 7);
+    }
+
+    /// tally 2.1.7's rule R4: its items' vectors and its reach (`m1/fixes/r4/`).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_r4() {
+        fixes_hold("fixes-r4", (0, 1), 8);
+    }
+
+    /// tally 2.1.7's rule R5: its items' vectors and its reach (`m1/fixes/r5/`).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_r5() {
+        fixes_hold("fixes-r5", (0, 1), 14);
+    }
+
+    /// tally 2.1.7's rule R6: its items' vectors and its reach (`m1/fixes/r6/`).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_r6() {
+        fixes_hold("fixes-r6", (0, 1), 10);
+    }
+
+    /// tally 2.1.7's rule R7: its items' vectors and its reach (`m1/fixes/r7/`).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_r7() {
+        fixes_hold("fixes-r7", (0, 1), 9);
+    }
+
+    /// tally 2.1.7's rule R8: its items' vectors and its reach (`m1/fixes/r8/`).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_r8() {
+        fixes_hold("fixes-r8", (0, 1), 3);
+    }
+
+    /// tally 2.1.7's rule R9: its items' vectors and its reach (`m1/fixes/r9/`).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_r9() {
+        fixes_hold("fixes-r9", (0, 1), 9);
+    }
+
+    /// tally 2.1.7's rule R10: its items' vectors and its reach (`m1/fixes/r10/`).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_r10() {
+        fixes_hold("fixes-r10", (0, 1), 5);
+    }
+
+    /// tally 2.1.7's groups B1–B7: its items' vectors and its reach (`m1/fixes/b<n>/`).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_b() {
+        fixes_hold("fixes-b", (0, 1), 15);
+    }
+
+    /// tally 2.1.7's singletons S1–S10: its items' vectors and its reach (`m1/fixes/s<n>/`).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_s() {
+        fixes_hold("fixes-s", (0, 1), 15);
     }
 
     /// F5's own realities, every ask of each.

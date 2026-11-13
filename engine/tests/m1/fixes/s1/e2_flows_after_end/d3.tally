@@ -1,0 +1,50 @@
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+index mon = month 2026-01..2026-12
+input amt: money PLN
+input dom: int
+input keep: money PLN
+place konto: accounts PLN lives 2025-01-01..
+place kasa: accounts PLN lives 2025-01-01..
+place savings: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+
+move pay[m in mon]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from world to konto amount amt
+
+move gift[m in mon]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from world to kasa amount amt
+
+move sweep[m in mon]: transfers
+  on end_of(m)
+  at start_of(m)
+  reads konto
+  leg cash from konto to savings amount max(0 PLN, bal(konto) - keep)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  opening[kasa] = 0.00 PLN at 2026-01-01 start "s"
+  opening[savings] = 0.00 PLN at 2026-01-01 start "s"
+  amt = 100.00 PLN "s"
+  dom = 10 "s"
+  keep = 50.00 PLN "s"
+
+ask f: flows(konto, 2026-06-01 .. 2026-08-31)
+ask w: flows(kasa, 2026-06-01 .. 2026-08-31)
+ask p: flows(pay, 2026-07-01 .. 2026-07-31)
+ask sw: flows(sweep, 2026-07-01 .. 2026-07-31)
+ask sw6: flows(sweep, 2026-06-01 .. 2026-06-30)
+ask g: flows(savings, 2026-06-01 .. 2026-08-31)

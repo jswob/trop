@@ -4263,15 +4263,15 @@ cut11/mc/law/pl/benefits.tally	1827	022a0d2d7f7a676e0ab9599c3892d623
 cut11/mc/law/pl/business.tally	10088	162924eabec3a6f6005a70e33d335b0d
 cut11/mc/law/pl/common.tally	4897	1b6b50d421bcae9407b119b80d655039
 cut11/mc/law/pl/employment.tally	5605	183ee14c9197b71506ab16aa7c31f18d
-cut11/mc/law/pl/wrappers.tally	3502	049ad4822bcaf81d10805deab0e076a0
+cut11/mc/law/pl/wrappers.tally	3476	08fb6be85cc3acda005dd1ccc4f08ba9
 cut11/mc/loans.tally	3307	0604c85f5b676434065e909cd92f7033
 cut11/mc/pays.tally	5561	0c0ba92062b82f261ba7ac33a95c98b9
 cut11/mc/people.tally	641	048408cded78f5bb160ccb75d6204345
-cut11/mc/places.tally	2068	16f130260aba230c132f47a94d5c3a66
+cut11/mc/places.tally	2068	17eeb07af6247b84124152eb999e5da8
 cut11/mc/reality.tally	3063	0598f0b283075fd516d4b80c5d952c6d
 cut11/mc/records/mbank/2026-09.tally	3262	0e7a6d14e5a367ca1e5279089fca0f3c
-cut11/mc/scenarios/surprises.tally	4264	1d24f511e480db891146a3d35ae1c54a
-,72:sha256 81727ffd77de40eeac57482f35538e00cf53d60cada690e903b3f9430c4b412f
+cut11/mc/scenarios/surprises.tally	4238	161c2bf84d1e076f19d83849ba333168
+,72:sha256 28d61da273d22ba2a411e9c193e46ba4ae62ac3cd1bfa8f5bd9d40307e6ce7ca
 ,16:I:X:explain_room,11:household-X,35:engine/tests/integration/amendments,425:reprint cut11/c1_r2/asks/cut.tally cut11/c1_r2/facts/2026.tally cut11/c1_r2/facts/2027.tally cut11/c1_r2/law/pl/benefits.tally cut11/c1_r2/law/pl/business.tally cut11/c1_r2/law/pl/common.tally cut11/c1_r2/law/pl/employment.tally cut11/c1_r2/law/pl/wrappers.tally cut11/c1_r2/loans.tally cut11/c1_r2/pays.tally cut11/c1_r2/people.tally cut11/c1_r2/places.tally cut11/c1_r2/reality.tally cut11/c1_r2/records/mbank/2026-09.tally,1158:cut11/c1_r2/asks/cut.tally	integration/amendments/cut11/c1_r2/asks/cut.tally
 cut11/c1_r2/facts/2026.tally	integration/amendments/cut11/c1_r2/facts/2026.tally
 cut11/c1_r2/facts/2027.tally	integration/amendments/cut11/c1_r2/facts/2027.tally
@@ -4286,21 +4286,21 @@ cut11/c1_r2/people.tally	integration/amendments/cut11/c1_r2/people.tally
 cut11/c1_r2/places.tally	integration/amendments/cut11/c1_r2/places.tally
 cut11/c1_r2/reality.tally	integration/amendments/cut11/c1_r2/reality.tally
 cut11/c1_r2/records/mbank/2026-09.tally	integration/amendments/cut11/c1_r2/records/mbank/2026-09.tally
-,1:0,948:cut11/c1_r2/asks/cut.tally	689	09ed4eae94f2a25b1bffee4f9e75c4ef
+,1:0,948:cut11/c1_r2/asks/cut.tally	663	1d5286f3805e56ee16060f77871e68d4
 cut11/c1_r2/facts/2026.tally	4256	1f8a975e93df96cd19a79583df22b0c0
 cut11/c1_r2/facts/2027.tally	346	0e0f1dadc47e1e82134a7805d7521a36
 cut11/c1_r2/law/pl/benefits.tally	1827	022a0d2d7f7a676e0ab9599c3892d623
 cut11/c1_r2/law/pl/business.tally	10088	162924eabec3a6f6005a70e33d335b0d
 cut11/c1_r2/law/pl/common.tally	4897	1b6b50d421bcae9407b119b80d655039
 cut11/c1_r2/law/pl/employment.tally	5605	183ee14c9197b71506ab16aa7c31f18d
-cut11/c1_r2/law/pl/wrappers.tally	3502	049ad4822bcaf81d10805deab0e076a0
+cut11/c1_r2/law/pl/wrappers.tally	3476	08fb6be85cc3acda005dd1ccc4f08ba9
 cut11/c1_r2/loans.tally	3307	0604c85f5b676434065e909cd92f7033
 cut11/c1_r2/pays.tally	5561	0c0ba92062b82f261ba7ac33a95c98b9
 cut11/c1_r2/people.tally	641	048408cded78f5bb160ccb75d6204345
-cut11/c1_r2/places.tally	2068	16f130260aba230c132f47a94d5c3a66
+cut11/c1_r2/places.tally	2068	17eeb07af6247b84124152eb999e5da8
 cut11/c1_r2/reality.tally	3063	13505680c131a28c00dd6a3e72fc1ac8
 cut11/c1_r2/records/mbank/2026-09.tally	3262	0e7a6d14e5a367ca1e5279089fca0f3c
-,72:sha256 57a6f1098f54d709795743c8570ff322bcc42cde186af1b42a728c5531b1c2c3
+,72:sha256 323576c23946b5a535b2f25e703bb5d69025cef5dcbb29b13972c36f7d7e18ee
 ,22:I:X:konto_balance@b_r1,11:household-X,35:engine/tests/integration/amendments,383:reprint cut11/b_r1/asks/cut.tally cut11/b_r1/facts/2026.tally cut11/b_r1/law/pl/benefits.tally cut11/b_r1/law/pl/business.tally cut11/b_r1/law/pl/common.tally cut11/b_r1/law/pl/employment.tally cut11/b_r1/law/pl/wrappers.tally cut11/b_r1/loans.tally cut11/b_r1/pays.tally cut11/b_r1/people.tally cut11/b_r1/places.tally cut11/b_r1/reality.tally cut11/b_r1/records/mbank/2026-09.tally,1051:cut11/b_r1/asks/cut.tally	integration/amendments/cut11/b_r1/asks/cut.tally
 cut11/b_r1/facts/2026.tally	integration/amendments/cut11/b_r1/facts/2026.tally
 cut11/b_r1/law/pl/benefits.tally	integration/amendments/cut11/b_r1/law/pl/benefits.tally
@@ -4320,14 +4320,14 @@ cut11/b_r1/law/pl/benefits.tally	1827	022a0d2d7f7a676e0ab9599c3892d623
 cut11/b_r1/law/pl/business.tally	10088	162924eabec3a6f6005a70e33d335b0d
 cut11/b_r1/law/pl/common.tally	4897	1b6b50d421bcae9407b119b80d655039
 cut11/b_r1/law/pl/employment.tally	5605	183ee14c9197b71506ab16aa7c31f18d
-cut11/b_r1/law/pl/wrappers.tally	3502	049ad4822bcaf81d10805deab0e076a0
+cut11/b_r1/law/pl/wrappers.tally	3476	08fb6be85cc3acda005dd1ccc4f08ba9
 cut11/b_r1/loans.tally	3307	0604c85f5b676434065e909cd92f7033
 cut11/b_r1/pays.tally	5561	0c0ba92062b82f261ba7ac33a95c98b9
 cut11/b_r1/people.tally	641	048408cded78f5bb160ccb75d6204345
-cut11/b_r1/places.tally	2068	16f130260aba230c132f47a94d5c3a66
+cut11/b_r1/places.tally	2068	17eeb07af6247b84124152eb999e5da8
 cut11/b_r1/reality.tally	3063	174f4249db84d542074850e980f9d84e
 cut11/b_r1/records/mbank/2026-09.tally	3262	0e7a6d14e5a367ca1e5279089fca0f3c
-,72:sha256 edff6fb7592ad831112c89e1027dc152712cbc42bca6321fb1b029792d9ff33b
+,72:sha256 7f243ab8fb0026be1a4928fcfe46328494f001bb93c309db7937d0e3838c7a03
 ,13:I:X:n2@min_m2,11:household-X,35:engine/tests/integration/amendments,37:reprint min/m2/m.tally min/m2/s.tally,106:min/m2/m.tally	integration/amendments/min/m2/m.tally
 min/m2/s.tally	integration/amendments/min/m2/s.tally
 ,1:0,104:min/m2/m.tally	213	098f2fc88067d9b31598f427ca273ad3
@@ -4352,21 +4352,21 @@ real11/c1/people.tally	integration/amendments/real11/c1/people.tally
 real11/c1/places.tally	integration/amendments/real11/c1/places.tally
 real11/c1/reality.tally	integration/amendments/real11/c1/reality.tally
 real11/c1/records/mbank/2026-09.tally	integration/amendments/real11/c1/records/mbank/2026-09.tally
-,1:0,922:real11/c1/asks/core.tally	1264	1af2624da9e9f3c106c1824e84b0d1c6
+,1:0,922:real11/c1/asks/core.tally	1238	19d8951141d6c20a0ed5767e42590760
 real11/c1/facts/2026.tally	4256	1f8a975e93df96cd19a79583df22b0c0
 real11/c1/facts/2027.tally	346	0e0f1dadc47e1e82134a7805d7521a36
 real11/c1/law/pl/benefits.tally	1827	022a0d2d7f7a676e0ab9599c3892d623
 real11/c1/law/pl/business.tally	10088	162924eabec3a6f6005a70e33d335b0d
 real11/c1/law/pl/common.tally	4897	1b6b50d421bcae9407b119b80d655039
 real11/c1/law/pl/employment.tally	5605	183ee14c9197b71506ab16aa7c31f18d
-real11/c1/law/pl/wrappers.tally	3502	049ad4822bcaf81d10805deab0e076a0
+real11/c1/law/pl/wrappers.tally	3476	08fb6be85cc3acda005dd1ccc4f08ba9
 real11/c1/loans.tally	3307	0604c85f5b676434065e909cd92f7033
 real11/c1/pays.tally	5561	0c0ba92062b82f261ba7ac33a95c98b9
 real11/c1/people.tally	641	048408cded78f5bb160ccb75d6204345
-real11/c1/places.tally	2068	16f130260aba230c132f47a94d5c3a66
+real11/c1/places.tally	2068	17eeb07af6247b84124152eb999e5da8
 real11/c1/reality.tally	3063	04f4c07868495e5211403ef05da3e289
 real11/c1/records/mbank/2026-09.tally	3262	0e7a6d14e5a367ca1e5279089fca0f3c
-,72:sha256 5b378e4120e17a6176e012e7c8917d325ed85ed6da71efedb09478c602012b5c
+,72:sha256 021b9c1fcd152aed1c1961394de2c38693e65bd5fbad987d443b787fd7db32d0
 ,17:I:X:pit37@c2_fast,11:household-X,35:engine/tests/integration/amendments,371:reprint real11/c2/asks/core.tally real11/c2/facts/2026.tally real11/c2/law/pl/benefits.tally real11/c2/law/pl/business.tally real11/c2/law/pl/common.tally real11/c2/law/pl/employment.tally real11/c2/law/pl/wrappers.tally real11/c2/loans.tally real11/c2/pays.tally real11/c2/people.tally real11/c2/places.tally real11/c2/reality.tally real11/c2/records/mbank/2026-09.tally,1027:real11/c2/asks/core.tally	integration/amendments/real11/c2/asks/core.tally
 real11/c2/facts/2026.tally	integration/amendments/real11/c2/facts/2026.tally
 real11/c2/law/pl/benefits.tally	integration/amendments/real11/c2/law/pl/benefits.tally
@@ -4380,20 +4380,20 @@ real11/c2/people.tally	integration/amendments/real11/c2/people.tally
 real11/c2/places.tally	integration/amendments/real11/c2/places.tally
 real11/c2/reality.tally	integration/amendments/real11/c2/reality.tally
 real11/c2/records/mbank/2026-09.tally	integration/amendments/real11/c2/records/mbank/2026-09.tally
-,1:0,858:real11/c2/asks/core.tally	1264	1af2624da9e9f3c106c1824e84b0d1c6
+,1:0,858:real11/c2/asks/core.tally	1238	19d8951141d6c20a0ed5767e42590760
 real11/c2/facts/2026.tally	4256	1f8a975e93df96cd19a79583df22b0c0
 real11/c2/law/pl/benefits.tally	1827	022a0d2d7f7a676e0ab9599c3892d623
 real11/c2/law/pl/business.tally	10088	162924eabec3a6f6005a70e33d335b0d
 real11/c2/law/pl/common.tally	5337	03fb8f28256c737c01c3e0836bfe7745
 real11/c2/law/pl/employment.tally	5605	183ee14c9197b71506ab16aa7c31f18d
-real11/c2/law/pl/wrappers.tally	3502	049ad4822bcaf81d10805deab0e076a0
+real11/c2/law/pl/wrappers.tally	3476	08fb6be85cc3acda005dd1ccc4f08ba9
 real11/c2/loans.tally	3307	0604c85f5b676434065e909cd92f7033
 real11/c2/pays.tally	5561	0c0ba92062b82f261ba7ac33a95c98b9
 real11/c2/people.tally	641	048408cded78f5bb160ccb75d6204345
-real11/c2/places.tally	2068	16f130260aba230c132f47a94d5c3a66
+real11/c2/places.tally	2068	17eeb07af6247b84124152eb999e5da8
 real11/c2/reality.tally	3063	1047f3a5de012e690b5456d73c00de82
 real11/c2/records/mbank/2026-09.tally	3262	0e7a6d14e5a367ca1e5279089fca0f3c
-,72:sha256 5b4d23c6a0145ea180030e2ea7ed7011c3f06cef79f6d9e4d398e5e21205524e
+,72:sha256 a17249e55dc23486e7298ff2b8af4a5fae117635606ae0894aa6695aea95dd46
 ,17:I:X:pit37@c3_fast,11:household-X,35:engine/tests/integration/amendments,371:reprint real11/c3/asks/core.tally real11/c3/facts/2026.tally real11/c3/law/pl/benefits.tally real11/c3/law/pl/business.tally real11/c3/law/pl/common.tally real11/c3/law/pl/employment.tally real11/c3/law/pl/wrappers.tally real11/c3/loans.tally real11/c3/pays.tally real11/c3/people.tally real11/c3/places.tally real11/c3/reality.tally real11/c3/records/mbank/2026-09.tally,1027:real11/c3/asks/core.tally	integration/amendments/real11/c3/asks/core.tally
 real11/c3/facts/2026.tally	integration/amendments/real11/c3/facts/2026.tally
 real11/c3/law/pl/benefits.tally	integration/amendments/real11/c3/law/pl/benefits.tally
@@ -4407,20 +4407,20 @@ real11/c3/people.tally	integration/amendments/real11/c3/people.tally
 real11/c3/places.tally	integration/amendments/real11/c3/places.tally
 real11/c3/reality.tally	integration/amendments/real11/c3/reality.tally
 real11/c3/records/mbank/2026-09.tally	integration/amendments/real11/c3/records/mbank/2026-09.tally
-,1:0,858:real11/c3/asks/core.tally	1264	1af2624da9e9f3c106c1824e84b0d1c6
+,1:0,858:real11/c3/asks/core.tally	1238	19d8951141d6c20a0ed5767e42590760
 real11/c3/facts/2026.tally	4256	1f8a975e93df96cd19a79583df22b0c0
 real11/c3/law/pl/benefits.tally	1827	022a0d2d7f7a676e0ab9599c3892d623
 real11/c3/law/pl/business.tally	10624	166ced12dab615061e218a6f5c162974
 real11/c3/law/pl/common.tally	4897	1b6b50d421bcae9407b119b80d655039
 real11/c3/law/pl/employment.tally	5605	183ee14c9197b71506ab16aa7c31f18d
-real11/c3/law/pl/wrappers.tally	3502	049ad4822bcaf81d10805deab0e076a0
+real11/c3/law/pl/wrappers.tally	3476	08fb6be85cc3acda005dd1ccc4f08ba9
 real11/c3/loans.tally	3307	0604c85f5b676434065e909cd92f7033
 real11/c3/pays.tally	5561	0c0ba92062b82f261ba7ac33a95c98b9
 real11/c3/people.tally	641	048408cded78f5bb160ccb75d6204345
-real11/c3/places.tally	2068	16f130260aba230c132f47a94d5c3a66
+real11/c3/places.tally	2068	17eeb07af6247b84124152eb999e5da8
 real11/c3/reality.tally	3063	181676a9a570412a0a6f9228c2f613a8
 real11/c3/records/mbank/2026-09.tally	3262	0e7a6d14e5a367ca1e5279089fca0f3c
-,72:sha256 689481e2d1947252e678070e8ee722eeb5f797db9cf5cb646d878a7e7e9289dc
+,72:sha256 6b225fd6bcbb42e07074ea0fb55ddefa65c92a23e6654999f255f45d8dbcd83d
 ,17:I:X:pit37@c4_fast,11:household-X,35:engine/tests/integration/amendments,423:reprint real11/c4/asks/core.tally real11/c4/asks/ola.tally real11/c4/facts/2026.tally real11/c4/facts/2028.tally real11/c4/law/pl/benefits.tally real11/c4/law/pl/business.tally real11/c4/law/pl/common.tally real11/c4/law/pl/employment.tally real11/c4/law/pl/wrappers.tally real11/c4/loans.tally real11/c4/pays.tally real11/c4/people.tally real11/c4/places.tally real11/c4/reality.tally real11/c4/records/mbank/2026-09.tally,1177:real11/c4/asks/core.tally	integration/amendments/real11/c4/asks/core.tally
 real11/c4/asks/ola.tally	integration/amendments/real11/c4/asks/ola.tally
 real11/c4/facts/2026.tally	integration/amendments/real11/c4/facts/2026.tally
@@ -4436,7 +4436,7 @@ real11/c4/people.tally	integration/amendments/real11/c4/people.tally
 real11/c4/places.tally	integration/amendments/real11/c4/places.tally
 real11/c4/reality.tally	integration/amendments/real11/c4/reality.tally
 real11/c4/records/mbank/2026-09.tally	integration/amendments/real11/c4/records/mbank/2026-09.tally
-,1:0,984:real11/c4/asks/core.tally	1264	1af2624da9e9f3c106c1824e84b0d1c6
+,1:0,984:real11/c4/asks/core.tally	1238	19d8951141d6c20a0ed5767e42590760
 real11/c4/asks/ola.tally	97	1c130c5df184c7991891da62a07b288a
 real11/c4/facts/2026.tally	4256	1f8a975e93df96cd19a79583df22b0c0
 real11/c4/facts/2028.tally	1522	0ee4f8410888d70616f9a4e05aefa3f7
@@ -4444,14 +4444,14 @@ real11/c4/law/pl/benefits.tally	1827	022a0d2d7f7a676e0ab9599c3892d623
 real11/c4/law/pl/business.tally	10088	162924eabec3a6f6005a70e33d335b0d
 real11/c4/law/pl/common.tally	4897	1b6b50d421bcae9407b119b80d655039
 real11/c4/law/pl/employment.tally	5605	183ee14c9197b71506ab16aa7c31f18d
-real11/c4/law/pl/wrappers.tally	3502	049ad4822bcaf81d10805deab0e076a0
+real11/c4/law/pl/wrappers.tally	3476	08fb6be85cc3acda005dd1ccc4f08ba9
 real11/c4/loans.tally	3307	0604c85f5b676434065e909cd92f7033
 real11/c4/pays.tally	5561	0c0ba92062b82f261ba7ac33a95c98b9
 real11/c4/people.tally	641	048408cded78f5bb160ccb75d6204345
-real11/c4/places.tally	2068	16f130260aba230c132f47a94d5c3a66
+real11/c4/places.tally	2068	17eeb07af6247b84124152eb999e5da8
 real11/c4/reality.tally	3063	0fdd99fa4469aae00f097ef10aae1162
 real11/c4/records/mbank/2026-09.tally	3262	0e7a6d14e5a367ca1e5279089fca0f3c
-,72:sha256 37708beb59607beabd36f38fb3c9c060a373f57dda3f94a22721279415c22646
+,72:sha256 ac2b311519be480d732369938023fdaf8bbbba113496dab542e1c860f0d0d9ad
 ,17:I:X:pit37@c5_fast,11:household-X,35:engine/tests/integration/amendments,455:reprint real11/c5/abroad.tally real11/c5/asks/core.tally real11/c5/facts/2026.tally real11/c5/facts/2029.tally real11/c5/law/de/employment.tally real11/c5/law/pl/benefits.tally real11/c5/law/pl/business.tally real11/c5/law/pl/common.tally real11/c5/law/pl/employment.tally real11/c5/law/pl/wrappers.tally real11/c5/loans.tally real11/c5/pays.tally real11/c5/people.tally real11/c5/places.tally real11/c5/reality.tally real11/c5/records/mbank/2026-09.tally,1264:real11/c5/abroad.tally	integration/amendments/real11/c5/abroad.tally
 real11/c5/asks/core.tally	integration/amendments/real11/c5/asks/core.tally
 real11/c5/facts/2026.tally	integration/amendments/real11/c5/facts/2026.tally
@@ -4469,7 +4469,7 @@ real11/c5/places.tally	integration/amendments/real11/c5/places.tally
 real11/c5/reality.tally	integration/amendments/real11/c5/reality.tally
 real11/c5/records/mbank/2026-09.tally	integration/amendments/real11/c5/records/mbank/2026-09.tally
 ,1:0,1054:real11/c5/abroad.tally	1545	018235e5963bf7db06d299d60a5dfa31
-real11/c5/asks/core.tally	1264	1af2624da9e9f3c106c1824e84b0d1c6
+real11/c5/asks/core.tally	1238	19d8951141d6c20a0ed5767e42590760
 real11/c5/facts/2026.tally	4256	1f8a975e93df96cd19a79583df22b0c0
 real11/c5/facts/2029.tally	919	090939466eeaf34e08e7bc7ca7f390e8
 real11/c5/law/de/employment.tally	393	0b1fe4101c4b31f0125adcfb16e39db2
@@ -4477,14 +4477,14 @@ real11/c5/law/pl/benefits.tally	1827	022a0d2d7f7a676e0ab9599c3892d623
 real11/c5/law/pl/business.tally	10088	162924eabec3a6f6005a70e33d335b0d
 real11/c5/law/pl/common.tally	4897	1b6b50d421bcae9407b119b80d655039
 real11/c5/law/pl/employment.tally	5605	183ee14c9197b71506ab16aa7c31f18d
-real11/c5/law/pl/wrappers.tally	3502	049ad4822bcaf81d10805deab0e076a0
+real11/c5/law/pl/wrappers.tally	3476	08fb6be85cc3acda005dd1ccc4f08ba9
 real11/c5/loans.tally	3307	0604c85f5b676434065e909cd92f7033
 real11/c5/pays.tally	5561	0c0ba92062b82f261ba7ac33a95c98b9
 real11/c5/people.tally	641	048408cded78f5bb160ccb75d6204345
-real11/c5/places.tally	2068	16f130260aba230c132f47a94d5c3a66
+real11/c5/places.tally	2068	17eeb07af6247b84124152eb999e5da8
 real11/c5/reality.tally	3063	1cb978afa5f941a90eef50481b519c15
 real11/c5/records/mbank/2026-09.tally	3262	0e7a6d14e5a367ca1e5279089fca0f3c
-,72:sha256 b8c924903f2e42c4b28bdef92fce472b55bff9269e2e30bb7f485606f0a54f00
+,72:sha256 8c511f1e30101671f665df1631785de9cbab3b5d6a8b25b943ec4e25dd0f2fb8
 ,17:I:X:pit37@c6_fast,11:household-X,35:engine/tests/integration/amendments,398:reprint real11/c6/asks/core.tally real11/c6/facts/2026.tally real11/c6/facts/2027.tally real11/c6/law/pl/benefits.tally real11/c6/law/pl/business.tally real11/c6/law/pl/common.tally real11/c6/law/pl/employment.tally real11/c6/law/pl/wrappers.tally real11/c6/loans.tally real11/c6/pays.tally real11/c6/people.tally real11/c6/places.tally real11/c6/reality.tally real11/c6/records/mbank/2026-09.tally,1104:real11/c6/asks/core.tally	integration/amendments/real11/c6/asks/core.tally
 real11/c6/facts/2026.tally	integration/amendments/real11/c6/facts/2026.tally
 real11/c6/facts/2027.tally	integration/amendments/real11/c6/facts/2027.tally
@@ -4499,21 +4499,21 @@ real11/c6/people.tally	integration/amendments/real11/c6/people.tally
 real11/c6/places.tally	integration/amendments/real11/c6/places.tally
 real11/c6/reality.tally	integration/amendments/real11/c6/reality.tally
 real11/c6/records/mbank/2026-09.tally	integration/amendments/real11/c6/records/mbank/2026-09.tally
-,1:0,922:real11/c6/asks/core.tally	1264	1af2624da9e9f3c106c1824e84b0d1c6
+,1:0,922:real11/c6/asks/core.tally	1238	19d8951141d6c20a0ed5767e42590760
 real11/c6/facts/2026.tally	4256	1f8a975e93df96cd19a79583df22b0c0
 real11/c6/facts/2027.tally	676	17931dea90fbdba217665527a41357ad
 real11/c6/law/pl/benefits.tally	1827	022a0d2d7f7a676e0ab9599c3892d623
 real11/c6/law/pl/business.tally	10088	162924eabec3a6f6005a70e33d335b0d
 real11/c6/law/pl/common.tally	4897	1b6b50d421bcae9407b119b80d655039
 real11/c6/law/pl/employment.tally	5605	183ee14c9197b71506ab16aa7c31f18d
-real11/c6/law/pl/wrappers.tally	3502	049ad4822bcaf81d10805deab0e076a0
+real11/c6/law/pl/wrappers.tally	3476	08fb6be85cc3acda005dd1ccc4f08ba9
 real11/c6/loans.tally	3307	0604c85f5b676434065e909cd92f7033
 real11/c6/pays.tally	5561	0c0ba92062b82f261ba7ac33a95c98b9
 real11/c6/people.tally	641	048408cded78f5bb160ccb75d6204345
-real11/c6/places.tally	2068	16f130260aba230c132f47a94d5c3a66
+real11/c6/places.tally	2068	17eeb07af6247b84124152eb999e5da8
 real11/c6/reality.tally	3063	04b1336d7180c753022d55393a2a083b
 real11/c6/records/mbank/2026-09.tally	3262	0e7a6d14e5a367ca1e5279089fca0f3c
-,72:sha256 83f5c346f36ecebc9d0ea9114b27d7e41a0635f8a081b89bf2f7ef50608624d9
+,72:sha256 d21695473256bcd6e1186d7a53d3ac01026935f52a520d6da6b365b69cbdf1a0
 ,17:I:X:pit37@c7_fast,11:household-X,35:engine/tests/integration/amendments,408:reprint real11/c7/asks/core.tally real11/c7/facts/2026.tally real11/c7/law/pl/benefits.tally real11/c7/law/pl/business.tally real11/c7/law/pl/common.tally real11/c7/law/pl/employment.tally real11/c7/law/pl/wrappers.tally real11/c7/loans.tally real11/c7/pays.tally real11/c7/people.tally real11/c7/places.tally real11/c7/reality.tally real11/c7/records/mbank/2026-09.tally real11/c7/scenarios/wife_stops.tally,1124:real11/c7/asks/core.tally	integration/amendments/real11/c7/asks/core.tally
 real11/c7/facts/2026.tally	integration/amendments/real11/c7/facts/2026.tally
 real11/c7/law/pl/benefits.tally	integration/amendments/real11/c7/law/pl/benefits.tally
@@ -4528,21 +4528,21 @@ real11/c7/places.tally	integration/amendments/real11/c7/places.tally
 real11/c7/reality.tally	integration/amendments/real11/c7/reality.tally
 real11/c7/records/mbank/2026-09.tally	integration/amendments/real11/c7/records/mbank/2026-09.tally
 real11/c7/scenarios/wife_stops.tally	integration/amendments/real11/c7/scenarios/wife_stops.tally
-,1:0,932:real11/c7/asks/core.tally	1404	11bcde3b82b8c7ab19242ec6882eebbb
+,1:0,932:real11/c7/asks/core.tally	1378	0a95f27b0ecb63550249c6c6342e88f7
 real11/c7/facts/2026.tally	4256	1f8a975e93df96cd19a79583df22b0c0
 real11/c7/law/pl/benefits.tally	1827	022a0d2d7f7a676e0ab9599c3892d623
 real11/c7/law/pl/business.tally	10088	162924eabec3a6f6005a70e33d335b0d
 real11/c7/law/pl/common.tally	4897	1b6b50d421bcae9407b119b80d655039
 real11/c7/law/pl/employment.tally	5605	183ee14c9197b71506ab16aa7c31f18d
-real11/c7/law/pl/wrappers.tally	3502	049ad4822bcaf81d10805deab0e076a0
+real11/c7/law/pl/wrappers.tally	3476	08fb6be85cc3acda005dd1ccc4f08ba9
 real11/c7/loans.tally	3307	0604c85f5b676434065e909cd92f7033
 real11/c7/pays.tally	5561	0c0ba92062b82f261ba7ac33a95c98b9
 real11/c7/people.tally	641	048408cded78f5bb160ccb75d6204345
-real11/c7/places.tally	2068	16f130260aba230c132f47a94d5c3a66
+real11/c7/places.tally	2068	17eeb07af6247b84124152eb999e5da8
 real11/c7/reality.tally	3063	19ffe0eb46e91f811cd729762af84fef
 real11/c7/records/mbank/2026-09.tally	3262	0e7a6d14e5a367ca1e5279089fca0f3c
 real11/c7/scenarios/wife_stops.tally	340	17bc4038a86306ab12b4c27ef88f4d5e
-,72:sha256 7d3d8ddceeb2dc7466c9139282298c7ddc71e85dc7a4ec16013786f846547da2
+,72:sha256 d96aa6c6f54135b02a10f59d9b8c67893134c9d3484c7850374e1666cc89c52d
 ,17:I:X:pit37@v3_fast,11:household-X,35:engine/tests/integration/amendments,371:reprint real11/v3/asks/core.tally real11/v3/facts/2026.tally real11/v3/law/pl/benefits.tally real11/v3/law/pl/business.tally real11/v3/law/pl/common.tally real11/v3/law/pl/employment.tally real11/v3/law/pl/wrappers.tally real11/v3/loans.tally real11/v3/pays.tally real11/v3/people.tally real11/v3/places.tally real11/v3/reality.tally real11/v3/records/mbank/2026-09.tally,1027:real11/v3/asks/core.tally	integration/amendments/real11/v3/asks/core.tally
 real11/v3/facts/2026.tally	integration/amendments/real11/v3/facts/2026.tally
 real11/v3/law/pl/benefits.tally	integration/amendments/real11/v3/law/pl/benefits.tally
@@ -4556,20 +4556,20 @@ real11/v3/people.tally	integration/amendments/real11/v3/people.tally
 real11/v3/places.tally	integration/amendments/real11/v3/places.tally
 real11/v3/reality.tally	integration/amendments/real11/v3/reality.tally
 real11/v3/records/mbank/2026-09.tally	integration/amendments/real11/v3/records/mbank/2026-09.tally
-,1:0,858:real11/v3/asks/core.tally	1264	1af2624da9e9f3c106c1824e84b0d1c6
+,1:0,858:real11/v3/asks/core.tally	1238	19d8951141d6c20a0ed5767e42590760
 real11/v3/facts/2026.tally	4256	1f8a975e93df96cd19a79583df22b0c0
 real11/v3/law/pl/benefits.tally	1827	022a0d2d7f7a676e0ab9599c3892d623
 real11/v3/law/pl/business.tally	10386	1840c21348dd640e1363ccb0138e2f69
 real11/v3/law/pl/common.tally	4897	1b6b50d421bcae9407b119b80d655039
 real11/v3/law/pl/employment.tally	5605	183ee14c9197b71506ab16aa7c31f18d
-real11/v3/law/pl/wrappers.tally	3502	049ad4822bcaf81d10805deab0e076a0
+real11/v3/law/pl/wrappers.tally	3476	08fb6be85cc3acda005dd1ccc4f08ba9
 real11/v3/loans.tally	3307	0604c85f5b676434065e909cd92f7033
 real11/v3/pays.tally	5561	0c0ba92062b82f261ba7ac33a95c98b9
 real11/v3/people.tally	641	048408cded78f5bb160ccb75d6204345
-real11/v3/places.tally	2068	16f130260aba230c132f47a94d5c3a66
+real11/v3/places.tally	2068	17eeb07af6247b84124152eb999e5da8
 real11/v3/reality.tally	3063	181676a9a570412a0a6f9228c2f613a8
 real11/v3/records/mbank/2026-09.tally	3262	0e7a6d14e5a367ca1e5279089fca0f3c
-,72:sha256 69d69edd704fda27e9ef797c50eb321a8bb642ca7a5b96738cc9fc18eb695a53
+,72:sha256 c290ce8b2453eb6983963f7924d6c71e526b54c73c58da609b9aba6ec9c017d4
 ,17:I:X:pit37@v4_fast,11:household-X,35:engine/tests/integration/amendments,423:reprint real11/v4/asks/core.tally real11/v4/asks/ola.tally real11/v4/facts/2026.tally real11/v4/facts/2028.tally real11/v4/law/pl/benefits.tally real11/v4/law/pl/business.tally real11/v4/law/pl/common.tally real11/v4/law/pl/employment.tally real11/v4/law/pl/wrappers.tally real11/v4/loans.tally real11/v4/pays.tally real11/v4/people.tally real11/v4/places.tally real11/v4/reality.tally real11/v4/records/mbank/2026-09.tally,1177:real11/v4/asks/core.tally	integration/amendments/real11/v4/asks/core.tally
 real11/v4/asks/ola.tally	integration/amendments/real11/v4/asks/ola.tally
 real11/v4/facts/2026.tally	integration/amendments/real11/v4/facts/2026.tally
@@ -4585,7 +4585,7 @@ real11/v4/people.tally	integration/amendments/real11/v4/people.tally
 real11/v4/places.tally	integration/amendments/real11/v4/places.tally
 real11/v4/reality.tally	integration/amendments/real11/v4/reality.tally
 real11/v4/records/mbank/2026-09.tally	integration/amendments/real11/v4/records/mbank/2026-09.tally
-,1:0,984:real11/v4/asks/core.tally	1264	1af2624da9e9f3c106c1824e84b0d1c6
+,1:0,984:real11/v4/asks/core.tally	1238	19d8951141d6c20a0ed5767e42590760
 real11/v4/asks/ola.tally	97	1c130c5df184c7991891da62a07b288a
 real11/v4/facts/2026.tally	4256	1f8a975e93df96cd19a79583df22b0c0
 real11/v4/facts/2028.tally	1522	0753bbd6ea5b1a9b17f7f326da6876c6
@@ -4593,14 +4593,14 @@ real11/v4/law/pl/benefits.tally	1827	022a0d2d7f7a676e0ab9599c3892d623
 real11/v4/law/pl/business.tally	10088	162924eabec3a6f6005a70e33d335b0d
 real11/v4/law/pl/common.tally	4897	1b6b50d421bcae9407b119b80d655039
 real11/v4/law/pl/employment.tally	5605	183ee14c9197b71506ab16aa7c31f18d
-real11/v4/law/pl/wrappers.tally	3502	049ad4822bcaf81d10805deab0e076a0
+real11/v4/law/pl/wrappers.tally	3476	08fb6be85cc3acda005dd1ccc4f08ba9
 real11/v4/loans.tally	3307	0604c85f5b676434065e909cd92f7033
 real11/v4/pays.tally	5561	0c0ba92062b82f261ba7ac33a95c98b9
 real11/v4/people.tally	641	048408cded78f5bb160ccb75d6204345
-real11/v4/places.tally	2068	16f130260aba230c132f47a94d5c3a66
+real11/v4/places.tally	2068	17eeb07af6247b84124152eb999e5da8
 real11/v4/reality.tally	3063	0fdd99fa4469aae00f097ef10aae1162
 real11/v4/records/mbank/2026-09.tally	3262	0e7a6d14e5a367ca1e5279089fca0f3c
-,72:sha256 ed67e614200942c67ee9019c7ff65008b21cdf832a6998fe35a4c5d3a13bf46f
+,72:sha256 2708d60b74a985cde1f3cce142f7b1066a6e2e7e5cc0f4ca086695427c8337e3
 ,17:I:X:pit37@v5_fast,11:household-X,35:engine/tests/integration/amendments,455:reprint real11/v5/abroad.tally real11/v5/asks/core.tally real11/v5/facts/2026.tally real11/v5/facts/2029.tally real11/v5/law/de/employment.tally real11/v5/law/pl/benefits.tally real11/v5/law/pl/business.tally real11/v5/law/pl/common.tally real11/v5/law/pl/employment.tally real11/v5/law/pl/wrappers.tally real11/v5/loans.tally real11/v5/pays.tally real11/v5/people.tally real11/v5/places.tally real11/v5/reality.tally real11/v5/records/mbank/2026-09.tally,1264:real11/v5/abroad.tally	integration/amendments/real11/v5/abroad.tally
 real11/v5/asks/core.tally	integration/amendments/real11/v5/asks/core.tally
 real11/v5/facts/2026.tally	integration/amendments/real11/v5/facts/2026.tally
@@ -4618,7 +4618,7 @@ real11/v5/places.tally	integration/amendments/real11/v5/places.tally
 real11/v5/reality.tally	integration/amendments/real11/v5/reality.tally
 real11/v5/records/mbank/2026-09.tally	integration/amendments/real11/v5/records/mbank/2026-09.tally
 ,1:0,1054:real11/v5/abroad.tally	1545	018235e5963bf7db06d299d60a5dfa31
-real11/v5/asks/core.tally	1264	1af2624da9e9f3c106c1824e84b0d1c6
+real11/v5/asks/core.tally	1238	19d8951141d6c20a0ed5767e42590760
 real11/v5/facts/2026.tally	4256	1f8a975e93df96cd19a79583df22b0c0
 real11/v5/facts/2029.tally	847	053ed0f12a6911400a6c822988ff76ee
 real11/v5/law/de/employment.tally	393	0b1fe4101c4b31f0125adcfb16e39db2
@@ -4626,14 +4626,14 @@ real11/v5/law/pl/benefits.tally	1827	022a0d2d7f7a676e0ab9599c3892d623
 real11/v5/law/pl/business.tally	10088	162924eabec3a6f6005a70e33d335b0d
 real11/v5/law/pl/common.tally	4897	1b6b50d421bcae9407b119b80d655039
 real11/v5/law/pl/employment.tally	5605	183ee14c9197b71506ab16aa7c31f18d
-real11/v5/law/pl/wrappers.tally	3502	049ad4822bcaf81d10805deab0e076a0
+real11/v5/law/pl/wrappers.tally	3476	08fb6be85cc3acda005dd1ccc4f08ba9
 real11/v5/loans.tally	3307	0604c85f5b676434065e909cd92f7033
 real11/v5/pays.tally	5561	0c0ba92062b82f261ba7ac33a95c98b9
 real11/v5/people.tally	641	048408cded78f5bb160ccb75d6204345
-real11/v5/places.tally	2068	16f130260aba230c132f47a94d5c3a66
+real11/v5/places.tally	2068	17eeb07af6247b84124152eb999e5da8
 real11/v5/reality.tally	3063	1cb978afa5f941a90eef50481b519c15
 real11/v5/records/mbank/2026-09.tally	3262	0e7a6d14e5a367ca1e5279089fca0f3c
-,72:sha256 e8f7e832c27d7381d463b94c5738fc537639d084bc04fed356ebedf3bc8bd8c6
+,72:sha256 d3ae99c2539b2b660ebb7f93475cf47affc7e19d7a7117ae5ec99bad12df57fe
 ,6:I:X:q1,11:household-X,35:engine/tests/integration/amendments,32:reprint cards11/i10q/model.tally,73:cards11/i10q/model.tally	integration/amendments/cards11/i10q/model.tally
 ,1:0,64:cards11/i10q/model.tally	12593	061f74d47aba4c2502af9ac3b62ca829
 ,72:sha256 14b18efa205194fc5e4d6b9b5fc212b71a2911e7520881be5e147b3a99e857ac
@@ -4656,14 +4656,14 @@ cut11/b_r1s/law/pl/benefits.tally	1827	022a0d2d7f7a676e0ab9599c3892d623
 cut11/b_r1s/law/pl/business.tally	10088	162924eabec3a6f6005a70e33d335b0d
 cut11/b_r1s/law/pl/common.tally	4897	1b6b50d421bcae9407b119b80d655039
 cut11/b_r1s/law/pl/employment.tally	5605	183ee14c9197b71506ab16aa7c31f18d
-cut11/b_r1s/law/pl/wrappers.tally	3502	049ad4822bcaf81d10805deab0e076a0
+cut11/b_r1s/law/pl/wrappers.tally	3476	08fb6be85cc3acda005dd1ccc4f08ba9
 cut11/b_r1s/loans.tally	3307	0604c85f5b676434065e909cd92f7033
 cut11/b_r1s/pays.tally	5561	0c0ba92062b82f261ba7ac33a95c98b9
 cut11/b_r1s/people.tally	641	048408cded78f5bb160ccb75d6204345
-cut11/b_r1s/places.tally	2068	16f130260aba230c132f47a94d5c3a66
+cut11/b_r1s/places.tally	2068	17eeb07af6247b84124152eb999e5da8
 cut11/b_r1s/reality.tally	3063	174f4249db84d542074850e980f9d84e
 cut11/b_r1s/records/mbank/2026-09.tally	3262	0e7a6d14e5a367ca1e5279089fca0f3c
-,72:sha256 32e21c7b1dd54612436da920b7a8791d05eca7863070f590bca385d009baea62
+,72:sha256 930d7668ed0cd1ea72aac62a40c84c205e04592bb21bf49cdd80561dbcfc9954
 ,13:I:X:t@min_F3k,11:household-X,35:engine/tests/integration/amendments,23:reprint min/F3k/m.tally,55:min/F3k/m.tally	integration/amendments/min/F3k/m.tally
 ,1:0,53:min/F3k/m.tally	703	0902e86a677621c3190ef91fd3bb4e3a
 ,72:sha256 64824fd623e31a958d12f7a77a000048b9980043300833b437a24b72a3b1d2dc
@@ -5271,8 +5271,8 @@ unit/probes/surf/SURF-04/redefine.tally	unit/probes/surf/SURF-04/redefine.tally
 ,19:format/header_order,19:format/header_order,22:engine/tests/m0/format,26:reprint header_order.tally,168:header_order.tally	m0/format/header_order.tally
 members/zeta/zeta.tally	m0/format/members/zeta/zeta.tally
 members/alpha/alpha.tally	m0/format/members/alpha/alpha.tally
-,1:0,56:header_order.tally	437	1b8cbd0b9e00eb70181cfbdc37b15ee8
-,72:sha256 dac364f1b0e3617dadf7b9c55866af1dca5d419cc8f7e67fe55048e893bb143c
+,1:0,56:header_order.tally	437	09822ee4f22e1d6c1266a9abace7b6eb
+,72:sha256 69024dcf382875ce172622e2b30c9c76658afcf4a01a667435efca37dab34946
 ,23:format/kinds_tree_order,23:format/kinds_tree_order,22:engine/tests/m0/format,30:reprint kinds_tree_order.tally,56:kinds_tree_order.tally	m0/format/kinds_tree_order.tally
 ,1:0,60:kinds_tree_order.tally	194	1d8e9a4775e33d761e533b80c5952294
 ,72:sha256 2461bc9877901eeef20c23fd4ebb4d61474bb039d595b430ca2e49c1696a2ccc
@@ -5291,13 +5291,11 @@ m/b.tally	m0/format/joint/folder/m/b.tally
 ,25:format/member_folder_none,25:format/member_folder_none,40:engine/tests/m0/format/joint/folder_none,15:reprint j.tally,140:j.tally	m0/format/joint/folder_none/j.tally
 m/a.tally	m0/format/joint/folder_none/m/a.tally
 m/b.tally	m0/format/joint/folder_none/m/b.tally
-,1:0,45:j.tally	298	027fc2419ff1f11c0ff0a2e214d9ee5b
-,72:sha256 ab615c74cf8394ddf3011c33b6262efbb91f5c89be49e9b020cb5470a7a140a7
+,1:1,0:,58:refused: member m: LOAD-HEADER no file has a model header
 ,24:format/member_folder_two,24:format/member_folder_two,39:engine/tests/m0/format/joint/folder_two,15:reprint j.tally,137:j.tally	m0/format/joint/folder_two/j.tally
 m/a.tally	m0/format/joint/folder_two/m/a.tally
 m/b.tally	m0/format/joint/folder_two/m/b.tally
-,1:0,45:j.tally	289	1108602840a0063414f252a5150d2583
-,72:sha256 ef51eb87c38a6fbfac1f143e4f2c8b87a377df6988f6a29a492fc2246c0cb227
+,1:1,0:,61:refused: member m: LOAD-HEADER two files have a model header
 ,20:format/member_nested,20:format/member_nested,35:engine/tests/m0/format/joint/nested,15:reprint j.tally,125:j.tally	m0/format/joint/nested/j.tally
 m/m.tally	m0/format/joint/nested/m/m.tally
 b/b.tally	m0/format/joint/nested/b/b.tally
@@ -5305,19 +5303,19 @@ b/b.tally	m0/format/joint/nested/b/b.tally
 ,72:sha256 fa62fcc0c57e842667f12844e735450a551cb8f60184b5d4ac7f57734107f0dc
 ,27:format/member_nested_absent,27:format/member_nested_absent,42:engine/tests/m0/format/joint/nested_absent,15:reprint j.tally,96:j.tally	m0/format/joint/nested_absent/j.tally
 m/m.tally	m0/format/joint/nested_absent/m/m.tally
-,1:1,0:,60:refused: member m: LOAD-NAME unknown id b.zone (m.tally:10)
+,1:1,0:,90:refused: member m: LOAD-PIN ../b/b.tally doesn't match its sha256 in use b (no such file)
 ,28:format/member_nested_changed,28:format/member_nested_changed,43:engine/tests/m0/format/joint/nested_changed,15:reprint j.tally,149:j.tally	m0/format/joint/nested_changed/j.tally
 m/m.tally	m0/format/joint/nested_changed/m/m.tally
 b/b.tally	m0/format/joint/nested_changed/b/b.tally
-,1:0,45:j.tally	304	139ca986c44232e417d84c23262a09cd
-,72:sha256 a0ed28a9b055b8a4e2e7889d0e7e4721bbc7bcde434b0bf717423d412588475b
+,1:1,0:,75:refused: member m: LOAD-PIN ../b/b.tally doesn't match its sha256 in use b
 ,25:format/member_outside_dot,25:format/member_outside_dot,38:engine/tests/m0/format/joint/outside/x,9:reprint .,91:./j.tally	m0/format/joint/outside/x/j.tally
 ../m/m.tally	m0/format/joint/outside/m/m.tally
 ,1:0,45:j.tally	353	0a2335aa8faf940d07310a22159fc0ce
 ,72:sha256 354b3e82eb917a40fc68c59255022d2723e061545ed40b7ac56465e3afd87e22
 ,28:format/member_outside_parent,28:format/member_outside_parent,36:engine/tests/m0/format/joint/outside,9:reprint x,88:x/j.tally	m0/format/joint/outside/x/j.tally
 m/m.tally	m0/format/joint/outside/m/m.tally
-,1:1,0:,80:refused: LOAD-PIN ../m/m.tally doesn't match its sha256 in use m (no such file)
+,1:0,45:j.tally	353	0a2335aa8faf940d07310a22159fc0ce
+,72:sha256 354b3e82eb917a40fc68c59255022d2723e061545ed40b7ac56465e3afd87e22
 ,14:format/numbers,14:format/numbers,22:engine/tests/m0/format,21:reprint numbers.tally,38:numbers.tally	m0/format/numbers.tally
 ,1:0,51:numbers.tally	338	01be4a45ae78ecb608c7643c9df33846
 ,72:sha256 7259c6ed95eac3e54f43602c22498976e201522204dbf27611761d12e0d530cc
@@ -5336,8 +5334,14 @@ m/m.tally	m0/format/joint/outside/m/m.tally
 ,19:format/rules_sorted,19:format/rules_sorted,22:engine/tests/m0/format,26:reprint rules_sorted.tally,48:rules_sorted.tally	m0/format/rules_sorted.tally
 ,1:0,56:rules_sorted.tally	422	1072a3b119ea75b107236f7eabee7708
 ,72:sha256 c4c3e6b1ca0c586693956cf1d4500afde76eca24f9d794699609869cf97b5c96
+,28:format/same_deep_beside_rows,28:format/same_deep_beside_rows,22:engine/tests/m0/format,35:reprint same_deep_beside_rows.tally,66:same_deep_beside_rows.tally	m0/format/same_deep_beside_rows.tally
+,1:0,65:same_deep_beside_rows.tally	332	02fc745b6dc783ec16220b0494f049bd
+,72:sha256 7ca1c8196d4cdc782367a4cf6e43e42209579f9c712a7d5cfe0a55c0d11c0089
 ,22:format/same_key_signed,22:format/same_key_signed,22:engine/tests/m0/format,29:reprint same_key_signed.tally,54:same_key_signed.tally	m0/format/same_key_signed.tally
 ,1:1,0:,87:refused: LOAD-PARSE cannot parse: expected a literal, got - (same_key_signed.tally:24)
+,32:format/same_place_key_beside_row,32:format/same_place_key_beside_row,22:engine/tests/m0/format,39:reprint same_place_key_beside_row.tally,74:same_place_key_beside_row.tally	m0/format/same_place_key_beside_row.tally
+,1:0,69:same_place_key_beside_row.tally	488	056ba39679e4256604ed6c2ef6ef49d7
+,72:sha256 1c2c2ad2d828183ffbe117ec494ad78b5d860a6f2524b7c8d8b99addf6489d76
 ,22:format/same_place_keys,22:format/same_place_keys,22:engine/tests/m0/format,29:reprint same_place_keys.tally,54:same_place_keys.tally	m0/format/same_place_keys.tally
 ,1:0,59:same_place_keys.tally	452	14ceff864fd3fd1e175fba29ac87835b
 ,72:sha256 85c3629a0b2449031fe8744192edc731be59eee641fca1477aef52792bc31ed5

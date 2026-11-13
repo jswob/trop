@@ -1,0 +1,34 @@
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+input amt: money PLN
+input dom: int
+place konto: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from world to konto amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  amt = 100.00 PLN "s"
+  dom = 10 "s"
+
+ask a: bal(konto, 2026-06-30)
+ask b: bal(konto, 2026-08-31)
+ask c: low(konto, 2026-06-01 .. 2026-08-31)
+ask d: low(konto, 2026-01-01 .. 2026-06-30)
+ask e: bal(konto, 2025-12-31)
+ask g: bal(konto, 2026-08-31) from 2026-03-01
+ask h: bal(konto, 2026-06-30) from 2026-03-01
+ask f: flows(konto, 2026-06-01 .. 2026-08-31)

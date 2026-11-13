@@ -1,0 +1,43 @@
+model w
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+index qs = [q1, q2, q3]
+
+input w: date
+
+input wd: date
+
+input u: date
+
+input cal: calendar
+
+input d[k in qs]: date
+
+input rank[k in qs]: int
+
+def same: date = w
+
+def paid: date = w + 1 day
+
+ask a1: add_days(w, 1) == w, w + 1 day > w, w + 1 day == w + 1 day, end_of(w) > w
+ask a2: same == w, w == w, w < w, paid == paid, paid == w + 1 day, (paid as if {rank[q1] = 5}) == paid
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-06-01, 2026-06-05) "c"
+  wd = window(2026-06-01, 2026-06-01) "c"
+  u = window(2026-06-06, 2026-06-07) "c"
+  cal = calendar(weekends [sat, sun]) "c"
+  d[q1] = 2026-03-01 "c"
+  d[q2] = 2026-03-01 "c"
+  d[q3] = window(2026-04-01, 2026-04-30) "c"
+  rank[q1] = 2 "c"
+  rank[q2] = 1 "c"
+  rank[q3] = 0 "c"

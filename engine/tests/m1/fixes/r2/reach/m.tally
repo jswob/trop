@@ -1,0 +1,73 @@
+model r2_reach
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.7, R2's reach (#141), from L §8's Refusals outrank holes alone: where a refusal and a hole both reach a value it is refused, and a refused movement is refused for every read of it. Features no item of R2 names: arithmetic over a hole and a refusal, either side first (a_*, twin a_hole_only); a count of movements over a span that may hold a refused one (c_*, twin c_before, a span before its day)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input h: int
+
+input n: int
+
+input z: int
+
+input fee: money PLN
+
+input dom: int
+
+input d0: date
+
+input d1: date
+
+input d9: date
+
+input div[m in month]: int
+
+def r: num = n / z
+
+def a_left: num = h + r
+
+def a_right: num = r + h
+
+def a_hole: num = h + n
+
+move pay[m in month]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  when n / div[m] > z
+  leg cash from world to konto amount fee
+
+ask a: a_left, a_right
+
+ask a_hole_only: a_hole
+
+ask c_span: count(t in transfers over d0 .. d9)
+
+ask c_before: count(t in transfers over d0 .. d1)
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  h = ?"how many?"
+  n = 6 "the card"
+  z = 0 "a division by zero, where it is read"
+  fee = 10.00 PLN "the card"
+  dom = 10 "the card"
+  d0 = 2026-01-01 "the card"
+  d1 = 2026-01-31 "January only"
+  d9 = 2026-12-31 "the card"
+  div[2026-01] = 1 "the card"
+  div[2026-02] = 0 "February's when divides by zero"
+  div[2026-03] = 2 "the card"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "the card"

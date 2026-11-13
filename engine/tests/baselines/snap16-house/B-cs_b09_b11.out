@@ -132,7 +132,6 @@ b09_total: 62 816.66 DUK
   unfulfilled: invoiced_flr[fv_028_2025]
   open: client_pay[fv_016_2025]
   open: kessel_pay[fv_026_2025]
-  held: fx_mid = 4.2307 DUK/FLR (fx_2025_12_31), read for 2025-12-31
   law date 2025-12-31, cut 2026-01-07
 b11_costs: (71 118.22 DUK, 51 898.22 DUK, 19 220.00 DUK, 42 670.93 DUK, 28 447.29 DUK, 9 227.29 DUK)
   law date 2025-12-31, cut 2026-01-07
@@ -281,6 +280,5 @@ b11_worth: (421 860.35 DUK + -1 × ?"Were this month's contributions, health con
   left out: pit_pay, 1 instances, first 2027-01-20
   left out: social_pay, 1 instances, first 2027-01-20
   left out: vat_pay, 1 instances, first 2027-01-25
-  held: fx_mid = 4.2307 DUK/FLR (fx_2025_12_31), read for 2025-12-31
   law date 2025-12-31, cut 2026-01-07
 

@@ -1,0 +1,37 @@
+model r7_reach_held
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.7, R7's reach (#146), from L §8.2's One read set alone: an entry is listed under a result exactly when a read in its set gives it. A feature no item of R7 names: held, a row with a start and no end read at a law date after the cut, listed under the result that reads it (h_f) and not under one that reads another input (h_g), nor under a line of both twice (h_both lists it once)"
+
+source card "T's card (invented)"
+
+input fee: num
+
+input n: num
+
+input later: date
+
+def f: num = fee at later
+
+def g: num = n
+
+ask h_f: f law 2026-09-01
+
+ask h_g: g
+
+ask h_both: f, f law 2026-09-01
+
+version v_open
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  fee = 4 "an open-ended row"
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  n = 2 "the card"
+  later = 2026-09-01 "after the cut"

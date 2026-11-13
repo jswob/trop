@@ -1,0 +1,26 @@
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index mon = month 2026-01..2026-12
+input base: money PLN
+input step: money PLN
+
+def acc[m in mon]: money PLN = if pos(m) == 1 then base else acc[m - 1] + step
+def two[m in mon]: money PLN = acc[m] + base
+
+ask e: explain acc[2026-06]
+ask e3: explain acc[2026-03]
+ask e4: explain acc[2026-04]
+ask t: explain two[2026-05]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 10.00 PLN "s"
+  step = 1.00 PLN "s"

@@ -1,0 +1,47 @@
+model r6_reach
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.7, R6's reach (#145), from L §5's A form defined by another alone: a form means its definition, with its values, holes and refusals, their messages naming the form as written. Features no item of R6 names: next(K, d) with no member yet (n_*: next and the first it is, one hole each, each naming its own form), and low over days a hole movement reaches (l_*: low and the min it is)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+
+input late: date
+
+input d0: date
+
+input d1: date
+
+input d9: date
+
+move gift: transfers
+  on late
+  leg cash from world to konto amount fee
+
+ask n_next: next(transfers, d1)
+
+ask n_first: first(t in transfers over d1 ..) ties by t.day
+
+ask l_low: low(konto, d0 .. d9)
+
+ask l_min: min(bal(konto, d) for d in d0 .. d9 step 1 day)
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  fee = ?"how much is the gift?"
+  late = 2026-02-10 "before the cut"
+  d0 = 2026-02-01 "the card"
+  d1 = 2026-03-02 "after the cut"
+  d9 = 2026-02-28 "the card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "the card"

@@ -1,0 +1,14 @@
+part pin_if
+  tally 2
+
+input pct: num %
+
+ask pin_if: rate[2026] with rate[2026] = (if year_of(start_day) == 2026 then 3 else 4)
+
+ask pin_if_pct: pct with pct = (if year_of(start_day) == 2026 then 2 % else 3 %)
+
+version card_p
+  cite card
+  governs always
+  known 2026-01-01
+  pct = 5 % "the card"

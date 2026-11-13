@@ -4,6 +4,18 @@ T's STOP-REPORTs (the guard's pointer, R-79): a form T wrote and ran where refco
 ruled family, held out of the vectors until it is ruled. Each in `engine/BUILD-LOG.md`'s STOP-REPORT layout, newest
 last. A held fixture stays written (`codes/m0/held.tsv`, `m0/format/held.tsv`); once ruled, it moves to the vectors.
 
+**Ruled by tally 2.1.7** (T's re-run, 2026-11-13). Every section below up to "STOP-REPORT 2026-11-11" was an item of
+the round (the plan's G1–G16) and is ruled: G1 (`adjust/bound-field`, `gifts/lifespan-zz`) by #90; REQ-CLOCK by R5
+(#144, `codes/m1/edits.tsv` `rules/clock`); the parenthesised years by R10 (#149) and S10 (#113), `m1/carried/held.tsv`
+released; `low` over no days by R6 (#145, `decide/low-empty`, `-from`); the fan-out's two refusals by R5 (#129); the
+`$u` clause by B3 (#151); NB6, NB7, NB11 by R6 (G4, G5, G8), NB9 by S5 (#152), NB10 by R2 (G7); the row id by B6
+(#135); `argmax … ties by` a hole by R1 (#116); the band figure by R9 (G9); N2, the prefix walk's legs by R1 (G10,
+G16); `by unit_price` keyed by places by R5 (G11); end-of-time ranges by B1 (G12); `pinned:` by read order by R7
+(G13); a figure in an `if` in a pin by R10 (G14); two currencies through `any` by R5 (G15); WARN-NEGATIVE through the
+walk up to a day by R1 (G3). Each item is a vector named by its rule (`m1/fixes/r<n>/`, `b<n>/`, `s<n>/`); the forms
+still noted "not stored, not built" stay for the milestones that build them. T's re-run's own findings are the last
+section, SR-1 to SR-14.
+
 ## STOP-REPORT 2026-11-05: a field of an adjustment's `.adjusts` that no event has loads on the engine; refcore refuses it `LOAD-FIELD`
 
 **Resolved (2026-11-05):** the coordinator's pick P19 (a); the builder's 9d9f5a1 ("M0, G12 (2 of 2)") checks a field read through `.adjusts` by name over the event kinds, and the engine prints refcore's `LOAD-FIELD zz is not a field of events`. `adjust/adjusts-field` moved from `codes/m0/held.tsv` to `edits.tsv`, with the forms 9d9f5a1 made match: a leg and an attribute read through `.adjusts` (`adjust/adjusts-leg`, `adjust/adjusts-attr`), a bound adjustment's `.adjusts.zz` (`adjust/bound-adjusts-field`), `LOAD-FIELD` through an aggregate (`adjust/aggregate-field`). The report as filed:
@@ -142,3 +154,60 @@ last. A held fixture stays written (`codes/m0/held.tsv`, `m0/format/held.tsv`); 
 - **What I ask:** the builder prints the warnings of the days a walk up to a day walked, as the whole walk does, once per run (L §8.5); T's vector turns green.
 - **State:** the vector is in the store, red; no hold.
 - **Not stored, not built (the gate or M2):** pins under `as if` naming a binding inside an aggregate (`agent/pt/x4`–`x6`, N5), a pin naming two bindings in one part (`pt/two.tally` `p3`), an ask's `law`, `as known` and `with` pins naming its own `for` (`agent/pt/w.tally`, `x1`, `x2`, `two` `p4`; refcore crashes), rows keyed by a range of fractions (`g13-review/p/sm*`, `agent/w/rq`, `x/rg8`), a scenario's parts beside `k23` (`g13-review/s/`); a leg read by name of a plan's instance a later version made exist (E §5 step 1; `fixes/g14/t_mb5_lx.tally` `x1`: refcore `0.00 PLN`, the engine stops the run "not implemented", so `leg_field`'s five mutants on that path, `members.rs:731` `||`, `:740`, `:744` ×3, have no green input yet).
+
+## STOP-REPORTs of tally 2.1.7's re-run (T, 2026-11-13): refcore's answer needs an exception to a rule's text
+
+Each: the smallest text, the rule's words, refcore's answer, what T stored. Where a line moved and nothing explains
+it, T left it at tally 2.1.6's bytes (kept in the store; `held.tsv` where the rest of the vector moved). Texts named
+`out/t217/…` are T's probes, re-made from the row's description (git-ignored); the rest are tracked fixtures.
+
+- **SR-1 (R2, #141):** `residuals konto` is refused `RUN-TIE lean has a tie …` by instances of `lean` whose legs never
+  touch konto (`kernel` `g5/order` q_res_jan, q_res_feb). R2: "a refused movement is refused for every read of it,
+  exactly where a hole movement would be a hole"; the same instance refused by `RUN-DIV`, or a hole, leaves the ledger
+  answered. Kept at 2.1.6's bytes: `g5/order`, m1 `fixes/g12/pm_order_order`, `pm4_g5_…`, `pm7_…`, `pm8_g5_…`,
+  `r_p_ord`; held for #141 with refcore's bytes (their other lines moved by R5), nine: `prr_*` (four), `r_agent_ord_order`,
+  `r_pb_*-order_order` (four).
+- **SR-2 (B1, #150):** `kernel` `g14/day_range_end`: `r_past`, `7262-02-02 .. 9999-12-31 step 1 day`, 1 000 001 keys,
+  is answered; L §7.6 item 2 refuses more than 1 000 000 keys, as refcore does for `r_count` (the same count ending
+  9999-12-30). `r_edge` and `r_two` answer where L §7.6 item 1 refuses "a range's next key" past 9999-12-31. Kept.
+- **SR-3 (R4, #143, F11a):** `value(wunits[oki], d1) in PLN by fp` on `place wunits[w in wrapper]: holdings fu priced
+  fp` prints `LOAD-PRICE value(wunits[ike]) by fp: wunits[ike]'s price already gives its fu`: it names a place the
+  text doesn't read (R9: a value printed as written). The refusal itself is R4's; stored as refcore gives it.
+- **SR-4 (R4, F11a, the spec's texts):** `engine/spec/amendments/household/law/pl/wrappers.tally:45`, its
+  `asks/core.tally` and `engine/spec/montecarlo/household-bands/scenarios/surprises.tally` write `value(wunits[w], d)
+  in PLN by etf_price[month_of(d)]` on a place `priced etf_price`: refcore refuses the household `LOAD-PRICE`, while
+  `spec/tools/loadcheck.py` calls it clean. The fix is T-1's: drop the `by`. `m0/loadcheck` kept at 2.1.6's bytes;
+  T's 26 copies (`integration/amendments/cut11`, `real11`) were repaired (pick T-1).
+- **SR-5 (R3, #142, minor):** `max(w_in, d) == d` undecided prints `?"date within window(…) not precise enough for
+  max(w_in, d) == d"` with no `(w_in)`, where `add_days(w_in, 1) == d` carries it: L §8.1, "with the item and keys each
+  came from". The form left out of `r3/reach_max`.
+- **SR-6 (R7, #146):** `tot as if {r[k1] = 5} with r[k1] = 9` is 6 (R4 right), but its register lists both `pinned:
+  r[k1] = 5` and `pinned: r[k1] = 9`; R7: a pin is listed "exactly when a read in its set gives it". `m1/fixes/r4/reach`
+  ask `p_inner`, left out of `r4/reach_asif`.
+- **SR-7 (R6, #145):** `next(transfers, d1)` before any member prints `?"m: no transfers yet, …"`, naming the
+  definition's bound `m`, not the form as written (R6: "their messages naming the form as written"); its RUN-TIE
+  prints `next(transfers, 2026-03-02)`, the day's value for the text's `d1` (stored as refcore gives it). `m1/fixes/r6/
+  reach` asks `n_next`, `n_first` left out.
+- **SR-8 (R7, #146):** `bal(konto, d9)` where a move's `when wanted` is false, `wanted` an `assumed` row, lists no
+  `assumed:`; with it true it does. L §8.2: the set holds "the reads that decided that a movement doesn't count (a
+  false when …)". `m1/fixes/r7/reach` ask `a_when` left out.
+- **SR-9 (R3, #142, a crash):** `count(d in d1 .. d2 step age(w, d2) * 1 month)`, w a window: `REFCORE-NOT-YET …
+  AttributeError: 'Iv' object has no attribute 'q'`; R3 makes a step that needs one value `HOLE-IMPRECISE`.
+  `fixes/g13/r_agent_w_model_with_r_agent_w_g4`, `_g5`, `rf_w_model_with_rf_w_w10` kept at 2.1.6's bytes.
+- **SR-10 (R8, #147):** `explain f with ax = lo`, ax an axis the ask pins, prints `REFCORE-NOT-YET … axis ax read
+  outside the axes the ask reaches`; R8: every ask form fans out over the axes it reads. `m1/fixes/r8/reach` ask
+  `e_pinned` left out of `r8/reach_explain`.
+- **SR-11 (budget):** `fixes/g13/r_agent_w_model_with_r_agent_w_h2`, `count(d in 2026-01-01 .. 2046-01-01 step 1 day
+  where t6[d] == n5)`, now runs past refcore's 90 s; tally 2.1.6's ran in budget. Kept at 2.1.6's bytes.
+- **SR-12 (B6, #135):** `px = 4 at 2026-04-01`, a `num` reading at a bare day, one of two px rows of a version, prints
+  its row id `card_2026:px 2026-04-01 None` (`explain`, `inputs-of`); L §2.5 gives `version:target` then its instant,
+  the day, and `None` is no printed form (R9). `fixes/g11/r_p_b_elp`, `_ilp` kept at 2.1.6's bytes.
+- **SR-13 (R10, #149):** `first_q == (2026-04)`, first_q a key of a month index `by 3`, is false on refcore; L §2.5
+  Keys: the position reaches through parentheses, and the bare twin `first_q != 2026-04` is false. `fixes/g7/
+  by3c_a_paren` stays held, re-pointed from #113 to #149.
+- **SR-14 (budget):** `I:B:B-13~B3` and `~B4` run past the 90 s budget on tally 2.1.7's refcore (2.1.6: 45.1 s,
+  49.7 s); their siblings take 70.6 s (`~B1`), 88.3 s (`~B2`) and 89.4 s (`~B5`) at two jobs, from 43–50 s. Their
+  baselines are kept; a capability copy (TESTING §4) or a load row is the user's call.
+- **Coverage lost, not a fault:** an ask's `as known` after the model's `on` now refuses the whole request (E §11
+  `REQ-CLOCK`, #112): `I:E1:tx2_*` (six asks of `baselines/e1-02-B16.out`) and `I:S4:S4-03P~pinned` (six) print the
+  refusal alone, stored as refcore gives it. A text repair that keeps their asks answered is for the round's owner.

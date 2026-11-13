@@ -1,0 +1,14 @@
+scenario sc over base
+  tally 2
+  from 2026-01-01
+  note "x"
+
+version sv
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  replace b = base.a * base.a "linked"
+
+ask r_a2: readers-of a in sc
+
+ask c_sc: c in sc

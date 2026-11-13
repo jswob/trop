@@ -1,0 +1,12 @@
+scenario s over hh
+  tally 2
+  from 2027-01-01
+
+version vs
+  cite act
+  governs 2027..
+  known 2026-12-01
+  rate: [0, 10) = 300.00 PLN "under 10"
+  rate: [10, 18) = 200.00 PLN "10 to 17"
+
+ask q: rate(age) in s law 2027-06-01

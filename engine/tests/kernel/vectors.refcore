@@ -1501,7 +1501,7 @@ q_se: (24 328.00 USD, 24 328.00 USD, 22 467.00 USD, 22 467.00 USD, 22 467.00 USD
   assumed: the case lists no entry for Schedule SE line 8c (wages, Form 8919), and the scenario has no Form 8919 (entry[bse_08c])
   assumed: the case's W-2 transcription lists no box 7 (social security tips) (w2_box7)
   law date 2025-12-31, cut 2026-10-18
-,22:I:X:konto_balance@b_r1,6:checks,399:run cut11/b_r1/asks/cut.tally cut11/b_r1/facts/2026.tally cut11/b_r1/law/pl/benefits.tally cut11/b_r1/law/pl/business.tally cut11/b_r1/law/pl/common.tally cut11/b_r1/law/pl/employment.tally cut11/b_r1/law/pl/wrappers.tally cut11/b_r1/loans.tally cut11/b_r1/pays.tally cut11/b_r1/people.tally cut11/b_r1/places.tally cut11/b_r1/reality.tally cut11/b_r1/records/mbank/2026-09.tally --ask konto_balance,48779:25:cut11/b_r1/asks/cut.tally,203:part asks_core
+,22:I:X:konto_balance@b_r1,6:checks,399:run cut11/b_r1/asks/cut.tally cut11/b_r1/facts/2026.tally cut11/b_r1/law/pl/benefits.tally cut11/b_r1/law/pl/business.tally cut11/b_r1/law/pl/common.tally cut11/b_r1/law/pl/employment.tally cut11/b_r1/law/pl/wrappers.tally cut11/b_r1/loans.tally cut11/b_r1/pays.tally cut11/b_r1/people.tally cut11/b_r1/places.tally cut11/b_r1/reality.tally cut11/b_r1/records/mbank/2026-09.tally --ask konto_balance,48753:25:cut11/b_r1/asks/cut.tally,203:part asks_core
   tally 2
 
 ask konto_balance: bal(konto, d) with uncertain, bal(konto, d) with uncertain - vat_owed[d] for d in [2026-10-31] law cut
@@ -2102,7 +2102,7 @@ version sus_2026
   ee_rate[disability] = 0.015 "art. 22 ust. 1 pkt b, część pracownika"
   ee_rate[pension] = 0.0976 "art. 22 ust. 1 pkt a, część pracownika"
   ee_rate[sickness] = 0.0245 "art. 22 ust. 1 pkt c"
-,32:cut11/b_r1/law/pl/wrappers.tally,3500:part pl_wrappers
+,32:cut11/b_r1/law/pl/wrappers.tally,3474:part pl_wrappers
   tally 2
   law
   note "IKE: roczny limit wpłat. OKI: od 2027, podatek od średniej wartości rachunku ponad kwotę wolną, płatny do 31 maja."
@@ -2146,7 +2146,7 @@ def ike_limit[y in tax_year]: money PLN at start_of(y)
 def nbp_oct[y in tax_year]: num = nbp_ref at add_days(add_months(start_of(y), -nbp_oct_2), -1)
 
 def oki_avg[y in tax_year]: num PLN at start_of(y)
-  rule base v oki_rules = sum(value(wunits[oki], d) in PLN by etf_price[month_of(d)] + bal(wcash[oki], d) for d in day where year_of(d) == y) / days_between(start_of(y), end_of(y))
+  rule base v oki_rules = sum(value(wunits[oki], d) in PLN + bal(wcash[oki], d) for d in day where year_of(d) == y) / days_between(start_of(y), end_of(y))
 
 def oki_rate[y in tax_year]: num at start_of(y)
   rule base v oki_2027 = oki_rate_first
@@ -2653,7 +2653,7 @@ version mbank_2026_09
 warning: WARN-NEGATIVE konto is below zero from 2026-03-01
 warning: WARN-NEGATIVE konto is below zero from 2026-03-17
 warning: WARN-UNREAD place gotowka is read by nothing
-,25:I:X:replay_september@b_r1,6:checks,402:run cut11/b_r1/asks/cut.tally cut11/b_r1/facts/2026.tally cut11/b_r1/law/pl/benefits.tally cut11/b_r1/law/pl/business.tally cut11/b_r1/law/pl/common.tally cut11/b_r1/law/pl/employment.tally cut11/b_r1/law/pl/wrappers.tally cut11/b_r1/loans.tally cut11/b_r1/pays.tally cut11/b_r1/people.tally cut11/b_r1/places.tally cut11/b_r1/reality.tally cut11/b_r1/records/mbank/2026-09.tally --ask replay_september,48779:25:cut11/b_r1/asks/cut.tally,203:part asks_core
+,25:I:X:replay_september@b_r1,6:checks,402:run cut11/b_r1/asks/cut.tally cut11/b_r1/facts/2026.tally cut11/b_r1/law/pl/benefits.tally cut11/b_r1/law/pl/business.tally cut11/b_r1/law/pl/common.tally cut11/b_r1/law/pl/employment.tally cut11/b_r1/law/pl/wrappers.tally cut11/b_r1/loans.tally cut11/b_r1/pays.tally cut11/b_r1/people.tally cut11/b_r1/places.tally cut11/b_r1/reality.tally cut11/b_r1/records/mbank/2026-09.tally --ask replay_september,48753:25:cut11/b_r1/asks/cut.tally,203:part asks_core
   tally 2
 
 ask konto_balance: bal(konto, d) with uncertain, bal(konto, d) with uncertain - vat_owed[d] for d in [2026-10-31] law cut
@@ -3254,7 +3254,7 @@ version sus_2026
   ee_rate[disability] = 0.015 "art. 22 ust. 1 pkt b, część pracownika"
   ee_rate[pension] = 0.0976 "art. 22 ust. 1 pkt a, część pracownika"
   ee_rate[sickness] = 0.0245 "art. 22 ust. 1 pkt c"
-,32:cut11/b_r1/law/pl/wrappers.tally,3500:part pl_wrappers
+,32:cut11/b_r1/law/pl/wrappers.tally,3474:part pl_wrappers
   tally 2
   law
   note "IKE: roczny limit wpłat. OKI: od 2027, podatek od średniej wartości rachunku ponad kwotę wolną, płatny do 31 maja."
@@ -3298,7 +3298,7 @@ def ike_limit[y in tax_year]: money PLN at start_of(y)
 def nbp_oct[y in tax_year]: num = nbp_ref at add_days(add_months(start_of(y), -nbp_oct_2), -1)
 
 def oki_avg[y in tax_year]: num PLN at start_of(y)
-  rule base v oki_rules = sum(value(wunits[oki], d) in PLN by etf_price[month_of(d)] + bal(wcash[oki], d) for d in day where year_of(d) == y) / days_between(start_of(y), end_of(y))
+  rule base v oki_rules = sum(value(wunits[oki], d) in PLN + bal(wcash[oki], d) for d in day where year_of(d) == y) / days_between(start_of(y), end_of(y))
 
 def oki_rate[y in tax_year]: num at start_of(y)
   rule base v oki_2027 = oki_rate_first
@@ -3827,7 +3827,7 @@ version mbank_2026_09
 warning: WARN-NEGATIVE konto is below zero from 2026-03-01
 warning: WARN-NEGATIVE konto is below zero from 2026-03-17
 warning: WARN-UNREAD place gotowka is read by nothing
-,26:I:X:replay_september@b_r1s,6:checks,415:run cut11/b_r1s/asks/cut.tally cut11/b_r1s/facts/2026.tally cut11/b_r1s/law/pl/benefits.tally cut11/b_r1s/law/pl/business.tally cut11/b_r1s/law/pl/common.tally cut11/b_r1s/law/pl/employment.tally cut11/b_r1s/law/pl/wrappers.tally cut11/b_r1s/loans.tally cut11/b_r1s/pays.tally cut11/b_r1s/people.tally cut11/b_r1s/places.tally cut11/b_r1s/reality.tally cut11/b_r1s/records/mbank/2026-09.tally --ask replay_september,48668:26:cut11/b_r1s/asks/cut.tally,80:part asks_core
+,26:I:X:replay_september@b_r1s,6:checks,415:run cut11/b_r1s/asks/cut.tally cut11/b_r1s/facts/2026.tally cut11/b_r1s/law/pl/benefits.tally cut11/b_r1s/law/pl/business.tally cut11/b_r1s/law/pl/common.tally cut11/b_r1s/law/pl/employment.tally cut11/b_r1s/law/pl/wrappers.tally cut11/b_r1s/loans.tally cut11/b_r1s/pays.tally cut11/b_r1s/people.tally cut11/b_r1s/places.tally cut11/b_r1s/reality.tally cut11/b_r1s/records/mbank/2026-09.tally --ask replay_september,48642:26:cut11/b_r1s/asks/cut.tally,80:part asks_core
   tally 2
 
 ask replay_september: residuals konto 2026-09 law cut
@@ -4426,7 +4426,7 @@ version sus_2026
   ee_rate[disability] = 0.015 "art. 22 ust. 1 pkt b, część pracownika"
   ee_rate[pension] = 0.0976 "art. 22 ust. 1 pkt a, część pracownika"
   ee_rate[sickness] = 0.0245 "art. 22 ust. 1 pkt c"
-,33:cut11/b_r1s/law/pl/wrappers.tally,3500:part pl_wrappers
+,33:cut11/b_r1s/law/pl/wrappers.tally,3474:part pl_wrappers
   tally 2
   law
   note "IKE: roczny limit wpłat. OKI: od 2027, podatek od średniej wartości rachunku ponad kwotę wolną, płatny do 31 maja."
@@ -4470,7 +4470,7 @@ def ike_limit[y in tax_year]: money PLN at start_of(y)
 def nbp_oct[y in tax_year]: num = nbp_ref at add_days(add_months(start_of(y), -nbp_oct_2), -1)
 
 def oki_avg[y in tax_year]: num PLN at start_of(y)
-  rule base v oki_rules = sum(value(wunits[oki], d) in PLN by etf_price[month_of(d)] + bal(wcash[oki], d) for d in day where year_of(d) == y) / days_between(start_of(y), end_of(y))
+  rule base v oki_rules = sum(value(wunits[oki], d) in PLN + bal(wcash[oki], d) for d in day where year_of(d) == y) / days_between(start_of(y), end_of(y))
 
 def oki_rate[y in tax_year]: num at start_of(y)
   rule base v oki_2027 = oki_rate_first
@@ -8736,16 +8736,16 @@ version openings
   known 2025-12-31
   opening[konto] = 100 at 2026-01-01 start
   opening[box] = 0 at 2026-01-01 start
-,,1:0,556:q_bal (d = 2026-01-20): (100.00 PLN, 3.00 PLN)
+,,1:0,510:q_bal (d = 2026-01-20): (100.00 PLN, 3.00 PLN)
   unfulfilled: split[2026-01]
   law date 2026-02-15, cut 2026-02-15
 q_bal (d = 2026-02-19): (100.00 PLN, 3.00 PLN)
   unfulfilled: split[2026-01]
   law date 2026-02-15, cut 2026-02-15
-q_bal (d = 2026-02-20): (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
+q_bal (d = 2026-02-20): (100.00 PLN, refused: RUN-DIV division by zero)
   unfulfilled: split[2026-01]
   law date 2026-02-15, cut 2026-02-15
-q_bal (d = 2026-03-20): (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
+q_bal (d = 2026-03-20): (100.00 PLN, refused: RUN-DIV division by zero)
   unfulfilled: split[2026-01]
   law date 2026-02-15, cut 2026-02-15
 ,7:g9/sign,2:g9,17:run g9/sign.tally,7498:13:g9/sign.tally,7475:model g9_sign
@@ -10441,7 +10441,8 @@ version openings
   opening[konto] = 1000 at 2026-01-01 start
   opening[p_pp] = 0 at 2026-01-01 start
   opening[z_box] = 10 at 2026-01-01 start
-,,1:0,107:q_after: (refused: RUN-DIV division by zero, 1 000.00 PLN, 0.00 PLN)
+,,1:0,132:q_after: (1 000.00 PLN, 1 000.00 PLN, 0.00 PLN)
+  left out: pp, 1 instances, first 2026-03-05
   law date 2026-02-15, cut 2026-02-15
 ,11:g10/observe,3:g10,21:run g10/observe.tally,6987:17:g10/observe.tally,6960:model g10_observe
   tally 2
@@ -15973,13 +15974,13 @@ ask a_y2_two_years: y2_two_years[2026]
 ask a_y2_24_months: y2_24_months[2026]
 ask a_y2_back_two_years: y2_back_two_years[2028]
 ask a_fy2_two_years: fy2_two_years[2026]
-,,1:0,182:a_fy2_two_years: 2027-04-06
+,,1:0,182:a_fy2_two_years: 2028-04-06
   cut 2026-12-31
-a_y2_24_months: 2027-01-01
+a_y2_24_months: 2028-01-01
   cut 2026-12-31
-a_y2_back_two_years: 2027-01-01
+a_y2_back_two_years: 2026-01-01
   cut 2026-12-31
-a_y2_two_years: 2027-01-01
+a_y2_two_years: 2028-01-01
   cut 2026-12-31
 ,15:g14/nominal_row,3:g14,25:run g14/nominal_row.tally,523:21:g14/nominal_row.tally,493:model g14_nominal_row
   tally 2
@@ -16180,7 +16181,8 @@ version v
   known 2026-01-01
   r5 = 5 %/year "five per cent a year"
   n1 = 1 "one"
-,,1:1,102:refused: LOAD-UNIT 0.05 /year * 1 day: a rate times a duration of another period dimension (day/year)
+,,1:0,127:d_day: refused: RUN-DOMAIN 0.05 /year * 1 day: a rate times a duration of another period dimension (day/year)
+  cut 2026-12-31
 ,21:g1/rate_duration_twin,2:g1,40:run g1/rate_duration.tally --ask d_month,696:22:g1/rate_duration.tally,665:model g1_rate_duration
   tally 2
   on 2026-12-31
@@ -16620,7 +16622,15 @@ version facts
   wdiv[2026-03] = 2 "answered"
   opening[konto] = 100 at 2026-01-01 start
   opening[box] = 0 at 2026-01-01 start
-,,1:1,102:refused: LOAD-UNIT 0.05 /year * 1 day: a rate times a duration of another period dimension (day/year)
+,,1:0,330:q_bal (d = 2026-01-20): (100.00 PLN, 3.00 PLN)
+  unfulfilled: topup[2026-01]
+  cut 2026-02-15
+q_bal (d = 2026-02-19): (100.00 PLN, 3.00 PLN)
+  unfulfilled: topup[2026-01]
+  cut 2026-02-15
+q_bal (d = 2026-02-20): (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
+  unfulfilled: topup[2026-01]
+  cut 2026-02-15
 ,26:g6/refused_where_later_key,2:g6,48:run g6/refused_where_later_key.tally --ask q_bal,1429:32:g6/refused_where_later_key.tally,1387:model g6_refused_where_later_key
   tally 2
   on 2026-02-15
@@ -16755,11 +16765,12 @@ move topup[d in month, k in acct]: pays
   leg cash from world to konto amount lim[k]
 
 ask b: bal(konto, 2026-12-31) in s
-,,1:0,246:scenario s: refused: LOAD-SCENARIO move topup of s books on 2026-01-01, before 2026-06-01 (g6/scen_open.tally:5)
-a: 100.00 PLN
+,,1:0,122:a: 100.00 PLN
   cut 2026-01-01
-warning: WARN-UNREAD input lim is read by nothing
-warning: WARN-UNREAD place world is read by nothing
+b: 170.00 PLN
+  world: s
+  left out: topup, 5 instances, first 2026-01-01
+  cut 2026-01-01
 ,18:g5/dec_where_place,2:g5,28:run g5/dec_where_place.tally,1692:24:g5/dec_where_place.tally,1658:model g5_dec_where_place
   tally 2
   on 2026-02-15
@@ -16812,16 +16823,16 @@ version openings
   known 2025-12-31
   opening[konto] = 100 at 2026-01-01 start
   opening[box] = 0 at 2026-01-01 start
-,,1:0,516:q_bal (d = 2026-01-20): (100.00 PLN, 3.00 PLN)
+,,1:0,589:q_bal (d = 2026-01-20): (100.00 PLN, 3.00 PLN)
   unfulfilled: split[2026-01]
   law date 2026-02-15, cut 2026-02-15
 q_bal (d = 2026-02-19): (100.00 PLN, 3.00 PLN)
   unfulfilled: split[2026-01]
   law date 2026-02-15, cut 2026-02-15
-q_bal (d = 2026-02-20): (100.00 PLN, 3.00 PLN)
+q_bal (d = 2026-02-20): (100.00 PLN, refused: RUN-DIV division by zero)
   unfulfilled: split[2026-01]
   law date 2026-02-15, cut 2026-02-15
-q_bal (d = 2026-03-20): (100.00 PLN, 6.00 PLN)
+q_bal (d = 2026-03-20): (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
   unfulfilled: split[2026-01]
   law date 2026-02-15, cut 2026-02-15
 warning: WARN-UNREAD input small_put is read by nothing
@@ -16886,18 +16897,17 @@ version openings
   known 2025-12-31
   opening[konto] = 100 at 2026-01-01 start
   opening[box] = 0 at 2026-01-01 start
-,,1:0,490:q_bal (d = 2026-01-20): (100.00 PLN, 3.00 PLN)
+,,1:0,533:q_bal (d = 2026-01-20): (100.00 PLN, 3.00 PLN)
   unfulfilled: split[2026-01]
   law date 2026-03-31, cut 2026-03-31
 q_bal (d = 2026-02-19): (100.00 PLN, 3.00 PLN)
   unfulfilled: split[2026-01]
   law date 2026-03-31, cut 2026-03-31
-q_bal (d = 2026-02-20): (100.00 PLN, 3.00 PLN)
+q_bal (d = 2026-02-20): (100.00 PLN, refused: RUN-DIV division by zero)
   unfulfilled: split[2026-01]
   law date 2026-03-31, cut 2026-03-31
-q_bal (d = 2026-03-20): (101.00 PLN, 3.00 PLN)
+q_bal (d = 2026-03-20): (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
   unfulfilled: split[2026-01]
-  unfulfilled: split[2026-03]
   law date 2026-03-31, cut 2026-03-31
 ,17:g5/dec_where_plan,2:g5,27:run g5/dec_where_plan.tally,1873:23:g5/dec_where_plan.tally,1840:model g5_dec_where_plan
   tally 2
@@ -17108,16 +17118,16 @@ version openings
   known 2025-12-31
   opening[konto] = 100 at 2026-01-01 start
   opening[box] = 0 at 2026-01-01 start
-,,1:0,460:q_bal (d = 2026-01-20): (100.00 PLN, 3.00 PLN)
+,,1:0,510:q_bal (d = 2026-01-20): (100.00 PLN, 3.00 PLN)
   unfulfilled: split[2026-01]
   law date 2026-02-15, cut 2026-02-15
 q_bal (d = 2026-02-19): (100.00 PLN, 3.00 PLN)
   unfulfilled: split[2026-01]
   law date 2026-02-15, cut 2026-02-15
-q_bal (d = 2026-02-20): (100.00 PLN, 3.00 PLN)
+q_bal (d = 2026-02-20): (100.00 PLN, refused: RUN-DIV division by zero)
   unfulfilled: split[2026-01]
   law date 2026-02-15, cut 2026-02-15
-q_bal (d = 2026-03-20): (100.00 PLN, 3.00 PLN)
+q_bal (d = 2026-03-20): (100.00 PLN, refused: RUN-DIV division by zero)
   unfulfilled: split[2026-01]
   law date 2026-02-15, cut 2026-02-15
 ,18:g5/dec_where_noleg,2:g5,28:run g5/dec_where_noleg.tally,1444:24:g5/dec_where_noleg.tally,1410:model g5_dec_where_noleg
@@ -17239,13 +17249,13 @@ version openings
   known 2025-12-31
   opening[konto] = 100 at 2026-01-01 start
   opening[box] = 0 at 2026-01-01 start
-,,1:0,598:q_bal (d = 2026-01-20): (100.00 PLN, 0.00 PLN)
+,,1:0,502:q_bal (d = 2026-01-20): (100.00 PLN, 0.00 PLN)
   law date 2026-02-15, cut 2026-02-15
 q_bal (d = 2026-02-19): (100.00 PLN, 0.00 PLN)
   law date 2026-02-15, cut 2026-02-15
-q_bal (d = 2026-02-20): (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
+q_bal (d = 2026-02-20): (100.00 PLN, 0.00 PLN)
   law date 2026-02-15, cut 2026-02-15
-q_bal (d = 2026-03-20): (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
+q_bal (d = 2026-03-20): (100.00 PLN, 0.00 PLN)
   law date 2026-02-15, cut 2026-02-15
 warning: WARN-UNREAD input fee_amt is read by nothing
 warning: WARN-UNREAD input small_put is read by nothing
@@ -17288,7 +17298,8 @@ version v
   r5 = 5 %/year "five"
   n1 = 1 "one"
   r6 = 1 %/month "one"
-,,1:1,72:refused: LOAD-UNIT rates of different periods: 0.05 /year + 0.01 /month
+,,1:0,97:d_add: refused: RUN-DOMAIN rates of different periods: 0.05 /year + 0.01 /month
+  cut 2026-12-31
 ,19:g1/rate_periods_sub,2:g1,37:run g1/rate_periods.tally --ask d_sub,860:21:g1/rate_periods.tally,830:model g1_rate_periods
   tally 2
   on 2026-12-31
@@ -17327,7 +17338,8 @@ version v
   r5 = 5 %/year "five"
   n1 = 1 "one"
   r6 = 1 %/month "one"
-,,1:1,72:refused: LOAD-UNIT rates of different periods: 0.05 /year - 0.01 /month
+,,1:0,97:d_sub: refused: RUN-DOMAIN rates of different periods: 0.05 /year - 0.01 /month
+  cut 2026-12-31
 ,19:g1/rate_periods_def,2:g1,37:run g1/rate_periods.tally --ask d_def,860:21:g1/rate_periods.tally,830:model g1_rate_periods
   tally 2
   on 2026-12-31
@@ -17366,7 +17378,8 @@ version v
   r5 = 5 %/year "five"
   n1 = 1 "one"
   r6 = 1 %/month "one"
-,,1:1,72:refused: LOAD-UNIT rates of different periods: 0.01 /month - 0.05 /year
+,,1:0,97:d_def: refused: RUN-DOMAIN rates of different periods: 0.01 /month - 0.05 /year
+  cut 2026-12-31
 ,19:g1/rate_periods_cmp,2:g1,37:run g1/rate_periods.tally --ask d_cmp,860:21:g1/rate_periods.tally,830:model g1_rate_periods
   tally 2
   on 2026-12-31
@@ -17405,7 +17418,8 @@ version v
   r5 = 5 %/year "five"
   n1 = 1 "one"
   r6 = 1 %/month "one"
-,,1:1,55:refused: LOAD-UNIT rates of different periods compared
+,,1:0,80:d_cmp: refused: RUN-DOMAIN rates of different periods compared
+  cut 2026-12-31
 ,20:g1/rate_periods_twin,2:g1,51:run g1/rate_periods.tally --ask a d_same d_periodic,860:21:g1/rate_periods.tally,830:model g1_rate_periods
   tally 2
   on 2026-12-31
@@ -17497,7 +17511,9 @@ source t "t"
 ask b: r5 + r6 in s
 
 ask c: n1 in s
-,,1:0,157:b: refused: LOAD-UNIT rates of different periods: 0.05 /year + 0.01 /month
+,,1:0,186:b: refused: RUN-DOMAIN rates of different periods: 0.05 /year + 0.01 /month
+  world: s
+  cut 2026-12-31
 c: 1
   world: s
   cut 2026-12-31
@@ -17776,10 +17792,7 @@ version card_2026
   rr[4] = 2.00 PLN "the card"
   opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
   bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[ana] amount 1.00 PLN) "a gift"
-,,1:0,207:warning: WARN-UNREAD input amt is read by nothing
-warning: WARN-UNREAD input fund_price is read by nothing
-warning: WARN-UNREAD input rr is read by nothing
-warning: WARN-UNREAD place fund is read by nothing
+,,1:1,85:refused: LOAD-KEY 4 is not a value of 1 .. 9 step 2 (g13/range_key_unasked.tally:40)
 ,25:g13/range_key_unasked_ask,3:g13,42:run g13/range_key_unasked.tally --ask nope,1330:27:g13/range_key_unasked.tally,1293:model g13_range_key_unasked
   tally 2
   on 2026-03-01
@@ -17822,7 +17835,7 @@ version card_2026
   rr[4] = 2.00 PLN "the card"
   opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
   bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[ana] amount 1.00 PLN) "a gift"
-,,1:1,29:refused: REQ-ASK no ask nope
+,,1:1,85:refused: LOAD-KEY 4 is not a value of 1 .. 9 step 2 (g13/range_key_unasked.tally:40)
 ,21:g7/flows_refused_plan,2:g7,121:run g7/flows_refused_plan.tally --ask q_start q_whole q_ends_before q_ends_on q_ends_after q_starts_before q_starts_after,2377:27:g7/flows_refused_plan.tally,2340:model g7_flows_refused_plan
   tally 2
   on 2026-02-15
@@ -17956,9 +17969,9 @@ version facts
   wdiv[2026-03] = 2 "answered"
   opening[konto] = 100 at 2026-01-01 start
   opening[box] = 0 at 2026-01-01 start
-,,1:0,100:q_starts_on: (3.00 PLN, 0.00 PLN)
+,,1:0,200:q_starts_on: (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
   cut 2026-02-15
-q_one_day: (0.00 PLN, 0.00 PLN)
+q_one_day: (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
   cut 2026-02-15
 ,26:g7/flows_refused_plan_twin,2:g7,36:run g7/flows_refused_plan_twin.tally,1919:32:g7/flows_refused_plan_twin.tally,1877:model g7_flows_refused_plan_twin
   tally 2

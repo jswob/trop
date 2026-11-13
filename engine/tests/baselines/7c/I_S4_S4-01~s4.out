@@ -25,12 +25,16 @@ s4_04 (p = edvin, d = 2027-02-13): 372 868 DUK
   anchor: a3390 2027-02-13 end, stated 7 315.40 DUK, difference ?"a3390 has no balance before 2027-02-13" (a3390)
   anchor: lea_own 2027-02-13 end, stated 6 200.00 DUK, difference ?"lea_own has no balance before 2027-02-13" (lea_own)
   anchor: pavo_own 2027-02-13 end, stated 3 400.00 DUK, difference ?"pavo_own has no balance before 2027-02-13" (pavo_own)
+  held: cottage_val = 151 000 DUK/property (valuations_r2), read for 2027-02-13
+  held: flat_val = 398 000 DUK/property (valuations_r2), read for 2027-02-13
   cut 2027-12-31
 s4_04 (p = lea, d = 2027-02-13): 6 200 DUK
   anchor: a1145 2027-02-13 end, stated 38 420.60 DUK, difference ?"a1145 has no balance before 2027-02-13" (a1145)
   anchor: a3390 2027-02-13 end, stated 7 315.40 DUK, difference ?"a3390 has no balance before 2027-02-13" (a3390)
   anchor: lea_own 2027-02-13 end, stated 6 200.00 DUK, difference ?"lea_own has no balance before 2027-02-13" (lea_own)
   anchor: pavo_own 2027-02-13 end, stated 3 400.00 DUK, difference ?"pavo_own has no balance before 2027-02-13" (pavo_own)
+  held: cottage_val = 151 000 DUK/property (valuations_r2), read for 2027-02-13
+  held: flat_val = 398 000 DUK/property (valuations_r2), read for 2027-02-13
   cut 2027-12-31
 s4_04 (p = lea, d = 2027-06-30): ?"Is the will's reason for leaving Lea out true? Lea sued Ruta and Pavo on 2027-05-20 calling it untrue; no ruling yet (hearing 2028-02-15)" (reason_true[edvin_estate, lea])
   anchor: a1145 2027-02-13 end, stated 38 420.60 DUK, difference ?"a1145 has no balance before 2027-02-13" (a1145)
@@ -42,6 +46,8 @@ s4_04 (p = lea, d = 2027-06-30): ?"Is the will's reason for leaving Lea out true
   unfulfilled: death_a3390[edvin_estate]
   unfulfilled: death_cottage[edvin_estate]
   unfulfilled: death_flat[edvin_estate]
+  held: cottage_val = 156 500 DUK/property (valuations_r2), read for 2027-06-30
+  held: flat_val = 412 000 DUK/property (valuations_r2), read for 2027-06-30
   cut 2027-12-31
 s4_04 (p = lea, d = 2027-12-31): ?"Is the will's reason for leaving Lea out true? Lea sued Ruta and Pavo on 2027-05-20 calling it untrue; no ruling yet (hearing 2028-02-15)" (reason_true[edvin_estate, lea])
   anchor: a1145 2027-02-13 end, stated 38 420.60 DUK, difference ?"a1145 has no balance before 2027-02-13" (a1145)
@@ -58,12 +64,16 @@ s4_04 (p = lea, d = 2027-12-31): ?"Is the will's reason for leaving Lea out true
   unfulfilled: divide_cottage[deed_311]
   unfulfilled: divide_flat[deed_311]
   WARN-LABELS labels dropped at pavo_own from 2027-10-12: bank[r3]
+  held: cottage_val = 171 000 DUK/property (valuations_r2), read for 2027-12-31
+  held: flat_val = 412 000 DUK/property (valuations_r2), read for 2027-12-31
   cut 2027-12-31
 s4_04 (p = pavo, d = 2027-02-13): 3 400 DUK
   anchor: a1145 2027-02-13 end, stated 38 420.60 DUK, difference ?"a1145 has no balance before 2027-02-13" (a1145)
   anchor: a3390 2027-02-13 end, stated 7 315.40 DUK, difference ?"a3390 has no balance before 2027-02-13" (a3390)
   anchor: lea_own 2027-02-13 end, stated 6 200.00 DUK, difference ?"lea_own has no balance before 2027-02-13" (lea_own)
   anchor: pavo_own 2027-02-13 end, stated 3 400.00 DUK, difference ?"pavo_own has no balance before 2027-02-13" (pavo_own)
+  held: cottage_val = 151 000 DUK/property (valuations_r2), read for 2027-02-13
+  held: flat_val = 398 000 DUK/property (valuations_r2), read for 2027-02-13
   cut 2027-12-31
 s4_04 (p = pavo, d = 2027-06-30): ?"Is the will's reason for leaving Lea out true? Lea sued Ruta and Pavo on 2027-05-20 calling it untrue; no ruling yet (hearing 2028-02-15)" (reason_true[edvin_estate, lea])
   anchor: a1145 2027-02-13 end, stated 38 420.60 DUK, difference ?"a1145 has no balance before 2027-02-13" (a1145)
@@ -75,6 +85,8 @@ s4_04 (p = pavo, d = 2027-06-30): ?"Is the will's reason for leaving Lea out tru
   unfulfilled: death_a3390[edvin_estate]
   unfulfilled: death_cottage[edvin_estate]
   unfulfilled: death_flat[edvin_estate]
+  held: cottage_val = 156 500 DUK/property (valuations_r2), read for 2027-06-30
+  held: flat_val = 412 000 DUK/property (valuations_r2), read for 2027-06-30
   cut 2027-12-31
 s4_04 (p = pavo, d = 2027-12-31): ?"Is the will's reason for leaving Lea out true? Lea sued Ruta and Pavo on 2027-05-20 calling it untrue; no ruling yet (hearing 2028-02-15)" (reason_true[edvin_estate, lea])
   anchor: a1145 2027-02-13 end, stated 38 420.60 DUK, difference ?"a1145 has no balance before 2027-02-13" (a1145)
@@ -91,12 +103,16 @@ s4_04 (p = pavo, d = 2027-12-31): ?"Is the will's reason for leaving Lea out tru
   unfulfilled: divide_cottage[deed_311]
   unfulfilled: divide_flat[deed_311]
   WARN-LABELS labels dropped at pavo_own from 2027-10-12: bank[r3]
+  held: cottage_val = 171 000 DUK/property (valuations_r2), read for 2027-12-31
+  held: flat_val = 412 000 DUK/property (valuations_r2), read for 2027-12-31
   cut 2027-12-31
 s4_04 (p = ruta, d = 2027-02-13): 221 868 DUK
   anchor: a1145 2027-02-13 end, stated 38 420.60 DUK, difference ?"a1145 has no balance before 2027-02-13" (a1145)
   anchor: a3390 2027-02-13 end, stated 7 315.40 DUK, difference ?"a3390 has no balance before 2027-02-13" (a3390)
   anchor: lea_own 2027-02-13 end, stated 6 200.00 DUK, difference ?"lea_own has no balance before 2027-02-13" (lea_own)
   anchor: pavo_own 2027-02-13 end, stated 3 400.00 DUK, difference ?"pavo_own has no balance before 2027-02-13" (pavo_own)
+  held: cottage_val = 151 000 DUK/property (valuations_r2), read for 2027-02-13
+  held: flat_val = 398 000 DUK/property (valuations_r2), read for 2027-02-13
   cut 2027-12-31
 s4_04 (p = ruta, d = 2027-06-30): ?"Is the will's reason for leaving Lea out true? Lea sued Ruta and Pavo on 2027-05-20 calling it untrue; no ruling yet (hearing 2028-02-15)" (reason_true[edvin_estate, lea])
   anchor: a1145 2027-02-13 end, stated 38 420.60 DUK, difference ?"a1145 has no balance before 2027-02-13" (a1145)
@@ -108,6 +124,8 @@ s4_04 (p = ruta, d = 2027-06-30): ?"Is the will's reason for leaving Lea out tru
   unfulfilled: death_a3390[edvin_estate]
   unfulfilled: death_cottage[edvin_estate]
   unfulfilled: death_flat[edvin_estate]
+  held: cottage_val = 156 500 DUK/property (valuations_r2), read for 2027-06-30
+  held: flat_val = 412 000 DUK/property (valuations_r2), read for 2027-06-30
   cut 2027-12-31
 s4_04 (p = ruta, d = 2027-12-31): ?"Is the will's reason for leaving Lea out true? Lea sued Ruta and Pavo on 2027-05-20 calling it untrue; no ruling yet (hearing 2028-02-15)" (reason_true[edvin_estate, lea])
   anchor: a1145 2027-02-13 end, stated 38 420.60 DUK, difference ?"a1145 has no balance before 2027-02-13" (a1145)
@@ -124,4 +142,6 @@ s4_04 (p = ruta, d = 2027-12-31): ?"Is the will's reason for leaving Lea out tru
   unfulfilled: divide_cottage[deed_311]
   unfulfilled: divide_flat[deed_311]
   WARN-LABELS labels dropped at pavo_own from 2027-10-12: bank[r3]
+  held: cottage_val = 171 000 DUK/property (valuations_r2), read for 2027-12-31
+  held: flat_val = 412 000 DUK/property (valuations_r2), read for 2027-12-31
   cut 2027-12-31

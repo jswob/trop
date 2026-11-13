@@ -468,7 +468,7 @@ mod tests {
     use std::collections::BTreeSet;
 
     /// The corpus groups `vectors.py` sorts the 315 text sets into, and how many sets each
-    /// holds; with the 38 format fixtures, 353 vectors.
+    /// holds; with the 40 format fixtures, 355 vectors.
     const GROUPS: [(&str, usize); 12] = [
         ("blind", 18),
         ("household-A", 8),
@@ -487,18 +487,21 @@ mod tests {
     /// The sets whose reprint refcore refuses, each by a ruling of tally 2.1.6: #91, a
     /// section id declared twice (LOAD-DUP), or an unknown prefix (LOAD-NAME); #74, a member
     /// absent or changed (LOAD-PIN); #88 with #90, a `same` side keyed by a signed literal,
-    /// no `sref` (LOAD-PARSE); and two refcore refuses where the engine prints or refuses
-    /// otherwise, held for #105 (pre-M1, P17): a member outside the folder given from its
-    /// parent (LOAD-PIN), a nested member's absent member (LOAD-NAME, a member's refusal).
-    /// `vectors.py`'s `REPRINT_REFUSED` lists the same.
-    const REPRINT_REFUSED: [&str; 9] = [
+    /// no `sref` (LOAD-PARSE); and, by tally 2.1.7's B4 (#105: `reprint` finds, pins and
+    /// loads members as `run` does), every refusal of `run`'s load of the members: a nested
+    /// member's absent or changed member (LOAD-PIN), a member folder with no model header or
+    /// two (LOAD-HEADER), each a member's refusal. `vectors.py`'s `REPRINT_REFUSED` lists the
+    /// same.
+    const REPRINT_REFUSED: [&str; 11] = [
         "U:set/surf/SURF-04/SURF-04",
         "format/dup_id",
         "format/dup_kind",
         "format/member_absent",
         "format/member_changed",
+        "format/member_folder_none",
+        "format/member_folder_two",
         "format/member_nested_absent",
-        "format/member_outside_parent",
+        "format/member_nested_changed",
         "format/same_key_signed",
         "format/unknown_prefix",
     ];
@@ -523,7 +526,7 @@ mod tests {
     #[test]
     fn the_format_vectors_read_and_name_their_texts() {
         let vs = format_vectors(FORMAT).expect("m0/format.refcore reads");
-        assert_eq!(vs.len(), 353, "315 text sets and 38 format fixtures");
+        assert_eq!(vs.len(), 355, "315 text sets and 40 format fixtures");
         let all = texts();
         let mut ids = BTreeSet::new();
         for v in &vs {
@@ -578,7 +581,7 @@ mod tests {
         }
         assert_eq!(
             vs.iter().filter(|v| v.group.starts_with("format/")).count(),
-            38,
+            40,
             "one vector per format fixture"
         );
     }

@@ -133,6 +133,16 @@ The test holds the law (L §2 "one canonical form"; `PROPERTIES.md` § M0 `m0_fo
 
 None of row 1's vectors waits on a ruling. Held so far: none (`held.tsv` names no M1 vector).
 
+**At tally 2.1.7** (T's re-run, 2026-11-13): the round's rules R1–R10, groups B1–B7 and singletons S1–S10 released
+172 of `held.tsv`'s 176 rows, `codes/m1/held.tsv`'s 3 (`rules/clock`, `decide/low-empty`, `-from`),
+`m1/carried/held.tsv`'s 7 (as `carried/years/*`), `m0/format/held.tsv`'s 2 and `codes/m0/held.tsv`'s 2 (G1). Each
+item is a vector named by its rule in `m1/vectors.tsv` (groups `fixes-r1` … `fixes-r10`, `fixes-b`, `fixes-s`: refcore's
+new tests' texts, `m1/fixes/<rule>/<test>/`, and T's own), and each rule has two or more `reach_*` vectors on features
+no item names, written from the rule's text (`m1/fixes/r<n>/reach/`). `HOLE-POSTRUN` has its gate-5 fixture
+(`codes/m1` `decide/post-run`). Held now, 23: R8's (#147, M2's first group) `fixes/g7/sc_w_diff`, `pr1_q_fc`,
+`pr2_q_fc` and `r8/*` (6); S2's `s2/*` (4, #101, M2: prices read from records); and T's STOP-REPORTs (`GAPS.md`,
+last section): SR-1's nine (#141) and SR-13's `fixes/g7/by3c_a_paren` (#149).
+
 ## Keeping master green
 
 As at S and M0 (`MILESTONE-S.md` § Keeping master green): every `m1_…` target has `test = false` and runs only as `check`'s report until M1 is in `engine/tools/milestones.toml`'s `gating`, which the rules step adds in `build/m1`'s last commit (the marker, pick P20).

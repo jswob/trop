@@ -11,10 +11,10 @@ unit PLN: currency minor 0.01
 
 place konto: accounts PLN lives 2026-01-01..
 
-input cash: money PLN
+input till: money PLN
 
 version v
   cite s
   governs always
   known 2026-01-01
-  cash = 1.00 PLN "s"
+  till = 1.00 PLN "s"

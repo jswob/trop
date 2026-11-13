@@ -10,7 +10,7 @@ ask ike_left: ike_limit[y] - flows(invest[ike], y) for y in [2026, 2027, 2028] l
 
 ask konto_balance: bal(konto, d) with uncertain, bal(konto, d) with uncertain - vat_owed[d] for d in [2026-10-31, 2026-12-31, 2027-06-30, 2027-12-31] law cut
 
-ask net_worth: sum(bal(x, d) with uncertain for x in places over .. where not x in outside and ((x in accounts or x in cash or x in claims or x in debts) and unit(x) == PLN)) + sum(value(wunits[w], d) in PLN by etf_price[month_of(d)] for w in wrapper) for d in [2026-12-31, 2031-12-31, 2041-12-31, 2059-12-31] law cut
+ask net_worth: sum(bal(x, d) with uncertain for x in places over .. where not x in outside and ((x in accounts or x in cash or x in claims or x in debts) and unit(x) == PLN)) + sum(value(wunits[w], d) in PLN for w in wrapper) for d in [2026-12-31, 2031-12-31, 2041-12-31, 2059-12-31] law cut
 
 ask pit28: pit28_due[y] for y in [2026, 2027, 2028] law cut
 

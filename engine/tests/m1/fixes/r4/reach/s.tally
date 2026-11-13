@@ -1,0 +1,13 @@
+scenario wide over r4_reach
+  tally 2
+  from 2026-01-01
+
+version wide_rows
+  cite card
+  governs 2026-01-01..
+  known 2025-12-01
+  replace r[*] = 7 "the scenario's wide row, known before the base's"
+
+ask s_wide: r[k1], r[k2] in wide law 2026-06-30
+
+ask s_asif: tot as if {r[k1] = 5} in wide law 2026-06-30

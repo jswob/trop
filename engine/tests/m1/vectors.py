@@ -44,7 +44,8 @@ KV.JOBS = 2  # at most two heavy jobs on the machine (the run's rule)
 LIST = os.path.join(HERE, 'vectors.tsv')
 STORED = os.path.join(HERE, 'vectors.refcore')
 COLUMNS = KV.COLUMNS + ['for']
-FOR = {'G%d' % n for n in range(1, 15)} | {'-'}
+FOR = ({'G%d' % n for n in range(1, 15)} | {'-'} | {'R%d' % n for n in range(1, 11)} | {'B%d' % n for n in range(1, 8)}
+       | {'S%d' % n for n in range(1, 11)})  # tally 2.1.7's rules, groups and singletons: the round's builder
 
 
 def rows():
@@ -55,7 +56,7 @@ def rows():
         out = list(r)
     for v in out:
         if v['for'] not in FOR:
-            sys.exit('vectors.tsv: %s is for %r, not a builder group G1..G14 or -' % (v['id'], v['for']))
+            sys.exit('vectors.tsv: %s is for %r, not a builder group G1..G14, a rule R1..R10, B1..B7, S1..S10 or -' % (v['id'], v['for']))
     return out
 
 

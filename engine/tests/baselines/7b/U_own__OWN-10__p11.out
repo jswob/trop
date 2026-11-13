@@ -1,12 +1,20 @@
 q_gain (p = ania): 100 DUK
+  held: px = 25 DUK/fz_units (prices), read for 2026-03-31
+  held: px = 27.5 DUK/fz_units (prices), read for 2026-04-30
   cut 2026-10-30
 q_gain (p = tomek): 150 DUK
+  held: px = 25 DUK/fz_units (prices), read for 2026-03-31
+  held: px = 27.5 DUK/fz_units (prices), read for 2026-04-30
   cut 2026-10-30
 q_units (p = ania): (40 fz_units, 40 fz_units)
   cut 2026-10-30
 q_units (p = tomek): (60 fz_units, 60 fz_units)
   cut 2026-10-30
 q_value (p = ania): (1 000 DUK, 1 100 DUK)
+  held: px = 25 DUK/fz_units (prices), read for 2026-03-31
+  held: px = 27.5 DUK/fz_units (prices), read for 2026-04-30
   cut 2026-10-30
 q_value (p = tomek): (1 500 DUK, 1 650 DUK)
+  held: px = 25 DUK/fz_units (prices), read for 2026-03-31
+  held: px = 27.5 DUK/fz_units (prices), read for 2026-04-30
   cut 2026-10-30

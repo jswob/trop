@@ -1,0 +1,12 @@
+part y_paren
+  tally 2
+
+ask p_day_of: day_of((2026), 12-31)
+
+ask y_end: end_of((2026))
+
+ask y_end_if: end_of(if year_of(start_day) == 2026 then 2026 else 2027)
+
+ask y_plus_if: (if year_of(start_day) == 2026 then 2026 else 2027) + 1 year
+
+ask y_round: round(wage[2026-06], (1), down)

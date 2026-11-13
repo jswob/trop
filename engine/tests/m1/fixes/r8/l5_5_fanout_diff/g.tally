@@ -1,0 +1,48 @@
+model g
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "made up"
+
+unit PLN: currency minor 0.01
+
+axis ax
+  lo "low"
+  mid "middle"
+  hi "high"
+
+input p: money PLN
+
+input twice: int
+
+input asked_on: date
+
+def f: money PLN at asked_on
+  rule base = p
+  rule hi beats base = p * twice when ax == hi
+
+def plain: money PLN = p at asked_on
+
+def same: money PLN at asked_on
+  rule base = p
+  rule hi beats base = p when ax == hi
+
+ask d_f: diff(f) in s against g
+
+ask d_plain: diff(plain) in s against g
+
+ask d_pin: diff(f) in s against g with ax = hi
+
+ask d_same: diff(same) in s against g
+
+ask d_stacks: diff(f) in s against t
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p = 10.00 PLN "the card"
+  twice = 2 "the card"
+  asked_on = 2026-06-01 "the card"

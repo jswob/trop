@@ -42,7 +42,7 @@ def ike_limit[y in tax_year]: money PLN at start_of(y)
 def nbp_oct[y in tax_year]: num = nbp_ref at add_days(add_months(start_of(y), -nbp_oct_2), -1)
 
 def oki_avg[y in tax_year]: num PLN at start_of(y)
-  rule base v oki_rules = sum(value(wunits[oki], d) in PLN by etf_price[month_of(d)] + bal(wcash[oki], d) for d in day where year_of(d) == y) / days_between(start_of(y), end_of(y))
+  rule base v oki_rules = sum(value(wunits[oki], d) in PLN + bal(wcash[oki], d) for d in day where year_of(d) == y) / days_between(start_of(y), end_of(y))
 
 def oki_rate[y in tax_year]: num at start_of(y)
   rule base v oki_2027 = oki_rate_first

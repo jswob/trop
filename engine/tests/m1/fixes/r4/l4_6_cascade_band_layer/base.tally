@@ -1,0 +1,21 @@
+model hh
+  tally 2
+  on 2027-12-31
+  start 2027-01-01
+  end 2027-12-31
+
+unit PLN: currency minor 0.01
+source act "the act"
+
+band rate(a: int): money PLN
+input age: int
+
+version v_act
+  cite act
+  governs 2026..
+  known 2026-12-01
+  rate: [0, 6) = 400.00 PLN "under 6"
+  rate: [6, 18) = 250.00 PLN "6 to 17"
+  age = 8 "the child"
+
+ask b: rate(age) law 2027-06-01

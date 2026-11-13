@@ -1,0 +1,21 @@
+model b5r
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "made up"
+
+index y2 = year 2026..2040 by 2
+
+input n1: int
+
+def bad[q in y2]: date = start_of(q + n1 * 1 year)
+
+ask a_bad: bad[2026]
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  n1 = 1 "one"

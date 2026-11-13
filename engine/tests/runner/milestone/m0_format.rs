@@ -264,6 +264,22 @@ mod tests {
         formats_as_refcore("format/same_place_keys");
     }
 
+    /// L §2.4 Version items (tally 2.1.7, R9, #96): a `same` side deeper than `a.x` beside
+    /// rows and a `same` item of two names sorts as the item it names, its target and keys its
+    /// left side's (refcore 2.1.6 sorted it by its parse tree; released from `format/held.tsv`).
+    #[test]
+    fn m0_format_rule_same_deep_beside_rows() {
+        formats_as_refcore("format/same_deep_beside_rows");
+    }
+
+    /// L §2.4 Version items (tally 2.1.7, R9, #96): a `same` side keyed by a keyed place beside
+    /// a row of its target and keys sorts as the item it names, a place keyed by things one
+    /// key; tied at target and keys, by the canonical line (GD-28).
+    #[test]
+    fn m0_format_rule_same_place_key_beside_row() {
+        formats_as_refcore("format/same_place_key_beside_row");
+    }
+
     /// E §3.1 step 1, L §2.4 (tally 2.1.6, #74): `reprint` reads and pins a joint model's
     /// members as `run` does, before it prints anything: a member with no file is refused
     /// `LOAD-PIN`, exit 1 (refcore 2.1.5 printed the model, exit 0).

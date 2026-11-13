@@ -238,15 +238,17 @@ mod tests {
             .collect();
         assert_eq!(
             (vs.len(), codes.len()),
-            (251, 52),
-            "237 fixtures of 52 codes"
+            (253, 52),
+            "239 fixtures of 52 codes"
         );
     }
 
     /// M1's stores (issue #108, chunk C4): 3 families' bases load clean and their 11 answers
-    /// print no refusal and no hole; 18 fixtures of 16 codes, #90's two on M0's families
-    /// (`m0:adjust`, `m0:gifts`, their bases beside them); and one `ENGINE-INVARIANT`
-    /// fixture, the family `decide`'s answers under the planted fault.
+    /// print no refusal and no hole; 22 fixtures of 18 codes, #90's two on M0's families
+    /// (`m0:adjust`, `m0:gifts`, their bases beside them), tally 2.1.7's three released rows
+    /// (`rules/clock`, `decide/low-empty`, `decide/low-empty-from`) and `HOLE-POSTRUN`'s
+    /// (S1, #93); and one `ENGINE-INVARIANT` fixture, the family `decide`'s answers under the
+    /// planted fault.
     #[test]
     fn the_m1_fixtures_read_and_print_their_codes() {
         let vs = m0_fixtures(M1).expect("codes/m1.refcore reads");
@@ -278,8 +280,8 @@ mod tests {
             .collect();
         assert_eq!(
             (vs.len(), codes.len()),
-            (34, 16),
-            "5 bases, 11 answers, 18 fixtures of 16 codes"
+            (38, 18),
+            "5 bases, 11 answers, 22 fixtures of 18 codes"
         );
         let faulted = m0_fixtures(M1_INVARIANT).expect("codes/m1_invariant.refcore reads");
         assert!(

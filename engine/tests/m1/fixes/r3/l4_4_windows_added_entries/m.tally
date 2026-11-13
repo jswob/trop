@@ -1,0 +1,18 @@
+model f5
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+input cal: calendar
+
+ask one: add_business(2026-05-29, 1, cal)
+ask each: add_business(2026-05-29, 1, cal) windows each
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  cal = calendar(weekends [sat, sun], added [window(2026-06-01, 2026-06-02), window(2026-06-01, 2026-06-02)]) "c"

@@ -3302,100 +3302,100 @@ benefits (m = 2028-03, c = ula): (zofia, 300.00 XXX, 0.00 XXX)
   held: night_share[ula] = 0.15 (facts), read for 2027-12-31
   cut 2026-10-01
 maintenance (m = 2027-01, c = tymon, p = wiktor): 1 134.00 XXX
-  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon])
+  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon], stated_from[court_2025_ula])
   cut 2026-10-01
 maintenance (m = 2027-01, c = ula, p = wiktor): 1 134.00 XXX
-  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_ula])
+  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon], stated_from[court_2025_ula])
   cut 2026-10-01
 maintenance (m = 2027-02, c = tymon, p = wiktor): 1 134.00 XXX
-  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon])
+  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon], stated_from[court_2025_ula])
   cut 2026-10-01
 maintenance (m = 2027-02, c = ula, p = wiktor): 1 134.00 XXX
-  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_ula])
+  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon], stated_from[court_2025_ula])
   cut 2026-10-01
 maintenance (m = 2027-03, c = tymon, p = wiktor): 1 134.00 XXX
-  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon])
+  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon], stated_from[court_2025_ula])
   cut 2026-10-01
 maintenance (m = 2027-03, c = ula, p = wiktor): 1 134.00 XXX
-  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_ula])
+  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon], stated_from[court_2025_ula])
   cut 2026-10-01
 maintenance (m = 2027-04, c = tymon, p = wiktor): 1 134.00 XXX
-  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon])
+  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon], stated_from[court_2025_ula])
   cut 2026-10-01
 maintenance (m = 2027-04, c = ula, p = wiktor): 1 134.00 XXX
-  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_ula])
+  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon], stated_from[court_2025_ula])
   cut 2026-10-01
 maintenance (m = 2027-05, c = tymon, p = wiktor): 1 134.00 XXX
-  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon])
+  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon], stated_from[court_2025_ula])
   cut 2026-10-01
 maintenance (m = 2027-05, c = ula, p = wiktor): 1 134.00 XXX
-  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_ula])
+  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon], stated_from[court_2025_ula])
   cut 2026-10-01
 maintenance (m = 2027-06, c = tymon, p = wiktor): 1 134.00 XXX
-  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon])
+  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon], stated_from[court_2025_ula])
   cut 2026-10-01
 maintenance (m = 2027-06, c = ula, p = wiktor): 1 134.00 XXX
-  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_ula])
+  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon], stated_from[court_2025_ula])
   cut 2026-10-01
 maintenance (m = 2027-07, c = tymon, p = wiktor): 1 134.00 XXX
-  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon])
+  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon], stated_from[court_2025_ula])
   cut 2026-10-01
 maintenance (m = 2027-07, c = ula, p = wiktor): 1 134.00 XXX
-  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_ula])
+  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon], stated_from[court_2025_ula])
   cut 2026-10-01
 maintenance (m = 2027-08, c = tymon, p = wiktor): 1 134.00 XXX
-  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon])
+  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon], stated_from[court_2025_ula])
   cut 2026-10-01
 maintenance (m = 2027-08, c = ula, p = wiktor): 1 134.00 XXX
-  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_ula])
+  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon], stated_from[court_2025_ula])
   cut 2026-10-01
 maintenance (m = 2027-09, c = tymon, p = wiktor): 1 134.00 XXX
-  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon])
+  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon], stated_from[court_2025_ula])
   cut 2026-10-01
 maintenance (m = 2027-09, c = ula, p = wiktor): 1 134.00 XXX
-  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_ula])
+  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon], stated_from[court_2025_ula])
   cut 2026-10-01
 maintenance (m = 2027-10, c = tymon, p = zofia): 432.00 XXX
-  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon])
+  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon], stated_from[court_2025_ula])
   held: night_share[tymon] = 0.7 (facts), read for 2027-09-20
   cut 2026-10-01
 maintenance (m = 2027-10, c = ula, p = wiktor): 1 134.00 XXX
-  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_ula])
+  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon], stated_from[court_2025_ula])
   cut 2026-10-01
 maintenance (m = 2027-11, c = tymon, p = zofia): 432.00 XXX
-  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon])
+  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon], stated_from[court_2025_ula])
   held: night_share[tymon] = 0.7 (facts), read for 2027-09-20
   cut 2026-10-01
 maintenance (m = 2027-11, c = ula, p = wiktor): 1 134.00 XXX
-  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_ula])
+  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon], stated_from[court_2025_ula])
   cut 2026-10-01
 maintenance (m = 2027-12, c = tymon, p = zofia): 432.00 XXX
-  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon])
+  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon], stated_from[court_2025_ula])
   held: night_share[tymon] = 0.7 (facts), read for 2027-09-20
   cut 2026-10-01
 maintenance (m = 2027-12, c = ula, p = wiktor): 1 134.00 XXX
-  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_ula])
+  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon], stated_from[court_2025_ula])
   cut 2026-10-01
 maintenance (m = 2028-01, c = tymon, p = zofia): 432.00 XXX
-  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon])
+  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon], stated_from[court_2025_ula])
   held: night_share[tymon] = 0.7 (facts), read for 2027-09-20
   cut 2026-10-01
 maintenance (m = 2028-01, c = ula, p = wiktor): 1 134.00 XXX
-  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_ula])
+  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon], stated_from[court_2025_ula])
   cut 2026-10-01
 maintenance (m = 2028-02, c = tymon, p = zofia): 432.00 XXX
-  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon])
+  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon], stated_from[court_2025_ula])
   held: night_share[tymon] = 0.7 (facts), read for 2027-09-20
   cut 2026-10-01
 maintenance (m = 2028-02, c = ula, p = wiktor): 1 134.00 XXX
-  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_ula])
+  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon], stated_from[court_2025_ula])
   cut 2026-10-01
 maintenance (m = 2028-03, c = tymon, p = zofia): 432.00 XXX
-  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon])
+  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon], stated_from[court_2025_ula])
   held: night_share[tymon] = 0.7 (facts), read for 2027-09-20
   cut 2026-10-01
 maintenance (m = 2028-03, c = ula, p = wiktor): 1 134.00 XXX
-  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_ula])
+  assumed: assessed in December 2025; taken to apply from January 2026, before the run (stated_from[court_2025_tymon], stated_from[court_2025_ula])
   cut 2026-10-01
 relief_2027 (p = wiktor): 570 XXX
   held: night_share[tymon] = 0.7 (facts), read for 2027-09-01

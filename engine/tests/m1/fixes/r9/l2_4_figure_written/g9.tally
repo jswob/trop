@@ -1,0 +1,23 @@
+model g9
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "made up"
+
+unit PLN: currency minor 0.01
+
+input amt: money PLN
+
+band fee(x: money PLN): money PLN
+
+ask q: fee(amt)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 4.00 PLN "the card"
+  fee: [0, 3.01) = 2.005 "the card"
+  fee: [3.01, inf) = 3.00 PLN "the card"
