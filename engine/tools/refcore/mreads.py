@@ -1905,6 +1905,11 @@ def m_priced_read(self, pn, th, u, d, n, env, ctx):
     if v is NONE:
         return Hole([('%s has no price in %s on %s' % (u or th.name, n.cur, d), '%s[%s]' % (
             pid, ', '.join(key_text(k) for k in ks)))])
+    for f in getattr(pn, '_fields', ()):
+        # `priced p.f`: the field of the record read (L §2.3 ref, §5.10; tally 2.1.7 S2, #101)
+        if isinstance(v, Hole):
+            return v
+        v = v.get(f)
     return v
 
 

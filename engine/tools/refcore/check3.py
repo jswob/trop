@@ -1115,6 +1115,16 @@ def m_resolve_price(self, pn, regime, what):
     m = self.m
     r = pn.ref
     pn._expr = None
+    # L §2.3 ref = ID ... {"." FIELD} (tally 2.1.7 S2, #101): `priced fund_price.nav` names a record input's field as
+    # the price; the fields are peeled here, the field's type is the price's, and priced_read reads the field
+    fields = []
+    root = r
+    while root.k == 'field':
+        fields.insert(0, root.name)
+        root = root.obj
+    if fields and root.k in ('name', 'index') and not (root.k == 'name' and root.id in getattr(m, 'joint_members', {})):
+        r = root
+    pn._fields = tuple(fields) if r is root else ()
     if r.k == 'index' and r.obj.k == 'name':
         # L §2.3 price = ref | "last" "(" ref ")": a price input read at keys the reference states, literal keys or
         # the place section's own key variables (`place h[f in funds]: holdings units priced px[f]`), read at the
@@ -1147,6 +1157,11 @@ def m_resolve_price(self, pn, regime, what):
     if pn.last and kind != 'input':
         raise uerr('%s is priced by last(%s): last reads an input (L §4.6)' % (what, r.id), pn.loc)
     t = info.type
+    for f in pn._fields:
+        ft = t.field(f) if t is not None and t.k == 'record' else None
+        if ft is None:
+            raise LoadError('LOAD-FIELD', '%s is not a field of %s' % (f, T.show(t) if t is not None else '?'), pn.loc)
+        t = ft
     u = None
     if t is not None and t.k == 'money':
         u = ((t.cur, 1),)
@@ -1163,7 +1178,7 @@ def m_resolve_price(self, pn, regime, what):
         pn._per = [b for b, e in u if e == -1][0]
     else:
         raise uerr('%s is priced by %s of type %s, not num CUR (a value) or num CUR/u (a price per unit)' % (
-            what, r.id, T.show(t) if t is not None else '?'), pn.loc)
+            what, _txt(pn.ref) if pn._fields else r.id, T.show(t) if t is not None else '?'), pn.loc)
     if len(info.binds) > 1:
         raise LoadError('LOAD-KEY', 'wrong number of keys: %s is priced by %s, keyed by %d indexes' % (
             what, r.id, len(info.binds)), pn.loc)
