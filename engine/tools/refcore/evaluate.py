@@ -1008,7 +1008,9 @@ class Engine:
                     out.append(r)
                     continue
                 if last_before is not None:
-                    if sp.always or sp.start is None or sp.start > last_before:
+                    # L §4.6 Past the last row: the rows whose span began on or before d, one with no start or that
+                    # governs always included (tally 2.1.7 R6, #118)
+                    if not sp.always and sp.start is not None and sp.start > last_before:
                         continue
                 elif not sp.contains(d):
                     continue
@@ -1290,29 +1292,43 @@ class Engine:
         if isinstance(dv, Hole):
             return dv
         d = self.date_of(dv, 'the day of last')
-        pv = self.pin_value(info, keys, ctx)
-        if pv is not NOPIN and not isinstance(pv, tuple):
-            return pv
-        org = self.origin(info, keys)
-        try:
-            cands = self.candidates(info.rows, keys, d, ctx, info, last_before=d)
-        except HoleSignal as h:
-            return h.hole
-        if not cands:
+        v = self.last_value(info, keys, d, ctx)
+        if v is NONE:
+            org = self.origin(info, keys)
             if info.reading:
                 # L §4.6 Readings: "With no reading on or before d, last and since are holes (HOLE-NOREADING)"; L §8.1:
                 # "<x>[k] has no reading on or before <d>"
                 return Hole([('%s has no reading on or before %s' % (org, d), org)])
             return self.no_candidate(info, keys, ctx, d, None)
+        return v
+
+    def last_value(self, info, keys, d, ctx):
+        """last(x[k], d), the one carry every form defined by it reads (L §4.6; `by last(p)`, `priced last(p)`,
+        L §5.10; tally 2.1.7 R6, #118, #123): the latest row whose span began on or before d (the latest reading for
+        a reading), marked held unless it governs always; NONE where no row began."""
+        pv = self.pin_value(info, keys, ctx)
+        if pv is not NOPIN and not isinstance(pv, tuple):
+            return pv
+        try:
+            cands = self.candidates(info.rows, keys, d, ctx, info, last_before=d)
+        except HoleSignal as h:
+            return h.hole
+        if not cands:
+            return NONE
+
+        def began(c):
+            sp = c.span(ctx.cut)
+            return datetime.date.min if sp.always or sp.start is None else sp.start
         if info.reading:
             latest = max(c.instant[0] for c in cands)
             cands = [c for c in cands if c.instant[0] == latest]
         else:
-            latest = max(c.span(ctx.cut).start for c in cands)
-            cands = [c for c in cands if c.span(ctx.cut).start == latest]
+            latest = max(began(c) for c in cands)
+            cands = [c for c in cands if began(c) == latest]
         row = self.choose(cands, info, 'last')
         v = self.row_value(row, info, keys, ctx, None, None)
-        self.reg(('held', '%s = %s (%s), read for %s' % (org, fmt(v), row.version.id, d)))
+        if info.reading or not row.span(ctx.cut).always:
+            self.reg(('held', '%s = %s (%s), read for %s' % (self.origin(info, keys), fmt(v), row.version.id, d)))
         return v
 
     def e_call_since(self, n, env, ctx):

@@ -43,9 +43,11 @@ version v1
 === expect
 h1: 1 000 PLN
   unfulfilled: buy
+  held: px = 250 PLN/etf (v1), read for 2026-03-31
   law date 2026-06-30, cut 2026-06-30
 h2: 0 PLN
   law date 2026-06-30, cut 2026-06-30
 h3: 1 040 PLN
   unfulfilled: buy
+  held: px = 260 PLN/etf (v1), read for 2026-04-30
   law date 2026-06-30, cut 2026-06-30

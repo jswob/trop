@@ -897,11 +897,18 @@ def m_e_bal(self, n, env, ctx):
         if isinstance(d, Iv):
             raise self.imprecise(d, 'the day of bal(%s, d)' % place)
     d = self.date_of(d, 'the day of bal')
+    return self.bal_at(n, place, unit, d, env, ctx)
+
+
+def m_bal_at(self, n, place, unit, d, env, ctx, regs_to=None):
+    """bal(x, d) with the read's own clauses (L §5.14.1): the one read `bal` and the forms defined by it (`low`, L §5,
+    a form defined by another; tally 2.1.7 R6, #125) make."""
+    form = n._form
     if form == 'proj':
-        return self.proj_bal(n, place, unit, d, env, ctx)
+        return self.proj_bal(n, place, unit, d, env, ctx, regs_to)
     if form == 'modelled':
         return self.bal_modelled(place, unit, d, ctx)
-    key = K_start(d) if n.start else K_end(d)
+    key = K_start(d) if getattr(n, 'start', False) else K_end(d)
     if n.proj and 'windows' in n.proj:
         ctx = ctx.but(windows=n.proj['windows'])
     v = self.bal_day(place, unit, d, key, ctx)
@@ -1066,8 +1073,8 @@ def m_rnd_clause(self, r, ctx):
     return ('mean', None)
 
 
-def m_proj_bal(self, n, place, unit, d, env, ctx):
-    """`bal(x, d) from t` (L §5.14.1, E §4.3)."""
+def m_proj_bal(self, n, place, unit, d, env, ctx, regs_to=None):
+    """`bal(x, d) from t` (L §5.14.1, E §4.3); regs_to: the last day whose left-out instances the reader lists."""
     t = self.ev(n.proj['frm'], env, ctx)
     if isinstance(t, Hole):
         return t
@@ -1083,7 +1090,7 @@ def m_proj_bal(self, n, place, unit, d, env, ctx):
         note_read(ctx.walk, place, True)
     w.run_to(d)
     v = self.read_state(w, place, unit, K_end(d))
-    self.proj_regs(w, t, d)
+    self.proj_regs(w, t, regs_to or d)
     if clauses[2] and not isinstance(v, Hole):
         v = self.proj_uncertain(w, place, unit, d, v)
     return v
@@ -1185,7 +1192,9 @@ def m_bal_modelled(self, place, unit, d, ctx):
 
 
 def m_e_low(self, n, env, ctx):
-    """low(x, a .. b) [from t]: the lowest end-of-day balance (L §5.14.1)."""
+    """low(x, a .. b) [from t] [clauses]: min(bal(x, d) [from t] [clauses] for d in a .. b step 1 day) (L §5.14.1),
+    its definition's reads, holes and refusals, named low (L §5, a form defined by another; tally 2.1.7 R6, #125,
+    #126a)."""
     p = self.place_arg(n.ref, env, ctx)
     if isinstance(p, Hole):
         return p
@@ -1203,32 +1212,13 @@ def m_e_low(self, n, env, ctx):
         if a < t:
             raise refuse('RUN-DOMAIN', 'low(%s, %s .. %s) from %s: a day before the projection\'s start' % (
                 place, a, b, t))
-        if t < self.m.S:
-            # L §5.14.1 (round 12): HOLE-PRERUN
-            return Hole([('before the run\'s start', place)])
-        clauses = self.proj_clauses(n.proj, ctx)
-        w = self.proj_walk(ctx, t, n._leftout, clauses)
-        if ctx.walk is not None:
-            note_read(ctx.walk, place, True)
-        w.run_to(b)
-        self.proj_regs(w, t, b)
-
-        def get(dd):
-            # L §5.14.1: low(x, span) from t is "min(bal(x, d) from t for d in days where ...)", "with the same
-            # clauses": with uncertain counts the uncertain instances as bal(x, d) from t does (fault f_low)
-            v = self.read_state(w, place, unit, K_end(dd))
-            if clauses[2] and not isinstance(v, Hole):
-                v = self.proj_uncertain(w, place, unit, dd, v)
-            return v
-    else:
-        if n.proj and 'windows' in n.proj:
-            ctx = ctx.but(windows=n.proj['windows'])
-        get = lambda dd: self.bal_day(place, unit, dd, K_end(dd), ctx)
     vals = []
     d = a
     while d <= b:
-        vals.append(get(d))
+        vals.append(self.bal_at(n, place, unit, d, env, ctx, regs_to=b))
         d += ONE_DAY
+    if not vals:
+        raise refuse('RUN-EMPTY', 'low over no keys')
     hs = [v for v in vals if isinstance(v, Hole)]
     if hs:
         return merge(*hs)
@@ -1684,10 +1674,10 @@ def m_e_value(self, n, env, ctx):
             return v
         amt = v.q
         if priced._cur != cur:
-            if getattr(n, '_price', None) is None:
+            pr = self.by_price(n, place, priced._cur, cur, d, env, ctx)
+            if pr is None:
                 raise refuse('LOAD-PRICE', 'value(%s) in %s holds units in %s and states no by' % (place, cur,
                                                                                                  priced._cur))
-            pr = self.price_read(n._price, [Thing(priced._cur)], d, n, env, ctx, place, priced._cur)
             if isinstance(pr, Hole):
                 return pr
             amt = amt * pr.q
@@ -1721,36 +1711,13 @@ def m_e_value(self, n, env, ctx):
             continue
         if q.q == 0:
             continue
-        if getattr(n, '_price_expr', False):
-            # a price written as an expression with its keys, read at the value's day (L §5.10); `by last(ref)` with
-            # keys is last(ref, d) (writer 12, A1: check3.m_t_value's _by_expr)
-            pr = self.ev(getattr(n, '_by_expr', None) or n.by, env, ctx.but(law=d))
-            if isinstance(pr, Hole):
-                holes.append(pr)
-                continue
-            if pr is NONE:
-                raise refuse('RUN-NONE', 'the price of %s in %s on %s is none here' % (u, cur, d))
-            want = tuple(sorted([(cur, 1), (u, -1)]))
-            if not isinstance(pr, Num) or tuple(sorted(pr.u)) != want:
-                raise refuse('RUN-DOMAIN', 'value(%s) in %s: the price %s is not in %s/%s' % (place, cur, fmt(pr), cur,
-                                                                                            u))
-            total += q.q * pr.q
-            continue
-        if getattr(n, '_price', None):
-            pr = self.price_read(n._price, [Thing(u)], d, n, env, ctx, place, u)
-            if isinstance(pr, Num):
-                # the price read is the position's unit's price: a unit that comes with the value (a key the run gives,
-                # a place of unit any) is checked here, in load's words (L §5.10, §8.4; tally 2.1.7 R5)
-                want = tuple(sorted([(cur, 1), (u, -1)]))
-                if tuple(sorted(pr.u)) != want:
-                    raise refuse('RUN-DOMAIN', 'value(%s) in %s: the price %s is not in %s/%s' % (
-                        place, cur, fmt(pr), cur, u))
-        elif priced is not None:
+        pr = self.by_price(n, place, u, cur, d, env, ctx)
+        if pr is None and priced is not None:
             if priced._cur != cur or priced._per != u:
                 raise refuse('LOAD-UNIT', 'value(%s) in %s: %s is priced in %s/%s, not %s/%s' % (
                     place, cur, place, priced._cur, priced._per, cur, u))
             pr = self.priced_read(priced, th, u, d, n, env, ctx)
-        else:
+        elif pr is None:
             raise refuse('LOAD-PRICE', 'value(%s) in %s holds units in %s and states no by' % (place, cur, u))
         if isinstance(pr, Hole):
             holes.append(pr)
@@ -1766,6 +1733,27 @@ def value_by_twice(n, place, u):
     from .check import _txt
     by = ('last(%s)' % _txt(n.by)) if getattr(n, 'bylast', False) else _txt(n.by)
     return "value(%s) by %s: %s's price already gives its %s" % (place, by, place, u)
+
+
+def m_by_price(self, n, place, u, cur, d, env, ctx):
+    """The price of unit u in cur that value's `by` gives on day d (L §5.10): a named price read at the unit, or an
+    expression with its keys (`by last(ref)` with keys is last(ref, d)), one path for every position, a place valued
+    whole included (tally 2.1.7 R6, #126c); None when the read states no by. A unit that comes with the value is
+    checked here, in load's words (L §8.4; tally 2.1.7 R5)."""
+    if getattr(n, '_price_expr', False):
+        pr = self.ev(getattr(n, '_by_expr', None) or n.by, env, ctx.but(law=d))
+        if pr is NONE:
+            raise refuse('RUN-NONE', 'the price of %s in %s on %s is none here' % (u, cur, d))
+    elif getattr(n, '_price', None):
+        pr = self.price_read(n._price, [Thing(u)], d, n, env, ctx, place, u)
+    else:
+        return None
+    if isinstance(pr, Hole):
+        return pr
+    want = tuple(sorted([(cur, 1), (u, -1)]))
+    if not isinstance(pr, Num) or tuple(sorted(pr.u)) != want:
+        raise refuse('RUN-DOMAIN', 'value(%s) in %s: the price %s is not in %s/%s' % (place, cur, fmt(pr), cur, u))
+    return pr
 
 
 def m_priced_read(self, pn, th, u, d, n, env, ctx):
@@ -2020,24 +2008,6 @@ def m_c_unit(self, n, env, ctx):
 
 
 def m_last_of(self, info, keys, d, env, ctx):
-    """last(p[k], d) (L §4.6), for value(...) by last(p) (L §5.10)."""
-    from .evaluate import HoleSignal, NOPIN
-    pv = self.pin_value(info, keys, ctx)
-    if pv is not NOPIN and not isinstance(pv, tuple):
-        return pv
-    org = self.origin(info, keys)
-    try:
-        cands = self.candidates(info.rows, keys, d, ctx, info, last_before=d)
-    except HoleSignal as h:
-        return h.hole
-    if not cands:
-        return NONE
-    if info.reading:
-        latest = max(c.instant[0] for c in cands)
-        cands = [c for c in cands if c.instant[0] == latest]
-    else:
-        latest = max(c.span(ctx.cut).start for c in cands)
-        cands = [c for c in cands if c.span(ctx.cut).start == latest]
-    row = self.choose(cands, info, 'last')
-    v = self.row_value(row, info, keys, ctx, None, None)
-    return v
+    """last(p[k], d) (L §4.6), for value(...) by last(p) and priced last(p) (L §5.10): last's own carry, its held
+    mark with it (tally 2.1.7 R6, #123); NONE where no row began, the price's hole (HOLE-PRICE) at its reader."""
+    return self.last_value(info, keys, d, ctx)

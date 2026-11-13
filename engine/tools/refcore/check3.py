@@ -1170,6 +1170,12 @@ def m_c_next(self, n, sc, expect):
     for qid, mi in m.moves.items():
         if self.move_kind(mi) in sub:
             self.edge(sc, ('move', qid), 'next')
+            if mi.decision:
+                # next(K, d) is first(m in K over d ..) ties by m.day (L §5.14.1): its binding's reads are its own, so a
+                # binding over a decision's movements is a running read (tally 2.1.7 R6, G4, G5)
+                self.mark(sc, 'legs', ('move', qid))
+    if 'pads' in sub:
+        self.mark(sc, 'legs', ('kind', 'pads'))
     return T.key(kid)
 
 
@@ -1192,6 +1198,8 @@ def m_c_gap(self, n, sc, expect):
     if not self.is_date(dt):
         raise uerr('gap(x, d): d is %s, not a date' % T.show(dt), n.loc)
     self.edge(sc, ('balances',), 'bal')
+    # gap(x, d) reads a balance (L §5.19, §5.14.1): a running read where a movement reaches it (tally 2.1.7 R6, G8)
+    self.mark(sc, 'bal', self.place_target(n.args[0]))
     return self.place_type_unit(t, n.args[0])
 
 
