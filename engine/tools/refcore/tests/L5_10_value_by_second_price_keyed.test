@@ -1,0 +1,55 @@
+# L §5.10 Value, §4.6 step 4 (tally 2.1.7 R4, issue #143; F11a), and L §2.4 Values (R9; T's SR-3): the keyed
+# twin of L5_10_value_by_second_price. kp[k2] is a priced place, so `by last(cot_val)` is a second claim on its
+# position's price: LOAD-PRICE at load, naming the place the text reads, kp[k2] (q8). 2.1.7's first refcore took
+# every place of kp for a literal key and named the first, kp[k1].
+=== sr3.tally
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit property "one property"
+
+kind props: place property min 0
+kind props2: place property min 0
+kind buys: event certain
+  leg units: property
+
+input flat_val: num PLN/property reading
+input cot_val: num PLN/property reading
+index ks = [k1, k2]
+input kval[k in ks]: num PLN/property reading
+input day: date
+
+place flat: props priced last(flat_val) lives 2026-01-01..
+place cot: props priced last(cot_val) lives 2026-01-01..
+place kp[k in ks]: props2 priced last(kval[k]) lives 2026-01-01..
+place market: outside lives 1900-01-01..
+
+move b1: buys
+  on day
+  leg units from market to flat amount 1 property
+move b2: buys
+  on day
+  leg units from market to cot amount 1 property
+move b3[k in ks]: buys
+  on day
+  leg units from market to kp[k] amount 1 property
+
+
+ask q8: value(kp[k2], 2026-06-30) in PLN by last(cot_val)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  day = 2026-02-02
+  flat_val = 100 PLN/property at 2026-03-01 "v"
+  cot_val = 30 PLN/property at 2026-03-01 "v"
+  kval[k1] = 7 PLN/property at 2026-03-01 "v"
+  kval[k2] = 5 PLN/property at 2026-03-01 "v"
+=== expect
+refused: LOAD-PRICE value(kp[k2]) by last(cot_val): kp[k2]'s price already gives its property ...

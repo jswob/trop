@@ -978,10 +978,17 @@ def m_t_value(self, n, sc, expect):
 
 def _seen_places(m, ref, cands):
     """The places load sees a value's reference give: a literal one, a keyed place's own things, or every thing of
-    the reference's kind (cands)."""
+    the reference's kind (cands). A keyed place at literal keys gives that place alone (tally 2.1.7 R9, T's SR-3: a
+    refusal names the place the text reads, not the first of its keyed place's)."""
     r = getattr(ref, '_r', None)
     if r is not None and r[0] == 'place' and r[1] in m.places:
-        return list(m.places[r[1]].things.values())
+        pi = m.places[r[1]]
+        convs = getattr(ref, '_convs', None)
+        if pi.binds and convs and all(c[0] == 'lit' for c in convs):
+            from .model import _kv
+            t = pi.things.get(tuple(_kv(c[1]) for c in convs))
+            return [t] if t is not None else []
+        return list(pi.things.values())
     return list(cands)
 
 
