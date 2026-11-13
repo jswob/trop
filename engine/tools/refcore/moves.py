@@ -464,6 +464,10 @@ def instant_text(r):
     if ins[0] == 'after':
         from .check import _txt
         return 'after %s' % _txt(ins[1])
+    if ins[1] is None:
+        # a reading at a bare day, `at D` (L §4.6 Readings): its instant is the day (L §2.5; tally 2.1.7 B6, R9, T's
+        # SR-12); 2.1.7's first refcore printed `None` after it
+        return ins[0].isoformat()
     return '%s %s' % (ins[0].isoformat(), ins[1])
 
 
