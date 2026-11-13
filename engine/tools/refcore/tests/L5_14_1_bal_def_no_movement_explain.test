@@ -2,6 +2,7 @@
 # at the ask's cut; E §3.1 step 7 now: "A def that reaches a mark and that a decision reaches is walk-bound". worth is
 # read by asks only: not walk-bound, so explain gives its ordinary derivation (E §10), the balance resting on wage's rows
 # (konto 0 + 5 000.00 on 2026-01-10). snap11 printed "walk-bound, read at no walk point".
+# tally 2.1.7 (R7, issue #146; #132b): the balance cause prints in its own form (E §10), not the walk's own reads.
 === m.tally
 model hh
   tally 2
@@ -41,9 +42,10 @@ q: 5 000.00 PLN
 w: 5 000.00 PLN
   [1] worth[2026-01-31] = 5 000.00 PLN, law date 2026-01-31
       rule base: won
-        [2] row plan_2026:wage_day = 2026-01-10
-            version plan_2026, source plan, "plan", locator "umowa", governs always, known 2026-01-01
-        [3] row plan_2026:wage_amt = 5 000.00 PLN
-            version plan_2026, source plan, "plan", locator "umowa", governs always, known 2026-01-01
+        [2] bal(konto, 2026-01-31) = 5 000.00 PLN
+            balance of konto (PLN) at the end of 2026-01-31
+            from: opening plan_2026:opening[konto] = 0.00 PLN, 2026-01-01 start (version plan_2026, source plan, locator "wyciąg")
+            2026-01-10:
+              wage.cash (past): +5 000.00 PLN
   unfulfilled: wage
   cut 2026-10-20

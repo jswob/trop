@@ -1,6 +1,7 @@
 # L §4.6 Past the last row, L §5 a form defined by another (tally 2.1.7 R6, issue #145; #118): last(x, d) reads
 # the latest row whose span began on or before d, a row with no start or one that governs always included; a row
-# that governs always is timeless, never held (§8.2). 2.1.6's refcore skipped both rows: holes. (T's G3 lastalw2.)
+# that governs always is timeless, never held (§8.2), and a row read inside its span isn't held (q3; R7, P31).
+# 2.1.6's refcore skipped both rows: holes. (T's G3 lastalw2.)
 === m.tally
 model lastalw
   tally 2
@@ -41,5 +42,4 @@ q2: 4
   held: t = 4 (v2), read for 2026-03-01
   cut 2026-03-01
 q3: 4
-  held: t = 4 (v2), read for 2023-03-01
   cut 2026-03-01

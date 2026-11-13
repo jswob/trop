@@ -15,7 +15,7 @@ import datetime
 from .dates import ONE_DAY, next_day
 from .moves import item_in_world, order_key
 from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, RandomLine
-from .model import known_first, key_text, SameDiffers
+from .model import known_first, key_text, SameDiffers, in_world
 from .values import Num, Money, Hole, Thing, Mv, Iv, Rec, Text, NONE, CURRENCIES, fmt, fmt_hole, vkey
 from .moves import Leg, Inst, ObsMv, AdjMv, PadMv, qty, unit_of_value, day_lo, day_hi, instant_text, merge
 
@@ -1187,6 +1187,33 @@ class Walk:
             self.book_leg(mv, lg, key[:4] + (key[4] + 1,), reg=reg, coll=coll, ends=ends)
 
     # -- booking (E §4.2 step 5) -----------------------------------------------------------------------------------
+    def before_from(self, mv, lg, coll):
+        """E §9 item 3, L §8.2 `before from:` (tally 2.1.7 R7, #121): a movement booked before a scenario's from that
+        read that scenario's facts (its rows, a lifespan its entries change) is listed under each result whose reads
+        reach it, in that branch and every branch over it; None for any other."""
+        if coll is None or not getattr(self.m, 'scen_from', None):
+            return None
+        day = lg.day if isinstance(lg.day, datetime.date) else getattr(mv, 'day', None)
+        if not isinstance(day, datetime.date):
+            return None
+        froms = self.m.scen_from
+
+        def changed(v):
+            sc = getattr(v, 'scenario', None) if v is not None else None
+            return sc is not None and in_world(v) and froms.get(sc) is not None and day < froms[sc]
+        items = set(getattr(r.target, 'id', r.target) for r in coll.rows.values()
+                    if changed(getattr(r, 'version', None)))
+        for e in coll.reg:
+            if e[0] == 'lifeof' and e[1] in self.m.things and \
+                    any(changed(getattr(x, 'version', None)) for x in self.m.things[e[1]].entries):
+                items.add(e[1])
+        if not items:
+            return None
+        self.__dict__.setdefault('before_places', set()).update(
+            p.name for p in (lg.frm, lg.to) if isinstance(p, Thing))
+        name = getattr(getattr(mv, 'move', None), 'id', None) or getattr(mv, 'id', '?')
+        return '%s on %s reads %s' % (name, day, ', '.join(sorted(items)))
+
     def book_leg(self, mv, lg, key, reg=(), coll=None, ends=(True, True)):
         """Book a leg's two ends (or the ends asked for); RUN-LIFESPAN, RUN-PLACE refuse it from that point."""
         m = self.m
@@ -1194,6 +1221,9 @@ class Walk:
         if isinstance(amt, TallyError):
             self.leg_bad(mv, lg, amt, key)
             return
+        bf = self.before_from(mv, lg, coll)
+        if bf is not None:
+            reg = tuple(reg) + (('before from', bf),)
         cs = self.consol(mv, lg)
         if cs != (None, None):
             ends = list(ends)
@@ -2046,8 +2076,6 @@ def m_inv3(self, w, tctx):
     D = m.scen_from.get(sc)
     if D is None or D <= m.S:
         return
-    if any(getattr(r, 'point', None) is not None and kday(r.point) < D for r in w.decs.values()):
-        return
     base = m.scenario_over.get(sc)
     from .model import set_world
     old = set_world(self.world_chain(base))
@@ -2059,6 +2087,23 @@ def m_inv3(self, w, tctx):
         set_world(old)
     last = min(D - ONE_DAY, m.E)
     key = K_end(last)
+    # L §8.2 before from: (tally 2.1.7 R7, #121; P46): a movement of the base booked before from that this branch
+    # doesn't book is listed, removed by the branch, under each read of the places it touched from its day on
+    mine = set(getattr(e.mv, 'id', None) for lg in w.logs.values() for e in lg.ents
+               if e.mv is not None and kday(e.key) < D)
+    for (place, unit), lg in sorted(bw.logs.items(), key=repr):
+        for e in lg.ents:
+            mid = getattr(e.mv, 'id', None)
+            if e.mv is None or mid is None or not kday(e.key) < D or mid in mine:
+                continue
+            ent = (kday(e.key), ('before from', '%s on %s removed by %s' % (mid, kday(e.key), sc)))
+            if ent not in w.adj_regs.get(place, ()):
+                w.adj_regs.setdefault(place, []).append(ent)
+            w.__dict__.setdefault('before_places', set()).add(place)
+    if any(getattr(r, 'point', None) is not None and kday(r.point) < D for r in w.decs.values()):
+        # a decision ran before D: the ones whose projection read a scenario row are listed (above); this
+        # interpreter checks no balance then
+        return
     for (place, unit) in sorted(set(w.logs) | set(bw.logs), key=repr):
         if place == '*' or unit == '*':
             continue
@@ -2066,6 +2111,9 @@ def m_inv3(self, w, tctx):
         sb = bw.pstate(place, unit, key, raw=True)
         a, b = sa.val, sb.val
         if place not in m.things or not (isinstance(a, Num) and isinstance(b, Num)) or a.q == b.q:
+            continue
+        if place in getattr(w, 'before_places', ()):
+            # a listed movement before from changed it (L §8.2 before from:)
             continue
         if any((x.hole or x.perm or x.imp or x.bad) for x in (sa, sb)):
             continue

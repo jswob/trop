@@ -897,6 +897,24 @@ def m_e_bal(self, n, env, ctx):
         if isinstance(d, Iv):
             raise self.imprecise(d, 'the day of bal(%s, d)' % place)
     d = self.date_of(d, 'the day of bal')
+    if self.tracing and self.trace_stack and form != 'proj' and getattr(self, 'explainer', None) is not None:
+        # E §10, §3.2 (tally 2.1.7 R7, #132b): a cause that is a balance prints in the balance's own form, its last
+        # reading or opening and the movements since, not the walk's own reads
+        from .evaluate import TraceNode
+        saved, self.trace_stack, self.tracing = self.trace_stack, [], False
+        tn = TraceNode('balread', 'bal(%s, %s%s)' % (place, d, ' start' if getattr(n, 'start', False) else ''))
+        try:
+            tn.value = self.bal_at(n, place, unit, d, env, ctx)
+            asker, a = self.explainer
+            tn.lines = asker.balance_cause(self, a, n, env, ctx)
+        except Refusal as e:
+            # a refused balance prints its refusal, with no balance form under it
+            tn.refused = e
+            raise
+        finally:
+            self.trace_stack, self.tracing = saved, True
+            saved[-1].children.append(('node', tn))
+        return tn.value
     return self.bal_at(n, place, unit, d, env, ctx)
 
 

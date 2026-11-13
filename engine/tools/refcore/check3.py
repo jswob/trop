@@ -290,6 +290,8 @@ def m_bind_movements(self, b, sc, kinfo=None, obs=None, key_bind=False):
         raise LoadError('LOAD-ALIVE', 'binding over %s needs on or over' % (kinfo.id if kinfo else obs.id), b.loc)
     if kinfo is not None:
         b._dom = ('event', kinfo.id)
+        # the binding reads its kind, subkinds included (readers-of, E §10; tally 2.1.7 R7)
+        self.edge(sc, ('kind', kinfo.id), 'bind')
         sub = kinfo.subtree(m)
         for qid, mi in m.moves.items():
             if self.move_kind(mi) in sub:

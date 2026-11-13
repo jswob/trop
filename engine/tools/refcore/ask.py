@@ -394,6 +394,7 @@ class Asker:
         if a.paths is not None and a.paths > MAX_PATHS:
             return ['%s: refused: REQ-PATHS %d paths for one ask; the cap is 100 000' % (a.id, a.paths)]
         eng = Engine(m)
+        eng.explainer = (self, a)
         self.eng_warn = eng.walk_warnings
         eng.check_range_lits()
         eng.cross = getattr(self, 'cross', None)
@@ -1103,7 +1104,7 @@ class Asker:
             out.extend('sample: %s' % t for t in sorted(first, key=lambda t: (first[t], t)))
         out.extend(sorted(ent.get('world', ())))
         out.extend('reading: %s' % r for r in reading)
-        for kind in ('anchor', 'pad', 'adjustment', 'unfulfilled', 'open', 'left out', 'uncertain'):
+        for kind in ('before from', 'anchor', 'pad', 'adjustment', 'unfulfilled', 'open', 'left out', 'uncertain'):
             out.extend(sorted(ent.get(kind, ())))
         for place, (d0, mids) in sorted(ent.get('_labels', {}).items()):
             out.append('WARN-LABELS labels dropped at %s from %s: %s' % (place, d0, ', '.join(sorted(mids))))
@@ -1135,6 +1136,16 @@ class Asker:
         kind, iid = r[1], r[2]
         item = (kind, iid)
         hits = self.m.checker.readers_of(item)
+        m = self.m
+        if iid in m.kinds:
+            # a binding over a kind reads it and its subkinds, so a binding over a kind above reads it too (E §10,
+            # L §8.2's one read set; tally 2.1.7 R7)
+            sub = m.kinds[iid].subtree(m)
+            for k in sorted(m.kinds):
+                if k != iid and (k in sub or iid in m.kinds[k].subtree(m)):
+                    for h in m.checker.readers_of(('kind', k)):
+                        if h not in hits:
+                            hits.append(h)
         names = ['%s' % h[1] for h in hits]
         return ['%s: %s' % (a.id, ', '.join(names) if names else 'nothing reads %s' % iid)]
 
@@ -1389,6 +1400,17 @@ class Asker:
         finally:
             eng.stack.pop()
         return v, lines
+
+    def balance_cause(self, eng, a, n, env, ctx):
+        """The lines of a balance read met as a cause (E §10's balance form), its register kept in the cause's."""
+        try:
+            return self._explain_bal_lines(eng, a, n, env, ctx)
+        except HoleSignal:
+            return []
+        except TallyError as e:
+            if is_load(e):
+                raise LoadAtRun(e)
+            return ['refused: %s %s' % (e.code, e.msg)]
 
     def explain_low_plain(self, eng, a, n, env, ctx):
         """`explain low(x, a .. b)` without `from`: the lowest of the plain end-of-day balances (L §5.14.1), and the
@@ -1698,6 +1720,14 @@ class Asker:
             return
         if tn.kind == 'bandrow':
             out.append('%s[%d] band row %s' % (ind, no, tn.label))
+            return
+        if tn.kind == 'balread':
+            # a balance cause in its own form (E §10; tally 2.1.7 R7, #132b)
+            e = getattr(tn, 'refused', None)
+            out.append('%s[%d] %s = %s' % (ind, no, tn.label, fmt_value(tn.value) if e is None else 'refused: %s %s' % (
+                e.code, e.msg)))
+            for l in tn.lines:
+                out.append('%s    %s' % (ind, l))
             return
         if tn.kind == 'def':
             law = getattr(tn, 'law', None)

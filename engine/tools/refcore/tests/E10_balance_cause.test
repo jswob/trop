@@ -1,0 +1,124 @@
+# E §10, §3.2 (tally 2.1.7 R7, issue #146; #132b): a def's cause that is a balance prints in the balance's own
+# form (its opening or last reading and the movements since), and a refused one prints its refusal; not the walk's
+# own reads. 2.1.6's refcore printed the rows the walk read while tracing. (T's G12 t_tb_m4.)
+=== t_tb_m4.tally
+model ro
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+kind fees: transfers
+
+input amt: money PLN
+
+input d: date
+
+input rate[k in qs]: num
+
+band tax(x: num): num
+
+def fee[k in qs]: money PLN = round(amt * rate[k], minor(PLN), half-up)
+
+def t: num = tax(1)
+
+def total: money PLN = fee[q1] + fee[q2]
+
+def b: money PLN = bal(konto, d + 1 day)
+
+def bn: money PLN = bal(neg, d + 1 day)
+
+def bh: money PLN = bal(hk, d + 1 day)
+
+ask nfa: count(f in fees over 2026)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place neg: accounts PLN lives 2026-01-01..
+
+place hk: accounts PLN lives 2026-01-01..
+
+move bad: transfers
+  on d
+  leg cash from world to neg amount amt - amt - amt
+
+move hole: transfers
+  on d
+  leg cash from world to hk amount nope
+
+input nope: money PLN
+
+place world: outside lives 1900-01-01..
+
+move pay: fees
+  on d
+  leg cash from konto to world amount fee[q1]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN
+  d = 2026-02-10
+  rate[q1] = 0.1
+  rate[q2] = 0.2
+  tax: [0, 100) = 0.1 "low"
+  tax: [100, inf) = 0.2
+  opening[konto] = 500.00 PLN at 2026-01-01 start
+  opening[neg] = 0 PLN at 2026-01-01 start
+  opening[hk] = 0 PLN at 2026-01-01 start
+
+ask e_b: explain b
+
+ask e_bn: explain bn
+
+ask e_bh: explain bh
+
+ask i_bn: inputs-of bn
+
+ask i_b: inputs-of b
+
+ask e_total: explain total
+
+ask e_t: explain t
+
+ask i_t: inputs-of t
+=== expect e_b e_bn
+e_b: 490.00 PLN
+  [1] b = 490.00 PLN
+      rule base: won
+        [2] row card_2026:d = 2026-02-10
+            version card_2026, source card, "card", governs always, known 2026-01-01
+        [3] bal(konto, 2026-02-11) = 490.00 PLN
+            balance of konto (PLN) at the end of 2026-02-11
+            from: opening card_2026:opening[konto] = 500.00 PLN, 2026-01-01 start (version card_2026, source card)
+            2026-02-10:
+              pay.cash (past): -10.00 PLN
+  unfulfilled: pay
+  cut 2026-12-31
+e_bn: refused: RUN-NEG negative amount -100.00 PLN for leg cash of bad
+  [1] bn = refused: RUN-NEG negative amount -100.00 PLN for leg cash of bad
+      rule base: won
+        [2] row card_2026:d = 2026-02-10
+            version card_2026, source card, "card", governs always, known 2026-01-01
+        [3] bal(neg, 2026-02-11) = refused: RUN-NEG negative amount -100.00 PLN for leg cash of bad
+  cut 2026-12-31

@@ -1327,7 +1327,11 @@ class Engine:
             cands = [c for c in cands if began(c) == latest]
         row = self.choose(cands, info, 'last')
         v = self.row_value(row, info, keys, ctx, None, None)
-        if info.reading or not row.span(ctx.cut).always:
+        sp = row.span(ctx.cut)
+        # held where it is read past its row's span (L §4.6, §8.2; tally 2.1.7 R7, P31): a reading past its instant's
+        # day, a state row past its span's end; a row that governs always is timeless
+        past = (d > row.instant[0]) if info.reading else (not sp.always and sp.end is not None and d >= sp.end)
+        if past:
             self.reg(('held', '%s = %s (%s), read for %s' % (self.origin(info, keys), fmt(v), row.version.id, d)))
         return v
 
@@ -3950,6 +3954,8 @@ class Engine:
             return v
         self.no_none(v, 'lifespan')
         t = self.m.things.get(v.name)
+        # a lifespan read is in the read set: the entries that state it (E §3.2; tally 2.1.7 R7, F15)
+        self.reg(('lifeof', v.name))
         sp = self.m.lifespan(t, ctx.cut)
         if sp is None:
             raise refuse('RUN-KEY', '%s was added after the cut' % v.name)
