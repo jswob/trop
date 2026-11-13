@@ -1303,31 +1303,45 @@ class Asker:
         from .evaluate import _tfmt
         pinned = set(p.axis for p in a.pins if getattr(p, 'pkind', None) == 'axis')
         octx = self._outside_ctx.but(axes=tuple((ax, o) for ax, o in ctx.axes if ax not in pinned))
-        eng.tracing = True
-        eng.trace_cells = {}
-        saved = eng.memo
-        eng.memo = {}
-        oroot = TraceNode('root', _txt(a.ref))
-        eng.trace_stack = [oroot]
-        old = set_world(eng.world_chain(octx.world))
-        eng.stack.append(Coll())
-        try:
-            vo = self.one(eng, a.ref, env, octx)
-        finally:
-            eng.stack.pop()
-            set_world(old)
-            eng.tracing = False
-            eng.trace_stack = []
-            eng.memo = saved
+
+        def outside_of(oc, fixed):
+            # outside the pins, an axis the ask pinned is read as every other line reads an axis: the derivation fans
+            # out over the options of each one it reads, in declaration order (L §5.5 Fan-out; tally 2.1.7 R8, T's
+            # SR-10); 2.1.7's first refcore stopped at its guard
+            eng.tracing = True
+            eng.trace_cells = {}
+            saved = eng.memo
+            eng.memo = {}
+            oroot = TraceNode('root', _txt(a.ref))
+            eng.trace_stack = [oroot]
+            old = set_world(eng.world_chain(oc.world))
+            eng.stack.append(Coll())
+            try:
+                vo = self.one(eng, a.ref, env, oc)
+            finally:
+                eng.stack.pop()
+                set_world(old)
+                eng.tracing = False
+                eng.trace_stack = []
+                eng.memo = saved
+            ax = getattr(vo, 'axis', None)
+            if ax in pinned and ax not in dict(fixed):
+                nodes = []
+                for o in self.m.axes[ax].options:
+                    nodes += outside_of(oc.but(axes=tuple(sorted(oc.axes + ((ax, o),)))), fixed + ((ax, o),))
+                return nodes
+            tag = (' [%s]' % ', '.join('%s = %s' % f for f in fixed)) if fixed else ''
+            node = TraceNode('group', 'outside the pins%s: %s' % (tag, _tfmt(vo)))
+            node.children = oroot.children
+            return [node]
+        outs = outside_of(octx, ())
         out = TraceNode('root', _txt(a.ref))
         pn = TraceNode('group', 'the pins, evaluated outside them')
         for line in eng.pin_lines(octx, ctx):
             pn.children.append(('node', TraceNode('group', 'pin ' + line)))
         inside = TraceNode('group', 'inside the pins: %s' % _tfmt(v))
         inside.children = root.children
-        outside = TraceNode('group', 'outside the pins: %s' % _tfmt(vo))
-        outside.children = oroot.children
-        out.children = [('node', pn), ('node', inside), ('node', outside)]
+        out.children = [('node', pn), ('node', inside)] + [('node', o) for o in outs]
         out.value = v
         return out
 

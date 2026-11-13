@@ -417,8 +417,10 @@ class Engine:
     def axis_option(self, a, ctx):
         o = ctx.axis(a)
         if o is None:
-            raise NotYet('axis %s read outside the axes the ask reaches: an interpreter guard (L §5.5: the cone holds every '
-                         'axis a run reads)' % a)
+            e = NotYet('axis %s read outside the axes the ask reaches: an interpreter guard (L §5.5: the cone holds every '
+                       'axis a run reads)' % a)
+            e.axis = a     # explain outside an axis pin fans out over it (ask.explain_pins)
+            raise e
         self.cur.axes.add(a)
         return o
 
