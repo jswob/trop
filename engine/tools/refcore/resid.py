@@ -151,13 +151,19 @@ def m_residuals(self, place, span, by, ctx, unit=None):
         f = o.fulfils
         if isinstance(f, tuple) and f[0] == 'inst' and self_touch(o.legs, place) and in_span(o.day):
             ful_ids.add('%s[%s]' % (f[1], ', '.join(key_text(k) for k in f[2])) if f[2] else f[1])
+    def may_touch(i):
+        # tally 2.1.7 R1, R2 (SR-1): a refused instance refuses the ledger exactly where a hole one would be a line of
+        # it: a place its legs give, or any place where its legs' places couldn't be read (L §8.4)
+        if i.legs:
+            return self_touch(i.legs, place) or any(not isinstance(p, Thing) for lg in i.legs for p in (lg.frm, lg.to))
+        return bool(i.move.legs)
+
     for mi in self.plan_moves():
         for i in self.move_instances(mi, ctx):
             st = self.status(i, ctx)
             if st in ('none', 'leftout'):
                 continue
-            if st == 'refused':
-                raise i.err
+            touches = may_touch if st == 'refused' else (lambda j: self_touch(j.legs, place))
             d = i.day
             if isinstance(d, Hole) or (isinstance(d, Iv) and isinstance(d.lo, datetime.date) and
                                        (d.lo.year, d.lo.month) != (d.hi.year, d.hi.month)):
@@ -167,15 +173,19 @@ def m_residuals(self, place, span, by, ctx, unit=None):
                 if isinstance(d, Iv) and ((span.end is not None and d.lo >= span.end) or
                                           (span.start is not None and d.hi < span.start)):
                     continue
-                if not self_touch(i.legs, place):
+                if not touches(i):
                     continue
+                if st == 'refused':
+                    raise i.err
                 undated.append(i)
                 continue
             dd = day_lo(d)
             if not in_span(dd) or (not covered(dd) and i.id not in ful_ids):
                 continue
-            if not self_touch(i.legs, place):
+            if not touches(i):
                 continue
+            if st == 'refused':
+                raise i.err
             model.append(i)
     w = self.main_walk(ctx)
     for iid in sorted(w.decs):
@@ -184,7 +194,9 @@ def m_residuals(self, place, span, by, ctx, unit=None):
         if dd is None or not in_span(dd) or not covered(dd):
             continue
         if run.err is not None:
-            raise run.err
+            if may_touch(run):
+                raise run.err
+            continue
         if not self_touch(run.legs, place):
             continue
         model.append(run)
