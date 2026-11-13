@@ -1657,6 +1657,27 @@ class Checker:
             if f and any(b == f[1] and e > 0 for b, e in xu):
                 raise uerr('an exchange rate %s/%s applied to the wrong currency' % f, loc)
 
+    def key_duration_whole(self, lt, n, op, loc):
+        """A duration moves a key of an index by whole keys (L §4.2, §4.1 `by n`); one that isn't a whole number of
+        them is refused where load sees the duration and the index's step, LOAD-DOMAIN with run's words (tally 2.1.7
+        B5, #98, R5: `q + 1 year` on an index by 2), else at the key, RUN-DOMAIN."""
+        from .dates import Period
+        ix = self.m.indexes.get(lt.ix)
+        r = n.r
+        if ix is None or not ix.keys or not isinstance(ix.keys[0], Period) or r.k != 'num' or not r.isint or \
+                not r.unit or len(r.unit) != 1 or r.unit[0][1] != 1:
+            return
+        per = {'days': 'day', 'months': 'month', 'quarters': 'quarter', 'years': 'year'}.get(r.unit[0][0],
+                                                                                             r.unit[0][0])
+        if per not in ('day', 'month', 'quarter', 'year'):
+            return
+        k0 = ix.keys[0]
+        q = int(r.v)
+        unit, amount = ('day', q) if per == 'day' else ('month', q * {'month': 1, 'quarter': 3, 'year': 12}[per])
+        if unit == k0.unit and amount % k0.n:
+            raise LoadError('LOAD-DOMAIN', '%s %s %s: not a whole number of its periods (L §4.2)' % (
+                _txt(n.l), op, _txt(n.r)), loc)
+
     def year4_as_number(self, *sides):
         """A four-digit literal where no period is expected is a number (L §2.1): the literal rule applies to it as a
         number (L §7.1) before any unit error."""
@@ -1732,6 +1753,7 @@ class Checker:
             if vk == 'date':
                 return self.arith_time(op, T.DATE, rt, n)
             if vk == 'period':
+                self.key_duration_whole(lt, n, op, loc)
                 return self.arith_time(op, T.period(self.key_pk(lt)), rt, n)
             raise uerr('%s %s %s' % (T.show(lt), op, T.show(rt)), loc)
         if rk == 'key' and op == '+' and lk in intlike and self.key_value_kind(rt) != 'int':

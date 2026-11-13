@@ -2242,12 +2242,9 @@ class Engine:
             if a.kind == 'month':
                 s = add_months(a.start, k)
                 return Period(a.kind, s, end_months(s, 1), 'month', a.n) if a.n == 1 else a.shift(k)
-            if a.kind == 'quarter':
-                return a.shift(k)
-            # a year moves by years
-            s = add_months(a.start, 12 * k)
-            return Period('year', s, end_months(a.start, 12 * (k + 1)) if a.n == 12 else end_months(s, a.n), 'month',
-                          a.n)
+            # a quarter or a year moves by whole keys of its index, k steps of n months (L §4.2; tally 2.1.7 B5, #98:
+            # a key of a year index by 2 plus 2 years is the next key)
+            return a.shift(k)
         raise refuse('LOAD-UNIT', '%s %s %s' % (fmt(a), op, fmt(b)))
 
     def iv_arith(self, n, a, b, ctx):

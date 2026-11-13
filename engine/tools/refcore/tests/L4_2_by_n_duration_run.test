@@ -1,0 +1,28 @@
+# L §4.2, §8.4 (tally 2.1.7 B5, issue #98): the twin of L4_2_by_n_duration_load: a duration load can't see
+# (n1 * 1 year) is refused at the key, RUN-DOMAIN, with the same words. Passes on 2.1.6's refcore too: it pins the
+# phase boundary.
+=== run.tally
+model b5r
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "made up"
+
+index y2 = year 2026..2040 by 2
+
+input n1: int
+
+def bad[q in y2]: date = start_of(q + n1 * 1 year)
+
+ask a_bad: bad[2026]
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  n1 = 1 "one"
+=== expect
+a_bad: refused: RUN-DOMAIN 2026 + 1 year: not a whole number of its periods (L §4.2)
+  cut 2026-12-31
