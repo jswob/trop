@@ -1,0 +1,44 @@
+# L §2.5 stable ids, §4.6, E §10 (tally 2.1.7 B6, issue #135; P67): a row's id carries its instant, a day with
+# start or end, when its version holds more than one row of the target at those keys: the morning and evening
+# readings of konto on 2026-02-20 are bank:stated[konto] 2026-02-20 start and ... end, and each anchor's gap is its
+# own (-100.00 PLN, -5.00 PLN). 2.1.6's refcore gave both the id bank:stated[konto] (its rows grouped by a thing
+# key's object, never met) and the evening's anchor the morning's gap. (T's G12 r_p_b1.)
+=== rid.tally
+model b1
+  tally 2
+  on 2026-03-15
+  start 2026-01-01
+  end 2026-06-30
+  note "review G12 B1: two readings of one place on one day, at its start and its end"
+
+source card "card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+ask a: explain bal(konto, 2026-02-20)
+
+ask b: explain bal(konto, 2026-02-20 start)
+
+version bank
+  cite card
+  governs always
+  known 2026-03-01
+  anchor konto
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  stated[konto] = 400.00 PLN at 2026-02-20 start "morning"
+  stated[konto] = 395.00 PLN at 2026-02-20 end "evening"
+=== expect
+a: 395.00 PLN
+  balance of konto (PLN) at the end of 2026-02-20
+  from: anchor bank:stated[konto] 2026-02-20 end = 395.00 PLN, 2026-02-20 end (version bank, source card, locator "evening"), gap role anchor, gap -5.00 PLN
+  no movement
+  anchor: konto 2026-02-20 end, stated 395.00 PLN, difference -5.00 PLN
+  cut 2026-03-15
+b: 400.00 PLN
+  balance of konto (PLN) at the start of 2026-02-20
+  from: anchor bank:stated[konto] 2026-02-20 start = 400.00 PLN, 2026-02-20 start (version bank, source card, locator "morning"), gap role anchor, gap -100.00 PLN
+  no movement
+  anchor: konto 2026-02-20 start, stated 400.00 PLN, difference -100.00 PLN
+  cut 2026-03-15

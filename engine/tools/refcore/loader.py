@@ -2037,14 +2037,17 @@ class Loader:
             # stable ids (L §2.5)
             per = {}
             for r in rows:
-                per.setdefault((r.version.id, r.pattern), []).append(r)
+                # rows of one target at one keys, compared by the keys' text (a thing key is a fresh value per row)
+                per.setdefault((r.version.id, r.keys_text()), []).append(r)
             for r in rows:
                 sid = '%s:%s%s' % (r.version.id, inf.id, r.keys_text())
-                if len(per[(r.version.id, r.pattern)]) > 1:
+                if len(per[(r.version.id, r.keys_text())]) > 1:
                     if r.own_span is not None:
                         sid += ' ' + r.own_span.text()
                     elif r.instant is not None:
-                        sid += ' %s' % (r.instant[0],)
+                        # its instant, a day with start or end (L §2.5, §4.6; tally 2.1.7 B6, #135), or `after m`
+                        from .moves import instant_text
+                        sid += ' ' + instant_text(r)
                 r.sid = sid
         self.check_mv_refs()
 
