@@ -2779,3 +2779,13 @@ Three commits: 4f8d6ad (the run half), 35e3be8 (prices at load), and this one (t
 - **Sweep:** none SAME → DIFF; 11 asks DIFF → SAME over R3's; no new `ENGINE-INVARIANT`.
 - **Size:** 341 changed lines (286 added, 55 removed). **M1 code replaced:** `wider_than` and `names_cell` (narrowness across every pin whatever its scope; a `solve` step's pin dropping the pins it covers); `choose`'s narrowness across a scenario and its base; the band read's latest-known table across layers; load's same-day band overlap across layers; a pin's identity without its scope. **Exceptions:** +0.
 - **Check:** `check commit: green, 23 steps`.
+
+## 2026-11-14 tally 2.1.7, R6: a form the definition gives as an expansion means its expansion (issue #145, pick P8)
+
+- **`last`'s one carry** (`eval/read.rs` `read_past`, `last_value`): `last(x, d)`, `by last(p)` and `priced last(p)` mark `held` only where d is past the row they read: a state row past its span's end, a reading past its instant's day; a row read inside its span (one with no start included) isn't `held`.
+- **`next(K, d)` reads as `first(m in K over d ..) ties by m.day` does** (`load/binds.rs` `kind_movements`, shared by a binding over an event kind and `load/reads.rs` `next`): a decision's movements and `pads` are a running read, so `reads K` covers them and a move without it is `LOAD-READS`. Its holes and refusals name the form as written (`book/members.rs` `next_movement`, SR-7): `next(transfers, d1): no transfers yet, …`, `RUN-TIE next(transfers, d1) …`.
+- **`gap(x, d)` is a balance read** (`load/reads.rs` `gap`): a running read of x, `LOAD-READS` in a move without `reads x`.
+- **Turned green (12):** `fixes/g10/p_c1`, `_c2`, `_c6`, `fixes/g3/last_q6`, `fixes/g3/lastalw2_q3`, `r6/l4_6_last_no_start`, `r6/l5_10_priced_reading`, `r6/l5_14_1_next_plan_load_reads`, `r6/l5_14_1_next_reads_binding`, `r6/l5_19_gap_plan_load_reads`, `r6/reach_low_hole`, `r6/reach_next_tie`. Gating: 90 of the 287 still red (and the 4 rows of the second STOP-REPORT).
+- **Sweep:** none SAME → DIFF; 11 asks DIFF → SAME over R4's; no new `ENGINE-INVARIANT`.
+- **Size:** 78 changed lines (53 added, 25 removed). The builder's graph test (`tests/graph_cases.rs`) gains refcore 2.1.7's three `legs` marks of `next` in an ask. **M1 code replaced:** `last_value`'s `held` on every row but an `always` one; `next`'s edges without the binding's running reads; `next`'s `m:` and evaluated-day messages; `gap` without its running read. **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps`.

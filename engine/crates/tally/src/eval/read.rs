@@ -73,6 +73,22 @@ fn latest_of(input: &InputInfo, at: usize) -> Result<&Row, Stop> {
         .ok_or_else(|| invariant("the read rule took a row the input lacks"))
 }
 
+/// Whether `last(x, d)` reads its row past it, for day `day`: a reading past its instant's
+/// day, a state row past its span's end; a row that governs `always` is timeless (L §4.6
+/// Past the last row, Readings; §8.2 `held`; refcore's `last_value`).
+fn read_past(m: &Reality, row: &Row, day: Day, cut: Day) -> Result<bool, Stop> {
+    match &row.instant {
+        Some(RowInstant::At(at, _)) => Ok(day > *at),
+        Some(RowInstant::After(_)) => Ok(false),
+        None => {
+            let Some(span) = crate::read::row_span(m, row, cut)? else {
+                return Ok(false);
+            };
+            Ok(!span.is_always() && span.end().is_some_and(|end| day >= end))
+        }
+    }
+}
+
 impl Engine {
     /// The clocks of a read of `item` in context `ctx`: the law date, the cut, the ask's cut,
     /// the day a `wording` pin names the item with, and the world (L §4.3, §4.5, §6.4).
@@ -226,8 +242,8 @@ impl Engine {
     }
 
     /// `last(x[k], d)`: the row of x whose span began latest on or before d, past its end
-    /// too, its value marked `held` for d in the register, except a row that governs `always`,
-    /// which is never `held`; a reading's latest on or before d (refcore's `e_lastx`). A key
+    /// too, its value marked `held` for d in the register where d is past the row; a
+    /// reading's latest on or before d (refcore's `e_lastx`). A key
     /// or a day that is a hole makes it that hole. L §4.6 (Past the last row, Readings), §5.3,
     /// §8.2.
     pub(crate) fn last_read(
@@ -244,7 +260,8 @@ impl Engine {
     }
 
     /// The value of the row `last(x[k], d)` took: as read for d, `held` for d in the register
-    /// but where the row governs `always` (refcore's `e_lastx`, its end). L §4.6, §8.2.
+    /// where d is past the row (`read_past`): the one carry `last`, `by last(p)` and `priced
+    /// last(p)` read (refcore's `last_value`; tally 2.1.7 R6). L §4.6, §8.2.
     fn last_value(&mut self, m: &Reality, latest: &Latest, ctx: Ctx) -> Result<Value, Stop> {
         let input = m
             .inputs
@@ -257,9 +274,7 @@ impl Engine {
             ..ctx
         };
         let value = self.row_converted(m, (input, row, &latest.keys), &figure, at)?;
-        let always = row.instant.is_none()
-            && crate::read::row_span(m, row, ctx.cut)?.is_some_and(|span| span.is_always());
-        if !always {
+        if read_past(m, row, latest.day, ctx.cut)? {
             let text = format!(
                 "{figure} = {} ({}), read for {}",
                 shown(m, &value)?,

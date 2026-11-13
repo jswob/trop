@@ -292,12 +292,25 @@ impl Checker {
             .entry(kind.to_owned())
             .or_insert_with(std::collections::BTreeSet::new)
             .insert(scope.item.clone());
+        self.kind_movements(m, scope, kind, &Rel::Bind);
+        for (id, input) in m.inputs.entries() {
+            if input.observed {
+                self.edge(&scope.item, Node::new(NodeKind::Input, id), Rel::Bind);
+            }
+        }
+    }
+
+    /// The movements of event kind `kind` read, each move of it or a subkind by `rel`; those
+    /// of a decision and `pads` a running read (refcore's `m_bind_movements`, `m_c_next`).
+    /// `next(K, d)` reads them as the binding its definition holds does (L §5 A form defined
+    /// by another, §5.14.1; tally 2.1.7 R6).
+    pub(super) fn kind_movements(&mut self, m: &Reality, scope: &Scope, kind: &str, rel: &Rel) {
         let sub = m.subtree(kind);
         for (id, mv) in m.moves.entries() {
             if !sub.contains(&mv.kind) {
                 continue;
             }
-            self.edge(&scope.item, Node::new(NodeKind::Move, id), Rel::Bind);
+            self.edge(&scope.item, Node::new(NodeKind::Move, id), rel.clone());
             if mv.decision {
                 self.mark(
                     &scope.item,
@@ -312,11 +325,6 @@ impl Checker {
                 crate::model::Mark::Legs,
                 crate::model::Target::Kind("pads".to_owned()),
             );
-        }
-        for (id, input) in m.inputs.entries() {
-            if input.observed {
-                self.edge(&scope.item, Node::new(NodeKind::Input, id), Rel::Bind);
-            }
         }
     }
 
