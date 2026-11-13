@@ -14,7 +14,7 @@
 //! refused; every recursion is counted (R-16).
 
 use super::check::{AxisRead, Checker, Figure, Narrowed, Scope, Var, VarDom, invariant};
-use super::keys::resolve_key;
+use super::keys::{RangeKey, resolve_key};
 use super::random::DrawKey;
 use super::reads::leg_type;
 use super::srows::base_name;
@@ -26,7 +26,7 @@ use super::types::{
 use crate::base::{Code, Load};
 use crate::eval::year_form;
 use crate::model::{
-    Domain, KeyVal, KindSpec, NameKind, Node, NodeKind, PeriodWord, Reality, Rel, Ty,
+    BindInfo, Domain, KeyVal, KindSpec, NameKind, Node, NodeKind, PeriodWord, Reality, Rel, Ty,
 };
 use crate::syntax::{Expr, Key, Lit, Postfix, SiteKey, Stop};
 use crate::time::PeriodKind;
@@ -92,7 +92,7 @@ impl Checker {
                     "cannot parse: * stands only in a pin".to_owned(),
                 ));
             };
-            let lit = self.key_pos(m, scope, kn, &bind.domain, depth)?;
+            let lit = self.bind_key(m, scope, kn, bind, depth)?;
             let mut value = "$?".to_owned();
             if let Expr::Name(name) = kn
                 && scope.is_var(name)
@@ -158,7 +158,7 @@ impl Checker {
                     "cannot parse: * stands only in a pin".to_owned(),
                 ));
             };
-            self.key_pos(m, scope, kn, &bind.domain, depth)?;
+            self.bind_key(m, scope, kn, bind, depth)?;
         }
         self.edge(&scope.item, Node::new(NodeKind::Place, id), Rel::Any);
         Ok(Ty::Key(place.kind.clone()))
@@ -206,7 +206,7 @@ impl Checker {
                     "cannot parse: * stands only in a pin".to_owned(),
                 ));
             };
-            self.key_pos(m, scope, kn, &bind.domain, depth)?;
+            self.bind_key(m, scope, kn, bind, depth)?;
         }
         self.edge(&scope.item, Node::new(NodeKind::Move, id), Rel::Any);
         if mv.decision {
@@ -217,6 +217,38 @@ impl Checker {
             );
         }
         Ok(mv.kind.clone())
+    }
+
+    /// A key at the position of binding `bind`, typed there as `key_pos` types it; a literal
+    /// at a stepped range whose ends and step are literals is kept for load's check, wherever
+    /// it is read, as a row's is (refcore's `key_pos`, `register_range_lit`; tally 2.1.7 R5,
+    /// #106). L §2.5, §8.4.
+    pub(super) fn bind_key(
+        &mut self,
+        m: &Reality,
+        scope: &Scope,
+        written: &Expr,
+        bind: &BindInfo,
+        depth: u32,
+    ) -> Result<Option<KeyVal>, Stop> {
+        let resolved = self.key_pos(m, scope, written, &bind.domain, depth)?;
+        let Expr::Lit(key) = written.unbracketed() else {
+            return Ok(resolved);
+        };
+        if bind.domain != Domain::Range {
+            return Ok(resolved);
+        }
+        // a literal that is no value of a range is the key's own type check's (refcore's
+        // `except LoadError: pass`)
+        match crate::eval::range_literal_key(m, key) {
+            Ok(Some(_)) => {
+                let (file, line) = scope.file_line();
+                self.range_keys.extend(RangeKey::of(bind, key, &file, line));
+            }
+            Ok(None) | Err(Stop::Refused(_)) => {}
+            Err(stop) => return Err(stop),
+        }
+        Ok(resolved)
     }
 
     /// A key at a key position whose domain is `domain`: typed there, and checked against

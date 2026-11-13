@@ -497,7 +497,7 @@ impl Checker {
                     "cannot parse: * stands only in a pin".to_owned(),
                 ));
             };
-            self.key_pos(m, scope, kn, &bind.domain, depth)?;
+            self.bind_key(m, scope, kn, bind, depth)?;
         }
         let mut legs = m.kind_legs(&mv.kind);
         if let Some(name) = leg {

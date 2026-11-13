@@ -20,9 +20,11 @@ use super::types::{
     key_value_kind, no_order, num, numcls, refused, uerr, unit_error, unit_of,
 };
 use crate::base::{Code, Load};
-use crate::model::{IndexInfo, NameKind, PeriodWord, Reality, Rel, Shown, Ty, Unit};
+use crate::eval::{num_stop, periods_of};
+use crate::model::{IndexInfo, KeyVal, NameKind, PeriodWord, Reality, Rel, Shown, Ty, Unit};
+use crate::num::Num;
 use crate::syntax::{Agg, AggFn, Expr, Lit, Stop};
-use crate::time::PeriodKind;
+use crate::time::{PeriodKind, Step};
 
 /// `LOAD-LIMIT <n> has more than 18 digits` for an integer written as a literal that names
 /// keys: a key offset `k ± n`, a `pos(k)` bound (refcore's `key_digits`). L §7.6 item 3.
@@ -40,6 +42,49 @@ pub(super) fn key_digits(n: &crate::syntax::Number) -> Result<(), Stop> {
     Err(refused(
         Load::Limit,
         format!("{text} has more than 18 digits"),
+    ))
+}
+
+/// A duration moves a key of a period index by whole keys: a literal one that isn't a whole
+/// number of the index's step is refused where load sees both, `LOAD-DOMAIN` in run's words
+/// `<k> <op> <d>: not a whole number of its periods (L §4.2)`; else the key's read refuses it
+/// at run (refcore's `key_duration_whole`; tally 2.1.7 B5, #98, R5). L §4.1 `by n`, §4.2.
+fn key_duration_whole(m: &Reality, ix: &str, op: Op, sides: &Sides) -> Result<(), Stop> {
+    let (Some(Lit::Num(n)), Some(KeyVal::Period(first))) = (
+        &sides.right.lit,
+        m.indexes.get(ix).and_then(|index| index.keys().first()),
+    ) else {
+        return Ok(());
+    };
+    let Some([term]) = n.unit.as_ref().map(|unit| unit.terms.as_slice()) else {
+        return Ok(());
+    };
+    let (family, months) = match term.base.as_str() {
+        "day" => (PeriodKind::Day, 1),
+        "month" => (PeriodKind::Month, 1),
+        "quarter" => (PeriodKind::Month, 3),
+        "year" => (PeriodKind::Month, 12),
+        _ => return Ok(()),
+    };
+    if !n.whole || term.power != Num::int(1) {
+        return Ok(());
+    }
+    let amount = n.value.checked_mul(&Num::int(months)).map_err(num_stop)?;
+    let own = match first.step() {
+        Step::Days(_) => PeriodKind::Day,
+        Step::Months(_) => PeriodKind::Month,
+    };
+    if own != family || periods_of(first.step(), family, &amount)?.is_some() {
+        return Ok(());
+    }
+    Err(refused(
+        Load::Domain,
+        format!(
+            "{} {} {}: not a whole number of its periods (L §4.2)",
+            sides.left.text,
+            sign(op),
+            sides.right.text
+        ),
     ))
 }
 
@@ -291,6 +336,7 @@ impl Checker {
             if vk == Some("period")
                 && let Some(pk) = key_pk(m, lt)
             {
+                key_duration_whole(m, ix, op, sides)?;
                 return self.arith_time(m, scope, op, (&period_ty(pk), rt), sides);
             }
             return Err(uerr(shown(op, lt, rt)));

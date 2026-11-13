@@ -18,6 +18,7 @@ use crate::model::{
     Ty, Unit,
 };
 use crate::syntax::{Expr, Postfix, Price, Stop, Valuation};
+use std::collections::{BTreeMap, BTreeSet};
 
 /// What a value with no `by` finds its place priced by (refcore's `priced`).
 enum Found {
@@ -188,7 +189,7 @@ impl Checker {
         }
         let mut things: Vec<&Thing> = m.things.entries().map(|(_, thing)| thing).collect();
         things.sort_by(|a, b| a.name.cmp(&b.name));
-        let mut sections = std::collections::BTreeSet::new();
+        let mut sections = BTreeSet::new();
         for thing in &things {
             for entry in &thing.entries {
                 let Some(price) = &entry.priced else {
@@ -348,7 +349,7 @@ impl Checker {
         };
         for name in seen_places(m, scope, &value.place, literal.as_deref(), &cands) {
             if let Some(thing) = m.things.get(&name) {
-                fits_value(m, value, thing, per.as_deref())?;
+                fits_value(m, &self.leg_amounts, value, thing, per.as_deref())?;
             }
         }
         self.edge(&scope.item, Node::balances(), Rel::Bal);
@@ -514,6 +515,7 @@ fn seen_places(
 /// already gives (`LOAD-PRICE`). Load sees both prices. L §5.10, §8.3.
 fn fits_value(
     m: &Reality,
+    legs: &LegTypes,
     value: &Valuation,
     thing: &Thing,
     by_per: Option<&str>,
@@ -527,7 +529,7 @@ fn fits_value(
         if let Some(Priced::PerUnit(pc, per)) = &priced
             && pc != cur
         {
-            let u = unit_name(m, thing, per);
+            let u = unit_name(m, legs, thing, per);
             return Err(uerr(format!(
                 "value({name}) in {cur}: {name} is priced in {pc}/{u}, not {cur}/{u}"
             )));
@@ -557,7 +559,7 @@ fn fits_value(
             Some(bp) if per.starts_with('$') => bp,
             Some(_) | None => per.as_str(),
         };
-        let u = unit_name(m, thing, named);
+        let u = unit_name(m, legs, thing, named);
         let written = if by.last {
             format!("last({})", text(&by.input))
         } else {
@@ -573,16 +575,36 @@ fn fits_value(
 
 /// A per-unit price's unit as a message names it: a price keyed by unit (`$u`) names the
 /// place's own unit (refcore's `_unit_name`). L §2.4, §3.2.
-fn unit_name(m: &Reality, thing: &Thing, u: &str) -> String {
-    if u.starts_with('$')
-        && let Some(own) = m
-            .place_unit(thing)
-            .filter(|pu| !matches!(pu.as_str(), "any" | "one"))
+fn unit_name(m: &Reality, legs: &LegTypes, thing: &Thing, u: &str) -> String {
+    if !u.starts_with('$') {
+        return u.to_owned();
+    }
+    if let Some(own) = m
+        .place_unit(thing)
+        .filter(|pu| !matches!(pu.as_str(), "any" | "one"))
     {
         return own;
     }
-    u.to_owned()
+    // a place of any unit: the first unit, by name, a leg naming it brings
+    let mut brought = BTreeSet::new();
+    for (_, mv) in m.moves.entries() {
+        for leg in &mv.decl.legs {
+            let named = [&leg.from, &leg.to]
+                .into_iter()
+                .any(|end| matches!(end, Expr::Name(n) if *n == thing.name));
+            if let (true, Some(Ty::Num(unit, _))) =
+                (named, legs.get(&(mv.id.clone(), leg.name.clone())))
+                && let [(base, 1)] = unit.terms()
+            {
+                brought.insert(base.clone());
+            }
+        }
+    }
+    brought.into_iter().next().unwrap_or_else(|| u.to_owned())
 }
+
+/// Each checked move's legs' amounts' types, by (move, leg) (refcore's `ln.amount._t`).
+type LegTypes = BTreeMap<(String, String), Ty>;
 
 /// Where a thing's price clause is written: its own entry's line, else the line of the kind
 /// that states it (refcore's `pn.loc`).

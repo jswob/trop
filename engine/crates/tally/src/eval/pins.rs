@@ -315,6 +315,12 @@ impl Engine {
         if expr {
             self.absorb(&met);
         }
+        // a cut after the clock is refused before its pin is noted (refcore's `apply_pins_`)
+        let day = if matches!(pin.form, PinForm::Known(_)) {
+            after_on(m, day)?
+        } else {
+            day
+        };
         let written = if expr {
             crate::load::expr_text(e)
         } else {
@@ -501,6 +507,19 @@ impl Engine {
 }
 
 /// Whether a pin's key is written, not `*` (L §5.11).
+/// A cut computed from a value, `known d`, after the model's `on`: refused at that value,
+/// `RUN-DOMAIN known <d> is after the model's on <on>` (L §8.4, E §11; R5, #112; refcore's
+/// `after_on`). An ask line's literal cut is the request's `REQ-CLOCK`, checked first.
+pub(crate) fn after_on(m: &Reality, d: Day) -> Result<Day, Stop> {
+    if d <= m.on {
+        return Ok(d);
+    }
+    Err(Stop::Refused(crate::base::Refusal::new(
+        Code::Run(crate::base::Run::Domain),
+        format!("known {} is after the model's on {}", d.text(), m.on.text()),
+    )))
+}
+
 fn is_written(key: &Key) -> bool {
     matches!(key, Key::Expr(_))
 }

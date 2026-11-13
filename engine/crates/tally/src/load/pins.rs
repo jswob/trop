@@ -300,7 +300,7 @@ impl Checker {
         }
         for (key, bind) in target.keys.iter().flatten().zip(binds) {
             if let Key::Expr(kn) = key {
-                self.key_pos(m, sc, kn, &bind.domain, depth)?;
+                self.bind_key(m, sc, kn, bind, depth)?;
             }
         }
         Ok(())

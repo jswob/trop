@@ -26,11 +26,11 @@ use super::register::{check_register_lines, register_lines, warning_lines};
 use super::residuals::residual_lines;
 use crate::base::{Code, Load, Place, Reach, Refusal, Req, Run, Warn};
 use crate::eval::{
-    Collected, Ctx, Engine, Entry, Env, Item, Member, Memo, names_in, num_stop, one_day, past_days,
-    world_named,
+    Collected, Ctx, Engine, Entry, Env, Item, Member, Memo, after_on, names_in, num_stop, one_day,
+    past_days, world_named,
 };
 use crate::model::{Reality, Value};
-use crate::syntax::{Ask, AskBody, Bind, Domain, Expr, Key, OfQ, Pin, PinForm, Step, Stop};
+use crate::syntax::{Ask, AskBody, Bind, Domain, Expr, Key, Lit, OfQ, Pin, PinForm, Step, Stop};
 use crate::time::Day;
 use crate::walk::{Bookings, Lows};
 use crate::{Asks, Days};
@@ -154,6 +154,11 @@ pub fn answer(m: &Reality, asks: &Asks, days: Days, how: How) -> Result<Answered
             named
         }
     };
+    for turn in &turns {
+        if let Turn::Ask(_, at) = turn {
+            req_clock(m, m.asks.get(*at).ok_or_else(no_turn)?)?;
+        }
+    }
     answer_turns(&[m], &turns, m.warnings.clone(), days, how)
 }
 
@@ -397,7 +402,7 @@ fn ask_lines(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<
             Ok(known_day) => known_day,
             Err(h) => return Ok(vec![format!("{}: {}", ask.id, shown(m, &Value::Hole(h))?)]),
         };
-        before_clock(m, "as known", cut)?;
+        cut = after_on(m, cut)?;
         known_engine = Some(engine);
     }
     let mut engine = Engine::new(cut)
@@ -418,21 +423,31 @@ fn ask_lines(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<
     Ok(lines)
 }
 
-/// The request's cut `cut`, set by an ask's `as known` or its `with known` (`what`), on or
-/// before the model's `on`: past it, the request is refused, the run's one result,
-/// `REQ-CLOCK <what> <cut> is after the model's on <on>` (E §11; picks P22 and P41, #112).
-fn before_clock(m: &Reality, what: &str, cut: Day) -> Result<(), Stop> {
-    if cut <= m.on {
-        return Ok(());
+/// The cuts the request's asks state as literals, `as known D` or `with known D` (`what`), on or
+/// before the model's `on`: past it, the request is refused after load, as `REQ-ASK` is, the
+/// run's one result, `REQ-CLOCK <what> <D> is after the model's on <on>` (E §11; R5, #112;
+/// refcore's `req_clock`). A computed cut is refused at its value (`after_on`).
+fn req_clock(m: &Reality, ask: &Ask) -> Result<(), Stop> {
+    let as_known = ask.known.iter().map(|e| ("as known", e));
+    let with_known = ask.pins.iter().filter_map(|pin| match &pin.form {
+        PinForm::Known(e) => Some(("with known", e)),
+        PinForm::Law(_) | PinForm::Wording(..) | PinForm::Scenario(_) | PinForm::Set { .. } => None,
+    });
+    for (what, e) in as_known.chain(with_known) {
+        if let Expr::Lit(Lit::Day(cut)) = e
+            && *cut > m.on
+        {
+            return Err(Stop::Refused(Refusal::new(
+                Code::Req(Req::Clock),
+                format!(
+                    "{what} {} is after the model's on {}",
+                    cut.text(),
+                    m.on.text()
+                ),
+            )));
+        }
     }
-    Err(Stop::Refused(Refusal::new(
-        Code::Req(Req::Clock),
-        format!(
-            "{what} {} is after the model's on {}",
-            cut.text(),
-            m.on.text()
-        ),
-    )))
+    Ok(())
 }
 
 /// The walk warnings an ask's engine met, each once, in the order met (refcore's
@@ -514,8 +529,6 @@ fn ask_body(m: &Reality, ask: &Ask, engine: &mut Engine, cut: Day) -> Result<Vec
             Err(hole) => return Ok(vec![format!("{}: {}", ask.id, hole.text())]),
             Ok(inside) => inside,
         };
-        // the ask's own cut is the clock's or before it, so a later cut is a `with known`'s
-        before_clock(m, "with known", inside.cut)?;
         engine.ask_cut = inside.cut;
         engine.unpinned = Some(ctx);
         engine.open_layer(m, inside)?;

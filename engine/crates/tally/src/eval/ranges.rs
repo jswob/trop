@@ -721,9 +721,10 @@ fn day_step(m: &Reality, day: Day, step: &Value) -> Result<Day, Stop> {
         ));
     };
     if next <= day {
+        let shown = step.text(m).map_err(num_stop)?;
         return Err(refuse(
             Run::Domain,
-            "a stepped range whose step is not positive".to_owned(),
+            format!("a stepped range whose step {shown} is not positive"),
         ));
     }
     Ok(next)

@@ -2695,3 +2695,29 @@ The 2.1.7 builder (one session, after T's re-run 2e4748c; work list its 287 `Log
 - **What I did:** built the rule (`eval`'s `refuse_load` through `Load::at_run`, refcore's `at_run`); the four rows go from green to red. No case is special-cased.
 - **What I ask:** T restates the four rows to the spec's 2.1.7 reading, `i3: refused: RUN-DOMAIN q1 - q2 + 1` and the like at each ask (exit 0; the engine's bytes), or holds them for this STOP-REPORT's issue. Option 2, keep `LOAD-UNIT`: a per-case exception to R5's one mapping, and `w6` red.
 - **State:** as above.
+
+## STOP-REPORT 2026-11-13: one input, two stored texts for a movement's lifespan: refcore 2.1.7 drops `(L §5.7)`, T's spec rows keep it
+
+- **Kind:** two T tests contradict each other (same input, different bytes)
+- **Where:** `engine/tests/m1/vectors.tsv` row `r5/l5_7_lifespan_of_movement` (refcore 2.1.7, R5's work list) and `engine/tests/m1/spec.tsv` rows `fixes/g14/b6_model_with_b6_l1_l1`, `_l2_l2`, `_l3_l3` and `fixes/g13/r_agent_w_model_with_r_agent_w_l1_l1` (P68, #136, "the engine's text"; test `m1_fixes_the_spec_where_refcore_crashes`). `r5/l5_7` loads the same `b6_model.tally` + `b6_l3.tally` as `b6_…_l3_l3`.
+- **Rule or gate:** E §11 / L §8.3 catalogue: `LOAD-UNIT lifespan of <x>: a movement has its day, not a lifespan` (`engine/tests/map/codes.tsv` row 119, no section mark).
+- **What happens:** `r5/l5_7` stores `refused: LOAD-UNIT lifespan of key transfers: a movement has its day, not a lifespan (b6_l3.tally:10)`; `b6_…_l3_l3` stores `… not a lifespan (L §5.7) (b6_l3.tally:10)`. One text turns one side red. With the catalogue's wording and refcore, `(L §5.7)` goes; the four spec rows then go red.
+- **What I did:** built the catalogue's text once (`load/calls.rs`), saw the four spec rows turn red, and reverted it: the engine keeps `(L §5.7)`, `r5/l5_7` stays red. No case is special-cased.
+- **What I ask:** T restates the four spec rows to refcore 2.1.7's text (they pinned the engine's text when refcore crashed there), then the message's ` (L §5.7)` goes in one line of `load/calls.rs` and its builder test in `tests/load_cases.rs` (`of-adjusts`).
+- **State:** R5 continues on its other ids.
+
+## 2026-11-13 tally 2.1.7, R5: load refuses what load sees, whatever the asks; a fault only the run meets is `RUN-*` in load's words (issue #144, pick P7)
+
+Three commits: 4f8d6ad (the run half), 35e3be8 (prices at load), and this one (the clock, literal keys and durations at load, the last texts).
+
+- **One mapping at run** (`base/code.rs` `Load::at_run`, refcore's `errors.at_run`; L §8.4 R-load): a check met at run that load would make, `LOAD-UNIT`/`LOAD-DOMAIN`, is `RUN-DOMAIN`, `LOAD-KEY` is `RUN-KEY`, same words, refusing the value, not the run. `eval`'s `refuse_load` and the walk's `bal`, `low`, `value` and ledger unit sites go through it; `walk/plan.rs` keeps `LOAD-*` (refcore's `moves.py` does; the first STOP-REPORT above).
+- **Prices at load** (`load/prices.rs`; E §3.1 pass 4): each place's price input against its key's kind and its unit, and each `value`'s currency and `by` against every place it can give, on every item, whatever the asks. This commit names the unit a leg brings by its amount's type (`Checker::leg_amounts`, refcore's `ln.amount._t`): `PLN/fa`, not the leg's kind `funds`.
+- **The clock** (`ask/answer.rs` `req_clock`, `eval/pins.rs` `after_on`; E §11): a cut an ask line writes as a literal day after `on` (`as known D`, `with known D`) refuses the request after load, `REQ-CLOCK`, the run's one result; a computed cut is `RUN-DOMAIN known d is after the model's on on` at its value, before its `pinned:` note. `before_clock`, which refused both as the request, goes.
+- **Literal keys at load** (`load/keyed.rs` `bind_key`; L §2.5): a key literal a read writes at a stepped range of literal ends joins the rows' list (`RangeKey`), checked once load is done, `LOAD-KEY … is not a value of a .. b step s` at the read's line. **Durations at load** (`load/ops.rs` `key_duration_whole`, the evaluator's `periods_of` shared; L §4.1 `by n`): a literal duration on a key of a period index that isn't a whole number of its step is `LOAD-DOMAIN` in run's words.
+- **Texts:** a unit clash between two key kinds names them (`eval/arith.rs` `unit_keys`); a stepped day range's step prints with its unit (`eval/ranges.rs`).
+- **Turned green (138 of the work list):** R5 82, S1 45 (the `fixes/g12/*` ids that waited on `bal`'s mapping), R6 6, R4 2, B3 2 (`b3/l5_10_priced_per_key_unit_message`, `fixes/g14/p130_one_kp_with_p130_one_c_wrong`), S7 1 (`s7/l8_4_stepped_range_step_text`); the ids are in the three commits' bodies. Gating: `check step gating: red`, 138 of the 287 still red, and 4 rows that were green (the second STOP-REPORT above).
+- **Still red:** `r5/l5_7_lifespan_of_movement` (the third STOP-REPORT above: T's spec rows store the other text); `r5/l3_3_accrue_yearly` stops "not implemented": `accrue` is a built-in the engine doesn't build, and a feature the engine lacks waits (refcore checks the yearly rate inside `accrue`'s computation).
+- **Sweep:** none SAME → DIFF; 48 asks DIFF → SAME over S1's (59 over the base); the two `ENGINE-INVARIANT`s (`R_L4_6_period_held_by_key`, `R_L4_6_reading_at_date`) are the base binary's too, none new.
+- **Size:** 587 changed lines in `engine/crates/` over the three commits (500 added, 87 removed). S1's entry above says 272; it is 275 (248 added, 27 removed). **M1 code replaced:** the per-site `LOAD-*` codes at run, now one mapping; `walk/value.rs`'s priced-place checks at run, now load's; `before_clock`. **Exceptions:** +0.
+- **Files:** `base/code.rs`, `ask/answer.rs`, `eval/{arith,convert,pins,ranges,state}.rs`, `load/{calls,check,exact,keyed,moves,ops,pins,prices,reads,strata}.rs`, `model/reality.rs`, `walk/{plan,projection,reads,value}.rs`, `book/ledger.rs`, `lib.rs`, `tests/load_cases.rs`.
+- **Check:** `check commit: green, 23 steps`.

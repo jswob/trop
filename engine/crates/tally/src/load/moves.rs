@@ -104,6 +104,8 @@ impl Checker {
         let what = format!("the amount of leg {} of {}", leg.name, mv.id);
         let expect = (!matches!(lt, Ty::Dyn) && !unit_kind).then_some(&lt);
         let t = self.expr(m, scope, &leg.amount, expect, 0)?;
+        self.leg_amounts
+            .insert((mv.id.clone(), leg.name.clone()), t.clone());
         if unit_kind && !unit_kind_amount(m, unit, &t) {
             return Err(scope.place(uerr(format!(
                 "{what} is {}, not a unit of {unit}",

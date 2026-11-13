@@ -65,6 +65,9 @@ impl Loader {
         self.m.asks_unresolved = core::mem::take(&mut walked.unresolved);
         self.m.list_keys = core::mem::take(&mut walked.list_keys);
         self.m.narrow_tests = core::mem::take(&mut walked.narrow_used);
+        // a literal read anywhere is load's to check, whatever the asks, after the rows' (R5)
+        self.range_keys
+            .extend(core::mem::take(&mut walked.range_keys));
         for fact in core::mem::take(&mut walked.facts) {
             if let Some(mv) = self.m.moves.get_mut(&fact.id) {
                 mv.read_targets = fact.read_targets;

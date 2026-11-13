@@ -15,6 +15,7 @@
 
 use super::across::PeriodRead;
 use super::fills::{FillState, inline_fill_edges};
+use super::keys::RangeKey;
 use super::moves::settlements;
 use super::pins::unloaded_world;
 use super::prices::price_twice;
@@ -454,6 +455,8 @@ pub(super) struct Walked {
     pub(super) ask_reads: BTreeMap<String, Vec<Node>>,
     /// The decisions' plain balance reads, in the order typed.
     pub(super) day_reads: Vec<DayRead>,
+    /// The key literals reads write at stepped ranges of literal ends, in the order typed.
+    pub(super) range_keys: Vec<RangeKey>,
     /// The asks refused alone, with their refusals (refcore's `asks_alone`). L §6.4, §8.
     pub(super) alone: BTreeMap<String, Refusal>,
     /// Each ask whose line can hold a key literal no position resolves, with the ask's line,
@@ -507,6 +510,12 @@ pub(super) struct Checker {
     vars: usize,
     /// Each checked move's legs' static amount types, by (move, leg) (refcore's `ln._lt`).
     pub(super) leg_types: BTreeMap<(String, String), Ty>,
+    /// Each checked move's legs' amounts' types, by (move, leg): the unit a leg brings to a place
+    /// of any unit (refcore's `ln.amount._t`).
+    pub(super) leg_amounts: BTreeMap<(String, String), Ty>,
+    /// The key literals reads write at stepped ranges of literal ends, kept for load's check
+    /// as a row's are (refcore's `register_range_lit` from `key_pos`; R5, #106).
+    pub(super) range_keys: Vec<RangeKey>,
     /// The periods read at keys of time indexes, in the order typed (refcore's
     /// `period_cands`).
     periods: Vec<PeriodRead>,
@@ -655,6 +664,7 @@ pub(super) fn walk(m: &Reality, sections: &[(String, Section)]) -> Result<Walked
         ask_reads: checker.ask_reads,
         unresolved: checker.unresolved,
         day_reads: checker.day_reads,
+        range_keys: checker.range_keys,
         alone,
         queries: checker.queries,
         orient_items: checker.orient_items,

@@ -159,17 +159,44 @@ pub fn arith(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Result<Value, Sto
     Ok(out)
 }
 
-/// `<a> and <b> have different units`, the operands as written (L §3.2; refcore's `arith`,
-/// `cmp3`).
+/// `<a> and <b> have different units`, the operands as written; values in two keys of one
+/// unit kind, which load saw only as that kind, `<a> and <b> are in different keys <u> and
+/// <u'> of <K>` (L §3.2, §8.4 `RUN-DOMAIN`; refcore's `arith`, `cmp3`, `key_clash`).
 fn different_units(m: &Reality, (a, b): (&Value, &Value)) -> Result<Stop, Stop> {
+    let shown = (a.text(m).map_err(num_stop)?, b.text(m).map_err(num_stop)?);
+    for x in unit_keys(m, a)? {
+        for y in unit_keys(m, b)? {
+            if let (Some(kx), Some(ky)) = (m.unit_kind_keys.get(&x), m.unit_kind_keys.get(&y))
+                && x != y
+                && kx == ky
+            {
+                return Ok(refuse(
+                    Run::Domain,
+                    format!(
+                        "{} and {} are in different keys {x} and {y} of {kx}",
+                        shown.0, shown.1
+                    ),
+                ));
+            }
+        }
+    }
     Ok(refuse_load(
         Load::Unit,
-        format!(
-            "{} and {} have different units",
-            a.text(m).map_err(num_stop)?,
-            b.text(m).map_err(num_stop)?
-        ),
+        format!("{} and {} have different units", shown.0, shown.1),
     ))
+}
+
+/// The base units of a value's unit: money's currency, a number's terms.
+fn unit_keys(m: &Reality, v: &Value) -> Result<Vec<String>, Stop> {
+    if let Value::Money(x) = v {
+        let (cur, _) = crate::model::currency(m, x.currency()).map_err(num_stop)?;
+        return Ok(vec![cur.to_owned()]);
+    }
+    if let Value::Number(n) = v {
+        let unit = n.unit();
+        return Ok(unit.terms().iter().map(|(base, _)| base.clone()).collect());
+    }
+    Ok(Vec::new())
 }
 
 /// `a ± b` (L §3.2): a bare figure takes the other operand's class (`%` beside a `num %`,
@@ -623,7 +650,11 @@ fn periods_in(
 /// `amount` days or months (`family`) as a count of periods of `step`, the days or months
 /// a period stands for: one key of its index, `by n` of them (refcore's `unit` and `n`);
 /// `None` when it isn't a whole number of them. L §4.1 `by n`, §4.2.
-fn periods_of(step: Step, family: PeriodKind, amount: &Num) -> Result<Option<Num>, Stop> {
+pub(crate) fn periods_of(
+    step: Step,
+    family: PeriodKind,
+    amount: &Num,
+) -> Result<Option<Num>, Stop> {
     let (own, size) = match step {
         Step::Days(n) => (PeriodKind::Day, n),
         Step::Months(n) => (PeriodKind::Month, n),
