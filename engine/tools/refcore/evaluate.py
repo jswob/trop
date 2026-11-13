@@ -2984,13 +2984,10 @@ class Engine:
             while cur <= z:
                 out.append(cur)
                 i += 1
-                try:
-                    nxt = self.day_step(a, s, i)
-                except TallyError as e:
-                    if e.code == 'RUN-LIMIT' and cur <= z:
-                        # the next value passes the last day there is, so it is past z too
-                        break
-                    raise
+                # L §7.6 item 1 (tally 2.1.7 B1, T's SR-2): a range's next key past 9999-12-31 is refused (RUN-LIMIT),
+                # as every day computed outside Tally's is, before its keys are counted (item 2); 2.1.7's first
+                # refcore stopped there and answered
+                nxt = self.day_step(a, s, i)
                 if nxt <= cur:
                     # L §8.4 RUN-DOMAIN `a stepped range whose step <s> is not positive` (tally 2.1.7 S7, X1)
                     raise refuse('RUN-DOMAIN', 'a stepped range whose step %s is not positive' % fmt(s))

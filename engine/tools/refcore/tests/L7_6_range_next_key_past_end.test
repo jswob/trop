@@ -1,0 +1,42 @@
+# L §7.6 item 1 (tally 2.1.7 B1, issue #150; T's SR-2): "A day computed outside them is refused: by ... a range's
+# next key". near .. end31 step 1 day holds 9999-12-30 and 9999-12-31, and its next key would be past 9999-12-31:
+# RUN-LIMIT `a day passes 9999-12-31` (r_two). near2 .. end30 ends a day before, so its next key is 9999-12-31 and it
+# is answered (r_twin). 2.1.7's first refcore stopped at the last day there is and answered r_two 2; a range of
+# 1 000 001 keys ending on 9999-12-31 was answered the same way (T's g14/day_range_end r_past).
+=== sr2.tally
+model sr2
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "invented"
+
+input n1: int
+
+input end31: date
+
+input end30: date
+
+input near: date
+
+input near2: date
+
+ask r_two: sum(n1 for d in near .. end31 step 1 day)
+
+ask r_twin: sum(n1 for d in near2 .. end30 step 1 day)
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  n1 = 1 "one"
+  end31 = 9999-12-31 "the calendar's last day"
+  end30 = 9999-12-30 "the day before it"
+  near = 9999-12-30 "a day before the last"
+  near2 = 9999-12-29 "two days before the last"
+=== expect
+r_twin: 2
+  cut 2026-12-31
+r_two: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 2026-12-31
