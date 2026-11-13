@@ -39,6 +39,18 @@ named. **1345 tests, all pass** (1251, 94 new, 8 changed; `refcore_fast` byte-eq
   the closure of the written orders, which `m.written_order` gives the walk (S5); the day-range step text gains its
   `<s>` (S7); `check.check_path_line`, `check3.m_check_settlement_units`, `moves.settle_sign` name their place (S9).
   `evaluate.business` refuses only a calendar of seven weekend days, its dead 366-yearly-days branch gone (S8, P33).
+- **T's re-run (P36: SR-1 to SR-14, no rule's exception).** **1356 tests, all pass** (11 new, `L5_14_next` changed;
+  each new one seen failing on 1f08769's refcore; `refcore_fast` 1356). `resid.may_touch`: a refused instance refuses
+  only a ledger its legs may give (SR-1, R2); `range_values` lets a next key past 9999-12-31 refuse (SR-2, B1);
+  `check3._seen_places` gives a keyed place at literal keys alone (SR-3, R4/R9); computed intervals keep their
+  `origin`, and `range_one_value` makes a window end or step `HOLE-IMPRECISE` (SR-5, SR-9, R3); `ask.print_line` drops
+  an ask's with pin an inner pin of its cell replaced at every read, `walk.note_none` puts a false when's reads in its
+  places' read sets (SR-6, SR-8, R7; dropping the ask-level pins outright breaks F9/F11, where the walk's pin reads
+  don't reach a refused result); `mreads.m_c_next` names the form as written (SR-7, R6); `ask.explain_pins` fans the
+  outside derivation over the pinned axes it reads (SR-10, R8); `moves.instant_text` of a bare day (SR-12, B6);
+  `check.compare` resolves each literal `reach_leaves` gives (SR-13, R10). Speed (SR-11, SR-14), outputs unchanged:
+  `range_has` bisects (g13's 20-year count 329 s -> 3 s; 2.1.6 0.8 s); `walk.m_prefix_walk` walks a branch's base only
+  to its from for invariant 3 (B-13 78-86 s -> 53 s at one job under PyPy; 2.1.6 31 s; the rest is R7's listing).
 
 ## tally 2.1.6 (the spec round after M0: 24 issues)
 
