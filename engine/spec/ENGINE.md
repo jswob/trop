@@ -177,7 +177,7 @@ For each distinct (cut class, world, pin set, clauses, axis options) the asks ne
 2. **The day walk** (§4.2): readings, observations, plans and decisions, day by day, from S to E.
 3. **The asks:** each reads cells and the timeline.
 
-The plan pass and the day walk run only if something the asks need reaches a place, a move or a balance. A model with no places, such as most law cases, runs only its asks. An unpinned `flows` or `bal` ask fans out over the axis options of its timelines like any value, under the cap of `LOAD-FORKS`.
+The plan pass and the day walk run only if something the asks need reaches a place, a move or a balance. A model with no places, such as most law cases, runs only its asks. An ask of any form fans out as LANGUAGE §5.5 says, under the cap of `LOAD-FORKS`.
 
 ---
 
@@ -475,7 +475,7 @@ The test suite adds **determinism**: every case is run twice, with 1 and with 6 
 
 **Long derivations fold.** A recurrence over 300 months prints its first and last steps and a count. Any step can be asked for with `explain x[k]`. A cause met again prints once and is referenced by its line.
 
-**`inputs-of ref`** is the transitive read set: every row the evaluation read, the rows an `at` reads included, with its source (N-1705). A walk or movement read in it stands for the rows behind what it counts: the openings, readings and observed rows of the places it reads, and the rows the movements it counts read for their days, `when`s and amounts (§3.2, tally 2.1.6). A rule's `v` version isn't a row; `explain` shows it. Across an axis it fans out, one set per line.
+**`inputs-of ref`** is the transitive read set: every row the evaluation read, the rows an `at` reads included, with its source (N-1705). A walk or movement read in it stands for the rows behind what it counts: the openings, readings and observed rows of the places it reads, and the rows the movements it counts read for their days, `when`s and amounts (§3.2, tally 2.1.6). A rule's `v` version isn't a row; `explain` shows it.
 
 **`readers-of x`** is the inverse of the item graph (§3.1), static: every item with a path of edges to x, the direct readers first. Of an event kind, every binding over it or over a kind it is a subkind of.
 
