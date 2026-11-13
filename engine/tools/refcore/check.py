@@ -3431,15 +3431,34 @@ class Checker:
                     raise LoadError('LOAD-LAWDATE', 'ask %s reads law-dated %s directly, without law' % (a.id, t[1]),
                                     a.loc)
 
+    ITEM_KINDS = ('def', 'input', 'band', 'ask', 'move', 'fill', 'place', 'kind', 'axis', 'index')
+
+    def item_of(self, node):
+        """The item a graph node belongs to, or None for the checker's own nodes (the timeline, a price's cone, a
+        parts clause): a move's day is the move's, a scenario's row is its input's (L §5.18, E §10; tally 2.1.7 B2)."""
+        if node[0] == 'moveon':
+            return ('move', node[1])
+        if node[0] == 'srow':
+            return (node[1], node[2])
+        if node[0] in self.ITEM_KINDS and len(node) == 2:
+            return node
+        return None
+
     def readers_of(self, item):
-        """Every item that reads x, directly or not: direct readers first, then by depth, then by id."""
+        """Every item that reads x, directly or not (L §5.18 inputs-of's reverse, E §10): breadth first over the
+        graph's nodes, each item listed once, at the first layer one of its nodes is met, a layer sorted by id."""
         inv = {}
+        nodes = {}
         for r, ts in self.edges.items():
+            nodes.setdefault(self.item_of(r), set()).add(r)
             for t in ts:
                 inv.setdefault(t, set()).add(r)
+                nodes.setdefault(self.item_of(t), set()).add(t)
+        nodes.pop(None, None)
         out = []
-        seen = {item}
-        frontier = [item]
+        listed = {self.item_of(item)}
+        seen = set(nodes.get(self.item_of(item), ())) | {item}
+        frontier = set(seen)
         while frontier:
             nxt = set()
             for x in frontier:
@@ -3447,9 +3466,16 @@ class Checker:
                     if r not in seen:
                         seen.add(r)
                         nxt.add(r)
-            layer = sorted(nxt, key=lambda r: r[1])
-            out.extend(layer)
-            frontier = layer
+            layer = set(self.item_of(r) for r in nxt) - listed - {None}
+            listed |= layer
+            out.extend(sorted(layer, key=lambda r: r[1]))
+            # an item's every node stands at the layer the item is listed at (its day, a scenario's row of it)
+            for it in layer:
+                for x in nodes.get(it, ()):
+                    if x not in seen:
+                        seen.add(x)
+                        nxt.add(x)
+            frontier = nxt
         return out
 
 
