@@ -398,6 +398,21 @@ impl Hole {
 }
 
 impl Load {
+    /// The code a check of load's prints when it is met at run, on a value load couldn't
+    /// see: a unit or a domain is `RUN-DOMAIN`, a key `RUN-KEY`, in load's words; any other
+    /// keeps load's code, which load meets first (L §8.4 "What isn't defined is refused",
+    /// tally 2.1.7 R5; refcore's `at_run`).
+    #[must_use]
+    pub fn at_run(self) -> Code {
+        if matches!(self, Load::Unit | Load::Domain) {
+            Code::Run(Run::Domain)
+        } else if self == Load::Key {
+            Code::Run(Run::Key)
+        } else {
+            Code::Load(self)
+        }
+    }
+
     /// The code as L §8.3 spells it.
     #[must_use]
     pub fn as_str(self) -> &'static str {

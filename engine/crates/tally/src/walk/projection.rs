@@ -475,7 +475,7 @@ pub(crate) fn own_unit(m: &Reality, place: &str) -> Result<String, Stop> {
         .filter(|u| u != "any")
         .ok_or_else(|| {
             Stop::Refused(Refusal::new(
-                Code::Load(Load::Unit),
+                Load::Unit.at_run(),
                 format!("bal({place}, d) of a place of unit any states its unit: bal(x, u, d)"),
             ))
         })

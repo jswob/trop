@@ -1201,7 +1201,8 @@ pub(super) fn refuse(code: Run, message: String) -> Stop {
     Stop::Refused(Refusal::new(Code::Run(code), message))
 }
 
-/// A load refusal met at run (L §8.3).
+/// A load refusal met at run, as refcore's `moves.py` raises it there (L §8.3; the
+/// STOP-REPORT of 2026-11-13 on R5 asks whether it is `RUN-DOMAIN` at the value).
 pub(super) fn refuse_load(code: Load, message: String) -> Stop {
     Stop::Refused(Refusal::new(Code::Load(code), message))
 }
@@ -1473,15 +1474,14 @@ ask q_top: bal(konto, 2026-01-05) in topup
     }
 
     #[test]
-    fn a_load_refusal_met_reading_a_refused_plans_place_refuses_the_run() {
-        // L §3.3, §8.3: a load refusal met at run, here reading the place of February's
-        // refused instance, refuses the run in the base's world, as anywhere else
+    fn a_unit_fault_met_reading_a_refused_plans_place_is_refused_at_that_value() {
+        // L §3.3, §8.4 (tally 2.1.7 R5): a unit check met at run, here reading the place of
+        // February's refused instance, is refused at that value, `RUN-*`, not the run: as
+        // its twin above, every place refused from 20 February (refcore's bytes)
         assert_eq!(
             answer(&[("loadrun.tally", PLACE_LOAD_REFUSAL)], "q_bal"),
-            [
-                "refused: LOAD-UNIT 0.05 /year * 1 day: a rate times a duration of another period dimension (day/year)"
-            ],
-            "the run refused"
+            answer(&[("place.tally", REFUSED_PLACE)], "q_bal"),
+            "every place refused from 20 February"
         );
     }
 

@@ -20,7 +20,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::adjust::Adjustment;
 use super::observe::{Obs, inst_id};
 use super::reading::{Seen, booked_amount, reading_rank, readings};
-use crate::base::{Code, Load, Refusal};
+use crate::base::{Load, Refusal};
 use crate::eval::{Ctx, Engine, Env, Rows, num_stop};
 use crate::hole::{Hole, spread};
 use crate::model::{Fulfils, GapRole, Reality, Span};
@@ -858,7 +858,7 @@ fn flow_into(legs: &[LegVal], place: &str, unit: &str) -> Result<Fig, Stop> {
             && u != unit
         {
             return Err(Stop::Refused(Refusal::new(
-                Code::Load(Load::Unit),
+                Load::Unit.at_run(),
                 format!("a leg in {u} touches {place}, a place in {unit}"),
             )));
         }

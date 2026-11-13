@@ -224,7 +224,7 @@ impl Engine {
         let per = if keyed_by_unit { u } else { per.as_str() };
         if pc != cur || per != u {
             return Err(Stop::Refused(Refusal::new(
-                Code::Load(Load::Unit),
+                Load::Unit.at_run(),
                 format!("value({place}) in {cur}: {place} is priced in {pc}/{per}, not {cur}/{u}"),
             )));
         }

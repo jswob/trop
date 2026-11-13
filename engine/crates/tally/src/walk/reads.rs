@@ -220,7 +220,7 @@ impl Engine {
                 && *pu != name
             {
                 return Err(Stop::Refused(Refusal::new(
-                    Code::Load(Load::Unit),
+                    Load::Unit.at_run(),
                     format!("bal({place}, {name}, d): {place} holds {pu}"),
                 )));
             }
