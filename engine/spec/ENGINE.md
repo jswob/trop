@@ -245,7 +245,7 @@ The walk is a fold over days, read as a scan: a read of day t reads its prefix t
 
 **The common case is cheap.** When the window holds no decision that the projection counts, the projection is the start balance plus a prefix sum F of the plan movements as known on t, and `low(x, a .. b) from t` is a range minimum over F. F changes only as the cut min(t, K) rises with t, so one structure is updated in place, in walk order (`PERFORMANCE.md` §2.3). On a path, a projection that reaches random facts only through its clause is the same on every path, so F is computed once, in the shared layer (§7).
 
-**`next(K, d)`** is a search in the sorted days of the movements of kind K, planned and observed, each once (LANGUAGE §5.19), as known at the reader's cut; two on the first day found are `RUN-TIE` (LANGUAGE §5.14.1). When none is planned yet, its binding is empty at the cut and its span reaches past it, so it is a hole naming the binding (`HOLE-NOTYET`, LANGUAGE §5.14.1).
+**`next(K, d)`** is a search in the sorted days of the movements of kind K, planned and observed, each once (LANGUAGE §5.19), as known at the reader's cut; its ties and holes are its definition's (LANGUAGE §5.14.1).
 
 ---
 

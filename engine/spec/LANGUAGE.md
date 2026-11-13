@@ -750,6 +750,8 @@ def quote_now[d in days]: num at d
 
 Each construct below gives its syntax, what it computes (a rule an evaluator can apply by hand), its refusals, its cost and the cases that use it. The case lists name the carried regression models (the 79, the household and its changes); the construct-by-case matrix in `coverage.md` is the record. The cost units are those of `PERFORMANCE.md`: one **evaluation** is one rule body computed at one key. Refusal codes are listed in §8. The examples follow the style rule of §2.4 (plural names for indexes and kinds).
 
+**A form defined by another** (tally 2.1.7). A form this definition gives as an expression of others means that expression: it takes the expression's clauses, reads what it reads (so load's read checks and the register see those reads, §5.14.1, §8.2), and gives its values, holes and refusals, their messages naming the form as written; it is empty where the expression is. Each form's own row is its definition's one home.
+
 ### 5.1 The header
 
 <!-- tally2: D-9, D-13 -->
@@ -1404,8 +1406,8 @@ A decision that reaches a projection of x declares `reads x`. In an ask, or a de
 
 | Built-in | Value |
 |---|---|
-| `low(x, a .. b) [from t] [clauses]` | the lowest end-of-day balance of x on days a..b: `min(bal(x, d) from t for d in a .. b step 1 day)` with the same clauses; without `from`, of the plain balances |
-| `next(K, d)` | the first movement of event kind K whose day is on or after d (`first(m in K over d ..) ties by m.day`): two movements on that first day are a tie, refused (`RUN-TIE`); a reader that needs one of them writes the `first` itself with a fuller `ties by`, `first(m in K over d ..) ties by (m.day, e)`. When none is planned yet, its binding is empty at the cut and its span reaches past it, so it is a hole naming the binding (`HOLE-NOTYET`, §3.1) |
+| `low(x, a .. b) [from t] [clauses]` | the lowest end-of-day balance of x on days a..b: `min(bal(x, d) [from t] [clauses] for d in a .. b step 1 day)` (§5, a form defined by another) |
+| `next(K, d)` | the first movement of event kind K whose day is on or after d: `first(m in K over d ..) ties by m.day` (§5, a form defined by another); a reader that needs one of two on a day writes the `first` itself with a fuller `ties by`, `first(m in K over d ..) ties by (m.day, e)` |
 
 `low` takes a place and passes on the projection's clauses, and `next` takes a kind; a def can do neither, so they are built-ins (C-24). **Groups of places** are written as sums: the lowest end-of-day sum of the liquid accounts is `min(sum(bal(x, d) from t for x in liquid on d) for d in a .. b step 1 day)`, which isn't the sum of their lows (R-07).
 
@@ -1727,7 +1729,7 @@ On days no version covers, and from K on, the planned movements are booked: the 
 - **`anchor x`**: the walk restarts from the reading: x's balance after the instant is the reading, nothing is booked, and `flows` doesn't count the difference. The difference is the reading's balance line in the residual ledger (`ENGINE.md` §6.3).
 
 Either way, **a balance means what the statement states at the last reading, plus what is booked since**; before a place's first reading, its opening plus what is booked since. Every figure that reads x's balance from that instant on lists the reading in its register as §8.2 says: `anchor:` for the last anchoring reading, `pad:` for each pad it counts.
-- **`gap(x, d)`** is the gap at the last `stated` reading of x on day d, a fact an ask or a def reads (`S:10`, `Q:B-08`); with no reading that day it is `HOLE-NOREADING`.
+- **`gap(x, d)`** is the gap at the last `stated` reading of x on day d, a balance read (§5.14.1), a fact an ask or a def reads (`S:10`, `Q:B-08`); with no reading that day it is `HOLE-NOREADING`.
 - **`bal(x, d) modelled`** is the model's own balance of the modelled past on a covered day: from x's last reading before d, plus the planned movements that touch x, at their booking cut (`P:RULE-07`, `ENGINE.md` §6.2). Comparing it with the reading is the residual.
 - **Holes.** A hole movement dated on or before the reading keeps x's balances before it holes, and its questions stay listed on those balances, on the gap and on the pad (whose amount is then a hole). It no longer makes x's balances after the reading holes: the reading states them. A movement that may fall after the reading (a hole day, or a window that runs past it) still does, from the first day it may fall on. A hole movement's other place is fixed only by a reading of its own.
 - **Decisions before a reading stay as booked.** A reading at the end of D applies after D's decisions, so it never changes them. A decision after the reading reads the balance it states, under every cut that sees the row, even one known after the decision's day (§5.14.3).
