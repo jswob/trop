@@ -24,7 +24,7 @@ def invested[m in month]: money PLN at start_of(m)
 
 def net_worth_on[d in day]: num PLN at start_of(d)
   note "majątek netto z pytania net_worth (asks/core), jako def, żeby pytania o pasma mogły go czytać"
-  rule base = sum(bal(x, d) with uncertain for x in places over .. where not x in outside and ((x in accounts or x in cash or x in claims or x in debts) and unit(x) == PLN)) + sum(value(wunits[w], d) in PLN by etf_price[month_of(d)] for w in wrapper)
+  rule base = sum(bal(x, d) with uncertain for x in places over .. where not x in outside and ((x in accounts or x in cash or x in claims or x in debts) and unit(x) == PLN)) + sum(value(wunits[w], d) in PLN for w in wrapper)
 
 def repair_hit[m in surprise_month]: dist at day_of(m, surprise_dom)
   note "czy w miesiącu m przychodzi niespodziewana naprawa (1) czy nie (0)"
