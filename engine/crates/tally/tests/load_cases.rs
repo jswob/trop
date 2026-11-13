@@ -784,10 +784,12 @@ version card_2026
                 "def worth: num PLN = value(st, day) in PLN by amt",
                 "LOAD-UNIT value by amt: the price is money PLN, not num PLN/u (a.tally:57)",
             ),
+            // tally 2.1.7 (F11a, R4/R6): st's own price, px, already prices its position, so
+            // the `by` names it twice (refcore 2.1.7's bytes)
             (
                 worth,
                 "def worth: num PLN = value(st, day) in PLN by last(px)",
-                "loaded",
+                "LOAD-PRICE value(st) by last(px): st's price already gives its etf_u (a.tally:57)",
             ),
             (
                 worth,

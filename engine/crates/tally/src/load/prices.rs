@@ -14,7 +14,8 @@ use super::texts::text;
 use super::types::{Typed, is_date, name_word, refused, uerr};
 use crate::base::{Code, Load, Place as At, Refusal};
 use crate::model::{
-    Entry, Mark, NameKind, Node, NodeKind, PlaceInfo, Priced, Reality, Rel, Shown, Thing, Ty, Unit,
+    Domain, Entry, Mark, NameKind, Node, NodeKind, PlaceInfo, Priced, Reality, Rel, Shown, Thing,
+    Ty, Unit,
 };
 use crate::syntax::{Expr, Postfix, Price, Stop, Valuation};
 
@@ -211,7 +212,7 @@ impl Checker {
             }
         }
         let assets = m.subtree("assets");
-        for thing in things {
+        for thing in &things {
             let asset = thing
                 .base
                 .as_ref()
@@ -223,7 +224,7 @@ impl Checker {
                 return Err(entry_refusal(m, files, thing, last, Load::Price, message));
             }
         }
-        Ok(())
+        price_fits(m, files, &things)
     }
 
     /// A price clause: an input or a def of type `num CUR` or `num CUR/u`, keyed by one index
@@ -338,9 +339,17 @@ impl Checker {
                 self.edge(&scope.item, node, Rel::Explicit);
             }
         }
-        match &value.by {
-            None => no_by(m, scope, value, literal.as_deref(), &t, &cands)?,
+        let per = match &value.by {
+            None => {
+                no_by(m, scope, value, literal.as_deref(), &t, &cands)?;
+                None
+            }
             Some(by) => self.by(m, scope, by, value, depth)?,
+        };
+        for name in seen_places(m, scope, &value.place, literal.as_deref(), &cands) {
+            if let Some(thing) = m.things.get(&name) {
+                fits_value(m, value, thing, per.as_deref())?;
+            }
         }
         self.edge(&scope.item, Node::balances(), Rel::Bal);
         let target = place_target(m, scope, &value.place)?;
@@ -358,8 +367,9 @@ impl Checker {
     }
 
     /// A value's `by p`: an unkeyed input read through `last`, a keyed input or def, an input
-    /// read through `last` at keys, or an expression of type `num CUR/u` (refcore's
-    /// `m_t_value`, its `by` branches). L §5.10, §4.6.
+    /// read through `last` at keys, or an expression of type `num CUR/u`; the unit u its price
+    /// is per where the `by` itself gives it, none for a price keyed by unit (refcore's
+    /// `m_t_value`, its `by` branches and `per`). L §5.10, §4.6.
     fn by(
         &mut self,
         m: &Reality,
@@ -367,7 +377,7 @@ impl Checker {
         by: &Price,
         value: &Valuation,
         depth: u32,
-    ) -> Result<(), Stop> {
+    ) -> Result<Option<String>, Stop> {
         let cur = &value.currency;
         let name = if let Expr::Name(id) = &by.input {
             Some(id.as_str())
@@ -394,7 +404,7 @@ impl Checker {
                 )));
             }
             self.edge(&scope.item, item_node(id, NameKind::Input), Rel::Explicit);
-            return Ok(());
+            return Ok(pt.as_ref().and_then(per_of));
         }
         if let Some((id, (kind, ty, keys))) = &read {
             if *keys != 1 || !matches!(ty, Some(Ty::Num(..))) {
@@ -420,8 +430,15 @@ impl Checker {
                     "value by {named}: the price is {shown}, not num {cur}/u"
                 )));
             }
+            // keyed by unit: a price keyed by places is load's to refuse, which sees its
+            // key's kind (L §5.10, R5)
+            if !m.unit_keyed(id) {
+                return Err(uerr(format!(
+                    "value by {id}: a price is a num CUR/u keyed by unit, or an expression of that type with its keys"
+                )));
+            }
             self.edge(&scope.item, item_node(id, *kind), Rel::Explicit);
-            return Ok(());
+            return Ok(None);
         }
         if let Some(id) = name
             && looked.is_none()
@@ -439,7 +456,7 @@ impl Checker {
                         pt.show()
                     )));
                 }
-                return Ok(());
+                return Ok(per_of(&pt));
             }
             return Err(uerr(format!(
                 "value by last({}): last reads an input (L §4.6)",
@@ -454,8 +471,186 @@ impl Checker {
                 pt.show()
             )));
         }
-        Ok(())
+        Ok(per_of(&pt))
     }
+}
+
+/// The unit a `num CUR/u` is per: its term of power −1.
+fn per_of(t: &Ty) -> Option<String> {
+    let Ty::Num(unit, _) = t else {
+        return None;
+    };
+    unit.terms()
+        .iter()
+        .find(|(_, power)| *power == -1)
+        .map(|(base, _)| base.clone())
+}
+
+/// The places load sees a value's reference give, by name: a literal one, a keyed place's
+/// own things, or every thing of the reference's kind (refcore's `_seen_places`). L §5.10.
+fn seen_places(
+    m: &Reality,
+    scope: &Scope,
+    place: &Expr,
+    literal: Option<&str>,
+    cands: &[String],
+) -> Vec<String> {
+    let section = literal
+        .is_none()
+        .then(|| place_section(m, scope, place))
+        .flatten()
+        .and_then(|id| m.places.get(&id));
+    let mut out: Vec<String> = match section {
+        Some(info) => info.things.iter().map(|(_, name)| name.clone()).collect(),
+        None => cands.to_vec(),
+    };
+    out.sort();
+    out
+}
+
+/// A value's place against the price it is read by (refcore's `m_t_value`, its places): the
+/// place's own price per unit in another currency than the value's (`LOAD-UNIT`); with a
+/// `by`, a position the `by`'s unit isn't (`LOAD-UNIT`), or one the place's own price
+/// already gives (`LOAD-PRICE`). Load sees both prices. L §5.10, §8.3.
+fn fits_value(
+    m: &Reality,
+    value: &Valuation,
+    thing: &Thing,
+    by_per: Option<&str>,
+) -> Result<(), Stop> {
+    let (cur, name) = (&value.currency, &thing.name);
+    let priced = m
+        .price_of(thing)
+        .and_then(|price| m.clause_mode(&price))
+        .map(|(_, mode)| mode);
+    let Some(by) = &value.by else {
+        if let Some(Priced::PerUnit(pc, per)) = &priced
+            && pc != cur
+        {
+            let u = unit_name(m, thing, per);
+            return Err(uerr(format!(
+                "value({name}) in {cur}: {name} is priced in {pc}/{u}, not {cur}/{u}"
+            )));
+        }
+        return Ok(());
+    };
+    // the unit a `by` prices is the position's: a place valued whole in another currency
+    // holds that currency, a place of one unit that unit
+    let want = match &priced {
+        Some(Priced::Whole(whole)) => Some(whole.clone()),
+        Some(Priced::PerUnit(..)) => None,
+        None => m.place_unit(thing),
+    };
+    if let (Some(per), Some(want)) = (by_per, want.as_deref())
+        && !matches!(want, "any" | "one")
+        && want != cur
+        && per != want
+    {
+        return Err(uerr(format!(
+            "value({name}) in {cur}: {name} is priced in {cur}/{per}, not {cur}/{want}"
+        )));
+    }
+    if let Some(Priced::PerUnit(_, per)) = &priced
+        && per != cur
+    {
+        let named = match by_per {
+            Some(bp) if per.starts_with('$') => bp,
+            Some(_) | None => per.as_str(),
+        };
+        let u = unit_name(m, thing, named);
+        let written = if by.last {
+            format!("last({})", text(&by.input))
+        } else {
+            text(&by.input)
+        };
+        return Err(refused(
+            Load::Price,
+            format!("value({name}) by {written}: {name}'s price already gives its {u}"),
+        ));
+    }
+    Ok(())
+}
+
+/// A per-unit price's unit as a message names it: a price keyed by unit (`$u`) names the
+/// place's own unit (refcore's `_unit_name`). L §2.4, §3.2.
+fn unit_name(m: &Reality, thing: &Thing, u: &str) -> String {
+    if u.starts_with('$')
+        && let Some(own) = m
+            .place_unit(thing)
+            .filter(|pu| !matches!(pu.as_str(), "any" | "one"))
+    {
+        return own;
+    }
+    u.to_owned()
+}
+
+/// Where a thing's price clause is written: its own entry's line, else the line of the kind
+/// that states it (refcore's `pn.loc`).
+fn price_place(m: &Reality, files: &Files, thing: &Thing) -> Result<Option<(String, u32)>, Stop> {
+    let Some(base) = thing.base.as_deref() else {
+        return Ok(None);
+    };
+    let own = thing
+        .entries
+        .iter()
+        .rev()
+        .find(|e| e.kind == base && e.priced.is_some());
+    if let Some(entry) = own {
+        return Ok(match entry_place(m, files, thing, entry)? {
+            Some(At::Line(file, line)) => Some((file, line)),
+            Some(At::File(_)) | None => None,
+        });
+    }
+    let Some(kind) = m.chain(base).into_iter().find(|k| k.priced.is_some()) else {
+        return Ok(None);
+    };
+    let Some(line) = kind.line else {
+        return Ok(None);
+    };
+    Ok(Some((files.get("kind", &kind.id)?.to_owned(), line)))
+}
+
+/// Each place's price input against the place, its key and its unit, with the priced kinds,
+/// whatever reads them; the first by file and line prints (refcore's `m_check_priced`, its
+/// pass 4). E §3.1 pass 4, L §5.10, §8.3 `LOAD-KEY`, `LOAD-UNIT`.
+fn price_fits(m: &Reality, files: &Files, things: &[&Thing]) -> Result<(), Stop> {
+    let mut first: Option<((String, u32), Stop)> = None;
+    for thing in things {
+        let Some((pid, mode)) = m.price_of(thing).and_then(|p| m.clause_mode(&p)) else {
+            continue;
+        };
+        let Some(pu) = m
+            .place_unit(thing)
+            .filter(|u| !matches!(u.as_str(), "any" | "one"))
+        else {
+            continue;
+        };
+        let name = &thing.name;
+        let (code, message) = match (m.first_domain(&pid), &mode) {
+            (Some(Domain::Kind(k)), _) if !m.thing_in(name, &k) && !m.thing_in(&pu, &k) => (
+                Load::Key,
+                format!(
+                    "{name} is priced by {pid}, keyed by {k}, which holds neither {name} nor its unit"
+                ),
+            ),
+            (_, Priced::PerUnit(pc, per)) if !per.starts_with('$') && *per != pu => (
+                Load::Unit,
+                format!("value({name}) in {pc}: {name} is priced in {pc}/{per}, not {pc}/{pu}"),
+            ),
+            _ => continue,
+        };
+        let at = price_place(m, files, thing)?;
+        let key = at.clone().unwrap_or_else(|| (String::new(), 0));
+        if first.as_ref().is_none_or(|(k, _)| key < *k) {
+            let refusal = Refusal::new(Code::Load(code), message);
+            let refusal = match at {
+                Some((file, line)) => refusal.placed(At::Line(file, line)),
+                None => refusal,
+            };
+            first = Some((key, Stop::Refused(refusal)));
+        }
+    }
+    first.map_or(Ok(()), |(_, stop)| Err(stop))
 }
 
 /// Whether `e` is an input that is no bound variable, read with keys: `px[k]`.

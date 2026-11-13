@@ -220,7 +220,7 @@ impl Engine {
         // a clause keyed by a kind of units (`num PLN/u`, its unit `$u`) takes the unit of the
         // key it is read at, the position's, when that kind holds it (L §3.2; pick P61, #130)
         let keyed_by_unit = per.starts_with('$')
-            && matches!(first_domain(m, &id), Some(Domain::Kind(kind)) if unit_in(m, Some(u), &kind));
+            && matches!(m.first_domain(&id), Some(Domain::Kind(kind)) if unit_in(m, Some(u), &kind));
         let per = if keyed_by_unit { u } else { per.as_str() };
         if pc != cur || per != u {
             return Err(Stop::Refused(Refusal::new(
@@ -274,7 +274,7 @@ impl Engine {
             return Err(Stop::NotBuilt("a price clause written with its keys"));
         }
         let place = valued.place.as_str();
-        let key = match first_domain(m, pid) {
+        let key = match m.first_domain(pid) {
             None => None,
             Some(Domain::Kind(kind)) if m.thing_in(place, &kind) => Some(place),
             Some(Domain::Kind(kind)) if unit_in(m, u, &kind) => u,
@@ -354,18 +354,6 @@ fn key_count(m: &Reality, id: &str) -> Option<usize> {
         return Some(input.binds.len());
     }
     m.defs.get(id).map(|def| def.binds.len())
-}
-
-/// The domain of an input's or a def's first key; none for no key or another id.
-/// L §5.8, §5.11.
-fn first_domain(m: &Reality, id: &str) -> Option<Domain> {
-    if let Some(input) = m.inputs.get(id) {
-        return input.binds.first().map(|b| b.domain.clone());
-    }
-    m.defs
-        .get(id)
-        .and_then(|def| def.binds.first())
-        .map(|b| b.domain.clone())
 }
 
 /// Whether a position's unit `u` is a thing of `kind`, for a price keyed by that kind.
