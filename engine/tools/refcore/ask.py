@@ -1771,6 +1771,51 @@ class Asker:
             self.explain_node(ch, kind, 1, out)
         return out
 
+    def def_causes(self, tn):
+        """A def cell's causes in the order explain_node prints them: each rule's when, the winner's value, the rest."""
+        states = getattr(tn, 'rule_states', {})
+        whens = dict(getattr(tn, 'when_children', []))
+        for lab in sorted(states):
+            w = whens.get(lab)
+            if w is not None:
+                yield from (ch for _k, ch in w.children)
+            vc = getattr(tn, 'value_children', None)
+            if states[lab] == 'won' and vc is not None:
+                yield from (ch for _k, ch in vc.children)
+        yield from (ch for _k, ch in tn.children)
+
+    def chain_next(self, tn, taken):
+        """The first cell of tn's own def that tn reads and nothing has printed: the next step of a recurrence."""
+        for ch in self.def_causes(tn):
+            if ch.kind == 'def' and getattr(ch, 'def_id', None) == tn.def_id and id(ch) not in self._seen and \
+                    id(ch) not in taken:
+                return ch
+        return None
+
+    def explain_step(self, tn, ch, kind, depth, out):
+        """A def cell's cause. A chain of more than 3 cells of one def, each read by the one before it, folds (E §10
+        Long derivations fold; tally 2.1.7 S4, #131): tn, then `… <n> more steps of <x>, <k2> .. <kn-1> …` where its
+        second step would print, then its last step there; a cause only the folded steps read prints where it is next
+        met, as they never print."""
+        if ch.kind != 'def' or getattr(ch, 'def_id', None) != getattr(tn, 'def_id', None) or id(ch) in self._seen:
+            self.explain_node(ch, kind, depth, out)
+            return
+        rest = [ch]
+        taken = {id(tn), id(ch)}
+        while True:
+            nx = self.chain_next(rest[-1], taken)
+            if nx is None:
+                break
+            rest.append(nx)
+            taken.add(id(nx))
+        if 1 + len(rest) <= 3:
+            self.explain_node(ch, kind, depth, out)
+            return
+        keys = lambda c: ', '.join(key_text(k) for k in c.keys)
+        out.append('%s\u2026 %d more steps of %s, %s .. %s \u2026' % (
+            '  ' * depth, len(rest) - 1, tn.def_id, keys(rest[0]), keys(rest[-2])))
+        self.explain_node(rest[-1], kind, depth, out)
+
     def explain_node(self, tn, kind, depth, out):
         ind = '  ' * depth
         ident = ('row', tn.label) if tn.kind in ('row', 'bandrow') else id(tn)
@@ -1820,14 +1865,14 @@ class Asker:
                 w = whens.get(lab)
                 if w is not None:
                     for k2, ch in w.children:
-                        self.explain_node(ch, k2, depth + 3, out)
+                        self.explain_step(tn, ch, k2, depth + 3, out)
                 if st == 'won':
                     vc = getattr(tn, 'value_children', None)
                     if vc is not None:
                         for k2, ch in vc.children:
-                            self.explain_node(ch, k2, depth + 3, out)
+                            self.explain_step(tn, ch, k2, depth + 3, out)
             for k2, ch in tn.children:
-                self.explain_node(ch, k2, depth + 2, out)
+                self.explain_step(tn, ch, k2, depth + 2, out)
             return
         out.append('%s[%d] %s' % (ind, no, tn.label))
         for k2, ch in tn.children:

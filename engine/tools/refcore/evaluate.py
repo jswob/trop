@@ -1573,6 +1573,8 @@ class Engine:
                     return v
             tn = TraceNode('def', self.origin(info, keys))
             tn.law = ctx.law
+            tn.def_id = info.id     # the fold of a chain of one def's cells (E §10; tally 2.1.7 S4, #131)
+            tn.keys = keys
             if self.trace_stack:
                 self.trace_stack[-1].children.append(('node', tn))
             self.trace_cells[ck] = tn

@@ -1,0 +1,83 @@
+# tally 2.1.7 S4 (#131): E §10 Long derivations fold: a chain of more than 3 cells of one def, each read by the
+# one before it, prints its first step, then `... <n> more steps of <x>, <k2> .. <kn-1> ...` where its second step
+# would print, then its last step there; a cause only the folded steps read (v:step) prints where it is next met.
+# acc[m] = acc[m - 1] + step from acc[2026-01] = base. e: acc[2026-06], six cells, folds four; e3: three cells,
+# no fold; e4: four cells, folds two; t: two[2026-05] reads acc[2026-05], cells of different defs, which don't
+# fold, then acc's own chain folds. The layout is this interpreter's. Was (2.1.6): every step printed.
+=== m.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index mon = month 2026-01..2026-12
+input base: money PLN
+input step: money PLN
+
+def acc[m in mon]: money PLN = if pos(m) == 1 then base else acc[m - 1] + step
+def two[m in mon]: money PLN = acc[m] + base
+
+ask e: explain acc[2026-06]
+ask e3: explain acc[2026-03]
+ask e4: explain acc[2026-04]
+ask t: explain two[2026-05]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 10.00 PLN "s"
+  step = 1.00 PLN "s"
+=== expect
+e: 15.00 PLN
+  [1] acc[2026-06] = 15.00 PLN
+      rule base: won
+        … 4 more steps of acc, 2026-05 .. 2026-02 …
+        [2] acc[2026-01] = 10.00 PLN
+            rule base: won
+              [3] row v:base = 10.00 PLN
+                  version v, source s, "s", locator "s", governs always, known 2026-01-01
+        [4] row v:step = 1.00 PLN
+            version v, source s, "s", locator "s", governs always, known 2026-01-01
+  cut 2026-10-18
+e3: 12.00 PLN
+  [1] acc[2026-03] = 12.00 PLN
+      rule base: won
+        [2] acc[2026-02] = 11.00 PLN
+            rule base: won
+              [3] acc[2026-01] = 10.00 PLN
+                  rule base: won
+                    [4] row v:base = 10.00 PLN
+                        version v, source s, "s", locator "s", governs always, known 2026-01-01
+              [5] row v:step = 1.00 PLN
+                  version v, source s, "s", locator "s", governs always, known 2026-01-01
+        (v:step: see [5])
+  cut 2026-10-18
+e4: 13.00 PLN
+  [1] acc[2026-04] = 13.00 PLN
+      rule base: won
+        … 2 more steps of acc, 2026-03 .. 2026-02 …
+        [2] acc[2026-01] = 10.00 PLN
+            rule base: won
+              [3] row v:base = 10.00 PLN
+                  version v, source s, "s", locator "s", governs always, known 2026-01-01
+        [4] row v:step = 1.00 PLN
+            version v, source s, "s", locator "s", governs always, known 2026-01-01
+  cut 2026-10-18
+t: 24.00 PLN
+  [1] two[2026-05] = 24.00 PLN
+      rule base: won
+        [2] acc[2026-05] = 14.00 PLN
+            rule base: won
+              … 3 more steps of acc, 2026-04 .. 2026-02 …
+              [3] acc[2026-01] = 10.00 PLN
+                  rule base: won
+                    [4] row v:base = 10.00 PLN
+                        version v, source s, "s", locator "s", governs always, known 2026-01-01
+              [5] row v:step = 1.00 PLN
+                  version v, source s, "s", locator "s", governs always, known 2026-01-01
+        (v:base: see [4])
+  cut 2026-10-18
