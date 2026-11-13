@@ -2369,9 +2369,16 @@ class Loader:
                 byk.setdefault(_kv(t.key) if t.key is not None else None, []).append(t)
             for k, ts in byk.items():
                 for t in ts:
-                    earlier = [o for o in ts if o is not t and known_first(o.version.known) < known_first(t.version.known)
+                    # L §4.6 steps 2 to 4 (tally 2.1.7 R4): a table in a scenario over the base's layer stands above
+                    # the tables below it whatever their known dates; known dates order tables of one layer
+                    lt = version_layer(m, t.version)
+                    below = [o for o in ts if o is not t and version_layer(m, o.version) < lt
+                             and _span_ov(o.version, t.version, m.on)]
+                    earlier = [o for o in ts if o is not t and version_layer(m, o.version) == lt
+                               and known_first(o.version.known) < known_first(t.version.known)
                                and _span_ov(o.version, t.version, m.on)]
-                    same = [o for o in ts if o is not t and known_first(o.version.known) == known_first(t.version.known)
+                    same = [o for o in ts if o is not t and version_layer(m, o.version) == lt
+                            and known_first(o.version.known) == known_first(t.version.known)
                             and _span_ov(o.version, t.version, m.on)]
                     if same:
                         raise LoadError('LOAD-OVERLAP', 'band %s: tables of %s and %s overlap, known the same day' % (
@@ -2388,6 +2395,7 @@ class Loader:
                             t.whole_ok = True
                         except LoadError:
                             t.whole_ok = False
+                        earlier = earlier + below
                         if not earlier:
                             sp = t.version.span_at(m.on)
                             if sp is None:

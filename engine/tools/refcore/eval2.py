@@ -1465,9 +1465,10 @@ def m_solve_value(self, s, env, ctx):
     holes = []
 
     def F(q):
-        pv = PinVal('solve', info.id, tuple(keys), (), mk(q), '')
-        pins = tuple(sorted([p for p in ctx.pins if not (p.item == info.id and p.kind in ('set', 'solve'))] +
-                            [pv], key=lambda p: repr(p.key())))
+        # the variable is a claim on its one cell (L §5.18), in a layer inside the ask's pins and outside every pin
+        # written in F (L §4.6 step 2, tally 2.1.7 R4, #120): the other pins of the item still hold
+        pv = PinVal('solve', info.id, tuple(keys), (), mk(q), '', 1 + max((p.layer for p in ctx.pins), default=0))
+        pins = tuple(sorted(list(ctx.pins) + [pv], key=lambda p: repr(p.key())))
         c2 = ctx.but(pins=pins)
         fv = self.ev(s.f, env, c2)
         gv = self.ev(s.g, env, c2)

@@ -901,6 +901,19 @@ def m_t_value(self, n, sc, expect):
             if pt.k != 'num' or not any(b == n.cur and e == 1 for b, e in (pt.u or ())) or len(pt.u) != 2:
                 raise uerr('value by %s: the price is %s, not num %s/u' % (_txt(by), T.show(pt), n.cur), n.loc)
             n._price_expr = True
+        r = getattr(n.ref, '_r', None)
+        seen = list(m.places[r[1]].things.values()) if r is not None and r[0] == 'place' and r[1] in m.places \
+            else cands
+        for c in sorted(seen, key=lambda x: x.name):
+            try:
+                priced = m.price_of(c)
+            except Unspecified:
+                priced = None
+            if priced is not None and getattr(priced, '_mode', None) == 'unit' and priced._per != n.cur:
+                # L §5.10 Value, §4.6 step 4 (tally 2.1.7 R4, F11a): the place's price and the `by` are two claims
+                # on one position's price, tied where load sees the place: a literal one, or any the binding gives
+                from .mreads import value_by_twice
+                raise LoadError('LOAD-PRICE', value_by_twice(n, c.name, priced._per), n.loc)
     self.edge(sc, ('balances',), 'bal')
     self.mark(sc, 'bal', self.place_target(n.ref))
     n._ctgt = ('bal', self.place_target(n.ref))

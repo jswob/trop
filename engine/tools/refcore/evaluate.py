@@ -136,18 +136,21 @@ class EachMet(dict):
 
 class PinVal:
     """A pin with its value (L §5.11 as if)."""
-    __slots__ = ('kind', 'item', 'keys', 'fields', 'value', 'text')
+    __slots__ = ('kind', 'item', 'keys', 'fields', 'value', 'text', 'layer')
 
-    def __init__(self, kind, item, keys, fields, value, text):
+    def __init__(self, kind, item, keys, fields, value, text, layer=0):
         self.kind = kind
         self.item = item
         self.keys = keys          # tuple of key kv or None (*)
         self.fields = fields
         self.value = value
         self.text = text
+        self.layer = layer        # its scope: deeper pins are written inside (L §4.6 step 2, tally 2.1.7 R4)
 
     def key(self):
-        return (self.kind, self.item, self.keys, self.fields, vkey(self.value))
+        if self.kind == 'conflict':
+            return (self.kind, self.item, self.keys, self.fields, self.value, self.layer)
+        return (self.kind, self.item, self.keys, self.fields, vkey(self.value), self.layer)
 
     def __hash__(self):
         return hash(self.key())
@@ -762,8 +765,12 @@ class Engine:
         return '%s[%s]' % (info.id, ', '.join(key_text(k) for k in keys))
 
     def pin_value(self, info, keys, ctx):
+        """The pin that holds for a cell, by L §4.6's cascade (tally 2.1.7 R4): the innermost layer (a pin written
+        inside an as if or a solve's F over the ones around it), then the narrower pin; two still tied hold at once,
+        refused at the cell (RUN-CONFLICT), as two pins whose keys only the run gives can be."""
+        hits = []
         for p in ctx.pins:
-            if p.kind not in ('set', 'solve') or p.item != info.id:
+            if p.kind not in ('set', 'solve', 'conflict') or p.item != info.id:
                 continue
             if p.keys is not None:
                 ok = True
@@ -773,12 +780,30 @@ class Engine:
                         break
                 if not ok:
                     continue
-            if p.fields:
-                return ('fields', p)
-            if p.kind == 'set':
-                self.reg(('pinned', p.text))
-            return p.value
-        return NOPIN
+            hits.append(p)
+        if not hits:
+            return NOPIN
+        top = max(p.layer for p in hits)
+        hits = [p for p in hits if p.layer == top]
+
+        def inside(p, q):
+            # p's keys are q's or lie inside them at every position (a key inside *)
+            if q.keys is None:
+                return True
+            if p.keys is None:
+                return False
+            return all(qk is None or pk == qk for pk, qk in zip(p.keys, q.keys))
+        best = [p for p in hits if all(inside(p, q) for q in hits)]
+        if len(best) != 1 or best[0].kind == 'conflict':
+            pair = best[0].value if best and best[0].kind == 'conflict' else (hits[0].text, hits[1].text)
+            raise refuse('RUN-CONFLICT', 'pins %s and %s both hold for %s' % (pair[0], pair[1],
+                                                                                self.origin(info, keys)))
+        p = best[0]
+        if p.fields:
+            return ('fields', p)
+        if p.kind == 'set':
+            self.reg(('pinned', p.text))
+        return p.value
 
     def apply_field_pins(self, info, keys, ctx, v):
         """A pin on a record field pins that field (L §5.11)."""
@@ -1838,18 +1863,24 @@ class Engine:
     def _table_of(self, cands, info, key, d):
         if not cands:
             return None
-        best = max(cands, key=lambda t: known_first(t.version.known))
-        top = [t for t in cands if known_first(t.version.known) == known_first(best.version.known)]
+        # L §4.6 steps 2 to 4 (tally 2.1.7 R4): the innermost layer's tables stand above the layers below, whatever
+        # their known dates; inside the layer, known dates and replace decide
+        from .loader import version_layer
+        top_l = max(version_layer(self.m, t.version) for t in cands)
+        lay = [t for t in cands if version_layer(self.m, t.version) == top_l]
+        below = [t for t in cands if version_layer(self.m, t.version) < top_l]
+        best = max(lay, key=lambda t: known_first(t.version.known))
+        top = [t for t in lay if known_first(t.version.known) == known_first(best.version.known)]
         if len(top) > 1:
             raise refuse('LOAD-OVERLAP', 'band %s: two tables known the same day' % info.id)
         t = top[0]
         if not t.replace:
-            others = [o for o in cands if o is not t]
+            others = [o for o in lay if o is not t]
             if others:
                 raise refuse('LOAD-OVERLAP', 'band %s: tables overlap without replace' % info.id)
             return [(r, t) for r in t.rows]
-        base = self._table_of([o for o in cands if known_first(o.version.known) < known_first(t.version.known)],
-                              info, key, d)
+        base = self._table_of([o for o in lay if known_first(o.version.known) < known_first(t.version.known)]
+                              + below, info, key, d)
         if base is None:
             # L §5.9 Rows replaced: "On a day of its span where no table is in force, only a whole table stands, as an
             # input's replace row is its value where no earlier row governs; a patch there is refused (LOAD-REPLACE)"
@@ -2609,6 +2640,8 @@ class Engine:
 
     def apply_pins_(self, pins, env, ctx, ask, holes):
         pinsv = list(ctx.pins)
+        # this set's scope: inside every pin already in force (L §4.6 step 2, tally 2.1.7 R4)
+        layer = 1 + max((q.layer for q in pinsv), default=0)
         law = ctx.law
         cut = ctx.cut
         axes = dict(ctx.axes)
@@ -2702,8 +2735,13 @@ class Engine:
                     # (`pinned: gross = g for g in gross_lo .. gross_hi step minor(DUK)`), never one line per tuple
                     text = '%s for %s' % (p._src, ', '.join(b._src for b in p._pertuple))
                 pv = PinVal('set', info.id, tuple(keys) if p.target.keys is not None else None, tuple(p.fields), v,
-                            text)
-                pinsv = [q for q in pinsv if q.key()[:4] != pv.key()[:4]]
+                            text, layer)
+                same = [q for q in pinsv if q.key()[:4] == pv.key()[:4] and q.layer == layer]
+                if same:
+                    # two pins of this set on one cell, their keys given by the run (load refuses the ones it sees,
+                    # check.pin_ties): the cell is refused where it is read (tally 2.1.7 R4, L §4.6 step 4)
+                    pv = PinVal('conflict', info.id, pv.keys, pv.fields, (same[0].text, text), text, layer)
+                pinsv = [q for q in pinsv if q.key()[:4] != pv.key()[:4] or q.layer != layer]
                 pinsv.append(pv)
                 if ask:
                     # an ask's with pins are printed with every line (L §5.18 The world of an ask)

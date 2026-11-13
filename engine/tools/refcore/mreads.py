@@ -1698,6 +1698,10 @@ def m_e_value(self, n, env, ctx):
         units = sorted(set(u for (pp, u) in w.logs if pp == place and u != '*'))
     else:
         units = [pu]
+    if n.by is not None and priced is not None and priced._mode == 'unit' and priced._per != cur:
+        # L §5.10 Value, §4.6 step 4 (tally 2.1.7 R4, F11a): a priced place's price has one home, so a `by` for a
+        # position it already prices is a second claim on that price, tied (load refuses it for a place it sees)
+        raise refuse('LOAD-PRICE', value_by_twice(n, place, priced._per))
     total = Fraction(0)
     holes = []
     ofq = None
@@ -1755,6 +1759,13 @@ def m_e_value(self, n, env, ctx):
     if holes:
         return merge(*holes)
     return Num(total, ((cur, 1),))
+
+
+def value_by_twice(n, place, u):
+    """LOAD-PRICE's form for a `by` that prices a position its place's price already gives (L §8.3)."""
+    from .check import _txt
+    by = ('last(%s)' % _txt(n.by)) if getattr(n, 'bylast', False) else _txt(n.by)
+    return "value(%s) by %s: %s's price already gives its %s" % (place, by, place, u)
 
 
 def m_priced_read(self, pn, th, u, d, n, env, ctx):

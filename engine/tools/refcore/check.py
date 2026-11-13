@@ -589,6 +589,7 @@ class Checker:
             self.pin(p, sc, ask=True)
             if p.kind == 'law':
                 has_law_pin = True
+        self.pin_ties(a.pins, sc)
         if a.law is not None:
             t = self.tc(a.law, sc)
             if not self.is_date(t):
@@ -2093,7 +2094,31 @@ class Checker:
             self.pin(p, sc)
             if p.kind == 'law':
                 sc2.lawpin = True
+        self.pin_ties(n.pins, sc)
         return self.tc(n.e, sc2, expect)
+
+    def pin_ties(self, pins, sc):
+        """Two pins of one set on one cell, of one width, tie in L §4.6's cascade (tally 2.1.7 R4, step 4): refused at
+        load where load sees both pins' keys, written alike with no variable in them (LOAD-OVERLAP); pins whose keys
+        only the run gives are checked at the cell (RUN-CONFLICT, evaluate.pin_value)."""
+        from .node import walk as _walk
+
+        def seen(kn):
+            return all(not (x.k == 'name' and x.get('id') in sc.vars) for x in _walk(kn))
+        sets = [p for p in pins if getattr(p, 'pkind', None) in ('input', 'def') and not getattr(p, 'sample', None)]
+        for i, p in enumerate(sets):
+            for q in sets[i + 1:]:
+                if p.info.id != q.info.id or tuple(p.fields or ()) != tuple(q.fields or ()):
+                    continue
+                pk, qk = p.target.keys or [], q.target.keys or []
+                if len(pk) != len(qk) or not all(seen(x) for x in pk + qk):
+                    continue
+                if [_txt(x) for x in pk] != [_txt(x) for x in qk]:
+                    continue
+                ks = ', '.join(_txt(x) for x in pk)
+                cell = '%s%s%s' % (p.info.id, ('[%s]' % ks) if pk else '', ''.join('.' + f for f in (p.fields or ())))
+                raise LoadError('LOAD-OVERLAP', 'pins %s = %s and %s = %s of %s overlap at [%s]' % (
+                    cell, _txt(p.value), cell, _txt(q.value), p.info.id, ks), q.loc)
 
     def is_bool(self, t):
         return t.k in ('bool', 'hole')

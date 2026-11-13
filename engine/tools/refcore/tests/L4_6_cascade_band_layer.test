@@ -1,0 +1,61 @@
+# L §4.6 steps 2 and 3 (tally 2.1.7 R4, issue #143; F2): a scenario's band table stands above the base's table
+# known the same day; the known dates order tables of one layer only. s gives 300.00 PLN at age 8 (under 10), t
+# 350.00 PLN; the base keeps 250.00 PLN. 2.1.6's refcore refused each scenario, LOAD-OVERLAP two tables known the
+# same day.
+=== base.tally
+model hh
+  tally 2
+  on 2027-12-31
+  start 2027-01-01
+  end 2027-12-31
+
+unit PLN: currency minor 0.01
+source act "the act"
+
+band rate(a: int): money PLN
+input age: int
+
+version v_act
+  cite act
+  governs 2026..
+  known 2026-12-01
+  rate: [0, 6) = 400.00 PLN "under 6"
+  rate: [6, 18) = 250.00 PLN "6 to 17"
+  age = 8 "the child"
+
+ask b: rate(age) law 2027-06-01
+=== s.tally
+scenario s over hh
+  tally 2
+  from 2027-01-01
+
+version vs
+  cite act
+  governs 2027..
+  known 2026-12-01
+  rate: [0, 10) = 300.00 PLN "under 10"
+  rate: [10, 18) = 200.00 PLN "10 to 17"
+
+ask q: rate(age) in s law 2027-06-01
+=== t.tally
+scenario t over hh
+  tally 2
+  from 2027-01-01
+
+version vt
+  cite act
+  governs 2027..
+  known 2026-12-01
+  rate: [0, 10) = 350.00 PLN "under 10"
+  rate: [10, 18) = 150.00 PLN "10 to 17"
+
+ask qt: rate(age) in t law 2027-06-01
+=== expect
+b: 250.00 PLN
+  law date 2027-06-01, cut 2027-12-31
+q: 300.00 PLN
+  world: s
+  law date 2027-06-01, cut 2027-12-31
+qt: 350.00 PLN
+  world: t
+  law date 2027-06-01, cut 2027-12-31

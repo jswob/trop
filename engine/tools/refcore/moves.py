@@ -470,6 +470,7 @@ def instant_text(r):
 def m_readings(self, ctx):
     """The balance readings the cut sees: (input id, place, unit, row), each restated reading replaced (L §5.19,
     §4.6)."""
+    from .loader import row_layer
     key = ('rd', self.wkey(ctx))
     hit = self.run_cache.get(key)
     if hit is not None:
@@ -494,7 +495,9 @@ def m_readings(self, ctx):
             u = unit_of_value(r.val) if isinstance(r.val, Num) else m.place_unit(m.things[place])
             k = (iid, place, instant_text(r), u, row_owner(m, r))
             cur = keep.get(k)
-            if cur is None or known_first(r.known) > known_first(cur.known):
+            # L §4.6 steps 2 and 3 (tally 2.1.7 R4, #137): a scenario's reading stands above its base's whatever
+            # their known dates; inside one layer the latest known restates
+            if cur is None or (row_layer(m, r), known_first(r.known)) > (row_layer(m, cur), known_first(cur.known)):
                 keep[k] = r
     # a place stated same in a joint model: its readings from the members are read together, a joint model's own
     # row settles them, and two that disagree are a hole naming both rows (L §6.1, HOLE-SAME)
