@@ -21,7 +21,7 @@ use super::agenda::left_out_lines;
 use super::lows::{Base, Lows};
 use super::plan::invariant;
 use super::point::At;
-use super::reads::Sees;
+use super::reads::{Sees, outside_run};
 use super::state::{Projected, St, Walk};
 use crate::base::{Code, Load, Refusal, Run};
 use crate::eval::{Ctx, Engine, Env};
@@ -76,7 +76,7 @@ impl Engine {
             ));
         }
         if start < m.start {
-            return Ok(Value::Hole(Hole::asked("before the run's start", place)));
+            return Ok(Value::Hole(Hole::before_run(place)));
         }
         let uncertain = read.proj.uncertain || ctx.unc;
         if let Some(v) =
@@ -138,8 +138,8 @@ impl Engine {
         if read.proj.windows_each {
             return Err(Stop::NotBuilt("`windows each` on a balance read"));
         }
-        let days = Days { first, last };
-        let balances = match &read.proj.from {
+        let start = match &read.proj.from {
+            None => None,
             Some(from) => {
                 let start = self.ev(m, from, env, ctx)?;
                 if let Value::Hole(_) = start {
@@ -161,17 +161,38 @@ impl Engine {
                     ));
                 }
                 if start < m.start {
-                    return Ok(Value::Hole(Hole::asked("before the run's start", &place)));
+                    return Ok(Value::Hole(Hole::before_run(&place)));
                 }
-                let uncertain = read.proj.uncertain || ctx.unc;
-                let window = (start, (days.first, days.last));
-                if let Some(v) = self.common_case(m, (&place, &unit), window, (uncertain, ctx))? {
-                    return Ok(v);
-                }
-                self.projected_days(m, (&place, &unit), (start, days), (read, ctx))?
+                Some(start)
             }
-            None => self.plain_days(m, (&place, &unit), days, (read, ctx))?,
         };
+        // `low` is the `min` of its days' balances (L §5.14.1): a day the walk doesn't hold is
+        // the hole naming the end it passes (L §8.1), the others are read as the walk has them
+        let days = Days {
+            first: first.max(m.start),
+            last: last.min(m.end),
+        };
+        let mut balances = Vec::new();
+        if days.first <= days.last {
+            balances = match start {
+                Some(start) => {
+                    let uncertain = read.proj.uncertain || ctx.unc;
+                    let window = (start, (days.first, days.last));
+                    match self.common_case(m, (&place, &unit), window, (uncertain, ctx))? {
+                        Some(v) => vec![v],
+                        None => {
+                            self.projected_days(m, (&place, &unit), (start, days), (read, ctx))?
+                        }
+                    }
+                }
+                None => self.plain_days(m, (&place, &unit), days, (read, ctx))?,
+            };
+        }
+        balances.extend(
+            [first, last]
+                .into_iter()
+                .filter_map(|d| outside_run(m, d, &place).map(Value::Hole)),
+        );
         lowest(balances)
     }
 

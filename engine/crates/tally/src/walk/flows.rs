@@ -54,7 +54,7 @@ impl Engine {
                 Some((mv, _)) => mv.id.clone(),
                 None => expr_text(&f.target)?,
             };
-            return Ok(Value::Hole(Hole::asked("before the run's start", &figure)));
+            return Ok(Value::Hole(Hole::before_run(&figure)));
         }
         if f.for_key.is_some() || f.convert.is_some() {
             return Err(Stop::NotBuilt("flows for a period or converted"));

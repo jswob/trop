@@ -374,10 +374,13 @@ mod tests {
         let tree = lows_answer(&files, Lows::Tree);
         assert_eq!(tree, lows_answer(&files, Lows::Walk), "F5's reality");
         let lines = tree.expect("F5's reality is answered");
-        // two of refcore's lines, one per world, so the two aren't the same refusal
+        // refcore's lines (tally 2.1.7): one per option of the axis, so the two aren't the same
+        // refusal; and in the scenario, whose last days rest on a walked value past the run's
+        // end E, the hole `after the run's end` (L §8.1 `HOLE-POSTRUN`)
         for line in [
-            "q_low [pay_reading = low]: 300.05 DUK",
-            "s_low [pay_reading = low]: 281.25 DUK",
+            "q_low_late [pay_reading = low]: 250.49 DUK",
+            "q_low_late [pay_reading = high]: 550.35 DUK",
+            "s_low [pay_reading = *]: ?\"after the run's end\" (konto)",
         ] {
             assert!(lines.iter().any(|l| l == line), "{line} is printed");
         }

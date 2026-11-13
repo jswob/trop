@@ -89,18 +89,25 @@ impl Engine {
             Ok(d) => d,
             Err(imprecise) => return Ok(Value::Hole(imprecise)),
         };
+        let outside = outside_run(m, d, &place).map(Value::Hole);
         if b.proj.from.is_some() {
-            return self.projection(m, b, (&place, &unit), d, (env, ctx));
+            return match outside {
+                Some(hole) => Ok(hole),
+                None => self.projection(m, b, (&place, &unit), d, (env, ctx)),
+            };
         }
         let key = if b.start { At::start(d) } else { At::end(d) };
         let walked = self.trace_walked();
-        let got = self.bal_day(m, (&place, &unit), d, key, ctx).and_then(|v| {
-            if b.proj.uncertain {
-                self.with_uncertain(m, (&place, &unit), d, &v, ctx)
-            } else {
-                Ok(v)
-            }
-        });
+        let got = match outside {
+            Some(hole) => Ok(hole),
+            None => self.bal_day(m, (&place, &unit), d, key, ctx).and_then(|v| {
+                if b.proj.uncertain {
+                    self.with_uncertain(m, (&place, &unit), d, &v, ctx)
+                } else {
+                    Ok(v)
+                }
+            }),
+        };
         if ctx.at.is_none() && self.tracing() {
             self.trace_bal(m, walked, (place, unit, ctx.cut), (d, b), &got)?;
         }
@@ -741,6 +748,18 @@ pub(crate) fn state_value(m: &Reality, st: &St, unit: &str, anchor: &Hole) -> Re
         .as_ref()
         .ok_or_else(|| invariant("a balance with no value"))?;
     qty_value(m, v, unit)
+}
+
+/// The walk holds the days S to E: a walked value of a day outside them is the hole naming
+/// the end it passes (refcore's `m_bal_at`). L §8.1 `HOLE-PRERUN`, `HOLE-POSTRUN`; E §2.
+pub(super) fn outside_run(m: &Reality, d: Day, figure: &str) -> Option<Hole> {
+    if d < m.start {
+        Some(Hole::before_run(figure))
+    } else if d > m.end {
+        Some(Hole::after_run(figure))
+    } else {
+        None
+    }
 }
 
 /// A flows target's text where a message names it (refcore's `fmt_node`). L §8.4.
