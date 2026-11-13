@@ -340,8 +340,8 @@ def main():
     if args not in ([], ["--check"], ["--check", "--fast"], ["--write"]):
         print("usage: engine/tools/exceptions [--check [--fast]|--write]", file=sys.stderr)
         return 64
-    # `check fast` (and so the Stop hook) reports report-only lines that differ from the
-    # lock; `check full`, before each commit and in CI, fails on them (R-110, the review
+    # `check quick` (and so the Stop hook) reports report-only lines that differ from the
+    # lock; `check commit`, `check full` and CI fail on them (R-110, the review
     # after S, 2026-11-03, issue #8)
     fast = args == ["--check", "--fast"]
     table, max_rule = areas()

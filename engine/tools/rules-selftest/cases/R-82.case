@@ -11,23 +11,6 @@ pub fn planted(v: Option<u8>) -> u8 {
 --- run
 RUSTFLAGS=--cap-lints=allow CARGO_ENCODED_RUSTFLAGS=--cap-lints=allow tools/check step clippy-lib
 
-case: release-profile-env-cleared
-tool: run
-expect: attempt to add with overflow
-exit: any
---- write crates/tally/tests/zz_overflow.rs
-//! Planted.
-
-#[test]
-fn planted() {
-    let v = core::hint::black_box(u8::MAX);
-    let w = v + core::hint::black_box(1);
-    core::hint::black_box(w);
-}
---- run
-CARGO_PROFILE_RELEASE_TEST_OVERFLOW_CHECKS=false CARGO_PROFILE_RELEASE_OVERFLOW_CHECKS=false tools/check step test-release
-cat target/check-logs/test-release.log
-
 case: rustfmt-env-cleared
 tool: run
 expect: FAIL fmt
@@ -71,3 +54,274 @@ expect: incremental=0 incremental=1 incremental=0
 --- run
 printf 'import sys\nsys.path.insert(0, "tools")\nimport check\nprint("incremental=" + check.clean_env().get("CARGO_INCREMENTAL", "unset"), end=" ")\n' > zz_incr.py
 env -u CARGO_INCREMENTAL python3 -I -B zz_incr.py; CARGO_INCREMENTAL=1 python3 -I -B zz_incr.py; CARGO_INCREMENTAL=yes python3 -I -B zz_incr.py; echo
+
+# Q3 (issue #138, 2026-11-13): the release profile's variables are proven on one small test
+# binary, a planted workspace member that needs nothing else, built and run in the
+# release-test profile through check's environment, not on the whole release-test build.
+case: release-profile-env-cleared
+tool: run
+expect: attempt to add with overflow
+exit: any
+--- replace Cargo.toml
+members = ["crates/tally", "crates/tally-cli", "tests/runner"]
+--- with
+members = ["crates/tally", "crates/tally-cli", "tests/runner", "zz_probe"]
+--- write zz_probe/Cargo.toml
+[package]
+name = "zz-probe"
+version = "0.0.0"
+edition = "2024"
+publish = false
+--- write zz_probe/src/lib.rs
+//! Planted: a member with nothing in it but its overflow test.
+--- write zz_probe/tests/overflow.rs
+//! Planted.
+
+#[test]
+fn planted() {
+    let v = core::hint::black_box(u8::MAX);
+    let w = v + core::hint::black_box(1);
+    core::hint::black_box(w);
+}
+--- write zz_release.py
+"""Planted: the probe's test in the release-test profile, in the environment check gives its
+steps; the caller's variables would turn overflow checks off."""
+import subprocess
+import sys
+
+sys.path.insert(0, "tools")
+import check
+
+argv = ["cargo", "nextest", "run", "-p", "zz-probe", "--cargo-profile", "release-test"]
+print(subprocess.run(argv, env=check.mode_env("full"), capture_output=True, text=True).stderr)
+--- run
+CARGO_PROFILE_RELEASE_TEST_OVERFLOW_CHECKS=false CARGO_PROFILE_RELEASE_OVERFLOW_CHECKS=false python3 -I -B zz_release.py
+
+# Q4 (issue #138, 2026-11-13): quick and commit build incrementally with 6 build jobs and 6
+# test threads unless the caller sets them; full keeps incremental off and every core.
+case: local-modes-jobs-and-threads
+tool: run
+exit: any
+expect: quick 1 6 6. commit 1 6 6. full 0 - -. quick, the caller's 0 2 3. quick, bad values 1 6 6.
+--- write zz_jobs.py
+"""Planted: the environment each mode gives its steps."""
+import sys
+
+sys.path.insert(0, "tools")
+import check
+
+e = check.mode_env(sys.argv[2])
+print(sys.argv[1], *(e.get(k, "-") for k in ("CARGO_INCREMENTAL", "CARGO_BUILD_JOBS", "NEXTEST_TEST_THREADS")), end=". ")
+--- run
+unset CARGO_INCREMENTAL CARGO_BUILD_JOBS NEXTEST_TEST_THREADS
+python3 -I -B zz_jobs.py quick quick; python3 -I -B zz_jobs.py commit commit; python3 -I -B zz_jobs.py full full
+CARGO_INCREMENTAL=0 CARGO_BUILD_JOBS=2 NEXTEST_TEST_THREADS=3 python3 -I -B zz_jobs.py "quick, the caller's" quick
+CARGO_INCREMENTAL=yes CARGO_BUILD_JOBS=-1 NEXTEST_TEST_THREADS=x python3 -I -B zz_jobs.py "quick, bad values" quick
+echo
+
+# The memo (R-82 as amended 2026-11-13, issue #138; the check-speed study's §6.1): a green
+# run's key, then a planted change after it; the run must go red, not answer from the memo.
+# check's steps are replaced by one planted step that fails, so a run the memo answers is
+# green and any other is red; CI's variables are unset, since CI never reads a memo.
+case: memo-tracked-file-edited
+tool: run
+expect: the memo answers on the same tree
+expect: FAIL planted: the planted step ran
+--- write zz_memo.py
+"""Planted: `keep MODE` keeps the tree's key as a green one of MODE; `run MODE [ARGS]` is
+check's main with one planted step that fails; `changing` one that edits a tracked file and
+passes."""
+import sys
+
+sys.path.insert(0, "tools")
+import check
+
+
+def red(env, log):
+    return "the planted step ran: the memo didn't answer"
+
+
+def changing(env, log):
+    with open("BUILD-LOG.md", "a", encoding="utf-8") as f:
+        f.write("planted during the run\n")
+
+
+what, mode = sys.argv[1], sys.argv[2]
+if what == "keep":
+    check.memo_keep(mode, check.memo_key())
+    print(f"kept {mode}")
+else:
+    step = changing if what == "changing" else red
+    check.steps = lambda m: [("planted", step, {})]
+    sys.argv = ["check", mode, *sys.argv[3:]]
+    sys.exit(check.main())
+--- run
+unset CI GITHUB_ACTIONS
+python3 -I -B zz_memo.py keep quick
+python3 -I -B zz_memo.py run quick | grep -q "check quick: green on this tree already" && echo "the memo answers on the same tree"
+printf '\n// planted after the green run\n' >> crates/tally/src/lib.rs
+python3 -I -B zz_memo.py run quick
+
+case: memo-untracked-file
+tool: run
+expect: the memo answers on the same tree
+expect: FAIL planted: the planted step ran
+--- write zz_memo.py
+"""Planted: as in memo-tracked-file-edited."""
+import sys
+
+sys.path.insert(0, "tools")
+import check
+
+
+def red(env, log):
+    return "the planted step ran: the memo didn't answer"
+
+
+what, mode = sys.argv[1], sys.argv[2]
+if what == "keep":
+    check.memo_keep(mode, check.memo_key())
+else:
+    check.steps = lambda m: [("planted", red, {})]
+    sys.argv = ["check", mode, *sys.argv[3:]]
+    sys.exit(check.main())
+--- run
+unset CI GITHUB_ACTIONS
+python3 -I -B zz_memo.py keep quick
+python3 -I -B zz_memo.py run quick | grep -q "check quick: green on this tree already" && echo "the memo answers on the same tree"
+printf 'pub fn planted() {}\n' > crates/tally/src/zz_untracked.rs
+python3 -I -B zz_memo.py run quick
+
+case: memo-path-changed
+tool: run
+expect: the memo answers on the same tree
+expect: FAIL planted: the planted step ran
+--- write zz_memo.py
+"""Planted: as in memo-tracked-file-edited."""
+import sys
+
+sys.path.insert(0, "tools")
+import check
+
+
+def red(env, log):
+    return "the planted step ran: the memo didn't answer"
+
+
+what, mode = sys.argv[1], sys.argv[2]
+if what == "keep":
+    check.memo_keep(mode, check.memo_key())
+else:
+    check.steps = lambda m: [("planted", red, {})]
+    sys.argv = ["check", mode, *sys.argv[3:]]
+    sys.exit(check.main())
+--- run
+unset CI GITHUB_ACTIONS
+python3 -I -B zz_memo.py keep quick
+python3 -I -B zz_memo.py run quick | grep -q "check quick: green on this tree already" && echo "the memo answers on the same tree"
+PATH="$PWD/zz-another-cargo:$PATH" python3 -I -B zz_memo.py run quick
+
+case: memo-executable-bit
+tool: run
+expect: the memo answers on the same tree
+expect: FAIL planted: the planted step ran
+--- write zz_memo.py
+"""Planted: as in memo-tracked-file-edited."""
+import sys
+
+sys.path.insert(0, "tools")
+import check
+
+
+def red(env, log):
+    return "the planted step ran: the memo didn't answer"
+
+
+what, mode = sys.argv[1], sys.argv[2]
+if what == "keep":
+    check.memo_keep(mode, check.memo_key())
+else:
+    check.steps = lambda m: [("planted", red, {})]
+    sys.argv = ["check", mode, *sys.argv[3:]]
+    sys.exit(check.main())
+--- run
+unset CI GITHUB_ACTIONS
+python3 -I -B zz_memo.py keep quick
+python3 -I -B zz_memo.py run quick | grep -q "check quick: green on this tree already" && echo "the memo answers on the same tree"
+chmod -x tools/headers
+python3 -I -B zz_memo.py run quick
+
+# A file changed during a green run: the keys before and after differ, so nothing is kept,
+# and the tree as it was before the run is checked again.
+case: memo-file-changed-during-the-run
+tool: run
+exit: any
+expect: check quick: the tree changed during the run, so this green isn't remembered
+expect: the tree after the run: FAIL planted: the planted step ran
+expect: the tree before the run: FAIL planted: the planted step ran
+--- write zz_memo.py
+"""Planted: as in memo-tracked-file-edited."""
+import sys
+
+sys.path.insert(0, "tools")
+import check
+
+
+def red(env, log):
+    return "the planted step ran: the memo didn't answer"
+
+
+def changing(env, log):
+    with open("BUILD-LOG.md", "a", encoding="utf-8") as f:
+        f.write("planted during the run\n")
+
+
+what, mode = sys.argv[1], sys.argv[2]
+check.steps = lambda m: [("planted", changing if what == "changing" else red, {})]
+sys.argv = ["check", mode, *sys.argv[3:]]
+sys.exit(check.main())
+--- run
+unset CI GITHUB_ACTIONS
+python3 -I -B zz_memo.py changing quick
+python3 -I -B zz_memo.py run quick | sed 's/^/the tree after the run: /'
+git checkout -q -- BUILD-LOG.md
+python3 -I -B zz_memo.py run quick | sed 's/^/the tree before the run: /'
+
+# Which runs a kept green answers: the same or a larger mode, never with --fresh, never on CI.
+case: memo-modes-fresh-and-ci
+tool: run
+exit: any
+expect: quick after a green full: check quick: green on this tree already
+expect: commit after a green quick: FAIL planted
+expect: quick --fresh: FAIL planted
+expect: quick on CI: FAIL planted
+expect: quick with CI set: FAIL planted
+--- write zz_memo.py
+"""Planted: as in memo-tracked-file-edited."""
+import sys
+
+sys.path.insert(0, "tools")
+import check
+
+
+def red(env, log):
+    return "the planted step ran: the memo didn't answer"
+
+
+what, mode = sys.argv[1], sys.argv[2]
+if what == "keep":
+    check.memo_keep(mode, check.memo_key())
+else:
+    check.steps = lambda m: [("planted", red, {})]
+    sys.argv = ["check", mode, *sys.argv[3:]]
+    sys.exit(check.main())
+--- run
+unset CI GITHUB_ACTIONS
+python3 -I -B zz_memo.py keep full
+python3 -I -B zz_memo.py run quick | sed 's/^/quick after a green full: /'
+rm -f target/check-memo/full
+python3 -I -B zz_memo.py keep quick
+python3 -I -B zz_memo.py run commit | sed 's/^/commit after a green quick: /'
+python3 -I -B zz_memo.py run quick --fresh | sed 's/^/quick --fresh: /'
+GITHUB_ACTIONS=true python3 -I -B zz_memo.py run quick | sed 's/^/quick on CI: /'
+CI=true python3 -I -B zz_memo.py run quick | sed 's/^/quick with CI set: /'

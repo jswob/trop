@@ -8,9 +8,11 @@ and it refuses itself too. It merges pull request <n> only when every condition 
   - it is open, its base is master and its head is another branch of this repo;
   - every check run and status on the head commit is success, neutral or skipped, and
     none is pending (and at least one ran);
-  - if it touches engine/**, the check `check full` ran on the head commit and passed,
-    its step `engine/tools/check full` passed, and so did `engine/tools/commit-check`
-    when it ran;
+  - if it touches engine/**, the Engine workflow's `check full` ran on the head commit as
+    its jobs (R-77, 2026-11-13): `check groups` (its step `engine/tools/check groups`
+    passed, and `engine/tools/commit-check` when it ran), one `check <group>` for each
+    group engine/tools/check names (its step `engine/tools/check group <group>` passed),
+    and `engine gate`; each job ran on the head commit and ended success;
   - its body says `Closes #<issue>`;
   - GitHub reports it MERGEABLE;
   - its head branch isn't build/*: a milestone waits for the user at its gate;
@@ -27,6 +29,9 @@ import os
 import re
 import subprocess
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+import check  # noqa: E402  CI's groups (R-77): the jobs `check full` runs as
 
 MASTER = "master"
 # the walls: a pull request changing one waits for the user (issue #18). Every other
@@ -47,7 +52,8 @@ WALLS = {
     ".github/workflows/engine.yml",
 }
 GREEN = {"SUCCESS", "NEUTRAL", "SKIPPED"}
-CHECK_FULL = "check full"
+GATE = "engine gate"
+GROUPS_JOB = "check groups"
 CLOSES = re.compile(r"\bcloses #\d+\b", re.IGNORECASE)
 FIELDS = "number,state,baseRefName,headRefName,headRefOid,isCrossRepository,mergeable,changedFiles,statusCheckRollup,body"
 
@@ -98,28 +104,38 @@ def check_reasons(rollup):
     return reasons
 
 
-def check_full_job(rollup):
-    """The job id of the Engine workflow's `check full` run, or None when it didn't run."""
+def engine_jobs():
+    """{check run: the step that must pass in its job}, the jobs `check full` runs as on CI."""
+    jobs = {GROUPS_JOB: "engine/tools/check groups"}
+    jobs.update({f"check {g}": f"engine/tools/check group {g}" for g in check.group_names()})
+    jobs[GATE] = "The engine jobs passed or were skipped"
+    return jobs
+
+
+def job_ids(rollup):
+    """{name: job id, or "unknown"} of the Engine workflow's check runs that engine_jobs names."""
+    wanted, found = engine_jobs(), {}
     for c in rollup if isinstance(rollup, list) else []:
-        if c.get("__typename") == "CheckRun" and c.get("name") == CHECK_FULL and c.get("workflowName") == "Engine":
+        if c.get("__typename") == "CheckRun" and c.get("name") in wanted and c.get("workflowName") == "Engine":
             m = re.search(r"/job/(\d+)", c.get("detailsUrl") or "")
-            return m.group(1) if m else "unknown"
-    return None
+            found[c.get("name")] = m.group(1) if m else "unknown"
+    return found
 
 
-def job_reasons(job, head):
-    """The reasons `check full`'s job (from the Actions API) doesn't prove the head commit."""
+def job_reasons(name, job, head):
+    """The reasons the job `name` (from the Actions API) doesn't prove the head commit."""
     if not isinstance(job, dict):
-        return [f"can't read the `{CHECK_FULL}` job"]
+        return [f"can't read the `{name}` job"]
     reasons = []
     if job.get("head_sha") != head:
-        reasons.append(f"the `{CHECK_FULL}` job ran on {job.get('head_sha')}, not on the head commit {head}")
+        reasons.append(f"the `{name}` job ran on {job.get('head_sha')}, not on the head commit {head}")
     if job.get("conclusion") != "success":
-        reasons.append(f"the `{CHECK_FULL}` job ended {job.get('conclusion')}")
+        reasons.append(f"the `{name}` job ended {job.get('conclusion')}")
     steps = {s.get("name"): s for s in job.get("steps") or []}
-    full = steps.get("engine/tools/check full")
-    if full is None or full.get("conclusion") != "success":
-        reasons.append(f"the step `engine/tools/check full` didn't pass ({'missing' if full is None else full.get('conclusion')})")
+    step = engine_jobs()[name]
+    ran = steps.get(step)
+    if ran is None or ran.get("conclusion") != "success":
+        reasons.append(f"the `{name}` job's step `{step}` didn't pass ({'missing' if ran is None else ran.get('conclusion')})")
     commit = steps.get("engine/tools/commit-check")
     if commit is not None and commit.get("conclusion") not in ("success", "skipped"):
         reasons.append(f"the step `engine/tools/commit-check` ended {commit.get('conclusion')}")
@@ -134,9 +150,9 @@ def changed_paths(files):
     return paths
 
 
-def refusals(pr, files, job=None):
+def refusals(pr, files, jobs=None):
     """Every reason not to merge `pr` (gh pr view's JSON), given its changed files (the
-    REST API's, one object each) and `check full`'s job (None if it wasn't read)."""
+    REST API's, one object each) and the Engine jobs read, {name: job}."""
     reasons = []
     if pr.get("state") != "OPEN":
         reasons.append(f"it is {pr.get('state')}, not open")
@@ -161,17 +177,19 @@ def refusals(pr, files, job=None):
     if walls:
         reasons.append(f"it changes the walls ({', '.join(walls)}), which only the user merges")
     if any(p.startswith("engine/") for p in paths):
-        if check_full_job(pr.get("statusCheckRollup")) is None:
-            reasons.append(f"it touches engine/ but `{CHECK_FULL}` didn't run on the head commit")
-        elif job is None:
-            reasons.append(f"it touches engine/ but `{CHECK_FULL}`'s job couldn't be read")
-        else:
-            reasons += job_reasons(job, pr.get("headRefOid"))
+        ran = job_ids(pr.get("statusCheckRollup"))
+        for name in engine_jobs():
+            if name not in ran:
+                reasons.append(f"it touches engine/ but `{name}` didn't run on the head commit")
+            elif (jobs or {}).get(name) is None:
+                reasons.append(f"it touches engine/ but `{name}`'s job couldn't be read")
+            else:
+                reasons += job_reasons(name, jobs[name], pr.get("headRefOid"))
     return reasons
 
 
 def gather(n):
-    """(pr, files, job) from GitHub, for pull request `n`."""
+    """(pr, files, jobs) from GitHub, for pull request `n`."""
     pr = parse(gh("pr", "view", n, "--json", FIELDS), "the pull request")
     if not isinstance(pr, dict):
         raise Refused("gh's answer isn't a pull request")
@@ -179,10 +197,11 @@ def gather(n):
     files = [parse(line, "the changed files") for line in lines.splitlines() if line.strip()]
     if not all(isinstance(f, dict) for f in files):
         raise Refused("gh's list of changed files isn't a list of files")
-    job, job_id = None, check_full_job(pr.get("statusCheckRollup"))
-    if job_id is not None and job_id != "unknown":
-        job = parse(gh("api", f"repos/{{owner}}/{{repo}}/actions/jobs/{job_id}"), f"the `{CHECK_FULL}` job")
-    return pr, files, job
+    jobs = {}
+    for name, job_id in job_ids(pr.get("statusCheckRollup")).items():
+        if job_id != "unknown":
+            jobs[name] = parse(gh("api", f"repos/{{owner}}/{{repo}}/actions/jobs/{job_id}"), f"the `{name}` job")
+    return pr, files, jobs
 
 
 def main(argv):
@@ -194,8 +213,8 @@ def main(argv):
     try:
         if role != "lead":
             raise Refused(f"only the lead role runs it, and this is {role} (R-132)")
-        pr, files, job = gather(n)
-        reasons = refusals(pr, files, job)
+        pr, files, jobs = gather(n)
+        reasons = refusals(pr, files, jobs)
         if reasons:
             raise Refused("; ".join(reasons))
         gh("pr", "merge", n, "--merge", "--match-head-commit", pr["headRefOid"])

@@ -39,3 +39,47 @@ disallowed-methods = [
   { path = "std::vec::Vec::no_such_method", reason = "R-78: a planted ban on a method that doesn't exist" },
 --- run
 tools/check step clippy-lib
+
+# R-78 as amended 2026-11-13 (issue #138): rules-selftest runs on CI in 4 shards by rule,
+# the last taking every other rule with a case. `check groups` fails unless every rule with
+# a case is in exactly one shard: a rule the last shard leaves out, a rule in two shards, a
+# named rule with no case, and an empty shard.
+case: shards-rule-left-out
+tool: run
+expect: FAIL groups: the rule R-110 has a case but is in no rules-selftest shard
+--- replace tools/check.py
+    return [r for r in with_cases if r not in named]
+--- with
+    return [r for r in with_cases if r not in named and r != "R-110"]
+--- run
+tools/check groups
+
+case: shards-rule-twice
+tool: run
+expect: FAIL groups: the rule R-110 is in 2 rules-selftest shards
+--- replace tools/check.py
+SHARDS = [["R-77"], ["R-51", "R-8"], ["R-9", "R-82"]]
+--- with
+SHARDS = [["R-77"], ["R-51", "R-8", "R-110"], ["R-9", "R-82", "R-110"]]
+--- run
+tools/check groups
+
+case: shards-rule-without-a-case
+tool: run
+expect: FAIL groups: the shard rules-selftest-3 names R-53, which has no case
+--- replace tools/check.py
+SHARDS = [["R-77"], ["R-51", "R-8"], ["R-9", "R-82"]]
+--- with
+SHARDS = [["R-77"], ["R-51", "R-8"], ["R-9", "R-82", "R-53"]]
+--- run
+tools/check groups
+
+case: shards-empty-shard
+tool: run
+expect: FAIL groups: the shard rules-selftest-2 has no rule
+--- replace tools/check.py
+SHARDS = [["R-77"], ["R-51", "R-8"], ["R-9", "R-82"]]
+--- with
+SHARDS = [["R-77"], [], ["R-9", "R-82", "R-51", "R-8"]]
+--- run
+tools/check groups

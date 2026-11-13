@@ -1,6 +1,12 @@
-"""mutants-local: gate 8's mutation run on a few kernel files, for T's loop (issue #40).
+"""mutants-local: gate 8's mutation run on a kernel file, for a single-mutant proof (issue #40).
 
     engine/tools/mutants-local [--next] [--fences] FILE… [-F REGEX]
+
+Locally it is for a single-mutant proof of a few minutes, `-F` naming one mutant; a batch
+of mutants goes to a gate-8 dispatch on GitHub (the user, 2026-11-12: "Why on earth are we
+running this locally instead of on github?"). T's baseline and the coverage map are paid
+once per tree: a second proof on the same tree, with the same targets, reuses them (R-88,
+2026-11-13; tools/mutants-gate's local mode).
 
 FILE is a kernel file (tools/kernel.toml, .cargo/mutants.toml's examine_globs), relative to
 engine/ or to the repository. -F keeps the mutants whose name matches REGEX, a struct
