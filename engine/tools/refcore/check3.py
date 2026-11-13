@@ -877,7 +877,7 @@ def m_t_value(self, n, sc, expect):
             if pc is not None and getattr(pc, '_mode', None) == 'unit' and pc._cur != n.cur:
                 # a place's price per unit in another currency than the value's: load sees both, with the priced
                 # kinds' price inputs, whatever reads them (tally 2.1.7 R5; L §5.10, §8.4)
-                u = _unit_name(m, c, pc._per)
+                u = _unit_name(self, c, pc._per)
                 raise uerr('value(%s) in %s: %s is priced in %s/%s, not %s/%s' % (
                     c.name, n.cur, c.name, pc._cur, u, n.cur, u), n.loc)
     else:
@@ -965,7 +965,7 @@ def m_t_value(self, n, sc, expect):
                 # L §5.10 Value, §4.6 step 4 (tally 2.1.7 R4, F11a): the place's price and the `by` are two claims
                 # on one position's price, tied where load sees the place: a literal one, or any the binding gives
                 from .mreads import value_by_twice
-                u = _unit_name(m, c, priced._per if not priced._per.startswith('$') or not per else per[0])
+                u = _unit_name(self, c, priced._per if not priced._per.startswith('$') or not per else per[0])
                 raise LoadError('LOAD-PRICE', value_by_twice(n, c.name, u), n.loc)
     self.edge(sc, ('balances',), 'bal')
     self.mark(sc, 'bal', self.place_target(n.ref))
@@ -985,12 +985,23 @@ def _seen_places(m, ref, cands):
     return list(cands)
 
 
-def _unit_name(m, c, u):
-    """A per-unit price's unit as a message names it: a price keyed by unit ($u) names the place's own unit."""
+def _unit_name(self, c, u):
+    """A per-unit price's unit as a message names it (L §2.4 Values, §3.2; tally 2.1.7 B3): a price keyed by unit
+    ($u) names the key's unit, the place's own, or for a place of any unit the first its legs bring (by name)."""
     if u is not None and u.startswith('$'):
+        m = self.m
         pu = m.place_unit(c)
         if pu not in (None, 'any', 'one'):
             return pu
+        seen = set()
+        for mi in m.moves.values():
+            for ln, _d in getattr(mi, 'legs', []) or []:
+                at = [s for s in (ln.frm, ln.to) if s is not None and self.literal_place(s) == c.name]
+                t = getattr(getattr(ln, 'amount', None), '_t', None)
+                if at and t is not None and t.k == 'num' and len(t.u or ()) == 1 and t.u[0][1] == 1:
+                    seen.add(t.u[0][0])
+        if seen:
+            return sorted(seen)[0]
     return u
 
 

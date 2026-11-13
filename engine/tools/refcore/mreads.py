@@ -1732,9 +1732,10 @@ def m_e_value(self, n, env, ctx):
             continue
         pr = self.by_price(n, place, u, cur, d, env, ctx)
         if pr is None and priced is not None:
-            if priced._cur != cur or priced._per != u:
+            per = self.priced_per(priced, th, u)
+            if priced._cur != cur or per != u:
                 raise refuse('LOAD-UNIT', 'value(%s) in %s: %s is priced in %s/%s, not %s/%s' % (
-                    place, cur, place, priced._cur, priced._per, cur, u))
+                    place, cur, place, priced._cur, per, cur, u))
             pr = self.priced_read(priced, th, u, d, n, env, ctx)
         elif pr is None:
             raise refuse('LOAD-PRICE', 'value(%s) in %s holds units in %s and states no by' % (place, cur, u))
@@ -1773,6 +1774,22 @@ def m_by_price(self, n, place, u, cur, d, env, ctx):
     if not isinstance(pr, Num) or tuple(sorted(pr.u)) != want:
         raise refuse('RUN-DOMAIN', 'value(%s) in %s: the price %s is not in %s/%s' % (place, cur, fmt(pr), cur, u))
     return pr
+
+
+def m_priced_per(self, pn, th, u):
+    """The unit a place's price is per at a position of unit u (L §3.2 `num CUR/u` with u the key; tally 2.1.7 B3):
+    a price keyed by unit is per the key it is read at, the position's unit, or the place's own where it is keyed by
+    the place."""
+    per = pn._per
+    if per is None or not per.startswith('$'):
+        return per
+    m = self.m
+    kind, pid = pn._r
+    info = m.inputs[pid] if kind == 'input' else m.defs[pid]
+    dom = info.binds[0].dom if info.binds else None
+    if dom is not None and dom[0] == 'kind' and m.thing_in(th.name, dom[1]):
+        return m.place_unit(th)
+    return u
 
 
 def m_priced_read(self, pn, th, u, d, n, env, ctx):
