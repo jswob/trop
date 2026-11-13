@@ -474,7 +474,7 @@ The test suite adds **determinism**: every case is run twice, with 1 and with 6 
 - `explain` re-evaluates the cell's cone with tracing on. The run is deterministic, so the traced value equals the stored one, and the memo supplies the cells it read.
 - A path is replayed alone (N-2004).
 
-**Long derivations fold.** A recurrence over 300 months prints its first and last steps and a count. Any step can be asked for with `explain x[k]`. A cause met again prints once and is referenced by its line.
+**Long derivations fold.** A cause that is a chain of more than 3 cells of one def, each read by the one before it (a recurrence, whatever its keys' steps), prints its first step, then one line `… <n> more steps of <x>, <k₂> .. <kₙ₋₁> …` where its second step would print, then its last step there; a cause only the folded steps read prints where it is next met. A chain of different defs doesn't fold: its steps aren't alike, so there is no count of like steps, and each is a definition the reader needs to see (tally 2.1.7). Any step can be asked for with `explain x[k]`. A cause met again prints once and is referenced by its line.
 
 **`inputs-of ref`** is the transitive read set: every row the evaluation read, the rows an `at` reads included, with its source (N-1705). A walk or movement read in it stands for the rows behind what it counts: the openings, readings and observed rows of the places it reads, and the rows the movements it counts read for their days, `when`s and amounts (§3.2, tally 2.1.6). A rule's `v` version isn't a row; `explain` shows it.
 
