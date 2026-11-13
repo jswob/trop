@@ -2942,7 +2942,8 @@ class Engine:
                         return False
                     raise
                 if nxt <= cur:
-                    raise refuse('RUN-DOMAIN', 'a stepped range whose step is not positive')
+                    # L §8.4 RUN-DOMAIN `a stepped range whose step <s> is not positive` (tally 2.1.7 S7, X1)
+                    raise refuse('RUN-DOMAIN', 'a stepped range whose step %s is not positive' % fmt(s))
                 cur = nxt
             return cur == k
         self.no_none(a, 'a range end')
@@ -2991,7 +2992,8 @@ class Engine:
                         break
                     raise
                 if nxt <= cur:
-                    raise refuse('RUN-DOMAIN', 'a stepped range whose step is not positive')
+                    # L §8.4 RUN-DOMAIN `a stepped range whose step <s> is not positive` (tally 2.1.7 S7, X1)
+                    raise refuse('RUN-DOMAIN', 'a stepped range whose step %s is not positive' % fmt(s))
                 cur = nxt
                 if len(out) > 1000000:
                     raise too_many()

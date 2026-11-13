@@ -1850,7 +1850,8 @@ def settle_sign(lg, a, s):
     from or into its to", -amount "when it runs the other way, out of its to or into its from"; "a settlement leg that
     touches neither of the adjusted leg's places is refused (RUN-RECORD)"."""
     if lg.unit is not None and a.leg.unit is not None and lg.unit != a.leg.unit:
-        raise LoadError('LOAD-UNIT', 'settlement %s of %s is in %s, not %s' % (s.id, a.id, lg.unit, a.leg.unit))
+        raise LoadError('LOAD-UNIT', 'settlement %s of %s is in %s, not %s' % (s.id, a.id, lg.unit, a.leg.unit),
+                        getattr(getattr(s, 'row', None), 'loc', None))
     if getattr(a, 'moved', False):
         # L §5.14.3 How a settlement leg counts: "For a change of places, the leg's places are both those it had
         # before V and those V gives it, so a settlement leg between two of its `to` places, or between two of its

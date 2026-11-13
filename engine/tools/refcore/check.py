@@ -568,8 +568,8 @@ class Checker:
         for e in getattr(a, 'exprs', None) or ():
             for x in walk(e):
                 if is_query_line(x):
-                    # the engine's bytes (load/cone.rs), which print no place, as tally 2.1.5's did
-                    raise LoadError('LOAD-RANDOM', 'a query over paths on a path p line')
+                    # its file, line and item, as every load refusal (L §8.3; tally 2.1.7 S9, X3)
+                    raise LoadError('LOAD-RANDOM', 'a query over paths on a path p line', a.loc)
 
     def check_ask(self, a):
         sc = Scope(self, ('ask', a.id), None, 'ask')

@@ -1943,8 +1943,9 @@ def m_check_settlement_units(self):
             if bad is None:
                 continue
             iid = '%s[%s]' % (mid, ', '.join(key_text(k) for k in kv)) if kv else mid
+            # its file, line and item, as every load refusal (L §8.3; tally 2.1.7 S9, X3)
             raise LoadError('LOAD-UNIT', 'settlement %s of adjustments[%s.%s, %s] is in %s, not %s' % (
-                o.sid, iid, leg, vid, bad[4], d.unit))
+                o.sid, iid, leg, vid, bad[4], d.unit), o.loc)
 
 
 def m_check_schedules(self):
