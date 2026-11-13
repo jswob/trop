@@ -8,6 +8,7 @@ The rule a fault breaks is in `tmp/engine-requirements.md` (§4 row 40, Q-19).
 
 ## KF-01: an answer that depends on which other asks run with it
 
+- **Retired:** 2026-11-13, T's re-run on tally 2.1.7 (P36): `I:D:d05_quarters~alone` read `fixed`, its ask alone printing its run's bytes; both checks now compare with the baseline as any other (`tools/build_checks.py`'s notes). Kept below as found.
 - **Found:** 2026-10-29, session 4.5a, splitting household D's run `D-d05` into one check per ask.
 - **Checks:** `I:D:d05_quarters` (guarded: its run's four asks, `same`) and `I:D:d05_quarters~alone` (`known`).
 - **What happens:** asked alone, `d05_quarters` prints, as the last cell of each of its 9 rows,

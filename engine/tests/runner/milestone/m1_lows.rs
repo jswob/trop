@@ -992,7 +992,7 @@ mod tests {
     /// tally 2.1.7's rule R8: its items' vectors and its reach (`m1/fixes/r8/`).
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_r8() {
-        fixes_hold("fixes-r8", (0, 1), 3);
+        fixes_hold("fixes-r8", (0, 1), 2);
     }
 
     /// tally 2.1.7's rule R9: its items' vectors and its reach (`m1/fixes/r9/`).

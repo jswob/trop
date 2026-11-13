@@ -32945,7 +32945,7 @@ version card_2026
 ask f1: weekday(wl)
 ask f2: is_business(last_day, endcal)
 ask f3: last_business(9999-12, 1, endcal)
-,,1:0,98:f1: ?"date within window(9999-12-29, 9999-12-31) not precise enough for a print"
+,,1:0,103:f1: ?"date within window(9999-12-29, 9999-12-31) not precise enough for a print" (wl)
   cut 2026-10-01
 ,14:fixes/g2/p4_f2,8:fixes-g2,21:run p4.tally --ask f2,521:8:p4.tally,505:model probes
   tally 2
@@ -37083,7 +37083,7 @@ version v
   known 2026-01-01
   from_q = 2026-04-01
   from_y = 2025-01-01
-,,1:0,53:a_paren: false
+,,1:0,52:a_paren: true
   law date 2026-10-18, cut 2026-10-18
 ,22:fixes/g8/v1_a_box_last,8:fixes-g8,29:run v1.tally --ask a_box_last,2814:8:v1.tally,2797:model v1
   tally 2
@@ -56235,7 +56235,7 @@ ask q_back: bal(konto, 2026-12-31) from 2026-08-01, bal(konto, 2026-12-31) from 
 ask q_fwd: low(konto, 2026-01-05 .. 2026-12-31) from 2026-01-05, low(konto, 2026-04-11 .. 2026-12-31) from 2026-04-11, low(konto, 2026-05-21 .. 2026-12-31) from 2026-05-21, low(konto, 2026-06-16 .. 2026-12-31) from 2026-06-16, low(konto, 2026-04-09 .. 2026-12-31) from 2026-04-09
 
 ask q_edge: bal(konto, 2026-12-31) from 2026-04-09, bal(konto, 2026-12-31) from 2026-04-10, bal(konto, 2026-12-31) from 2026-04-11, bal(konto, 2026-12-31) from 2026-04-12, bal(konto, 2026-12-31) from 2026-04-10
-,,1:0,992:q_sum_bal: 714 770.00 DUK
+,,1:0,1148:q_sum_bal: 714 770.00 DUK
   unfulfilled: rent_pay[2026-01]
   unfulfilled: rent_pay[2026-02]
   unfulfilled: rent_pay[2026-03]
@@ -56261,6 +56261,9 @@ ask q_edge: bal(konto, 2026-12-31) from 2026-04-09, bal(konto, 2026-12-31) from 
   unfulfilled: side_k[2026-05]
   unfulfilled: side_k[2026-06]
   unfulfilled: side_k[2026-07]
+  held: to_spare = true (flip), read for 2026-10-01
+  held: to_spare = true (flip), read for 2026-11-01
+  held: to_spare = true (flip), read for 2026-12-01
   cut 2026-09-30
 warning: WARN-UNREAD input amt_a is read by nothing
 warning: WARN-UNREAD input off_b is read by nothing
@@ -56374,7 +56377,7 @@ ask q_back: bal(konto, 2026-12-31) from 2026-08-01, bal(konto, 2026-12-31) from 
 ask q_fwd: low(konto, 2026-01-05 .. 2026-12-31) from 2026-01-05, low(konto, 2026-04-11 .. 2026-12-31) from 2026-04-11, low(konto, 2026-05-21 .. 2026-12-31) from 2026-05-21, low(konto, 2026-06-16 .. 2026-12-31) from 2026-06-16, low(konto, 2026-04-09 .. 2026-12-31) from 2026-04-09
 
 ask q_edge: bal(konto, 2026-12-31) from 2026-04-09, bal(konto, 2026-12-31) from 2026-04-10, bal(konto, 2026-12-31) from 2026-04-11, bal(konto, 2026-12-31) from 2026-04-12, bal(konto, 2026-12-31) from 2026-04-10
-,,1:0,992:q_sum_low: 356 170.00 DUK
+,,1:0,1148:q_sum_low: 356 170.00 DUK
   unfulfilled: rent_pay[2026-01]
   unfulfilled: rent_pay[2026-02]
   unfulfilled: rent_pay[2026-03]
@@ -56400,6 +56403,9 @@ ask q_edge: bal(konto, 2026-12-31) from 2026-04-09, bal(konto, 2026-12-31) from 
   unfulfilled: side_k[2026-05]
   unfulfilled: side_k[2026-06]
   unfulfilled: side_k[2026-07]
+  held: to_spare = true (flip), read for 2026-10-01
+  held: to_spare = true (flip), read for 2026-11-01
+  held: to_spare = true (flip), read for 2026-12-01
   cut 2026-09-30
 warning: WARN-UNREAD input amt_a is read by nothing
 warning: WARN-UNREAD input off_b is read by nothing
@@ -56513,7 +56519,7 @@ ask q_back: bal(konto, 2026-12-31) from 2026-08-01, bal(konto, 2026-12-31) from 
 ask q_fwd: low(konto, 2026-01-05 .. 2026-12-31) from 2026-01-05, low(konto, 2026-04-11 .. 2026-12-31) from 2026-04-11, low(konto, 2026-05-21 .. 2026-12-31) from 2026-05-21, low(konto, 2026-06-16 .. 2026-12-31) from 2026-06-16, low(konto, 2026-04-09 .. 2026-12-31) from 2026-04-09
 
 ask q_edge: bal(konto, 2026-12-31) from 2026-04-09, bal(konto, 2026-12-31) from 2026-04-10, bal(konto, 2026-12-31) from 2026-04-11, bal(konto, 2026-12-31) from 2026-04-12, bal(konto, 2026-12-31) from 2026-04-10
-,,1:0,988:q_min_low: 600.00 DUK
+,,1:0,1144:q_min_low: 600.00 DUK
   unfulfilled: rent_pay[2026-01]
   unfulfilled: rent_pay[2026-02]
   unfulfilled: rent_pay[2026-03]
@@ -56539,6 +56545,9 @@ ask q_edge: bal(konto, 2026-12-31) from 2026-04-09, bal(konto, 2026-12-31) from 
   unfulfilled: side_k[2026-05]
   unfulfilled: side_k[2026-06]
   unfulfilled: side_k[2026-07]
+  held: to_spare = true (flip), read for 2026-10-01
+  held: to_spare = true (flip), read for 2026-11-01
+  held: to_spare = true (flip), read for 2026-12-01
   cut 2026-09-30
 warning: WARN-UNREAD input amt_a is read by nothing
 warning: WARN-UNREAD input off_b is read by nothing
@@ -56652,7 +56661,7 @@ ask q_back: bal(konto, 2026-12-31) from 2026-08-01, bal(konto, 2026-12-31) from 
 ask q_fwd: low(konto, 2026-01-05 .. 2026-12-31) from 2026-01-05, low(konto, 2026-04-11 .. 2026-12-31) from 2026-04-11, low(konto, 2026-05-21 .. 2026-12-31) from 2026-05-21, low(konto, 2026-06-16 .. 2026-12-31) from 2026-06-16, low(konto, 2026-04-09 .. 2026-12-31) from 2026-04-09
 
 ask q_edge: bal(konto, 2026-12-31) from 2026-04-09, bal(konto, 2026-12-31) from 2026-04-10, bal(konto, 2026-12-31) from 2026-04-11, bal(konto, 2026-12-31) from 2026-04-12, bal(konto, 2026-12-31) from 2026-04-10
-,,1:0,1055:q_back: (2 440.00 DUK, 2 440.00 DUK, 770.00 DUK, 2 340.00 DUK, 600.00 DUK, 2 440.00 DUK)
+,,1:0,1211:q_back: (2 440.00 DUK, 2 440.00 DUK, 770.00 DUK, 2 340.00 DUK, 600.00 DUK, 2 440.00 DUK)
   unfulfilled: rent_pay[2026-01]
   unfulfilled: rent_pay[2026-02]
   unfulfilled: rent_pay[2026-03]
@@ -56678,6 +56687,9 @@ ask q_edge: bal(konto, 2026-12-31) from 2026-04-09, bal(konto, 2026-12-31) from 
   unfulfilled: side_k[2026-05]
   unfulfilled: side_k[2026-06]
   unfulfilled: side_k[2026-07]
+  held: to_spare = true (flip), read for 2026-10-01
+  held: to_spare = true (flip), read for 2026-11-01
+  held: to_spare = true (flip), read for 2026-12-01
   cut 2026-09-30
 warning: WARN-UNREAD input amt_a is read by nothing
 warning: WARN-UNREAD input off_b is read by nothing
@@ -56791,7 +56803,7 @@ ask q_back: bal(konto, 2026-12-31) from 2026-08-01, bal(konto, 2026-12-31) from 
 ask q_fwd: low(konto, 2026-01-05 .. 2026-12-31) from 2026-01-05, low(konto, 2026-04-11 .. 2026-12-31) from 2026-04-11, low(konto, 2026-05-21 .. 2026-12-31) from 2026-05-21, low(konto, 2026-06-16 .. 2026-12-31) from 2026-06-16, low(konto, 2026-04-09 .. 2026-12-31) from 2026-04-09
 
 ask q_edge: bal(konto, 2026-12-31) from 2026-04-09, bal(konto, 2026-12-31) from 2026-04-10, bal(konto, 2026-12-31) from 2026-04-11, bal(konto, 2026-12-31) from 2026-04-12, bal(konto, 2026-12-31) from 2026-04-10
-,,1:0,819:q_fwd: (600.00 DUK, 1 110.00 DUK, 1 350.00 DUK, 1 520.00 DUK, 1 110.00 DUK)
+,,1:0,975:q_fwd: (600.00 DUK, 1 110.00 DUK, 1 350.00 DUK, 1 520.00 DUK, 1 110.00 DUK)
   unfulfilled: rent_pay[2026-01]
   unfulfilled: rent_pay[2026-02]
   unfulfilled: rent_pay[2026-03]
@@ -56810,6 +56822,9 @@ ask q_edge: bal(konto, 2026-12-31) from 2026-04-09, bal(konto, 2026-12-31) from 
   unfulfilled: side_k[2026-04]
   unfulfilled: side_k[2026-05]
   unfulfilled: side_k[2026-06]
+  held: to_spare = true (flip), read for 2026-10-01
+  held: to_spare = true (flip), read for 2026-11-01
+  held: to_spare = true (flip), read for 2026-12-01
   cut 2026-09-30
 warning: WARN-UNREAD input amt_a is read by nothing
 warning: WARN-UNREAD input off_b is read by nothing
@@ -75731,7 +75746,7 @@ version card_2026
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
   opening[savings] = 0 PLN at 2026-01-01 start "the card"
   opening[sink] = 0 PLN at 2026-01-01 start "the card"
-,,1:0,775:q_after: ?"m: no pays yet, and its span reaches past the cut" (pays)
+,,1:0,796:q_after: ?"next(pays, 2026-04-16): no pays yet, and its span reaches past the cut" (pays)
   cut 2026-03-01
 q_on: refused: RUN-TIE next(pays, 2026-04-15) has a tie at p1, p2 that changes the result, and its ties by doesn't break it
   cut 2026-03-01
@@ -75948,7 +75963,7 @@ version card_2026
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
   opening[savings] = 0 PLN at 2026-01-01 start "the card"
   opening[sink] = 0 PLN at 2026-01-01 start "the card"
-,,1:0,645:q: (2026-05-20, 7.00 PLN, ?"m: no pays yet, and its span reaches past the cut" (pays))
+,,1:0,658:q: (2026-05-20, 7.00 PLN, ?"next(pays, e4): no pays yet, and its span reaches past the cut" (pays))
   cut 2026-03-01
 q3: (7.00 PLN, 7.00 PLN)
   cut 2026-03-01
@@ -76120,7 +76135,7 @@ version card_2026
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
   opening[savings] = 0 PLN at 2026-01-01 start "the card"
   opening[sink] = 0 PLN at 2026-01-01 start "the card"
-,,1:0,615:q: (?"m: no pays yet, and its span reaches past the cut" (pays), 2026-02-15)
+,,1:0,636:q: (?"next(pays, 2026-02-16): no pays yet, and its span reaches past the cut" (pays), 2026-02-15)
   unfulfilled: p1
   cut 2026-03-01
 warning: WARN-UNREAD input b is read by nothing
@@ -107905,7 +107920,7 @@ ask zm18: explain dole[first, 2026-02]
 ask zm19: explain lean[first, 2026-01]
 
 ask zm20: explain lean[first, 2026-02]
-,,1:0,11139:q_bal (d = 2026-01-18): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 0.00 PLN)
+,,1:0,11647:q_bal (d = 2026-01-18): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 0.00 PLN)
   law date 2026-02-15, cut 2026-02-15
 q_bal (d = 2026-01-20): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 1.00 PLN)
   unfulfilled: save[2026-01]
@@ -108025,15 +108040,17 @@ zm14: split[2026-02]
   leg cash from world to err_box amount refused: RUN-DIV division by zero
   cut 2026-02-15
 zm15: spread[first, 2026-01]
-  decision, day 2026-01-20, status past
+  decision, day 2026-01-20, status refused
   stratum 1, walk point (2026-01-20, stratum 1, spread|000000)
   read at its walk point: tie_jar[first], tie_jar[second]
+  refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by
   leg cash from world to tie_jar[first] amount 100.00 PLN
   cut 2026-02-15
 zm16: spread[first, 2026-02]
-  decision, day 2026-02-20, status plan
+  decision, day 2026-02-20, status refused
   stratum 1, walk point (2026-02-20, stratum 1, spread|000000)
   read at its walk point: tie_jar[first]
+  refused: RUN-TIE spread has a tie at spread[first, 2026-02], spread[second, 2026-02] that changes the result, and no ties by
   leg cash from world to tie_jar[first] amount refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by
   cut 2026-02-15
 zm17: dole[first, 2026-01]
@@ -108049,9 +108066,10 @@ zm18: dole[first, 2026-02]
   leg cash from world to free_jar[first] amount 100.00 PLN
   cut 2026-02-15
 zm19: lean[first, 2026-01]
-  decision, day 2026-01-20, status past
+  decision, day 2026-01-20, status refused
   stratum 1, walk point (2026-01-20, stratum 1, lean|000000)
   read at its walk point: lean_jar[first]
+  refused: RUN-TIE lean has a tie at lean[first, 2026-01], lean[second, 2026-01] that changes the result, and no ties by
   leg cash from world to lean_jar[first] amount 100.00 PLN
   cut 2026-02-15
 zm2: rent_pay[2026-02]
@@ -108064,9 +108082,10 @@ zm2: rent_pay[2026-02]
         version facts, source fixture, "T's fixture for S's kernel tests (invented values)", locator "the rent", governs always, known 2025-12-01
   cut 2026-02-15
 zm20: lean[first, 2026-02]
-  decision, day 2026-02-20, status plan
+  decision, day 2026-02-20, status refused
   stratum 1, walk point (2026-02-20, stratum 1, lean|000000)
   read at its walk point: lean_jar[first]
+  refused: RUN-TIE lean has a tie at lean[first, 2026-02], lean[second, 2026-02] that changes the result, and no ties by
   leg cash from world to lean_jar[first] amount refused: RUN-TIE lean has a tie at lean[first, 2026-01], lean[second, 2026-01] that changes the result, and no ties by
   cut 2026-02-15
 zm3: topup[2026-01]
@@ -115775,7 +115794,7 @@ ask zm32: explain lean[first, 2026-02]
 ask zm33: explain lean[first, 2026-03]
 
 ask zm34: explain lean[second, 2026-01]
-,,1:0,15014:q_bal (d = 2026-01-18): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 0.00 PLN)
+,,1:0,16030:q_bal (d = 2026-01-18): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 0.00 PLN)
   law date 2026-02-15, cut 2026-02-15
 q_bal (d = 2026-01-20): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 1.00 PLN)
   unfulfilled: save[2026-01]
@@ -115952,27 +115971,31 @@ zm22: split[2026-03]
   leg cash from world to err_box amount refused: RUN-DIV division by zero
   cut 2026-02-15
 zm23: spread[first, 2026-01]
-  decision, day 2026-01-20, status past
+  decision, day 2026-01-20, status refused
   stratum 1, walk point (2026-01-20, stratum 1, spread|000000)
   read at its walk point: tie_jar[first], tie_jar[second]
+  refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by
   leg cash from world to tie_jar[first] amount 100.00 PLN
   cut 2026-02-15
 zm24: spread[first, 2026-02]
-  decision, day 2026-02-20, status plan
+  decision, day 2026-02-20, status refused
   stratum 1, walk point (2026-02-20, stratum 1, spread|000000)
   read at its walk point: tie_jar[first]
+  refused: RUN-TIE spread has a tie at spread[first, 2026-02], spread[second, 2026-02] that changes the result, and no ties by
   leg cash from world to tie_jar[first] amount refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by
   cut 2026-02-15
 zm25: spread[first, 2026-03]
-  decision, day 2026-03-20, status plan
+  decision, day 2026-03-20, status refused
   stratum 1, walk point (2026-03-20, stratum 1, spread|000000)
   read at its walk point: tie_jar[first]
+  refused: RUN-TIE spread has a tie at spread[first, 2026-03], spread[second, 2026-03] that changes the result, and no ties by
   leg cash from world to tie_jar[first] amount refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by
   cut 2026-02-15
 zm26: spread[second, 2026-01]
-  decision, day 2026-01-20, status past
+  decision, day 2026-01-20, status refused
   stratum 1, walk point (2026-01-20, stratum 1, spread|000001)
   read at its walk point: tie_jar[first], tie_jar[second]
+  refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by
   leg cash from world to tie_jar[second] amount 100.00 PLN
   cut 2026-02-15
 zm27: dole[first, 2026-01]
@@ -116009,27 +116032,31 @@ zm30: dole[second, 2026-01]
   leg cash from world to free_jar[second] amount 100.00 PLN
   cut 2026-02-15
 zm31: lean[first, 2026-01]
-  decision, day 2026-01-20, status past
+  decision, day 2026-01-20, status refused
   stratum 1, walk point (2026-01-20, stratum 1, lean|000000)
   read at its walk point: lean_jar[first]
+  refused: RUN-TIE lean has a tie at lean[first, 2026-01], lean[second, 2026-01] that changes the result, and no ties by
   leg cash from world to lean_jar[first] amount 100.00 PLN
   cut 2026-02-15
 zm32: lean[first, 2026-02]
-  decision, day 2026-02-20, status plan
+  decision, day 2026-02-20, status refused
   stratum 1, walk point (2026-02-20, stratum 1, lean|000000)
   read at its walk point: lean_jar[first]
+  refused: RUN-TIE lean has a tie at lean[first, 2026-02], lean[second, 2026-02] that changes the result, and no ties by
   leg cash from world to lean_jar[first] amount refused: RUN-TIE lean has a tie at lean[first, 2026-01], lean[second, 2026-01] that changes the result, and no ties by
   cut 2026-02-15
 zm33: lean[first, 2026-03]
-  decision, day 2026-03-20, status plan
+  decision, day 2026-03-20, status refused
   stratum 1, walk point (2026-03-20, stratum 1, lean|000000)
   read at its walk point: lean_jar[first]
+  refused: RUN-TIE lean has a tie at lean[first, 2026-03], lean[second, 2026-03] that changes the result, and no ties by
   leg cash from world to lean_jar[first] amount refused: RUN-TIE lean has a tie at lean[first, 2026-01], lean[second, 2026-01] that changes the result, and no ties by
   cut 2026-02-15
 zm34: lean[second, 2026-01]
-  decision, day 2026-01-20, status past
+  decision, day 2026-01-20, status refused
   stratum 1, walk point (2026-01-20, stratum 1, lean|000001)
   read at its walk point: lean_jar[first]
+  refused: RUN-TIE lean has a tie at lean[first, 2026-01], lean[second, 2026-01] that changes the result, and no ties by
   leg cash from world to lean_jar[second] amount 1.00 PLN
   cut 2026-02-15
 zm4: topup[2026-01]
@@ -121680,7 +121707,7 @@ ask zm28: explain lean[first, 2026-01]
 ask zm29: explain lean[first, 2026-02]
 
 ask zm30: explain lean[first, 2026-03]
-,,1:0,14015:q_bal (d = 2026-01-18): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 0.00 PLN)
+,,1:0,14777:q_bal (d = 2026-01-18): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 0.00 PLN)
   law date 2026-02-15, cut 2026-02-15
 q_bal (d = 2026-01-20): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 1.00 PLN)
   unfulfilled: save[2026-01]
@@ -121851,21 +121878,24 @@ zm21: split[2026-03]
   leg cash from world to err_box amount refused: RUN-DIV division by zero
   cut 2026-02-15
 zm22: spread[first, 2026-01]
-  decision, day 2026-01-20, status past
+  decision, day 2026-01-20, status refused
   stratum 1, walk point (2026-01-20, stratum 1, spread|000000)
   read at its walk point: tie_jar[first], tie_jar[second]
+  refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by
   leg cash from world to tie_jar[first] amount 100.00 PLN
   cut 2026-02-15
 zm23: spread[first, 2026-02]
-  decision, day 2026-02-20, status plan
+  decision, day 2026-02-20, status refused
   stratum 1, walk point (2026-02-20, stratum 1, spread|000000)
   read at its walk point: tie_jar[first]
+  refused: RUN-TIE spread has a tie at spread[first, 2026-02], spread[second, 2026-02] that changes the result, and no ties by
   leg cash from world to tie_jar[first] amount refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by
   cut 2026-02-15
 zm24: spread[first, 2026-03]
-  decision, day 2026-03-20, status plan
+  decision, day 2026-03-20, status refused
   stratum 1, walk point (2026-03-20, stratum 1, spread|000000)
   read at its walk point: tie_jar[first]
+  refused: RUN-TIE spread has a tie at spread[first, 2026-03], spread[second, 2026-03] that changes the result, and no ties by
   leg cash from world to tie_jar[first] amount refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by
   cut 2026-02-15
 zm25: dole[first, 2026-01]
@@ -121887,15 +121917,17 @@ zm27: dole[first, 2026-03]
   leg cash from world to free_jar[first] amount 1.00 PLN
   cut 2026-02-15
 zm28: lean[first, 2026-01]
-  decision, day 2026-01-20, status past
+  decision, day 2026-01-20, status refused
   stratum 1, walk point (2026-01-20, stratum 1, lean|000000)
   read at its walk point: lean_jar[first]
+  refused: RUN-TIE lean has a tie at lean[first, 2026-01], lean[second, 2026-01] that changes the result, and no ties by
   leg cash from world to lean_jar[first] amount 100.00 PLN
   cut 2026-02-15
 zm29: lean[first, 2026-02]
-  decision, day 2026-02-20, status plan
+  decision, day 2026-02-20, status refused
   stratum 1, walk point (2026-02-20, stratum 1, lean|000000)
   read at its walk point: lean_jar[first]
+  refused: RUN-TIE lean has a tie at lean[first, 2026-02], lean[second, 2026-02] that changes the result, and no ties by
   leg cash from world to lean_jar[first] amount refused: RUN-TIE lean has a tie at lean[first, 2026-01], lean[second, 2026-01] that changes the result, and no ties by
   cut 2026-02-15
 zm3: rent_pay[2026-03]
@@ -121908,9 +121940,10 @@ zm3: rent_pay[2026-03]
         version facts, source fixture, "T's fixture for S's kernel tests (invented values)", locator "the rent", governs always, known 2025-12-01
   cut 2026-02-15
 zm30: lean[first, 2026-03]
-  decision, day 2026-03-20, status plan
+  decision, day 2026-03-20, status refused
   stratum 1, walk point (2026-03-20, stratum 1, lean|000000)
   read at its walk point: lean_jar[first]
+  refused: RUN-TIE lean has a tie at lean[first, 2026-03], lean[second, 2026-03] that changes the result, and no ties by
   leg cash from world to lean_jar[first] amount refused: RUN-TIE lean has a tie at lean[first, 2026-01], lean[second, 2026-01] that changes the result, and no ties by
   cut 2026-02-15
 zm4: topup[2026-01]
@@ -124869,7 +124902,7 @@ ask zm32: explain lean[first, 2026-02]
 ask zm33: explain lean[first, 2026-03]
 
 ask zm34: explain lean[second, 2026-01]
-,,1:0,15014:q_bal (d = 2026-01-18): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 0.00 PLN)
+,,1:0,16030:q_bal (d = 2026-01-18): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 0.00 PLN)
   law date 2026-02-15, cut 2026-02-15
 q_bal (d = 2026-01-20): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 1.00 PLN)
   unfulfilled: save[2026-01]
@@ -125046,27 +125079,31 @@ zm22: split[2026-03]
   leg cash from world to err_box amount refused: RUN-DIV division by zero
   cut 2026-02-15
 zm23: spread[first, 2026-01]
-  decision, day 2026-01-20, status past
+  decision, day 2026-01-20, status refused
   stratum 1, walk point (2026-01-20, stratum 1, spread|000000)
   read at its walk point: tie_jar[first], tie_jar[second]
+  refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by
   leg cash from world to tie_jar[first] amount 100.00 PLN
   cut 2026-02-15
 zm24: spread[first, 2026-02]
-  decision, day 2026-02-20, status plan
+  decision, day 2026-02-20, status refused
   stratum 1, walk point (2026-02-20, stratum 1, spread|000000)
   read at its walk point: tie_jar[first]
+  refused: RUN-TIE spread has a tie at spread[first, 2026-02], spread[second, 2026-02] that changes the result, and no ties by
   leg cash from world to tie_jar[first] amount refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by
   cut 2026-02-15
 zm25: spread[first, 2026-03]
-  decision, day 2026-03-20, status plan
+  decision, day 2026-03-20, status refused
   stratum 1, walk point (2026-03-20, stratum 1, spread|000000)
   read at its walk point: tie_jar[first]
+  refused: RUN-TIE spread has a tie at spread[first, 2026-03], spread[second, 2026-03] that changes the result, and no ties by
   leg cash from world to tie_jar[first] amount refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by
   cut 2026-02-15
 zm26: spread[second, 2026-01]
-  decision, day 2026-01-20, status past
+  decision, day 2026-01-20, status refused
   stratum 1, walk point (2026-01-20, stratum 1, spread|000001)
   read at its walk point: tie_jar[first], tie_jar[second]
+  refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by
   leg cash from world to tie_jar[second] amount 100.00 PLN
   cut 2026-02-15
 zm27: dole[first, 2026-01]
@@ -125103,27 +125140,31 @@ zm30: dole[second, 2026-01]
   leg cash from world to free_jar[second] amount 100.00 PLN
   cut 2026-02-15
 zm31: lean[first, 2026-01]
-  decision, day 2026-01-20, status past
+  decision, day 2026-01-20, status refused
   stratum 1, walk point (2026-01-20, stratum 1, lean|000000)
   read at its walk point: lean_jar[first]
+  refused: RUN-TIE lean has a tie at lean[first, 2026-01], lean[second, 2026-01] that changes the result, and no ties by
   leg cash from world to lean_jar[first] amount 100.00 PLN
   cut 2026-02-15
 zm32: lean[first, 2026-02]
-  decision, day 2026-02-20, status plan
+  decision, day 2026-02-20, status refused
   stratum 1, walk point (2026-02-20, stratum 1, lean|000000)
   read at its walk point: lean_jar[first]
+  refused: RUN-TIE lean has a tie at lean[first, 2026-02], lean[second, 2026-02] that changes the result, and no ties by
   leg cash from world to lean_jar[first] amount refused: RUN-TIE lean has a tie at lean[first, 2026-01], lean[second, 2026-01] that changes the result, and no ties by
   cut 2026-02-15
 zm33: lean[first, 2026-03]
-  decision, day 2026-03-20, status plan
+  decision, day 2026-03-20, status refused
   stratum 1, walk point (2026-03-20, stratum 1, lean|000000)
   read at its walk point: lean_jar[first]
+  refused: RUN-TIE lean has a tie at lean[first, 2026-03], lean[second, 2026-03] that changes the result, and no ties by
   leg cash from world to lean_jar[first] amount refused: RUN-TIE lean has a tie at lean[first, 2026-01], lean[second, 2026-01] that changes the result, and no ties by
   cut 2026-02-15
 zm34: lean[second, 2026-01]
-  decision, day 2026-01-20, status past
+  decision, day 2026-01-20, status refused
   stratum 1, walk point (2026-01-20, stratum 1, lean|000001)
   read at its walk point: lean_jar[first]
+  refused: RUN-TIE lean has a tie at lean[first, 2026-01], lean[second, 2026-01] that changes the result, and no ties by
   leg cash from world to lean_jar[second] amount 1.00 PLN
   cut 2026-02-15
 zm4: topup[2026-01]
@@ -180854,7 +180895,7 @@ ask zx159: explain bal(shop, 2026-03-20)
 ask zx160: explain bal(shop, 2026-03-20 start)
 
 ask zx161: explain bal(shop, 2026-03-31)
-,,1:0,41140:q_bal (d = 2026-01-18): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 0.00 PLN)
+,,1:0,42958:q_bal (d = 2026-01-18): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 0.00 PLN)
   law date 2026-02-15, cut 2026-02-15
 q_bal (d = 2026-01-20): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 1.00 PLN)
   unfulfilled: save[2026-01]
@@ -180887,8 +180928,32 @@ q_lean (d = 2026-01-20): (refused: RUN-TIE lean has a tie at lean[first, 2026-01
 q_proj: (45.00 PLN, 50.00 PLN)
   anchor: pocket 2026-02-10 start, stated 45.00 PLN, difference -5.00 PLN
   law date 2026-02-15, cut 2026-02-15
-q_res_feb: refused: RUN-TIE lean has a tie at lean[first, 2026-02], lean[second, 2026-02] that changes the result, and no ties by
-q_res_jan: refused: RUN-TIE lean has a tie at lean[first, 2026-01], lean[second, 2026-01] that changes the result, and no ties by
+q_res_feb: residuals konto 2026-02
+  2026-02 move topup: model 1 000.00 PLN, observed 0.00 PLN, difference -1 000.00 PLN
+    expected but missing topup[2026-02] on 2026-02-20: model 1 000.00 PLN
+  2026-02 move stash: model -101.00 PLN, observed 0.00 PLN, difference 101.00 PLN
+    expected but missing stash[second, 2026-02] on 2026-02-20: model -100.00 PLN
+    expected but missing stash[first, 2026-02] on 2026-02-20: model -1.00 PLN
+  2026-02 move feed2: model -5.00 PLN, observed 0.00 PLN, difference 5.00 PLN
+    expected but missing feed2[2026-02] on 2026-02-15: model -5.00 PLN
+  2026-02 move feed: model -5.00 PLN, observed -6.00 PLN, difference -1.00 PLN
+    matched feed[2026-02] on 2026-02-15: model -5.00 PLN, observed -6.00 PLN, difference -1.00 PLN, timing +0 days
+  2026-02 move rent_pay: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN
+    matched rent_pay[2026-02] on 2026-02-05: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN, timing +0 days
+  law date 2026-02-15, cut 2026-02-15
+q_res_jan: residuals konto 2026-01
+  2026-01 balance: model 2 300.00 PLN, observed 2 200.00 PLN, difference -100.00 PLN
+    balance konto 2026-01-31 end (anchored): booked 2 300.00 PLN, stated 2 200.00 PLN, gap -100.00 PLN
+  2026-01 move feed: model -5.00 PLN, observed 0.00 PLN, difference 5.00 PLN
+    expected but missing feed[2026-01] on 2026-01-15: model -5.00 PLN
+  2026-01 move feed2: model -5.00 PLN, observed 0.00 PLN, difference 5.00 PLN
+    expected but missing feed2[2026-01] on 2026-01-15: model -5.00 PLN
+  2026-01 move stash: model -101.00 PLN, observed -100.00 PLN, difference 1.00 PLN
+    expected but missing stash[second, 2026-01] on 2026-01-20: model -1.00 PLN
+    matched stash[first, 2026-01] on 2026-01-20: model -100.00 PLN, observed -100.00 PLN, difference 0.00 PLN, timing -2 days
+  2026-01 move rent_pay: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN
+    matched rent_pay[2026-01] on 2026-01-05: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN, timing +0 days
+  law date 2026-02-15, cut 2026-02-15
 q_side (d = 2026-01-20): (1.00 PLN, refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by, refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by, 100.00 PLN, 100.00 PLN)
   unfulfilled: dole[first, 2026-01]
   unfulfilled: dole[second, 2026-01]
@@ -192411,7 +192476,7 @@ ask zx105: explain low(shop, 2026-02-15 .. 2026-03-20)
 ask zx106: explain low(shop, 2026-02-20 .. 2026-03-31)
 
 ask zx107: explain low(shop, 2026-03-20 .. 2026-03-31)
-,,1:0,35161:q_bal (d = 2026-01-18): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 0.00 PLN)
+,,1:0,36979:q_bal (d = 2026-01-18): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 0.00 PLN)
   law date 2026-02-15, cut 2026-02-15
 q_bal (d = 2026-01-20): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 1.00 PLN)
   unfulfilled: save[2026-01]
@@ -192444,8 +192509,32 @@ q_lean (d = 2026-01-20): (refused: RUN-TIE lean has a tie at lean[first, 2026-01
 q_proj: (45.00 PLN, 50.00 PLN)
   anchor: pocket 2026-02-10 start, stated 45.00 PLN, difference -5.00 PLN
   law date 2026-02-15, cut 2026-02-15
-q_res_feb: refused: RUN-TIE lean has a tie at lean[first, 2026-02], lean[second, 2026-02] that changes the result, and no ties by
-q_res_jan: refused: RUN-TIE lean has a tie at lean[first, 2026-01], lean[second, 2026-01] that changes the result, and no ties by
+q_res_feb: residuals konto 2026-02
+  2026-02 move topup: model 1 000.00 PLN, observed 0.00 PLN, difference -1 000.00 PLN
+    expected but missing topup[2026-02] on 2026-02-20: model 1 000.00 PLN
+  2026-02 move stash: model -101.00 PLN, observed 0.00 PLN, difference 101.00 PLN
+    expected but missing stash[second, 2026-02] on 2026-02-20: model -100.00 PLN
+    expected but missing stash[first, 2026-02] on 2026-02-20: model -1.00 PLN
+  2026-02 move feed2: model -5.00 PLN, observed 0.00 PLN, difference 5.00 PLN
+    expected but missing feed2[2026-02] on 2026-02-15: model -5.00 PLN
+  2026-02 move feed: model -5.00 PLN, observed -6.00 PLN, difference -1.00 PLN
+    matched feed[2026-02] on 2026-02-15: model -5.00 PLN, observed -6.00 PLN, difference -1.00 PLN, timing +0 days
+  2026-02 move rent_pay: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN
+    matched rent_pay[2026-02] on 2026-02-05: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN, timing +0 days
+  law date 2026-02-15, cut 2026-02-15
+q_res_jan: residuals konto 2026-01
+  2026-01 balance: model 2 300.00 PLN, observed 2 200.00 PLN, difference -100.00 PLN
+    balance konto 2026-01-31 end (anchored): booked 2 300.00 PLN, stated 2 200.00 PLN, gap -100.00 PLN
+  2026-01 move feed: model -5.00 PLN, observed 0.00 PLN, difference 5.00 PLN
+    expected but missing feed[2026-01] on 2026-01-15: model -5.00 PLN
+  2026-01 move feed2: model -5.00 PLN, observed 0.00 PLN, difference 5.00 PLN
+    expected but missing feed2[2026-01] on 2026-01-15: model -5.00 PLN
+  2026-01 move stash: model -101.00 PLN, observed -100.00 PLN, difference 1.00 PLN
+    expected but missing stash[second, 2026-01] on 2026-01-20: model -1.00 PLN
+    matched stash[first, 2026-01] on 2026-01-20: model -100.00 PLN, observed -100.00 PLN, difference 0.00 PLN, timing -2 days
+  2026-01 move rent_pay: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN
+    matched rent_pay[2026-01] on 2026-01-05: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN, timing +0 days
+  law date 2026-02-15, cut 2026-02-15
 q_side (d = 2026-01-20): (1.00 PLN, refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by, refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by, 100.00 PLN, 100.00 PLN)
   unfulfilled: dole[first, 2026-01]
   unfulfilled: dole[second, 2026-01]
@@ -201283,7 +201372,7 @@ ask zx105: explain bal(shop, 2026-03-20) from 2026-02-15
 ask zx106: explain bal(shop, 2026-03-31) from 2026-02-20
 
 ask zx107: explain bal(shop, 2026-03-31) from 2026-03-20
-,,1:0,33101:q_bal (d = 2026-01-18): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 0.00 PLN)
+,,1:0,34919:q_bal (d = 2026-01-18): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 0.00 PLN)
   law date 2026-02-15, cut 2026-02-15
 q_bal (d = 2026-01-20): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 1.00 PLN)
   unfulfilled: save[2026-01]
@@ -201316,8 +201405,32 @@ q_lean (d = 2026-01-20): (refused: RUN-TIE lean has a tie at lean[first, 2026-01
 q_proj: (45.00 PLN, 50.00 PLN)
   anchor: pocket 2026-02-10 start, stated 45.00 PLN, difference -5.00 PLN
   law date 2026-02-15, cut 2026-02-15
-q_res_feb: refused: RUN-TIE lean has a tie at lean[first, 2026-02], lean[second, 2026-02] that changes the result, and no ties by
-q_res_jan: refused: RUN-TIE lean has a tie at lean[first, 2026-01], lean[second, 2026-01] that changes the result, and no ties by
+q_res_feb: residuals konto 2026-02
+  2026-02 move topup: model 1 000.00 PLN, observed 0.00 PLN, difference -1 000.00 PLN
+    expected but missing topup[2026-02] on 2026-02-20: model 1 000.00 PLN
+  2026-02 move stash: model -101.00 PLN, observed 0.00 PLN, difference 101.00 PLN
+    expected but missing stash[second, 2026-02] on 2026-02-20: model -100.00 PLN
+    expected but missing stash[first, 2026-02] on 2026-02-20: model -1.00 PLN
+  2026-02 move feed2: model -5.00 PLN, observed 0.00 PLN, difference 5.00 PLN
+    expected but missing feed2[2026-02] on 2026-02-15: model -5.00 PLN
+  2026-02 move feed: model -5.00 PLN, observed -6.00 PLN, difference -1.00 PLN
+    matched feed[2026-02] on 2026-02-15: model -5.00 PLN, observed -6.00 PLN, difference -1.00 PLN, timing +0 days
+  2026-02 move rent_pay: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN
+    matched rent_pay[2026-02] on 2026-02-05: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN, timing +0 days
+  law date 2026-02-15, cut 2026-02-15
+q_res_jan: residuals konto 2026-01
+  2026-01 balance: model 2 300.00 PLN, observed 2 200.00 PLN, difference -100.00 PLN
+    balance konto 2026-01-31 end (anchored): booked 2 300.00 PLN, stated 2 200.00 PLN, gap -100.00 PLN
+  2026-01 move feed: model -5.00 PLN, observed 0.00 PLN, difference 5.00 PLN
+    expected but missing feed[2026-01] on 2026-01-15: model -5.00 PLN
+  2026-01 move feed2: model -5.00 PLN, observed 0.00 PLN, difference 5.00 PLN
+    expected but missing feed2[2026-01] on 2026-01-15: model -5.00 PLN
+  2026-01 move stash: model -101.00 PLN, observed -100.00 PLN, difference 1.00 PLN
+    expected but missing stash[second, 2026-01] on 2026-01-20: model -1.00 PLN
+    matched stash[first, 2026-01] on 2026-01-20: model -100.00 PLN, observed -100.00 PLN, difference 0.00 PLN, timing -2 days
+  2026-01 move rent_pay: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN
+    matched rent_pay[2026-01] on 2026-01-05: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN, timing +0 days
+  law date 2026-02-15, cut 2026-02-15
 q_side (d = 2026-01-20): (1.00 PLN, refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by, refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by, 100.00 PLN, 100.00 PLN)
   unfulfilled: dole[first, 2026-01]
   unfulfilled: dole[second, 2026-01]
@@ -211172,7 +211285,7 @@ ask zx105: explain bal(shop, 2026-03-20) from 2026-02-15 with uncertain
 ask zx106: explain bal(shop, 2026-03-31) from 2026-02-20 with uncertain
 
 ask zx107: explain bal(shop, 2026-03-31) from 2026-03-20 with uncertain
-,,1:0,32939:q_bal (d = 2026-01-18): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 0.00 PLN)
+,,1:0,34757:q_bal (d = 2026-01-18): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 0.00 PLN)
   law date 2026-02-15, cut 2026-02-15
 q_bal (d = 2026-01-20): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 1.00 PLN)
   unfulfilled: save[2026-01]
@@ -211205,8 +211318,32 @@ q_lean (d = 2026-01-20): (refused: RUN-TIE lean has a tie at lean[first, 2026-01
 q_proj: (45.00 PLN, 50.00 PLN)
   anchor: pocket 2026-02-10 start, stated 45.00 PLN, difference -5.00 PLN
   law date 2026-02-15, cut 2026-02-15
-q_res_feb: refused: RUN-TIE lean has a tie at lean[first, 2026-02], lean[second, 2026-02] that changes the result, and no ties by
-q_res_jan: refused: RUN-TIE lean has a tie at lean[first, 2026-01], lean[second, 2026-01] that changes the result, and no ties by
+q_res_feb: residuals konto 2026-02
+  2026-02 move topup: model 1 000.00 PLN, observed 0.00 PLN, difference -1 000.00 PLN
+    expected but missing topup[2026-02] on 2026-02-20: model 1 000.00 PLN
+  2026-02 move stash: model -101.00 PLN, observed 0.00 PLN, difference 101.00 PLN
+    expected but missing stash[second, 2026-02] on 2026-02-20: model -100.00 PLN
+    expected but missing stash[first, 2026-02] on 2026-02-20: model -1.00 PLN
+  2026-02 move feed2: model -5.00 PLN, observed 0.00 PLN, difference 5.00 PLN
+    expected but missing feed2[2026-02] on 2026-02-15: model -5.00 PLN
+  2026-02 move feed: model -5.00 PLN, observed -6.00 PLN, difference -1.00 PLN
+    matched feed[2026-02] on 2026-02-15: model -5.00 PLN, observed -6.00 PLN, difference -1.00 PLN, timing +0 days
+  2026-02 move rent_pay: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN
+    matched rent_pay[2026-02] on 2026-02-05: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN, timing +0 days
+  law date 2026-02-15, cut 2026-02-15
+q_res_jan: residuals konto 2026-01
+  2026-01 balance: model 2 300.00 PLN, observed 2 200.00 PLN, difference -100.00 PLN
+    balance konto 2026-01-31 end (anchored): booked 2 300.00 PLN, stated 2 200.00 PLN, gap -100.00 PLN
+  2026-01 move feed: model -5.00 PLN, observed 0.00 PLN, difference 5.00 PLN
+    expected but missing feed[2026-01] on 2026-01-15: model -5.00 PLN
+  2026-01 move feed2: model -5.00 PLN, observed 0.00 PLN, difference 5.00 PLN
+    expected but missing feed2[2026-01] on 2026-01-15: model -5.00 PLN
+  2026-01 move stash: model -101.00 PLN, observed -100.00 PLN, difference 1.00 PLN
+    expected but missing stash[second, 2026-01] on 2026-01-20: model -1.00 PLN
+    matched stash[first, 2026-01] on 2026-01-20: model -100.00 PLN, observed -100.00 PLN, difference 0.00 PLN, timing -2 days
+  2026-01 move rent_pay: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN
+    matched rent_pay[2026-01] on 2026-01-05: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN, timing +0 days
+  law date 2026-02-15, cut 2026-02-15
 q_side (d = 2026-01-20): (1.00 PLN, refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by, refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by, 100.00 PLN, 100.00 PLN)
   unfulfilled: dole[first, 2026-01]
   unfulfilled: dole[second, 2026-01]
@@ -220011,7 +220148,7 @@ ask zx159: explain bal(shop, 2026-03-20)
 ask zx160: explain bal(shop, 2026-03-20 start)
 
 ask zx161: explain bal(shop, 2026-03-31)
-,,1:0,42010:q_bal (d = 2026-01-18): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 0.00 PLN)
+,,1:0,43828:q_bal (d = 2026-01-18): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 0.00 PLN)
   law date 2026-02-15, cut 2026-02-15
 q_bal (d = 2026-01-20): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 1.00 PLN)
   unfulfilled: save[2026-01]
@@ -220044,8 +220181,32 @@ q_lean (d = 2026-01-20): (refused: RUN-TIE lean has a tie at lean[first, 2026-01
 q_proj: (45.00 PLN, 50.00 PLN)
   anchor: pocket 2026-02-10 start, stated 45.00 PLN, difference -5.00 PLN
   law date 2026-02-15, cut 2026-02-15
-q_res_feb: refused: RUN-TIE lean has a tie at lean[first, 2026-02], lean[second, 2026-02] that changes the result, and no ties by
-q_res_jan: refused: RUN-TIE lean has a tie at lean[first, 2026-01], lean[second, 2026-01] that changes the result, and no ties by
+q_res_feb: residuals konto 2026-02
+  2026-02 move topup: model 1 000.00 PLN, observed 0.00 PLN, difference -1 000.00 PLN
+    expected but missing topup[2026-02] on 2026-02-20: model 1 000.00 PLN
+  2026-02 move stash: model -101.00 PLN, observed 0.00 PLN, difference 101.00 PLN
+    expected but missing stash[second, 2026-02] on 2026-02-20: model -100.00 PLN
+    expected but missing stash[first, 2026-02] on 2026-02-20: model -1.00 PLN
+  2026-02 move feed2: model -5.00 PLN, observed 0.00 PLN, difference 5.00 PLN
+    expected but missing feed2[2026-02] on 2026-02-15: model -5.00 PLN
+  2026-02 move feed: model -5.00 PLN, observed -6.00 PLN, difference -1.00 PLN
+    matched feed[2026-02] on 2026-02-15: model -5.00 PLN, observed -6.00 PLN, difference -1.00 PLN, timing +0 days
+  2026-02 move rent_pay: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN
+    matched rent_pay[2026-02] on 2026-02-05: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN, timing +0 days
+  law date 2026-02-15, cut 2026-02-15
+q_res_jan: residuals konto 2026-01
+  2026-01 balance: model 2 300.00 PLN, observed 2 200.00 PLN, difference -100.00 PLN
+    balance konto 2026-01-31 end (anchored): booked 2 300.00 PLN, stated 2 200.00 PLN, gap -100.00 PLN
+  2026-01 move feed: model -5.00 PLN, observed 0.00 PLN, difference 5.00 PLN
+    expected but missing feed[2026-01] on 2026-01-15: model -5.00 PLN
+  2026-01 move feed2: model -5.00 PLN, observed 0.00 PLN, difference 5.00 PLN
+    expected but missing feed2[2026-01] on 2026-01-15: model -5.00 PLN
+  2026-01 move stash: model -101.00 PLN, observed -100.00 PLN, difference 1.00 PLN
+    expected but missing stash[second, 2026-01] on 2026-01-20: model -1.00 PLN
+    matched stash[first, 2026-01] on 2026-01-20: model -100.00 PLN, observed -100.00 PLN, difference 0.00 PLN, timing -2 days
+  2026-01 move rent_pay: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN
+    matched rent_pay[2026-01] on 2026-01-05: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN, timing +0 days
+  law date 2026-02-15, cut 2026-02-15
 q_side (d = 2026-01-20): (1.00 PLN, refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by, refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by, 100.00 PLN, 100.00 PLN)
   unfulfilled: dole[first, 2026-01]
   unfulfilled: dole[second, 2026-01]
@@ -221951,7 +222112,7 @@ ask y9: explain low(konto, 2026-01-01 .. 2026-03-31)
 ask y10: explain feed[2026-03]
 
 ask y11: explain feed2[2026-03]
-,,1:0,8776:q_bal (d = 2026-01-18): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 0.00 PLN)
+,,1:0,9030:q_bal (d = 2026-01-18): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 0.00 PLN)
   law date 2026-02-15, cut 2026-02-15
 q_bal (d = 2026-01-20): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 1.00 PLN)
   unfulfilled: save[2026-01]
@@ -222056,9 +222217,10 @@ y2: stash[second, 2026-02]
   leg cash from konto to jar[second] amount 100.00 PLN
   cut 2026-02-15
 y3: spread[first, 2026-01]
-  decision, day 2026-01-20, status past
+  decision, day 2026-01-20, status refused
   stratum 1, walk point (2026-01-20, stratum 1, spread|000000)
   read at its walk point: tie_jar[first], tie_jar[second]
+  refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by
   leg cash from world to tie_jar[first] amount 100.00 PLN
   cut 2026-02-15
 y4: split[2026-02]
@@ -222080,9 +222242,10 @@ y6: topup[2026-03]
   leg cash from world to konto amount 1 000.00 PLN
   cut 2026-02-15
 y7: lean[second, 2026-01]
-  decision, day 2026-01-20, status past
+  decision, day 2026-01-20, status refused
   stratum 1, walk point (2026-01-20, stratum 1, lean|000001)
   read at its walk point: lean_jar[first]
+  refused: RUN-TIE lean has a tie at lean[first, 2026-01], lean[second, 2026-01] that changes the result, and no ties by
   leg cash from world to lean_jar[second] amount 1.00 PLN
   cut 2026-02-15
 y8: 45.00 PLN
@@ -225244,7 +225407,7 @@ ask zx159: explain bal(shop, 2026-03-20)
 ask zx160: explain bal(shop, 2026-03-20 start)
 
 ask zx161: explain bal(shop, 2026-03-31)
-,,1:0,41140:q_bal (d = 2026-01-18): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 0.00 PLN)
+,,1:0,42958:q_bal (d = 2026-01-18): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 0.00 PLN)
   law date 2026-02-15, cut 2026-02-15
 q_bal (d = 2026-01-20): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 1.00 PLN)
   unfulfilled: save[2026-01]
@@ -225277,8 +225440,32 @@ q_lean (d = 2026-01-20): (refused: RUN-TIE lean has a tie at lean[first, 2026-01
 q_proj: (45.00 PLN, 50.00 PLN)
   anchor: pocket 2026-02-10 start, stated 45.00 PLN, difference -5.00 PLN
   law date 2026-02-15, cut 2026-02-15
-q_res_feb: refused: RUN-TIE lean has a tie at lean[first, 2026-02], lean[second, 2026-02] that changes the result, and no ties by
-q_res_jan: refused: RUN-TIE lean has a tie at lean[first, 2026-01], lean[second, 2026-01] that changes the result, and no ties by
+q_res_feb: residuals konto 2026-02
+  2026-02 move topup: model 1 000.00 PLN, observed 0.00 PLN, difference -1 000.00 PLN
+    expected but missing topup[2026-02] on 2026-02-20: model 1 000.00 PLN
+  2026-02 move stash: model -101.00 PLN, observed 0.00 PLN, difference 101.00 PLN
+    expected but missing stash[second, 2026-02] on 2026-02-20: model -100.00 PLN
+    expected but missing stash[first, 2026-02] on 2026-02-20: model -1.00 PLN
+  2026-02 move feed2: model -5.00 PLN, observed 0.00 PLN, difference 5.00 PLN
+    expected but missing feed2[2026-02] on 2026-02-15: model -5.00 PLN
+  2026-02 move feed: model -5.00 PLN, observed -6.00 PLN, difference -1.00 PLN
+    matched feed[2026-02] on 2026-02-15: model -5.00 PLN, observed -6.00 PLN, difference -1.00 PLN, timing +0 days
+  2026-02 move rent_pay: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN
+    matched rent_pay[2026-02] on 2026-02-05: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN, timing +0 days
+  law date 2026-02-15, cut 2026-02-15
+q_res_jan: residuals konto 2026-01
+  2026-01 balance: model 2 300.00 PLN, observed 2 200.00 PLN, difference -100.00 PLN
+    balance konto 2026-01-31 end (anchored): booked 2 300.00 PLN, stated 2 200.00 PLN, gap -100.00 PLN
+  2026-01 move feed: model -5.00 PLN, observed 0.00 PLN, difference 5.00 PLN
+    expected but missing feed[2026-01] on 2026-01-15: model -5.00 PLN
+  2026-01 move feed2: model -5.00 PLN, observed 0.00 PLN, difference 5.00 PLN
+    expected but missing feed2[2026-01] on 2026-01-15: model -5.00 PLN
+  2026-01 move stash: model -101.00 PLN, observed -100.00 PLN, difference 1.00 PLN
+    expected but missing stash[second, 2026-01] on 2026-01-20: model -1.00 PLN
+    matched stash[first, 2026-01] on 2026-01-20: model -100.00 PLN, observed -100.00 PLN, difference 0.00 PLN, timing -2 days
+  2026-01 move rent_pay: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN
+    matched rent_pay[2026-01] on 2026-01-05: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN, timing +0 days
+  law date 2026-02-15, cut 2026-02-15
 q_side (d = 2026-01-20): (1.00 PLN, refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by, refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by, 100.00 PLN, 100.00 PLN)
   unfulfilled: dole[first, 2026-01]
   unfulfilled: dole[second, 2026-01]
@@ -230915,7 +231102,7 @@ ask zx105: explain low(shop, 2026-02-15 .. 2026-03-20)
 ask zx106: explain low(shop, 2026-02-20 .. 2026-03-31)
 
 ask zx107: explain low(shop, 2026-03-20 .. 2026-03-31)
-,,1:0,35161:q_bal (d = 2026-01-18): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 0.00 PLN)
+,,1:0,36979:q_bal (d = 2026-01-18): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 0.00 PLN)
   law date 2026-02-15, cut 2026-02-15
 q_bal (d = 2026-01-20): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 1.00 PLN)
   unfulfilled: save[2026-01]
@@ -230948,8 +231135,32 @@ q_lean (d = 2026-01-20): (refused: RUN-TIE lean has a tie at lean[first, 2026-01
 q_proj: (45.00 PLN, 50.00 PLN)
   anchor: pocket 2026-02-10 start, stated 45.00 PLN, difference -5.00 PLN
   law date 2026-02-15, cut 2026-02-15
-q_res_feb: refused: RUN-TIE lean has a tie at lean[first, 2026-02], lean[second, 2026-02] that changes the result, and no ties by
-q_res_jan: refused: RUN-TIE lean has a tie at lean[first, 2026-01], lean[second, 2026-01] that changes the result, and no ties by
+q_res_feb: residuals konto 2026-02
+  2026-02 move topup: model 1 000.00 PLN, observed 0.00 PLN, difference -1 000.00 PLN
+    expected but missing topup[2026-02] on 2026-02-20: model 1 000.00 PLN
+  2026-02 move stash: model -101.00 PLN, observed 0.00 PLN, difference 101.00 PLN
+    expected but missing stash[second, 2026-02] on 2026-02-20: model -100.00 PLN
+    expected but missing stash[first, 2026-02] on 2026-02-20: model -1.00 PLN
+  2026-02 move feed2: model -5.00 PLN, observed 0.00 PLN, difference 5.00 PLN
+    expected but missing feed2[2026-02] on 2026-02-15: model -5.00 PLN
+  2026-02 move feed: model -5.00 PLN, observed -6.00 PLN, difference -1.00 PLN
+    matched feed[2026-02] on 2026-02-15: model -5.00 PLN, observed -6.00 PLN, difference -1.00 PLN, timing +0 days
+  2026-02 move rent_pay: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN
+    matched rent_pay[2026-02] on 2026-02-05: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN, timing +0 days
+  law date 2026-02-15, cut 2026-02-15
+q_res_jan: residuals konto 2026-01
+  2026-01 balance: model 2 300.00 PLN, observed 2 200.00 PLN, difference -100.00 PLN
+    balance konto 2026-01-31 end (anchored): booked 2 300.00 PLN, stated 2 200.00 PLN, gap -100.00 PLN
+  2026-01 move feed: model -5.00 PLN, observed 0.00 PLN, difference 5.00 PLN
+    expected but missing feed[2026-01] on 2026-01-15: model -5.00 PLN
+  2026-01 move feed2: model -5.00 PLN, observed 0.00 PLN, difference 5.00 PLN
+    expected but missing feed2[2026-01] on 2026-01-15: model -5.00 PLN
+  2026-01 move stash: model -101.00 PLN, observed -100.00 PLN, difference 1.00 PLN
+    expected but missing stash[second, 2026-01] on 2026-01-20: model -1.00 PLN
+    matched stash[first, 2026-01] on 2026-01-20: model -100.00 PLN, observed -100.00 PLN, difference 0.00 PLN, timing -2 days
+  2026-01 move rent_pay: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN
+    matched rent_pay[2026-01] on 2026-01-05: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN, timing +0 days
+  law date 2026-02-15, cut 2026-02-15
 q_side (d = 2026-01-20): (1.00 PLN, refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by, refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by, 100.00 PLN, 100.00 PLN)
   unfulfilled: dole[first, 2026-01]
   unfulfilled: dole[second, 2026-01]
@@ -235057,7 +235268,7 @@ ask zx105: explain bal(shop, 2026-03-20) from 2026-02-15
 ask zx106: explain bal(shop, 2026-03-31) from 2026-02-20
 
 ask zx107: explain bal(shop, 2026-03-31) from 2026-03-20
-,,1:0,33101:q_bal (d = 2026-01-18): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 0.00 PLN)
+,,1:0,34919:q_bal (d = 2026-01-18): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 0.00 PLN)
   law date 2026-02-15, cut 2026-02-15
 q_bal (d = 2026-01-20): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 1.00 PLN)
   unfulfilled: save[2026-01]
@@ -235090,8 +235301,32 @@ q_lean (d = 2026-01-20): (refused: RUN-TIE lean has a tie at lean[first, 2026-01
 q_proj: (45.00 PLN, 50.00 PLN)
   anchor: pocket 2026-02-10 start, stated 45.00 PLN, difference -5.00 PLN
   law date 2026-02-15, cut 2026-02-15
-q_res_feb: refused: RUN-TIE lean has a tie at lean[first, 2026-02], lean[second, 2026-02] that changes the result, and no ties by
-q_res_jan: refused: RUN-TIE lean has a tie at lean[first, 2026-01], lean[second, 2026-01] that changes the result, and no ties by
+q_res_feb: residuals konto 2026-02
+  2026-02 move topup: model 1 000.00 PLN, observed 0.00 PLN, difference -1 000.00 PLN
+    expected but missing topup[2026-02] on 2026-02-20: model 1 000.00 PLN
+  2026-02 move stash: model -101.00 PLN, observed 0.00 PLN, difference 101.00 PLN
+    expected but missing stash[second, 2026-02] on 2026-02-20: model -100.00 PLN
+    expected but missing stash[first, 2026-02] on 2026-02-20: model -1.00 PLN
+  2026-02 move feed2: model -5.00 PLN, observed 0.00 PLN, difference 5.00 PLN
+    expected but missing feed2[2026-02] on 2026-02-15: model -5.00 PLN
+  2026-02 move feed: model -5.00 PLN, observed -6.00 PLN, difference -1.00 PLN
+    matched feed[2026-02] on 2026-02-15: model -5.00 PLN, observed -6.00 PLN, difference -1.00 PLN, timing +0 days
+  2026-02 move rent_pay: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN
+    matched rent_pay[2026-02] on 2026-02-05: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN, timing +0 days
+  law date 2026-02-15, cut 2026-02-15
+q_res_jan: residuals konto 2026-01
+  2026-01 balance: model 2 300.00 PLN, observed 2 200.00 PLN, difference -100.00 PLN
+    balance konto 2026-01-31 end (anchored): booked 2 300.00 PLN, stated 2 200.00 PLN, gap -100.00 PLN
+  2026-01 move feed: model -5.00 PLN, observed 0.00 PLN, difference 5.00 PLN
+    expected but missing feed[2026-01] on 2026-01-15: model -5.00 PLN
+  2026-01 move feed2: model -5.00 PLN, observed 0.00 PLN, difference 5.00 PLN
+    expected but missing feed2[2026-01] on 2026-01-15: model -5.00 PLN
+  2026-01 move stash: model -101.00 PLN, observed -100.00 PLN, difference 1.00 PLN
+    expected but missing stash[second, 2026-01] on 2026-01-20: model -1.00 PLN
+    matched stash[first, 2026-01] on 2026-01-20: model -100.00 PLN, observed -100.00 PLN, difference 0.00 PLN, timing -2 days
+  2026-01 move rent_pay: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN
+    matched rent_pay[2026-01] on 2026-01-05: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN, timing +0 days
+  law date 2026-02-15, cut 2026-02-15
 q_side (d = 2026-01-20): (1.00 PLN, refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by, refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by, 100.00 PLN, 100.00 PLN)
   unfulfilled: dole[first, 2026-01]
   unfulfilled: dole[second, 2026-01]
@@ -239844,7 +240079,7 @@ ask zx105: explain bal(shop, 2026-03-20) from 2026-02-15 with uncertain
 ask zx106: explain bal(shop, 2026-03-31) from 2026-02-20 with uncertain
 
 ask zx107: explain bal(shop, 2026-03-31) from 2026-03-20 with uncertain
-,,1:0,32939:q_bal (d = 2026-01-18): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 0.00 PLN)
+,,1:0,34757:q_bal (d = 2026-01-18): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 0.00 PLN)
   law date 2026-02-15, cut 2026-02-15
 q_bal (d = 2026-01-20): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 1.00 PLN)
   unfulfilled: save[2026-01]
@@ -239877,8 +240112,32 @@ q_lean (d = 2026-01-20): (refused: RUN-TIE lean has a tie at lean[first, 2026-01
 q_proj: (45.00 PLN, 50.00 PLN)
   anchor: pocket 2026-02-10 start, stated 45.00 PLN, difference -5.00 PLN
   law date 2026-02-15, cut 2026-02-15
-q_res_feb: refused: RUN-TIE lean has a tie at lean[first, 2026-02], lean[second, 2026-02] that changes the result, and no ties by
-q_res_jan: refused: RUN-TIE lean has a tie at lean[first, 2026-01], lean[second, 2026-01] that changes the result, and no ties by
+q_res_feb: residuals konto 2026-02
+  2026-02 move topup: model 1 000.00 PLN, observed 0.00 PLN, difference -1 000.00 PLN
+    expected but missing topup[2026-02] on 2026-02-20: model 1 000.00 PLN
+  2026-02 move stash: model -101.00 PLN, observed 0.00 PLN, difference 101.00 PLN
+    expected but missing stash[second, 2026-02] on 2026-02-20: model -100.00 PLN
+    expected but missing stash[first, 2026-02] on 2026-02-20: model -1.00 PLN
+  2026-02 move feed2: model -5.00 PLN, observed 0.00 PLN, difference 5.00 PLN
+    expected but missing feed2[2026-02] on 2026-02-15: model -5.00 PLN
+  2026-02 move feed: model -5.00 PLN, observed -6.00 PLN, difference -1.00 PLN
+    matched feed[2026-02] on 2026-02-15: model -5.00 PLN, observed -6.00 PLN, difference -1.00 PLN, timing +0 days
+  2026-02 move rent_pay: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN
+    matched rent_pay[2026-02] on 2026-02-05: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN, timing +0 days
+  law date 2026-02-15, cut 2026-02-15
+q_res_jan: residuals konto 2026-01
+  2026-01 balance: model 2 300.00 PLN, observed 2 200.00 PLN, difference -100.00 PLN
+    balance konto 2026-01-31 end (anchored): booked 2 300.00 PLN, stated 2 200.00 PLN, gap -100.00 PLN
+  2026-01 move feed: model -5.00 PLN, observed 0.00 PLN, difference 5.00 PLN
+    expected but missing feed[2026-01] on 2026-01-15: model -5.00 PLN
+  2026-01 move feed2: model -5.00 PLN, observed 0.00 PLN, difference 5.00 PLN
+    expected but missing feed2[2026-01] on 2026-01-15: model -5.00 PLN
+  2026-01 move stash: model -101.00 PLN, observed -100.00 PLN, difference 1.00 PLN
+    expected but missing stash[second, 2026-01] on 2026-01-20: model -1.00 PLN
+    matched stash[first, 2026-01] on 2026-01-20: model -100.00 PLN, observed -100.00 PLN, difference 0.00 PLN, timing -2 days
+  2026-01 move rent_pay: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN
+    matched rent_pay[2026-01] on 2026-01-05: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN, timing +0 days
+  law date 2026-02-15, cut 2026-02-15
 q_side (d = 2026-01-20): (1.00 PLN, refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by, refused: RUN-TIE spread has a tie at spread[first, 2026-01], spread[second, 2026-01] that changes the result, and no ties by, 100.00 PLN, 100.00 PLN)
   unfulfilled: dole[first, 2026-01]
   unfulfilled: dole[second, 2026-01]
@@ -262369,9 +262628,10 @@ version bank_apr
   anchor konto
   bank[r1] = (on: 2026-04-05, kind: transfers, leg cash from konto to world amount 7.00 PLN) "april"
   stated[konto] = 400.00 PLN at 2026-04-06 end "statement"
-,,1:0,105:ibl:
+,,1:0,126:ibl:
   card_2026:d (source card "card")
   card_2026:opening[konto] (source card "card")
+  pinned: go = false
   cut 2026-12-31
 ,18:fixes/g11/r_p_b_iw,9:fixes-g11,24:run r_p_b.tally --ask iw,2390:11:r_p_b.tally,2369:model pb
   tally 2
@@ -263378,8 +263638,9 @@ version bank_apr
   anchor konto
   bank[r1] = (on: 2026-04-05, kind: transfers, leg cash from konto to world amount 7.00 PLN) "april"
   stated[konto] = 400.00 PLN at 2026-04-06 end "statement"
-,,1:0,306:v: (490.00 PLN, 380.00 PLN, 20.00 PLN, 1, 4, 20.00 PLN, 2.00 PLN, 500.00 PLN)
+,,1:0,327:v: (490.00 PLN, 380.00 PLN, 20.00 PLN, 1, 4, 20.00 PLN, 2.00 PLN, 500.00 PLN)
   pinned: amt = 20.00 PLN
+  pinned: go = false
   pinned: rate[q1] = 0.2
   anchor: konto 2026-04-06 end, stated 400.00 PLN, difference -83.00 PLN
   unfulfilled: pay
@@ -276482,7 +276743,17 @@ version card_2026
 
 
 ask g4: count(d in d1 .. d2 step age(w, d2) * 1 month)
-,,1:1,57:refused: LOAD-UNIT 2026-01-01 + window(0 month, 1 month)
+,,1:0,558:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
+  cut 2026-03-01
+g4: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range step" (w)
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
 ,43:fixes/g13/r_agent_w_model_with_r_agent_w_g5,9:fixes-g13,44:run r_agent_w_model.tally r_agent_w_g5.tally,904:21:r_agent_w_model.tally,767:model rv
   tally 2
   on 2026-03-01
@@ -276539,7 +276810,17 @@ version card_2026
 
 
 ask g5: count(d in d1 .. d2 step (age(w, d2) + 1) * 1 month)
-,,1:1,57:refused: LOAD-UNIT 2026-01-01 + window(1 month, 2 month)
+,,1:0,558:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
+  cut 2026-03-01
+g5: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range step" (w)
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
 ,43:fixes/g13/r_agent_w_model_with_r_agent_w_h1,9:fixes-g13,44:run r_agent_w_model.tally r_agent_w_h1.tally,974:21:r_agent_w_model.tally,767:model rv
   tally 2
   on 2026-03-01
@@ -283523,7 +283804,17 @@ version card_2026
   tally 2
 
 ask w10: count(d in d1 .. d2 step age(w, d2) * 1 month)
-,,1:1,57:refused: LOAD-UNIT 2026-01-01 + window(0 month, 1 month)
+,,1:0,559:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
+  cut 2026-03-01
+w10: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range step" (w)
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
 ,34:fixes/g13/rf_w_model_with_rf_w_w12,9:fixes-g13,35:run rf_w_model.tally rf_w_w12.tally,850:16:rf_w_model.tally,767:model rv
   tally 2
   on 2026-03-01
@@ -314612,12 +314903,12 @@ version v_card
 c_before: 1
   unfulfilled: pay[2026-01]
   cut 2026-03-01
-,13:r3/reach_year,8:fixes-r3,26:run m.tally --ask y y_hole,1155:7:m.tally,1139:model r3_reach
+,13:r3/reach_year,8:fixes-r3,26:run m.tally --ask y y_hole,1290:7:m.tally,1274:model r3_reach
   tally 2
   on 2026-03-01
   start 2026-01-01
   end 2026-12-31
-  note "T, tally 2.1.7, R3's reach (#142), from L §4.4 alone: each operation gives the interval of its values over the days its arguments can take, one value when the ends agree, and only a comparison decides an interval. Features no item of R3 names: year_of of a window (y_in one year, y_across two: a hole where one value is needed), and max of a window and a day, decided where every day agrees (m_after true, m_inside false)"
+  note "T, tally 2.1.7, R3's reach (#142), from L §4.4 alone: each operation gives the interval of its values over the days its arguments can take, one value when the ends agree, and only a comparison decides an interval. Features no item of R3 names: year_of of a window (y_in one year, y_across two: a hole where one value is needed), and max of a window and a day, decided where every day agrees (m_after true, m_inside false), and undecided (m_open: a hole naming w_in, SR-5 ruled by P36)"
 
 source card "T's card (invented)"
 
@@ -314637,6 +314928,8 @@ def m_after: bool = max(w_in, d_after) == d_after
 
 def m_inside: bool = max(w_in, d_inside) > d_after
 
+def m_open: bool = max(w_in, d_inside) == d_inside
+
 ask y: y_in
 
 ask y_hole: y_across
@@ -314644,6 +314937,8 @@ ask y_hole: y_across
 ask m: m_after
 
 ask m_false: m_inside
+
+ask m_hole: m_open
 
 version v_card
   cite card
@@ -314657,12 +314952,12 @@ version v_card
   cut 2026-03-01
 y_hole: ?"date within window(2026-12-20, 2027-01-10) not precise enough for a print" (w_across)
   cut 2026-03-01
-,12:r3/reach_max,8:fixes-r3,27:run m.tally --ask m m_false,1155:7:m.tally,1139:model r3_reach
+,12:r3/reach_max,8:fixes-r3,34:run m.tally --ask m m_false m_hole,1290:7:m.tally,1274:model r3_reach
   tally 2
   on 2026-03-01
   start 2026-01-01
   end 2026-12-31
-  note "T, tally 2.1.7, R3's reach (#142), from L §4.4 alone: each operation gives the interval of its values over the days its arguments can take, one value when the ends agree, and only a comparison decides an interval. Features no item of R3 names: year_of of a window (y_in one year, y_across two: a hole where one value is needed), and max of a window and a day, decided where every day agrees (m_after true, m_inside false)"
+  note "T, tally 2.1.7, R3's reach (#142), from L §4.4 alone: each operation gives the interval of its values over the days its arguments can take, one value when the ends agree, and only a comparison decides an interval. Features no item of R3 names: year_of of a window (y_in one year, y_across two: a hole where one value is needed), and max of a window and a day, decided where every day agrees (m_after true, m_inside false), and undecided (m_open: a hole naming w_in, SR-5 ruled by P36)"
 
 source card "T's card (invented)"
 
@@ -314682,6 +314977,8 @@ def m_after: bool = max(w_in, d_after) == d_after
 
 def m_inside: bool = max(w_in, d_inside) > d_after
 
+def m_open: bool = max(w_in, d_inside) == d_inside
+
 ask y: y_in
 
 ask y_hole: y_across
@@ -314689,6 +314986,8 @@ ask y_hole: y_across
 ask m: m_after
 
 ask m_false: m_inside
+
+ask m_hole: m_open
 
 version v_card
   cite card
@@ -314698,9 +314997,11 @@ version v_card
   w_across = window(2026-12-20, 2027-01-10) "around the new year"
   d_after = 2026-07-15 "after the window"
   d_inside = 2026-06-15 "inside the window"
-,,1:0,57:m: true
+,,1:0,190:m: true
   cut 2026-03-01
 m_false: false
+  cut 2026-03-01
+m_hole: ?"date within window(2026-06-01, 2026-06-30) not precise enough for max(w_in, d_inside) == d_inside" (w_in)
   cut 2026-03-01
 ,17:r4/reach_scenario,8:fixes-r4,39:run m.tally s.tally --ask s_base s_wide,1316:7:m.tally,980:model r4_reach
   tally 2
@@ -314751,7 +315052,7 @@ s_wide: (7, 7)
   world: wide
   law date 2026-06-30, cut 2026-06-30
 warning: WARN-UNREAD input reader is read by nothing
-,13:r4/reach_asif,8:fixes-r4,39:run m.tally s.tally --ask p_with s_asif,1316:7:m.tally,980:model r4_reach
+,13:r4/reach_asif,8:fixes-r4,47:run m.tally s.tally --ask p_with s_asif p_inner,1316:7:m.tally,980:model r4_reach
   tally 2
   on 2026-06-30
   start 2026-01-01
@@ -314794,12 +315095,15 @@ version wide_rows
 ask s_wide: r[k1], r[k2] in wide law 2026-06-30
 
 ask s_asif: tot as if {r[k1] = 5} in wide law 2026-06-30
-,,1:0,205:p_with: 10
+,,1:0,274:p_with: 10
   pinned: r[k1] = 9
   law date 2026-06-30, cut 2026-06-30
 s_asif: 12
   pinned: r[k1] = 5
   world: wide
+  law date 2026-06-30, cut 2026-06-30
+p_inner: 6
+  pinned: r[k1] = 5
   law date 2026-06-30, cut 2026-06-30
 warning: WARN-UNREAD input reader is read by nothing
 ,13:r5/reach_base,8:fixes-r5,14:run base.tally,918:10:base.tally,899:model r5_reach
@@ -314905,7 +315209,7 @@ version v_card
   lim[*] = 5.00 PLN "the card"
   span_d = 2026-02-01 "the card"
 ,,1:1,55:refused: LOAD-KEY k3 is not a key of ks (key.tally:22)
-,17:r6/reach_low_hole,8:fixes-r6,29:run m.tally --ask l_low l_min,1286:7:m.tally,1270:model r6_reach
+,17:r6/reach_low_hole,8:fixes-r6,44:run m.tally --ask l_low l_min n_next n_first,1286:7:m.tally,1270:model r6_reach
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -314952,11 +315256,15 @@ version v_card
   d1 = 2026-03-02 "after the cut"
   d9 = 2026-02-28 "the card"
   opening[konto] = 100.00 PLN at 2026-01-01 start "the card"
-,,1:0,150:l_low: ?"how much is the gift?" (fee)
+,,1:0,359:l_low: ?"how much is the gift?" (fee)
   unfulfilled: gift
   cut 2026-03-01
 l_min: ?"how much is the gift?" (fee)
   unfulfilled: gift
+  cut 2026-03-01
+n_next: ?"next(transfers, d1): no transfers yet, and its span reaches past the cut" (transfers)
+  cut 2026-03-01
+n_first: ?"t: no transfers yet, and its span reaches past the cut" (transfers)
   cut 2026-03-01
 ,17:r6/reach_next_tie,8:fixes-r6,42:run tie.tally --ask n_tie_next n_tie_first,1129:9:tie.tally,1111:model r6_reach
   tally 2
@@ -315009,13 +315317,13 @@ version v_card
   d1 = 2026-03-02 "after the cut"
   d9 = 2026-02-28 "the card"
   opening[konto] = 100.00 PLN at 2026-01-01 start "the card"
-,,1:0,391:n_tie_next: refused: RUN-TIE next(transfers, 2026-03-02) has a tie at gift, gift2 that changes the result, and its ties by doesn't break it
+,,1:0,383:n_tie_next: refused: RUN-TIE next(transfers, d1) has a tie at gift, gift2 that changes the result, and its ties by doesn't break it
   cut 2026-03-01
 n_tie_first: refused: RUN-TIE first has a tie at gift, gift2 that changes the result, and its ties by doesn't break it
   cut 2026-03-01
 warning: WARN-UNREAD input d0 is read by nothing
 warning: WARN-UNREAD input d9 is read by nothing
-,20:r7/reach_unfulfilled,8:fixes-r7,31:run m.tally --ask a_other u_box,1453:7:m.tally,1437:model r7_reach
+,20:r7/reach_unfulfilled,8:fixes-r7,38:run m.tally --ask a_other u_box a_when,1453:7:m.tally,1437:model r7_reach
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -315065,11 +315373,15 @@ version v_card
   d9 = 2026-02-28 "the card"
   opening[konto] = 100.00 PLN at 2026-01-01 start "the card"
   opening[box] = 0.00 PLN at 2026-01-01 start "the card"
-,,1:0,124:a_other: 10.00 PLN
+,,1:0,240:a_other: 10.00 PLN
   unfulfilled: rent
   cut 2026-03-01
 u_box: (10.00 PLN, 100.00 PLN)
+  assumed: a guess: not wanted (wanted)
   unfulfilled: rent
+  cut 2026-03-01
+a_when: 100.00 PLN
+  assumed: a guess: not wanted (wanted)
   cut 2026-03-01
 ,13:r7/reach_held,8:fixes-r7,14:run held.tally,923:10:held.tally,904:model r7_reach_held
   tally 2
@@ -315166,7 +315478,7 @@ c_axis [ax = hi]: differs: f = 20.00 PLN, plain = 10.00 PLN, difference 10.00 PL
   law date 2026-06-01, cut 2026-03-01
 c_plain: ok
   law date 2026-06-01, cut 2026-03-01
-,16:r8/reach_explain,8:fixes-r8,24:run m.tally --ask e_axis,1109:7:m.tally,1093:model r8_reach
+,16:r8/reach_explain,8:fixes-r8,33:run m.tally --ask e_axis e_pinned,1109:7:m.tally,1093:model r8_reach
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -315208,7 +315520,7 @@ version v
   p = 10.00 PLN "the card"
   twice = 2 "the card"
   asked_on = 2026-06-01 "the card"
-,,1:0,985:e_axis [ax = lo]: 10.00 PLN
+,,1:0,2028:e_axis [ax = lo]: 10.00 PLN
   [1] row v:asked_on = 2026-06-01
       version v, source s, "made up", locator "the card", governs always, known 2026-01-01
   [2] f = 10.00 PLN, law date 2026-06-01
@@ -315229,6 +315541,33 @@ e_axis [ax = hi]: 20.00 PLN
         [4] row v:twice = 2
             version v, source s, "made up", locator "the card", governs always, known 2026-01-01
   reading: ax = hi
+  law date 2026-06-01, cut 2026-03-01
+e_pinned: 10.00 PLN
+  [1] the pins, evaluated outside them
+    [2] pin ax = lo
+  [3] inside the pins: 10.00 PLN
+    [4] row v:asked_on = 2026-06-01
+        version v, source s, "made up", locator "the card", governs always, known 2026-01-01
+    [5] f = 10.00 PLN, law date 2026-06-01
+        rule base: won
+          [6] row v:p = 10.00 PLN
+              version v, source s, "made up", locator "the card", governs always, known 2026-01-01
+        rule hi: not applicable
+  [7] outside the pins [ax = lo]: 10.00 PLN
+    (v:asked_on: see [4])
+    [8] f = 10.00 PLN, law date 2026-06-01
+        rule base: won
+          (v:p: see [6])
+        rule hi: not applicable
+  [9] outside the pins [ax = hi]: 20.00 PLN
+    (v:asked_on: see [4])
+    [10] f = 20.00 PLN, law date 2026-06-01
+        rule base: beaten by hi
+        rule hi: won
+          (v:p: see [6])
+          [11] row v:twice = 2
+              version v, source s, "made up", locator "the card", governs always, known 2026-01-01
+  pinned: ax = lo
   law date 2026-06-01, cut 2026-03-01
 ,15:r9/reach_number,8:fixes-r9,32:run m.tally --ask k_third k_half,1100:7:m.tally,1084:model r9_reach
   tally 2
@@ -315690,4 +316029,458 @@ version card_extra
   extra[(2026)] = 0.3 "the card"
   extra[2027] = 0.4 "the card"
 ,,1:1,81:refused: LOAD-PARSE cannot parse: expected a literal, got ( (p_row_key.tally:12)
+,11:r5/s4_clock,8:fixes-r5,68:run s4.tally ../../../m1/fixes/r5/s4_clock/clock.tally --ask j5_true,23937:8:s4.tally,23478:model s4
+  tally 2
+  on 2027-12-31
+  start 2027-02-13
+  end 2027-12-31
+  note "Card S4: Edvin and Ruta Malek, Edvin's death, his will, Lea's claim and the division of the estate, SPS and SUC; all made up."
+
+source card_s4 "Card S4, Cast and Entries: the stipulations of the case"
+source sps_law "Card S4, Law: SPS-1 Spouses' property"
+source suc_law "Card S4, Law: SUC-1 Heirs and the estate"
+source house_rules "Card S4, House rules: H-1 What each of us is worth"
+source will_doc "Card S4, S4-D1: Notary Olek Fenn, Torvin, will of 2019-10-02, opened 2027-03-08"
+source deed_doc "Card S4, S4-D2: Notary Olek Fenn, Torvin, deed of division 311/2027, issued 2027-09-20"
+source banka_torvin "Card S4, S4-R1: Banka Torvin, account 2208 1145, all rows from 2027-02-14 to 2027-12-31"
+source valuations "Card S4, S4-R2: valuations kept"
+source balances "Card S4, S4-R3: balances kept"
+
+unit DUK: currency minor 0.01
+
+unit property "one whole property (the flat, or the cottage)"
+
+kind persons: parties
+
+kind couples: parties
+  note "a married couple as the owner of its joint property (SPS-1 point 1)"
+
+kind estates: parties
+  note "a deceased's estate, owned by the heirs together, each in their share (SUC-1 point 1)"
+
+kind closings: event certain
+  leg cash: DUK
+  note "money moved between accounts when one is closed; it stays whose it was (SPS-1 point 1: in whatever account)"
+
+kind deaths: event certain
+  leg what: any
+  attr couple: key couples
+  attr deceased: key persons
+  attr estate: key estates
+  attr survivor: key persons
+
+kind division_pays: event certain
+  leg cash: DUK
+  attr deed: key deeds_ix
+  attr payee: key persons
+  attr payer: key persons
+
+kind divisions: event certain
+  leg what: any
+  attr deed: key deeds_ix
+  attr estate: key estates
+
+kind estate_debt_pays: event certain
+  leg cash: DUK
+  attr debtor: key estates
+
+kind owned_accounts: place DUK min 0
+  owned by sps_arrive
+  step minor(DUK)
+  takes k for w order take_rank[w, k.owner], take_rest[w, k.owner]
+  note "accounts holding joint, own or estate money, kept as parts by owner"
+
+kind properties: place property min 0
+  owned by sps_arrive
+  step 0.01 property
+  takes k for w order take_rank[w, k.owner], take_rest[w, k.owner]
+  note "the flat and the cottage, kept as parts by owner, each counted at its latest valuation (H-1 point 2)"
+
+index deeds_ix: open
+  note "deeds of division; a deed's key comes with the deed's version, so no division exists before it is known"
+
+place a1145: owned_accounts lives 1900-01-01..
+  note "the joint account 2208 1145; the day it was opened isn't given, so an early day stands for it (L 5.7)"
+
+place a3390: owned_accounts lives 1900-01-01..
+  note "Edvin's account 2208 3390; the day it was opened isn't given, so an early day stands for it (L 5.7)"
+
+place lea_own: accounts DUK lives 1900-01-01..
+  note "Lea's own account"
+
+place pavo_own: accounts DUK lives 1900-01-01..
+  note "Pavo's own account"
+
+place cottage: properties priced last(cottage_val) lives 1900-01-01..
+  note "the cottage; counted at its latest valuation (H-1 point 2)"
+
+place flat: properties priced last(flat_val) lives 1900-01-01..
+  note "the flat in Torvin; counted at its latest valuation (H-1 point 2)"
+
+place ruta_own: accounts DUK lives 2027-03-01..
+  note "2208 7702, Ruta's own, opened 2027-03-01 for her pension"
+
+place world: outside lives 1900-01-01..
+
+input allot[dv in deeds_ix, x in places, p in persons]: num
+  note "the share of the estate's parts at a place that a deed of division gives each heir"
+
+input bank: observed
+
+input child_of[c in persons, p in persons]: bool
+
+input claim_fraction: num
+  note "SUC-1 point 4: the fraction of the no-will share a child left out may claim"
+
+input couple_of[e in estates]: key couples
+
+input deceased_of[e in estates]: key persons
+
+input deed_day[dv in deeds_ix]: date
+
+input deed_estate[dv in deeds_ix]: key estates
+
+input deed_part[dv in deeds_ix, p in persons]: num
+
+input deed_value[dv in deeds_ix, x in properties]: money DUK
+
+input first_named[e in estates]: key persons
+
+input flat_val: num DUK/property reading
+  note "a valuation of the whole flat, for the day it is for"
+
+input heir_share[p in persons, e in estates]: num
+
+input joint_share[p in persons, c in couples]: num
+  note "H-1 point 1: joint property half to each spouse"
+
+input owns[p in persons, x in accounts]: num
+
+input cottage_val: num DUK/property reading
+  note "a valuation of the whole cottage, for the day it is for"
+
+input reason_true[e in estates, c in persons]: bool question "Is the reason the will gives for leaving the child out true (SUC-1 point 6)?"
+
+input survivor_half: num
+  note "SPS-1 point 2: at a death, half of each joint thing and joint money becomes the survivor's own, half the estate's"
+
+input survivor_of[e in estates]: key persons
+
+def claim[e in estates, c in persons]: money DUK at death_day[e]
+  note "SUC-1 points 4 and 6: a child the will leaves nothing may claim a fraction of their no-will share of the estate's net value at the death, rounded to whole orts, half up; none if the will's reason is true"
+  rule left_out v suc1_v1 = round(claim_fraction * no_will_share[e] * net_at_death[e], minor(DUK), half-up) when child_of[c, deceased_of[e]] and heir_share[c, e] == 0
+  rule not_left_out v suc1_v1 = 0 when not (child_of[c, deceased_of[e]] and heir_share[c, e] == 0)
+  rule reason_true beats left_out v suc1_v1 = 0 when child_of[c, deceased_of[e]] and heir_share[c, e] == 0 and reason_true[e, c]
+
+def claim_from[e in estates, c in persons, h in persons]: money DUK at death_day[e]
+  note "SUC-1 point 5: the heirs owe the claim in their shares, the first-named heir's part rounded to whole orts, half up, the other's the rest"
+  rule first v suc1_v1 = round(claim[e, c] * heir_share[h, e], minor(DUK), half-up) when heir_share[h, e] > 0 and h == first_named[e]
+  rule not_heir v suc1_v1 = 0 when heir_share[h, e] == 0
+  rule rest v suc1_v1 = claim[e, c] - claim_from[e, c, first_named[e]] when heir_share[h, e] > 0 and h != first_named[e]
+
+def claims_net[p in persons, d in days]: num DUK
+  note "H-1 point 1: a claim counts for the one owed, against the one owing"
+  rule base = sum(claim[e, p] - sum(claim_from[e, c, p] for c in persons on death_day[e]) for e in estates on d)
+
+def counts_for[p in persons, q in parties, d in days]: num at d
+  note "H-1 point 1: how much of party q's parts counts for person p: one's own whole, joint property half to each spouse, a share of an estate at that share"
+  rule estate v h1_v1 = heir_share[p, q] when q in estates
+  rule joint v h1_v1 = joint_share[p, q] when q in couples
+  rule own v h1_v1 = (if q == p then 1 else 0) when q in persons
+
+def death_day[e in estates]: date = lifespan(e).from
+
+def deed_estate_value[dv in deeds_ix]: num DUK at deed_day[dv]
+  note "S4-D2 point 2: the estate valued at the deed's values, its money as the estate holds it that day"
+  rule d2 v deed_d2 = sum(deed_value[dv, x] for x in properties on deed_day[dv]) + sum(deed_money[dv, x] for x in owned_accounts on deed_day[dv])
+
+def deed_money[dv in deeds_ix, x in owned_accounts]: money DUK at deed_day[dv]
+  note "S4-D2 point 2: the money the estate holds in an account on the deed's day, before the division"
+  rule d2 v deed_d2 = bal(x, deed_day[dv] start) of deed_estate[dv]
+
+def deed_takes[dv in deeds_ix, h in persons]: num DUK at deed_day[dv]
+  note "S4-D2 points 1-2: what the deed gives an heir, at the deed's values"
+  rule d2 v deed_d2 = sum(allot[dv, x, h] * deed_value[dv, x] for x in properties on deed_day[dv]) + sum(allot[dv, x, h] * deed_money[dv, x] for x in owned_accounts on deed_day[dv])
+
+def div_net[p in persons, d in days]: num DUK
+  note "H-1 point 1: the division's payment counts for the one owed, against the one owing, from the deed's day until paid"
+  rule base = sum((if d >= deed_day[dv] then div_owed[dv, p] - div_owes[dv, p] else 0) + div_paid[dv, p, d] - div_received[dv, p, d] for dv in deeds_ix)
+
+def div_owed[dv in deeds_ix, h in persons]: money DUK at deed_day[dv]
+  note "S4-D2 point 3: what the heir who takes less is paid"
+  rule not_heir v deed_d2 = 0 when deed_part[dv, h] == 0
+  rule pays v deed_d2 = 0 when deed_part[dv, h] > 0 and div_owes[dv, h] > 0
+  rule receives v deed_d2 = sum(div_owes[dv, h2] for h2 in persons over .. where h2 != h) when deed_part[dv, h] > 0 and div_owes[dv, h] == 0
+
+def div_owes[dv in deeds_ix, h in persons]: money DUK at deed_day[dv]
+  note "S4-D2 point 3: each heir's part is half the estate so valued; who takes more pays the other the difference, rounded to whole orts, half up"
+  rule more v deed_d2 = round(deed_takes[dv, h] - deed_part[dv, h] * deed_estate_value[dv], minor(DUK), half-up) when deed_takes[dv, h] > deed_part[dv, h] * deed_estate_value[dv]
+  rule not_more v deed_d2 = 0 when deed_takes[dv, h] <= deed_part[dv, h] * deed_estate_value[dv]
+
+def div_paid[dv in deeds_ix, h in persons, d in days]: money DUK = sum(o.cash.amount for o in division_pays over .. d where o.deed == dv and o.payer == h)
+
+def div_received[dv in deeds_ix, h in persons, d in days]: money DUK = sum(o.cash.amount for o in division_pays over .. d where o.deed == dv and o.payee == h)
+
+def net_at_death[e in estates]: num DUK
+  note "SUC-1 point 4: the estate's net value at the death: its things at the valuations for that day (the sworn appraiser's), plus its money, less its debts, the funeral included"
+  rule base = (value(cottage, death_day[e]) in DUK of e) + (value(flat, death_day[e]) in DUK of e) + sum(bal(x, death_day[e]) of e for x in owned_accounts on death_day[e]) - sum(o.cash.amount for o in estate_debt_pays over .. where o.debtor == e)
+
+def no_will_share[e in estates]: num at death_day[e]
+  note "SUC-1 point 1: with no will, spouse and children inherit equally"
+  rule suc1_1 v suc1_v1 = 1 / count(q in persons on death_day[e] where q == survivor_of[e] or child_of[q, deceased_of[e]])
+
+def parts_worth[p in persons, d in days]: num DUK
+  note "H-1: the parts of every owner, counted for p as counts_for says; money at its balance, a property at its latest valuation. The two properties are named: value() over a binding of the kind is refused at load (LOAD-PRICE), since each place names its own price"
+  rule base = sum(counts_for[p, q, d] * (bal(x, d) of q) for x in owned_accounts on d, q in parties on d) + sum(counts_for[p, q, d] * ((value(cottage, d) in DUK of q) + (value(flat, d) in DUK of q)) for q in parties on d)
+
+def sps_arrive[m in events, p in parties]: num at m.day
+  note "whose each arrival at an owned place is"
+  rule death_estate v sps1_v1 = ((m.what.amount of m.couple) * survivor_half + (m.what.amount of m.deceased)) / m.what.amount when m in deaths and p == m.estate
+  rule death_others v sps1_v1 = 0 when m in deaths and p != m.estate and p != m.survivor
+  rule death_survivor v sps1_v1 = (m.what.amount of m.couple) * survivor_half / m.what.amount when m in deaths and p == m.survivor
+  rule divided v suc1_v1 = allot[m.deed, m.what.to, p] when m in divisions and p in persons
+  rule divided_others v suc1_v1 = 0 when m in divisions and not p in persons
+  rule kept v sps1_v1 = (m.cash.amount of p) / m.cash.amount when m in closings
+
+def take_rank[w in events, p in parties]: int at w.day
+  note "which parts an outflow takes first (lower first)"
+  rule closing v sps1_v1 = 0 when w in closings
+  rule death v sps1_v1 = (if p == w.deceased or p == w.couple then 0 else 1) when w in deaths
+  rule divided v suc1_v1 = (if p == w.estate then 0 else 1) when w in divisions
+  rule estate_debt v suc1_v1 = (if p == w.debtor then 0 else 1) when w in estate_debt_pays
+  rule payer v deed_d2 = (if p == w.payer then 0 else 1) when w in division_pays
+
+def take_rest[w in events, p in parties]: int
+  note "after the parts an outflow names: a death or a division takes exactly the parts it names, a closing all; SUC-1 point 2 and the deed name no money after the estate's or the payer's"
+  rule named = 0 when take_rank[w, p] == 0
+  rule unnamed = ?"the law names no money an estate debt, or a division's payment, takes after the money it names first" when take_rank[w, p] == 1 and (w in estate_debt_pays or w in division_pays)
+  rule unreached = 0 when take_rank[w, p] == 1 and not (w in estate_debt_pays or w in division_pays)
+
+def worth[p in persons, d in days]: num DUK at d
+  note "H-1: what one owns less what one owes; no rounding"
+  rule h1 v h1_v1 = parts_worth[p, d] + sum(bal(x, d) * owns[p, x] for x in accounts on d) + claims_net[p, d] + div_net[p, d]
+
+move death_a1145[e in estates over ..]: deaths
+  on death_day[e]
+  reads a1145
+  attr couple = couple_of[e]
+  attr deceased = deceased_of[e]
+  attr estate = e
+  attr survivor = survivor_of[e]
+  leg what from a1145 to a1145 amount (bal(a1145) of deceased_of[e]) + (bal(a1145) of couple_of[e])
+  note "SPS-1 point 2 and SUC-1 point 1, at the joint account 2208 1145: at the death, the deceased's own and the joint parts are relabelled, half the joint the survivor's own, the rest the estate's"
+
+move death_a3390[e in estates over ..]: deaths
+  on death_day[e]
+  reads a3390
+  attr couple = couple_of[e]
+  attr deceased = deceased_of[e]
+  attr estate = e
+  attr survivor = survivor_of[e]
+  leg what from a3390 to a3390 amount (bal(a3390) of deceased_of[e]) + (bal(a3390) of couple_of[e])
+  note "SPS-1 point 2 and SUC-1 point 1, at Edvin's account 2208 3390: at the death, the deceased's own and the joint parts are relabelled, half the joint the survivor's own, the rest the estate's"
+
+move death_cottage[e in estates over ..]: deaths
+  on death_day[e]
+  reads cottage
+  attr couple = couple_of[e]
+  attr deceased = deceased_of[e]
+  attr estate = e
+  attr survivor = survivor_of[e]
+  leg what from cottage to cottage amount (bal(cottage) of deceased_of[e]) + (bal(cottage) of couple_of[e])
+  note "SPS-1 point 2 and SUC-1 point 1, at the cottage: at the death, the deceased's own and the joint parts are relabelled, half the joint the survivor's own, the rest the estate's"
+
+move death_flat[e in estates over ..]: deaths
+  on death_day[e]
+  reads flat
+  attr couple = couple_of[e]
+  attr deceased = deceased_of[e]
+  attr estate = e
+  attr survivor = survivor_of[e]
+  leg what from flat to flat amount (bal(flat) of deceased_of[e]) + (bal(flat) of couple_of[e])
+  note "SPS-1 point 2 and SUC-1 point 1, at the flat: at the death, the deceased's own and the joint parts are relabelled, half the joint the survivor's own, the rest the estate's"
+
+move divide_a1145[dv in deeds_ix]: divisions
+  on deed_day[dv]
+  at deed_day[dv]
+  reads a1145
+  attr deed = dv
+  attr estate = deed_estate[dv]
+  leg what from a1145 to a1145 amount bal(a1145) of deed_estate[dv]
+  note "SUC-1 point 3, at the joint account 2208 1145: from the deed's day each heir alone owns what it gives them"
+
+move divide_a3390[dv in deeds_ix]: divisions
+  on deed_day[dv]
+  at deed_day[dv]
+  reads a3390
+  attr deed = dv
+  attr estate = deed_estate[dv]
+  leg what from a3390 to a3390 amount bal(a3390) of deed_estate[dv]
+  note "SUC-1 point 3, at Edvin's account 2208 3390: from the deed's day each heir alone owns what it gives them"
+
+move divide_cottage[dv in deeds_ix]: divisions
+  on deed_day[dv]
+  at deed_day[dv]
+  reads cottage
+  attr deed = dv
+  attr estate = deed_estate[dv]
+  leg what from cottage to cottage amount bal(cottage) of deed_estate[dv]
+  note "SUC-1 point 3, at the cottage: from the deed's day each heir alone owns what it gives them"
+
+move divide_flat[dv in deeds_ix]: divisions
+  on deed_day[dv]
+  at deed_day[dv]
+  reads flat
+  attr deed = dv
+  attr estate = deed_estate[dv]
+  leg what from flat to flat amount bal(flat) of deed_estate[dv]
+  note "SUC-1 point 3, at the flat: from the deed's day each heir alone owns what it gives them"
+
+ask s4_01: net_at_death[e] for e in estates over .. as known 2027-04-10
+
+ask s4_02: div_owes[dv, h], div_owed[dv, h] for dv in deeds_ix, h in persons over .. where deed_part[dv, h] > 0 law 2027-10-31 as known 2027-11-05
+
+ask s4_03: claim_from[e, lea, ruta], claim_from[e, lea, pavo] for e in estates over .. as known 2027-12-31
+
+ask s4_04: worth[p, d] for p in persons over .., d in [2027-02-13, 2027-06-30, 2027-12-31] where p != edvin or d == 2027-02-13 as known 2027-12-31
+
+version sps1_v1
+  cite sps_law
+  governs 1975-01-01..
+  known 1974-06-03
+  survivor_half = 0.5 "SPS-1 point 2: half the survivor's own, half the estate's"
+
+version suc1_v1
+  cite suc_law
+  governs 1990-01-01..
+  known 1989-05-02
+  note "SUC-1 v1; v2 (deaths from 2027-07-01) is as v1 but for point 4's fraction, so the rules cite v1 and only the fraction changes"
+  claim_fraction = 0.5 governs 1990-01-01..2027-06-30 "SUC-1 v1 point 4: half their no-will share"
+
+version cast
+  cite card_s4
+  governs always
+  known 2027-02-13
+  persons + [edvin] lives 1951-03-02..
+  persons + [lea] lives 1980-05-06..
+  persons + [pavo] lives 1983-12-11..
+  persons + [ruta] lives 1954-08-19..
+  couples + [maleks] lives 1979-07-07..
+  child_of = false "Cast: no other children"
+  child_of[lea, edvin] = true "Cast: children Lea and Pavo"
+  child_of[lea, ruta] = true "Cast: children Lea and Pavo"
+  child_of[pavo, edvin] = true "Cast: children Lea and Pavo"
+  child_of[pavo, ruta] = true "Cast: children Lea and Pavo"
+  owns = 0 "each own account is its holder's alone"
+  owns[lea, lea_own] = 1 "S4-R3: Lea's own"
+  owns[pavo, pavo_own] = 1 "S4-R3: Pavo's own"
+  owns[ruta, ruta_own] = 1 "S4-R3: Ruta's own, for her pension (SPS-1 point 2: what the survivor receives afterwards is their own)"
+  opening[cottage] = 1 property at 2027-02-13 start "Cast: a cottage, Edvin's own, inherited 2004"
+  opening[cottage] of edvin = 1 property at 2027-02-13 start "Cast: Edvin's own, inherited 2004 (SPS-1 point 1)"
+  opening[flat] = 1 property at 2027-02-13 start "Cast: a flat in Torvin"
+  opening[flat] of maleks = 1 property at 2027-02-13 start "Cast: bought 1991 with joint money (SPS-1 point 1)"
+
+version h1_v1
+  cite house_rules
+  governs 2020-01-01..
+  known 2027-02-13
+  joint_share = 0 "H-1 point 1: joint property counts only for the spouses"
+  joint_share[edvin, maleks] = 0.5 "H-1 point 1: half to each spouse"
+  joint_share[ruta, maleks] = 0.5 "H-1 point 1: half to each spouse"
+
+version valuations_r2
+  cite valuations
+  known 2025-09-01
+  cottage_val = 151000 DUK/property known 2025-09-01 at 2025-09-01 "S4-R2: Lipa Insurance"
+  cottage_val = 156500 DUK/property known 2027-04-02 at 2027-02-14 "S4-R2: sworn appraiser M. Ostrova, report 77/2027 of 2027-04-02"
+  cottage_val = 171000 DUK/property known 2027-11-15 at 2027-11-15 "S4-R2: Lipa Insurance, for Pavo"
+  flat_val = 398000 DUK/property known 2026-05-12 at 2026-05-12 "S4-R2: Banka Torvin, for a loan offer not taken"
+  flat_val = 412000 DUK/property known 2027-04-02 at 2027-02-14 "S4-R2: sworn appraiser M. Ostrova, report 77/2027 of 2027-04-02"
+
+version balances_r3
+  cite balances
+  known 2027-02-13
+  anchor a3390
+  anchor lea_own
+  anchor pavo_own
+  anchor ruta_own
+  stated[a3390] = 7315.40 DUK known 2027-02-13 at 2027-02-13 end "S4-R3: 2208 3390 (Edvin)"
+  stated[a3390] of maleks = 7315.40 DUK known 2027-02-13 at 2027-02-13 end "Cast: only pension paid in during the marriage, joint (SPS-1 point 1)"
+  stated[a3390] = 7315.40 DUK known 2027-10-04 at 2027-10-04 end "S4-R3: 2208 3390 (Edvin)"
+  stated[lea_own] = 6200.00 DUK known 2027-02-13 at 2027-02-13 end "S4-R3: Lea's own"
+  stated[lea_own] = 6200.00 DUK known 2027-06-30 at 2027-06-30 end "S4-R3: Lea's own"
+  stated[lea_own] = 6200.00 DUK known 2027-12-31 at 2027-12-31 end "S4-R3: Lea's own"
+  stated[pavo_own] = 3400.00 DUK known 2027-02-13 at 2027-02-13 end "S4-R3: Pavo's own"
+  stated[pavo_own] = 3400.00 DUK known 2027-06-30 at 2027-06-30 end "S4-R3: Pavo's own"
+  stated[pavo_own] = 34911.33 DUK known 2027-12-31 at 2027-12-31 end "S4-R3: Pavo's own"
+  stated[ruta_own] = 3210.15 DUK known 2027-06-30 at 2027-06-30 end "S4-R3: 2208 7702 (Ruta's own)"
+  stated[ruta_own] = 4077.90 DUK known 2027-12-31 at 2027-12-31 end "S4-R3: 2208 7702 (Ruta's own)"
+
+version stmt_r1
+  cite banka_torvin
+  governs 2027-02-14..2027-12-31
+  known 2027-02-14
+  anchor a1145
+  note "S4-R1 holds all the account's rows from 2027-02-14 to 2027-12-31, but no covers line is written: on a covered day the death's and the division's relabels at the account (L 5.14), which no bank row shows, would be modelled past and never booked (L 5.19)"
+  stated[a1145] = 38420.60 DUK at 2027-02-13 end "S4-R1 row 0: closing balance 13.02.2027"
+  stated[a1145] of maleks = 38420.60 DUK at 2027-02-13 end "Cast: the joint account (SPS-1 point 1)"
+  bank[r1] = (on: 2027-02-24, kind: estate_debt_pays, leg cash from a1145 to world amount 9845.35 DUK, debtor: edvin_estate) known 2027-02-24 "S4-R1 row 1: LIPA FUNERAL HOME INVOICE 2027/118 (SUC-1 point 2: an estate debt)"
+  bank[r2] = (on: 2027-10-05, kind: closings, leg cash from a3390 to a1145 amount 7315.40 DUK) known 2027-10-05 "S4-R1 row 2: FROM 2208 3390 ACCOUNT CLOSED E.MALEK"
+  bank[r3] = (on: 2027-10-12, kind: division_pays, leg cash from a1145 to pavo_own amount 31511.33 DUK, deed: deed_311, payee: pavo, payer: ruta) known 2027-10-12 "S4-R1 row 3: TO P.MALEK DEED 311/2027"
+
+version death
+  cite card_s4
+  governs always
+  known 2027-02-14
+  note "Entries: Edvin dies on 2027-02-14 (no document); the marriage ends with him"
+  estates + [edvin_estate] lives 2027-02-14..
+  replace couples + [maleks] lives 1979-07-07..2027-02-14
+  replace persons + [edvin] lives 1951-03-02..2027-02-14
+  couple_of[edvin_estate] = maleks "Cast: married 1979-07-07"
+  deceased_of[edvin_estate] = edvin "Entries: Edvin dies"
+  survivor_of[edvin_estate] = ruta "Cast: Ruta, his wife"
+
+version will
+  cite will_doc
+  governs 2027-02-14..
+  known 2027-03-08
+  heir_share = 0 "S4-D1: no one else is an heir; Lea is left nothing"
+  heir_share[pavo, edvin_estate] = 0.5 "S4-D1: my heirs are my wife Ruta and my son Pavo, in equal shares"
+  heir_share[ruta, edvin_estate] = 0.5 "S4-D1: my heirs are my wife Ruta and my son Pavo, in equal shares"
+  first_named[edvin_estate] = ruta governs always "S4-D1: Ruta is named first"
+
+version suc1_v2
+  cite suc_law
+  governs 2027-07-01..
+  known 2027-05-14
+  claim_fraction = 2/3 "SUC-1 v2 point 4: two thirds instead of half"
+
+version suit
+  cite card_s4
+  governs always
+  known 2027-05-26
+  reason_true[edvin_estate, lea] = ?"Is the will's reason for leaving Lea out true? Lea sued Ruta and Pavo on 2027-05-20 calling it untrue; no ruling yet (hearing 2028-02-15)" "Entries: no document kept"
+
+version deed_d2
+  cite deed_doc
+  governs 2027-09-20..
+  known 2027-09-20
+  allot = 0 "S4-D2 point 1: the deed gives nothing else"
+  allot[deed_311, a1145, ruta] = 1 "S4-D2 point 1: Ruta takes all the estate's money"
+  allot[deed_311, a3390, ruta] = 1 "S4-D2 point 1: Ruta takes all the estate's money"
+  allot[deed_311, cottage, pavo] = 1 "S4-D2 point 1: Pavo, the cottage"
+  allot[deed_311, flat, ruta] = 1 "S4-D2 point 1: Ruta takes the estate's half of the flat"
+  deed_day[deed_311] = 2027-09-20 governs always "S4-D2: issued 2027-09-20"
+  deed_estate[deed_311] = edvin_estate "S4-D2: Edvin's estate"
+  deed_part = 0 "S4-D2 point 3: only the two heirs have parts"
+  deed_part[deed_311, pavo] = 0.5 "S4-D2 point 3: each heir's part is half the estate so valued"
+  deed_part[deed_311, ruta] = 0.5 "S4-D2 point 3: each heir's part is half the estate so valued"
+  deed_value[deed_311, cottage] = 160000.00 DUK "S4-D2 point 2: the cottage 160.000,00"
+  deed_value[deed_311, flat] = 210000.00 DUK "S4-D2 point 2: that half of the flat 210.000,00"
+,41:../../../m1/fixes/r5/s4_clock/clock.tally,391:part s4_clock
+  tally 2
+  note "T, tally 2.1.7 (P36): S4-03P's j5 as the judge wrote it, as known 2028-01-01 after s4's on 2027-12-31: the request is refused REQ-CLOCK (E §11, #112), the twin of I:S4:S4-03P~pinned, whose j5 asks as known 2027-12-31"
+
+ask j5_true: worth[p, 2027-12-31] for p in persons over .. where p != edvin with reason_true[edvin_estate, lea] = true as known 2028-01-01
+,,1:1,74:refused: REQ-CLOCK as known 2028-01-01 is after the model's on 2027-12-31
 ,

@@ -57,7 +57,7 @@ python3 -I -B engine/tests/map/examples.py                    # the examples' li
 
 | Layer | id | From | Baseline |
 |---|---|---|---|
-| interpreter | `R:all` | `refcore test` | last line `1345 tests, 1345 passed, 0 failed` (tally 2.1.7; 1251 on 2.1.6, 950 on 2.0) |
+| interpreter | `R:all` | `refcore test` | last line `1356 tests, 1356 passed, 0 failed` (tally 2.1.7 after P36, 1345 before; 1251 on 2.1.6, 950 on 2.0) |
 | unit | `U:<path under unit/probes, no .tally>` | `defs/probes.list` (session 4's names, `cases/probes/…`) | `snap16-probes/` |
 | unit | `U:set/<first path>` | `probe-sets.list`, plus PTY-05 as `rerun.sh` runs it | `snap16-probe-sets/` |
 | integration | `I:M:<model>` | `models.list` | `snap16-models/` |

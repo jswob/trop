@@ -1645,18 +1645,18 @@ r1/reach_rules	fixes-r1		engine/tests/m1/fixes/r1/reach	engine/tests/m1/fixes/r1
 r2/reach_arith	fixes-r2		engine/tests/m1/fixes/r2/reach	engine/tests/m1/fixes/r2/reach/m.tally	a a_hole_only		R2
 r2/reach_count	fixes-r2		engine/tests/m1/fixes/r2/reach	engine/tests/m1/fixes/r2/reach/m.tally	c_span c_before		R2
 r3/reach_year	fixes-r3		engine/tests/m1/fixes/r3/reach	engine/tests/m1/fixes/r3/reach/m.tally	y y_hole		R3
-r3/reach_max	fixes-r3		engine/tests/m1/fixes/r3/reach	engine/tests/m1/fixes/r3/reach/m.tally	m m_false		R3
+r3/reach_max	fixes-r3		engine/tests/m1/fixes/r3/reach	engine/tests/m1/fixes/r3/reach/m.tally	m m_false m_hole		R3
 r4/reach_scenario	fixes-r4		engine/tests/m1/fixes/r4/reach	engine/tests/m1/fixes/r4/reach/m.tally engine/tests/m1/fixes/r4/reach/s.tally	s_base s_wide		R4
-r4/reach_asif	fixes-r4		engine/tests/m1/fixes/r4/reach	engine/tests/m1/fixes/r4/reach/m.tally engine/tests/m1/fixes/r4/reach/s.tally	p_with s_asif		R4
+r4/reach_asif	fixes-r4		engine/tests/m1/fixes/r4/reach	engine/tests/m1/fixes/r4/reach/m.tally engine/tests/m1/fixes/r4/reach/s.tally	p_with s_asif p_inner		R4
 r5/reach_base	fixes-r5		engine/tests/m1/fixes/r5/reach	engine/tests/m1/fixes/r5/reach/base.tally			R5
 r5/reach_unit	fixes-r5		engine/tests/m1/fixes/r5/reach	engine/tests/m1/fixes/r5/reach/unit.tally			R5
 r5/reach_key	fixes-r5		engine/tests/m1/fixes/r5/reach	engine/tests/m1/fixes/r5/reach/key.tally			R5
-r6/reach_low_hole	fixes-r6		engine/tests/m1/fixes/r6/reach	engine/tests/m1/fixes/r6/reach/m.tally	l_low l_min		R6
+r6/reach_low_hole	fixes-r6		engine/tests/m1/fixes/r6/reach	engine/tests/m1/fixes/r6/reach/m.tally	l_low l_min n_next n_first		R6
 r6/reach_next_tie	fixes-r6		engine/tests/m1/fixes/r6/reach	engine/tests/m1/fixes/r6/reach/tie.tally	n_tie_next n_tie_first		R6
-r7/reach_unfulfilled	fixes-r7		engine/tests/m1/fixes/r7/reach	engine/tests/m1/fixes/r7/reach/m.tally	a_other u_box		R7
+r7/reach_unfulfilled	fixes-r7		engine/tests/m1/fixes/r7/reach	engine/tests/m1/fixes/r7/reach/m.tally	a_other u_box a_when		R7
 r7/reach_held	fixes-r7		engine/tests/m1/fixes/r7/reach	engine/tests/m1/fixes/r7/reach/held.tally			R7
 r8/reach_check	fixes-r8		engine/tests/m1/fixes/r8/reach	engine/tests/m1/fixes/r8/reach/m.tally	c_axis c_plain		R8
-r8/reach_explain	fixes-r8		engine/tests/m1/fixes/r8/reach	engine/tests/m1/fixes/r8/reach/m.tally	e_axis		R8
+r8/reach_explain	fixes-r8		engine/tests/m1/fixes/r8/reach	engine/tests/m1/fixes/r8/reach/m.tally	e_axis e_pinned		R8
 r9/reach_number	fixes-r9		engine/tests/m1/fixes/r9/reach	engine/tests/m1/fixes/r9/reach/m.tally	k_third k_half		R9
 r9/reach_day	fixes-r9		engine/tests/m1/fixes/r9/reach	engine/tests/m1/fixes/r9/reach/m.tally	d_off d_on		R9
 r10/reach_compare	fixes-r10		engine/tests/m1/fixes/r10/reach	engine/tests/m1/fixes/r10/reach/m.tally	c		R10
@@ -1668,3 +1668,4 @@ carried/years/n1_if	carried-5		engine/tests/m1/carried/years	engine/tests/m1/car
 carried/years/p_list	carried-5		engine/tests/m1/carried/years	engine/tests/m1/carried/years/model.tally engine/tests/m1/carried/years/p_list.tally	p_list		S10
 carried/years/p_governs	carried-5		engine/tests/m1/carried/years	engine/tests/m1/carried/years/model.tally engine/tests/m1/carried/years/p_governs.tally	p_governs		S10
 carried/years/p_row_key	carried-5		engine/tests/m1/carried/years	engine/tests/m1/carried/years/model.tally engine/tests/m1/carried/years/p_row_key.tally	p_row_key		S10
+r5/s4_clock	fixes-r5		engine/tests/integration/blind7/S4	engine/tests/integration/blind7/S4/s4.tally engine/tests/m1/fixes/r5/s4_clock/clock.tally	j5_true		R5

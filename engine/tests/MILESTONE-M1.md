@@ -139,9 +139,9 @@ None of row 1's vectors waits on a ruling. Held so far: none (`held.tsv` names n
 item is a vector named by its rule in `m1/vectors.tsv` (groups `fixes-r1` … `fixes-r10`, `fixes-b`, `fixes-s`: refcore's
 new tests' texts, `m1/fixes/<rule>/<test>/`, and T's own), and each rule has two or more `reach_*` vectors on features
 no item names, written from the rule's text (`m1/fixes/r<n>/reach/`). `HOLE-POSTRUN` has its gate-5 fixture
-(`codes/m1` `decide/post-run`). Held now, 23: R8's (#147, M2's first group) `fixes/g7/sc_w_diff`, `pr1_q_fc`,
-`pr2_q_fc` and `r8/*` (6); S2's `s2/*` (4, #101, M2: prices read from records); and T's STOP-REPORTs (`GAPS.md`,
-last section): SR-1's nine (#141) and SR-13's `fixes/g7/by3c_a_paren` (#149).
+(`codes/m1` `decide/post-run`). Held now, 13: R8's (#147, M2's first group) `fixes/g7/sc_w_diff`, `pr1_q_fc`,
+`pr2_q_fc` and `r8/*` (6); S2's `s2/*` (4, #101, M2: prices read from records). T's STOP-REPORTs SR-1 to SR-14
+(`GAPS.md`) were ruled by P36 and their ten held rows released on refcore a98820c.
 
 ## Keeping master green
 

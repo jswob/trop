@@ -3698,7 +3698,7 @@ rules.tally	integration/households/B/rules.tally
 ../../law/VAT-5.tally	integration/law/VAT-5.tally
 ../../law/VAT-6.tally	integration/law/VAT-6.tally
 ../../cuts/E1-02-B/B/asks-tx2.tally	integration/cuts/E1-02-B/B/asks-tx2.tally
-,1:0,3383:../../cuts/E1-02-B/B/asks-tx2.tally	772	1509e753942618881187590907f1f10c
+,1:0,3383:../../cuts/E1-02-B/B/asks-tx2.tally	772	1988a593eabd8af8018ac10c6c482e18
 ../../law/CC-1.tally	1142	0cba1c1bc6dfcd0e11fbdea8501bd938
 ../../law/CC-2.tally	838	18fa5ae193642fbc1de0a3c19b5f64eb
 ../../law/GEN-1.tally	4072	11b536cc9c4ae5b40f05174fe51044da
@@ -3757,7 +3757,7 @@ records/savings-2025.tally	3776	0f1ce08660d7f27b12b631e96c04d952
 records/wrzos.tally	15851	1c42f01a8753d85009b8647ce06ac72e
 registers.tally	26423	0bc32e9c89399c6409f6bcc76de3e7e3
 rules.tally	15408	16895bd393fc21ea16fc0fa73e51744a
-,72:sha256 823ba8a2caf27dbd55305b45f71ba88fcc98b5b3a7685ac9e777e6e8619a8bbc
+,72:sha256 e9b00d1624d1ca383e542bcf36d95e2ee53fa58d5c702725100e77481d1d48c2
 ,17:I:E2:E2-01~e2_01a,12:household-E2,35:engine/tests/integration/households,149:reprint E2/family.tally E2/estate.tally E2/gifts.tally E2/asks/E2-01.tally E2/asks/E2-02.tally E2/asks/E2-03.tally E2/scenarios/e2_not_reported.tally,9646:E2/family.tally	integration/households/E2/family.tally
 E2/estate.tally	integration/households/E2/estate.tally
 E2/gifts.tally	integration/households/E2/gifts.tally
@@ -4234,9 +4234,9 @@ E2/cside/e2c.tally	5837	0d0eb26d03c35730072b31c250535367
 ,72:sha256 296812d65fa12ce8e5462940c00a0bee6715a4ffca1a1309ab495e90ba998e2c
 ,18:I:S4:S4-03P~pinned,5:blind,34:engine/tests/integration/blind7/S4,29:reprint s4.tally pinned.tally,88:s4.tally	integration/blind7/S4/s4.tally
 pinned.tally	integration/blind7/S4/pinned.tally
-,1:0,99:pinned.tally	1305	1116658c41463b290364dd5d5e096345
+,1:0,99:pinned.tally	1491	0714d031fcc7815616900d825344e948
 s4.tally	23437	147da1c66bb0e58d1ad4aa447b01bda3
-,72:sha256 f850f250d5c05e20481a20800b29e1997454c6447071afa15b73d5670ddcecf5
+,72:sha256 7bae5966761e277c49cb61f8c7ce6dd1e045f8db65665e2aaece57fc88782363
 ,13:I:S5:S5-01~s5,5:blind,34:engine/tests/integration/blind7/S5,16:reprint s5.tally,40:s5.tally	integration/blind7/S5/s5.tally
 ,1:0,48:s5.tally	14098	009d37cf9f6c3802038cd165fb789f47
 ,72:sha256 867db7d426808b53d4903b3e2350da984386d7ddee831e53b982dc9067a4a456

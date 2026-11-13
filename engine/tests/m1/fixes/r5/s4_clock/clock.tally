@@ -1,0 +1,5 @@
+part s4_clock
+  tally 2
+  note "T, tally 2.1.7 (P36): S4-03P's j5 as the judge wrote it, as known 2028-01-01 after s4's on 2027-12-31: the request is refused REQ-CLOCK (E §11, #112), the twin of I:S4:S4-03P~pinned, whose j5 asks as known 2027-12-31"
+
+ask j5_true: worth[p, 2027-12-31] for p in persons over .. where p != edvin with reason_true[edvin_estate, lea] = true as known 2028-01-01
