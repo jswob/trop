@@ -213,11 +213,15 @@ impl Engine {
         if let Some(at) = ctx.at {
             self.note_read(at.walk, place, Sees::AtPoint)?;
         }
-        self.walk_projection(m, id, days.last)?;
-        self.proj_regs(id, start, days.last)?;
+        // a day's balance reads the walk through that day (L §8, a scan; tally 2.1.7 R1, #127):
+        // a walk that fails on a day refuses the `low` there, after the days before it are read
         let mut out = Vec::new();
         let mut day = Some(days.first);
         while let Some(d) = day.filter(|d| *d <= days.last) {
+            self.walk_projection(m, id, d)?;
+            if d == days.first {
+                self.proj_regs(id, start, days.last)?;
+            }
             let v = self.read_state(m, id, place, unit, At::end(d))?;
             out.push(if uncertain && !matches!(v, Value::Hole(_)) {
                 self.proj_uncertain(m, id, (place, unit), d, &v)?

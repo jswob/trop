@@ -469,7 +469,7 @@ impl Engine {
 
     /// `first(b where c)` and `last(…)`: the first (last) binding tuple whose `where` is
     /// true, in binding order with no `where` read past it, or over things, movements or an
-    /// open index's keys in the order of the `ties by` among those the `where` keeps; a hole
+    /// open index's keys in the order of the `ties by`, its `where`s read in it; a hole
     /// met before it makes the result that hole; none, `HOLE-NOTYET` where a binding of things
     /// or movements reaches past the cut, else `RUN-EMPTY` (refcore's `agg_first`). L §5.11,
     /// §3.1, §8.1, §8.4.
@@ -551,11 +551,11 @@ impl Engine {
     }
 
     /// `first` (`last`, from the end `way` names) over things, movements or an open index's
-    /// keys: every value's `where` read first, since it guards the `ties by` ("a term that is
-    /// `none` is refused unless the `where` tests it out"); the values it keeps in the order
-    /// of the `ties by`, group by group, each group's register brought as it is reached, up to
-    /// the first group with a true one; two true in one group are a tie it doesn't break
-    /// (refcore's `agg_first`, `members`, `tie_groups`). L §5.11, §8.2.
+    /// keys: the `ties by` is the order, so its term is read for every value first; then, group
+    /// by group in that order, each value's register brought and its `where` read, up to the
+    /// first group with a true one, so a later value's `where` is never read (tally 2.1.7 R1,
+    /// #117); two true in one group are a tie it doesn't break (refcore's `agg_first`,
+    /// `tie_order`, `where_status`). L §5.11, §8, §8.2.
     fn first_by_ties(
         &mut self,
         m: &Reality,
@@ -571,14 +571,8 @@ impl Engine {
             Err(hole) => return Ok(Met::Holes(vec![hole])),
             Ok(cands) => cands,
         };
-        let mut kept: Vec<(&Candidate, Option<Hole>)> = Vec::with_capacity(cands.len());
-        for cand in &cands {
-            if let Kept::In(hole) = self.candidate_kept(m, bind, cand, ctx)? {
-                kept.push((cand, hole));
-            }
-        }
-        let envs: Vec<&Env> = kept.iter().map(|(c, _)| &c.env).collect();
-        let mut order = TieOrder::of(kept.len(), way);
+        let envs: Vec<&Env> = cands.iter().map(|c| &c.env).collect();
+        let mut order = TieOrder::of(cands.len(), way);
         let mut holes: Vec<Hole> = Vec::new();
         loop {
             let group = match self.next_tied(m, agg, &envs, &mut order, ctx)? {
@@ -591,15 +585,16 @@ impl Engine {
             };
             let mut trues: Vec<&Env> = Vec::new();
             for at in group {
-                let (cand, hole) = kept
+                let cand = cands
                     .get(at)
                     .ok_or_else(|| invariant("a candidate past the list"))?;
                 if let Some(c) = &cand.brings {
                     self.absorb(c);
                 }
-                match hole {
-                    Some(h) => holes.push(h.clone()),
-                    None => trues.push(&cand.env),
+                match self.candidate_kept(m, bind, cand, ctx)? {
+                    Kept::In(Some(hole)) => holes.push(hole),
+                    Kept::In(None) => trues.push(&cand.env),
+                    Kept::Out => {}
                 }
             }
             let Some(first) = trues.first() else {

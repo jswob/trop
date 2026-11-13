@@ -2721,3 +2721,12 @@ Three commits: 4f8d6ad (the run half), 35e3be8 (prices at load), and this one (t
 - **Size:** 587 changed lines in `engine/crates/` over the three commits (500 added, 87 removed). S1's entry above says 272; it is 275 (248 added, 27 removed). **M1 code replaced:** the per-site `LOAD-*` codes at run, now one mapping; `walk/value.rs`'s priced-place checks at run, now load's; `before_clock`. **Exceptions:** +0.
 - **Files:** `base/code.rs`, `ask/answer.rs`, `eval/{arith,convert,pins,ranges,state}.rs`, `load/{calls,check,exact,keyed,moves,ops,pins,prices,reads,strata}.rs`, `model/reality.rs`, `walk/{plan,projection,reads,value}.rs`, `book/ledger.rs`, `lib.rs`, `tests/load_cases.rs`.
 - **Check:** `check commit: green, 23 steps`.
+
+## 2026-11-13 tally 2.1.7, R1: a result reads only what its definition reads, in its order (issue #140, pick P3)
+
+- **`first`/`last` over things** (`eval/extremes.rs` `first_by_ties`; L §5.11, §8): the `ties by` is the order, so its term is read for every candidate first; then, group by group in that order, each candidate's register is brought and its `where` read, up to the first group with a true one. A later thing's refusing `where` isn't read (`fixes/g3` `t1`, `t2` answer `bob`, `ana`); a hole or `none` term of a thing the `where` would drop is read, since it is the order (`f1`'s hole, `f2`'s `RUN-NONE`).
+- **A projected `low`** (`walk/projection.rs` `projected_days`; E §4.2 read as a scan): each day's balance walks the projection through that day, so a walk that fails on a day refuses the `low` there after the days before it are read and registered (`fail_cut_f_long` prints its two `unfulfilled:` lines, as `f_long_short` did). The failed walk's answer to an earlier day is G9's (`before_failure`).
+- **Turned green (7):** R1's `fixes/g3/b3_t1`, `b3_t2`, `f1_where_hole_ties_a`, `f2_where_none_ties_a`, `fixes/g9/fail_cut_f_long`, `r1/l8_reads_things_ties_order_then_where`; R7's `fixes/g3/f7_register_q3`. Gating: 131 of the 287 still red (and the 4 rows of the second STOP-REPORT above).
+- **Sweep:** none SAME → DIFF; 2 asks DIFF → SAME over R5's; no new `ENGINE-INVARIANT`.
+- **Size:** 39 changed lines (19 added, 20 removed). **M1 code replaced:** a115e04's read-every-`where` pass over things before the `ties by`. **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps`.
