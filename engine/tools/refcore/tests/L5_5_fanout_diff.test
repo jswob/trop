@@ -1,0 +1,124 @@
+# L §5.5 Fan-out (tally 2.1.7 R8, issue #147; #122a, P47): a diff whose expression reads an axis is evaluated in
+# every combination; its result is its set of added, removed and changed lines, and the combinations with equal
+# lines print as one line under one head (`[ax = lo | mid]`, or `[ax = *]` when every option gives it), each with
+# its own register (F10: twice is held only where hi reads it). A diff that reads no axis prints no head; a pinned
+# one prints the pinned world; a diff across two stacks (s, t) fans out the same way. 2.1.6's refcore compared
+# both worlds outside the fan-out and printed 0 changed under one head.
+=== g.tally
+model g
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "made up"
+
+unit PLN: currency minor 0.01
+
+axis ax
+  lo "low"
+  mid "middle"
+  hi "high"
+
+input p: money PLN
+
+input twice: int
+
+input asked_on: date
+
+def f: money PLN at asked_on
+  rule base = p
+  rule hi beats base = p * twice when ax == hi
+
+def plain: money PLN = p at asked_on
+
+def same: money PLN at asked_on
+  rule base = p
+  rule hi beats base = p when ax == hi
+
+ask d_f: diff(f) in s against g
+
+ask d_plain: diff(plain) in s against g
+
+ask d_pin: diff(f) in s against g with ax = hi
+
+ask d_same: diff(same) in s against g
+
+ask d_stacks: diff(f) in s against t
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p = 10.00 PLN "the card"
+  twice = 2 "the card"
+  asked_on = 2026-06-01 "the card"
+=== g_s.tally
+scenario s over g
+  tally 2
+  from 2026-01-01
+
+version cheaper
+  cite s
+  governs 2026-01-01..
+  known 2026-01-01
+  replace p = 4.00 PLN "a cheaper card"
+=== g_t.tally
+scenario t over g
+  tally 2
+  from 2026-01-01
+
+version dearer
+  cite s
+  governs 2026-01-01..
+  known 2026-01-01
+  replace twice = 3 "a dearer rule"
+=== expect
+d_f [ax = lo | mid]: diff in s against g: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed f: 4.00 PLN against 10.00 PLN
+  world: g
+  world: s
+  reading: ax = lo | mid
+  held: p = 4.00 PLN (cheaper), read for 2026-06-01
+  cut 2026-03-01
+d_f [ax = hi]: diff in s against g: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed f: 8.00 PLN against 20.00 PLN
+  world: g
+  world: s
+  reading: ax = hi
+  held: p = 4.00 PLN (cheaper), read for 2026-06-01
+  cut 2026-03-01
+d_pin: diff in s against g: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed f: 8.00 PLN against 20.00 PLN
+  pinned: ax = hi
+  world: g
+  world: s
+  held: p = 4.00 PLN (cheaper), read for 2026-06-01
+  cut 2026-03-01
+d_plain: diff in s against g: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed plain: 4.00 PLN against 10.00 PLN
+  world: g
+  world: s
+  held: p = 4.00 PLN (cheaper), read for 2026-06-01
+  cut 2026-03-01
+d_same [ax = *]: diff in s against g: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed same: 4.00 PLN against 10.00 PLN
+  world: g
+  world: s
+  held: p = 4.00 PLN (cheaper), read for 2026-06-01
+  cut 2026-03-01
+d_stacks [ax = lo | mid]: diff in s against t: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed f: 4.00 PLN against 10.00 PLN
+  world: s
+  world: t
+  reading: ax = lo | mid
+  held: p = 4.00 PLN (cheaper), read for 2026-06-01
+  cut 2026-03-01
+d_stacks [ax = hi]: diff in s against t: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed f: 8.00 PLN against 30.00 PLN
+  world: s
+  world: t
+  reading: ax = hi
+  held: p = 4.00 PLN (cheaper), read for 2026-06-01
+  held: twice = 3 (dearer), read for 2026-06-01
+  cut 2026-03-01

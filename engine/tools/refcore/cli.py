@@ -162,13 +162,10 @@ def guarded(fn):
 
 def cross_stack_diff(aid, a, realities, chains, askers, mid):
     """A diff whose two worlds sit on two stacks of scenarios: each side answered by the reality holding its world,
-    then combined (ask.Asker.diff_combine)."""
-    from .ask import Asker
-    from .errors import Unspecified
+    then printed as one diff (ask.Asker.diff_print), cell by cell over the axes either side reads (L §5.5)."""
+    from .ask import Asker, Coll
     sw, bw = a.diff[2], a.diff[3]
-    res = {}
-    coll = None
-    ctx = t = None
+    sides = {}
     asker0 = None
     for w in (sw, bw):
         if w == mid:
@@ -195,12 +192,20 @@ def cross_stack_diff(aid, a, realities, chains, askers, mid):
         side = asker._diff_side
         if side is None:
             return lines
-        res[w] = side[0]
-        if coll is None:
-            coll, ctx, t, asker0 = side[1], side[2], side[3], asker
-        else:
-            coll.merge(side[1])
-    return asker0.diff_combine(a, res, coll, ctx, t)
+        sides[w] = side
+        asker0 = asker0 or asker
+    axes = sorted(set(sides[sw][0]) | set(sides[bw][0]))
+    ctx = sides[sw][2]
+    cells = {}
+    for c in asker0.diff_combos(axes):
+        d = dict(c)
+        # a side's cell is the one at the options of the axes that side reads
+        cell = {w: sides[w][1][tuple((ax, d[ax]) for ax in sides[w][0])] for w in (sw, bw)}
+        coll = Coll()
+        for w in (sw, bw):
+            coll.merge(cell[w][1])
+        cells[c] = ({sw: cell[sw][0][sw], bw: cell[bw][0][bw]}, coll, cell[sw][2], cell[sw][3])
+    return asker0.diff_print(a, axes, cells, ctx)
 
 
 def run_worlds(heads, ids=None, loader=None, srcs=None):

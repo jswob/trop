@@ -711,6 +711,26 @@ def m_t_low(self, n, sc, expect):
     return ut
 
 
+def m_leg_guarded(self, mi, leg):
+    """Whether a move's leg named leg touches a place the walk guards (L §5.10's sign rule, a place keeping
+    parts), or a place load can't name: its booking reads that place's balance."""
+    from .parts import thing_parts
+    m = self.m
+    for ln, d in getattr(mi, 'legs', []) or []:
+        if getattr(ln, 'name', None) != leg:
+            continue
+        for side in (ln.frm, ln.to):
+            if side is None:
+                continue
+            th = self.literal_place(side)
+            if th is None:
+                return True
+            t = m.things[th]
+            if m.kind_sign(t.base) in ('min0', 'max0') or thing_parts(m, t) is not None:
+                return True
+    return False
+
+
 def m_t_flows(self, n, sc, expect):
     m = self.m
     r = n.ref
@@ -767,6 +787,10 @@ def m_t_flows(self, n, sc, expect):
             if len(us) == 1 and list(us)[0] not in (None, 'any', 'one'):
                 n._leg_unit = list(us)[0]
         self.edge(sc, ('move', mi.id), 'flows')
+        if self.leg_guarded(mi, n._leg):
+            # L §5.5 (tally 2.1.7, R8): a leg at a place the sign rule or its parts guard is booked against that
+            # place's balance, so its amount, read inside its combination, reads what the balances read
+            self.edge(sc, ('balances',), 'flows')
         if mi.decision:
             self.mark(sc, 'flows', ('move', mi.id))
         n._ctgt = ('flows', ('move', mi.id))

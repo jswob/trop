@@ -556,11 +556,34 @@ class Asker:
         return out
 
     # -- diff (L §5.18, §6.4) -------------------------------------------------------------------------
+    def diff_axes(self, a, ctx):
+        """The axes a diff fans out over (L §5.5): those its cone reaches, less its pins."""
+        return [ax for ax in getattr(a, '_axes', []) if ax not in dict(ctx.axes)]
+
+    def diff_combos(self, axes):
+        combos = [()]
+        for ax in axes:
+            combos = [c + ((ax, o),) for c in combos for o in self.m.axes[ax].options]
+        return combos
+
     def answer_diff(self, eng, a, ctx, pins_coll):
-        """diff(e [for binds]) in S against B: e in world S and in world B, line by line keyed by the binding tuple
-        (the expression's text without binds); `added` (only in S), `removed` (only in B), `changed` with both
-        values; the unchanged lines counted.  Layout (this interpreter's): a head line with the counts, then one line
-        per difference, then the register of both evaluations."""
+        """diff(e [for binds]) in S against B, evaluated per combination of the axes it reads (L §5.5, tally 2.1.7
+        R8): each combination a cell, `diff_worlds`; the cells' results printed by `diff_print`. On a stack that holds
+        one of the two worlds (cli.cross_stack_diff) the cells of that side are kept for the caller instead."""
+        axes = self.diff_axes(a, ctx)
+        pinned = list(ctx.axes)
+        cells = {}
+        for c in self.diff_combos(axes):
+            cctx = ctx.but(axes=tuple(sorted(pinned + list(c)))) if c else ctx
+            cells[c] = self.diff_worlds(eng, a, cctx, pins_coll)
+        if getattr(self, '_diff_only', None) is not None:
+            self._diff_side = (axes, cells, ctx)
+            return []
+        return self.diff_print(a, axes, cells, ctx)
+
+    def diff_worlds(self, eng, a, ctx, pins_coll):
+        """One cell of a diff: e in world S and in world B (or the one this stack holds), line by line keyed by the
+        binding tuple (the expression's text without binds). Returns ({world: [(key, value)]}, coll, ctx, type)."""
         m = self.m
         e, bs, sw, bw = a.diff
         coll = Coll()
@@ -595,14 +618,11 @@ class Asker:
                 eng.stack.pop()
                 set_world(old)
             res[w] = lines
-        t = getattr(e, '_t', None)
-        if only is not None:
-            # one side of a diff whose worlds sit on two stacks (cli.run_worlds): the other side is another reality's
-            self._diff_side = (res[only], coll, ctx, t)
-            return []
-        return self.diff_combine(a, res, coll, ctx, t)
+        return res, coll, ctx, getattr(e, '_t', None)
 
-    def diff_combine(self, a, res, coll, ctx, t):
+    def diff_lines(self, a, res, ctx, t):
+        """A cell's result, the set of its lines (L §5.18): `added` (only in S), `removed` (only in B), `changed` with
+        both values, the unchanged ones counted. Returns (the head's counts, the lines)."""
         e, bs, sw, bw = a.diff
         sl = dict(res[sw])
         bl = dict(res[bw])
@@ -623,9 +643,49 @@ class Asker:
             if key not in sl:
                 counts['removed'] += 1
                 out_lines.append('  removed %s: %s' % (key, fmt_value(v, ctx.partial, t)))
-        head = '%s: diff in %s against %s: %d changed, %d added, %d removed, %d unchanged' % (
-            a.id, sw, bw, counts['changed'], counts['added'], counts['removed'], counts['unchanged'])
-        return [head] + out_lines + ['  ' + r for r in self.register(coll, [], ctx)]
+        counted = 'diff in %s against %s: %d changed, %d added, %d removed, %d unchanged' % (
+            sw, bw, counts['changed'], counts['added'], counts['removed'], counts['unchanged'])
+        return counted, tuple(out_lines)
+
+    def diff_print(self, a, axes, cells, ctx):
+        """Print a diff's cells (L §5.5): one line per distinct result, the combinations giving it split into products
+        and named as a value's are (`group`); no head when it reads no axis. Layout (this interpreter's): a head line
+        with the counts, one line per difference, then the register of the evaluations it stands for."""
+        m = self.m
+        results = {c: self.diff_lines(a, res, cctx, t) for c, (res, coll, cctx, t) in cells.items()}
+        if not axes:
+            counted, body = results[()]
+            return (['%s: %s' % (a.id, counted)] + list(body) +
+                    ['  ' + r for r in self.register(cells[()][1], [], ctx)])
+        by, order = {}, []
+        for c in self.diff_combos(axes):
+            if results[c] not in by:
+                by[results[c]] = []
+                order.append(results[c])
+            by[results[c]].append(c)
+        out = []
+        for k in order:
+            cs = by[k]
+            for prod in split(axes, [dict(c) for c in cs], m):
+                coll = Coll()
+                for c in cs:
+                    d = dict(c)
+                    if all(d[ax] in opts for ax, opts in prod):
+                        coll.merge(cells[c][1])
+                lab, reading, sk = [], [], []
+                for ax, opts in prod:
+                    allo = m.axes[ax].options
+                    ol = [o for o in allo if o in opts]
+                    whole = len(ol) == len(allo)
+                    lab.append('%s = %s' % (ax, '*' if whole else ' | '.join(ol)))
+                    if not whole:
+                        reading.append('%s = %s' % (ax, ' | '.join(ol)))
+                    sk.append(-1 if whole else allo.index(ol[0]))
+                out.append((sk, ['%s [%s]: %s' % (a.id, ', '.join(lab), k[0])] + list(k[1]) +
+                            ['  ' + r for r in self.register(coll, reading, ctx)]))
+        # order: by the axes' options in declaration order, axes in id order; * first (as `group`)
+        out.sort(key=lambda x: x[0])
+        return [l for _, ls in out for l in ls]
 
     # -- residuals (E §6.3) ----------------------------------------------------------------------------
     def answer_residuals(self, eng, a, ctx, pins_coll):
