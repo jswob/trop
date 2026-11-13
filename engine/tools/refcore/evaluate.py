@@ -2894,14 +2894,19 @@ class Engine:
             raise self.imprecise(v, 'a span end')
         raise refuse('LOAD-UNIT', 'a span end is %s' % fmt(v))
 
-    def members(self, binds, env, ctx, i=0, status=None, possible=False, regs=None):
+    def members(self, binds, env, ctx, i=0, status=None, possible=False, regs=None, reverse=False, defer=None):
         """Yield (env, status) over the binding tuples in binding order; status is True, or a
         Hole when a where is a hole (an unknown member). With possible, a binding whose day or span is a hole
         yields every member it could hold, each an unknown member carrying that hole (a fill side, L §5.12). With
         regs (a list), each tuple's members' registers are kept for it, not merged: (env, status, [Coll]) (an ask's
-        for, one line per tuple, L §8.2)."""
+        for, one line per tuple, L §8.2). The tuples are yielded lazily, each where read when its tuple is reached
+        (tally 2.1.7 R1: a value reads only what its definition reads); with reverse, from the last tuple (each
+        binding's members from its last); with defer (a list), the wheres aren't read: each tuple carries the list of
+        its wheres, (env, status, [Coll], [where]), for a reader that orders the tuples first (where_status)."""
         if i == len(binds):
-            if regs is not None:
+            if defer is not None:
+                yield env, (status if status is not None else True), regs, defer
+            elif regs is not None:
                 yield env, (status if status is not None else True), regs
             else:
                 yield env, (status if status is not None else True)
@@ -2913,13 +2918,15 @@ class Engine:
         if isinstance(res, Hole):
             cands = self.possible_members(b, ctx) if possible else None
             if cands is None:
-                if regs is not None:
+                if defer is not None:
+                    yield env, ('domainhole', res), regs, defer
+                elif regs is not None:
                     yield env, ('domainhole', res), regs
                 else:
                     yield env, ('domainhole', res)
                 return
             res = [(v, res) for v in cands]
-        for v, s0 in res:
+        for v, s0 in (list(res)[::-1] if reverse else res):
             if isinstance(s0, TallyError):
                 raise s0
             e2 = dict(env)
@@ -2927,7 +2934,10 @@ class Engine:
             st = status
             if isinstance(s0, Hole):
                 st = s0 if st is None or st is True else merge(st, s0)
-            if b.where is not None:
+            d2 = defer
+            if b.where is not None and defer is not None:
+                d2 = defer + [b.where]
+            elif b.where is not None:
                 w = self.ev(b.where, e2, ctx)
                 if w is False:
                     continue
@@ -2943,7 +2953,7 @@ class Engine:
                         r2 = regs + [mc]
                     else:
                         self.cur.merge(mc)
-            for x in self.members(binds, e2, ctx, i + 1, st, possible, r2):
+            for x in self.members(binds, e2, ctx, i + 1, st, possible, r2, reverse, d2):
                 yield x
 
     def safe_order_key(self, t, kind, K):
@@ -3169,34 +3179,59 @@ class Engine:
                 best.append((e2, t))
         if len(best) > 1:
             best = self.tie_break(n, best, ctx)
+            if isinstance(best, Hole):
+                return best
         return self.bare_key(n, best[0][0])
 
+    def tie_order(self, fn, cands, term, n_terms):
+        """The order `ties by (e1, e2, …)` gives (L §5.11; tally 2.1.7 R1, #116): e1 is read for every candidate, and each
+        later term only among the candidates the terms before it leave tied. Groups of candidates, least first, those
+        still tied after the last term together; a Hole when a term read is one (the least of a hole is a hole: the
+        candidate's place in the order is unknown). term(c, j) reads term j at candidate c."""
+        import functools
+        groups = [list(cands)]
+        for j in range(n_terms):
+            out = []
+            for g in groups:
+                if j > 0 and len(g) == 1:
+                    out.append(g)
+                    continue
+                scored = []
+                holes = []
+                for c in g:
+                    v = term(c, j)
+                    if isinstance(v, Hole):
+                        holes.append(v)
+                        continue
+                    if v is NONE:
+                        raise refuse('RUN-NONE', 'the ties by of %s is none here' % fn)
+                    scored.append((v, c))
+                if holes:
+                    return merge(*holes)
+                scored.sort(key=functools.cmp_to_key(lambda a, b: self.cmp3(a[0], b[0], None)))
+                sub = []
+                for v, c in scored:
+                    if sub and self.cmp3(sub[-1][0], v, None) == 0:
+                        sub[-1][1].append(c)
+                    else:
+                        sub.append((v, [c]))
+                out.extend(cs for v, cs in sub)
+            groups = out
+        return groups
+
     def tie_break(self, n, tied, ctx):
+        """argmin and argmax among tied candidates: the one with the least ties by term (L §5.11), read as tie_order
+        reads it; a Hole when a term it reads is one."""
         if not n.tie:
             raise refuse('RUN-TIE', '%s has a tie at %s that changes the result, and no ties by' % (
                 n.fn, ', '.join(fmt(self.bare_key(n, e2)) for e2, t in tied)))
-        scored = []
-        for e2, t in tied:
-            vals = [self.ev(x, e2, ctx) for x in n.tie]
-            for v in vals:
-                if isinstance(v, Hole):
-                    return [(e2, v)]
-            scored.append((vals, e2, t))
-        best = [scored[0]]
-        for s in scored[1:]:
-            c = 0
-            for a, b in zip(s[0], best[0][0]):
-                c = self.cmp3(a, b, None)
-                if c:
-                    break
-            if c < 0:
-                best = [s]
-            elif c == 0:
-                best.append(s)
-        if len(best) > 1:
+        groups = self.tie_order(n.fn, tied, lambda c, j: self.ev(n.tie[j], c[0], ctx), len(n.tie))
+        if isinstance(groups, Hole):
+            return groups
+        if len(groups[0]) > 1:
             raise refuse('RUN-TIE', '%s has a tie at %s that changes the result, and its ties by doesn\'t break it' % (
-                n.fn, ', '.join(fmt(self.bare_key(n, s[1])) for s in best)))
-        return [(best[0][1], best[0][2])]
+                n.fn, ', '.join(fmt(self.bare_key(n, e2)) for e2, t in groups[0])))
+        return groups[0]
 
     def unordered_what(self, b):
         """What a binding ranges over when it has no order a rule can read (L §5.7, §5.6): 'things', 'movements',
@@ -3220,25 +3255,36 @@ class Engine:
             # L §5.11 Ties are stated; L §8.4 RUN-TIE: "<first or last> over <things, movements or open-index keys>
             # has no ties by"
             raise refuse('RUN-TIE', '%s over %s has no ties by' % (n.fn, un[0]))
-        mem = list(self.members(n.binds, env, ctx, regs=[]))
-        for e2, st, rg in mem:
-            if isinstance(st, tuple) and st[0] == 'domainhole':
-                return st[1]
+        # tally 2.1.7 R1 (#117): the wheres are read in the order first and last run in, stopping at the first key
+        # whose where is true; over things, movements or an open index's keys that order is the ties by term's, read
+        # for every member first (tie_order), and then their wheres in it
         if un:
-            groups = self.tie_groups(n, mem, ctx)
+            mem = list(self.members(n.binds, env, ctx, regs=[], defer=[]))
+            for e2, st, rg, ws in mem:
+                if isinstance(st, tuple) and st[0] == 'domainhole':
+                    return st[1]
+            groups = self.tie_order(n.fn, mem, lambda c, j: self.ev(n.tie[j], c[0], ctx), len(n.tie))
             if isinstance(groups, Hole):
                 return groups
+            if n.fn == 'last':
+                groups = list(reversed(groups))
         else:
-            groups = [[x] for x in mem]
-        if n.fn == 'last':
-            groups = list(reversed(groups))
+            groups = ([x] for x in self.members(n.binds, env, ctx, regs=[], reverse=(n.fn == 'last')))
         holes = []
         for g in groups:
-            for e2, st, rg in g:
+            trues = []
+            for x in g:
+                e2, st, rg = x[0], x[1], x[2]
+                if isinstance(st, tuple) and st[0] == 'domainhole':
+                    return st[1]
                 for c in rg:
                     self.cur.merge(c)
-            trues = [e2 for e2, st, rg in g if st is True]
-            holes.extend(st for e2, st, rg in g if isinstance(st, Hole))
+                if un:
+                    st = self.where_status(x[3], e2, st, ctx)
+                if st is True:
+                    trues.append(e2)
+                elif isinstance(st, Hole):
+                    holes.append(st)
             if not trues:
                 continue
             if holes:
@@ -3255,35 +3301,18 @@ class Engine:
             return Hole([('%s: no %s yet, and its span reaches past the cut' % (b.var, b._dom[1]), b._dom[1])])
         raise refuse('RUN-EMPTY', '%s over no keys' % n.fn)
 
-    def tie_groups(self, n, mem, ctx):
-        """The members in the order of the ties by term, those with equal terms in one group (L §5.11); a Hole when a
-        member's term is one (its place in the order is unknown)."""
-        import functools
-        scored = []
-        for e2, st, rg in mem:
-            vals = [self.ev(x, e2, ctx) for x in n.tie]
-            hs = [v for v in vals if isinstance(v, Hole)]
-            if hs:
-                return merge(*(hs + ([st] if isinstance(st, Hole) else [])))
-            for v in vals:
-                if v is NONE:
-                    raise refuse('RUN-NONE', 'the ties by of %s is none here' % n.fn)
-            scored.append((vals, (e2, st, rg)))
-
-        def cmp(a, b):
-            for x, y in zip(a[0], b[0]):
-                c = self.cmp3(x, y, None)
-                if c:
-                    return c
-            return 0
-        scored.sort(key=functools.cmp_to_key(cmp))
-        groups = []
-        for s in scored:
-            if groups and cmp(groups[-1][0], s) == 0:
-                groups[-1][1].append(s[1])
-            else:
-                groups.append((s, [s[1]]))
-        return [g[1] for g in groups]
+    def where_status(self, wheres, e2, st, ctx):
+        """A deferred tuple's status (members with defer): its wheres read in binding order, stopping at a false one:
+        False, or True, or a Hole (an unknown member)."""
+        for w0 in wheres:
+            w = self.ev(w0, e2, ctx)
+            if w is False:
+                return False
+            if w is NONE:
+                raise refuse('RUN-NONE', 'a where is none here')
+            if isinstance(w, Hole):
+                st = w if st is None or st is True else merge(st, w)
+        return st
 
     def notyet_bind(self, binds, env, ctx):
         """The first binding of things or movements whose day or span reaches past the cut (L §3.1), or None."""

@@ -737,7 +737,7 @@ def m_insts_of_tuples(self, mi, tuples, tctx, upto=None):
                 if inst is None:
                     continue
                 if not mi.decision and inst.cut is not None and inst.err is None:
-                    self.inv5(inst, tctx)
+                    self.inv5(inst, tctx, upto)
             inst.coll.merge(c)
             out.append(inst)
         for inst in out:
@@ -806,12 +806,14 @@ def m_check_schedule(self, mi, insts):
                     mi.decl.loc)
 
 
-def m_inv5(self, inst, tctx):
+def m_inv5(self, inst, tctx, upto=None):
     """E §9 invariant 5: a plan instance's A0 is the same under every K class that books it at the same cut.  Kept
-    across the asks of a run, per timeline apart from its cut."""
+    across the asks of a run, per timeline apart from its cut, and per walk limit: a walk up to a day (m_prefix_walk)
+    is the whole walk's prefix, not a second walk of the cut, so its bookings meet only its own (tally 2.1.7 R1: a
+    read of day d reads the walk's prefix through d; G10, G16)."""
     reg = self.m.__dict__.setdefault('_inv5', {})
     wk = self.wkey(tctx)
-    k = (inst.id, inst.cut, tuple(repr(q.key()) for q in wk[1])) + tuple(repr(x) for x in wk[2:])
+    k = (inst.id, inst.cut, upto, tuple(repr(q.key()) for q in wk[1])) + tuple(repr(x) for x in wk[2:])
     v = body_key((inst.exists, inst.legs, None, None, None))
     old = reg.get(k)
     if old is None:

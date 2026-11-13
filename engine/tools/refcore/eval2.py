@@ -1608,29 +1608,24 @@ def m_e_prorata(self, n, env, ctx):
                 if not n.tie:
                     raise refuse('RUN-TIE', 'prorata has a tie at %s that changes the result, and no ties by' %
                                  ', '.join(fmt(keys[i]) for i in tied))
-                scored = []
-                for i in tied:
+                def term(i, j):
                     e2 = dict(env)
                     e2[b.var] = keys[i]
-                    vals = [self.ev(x, e2, ctx) for x in n.tie]
-                    for v in vals:
-                        if isinstance(v, Hole):
-                            return v
-                    scored.append((vals, i))
-                import functools
-
-                def cmp(a, c):
-                    for x, y in zip(a[0], c[0]):
-                        r = self.cmp3(x, y, None)
-                        if r:
-                            return r
-                    return 0
-                scored.sort(key=functools.cmp_to_key(cmp))
+                    return self.ev(n.tie[j], e2, ctx)
+                # the ties by's order, a later term read only among the keys still tied (tally 2.1.7 R1, #116)
+                groups = self.tie_order('prorata', tied, term, len(n.tie))
+                if isinstance(groups, Hole):
+                    return groups
                 need = len(inside)
-                if need < len(scored) and cmp(scored[need - 1], scored[need]) == 0:
-                    raise refuse('RUN-TIE', 'prorata has a tie at %s that changes the result, and its ties by doesn\'t '
-                                 'break it' % ', '.join(fmt(keys[i]) for i in tied))
-                give = (give - set(tied)) | set(i for v, i in scored[:need])
+                taken = []
+                for g in groups:
+                    if len(taken) < need < len(taken) + len(g):
+                        raise refuse('RUN-TIE', 'prorata has a tie at %s that changes the result, and its ties by '
+                                     'doesn\'t break it' % ', '.join(fmt(keys[i]) for i in tied))
+                    if len(taken) >= need:
+                        break
+                    taken.extend(g)
+                give = (give - set(tied)) | set(taken)
         q = sign * (down[i_k] + (1 if i_k in give else 0)) * step
     if out_k:
         q = Fraction(0)

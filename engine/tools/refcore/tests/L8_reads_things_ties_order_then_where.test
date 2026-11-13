@@ -1,0 +1,67 @@
+# L §8 What a result reads (tally 2.1.7 R1, issue #140; #116, #117): over things `first` and `last` run in the order
+# of their `ties by` term (L §5.11 l.1170), so every thing's term is read first, a later term only among the things
+# the earlier ones leave tied, and then the `where`s in that order, stopping at the first true one. t1: bob is first
+# by born and his `where` is true, so cid's and ana's `where`s (a division by zero) are never read. t3: ana is least
+# by rank alone, so sub[ana], a hole, is never read; t4: bob and cid tie on rank, and sub breaks it. 2.1.6's refcore
+# read every `where` (RUN-DIV) and every term of every thing (the hole of sub[ana]).
+=== m.tally
+model fx
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+kind persons
+
+input base: int
+
+input born[p in persons]: date
+
+input rank[p in persons]: int
+
+input sub[p in persons]: int
+
+input gate[p in persons]: int
+
+ask t1: first(p in persons on 2026-02-01 where p == bob or base / gate[p] > 0) ties by born[p]
+
+ask t2: last(p in persons on 2026-02-01 where p == ana or base / gate[p] > 0) ties by born[p]
+
+ask t3: first(p in persons on 2026-02-01) ties by (rank[p], sub[p])
+
+ask t4: last(p in persons on 2026-02-01) ties by (rank[p], sub[p])
+
+ask t5: first(p in persons on 2026-02-01 where rank[p] > 1) ties by (rank[p], sub[p])
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ana] lives 2026-01-01..
+  persons + [bob] lives 2026-01-01..
+  persons + [cid] lives 2026-01-01..
+  base = 6 "c"
+  born[ana] = 2000-01-01 "x"
+  born[bob] = 1990-01-01 "x"
+  born[cid] = 1995-01-01 "x"
+  rank[ana] = 1 "x"
+  rank[bob] = 2 "x"
+  rank[cid] = 2 "x"
+  sub[bob] = 5 "x"
+  sub[cid] = 4 "x"
+  gate[ana] = 0 "x"
+  gate[bob] = 0 "x"
+  gate[cid] = 0 "x"
+=== expect t1 t2 t3 t4 t5
+t1: bob
+  cut 2026-03-01
+t2: ana
+  cut 2026-03-01
+t3: ana
+  cut 2026-03-01
+t4: bob
+  cut 2026-03-01
+t5: cid
+  cut 2026-03-01

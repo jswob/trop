@@ -703,10 +703,17 @@ class Walk:
 
     # -- the walk ---------------------------------------------------------------------------------------------------
     def run_to(self, day):
-        if getattr(self, 'failed', None) is not None:
-            raise self.failed
+        """Walk through `day`. A walk that failed on day D refuses the reads of D or later and answers an earlier
+        day's from the days it walked (tally 2.1.7 R1, #127: a read of day d reads the walk's prefix through d, so the
+        order of the reads never changes an answer); a walk that failed before its first day (its plan pass) refuses
+        every read."""
         if day > self.end:
             day = self.end
+        if getattr(self, 'failed', None) is not None:
+            fd = getattr(self, 'failed_day', None)
+            if fd is None or day >= fd:
+                raise self.failed
+            return
         try:
             while self.done < day:
                 d = self.done + ONE_DAY
@@ -714,6 +721,7 @@ class Walk:
                 self.done = d
         except TallyError as e:
             self.failed = e
+            self.failed_day = d
             raise
 
     def walk_day(self, d):
@@ -2090,7 +2098,9 @@ def m_proj_walk(self, ctx, t, leftout, clauses):
     tctx = self.tctx(ctx).but(cut=c, windows=windows, rnd=prnd)
     wk = ('proj', id(base), point, c, leftout, windows, rnd, unc) + self.wkey(tctx)
     w = self.walks.get(wk)
-    if w is not None and getattr(w, 'failed', None) is not None:
+    if w is not None and getattr(w, 'failed', None) is not None and getattr(w, 'failed_day', None) is None:
+        # its plan pass failed: every read of it is refused; a failure on a day refuses only the reads from that day
+        # (Walk.run_to)
         raise w.failed
     if w is None:
         w = Walk(self, tctx, t, self.m.E, base=base, point=point, leftout=leftout, proj=True, unc=unc)

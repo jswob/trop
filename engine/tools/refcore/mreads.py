@@ -162,9 +162,24 @@ def m_leg_refused(self, iid, leg, ctx, day=None):
 def m_outer_hit(self):
     """A walk attempt needed a cell still being evaluated outside it: start the journal of what it caches."""
     self._outer_hit = True
-    for d in (self.memo, self.run_cache, self.walks):
+    for d in self.journaled():
         if getattr(d, 'journal', 1) is None:
             d.journal = []
+
+
+def m_journaled(self):
+    """What a walk attempt's take-back undoes (m_guarded_walk): the memo, the run cache, the walks and the invariant 5
+    record, all journalled (tally 2.1.7 R1, G10: an amount booked while the cell it reads was still being evaluated
+    outside the attempt is taken back with it, or a later ask meets it as a booking that changed)."""
+    from .evaluate import JournalDict
+    for name in ('memo', 'run_cache', 'walks'):
+        d = getattr(self, name)
+        if not isinstance(d, JournalDict):
+            setattr(self, name, JournalDict(d))
+    reg = self.m.__dict__.get('_inv5')
+    if not isinstance(reg, JournalDict):
+        reg = self.m.__dict__['_inv5'] = JournalDict(reg or {})
+    return (self.memo, self.run_cache, self.walks, reg)
 
 
 def m_guarded_walk(self, ctx, day):
@@ -175,16 +190,12 @@ def m_guarded_walk(self, ctx, day):
     point), and evaluation is demand-driven (E §3.2; L §5.11 RUN-CYCLE is a chain back to a cell still being
     evaluated). The attempt is then taken back, what it cached after the need dropped (MC-D-F1: else the answer depends
     on the order of the asks), and the walk is built up to the leg's day (m_prefix_walk)."""
-    from .evaluate import JournalDict
     wk = ('walk',) + self.wkey(self.tctx(ctx))
     outer = frozenset(self.active)
     blocked = self.__dict__.setdefault('_walk_blocked', {}).get(wk)
     if blocked and blocked & outer:
         return self.prefix_walk(ctx, day)
-    for name in ('memo', 'run_cache', 'walks'):
-        d = getattr(self, name)
-        if not isinstance(d, JournalDict):
-            setattr(self, name, JournalDict(d))
+    stores = self.journaled()
     prev = (getattr(self, '_walk_outer', frozenset()), getattr(self, '_outer_hit', False))
     self._walk_outer = prev[0] | outer
     self._outer_hit = False
@@ -198,12 +209,12 @@ def m_guarded_walk(self, ctx, day):
         self._walk_outer = prev[0]
         self._outer_hit = prev[1]
         journals = []
-        for d in (self.memo, self.run_cache, self.walks):
+        for d in stores:
             journals.append(d.journal)
             d.journal = None
     if not hit:
         return w
-    for d, j in zip((self.memo, self.run_cache, self.walks), journals):
+    for d, j in zip(stores, journals):
         for k in j or ():
             d.pop(k, None)
     self.walks.pop(wk, None)
