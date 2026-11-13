@@ -600,7 +600,14 @@ class Walk:
         mid = i.move.id
         n, first = self.leftout_regs.get(mid, (0, None))
         d = day_lo(i.day)
-        self.leftout_regs[mid] = (n + 1, d if first is None or (d is not None and d < first) else first)
+        if d is None:
+            # a day that is a hole: the first instance's, printed as that hole, until a dated one comes (L §2.4
+            # Values, tally 2.1.7, R9; F17)
+            d = i.day if isinstance(i.day, Hole) else None
+        known = isinstance(first, datetime.date)
+        if first is None or (isinstance(d, datetime.date) and (not known or d < first)):
+            first = d
+        self.leftout_regs[mid] = (n + 1, first)
         for lg in i.legs:
             for p in (lg.frm, lg.to):
                 if isinstance(p, Thing):

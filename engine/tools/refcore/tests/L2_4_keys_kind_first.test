@@ -1,0 +1,40 @@
+# L §2.4 Version items (tally 2.1.7 R9, issue #148; #111, P3): keys of different literal kinds at one position
+# of a lone part (its index not loaded) sort by kind first, in lit's order (a number, a date, a month-day, a key, a
+# duration, true / false), then by value; the reprint is a fixed point. 2.1.6's refcore sorted them as text.
+=== options reprint
+=== s.tally
+scenario s over m
+  tally 2
+  from 2026-01-01
+
+version w
+  cite c
+  governs always
+  known 2026-01-01
+  x[q1] = 1
+  x[true] = 1
+  x[3 years] = 1
+  x[2026-03] = 1
+  x[0315] = 1
+  x[10] = 1
+  x[2026-02-01] = 1
+  x[2.5] = 1
+=== expect
+...
+scenario s over m
+  tally 2
+  from 2026-01-01
+
+version w
+  cite c
+  governs always
+  known 2026-01-01
+  x[2.5] = 1
+  x[10] = 1
+  x[0315] = 1
+  x[2026-02-01] = 1
+  x[2026-03] = 1
+  x[q1] = 1
+  x[3 years] = 1
+  x[true] = 1
+sha256 ...

@@ -2623,6 +2623,15 @@ def key_order(m, k, dom):
     return k
 
 
+def key_written(kn):
+    """A key as the text writes it, in its canonical text whatever its kind (L §2.4 Values, tally 2.1.7, R9):
+    `2026-02 + 1`, `konto[ana]`, `true`, `2031-05`, never the interpreter's own form of its value."""
+    if isinstance(kn, str):
+        return kn
+    from .check import _txt
+    return _txt(kn)
+
+
 def resolve_text(n):
     if isinstance(n, str):
         return n
@@ -2662,7 +2671,7 @@ def resolve_key_literal(m, kn, dom, loc):
                 v = int(kn.v)
                 if ix.has(v):
                     return v
-            raise LoadError('LOAD-KEY', '%s is not a key of %s' % (kn.get('text') or resolve_text(kn), ix.id), loc)
+            raise LoadError('LOAD-KEY', '%s is not a key of %s' % (key_written(kn), ix.id), loc)
         if ix.pk is not None:
             label = None
             if kn.k == 'num' and kn.isint and kn.unit is None and len(kn.text) == 4:
@@ -2678,7 +2687,7 @@ def resolve_key_literal(m, kn, dom, loc):
                     lab = k.isoformat() if isinstance(k, datetime.date) else k.label()
                     if lab == label and _pk_matches(k, kn):
                         return k
-            raise LoadError('LOAD-KEY', '%s is not a key of %s' % (kn.get('text') or resolve_text(kn), ix.id), loc)
+            raise LoadError('LOAD-KEY', '%s is not a key of %s' % (key_written(kn), ix.id), loc)
         t = resolve_text(kn) if kn.k in ('name', 'key', 'num', 'mmdd', 'cur') else None
         if kn.k == 'date':
             t = kn.v.isoformat()
@@ -2690,8 +2699,8 @@ def resolve_key_literal(m, kn, dom, loc):
             return ix.texts[t]
         if ix.form == 'open':
             # its keys are those its inputs' rows bring (L §4.1), all gathered before any read is resolved
-            raise LoadError('LOAD-KEY', '%s is not a key of %s: no row brings it' % (t or _txt_node(kn), ix.id), loc)
-        raise LoadError('LOAD-KEY', '%s is not a key of %s' % (t or _txt_node(kn), ix.id), loc)
+            raise LoadError('LOAD-KEY', '%s is not a key of %s: no row brings it' % (t or key_written(kn), ix.id), loc)
+        raise LoadError('LOAD-KEY', '%s is not a key of %s' % (t or key_written(kn), ix.id), loc)
     if kind == 'kind':
         if kn.k == 'placekey' or (kn.k == 'index' and kn.obj.k == 'name'):
             name = kn.id if kn.k == 'placekey' else kn.obj.id
@@ -2712,12 +2721,12 @@ def resolve_key_literal(m, kn, dom, loc):
                 t = hit[1].things[()].name
         if t is not None and m.thing_in(t, dom[1]):
             return Thing(t)
-        raise LoadError('LOAD-KEY', '%s is not a key of %s' % (t or _txt_node(kn), dom[1]), loc)
+        raise LoadError('LOAD-KEY', '%s is not a key of %s' % (t or key_written(kn), dom[1]), loc)
     if kind == 'axis':
         t = resolve_text(kn) if kn.k in ('name', 'key', 'num') else None
         if t is not None and t in m.axes[dom[1]].options:
             return Key(dom[1], t)
-        raise LoadError('LOAD-KEY', '%s is not a key of %s' % (t or _txt_node(kn), dom[1]), loc)
+        raise LoadError('LOAD-KEY', '%s is not a key of %s' % (t or key_written(kn), dom[1]), loc)
     if kind == 'list':
         t = resolve_text(kn)
         if t in [resolve_text(x) for x in dom[1]]:
@@ -2757,7 +2766,7 @@ def range_literal(m, kn, loc):
         if kn.isint:
             return Int(int(kn.v))
         return Num(Fraction(kn.v), ())
-    raise LoadError('LOAD-KEY', '%s is not a value of a stepped range' % (kn.get('text') or resolve_text(kn)), loc)
+    raise LoadError('LOAD-KEY', '%s is not a value of a stepped range' % key_written(kn), loc)
 
 
 def known_last(k):

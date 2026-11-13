@@ -2164,7 +2164,8 @@ class Checker:
                 return
             if k == 'flex':
                 if (Fraction(t.n) / CURRENCIES[target.cur]).denominator != 1:
-                    raise LoadError('LOAD-PRECISION', '%s is finer than the minor unit' % t.n, loc)
+                    # the figure as the text writes it (L §2.4 Values, tally 2.1.7, R9; G9)
+                    raise LoadError('LOAD-PRECISION', '%s is finer than the minor unit' % _txt(node), loc)
                 self.flex_to(node, target)
                 node._flexto = target
                 return
@@ -3450,6 +3451,16 @@ def _txt(n):
         return '%04d-Q%d' % n.v
     if k == 'index':
         return '%s[%s]' % (_txt(n.obj), ', '.join(_txt(x) for x in n.keys))
+    if k == 'placekey':
+        return '%s[%s]' % (n.id, ', '.join(_txt(x) for x in n.keys))
+    if k == 'inf':
+        return '-inf' if n.neg else 'inf'
+    if k == 'dname':
+        return '%s.%s' % (n.qual, n.id) if n.qual else n.id
+    if k == 'dlist':
+        return '[%s]' % ', '.join(_txt(x) for x in n.keys)
+    if k == 'drange':
+        return '%s..%s%s' % (_txt(n.a), _txt(n.b), (' step ' + _txt(n.step)) if n.step is not None else '')
     if k == 'field':
         return '%s.%s' % (_txt(n.obj), n.name)
     if k == 'bin':

@@ -177,6 +177,16 @@ class RowSet:
         self.texts = texts
 
 
+def day_text(d, inst=None):
+    """A day as L §2.4 prints values (tally 2.1.7, R9; F17): a date in ISO; a day that is a hole as the hole, `?`
+    with its question; a booking cut an instance never reached (its day a hole or refused) as that day."""
+    if d is None and inst is not None:
+        d = inst.day if inst.err is None or isinstance(inst.day, Hole) else inst.err
+    if isinstance(d, datetime.date):
+        return d.isoformat()
+    return fmt_value(d)
+
+
 def fmt_value(v, partial=False, t=None):
     if isinstance(v, TallyError):
         return 'refused: %s %s' % (v.code, v.msg)
@@ -1234,7 +1244,7 @@ class Asker:
             if run is not None and getattr(run, 'read_places', None):
                 out.append('read at its walk point: %s' % ', '.join(sorted(run.read_places)))
         else:
-            out.append('plan, day %s, booking cut %s, status %s' % (fmt_value(inst.day), inst.cut, st))
+            out.append('plan, day %s, booking cut %s, status %s' % (fmt_value(inst.day), day_text(inst.cut, inst), st))
         if inst.exists is not True:
             out.append('exists: %s' % fmt_value(inst.exists))
         if src.err is not None:

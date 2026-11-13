@@ -826,7 +826,8 @@ def m_read_state(self, w, place, unit, key):
     while ww is not None:
         for mid in sorted(getattr(ww, 'leftout_by_place', {}).get(place, ())):
             n, first = ww.leftout_regs[mid]
-            self.reg(('left out', '%s, %d instances, first %s' % (mid, n, first)))
+            from .ask import day_text
+            self.reg(('left out', '%s, %d instances, first %s' % (mid, n, day_text(first))))
         ww = ww.base
     self.joint_left_out(w, place, key)
     v = w.st_value(st, place, unit)

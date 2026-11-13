@@ -28,6 +28,7 @@ forms, the spacing of tokens §2.4 doesn't name (taken from the spec's examples:
 section order one input two ways, or name no order for two items that differ, the reprint is REFCORE-UNSPECIFIED.
 """
 import datetime
+from fractions import Fraction
 import hashlib
 import heapq
 from functools import cmp_to_key
@@ -177,7 +178,8 @@ class Table:
         """How keys at a position over the domain dom sort (L §2.4 "keys in index order (things and an open index's
         keys in the text order of their stable ids, §2.5)"): 'pos' {text: i}, 'value' or 'text'."""
         if dom is None:
-            return ('text', None)
+            # a lone part, whose index isn't loaded: the one total order, kind first (L §2.4, tally 2.1.7, R9; #111)
+            return ('kind', None)
         if dom.k == 'dlist':
             return ('pos', dict((key_text(x), i) for i, x in enumerate(dom.keys)))
         if dom.k == 'drange':
@@ -232,19 +234,41 @@ def key_text(k):
         return key_text(k.a) + '..' + key_text(k.b)
     if k.k == 'placekey':
         return '%s[%s]' % (k.id, ', '.join(key_text(x) for x in k.keys))
-    return repr(k)
+    if k.k == 'index':
+        return '%s[%s]' % (key_text(k.obj), ', '.join(key_text(x) for x in k.keys))
+    if k.k == 'field':
+        return '%s.%s' % (key_text(k.obj), k.name)
+    # any other form as the text writes it (L §2.4 Values, tally 2.1.7, R9), never the parse node's own form (#96)
+    from .check import _txt
+    return _txt(k)
+
+
+def is_duration(k):
+    """An int and one period word (L §2.3 `lit`: a duration, 5 years, 1 day)."""
+    from .units import PERIODS
+    return (k.k == 'num' and k.isint and bool(k.unit) and len(k.unit) == 1 and k.unit[0][1] == 1 and
+            k.unit[0][0].rstrip('s') in PERIODS)
 
 
 def key_value(k):
+    """A key's place in one total order (L §2.4, tally 2.1.7, R9; #111): its literal's kind first, in `lit`'s order
+    (§2.3: a number, a date, a month-day, a key, a duration, true / false), then its value within its kind (a number
+    or a duration by value, a date by its first day, then its text), any other by its text."""
     if k.k == 'num':
-        return (0, k.v)
+        return (4 if is_duration(k) else 0, Fraction(k.v))
     if k.k == 'date':
-        return (1, k.v)
+        return (1, k.v, key_text(k))
     if k.k == 'month':
-        return (1, datetime.date(k.v[0], k.v[1], 1))
+        return (1, datetime.date(k.v[0], k.v[1], 1), key_text(k))
     if k.k == 'quarter':
-        return (1, datetime.date(k.v[0], 3 * k.v[1] - 2, 1))
-    return (2, key_text(k))
+        return (1, datetime.date(k.v[0], 3 * k.v[1] - 2, 1), key_text(k))
+    if k.k == 'mmdd':
+        return (2, key_text(k))
+    if k.k == 'bool':
+        return (5, key_text(k))
+    if k.k == 'inf':
+        return (6, key_text(k))
+    return (3, key_text(k))
 
 
 def first_day(lit):
@@ -758,7 +782,7 @@ class FilePrinter:
                 what = dom.id if dom is not None and dom.k == 'dname' else 'the list'
                 raise LoadError('LOAD-KEY', '%s is not a key of %s' % (key_text(k), what), k.loc)
             return (0, p)
-        if how == 'value':
+        if how in ('value', 'kind'):
             return key_value(k)
         return (2, key_text(k))
 
