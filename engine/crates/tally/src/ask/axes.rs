@@ -349,7 +349,7 @@ fn tuple_lines(
             .ok_or_else(|| invariant("a line's result past the results"))?;
         out.extend(first.lines(&format!("{head} [{}]", axes.head(&line.product)?)));
         let mut met = line.met;
-        met.merge(pinned);
+        met.merge(&super::answer::ask_pins_listed(pinned, &met));
         for reading in axes.readings(&line.product)? {
             met.entries.insert(Entry {
                 word: "reading",

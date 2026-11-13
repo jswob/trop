@@ -225,6 +225,8 @@ impl Engine {
         how: Pinning,
     ) -> Result<Result<Ctx, Hole>, Stop> {
         let mut data = self.layer_data(ctx.layer)?.clone();
+        // this set's scope: inside every pin already in force (L §4.6's cascade, R4)
+        let depth = data.next_layer()?;
         let mut inside = ctx;
         let mut holes: Vec<Hole> = Vec::new();
         for pin in pins {
@@ -262,7 +264,8 @@ impl Engine {
                         continue;
                     }
                     let set = (target, value, pin.text.as_str());
-                    if let Some(pinned) = self.value_pin(m, set, env, ctx, (how, &mut holes))? {
+                    if let Some(mut pinned) = self.value_pin(m, set, env, ctx, (how, &mut holes))? {
+                        pinned.layer = depth;
                         data.pin(pinned);
                     }
                 }
@@ -478,6 +481,8 @@ impl Engine {
             fields: target.fields.clone(),
             value,
             text,
+            layer: 0,
+            tied: None,
         }))
     }
 

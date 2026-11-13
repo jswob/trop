@@ -2768,3 +2768,14 @@ Three commits: 4f8d6ad (the run half), 35e3be8 (prices at load), and this one (t
 - **Sweep:** none SAME → DIFF; 6 asks DIFF → SAME over R2's; no new `ENGINE-INVARIANT`.
 - **Size:** 313 changed lines (244 added, 69 removed); the plan said about 120. The engine's read identity (`ReadOf`, #115) stood as it was. **M1 code replaced:** `dcf_day`'s `HOLE-IMPRECISE`; `is_business`'s and `add_business`'s window `HOLE-IMPRECISE`; `decided_keys`' strict "below every other"; the window id without its entry. **Exceptions:** +0.
 - **Check:** `check commit: green, 23 steps`.
+
+## 2026-11-14 tally 2.1.7, R4: one cascade of claims, layer first, then replacement, then the narrower (issue #143, pick P6)
+
+- **A pin carries its scope** (`eval/context.rs` `Pinned.layer`, `LayerData::next_layer`; `eval/pins.rs`): each `with`, `as if` and `solve` step's pins take the layer inside every pin in force. A read takes the innermost layer's pins, then the narrowest of them (`pin_of`, `inside_all`); two still tied are `RUN-CONFLICT` at the cell (`conflict`), and two of one set on the same cells are tied where read (`Pinned.tied`). A pin's identity holds its scope, as refcore's `PinVal.key` does, so two nestings of the same pins are two layers in the memo.
+- **Load refuses two pins of one cell it sees** (`load/pins.rs` `pin_ties`, `seen_keys`; from an `as if` in `load/types.rs` and an ask's `with` in `load/check.rs`): `LOAD-OVERLAP … overlap at [keys]`.
+- **Rows and band tables: the top layer first** (`read/rows.rs` `top_layer`; `read/bands.rs` `top_layer`, `table_layer`, `chain`; `load/bands.rs` `tables_of_one_key`): a scenario's rows and tables stand above the base's whatever their known dates; known dates, `replace` and narrowness decide inside one layer; a scenario's `replace` table patches the layers below.
+- **A line lists the ask pins it read** (`ask/answer.rs` `ask_pins_listed`, `shadowed`; `ask/axes.rs`): an ask pin of a cell an inner pin gave at every read isn't listed.
+- **Turned green (7):** `fixes/g14/pt_m7_t11`, `fixes/g14/pt_memo_t11`, `r4/l4_6_cascade_band_layer`, `r4/l4_6_cascade_pins`, `r4/l4_6_cascade_pins_load_tie`, `r4/reach_asif`, `r4/reach_scenario`. Gating: 102 of the 287 still red (and the 4 rows of the second STOP-REPORT).
+- **Sweep:** none SAME → DIFF; 11 asks DIFF → SAME over R3's; no new `ENGINE-INVARIANT`.
+- **Size:** 341 changed lines (286 added, 55 removed). **M1 code replaced:** `wider_than` and `names_cell` (narrowness across every pin whatever its scope; a `solve` step's pin dropping the pins it covers); `choose`'s narrowness across a scenario and its base; the band read's latest-known table across layers; load's same-day band overlap across layers; a pin's identity without its scope. **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps`.

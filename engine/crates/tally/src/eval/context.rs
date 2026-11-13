@@ -20,7 +20,8 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use super::state::{Ctx, Engine, invariant};
+use super::state::{Ctx, Engine, invariant, refuse};
+use crate::base::Run;
 use crate::model::{KeyVal, NameKind, Node, NodeKind, Reality, Value, World};
 use crate::syntax::Stop;
 use crate::time::Day;
@@ -64,9 +65,29 @@ pub(crate) struct Pinned {
     pub(super) value: Value,
     /// The pin as the register prints it.
     pub(super) text: String,
+    /// Its scope: a pin written inside others is deeper, and wins (L §4.6's cascade; tally
+    /// 2.1.7 R4).
+    pub(super) layer: u32,
+    /// The pin of its own set it ties with on the same cells, by its text: the cell is
+    /// refused where it is read (`RUN-CONFLICT`, R4).
+    pub(super) tied: Option<String>,
 }
 
 impl Pinned {
+    /// Whether its keys are `other`'s or lie inside them at every position (a key inside
+    /// `*`): it is at least as narrow (L §4.6's cascade).
+    fn inside(&self, other: &Pinned) -> bool {
+        self.keys
+            .iter()
+            .zip(&other.keys)
+            .all(|(mine, theirs)| theirs.is_none() || mine == theirs)
+    }
+
+    /// Whether it lies inside each of `others`: the narrowest of them (L §4.6 step 4.1).
+    fn inside_all(&self, others: &[&Pinned]) -> bool {
+        others.iter().all(|other| self.inside(other))
+    }
+
     /// Whether `other` pins the same cells: the same item, keys and fields (refcore's
     /// `key()[:4]`).
     fn same_target(&self, other: &Pinned) -> bool {
@@ -76,33 +97,11 @@ impl Pinned {
             && self.fields == other.fields
     }
 
-    /// Whether `other` is the same pin: the same target and value, whatever its text
-    /// (E §3.2: "keyed by the pins' values").
+    /// Whether `other` is the same pin: the same target, value and scope, whatever its text
+    /// (E §3.2: "keyed by the pins' values"; the scope decides which pin wins, L §4.6 step 2,
+    /// refcore's `PinVal.key`).
     fn same(&self, other: &Pinned) -> bool {
-        self.same_target(other) && self.value == other.value
-    }
-
-    /// Whether the pin is wider than `other` at a cell both hold at: at the first key position
-    /// where one names a key and the other `*`, `other` names it. The narrower pin wins, as a
-    /// row does (L §4.6 step 2; pick P38, #119), whatever the order the pins were written
-    /// in; refcore's pins, sorted by their keys' text, put a named key before `*` alike.
-    fn wider_than(&self, other: &Pinned) -> bool {
-        for (mine, theirs) in self.keys.iter().zip(&other.keys) {
-            if mine.is_some() != theirs.is_some() {
-                return theirs.is_some();
-            }
-        }
-        false
-    }
-
-    /// Whether the pin names exactly the cell at `keys`, every key named, none `*`.
-    fn names_cell(&self, keys: &[KeyVal]) -> bool {
-        self.keys.len() == keys.len()
-            && self
-                .keys
-                .iter()
-                .zip(keys)
-                .all(|(pinned, key)| pinned.as_ref() == Some(key))
+        self.same_target(other) && self.value == other.value && self.layer == other.layer
     }
 
     /// Whether the pin holds at `keys` of its item: every key it names is the key read.
@@ -192,10 +191,27 @@ impl LayerData {
         }
     }
 
-    /// Adds pin `pin`, replacing one of the same target.
-    pub(super) fn pin(&mut self, pin: Pinned) {
-        self.pins.retain(|p| !p.same_target(&pin));
+    /// Adds pin `pin` at its layer; a pin of its own set on the same cells ties with it, so
+    /// the pin kept is refused where it is read (refcore's `apply_pins_`; tally 2.1.7 R4).
+    pub(super) fn pin(&mut self, mut pin: Pinned) {
+        pin.tied = self
+            .pins
+            .iter()
+            .find(|p| p.layer == pin.layer && p.same_target(&pin))
+            .map(|p| p.text.clone());
+        self.pins
+            .retain(|p| !(p.layer == pin.layer && p.same_target(&pin)));
         self.pins.push(pin);
+    }
+
+    /// The layer a set of pins applied over these takes: inside every pin in force.
+    pub(super) fn next_layer(&self) -> Result<u32, Stop> {
+        let Some(deepest) = self.pins.iter().map(|p| p.layer).max() else {
+            return Ok(1);
+        };
+        deepest
+            .checked_add(1)
+            .ok_or_else(|| invariant("a pin's layer past the integers"))
     }
 
     /// Adds a `wording D for [ids]` pin: each item it names that no pin named before takes D
@@ -338,18 +354,35 @@ impl Engine {
             return Ok(None);
         }
         let data = self.layer_data(ctx.layer)?;
-        let mut narrowest: Option<&Pinned> = None;
-        for pin in data.pins.iter().filter(|p| p.holds_at(item, keys)) {
-            if !pin.fields.is_empty() {
-                return Err(Stop::NotBuilt("a pin on a record field at run"));
-            }
-            if narrowest.is_none_or(|held| held.wider_than(pin)) {
-                narrowest = Some(pin);
-            }
+        let hits: Vec<&Pinned> = data
+            .pins
+            .iter()
+            .filter(|p| p.holds_at(item, keys))
+            .collect();
+        if hits.iter().any(|p| !p.fields.is_empty()) {
+            return Err(Stop::NotBuilt("a pin on a record field at run"));
         }
-        let Some(pin) = narrowest else {
+        // L §4.6's cascade: the innermost layer, then the narrower pin; two still tied hold
+        // at once, refused at the cell (tally 2.1.7 R4)
+        let Some(top) = hits.iter().map(|p| p.layer).max() else {
             return Ok(None);
         };
+        let hits: Vec<&Pinned> = hits.into_iter().filter(|p| p.layer == top).collect();
+        let best: Vec<&Pinned> = hits
+            .iter()
+            .copied()
+            .filter(|p| p.inside_all(&hits))
+            .collect();
+        let pin = match (best.as_slice(), hits.as_slice()) {
+            ([one], _) => *one,
+            (_, [first, second, ..]) => {
+                return Err(conflict(&first.text, &second.text, item, keys));
+            }
+            (_, _) => return Err(invariant("pins that hold with no narrowest")),
+        };
+        if let Some(earlier) = &pin.tied {
+            return Err(conflict(earlier, &pin.text, item, keys));
+        }
         let (value, text, solve) = (pin.value.clone(), pin.text.clone(), pin.solve);
         if !solve {
             self.note("pinned", text, String::new());
@@ -553,9 +586,9 @@ impl Engine {
     }
 
     /// The context of a `solve` step: `ctx` with `item` at `keys` pinned to `value`, listed
-    /// nowhere; a pin of that one cell is set aside, and the item's other pins stay, so a
-    /// `with` pin of the item still holds at its other cells (L §5.18: "only that cell is
-    /// pinned"; pick P40, #120, where refcore's `m_solve_value` drops every pin of the item).
+    /// nowhere, in a layer inside the pins in force and outside every pin written in F, so
+    /// the item's other pins still hold at its other cells (L §5.18: "only that cell is
+    /// pinned"; L §4.6's cascade, tally 2.1.7 R4, #120; refcore's `m_solve_value`).
     ///
     /// # Errors
     ///
@@ -567,8 +600,7 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Ctx, Stop> {
         let mut data = self.layer_data(ctx.layer)?.clone();
-        data.pins
-            .retain(|p| !(p.item == item && p.fields.is_empty() && p.names_cell(keys)));
+        let depth = data.next_layer()?;
         data.pins.push(Pinned {
             solve: true,
             item: item.to_owned(),
@@ -576,6 +608,8 @@ impl Engine {
             fields: Vec::new(),
             value,
             text: String::new(),
+            layer: depth,
+            tied: None,
         });
         let layer = self.intern(data)?;
         Ok(Ctx { layer, ..ctx })
@@ -733,6 +767,19 @@ fn item_node(m: &Reality, item: &str) -> Option<Node> {
         | NameKind::Cut => return None,
     };
     Some(Node::new(kind, item))
+}
+
+/// `RUN-CONFLICT pins <a> and <b> both hold for <x>[k]`: two pins of one layer, neither
+/// narrower, hold for one cell, whose keys only the run gives (L §4.6's cascade, §8.4; tally
+/// 2.1.7 R4).
+fn conflict(a: &str, b: &str, item: &str, keys: &[KeyVal]) -> Stop {
+    refuse(
+        Run::Conflict,
+        format!(
+            "pins {a} and {b} both hold for {}",
+            crate::read::origin(item, keys)
+        ),
+    )
 }
 
 /// The layer at slot `at`.

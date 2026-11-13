@@ -518,6 +518,7 @@ impl Checker {
                 under.mode = Some(Rel::LawPin);
             }
         }
+        super::pins::pin_ties(m, scope, pins)?;
         self.expr(m, &under, inner, expect, depth)
     }
 

@@ -1079,6 +1079,7 @@ impl Checker {
         for pin in &ask.pins {
             self.pin(m, &scope, pin, 0)?;
         }
+        super::pins::pin_ties(m, &scope, &ask.pins).map_err(|s| scope.place(s))?;
         for (clause, word) in [(&ask.law, "law"), (&ask.known, "as known")] {
             if let Some(e) = clause {
                 let t = self.expr(m, &scope, e, None, 0)?;

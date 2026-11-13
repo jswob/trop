@@ -572,7 +572,30 @@ fn unreplaced(m: &Reality, rows: &[Row], cands: &[usize]) -> Result<Vec<usize>, 
     Ok(keep)
 }
 
-/// The candidates no other remaining candidate is narrower than (L §4.6 step 3.2).
+/// The candidates of the top layer: a scenario's rows over its base's, the top scenario
+/// first, whatever their `known` dates; narrowness decides only inside one layer (L §4.6
+/// step 2, §6.4).
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for a candidate past its rows.
+fn top_layer(m: &Reality, rows: &[Row], keep: &[usize]) -> Result<Vec<usize>, Stop> {
+    let mut layers = Vec::new();
+    for &at in keep {
+        let row = rows
+            .get(at)
+            .ok_or_else(|| invariant("a candidate past its rows"))?;
+        layers.push((at, m.scenarios.layer(Some(&row.version))));
+    }
+    let top = layers.iter().map(|&(_, layer)| layer).max();
+    Ok(layers
+        .into_iter()
+        .filter(|&(_, layer)| Some(layer) == top)
+        .map(|(at, _)| at)
+        .collect())
+}
+
+/// The candidates no other remaining candidate is narrower than (L §4.6 step 4.1).
 fn narrowest(m: &Reality, rows: &[Row], binds: &[BindInfo], keep: &[usize]) -> Vec<usize> {
     let mut out = Vec::new();
     for &at in keep {
@@ -644,7 +667,7 @@ pub fn choose(
     if cands.is_empty() {
         return Ok(None);
     }
-    let mut keep = unreplaced(m, rows, cands)?;
+    let mut keep = top_layer(m, rows, &unreplaced(m, rows, cands)?)?;
     if keep.len() > 1 {
         keep = narrowest(m, rows, binds, &keep);
     }
