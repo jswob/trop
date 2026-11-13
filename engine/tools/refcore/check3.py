@@ -843,6 +843,17 @@ def m_t_value(self, n, sc, expect):
             # the place's value is in priced._cur: a position in another unit than CUR needs `by p` (L §5.10)
             raise LoadError('LOAD-PRICE', 'value(%s) in %s holds units in %s and states no by' % (
                 _txt(n.ref), n.cur, priced._cur), n.loc)
+        for c in sorted(_seen_places(m, n.ref, cands), key=lambda x: x.name):
+            try:
+                pc = m.price_of(c)
+            except Unspecified:
+                pc = None
+            if pc is not None and getattr(pc, '_mode', None) == 'unit' and pc._cur != n.cur:
+                # a place's price per unit in another currency than the value's: load sees both, with the priced
+                # kinds' price inputs, whatever reads them (tally 2.1.7 R5; L §5.10, §8.4)
+                u = _unit_name(m, c, pc._per)
+                raise uerr('value(%s) in %s: %s is priced in %s/%s, not %s/%s' % (
+                    c.name, n.cur, c.name, pc._cur, u, n.cur, u), n.loc)
     else:
         sc2 = sc.child()
         sc2.readmode = 'explicit'
@@ -874,6 +885,15 @@ def m_t_value(self, n, sc, expect):
                            'keys' % by.id, n.loc)
             if n.bylast and hit[0] != 'input':
                 raise uerr('value by last(%s): last reads an input (L §4.6)' % by.id, n.loc)
+            if not any(b == n.cur and e == 1 for b, e in (inf.type.u or ())):
+                # a num CUR/u in the value's own currency, as the unkeyed forms are (tally 2.1.7 R5, #130a)
+                raise uerr('value by %s: the price is %s, not num %s/u' % (
+                    ('last(%s)' % by.id) if n.bylast else by.id, T.show(inf.type), n.cur), n.loc)
+            if not _unit_keyed(m, inf.binds[0]):
+                # keyed by unit: a price keyed by places is refused here, where load sees its key's kind (tally 2.1.7
+                # R5, G11), not at the read of a key that isn't a unit
+                raise uerr('value by %s: a price is a num CUR/u keyed by unit, or an expression of that type with its '
+                           'keys' % by.id, n.loc)
             by._r = (hit[0], inf.id)
             n._price = inf.id
             n._price_kind = hit[0]
@@ -901,19 +921,26 @@ def m_t_value(self, n, sc, expect):
             if pt.k != 'num' or not any(b == n.cur and e == 1 for b, e in (pt.u or ())) or len(pt.u) != 2:
                 raise uerr('value by %s: the price is %s, not num %s/u' % (_txt(by), T.show(pt), n.cur), n.loc)
             n._price_expr = True
-        r = getattr(n.ref, '_r', None)
-        seen = list(m.places[r[1]].things.values()) if r is not None and r[0] == 'place' and r[1] in m.places \
-            else cands
-        for c in sorted(seen, key=lambda x: x.name):
+        per = [b for b, e in (pt.u or ()) if e == -1] if not getattr(n, '_price', None) or \
+            getattr(n, '_price_unkeyed', False) else []
+        for c in sorted(_seen_places(m, n.ref, cands), key=lambda x: x.name):
             try:
                 priced = m.price_of(c)
             except Unspecified:
                 priced = None
+            # the unit a by prices is the position's: a place valued whole in another currency holds that currency,
+            # a place of one unit that unit; load sees both (tally 2.1.7 R5, #126b; L §5.10)
+            want = priced._cur if priced is not None and getattr(priced, '_mode', None) == 'whole' else \
+                (m.place_unit(c) if priced is None else None)
+            if per and want not in (None, 'any', 'one', n.cur) and per[0] != want:
+                raise uerr('value(%s) in %s: %s is priced in %s/%s, not %s/%s' % (
+                    c.name, n.cur, c.name, n.cur, per[0], n.cur, want), n.loc)
             if priced is not None and getattr(priced, '_mode', None) == 'unit' and priced._per != n.cur:
                 # L §5.10 Value, §4.6 step 4 (tally 2.1.7 R4, F11a): the place's price and the `by` are two claims
                 # on one position's price, tied where load sees the place: a literal one, or any the binding gives
                 from .mreads import value_by_twice
-                raise LoadError('LOAD-PRICE', value_by_twice(n, c.name, priced._per), n.loc)
+                u = _unit_name(m, c, priced._per if not priced._per.startswith('$') or not per else per[0])
+                raise LoadError('LOAD-PRICE', value_by_twice(n, c.name, u), n.loc)
     self.edge(sc, ('balances',), 'bal')
     self.mark(sc, 'bal', self.place_target(n.ref))
     n._ctgt = ('bal', self.place_target(n.ref))
@@ -921,6 +948,43 @@ def m_t_value(self, n, sc, expect):
         # tally 2.1 (L §5.10): value(x, d) in C [by p] of q
         self.check_of(n.of, sc, n.ref, t)
     return T.num(((n.cur, 1),))
+
+
+def _seen_places(m, ref, cands):
+    """The places load sees a value's reference give: a literal one, a keyed place's own things, or every thing of
+    the reference's kind (cands)."""
+    r = getattr(ref, '_r', None)
+    if r is not None and r[0] == 'place' and r[1] in m.places:
+        return list(m.places[r[1]].things.values())
+    return list(cands)
+
+
+def _unit_name(m, c, u):
+    """A per-unit price's unit as a message names it: a price keyed by unit ($u) names the place's own unit."""
+    if u is not None and u.startswith('$'):
+        pu = m.place_unit(c)
+        if pu not in (None, 'any', 'one'):
+            return pu
+    return u
+
+
+def _unit_keyed(m, b):
+    """Whether a price's key position is keyed by units: the currencies or a kind of unit, a subkind's root included
+    (L §5.10 Value: `by p` keyed by unit)."""
+    d = getattr(b, 'dom', None)
+    k = d[1] if isinstance(d, tuple) and len(d) > 1 and d[0] == 'kind' else None
+    seen = []
+    while k is not None and k not in seen:
+        seen.append(k)
+        if k == 'currencies':
+            return True
+        kn = m.kinds.get(k)
+        if kn is None:
+            return True
+        if kn.spec == 'unit':
+            return True
+        k = kn.parent if kn.spec == 'sub' else None
+    return k is None and not seen
 
 
 def _all_priced(m, ref, cands, cur):
@@ -976,6 +1040,38 @@ def m_check_priced(self):
             for e in getattr(th, 'entries', ()) or ():
                 loc = getattr(e, 'loc', None) or loc
             raise LoadError('LOAD-PRICE', 'asset %s names no price input' % name, loc)
+    # E §3.1 pass 4 (tally 2.1.7 R5, #129): each place's price input against the place, its key and its unit, here
+    # with the priced kinds, whatever reads them; the first by path and line prints (L §8.3 Which refusal prints)
+    faults = []
+    for name in sorted(m.things):
+        th = m.things[name]
+        try:
+            pn = m.price_of(th)
+        except Unspecified:
+            continue
+        if pn is None or getattr(pn, '_expr', None) is not None or getattr(pn, '_r', None) is None:
+            continue
+        kind, pid = pn._r
+        info = m.inputs[pid] if kind == 'input' else m.defs[pid]
+        pu = m.place_unit(th)
+        fixed = pu not in (None, 'any', 'one')
+        if info.binds:
+            dom = info.binds[0].dom
+            if dom[0] == 'kind' and not m.thing_in(name, dom[1]) and fixed and \
+                    not (pu in m.things and m.thing_in(pu, dom[1])):
+                faults.append(LoadError('LOAD-KEY', '%s is priced by %s, keyed by %s, which holds neither %s nor its '
+                                        'unit' % (name, pid, dom[1], name), pn.loc))
+                continue
+        if pn._mode == 'unit' and fixed and not pn._per.startswith('$') and pn._per != pu:
+            faults.append(uerr('value(%s) in %s: %s is priced in %s/%s, not %s/%s' % (
+                name, pn._cur, name, pn._cur, pn._per, pn._cur, pu), pn.loc))
+    if faults:
+        raise min(faults, key=lambda e: _loc_order(e.loc))
+
+
+def _loc_order(loc):
+    f, _, n = str(loc or '').rpartition(':')
+    return (f, int(n)) if n.isdigit() else (str(loc or ''), 0)
 
 
 def m_resolve_price(self, pn, regime, what):

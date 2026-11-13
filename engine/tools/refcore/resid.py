@@ -9,7 +9,7 @@ Installed as Engine methods (`m_<name>` -> `<name>`).
 import datetime
 from fractions import Fraction
 
-from .errors import TallyError, Refusal, Unspecified
+from .errors import TallyError, Refusal, Unspecified, at_run
 from .values import Num, Hole, Thing, Text, Key, Iv, fmt, fmt_hole
 from .dates import month_period
 from .moves import Inst, qty, day_lo, merge, key_text, instant_text, order_key
@@ -23,7 +23,7 @@ def install(E):
 
 
 def refuse(code, msg):
-    return Refusal(code, msg)
+    return at_run(code, msg)
 
 
 class RLine:

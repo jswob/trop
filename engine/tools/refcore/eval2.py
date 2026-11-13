@@ -10,7 +10,7 @@ from fractions import Fraction
 from . import units as U
 from . import reals as R
 from . import dists as D
-from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, RandomLine
+from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, RandomLine, at_run
 from .values import Num, Money, Hole, Key, Code, Special, NONE, NEVER, fmt, fmt_q, CURRENCIES, Mv, Thing
 from .dates import Period, last_day
 
@@ -31,7 +31,7 @@ def _ev():
 
 
 def refuse(code, msg):
-    return Refusal(code, msg)
+    return at_run(code, msg)
 
 
 def strip(n):

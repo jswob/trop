@@ -1091,6 +1091,13 @@ class Checker:
             # L §2.5: "At a position keyed by a stepped range (§5.6), a key is a value of the range's type, written
             # or computed, and must be one of the range's values ... (LOAD-KEY for a literal, RUN-KEY at run)"
             kn._rangelit = True
+            if len(dom) > 1:
+                # a literal read anywhere is load's to check, whatever the asks (tally 2.1.7 R5, #106), as a row's is
+                from .loader import register_range_lit, range_literal
+                try:
+                    register_range_lit(m, _AtRange(dom), range_literal(m, kn, kn.loc), kn, kn.loc)
+                except LoadError:
+                    pass
         sc2 = sc.child()
         if (kn.k == 'bin' and kn.op in ('+', '-')) or getattr(kn, '_rangelit', False):
             sc2.allow_lit = True
@@ -2892,6 +2899,15 @@ class Checker:
             t = self.tc(n.args[0], sc, expect=T.key(self.m.things[t.n].base))
         if t.k != 'key' or t.ix not in self.m.kinds:
             raise uerr('lifespan of %s, not a thing' % T.show(t), n.loc)
+        k, seen = t.ix, []
+        while k in self.m.kinds and k not in seen:
+            seen.append(k)
+            kn = self.m.kinds[k]
+            if kn.spec == 'event':
+                # L §5.7: a movement has its day, not a lifespan; load's types show it (tally 2.1.7 R5, #136; refcore
+                # 2.1.6 crashed at run)
+                raise uerr('lifespan of %s: a movement has its day, not a lifespan' % T.show(t), n.loc)
+            k = kn.parent if kn.spec == 'sub' else None
         return T.record([('from', T.DATE), ('to', T.DATE)])
 
     def c_missing(self, n, sc, expect):
@@ -3407,6 +3423,13 @@ class Checker:
 def _intflex(t):
     """A bare figure that is an integer (0, 1, -1, or an integer in a band row)."""
     return Fraction(t.n).denominator == 1
+
+
+class _AtRange:
+    """A key position keyed by a stepped range, as range_member reads a bind's (its dom)."""
+
+    def __init__(self, dom):
+        self.dom = dom
 
 
 def _txt(n):

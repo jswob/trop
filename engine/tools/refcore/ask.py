@@ -16,7 +16,7 @@ import datetime
 import re
 
 from .errors import TallyError, Unspecified, NotYet, Refusal
-from .evaluate import Engine, Ctx, Coll, TraceNode, HoleSignal, OutKey, ListKey, merge, lin_of
+from .evaluate import Engine, Ctx, Coll, TraceNode, HoleSignal, OutKey, ListKey, merge, lin_of, after_on
 from .model import key_text, set_world, set_each
 from .values import (CURRENCIES, fmt_typed, Num, Hole, Iv, Special, Thing, Key, Lst, Text, NONE, vkey, fmt, fmt_hole, fmt_q)
 from .check import _txt
@@ -76,6 +76,21 @@ def req_ask(qid):
     after load (a load refusal outranks it), in every shape of reality, printing `no ask <q>`, q the first such ask in
     the request's order, as the run's one result; a member's ask named as asked, a.q (L §6.1)."""
     return TallyError('REQ-ASK', 'no ask %s' % qid)
+
+
+def req_clock(m, a):
+    """E §11 (tally 2.1.7 R5, #112): a cut an asked line's literal states after `on` (`as known D`, `with known D`)
+    refuses the request, after load, as REQ-ASK does: the run's one result. A computed one is refused at its value."""
+    lits = []
+    if a.known is not None and a.known.k == 'date':
+        lits.append(('as known', a.known))
+    for p in a.pins:
+        if getattr(p, 'kind', None) == 'known' and p.value.k == 'date':
+            lits.append(('with known', p.value))
+    for word, n in lits:
+        d = datetime.date.fromisoformat(n.v) if isinstance(getattr(n, 'v', None), str) else getattr(n, 'v', None)
+        if isinstance(d, datetime.date) and d > m.on:
+            raise TallyError('REQ-CLOCK', "%s %s is after the model's on %s" % (word, d, m.on))
 
 
 def knows_ask(m, qid):
@@ -260,6 +275,9 @@ class Asker:
         m = self.m
         asks = {a.id: a for a in list(m.asks) + list(getattr(m, 'asks_alone', ()))}
         members = getattr(m, 'joint_members', {})
+        # L §2.5, §8.4 (tally 2.1.7 R5, #106): a literal key at a literal stepped range is load's to refuse, whatever
+        # the asks, before REQ-ASK (E §11), not at the first ask answered
+        Engine(m).check_range_lits()
         if ids:
             for i in ids:
                 if not knows_ask(m, i):
@@ -276,6 +294,9 @@ class Asker:
                 order.append(asks[i])
         else:
             order = [asks[i] for i in sorted(asks)]
+        for a in order:
+            if not isinstance(a, str):
+                req_clock(m, a)
         out = []
         try:
             for a in order:
@@ -389,6 +410,7 @@ class Asker:
                 # questions, and nothing inside is evaluated"
                 return ['%s: %s' % (a.id, fmt_value(v))]
             K = eng.date_of(v, 'as known')
+            after_on(m, K)
         eng.ask_K = K
         law = None
         if a.law is not None:

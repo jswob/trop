@@ -16,7 +16,7 @@ from . import ty as T
 from .dates import (Period, day_period, month_period, quarter_period, year_period, month_of, quarter_of, year_of,
                     add_days, add_months, age, age_months, overlap_days, last_day, WEEKDAYS, ONE_DAY, next_day,
                     end_months, END, past_days)
-from .errors import TallyError, LoadError, Refusal, Unspecified, NotYet, load_now
+from .errors import TallyError, LoadError, Refusal, Unspecified, NotYet, load_now, at_run
 from .model import (in_world, set_world, Span, visible, known_first, InputInfo, DefInfo, BandInfo, key_text, _kv,
                     wcut, WindowUndecided, row_known_sid)
 from .values import MonthDay  # noqa: E402 (GD-2)
@@ -25,7 +25,14 @@ from .values import (fmt_typed, Num, Int, Money, Text, Key, Thing, Code, Rec, Ls
 
 
 def refuse(code, msg):
-    return Refusal(code, msg)
+    return at_run(code, msg)
+
+
+def after_on(m, d):
+    """A cut after the model's on, met at a value: refused there (L §8.4 RUN-DOMAIN, E §11; tally 2.1.7 R5, #112).
+    An ask line's literal cut is the request's REQ-CLOCK, checked before any ask is answered (ask.Asker.run)."""
+    if d > m.on:
+        raise refuse('RUN-DOMAIN', "known %s is after the model's on %s" % (d, m.on))
 
 
 
@@ -606,7 +613,8 @@ class Engine:
             try:
                 self.range_member(value, b, dict(earlier), ctx, kn)
             except TallyError as e:
-                if e.code == 'LOAD-KEY':
+                # a key check made here is load's, whatever code the read it borrows prints at run (L §8.4, R5)
+                if e.code in ('LOAD-KEY', 'RUN-KEY'):
                     raise LoadError('LOAD-KEY', e.msg, loc)
                 continue
 
@@ -2672,6 +2680,7 @@ class Engine:
                 if p.kind == 'law':
                     law = d
                 elif p.kind == 'known':
+                    after_on(self.m, d)
                     cut = d
                 else:
                     for i in p.ids:

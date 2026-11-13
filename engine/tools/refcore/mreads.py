@@ -8,7 +8,7 @@ from fractions import Fraction
 
 from . import units as U
 from .dates import Period, ONE_DAY, next_day, END
-from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now
+from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, at_run
 from .evaluate import member_owns, member_moves, move_owner
 from .model import Span, _kv, key_text, WindowUndecided
 from .values import (Num, Money, Int, Hole, Thing, Mv, Iv, Rec, Text, Code, Key, NONE, CURRENCIES, fmt,
@@ -24,7 +24,7 @@ def install(E):
 
 
 def refuse(code, msg):
-    return Refusal(code, msg)
+    return at_run(code, msg)
 
 
 def reads_var(node, var):
@@ -1738,9 +1738,9 @@ def m_e_value(self, n, env, ctx):
             continue
         if getattr(n, '_price', None):
             pr = self.price_read(n._price, [Thing(u)], d, n, env, ctx, place, u)
-            if getattr(n, '_price_unkeyed', False) and isinstance(pr, Num):
-                # an unkeyed price read through its carry is one unit's price: the position's unit must be it, as for a
-                # price written as an expression (L §5.10; writer 11)
+            if isinstance(pr, Num):
+                # the price read is the position's unit's price: a unit that comes with the value (a key the run gives,
+                # a place of unit any) is checked here, in load's words (L §5.10, §8.4; tally 2.1.7 R5)
                 want = tuple(sorted([(cur, 1), (u, -1)]))
                 if tuple(sorted(pr.u)) != want:
                     raise refuse('RUN-DOMAIN', 'value(%s) in %s: the price %s is not in %s/%s' % (

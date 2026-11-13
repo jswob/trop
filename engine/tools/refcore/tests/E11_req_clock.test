@@ -1,0 +1,27 @@
+# E §11 REQ-CLOCK (tally 2.1.7 R5, issue #144; #112): an asked line's literal cut after `on` refuses the
+# request, after load, as REQ-ASK does: the run's one result. 2.1.6's refcore answered at the later cut (3).
+=== m.tally
+model t
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input a: int
+input later: date
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = 3 "s"
+  later = 2026-06-01 "s"
+
+ask c0: a
+ask c1: a as known 2026-06-01
+ask c2: a with known 2026-06-01
+ask c3: a as known later
+ask c4: a as if {known later}
+=== expect c1
+refused: REQ-CLOCK as known 2026-06-01 is after the model's on 2026-03-01

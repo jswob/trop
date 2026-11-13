@@ -1,0 +1,24 @@
+# L §8.4 Load refuses what load sees, L §2.5 (tally 2.1.7 R5, issue #144; #106): a literal key at a literal
+# stepped range is load's to refuse wherever it is written, a def no ask reads included, whatever the asks.
+# 2.1.6's refcore checked only rows, at the first ask answered, and answered q (0).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input r[d in 2026-01-01 .. 2026-12-31 step 7 days]: int
+
+def w: int = r[2026-01-09]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r[*] = 0 "s"
+
+ask q: r[2026-01-15]
+=== expect
+refused: LOAD-KEY 2026-01-09 is not a value of 2026-01-01 .. 2026-12-31 step 7 day ...
