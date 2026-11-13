@@ -385,6 +385,16 @@ def pinned_members(jfile, uses, pool, options=None):
             raise LoadError('LOAD-DUP', 'use %s twice' % a)
         member_files[a] = member_texts(a, f, os.path.normpath(os.path.join(os.path.dirname(jfile), f)), pool, on_disk)
     for a, f, h in uses:
+        # a member that is itself a joint model pins its own members through its use lines first (E §3.1 step 1;
+        # tally 2.1.7 B4): its canonical text, which its own pin hashes, reads them
+        mods = [(fn, src) for fn, rel, src in member_files[a] if is_model(src) and not is_scenario(src)]
+        if len(mods) == 1 and header_uses(mods[0][1]):
+            try:
+                pinned_members(mods[0][0], header_uses(mods[0][1]), pool, options)
+            except MemberRefused as e:
+                raise MemberRefused(a + '.' + e.alias, e.err)
+            except TallyError as e:
+                raise MemberRefused(a, e)
         try:
             pin_check(a, f, member_files[a], h, options, pool, on_disk)
         except LoadError as e:

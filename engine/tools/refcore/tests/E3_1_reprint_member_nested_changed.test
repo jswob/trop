@@ -1,0 +1,42 @@
+# E §3.1 step 1 (tally 2.1.7 B4, issue #105; P17): reprint refuses a nested member's changed member LOAD-PIN,
+# as run does. 2.1.6's refcore printed it. (T's M0 format member_nested_changed.)
+=== options reprint
+=== j.tally
+model j
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  use m = "m/m.tally" sha256 "b1faaaad09e485d55edf61307f3943b872213c4dcaebf0044acf515b7710afdd"
+  note "T, pre-M1 (#97, chunk 4; G3 review, 5815c57, #105, P17): its member m pins b, whose text has changed"
+
+input y: num
+
+source s "s"
+=== m/m.tally
+model mm
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  use b = "../b/b.tally" sha256 "be4463915516bf956ac4de46e79b2e45f6faa87a9e9fe00817215bc75b232c77"
+
+source s "s"
+
+input w[k in b.zone]: num
+
+input y: num
+=== b/b.tally
+model bb
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+index zone = [g, r]
+
+input extra: num
+=== expect
+refused: member m: LOAD-PIN ../b/b.tally doesn't match its sha256 in use b

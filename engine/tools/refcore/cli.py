@@ -45,13 +45,15 @@ def _run_texts(texts, ids=None, options=None):
     return run_one(texts, ids)
 
 
-def reprint_lines(texts, ordered=False):
+def reprint_lines(texts, ordered=False, run_as=None):
     """Each file's canonical text (L §2.4) in the order of their paths, then the reality's hash (E §3.1 step 1): the
     sha256 of the texts printed, in the order printed.  texts are taken by their names, unless ordered: then in the
     order given (reprint_paths gives them in the order of their full paths, tally 2.1.3)."""
     from .canon import reprint, printed_hash
-    from .joint import use_member_files, header_uses, pinned_members, MemberRefused, is_model
+    from .joint import use_member_files, header_uses, pinned_members, MemberRefused, is_model, joint_texts
     files = list(texts) if ordered else sorted(texts, key=lambda f: f[0])
+    # the files as run names them (reprint_paths: their paths), where a joint model's members are found
+    load = list(run_as) if run_as is not None else files
     try:
         # a joint model's members, checked against their pins as `run` checks them, before anything prints (E §3.1
         # step 1, INTERFACE §1: reprint reads its files as run does; tally 2.1.6, issue #74: refcore 2.1.5 printed a
@@ -59,13 +61,17 @@ def reprint_lines(texts, ordered=False):
         # (canon.reprint)
         members = {}
         member_paths = {}
-        on_disk = any(os.path.isfile(p) for p, src in texts)
-        for p, src in files:
+        on_disk = any(os.path.isfile(p) for p, src in load)
+        for p, src in load:
             uses = header_uses(src)
             if uses and is_model(src):
-                for a, fs in pinned_members(p, uses, texts).items():
+                # reprint loads as run loads before it prints anything: its members found, pinned (a nested
+                # member's own first) and each loaded in full, so it refuses what run refuses, first in run's order
+                # (E §3.1 step 1, INTERFACE §1, CHANGES 2.1.6-14; tally 2.1.7 B4, #105)
+                joint_texts(load, uses, {})
+                for a, fs in pinned_members(p, uses, load).items():
                     member_paths[a] = set(f for f, rel, s in fs)
-                members.update(use_member_files([(p, p, src)], texts, on_disk))
+                members.update(use_member_files([(p, p, src)], load, on_disk))
         printed = reprint(files, members, member_paths)
         out = []
         for p, t in printed:
@@ -602,7 +608,8 @@ def reprint_paths(paths):
     texts, refused = read_files(pairs)
     if refused is not None:
         return [refused]
-    return reprint_lines(texts, ordered=True)
+    by_name = dict((name, f) for f, name in pairs)
+    return reprint_lines(texts, ordered=True, run_as=[(by_name[n], src) for n, src in texts])
 
 
 def command_lines(argv):

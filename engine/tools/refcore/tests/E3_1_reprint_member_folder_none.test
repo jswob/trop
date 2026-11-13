@@ -1,0 +1,32 @@
+# E §3.1 step 1, INTERFACE §1, CHANGES 2.1.6-14 (tally 2.1.7 B4, issue #105; P17): reprint loads as run loads
+# before it prints: a member folder with no model file is refused LOAD-HEADER, as run refuses it. 2.1.6's refcore
+# printed it. (T's M0 format member_folder_none.)
+=== options reprint
+=== j.tally
+model j
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  use m = "m" sha256 "b50b829c1bb03fb54d8dc09f611da119720164a19bc0bc301837efcff2f477f2"
+  note "T, pre-M1 (#97, chunk 4; G3 review, 5815c57, #105, P17): a member folder with no model file, two parts"
+
+input y: num
+
+source s "s"
+=== m/a.tally
+part pa
+  tally 2
+
+source ta "t"
+
+input wa: num
+=== m/b.tally
+part pb
+  tally 2
+
+source tb "t"
+
+input wb: num
+=== expect
+refused: member m: LOAD-HEADER no file has a model header
