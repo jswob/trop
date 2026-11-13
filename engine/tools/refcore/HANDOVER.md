@@ -38,7 +38,7 @@ named. **1345 tests, all pass** (1251, 94 new, 8 changed; `refcore_fast` byte-eq
   (S2); `ask.explain_step`, `chain_next` fold a chain of one def's cells past 3 (S4); `check3`'s decision graph takes
   the closure of the written orders, which `m.written_order` gives the walk (S5); the day-range step text gains its
   `<s>` (S7); `check.check_path_line`, `check3.m_check_settlement_units`, `moves.settle_sign` name their place (S9).
-  S8 is not applied (`spec/CHANGES.md` 2.1.7-25): `evaluate.business` keeps `== 366`.
+  `evaluate.business` refuses only a calendar of seven weekend days, its dead 366-yearly-days branch gone (S8, P33).
 
 ## tally 2.1.6 (the spec round after M0: 24 issues)
 

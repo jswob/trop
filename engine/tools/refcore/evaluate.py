@@ -4060,11 +4060,10 @@ class Engine:
             return cal
         if cal is NONE:
             raise refuse('RUN-NONE', 'the calendar is none here')
-        if seek and (len(set(cal.weekends)) == 7 or (len(set(cal.yearly)) == 366 and
-                                                      (cal.yfrom is None or day.year >= cal.yfrom))):
+        if seek and len(set(cal.weekends)) == 7:
             # L §4.2, §7.6 item 5 (tally 2.1.6, issue #89): add_business and schedule seek a business day, and a
-            # calendar whose weekends name all seven days, or whose yearly days all 366 month-days (from its from
-            # year), has none; refcore 2.1.5 walked to 9999-12-31
+            # calendar whose weekends name all seven days has none; refcore 2.1.5 walked to 9999-12-31. Yearly days
+            # never empty a year: 02-29 is no month-day (L §3.1), so tally 2.1.7 dropped their clause (P33, #155)
             raise refuse('RUN-DOMAIN', 'calendar %s has no business day' % node._r[2])
         wd = day.isoweekday()
         if any(WEEKDAYS[w] == wd for w in cal.weekends):
