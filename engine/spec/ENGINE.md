@@ -82,7 +82,7 @@ The four clocks of the spec (T-16, N-1219):
 
 | Clock | Comes from | What it does |
 |---|---|---|
-| **S**, run start | the header's `start` | the first day walked. Balances open at S from `opening` readings (LANGUAGE §5.10). Nothing before S is walked: a walked value of a day before S (a `bal`, a `low`, a projection) and `flows` over days before S are holes (`HOLE-PRERUN`, LANGUAGE §8.1): `before the run's start` |
+| **S**, run start | the header's `start` | the first day walked. Balances open at S from `opening` readings (LANGUAGE §5.10). Nothing before S is walked: a walked value or a `flows` of a day before S is `HOLE-PRERUN` (LANGUAGE §8.1) |
 | **K**, knowledge date | the ask's `as known D`, else the model's `on` | masks every version and row known after K: law, facts, observations, readings, entries of things. It splits the past (before K) from the plan (from K) |
 | **[K, E]**, evaluation window | E is the header's `end` | the plan runs to E, and nothing after E is walked: a walked value of a day after E is a hole (`HOLE-POSTRUN`, LANGUAGE §8.1): `after the run's end` (tally 2.1.7). Observations in [K, E] are never read by the run at cut K; only the evaluation layer compares them (§8) |
 | **R**, record time | the store: the reality's files as they stood at R | "what did we think in March?" is the reality at R = March, asked as known in March (N-1222). The language has no R; the store keeps the history of the files (`OPERATIONS.md` §1) |
