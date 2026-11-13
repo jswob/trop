@@ -305,13 +305,12 @@ impl Engine {
                 coll: j.coll.clone(),
             };
             if let Some(err) = &j.err {
-                // a refused version doesn't answer a hole movement, which stays the hole it
-                // is (E §5 step 1); otherwise each leg's adjustment is refused (step 3)
-                if !hole0 {
-                    let refused = Amount::Refused(err.clone());
-                    out.extend(each_leg(&step, inst, &prev.legs, &j.legs, &refused));
-                    prev.unknown = Some(Unknown::Refused(err.clone()));
-                }
+                // a version answers a hole movement with a value or a refusal (E §5 step 1; L
+                // §8, a refusal outranks a hole: tally 2.1.7 R2, #94): each leg's adjustment
+                // is refused from that version's known, and the next step's (step 3)
+                let refused = Amount::Refused(err.clone());
+                out.extend(each_leg(&step, inst, &prev.legs, &j.legs, &refused));
+                prev.unknown = Some(Unknown::Refused(err.clone()));
                 continue;
             }
             if let Some(was) = prev.unknown.take() {

@@ -714,8 +714,9 @@ impl Sums {
         Ok(())
     }
 
-    /// What holds for the whole walk up to the span's end: a refusal from inside the span or
-    /// from the walk's start, every hole (refcore's `flows_place`, its global log). L §5.14.3.
+    /// What holds for the whole walk up to the span's end: a refusal from inside the span, its
+    /// first point included (tally 2.1.7 R2, #107), or from the walk's start, every hole
+    /// (refcore's `flows_place`, its global log). L §5.14.3, §8.
     fn global(&mut self, walk: &Walk, lo: At, limit: At) -> Result<(), Stop> {
         let first = At::before(walk.start);
         for e in walk.entries(ALL, ALL) {
@@ -723,7 +724,7 @@ impl Sums {
                 continue;
             }
             match &e.change {
-                Change::Bad(r) if e.at > lo || e.at == first => {
+                Change::Bad(r) if e.at >= lo || e.at == first => {
                     return Err(Stop::Refused(r.clone()));
                 }
                 Change::Perm(h) | Change::Hole(h) => {

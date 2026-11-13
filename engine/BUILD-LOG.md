@@ -2730,3 +2730,27 @@ Three commits: 4f8d6ad (the run half), 35e3be8 (prices at load), and this one (t
 - **Sweep:** none SAME → DIFF; 2 asks DIFF → SAME over R5's; no new `ENGINE-INVARIANT`.
 - **Size:** 39 changed lines (19 added, 20 removed). **M1 code replaced:** a115e04's read-every-`where` pass over things before the `ties by`. **Exceptions:** +0.
 - **Check:** `check commit: green, 23 steps`.
+
+## STOP-REPORT 2026-11-13: two decisions on one day print `feed2` before `feed` in refcore 2.1.7; E §4.1 sorts by move id, `feed` first
+
+- **Kind:** the spec and refcore differ (the spec is clear)
+- **Where:** 9 vectors of R2's list, all from `fixes/g12`'s G5 model (`move feed[m in month]` and `move feed2[m in month]`, both decisions `on day_of(m, cut_dom)`, `reads pocket`, neither reading what the other changes): `prr_bal_g5_order_order`, `prr_low_g5_order_order`, `prr_proj_g5_order_order`, `prr_projunc_g5_order_order`, `r_agent_ord_order`, `r_pb_bal-order_order`, `r_pb_low-order_order`, `r_pb_proj-order_order`, `r_pb_projunc-order_order`. Each differs from the engine only there: an `explain … from t`'s `counted:` lines of a day, `feed2[2026-02].cash (plan)` before `feed[2026-02].cash (plan)`.
+- **Rule or gate:** E §4.1 (l.201): "Movements are sorted by (day, stratum, move id, keys in index order, …), each term compared as its own type, never as text"; the decisions' run order agrees (refcore's `run_group` `rank`, (move id, instance)).
+- **What happens:** refcore's `counted:` sorts the entries by their walk key, whose decision part is one text, `'%s|%06d' % (mi.id, n)` (`walk.py` l.1600): `feed2|000000` sorts before `feed|000000` (`2` < `|`), so the id and the instance are compared as one text. The engine sorts by the terms: `feed` < `feed2`. At tally 2.1.6 these vectors stored `feed` first (they were green at M1); which 2.1.7 change of refcore's moved them I didn't find.
+- **What I did:** nothing to the engine's order; the 9 ids stay red. No case is special-cased.
+- **What I ask:** refcore's entry key keeps the move id and the instance as two terms (or its `counted:` sorts by E §4.1's terms), and T restores the 9 vectors' `feed` first.
+- **State:** R2 continues: its other 14 ids are green.
+
+## 2026-11-13 tally 2.1.7, R2: a refusal outranks a hole and reaches whatever reads what it refuses (issue #141, pick P4)
+
+- **One status per instance** (L §8, §8.4; E §4.2): a refusal is the instance's, read by every reader through the refused-movement paths that exist.
+  - **A tie** (`walk/order.rs` `self_tie`; L §5.14.2, G7): instances of one move that read each other's places with no `ties by` are refused each, their legs at their places too, not only the balances they change, so `flows` and `explain` of them are refused (`r2/l8_refused_tie_each_instance`, `fixes/gate8/due_alone`'s `status refused`).
+  - **Refused before its point** (`walk/order.rs` `run_one_body`; #104): a decision instance its key's `where` refuses reads nothing of its body, its `when` included; any refused run with no known legs reads its legs' places at its point, so it refuses those places, not every place (`g5/refused`, `g5/dec_where_when_false`, `g8/after`, `fixes/g10/t_c4c`, `fixes/g12` `pm*_order`, `r_p_ord`).
+  - **A refused re-measure** (`book/adjust.rs`; E §5 step 1, #94): a version answers a hole booking with its refusal as with a value, each leg's adjustment refused from its known (`r2/l8_refused_hole_answered`).
+  - **`flows`' global entry** (`walk/flows.rs` `Sums::global`; #107): a refusal keyed at the span's first point counts (`g7/flows_refused_plan_first_day`, `r2/l8_refused_flows_first_day`).
+  - **The ledger** (`book/ledger.rs` `may_touch`; E §6.3, SR-1): a refused instance refuses `residuals` exactly where a hole one would be a line, a place its legs give or any place a leg's place couldn't be read; a refused plan instance passes the span and coverage tests first, as any other. Without it, the tie's refused instances refused `g5/order`'s `konto` ledger, which they never touch.
+- **Turned green (14):** `fixes/g10/t_c4c`, `fixes/g12/pm_order_order`, `pm4_g5_order_order`, `pm7_order_order`, `pm8_g5_order_order`, `r_p_ord`, `fixes/gate8/due_alone`, `g5/dec_where_when_false`, `g5/refused`, `g7/flows_refused_plan_first_day`, `g8/after`, `r2/l8_refused_flows_first_day`, `r2/l8_refused_hole_answered`, `r2/l8_refused_tie_each_instance`. Gating: 117 of the 287 still red (and the 4 rows of the second STOP-REPORT).
+- **Still red:** 9 G5 ids whose `counted:` lines refcore 2.1.7 orders `feed2` before `feed` (the STOP-REPORT above: E §4.1 sorts by move id).
+- **Sweep:** none SAME → DIFF (an intermediate build had 2, `residuals` of a place the tie doesn't touch, fixed by `may_touch`); 5 asks DIFF → SAME over R1's; no new `ENGINE-INVARIANT`.
+- **Size:** 135 changed lines (95 added, 40 removed); the plan said about 60, without the ledger's `may_touch` and `run_one_body`. **M1 code replaced:** "a refused version doesn't answer a hole movement"; the global log's first-day skip (`> lo`); 2.1.6's read of a refused decision's `when` and every place for a refused body; the ledger's refusal by any refused instance. **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps`.
