@@ -2946,20 +2946,37 @@ class Engine:
             z = self.date_of(z, 'a range end')
             if k < a or k > z:
                 return False
-            cur, i = a, 0
-            while cur < k:
-                i += 1
+            if k == a:
+                return True
+
+            def at(i):
+                # a + i·s, or None past 9999-12-31 (so past z too)
                 try:
-                    nxt = self.day_step(a, s, i)
+                    return self.day_step(a, s, i)
                 except TallyError as e:
                     if e.code == 'RUN-LIMIT':
-                        return False
+                        return None
                     raise
-                if nxt <= cur:
-                    # L §8.4 RUN-DOMAIN `a stepped range whose step <s> is not positive` (tally 2.1.7 S7, X1)
-                    raise refuse('RUN-DOMAIN', 'a stepped range whose step %s is not positive' % fmt(s))
-                cur = nxt
-            return cur == k
+            first = at(1)
+            if first is not None and first <= a:
+                # L §8.4 RUN-DOMAIN `a stepped range whose step <s> is not positive` (tally 2.1.7 S7, X1)
+                raise refuse('RUN-DOMAIN', 'a stepped range whose step %s is not positive' % fmt(s))
+            # a positive step's values rise with i, so the first at or after k is found by bisection, not by stepping
+            # from a (tally 2.1.7, T's SR-11: a count over 20 years of days stepped 26 million times, 0.8 s -> 329 s)
+            lo, hi = 0, 1
+            while True:
+                v = at(hi)
+                if v is None or v >= k:
+                    break
+                lo, hi = hi, hi * 2
+            while hi - lo > 1:
+                mid = (lo + hi) // 2
+                v = at(mid)
+                if v is None or v >= k:
+                    hi = mid
+                else:
+                    lo = mid
+            return at(hi) == k
         self.no_none(a, 'a range end')
         self.no_none(z, 'a range end')
         if not isinstance(k, Num) or isinstance(k, bool):

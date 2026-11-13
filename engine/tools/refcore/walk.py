@@ -2102,6 +2102,37 @@ def m_main_walk(self, ctx):
     return w
 
 
+def m_prefix_walk(self, ctx, day):
+    """A context's timeline walked from S through `day` only: invariant 3 reads the base's entries and balances before
+    a branch's from, nothing after (E §9 item 3), so the main walk, when one is kept, serves, and otherwise a walk of
+    its own, kept apart so a later main_walk still builds the whole one. tally 2.1.7 (T's SR-14): R7's listing of base
+    movements before from walked the whole base for every branch, B-13's asks 31 s -> 78 s and 2.8 -> 7.8 GB."""
+    tctx = self.tctx(ctx)
+    w = self.walks.get(('walk',) + self.wkey(tctx))
+    if w is not None and not w.running and getattr(w, 'failed', None) is None:
+        return w
+    wk = ('prefix', day) + self.wkey(tctx)
+    w = self.walks.get(wk)
+    if w is not None:
+        if getattr(w, 'failed', None) is not None:
+            raise w.failed
+        return w
+    w = Walk(self, tctx, self.m.S, self.m.E)
+    self.walks[wk] = w
+    self.stack.append(_coll())
+    w.running = True
+    try:
+        w.prepare()
+        w.run_to(day)
+    except TallyError as e:
+        w.failed = e
+        raise
+    finally:
+        w.running = False
+        self.stack.pop()
+    return w
+
+
 def m_inv3(self, w, tctx):
     """E §9 invariant 3: a scenario changes nothing before its from that it doesn't list.  Every balance at the end of
     the day before D equals the base run's, unless a decision ran before D (the ones whose projection read a scenario
@@ -2112,15 +2143,15 @@ def m_inv3(self, w, tctx):
     if D is None or D <= m.S:
         return
     base = m.scenario_over.get(sc)
+    last = min(D - ONE_DAY, m.E)
     from .model import set_world
     old = set_world(self.world_chain(base))
     try:
-        bw = self.main_walk(tctx.but(world=base))
+        bw = self.prefix_walk(tctx.but(world=base), last)
     except TallyError:
         return
     finally:
         set_world(old)
-    last = min(D - ONE_DAY, m.E)
     key = K_end(last)
     # L §8.2 before from: (tally 2.1.7 R7, #121; P46): a movement of the base booked before from that this branch
     # doesn't book is listed, removed by the branch, under each read of the places it touched from its day on
