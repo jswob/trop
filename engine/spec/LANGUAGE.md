@@ -392,7 +392,7 @@ A position that takes a code takes any expression of the code's type, such as a 
 
 A value of type `date` may also be **`never`**: later than every date. Ordering against it is allowed (`d < never` holds); arithmetic and aggregation on it are refused (`RUN-NONE`). A deadline that doesn't exist is a row `never`.
 
-`first`, `last` and `next` over a binding that is empty at the cut and whose span reaches past it give a hole naming the binding (`HOLE-NOTYET`, §8.1), since a later row may bring a member.
+`first` and `last` over a binding that is empty at the cut and whose span reaches past it give a hole naming the binding (`HOLE-NOTYET`, §8.1), since a later row may bring a member.
 
 ### 3.2 Units and the unit rules
 
