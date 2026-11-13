@@ -7,6 +7,39 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.1.7 (the spec round after M1: 84 items, ten rules)
+
+The spec patch tally 2.1.7 (`spec/CHANGES.md` 2.1.7-1 to 2.1.7-30), the coordinator's picks P3–P32 under the user's
+standing rule of 2026-11-04. Each new test was seen failing on tally 2.1.6's refcore first, but the twins and pins
+named. **1345 tests, all pass** (1251, 94 new, 8 changed; `refcore_fast` byte-equal). One mechanism per rule:
+
+- **What a result reads (R1).** Folds, `argmin`/`argmax`, `first`/`last` and the walk read only as far as the value
+  needs; a later term's hole or refusal no longer reaches a decided result.
+- **Refusals (R2).** A refusal is the instance's status (`Inst.err`), read by every path that reads the movement, a
+  tie and a span before its day included.
+- **Windows (R3).** One window value, named by its read (its trimmed cell), lifted per day set; a copy keeps the name.
+- **The cascade (R4).** One candidate order for rows, band rows, givens, pins, a solve's variable and prices.
+- **Phases (R5).** Load checks every item whatever the asks; a run-time check prints a `RUN-*` code in load's words.
+- **Derived forms (R6).** `low`, `last`, `by last`, `priced last` evaluate through their definitions.
+- **One read set (R7).** The register, `explain` and `inputs-of` are views of the result's read set.
+- **Fan-out (R8).** Every ask form fans out before it is answered; `ask.diff_*` gives a `diff` as cells;
+  `check3.m_leg_guarded` books a guarded leg against its place's balance.
+- **The printer (R9).** `loader.key_written`, `check._txt`, `ask.day_text`, `canon.key_value` kind-first: one form and
+  one order per type.
+- **Positions (R10).** `check.reach_leaves`, `as_year`, `key_pos` push a position's type through `( )` and an `if`.
+- **Faults (B1–B7).** `evaluate.range_has`, `day_step`, `values.range_key` (B1); `check.item_of`, `readers_of` by
+  items (B2); `mreads.m_priced_per`, `check3._unit_name` (B3); `cli.reprint_lines`, `joint.pinned_members` nested (B4);
+  `date_arith`'s year step and `check.key_duration_whole` (B5); a reading's sid with its instant (B6);
+  `check3.m_existence_seen` over an open index (B7).
+- **Outside the run (S1).** `mreads.m_bal_at` gives `HOLE-PRERUN` before S and `HOLE-POSTRUN` after E; `walk.note_post_e`
+  keeps the instances after E and `mreads.m_flows_post_e` counts them (a plan's amount, a decision's hole); a decision
+  move's `flows` does the same; `resid.m_residuals` prints the days after E as one hole line.
+- **Singletons.** `check3.m_resolve_price` peels a price reference's fields, `mreads.m_priced_read` reads the field
+  (S2); `ask.explain_step`, `chain_next` fold a chain of one def's cells past 3 (S4); `check3`'s decision graph takes
+  the closure of the written orders, which `m.written_order` gives the walk (S5); the day-range step text gains its
+  `<s>` (S7); `check.check_path_line`, `check3.m_check_settlement_units`, `moves.settle_sign` name their place (S9).
+  S8 is not applied (`spec/CHANGES.md` 2.1.7-25): `evaluate.business` keeps `== 366`.
+
 ## tally 2.1.6 (the spec round after M0: 24 issues)
 
 The spec patch tally 2.1.6 (`spec/CHANGES.md` 2.1.6-1 to 2.1.6-28), the coordinator's picks P1–P27 and, on T's
