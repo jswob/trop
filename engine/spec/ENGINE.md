@@ -496,7 +496,7 @@ The test suite adds **determinism**: every case is run twice, with 1 and with 6 
 | **Per-value refusals** (LANGUAGE §8.4) | a value can't be computed | printed at its key; it propagates and outranks holes |
 | **Holes** (LANGUAGE §8.1) | a fact is missing | printed with their questions; other results stand |
 | `REQ-ASK` | the request names an ask that doesn't exist (an ask given with the request that doesn't load is refused with its own load code, LANGUAGE §8.3, as `OPERATIONS.md` §8 says) | the request is refused, after load (a load refusal outranks it), in every shape of reality (a plain one, one with scenarios, a joint model): `no ask <q>`, q the first such ask in the request's order, a member's ask named as asked (`a.q`, LANGUAGE §6.1), is the run's one result; nothing else prints (tally 2.1.3) |
-| `REQ-CLOCK` | a cut the request or an ask's literal states after `on` (`as known`, `with known`) | the request is refused, checked after load, which it doesn't outrank: `as known <D> is after the model's on <on>` (`with known <D> …` likewise) is the run's one result, as `REQ-ASK`'s; a cut computed from a value is refused at that value (`RUN-DOMAIN`, LANGUAGE §8.4) |
+| `REQ-CLOCK` | a cut the request or an ask's literal states after `on` (`as known`, `with known`) | the request is refused, checked after load, which it doesn't outrank: `as known <D> is after the model's on <on>` (`with known <D> …` likewise) is the run's one result, as `REQ-ASK`'s |
 | `REQ-PATHS` | more than 100 000 paths for one ask | the request is refused |
 | `ENGINE-INVARIANT` | §9 fails | the whole result is refused, with the evidence |
 
