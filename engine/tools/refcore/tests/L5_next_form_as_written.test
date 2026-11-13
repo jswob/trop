@@ -1,0 +1,53 @@
+# L §5 A form defined by another (tally 2.1.7 R6, issue #145; T's SR-7): next(K, d) is first(m in K over d ..) ties by
+# m.day, and "gives its values, holes and refusals, their messages naming the form as written". gift and gift2 fall on
+# one day: RUN-TIE naming next(transfers, d1) (n_tie_next); after both, HOLE-NOTYET naming next(transfers, after_all)
+# (n_none). 2.1.7's first refcore named the definition's bound m and the day's value, next(transfers, 2026-03-02).
+=== sr7.tally
+model sr7
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+
+input late: date
+
+input d1: date
+
+input after_all: date
+
+move gift2: transfers
+  on late
+  leg cash from world to konto amount fee
+
+move gift: transfers
+  on late
+  leg cash from world to konto amount fee
+
+ask n_tie_next: next(transfers, d1)
+
+ask n_none: next(transfers, after_all)
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  fee = ?"how much is the gift?"
+  late = 2026-06-10 "after the cut"
+  d1 = 2026-03-02 "after the cut"
+  after_all = 2026-07-01 "after both gifts"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "the card"
+=== expect
+n_none: ?"next(transfers, after_all): no transfers yet, and its span reaches past the cut" (transfers)
+  cut 2026-03-01
+n_tie_next: refused: RUN-TIE next(transfers, d1) has a tie at gift, gift2 that changes the result, and its ties by doesn't break it
+  cut 2026-03-01

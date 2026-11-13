@@ -1953,12 +1953,15 @@ def m_c_next(self, n, env, ctx):
         return d
     d = self.date_of(d, 'the day of next')
     res, colls = self.span_members(('event', kid), Span(d, None), ctx)
-    what = 'next(%s, %s)' % (kid, d)
+    # L §5 A form defined by another (tally 2.1.7 R6, T's SR-7): its holes and refusals name the form as written,
+    # not the definition's bound variable or the day's value
+    from .check import _txt
+    what = _txt(n)
     best = self.first_by_day(res, what)
     if isinstance(best, Hole):
         return best
     if best is None:
-        return notyet_hole('m', kid)
+        return notyet_hole(what, kid)
     v, x = best
     c = colls.get(x.id)
     if c is not None:
