@@ -82,16 +82,16 @@ The four clocks of the spec (T-16, N-1219):
 
 | Clock | Comes from | What it does |
 |---|---|---|
-| **S**, run start | the header's `start` | the first day walked. Balances open at S from `opening` readings (LANGUAGE §5.10). Nothing before S is walked, and `flows` over days before S is a hole (`HOLE-PRERUN`, LANGUAGE §8.1): `before the run's start` |
+| **S**, run start | the header's `start` | the first day walked. Balances open at S from `opening` readings (LANGUAGE §5.10). Nothing before S is walked: a walked value of a day before S (a `bal`, a `low`, a projection) and `flows` over days before S are holes (`HOLE-PRERUN`, LANGUAGE §8.1): `before the run's start` |
 | **K**, knowledge date | the ask's `as known D`, else the model's `on` | masks every version and row known after K: law, facts, observations, readings, entries of things. It splits the past (before K) from the plan (from K) |
-| **[K, E]**, evaluation window | E is the header's `end` | the plan runs to E. Observations in [K, E] are never read by the run at cut K; only the evaluation layer compares them (§8) |
+| **[K, E]**, evaluation window | E is the header's `end` | the plan runs to E, and nothing after E is walked: a walked value of a day after E is a hole (`HOLE-POSTRUN`, LANGUAGE §8.1): `after the run's end` (tally 2.1.7). Observations in [K, E] are never read by the run at cut K; only the evaluation layer compares them (§8) |
 | **R**, record time | the store: the reality's files as they stood at R | "what did we think in March?" is the reality at R = March, asked as known in March (N-1222). The language has no R; the store keeps the history of the files (`OPERATIONS.md` §1) |
 
 - **A plain forecast** has K = `on`. S is the header's start. Covered days before K replay observations, and the plan starts at K.
 - **A backtest** sets K in the past with `as known`. The run sees only what was known then, and the evaluation layer judges it against what happened in [K, E] (N-1218).
 - **K before S** is allowed. The whole run is then plan.
 - **K after E** is allowed. The whole run is then past.
-- **Movements outside [S, E]** are bound and read by bindings like any other, those after E by `flows` too, and never booked; the register lists them (`left out:`, LANGUAGE §5.14.3, D-13). `flows` over days before S is a hole whatever is dated there (`HOLE-PRERUN`, above).
+- **Movements outside [S, E]** are bound and read by bindings like any other, those after E by `flows` too (a plan's instance with its amount, a decision's instance as a hole movement, `HOLE-POSTRUN`, since its amount reads a walk that doesn't hold its day), and never booked; the register lists them (`left out:`, LANGUAGE §5.14.3, D-13). `flows` over days before S is a hole whatever is dated there (`HOLE-PRERUN`, above).
 
 **Dates inside a run.** These aren't clocks of the run, but every evaluation carries them:
 
@@ -336,6 +336,7 @@ Law for the past reads observations and facts, not the modelled past (N-1203):
 - When K is earlier, it is the backtest of the forecast over [K, E] (§8).
 - A day no statement covers for x prints no line, since nothing states x's observations there complete (LANGUAGE §5.19); an instance dated there that an observation fulfils is compared all the same, its matched line on the instance's day.
 - A pair of rows stated `same` is one movement (LANGUAGE §5.19): the ledger lists it once, on one line, and names both rows as its evidence.
+- A period that E cuts holds its days through E; the days after E are one line, a hole `after the run's end` (`HOLE-POSTRUN`, §2; tally 2.1.7).
 
 Each line of the ledger is one of:
 
