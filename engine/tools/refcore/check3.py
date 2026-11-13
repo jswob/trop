@@ -1551,6 +1551,29 @@ def m_strata(self):
                 after[a].add(b)
                 after[b].discard(a)
                 m.written_order.add((a, b))
+    # L §5.14.2 Cycles (tally 2.1.7 S5, G6): written orders compose, so save before spend and spend before top order
+    # save before top; a composed order stands for its pair in place of their read edges, as a stated one does, and
+    # the walk orders a cycle's instances by the same pairs (m.written_order). Orders written both ways stay as
+    # written
+    wo = set(m.written_order)
+    closure = set(wo)
+    grew = True
+    while grew:
+        grew = False
+        for (x, y) in sorted(closure):
+            for (y2, z) in sorted(closure):
+                if y2 == y and x != z and (x, z) not in closure:
+                    closure.add((x, z))
+                    grew = True
+    for (x, z) in sorted(closure - wo):
+        if (z, x) in closure:
+            continue
+        if ('move', x) in m.moves[z].read_targets:
+            raise LoadError('LOAD-ORDER', '%s before %s contradicts a read of %s\'s legs' % (z, x, x),
+                            m.moves[z].decl.loc)
+        after[x].add(z)
+        after[z].discard(x)
+        m.written_order.add((x, z))
     # cycles left: LOAD-ORDER where the days are known at load, RUN-ORDER in the walk otherwise
     state = {}
     m.order_groups = []
