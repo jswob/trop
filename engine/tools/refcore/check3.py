@@ -1709,7 +1709,13 @@ def m_seen_day(self, e, mi, cond=False):
 def m_existence_seen(self, mi):
     """L §6.4 (tally 2.1.6, P29 on SR-T1 of #75): load sees whether an instance of mi exists where the move has no
     `when` and each binding's `where` reads nothing but its keys and literals (§8.3 item 9); otherwise its existence
-    is decided at run, and an instance before a scenario's from is left out there."""
+    is decided at run, and an instance before a scenario's from is left out there. Load never sees an open index's
+    keys (L §8.3), so an instance over one is decided at run too (tally 2.1.7 B7, #103)."""
+    m = self.m
+    for b in mi.binds:
+        dom = getattr(b, 'dom', None)
+        if isinstance(dom, tuple) and dom[0] == 'index' and m.indexes[dom[1]].form == 'open':
+            return False
     return mi.decl.when is None and all(b.node.where is None or self.seen_day(b.node.where, mi, cond=True)
                                         for b in mi.binds)
 
