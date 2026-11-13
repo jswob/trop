@@ -49,8 +49,11 @@ named. **1345 tests, all pass** (1251, 94 new, 8 changed; `refcore_fast` byte-eq
   don't reach a refused result); `mreads.m_c_next` names the form as written (SR-7, R6); `ask.explain_pins` fans the
   outside derivation over the pinned axes it reads (SR-10, R8); `moves.instant_text` of a bare day (SR-12, B6);
   `check.compare` resolves each literal `reach_leaves` gives (SR-13, R10). Speed (SR-11, SR-14), outputs unchanged:
-  `range_has` bisects (g13's 20-year count 329 s -> 3 s; 2.1.6 0.8 s); `walk.m_prefix_walk` walks a branch's base only
-  to its from for invariant 3 (B-13 78-86 s -> 53 s at one job under PyPy; 2.1.6 31 s; the rest is R7's listing).
+  `range_has` bisects (g13's 20-year count 329 s -> 3 s; 2.1.6 0.8 s); invariant 3 walks a branch's base only to its
+  from (`mreads.m_prefix_walk`; B-13 78-86 s -> 53 s at one job under PyPy; 2.1.6 31 s). P37: the rest is the
+  base's own walk from S to the from, which R7's `before from:` listing needs (the base books holes there that the
+  branch doesn't); a run of one ask walks the base nowhere else, so there is no walk to share. walk.py's copy of
+  `m_prefix_walk`, which mreads' shadowed, is gone.
 
 ## tally 2.1.6 (the spec round after M0: 24 issues)
 
