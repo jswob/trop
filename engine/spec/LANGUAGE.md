@@ -311,6 +311,8 @@ MODE      = a rounding code, a ref to an input of type rounding, or an axis whos
 LABEL     = a word of the id pattern; keywords allowed (§2.2)
 ```
 
+**Written literals.** A row's keys, an index's and a key list's keys, a `governs`, a header's `on`, a version's `known` and an instant's day are written literals: facts load reads as written, without evaluating anything (§8.3, what load sees). They take no expression, and so no parentheses: `(2026)` there is refused (`LOAD-PARSE`), where a key in an expression takes them (§2.5 Keys; tally 2.1.7).
+
 **Seven parse rules.**
 1. **Comparisons don't chain.** `a < b < c` is refused (`LOAD-PARSE`). The `==` of `check` and `solve` counts: `check a == b == c` is refused.
 2. **`as if` binds to the reference before it.** `x[t] + y as if {…}` applies the pins to `y` only; write `(x[t] + y) as if {…}` for both.
