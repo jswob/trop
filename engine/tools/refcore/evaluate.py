@@ -318,7 +318,7 @@ class Engine:
         if isinstance(v, Num):
             return Num(-v.q, v.u, money=v.money, isint=v.isint, rate=v.rate, enc=enc_neg(v.enc))
         if isinstance(v, Iv):
-            return Iv(self.neg1(v.hi), self.neg1(v.lo), None, v.src)
+            return Iv(self.neg1(v.hi), self.neg1(v.lo), None, v.src, origin=v.origin)
         raise refuse('LOAD-UNIT', 'unary minus on %s' % fmt(v))
 
     def neg1(self, x):
@@ -2915,6 +2915,14 @@ class Engine:
             vals = self.range_values(a, z, s, b, range_is_literal(d) and d)
         return vals, None, past
 
+    def range_one_value(self, a, z, s):
+        """A range's ends and step each need one value (L §4.4, Only a comparison decides an interval; tally 2.1.7
+        R3, T's SR-9): an undecided interval there is HOLE-IMPRECISE; 2.1.7's first refcore stepped by it and
+        crashed."""
+        for v, what in ((a, 'a range end'), (z, 'a range end'), (s, 'a range step')):
+            if isinstance(v, Iv):
+                raise self.imprecise(v, what)
+
     def day_step(self, a, s, i):
         """A day range's i-th value, a + i·s (L §2.5), computed from a, so a month step from the 31st keeps the 31st
         where the month has it."""
@@ -2926,6 +2934,7 @@ class Engine:
         """Whether k is one of a stepped range's values, a + i·s <= z for a whole i >= 0 (L §2.5), by arithmetic on
         the value (tally 2.1.7, B1; #134a, F19, G12): a number compared by value in a's unit, so 2 is the value 2.0; a
         day stepped from a only up to k, so a range near 9999-12-31 is never stepped past it."""
+        self.range_one_value(a, z, s)
         if isinstance(a, datetime.date):
             if not isinstance(k, datetime.date):
                 return False
@@ -2977,6 +2986,7 @@ class Engine:
             if lit:
                 return LoadError('LOAD-LIMIT', msg, getattr(lit, 'loc', None))
             return Refusal('RUN-LIMIT', msg)
+        self.range_one_value(a, z, s)
         out = []
         if isinstance(a, datetime.date):
             z = self.date_of(z, 'a range end')
@@ -3283,10 +3293,12 @@ class Engine:
             his = [t.hi if isinstance(t, Iv) else t for t in ts]
             pick = (lambda xs: self.extreme(xs, fn))
             lo, hi = pick(los), pick(his)
-            src = [t for t in ts if isinstance(t, Iv)][0].src
+            first = [t for t in ts if isinstance(t, Iv)][0]
             if self.cmp3(lo, hi, None) == 0:
                 return lo
-            return Iv(lo, hi, None, src)
+            # a computed interval has no name, but its questions name the read it came from (L §8.1; tally 2.1.7
+            # R3, T's SR-5): the first window's
+            return Iv(lo, hi, None, first.src, origin=first.origin)
         return self.extreme(ts, fn, n)
 
     def extreme(self, ts, fn, n=None):
@@ -3863,13 +3875,13 @@ class Engine:
         d = self.as_date_or_iv(d, 'weekday')
         if isinstance(d, Iv):
             if d.days is None and (d.hi - d.lo).days >= 6:
-                return Iv(Int(1), Int(7), None, d.src)
+                return Iv(Int(1), Int(7), None, d.src, origin=d.origin)
             days = sorted(d.days) if d.days else [d.lo + datetime.timedelta(days=i)
                                                   for i in range((d.hi - d.lo).days + 1)]
             ws = sorted(set(x.isoweekday() for x in days))
             if len(ws) == 1:
                 return Int(ws[0])
-            return Iv(Int(min(ws)), Int(max(ws)), None, d.src)
+            return Iv(Int(min(ws)), Int(max(ws)), None, d.src, origin=d.origin)
         return Int(d.isoweekday())
 
     def c_pos(self, n, env, ctx):
@@ -4148,7 +4160,7 @@ class Engine:
         if isinstance(v0, bool):
             cal_id, wt = first_met[0], first_met[1]
             return Hole([('date within %s not precise enough for %s' % (wt, _ntxt(n)), cal_id)])
-        return Iv(min(out), max(out), None, None)
+        return Iv(min(out), max(out), None, None, origin=(first_met[0], first_met[0]) if first_met else None)
 
     def c_is_business(self, n, env, ctx):
         d = self.ev(n.args[0], env, ctx)
