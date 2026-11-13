@@ -1,0 +1,71 @@
+# L §2.5 Keys (tally 2.1.7 R10, issue #149; #113a, #113c, P6, P12, P23): a key position reaches through
+# parentheses and into both branches of an if, which stand where the whole stands: rate[(2026)] and an if of years
+# are year keys, lim[(k1)] and an if of codes are codes, each as its bare twin. 2.1.6's refcore refused LOAD-KEY
+# `(2026) (year4) is not a key of ys`. (T's carried p_key, n1_if.)
+=== model.tally
+model years
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2027-12-31
+  note "T's carried items 5 and 6 (issue #108, invented): a parenthesised literal is that literal wherever the bare one stands (L §2.1, the coordinator's picks P6 and P12), and #97's N1, the written year forms; each form is a file of its own beside this base"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ys = year 2026..2027
+
+index ms = month 2026-01..2027-12
+
+place konto: accounts PLN lives 2026-01-01..
+
+input rate[y in ys]: num
+
+input start_day: date
+
+input wage[m in ms]: money PLN
+
+ask base: rate[2026], rate[2027], year_of(start_day) == 2026, day_of(2026, 12-31), wage[2026-06], wage[2027-06], bal(konto, 2026-01-05)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  rate[2026] = 0.1 "the card"
+  rate[2027] = 0.2 "the card"
+  start_day = 2026-01-05 "the card"
+  wage = 5000.00 PLN governs 2026 "the card"
+  wage = 5200.00 PLN governs 2027 "the card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "the card"
+=== k_paren.tally
+part k_paren
+  tally 2
+
+index cs = [k1, k2]
+
+input lim[c in cs]: num
+
+ask p_key: rate[(2026)]
+
+ask n1_if: rate[if year_of(start_day) == 2026 then 2026 else 2027]
+
+ask k_code: lim[(k1)]
+
+ask k_code_if: lim[if year_of(start_day) == 2026 then k1 else k2]
+
+version card_k
+  cite card
+  governs always
+  known 2026-01-01
+  lim[k1] = 1 "the card"
+  lim[k2] = 2 "the card"
+=== expect p_key n1_if k_code k_code_if
+p_key: 0.1
+  cut 2026-10-01
+n1_if: 0.1
+  cut 2026-10-01
+k_code: 1
+  cut 2026-10-01
+k_code_if: 1
+  cut 2026-10-01

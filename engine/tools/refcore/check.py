@@ -809,6 +809,10 @@ class Checker:
         return t
 
     def _tc(self, n, sc, expect):
+        kt = getattr(n, '_keyat', None)
+        if kt is not None:
+            # a key literal its key position reached through ( ) or an if's branch, resolved there (key_pos)
+            return kt
         k = n.k
         fn = getattr(self, 't_' + k, None)
         if fn is None:
@@ -1074,6 +1078,12 @@ class Checker:
         if dk == 'index' and m.indexes[dom[1]].pk not in (None, 'year') and kn.k == 'num' and kn.get('four'):
             t = self.tc(kn, sc, expect=T.period('year'))
             return self.key_conv(t, dom, kn, sc)
+        if kn.k in ('paren', 'if') and dk in ('index', 'kind', 'axis'):
+            # L §2.5 (tally 2.1.7, R10): the position reaches through ( ) and into both branches of an if, which stand
+            # where the whole stands: each literal it reaches is resolved as a bare key there
+            for leaf in self.reach_leaves(kn):
+                if self.is_keylit_node(leaf, sc) and self.key_pos(leaf, dom, sc)[0] == 'lit':
+                    leaf._keyat = leaf._t
         if self.is_keylit_node(kn, sc):
             if dk in ('index', 'kind', 'axis'):
                 if kn.k in ('date', 'month', 'quarter') or (kn.k == 'num' and kn.get('four') and dk == 'index'
@@ -1672,11 +1682,11 @@ class Checker:
             raise uerr('%s and %s in arithmetic' % (T.show(lt), T.show(rt)), n.loc)
         for side in (n.l, n.r):
             if getattr(side, '_t', None) is not None and side._t.k == 'year4':
-                side._year = readings[0][0]
-                side._t = T.period('year') if readings[0][0] else T.INT
-                lsc = getattr(side, '_litsc', None)
-                if lsc is not None:
-                    self.lit_rule(lsc, side, 'date' if readings[0][0] else 'num', side.v)
+                self.as_year(side, readings[0][0])
+                for leaf in self.reach_leaves(side):
+                    lsc = getattr(leaf, '_litsc', None)
+                    if lsc is not None:
+                        self.lit_rule(lsc, leaf, 'date' if readings[0][0] else 'num', leaf.v)
         return readings[0][1]
 
     def is_duration(self, t, pk=None):
@@ -1802,9 +1812,12 @@ class Checker:
         sc2 = scn.child()
         sc2.guards |= self.tested_vars(n.c, set(sc.keyvars))
         sc2.covered_spans |= self.covered_spans_of(n.c)
+        # the branches stand where the whole stands, so a figure allowed there is allowed in them (L §2.5, R10; G14)
+        sc2.allow_lit = sc.allow_lit
         sc3 = sc.child()
         sc3.guards |= self.tested_vars(n.c, set(sc.keyvars))
         sc3.covered_spans |= self.covered_spans_of(n.c)
+        sc3.allow_lit = sc.allow_lit
         at = self.tc(n.a, sc2, expect)
         bt = self.tc(n.b, sc3, expect)
         self.narrow_mark(n.c, nw)
@@ -1973,8 +1986,7 @@ class Checker:
             other = rt if lk == 'year4' else lt
             side = ln if lk == 'year4' else rn
             if other.k == 'period' and other.pk == 'year' or (other.k == 'key' and self.key_pk(other) == 'year'):
-                side._year = True
-                side._t = T.period('year')
+                self.as_year(side)
                 return
             if self.numcls(other) in ('int', 'num', 'flex'):
                 side._year = False
@@ -2220,7 +2232,7 @@ class Checker:
             if self.period_kind(t) == target.pk:
                 return
             if k == 'year4' and target.pk == 'year':
-                node._year = True
+                self.as_year(node)
                 return
             raise uerr('%s is %s, not %s' % (what, T.show(t), target.pk), loc)
         if tk == 'key':
@@ -2407,8 +2419,7 @@ class Checker:
                 if t.k == 'keylist':
                     t = self.kl_value(e, 'year') or t
                 if t.k == 'year4':
-                    e._year = True
-                    e._t = T.period('year')
+                    self.as_year(e)
                     t = e._t
                 if not (self.is_date(t) or self.is_period(t)):
                     raise uerr('a span end is %s, not a date or a period' % T.show(t), sp.loc)
@@ -2560,11 +2571,30 @@ class Checker:
         self.want(t, lambda t: self.is_date(t) or (t.k == 'key' and False), what, n)
         return t
 
+    def reach_leaves(self, e):
+        """The nodes a position's expected type reaches (L §2.5, tally 2.1.7, R10): through parentheses and into both
+        branches of an if, which stand where the whole stands (bidirectional checking)."""
+        if e.k == 'paren':
+            return self.reach_leaves(e.e)
+        if e.k == 'if':
+            return self.reach_leaves(e.a) + self.reach_leaves(e.b)
+        return [e]
+
+    def as_year(self, e, year=True):
+        """A four-digit literal where a period is expected is a year, elsewhere an integer (L §2.1, §2.5), and so is
+        each one the position reaches: e is typed year4, so every leaf it reaches is one or a hole."""
+        t = T.period('year') if year else T.INT
+        for leaf in self.reach_leaves(e):
+            if leaf._t is not None and leaf._t.k == 'year4':
+                leaf._year = year
+                leaf._t = t
+        e._t = t
+
     def tdate_or_period(self, e, sc, n):
         t = self.tc(e, sc)
         if t.k == 'year4':
-            e._year = True
-            e._t = t = T.period('year')
+            self.as_year(e)
+            t = e._t
         self.want(t, lambda t: self.is_date(t) or self.is_period(t), 'the argument', n)
         return t
 
