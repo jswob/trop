@@ -1,0 +1,54 @@
+# L §4.4 One unknown day, named by its read; a comparison is decided (tally 2.1.7 R3, issue #142; #115, F8): w is
+# one unknown day named by its read; add_days(w, 1), w + 1 day and end_of(w) are computed values with no name, so
+# comparing them with w, or with each other, isn't decided (HOLE-IMPRECISE); a copy keeps the name (same == w), two
+# reads of one def's cell are one value (paid == paid), and a pin the def doesn't read doesn't rename it (F8). 2.1.6's
+# refcore kept the row's origin through arithmetic: (true, false, true, false), and paid == w + 1 day true.
+=== m.tally
+model w
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+index qs = [q1, q2, q3]
+
+input w: date
+
+input wd: date
+
+input u: date
+
+input cal: calendar
+
+input d[k in qs]: date
+
+input rank[k in qs]: int
+
+def same: date = w
+
+def paid: date = w + 1 day
+
+ask a1: add_days(w, 1) == w, w + 1 day > w, w + 1 day == w + 1 day, end_of(w) > w
+ask a2: same == w, w == w, w < w, paid == paid, paid == w + 1 day, (paid as if {rank[q1] = 5}) == paid
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-06-01, 2026-06-05) "c"
+  wd = window(2026-06-01, 2026-06-01) "c"
+  u = window(2026-06-06, 2026-06-07) "c"
+  cal = calendar(weekends [sat, sun]) "c"
+  d[q1] = 2026-03-01 "c"
+  d[q2] = 2026-03-01 "c"
+  d[q3] = window(2026-04-01, 2026-04-30) "c"
+  rank[q1] = 2 "c"
+  rank[q2] = 1 "c"
+  rank[q3] = 0 "c"
+=== expect a1 a2
+a1: (?"date within window(2026-06-01, 2026-06-05) not precise enough for add_days(w, 1) == w" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day > w" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day == w + 1 day" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for end_of(w) > w" (w))
+...
+a2: (true, true, false, true, ?"date within window(2026-06-01, 2026-06-05) not precise enough for paid == w + 1 day" (w), true)
+...

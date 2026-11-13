@@ -337,7 +337,8 @@ def m_c_dcf(self, n, env, ctx):
     h = self.hole_args(vals)
     if h:
         return h
-    return Num(self.dcf_q(*vals), ())
+    # the year fraction is monotone in each day: a window by its ends (tally 2.1.7 R3, F4)
+    return self.lift(lambda a, b, dc: Num(self.dcf_q(a, b, dc), ()), *vals)
 
 
 def m_call_args(self, n, env, ctx):
@@ -1613,12 +1614,11 @@ def m_e_prorata(self, n, env, ctx):
                     e2[b.var] = keys[i]
                     return self.ev(n.tie[j], e2, ctx)
                 # the ties by's order, a later term read only among the keys still tied (tally 2.1.7 R1, #116)
-                groups = self.tie_order('prorata', tied, term, len(n.tie))
-                if isinstance(groups, Hole):
-                    return groups
                 need = len(inside)
                 taken = []
-                for g in groups:
+                for g in self.tie_order('prorata', tied, term, len(n.tie)):
+                    if isinstance(g, Hole):
+                        return g
                     if len(taken) < need < len(taken) + len(g):
                         raise refuse('RUN-TIE', 'prorata has a tie at %s that changes the result, and its ties by '
                                      'doesn\'t break it' % ', '.join(fmt(keys[i]) for i in tied))
