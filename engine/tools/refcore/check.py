@@ -1084,7 +1084,9 @@ class Checker:
             for leaf in self.reach_leaves(kn):
                 if self.is_keylit_node(leaf, sc) and self.key_pos(leaf, dom, sc)[0] == 'lit':
                     leaf._keyat = leaf._t
-        if self.is_keylit_node(kn, sc):
+        # a number written at a stepped range's position is a key literal of it, whatever its digits (L §2.5, B1;
+        # F19: by_frac[2.0])
+        if self.is_keylit_node(kn, sc) or (dk == 'range' and kn.k == 'num'):
             if dk in ('index', 'kind', 'axis'):
                 if kn.k in ('date', 'month', 'quarter') or (kn.k == 'num' and kn.get('four') and dk == 'index'
                                                  and m.indexes[dom[1]].pk is not None):

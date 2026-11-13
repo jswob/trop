@@ -60,6 +60,14 @@ def Int(n):
     return Num(Fraction(n), (), isint=True)
 
 
+def range_key(v):
+    """A key at a position keyed by a stepped range is the value of the range's type it equals (L §2.5, tally 2.1.7,
+    B1; F19): a number by its value, so a row at 2.0 and one at 2 are one key, and 2.0 prints 2."""
+    if isinstance(v, Num) and not v.money and v.enc is None:
+        return Num(v.q, v.u, isint=(v.q.denominator == 1 and not v.u))
+    return v
+
+
 def Money(q, cur):
     return Num(Fraction(q), ((cur, 1),), money=True)
 

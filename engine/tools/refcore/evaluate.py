@@ -19,7 +19,7 @@ from .dates import (Period, day_period, month_period, quarter_period, year_perio
 from .errors import TallyError, LoadError, Refusal, Unspecified, NotYet, load_now, at_run
 from .model import (in_world, set_world, Span, visible, known_first, InputInfo, DefInfo, BandInfo, key_text, _kv,
                     wcut, WindowUndecided, row_known_sid)
-from .values import MonthDay  # noqa: E402 (GD-2)
+from .values import MonthDay, range_key  # noqa: E402 (GD-2; B1)
 from .values import (fmt_typed, Num, Int, Money, Text, Key, Thing, Code, Rec, Lst, Tup, Iv, Cal, Hole, NONE, NEVER,
                      Special, CURRENCIES, vkey, fmt, fmt_q, Mv, fmt_hole)
 
@@ -577,6 +577,7 @@ class Engine:
                     holes.append(h)
                     keys.append(None)
                     continue
+                k = range_key(k)
             else:
                 try:
                     self.check_key(k, b.dom, ctx)
@@ -629,13 +630,8 @@ class Engine:
         hs = [x for x in (a, z, s) if isinstance(x, Hole)]
         if hs:
             return merge(*hs)
-        memo = self.__dict__.setdefault('_range_memo', {})
-        mk = (id(d), vkey(a), vkey(z), vkey(s) if s is not None else None)
-        vals = memo.get(mk)
-        if vals is None:
-            vals = memo[mk] = set(vkey(x) for x in self.range_values(a, z, s, b, range_is_literal(d) and d))
         kk = Int(k) if isinstance(k, int) and not isinstance(k, bool) else k
-        if vkey(kk) not in vals:
+        if not self.range_has(kk, a, z, s):
             code = 'LOAD-KEY' if getattr(kn, '_rangelit', False) and range_is_literal(d) else 'RUN-KEY'
             raise refuse(code, '%s is not a value of %s .. %s%s' % (fmt(kk), fmt(a), fmt(z),
                                                                      (' step %s' % fmt(s)) if s is not None else ''))
@@ -648,6 +644,9 @@ class Engine:
             raise refuse('RUN-NONE', '%s is none here: a key' % _ntxt(kn))
         if isinstance(v, Iv):
             raise self.imprecise(v, 'a key')
+        if dom is not None and dom[0] == 'range':
+            # a key at a stepped range's position is the value it equals (L §2.5, B1)
+            return range_key(v)
         if c == 'same':
             if isinstance(v, Num):
                 return self.int_of(v)
@@ -2917,6 +2916,56 @@ class Engine:
             vals = self.range_values(a, z, s, b, range_is_literal(d) and d)
         return vals, None, past
 
+    def day_step(self, a, s, i):
+        """A day range's i-th value, a + i·s (L §2.5), computed from a, so a month step from the 31st keeps the 31st
+        where the month has it."""
+        fake = type('N', (), {})()
+        fake.op = '+'
+        return self.date_arith(fake, a, Num(s.q * i, s.u, isint=s.isint))
+
+    def range_has(self, k, a, z, s):
+        """Whether k is one of a stepped range's values, a + i·s <= z for a whole i >= 0 (L §2.5), by arithmetic on
+        the value (tally 2.1.7, B1; #134a, F19, G12): a number compared by value in a's unit, so 2 is the value 2.0; a
+        day stepped from a only up to k, so a range near 9999-12-31 is never stepped past it."""
+        if isinstance(a, datetime.date):
+            if not isinstance(k, datetime.date):
+                return False
+            z = self.date_of(z, 'a range end')
+            if k < a or k > z:
+                return False
+            cur, i = a, 0
+            while cur < k:
+                i += 1
+                try:
+                    nxt = self.day_step(a, s, i)
+                except TallyError as e:
+                    if e.code == 'RUN-LIMIT':
+                        return False
+                    raise
+                if nxt <= cur:
+                    raise refuse('RUN-DOMAIN', 'a stepped range whose step is not positive')
+                cur = nxt
+            return cur == k
+        self.no_none(a, 'a range end')
+        self.no_none(z, 'a range end')
+        if not isinstance(k, Num) or isinstance(k, bool):
+            return False
+        if s is None:
+            lo, hi = self.int_of(a), self.int_of(z)
+            return k.q.denominator == 1 and not k.u and lo <= k.q <= hi
+        if s.q <= 0:
+            raise refuse('RUN-DOMAIN', 'a stepped range whose step %s is not positive' % fmt(s))
+        f = U.conv(z.u, a.u) if a.u != z.u else Fraction(1)
+        g = U.conv(s.u, a.u) if a.u != s.u else Fraction(1)
+        h = U.conv(k.u, a.u) if a.u != k.u else Fraction(1)
+        if f is None or g is None:
+            raise refuse('LOAD-UNIT', 'a range of quantities in different units')
+        if h is None:
+            return False
+        kq = k.q * h
+        i = (kq - a.q) / (s.q * g)
+        return i >= 0 and i.denominator == 1 and kq <= z.q * f
+
     def range_values(self, a, z, s, b, lit=None):
         """A stepped range's values, a + i·s <= z (L §2.5). L §7.6 item 2 (tally 2.1.6, issue #89): at most 1 000 000
         of them, LOAD-LIMIT where its ends and step are literals (lit, the range's node), which load sees, RUN-LIMIT
@@ -2931,12 +2980,17 @@ class Engine:
         out = []
         if isinstance(a, datetime.date):
             z = self.date_of(z, 'a range end')
-            cur = a
-            fake = type('N', (), {})()
-            fake.op = '+'
+            cur, i = a, 0
             while cur <= z:
                 out.append(cur)
-                nxt = self.date_arith(fake, cur, s)
+                i += 1
+                try:
+                    nxt = self.day_step(a, s, i)
+                except TallyError as e:
+                    if e.code == 'RUN-LIMIT' and cur <= z:
+                        # the next value passes the last day there is, so it is past z too
+                        break
+                    raise
                 if nxt <= cur:
                     raise refuse('RUN-DOMAIN', 'a stepped range whose step is not positive')
                 cur = nxt
@@ -2964,7 +3018,7 @@ class Engine:
             raise too_many()
         n = 0
         while cur <= stop:
-            out.append(Num(cur, a.u, money=a.money, isint=a.isint and step.denominator == 1))
+            out.append(range_key(Num(cur, a.u, money=a.money, isint=a.isint and step.denominator == 1)))
             cur += step
             n += 1
             if n > 1000000:

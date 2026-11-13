@@ -1,0 +1,34 @@
+# L §2.5 Keys at a stepped range (tally 2.1.7 B1, issue #150; G12): a day range's values are a + i·s from a, so
+# 9999-10-31 .. 9999-12-31 step 1 month holds 9999-12-31, and a key's membership never steps past the last day
+# there is: 9999-11-30 is read, 9999-12-01 is refused with RUN-KEY's form. 2.1.6's refcore refused RUN-LIMIT `a day
+# passes 9999-12-31`.
+=== g12.tally
+model g12
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "made up"
+
+input fee[d in 9999-10-31 .. 9999-12-31 step 1 month]: num
+
+input at_day: date
+
+ask q_on: fee[at_day]
+
+ask q_off: fee[at_day + 1 day]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fee[9999-10-31] = 1 "the card"
+  fee[9999-11-30] = 2 "the card"
+  fee[9999-12-31] = 3 "the card"
+  at_day = 9999-11-30 "the card"
+=== expect
+q_off: refused: RUN-KEY 9999-12-01 is not a value of 9999-10-31 .. 9999-12-31 step 1 month
+  cut 2026-03-01
+q_on: 2
+  cut 2026-03-01

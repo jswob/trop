@@ -18,7 +18,7 @@ from .model import (Reality, Span, ALWAYS, lit_period, lspan_to_span, visible, k
                     BUILTIN_IDS, key_text, _kv, PlaceInfo, PlaceThing, MoveInfo, ObsRow)
 from .node import Node
 from .parser import parse_file, prescan_units, BUILTINS, KEYWORDS, PERIOD_WORDS
-from .values import (Num, Int, Money, Text, Key, Thing, Code, Rec, Lst, Iv, Cal, Hole, NONE, NEVER, CURRENCIES,
+from .values import (range_key, Num, Int, Money, Text, Key, Thing, Code, Rec, Lst, Iv, Cal, Hole, NONE, NEVER, CURRENCIES,
                      terminating)
 
 
@@ -2762,10 +2762,8 @@ def range_literal(m, kn, loc):
             q = Fraction(kn.v) * f
             if U.is_currency(u):
                 return Num(q, u, money=True)
-            return Num(q, u)
-        if kn.isint:
-            return Int(int(kn.v))
-        return Num(Fraction(kn.v), ())
+            return range_key(Num(q, u))
+        return range_key(Num(Fraction(kn.v), ()))
     raise LoadError('LOAD-KEY', '%s is not a value of a stepped range' % key_written(kn), loc)
 
 
