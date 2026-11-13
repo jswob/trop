@@ -240,7 +240,8 @@ impl Engine {
             }
             unexplained_line(m, lines, o)?;
         }
-        self.balance_lines(m, lines, span, cut)
+        self.balance_lines(m, lines, span, cut)?;
+        after_run_line(m, lines, span)
     }
 
     /// The observations as known on the model's `on` date that touch the place, dated in the
@@ -670,6 +671,50 @@ fn undated_line(
         diff,
         text,
         order: inst.order.term()?,
+    });
+    Ok(())
+}
+
+/// A period that E cuts holds its days through E; the days after E are one line, the hole
+/// `after the run's end`, since the walk holds none of them (refcore's `m_residuals`).
+/// E §6.3, L §8.1 `HOLE-POSTRUN`.
+fn after_run_line(m: &Reality, lines: &mut Lines, span: &Span) -> Result<(), Stop> {
+    let (Some(first), Some(end)) = (span.start(), span.end()) else {
+        return Ok(());
+    };
+    let last = end
+        .previous()
+        .ok_or_else(|| invariant("a span ending before the calendar"))?;
+    if last <= m.end {
+        return Ok(());
+    }
+    lines.out.retain(|l| match l.day {
+        Some(d) => d <= m.end,
+        None => true,
+    });
+    let after = m
+        .end
+        .next()
+        .ok_or_else(|| invariant("a run ending at the calendar's end"))?
+        .max(first);
+    let hole = Fig::Hole(Hole::after_run(&lines.place));
+    let text = format!(
+        "days {} .. {}: {}",
+        after.text(),
+        last.text(),
+        fig_text(m, &hole, &lines.unit)?
+    );
+    lines.out.push(Line {
+        day: Some(after),
+        group: GroupKey {
+            month: None,
+            name: "after the run's end".to_owned(),
+        },
+        model: Some(hole.clone()),
+        observed: Some(hole.clone()),
+        diff: hole,
+        text,
+        order: Term::Tuple(Vec::new()),
     });
     Ok(())
 }
