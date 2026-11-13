@@ -1,0 +1,65 @@
+# L §8.2 One read set (tally 2.1.7 R7, issue #146; T's SR-8): the set holds "the reads that decided that a movement
+# doesn't count (a false when, ...)". maybe's when reads wanted, an assumed row, and is false, so bal(konto, d9) lists
+# assumed: (a_when, u_box); box, a place maybe can't touch, doesn't (a_other). 2.1.7's first refcore listed it only
+# with the when true.
+=== sr8.tally
+model sr8
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place box: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+
+input on_day: date
+
+input wanted: bool
+
+input d9: date
+
+move maybe: transfers
+  on on_day
+  when wanted
+  leg cash from world to konto amount fee
+
+move rent: transfers
+  on on_day
+  leg cash from world to box amount fee
+
+ask a_when: bal(konto, d9)
+
+ask a_other: bal(box, d9)
+
+ask u_box: bal(box, d9), bal(konto, d9)
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 10.00 PLN "the card"
+  on_day = 2026-02-10 "the card"
+  wanted = false assumed "a guess: not wanted"
+  d9 = 2026-02-28 "the card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "the card"
+  opening[box] = 0.00 PLN at 2026-01-01 start "the card"
+=== expect
+a_other: 10.00 PLN
+  unfulfilled: rent
+  cut 2026-03-01
+a_when: 100.00 PLN
+  assumed: a guess: not wanted (wanted)
+  cut 2026-03-01
+u_box: (10.00 PLN, 100.00 PLN)
+  assumed: a guess: not wanted (wanted)
+  unfulfilled: rent
+  cut 2026-03-01

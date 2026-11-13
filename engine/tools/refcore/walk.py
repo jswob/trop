@@ -474,6 +474,8 @@ class Walk:
                 self.note_post_e(i, day_lo(i.day))
                 continue
             if st in ('none', 'modelled'):
+                if st == 'none':
+                    self.note_none(i, ctx, S)
                 if st == 'modelled':
                     self.modelled.append(i)
                     if not i.obs and not self.same_observed(i):
@@ -598,6 +600,20 @@ class Walk:
             return
         for p in sorted(places):
             self.at(key, 'placebad', (p, err, i))
+
+    def note_none(self, i, ctx, S):
+        """An instance that doesn't exist (a false `when` or key `where`) books nothing, but the reads that decided it
+        are in the read set of a balance of the places its legs give from its day (L §8.2 One read set: "the reads
+        that decided that a movement doesn't count (a false when, …)"; tally 2.1.7 R7, T's SR-8)."""
+        d = day_lo(i.day)
+        if i.coll is None or not isinstance(d, datetime.date) or d < S:
+            return
+        legs = i.legs or self.eng.refused_places(i.move, i.env, i, ctx)
+        for lg in legs:
+            for p in (lg.frm, lg.to):
+                if isinstance(p, Thing):
+                    u = lg.unit or self.m.place_unit(self.m.things[p.name])
+                    self.at((d.toordinal(), 2, 0, plan_key(i), 0), 'decided', (p.name, u, i.coll))
 
     def note_leftout(self, i):
         mid = i.move.id
@@ -940,6 +956,9 @@ class Walk:
         elif kind == 'mark':
             place, unit, r, c = obj
             self.add(place, unit or '*', Ent(key, 'mark', reg=(r,), coll=c))
+        elif kind == 'decided':
+            place, unit, c = obj
+            self.add(place, unit or '*', Ent(key, 'mark', reg=(), coll=c))
         elif kind == 'placehole':
             place, qs, i = obj
             self.add(place, '*', Ent(key, 'perm', qs=qs, mv=i, coll=i.coll, flow=Hole(qs)))

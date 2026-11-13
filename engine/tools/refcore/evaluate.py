@@ -208,6 +208,7 @@ class Engine:
         self.stack = [Coll()]
         self.active = set()
         self.ask_K = m.on
+        self.ask_pin_cells = {}     # an ask's with value pin's text -> the cell it pins, as printed (ask.print_line)
         self.tracing = False
         self.trace_stack = []
         self.trace_cells = {}
@@ -2771,8 +2772,10 @@ class Engine:
                 pinsv = [q for q in pinsv if q.key()[:4] != pv.key()[:4] or q.layer != layer]
                 pinsv.append(pv)
                 if ask:
-                    # an ask's with pins are printed with every line (L §5.18 The world of an ask)
+                    # an ask's with pins are printed with its lines (L §5.18 The world of an ask), but not under a
+                    # line where an inner pin of the same cell gave every read of it (R7, T's SR-6: ask.print_line)
                     self.reg(('pinned', text))
+                    self.ask_pin_cells[text] = text.split(' = ')[0]
         return ctx.but(law=law, cut=cut, pins=tuple(sorted(pinsv, key=lambda q: repr(q.key()))),
                        axes=tuple(sorted(axes.items())), wording=tuple(wording), world=world)
 

@@ -405,6 +405,7 @@ class Asker:
             return ['%s: refused: REQ-PATHS %d paths for one ask; the cap is 100 000' % (a.id, a.paths)]
         eng = Engine(m)
         eng.explainer = (self, a)
+        self.pin_cells = eng.ask_pin_cells
         self.eng_warn = eng.walk_warnings
         eng.check_range_lits()
         eng.cross = getattr(self, 'cross', None)
@@ -1109,6 +1110,12 @@ class Asker:
         coll = Coll()
         coll.merge(pins_coll)
         coll.merge(ln.coll)
+        # L §8.2 One read set (tally 2.1.7 R7, T's SR-6): an ask's with pin of a cell that an inner pin gave at every
+        # read of it is in no read of the line, so it isn't listed (R4: the innermost claim wins)
+        cells = getattr(self, 'pin_cells', {})
+        for e in [e for e in pins_coll.reg if e[0] == 'pinned' and e[1] in cells and e not in ln.coll.reg]:
+            if any(x[0] == 'pinned' and x != e and x[1].startswith(cells[e[1]] + ' = ') for x in ln.coll.reg):
+                coll.reg.discard(e)
         laws = getattr(vals[0], 'laws', None) if vals else None
         out.extend('  ' + r for r in self.register(coll, ln.reading, ctx, a.path is not None, laws))
         if a.orient is not None:
