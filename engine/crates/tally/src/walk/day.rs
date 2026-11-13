@@ -23,7 +23,7 @@ use super::state::{ALL, Change, Ent, Group, Progress, Taken, Today, Walk, WalkOb
 use crate::base::{Code, Refusal, Run, Warn};
 use crate::eval::{Collected, Engine, Entry, GUARDED};
 use crate::hole::{Hole, spread};
-use crate::model::Reality;
+use crate::model::{Reality, World};
 use crate::num::Num;
 use crate::syntax::{Sign, Stop};
 use crate::time::Day;
@@ -363,7 +363,7 @@ impl Engine {
             Act::Obs(ix, leg) => self.book_obs_leg(m, id, ix, leg, at),
             Act::Mark(place, unit, entry, coll) => {
                 let mut ent = Ent::new(at, Change::Mark);
-                ent.reg = vec![entry];
+                ent.reg = entry.into_iter().collect();
                 ent.coll = Some(coll);
                 self.walk_mut(id)?.add(m, &place, &unit, ent)
             }
@@ -377,7 +377,15 @@ impl Engine {
                         figure: String::new(),
                     });
                 }
-                self.book_leg(m, id, (&movement.id, &lg), at, &reg, &movement.coll)
+                let move_id = movement.move_id.clone();
+                self.book_leg(
+                    m,
+                    id,
+                    (&movement.id, &move_id, &lg),
+                    at,
+                    &reg,
+                    &movement.coll,
+                )
             }
             Act::LegHole(mv, leg, qs) => {
                 let (movement, lg) = self.movement_leg(id, mv, leg)?;
@@ -463,12 +471,16 @@ impl Engine {
         &mut self,
         m: &Reality,
         id: usize,
-        (movement, lg): (&str, &LegVal),
+        (movement, move_id, lg): (&str, &str, &LegVal),
         at: At,
         reg: &[Entry],
         coll: &Collected,
     ) -> Result<(), Stop> {
-        self.book_leg_ends(m, id, (movement, lg), at, (reg, coll), Ends::both())
+        let day = lg.day.day().unwrap_or(at.day);
+        let world = self.walk(id)?.world;
+        let mut reg = reg.to_vec();
+        reg.extend(before_from(m, world, (move_id, day), coll));
+        self.book_leg_ends(m, id, (movement, lg), at, (&reg, coll), Ends::both())
     }
 
     /// Books the ends of a leg `ends` names, as [`Engine::book_leg`] books both: an
@@ -1039,6 +1051,47 @@ pub(super) fn ends(lg: &LegVal) -> Vec<&str> {
         .into_iter()
         .filter_map(End::place)
         .collect()
+}
+
+/// The `before from:` entry of a leg an instance of move `move_id` books on `day`, where its
+/// read set holds a fact of a scenario of the walk's world whose `from` is after `day`: listed
+/// under each result whose reads reach the leg, in that branch and every branch over it; none
+/// for any other leg (refcore's `before_from`). L §8.2 `before from:`, §6.4; E §9 item 3
+/// (tally 2.1.7 R7).
+fn before_from(
+    m: &Reality,
+    world: World,
+    (move_id, day): (&str, Day),
+    coll: &Collected,
+) -> Option<Entry> {
+    let items: BTreeSet<&str> = coll
+        .listed
+        .iter()
+        .filter(|(section, _)| changed_after(m, world, section, day))
+        .map(|(_, item)| item.as_str())
+        .collect();
+    if items.is_empty() {
+        return None;
+    }
+    let items: Vec<&str> = items.into_iter().collect();
+    Some(Entry {
+        word: "before from",
+        text: format!("{move_id} on {} reads {}", day.text(), items.join(", ")),
+        figure: String::new(),
+    })
+}
+
+/// Whether `section` is of a scenario world `world` sees whose `from` is after `day` (refcore's
+/// `before_from`, its `changed`). L §6.4.
+fn changed_after(m: &Reality, world: World, section: &str, day: Day) -> bool {
+    let Some(scenario) = m.scenarios.of(section) else {
+        return false;
+    };
+    m.scenarios.sees(world, Some(section))
+        && m.scenarios
+            .from
+            .get(scenario)
+            .is_some_and(|from| day < *from)
 }
 
 /// A quantity with a sign: −q out of a place, +q into it. E §4.2.

@@ -587,7 +587,7 @@ impl Engine {
                 Ok(day) => day,
                 Err(h) => return Ok(Value::Hole(h)),
             };
-            self.note_thing(m, thing, ctx.world);
+            self.note_thing(m, thing, ctx.world, super::state::ThingRead::Member);
             let alive =
                 member_span(m, thing, kind, (ctx.cut, ctx.world)).is_some_and(|s| s.contains(day));
             return Ok(Value::Bool(alive));

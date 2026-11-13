@@ -247,7 +247,7 @@ impl Engine {
             .ok_or_else(|| invariant("a thing load didn't build"))?;
         // a lifespan is a fact (L §5.7): its read is recorded, so a scenario that changes it
         // lists the movements before its `from` that read it (E §9 item 3)
-        self.note_thing(m, thing, ctx.world);
+        self.note_thing(m, thing, ctx.world, super::state::ThingRead::Lifespan);
         let Some(span) = m.lifespan(thing, (ctx.cut, ctx.world)) else {
             return Err(refuse(Run::Key, format!("{name} was added after the cut")));
         };

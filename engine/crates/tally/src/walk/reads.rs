@@ -548,11 +548,6 @@ impl Engine {
         self.pop_alone();
         self.walking.remove(&id);
         walked?;
-        // a scenario's movements before its from that read its facts, listed with every
-        // result read from the walk (E §9 item 3)
-        for text in self.walk(id)?.listed.clone() {
-            self.note("before from", text, String::new());
-        }
         Ok(id)
     }
 

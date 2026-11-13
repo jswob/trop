@@ -651,6 +651,9 @@ impl Engine {
                     count_left_out(&mut got.tree, mv, inst);
                 } else if mv.decision {
                     judge_decision(&mut got.tree, inst);
+                } else if inst.status == Status::None {
+                    let places = self.decided_places(m, mv, inst, cut)?;
+                    got.decided(inst, (place, unit), &places);
                 } else {
                     got.judge_plan(m, (place, unit), (cut, world), inst)?;
                 }
@@ -689,6 +692,21 @@ impl Gathered {
             | Status::Uncertain => {}
         }
         Ok(())
+    }
+
+    /// An instance that doesn't exist (a false `when` or key `where`): the reads that decided
+    /// it carried at x from its day, where a leg gives x, a position that moves nothing
+    /// (refcore's `note_none`). L §8.2 One read set (tally 2.1.7 R7).
+    fn decided(&mut self, inst: &Inst, (place, unit): (&str, &str), places: &[(String, String)]) {
+        let Some(d) = inst.day.as_ref().and_then(Dated::day) else {
+            return;
+        };
+        if places
+            .iter()
+            .any(|(p, u)| p == place && (u == unit || u == super::state::ALL))
+        {
+            self.legs.push((d, Num::zero(), inst.coll.clone()));
+        }
     }
 
     /// An instance outside the run: counted with its move's, which keeps a `left out:` entry

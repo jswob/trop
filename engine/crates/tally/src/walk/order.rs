@@ -777,7 +777,7 @@ impl Engine {
                 self.walk_mut(id)?.at(at, Act::Leg(Mv::Run(ix), li));
                 continue;
             }
-            self.book_leg(m, id, (&mv_id, lg), key, &reg, &coll)?;
+            self.book_leg(m, id, (&mv_id, &inst.move_id, lg), key, &reg, &coll)?;
         }
         self.book_own_obs(m, id, &inst, key)?;
         Ok(ix)

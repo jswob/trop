@@ -554,7 +554,7 @@ impl Engine {
         self.note_version(&row.version);
         self.note_row(&row.sid, &row.version, row.locator.as_ref());
         if m.scenarios.of(&row.version).is_some() {
-            self.note_scenario(&row.version, &def.id);
+            self.note_listed(&row.version, &def.id);
         }
         self.read(Read::Row {
             version: row.version.clone(),

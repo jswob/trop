@@ -286,9 +286,6 @@ pub struct Walk {
     /// A main walk's checkpoints, one at the start of each month it walked into, in day
     /// order (P §2.4).
     pub(crate) checkpoints: Vec<Checkpoint>,
-    /// A scenario's main walk's movements before its `from` that read the scenario's facts,
-    /// each a `before from:` text its reads list (E §9 item 3, ruling P43).
-    pub(crate) listed: Vec<String>,
     /// The gaps of the `stated` readings it applied, per (place, day), in the order applied
     /// (L §5.19 `gap(x, d)`, E §6.1).
     pub(crate) gaps: BTreeMap<(String, Day), Vec<GapAt>>,
@@ -450,7 +447,6 @@ impl Walk {
             modelled: Vec::new(),
             less_obs: None,
             checkpoints: Vec::new(),
-            listed: Vec::new(),
             gaps: BTreeMap::new(),
             upto: None,
         }

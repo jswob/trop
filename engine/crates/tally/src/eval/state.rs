@@ -351,6 +351,10 @@ pub struct Collected {
     /// version, a thing's entry or place a scenario states, a scenario's move a binding
     /// ranges over: the read set E §9 item 3 lists a movement by (L §6.4, ruling P45).
     pub scenario: BTreeSet<(String, String)>,
+    /// Of those, each (its section, its item) a movement booked before the scenario's `from`
+    /// lists: a row of a scenario's version, and a thing's entry a `lifespan` read met
+    /// (refcore's `Coll.rows` and `lifeof` entries; L §8.2 `before from:`, tally 2.1.7 R7).
+    pub listed: BTreeSet<(String, String)>,
     /// The rows read, by stable id, each with its version and locator: an input's, a given,
     /// a band row, a reading and an observed row, the walk's counted movements' included
     /// (refcore's `Coll.rows`). Kept only by an engine answering `inputs-of` (E §3.2, §10).
@@ -364,6 +368,17 @@ pub struct RowSeen {
     pub version: String,
     /// Its locator, where it states one.
     pub locator: Option<String>,
+}
+
+/// How a read met a thing: its `lifespan` read, which a movement before a scenario's `from`
+/// lists, or its membership tested or bound, which only explains it (L §8.2 `before from:`;
+/// E §9 item 3; tally 2.1.7 R7).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum ThingRead {
+    /// `lifespan(x)`.
+    Lifespan,
+    /// A membership test or a binding over its kind.
+    Member,
 }
 
 /// Whether the collectors keep the rows read: an engine answering `inputs-of` keeps them,
@@ -382,6 +397,7 @@ impl Collected {
         self.entries.extend(other.entries.iter().cloned());
         self.versions.extend(other.versions.iter().cloned());
         self.scenario.extend(other.scenario.iter().cloned());
+        self.listed.extend(other.listed.iter().cloned());
         for (sid, seen) in &other.rows {
             self.rows.insert(sid.clone(), seen.clone());
         }
@@ -714,12 +730,26 @@ impl Engine {
         }
     }
 
+    /// Records a scenario's fact a movement booked before the scenario's `from` lists when it
+    /// reads it, in the read set too: a row of a scenario's version, a thing's entry a
+    /// `lifespan` read met (refcore's `Coll.rows`, `lifeof`; L §8.2 `before from:`, tally
+    /// 2.1.7 R7). E §9 item 3.
+    pub(crate) fn note_listed(&mut self, section: &str, item: &str) {
+        if let Some(top) = self.stack.last_mut() {
+            top.scenario.insert((section.to_owned(), item.to_owned()));
+            top.listed.insert((section.to_owned(), item.to_owned()));
+        }
+    }
+
     /// Records the scenarios' facts of thing `thing` a read in world `world` met: the
     /// sections of its entries, its place and its key things a scenario states (L §5.7: a
-    /// lifespan is a fact; §6.4). E §9 item 3.
-    pub(crate) fn note_thing(&mut self, m: &Reality, thing: &Thing, world: World) {
+    /// lifespan is a fact; §6.4); listed where `lifespan` read them. E §9 item 3.
+    pub(crate) fn note_thing(&mut self, m: &Reality, thing: &Thing, world: World, read: ThingRead) {
         for section in m.thing_scenario_sections(thing, world) {
-            self.note_scenario(&section, &thing.name);
+            match read {
+                ThingRead::Lifespan => self.note_listed(&section, &thing.name),
+                ThingRead::Member => self.note_scenario(&section, &thing.name),
+            }
         }
     }
 

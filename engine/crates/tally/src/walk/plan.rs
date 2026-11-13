@@ -786,7 +786,40 @@ impl Engine {
             .clone()
             .ok_or_else(|| invariant("a refused instance with no refusal"))?;
         let day = inst.day.clone().unwrap_or(Dated::Day(Day::END));
-        let mut legs = Vec::with_capacity(mv.decl.legs.len());
+        let Some(places) = self.leg_ends(m, mv, inst, ctx)? else {
+            return Ok(None);
+        };
+        let legs = mv
+            .decl
+            .legs
+            .iter()
+            .zip(places)
+            .map(|(leg, (from, to))| LegVal {
+                name: leg.name.clone(),
+                from: End::Place(from),
+                to: End::Place(to),
+                amount: Amount::Refused(err.clone()),
+                unit: None,
+                day: day.clone(),
+            })
+            .collect();
+        Ok(Some(legs))
+    }
+
+    /// The places each leg of instance `inst` gives, read at `ctx`; none where a place isn't
+    /// a thing here, a hole or a refusal (refcore's `refused_places`). L §8.4, §8.2.
+    ///
+    /// # Errors
+    ///
+    /// A load refusal met at run.
+    fn leg_ends(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        inst: &Inst,
+        ctx: Ctx,
+    ) -> Result<Option<Vec<(String, String)>>, Stop> {
+        let mut out = Vec::with_capacity(mv.decl.legs.len());
         for leg in &mv.decl.legs {
             let Some(from) = self.read_or_refused(m, &leg.from, &inst.env, ctx)? else {
                 return Ok(None);
@@ -798,16 +831,56 @@ impl Engine {
             else {
                 return Ok(None);
             };
-            legs.push(LegVal {
-                name: leg.name.clone(),
-                from: End::Place(from),
-                to: End::Place(to),
-                amount: Amount::Refused(err.clone()),
-                unit: None,
-                day: day.clone(),
-            });
+            out.push((from, to));
         }
-        Ok(Some(legs))
+        Ok(Some(out))
+    }
+
+    /// The places, each with its unit, where the reads that decided instance `inst` doesn't
+    /// exist (a false `when` or key `where`) join a balance's read set from its day: those
+    /// its legs give, read at its booking cut (refcore's `note_none`). L §8.2 One read set
+    /// (tally 2.1.7 R7, T's SR-8).
+    ///
+    /// # Errors
+    ///
+    /// A load refusal met at run.
+    pub(super) fn decided_places(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        inst: &Inst,
+        cut: Day,
+    ) -> Result<Vec<(String, String)>, Stop> {
+        let mut ends: Vec<(String, Option<String>)> = Vec::new();
+        if inst.legs.is_empty() {
+            let day = inst.day.as_ref().and_then(Dated::day);
+            let ctx = self.timeline_ctx(inst.law, day.map_or(cut, |d| d.min(cut)));
+            let Some(places) = self.leg_ends(m, mv, inst, ctx)? else {
+                return Ok(Vec::new());
+            };
+            for (from, to) in places {
+                ends.push((from, None));
+                ends.push((to, None));
+            }
+        }
+        for lg in &inst.legs {
+            for place in [&lg.from, &lg.to].into_iter().filter_map(End::place) {
+                ends.push((place.to_owned(), lg.unit.clone()));
+            }
+        }
+        let mut out = Vec::new();
+        for (place, unit) in ends {
+            let unit = match unit {
+                Some(unit) => unit,
+                None => m
+                    .things
+                    .get(&place)
+                    .and_then(|thing| m.place_unit(thing))
+                    .unwrap_or_else(|| super::state::ALL.to_owned()),
+            };
+            out.push((place, unit));
+        }
+        Ok(out)
     }
 
     /// The value of `e` at `ctx`, or none where it is refused at run (refcore's `try: ev …
