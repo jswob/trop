@@ -202,7 +202,7 @@ Plans read other plans through `flows(m[keys], span)`, their legs and attributes
 
 ### 4.2 The day walk
 
-The walk is a fold over days. It starts at S from the opening readings (LANGUAGE §5.10); observed rows dated before S are bound by bindings and fills and booked by none (LANGUAGE §5.19). For each day t from S to E:
+The walk is a fold over days, read as a scan: a read of day t reads its prefix through t, and the walk runs S to E whole (LANGUAGE §8, what a result reads). It starts at S from the opening readings (LANGUAGE §5.10); observed rows dated before S are bound by bindings and fills and booked by none (LANGUAGE §5.19). For each day t from S to E:
 0. **Readings at the start of the day.** Each `opening` reading at `t start` that the cut sees, with t before K or t = S, anchors its place, and each `stated` reading there, with t before K, pads or anchors it (LANGUAGE §5.10, §5.19; §6.1).
 1. **Observations.** Book the observations dated t, if t is before K, each end by the rule of §6.1, except one that fulfils a decision instance dated t: it is that instance's movement, booked at its point in step 3, so the decisions before it that day see the balance without it. Every other observation is booked here, on its own day, one dated before or after the instance it fulfils included (LANGUAGE §5.19).
 2. **Plans.** Book the plan pass's legs dated t. A leg with its own `on` is booked on its day; each leg moves its unit from its `from` to its `to`.
