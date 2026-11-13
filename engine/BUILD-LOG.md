@@ -2754,3 +2754,17 @@ Three commits: 4f8d6ad (the run half), 35e3be8 (prices at load), and this one (t
 - **Sweep:** none SAME → DIFF (an intermediate build had 2, `residuals` of a place the tie doesn't touch, fixed by `may_touch`); 5 asks DIFF → SAME over R1's; no new `ENGINE-INVARIANT`.
 - **Size:** 135 changed lines (95 added, 40 removed); the plan said about 60, without the ledger's `may_touch` and `run_one_body`. **M1 code replaced:** "a refused version doesn't answer a hole movement"; the global log's first-day skip (`> lo`); 2.1.6's read of a refused decision's `when` and every place for a refused body; the ledger's refusal by any refused instance. **Exceptions:** +0.
 - **Check:** `check commit: green, 23 steps`.
+
+## 2026-11-13 tally 2.1.7, R3: an unknown day is a set of days; each operation gives the interval of its values (issue #142, pick P5; P32 reopened)
+
+- **A window of one day is that day** (`eval/windows.rs` `single`; F3): in a comparison, an order, arithmetic and wherever one day is needed (`one_day`), so `window(d, d) == d` is true.
+- **One lift per function, ends or per day** (L §4.4; F4): `dcf` is monotone in each day, so a window is read by its ends, every corner (`eval/dates.rs` `dcf_ends`, `year_fraction`); `is_business` and `add_business` aren't, so a window argument is evaluated for each day it can take (`eval/business.rs` `per_day`, `Daily`, `window_days`): one value where the days agree, else their interval, or for a truth value `HOLE-IMPRECISE`. The per-built-in `HOLE-IMPRECISE` for `dcf`, `is_business` and `add_business` go.
+- **Two `added` entries are two unknown days** (`eval/business.rs` `WindowId`; F5): a pass's choice is keyed by the entry's place in `added` too, so equal texts no longer share one choice.
+- **`argmin`/`argmax` over windows** (`eval/extremes.rs` `decided_keys`, `tie_group`; P32): the first term decided least (greatest) against every other, with the terms equal to it on every day (one read, or one known value) as its tie, which `ties by` breaks; else `HOLE-IMPRECISE`.
+- **Questions name the read** (T's SR-5): a computed interval has no read, but `min`/`max`, `weekday` and a negated window keep the first window's figure for their questions (`(wl)`, `(w_in)`).
+- **A range's step is needed whole** (`eval/ranges.rs`; SR-9): a window step is `HOLE-IMPRECISE … for a range step`, as its ends are.
+- **Turned green (8):** `fixes/g2/p4_f1`, `fixes/g13/r_agent_w_model_with_r_agent_w_g4`, `_g5`, `fixes/g13/rf_w_model_with_rf_w_w10`, `r3/l4_4_windows_argmin_tie`, `r3/l4_4_windows_one_day`, `r3/l4_4_windows_per_day`, `r3/reach_max`. Gating: 109 of the 287 still red (and the 4 rows of the second STOP-REPORT).
+- **Still red:** `r3/l4_4_windows_added_entries`: its `one` now answers refcore's `window(2026-06-01, 2026-06-03)`, but its `each` is `windows each` on an ask, which the engine doesn't build (`ask/answer.rs`, "an ask's `windows each`"): a feature the engine lacks waits.
+- **Sweep:** none SAME → DIFF; 6 asks DIFF → SAME over R2's; no new `ENGINE-INVARIANT`.
+- **Size:** 313 changed lines (244 added, 69 removed); the plan said about 120. The engine's read identity (`ReadOf`, #115) stood as it was. **M1 code replaced:** `dcf_day`'s `HOLE-IMPRECISE`; `is_business`'s and `add_business`'s window `HOLE-IMPRECISE`; `decided_keys`' strict "below every other"; the window id without its entry. **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps`.

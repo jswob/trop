@@ -163,6 +163,10 @@ impl Engine {
                 return Err(refuse(Run::None, "never in a range end".to_owned()));
             }
         }
+        // and so is its step (tally 2.1.7 R3: a value needed whole)
+        if let Some(w) = by.as_ref().and_then(as_window) {
+            return Ok(Err(imprecise(m, w, "a range step")?));
+        }
         Ok(Ok((first, last, by)))
     }
 

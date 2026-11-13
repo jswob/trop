@@ -25,7 +25,7 @@ use super::arith::{Test, compare};
 use super::bindings::{reads_name, span_reads};
 use super::expr::hole_of;
 use super::state::{Ctx, Engine, Env, a_day, invariant, num_stop, refuse};
-use super::windows::{End, as_window, decided_order, imprecise, one_day, one_read, window_end};
+use super::windows::{End, as_window, decided_order, imprecise, one_day, window_end};
 use crate::base::Run;
 use crate::hole::{Hole, spread};
 use crate::model::{IndexForm, KindSpec, Reality, Value, Window};
@@ -88,7 +88,9 @@ pub(super) fn min_max(m: &Reality, vals: Vec<Value>, pick: End) -> Result<Value,
     let Some(w) = vals.iter().find_map(as_window) else {
         return extreme_of(m, vals, pick);
     };
-    let src = w.src.clone();
+    // a computed interval has no read, but its questions name the first window's figure
+    // (L §8.1; tally 2.1.7 R3, T's SR-5)
+    let (src, figure) = (w.src.clone(), w.figure.clone());
     let los: Vec<Value> = vals.iter().map(|v| window_end(v, End::Low)).collect();
     let his: Vec<Value> = vals.iter().map(|v| window_end(v, End::High)).collect();
     let (lo, hi) = (extreme_of(m, los, pick)?, extreme_of(m, his, pick)?);
@@ -100,7 +102,7 @@ pub(super) fn min_max(m: &Reality, vals: Vec<Value>, pick: End) -> Result<Value,
         hi,
         days: None,
         src,
-        figure: None,
+        figure,
         read: None,
     })))
 }
@@ -719,29 +721,44 @@ fn extreme_keys(
     Ok(Some(best))
 }
 
-/// The positions of the terms decided below (`wanted` Less) or above every other term but
-/// those that are one value with them; none where no term is (refcore's `agg_arg`). L §5.11,
-/// §4.4.
+/// The positions of the first term decided below (`wanted` Less) or above every other term,
+/// with the terms equal to it on every day the windows can take (one read, or one known
+/// value), a tie the `ties by` breaks; none where no term is (refcore's `agg_arg`; tally 2.1.7
+/// R3, P32). L §5.11, §4.4.
 fn decided_keys(
     m: &Reality,
     terms: &[(&Env, Value)],
     wanted: Ordering,
 ) -> Result<Option<Vec<usize>>, Stop> {
-    let mut wins: Vec<usize> = Vec::new();
-    for (i, (_, t)) in terms.iter().enumerate() {
-        let mut beats = true;
-        for (j, (_, u)) in terms.iter().enumerate() {
-            if i == j || one_read(t, u) {
-                continue;
-            }
-            if decided_order(m, t, u)? != Some(wanted) {
-                beats = false;
-                break;
-            }
-        }
-        if beats {
-            wins.push(i);
+    for i in 0..terms.len() {
+        if let Some(group) = tie_group(m, terms, i, wanted)? {
+            return Ok(Some(group));
         }
     }
-    Ok((!wins.is_empty()).then_some(wins))
+    Ok(None)
+}
+
+/// Term `i` with the terms equal to it, where it is decided below (`wanted` Less) or above
+/// every other; none where it isn't. L §5.11, §4.4.
+fn tie_group(
+    m: &Reality,
+    terms: &[(&Env, Value)],
+    i: usize,
+    wanted: Ordering,
+) -> Result<Option<Vec<usize>>, Stop> {
+    let (_, t) = terms
+        .get(i)
+        .ok_or_else(|| invariant("a term past the list"))?;
+    let mut group = vec![i];
+    for (j, (_, u)) in terms.iter().enumerate() {
+        if i == j {
+            continue;
+        }
+        match decided_order(m, t, u)? {
+            Some(Ordering::Equal) => group.push(j),
+            Some(order) if order == wanted => {}
+            Some(_) | None => return Ok(None),
+        }
+    }
+    Ok(Some(group))
 }
