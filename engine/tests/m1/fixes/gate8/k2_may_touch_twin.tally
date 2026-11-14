@@ -1,0 +1,79 @@
+model res_tie
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+
+source fixture "T's probe (invented values)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-02
+
+index box = [first, second]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place lean_jar[b in box]: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input rent: money PLN
+
+input pay_dom: int
+
+input dec_dom: int
+
+input big_put: money PLN
+
+input small_put: money PLN
+
+input lean_amt[b in box]: money PLN
+
+move rent_pay[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from konto to world amount rent
+
+move lean[b in box, m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  leg cash from world to lean_jar[b] amount lean_amt[b] * small_put / big_put
+
+ask q_res: residuals konto 2026-01 law cut
+
+ask q_bal: bal(konto, 2026-01-31), bal(lean_jar[second], 2026-01-31) law cut
+
+ask q_flows: flows(rent_pay, 2026-01-01 .. 2026-01-31) law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  rent = 600.00 "the rent"
+  pay_dom = 5 "day"
+  dec_dom = 20 "day"
+  big_put = 100.00 "a big amount"
+  small_put = 1.00 "a small amount"
+  lean_amt[first] = 2.00 "two"
+  lean_amt[second] = 1.00 "one"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 3000 at 2026-01-01 start
+  opening[lean_jar[first]] = 0 at 2026-01-01 start
+  opening[lean_jar[second]] = 0 at 2026-01-01 start
+
+version bank_jan
+  cite fixture
+  governs 2026-01
+  known 2026-02-02
+  covers konto, lean_jar[second]
+  anchor konto
+  bank[b20260105] = (on: 2026-01-05, kind: transfers, leg cash from konto to world amount 600.00 PLN, fulfils: rent_pay[2026-01]) "the rent"
+
+ask q_lean: residuals lean_jar[second] 2026-01 law cut

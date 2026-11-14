@@ -308835,6 +308835,525 @@ s7g: (100.00 PLN, 90.00 PLN)
   anchor: ko2 2026-02-28 end, stated 90.00 PLN, difference 75.00 PLN
   anchor: konto 2026-02-28 end, stated 100.00 PLN, difference 60.00 PLN
   cut 2026-04-15
+,29:fixes/gate8/k1_after_run_line,11:fixes-gate8,27:run k1_after_run_line.tally,658:23:k1_after_run_line.tally,626:model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-03-15
+
+source plan "plan"
+unit PLN: currency minor 0.01
+input rent_amt: money PLN
+input rent_dom: int
+place konto: accounts PLN lives 2019-05-01..
+place landlord: outside lives 1900-01-01..
+
+move rent[m in months]: transfers
+  on day_of(m, rent_dom)
+  at start_of(m)
+  leg cash from konto to landlord amount rent_amt
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  rent_amt = 2 000.00 PLN "umowa najmu"
+  rent_dom = 3 "umowa najmu"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "wyciąg"
+
+ask led: residuals konto 2026-02 .. 2026-03
+,,1:0,267:led: residuals konto 2026-02 .. 2026-03
+  after the run's end: model ?"after the run's end" (konto), observed ?"after the run's end" (konto), difference ?"after the run's end" (konto)
+    days 2026-03-16 .. 2026-03-31: ?"after the run's end" (konto)
+  cut 2026-10-20
+,24:fixes/gate8/k2_may_touch,11:fixes-gate8,22:run k2_may_touch.tally,1851:18:k2_may_touch.tally,1823:model res_tie
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+
+source fixture "T's probe (invented values)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-02
+
+index box = [first, second]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place lean_jar[b in box]: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input rent: money PLN
+
+input pay_dom: int
+
+input dec_dom: int
+
+input big_put: money PLN
+
+input small_put: money PLN
+
+input lean_amt[b in box]: money PLN
+
+move rent_pay[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from konto to world amount rent
+
+move lean[b in box, m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  leg cash from world to lean_jar[b] amount lean_amt[b] * small_put / (big_put - big_put)
+
+ask q_res: residuals konto 2026-01 law cut
+
+ask q_bal: bal(konto, 2026-01-31), bal(lean_jar[second], 2026-01-31) law cut
+
+ask q_flows: flows(rent_pay, 2026-01-01 .. 2026-01-31) law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  rent = 600.00 "the rent"
+  pay_dom = 5 "day"
+  dec_dom = 20 "day"
+  big_put = 100.00 "a big amount"
+  small_put = 1.00 "a small amount"
+  lean_amt[first] = 2.00 "two"
+  lean_amt[second] = 1.00 "one"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 3000 at 2026-01-01 start
+  opening[lean_jar[first]] = 0 at 2026-01-01 start
+  opening[lean_jar[second]] = 0 at 2026-01-01 start
+
+version bank_jan
+  cite fixture
+  governs 2026-01
+  known 2026-02-02
+  covers konto, lean_jar[second]
+  anchor konto
+  bank[b20260105] = (on: 2026-01-05, kind: transfers, leg cash from konto to world amount 600.00 PLN, fulfils: rent_pay[2026-01]) "the rent"
+
+ask q_lean: residuals lean_jar[second] 2026-01 law cut
+,,1:0,447:q_bal: (2 400.00 PLN, 0.00 PLN)
+  law date 2026-02-15, cut 2026-02-15
+q_flows: 600.00 PLN
+  law date 2026-02-15, cut 2026-02-15
+q_lean: refused: RUN-DIV division by zero
+q_res: residuals konto 2026-01
+  2026-01 move rent_pay: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN
+    matched rent_pay[2026-01] on 2026-01-05: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN, timing +0 days
+  law date 2026-02-15, cut 2026-02-15
+,29:fixes/gate8/k2_may_touch_twin,11:fixes-gate8,27:run k2_may_touch_twin.tally,1844:23:k2_may_touch_twin.tally,1811:model res_tie
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+
+source fixture "T's probe (invented values)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-02
+
+index box = [first, second]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place lean_jar[b in box]: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input rent: money PLN
+
+input pay_dom: int
+
+input dec_dom: int
+
+input big_put: money PLN
+
+input small_put: money PLN
+
+input lean_amt[b in box]: money PLN
+
+move rent_pay[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from konto to world amount rent
+
+move lean[b in box, m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  leg cash from world to lean_jar[b] amount lean_amt[b] * small_put / big_put
+
+ask q_res: residuals konto 2026-01 law cut
+
+ask q_bal: bal(konto, 2026-01-31), bal(lean_jar[second], 2026-01-31) law cut
+
+ask q_flows: flows(rent_pay, 2026-01-01 .. 2026-01-31) law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  rent = 600.00 "the rent"
+  pay_dom = 5 "day"
+  dec_dom = 20 "day"
+  big_put = 100.00 "a big amount"
+  small_put = 1.00 "a small amount"
+  lean_amt[first] = 2.00 "two"
+  lean_amt[second] = 1.00 "one"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 3000 at 2026-01-01 start
+  opening[lean_jar[first]] = 0 at 2026-01-01 start
+  opening[lean_jar[second]] = 0 at 2026-01-01 start
+
+version bank_jan
+  cite fixture
+  governs 2026-01
+  known 2026-02-02
+  covers konto, lean_jar[second]
+  anchor konto
+  bank[b20260105] = (on: 2026-01-05, kind: transfers, leg cash from konto to world amount 600.00 PLN, fulfils: rent_pay[2026-01]) "the rent"
+
+ask q_lean: residuals lean_jar[second] 2026-01 law cut
+,,1:0,670:q_bal: (2 400.00 PLN, 0.00 PLN)
+  open: lean[second, 2026-01]
+  law date 2026-02-15, cut 2026-02-15
+q_flows: 600.00 PLN
+  law date 2026-02-15, cut 2026-02-15
+q_lean: residuals lean_jar[second] 2026-01
+  2026-01 move lean: model 0.01 PLN, observed 0.00 PLN, difference -0.01 PLN
+    expected but missing lean[second, 2026-01] on 2026-01-20: model 0.01 PLN
+  law date 2026-02-15, cut 2026-02-15
+q_res: residuals konto 2026-01
+  2026-01 move rent_pay: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN
+    matched rent_pay[2026-01] on 2026-01-05: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN, timing +0 days
+  law date 2026-02-15, cut 2026-02-15
+,23:fixes/gate8/k5_unbooked,11:fixes-gate8,21:run k5_unbooked.tally,917:17:k5_unbooked.tally,891:model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-03-15
+
+source plan "plan"
+unit PLN: currency minor 0.01
+input rent_amt: money PLN
+input rent_dom: int
+place konto: accounts PLN lives 2019-05-01..
+place landlord: outside lives 1900-01-01..
+place szuflada: cash PLN lives 2019-05-01..
+
+index mon = month 2026-01..2026-12
+
+move rent[m in mon]: transfers
+  on day_of(m, rent_dom)
+  at start_of(m)
+  leg cash from konto to landlord amount rent_amt
+
+move gift[m in mon]: transfers
+  on day_of(m, rent_dom)
+  at start_of(m)
+  leg cash from landlord to szuflada amount rent_amt
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  rent_amt = 2 000.00 PLN "umowa najmu"
+  rent_dom = 1 "umowa najmu"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "wyciąg"
+  opening[szuflada] = 0 PLN at 2026-01-01 start "szuflada"
+
+ask f: flows(konto, 2026-04-01 .. 2026-05-01)
+,,1:0,34:f: -4 000.00 PLN
+  cut 2026-10-20
+,22:fixes/gate8/k6_by_form,11:fixes-gate8,20:run k6_by_form.tally,1086:16:k6_by_form.tally,1060:model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+unit etf "fund unit"
+
+kind funds: place etf min 0
+kind mixed: place any min 0
+kind buys: event certain
+  leg units: etf
+
+input px: num PLN/etf reading
+input day: date
+input amt: num etf
+input eur_amt: money EUR
+
+place fund: funds lives 2026-01-01..
+place box: mixed lives 2026-01-01..
+place market: outside lives 1900-01-01..
+
+move buy: buys
+  on day
+  leg units from market to fund amount amt
+
+move buy2: buys
+  on day
+  leg units from market to box amount amt
+
+move fx: transfers
+  on day
+  leg cash from market to box amount eur_amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  px = 12 PLN/etf at 2026-03-01 "kurs"
+  day = 2026-02-02 "own"
+  amt = 1 etf "own"
+  eur_amt = 1.00 EUR "own"
+
+ask q1: value(fund, 2026-06-30) in PLN by last(px)
+ask q2: value(fund, 2026-06-30) in PLN by px law 2026-06-30
+ask q3: value(fund, 2026-01-31) in PLN by last(px)
+ask q4: value(box, 2026-06-30) in PLN by last(px)
+,,1:0,390:q1: 12 PLN
+  unfulfilled: buy
+  held: px = 12 PLN/etf (v), read for 2026-06-30
+  cut 2026-06-30
+q2: ?"px has no reading at 2026-06-30" (px)
+  unfulfilled: buy
+  law date 2026-06-30, cut 2026-06-30
+q3: 0 PLN
+  cut 2026-06-30
+q4: refused: RUN-DOMAIN value(box) in PLN: the price 12 PLN/etf is not in PLN/EUR
+  unfulfilled: fx
+  held: px = 12 PLN/etf (v), read for 2026-06-30
+  cut 2026-06-30
+,24:fixes/gate8/k7_after_run,11:fixes-gate8,22:run k7_after_run.tally,733:18:k7_after_run.tally,706:model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-03-15
+
+source plan "plan"
+unit PLN: currency minor 0.01
+input rent_amt: money PLN
+input rent_dom: int
+input ld: date
+place konto: accounts PLN lives 2019-05-01..
+place landlord: outside lives 1900-01-01..
+
+index mon = month 2025-12..2026-12
+
+move rent[m in mon]: transfers
+  on day_of(m, rent_dom)
+  at start_of(m)
+  leg cash from konto to landlord amount rent_amt on ld
+
+version plan_2026
+  cite plan
+  governs always
+  known 2025-01-01
+  rent_amt = 2 000.00 PLN "umowa najmu"
+  rent_dom = 1 "umowa najmu"
+  ld = 2026-04-01 "own"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "wyciąg"
+
+ask f: flows(konto, 2026-04-01 .. 2026-05-01)
+,,1:0,35:f: -18 000.00 PLN
+  cut 2026-10-20
+,28:fixes/gate8/k4_changed_after,11:fixes-gate8,30:run household.tally late.tally,761:15:household.tally,563:model household
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2027-12-31
+
+source plan "plan"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input dom: int
+
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to world amount amt
+
+version base
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  amt = 10.00 PLN "own"
+  dom = 1 "own"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "wyciąg"
+
+ask b: bal(konto, 2027-01-31) in late
+,10:late.tally,155:scenario late over household
+  tally 2
+  from 2027-01-01
+
+version late_amt
+  cite plan
+  governs 2027..
+  known 2026-01-01
+  replace amt = 20.00 PLN "own"
+,,1:0,676:b: -40.00 PLN
+  world: late
+  unfulfilled: pay[2026-01]
+  unfulfilled: pay[2026-02]
+  unfulfilled: pay[2026-03]
+  unfulfilled: pay[2026-04]
+  unfulfilled: pay[2026-05]
+  unfulfilled: pay[2026-06]
+  unfulfilled: pay[2026-07]
+  unfulfilled: pay[2026-08]
+  unfulfilled: pay[2026-09]
+  unfulfilled: pay[2026-10]
+  held: amt = 10.00 PLN (base), read for 2026-11-01
+  held: amt = 10.00 PLN (base), read for 2026-12-01
+  held: amt = 20.00 PLN (late_amt), read for 2027-01-01
+  held: dom = 1 (base), read for 2026-11-01
+  held: dom = 1 (base), read for 2026-12-01
+  held: dom = 1 (base), read for 2027-01-01
+  cut 2026-10-20
+warning: WARN-NEGATIVE konto is below zero from 2026-11-01
+,29:fixes/gate8/k8_projected_days,11:fixes-gate8,46:run k8_projected_days.tally --ask p_day p_from,2922:23:k8_projected_days.tally,2889:model l1
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-06-30
+  note "G8's low probes (invented): the plain form, the clauses, the refusals and holes, a def that leaves a move out"
+
+source card "probe card"
+
+unit PLN: currency minor 0.01
+
+kind promises: transfers uncertain
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input rent_amt: money PLN
+
+input rent_day: date
+
+input wage_amt: money PLN
+
+input wage_day: date
+
+input gift_amt: money PLN
+
+input gift_day: date
+
+input odd_amt: money PLN
+
+input a_day: date
+
+input b_day: date
+
+input top_day: date
+
+input odd_day: date
+
+def floor_ahead: money PLN = low(konto, a_day .. b_day) from a_day
+
+def top_up: money PLN = max(0 PLN, -floor_ahead)
+
+move rent: transfers
+  on rent_day
+  leg cash from konto to world amount rent_amt
+
+move wage: transfers
+  on wage_day
+  leg cash from world to konto amount wage_amt
+
+move gift: promises
+  on gift_day
+  leg cash from world to konto amount gift_amt
+
+move topup: transfers
+  on top_day
+  reads konto
+  leg cash from world to konto amount top_up
+
+move odd: transfers
+  on odd_day
+  leg cash from konto to world amount odd_amt
+
+ask p_plain: low(konto, 2026-01-01 .. 2026-03-31)
+
+ask p_from: low(konto, 2026-03-01 .. 2026-04-30) from 2026-03-01
+ask p_day: low(konto, 2026-04-20 .. 2026-04-20) from 2026-03-01
+
+ask p_unc: low(konto, 2026-03-01 .. 2026-04-30) from 2026-03-01 with uncertain
+
+ask p_plain_unc: low(konto, 2026-03-01 .. 2026-04-30) with uncertain
+
+ask p_before: low(konto, 2026-02-01 .. 2026-04-30) from 2026-03-01
+
+ask p_prerun: low(konto, 2026-01-01 .. 2026-04-30) from 2025-12-01
+
+ask p_hole: low(konto, 2026-03-01 .. 2026-05-31) from 2026-03-01
+
+ask p_hole_short: low(konto, 2026-03-01 .. 2026-05-09) from 2026-03-01
+
+ask p_def: floor_ahead, top_up
+
+ask p_one: low(konto, 2026-04-15 .. 2026-04-15) from 2026-03-01
+
+ask p_bal: bal(konto, 2026-04-30) from 2026-03-01, bal(konto, 2026-04-30) from 2026-03-01 with uncertain
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  a_day = 2026-03-01 "the card"
+  b_day = 2026-04-30 "the card"
+  odd_day = 2026-05-10 "the card"
+  top_day = 2026-04-20 "the card"
+  gift_amt = 400.00 PLN "the card"
+  gift_day = 2026-03-20 "the card"
+  odd_amt = ?"what does the odd bill come to?" "the card"
+  opening[konto] = 1000.00 PLN at 2026-01-01 start "the card"
+  rent_amt = 2500.00 PLN "the card"
+  rent_day = 2026-03-10 "the card"
+  wage_amt = 3000.00 PLN "the card"
+  wage_day = 2026-04-10 "the card"
+
+ask p_u1: bal(konto, 2026-04-30) with uncertain, bal(konto, 2026-04-30)
+
+ask p_u2: low(konto, 2026-04-30 .. 2026-04-30) with uncertain, low(konto, 2026-04-30 .. 2026-04-30)
+
+ask p_arg: argmin(bal(konto, d) from 2026-03-01 for d in 2026-03-01 .. 2026-04-30 step 1 day) ties by d
+
+ask p_min: min(bal(konto, d) from 2026-03-01 with uncertain for d in 2026-03-01 .. 2026-04-30 step 1 day)
+,,1:0,233:p_day: 3 000.00 PLN
+  left out: topup, 1 instances, first 2026-04-20
+  cut 2026-03-01
+p_from: -1 500.00 PLN
+  left out: topup, 1 instances, first 2026-04-20
+  cut 2026-03-01
+warning: WARN-NEGATIVE konto is below zero from 2026-03-10
 ,27:r1/l8_reads_first_last_stop,8:fixes-r1,23:run m.tally --ask a b c,392:7:m.tally,377:model t
   tally 2
   on 2026-03-01

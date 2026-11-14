@@ -1,0 +1,27 @@
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-03-15
+
+source plan "plan"
+unit PLN: currency minor 0.01
+input rent_amt: money PLN
+input rent_dom: int
+place konto: accounts PLN lives 2019-05-01..
+place landlord: outside lives 1900-01-01..
+
+move rent[m in months]: transfers
+  on day_of(m, rent_dom)
+  at start_of(m)
+  leg cash from konto to landlord amount rent_amt
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  rent_amt = 2 000.00 PLN "umowa najmu"
+  rent_dom = 3 "umowa najmu"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "wyciąg"
+
+ask led: residuals konto 2026-02 .. 2026-03
