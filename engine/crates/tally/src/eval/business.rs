@@ -4,12 +4,17 @@
 //! that is a hole, `HOLE-CALENDAR`, or a window, every day known but one), §4.4 (a
 //! business-day function over a calendar whose `added` holds a window is evaluated for each
 //! day the window can take, its value the interval of those results; for `is_business`
-//! `HOLE-IMPRECISE` when they differ), §7.6 item 5 (a calendar with no business day), §8.4.
+//! `HOLE-IMPRECISE` when they differ), §7.6 items 1 and 5 (the calendar's edge; a calendar
+//! with no business day), §8 head (R1), §8.4; E §3.2 (law-date classes).
 //! Twin: engine/tools/refcore/evaluate.py (`cal_at`, `business`, `over_added`,
 //! `c_is_business`, `c_add_business`, `c_last_business`, `c_schedule`, `rolled`).
 //! Invariants: every business-day function runs as passes, one per combination of the days
 //! the added windows it meets can take, nested in the order met; a pass that meets a window
 //! no choice names is run again once per day of it; the passes' state is restored after them.
+//! An `add_business` whose count outnumbers the days to the edge reads the calendar once per
+//! law-date class of its rows in day order, where those classes stand for its days, and
+//! refuses with the first read's refusal, else `RUN-LIMIT`, as refcore's walk day by day
+//! does; a hole on the way is left to that walk.
 
 use std::collections::{BTreeMap, VecDeque};
 
@@ -17,14 +22,15 @@ use super::arith::whole_of;
 use super::builtin::read_parts;
 use super::dates::period_arg;
 use super::expr::hole_of;
+use super::memo::rows_class;
 use super::state::{Ctx, Engine, Env, invariant, not_typed, past_days, refuse, refuse_load};
 use super::windows::{imprecise, interval, one_day, single};
 use crate::base::{Load, Run};
 use crate::hole::{Hole, spread};
-use crate::model::{Code, Reality, Value, Window};
+use crate::model::{Code, InputInfo, KeyVal, Reality, Value, Window};
 use crate::num::Num;
 use crate::read::Asked;
-use crate::syntax::{Call, Expr, Stop};
+use crate::syntax::{Call, Expr, Stop, Value as Written};
 use crate::time::{Added, Day, Period};
 
 /// An added window of a calendar, by the calendar's input, the entry's place in its `added`
@@ -414,13 +420,18 @@ impl Engine {
     }
 
     /// The `count`-th business day after `from` by steps of `step`, or the hole met on the
-    /// way (refcore's `c_add_business`, its `count`). L §4.2.
+    /// way (refcore's `c_add_business`, its `count`); a count past the days to the edge passes
+    /// it whatever each day is (L §4.2: n business days take at least n days). L §4.2,
+    /// §7.6 item 1.
     fn count_business(
         &mut self,
         m: &Reality,
         (cal, env, ctx): (&Expr, &Env, Ctx),
         (from, step, count): (Day, i64, Option<u64>),
     ) -> Result<Value, Stop> {
+        if passes_edge(from, step, count) {
+            self.past_edge(m, (cal, env, ctx), (from, step))?;
+        }
         let mut left = count;
         let mut current = from;
         while left != Some(0) {
@@ -436,6 +447,55 @@ impl Engine {
             }
         }
         Ok(Value::Day(current))
+    }
+
+    /// A shift that passes the calendar's edge from `from` by steps of `step`: its value is
+    /// computed from the reads the walk makes, in day order (L §8 head, R1), so the calendar
+    /// is read once per law-date class of its rows, the span over which the read can't change
+    /// (E §3.2), from the day after `from` to the edge; the first read's refusal stands, else
+    /// `RUN-LIMIT`. Returns, for the walk day by day, where the classes can't stand for the
+    /// days (a key that is a hole, a reading, a row that is an instant or an expression, a
+    /// key that is a thing with a lifespan) and at a hole on the way, which the walk meets
+    /// first as refcore does (L §8 head R2 reads it refused: the STOP-REPORT of 2026-11-14).
+    /// L §4.2, §7.6 item 1, §8.4.
+    ///
+    /// # Errors
+    ///
+    /// The first class's refusal, else `RUN-LIMIT`.
+    fn past_edge(
+        &mut self,
+        m: &Reality,
+        (cal, env, ctx): (&Expr, &Env, Ctx),
+        (from, step): (Day, i64),
+    ) -> Result<(), Stop> {
+        let Ok((input, keys)) = self.calendar_input(m, (cal, env, ctx))? else {
+            return Ok(());
+        };
+        let by_rows = !input.reading
+            && input.prices.is_none()
+            && input
+                .rows
+                .iter()
+                .all(|r| r.instant.is_none() && !matches!(r.value, Written::Expr(_)))
+            && keys.iter().all(|k| !matches!(k, KeyVal::Thing(_)));
+        if !by_rows {
+            return Ok(());
+        }
+        let mut current = from.add_days(step).ok_or_else(|| past_days(step))?;
+        loop {
+            // the read's refusal stands; a hole, read or added, is met by the walk
+            let value = self.calendar_on(m, (input, &keys), ctx, (current, true))?;
+            let unknown = if let Value::Calendar(c) = &value {
+                c.added().iter().any(|a| matches!(a, Added::Hole(_)))
+            } else {
+                true
+            };
+            if unknown {
+                return Ok(());
+            }
+            let class = rows_class(m, &input.rows, ctx.cut, current)?;
+            current = class.beyond(step).ok_or_else(|| past_days(step))?;
+        }
     }
 
     /// The `count`-th last business day of `period`, counting back from its last day, or the
@@ -536,36 +596,15 @@ impl Engine {
         (cal, env, ctx): (&Expr, &Env, Ctx),
         (day, seek): (Day, bool),
     ) -> Result<Value, Stop> {
-        let Some((name, written)) = read_parts(cal) else {
-            return Err(Stop::NotBuilt("a calendar that isn't an input's read"));
-        };
-        let input = m
-            .inputs
-            .get(name)
-            .ok_or(Stop::NotBuilt("a calendar that isn't an input's read"))?;
-        let given = self.given_keys(m, written, env, ctx)?;
-        let keys = match self.make_keys(m, name, &input.binds, given, ctx)? {
+        let (input, keys) = match self.calendar_input(m, (cal, env, ctx))? {
             Err(hole) => return Ok(Value::Hole(hole)),
-            Ok(made) => made,
+            Ok(found) => found,
         };
-        let value = self.read_input_at(m, input, &keys, ctx.at_law(Some(day)), Asked::Calendar)?;
+        let name = input.id.as_str();
+        let value = self.calendar_on(m, (input, &keys), ctx, (day, seek))?;
         let Value::Calendar(c) = &value else {
-            if let Value::Hole(_) = value {
-                return Ok(value);
-            }
-            if value == Value::None {
-                return Err(refuse(Run::None, "the calendar is none here".to_owned()));
-            }
-            return Err(invariant(
-                "a calendar argument that isn't a calendar: load's types refuse it first (LOAD-UNIT)",
-            ));
+            return Ok(value);
         };
-        if seek && !c.has_business_day() {
-            return Err(refuse(
-                Run::Domain,
-                format!("calendar {name} has no business day"),
-            ));
-        }
         if c.off_by_rule(day) {
             return Ok(Value::Bool(false));
         }
@@ -586,6 +625,56 @@ impl Engine {
         }
         let holes: Vec<Option<&Hole>> = unknown.iter().map(Some).collect();
         hole_of(&holes)
+    }
+
+    /// The input a calendar argument reads and its keys, or the hole of a key (refcore's
+    /// `cal_at`, its read). L §4.2.
+    fn calendar_input<'m>(
+        &mut self,
+        m: &'m Reality,
+        (cal, env, ctx): (&Expr, &Env, Ctx),
+    ) -> Result<Result<(&'m InputInfo, Vec<KeyVal>), Hole>, Stop> {
+        let Some((name, written)) = read_parts(cal) else {
+            return Err(Stop::NotBuilt("a calendar that isn't an input's read"));
+        };
+        let input = m
+            .inputs
+            .get(name)
+            .ok_or(Stop::NotBuilt("a calendar that isn't an input's read"))?;
+        let given = self.given_keys(m, written, env, ctx)?;
+        let keys = self.make_keys(m, name, &input.binds, given, ctx)?;
+        Ok(keys.map(|made| (input, made)))
+    }
+
+    /// The calendar `input` holds at `keys`, in force on `day`: a calendar, or the hole of
+    /// its read; `none` is `RUN-NONE`; where the search for a business day asks (`seek`), a
+    /// calendar with none is `RUN-DOMAIN` (refcore's `cal_at`). L §4.2, §7.6 item 5, §8.4.
+    fn calendar_on(
+        &mut self,
+        m: &Reality,
+        (input, keys): (&InputInfo, &[KeyVal]),
+        ctx: Ctx,
+        (day, seek): (Day, bool),
+    ) -> Result<Value, Stop> {
+        let value = self.read_input_at(m, input, keys, ctx.at_law(Some(day)), Asked::Calendar)?;
+        if let Value::Hole(_) = value {
+            return Ok(value);
+        }
+        let Value::Calendar(c) = &value else {
+            if value == Value::None {
+                return Err(refuse(Run::None, "the calendar is none here".to_owned()));
+            }
+            return Err(invariant(
+                "a calendar argument that isn't a calendar: load's types refuse it first (LOAD-UNIT)",
+            ));
+        };
+        if seek && !c.has_business_day() {
+            return Err(refuse(
+                Run::Domain,
+                format!("calendar {} has no business day", input.id),
+            ));
+        }
+        Ok(value)
     }
 
     /// Whether calendar `name`'s added window `added`, which may be `day`, takes it in this
@@ -611,6 +700,23 @@ impl Engine {
         let first = days.first().copied();
         pass.met.entry(id).or_insert(days);
         Ok(first == Some(day))
+    }
+}
+
+/// Whether `count` business days by steps of `step` from `from` outnumber the days to the
+/// calendar's edge that way, so the shift passes it whatever each day is (L §4.2: n business
+/// days take at least n days; a count past 64 bits outnumbers every calendar's days).
+fn passes_edge(from: Day, step: i64, count: Option<u64>) -> bool {
+    let room = if step > 0 {
+        from.days_to(Day::LAST)
+    } else {
+        i64::from(from.number()).checked_sub(1)
+    };
+    let room = room.and_then(|days| u64::try_from(days).ok());
+    match (count, room) {
+        (None, _) => true,
+        (Some(n), Some(days)) => n > days,
+        (Some(_), None) => false,
     }
 }
 
