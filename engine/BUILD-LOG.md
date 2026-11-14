@@ -2833,3 +2833,15 @@ Three commits: 4f8d6ad (the run half), 35e3be8 (prices at load), and this one (t
 - **Sweep:** none SAME → DIFF, none DIFF → SAME over R9's (the sweep's cases hold no month-stepped range from a 29th–31st); no new `ENGINE-INVARIANT`.
 - **Size:** 235 changed lines (125 added, 110 removed). **M1 code replaced:** `day_step`'s cumulative stepping, `steps_by_days`, `holds_by_days` (days only) and the month walk in `range_holds`; `days_past`'s estimate by the first step's days; the limit counted at every key read. **Exceptions:** +0.
 - **Check:** `check commit: green, 23 steps`.
+
+## 2026-11-14 tally 2.1.7, B3: nothing left to build
+
+- B3's two ids were green before its turn (the R-rules' mechanisms reached them); nothing replaced.
+
+## 2026-11-14 tally 2.1.7, S4: long derivations fold (issue #131, pick P23)
+
+- **A chain of one def folds** (`ask/explain.rs` `Step::Cause`, `folded`, `def_causes`, `cell_keys`; `eval/trace.rs` `Node.cell`): a def cell's cause that starts a chain of more than 3 cells of its def, each read by the one before and none printed yet, prints `… <n> more steps of <x>, <k₂> .. <kₙ₋₁> …` where its second step would, then its last step; a chain of different defs doesn't fold (refcore's `explain_step`, `chain_next`).
+- **Turned green (13):** `fixes/g11/ai2_m_with_ai2_infl8_e_acc`, `_e_acc_as`, `fixes/g11/r_agent_d1` … `_d5`, `_deep_agg`, `_deep_max`, `_deep_max300`, `fixes/g14/ex_m`, `s4/e10_explain_fold`, `s4/e10_explain_fold_two_reads`. Gating: 39 of the 287 still red (and the 4 rows of the second STOP-REPORT).
+- **Sweep:** none SAME → DIFF; 4 asks DIFF → SAME over B1's; no new `ENGINE-INVARIANT`.
+- **Size:** 118 changed lines (114 added, 4 removed). **M1 code replaced:** none; the derivation printed every step. **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps`.
