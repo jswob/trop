@@ -193,19 +193,13 @@ impl Calendar {
         &self.added
     }
 
-    /// Whether a search for a business day can find one, as of `day`: not when the weekends
-    /// name all seven days, or the yearly days all 366 month-days from their first year on
+    /// Whether a search for a business day can find one: not when the weekends name all
+    /// seven days. Yearly days never empty a year, since 02-29 is no month-day (L §3.1)
     /// (refcore's `business`, its `seek`). L §4.2, §7.6 item 5.
     #[must_use]
-    pub fn has_business_day(&self, day: Day) -> bool {
+    pub fn has_business_day(&self) -> bool {
         let weekends: BTreeSet<u8> = self.weekends.iter().copied().collect();
-        let yearly: BTreeSet<(u8, u8)> = self.yearly.iter().copied().collect();
-        let all_yearly = yearly.len() == 366
-            && self
-                .yearly_from
-                .as_ref()
-                .is_none_or(|from| day.year() >= from.year());
-        weekends.len() < 7 && !all_yearly
+        weekends.len() < 7
     }
 
     /// The calendar as it prints, `calendar(weekends [sat, sun], yearly [12-25] from 2027)`;

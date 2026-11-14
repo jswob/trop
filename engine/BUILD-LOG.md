@@ -2853,3 +2853,15 @@ Three commits: 4f8d6ad (the run half), 35e3be8 (prices at load), and this one (t
 - **Sweep:** none SAME → DIFF; 7 asks DIFF → SAME over S4's (the two vectors); no new `ENGINE-INVARIANT`.
 - **Size:** 62 changed lines (62 added). **M1 code replaced:** none; only written pairs ordered. **Exceptions:** +0.
 - **Check:** `check commit: green, 23 steps`.
+
+## 2026-11-14 tally 2.1.7, S7: nothing left to build
+
+- S7's ids were green before its turn (the R-rules' mechanisms reached them); nothing replaced.
+
+## 2026-11-14 tally 2.1.7, S8: only seven weekends leave no business day (issue #155, pick P33)
+
+- **Dead branch removed** (`time/calendar.rs` `has_business_day`, its caller in `eval/business.rs`): yearly days never empty a year, since 02-29 is no month-day (L §3.1), so the `yearly == 366` clause could never hold; a search for a business day is refused only when the weekends name all seven days (refcore's `business`, `seek`). The function no longer takes a day.
+- **Turned green:** none (no id). Gating: 37 of the 287 still red (and the 4 rows of the second STOP-REPORT).
+- **Sweep:** none SAME → DIFF, none DIFF → SAME over S5's; no new `ENGINE-INVARIANT`.
+- **Size:** 16 changed lines (5 added, 11 removed). **M1 code replaced:** the 366-day clause. **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps`.

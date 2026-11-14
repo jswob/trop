@@ -560,7 +560,7 @@ impl Engine {
                 "a calendar argument that isn't a calendar: load's types refuse it first (LOAD-UNIT)",
             ));
         };
-        if seek && !c.has_business_day(day) {
+        if seek && !c.has_business_day() {
             return Err(refuse(
                 Run::Domain,
                 format!("calendar {name} has no business day"),
