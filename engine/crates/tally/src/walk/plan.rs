@@ -1097,20 +1097,34 @@ impl Engine {
             (None, _, _) => (tctx.cut, tctx.cut),
         };
         inst.cut = Some(cut);
-        if !keys_seen(m, mv, &inst.keys, (last, self.timeline_world())) {
+        let world = self.timeline_world();
+        let first = keys_seen(m, mv, &inst.keys, (cut, world));
+        let seen = if last == cut {
+            (first, first)
+        } else {
+            (first, keys_seen(m, mv, &inst.keys, (last, world)))
+        };
+        if seen == (false, false) {
             inst.exists = Exists::No;
             return Ok(true);
         }
         let mut body = self.body_over_law(m, mv, inst, self.timeline_ctx(None, cut))?;
         if let (Dated::Window(w), true) = (&day, last != cut) {
-            let other = self.body_over_law(m, mv, inst, self.timeline_ctx(None, last))?;
-            if !same_body(&body, &other) {
-                // a version known inside the window of a windowed instance (L §5.14.3)
-                let text = format!(
-                    "date within {} not precise enough for the booking cut of {}",
-                    w.question, inst.id
-                );
-                body = imprecise_body(body, &other, &Hole::asked(&text, &inst.id));
+            // a version known inside the window of a windowed instance (L §5.14.3)
+            let text = format!(
+                "date within {} not precise enough for the booking cut of {}",
+                w.question, inst.id
+            );
+            let hole = Hole::asked(&text, &inst.id);
+            if seen.0 == seen.1 {
+                let other = self.body_over_law(m, mv, inst, self.timeline_ctx(None, last))?;
+                if !same_body(&body, &other) {
+                    body = imprecise_body(body, &other, &hole);
+                }
+            } else {
+                // a key added or dropped inside the window: whether the instance exists
+                // turns on the day (E §5 step 1)
+                body.exists = join(body.exists, &hole);
             }
         }
         inst.exists = body.exists;
@@ -1274,12 +1288,22 @@ impl Engine {
     }
 }
 
-/// Whether two bodies are the same, read at two law dates: their existence and each leg's
-/// name, places, amount and day (refcore's `body_key`). L §4.3.
+/// Whether two bodies are the same, read at two law dates or two cuts: their existence, each
+/// leg's name, places, amount and day, their attributes, `for` and `fulfils` (refcore's
+/// `body_key`, its legs). L §4.3, E §5 step 1.
 fn same_body(a: &Body, b: &Body) -> bool {
     a.exists == b.exists
-        && a.legs.len() == b.legs.len()
-        && a.legs.iter().zip(&b.legs).all(|(x, y)| {
+        && same_legs(&a.legs, &b.legs)
+        && a.attrs == b.attrs
+        && a.for_period == b.for_period
+        && a.fulfils == b.fulfils
+}
+
+/// Whether two bodies' legs are the same: each leg's name, places, amount and day (refcore's
+/// `body_key`). L §4.3.
+fn same_legs(a: &[LegVal], b: &[LegVal]) -> bool {
+    a.len() == b.len()
+        && a.iter().zip(b).all(|(x, y)| {
             x.name == y.name
                 && x.from == y.from
                 && x.to == y.to
@@ -1289,32 +1313,54 @@ fn same_body(a: &Body, b: &Body) -> bool {
 }
 
 /// The body of a window `at` whose law dates give two bodies: the first's, each leg's amount
-/// the hole `hole` (the second's legs where the first has none), its existence the hole too
-/// where the two differ (refcore's `body_over_law`). L §4.3, §8.1.
+/// the hole `hole` (the second's legs where the first has none) unless only attributes, `for`
+/// or `fulfils` differ, its existence the hole too where the two differ, and each attribute,
+/// `for` and `fulfils` the two give differently the hole (refcore's `body_over_law`). L §4.3,
+/// §8.1, E §5 step 1.
 fn imprecise_body(first: Body, other: &Body, hole: &Hole) -> Body {
-    let src = if first.legs.is_empty() {
-        &other.legs
+    let legs = if first.exists == other.exists && same_legs(&first.legs, &other.legs) {
+        first.legs
     } else {
-        &first.legs
+        let src = if first.legs.is_empty() {
+            &other.legs
+        } else {
+            &first.legs
+        };
+        src.iter()
+            .map(|lg| LegVal {
+                amount: Amount::Hole(hole.clone()),
+                ..lg.clone()
+            })
+            .collect()
     };
-    let legs = src
-        .iter()
-        .map(|lg| LegVal {
-            amount: Amount::Hole(hole.clone()),
-            ..lg.clone()
-        })
-        .collect();
     let exists = if first.exists == other.exists {
         first.exists
     } else {
         Exists::Unknown(hole.clone())
     };
+    let mut attrs = first.attrs;
+    for (name, value) in &mut attrs {
+        let theirs = other.attrs.iter().find(|(n, _)| n == name).map(|(_, v)| v);
+        if theirs != Some(&*value) {
+            *value = Value::Hole(hole.clone());
+        }
+    }
     Body {
         exists,
         legs,
-        attrs: first.attrs,
-        for_period: first.for_period,
-        fulfils: first.fulfils,
+        attrs,
+        for_period: imprecise_part(first.for_period, other.for_period.as_ref(), hole),
+        fulfils: imprecise_part(first.fulfils, other.fulfils.as_ref(), hole),
+    }
+}
+
+/// A body's `for` or `fulfils` read two ways: the first where both agree, else the hole
+/// `hole` (L §4.3, §8.1).
+fn imprecise_part(first: Option<Value>, other: Option<&Value>, hole: &Hole) -> Option<Value> {
+    if first.as_ref() == other {
+        first
+    } else {
+        Some(Value::Hole(hole.clone()))
     }
 }
 
