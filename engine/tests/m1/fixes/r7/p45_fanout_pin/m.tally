@@ -1,0 +1,28 @@
+model c7f
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+index ks = [k1, k2]
+input r[k in ks]: num
+input seven: num
+def one: num = r[k1] at reader
+def pick[k in ks]: num = if k == k2 then (one as if {r[k1] = seven}) else one at reader
+def both[k in ks]: num = if k == k2 then one + 1 else one at reader
+
+ask t5: (if k == k2 then (one as if {r[k1] = 3}) else one) for k in ks with r[k1] = 9 law 2026-06-30
+ask p_reg: pick[k] for k in ks with r[k1] = 9 law 2026-06-30
+ask p_exp: explain pick[k] for k in ks with r[k1] = 9 law 2026-06-30
+ask p_inp: inputs-of pick[k] for k in ks with r[k1] = 9 law 2026-06-30
+ask b_reg: both[k] for k in ks with r[k1] = 9 law 2026-06-30
+ask b_exp: explain both[k] for k in ks with r[k1] = 9 law 2026-06-30
+ask b_inp: inputs-of both[k] for k in ks with r[k1] = 9 law 2026-06-30
+
+version v
+  cite card
+  governs 2026..
+  known 2026-01-01
+  r[*] = 1 "c"
+  seven = 7 "c"

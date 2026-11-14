@@ -294536,7 +294536,7 @@ ask a10: count(k in qs where (f[k] as if {v[k] = m[k]}) > m[k])
 ask a11: gk[q1] as if {v[q1] = 10}
 
 ask a12: f[k] as if {v[k] = 5} for k in qs with v[q1] = 0
-,,1:0,1761:a1: 12
+,,1:0,1781:a1: 12
   pinned: v[k] = 3 for k in qs
   cut 2026-03-01
 a10: 2
@@ -294551,6 +294551,7 @@ a12 (k = q1): 10
   cut 2026-03-01
 a12 (k = q2): 10
   pinned: v[k] = 5 for k in qs
+  pinned: v[q1] = 0
   cut 2026-03-01
 a2: (2, 2)
   pinned: v[k] = 1 for k in qs
@@ -316721,6 +316722,178 @@ s_inp:
   pinned: r[k1] = 9
   world: wide
   law date 2026-06-30, cut 2026-06-30
+,26:r7/p45_fanout_pin_one_line,8:fixes-r7,38:run m.tally --ask t5 p_reg p_exp p_inp,951:7:m.tally,936:model c7f
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+index ks = [k1, k2]
+input r[k in ks]: num
+input seven: num
+def one: num = r[k1] at reader
+def pick[k in ks]: num = if k == k2 then (one as if {r[k1] = seven}) else one at reader
+def both[k in ks]: num = if k == k2 then one + 1 else one at reader
+
+ask t5: (if k == k2 then (one as if {r[k1] = 3}) else one) for k in ks with r[k1] = 9 law 2026-06-30
+ask p_reg: pick[k] for k in ks with r[k1] = 9 law 2026-06-30
+ask p_exp: explain pick[k] for k in ks with r[k1] = 9 law 2026-06-30
+ask p_inp: inputs-of pick[k] for k in ks with r[k1] = 9 law 2026-06-30
+ask b_reg: both[k] for k in ks with r[k1] = 9 law 2026-06-30
+ask b_exp: explain both[k] for k in ks with r[k1] = 9 law 2026-06-30
+ask b_inp: inputs-of both[k] for k in ks with r[k1] = 9 law 2026-06-30
+
+version v
+  cite card
+  governs 2026..
+  known 2026-01-01
+  r[*] = 1 "c"
+  seven = 7 "c"
+,,1:0,2438:t5 (k = k1): 9
+  pinned: r[k1] = 9
+  law date 2026-06-30, cut 2026-06-30
+t5 (k = k2): 3
+  pinned: r[k1] = 3
+  law date 2026-06-30, cut 2026-06-30
+p_reg (k = k1): 9
+  pinned: r[k1] = 9
+  law date 2026-06-30, cut 2026-06-30
+p_reg (k = k2): 7
+  pinned: r[k1] = 7
+  law date 2026-06-30, cut 2026-06-30
+p_exp (k = k1): 9
+  [1] the pins, evaluated outside them
+    [2] pin r[k1] = 9
+  [3] inside the pins: 9
+    [4] pick[k1] = 9, law date 2026-06-30
+        rule base: won
+          [5] one = 9, law date 2026-06-30
+              rule base: won
+  [6] outside the pins: 1
+    [7] pick[k1] = 1, law date 2026-06-30
+        rule base: won
+          [8] one = 1, law date 2026-06-30
+              rule base: won
+                [9] row v:r = 1
+                    version v, source card, "invented", locator "c", governs 2026-01-01.., known 2026-01-01
+  pinned: r[k1] = 9
+  law date 2026-06-30, cut 2026-06-30
+p_exp (k = k2): 7
+  [1] the pins, evaluated outside them
+    [2] pin r[k1] = 9
+  [3] inside the pins: 7
+    [4] pick[k2] = 7, law date 2026-06-30
+        rule base: won
+          [5] as if {...}
+            [6] the pins, evaluated outside the as if
+              [7] row v:seven = 7
+                  version v, source card, "invented", locator "c", governs 2026-01-01.., known 2026-01-01
+              [8] pin r[k1] = 7
+            [9] inside the as if: 7
+              [10] one = 7, law date 2026-06-30
+                  rule base: won
+            [11] outside the as if: 9
+              [12] one = 9, law date 2026-06-30
+                  rule base: won
+  [13] outside the pins: 7
+    [14] pick[k2] = 7, law date 2026-06-30
+        rule base: won
+          [15] as if {...}
+            [16] the pins, evaluated outside the as if
+              (v:seven: see [7])
+              [17] pin r[k1] = 7
+            [18] inside the as if: 7
+              [19] one = 7, law date 2026-06-30
+                  rule base: won
+            [20] outside the as if: 1
+              [21] one = 1, law date 2026-06-30
+                  rule base: won
+                    [22] row v:r = 1
+                        version v, source card, "invented", locator "c", governs 2026-01-01.., known 2026-01-01
+  pinned: r[k1] = 7
+  law date 2026-06-30, cut 2026-06-30
+p_inp (k = k1):
+  pinned: r[k1] = 9
+  law date 2026-06-30, cut 2026-06-30
+p_inp (k = k2):
+  v:seven (source card "invented", locator "c")
+  pinned: r[k1] = 7
+  law date 2026-06-30, cut 2026-06-30
+,28:r7/p45_fanout_pin_both_lines,8:fixes-r7,35:run m.tally --ask b_reg b_exp b_inp,951:7:m.tally,936:model c7f
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+index ks = [k1, k2]
+input r[k in ks]: num
+input seven: num
+def one: num = r[k1] at reader
+def pick[k in ks]: num = if k == k2 then (one as if {r[k1] = seven}) else one at reader
+def both[k in ks]: num = if k == k2 then one + 1 else one at reader
+
+ask t5: (if k == k2 then (one as if {r[k1] = 3}) else one) for k in ks with r[k1] = 9 law 2026-06-30
+ask p_reg: pick[k] for k in ks with r[k1] = 9 law 2026-06-30
+ask p_exp: explain pick[k] for k in ks with r[k1] = 9 law 2026-06-30
+ask p_inp: inputs-of pick[k] for k in ks with r[k1] = 9 law 2026-06-30
+ask b_reg: both[k] for k in ks with r[k1] = 9 law 2026-06-30
+ask b_exp: explain both[k] for k in ks with r[k1] = 9 law 2026-06-30
+ask b_inp: inputs-of both[k] for k in ks with r[k1] = 9 law 2026-06-30
+
+version v
+  cite card
+  governs 2026..
+  known 2026-01-01
+  r[*] = 1 "c"
+  seven = 7 "c"
+,,1:0,1508:b_reg (k = k1): 9
+  pinned: r[k1] = 9
+  law date 2026-06-30, cut 2026-06-30
+b_reg (k = k2): 10
+  pinned: r[k1] = 9
+  law date 2026-06-30, cut 2026-06-30
+b_exp (k = k1): 9
+  [1] the pins, evaluated outside them
+    [2] pin r[k1] = 9
+  [3] inside the pins: 9
+    [4] both[k1] = 9, law date 2026-06-30
+        rule base: won
+          [5] one = 9, law date 2026-06-30
+              rule base: won
+  [6] outside the pins: 1
+    [7] both[k1] = 1, law date 2026-06-30
+        rule base: won
+          [8] one = 1, law date 2026-06-30
+              rule base: won
+                [9] row v:r = 1
+                    version v, source card, "invented", locator "c", governs 2026-01-01.., known 2026-01-01
+  pinned: r[k1] = 9
+  law date 2026-06-30, cut 2026-06-30
+b_exp (k = k2): 10
+  [1] the pins, evaluated outside them
+    [2] pin r[k1] = 9
+  [3] inside the pins: 10
+    [4] both[k2] = 10, law date 2026-06-30
+        rule base: won
+          [5] one = 9, law date 2026-06-30
+              rule base: won
+  [6] outside the pins: 2
+    [7] both[k2] = 2, law date 2026-06-30
+        rule base: won
+          [8] one = 1, law date 2026-06-30
+              rule base: won
+                [9] row v:r = 1
+                    version v, source card, "invented", locator "c", governs 2026-01-01.., known 2026-01-01
+  pinned: r[k1] = 9
+  law date 2026-06-30, cut 2026-06-30
+b_inp (k = k1):
+  pinned: r[k1] = 9
+  law date 2026-06-30, cut 2026-06-30
+b_inp (k = k2):
+  pinned: r[k1] = 9
+  law date 2026-06-30, cut 2026-06-30
 ,29:r9/e4_1_decision_move_id_term,8:fixes-r9,11:run m.tally,1019:7:m.tally,1003:model t
   tally 2
   on 2026-02-15
@@ -316876,6 +317049,41 @@ version v
   y = 1
 ,,1:0,22:q: 1
   cut 2026-01-01
+,23:r9/p45_owns_party_place,8:fixes-r9,11:run m.tally,655:7:m.tally,640:model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind savings: place PLN min 0
+place konto: savings lives 2025-01-01..
+input wd: date
+input owns[p in parties, x in places]: num
+input wa: money PLN
+place world: outside lives 1900-01-01..
+kind pays: event certain
+  leg cash: PLN
+move wage: pays
+  on wd
+  leg cash from world to konto amount wa
+
+ask a: wa
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  opening[konto] = 0 PLN at 2026-01-01 start
+  wd = 2026-02-01
+  wa = 100.00 PLN
+  owns[ania, konto] = 1
+,,1:0,82:a: 100.00 PLN
+  cut 2026-01-01
+warning: WARN-UNREAD input owns is read by nothing
 ,27:s9/l8_3_balnow_outside_line,7:fixes-s,11:run m.tally,341:7:m.tally,326:model t
   tally 2
   on 2026-10-18
