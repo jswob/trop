@@ -143,3 +143,10 @@ required-features = ["fault-injection"]
 name = "m2_checks"
 path = "milestone/m2_checks.rs"
 test = false
+
+# Milestone M2's in-scope items (issue #167, MILESTONE-M2.md row 6): `test = false` until M2
+# is in tools/milestones.toml's `gating`, as m2_checks.
+[[test]]
+name = "m2_items"
+path = "milestone/m2_items.rs"
+test = false

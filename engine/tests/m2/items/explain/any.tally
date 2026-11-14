@@ -1,0 +1,24 @@
+model x_any
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 C2, G2 (#163): an opening row at a place of unit any, one row per unit (L §4.6), read by bal and explain"
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind wallets: place any signed
+
+place broker: wallets lives 2026-01-01..
+
+ask b: bal(broker, EUR, 2026-03-01)
+ask b2: bal(broker, PLN, 2026-03-01)
+ask e: explain bal(broker, PLN, 2026-03-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[broker] = 0.00 EUR at 2026-01-01 start "own"
+  opening[broker] = 5.00 PLN at 2026-01-01 start "own"

@@ -1,0 +1,70 @@
+model r8_reach2
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 C2, R8's reach (#147) on the forms L §5.5's fan-out names and no vector held yet: solve whose F reads an axis (s_axis), inputs-of across an axis (i_axis), residuals over a place whose plan reads an axis (r_axis), and each combination's register of a balance its plan reads under the axis (b_axis); twins pinned to one option (*_lo)"
+
+source s "made up"
+
+unit PLN: currency minor 0.01
+
+axis ax
+  lo "low"
+  hi "high"
+
+input p: money PLN
+
+input twice: int
+
+input goal: money PLN
+
+input bank: observed
+
+place konto: accounts PLN lives 2026-01-01..
+
+place work: outside lives 1900-01-01..
+
+def pay_amt: money PLN
+  rule base = p
+  rule hi beats base = p * twice when ax == hi
+
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from work to konto amount pay_amt
+
+ask s_axis: solve pay_amt == goal for p in [0, 1000] to 1 law 2026-06-01
+
+ask s_lo: solve pay_amt == goal for p in [0, 1000] to 1 with ax = lo law 2026-06-01
+
+ask i_axis: inputs-of pay_amt law 2026-06-01
+
+ask i_lo: inputs-of pay_amt with ax = lo law 2026-06-01
+
+ask r_axis: residuals konto 2026-01..2026-03
+
+ask r_lo: residuals konto 2026-01..2026-03 with ax = lo
+
+ask b_axis: bal(konto, 2026-06-30)
+
+ask b_lo: bal(konto, 2026-06-30) with ax = lo
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p = 10.00 PLN "the card"
+  twice = 2 "the card"
+  goal = 40.00 PLN "the card"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
+
+version bank_q1
+  cite s
+  governs 2026-01..2026-03
+  known 2026-04-02
+  covers konto
+  anchor konto
+  bank[r1] = (on: 2026-01-01, kind: transfers, leg cash from work to konto amount 10.00 PLN, fulfils: pay[2026-01]) "r1"
+  bank[r2] = (on: 2026-02-02, kind: transfers, leg cash from work to konto amount 10.00 PLN, fulfils: pay[2026-02]) "r2"
+  bank[r3] = (on: 2026-03-01, kind: transfers, leg cash from work to konto amount 12.00 PLN, fulfils: pay[2026-03]) "r3"
+  stated[konto] = 32.00 PLN at 2026-03-31 end "saldo"

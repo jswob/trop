@@ -13594,7 +13594,7 @@ version px_rows
   law date 2024-12-31, cut 2026-10-25
 b: 3 170 DUK
   law date 2027-03-15, cut 2026-10-25
-,14:U:rule/RULE-07,11:checks-plan,34:run unit/probes/rule/RULE-07.tally,2155:30:unit/probes/rule/RULE-07.tally,2115:model rule07
+,14:U:rule/RULE-07,14:checks-records,34:run unit/probes/rule/RULE-07.tally,2155:30:unit/probes/rule/RULE-07.tally,2115:model rule07
   tally 2
   on 2025-07-01
   start 2025-01-01
@@ -13662,7 +13662,7 @@ gap: residuals savings 2025-01 .. 2025-06
   2025-06 move standing: model 500.00 DUK, observed 500.00 DUK, difference 0.00 DUK
     matched standing[2025-06] on 2025-06-01: model 500.00 DUK, observed 500.00 DUK, difference 0.00 DUK, timing +0 days
   cut 2025-07-01
-,14:U:rule/RULE-08,11:checks-plan,34:run unit/probes/rule/RULE-08.tally,1100:30:unit/probes/rule/RULE-08.tally,1060:model rule08
+,14:U:rule/RULE-08,12:checks-forms,34:run unit/probes/rule/RULE-08.tally,1100:30:unit/probes/rule/RULE-08.tally,1060:model rule08
   tally 2
   on 2025-06-15
   start 2025-01-01
@@ -13695,7 +13695,7 @@ version card_2025
   window = 3 "rule 1: the three full months before the decision's month"
 ,,1:0,70:q: (3 216.67 DUK, 3 266.67 DUK)
   law date 2025-06-15, cut 2025-06-15
-,9:I:M:UL-15,11:checks-plan,34:run integration/models/UL-15.tally,24542:30:integration/models/UL-15.tally,24501:model ul15
+,9:I:M:UL-15,12:checks-forms,34:run integration/models/UL-15.tally,24542:30:integration/models/UL-15.tally,24501:model ul15
   tally 2
   on 2026-10-18
   start 2026-01-01
@@ -14320,4 +14320,819 @@ q06_adv_july (e = ex_p4, s = pension, m = 2022-07): ?"Did this payer reduce each
   assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_p4, pension])
   assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_p4])
   law date 2026-10-18, cut 2026-10-18
+,15:items/r8/reach2,11:items-green,63:run reach2.tally --ask b_axis b_lo i_axis i_lo r_lo s_axis s_lo,2040:12:reach2.tally,2018:model r8_reach2
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 C2, R8's reach (#147) on the forms L §5.5's fan-out names and no vector held yet: solve whose F reads an axis (s_axis), inputs-of across an axis (i_axis), residuals over a place whose plan reads an axis (r_axis), and each combination's register of a balance its plan reads under the axis (b_axis); twins pinned to one option (*_lo)"
+
+source s "made up"
+
+unit PLN: currency minor 0.01
+
+axis ax
+  lo "low"
+  hi "high"
+
+input p: money PLN
+
+input twice: int
+
+input goal: money PLN
+
+input bank: observed
+
+place konto: accounts PLN lives 2026-01-01..
+
+place work: outside lives 1900-01-01..
+
+def pay_amt: money PLN
+  rule base = p
+  rule hi beats base = p * twice when ax == hi
+
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from work to konto amount pay_amt
+
+ask s_axis: solve pay_amt == goal for p in [0, 1000] to 1 law 2026-06-01
+
+ask s_lo: solve pay_amt == goal for p in [0, 1000] to 1 with ax = lo law 2026-06-01
+
+ask i_axis: inputs-of pay_amt law 2026-06-01
+
+ask i_lo: inputs-of pay_amt with ax = lo law 2026-06-01
+
+ask r_axis: residuals konto 2026-01..2026-03
+
+ask r_lo: residuals konto 2026-01..2026-03 with ax = lo
+
+ask b_axis: bal(konto, 2026-06-30)
+
+ask b_lo: bal(konto, 2026-06-30) with ax = lo
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p = 10.00 PLN "the card"
+  twice = 2 "the card"
+  goal = 40.00 PLN "the card"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
+
+version bank_q1
+  cite s
+  governs 2026-01..2026-03
+  known 2026-04-02
+  covers konto
+  anchor konto
+  bank[r1] = (on: 2026-01-01, kind: transfers, leg cash from work to konto amount 10.00 PLN, fulfils: pay[2026-01]) "r1"
+  bank[r2] = (on: 2026-02-02, kind: transfers, leg cash from work to konto amount 10.00 PLN, fulfils: pay[2026-02]) "r2"
+  bank[r3] = (on: 2026-03-01, kind: transfers, leg cash from work to konto amount 12.00 PLN, fulfils: pay[2026-03]) "r3"
+  stated[konto] = 32.00 PLN at 2026-03-31 end "saldo"
+,,1:0,2103:b_axis [ax = lo]: 62.00 PLN
+  reading: ax = lo
+  anchor: konto 2026-03-31 end, stated 32.00 PLN, difference 0.00 PLN
+  unfulfilled: pay[2026-04]
+  unfulfilled: pay[2026-05]
+  unfulfilled: pay[2026-06]
+  cut 2026-06-30
+b_axis [ax = hi]: 92.00 PLN
+  reading: ax = hi
+  anchor: konto 2026-03-31 end, stated 32.00 PLN, difference 0.00 PLN
+  unfulfilled: pay[2026-04]
+  unfulfilled: pay[2026-05]
+  unfulfilled: pay[2026-06]
+  cut 2026-06-30
+b_lo: 62.00 PLN
+  pinned: ax = lo
+  anchor: konto 2026-03-31 end, stated 32.00 PLN, difference 0.00 PLN
+  unfulfilled: pay[2026-04]
+  unfulfilled: pay[2026-05]
+  unfulfilled: pay[2026-06]
+  cut 2026-06-30
+i_axis [ax = lo]:
+  v:p (source s "made up", locator "the card")
+  reading: ax = lo
+  law date 2026-06-01, cut 2026-06-30
+i_axis [ax = hi]:
+  v:p (source s "made up", locator "the card")
+  v:twice (source s "made up", locator "the card")
+  reading: ax = hi
+  law date 2026-06-01, cut 2026-06-30
+i_lo:
+  v:p (source s "made up", locator "the card")
+  pinned: ax = lo
+  law date 2026-06-01, cut 2026-06-30
+r_lo: residuals konto 2026-01 .. 2026-03
+  2026-03 move pay: model 10.00 PLN, observed 12.00 PLN, difference 2.00 PLN
+    matched pay[2026-03] on 2026-03-01: model 10.00 PLN, observed 12.00 PLN, difference 2.00 PLN, timing +0 days
+  2026-01 move pay: model 10.00 PLN, observed 10.00 PLN, difference 0.00 PLN
+    matched pay[2026-01] on 2026-01-01: model 10.00 PLN, observed 10.00 PLN, difference 0.00 PLN, timing +0 days
+  2026-02 move pay: model 10.00 PLN, observed 10.00 PLN, difference 0.00 PLN
+    matched pay[2026-02] on 2026-02-01: model 10.00 PLN, observed 10.00 PLN, difference 0.00 PLN, timing +1 days
+  2026-03 balance: model 32.00 PLN, observed 32.00 PLN, difference 0.00 PLN
+    balance konto 2026-03-31 end (anchored): booked 32.00 PLN, stated 32.00 PLN, gap 0.00 PLN
+  pinned: ax = lo
+  cut 2026-06-30
+s_axis [ax = lo]: 40.00 PLN
+  reading: ax = lo
+  law date 2026-06-01, cut 2026-06-30
+s_axis [ax = hi]: 20.00 PLN
+  reading: ax = hi
+  law date 2026-06-01, cut 2026-06-30
+s_lo: 40.00 PLN
+  pinned: ax = lo
+  law date 2026-06-01, cut 2026-06-30
+,14:items/s2/forms,11:items-forms,15:run forms.tally,1418:11:forms.tally,1397:model s2_forms
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 C2, #101's other forms (L §2.3 ref with fields, §5.10 priced, §5.19 readings): an unkeyed record input's field as the price (fund3), last of a keyed and an unkeyed field (l1, l2), value by a field (v1), and a field read before its first reading (l0)"
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+unit etf "fund unit"
+index bx = [b1, b2]
+
+place fund: holdings etf priced fp[b1].nav lives 2026-01-01..
+place fund3: holdings etf priced fq.nav lives 2026-01-01..
+place hold: holdings etf lives 2026-01-01..
+
+input fp[b in bx]: (nav num PLN/etf, note text) reading
+input fq: (nav num PLN/etf, note text) reading
+
+ask a1: value(fund, 2026-03-01) in PLN law 2026-06-30
+ask a3: value(fund3, 2026-04-01) in PLN law 2026-06-30
+ask l0: last(fq, 2026-02-01).nav
+ask l1: last(fq, 2026-04-01).nav
+ask l2: last(fp[b1], 2026-04-01).nav
+ask vby: value(hold, 2026-03-01) in PLN by fp[b1].nav law 2026-06-30
+ask vby2: value(hold, 2026-04-01) in PLN by fp[b1].nav law 2026-06-30
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  fp[b1] = (nav: 12.50 PLN/etf, note: "x") at 2026-03-01 "wycena"
+  fq = (nav: 11.00 PLN/etf, note: "y") at 2026-03-01 "wycena"
+  opening[fund] = 10 etf at 2026-01-01 start "own"
+  opening[fund3] = 4 etf at 2026-01-01 start "own"
+  opening[hold] = 2 etf at 2026-01-01 start "own"
+,,1:0,553:a1: 125 PLN
+  law date 2026-06-30, cut 2026-06-30
+a3: ?"fq has no reading at 2026-04-01" (fq)
+  law date 2026-06-30, cut 2026-06-30
+l0: ?"fq has no reading on or before 2026-02-01" (fq)
+  cut 2026-06-30
+l1: 11 PLN/etf
+  held: fq = (nav: 11 PLN/etf, note: "y") (v1), read for 2026-04-01
+  cut 2026-06-30
+l2: 12.5 PLN/etf
+  held: fp[b1] = (nav: 12.5 PLN/etf, note: "x") (v1), read for 2026-04-01
+  cut 2026-06-30
+vby: 25 PLN
+  law date 2026-06-30, cut 2026-06-30
+vby2: ?"fp[b1] has no reading at 2026-04-01" (fp[b1])
+  law date 2026-06-30, cut 2026-06-30
+,16:items/shift/hole,11:items-green,44:run hole.tally --ask h_in h_in2 s_back s_fwd,1233:10:hole.tally,1213:model shift_hole
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 C2, item 9 (pick P5): add_business past the calendar's edge with a hole on the way. cal_h is governed in 2026 only, so every day outside 2026 reads a hole (HOLE-UNGOVERNED). n business days move at least n days, so h_back and h_fwd pass the edge whatever the hole: decided without it (L §8.1), refused (R2, L §8): RUN-LIMIT. Twins: the same shifts over cal, governed always (s_back, s_fwd); shifts that land inside the edge, where the hole decides (h_in2) or isn't met (h_in)"
+
+source plan "plan"
+
+input d: date
+
+input cal: calendar
+
+input cal_h: calendar
+
+input nb: int
+
+input nf: int
+
+input n5: int
+
+input n200: int
+
+ask h_back: add_business(d, nb, cal_h)
+
+ask h_fwd: add_business(d, nf, cal_h)
+
+ask s_back: add_business(d, nb, cal)
+
+ask s_fwd: add_business(d, nf, cal)
+
+ask h_in: add_business(d, n5, cal_h)
+
+ask h_in2: add_business(d, n200, cal_h)
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  d = 2026-06-01
+  cal = calendar(weekends [sat, sun])
+  nb = -739768
+  nf = 2912292
+  n5 = 5
+  n200 = 200
+
+version v2026
+  cite plan
+  governs 2026
+  known 2026-01-01
+  cal_h = calendar(weekends [sat, sun])
+,,1:0,244:h_in: 2026-06-08
+  cut 2026-12-31
+h_in2: ?"calendar cal_h doesn't cover 2027" (cal_h)
+  cut 2026-12-31
+s_back: refused: RUN-LIMIT a day comes before 0001-01-01
+  cut 2026-12-31
+s_fwd: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 2026-12-31
+,21:items/law09/each_year,11:items-green,32:run LAW-09.tally --ask each_year,1996:12:LAW-09.tally,1974:model law09
+  tally 2
+  on 2026-10-25
+  start 2020-01-01
+  end 2025-12-31
+  note "Probe LAW-09: a loss carried forward 5 years, in any one year at most half its original size."
+
+source card "Probe card LAW-09 (tmp/cases/probes/law/LAW-09.md): story, rule 1 and question"
+
+unit DUK: currency minor 0.01
+
+index yr = year 2021..2025
+
+input carry_years: int question "For how many years after its year is a loss used?"
+
+input gain[y in yr]: money DUK question "What is Ania's fund gain in this year?"
+
+input loss: money DUK question "What is Ania's 2020 fund loss?"
+
+input loss_year: year question "In which year did the loss arise?"
+
+input max_share: num question "At most what share of the original loss may be used in any one year?"
+
+def avail[y in yr]: num DUK at start_of(y)
+  note "what is left of the loss at the start of year y"
+  rule base = if pos(y) == 1 then loss else avail[y - 1] - used[y - 1]
+
+def taxable[y in yr]: num DUK = gain[y] - used[y] at start_of(y)
+
+def used[y in yr]: num DUK at start_of(y)
+  note "rule 1: in the 5 years after the loss, the gain, half the original loss, or what is left, whichever is least"
+  rule outside v card_law = 0
+  rule window beats outside v card_law = min(gain[y], loss * max_share, avail[y]) when y > loss_year and y <= loss_year + carry_years
+
+ask each_year: used[y], taxable[y] for y in [2021, 2022, 2023]
+
+ask left_after: avail[2024]
+
+version card_facts
+  cite card
+  governs always
+  known 2020-01-01
+  gain[2021] = 3000 "story: 3 000.00 in 2021"
+  gain[2022] = 8000 "story: 8 000.00 in 2022"
+  gain[2023] = 9000 "story: 9 000.00 in 2023"
+  loss = 10000 "story: Ania's 2020 fund loss is 10 000.00 DUK"
+  loss_year = 2020 "story: the 2020 loss"
+
+version card_law
+  cite card
+  governs always
+  known 2020-01-01
+  note "the card's own rule, a stipulation known from the model's start (L 4.5)"
+  carry_years = 5 "rule 1: the next 5 years' gains"
+  max_share = 50 % "rule 1: in any one year at most half its original size"
+,,1:0,182:each_year (y = 2021): (3 000 DUK, 0 DUK)
+  cut 2026-10-25
+each_year (y = 2022): (5 000 DUK, 3 000 DUK)
+  cut 2026-10-25
+each_year (y = 2023): (2 000 DUK, 7 000 DUK)
+  cut 2026-10-25
+,15:items/explain/m,13:items-explain,11:run m.tally,2444:7:m.tally,2428:model x_explain
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 C2, G2: readers-of a kind through its subkind (#132: rk, rk_sub); explain of a balance whose last reading pads (e_sav), anchors (e_konto), or has a hole movement since it (e_jar) (#132); last of a reading after m, before its day (#163, #164: la_before; on and after its day refcore 2.1.7 prints a hole, L §4.6 reads the reading: not stored, a refcore case), last of a reading at a day end read past it and on it (ls, lj); explain of a def bound by the walk (#163: e_wb)"
+
+source s "synthetic"
+
+unit PLN: currency minor 0.01
+
+kind pays: event certain
+  leg cash: PLN
+
+kind subpays: pays
+
+place konto: accounts PLN lives 2026-01-01..
+
+place jar: accounts PLN lives 2026-01-01..
+
+place sav: accounts PLN lives 2026-01-01..
+
+place work: outside lives 1900-01-01..
+
+input amt[m in months]: money PLN
+
+input fee[m in months]: money PLN
+
+def n_pays[m in months]: int = count(p in pays over m)
+
+def wb[m in months]: money PLN = bal(konto, end_of(m)) at end_of(m)
+
+move pay[m in months]: subpays
+  on start_of(m)
+  leg cash from work to konto amount amt[m]
+
+move tip[m in months]: transfers
+  on start_of(m)
+  leg cash from work to jar amount fee[m]
+
+move save[m in months]: transfers
+  on end_of(m)
+  reads konto
+  leg cash from konto to sav amount max(bal(konto) - amt[m], 0)
+
+ask rk: readers-of pays
+
+ask rk_sub: readers-of subpays
+
+ask n2: n_pays[2026-02]
+
+ask e_konto: explain bal(konto, 2026-04-30)
+
+ask e_sav: explain bal(sav, 2026-02-28)
+
+ask e_jar: explain bal(jar, 2026-04-30)
+
+ask la_before: last(stated[konto], 2026-03-30)
+
+ask ls: last(stated[sav], 2026-03-01)
+
+ask lj: last(stated[jar], 2026-02-02)
+
+ask e_wb: explain wb[2026-02]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[2026-01..2026-12] = 10.00 PLN "plan"
+  fee[2026-01..2026-02] = 5.00 PLN "plan"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
+  opening[jar] = 0.00 PLN at 2026-01-01 start "own"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "own"
+
+version konto_read
+  cite s
+  governs 2026-03
+  known 2026-03-05
+  anchor konto
+  stated[konto] = 10.00 PLN after save[2026-03] "saldo"
+
+version sav_read
+  cite s
+  governs 2026-01
+  known 2026-02-01
+  pad sav from work
+  stated[sav] = 0.50 PLN at 2026-01-31 end "saldo"
+
+version jar_read
+  cite s
+  governs 2026-02
+  known 2026-02-03
+  anchor jar
+  stated[jar] = 10.00 PLN at 2026-02-02 end "saldo"
+,,1:0,2559:e_jar: ?"fee at 2026-03: no value for 2026-03" (fee[2026-03]) ?"fee at 2026-04: no value for 2026-04" (fee[2026-04])
+  balance of jar (PLN) at the end of 2026-04-30
+  from: anchor jar_read:stated[jar] = 10.00 PLN, 2026-02-02 end (version jar_read, source s, locator "saldo"), gap role anchor, gap 0.00 PLN
+  2026-03-01:
+    tip[2026-03].cash (past): hole: ?"fee at 2026-03: no value for 2026-03" (fee[2026-03])
+  2026-04-01:
+    tip[2026-04].cash (past): hole: ?"fee at 2026-04: no value for 2026-04" (fee[2026-04])
+  anchor: jar 2026-02-02 end, stated 10.00 PLN, difference 0.00 PLN
+  unfulfilled: tip[2026-03]
+  unfulfilled: tip[2026-04]
+  cut 2026-06-30
+e_konto: 10.00 PLN
+  balance of konto (PLN) at the end of 2026-04-30
+  from: anchor konto_read:stated[konto] = 10.00 PLN, after save[2026-03] (version konto_read, source s, locator "saldo"), gap role anchor, gap 0.00 PLN
+  no movement
+  anchor: konto after save[2026-03], stated 10.00 PLN, difference 0.00 PLN
+  cut 2026-06-30
+e_sav: 10.50 PLN
+  balance of sav (PLN) at the end of 2026-02-28
+  from: pad sav_read:stated[sav] = 0.50 PLN, 2026-01-31 end (version sav_read, source s, locator "saldo"), gap role pad from work, gap 0.50 PLN (pads:sav_read:sav@2026-01-31 end)
+  2026-02-01:
+    save[2026-01].cash (past): +10.00 PLN
+  pad: sav 2026-01-31 end, pads:sav_read:sav@2026-01-31 end of 0.50 PLN
+  unfulfilled: pay[2026-01]
+  unfulfilled: pay[2026-02]
+  unfulfilled: save[2026-01]
+  cut 2026-06-30
+e_wb: 10.00 PLN
+  [1] wb[2026-02] = 10.00 PLN, law date 2026-03-01
+      rule base: won
+        [2] bal(konto, 2026-03-01) = 10.00 PLN
+            balance of konto (PLN) at the end of 2026-03-01
+            from: opening v:opening[konto] = 0.00 PLN, 2026-01-01 start (version v, source s, locator "own")
+            2026-01-01:
+              pay[2026-01].cash (past): +10.00 PLN
+            2026-02-01:
+              pay[2026-02].cash (past): +10.00 PLN
+              save[2026-01].cash (past): -10.00 PLN
+            2026-03-01:
+              pay[2026-03].cash (past): +10.00 PLN
+              save[2026-02].cash (past): -10.00 PLN
+  unfulfilled: pay[2026-01]
+  unfulfilled: pay[2026-02]
+  unfulfilled: pay[2026-03]
+  unfulfilled: save[2026-01]
+  unfulfilled: save[2026-02]
+  cut 2026-06-30
+la_before: ?"stated[konto] has no reading on or before 2026-03-30" (stated[konto])
+  cut 2026-06-30
+lj: 10.00 PLN
+  cut 2026-06-30
+ls: 0.50 PLN
+  held: stated[sav] = 0.50 PLN (sav_read), read for 2026-03-01
+  cut 2026-06-30
+n2: 1
+  unfulfilled: pay[2026-02]
+  cut 2026-06-30
+rk: n_pays, n2
+rk_sub: n_pays, n2
+,17:items/explain/any,13:items-explain,13:run any.tally,651:9:any.tally,634:model x_any
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 C2, G2 (#163): an opening row at a place of unit any, one row per unit (L §4.6), read by bal and explain"
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind wallets: place any signed
+
+place broker: wallets lives 2026-01-01..
+
+ask b: bal(broker, EUR, 2026-03-01)
+ask b2: bal(broker, PLN, 2026-03-01)
+ask e: explain bal(broker, PLN, 2026-03-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[broker] = 0.00 EUR at 2026-01-01 start "own"
+  opening[broker] = 5.00 PLN at 2026-01-01 start "own"
+,,1:0,270:b: 0.00 EUR
+  cut 2026-06-30
+b2: 5.00 PLN
+  cut 2026-06-30
+e: 5.00 PLN
+  balance of broker (PLN) at the end of 2026-03-01
+  from: opening v:opening[broker] 2026-01-01 start = 5.00 PLN, 2026-01-01 start (version v, source s, locator "own")
+  no movement
+  cut 2026-06-30
+,18:items/explain/from,13:items-explain,30:run household.tally late.tally,1424:15:household.tally,1225:model household
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2027-12-31
+  note "T, M2 C2, G2 (#164 R7, #163): before from: under flows (fl) and under bal (bl), for an instance dated before the scenario's from whose law date is after it (adv); a leg whose day is a window (advw) under windows each (blw)"
+
+source plan "plan"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input adv_day: date
+input adv_law: date
+input wd: date
+
+move adv: transfers
+  on adv_day
+  at adv_law
+  leg cash from konto to world amount amt
+
+move advw: transfers
+  on wd
+  at adv_law
+  leg cash from konto to world amount amt
+
+version base
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  amt = 10.00 PLN "own"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "wyciąg"
+
+version dates
+  cite plan
+  governs always
+  known 2026-01-01
+  adv_day = 2026-12-15 "own"
+  adv_law = 2027-01-01 "own"
+  wd = window(2026-12-20, 2026-12-28) "own"
+
+ask fl: flows(konto, 2026-12-01 .. 2027-01-31) in late windows each
+ask bl: bal(konto, 2026-12-31) in late windows each
+ask blw: bal(konto, 2026-12-24) in late windows each
+ask bl_plain: bal(konto, 2026-12-31) in late
+,10:late.tally,155:scenario late over household
+  tally 2
+  from 2027-01-01
+
+version late_amt
+  cite plan
+  governs 2027..
+  known 2026-01-01
+  replace amt = 20.00 PLN "own"
+,,1:0,1805:bl: 60.00 PLN
+  world: late
+  before from: adv on 2026-12-15 reads amt
+  before from: advw on 2026-12-20 reads amt
+  before from: advw on 2026-12-21 reads amt
+  before from: advw on 2026-12-22 reads amt
+  before from: advw on 2026-12-23 reads amt
+  before from: advw on 2026-12-24 reads amt
+  before from: advw on 2026-12-25 reads amt
+  before from: advw on 2026-12-26 reads amt
+  before from: advw on 2026-12-27 reads amt
+  before from: advw on 2026-12-28 reads amt
+  held: amt = 20.00 PLN (late_amt), read for 2027-01-01
+  cut 2026-10-20
+bl_plain: 60.00 PLN
+  world: late
+  before from: adv on 2026-12-15 reads amt
+  held: amt = 20.00 PLN (late_amt), read for 2027-01-01
+  cut 2026-10-20
+blw [wd = 2026-12-20 .. 2026-12-24]: 60.00 PLN
+  world: late
+  before from: adv on 2026-12-15 reads amt
+  before from: advw on 2026-12-20 reads amt
+  before from: advw on 2026-12-21 reads amt
+  before from: advw on 2026-12-22 reads amt
+  before from: advw on 2026-12-23 reads amt
+  before from: advw on 2026-12-24 reads amt
+  held: amt = 20.00 PLN (late_amt), read for 2027-01-01
+  cut 2026-10-20
+blw [wd = 2026-12-25 .. 2026-12-28]: 80.00 PLN
+  world: late
+  before from: adv on 2026-12-15 reads amt
+  held: amt = 20.00 PLN (late_amt), read for 2027-01-01
+  cut 2026-10-20
+fl: -40.00 PLN
+  world: late
+  before from: adv on 2026-12-15 reads amt
+  before from: advw on 2026-12-20 reads amt
+  before from: advw on 2026-12-21 reads amt
+  before from: advw on 2026-12-22 reads amt
+  before from: advw on 2026-12-23 reads amt
+  before from: advw on 2026-12-24 reads amt
+  before from: advw on 2026-12-25 reads amt
+  before from: advw on 2026-12-26 reads amt
+  before from: advw on 2026-12-27 reads amt
+  before from: advw on 2026-12-28 reads amt
+  held: amt = 20.00 PLN (late_amt), read for 2027-01-01
+  cut 2026-10-20
+,15:items/windows/m,13:items-windows,11:run m.tally,1686:7:m.tally,1670:model w_each
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 C2, G3 (#158, #164 R6): windows each on an ask over add_business (ab), on low with from under a pin (lwf; without from refcore 2.1.7 prints the unsplit holes, against L §4.4: not stored, a question), on a balance whose move's at is a window (bw, bw_plain), and under an axis (bx)"
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+axis ax
+  lo "low"
+  hi "high"
+
+place konto: accounts PLN lives 2026-01-01..
+place work: outside lives 1900-01-01..
+
+input cal: calendar
+input pd: date
+input wd: date
+input rate: money PLN
+input twice: int
+
+def bonus_amt: money PLN at wd
+  rule base = rate
+  rule hi beats base = rate * twice when ax == hi
+
+move bonus: transfers
+  on pd
+  at wd
+  leg cash from work to konto amount rate
+
+move gift: transfers
+  on wd
+  leg cash from work to konto amount bonus_amt
+
+ask ab: add_business(2026-05-29, 1, cal) windows each
+ask lwf: low(konto, 2026-03-01 .. 2026-04-30) from 2026-03-01 windows each with ax = lo
+ask bw: bal(konto, 2026-04-30) windows each
+ask bw_plain: bal(konto, 2026-04-30)
+ask bx: bal(konto, 2026-04-30) with ax = hi windows each
+ask bxx: bal(konto, 2026-04-30) windows each
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  cal = calendar(weekends [sat, sun], added [window(2026-06-01, 2026-06-02)]) "c"
+  pd = 2026-04-01 "c"
+  wd = window(2026-03-28, 2026-04-03) "c"
+  twice = 2 "c"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
+
+version r1
+  cite card
+  governs ..2026-03-31
+  known 2026-01-01
+  rate = 10.00 PLN "c"
+
+version r2
+  cite card
+  governs 2026-04-01..
+  known 2026-01-01
+  rate = 12.00 PLN "c"
+,,1:0,2432:ab [added window(2026-06-01, 2026-06-02) = 2026-06-01]: 2026-06-02
+  cut 2026-03-01
+ab [added window(2026-06-01, 2026-06-02) = 2026-06-02]: 2026-06-01
+  cut 2026-03-01
+bw [wd = 2026-03-28 .. 2026-03-31] [ax = lo]: 20.00 PLN
+  reading: ax = lo
+  cut 2026-03-01
+bw [wd = 2026-04-01 .. 2026-04-03] [ax = lo]: 24.00 PLN
+  reading: ax = lo
+  held: rate = 12.00 PLN (r2), read for 2026-04-01
+  held: rate = 12.00 PLN (r2), read for 2026-04-02
+  held: rate = 12.00 PLN (r2), read for 2026-04-03
+  cut 2026-03-01
+bw [wd = 2026-03-28 .. 2026-03-31] [ax = hi]: 30.00 PLN
+  reading: ax = hi
+  cut 2026-03-01
+bw [wd = 2026-04-01 .. 2026-04-03] [ax = hi]: 36.00 PLN
+  reading: ax = hi
+  held: rate = 12.00 PLN (r2), read for 2026-04-01
+  held: rate = 12.00 PLN (r2), read for 2026-04-02
+  held: rate = 12.00 PLN (r2), read for 2026-04-03
+  cut 2026-03-01
+bw_plain [ax = *]: ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus" (bonus) ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus_amt" (bonus_amt)
+  held: rate = 12.00 PLN (r2), read for 2026-04-01
+  held: rate = 12.00 PLN (r2), read for 2026-04-02
+  held: rate = 12.00 PLN (r2), read for 2026-04-03
+  cut 2026-03-01
+bx [wd = 2026-03-28 .. 2026-03-31]: 30.00 PLN
+  pinned: ax = hi
+  cut 2026-03-01
+bx [wd = 2026-04-01 .. 2026-04-03]: 36.00 PLN
+  pinned: ax = hi
+  held: rate = 12.00 PLN (r2), read for 2026-04-01
+  held: rate = 12.00 PLN (r2), read for 2026-04-02
+  held: rate = 12.00 PLN (r2), read for 2026-04-03
+  cut 2026-03-01
+bxx [wd = 2026-03-28 .. 2026-03-31] [ax = lo]: 20.00 PLN
+  reading: ax = lo
+  cut 2026-03-01
+bxx [wd = 2026-04-01 .. 2026-04-03] [ax = lo]: 24.00 PLN
+  reading: ax = lo
+  held: rate = 12.00 PLN (r2), read for 2026-04-01
+  held: rate = 12.00 PLN (r2), read for 2026-04-02
+  held: rate = 12.00 PLN (r2), read for 2026-04-03
+  cut 2026-03-01
+bxx [wd = 2026-03-28 .. 2026-03-31] [ax = hi]: 30.00 PLN
+  reading: ax = hi
+  cut 2026-03-01
+bxx [wd = 2026-04-01 .. 2026-04-03] [ax = hi]: 36.00 PLN
+  reading: ax = hi
+  held: rate = 12.00 PLN (r2), read for 2026-04-01
+  held: rate = 12.00 PLN (r2), read for 2026-04-02
+  held: rate = 12.00 PLN (r2), read for 2026-04-03
+  cut 2026-03-01
+lwf: 0.00 PLN
+  pinned: ax = lo
+  held: rate = 12.00 PLN (r2), read for 2026-04-01
+  held: rate = 12.00 PLN (r2), read for 2026-04-02
+  held: rate = 12.00 PLN (r2), read for 2026-04-03
+  cut 2026-03-01
+,19:items/windows/known,13:items-windows,15:run known.tally,2189:11:known.tally,2168:model w_known
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 C2, G3 (P6): a known window at run, on a version (kv), a row (kr) and an observation's version (ko), read as known inside the window and past it, plain and windows each; a moves line at run (mv): the moved version read at a law date in its old span and its new, as known before and after the moves line"
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place work: outside lives 1900-01-01..
+
+input bank: observed
+input a: money PLN
+input b: money PLN
+input c: money PLN
+input amt: money PLN
+
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from work to konto amount amt
+
+ask kv_in: a law 2026-06-01 as known 2026-03-15
+ask kv_in_each: a law 2026-06-01 as known 2026-03-15 windows each
+ask kv_past: a law 2026-06-01 as known 2026-04-01
+ask kr_in_each: b law 2026-06-01 as known 2026-03-15 windows each
+ask kr_before: b law 2026-06-01 as known 2026-03-01
+ask ko_in_each: bal(konto, 2026-02-28) as known 2026-03-15 windows each
+ask ko_past: bal(konto, 2026-02-28) as known 2026-04-01
+ask mv_old_before: c law 2026-02-15 as known 2026-02-01
+ask mv_old_after: c law 2026-02-15 as known 2026-04-01
+ask mv_new_after: c law 2026-05-15 as known 2026-04-01
+ask mv_new_before: c law 2026-05-15 as known 2026-02-01
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  a = 1.00 PLN "c"
+  amt = 10.00 PLN "c"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
+
+version va
+  cite card
+  governs always
+  known window(2026-03-10, 2026-03-20)
+  replace a = 2.00 PLN "c"
+
+version vb
+  cite card
+  governs always
+  known 2026-01-01
+  b = 3.00 PLN "c"
+  replace b = 4.00 PLN known window(2026-03-10, 2026-03-20) "c"
+
+version bank_feb
+  cite card
+  governs 2026-02
+  known window(2026-03-10, 2026-03-20)
+  covers konto
+  bank[r1] = (on: 2026-02-01, kind: transfers, leg cash from work to konto amount 11.00 PLN, fulfils: pay[2026-02]) "r1"
+
+version vc
+  cite card
+  governs 2026-01..2026-03
+  known 2026-01-01
+  c = 5.00 PLN "c"
+
+version vmove
+  cite card
+  governs always
+  known 2026-03-01
+  moves vc to 2026-04..2026-06
+,,1:0,1270:ko_in_each [known of bank_feb = 2026-03-10 .. 2026-03-15]: 21.00 PLN
+  unfulfilled: pay[2026-01]
+  cut 2026-03-15
+ko_in_each [known of bank_feb = 2026-03-16 .. 2026-03-20]: 20.00 PLN
+  unfulfilled: pay[2026-01]
+  unfulfilled: pay[2026-02]
+  cut 2026-03-15
+ko_past: 21.00 PLN
+  unfulfilled: pay[2026-01]
+  cut 2026-04-01
+kr_before: 3.00 PLN
+  law date 2026-06-01, cut 2026-03-01
+kr_in_each [known of vb:b = 2026-03-10 .. 2026-03-15]: 4.00 PLN
+  law date 2026-06-01, cut 2026-03-15
+kr_in_each [known of vb:b = 2026-03-16 .. 2026-03-20]: 3.00 PLN
+  law date 2026-06-01, cut 2026-03-15
+kv_in: ?"date within window(2026-03-10, 2026-03-20) not precise enough for the cut 2026-03-15" (va)
+  law date 2026-06-01, cut 2026-03-15
+kv_in_each [known of va = 2026-03-10 .. 2026-03-15]: 2.00 PLN
+  law date 2026-06-01, cut 2026-03-15
+kv_in_each [known of va = 2026-03-16 .. 2026-03-20]: 1.00 PLN
+  law date 2026-06-01, cut 2026-03-15
+kv_past: 2.00 PLN
+  law date 2026-06-01, cut 2026-04-01
+mv_new_after: 5.00 PLN
+  law date 2026-05-15, cut 2026-04-01
+mv_new_before: ?"c: no value at 2026-05-15" (c)
+  law date 2026-05-15, cut 2026-02-01
+mv_old_after: ?"c: no value at 2026-02-15" (c)
+  law date 2026-02-15, cut 2026-04-01
+mv_old_before: 5.00 PLN
+  law date 2026-02-15, cut 2026-02-01
 ,

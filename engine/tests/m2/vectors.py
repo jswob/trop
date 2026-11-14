@@ -6,10 +6,11 @@ Reads vectors.tsv, one vector per row, in m1/vectors.tsv's columns:
 
 The first seven columns are kernel/vectors.py's, read and run by its own functions (imported, not copied): a vector
 names a check of checks.tsv (`check`; the other columns empty) or is a fixture of its own (`cwd`, `files`, `asks`,
-`options`; a `.gen` source expanded as there). `group` is the runner test that holds it (`checks-green`,
-`checks-plan`, ...: milestone/m2_checks.rs, one test per group). `for` is the builder's group that turns it green
-(G1, G2, ... of tmp/m2/build-plan.md), `plan` until that plan names one, or `-` for a vector the engine already
-answers; it is the builder's work list and is not stored.
+`options`; a `.gen` source expanded as there). `group` is the runner test that holds it: `checks-…` in
+milestone/m2_checks.rs (the 26 checks), `items-…` in milestone/m2_items.rs (the run's in-scope items), one test per
+group. `for` is the builder's group that turns it green (`forms`, `explain`, `windows`, `records`, `ledger`, `sweep`,
+`forks`: G1 to G7 of tmp/m2/build-plan.md), or `-` for a vector the engine already answers; it is the builder's work
+list and is not stored.
 
 Each vector is run on the frozen refcore (PyPy, plain refcore, never the fast layer: run.py's run_one, its 90 s
 budget, its cache, the watchdog) and written to vectors.refcore in kernel/vectors.refcore's six netstrings (id, group,
@@ -42,7 +43,7 @@ KV.JOBS = 2  # at most two heavy jobs on the machine (the run's rule)
 LIST = os.path.join(HERE, 'vectors.tsv')
 STORED = os.path.join(HERE, 'vectors.refcore')
 COLUMNS = KV.COLUMNS + ['for']
-FOR = {'G%d' % n for n in range(1, 31)} | {'-', 'plan'}  # the builder's groups (tmp/m2/build-plan.md)
+FOR = {'forms', 'explain', 'windows', 'records', 'ledger', 'sweep', 'forks', '-'}  # tmp/m2/build-plan.md's G1 to G7
 
 
 def rows():
@@ -53,7 +54,7 @@ def rows():
         out = list(r)
     for v in out:
         if v['for'] not in FOR:
-            sys.exit('vectors.tsv: %s is for %r, not a builder group G1..G30, plan or -' % (v['id'], v['for']))
+            sys.exit('vectors.tsv: %s is for %r, not a builder group or -' % (v['id'], v['for']))
     return out
 
 

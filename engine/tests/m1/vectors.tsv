@@ -1544,6 +1544,13 @@ fixes/gate8/k6_by_form	fixes-gate8		engine/tests/m1/fixes/gate8	engine/tests/m1/
 fixes/gate8/k7_after_run	fixes-gate8		engine/tests/m1/fixes/gate8	engine/tests/m1/fixes/gate8/k7_after_run.tally			-
 fixes/gate8/k4_changed_after	fixes-gate8		engine/tests/m1/fixes/gate8/k4_changed_after	engine/tests/m1/fixes/gate8/k4_changed_after/household.tally engine/tests/m1/fixes/gate8/k4_changed_after/late.tally			-
 fixes/gate8/k8_projected_days	fixes-gate8		engine/tests/m1/fixes/gate8	engine/tests/m1/fixes/gate8/k8_projected_days.tally	p_day p_from		-
+fixes/gate8/p47_k1_after_run_line	fixes-gate8		engine/tests/m1/fixes/gate8/p47_k1_after_run_line	engine/tests/m1/fixes/gate8/p47_k1_after_run_line/m.tally			-
+fixes/gate8/p47_k2_may_touch	fixes-gate8		engine/tests/m1/fixes/gate8/p47_k2_may_touch	engine/tests/m1/fixes/gate8/p47_k2_may_touch/m.tally			-
+fixes/gate8/p47_k4_changed_after	fixes-gate8		engine/tests/m1/fixes/gate8/p47_k4_changed_after	engine/tests/m1/fixes/gate8/p47_k4_changed_after/household.tally engine/tests/m1/fixes/gate8/p47_k4_changed_after/late.tally			-
+fixes/gate8/p47_k5_unbooked	fixes-gate8		engine/tests/m1/fixes/gate8/p47_k5_unbooked	engine/tests/m1/fixes/gate8/p47_k5_unbooked/m.tally			-
+fixes/gate8/p47_k6_by_form	fixes-gate8		engine/tests/m1/fixes/gate8/p47_k6_by_form	engine/tests/m1/fixes/gate8/p47_k6_by_form/m.tally			-
+fixes/gate8/p47_k7_after_run	fixes-gate8		engine/tests/m1/fixes/gate8/p47_k7_after_run	engine/tests/m1/fixes/gate8/p47_k7_after_run/m.tally			-
+fixes/gate8/p47_k9_by_last_hole	fixes-gate8		engine/tests/m1/fixes/gate8/p47_k9_by_last_hole	engine/tests/m1/fixes/gate8/p47_k9_by_last_hole/m.tally			-
 r1/l8_reads_first_last_stop	fixes-r1		engine/tests/m1/fixes/r1/l8_reads_first_last_stop	engine/tests/m1/fixes/r1/l8_reads_first_last_stop/m.tally	a b c		R1
 r1/l8_reads_things_ties_order_then_where	fixes-r1		engine/tests/m1/fixes/r1/l8_reads_things_ties_order_then_where	engine/tests/m1/fixes/r1/l8_reads_things_ties_order_then_where/m.tally	t1 t2 t3 t4 t5		R1
 r1/l8_reads_ties_second_term_tied_only	fixes-r1		engine/tests/m1/fixes/r1/l8_reads_ties_second_term_tied_only	engine/tests/m1/fixes/r1/l8_reads_ties_second_term_tied_only/m.tally	a b		R1
