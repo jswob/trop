@@ -308,6 +308,7 @@ impl Loader {
                 version: vid.to_owned(),
                 key,
                 rows: vec![written],
+                whole: false,
             });
         }
         Ok(())

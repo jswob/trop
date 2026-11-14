@@ -243,6 +243,10 @@ pub struct Table {
     pub key: Option<KeyVal>,
     /// Its rows.
     pub rows: Vec<BandRow>,
+    /// Whether its rows are all `replace` and form a whole table, which then replaces the
+    /// table under it wholly where they don't all match its intervals; set by load's band
+    /// checks (refcore's `whole_ok`; L §5.9 Rows replaced).
+    pub whole: bool,
 }
 
 /// A band (refcore's `BandInfo`).

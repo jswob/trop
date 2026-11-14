@@ -63,6 +63,7 @@ impl Engine {
             "pow" => self.pow(m, call, env, ctx),
             "minor" => minor_of(m, call),
             "marginal" => self.marginal(m, call, env, ctx),
+            "band_lo" | "band_hi" => self.band_edge(m, call, env, ctx),
             "pos" => self.pos(m, call, env, ctx),
             "missing" => self.missing(m, call, env, ctx),
             "since" => self.since_read(m, call, env, ctx),

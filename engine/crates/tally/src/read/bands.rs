@@ -8,8 +8,9 @@
 //! `BandRow.same_interval`).
 //! Invariants: refcore's recursion through earlier tables is a loop: the chain of tables,
 //! each the latest known before the one above it, while that one says `replace`. A table
-//! that replaces another wholly is told from load's band checks, which are M0's, so it
-//! stops with `NotBuilt`.
+//! whose `replace` rows form a whole table is marked so by load's band checks (`whole`); it
+//! patches the table under it where its rows all match that table's intervals, and stands
+//! for it otherwise, or where no table is under it.
 
 use super::gap::Question;
 use super::rows::{Clocks, enters, invariant, no_law_date, version_known, version_span};
@@ -179,8 +180,9 @@ fn chain(m: &Reality, band: &BandInfo, cands: &[usize]) -> Result<Vec<usize>, St
 /// # Errors
 ///
 /// `LOAD-OVERLAP` for tables known the same day or overlapping without `replace`;
-/// `NotBuilt` for a `replace` table that stands as a whole table, or for a dated band read
-/// with no law date (`LOAD-LAWDATE`).
+/// `LOAD-REPLACE` for a patch on a day no table is in force; `LOAD-BAND` for `replace` rows
+/// that neither patch the table in force nor form a whole table; `NotBuilt` for a dated band
+/// read with no law date (`LOAD-LAWDATE`).
 pub fn band_rows(
     m: &Reality,
     band: &BandInfo,
@@ -193,22 +195,47 @@ pub fn band_rows(
     for &at in tables.iter().rev() {
         let table = table_at(band, at)?;
         rows = Some(match rows {
-            None if replaces(table) => {
-                return Err(Stop::NotBuilt(
-                    "a band's replace table with no table under it",
-                ));
+            None if replaces(table) && !table.whole => {
+                return Err(patches_nothing(band, table, clocks.law));
             }
-            None => (0..table.rows.len())
-                .map(|row| BandAt { table: at, row })
-                .collect(),
+            None => own_rows(at, table),
             Some(base) => patch(band, at, &base)?,
         });
     }
     Ok(rows)
 }
 
+/// The rows of the table at `at`, as they stand: a table of its own, or a whole table of
+/// `replace` rows (L §5.9).
+fn own_rows(at: usize, table: &Table) -> Vec<BandAt> {
+    (0..table.rows.len())
+        .map(|row| BandAt { table: at, row })
+        .collect()
+}
+
+/// `LOAD-REPLACE replace rows of <b> in <V> patch no table on <d>`: a patch read on a day no
+/// table is in force, under a cut that sees its version (L §5.9 Rows replaced, §8.3;
+/// refcore's `_table_of`).
+fn patches_nothing(band: &BandInfo, table: &Table, law: Option<Day>) -> Stop {
+    let Some(day) = law else {
+        return Stop::NotBuilt("a band patch with no table under it, read with no law date");
+    };
+    let message = format!(
+        "replace rows of {} in {} patch no table on {}",
+        band.id,
+        table.version,
+        day.text()
+    );
+    refuse(Load::Replace, message)
+}
+
 /// The earlier table's rows with those a `replace` table restates swapped for its rows,
-/// when each of its rows has an interval of the earlier table's (L §5.9 Rows replaced).
+/// when each of its rows has an interval of the earlier table's; else the `replace` table's
+/// own rows, where they form a whole table (L §5.9 Rows replaced; refcore's `_table_of`).
+///
+/// # Errors
+///
+/// `LOAD-BAND` for `replace` rows that do neither.
 fn patch(band: &BandInfo, at: usize, base: &[BandAt]) -> Result<Vec<BandAt>, Stop> {
     let table = table_at(band, at)?;
     let mut base_rows = Vec::new();
@@ -223,10 +250,15 @@ fn patch(band: &BandInfo, at: usize, base: &[BandAt]) -> Result<Vec<BandAt>, Sto
     for row in &table.rows {
         matches = matches && base_rows.iter().any(|b| same_interval(row, b));
     }
+    if !matches && table.whole {
+        return Ok(own_rows(at, table));
+    }
     if !matches {
-        return Err(Stop::NotBuilt(
-            "a band's replace rows that form a whole table",
-        ));
+        let message = format!(
+            "band {} in {}: the replace rows neither match the earlier table's intervals nor form a whole table",
+            band.id, table.version
+        );
+        return Err(refuse(Load::Band, message));
     }
     let mut out = Vec::new();
     for (held, earlier) in base.iter().zip(base_rows) {
