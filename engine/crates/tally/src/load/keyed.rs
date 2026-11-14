@@ -297,7 +297,10 @@ impl Checker {
             }
         }
         let mut range_lit = false;
-        if is_keylit_node(m, scope, kn) {
+        // a number written at a stepped range's position is a key literal of it, whatever
+        // its digits or unit (L §2.5; tally 2.1.7 B1, refcore's `key_pos`)
+        let range_number = matches!(domain, Domain::Range) && matches!(kn, Expr::Lit(Lit::Num(_)));
+        if is_keylit_node(m, scope, kn) || range_number {
             match domain {
                 Domain::Index(_) | Domain::Kind(_) | Domain::Axis(_) => {
                     let dated = matches!(

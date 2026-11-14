@@ -2820,3 +2820,16 @@ Three commits: 4f8d6ad (the run half), 35e3be8 (prices at load), and this one (t
 - **Sweep:** none SAME → DIFF; 3 asks DIFF → SAME over R7's; no new `ENGINE-INVARIANT`.
 - **Size:** 123 changed lines (95 added, 28 removed). **M1 code replaced:** `discrete_index`'s `None` for a list or range domain and its refusal at the reading ask; `explain`'s `booking cut None`. **Exceptions:** +0.
 - **Check:** `check commit: green, 23 steps`.
+
+## 2026-11-14 tally 2.1.7, R10: nothing to build
+
+- R10 (bidirectional typing through `( )` and an `if`'s branches, #149, P12) has no id on the work list: the engine's key positions already reach through them (`load/keyed.rs`, M1's ruling on #113). Nothing replaced.
+
+## 2026-11-14 tally 2.1.7, B1: a stepped range's values are `a + i·s`, by arithmetic (issue #150, pick P13)
+
+- **One formula for a day range** (`eval/ranges.rs` `nth_day`, `day_at`): the i-th day is `a + i·s` computed from the start, so `2026-01-31 .. step 1 month` holds 03-31, not 03-28. Its values (`day_range`), its count against the key limit (`days_past`) and its membership (`range_holds`, `holds_day`) all read it; a value past 9999-12-31 is past every key for membership and refused (`RUN-LIMIT`) when listed, before the keys are counted (SR-2); membership finds its index by doubling then bisection, never by stepping from the start (SR-11). A key's read no longer counts the range (refcore's `range_member`).
+- **A number at a range's position is its key literal** (`load/keyed.rs`): `by_money[5.00 PLN]` in an ask is a key, not a figure, whatever its digits or unit.
+- **Turned green (26):** `fixes/g13/pz_p1`; `fixes/g14/r_rh_h_b1`, `_b2`, `_b3`, `_b5`, `_b6`; `fixes/g14/rh_m_a1` … `_a16` (20 ids). Gating: 52 of the 287 still red (and the 4 rows of the second STOP-REPORT).
+- **Sweep:** none SAME → DIFF, none DIFF → SAME over R9's (the sweep's cases hold no month-stepped range from a 29th–31st); no new `ENGINE-INVARIANT`.
+- **Size:** 235 changed lines (125 added, 110 removed). **M1 code replaced:** `day_step`'s cumulative stepping, `steps_by_days`, `holds_by_days` (days only) and the month walk in `range_holds`; `days_past`'s estimate by the first step's days; the limit counted at every key read. **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps`.
