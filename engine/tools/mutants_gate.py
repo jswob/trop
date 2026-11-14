@@ -2,7 +2,7 @@
 (R-84, R-88, R-133; the mutation study, approved 2026-11-12).
 
     engine/tools/mutants-gate baseline DIR             T's tests unmutated; DIR/times.json
-    engine/tools/mutants-gate slow TIMES.json HISTORY  fails on a T test over 20 s on the median runner
+    engine/tools/mutants-gate slow TIMES.json HISTORY  reports the T tests over 20 s; never fails
     engine/tools/mutants-gate list OUT.json            cargo-mutants' mutants, with the key
     engine/tools/mutants-gate coverage OUT.json        the coverage map (R-133)
     engine/tools/mutants-gate same-map A.json B.json   two maps are equal (the nightly's twin)
@@ -38,7 +38,7 @@ profile.mutants.package.tally.opt-level=1`): it will likely run every selected t
 end, 4.2x faster so (run 43127579597); overflow checks and debug assertions stay on, so
 the program means the same.
 
-`local` runs the whole method here: the baseline (a test over 20 s is a notice), the
+`local` runs the whole method here: the baseline, the
 mutants of FILE… (every kernel file when none is named) matching REGEX, a fresh map, one
 shard, every mutant at opt-level 0. Its output is target/mutants-local/mutants.out/, its
 exit cargo-mutants' (0 all caught, 2 some missed, 3 some timed out). tools/mutants-local
@@ -83,10 +83,12 @@ KEYED = ["crates", "tests", "Cargo.toml", "Cargo.lock", "rust-toolchain.toml", "
          "tools/milestones.toml", "tools/mutants_gate.py", "tools/mutants-cov-wrap", "tools/mutants-cov.toml"]
 # each mutant's tests and build, in seconds (R-88)
 TIMEOUT, BUILD_TIMEOUT = 600, 600
-# the baseline's limit on one T test on the median runner (R-88): about 60 s on a runner 3x
-# slower, half the kill; a test tools/milestones.toml names has its own ceiling (pick P73)
+# `slow`'s report (R-88, 2026-11-14, issue #165): a T test over 20 s, raw or on the median
+# runner, is named in a notice; nothing fails on it. 20 s on the median runner is about 33 s
+# on the slowest runner seen (1.64x), under half the mutants profile's 120 s kill
 SLOW = 20.0
-# the runner's speed rests on at least this many tests the history also times (pick P73)
+# the runner's speed rests on at least this many tests the history also times, or the
+# report names the raw times alone
 SPEED_TESTS = 10
 O1 = ["--config", "profile.mutants.package.tally.opt-level=1"]
 # run 43127579597, all 301 survivors: tests 4.17x faster at opt-level 1, the build 27.5 s longer
@@ -201,7 +203,7 @@ def tee(argv, env, log, timeout=None):
 
 def baseline(out_dir, extra=(), expr=None):
     """T's tests unmutated in the mutants profile (R-88); False when one fails. Each test's
-    time goes to OUT_DIR/times.json, for the 20 s check."""
+    time goes to OUT_DIR/times.json, for `slow`'s report."""
     argv = ["cargo", "nextest", "run", "--locked", "-p", RUNNER, "--cargo-profile", "mutants", "--profile", "mutants",
             *selection(), *extra]
     if expr:
@@ -217,7 +219,7 @@ def baseline(out_dir, extra=(), expr=None):
 
 
 def runner_speed(times, past):
-    """The baseline runner's speed against the median runner (R-88; pick P73): the median,
+    """The baseline runner's speed against the median runner (R-88's report): the median,
     over the T tests both the baseline and the history time over 0.5 s, of the baseline's
     time over the history's (each test's median on the median runner, as `history` keeps
     it); and how many tests it rests on."""
@@ -225,19 +227,6 @@ def runner_speed(times, past):
     ratios = [s / tests[t]["seconds"] for t, s in times.items()
               if s > 0.5 and isinstance(tests.get(t), dict) and tests[t].get("seconds", 0) > 0.5]
     return (statistics.median(ratios) if ratios else None), len(ratios)
-
-
-def slow(times, speed=1.0, named=None):
-    """The T tests over their limit on the median runner, each baseline time over the runner's
-    `speed` (a test the history lacks too): 20 s, or a named test's ceiling (R-88; pick
-    P73), slowest first, as (seconds there, test, limit); and the named tests the run lacks."""
-    named = named or {}
-    over = []
-    for t, s in times.items():
-        limit = named[t][1] if t in named else SLOW
-        if s / speed > limit:
-            over.append((s / speed, t, limit))
-    return sorted(over, reverse=True), sorted(t for t in named if t not in times)
 
 
 # --- the mutants -------------------------------------------------------------------------
@@ -744,29 +733,27 @@ def history(out, dirs):
     return 0
 
 
-def slow_check(times, past):
-    """`slow`: the 20 s check on the median runner (R-88; pick P73)."""
-    named = milestones.slow_tests()
+def slow_report(times, past):
+    """`slow`: a report that never fails (R-88, 2026-11-14, issue #165). It names, as GitHub
+    notices, the T tests over 20 s in the baseline: raw, and over the runner's speed against
+    the plan's history when that speed rests on enough tests. Test times alone send no one
+    to re-run gate 8 or to split a test: the guard that a kill means a hang is the survivors
+    job's timed-out count (R-87), and its notice names a kill's tests."""
     speed, n = runner_speed(times, past)
     if speed is None or n < SPEED_TESTS:
-        print(f"FAIL R-88: the runner's speed rests on {n} tests the history also times, under "
-              f"{SPEED_TESTS}: the 20 s check can't tell this runner from the median one")
-        return 1
-    print(f"mutants-gate: the baseline runner's speed {speed:.2f}x the median runner's, over {n} tests")
-    over, stale = slow(times, speed, named)
-    for t in sorted(named):
-        if t in times:
-            print(f"mutants-gate: {t}: {times[t] / speed:.1f} s on the median runner ({times[t]:.1f} s here), "
-                  f"ceiling {named[t][1]:.0f} s")
-    for s, t, limit in over:
-        what = "its ceiling (tools/milestones.toml)" if t in named else "T splits it"
-        print(f"FAIL R-88: {t} took {s:.1f} s on the median runner, over {limit:.0f} s: {what}, so a "
-              "slow-timeout kill means a hang, not a slow runner")
-    for t in stale:
-        print(f"FAIL R-88: tools/milestones.toml's mutants_slow_tests names {t}, which the baseline didn't run")
-    print(f"mutants-gate: {len(over)} T test{'' if len(over) == 1 else 's'} over its limit on the median runner, "
-          f"{len(stale)} stale name{'' if len(stale) == 1 else 's'}")
-    return 1 if over or stale else 0
+        speed = None
+        print(f"mutants-gate: the runner's speed rests on {n} tests the history also times, under "
+              f"{SPEED_TESTS}: raw times alone")
+    else:
+        print(f"mutants-gate: the baseline runner's speed {speed:.2f}x the median runner's, over {n} tests")
+    over = sorted(((s, t) for t, s in times.items() if s > SLOW or (speed is not None and s / speed > SLOW)),
+                  reverse=True)
+    for s, t in over:
+        there = f", {s / speed:.1f} s on the median runner" if speed is not None else ""
+        print(f"::notice title=R-88 report::{t}: {s:.1f} s here{there}; information only, nothing fails on it")
+    print(f"mutants-gate: report: {len(over)} T test{'' if len(over) == 1 else 's'} over {SLOW:.0f} s "
+          "(R-88: never a failure, never a re-run)")
+    return 0
 
 
 # --- on this machine -------------------------------------------------------------------
@@ -811,9 +798,6 @@ def local(files=None, regex=None, extra=(), expr=None):
         print("mutants-gate: T's tests, unmutated", flush=True)
         if not baseline(work, extra, expr):
             return 1
-    for s, t, limit in slow(load_json(os.path.join(work, "times.json")), named=milestones.slow_tests())[0]:
-        print(f"mutants-gate: notice: {t} took {s:.1f} s here, over the {limit:.0f} s CI's baseline allows on "
-              "the median runner (R-88)")
     listed = list_mutants(os.path.join(work, "mutants.json"), args, files, regex)
     if not listed:
         print("mutants-gate: no mutant to run")
@@ -855,7 +839,12 @@ def main(argv):
         if cmd == "baseline" and len(rest) == 1:
             return 0 if baseline(rest[0]) else 1
         if cmd == "slow" and len(rest) == 2:
-            return slow_check(load_json(rest[0]), load_json(rest[1]))
+            # a report: whatever goes wrong in it is printed, never a failure (R-88, issue #165)
+            try:
+                return slow_report(load_json(rest[0]), load_json(rest[1]))
+            except Exception as e:  # noqa: BLE001  the report must not fail the run
+                print(f"::notice title=R-88 report::the report couldn't be made: {e}")
+                return 0
         if cmd == "list" and len(rest) == 1:
             list_mutants(rest[0], selection())
             return 0

@@ -12,12 +12,11 @@ FILE is a kernel file (tools/kernel.toml, .cargo/mutants.toml's examine_globs), 
 engine/ or to the repository. -F keeps the mutants whose name matches REGEX, a struct
 field's deletion included. It is tools/mutants-gate's local mode, CI's method on this
 machine (R-84, R-88, R-133; 2026-11-12): T's tests unmutated first (the default targets
-and every gating milestone's but the marker's mutants_leave_out, tools/milestones args; a
-test over the 20 s CI's baseline allows is a notice here); the mutants of FILE; a fresh
-coverage map; then each mutant built with the targets of the T tests that enter its
-function and run on those tests, under `--timeout 600 --build-timeout 600`, a fixed
-proptest seed, no failure files and the memory cap, ended at its first failing test
-(nextest's `mutants` profile, tools/test-memcap). A mutant no test enters is built and, if
+and every gating milestone's but the marker's mutants_leave_out, tools/milestones args);
+the mutants of FILE; a fresh coverage map; then each mutant built with the targets of the
+T tests that enter its function and run on those tests, under `--timeout 600 --build-timeout
+600`, a fixed proptest seed, no failure files and the memory cap, ended at its first failing
+test (nextest's `mutants` profile, tools/test-memcap). A mutant no test enters is built and, if
 viable, missed. The output is engine/target/mutants-local/mutants.out/; the exit is
 cargo-mutants' (0 all caught, 2 some missed, 3 some timed out).
 

@@ -274,7 +274,7 @@ jobs:
         run: *install
       # T's tests must pass unmutated before any mutant runs (R-88): the runner's default
       # targets and every gating milestone's, but the marker's mutants_leave_out (R-84,
-      # tools/milestones args), the shards' own set; each test's time is kept for the 20 s check
+      # tools/milestones args), the shards' own set; each test's time is kept for the report
       - name: The tests pass unmutated, fresh
         working-directory: engine
         run: tools/mutants-gate baseline target/mutants-plan
@@ -295,30 +295,19 @@ jobs:
           [ -f "$history" ] || history=tools/mutants-gate-seed.json
           echo "mutants-gate: the plan from $history"
           tools/mutants-gate plan target/mutants-plan/mutants.json "$history" 100 target/mutants-plan/plan.json
-          # the 20 s check measures the runner against the same history (pick P73)
+          # the report measures the runner against the same history
           cp "$history" target/mutants-plan/history.json
+      # the T tests over 20 s, raw and on the median runner, as notices: a report that never
+      # fails, so no one re-runs gate 8 or splits a test for its time alone (R-88, 2026-11-14,
+      # issue #165); the guard that a kill means a hang is the survivors job's (R-87)
+      - name: The T tests over 20 s, a report that never fails
+        continue-on-error: true
+        working-directory: engine
+        run: tools/mutants-gate slow target/mutants-plan/times.json target/mutants-plan/history.json
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: mutants-plan
           path: engine/target/mutants-plan/
-
-  # a T test over 20 s on the median runner fails the run (R-88), but stops no shard: the
-  # verdicts are judged all the same, and T splits the test. Each baseline time counts over the
-  # runner's speed against the plan's history; a single vector tools/milestones.toml names
-  # has its 40 s ceiling (pick P73)
-  mutants-slow-tests:
-    name: mutants baseline, 20 s a test
-    needs: mutants-baseline
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: mutants-plan
-          path: engine/target/mutants-plan
-      - name: No T test in the mutation set over 20 s on the median runner
-        run: engine/tools/mutants-gate slow engine/target/mutants-plan/times.json engine/target/mutants-plan/history.json
 
   # the coverage map, from the commit under test and never reused (R-133): T's mutation
   # targets built with -C instrument-coverage and run once, each test with its own profile
