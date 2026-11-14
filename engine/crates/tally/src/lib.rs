@@ -360,7 +360,8 @@ pub mod read {
 
     pub use bands::{BandAt, band_no_row, band_no_table, band_origin, band_rows, table_held};
     pub use gap::{
-        Asked, Found, Question, member_span, no_candidate, origin, read_input, read_last,
+        Asked, Found, Question, last_began, member_span, no_candidate, origin, read_input,
+        read_last,
     };
     pub use rows::{
         Clocks, Point, Test, candidates, choose, held, lawless, need_law, row_known, row_place,

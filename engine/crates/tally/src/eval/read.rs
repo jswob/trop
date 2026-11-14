@@ -25,7 +25,9 @@ use crate::model::{
     BindInfo, Class, Domain, InputInfo, KeyVal, Number, Pat, Reality, Row, RowInstant, TimePos,
     Unit, Value,
 };
-use crate::read::{Asked, Clocks, Found, held, origin, read_input, read_last, time_point};
+use crate::read::{
+    Asked, Clocks, Found, held, last_began, origin, read_input, read_last, time_point,
+};
 use crate::syntax::{Call, Expr, Stop, Value as Written};
 use crate::time::{Day, PeriodKind};
 
@@ -379,7 +381,21 @@ impl Engine {
             id: input.id.clone(),
             keys: keys.clone(),
         });
-        let at = match read_last(m, input, &keys, day, self.clocks(ctx, &input.id)?)? {
+        let clocks = self.clocks(ctx, &input.id)?;
+        let found = match past {
+            // `since` reads only the day the latest rows began, which they share: one reading
+            // per unit at a place of unit `any` is no tie for it (L §4.6 Readings)
+            Past::Since => match last_began(m, input, &keys, day, clocks)? {
+                Ok(kept) => Found::Row(
+                    *kept
+                        .first()
+                        .ok_or_else(|| invariant("since's rows that began latest, none"))?,
+                ),
+                Err(found) => found,
+            },
+            Past::Last | Past::Price => read_last(m, input, &keys, day, clocks)?,
+        };
+        let at = match found {
             Found::Row(at) => at,
             Found::None => return Ok(Err(Value::None)),
             // a price with no row on or before d: no price, which `value` names (refcore's
