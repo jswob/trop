@@ -3065,3 +3065,37 @@ Rulings: F-1, F-2, SQ-1, P25 (the coordinator's brief, the review loop's end). P
 - **Also:** the fixes' code is restructured for two report-only hits `check commit` met (`per_unit`'s chain, `long-chain-review`; `trace_observation`'s nested closure, `nested-closure-review`); the lock stays at 9.
 - **Size:** 128 added, 54 removed (182 changed) in `engine/crates` over the three fixes. **Exceptions:** +0. No single-mutant proofs. `check step gating: green, 1 step (89s)`.
 - **Check:** `check commit: green, 23 steps (149s)`, at 2fd0bb21's tree with the survivor rows.
+
+## 2026-11-15 M2 G3 `windows`, the review's fixes (addendum to G3's entry; issue #167, #169, #174)
+
+Rulings: picks P26–P30 (`tmp/m2/auto-picks.md`); the review `tmp/m2/review-g3.md`. Probes: the review's texts copied into `tmp/m2/b/g3fix/` (`run.sh <file>` runs the quick binary and refcore on pypy and diffs them), plus `n6.tally` and `n7.tally`. Each answer is the quick binary's against refcore. Where refcore shares the old wrong answer, T holds the vector for #169 (P27).
+
+- **B1** (5c92cd8f, `walk/flows.rs` `place_log`, `unbooked`, new `crosses`): a movement dated by a window that meets a `flows` span without lying inside it makes the flows `HOLE-IMPRECISE`, whether the walk booked it or it falls past the run's end (L §4.4). `f.tally`: `fa: ?"date within window(2026-12-20, 2027-01-10) not precise enough for flows of konto" (g)` where refcore prints `0.00 PLN` (held); `fb` names both g's window and h's, where refcore names only h's; `fc` is h's hole, as refcore. `f2.tally`: `fa` and `fb` give g's hole, where refcore prints `0.00 PLN` (held).
+- **B2** (247847e2, `ask/windows.rs` new `bound_lines`, `bound_run`, `Tuple`, `Shape`): a line under `windows each` that binds keys binds inside each run, so the binding's windows split its members. Each tuple's line prints with the sub-window after its binding, and a sub-window that binds nothing prints no line (L §5.18, P29). `g2.tally` `qw (m = g) [wd = 2026-04-01 .. 2026-04-02]: 10.00 PLN`, where refcore prints nothing (held). `g.tally`'s `sum(… for …)`: as refcore.
+- **B3** (6dd970c7, `eval/business.rs` `window_takes`): a calendar's added window is named by its entry and its text, as refcore's `window_id` names it. `i2.tally` `qs` gives refcore's 4 combinations. `qp` differs only by refcore's `(cal)` source tag (NB-4, follow-up list).
+- **B4** (6d5f3706, `read/rows.rs` `known_inside`; `eval/read.rs` `input_view`, `read_input_at`, `latest_at`; `eval/rules.rs` `given`; `eval/builtin.rs` `missing`): a row known in a window that holds the cut makes a read a hole only where the row applies at the read's time (L §4.6 step 1). That is its span at the law date or the time key's day, a reading's instant on or before it, or for `last` and `since` a span begun by their day. The read's law-date class is now taken over every row before the view, so the memo keeps a hole by its class. `j3.tally` gives `q: 10.00 PLN`, where refcore prints the hole (held); `q27` (law 2027) is still the hole. `j.tally` and `j2.tally` match refcore.
+- **B5** (247847e2, `ask/answer.rs` new `read_each_lines`, `plain_lines`): a projection's own `windows each` holds for that read only. An ask without the clause runs plain, and a read that states it takes its windows' first days (`with_read_windows` under the empty choice). Only where such a read met a window does the line run once per sub-window. `k2.tally` `t` prints `k.tally`'s four lines (refcore: `REFCORE-NOT-YET`, held). `k4.tally` `t` keeps `k3.tally`'s `unfulfilled:` lines. A `windows each` line's register now also lists what its tuple bound (L §8.2), where refcore's `each_lines` drops it (held).
+- **NB-2:** `i.tally` matches refcore after B3 (the two rows' windows were one unknown). `over_axes` still prints its group's first combination's register: not done.
+- **NB-6, NB-7** (b1c5dcff, `walk/plan.rs` `same_body`, new `same_legs`, `imprecise_body`, new `imprecise_part`, `inst_parts`):
+  - At a windowed instance's two booking cuts, the bodies also compare attributes, `for` and `fulfils`. A part the two give differently is the booking-cut hole, and the legs are kept where only those differ. `n6.tally`: `sw: ?"date within window(2026-03-10, 2026-03-20) not precise enough for the booking cut of mw" (mw)` and `sww` splits into `1` and `2`, where refcore prints `1` (held).
+  - An instance whose key is added or dropped inside the window exists only as that hole. `n7.tally`: `bw` is the hole of `mw[a2]`, where refcore prints `20.00 PLN` (held); `bww` matches refcore.
+- **NB-8** (5b887b14, `eval/memo.rs` new `open_law_class`, `close_law_class`; `walk/plan.rs` `day_over_law`, `body_over_law`, new `on_at`, `body_at`; `walk/tuples.rs` `members_over_law`, new `members_at`; `eval/rules.rs` `def_window`; `eval/context.rs` new `named_day`; `eval/windows.rs` `chosen`, `known_seen`; `eval/business.rs` `window_takes`):
+  - A window `at` is read once per law-date class: each read runs in a class frame of its own, the days that class holds are skipped, and the holding cell is narrowed as the read would have narrowed it (E §3.2).
+  - A window the run's choice already names takes its day without its days being listed.
+  - Every probe above, and G3's vectors (`tmp/m2/b/g3/w/m.tally`, `w2/m.tally`, `from/`), answers as before.
+- **P28** (9c3d99c2, `ask/windows.rs` `each_rows`, `EACH_CAP`): past 20 000 day combinations, done and pending, the line is refused `RUN-LIMIT windows each over more than 20 000 day combinations`, at refcore's point. `ez06.tally`, `ez09.tally` and `ez12.tally` refuse `c` where refcore stops `REFCORE-NOT-YET`.
+- **P30** (36561769, `eval/read.rs` `read_input_at`): a pinned window is a window the line meets. `h2.tally` `q` prints `qw`'s three sub-windows with its `pinned:` lines, where refcore pins the first day and prints `false` (held). `h.tally` matches refcore.
+- **Unchanged known differences** (P11, held for #169): `a.tally` `linw` and `c.tally` `l`, a `low … windows each` without `from`.
+- **Timing** (quick binary, niced, wall): `ez12.tally` 36.1 s (peak 156 MB) before; 1.76 s with the cap (`c` refused, `d`'s 362 lines); 0.90 s after NB-8. `e.tally` (windows of years; over 5 minutes in the review) 0.81 s.
+- **Not done, for the next builder:**
+  - NB-2's `over_axes`: a grouped line prints its first combination's register.
+  - B2 under an axis: a line that binds keys and fans out over axes still binds once, outside the runs.
+  - P26's stop removal waits on T, as ruled.
+  - NB-4, NB-5 and NB-9 are on the follow-up list.
+- **Code no vector covers** (for T; the review's inputs are ready vectors):
+  - B1's two paths (`place_log`'s windows map, `unbooked`'s crossing leg), `bound_lines` and `bound_run` (B2), `read_each_lines` (B5), `known_inside`'s time test (B4);
+  - `imprecise_part` and the attribute holes (NB-6), the key added inside the window (NB-7);
+  - `EACH_CAP` (P28), the pinned window (P30), `named_day`'s early return, and `close_law_class`'s truncation past a refusal.
+- **Checks:** each commit on `check quick` (green, 11 steps, 96–99 s). B1, B3 and B4 were checked together on one tree and committed file by file; NB-6/NB-7 and P30 the same. **Exceptions:** +0 (report-only hits 9, as the lock). No single-mutant proofs (gate 8's).
+- **Size:** 586 added, 173 removed (759 changed) in `engine/crates` over the eight commits.
+- **Check:** `check commit: green, 23 steps (71s)`, at 5b887b14's tree with this entry.
