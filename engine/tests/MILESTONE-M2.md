@@ -13,11 +13,11 @@ The checks M2 (replay against reality) must turn green, from BUILD-ORDER § M2 (
 | 3 | the hindcast fixtures H1–H5, H8, H9, each landing in the ledger line its answer key names | chunk C5 | `m2_hindcasts` | 4 | plan | not written |
 | 4 | the codes of M2's constructs no output prints, one fixture each: `HOLE-SAME`'s disagreement form and four `RUN-RECORD` forms | chunk C6 | `m2_codes` | 5 | plan | not written |
 | 5 | the properties of § M2: masking at K, the three-way split, the fixed past, forks on and off | chunks C7, C8 | `m2_properties`, `m2_forks` | 6 | plan | not written |
-| 6 | the brief's in-scope items: #147, #101, #158, #132, #42, #163, #164, item 9's pair; P6's known windows and `moves` at run; P47's kill texts | chunk C2 (§ Row 6): 9 texts under `m2/items/` in `m2/vectors.refcore`; the 7 kill texts in `m1/fixes/gate8/p47_*` (gating `m1_fixes`); 15 rows held in `held.tsv` for #147 (9), #101 (4), #158 (1), #132 (1), all `m1_fixes` | `m2_items` (5 tests: `items-green`, `items-forms`, `items-explain`, `items-windows`, one that every group has its test); `m1_fixes` `fixes-gate8` | 1, 8 | forms, explain, windows | 3 green on arrival (`items-green`), 6 red (not implemented): 1 `forms`, 3 `explain`, 2 `windows`; the 7 kill texts green; the 15 held rows red on the engine |
+| 6 | the brief's in-scope items: #147, #101, #158, #132, #42, #163, #164, item 9's pair; P6's known windows and `moves` at run; P47's kill texts | chunk C2 (§ Row 6): 9 texts under `m2/items/` in `m2/vectors.refcore`; the 7 kill texts in `m1/fixes/gate8/p47_*` (gating `m1_fixes`); the 15 rows `held.tsv` held for #147 (9), #101 (4), #158 (1), #132 (1) un-held once G1–G3 turned them (C9) | `m2_items` (5 tests: `items-green`, `items-forms`, `items-explain`, `items-windows`, one that every group has its test); `m1_fixes` `fixes-gate8` | 1, 8 | forms, explain, windows | 3 green on arrival (`items-green`), 6 red (not implemented): 1 `forms`, 3 `explain`, 2 `windows`; the 7 kill texts green; the 15 held rows red on the engine |
 | 7 | item 10: the 63 over-specified `fixes/g12/*` vectors restated to their asks | chunk C3: `m1/restate_g12.py` (`--check` in `run.py --self-test`, 8n), 582 asks; `MILESTONE-M1.md` § Item 10 | `m1_fixes`, `m1_lows` (gating) | 1 | — | done: `m1/vectors.refcore` 318 591 lines, 11 281 620 bytes before; 229 737 lines, 7 575 415 bytes after (the 63's output 95 744 → 6 890 lines); each prints its asks as its whole run did |
-| 8 | the builder groups' review fixes and gate 8's survivors | chunk C9 on | `m2_fixes` | 1, 8 | each group | — |
+| 8 | the builder groups' review fixes, refcore 2.1.7's misses (#169, #173) and gate 8's survivors | chunk C9 (§ Row 8): the probes' texts under `m2/fixes/`; 22 vectors with refcore's bytes held in `held.tsv` (`m2_fixes`; #169 20, #173 2) and `g14/past_64_counts` held in `s_kernel` (#169); `m2/spec.tsv` 21 rows, the spec's answers; 33 kill vectors `fixes/gate8/m2_*` (gating) | `m2_fixes` (8 tests: 4 held groups, 3 spec groups, one that every group has its test); `m1_fixes` `fixes-gate8`; `m2/spec.py --check` | 1, 8 | each group | the spec rows green (the engine's answers, read against their sections); the 33 kill vectors green |
 
-`check`'s report line counts the `m2_…` targets' tests: `milestone-report: M2: 2/3 green (gates once M2 is tagged)` after chunk C1, `4/9` after chunk C2.
+`check`'s report line counts the `m2_…` targets' tests: `milestone-report: M2: 2/3 green (gates once M2 is tagged)` after chunk C1, `4/9` after chunk C2, `14/17` after C9's holds.
 
 ## Row 1: the 26
 
@@ -73,15 +73,21 @@ Each text is T's, under `m2/items/`, its note naming the item and the forms; eac
 
 Not written in C2, for the next chunk: #164's month-stepped range from the 29th–31st, S5 through four or more decisions and a cycle left after composing, R1 `argmin` with a hole `ties by` term, `low … random at mean`, `next(K, d) with uncertain`; and the forms refcore crashes on (`m2/spec.tsv`, as M1's): `residuals` over a place whose plan reads an axis (refcore 2.1.7: `REFCORE-NOT-YET … an interpreter guard`), `pay law w`, `as known w`.
 
+## Row 8: review fixes and refcore's misses (chunk C9)
+
+From the builders' review probes (`tmp/m2/b/`, the BUILD-LOG addenda of G1–G3), each ask run on refcore 2.1.7 and on the engine at 913f1088 and sorted by machine:
+
+- **Same on both** (33 vectors, `m1/vectors.tsv` `fixes/gate8/m2_*`, gating now in `m1_fixes` `fixes-gate8`): the asks gate 8's survivors in G1's and G2's code name (`read/bands.rs` `band_rows`, `chain`: `m2_g1_bands`; `walk/value.rs` `clause_keys`, `price_field`: `m2_g1_px`, `m2_g1_law`; `book/members.rs` `movements_of`, `walk/plan.rs` `traced_instances`: `m2_g2_sum`, `m2_g2_sum2`) and every other probe ask the two engines answer alike (G3's `windows each` forms among them).
+- **Refcore's misses, held** (`held.tsv`, target `m2_fixes`, refcore's bytes kept): #169 (picks P5, P11, P15–P17, P21, P24, P27, P30) and #173 (P22); and `g14/past_64_counts` (`s_kernel`, P15). `m2/spec.tsv` gives the spec's answer beside each the engine already follows (the engine's run, read against the row's section).
+- **Refcore crashes** (`m2/spec.tsv` only): a quantile whose level is `none` (P17 B-1), `residuals` over an axis (P14), a read's own `windows each` under another ask (`k2`, P27 B5), `windows each` past 20 000 day combinations (P28, #174 interim).
+- **Held, the engine wrong too** (no spec row; `for` names the group): `fixes/g1/y4` (P16, LOAD-LITERAL, `sweep`), `fixes/g1/edge_hole` and `g14/past_64_counts` (P5, P15, `sweep`), `fixes/g2/after_m` (P11, P12, `records`).
+- **Not stored:** `i2`'s `qp` (NB-4, the `(cal)` source tag) and `anyhole`'s `l1` (NB-4's held text): on the follow-up list, unruled. P20's probe (`g2/any/a` `e2`) answers alike on both engines now, so it gates with the others.
+
 ## What rulings hold back
 
 None of row 1's vectors waits on a ruling: refcore and the stored baselines agree on all 26. The 15 rows `held.tsv` holds for M2's items (#147, #101, #158, #132) are row 6's; each is released by T once its builder group turns it green.
 
-Three forms of row 6 are stored in no file, since refcore 2.1.7's answer differs from the spec's and nothing may hold refcore's bytes as expected (refcore cases for 2.1.8, each awaiting the coordinator's issue):
-
-- **Item 9's pair** (P5; R2, L §8.1): `add_business(2026-06-01, -739768, cal_h)` and `add_business(2026-06-01, 2912292, cal_h)`, `cal_h` governed in 2026 only. n business days move at least n days, so both pass the day range whatever the hole on the way; the spec's answer is `refused: RUN-LIMIT a day comes before 0001-01-01` (`… passes 9999-12-31`), as over a calendar governed always. refcore prints the hole, `?"calendar cal_h doesn't cover 2025" (cal_h)` (`… 2027`). The text is `m2/items/shift/hole.tally` (`h_back`, `h_fwd`).
-- **`last` of a reading `after m`** (#163, #164; L §4.6): `last(stated[konto], d)` on or after the day of a reading `stated[konto] = 10.00 PLN after save[2026-03]`: L §4.6 takes the last reading on or before d, so 10.00 PLN (its `held` mark is P31's question); refcore prints `?"stated[konto] has no reading on or before …"`. The text is `m2/items/explain/m.tally` with an ask `last(stated[konto], 2026-05-01)`.
-- **`low … windows each` without `from`** (#164 R6; L §4.4): on an ask line the clause splits every window the line meets; refcore prints the holes of the plain form, unsplit. The text is `m2/items/windows/m.tally` with an ask `low(konto, 2026-03-01 .. 2026-04-30) windows each`.
+Row 6's three forms where refcore 2.1.7 differs from the spec (item 9's pair past the edge, `last` of an `after m` reading, `low … windows each` without `from`) are held for #169 (P11), with row 8's.
 
 ## Keeping master green
 

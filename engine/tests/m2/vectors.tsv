@@ -31,3 +31,25 @@ items/explain/any	items-explain		engine/tests/m2/items/explain	engine/tests/m2/i
 items/explain/from	items-explain		engine/tests/m2/items/explain/from	engine/tests/m2/items/explain/from/household.tally engine/tests/m2/items/explain/from/late.tally			explain
 items/windows/m	items-windows		engine/tests/m2/items/windows	engine/tests/m2/items/windows/m.tally			windows
 items/windows/known	items-windows		engine/tests/m2/items/windows	engine/tests/m2/items/windows/known.tally			windows
+fixes/g1/forks	fixes-forms		engine/tests/m2/fixes/g1/forks	engine/tests/m2/fixes/g1/forks/base.tally engine/tests/m2/fixes/g1/forks/sa.tally engine/tests/m2/fixes/g1/forks/sb.tally			-
+fixes/g1/y4	fixes-sweep		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/y4.tally			sweep
+fixes/g1/edge_hole	fixes-sweep		engine/tests/m2/items/shift	engine/tests/m2/items/shift/hole.tally	h_back h_fwd		sweep
+fixes/g2/after_m	fixes-explain		engine/tests/m2/fixes/g2	engine/tests/m2/fixes/g2/after_m.tally	la		records
+fixes/g2/wb	fixes-explain		engine/tests/m2/fixes/g2	engine/tests/m2/fixes/g2/wb.tally	w2		-
+fixes/g2/wb_r	fixes-explain		engine/tests/m2/fixes/g2	engine/tests/m2/fixes/g2/wb_r.tally	xc		-
+fixes/g2/sumobs2	fixes-explain		engine/tests/m2/fixes/g2	engine/tests/m2/fixes/g2/sumobs2.tally	e1 e2 e3		-
+fixes/g2/fall	fixes-explain		engine/tests/m2/fixes/g2	engine/tests/m2/fixes/g2/fall.tally	l1 p1 s1		-
+fixes/g2/nb3	fixes-explain		engine/tests/m2/fixes/g2	engine/tests/m2/fixes/g2/nb3.tally	s1		-
+fixes/g2/nb3b	fixes-explain		engine/tests/m2/fixes/g2	engine/tests/m2/fixes/g2/nb3b.tally	l1 s1		-
+fixes/g2/anyhole	fixes-explain		engine/tests/m2/fixes/g2	engine/tests/m2/fixes/g2/anyhole.tally	b1 e2		-
+fixes/g2/anynone	fixes-explain		engine/tests/m2/fixes/g2	engine/tests/m2/fixes/g2/anynone.tally	b1 e2		-
+fixes/g3/low_each	fixes-windows		engine/tests/m2/fixes/g3	engine/tests/m2/fixes/g3/low_each.tally	lw		-
+fixes/g3/f	fixes-windows		engine/tests/m2/fixes/g3	engine/tests/m2/fixes/g3/f.tally	fa fb		-
+fixes/g3/f2	fixes-windows		engine/tests/m2/fixes/g3	engine/tests/m2/fixes/g3/f2.tally	fa fb		-
+fixes/g3/g2	fixes-windows		engine/tests/m2/fixes/g3	engine/tests/m2/fixes/g3/g2.tally	qw		-
+fixes/g3/j3	fixes-windows		engine/tests/m2/fixes/g3	engine/tests/m2/fixes/g3/j3.tally	q		-
+fixes/g3/k	fixes-windows		engine/tests/m2/fixes/g3	engine/tests/m2/fixes/g3/k.tally	t		-
+fixes/g3/k4	fixes-windows		engine/tests/m2/fixes/g3	engine/tests/m2/fixes/g3/k4.tally	t		-
+fixes/g3/h2	fixes-windows		engine/tests/m2/fixes/g3	engine/tests/m2/fixes/g3/h2.tally	q		-
+fixes/g3/n6	fixes-windows		engine/tests/m2/fixes/g3	engine/tests/m2/fixes/g3/n6.tally	sw		-
+fixes/g3/n7	fixes-windows		engine/tests/m2/fixes/g3	engine/tests/m2/fixes/g3/n7.tally	bw		-

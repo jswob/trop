@@ -150,3 +150,10 @@ test = false
 name = "m2_items"
 path = "milestone/m2_items.rs"
 test = false
+
+# Milestone M2's review fixes and refcore's misses (issue #167, MILESTONE-M2.md row 8): the held
+# vectors' groups and the spec's answers (m2/spec.vectors); `test = false` until M2 gates.
+[[test]]
+name = "m2_fixes"
+path = "milestone/m2_fixes.rs"
+test = false

@@ -1,0 +1,22 @@
+model ph
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+input a: date
+input b: date
+
+ask q: a < b with a = window(2026-01-01, 2026-01-02), b = window(2026-01-01, 2026-01-02) windows each
+ask qw: a < b windows each
+ask qe: a == b windows each
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  a = window(2026-01-01, 2026-01-02) "c"
+  b = window(2026-01-01, 2026-01-02) "c"

@@ -1,0 +1,36 @@
+model x_sum
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+
+kind pays: event certain
+  leg cash: PLN
+
+place konto: accounts PLN lives 2026-01-01..
+place work: outside lives 1900-01-01..
+
+input amt[m in months]: money PLN
+
+def tot[m in months]: money PLN = sum(p.cash.amount for p in pays over m)
+
+move pay[m in months]: pays
+  on start_of(m)
+  leg cash from work to konto amount amt[m]
+
+ask e: explain tot[2026-09]
+def big[m in months]: int = count(p in pays over m where p.cash.amount > 0)
+ask e3: explain big[2026-09]
+ask e4: explain tot[2026-03]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[2026-01..2026-02] = 10.00 PLN "plan"
+  amt[2026-03] = ?"unknown" "plan"
+  amt[2026-04..2026-12] = 10.00 PLN "plan"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"

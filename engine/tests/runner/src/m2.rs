@@ -6,9 +6,14 @@
 //! (`m2_goldens`, `m2_hindcasts`, `m2_codes`, `m2_items`, `m2_fixes`) read the same store.
 //!
 //! - [`VECTORS`]: the stored vectors.
+//! - [`SPEC`]: the vectors where refcore crashes or answers otherwise (#169), the spec's
+//!   answers T wrote (`m2/spec.py`), read by `milestone/m2_fixes.rs`.
 
 /// The vectors `m2/vectors.py` writes from refcore's runs (`kernel/vectors.refcore`'s form).
 pub const VECTORS: &[u8] = include_bytes!("../../m2/vectors.refcore");
+
+/// The spec's answers where refcore crashes or answers otherwise (`m2/spec.py`, its `spec.tsv`).
+pub const SPEC: &[u8] = include_bytes!("../../m2/spec.vectors");
 
 #[cfg(test)]
 mod tests {
@@ -17,8 +22,9 @@ mod tests {
     use crate::kernel::vectors;
     use std::collections::BTreeSet;
 
-    /// The runner tests' groups, `<target>-<group>`: `checks-…` for `m2_checks`.
-    const TARGETS: [&str; 2] = ["checks-", "items-"];
+    /// The runner tests' groups, `<target>-<group>`: `checks-…` for `m2_checks`, `items-…`
+    /// for `m2_items`, `fixes-…` for `m2_fixes`.
+    const TARGETS: [&str; 3] = ["checks-", "items-", "fixes-"];
 
     #[test]
     fn the_m2_vectors_read_and_their_tables_hold_every_path_they_name() {

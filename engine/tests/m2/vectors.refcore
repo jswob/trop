@@ -15135,4 +15135,1572 @@ mv_old_after: ?"c: no value at 2026-02-15" (c)
   law date 2026-02-15, cut 2026-04-01
 mv_old_before: 5.00 PLN
   law date 2026-02-15, cut 2026-02-01
+,14:fixes/g1/forks,11:fixes-forms,32:run base.tally sa.tally sb.tally,913:10:base.tally,562:model fk
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+
+axis x
+  x1 "1"
+  x2 "2"
+  x3 "3"
+  x4 "4"
+
+axis y
+  y1 "1"
+  y2 "2"
+  y3 "3"
+  y4 "4"
+
+axis z
+  z1 "1"
+  z2 "2"
+  z3 "3"
+  z4 "4"
+
+axis w
+  w1 "1"
+  w2 "2"
+  w3 "3"
+  w4 "4"
+
+input flag: bool
+
+def d: int at reader
+  rule base = 1
+  rule bx beats base = 0 when x == x2 and y == y2
+  rule bz beats base, bx = 1 when flag
+
+ask q: diff(d) in sa against sb law 2026-06-01
+
+ask plain: d law 2026-06-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  flag = false
+,8:sa.tally,150:scenario sa over fk
+  tally 2
+  from 2026-01-01
+
+version sa_v
+  cite s
+  governs 2026-01-01..
+  known 2026-01-01
+  replace rule d.bz = 1 when z == z2
+,8:sb.tally,150:scenario sb over fk
+  tally 2
+  from 2026-01-01
+
+version sb_v
+  cite s
+  governs 2026-01-01..
+  known 2026-01-01
+  replace rule d.bz = 1 when w == w2
+,,1:0,2883:plain [x = x1 | x3 | x4, y = *]: 1
+  reading: x = x1 | x3 | x4
+  law date 2026-06-01, cut 2026-06-30
+plain [x = x2, y = y1 | y3 | y4]: 1
+  reading: x = x2
+  reading: y = y1 | y3 | y4
+  law date 2026-06-01, cut 2026-06-30
+plain [x = x2, y = y2]: 0
+  reading: x = x2
+  reading: y = y2
+  law date 2026-06-01, cut 2026-06-30
+q [w = w1 | w3 | w4, x = *, y = *, z = z1 | z3 | z4]: diff in sa against sb: 0 changed, 0 added, 0 removed, 1 unchanged
+  world: sa
+  world: sb
+  reading: w = w1 | w3 | w4
+  reading: z = z1 | z3 | z4
+  law date 2026-06-01, cut 2026-06-30
+q [w = w1 | w3 | w4, x = x1 | x3 | x4, y = *, z = z2]: diff in sa against sb: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed d: refused: RUN-CONFLICT rules bz and base both win for d on 2026-06-01 against 1
+  world: sa
+  world: sb
+  reading: w = w1 | w3 | w4
+  reading: x = x1 | x3 | x4
+  reading: z = z2
+  law date 2026-06-01, cut 2026-06-30
+q [w = w1 | w3 | w4, x = x2, y = y1 | y3 | y4, z = z2]: diff in sa against sb: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed d: refused: RUN-CONFLICT rules bz and base both win for d on 2026-06-01 against 1
+  world: sa
+  world: sb
+  reading: w = w1 | w3 | w4
+  reading: x = x2
+  reading: y = y1 | y3 | y4
+  reading: z = z2
+  law date 2026-06-01, cut 2026-06-30
+q [w = w1 | w3 | w4, x = x2, y = y2, z = z2]: diff in sa against sb: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed d: refused: RUN-CONFLICT rules bz and bx both win for d on 2026-06-01 against 0
+  world: sa
+  world: sb
+  reading: w = w1 | w3 | w4
+  reading: x = x2
+  reading: y = y2
+  reading: z = z2
+  law date 2026-06-01, cut 2026-06-30
+q [w = w2, x = *, y = *, z = z2]: diff in sa against sb: 0 changed, 0 added, 0 removed, 1 unchanged
+  world: sa
+  world: sb
+  reading: w = w2
+  reading: z = z2
+  law date 2026-06-01, cut 2026-06-30
+q [w = w2, x = x1 | x3 | x4, y = *, z = z1 | z3 | z4]: diff in sa against sb: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed d: 1 against refused: RUN-CONFLICT rules bz and base both win for d on 2026-06-01
+  world: sa
+  world: sb
+  reading: w = w2
+  reading: x = x1 | x3 | x4
+  reading: z = z1 | z3 | z4
+  law date 2026-06-01, cut 2026-06-30
+q [w = w2, x = x2, y = y1 | y3 | y4, z = z1 | z3 | z4]: diff in sa against sb: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed d: 1 against refused: RUN-CONFLICT rules bz and base both win for d on 2026-06-01
+  world: sa
+  world: sb
+  reading: w = w2
+  reading: x = x2
+  reading: y = y1 | y3 | y4
+  reading: z = z1 | z3 | z4
+  law date 2026-06-01, cut 2026-06-30
+q [w = w2, x = x2, y = y2, z = z1 | z3 | z4]: diff in sa against sb: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed d: 0 against refused: RUN-CONFLICT rules bz and bx both win for d on 2026-06-01
+  world: sa
+  world: sb
+  reading: w = w2
+  reading: x = x2
+  reading: y = y2
+  reading: z = z1 | z3 | z4
+  law date 2026-06-01, cut 2026-06-30
+,11:fixes/g1/y4,11:fixes-sweep,12:run y4.tally,310:8:y4.tally,294:model y4
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+
+band sc(x: money PLN): num PLN
+
+def z: num PLN = sc(1000) at reader
+
+ask a1: z law 2026-03-01
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  sc: [0, inf) = x
+,,1:1,81:refused: LOAD-UNIT the argument of band sc is year4, not money PLN (y4.tally:12)
+,18:fixes/g1/edge_hole,11:fixes-sweep,33:run hole.tally --ask h_back h_fwd,1233:10:hole.tally,1213:model shift_hole
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 C2, item 9 (pick P5): add_business past the calendar's edge with a hole on the way. cal_h is governed in 2026 only, so every day outside 2026 reads a hole (HOLE-UNGOVERNED). n business days move at least n days, so h_back and h_fwd pass the edge whatever the hole: decided without it (L §8.1), refused (R2, L §8): RUN-LIMIT. Twins: the same shifts over cal, governed always (s_back, s_fwd); shifts that land inside the edge, where the hole decides (h_in2) or isn't met (h_in)"
+
+source plan "plan"
+
+input d: date
+
+input cal: calendar
+
+input cal_h: calendar
+
+input nb: int
+
+input nf: int
+
+input n5: int
+
+input n200: int
+
+ask h_back: add_business(d, nb, cal_h)
+
+ask h_fwd: add_business(d, nf, cal_h)
+
+ask s_back: add_business(d, nb, cal)
+
+ask s_fwd: add_business(d, nf, cal)
+
+ask h_in: add_business(d, n5, cal_h)
+
+ask h_in2: add_business(d, n200, cal_h)
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  d = 2026-06-01
+  cal = calendar(weekends [sat, sun])
+  nb = -739768
+  nf = 2912292
+  n5 = 5
+  n200 = 200
+
+version v2026
+  cite plan
+  governs 2026
+  known 2026-01-01
+  cal_h = calendar(weekends [sat, sun])
+,,1:0,139:h_back: ?"calendar cal_h doesn't cover 2025" (cal_h)
+  cut 2026-12-31
+h_fwd: ?"calendar cal_h doesn't cover 2027" (cal_h)
+  cut 2026-12-31
+,16:fixes/g2/after_m,13:fixes-explain,26:run after_m.tally --ask la,2578:13:after_m.tally,2555:model x_explain
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 C2 (items/explain/m with la, P11, P12: last of a reading after m, past its day, L §4.6), G2: readers-of a kind through its subkind (#132: rk, rk_sub); explain of a balance whose last reading pads (e_sav), anchors (e_konto), or has a hole movement since it (e_jar) (#132); last of a reading after m, before its day (#163, #164: la_before; on and after its day refcore 2.1.7 prints a hole, L §4.6 reads the reading: not stored, a refcore case), last of a reading at a day end read past it and on it (ls, lj); explain of a def bound by the walk (#163: e_wb)"
+
+source s "synthetic"
+
+unit PLN: currency minor 0.01
+
+kind pays: event certain
+  leg cash: PLN
+
+kind subpays: pays
+
+place konto: accounts PLN lives 2026-01-01..
+
+place jar: accounts PLN lives 2026-01-01..
+
+place sav: accounts PLN lives 2026-01-01..
+
+place work: outside lives 1900-01-01..
+
+input amt[m in months]: money PLN
+
+input fee[m in months]: money PLN
+
+def n_pays[m in months]: int = count(p in pays over m)
+
+def wb[m in months]: money PLN = bal(konto, end_of(m)) at end_of(m)
+
+move pay[m in months]: subpays
+  on start_of(m)
+  leg cash from work to konto amount amt[m]
+
+move tip[m in months]: transfers
+  on start_of(m)
+  leg cash from work to jar amount fee[m]
+
+move save[m in months]: transfers
+  on end_of(m)
+  reads konto
+  leg cash from konto to sav amount max(bal(konto) - amt[m], 0)
+
+ask rk: readers-of pays
+
+ask rk_sub: readers-of subpays
+
+ask n2: n_pays[2026-02]
+
+ask e_konto: explain bal(konto, 2026-04-30)
+
+ask e_sav: explain bal(sav, 2026-02-28)
+
+ask e_jar: explain bal(jar, 2026-04-30)
+
+ask la: last(stated[konto], 2026-05-01)
+
+ask la_before: last(stated[konto], 2026-03-30)
+
+ask ls: last(stated[sav], 2026-03-01)
+
+ask lj: last(stated[jar], 2026-02-02)
+
+ask e_wb: explain wb[2026-02]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[2026-01..2026-12] = 10.00 PLN "plan"
+  fee[2026-01..2026-02] = 5.00 PLN "plan"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
+  opening[jar] = 0.00 PLN at 2026-01-01 start "own"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "own"
+
+version konto_read
+  cite s
+  governs 2026-03
+  known 2026-03-05
+  anchor konto
+  stated[konto] = 10.00 PLN after save[2026-03] "saldo"
+
+version sav_read
+  cite s
+  governs 2026-01
+  known 2026-02-01
+  pad sav from work
+  stated[sav] = 0.50 PLN at 2026-01-31 end "saldo"
+
+version jar_read
+  cite s
+  governs 2026-02
+  known 2026-02-03
+  anchor jar
+  stated[jar] = 10.00 PLN at 2026-02-02 end "saldo"
+,,1:0,93:la: ?"stated[konto] has no reading on or before 2026-05-01" (stated[konto])
+  cut 2026-06-30
+,11:fixes/g2/wb,13:fixes-explain,21:run wb.tally --ask w2,7277:8:wb.tally,7260:model g5_order
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G5: decisions at their points (E §4.2 step 3, L §5.14.2, §5.19): a walk-bound def read at two points of a day; ties by a money value, then by position; a decision computed less its own earlier observation; decisions on the cut's day, one fulfilled by an observation that day and one at a covered place; a decision refused by its own amount (RUN-DIV) at its place only; one move's instances that read each other's places with no ties clause (RUN-TIE), and one whose second instance reads what the first changes but not the other way (RUN-TIE too) beside a twin whose instances don't; a projection from a day with a reading at its start."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+index box = [first, second]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place pocket: cash PLN lives 2026-01-01..
+
+place jar[b in box]: accounts PLN lives 2026-01-01..
+
+place tie_jar[b in box]: accounts PLN lives 2026-01-01..
+
+place free_jar[b in box]: accounts PLN lives 2026-01-01..
+
+place lean_jar[b in box]: accounts PLN lives 2026-01-01..
+
+place err_box: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place cy_a: accounts PLN lives 2026-01-01..
+
+place cy_b: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+place shop: outside lives 2026-01-01..
+
+input bank: observed
+
+input rent: money PLN
+
+input pay_dom: int
+
+input dec_dom: int
+
+input cut_dom: int
+
+input low_mark: money PLN
+
+input high_mark[m in month]: money PLN
+
+input top_amt: money PLN
+
+input big_put: money PLN
+
+input small_put: money PLN
+
+input feed_amt: money PLN
+
+input prio[b in box, m in month]: money PLN
+
+input divisor[m in month]: num
+
+def avail[m in month]: money PLN = bal(konto) at start_of(m)
+  note "walk-bound: konto's running balance wherever a decision reads it"
+
+def cyv[m in month]: money PLN = bal(cy_a) + bal(cy_b) at start_of(m)
+
+move ca[m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads cy_a, cy_b
+  before cb
+  when cyv[m] < big_put
+  leg cash from world to cy_a amount small_put
+
+move cb[m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads cy_a, cy_b
+  when cyv[m] < big_put
+  leg cash from world to cy_b amount small_put
+
+move rent_pay[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from konto to world amount rent
+
+move topup[m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads pocket
+  when bal(pocket) < low_mark
+  leg cash from world to konto amount top_amt
+
+move stash[b in box, m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads konto
+  ties by prio[b, m]
+  leg cash from konto to jar[b] amount if avail[m] > high_mark[m] then big_put else small_put
+
+move save[m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads konto
+  leg cash from world to savings amount if avail[m] > high_mark[m] then big_put else small_put
+
+move feed[m in month]: transfers
+  on day_of(m, cut_dom)
+  at start_of(m)
+  reads pocket
+  leg cash from konto to shop amount if bal(pocket) > big_put then small_put else feed_amt
+
+move feed2[m in month]: transfers
+  on day_of(m, cut_dom)
+  at start_of(m)
+  reads pocket
+  leg cash from konto to world amount if bal(pocket) > big_put then small_put else feed_amt
+
+move split[m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads err_box
+  leg cash from world to err_box amount if bal(err_box) >= small_put then round(small_put / divisor[m], minor(PLN), half-up) else small_put
+
+move spread[b in box, m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads tie_jar
+  leg cash from world to tie_jar[b] amount if bal(tie_jar[first]) + bal(tie_jar[second]) > big_put then small_put else big_put
+
+move dole[b in box, m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads free_jar
+  leg cash from world to free_jar[b] amount if bal(free_jar[b]) > big_put then small_put else big_put
+
+move lean[b in box, m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads lean_jar
+  leg cash from world to lean_jar[b] amount if bal(lean_jar[first]) > small_put then small_put else big_put
+
+
+
+
+
+
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  rent = 600.00 "the rent"
+  pay_dom = 5 "the rent's day of the month"
+  dec_dom = 20 "the decisions' day of the month"
+  cut_dom = 15 "the cut's day of the month"
+  low_mark = 48.00 "top up while the pocket is below this"
+  high_mark[2026-01] = 2350.00 "stash 100 above this: first's own early stash decides it"
+  high_mark[2026-02] = 2500.00 "only the first in order stashes 100"
+  high_mark[2026-03] = 2800.00 "only the first in order stashes 100"
+  top_amt = 1000.00 "the top-up"
+  big_put = 100.00 "a big amount"
+  small_put = 1.00 "a small amount"
+  feed_amt = 5.00 "a feed"
+  prio[first, 2026-01] = 1.00 "first goes first in January"
+  prio[second, 2026-01] = 2.00
+  prio[first, 2026-02] = 2.00 "second goes first in February"
+  prio[second, 2026-02] = 1.00
+  prio[first, 2026-03] = 1.00 "first goes first in March"
+  prio[second, 2026-03] = 2.00
+  divisor[2026-01] = 1 "a whole small amount"
+  divisor[2026-02] = 0 "a division by zero, refused"
+  divisor[2026-03] = 2 "half a small amount"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 3000 at 2026-01-01 start
+  opening[pocket] = 50 at 2026-01-01 start
+  opening[jar[first]] = 0 at 2026-01-01 start
+  opening[jar[second]] = 0 at 2026-01-01 start
+  opening[tie_jar[first]] = 0 at 2026-01-01 start
+  opening[tie_jar[second]] = 0 at 2026-01-01 start
+  opening[free_jar[first]] = 0 at 2026-01-01 start
+  opening[free_jar[second]] = 0 at 2026-01-01 start
+  opening[lean_jar[first]] = 0 at 2026-01-01 start
+  opening[lean_jar[second]] = 0 at 2026-01-01 start
+  opening[err_box] = 0 at 2026-01-01 start
+  opening[savings] = 0 at 2026-01-01 start
+  opening[cy_a] = 0 at 2026-01-01 start
+  opening[cy_b] = 0 at 2026-01-01 start
+
+version bank_jan
+  cite fixture
+  governs 2026-01
+  known 2026-02-02
+  covers konto
+  anchor konto
+  bank[b20260105] = (on: 2026-01-05, kind: transfers, leg cash from konto to world amount 600.00 PLN, fulfils: rent_pay[2026-01]) "the rent"
+  bank[b20260118] = (on: 2026-01-18, kind: transfers, leg cash from konto to jar[first] amount 100.00 PLN, fulfils: stash[first, 2026-01]) "first's stash, two days early"
+  stated[konto] = 2200.00 at 2026-01-31 end "the month's closing balance"
+
+version bank_feb
+  cite fixture
+  governs 2026-02
+  known 2026-02-15
+  covers konto
+  anchor pocket
+  bank[b20260205] = (on: 2026-02-05, kind: transfers, leg cash from konto to world amount 600.00 PLN, fulfils: rent_pay[2026-02]) "the rent"
+  bank[b20260215] = (on: 2026-02-15, kind: transfers, leg cash from konto to shop amount 6.00 PLN, fulfils: feed[2026-02]) "the feed, on the cut's day"
+  stated[pocket] = 45.00 at 2026-02-10 start "the pocket counted in the morning"
+
+
+
+
+
+
+
+
+
+
+
+
+ask w1: explain avail[2026-03]
+ask w2: explain avail[2026-01]
+ask w3: explain avail[2026-02]
+ask w4: explain cyv[2026-02]
+ask w5: explain avail[2026-03] with big_put = 50.00
+,,1:0,846:w2: walk-bound, read at 3 walk points
+  avail[2026-01] at (2026-01-20, stratum 2, stash[first, 2026-01]): 2 400.00 PLN
+      [1] avail[2026-01] = 2 300.00 PLN, law date 2026-01-01
+          rule base: won
+            [2] running read bal(konto) = 2 300.00 PLN, the balance up to this point of 2026-01-20
+  avail[2026-01] at (2026-01-20, stratum 2, stash[second, 2026-01]): 2 300.00 PLN
+      [1] avail[2026-01] = 2 300.00 PLN, law date 2026-01-01
+          rule base: won
+            [2] running read bal(konto) = 2 300.00 PLN, the balance up to this point of 2026-01-20
+  avail[2026-01] at (2026-01-20, stratum 3, save[2026-01]): 2 300.00 PLN
+      [1] avail[2026-01] = 2 300.00 PLN, law date 2026-01-01
+          rule base: won
+            [2] running read bal(konto) = 2 300.00 PLN, the balance up to this point of 2026-01-20
+  cut 2026-02-15
+,13:fixes/g2/wb_r,13:fixes-explain,23:run wb_r.tally --ask xc,7783:10:wb_r.tally,7763:model g5_order
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G5: decisions at their points (E §4.2 step 3, L §5.14.2, §5.19): a walk-bound def read at two points of a day; ties by a money value, then by position; a decision computed less its own earlier observation; decisions on the cut's day, one fulfilled by an observation that day and one at a covered place; a decision refused by its own amount (RUN-DIV) at its place only; one move's instances that read each other's places with no ties clause (RUN-TIE), and one whose second instance reads what the first changes but not the other way (RUN-TIE too) beside a twin whose instances don't; a projection from a day with a reading at its start."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+index box = [first, second]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place pocket: cash PLN lives 2026-01-01..
+
+place jar[b in box]: accounts PLN lives 2026-01-01..
+
+place tie_jar[b in box]: accounts PLN lives 2026-01-01..
+
+place free_jar[b in box]: accounts PLN lives 2026-01-01..
+
+place lean_jar[b in box]: accounts PLN lives 2026-01-01..
+
+place err_box: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+place shop: outside lives 2026-01-01..
+
+input bank: observed
+
+input rent: money PLN
+
+input pay_dom: int
+
+input dec_dom: int
+
+input cut_dom: int
+
+input low_mark: money PLN
+
+input high_mark[m in month]: money PLN
+
+input top_amt: money PLN
+
+input big_put: money PLN
+
+input small_put: money PLN
+
+input feed_amt: money PLN
+
+input prio[b in box, m in month]: money PLN
+
+input divisor[m in month]: num
+
+def avail[m in month]: money PLN = bal(konto) at start_of(m)
+  note "walk-bound: konto's running balance wherever a decision reads it"
+
+move rent_pay[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from konto to world amount rent
+
+move topup[m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads pocket
+  when bal(pocket) < low_mark
+  leg cash from world to konto amount top_amt
+
+move stash[b in box, m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads konto
+  ties by prio[b, m]
+  leg cash from konto to jar[b] amount if avail[m] > high_mark[m] then big_put else small_put
+
+move save[m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads konto
+  leg cash from world to savings amount if avail[m] > high_mark[m] then big_put else small_put
+
+move feed[m in month]: transfers
+  on day_of(m, cut_dom)
+  at start_of(m)
+  reads pocket
+  leg cash from konto to shop amount if bal(pocket) > big_put then small_put else feed_amt
+
+move feed2[m in month]: transfers
+  on day_of(m, cut_dom)
+  at start_of(m)
+  reads pocket
+  leg cash from konto to world amount if bal(pocket) > big_put then small_put else feed_amt
+
+move split[m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads err_box
+  leg cash from world to err_box amount if bal(err_box) >= small_put then round(small_put / divisor[m], minor(PLN), half-up) else small_put
+
+move spread[b in box, m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads tie_jar
+  leg cash from world to tie_jar[b] amount if bal(tie_jar[first]) + bal(tie_jar[second]) > big_put then small_put else big_put
+
+move dole[b in box, m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads free_jar
+  leg cash from world to free_jar[b] amount if bal(free_jar[b]) > big_put then small_put else big_put
+
+move lean[b in box, m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads lean_jar
+  leg cash from world to lean_jar[b] amount if bal(lean_jar[first]) > small_put then small_put else big_put
+
+ask q_lean: bal(lean_jar[first], d), bal(lean_jar[second], d) for d in [2026-01-19, 2026-01-20] law cut
+
+ask q_bal: bal(konto, d), bal(jar[first], d), bal(jar[second], d), bal(savings, d) for d in [2026-01-18, 2026-01-20, 2026-02-14, 2026-02-15, 2026-02-20, 2026-03-20] law cut
+
+ask q_side: bal(err_box, d), bal(tie_jar[first], d), bal(tie_jar[second], d), bal(free_jar[first], d), bal(free_jar[second], d) for d in [2026-01-20, 2026-02-20, 2026-03-20] law cut
+
+ask q_proj: bal(pocket, 2026-02-12) from 2026-02-10, bal(pocket, 2026-02-12) from 2026-02-09 law cut
+
+ask q_res_jan: residuals konto 2026-01 law cut
+
+ask q_res_feb: residuals konto 2026-02 law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  rent = 600.00 "the rent"
+  pay_dom = 5 "the rent's day of the month"
+  dec_dom = 20 "the decisions' day of the month"
+  cut_dom = 15 "the cut's day of the month"
+  low_mark = 48.00 "top up while the pocket is below this"
+  high_mark[2026-01] = 2350.00 "stash 100 above this: first's own early stash decides it"
+  high_mark[2026-02] = 2500.00 "only the first in order stashes 100"
+  high_mark[2026-03] = 2800.00 "only the first in order stashes 100"
+  top_amt = 1000.00 "the top-up"
+  big_put = 100.00 "a big amount"
+  small_put = 1.00 "a small amount"
+  feed_amt = 5.00 "a feed"
+  prio[first, 2026-01] = 1.00 "first goes first in January"
+  prio[second, 2026-01] = 2.00
+  prio[first, 2026-02] = 2.00 "second goes first in February"
+  prio[second, 2026-02] = 1.00
+  prio[first, 2026-03] = 1.00 "first goes first in March"
+  prio[second, 2026-03] = 2.00
+  divisor[2026-01] = 1 "a whole small amount"
+  divisor[2026-02] = 0 "a division by zero, refused"
+  divisor[2026-03] = 2 "half a small amount"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 3000 at 2026-01-01 start
+  opening[pocket] = 50 at 2026-01-01 start
+  opening[jar[first]] = 0 at 2026-01-01 start
+  opening[jar[second]] = 0 at 2026-01-01 start
+  opening[tie_jar[first]] = 0 at 2026-01-01 start
+  opening[tie_jar[second]] = 0 at 2026-01-01 start
+  opening[free_jar[first]] = 0 at 2026-01-01 start
+  opening[free_jar[second]] = 0 at 2026-01-01 start
+  opening[lean_jar[first]] = 0 at 2026-01-01 start
+  opening[lean_jar[second]] = 0 at 2026-01-01 start
+  opening[err_box] = 0 at 2026-01-01 start
+  opening[savings] = 0 at 2026-01-01 start
+
+version bank_jan
+  cite fixture
+  governs 2026-01
+  known 2026-02-02
+  covers konto
+  anchor konto
+  bank[b20260105] = (on: 2026-01-05, kind: transfers, leg cash from konto to world amount 600.00 PLN, fulfils: rent_pay[2026-01]) "the rent"
+  bank[b20260118] = (on: 2026-01-18, kind: transfers, leg cash from konto to jar[first] amount 100.00 PLN, fulfils: stash[first, 2026-01]) "first's stash, two days early"
+  stated[konto] = 2200.00 at 2026-01-31 end "the month's closing balance"
+
+version bank_feb
+  cite fixture
+  governs 2026-02
+  known 2026-02-15
+  covers konto
+  anchor pocket
+  bank[b20260205] = (on: 2026-02-05, kind: transfers, leg cash from konto to world amount 600.00 PLN, fulfils: rent_pay[2026-02]) "the rent"
+  bank[b20260215] = (on: 2026-02-15, kind: transfers, leg cash from konto to shop amount 6.00 PLN, fulfils: feed[2026-02]) "the feed, on the cut's day"
+  stated[pocket] = 45.00 at 2026-02-10 start "the pocket counted in the morning"
+
+ask y1: explain stash[first, 2026-01]
+
+ask y2: explain stash[second, 2026-02]
+
+ask y3: explain spread[first, 2026-01]
+
+ask y4: explain split[2026-02]
+
+ask y5: explain feed[2026-02]
+
+ask y6: explain topup[2026-03]
+
+ask y7: explain lean[second, 2026-01]
+
+ask y8: explain bal(pocket, 2026-02-12) from 2026-02-10
+
+ask y9: explain low(konto, 2026-01-01 .. 2026-03-31)
+
+ask y10: explain feed[2026-03]
+
+ask y11: explain feed2[2026-03]
+
+ask xa: explain avail[2026-03]
+ask xb: explain avail[2026-02]
+
+ask xc: explain avail[2026-01]
+input hm: date
+ask xd: explain avail[month_of(hm)]
+ask xe: explain avail[2026-02] law cut
+,,1:0,846:xc: walk-bound, read at 3 walk points
+  avail[2026-01] at (2026-01-20, stratum 2, stash[first, 2026-01]): 2 400.00 PLN
+      [1] avail[2026-01] = 2 300.00 PLN, law date 2026-01-01
+          rule base: won
+            [2] running read bal(konto) = 2 300.00 PLN, the balance up to this point of 2026-01-20
+  avail[2026-01] at (2026-01-20, stratum 2, stash[second, 2026-01]): 2 300.00 PLN
+      [1] avail[2026-01] = 2 300.00 PLN, law date 2026-01-01
+          rule base: won
+            [2] running read bal(konto) = 2 300.00 PLN, the balance up to this point of 2026-01-20
+  avail[2026-01] at (2026-01-20, stratum 3, save[2026-01]): 2 300.00 PLN
+      [1] avail[2026-01] = 2 300.00 PLN, law date 2026-01-01
+          rule base: won
+            [2] running read bal(konto) = 2 300.00 PLN, the balance up to this point of 2026-01-20
+  cut 2026-02-15
+,16:fixes/g2/sumobs2,13:fixes-explain,32:run sumobs2.tally --ask e1 e2 e3,1271:13:sumobs2.tally,1248:model sumdec
+  tally 2
+  on 2026-03-15
+  start 2026-01-01
+  end 2026-06-30
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+
+kind pays: event certain
+  leg cash: PLN
+
+place konto: accounts PLN lives 2026-01-01..
+place work: outside lives 1900-01-01..
+
+input amt[m in months]: money PLN
+input cap: money PLN
+input dom: int
+input big: money PLN
+input small: money PLN
+input bank: observed
+
+def tot[m in months]: money PLN = sum(p.cash.amount for p in pays over m)
+def cnt[m in months]: int = count(p in pays over m)
+
+move pay[m in months]: pays
+  on start_of(m)
+  leg cash from work to konto amount amt[m]
+
+ask i3: inputs-of tot[2026-03]
+ask i2: inputs-of tot[2026-02]
+ask e1: explain tot[2026-02]
+ask e2: explain tot[2026-05]
+ask e3: explain tot[2026-03]
+ask v2: tot[2026-02]
+ask v5: tot[2026-05]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[2026-01..2026-06] = 10.00 PLN "plan"
+  cap = 12.00 PLN "cap"
+  dom = 20 "day"
+  big = 5.00 PLN "big"
+  small = 1.00 PLN "small"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
+
+version b
+  cite s
+  governs 2026-03
+  known 2026-03-10
+  covers konto
+  anchor konto
+  bank[o1] = (on: 2026-03-01, kind: pays, leg cash from work to konto amount 11.00 PLN, fulfils: pay[2026-03]) "paid"
+,,1:0,1871:e1: 10.00 PLN
+  [1] tot[2026-02] = 10.00 PLN
+      rule base: won
+        [2] row v:amt[2026-01..2026-06] = 10.00 PLN
+            version v, source s, "synthetic", locator "plan", governs always, known 2026-01-01
+        (v:amt[2026-01..2026-06]: see [2])
+        (v:amt[2026-01..2026-06]: see [2])
+        (v:amt[2026-01..2026-06]: see [2])
+        (v:amt[2026-01..2026-06]: see [2])
+        (v:amt[2026-01..2026-06]: see [2])
+        (v:amt[2026-01..2026-06]: see [2])
+        (v:amt[2026-01..2026-06]: see [2])
+  unfulfilled: pay[2026-02]
+  cut 2026-03-15
+e2: 10.00 PLN
+  [1] tot[2026-05] = 10.00 PLN
+      rule base: won
+        [2] row v:amt[2026-01..2026-06] = 10.00 PLN
+            version v, source s, "synthetic", locator "plan", governs always, known 2026-01-01
+        (v:amt[2026-01..2026-06]: see [2])
+        (v:amt[2026-01..2026-06]: see [2])
+        (v:amt[2026-01..2026-06]: see [2])
+        (v:amt[2026-01..2026-06]: see [2])
+        (v:amt[2026-01..2026-06]: see [2])
+        (v:amt[2026-01..2026-06]: see [2])
+        (v:amt[2026-01..2026-06]: see [2])
+  cut 2026-03-15
+e3: 11.00 PLN
+  [1] tot[2026-03] = 11.00 PLN
+      rule base: won
+        [2] row v:amt[2026-01..2026-06] = 10.00 PLN
+            version v, source s, "synthetic", locator "plan", governs always, known 2026-01-01
+        (v:amt[2026-01..2026-06]: see [2])
+        (v:amt[2026-01..2026-06]: see [2])
+        (v:amt[2026-01..2026-06]: see [2])
+        (v:amt[2026-01..2026-06]: see [2])
+        (v:amt[2026-01..2026-06]: see [2])
+        (v:amt[2026-01..2026-06]: see [2])
+        (v:amt[2026-01..2026-06]: see [2])
+  cut 2026-03-15
+warning: WARN-UNREAD def cnt is read by nothing
+warning: WARN-UNREAD input big is read by nothing
+warning: WARN-UNREAD input cap is read by nothing
+warning: WARN-UNREAD input dom is read by nothing
+warning: WARN-UNREAD input small is read by nothing
+,13:fixes/g2/fall,13:fixes-explain,29:run fall.tally --ask l1 p1 s1,1072:10:fall.tally,1052:model fall
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind wallets: place EUR signed
+
+place broker: wallets lives 2026-01-01..
+place work: outside lives 1900-01-01..
+
+ask b1: bal(broker, EUR, 2026-03-01)
+ask l1: last(stated[broker], 2026-03-01)
+ask s1: since(stated[broker], 2026-03-01)
+ask l0: last(stated[broker], 2026-02-10)
+ask p1: stated[broker] with law 2026-02-15
+ask e2: explain bal(broker, EUR, 2026-03-01)
+ask g1: gap(broker, 2026-02-15)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[broker] = 0.00 EUR at 2026-01-01 start "own"
+
+version r1
+  cite s
+  governs 2026-02
+  known 2026-02-06
+  anchor broker
+  stated[broker] = 3.00 EUR at 2026-02-05 end "first"
+
+version r2
+  cite s
+  governs 2026-02
+  known 2026-02-16
+  anchor broker
+  stated[broker] = 4.00 EUR at 2026-02-15 end "saldo"
+
+version r3
+  cite s
+  governs 2026-02
+  known 2026-02-20
+  anchor broker
+  replace stated[broker] = none at 2026-02-15 end "withdrawn"
+,,1:0,298:l1: ?"stated[broker] has no reading on or before 2026-03-01" (stated[broker])
+  held: stated[broker] = none (r3), read for 2026-03-01
+  cut 2026-06-30
+p1: none
+  pinned: law 2026-02-15
+  law date 2026-02-15, cut 2026-06-30
+s1: 14
+  cut 2026-06-30
+warning: WARN-UNREAD place work is read by nothing
+,12:fixes/g2/nb3,13:fixes-explain,22:run nb3.tally --ask s1,870:9:nb3.tally,853:model eurnone
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind wallets: place EUR signed
+
+place broker: wallets lives 2026-01-01..
+place work: outside lives 1900-01-01..
+
+ask b1: bal(broker, EUR, 2026-03-01)
+ask l1: last(stated[broker], 2026-03-01)
+ask e2: explain bal(broker, EUR, 2026-03-01)
+ask s1: since(stated[broker], 2026-03-01)
+ask s2: since(stated[broker], 2026-02-10)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[broker] = 0.00 EUR at 2026-01-01 start "own"
+
+version r2
+  cite s
+  governs 2026-02
+  known 2026-02-16
+  anchor broker
+  stated[broker] = 4.00 EUR at 2026-02-15 end "saldo"
+
+version r3
+  cite s
+  governs 2026-02
+  known 2026-02-20
+  anchor broker
+  replace stated[broker] = none at 2026-02-15 end "withdrawn"
+,,1:0,75:s1: 14
+  cut 2026-06-30
+warning: WARN-UNREAD place work is read by nothing
+,13:fixes/g2/nb3b,13:fixes-explain,26:run nb3b.tally --ask l1 s1,998:10:nb3b.tally,979:model eurnone
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind wallets: place EUR signed
+
+place broker: wallets lives 2026-01-01..
+place work: outside lives 1900-01-01..
+
+ask b1: bal(broker, EUR, 2026-03-01)
+ask l1: last(stated[broker], 2026-03-01)
+ask e2: explain bal(broker, EUR, 2026-03-01)
+ask s1: since(stated[broker], 2026-03-01)
+ask s2: since(stated[broker], 2026-02-10)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[broker] = 0.00 EUR at 2026-01-01 start "own"
+
+version r1
+  cite s
+  governs 2026-01
+  known 2026-02-01
+  anchor broker
+  stated[broker] = 2.00 EUR at 2026-01-31 end "jan"
+
+version r2
+  cite s
+  governs 2026-02
+  known 2026-02-16
+  anchor broker
+  stated[broker] = 4.00 EUR at 2026-02-15 end "saldo"
+
+version r3
+  cite s
+  governs 2026-02
+  known 2026-02-20
+  anchor broker
+  replace stated[broker] = none at 2026-02-15 end "withdrawn"
+,,1:0,226:l1: ?"stated[broker] has no reading on or before 2026-03-01" (stated[broker])
+  held: stated[broker] = none (r3), read for 2026-03-01
+  cut 2026-06-30
+s1: 14
+  cut 2026-06-30
+warning: WARN-UNREAD place work is read by nothing
+,16:fixes/g2/anyhole,13:fixes-explain,29:run anyhole.tally --ask b1 e2,792:13:anyhole.tally,770:model anyhole
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind wallets: place any signed
+
+place broker: wallets lives 2026-01-01..
+place work: outside lives 1900-01-01..
+
+ask b1: bal(broker, EUR, 2026-03-01)
+ask l1: last(stated[broker], 2026-03-01)
+ask e2: explain bal(broker, EUR, 2026-03-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[broker] = 0.00 EUR at 2026-01-01 start "own"
+
+version r2
+  cite s
+  governs 2026-02
+  known 2026-02-16
+  anchor broker
+  stated[broker] = 4.00 EUR at 2026-02-15 end "saldo"
+
+version r3
+  cite s
+  governs 2026-02
+  known 2026-02-20
+  anchor broker
+  stated[broker] = ?"not read yet" at 2026-02-18 end "pending"
+,,1:0,447:b1: 4.00 EUR
+  anchor: broker 2026-02-15 end, stated 4.00 EUR, difference 4.00 EUR
+  cut 2026-06-30
+e2: 4.00 EUR
+  balance of broker (EUR) at the end of 2026-03-01
+  from: anchor r2:stated[broker] = 4.00 EUR, 2026-02-15 end (version r2, source s, locator "saldo"), gap role anchor, gap 4.00 EUR
+  no movement
+  anchor: broker 2026-02-15 end, stated 4.00 EUR, difference 4.00 EUR
+  cut 2026-06-30
+warning: WARN-UNREAD place work is read by nothing
+,16:fixes/g2/anynone,13:fixes-explain,29:run anynone.tally --ask b1 e2,791:13:anynone.tally,769:model anynone
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind wallets: place any signed
+
+place broker: wallets lives 2026-01-01..
+place work: outside lives 1900-01-01..
+
+ask b1: bal(broker, EUR, 2026-03-01)
+ask l1: last(stated[broker], 2026-03-01)
+ask e2: explain bal(broker, EUR, 2026-03-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[broker] = 0.00 EUR at 2026-01-01 start "own"
+
+version r2
+  cite s
+  governs 2026-02
+  known 2026-02-16
+  anchor broker
+  stated[broker] = 4.00 EUR at 2026-02-15 end "saldo"
+
+version r3
+  cite s
+  governs 2026-02
+  known 2026-02-20
+  anchor broker
+  replace stated[broker] = none at 2026-02-15 end "withdrawn"
+,,1:0,447:b1: 4.00 EUR
+  anchor: broker 2026-02-15 end, stated 4.00 EUR, difference 4.00 EUR
+  cut 2026-06-30
+e2: 4.00 EUR
+  balance of broker (EUR) at the end of 2026-03-01
+  from: anchor r2:stated[broker] = 4.00 EUR, 2026-02-15 end (version r2, source s, locator "saldo"), gap role anchor, gap 4.00 EUR
+  no movement
+  anchor: broker 2026-02-15 end, stated 4.00 EUR, difference 4.00 EUR
+  cut 2026-06-30
+warning: WARN-UNREAD place work is read by nothing
+,17:fixes/g3/low_each,13:fixes-windows,27:run low_each.tally --ask lw,1830:14:low_each.tally,1806:model w_each
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 C2 (items/windows/m with lw, P11: low windows each without from splits, L §4.4), G3 (#158, #164 R6): windows each on an ask over add_business (ab), on low with from under a pin (lwf; without from refcore 2.1.7 prints the unsplit holes, against L §4.4: not stored, a question), on a balance whose move's at is a window (bw, bw_plain), and under an axis (bx)"
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+axis ax
+  lo "low"
+  hi "high"
+
+place konto: accounts PLN lives 2026-01-01..
+place work: outside lives 1900-01-01..
+
+input cal: calendar
+input pd: date
+input wd: date
+input rate: money PLN
+input twice: int
+
+def bonus_amt: money PLN at wd
+  rule base = rate
+  rule hi beats base = rate * twice when ax == hi
+
+move bonus: transfers
+  on pd
+  at wd
+  leg cash from work to konto amount rate
+
+move gift: transfers
+  on wd
+  leg cash from work to konto amount bonus_amt
+
+ask ab: add_business(2026-05-29, 1, cal) windows each
+ask lw: low(konto, 2026-03-01 .. 2026-04-30) windows each
+ask lwf: low(konto, 2026-03-01 .. 2026-04-30) from 2026-03-01 windows each with ax = lo
+ask bw: bal(konto, 2026-04-30) windows each
+ask bw_plain: bal(konto, 2026-04-30)
+ask bx: bal(konto, 2026-04-30) with ax = hi windows each
+ask bxx: bal(konto, 2026-04-30) windows each
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  cal = calendar(weekends [sat, sun], added [window(2026-06-01, 2026-06-02)]) "c"
+  pd = 2026-04-01 "c"
+  wd = window(2026-03-28, 2026-04-03) "c"
+  twice = 2 "c"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
+
+version r1
+  cite card
+  governs ..2026-03-31
+  known 2026-01-01
+  rate = 10.00 PLN "c"
+
+version r2
+  cite card
+  governs 2026-04-01..
+  known 2026-01-01
+  rate = 12.00 PLN "c"
+,,1:0,475:lw [ax = *]: ?"date within window(2026-03-28, 2026-04-03) not precise enough for a balance" (gift) ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus" (bonus) ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus_amt" (bonus_amt)
+  held: rate = 12.00 PLN (r2), read for 2026-04-01
+  held: rate = 12.00 PLN (r2), read for 2026-04-02
+  held: rate = 12.00 PLN (r2), read for 2026-04-03
+  cut 2026-03-01
+,10:fixes/g3/f,13:fixes-windows,23:run f.tally --ask fa fb,901:7:f.tally,886:model pf
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place work: outside lives 1900-01-01..
+
+input wd: date
+input wd2: date
+input amt: money PLN
+
+move g: transfers
+  on wd
+  leg cash from work to konto amount amt
+
+move h: transfers
+  on wd2
+  leg cash from work to konto amount amt
+
+ask fa: flows(konto, 2026-12-01 .. 2026-12-31)
+ask fb: flows(konto, 2027-01-01 .. 2027-01-31)
+ask fc: flows(konto, 2027-02-01 .. 2027-02-28)
+ask be: bal(konto, 2026-12-31)
+ask bea: bal(konto, 2027-01-31)
+ask few: flows(konto, 2026-12-01 .. 2026-12-31) windows each
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "c"
+  wd = window(2026-12-20, 2027-01-10) "c"
+  wd2 = window(2027-01-25, 2027-02-05) "c"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
+,,1:0,139:fa: 0.00 PLN
+  cut 2026-03-01
+fb: ?"date within window(2027-01-25, 2027-02-05) not precise enough for flows of konto" (h)
+  cut 2026-03-01
+,11:fixes/g3/f2,13:fixes-windows,24:run f2.tally --ask fa fb,882:8:f2.tally,866:model pf
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place work: outside lives 1900-01-01..
+
+input wd: date
+input wd2: date
+input amt: money PLN
+
+move g: transfers
+  on wd
+  leg cash from work to konto amount amt
+
+move h: transfers
+  on wd2
+  leg cash from work to konto amount amt
+
+ask fa: flows(konto, 2026-12-01 .. 2026-12-31)
+ask fb: flows(konto, 2027-01-01 .. 2027-01-31)
+ask fc: flows(konto, 2027-02-01 .. 2027-02-28)
+ask be: bal(konto, 2026-12-31)
+ask bea: bal(konto, 2027-01-31)
+ask few: flows(konto, 2026-12-01 .. 2026-12-31) windows each
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "c"
+  wd = window(2026-12-20, 2027-01-10) "c"
+  wd2 = 2027-03-01 "c"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
+,,1:0,60:fa: 0.00 PLN
+  cut 2026-03-01
+fb: 0.00 PLN
+  cut 2026-03-01
+,11:fixes/g3/g2,13:fixes-windows,21:run g2.tally --ask qw,723:8:g2.tally,707:model pg
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place work: outside lives 1900-01-01..
+
+input wd: date
+input amt: money PLN
+
+move g: transfers
+  on wd
+  leg cash from work to konto amount amt
+
+ask q: m.cash.amount for m in transfers over 2026-04-01 .. 2026-04-30
+ask qw: m.cash.amount for m in transfers over 2026-04-01 .. 2026-04-30 windows each
+ask fl: flows(konto, 2026-04-01 .. 2026-04-30) windows each
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "c"
+  wd = window(2026-03-30, 2026-04-02) "c"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
+,,1:0,0:,11:fixes/g3/j3,13:fixes-windows,20:run j3.tally --ask q,521:8:j3.tally,505:model pj
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2027-12-31
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+input rate: money PLN
+
+ask q: rate law 2026-06-01 as known 2026-02-25
+ask qw: rate law 2026-06-01 as known 2026-02-25 windows each
+ask q27: rate law 2027-06-01 as known 2026-02-25
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  rate = 10.00 PLN "c"
+
+version v2
+  cite card
+  governs 2027-01-01..
+  known window(2026-02-20, 2026-02-28)
+  replace rate = 12.00 PLN "c"
+,,1:0,134:q: ?"date within window(2026-02-20, 2026-02-28) not precise enough for the cut 2026-02-25" (v2)
+  law date 2026-06-01, cut 2026-02-25
+,10:fixes/g3/k,13:fixes-windows,19:run k.tally --ask t,913:7:k.tally,898:model pk
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+axis ax
+  lo "low"
+  hi "high"
+
+place konto: accounts PLN lives 2026-01-01..
+place work: outside lives 1900-01-01..
+
+input amt: money PLN
+input pd: date
+input bank: observed
+
+def a2: money PLN
+  rule base = amt
+  rule hi beats base = amt + amt when ax == hi
+
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from work to konto amount a2
+
+ask s: sum(x.cash.amount for x in transfers over 2026-01-01 .. 2026-02-28)
+ask t: x.cash.amount for x in transfers over 2026-01-01 .. 2026-02-28
+ask u: sum(x.cash.amount for x in transfers over 2026-01-01 .. 2026-02-28 where ax == hi)
+ask b: bal(konto, 2026-02-28)
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "c"
+  pd = 2026-04-01 "c"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
+,,1:0,165:t (x = pay[2026-01]) [ax = *]: 10.00 PLN
+  cut 2026-03-01
+t (x = pay[2026-02]) [ax = *]: 10.00 PLN
+  cut 2026-03-01
+warning: WARN-UNREAD input pd is read by nothing
+,11:fixes/g3/k4,13:fixes-windows,20:run k4.tally --ask t,837:8:k4.tally,821:model pk
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+axis ax
+  lo "low"
+  hi "high"
+
+place konto: accounts PLN lives 2026-01-01..
+place work: outside lives 1900-01-01..
+
+input amt: money PLN
+input pd: date
+input bank: observed
+
+def a2: money PLN
+  rule base = amt
+
+
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from work to konto amount a2
+
+ask s: sum(x.cash.amount for x in transfers over 2026-01-01 .. 2026-02-28)
+ask t: x.cash.amount for x in transfers over 2026-01-01 .. 2026-02-28
+ask b: bal(konto, 2026-02-28)
+ask p: bal(konto, 2026-04-30) from 2026-03-01 windows each
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "c"
+  pd = 2026-04-01 "c"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
+,,1:0,147:t (x = pay[2026-01]): 10.00 PLN
+  cut 2026-03-01
+t (x = pay[2026-02]): 10.00 PLN
+  cut 2026-03-01
+warning: WARN-UNREAD input pd is read by nothing
+,11:fixes/g3/h2,13:fixes-windows,20:run h2.tally --ask q,469:8:h2.tally,453:model ph
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+input a: date
+input b: date
+
+ask q: a < b with a = window(2026-01-01, 2026-01-02), b = window(2026-01-01, 2026-01-02) windows each
+ask qw: a < b windows each
+ask qe: a == b windows each
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  a = window(2026-01-01, 2026-01-02) "c"
+  b = window(2026-01-01, 2026-01-02) "c"
+,,1:0,76:q: false
+  pinned: a = 2026-01-01
+  pinned: b = 2026-01-01
+  cut 2026-03-01
+,11:fixes/g3/n6,13:fixes-windows,21:run n6.tally --ask sw,774:8:n6.tally,758:model pn6
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+kind tagged: transfers
+  attr size: int
+
+place konto: accounts PLN lives 2026-01-01..
+place work: outside lives 1900-01-01..
+
+input wd: date
+input amt: money PLN
+input sz: int
+
+move mw: tagged
+  on wd
+  attr size = sz
+  leg cash from work to konto amount amt
+
+ask sw: mw.size
+ask sww: mw.size windows each
+ask aw: mw.cash.amount
+ask bw: bal(konto, 2026-04-30)
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  wd = window(2026-03-10, 2026-03-20) "c"
+  amt = 10.00 PLN "c"
+  sz = 1 "c"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
+
+version v2
+  cite card
+  governs always
+  known 2026-03-15
+  replace sz = 2 "c"
+,,1:0,23:sw: 1
+  cut 2026-06-30
+,11:fixes/g3/n7,13:fixes-windows,21:run n7.tally --ask bw,718:8:n7.tally,702:model pn7
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+index acct = [a1]
+
+place konto: accounts PLN lives 2026-01-01..
+place work: outside lives 1900-01-01..
+
+input wd: date
+input amt: money PLN
+
+move mw[k in acct]: transfers
+  on wd
+  leg cash from work to konto amount amt
+
+ask bw: bal(konto, 2026-04-30)
+ask bww: bal(konto, 2026-04-30) windows each
+ask aw: mw[a2].cash.amount
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  wd = window(2026-03-10, 2026-03-20) "c"
+  amt = 10.00 PLN "c"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
+
+version v2
+  cite card
+  governs always
+  known 2026-03-15
+  acct + [a2]
+,,1:0,75:bw: 20.00 PLN
+  unfulfilled: mw[a1]
+  unfulfilled: mw[a2]
+  cut 2026-06-30
 ,

@@ -1,16 +1,24 @@
 id	target	issue	why
-fixes/g7/sc_w_diff	m1_fixes	#147	P2 (tally 2.1.7: R8, broadcasting, the engine's half is M2's first group; refcore now fans the form out, its bytes stored). P47 (G7's STOP-REPORT): a diff whose expression reads an axis; refcore prints 0 changed, its guard refusing both worlds' reads alike, the spec has no fan-out form for a diff yet; the engine stops not implemented until #122's layout is written; refcore at M2's round
-fixes/g7/pr1_q_fc	m1_fixes	#147	P2 (tally 2.1.7: R8, broadcasting, the engine's half is M2's first group; refcore now fans the form out, its bytes stored). G7 fix review NB3: a plan leg refused under one option of an axis the ask doesn't fan out over, read by flows; refcore prints the leg's 10.00 DUK (its guard's error swallowed), the engine stops not implemented until #122's round says how such a line prints
-fixes/g7/pr2_q_fc	m1_fixes	#147	P2 (tally 2.1.7: R8, broadcasting, the engine's half is M2's first group; refcore now fans the form out, its bytes stored). G7 fix review NB2, NB3: the same leg refused under both options with other balances; refcore prints 10.00 DUK, the engine stops not implemented (#122)
-r8/l5_5_fanout_diff	m1_fixes	#147	P2 (tally 2.1.7): R8's broadcasting, every ask form fanned out over the axes it reads; the engine's half is M2's first group (CHANGES 2.1.7-8)
-r8/l5_5_fanout_diff_two_axes	m1_fixes	#147	P2 (tally 2.1.7): R8's broadcasting, every ask form fanned out over the axes it reads; the engine's half is M2's first group (CHANGES 2.1.7-8)
-r8/l5_5_fanout_guarded_leg	m1_fixes	#147	P2 (tally 2.1.7): R8's broadcasting, every ask form fanned out over the axes it reads; the engine's half is M2's first group (CHANGES 2.1.7-8)
-r8/l5_5_fanout_unguarded_leg	m1_fixes	#147	P2 (tally 2.1.7): R8's broadcasting, every ask form fanned out over the axes it reads; the engine's half is M2's first group (CHANGES 2.1.7-8)
-r8/reach_check	m1_fixes	#147	P2 (tally 2.1.7): R8's broadcasting, every ask form fanned out over the axes it reads; the engine's half is M2's first group (CHANGES 2.1.7-8)
-r8/reach_explain	m1_fixes	#147	P2 (tally 2.1.7): R8's broadcasting, every ask form fanned out over the axes it reads; the engine's half is M2's first group (CHANGES 2.1.7-8)
-s2/l5_10_priced_field	m1_fixes	#101	P34 (tally 2.1.7, S2): `priced p.f`, a record input's field as the price input; the engine stops it not implemented (M2 builds prices read from records, CHANGES 2.1.7-19)
-s2/l5_10_priced_field_keyed	m1_fixes	#101	P34 (tally 2.1.7, S2): `priced p.f`, a record input's field as the price input; the engine stops it not implemented (M2 builds prices read from records, CHANGES 2.1.7-19)
-s2/l5_10_priced_field_type	m1_fixes	#101	P34 (tally 2.1.7, S2): `priced p.f`, a record input's field as the price input; the engine stops it not implemented (M2 builds prices read from records, CHANGES 2.1.7-19)
-s2/l5_10_priced_field_unknown	m1_fixes	#101	P34 (tally 2.1.7, S2): `priced p.f`, a record input's field as the price input; the engine stops it not implemented (M2 builds prices read from records, CHANGES 2.1.7-19)
-r3/l4_4_windows_added_entries	m1_fixes	#158	P43 (tally 2.1.7, R3): `windows each` with entries added inside the window; the engine lacks windows each (filed for M2, #158), refcore's bytes stored
-r7/t_f18	m1_fixes	#132	P43 (tally 2.1.7, R7): `explain` of a balance cause; the engine's half of #132 is open in M2, refcore's bytes stored
+fixes/g1/forks	m2_fixes	#169	P17 (G1 review B-2; L §5.5 l.872, E §3.1 step 11): a cross-world diff past 64 axis combinations is refused LOAD-FORKS; refcore 2.1.7 prints every combination (exit 0), its miss. The engine follows the spec: m2/spec.tsv spec/g1/forks
+fixes/g1/y4	m2_fixes	#169	P16 (G1 finding 5; L §3.2 Inline figures): a four-digit literal where money is expected, def z: num PLN = sc(1000), is LOAD-LITERAL; refcore refuses LOAD-UNIT (year4), the engine answers 1 000: both wrong, the engine fixed in the sweep group
+fixes/g1/edge_hole	m2_fixes	#169	P5, P11, P15 (R2, L §8.1): add_business past the day range with a hole on the way is refused RUN-LIMIT; refcore 2.1.7 prints the hole, the engine too until the sweep group changes past_edge
+fixes/g2/after_m	m2_fixes	#169	P11, P12 (L §4.6, M1 P31): last of a reading after m, past its day, takes the reading, marked held; refcore 2.1.7 prints HOLE-NOREADING, the engine too until G4 books after-m readings
+fixes/g2/wb	m2_fixes	#169	P21 (G2 review B-3; E §10 l.468, l.472): a walk-bound explain traces each point inside its decision run, its own earlier observation left out, so the derivation equals the value (2 400.00); refcore derives 2 300.00. Engine: m2/spec.tsv
+fixes/g2/wb_r	m2_fixes	#169	P21 (G2 review B-3; E §10 l.472): as fixes/g2/wb, avail[2026-01] of g5_order. Engine: m2/spec.tsv
+fixes/g2/sumobs2	m2_fixes	#169	P24 (G2 fix review F-2; E §10 l.472): an observation that fulfils a leg a sum of leg amounts reads prints as its row; refcore leaves bank[o1] out. Engine: m2/spec.tsv
+fixes/g2/fall	m2_fixes	#169	P24 (SQ-1; L §4.6, L §5.19 l.1728): a reading removed by replace … = none leaves the earlier one the last, for last, since and a plain read; refcore gives the hole. Engine: m2/spec.tsv
+fixes/g2/nb3	m2_fixes	#169	P21 NB-3, P24 SQ-1 (L §4.6, L §5.19 l.1728): since over a removed reading; refcore counts from it. Engine: m2/spec.tsv
+fixes/g2/nb3b	m2_fixes	#169	P24 SQ-1 (L §4.6, L §5.19 l.1728): the earlier reading stands for last and since; refcore gives the hole and counts from the removed one. Engine: m2/spec.tsv
+fixes/g2/anyhole	m2_fixes	#173	P22 (#173 interim, option 1): at a place of unit any a reading row that states no unit (a hole) stands for each unit the place holds; refcore skips it
+fixes/g2/anynone	m2_fixes	#173	P22 (#173 interim, option 1): replace … = none of a unitless row removes each unit's reading; refcore anchors on the removed reading
+fixes/g3/low_each	m2_fixes	#169	P11 (L §4.4): low … windows each without from splits every window the line meets; refcore prints the plain form's holes. Engine: m2/spec.tsv
+fixes/g3/f	m2_fixes	#169	P27 B1 (L §4.4): flows over a movement dated by a window that crosses the span's or the run's end is HOLE-IMPRECISE; refcore prints 0.00 PLN (fa) and names one window (fb). Engine: m2/spec.tsv
+fixes/g3/f2	m2_fixes	#169	P27 B1 (L §4.4): as fixes/g3/f. Engine: m2/spec.tsv
+fixes/g3/g2	m2_fixes	#169	P27 B2, P29 (L §4.4, §5.18): windows each on a line binding over movements binds inside each run; refcore prints nothing. Engine: m2/spec.tsv
+fixes/g3/j3	m2_fixes	#169	P27 B4 (L §4.6 step 1, E §5 step 1): a row known in a window holding the cut makes a read a hole only where the row applies; refcore prints the hole. Engine: m2/spec.tsv
+fixes/g3/k	m2_fixes	#169	P27 B5 (L §4.4 "for that read", L §8.2): a windows each line's register lists what its tuple bound; refcore drops it. Engine: m2/spec.tsv
+fixes/g3/k4	m2_fixes	#169	P27 B5: as fixes/g3/k. Engine: m2/spec.tsv
+fixes/g3/h2	m2_fixes	#169	P30 (L §4.4, l.1622): a with pin to a window under windows each is a window the line meets, so it splits; refcore pins the first day. Engine: m2/spec.tsv
+fixes/g3/n6	m2_fixes	#169	P27 NB-6 (L §4.4, §5.14.3): a windowed instance's booking cuts compare attributes, for and fulfils; refcore compares legs only. Engine: m2/spec.tsv
+fixes/g3/n7	m2_fixes	#169	P27 NB-7 (L §4.4): an instance whose key is added inside the window is the window's hole; refcore books it. Engine: m2/spec.tsv
+g14/past_64_counts	s_kernel	#169	P5, P15 (R2, L §8.1; G1 STOP-REPORT): g1_hole, add_business past the day range over a calendar with no row, is refused RUN-LIMIT; refcore 2.1.7 stores the hole. The sweep group changes past_edge
