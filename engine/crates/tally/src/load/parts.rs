@@ -303,8 +303,13 @@ fn clauses(m: &Reality, kind: &KindInfo, file: &str) -> Result<(), Stop> {
         Some(Sign::Min0) => None,
         Some(Sign::Signed) => Some("signed"),
         Some(Sign::Max0) => Some("max 0"),
-        // refcore prints the missing sign as Python's `None`.
-        None => Some("None"),
+        // a place kind's chain states its sign: load refuses one that doesn't first
+        // (`LOAD-PLACEKIND`, `load/kinds.rs`; L §5.7; P44)
+        None => {
+            return Err(invariant(format!(
+                "kind {id} keeps parts with no sign rule: load refuses it first (LOAD-PLACEKIND)"
+            )));
+        }
     };
     if let Some(sign) = sign {
         return Err(at_first(format!("kind {id} keeps parts and is {sign}")));
@@ -391,22 +396,17 @@ fn owns_rows(m: &Reality, kept: &[String], files: &Files) -> Result<(), Stop> {
     for row in &owns.rows {
         let mut names = Vec::with_capacity(row.pattern.len());
         for pat in &row.pattern {
+            // an owns a reality declares may be keyed by anything: a key that is no thing
+            // keeps no parts, and prints as its type prints it (L §3.6, §2.4; P45)
             names.push(match pat {
                 Pat::Key(KeyVal::Thing(name) | KeyVal::Key { name, .. }) => name.clone(),
-                // owns is keyed by a party and a place: a row's key is a thing, or load
-                // refused it at its row (LOAD-KEY, L §3.6)
                 Pat::Key(
-                    KeyVal::Day(_)
+                    key @ (KeyVal::Day(_)
                     | KeyVal::Period(_)
                     | KeyVal::Int(_)
                     | KeyVal::Mv(_)
-                    | KeyVal::Value(_),
-                ) => {
-                    return Err(invariant(
-                        "an owns row keyed by other than things: load refuses it first (LOAD-KEY)"
-                            .to_owned(),
-                    ));
-                }
+                    | KeyVal::Value(_)),
+                ) => key.text(),
                 Pat::Star | Pat::Range(..) => "*".to_owned(),
             });
         }
