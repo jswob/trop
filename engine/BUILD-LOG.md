@@ -2845,3 +2845,11 @@ Three commits: 4f8d6ad (the run half), 35e3be8 (prices at load), and this one (t
 - **Sweep:** none SAME → DIFF; 4 asks DIFF → SAME over B1's; no new `ENGINE-INVARIANT`.
 - **Size:** 118 changed lines (114 added, 4 removed). **M1 code replaced:** none; the derivation printed every step. **Exceptions:** +0.
 - **Check:** `check commit: green, 23 steps`.
+
+## 2026-11-14 tally 2.1.7, S5: written orders compose (issue #152, pick P24)
+
+- **Orders compose** (`load/strata.rs` `composed_orders`, `closure`): after the written `before`/`after` lines, their transitive closure is taken; each composed pair (`save before spend`, `spend before top` give `save before top`) stands for its pair in place of their read edges, as a written one does, and reaches the walk's cycle order through the same `written_order` pairs. Orders written both ways stay as written; a composed order against a read of the later decision's legs is `LOAD-ORDER … contradicts a read of …'s legs`, at the earlier one's line (refcore's `m_strata`). A cycle is refused only where the edges left form one.
+- **Turned green (2):** `s5/l5_14_2_order_chain`, `s5/l5_14_2_order_chain_contradicts`. Gating: 37 of the 287 still red (and the 4 rows of the second STOP-REPORT).
+- **Sweep:** none SAME → DIFF; 7 asks DIFF → SAME over S4's (the two vectors); no new `ENGINE-INVARIANT`.
+- **Size:** 62 changed lines (62 added). **M1 code replaced:** none; only written pairs ordered. **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps`.

@@ -141,6 +141,7 @@ impl Loader {
                 self.written_order(a, *order, other, &mut after, &mut written)?;
             }
         }
+        self.composed_orders(&mut after, &mut written)?;
         let groups = match order_cycles(&self.m.graph, &after, &decisions) {
             Ok(groups) => merge(groups),
             Err(cycle) => return Err(self.unordered(&cycle)),
@@ -223,6 +224,42 @@ impl Loader {
         Ok(())
     }
 
+    /// Written orders compose: `save before spend` and `spend before top` order `save`
+    /// before `top`, and a composed order stands for its pair in place of their read edges,
+    /// as a written one does; orders written both ways stay as written, and a composed order
+    /// against a read of the later one's legs is refused (refcore's `m_strata`). L §5.14.2.
+    fn composed_orders(
+        &self,
+        after: &mut BTreeMap<String, BTreeSet<String>>,
+        written: &mut BTreeSet<(String, String)>,
+    ) -> Result<(), Stop> {
+        let closure = closure(written);
+        let composed: Vec<(String, String)> = closure.difference(written).cloned().collect();
+        for (later, earlier) in composed {
+            if closure.contains(&(earlier.clone(), later.clone())) {
+                continue;
+            }
+            let reads_legs = self
+                .m
+                .moves
+                .get(&earlier)
+                .is_some_and(|mv| mv.read_targets.contains(&Target::Move(later.clone())));
+            if reads_legs {
+                let message =
+                    format!("{earlier} before {later} contradicts a read of {later}'s legs");
+                return Err(self.at_move(&earlier, Load::Order, message));
+            }
+            if let Some(set) = after.get_mut(&later) {
+                set.insert(earlier.clone());
+            }
+            if let Some(set) = after.get_mut(&earlier) {
+                set.remove(&later);
+            }
+            written.insert((later, earlier));
+        }
+        Ok(())
+    }
+
     /// `LOAD-ORDER` for decisions that read each other on days load knows, with no
     /// written order. L §5.14.2.
     fn unordered(&self, cycle: &[String]) -> Stop {
@@ -251,6 +288,31 @@ impl Loader {
             Some((file, line)) => refuse(code, message, file, line),
             None => Stop::Refused(Refusal::new(Code::Load(code), message)),
         }
+    }
+}
+
+/// The written orders composed: a pair `(later, earlier)` with `later` after `x` and `x`
+/// after `earlier` puts `later` after `earlier`, never a decision after itself
+/// (refcore's `m_strata`). L §5.14.2.
+fn closure(written: &BTreeSet<(String, String)>) -> BTreeSet<(String, String)> {
+    let mut closure = written.clone();
+    loop {
+        let mut grown = Vec::new();
+        for (later, middle) in &closure {
+            for (from, earlier) in closure.range((middle.clone(), String::new())..) {
+                if from != middle {
+                    break;
+                }
+                let pair = (later.clone(), earlier.clone());
+                if later != earlier && !closure.contains(&pair) {
+                    grown.push(pair);
+                }
+            }
+        }
+        if grown.is_empty() {
+            return closure;
+        }
+        closure.extend(grown);
     }
 }
 
