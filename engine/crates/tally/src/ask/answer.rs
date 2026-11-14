@@ -33,7 +33,7 @@ use crate::eval::{
 use crate::model::{Reality, Value};
 use crate::syntax::{Ask, AskBody, Bind, Domain, Expr, Key, Lit, OfQ, Pin, PinForm, Step, Stop};
 use crate::time::Day;
-use crate::walk::{Bookings, Lows};
+use crate::walk::{Bookings, Lows, invariant};
 use crate::{Asks, Days};
 
 /// What a run's asks print, and, in the `counters` build, what their engines did.
@@ -747,10 +747,56 @@ fn tuple_lines(
     engine: &mut Engine,
     (ctx, pinned): (Ctx, &Collected),
 ) -> Result<Vec<String>, Stop> {
-    if ask.windows_each || m.graph.read_each {
-        // the line's clause, or a read's the line may reach: one run per sub-window (L §4.4)
+    if ask.windows_each {
+        // the line's clause: one run per sub-window (L §4.4)
         return super::windows::each_lines(m, ask, engine, (ctx, pinned));
     }
+    if m.graph.read_each {
+        return read_each_lines(m, ask, engine, (ctx, pinned));
+    }
+    plain_lines(m, ask, engine, (ctx, pinned))
+}
+
+/// The lines of ask `ask` in a reality where a read states `windows each`, which holds for
+/// that read (L §4.4, §8.2): the line runs plain, such a read taking its windows' first days;
+/// only where one met a window does the line run once per sub-window, so a line no such read
+/// reaches answers as it would without the clause (refcore's `proj_clauses`).
+///
+/// # Errors
+///
+/// As [`tuple_lines`].
+fn read_each_lines(
+    m: &Reality,
+    ask: &Ask,
+    engine: &mut Engine,
+    (ctx, pinned): (Ctx, &Collected),
+) -> Result<Vec<String>, Stop> {
+    let probe = engine.with_read_windows(ctx, &Vec::new())?;
+    let outer = engine.each_met.replace(Vec::new());
+    engine.open_layer(m, probe)?;
+    let lines = plain_lines(m, ask, engine, (probe, pinned));
+    engine.end_layer(probe.layer, lines.as_ref().err())?;
+    let met = core::mem::replace(&mut engine.each_met, outer)
+        .ok_or_else(|| invariant("a line's windows met taken while it ran"))?;
+    let lines = lines?;
+    if met.is_empty() {
+        return Ok(lines);
+    }
+    super::windows::each_lines(m, ask, engine, (ctx, pinned))
+}
+
+/// The lines of ask `ask` with no `windows each` to run: per binding tuple, or fanned out
+/// over the axes it reaches (L §5.5, §5.18).
+///
+/// # Errors
+///
+/// As [`tuple_lines`].
+fn plain_lines(
+    m: &Reality,
+    ask: &Ask,
+    engine: &mut Engine,
+    (ctx, pinned): (Ctx, &Collected),
+) -> Result<Vec<String>, Stop> {
     if let Some(axes) = Axes::of(m, ask)? {
         return fanned_lines(m, ask, engine, (ctx, pinned), &axes);
     }
