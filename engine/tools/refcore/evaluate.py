@@ -2183,6 +2183,12 @@ class Engine:
         ix = self.m.indexes.get(n.l._t.ix)
         if ix is None:
             raise refuse('LOAD-UNIT', 'the difference of two things of a kind')
+        if isinstance(a, OutKey) or isinstance(b, OutKey):
+            # L §3.2 Differences: two keys differ by their positions; key arithmetic outside the index has none, and
+            # in a value position it is no key, so the difference has no meaning for its values: load's check met at
+            # run, RUN-DOMAIN in the operands' words (§8.4 R-load), as `0.1 + q1` is (SR-B2)
+            raise refuse('LOAD-UNIT', '%s %s %s' % (a.text if isinstance(a, OutKey) else fmt(a), n.op,
+                                                    b.text if isinstance(b, OutKey) else fmt(b)))
         if ix.isint:
             return Int(self.int_of(a) - self.int_of(b))
         if ix.pk is not None:
