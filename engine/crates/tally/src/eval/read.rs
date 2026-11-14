@@ -165,9 +165,13 @@ impl Engine {
         asked: Asked,
     ) -> Result<Value, Stop> {
         self.index_assumed(m, &input.binds);
-        // a `with` or `as if` pin replaces every read of the input at its keys (L §5.11)
+        // a `with` or `as if` pin replaces every read of the input at its keys (L §5.11); a
+        // pinned window is a window the line meets, so `windows each` splits by it (L §4.4;
+        // pick P30)
         if let Some(pinned) = self.pin_of(&input.id, keys, ctx)? {
-            return pinned_at(pinned, &input.binds, keys);
+            let value = pinned_at(pinned, &input.binds, keys)?;
+            let figure = origin(&input.id, keys);
+            return self.chosen(value, (format!("pin {figure}"), &figure), ctx);
         }
         let clocks = self.clocks(ctx, &input.id)?;
         #[cfg(feature = "counters")]
