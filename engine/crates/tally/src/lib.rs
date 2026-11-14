@@ -279,6 +279,7 @@ pub mod ask {
     mod instance;
     mod register;
     mod residuals;
+    mod walkbound;
     mod walked;
     mod worlds;
 

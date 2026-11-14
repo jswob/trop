@@ -21,8 +21,8 @@ use super::state::{
 use super::windows::{End, as_window, imprecise};
 use crate::base::{Load, Run};
 use crate::model::{
-    Class, Code, Domain, KeyVal, Number, Reality, Shown, Unit, Value, currency_unit, money_num,
-    num_money,
+    BindInfo, Class, Code, Domain, KeyVal, Number, Reality, Shown, Unit, Value, currency_unit,
+    money_num, num_money,
 };
 use crate::num::{Mode, Num, NumError};
 use crate::read::{Asked, Found, read_input};
@@ -383,6 +383,24 @@ impl Engine {
             given.push(self.given_key(m, e, env, ctx)?);
         }
         Ok(given)
+    }
+
+    /// The keys of a read of `item` written `keys`, made keys of its binds' domains, or the
+    /// hole a key is, carrying the keys' questions (refcore's `key_values`). L §2.5, §8.1.
+    ///
+    /// # Errors
+    ///
+    /// `RUN-KEY`, `RUN-NONE` and the refusals of the keys' evaluation.
+    pub(crate) fn read_keys(
+        &mut self,
+        m: &Reality,
+        (item, binds): (&str, &[BindInfo]),
+        keys: &[Key],
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Result<Vec<KeyVal>, crate::hole::Hole>, Stop> {
+        let given = self.given_keys(m, keys, env, ctx)?;
+        self.make_keys(m, item, binds, given, ctx)
     }
 
     /// `periodic(r, P, c)`, the rate per period P under compounding c, and `factor(r, n, P,

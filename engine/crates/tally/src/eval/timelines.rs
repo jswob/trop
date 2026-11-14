@@ -88,6 +88,8 @@ pub(crate) struct Timeline {
     booked: Bookings,
     /// Each main walk's signature once it is done.
     signatures: BTreeMap<usize, crate::invariant::Signature>,
+    /// Each walk-bound def's cells a decision read at its point of a main walk.
+    walk_cells: super::state::WalkCells,
     /// The walks up to a day.
     prefixes: super::state::Prefixes,
     /// The legs each combination's main walk of a cut refused, where the main walk read an
@@ -446,6 +448,7 @@ impl Engine {
             adjust_all_active: core::mem::take(&mut self.adjust_all_active),
             booked: core::mem::take(&mut self.booked),
             signatures: core::mem::take(&mut self.signatures),
+            walk_cells: core::mem::take(&mut self.walk_cells),
             prefixes: core::mem::take(&mut self.prefixes),
         }
     }
@@ -472,6 +475,7 @@ impl Engine {
         self.adjust_all_active = t.adjust_all_active;
         self.booked = t.booked;
         self.signatures = t.signatures;
+        self.walk_cells = t.walk_cells;
         self.prefixes = t.prefixes;
     }
 }

@@ -55,7 +55,9 @@ pub(super) fn explain_line(
     }
     match walk_form(m, reference) {
         Form::Instance => return instance_line(m, (ask, reference), engine, env, ctx),
-        Form::WalkBound => return Err(Stop::NotBuilt("explain of a walk-bound def")),
+        Form::WalkBound => {
+            return super::walkbound::walk_bound_line(m, reference, engine, env, ctx);
+        }
         Form::Traced => {}
     }
     let (item, met, trace) = traced(m, engine, reference, env, ctx)?;

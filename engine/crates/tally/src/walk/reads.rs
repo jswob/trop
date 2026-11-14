@@ -70,7 +70,9 @@ impl Engine {
             };
             self.note_read(at.walk, &place, Sees::AtPoint)?;
             let v = self.read_state(m, at.walk, &place, &unit, at.point)?;
-            return self.less_own_obs(m, at.walk, (&place, &unit), at.point, v);
+            let v = self.less_own_obs(m, at.walk, (&place, &unit), at.point, v)?;
+            self.trace_running(m, &place, &v, at.point.day)?;
+            return Ok(v);
         };
         let d = self.ev(m, day_arg, env, ctx)?;
         if let Value::Hole(_) = d {

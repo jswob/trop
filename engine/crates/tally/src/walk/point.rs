@@ -45,6 +45,20 @@ impl Step {
             Step::After => 7,
         }
     }
+
+    /// The step before it in a day's order; none before the first (E §4.2).
+    fn before(self) -> Option<Step> {
+        match self {
+            Step::Before => None,
+            Step::Start => Some(Step::Before),
+            Step::Observations => Some(Step::Start),
+            Step::Plans => Some(Step::Observations),
+            Step::Decisions => Some(Step::Plans),
+            Step::End => Some(Step::Decisions),
+            Step::Close => Some(Step::End),
+            Step::After => Some(Step::Close),
+        }
+    }
 }
 
 /// A point of the walk (refcore's walk key).
@@ -185,6 +199,53 @@ impl At {
         At { sub, ..self }
     }
 
+    /// The last point before this one in the walk's order: a balance read there sees every
+    /// entry before this point and none at it, as a decision's running reads saw the walk
+    /// before it booked (refcore's key less ½). The day's first point is itself. E §4.2
+    /// step 3, §10.
+    #[must_use]
+    pub fn just_before(self) -> At {
+        let last = u32::MAX;
+        if let Some(sub) = self.sub.checked_sub(1) {
+            return At { sub, ..self };
+        }
+        if let Some(n) = self.n.checked_sub(1) {
+            return At {
+                n,
+                sub: last,
+                ..self
+            };
+        }
+        if let Some(rank) = self.rank.checked_sub(1) {
+            return At {
+                rank,
+                n: last,
+                sub: last,
+                ..self
+            };
+        }
+        if let Some(stratum) = self.stratum.checked_sub(1) {
+            return At {
+                stratum,
+                rank: last,
+                n: last,
+                sub: last,
+                ..self
+            };
+        }
+        match self.step.before() {
+            Some(step) => At {
+                day: self.day,
+                step,
+                stratum: last,
+                rank: last,
+                n: last,
+                sub: last,
+            },
+            None => self,
+        }
+    }
+
     /// Whether `other` is the same act: the same point but for the sub-step (E §4.2 step 3).
     #[must_use]
     pub fn same_act(self, other: At) -> bool {
@@ -244,5 +305,42 @@ mod tests {
         assert!(!p.in_first_batch(), "a decision");
         assert!(p.at_or_after_decisions(), "a decision");
         assert!(At::close(d).at_or_after_end(), "the close");
+    }
+
+    #[test]
+    fn the_point_just_before_a_decision_sees_everything_before_it_and_nothing_at_it() {
+        let d = Day::from_ymd(2025, 1, 2).expect("a day");
+        let p = At {
+            stratum: 1,
+            rank: 3,
+            n: 2,
+            ..At::of(d, Step::Decisions)
+        };
+        let earlier = [
+            At { n: 1, sub: 7, ..p },
+            At { rank: 2, n: 9, ..p },
+            At::batch_end(d),
+            At::of(d, Step::Plans),
+        ];
+        let before = p.just_before();
+        assert!(before < p, "before the decision");
+        for e in earlier {
+            assert!(e <= before, "{e:?} is seen");
+        }
+        assert!(p.with_sub(1).just_before() == p, "a sub-step's");
+        let first = At {
+            stratum: 0,
+            rank: 0,
+            n: 0,
+            ..At::of(d, Step::Decisions)
+        };
+        assert!(
+            At::batch_end(d) <= first.just_before(),
+            "the plans are seen"
+        );
+        assert!(
+            At::before(d).just_before() == At::before(d),
+            "the day's first"
+        );
     }
 }

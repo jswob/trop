@@ -4,7 +4,8 @@
 //! §8.2 (`assumed`, `given`, `missing` entries); E §3.2 (the memo: one cell per def, keys and
 //! context, its result kept, refusal included; a cell read while it is computed is `RUN-CYCLE`);
 //! L §4.4 (a window a def computes is the read's value in its cell's world; one it passes on
-//! keeps the read that made it).
+//! keeps the read that made it); E §10 (a walk-bound def's cell at each walk point a decision
+//! read it, kept for `explain`).
 //! Twin: engine/tools/refcore/evaluate.py (`read_def`, `_read_def`, `law_value`, `def_cell`,
 //! `coerce_def`, `rule_in_force`, `beats_order`, `eval_rules`).
 //! Invariants: every result a cell computes is kept, with the register entries it met; the
@@ -48,7 +49,44 @@ impl Engine {
         let outer = self.holding(Node::new(NodeKind::Def, &def.id));
         let read = self.read_def_held(m, def, keys, ctx);
         self.holder = outer;
+        self.keep_walk_cell(m, def, keys, ctx, &read)?;
         read
+    }
+
+    /// Keeps walk-bound def `def`'s cell at `keys` where a decision read it at its point of
+    /// a main walk, its value or refusal, for `explain` to print (refcore's `read_def`, its
+    /// `walk_cells`). E §10, §3.2.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a walk the engine lacks.
+    fn keep_walk_cell(
+        &mut self,
+        m: &Reality,
+        def: &DefInfo,
+        keys: &[KeyVal],
+        ctx: Ctx,
+        read: &Result<Value, Stop>,
+    ) -> Result<(), Stop> {
+        let Some(at) = ctx.at else {
+            return Ok(());
+        };
+        if self.rereading
+            || !m.graph.walk_bound.contains(&def.id)
+            || self.walk(at.walk)?.proj.is_some()
+        {
+            return Ok(());
+        }
+        let kept = match read {
+            Ok(value) => Ok(value.clone()),
+            Err(Stop::Refused(refusal)) => Err(refusal.clone()),
+            Err(_) => return Ok(()),
+        };
+        self.walk_cells
+            .entry((at.walk, origin(&def.id, keys)))
+            .or_default()
+            .insert(at.point, kept);
+        Ok(())
     }
 
     /// [`Engine::read_def_at`] with the def holding what its `where` and `at` read. L §5.11,

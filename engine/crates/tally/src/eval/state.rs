@@ -22,7 +22,7 @@ use crate::model::{Domain, KeyVal, Node, NodeKind, Reality, Thing, UnitError, Va
 use crate::num::NumError;
 use crate::syntax::{Ask, AskBody, Expr, Stop};
 use crate::time::Day;
-use crate::walk::{Inst, ProjKey, Walk, WalkAt};
+use crate::walk::{At, Inst, ProjKey, Walk, WalkAt};
 
 use super::bindings::{names_in, reads_name};
 use super::context::{Layer, Layers};
@@ -55,6 +55,11 @@ pub struct Ctx {
     /// them (L §6.4; refcore's `Ctx.world`). A timeline's contexts take the timeline's.
     pub world: World,
 }
+
+/// A walk-bound def's cells by the walk that read them and the def at its keys as a figure
+/// (`avail[2026-03]`), each by the decision's point that read it: its value or refusal
+/// (refcore's `walk_cells`). E §10, §3.2.
+pub(crate) type WalkCells = BTreeMap<(usize, String), BTreeMap<At, Result<Value, Refusal>>>;
 
 /// The walks up to a day of one timeline (refcore's `prefix_walks`, `plan_list`'s cache and
 /// `_walk_blocked`). E §3.2, §4.1, §4.2 step 5.
@@ -551,6 +556,11 @@ pub struct Engine {
     pub(crate) booked: crate::walk::Bookings,
     /// Each main walk's signature once it is done, by its place in `walks` (E §9 item 4).
     pub(crate) signatures: BTreeMap<usize, crate::invariant::Signature>,
+    /// Each walk-bound def's cells a decision read at its point of a main walk (E §10).
+    pub(crate) walk_cells: WalkCells,
+    /// Whether `explain` reads a walk-bound def's cell again at a walk point, a read the walk
+    /// didn't make, so not kept in `walk_cells` (refcore's `_explaining_wb`). E §10.
+    pub(crate) rereading: bool,
     /// The legs each combination's main walk of a cut refused, where the main walk read an
     /// axis the timeline sets no option of (E §3.3, §4.2 step 5).
     pub(crate) each_refused: BTreeMap<Day, Vec<super::timelines::LegRefusals>>,
@@ -638,6 +648,8 @@ impl Engine {
             adjust_all_active: BTreeSet::new(),
             booked: BTreeMap::new(),
             signatures: BTreeMap::new(),
+            walk_cells: WalkCells::new(),
+            rereading: false,
             each_refused: BTreeMap::new(),
             calendar_pass: None,
             splits: super::prorata::Splits::default(),

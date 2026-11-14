@@ -610,6 +610,32 @@ impl Engine {
         }
     }
 
+    /// Adds a running read of `place`, `value`, under the open node: a walk-bound def's cell
+    /// read again at its walk point prints "its running reads as balances up to that point"
+    /// of `day` (E §10; refcore's `e_bal`, its `now` form).
+    ///
+    /// # Errors
+    ///
+    /// A number error printing the value.
+    pub(crate) fn trace_running(
+        &mut self,
+        m: &Reality,
+        place: &str,
+        value: &Value,
+        day: Day,
+    ) -> Result<(), Stop> {
+        if self.traced().is_none() {
+            return Ok(());
+        }
+        let label = format!(
+            "running read bal({place}) = {}, the balance up to this point of {}",
+            super::read::shown(m, value)?,
+            day.text()
+        );
+        self.trace_leaf(label);
+        Ok(())
+    }
+
     /// Closes the node at `at`, opened last.
     pub(super) fn trace_close(&mut self, at: Option<usize>) {
         let Some((trace, at)) = self.traced_node(at) else {
