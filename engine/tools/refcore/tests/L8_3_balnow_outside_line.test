@@ -1,0 +1,27 @@
+# L §5.14.1, §8.3 (tally 2.1.7, S9's family; the review's non-blocking item 5, pick P41): a def that holds bal(x) with
+# no day and that no decision reaches is LOAD-READS at load, whatever the asks, and like every load refusal it names
+# the read's file and line. refcore 2.1.7 printed it with neither.
+=== m.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+input y: int
+
+def nd: money PLN = bal(konto)
+
+ask r: y
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 0.00 PLN at 2026-01-01 start
+  y = 1
+=== expect
+refused: LOAD-READS nd holds bal(x) with no day: a running read outside a decision and its defs (m.tally:12)

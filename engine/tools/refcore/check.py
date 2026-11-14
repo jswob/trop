@@ -115,7 +115,7 @@ class Checker:
         self.proj_nc = {}          # item -> {target}: its projections with no random clause (L §8.3 item 10)
         self.cycle_cands = []      # (move, bal node, day node): a decision's plain bal at a day (L §5.14.1)
         self.period_cands = []     # (index, key node, holder item): a period read at a time index's key (L §4.6)
-        self.balnow_items = set()  # items that hold bal(x) with no day
+        self.balnow_items = {}  # items that hold bal(x) with no day -> the first such read's loc
         self.projs = []            # (projection node, holder item)
         m.checker = self
 

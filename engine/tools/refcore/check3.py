@@ -214,7 +214,7 @@ def m_resolve_move_kind(self, info):
 def m_mark(self, sc, what, target, node=None):
     self.marks.setdefault(sc.item, set()).add((what, target))
     if node is not None and what in ('balnow',):
-        self.balnow_items.add(sc.item)
+        self.balnow_items.setdefault(sc.item, getattr(node, 'loc', None))
 
 
 # -- fields of movements (L §5.14, §2.2) -----------------------------------------------------------------
@@ -1475,8 +1475,9 @@ def m_check_moves_graph(self):
                     stack.append(t)
     for item in sorted(self.balnow_items, key=repr):
         if item not in from_decisions:
+            # at the read's line, as every load refusal (tally 2.1.7 S9's family; the review's non-blocking item 5)
             raise LoadError('LOAD-READS', '%s holds bal(x) with no day: a running read outside a decision and its '
-                            'defs' % item[1], None)
+                            'defs' % item[1], self.balnow_items[item])
     m.from_decisions = from_decisions
     # walk-bound defs: "A def that reaches a mark and that a decision reaches is walk-bound: its cells carry the walk
     # point (§3.2); in an ask, or a def no movement reaches, a plain bal(x, d) is the balance on day d at the ask's
