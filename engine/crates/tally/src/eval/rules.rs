@@ -11,6 +11,8 @@
 //! Invariants: every result a cell computes is kept, with the register entries it met; the
 //! entries reach every reader of the cell; recursion through cells is counted (R-16).
 
+use std::collections::BTreeMap;
+
 use super::state::{
     Cell, Ctx, DEPTH_LIMIT, Engine, Env, Task, a_day, invariant, num_stop, refuse, refuse_load,
 };
@@ -82,10 +84,16 @@ impl Engine {
             Err(Stop::Refused(refusal)) => Err(refusal.clone()),
             Err(_) => return Ok(()),
         };
-        self.walk_cells
-            .entry((at.walk, origin(&def.id, keys)))
-            .or_default()
-            .insert(at.point, kept);
+        let key = (at.walk, origin(&def.id, keys));
+        match self.walk_cells.get_mut(&key) {
+            Some(cells) => {
+                cells.insert(at.point, kept);
+            }
+            None => {
+                self.walk_cells
+                    .insert(key, BTreeMap::from([(at.point, kept)]));
+            }
+        }
         Ok(())
     }
 

@@ -26,7 +26,8 @@ use super::instance::instance_line;
 use super::walked::{Read, balance_line};
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{
-    Collected, Ctx, Engine, Env, Item, Trace, TraceKind, TracedBalance, UNSET_AXIS, num_stop,
+    Collected, Ctx, Engine, Env, Item, RuleLine, Trace, TraceKind, TracedBalance, UNSET_AXIS,
+    num_stop,
 };
 use crate::model::{NameKind, Node, NodeKind, Reality, Value};
 use crate::syntax::{Ask, Expr, PinForm, Postfix, Stop};
@@ -462,7 +463,7 @@ fn def_causes(trace: &Trace, at: usize) -> Result<Vec<usize>, Stop> {
     for (rule, state) in node
         .rules
         .values()
-        .filter_map(|r| r.state.as_ref().map(|s| (r, s)))
+        .filter_map(RuleLine::stated)
         .filter(|_| node.shown)
     {
         let groups = [rule.when, rule.value.filter(|_| state.won())];
@@ -657,7 +658,7 @@ fn node_lines(
             let shown = node
                 .rules
                 .values()
-                .filter_map(|r| r.state.as_ref().map(|s| (r, s)))
+                .filter_map(RuleLine::stated)
                 .filter(|_| node.shown);
             for (rule, state) in shown {
                 below.push(Step::Line(format!(

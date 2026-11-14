@@ -92,6 +92,13 @@ pub(crate) struct RuleLine {
     pub value: Option<usize>,
 }
 
+impl RuleLine {
+    /// The rule with its state, where it has one: a rule that prints (L §5.18).
+    pub(crate) fn stated(&self) -> Option<(&RuleLine, &RuleState)> {
+        Some((self, self.state.as_ref()?))
+    }
+}
+
 /// The state of a rule of a traced def cell (L §5.18 Explanation order: won; beaten, by
 /// whom; not applicable; unknown, when its `when` is a hole; refcore's `rule_states`).
 #[derive(Debug, Clone, PartialEq, Eq)]
