@@ -165,13 +165,10 @@ impl Engine {
         asked: Asked,
     ) -> Result<Value, Stop> {
         self.index_assumed(m, &input.binds);
-        // a `with` or `as if` pin replaces every read of the input at its keys (L §5.11); a
-        // pinned window is a window the line meets, so `windows each` splits by it (L §4.4;
-        // pick P30)
+        // a `with` or `as if` pin replaces every read of the input at its keys (L §5.11)
         if let Some(pinned) = self.pin_of(&input.id, keys, ctx)? {
             let value = pinned_at(pinned, &input.binds, keys)?;
-            let figure = origin(&input.id, keys);
-            return self.chosen(value, (format!("pin {figure}"), &figure), ctx);
+            return self.pin_chosen(value, &origin(&input.id, keys), ctx);
         }
         let clocks = self.clocks(ctx, &input.id)?;
         #[cfg(feature = "counters")]
@@ -218,6 +215,33 @@ impl Engine {
             Found::None => Ok(Value::None),
             Found::Hole(q) => Ok(Value::Hole(Hole::asked(&q.text, &q.origin))),
         }
+    }
+
+    /// A pinned value `value` of figure `figure` as a `windows each` in `ctx` takes it: a
+    /// pinned window is a window the line meets, so the line splits by it; one that came from
+    /// a read is that read's window, taken with its own name once, and a literal is named by
+    /// the figure pinned (L §4.4; picks P30, P32).
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::chosen`].
+    pub(super) fn pin_chosen(
+        &mut self,
+        value: Value,
+        figure: &str,
+        ctx: Ctx,
+    ) -> Result<Value, Stop> {
+        let Value::Window(w) = &value else {
+            return Ok(value);
+        };
+        let (id, label) = match &w.read {
+            Some(read) => {
+                let from = origin(&read.item, &read.keys);
+                (format!("{} {from}", read.cell), from)
+            }
+            None => (format!("pin {figure}"), figure.to_owned()),
+        };
+        self.chosen(value, (id, &label), ctx)
     }
 
     /// Input `input` as a read at `keys` in `ctx` sees its rows, a read at its law date or,
@@ -490,7 +514,12 @@ impl Engine {
         if past != Past::Since
             && let Some(pinned) = self.pin_of(&input.id, &keys, ctx)?
         {
-            return Ok(Err(pinned_at(pinned, &input.binds, &keys)?));
+            let value = pinned_at(pinned, &input.binds, &keys)?;
+            return Ok(Err(self.pin_chosen(
+                value,
+                &origin(&input.id, &keys),
+                ctx,
+            )?));
         }
         self.read(Read::Input {
             id: input.id.clone(),

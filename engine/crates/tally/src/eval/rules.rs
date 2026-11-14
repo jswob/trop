@@ -138,7 +138,8 @@ impl Engine {
         // a pin wins over the def's rules and givens (L §5.11); the def's cell keeps only the
         // pins its def reaches (E §3.2)
         if let Some(pinned) = self.pin_of(&def.id, keys, ctx)? {
-            return pinned_at(pinned, &def.binds, keys).map(Err);
+            let value = pinned_at(pinned, &def.binds, keys)?;
+            return Ok(Err(self.pin_chosen(value, &origin(&def.id, keys), ctx)?));
         }
         let ctx = self.trimmed(m, &def.id, ctx)?;
         for bind in &def.binds {
