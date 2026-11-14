@@ -10,7 +10,7 @@ Installed as Engine methods (`m_<name>` -> `<name>`), as eval2 is.
 import datetime
 
 from .dates import Period, ONE_DAY, END, past_days
-from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, RandomLine
+from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, RandomLine, at_run
 from .model import visible, row_known_sid, known_first, PlaceThing, _kv, key_text, in_world, _WSET
 from .values import Num, Money, Hole, Thing, Mv, Iv, Rec, Text, NONE, NEVER, CURRENCIES, fmt, vkey
 
@@ -35,7 +35,8 @@ def install(E):
 
 
 def refuse(code, msg):
-    return Refusal(code, msg)
+    # L §8.4 R-load (R5): a check met at run is RUN-* in load's words, as in evaluate, mreads and resid (SR-B1)
+    return at_run(code, msg)
 
 
 def merge(*vals):
@@ -1094,7 +1095,8 @@ def m_leg_unit_static(self, d, frm, to):
 
 
 def m_leg_amount(self, inst, ln, d, amt, frm, to):
-    """A leg's amount in its unit: places of another unit are LOAD-UNIT (L §5.10), a negative amount RUN-NEG."""
+    """A leg's amount in its unit: places of another unit are LOAD-UNIT's check, met at run so RUN-DOMAIN in its
+    words (L §5.10, §8.4 R-load), a negative amount RUN-NEG."""
     m = self.m
     units = set()
     for p in (frm, to):
@@ -1110,21 +1112,21 @@ def m_leg_amount(self, inst, ln, d, amt, frm, to):
         if u is None and amt.q == 0 and len(units) == 1:
             u = list(units)[0]
         if u is None:
-            raise LoadError('LOAD-UNIT', 'the amount of leg %s of %s (%s) is in no unit of a place' % (
+            raise refuse('LOAD-UNIT', 'the amount of leg %s of %s (%s) is in no unit of a place' % (
                 ln.name, inst.id, fmt(amt)))
         if d.unit != 'any' and d.unit in m.kinds and m.unit_kind_keys.get(u) != d.unit and \
                 not (d.unit == 'currencies' and u in CURRENCIES):
-            raise LoadError('LOAD-UNIT', 'the amount of leg %s of %s is in %s, not a unit of %s' % (
+            raise refuse('LOAD-UNIT', 'the amount of leg %s of %s is in %s, not a unit of %s' % (
                 ln.name, inst.id, u, d.unit))
     if units and units != {u}:
-        raise LoadError('LOAD-UNIT', 'leg %s of %s moves %s between places of %s' % (
+        raise refuse('LOAD-UNIT', 'leg %s of %s moves %s between places of %s' % (
             ln.name, inst.id, u, ', '.join(sorted(units))))
     if au is not None and au != u:
-        raise LoadError('LOAD-UNIT', 'the amount of leg %s of %s is in %s, not %s' % (ln.name, inst.id, au, u))
+        raise refuse('LOAD-UNIT', 'the amount of leg %s of %s is in %s, not %s' % (ln.name, inst.id, au, u))
     if amt.q < 0:
         raise refuse('RUN-NEG', 'negative amount %s for leg %s of %s' % (fmt(amt), ln.name, inst.id))
     if u in CURRENCIES and (amt.q / CURRENCIES[u]).denominator != 1:
-        raise LoadError('LOAD-UNIT', 'the amount of leg %s of %s (%s) is not money of %s: round it' % (
+        raise refuse('LOAD-UNIT', 'the amount of leg %s of %s (%s) is not money of %s: round it' % (
             ln.name, inst.id, fmt(amt), u))
     return qty(amt.q, u), u
 
