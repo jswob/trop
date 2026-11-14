@@ -76,8 +76,8 @@ impl Engine {
     }
 
     /// `quantile(t for b, q)`: the terms sorted by value, the first whose rank reaches q·n, the
-    /// last when none does; a level that is a hole makes it that hole (refcore's `e_query`).
-    /// L §5.11.
+    /// last when none does; a level that is a hole makes it that hole, one that is `none` is
+    /// `RUN-NONE` (refcore's `e_query`). L §5.11, §3.1.
     fn quantile(
         &mut self,
         m: &Reality,
@@ -92,6 +92,12 @@ impl Engine {
         let read = self.ev(m, level, env, ctx)?;
         if let Value::Hole(h) = read {
             return Ok(Value::Hole(h));
+        }
+        if read == Value::None {
+            // `none` is only tested (L §3.1): the level's use is refused, as refcore's `no_none`
+            // words it
+            let text = "a value is none here: the level of quantile".to_owned();
+            return Err(refuse(Run::None, text));
         }
         let Value::Number(Number { q, .. }) = read else {
             return Err(not_typed());
