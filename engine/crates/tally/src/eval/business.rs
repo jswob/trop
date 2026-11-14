@@ -680,8 +680,10 @@ impl Engine {
         (day, ctx): (Day, Ctx),
     ) -> Result<bool, Stop> {
         if self.chooses(ctx)? {
+            // each entry of each row a read of its own: two rows' entries are two unknowns
+            // (L §4.4)
             let window = Met {
-                id: format!("calendar {name}#{entry}"),
+                id: format!("calendar {name}#{entry} {}", added.text()),
                 label: format!("added {}", added.text()),
                 days: added
                     .days()
