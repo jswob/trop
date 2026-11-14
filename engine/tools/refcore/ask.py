@@ -1319,9 +1319,13 @@ class Asker:
             eng.trace_stack = [oroot]
             old = set_world(eng.world_chain(oc.world))
             eng.stack.append(Coll())
+            # the derivation outside the pins is no read of the result: neither its register nor the ask pins it
+            # takes are listed (L §8.2 One read set; T's SR-C1, P42)
+            record, eng.pin_record = eng.pin_record, False
             try:
                 vo = self.one(eng, a.ref, env, oc)
             finally:
+                eng.pin_record = record
                 eng.stack.pop()
                 set_world(old)
                 eng.tracing = False

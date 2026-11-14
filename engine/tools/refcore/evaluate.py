@@ -211,6 +211,7 @@ class Engine:
         self.ask_pin_cells = {}     # an ask's with value pin's text -> the cell it pins, as printed (ask.print_line)
         self.ask_pins_taken = set()     # the ask pins a read took (pin_value)
         self.ask_pins_shadowed = set()  # the ask pins a read met under an inner or narrower claim (pin_value)
+        self.pin_record = True          # off while explain derives a comparison outside the result (P42)
         self.tracing = False
         self.trace_stack = []
         self.trace_cells = {}
@@ -812,7 +813,7 @@ class Engine:
             raise refuse('RUN-CONFLICT', 'pins %s and %s both hold for %s' % (pair[0], pair[1],
                                                                                 self.origin(info, keys)))
         p = best[0]
-        if self.ask_pin_cells:
+        if self.ask_pin_cells and self.pin_record:
             # L §8.2 One read set (R7; the review's finding 4): an ask's with pin is listed where a read takes it, not
             # where an inner or narrower claim of the cell (an as if, a solve's variable; R4's cascade) gave the read
             for q in met:
@@ -2616,6 +2617,8 @@ class Engine:
         tn.children.append(('node', outside))
         self.trace_stack.append(outside)
         self.stack.append(Coll())   # the outside derivation adds nothing to the result's register
+        # nor to the ask pins its reads took (L §8.2 One read set; T's SR-C1, P42: explain lists what the result read)
+        record, self.pin_record = self.pin_record, False
         try:
             try:
                 vo = self.ev(n.e, env, ctx)
@@ -2626,6 +2629,7 @@ class Engine:
                     raise
                 vo = e
         finally:
+            self.pin_record = record
             self.stack.pop()
             self.trace_stack.pop()
         outside.label = 'outside the as if: %s' % _tfmt(vo)
