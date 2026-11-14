@@ -18,7 +18,7 @@ use crate::model::{KeyVal, MoveInfo, Reality, Span, Value};
 use crate::num::Num;
 use crate::syntax::{Expr, Flows, Key, Postfix, Stop};
 use crate::time::Day;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 impl Engine {
     /// `flows(x, span)`, of a place or of a move (refcore's `e_flows`). L §5.14.3.
@@ -122,8 +122,10 @@ impl Engine {
             vec![pu.clone()]
         };
         let mut sums = Sums {
-            span: Some((start, last)),
-            ..Sums::default()
+            span: (start, last),
+            totals: BTreeMap::new(),
+            holes: Vec::new(),
+            met: Collected::default(),
         };
         for (wid, cut) in &chain {
             if let Err(stop) = sums.logs(self.walk(*wid)?, place, &units, (lo, *cut)) {
@@ -247,30 +249,28 @@ impl Engine {
     }
 }
 
-/// `HOLE-IMPRECISE` of flows over a span a movement dated by window `w` may fall in or out
-/// of, asked of the movement entry `e` books (refcore's `flows_place`). L §4.4, §8.1.
-///
-/// # Errors
-///
-/// `ENGINE-INVARIANT` for an entry that books no movement.
-fn imprecise_flows(w: &DayWindow, place: &str, e: &Ent) -> Result<Hole, Stop> {
+/// `HOLE-IMPRECISE` of flows over a span movement `movement`, dated by window `w`, may fall
+/// in or out of (refcore's `flows_place`). L §4.4, §8.1.
+fn imprecise_flows(w: &DayWindow, place: &str, movement: &str) -> Hole {
     let text = format!(
         "date within {} not precise enough for flows of {place}",
         w.question
     );
-    let movement =
-        e.mv.as_deref()
-            .ok_or_else(|| invariant("a window's entry that books no movement"))?;
-    Ok(Hole::asked(&text, movement))
+    Hole::asked(&text, movement)
+}
+
+/// Whether window `w` meets the span `(first, last)` without lying inside it: the movement
+/// it dates may fall in the span or out of it (L §4.4).
+fn crosses(w: &DayWindow, (first, last): (Day, Day)) -> bool {
+    w.lo <= last && w.hi >= first && !(first <= w.lo && w.hi <= last)
 }
 
 /// What a place's flows gather: the totals per unit, the holes, the register.
-#[derive(Default)]
 struct Sums {
     /// The span's first and last day, which a movement dated by a window must fall inside.
-    span: Option<(Day, Day)>,
+    span: (Day, Day),
     /// The booked flows per unit.
-    totals: std::collections::BTreeMap<String, Num>,
+    totals: BTreeMap<String, Num>,
     /// The holes met.
     holes: Vec<Hole>,
     /// The register met.
@@ -332,13 +332,14 @@ impl Sums {
         unit: &str,
         (lo, limit): (At, At),
     ) -> Result<(), Stop> {
-        // the movements dated by a window that may fall in the span (refcore's `wins`)
-        let mut windows: BTreeSet<String> = BTreeSet::new();
+        // the movements dated by a window met by the span's end: each whose window crosses
+        // the span is its hole, booked in the walk or past its end (L §4.4; refcore's `wins`)
+        let mut windows: BTreeMap<&str, (&DayWindow, &str)> = BTreeMap::new();
         for e in walk.entries(place, unit) {
-            if let (Change::ImpOn(_), Some((wid, _))) = (&e.change, &e.window)
+            if let (Change::ImpOn(_), Some((wid, w)), Some(mv)) = (&e.change, &e.window, &e.mv)
                 && e.at <= limit
             {
-                windows.insert(wid.clone());
+                windows.insert(wid, (w, mv));
             }
             if e.at <= lo {
                 if let Change::Perm(h) = &e.change
@@ -349,12 +350,6 @@ impl Sums {
                 continue;
             }
             if e.at > limit {
-                // one booked after the span that may have fallen inside it (L §4.4)
-                if let (Change::Delta(_), Some((wid, w))) = (&e.change, &e.window)
-                    && windows.contains(wid)
-                {
-                    self.holes.push(imprecise_flows(w, place, e)?);
-                }
                 continue;
             }
             match &e.change {
@@ -367,10 +362,8 @@ impl Sums {
                     }
                 }
                 Change::Delta(f) => match &e.window {
-                    // a window not inside the span may have fallen outside it (L §4.4)
-                    Some((_, w)) if !self.span.is_some_and(|(a, b)| a <= w.lo && w.hi <= b) => {
-                        self.holes.push(imprecise_flows(w, place, e)?);
-                    }
+                    // a window that crosses the span is its hole, below (L §4.4)
+                    Some((_, w)) if crosses(w, self.span) => {}
                     Some(_) | None => self.count(e, unit, Ok(f))?,
                 },
                 // a pad's end at its reading's own place (E §6.1); an anchor's or an
@@ -381,6 +374,11 @@ impl Sums {
                     Some(Amount::Refused(_)) | None => {}
                 },
                 Change::ImpOn(_) | Change::Mark => {}
+            }
+        }
+        for (w, movement) in windows.into_values() {
+            if crosses(w, self.span) {
+                self.holes.push(imprecise_flows(w, place, movement));
             }
         }
         Ok(())
@@ -409,6 +407,13 @@ impl Sums {
             self.met.merge(&i.coll);
             if let Exists::Unknown(h) = &i.exists {
                 self.holes.push(h.clone());
+                continue;
+            }
+            // a leg whose window crosses the span may fall in it or out (L §4.4)
+            if let Dated::Window(w) = &lg.day
+                && crosses(w, (first, last))
+            {
+                self.holes.push(imprecise_flows(w, place, &i.id));
                 continue;
             }
             let q = match &lg.amount {
@@ -458,7 +463,7 @@ impl Sums {
 fn one_unit(
     m: &Reality,
     place: &str,
-    totals: &std::collections::BTreeMap<String, Num>,
+    totals: &BTreeMap<String, Num>,
     units: &[String],
 ) -> Result<Value, Stop> {
     if totals.len() > 1 {
