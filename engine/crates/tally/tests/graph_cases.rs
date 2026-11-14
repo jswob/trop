@@ -169,7 +169,7 @@ place shop: ext lives 2026-01-01..
                 lines.insert(format!("mark {holder} : {word} {what}"));
             }
         }
-        for item in &graph.balnow {
+        for item in graph.balnow.keys() {
             lines.insert(format!("balnow {}", node(item)));
         }
         for (holder, moves) in &graph.left_out {

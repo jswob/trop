@@ -547,16 +547,19 @@ fn running_reads(
             ));
         }
     }
-    let Some(item) = graph.balnow.iter().find(|item| !decided.contains(*item)) else {
+    let Some((item, (file, line))) = graph
+        .balnow
+        .iter()
+        .find(|(item, _)| !decided.contains(*item))
+    else {
         return Ok(());
     };
-    Err(Stop::Refused(Refusal::new(
-        Code::Load(Load::Reads),
-        format!(
-            "{} holds bal(x) with no day: a running read outside a decision and its defs",
-            item.id
-        ),
-    )))
+    // at the read's line, as every load refusal (L §8.3; tally 2.1.7 S9)
+    let message = format!(
+        "{} holds bal(x) with no day: a running read outside a decision and its defs",
+        item.id
+    );
+    Err(refuse(Load::Reads, message, file, *line))
 }
 
 /// The `LOAD-READS` message for one move, where it needs one (refcore's

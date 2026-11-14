@@ -1734,7 +1734,7 @@ version card_2026
                         "ask q: fee, levy, acc[2026-02], bal(konto, 2026-12-31), now",
                     ),
                 ],
-                "LOAD-READS now holds bal(x) with no day: a running read outside a decision and its defs",
+                "LOAD-READS now holds bal(x) with no day: a running read outside a decision and its defs (a.tally:40)",
             ),
             // balnow-decision
             (

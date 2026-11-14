@@ -217,7 +217,10 @@ impl Checker {
                 }
                 self.proj(m, scope, &bal.proj, target, depth)?;
             } else if day.is_none() {
-                self.graph.balnow.insert(scope.item.clone());
+                self.graph
+                    .balnow
+                    .entry(scope.item.clone())
+                    .or_insert_with(|| scope.file_line());
                 self.mark(&scope.item, Mark::BalNow, target);
             } else {
                 self.mark(&scope.item, Mark::Bal, target);
