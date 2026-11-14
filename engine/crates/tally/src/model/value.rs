@@ -150,17 +150,20 @@ pub struct Window {
     pub read: Option<ReadOf>,
 }
 
-/// One read of an item: the input or def, its keys and the world it was read in. Two reads
-/// of one item at the same keys, law date, cut and pins are one value, whatever variables
-/// bind the keys; equal intervals from different reads stay undecided (L §4.4).
+/// One read of an item: the input or def, its keys and the cell it was read at. Two reads
+/// of one item at the same keys, with the law date, cut and pins it depends on, are one
+/// value, whatever variables bind the keys; equal intervals from different reads stay
+/// undecided (L §4.4).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ReadOf {
     /// The input or def read.
     pub item: String,
     /// Its keys, as made.
     pub keys: Vec<KeyVal>,
-    /// The world: the law date, the cut, the walk point and `with uncertain`, as text.
-    pub world: String,
+    /// The cell, as text: for a def, its cell's world (the law date, the cut, the pins the
+    /// def's cone reaches, the walk point, `with uncertain`); for an input, the row its read
+    /// rule took, which those decide (a pin of the input itself is its own value).
+    pub cell: String,
 }
 
 impl Window {

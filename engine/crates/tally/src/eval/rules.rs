@@ -70,7 +70,7 @@ impl Engine {
         let value = self.def_cell(m, def, keys, &env, cell)?;
         // a window the def computed is this read's value, in the world its cell is computed
         // in; one it passes on keeps the read that made it (L §4.4)
-        Ok(as_read(value, (&def.id, keys), cell, None))
+        Ok(as_read(value, (&def.id, keys), cell.world()))
     }
 
     /// The context def `def`'s cell at its keys is computed in, `env` binding them: its law

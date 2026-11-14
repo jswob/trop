@@ -73,6 +73,12 @@ fn latest_of(input: &InputInfo, at: usize) -> Result<&Row, Stop> {
         .ok_or_else(|| invariant("the read rule took a row the input lacks"))
 }
 
+/// The cell a read of an input names its window by: the row its read rule took, which the
+/// law date, cut and pins the read depends on decide (L §4.4; refcore's `('row', sid, …)`).
+fn row_cell(row: &Row) -> String {
+    format!("row {}", row.sid)
+}
+
 /// Whether `last(x, d)` reads its row past it, for day `day`: a reading past its instant's
 /// day, a state row past its span's end; a row that governs `always` is timeless (L §4.6
 /// Past the last row, Readings; §8.2 `held`; refcore's `last_value`).
@@ -153,7 +159,7 @@ impl Engine {
             // a thing's lifespan or the question's text: the day itself (L §4.6 step 5)
             self.narrow_to_day(ctx.law);
         }
-        let value = match found {
+        match found {
             Found::Row(at) => {
                 let row = input
                     .rows
@@ -164,12 +170,12 @@ impl Engine {
                     sid: row.sid.clone(),
                 });
                 let value = self.row_value(m, input, row, keys, ctx)?;
-                self.priced(m, input, keys, ctx, value)?
+                let value = self.priced(m, input, keys, ctx, value)?;
+                Ok(as_read(value, (&input.id, keys), row_cell(row)))
             }
-            Found::None => Value::None,
-            Found::Hole(q) => Value::Hole(Hole::asked(&q.text, &q.origin)),
-        };
-        Ok(as_read(value, (&input.id, keys), ctx, None))
+            Found::None => Ok(Value::None),
+            Found::Hole(q) => Ok(Value::Hole(Hole::asked(&q.text, &q.origin))),
+        }
     }
 
     /// Narrows the reading cell's law date class by what a read of `input` tests its law
@@ -283,13 +289,8 @@ impl Engine {
             );
             self.note("held", text, String::new());
         }
-        // a read of x at its keys, its day d part of the read (L §4.4, §4.6)
-        Ok(as_read(
-            value,
-            (&input.id, &latest.keys),
-            ctx,
-            Some(latest.day),
-        ))
+        // a read of x at its keys, named by the row it took, whatever day d took it (L §4.4)
+        Ok(as_read(value, (&input.id, &latest.keys), row_cell(row)))
     }
 
     /// `since(x[k], d)`: the days from the last reading of x on or before d to d, a hole

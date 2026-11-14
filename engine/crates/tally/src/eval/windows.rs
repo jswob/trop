@@ -62,30 +62,21 @@ pub(super) fn window_end(v: &Value, end: End) -> Value {
     }
 }
 
-/// Value `v` as the value of one read of `item` at `keys` in `ctx`'s world, `last`'s day too
-/// for `last(x, d)`: a window that is no read's value yet takes this read, so another read
-/// alike is the same value (L §4.4: "Two reads of one item at the same keys, law date, cut
-/// and pins are one value"). A window already a read's value keeps that read, so a def that
-/// passes a read on is that read (L §4.4: "every def has one value in that world, whichever
-/// def reads it"); any other value is itself.
-pub(super) fn as_read(
-    v: Value,
-    (item, keys): (&str, &[KeyVal]),
-    ctx: Ctx,
-    last: Option<Day>,
-) -> Value {
+/// Value `v` as the value of one read of `item` at `keys` at cell `cell` (a def's cell's
+/// world, an input's row): a window that is no read's value yet takes this read, so another
+/// read of that cell is the same value (L §4.4: "named by the read that gave it: its cell,
+/// the item at its keys with the law date, cut and pins it depends on"). A window already a
+/// read's value keeps that read, so a def that passes a read on is that read (L §4.4: "A
+/// copy keeps the name"); any other value is itself.
+pub(super) fn as_read(v: Value, (item, keys): (&str, &[KeyVal]), cell: String) -> Value {
     let Value::Window(mut w) = v else {
         return v;
     };
     if w.read.is_none() {
-        let world = match last {
-            None => ctx.world(),
-            Some(day) => format!("{}|last {}", ctx.world(), day.text()),
-        };
         w.read = Some(ReadOf {
             item: item.to_owned(),
             keys: keys.to_vec(),
-            world,
+            cell,
         });
     }
     Value::Window(w)
