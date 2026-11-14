@@ -259,6 +259,11 @@ fn imprecise_flows(w: &DayWindow, place: &str, movement: &str) -> Hole {
     Hole::asked(&text, movement)
 }
 
+/// Whether a leg's amount is zero, so its day can't change a sum (L §4.4).
+fn zero_amount(amount: &Amount) -> bool {
+    matches!(amount, Amount::Qty(q) if q.is_zero())
+}
+
 /// Whether window `w` meets the span `(first, last)` without lying inside it: the movement
 /// it dates may fall in the span or out of it (L §4.4).
 fn crosses(w: &DayWindow, (first, last): (Day, Day)) -> bool {
@@ -336,8 +341,10 @@ impl Sums {
         // the span is its hole, booked in the walk or past its end (L §4.4; refcore's `wins`)
         let mut windows: BTreeMap<&str, (&DayWindow, &str)> = BTreeMap::new();
         for e in walk.entries(place, unit) {
+            // a zero leg's day can't change the sum: decided (L §4.4)
             if let (Change::ImpOn(_), Some((wid, w)), Some(mv)) = (&e.change, &e.window, &e.mv)
                 && e.at <= limit
+                && !e.flow.as_ref().is_some_and(zero_amount)
             {
                 windows.insert(wid, (w, mv));
             }
@@ -409,9 +416,11 @@ impl Sums {
                 self.holes.push(h.clone());
                 continue;
             }
-            // a leg whose window crosses the span may fall in it or out (L §4.4)
+            // a leg whose window crosses the span may fall in it or out, unless it moves
+            // nothing (L §4.4)
             if let Dated::Window(w) = &lg.day
                 && crosses(w, (first, last))
+                && !zero_amount(&lg.amount)
             {
                 self.holes.push(imprecise_flows(w, place, &i.id));
                 continue;

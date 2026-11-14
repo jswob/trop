@@ -1023,6 +1023,8 @@ impl Walk {
             ent.mv = Some(movement.to_owned());
             ent.window = leg_window(movement, lg);
             ent.coll = Some(coll.clone());
+            // the leg's amount, which `flows` reads to tell a zero leg (L §4.4)
+            ent.flow = Some(lg.amount.clone());
             self.add(m, p, &unit, ent)?;
         }
         Ok(())
