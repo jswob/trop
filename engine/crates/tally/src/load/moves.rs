@@ -11,12 +11,13 @@
 //! refcore meets them after load; a type load doesn't see refuses nothing.
 
 use super::check::{Checker, DayRead, Scope};
+use super::overlap::at_obs;
 use super::reads::is_place_type;
 use super::same::instance_text;
 use super::targets::literal_place;
 use super::texts::{children, text};
 use super::types::{Typed, numcls, refused, uerr, unit_type};
-use crate::base::{Code, Load, Refusal};
+use crate::base::Load;
 use crate::model::{Fulfils, MoveInfo, NameKind, Reality, Ty};
 use crate::syntax::{AddOp, Bal, Expr, Leg, Lit, Stop};
 use std::collections::{BTreeMap, BTreeSet};
@@ -240,7 +241,7 @@ fn later_day(day: &Expr, on: &str) -> bool {
 ///
 /// # Errors
 ///
-/// That refusal, with no place, as refcore prints it.
+/// That refusal, at the observed row's file and line, as every load refusal (L §8.3).
 pub(super) fn settlements(
     m: &Reality,
     leg_types: &BTreeMap<(String, String), Ty>,
@@ -260,14 +261,12 @@ pub(super) fn settlements(
                 continue;
             };
             let iid = instance_text(mid, keys);
-            return Err(Stop::Refused(Refusal::new(
-                Code::Load(Load::Unit),
-                format!(
-                    "settlement {} of adjustments[{iid}.{leg}, {vid}] is in {}, not {adjusted}",
-                    obs.sid(),
-                    settling.unit
-                ),
-            )));
+            let message = format!(
+                "settlement {} of adjustments[{iid}.{leg}, {vid}] is in {}, not {adjusted}",
+                obs.sid(),
+                settling.unit
+            );
+            return Err(at_obs(m, obs, Load::Unit, message)?);
         }
     }
     Ok(())

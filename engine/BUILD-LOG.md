@@ -2865,3 +2865,11 @@ Three commits: 4f8d6ad (the run half), 35e3be8 (prices at load), and this one (t
 - **Sweep:** none SAME → DIFF, none DIFF → SAME over S5's; no new `ENGINE-INVARIANT`.
 - **Size:** 16 changed lines (5 added, 11 removed). **M1 code replaced:** the 366-day clause. **Exceptions:** +0.
 - **Check:** `check commit: green, 23 steps`.
+
+## 2026-11-14 tally 2.1.7, S9: two load refusals name their file and line (issue #156, pick P28)
+
+- **Placed like every load refusal** (L §8.3): `LOAD-RANDOM a query over paths on a path p line` stands at its ask's line (`load/cone.rs` `check_path_lines`, through `Files`), and the settlement `LOAD-UNIT … is in X, not Y` at the observed row's line (`load/moves.rs` `settlements`, through `overlap.rs`'s `at_obs`, now shared) (refcore's `check_path_line`, `m_check_settlement_units`). The builder's own load case for the path line gains its place.
+- **Turned green (6):** `adjust/unit-settlement`, `adjust/unit-settlement-load`, `basic/random-path`, `basic/random-path-load`, `s9/l5_14_3_settlement_unit_at_load`, `s9/l5_16_path_line_query_at_load`. Gating: 31 of the 287 still red (and the 4 rows of the second STOP-REPORT).
+- **Sweep:** none SAME → DIFF; 3 asks DIFF → SAME over S8's; no new `ENGINE-INVARIANT`.
+- **Size:** 62 changed lines (36 added, 26 removed). **M1 code replaced:** the two placeless refusals. **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps`.

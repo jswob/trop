@@ -108,7 +108,7 @@ impl Loader {
         check_srow_reads(&self.m, &walked.srows, &walked.read_order)?;
         check_schedules(&self.m, &files)?;
         check_scenario_moves(&self.m, &files)?;
-        check_path_lines(&self.m, &walked.queries)
+        check_path_lines(&self.m, &walked.queries, &files)
     }
 
     /// The decision graph and its layers: who acts after whom, the written orders, the

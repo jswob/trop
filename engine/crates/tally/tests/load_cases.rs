@@ -3418,13 +3418,13 @@ version v1
                 ],
                 "LOAD-KEY wrong number of keys for ru: write [*] to pin every address (a.tally:40)",
             ),
-            // path-line (#83: at load, refcore's run-time bytes)
+            // path-line (#83: at load; S9: at the ask's line)
             (
                 &[(
                     "ask q_draw: mean(drawn) paths 10 seed 1",
                     "ask q_draw: mean(drawn) paths 10 seed 1 path 3",
                 )],
-                "LOAD-RANDOM a query over paths on a path p line",
+                "LOAD-RANDOM a query over paths on a path p line (a.tally:40)",
             ),
             // path-line-plain
             (

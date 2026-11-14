@@ -12,6 +12,7 @@
 
 use super::check::{Files, Scope, Stands, invariant};
 use super::random::{DrawKey, QueryAt, Support, strip, support_max};
+use super::steps::refuse;
 use super::targets::place_target;
 use super::texts::{children, text};
 use super::types::refused;
@@ -577,27 +578,32 @@ fn int_text(n: &crate::num::Num) -> Result<String, Stop> {
 
 /// `LOAD-RANDOM a query over paths on a path p line`: an ask that states `paths N seed S`
 /// evaluates the queries and path scores its line holds over its paths, and a `path p` line
-/// holds none (L §5.16). refcore refuses it where the run evaluates the query
-/// (eval2.py's `m_path_terms`), with no place; load refuses it whatever the asks (issue #83,
-/// the coordinator's ruling), last in load, as the run would after it. L §8.3.
+/// holds none (L §5.16). Load refuses it whatever the asks (issue #83, the coordinator's
+/// ruling), last in load, as the run would after it, at the ask's file and line, as every
+/// load refusal (refcore's `check_path_line`). L §8.3.
 ///
 /// # Errors
 ///
 /// That refusal, for the first such query.
-pub(super) fn check_path_lines(m: &Reality, queries: &[QueryAt]) -> Result<(), Stop> {
+pub(super) fn check_path_lines(
+    m: &Reality,
+    queries: &[QueryAt],
+    files: &Files,
+) -> Result<(), Stop> {
     for at in queries {
         if at.item.kind != NodeKind::Ask || m.asks_alone.contains_key(&at.item.id) {
             continue;
         }
-        let path_line = m
-            .asks
-            .iter()
-            .find(|ask| ask.id == at.item.id)
-            .is_some_and(|ask| ask.paths.is_some() && ask.path.is_some());
-        if path_line {
-            return Err(refused(
+        let Some(ask) = m.asks.iter().find(|ask| ask.id == at.item.id) else {
+            continue;
+        };
+        if ask.paths.is_some() && ask.path.is_some() {
+            let message = "a query over paths on a path p line".to_owned();
+            return Err(refuse(
                 Load::Random,
-                "a query over paths on a path p line".to_owned(),
+                message,
+                files.get("ask", &ask.id)?,
+                ask.line,
             ));
         }
     }
