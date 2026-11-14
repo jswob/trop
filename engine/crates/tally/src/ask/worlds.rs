@@ -153,13 +153,12 @@ fn cross_turn(w: &Worlds, id: &str, sides: [&String; 2], model: &str) -> Result<
             (0, &w.base)
         } else {
             let own = w.loaded.iter().position(|(s, _)| s == world);
-            let holding = || {
-                w.loaded
-                    .values()
-                    .position(|m| m.scenarios.over.contains_key(world))
-            };
+            let holding = w
+                .loaded
+                .values()
+                .position(|m| m.scenarios.over.contains_key(world));
             let at = own
-                .or_else(holding)
+                .or(holding)
                 .ok_or_else(|| invariant("a diff's world no loaded stack holds"))?;
             let reality = w
                 .loaded

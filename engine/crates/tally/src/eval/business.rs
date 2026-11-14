@@ -27,7 +27,7 @@ use super::state::{Ctx, Engine, Env, invariant, not_typed, past_days, refuse, re
 use super::windows::{imprecise, interval, one_day, single};
 use crate::base::{Load, Run};
 use crate::hole::{Hole, spread};
-use crate::model::{Code, InputInfo, KeyVal, Reality, Value, Window};
+use crate::model::{Code, KeyVal, Reality, Value, Window};
 use crate::num::Num;
 use crate::read::Asked;
 use crate::syntax::{Call, Expr, Stop, Value as Written};
@@ -468,9 +468,13 @@ impl Engine {
         (cal, env, ctx): (&Expr, &Env, Ctx),
         (from, step): (Day, i64),
     ) -> Result<(), Stop> {
-        let Ok((input, keys)) = self.calendar_input(m, (cal, env, ctx))? else {
+        let Ok((name, keys)) = self.calendar_input(m, (cal, env, ctx))? else {
             return Ok(());
         };
+        let input = m
+            .inputs
+            .get(&name)
+            .ok_or_else(|| invariant("a calendar input load didn't build"))?;
         let by_rows = !input.reading
             && input.prices.is_none()
             && input
@@ -484,7 +488,7 @@ impl Engine {
         let mut current = from.add_days(step).ok_or_else(|| past_days(step))?;
         loop {
             // the read's refusal stands; a hole, read or added, is met by the walk
-            let value = self.calendar_on(m, (input, &keys), ctx, (current, true))?;
+            let value = self.calendar_on(m, (&name, &keys), ctx, (current, true))?;
             let unknown = if let Value::Calendar(c) = &value {
                 c.added().iter().any(|a| matches!(a, Added::Hole(_)))
             } else {
@@ -596,12 +600,12 @@ impl Engine {
         (cal, env, ctx): (&Expr, &Env, Ctx),
         (day, seek): (Day, bool),
     ) -> Result<Value, Stop> {
-        let (input, keys) = match self.calendar_input(m, (cal, env, ctx))? {
+        let (owned, keys) = match self.calendar_input(m, (cal, env, ctx))? {
             Err(hole) => return Ok(Value::Hole(hole)),
             Ok(found) => found,
         };
-        let name = input.id.as_str();
-        let value = self.calendar_on(m, (input, &keys), ctx, (day, seek))?;
+        let name = owned.as_str();
+        let value = self.calendar_on(m, (name, &keys), ctx, (day, seek))?;
         let Value::Calendar(c) = &value else {
             return Ok(value);
         };
@@ -627,13 +631,13 @@ impl Engine {
         hole_of(&holes)
     }
 
-    /// The input a calendar argument reads and its keys, or the hole of a key (refcore's
-    /// `cal_at`, its read). L §4.2.
-    fn calendar_input<'m>(
+    /// The input a calendar argument reads, by id, and its keys, or the hole of a key
+    /// (refcore's `cal_at`, its read). L §4.2.
+    fn calendar_input(
         &mut self,
-        m: &'m Reality,
+        m: &Reality,
         (cal, env, ctx): (&Expr, &Env, Ctx),
-    ) -> Result<Result<(&'m InputInfo, Vec<KeyVal>), Hole>, Stop> {
+    ) -> Result<Result<(String, Vec<KeyVal>), Hole>, Stop> {
         let Some((name, written)) = read_parts(cal) else {
             return Err(Stop::NotBuilt("a calendar that isn't an input's read"));
         };
@@ -643,19 +647,23 @@ impl Engine {
             .ok_or(Stop::NotBuilt("a calendar that isn't an input's read"))?;
         let given = self.given_keys(m, written, env, ctx)?;
         let keys = self.make_keys(m, name, &input.binds, given, ctx)?;
-        Ok(keys.map(|made| (input, made)))
+        Ok(keys.map(|made| (input.id.clone(), made)))
     }
 
-    /// The calendar `input` holds at `keys`, in force on `day`: a calendar, or the hole of
-    /// its read; `none` is `RUN-NONE`; where the search for a business day asks (`seek`), a
-    /// calendar with none is `RUN-DOMAIN` (refcore's `cal_at`). L §4.2, §7.6 item 5, §8.4.
+    /// The calendar input `name` holds at `keys`, in force on `day`: a calendar, or the hole
+    /// of its read; `none` is `RUN-NONE`; where the search for a business day asks (`seek`),
+    /// a calendar with none is `RUN-DOMAIN` (refcore's `cal_at`). L §4.2, §7.6 item 5, §8.4.
     fn calendar_on(
         &mut self,
         m: &Reality,
-        (input, keys): (&InputInfo, &[KeyVal]),
+        (name, keys): (&str, &[KeyVal]),
         ctx: Ctx,
         (day, seek): (Day, bool),
     ) -> Result<Value, Stop> {
+        let input = m
+            .inputs
+            .get(name)
+            .ok_or_else(|| invariant("a calendar input load didn't build"))?;
         let value = self.read_input_at(m, input, keys, ctx.at_law(Some(day)), Asked::Calendar)?;
         if let Value::Hole(_) = value {
             return Ok(value);

@@ -153,8 +153,8 @@ pub(super) fn crossed(m: &Reality, (ours, theirs): (&Cells, &Cells)) -> Result<C
     };
     let mut each = Vec::with_capacity(every.len());
     for options in every {
-        let left = cell_at(ours, &options)?;
-        let right = cell_at(theirs, &options)?;
+        let left = ours.at(&options)?;
+        let right = theirs.at(&options)?;
         let mut met = left.met.clone();
         met.merge(&right.met);
         each.push(Cell {
@@ -171,18 +171,20 @@ pub(super) fn crossed(m: &Reality, (ours, theirs): (&Cells, &Cells)) -> Result<C
     })
 }
 
-/// The cell of side `side` at the options of `options` of the axes it reads.
-fn cell_at<'a>(side: &'a Cells, options: &[(String, String)]) -> Result<&'a Cell, Stop> {
-    let ids: BTreeSet<String> = side.axes.iter().flat_map(Axes::ids).collect();
-    let wanted: Vec<(String, String)> = options
-        .iter()
-        .filter(|(axis, _)| ids.contains(axis))
-        .cloned()
-        .collect();
-    side.each
-        .iter()
-        .find(|c| c.options == wanted)
-        .ok_or_else(|| invariant("a diff's side with no cell at a combination"))
+impl Cells {
+    /// The cell at the options of `options` of the axes this side reads.
+    fn at(&self, options: &[(String, String)]) -> Result<&Cell, Stop> {
+        let ids: BTreeSet<String> = self.axes.iter().flat_map(Axes::ids).collect();
+        let wanted: Vec<(String, String)> = options
+            .iter()
+            .filter(|(axis, _)| ids.contains(axis))
+            .cloned()
+            .collect();
+        self.each
+            .iter()
+            .find(|c| c.options == wanted)
+            .ok_or_else(|| invariant("a diff's side with no cell at a combination"))
+    }
 }
 
 /// A diff's lines from its cells: its one result without a head when it reads no axis, else

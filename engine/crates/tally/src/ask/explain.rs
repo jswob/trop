@@ -160,8 +160,11 @@ fn outside_pins(
         match read {
             Err(Stop::NotBuilt(why)) if why == UNSET_AXIS => {
                 let axis = met
-                    .filter(|a| fixed.contains(a) && !chosen.iter().any(|(b, _)| b == a))
+                    .filter(|a| fixed.contains(a))
                     .ok_or(Stop::NotBuilt(why))?;
+                if chosen.iter().any(|(b, _)| *b == axis) {
+                    return Err(Stop::NotBuilt(why));
+                }
                 let options = m
                     .axes
                     .get(&axis)
