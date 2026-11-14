@@ -762,7 +762,6 @@ impl Engine {
             });
         }
         let legs = run.inst.legs.clone();
-        let (mv_id, coll) = (run.inst.id.clone(), run.inst.coll.clone());
         let later_rank = walk.plan_rank(&run.inst.order)?;
         let inst = run.inst.clone();
         walk.record(run);
@@ -777,7 +776,7 @@ impl Engine {
                 self.walk_mut(id)?.at(at, Act::Leg(Mv::Run(ix), li));
                 continue;
             }
-            self.book_leg(m, id, (&mv_id, &inst.move_id, lg), key, &reg, &coll)?;
+            self.book_leg(m, id, (&inst, lg), key, &reg)?;
         }
         self.book_own_obs(m, id, &inst, key)?;
         Ok(ix)

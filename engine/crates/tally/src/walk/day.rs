@@ -17,7 +17,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::agenda::{Act, Mv, Reading};
-use super::plan::{Amount, End, Inst, LegVal, Status, invariant, qty_value};
+use super::plan::{Amount, Dated, End, Inst, LegVal, Status, invariant, qty_value};
 use super::point::At;
 use super::state::{ALL, Change, Ent, Group, Progress, Taken, Today, Walk, WalkObs};
 use crate::base::{Code, Refusal, Run, Warn};
@@ -377,15 +377,7 @@ impl Engine {
                         figure: String::new(),
                     });
                 }
-                let move_id = movement.move_id.clone();
-                self.book_leg(
-                    m,
-                    id,
-                    (&movement.id, &move_id, &lg),
-                    at,
-                    &reg,
-                    &movement.coll,
-                )
+                self.book_leg(m, id, (&movement, &lg), at, &reg)
             }
             Act::LegHole(mv, leg, qs) => {
                 let (movement, lg) = self.movement_leg(id, mv, leg)?;
@@ -463,24 +455,30 @@ impl Engine {
         Ok((inst.clone(), lg))
     }
 
-    /// Books a leg's two ends: a hole at both for a hole amount, nothing for 0, `RUN-LIFESPAN`
-    /// for an end outside its place's lifespan; in a group of the sign rule it waits for the
-    /// group, otherwise it is tested at once (refcore's `book_leg`). E §4.2 step 2, step 5;
-    /// L §5.14 Legs.
+    /// Books instance `inst`'s leg `lg`'s two ends: a hole at both for a hole amount, nothing
+    /// for 0, `RUN-LIFESPAN` for an end outside its place's lifespan; in a group of the sign
+    /// rule it waits for the group, otherwise it is tested at once (refcore's `book_leg`).
+    /// Its `before from:` entry is dated by the leg's day, else the instance's, and a leg
+    /// dated by neither has none (refcore's `before_from`). E §4.2 step 2, step 5, §9 item 3;
+    /// L §5.14 Legs, §8.2 `before from:`.
     pub(super) fn book_leg(
         &mut self,
         m: &Reality,
         id: usize,
-        (movement, move_id, lg): (&str, &str, &LegVal),
+        (inst, lg): (&Inst, &LegVal),
         at: At,
         reg: &[Entry],
-        coll: &Collected,
     ) -> Result<(), Stop> {
-        let day = lg.day.day().unwrap_or(at.day);
         let world = self.walk(id)?.world;
         let mut reg = reg.to_vec();
-        reg.extend(before_from(m, world, (move_id, day), coll));
-        self.book_leg_ends(m, id, (movement, lg), at, (&reg, coll), Ends::both())
+        let day = lg
+            .day
+            .day()
+            .or_else(|| inst.day.as_ref().and_then(Dated::day));
+        if let Some(day) = day {
+            reg.extend(before_from(m, world, (&inst.move_id, day), &inst.coll));
+        }
+        self.book_leg_ends(m, id, (&inst.id, lg), at, (&reg, &inst.coll), Ends::both())
     }
 
     /// Books the ends of a leg `ends` names, as [`Engine::book_leg`] books both: an
