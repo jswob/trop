@@ -4759,7 +4759,7 @@ version v1
             (
                 "of-adjusts",
                 "def ls: date = lifespan(argmax(1 for a in adjustments over ..).adjusts).from",
-                "refused: LOAD-UNIT lifespan of key events: a movement has its day, not a lifespan (L §5.7) (a.tally:27)",
+                "refused: LOAD-UNIT lifespan of key events: a movement has its day, not a lifespan (a.tally:27)",
             ),
             (
                 "adjusts-day",

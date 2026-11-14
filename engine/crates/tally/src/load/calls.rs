@@ -454,7 +454,7 @@ impl Checker {
             && m.subtree("events").contains(ix)
         {
             return Err(uerr(format!(
-                "lifespan of {}: a movement has its day, not a lifespan (L §5.7)",
+                "lifespan of {}: a movement has its day, not a lifespan",
                 t.show()
             )));
         }

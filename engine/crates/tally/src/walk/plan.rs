@@ -1274,10 +1274,11 @@ pub(super) fn refuse(code: Run, message: String) -> Stop {
     Stop::Refused(Refusal::new(Code::Run(code), message))
 }
 
-/// A load refusal met at run, as refcore's `moves.py` raises it there (L §8.3; the
-/// STOP-REPORT of 2026-11-13 on R5 asks whether it is `RUN-DOMAIN` at the value).
+/// A check of load's met at run, on a value load couldn't see: `RUN-*` in load's words at
+/// the value, and the run goes on (L §8.4 R-load, tally 2.1.7 R5; refcore's `moves.py`
+/// `refuse`, its `at_run`).
 pub(super) fn refuse_load(code: Load, message: String) -> Stop {
-    Stop::Refused(Refusal::new(Code::Load(code), message))
+    Stop::Refused(Refusal::new(code.at_run(), message))
 }
 
 /// A broken promise: `ENGINE-INVARIANT` (E §11).
