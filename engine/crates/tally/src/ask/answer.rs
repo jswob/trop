@@ -26,8 +26,8 @@ use super::register::{check_register_lines, register_lines, warning_lines};
 use super::residuals::residual_lines;
 use crate::base::{Code, Load, Place, Reach, Refusal, Req, Run, Warn};
 use crate::eval::{
-    Collected, Ctx, Engine, Entry, Env, Item, Member, Memo, after_on, names_in, num_stop, one_day,
-    past_days, world_named,
+    Collected, Ctx, Engine, Entry, Env, Item, Member, Memo, PinsRead, after_on, names_in, num_stop,
+    one_day, past_days, world_named,
 };
 use crate::model::{Reality, Value};
 use crate::syntax::{Ask, AskBody, Bind, Domain, Expr, Key, Lit, OfQ, Pin, PinForm, Step, Stop};
@@ -531,6 +531,7 @@ fn ask_body(m: &Reality, ask: &Ask, engine: &mut Engine, cut: Day) -> Result<Vec
         };
         engine.ask_cut = inside.cut;
         engine.unpinned = Some(ctx);
+        engine.pins_read.keeping = true;
         engine.open_layer(m, inside)?;
         inside
     };
@@ -611,7 +612,8 @@ fn tuple_lines(
         let mut line = form_line(m, ask, engine, &tuple.env, ctx)?;
         out.extend(line.lines(&head));
         line.met.merge(&tuple.brought);
-        line.met.merge(&ask_pins_listed(pinned, &line.met));
+        line.met
+            .merge(&ask_pins_listed(pinned, &line.met, &engine.pins_read));
         let register = match line.laws {
             Some(laws) => check_register_lines(&line.met, ctx, laws)?,
             None => register_lines(&line.met, ctx)?,
@@ -621,28 +623,17 @@ fn tuple_lines(
     Ok(out)
 }
 
-/// The ask's `with` pins and what they read, as a line lists them: an ask pin the line never
-/// read, of a cell an inner pin gave at every read of it, isn't listed (the innermost claim
-/// wins, L §4.6; L §8.2 One read set; tally 2.1.7 R7, T's SR-6; refcore's `print_line`).
-pub(super) fn ask_pins_listed(pinned: &Collected, line: &Collected) -> Collected {
+/// The ask's `with` pins and what they read, as a line lists them: an ask pin the line didn't
+/// list, which the ask's reads met only under an inner or narrower claim of its cell (an
+/// `as if`'s pin, a `solve`'s variable; the innermost claim wins, L §4.6), is in no read of
+/// it and isn't listed; a pin no read reaches stays listed, as refcore's walk reads don't
+/// reach a refused result yet (L §8.2 One read set; tally 2.1.7 R7; refcore's `print_line`,
+/// `pin_value`).
+pub(super) fn ask_pins_listed(pinned: &Collected, line: &Collected, read: &PinsRead) -> Collected {
     let mut kept = pinned.clone();
-    kept.entries.retain(|e| !shadowed(e, line));
+    kept.entries
+        .retain(|e| e.word != "pinned" || line.entries.contains(e) || !read.shadowed_only(&e.text));
     kept
-}
-
-/// Whether ask pin entry `e` is one the line never read, while another `pinned:` entry of the
-/// line names its cell. L §4.6, §8.2.
-fn shadowed(e: &Entry, line: &Collected) -> bool {
-    if e.word != "pinned" || line.entries.contains(e) {
-        return false;
-    }
-    let Some((cell, _)) = e.text.split_once(" = ") else {
-        return false;
-    };
-    let prefix = format!("{cell} = ");
-    line.entries
-        .iter()
-        .any(|x| x.word == "pinned" && x != e && x.text.starts_with(&prefix))
 }
 
 /// One tuple's line after its head, with the register entries it met: the values of

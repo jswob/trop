@@ -23,7 +23,7 @@ use super::answer::{env_text, form_line};
 use super::check::Printed;
 use super::register::{check_register_lines, register_lines};
 use crate::base::{Code, Refusal};
-use crate::eval::{Collected, Ctx, Engine, Entry, Env, Member, combinations};
+use crate::eval::{Collected, Ctx, Engine, Entry, Env, Member, PinsRead, combinations};
 use crate::hole::{Hole, spread};
 use crate::model::{Reality, Value};
 use crate::syntax::{Ask, Stop};
@@ -217,7 +217,8 @@ pub(super) fn fanned_lines(
     }
     let mut out = Vec::new();
     for tuple in &bound {
-        out.extend(tuple_lines(m, (ask, axes, &combos), tuple, (ctx, pinned))?);
+        let listing = (ctx, pinned, &engine.pins_read);
+        out.extend(tuple_lines(m, (ask, axes, &combos), tuple, listing)?);
     }
     Ok(out)
 }
@@ -333,7 +334,7 @@ fn tuple_lines(
     m: &Reality,
     (ask, axes, combos): (&Ask, &Axes, &[Combo]),
     tuple: &Bound,
-    (ctx, pinned): (Ctx, &Collected),
+    (ctx, pinned, read): (Ctx, &Collected, &PinsRead),
 ) -> Result<Vec<String>, Stop> {
     let head = format!("{}{}", ask.id, env_text(m, &ask.binds, &tuple.env)?);
     if !tuple.unknown.is_empty() {
@@ -349,7 +350,7 @@ fn tuple_lines(
             .ok_or_else(|| invariant("a line's result past the results"))?;
         out.extend(first.lines(&format!("{head} [{}]", axes.head(&line.product)?)));
         let mut met = line.met;
-        met.merge(&super::answer::ask_pins_listed(pinned, &met));
+        met.merge(&super::answer::ask_pins_listed(pinned, &met, read));
         for reading in axes.readings(&line.product)? {
             met.entries.insert(Entry {
                 word: "reading",

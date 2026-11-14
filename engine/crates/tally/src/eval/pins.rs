@@ -112,7 +112,11 @@ impl Engine {
         self.trace_value(within, &Ok(v.clone()));
         let without = self.trace_open(TraceKind::Side, "outside the as if");
         self.push();
+        // the derivation outside is no read of the result: neither its register nor the ask
+        // pins it takes are listed (L §8.2 One read set; P42)
+        let keeping = core::mem::replace(&mut self.pins_read.keeping, false);
         let outside = self.ev(m, inner, env, ctx);
+        self.pins_read.keeping = keeping;
         self.pop_alone();
         self.trace_close(without);
         self.trace_close(node);

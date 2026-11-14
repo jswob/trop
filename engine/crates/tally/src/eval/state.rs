@@ -442,6 +442,29 @@ pub(super) struct Task {
     pub unwound: Vec<CellId>,
 }
 
+/// The pins an ask's reads chose, by their text, as the register prints them: those a read
+/// took, and those a read met under an inner or narrower claim of the cell (L §4.6's
+/// cascade). Kept while the ask has `with` pins, and not while `explain` derives a
+/// comparison outside the result, which is no read of it (refcore's `ask_pins_taken`,
+/// `ask_pins_shadowed`, `pin_record`). L §8.2 One read set.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub(crate) struct PinsRead {
+    /// Whether the reads are kept now.
+    pub(crate) keeping: bool,
+    /// The pins a read took.
+    pub(crate) taken: BTreeSet<String>,
+    /// The pins a read met and didn't take.
+    pub(crate) shadowed: BTreeSet<String>,
+}
+
+impl PinsRead {
+    /// Whether ask pin `text` is in no read of its result: met only under another claim.
+    #[must_use]
+    pub(crate) fn shadowed_only(&self, text: &str) -> bool {
+        self.shadowed.contains(text) && !self.taken.contains(text)
+    }
+}
+
 /// The evaluator: the memo, the collector stack and the work stack (refcore's `Engine`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Engine {
@@ -558,6 +581,9 @@ pub struct Engine {
     /// The ask line's context outside its `with` pins, where it has any: an `explain`'s
     /// derivation outside them (E §10; refcore's `_outside_ctx`).
     pub(crate) unpinned: Option<Ctx>,
+    /// The pins the ask's reads took, and those they met under an inner or narrower claim:
+    /// an ask's `with` pin is listed where a read takes it (L §8.2 One read set).
+    pub(crate) pins_read: PinsRead,
     /// Each binding's written text, once: the member scopes of its aggregate share it, up to
     /// 1 000 000 of them (L §7.6 item 2, §8.2).
     pub(super) bind_texts: BTreeMap<String, Rc<str>>,
@@ -619,6 +645,7 @@ impl Engine {
             keep_rows: Rows::Unkept,
             trace: None,
             unpinned: None,
+            pins_read: PinsRead::default(),
             bind_texts: BTreeMap::new(),
             #[cfg(feature = "counters")]
             counts: crate::Counters::default(),

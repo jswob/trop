@@ -138,7 +138,10 @@ fn outside_pins(
     let outside = engine.outside_pins((unpinned, ctx), &fixed)?;
     let pins = engine.pin_lines(m, outside, ctx)?;
     engine.open_layer(m, outside)?;
+    // the derivation outside the pins is no read of the result (L §8.2 One read set; P42)
+    let keeping = core::mem::replace(&mut engine.pins_read.keeping, false);
     let read = traced(m, engine, reference, env, outside);
+    engine.pins_read.keeping = keeping;
     engine.end_layer(outside.layer, read.as_ref().err())?;
     let (value, _, outside_trace) = read?;
     trace.beside_pins(outside_trace, pins, (inside, value))

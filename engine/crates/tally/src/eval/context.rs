@@ -367,6 +367,11 @@ impl Engine {
         let Some(top) = hits.iter().map(|p| p.layer).max() else {
             return Ok(None);
         };
+        let met = if self.pins_read.keeping {
+            hits.clone()
+        } else {
+            Vec::new()
+        };
         let hits: Vec<&Pinned> = hits.into_iter().filter(|p| p.layer == top).collect();
         let best: Vec<&Pinned> = hits
             .iter()
@@ -383,7 +388,19 @@ impl Engine {
         if let Some(earlier) = &pin.tied {
             return Err(conflict(earlier, &pin.text, item, keys));
         }
+        // L §8.2 One read set: the pins this read met under the claim it took (R4's cascade)
+        let passed: Vec<String> = met
+            .iter()
+            .filter(|q| q.text != pin.text)
+            .map(|q| q.text.clone())
+            .collect();
         let (value, text, solve) = (pin.value.clone(), pin.text.clone(), pin.solve);
+        if self.pins_read.keeping {
+            self.pins_read.shadowed.extend(passed);
+            if !self.pins_read.taken.contains(&text) {
+                self.pins_read.taken.insert(text.clone());
+            }
+        }
         if !solve {
             self.note("pinned", text, String::new());
         }
