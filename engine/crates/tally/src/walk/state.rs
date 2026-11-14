@@ -26,7 +26,7 @@ use std::rc::Rc;
 
 use super::agenda::{Act, Mv};
 use super::order::{CycleItem, Run};
-use super::plan::{Amount, Inst, LegVal, Order, invariant};
+use super::plan::{Amount, Dated, Inst, LegVal, Order, invariant};
 use super::point::{At, Step};
 use crate::base::{Refusal, Warn};
 use crate::eval::{Collected, Entry};
@@ -238,8 +238,9 @@ pub struct Walk {
     /// The moves of an unordered cycle whose instances due each day ran together, by (move,
     /// day): the cycle's other moves' acts that day run nothing more (L §5.14.2).
     pub(crate) cycles_run: BTreeSet<(String, Day)>,
-    /// The instances left out, per move: how many, and the first day (L §8.2 `left out:`).
-    pub(crate) left_out: BTreeMap<String, (u32, Option<Day>)>,
+    /// The instances left out, per move: how many, and the first day, a hole until a dated
+    /// one comes (L §8.2 `left out:`, §2.4 Values).
+    pub(crate) left_out: BTreeMap<String, (u32, Dated)>,
     /// The moves left out that touch each place.
     pub(crate) left_out_at: BTreeMap<String, BTreeSet<String>>,
     /// The adjustments with a remainder, per place, from their day (L §8.2 `adjustment:`).

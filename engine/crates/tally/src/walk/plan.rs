@@ -78,6 +78,16 @@ impl Dated {
             Dated::Hole(_) => None,
         }
     }
+
+    /// The day as L §2.4 prints a value: a date in ISO, a hole as the hole (refcore's
+    /// `day_text`). L §2.4 Values.
+    #[must_use]
+    pub fn text(&self) -> String {
+        match self {
+            Dated::Day(d) => d.text(),
+            Dated::Hole(h) => h.text(),
+        }
+    }
 }
 
 /// A leg of an instance, evaluated (refcore's `Leg`).

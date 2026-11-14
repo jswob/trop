@@ -516,7 +516,7 @@ struct Gathered {
     legs: Vec<(Day, Num, Collected)>,
     /// Each move with instances outside the run: how many, and the first day (refcore's
     /// `note_leftout`).
-    outside: BTreeMap<String, (u32, Option<Day>)>,
+    outside: BTreeMap<String, (u32, Dated)>,
     /// The moves outside the run with an instance whose leg touches x.
     touching: BTreeSet<String>,
 }
@@ -833,10 +833,9 @@ impl Gathered {
         }
         for (mid, (n, first)) in &self.outside {
             if self.touching.contains(mid) {
-                let first = first.map_or_else(|| "None".to_owned(), Day::text);
                 tree.left_out.push(Entry {
                     word: "left out",
-                    text: format!("{mid}, {n} instances, first {first}"),
+                    text: format!("{mid}, {n} instances, first {}", first.text()),
                     figure: String::new(),
                 });
             }

@@ -296,7 +296,7 @@ pub(crate) fn plain_lines(
     let since = reset.map(|(_, e)| e.at);
     out.push(match reset {
         Some((_, e)) => format!("from: {}", reading_text(m, walk, (place, unit), e)?),
-        None => opening_text(m, walk, (place, unit)),
+        None => opening_text(m, walk, (place, unit))?,
     });
     // the entries after the last reset, through the last the state counts
     let first = match reset {
@@ -453,17 +453,27 @@ fn entry_rows(
 /// Where a balance with no reading before it starts: zero from its lifespan's start, when
 /// the walk opens it so, else nothing (refcore's `_explain_bal_lines`, its `default`).
 /// L §5.10.
-fn opening_text(m: &Reality, walk: &Walk, (place, unit): (&str, &str)) -> String {
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for a balance opened at zero with no lifespan start: load refuses a
+/// place whose lifespan has no start (`LOAD-LIFESPAN`), and the main walk, the only one
+/// explained here, opens a place at zero only from that start, on or after S
+/// (`opening_state`).
+fn opening_text(m: &Reality, walk: &Walk, (place, unit): (&str, &str)) -> Result<String, Stop> {
     if walk.default_state(m, place, unit).val.is_none() {
-        return "from: no reading or opening before it".to_owned();
+        return Ok("from: no reading or opening before it".to_owned());
     }
     let start = m
         .things
         .get(place)
         .and_then(|th| m.lifespan(th, (walk.cut, walk.world)))
-        .and_then(|sp| sp.start());
-    let start = start.map_or_else(|| "None".to_owned(), Day::text);
-    format!("from: 0 at the start of its lifespan, {start}")
+        .and_then(|sp| sp.start())
+        .ok_or_else(|| invariant("a balance opened at zero with no lifespan start"))?;
+    Ok(format!(
+        "from: 0 at the start of its lifespan, {}",
+        start.text()
+    ))
 }
 
 /// What a reset entry is, by what booked it: an opening, an anchor, or a pad's reading end

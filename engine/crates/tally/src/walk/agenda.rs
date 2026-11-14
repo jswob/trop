@@ -801,27 +801,35 @@ fn note_left_out(walk: &mut Walk, inst: &Inst) -> Result<(), Stop> {
 }
 
 /// One more instance of a move left out of the run, counted with its first day, for its
-/// `left out:` line (refcore's `note_leftout`). Shared by the walk and fence F5 (`lows.rs`).
-/// L §8.2, E §4.1 step 3.
+/// `left out:` line: the earliest date, or the first instance's hole until a dated one comes
+/// (refcore's `note_leftout`). Shared by the walk and fence F5 (`lows.rs`). L §8.2, §2.4
+/// Values, E §4.1 step 3.
 ///
 /// # Errors
 ///
-/// `ENGINE-INVARIANT` for a count past what a `u32` holds.
+/// `ENGINE-INVARIANT` for a count past what a `u32` holds, or for an instance left out with no
+/// day: only an instance refused before its day has none, and its legs fall on the end of
+/// time (`refused_places`), so its status is never left out (`status`, `scenario_early`).
 pub(super) fn one_more_left_out(
-    left_out: &mut BTreeMap<String, (u32, Option<Day>)>,
+    left_out: &mut BTreeMap<String, (u32, Dated)>,
     inst: &Inst,
 ) -> Result<(), Stop> {
-    let day = inst.day.as_ref().and_then(Dated::day);
-    let entry = left_out.entry(inst.move_id.clone()).or_insert((0, None));
+    let day = inst
+        .day
+        .clone()
+        .ok_or_else(|| super::plan::invariant("an instance left out with no day"))?;
+    let entry = left_out
+        .entry(inst.move_id.clone())
+        .or_insert_with(|| (0, day.clone()));
     entry.0 = entry
         .0
         .checked_add(1)
         .ok_or_else(|| super::plan::invariant("a count of instances"))?;
-    entry.1 = match (entry.1, day) {
-        (Some(a), Some(b)) => Some(a.min(b)),
-        (None, b) => b,
-        (a, None) => a,
-    };
+    if let Dated::Day(d) = day
+        && entry.1.day().is_none_or(|first| d < first)
+    {
+        entry.1 = Dated::Day(d);
+    }
     Ok(())
 }
 

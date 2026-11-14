@@ -415,10 +415,9 @@ impl Engine {
                 .left_out
                 .get(mid)
                 .ok_or_else(|| invariant("a move left out with no count"))?;
-            let first = first.map_or_else(|| "None".to_owned(), Day::text);
             met.entries.insert(Entry {
                 word: "left out",
-                text: format!("{mid}, {n} instances, first {first}"),
+                text: format!("{mid}, {n} instances, first {}", first.text()),
                 figure: String::new(),
             });
         }
