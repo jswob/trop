@@ -183,7 +183,10 @@ impl Engine {
                 });
                 let value = self.row_value(m, input, row, keys, ctx)?;
                 let value = self.priced(m, input, keys, ctx, value)?;
-                Ok(as_read(value, (&input.id, keys), row_cell(row)))
+                let value = as_read(value, (&input.id, keys), row_cell(row));
+                // under `windows each`, the window the read gave takes its day (L §4.4)
+                let figure = origin(&input.id, keys);
+                self.chosen(value, (format!("row {} {figure}", row.sid), &figure), ctx)
             }
             Found::None => Ok(Value::None),
             Found::Hole(q) => Ok(Value::Hole(Hole::asked(&q.text, &q.origin))),
@@ -307,7 +310,8 @@ impl Engine {
             return Ok(Value::Hole(no_reading(&figure, latest.day)));
         }
         // a read of x at its keys, named by the row it took, whatever day d took it (L §4.4)
-        Ok(as_read(value, (&input.id, &latest.keys), row_cell(row)))
+        let value = as_read(value, (&input.id, &latest.keys), row_cell(row));
+        self.chosen(value, (format!("row {} {figure}", row.sid), &figure), ctx)
     }
 
     /// `since(x[k], d)`: the days from the last reading of x on or before d to d, a hole

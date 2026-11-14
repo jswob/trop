@@ -15,6 +15,7 @@ use crate::time::Day;
 
 /// What an ask's line prints after its head: its text, the lines under it, the register
 /// entries it met, and, for a `check`, each side's law date where they differ.
+#[derive(Debug, Clone)]
 pub(super) struct Printed {
     /// The line's values, or a check's `ok`, `differs: …` or both sides.
     pub text: String,

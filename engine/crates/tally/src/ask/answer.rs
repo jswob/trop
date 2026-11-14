@@ -431,8 +431,10 @@ fn answer_one(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec
 /// tuple with the register under it; once answered, the timelines its engines walked are
 /// checked unchanged (refcore's `_answer`, `_answer_in`). L §5.18, E §9 item 4.
 fn ask_lines(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<String>, Stop> {
-    if ask.windows_each {
-        return Err(Stop::NotBuilt("an ask's `windows each`"));
+    if ask.windows_each && matches!(ask.body, AskBody::Diff(_) | AskBody::Residuals(_)) {
+        // a diff's and a ledger's result is their set of lines (R8): split by the windows
+        // they meet, each sub-window's set, which no layout yet writes
+        return Err(Stop::NotBuilt("a diff's or a ledger's `windows each`"));
     }
     if ask.partial {
         return Err(Stop::NotBuilt("a partial answer"));
@@ -665,6 +667,9 @@ fn tuple_lines(
     engine: &mut Engine,
     (ctx, pinned): (Ctx, &Collected),
 ) -> Result<Vec<String>, Stop> {
+    if ask.windows_each {
+        return super::windows::each_lines(m, ask, engine, (ctx, pinned));
+    }
     if let Some(axes) = Axes::of(m, ask)? {
         return fanned_lines(m, ask, engine, (ctx, pinned), &axes);
     }

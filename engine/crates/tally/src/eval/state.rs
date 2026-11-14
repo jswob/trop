@@ -567,6 +567,9 @@ pub struct Engine {
     /// The pass a business-day function runs now over the days its calendar's added windows
     /// can take (L §4.2, §4.4).
     pub(super) calendar_pass: Option<super::business::CalendarPass>,
+    /// The windows a `windows each` run met that its choice names no day of, in the order
+    /// met; none outside such a run (L §4.4; refcore's `each_met`).
+    pub(crate) each_met: Option<Vec<super::context::Met>>,
     /// The splits `prorata`'s `rest largest` made, once per total, step and weights (L §5.13
     /// Cost).
     pub(super) splits: super::prorata::Splits,
@@ -652,6 +655,7 @@ impl Engine {
             rereading: false,
             each_refused: BTreeMap::new(),
             calendar_pass: None,
+            each_met: None,
             splits: super::prorata::Splits::default(),
             layers: Layers::default(),
             timelines: Timelines::default(),

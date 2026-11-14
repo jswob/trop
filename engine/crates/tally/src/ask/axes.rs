@@ -110,7 +110,7 @@ impl Axes {
 
     /// A line's options as its head prints them, `a = *, b = x | y` (refcore's `print_line`).
     /// L §5.5.
-    fn head(&self, product: &[BTreeSet<usize>]) -> Result<String, Stop> {
+    pub(super) fn head(&self, product: &[BTreeSet<usize>]) -> Result<String, Stop> {
         let mut parts = Vec::with_capacity(product.len());
         for ((id, options), named) in self.axes.iter().zip(product) {
             let shown = if named.len() == options.len() {
@@ -125,7 +125,7 @@ impl Axes {
 
     /// A line's `reading:` entries: each axis it doesn't print `*`, with the options it
     /// names, in id order (refcore's `group`, its `reading`). L §5.5, §8.2.
-    fn readings(&self, product: &[BTreeSet<usize>]) -> Result<Vec<String>, Stop> {
+    pub(super) fn readings(&self, product: &[BTreeSet<usize>]) -> Result<Vec<String>, Stop> {
         let mut out = Vec::new();
         for ((id, options), named) in self.axes.iter().zip(product) {
             if named.len() != options.len() {
@@ -399,12 +399,12 @@ pub(super) fn result_lines(
 }
 
 /// One line of a fan-out: the product of options it names and the result they give.
-struct Grouped {
+pub(super) struct Grouped {
     /// Each axis's options the line names.
-    product: Product,
+    pub(super) product: Product,
     /// The first combination's result, by its place among the tuple's results: its text
     /// after the line's head, the lines under it.
-    first: usize,
+    pub(super) first: usize,
     /// What the line's combinations met, together.
     met: Collected,
     /// A check's sides' law dates, as its first combination read them.
@@ -415,7 +415,7 @@ struct Grouped {
 /// combinations that give one result, the results in the order first met, each set split into
 /// products by the axes in id order; then every line sorted by each axis's first option, `*`
 /// first, the sort keeping the order made between equal keys (refcore's `group`). L §5.5.
-fn grouped(
+pub(super) fn grouped(
     axes: &Axes,
     combos: &[Combo],
     results: &[(usize, Printed)],

@@ -20,11 +20,12 @@ use std::collections::{BTreeMap, VecDeque};
 
 use super::arith::whole_of;
 use super::builtin::read_parts;
+use super::context::Met;
 use super::dates::period_arg;
 use super::expr::hole_of;
 use super::memo::rows_class;
 use super::state::{Ctx, Engine, Env, invariant, not_typed, past_days, refuse, refuse_load};
-use super::windows::{imprecise, interval, one_day, single};
+use super::windows::{imprecise, interval, one_day, single, window_days};
 use crate::base::{Load, Run};
 use crate::hole::{Hole, spread};
 use crate::model::{Code, KeyVal, Reality, Value, Window};
@@ -105,24 +106,6 @@ impl Daily {
         let count = k.to_i64().map(i64::unsigned_abs);
         Ok(Business::Add(day, step, count))
     }
-}
-
-/// The days a window can take: a `one_of`'s, else every day from its first to its last.
-/// L §4.4.
-fn window_days(w: &Window) -> Result<Vec<Day>, Stop> {
-    if let Some(days) = &w.days {
-        return Ok(days.clone());
-    }
-    let (Value::Day(first), Value::Day(last)) = (&w.lo, &w.hi) else {
-        return Err(not_typed());
-    };
-    let mut out = vec![*first];
-    let mut day = *first;
-    while day < *last {
-        day = day.next().ok_or_else(|| past_days(1))?;
-        out.push(day);
-    }
-    Ok(out)
 }
 
 /// A value's day, if it is one.
@@ -620,7 +603,7 @@ impl Engine {
             if let Added::Hole(question) = added {
                 unknown.push(Hole::asked(question, name));
             }
-            if added.may_be(day) && self.window_takes((name, entry), added, day)? {
+            if added.may_be(day) && self.window_takes((name, entry), added, (day, ctx))? {
                 return Ok(Value::Bool(false));
             }
         }
@@ -685,15 +668,27 @@ impl Engine {
         Ok(value)
     }
 
-    /// Whether calendar `name`'s added window `added`, which may be `day`, takes it in this
-    /// pass: the pass's choice for it, or its first day where the pass meets it newly, which
-    /// the pass records (refcore's `business`, its `cal_choice`). L §4.2, §4.4.
+    /// Whether calendar `name`'s added window `added`, which may be `day`, takes it: under a
+    /// `windows each` in context `ctx`, the day the line's choice names (L §4.4: the clause
+    /// splits the line by "a day in a calendar's added list"); else this pass's choice for it,
+    /// or its first day where the pass meets it newly, which the pass records (refcore's
+    /// `business`, its `window_choice` and `cal_choice`). L §4.2, §4.4.
     fn window_takes(
         &mut self,
         (name, entry): (&str, usize),
         added: &Added,
-        day: Day,
+        (day, ctx): (Day, Ctx),
     ) -> Result<bool, Stop> {
+        if self.chooses(ctx)? {
+            let window = Met {
+                id: format!("calendar {name}#{entry}"),
+                label: format!("added {}", added.text()),
+                days: added
+                    .days()
+                    .ok_or_else(|| invariant("a window's days past the calendar"))?,
+            };
+            return Ok(self.window_day(ctx, window)? == Some(day));
+        }
         let pass = self
             .calendar_pass
             .as_mut()

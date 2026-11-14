@@ -14,6 +14,7 @@
 use core::cmp::Ordering;
 
 use super::arith::{Op, Test, arith, compare, negate};
+use super::context::Met;
 use super::expr::hole_of;
 use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load};
 use crate::base::{Load, Run};
@@ -315,7 +316,57 @@ pub(crate) fn one_day(m: &Reality, v: &Value, what: &str) -> Result<Result<Day, 
     ))
 }
 
+/// The days window `w` can take: a `one_of`'s, else every day from its first to its last.
+/// L §4.4.
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for a window of numbers; `RUN-LIMIT` past the calendar's edge.
+pub(super) fn window_days(w: &Window) -> Result<Vec<Day>, Stop> {
+    if let Some(days) = &w.days {
+        return Ok(days.clone());
+    }
+    let (Value::Day(first), Value::Day(last)) = (&w.lo, &w.hi) else {
+        return Err(super::state::not_typed());
+    };
+    let mut out = vec![*first];
+    let mut day = *first;
+    while day < *last {
+        day = day.next().ok_or_else(|| super::state::past_days(1))?;
+        out.push(day);
+    }
+    Ok(out)
+}
+
 impl Engine {
+    /// Value `v`, as a `windows each` in force in `ctx` takes it: a window of days takes the
+    /// day the line's choice names for it, the window named `id` and labelled `label` (a read's
+    /// row and figure, or the window as written); any other value, or a context no `windows
+    /// each` holds, leaves it as it is (refcore's `window_choice`, `window_id`). L §4.4.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a freed layer; `RUN-LIMIT` past the calendar's edge.
+    pub(super) fn chosen(
+        &mut self,
+        v: Value,
+        (id, label): (String, &str),
+        ctx: Ctx,
+    ) -> Result<Value, Stop> {
+        let Value::Window(w) = &v else {
+            return Ok(v);
+        };
+        if !matches!(w.lo, Value::Day(_)) || !self.chooses(ctx)? {
+            return Ok(v);
+        }
+        let window = Met {
+            id,
+            label: label.to_owned(),
+            days: window_days(w)?,
+        };
+        Ok(self.window_day(ctx, window)?.map_or(v, Value::Day))
+    }
+
     /// `window(a, b)`: one day from a to b, not yet known (refcore's `c_window`). L §4.4, §8.4.
     pub(super) fn window_call(
         &mut self,
@@ -343,14 +394,15 @@ impl Engine {
         if first > last {
             return Err(refuse(Run::Domain, format!("{written} with a after b")));
         }
-        Ok(Value::Window(Box::new(Window {
+        let window = Value::Window(Box::new(Window {
             lo: Value::Day(first),
             hi: Value::Day(last),
             days: None,
-            src: Some(written),
+            src: Some(written.clone()),
             figure: None,
             read: None,
-        })))
+        }));
+        self.chosen(window, (format!("src {written}"), &written), ctx)
     }
 
     /// `one_of(ds)`: one of a list's days, not yet known (refcore's `c_one_of`). L §4.4, §8.4.
@@ -385,7 +437,16 @@ impl Engine {
         if days.is_empty() {
             return Err(refuse(Run::Domain, "one_of of no days".to_owned()));
         }
-        Ok(Value::Window(Box::new(super::convert::one_of(&days)?)))
+        let window = super::convert::one_of(&days)?;
+        let written = window
+            .src
+            .clone()
+            .ok_or_else(|| invariant("a one_of with no text"))?;
+        self.chosen(
+            Value::Window(Box::new(window)),
+            (format!("src {written}"), &written),
+            ctx,
+        )
     }
 }
 

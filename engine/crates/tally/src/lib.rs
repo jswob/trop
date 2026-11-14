@@ -186,7 +186,7 @@ pub mod eval {
     pub use arith::{Op, Test, arith, compare, currency_of, int_of, negate, same_value};
     pub(crate) use bindings::{names_in, order_text, reads_name};
     pub use context::Layer;
-    pub(crate) use context::{GUARDED, UNSET_AXIS, world_named};
+    pub(crate) use context::{Choice, GUARDED, Met, UNSET_AXIS, world_named};
     pub(crate) use convert::{ConvertFor, Converted, convert, convert_row, field_literal};
     pub(crate) use expr::equal_sides;
     pub(crate) use keys::{Given, thing_seen, to_key};
@@ -281,6 +281,7 @@ pub mod ask {
     mod residuals;
     mod walkbound;
     mod walked;
+    mod windows;
     mod worlds;
 
     pub use answer::{Answered, How, answer};

@@ -128,12 +128,35 @@ pub(crate) struct LayerData {
     /// The option each axis takes, by the axis's id: one combination of an ask's fan-out, or
     /// an axis pin (L §5.5).
     pub(super) axes: BTreeMap<String, String>,
+    /// `windows each`'s choice in force: the day each window met takes, by the window's
+    /// identity, in the order met; none where no `windows each` holds (L §4.4).
+    pub(super) windows: Option<Choice>,
+}
+
+/// One run of a `windows each` line: the day each window it met takes, by the window's
+/// identity, in the order the windows were met (refcore's assignment `asg`). L §4.4.
+pub(crate) type Choice = Vec<(String, Day)>;
+
+/// A window a `windows each` run met that its choice names no day of: its identity (the read
+/// that gave it, a calendar's entry, a version's or row's `known`), the label a line's head
+/// names it by, and the days it can take (refcore's `each_met`). L §4.4.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct Met {
+    /// Its identity.
+    pub(crate) id: String,
+    /// Its label: `wd`, `added window(…)`, `known of v`.
+    pub(crate) label: String,
+    /// The days it can take, in order.
+    pub(crate) days: Vec<Day>,
 }
 
 impl LayerData {
     /// Whether it pins nothing and sets no axis: the unpinned context.
     fn is_empty(&self) -> bool {
-        self.pins.is_empty() && self.wording.is_empty() && self.axes.is_empty()
+        self.pins.is_empty()
+            && self.wording.is_empty()
+            && self.axes.is_empty()
+            && self.windows.is_none()
     }
 
     /// Whether every pin, wording pin and axis option of this layer is one of `other`'s.
@@ -144,6 +167,7 @@ impl LayerData {
                 .axes
                 .iter()
                 .all(|(axis, option)| other.axes.get(axis) == Some(option))
+            && (self.windows.is_none() || self.windows == other.windows)
     }
 
     /// Whether `pin` is one of the layer's pins, by target and value.
@@ -156,6 +180,7 @@ impl LayerData {
         self.pins.len() == other.pins.len()
             && self.wording.len() == other.wording.len()
             && self.axes.len() == other.axes.len()
+            && self.windows == other.windows
             && self.within(other)
     }
 
@@ -188,6 +213,9 @@ impl LayerData {
                 .filter(|(axis, _)| axes.contains(*axis))
                 .map(|(axis, option)| (axis.clone(), option.clone()))
                 .collect(),
+            // a window is a value, not an item of the graph: which cells read one is known
+            // only at run, so the choice stays in every context it holds (E §3.2)
+            windows: self.windows.clone(),
         }
     }
 
@@ -581,6 +609,63 @@ impl Engine {
         }
         let layer = self.intern(data)?;
         Ok(Ctx { layer, ..ctx })
+    }
+
+    /// Context `ctx` under `windows each`'s choice `choice`: every read in it takes the day
+    /// the choice names for each window it meets (L §4.4).
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a freed layer.
+    pub(crate) fn with_windows(&mut self, ctx: Ctx, choice: &Choice) -> Result<Ctx, Stop> {
+        let mut data = self.layer_data(ctx.layer)?.clone();
+        data.windows = Some(choice.clone());
+        let layer = self.intern(data)?;
+        Ok(Ctx { layer, ..ctx })
+    }
+
+    /// Whether a `windows each` holds in context `ctx`, so a window met there takes one day
+    /// (L §4.4).
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a freed layer.
+    pub(crate) fn chooses(&self, ctx: Ctx) -> Result<bool, Stop> {
+        if ctx.layer.is_base() {
+            return Ok(false);
+        }
+        Ok(self.layer_data(ctx.layer)?.windows.is_some())
+    }
+
+    /// The day window `window` takes in context `ctx`, where a `windows each` holds: the day
+    /// its choice names, else its first, the window noted as met so the line runs again once
+    /// per day of it; none where no `windows each` holds, so the window stays one (refcore's
+    /// `window_choice`, `visible`). L §4.4.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a freed layer or a window with no day.
+    pub(crate) fn window_day(&mut self, ctx: Ctx, window: Met) -> Result<Option<Day>, Stop> {
+        if ctx.layer.is_base() {
+            return Ok(None);
+        }
+        let Some(choice) = &self.layer_data(ctx.layer)?.windows else {
+            return Ok(None);
+        };
+        if let Some((_, day)) = choice.iter().find(|(id, _)| *id == window.id) {
+            return Ok(Some(*day));
+        }
+        let first = window
+            .days
+            .first()
+            .copied()
+            .ok_or_else(|| invariant("a window with no day"))?;
+        if let Some(met) = &mut self.each_met
+            && !met.iter().any(|w| w.id == window.id)
+        {
+            met.push(window);
+        }
+        Ok(Some(first))
     }
 
     /// The items the walk's readers reach, once computed; the caller puts it back in
