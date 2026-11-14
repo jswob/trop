@@ -389,22 +389,27 @@ fn owns_rows(m: &Reality, kept: &[String], files: &Files) -> Result<(), Stop> {
         return Ok(());
     };
     for row in &owns.rows {
-        let names: Vec<String> = row
-            .pattern
-            .iter()
-            .map(|pat| match pat {
+        let mut names = Vec::with_capacity(row.pattern.len());
+        for pat in &row.pattern {
+            names.push(match pat {
                 Pat::Key(KeyVal::Thing(name) | KeyVal::Key { name, .. }) => name.clone(),
-                // refcore's key value with no name prints as Python's `None`.
+                // owns is keyed by a party and a place: a row's key is a thing, or load
+                // refused it at its row (LOAD-KEY, L §3.6)
                 Pat::Key(
                     KeyVal::Day(_)
                     | KeyVal::Period(_)
                     | KeyVal::Int(_)
                     | KeyVal::Mv(_)
                     | KeyVal::Value(_),
-                ) => "None".to_owned(),
+                ) => {
+                    return Err(invariant(
+                        "an owns row keyed by other than things: load refuses it first (LOAD-KEY)"
+                            .to_owned(),
+                    ));
+                }
                 Pat::Star | Pat::Range(..) => "*".to_owned(),
-            })
-            .collect();
+            });
+        }
         for name in &names {
             let keeps = m
                 .things
@@ -923,12 +928,12 @@ impl Loader {
 /// `instant_text`).
 fn instant_text(row: &Row) -> Result<String, Stop> {
     match &row.instant {
-        Some(RowInstant::At(day, edge)) => {
+        // a reading at a bare day: its instant is the day, as written (L §2.5, §4.6; R9)
+        Some(RowInstant::At(day, None)) => Ok(day.text()),
+        Some(RowInstant::At(day, Some(edge))) => {
             let edge = match edge {
-                Some(Edge::Start) => "start",
-                Some(Edge::End) => "end",
-                // refcore prints the missing edge as Python's `None`.
-                None => "None",
+                Edge::Start => "start",
+                Edge::End => "end",
             };
             Ok(format!("{} {edge}", day.text()))
         }
