@@ -10,8 +10,29 @@
 use super::check::Scope;
 use crate::model::{NameKind, Reality, Unit};
 use crate::syntax::{
-    AddOp, CmpOp, Expr, Field, FieldValue, Key, Lit, MulOp, Postfix, QueryFn, Span,
+    AddOp, CmpOp, Domain, Expr, Field, FieldValue, Key, Lit, MulOp, Postfix, QueryFn, Span,
 };
+
+/// A binding's domain as the text writes it: an index or kind with its member's prefix, a
+/// key list, a range with its step (refcore's `_txt`, its `dname`, `dlist`, `drange` arms;
+/// L §2.4 Values, tally 2.1.7 R9).
+pub(crate) fn domain_text(d: &Domain) -> String {
+    match d {
+        Domain::Name { id, qual: None } => id.clone(),
+        Domain::Name { id, qual: Some(q) } => format!("{q}.{id}"),
+        Domain::List(keys) => {
+            let keys: Vec<String> = keys.iter().map(lit_txt).collect();
+            format!("[{}]", keys.join(", "))
+        }
+        Domain::Range(range) => {
+            let (from, to, step) = range.as_ref();
+            let step = step
+                .as_ref()
+                .map_or_else(String::new, |s| format!(" step {}", text(s)));
+            format!("{}..{}{step}", text(from), text(to))
+        }
+    }
+}
 
 /// An expression's text, as a message names it (refcore's `_txt`).
 pub(crate) fn text(e: &Expr) -> String {

@@ -516,6 +516,8 @@ pub(super) struct Checker {
     /// The key literals reads write at stepped ranges of literal ends, kept for load's check
     /// as a row's are (refcore's `register_range_lit` from `key_pos`; R5, #106).
     pub(super) range_keys: Vec<RangeKey>,
+    /// The file of each item's section, for a refusal placed at an item's own line.
+    pub(super) files: Files,
     /// The periods read at keys of time indexes, in the order typed (refcore's
     /// `period_cands`).
     periods: Vec<PeriodRead>,
@@ -591,6 +593,7 @@ pub(super) fn walk(m: &Reality, sections: &[(String, Section)]) -> Result<Walked
     price_twice(m, &files)?;
     let mut checker = Checker {
         fill: FillState::of(m, &files)?,
+        files: files.clone(),
         ..Checker::default()
     };
     checker.check_parts(m, &files)?;
@@ -700,6 +703,7 @@ pub(super) fn invariant(message: String) -> Stop {
 }
 
 /// The file each item's section stands in, by the item's id: a refusal names it.
+#[derive(Debug, Clone, Default)]
 pub(super) struct Files {
     /// `(section word, id)` to the file.
     by_item: BTreeMap<(&'static str, String), String>,

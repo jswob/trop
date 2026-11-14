@@ -261,7 +261,7 @@ impl Checker {
                 return Err(sc.place(uerr(message)));
             }
         } else {
-            let st = sample_type(m, &pinned, &ty).map_err(|stop| sc.place(stop))?;
+            let st = sample_type(m, &self.files, &pinned, &ty).map_err(|stop| sc.place(stop))?;
             if !pin_literal(m, sc, value, &st)? {
                 let t = self.expr(m, sc, value, Some(&st), depth)?;
                 let what = format!("the sample pin of {name}");

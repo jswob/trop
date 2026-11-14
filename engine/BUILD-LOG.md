@@ -2799,3 +2799,24 @@ Three commits: 4f8d6ad (the run half), 35e3be8 (prices at load), and this one (t
 - **Sweep:** none SAME → DIFF; 2 asks DIFF → SAME over R6's; no new `ENGINE-INVARIANT`.
 - **Size:** 355 changed lines (295 added, 60 removed). **M1 code replaced:** the walk-wide `listed` lines every read of a scenario's walk printed (`Walk.listed`, `main_walk`'s notes) and invariant 3's `reads` texts; `Act::Mark` that needed an entry; a `when`'s reads lost with an instance that doesn't exist. **Exceptions:** +0.
 - **Check:** `check commit: green, 23 steps`.
+
+## STOP-REPORT 2026-11-14: refcore 2.1.7 sorts a place keyed by things before plain things at a lone part; L §2.4 sorts it as things are
+
+- **Kind:** the spec is clear and refcore differs (R9's one order per type, #148, #111)
+- **Where:** `engine/tests/m0/format.refcore`, the 14 `household-X` sets of `m0_format::m0_format_household_x` (`I:X:base_values`, `I:X:explain_room`, `I:X:konto_balance@b_r1`, `I:X:pit37@c1_fast` … `@c7_fast`, `@v3_fast` … `@v5_fast`, `I:X:replay_september@b_r1s`): each reprints `places.tally`, version `openings_2026`.
+- **Rule:** L §2.4 Inside a section: "keys in index order (things and an open index's keys in the text order of their stable ids, §2.5) … a place keyed by things (`konto[ana]`) is one key, sorted as things are. Keys of different literal kinds at one position (a lone part, whose index isn't loaded) sort by kind first, in `lit`'s order … then by value within their kind".
+- **What happens:** the rows `opening[gotowka]`, `opening[konto]`, `opening[marek]`, `opening[wcash[ike]]`, … The engine prints them in the text order of their keys (`gotowka`, `konto`, `marek`, `wcash[ike]`, …): all are keys of things, one kind. refcore 2.1.7 prints the six `wcash[…]`/`wunits[…]` rows first. In `canon.py` `key_comp`, a `placekey` returns `((2, key_text(k)), 1)`, the rank of 2.1.6's text order; R9 made `opening`'s position (a built-in, no binds in the reprint's table, so `dom` is None) the kind-first order, where `key_value` ranks a key `3`. So a keyed place now sorts as a month-day, before every plain thing.
+- **What I think is wrong:** refcore: its `placekey` arm keeps 2.1.6's rank under R9's new order; with `(3, key_text(k))` there (as `key_value` ranks any key), refcore prints the engine's order, which L §2.4 states.
+- **What I did:** nothing to the engine's order (`syntax/canon_order.rs`); no case special-cased.
+- **What I did not do:** change refcore or the stored `format.refcore`.
+- **State:** the 14 ids stay red; R9 continues on its other ids.
+
+## 2026-11-14 tally 2.1.7, R9: one printer per type: each value in its declared form, keys as written (issue #148, pick P11)
+
+- **A domain as written** (`load/texts.rs` `domain_text`; `load/random.rs` `discrete_index`): a random fact's mix of sample types names each `discrete`'s domain as the text writes it (`[ka, kb]`, `ks`, a range with its step), where it printed `None`, and is placed at the fact's own line (`at_decl`; the checker keeps the sections' files, `Checker.files`).
+- **A day that is a hole prints as the hole** (`ask/instance.rs` `cut_text`): an instance's booking cut it never reached prints as its day, a hole or its refusal, not `None`.
+- **Turned green (2):** `r9/e10_booking_cut_hole`, `r9/l2_4_domain_written`. Gating: 78 of the 287 still red (and the 4 rows of the second STOP-REPORT).
+- **STOP-REPORT** (above): the 14 `household-X` format sets, refcore's keyed-place rank under R9's kind-first order against L §2.4; they stay red.
+- **Sweep:** none SAME → DIFF; 3 asks DIFF → SAME over R7's; no new `ENGINE-INVARIANT`.
+- **Size:** 123 changed lines (95 added, 28 removed). **M1 code replaced:** `discrete_index`'s `None` for a list or range domain and its refusal at the reading ask; `explain`'s `booking cut None`. **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps`.
