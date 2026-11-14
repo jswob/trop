@@ -1,0 +1,9 @@
+scenario t over g
+  tally 2
+  from 2026-01-01
+
+version dearer
+  cite s
+  governs 2026-01-01..
+  known 2026-01-01
+  replace twice = 3 "a dearer rule"

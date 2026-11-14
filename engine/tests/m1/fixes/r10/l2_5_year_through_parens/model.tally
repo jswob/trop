@@ -1,0 +1,35 @@
+model years
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2027-12-31
+  note "T's carried items 5 and 6 (issue #108, invented): a parenthesised literal is that literal wherever the bare one stands (L §2.1, the coordinator's picks P6 and P12), and #97's N1, the written year forms; each form is a file of its own beside this base"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ys = year 2026..2027
+
+index ms = month 2026-01..2027-12
+
+place konto: accounts PLN lives 2026-01-01..
+
+input rate[y in ys]: num
+
+input start_day: date
+
+input wage[m in ms]: money PLN
+
+ask base: rate[2026], rate[2027], year_of(start_day) == 2026, day_of(2026, 12-31), wage[2026-06], wage[2027-06], bal(konto, 2026-01-05)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  rate[2026] = 0.1 "the card"
+  rate[2027] = 0.2 "the card"
+  start_day = 2026-01-05 "the card"
+  wage = 5000.00 PLN governs 2026 "the card"
+  wage = 5200.00 PLN governs 2027 "the card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "the card"

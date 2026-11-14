@@ -7,6 +7,69 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.1.7 (the spec round after M1: 84 items, ten rules)
+
+The spec patch tally 2.1.7 (`spec/CHANGES.md` 2.1.7-1 to 2.1.7-30), the coordinator's picks P3–P32 under the user's
+standing rule of 2026-11-04. Each new test was seen failing on tally 2.1.6's refcore first, but the twins and pins
+named. **1345 tests, all pass** (1251, 94 new, 8 changed; `refcore_fast` byte-equal). One mechanism per rule:
+
+- **What a result reads (R1).** Folds, `argmin`/`argmax`, `first`/`last` and the walk read only as far as the value
+  needs; a later term's hole or refusal no longer reaches a decided result.
+- **Refusals (R2).** A refusal is the instance's status (`Inst.err`), read by every path that reads the movement, a
+  tie and a span before its day included.
+- **Windows (R3).** One window value, named by its read (its trimmed cell), lifted per day set; a copy keeps the name.
+- **The cascade (R4).** One candidate order for rows, band rows, givens, pins, a solve's variable and prices.
+- **Phases (R5).** Load checks every item whatever the asks; a run-time check prints a `RUN-*` code in load's words.
+- **Derived forms (R6).** `low`, `last`, `by last`, `priced last` evaluate through their definitions.
+- **One read set (R7).** The register, `explain` and `inputs-of` are views of the result's read set.
+- **Fan-out (R8).** Every ask form fans out before it is answered; `ask.diff_*` gives a `diff` as cells;
+  `check3.m_leg_guarded` books a guarded leg against its place's balance.
+- **The printer (R9).** `loader.key_written`, `check._txt`, `ask.day_text`, `canon.key_value` kind-first: one form and
+  one order per type.
+- **Positions (R10).** `check.reach_leaves`, `as_year`, `key_pos` push a position's type through `( )` and an `if`.
+- **Faults (B1–B7).** `evaluate.range_has`, `day_step`, `values.range_key` (B1); `check.item_of`, `readers_of` by
+  items (B2); `mreads.m_priced_per`, `check3._unit_name` (B3); `cli.reprint_lines`, `joint.pinned_members` nested (B4);
+  `date_arith`'s year step and `check.key_duration_whole` (B5); a reading's sid with its instant (B6);
+  `check3.m_existence_seen` over an open index (B7).
+- **Outside the run (S1).** `mreads.m_bal_at` gives `HOLE-PRERUN` before S and `HOLE-POSTRUN` after E; `walk.note_post_e`
+  keeps the instances after E and `mreads.m_flows_post_e` counts them (a plan's amount, a decision's hole); a decision
+  move's `flows` does the same; `resid.m_residuals` prints the days after E as one hole line.
+- **Singletons.** `check3.m_resolve_price` peels a price reference's fields, `mreads.m_priced_read` reads the field
+  (S2); `ask.explain_step`, `chain_next` fold a chain of one def's cells past 3 (S4); `check3`'s decision graph takes
+  the closure of the written orders, which `m.written_order` gives the walk (S5); the day-range step text gains its
+  `<s>` (S7); `check.check_path_line`, `check3.m_check_settlement_units`, `moves.settle_sign` name their place (S9).
+  `evaluate.business` refuses only a calendar of seven weekend days, its dead 366-yearly-days branch gone (S8, P33).
+- **T's re-run (P36: SR-1 to SR-14, no rule's exception).** **1356 tests, all pass** (11 new, `L5_14_next` changed;
+  each new one seen failing on 1f08769's refcore; `refcore_fast` 1356). `resid.may_touch`: a refused instance refuses
+  only a ledger its legs may give (SR-1, R2); `range_values` lets a next key past 9999-12-31 refuse (SR-2, B1);
+  `check3._seen_places` gives a keyed place at literal keys alone (SR-3, R4/R9); computed intervals keep their
+  `origin`, and `range_one_value` makes a window end or step `HOLE-IMPRECISE` (SR-5, SR-9, R3); `ask.print_line` drops
+  an ask's with pin an inner pin of its cell replaced at every read, `walk.note_none` puts a false when's reads in its
+  places' read sets (SR-6, SR-8, R7; dropping the ask-level pins outright breaks F9/F11, where the walk's pin reads
+  don't reach a refused result); `mreads.m_c_next` names the form as written (SR-7, R6); `ask.explain_pins` fans the
+  outside derivation over the pinned axes it reads (SR-10, R8); `moves.instant_text` of a bare day (SR-12, B6);
+  `check.compare` resolves each literal `reach_leaves` gives (SR-13, R10). Speed (SR-11, SR-14), outputs unchanged:
+  `range_has` bisects (g13's 20-year count 329 s -> 3 s; 2.1.6 0.8 s); invariant 3 walks a branch's base only to its
+  from (`mreads.m_prefix_walk`; B-13 78-86 s -> 53 s at one job under PyPy; 2.1.6 31 s). P37: the rest is the
+  base's own walk from S to the from, which R7's `before from:` listing needs (the base books holes there that the
+  branch doesn't); a run of one ask walks the base nowhere else, so there is no walk to share. walk.py's copy of
+  `m_prefix_walk`, which mreads' shadowed, is gone.
+- **P40 to P46** (the builder's STOP-REPORTs, the reviews' findings refcore shared, T's SR-C1; 1 371 tests): `moves.refuse`
+  goes through `errors.at_run` like the other run modules, and `leg_amount`'s unit checks through it (SR-B1);
+  `key_diff` of a key outside its index is `RUN-DOMAIN` in the operands' words (SR-B2); a decision's entry key joins
+  its terms with `walk.DSEP`, below every identifier character, so its text sorts as E §4.1's terms (`dec_text`,
+  `dec_head`, `dec_move`; a walk point still prints `|`; SR-B4); `canon.key_comp` ranks a keyed place as a thing's key
+  under the kind-first order (SR-B5); `mreads.run_ends` is S1's test, made at `read_state`, the walked read every
+  balance takes (finding 2); `check3._units_into` gives the units load sees reach a place of unit any, a leg's written
+  unit or a row's, so `value` with no by is `LOAD-PRICE` at load (finding 3); `pin_value` records in the read's own set
+  an ask pin it met under another claim (`pin met`, P45: per result), and `print_line` drops one a line met only so (finding 4; a pin no read reaches
+  stays listed: F9's and F11's walk reads don't reach a refused result yet), and explain's two comparison derivations
+  stop that record while they run (`pin_record`, SR-C1); `balnow_items` keeps its read's loc (S9). P44: the loader
+  refuses a declared place kind whose chain states no unit or no sign (`LOAD-PLACEKIND`; the parser a bare `place`), and
+  `joint.py` runs a file's own header check where its `tally` is absent, before the versions are compared. P46: the `owns` refusal prints its row's `keys_text`.
+  Left: the run modules still raise 49 `LOAD-*` sites of 20 codes as themselves (LOAD-PRICE, LOAD-TO, LOAD-KEY in
+  evaluate, LOAD-OVERLAP, …), most likely unreachable; none is proven reachable or not.
+
 ## tally 2.1.6 (the spec round after M0: 24 issues)
 
 The spec patch tally 2.1.6 (`spec/CHANGES.md` 2.1.6-1 to 2.1.6-28), the coordinator's picks P1–P27 and, on T's

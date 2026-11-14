@@ -1,0 +1,61 @@
+# L §4.4, §5.11 (tally 2.1.7 R1, R3, issue #142; #115's P33 rows): windows in a ties by order by §4.4's comparisons,
+# and only as far as the result needs: the least window decided below every other gives the key, the others'
+# undecided order unread (p0, k0). The engine's bytes. 2.1.6's refcore refused LOAD-UNIT at run.
+=== m.tally
+model f3
+  tally 2
+  on 2025-04-01
+  start 2025-03-01
+  end 2025-03-31
+
+source card "invented"
+
+unit DUK: currency minor 0.01
+
+place p0: accounts DUK lives 2025-03-01..
+
+place p1: accounts DUK lives 2025-03-01..
+
+place p2: accounts DUK lives 2025-03-01..
+
+index ks = [k0, k1, k2]
+
+input w[p in accounts]: date
+
+input u[k in ks]: date
+
+input day: date
+
+input c0: int
+
+def f: key accounts = first(p in accounts on day) ties by w[p]
+
+def g: key ks = argmin(u[k] for k in ks)
+
+def h: key ks = argmin(c0 for k in ks) ties by u[k]
+
+ask a: f
+
+ask b: g
+
+ask c: h
+
+version v1
+  cite card
+  governs always
+  known 2025-03-01
+  day = 2025-03-15 "c"
+  c0 = 5 "c"
+  w[p0] = 2025-01-01 "c"
+  w[p1] = window(2025-02-01, 2025-02-10) "c"
+  w[p2] = window(2025-02-05, 2025-02-15) "c"
+  u[k0] = 2025-01-01 "c"
+  u[k1] = window(2025-02-01, 2025-02-10) "c"
+  u[k2] = window(2025-02-05, 2025-02-15) "c"
+=== expect
+a: p0
+...
+b: k0
+...
+c: k0
+...

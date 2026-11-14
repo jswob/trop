@@ -1,0 +1,51 @@
+# E §10 readers-of, L §6.4 (tally 2.1.7 B2, issue #133; P64): a scenario's row of b that reads a makes b a
+# reader of a at the first layer, and no scenario row prints as a node of its own: `b, c, c_sc`. 2.1.6's refcore
+# printed `c, input, b, c_sc`. (T's G11 r_agent_s1.)
+=== r_agent_s1_base.tally
+model base
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+input a: num
+
+input b: num
+
+input ld: date
+
+def c: num = b + a at ld
+
+ask r_a: readers-of a
+
+ask r_b: readers-of b
+
+ask v: c
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  a = 3
+  b = 4
+  ld = 2026-06-01
+=== r_agent_s1_sc.tally
+scenario sc over base
+  tally 2
+  from 2026-01-01
+  note "x"
+
+version sv
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  replace b = base.a * base.a "linked"
+
+ask r_a2: readers-of a in sc
+
+ask c_sc: c in sc
+=== expect r_a2 r_a
+r_a2: b, c, c_sc
+r_a: c, v

@@ -2,7 +2,6 @@ b03_lazur: (3 904.00 FLR, 16 516.65 DUK)
   assumed: B-HR4 .5 says each amount to the ort and names no mode (hr4_round)
   anchor: lazur 2025-12-01 end, stated 3 904.00 FLR, difference 0.00 FLR
   open: kessel_pay[fv_026_2025]
-  held: fx_mid = 4.2307 DUK/FLR (fx_2025_12_31), read for 2025-12-31
   law date 2025-12-31, cut 2026-01-07
 b03_november (d = 2025-11-30): (1 952.00 FLR, 8 263.21 DUK)
   assumed: B-HR4 .5 says each amount to the ort and names no mode (hr4_round)
@@ -13,7 +12,6 @@ b03_november (d = 2025-12-31): (1 952.00 FLR, 8 258.33 DUK)
   assumed: B-HR4 .5 says each amount to the ort and names no mode (hr4_round)
   unfulfilled: invoiced_flr[fv_026_2025]
   open: kessel_pay[fv_026_2025]
-  held: fx_mid = 4.2307 DUK/FLR (fx_2025_12_31), read for 2025-12-31
   law date 2025-12-31, cut 2026-01-07
 b08_balances: (8 492.03 DUK, 398.70 DUK, 786.87 DUK)
   anchor: cis 2025-10-31 end, stated 8 492.03 DUK, difference 0.00 DUK

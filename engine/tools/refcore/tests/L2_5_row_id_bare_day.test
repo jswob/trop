@@ -1,0 +1,44 @@
+# L §2.5 (tally 2.1.7 B6, issue #135) and L §2.4 Values (R9; T's SR-12): a row's id is version:target, then its
+# instant; a reading at a bare day, `px = 4 at 2026-04-01`, has the day for its instant, so its id is
+# card_2026:px 2026-04-01 (ilp, elp). 2.1.7's first refcore printed card_2026:px 2026-04-01 None.
+=== sr12.tally
+model sr12
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+input d2: date
+
+input px: num reading
+
+def lastpx: num = last(px, d2)
+
+ask ilp: inputs-of lastpx
+
+ask elp: explain lastpx
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  d2 = 2026-05-01 "c"
+  px = 3 at 2026-03-01 "march price"
+  px = 4 at 2026-04-01 "april price"
+=== expect
+elp: 4
+  [1] lastpx = 4
+      rule base: won
+        [2] row card_2026:d2 = 2026-05-01
+            version card_2026, source card, "card", locator "c", governs always, known 2026-01-01
+        [3] row card_2026:px 2026-04-01 = 4
+            version card_2026, source card, "card", locator "april price", at 2026-04-01, known 2026-01-01
+  held: px = 4 (card_2026), read for 2026-05-01
+  cut 2026-06-30
+ilp:
+  card_2026:d2 (source card "card", locator "c")
+  card_2026:px 2026-04-01 (source card "card", locator "april price")
+  held: px = 4 (card_2026), read for 2026-05-01
+  cut 2026-06-30

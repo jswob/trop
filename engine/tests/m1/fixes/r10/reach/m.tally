@@ -1,0 +1,35 @@
+model r10_reach
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.7, R10's reach (#149), from L §2.5's Keys alone: a literal takes the type its position gives, through parentheses and into both branches of an if. Features no item of R10 names: a bare key compared with a bound key, in parentheses (c_paren; twin c_bare), and a key literal in a rule's value position, in an if's branch and in parentheses (v_paren; twin v_bare)"
+
+source card "T's card (invented)"
+
+index ks = [k1, k2, k3]
+
+input w[k in ks]: num
+
+input big: bool
+
+def c_paren: num = sum(w[k] for k in ks where k == (k2))
+
+def c_bare: num = sum(w[k] for k in ks where k == k2)
+
+def v_paren: key ks = if big then (k2) else k3
+
+def v_bare: key ks = if big then k2 else k3
+
+ask c: c_paren, c_bare
+
+ask v: v_paren, v_bare
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  w[k1] = 1 "the card"
+  w[k2] = 2 "the card"
+  w[k3] = 3 "the card"
+  big = true "the card"

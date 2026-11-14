@@ -4,6 +4,18 @@ T's STOP-REPORTs (the guard's pointer, R-79): a form T wrote and ran where refco
 ruled family, held out of the vectors until it is ruled. Each in `engine/BUILD-LOG.md`'s STOP-REPORT layout, newest
 last. A held fixture stays written (`codes/m0/held.tsv`, `m0/format/held.tsv`); once ruled, it moves to the vectors.
 
+**Ruled by tally 2.1.7** (T's re-run, 2026-11-13). Every section below up to "STOP-REPORT 2026-11-11" was an item of
+the round (the plan's G1–G16) and is ruled: G1 (`adjust/bound-field`, `gifts/lifespan-zz`) by #90; REQ-CLOCK by R5
+(#144, `codes/m1/edits.tsv` `rules/clock`); the parenthesised years by R10 (#149) and S10 (#113), `m1/carried/held.tsv`
+released; `low` over no days by R6 (#145, `decide/low-empty`, `-from`); the fan-out's two refusals by R5 (#129); the
+`$u` clause by B3 (#151); NB6, NB7, NB11 by R6 (G4, G5, G8), NB9 by S5 (#152), NB10 by R2 (G7); the row id by B6
+(#135); `argmax … ties by` a hole by R1 (#116); the band figure by R9 (G9); N2, the prefix walk's legs by R1 (G10,
+G16); `by unit_price` keyed by places by R5 (G11); end-of-time ranges by B1 (G12); `pinned:` by read order by R7
+(G13); a figure in an `if` in a pin by R10 (G14); two currencies through `any` by R5 (G15); WARN-NEGATIVE through the
+walk up to a day by R1 (G3). Each item is a vector named by its rule (`m1/fixes/r<n>/`, `b<n>/`, `s<n>/`); the forms
+still noted "not stored, not built" stay for the milestones that build them. T's re-run's own findings are the last
+section, SR-1 to SR-14, ruled by P36.
+
 ## STOP-REPORT 2026-11-05: a field of an adjustment's `.adjusts` that no event has loads on the engine; refcore refuses it `LOAD-FIELD`
 
 **Resolved (2026-11-05):** the coordinator's pick P19 (a); the builder's 9d9f5a1 ("M0, G12 (2 of 2)") checks a field read through `.adjusts` by name over the event kinds, and the engine prints refcore's `LOAD-FIELD zz is not a field of events`. `adjust/adjusts-field` moved from `codes/m0/held.tsv` to `edits.tsv`, with the forms 9d9f5a1 made match: a leg and an attribute read through `.adjusts` (`adjust/adjusts-leg`, `adjust/adjusts-attr`), a bound adjustment's `.adjusts.zz` (`adjust/bound-adjusts-field`), `LOAD-FIELD` through an aggregate (`adjust/aggregate-field`). The report as filed:
@@ -142,3 +154,9 @@ last. A held fixture stays written (`codes/m0/held.tsv`, `m0/format/held.tsv`); 
 - **What I ask:** the builder prints the warnings of the days a walk up to a day walked, as the whole walk does, once per run (L §8.5); T's vector turns green.
 - **State:** the vector is in the store, red; no hold.
 - **Not stored, not built (the gate or M2):** pins under `as if` naming a binding inside an aggregate (`agent/pt/x4`–`x6`, N5), a pin naming two bindings in one part (`pt/two.tally` `p3`), an ask's `law`, `as known` and `with` pins naming its own `for` (`agent/pt/w.tally`, `x1`, `x2`, `two` `p4`; refcore crashes), rows keyed by a range of fractions (`g13-review/p/sm*`, `agent/w/rq`, `x/rg8`), a scenario's parts beside `k23` (`g13-review/s/`); a leg read by name of a plan's instance a later version made exist (E §5 step 1; `fixes/g14/t_mb5_lx.tally` `x1`: refcore `0.00 PLN`, the engine stops the run "not implemented", so `leg_field`'s five mutants on that path, `members.rs:731` `||`, `:740`, `:744` ×3, have no green input yet).
+
+## STOP-REPORTs of tally 2.1.7's re-run (T, 2026-11-13): ruled by P36
+
+SR-1 to SR-14 were ruled by P36 (2026-11-13, the coordinator under the user's standing rule, on each rule's issue):
+each was refcore or one of the spec's own texts not following a rule's text, fixed in 70e8016..a98820c; T's re-run
+on that refcore (`test(refcore)` after a98820c) released their rows and restored the forms left out.

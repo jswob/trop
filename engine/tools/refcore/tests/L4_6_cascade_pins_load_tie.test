@@ -1,0 +1,27 @@
+# L §4.6 step 4 Ties (tally 2.1.7 R4, issue #143): two pins of one set on one cell, keys written alike with no
+# variable, tie where load sees them: LOAD-OVERLAP. The literal twin of L4_6_cascade_pins' run-time tie. 2.1.6's
+# refcore let the later pin win (8).
+=== m.tally
+model c7b
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+index ks = [k1, k2]
+
+input r[k in ks]: num
+
+def tot: num = sum(r[k] for k in ks) at reader
+
+ask e: tot as if {r[k1] = 5, r[k1] = 7} law 2026-06-30
+
+version v
+  cite card
+  governs 2026..
+  known 2026-01-01
+  r[*] = 1 "c"
+=== expect
+refused: LOAD-OVERLAP pins r[k1] = 5 and r[k1] = 7 of r overlap at [k1] ...

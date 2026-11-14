@@ -1,5 +1,6 @@
-# L §3.3 accrue takes "yearly rate r": a monthly rate is refused (LOAD-UNIT; the period is in the value, found
-# at run, L §8.3).
+# L §3.3 accrue takes "yearly rate r": a monthly rate is refused; the period is in the value, found at run, so
+# tally 2.1.7 (R5, issue #144; P66 reopened) prints RUN-DOMAIN at the value with load's words (L §8.4); 2.1.6
+# printed LOAD-UNIT for the whole reality.
 === m.tally
 model t
   tally 2
@@ -27,4 +28,5 @@ version v
 
 ask q: a law 2026-06-30
 === expect
-refused: LOAD-UNIT ...
+q: refused: RUN-DOMAIN accrue takes a yearly rate, not 0.01 /month (L §3.3)
+  law date 2026-06-30, cut 2026-12-31

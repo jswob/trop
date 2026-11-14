@@ -1,0 +1,74 @@
+# L §5.5 Fan-out (tally 2.1.7 R8, issue #147; T's SR-10): every ask form fans out over the axes it reads. explain f
+# with ax = lo gives the pins, the derivation inside them, and the one outside them (E §10); outside the pins ax is
+# not pinned and f reads it, so that derivation fans out over ax's options, lo then hi (e_pinned). 2.1.7's first
+# refcore stopped outside the pins at its guard (REFCORE-NOT-YET axis ax read outside the axes the ask reaches).
+=== sr10.tally
+model sr10
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "made up"
+
+unit PLN: currency minor 0.01
+
+axis ax
+  lo "low"
+  hi "high"
+
+input p: money PLN
+
+input twice: int
+
+input asked_on: date
+
+def f: money PLN at asked_on
+  rule base = p
+  rule hi beats base = p * twice when ax == hi
+
+def plain: money PLN = p at asked_on
+
+ask c_axis: check f == plain law 2026-06-01
+
+ask c_plain: check plain == p law 2026-06-01
+
+ask e_axis: explain f law 2026-06-01
+
+ask e_pinned: explain f with ax = lo law 2026-06-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p = 10.00 PLN "the card"
+  twice = 2 "the card"
+  asked_on = 2026-06-01 "the card"
+=== expect e_pinned
+e_pinned: 10.00 PLN
+  [1] the pins, evaluated outside them
+    [2] pin ax = lo
+  [3] inside the pins: 10.00 PLN
+    [4] row v:asked_on = 2026-06-01
+        version v, source s, "made up", locator "the card", governs always, known 2026-01-01
+    [5] f = 10.00 PLN, law date 2026-06-01
+        rule base: won
+          [6] row v:p = 10.00 PLN
+              version v, source s, "made up", locator "the card", governs always, known 2026-01-01
+        rule hi: not applicable
+  [7] outside the pins [ax = lo]: 10.00 PLN
+    (v:asked_on: see [4])
+    [8] f = 10.00 PLN, law date 2026-06-01
+        rule base: won
+          (v:p: see [6])
+        rule hi: not applicable
+  [9] outside the pins [ax = hi]: 20.00 PLN
+    (v:asked_on: see [4])
+    [10] f = 20.00 PLN, law date 2026-06-01
+        rule base: beaten by hi
+        rule hi: won
+          (v:p: see [6])
+          [11] row v:twice = 2
+              version v, source s, "made up", locator "the card", governs always, known 2026-01-01
+  pinned: ax = lo
+  law date 2026-06-01, cut 2026-03-01

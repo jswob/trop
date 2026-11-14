@@ -18,7 +18,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::base::{Code, Refusal};
-use crate::eval::{Collected, Engine, world_named};
+use crate::eval::{Collected, Engine, Entry, world_named};
 use crate::model::{Reality, World};
 use crate::syntax::Stop;
 use crate::time::Day;
@@ -125,8 +125,14 @@ impl Engine {
         let Some(base) = base? else {
             return Ok(());
         };
-        let listed = listed(scenario, (&ours, &base), &facts)?;
-        self.walk_mut(id)?.listed = listed;
+        let removed = listed(scenario, (&ours, &base), &facts)?;
+        let scenario_walk = self.walk_mut(id)?;
+        for (place, day, entry) in removed {
+            let at_place = scenario_walk.adj_regs.entry(place).or_insert_with(Vec::new);
+            if !at_place.contains(&(day, entry.clone())) {
+                at_place.push((day, entry));
+            }
+        }
         Ok(())
     }
 
@@ -245,7 +251,13 @@ fn before(m: &Reality, walk: &Walk, from: Day) -> Before {
             continue;
         }
         let mut days: BTreeMap<Day, Vec<Moved>> = BTreeMap::new();
-        for ent in log.ents.iter().filter(|e| e.at.day < from) {
+        // a mark changes no balance (refcore compares balances): what decided an instance
+        // doesn't exist, an `open` instance
+        let changing = log
+            .ents
+            .iter()
+            .filter(|e| e.at.day < from && !matches!(e.change, Change::Mark));
+        for ent in changing {
             days.entry(ent.at.day).or_insert_with(Vec::new).push(Moved {
                 change: ent.change.clone(),
                 mv: ent.mv.clone(),
@@ -277,10 +289,10 @@ fn scenario_items(m: &Reality, coll: &Collected, under: World) -> BTreeSet<Strin
     unseen.map(|(_, item)| item.clone()).collect()
 }
 
-/// The `before from:` texts of the scenario's walk against its base's, sorted: one per plan
-/// instance that differs and read a fact of the scenario, `<instance> on <day> reads
-/// <items>`, or `<instance> on <day> removed by <scenario>` for one the scenario's walk no
-/// longer books, its first day that differs (ruling P45). E §9 item 3, L §6.4.
+/// The scenario's walk against its base's before `from`: each entry that differs is a hole or
+/// a refusal, or an instance's that read a fact of the scenario, or at a place such an
+/// instance changed on that day or before (ruling P45); then the base's movements the
+/// scenario removed, at their places (`removed`). E §9 item 3, L §6.4.
 ///
 /// # Errors
 ///
@@ -291,7 +303,7 @@ fn listed(
     scenario: &str,
     (ours, base): (&Before, &Before),
     facts: &Facts,
-) -> Result<Vec<String>, Stop> {
+) -> Result<Vec<(String, Day, Entry)>, Stop> {
     let mut odds = Vec::new();
     let keys: BTreeSet<&(String, String)> = ours.keys().chain(base.keys()).collect();
     for key in keys {
@@ -342,20 +354,39 @@ fn listed(
         }
         return Err(unexplained(scenario, odd));
     }
-    let mut out = Vec::new();
-    for (mv, f) in found.iter().filter(|(_, f)| !f.flagged) {
-        let day = f.day.text();
-        let items = facts.get(mv).map(|read| {
-            let names: Vec<&str> = read.items.iter().map(String::as_str).collect();
-            names.join(", ")
-        });
-        out.push(match (f.ours, items) {
-            (true, Some(items)) => format!("{mv} on {day} reads {items}"),
-            (true, None) | (false, _) => format!("{mv} on {day} removed by {scenario}"),
-        });
+    Ok(removed(scenario, (ours, base)))
+}
+
+/// The `before from:` entries of the base's movements booked before `from` that the
+/// scenario's walk doesn't book: `<movement> on <day> removed by <scenario>`, at each place
+/// the base books it, from that day (refcore's `m_inv3`, its listing; ruling P46). The legs
+/// the scenario's walk books list what they read themselves (`walk/day.rs`, `before_from`).
+/// L §8.2 `before from:`, E §9 item 3 (tally 2.1.7 R7).
+fn removed(scenario: &str, (ours, base): (&Before, &Before)) -> Vec<(String, Day, Entry)> {
+    let mut mine: BTreeSet<&str> = BTreeSet::new();
+    for moveds in ours.values().flat_map(BTreeMap::values) {
+        mine.extend(moveds.iter().filter_map(|moved| moved.mv.as_deref()));
     }
-    out.sort();
-    Ok(out)
+    let mut out: Vec<(String, Day, Entry)> = Vec::new();
+    for ((place, _), days) in base {
+        for (day, moveds) in days {
+            for mv in moveds.iter().filter_map(|moved| moved.mv.as_deref()) {
+                if mine.contains(mv) {
+                    continue;
+                }
+                let entry = Entry {
+                    word: "before from",
+                    text: format!("{mv} on {} removed by {scenario}", day.text()),
+                    figure: String::new(),
+                };
+                let listed = (place.clone(), *day, entry);
+                if !out.contains(&listed) {
+                    out.push(listed);
+                }
+            }
+        }
+    }
+    out
 }
 
 /// Whether entry `odd` follows from a listed instance: one that changed its place on its day

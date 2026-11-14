@@ -1,0 +1,12 @@
+scenario top over more
+  tally 2
+  from 2026-09-01
+  note "T, tally 2.1.7, R7 (#146; F9): a branch over a branch lists its base branch's changes before from under each result whose reads reach them, so pay's `before from:` line, which more's fee change makes, prints under top's balance too"
+
+version top_note
+  cite card
+  governs 2026-09-01..
+  known 2026-01-01
+  replace pay_day = 2026-03-01 "top restates the day"
+
+ask b2: bal(konto, 2026-12-31) in top

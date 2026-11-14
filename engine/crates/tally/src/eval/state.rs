@@ -351,6 +351,10 @@ pub struct Collected {
     /// version, a thing's entry or place a scenario states, a scenario's move a binding
     /// ranges over: the read set E §9 item 3 lists a movement by (L §6.4, ruling P45).
     pub scenario: BTreeSet<(String, String)>,
+    /// Of those, each (its section, its item) a movement booked before the scenario's `from`
+    /// lists: a row of a scenario's version, and a thing's entry a `lifespan` read met
+    /// (refcore's `Coll.rows` and `lifeof` entries; L §8.2 `before from:`, tally 2.1.7 R7).
+    pub listed: BTreeSet<(String, String)>,
     /// The rows read, by stable id, each with its version and locator: an input's, a given,
     /// a band row, a reading and an observed row, the walk's counted movements' included
     /// (refcore's `Coll.rows`). Kept only by an engine answering `inputs-of` (E §3.2, §10).
@@ -364,6 +368,17 @@ pub struct RowSeen {
     pub version: String,
     /// Its locator, where it states one.
     pub locator: Option<String>,
+}
+
+/// How a read met a thing: its `lifespan` read, which a movement before a scenario's `from`
+/// lists, or its membership tested or bound, which only explains it (L §8.2 `before from:`;
+/// E §9 item 3; tally 2.1.7 R7).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum ThingRead {
+    /// `lifespan(x)`.
+    Lifespan,
+    /// A membership test or a binding over its kind.
+    Member,
 }
 
 /// Whether the collectors keep the rows read: an engine answering `inputs-of` keeps them,
@@ -382,6 +397,7 @@ impl Collected {
         self.entries.extend(other.entries.iter().cloned());
         self.versions.extend(other.versions.iter().cloned());
         self.scenario.extend(other.scenario.iter().cloned());
+        self.listed.extend(other.listed.iter().cloned());
         for (sid, seen) in &other.rows {
             self.rows.insert(sid.clone(), seen.clone());
         }
@@ -424,6 +440,28 @@ pub(super) struct Task {
     /// The cells in progress that unwound so it could be computed from depth 0: they stay in
     /// progress until it is, then the read waiting on it replays them.
     pub unwound: Vec<CellId>,
+}
+
+/// An ask's `with` pins, by their text as the register prints them, whose meeting a read
+/// records in its own set: a read that met one under an inner or narrower claim of the cell
+/// (L §4.6's cascade) notes `pin met`, which prints nothing and travels with the result's
+/// reads, a memo cell's and each line's alike. Not while `explain` derives a comparison
+/// outside the result, which is no read of it (refcore's `ask_pin_cells`, `pin_record`).
+/// L §8.2 One read set.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub(crate) struct PinsRead {
+    /// Whether the reads record them now.
+    pub(crate) keeping: bool,
+    /// The ask's pins.
+    pub(crate) ask: BTreeSet<String>,
+}
+
+impl PinsRead {
+    /// Whether a read that met pin `text` under another claim records it.
+    #[must_use]
+    pub(crate) fn records(&self, text: &str) -> bool {
+        self.keeping && self.ask.contains(text)
+    }
 }
 
 /// The evaluator: the memo, the collector stack and the work stack (refcore's `Engine`).
@@ -542,6 +580,9 @@ pub struct Engine {
     /// The ask line's context outside its `with` pins, where it has any: an `explain`'s
     /// derivation outside them (E §10; refcore's `_outside_ctx`).
     pub(crate) unpinned: Option<Ctx>,
+    /// The pins the ask's reads took, and those they met under an inner or narrower claim:
+    /// an ask's `with` pin is listed where a read takes it (L §8.2 One read set).
+    pub(crate) pins_read: PinsRead,
     /// Each binding's written text, once: the member scopes of its aggregate share it, up to
     /// 1 000 000 of them (L §7.6 item 2, §8.2).
     pub(super) bind_texts: BTreeMap<String, Rc<str>>,
@@ -603,6 +644,7 @@ impl Engine {
             keep_rows: Rows::Unkept,
             trace: None,
             unpinned: None,
+            pins_read: PinsRead::default(),
             bind_texts: BTreeMap::new(),
             #[cfg(feature = "counters")]
             counts: crate::Counters::default(),
@@ -714,12 +756,26 @@ impl Engine {
         }
     }
 
+    /// Records a scenario's fact a movement booked before the scenario's `from` lists when it
+    /// reads it, in the read set too: a row of a scenario's version, a thing's entry a
+    /// `lifespan` read met (refcore's `Coll.rows`, `lifeof`; L §8.2 `before from:`, tally
+    /// 2.1.7 R7). E §9 item 3.
+    pub(crate) fn note_listed(&mut self, section: &str, item: &str) {
+        if let Some(top) = self.stack.last_mut() {
+            top.scenario.insert((section.to_owned(), item.to_owned()));
+            top.listed.insert((section.to_owned(), item.to_owned()));
+        }
+    }
+
     /// Records the scenarios' facts of thing `thing` a read in world `world` met: the
     /// sections of its entries, its place and its key things a scenario states (L §5.7: a
-    /// lifespan is a fact; §6.4). E §9 item 3.
-    pub(crate) fn note_thing(&mut self, m: &Reality, thing: &Thing, world: World) {
+    /// lifespan is a fact; §6.4); listed where `lifespan` read them. E §9 item 3.
+    pub(crate) fn note_thing(&mut self, m: &Reality, thing: &Thing, world: World, read: ThingRead) {
         for section in m.thing_scenario_sections(thing, world) {
-            self.note_scenario(&section, &thing.name);
+            match read {
+                ThingRead::Lifespan => self.note_listed(&section, &thing.name),
+                ThingRead::Member => self.note_scenario(&section, &thing.name),
+            }
         }
     }
 
@@ -787,9 +843,10 @@ pub(super) fn refuse(code: Run, message: String) -> Stop {
     Stop::Refused(Refusal::new(Code::Run(code), message))
 }
 
-/// A load refusal met at run, as refcore raises it there (L §8.3).
+/// A check of load's met at run, on a value load couldn't see: refused at that value in
+/// load's words, a unit's or a domain's `RUN-DOMAIN`, a key's `RUN-KEY` (L §8.4, R5).
 pub(super) fn refuse_load(code: crate::base::Load, message: String) -> Stop {
-    Stop::Refused(Refusal::new(Code::Load(code), message))
+    Stop::Refused(Refusal::new(code.at_run(), message))
 }
 
 /// A value of a type its place doesn't take, at a place whose every run-time value load

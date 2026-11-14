@@ -339,6 +339,15 @@ fn kind_spec(p: &mut P<'_>, id: &str) -> Result<KindSpec, Stop> {
 
 /// `place unit sign [priced p] [outside]`, after `kind id: place`.
 fn place_kind(p: &mut P<'_>, id: &str) -> Result<KindSpec, Stop> {
+    // unit and sign: required, `LOAD-PLACEKIND`, not `LOAD-PARSE` (L §5.7's grammar; P44)
+    let no_unit = p.done()
+        || ["signed", "min", "max", "priced", "outside"]
+            .iter()
+            .any(|word| p.at(word, 0));
+    if no_unit {
+        let message = format!("place kind {id} has no unit or sign rule");
+        return Err(p.refuse(Load::PlaceKind, message));
+    }
     let unit = if p.kind(0) == Some(&Kind::Cur) {
         p.cur()?
     } else {

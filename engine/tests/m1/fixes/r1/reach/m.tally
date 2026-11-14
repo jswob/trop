@@ -1,0 +1,48 @@
+model r1_reach
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.7, R1's reach (#140), from L §8's What a result reads alone: a value is computed from the reads its definition makes, and a branch an if doesn't take or a rule §5.11 doesn't evaluate can't refuse it. Features no item of R1 names: an if's untaken branch (i_*), a def's beaten rule and a rule whose when is false (b_*); each with its twin, the refusing part taken"
+
+source card "T's card (invented)"
+
+input n: int
+
+input z: int
+
+input big: bool
+
+def safe_if: num = if n > z then n + n else n / z
+
+def taken_if: num = if n < z then n + n else n / z
+
+def by_rule: num
+  rule base = n / z
+  rule wide beats base = n + n + n when big
+
+def by_rule_off: num
+  rule base = n + n + n
+  rule wide beats base = n / z when not big
+
+def by_rule_taken: num
+  rule base = n + n + n
+  rule wide beats base = n / z when big
+
+ask i_untaken: safe_if
+
+ask i_taken: taken_if
+
+ask b_beaten: by_rule
+
+ask b_when_false: by_rule_off
+
+ask b_taken: by_rule_taken
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  n = 6 "the card"
+  z = 0 "a division by zero, where it is read"
+  big = true "the card"

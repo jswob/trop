@@ -1,0 +1,38 @@
+# L §4.6 step 2, the layer by scope (tally 2.1.7 R4, issue #143; #120): the solve is inside the ask's `with`,
+# so its variable w[q1] is the inner claim at q1 and beats `with w[*] = 3` there; at q2 the pin holds. tot =
+# w[q1] + 3 = 10 at w[q1] = 7. 2.1.6's refcore gave the solve's pin set the item's pins (8).
+=== m.tally
+model c120
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+index qs = [q1, q2]
+
+input ten: num
+
+input w[k in qs]: num
+
+def tot: num = w[q1] + w[q2]
+
+ask s1: solve tot == ten for w[q1] in [0, 100] to 1 with w[*] = 3
+
+ask s2: tot with w[*] = 3
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  ten = 10 "c"
+  w[q1] = 1 "c"
+  w[q2] = 2 "c"
+=== expect
+s1: 7
+  pinned: w[*] = 3
+  cut 2026-03-01
+s2: 6
+  pinned: w[*] = 3
+  cut 2026-03-01

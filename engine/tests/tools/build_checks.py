@@ -66,8 +66,8 @@ def summary(snap):
 
 
 # --- the interpreter's own tests
-add(id='R:all', layer='interpreter', cwd='.', files='', options='test', baseline='1251 passed',
-    note='refcore test; same = its last line reports 1251 passed and nothing failed (tally 2.1.6, after the T re-run: P29-P31; 1243 at its first close; 1170 on 2.1.5, issue #84; 1168 on 2.1.4, issue #80; 1165 on 2.1.3, issues #58, #59, #60; 1152 on 2.1.2, the spec round; 1124 on 2.1.1, issue #13; 1115 on 2.1 after session 7c; 1105 in 7b; 950 on 2.0)')
+add(id='R:all', layer='interpreter', cwd='.', files='', options='test', baseline='1365 passed',
+    note='refcore test; same = its last line reports 1365 passed and nothing failed (tally 2.1.7 after P40-P41; 1356 after P36, 1345 before; 1251 on 2.1.6 after the T re-run: P29-P31; 1243 at its first close; 1170 on 2.1.5, issue #84; 1168 on 2.1.4, issue #80; 1165 on 2.1.3, issues #58, #59, #60; 1152 on 2.1.2, the spec round; 1124 on 2.1.1, issue #13; 1115 on 2.1 after session 7c; 1105 in 7b; 950 on 2.0)')
 
 
 # --- the run_set.py lists: one check per line, the whole output its baseline
@@ -232,10 +232,10 @@ for H, name, old, cwd, files, asks, opts, nr in runs:
             continue
         add(id=cid, layer='integration', cwd=cwd, files=' '.join(files), asks=' '.join(asks), options=' '.join(opts),
             baseline=old, block=a, question=q,
-            note=' '.join(['known-fault: %s, run with its run\'s asks; alone it is %s~alone' % (kf, cid)] + note))
+            note=' '.join(['%s retired (tally 2.1.7, 2026-11-13: alone it prints its run\'s bytes), run with its run\'s asks; alone it is %s~alone' % (kf, cid)] + note))
         add(id=cid + '~alone', layer='integration', cwd=cwd, files=' '.join(files), asks=a, options=' '.join(opts),
             baseline=old, block=a, question=q,
-            note=' '.join(['xfail: %s, the ask alone; `fixed` when it matches the baseline' % kf] + note))
+            note=' '.join(['%s retired (tally 2.1.7, 2026-11-13): the ask alone, compared with its baseline' % kf] + note))
 
 # --- the split (4.5c): capability copies under integration/split/, each differing from its original only in the
 # knob lines knobs.md names (knobdiff.py). split.tsv: K, the original checks (an id glob), the original dir, the copy,

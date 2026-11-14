@@ -1,0 +1,38 @@
+# L §2.5 Keys at a stepped range, §5.6 (tally 2.1.7 B1, issue #150; F19, P65): rows written by_frac[2] and
+# by_frac[2.0] are one key, LOAD-OVERLAP. 2.1.6's refcore loaded both. (T's G13 r_p_dup.)
+=== dup.tally
+model frac2
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "made up"
+
+input by_frac[f in 0.5 .. 2.5 step 0.5]: num
+
+input two_i: int
+
+input two_f: num
+
+ask q_int: by_frac[two_i]
+
+ask q_num: by_frac[two_f]
+
+ask q_pin: by_frac[two_i] as if {by_frac[2.0] = 8}
+
+ask q_off: by_frac[two_i + 1]
+
+ask q_sum: sum(by_frac[f] for f in 0.5 .. 2.5 step 0.5)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  by_frac[*] = 1 "the card"
+  by_frac[2] = 5 "the card"
+  by_frac[2.0] = 6 "the card"
+  two_i = 2 "the card"
+  two_f = 2.0 "the card"
+=== expect
+refused: LOAD-OVERLAP rows dup.tally:30 and dup.tally:31 of by_frac overlap at [2] in one version (dup.tally:31)

@@ -1,0 +1,24 @@
+model g12
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "made up"
+
+input fee[d in 9999-10-31 .. 9999-12-31 step 1 month]: num
+
+input at_day: date
+
+ask q_on: fee[at_day]
+
+ask q_off: fee[at_day + 1 day]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fee[9999-10-31] = 1 "the card"
+  fee[9999-11-30] = 2 "the card"
+  fee[9999-12-31] = 3 "the card"
+  at_day = 9999-11-30 "the card"

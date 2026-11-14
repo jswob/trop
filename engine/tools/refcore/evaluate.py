@@ -16,16 +16,23 @@ from . import ty as T
 from .dates import (Period, day_period, month_period, quarter_period, year_period, month_of, quarter_of, year_of,
                     add_days, add_months, age, age_months, overlap_days, last_day, WEEKDAYS, ONE_DAY, next_day,
                     end_months, END, past_days)
-from .errors import TallyError, LoadError, Refusal, Unspecified, NotYet, load_now
+from .errors import TallyError, LoadError, Refusal, Unspecified, NotYet, load_now, at_run
 from .model import (in_world, set_world, Span, visible, known_first, InputInfo, DefInfo, BandInfo, key_text, _kv,
                     wcut, WindowUndecided, row_known_sid)
-from .values import MonthDay  # noqa: E402 (GD-2)
+from .values import MonthDay, range_key  # noqa: E402 (GD-2; B1)
 from .values import (fmt_typed, Num, Int, Money, Text, Key, Thing, Code, Rec, Lst, Tup, Iv, Cal, Hole, NONE, NEVER,
                      Special, CURRENCIES, vkey, fmt, fmt_q, Mv, fmt_hole)
 
 
 def refuse(code, msg):
-    return Refusal(code, msg)
+    return at_run(code, msg)
+
+
+def after_on(m, d):
+    """A cut after the model's on, met at a value: refused there (L §8.4 RUN-DOMAIN, E §11; tally 2.1.7 R5, #112).
+    An ask line's literal cut is the request's REQ-CLOCK, checked before any ask is answered (ask.Asker.run)."""
+    if d > m.on:
+        raise refuse('RUN-DOMAIN', "known %s is after the model's on %s" % (d, m.on))
 
 
 
@@ -136,18 +143,21 @@ class EachMet(dict):
 
 class PinVal:
     """A pin with its value (L §5.11 as if)."""
-    __slots__ = ('kind', 'item', 'keys', 'fields', 'value', 'text')
+    __slots__ = ('kind', 'item', 'keys', 'fields', 'value', 'text', 'layer')
 
-    def __init__(self, kind, item, keys, fields, value, text):
+    def __init__(self, kind, item, keys, fields, value, text, layer=0):
         self.kind = kind
         self.item = item
         self.keys = keys          # tuple of key kv or None (*)
         self.fields = fields
         self.value = value
         self.text = text
+        self.layer = layer        # its scope: deeper pins are written inside (L §4.6 step 2, tally 2.1.7 R4)
 
     def key(self):
-        return (self.kind, self.item, self.keys, self.fields, vkey(self.value))
+        if self.kind == 'conflict':
+            return (self.kind, self.item, self.keys, self.fields, self.value, self.layer)
+        return (self.kind, self.item, self.keys, self.fields, vkey(self.value), self.layer)
 
     def __hash__(self):
         return hash(self.key())
@@ -198,6 +208,8 @@ class Engine:
         self.stack = [Coll()]
         self.active = set()
         self.ask_K = m.on
+        self.ask_pin_cells = {}     # an ask's with value pin's text -> the cell it pins, as printed (ask.print_line)
+        self.pin_record = True          # off while explain derives a comparison outside the result (P42)
         self.tracing = False
         self.trace_stack = []
         self.trace_cells = {}
@@ -308,7 +320,7 @@ class Engine:
         if isinstance(v, Num):
             return Num(-v.q, v.u, money=v.money, isint=v.isint, rate=v.rate, enc=enc_neg(v.enc))
         if isinstance(v, Iv):
-            return Iv(self.neg1(v.hi), self.neg1(v.lo), None, v.src)
+            return Iv(self.neg1(v.hi), self.neg1(v.lo), None, v.src, origin=v.origin)
         raise refuse('LOAD-UNIT', 'unary minus on %s' % fmt(v))
 
     def neg1(self, x):
@@ -406,8 +418,10 @@ class Engine:
     def axis_option(self, a, ctx):
         o = ctx.axis(a)
         if o is None:
-            raise NotYet('axis %s read outside the axes the ask reaches: an interpreter guard (L §5.5: the cone holds every '
-                         'axis a run reads)' % a)
+            e = NotYet('axis %s read outside the axes the ask reaches: an interpreter guard (L §5.5: the cone holds every '
+                       'axis a run reads)' % a)
+            e.axis = a     # explain outside an axis pin fans out over it (ask.explain_pins)
+            raise e
         self.cur.axes.add(a)
         return o
 
@@ -567,6 +581,7 @@ class Engine:
                     holes.append(h)
                     keys.append(None)
                     continue
+                k = range_key(k)
             else:
                 try:
                     self.check_key(k, b.dom, ctx)
@@ -603,7 +618,8 @@ class Engine:
             try:
                 self.range_member(value, b, dict(earlier), ctx, kn)
             except TallyError as e:
-                if e.code == 'LOAD-KEY':
+                # a key check made here is load's, whatever code the read it borrows prints at run (L §8.4, R5)
+                if e.code in ('LOAD-KEY', 'RUN-KEY'):
                     raise LoadError('LOAD-KEY', e.msg, loc)
                 continue
 
@@ -618,13 +634,8 @@ class Engine:
         hs = [x for x in (a, z, s) if isinstance(x, Hole)]
         if hs:
             return merge(*hs)
-        memo = self.__dict__.setdefault('_range_memo', {})
-        mk = (id(d), vkey(a), vkey(z), vkey(s) if s is not None else None)
-        vals = memo.get(mk)
-        if vals is None:
-            vals = memo[mk] = set(vkey(x) for x in self.range_values(a, z, s, b, range_is_literal(d) and d))
         kk = Int(k) if isinstance(k, int) and not isinstance(k, bool) else k
-        if vkey(kk) not in vals:
+        if not self.range_has(kk, a, z, s):
             code = 'LOAD-KEY' if getattr(kn, '_rangelit', False) and range_is_literal(d) else 'RUN-KEY'
             raise refuse(code, '%s is not a value of %s .. %s%s' % (fmt(kk), fmt(a), fmt(z),
                                                                      (' step %s' % fmt(s)) if s is not None else ''))
@@ -637,6 +648,9 @@ class Engine:
             raise refuse('RUN-NONE', '%s is none here: a key' % _ntxt(kn))
         if isinstance(v, Iv):
             raise self.imprecise(v, 'a key')
+        if dom is not None and dom[0] == 'range':
+            # a key at a stepped range's position is the value it equals (L §2.5, B1)
+            return range_key(v)
         if c == 'same':
             if isinstance(v, Num):
                 return self.int_of(v)
@@ -762,8 +776,12 @@ class Engine:
         return '%s[%s]' % (info.id, ', '.join(key_text(k) for k in keys))
 
     def pin_value(self, info, keys, ctx):
+        """The pin that holds for a cell, by L §4.6's cascade (tally 2.1.7 R4): the innermost layer (a pin written
+        inside an as if or a solve's F over the ones around it), then the narrower pin; two still tied hold at once,
+        refused at the cell (RUN-CONFLICT), as two pins whose keys only the run gives can be."""
+        hits = []
         for p in ctx.pins:
-            if p.kind not in ('set', 'solve') or p.item != info.id:
+            if p.kind not in ('set', 'solve', 'conflict') or p.item != info.id:
                 continue
             if p.keys is not None:
                 ok = True
@@ -773,12 +791,39 @@ class Engine:
                         break
                 if not ok:
                     continue
-            if p.fields:
-                return ('fields', p)
-            if p.kind == 'set':
-                self.reg(('pinned', p.text))
-            return p.value
-        return NOPIN
+            hits.append(p)
+        if not hits:
+            return NOPIN
+        met = list(hits)
+        top = max(p.layer for p in hits)
+        hits = [p for p in hits if p.layer == top]
+
+        def inside(p, q):
+            # p's keys are q's or lie inside them at every position (a key inside *)
+            if q.keys is None:
+                return True
+            if p.keys is None:
+                return False
+            return all(qk is None or pk == qk for pk, qk in zip(p.keys, q.keys))
+        best = [p for p in hits if all(inside(p, q) for q in hits)]
+        if len(best) != 1 or best[0].kind == 'conflict':
+            pair = best[0].value if best and best[0].kind == 'conflict' else (hits[0].text, hits[1].text)
+            raise refuse('RUN-CONFLICT', 'pins %s and %s both hold for %s' % (pair[0], pair[1],
+                                                                                self.origin(info, keys)))
+        p = best[0]
+        if self.ask_pin_cells and self.pin_record:
+            # L §8.2 One read set (R7; the review's finding 4): an ask's with pin is listed where a read takes it (its
+            # `pinned:` entry, below), not where an inner or narrower claim of the cell (an as if, a solve's variable;
+            # R4's cascade) gave the read: that read's set records the pin it met, `pin met`, which prints nothing and
+            # travels with the result's reads, a memo cell's and each fan-out line's alike (P45)
+            for q in met:
+                if q is not p and q.kind == 'set' and q.text in self.ask_pin_cells:
+                    self.reg(('pin met', q.text))
+        if p.fields:
+            return ('fields', p)
+        if p.kind == 'set':
+            self.reg(('pinned', p.text))
+        return p.value
 
     def apply_field_pins(self, info, keys, ctx, v):
         """A pin on a record field pins that field (L §5.11)."""
@@ -975,7 +1020,9 @@ class Engine:
                     out.append(r)
                     continue
                 if last_before is not None:
-                    if sp.always or sp.start is None or sp.start > last_before:
+                    # L §4.6 Past the last row: the rows whose span began on or before d, one with no start or that
+                    # governs always included (tally 2.1.7 R6, #118)
+                    if not sp.always and sp.start is not None and sp.start > last_before:
                         continue
                 elif not sp.contains(d):
                     continue
@@ -1025,7 +1072,8 @@ class Engine:
                 self.reg(('held', '%s = %s (%s), read for %s' % (org, fmt(v) if not isinstance(v, Hole) else '?',
                                                                   r.version.id, per)))
         if isinstance(v, Iv):
-            v = Iv(v.lo, v.hi, v.days, v.src, origin=(r.sid, org))
+            # the read names the unknown day (tally 2.1.7 R3, L §4.4): its row and cell
+            v = Iv(v.lo, v.hi, v.days, v.src, origin=(r.sid, org), name=('row', r.sid, org))
             v = self.window_choice(v, ctx)
         if isinstance(v, Num) and any(b.startswith('$') for b, e in v.u):
             # a per-unit price num PLN/u takes the key it is read at (L §3.2)
@@ -1256,29 +1304,47 @@ class Engine:
         if isinstance(dv, Hole):
             return dv
         d = self.date_of(dv, 'the day of last')
-        pv = self.pin_value(info, keys, ctx)
-        if pv is not NOPIN and not isinstance(pv, tuple):
-            return pv
-        org = self.origin(info, keys)
-        try:
-            cands = self.candidates(info.rows, keys, d, ctx, info, last_before=d)
-        except HoleSignal as h:
-            return h.hole
-        if not cands:
+        v = self.last_value(info, keys, d, ctx)
+        if v is NONE:
+            org = self.origin(info, keys)
             if info.reading:
                 # L §4.6 Readings: "With no reading on or before d, last and since are holes (HOLE-NOREADING)"; L §8.1:
                 # "<x>[k] has no reading on or before <d>"
                 return Hole([('%s has no reading on or before %s' % (org, d), org)])
             return self.no_candidate(info, keys, ctx, d, None)
+        return v
+
+    def last_value(self, info, keys, d, ctx):
+        """last(x[k], d), the one carry every form defined by it reads (L §4.6; `by last(p)`, `priced last(p)`,
+        L §5.10; tally 2.1.7 R6, #118, #123): the latest row whose span began on or before d (the latest reading for
+        a reading), marked held unless it governs always; NONE where no row began."""
+        pv = self.pin_value(info, keys, ctx)
+        if pv is not NOPIN and not isinstance(pv, tuple):
+            return pv
+        try:
+            cands = self.candidates(info.rows, keys, d, ctx, info, last_before=d)
+        except HoleSignal as h:
+            return h.hole
+        if not cands:
+            return NONE
+
+        def began(c):
+            sp = c.span(ctx.cut)
+            return datetime.date.min if sp.always or sp.start is None else sp.start
         if info.reading:
             latest = max(c.instant[0] for c in cands)
             cands = [c for c in cands if c.instant[0] == latest]
         else:
-            latest = max(c.span(ctx.cut).start for c in cands)
-            cands = [c for c in cands if c.span(ctx.cut).start == latest]
+            latest = max(began(c) for c in cands)
+            cands = [c for c in cands if began(c) == latest]
         row = self.choose(cands, info, 'last')
         v = self.row_value(row, info, keys, ctx, None, None)
-        self.reg(('held', '%s = %s (%s), read for %s' % (org, fmt(v), row.version.id, d)))
+        sp = row.span(ctx.cut)
+        # held where it is read past its row's span (L §4.6, §8.2; tally 2.1.7 R7, P31): a reading past its instant's
+        # day, a state row past its span's end; a row that governs always is timeless
+        past = (d > row.instant[0]) if info.reading else (not sp.always and sp.end is not None and d >= sp.end)
+        if past:
+            self.reg(('held', '%s = %s (%s), read for %s' % (self.origin(info, keys), fmt(v), row.version.id, d)))
         return v
 
     def e_call_since(self, n, env, ctx):
@@ -1496,7 +1562,7 @@ class Engine:
             self.cur.merge(coll)
             if err is not None:
                 raise err
-            return v
+            return self.named(v, info, keys, ctx)
         if ck in self.active:
             if ck in getattr(self, '_walk_outer', ()):
                 # a walk started inside this cell's evaluation needs it (mreads.m_guarded_walk): from here on, what
@@ -1520,6 +1586,8 @@ class Engine:
                     return v
             tn = TraceNode('def', self.origin(info, keys))
             tn.law = ctx.law
+            tn.def_id = info.id     # the fold of a chain of one def's cells (E §10; tally 2.1.7 S4, #131)
+            tn.keys = keys
             if self.trace_stack:
                 self.trace_stack[-1].children.append(('node', tn))
             self.trace_cells[ck] = tn
@@ -1543,7 +1611,47 @@ class Engine:
         self.cur.merge(c)
         if err is not None:
             raise err
-        return v
+        return self.named(v, info, keys, ctx)
+
+    def named(self, v, info, keys, ctx):
+        """A def's read names the unknown day its value is (tally 2.1.7 R3, L §4.4): a copy keeps the name of the read
+        it copies; a computed window, which has none, takes the def's cell, its keys and the law date, cut and pins it
+        depends on (E §3.2: the context trimmed to the def's cone), so two reads of one cell are one value and a pin the
+        def doesn't read doesn't rename it (F8)."""
+        if not isinstance(v, Iv) or v.name is not None:
+            return v
+        cone = self.def_cone(info.id)
+        pins = ctx.pins if cone is None else tuple(q for q in ctx.pins if getattr(q, 'item', None) in cone)
+        nm = ('def', info.id, tuple(_kv(k) for k in keys), ctx.law, ctx.cut, tuple(repr(q.key()) for q in pins),
+              ctx.axes, ctx.windows, ctx.world, ctx.path)
+        return Iv(v.lo, v.hi, v.days, v.src, origin=v.origin, name=nm)
+
+    def def_cone(self, qid):
+        """The ids of the items a def's cone reaches, or None when it reaches movements or balances (whose walk any pin
+        may reach)."""
+        cache = self.m.__dict__.setdefault('_def_cone', {})
+        if qid in cache:
+            return cache[qid]
+        ch = getattr(self.m, 'checker', None)
+        out = None
+        if ch is not None:
+            seen = set()
+            stack = [('def', qid)]
+            plain = True
+            while stack and plain:
+                x = stack.pop()
+                if x in seen:
+                    continue
+                seen.add(x)
+                if x[0] not in ('def', 'input', 'band', 'axis'):
+                    plain = False
+                    break
+                for t in ch.edges.get(x, {}):
+                    stack.append(t)
+            if plain:
+                out = frozenset(x[1] for x in seen)
+        cache[qid] = out
+        return out
 
     def coerce_def(self, info, v):
         t = info.type
@@ -1797,18 +1905,24 @@ class Engine:
     def _table_of(self, cands, info, key, d):
         if not cands:
             return None
-        best = max(cands, key=lambda t: known_first(t.version.known))
-        top = [t for t in cands if known_first(t.version.known) == known_first(best.version.known)]
+        # L §4.6 steps 2 to 4 (tally 2.1.7 R4): the innermost layer's tables stand above the layers below, whatever
+        # their known dates; inside the layer, known dates and replace decide
+        from .loader import version_layer
+        top_l = max(version_layer(self.m, t.version) for t in cands)
+        lay = [t for t in cands if version_layer(self.m, t.version) == top_l]
+        below = [t for t in cands if version_layer(self.m, t.version) < top_l]
+        best = max(lay, key=lambda t: known_first(t.version.known))
+        top = [t for t in lay if known_first(t.version.known) == known_first(best.version.known)]
         if len(top) > 1:
             raise refuse('LOAD-OVERLAP', 'band %s: two tables known the same day' % info.id)
         t = top[0]
         if not t.replace:
-            others = [o for o in cands if o is not t]
+            others = [o for o in lay if o is not t]
             if others:
                 raise refuse('LOAD-OVERLAP', 'band %s: tables overlap without replace' % info.id)
             return [(r, t) for r in t.rows]
-        base = self._table_of([o for o in cands if known_first(o.version.known) < known_first(t.version.known)],
-                              info, key, d)
+        base = self._table_of([o for o in lay if known_first(o.version.known) < known_first(t.version.known)]
+                              + below, info, key, d)
         if base is None:
             # L §5.9 Rows replaced: "On a day of its span where no table is in force, only a whole table stands, as an
             # input's replace row is its value where no earlier row governs; a patch there is refused (LOAD-REPLACE)"
@@ -2079,6 +2193,12 @@ class Engine:
         ix = self.m.indexes.get(n.l._t.ix)
         if ix is None:
             raise refuse('LOAD-UNIT', 'the difference of two things of a kind')
+        if isinstance(a, OutKey) or isinstance(b, OutKey):
+            # L §3.2 Differences: two keys differ by their positions; key arithmetic outside the index has none, and
+            # in a value position it is no key, so the difference has no meaning for its values: load's check met at
+            # run, RUN-DOMAIN in the operands' words (§8.4 R-load), as `0.1 + q1` is (SR-B2)
+            raise refuse('LOAD-UNIT', '%s %s %s' % (a.text if isinstance(a, OutKey) else fmt(a), n.op,
+                                                    b.text if isinstance(b, OutKey) else fmt(b)))
         if ix.isint:
             return Int(self.int_of(a) - self.int_of(b))
         if ix.pk is not None:
@@ -2143,12 +2263,9 @@ class Engine:
             if a.kind == 'month':
                 s = add_months(a.start, k)
                 return Period(a.kind, s, end_months(s, 1), 'month', a.n) if a.n == 1 else a.shift(k)
-            if a.kind == 'quarter':
-                return a.shift(k)
-            # a year moves by years
-            s = add_months(a.start, 12 * k)
-            return Period('year', s, end_months(a.start, 12 * (k + 1)) if a.n == 12 else end_months(s, a.n), 'month',
-                          a.n)
+            # a quarter or a year moves by whole keys of its index, k steps of n months (L §4.2; tally 2.1.7 B5, #98:
+            # a key of a year index by 2 plus 2 years is the next key)
+            return a.shift(k)
         raise refuse('LOAD-UNIT', '%s %s %s' % (fmt(a), op, fmt(b)))
 
     def iv_arith(self, n, a, b, ctx):
@@ -2162,10 +2279,12 @@ class Engine:
             hi = self.binop_plain(n, a, b.hi, ctx)
             src = b.src
         else:
-            raise self.imprecise(a, 'arithmetic on two windows')
+            # two windows: the interval over every corner of their ends (tally 2.1.7 R3, the natural extension)
+            return self.lift(lambda x, y: self.binop_plain(n, x, y, ctx), a, b)
         if order_lt(hi, lo):
             lo, hi = hi, lo
         org = a.origin if isinstance(a, Iv) else b.origin
+        # a computed value: no name (tally 2.1.7 R3, L §4.4: only a copy is the same unknown)
         return Iv(lo, hi, None, src, origin=org)
 
     def binop_plain(self, n, a, b, ctx):
@@ -2346,8 +2465,14 @@ class Engine:
     def iv_compare(self, op, a, b, n):
         """A comparison on a window is decided when the whole interval lies on one side;
         a value compared with itself is decided (L §4.4)."""
-        if isinstance(a, Iv) and isinstance(b, Iv) and a.origin is not None and a.origin == b.origin:
+        if isinstance(a, Iv) and isinstance(b, Iv) and a.name is not None and a.name == b.name:
+            # a window taken with its own name: one unknown day (tally 2.1.7 R3: only a copy is the same unknown)
             return {'==': True, '!=': False, '<': False, '<=': True, '>': False, '>=': True}[op]
+        a, b = one_day(a), one_day(b)
+        if not isinstance(a, Iv) and not isinstance(b, Iv):
+            # a window of one day is that day (tally 2.1.7 R3, F3)
+            c = self.cmp3(a, b, None)
+            return {'==': c == 0, '!=': c != 0, '<': c < 0, '<=': c <= 0, '>': c > 0, '>=': c >= 0}[op]
         alo, ahi = (a.lo, a.hi) if isinstance(a, Iv) else (a, a)
         blo, bhi = (b.lo, b.hi) if isinstance(b, Iv) else (b, b)
         # outcomes at the extremes
@@ -2490,6 +2615,8 @@ class Engine:
         tn.children.append(('node', outside))
         self.trace_stack.append(outside)
         self.stack.append(Coll())   # the outside derivation adds nothing to the result's register
+        # nor to the ask pins its reads took (L §8.2 One read set; T's SR-C1, P42: explain lists what the result read)
+        record, self.pin_record = self.pin_record, False
         try:
             try:
                 vo = self.ev(n.e, env, ctx)
@@ -2500,6 +2627,7 @@ class Engine:
                     raise
                 vo = e
         finally:
+            self.pin_record = record
             self.stack.pop()
             self.trace_stack.pop()
         outside.label = 'outside the as if: %s' % _tfmt(vo)
@@ -2560,6 +2688,8 @@ class Engine:
 
     def apply_pins_(self, pins, env, ctx, ask, holes):
         pinsv = list(ctx.pins)
+        # this set's scope: inside every pin already in force (L §4.6 step 2, tally 2.1.7 R4)
+        layer = 1 + max((q.layer for q in pinsv), default=0)
         law = ctx.law
         cut = ctx.cut
         axes = dict(ctx.axes)
@@ -2590,6 +2720,7 @@ class Engine:
                 if p.kind == 'law':
                     law = d
                 elif p.kind == 'known':
+                    after_on(self.m, d)
                     cut = d
                 else:
                     for i in p.ids:
@@ -2653,12 +2784,19 @@ class Engine:
                     # (`pinned: gross = g for g in gross_lo .. gross_hi step minor(DUK)`), never one line per tuple
                     text = '%s for %s' % (p._src, ', '.join(b._src for b in p._pertuple))
                 pv = PinVal('set', info.id, tuple(keys) if p.target.keys is not None else None, tuple(p.fields), v,
-                            text)
-                pinsv = [q for q in pinsv if q.key()[:4] != pv.key()[:4]]
+                            text, layer)
+                same = [q for q in pinsv if q.key()[:4] == pv.key()[:4] and q.layer == layer]
+                if same:
+                    # two pins of this set on one cell, their keys given by the run (load refuses the ones it sees,
+                    # check.pin_ties): the cell is refused where it is read (tally 2.1.7 R4, L §4.6 step 4)
+                    pv = PinVal('conflict', info.id, pv.keys, pv.fields, (same[0].text, text), text, layer)
+                pinsv = [q for q in pinsv if q.key()[:4] != pv.key()[:4] or q.layer != layer]
                 pinsv.append(pv)
                 if ask:
-                    # an ask's with pins are printed with every line (L §5.18 The world of an ask)
+                    # an ask's with pins are listed with its lines (L §5.18, §8.2), but not where every read of the
+                    # cell an ask's reads met took an inner or narrower claim (R7, R4; ask.print_line, pin_value)
                     self.reg(('pinned', text))
+                    self.ask_pin_cells[text] = text.split(' = ')[0]
         return ctx.but(law=law, cut=cut, pins=tuple(sorted(pinsv, key=lambda q: repr(q.key()))),
                        axes=tuple(sorted(axes.items())), wording=tuple(wording), world=world)
 
@@ -2801,6 +2939,83 @@ class Engine:
             vals = self.range_values(a, z, s, b, range_is_literal(d) and d)
         return vals, None, past
 
+    def range_one_value(self, a, z, s):
+        """A range's ends and step each need one value (L §4.4, Only a comparison decides an interval; tally 2.1.7
+        R3, T's SR-9): an undecided interval there is HOLE-IMPRECISE; 2.1.7's first refcore stepped by it and
+        crashed."""
+        for v, what in ((a, 'a range end'), (z, 'a range end'), (s, 'a range step')):
+            if isinstance(v, Iv):
+                raise self.imprecise(v, what)
+
+    def day_step(self, a, s, i):
+        """A day range's i-th value, a + i·s (L §2.5), computed from a, so a month step from the 31st keeps the 31st
+        where the month has it."""
+        fake = type('N', (), {})()
+        fake.op = '+'
+        return self.date_arith(fake, a, Num(s.q * i, s.u, isint=s.isint))
+
+    def range_has(self, k, a, z, s):
+        """Whether k is one of a stepped range's values, a + i·s <= z for a whole i >= 0 (L §2.5), by arithmetic on
+        the value (tally 2.1.7, B1; #134a, F19, G12): a number compared by value in a's unit, so 2 is the value 2.0; a
+        day stepped from a only up to k, so a range near 9999-12-31 is never stepped past it."""
+        self.range_one_value(a, z, s)
+        if isinstance(a, datetime.date):
+            if not isinstance(k, datetime.date):
+                return False
+            z = self.date_of(z, 'a range end')
+            if k < a or k > z:
+                return False
+            if k == a:
+                return True
+
+            def at(i):
+                # a + i·s, or None past 9999-12-31 (so past z too)
+                try:
+                    return self.day_step(a, s, i)
+                except TallyError as e:
+                    if e.code == 'RUN-LIMIT':
+                        return None
+                    raise
+            first = at(1)
+            if first is not None and first <= a:
+                # L §8.4 RUN-DOMAIN `a stepped range whose step <s> is not positive` (tally 2.1.7 S7, X1)
+                raise refuse('RUN-DOMAIN', 'a stepped range whose step %s is not positive' % fmt(s))
+            # a positive step's values rise with i, so the first at or after k is found by bisection, not by stepping
+            # from a (tally 2.1.7, T's SR-11: a count over 20 years of days stepped 26 million times, 0.8 s -> 329 s)
+            lo, hi = 0, 1
+            while True:
+                v = at(hi)
+                if v is None or v >= k:
+                    break
+                lo, hi = hi, hi * 2
+            while hi - lo > 1:
+                mid = (lo + hi) // 2
+                v = at(mid)
+                if v is None or v >= k:
+                    hi = mid
+                else:
+                    lo = mid
+            return at(hi) == k
+        self.no_none(a, 'a range end')
+        self.no_none(z, 'a range end')
+        if not isinstance(k, Num) or isinstance(k, bool):
+            return False
+        if s is None:
+            lo, hi = self.int_of(a), self.int_of(z)
+            return k.q.denominator == 1 and not k.u and lo <= k.q <= hi
+        if s.q <= 0:
+            raise refuse('RUN-DOMAIN', 'a stepped range whose step %s is not positive' % fmt(s))
+        f = U.conv(z.u, a.u) if a.u != z.u else Fraction(1)
+        g = U.conv(s.u, a.u) if a.u != s.u else Fraction(1)
+        h = U.conv(k.u, a.u) if a.u != k.u else Fraction(1)
+        if f is None or g is None:
+            raise refuse('LOAD-UNIT', 'a range of quantities in different units')
+        if h is None:
+            return False
+        kq = k.q * h
+        i = (kq - a.q) / (s.q * g)
+        return i >= 0 and i.denominator == 1 and kq <= z.q * f
+
     def range_values(self, a, z, s, b, lit=None):
         """A stepped range's values, a + i·s <= z (L §2.5). L §7.6 item 2 (tally 2.1.6, issue #89): at most 1 000 000
         of them, LOAD-LIMIT where its ends and step are literals (lit, the range's node), which load sees, RUN-LIMIT
@@ -2812,17 +3027,21 @@ class Engine:
             if lit:
                 return LoadError('LOAD-LIMIT', msg, getattr(lit, 'loc', None))
             return Refusal('RUN-LIMIT', msg)
+        self.range_one_value(a, z, s)
         out = []
         if isinstance(a, datetime.date):
             z = self.date_of(z, 'a range end')
-            cur = a
-            fake = type('N', (), {})()
-            fake.op = '+'
+            cur, i = a, 0
             while cur <= z:
                 out.append(cur)
-                nxt = self.date_arith(fake, cur, s)
+                i += 1
+                # L §7.6 item 1 (tally 2.1.7 B1, T's SR-2): a range's next key past 9999-12-31 is refused (RUN-LIMIT),
+                # as every day computed outside Tally's is, before its keys are counted (item 2); 2.1.7's first
+                # refcore stopped there and answered
+                nxt = self.day_step(a, s, i)
                 if nxt <= cur:
-                    raise refuse('RUN-DOMAIN', 'a stepped range whose step is not positive')
+                    # L §8.4 RUN-DOMAIN `a stepped range whose step <s> is not positive` (tally 2.1.7 S7, X1)
+                    raise refuse('RUN-DOMAIN', 'a stepped range whose step %s is not positive' % fmt(s))
                 cur = nxt
                 if len(out) > 1000000:
                     raise too_many()
@@ -2848,7 +3067,7 @@ class Engine:
             raise too_many()
         n = 0
         while cur <= stop:
-            out.append(Num(cur, a.u, money=a.money, isint=a.isint and step.denominator == 1))
+            out.append(range_key(Num(cur, a.u, money=a.money, isint=a.isint and step.denominator == 1)))
             cur += step
             n += 1
             if n > 1000000:
@@ -2894,14 +3113,19 @@ class Engine:
             raise self.imprecise(v, 'a span end')
         raise refuse('LOAD-UNIT', 'a span end is %s' % fmt(v))
 
-    def members(self, binds, env, ctx, i=0, status=None, possible=False, regs=None):
+    def members(self, binds, env, ctx, i=0, status=None, possible=False, regs=None, reverse=False, defer=None):
         """Yield (env, status) over the binding tuples in binding order; status is True, or a
         Hole when a where is a hole (an unknown member). With possible, a binding whose day or span is a hole
         yields every member it could hold, each an unknown member carrying that hole (a fill side, L §5.12). With
         regs (a list), each tuple's members' registers are kept for it, not merged: (env, status, [Coll]) (an ask's
-        for, one line per tuple, L §8.2)."""
+        for, one line per tuple, L §8.2). The tuples are yielded lazily, each where read when its tuple is reached
+        (tally 2.1.7 R1: a value reads only what its definition reads); with reverse, from the last tuple (each
+        binding's members from its last); with defer (a list), the wheres aren't read: each tuple carries the list of
+        its wheres, (env, status, [Coll], [where]), for a reader that orders the tuples first (where_status)."""
         if i == len(binds):
-            if regs is not None:
+            if defer is not None:
+                yield env, (status if status is not None else True), regs, defer
+            elif regs is not None:
                 yield env, (status if status is not None else True), regs
             else:
                 yield env, (status if status is not None else True)
@@ -2913,13 +3137,15 @@ class Engine:
         if isinstance(res, Hole):
             cands = self.possible_members(b, ctx) if possible else None
             if cands is None:
-                if regs is not None:
+                if defer is not None:
+                    yield env, ('domainhole', res), regs, defer
+                elif regs is not None:
                     yield env, ('domainhole', res), regs
                 else:
                     yield env, ('domainhole', res)
                 return
             res = [(v, res) for v in cands]
-        for v, s0 in res:
+        for v, s0 in (list(res)[::-1] if reverse else res):
             if isinstance(s0, TallyError):
                 raise s0
             e2 = dict(env)
@@ -2927,7 +3153,10 @@ class Engine:
             st = status
             if isinstance(s0, Hole):
                 st = s0 if st is None or st is True else merge(st, s0)
-            if b.where is not None:
+            d2 = defer
+            if b.where is not None and defer is not None:
+                d2 = defer + [b.where]
+            elif b.where is not None:
                 w = self.ev(b.where, e2, ctx)
                 if w is False:
                     continue
@@ -2943,7 +3172,7 @@ class Engine:
                         r2 = regs + [mc]
                     else:
                         self.cur.merge(mc)
-            for x in self.members(binds, e2, ctx, i + 1, st, possible, r2):
+            for x in self.members(binds, e2, ctx, i + 1, st, possible, r2, reverse, d2):
                 yield x
 
     def safe_order_key(self, t, kind, K):
@@ -3105,10 +3334,12 @@ class Engine:
             his = [t.hi if isinstance(t, Iv) else t for t in ts]
             pick = (lambda xs: self.extreme(xs, fn))
             lo, hi = pick(los), pick(his)
-            src = [t for t in ts if isinstance(t, Iv)][0].src
+            first = [t for t in ts if isinstance(t, Iv)][0]
             if self.cmp3(lo, hi, None) == 0:
                 return lo
-            return Iv(lo, hi, None, src)
+            # a computed interval has no name, but its questions name the read it came from (L §8.1; tally 2.1.7
+            # R3, T's SR-5): the first window's
+            return Iv(lo, hi, None, first.src, origin=first.origin)
         return self.extreme(ts, fn, n)
 
     def extreme(self, ts, fn, n=None):
@@ -3134,30 +3365,37 @@ class Engine:
         best = None
         ivs = [t for e2, t in terms if isinstance(t, Iv)]
         if ivs:
-            # windows: "argmin and argmax give the key whose value is decided below (above) every other key's,
-            # and otherwise HOLE-IMPRECISE" (L §5.11, §4.4)
-            def lo(t):
-                return t.lo if isinstance(t, Iv) else t
-
-            def hi(t):
-                return t.hi if isinstance(t, Iv) else t
-            wins = []
+            # windows (tally 2.1.7 R3, L §4.4): the key least (greatest) for every day the windows can take; the
+            # candidates equal there on every day (one name, or one known value) are a tie, which ties by breaks
+            # (P32); otherwise HOLE-IMPRECISE
+            sign = -1 if fn == 'argmin' else 1
+            best = None
             for i, (e2, t) in enumerate(terms):
+                group = [(e2, t)]
                 ok = True
                 for j, (e3, u) in enumerate(terms):
                     if i == j:
                         continue
-                    if fn == 'argmin' and not self.cmp3(hi(t), lo(u), None) < 0:
+                    try:
+                        c = self.win_cmp(t, u, fn)
+                    except HoleSignal:
                         ok = False
                         break
-                    if fn == 'argmax' and not self.cmp3(lo(t), hi(u), None) > 0:
+                    if c == 0:
+                        group.append((e3, u))
+                    elif c != sign:
                         ok = False
                         break
                 if ok:
-                    wins.append(e2)
-            if len(wins) == 1:
-                return self.bare_key(n, wins[0])
-            raise self.imprecise(ivs[0], fn)
+                    best = group
+                    break
+            if best is None:
+                raise self.imprecise(ivs[0], fn)
+            if len(best) > 1:
+                best = self.tie_break(n, best, ctx)
+                if isinstance(best, Hole):
+                    return best
+            return self.bare_key(n, best[0][0])
         for e2, t in terms:
             if best is None:
                 best = [(e2, t)]
@@ -3169,34 +3407,98 @@ class Engine:
                 best.append((e2, t))
         if len(best) > 1:
             best = self.tie_break(n, best, ctx)
+            if isinstance(best, Hole):
+                return best
         return self.bare_key(n, best[0][0])
 
+    def tie_order(self, fn, cands, term, n_terms, j=0, desc=False):
+        """The order `ties by (e1, e2, …)` gives (L §5.11; tally 2.1.7 R1, #116; R3): e1 is read for every candidate,
+        and each later term only among the candidates the terms before it leave tied. A generator of groups, least
+        first (greatest with desc), those still tied after the last term together, each group found only when it is
+        needed, by L §4.4's comparisons (win_cmp: windows by their names and ends); it yields a Hole, and stops, where
+        a term read is one or the next group is undecided (the least of a hole is a hole). term(c, j) reads term j."""
+        if j > 0 and len(cands) <= 1:
+            yield list(cands)
+            return
+        vals = []
+        holes = []
+        for c in cands:
+            v = term(c, j)
+            if isinstance(v, Hole):
+                holes.append(v)
+                continue
+            if v is NONE:
+                raise refuse('RUN-NONE', 'the ties by of %s is none here' % fn)
+            vals.append((v, c))
+        if holes:
+            yield merge(*holes)
+            return
+        what = 'the ties by of %s' % fn
+        rest = vals
+        while rest:
+            pick = None
+            undecided = None
+            for v, c in rest:
+                grp = []
+                ok = True
+                for x in rest:
+                    try:
+                        k = self.win_cmp(v, x[0], what)
+                    except HoleSignal as hs:
+                        undecided = undecided or hs.hole
+                        ok = False
+                        break
+                    if (k > 0 and not desc) or (k < 0 and desc):
+                        ok = False
+                        break
+                    if k == 0:
+                        grp.append(x)
+                if ok:
+                    pick = grp
+                    break
+            if pick is None:
+                yield undecided if undecided is not None else Hole([('%s: no least candidate' % what, fn)])
+                return
+            taken = set(id(x) for x in pick)
+            rest = [x for x in rest if id(x) not in taken]
+            sub = [d for u, d in pick]
+            if len(sub) > 1 and j + 1 < n_terms:
+                for g in self.tie_order(fn, sub, term, n_terms, j + 1, desc):
+                    yield g
+                    if isinstance(g, Hole):
+                        return
+            else:
+                yield sub
+
+    def win_cmp(self, a, b, what):
+        """Two values ordered by L §4.4's comparisons (tally 2.1.7 R3): a window with its own name is equal to it, one
+        wholly below another is less, a window of one day is that day; otherwise HOLE-IMPRECISE (a HoleSignal)."""
+        a, b = one_day(a), one_day(b)
+        if not isinstance(a, Iv) and not isinstance(b, Iv):
+            return self.cmp3(a, b, None)
+        if isinstance(a, Iv) and isinstance(b, Iv) and a.name is not None and a.name == b.name:
+            return 0
+        alo, ahi = (a.lo, a.hi) if isinstance(a, Iv) else (a, a)
+        blo, bhi = (b.lo, b.hi) if isinstance(b, Iv) else (b, b)
+        if self.cmp3(ahi, blo, None) < 0:
+            return -1
+        if self.cmp3(alo, bhi, None) > 0:
+            return 1
+        raise self.imprecise(b if isinstance(b, Iv) else a, what)
+
     def tie_break(self, n, tied, ctx):
+        """argmin and argmax among tied candidates: the one with the least ties by term (L §5.11), read as tie_order
+        reads it; a Hole when a term it reads is one."""
         if not n.tie:
             raise refuse('RUN-TIE', '%s has a tie at %s that changes the result, and no ties by' % (
                 n.fn, ', '.join(fmt(self.bare_key(n, e2)) for e2, t in tied)))
-        scored = []
-        for e2, t in tied:
-            vals = [self.ev(x, e2, ctx) for x in n.tie]
-            for v in vals:
-                if isinstance(v, Hole):
-                    return [(e2, v)]
-            scored.append((vals, e2, t))
-        best = [scored[0]]
-        for s in scored[1:]:
-            c = 0
-            for a, b in zip(s[0], best[0][0]):
-                c = self.cmp3(a, b, None)
-                if c:
-                    break
-            if c < 0:
-                best = [s]
-            elif c == 0:
-                best.append(s)
-        if len(best) > 1:
+        g = next(self.tie_order(n.fn, tied, lambda c, j: self.ev(n.tie[j], c[0], ctx), len(n.tie)))
+        if isinstance(g, Hole):
+            return g
+        if len(g) > 1:
             raise refuse('RUN-TIE', '%s has a tie at %s that changes the result, and its ties by doesn\'t break it' % (
-                n.fn, ', '.join(fmt(self.bare_key(n, s[1])) for s in best)))
-        return [(best[0][1], best[0][2])]
+                n.fn, ', '.join(fmt(self.bare_key(n, e2)) for e2, t in g)))
+        return g
 
     def unordered_what(self, b):
         """What a binding ranges over when it has no order a rule can read (L §5.7, §5.6): 'things', 'movements',
@@ -3220,25 +3522,36 @@ class Engine:
             # L §5.11 Ties are stated; L §8.4 RUN-TIE: "<first or last> over <things, movements or open-index keys>
             # has no ties by"
             raise refuse('RUN-TIE', '%s over %s has no ties by' % (n.fn, un[0]))
-        mem = list(self.members(n.binds, env, ctx, regs=[]))
-        for e2, st, rg in mem:
-            if isinstance(st, tuple) and st[0] == 'domainhole':
-                return st[1]
+        # tally 2.1.7 R1 (#117): the wheres are read in the order first and last run in, stopping at the first key
+        # whose where is true; over things, movements or an open index's keys that order is the ties by term's, read
+        # for every member first (tie_order), and then their wheres in it
         if un:
-            groups = self.tie_groups(n, mem, ctx)
-            if isinstance(groups, Hole):
-                return groups
+            mem = list(self.members(n.binds, env, ctx, regs=[], defer=[]))
+            for e2, st, rg, ws in mem:
+                if isinstance(st, tuple) and st[0] == 'domainhole':
+                    return st[1]
+            groups = self.tie_order(n.fn, mem, lambda c, j: self.ev(n.tie[j], c[0], ctx), len(n.tie),
+                                    desc=(n.fn == 'last'))
         else:
-            groups = [[x] for x in mem]
-        if n.fn == 'last':
-            groups = list(reversed(groups))
+            groups = ([x] for x in self.members(n.binds, env, ctx, regs=[], reverse=(n.fn == 'last')))
         holes = []
         for g in groups:
-            for e2, st, rg in g:
+            if isinstance(g, Hole):
+                # the order is unknown from here (a hole term, an undecided window): so is the result
+                return merge(*(holes + [g]))
+            trues = []
+            for x in g:
+                e2, st, rg = x[0], x[1], x[2]
+                if isinstance(st, tuple) and st[0] == 'domainhole':
+                    return st[1]
                 for c in rg:
                     self.cur.merge(c)
-            trues = [e2 for e2, st, rg in g if st is True]
-            holes.extend(st for e2, st, rg in g if isinstance(st, Hole))
+                if un:
+                    st = self.where_status(x[3], e2, st, ctx)
+                if st is True:
+                    trues.append(e2)
+                elif isinstance(st, Hole):
+                    holes.append(st)
             if not trues:
                 continue
             if holes:
@@ -3255,35 +3568,18 @@ class Engine:
             return Hole([('%s: no %s yet, and its span reaches past the cut' % (b.var, b._dom[1]), b._dom[1])])
         raise refuse('RUN-EMPTY', '%s over no keys' % n.fn)
 
-    def tie_groups(self, n, mem, ctx):
-        """The members in the order of the ties by term, those with equal terms in one group (L §5.11); a Hole when a
-        member's term is one (its place in the order is unknown)."""
-        import functools
-        scored = []
-        for e2, st, rg in mem:
-            vals = [self.ev(x, e2, ctx) for x in n.tie]
-            hs = [v for v in vals if isinstance(v, Hole)]
-            if hs:
-                return merge(*(hs + ([st] if isinstance(st, Hole) else [])))
-            for v in vals:
-                if v is NONE:
-                    raise refuse('RUN-NONE', 'the ties by of %s is none here' % n.fn)
-            scored.append((vals, (e2, st, rg)))
-
-        def cmp(a, b):
-            for x, y in zip(a[0], b[0]):
-                c = self.cmp3(x, y, None)
-                if c:
-                    return c
-            return 0
-        scored.sort(key=functools.cmp_to_key(cmp))
-        groups = []
-        for s in scored:
-            if groups and cmp(groups[-1][0], s) == 0:
-                groups[-1][1].append(s[1])
-            else:
-                groups.append((s, [s[1]]))
-        return [g[1] for g in groups]
+    def where_status(self, wheres, e2, st, ctx):
+        """A deferred tuple's status (members with defer): its wheres read in binding order, stopping at a false one:
+        False, or True, or a Hole (an unknown member)."""
+        for w0 in wheres:
+            w = self.ev(w0, e2, ctx)
+            if w is False:
+                return False
+            if w is NONE:
+                raise refuse('RUN-NONE', 'a where is none here')
+            if isinstance(w, Hole):
+                st = w if st is None or st is True else merge(st, w)
+        return st
 
     def notyet_bind(self, binds, env, ctx):
         """The first binding of things or movements whose day or span reaches past the cut (L §3.1), or None."""
@@ -3414,22 +3710,58 @@ class Engine:
         raise refuse('LOAD-UNIT', '%s is %s' % (what, fmt(v)))
 
     def lift(self, fn, *vals, src=None):
-        """A built-in on a window gives the interval of its values at the first and last day (L §4.4)."""
+        """An operation monotone in its windows gives the interval of its values over the days they can take, from
+        their ends (L §4.4; tally 2.1.7 R3: the natural interval extension, every corner of the windows' ends): one
+        value when they agree; a computed value, so no name."""
+        vals = [one_day(v) for v in vals]
         ivs = [v for v in vals if isinstance(v, Iv)]
         if not ivs:
             return fn(*vals)
-        if len(ivs) > 1:
-            raise self.imprecise(ivs[0], 'a built-in of two windows')
-        lo_args = [v.lo if isinstance(v, Iv) else v for v in vals]
-        hi_args = [v.hi if isinstance(v, Iv) else v for v in vals]
-        a, b = fn(*lo_args), fn(*hi_args)
-        if a is None or b is None or a is NONE or b is NONE:
-            raise self.imprecise(ivs[0], 'a built-in that is none on part of the window')
+        import itertools
+        outs = []
+        for ends in itertools.product(*[((v.lo, v.hi) if isinstance(v, Iv) else (v,)) for v in vals]):
+            r = fn(*ends)
+            if r is None or r is NONE:
+                raise self.imprecise(ivs[0], 'a built-in that is none on part of the window')
+            outs.append(r)
+        return self.interval_of(outs, ivs[0])
+
+    def interval_of(self, outs, iv):
+        """The values an operation takes over a window's days: one value when they agree, else their interval (a
+        computed window, no name)."""
+        a = b = outs[0]
+        for r in outs[1:]:
+            if order_lt(r, a):
+                a = r
+            if order_lt(b, r):
+                b = r
         if self.cmp3(a, b, None) == 0:
             return a
-        if order_lt(b, a):
-            a, b = b, a
-        return Iv(a, b, None, ivs[0].src, origin=ivs[0].origin)
+        return Iv(a, b, None, iv.src, origin=iv.origin)
+
+    def per_day(self, iv, fn, n):
+        """An operation that isn't monotone in its window is evaluated for each day the window can take (L §4.4; tally
+        2.1.7 R3, F4): one value when they agree, else the interval of the results, or HOLE-IMPRECISE where they aren't
+        ordered (a truth value)."""
+        if iv.days is not None:
+            days = sorted(iv.days)
+        else:
+            days = [iv.lo + datetime.timedelta(days=i) for i in range((iv.hi - iv.lo).days + 1)]
+        outs = []
+        holes = []
+        for d in days:
+            r = fn(d)
+            if isinstance(r, Hole):
+                holes.append(r)
+            else:
+                outs.append(r)
+        if holes:
+            return merge(*holes)
+        if all(isinstance(r, bool) for r in outs):
+            if len(set(outs)) == 1:
+                return outs[0]
+            raise self.imprecise(iv, _ntxt(n))
+        return self.interval_of(outs, iv)
 
     def period_arg(self, v, what):
         if isinstance(v, Period):
@@ -3584,13 +3916,13 @@ class Engine:
         d = self.as_date_or_iv(d, 'weekday')
         if isinstance(d, Iv):
             if d.days is None and (d.hi - d.lo).days >= 6:
-                return Iv(Int(1), Int(7), None, d.src)
+                return Iv(Int(1), Int(7), None, d.src, origin=d.origin)
             days = sorted(d.days) if d.days else [d.lo + datetime.timedelta(days=i)
                                                   for i in range((d.hi - d.lo).days + 1)]
             ws = sorted(set(x.isoweekday() for x in days))
             if len(ws) == 1:
                 return Int(ws[0])
-            return Iv(Int(min(ws)), Int(max(ws)), None, d.src)
+            return Iv(Int(min(ws)), Int(max(ws)), None, d.src, origin=d.origin)
         return Int(d.isoweekday())
 
     def c_pos(self, n, env, ctx):
@@ -3727,6 +4059,8 @@ class Engine:
             return v
         self.no_none(v, 'lifespan')
         t = self.m.things.get(v.name)
+        # a lifespan read is in the read set: the entries that state it (E §3.2; tally 2.1.7 R7, F15)
+        self.reg(('lifeof', v.name))
         sp = self.m.lifespan(t, ctx.cut)
         if sp is None:
             raise refuse('RUN-KEY', '%s was added after the cut' % v.name)
@@ -3776,11 +4110,10 @@ class Engine:
             return cal
         if cal is NONE:
             raise refuse('RUN-NONE', 'the calendar is none here')
-        if seek and (len(set(cal.weekends)) == 7 or (len(set(cal.yearly)) == 366 and
-                                                      (cal.yfrom is None or day.year >= cal.yfrom))):
+        if seek and len(set(cal.weekends)) == 7:
             # L §4.2, §7.6 item 5 (tally 2.1.6, issue #89): add_business and schedule seek a business day, and a
-            # calendar whose weekends name all seven days, or whose yearly days all 366 month-days (from its from
-            # year), has none; refcore 2.1.5 walked to 9999-12-31
+            # calendar whose weekends name all seven days has none; refcore 2.1.5 walked to 9999-12-31. Yearly days
+            # never empty a year: 02-29 is no month-day (L §3.1), so tally 2.1.7 dropped their clause (P33, #155)
             raise refuse('RUN-DOMAIN', 'calendar %s has no business day' % node._r[2])
         wd = day.isoweekday()
         if any(WEEKDAYS[w] == wd for w in cal.weekends):
@@ -3788,7 +4121,7 @@ class Engine:
         if (day.month, day.day) in cal.yearly and (cal.yfrom is None or day.year >= cal.yfrom):
             return False
         unknown = []
-        for a in cal.added:
+        for ai, a in enumerate(cal.added):
             if a[0] == 'day' and a[1] == day:
                 return False
             if a[0] == 'hole':
@@ -3798,11 +4131,13 @@ class Engine:
                 # meets, so a result that depends on its day is HOLE-IMPRECISE unless the line states windows each"
                 if a[0] == 'window':
                     wt = 'window(%s, %s)' % (a[1], a[2])
-                    iv = Iv(a[1], a[2], None, wt, origin=('calendar %s' % node._r[2], 'added %s' % wt))
+                    iv = Iv(a[1], a[2], None, wt, origin=('calendar %s#%d' % (node._r[2], ai), 'added %s' % wt),
+                            name=('added', node._r[2], ai))
                     days = [a[1] + datetime.timedelta(days=i) for i in range((a[2] - a[1]).days + 1)]
                 else:
                     wt = 'one_of([%s])' % ', '.join(str(x) for x in sorted(a[1]))
-                    iv = Iv(min(a[1]), max(a[1]), set(a[1]), wt, origin=('calendar %s' % node._r[2], 'added %s' % wt))
+                    iv = Iv(min(a[1]), max(a[1]), set(a[1]), wt, origin=('calendar %s#%d' % (node._r[2], ai), 'added %s' % wt),
+                            name=('added', node._r[2], ai))
                     days = sorted(a[1])
                 if ctx.windows in ('earliest', 'latest') or (isinstance(ctx.windows, tuple) and ctx.windows and
                                                              ctx.windows[0] == 'each'):
@@ -3813,7 +4148,8 @@ class Engine:
                 if self.cal_choice is not None:
                     # evaluated at each day the window can take (over_added): this pass's day, or the first while
                     # the window is newly met (that pass is run again per day)
-                    k = (node._r[2], wt)
+                    # each entry of the list is an unknown day of its own (tally 2.1.7 R3, F5)
+                    k = (node._r[2], wt, ai)
                     if k not in self.cal_choice:
                         self.cal_met.setdefault(k, days)
                     if self.cal_choice.get(k, days[0]) == day:
@@ -3863,14 +4199,18 @@ class Engine:
         if all(vkey(v) == vkey(v0) for v in out[1:]):
             return v0
         if isinstance(v0, bool):
-            cal_id, wt = first_met
+            cal_id, wt = first_met[0], first_met[1]
             return Hole([('date within %s not precise enough for %s' % (wt, _ntxt(n)), cal_id)])
-        return Iv(min(out), max(out), None, None)
+        return Iv(min(out), max(out), None, None, origin=(first_met[0], first_met[0]) if first_met else None)
 
     def c_is_business(self, n, env, ctx):
         d = self.ev(n.args[0], env, ctx)
         if isinstance(d, Hole):
             return d
+        d = one_day(d)
+        if isinstance(d, Iv):
+            # a window argument: day by day, is_business isn't monotone in it (tally 2.1.7 R3, F4)
+            return self.per_day(d, lambda x: self.over_added(n, lambda: self.business(n.args[1], env, ctx, x)), n)
         d = self.date_of(d, 'is_business')
         return self.over_added(n, lambda: self.business(n.args[1], env, ctx, d))
 
@@ -3880,6 +4220,13 @@ class Engine:
         h = self.hole_args([d, k])
         if h:
             return h
+        d = one_day(d)
+        if isinstance(d, Iv):
+            # a window argument: day by day, add_business isn't monotone in it (tally 2.1.7 R3, F4)
+            return self.per_day(d, lambda x: self.add_business_at(n, x, k, env, ctx), n)
+        return self.add_business_at(n, d, k, env, ctx)
+
+    def add_business_at(self, n, d, k, env, ctx):
         d = self.date_of(d, 'add_business')
         k = self.int_of(k)
         if k == 0:
@@ -4196,6 +4543,14 @@ def band_x(x, m=None):
         from .loader import order_key
         return order_key(x, m)
     raise refuse('LOAD-UNIT', 'a band argument %s' % fmt(x))
+
+
+def one_day(v):
+    """A window of one day is that day (tally 2.1.7 R3, L §4.4; F3)."""
+    if isinstance(v, Iv) and (v.days is None or len(v.days) == 1) and not order_lt(v.lo, v.hi) and \
+            not order_lt(v.hi, v.lo):
+        return v.lo
+    return v
 
 
 def order_lt(a, b):

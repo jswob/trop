@@ -454,7 +454,7 @@ impl Checker {
             && m.subtree("events").contains(ix)
         {
             return Err(uerr(format!(
-                "lifespan of {}: a movement has its day, not a lifespan (L §5.7)",
+                "lifespan of {}: a movement has its day, not a lifespan",
                 t.show()
             )));
         }
@@ -760,7 +760,7 @@ impl Checker {
             ));
         }
         if let (Some(Key::Expr(kn)), Some(bind)) = (key, info.binds.first()) {
-            self.key_pos(m, scope, kn, &bind.domain, depth)?;
+            self.bind_key(m, scope, kn, bind, depth)?;
         }
         let target = Node::new(NodeKind::Band, id);
         self.direct(&target);
@@ -871,7 +871,7 @@ impl Checker {
             ));
         }
         if let (Some(Key::Expr(kn)), Some(bind)) = (&call.band_key, band.binds.first()) {
-            self.key_pos(m, scope, kn, &bind.domain, depth)?;
+            self.bind_key(m, scope, kn, bind, depth)?;
         }
         let what = format!("the argument of band {}", band.id);
         self.typed_as(m, scope, arg, &band.arg_type, &what, depth)?;

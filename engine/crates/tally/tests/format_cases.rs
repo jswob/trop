@@ -281,8 +281,8 @@ version v1
 
     /// A `same` side's keys are literals (L §2.3 `sref`): any other key is refused at parse,
     /// where refcore's parser takes an expression and names its parse tree (#88, pick P12 of
-    /// pre-M1); a bracketed literal is that literal, reprinted bare (L §2.1, pick P12 of M1).
-    /// A side with fields after its first two names is keyed by its written text (L §2.4: "as
+    /// pre-M1); a bracketed literal too, a written literal taking no expression (L §2.3,
+    /// tally 2.1.7 S10). A side with fields after its first two names is keyed by its written text (L §2.4: "as
     /// an item whose target and keys are its left side's"), where refcore keys it by its
     /// parse node's text, `field(obj=…)`: the two orders differ only against such a side.
     #[test]
@@ -293,7 +293,8 @@ version v1
             ("same fee[1 + 1] = fee[a1]", "expected \"]\", got +"),
             ("same fee[a1] = fee[f(x)]", "expected \"]\", got ("),
             ("same fee[*] = fee[a1]", "expected a literal, got *"),
-            ("same fee[(a1 + 1)] = fee[a1]", "expected \")\", got +"),
+            ("same fee[(a1 + 1)] = fee[a1]", "expected a literal, got ("),
+            ("same fee[(a1)] = fee[a2]", "expected a literal, got ("),
         ];
         for (line, why) in refused {
             let text = format!("{head}  {line}\n");
@@ -306,12 +307,6 @@ version v1
                 "{line}"
             );
         }
-        let bracketed = format!("{head}  same fee[(a1)] = fee[a2]\n");
-        assert_eq!(
-            format_file(bracketed.as_bytes()).expect("it reprints"),
-            format!("{head}  same fee[a1] = fee[a2]\n"),
-            "a bracketed literal key"
-        );
         let text = format!(
             "{head}  same z.b.c = y\n  same b.x = y\n  same a.b.c[k2] = y\n  same a.b.c[k1] = y\n"
         );

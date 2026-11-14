@@ -1,0 +1,22 @@
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+unit hour "godzina"
+
+input a: rate
+input b: rate
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = 5 %/year
+  b = 0.5 %/month
+
+ask q1: a + b

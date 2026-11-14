@@ -1,0 +1,33 @@
+model f
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "made up"
+
+unit PLN: currency minor 0.01
+
+place kasa: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input d1: date
+
+input lawd: date
+
+input amt: money PLN
+
+move pay: transfers
+  at lawd
+  on d1
+  leg cash from world to kasa amount amt
+
+ask q: explain pay
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 5.00 PLN "the card"
+  d1 = 2026-02-01 "the card"

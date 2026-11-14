@@ -159,10 +159,22 @@ fn tables_of_one_key(
         .get(at)
         .ok_or_else(|| invariant("a band table past its key's".to_owned()))?;
     let known = version_known(m, &table.version)?;
+    // a table in a scenario stands above the tables of the layers below it whatever their
+    // known dates; known dates order the tables of one layer (L §4.6 step 2)
+    let layer = m.scenarios.layer(Some(&table.version));
+    let mut below = Vec::new();
     let mut earlier = Vec::new();
     let mut same = Vec::new();
     for (j, other) in tables.iter().enumerate() {
         if j == at || !spans_overlap(m, &other.version, &table.version)? {
+            continue;
+        }
+        let theirs = m.scenarios.layer(Some(&other.version));
+        if theirs < layer {
+            below.push(*other);
+            continue;
+        }
+        if theirs > layer {
             continue;
         }
         match version_known(m, &other.version)?.cmp(&known) {
@@ -194,6 +206,7 @@ fn tables_of_one_key(
         let message = format!("band {id} in {vid} mixes replace rows and plain rows");
         return Err(refuse(Load::Band, message, &file, line));
     }
+    earlier.extend(below);
     if earlier.is_empty() {
         // L §8.3 LOAD-REPLACE's band form where its version has a span on the model's `on`
         // (refcore's `check_bands`)

@@ -312,8 +312,11 @@ impl Engine {
         if let Some(h) = spread(&hole_days) {
             return Ok(Value::Hole(h));
         }
+        // its holes and refusals name the form as written, not its definition's bound
+        // variable or the day's value (L §5 A form defined by another; tally 2.1.7 R6, SR-7)
+        let written = crate::load::expr_text(&Expr::Call(Box::new(call.clone())));
         let Some(top) = members.iter().filter_map(|x| x.day.day()).min() else {
-            let text = format!("m: no {kind} yet, and its span reaches past the cut");
+            let text = format!("{written}: no {kind} yet, and its span reaches past the cut");
             return Ok(Value::Hole(Hole::asked(&text, kind)));
         };
         let firsts: Vec<&MvMember> = members
@@ -329,9 +332,8 @@ impl Engine {
             return Err(Stop::Refused(Refusal::new(
                 Code::Run(Run::Tie),
                 format!(
-                    "next({kind}, {}) has a tie at {} that changes the result, and its ties by \
+                    "{written} has a tie at {} that changes the result, and its ties by \
                      doesn't break it",
-                    d.text(),
                     ids.join(", ")
                 ),
             )));

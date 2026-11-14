@@ -1,0 +1,59 @@
+model s10_f1
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.7, S10 (#113, F1): the twin of the on, known and at forms: written literals, bare, load"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+kind anys: event certain
+  leg cash: any
+
+place world: outside lives 1900-01-01..
+
+place konto: accounts PLN lives 2026-01-01..
+
+input base: money PLN
+
+input amt_eur: money EUR
+
+input amt_pln: money PLN
+
+input d1: date
+
+input d0: date
+
+input d9: date
+
+move feur: anys
+  on d1
+  leg cash from world to world amount amt_eur
+
+move fpln: anys
+  on d1
+  leg cash from world to world amount amt_pln
+
+def t_eur: money PLN = base + flows(feur, d0 .. d9)
+
+def t_pln: money PLN = base + flows(fpln, d0 .. d9)
+
+ask c: t_eur
+
+ask c_twin: t_pln
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  base = 1000.00 PLN "the card"
+  amt_eur = 20.00 EUR "the card"
+  amt_pln = 20.00 PLN "the card"
+  d1 = 2026-03-01 "the card"
+  d0 = 2026-01-01 "the card"
+  d9 = 2026-12-31 "the card"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "the card"

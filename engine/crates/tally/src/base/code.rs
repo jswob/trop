@@ -52,6 +52,8 @@ pub enum Hole {
     Same,
     /// `HOLE-PRERUN`
     PreRun,
+    /// `HOLE-POSTRUN`
+    PostRun,
     /// `HOLE-PART`
     Part,
 }
@@ -253,7 +255,7 @@ pub enum Req {
 impl Code {
     /// Every code, each once, in the order of the spec's tables: L §8.1, §8.3, §8.4, §8.5,
     /// then E §11.
-    pub const ALL: [Code; 101] = [
+    pub const ALL: [Code; 102] = [
         Code::Hole(Hole::Stated),
         Code::Hole(Hole::Ungoverned),
         Code::Hole(Hole::NoReading),
@@ -266,6 +268,7 @@ impl Code {
         Code::Hole(Hole::Changed),
         Code::Hole(Hole::Same),
         Code::Hole(Hole::PreRun),
+        Code::Hole(Hole::PostRun),
         Code::Hole(Hole::Part),
         Code::Load(Load::Path),
         Code::Load(Load::Parse),
@@ -388,12 +391,28 @@ impl Hole {
             Hole::Changed => "HOLE-CHANGED",
             Hole::Same => "HOLE-SAME",
             Hole::PreRun => "HOLE-PRERUN",
+            Hole::PostRun => "HOLE-POSTRUN",
             Hole::Part => "HOLE-PART",
         }
     }
 }
 
 impl Load {
+    /// The code a check of load's prints when it is met at run, on a value load couldn't
+    /// see: a unit or a domain is `RUN-DOMAIN`, a key `RUN-KEY`, in load's words; any other
+    /// keeps load's code, which load meets first (L §8.4 "What isn't defined is refused",
+    /// tally 2.1.7 R5; refcore's `at_run`).
+    #[must_use]
+    pub fn at_run(self) -> Code {
+        if matches!(self, Load::Unit | Load::Domain) {
+            Code::Run(Run::Domain)
+        } else if self == Load::Key {
+            Code::Run(Run::Key)
+        } else {
+            Code::Load(self)
+        }
+    }
+
     /// The code as L §8.3 spells it.
     #[must_use]
     pub fn as_str(self) -> &'static str {

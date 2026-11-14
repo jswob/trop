@@ -13,7 +13,7 @@
 //! range's position is one of its values, the same key whether a row writes it or a read
 //! computes it.
 
-use super::arith::{Kind, Op, Operand, arith, duration, finish, int_of, operand};
+use super::arith::{Kind, Op, Operand, arith, finish, int_of, operand};
 use super::bindings::Values;
 use super::expr::literal;
 use super::keys::Given;
@@ -21,7 +21,7 @@ use super::state::{
     Ctx, Engine, Env, Figures, invariant, num_stop, refuse, refuse_load, unit_stop,
 };
 use super::windows::{as_window, imprecise, one_day};
-use crate::base::{Load, Run};
+use crate::base::{Code, Load, Run};
 use crate::hole::{Hole, spread};
 use crate::load::literal_end;
 use crate::model::{
@@ -65,8 +65,8 @@ impl Engine {
 
     /// What load says of a key written at a stepped range's position once it is done, the
     /// range's ends and step literals: `<k> is not a value of <a> .. <b>[ step <s>]` where the
-    /// range doesn't hold it; none where it does, or where load can't tell, an end refused or
-    /// the range past the key limit (refcore's `check_range_lits`, `range_member`, its
+    /// range doesn't hold it, by arithmetic; none where it does, or where load can't tell, an
+    /// end refused (refcore's `check_range_lits`, `range_member`, its
     /// `continue`). L §2.5, §5.6.
     ///
     /// # Errors
@@ -85,11 +85,6 @@ impl Engine {
             Ok(Err(_)) | Err(Stop::Refused(_)) => return Ok(None),
             Err(stop) => return Err(stop),
         };
-        match past_limit(m, &ends) {
-            Ok(false) => {}
-            Ok(true) | Err(Stop::Refused(_)) => return Ok(None),
-            Err(stop) => return Err(stop),
-        }
         let value = written_value(m, key)?;
         match range_holds(m, &ends, &value) {
             Ok(true) | Err(Stop::Refused(_)) => Ok(None),
@@ -163,6 +158,10 @@ impl Engine {
                 return Err(refuse(Run::None, "never in a range end".to_owned()));
             }
         }
+        // and so is its step (tally 2.1.7 R3: a value needed whole)
+        if let Some(w) = by.as_ref().and_then(as_window) {
+            return Ok(Err(imprecise(m, w, "a range step")?));
+        }
         Ok(Ok((first, last, by)))
     }
 
@@ -175,8 +174,8 @@ impl Engine {
     /// # Errors
     ///
     /// `RUN-NONE` for `none`; `<k> is not a value of <a> .. <b>[ step <s>]`, `LOAD-KEY` for a
-    /// key literal where the range's ends and step are literals, else `RUN-KEY`; `RUN-LIMIT`
-    /// for a range past 1 000 000 keys.
+    /// key literal where the range's ends and step are literals, else `RUN-KEY`; a range is
+    /// never counted here (tally 2.1.7 B1).
     pub(super) fn range_key(
         &mut self,
         m: &Reality,
@@ -201,9 +200,6 @@ impl Engine {
             Ok(ends) => ends,
             Err(hole) => return Ok(Err(hole)),
         };
-        if past_limit(m, &ends)? {
-            return Err(refuse(Run::Limit, too_many_keys(m, &ends)?));
-        }
         if !range_holds(m, &ends, &value)? {
             let text = format!(
                 "{} is not a value of {}",
@@ -562,10 +558,10 @@ fn past_limit(m: &Reality, (first, last, by): &Ends) -> Result<bool, Stop> {
 }
 
 /// Whether the days `start .. end step s` are more than 1 000 000, counted and never stepped:
-/// a step of days moves every day by its first step's days, and one of months moves a day
-/// by 28 days at least, so a million of them pass the calendar. Past the limit, the
-/// 1 000 001st day is stepped from, as refcore's loop steps from it before it counts
-/// (refcore's `range_values` for days). L §4.2, §5.6, §7.6 item 2.
+/// the 1 000 001st, `start + 1 000 000·s`, is on or before the end; then the next is computed,
+/// refused past 9999-12-31 as refcore's loop computes it before it counts. A day past
+/// 9999-12-31 among the first million leaves the count to the values, which refuse it
+/// (refcore's `range_values` for days; tally 2.1.7 B1, T's SR-2). L §4.2, §5.6, §7.6.
 fn days_past(m: &Reality, start: Day, end: &Value, by: Option<&Value>) -> Result<bool, Stop> {
     let Some(by) = by else {
         return Err(Stop::NotBuilt("a range of days with no step"));
@@ -574,22 +570,17 @@ fn days_past(m: &Reality, start: Day, end: &Value, by: Option<&Value>) -> Result
     if start > last {
         return Ok(false);
     }
-    let days = start
-        .days_to(day_step(m, start, by)?)
-        .ok_or_else(|| invariant("a step's days"))?;
-    let reach = days
-        .checked_mul(RANGE_LIMIT)
-        .ok_or_else(|| invariant("a range's reach"))?;
-    let span = start
-        .days_to(last)
-        .ok_or_else(|| invariant("a range's days"))?;
-    if span < reach {
+    forward(m, start, by)?;
+    let Some(far) = day_at(m, start, by, RANGE_LIMIT)? else {
+        return Ok(false);
+    };
+    if far > last {
         return Ok(false);
     }
-    let key = start
-        .add_days(reach)
-        .ok_or_else(|| invariant("a day of the range"))?;
-    day_step(m, key, by)?;
+    let after = RANGE_LIMIT
+        .checked_add(1)
+        .ok_or_else(|| invariant("the key limit"))?;
+    nth_day(m, start, by, after)?;
     Ok(true)
 }
 
@@ -612,10 +603,10 @@ fn range_text(m: &Reality, (a, b, s): &Ends) -> Result<String, Stop> {
     Ok(format!("{a} .. {b}{step}"))
 }
 
-/// Whether a range counted within the key limit holds `key`, as refcore's set of its values
-/// does (`range_member`): days stepped by days as `a + i·s`, days stepped by months by
-/// stepping to it, numbers by `a + i·s` for a whole `i ≥ 0` up to `b`, a value of another
-/// kind never. L §2.5, §5.6, §4.2.
+/// Whether a range holds `key`, by arithmetic on the value (refcore's `range_has`; tally
+/// 2.1.7 B1): a day is `a + i·s ≤ b` for a whole `i ≥ 0`, each `a + i·s` computed from a,
+/// found by bisection, a day past 9999-12-31 past every key; numbers by `a + i·s` up to `b`;
+/// a value of another kind never. L §2.5, §5.6, §4.2.
 fn range_holds(m: &Reality, (first, last, by): &Ends, key: &Value) -> Result<bool, Stop> {
     if let Value::Day(start) = first {
         let Some(by) = by else {
@@ -625,66 +616,50 @@ fn range_holds(m: &Reality, (first, last, by): &Ends, key: &Value) -> Result<boo
             return Ok(false);
         };
         let last = range_last(m, last)?;
-        if *day <= *start || *start > last {
-            return Ok(*day == *start && *start <= last);
+        if *day < *start || *day > last {
+            return Ok(false);
         }
-        // the first step, refused as stepping refuses it (no duration, or not forward)
-        let next = day_step(m, *start, by)?;
-        if steps_by_days(by) {
-            return holds_by_days(m, (*start, next, last), by, *day);
+        if *day == *start {
+            return Ok(true);
         }
-        let mut current = next;
-        while current < *day && current <= last {
-            current = day_step(m, current, by)?;
-        }
-        return Ok(current == *day && current <= last);
+        return holds_day(m, (*start, by), *day);
     }
     Stepped::of(m, (first, last, by.as_ref()))?.holds(m, key)
 }
 
-/// Whether a range's step moves a day by days alone: a whole number of days, or a count
-/// (refcore's `date_arith`). L §4.2.
-fn steps_by_days(by: &Value) -> bool {
-    let Value::Number(n) = by else {
-        return false;
-    };
-    duration(n).is_none_or(|(word, _)| word == "day")
-}
-
-/// Whether day `day`, after `start`, is one of a range's days `start + i·s` up to `last`, the
-/// step s the days from `start` to `next`: the value before `day` found by its index, then
-/// the range's step from it, refused where stepping one by one refuses (past the end of
-/// time). One read of a long range costs a step, not the range (G13 review NB5). L §2.5,
-/// §4.2, §5.6.
-fn holds_by_days(
-    m: &Reality,
-    (start, next, last): (Day, Day, Day),
-    by: &Value,
-    day: Day,
-) -> Result<bool, Stop> {
-    let bad = || invariant("a forward step of days: `day_step` refuses one that isn't");
-    let step = start.days_to(next).ok_or_else(bad)?;
-    let gap = start.days_to(day).ok_or_else(bad)?;
-    // Python's (gap - 1) // step * step: the offset of the range's last day before `day`
-    let before = gap
-        .checked_sub(1)
-        .and_then(|g| g.checked_div_euclid(step))
-        .and_then(|i| i.checked_mul(step))
-        .ok_or_else(bad)?;
-    let below = start.add_days(before).ok_or_else(bad)?;
-    if below > last {
-        return Ok(false);
+/// Whether `day`, after `start`, is `start + i·s` for a whole i: the step's first value must
+/// move forward; the values rise with i, so the first at or after `day` is found by doubling
+/// then bisection, never by stepping from the start (refcore's `range_has`; T's SR-11). L
+/// §2.5, §4.2.
+fn holds_day(m: &Reality, (start, by): (Day, &Value), day: Day) -> Result<bool, Stop> {
+    if day_at(m, start, by, 1)?.is_some_and(|first| first <= start) {
+        return Err(not_positive(m, by)?);
     }
-    let reached = if before == 0 {
-        next
-    } else {
-        day_step(m, below, by)?
-    };
-    Ok(reached == day && reached <= last)
+    let bad = || invariant("a range's index past the integers");
+    let (mut lo, mut hi) = (0_i64, 1_i64);
+    while day_at(m, start, by, hi)?.is_some_and(|v| v < day) {
+        lo = hi;
+        hi = hi.checked_mul(2).ok_or_else(bad)?;
+    }
+    while hi.checked_sub(lo).ok_or_else(bad)? > 1 {
+        let half = hi
+            .checked_sub(lo)
+            .and_then(|gap| gap.checked_div_euclid(2))
+            .ok_or_else(bad)?;
+        let mid = lo.checked_add(half).ok_or_else(bad)?;
+        if day_at(m, start, by, mid)?.is_none_or(|v| v >= day) {
+            hi = mid;
+        } else {
+            lo = mid;
+        }
+    }
+    Ok(day_at(m, start, by, hi)? == Some(day))
 }
 
-/// The days from `start` to `end`, stepped, a range counted within the key limit (refcore's
-/// `range_values` for days). L §5.11.
+/// The days from `start` to `end`, each `start + i·s` computed from the start, a range
+/// counted within the key limit: the next day past 9999-12-31 is refused, `RUN-LIMIT`, and a
+/// step that doesn't move forward `RUN-DOMAIN` (refcore's `range_values` for days; tally
+/// 2.1.7 B1, SR-2). L §2.5, §5.11.
 fn day_range(
     m: &Reality,
     start: Day,
@@ -692,12 +667,76 @@ fn day_range(
 ) -> Result<Vec<(Value, Option<Hole>)>, Stop> {
     let last = range_last(m, end)?;
     let mut out = Vec::new();
-    let mut current = start;
+    let (mut current, mut i) = (start, 0_i64);
     while current <= last {
         out.push((Value::Day(current), None));
-        current = day_step(m, current, step)?;
+        i = i
+            .checked_add(1)
+            .ok_or_else(|| invariant("a range's index past the integers"))?;
+        let next = nth_day(m, start, step, i)?;
+        if next <= current {
+            return Err(not_positive(m, step)?);
+        }
+        current = next;
     }
     Ok(out)
+}
+
+/// The first value after the start moves forward, refused as stepping refuses it (no
+/// duration, past 9999-12-31, `RUN-DOMAIN` for a step that isn't positive). L §4.2, §8.4.
+fn forward(m: &Reality, start: Day, by: &Value) -> Result<(), Stop> {
+    if nth_day(m, start, by, 1)? <= start {
+        return Err(not_positive(m, by)?);
+    }
+    Ok(())
+}
+
+/// `RUN-DOMAIN a stepped range whose step <s> is not positive`. L §8.4.
+fn not_positive(m: &Reality, by: &Value) -> Result<Stop, Stop> {
+    let shown = by.text(m).map_err(num_stop)?;
+    Ok(refuse(
+        Run::Domain,
+        format!("a stepped range whose step {shown} is not positive"),
+    ))
+}
+
+/// The i-th day of a range from `start` stepped by `by`, `start + i·s`, computed from the
+/// start, so a month step from the 31st keeps the 31st where the month has it; refused as
+/// day arithmetic refuses it, `RUN-LIMIT` past 9999-12-31 (refcore's `day_step`). A step
+/// that is an interval of durations moves a day to no one day, `LOAD-UNIT` (L §4.4). L §2.5,
+/// §4.2.
+fn nth_day(m: &Reality, start: Day, by: &Value, i: i64) -> Result<Day, Stop> {
+    if let Value::Window(_) = by {
+        let shown = by.text(m).map_err(num_stop)?;
+        return Err(refuse_load(
+            Load::Unit,
+            format!("{} + {shown}", start.text()),
+        ));
+    }
+    let scaled = if let Value::Number(n) = by {
+        Value::Number(Number {
+            q: n.q.checked_mul(&Num::int(i)).map_err(num_stop)?,
+            class: n.class.clone(),
+        })
+    } else {
+        by.clone()
+    };
+    let Value::Day(day) = arith(m, Op::Add, &Value::Day(start), &scaled)? else {
+        return Err(invariant(
+            "a day stepped to no day: `arith` refuses a step that isn't a duration first",
+        ));
+    };
+    Ok(day)
+}
+
+/// [`nth_day`], or none past 9999-12-31, past every key (refcore's `range_has`, its `at`).
+/// L §7.6 item 1.
+fn day_at(m: &Reality, start: Day, by: &Value, i: i64) -> Result<Option<Day>, Stop> {
+    match nth_day(m, start, by, i) {
+        Ok(day) => Ok(Some(day)),
+        Err(Stop::Refused(r)) if r.code() == Code::Run(Run::Limit) => Ok(None),
+        Err(stop) => Err(stop),
+    }
 }
 
 /// A day range's last day (refcore's `date_of(z, 'a range end')`): `never` is `RUN-NONE`; a
@@ -705,26 +744,4 @@ fn day_range(
 fn range_last(m: &Reality, end: &Value) -> Result<Day, Stop> {
     one_day(m, end, "a range end")?
         .map_err(|_| invariant("a window as a range end, which `range_ends` makes a hole first"))
-}
-
-/// A day of a range moved by its step (refcore's `date_arith` in `range_values`): a step
-/// that isn't a duration is `LOAD-UNIT`, an interval of durations included, which moves a
-/// day to no one day (L §4.4); one that doesn't move forward `RUN-DOMAIN`. L §4.2, §5.11.
-fn day_step(m: &Reality, day: Day, step: &Value) -> Result<Day, Stop> {
-    if let Value::Window(_) = step {
-        let shown = step.text(m).map_err(num_stop)?;
-        return Err(refuse_load(Load::Unit, format!("{} + {shown}", day.text())));
-    }
-    let Value::Day(next) = arith(m, Op::Add, &Value::Day(day), step)? else {
-        return Err(invariant(
-            "a day stepped to no day: `arith` refuses a step that isn't a duration first",
-        ));
-    };
-    if next <= day {
-        return Err(refuse(
-            Run::Domain,
-            "a stepped range whose step is not positive".to_owned(),
-        ));
-    }
-    Ok(next)
 }

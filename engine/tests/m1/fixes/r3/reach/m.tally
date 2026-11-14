@@ -1,0 +1,45 @@
+model r3_reach
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.7, R3's reach (#142), from L §4.4 alone: each operation gives the interval of its values over the days its arguments can take, one value when the ends agree, and only a comparison decides an interval. Features no item of R3 names: year_of of a window (y_in one year, y_across two: a hole where one value is needed), and max of a window and a day, decided where every day agrees (m_after true, m_inside false), and undecided (m_open: a hole naming w_in, SR-5 ruled by P36)"
+
+source card "T's card (invented)"
+
+input w_in: date
+
+input w_across: date
+
+input d_after: date
+
+input d_inside: date
+
+def y_in: year = year_of(w_in)
+
+def y_across: year = year_of(w_across)
+
+def m_after: bool = max(w_in, d_after) == d_after
+
+def m_inside: bool = max(w_in, d_inside) > d_after
+
+def m_open: bool = max(w_in, d_inside) == d_inside
+
+ask y: y_in
+
+ask y_hole: y_across
+
+ask m: m_after
+
+ask m_false: m_inside
+
+ask m_hole: m_open
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  w_in = window(2026-06-01, 2026-06-30) "June"
+  w_across = window(2026-12-20, 2027-01-10) "around the new year"
+  d_after = 2026-07-15 "after the window"
+  d_inside = 2026-06-15 "inside the window"

@@ -1,6 +1,6 @@
 # L §5.16 (tally 2.1.6, issue #83): a `path p` line holds no query over paths (LOAD-RANDOM), a property of the line
 # that load sees whole, so it is refused at load whatever the asks (E §3.1 step 11): asking `other` alone refuses the
-# reality (the engine's bytes, load/cone.rs, with no place, as tally 2.1.5's). M0's fixture basic/random-path plus the ask `other`. tally 2.1.5's refcore refused
+# reality, naming the ask line's file and line as every load refusal does (L §8.3; tally 2.1.7 S9, X3; 2.1.6 printed no place). M0's fixture basic/random-path plus the ask `other`. tally 2.1.5's refcore refused
 # the line only as it evaluated it, so `other` answered 10.00 PLN.
 === m.tally
 model basic
@@ -52,4 +52,4 @@ version card_2026
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
 ask other: total
 === expect other
-refused: LOAD-RANDOM a query over paths on a path p line
+refused: LOAD-RANDOM a query over paths on a path p line (m.tally:36)

@@ -1,0 +1,38 @@
+# tally 2.1.7 S4 (#131): a recurrence reading two of its own cells, fib[n] = fib[n - 1] + fib[n - 2]: the chain
+# follows the first cell each step reads that nothing has printed (c6 .. c2); fib[c4], which fib[c6] reads too, was
+# a folded step, so it prints where next met, folding its own chain (c4, c3, c1). The layout is this interpreter's.
+# Was (2.1.6): every step printed.
+=== f.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+index cnt = [c1, c2, c3, c4, c5, c6]
+input one: int
+
+def fib[n in cnt]: int = if pos(n) <= 2 then one else fib[n - 1] + fib[n - 2]
+
+ask e: explain fib[c6]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  one = 1 "s"
+=== expect
+e: 8
+  [1] fib[c6] = 8
+      rule base: won
+        … 3 more steps of fib, c5 .. c3 …
+        [2] fib[c2] = 1
+            rule base: won
+              [3] row v:one = 1
+                  version v, source s, "s", locator "s", governs always, known 2026-01-01
+        … 2 more steps of fib, c4 .. c3 …
+        [4] fib[c1] = 1
+            rule base: won
+              (v:one: see [3])
+  cut 2026-10-18

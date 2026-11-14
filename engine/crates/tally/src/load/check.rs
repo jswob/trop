@@ -15,6 +15,7 @@
 
 use super::across::PeriodRead;
 use super::fills::{FillState, inline_fill_edges};
+use super::keys::RangeKey;
 use super::moves::settlements;
 use super::pins::unloaded_world;
 use super::prices::price_twice;
@@ -454,6 +455,8 @@ pub(super) struct Walked {
     pub(super) ask_reads: BTreeMap<String, Vec<Node>>,
     /// The decisions' plain balance reads, in the order typed.
     pub(super) day_reads: Vec<DayRead>,
+    /// The key literals reads write at stepped ranges of literal ends, in the order typed.
+    pub(super) range_keys: Vec<RangeKey>,
     /// The asks refused alone, with their refusals (refcore's `asks_alone`). L §6.4, §8.
     pub(super) alone: BTreeMap<String, Refusal>,
     /// Each ask whose line can hold a key literal no position resolves, with the ask's line,
@@ -484,6 +487,16 @@ pub(super) struct Walked {
     pub(super) narrow_used: BTreeSet<SiteKey>,
 }
 
+/// A leg as load sees it: its kind's leg unit, and each end's literal place, if it is one,
+/// with its type. L §5.14, §5.10.
+#[derive(Debug, Clone)]
+pub(super) struct LegEnds {
+    /// The kind's leg unit, as written.
+    pub(super) unit: String,
+    /// Each end: its literal place, and its type.
+    pub(super) ends: Vec<(Option<String>, Ty)>,
+}
+
 /// The checker's state over the walk (refcore's `Checker`).
 #[derive(Debug, Default)]
 pub(super) struct Checker {
@@ -507,6 +520,17 @@ pub(super) struct Checker {
     vars: usize,
     /// Each checked move's legs' static amount types, by (move, leg) (refcore's `ln._lt`).
     pub(super) leg_types: BTreeMap<(String, String), Ty>,
+    /// Each checked move's legs' amounts' types, by (move, leg): the unit a leg brings to a place
+    /// of any unit (refcore's `ln.amount._t`).
+    pub(super) leg_amounts: BTreeMap<(String, String), Ty>,
+    /// Each checked move's legs' units and ends, by (move, leg): the places a leg reaches,
+    /// for the units load sees come into a place of any unit (refcore's `_units_into`).
+    pub(super) leg_ends: BTreeMap<(String, String), LegEnds>,
+    /// The key literals reads write at stepped ranges of literal ends, kept for load's check
+    /// as a row's are (refcore's `register_range_lit` from `key_pos`; R5, #106).
+    pub(super) range_keys: Vec<RangeKey>,
+    /// The file of each item's section, for a refusal placed at an item's own line.
+    pub(super) files: Files,
     /// The periods read at keys of time indexes, in the order typed (refcore's
     /// `period_cands`).
     periods: Vec<PeriodRead>,
@@ -582,6 +606,7 @@ pub(super) fn walk(m: &Reality, sections: &[(String, Section)]) -> Result<Walked
     price_twice(m, &files)?;
     let mut checker = Checker {
         fill: FillState::of(m, &files)?,
+        files: files.clone(),
         ..Checker::default()
     };
     checker.check_parts(m, &files)?;
@@ -655,6 +680,7 @@ pub(super) fn walk(m: &Reality, sections: &[(String, Section)]) -> Result<Walked
         ask_reads: checker.ask_reads,
         unresolved: checker.unresolved,
         day_reads: checker.day_reads,
+        range_keys: checker.range_keys,
         alone,
         queries: checker.queries,
         orient_items: checker.orient_items,
@@ -690,6 +716,7 @@ pub(super) fn invariant(message: String) -> Stop {
 }
 
 /// The file each item's section stands in, by the item's id: a refusal names it.
+#[derive(Debug, Clone, Default)]
 pub(super) struct Files {
     /// `(section word, id)` to the file.
     by_item: BTreeMap<(&'static str, String), String>,
@@ -1069,6 +1096,7 @@ impl Checker {
         for pin in &ask.pins {
             self.pin(m, &scope, pin, 0)?;
         }
+        super::pins::pin_ties(m, &scope, &ask.pins).map_err(|s| scope.place(s))?;
         for (clause, word) in [(&ask.law, "law"), (&ask.known, "as known")] {
             if let Some(e) = clause {
                 let t = self.expr(m, &scope, e, None, 0)?;

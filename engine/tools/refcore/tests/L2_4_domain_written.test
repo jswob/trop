@@ -1,0 +1,36 @@
+# L §2.4 Values, L §5.16 (tally 2.1.7 R9, issue #148): a discrete distribution over a key list names it as
+# written, `[ka, kb]`, in LOAD-UNIT's message. 2.1.6's refcore printed `None`. (Twin: L5_16_sample_type_mix.)
+=== m.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [ka, kb]
+index js = [ja, jb]
+input w[k in ks]: num
+input u[j in js]: num
+input g: dist
+
+version v1
+  cite s
+  governs 2026
+  known 2026-01-01
+  w[ka] = 1
+  w[kb] = 1
+  u[ja] = 1
+  u[jb] = 1
+  g = discrete(w[k] for k in ks)
+
+version v2
+  cite s
+  governs 2027
+  known 2026-01-01
+  g = discrete(w[k] for k in [ka, kb])
+
+ask q: share(g == ka) law 2026-06-30 paths 10 seed 1
+=== expect
+refused: LOAD-UNIT random fact g mixes sample types: discrete over [ka, kb], ks ...

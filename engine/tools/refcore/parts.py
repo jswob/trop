@@ -108,7 +108,9 @@ def chk_check_parts(self):
             for nm in names:
                 th = m.things.get(nm) if isinstance(nm, str) else None
                 if th is not None and thing_parts(m, th) is not None:
-                    raise _lp('owns[%s]: %s keeps parts' % (', '.join(str(x) for x in names), nm),
+                    # the row's keys each in its type's printer, as every row's (L §2.4, R9; P46: a month key
+                    # printed `None`, its thing name being absent)
+                    raise _lp('owns%s: %s keeps parts' % (r.keys_text(), nm),
                               getattr(r, 'loc', None))
 
 

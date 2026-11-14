@@ -2891,7 +2891,7 @@ version bank_a
   governs 2026-05
   known 2026-06-01
   bank[r1] = (on: 2026-05-15, kind: settles, leg cash from world to konto_eur amount 500.00 EUR, fulfils: adjustments[wage[2026-03].cash, raise]) "back pay for March"
-,,1:1,100:refused: LOAD-UNIT settlement bank[r1] of adjustments[wage[2026-03].cash, raise] is in EUR, not PLN
+,,1:1,116:refused: LOAD-UNIT settlement bank[r1] of adjustments[wage[2026-03].cash, raise] is in EUR, not PLN (base.tally:59)
 ,18:basic/scenario-ask,13:LOAD-SCENARIO,5:basic,26:run base.tally --ask q_low,1060:10:base.tally,1040:model basic
   tally 2
   on 2026-03-01
@@ -5816,7 +5816,7 @@ version card_2026
   rate[q1] = 0.1 "the card"
   rate[q2] = 0 "the card"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
-,,1:1,57:refused: LOAD-RANDOM a query over paths on a path p line
+,,1:1,73:refused: LOAD-RANDOM a query over paths on a path p line (base.tally:36)
 ,21:basic/domain-discrete,11:LOAD-DOMAIN,5:basic,22:run base.tally --ask q,1096:10:base.tally,1076:model basic
   tally 2
   on 2026-03-01
@@ -10373,7 +10373,7 @@ version bank_a
   governs 2026-05
   known 2026-06-01
   bank[r1] = (on: 2026-05-15, kind: settles, leg cash from world to konto_eur amount 500.00 EUR, fulfils: adjustments[wage[2026-03].cash, raise]) "back pay for March"
-,,1:1,100:refused: LOAD-UNIT settlement bank[r1] of adjustments[wage[2026-03].cash, raise] is in EUR, not PLN
+,,1:1,116:refused: LOAD-UNIT settlement bank[r1] of adjustments[wage[2026-03].cash, raise] is in EUR, not PLN (base.tally:59)
 ,22:basic/random-path-load,11:LOAD-RANDOM,5:basic,32:run base.tally --ask zz_m0_probe,1090:10:base.tally,1070:model basic
   tally 2
   on 2026-03-01
@@ -10421,7 +10421,7 @@ version card_2026
   rate[q1] = 0.1 "the card"
   rate[q2] = 0 "the card"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
-,,1:1,57:refused: LOAD-RANDOM a query over paths on a path p line
+,,1:1,73:refused: LOAD-RANDOM a query over paths on a path p line (base.tally:36)
 ,20:scen/ask-alone-by-id,13:LOAD-SCENARIO,4:scen,38:run model.tally scen.tally --ask q_low,772:11:model.tally,511:model household
   tally 2
   on 2026-03-01
@@ -11161,7 +11161,7 @@ version card_2026
   rr[true] = 2.00 PLN "the card"
   opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
   bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[ana] amount 1.00 PLN) "a gift"
-,,1:1,73:refused: LOAD-KEY True is not a value of a stepped range (base.tally:42)
+,,1:1,73:refused: LOAD-KEY true is not a value of a stepped range (base.tally:42)
 ,23:written/range-key-place,8:LOAD-KEY,7:written,32:run base.tally --ask zz_m0_probe,1251:10:base.tally,1231:model written
   tally 2
   on 2026-03-01
@@ -11206,7 +11206,7 @@ version card_2026
   rr[konto[ana]] = 2.00 PLN "the card"
   opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
   bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[ana] amount 1.00 PLN) "a gift"
-,,1:1,73:refused: LOAD-KEY None is not a value of a stepped range (base.tally:42)
+,,1:1,79:refused: LOAD-KEY konto[ana] is not a value of a stepped range (base.tally:42)
 ,23:adjust/fulfils-key-expr,8:LOAD-KEY,6:adjust,32:run base.tally --ask zz_m0_probe,1303:10:base.tally,1283:model adjust
   tally 2
   on 2026-10-20
@@ -11261,7 +11261,7 @@ version bank_a
   governs 2026-05
   known 2026-06-01
   bank[r1] = (on: 2026-05-15, kind: wages, leg cash from world to konto amount 500.00 PLN, fulfils: adjustments[wage[2026-02 + 1].cash, raise]) "back pay for March"
-,,1:1,62:refused: LOAD-KEY None is not a key of months (base.tally:54)
+,,1:1,69:refused: LOAD-KEY 2026-02 + 1 is not a key of months (base.tally:54)
 ,30:basic/domain-anchored-schedule,11:LOAD-DOMAIN,5:basic,32:run base.tally --ask zz_m0_probe,1199:10:base.tally,1179:model basic
   tally 2
   on 2026-03-01
@@ -12211,7 +12211,7 @@ version card_2026
   rate[q2] = 0 "the card"
   same v[2026] = v[konto[ana]]
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
-,,1:1,58:refused: LOAD-KEY None is not a key of ly (base.tally:48)
+,,1:1,64:refused: LOAD-KEY konto[ana] is not a key of ly (base.tally:48)
 ,24:basic/same-key-place-int,8:LOAD-KEY,5:basic,22:run base.tally --ask q,1099:10:base.tally,1079:model basic
   tally 2
   on 2026-03-01
@@ -12261,7 +12261,7 @@ version card_2026
   rate[q2] = 0 "the card"
   same v[1] = v[konto[ana]]
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
-,,1:1,58:refused: LOAD-KEY None is not a key of ns (base.tally:48)
+,,1:1,64:refused: LOAD-KEY konto[ana] is not a key of ns (base.tally:48)
 ,19:basic/row-key-place,8:LOAD-KEY,5:basic,22:run base.tally --ask q,1102:10:base.tally,1082:model basic
   tally 2
   on 2026-03-01
@@ -12311,7 +12311,7 @@ version card_2026
   rate[q2] = 0 "the card"
   v[konto[ana]] = 1 "the card"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
-,,1:1,58:refused: LOAD-KEY None is not a key of ns (base.tally:48)
+,,1:1,64:refused: LOAD-KEY konto[ana] is not a key of ns (base.tally:48)
 ,16:written/key-kind,8:LOAD-KEY,7:written,32:run base.tally --ask zz_m0_probe,1289:10:base.tally,1269:model written
   tally 2
   on 2026-03-01
@@ -12457,7 +12457,7 @@ version card_2026
   who = 2031-05 "the card"
   opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
   bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[ana] amount 1.00 PLN) "a gift"
-,,1:1,67:refused: LOAD-KEY (2031, 5) is not a key of months (base.tally:45)
+,,1:1,65:refused: LOAD-KEY 2031-05 is not a key of months (base.tally:45)
 ,15:written/key-row,8:LOAD-KEY,7:written,32:run base.tally --ask zz_m0_probe,1294:10:base.tally,1274:model written
   tally 2
   on 2026-03-01
@@ -12620,4 +12620,124 @@ version bank_a
   bank[r1] = (on: 2026-05-15, kind: wages, leg cash from world to konto amount 500.00 PLN, fulfils: adjustments[wage[2026-03].cash, raise]) "back pay for March"
   bank[r2] = (on: 2026-05-20, kind: gifts, leg cash from world to konto amount 1.00 PLN, giver: zed) "a gift"
 ,,1:1,63:refused: LOAD-KEY zed is not a key of accounts (base.tally:63)
+,18:adjust/bound-field,10:LOAD-FIELD,6:adjust,32:run base.tally --ask zz_m0_probe,1365:10:base.tally,1345:model adjust
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): a wage raised after it was paid, and the back pay that settles the adjustment; it loads clean"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+kind wages: event certain
+  leg cash: PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input wage_amt: money PLN
+
+input wage_dom: int
+
+def net[m in months]: money PLN = wage_amt at start_of(m)
+
+def ls: date = argmax(1 for a in adjustments over .. where a.zz)
+
+move wage[m in months]: wages
+  on day_of(m, wage_dom)
+  at start_of(m)
+  leg cash from world to konto amount net[m]
+
+ask q: bal(konto, 2026-12-31)
+
+version plan
+  cite card
+  governs always
+  known 2025-12-01
+  wage_amt = 5 000.00 "a wage"
+  wage_dom = 10 "paid on the 10th"
+  opening[konto] = 0 at 2026-01-01 start "the card"
+
+version raise
+  cite card
+  governs 2026-03..2026-04
+  known 2026-05-01
+  replace wage_amt = 5 500.00 "a raise for March and April"
+
+version bank_a
+  cite card
+  governs 2026-05
+  known 2026-06-01
+  bank[r1] = (on: 2026-05-15, kind: wages, leg cash from world to konto amount 500.00 PLN, fulfils: adjustments[wage[2026-03].cash, raise]) "back pay for March"
+,,1:1,69:refused: LOAD-FIELD zz is not a field of adjustments (base.tally:29)
+,17:gifts/lifespan-zz,10:LOAD-FIELD,5:gifts,32:run base.tally --ask zz_m0_probe,1584:10:base.tally,1564:model gifts
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): adjust's text, an event kind with a giver, and lifespan of a bound name's field over events and under a kind test; it loads clean"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+kind wages: event certain
+  leg cash: PLN
+
+kind gifts: event certain
+  leg cash: PLN
+  attr giver: key accounts
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input wage_amt: money PLN
+
+input wage_dom: int
+
+def net[m in months]: money PLN = wage_amt at start_of(m)
+
+def early: int = count(e in events over .. where lifespan(e.zz).from < e.day)
+
+def early_gifts: int = count(e in events over .. where e in gifts and lifespan(e.giver).to > e.day)
+
+move wage[m in months]: wages
+  on day_of(m, wage_dom)
+  at start_of(m)
+  leg cash from world to konto amount net[m]
+
+ask q: bal(konto, 2026-12-31)
+
+version plan
+  cite card
+  governs always
+  known 2025-12-01
+  wage_amt = 5 000.00 "a wage"
+  wage_dom = 10 "paid on the 10th"
+  opening[konto] = 0 at 2026-01-01 start "the card"
+
+version raise
+  cite card
+  governs 2026-03..2026-04
+  known 2026-05-01
+  replace wage_amt = 5 500.00 "a raise for March and April"
+
+version bank_a
+  cite card
+  governs 2026-05
+  known 2026-06-01
+  bank[r1] = (on: 2026-05-15, kind: wages, leg cash from world to konto amount 500.00 PLN, fulfils: adjustments[wage[2026-03].cash, raise]) "back pay for March"
+,,1:1,64:refused: LOAD-FIELD zz is not a field of events (base.tally:33)
 ,

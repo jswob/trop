@@ -115,7 +115,7 @@ class Checker:
         self.proj_nc = {}          # item -> {target}: its projections with no random clause (L §8.3 item 10)
         self.cycle_cands = []      # (move, bal node, day node): a decision's plain bal at a day (L §5.14.1)
         self.period_cands = []     # (index, key node, holder item): a period read at a time index's key (L §4.6)
-        self.balnow_items = set()  # items that hold bal(x) with no day
+        self.balnow_items = {}  # items that hold bal(x) with no day -> the first such read's loc
         self.projs = []            # (projection node, holder item)
         m.checker = self
 
@@ -568,8 +568,8 @@ class Checker:
         for e in getattr(a, 'exprs', None) or ():
             for x in walk(e):
                 if is_query_line(x):
-                    # the engine's bytes (load/cone.rs), which print no place, as tally 2.1.5's did
-                    raise LoadError('LOAD-RANDOM', 'a query over paths on a path p line')
+                    # its file, line and item, as every load refusal (L §8.3; tally 2.1.7 S9, X3)
+                    raise LoadError('LOAD-RANDOM', 'a query over paths on a path p line', a.loc)
 
     def check_ask(self, a):
         sc = Scope(self, ('ask', a.id), None, 'ask')
@@ -589,6 +589,7 @@ class Checker:
             self.pin(p, sc, ask=True)
             if p.kind == 'law':
                 has_law_pin = True
+        self.pin_ties(a.pins, sc)
         if a.law is not None:
             t = self.tc(a.law, sc)
             if not self.is_date(t):
@@ -808,6 +809,10 @@ class Checker:
         return t
 
     def _tc(self, n, sc, expect):
+        kt = getattr(n, '_keyat', None)
+        if kt is not None:
+            # a key literal its key position reached through ( ) or an if's branch, resolved there (key_pos)
+            return kt
         k = n.k
         fn = getattr(self, 't_' + k, None)
         if fn is None:
@@ -1073,7 +1078,15 @@ class Checker:
         if dk == 'index' and m.indexes[dom[1]].pk not in (None, 'year') and kn.k == 'num' and kn.get('four'):
             t = self.tc(kn, sc, expect=T.period('year'))
             return self.key_conv(t, dom, kn, sc)
-        if self.is_keylit_node(kn, sc):
+        if kn.k in ('paren', 'if') and dk in ('index', 'kind', 'axis'):
+            # L §2.5 (tally 2.1.7, R10): the position reaches through ( ) and into both branches of an if, which stand
+            # where the whole stands: each literal it reaches is resolved as a bare key there
+            for leaf in self.reach_leaves(kn):
+                if self.is_keylit_node(leaf, sc) and self.key_pos(leaf, dom, sc)[0] == 'lit':
+                    leaf._keyat = leaf._t
+        # a number written at a stepped range's position is a key literal of it, whatever its digits (L §2.5, B1;
+        # F19: by_frac[2.0])
+        if self.is_keylit_node(kn, sc) or (dk == 'range' and kn.k == 'num'):
             if dk in ('index', 'kind', 'axis'):
                 if kn.k in ('date', 'month', 'quarter') or (kn.k == 'num' and kn.get('four') and dk == 'index'
                                                  and m.indexes[dom[1]].pk is not None):
@@ -1090,6 +1103,13 @@ class Checker:
             # L §2.5: "At a position keyed by a stepped range (§5.6), a key is a value of the range's type, written
             # or computed, and must be one of the range's values ... (LOAD-KEY for a literal, RUN-KEY at run)"
             kn._rangelit = True
+            if len(dom) > 1:
+                # a literal read anywhere is load's to check, whatever the asks (tally 2.1.7 R5, #106), as a row's is
+                from .loader import register_range_lit, range_literal
+                try:
+                    register_range_lit(m, _AtRange(dom), range_literal(m, kn, kn.loc), kn, kn.loc)
+                except LoadError:
+                    pass
         sc2 = sc.child()
         if (kn.k == 'bin' and kn.op in ('+', '-')) or getattr(kn, '_rangelit', False):
             sc2.allow_lit = True
@@ -1637,6 +1657,27 @@ class Checker:
             if f and any(b == f[1] and e > 0 for b, e in xu):
                 raise uerr('an exchange rate %s/%s applied to the wrong currency' % f, loc)
 
+    def key_duration_whole(self, lt, n, op, loc):
+        """A duration moves a key of an index by whole keys (L §4.2, §4.1 `by n`); one that isn't a whole number of
+        them is refused where load sees the duration and the index's step, LOAD-DOMAIN with run's words (tally 2.1.7
+        B5, #98, R5: `q + 1 year` on an index by 2), else at the key, RUN-DOMAIN."""
+        from .dates import Period
+        ix = self.m.indexes.get(lt.ix)
+        r = n.r
+        if ix is None or not ix.keys or not isinstance(ix.keys[0], Period) or r.k != 'num' or not r.isint or \
+                not r.unit or len(r.unit) != 1 or r.unit[0][1] != 1:
+            return
+        per = {'days': 'day', 'months': 'month', 'quarters': 'quarter', 'years': 'year'}.get(r.unit[0][0],
+                                                                                             r.unit[0][0])
+        if per not in ('day', 'month', 'quarter', 'year'):
+            return
+        k0 = ix.keys[0]
+        q = int(r.v)
+        unit, amount = ('day', q) if per == 'day' else ('month', q * {'month': 1, 'quarter': 3, 'year': 12}[per])
+        if unit == k0.unit and amount % k0.n:
+            raise LoadError('LOAD-DOMAIN', '%s %s %s: not a whole number of its periods (L §4.2)' % (
+                _txt(n.l), op, _txt(n.r)), loc)
+
     def year4_as_number(self, *sides):
         """A four-digit literal where no period is expected is a number (L §2.1): the literal rule applies to it as a
         number (L §7.1) before any unit error."""
@@ -1664,11 +1705,11 @@ class Checker:
             raise uerr('%s and %s in arithmetic' % (T.show(lt), T.show(rt)), n.loc)
         for side in (n.l, n.r):
             if getattr(side, '_t', None) is not None and side._t.k == 'year4':
-                side._year = readings[0][0]
-                side._t = T.period('year') if readings[0][0] else T.INT
-                lsc = getattr(side, '_litsc', None)
-                if lsc is not None:
-                    self.lit_rule(lsc, side, 'date' if readings[0][0] else 'num', side.v)
+                self.as_year(side, readings[0][0])
+                for leaf in self.reach_leaves(side):
+                    lsc = getattr(leaf, '_litsc', None)
+                    if lsc is not None:
+                        self.lit_rule(lsc, leaf, 'date' if readings[0][0] else 'num', leaf.v)
         return readings[0][1]
 
     def is_duration(self, t, pk=None):
@@ -1712,6 +1753,7 @@ class Checker:
             if vk == 'date':
                 return self.arith_time(op, T.DATE, rt, n)
             if vk == 'period':
+                self.key_duration_whole(lt, n, op, loc)
                 return self.arith_time(op, T.period(self.key_pk(lt)), rt, n)
             raise uerr('%s %s %s' % (T.show(lt), op, T.show(rt)), loc)
         if rk == 'key' and op == '+' and lk in intlike and self.key_value_kind(rt) != 'int':
@@ -1794,9 +1836,12 @@ class Checker:
         sc2 = scn.child()
         sc2.guards |= self.tested_vars(n.c, set(sc.keyvars))
         sc2.covered_spans |= self.covered_spans_of(n.c)
+        # the branches stand where the whole stands, so a figure allowed there is allowed in them (L §2.5, R10; G14)
+        sc2.allow_lit = sc.allow_lit
         sc3 = sc.child()
         sc3.guards |= self.tested_vars(n.c, set(sc.keyvars))
         sc3.covered_spans |= self.covered_spans_of(n.c)
+        sc3.allow_lit = sc.allow_lit
         at = self.tc(n.a, sc2, expect)
         bt = self.tc(n.b, sc3, expect)
         self.narrow_mark(n.c, nw)
@@ -1946,27 +1991,32 @@ class Checker:
         # a period literal compared with a key of a period index is that index's key: "a bare key used elsewhere
         # takes the index ... of the other operand" (L §2.5; §7.1 a comparison with a key)
         for side, t, other in ((ln, lt, rt), (rn, rt, lt)):
-            if other.k == 'key' and other.ix in self.m.indexes and \
-                    self.m.indexes[other.ix].pk in ('year', 'quarter', 'month') \
-                    and (t.k == 'year4' or (t.k == 'period' and side.k in ('month', 'quarter'))) and \
-                    side.k in ('num', 'month', 'quarter'):
-                ix = self.m.indexes[other.ix]
-                if {'num': 'year'}.get(side.k, side.k) != ix.pk:
-                    continue
-                lsc = getattr(side, '_litsc', None)
+            if not (other.k == 'key' and other.ix in self.m.indexes and
+                    self.m.indexes[other.ix].pk in ('year', 'quarter', 'month')):
+                continue
+            ix = self.m.indexes[other.ix]
+            # the position reaches through ( ) and into both branches of an if (L §2.5 Keys; tally 2.1.7 R10, T's
+            # SR-13: `first_q == (2026-04)`), so each literal it reaches is the key, as a bare one is
+            leaves = self.reach_leaves(side)
+            if not all(lf.k in ('num', 'month', 'quarter') and lf._t is not None and
+                       (lf._t.k == 'year4' or (lf._t.k == 'period' and lf.k in ('month', 'quarter'))) and
+                       {'num': 'year'}.get(lf.k, lf.k) == ix.pk for lf in leaves):
+                continue
+            for lf in leaves:
+                lsc = getattr(lf, '_litsc', None)
                 if lsc is not None:
-                    self.lit_rule(lsc, side, 'date')
-                side._r = ('key', resolve_key_literal(self.m, side, ('index', ix.id), side.loc))
-                side._t = T.key(ix.id)
-                side._year = False
-                side._keylit = True
-                return
+                    self.lit_rule(lsc, lf, 'date')
+                lf._r = ('key', resolve_key_literal(self.m, lf, ('index', ix.id), lf.loc))
+                lf._t = T.key(ix.id)
+                lf._year = False
+                lf._keylit = True
+            side._t = T.key(ix.id)
+            return
         if lk == 'year4' or rk == 'year4':
             other = rt if lk == 'year4' else lt
             side = ln if lk == 'year4' else rn
             if other.k == 'period' and other.pk == 'year' or (other.k == 'key' and self.key_pk(other) == 'year'):
-                side._year = True
-                side._t = T.period('year')
+                self.as_year(side)
                 return
             if self.numcls(other) in ('int', 'num', 'flex'):
                 side._year = False
@@ -2093,7 +2143,31 @@ class Checker:
             self.pin(p, sc)
             if p.kind == 'law':
                 sc2.lawpin = True
+        self.pin_ties(n.pins, sc)
         return self.tc(n.e, sc2, expect)
+
+    def pin_ties(self, pins, sc):
+        """Two pins of one set on one cell, of one width, tie in L §4.6's cascade (tally 2.1.7 R4, step 4): refused at
+        load where load sees both pins' keys, written alike with no variable in them (LOAD-OVERLAP); pins whose keys
+        only the run gives are checked at the cell (RUN-CONFLICT, evaluate.pin_value)."""
+        from .node import walk as _walk
+
+        def seen(kn):
+            return all(not (x.k == 'name' and x.get('id') in sc.vars) for x in _walk(kn))
+        sets = [p for p in pins if getattr(p, 'pkind', None) in ('input', 'def') and not getattr(p, 'sample', None)]
+        for i, p in enumerate(sets):
+            for q in sets[i + 1:]:
+                if p.info.id != q.info.id or tuple(p.fields or ()) != tuple(q.fields or ()):
+                    continue
+                pk, qk = p.target.keys or [], q.target.keys or []
+                if len(pk) != len(qk) or not all(seen(x) for x in pk + qk):
+                    continue
+                if [_txt(x) for x in pk] != [_txt(x) for x in qk]:
+                    continue
+                ks = ', '.join(_txt(x) for x in pk)
+                cell = '%s%s%s' % (p.info.id, ('[%s]' % ks) if pk else '', ''.join('.' + f for f in (p.fields or ())))
+                raise LoadError('LOAD-OVERLAP', 'pins %s = %s and %s = %s of %s overlap at [%s]' % (
+                    cell, _txt(p.value), cell, _txt(q.value), p.info.id, ks), q.loc)
 
     def is_bool(self, t):
         return t.k in ('bool', 'hole')
@@ -2132,7 +2206,8 @@ class Checker:
                 return
             if k == 'flex':
                 if (Fraction(t.n) / CURRENCIES[target.cur]).denominator != 1:
-                    raise LoadError('LOAD-PRECISION', '%s is finer than the minor unit' % t.n, loc)
+                    # the figure as the text writes it (L §2.4 Values, tally 2.1.7, R9; G9)
+                    raise LoadError('LOAD-PRECISION', '%s is finer than the minor unit' % _txt(node), loc)
                 self.flex_to(node, target)
                 node._flexto = target
                 return
@@ -2187,7 +2262,7 @@ class Checker:
             if self.period_kind(t) == target.pk:
                 return
             if k == 'year4' and target.pk == 'year':
-                node._year = True
+                self.as_year(node)
                 return
             raise uerr('%s is %s, not %s' % (what, T.show(t), target.pk), loc)
         if tk == 'key':
@@ -2374,8 +2449,7 @@ class Checker:
                 if t.k == 'keylist':
                     t = self.kl_value(e, 'year') or t
                 if t.k == 'year4':
-                    e._year = True
-                    e._t = T.period('year')
+                    self.as_year(e)
                     t = e._t
                 if not (self.is_date(t) or self.is_period(t)):
                     raise uerr('a span end is %s, not a date or a period' % T.show(t), sp.loc)
@@ -2527,11 +2601,30 @@ class Checker:
         self.want(t, lambda t: self.is_date(t) or (t.k == 'key' and False), what, n)
         return t
 
+    def reach_leaves(self, e):
+        """The nodes a position's expected type reaches (L §2.5, tally 2.1.7, R10): through parentheses and into both
+        branches of an if, which stand where the whole stands (bidirectional checking)."""
+        if e.k == 'paren':
+            return self.reach_leaves(e.e)
+        if e.k == 'if':
+            return self.reach_leaves(e.a) + self.reach_leaves(e.b)
+        return [e]
+
+    def as_year(self, e, year=True):
+        """A four-digit literal where a period is expected is a year, elsewhere an integer (L §2.1, §2.5), and so is
+        each one the position reaches: e is typed year4, so every leaf it reaches is one or a hole."""
+        t = T.period('year') if year else T.INT
+        for leaf in self.reach_leaves(e):
+            if leaf._t is not None and leaf._t.k == 'year4':
+                leaf._year = year
+                leaf._t = t
+        e._t = t
+
     def tdate_or_period(self, e, sc, n):
         t = self.tc(e, sc)
         if t.k == 'year4':
-            e._year = True
-            e._t = t = T.period('year')
+            self.as_year(e)
+            t = e._t
         self.want(t, lambda t: self.is_date(t) or self.is_period(t), 'the argument', n)
         return t
 
@@ -2867,6 +2960,15 @@ class Checker:
             t = self.tc(n.args[0], sc, expect=T.key(self.m.things[t.n].base))
         if t.k != 'key' or t.ix not in self.m.kinds:
             raise uerr('lifespan of %s, not a thing' % T.show(t), n.loc)
+        k, seen = t.ix, []
+        while k in self.m.kinds and k not in seen:
+            seen.append(k)
+            kn = self.m.kinds[k]
+            if kn.spec == 'event':
+                # L §5.7: a movement has its day, not a lifespan; load's types show it (tally 2.1.7 R5, #136; refcore
+                # 2.1.6 crashed at run)
+                raise uerr('lifespan of %s: a movement has its day, not a lifespan' % T.show(t), n.loc)
+            k = kn.parent if kn.spec == 'sub' else None
         return T.record([('from', T.DATE), ('to', T.DATE)])
 
     def c_missing(self, n, sc, expect):
@@ -3357,15 +3459,34 @@ class Checker:
                     raise LoadError('LOAD-LAWDATE', 'ask %s reads law-dated %s directly, without law' % (a.id, t[1]),
                                     a.loc)
 
+    ITEM_KINDS = ('def', 'input', 'band', 'ask', 'move', 'fill', 'place', 'kind', 'axis', 'index')
+
+    def item_of(self, node):
+        """The item a graph node belongs to, or None for the checker's own nodes (the timeline, a price's cone, a
+        parts clause): a move's day is the move's, a scenario's row is its input's (L §5.18, E §10; tally 2.1.7 B2)."""
+        if node[0] == 'moveon':
+            return ('move', node[1])
+        if node[0] == 'srow':
+            return (node[1], node[2])
+        if node[0] in self.ITEM_KINDS and len(node) == 2:
+            return node
+        return None
+
     def readers_of(self, item):
-        """Every item that reads x, directly or not: direct readers first, then by depth, then by id."""
+        """Every item that reads x, directly or not (L §5.18 inputs-of's reverse, E §10): breadth first over the
+        graph's nodes, each item listed once, at the first layer one of its nodes is met, a layer sorted by id."""
         inv = {}
+        nodes = {}
         for r, ts in self.edges.items():
+            nodes.setdefault(self.item_of(r), set()).add(r)
             for t in ts:
                 inv.setdefault(t, set()).add(r)
+                nodes.setdefault(self.item_of(t), set()).add(t)
+        nodes.pop(None, None)
         out = []
-        seen = {item}
-        frontier = [item]
+        listed = {self.item_of(item)}
+        seen = set(nodes.get(self.item_of(item), ())) | {item}
+        frontier = set(seen)
         while frontier:
             nxt = set()
             for x in frontier:
@@ -3373,15 +3494,29 @@ class Checker:
                     if r not in seen:
                         seen.add(r)
                         nxt.add(r)
-            layer = sorted(nxt, key=lambda r: r[1])
-            out.extend(layer)
-            frontier = layer
+            layer = set(self.item_of(r) for r in nxt) - listed - {None}
+            listed |= layer
+            out.extend(sorted(layer, key=lambda r: r[1]))
+            # an item's every node stands at the layer the item is listed at (its day, a scenario's row of it)
+            for it in layer:
+                for x in nodes.get(it, ()):
+                    if x not in seen:
+                        seen.add(x)
+                        nxt.add(x)
+            frontier = nxt
         return out
 
 
 def _intflex(t):
     """A bare figure that is an integer (0, 1, -1, or an integer in a band row)."""
     return Fraction(t.n).denominator == 1
+
+
+class _AtRange:
+    """A key position keyed by a stepped range, as range_member reads a bind's (its dom)."""
+
+    def __init__(self, dom):
+        self.dom = dom
 
 
 def _txt(n):
@@ -3402,6 +3537,16 @@ def _txt(n):
         return '%04d-Q%d' % n.v
     if k == 'index':
         return '%s[%s]' % (_txt(n.obj), ', '.join(_txt(x) for x in n.keys))
+    if k == 'placekey':
+        return '%s[%s]' % (n.id, ', '.join(_txt(x) for x in n.keys))
+    if k == 'inf':
+        return '-inf' if n.neg else 'inf'
+    if k == 'dname':
+        return '%s.%s' % (n.qual, n.id) if n.qual else n.id
+    if k == 'dlist':
+        return '[%s]' % ', '.join(_txt(x) for x in n.keys)
+    if k == 'drange':
+        return '%s..%s%s' % (_txt(n.a), _txt(n.b), (' step ' + _txt(n.step)) if n.step is not None else '')
     if k == 'field':
         return '%s.%s' % (_txt(n.obj), n.name)
     if k == 'bin':

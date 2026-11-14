@@ -16,7 +16,7 @@ import datetime
 import re
 
 from .errors import TallyError, Unspecified, NotYet, Refusal
-from .evaluate import Engine, Ctx, Coll, TraceNode, HoleSignal, OutKey, ListKey, merge, lin_of
+from .evaluate import Engine, Ctx, Coll, TraceNode, HoleSignal, OutKey, ListKey, merge, lin_of, after_on
 from .model import key_text, set_world, set_each
 from .values import (CURRENCIES, fmt_typed, Num, Hole, Iv, Special, Thing, Key, Lst, Text, NONE, vkey, fmt, fmt_hole, fmt_q)
 from .check import _txt
@@ -76,6 +76,21 @@ def req_ask(qid):
     after load (a load refusal outranks it), in every shape of reality, printing `no ask <q>`, q the first such ask in
     the request's order, as the run's one result; a member's ask named as asked, a.q (L §6.1)."""
     return TallyError('REQ-ASK', 'no ask %s' % qid)
+
+
+def req_clock(m, a):
+    """E §11 (tally 2.1.7 R5, #112): a cut an asked line's literal states after `on` (`as known D`, `with known D`)
+    refuses the request, after load, as REQ-ASK does: the run's one result. A computed one is refused at its value."""
+    lits = []
+    if a.known is not None and a.known.k == 'date':
+        lits.append(('as known', a.known))
+    for p in a.pins:
+        if getattr(p, 'kind', None) == 'known' and p.value.k == 'date':
+            lits.append(('with known', p.value))
+    for word, n in lits:
+        d = datetime.date.fromisoformat(n.v) if isinstance(getattr(n, 'v', None), str) else getattr(n, 'v', None)
+        if isinstance(d, datetime.date) and d > m.on:
+            raise TallyError('REQ-CLOCK', "%s %s is after the model's on %s" % (word, d, m.on))
 
 
 def knows_ask(m, qid):
@@ -160,6 +175,16 @@ class RowSet:
     def __init__(self, rows, texts):
         self.rows = rows
         self.texts = texts
+
+
+def day_text(d, inst=None):
+    """A day as L §2.4 prints values (tally 2.1.7, R9; F17): a date in ISO; a day that is a hole as the hole, `?`
+    with its question; a booking cut an instance never reached (its day a hole or refused) as that day."""
+    if d is None and inst is not None:
+        d = inst.day if inst.err is None or isinstance(inst.day, Hole) else inst.err
+    if isinstance(d, datetime.date):
+        return d.isoformat()
+    return fmt_value(d)
 
 
 def fmt_value(v, partial=False, t=None):
@@ -260,6 +285,9 @@ class Asker:
         m = self.m
         asks = {a.id: a for a in list(m.asks) + list(getattr(m, 'asks_alone', ()))}
         members = getattr(m, 'joint_members', {})
+        # L §2.5, §8.4 (tally 2.1.7 R5, #106): a literal key at a literal stepped range is load's to refuse, whatever
+        # the asks, before REQ-ASK (E §11), not at the first ask answered
+        Engine(m).check_range_lits()
         if ids:
             for i in ids:
                 if not knows_ask(m, i):
@@ -276,6 +304,9 @@ class Asker:
                 order.append(asks[i])
         else:
             order = [asks[i] for i in sorted(asks)]
+        for a in order:
+            if not isinstance(a, str):
+                req_clock(m, a)
         out = []
         try:
             for a in order:
@@ -373,6 +404,8 @@ class Asker:
         if a.paths is not None and a.paths > MAX_PATHS:
             return ['%s: refused: REQ-PATHS %d paths for one ask; the cap is 100 000' % (a.id, a.paths)]
         eng = Engine(m)
+        eng.explainer = (self, a)
+        self.pin_cells = eng.ask_pin_cells
         self.eng_warn = eng.walk_warnings
         eng.check_range_lits()
         eng.cross = getattr(self, 'cross', None)
@@ -389,6 +422,7 @@ class Asker:
                 # questions, and nothing inside is evaluated"
                 return ['%s: %s' % (a.id, fmt_value(v))]
             K = eng.date_of(v, 'as known')
+            after_on(m, K)
         eng.ask_K = K
         law = None
         if a.law is not None:
@@ -533,11 +567,34 @@ class Asker:
         return out
 
     # -- diff (L §5.18, §6.4) -------------------------------------------------------------------------
+    def diff_axes(self, a, ctx):
+        """The axes a diff fans out over (L §5.5): those its cone reaches, less its pins."""
+        return [ax for ax in getattr(a, '_axes', []) if ax not in dict(ctx.axes)]
+
+    def diff_combos(self, axes):
+        combos = [()]
+        for ax in axes:
+            combos = [c + ((ax, o),) for c in combos for o in self.m.axes[ax].options]
+        return combos
+
     def answer_diff(self, eng, a, ctx, pins_coll):
-        """diff(e [for binds]) in S against B: e in world S and in world B, line by line keyed by the binding tuple
-        (the expression's text without binds); `added` (only in S), `removed` (only in B), `changed` with both
-        values; the unchanged lines counted.  Layout (this interpreter's): a head line with the counts, then one line
-        per difference, then the register of both evaluations."""
+        """diff(e [for binds]) in S against B, evaluated per combination of the axes it reads (L §5.5, tally 2.1.7
+        R8): each combination a cell, `diff_worlds`; the cells' results printed by `diff_print`. On a stack that holds
+        one of the two worlds (cli.cross_stack_diff) the cells of that side are kept for the caller instead."""
+        axes = self.diff_axes(a, ctx)
+        pinned = list(ctx.axes)
+        cells = {}
+        for c in self.diff_combos(axes):
+            cctx = ctx.but(axes=tuple(sorted(pinned + list(c)))) if c else ctx
+            cells[c] = self.diff_worlds(eng, a, cctx, pins_coll)
+        if getattr(self, '_diff_only', None) is not None:
+            self._diff_side = (axes, cells, ctx)
+            return []
+        return self.diff_print(a, axes, cells, ctx)
+
+    def diff_worlds(self, eng, a, ctx, pins_coll):
+        """One cell of a diff: e in world S and in world B (or the one this stack holds), line by line keyed by the
+        binding tuple (the expression's text without binds). Returns ({world: [(key, value)]}, coll, ctx, type)."""
         m = self.m
         e, bs, sw, bw = a.diff
         coll = Coll()
@@ -572,14 +629,11 @@ class Asker:
                 eng.stack.pop()
                 set_world(old)
             res[w] = lines
-        t = getattr(e, '_t', None)
-        if only is not None:
-            # one side of a diff whose worlds sit on two stacks (cli.run_worlds): the other side is another reality's
-            self._diff_side = (res[only], coll, ctx, t)
-            return []
-        return self.diff_combine(a, res, coll, ctx, t)
+        return res, coll, ctx, getattr(e, '_t', None)
 
-    def diff_combine(self, a, res, coll, ctx, t):
+    def diff_lines(self, a, res, ctx, t):
+        """A cell's result, the set of its lines (L §5.18): `added` (only in S), `removed` (only in B), `changed` with
+        both values, the unchanged ones counted. Returns (the head's counts, the lines)."""
         e, bs, sw, bw = a.diff
         sl = dict(res[sw])
         bl = dict(res[bw])
@@ -600,9 +654,49 @@ class Asker:
             if key not in sl:
                 counts['removed'] += 1
                 out_lines.append('  removed %s: %s' % (key, fmt_value(v, ctx.partial, t)))
-        head = '%s: diff in %s against %s: %d changed, %d added, %d removed, %d unchanged' % (
-            a.id, sw, bw, counts['changed'], counts['added'], counts['removed'], counts['unchanged'])
-        return [head] + out_lines + ['  ' + r for r in self.register(coll, [], ctx)]
+        counted = 'diff in %s against %s: %d changed, %d added, %d removed, %d unchanged' % (
+            sw, bw, counts['changed'], counts['added'], counts['removed'], counts['unchanged'])
+        return counted, tuple(out_lines)
+
+    def diff_print(self, a, axes, cells, ctx):
+        """Print a diff's cells (L §5.5): one line per distinct result, the combinations giving it split into products
+        and named as a value's are (`group`); no head when it reads no axis. Layout (this interpreter's): a head line
+        with the counts, one line per difference, then the register of the evaluations it stands for."""
+        m = self.m
+        results = {c: self.diff_lines(a, res, cctx, t) for c, (res, coll, cctx, t) in cells.items()}
+        if not axes:
+            counted, body = results[()]
+            return (['%s: %s' % (a.id, counted)] + list(body) +
+                    ['  ' + r for r in self.register(cells[()][1], [], ctx)])
+        by, order = {}, []
+        for c in self.diff_combos(axes):
+            if results[c] not in by:
+                by[results[c]] = []
+                order.append(results[c])
+            by[results[c]].append(c)
+        out = []
+        for k in order:
+            cs = by[k]
+            for prod in split(axes, [dict(c) for c in cs], m):
+                coll = Coll()
+                for c in cs:
+                    d = dict(c)
+                    if all(d[ax] in opts for ax, opts in prod):
+                        coll.merge(cells[c][1])
+                lab, reading, sk = [], [], []
+                for ax, opts in prod:
+                    allo = m.axes[ax].options
+                    ol = [o for o in allo if o in opts]
+                    whole = len(ol) == len(allo)
+                    lab.append('%s = %s' % (ax, '*' if whole else ' | '.join(ol)))
+                    if not whole:
+                        reading.append('%s = %s' % (ax, ' | '.join(ol)))
+                    sk.append(-1 if whole else allo.index(ol[0]))
+                out.append((sk, ['%s [%s]: %s' % (a.id, ', '.join(lab), k[0])] + list(k[1]) +
+                            ['  ' + r for r in self.register(coll, reading, ctx)]))
+        # order: by the axes' options in declaration order, axes in id order; * first (as `group`)
+        out.sort(key=lambda x: x[0])
+        return [l for _, ls in out for l in ls]
 
     # -- residuals (E §6.3) ----------------------------------------------------------------------------
     def answer_residuals(self, eng, a, ctx, pins_coll):
@@ -1016,6 +1110,15 @@ class Asker:
         coll = Coll()
         coll.merge(pins_coll)
         coll.merge(ln.coll)
+        # L §8.2 One read set (tally 2.1.7 R7; T's SR-6, the review's finding 4): an ask's with pin that the ask's
+        # reads of its cell met only under an inner or narrower claim (an as if's pin, a solve's variable; R4: the
+        # innermost claim wins) is in no read of the line, so it isn't listed. The line's own read set says both:
+        # a read that took the pin registered it, one that met it under another claim `pin met` (eng.pin_value; P45:
+        # per result, not per ask)
+        cells = getattr(self, 'pin_cells', {})
+        for e in [e for e in pins_coll.reg if e[0] == 'pinned' and e[1] in cells and e not in ln.coll.reg]:
+            if ('pin met', e[1]) in ln.coll.reg:
+                coll.reg.discard(e)
         laws = getattr(vals[0], 'laws', None) if vals else None
         out.extend('  ' + r for r in self.register(coll, ln.reading, ctx, a.path is not None, laws))
         if a.orient is not None:
@@ -1081,7 +1184,7 @@ class Asker:
             out.extend('sample: %s' % t for t in sorted(first, key=lambda t: (first[t], t)))
         out.extend(sorted(ent.get('world', ())))
         out.extend('reading: %s' % r for r in reading)
-        for kind in ('anchor', 'pad', 'adjustment', 'unfulfilled', 'open', 'left out', 'uncertain'):
+        for kind in ('before from', 'anchor', 'pad', 'adjustment', 'unfulfilled', 'open', 'left out', 'uncertain'):
             out.extend(sorted(ent.get(kind, ())))
         for place, (d0, mids) in sorted(ent.get('_labels', {}).items()):
             out.append('WARN-LABELS labels dropped at %s from %s: %s' % (place, d0, ', '.join(sorted(mids))))
@@ -1113,6 +1216,16 @@ class Asker:
         kind, iid = r[1], r[2]
         item = (kind, iid)
         hits = self.m.checker.readers_of(item)
+        m = self.m
+        if iid in m.kinds:
+            # a binding over a kind reads it and its subkinds, so a binding over a kind above reads it too (E §10,
+            # L §8.2's one read set; tally 2.1.7 R7)
+            sub = m.kinds[iid].subtree(m)
+            for k in sorted(m.kinds):
+                if k != iid and (k in sub or iid in m.kinds[k].subtree(m)):
+                    for h in m.checker.readers_of(('kind', k)):
+                        if h not in hits:
+                            hits.append(h)
         names = ['%s' % h[1] for h in hits]
         return ['%s: %s' % (a.id, ', '.join(names) if names else 'nothing reads %s' % iid)]
 
@@ -1141,7 +1254,7 @@ class Asker:
             if run is not None and getattr(run, 'read_places', None):
                 out.append('read at its walk point: %s' % ', '.join(sorted(run.read_places)))
         else:
-            out.append('plan, day %s, booking cut %s, status %s' % (fmt_value(inst.day), inst.cut, st))
+            out.append('plan, day %s, booking cut %s, status %s' % (fmt_value(inst.day), day_text(inst.cut, inst), st))
         if inst.exists is not True:
             out.append('exists: %s' % fmt_value(inst.exists))
         if src.err is not None:
@@ -1193,31 +1306,49 @@ class Asker:
         from .evaluate import _tfmt
         pinned = set(p.axis for p in a.pins if getattr(p, 'pkind', None) == 'axis')
         octx = self._outside_ctx.but(axes=tuple((ax, o) for ax, o in ctx.axes if ax not in pinned))
-        eng.tracing = True
-        eng.trace_cells = {}
-        saved = eng.memo
-        eng.memo = {}
-        oroot = TraceNode('root', _txt(a.ref))
-        eng.trace_stack = [oroot]
-        old = set_world(eng.world_chain(octx.world))
-        eng.stack.append(Coll())
-        try:
-            vo = self.one(eng, a.ref, env, octx)
-        finally:
-            eng.stack.pop()
-            set_world(old)
-            eng.tracing = False
-            eng.trace_stack = []
-            eng.memo = saved
+
+        def outside_of(oc, fixed):
+            # outside the pins, an axis the ask pinned is read as every other line reads an axis: the derivation fans
+            # out over the options of each one it reads, in declaration order (L §5.5 Fan-out; tally 2.1.7 R8, T's
+            # SR-10); 2.1.7's first refcore stopped at its guard
+            eng.tracing = True
+            eng.trace_cells = {}
+            saved = eng.memo
+            eng.memo = {}
+            oroot = TraceNode('root', _txt(a.ref))
+            eng.trace_stack = [oroot]
+            old = set_world(eng.world_chain(oc.world))
+            eng.stack.append(Coll())
+            # the derivation outside the pins is no read of the result: neither its register nor the ask pins it
+            # takes are listed (L §8.2 One read set; T's SR-C1, P42)
+            record, eng.pin_record = eng.pin_record, False
+            try:
+                vo = self.one(eng, a.ref, env, oc)
+            finally:
+                eng.pin_record = record
+                eng.stack.pop()
+                set_world(old)
+                eng.tracing = False
+                eng.trace_stack = []
+                eng.memo = saved
+            ax = getattr(vo, 'axis', None)
+            if ax in pinned and ax not in dict(fixed):
+                nodes = []
+                for o in self.m.axes[ax].options:
+                    nodes += outside_of(oc.but(axes=tuple(sorted(oc.axes + ((ax, o),)))), fixed + ((ax, o),))
+                return nodes
+            tag = (' [%s]' % ', '.join('%s = %s' % f for f in fixed)) if fixed else ''
+            node = TraceNode('group', 'outside the pins%s: %s' % (tag, _tfmt(vo)))
+            node.children = oroot.children
+            return [node]
+        outs = outside_of(octx, ())
         out = TraceNode('root', _txt(a.ref))
         pn = TraceNode('group', 'the pins, evaluated outside them')
         for line in eng.pin_lines(octx, ctx):
             pn.children.append(('node', TraceNode('group', 'pin ' + line)))
         inside = TraceNode('group', 'inside the pins: %s' % _tfmt(v))
         inside.children = root.children
-        outside = TraceNode('group', 'outside the pins: %s' % _tfmt(vo))
-        outside.children = oroot.children
-        out.children = [('node', pn), ('node', inside), ('node', outside)]
+        out.children = [('node', pn), ('node', inside)] + [('node', o) for o in outs]
         out.value = v
         return out
 
@@ -1251,10 +1382,11 @@ class Asker:
         # that point"
         out = []
         byp = {r.point: r.id for r in w.decs.values() if getattr(r, 'point', None) is not None}
+        from .walk import dec_head
         for p in sorted(cells):
             import datetime as _dt
             d = _dt.date.fromordinal(p[0])
-            out.append('%s at (%s, stratum %s, %s): %s' % (org, d, p[2], byp.get(p, p[3].split('|')[0]),
+            out.append('%s at (%s, stratum %s, %s): %s' % (org, d, p[2], byp.get(p, dec_head(p[3])),
                                                            fmt_value(cells[p])))
             # the state just before the reader's own booking at p: "its running reads as balances up to that point"
             ctx2 = w.tctx.but(cut=min(d, w.K), walk=w, wp=p[:4] + (p[4] - 0.5,))
@@ -1367,6 +1499,17 @@ class Asker:
         finally:
             eng.stack.pop()
         return v, lines
+
+    def balance_cause(self, eng, a, n, env, ctx):
+        """The lines of a balance read met as a cause (E §10's balance form), its register kept in the cause's."""
+        try:
+            return self._explain_bal_lines(eng, a, n, env, ctx)
+        except HoleSignal:
+            return []
+        except TallyError as e:
+            if is_load(e):
+                raise LoadAtRun(e)
+            return ['refused: %s %s' % (e.code, e.msg)]
 
     def explain_low_plain(self, eng, a, n, env, ctx):
         """`explain low(x, a .. b)` without `from`: the lowest of the plain end-of-day balances (L §5.14.1), and the
@@ -1644,8 +1787,10 @@ class Asker:
 
     def point_text(self, p):
         import datetime as _dt
+        from .walk import DSEP
         d = _dt.date.fromordinal(p[0])
-        return '(%s, stratum %s, %s)' % (d, p[2], p[3])
+        # a decision's entry text prints its terms joined by `|`, as written before SR-B4 (walk.DSEP)
+        return '(%s, stratum %s, %s)' % (d, p[2], p[3].replace(DSEP, '|') if isinstance(p[3], str) else p[3])
 
     def explain_lines(self, root, ctx):
         if isinstance(root, ExplainLines):
@@ -1656,6 +1801,51 @@ class Asker:
         for kind, ch in root.children:
             self.explain_node(ch, kind, 1, out)
         return out
+
+    def def_causes(self, tn):
+        """A def cell's causes in the order explain_node prints them: each rule's when, the winner's value, the rest."""
+        states = getattr(tn, 'rule_states', {})
+        whens = dict(getattr(tn, 'when_children', []))
+        for lab in sorted(states):
+            w = whens.get(lab)
+            if w is not None:
+                yield from (ch for _k, ch in w.children)
+            vc = getattr(tn, 'value_children', None)
+            if states[lab] == 'won' and vc is not None:
+                yield from (ch for _k, ch in vc.children)
+        yield from (ch for _k, ch in tn.children)
+
+    def chain_next(self, tn, taken):
+        """The first cell of tn's own def that tn reads and nothing has printed: the next step of a recurrence."""
+        for ch in self.def_causes(tn):
+            if ch.kind == 'def' and getattr(ch, 'def_id', None) == tn.def_id and id(ch) not in self._seen and \
+                    id(ch) not in taken:
+                return ch
+        return None
+
+    def explain_step(self, tn, ch, kind, depth, out):
+        """A def cell's cause. A chain of more than 3 cells of one def, each read by the one before it, folds (E §10
+        Long derivations fold; tally 2.1.7 S4, #131): tn, then `… <n> more steps of <x>, <k2> .. <kn-1> …` where its
+        second step would print, then its last step there; a cause only the folded steps read prints where it is next
+        met, as they never print."""
+        if ch.kind != 'def' or getattr(ch, 'def_id', None) != getattr(tn, 'def_id', None) or id(ch) in self._seen:
+            self.explain_node(ch, kind, depth, out)
+            return
+        rest = [ch]
+        taken = {id(tn), id(ch)}
+        while True:
+            nx = self.chain_next(rest[-1], taken)
+            if nx is None:
+                break
+            rest.append(nx)
+            taken.add(id(nx))
+        if 1 + len(rest) <= 3:
+            self.explain_node(ch, kind, depth, out)
+            return
+        keys = lambda c: ', '.join(key_text(k) for k in c.keys)
+        out.append('%s\u2026 %d more steps of %s, %s .. %s \u2026' % (
+            '  ' * depth, len(rest) - 1, tn.def_id, keys(rest[0]), keys(rest[-2])))
+        self.explain_node(rest[-1], kind, depth, out)
 
     def explain_node(self, tn, kind, depth, out):
         ind = '  ' * depth
@@ -1676,6 +1866,14 @@ class Asker:
             return
         if tn.kind == 'bandrow':
             out.append('%s[%d] band row %s' % (ind, no, tn.label))
+            return
+        if tn.kind == 'balread':
+            # a balance cause in its own form (E §10; tally 2.1.7 R7, #132b)
+            e = getattr(tn, 'refused', None)
+            out.append('%s[%d] %s = %s' % (ind, no, tn.label, fmt_value(tn.value) if e is None else 'refused: %s %s' % (
+                e.code, e.msg)))
+            for l in tn.lines:
+                out.append('%s    %s' % (ind, l))
             return
         if tn.kind == 'def':
             law = getattr(tn, 'law', None)
@@ -1698,14 +1896,14 @@ class Asker:
                 w = whens.get(lab)
                 if w is not None:
                     for k2, ch in w.children:
-                        self.explain_node(ch, k2, depth + 3, out)
+                        self.explain_step(tn, ch, k2, depth + 3, out)
                 if st == 'won':
                     vc = getattr(tn, 'value_children', None)
                     if vc is not None:
                         for k2, ch in vc.children:
-                            self.explain_node(ch, k2, depth + 3, out)
+                            self.explain_step(tn, ch, k2, depth + 3, out)
             for k2, ch in tn.children:
-                self.explain_node(ch, k2, depth + 2, out)
+                self.explain_step(tn, ch, k2, depth + 2, out)
             return
         out.append('%s[%d] %s' % (ind, no, tn.label))
         for k2, ch in tn.children:

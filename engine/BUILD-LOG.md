@@ -2660,3 +2660,285 @@ The builder, on #137 (the equivalents review's row 3, overturned). L §4.6 step 
 - **Check:** `check full: red, 1 of 31 steps failed (839s)` on this commit's tree with the survivors list's commit: 30 steps green, `m1_fixes_a_scenario_replace_of_a_reading_wins` among them. The red step, `rules-selftest`, failed its clean pass on a warning replayed from cargo's cache: a planted R-78 case (`Vec::no_such_method`) from a selftest run I stopped mid-case. Its tally fingerprints dropped, the step alone is green: `check step rules-selftest: green, 1 step (919s)`. A first run was red on `doc`: `readings`' doc linked the private `standing`, now plain text. `milestone-report: M2: no test target`.
 - **For the review:** a selftest run stopped mid-case leaves its planted `clippy.toml` in cargo's cache (the copy keeps the old mtime), so the next clean pass replays the planted warning. That's for the rules (`tools/rules_selftest.py`), not fixed here.
 - **STOP-REPORTs:** none new.
+
+## 2026-11-13 tally 2.1.7, S1: a walked value outside [S, E] is a hole; `flows` after E; the ledger's days after E (issue #93, pick P20)
+
+The 2.1.7 builder (one session, after T's re-run 2e4748c; work list its 287 `Logged-Red:` ids). The sweep for every commit of this round: the engine against refcore over refcore's 1 318 tests that run through `run` and T's probe texts in `engine/tests/out/t217/` (`tmp/spec-2.1.7-build/sweep.py`, refcore's side computed once on 4241169), compared ask by ask with the base binary (HEAD 4241169, crates bf92d27). The base has `ENGINE-INVARIANT` in two refcore tests, `L4_6_period_held_by_key` and `L4_6_reading_at_date` (a literal key outside its index, which refcore refuses `RUN-KEY` at run): they were there before this round, and are R5's and B1's.
+
+- **One test at the read** (`walk/reads.rs` `outside_run`; L §8.1, E §2): the walk holds S to E, so a walked value of a day outside it is the hole naming the end it passes, `HOLE-PRERUN` before S, `HOLE-POSTRUN` after E. `bal` asks it once its day is known, before the plain or projected read (a traced `explain` still prints the balance form); `low` reads the days inside [S, E] as before (F5's common case included) and adds the hole of each end its span passes, so `low` is the `min` of its days' balances (R6). Before, a day after E carried the balance at E, and a day before S asked `HOLE-ANCHOR`'s false question. The hole module builds both holes (`Hole::before_run`, `Hole::after_run`); the three earlier `before the run's start` sites use it.
+- **`flows` after E** (`walk/flows.rs` `after_run`, `may_touch`, `Sums::unbooked`; E §2 "Movements outside [S, E] … those after E by `flows` too"): a place's flows over a span past E counts each plan instance dated after E with its legs' amounts at the place, and a decision's instance there that may touch the place (a leg names it, or a leg's place can't be read) as the hole `after the run's end`; a move's flows counts a decision's unwalked instance after E as that hole (refcore's `flows_post_e`, `flows_move`).
+- **The ledger** (`book/ledger.rs` `after_run_line`; E §6.3): a period that E cuts holds its days through E, and the days after E are one line, a hole `after the run's end`, in a group of its own; lines dated after E go.
+- **The catalogue:** `HOLE-POSTRUN` in `Code::ALL` (102 codes), after `HOLE-PRERUN` as L §8.1's table has it: `the_catalogue_is_the_spec_tables` is green.
+- **Turned green (10 S1, 3 R7):** `decide/post-run`, `fixes/g12/r_agent_lw_lw_e12`, `r_agent_lw_lw_e13`, `fixes/g9/r_beyond_e_e_bal`, `r_beyond_e_e_low`, `s1/e2_walked_after_end`, `s1/e2_walked_before_start`, `s1/e2_flows_after_end`; R7's `fixes/g12/r_p_bc`, `r_p_bc2`, `r_p_rid` (their reads of days outside the run). Gating: 276 of the 287 still red.
+- **Still red, not S1's alone:** the 43 `fixes/g12/*` S1 ids refuse the whole run `LOAD-UNIT bal(world, d) of a place of unit any…`, one of R5's run-time `LOAD-*` sites; they are measured again after R5. `s1/e6_3_residuals_after_end` stops "not implemented" on a construct no rule of this round builds, a `text` attribute in an observed row (`kind groceries … attr payee: text`, `payee: "BIEDRONKA"`): on the same text without that attribute the engine prints refcore's bytes, the after-E line included (`/tmp/e63/r7.tally`, both ledgers). For the coordinator: T may hold it for the milestone that builds text attributes.
+- **The builder's own test** `tally-cli/tests/walk_oracle.rs` pinned two of refcore's 2.1.6 lines of F5's reality, `q_low` and `s_low`, which now read days past E: it pins refcore 2.1.7's, `q_low_late`'s two worlds and `s_low`'s hole (refcore and the engine byte-equal there but R7's two `before from:` lines).
+- **Sweep:** none SAME → DIFF; 11 asks DIFF → SAME (refcore's `E2_walked_after_end`, `E2_walked_before_start`, `E2_flows_after_end`); no new `ENGINE-INVARIANT`.
+- **Size:** 272 changed lines in `engine/crates/` (245 added, 27 removed), over the plan's 50: `flows` after E (about 110) and the ledger's line (44) were not in its estimate. **M1 code replaced:** the three `before the run's start` holes now one constructor; the false `HOLE-ANCHOR` before S. **Exceptions:** +0.
+- **Files:** `base/code.rs`, `hole/questions.rs`, `walk/reads.rs`, `walk/projection.rs`, `walk/flows.rs`, `book/ledger.rs` (kernel: walk, book, hole), `tally-cli/tests/walk_oracle.rs`.
+
+## STOP-REPORT 2026-11-13: a leg's unit fault through `any` met at run: refcore prints `LOAD-UNIT` and refuses the run, R5 says `RUN-DOMAIN` at the value
+
+- **Kind:** the spec and refcore differ (refcore seems wrong)
+- **Where:** `engine/tests/m1/fixes/gate8/zero2.tally` (T's C15: "a leg of unit any whose amount is a number 0 with no unit, between two places of two units that load can't see"); refcore `moves.py` l.1109–1123 (`raise LoadError('LOAD-UNIT', …)` in `eval_leg`'s unit checks) and its `refuse` (l.37), which, unlike `evaluate.py`'s, `mreads.py`'s and `resid.py`'s, doesn't go through `errors.at_run`; the engine's twins `walk/legs.rs` (five sites) and `walk/plan.rs` (`the when of <i> is <v>`, `a day that isn't a date`).
+- **Rule or gate:** L §8.4 "Load refuses what load sees (R-load, tally 2.1.7)": "A check whose input only the run knows (a unit that comes with a value …) is made where the value is read, with a `RUN-*` code (`RUN-DOMAIN` for units and domains) in load's words. No `LOAD-*` code prints at run"; L §8.4 `RUN-DOMAIN`'s row: "a unit or type check made at the value, in load's words (R-load)".
+- **What happens:** `zero2`'s smallest form: a move over `accounts` with a leg of unit `any`, amount `z = 0`. refcore 2.1.7 and the stored vector: `refused: LOAD-UNIT the amount of leg cash of nil[kasa, konto] (0) is in no unit of a place`, exit 1. With `walk/plan.rs`'s `refuse_load` routed through R5's mapping (as `eval`'s now is), the engine prints `b: refused: RUN-DOMAIN the amount of leg cash of nil[kasa, konto] (0) is in no unit of a place` and the same for `f`, exit 0: the spec's reading.
+- **What I did:** left the form as it is. `walk/plan.rs`'s `refuse_load` (legs and `when`, refcore's `moves.py`) keeps load's code; `eval/` and the reads (`walk/reads.rs`, `value.rs`, `projection.rs`, `book/ledger.rs`, refcore's `evaluate.py`, `mreads.py`, `resid.py`) take R5's mapping, `Load::at_run`. `zero2` stays green on refcore's bytes.
+- **What I ask:** a ruling. Recommended: refcore's `moves.py` `refuse` goes through `at_run` like its other modules (one mechanism), so the eight leg and `when` sites print `RUN-DOMAIN` at the value; T restates `zero2` (its `b` and `f` lines); the engine's `walk/plan.rs` `refuse_load` takes `Load::at_run` (one line). Option 2: these faults are load's (it sees the leg's declared unit `any`): no, load can't see the places a binding over `accounts` gives.
+- **State:** last green commit 8ffee7b; R5's run half is this STOP-REPORT's commit.
+
+## STOP-REPORT 2026-11-13: T's four spec rows for key arithmetic outside its index print `LOAD-UNIT` at run, refusing the run; R5 says `RUN-DOMAIN` at the value
+
+- **Kind:** a test seems wrong (stale against tally 2.1.7's R5)
+- **Where:** `engine/tests/m1/spec.tsv` rows 31, 32 (`fixes/g13/fix_i3_model_with_fix_i3_i3_i3`, `_i4`: `def z3: int = q1 - (kq + 1)`, `kq` a key input of `qs = [q1, q2]`) and the two `fixes/g13/r_agent_w_model_with_r_agent_w_i1_i1`, `_i2_i2` ("a key literal beside key arithmetic outside its index reads as its key-input twin"); test `m1_fixes_the_spec_where_refcore_crashes` (refcore crashes there, `REFCORE-NOT-YET … TypeError`, so T stored the spec's answer at tally 2.1.6).
+- **Rule or gate:** L §8.4 R-load (tally 2.1.7), as above; the plan's R5 reopens M1's P66 ("was `LOAD-UNIT` at run; now `RUN-DOMAIN` with the same words").
+- **What happens:** the stored rows: `refused: LOAD-UNIT q1 - q2 + 1` (the run refused, exit 1), the engine before this round. The fault depends on `kq`'s row value (`q2 + 1` is past `qs`), so only the run knows it; with R5's one mapping the engine prints `i3: refused: RUN-DOMAIN q1 - q2 + 1` at the ask, exit 0. The same engine site (an operand that isn't a quantity, `eval/arith.rs`) gives refcore 2.1.7's `w6: refused: RUN-DOMAIN 0.1 + q1` for `fixes/g13/sites_pz2_model_with_sites_pz2_w6`, a vector of R5's work list, now green: the rows and refcore ask opposite codes of one site.
+- **What I did:** built the rule (`eval`'s `refuse_load` through `Load::at_run`, refcore's `at_run`); the four rows go from green to red. No case is special-cased.
+- **What I ask:** T restates the four rows to the spec's 2.1.7 reading, `i3: refused: RUN-DOMAIN q1 - q2 + 1` and the like at each ask (exit 0; the engine's bytes), or holds them for this STOP-REPORT's issue. Option 2, keep `LOAD-UNIT`: a per-case exception to R5's one mapping, and `w6` red.
+- **State:** as above.
+
+## STOP-REPORT 2026-11-13: one input, two stored texts for a movement's lifespan: refcore 2.1.7 drops `(L §5.7)`, T's spec rows keep it
+
+- **Kind:** two T tests contradict each other (same input, different bytes)
+- **Where:** `engine/tests/m1/vectors.tsv` row `r5/l5_7_lifespan_of_movement` (refcore 2.1.7, R5's work list) and `engine/tests/m1/spec.tsv` rows `fixes/g14/b6_model_with_b6_l1_l1`, `_l2_l2`, `_l3_l3` and `fixes/g13/r_agent_w_model_with_r_agent_w_l1_l1` (P68, #136, "the engine's text"; test `m1_fixes_the_spec_where_refcore_crashes`). `r5/l5_7` loads the same `b6_model.tally` + `b6_l3.tally` as `b6_…_l3_l3`.
+- **Rule or gate:** E §11 / L §8.3 catalogue: `LOAD-UNIT lifespan of <x>: a movement has its day, not a lifespan` (`engine/tests/map/codes.tsv` row 119, no section mark).
+- **What happens:** `r5/l5_7` stores `refused: LOAD-UNIT lifespan of key transfers: a movement has its day, not a lifespan (b6_l3.tally:10)`; `b6_…_l3_l3` stores `… not a lifespan (L §5.7) (b6_l3.tally:10)`. One text turns one side red. With the catalogue's wording and refcore, `(L §5.7)` goes; the four spec rows then go red.
+- **What I did:** built the catalogue's text once (`load/calls.rs`), saw the four spec rows turn red, and reverted it: the engine keeps `(L §5.7)`, `r5/l5_7` stays red. No case is special-cased.
+- **What I ask:** T restates the four spec rows to refcore 2.1.7's text (they pinned the engine's text when refcore crashed there), then the message's ` (L §5.7)` goes in one line of `load/calls.rs` and its builder test in `tests/load_cases.rs` (`of-adjusts`).
+- **State:** R5 continues on its other ids.
+
+## 2026-11-13 tally 2.1.7, R5: load refuses what load sees, whatever the asks; a fault only the run meets is `RUN-*` in load's words (issue #144, pick P7)
+
+Three commits: 4f8d6ad (the run half), 35e3be8 (prices at load), and this one (the clock, literal keys and durations at load, the last texts).
+
+- **One mapping at run** (`base/code.rs` `Load::at_run`, refcore's `errors.at_run`; L §8.4 R-load): a check met at run that load would make, `LOAD-UNIT`/`LOAD-DOMAIN`, is `RUN-DOMAIN`, `LOAD-KEY` is `RUN-KEY`, same words, refusing the value, not the run. `eval`'s `refuse_load` and the walk's `bal`, `low`, `value` and ledger unit sites go through it; `walk/plan.rs` keeps `LOAD-*` (refcore's `moves.py` does; the first STOP-REPORT above).
+- **Prices at load** (`load/prices.rs`; E §3.1 pass 4): each place's price input against its key's kind and its unit, and each `value`'s currency and `by` against every place it can give, on every item, whatever the asks. This commit names the unit a leg brings by its amount's type (`Checker::leg_amounts`, refcore's `ln.amount._t`): `PLN/fa`, not the leg's kind `funds`.
+- **The clock** (`ask/answer.rs` `req_clock`, `eval/pins.rs` `after_on`; E §11): a cut an ask line writes as a literal day after `on` (`as known D`, `with known D`) refuses the request after load, `REQ-CLOCK`, the run's one result; a computed cut is `RUN-DOMAIN known d is after the model's on on` at its value, before its `pinned:` note. `before_clock`, which refused both as the request, goes.
+- **Literal keys at load** (`load/keyed.rs` `bind_key`; L §2.5): a key literal a read writes at a stepped range of literal ends joins the rows' list (`RangeKey`), checked once load is done, `LOAD-KEY … is not a value of a .. b step s` at the read's line. **Durations at load** (`load/ops.rs` `key_duration_whole`, the evaluator's `periods_of` shared; L §4.1 `by n`): a literal duration on a key of a period index that isn't a whole number of its step is `LOAD-DOMAIN` in run's words.
+- **Texts:** a unit clash between two key kinds names them (`eval/arith.rs` `unit_keys`); a stepped day range's step prints with its unit (`eval/ranges.rs`).
+- **Turned green (138 of the work list):** R5 82, S1 45 (the `fixes/g12/*` ids that waited on `bal`'s mapping), R6 6, R4 2, B3 2 (`b3/l5_10_priced_per_key_unit_message`, `fixes/g14/p130_one_kp_with_p130_one_c_wrong`), S7 1 (`s7/l8_4_stepped_range_step_text`); the ids are in the three commits' bodies. Gating: `check step gating: red`, 138 of the 287 still red, and 4 rows that were green (the second STOP-REPORT above).
+- **Still red:** `r5/l5_7_lifespan_of_movement` (the third STOP-REPORT above: T's spec rows store the other text); `r5/l3_3_accrue_yearly` stops "not implemented": `accrue` is a built-in the engine doesn't build, and a feature the engine lacks waits (refcore checks the yearly rate inside `accrue`'s computation).
+- **Sweep:** none SAME → DIFF; 48 asks DIFF → SAME over S1's (59 over the base); the two `ENGINE-INVARIANT`s (`R_L4_6_period_held_by_key`, `R_L4_6_reading_at_date`) are the base binary's too, none new.
+- **Size:** 587 changed lines in `engine/crates/` over the three commits (500 added, 87 removed). S1's entry above says 272; it is 275 (248 added, 27 removed). **M1 code replaced:** the per-site `LOAD-*` codes at run, now one mapping; `walk/value.rs`'s priced-place checks at run, now load's; `before_clock`. **Exceptions:** +0.
+- **Files:** `base/code.rs`, `ask/answer.rs`, `eval/{arith,convert,pins,ranges,state}.rs`, `load/{calls,check,exact,keyed,moves,ops,pins,prices,reads,strata}.rs`, `model/reality.rs`, `walk/{plan,projection,reads,value}.rs`, `book/ledger.rs`, `lib.rs`, `tests/load_cases.rs`.
+- **Check:** `check commit: green, 23 steps`.
+
+## 2026-11-13 tally 2.1.7, R1: a result reads only what its definition reads, in its order (issue #140, pick P3)
+
+- **`first`/`last` over things** (`eval/extremes.rs` `first_by_ties`; L §5.11, §8): the `ties by` is the order, so its term is read for every candidate first; then, group by group in that order, each candidate's register is brought and its `where` read, up to the first group with a true one. A later thing's refusing `where` isn't read (`fixes/g3` `t1`, `t2` answer `bob`, `ana`); a hole or `none` term of a thing the `where` would drop is read, since it is the order (`f1`'s hole, `f2`'s `RUN-NONE`).
+- **A projected `low`** (`walk/projection.rs` `projected_days`; E §4.2 read as a scan): each day's balance walks the projection through that day, so a walk that fails on a day refuses the `low` there after the days before it are read and registered (`fail_cut_f_long` prints its two `unfulfilled:` lines, as `f_long_short` did). The failed walk's answer to an earlier day is G9's (`before_failure`).
+- **Turned green (7):** R1's `fixes/g3/b3_t1`, `b3_t2`, `f1_where_hole_ties_a`, `f2_where_none_ties_a`, `fixes/g9/fail_cut_f_long`, `r1/l8_reads_things_ties_order_then_where`; R7's `fixes/g3/f7_register_q3`. Gating: 131 of the 287 still red (and the 4 rows of the second STOP-REPORT above).
+- **Sweep:** none SAME → DIFF; 2 asks DIFF → SAME over R5's; no new `ENGINE-INVARIANT`.
+- **Size:** 39 changed lines (19 added, 20 removed). **M1 code replaced:** a115e04's read-every-`where` pass over things before the `ties by`. **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps`.
+
+## STOP-REPORT 2026-11-13: two decisions on one day print `feed2` before `feed` in refcore 2.1.7; E §4.1 sorts by move id, `feed` first
+
+- **Kind:** the spec and refcore differ (the spec is clear)
+- **Where:** 9 vectors of R2's list, all from `fixes/g12`'s G5 model (`move feed[m in month]` and `move feed2[m in month]`, both decisions `on day_of(m, cut_dom)`, `reads pocket`, neither reading what the other changes): `prr_bal_g5_order_order`, `prr_low_g5_order_order`, `prr_proj_g5_order_order`, `prr_projunc_g5_order_order`, `r_agent_ord_order`, `r_pb_bal-order_order`, `r_pb_low-order_order`, `r_pb_proj-order_order`, `r_pb_projunc-order_order`. Each differs from the engine only there: an `explain … from t`'s `counted:` lines of a day, `feed2[2026-02].cash (plan)` before `feed[2026-02].cash (plan)`.
+- **Rule or gate:** E §4.1 (l.201): "Movements are sorted by (day, stratum, move id, keys in index order, …), each term compared as its own type, never as text"; the decisions' run order agrees (refcore's `run_group` `rank`, (move id, instance)).
+- **What happens:** refcore's `counted:` sorts the entries by their walk key, whose decision part is one text, `'%s|%06d' % (mi.id, n)` (`walk.py` l.1600): `feed2|000000` sorts before `feed|000000` (`2` < `|`), so the id and the instance are compared as one text. The engine sorts by the terms: `feed` < `feed2`. At tally 2.1.6 these vectors stored `feed` first (they were green at M1); which 2.1.7 change of refcore's moved them I didn't find.
+- **What I did:** nothing to the engine's order; the 9 ids stay red. No case is special-cased.
+- **What I ask:** refcore's entry key keeps the move id and the instance as two terms (or its `counted:` sorts by E §4.1's terms), and T restores the 9 vectors' `feed` first.
+- **State:** R2 continues: its other 14 ids are green.
+
+## 2026-11-13 tally 2.1.7, R2: a refusal outranks a hole and reaches whatever reads what it refuses (issue #141, pick P4)
+
+- **One status per instance** (L §8, §8.4; E §4.2): a refusal is the instance's, read by every reader through the refused-movement paths that exist.
+  - **A tie** (`walk/order.rs` `self_tie`; L §5.14.2, G7): instances of one move that read each other's places with no `ties by` are refused each, their legs at their places too, not only the balances they change, so `flows` and `explain` of them are refused (`r2/l8_refused_tie_each_instance`, `fixes/gate8/due_alone`'s `status refused`).
+  - **Refused before its point** (`walk/order.rs` `run_one_body`; #104): a decision instance its key's `where` refuses reads nothing of its body, its `when` included; any refused run with no known legs reads its legs' places at its point, so it refuses those places, not every place (`g5/refused`, `g5/dec_where_when_false`, `g8/after`, `fixes/g10/t_c4c`, `fixes/g12` `pm*_order`, `r_p_ord`).
+  - **A refused re-measure** (`book/adjust.rs`; E §5 step 1, #94): a version answers a hole booking with its refusal as with a value, each leg's adjustment refused from its known (`r2/l8_refused_hole_answered`).
+  - **`flows`' global entry** (`walk/flows.rs` `Sums::global`; #107): a refusal keyed at the span's first point counts (`g7/flows_refused_plan_first_day`, `r2/l8_refused_flows_first_day`).
+  - **The ledger** (`book/ledger.rs` `may_touch`; E §6.3, SR-1): a refused instance refuses `residuals` exactly where a hole one would be a line, a place its legs give or any place a leg's place couldn't be read; a refused plan instance passes the span and coverage tests first, as any other. Without it, the tie's refused instances refused `g5/order`'s `konto` ledger, which they never touch.
+- **Turned green (14):** `fixes/g10/t_c4c`, `fixes/g12/pm_order_order`, `pm4_g5_order_order`, `pm7_order_order`, `pm8_g5_order_order`, `r_p_ord`, `fixes/gate8/due_alone`, `g5/dec_where_when_false`, `g5/refused`, `g7/flows_refused_plan_first_day`, `g8/after`, `r2/l8_refused_flows_first_day`, `r2/l8_refused_hole_answered`, `r2/l8_refused_tie_each_instance`. Gating: 117 of the 287 still red (and the 4 rows of the second STOP-REPORT).
+- **Still red:** 9 G5 ids whose `counted:` lines refcore 2.1.7 orders `feed2` before `feed` (the STOP-REPORT above: E §4.1 sorts by move id).
+- **Sweep:** none SAME → DIFF (an intermediate build had 2, `residuals` of a place the tie doesn't touch, fixed by `may_touch`); 5 asks DIFF → SAME over R1's; no new `ENGINE-INVARIANT`.
+- **Size:** 135 changed lines (95 added, 40 removed); the plan said about 60, without the ledger's `may_touch` and `run_one_body`. **M1 code replaced:** "a refused version doesn't answer a hole movement"; the global log's first-day skip (`> lo`); 2.1.6's read of a refused decision's `when` and every place for a refused body; the ledger's refusal by any refused instance. **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps`.
+
+## 2026-11-13 tally 2.1.7, R3: an unknown day is a set of days; each operation gives the interval of its values (issue #142, pick P5; P32 reopened)
+
+- **A window of one day is that day** (`eval/windows.rs` `single`; F3): in a comparison, an order, arithmetic and wherever one day is needed (`one_day`), so `window(d, d) == d` is true.
+- **One lift per function, ends or per day** (L §4.4; F4): `dcf` is monotone in each day, so a window is read by its ends, every corner (`eval/dates.rs` `dcf_ends`, `year_fraction`); `is_business` and `add_business` aren't, so a window argument is evaluated for each day it can take (`eval/business.rs` `per_day`, `Daily`, `window_days`): one value where the days agree, else their interval, or for a truth value `HOLE-IMPRECISE`. The per-built-in `HOLE-IMPRECISE` for `dcf`, `is_business` and `add_business` go.
+- **Two `added` entries are two unknown days** (`eval/business.rs` `WindowId`; F5): a pass's choice is keyed by the entry's place in `added` too, so equal texts no longer share one choice.
+- **`argmin`/`argmax` over windows** (`eval/extremes.rs` `decided_keys`, `tie_group`; P32): the first term decided least (greatest) against every other, with the terms equal to it on every day (one read, or one known value) as its tie, which `ties by` breaks; else `HOLE-IMPRECISE`.
+- **Questions name the read** (T's SR-5): a computed interval has no read, but `min`/`max`, `weekday` and a negated window keep the first window's figure for their questions (`(wl)`, `(w_in)`).
+- **A range's step is needed whole** (`eval/ranges.rs`; SR-9): a window step is `HOLE-IMPRECISE … for a range step`, as its ends are.
+- **Turned green (8):** `fixes/g2/p4_f1`, `fixes/g13/r_agent_w_model_with_r_agent_w_g4`, `_g5`, `fixes/g13/rf_w_model_with_rf_w_w10`, `r3/l4_4_windows_argmin_tie`, `r3/l4_4_windows_one_day`, `r3/l4_4_windows_per_day`, `r3/reach_max`. Gating: 109 of the 287 still red (and the 4 rows of the second STOP-REPORT).
+- **Still red:** `r3/l4_4_windows_added_entries`: its `one` now answers refcore's `window(2026-06-01, 2026-06-03)`, but its `each` is `windows each` on an ask, which the engine doesn't build (`ask/answer.rs`, "an ask's `windows each`"): a feature the engine lacks waits.
+- **Sweep:** none SAME → DIFF; 6 asks DIFF → SAME over R2's; no new `ENGINE-INVARIANT`.
+- **Size:** 313 changed lines (244 added, 69 removed); the plan said about 120. The engine's read identity (`ReadOf`, #115) stood as it was. **M1 code replaced:** `dcf_day`'s `HOLE-IMPRECISE`; `is_business`'s and `add_business`'s window `HOLE-IMPRECISE`; `decided_keys`' strict "below every other"; the window id without its entry. **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps`.
+
+## 2026-11-14 tally 2.1.7, R4: one cascade of claims, layer first, then replacement, then the narrower (issue #143, pick P6)
+
+- **A pin carries its scope** (`eval/context.rs` `Pinned.layer`, `LayerData::next_layer`; `eval/pins.rs`): each `with`, `as if` and `solve` step's pins take the layer inside every pin in force. A read takes the innermost layer's pins, then the narrowest of them (`pin_of`, `inside_all`); two still tied are `RUN-CONFLICT` at the cell (`conflict`), and two of one set on the same cells are tied where read (`Pinned.tied`). A pin's identity holds its scope, as refcore's `PinVal.key` does, so two nestings of the same pins are two layers in the memo.
+- **Load refuses two pins of one cell it sees** (`load/pins.rs` `pin_ties`, `seen_keys`; from an `as if` in `load/types.rs` and an ask's `with` in `load/check.rs`): `LOAD-OVERLAP … overlap at [keys]`.
+- **Rows and band tables: the top layer first** (`read/rows.rs` `top_layer`; `read/bands.rs` `top_layer`, `table_layer`, `chain`; `load/bands.rs` `tables_of_one_key`): a scenario's rows and tables stand above the base's whatever their known dates; known dates, `replace` and narrowness decide inside one layer; a scenario's `replace` table patches the layers below.
+- **A line lists the ask pins it read** (`ask/answer.rs` `ask_pins_listed`, `shadowed`; `ask/axes.rs`): an ask pin of a cell an inner pin gave at every read isn't listed.
+- **Turned green (7):** `fixes/g14/pt_m7_t11`, `fixes/g14/pt_memo_t11`, `r4/l4_6_cascade_band_layer`, `r4/l4_6_cascade_pins`, `r4/l4_6_cascade_pins_load_tie`, `r4/reach_asif`, `r4/reach_scenario`. Gating: 102 of the 287 still red (and the 4 rows of the second STOP-REPORT).
+- **Sweep:** none SAME → DIFF; 11 asks DIFF → SAME over R3's; no new `ENGINE-INVARIANT`.
+- **Size:** 341 changed lines (286 added, 55 removed). **M1 code replaced:** `wider_than` and `names_cell` (narrowness across every pin whatever its scope; a `solve` step's pin dropping the pins it covers); `choose`'s narrowness across a scenario and its base; the band read's latest-known table across layers; load's same-day band overlap across layers; a pin's identity without its scope. **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps`.
+
+## 2026-11-14 tally 2.1.7, R6: a form the definition gives as an expansion means its expansion (issue #145, pick P8)
+
+- **`last`'s one carry** (`eval/read.rs` `read_past`, `last_value`): `last(x, d)`, `by last(p)` and `priced last(p)` mark `held` only where d is past the row they read: a state row past its span's end, a reading past its instant's day; a row read inside its span (one with no start included) isn't `held`.
+- **`next(K, d)` reads as `first(m in K over d ..) ties by m.day` does** (`load/binds.rs` `kind_movements`, shared by a binding over an event kind and `load/reads.rs` `next`): a decision's movements and `pads` are a running read, so `reads K` covers them and a move without it is `LOAD-READS`. Its holes and refusals name the form as written (`book/members.rs` `next_movement`, SR-7): `next(transfers, d1): no transfers yet, …`, `RUN-TIE next(transfers, d1) …`.
+- **`gap(x, d)` is a balance read** (`load/reads.rs` `gap`): a running read of x, `LOAD-READS` in a move without `reads x`.
+- **Turned green (12):** `fixes/g10/p_c1`, `_c2`, `_c6`, `fixes/g3/last_q6`, `fixes/g3/lastalw2_q3`, `r6/l4_6_last_no_start`, `r6/l5_10_priced_reading`, `r6/l5_14_1_next_plan_load_reads`, `r6/l5_14_1_next_reads_binding`, `r6/l5_19_gap_plan_load_reads`, `r6/reach_low_hole`, `r6/reach_next_tie`. Gating: 90 of the 287 still red (and the 4 rows of the second STOP-REPORT).
+- **Sweep:** none SAME → DIFF; 11 asks DIFF → SAME over R4's; no new `ENGINE-INVARIANT`.
+- **Size:** 78 changed lines (53 added, 25 removed). The builder's graph test (`tests/graph_cases.rs`) gains refcore 2.1.7's three `legs` marks of `next` in an ask. **M1 code replaced:** `last_value`'s `held` on every row but an `always` one; `next`'s edges without the binding's running reads; `next`'s `m:` and evaluated-day messages; `gap` without its running read. **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps`.
+
+## 2026-11-14 tally 2.1.7, R7: one read set per result; the register lists what it read (issue #146, pick P9)
+
+- **A false `when` is read** (`walk/agenda.rs` `schedule_decided`, `Act::Mark` with no entry; `walk/plan.rs` `decided_places`, `leg_ends`; refcore's `note_none`): an instance that doesn't exist books nothing, but what decided it joins the read set of a balance of each place its legs give, from its day. Fence F5's tree carries it too, as a position that moves nothing (`walk/lows.rs` `Gathered::decided`), so a projection's common case lists it as its walk does. Invariant 3 compares what changes a balance, so a mark passes (`invariant.rs` `before`).
+- **`before from:` is a leg's, not a walk's** (`walk/day.rs` `before_from`, `changed_after`, in `book_leg`; refcore's `before_from`): a leg booked before a scenario's `from` whose read set holds that scenario's row, or a thing's entry a `lifespan` read met (`Collected.listed`, `note_listed`, `ThingRead`), lists `<move> on <day> reads <items>` under each result whose reads reach it, in that branch and every branch over it. Invariant 3 lists the base's movements the branch no longer books, `… removed by <scenario>`, at their places from their days (`invariant.rs` `removed`, into `adj_regs`).
+- **Turned green (10):** `fixes/g10/f_law2_with_f_law_s`, `fixes/g11/r_p_b_ibl`, `fixes/g11/r_p_b_v`, `fixes/g9/u_place_q_back`, `_q_fwd`, `_q_min_low`, `_q_sum_bal`, `_q_sum_low`, `r7/reach_unfulfilled`, `r7/t_f9`. Gating: 80 of the 287 still red (and the 4 rows of the second STOP-REPORT).
+- **Still red:** `r7/t_f18`: `explain` of a def whose cause is a movement's day is `explain of a cause the walk computes` in the engine (`ask/explain.rs` `traced`), a feature it lacks, so it waits; its `v` and `i` asks print refcore's bytes.
+- **Sweep:** none SAME → DIFF; 2 asks DIFF → SAME over R6's; no new `ENGINE-INVARIANT`.
+- **Size:** 355 changed lines (295 added, 60 removed). **M1 code replaced:** the walk-wide `listed` lines every read of a scenario's walk printed (`Walk.listed`, `main_walk`'s notes) and invariant 3's `reads` texts; `Act::Mark` that needed an entry; a `when`'s reads lost with an instance that doesn't exist. **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps`.
+
+## STOP-REPORT 2026-11-14: refcore 2.1.7 sorts a place keyed by things before plain things at a lone part; L §2.4 sorts it as things are
+
+- **Kind:** the spec is clear and refcore differs (R9's one order per type, #148, #111)
+- **Where:** `engine/tests/m0/format.refcore`, the 14 `household-X` sets of `m0_format::m0_format_household_x` (`I:X:base_values`, `I:X:explain_room`, `I:X:konto_balance@b_r1`, `I:X:pit37@c1_fast` … `@c7_fast`, `@v3_fast` … `@v5_fast`, `I:X:replay_september@b_r1s`): each reprints `places.tally`, version `openings_2026`.
+- **Rule:** L §2.4 Inside a section: "keys in index order (things and an open index's keys in the text order of their stable ids, §2.5) … a place keyed by things (`konto[ana]`) is one key, sorted as things are. Keys of different literal kinds at one position (a lone part, whose index isn't loaded) sort by kind first, in `lit`'s order … then by value within their kind".
+- **What happens:** the rows `opening[gotowka]`, `opening[konto]`, `opening[marek]`, `opening[wcash[ike]]`, … The engine prints them in the text order of their keys (`gotowka`, `konto`, `marek`, `wcash[ike]`, …): all are keys of things, one kind. refcore 2.1.7 prints the six `wcash[…]`/`wunits[…]` rows first. In `canon.py` `key_comp`, a `placekey` returns `((2, key_text(k)), 1)`, the rank of 2.1.6's text order; R9 made `opening`'s position (a built-in, no binds in the reprint's table, so `dom` is None) the kind-first order, where `key_value` ranks a key `3`. So a keyed place now sorts as a month-day, before every plain thing.
+- **What I think is wrong:** refcore: its `placekey` arm keeps 2.1.6's rank under R9's new order; with `(3, key_text(k))` there (as `key_value` ranks any key), refcore prints the engine's order, which L §2.4 states.
+- **What I did:** nothing to the engine's order (`syntax/canon_order.rs`); no case special-cased.
+- **What I did not do:** change refcore or the stored `format.refcore`.
+- **State:** the 14 ids stay red; R9 continues on its other ids.
+
+## 2026-11-14 tally 2.1.7, R9: one printer per type: each value in its declared form, keys as written (issue #148, pick P11)
+
+- **A domain as written** (`load/texts.rs` `domain_text`; `load/random.rs` `discrete_index`): a random fact's mix of sample types names each `discrete`'s domain as the text writes it (`[ka, kb]`, `ks`, a range with its step), where it printed `None`, and is placed at the fact's own line (`at_decl`; the checker keeps the sections' files, `Checker.files`).
+- **A day that is a hole prints as the hole** (`ask/instance.rs` `cut_text`): an instance's booking cut it never reached prints as its day, a hole or its refusal, not `None`.
+- **Turned green (2):** `r9/e10_booking_cut_hole`, `r9/l2_4_domain_written`. Gating: 78 of the 287 still red (and the 4 rows of the second STOP-REPORT).
+- **STOP-REPORT** (above): the 14 `household-X` format sets, refcore's keyed-place rank under R9's kind-first order against L §2.4; they stay red.
+- **Sweep:** none SAME → DIFF; 3 asks DIFF → SAME over R7's; no new `ENGINE-INVARIANT`.
+- **Size:** 123 changed lines (95 added, 28 removed). **M1 code replaced:** `discrete_index`'s `None` for a list or range domain and its refusal at the reading ask; `explain`'s `booking cut None`. **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps`.
+
+## 2026-11-14 tally 2.1.7, R10: nothing to build
+
+- R10 (bidirectional typing through `( )` and an `if`'s branches, #149, P12) has no id on the work list: the engine's key positions already reach through them (`load/keyed.rs`, M1's ruling on #113). Nothing replaced.
+
+## 2026-11-14 tally 2.1.7, B1: a stepped range's values are `a + i·s`, by arithmetic (issue #150, pick P13)
+
+- **One formula for a day range** (`eval/ranges.rs` `nth_day`, `day_at`): the i-th day is `a + i·s` computed from the start, so `2026-01-31 .. step 1 month` holds 03-31, not 03-28. Its values (`day_range`), its count against the key limit (`days_past`) and its membership (`range_holds`, `holds_day`) all read it; a value past 9999-12-31 is past every key for membership and refused (`RUN-LIMIT`) when listed, before the keys are counted (SR-2); membership finds its index by doubling then bisection, never by stepping from the start (SR-11). A key's read no longer counts the range (refcore's `range_member`).
+- **A number at a range's position is its key literal** (`load/keyed.rs`): `by_money[5.00 PLN]` in an ask is a key, not a figure, whatever its digits or unit.
+- **Turned green (26):** `fixes/g13/pz_p1`; `fixes/g14/r_rh_h_b1`, `_b2`, `_b3`, `_b5`, `_b6`; `fixes/g14/rh_m_a1` … `_a16` (20 ids). Gating: 52 of the 287 still red (and the 4 rows of the second STOP-REPORT).
+- **Sweep:** none SAME → DIFF, none DIFF → SAME over R9's (the sweep's cases hold no month-stepped range from a 29th–31st); no new `ENGINE-INVARIANT`.
+- **Size:** 235 changed lines (125 added, 110 removed). **M1 code replaced:** `day_step`'s cumulative stepping, `steps_by_days`, `holds_by_days` (days only) and the month walk in `range_holds`; `days_past`'s estimate by the first step's days; the limit counted at every key read. **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps`.
+
+## 2026-11-14 tally 2.1.7, B3: nothing left to build
+
+- B3's two ids were green before its turn (the R-rules' mechanisms reached them); nothing replaced.
+
+## 2026-11-14 tally 2.1.7, S4: long derivations fold (issue #131, pick P23)
+
+- **A chain of one def folds** (`ask/explain.rs` `Step::Cause`, `folded`, `def_causes`, `cell_keys`; `eval/trace.rs` `Node.cell`): a def cell's cause that starts a chain of more than 3 cells of its def, each read by the one before and none printed yet, prints `… <n> more steps of <x>, <k₂> .. <kₙ₋₁> …` where its second step would, then its last step; a chain of different defs doesn't fold (refcore's `explain_step`, `chain_next`).
+- **Turned green (13):** `fixes/g11/ai2_m_with_ai2_infl8_e_acc`, `_e_acc_as`, `fixes/g11/r_agent_d1` … `_d5`, `_deep_agg`, `_deep_max`, `_deep_max300`, `fixes/g14/ex_m`, `s4/e10_explain_fold`, `s4/e10_explain_fold_two_reads`. Gating: 39 of the 287 still red (and the 4 rows of the second STOP-REPORT).
+- **Sweep:** none SAME → DIFF; 4 asks DIFF → SAME over B1's; no new `ENGINE-INVARIANT`.
+- **Size:** 118 changed lines (114 added, 4 removed). **M1 code replaced:** none; the derivation printed every step. **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps`.
+
+## 2026-11-14 tally 2.1.7, S5: written orders compose (issue #152, pick P24)
+
+- **Orders compose** (`load/strata.rs` `composed_orders`, `closure`): after the written `before`/`after` lines, their transitive closure is taken; each composed pair (`save before spend`, `spend before top` give `save before top`) stands for its pair in place of their read edges, as a written one does, and reaches the walk's cycle order through the same `written_order` pairs. Orders written both ways stay as written; a composed order against a read of the later decision's legs is `LOAD-ORDER … contradicts a read of …'s legs`, at the earlier one's line (refcore's `m_strata`). A cycle is refused only where the edges left form one.
+- **Turned green (2):** `s5/l5_14_2_order_chain`, `s5/l5_14_2_order_chain_contradicts`. Gating: 37 of the 287 still red (and the 4 rows of the second STOP-REPORT).
+- **Sweep:** none SAME → DIFF; 7 asks DIFF → SAME over S4's (the two vectors); no new `ENGINE-INVARIANT`.
+- **Size:** 62 changed lines (62 added). **M1 code replaced:** none; only written pairs ordered. **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps`.
+
+## 2026-11-14 tally 2.1.7, S7: nothing left to build
+
+- S7's ids were green before its turn (the R-rules' mechanisms reached them); nothing replaced.
+
+## 2026-11-14 tally 2.1.7, S8: only seven weekends leave no business day (issue #155, pick P33)
+
+- **Dead branch removed** (`time/calendar.rs` `has_business_day`, its caller in `eval/business.rs`): yearly days never empty a year, since 02-29 is no month-day (L §3.1), so the `yearly == 366` clause could never hold; a search for a business day is refused only when the weekends name all seven days (refcore's `business`, `seek`). The function no longer takes a day.
+- **Turned green:** none (no id). Gating: 37 of the 287 still red (and the 4 rows of the second STOP-REPORT).
+- **Sweep:** none SAME → DIFF, none DIFF → SAME over S5's; no new `ENGINE-INVARIANT`.
+- **Size:** 16 changed lines (5 added, 11 removed). **M1 code replaced:** the 366-day clause. **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps`.
+
+## 2026-11-14 tally 2.1.7, S9: two load refusals name their file and line (issue #156, pick P28)
+
+- **Placed like every load refusal** (L §8.3): `LOAD-RANDOM a query over paths on a path p line` stands at its ask's line (`load/cone.rs` `check_path_lines`, through `Files`), and the settlement `LOAD-UNIT … is in X, not Y` at the observed row's line (`load/moves.rs` `settlements`, through `overlap.rs`'s `at_obs`, now shared) (refcore's `check_path_line`, `m_check_settlement_units`). The builder's own load case for the path line gains its place.
+- **Turned green (6):** `adjust/unit-settlement`, `adjust/unit-settlement-load`, `basic/random-path`, `basic/random-path-load`, `s9/l5_14_3_settlement_unit_at_load`, `s9/l5_16_path_line_query_at_load`. Gating: 31 of the 287 still red (and the 4 rows of the second STOP-REPORT).
+- **Sweep:** none SAME → DIFF; 3 asks DIFF → SAME over S8's; no new `ENGINE-INVARIANT`.
+- **Size:** 62 changed lines (36 added, 26 removed). **M1 code replaced:** the two placeless refusals. **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps`.
+
+## 2026-11-14 tally 2.1.7, S10: a written literal takes no parentheses (issue #113, pick P29)
+
+- **Written literals read as written** (L §2.3; `syntax/parse.rs` `lit`, `lit_unsigned`): a row's keys, an index's and a key list's keys, a `governs`, a header's `on`, a version's `known` and an instant's day take no expression, so `(2026)` there is `LOAD-PARSE cannot parse: expected a literal, got (` (refcore's `lit`). An expression's brackets are untouched (R10 reaches through them). The builder's own format case for a `same` side's keys follows: `fee[(a1)]` is refused, as refcore does.
+- **Turned green (3):** `carried/years/p_governs`, `p_list`, `p_row_key`. Gating: 28 of the 287 still red (and the 4 rows of the second STOP-REPORT).
+- **Sweep:** none SAME → DIFF, none DIFF → SAME over S9's; no new `ENGINE-INVARIANT`.
+- **Size:** 40 changed lines (8 added, 32 removed). **M1 code replaced:** `paren_lit` (pre-M1's P6, M1's P12). **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps`.
+
+## 2026-11-14 tally 2.1.7, the builder's close
+
+- **All 18 items built** (P38): S1, R5, R1, R2, R3, R4, R6, R7, R9, R10 (nothing), B1, B3 (nothing), S4, S5, S7 (nothing), S8, S9, S10; R8's engine part and S2 are M2's (P2, P34).
+- **Still red (32):** 28 of the 287 and the 4 rows of the second STOP-REPORT (`fixes/g13/fix_i3_…_i3`, `_i4`, `fixes/g13/r_agent_w_…_i1`, `_i2`). Of the 28: the fourth STOP-REPORT's 9 (`fixes/g12/…order_order`, the feed2/feed order), the fifth's 14 (`I:X:…`, refcore's keyed-place rank against L §2.4), the third's 1 (`r5/l5_7_lifespan_of_movement`, the lifespan text), and 4 that wait on what the engine lacks: `r3/l4_4_windows_added_entries` (windows each), `r5/l3_3_accrue_yearly` (accrue), `r7/t_f18` (explain of a movement cause), `s1/e6_3_residuals_after_end`.
+- **Exceptions:** +0 over the round. **Sweep:** no SAME → DIFF at any commit; no new `ENGINE-INVARIANT`.
+- **Check:** `check commit: green, 23 steps`.
+
+## 2026-11-14 tally 2.1.7, P40–P42: the STOP-REPORTs' follow-ups and the review's four findings
+
+- **P40** (2fa0361): the walk's `refuse_load` (a leg's unit checks, the `when`) goes through `Load::at_run`, as refcore's `moves.py` `refuse` now does: a leg's unit fault met at run is `RUN-DOMAIN` at each value that reads the instance, and the run goes on. The lifespan refusal prints the catalogue's text, with no ` (L §5.7)`. The order and keyed-place vectors were green with refcore's new bytes before this step (T restated them).
+- **Finding 1** (d941105, `eval/keys.rs` `literal_at`, `held_value`): at a read's key over an index of periods, a date or a period of another granularity, or a four-digit year at an index of days, months or quarters, is read as its value, the key whose period holds it, `RUN-KEY` outside them (L §4.6; refcore's `key_pos`). M1's `lacks_at_run` invariant was met there.
+- **Finding 2** (8fa0c4e, `walk/reads.rs` `read_state`): the run's ends are tested once at the walked read, so `value` past E is `HOLE-POSTRUN`, before S `HOLE-PRERUN` (refcore's `run_ends`). `bal`'s own test stays first, as refcore's `bal_at` keeps it (a decision's `RUN-FUTURE` comes after the hole); a projection's start, a `flows` span's start and `low`'s span keep theirs, as refcore does: none of them is a walked read of a day, so none is covered by the one site.
+- **Finding 3** (13500d1, `load/prices.rs` `any_unit_no_by`, `units_into`, `end_reaches`; `load/check.rs` `LegEnds`): a value with no `by` of a place of unit `any` that nothing prices is `LOAD-PRICE` at load, at its line, whatever the asks, where a unit load sees come into the place is another than `CUR`: each leg reaching it (a literal end, or an end of a kind holding it) in its kind's leg unit, else its amount's, and an opening or reading row's written unit (refcore's `_units_into`). `walk/value.rs`'s two `LOAD-PRICE` and its price key go through `Load::at_run` (the key is `RUN-KEY`, as refcore prints it); a row's value converted where it is read (`convert_read`, an input's row, a def's given) is an invariant: load's `check_rows` converts every such row with the same type first.
+- **Finding 4** (30cba37, `eval/context.rs` `pin_of`, `eval/state.rs` `PinsRead`, `ask/answer.rs` `ask_pins_listed`): the pin choice keeps the ask pins a read took and those it met under an inner or narrower claim; a line drops an ask pin its reads met only under another claim. The text-prefix `shadowed` is gone. `explain`'s two comparison derivations (outside an `as if`, outside the ask's pins) keep nothing (P42). **Limit, for the follow-ups:** as refcore, an ask pin no read reaches at all stays listed, since the walk's reads don't reach a refused result yet (F9's `d`, F11's `flag`); the strict form (list only what a read took) waits on that.
+- **S9** (f464fca, `model/graph.rs` `balnow`, `load/strata.rs`): `LOAD-READS … holds bal(x) with no day` stands at the first such read's file and line.
+- **R9's `None` texts** (this commit, `load/parts.rs`): a reading at a bare day names its instant as the day alone, as refcore now does; an `owns` row's key that is no thing is an invariant (owns is keyed by a party and a place: `LOAD-KEY` at its row first). `load/parts.rs:307` (an absent sign) and `load/merge.rs:798` (an absent `tally`) stay: refcore prints Python's `None` there too, and the spec has no written form for either (STOP-REPORT below).
+- **Turned green (16, all of b4604b5/747648a's `Logged-Red:`):** `fixes/gate8/zero2`, `r5/l8_4_leg_unit_at_run`, `fixes/g13/r_agent_w_model_with_r_agent_w_l1_l1`, `fixes/g14/b6_model_with_b6_l1_l1`, `_l2_l2`, `_l3_l3`, `r5/l5_7_lifespan_of_movement`, `b1/l4_6_reading_at_date`, `b1/l4_6_period_held_by_key`, `s1/l8_1_value_run_ends`, `r5/l8_4_load_price_unread`, `r5/l8_4_load_price_opening_row`, `r7/l8_2_ask_pin_shadowed`, `r7/t_f4_views`, `fixes/g14/r_p_base_with_r_p_asks`, `s9/l8_3_balnow_outside_line`. **Gating:** 0 red (only the vectors T holds for M2 aside).
+- **Sweep:** refcore's side rebuilt whole (its cache had kept the outputs refcore moved; one existing case moved, `R_L5_10_load_price_run`); none SAME → DIFF at any commit, 21 asks DIFF → SAME; no `ENGINE-INVARIANT` left (the two of finding 1 are gone).
+- **Size:** about 427 changed lines in `engine/crates` (349 added, 78 removed), the builder's own tests' three expectations included. **Per-case code removed:** `ask/answer.rs` `shadowed` (the register-text prefix match); M1's "load refuses it first" at a period key (`lacks_at_run` from a read's key); the walk's load codes built past `at_run` (`walk/plan.rs` `refuse_load`, `walk/value.rs` ×3); the `"None"` of a bare-day instant and of an `owns` key. **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps`, on each commit's own tree.
+
+## STOP-REPORT 2026-11-14: two messages print Python's `None` where the spec has no written form
+
+- **Kind:** the spec seems silent.
+- **Where:** `engine/crates/tally/src/load/parts.rs:307` (`kind <K> keeps parts and is None`, a parts kind declared under `places` itself, whose chain states no sign); `engine/crates/tally/src/load/merge.rs:798` (`member <a> declares tally None, the joint model 2`, a member file with no `tally` clause).
+- **Rule or gate:** L §2.4 Values / R9 (values print as written); L §5.7 (a parts kind's sign rule is min 0); L §6.1.
+- **What happens:** `kind savings: places` with the parts clauses of refcore's `L5_7_parts_kind_max0`: refcore and the engine both print `refused: LOAD-PARTS kind savings keeps parts and is None (b.tally:11)`, exit 1. `kind foo: places` alone loads in both.
+- **What I tried:** found no type printer for an absent sign or an absent `tally`; refcore's twins (`parts.py` l.94, `joint.py` l.480) print `None` the same way, so a change would leave refcore's bytes.
+- **What I ask:** the words for each: e.g. a sub-kind of `places` with no sign refused earlier (`LOAD-PLACEKIND`), or `… keeps parts and states no sign`; a member with no `tally` refused by its own header check before the joint one. Then refcore and the engine change together. The other `"None"` prints the review lists as likely unreachable (`walk/reads.rs:413`, `walk/lows.rs:836`, `ask/walked.rs:465`, `load/random.rs:273`) and `kind_unit(..).unwrap_or("None")` in `load/places.rs:75`, `load/kinds.rs:372` were not in this step.
+- **State:** green; this commit holds the entry.
+
+## 2026-11-14 tally 2.1.7, P44–P45: place kinds whole, per-result ask pins
+
+- **P44** (`load/kinds.rs` `place_kinds_whole`, `syntax/decls.rs` `place_kind`, `load/merge.rs` `check_tally`): a declared place kind whose chain states no unit or no sign rule is `LOAD-PLACEKIND place kind <K> has no unit or sign rule` at its line, a bare `place` too (refcore's c5748f5); a joint model file with no `tally` meets its own header check first, `LOAD-HEADER missing tally version` (8cd7428).
+- **Invariants added, each with its probe** (`tmp/spec-2.1.7-build/r9n/`, refcore and the engine print the same):
+  - `load/parts.rs` a parts kind with no sign: `kind savings: places` + parts clauses → `LOAD-PLACEKIND … (b.tally:10)`;
+  - `load/places.rs` a place's kind with no unit: `kind foo: places` + `place a: foo` → `LOAD-PLACEKIND (p1.tally:9)`; `place a: places` → `LOAD-LEAF a enters places, which has subkinds`;
+  - `load/kinds.rs` an entry's kind with no unit: `foo + [x]` → `LOAD-PLACEKIND (p2.tally:9)`; `places + [x]` → `LOAD-LEAF`;
+  - `load/merge.rs` a tally with no version: a member file with no `tally` → `member a: LOAD-HEADER missing tally version (ana.tally:1)`; a joint file with none → `LOAD-HEADER … (joint.tally:1)` (refcore's `L6_1_joint_header_tally`).
+- **P45 A** (`load/parts.rs` `owns_rows`): the parts check passes over an `owns` row whose keys are no things, printing a key as its type prints it, as refcore does; the review's owns-by-months text gives `tally run: not implemented` (parts at M1), no `ENGINE-INVARIANT`.
+- **P45 B** (`eval/context.rs` `pin_of`, `eval/state.rs` `PinsRead`, `ask/answer.rs` `ask_pins_listed`, `ask/register.rs`): a read that meets an ask pin under another claim notes `pin met` in its own read set (no view prints it); a line drops an ask pin its own set met and didn't take. The per-ask record of my P41 commit goes (refcore's 179ff92).
+- **`load/decls.rs:284`:** refcore prints `… is defined for every key (L §5.7)` there too (`loader.py` l.900): the bytes already agree; nothing changed.
+- **Correction to the last entry:** `walk/value.rs:135` and `:213` still build `LOAD-PRICE` (through `Load::at_run`, which maps only Unit, Domain and Key), and `eval/convert.rs:173` keeps its own `refuse_load`. No probe reaches them after P41's load check; they go to the follow-ups with refcore's 49 `LOAD-*` run sites (F4).
+- **Left for the hand-off** (the step's budget): the `"None"` prints at `walk/reads.rs:418`, `walk/lows.rs:836` (a left-out move's first day), `ask/walked.rs:465` (a lifespan's start), `load/random.rs:273` (a discrete with no bind), each still to print with its type's printer or become a probed invariant.
+- **Turned green (5, 366116b's `Logged-Red:`):** `r9/l5_7_kind_parts`, `r9/l5_7_kind_places_alone`, `r9/l5_7_kind_place_bare`, `r7/p45_fanout_pin_one_line`, `fixes/g14/r_p_base_with_r_p_asks`. **Gating:** 0 red.
+- **Sweep:** refcore's side rebuilt whole; none SAME → DIFF; 4 DIFF → SAME (refcore's new `L5_7_place_kind_bare`, `_no_unit_sign`, `L6_1_joint_header_tally`, `L8_2_fanout_ask_pin_per_line`); no `ENGINE-INVARIANT`.
+- **Size:** 196 changed lines (134 added, 62 removed). **Exceptions:** +0. **Check:** `check commit: green, 23 steps`, on each commit's own tree.
+- **The hand-off's four `None` prints, done (P44, next commit; probes in `tmp/spec-2.1.7-build/r9n/`):**
+  - `walk/reads.rs`, `walk/lows.rs` (a left-out move's first day) were reachable: a scenario move dated by a hole with a leg before `from` printed `first None`. The walk now keeps the first instance's hole until a dated one comes and prints it with `Dated::text` (refcore's `note_leftout`, `day_text`): `lo/` gives `left out: extra, 12 instances, first ?"hd: no value at 2026-01-01" (hd)`, byte-equal to refcore. A left-out instance with no day is `ENGINE-INVARIANT`: only one refused before its day has none, and its legs fall on the end of time.
+  - `ask/walked.rs` (a lifespan's start): invariant; `ls/c.tally` → `LOAD-LIFESPAN c's lifespan has no start`, and `ls/m.tally` shows the main walk opens at zero only from a start (`a`), else `no reading or opening before it` (`b`).
+  - `load/random.rs` (a discrete with no binding): invariant; `dn/m.tally` → `LOAD-PARSE cannot parse: expected "for"`.
+  - No STOP-REPORT: no site reachable where refcore prints `None`. **Sweep:** none SAME → DIFF, no `ENGINE-INVARIANT`; gating 0 red. **Exceptions:** +0.
+
+## 2026-11-14 tally 2.1.7, P47: gate 8 run 43582832630's survivors listed
+
+- **List** (`engine/MUTANTS-SURVIVORS.md`): the 10 rows the job names dropped (9 caught, `run_one_body` gone); the job's 28 unlisted keys judged at their code: **equivalent 2** (`one_more_left_out` `<` → `<=` stores the same day; `<` → `==`, a move's left-out instances noted in the movement order), **missed with a kill text 10** (`tmp/kills/k1` `after_run_line` ×2, `k2` `may_touch` ×2, `k4` `changed_after`, `k5` `Sums::unbooked` ×5; each text's engine output equals refcore's; `tmp/kills/README.md` says what each mutant prints), **missed open 16** (each row names the input that tells it apart; no text yet), **defects 0**.
+- **Hand-off (the step's budget):** texts for the 16 open rows: `may_touch` `delete !` (a refused leg place; a hole place leaves the instance unrefused), `schedule_decided` ×3, `after_run`, `decision_runs`, `flows_place`, `Gathered::decided` ×2, `run_time` and `read_or_refused` (a load refusal met at run, F4; possibly equivalent), `projected_days`, `value.rs` ×4 (prices keyed by a kind, `by p last`). T proves k1, k2, k4, k5 by single-mutant proofs.
+- **Local:** `mutants-survivors` over run 1's shards: score 91.2 % = caught 1719 / (1719 + 303 − 137), every survivor listed. **Exceptions:** +0.
+- **Open rows, second pass (P47):** texts written for 3 rows: `tmp/kills/k6` (`by_form` ×2, refcore's `L5_10_value_by_last_unkeyed`), `k7` (`after_run`, a plan instance left out before S with its leg after E); engine = refcore on each. `run_time` and `read_or_refused` stay missed: P41's check doesn't cover the load codes still built at run (#162, F4). `unit_in` and its guard stay open: load's `price_fits` skips places of unit any, so a text exists (a unit-any place holding a unit outside the price's kind), not yet written. **Still open, no text (budget):** `may_touch` `delete !`, `schedule_decided` ×3 and `Gathered::decided` ×2 (a `when`-false instance's decided mark printed no register entry in a scenario try), `decision_runs`, `flows_place`, `projected_days`, `unit_in` ×2, `run_time`, `read_or_refused` (13). `mutants-survivors` over run 1's shards passes, 91.2 %.
+- **P47 after T's 06645d1 (Pick P48):** the 9 rows T's kills caught dropped; reworded with what T's text didn't tell apart and what one still needs: `after_run_line` `<=` → `>` (dated lines on both sides of E), `may_touch` ×2 (a refusal only `may_touch` carries), `projected_days` (a walk refused after the first day, or a left-out line only `proj_regs` notes), `schedule_decided` `rank` (the review's note, unsettled); `by_form` `by.last` → `false` not equivalent: `tmp/kills/k9` (the `px[]` price hole before px's first reading); `unit_in` and its guard missed by P48 (#162, M2). No new equivalent. Local `mutants-survivors` names exactly the 9 dropped keys.

@@ -1,2 +1,8 @@
 id	milestone	issue	rule
 M7/sample_order	M7	#49	L §8.2, §5.16 (tally 2.1.6, P23): a path's sample lines in canonical order, keys in index order (m2 before m10)
+M2/s1_residuals_after_end	M2	#93	E §6.3, L §8.1 HOLE-POSTRUN (tally 2.1.7, S1): a residuals ask over months past the run's end; residuals asks are built at M2 (BUILD-ORDER M2, E §6.3), refcore's test E6_3_residuals_after_end
+M6/r5_accrue_yearly	M6	#144	L §3.3, §8.4 RUN-DOMAIN (tally 2.1.7, R5): accrue of a monthly rate refused at the value; accrue, an L §3.3 function beyond X's forms, is built at M6 (BUILD-ORDER M6), refcore's test L3_3_accrue_yearly
+M5b/r9_kind_parts_twin	M5b	#148	L §5.7 (tally 2.1.7, P44, R9): the loading twin of r9/l5_7_kind_parts, a parts kind that states `place PLN min 0`; its `owned by` and `takes` lines are built at M5b (BUILD-ORDER M5b, the placement scan)
+M5c/r9_joint_header	M5c	#148	L §6.1, §5.1 (tally 2.1.7, P44, R9): a joint model file with no `tally` is LOAD-HEADER before its members are compared; joint members (a `use` line) are built at M5c (BUILD-ORDER M5c), refcore's test L6_1_joint_header_tally
+M5c/r9_joint_header_twin	M5c	#148	L §6.1 (tally 2.1.7, P44, R9): the twin of M5c/r9_joint_header with `tally 2`, which loads; built at M5c (BUILD-ORDER M5c)
+M5b/r9_owns_months_beside_parts	M5b	#148	L §3.6 (tally 2.1.7, P45 A, R9): an `owns` input keyed by months beside a place that keeps parts loads (only `owns[p, x]` at a parts place is refused), WARN-UNREAD; parts are built at M5b (BUILD-ORDER M5b), the fix review's probe ow

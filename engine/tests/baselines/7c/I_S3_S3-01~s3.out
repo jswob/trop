@@ -10,6 +10,7 @@ s3_03 (p = emil, d = 2026-09-30): 6 332.1 DUK
   cut 2027-01-20
 s3_03 (p = emil, d = 2026-12-31): 6 074.4 DUK
   anchor: n_cash 2026-12-31 end, stated 10 791.00 DUK, difference 0.00 DUK
+  held: lgf_px = 56.48 DUK/lgf_a (prices), read for 2026-12-31
   cut 2027-01-20
 s3_03 (p = nadia, d = 2026-06-30): 16 485 DUK
   cut 2027-01-20
@@ -17,4 +18,5 @@ s3_03 (p = nadia, d = 2026-09-30): 16 575.2 DUK
   cut 2027-01-20
 s3_03 (p = nadia, d = 2026-12-31): 15 098.4 DUK
   anchor: n_cash 2026-12-31 end, stated 10 791.00 DUK, difference 0.00 DUK
+  held: lgf_px = 56.48 DUK/lgf_a (prices), read for 2026-12-31
   cut 2027-01-20

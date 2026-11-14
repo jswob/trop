@@ -1,0 +1,36 @@
+# L §4.4 One unknown day, named by its read, and L §8.1 It prints (tally 2.1.7 R3, issue #142; T's SR-5): max(w_in, d)
+# is a computed value, so it has no name, but its question still names the item it came from: "every question it
+# carries ... with the item and keys each came from". qm and qa both print (w_in). 2.1.7's first refcore dropped it
+# from max, min, a negation and weekday.
+=== sr5.tally
+model sr5
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+input w_in: date
+
+input d: date
+
+def m_max: bool = max(w_in, d) == d
+
+def m_add: bool = add_days(w_in, 1) == d
+
+ask qm: m_max
+
+ask qa: m_add
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  w_in = window(2026-03-01, 2026-03-31) "a day in March"
+  d = 2026-03-15 "mid-March"
+=== expect
+qa: ?"date within window(2026-03-01, 2026-03-31) not precise enough for add_days(w_in, 1) == d" (w_in)
+  cut 2026-12-31
+qm: ?"date within window(2026-03-01, 2026-03-31) not precise enough for max(w_in, d) == d" (w_in)
+  cut 2026-12-31

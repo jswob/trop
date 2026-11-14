@@ -1,0 +1,58 @@
+# tally 2.1.7 S5 (G6): the twin of L5_14_2_order_chain: spend states no `before top`, so no chain orders save and top;
+# the edges left still form the cycle, refused at run (RUN-ORDER, L §5.14.2). The same in 2.1.6.
+=== broken.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input day: date
+input keep: money PLN
+input floor: money PLN
+input fee: money PLN
+place konto: accounts PLN lives 2025-01-01..
+place savings: accounts PLN lives 2025-01-01..
+place kasa: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+
+move save: transfers
+  on day
+  reads konto
+  before spend
+  leg cash from konto to savings amount max(0 PLN, bal(konto) - keep)
+
+move spend: transfers
+  on day
+  reads kasa
+  leg cash from kasa to world amount min(bal(kasa), fee)
+
+move top: transfers
+  on day
+  reads konto
+  leg cash from world to konto amount max(0 PLN, floor - bal(konto))
+
+ask a: flows(save, 2026-01-15)
+ask b: flows(top, 2026-01-15)
+ask c: bal(konto, 2026-01-15)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  day = 2026-01-15 "s"
+  keep = 50.00 PLN "s"
+  floor = 80.00 PLN "s"
+  fee = 5.00 PLN "s"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+  opening[savings] = 0.00 PLN at 2026-01-01 start "s"
+  opening[kasa] = 10.00 PLN at 2026-01-01 start "s"
+=== expect
+a: refused: RUN-ORDER decisions save and top read each other on 2026-01-15
+  cut 2026-10-18
+b: refused: RUN-ORDER decisions save and top read each other on 2026-01-15
+  cut 2026-10-18
+c: refused: RUN-ORDER decisions save and top read each other on 2026-01-15
+  cut 2026-10-18

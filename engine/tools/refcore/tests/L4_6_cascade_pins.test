@@ -1,0 +1,52 @@
+# L §4.6 steps 2 to 4, one cascade (tally 2.1.7 R4, issue #143; #119): pins of one `as if` are one layer. `n`:
+# the narrower pin wins, `r[k1] = 5` over `r[*] = 7` (#119). `d`: two pins whose keys only the run gives, `r[a]`
+# and `r[b]` for each a, b: at a = b they tie on one cell, refused at the cell (RUN-CONFLICT); 2.1.6's refcore let
+# the later pin win (40). `e`: two pins at different keys, no tie. `s`: a pin inside the solve's F is inside the
+# solve's variable, so it holds there: xv = 1 whatever the solve tries, no sign change.
+=== m.tally
+model c7
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+index ks = [k1, k2]
+
+input r[k in ks]: num
+
+input xv: num
+
+input target: num
+
+def tot: num = sum(r[k] for k in ks) at reader
+
+def sq: num = xv * xv at reader
+
+ask d: sum(tot as if {r[a] = 5, r[b] = 7} for a in ks, b in ks) law 2026-06-30
+ask e: tot as if {r[k1] = 5, r[k2] = 7} law 2026-06-30
+ask n: tot as if {r[k1] = 5, r[*] = 7} law 2026-06-30
+ask s: solve (sq as if {xv = 1}) == target for xv in [0, 4] to 1 law 2026-06-30
+
+version v
+  cite card
+  governs 2026..
+  known 2026-01-01
+  r[*] = 1 "c"
+  xv = 1 "c"
+  target = 2 "c"
+=== expect
+d: refused: RUN-CONFLICT pins r[a] = 5 for a in ks and r[b] = 7 for b in ks both hold for r[k1]
+  law date 2026-06-30, cut 2026-06-30
+e: 12
+  pinned: r[k1] = 5
+  pinned: r[k2] = 7
+  law date 2026-06-30, cut 2026-06-30
+n: 12
+  pinned: r[*] = 7
+  pinned: r[k1] = 5
+  law date 2026-06-30, cut 2026-06-30
+s: refused: RUN-SOLVE no sign change on [0, 4]
+  pinned: xv = 1
+  law date 2026-06-30, cut 2026-06-30

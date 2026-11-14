@@ -1,0 +1,37 @@
+# L §3.2 Differences, Key arithmetic; §8.4 R-load (tally 2.1.7, R5, issue #144, the builder's SR-B2, pick P40): key
+# arithmetic past a list index (kq + 1 at its last key) stands in a value position here, the difference of two keys,
+# which is the difference of their positions; a result outside the index has none, so the difference has no meaning
+# for its values: RUN-DOMAIN at the value, in the operands' words (as `0.1 + q1` is), the run going on. refcore 2.1.6
+# crashed there (REFCORE-NOT-YET, TypeError). Either side, and against a key input.
+=== m.tally
+model t
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+index qs = [q1, q2]
+input kq: key qs
+input kp: key qs
+def z1: int = q1 - (kq + 1)
+def z2: int = (kq + 1) - kp
+def z3: int = kq - kp
+
+ask a1: z1
+ask a2: z2
+ask a3: z3
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  kq = q2
+  kp = q1
+=== expect
+a1: refused: RUN-DOMAIN q1 - q2 + 1
+  cut 2026-03-01
+a2: refused: RUN-DOMAIN q2 + 1 - q1
+  cut 2026-03-01
+a3: 1
+  cut 2026-03-01

@@ -1,7 +1,7 @@
 # L §3.3: rate ± rate only "of one period"; comparisons "within one period".  A yearly and a monthly rate
-# added are refused (LOAD-UNIT, "rate arithmetic outside §3.3"); the periods are in the values, so this is
-# found when the values are read.  L §8.3: a load refusal means the model does not run, so it prints once,
-# as a load refusal, not per value (the lead's note on writer 1's per-value LOAD codes).
+# added are refused ("rate arithmetic outside §3.3"); the periods are in the values, so this is found when the
+# values are read: tally 2.1.7 (R5, issue #144; P66 reopened), a check whose input only the run knows prints
+# RUN-DOMAIN at the value with load's words (L §8.4); 2.1.6 printed LOAD-UNIT for the whole reality.
 === m.tally
 model t
   tally 2
@@ -26,4 +26,5 @@ version v
 
 ask q1: a + b
 === expect
-refused: LOAD-UNIT ...
+q1: refused: RUN-DOMAIN rates of different periods: 0.05 /year + 0.005 /month
+  cut 2026-01-01

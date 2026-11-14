@@ -20,7 +20,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::adjust::Adjustment;
 use super::observe::{Obs, inst_id};
 use super::reading::{Seen, booked_amount, reading_rank, readings};
-use crate::base::{Code, Load, Refusal};
+use crate::base::{Load, Refusal};
 use crate::eval::{Ctx, Engine, Env, Rows, num_stop};
 use crate::hole::{Hole, spread};
 use crate::model::{Fulfils, GapRole, Reality, Span};
@@ -240,7 +240,8 @@ impl Engine {
             }
             unexplained_line(m, lines, o)?;
         }
-        self.balance_lines(m, lines, span, cut)
+        self.balance_lines(m, lines, span, cut)?;
+        after_run_line(m, lines, span)
     }
 
     /// The observations as known on the model's `on` date that touch the place, dated in the
@@ -282,17 +283,28 @@ impl Engine {
                 Modelled::Undated => None,
                 Modelled::On(day) => Some(day),
             };
-            if !touches(&inst.legs, place) {
+            let refused = inst.status == Status::Refused;
+            let touching = if refused {
+                may_touch(m, &inst, place)
+            } else {
+                touches(&inst.legs, place)
+            };
+            if !touching {
                 continue;
             }
-            let Some(day) = day else {
-                undated.push(inst);
-                continue;
-            };
-            let shown =
-                !self.covering(m, place, day, m.on).is_empty() || fulfilled.contains(&inst.id);
-            if span.contains(day) && shown {
-                model.push(inst);
+            if let Some(day) = day {
+                let shown =
+                    !self.covering(m, place, day, m.on).is_empty() || fulfilled.contains(&inst.id);
+                if !(span.contains(day) && shown) {
+                    continue;
+                }
+            }
+            if refused {
+                return Err(refusal_of(&inst));
+            }
+            match day {
+                None => undated.push(inst),
+                Some(_) => model.push(inst),
             }
         }
         model.extend(self.ledger_runs(m, place, span, cut)?);
@@ -327,7 +339,10 @@ impl Engine {
                 continue;
             }
             if let Some(err) = &inst.err {
-                return Err(Stop::Refused(err.clone()));
+                if may_touch(m, &inst, place) {
+                    return Err(Stop::Refused(err.clone()));
+                }
+                continue;
             }
             if touches(&inst.legs, place) {
                 out.push(inst);
@@ -414,19 +429,40 @@ enum Modelled {
     On(Day),
 }
 
+/// Whether a refused instance refuses the ledger of `place`: exactly where a hole one would be
+/// a line of it, a place its legs give or any place where a leg's place couldn't be read; with
+/// no legs, wherever its move has some (refcore's `may_touch`; tally 2.1.7 R1, R2, SR-1).
+/// E §6.3, L §8.4.
+fn may_touch(m: &Reality, inst: &Inst, place: &str) -> bool {
+    if inst.legs.is_empty() {
+        return m
+            .moves
+            .get(&inst.move_id)
+            .is_some_and(|mv| !mv.decl.legs.is_empty());
+    }
+    touches(&inst.legs, place)
+        || inst
+            .legs
+            .iter()
+            .any(|lg| lg.to.place().is_none() || lg.from.place().is_none())
+}
+
+/// A refused instance's refusal. L §8.4.
+fn refusal_of(inst: &Inst) -> Stop {
+    match &inst.err {
+        Some(err) => Stop::Refused(err.clone()),
+        None => invariant("a refused instance with no refusal"),
+    }
+}
+
 /// Where an instance of the model stands (refcore's `m_residuals`, its status test): one
-/// whose evaluation was refused refuses the ledger. E §6.3, L §8.4.
+/// that doesn't exist is no line; a refused one stands where its day is, and refuses the
+/// ledger where it may touch the place. E §6.3, L §8.4.
 fn model_day(inst: &Inst) -> Result<Modelled, Stop> {
     match inst.status {
         Status::None | Status::LeftOut => return Ok(Modelled::Skip),
-        Status::Refused => {
-            let err = inst
-                .err
-                .clone()
-                .ok_or_else(|| invariant("a refused instance with no refusal"))?;
-            return Err(Stop::Refused(err));
-        }
-        Status::Open
+        Status::Refused
+        | Status::Open
         | Status::Hole
         | Status::Decision
         | Status::Uncertain
@@ -674,6 +710,50 @@ fn undated_line(
     Ok(())
 }
 
+/// A period that E cuts holds its days through E; the days after E are one line, the hole
+/// `after the run's end`, since the walk holds none of them (refcore's `m_residuals`).
+/// E §6.3, L §8.1 `HOLE-POSTRUN`.
+fn after_run_line(m: &Reality, lines: &mut Lines, span: &Span) -> Result<(), Stop> {
+    let (Some(first), Some(end)) = (span.start(), span.end()) else {
+        return Ok(());
+    };
+    let last = end
+        .previous()
+        .ok_or_else(|| invariant("a span ending before the calendar"))?;
+    if last <= m.end {
+        return Ok(());
+    }
+    lines.out.retain(|l| match l.day {
+        Some(d) => d <= m.end,
+        None => true,
+    });
+    let after = m
+        .end
+        .next()
+        .ok_or_else(|| invariant("a run ending at the calendar's end"))?
+        .max(first);
+    let hole = Fig::Hole(Hole::after_run(&lines.place));
+    let text = format!(
+        "days {} .. {}: {}",
+        after.text(),
+        last.text(),
+        fig_text(m, &hole, &lines.unit)?
+    );
+    lines.out.push(Line {
+        day: Some(after),
+        group: GroupKey {
+            month: None,
+            name: "after the run's end".to_owned(),
+        },
+        model: Some(hole.clone()),
+        observed: Some(hole.clone()),
+        diff: hole,
+        text,
+        order: Term::Tuple(Vec::new()),
+    });
+    Ok(())
+}
+
 /// An unexplained line: an observation that fulfils nothing the model at the cut holds, its
 /// amount the difference (refcore's unexplained `RLine`). E §6.3 unexplained.
 fn unexplained_line(m: &Reality, lines: &mut Lines, o: &Obs) -> Result<(), Stop> {
@@ -813,7 +893,7 @@ fn flow_into(legs: &[LegVal], place: &str, unit: &str) -> Result<Fig, Stop> {
             && u != unit
         {
             return Err(Stop::Refused(Refusal::new(
-                Code::Load(Load::Unit),
+                Load::Unit.at_run(),
                 format!("a leg in {u} touches {place}, a place in {unit}"),
             )));
         }

@@ -1,0 +1,29 @@
+model c7
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+index ks = [k1, k2]
+input r[k in ks]: num
+input seven: num
+input xv: num
+input target: num
+def tot: num = sum(r[k] for k in ks) at reader
+def inner: num = tot as if {r[*] = seven} at reader
+def sq: num = xv * xv at reader
+
+ask o3: inner with r[k1] = 9 law 2026-06-30
+ask o6: (tot as if {r[*] = seven}) with r[k1] = 9 law 2026-06-30
+ask o9: solve sq == target for xv in [0, 4] to 1 with xv = 2 law 2026-06-30
+ask w: tot with r[k1] = 9 law 2026-06-30
+
+version v
+  cite card
+  governs 2026..
+  known 2026-01-01
+  r[*] = 1
+  seven = 7
+  xv = 1
+  target = 4

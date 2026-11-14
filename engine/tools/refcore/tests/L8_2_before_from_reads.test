@@ -1,0 +1,57 @@
+# L §8.2 before from:, E §9 item 3 (tally 2.1.7 R7, issue #146; #121): a movement before the scenario's from
+# that reads the scenario's facts (pay, at a law date after from, reads fee) is listed under each result whose
+# reads reach it, `before from: <instance> on <day> reads <item>`. 2.1.6's refcore refused ENGINE-INVARIANT
+# (invariant 3). (T's G6 law_after.)
+=== law_after.tally
+model hh
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "G6 review B1: a base move before from, read at a law date after it"
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+
+input pay_day: date
+
+input law_day: date
+
+move pay: transfers
+  on pay_day
+  at law_day
+  leg cash from world to konto amount fee
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 100.00 PLN "the card"
+  pay_day = 2026-03-01 "the card"
+  law_day = 2026-08-01 "the card"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "the card"
+=== law_after_s.tally
+scenario more over hh
+  tally 2
+  from 2026-07-01
+
+version more_fee
+  cite card
+  governs 2026-07-01..
+  known 2026-01-01
+  replace fee = 150.00 PLN "more"
+
+ask b1: bal(konto, 2026-12-31) in more
+=== expect b1
+b1: 150.00 PLN
+  world: more
+  before from: pay on 2026-03-01 reads fee
+  held: fee = 150.00 PLN (more_fee), read for 2026-08-01
+  cut 2026-03-01

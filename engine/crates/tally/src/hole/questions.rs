@@ -69,6 +69,20 @@ impl Hole {
         }
     }
 
+    /// `HOLE-PRERUN`'s hole, asked of `figure`: a walked value of a day before the run's
+    /// start S, which nothing walks (L §8.1; E §2).
+    #[must_use]
+    pub fn before_run(figure: &str) -> Hole {
+        Hole::asked("before the run's start", figure)
+    }
+
+    /// `HOLE-POSTRUN`'s hole, asked of `figure`: a walked value of a day after the run's end
+    /// E, which nothing walks (L §8.1; E §2, §6.3).
+    #[must_use]
+    pub fn after_run(figure: &str) -> Hole {
+        Hole::asked("after the run's end", figure)
+    }
+
     /// The questions as L §8.1 prints them: each text once, sorted by code point, with the
     /// figures it was reached at in brackets; a text no figure names prints alone.
     #[must_use]

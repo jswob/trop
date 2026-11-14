@@ -4350,22 +4350,31 @@ pre_s: (247.99 DUK, 1 132.31 DUK, 4 398.54 DUK, 247.99 DUK, 1 132.31 DUK, 5 123.
   cut 2025-03-29
 warning: WARN-NEGATIVE acc_0 is below zero from 2025-05-10
 warning: WARN-NEGATIVE acc_1 is below zero from 2025-06-19
-,18:scenario-before-03,3:one,1:0,982:post_m: (6 817.18 DUK, 4 583.71 DUK)
+,18:scenario-before-03,3:one,1:0,1146:post_m: (6 817.18 DUK, 4 583.71 DUK)
   unfulfilled: mv_l
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
   cut 2025-03-11
-post_s: (refused: ENGINE-INVARIANT scenario s: acc_0 holds 4 790.98 DUK at the end of 2025-03-30, the base 5 798.50 DUK (E §9 invariant 3), 5 190.31 DUK)
+post_s: (6 001.39 DUK, 5 190.31 DUK)
   world: s
+  before from: mv_l on 2025-01-06 reads amt_mv_l
+  unfulfilled: mv_l
+  unfulfilled: plan[2025-01]
+  unfulfilled: plan[2025-02]
   held: amt_mv_0 = 1 750.01 DUK (sv), read for 2025-05-03
+  held: amt_mv_l = 331.08 DUK (sv), read for 2025-05-07
+  held: plan_amt = 519.15 DUK (sv), read for 2025-04-01
+  held: plan_amt = 519.15 DUK (sv), read for 2025-05-01
+  held: plan_amt = 519.15 DUK (sv), read for 2025-06-01
   cut 2025-03-11
 pre_m: (4 927.68 DUK, 4 075.34 DUK, 5 382.92 DUK, 4 075.34 DUK, -1 365.72 DUK, -1 298.94 DUK, 2 664.66 DUK, 0.00 DUK)
   unfulfilled: mv_l
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
   cut 2025-03-11
-pre_s: (refused: ENGINE-INVARIANT scenario s: acc_0 holds 4 790.98 DUK at the end of 2025-03-30, the base 5 798.50 DUK (E §9 invariant 3), 4 075.34 DUK, 4 375.40 DUK, 4 075.34 DUK, -1 365.72 DUK, -291.42 DUK, 1 657.14 DUK, 0.00 DUK)
+pre_s: (3 920.16 DUK, 4 075.34 DUK, 4 375.40 DUK, 4 075.34 DUK, -1 365.72 DUK, -291.42 DUK, 1 657.14 DUK, 0.00 DUK)
   world: s
+  before from: mv_l on 2025-01-06 reads amt_mv_l
   unfulfilled: mv_l
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
@@ -4492,7 +4501,7 @@ pre_s: (3 835.01 DUK, 1 689.48 DUK, 4 884.59 DUK, 1 955.62 DUK, 4 149.23 DUK, 4 
   unfulfilled: plan[2025-03]
   unfulfilled: sweep
   cut 2025-05-27
-,18:scenario-before-07,3:one,1:0,1638:post_m: (7 978.83 DUK, 1 542.54 DUK, 3 247.31 DUK)
+,18:scenario-before-07,3:one,1:0,1782:post_m: (7 978.83 DUK, 1 542.54 DUK, 3 247.31 DUK)
   unfulfilled: mv_l
   unfulfilled: pay_fee
   unfulfilled: plan[2025-01]
@@ -4501,15 +4510,22 @@ pre_s: (3 835.01 DUK, 1 689.48 DUK, 4 884.59 DUK, 1 955.62 DUK, 4 149.23 DUK, 4 
   unfulfilled: split[q2]
   unfulfilled: split[q3]
   cut 2025-02-16
-post_s: (refused: ENGINE-INVARIANT scenario s: acc_1 holds 1 175.69 DUK at the end of 2025-02-21, the base 1 515.54 DUK (E §9 invariant 3), 3 035.98 DUK, 3 247.31 DUK)
+post_s: (6 328.23 DUK, 3 035.98 DUK, 3 247.31 DUK)
   world: s
+  before from: mv_l on 2025-01-23 reads amt_mv_l
   unfulfilled: mv_l
   unfulfilled: pay_fee
+  unfulfilled: plan[2025-01]
+  unfulfilled: plan[2025-02]
   unfulfilled: split[q1]
   unfulfilled: split[q2]
   unfulfilled: split[q3]
   held: amt_mv_0 = 1 860.29 DUK (sv), read for 2025-05-24
   held: amt_mv_l = 991.81 DUK (sv), read for 2025-03-15
+  held: plan_amt = 455.32 DUK (sv), read for 2025-03-01
+  held: plan_amt = 455.32 DUK (sv), read for 2025-04-01
+  held: plan_amt = 455.32 DUK (sv), read for 2025-05-01
+  held: plan_amt = 455.32 DUK (sv), read for 2025-06-01
   cut 2025-02-16
 pre_m: (3 638.98 DUK, 207.53 DUK, 3 436.19 DUK, 3 638.98 DUK, 1 515.54 DUK, 3 247.31 DUK, 3 638.98 DUK, 1 515.54 DUK, 3 247.31 DUK, -2 855.07 DUK, 0.00 DUK, 1 735.94 DUK, 1 308.01 DUK, -188.88 DUK)
   unfulfilled: mv_l
@@ -4520,8 +4536,9 @@ pre_m: (3 638.98 DUK, 207.53 DUK, 3 436.19 DUK, 3 638.98 DUK, 1 515.54 DUK, 3 24
   unfulfilled: split[q2]
   unfulfilled: split[q3]
   cut 2025-02-16
-pre_s: (refused: ENGINE-INVARIANT scenario s: acc_1 holds 1 175.69 DUK at the end of 2025-02-21, the base 1 515.54 DUK (E §9 invariant 3), 207.53 DUK, 3 436.19 DUK, 3 638.98 DUK, 1 175.69 DUK, 3 247.31 DUK, 3 638.98 DUK, 1 175.69 DUK, 3 247.31 DUK, -2 515.22 DUK, 0.00 DUK, 1 735.94 DUK, 968.16 DUK, -188.88 DUK)
+pre_s: (3 638.98 DUK, 207.53 DUK, 3 436.19 DUK, 3 638.98 DUK, 1 175.69 DUK, 3 247.31 DUK, 3 638.98 DUK, 1 175.69 DUK, 3 247.31 DUK, -2 515.22 DUK, 0.00 DUK, 1 735.94 DUK, 968.16 DUK, -188.88 DUK)
   world: s
+  before from: mv_l on 2025-01-23 reads amt_mv_l
   unfulfilled: mv_l
   unfulfilled: pay_fee
   unfulfilled: plan[2025-01]
@@ -4655,12 +4672,13 @@ pre_s: (1 571.95 DUK, 1 674.77 DUK, 468.64 DUK, 1 571.95 DUK, 1 674.77 DUK, 468.
   unfulfilled: plan[2025-02]
   cut 2025-04-28
 warning: WARN-NEGATIVE acc_2 is below zero from 2025-05-15
-,18:scenario-before-11,3:one,1:0,1232:post_m: (3 959.16 DUK, 7 307.12 DUK)
+,18:scenario-before-11,3:one,1:0,1094:post_m: (3 959.16 DUK, 7 307.12 DUK)
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
   cut 2025-02-10
-post_s: (refused: ENGINE-INVARIANT scenario s: acc_1 holds 6 299.97 DUK at the end of 2025-03-14, the base 7 544.92 DUK (E §9 invariant 3), 5 429.49 DUK)
+post_s: (3 959.16 DUK, 5 429.49 DUK)
   world: s
+  before from: mv_l on 2025-03-03 reads amt_mv_l
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
   held: amt_mv_0 = 1 031.00 DUK (sv), read for 2025-05-18
@@ -4673,8 +4691,9 @@ pre_m: (3 959.16 DUK, 4 271.00 DUK, 3 959.16 DUK, 4 757.49 DUK, 3 959.16 DUK, 5 
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
   cut 2025-02-10
-pre_s: (refused: ENGINE-INVARIANT scenario s: acc_1 holds 6 299.97 DUK at the end of 2025-03-14, the base 7 544.92 DUK (E §9 invariant 3), 4 271.00 DUK, 3 959.16 DUK, 4 757.49 DUK, 3 959.16 DUK, 5 243.98 DUK, -2 028.97 DUK, 0.00 DUK, 2 028.97 DUK)
+pre_s: (3 959.16 DUK, 4 271.00 DUK, 3 959.16 DUK, 4 757.49 DUK, 3 959.16 DUK, 5 243.98 DUK, -2 028.97 DUK, 0.00 DUK, 2 028.97 DUK)
   world: s
+  before from: mv_l on 2025-03-03 reads amt_mv_l
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
   held: amt_mv_l = 569.50 DUK (sv), read for 2025-06-29
@@ -4802,7 +4821,7 @@ pre_s: (4 820.86 DUK, 3 549.59 DUK, 4 820.86 DUK, 3 549.59 DUK, 483.16 DUK, 8 93
   unfulfilled: sweep
   cut 2025-04-13
 warning: WARN-NEGATIVE acc_0 is below zero from 2025-05-13
-,18:scenario-before-15,3:one,1:0,1676:post_m: (4 025.48 DUK, 7 115.85 DUK)
+,18:scenario-before-15,3:one,1:0,1711:post_m: (4 025.48 DUK, 7 115.85 DUK)
   unfulfilled: mv_1
   unfulfilled: mv_2
   unfulfilled: mv_3
@@ -4818,10 +4837,13 @@ warning: WARN-NEGATIVE acc_0 is below zero from 2025-05-13
   unfulfilled: split[q2]
   unfulfilled: split[q3]
   cut 2025-06-24
-post_s: (refused: ENGINE-INVARIANT scenario s: acc_0 holds 7 070.61 DUK at the end of 2025-05-07, the base 6 268.43 DUK (E §9 invariant 3), 6 646.57 DUK)
+post_s: (4 634.68 DUK, 6 646.57 DUK)
   world: s
+  before from: mv_l on 2025-04-04 reads amt_mv_l
+  unfulfilled: mv_1
   unfulfilled: mv_2
   unfulfilled: mv_3
+  unfulfilled: mv_l
   unfulfilled: pay_fee
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
@@ -4829,6 +4851,10 @@ post_s: (refused: ENGINE-INVARIANT scenario s: acc_0 holds 7 070.61 DUK at the e
   unfulfilled: plan[2025-04]
   unfulfilled: plan[2025-05]
   unfulfilled: plan[2025-06]
+  unfulfilled: split[q1]
+  unfulfilled: split[q2]
+  unfulfilled: split[q3]
+  held: amt_mv_0 = 1 661.77 DUK (sv), read for 2025-06-25
   cut 2025-06-24
 pre_m: (5 668.83 DUK, 5 292.92 DUK, 5 668.83 DUK, 5 869.80 DUK, 5 668.83 DUK, 6 446.68 DUK, -5 026.68 DUK, 461.03 DUK, 1 422.35 DUK, 3 143.30 DUK)
   unfulfilled: mv_1
@@ -4840,8 +4866,9 @@ pre_m: (5 668.83 DUK, 5 292.92 DUK, 5 668.83 DUK, 5 869.80 DUK, 5 668.83 DUK, 6 
   unfulfilled: plan[2025-03]
   unfulfilled: plan[2025-04]
   cut 2025-06-24
-pre_s: (refused: ENGINE-INVARIANT scenario s: acc_0 holds 7 070.61 DUK at the end of 2025-05-07, the base 6 268.43 DUK (E §9 invariant 3), 5 292.92 DUK, 5 668.83 DUK, 5 869.80 DUK, 5 668.83 DUK, 6 446.68 DUK, -5 026.68 DUK, -341.15 DUK, 2 224.53 DUK, 3 143.30 DUK)
+pre_s: (5 668.83 DUK, 5 292.92 DUK, 5 668.83 DUK, 5 869.80 DUK, 5 668.83 DUK, 6 446.68 DUK, -5 026.68 DUK, -341.15 DUK, 2 224.53 DUK, 3 143.30 DUK)
   world: s
+  before from: mv_l on 2025-04-04 reads amt_mv_l
   unfulfilled: mv_1
   unfulfilled: mv_2
   unfulfilled: mv_3
@@ -4971,7 +4998,7 @@ pre_s: (766.38 DUK, 3 240.92 DUK, 4 555.21 DUK, 682.01 DUK, 766.38 DUK, 3 240.92
   unfulfilled: plan[2025-01]
   cut 2025-02-12
 warning: WARN-NEGATIVE acc_3 is below zero from 2025-03-14
-,18:scenario-before-19,3:one,1:0,1794:post_m: (815.58 DUK, 2 767.58 DUK, 11 449.80 DUK)
+,18:scenario-before-19,3:one,1:0,1892:post_m: (815.58 DUK, 2 767.58 DUK, 11 449.80 DUK)
   unfulfilled: mv_0
   unfulfilled: mv_1
   unfulfilled: mv_l
@@ -4989,6 +5016,7 @@ warning: WARN-NEGATIVE acc_3 is below zero from 2025-03-14
   cut 2025-06-30
 post_s: (1 637.51 DUK, 1 085.70 DUK, 10 247.97 DUK)
   world: s
+  before from: mv_l on 2025-03-15 reads amt_mv_l
   unfulfilled: mv_0
   unfulfilled: mv_1
   unfulfilled: mv_l
@@ -5018,6 +5046,7 @@ pre_m: (2 404.64 DUK, 3 007.70 DUK, 4 079.71 DUK, 394.45 DUK, 3 007.70 DUK, 7 39
   cut 2025-06-30
 pre_s: (2 404.64 DUK, 3 007.70 DUK, 4 079.71 DUK, 394.45 DUK, 3 007.70 DUK, 7 395.54 DUK, 1 637.51 DUK, 3 007.70 DUK, 9 646.36 DUK, -1 598.00 DUK, -3 042.01 DUK, -767.13 DUK, -159.51 DUK, 5 566.65 DUK)
   world: s
+  before from: mv_l on 2025-03-15 reads amt_mv_l
   unfulfilled: mv_1
   unfulfilled: mv_l
   unfulfilled: pay_fee
@@ -5098,25 +5127,31 @@ pre_s: (5 146.90 DUK, 3 842.35 DUK, 5 146.90 DUK, 3 842.35 DUK, 5 146.90 DUK, 3 
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
   cut 2025-04-03
-,18:scenario-before-23,3:one,1:0,1369:post_m: (5 990.58 DUK, 969.46 DUK, 1 862.65 DUK, 1 974.33 DUK)
+,18:scenario-before-23,3:one,1:0,1425:post_m: (5 990.58 DUK, 969.46 DUK, 1 862.65 DUK, 1 974.33 DUK)
   unfulfilled: mv_2
   unfulfilled: mv_l
   unfulfilled: plan[2025-01]
   cut 2025-02-11
-post_s: (refused: ENGINE-INVARIANT scenario s: acc_3 holds 3 167.94 DUK at the end of 2025-03-03, the base 1 974.33 DUK (E §9 invariant 3), 571.92 DUK, 1 862.65 DUK, 3 167.94 DUK)
+post_s: (4 867.89 DUK, 571.92 DUK, 1 862.65 DUK, 3 167.94 DUK)
   world: s
+  before from: mv_l on 2025-02-10 reads amt_mv_l
   unfulfilled: mv_2
   unfulfilled: mv_l
+  unfulfilled: plan[2025-01]
   held: amt_mv_3 = 1 812.45 DUK (sv), read for 2025-06-26
   held: amt_mv_l = 1 879.76 DUK (sv), read for 2025-06-18
+  held: plan_amt = 56.59 DUK (sv), read for 2025-04-01
+  held: plan_amt = 56.59 DUK (sv), read for 2025-05-01
+  held: plan_amt = 56.59 DUK (sv), read for 2025-06-01
   cut 2025-02-11
 pre_m: (4 654.97 DUK, 2 384.37 DUK, 3 028.72 DUK, 544.37 DUK, 4 801.04 DUK, 2 384.37 DUK, 3 028.72 DUK, 1 974.33 DUK, 4 801.04 DUK, 2 384.37 DUK, 3 028.72 DUK, 1 974.33 DUK, -459.06 DUK, -1 547.79 DUK, 576.89 DUK, 0.00 DUK, 0.00 DUK, 1 429.96 DUK)
   unfulfilled: mv_2
   unfulfilled: mv_l
   unfulfilled: plan[2025-01]
   cut 2025-02-11
-pre_s: (refused: ENGINE-INVARIANT scenario s: acc_3 holds 3 167.94 DUK at the end of 2025-03-03, the base 1 974.33 DUK (E §9 invariant 3), 2 384.37 DUK, 3 028.72 DUK, 544.37 DUK, 4 801.04 DUK, 2 384.37 DUK, 3 028.72 DUK, 3 167.94 DUK, 4 801.04 DUK, 2 384.37 DUK, 3 028.72 DUK, 3 167.94 DUK, -459.06 DUK, -2 741.40 DUK, 576.89 DUK, 0.00 DUK, 0.00 DUK, 2 623.57 DUK)
+pre_s: (4 654.97 DUK, 2 384.37 DUK, 3 028.72 DUK, 544.37 DUK, 4 801.04 DUK, 2 384.37 DUK, 3 028.72 DUK, 3 167.94 DUK, 4 801.04 DUK, 2 384.37 DUK, 3 028.72 DUK, 3 167.94 DUK, -459.06 DUK, -2 741.40 DUK, 576.89 DUK, 0.00 DUK, 0.00 DUK, 2 623.57 DUK)
   world: s
+  before from: mv_l on 2025-02-10 reads amt_mv_l
   unfulfilled: mv_2
   unfulfilled: mv_l
   unfulfilled: plan[2025-01]
@@ -14499,17 +14534,17 @@ b_pos: refused: RUN-KEY 7 is outside ix
 d_off: refused: RUN-KEY 8 is outside ix
   cut 2025-06-30
 warning: WARN-UNREAD input mm is read by nothing
-,8:steps-06,3:one,1:0,347:a_key: 6
+,8:steps-06,3:one,1:0,260:a_key: 6
   cut 2025-06-30
 b_pos: 6
   cut 2025-06-30
-c_dur: refused: RUN-DOMAIN the period 2037 lies across two keys of ix: no key's period holds it
+c_dur: 6
   cut 2025-06-30
 d_part: refused: RUN-DOMAIN 2036 + 3 year: not a whole number of its periods (L §4.2)
   cut 2025-06-30
 e_start: 2038-01-01
   cut 2025-06-30
-e_start_dur: 2037-01-01
+e_start_dur: 2038-01-01
   cut 2025-06-30
 ,8:steps-07,3:one,1:0,156:a_key: 2
   cut 2025-06-30
@@ -14533,17 +14568,17 @@ e_start: 2025-03-04
   cut 2025-06-30
 e_start_dur: 2025-03-04
   cut 2025-06-30
-,8:steps-09,3:one,1:0,348:a_key: 2
+,8:steps-09,3:one,1:0,261:a_key: 2
   cut 2025-06-30
 b_pos: 2
   cut 2025-06-30
-c_dur: refused: RUN-DOMAIN the period 2026 lies across two keys of ix: no key's period holds it
+c_dur: 2
   cut 2025-06-30
 d_part: refused: RUN-DOMAIN 2029 + -5 year: not a whole number of its periods (L §4.2)
   cut 2025-06-30
 e_start: 2023-03-09
   cut 2025-06-30
-e_start_dur: 2026-03-09
+e_start_dur: 2023-03-09
   cut 2025-06-30
 ,8:steps-10,3:one,1:0,264:a_key: 6
   cut 2025-06-30
@@ -14596,17 +14631,17 @@ e_start: 2025-11-26
   cut 2025-06-30
 e_start_dur: 2025-11-26
   cut 2025-06-30
-,8:steps-15,3:one,1:0,347:a_key: 2
+,8:steps-15,3:one,1:0,260:a_key: 2
   cut 2025-06-30
 b_pos: 2
   cut 2025-06-30
-c_dur: refused: RUN-DOMAIN the period 2030 lies across two keys of ix: no key's period holds it
+c_dur: 2
   cut 2025-06-30
 d_part: refused: RUN-DOMAIN 2029 + 4 year: not a whole number of its periods (L §4.2)
   cut 2025-06-30
 e_start: 2032-06-08
   cut 2025-06-30
-e_start_dur: 2030-06-08
+e_start_dur: 2032-06-08
   cut 2025-06-30
 ,8:steps-16,3:one,1:0,265:a_key: 1
   cut 2025-06-30
@@ -14625,17 +14660,17 @@ e_start_dur: 2020-07-11
 b_pos: refused: RUN-KEY 6 is outside ix
   cut 2025-06-30
 warning: WARN-UNREAD input mm is read by nothing
-,8:steps-18,3:one,1:0,348:a_key: 4
+,8:steps-18,3:one,1:0,261:a_key: 4
   cut 2025-06-30
 b_pos: 4
   cut 2025-06-30
-c_dur: refused: RUN-DOMAIN the period 2028 lies across two keys of ix: no key's period holds it
+c_dur: 4
   cut 2025-06-30
 d_part: refused: RUN-DOMAIN 2029 + -1 year: not a whole number of its periods (L §4.2)
   cut 2025-06-30
 e_start: 2027-01-01
   cut 2025-06-30
-e_start_dur: 2028-01-01
+e_start_dur: 2027-01-01
   cut 2025-06-30
 ,8:steps-19,3:one,1:0,265:a_key: 3
   cut 2025-06-30
@@ -14665,13 +14700,13 @@ e_start_dur: 2025-04-07
   cut 2025-06-30
 b_pos: 3
   cut 2025-06-30
-c_dur: 5
+c_dur: 3
   cut 2025-06-30
 d_part: refused: RUN-DOMAIN 2041 + -8 year: not a whole number of its periods (L §4.2)
   cut 2025-06-30
 e_start: 2032-05-18
   cut 2025-06-30
-e_start_dur: 2038-05-18
+e_start_dur: 2032-05-18
   cut 2025-06-30
 ,8:steps-22,3:one,1:0,265:a_key: 1
   cut 2025-06-30

@@ -1,0 +1,9 @@
+scenario late over household
+  tally 2
+  from 2027-01-01
+
+version late_amt
+  cite plan
+  governs 2027..
+  known 2026-01-01
+  replace amt = 20.00 PLN "own"

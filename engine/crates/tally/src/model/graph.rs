@@ -262,8 +262,8 @@ pub struct Graph {
     pub edges: BTreeMap<Node, BTreeMap<Node, Vec<Rel>>>,
     /// Each item's own running reads and projections, with what they read.
     pub marks: BTreeMap<Node, Vec<(Mark, Target)>>,
-    /// The items that hold `bal(x)` with no day.
-    pub balnow: BTreeSet<Node>,
+    /// The items that hold `bal(x)` with no day, each with the file and line of its first.
+    pub balnow: BTreeMap<Node, (String, u32)>,
     /// The items that hold a written projection.
     pub holders: BTreeSet<Node>,
     /// Each holder's left-out moves: those that depend on it (L §5.14.1).

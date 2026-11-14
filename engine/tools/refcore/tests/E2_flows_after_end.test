@@ -1,0 +1,108 @@
+# tally 2.1.7 S1 (#93): movements dated after E are never booked and flows counts them (E §2 Movements outside
+# [S, E], E §4.1 step 3): a plan's instance with its amount, a decision's instance as a hole movement, HOLE-POSTRUN
+# `after the run's end`, since its amount reads a walk that doesn't hold its day (L §8.1). Run 2026-01-01 ..
+# 2026-06-30; pay and gift (plans, 100.00 PLN on day 10 of each month of 2026) and sweep (a decision on each month's
+# end_of, so sweep[2026-06] falls on 2026-07-01) keeping 50.00 PLN in konto. f, g: flows of konto and savings past E
+# hold sweep[2026-06] and sweep[2026-07], so the hole; w: flows of kasa over June .. August counts gift[2026-06..08],
+# 300.00 PLN; p: flows of the plan pay in July, 100.00 PLN; sw: flows of the decision sweep in July, the hole; sw6:
+# flows of sweep in June, inside the run, 100.00 PLN. Was (2.1.6): f 0.00, g 100.00, w 100.00, sw 0.00, the movements
+# after E dropped in silence.
+=== d3.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+index mon = month 2026-01..2026-12
+input amt: money PLN
+input dom: int
+input keep: money PLN
+place konto: accounts PLN lives 2025-01-01..
+place kasa: accounts PLN lives 2025-01-01..
+place savings: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+
+move pay[m in mon]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from world to konto amount amt
+
+move gift[m in mon]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from world to kasa amount amt
+
+move sweep[m in mon]: transfers
+  on end_of(m)
+  at start_of(m)
+  reads konto
+  leg cash from konto to savings amount max(0 PLN, bal(konto) - keep)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  opening[kasa] = 0.00 PLN at 2026-01-01 start "s"
+  opening[savings] = 0.00 PLN at 2026-01-01 start "s"
+  amt = 100.00 PLN "s"
+  dom = 10 "s"
+  keep = 50.00 PLN "s"
+
+ask f: flows(konto, 2026-06-01 .. 2026-08-31)
+ask w: flows(kasa, 2026-06-01 .. 2026-08-31)
+ask p: flows(pay, 2026-07-01 .. 2026-07-31)
+ask sw: flows(sweep, 2026-07-01 .. 2026-07-31)
+ask sw6: flows(sweep, 2026-06-01 .. 2026-06-30)
+ask g: flows(savings, 2026-06-01 .. 2026-08-31)
+=== expect
+f: ?"after the run's end" (sweep[2026-06], sweep[2026-07])
+  unfulfilled: pay[2026-01]
+  unfulfilled: pay[2026-02]
+  unfulfilled: pay[2026-03]
+  unfulfilled: pay[2026-04]
+  unfulfilled: pay[2026-05]
+  unfulfilled: pay[2026-06]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  unfulfilled: sweep[2026-03]
+  unfulfilled: sweep[2026-04]
+  unfulfilled: sweep[2026-05]
+  left out: pay, 6 instances, first 2026-07-10
+  cut 2026-10-18
+g: ?"after the run's end" (sweep[2026-06], sweep[2026-07])
+  unfulfilled: pay[2026-01]
+  unfulfilled: pay[2026-02]
+  unfulfilled: pay[2026-03]
+  unfulfilled: pay[2026-04]
+  unfulfilled: pay[2026-05]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  unfulfilled: sweep[2026-03]
+  unfulfilled: sweep[2026-04]
+  unfulfilled: sweep[2026-05]
+  left out: pay, 6 instances, first 2026-07-10
+  cut 2026-10-18
+p: 100.00 PLN
+  cut 2026-10-18
+sw: ?"after the run's end" (sweep[2026-06])
+  cut 2026-10-18
+sw6: 100.00 PLN
+  unfulfilled: pay[2026-01]
+  unfulfilled: pay[2026-02]
+  unfulfilled: pay[2026-03]
+  unfulfilled: pay[2026-04]
+  unfulfilled: pay[2026-05]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  unfulfilled: sweep[2026-03]
+  unfulfilled: sweep[2026-04]
+  unfulfilled: sweep[2026-05]
+  left out: pay, 6 instances, first 2026-07-10
+  cut 2026-10-18
+w: 300.00 PLN
+  unfulfilled: gift[2026-06]
+  cut 2026-10-18

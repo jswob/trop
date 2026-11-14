@@ -1,0 +1,4 @@
+exit 0
+a: 100.00 PLN
+  cut 2026-01-01
+warning: WARN-UNREAD input owns is read by nothing

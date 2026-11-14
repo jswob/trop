@@ -96,6 +96,11 @@ fn entry_lines(met: &Collected) -> Result<Vec<String>, Stop> {
     let mut by_word: BTreeSet<(usize, String)> = BTreeSet::new();
     let mut pins: Vec<&str> = Vec::new();
     for entry in &met.entries {
+        // an ask pin a read met under another claim: in the read set, printed by no view
+        // (L §8.2 One read set; P45)
+        if entry.word == "pin met" {
+            continue;
+        }
         if entry.word == "assumed" {
             assumed.insert((entry.text.as_str(), entry.figure.as_str()));
             continue;

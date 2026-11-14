@@ -1,0 +1,21 @@
+part k_paren
+  tally 2
+
+index cs = [k1, k2]
+
+input lim[c in cs]: num
+
+ask p_key: rate[(2026)]
+
+ask n1_if: rate[if year_of(start_day) == 2026 then 2026 else 2027]
+
+ask k_code: lim[(k1)]
+
+ask k_code_if: lim[if year_of(start_day) == 2026 then k1 else k2]
+
+version card_k
+  cite card
+  governs always
+  known 2026-01-01
+  lim[k1] = 1 "the card"
+  lim[k2] = 2 "the card"

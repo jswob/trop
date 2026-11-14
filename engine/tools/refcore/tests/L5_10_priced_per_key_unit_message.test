@@ -1,0 +1,106 @@
+# L §2.4 Values, §3.2 (tally 2.1.7 B3, issue #151; F21): a message names a price keyed by unit by the key's
+# unit, PLN/fa, for a place of any unit the first its legs bring. 2.1.6's refcore printed the placeholder,
+# `PLN/$u, not EUR/$u`. (T's G14 p130_one_kp with c_eur.)
+=== p130_one_kp.tally
+model kp
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+
+source card "probe card"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+kind funds: unit
+
+kind ikes: place any min 0
+
+kind pikes: place any min 0 priced px
+
+kind wikes: place any min 0 priced qx
+
+kind lots: place one min 0 priced px
+
+kind unit_buys: event certain
+  leg units: funds
+
+place ike: ikes lives 2026-01-01..
+
+place pike: pikes lives 2026-01-01..
+
+place wike: wikes lives 2026-01-01..
+
+place lot: lots fa lives 2026-01-01..
+
+place market: outside lives 2026-01-01..
+
+input px[u in funds]: num PLN/u
+
+input qx[u in funds]: num PLN/fa
+
+input pl[u in funds]: num PLN/u reading
+
+input buy_day: date
+
+input n3a: num fa
+
+input n2b: num fb
+
+input n5a: num fa
+
+move b1: unit_buys
+  on buy_day
+  leg units from market to ike amount n3a
+
+move b2: unit_buys
+  on buy_day
+  leg units from market to ike amount n2b
+
+move b3: unit_buys
+  on buy_day
+  leg units from market to pike amount n3a
+
+move b4: unit_buys
+  on buy_day
+  leg units from market to pike amount n2b
+
+move b5: unit_buys
+  on buy_day
+  leg units from market to wike amount n2b
+
+move b6: unit_buys
+  on buy_day
+  leg units from market to lot amount n5a
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  funds + [fa] lives 2026-01-01..
+  funds + [fb] lives 2026-01-01..
+  buy_day = 2026-02-10 "the card"
+  n3a = 3 fa "the card"
+  n2b = 2 fb "the card"
+  n5a = 5 fa "the card"
+  px[fa] = 10 PLN/fa "the card"
+  px[fb] = 20 PLN/fb "the card"
+  qx[fa] = 7 PLN/fa "the card"
+  qx[fb] = 9 PLN/fa "the card"
+
+version readings_2026
+  cite card
+  governs 2026-01..2026-12
+  known 2026-01-01
+  pl[fa] = 11 PLN/fa at 2026-03-01 "quoted"
+  pl[fb] = 21 PLN/fb at 2026-03-01 "quoted"
+=== p130_one_c_eur.tally
+part p_c_eur
+  tally 2
+
+ask c_eur: value(pike, 2026-03-31) in EUR
+=== expect
+refused: LOAD-UNIT value(pike) in EUR: pike is priced in PLN/fa, not EUR/fa ...

@@ -1,0 +1,19 @@
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+index cnt = [c1, c2, c3, c4, c5, c6]
+input one: int
+
+def fib[n in cnt]: int = if pos(n) <= 2 then one else fib[n - 1] + fib[n - 2]
+
+ask e: explain fib[c6]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  one = 1 "s"

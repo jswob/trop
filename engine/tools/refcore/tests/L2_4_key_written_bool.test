@@ -1,0 +1,49 @@
+# L §2.4 Values, §8.3 LOAD-KEY (tally 2.1.7 R9, issue #148; #100a, pre-M1 P2): `true` at a stepped range prints
+# as written, `true`. 2.1.6's refcore printed Python's `True`. (T's code vector written/range-key-bool.)
+=== base.tally
+model written
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented, issue #90): keys and a price written in rows and clauses; a place keyed by persons, an observation's leg to one of them, an input keyed by a stepped range, a priced holding; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit etf_unit "a fund unit"
+
+kind persons
+
+kind gifts: event certain
+  leg cash: PLN
+
+place konto[p in persons]: accounts PLN lives 2026-01-01..
+
+place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input fund_price[m in months]: num PLN/etf_unit
+
+input rr[k in 1..9 step 2]: money PLN
+
+input amt: money PLN
+
+ask q: amt + rr[3]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ana] lives 2026-01-01..
+  persons + [ben] lives 2026-01-01..
+  amt = 1.00 PLN "the card"
+  rr[true] = 2.00 PLN "the card"
+  opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
+  bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[ana] amount 1.00 PLN) "a gift"
+=== expect
+refused: LOAD-KEY true is not a value of a stepped range ...

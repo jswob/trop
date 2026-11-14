@@ -1,0 +1,19 @@
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input st: int
+input fr: num
+
+ask q: sum(1 for d in 2026-01-01 .. 2026-01-31 step st * 1 day)
+ask n: sum(1 for f in 0.5 .. 2.5 step fr)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  st = 0 "s"
+  fr = -0.5 "s"

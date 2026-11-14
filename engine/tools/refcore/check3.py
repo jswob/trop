@@ -214,7 +214,7 @@ def m_resolve_move_kind(self, info):
 def m_mark(self, sc, what, target, node=None):
     self.marks.setdefault(sc.item, set()).add((what, target))
     if node is not None and what in ('balnow',):
-        self.balnow_items.add(sc.item)
+        self.balnow_items.setdefault(sc.item, getattr(node, 'loc', None))
 
 
 # -- fields of movements (L §5.14, §2.2) -----------------------------------------------------------------
@@ -290,6 +290,8 @@ def m_bind_movements(self, b, sc, kinfo=None, obs=None, key_bind=False):
         raise LoadError('LOAD-ALIVE', 'binding over %s needs on or over' % (kinfo.id if kinfo else obs.id), b.loc)
     if kinfo is not None:
         b._dom = ('event', kinfo.id)
+        # the binding reads its kind, subkinds included (readers-of, E §10; tally 2.1.7 R7)
+        self.edge(sc, ('kind', kinfo.id), 'bind')
         sub = kinfo.subtree(m)
         for qid, mi in m.moves.items():
             if self.move_kind(mi) in sub:
@@ -709,6 +711,26 @@ def m_t_low(self, n, sc, expect):
     return ut
 
 
+def m_leg_guarded(self, mi, leg):
+    """Whether a move's leg named leg touches a place the walk guards (L §5.10's sign rule, a place keeping
+    parts), or a place load can't name: its booking reads that place's balance."""
+    from .parts import thing_parts
+    m = self.m
+    for ln, d in getattr(mi, 'legs', []) or []:
+        if getattr(ln, 'name', None) != leg:
+            continue
+        for side in (ln.frm, ln.to):
+            if side is None:
+                continue
+            th = self.literal_place(side)
+            if th is None:
+                return True
+            t = m.things[th]
+            if m.kind_sign(t.base) in ('min0', 'max0') or thing_parts(m, t) is not None:
+                return True
+    return False
+
+
 def m_t_flows(self, n, sc, expect):
     m = self.m
     r = n.ref
@@ -765,6 +787,10 @@ def m_t_flows(self, n, sc, expect):
             if len(us) == 1 and list(us)[0] not in (None, 'any', 'one'):
                 n._leg_unit = list(us)[0]
         self.edge(sc, ('move', mi.id), 'flows')
+        if self.leg_guarded(mi, n._leg):
+            # L §5.5 (tally 2.1.7, R8): a leg at a place the sign rule or its parts guard is booked against that
+            # place's balance, so its amount, read inside its combination, reads what the balances read
+            self.edge(sc, ('balances',), 'flows')
         if mi.decision:
             self.mark(sc, 'flows', ('move', mi.id))
         n._ctgt = ('flows', ('move', mi.id))
@@ -843,6 +869,25 @@ def m_t_value(self, n, sc, expect):
             # the place's value is in priced._cur: a position in another unit than CUR needs `by p` (L §5.10)
             raise LoadError('LOAD-PRICE', 'value(%s) in %s holds units in %s and states no by' % (
                 _txt(n.ref), n.cur, priced._cur), n.loc)
+        for c in sorted(_seen_places(m, n.ref, cands), key=lambda x: x.name):
+            try:
+                pc = m.price_of(c)
+            except Unspecified:
+                pc = None
+            if pc is None and m.place_unit(c) == 'any':
+                # a place of any unit holds what its legs bring; a unit a leg writes (its kind's leg unit or its
+                # amount's type) load sees, so a position in another unit than CUR with no by is refused here,
+                # whatever the asks read (L §5.10 Value, §8.4 R-load; tally 2.1.7 R5, the review's finding 3)
+                other = sorted(u for u in _units_into(self, c) if u != n.cur)
+                if other:
+                    raise LoadError('LOAD-PRICE', 'value(%s) in %s holds units in %s and states no by' % (
+                        _txt(n.ref), n.cur, other[0]), n.loc)
+            if pc is not None and getattr(pc, '_mode', None) == 'unit' and pc._cur != n.cur:
+                # a place's price per unit in another currency than the value's: load sees both, with the priced
+                # kinds' price inputs, whatever reads them (tally 2.1.7 R5; L §5.10, §8.4)
+                u = _unit_name(self, c, pc._per)
+                raise uerr('value(%s) in %s: %s is priced in %s/%s, not %s/%s' % (
+                    c.name, n.cur, c.name, pc._cur, u, n.cur, u), n.loc)
     else:
         sc2 = sc.child()
         sc2.readmode = 'explicit'
@@ -874,6 +919,15 @@ def m_t_value(self, n, sc, expect):
                            'keys' % by.id, n.loc)
             if n.bylast and hit[0] != 'input':
                 raise uerr('value by last(%s): last reads an input (L §4.6)' % by.id, n.loc)
+            if not any(b == n.cur and e == 1 for b, e in (inf.type.u or ())):
+                # a num CUR/u in the value's own currency, as the unkeyed forms are (tally 2.1.7 R5, #130a)
+                raise uerr('value by %s: the price is %s, not num %s/u' % (
+                    ('last(%s)' % by.id) if n.bylast else by.id, T.show(inf.type), n.cur), n.loc)
+            if not _unit_keyed(m, inf.binds[0]):
+                # keyed by unit: a price keyed by places is refused here, where load sees its key's kind (tally 2.1.7
+                # R5, G11), not at the read of a key that isn't a unit
+                raise uerr('value by %s: a price is a num CUR/u keyed by unit, or an expression of that type with its '
+                           'keys' % by.id, n.loc)
             by._r = (hit[0], inf.id)
             n._price = inf.id
             n._price_kind = hit[0]
@@ -901,6 +955,26 @@ def m_t_value(self, n, sc, expect):
             if pt.k != 'num' or not any(b == n.cur and e == 1 for b, e in (pt.u or ())) or len(pt.u) != 2:
                 raise uerr('value by %s: the price is %s, not num %s/u' % (_txt(by), T.show(pt), n.cur), n.loc)
             n._price_expr = True
+        per = [b for b, e in (pt.u or ()) if e == -1] if not getattr(n, '_price', None) or \
+            getattr(n, '_price_unkeyed', False) else []
+        for c in sorted(_seen_places(m, n.ref, cands), key=lambda x: x.name):
+            try:
+                priced = m.price_of(c)
+            except Unspecified:
+                priced = None
+            # the unit a by prices is the position's: a place valued whole in another currency holds that currency,
+            # a place of one unit that unit; load sees both (tally 2.1.7 R5, #126b; L §5.10)
+            want = priced._cur if priced is not None and getattr(priced, '_mode', None) == 'whole' else \
+                (m.place_unit(c) if priced is None else None)
+            if per and want not in (None, 'any', 'one', n.cur) and per[0] != want:
+                raise uerr('value(%s) in %s: %s is priced in %s/%s, not %s/%s' % (
+                    c.name, n.cur, c.name, n.cur, per[0], n.cur, want), n.loc)
+            if priced is not None and getattr(priced, '_mode', None) == 'unit' and priced._per != n.cur:
+                # L §5.10 Value, §4.6 step 4 (tally 2.1.7 R4, F11a): the place's price and the `by` are two claims
+                # on one position's price, tied where load sees the place: a literal one, or any the binding gives
+                from .mreads import value_by_twice
+                u = _unit_name(self, c, priced._per if not priced._per.startswith('$') or not per else per[0])
+                raise LoadError('LOAD-PRICE', value_by_twice(n, c.name, u), n.loc)
     self.edge(sc, ('balances',), 'bal')
     self.mark(sc, 'bal', self.place_target(n.ref))
     n._ctgt = ('bal', self.place_target(n.ref))
@@ -908,6 +982,105 @@ def m_t_value(self, n, sc, expect):
         # tally 2.1 (L §5.10): value(x, d) in C [by p] of q
         self.check_of(n.of, sc, n.ref, t)
     return T.num(((n.cur, 1),))
+
+
+def _seen_places(m, ref, cands):
+    """The places load sees a value's reference give: a literal one, a keyed place's own things, or every thing of
+    the reference's kind (cands). A keyed place at literal keys gives that place alone (tally 2.1.7 R9, T's SR-3: a
+    refusal names the place the text reads, not the first of its keyed place's)."""
+    r = getattr(ref, '_r', None)
+    if r is not None and r[0] == 'place' and r[1] in m.places:
+        pi = m.places[r[1]]
+        convs = getattr(ref, '_convs', None)
+        if pi.binds and convs and all(c[0] == 'lit' for c in convs):
+            from .model import _kv
+            t = pi.things.get(tuple(_kv(c[1]) for c in convs))
+            return [t] if t is not None else []
+        return list(pi.things.values())
+    return list(cands)
+
+
+def _units_into(self, c):
+    """The units load sees reach place c: each leg whose end is c, written or a binding over a kind
+    that holds it, in its kind's leg unit where that is a unit, else its amount's type (money's currency, a quantity
+    of one unit)."""
+    m = self.m
+    out = set()
+    for mi in m.moves.values():
+        for ln, d in getattr(mi, 'legs', []) or []:
+            reach = False
+            for e in (ln.frm, ln.to):
+                if e is None:
+                    continue
+                if self.literal_place(e) == c.name:
+                    reach = True
+                    continue
+                t = getattr(e, '_t', None)
+                if self.literal_place(e) is None and t is not None and t.k == 'key' and t.ix in m.kinds and \
+                        c.base in m.kinds[t.ix].subtree(m):
+                    reach = True
+            if not reach:
+                continue
+            if d.unit in CURRENCIES or d.unit in m.units:
+                out.add(d.unit)
+                continue
+            t = getattr(getattr(ln, 'amount', None), '_t', None)
+            if t is None:
+                continue
+            if t.k == 'money' and getattr(t, 'cur', None):
+                out.add(t.cur)
+            elif t.k == 'num' and len(t.u or ()) == 1 and t.u[0][1] == 1:
+                out.add(t.u[0][0])
+    # the rows that state its balance (an opening, a reading) bring their written unit too
+    for iid in ('opening', 'stated'):
+        inf = m.inputs.get(iid)
+        for r in (inf.rows if inf is not None else ()):
+            pat = r.pattern
+            if not (len(pat) == 1 and pat[0][0] == 'k' and getattr(pat[0][1], 'name', None) == c.name):
+                continue
+            v = r.value
+            if getattr(v, 'k', None) == 'num' and v.unit and len(v.unit) == 1 and v.unit[0][1] == 1:
+                out.add(v.unit[0][0])
+    return out
+
+
+def _unit_name(self, c, u):
+    """A per-unit price's unit as a message names it (L §2.4 Values, §3.2; tally 2.1.7 B3): a price keyed by unit
+    ($u) names the key's unit, the place's own, or for a place of any unit the first its legs bring (by name)."""
+    if u is not None and u.startswith('$'):
+        m = self.m
+        pu = m.place_unit(c)
+        if pu not in (None, 'any', 'one'):
+            return pu
+        seen = set()
+        for mi in m.moves.values():
+            for ln, _d in getattr(mi, 'legs', []) or []:
+                at = [s for s in (ln.frm, ln.to) if s is not None and self.literal_place(s) == c.name]
+                t = getattr(getattr(ln, 'amount', None), '_t', None)
+                if at and t is not None and t.k == 'num' and len(t.u or ()) == 1 and t.u[0][1] == 1:
+                    seen.add(t.u[0][0])
+        if seen:
+            return sorted(seen)[0]
+    return u
+
+
+def _unit_keyed(m, b):
+    """Whether a price's key position is keyed by units: the currencies or a kind of unit, a subkind's root included
+    (L §5.10 Value: `by p` keyed by unit)."""
+    d = getattr(b, 'dom', None)
+    k = d[1] if isinstance(d, tuple) and len(d) > 1 and d[0] == 'kind' else None
+    seen = []
+    while k is not None and k not in seen:
+        seen.append(k)
+        if k == 'currencies':
+            return True
+        kn = m.kinds.get(k)
+        if kn is None:
+            return True
+        if kn.spec == 'unit':
+            return True
+        k = kn.parent if kn.spec == 'sub' else None
+    return k is None and not seen
 
 
 def _all_priced(m, ref, cands, cur):
@@ -963,12 +1136,54 @@ def m_check_priced(self):
             for e in getattr(th, 'entries', ()) or ():
                 loc = getattr(e, 'loc', None) or loc
             raise LoadError('LOAD-PRICE', 'asset %s names no price input' % name, loc)
+    # E §3.1 pass 4 (tally 2.1.7 R5, #129): each place's price input against the place, its key and its unit, here
+    # with the priced kinds, whatever reads them; the first by path and line prints (L §8.3 Which refusal prints)
+    faults = []
+    for name in sorted(m.things):
+        th = m.things[name]
+        try:
+            pn = m.price_of(th)
+        except Unspecified:
+            continue
+        if pn is None or getattr(pn, '_expr', None) is not None or getattr(pn, '_r', None) is None:
+            continue
+        kind, pid = pn._r
+        info = m.inputs[pid] if kind == 'input' else m.defs[pid]
+        pu = m.place_unit(th)
+        fixed = pu not in (None, 'any', 'one')
+        if info.binds:
+            dom = info.binds[0].dom
+            if dom[0] == 'kind' and not m.thing_in(name, dom[1]) and fixed and \
+                    not (pu in m.things and m.thing_in(pu, dom[1])):
+                faults.append(LoadError('LOAD-KEY', '%s is priced by %s, keyed by %s, which holds neither %s nor its '
+                                        'unit' % (name, pid, dom[1], name), pn.loc))
+                continue
+        if pn._mode == 'unit' and fixed and not pn._per.startswith('$') and pn._per != pu:
+            faults.append(uerr('value(%s) in %s: %s is priced in %s/%s, not %s/%s' % (
+                name, pn._cur, name, pn._cur, pn._per, pn._cur, pu), pn.loc))
+    if faults:
+        raise min(faults, key=lambda e: _loc_order(e.loc))
+
+
+def _loc_order(loc):
+    f, _, n = str(loc or '').rpartition(':')
+    return (f, int(n)) if n.isdigit() else (str(loc or ''), 0)
 
 
 def m_resolve_price(self, pn, regime, what):
     m = self.m
     r = pn.ref
     pn._expr = None
+    # L §2.3 ref = ID ... {"." FIELD} (tally 2.1.7 S2, #101): `priced fund_price.nav` names a record input's field as
+    # the price; the fields are peeled here, the field's type is the price's, and priced_read reads the field
+    fields = []
+    root = r
+    while root.k == 'field':
+        fields.insert(0, root.name)
+        root = root.obj
+    if fields and root.k in ('name', 'index') and not (root.k == 'name' and root.id in getattr(m, 'joint_members', {})):
+        r = root
+    pn._fields = tuple(fields) if r is root else ()
     if r.k == 'index' and r.obj.k == 'name':
         # L §2.3 price = ref | "last" "(" ref ")": a price input read at keys the reference states, literal keys or
         # the place section's own key variables (`place h[f in funds]: holdings units priced px[f]`), read at the
@@ -1001,6 +1216,11 @@ def m_resolve_price(self, pn, regime, what):
     if pn.last and kind != 'input':
         raise uerr('%s is priced by last(%s): last reads an input (L §4.6)' % (what, r.id), pn.loc)
     t = info.type
+    for f in pn._fields:
+        ft = t.field(f) if t is not None and t.k == 'record' else None
+        if ft is None:
+            raise LoadError('LOAD-FIELD', '%s is not a field of %s' % (f, T.show(t) if t is not None else '?'), pn.loc)
+        t = ft
     u = None
     if t is not None and t.k == 'money':
         u = ((t.cur, 1),)
@@ -1017,7 +1237,7 @@ def m_resolve_price(self, pn, regime, what):
         pn._per = [b for b, e in u if e == -1][0]
     else:
         raise uerr('%s is priced by %s of type %s, not num CUR (a value) or num CUR/u (a price per unit)' % (
-            what, r.id, T.show(t) if t is not None else '?'), pn.loc)
+            what, _txt(pn.ref) if pn._fields else r.id, T.show(t) if t is not None else '?'), pn.loc)
     if len(info.binds) > 1:
         raise LoadError('LOAD-KEY', 'wrong number of keys: %s is priced by %s, keyed by %d indexes' % (
             what, r.id, len(info.binds)), pn.loc)
@@ -1061,6 +1281,12 @@ def m_c_next(self, n, sc, expect):
     for qid, mi in m.moves.items():
         if self.move_kind(mi) in sub:
             self.edge(sc, ('move', qid), 'next')
+            if mi.decision:
+                # next(K, d) is first(m in K over d ..) ties by m.day (L §5.14.1): its binding's reads are its own, so a
+                # binding over a decision's movements is a running read (tally 2.1.7 R6, G4, G5)
+                self.mark(sc, 'legs', ('move', qid))
+    if 'pads' in sub:
+        self.mark(sc, 'legs', ('kind', 'pads'))
     return T.key(kid)
 
 
@@ -1083,6 +1309,8 @@ def m_c_gap(self, n, sc, expect):
     if not self.is_date(dt):
         raise uerr('gap(x, d): d is %s, not a date' % T.show(dt), n.loc)
     self.edge(sc, ('balances',), 'bal')
+    # gap(x, d) reads a balance (L §5.19, §5.14.1): a running read where a movement reaches it (tally 2.1.7 R6, G8)
+    self.mark(sc, 'bal', self.place_target(n.args[0]))
     return self.place_type_unit(t, n.args[0])
 
 
@@ -1247,8 +1475,9 @@ def m_check_moves_graph(self):
                     stack.append(t)
     for item in sorted(self.balnow_items, key=repr):
         if item not in from_decisions:
+            # at the read's line, as every load refusal (tally 2.1.7 S9's family; the review's non-blocking item 5)
             raise LoadError('LOAD-READS', '%s holds bal(x) with no day: a running read outside a decision and its '
-                            'defs' % item[1], None)
+                            'defs' % item[1], self.balnow_items[item])
     m.from_decisions = from_decisions
     # walk-bound defs: "A def that reaches a mark and that a decision reaches is walk-bound: its cells carry the walk
     # point (§3.2); in an ask, or a def no movement reaches, a plain bal(x, d) is the balance on day d at the ask's
@@ -1382,6 +1611,29 @@ def m_strata(self):
                 after[a].add(b)
                 after[b].discard(a)
                 m.written_order.add((a, b))
+    # L §5.14.2 Cycles (tally 2.1.7 S5, G6): written orders compose, so save before spend and spend before top order
+    # save before top; a composed order stands for its pair in place of their read edges, as a stated one does, and
+    # the walk orders a cycle's instances by the same pairs (m.written_order). Orders written both ways stay as
+    # written
+    wo = set(m.written_order)
+    closure = set(wo)
+    grew = True
+    while grew:
+        grew = False
+        for (x, y) in sorted(closure):
+            for (y2, z) in sorted(closure):
+                if y2 == y and x != z and (x, z) not in closure:
+                    closure.add((x, z))
+                    grew = True
+    for (x, z) in sorted(closure - wo):
+        if (z, x) in closure:
+            continue
+        if ('move', x) in m.moves[z].read_targets:
+            raise LoadError('LOAD-ORDER', '%s before %s contradicts a read of %s\'s legs' % (z, x, x),
+                            m.moves[z].decl.loc)
+        after[x].add(z)
+        after[z].discard(x)
+        m.written_order.add((x, z))
     # cycles left: LOAD-ORDER where the days are known at load, RUN-ORDER in the walk otherwise
     state = {}
     m.order_groups = []
@@ -1555,7 +1807,13 @@ def m_seen_day(self, e, mi, cond=False):
 def m_existence_seen(self, mi):
     """L §6.4 (tally 2.1.6, P29 on SR-T1 of #75): load sees whether an instance of mi exists where the move has no
     `when` and each binding's `where` reads nothing but its keys and literals (§8.3 item 9); otherwise its existence
-    is decided at run, and an instance before a scenario's from is left out there."""
+    is decided at run, and an instance before a scenario's from is left out there. Load never sees an open index's
+    keys (L §8.3), so an instance over one is decided at run too (tally 2.1.7 B7, #103)."""
+    m = self.m
+    for b in mi.binds:
+        dom = getattr(b, 'dom', None)
+        if isinstance(dom, tuple) and dom[0] == 'index' and m.indexes[dom[1]].form == 'open':
+            return False
     return mi.decl.when is None and all(b.node.where is None or self.seen_day(b.node.where, mi, cond=True)
                                         for b in mi.binds)
 
@@ -1745,8 +2003,9 @@ def m_check_settlement_units(self):
             if bad is None:
                 continue
             iid = '%s[%s]' % (mid, ', '.join(key_text(k) for k in kv)) if kv else mid
+            # its file, line and item, as every load refusal (L §8.3; tally 2.1.7 S9, X3)
             raise LoadError('LOAD-UNIT', 'settlement %s of adjustments[%s.%s, %s] is in %s, not %s' % (
-                o.sid, iid, leg, vid, bad[4], d.unit))
+                o.sid, iid, leg, vid, bad[4], d.unit), o.loc)
 
 
 def m_check_schedules(self):

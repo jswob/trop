@@ -1,5 +1,5 @@
 tx2_owes: 9 227.29 DUK
-  law date 2025-12-31, cut 2026-01-15
+  law date 2025-12-31, cut 2026-01-07
 tx2_owes_explain: 9 227.29 DUK
   [1] ola_owes_piotr[2025] = 9 227.29 DUK
       rule base: won
@@ -21312,7 +21312,7 @@ tx2_owes_explain: 9 227.29 DUK
                   version flat_policy, source b_d10, "B-D10 TU Bocian · flat insurance policy WRZ-12/5 2025/26 (tmp/cases/B/docs/B-D10.md)", locator "B-D10: paid on 10.03.2025 by Aleksandra Wilk", governs always, known 2025-03-10
               (flat_policy:flat_ins_paid: see [38])
               (flat_policy:flat_insurance: see [39])
-  law date 2025-12-31, cut 2026-01-15
+  law date 2025-12-31, cut 2026-01-07
 tx2_worth: (421 860.35 DUK + -1 × ?"Were this month's contributions, health contribution, PIT advance and VAT paid? Their days fall where no Cis export covers" (tax_owed_month[2025-10, 2025-12-31]), 142 786.33 DUK + -1 × ?"What did Ola spend from Wrzos from April 2025 on? She kept no statement after March 2025" (ola_spend[2025-04]) + -1 × ?"What did Ola spend from Wrzos from April 2025 on? She kept no statement after March 2025" (ola_spend[2025-05]) + -1 × ?"What did Ola spend from Wrzos from April 2025 on? She kept no statement after March 2025" (ola_spend[2025-06]) + -1 × ?"What did Ola spend from Wrzos from April 2025 on? She kept no statement after March 2025" (ola_spend[2025-07]) + -1 × ?"What did Ola spend from Wrzos from April 2025 on? She kept no statement after March 2025" (ola_spend[2025-08]) + -1 × ?"What did Ola spend from Wrzos from April 2025 on? She kept no statement after March 2025" (ola_spend[2025-09]) + -1 × ?"What did Ola spend from Wrzos from April 2025 on? She kept no statement after March 2025" (ola_spend[2025-10]) + -1 × ?"What did Ola spend from Wrzos from April 2025 on? She kept no statement after March 2025" (ola_spend[2025-11]) + -1 × ?"What did Ola spend from Wrzos from April 2025 on? She kept no statement after March 2025" (ola_spend[2025-12]))
   assumed: B-D07 .3 rounds the interest to the ort and names no mode; the instalment's rounding isn't stated: half up for both (mtg_round)
   assumed: B-D07 .4 says equal instalments (annuity) but names no periodic rate: the yearly rate over 12 months, nominal 12 (O:B-5) (mtg_inst.reset)
@@ -21458,11 +21458,10 @@ tx2_worth: (421 860.35 DUK + -1 × ?"Were this month's contributions, health con
   left out: pit_pay, 1 instances, first 2029-01-22
   left out: social_pay, 1 instances, first 2029-01-22
   left out: vat_pay, 1 instances, first 2029-01-25
-  held: fx_mid = 4.2307 DUK/FLR (fx_2025_12_31), read for 2025-12-31
-  law date 2025-12-31, cut 2026-01-15
+  law date 2025-12-31, cut 2026-01-07
 tx2_cis_explain: 786.87 DUK
   balance of cis (DUK) at the end of 2025-12-31
-  from: anchor cis_2025_12:stated[cis] = 786.87 DUK, 2025-12-30 end (version cis_2025_12, source cis_export, locator "cis-5521-3380-0001-2025-12.csv line 41 Balance"), gap role anchor, gap 0.00 DUK
+  from: anchor cis_2025_12:stated[cis] 2025-12-30 end = 786.87 DUK, 2025-12-30 end (version cis_2025_12, source cis_export, locator "cis-5521-3380-0001-2025-12.csv line 41 Balance"), gap role anchor, gap 0.00 DUK
   no movement
   anchor: cis 2025-12-30 end, stated 786.87 DUK, difference 0.00 DUK
   left out: health_pay, 1 instances, first 2029-01-22
@@ -21470,9 +21469,9 @@ tx2_cis_explain: 786.87 DUK
   left out: pit_pay, 1 instances, first 2029-01-22
   left out: social_pay, 1 instances, first 2029-01-22
   left out: vat_pay, 1 instances, first 2029-01-25
-  law date 2025-12-31, cut 2026-01-15
+  law date 2025-12-31, cut 2026-01-07
 tx2_mtg_day: (window(2027-04-05, 2027-04-06), 2027-04-05, 36 326.10 DUK, 18 700.00 DUK)
-  law date 2025-12-31, cut 2026-01-15
+  law date 2025-12-31, cut 2026-01-07
 tx2_mtg_live: (true, window(2027-04-05, 2027-04-06), ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays), 14 652.96 DUK)
   assumed: B-HR2 .2 says 12 % of the net to the ort and names no mode (hr2_tax_round)
   assumed: the November export's day is not stated: the 2nd of the next month (story) (gap_from, gap_to)
@@ -21490,7 +21489,7 @@ tx2_mtg_live: (true, window(2027-04-05, 2027-04-06), ?"Did Kawiarnia Ziarno pay 
   left out: pit_pay, 1 instances, first 2029-01-22
   left out: social_pay, 1 instances, first 2029-01-22
   left out: vat_pay, 1 instances, first 2029-01-25
-  law date 2025-12-31, cut 2026-01-15
+  law date 2025-12-31, cut 2026-01-07
 warning: WARN-UNREAD source b_d06 is read by nothing
 warning: WARN-UNREAD source b_d14 is read by nothing
 warning: WARN-UNREAD source b_d17 is read by nothing

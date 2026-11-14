@@ -106,7 +106,7 @@ fn instance_lines(
         out.push(format!(
             "plan, day {}, booking cut {}, status {}",
             day_text(inst.day.as_ref()),
-            inst.cut.map_or_else(|| "None".to_owned(), Day::text),
+            cut_text(&inst),
             status_of(&inst)?
         ));
         None
@@ -211,6 +211,21 @@ fn point_text(m: &Reality, walk: &Walk, run: &Run) -> String {
 /// An instance's status word. E §4.1 step 3.
 fn status_of(inst: &Inst) -> Result<&'static str, Stop> {
     status_text(inst.status).ok_or_else(|| invariant("an explained instance with no status"))
+}
+
+/// An instance's booking cut as `explain` prints it: min(t, K), or where it never reached one,
+/// its day (refcore's `day_text`). L §2.4 Values, E §10.
+fn cut_text(inst: &Inst) -> String {
+    if let Some(cut) = inst.cut {
+        return cut.text();
+    }
+    // a booking cut the instance never reached: its day, a hole as the hole, or its
+    // refusal (L §2.4 Values, tally 2.1.7 R9; refcore's `day_text`)
+    match (&inst.err, inst.day.as_ref()) {
+        (_, Some(Dated::Hole(h))) => h.text(),
+        (Some(r), _) => format!("refused: {}", r.text()),
+        (None, day) => day_text(day),
+    }
 }
 
 /// A day or a hole as `fmt_value` prints it; `-` for none, an instance refused before its

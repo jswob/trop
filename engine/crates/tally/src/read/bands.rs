@@ -110,16 +110,48 @@ fn latest(m: &Reality, band: &BandInfo, pool: &[usize]) -> Result<Option<usize>,
     Ok(best.map(|(at, _)| at))
 }
 
-/// The chain of tables a read takes: the latest known, then while it says `replace`, the
-/// latest known before it (L §5.9 Rows replaced, §4.6 steps 2 and 4).
+/// The layer of the table at `at`: 0 for the base's, its scenario's depth otherwise (L §4.6
+/// step 2, §6.4).
+fn table_layer(m: &Reality, band: &BandInfo, at: usize) -> Result<usize, Stop> {
+    Ok(m.scenarios.layer(Some(&table_at(band, at)?.version)))
+}
+
+/// The tables of `pool` in its top layer, with the layer; none for an empty pool (L §4.6
+/// step 2).
+fn top_layer(
+    m: &Reality,
+    band: &BandInfo,
+    pool: &[usize],
+) -> Result<Option<(Vec<usize>, usize)>, Stop> {
+    let mut layers = Vec::new();
+    for &at in pool {
+        layers.push((at, table_layer(m, band, at)?));
+    }
+    let Some(top) = layers.iter().map(|&(_, layer)| layer).max() else {
+        return Ok(None);
+    };
+    let lay = layers
+        .into_iter()
+        .filter(|&(_, layer)| layer == top)
+        .map(|(at, _)| at)
+        .collect();
+    Ok(Some((lay, top)))
+}
+
+/// The chain of tables a read takes: the top layer's latest known, then while it says
+/// `replace`, its layer's tables known before it and the layers below (L §5.9 Rows replaced,
+/// §4.6 steps 2 to 4).
 fn chain(m: &Reality, band: &BandInfo, cands: &[usize]) -> Result<Vec<usize>, Stop> {
     let mut out = Vec::new();
     let mut pool = cands.to_vec();
-    while let Some(top) = latest(m, band, &pool)? {
+    while let Some((lay, layer)) = top_layer(m, band, &pool)? {
+        let Some(top) = latest(m, band, &lay)? else {
+            break;
+        };
         out.push(top);
         let table = table_at(band, top)?;
         if !replaces(table) {
-            if let [_, _, ..] = pool.as_slice() {
+            if let [_, _, ..] = lay.as_slice() {
                 let message = format!("band {}: tables overlap without replace", band.id);
                 return Err(refuse(Load::Overlap, message));
             }
@@ -128,7 +160,10 @@ fn chain(m: &Reality, band: &BandInfo, cands: &[usize]) -> Result<Vec<usize>, St
         let known = version_known(m, &table.version)?;
         let mut earlier = Vec::new();
         for &at in &pool {
-            if version_known(m, &table_at(band, at)?.version)? < known {
+            let theirs = table_layer(m, band, at)?;
+            if theirs < layer
+                || (theirs == layer && version_known(m, &table_at(band, at)?.version)? < known)
+            {
                 earlier.push(at);
             }
         }

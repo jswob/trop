@@ -64,4 +64,5 @@ version v
 ask nw: net_worth[ola, 2026-06-30]
 === expect
 nw: 4 787.50 PLN
+  held: px[EUR] = 4.25 PLN/EUR (v), read for 2026-06-30
   cut 2026-01-01

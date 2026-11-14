@@ -18,7 +18,7 @@ from .model import (Reality, Span, ALWAYS, lit_period, lspan_to_span, visible, k
                     BUILTIN_IDS, key_text, _kv, PlaceInfo, PlaceThing, MoveInfo, ObsRow)
 from .node import Node
 from .parser import parse_file, prescan_units, BUILTINS, KEYWORDS, PERIOD_WORDS
-from .values import (Num, Int, Money, Text, Key, Thing, Code, Rec, Lst, Iv, Cal, Hole, NONE, NEVER, CURRENCIES,
+from .values import (range_key, Num, Int, Money, Text, Key, Thing, Code, Rec, Lst, Iv, Cal, Hole, NONE, NEVER, CURRENCIES,
                      terminating)
 
 
@@ -541,6 +541,22 @@ class Loader:
                 if k.spec == 'event':
                     # a subkind of an event kind keeps its parent's legs and attributes
                     pass
+        # L §5.7, §8.3 (the grammar: "unit and sign: required, LOAD-PLACEKIND"): a place kind states its unit and its
+        # sign rule, or takes them from the place kind it is a subkind of; the root places states neither, so a
+        # subkind of it whose chain states no unit, or no sign, is refused at its line, whatever the asks (P44: refcore
+        # loaded `kind foo: places`, and printed `keeps parts and is None` for one with parts clauses)
+        for s, rid in decls:
+            k = K[s.id if rid is None else '%s.%s' % (rid, s.id)]
+            if k.spec != 'place':
+                continue
+            unit = sign = None
+            x = k
+            while x is not None and (unit is None or sign is None):
+                unit = x.unit if unit is None else unit
+                sign = x.sign if sign is None else sign
+                x = K[x.parent] if x.parent is not None else None
+            if unit is None or sign is None:
+                raise LoadError('LOAD-PLACEKIND', 'place kind %s has no unit or sign rule' % k.id, s.loc)
         for kid, k in K.items():
             if k.spec == 'event' and k.certainty is None:
                 x = k
@@ -2037,14 +2053,17 @@ class Loader:
             # stable ids (L §2.5)
             per = {}
             for r in rows:
-                per.setdefault((r.version.id, r.pattern), []).append(r)
+                # rows of one target at one keys, compared by the keys' text (a thing key is a fresh value per row)
+                per.setdefault((r.version.id, r.keys_text()), []).append(r)
             for r in rows:
                 sid = '%s:%s%s' % (r.version.id, inf.id, r.keys_text())
-                if len(per[(r.version.id, r.pattern)]) > 1:
+                if len(per[(r.version.id, r.keys_text())]) > 1:
                     if r.own_span is not None:
                         sid += ' ' + r.own_span.text()
                     elif r.instant is not None:
-                        sid += ' %s' % (r.instant[0],)
+                        # its instant, a day with start or end (L §2.5, §4.6; tally 2.1.7 B6, #135), or `after m`
+                        from .moves import instant_text
+                        sid += ' ' + instant_text(r)
                 r.sid = sid
         self.check_mv_refs()
 
@@ -2369,9 +2388,16 @@ class Loader:
                 byk.setdefault(_kv(t.key) if t.key is not None else None, []).append(t)
             for k, ts in byk.items():
                 for t in ts:
-                    earlier = [o for o in ts if o is not t and known_first(o.version.known) < known_first(t.version.known)
+                    # L §4.6 steps 2 to 4 (tally 2.1.7 R4): a table in a scenario over the base's layer stands above
+                    # the tables below it whatever their known dates; known dates order tables of one layer
+                    lt = version_layer(m, t.version)
+                    below = [o for o in ts if o is not t and version_layer(m, o.version) < lt
+                             and _span_ov(o.version, t.version, m.on)]
+                    earlier = [o for o in ts if o is not t and version_layer(m, o.version) == lt
+                               and known_first(o.version.known) < known_first(t.version.known)
                                and _span_ov(o.version, t.version, m.on)]
-                    same = [o for o in ts if o is not t and known_first(o.version.known) == known_first(t.version.known)
+                    same = [o for o in ts if o is not t and version_layer(m, o.version) == lt
+                            and known_first(o.version.known) == known_first(t.version.known)
                             and _span_ov(o.version, t.version, m.on)]
                     if same:
                         raise LoadError('LOAD-OVERLAP', 'band %s: tables of %s and %s overlap, known the same day' % (
@@ -2388,6 +2414,7 @@ class Loader:
                             t.whole_ok = True
                         except LoadError:
                             t.whole_ok = False
+                        earlier = earlier + below
                         if not earlier:
                             sp = t.version.span_at(m.on)
                             if sp is None:
@@ -2615,6 +2642,15 @@ def key_order(m, k, dom):
     return k
 
 
+def key_written(kn):
+    """A key as the text writes it, in its canonical text whatever its kind (L §2.4 Values, tally 2.1.7, R9):
+    `2026-02 + 1`, `konto[ana]`, `true`, `2031-05`, never the interpreter's own form of its value."""
+    if isinstance(kn, str):
+        return kn
+    from .check import _txt
+    return _txt(kn)
+
+
 def resolve_text(n):
     if isinstance(n, str):
         return n
@@ -2654,7 +2690,7 @@ def resolve_key_literal(m, kn, dom, loc):
                 v = int(kn.v)
                 if ix.has(v):
                     return v
-            raise LoadError('LOAD-KEY', '%s is not a key of %s' % (kn.get('text') or resolve_text(kn), ix.id), loc)
+            raise LoadError('LOAD-KEY', '%s is not a key of %s' % (key_written(kn), ix.id), loc)
         if ix.pk is not None:
             label = None
             if kn.k == 'num' and kn.isint and kn.unit is None and len(kn.text) == 4:
@@ -2670,7 +2706,7 @@ def resolve_key_literal(m, kn, dom, loc):
                     lab = k.isoformat() if isinstance(k, datetime.date) else k.label()
                     if lab == label and _pk_matches(k, kn):
                         return k
-            raise LoadError('LOAD-KEY', '%s is not a key of %s' % (kn.get('text') or resolve_text(kn), ix.id), loc)
+            raise LoadError('LOAD-KEY', '%s is not a key of %s' % (key_written(kn), ix.id), loc)
         t = resolve_text(kn) if kn.k in ('name', 'key', 'num', 'mmdd', 'cur') else None
         if kn.k == 'date':
             t = kn.v.isoformat()
@@ -2682,8 +2718,8 @@ def resolve_key_literal(m, kn, dom, loc):
             return ix.texts[t]
         if ix.form == 'open':
             # its keys are those its inputs' rows bring (L §4.1), all gathered before any read is resolved
-            raise LoadError('LOAD-KEY', '%s is not a key of %s: no row brings it' % (t or _txt_node(kn), ix.id), loc)
-        raise LoadError('LOAD-KEY', '%s is not a key of %s' % (t or _txt_node(kn), ix.id), loc)
+            raise LoadError('LOAD-KEY', '%s is not a key of %s: no row brings it' % (t or key_written(kn), ix.id), loc)
+        raise LoadError('LOAD-KEY', '%s is not a key of %s' % (t or key_written(kn), ix.id), loc)
     if kind == 'kind':
         if kn.k == 'placekey' or (kn.k == 'index' and kn.obj.k == 'name'):
             name = kn.id if kn.k == 'placekey' else kn.obj.id
@@ -2704,12 +2740,12 @@ def resolve_key_literal(m, kn, dom, loc):
                 t = hit[1].things[()].name
         if t is not None and m.thing_in(t, dom[1]):
             return Thing(t)
-        raise LoadError('LOAD-KEY', '%s is not a key of %s' % (t or _txt_node(kn), dom[1]), loc)
+        raise LoadError('LOAD-KEY', '%s is not a key of %s' % (t or key_written(kn), dom[1]), loc)
     if kind == 'axis':
         t = resolve_text(kn) if kn.k in ('name', 'key', 'num') else None
         if t is not None and t in m.axes[dom[1]].options:
             return Key(dom[1], t)
-        raise LoadError('LOAD-KEY', '%s is not a key of %s' % (t or _txt_node(kn), dom[1]), loc)
+        raise LoadError('LOAD-KEY', '%s is not a key of %s' % (t or key_written(kn), dom[1]), loc)
     if kind == 'list':
         t = resolve_text(kn)
         if t in [resolve_text(x) for x in dom[1]]:
@@ -2745,11 +2781,9 @@ def range_literal(m, kn, loc):
             q = Fraction(kn.v) * f
             if U.is_currency(u):
                 return Num(q, u, money=True)
-            return Num(q, u)
-        if kn.isint:
-            return Int(int(kn.v))
-        return Num(Fraction(kn.v), ())
-    raise LoadError('LOAD-KEY', '%s is not a value of a stepped range' % (kn.get('text') or resolve_text(kn)), loc)
+            return range_key(Num(q, u))
+        return range_key(Num(Fraction(kn.v), ()))
+    raise LoadError('LOAD-KEY', '%s is not a value of a stepped range' % key_written(kn), loc)
 
 
 def known_last(k):

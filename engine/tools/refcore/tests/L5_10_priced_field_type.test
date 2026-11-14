@@ -1,0 +1,27 @@
+# tally 2.1.7 S2 (#101): the field's type must be the price's, num CUR or num CUR/u (L §5.10); fp.note is text:
+# LOAD-UNIT, naming the reference as written. Was (2.1.6): REFCORE-NOT-YET.
+=== bad_type.tally
+model pr
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+unit etf "fund unit"
+
+place fund: holdings etf priced fp.note lives 2026-01-01..
+
+input fp: (nav num PLN/etf, note text) reading
+
+ask a4: value(fund, 2026-03-01) in PLN law 2026-06-30
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  fp = (nav: 12.50 PLN/etf, note: "x") at 2026-03-01 "wycena"
+  opening[fund] = 10 etf at 2026-01-01 start "own"
+=== expect
+refused: LOAD-UNIT place fund is priced by fp.note of type text, not num CUR (a value) or num CUR/u (a price per unit) ...

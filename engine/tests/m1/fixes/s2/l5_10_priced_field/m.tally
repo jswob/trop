@@ -1,0 +1,29 @@
+model pr
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+unit etf "fund unit"
+
+place flat: assets PLN priced quote.close lives 2026-01-01..
+place flat2: assets PLN priced last(quote.close) lives 2026-01-01..
+place fund: holdings etf priced fp.nav lives 2026-01-01..
+
+input quote: (close money PLN, open money PLN) reading
+input fp: (nav num PLN/etf, note text) reading
+
+ask a1: value(flat, 2026-03-01) in PLN law 2026-06-30
+ask a2: value(flat, 2026-03-02) in PLN law 2026-06-30
+ask a3: value(flat2, 2026-03-02) in PLN law 2026-06-30
+ask a4: value(fund, 2026-03-01) in PLN law 2026-06-30
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  quote = (close: 500 000.00 PLN, open: 490 000.00 PLN) at 2026-03-01 "wycena"
+  fp = (nav: 12.50 PLN/etf, note: "x") at 2026-03-01 "wycena"
+  opening[fund] = 10 etf at 2026-01-01 start "own"

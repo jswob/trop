@@ -1,0 +1,2 @@
+exit 1
+refused: LOAD-HEADER missing tally version (M5c/r9_joint_header.tally:1)

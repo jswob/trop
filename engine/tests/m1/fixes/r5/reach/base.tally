@@ -1,0 +1,32 @@
+model r5_reach
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.7, R5's reach (#144), from L §8.4's Load refuses what load sees alone: every check whose inputs load sees is made at load, on every item, whatever the asks read. Features no item of R5 names: a def no ask reads whose comparison of money with a date the types show (unit.tally, LOAD-UNIT) and whose key isn't one of its index's (key.tally, LOAD-KEY); this base, both written right, is their twin"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+input fee: money PLN
+
+input lim[k in ks]: money PLN
+
+input span_d: date
+
+def unread_cmp: bool = fee > lim[k1]
+
+def unread_key: money PLN = lim[k2]
+
+ask q: fee
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 10.00 PLN "the card"
+  lim[*] = 5.00 PLN "the card"
+  span_d = 2026-02-01 "the card"

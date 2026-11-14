@@ -1,0 +1,35 @@
+# tally 2.1.7 S2 (#101): a keyed price reference with a field, `priced fp[b1].nav` (L §2.3 ref: keys, then
+# fields): a4 reads fp[b1]'s nav, 10 etf at 12.50 PLN/etf, 125 PLN; a5 fp[b2], which has no reading, HOLE-NOREADING
+# naming fp[b2]. Was (2.1.6): REFCORE-NOT-YET.
+=== k.tally
+model pr
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+unit etf "fund unit"
+index bx = [b1, b2]
+
+place fund: holdings etf priced fp[b1].nav lives 2026-01-01..
+place fund2: holdings etf priced fp[b2].nav lives 2026-01-01..
+
+input fp[b in bx]: (nav num PLN/etf, note text) reading
+
+ask a4: value(fund, 2026-03-01) in PLN law 2026-06-30
+ask a5: value(fund2, 2026-03-01) in PLN law 2026-06-30
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  fp[b1] = (nav: 12.50 PLN/etf, note: "x") at 2026-03-01 "wycena"
+  opening[fund] = 10 etf at 2026-01-01 start "own"
+  opening[fund2] = 4 etf at 2026-01-01 start "own"
+=== expect
+a4: 125 PLN
+  law date 2026-06-30, cut 2026-06-30
+a5: ?"fp[b2] has no reading at 2026-03-01" (fp[b2])
+  law date 2026-06-30, cut 2026-06-30

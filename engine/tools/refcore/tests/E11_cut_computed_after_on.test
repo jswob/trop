@@ -1,0 +1,32 @@
+# L §8.4 RUN-DOMAIN, E §11 (tally 2.1.7 R5, issue #144; #112): a cut computed from a value after `on` is
+# refused at that value, `known <d> is after the model's on <on>`, as known or as if alike; the other asks
+# stand. 2.1.6's refcore answered at the later cut (3).
+=== m.tally
+model t
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input a: int
+input later: date
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = 3 "s"
+  later = 2026-06-01 "s"
+
+ask c0: a
+ask c1: a as known 2026-06-01
+ask c2: a with known 2026-06-01
+ask c3: a as known later
+ask c4: a as if {known later}
+=== expect c0 c3 c4
+c0: 3
+  cut 2026-03-01
+c3: refused: RUN-DOMAIN known 2026-06-01 is after the model's on 2026-03-01
+c4: refused: RUN-DOMAIN known 2026-06-01 is after the model's on 2026-03-01
+  cut 2026-03-01

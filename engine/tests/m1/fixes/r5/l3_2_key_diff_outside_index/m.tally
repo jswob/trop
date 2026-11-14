@@ -1,0 +1,24 @@
+model t
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+index qs = [q1, q2]
+input kq: key qs
+input kp: key qs
+def z1: int = q1 - (kq + 1)
+def z2: int = (kq + 1) - kp
+def z3: int = kq - kp
+
+ask a1: z1
+ask a2: z2
+ask a3: z3
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  kq = q2
+  kp = q1

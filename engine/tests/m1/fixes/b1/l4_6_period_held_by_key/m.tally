@@ -1,0 +1,17 @@
+model f1
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "minimal text"
+index tyear = year 2022..2023 from 04-06
+
+def yfirst[y in tyear]: date = start_of(y)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+
+ask held: yfirst[2022-06] law 2026-10-18

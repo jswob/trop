@@ -1,0 +1,38 @@
+# tally 2.1.7 S1 (#93, F11b; the plan's critic C-20): a walked value of a day before S is HOLE-PRERUN `before
+# the run's start` (L §8.1), bal and low as flows already was; HOLE-ANCHOR is for a read inside the run before a
+# place's first reading. Run 2026-02-01 .. 2026-03-31; a stated reading of konto at 2026-01-05 end and an opening at
+# 2026-02-01 start: bal on 2026-01-20 (a), low over 2026-01-20 .. 2026-02-15 (b) and bal on the stated day (d) are
+# the hole; bal inside the run reads the opening (c). Was (2.1.6): a, b, d "konto has no balance before
+# 2026-01-05", a question false of the day read.
+=== pre.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-02-01
+  end 2026-03-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  anchor konto
+  stated[konto] = 40.00 PLN at 2026-01-05 end "s"
+  opening[konto] = 50.00 PLN at 2026-02-01 start "s"
+
+ask a: bal(konto, 2026-01-20)
+ask b: low(konto, 2026-01-20 .. 2026-02-15)
+ask c: bal(konto, 2026-02-15)
+ask d: bal(konto, 2026-01-05)
+=== expect
+a: ?"before the run's start" (konto)
+  cut 2026-10-18
+b: ?"before the run's start" (konto)
+  cut 2026-10-18
+c: 50.00 PLN
+  cut 2026-10-18
+d: ?"before the run's start" (konto)
+  cut 2026-10-18

@@ -26,6 +26,9 @@ line. It checks:
                  <label> already exists in <def>; write replace`; tally 2.1.6,
                  issue #76); a `beats` naming no rule of its def
   LOAD-CYCLE     a `beats` cycle among a def's rules
+  LOAD-PRICE     `value(x, d) in CUR by p` on a place written literally whose
+                 price has a home, its kind's or its own `priced` (§5.10;
+                 tally 2.1.7, T's SR-4)
   LOAD-PARSE     what the scan itself needs: tabs, odd indentation, an
                  unterminated string, an id outside [a-z][a-z0-9_]* or longer
                  than 48, a key outside the key pattern, an unknown section, an
@@ -451,7 +454,54 @@ def check(reality):
                 check_rules(reality, s, [s.line] + s.body)
         elif s.kind == 'def':
             check_rules(reality, s, s.body)
+    check_prices(reality, everything)
     return reality
+
+
+# the words a place's line may hold after its kind other than a unit
+PLACE_CLAUSE_WORDS = {'priced', 'lives', 'owned', 'batched', 'takes', 'min', 'max', 'outside'}
+
+
+def check_prices(reality, everything):
+    """LOAD-PRICE (§5.10 Value, §4.6 step 4; tally 2.1.7 R4, T's SR-4): `value(x, d) in CUR by p` with x a place
+    written literally whose price input has a home (its kind's or its own `priced`): the place's price and the `by`
+    are two claims on one position's price. A line scan: a place a binding gives is refcore's to see."""
+    kind_unit, kind_priced = {}, set()
+    for s in everything:
+        if s.kind == 'kind':
+            m = re.match(r'kind\s+' + re.escape(s.id) + r'\s*:\s*(.*)', s.line.code or '')
+            t = tokens(m.group(1)) if m else []
+            if 'priced' in t:
+                kind_priced.add(s.id)
+            if len(t) > 1 and t[0] == 'place':
+                kind_unit[s.id] = t[1]
+    priced = {}
+    for s in everything:
+        if s.kind == 'place':
+            m = re.match(r'place\s+' + re.escape(s.id) + r'(\[[^\]]*\])?\s*:\s*(.*)', s.line.code or '')
+            t = tokens(m.group(2)) if m else []
+            if t and ('priced' in t or t[0] in kind_priced):
+                priced[s.id] = t[1] if len(t) > 1 and t[1] not in PLACE_CLAUSE_WORDS else kind_unit.get(t[0], 'unit')
+    for s in everything:
+        for line in [s.line] + s.body:
+            code = line.code or ''
+            for m in re.finditer(r'\bvalue\(', code):
+                inner, end = bracket_group(code, m.end() - 1)
+                if inner is None:
+                    continue
+                x = split_top(inner)[0]
+                name = re.match(r'[a-z][a-z0-9_]*', x)
+                by = re.match(r'\s+in\s+[A-Z][A-Z0-9]*\s+by\s+', code[end:])
+                if not name or name.group(0) not in priced or not by:
+                    continue
+                i = j = end + by.end()
+                depth = 0
+                while j < len(code) and (depth or code[j] not in ' ,)'):
+                    depth += code[j] in '([{'
+                    depth -= code[j] in ')]}'
+                    j += 1
+                reality.refuse('LOAD-PRICE', line, s.item, "value(%s) by %s: %s's price already gives its %s"
+                               % (x, code[i:j], x, priced[name.group(0)]))
 
 
 def scan_vitem(reality, line, item, declare_key, keyed, top, places):
@@ -683,6 +733,20 @@ source src1 "declared again in another file"
 version cid
   cite src1
   known 2026-01-02
+
+kind holds: place piece
+
+place fund: holds priced fund_px lives 2026-01-01..
+
+place free: holds lives 2026-01-01..
+
+input fund_px: num PLN/piece
+
+input other_px: num PLN/piece
+
+ask qp: value(fund, 2026-06-30) in PLN by other_px
+
+ask qq: value(free, 2026-06-30) in PLN by other_px
 ''',
 }
 SELFTEST_PARSE = ('model t2\n  tally 2\n  on 2026-10-18\n  start 2026-01-01\n  end 2026-12-31\n\nsource s "unterminated\n\n'
@@ -714,6 +778,7 @@ SELFTEST_EXPECTED = sorted([
     ('LOAD-KEY', 'a.tally:83'),        # row key q2 of input owner
     ('LOAD-RESERVED', 'a.tally:82'),   # record field if (kind, a FIELD keyword, is admitted)
     ('LOAD-DUP', 'b.tally:4'),         # source src1 in another file
+    ('LOAD-PRICE', 'b.tally:20'),      # a by on fund, whose own section prices it (free, unpriced, passes)
     ('LOAD-PARSE', 'c.tally:7'), ('LOAD-PARSE', 'c.tally:9'), ('LOAD-PARSE', 'c.tally:12'),
     ('LOAD-PARSE', 'c.tally:14'), ('LOAD-PARSE', 'c.tally:16'), ('LOAD-PARSE', 'c.tally:18'),
 ])

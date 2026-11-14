@@ -13,7 +13,7 @@
 use super::plan::invariant;
 use super::point::At;
 use super::reads::refuse;
-use crate::base::{Code, Load, Refusal, Run};
+use crate::base::{Load, Refusal, Run};
 use crate::eval::{Ctx, Engine, Env};
 use crate::hole::{Hole, spread};
 use crate::model::{Domain, KeyVal, Priced, Reality, Value};
@@ -132,7 +132,7 @@ impl Engine {
         }
         if valued.by.is_none() {
             return Err(Stop::Refused(Refusal::new(
-                Code::Load(Load::Price),
+                Load::Price.at_run(),
                 format!(
                     "value({}) in {cur} holds units in {whole} and states no by",
                     valued.place
@@ -210,7 +210,7 @@ impl Engine {
         let (cur, place) = (read.currency.as_str(), valued.place.as_str());
         let Some(price) = &valued.priced else {
             return Err(Stop::Refused(Refusal::new(
-                Code::Load(Load::Price),
+                Load::Price.at_run(),
                 format!("value({place}) in {cur} holds units in {u} and states no by"),
             )));
         };
@@ -220,11 +220,11 @@ impl Engine {
         // a clause keyed by a kind of units (`num PLN/u`, its unit `$u`) takes the unit of the
         // key it is read at, the position's, when that kind holds it (L §3.2; pick P61, #130)
         let keyed_by_unit = per.starts_with('$')
-            && matches!(first_domain(m, &id), Some(Domain::Kind(kind)) if unit_in(m, Some(u), &kind));
+            && matches!(m.first_domain(&id), Some(Domain::Kind(kind)) if unit_in(m, Some(u), &kind));
         let per = if keyed_by_unit { u } else { per.as_str() };
         if pc != cur || per != u {
             return Err(Stop::Refused(Refusal::new(
-                Code::Load(Load::Unit),
+                Load::Unit.at_run(),
                 format!("value({place}) in {cur}: {place} is priced in {pc}/{per}, not {cur}/{u}"),
             )));
         }
@@ -274,7 +274,7 @@ impl Engine {
             return Err(Stop::NotBuilt("a price clause written with its keys"));
         }
         let place = valued.place.as_str();
-        let key = match first_domain(m, pid) {
+        let key = match m.first_domain(pid) {
             None => None,
             Some(Domain::Kind(kind)) if m.thing_in(place, &kind) => Some(place),
             Some(Domain::Kind(kind)) if unit_in(m, u, &kind) => u,
@@ -285,7 +285,7 @@ impl Engine {
                     Domain::Range => "a stepped range",
                 };
                 return Err(Stop::Refused(Refusal::new(
-                    Code::Load(Load::Key),
+                    Load::Key.at_run(),
                     format!(
                         "{place} is priced by {pid}, keyed by {over}, which holds neither {place} nor its unit"
                     ),
@@ -354,18 +354,6 @@ fn key_count(m: &Reality, id: &str) -> Option<usize> {
         return Some(input.binds.len());
     }
     m.defs.get(id).map(|def| def.binds.len())
-}
-
-/// The domain of an input's or a def's first key; none for no key or another id.
-/// L §5.8, §5.11.
-fn first_domain(m: &Reality, id: &str) -> Option<Domain> {
-    if let Some(input) = m.inputs.get(id) {
-        return input.binds.first().map(|b| b.domain.clone());
-    }
-    m.defs
-        .get(id)
-        .and_then(|def| def.binds.first())
-        .map(|b| b.domain.clone())
 }
 
 /// Whether a position's unit `u` is a thing of `kind`, for a price keyed by that kind.

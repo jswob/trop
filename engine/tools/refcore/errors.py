@@ -72,3 +72,14 @@ def load(code, msg, loc=None):
 
 def run(code, msg):
     return Refusal(code, msg)
+
+
+# L §8.4 Load refuses what load sees (tally 2.1.7 R5): a unit or domain check met at run is one whose input only the
+# run knows (a unit that comes with a value), so it prints RUN-DOMAIN with the words load would have used; the faults
+# load sees are refused by load's own checks, whatever the asks
+RUN_PHASE = {'LOAD-UNIT': 'RUN-DOMAIN', 'LOAD-DOMAIN': 'RUN-DOMAIN', 'LOAD-KEY': 'RUN-KEY'}
+
+
+def at_run(code, msg):
+    """A refusal met while a value is computed (L §8.4)."""
+    return Refusal(RUN_PHASE.get(code, code), msg)

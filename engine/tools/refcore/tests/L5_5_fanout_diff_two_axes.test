@@ -1,0 +1,110 @@
+# L §5.5 Fan-out, naming the options (tally 2.1.7 R8, issue #147; #122a): a diff reading two axes, each
+# combination with distinct lines, prints one line per combination, each axis named and each a `reading:` entry.
+# 2.1.6's refcore printed one `0 changed` line. (T's G7 sc_w_diff.)
+=== sc.tally
+model axw
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+axis rm
+  down "down"
+  half-up "half up"
+
+axis share
+  one "one"
+  two "two"
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input asked_on: date
+
+input rate[k in qs]: num
+
+input double: int
+
+def fee[k in qs]: money PLN at asked_on
+  rule base = round(amt * rate[k], minor(PLN), rm)
+  rule twice beats base = round(amt * rate[k] * double, minor(PLN), rm) when share == two
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+ask w_base: total
+
+ask w_as_if: total, total as if {scenario cheap}
+
+ask w_diff: diff(fee[k] for k in qs) in cheap against axw
+
+ask w_pin_diff: diff(total) in cheap against axw with rm = down, share = one
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.05 PLN "the card"
+  asked_on = 2026-06-01 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0.2 "the card"
+  double = 2 "the card"
+=== sc_cheap.tally
+scenario cheap over axw
+  tally 2
+  from 2026-01-01
+
+version cheap_rates
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  replace rate[q1] = 0.05 "a cheaper rate"
+
+ask c_in: total in cheap
+
+ask c_model: total in axw
+=== expect w_diff w_pin_diff
+w_diff [rm = down, share = one]: diff in cheap against axw: 1 changed, 0 added, 0 removed, 1 unchanged
+  changed (k = q1): 5.00 PLN against 10.00 PLN
+  world: axw
+  world: cheap
+  reading: rm = down
+  reading: share = one
+  held: rate[q1] = 0.05 (cheap_rates), read for 2026-06-01
+  cut 2026-03-01
+w_diff [rm = down, share = two]: diff in cheap against axw: 1 changed, 0 added, 0 removed, 1 unchanged
+  changed (k = q1): 10.00 PLN against 20.01 PLN
+  world: axw
+  world: cheap
+  reading: rm = down
+  reading: share = two
+  held: rate[q1] = 0.05 (cheap_rates), read for 2026-06-01
+  cut 2026-03-01
+w_diff [rm = half-up, share = one]: diff in cheap against axw: 1 changed, 0 added, 0 removed, 1 unchanged
+  changed (k = q1): 5.00 PLN against 10.01 PLN
+  world: axw
+  world: cheap
+  reading: rm = half-up
+  reading: share = one
+  held: rate[q1] = 0.05 (cheap_rates), read for 2026-06-01
+  cut 2026-03-01
+w_diff [rm = half-up, share = two]: diff in cheap against axw: 1 changed, 0 added, 0 removed, 1 unchanged
+  changed (k = q1): 10.01 PLN against 20.01 PLN
+  world: axw
+  world: cheap
+  reading: rm = half-up
+  reading: share = two
+  held: rate[q1] = 0.05 (cheap_rates), read for 2026-06-01
+  cut 2026-03-01
+w_pin_diff: diff in cheap against axw: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed total: 25.01 PLN against 30.01 PLN
+  pinned: rm = down
+  pinned: share = one
+  world: axw
+  world: cheap
+  held: rate[q1] = 0.05 (cheap_rates), read for 2026-06-01
+  cut 2026-03-01

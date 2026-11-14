@@ -1,0 +1,27 @@
+# L §4.2, §8.4 (tally 2.1.7 B5, issue #98; R5): a duration that isn't a whole number of an index's keys is
+# refused where load sees it and the index's step, LOAD-DOMAIN with run's words: q + 1 year on a year index by 2.
+# Twin: L4_2_by_n_duration_run. 2.1.6's refcore answered it (2027-01-01).
+=== load.tally
+model b5
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "made up"
+
+index y2 = year 2026..2040 by 2
+
+input n1: int
+
+def bad[q in y2]: date = start_of(q + 1 year)
+
+ask a_bad: bad[2026]
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  n1 = 1 "one"
+=== expect
+refused: LOAD-DOMAIN q + 1 year: not a whole number of its periods (L §4.2) ...

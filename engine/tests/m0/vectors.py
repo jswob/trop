@@ -74,9 +74,10 @@ REFUSALS = ['U:law/LAW-13/rate25', 'U:rand/RAND-04/plan_b', 'U:rule/RULE-09/inpa
             'U:rule/RULE-04', 'U:own/OWN-11/p21-signed']
 SCENARIO_REFUSED = re.compile(r'^scenario ([a-z][a-z0-9_]*): refused: ', re.M)
 # the sets whose reprint refuses, as load refuses them, before it prints anything (tally 2.1.6): a joint model's
-# member absent or changed (E §3.1 step 1, #74, P15); a duplicated id or an unknown prefix, which has no canonical
-# form (L §2.4, #91, P22). Each stores its one refusal line (no section) and its exit code; the round trip of a
-# refusal is the same refusal. Any other set must reprint, and each of these must refuse.
+# member absent or changed (E §3.1 step 1, #74, P15), and since tally 2.1.7 (B4, #105) every refusal of run's load
+# of its members (reprint finds, pins and loads them as run does); a duplicated id or an unknown prefix, which has
+# no canonical form (L §2.4, #91, P22). Each stores its one refusal line (no section) and its exit code; the round
+# trip of a refusal is the same refusal. Any other set must reprint, and each of these must refuse.
 REPRINT_REFUSED = {
     'U:set/surf/SURF-04/SURF-04': '#91: its scenario declares the base\'s contrib again (LOAD-DUP)',
     'format/member_absent': '#74: a joint model whose member file is absent (LOAD-PIN)',
@@ -87,10 +88,11 @@ REPRINT_REFUSED = {
                              'fuzz input c5a8 minimized)',
     'format/same_key_signed': '#88, #90: a same side keyed by a signed literal, no sref (LOAD-PARSE at parse, before '
                               'the canonical order of same sides)',
-    'format/member_outside_parent': '#105 (held): refcore looks the member up from the printed name, LOAD-PIN (no such '
-                                    'file), where run finds it',
-    'format/member_nested_absent': '#105 (held): refcore refuses a nested member\'s absent member LOAD-NAME, the engine '
-                                   'LOAD-PIN as its run does',
+    'format/member_nested_absent': '#105 (B4, tally 2.1.7): a nested member\'s absent member, LOAD-PIN as run refuses '
+                                   'it (reprint finds, pins and loads members as run does)',
+    'format/member_nested_changed': '#105 (B4): a nested member whose text no longer matches its pin, LOAD-PIN as run',
+    'format/member_folder_none': '#105 (B4): a member folder with no model header, LOAD-HEADER as run',
+    'format/member_folder_two': '#105 (B4): a member folder with two model headers, LOAD-HEADER as run',
 }
 REFUSED_LINE = re.compile(r'refused: (?:member [a-z][a-z0-9_]*: )*[A-Z]+(?:-[A-Z]+)+ [^\n]*\n')  # a member's: INTERFACE §2
 TEXTS_RS = R.T + 'runner/src/m0_texts.rs'
@@ -253,7 +255,12 @@ def runs(sets):
     canons = []
     for s, e in zip(sets, first):
         secs, _ = sections(e['out'])
-        canon = dict((os.path.normpath(os.path.join(s['cwd'].rstrip('/') or '.', n)), t) for n, t in secs)
+        canon = {}
+        for n, t in secs:
+            repo = os.path.normpath(os.path.join(s['cwd'].rstrip('/') or '.', n))
+            # a folder argument's sections are named inside it (reprint x from x's parent, #105): its table's file
+            inside = [r for _, r in s['table'] if r.endswith('/' + n)]
+            canon[inside[0] if not os.path.exists(R.ROOT + repo) and len(inside) == 1 else repo] = t
         canons.append(canon)
         for _, repo in s['table']:
             dst = R.ROOT + CANON + repo

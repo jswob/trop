@@ -2319,8 +2319,9 @@ def eng_bal_of_day(self, place, unit, d, key, ctx, q):
         if key[0] > ctx.wp[0] or (key[0] == ctx.wp[0] and key[1] >= 3):
             if d > t:
                 raise refuse('RUN-FUTURE', 'a decision on %s reads %s at %s after its day' % (t, place, d))
+            from .walk import dec_move
             raise refuse('RUN-CYCLE', '%s reads itself through bal(%s, %s) of %s: a plain read of its own day' % (
-                ctx.wp[3].split('|')[-1 if ctx.wp[3].count('|') > 1 else 0] or 'the booking', place, d, _qtext(q)))
+                dec_move(ctx.wp[3]) or 'the booking', place, d, _qtext(q)))
         if getattr(w, 'less_obs', None):
             raise NotYet('a modelled-past decision\'s read of parts (bal(x, d) of q)')
         return self.bal_of(w, place, unit, key, q)

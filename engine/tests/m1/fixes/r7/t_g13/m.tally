@@ -1,0 +1,28 @@
+model r7_g13
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.7, R7 (#146; G13, GAPS l.131): a result's register is the set of what it read, whatever order its cells were computed in: the pin on a that s[5] reads is listed under each line, whether s[5] or u, which reads it, is read first"
+
+source card "T's card (invented)"
+
+index ks = 1..5
+
+input a: int
+
+def s[k in ks]: int = a * k
+
+def u: int = s[5] + a
+
+ask t1: s[5], u with a = 3
+
+ask t2: u, s[5] with a = 3
+
+ask t3: u with a = 3
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  a = 2 "the card"

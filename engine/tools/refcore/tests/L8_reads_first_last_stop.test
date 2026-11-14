@@ -1,0 +1,33 @@
+# L §8 What a result reads (tally 2.1.7 R1, issue #140; #117): `first` reads its `where` from the first key and
+# `last` from the last, each stopping at the first key whose `where` is true (L §5.11); the keys after it are never
+# read, so a `where` that would divide by zero there can't refuse the result. `or` stops at its first true operand.
+# 2.1.6's refcore read every `where` and refused RUN-DIV.
+=== m.tally
+model t
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+index ks = 1..4
+
+input base: int
+
+ask a: first(k in ks where k == 1 or base / (k - 2) > 0)
+ask b: last(k in ks where k == 4 or base / (k - 3) > 0)
+ask c: first(k in ks where k == 3 or base / (k - 2) > 0)
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  base = 6 "card"
+=== expect a b c
+a: 1
+  cut 2026-03-01
+b: 4
+  cut 2026-03-01
+c: refused: RUN-DIV ...
+  cut 2026-03-01

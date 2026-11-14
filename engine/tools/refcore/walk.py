@@ -15,7 +15,7 @@ import datetime
 from .dates import ONE_DAY, next_day
 from .moves import item_in_world, order_key
 from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, RandomLine
-from .model import known_first, key_text, SameDiffers
+from .model import known_first, key_text, SameDiffers, in_world
 from .values import Num, Money, Hole, Thing, Mv, Iv, Rec, Text, NONE, CURRENCIES, fmt, fmt_hole, vkey
 from .moves import Leg, Inst, ObsMv, AdjMv, PadMv, qty, unit_of_value, day_lo, day_hi, instant_text, merge
 
@@ -51,6 +51,27 @@ def K_before(d):
 
 def kday(key):
     return datetime.date.fromordinal(key[0])
+
+
+# A decision's entry key holds its move id and its instance as two terms, compared each as its own type (E §4.1:
+# "never as text"): joined by a character below every identifier's, the text sorts as the terms do, `feed` before
+# `feed2`. tally 2.1.7 (the builder's SR-B4, pick P40): `|`, above them, put `feed2|000000` first.
+DSEP = '\x1f'
+
+
+def dec_text(*terms):
+    return DSEP.join(terms)
+
+
+def dec_head(t):
+    """The first term of a decision's entry text: its move id, or its group's first."""
+    return t.split(DSEP, 1)[0]
+
+
+def dec_move(t):
+    """The move id of a decision's entry text, inside a group too."""
+    parts = t.split(DSEP)
+    return parts[-1] if len(parts) > 2 else parts[0]
 
 
 def plan_key(x):
@@ -205,6 +226,7 @@ class Walk:
         self.live = None
         self.counted_leftout = {}
         self.leftout_insts = []     # (day, instance id) of the movements a projection leaves out (E §10)
+        self.post_e = []            # the instances dated after E, which flows counts (E §2; tally 2.1.7 S1, #93)
         self.bad_legs = {}          # (movement id, leg) -> the refusal of a leg the walk refused (E §4.2 step 5)
         self.running = False
 
@@ -470,8 +492,11 @@ class Walk:
             st = i.status
             if st == 'leftout':
                 self.note_leftout(i)
+                self.note_post_e(i, day_lo(i.day))
                 continue
             if st in ('none', 'modelled'):
+                if st == 'none':
+                    self.note_none(i, ctx, S)
                 if st == 'modelled':
                     self.modelled.append(i)
                     if not i.obs and not self.same_observed(i):
@@ -511,12 +536,9 @@ class Walk:
                 d = i.day
                 if i.exists is False:
                     continue
-                if i.err is not None and not isinstance(i.err, RandomLine) and isinstance(d, datetime.date):
-                    # tally 2.1.6 (issue #51): a decision instance refused before its point (its key's `where`) is
-                    # refused at the places its legs name from its day, as a hole movement would be (L §8.4, E §4.2)
-                    if S <= d <= self.end:
-                        self.dec_bad(i, K_before(d), i.err, ctx)
-                    continue
+                # tally 2.1.7 R2 (#104): a decision instance refused before its point (its key's `where`) is scheduled
+                # at its point like any other, where run_one_body reads its legs' places and refuses those from there
+                # (L §8, §8.4; E §4.2 step 3: its places are read at its point, its law date and min(t, K))
                 if isinstance(d, datetime.date):
                     if eng.before_scen_from(i, d):
                         # a scenario's move books nothing before its from (L §6.4): left out
@@ -526,6 +548,7 @@ class Walk:
                     if d < S or d > self.end:
                         if not self.proj and (d < m.S or d > m.E):
                             self.note_leftout(i)
+                            self.note_post_e(i, d)
                         continue
                     k = (qid, d)
                     if k not in self.decday:
@@ -599,15 +622,42 @@ class Walk:
         for p in sorted(places):
             self.at(key, 'placebad', (p, err, i))
 
+    def note_none(self, i, ctx, S):
+        """An instance that doesn't exist (a false `when` or key `where`) books nothing, but the reads that decided it
+        are in the read set of a balance of the places its legs give from its day (L §8.2 One read set: "the reads
+        that decided that a movement doesn't count (a false when, …)"; tally 2.1.7 R7, T's SR-8)."""
+        d = day_lo(i.day)
+        if i.coll is None or not isinstance(d, datetime.date) or d < S:
+            return
+        legs = i.legs or self.eng.refused_places(i.move, i.env, i, ctx)
+        for lg in legs:
+            for p in (lg.frm, lg.to):
+                if isinstance(p, Thing):
+                    u = lg.unit or self.m.place_unit(self.m.things[p.name])
+                    self.at((d.toordinal(), 2, 0, plan_key(i), 0), 'decided', (p.name, u, i.coll))
+
     def note_leftout(self, i):
         mid = i.move.id
         n, first = self.leftout_regs.get(mid, (0, None))
         d = day_lo(i.day)
-        self.leftout_regs[mid] = (n + 1, d if first is None or (d is not None and d < first) else first)
+        if d is None:
+            # a day that is a hole: the first instance's, printed as that hole, until a dated one comes (L §2.4
+            # Values, tally 2.1.7, R9; F17)
+            d = i.day if isinstance(i.day, Hole) else None
+        known = isinstance(first, datetime.date)
+        if first is None or (isinstance(d, datetime.date) and (not known or d < first)):
+            first = d
+        self.leftout_regs[mid] = (n + 1, first)
         for lg in i.legs:
             for p in (lg.frm, lg.to):
                 if isinstance(p, Thing):
                     self.leftout_by_place.setdefault(p.name, set()).add(mid)
+
+    def note_post_e(self, i, d):
+        """An instance dated after E: never booked, counted by flows (E §2 Movements outside [S, E]; tally 2.1.7 S1,
+        #93), a plan's with its amount and a decision's as a hole movement (mreads.flows_post_e)."""
+        if not self.proj and isinstance(d, datetime.date) and d > self.m.E:
+            self.post_e.append(i)
 
     def count_leftout(self, i):
         """A movement a projection leaves out (L §5.14.1): listed when dated in its window."""
@@ -703,10 +753,17 @@ class Walk:
 
     # -- the walk ---------------------------------------------------------------------------------------------------
     def run_to(self, day):
-        if getattr(self, 'failed', None) is not None:
-            raise self.failed
+        """Walk through `day`. A walk that failed on day D refuses the reads of D or later and answers an earlier
+        day's from the days it walked (tally 2.1.7 R1, #127: a read of day d reads the walk's prefix through d, so the
+        order of the reads never changes an answer); a walk that failed before its first day (its plan pass) refuses
+        every read."""
         if day > self.end:
             day = self.end
+        if getattr(self, 'failed', None) is not None:
+            fd = getattr(self, 'failed_day', None)
+            if fd is None or day >= fd:
+                raise self.failed
+            return
         try:
             while self.done < day:
                 d = self.done + ONE_DAY
@@ -714,6 +771,7 @@ class Walk:
                 self.done = d
         except TallyError as e:
             self.failed = e
+            self.failed_day = d
             raise
 
     def walk_day(self, d):
@@ -919,6 +977,9 @@ class Walk:
         elif kind == 'mark':
             place, unit, r, c = obj
             self.add(place, unit or '*', Ent(key, 'mark', reg=(r,), coll=c))
+        elif kind == 'decided':
+            place, unit, c = obj
+            self.add(place, unit or '*', Ent(key, 'mark', reg=(), coll=c))
         elif kind == 'placehole':
             place, qs, i = obj
             self.add(place, '*', Ent(key, 'perm', qs=qs, mv=i, coll=i.coll, flow=Hole(qs)))
@@ -1182,6 +1243,33 @@ class Walk:
             self.book_leg(mv, lg, key[:4] + (key[4] + 1,), reg=reg, coll=coll, ends=ends)
 
     # -- booking (E §4.2 step 5) -----------------------------------------------------------------------------------
+    def before_from(self, mv, lg, coll):
+        """E §9 item 3, L §8.2 `before from:` (tally 2.1.7 R7, #121): a movement booked before a scenario's from that
+        read that scenario's facts (its rows, a lifespan its entries change) is listed under each result whose reads
+        reach it, in that branch and every branch over it; None for any other."""
+        if coll is None or not getattr(self.m, 'scen_from', None):
+            return None
+        day = lg.day if isinstance(lg.day, datetime.date) else getattr(mv, 'day', None)
+        if not isinstance(day, datetime.date):
+            return None
+        froms = self.m.scen_from
+
+        def changed(v):
+            sc = getattr(v, 'scenario', None) if v is not None else None
+            return sc is not None and in_world(v) and froms.get(sc) is not None and day < froms[sc]
+        items = set(getattr(r.target, 'id', r.target) for r in coll.rows.values()
+                    if changed(getattr(r, 'version', None)))
+        for e in coll.reg:
+            if e[0] == 'lifeof' and e[1] in self.m.things and \
+                    any(changed(getattr(x, 'version', None)) for x in self.m.things[e[1]].entries):
+                items.add(e[1])
+        if not items:
+            return None
+        self.__dict__.setdefault('before_places', set()).update(
+            p.name for p in (lg.frm, lg.to) if isinstance(p, Thing))
+        name = getattr(getattr(mv, 'move', None), 'id', None) or getattr(mv, 'id', '?')
+        return '%s on %s reads %s' % (name, day, ', '.join(sorted(items)))
+
     def book_leg(self, mv, lg, key, reg=(), coll=None, ends=(True, True)):
         """Book a leg's two ends (or the ends asked for); RUN-LIFESPAN, RUN-PLACE refuse it from that point."""
         m = self.m
@@ -1189,6 +1277,9 @@ class Walk:
         if isinstance(amt, TallyError):
             self.leg_bad(mv, lg, amt, key)
             return
+        bf = self.before_from(mv, lg, coll)
+        if bf is not None:
+            reg = tuple(reg) + (('before from', bf),)
         cs = self.consol(mv, lg)
         if cs != (None, None):
             ends = list(ends)
@@ -1527,7 +1618,7 @@ class Walk:
             insts = self.tie_order(mi, insts, d)
         group = []
         for n, i in enumerate(insts):
-            k = key[:3] + ('%s|%06d' % (mi.id, n), 0)
+            k = key[:3] + (dec_text(mi.id, '%06d' % n), 0)
             run = self.run_one(i, k)
             group.append(run)
         if len(group) > 1 and not mi.decl.tie and mi.self_reads:
@@ -1538,10 +1629,16 @@ class Walk:
                     if (rb.live_places & ra.changed) or (ra.live_places & rb.changed):
                         err = refuse('RUN-TIE', '%s has a tie at %s that changes the result, and no ties by' % (
                             mi.id, ', '.join(r.id for r in group)))
-                        k = key[:3] + ('%s|999999' % mi.id, 9)
+                        k = key[:3] + (dec_text(mi.id, '999999'), 9)
                         for r in group:
                             for p in r.changed:
                                 self.add(p, m.place_unit(m.things[p]) or '*', Ent(k, 'bad', err=err))
+                            # tally 2.1.7 R2 (G7): the tie refuses each tied instance, so every read of it is
+                            # refused (its legs, its flows), not only the balances it changes (L §8, §5.14.2)
+                            r.err = err
+                            r.status = 'refused'
+                            for lg in r.legs:
+                                self.leg_bad(r, lg, err, k)
                         return
 
     def refused_run(self, i, key, err):
@@ -1724,7 +1821,7 @@ class Walk:
             left.discard(ready[0])
         seq = 0
         for x in sorted(bad, key=rank):
-            k = key[:3] + ('%s|%06d|%s' % (g[0], seq, info[x][0].move.id), 0)
+            k = key[:3] + (dec_text(g[0], '%06d' % seq, info[x][0].move.id), 0)
             seq += 1
             ch = info[x][1]
             if ch:
@@ -1734,7 +1831,7 @@ class Walk:
                 self.add('*', '*', Ent(k, 'bad', err=bad[x]))
             self.refused_run(info[x][0], k, bad[x])
         for x in order:
-            k = key[:3] + ('%s|%06d|%s' % (g[0], seq, info[x][0].move.id), 0)
+            k = key[:3] + (dec_text(g[0], '%06d' % seq, info[x][0].move.id), 0)
             seq += 1
             self.run_one(info[x][0], k)
 
@@ -1827,12 +1924,19 @@ class Walk:
         eng.stack.append(run.coll)
         try:
             try:
+                if inst.err is not None:
+                    # refused before its point (its key's `where`): nothing of its body is read but its places
+                    raise inst.err
                 b = eng.body_over_law(mi, inst.env, run, ctx, inst.law, inst.exists)
                 run.exists, run.legs, run.attrs, run.forp, run.fulfils = b
             except TallyError as e:
                 if load_now(e):
                     raise
                 run.err = e
+                if not run.legs and mi.legs:
+                    # tally 2.1.7 R2 (#104): a refused instance's day and legs' places are still read, at its point
+                    # (L §8.4), so the refusal reaches the places its legs give
+                    run.legs = eng.refused_places(mi, inst.env, run, ctx)
         finally:
             eng.stack.pop()
             self.wp, self.reads, self.less_obs, self.live = old
@@ -1844,7 +1948,8 @@ class Walk:
             if known:
                 for lg in known:
                     self.leg_bad(run, lg, run.err, key)
-            else:
+            elif mi.legs:
+                # a leg whose place can't be read could book anywhere: every place (L §8.4)
                 self.add('*', '*', Ent(key, 'bad', err=run.err))
             self.same_release(run, key)
             return run
@@ -2027,19 +2132,38 @@ def m_inv3(self, w, tctx):
     D = m.scen_from.get(sc)
     if D is None or D <= m.S:
         return
-    if any(getattr(r, 'point', None) is not None and kday(r.point) < D for r in w.decs.values()):
-        return
     base = m.scenario_over.get(sc)
+    last = min(D - ONE_DAY, m.E)
     from .model import set_world
     old = set_world(self.world_chain(base))
     try:
-        bw = self.main_walk(tctx.but(world=base))
+        # mreads.m_prefix_walk: the base walked only through the day before D, all invariant 3 reads (T's SR-14)
+        bw = self.prefix_walk(tctx.but(world=base), last)
     except TallyError:
         return
     finally:
         set_world(old)
-    last = min(D - ONE_DAY, m.E)
+    if bw is None:
+        # the prefix walk was refused (mreads keeps None for it): nothing to list or check
+        return
     key = K_end(last)
+    # L §8.2 before from: (tally 2.1.7 R7, #121; P46): a movement of the base booked before from that this branch
+    # doesn't book is listed, removed by the branch, under each read of the places it touched from its day on
+    mine = set(getattr(e.mv, 'id', None) for lg in w.logs.values() for e in lg.ents
+               if e.mv is not None and kday(e.key) < D)
+    for (place, unit), lg in sorted(bw.logs.items(), key=repr):
+        for e in lg.ents:
+            mid = getattr(e.mv, 'id', None)
+            if e.mv is None or mid is None or not kday(e.key) < D or mid in mine:
+                continue
+            ent = (kday(e.key), ('before from', '%s on %s removed by %s' % (mid, kday(e.key), sc)))
+            if ent not in w.adj_regs.get(place, ()):
+                w.adj_regs.setdefault(place, []).append(ent)
+            w.__dict__.setdefault('before_places', set()).add(place)
+    if any(getattr(r, 'point', None) is not None and kday(r.point) < D for r in w.decs.values()):
+        # a decision ran before D: the ones whose projection read a scenario row are listed (above); this
+        # interpreter checks no balance then
+        return
     for (place, unit) in sorted(set(w.logs) | set(bw.logs), key=repr):
         if place == '*' or unit == '*':
             continue
@@ -2047,6 +2171,9 @@ def m_inv3(self, w, tctx):
         sb = bw.pstate(place, unit, key, raw=True)
         a, b = sa.val, sb.val
         if place not in m.things or not (isinstance(a, Num) and isinstance(b, Num)) or a.q == b.q:
+            continue
+        if place in getattr(w, 'before_places', ()):
+            # a listed movement before from changed it (L §8.2 before from:)
             continue
         if any((x.hole or x.perm or x.imp or x.bad) for x in (sa, sb)):
             continue
@@ -2090,7 +2217,9 @@ def m_proj_walk(self, ctx, t, leftout, clauses):
     tctx = self.tctx(ctx).but(cut=c, windows=windows, rnd=prnd)
     wk = ('proj', id(base), point, c, leftout, windows, rnd, unc) + self.wkey(tctx)
     w = self.walks.get(wk)
-    if w is not None and getattr(w, 'failed', None) is not None:
+    if w is not None and getattr(w, 'failed', None) is not None and getattr(w, 'failed_day', None) is None:
+        # its plan pass failed: every read of it is refused; a failure on a day refuses only the reads from that day
+        # (Walk.run_to)
         raise w.failed
     if w is None:
         w = Walk(self, tctx, t, self.m.E, base=base, point=point, leftout=leftout, proj=True, unc=unc)
@@ -2114,11 +2243,11 @@ def m_proj_walk(self, ctx, t, leftout, clauses):
 
 def _act_after(k, point):
     """Whether a day's decision act, keyed (day, 3, stratum, move id, 0), runs after a walk point: by (day, step,
-    stratum), then by move id (E §4.1), the point's own move id taken apart from its instance number (`sw|000000`).
+    stratum), then by move id (E §4.1), the point's own move id taken apart from its instance number (dec_head).
     tally 2.1.2 (issue #32): the two were compared as one text, so `sw_b`, whose `_` sorts before `|`, counted as
     booked at sw's point and a projection read there left its act out (L §5.14.1: "counts only the movements not yet
     booked")."""
-    head = point[3].split('|', 1)[0] if isinstance(point[3], str) else point[3]
+    head = dec_head(point[3]) if isinstance(point[3], str) else point[3]
     return (k[:3], k[3]) > (tuple(point[:3]), head)
 
 

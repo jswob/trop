@@ -1,0 +1,25 @@
+exit 0
+led: residuals konto 2026-01 .. 2026-03
+  after the run's end: model ?"after the run's end" (konto), observed ?"after the run's end" (konto), difference ?"after the run's end" (konto)
+    days 2026-03-16 .. 2026-03-31: ?"after the run's end" (konto)
+  2026-03 move wage: model 5 000.00 PLN, observed 0.00 PLN, difference -5 000.00 PLN
+    expected but missing wage[2026-03] on 2026-03-10: model 5 000.00 PLN
+  2026-02 unexplained: model 0.00 PLN, observed -400.00 PLN, difference -400.00 PLN
+    unexplained bank[r3] on 2026-02-20: observed -400.00 PLN
+  2026-02 move wage: model 5 000.00 PLN, observed 5 300.00 PLN, difference 300.00 PLN
+    matched wage[2026-02] on 2026-02-10: model 5 000.00 PLN, observed 5 300.00 PLN, difference 300.00 PLN, timing +2 days
+  2026-02 balance: model 15 900.00 PLN, observed 15 800.00 PLN, difference -100.00 PLN
+    balance konto 2026-02-28 end (padded): booked 15 900.00 PLN, stated 15 800.00 PLN, gap -100.00 PLN
+  2026-02 move rent: model -2 000.00 PLN, observed -2 000.00 PLN, difference 0.00 PLN
+    matched rent[2026-02] on 2026-02-03: model -2 000.00 PLN, observed -2 000.00 PLN, difference 0.00 PLN, timing +0 days
+  2026-03 move rent: model -2 000.00 PLN, observed -2 000.00 PLN, difference 0.00 PLN
+    matched rent[2026-03] on 2026-03-03: model -2 000.00 PLN, observed -2 000.00 PLN, difference 0.00 PLN, timing +0 days
+  cut 2026-10-20
+led2: residuals konto 2026-03 .. 2026-05
+  after the run's end: model ?"after the run's end" (konto), observed ?"after the run's end" (konto), difference ?"after the run's end" (konto)
+    days 2026-03-16 .. 2026-05-31: ?"after the run's end" (konto)
+  2026-03 move wage: model 5 000.00 PLN, observed 0.00 PLN, difference -5 000.00 PLN
+    expected but missing wage[2026-03] on 2026-03-10: model 5 000.00 PLN
+  2026-03 move rent: model -2 000.00 PLN, observed -2 000.00 PLN, difference 0.00 PLN
+    matched rent[2026-03] on 2026-03-03: model -2 000.00 PLN, observed -2 000.00 PLN, difference 0.00 PLN, timing +0 days
+  cut 2026-10-20

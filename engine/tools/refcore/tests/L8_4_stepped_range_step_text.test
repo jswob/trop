@@ -1,0 +1,28 @@
+# tally 2.1.7 S7 (X1, pre-M1 P4 on #97): L §8.4 RUN-DOMAIN `a stepped range whose step <s> is not positive`, for a
+# range of days as for numbers: q steps 2026-01-01 .. 2026-01-31 by st * 1 day, with st = 0; n steps 0.5 .. 2.5 by
+# -0.5. Was (2.1.6): q printed `a stepped range whose step is not positive`, without its <s>.
+=== m.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input st: int
+input fr: num
+
+ask q: sum(1 for d in 2026-01-01 .. 2026-01-31 step st * 1 day)
+ask n: sum(1 for f in 0.5 .. 2.5 step fr)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  st = 0 "s"
+  fr = -0.5 "s"
+=== expect
+n: refused: RUN-DOMAIN a stepped range whose step -0.5 is not positive
+  cut 2026-10-18
+q: refused: RUN-DOMAIN a stepped range whose step 0 day is not positive
+  cut 2026-10-18

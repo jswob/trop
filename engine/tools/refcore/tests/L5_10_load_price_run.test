@@ -1,5 +1,7 @@
-# L §5.10 Value, LOAD-PRICE for a place of unit any: broker holds 100.00 EUR from 2026-03-02, which only the run
-# sees; a LOAD refusal found at run refuses the reality (L §8.3).
+# L §5.10 Value, LOAD-PRICE for a place of unit any: buy's leg eur writes EUR into broker, which load sees, so
+# value(broker, d) in PLN with no by is refused at load, at its line (L §8.4 R-load: "no run meets a fault load could
+# see"; tally 2.1.7 R5, the review's finding 3, pick P41). Until 2.1.7 refcore refused it at run, with no line, when
+# the run had booked the EUR.
 === m.tally
 model t
   tally 2
@@ -43,4 +45,4 @@ version v
 
 ask rp: value(broker, 2026-06-30) in PLN
 === expect
-refused: LOAD-PRICE value(broker) in PLN holds units in EUR and states no by
+refused: LOAD-PRICE value(broker) in PLN holds units in EUR and states no by (m.tally:41)

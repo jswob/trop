@@ -1,0 +1,36 @@
+# L §8 What a result reads (tally 2.1.7 R1, issue #140; G10, GAPS l.128): a walk built up to a day is the whole
+# walk's prefix, not a second walk of its cut, so E §9 invariant 5 compares a booking only with the same walk's; and a
+# walk attempt taken back because it needed a cell still being evaluated (mreads.m_guarded_walk) takes back what it
+# recorded for invariant 5 too. t1 and t2 run first and build those walks; t3 then gives what it gives alone,
+# RUN-PLACE (acct, min 0, after op[2027-01] on day one). 2.1.6's refcore refused t3 with a false ENGINE-INVARIANT.
+=== m.tally
+model b
+  tally 2
+  on 2027-01-01
+  start 2027-01-01
+  end 2027-12-31
+unit PLN: currency minor 0.01
+kind ovs: event certain
+  leg cash: PLN
+kind boxes: place one min 0
+place acct: boxes PLN lives 2027-01-01..
+place bank: outside lives 2027-01-01..
+def p[m in months]: money PLN = if pos(m) == 1 then 0 else p[m - 1] + sum(o.cash.amount for o in ovs over m)
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from bank to acct amount p[m]
+move op[m in months]: ovs
+  on start_of(m)
+  leg cash from acct to bank amount 1 PLN
+ask t1: p[2027-06]
+ask t2: p[m] for m in [2027-02, 2027-03]
+ask t3: bal(acct, 2027-06-30)
+=== expect
+t1: 5.00 PLN
+...
+t2 (m = 2027-02): 1.00 PLN
+...
+t2 (m = 2027-03): 2.00 PLN
+...
+t3: refused: RUN-PLACE acct is -1.00 PLN after the day's observations and plans of 2027-01-01
+...

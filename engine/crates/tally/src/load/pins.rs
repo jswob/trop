@@ -261,7 +261,7 @@ impl Checker {
                 return Err(sc.place(uerr(message)));
             }
         } else {
-            let st = sample_type(m, &pinned, &ty).map_err(|stop| sc.place(stop))?;
+            let st = sample_type(m, &self.files, &pinned, &ty).map_err(|stop| sc.place(stop))?;
             if !pin_literal(m, sc, value, &st)? {
                 let t = self.expr(m, sc, value, Some(&st), depth)?;
                 let what = format!("the sample pin of {name}");
@@ -300,7 +300,7 @@ impl Checker {
         }
         for (key, bind) in target.keys.iter().flatten().zip(binds) {
             if let Key::Expr(kn) = key {
-                self.key_pos(m, sc, kn, &bind.domain, depth)?;
+                self.bind_key(m, sc, kn, bind, depth)?;
             }
         }
         Ok(())
@@ -460,6 +460,88 @@ pub(super) fn bare(node: &Expr) -> (&Expr, bool) {
 /// `LOAD-ASIF pin on unknown id <x>`. L §8.3.
 fn unknown(id: &str) -> Stop {
     refused(Load::AsIf, format!("pin on unknown id {id}"))
+}
+
+/// Two value pins of one set on one cell, of one width, tie in L §4.6's cascade: refused at
+/// load where load sees both pins' keys, written alike with no variable of the scope in them,
+/// `LOAD-OVERLAP pins <x>[k] = a and <x>[k] = b of <x> overlap at [k]`; pins whose keys only
+/// the run gives are the cell's, `RUN-CONFLICT` (refcore's `pin_ties`; tally 2.1.7 R4).
+/// L §4.6, §8.3.
+///
+/// # Errors
+///
+/// That `LOAD-OVERLAP`, unplaced.
+pub(super) fn pin_ties(m: &Reality, scope: &Scope, pins: &[Pin]) -> Result<(), Stop> {
+    let sets: Vec<(&PRef, &Expr)> = pins
+        .iter()
+        .filter_map(|pin| match &pin.form {
+            PinForm::Set {
+                target,
+                value,
+                sample: false,
+            } if m.names.kind(&target.id) != Some(NameKind::Axis) => Some((target, value)),
+            PinForm::Set { .. }
+            | PinForm::Law(_)
+            | PinForm::Known(_)
+            | PinForm::Wording(..)
+            | PinForm::Scenario(_) => None,
+        })
+        .collect();
+    let mut rest = sets.as_slice();
+    while let [(p, pv), tail @ ..] = rest {
+        for (q, qv) in tail {
+            if p.id != q.id || p.qual != q.qual || p.fields != q.fields {
+                continue;
+            }
+            let (Some(pk), Some(qk)) = (seen_keys(scope, p), seen_keys(scope, q)) else {
+                continue;
+            };
+            if pk != qk {
+                continue;
+            }
+            let ks = pk.join(", ");
+            let mut cell = p.id.clone();
+            if !pk.is_empty() {
+                cell = format!("{cell}[{ks}]");
+            }
+            for field in &p.fields {
+                cell = format!("{cell}.{field}");
+            }
+            return Err(refused(
+                Load::Overlap,
+                format!(
+                    "pins {cell} = {} and {cell} = {} of {} overlap at [{ks}]",
+                    text(pv),
+                    text(qv),
+                    p.id
+                ),
+            ));
+        }
+        rest = tail;
+    }
+    Ok(())
+}
+
+/// A pin's keys as written, when load sees them: none where one reads a variable of the
+/// scope, which the run gives (refcore's `pin_ties`, its `seen`). L §4.6.
+fn seen_keys(scope: &Scope, target: &PRef) -> Option<Vec<String>> {
+    let Some(keys) = &target.keys else {
+        return Some(Vec::new());
+    };
+    let mut out = Vec::with_capacity(keys.len());
+    for key in keys {
+        match key {
+            Key::Star => out.push("*".to_owned()),
+            Key::Expr(e) => {
+                let names = crate::eval::names_in(e)?;
+                if names.iter().any(|n| scope.is_var(n)) {
+                    return None;
+                }
+                out.push(text(e));
+            }
+        }
+    }
+    Some(out)
 }
 
 /// `LOAD-SCENARIO ask <q> names <w>, neither the model nor a loaded scenario`: it refuses only

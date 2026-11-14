@@ -114,13 +114,15 @@ pub(super) fn interval(m: &Reality, (a, b): (Value, Value), from: &Window) -> Re
 /// its text and figure and no read, a value computed; on two windows `HOLE-IMPRECISE`
 /// (refcore's `iv_arith`). L §4.4.
 pub(super) fn window_arith(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Result<Value, Stop> {
+    let (lhs, rhs) = (single(lhs), single(rhs));
     let (w, lo, hi) = match (lhs, rhs) {
         (Value::Window(a), Value::Window(_)) => {
             return Ok(Value::Hole(imprecise(m, a, "arithmetic on two windows")?));
         }
         (Value::Window(a), b) => (a, arith(m, op, &a.lo, b)?, arith(m, op, &a.hi, b)?),
         (a, Value::Window(b)) => (b, arith(m, op, a, &b.lo)?, arith(m, op, a, &b.hi)?),
-        _ => return Err(invariant("window arithmetic with no window")),
+        // a window of one day is that day (F3)
+        _ => return arith(m, op, lhs, rhs),
     };
     let (lo, hi) = if compare(m, &hi, &lo, Test::Order)? == Ordering::Less {
         (hi, lo)
@@ -148,7 +150,7 @@ pub(super) fn window_negated(w: &Window) -> Result<Option<Value>, Stop> {
         hi,
         days: None,
         src: w.src.clone(),
-        figure: None,
+        figure: w.figure.clone(),
         read: None,
     }))))
 }
@@ -165,6 +167,20 @@ pub(super) fn window_compare(
 ) -> Result<Value, Stop> {
     if one_read(a, b) {
         return Ok(Value::Bool(matches!(op, CmpOp::Eq | CmpOp::Le | CmpOp::Ge)));
+    }
+    let (a, b) = (single(a), single(b));
+    if as_window(a).is_none() && as_window(b).is_none() {
+        // a window of one day is that day (F3)
+        let order = compare(m, a, b, Test::Order)?;
+        let holds = match op {
+            CmpOp::Lt => order == Ordering::Less,
+            CmpOp::Le => order != Ordering::Greater,
+            CmpOp::Gt => order == Ordering::Greater,
+            CmpOp::Ge => order != Ordering::Less,
+            CmpOp::Eq => order == Ordering::Equal,
+            CmpOp::Ne => order != Ordering::Equal,
+        };
+        return Ok(Value::Bool(holds));
     }
     let ((alo, ahi), (blo, bhi)) = (ends(a), ends(b));
     let order = |x: &Value, y: &Value| compare(m, x, y, Test::Order);
@@ -230,11 +246,12 @@ pub(super) fn one_read(a: &Value, b: &Value) -> bool {
 ///
 /// The refusals of comparing the values or their ends.
 pub(super) fn decided_order(m: &Reality, a: &Value, b: &Value) -> Result<Option<Ordering>, Stop> {
-    if as_window(a).is_none() && as_window(b).is_none() {
-        return compare(m, a, b, Test::Order).map(Some);
-    }
     if one_read(a, b) {
         return Ok(Some(Ordering::Equal));
+    }
+    let (a, b) = (single(a), single(b));
+    if as_window(a).is_none() && as_window(b).is_none() {
+        return compare(m, a, b, Test::Order).map(Some);
     }
     let ((alo, ahi), (blo, bhi)) = (ends(a), ends(b));
     if compare(m, ahi, blo, Test::Order)? == Ordering::Less {
@@ -244,6 +261,18 @@ pub(super) fn decided_order(m: &Reality, a: &Value, b: &Value) -> Result<Option<
         return Ok(Some(Ordering::Greater));
     }
     Ok(None)
+}
+
+/// A window of one day is that day; any other value is itself (refcore's `one_day`; tally
+/// 2.1.7 R3, F3). L §4.4.
+pub(super) fn single(v: &Value) -> &Value {
+    if let Value::Window(w) = v
+        && w.days.as_ref().is_none_or(|days| days.len() == 1)
+        && w.lo == w.hi
+    {
+        return &w.lo;
+    }
+    v
 }
 
 /// A value's interval: a window's ends, any other value twice. L §4.4.
@@ -270,6 +299,7 @@ fn one_of_holds(w: &Window, v: &Value) -> bool {
 ///
 /// `RUN-NONE`, `RUN-LIMIT`; `LOAD-UNIT` for a value that is no date.
 pub(crate) fn one_day(m: &Reality, v: &Value, what: &str) -> Result<Result<Day, Hole>, Stop> {
+    let v = single(v);
     if let Value::Day(d) = v {
         return Ok(Ok(super::state::a_day(*d)?));
     }

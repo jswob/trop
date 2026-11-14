@@ -103,8 +103,9 @@ pub enum Act {
     /// step 1).
     Obs(usize, usize),
     /// A register entry at a place, with what its movement met: a modelled-past instance
-    /// nothing fulfils is `open` (L §5.19).
-    Mark(String, String, Entry, Collected),
+    /// nothing fulfils is `open` (L §5.19); with no entry, what decided an instance doesn't
+    /// exist (L §8.2).
+    Mark(String, String, Option<Entry>, Collected),
 }
 
 impl Walk {
@@ -186,6 +187,7 @@ impl Engine {
         let mut plans = Vec::new();
         let mut decisions = Vec::new();
         let mut hole_places = BTreeMap::new();
+        let mut decided = BTreeMap::new();
         for mv in m.moves_in(world) {
             let insts = self.plan_list(m, mv, cut)?.to_vec();
             if mv.decision {
@@ -193,9 +195,13 @@ impl Engine {
                     hole_places.extend(self.hole_days(m, mv, &insts, cut)?);
                 }
                 decisions.push((mv.id.clone(), mv.stratum, insts));
-            } else {
-                plans.extend(insts);
+                continue;
             }
+            for inst in insts.iter().filter(|i| i.status == Status::None) {
+                let places = self.decided_places(m, mv, inst, cut)?;
+                decided.insert(inst.id.clone(), places);
+            }
+            plans.extend(insts);
         }
         plans.sort_by(|a, b| a.order.cmp(&b.order));
         let orders = movement_orders(&plans, &decisions);
@@ -222,6 +228,9 @@ impl Engine {
                     count_left_out(walk, &inst)?;
                 }
                 continue;
+            }
+            if let Some(places) = decided.remove(&inst.id) {
+                schedule_decided(walk, &inst, places)?;
             }
             schedule_plan(walk, inst)?;
         }
@@ -503,7 +512,12 @@ fn schedule_modelled(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
                     text: inst.id.clone(),
                     figure: String::new(),
                 };
-                let act = Act::Mark(place.to_owned(), unit.clone(), entry, inst.coll.clone());
+                let act = Act::Mark(
+                    place.to_owned(),
+                    unit.clone(),
+                    Some(entry),
+                    inst.coll.clone(),
+                );
                 walk.at(
                     At {
                         rank,
@@ -515,6 +529,31 @@ fn schedule_modelled(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
         }
     }
     walk.modelled.push(inst);
+    Ok(())
+}
+
+/// An instance that doesn't exist (a false `when` or key `where`) books nothing, but the
+/// reads that decided it join the read set of a balance of each place its legs give, from
+/// its day (refcore's `note_none`, its `decided` act). L §8.2 One read set (tally 2.1.7 R7,
+/// T's SR-8).
+fn schedule_decided(
+    walk: &mut Walk,
+    inst: &Inst,
+    places: Vec<(String, String)>,
+) -> Result<(), Stop> {
+    let Some(day) = inst.day.as_ref().and_then(Dated::day) else {
+        return Ok(());
+    };
+    if day < walk.start {
+        return Ok(());
+    }
+    let at = At {
+        rank: walk.plan_rank(&inst.order)?,
+        ..At::of(day, Step::Plans)
+    };
+    for (place, unit) in places {
+        walk.at(at, Act::Mark(place, unit, None, inst.coll.clone()));
+    }
     Ok(())
 }
 
@@ -762,27 +801,35 @@ fn note_left_out(walk: &mut Walk, inst: &Inst) -> Result<(), Stop> {
 }
 
 /// One more instance of a move left out of the run, counted with its first day, for its
-/// `left out:` line (refcore's `note_leftout`). Shared by the walk and fence F5 (`lows.rs`).
-/// L §8.2, E §4.1 step 3.
+/// `left out:` line: the earliest date, or the first instance's hole until a dated one comes
+/// (refcore's `note_leftout`). Shared by the walk and fence F5 (`lows.rs`). L §8.2, §2.4
+/// Values, E §4.1 step 3.
 ///
 /// # Errors
 ///
-/// `ENGINE-INVARIANT` for a count past what a `u32` holds.
+/// `ENGINE-INVARIANT` for a count past what a `u32` holds, or for an instance left out with no
+/// day: only an instance refused before its day has none, and its legs fall on the end of
+/// time (`refused_places`), so its status is never left out (`status`, `scenario_early`).
 pub(super) fn one_more_left_out(
-    left_out: &mut BTreeMap<String, (u32, Option<Day>)>,
+    left_out: &mut BTreeMap<String, (u32, Dated)>,
     inst: &Inst,
 ) -> Result<(), Stop> {
-    let day = inst.day.as_ref().and_then(Dated::day);
-    let entry = left_out.entry(inst.move_id.clone()).or_insert((0, None));
+    let day = inst
+        .day
+        .clone()
+        .ok_or_else(|| super::plan::invariant("an instance left out with no day"))?;
+    let entry = left_out
+        .entry(inst.move_id.clone())
+        .or_insert_with(|| (0, day.clone()));
     entry.0 = entry
         .0
         .checked_add(1)
         .ok_or_else(|| super::plan::invariant("a count of instances"))?;
-    entry.1 = match (entry.1, day) {
-        (Some(a), Some(b)) => Some(a.min(b)),
-        (None, b) => b,
-        (a, None) => a,
-    };
+    if let Dated::Day(d) = day
+        && entry.1.day().is_none_or(|first| d < first)
+    {
+        entry.1 = Dated::Day(d);
+    }
     Ok(())
 }
 

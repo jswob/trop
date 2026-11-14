@@ -407,8 +407,8 @@ impl Engine {
     }
 
     /// Instances of one move that read the places another of them changes, with no `ties by`:
-    /// their order changes the result, `RUN-TIE` at every place they change (refcore's
-    /// `run_decisions`). L §5.14.2.
+    /// their order changes the result, `RUN-TIE` at every place they change and on each of them
+    /// (refcore's `run_decisions`). L §5.14.2, §8.
     fn self_tie(&mut self, m: &Reality, id: usize, mv: &MoveInfo, at: At) -> Result<(), Stop> {
         let walk = self.walk(id)?;
         let runs: Vec<&Run> = self
@@ -456,6 +456,22 @@ impl Engine {
                 .unwrap_or_else(|| ALL.to_owned());
             self.walk_mut(id)?
                 .add(m, &place, &unit, Ent::new(key, Change::Bad(err.clone())))?;
+        }
+        // the tie refuses each tied instance, so every read of it is refused, its legs and
+        // its flows, not only the balances it changes (L §8, §5.14.2; tally 2.1.7 R2, G7)
+        let tied = self.today(id)?.runs.clone();
+        let tied_walk = self.walk_mut(id)?;
+        for ix in tied {
+            let run = tied_walk
+                .runs
+                .get_mut(ix)
+                .ok_or_else(|| invariant("a tied run past the walk's runs"))?;
+            run.inst.err = Some(err.clone());
+            run.inst.status = Status::Refused;
+            let (movement, legs) = (run.inst.id.clone(), run.inst.legs.clone());
+            for lg in &legs {
+                tied_walk.leg_bad(m, &movement, lg, &err, key)?;
+            }
         }
         Ok(())
     }
@@ -549,9 +565,9 @@ impl Engine {
 
     /// A decision instance's run: its body at its point with running reads, then, by what it
     /// gives, its legs booked, a hole at its places, or a refusal there (refcore's
-    /// `run_one_body`). One refused before its point (its key's `where`) doesn't exist where
-    /// its `when` is false here; else it is that refusal, its legs' places read at its point
-    /// (L §8.4, tally 2.1.6). E §4.2 step 3, L §5.14.1.
+    /// `run_one_body`). One refused before its point (its key's `where`) reads nothing of its
+    /// body; a refused one's legs' places are read at its point (L §8, §8.4; tally 2.1.7 R2,
+    /// #104). E §4.2 step 3, L §5.14.1.
     fn run_one_body(&mut self, m: &Reality, id: usize, inst: Inst, key: At) -> Result<usize, Stop> {
         let mv = m
             .moves
@@ -573,7 +589,12 @@ impl Engine {
         let prev_live = self.walk_mut(id)?.live.replace(BTreeSet::new());
         let prev_reads = self.walk_mut(id)?.reads.replace(BTreeSet::new());
         self.push();
-        let body = self.inst_body(m, mv, &inst, ctx, inst.exists.clone());
+        let body = match &inst.err {
+            // refused before its point (its key's `where`): nothing of its body is read but its
+            // places (tally 2.1.7 R2, #104)
+            Some(err) => Err(Stop::Refused(err.clone())),
+            None => self.inst_body(m, mv, &inst, ctx, inst.exists.clone()),
+        };
         let met = self.pop_alone();
         self.walk_mut(id)?.less_obs = prev_less;
         let Some(live) = core::mem::replace(&mut self.walk_mut(id)?.live, prev_live) else {
@@ -592,7 +613,7 @@ impl Engine {
         };
         run.inst.coll.merge(&met);
         run.inst.obs = linked;
-        let before = run.inst.err.take();
+        run.inst.err = None;
         match body {
             Ok(b) => {
                 run.inst.exists = b.exists;
@@ -604,10 +625,9 @@ impl Engine {
             Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => run.inst.err = Some(r),
             Err(stop) => return Err(stop),
         }
-        if let Some(err) = before
-            && (run.inst.err.is_some() || run.inst.exists != Exists::No)
-        {
-            run.inst.err = Some(err);
+        // a refused instance's legs' places are still read, at its point, so the refusal
+        // reaches the places its legs give (L §8.4; tally 2.1.7 R2, #104)
+        if run.inst.err.is_some() && run.inst.legs.is_empty() && !mv.decl.legs.is_empty() {
             self.refused_at_point(m, mv, &mut run.inst, ctx)?;
         }
         self.walk_mut(id)?.group = Some(Group::new());
@@ -757,7 +777,7 @@ impl Engine {
                 self.walk_mut(id)?.at(at, Act::Leg(Mv::Run(ix), li));
                 continue;
             }
-            self.book_leg(m, id, (&mv_id, lg), key, &reg, &coll)?;
+            self.book_leg(m, id, (&mv_id, &inst.move_id, lg), key, &reg, &coll)?;
         }
         self.book_own_obs(m, id, &inst, key)?;
         Ok(ix)

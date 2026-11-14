@@ -65,6 +65,9 @@ impl Loader {
         self.m.asks_unresolved = core::mem::take(&mut walked.unresolved);
         self.m.list_keys = core::mem::take(&mut walked.list_keys);
         self.m.narrow_tests = core::mem::take(&mut walked.narrow_used);
+        // a literal read anywhere is load's to check, whatever the asks, after the rows' (R5)
+        self.range_keys
+            .extend(core::mem::take(&mut walked.range_keys));
         for fact in core::mem::take(&mut walked.facts) {
             if let Some(mv) = self.m.moves.get_mut(&fact.id) {
                 mv.read_targets = fact.read_targets;
@@ -105,7 +108,7 @@ impl Loader {
         check_srow_reads(&self.m, &walked.srows, &walked.read_order)?;
         check_schedules(&self.m, &files)?;
         check_scenario_moves(&self.m, &files)?;
-        check_path_lines(&self.m, &walked.queries)
+        check_path_lines(&self.m, &walked.queries, &files)
     }
 
     /// The decision graph and its layers: who acts after whom, the written orders, the
@@ -138,6 +141,7 @@ impl Loader {
                 self.written_order(a, *order, other, &mut after, &mut written)?;
             }
         }
+        self.composed_orders(&mut after, &mut written)?;
         let groups = match order_cycles(&self.m.graph, &after, &decisions) {
             Ok(groups) => merge(groups),
             Err(cycle) => return Err(self.unordered(&cycle)),
@@ -220,6 +224,42 @@ impl Loader {
         Ok(())
     }
 
+    /// Written orders compose: `save before spend` and `spend before top` order `save`
+    /// before `top`, and a composed order stands for its pair in place of their read edges,
+    /// as a written one does; orders written both ways stay as written, and a composed order
+    /// against a read of the later one's legs is refused (refcore's `m_strata`). L §5.14.2.
+    fn composed_orders(
+        &self,
+        after: &mut BTreeMap<String, BTreeSet<String>>,
+        written: &mut BTreeSet<(String, String)>,
+    ) -> Result<(), Stop> {
+        let closure = closure(written);
+        let composed: Vec<(String, String)> = closure.difference(written).cloned().collect();
+        for (later, earlier) in composed {
+            if closure.contains(&(earlier.clone(), later.clone())) {
+                continue;
+            }
+            let reads_legs = self
+                .m
+                .moves
+                .get(&earlier)
+                .is_some_and(|mv| mv.read_targets.contains(&Target::Move(later.clone())));
+            if reads_legs {
+                let message =
+                    format!("{earlier} before {later} contradicts a read of {later}'s legs");
+                return Err(self.at_move(&earlier, Load::Order, message));
+            }
+            if let Some(set) = after.get_mut(&later) {
+                set.insert(earlier.clone());
+            }
+            if let Some(set) = after.get_mut(&earlier) {
+                set.remove(&later);
+            }
+            written.insert((later, earlier));
+        }
+        Ok(())
+    }
+
     /// `LOAD-ORDER` for decisions that read each other on days load knows, with no
     /// written order. L §5.14.2.
     fn unordered(&self, cycle: &[String]) -> Stop {
@@ -248,6 +288,31 @@ impl Loader {
             Some((file, line)) => refuse(code, message, file, line),
             None => Stop::Refused(Refusal::new(Code::Load(code), message)),
         }
+    }
+}
+
+/// The written orders composed: a pair `(later, earlier)` with `later` after `x` and `x`
+/// after `earlier` puts `later` after `earlier`, never a decision after itself
+/// (refcore's `m_strata`). L §5.14.2.
+fn closure(written: &BTreeSet<(String, String)>) -> BTreeSet<(String, String)> {
+    let mut closure = written.clone();
+    loop {
+        let mut grown = Vec::new();
+        for (later, middle) in &closure {
+            for (from, earlier) in closure.range((middle.clone(), String::new())..) {
+                if from != middle {
+                    break;
+                }
+                let pair = (later.clone(), earlier.clone());
+                if later != earlier && !closure.contains(&pair) {
+                    grown.push(pair);
+                }
+            }
+        }
+        if grown.is_empty() {
+            return closure;
+        }
+        closure.extend(grown);
     }
 }
 
@@ -482,16 +547,19 @@ fn running_reads(
             ));
         }
     }
-    let Some(item) = graph.balnow.iter().find(|item| !decided.contains(*item)) else {
+    let Some((item, (file, line))) = graph
+        .balnow
+        .iter()
+        .find(|(item, _)| !decided.contains(*item))
+    else {
         return Ok(());
     };
-    Err(Stop::Refused(Refusal::new(
-        Code::Load(Load::Reads),
-        format!(
-            "{} holds bal(x) with no day: a running read outside a decision and its defs",
-            item.id
-        ),
-    )))
+    // at the read's line, as every load refusal (L §8.3; tally 2.1.7 S9)
+    let message = format!(
+        "{} holds bal(x) with no day: a running read outside a decision and its defs",
+        item.id
+    );
+    Err(refuse(Load::Reads, message, file, *line))
 }
 
 /// The `LOAD-READS` message for one move, where it needs one (refcore's

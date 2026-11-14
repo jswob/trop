@@ -2012,6 +2012,9 @@ def sec_kind(p, body, units, line):
             k.spec = 'place'
             if p.at_t('CUR'):
                 k.unit = p.cur()
+            elif p.peek() is None or any(p.at(w) for w in ('signed', 'min', 'max', 'priced', 'outside')):
+                # "unit and sign: required, LOAD-PLACEKIND, not LOAD-PARSE" (L §5.7's grammar; P44)
+                raise LoadError('LOAD-PLACEKIND', 'place kind %s has no unit or sign rule' % kid, line.loc)
             else:
                 k.unit = p.ident('a unit, any or one')
             if p.accept('signed'):

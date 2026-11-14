@@ -16,7 +16,7 @@ use super::arith::{step_count, whole_of};
 use super::expr::hole_of;
 use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load};
 use super::state::{a_day, not_typed, past_days};
-use super::windows::{End, as_window, imprecise, interval, window_end};
+use super::windows::{End, as_window, imprecise, interval, single, window_end};
 use super::years::as_year;
 use crate::base::{Load, Run};
 use crate::model::{Class, Code, Number, Reality, Unit, Value, Window};
@@ -269,14 +269,8 @@ impl Engine {
         if let Some(h) = crate::hole::spread(&[a.as_hole(), b.as_hole(), dc.as_hole()]) {
             return Ok(Value::Hole(h));
         }
-        let from = match dcf_day(m, &a)? {
-            Ok(d) => d,
-            Err(hole) => return Ok(Value::Hole(hole)),
-        };
-        let to = match dcf_day(m, &b)? {
-            Ok(d) => d,
-            Err(hole) => return Ok(Value::Hole(hole)),
-        };
+        // the year fraction is monotone in each day: a window by its ends (tally 2.1.7 R3, F4)
+        let (froms, tos) = (dcf_ends(m, &a)?, dcf_ends(m, &b)?);
         let word = if let Value::Code(Code::Word(w)) | Value::Word(w) = &dc {
             w.clone()
         } else {
@@ -288,13 +282,23 @@ impl Engine {
                 format!("dcf: {word} is not a daycount code"),
             ));
         }
-        let days = from
-            .days_to(to)
-            .ok_or_else(|| invariant("a day count past the integers"))?;
-        let q = Num::int(days)
-            .checked_div(&Num::int(365))
-            .map_err(num_stop)?;
-        Ok(Value::Number(Number::plain(q, Unit::one())))
+        let mut counts: Vec<i64> = Vec::with_capacity(4);
+        for from in &froms {
+            for to in &tos {
+                counts.push(
+                    from.days_to(*to)
+                        .ok_or_else(|| invariant("a day count past the integers"))?,
+                );
+            }
+        }
+        let (Some(lo), Some(hi)) = (counts.iter().min(), counts.iter().max()) else {
+            return Err(invariant("dcf with no day"));
+        };
+        let (lo, hi) = (year_fraction(*lo)?, year_fraction(*hi)?);
+        match as_window(single(&a)).or_else(|| as_window(single(&b))) {
+            Some(w) => interval(m, (lo, hi), w),
+            None => Ok(lo),
+        }
     }
 }
 
@@ -413,7 +417,7 @@ fn window_weekday(w: &Window) -> Result<Value, Stop> {
         hi: Value::int(i64::from(*hi)),
         days: None,
         src: w.src.clone(),
-        figure: None,
+        figure: w.figure.clone(),
         read: None,
     })))
 }
@@ -466,19 +470,30 @@ fn date_or_window(v: Value, what: &str) -> Result<Value, Stop> {
     Err(not_typed())
 }
 
-/// A date of `dcf`: a day, a day period's day; a window is `HOLE-IMPRECISE` (refcore's
-/// `m_as_day`). L §3.3, §4.4.
-fn dcf_day(m: &Reality, v: &Value) -> Result<Result<Day, crate::hole::Hole>, Stop> {
-    if let Value::Window(w) = v {
-        return Ok(Err(imprecise(m, w, "dcf")?));
+/// `days`/365 as a number, `act365`'s year fraction (refcore's `dcf_q`). L §3.3.
+fn year_fraction(days: i64) -> Result<Value, Stop> {
+    let q = Num::int(days)
+        .checked_div(&Num::int(365))
+        .map_err(num_stop)?;
+    Ok(Value::Number(Number::plain(q, Unit::one())))
+}
+
+/// The days a date of `dcf` stands for: a day, a day period's day, a window's two ends
+/// (refcore's `m_as_day` under `lift`; tally 2.1.7 R3, F4). L §3.3, §4.4.
+fn dcf_ends(m: &Reality, v: &Value) -> Result<Vec<Day>, Stop> {
+    let v = single(v);
+    if let Value::Window(w) = v
+        && let (Value::Day(lo), Value::Day(hi)) = (&w.lo, &w.hi)
+    {
+        return Ok(vec![*lo, *hi]);
     }
     if let Value::Period(p) = v
         && p.kind() == PeriodKind::Day
     {
-        return Ok(Ok(p.start()));
+        return Ok(vec![p.start()]);
     }
     if let Value::Day(d) = v {
-        return Ok(Ok(*d));
+        return Ok(vec![*d]);
     }
     if *v == Value::None {
         return Err(refuse(Run::None, "a value is none here: dcf".to_owned()));

@@ -1,0 +1,51 @@
+model r6_reach
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.7, R6's reach (#145): next(K, d) where two movements share the first day: its definition, first(m in K over d ..) ties by m.day, is refused RUN-TIE, and so is next, its message naming the form as written (n_tie_next, n_tie_first)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+
+input late: date
+
+input d0: date
+
+input d1: date
+
+input d9: date
+
+move gift2: transfers
+  on late
+  leg cash from world to konto amount fee
+
+move gift: transfers
+  on late
+  leg cash from world to konto amount fee
+
+ask n_tie_next: next(transfers, d1)
+
+ask n_tie_first: first(t in transfers over d1 ..) ties by t.day
+
+
+
+
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  fee = ?"how much is the gift?"
+  late = 2026-06-10 "after the cut"
+  d0 = 2026-02-01 "the card"
+  d1 = 2026-03-02 "after the cut"
+  d9 = 2026-02-28 "the card"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "the card"

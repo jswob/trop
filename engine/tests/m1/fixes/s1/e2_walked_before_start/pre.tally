@@ -1,0 +1,22 @@
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-02-01
+  end 2026-03-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  anchor konto
+  stated[konto] = 40.00 PLN at 2026-01-05 end "s"
+  opening[konto] = 50.00 PLN at 2026-02-01 start "s"
+
+ask a: bal(konto, 2026-01-20)
+ask b: low(konto, 2026-01-20 .. 2026-02-15)
+ask c: bal(konto, 2026-02-15)
+ask d: bal(konto, 2026-01-05)

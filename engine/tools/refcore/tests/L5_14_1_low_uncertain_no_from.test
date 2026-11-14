@@ -1,0 +1,120 @@
+# L §5.14.1 low, L §5 a form defined by another (tally 2.1.7 R6, issue #145; #125): low(...) with uncertain
+# without from is min(bal(x, d) with uncertain for d ...): the uncertain gift counts, and the register says so.
+# 2.1.6's refcore dropped the clause (3 000.00 PLN both ends). (T's G8 lowu.)
+=== lowu.tally
+model l1
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-06-30
+  note "G8's low probes (invented): the plain form, the clauses, the refusals and holes, a def that leaves a move out"
+
+source card "probe card"
+
+unit PLN: currency minor 0.01
+
+kind promises: transfers uncertain
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input rent_amt: money PLN
+
+input rent_day: date
+
+input wage_amt: money PLN
+
+input wage_day: date
+
+input gift_amt: money PLN
+
+input gift_day: date
+
+input odd_amt: money PLN
+
+input a_day: date
+
+input b_day: date
+
+input top_day: date
+
+input odd_day: date
+
+def floor_ahead: money PLN = low(konto, a_day .. b_day) from a_day
+
+def top_up: money PLN = max(0 PLN, -floor_ahead)
+
+move rent: transfers
+  on rent_day
+  leg cash from konto to world amount rent_amt
+
+move wage: transfers
+  on wage_day
+  leg cash from world to konto amount wage_amt
+
+move gift: promises
+  on gift_day
+  leg cash from world to konto amount gift_amt
+
+move topup: transfers
+  on top_day
+  reads konto
+  leg cash from world to konto amount top_up
+
+move odd: transfers
+  on odd_day
+  leg cash from konto to world amount odd_amt
+
+ask p_plain: low(konto, 2026-01-01 .. 2026-03-31)
+
+ask p_from: low(konto, 2026-03-01 .. 2026-04-30) from 2026-03-01
+
+ask p_unc: low(konto, 2026-03-01 .. 2026-04-30) from 2026-03-01 with uncertain
+
+ask p_plain_unc: low(konto, 2026-03-01 .. 2026-04-30) with uncertain
+
+ask p_before: low(konto, 2026-02-01 .. 2026-04-30) from 2026-03-01
+
+ask p_prerun: low(konto, 2026-01-01 .. 2026-04-30) from 2025-12-01
+
+ask p_hole: low(konto, 2026-03-01 .. 2026-05-31) from 2026-03-01
+
+ask p_hole_short: low(konto, 2026-03-01 .. 2026-05-09) from 2026-03-01
+
+ask p_def: floor_ahead, top_up
+
+ask p_one: low(konto, 2026-04-15 .. 2026-04-15) from 2026-03-01
+
+ask p_bal: bal(konto, 2026-04-30) from 2026-03-01, bal(konto, 2026-04-30) from 2026-03-01 with uncertain
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  a_day = 2026-03-01 "the card"
+  b_day = 2026-04-30 "the card"
+  odd_day = 2026-05-10 "the card"
+  top_day = 2026-04-20 "the card"
+  gift_amt = 400.00 PLN "the card"
+  gift_day = 2026-03-20 "the card"
+  odd_amt = ?"what does the odd bill come to?" "the card"
+  opening[konto] = 1000.00 PLN at 2026-01-01 start "the card"
+  rent_amt = 2500.00 PLN "the card"
+  rent_day = 2026-03-10 "the card"
+  wage_amt = 3000.00 PLN "the card"
+  wage_day = 2026-04-10 "the card"
+
+ask p_u1: bal(konto, 2026-04-30) with uncertain, bal(konto, 2026-04-30)
+
+ask p_u2: low(konto, 2026-04-30 .. 2026-04-30) with uncertain, low(konto, 2026-04-30 .. 2026-04-30)
+
+ask p_arg: argmin(bal(konto, d) from 2026-03-01 for d in 2026-03-01 .. 2026-04-30 step 1 day) ties by d
+
+ask p_min: min(bal(konto, d) from 2026-03-01 with uncertain for d in 2026-03-01 .. 2026-04-30 step 1 day)
+=== expect p_u2
+p_u2: (3 400.00 PLN, 3 000.00 PLN)
+  left out: topup, 1 instances, first 2026-04-20
+  uncertain: gift
+  cut 2026-03-01
+warning: WARN-NEGATIVE konto is below zero from 2026-03-10

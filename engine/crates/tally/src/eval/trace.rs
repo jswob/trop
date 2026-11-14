@@ -111,6 +111,9 @@ pub(crate) struct Node {
     /// Whether a def cell's rules show: once its candidates are known (refcore's
     /// `eval_rules`, where it sets `rule_states`).
     pub shown: bool,
+    /// A def cell's def, by id, and its keys as its label writes them (refcore's `def_id`,
+    /// `keys`): what a long derivation folds by (E §10; tally 2.1.7 S4).
+    pub cell: Option<(String, String)>,
 }
 
 impl Node {
@@ -124,6 +127,7 @@ impl Node {
             children: Vec::new(),
             rules: BTreeMap::new(),
             shown: false,
+            cell: None,
         }
     }
 }
@@ -466,7 +470,15 @@ impl Engine {
         law: Option<Day>,
     ) -> Option<usize> {
         let trace = self.traced()?;
-        let at = trace.added(Node::new(Kind::Def(law), origin(def, keys)))?;
+        let label = origin(def, keys);
+        let written = label
+            .strip_prefix(def)
+            .and_then(|rest| rest.strip_prefix('['))
+            .and_then(|rest| rest.strip_suffix(']'))
+            .map_or_else(String::new, str::to_owned);
+        let mut node = Node::new(Kind::Def(law), label);
+        node.cell = Some((def.to_owned(), written));
+        let at = trace.added(node)?;
         trace.cells.insert(id.clone(), at);
         trace.open.push(at);
         Some(at)

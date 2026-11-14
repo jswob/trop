@@ -10,7 +10,7 @@
 //! doesn't see (`Unseen`) refuses nothing; each read of an input or a def is recorded with
 //! its role for the random cone (`Graph.rand_edges`).
 
-use super::check::{Checker, Files, ReadIn, Scope, Stands, VarDom};
+use super::check::{Checker, Files, ReadIn, Scope, Stands, VarDom, invariant};
 use super::exact::Under;
 use super::types::{Typed, converts, is_bool, num, numcls, refused, uerr, unit_of};
 use crate::base::Load;
@@ -236,7 +236,12 @@ pub(super) fn dist_whole(node: &Expr, place: &str) -> Result<(), Stop> {
 
 /// The index a random fact's `discrete` rows or rules range over, if they are all one
 /// index's (refcore's `discrete_index`); `LOAD-UNIT` for a mix. L §5.16.
-fn discrete_index(m: &Reality, target: &Node) -> Result<Option<String>, Stop> {
+///
+/// # Errors
+///
+/// `LOAD-UNIT` for a mix; `ENGINE-INVARIANT` for a `discrete` with no binding, which the
+/// parser refuses first.
+fn discrete_index(m: &Reality, files: &Files, target: &Node) -> Result<Option<String>, Stop> {
     let mut nodes: Vec<Option<&Expr>> = Vec::new();
     if target.kind == NodeKind::Def {
         if let Some(def) = m.defs.get(&target.id) {
@@ -256,18 +261,27 @@ fn discrete_index(m: &Reality, target: &Node) -> Result<Option<String>, Stop> {
             }
         }
     }
-    let mut over: BTreeSet<String> = BTreeSet::new();
+    // each domain's index, none for a list or a range, and its text as written (L §2.4
+    // Values, tally 2.1.7 R9)
+    let mut over: BTreeSet<Option<String>> = BTreeSet::new();
+    let mut shown: BTreeSet<String> = BTreeSet::new();
     let mut other = false;
     for node in nodes {
         if let Some(Expr::Dist(d)) = node.map(strip_to)
             && d.func == DistKind::Discrete
         {
-            let ix = match d.bind.as_ref().map(|b| &b.domain) {
-                Some(Written::Name { id, qual: None }) => id.clone(),
-                Some(Written::Name { .. } | Written::List(_) | Written::Range(_)) | None => {
-                    "None".to_owned()
-                }
+            // the parser gives every `discrete` its `for` binding, refusing one written
+            // without it (`dist`, PARSE)
+            let domain = &d
+                .bind
+                .as_ref()
+                .ok_or_else(|| invariant("a discrete with no binding".to_owned()))?
+                .domain;
+            let ix = match domain {
+                Written::Name { id, .. } => Some(id.clone()),
+                Written::List(_) | Written::Range(_) => None,
             };
+            shown.insert(super::texts::domain_text(domain));
             over.insert(ix);
         } else {
             other = true;
@@ -276,26 +290,50 @@ fn discrete_index(m: &Reality, target: &Node) -> Result<Option<String>, Stop> {
     let Some(first) = over.first().cloned() else {
         return Ok(None);
     };
-    if over.len() > 1 || other || over.contains("None") {
-        let names: Vec<String> = over.into_iter().collect();
-        let tail = if other {
-            " and other distributions"
-        } else {
-            ""
-        };
-        return Err(uerr(format!(
-            "random fact {} mixes sample types: discrete over {}{tail}",
-            target.id,
-            names.join(", ")
-        )));
+    if let (Some(ix), 1, false) = (first, over.len(), other) {
+        return Ok(Some(ix));
     }
-    Ok(Some(first))
+    let names: Vec<String> = shown.into_iter().collect();
+    let tail = if other {
+        " and other distributions"
+    } else {
+        ""
+    };
+    let message = format!(
+        "random fact {} mixes sample types: discrete over {}{tail}",
+        target.id,
+        names.join(", ")
+    );
+    Err(at_decl(m, files, target, uerr(message))?)
+}
+
+/// Refusal `stop` placed at the declaration of random fact `target`, its input's or its
+/// def's line (refcore's `info.decl.loc`). L §5.16, §8.3.
+fn at_decl(m: &Reality, files: &Files, target: &Node, stop: Stop) -> Result<Stop, Stop> {
+    let (word, line) = if target.kind == NodeKind::Def {
+        ("def", m.defs.get(&target.id).map(|def| def.decl.line))
+    } else {
+        (
+            "input",
+            m.inputs.get(&target.id).and_then(|input| input.line),
+        )
+    };
+    let Some(line) = line else {
+        return Ok(stop);
+    };
+    let scope = Scope::new(
+        target.clone(),
+        Stands::Decl,
+        files.get(word, &target.id)?,
+        line,
+    );
+    Ok(scope.place(stop))
 }
 
 /// The type of a random fact's sample: `num u`, or a key of the index its `discrete`
 /// ranges over (refcore's `sample_type`). L §5.16 Samples.
-pub(super) fn sample_type(m: &Reality, target: &Node, ty: &Ty) -> Typed {
-    if let Some(ix) = discrete_index(m, target)? {
+pub(super) fn sample_type(m: &Reality, files: &Files, target: &Node, ty: &Ty) -> Typed {
+    if let Some(ix) = discrete_index(m, files, target)? {
         return Ok(Ty::Key(ix));
     }
     Ok(num(unit_of(ty)?))
@@ -416,7 +454,7 @@ impl Checker {
     ) -> Typed {
         if read == SampleOf::AffineX {
             self.graph.rand_edge(&scope.item, target, ReadRole::Dist);
-            return sample_type(m, target, ty);
+            return sample_type(m, &self.files, target, ty);
         }
         let role = match scope.read_in {
             ReadIn::Query => ReadRole::Query,
@@ -427,7 +465,7 @@ impl Checker {
         if role == ReadRole::Dist {
             return Ok(ty.clone());
         }
-        sample_type(m, target, ty)
+        sample_type(m, &self.files, target, ty)
     }
 
     /// A plain read of an input or a def, recorded for the random cone (refcore's
@@ -483,7 +521,7 @@ impl Checker {
         for arg in &d.args {
             ts.push(self.expr(m, &scope.child(), arg, None, depth)?);
         }
-        let missing = || super::check::invariant(format!("{name} has fewer parameters"));
+        let missing = || invariant(format!("{name} has fewer parameters"));
         let first = ts.first().ok_or_else(missing)?;
         let fallback = if let Some(w) = &want {
             w.clone()
@@ -560,7 +598,7 @@ impl Checker {
     /// (refcore's `t_dist`, its discrete arm). L §5.16.
     fn discrete(&mut self, m: &Reality, scope: &Scope, d: &Dist, depth: u32) -> Typed {
         let (Some(bind), Some(term)) = (&d.bind, &d.term) else {
-            return Err(super::check::invariant(
+            return Err(invariant(
                 "a discrete distribution with no binding".to_owned(),
             ));
         };
@@ -622,7 +660,7 @@ impl Checker {
         }
         if matches!(xt, Ty::Dist(_))
             && let Some(target) = read_target(m, scope, x)
-            && let Some(ix) = discrete_index(m, &target)?
+            && let Some(ix) = discrete_index(m, &self.files, &target)?
         {
             xt = Ty::DistKeys(ix);
         }
@@ -757,9 +795,7 @@ impl Checker {
         depth: u32,
     ) -> Result<(), Stop> {
         let Some(level) = &q.level else {
-            return Err(super::check::invariant(
-                "a quantile with no level".to_owned(),
-            ));
+            return Err(invariant("a quantile with no level".to_owned()));
         };
         let mut levelled = scope.child();
         levelled.allow_lit = scope.stands == Stands::Ask;

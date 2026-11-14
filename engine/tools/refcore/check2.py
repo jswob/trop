@@ -97,6 +97,7 @@ def m_discrete_index(self, kind, info):
             if isinstance(v, tuple) and v and v[0] == 'node':
                 nodes.append(v[1])
     ixs = set()
+    shown = set()
     other = False
     for nd in nodes:
         nd = strip(nd)
@@ -105,6 +106,8 @@ def m_discrete_index(self, kind, info):
         if nd.k == 'dist' and nd.fn == 'discrete':
             d = nd.bind.dom
             ixs.add(getattr(d, 'id', None))
+            # its domain as the text writes it (L §2.4 Values, tally 2.1.7, R9)
+            shown.add(getattr(d, "id", None) or _c()._txt(d))
         else:
             other = True
     if not ixs:
@@ -113,7 +116,7 @@ def m_discrete_index(self, kind, info):
         # L §5.16 (round 12): "Its rows and rules give samples of one type, quantities of unit U or keys of one index
         # (each a discrete over it); a mix is refused (LOAD-UNIT)"
         raise LoadError('LOAD-UNIT', 'random fact %s mixes sample types: discrete over %s%s' % (
-            info.id, ', '.join(sorted(str(x) for x in ixs)), ' and other distributions' if other else ''),
+            info.id, ', '.join(sorted(shown)), ' and other distributions' if other else ''),
             getattr(getattr(info, 'decl', None), 'loc', None))
     return list(ixs)[0]
 

@@ -3,10 +3,10 @@ model header_order
   on 2026-01-01
   start 2026-01-01
   end 2026-12-31
-  use zeta = "members/zeta" sha256 "fd28f024b84f6517db3c67b3d07c27277c91b238417ec994f6c379224e247f8d"
-  use alpha = "members/alpha" sha256 "b940511eec41fcc359d3fffd7139f3f59095d69554717fbabf92eb11da425bf2"
+  use zeta = "members/zeta" sha256 "e998309b16278bdeb1cde806dde80d30867210abbb961e59fef115c68ad5ea37"
+  use alpha = "members/alpha" sha256 "1cdd10e31394776e09d0ef642a17325399b8988d501d6fcb45895630d2fb97ee"
   same zeta.konto = alpha.konto
-  same alpha.cash = zeta.cash
+  same alpha.till = zeta.till
   note "L §2.4 Header first: use lines by name, same lines by left side"
 
 source s "s"

@@ -17,7 +17,7 @@ use crate::hole::Hole;
 use crate::load::index_key_of;
 use crate::model::{BindInfo, Domain, IndexInfo, KeyVal, Reality, Value};
 use crate::syntax::{Lit, Stop};
-use crate::time::{Day, PeriodKind};
+use crate::time::{Day, Period, PeriodKind};
 
 /// A key a read is given: a value, or a key literal its position resolves (L §2.5).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -87,9 +87,7 @@ impl Engine {
                     self.range_key(m, bind, at_range, (&earlier, ctx))?
                 }
                 Given::Value(v) => Ok(to_key(m, item, &v, &bind.domain)?),
-                Given::Literal(lit) => {
-                    Ok(literal_key(m, &lit, &bind.domain)?.ok_or_else(lacks_at_run)?)
-                }
+                Given::Literal(lit) => Ok(literal_at(m, item, &lit, &bind.domain)?),
             };
             let key = match made {
                 Ok(key) => key,
@@ -113,6 +111,61 @@ impl Engine {
             return Ok(Err(hole));
         }
         Ok(Ok(keys))
+    }
+}
+
+/// A key literal at a read's key of `domain`: the key it names; at an index of periods, a
+/// date or a period of another granularity, or a four-digit year at an index of days, months
+/// or quarters, is read as its value, the key whose period holds it, `RUN-KEY` outside them
+/// (L §4.6 Reading at a date; refcore's `key_pos`, its `key_conv`). Any other literal the
+/// domain lacks, load refuses first (`LOAD-KEY`).
+///
+/// # Errors
+///
+/// `RUN-KEY`; an invariant for a literal load refuses.
+fn literal_at(m: &Reality, item: &str, lit: &Lit, domain: &Domain) -> Result<KeyVal, Stop> {
+    if let Some(key) = literal_key(m, lit, domain)? {
+        return Ok(key);
+    }
+    let Domain::Index(id) = domain else {
+        return Err(lacks_at_run());
+    };
+    let Some(ix) = m.indexes.get(id) else {
+        return Err(lacks_at_run());
+    };
+    let Some(value) = held_value(ix, lit)? else {
+        return Err(lacks_at_run());
+    };
+    index_key(m, item, ix, &value)
+}
+
+/// The value a date, a period or a four-digit year written at a key of index `ix` of periods
+/// stands for, where it is read as the key holding it (L §4.6); none at any other index or for
+/// any other literal.
+fn held_value(ix: &IndexInfo, lit: &Lit) -> Result<Option<Value>, Stop> {
+    let Some(kind) = ix.period else {
+        return Ok(None);
+    };
+    match lit {
+        Lit::Day(day) => Ok(Some(Value::Day(*day))),
+        Lit::Month(year, month) => Ok(Period::month(*year, *month).map(Value::Period)),
+        Lit::Quarter(year, quarter) => Ok(Period::quarter(*year, *quarter).map(Value::Period)),
+        Lit::Num(n) if n.four && n.whole && n.unit.is_none() && kind != PeriodKind::Year => {
+            let year = n
+                .value
+                .to_i64()
+                .and_then(|y| u16::try_from(y).ok())
+                .ok_or_else(|| invariant("a four-digit year past 16 bits"))?;
+            Ok(Period::year(year).map(Value::Period))
+        }
+        Lit::Num(_)
+        | Lit::MonthDay(..)
+        | Lit::Key(_)
+        | Lit::Name(_)
+        | Lit::Cur(_)
+        | Lit::Bool(_)
+        | Lit::Inf { .. }
+        | Lit::Nominal(_) => Ok(None),
     }
 }
 

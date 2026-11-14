@@ -10,7 +10,7 @@ Installed as Engine methods (`m_<name>` -> `<name>`), as eval2 is.
 import datetime
 
 from .dates import Period, ONE_DAY, END, past_days
-from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, RandomLine
+from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, RandomLine, at_run
 from .model import visible, row_known_sid, known_first, PlaceThing, _kv, key_text, in_world, _WSET
 from .values import Num, Money, Hole, Thing, Mv, Iv, Rec, Text, NONE, NEVER, CURRENCIES, fmt, vkey
 
@@ -35,7 +35,8 @@ def install(E):
 
 
 def refuse(code, msg):
-    return Refusal(code, msg)
+    # L §8.4 R-load (R5): a check met at run is RUN-* in load's words, as in evaluate, mreads and resid (SR-B1)
+    return at_run(code, msg)
 
 
 def merge(*vals):
@@ -464,12 +465,17 @@ def instant_text(r):
     if ins[0] == 'after':
         from .check import _txt
         return 'after %s' % _txt(ins[1])
+    if ins[1] is None:
+        # a reading at a bare day, `at D` (L §4.6 Readings): its instant is the day (L §2.5; tally 2.1.7 B6, R9, T's
+        # SR-12); 2.1.7's first refcore printed `None` after it
+        return ins[0].isoformat()
     return '%s %s' % (ins[0].isoformat(), ins[1])
 
 
 def m_readings(self, ctx):
     """The balance readings the cut sees: (input id, place, unit, row), each restated reading replaced (L §5.19,
     §4.6)."""
+    from .loader import row_layer
     key = ('rd', self.wkey(ctx))
     hit = self.run_cache.get(key)
     if hit is not None:
@@ -494,7 +500,9 @@ def m_readings(self, ctx):
             u = unit_of_value(r.val) if isinstance(r.val, Num) else m.place_unit(m.things[place])
             k = (iid, place, instant_text(r), u, row_owner(m, r))
             cur = keep.get(k)
-            if cur is None or known_first(r.known) > known_first(cur.known):
+            # L §4.6 steps 2 and 3 (tally 2.1.7 R4, #137): a scenario's reading stands above its base's whatever
+            # their known dates; inside one layer the latest known restates
+            if cur is None or (row_layer(m, r), known_first(r.known)) > (row_layer(m, cur), known_first(cur.known)):
                 keep[k] = r
     # a place stated same in a joint model: its readings from the members are read together, a joint model's own
     # row settles them, and two that disagree are a hole naming both rows (L §6.1, HOLE-SAME)
@@ -737,7 +745,7 @@ def m_insts_of_tuples(self, mi, tuples, tctx, upto=None):
                 if inst is None:
                     continue
                 if not mi.decision and inst.cut is not None and inst.err is None:
-                    self.inv5(inst, tctx)
+                    self.inv5(inst, tctx, upto)
             inst.coll.merge(c)
             out.append(inst)
         for inst in out:
@@ -806,12 +814,14 @@ def m_check_schedule(self, mi, insts):
                     mi.decl.loc)
 
 
-def m_inv5(self, inst, tctx):
+def m_inv5(self, inst, tctx, upto=None):
     """E §9 invariant 5: a plan instance's A0 is the same under every K class that books it at the same cut.  Kept
-    across the asks of a run, per timeline apart from its cut."""
+    across the asks of a run, per timeline apart from its cut, and per walk limit: a walk up to a day (m_prefix_walk)
+    is the whole walk's prefix, not a second walk of the cut, so its bookings meet only its own (tally 2.1.7 R1: a
+    read of day d reads the walk's prefix through d; G10, G16)."""
     reg = self.m.__dict__.setdefault('_inv5', {})
     wk = self.wkey(tctx)
-    k = (inst.id, inst.cut, tuple(repr(q.key()) for q in wk[1])) + tuple(repr(x) for x in wk[2:])
+    k = (inst.id, inst.cut, upto, tuple(repr(q.key()) for q in wk[1])) + tuple(repr(x) for x in wk[2:])
     v = body_key((inst.exists, inst.legs, None, None, None))
     old = reg.get(k)
     if old is None:
@@ -1085,7 +1095,8 @@ def m_leg_unit_static(self, d, frm, to):
 
 
 def m_leg_amount(self, inst, ln, d, amt, frm, to):
-    """A leg's amount in its unit: places of another unit are LOAD-UNIT (L §5.10), a negative amount RUN-NEG."""
+    """A leg's amount in its unit: places of another unit are LOAD-UNIT's check, met at run so RUN-DOMAIN in its
+    words (L §5.10, §8.4 R-load), a negative amount RUN-NEG."""
     m = self.m
     units = set()
     for p in (frm, to):
@@ -1101,21 +1112,21 @@ def m_leg_amount(self, inst, ln, d, amt, frm, to):
         if u is None and amt.q == 0 and len(units) == 1:
             u = list(units)[0]
         if u is None:
-            raise LoadError('LOAD-UNIT', 'the amount of leg %s of %s (%s) is in no unit of a place' % (
+            raise refuse('LOAD-UNIT', 'the amount of leg %s of %s (%s) is in no unit of a place' % (
                 ln.name, inst.id, fmt(amt)))
         if d.unit != 'any' and d.unit in m.kinds and m.unit_kind_keys.get(u) != d.unit and \
                 not (d.unit == 'currencies' and u in CURRENCIES):
-            raise LoadError('LOAD-UNIT', 'the amount of leg %s of %s is in %s, not a unit of %s' % (
+            raise refuse('LOAD-UNIT', 'the amount of leg %s of %s is in %s, not a unit of %s' % (
                 ln.name, inst.id, u, d.unit))
     if units and units != {u}:
-        raise LoadError('LOAD-UNIT', 'leg %s of %s moves %s between places of %s' % (
+        raise refuse('LOAD-UNIT', 'leg %s of %s moves %s between places of %s' % (
             ln.name, inst.id, u, ', '.join(sorted(units))))
     if au is not None and au != u:
-        raise LoadError('LOAD-UNIT', 'the amount of leg %s of %s is in %s, not %s' % (ln.name, inst.id, au, u))
+        raise refuse('LOAD-UNIT', 'the amount of leg %s of %s is in %s, not %s' % (ln.name, inst.id, au, u))
     if amt.q < 0:
         raise refuse('RUN-NEG', 'negative amount %s for leg %s of %s' % (fmt(amt), ln.name, inst.id))
     if u in CURRENCIES and (amt.q / CURRENCIES[u]).denominator != 1:
-        raise LoadError('LOAD-UNIT', 'the amount of leg %s of %s (%s) is not money of %s: round it' % (
+        raise refuse('LOAD-UNIT', 'the amount of leg %s of %s (%s) is not money of %s: round it' % (
             ln.name, inst.id, fmt(amt), u))
     return qty(amt.q, u), u
 
@@ -1140,7 +1151,17 @@ def m_decision_instances(self, mi, ctx):
     tuples = self.move_tuples(mi, tctx)
     out = []
     for env, keys, st, c in tuples:
-        if isinstance(st, tuple):
+        if isinstance(st, tuple) and st[0] == 'refused':
+            # tally 2.1.7 R2 (#104): a refusal is the instance's status, not a way of reading it: an instance its
+            # key's `where` refuses is kept, with its day, and refused for every read of it (L §8, §8.4), as a plan's
+            # is (insts_of_tuples); the walk refuses the places its legs give from its day (Walk dec_bad)
+            if None in keys:
+                raise st[1]
+            inst = self.eval_inst(mi, env, keys, tctx)
+            if inst is None:
+                continue
+            inst.err = st[1]
+        elif isinstance(st, tuple):
             inst = Inst(mi, keys, env)
             inst.day = st[1]
             inst.exists = st[1]
@@ -1600,10 +1621,10 @@ def m_adjust_move_compute(self, mi, ctx):
                 j = self.eval_inst(mi, i.env, i.keys, tctx, at_cut=c)
                 if j is None:
                     continue
-                if j.err is not None and hole0:
-                    # a refused version doesn't answer a hole movement, which stays the hole it is (E §5 step 1)
-                    continue
                 if j.err is not None:
+                    # tally 2.1.7 R2 (#94): a version answers a hole movement with a value or with a refusal (E §5
+                    # step 1; L §8: a refusal outranks a hole), so a refused re-measurement of a hole booking answers
+                    # it with its refusal, from that version's known, as it does a booking that had a value
                     # re-measured and refused (its day, `when` or a place): each leg's adjustment is refused, and so
                     # is the next step's, measured against it; tally 2.1.1 skipped the step
                     for lg in self.step_legs(i, prev, j):
@@ -1835,7 +1856,8 @@ def settle_sign(lg, a, s):
     from or into its to", -amount "when it runs the other way, out of its to or into its from"; "a settlement leg that
     touches neither of the adjusted leg's places is refused (RUN-RECORD)"."""
     if lg.unit is not None and a.leg.unit is not None and lg.unit != a.leg.unit:
-        raise LoadError('LOAD-UNIT', 'settlement %s of %s is in %s, not %s' % (s.id, a.id, lg.unit, a.leg.unit))
+        raise LoadError('LOAD-UNIT', 'settlement %s of %s is in %s, not %s' % (s.id, a.id, lg.unit, a.leg.unit),
+                        getattr(getattr(s, 'row', None), 'loc', None))
     if getattr(a, 'moved', False):
         # L §5.14.3 How a settlement leg counts: "For a change of places, the leg's places are both those it had
         # before V and those V gives it, so a settlement leg between two of its `to` places, or between two of its

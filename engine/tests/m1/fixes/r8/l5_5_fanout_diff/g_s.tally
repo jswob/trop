@@ -1,0 +1,9 @@
+scenario s over g
+  tally 2
+  from 2026-01-01
+
+version cheaper
+  cite s
+  governs 2026-01-01..
+  known 2026-01-01
+  replace p = 4.00 PLN "a cheaper card"

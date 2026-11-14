@@ -79,7 +79,28 @@ impl Loader {
             info.parts.clone_from(&decl.parts);
             self.m.kinds.push(&mut self.m.symbols, &decl.id, info)?;
         }
-        self.link_kinds(&subs)
+        self.link_kinds(&subs)?;
+        self.place_kinds_whole()
+    }
+
+    /// Every declared place kind states its unit and its sign rule, or takes them from the
+    /// place kind it is a subkind of; the root `places` states neither, so a subkind of it
+    /// whose chain states no unit, or no sign, is refused at its line, whatever the asks
+    /// (refcore's `build_kinds`, P44). L §5.7, §8.3.
+    fn place_kinds_whole(&self) -> Result<(), Stop> {
+        for (file, section) in &self.sections {
+            let Section::Kind(decl) = section else {
+                continue;
+            };
+            if self.m.kinds.get(&decl.id).map(|k| k.spec) != Some(KindSpec::Place) {
+                continue;
+            }
+            if self.m.kind_unit(&decl.id).is_none() || self.m.kind_sign(&decl.id).is_none() {
+                let message = format!("place kind {} has no unit or sign rule", decl.id);
+                return Err(refuse(Load::PlaceKind, message, file, decl.line));
+            }
+        }
+        Ok(())
     }
 
     /// Children, the check that no kind is its own subkind, and what subkinds inherit.
@@ -369,7 +390,13 @@ impl Loader {
                 line,
             )),
             KindSpec::Place => {
-                let unit = self.m.kind_unit(target).unwrap_or("None");
+                // a place kind's chain states its unit: load refused one that doesn't first
+                // (`LOAD-PLACEKIND`, `place_kinds_whole`; P44)
+                let unit = self.m.kind_unit(target).ok_or_else(|| {
+                    invariant(format!(
+                        "an entry into kind {target} with no unit: load refuses it first (LOAD-PLACEKIND)"
+                    ))
+                })?;
                 if unit == "one" && enter.unit.is_none() {
                     return Err(refuse(
                         Load::PlaceKind,

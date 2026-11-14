@@ -217,7 +217,10 @@ impl Checker {
                 }
                 self.proj(m, scope, &bal.proj, target, depth)?;
             } else if day.is_none() {
-                self.graph.balnow.insert(scope.item.clone());
+                self.graph
+                    .balnow
+                    .entry(scope.item.clone())
+                    .or_insert_with(|| scope.file_line());
                 self.mark(&scope.item, Mark::BalNow, target);
             } else {
                 self.mark(&scope.item, Mark::Bal, target);
@@ -497,7 +500,7 @@ impl Checker {
                     "cannot parse: * stands only in a pin".to_owned(),
                 ));
             };
-            self.key_pos(m, scope, kn, &bind.domain, depth)?;
+            self.bind_key(m, scope, kn, bind, depth)?;
         }
         let mut legs = m.kind_legs(&mv.kind);
         if let Some(name) = leg {
@@ -604,8 +607,8 @@ impl Checker {
         ))
     }
 
-    /// `gap(x, d)`: a place and a date, read as a balance; the place's unit (refcore's
-    /// `m_c_gap`). L §5.19.
+    /// `gap(x, d)`: a place and a date, read as a balance, a running read of x; the place's
+    /// unit (refcore's `m_c_gap`). L §5.19, §5.14.1.
     pub(super) fn gap(&mut self, m: &Reality, scope: &Scope, args: &[Expr], depth: u32) -> Typed {
         let [place, day] = args else {
             return Err(refused(
@@ -619,6 +622,10 @@ impl Checker {
             return Err(uerr(format!("gap(x, d): d is {}, not a date", dt.show())));
         }
         self.edge(&scope.item, Node::balances(), Rel::Bal);
+        // a balance read, so a running read where a movement reaches it (L §5.19, §5.14.1;
+        // tally 2.1.7 R6)
+        let target = place_target(m, scope, place)?;
+        self.mark(&scope.item, Mark::Bal, target);
         place_type_unit(m, scope, &t, place)
     }
 
@@ -669,8 +676,9 @@ impl Checker {
         Ok(Ty::Record(fields))
     }
 
-    /// `next(K, d)`: an event kind and a date; every move of K or a subkind read (refcore's
-    /// `m_c_next`). L §5.14.1.
+    /// `next(K, d)`: an event kind and a date; every move of K or a subkind read, a
+    /// decision's a running read, as its definition's binding reads them (refcore's
+    /// `m_c_next`). L §5 A form defined by another, §5.14.1.
     pub(super) fn next(&mut self, m: &Reality, scope: &Scope, args: &[Expr], depth: u32) -> Typed {
         let [kind, day] = args else {
             return Err(refused(
@@ -695,12 +703,7 @@ impl Checker {
         if !is_date(m, &dt) {
             return Err(uerr(format!("next(K, d): d is {}, not a date", dt.show())));
         }
-        let sub = m.subtree(&kid);
-        for (move_id, mv) in m.moves.entries() {
-            if sub.contains(&mv.kind) {
-                self.edge(&scope.item, Node::new(NodeKind::Move, move_id), Rel::Next);
-            }
-        }
+        self.kind_movements(m, scope, &kid, &Rel::Next);
         Ok(Ty::Key(kid))
     }
 

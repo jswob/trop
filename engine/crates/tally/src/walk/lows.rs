@@ -516,7 +516,7 @@ struct Gathered {
     legs: Vec<(Day, Num, Collected)>,
     /// Each move with instances outside the run: how many, and the first day (refcore's
     /// `note_leftout`).
-    outside: BTreeMap<String, (u32, Option<Day>)>,
+    outside: BTreeMap<String, (u32, Dated)>,
     /// The moves outside the run with an instance whose leg touches x.
     touching: BTreeSet<String>,
 }
@@ -651,6 +651,9 @@ impl Engine {
                     count_left_out(&mut got.tree, mv, inst);
                 } else if mv.decision {
                     judge_decision(&mut got.tree, inst);
+                } else if inst.status == Status::None {
+                    let places = self.decided_places(m, mv, inst, cut)?;
+                    got.decided(inst, (place, unit), &places);
                 } else {
                     got.judge_plan(m, (place, unit), (cut, world), inst)?;
                 }
@@ -689,6 +692,21 @@ impl Gathered {
             | Status::Uncertain => {}
         }
         Ok(())
+    }
+
+    /// An instance that doesn't exist (a false `when` or key `where`): the reads that decided
+    /// it carried at x from its day, where a leg gives x, a position that moves nothing
+    /// (refcore's `note_none`). L §8.2 One read set (tally 2.1.7 R7).
+    fn decided(&mut self, inst: &Inst, (place, unit): (&str, &str), places: &[(String, String)]) {
+        let Some(d) = inst.day.as_ref().and_then(Dated::day) else {
+            return;
+        };
+        if places
+            .iter()
+            .any(|(p, u)| p == place && (u == unit || u == super::state::ALL))
+        {
+            self.legs.push((d, Num::zero(), inst.coll.clone()));
+        }
     }
 
     /// An instance outside the run: counted with its move's, which keeps a `left out:` entry
@@ -815,10 +833,9 @@ impl Gathered {
         }
         for (mid, (n, first)) in &self.outside {
             if self.touching.contains(mid) {
-                let first = first.map_or_else(|| "None".to_owned(), Day::text);
                 tree.left_out.push(Entry {
                     word: "left out",
-                    text: format!("{mid}, {n} instances, first {first}"),
+                    text: format!("{mid}, {n} instances, first {}", first.text()),
                     figure: String::new(),
                 });
             }

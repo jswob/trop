@@ -72,7 +72,17 @@ impl Loader {
                     line,
                 ));
             }
-            let unit = self.m.kind_unit(&kind_id).unwrap_or("None").to_owned();
+            // a leaf place kind's chain states its unit: load refused one that doesn't
+            // (`LOAD-PLACEKIND`, P44), and the root `places` has subkinds (`LOAD-LEAF` above)
+            let unit = self
+                .m
+                .kind_unit(&kind_id)
+                .ok_or_else(|| {
+                    super::check::invariant(format!(
+                        "place {id} of kind {kind_id} with no unit: load refuses it first (LOAD-PLACEKIND)"
+                    ))
+                })?
+                .to_owned();
             if unit == "one" && decl.unit.is_none() {
                 return Err(refuse(
                     Load::PlaceKind,

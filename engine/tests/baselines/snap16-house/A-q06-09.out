@@ -44,6 +44,8 @@ a09 (m = 2025-11) [px_round = *]: (2025-11-17, 2 677.71 DUK, 2 677.71 DUK, 0.00 
   anchor: joint 2025-11-01 start, stated 12 043.60 DUK, difference 0.00 DUK
   law date 2026-01-15, cut 2026-01-15
 a09 (m = 2025-12) [px_round = *]: (2025-12-15, 1 355.58 DUK, 1 355.58 DUK, 0.00 DUK, 1 300.00 DUK, -55.58 DUK)
+  assumed: A-D15 says by the 10th, not the day; the 10th is taken, on the last business day before it where it isn't one (payday_dom[sio, 2025-12])
+  assumed: the records end on 2025-12-31 (story); the walk books the model's own movements from the next day (walk_from)
   anchor: joint 2025-12-01 start, stated 11 405.35 DUK, difference 0.00 DUK
   law date 2026-01-15, cut 2026-01-15
 a09_steps (m = 2025-01) [px_round = *]: (2025-01-15, 8 569.17 DUK, 5 119.99 DUK, 3 411.72 DUK, 9 531.71 DUK)
@@ -80,6 +82,8 @@ a09_steps (m = 2025-11) [px_round = *]: (2025-11-17, 11 397.14 DUK, 4 739.99 DUK
   anchor: joint 2025-11-01 start, stated 12 043.60 DUK, difference 0.00 DUK
   law date 2026-01-15, cut 2026-01-15
 a09_steps (m = 2025-12) [px_round = *]: (2025-12-15, 9 938.03 DUK, 4 739.99 DUK, 2 842.46 DUK, 8 582.45 DUK)
+  assumed: A-D15 says by the 10th, not the day; the 10th is taken, on the last business day before it where it isn't one (payday_dom[sio, 2025-12])
+  assumed: the records end on 2025-12-31 (story); the walk books the model's own movements from the next day (walk_from)
   anchor: joint 2025-12-01 start, stated 11 405.35 DUK, difference 0.00 DUK
   law date 2026-01-15, cut 2026-01-15
 

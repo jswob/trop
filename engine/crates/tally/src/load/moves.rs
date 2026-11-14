@@ -10,13 +10,14 @@
 //! and the settlements; the settlements are checked after every other check of the walk, as
 //! refcore meets them after load; a type load doesn't see refuses nothing.
 
-use super::check::{Checker, DayRead, Scope};
+use super::check::{Checker, DayRead, LegEnds, Scope};
+use super::overlap::at_obs;
 use super::reads::is_place_type;
 use super::same::instance_text;
 use super::targets::literal_place;
 use super::texts::{children, text};
 use super::types::{Typed, numcls, refused, uerr, unit_type};
-use crate::base::{Code, Load, Refusal};
+use crate::base::Load;
 use crate::model::{Fulfils, MoveInfo, NameKind, Reality, Ty};
 use crate::syntax::{AddOp, Bal, Expr, Leg, Lit, Stop};
 use std::collections::{BTreeMap, BTreeSet};
@@ -36,6 +37,7 @@ impl Checker {
         let places = Ty::Key("places".to_owned());
         let assets = m.subtree("assets");
         let mut ends: Vec<String> = Vec::new();
+        let mut seen = Vec::new();
         for (side, end) in [("from", &leg.from), ("to", &leg.to)] {
             let t = self.expr(m, scope, end, Some(&places), 0)?;
             if matches!(t, Ty::Hole) {
@@ -62,8 +64,15 @@ impl Checker {
                     format!("a leg to or from an asset ({} of {})", leg.name, mv.id),
                 )));
             }
+            seen.push((thing.clone(), t));
             ends.extend(thing);
         }
+        let leg_ends = LegEnds {
+            unit: unit.to_owned(),
+            ends: seen,
+        };
+        self.leg_ends
+            .insert((mv.id.clone(), leg.name.clone()), leg_ends);
         let mut units = BTreeSet::new();
         for name in &ends {
             if let Some(held) = m.things.get(name).and_then(|thing| m.place_unit(thing))
@@ -104,6 +113,8 @@ impl Checker {
         let what = format!("the amount of leg {} of {}", leg.name, mv.id);
         let expect = (!matches!(lt, Ty::Dyn) && !unit_kind).then_some(&lt);
         let t = self.expr(m, scope, &leg.amount, expect, 0)?;
+        self.leg_amounts
+            .insert((mv.id.clone(), leg.name.clone()), t.clone());
         if unit_kind && !unit_kind_amount(m, unit, &t) {
             return Err(scope.place(uerr(format!(
                 "{what} is {}, not a unit of {unit}",
@@ -238,7 +249,7 @@ fn later_day(day: &Expr, on: &str) -> bool {
 ///
 /// # Errors
 ///
-/// That refusal, with no place, as refcore prints it.
+/// That refusal, at the observed row's file and line, as every load refusal (L §8.3).
 pub(super) fn settlements(
     m: &Reality,
     leg_types: &BTreeMap<(String, String), Ty>,
@@ -258,14 +269,12 @@ pub(super) fn settlements(
                 continue;
             };
             let iid = instance_text(mid, keys);
-            return Err(Stop::Refused(Refusal::new(
-                Code::Load(Load::Unit),
-                format!(
-                    "settlement {} of adjustments[{iid}.{leg}, {vid}] is in {}, not {adjusted}",
-                    obs.sid(),
-                    settling.unit
-                ),
-            )));
+            let message = format!(
+                "settlement {} of adjustments[{iid}.{leg}, {vid}] is in {}, not {adjusted}",
+                obs.sid(),
+                settling.unit
+            );
+            return Err(at_obs(m, obs, Load::Unit, message)?);
         }
     }
     Ok(())

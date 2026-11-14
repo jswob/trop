@@ -1,0 +1,12 @@
+scenario t over hh
+  tally 2
+  from 2027-01-01
+
+version vt
+  cite act
+  governs 2027..
+  known 2026-12-01
+  rate: [0, 10) = 350.00 PLN "under 10"
+  rate: [10, 18) = 150.00 PLN "10 to 17"
+
+ask qt: rate(age) in t law 2027-06-01

@@ -1,0 +1,72 @@
+# L §5.10 Value, §8.4 (tally 2.1.7 R5, issue #144; #130a): a price keyed by unit is a num CUR/u in the
+# value's own currency; fxs, a num PLN/u, for a value asked in USD is refused at load, as the unkeyed forms are.
+# 2.1.6's refcore printed a PLN figure labelled USD (4 250 USD). (T's G8 vectors keyed, keyed_n.)
+=== keyed.tally
+model keyed
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "a price keyed by unit in another currency (invented): G8 fix review NB1"
+
+source card "probe card"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+unit USD: currency minor 0.01
+
+kind safes: place any signed
+
+place eur_acc: accounts EUR lives 2026-01-01..
+
+place usd_acc: accounts USD lives 2026-01-01..
+
+place safe: safes lives 2026-01-01..
+
+place market: outside lives 2026-01-01..
+
+input fxu[u in currencies]: num PLN/u reading
+
+input fxs[u in currencies]: num PLN/u
+
+input put_day: date
+
+input amt_eur: money EUR
+
+input amt_pln: money PLN
+
+def fxd[u in currencies]: num PLN/u = fxs[u]
+
+move put_eur: transfers
+  on put_day
+  leg cash from market to safe amount amt_eur
+
+move put_pln: transfers
+  on put_day
+  leg cash from market to safe amount amt_pln
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  put_day = 2026-02-20 "the card"
+  amt_eur = 200.00 EUR "the card"
+  amt_pln = 300.00 PLN "the card"
+  fxs[EUR] = 4.25 PLN/EUR "the card"
+  opening[eur_acc] = 1000.00 EUR at 2026-01-01 start "the card"
+  opening[usd_acc] = 50.00 USD at 2026-01-01 start "the card"
+
+version readings_2026
+  cite card
+  governs 2026-01..2026-12
+  known 2026-01-01
+  fxu[EUR] = 4.30 PLN/EUR at 2026-03-01 "quoted"
+=== keyed_n.tally
+part asks_n
+  tally 2
+
+ask n_name: value(eur_acc, 2026-03-31) in USD by fxs
+=== expect
+refused: LOAD-UNIT value by fxs: the price is num PLN/$u, not num USD/u ...

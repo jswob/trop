@@ -60,6 +60,14 @@ def Int(n):
     return Num(Fraction(n), (), isint=True)
 
 
+def range_key(v):
+    """A key at a position keyed by a stepped range is the value of the range's type it equals (L §2.5, tally 2.1.7,
+    B1; F19): a number by its value, so a row at 2.0 and one at 2 are one key, and 2.0 prints 2."""
+    if isinstance(v, Num) and not v.money and v.enc is None:
+        return Num(v.q, v.u, isint=(v.q.denominator == 1 and not v.u))
+    return v
+
+
 def Money(q, cur):
     return Num(Fraction(q), ((cur, 1),), money=True)
 
@@ -190,15 +198,20 @@ NEVER = Special('never')
 class Iv:
     """An interval of ordered values from a window (L §4.4).  `days` is the
     set of a one_of window; `src` names the window for a question; `origin`
-    identifies the read it came from (a value compared with itself is decided)."""
-    __slots__ = ('lo', 'hi', 'days', 'src', 'origin')
+    is the read it came from, which its questions name; `name` is the unknown
+    day it is (tally 2.1.7 R3, L §4.4): set by a read (an input's row, a def's
+    cell, a calendar's added entry), kept by a copy, None for a computed value,
+    so only a copy is the same unknown (a window compared with its own name is
+    decided)."""
+    __slots__ = ('lo', 'hi', 'days', 'src', 'origin', 'name')
 
-    def __init__(self, lo, hi, days=None, src=None, origin=None):
+    def __init__(self, lo, hi, days=None, src=None, origin=None, name=None):
         self.lo = lo
         self.hi = hi
         self.days = days
         self.src = src
         self.origin = origin
+        self.name = name
 
     def key(self):
         return ('iv', vkey(self.lo), vkey(self.hi), tuple(sorted(self.days)) if self.days else None)

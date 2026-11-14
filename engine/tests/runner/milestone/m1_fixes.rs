@@ -17,7 +17,7 @@ mod tests {
     use tally_runner::m1::{SPEC, VECTORS};
 
     /// The groups this target tests, one `#[test]` each.
-    const GROUPS: [&str; 16] = [
+    const GROUPS: [&str; 28] = [
         "fixes-g1",
         "fixes-g2",
         "fixes-g3",
@@ -34,6 +34,18 @@ mod tests {
         "fixes-g14",
         "fixes-open",
         "fixes-gate8",
+        "fixes-r1",
+        "fixes-r2",
+        "fixes-r3",
+        "fixes-r4",
+        "fixes-r5",
+        "fixes-r6",
+        "fixes-r7",
+        "fixes-r8",
+        "fixes-r9",
+        "fixes-r10",
+        "fixes-b",
+        "fixes-s",
     ];
 
     /// Runs every vector of `group` whose place in the group is `part` modulo `parts` (a
@@ -498,6 +510,90 @@ mod tests {
     #[test]
     fn m1_fixes_gate8_survivors() {
         group_holds("fixes-gate8", (0, 1));
+    }
+
+    /// tally 2.1.7's R1, what a result reads (L §8; #140): each item a vector named by its rule (`m1/fixes/r1/`, most from refcore's
+    /// own test of the item), a result computed from the reads its definition makes, in its order: `first`/`last` stop at their match, a tie-break term is read only among the tied, a failed walk refuses only reads of its day or later, the walk up to a day gives its prefix (invariant 5, a refused leg, a warning); and its reach: an `if`'s untaken branch, a beaten rule. Expected bytes are refcore's.
+    #[test]
+    fn m1_fixes_tally_217_r1() {
+        group_holds("fixes-r1", (0, 1));
+    }
+
+    /// tally 2.1.7's R2, refusals outrank holes (L §8; #141): each item a vector named by its rule (`m1/fixes/r2/`, most from refcore's
+    /// own test of the item), a refused movement refused for every read of it: a decision its key's `where` refuses, one with no legs, `flows` over a span from the refused day, a tie of keyed instances, a hole answered by a refused version; and its reach: arithmetic over a hole and a refusal, a `count` over a span that may hold a refused movement. Expected bytes are refcore's.
+    #[test]
+    fn m1_fixes_tally_217_r2() {
+        group_holds("fixes-r2", (0, 1));
+    }
+
+    /// tally 2.1.7's R3, an unknown day is a set of days (L §4.4; #142): each item a vector named by its rule (`m1/fixes/r3/`, most from refcore's
+    /// own test of the item), a window named by its read, a copy keeping the name, a one-day window, business days per day, `argmin` of windows by `ties by`, two `added` entries two unknowns; and its reach: `year_of` and `max` of a window. Expected bytes are refcore's.
+    #[test]
+    fn m1_fixes_tally_217_r3() {
+        group_holds("fixes-r3", (0, 1));
+    }
+
+    /// tally 2.1.7's R4, one cascade for every claim on a cell (L §4.6; #143): each item a vector named by its rule (`m1/fixes/r4/`, most from refcore's
+    /// own test of the item), pins by layer then narrowness, a tie of pins at load, a `solve`'s variable inside the ask's `with`, a scenario's reading whatever the `known` dates, band tables by layer, a second price (`LOAD-PRICE`); and its reach: an `as if` over a scenario, a scenario's wide row over the base's narrower one. Expected bytes are refcore's.
+    #[test]
+    fn m1_fixes_tally_217_r4() {
+        group_holds("fixes-r4", (0, 1));
+    }
+
+    /// tally 2.1.7's R5, load refuses what load sees (L §8.4; #144): each item a vector named by its rule (`m1/fixes/r5/`, most from refcore's
+    /// own test of the item), a literal key at a literal range before `REQ-ASK`, `REQ-CLOCK`, a computed cut after `on`, a price's unit, currency and key kind at load, the priced kinds' pass, `lifespan` of a movement, a rate whose period comes from a row at its value (`RUN-DOMAIN`), two currencies through `any`; and its reach: a unit fault and a key its index lacks in a def no ask reads, with their twin. Expected bytes are refcore's.
+    #[test]
+    fn m1_fixes_tally_217_r5() {
+        group_holds("fixes-r5", (0, 1));
+    }
+
+    /// tally 2.1.7's R6, a form defined by another (L §5; #145): each item a vector named by its rule (`m1/fixes/r6/`, most from refcore's
+    /// own test of the item), `last` over a row with no start, `low` with its clauses and over no days, `by` an expression for a place valued whole, `next` and `gap` as the reads they make, `by last(p)` and `priced last(p)` marking `held`; and its reach: `low` over a hole movement as the `min` it is, `next` over a tie as its `first`. Expected bytes are refcore's.
+    #[test]
+    fn m1_fixes_tally_217_r6() {
+        group_holds("fixes-r6", (0, 1));
+    }
+
+    /// tally 2.1.7's R7, one read set (L §8.2; #146): each item a vector named by its rule (`m1/fixes/r7/`, most from refcore's
+    /// own test of the item), `before from:` under the results whose reads reach it, in a branch and one over it, a removed movement, a lifespan read, a balance cause in its own form, `pinned:` whatever the read order, a movement's day as a cause; and its reach: `unfulfilled:` and `held:` only under the results that read them. Expected bytes are refcore's.
+    #[test]
+    fn m1_fixes_tally_217_r7() {
+        group_holds("fixes-r7", (0, 1));
+    }
+
+    /// tally 2.1.7's R8, every ask form fans out (L §5.5; #147): each item a vector named by its rule (`m1/fixes/r8/`, most from refcore's
+    /// own test of the item), `diff` per combination, a leg's amount inside its combination, no head for an unguarded leg; and its reach: a `check` and an `explain` over an axis. Held for #147: the engine's half is M2's first group (pick P2). Expected bytes are refcore's.
+    #[test]
+    fn m1_fixes_tally_217_r8() {
+        group_holds("fixes-r8", (0, 1));
+    }
+
+    /// tally 2.1.7's R9, one printer and one order per type (L §2.4; #148): each item a vector named by its rule (`m1/fixes/r9/`, most from refcore's
+    /// own test of the item), keys as written in `LOAD-KEY` (an expression, a place, a bool, a month), a figure as written, a domain, a booking cut that is a hole; and its reach: a computed number and a computed day in `RUN-KEY`. Expected bytes are refcore's.
+    #[test]
+    fn m1_fixes_tally_217_r9() {
+        group_holds("fixes-r9", (0, 1));
+    }
+
+    /// tally 2.1.7's R10, a position's type through `( )` and `if` (L §2.5; #149): each item a vector named by its rule (`m1/fixes/r10/`, most from refcore's
+    /// own test of the item), a key and a year through parentheses, a pin's figure in an `if`; and its reach: a key compared in parentheses, a key literal in a rule's value position. Expected bytes are refcore's.
+    #[test]
+    fn m1_fixes_tally_217_r10() {
+        group_holds("fixes-r10", (0, 1));
+    }
+
+    /// tally 2.1.7's B1 to B7, refcore faults fixed at their shared cause (#150, #133, #151, #103, #98, #135): each item a vector named by its rule (`m1/fixes/b<n>/`, most from refcore's
+    /// own test of the item), a stepped range holds a key by its value (B1), `readers-of` lists items once by first layer (B2), a per-unit type takes its key's unit (B3), a duration moves a `by n` key by whole keys (B5), a reading's row id carries its instant (B6), a scenario's instance load can't see is left out (B7). Expected bytes are refcore's.
+    #[test]
+    fn m1_fixes_tally_217_b() {
+        group_holds("fixes-b", (0, 1));
+    }
+
+    /// tally 2.1.7's S1 to S10, the singletons (#93, #101, #131, #152, #154, #156, #113): each item a vector named by its rule (`m1/fixes/s<n>/`, most from refcore's
+    /// own test of the item), reads outside [S, E] are holes, `HOLE-PRERUN` and `HOLE-POSTRUN` (S1), a price named by a record's field (S2, held for #101: M2 builds prices read from records, pick P34), `explain` folds a recurrence past three steps (S4), written orders compose (S5), `RUN-DOMAIN`'s step form (S7), two load refusals' places (S9), `( )` refused where a written literal stands (S10). Expected bytes are refcore's.
+    #[test]
+    fn m1_fixes_tally_217_s() {
+        group_holds("fixes-s", (0, 1));
     }
 
     /// A scenario's `replace` of a base row wins on its span whatever the two rows' `known`

@@ -10,8 +10,8 @@
 
 use super::keys::literal_key;
 use super::read::keyed;
-use super::state::{invariant, num_stop, refuse_load, unit_stop};
-use crate::base::Load;
+use super::state::{invariant, num_stop, unit_stop};
+use crate::base::{Load, Refusal};
 use crate::model::{
     BindInfo, Class, Code, CodeKind, Domain, NameKind, Number, Pat, PeriodWord, Reality, Ty, Unit,
     Value, Window, currency_id, num_money,
@@ -167,6 +167,37 @@ pub(crate) fn convert(
         Written::Expr(_) => return Err(Stop::NotBuilt("a scenario's expression row")),
     };
     Ok(Converted::Value(v))
+}
+
+/// A written value's fault: load's, which reads the rows (L §8.3), whenever it is converted.
+fn refuse_load(code: Load, message: String) -> Stop {
+    Stop::Refused(Refusal::new(crate::base::Code::Load(code), message))
+}
+
+/// A row's value converted at run, where it is read: load converted the same row with the
+/// same type first, every input's row and every def's given (`check_rows`), so a fault of
+/// its value was refused there, at its line (L §8.3, §8.4 R-load); met here, it is a broken
+/// promise (E §11).
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for a load refusal; `NotBuilt` as [`convert`].
+pub(crate) fn convert_read(
+    m: &Reality,
+    value: &Written,
+    ty: &Ty,
+    target: &str,
+    of: &ConvertFor,
+) -> Result<Converted, Stop> {
+    match convert(m, value, ty, target, of) {
+        Err(Stop::Refused(refusal)) if matches!(refusal.code(), crate::base::Code::Load(_)) => {
+            Err(Stop::Refused(Refusal::new(
+                crate::base::Code::EngineInvariant,
+                "a row's value refused at run: load converts every row first".to_owned(),
+            )))
+        }
+        other => other,
+    }
 }
 
 /// `LOAD-UNIT` with `message`.

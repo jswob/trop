@@ -112,7 +112,11 @@ impl Engine {
         self.trace_value(within, &Ok(v.clone()));
         let without = self.trace_open(TraceKind::Side, "outside the as if");
         self.push();
+        // the derivation outside is no read of the result: neither its register nor the ask
+        // pins it takes are listed (L §8.2 One read set; P42)
+        let keeping = core::mem::replace(&mut self.pins_read.keeping, false);
         let outside = self.ev(m, inner, env, ctx);
+        self.pins_read.keeping = keeping;
         self.pop_alone();
         self.trace_close(without);
         self.trace_close(node);
@@ -225,6 +229,8 @@ impl Engine {
         how: Pinning,
     ) -> Result<Result<Ctx, Hole>, Stop> {
         let mut data = self.layer_data(ctx.layer)?.clone();
+        // this set's scope: inside every pin already in force (L §4.6's cascade, R4)
+        let depth = data.next_layer()?;
         let mut inside = ctx;
         let mut holes: Vec<Hole> = Vec::new();
         for pin in pins {
@@ -262,7 +268,8 @@ impl Engine {
                         continue;
                     }
                     let set = (target, value, pin.text.as_str());
-                    if let Some(pinned) = self.value_pin(m, set, env, ctx, (how, &mut holes))? {
+                    if let Some(mut pinned) = self.value_pin(m, set, env, ctx, (how, &mut holes))? {
+                        pinned.layer = depth;
                         data.pin(pinned);
                     }
                 }
@@ -315,6 +322,12 @@ impl Engine {
         if expr {
             self.absorb(&met);
         }
+        // a cut after the clock is refused before its pin is noted (refcore's `apply_pins_`)
+        let day = if matches!(pin.form, PinForm::Known(_)) {
+            after_on(m, day)?
+        } else {
+            day
+        };
         let written = if expr {
             crate::load::expr_text(e)
         } else {
@@ -472,6 +485,8 @@ impl Engine {
             fields: target.fields.clone(),
             value,
             text,
+            layer: 0,
+            tied: None,
         }))
     }
 
@@ -501,6 +516,19 @@ impl Engine {
 }
 
 /// Whether a pin's key is written, not `*` (L §5.11).
+/// A cut computed from a value, `known d`, after the model's `on`: refused at that value,
+/// `RUN-DOMAIN known <d> is after the model's on <on>` (L §8.4, E §11; R5, #112; refcore's
+/// `after_on`). An ask line's literal cut is the request's `REQ-CLOCK`, checked first.
+pub(crate) fn after_on(m: &Reality, d: Day) -> Result<Day, Stop> {
+    if d <= m.on {
+        return Ok(d);
+    }
+    Err(Stop::Refused(crate::base::Refusal::new(
+        Code::Run(crate::base::Run::Domain),
+        format!("known {} is after the model's on {}", d.text(), m.on.text()),
+    )))
+}
+
 fn is_written(key: &Key) -> bool {
     matches!(key, Key::Expr(_))
 }

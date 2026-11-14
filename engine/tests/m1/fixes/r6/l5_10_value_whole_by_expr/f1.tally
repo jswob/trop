@@ -1,0 +1,124 @@
+model f1
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "G8's fix probes (invented): a place priced whole in another currency, valued by every form of by; a low over an empty window, literal and computed; a plain low with uncertain"
+
+source card "probe card"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+unit etf "a fund unit"
+
+kind promises: transfers uncertain
+
+index month = month 2026-01..2026-12
+
+index day = day 2026-01-01..2026-12-31
+
+place konto: accounts PLN lives 2026-01-01..
+
+place flat: assets EUR priced flat_eur lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input mprice[m in month]: num PLN/etf
+
+input px: num PLN/etf reading
+
+input fx[d in day]: num PLN/EUR
+
+input fxu[u in currencies]: num PLN/u reading
+
+input fxs[u in currencies]: num PLN/u
+
+input fxr: num PLN/EUR reading
+
+input flat_eur: money EUR
+
+input a_day: date
+
+input b_day: date
+
+input gift_amt: money PLN
+
+input gift_day: date
+
+input rent_amt: money PLN
+
+input rent_day: date
+
+move gift: promises
+  on gift_day
+  leg cash from world to konto amount gift_amt
+
+move rent: transfers
+  on rent_day
+  leg cash from konto to world amount rent_amt
+
+ask f_unset: value(flat, 2026-04-30) in PLN by fx[2026-04-30]
+
+ask f_expr: value(flat, 2026-03-31) in PLN by fx[2026-03-31]
+
+ask f_keyed: value(flat, 2026-03-31) in PLN by fxs
+
+ask f_keyed_last: value(flat, 2026-03-31) in PLN by last(fxu)
+
+ask f_keyed_none: value(flat, 2026-02-15) in PLN by last(fxu)
+
+ask f_unkeyed_last: value(flat, 2026-03-31) in PLN by last(fxr)
+
+ask f_unkeyed_none: value(flat, 2026-02-15) in PLN by last(fxr)
+
+ask f_last_k: value(flat, 2026-03-31) in PLN by last(fxu[EUR])
+
+
+
+ask f_same: value(flat, 2026-03-31) in EUR
+
+ask f_rev: low(konto, 2026-03-31 .. 2026-03-01)
+
+ask f_rev_from: low(konto, 2026-03-31 .. 2026-03-01) from 2026-03-01
+
+ask f_rev_computed: low(konto, b_day .. a_day)
+
+ask f_rev_unc: low(konto, 2026-03-31 .. 2026-03-01) with uncertain
+
+ask f_one: low(konto, 2026-03-01 .. 2026-03-01)
+
+ask f_unc: low(konto, 2026-03-01 .. 2026-04-30) with uncertain, low(konto, 2026-03-01 .. 2026-04-30)
+
+ask f_unc_late: low(konto, 2026-03-15 .. 2026-04-30) with uncertain
+
+ask f_unc_bal: min(bal(konto, d) with uncertain for d in 2026-03-15 .. 2026-04-30 step 1 day)
+
+ask f_unc_gift: low(konto, 2026-03-20 .. 2026-04-30) with uncertain, low(konto, 2026-03-20 .. 2026-04-30)
+
+ask f_unc_gift_bal: min(bal(konto, d) with uncertain for d in 2026-03-20 .. 2026-04-30 step 1 day)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  a_day = 2026-03-01 "the card"
+  b_day = 2026-03-31 "the card"
+  flat_eur = 100000.00 EUR "the card"
+  fx[2026-03-31] = 4.25 PLN/EUR "the card"
+  fxs[EUR] = 4.25 PLN/EUR "the card"
+  gift_amt = 400.00 PLN "the card"
+  gift_day = 2026-03-20 "the card"
+  mprice[2026-03] = 150 PLN/etf "the card"
+  opening[konto] = 1000.00 PLN at 2026-01-01 start "the card"
+  rent_amt = 2500.00 PLN "the card"
+  rent_day = 2026-03-10 "the card"
+
+version readings_2026
+  cite card
+  governs 2026-01..2026-12
+  known 2026-01-01
+  fxr = 4.20 PLN/EUR at 2026-03-01 "quoted"
+  fxu[EUR] = 4.30 PLN/EUR at 2026-03-01 "quoted"
+  px = 151 PLN/etf at 2026-04-01 "quoted"

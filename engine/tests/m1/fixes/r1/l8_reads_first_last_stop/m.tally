@@ -1,0 +1,21 @@
+model t
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+index ks = 1..4
+
+input base: int
+
+ask a: first(k in ks where k == 1 or base / (k - 2) > 0)
+ask b: last(k in ks where k == 4 or base / (k - 3) > 0)
+ask c: first(k in ks where k == 3 or base / (k - 2) > 0)
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  base = 6 "card"

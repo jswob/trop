@@ -1,0 +1,7 @@
+model family
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  use a = "members/ana.tally" sha256 "da53b6ff6a096d47b9af5e16e8276735e72b3c343160d17d841c6ba432df1720"
+
+ask r: a.rate

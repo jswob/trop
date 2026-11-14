@@ -1,7 +1,7 @@
 # L §5.14.1 next(K, d): "the first movement of event kind K whose day is on or after d (first(m in K over d ..) ties
 # by m.day) ... When none is planned yet, its binding is empty at the cut and its span reaches past it, so it is a hole
 # naming the binding (HOLE-NOTYET, §3.1)"; L §8.1 HOLE-NOTYET "<x>: no <event> yet, and its span reaches past the cut"
-# (writer 8: x is the binding's variable, m in the stated equivalence; was pending, removed by the review).  wage[m] for m in pay_months (2026-01..2026-06) falls on day_of(m, 10) (L §4.2): on or after
+# (tally 2.1.7 R6, T's SR-7: a form defined by another names itself as written, so x is next(wages, 2026-06-11); writer 8 had the bound m).  wage[m] for m in pay_months (2026-01..2026-06) falls on day_of(m, 10) (L §4.2): on or after
 # 2026-03-10 the first is wage[2026-03], on or after 2026-03-11 wage[2026-04] on 2026-04-10; after the last
 # (2026-06-10) none is planned: HOLE-NOTYET.  L §5.10 "Kind and unit are read by x in K and unit(x)": konto is a place
 # of unit PLN.
@@ -45,7 +45,7 @@ n1: (wage[2026-03], wage[2026-04])
   cut 2026-01-01
 n2: 2026-04-10
   cut 2026-01-01
-n3: ?"m: no wages yet, and its span reaches past the cut" (wages)
+n3: ?"next(wages, 2026-06-11): no wages yet, and its span reaches past the cut" (wages)
   cut 2026-01-01
 u1: PLN
   cut 2026-01-01

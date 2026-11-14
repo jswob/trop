@@ -1,0 +1,34 @@
+# L §4.4 Only a comparison decides an interval (tally 2.1.7 R3, issue #142; T's SR-9): age(w, d2) is 0 or 1 as w
+# falls, and a range's step needs one value: HOLE-IMPRECISE, naming w (g). Its twin with a day for w steps by 1 month
+# (g_twin). 2.1.7's first refcore stepped by the interval and crashed (REFCORE-NOT-YET, AttributeError).
+=== sr9.tally
+model sr9
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+input w: date
+
+input d1: date
+
+input d2: date
+
+ask g: count(d in d1 .. d2 step age(w, d2) * 1 month)
+
+ask g_twin: count(d in d1 .. d2 step age(d1, d2) * 1 month)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "a day in March"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+=== expect
+g: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range step" (w)
+  cut 2026-12-31
+g_twin: 15
+  cut 2026-12-31

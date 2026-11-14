@@ -784,10 +784,12 @@ version card_2026
                 "def worth: num PLN = value(st, day) in PLN by amt",
                 "LOAD-UNIT value by amt: the price is money PLN, not num PLN/u (a.tally:57)",
             ),
+            // tally 2.1.7 (F11a, R4/R6): st's own price, px, already prices its position, so
+            // the `by` names it twice (refcore 2.1.7's bytes)
             (
                 worth,
                 "def worth: num PLN = value(st, day) in PLN by last(px)",
-                "loaded",
+                "LOAD-PRICE value(st) by last(px): st's price already gives its etf_u (a.tally:57)",
             ),
             (
                 worth,
@@ -1732,7 +1734,7 @@ version card_2026
                         "ask q: fee, levy, acc[2026-02], bal(konto, 2026-12-31), now",
                     ),
                 ],
-                "LOAD-READS now holds bal(x) with no day: a running read outside a decision and its defs",
+                "LOAD-READS now holds bal(x) with no day: a running read outside a decision and its defs (a.tally:40)",
             ),
             // balnow-decision
             (
@@ -3416,13 +3418,13 @@ version v1
                 ],
                 "LOAD-KEY wrong number of keys for ru: write [*] to pin every address (a.tally:40)",
             ),
-            // path-line (#83: at load, refcore's run-time bytes)
+            // path-line (#83: at load; S9: at the ask's line)
             (
                 &[(
                     "ask q_draw: mean(drawn) paths 10 seed 1",
                     "ask q_draw: mean(drawn) paths 10 seed 1 path 3",
                 )],
-                "LOAD-RANDOM a query over paths on a path p line",
+                "LOAD-RANDOM a query over paths on a path p line (a.tally:40)",
             ),
             // path-line-plain
             (
@@ -4757,7 +4759,7 @@ version v1
             (
                 "of-adjusts",
                 "def ls: date = lifespan(argmax(1 for a in adjustments over ..).adjusts).from",
-                "refused: LOAD-UNIT lifespan of key events: a movement has its day, not a lifespan (L §5.7) (a.tally:27)",
+                "refused: LOAD-UNIT lifespan of key events: a movement has its day, not a lifespan (a.tally:27)",
             ),
             (
                 "adjusts-day",

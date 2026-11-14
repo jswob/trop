@@ -148,7 +148,7 @@ The deterministic core, enough for X's forecast and its changes 1, 2, 4, 6 and 7
 - X: `I:X:*@c1_fast`, `@c2_fast`, `@c4_fast`, `@c6_fast`, `@c7_fast`, `@v4_fast` (18 checks), and X's minimal texts without a fill (`I:X:t@min_m13`, `…_m13b`, `…_F4g`, `…_F4h`, `…_m10l`, `I:X:n@min_m2`, `n2@min_m2`, and the same two at `min_m2b`: 9).
 - Cases: `I:M:UL-01`, `I:M:UL-02`, `I:M:UL-05`.
 - Probes (60): `U:num/*`, `U:time/*`, `U:life/*`; ASK-01, -03, -04, -05; FLOW-01, -02; LAW-01, -03, -05, -06, -08, LAW-13 and its set; OWN-01, -02, -03; PTY-01; REC-06; RULE-01, -02, -05; SCEN-01, -03, -04 and their sets; SURF-01, -02, -04 and its set, -05, -07; VAL-01..04, -06, -07.
-- *T's, not yet in `checks.tsv`:* goldens G1, G2, G3, G6, G7, G8, G9 and G10 and the 36 pins, on tally 2's canonical form (gate 2); the hole and run codes of M1's constructs, one fixture each (gate 5).
+- *T's, not yet in `checks.tsv`:* goldens G7, G8 and G9, the halves of G1, G2, G3, G6 and G10 that don't read the prototype's bank history, and the 16 pins that don't, on tally 2's canonical form (gate 2); the hole and run codes of M1's constructs, one fixture each (gate 5).
 
 **Properties** (gate 6): determinism; money conserved (E §9.1); net worth moves only at the boundary, a price or an anchor (§9.2); a scenario changes nothing before its `from` (§9.3); asks move no money (§9.4); things hold nothing outside their lifespans (§9.6); no foresight through declared reads and the written projection (D-5, D-6); a hole never becomes 0.
 
@@ -171,7 +171,7 @@ The deterministic core, enough for X's forecast and its changes 1, 2, 4, 6 and 7
 - X: `I:X:*@c3_fast` and `I:X:*@v3_fast`, change 3, the retroactive law (6).
 - Cases: `I:M:LH-05`, `LH-14`, `RC-08`, `UL-06`, `UL-09`, `UL-15`, `CH-04`.
 - Probes (13): LAW-04; REC-01, -02, -03, -05, -07; RULE-06, -07, -08; SCEN-02 and its set; SURF-06; VAL-05.
-- *T's, not yet in `checks.tsv`:* goldens G4 and G5 (G5 with the fixture's flat price index pinned); hindcast fixtures H1, H2, H3, H4, H5, H8 and H9, each landing in the ledger line its answer key names (gate 4). H0, H6 and H7 are banded and wait for M7.
+- *T's, not yet in `checks.tsv`:* goldens G4 and G5 (G5 with the fixture's flat price index pinned); the halves of goldens G1, G2, G3, G6 and G10 that read the prototype's synthetic bank history, and its 20 pins, on that ledger tracked as a fixture under `engine/tests/` (#114, M1's pick P21; tally 2.1.7); hindcast fixtures H1, H2, H3, H4, H5, H8 and H9, each landing in the ledger line its answer key names (gate 4). H0, H6 and H7 are banded and wait for M7.
 
 **Properties**
 - **Masking at K:** changing any record or version known after K leaves every result as of K unchanged (H8 is the metamorphic case).
@@ -365,7 +365,8 @@ PGO only here, and no budget may need it (D4-4). Every optimisation leaves every
 
 | T's item | DONE gate | Lands at |
 |---|---|---|
-| Goldens G1, G2, G3, G6–G10 and the 36 pins, restated in tally 2 with refcore baselines | 2 | M1 |
+| Goldens G7–G9, the halves of G1, G2, G3, G6 and G10 that don't read the prototype's bank history, and the 16 pins that don't, restated in tally 2 with refcore baselines | 2 | M1 |
+| The halves of G1, G2, G3, G6 and G10 that read the synthetic bank history, and its 20 pins, on that ledger tracked under `engine/tests/` (#114) | 2 | M2 |
 | Goldens G4, G5 | 2 | M2 |
 | Hindcast H1–H5, H8, H9 | 4 | M2 |
 | Hindcast H0, H6, H7 on a single origin | 4 | M7 |

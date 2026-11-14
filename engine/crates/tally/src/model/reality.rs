@@ -7,7 +7,7 @@
 //! lifespan under a cut is its latest entry the cut and the read's world see, a `replace` line
 //! winning (L §6.4: a scenario's entry is seen in its world and those over it).
 
-use super::decl::{BandInfo, DefInfo, InputInfo, MoveInfo, PlaceInfo};
+use super::decl::{BandInfo, DefInfo, Domain, InputInfo, MoveInfo, PlaceInfo};
 use super::graph::Graph;
 use super::ids::{
     AxisId, BandId, DefId, FillId, IndexId, InputId, KindId, MoveId, Names, PlaceId, SourceId,
@@ -417,6 +417,32 @@ impl Reality {
             return None;
         };
         Some((id.to_owned(), self.price_mode(ty.as_ref())?))
+    }
+
+    /// The domain of an input's or a def's first key, a price's key. L §5.8, §5.10.
+    #[must_use]
+    pub fn first_domain(&self, id: &str) -> Option<Domain> {
+        if let Some(input) = self.inputs.get(id) {
+            return input.binds.first().map(|b| b.domain.clone());
+        }
+        self.defs
+            .get(id)
+            .and_then(|def| def.binds.first())
+            .map(|b| b.domain.clone())
+    }
+
+    /// Whether a price keyed by `id` is keyed by units: the currencies or a kind of unit, a
+    /// subkind's root included (refcore's `_unit_keyed`). L §5.10 (`by p` keyed by unit).
+    #[must_use]
+    pub fn unit_keyed(&self, id: &str) -> bool {
+        let Some(Domain::Kind(kind)) = self.first_domain(id) else {
+            return false;
+        };
+        self.kinds.get(&kind).is_none()
+            || self
+                .chain(&kind)
+                .iter()
+                .any(|k| k.id == "currencies" || k.spec == KindSpec::Unit)
     }
 
     /// The price a place is valued by: on its entry or `place` section, else on its kind

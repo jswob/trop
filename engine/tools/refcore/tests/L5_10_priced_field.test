@@ -1,0 +1,45 @@
+# tally 2.1.7 S2 (#101): L §2.3 `ref = ID ... {"." FIELD}` after `priced`: `priced quote.close` names the record
+# input's field as the price input, read as any price input is (L §5.10), its type the field's. a1: flat on the
+# reading's day, 500 000 PLN; a2: the next day, no reading, HOLE-NOREADING; a3: `priced last(quote.close)` carries
+# it; a4: fund, 10 etf priced fp.nav (num PLN/etf), 125 PLN. Was (2.1.6): REFCORE-NOT-YET a priced reference with
+# fields.
+=== m.tally
+model pr
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+unit etf "fund unit"
+
+place flat: assets PLN priced quote.close lives 2026-01-01..
+place flat2: assets PLN priced last(quote.close) lives 2026-01-01..
+place fund: holdings etf priced fp.nav lives 2026-01-01..
+
+input quote: (close money PLN, open money PLN) reading
+input fp: (nav num PLN/etf, note text) reading
+
+ask a1: value(flat, 2026-03-01) in PLN law 2026-06-30
+ask a2: value(flat, 2026-03-02) in PLN law 2026-06-30
+ask a3: value(flat2, 2026-03-02) in PLN law 2026-06-30
+ask a4: value(fund, 2026-03-01) in PLN law 2026-06-30
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  quote = (close: 500 000.00 PLN, open: 490 000.00 PLN) at 2026-03-01 "wycena"
+  fp = (nav: 12.50 PLN/etf, note: "x") at 2026-03-01 "wycena"
+  opening[fund] = 10 etf at 2026-01-01 start "own"
+=== expect
+a1: 500 000 PLN
+  law date 2026-06-30, cut 2026-06-30
+a2: ?"quote has no reading at 2026-03-02" (quote)
+  law date 2026-06-30, cut 2026-06-30
+a3: 500 000 PLN
+  held: quote = (close: 500 000.00 PLN, open: 490 000.00 PLN) (v1), read for 2026-03-02
+  law date 2026-06-30, cut 2026-06-30
+a4: 125 PLN
+  law date 2026-06-30, cut 2026-06-30

@@ -6,7 +6,7 @@ Session 4.5c, 2026-10-29. One page of rules for the test set and for everything 
 
 | Layer | What | Budget | Runs |
 |---|---|---|---|
-| **interpreter** | refcore's own tests (`R:all`: 1251 at tally 2.1.6, 950 on 2.0) | 90 s | every pass |
+| **interpreter** | refcore's own tests (`R:all`: 1365 at tally 2.1.7 (1356 after P36, 1345 before), 1251 at 2.1.6, 950 on 2.0) | 90 s | every pass |
 | **unit** | the probes: one card per catalogue edge (and pair cards for two edges that interact), seconds each | 90 s each; the layer about 2 min | every pass |
 | **integration** | the household questions (one check per ask), the 79 old models, the light twins, the blind texts, the amendments household, the key scripts of `keys-extra/` | 90 s each; the layer under 10 min on 4 jobs | every pass |
 | **acceptance** | the holdout: blind, exam only, never split into visible probes | the exam's | session 5 only |
@@ -38,6 +38,8 @@ If the copy is still a candidate (over 60 s) at every knob, the user decides: a 
 ## 5. Both ways for any interpreter change
 
 refcore stays frozen and is the judge. A faster way to run it (PyPy today; any later layer behind a switch) is accepted only if refcore's own tests (`R:all`) and every stored output match the frozen interpreter byte for byte: `run.py --runtime both` for a runtime, `run.py --interp both` for the memory layer `engine/tools/refcore_fast` (4.5e), and `--verify 50` on the heavy checks after any change to the layer. The fast side serves routine passes over checks with a stored baseline; a new baseline, a `ran` check J marks, and the exam run on refcore. *(Cedar and ShardStore: an obviously right reference model, fast enough on small inputs to judge many of them.)*
+
+**A re-run explains every moved hunk, not every moved vector** (tally 2.1.7, 2026-11-14). After an interpreter change, each changed hunk of each stored output is matched to the ruling or rule that moves it, and a pure reordering of the same lines is named as one; a hunk nothing explains is a STOP-REPORT, even inside a vector a ruling is known to move. (2e4748c accepted nine `*order_order` vectors as SR-1's because their ids were on its list, while `feed2` had also moved before `feed` with no rule for it; E §4.1 orders movements by their terms, so P40 put `feed` first.)
 
 ## 6. The cache, the known faults and the labels
 

@@ -1,0 +1,26 @@
+model rd
+  tally 2
+  on 2026-03-10
+  start 2026-01-01
+  end 2026-12-31
+  note "T C14 (invented): a scenario's replace of a base reading at the same instant, its version known the base's day or earlier; it wins whatever the known dates (L §6.4, §4.6 step 2; issue #137)"
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+ask q: bal(konto, 2026-02-28) in rd
+
+ask qs: bal(konto, 2026-02-28) in same
+
+ask qe: bal(konto, 2026-02-28) in early
+
+version v
+  cite card
+  governs 2026-01..2026-02
+  known 2026-03-05
+  anchor konto
+  opening[konto] = 0 at 2026-01-01 start "base"
+  stated[konto] = 100 at 2026-02-28 end "base"

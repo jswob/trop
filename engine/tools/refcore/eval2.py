@@ -10,7 +10,7 @@ from fractions import Fraction
 from . import units as U
 from . import reals as R
 from . import dists as D
-from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, RandomLine
+from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, RandomLine, at_run
 from .values import Num, Money, Hole, Key, Code, Special, NONE, NEVER, fmt, fmt_q, CURRENCIES, Mv, Thing
 from .dates import Period, last_day
 
@@ -31,7 +31,7 @@ def _ev():
 
 
 def refuse(code, msg):
-    return Refusal(code, msg)
+    return at_run(code, msg)
 
 
 def strip(n):
@@ -337,7 +337,8 @@ def m_c_dcf(self, n, env, ctx):
     h = self.hole_args(vals)
     if h:
         return h
-    return Num(self.dcf_q(*vals), ())
+    # the year fraction is monotone in each day: a window by its ends (tally 2.1.7 R3, F4)
+    return self.lift(lambda a, b, dc: Num(self.dcf_q(a, b, dc), ()), *vals)
 
 
 def m_call_args(self, n, env, ctx):
@@ -1464,9 +1465,10 @@ def m_solve_value(self, s, env, ctx):
     holes = []
 
     def F(q):
-        pv = PinVal('solve', info.id, tuple(keys), (), mk(q), '')
-        pins = tuple(sorted([p for p in ctx.pins if not (p.item == info.id and p.kind in ('set', 'solve'))] +
-                            [pv], key=lambda p: repr(p.key())))
+        # the variable is a claim on its one cell (L §5.18), in a layer inside the ask's pins and outside every pin
+        # written in F (L §4.6 step 2, tally 2.1.7 R4, #120): the other pins of the item still hold
+        pv = PinVal('solve', info.id, tuple(keys), (), mk(q), '', 1 + max((p.layer for p in ctx.pins), default=0))
+        pins = tuple(sorted(list(ctx.pins) + [pv], key=lambda p: repr(p.key())))
         c2 = ctx.but(pins=pins)
         fv = self.ev(s.f, env, c2)
         gv = self.ev(s.g, env, c2)
@@ -1608,29 +1610,23 @@ def m_e_prorata(self, n, env, ctx):
                 if not n.tie:
                     raise refuse('RUN-TIE', 'prorata has a tie at %s that changes the result, and no ties by' %
                                  ', '.join(fmt(keys[i]) for i in tied))
-                scored = []
-                for i in tied:
+                def term(i, j):
                     e2 = dict(env)
                     e2[b.var] = keys[i]
-                    vals = [self.ev(x, e2, ctx) for x in n.tie]
-                    for v in vals:
-                        if isinstance(v, Hole):
-                            return v
-                    scored.append((vals, i))
-                import functools
-
-                def cmp(a, c):
-                    for x, y in zip(a[0], c[0]):
-                        r = self.cmp3(x, y, None)
-                        if r:
-                            return r
-                    return 0
-                scored.sort(key=functools.cmp_to_key(cmp))
+                    return self.ev(n.tie[j], e2, ctx)
+                # the ties by's order, a later term read only among the keys still tied (tally 2.1.7 R1, #116)
                 need = len(inside)
-                if need < len(scored) and cmp(scored[need - 1], scored[need]) == 0:
-                    raise refuse('RUN-TIE', 'prorata has a tie at %s that changes the result, and its ties by doesn\'t '
-                                 'break it' % ', '.join(fmt(keys[i]) for i in tied))
-                give = (give - set(tied)) | set(i for v, i in scored[:need])
+                taken = []
+                for g in self.tie_order('prorata', tied, term, len(n.tie)):
+                    if isinstance(g, Hole):
+                        return g
+                    if len(taken) < need < len(taken) + len(g):
+                        raise refuse('RUN-TIE', 'prorata has a tie at %s that changes the result, and its ties by '
+                                     'doesn\'t break it' % ', '.join(fmt(keys[i]) for i in tied))
+                    if len(taken) >= need:
+                        break
+                    taken.extend(g)
+                give = (give - set(tied)) | set(taken)
         q = sign * (down[i_k] + (1 if i_k in give else 0)) * step
     if out_k:
         q = Fraction(0)

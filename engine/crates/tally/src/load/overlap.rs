@@ -613,7 +613,12 @@ fn at_row(m: &Reality, row: &Row, code: Load, message: String) -> Result<Stop, S
 }
 
 /// A refusal at an observation's line.
-fn at_obs(m: &Reality, o: &Observation, code: Load, message: String) -> Result<Stop, Stop> {
+pub(super) fn at_obs(
+    m: &Reality,
+    o: &Observation,
+    code: Load,
+    message: String,
+) -> Result<Stop, Stop> {
     let (file, line) = place(m, &o.version, o.line)?;
     Ok(refuse(code, message, &file, line))
 }

@@ -1,0 +1,9 @@
+scenario s over g6_scen_open
+  tally 2
+  from 2026-06-01
+
+move topup[d in month, k in acct]: pays
+  on start_of(d)
+  leg cash from world to konto amount lim[k]
+
+ask b: bal(konto, 2026-12-31) in s

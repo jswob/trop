@@ -1,0 +1,36 @@
+model g7
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+input dday: date
+
+input fee: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+move pull[k in ks]: transfers
+  on dday
+  reads konto
+  leg cash from konto to world amount bal(konto) - fee
+
+ask b: bal(konto, 2026-03-01)
+ask f1: flows(pull[k1], 2026-01-01 .. 2026-12-31)
+ask f2: flows(pull[k2], 2026-01-01 .. 2026-12-31)
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  dday = 2026-02-01 "c"
+  fee = 100.00 PLN "c"
+  opening[konto] = 800.00 PLN at 2026-01-01 start "c"

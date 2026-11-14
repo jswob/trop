@@ -138,7 +138,10 @@ fn outside_pins(
     let outside = engine.outside_pins((unpinned, ctx), &fixed)?;
     let pins = engine.pin_lines(m, outside, ctx)?;
     engine.open_layer(m, outside)?;
+    // the derivation outside the pins is no read of the result (L §8.2 One read set; P42)
+    let keeping = core::mem::replace(&mut engine.pins_read.keeping, false);
     let read = traced(m, engine, reference, env, outside);
+    engine.pins_read.keeping = keeping;
     engine.end_layer(outside.layer, read.as_ref().err())?;
     let (value, _, outside_trace) = read?;
     trace.beside_pins(outside_trace, pins, (inside, value))
@@ -388,12 +391,101 @@ fn nodes_of(m: &Reality, item: &Node) -> Vec<Node> {
     nodes
 }
 
-/// One step of printing a derivation: a node at its depth, or a line made already.
+/// One step of printing a derivation: a node at its depth, a def cell's cause, or a line
+/// made already.
 enum Step {
     /// The node at this place, printed at this depth.
     Node(usize, usize),
+    /// A cause of the def cell at the first place, the node at the second, printed at this
+    /// depth, or folded with the chain it starts (refcore's `explain_step`).
+    Cause(usize, usize, usize),
     /// A line, printed as it is.
     Line(String),
+}
+
+/// A def cell's causes in the order they print: each shown rule's `when`, the winner's
+/// value, then what it read beside its rules (refcore's `def_causes`). E §10.
+fn def_causes(trace: &Trace, at: usize) -> Result<Vec<usize>, Stop> {
+    let node = trace.node(at)?;
+    let mut out = Vec::new();
+    for rule in node
+        .rules
+        .values()
+        .filter(|r| node.shown && !r.state.is_empty())
+    {
+        let groups = [
+            rule.when,
+            rule.value.filter(|_| rule.state.starts_with("won")),
+        ];
+        for group in groups.into_iter().flatten() {
+            out.extend(trace.node(group)?.children.iter().copied());
+        }
+    }
+    out.extend(node.children.iter().copied());
+    Ok(out)
+}
+
+/// The def of the cell at `at`, none for another node.
+fn cell_def(trace: &Trace, at: usize) -> Result<Option<&str>, Stop> {
+    Ok(trace.node(at)?.cell.as_ref().map(|(def, _)| def.as_str()))
+}
+
+/// Cause `child` of def cell `parent` folded where it starts a chain of more than 3 cells of
+/// one def, each read by the one before it and none printed yet: `… <n> more steps of <x>,
+/// <k₂> .. <kₙ₋₁> …` at `depth`, then the chain's last cell; none where it doesn't fold
+/// (refcore's `explain_step`, `chain_next`). E §10 Long derivations fold (tally 2.1.7 S4).
+fn folded(
+    trace: &Trace,
+    numbered: &BTreeMap<usize, usize>,
+    (parent, child): (usize, usize),
+    depth: usize,
+) -> Result<Option<(String, usize)>, Stop> {
+    let Some(def) = cell_def(trace, parent)? else {
+        return Ok(None);
+    };
+    if cell_def(trace, child)? != Some(def) || numbered.contains_key(&child) {
+        return Ok(None);
+    }
+    let mut rest = vec![child];
+    let mut taken: BTreeSet<usize> = BTreeSet::from([parent, child]);
+    while let Some(last) = rest.last().copied() {
+        let mut next = None;
+        for cause in def_causes(trace, last)? {
+            let fresh = !numbered.contains_key(&cause) && !taken.contains(&cause);
+            if fresh && cell_def(trace, cause)? == Some(def) {
+                next = Some(cause);
+                break;
+            }
+        }
+        let Some(cause) = next else {
+            break;
+        };
+        rest.push(cause);
+        taken.insert(cause);
+    }
+    let [first, .., before_last, last] = rest.as_slice() else {
+        return Ok(None);
+    };
+    let more = rest
+        .len()
+        .checked_sub(1)
+        .ok_or_else(|| invariant("a chain's length"))?;
+    let line = format!(
+        "{}\u{2026} {more} more steps of {def}, {} .. {} \u{2026}",
+        indent(depth),
+        cell_keys(trace, *first)?,
+        cell_keys(trace, *before_last)?
+    );
+    Ok(Some((line, *last)))
+}
+
+/// The keys of the cell at `at` as its label writes them; none for a keyless one.
+fn cell_keys(trace: &Trace, at: usize) -> Result<String, Stop> {
+    Ok(trace
+        .node(at)?
+        .cell
+        .as_ref()
+        .map_or_else(String::new, |(_, keys)| keys.clone()))
 }
 
 /// The lines of a trace's derivation, as refcore prints them (`explain_lines`,
@@ -420,6 +512,15 @@ pub(super) fn derivation(m: &Reality, trace: &Trace) -> Result<Vec<String>, Stop
                 continue;
             }
             Step::Node(at, depth) => (at, depth),
+            Step::Cause(parent, at, depth) => {
+                match folded(trace, &numbered, (parent, at), depth)? {
+                    Some((line, last)) => {
+                        out.push(line);
+                        (last, depth)
+                    }
+                    None => (at, depth),
+                }
+            }
         };
         let node = trace.node(at)?;
         let ind = indent(depth);
@@ -519,13 +620,13 @@ fn node_lines(
                 ];
                 for group in groups.into_iter().flatten() {
                     let children = &trace.node(group)?.children;
-                    below.extend(children.iter().map(|c| Step::Node(*c, inner)));
+                    below.extend(children.iter().map(|c| Step::Cause(at, *c, inner)));
                 }
             }
             let beside = depth
                 .checked_add(2)
                 .ok_or_else(|| invariant("a derivation's depth"))?;
-            below.extend(node.children.iter().map(|c| Step::Node(*c, beside)));
+            below.extend(node.children.iter().map(|c| Step::Cause(at, *c, beside)));
         }
         TraceKind::Root | TraceKind::Group | TraceKind::Side => {
             let value = match (&node.kind, &node.value) {

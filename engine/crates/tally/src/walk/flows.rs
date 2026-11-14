@@ -54,7 +54,7 @@ impl Engine {
                 Some((mv, _)) => mv.id.clone(),
                 None => expr_text(&f.target)?,
             };
-            return Ok(Value::Hole(Hole::asked("before the run's start", &figure)));
+            return Ok(Value::Hole(Hole::before_run(&figure)));
         }
         if f.for_key.is_some() || f.convert.is_some() {
             return Err(Stop::NotBuilt("flows for a period or converted"));
@@ -135,6 +135,12 @@ impl Engine {
                 return Err(stop);
             }
         }
+        if last > m.end
+            && let Err(stop) = self.after_run(m, place, (start, last), ctx, &mut sums)
+        {
+            self.absorb(&sums.met);
+            return Err(stop);
+        }
         let walk = self.walk(id)?;
         for (day, entry) in walk.adj_regs.get(place).into_iter().flatten() {
             if *day <= last {
@@ -152,6 +158,62 @@ impl Engine {
             ));
         }
         one_unit(m, place, &sums.totals, &units)
+    }
+
+    /// A place's flows over the days after the run's end E, which the walk doesn't book
+    /// (refcore's `flows_post_e`): a plan's instance there counts its legs at the place, a
+    /// decision's is the hole `after the run's end`, its amount reading a walk that doesn't
+    /// hold its day. E §2 (movements outside [S, E]), L §8.1 `HOLE-POSTRUN`.
+    fn after_run(
+        &mut self,
+        m: &Reality,
+        place: &str,
+        days: (Day, Day),
+        ctx: Ctx,
+        sums: &mut Sums,
+    ) -> Result<(), Stop> {
+        let mut moves = m.moves_in(self.timeline_world());
+        // the plans' instances first, as the walk lists them (refcore's `post_e`)
+        moves.sort_by_key(|mv| mv.decision);
+        for mv in moves {
+            for i in self.move_instances(m, mv, ctx.cut)?.iter() {
+                let Some(Dated::Day(day)) = i.day else {
+                    continue;
+                };
+                if day <= m.end || i.status != Status::LeftOut {
+                    continue;
+                }
+                if !mv.decision {
+                    sums.unbooked(i, place, days)?;
+                } else if day >= days.0 && day <= days.1 && self.may_touch(m, mv, i, place, ctx)? {
+                    sums.holes.push(Hole::after_run(&i.id));
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// Whether a decision's instance may move a place: a leg names it, or a leg's place can't
+    /// be read (refcore's `flows_post_e`, its places). L §5.14 Legs.
+    fn may_touch(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        i: &Inst,
+        place: &str,
+        ctx: Ctx,
+    ) -> Result<bool, Stop> {
+        for leg in &mv.decl.legs {
+            for end in [&leg.from, &leg.to] {
+                match self.ev(m, end, &i.env, ctx) {
+                    Ok(Value::Key(KeyVal::Thing(name))) if name == place => return Ok(true),
+                    Ok(Value::Key(KeyVal::Thing(_))) => {}
+                    Ok(_) | Err(Stop::Refused(_)) => return Ok(true),
+                    Err(stop) => return Err(stop),
+                }
+            }
+        }
+        Ok(false)
     }
 
     /// A move's flows over a span: its movements dated in it, a decision's as the walk ran
@@ -260,6 +322,11 @@ impl Engine {
                 }
             };
             if !sp.contains(day) {
+                continue;
+            }
+            if mv.decision && day > m.end {
+                // never walked, so its amount reads a walk that doesn't hold its day (E §2)
+                acc.holes.push(Hole::after_run(&i.id));
                 continue;
             }
             if i.status == Status::Modelled {
@@ -399,7 +466,12 @@ impl Engine {
         let mut out = Vec::new();
         for i in self.move_instances(m, mv, ctx.cut)?.iter() {
             let Some(run) = self.chain_run(id, &i.id)? else {
-                if matches!(i.day, Some(Dated::Hole(_)) | None) && i.exists != Exists::No {
+                // an instance no walk ran: its day a hole, or after the run's end (E §2)
+                let unwalked = match i.day {
+                    Some(Dated::Day(d)) => d > m.end,
+                    Some(Dated::Hole(_)) | None => true,
+                };
+                if unwalked && i.exists != Exists::No {
                     out.push(i.clone());
                 }
                 continue;
@@ -642,8 +714,9 @@ impl Sums {
         Ok(())
     }
 
-    /// What holds for the whole walk up to the span's end: a refusal from inside the span or
-    /// from the walk's start, every hole (refcore's `flows_place`, its global log). L §5.14.3.
+    /// What holds for the whole walk up to the span's end: a refusal from inside the span, its
+    /// first point included (tally 2.1.7 R2, #107), or from the walk's start, every hole
+    /// (refcore's `flows_place`, its global log). L §5.14.3, §8.
     fn global(&mut self, walk: &Walk, lo: At, limit: At) -> Result<(), Stop> {
         let first = At::before(walk.start);
         for e in walk.entries(ALL, ALL) {
@@ -651,7 +724,7 @@ impl Sums {
                 continue;
             }
             match &e.change {
-                Change::Bad(r) if e.at > lo || e.at == first => {
+                Change::Bad(r) if e.at >= lo || e.at == first => {
                     return Err(Stop::Refused(r.clone()));
                 }
                 Change::Perm(h) | Change::Hole(h) => {
@@ -704,6 +777,49 @@ impl Sums {
                     Some(Amount::Refused(_)) | None => {}
                 },
                 Change::Mark => {}
+            }
+        }
+        Ok(())
+    }
+
+    /// A plan's instance dated after the run's end counted at the place: each leg dated in
+    /// the span, signed by the way it runs there (refcore's `flows_post_e`, its plans). E §2,
+    /// L §5.14.3.
+    fn unbooked(&mut self, i: &Inst, place: &str, (first, last): (Day, Day)) -> Result<(), Stop> {
+        for lg in &i.legs {
+            if lg.day.day().is_none_or(|d| d < first || d > last) {
+                continue;
+            }
+            let (out, into) = (lg.from.place() == Some(place), lg.to.place() == Some(place));
+            if !out && !into {
+                continue;
+            }
+            if let Some(err) = &i.err {
+                return Err(Stop::Refused(err.clone()));
+            }
+            self.met.merge(&i.coll);
+            if let Exists::Unknown(h) = &i.exists {
+                self.holes.push(h.clone());
+                continue;
+            }
+            let q = match &lg.amount {
+                Amount::Refused(r) => return Err(Stop::Refused(r.clone())),
+                Amount::Hole(h) => {
+                    self.holes.push(h.clone());
+                    continue;
+                }
+                Amount::Qty(q) => q,
+            };
+            let unit = lg
+                .unit
+                .clone()
+                .ok_or_else(|| invariant("a counted leg with no unit"))?;
+            let sum = self.totals.entry(unit).or_insert_with(Num::zero);
+            if out {
+                *sum = sum.checked_sub(q).map_err(crate::eval::num_stop)?;
+            }
+            if into {
+                *sum = sum.checked_add(q).map_err(crate::eval::num_stop)?;
             }
         }
         Ok(())

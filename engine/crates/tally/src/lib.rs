@@ -181,6 +181,7 @@ pub mod eval {
     mod years;
 
     pub use aggregate::Member;
+    pub(crate) use arith::periods_of;
     pub use arith::{Op, Test, arith, compare, currency_of, int_of, negate, same_value};
     pub(crate) use bindings::{names_in, order_text, reads_name};
     pub use context::Layer;
@@ -189,6 +190,7 @@ pub mod eval {
     pub(crate) use expr::equal_sides;
     pub(crate) use keys::{thing_seen, to_key};
     pub use memo::Memo;
+    pub(crate) use pins::after_on;
     pub(crate) use ranges::range_literal_key;
     pub use stack::Item;
     pub use state::{Collected, Ctx, Engine, Entry, Env, RowSeen, Rows};

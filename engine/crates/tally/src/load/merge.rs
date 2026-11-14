@@ -768,11 +768,21 @@ fn declare(d: &mut Decls, section: &Section, at: LineAt) {
 ///
 /// `LOAD-VERSION member <a> declares tally <x>, the joint model <y>`.
 fn check_tally(jlines: &[FileLines], members: &[Member]) -> Result<(), Stop> {
-    let tally = jlines
+    let joint = jlines
         .iter()
         .rev()
-        .find(|(_, ls)| first_word(ls) == "model")
-        .and_then(|(_, ls)| clause_tok(ls, Clause::Tally));
+        .find(|(_, ls)| first_word(ls) == "model");
+    let tally = joint.and_then(|(_, ls)| clause_tok(ls, Clause::Tally));
+    // the joint file's own header check comes first: one that states no `tally` is refused
+    // there, so the comparison sees versions only (L §6.1, §5.1; refcore's `joint_texts`, P44)
+    if let (Some((path, ls)), None) = (joint, tally) {
+        let line = ls
+            .first()
+            .map(|l| l.number)
+            .ok_or_else(|| invariant("a joint model file with no header line".to_owned()))?;
+        let message = "missing tally version".to_owned();
+        return Err(super::steps::refuse(Load::Header, message, path, line));
+    }
     for m in members {
         for (_, ls) in &m.files {
             let theirs = clause_tok(ls, Clause::Tally);
@@ -780,8 +790,8 @@ fn check_tally(jlines: &[FileLines], members: &[Member]) -> Result<(), Stop> {
                 let message = format!(
                     "member {} declares tally {}, the joint model {}",
                     m.alias,
-                    tally_word(theirs),
-                    tally_word(tally)
+                    tally_word(theirs)?,
+                    tally_word(tally)?
                 );
                 return Err(Stop::Refused(Refusal::new(
                     Code::Load(Load::Version),
@@ -793,9 +803,13 @@ fn check_tally(jlines: &[FileLines], members: &[Member]) -> Result<(), Stop> {
     Ok(())
 }
 
-/// A `tally` clause's version as refcore prints it, `None` where there is none.
-fn tally_word(version: Option<&Tok>) -> String {
-    version.map_or_else(|| "None".to_owned(), |t| t.text.clone())
+/// A `tally` clause's version as the message names it. Both sides state one: a member file
+/// with none is refused by its own header check when it is read, the joint file's above
+/// (`LOAD-HEADER missing tally version`; L §5.1, §6.1; P44).
+fn tally_word(version: Option<&Tok>) -> Result<String, Stop> {
+    version.map(|t| t.text.clone()).ok_or_else(|| {
+        invariant("a file with no tally version: its header check refuses it first".to_owned())
+    })
 }
 
 /// Two members that copy different versions of one law part are refused (refcore's

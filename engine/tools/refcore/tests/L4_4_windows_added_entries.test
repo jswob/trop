@@ -1,0 +1,34 @@
+# L §4.4 One unknown day, named by its read (tally 2.1.7 R3, issue #142; F5): each entry of a calendar's added list
+# is an unknown day of its own, so two equal windows are two holidays, which may fall on one day or two: the next
+# business day after Friday 2026-05-29 is any of 1 to 3 June, and windows each splits on both entries. 2.1.6's
+# refcore counted the two entries as one (window(2026-06-01, 2026-06-02), two lines).
+=== m.tally
+model f5
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+input cal: calendar
+
+ask one: add_business(2026-05-29, 1, cal)
+ask each: add_business(2026-05-29, 1, cal) windows each
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  cal = calendar(weekends [sat, sun], added [window(2026-06-01, 2026-06-02), window(2026-06-01, 2026-06-02)]) "c"
+=== expect
+each [added window(2026-06-01, 2026-06-02) = 2026-06-01, added window(2026-06-01, 2026-06-02) = 2026-06-01]: 2026-06-02
+...
+each [added window(2026-06-01, 2026-06-02) = 2026-06-01, added window(2026-06-01, 2026-06-02) = 2026-06-02]: 2026-06-03
+...
+each [added window(2026-06-01, 2026-06-02) = 2026-06-02, added window(2026-06-01, 2026-06-02) = 2026-06-01]: 2026-06-03
+...
+each [added window(2026-06-01, 2026-06-02) = 2026-06-02, added window(2026-06-01, 2026-06-02) = 2026-06-02]: 2026-06-01
+...
+one: window(2026-06-01, 2026-06-03)
+...
