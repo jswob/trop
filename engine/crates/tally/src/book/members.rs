@@ -737,9 +737,13 @@ impl Engine {
                 .day
                 .day()
                 .or_else(|| src.day().as_ref().and_then(Dated::day));
+            // the walk is a cause an explanation prints in its own form only where it refused
+            // the leg; else the leg is its instance's, traced as the instance was (E §10)
+            let back = self.trace_walked();
             if let Some(err) = self.leg_refused(m, (src.id(), name), day, ctx)? {
                 return Err(Stop::Refused(err));
             }
+            self.trace_walked_back(back);
             return leg_record(m, lg);
         }
         if let Moving::Plan(i) = src
