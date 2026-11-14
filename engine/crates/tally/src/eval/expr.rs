@@ -13,11 +13,12 @@
 
 use core::cmp::Ordering;
 
-use super::arith::{Op, Test, arith, compare, duration, negate, same_value};
+use super::arith::{Op, Test, arith, compare, negate, same_value};
 use super::keys::{Given, lacks_at_run, literal_key};
 use super::state::{
     Ctx, Engine, Env, Figures, invariant, not_typed, num_stop, refuse, refuse_load, unit_stop,
 };
+use super::time_arith::duration;
 use super::ty::{figure_like, sample};
 use super::windows::{as_window, window_arith, window_compare, window_negated};
 use super::years::{as_year, period_like, period_literal, year_literal};

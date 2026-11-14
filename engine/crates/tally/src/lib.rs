@@ -175,6 +175,7 @@ pub mod eval {
     mod srows;
     mod stack;
     mod state;
+    mod time_arith;
     mod timelines;
     mod trace;
     mod ty;
@@ -182,7 +183,6 @@ pub mod eval {
     mod years;
 
     pub use aggregate::Member;
-    pub(crate) use arith::periods_of;
     pub use arith::{Op, Test, arith, compare, currency_of, int_of, negate, same_value};
     pub(crate) use bindings::{names_in, order_text, reads_name};
     pub use context::Layer;
@@ -196,6 +196,7 @@ pub mod eval {
     pub use stack::Item;
     pub use state::{Collected, Ctx, Engine, Entry, Env, RowSeen, Rows};
     pub(crate) use state::{a_day, num_stop, past_days};
+    pub(crate) use time_arith::periods_of;
     pub(crate) use timelines::combinations;
     pub(crate) use trace::{Balance as TracedBalance, Kind as TraceKind, Trace, Walked};
     pub(crate) use windows::one_day;
@@ -212,6 +213,7 @@ pub mod walk {
     mod flows;
     mod legs;
     mod lows;
+    mod move_flows;
     mod order;
     mod plan;
     mod point;
