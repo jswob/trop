@@ -26,7 +26,7 @@ use crate::time::Day;
 use super::convert::{ConvertFor, Converted, convert_read};
 use super::memo::{CellId, CellKey, LawClass, Read, rows_class, rules_class};
 use super::read::{at_keys, pinned_at, shown};
-use super::trace::Seen;
+use super::trace::{RuleState, Seen};
 use super::windows::as_read;
 
 impl Engine {
@@ -406,7 +406,7 @@ impl Engine {
         }
         if let Some(hole) = spread(&relevant) {
             if let Some(first) = cands.first() {
-                self.trace_state(node, label_of(def, *first), "candidate".to_owned());
+                self.trace_state(node, label_of(def, *first), RuleState::Candidate);
             }
             return Ok(Err(Value::Hole(hole)));
         }
@@ -433,7 +433,7 @@ impl Engine {
         applicable: &[InForce],
     ) {
         if node.is_some() {
-            self.trace_state(node, label_of(def, at), beaten_text(def, applicable, at));
+            self.trace_state(node, label_of(def, at), beaten_state(def, applicable, at));
         }
     }
 
@@ -451,9 +451,9 @@ impl Engine {
             return;
         }
         if let Value::Hole(_) = tested {
-            self.trace_state(node, label, "unknown".to_owned());
+            self.trace_state(node, label, RuleState::Unknown);
         } else if *tested == Value::Bool(false) {
-            self.trace_state(node, label, "not applicable".to_owned());
+            self.trace_state(node, label, RuleState::NotApplicable);
         }
         self.trace_groups(node, label, (group, None));
     }
@@ -483,7 +483,7 @@ impl Engine {
         if node.is_none() {
             return;
         }
-        match won_text(m, rule) {
+        match won_state(m, rule) {
             Ok(state) => self.trace_state(node, &rule.label, state),
             Err(stop) => self.trace_kept(stop),
         }
@@ -608,31 +608,28 @@ fn in_force(m: &Reality, def: &DefInfo, clocks: Clocks) -> Result<Vec<InForce>, 
 
 /// `beaten by a, b`: the rules among `applicable` that beat rule `at`, by label (refcore's
 /// `eval_rules`, its states). L §5.18.
-fn beaten_text(def: &DefInfo, applicable: &[InForce], at: InForce) -> String {
+fn beaten_state(def: &DefInfo, applicable: &[InForce], at: InForce) -> RuleState {
     // the labels in their text's order, each once
     let by: std::collections::BTreeSet<&str> = applicable
         .iter()
         .filter(|o| **o != at && beats(def, **o, at))
         .map(|o| label_of(def, *o))
         .collect();
-    format!(
-        "beaten by {}",
-        by.into_iter().collect::<Vec<_>>().join(", ")
-    )
+    RuleState::Beaten(by.into_iter().map(str::to_owned).collect())
 }
 
 /// `won`, with the version that states the rule and its source where it cites one: its `v`,
 /// else the version holding it (refcore's `explain_node`, `rv.v or rv.version`). E §10.
-fn won_text(m: &Reality, rule: &RuleVer) -> Result<String, Stop> {
+fn won_state(m: &Reality, rule: &RuleVer) -> Result<RuleState, Stop> {
     let Some(version) = rule.v.as_ref().or(rule.version.as_ref()) else {
-        return Ok("won".to_owned());
+        return Ok(RuleState::Won(None));
     };
     let cite = &m
         .versions
         .get(version)
         .ok_or_else(|| invariant("a rule names a version load didn't build"))?
         .cite;
-    Ok(format!("won (version {version}, source {cite})"))
+    Ok(RuleState::Won(Some((version.clone(), cite.clone()))))
 }
 
 /// The version of a rule in force.

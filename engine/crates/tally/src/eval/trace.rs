@@ -84,13 +84,51 @@ pub(crate) struct Balance {
 pub(crate) struct RuleLine {
     /// Its label.
     pub label: String,
-    /// Its state: `won (version v, source s)`, `beaten by a, b`, `not applicable`,
-    /// `unknown`, `candidate`; empty while it has none, and then it doesn't print.
-    pub state: String,
+    /// Its state; none while it has none, and then it doesn't print.
+    pub state: Option<RuleState>,
     /// The group its `when` read, if it has one and it was read.
     pub when: Option<usize>,
     /// The group the winner's value read.
     pub value: Option<usize>,
+}
+
+/// The state of a rule of a traced def cell (L §5.18 Explanation order: won; beaten, by
+/// whom; not applicable; unknown, when its `when` is a hole; refcore's `rule_states`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum RuleState {
+    /// It won: `won`, with the version that states it and its source where it cites one,
+    /// `won (version v, source s)`.
+    Won(Option<(String, String)>),
+    /// It applies and rules that beat it do, by their labels in their text's order:
+    /// `beaten by a, b`.
+    Beaten(Vec<String>),
+    /// Its `when` is false: `not applicable`.
+    NotApplicable,
+    /// Its `when` is a hole: `unknown`.
+    Unknown,
+    /// It was the first candidate when a hole decided the value: `candidate`.
+    Candidate,
+}
+
+impl RuleState {
+    /// The state as `explain` prints it after the rule's label. L §5.18.
+    pub(crate) fn text(&self) -> String {
+        match self {
+            RuleState::Won(None) => "won".to_owned(),
+            RuleState::Won(Some((version, cite))) => {
+                format!("won (version {version}, source {cite})")
+            }
+            RuleState::Beaten(by) => format!("beaten by {}", by.join(", ")),
+            RuleState::NotApplicable => "not applicable".to_owned(),
+            RuleState::Unknown => "unknown".to_owned(),
+            RuleState::Candidate => "candidate".to_owned(),
+        }
+    }
+
+    /// Whether the rule won, so its value's causes print under it. L §5.18.
+    pub(crate) fn won(&self) -> bool {
+        matches!(self, RuleState::Won(_))
+    }
 }
 
 /// A node of a trace (refcore's `TraceNode`).
@@ -261,7 +299,7 @@ impl Trace {
         let rules = &mut self.node_mut(at)?.rules;
         Ok(rules.entry(label.to_owned()).or_insert_with(|| RuleLine {
             label: label.to_owned(),
-            state: String::new(),
+            state: None,
             when: None,
             value: None,
         }))
@@ -633,12 +671,12 @@ impl Engine {
     }
 
     /// Sets the state of the rule labelled `label` of the def cell's node `node`.
-    pub(super) fn trace_state(&mut self, node: Option<usize>, label: &str, state: String) {
+    pub(super) fn trace_state(&mut self, node: Option<usize>, label: &str, state: RuleState) {
         let Some((trace, at)) = self.traced_node(node) else {
             return;
         };
         match trace.rule_mut(at, label) {
-            Ok(rule) => rule.state = state,
+            Ok(rule) => rule.state = Some(state),
             Err(stop) => trace.keep(Err(stop)),
         }
     }

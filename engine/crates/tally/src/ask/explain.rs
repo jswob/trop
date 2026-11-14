@@ -457,15 +457,13 @@ enum Step {
 fn def_causes(trace: &Trace, at: usize) -> Result<Vec<usize>, Stop> {
     let node = trace.node(at)?;
     let mut out = Vec::new();
-    for rule in node
+    for (rule, state) in node
         .rules
         .values()
-        .filter(|r| node.shown && !r.state.is_empty())
+        .filter_map(|r| r.state.as_ref().map(|s| (r, s)))
+        .filter(|_| node.shown)
     {
-        let groups = [
-            rule.when,
-            rule.value.filter(|_| rule.state.starts_with("won")),
-        ];
+        let groups = [rule.when, rule.value.filter(|_| state.won())];
         for group in groups.into_iter().flatten() {
             out.extend(trace.node(group)?.children.iter().copied());
         }
@@ -657,16 +655,15 @@ fn node_lines(
             let shown = node
                 .rules
                 .values()
-                .filter(|r| node.shown && !r.state.is_empty());
-            for rule in shown {
+                .filter_map(|r| r.state.as_ref().map(|s| (r, s)))
+                .filter(|_| node.shown);
+            for (rule, state) in shown {
                 below.push(Step::Line(format!(
                     "{ind}    rule {}: {}",
-                    rule.label, rule.state
+                    rule.label,
+                    state.text()
                 )));
-                let groups = [
-                    rule.when,
-                    rule.value.filter(|_| rule.state.starts_with("won")),
-                ];
+                let groups = [rule.when, rule.value.filter(|_| state.won())];
                 for group in groups.into_iter().flatten() {
                     let children = &trace.node(group)?.children;
                     below.extend(children.iter().map(|c| Step::Cause(at, *c, inner)));
