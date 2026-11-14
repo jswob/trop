@@ -359,7 +359,7 @@ impl Engine {
             Act::Read(reading) => {
                 // a hole that states no unit stands for each unit its place holds here (pick
                 // P22, #173)
-                for each in crate::book::per_unit(self.walk(id)?, &reading) {
+                for each in crate::book::per_unit(self.walk(id)?, &reading, at) {
                     if each.input == "opening" {
                         self.walk_mut(id)?.apply_opening(m, at, &each)?;
                     } else {

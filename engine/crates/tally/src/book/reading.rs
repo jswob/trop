@@ -147,34 +147,24 @@ pub fn readings(m: &Reality, (cut, world): (Day, World), rows: Rows) -> Result<V
     Ok(out)
 }
 
-/// Reading `r` once per unit it stands for: itself, or for a hole that states no unit (unit
-/// `ALL`) one per unit its place holds in walk `walk` when it applies, in text order; itself
-/// at `ALL` where the place holds none yet (pick P22, #173). L §4.6 Readings, E §6.1.
+/// Reading `r`, applied at point `at` of walk `walk`, once per unit it stands for: itself, or
+/// for a hole that states no unit (unit `ALL`) one per unit its place holds at that point, in
+/// text order, none where it holds none yet; each unit's own next anchor sets that unit's
+/// balance again (pick P22, #173; P24). L §4.6 Readings, E §6.1.
 #[must_use]
-pub fn per_unit(walk: &crate::walk::Walk, r: &Reading) -> Vec<Reading> {
+pub fn per_unit(walk: &crate::walk::Walk, r: &Reading, at: At) -> Vec<Reading> {
     if r.unit != crate::walk::ALL {
         return vec![r.clone()];
     }
-    let mut units = Vec::new();
-    for (place, unit) in walk
-        .logs
-        .range((r.place.clone(), String::new())..)
-        .map(|(k, _)| k)
-    {
-        if *place != r.place {
-            break;
-        }
-        if unit != crate::walk::ALL {
-            units.push(Reading {
-                unit: unit.clone(),
-                ..r.clone()
-            });
+    let mut out = Vec::new();
+    for unit in walk.units_of(&r.place) {
+        // a unit the place holds by `at`: its first entry is at or before it
+        let held = matches!(walk.entries(&r.place, &unit).first(), Some(e) if e.at <= at);
+        if held {
+            out.push(Reading { unit, ..r.clone() });
         }
     }
-    if units.is_empty() {
-        return vec![r.clone()];
-    }
-    units
+    out
 }
 
 /// The units the rows of one place, instant and input state, in text order; one `None` where
