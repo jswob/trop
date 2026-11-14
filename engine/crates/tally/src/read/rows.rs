@@ -540,6 +540,16 @@ fn narrower(m: &Reality, binds: &[BindInfo], a: &[Pat], b: &[Pat]) -> bool {
     strict
 }
 
+/// The candidates `cands` that stand: none a `replace` row beats, of the innermost layer
+/// that holds any (L §4.6 step 2, §6.4; refcore's `choose`, before precedence).
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for a candidate past its rows or a row whose version is missing.
+pub fn standing_rows(m: &Reality, rows: &[Row], cands: &[usize]) -> Result<Vec<usize>, Stop> {
+    top_layer(m, rows, &unreplaced(m, rows, cands)?)
+}
+
 /// The candidates no `replace` row beats: a row at the same keys that says `replace` wins
 /// over the rows known before it, and a scenario's over its base's whatever their `known`
 /// dates (refcore's `choose`, its replacement). L §4.6 step 2, §6.4.
@@ -667,7 +677,7 @@ pub fn choose(
     if cands.is_empty() {
         return Ok(None);
     }
-    let mut keep = top_layer(m, rows, &unreplaced(m, rows, cands)?)?;
+    let mut keep = standing_rows(m, rows, cands)?;
     if keep.len() > 1 {
         keep = narrowest(m, rows, binds, &keep);
     }

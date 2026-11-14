@@ -60,6 +60,10 @@ pub struct Pad {
 /// row (L §5.19).
 type Kept = (Day, Day, Edge, crate::model::Row);
 
+/// A kept reading row with the unit its value states, none for a hole or `none` at a place
+/// of unit `any` (pick P22, #173).
+type UnitKept = (Option<String>, Kept);
+
 /// The readings cut `cut` sees in world `world`: each `opening` and `stated` row known by
 /// the cut, of a version the world sees, a restated one replaced as `replace` says (a
 /// scenario's over its base's whatever their `known` dates, as `standing` takes it), sorted
@@ -69,10 +73,12 @@ type Kept = (Day, Day, Edge, crate::model::Row);
 /// # Errors
 ///
 /// A row load left without its version; `NotBuilt` for a reading `after` a movement or at a
-/// day with no edge, and for a place of unit `any`.
+/// day with no edge.
 pub fn readings(m: &Reality, (cut, world): (Day, World), rows: Rows) -> Result<Vec<Seen>, Stop> {
-    // a place of unit `any` holds a reading per unit (L §4.6): a row's key holds its unit
-    let mut cands: BTreeMap<(String, String, String, Option<String>), Vec<Kept>> = BTreeMap::new();
+    // a reading row is keyed by its place and instant, its unit in its value: a place of unit
+    // `any` holds a reading per unit (L §4.6), and a row that states no unit (a hole, `none`)
+    // stands for every unit at its instant (pick P22, #173)
+    let mut cands: BTreeMap<(String, String, String), Vec<UnitKept>> = BTreeMap::new();
     for input in ["opening", "stated"] {
         let Some(info) = m.inputs.get(input) else {
             continue;
@@ -102,40 +108,78 @@ pub fn readings(m: &Reality, (cut, world): (Day, World), rows: Rows) -> Result<V
                 .reading_ty(place, &row.value)
                 .map_err(crate::eval::num_stop)?
                 .map(|(unit, _)| unit);
-            let key = (
-                place.clone(),
-                instant_text(day, edge),
-                input.to_owned(),
-                unit,
-            );
+            let key = (place.clone(), instant_text(day, edge), input.to_owned());
             cands
                 .entry(key)
                 .or_insert_with(Vec::new)
-                .push((known, day, edge, row.clone()));
+                .push((unit, (known, day, edge, row.clone())));
         }
     }
     let mut out = Vec::with_capacity(cands.len());
-    for ((place, instant, input, _), rows_at) in cands {
-        let Some((_, day, edge, row)) = standing(m, rows_at) else {
-            continue;
-        };
-        let mut reading = reading_of(m, &input, &place, &instant, &row)?;
-        // the row as `inputs-of` lists it, kept by an engine answering one (E §10)
-        if rows == Rows::Kept
-            && let Some(r) = &mut reading
-        {
-            r.coll
-                .note_row(&row.sid, &row.version, row.locator.as_ref());
+    for ((place, instant, input), rows_at) in cands {
+        for unit in stated_units(&rows_at) {
+            // the unit's own rows and the rows that state no unit, which stand for it
+            let rows_of: Vec<Kept> = rows_at
+                .iter()
+                .filter(|(u, _)| u.is_none() || *u == unit)
+                .map(|(_, kept)| kept.clone())
+                .collect();
+            let Some((_, day, edge, row)) = standing(m, rows_of) else {
+                continue;
+            };
+            let mut reading = reading_of(m, (&input, &place, &instant), &row, unit.as_deref())?;
+            // the row as `inputs-of` lists it, kept by an engine answering one (E §10)
+            if rows == Rows::Kept
+                && let Some(r) = &mut reading
+            {
+                r.coll
+                    .note_row(&row.sid, &row.version, row.locator.as_ref());
+            }
+            out.push(Seen {
+                day,
+                edge,
+                place: place.clone(),
+                input: input.clone(),
+                reading,
+            });
         }
-        out.push(Seen {
-            day,
-            edge,
-            place,
-            input,
-            reading,
-        });
     }
     Ok(out)
+}
+
+/// Reading `r` once per unit it stands for: itself, or for a hole that states no unit (unit
+/// `ALL`) one per unit its place holds in walk `walk` when it applies, in text order; itself
+/// at `ALL` where the place holds none yet (pick P22, #173). L §4.6 Readings, E §6.1.
+#[must_use]
+pub fn per_unit(walk: &crate::walk::Walk, r: &Reading) -> Vec<Reading> {
+    if r.unit != crate::walk::ALL {
+        return vec![r.clone()];
+    }
+    let units: Vec<Reading> = walk
+        .logs
+        .range((r.place.clone(), String::new())..)
+        .take_while(|((place, _), _)| *place == r.place)
+        .filter(|((_, unit), _)| unit != crate::walk::ALL)
+        .map(|((_, unit), _)| Reading {
+            unit: unit.clone(),
+            ..r.clone()
+        })
+        .collect();
+    if units.is_empty() {
+        return vec![r.clone()];
+    }
+    units
+}
+
+/// The units the rows of one place, instant and input state, in text order; one `None` where
+/// none states a unit, every unit the place holds then (pick P22, #173). L §4.6 Readings.
+fn stated_units(rows_at: &[UnitKept]) -> Vec<Option<String>> {
+    let units: std::collections::BTreeSet<&String> =
+        rows_at.iter().filter_map(|(u, _)| u.as_ref()).collect();
+    if units.is_empty() {
+        return vec![None];
+    }
+    units.into_iter().map(|u| Some(u.clone())).collect()
 }
 
 /// The row that stands among the readings `rows_at` of one place, instant and input: of the
@@ -228,24 +272,40 @@ pub(crate) fn instant_text(day: Day, edge: Edge) -> String {
     format!("{} {word}", day.text())
 }
 
-/// A reading's row as the walk applies it: its value in the place's unit, a stated hole, or
-/// none for a row whose value is `none` (refcore's `apply_reading`, its value). L §5.19.
+/// A reading's row as the walk applies it, for unit `stands` among its instant's: its value
+/// in its unit, a stated hole, or none for a row whose value is `none`. A hole that states no
+/// unit stands for `stands`, or for every unit the place holds at its point (`ALL`) where no
+/// row at its instant states one (refcore's `apply_reading`, its value; pick P22, #173).
+/// L §5.19, §4.6 Readings.
 fn reading_of(
     m: &Reality,
-    input: &str,
-    place: &str,
-    instant: &str,
+    (input, place, instant): (&str, &str, &str),
     row: &crate::model::Row,
+    stands: Option<&str>,
 ) -> Result<Option<Reading>, Stop> {
     if row.value == crate::syntax::Value::None {
         return Ok(None);
     }
-    let (unit, ty) = m
+    let figure = format!("{input}[{place}]");
+    let stated = m
         .reading_ty(place, &row.value)
-        .map_err(crate::eval::num_stop)?
-        .ok_or(Stop::NotBuilt(
-            "a reading whose unit neither its place nor its row states",
-        ))?;
+        .map_err(crate::eval::num_stop)?;
+    let (unit, value) = match (stated, &row.value) {
+        (Some((unit, ty)), _) => match crate::eval::convert_row(m, &row.value, &ty)? {
+            Err(text) => (unit, Err(Hole::asked(&text, &figure))),
+            Ok(crate::model::Value::None) => return Ok(None),
+            Ok(v) => (unit, Ok(crate::walk::quantity(m, &v)?.0)),
+        },
+        (None, crate::syntax::Value::Hole(text)) => (
+            stands.unwrap_or(crate::walk::ALL).to_owned(),
+            Err(Hole::asked(text, &figure)),
+        ),
+        (None, _) => {
+            return Err(Stop::NotBuilt(
+                "a reading whose unit neither its place nor its row states",
+            ));
+        }
+    };
     let mut coll = Collected::default();
     coll.versions.insert(row.version.clone());
     if let Some(reason) = &row.assumed {
@@ -255,12 +315,6 @@ fn reading_of(
             figure: String::new(),
         });
     }
-    let figure = format!("{input}[{place}]");
-    let value = match crate::eval::convert_row(m, &row.value, &ty)? {
-        Err(text) => Err(Hole::asked(&text, &figure)),
-        Ok(crate::model::Value::None) => return Ok(None),
-        Ok(v) => Ok(crate::walk::quantity(m, &v)?.0),
-    };
     Ok(Some(Reading {
         input: input.to_owned(),
         place: place.to_owned(),

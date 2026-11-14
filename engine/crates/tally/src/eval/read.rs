@@ -26,7 +26,8 @@ use crate::model::{
     Unit, Value,
 };
 use crate::read::{
-    Asked, Clocks, Found, held, last_began, origin, read_input, read_last, time_point,
+    Asked, Clocks, Found, held, last_began, origin, read_input, read_last, standing_rows,
+    time_point,
 };
 use crate::syntax::{Call, Expr, Stop, Value as Written};
 use crate::time::{Day, PeriodKind};
@@ -73,6 +74,15 @@ fn latest_of(input: &InputInfo, at: usize) -> Result<&Row, Stop> {
         .rows
         .get(at)
         .ok_or_else(|| invariant("the read rule took a row the input lacks"))
+}
+
+/// `HOLE-NOREADING` of `figure` on or before day `day`: "<x>[k] has no reading on or before
+/// <d>" (L §4.6 Readings, §8.1; refcore's `e_lastx`).
+fn no_reading(figure: &str, day: Day) -> Hole {
+    Hole::asked(
+        &format!("{figure} has no reading on or before {}", day.text()),
+        figure,
+    )
 }
 
 /// The cell a read of an input names its window by: the row its read rule took, which the
@@ -291,6 +301,11 @@ impl Engine {
             );
             self.note("held", text, String::new());
         }
+        // a reading `replace … = none` removed is no reading (L §5.19: "it removes the
+        // reading it replaces"; L §4.6 Readings, `HOLE-NOREADING`; refcore's `e_lastx`)
+        if input.reading && value == Value::None {
+            return Ok(Value::Hole(no_reading(&figure, latest.day)));
+        }
         // a read of x at its keys, named by the row it took, whatever day d took it (L §4.4)
         Ok(as_read(value, (&input.id, &latest.keys), row_cell(row)))
     }
@@ -384,13 +399,24 @@ impl Engine {
         let clocks = self.clocks(ctx, &input.id)?;
         let found = match past {
             // `since` reads only the day the latest rows began, which they share: one reading
-            // per unit at a place of unit `any` is no tie for it (L §4.6 Readings)
+            // per unit at a place of unit `any` is no tie for it (L §4.6 Readings); a reading
+            // `replace … = none` removed is none (L §5.19), so with only such it is
+            // `HOLE-NOREADING`
             Past::Since => match last_began(m, input, &keys, day, clocks)? {
-                Ok(kept) => Found::Row(
-                    *kept
-                        .first()
-                        .ok_or_else(|| invariant("since's rows that began latest, none"))?,
-                ),
+                Ok(kept) => {
+                    let stand = standing_rows(m, &input.rows, &kept)?;
+                    let read = stand.into_iter().find(|at| {
+                        input
+                            .rows
+                            .get(*at)
+                            .is_some_and(|row| row.value != Written::None)
+                    });
+                    let Some(at) = read else {
+                        let figure = origin(&input.id, &keys);
+                        return Ok(Err(Value::Hole(no_reading(&figure, day))));
+                    };
+                    Found::Row(at)
+                }
                 Err(found) => found,
             },
             Past::Last | Past::Price => read_last(m, input, &keys, day, clocks)?,
@@ -700,9 +726,13 @@ fn row_value(
         // states at a place of unit `any` (L §4.6 Readings, §5.19)
         (None, true, Some(Pat::Key(KeyVal::Thing(place)))) => {
             reading = m.reading_ty(place, &row.value).map_err(num_stop)?;
-            match &reading {
-                Some((_, ty)) => ty,
-                None => return Err(Stop::NotBuilt("the value of a reading of no unit")),
+            match (&reading, &row.value) {
+                (Some((_, ty)), _) => ty,
+                // a row that states no unit, a hole or `none`, stands for every unit (pick
+                // P22, #173)
+                (None, Written::Hole(text)) => return Ok(Value::Hole(Hole::asked(text, figure))),
+                (None, Written::None) => return Ok(Value::None),
+                (None, _) => return Err(Stop::NotBuilt("the value of a reading of no unit")),
             }
         }
         (None, ..) => return Err(Stop::NotBuilt("the value of an observed row")),

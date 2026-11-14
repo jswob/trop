@@ -263,7 +263,7 @@ pub mod book {
     pub use ledger::{Fig, Group, GroupKey, Ledger, Line, fig_text};
     pub(crate) use members::{MvDom, MvMember, inst_ref};
     pub use observe::{Coverage, Linked, Obs, inst_id};
-    pub use reading::{Pad, Seen, first_readings, reading_rank, readings};
+    pub use reading::{Pad, Seen, first_readings, per_unit, reading_rank, readings};
     pub(crate) use reading::{gap_text, instant_text};
     pub(crate) use settle::settlement_move;
 }
@@ -365,7 +365,7 @@ pub mod read {
     };
     pub use rows::{
         Clocks, Point, Test, candidates, choose, held, lawless, need_law, row_known, row_place,
-        row_span, time_point, worded,
+        row_span, standing_rows, time_point, worded,
     };
     pub use rules::rule_in_force;
 }

@@ -356,10 +356,18 @@ impl Engine {
     /// One act of the day (refcore's `act`). E §4.2 steps 0–2, Holes in the walk, E §5 step 5.
     fn act(&mut self, m: &Reality, id: usize, at: At, act: Act) -> Result<(), Stop> {
         match act {
-            Act::Read(reading) if reading.input == "opening" => {
-                self.walk_mut(id)?.apply_opening(m, at, &reading)
+            Act::Read(reading) => {
+                // a hole that states no unit stands for each unit its place holds here (pick
+                // P22, #173)
+                for each in crate::book::per_unit(self.walk(id)?, &reading) {
+                    if each.input == "opening" {
+                        self.walk_mut(id)?.apply_opening(m, at, &each)?;
+                    } else {
+                        self.apply_stated(m, id, at, &each)?;
+                    }
+                }
+                Ok(())
             }
-            Act::Read(reading) => self.apply_stated(m, id, at, &reading),
             Act::Obs(ix, leg) => self.book_obs_leg(m, id, ix, leg, at),
             Act::Mark(place, unit, entry, coll) => {
                 let mut ent = Ent::new(at, Change::Mark);
