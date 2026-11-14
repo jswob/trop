@@ -13,7 +13,7 @@
 //! min(t, K); a run-time refusal met evaluating an instance stays with that instance; a move's
 //! instances are computed once per cut, and a move that reads its own instances is `RUN-CYCLE`.
 
-use super::tuples::{Law, Tuple};
+use super::tuples::{Law, Tuple, imprecise_law};
 use crate::base::{Code, Load, Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Env, order_text, thing_seen};
 use crate::hole::{Hole, spread};
@@ -333,8 +333,8 @@ pub struct Inst {
     pub id: String,
     /// Its day, at the cut K; none when its evaluation was refused before it.
     pub day: Option<Dated>,
-    /// Its law date by the move's `at`.
-    pub law: Option<Day>,
+    /// Its law date by the move's `at`: a day, or a window it is read at each day of.
+    pub law: Law,
     /// Its booking cut min(t, K), for a booked plan.
     pub cut: Option<Day>,
     /// The period it is for.
@@ -376,7 +376,7 @@ impl Inst {
             env,
             id,
             day: None,
-            law: None,
+            law: Law::None,
             cut: None,
             for_period: None,
             exists: Exists::Yes,
@@ -799,7 +799,9 @@ impl Engine {
             (None, Some(d)) => d.min(tctx.cut),
             (None, None) => tctx.cut,
         };
-        if let Some(legs) = self.refused_places(m, mv, inst, self.timeline_ctx(inst.law, cut))? {
+        if let Some(legs) =
+            self.refused_places(m, mv, inst, self.timeline_ctx(inst.law.first(), cut))?
+        {
             inst.legs = legs;
         }
         Ok(())
@@ -896,7 +898,7 @@ impl Engine {
         let mut ends: Vec<(String, Option<String>)> = Vec::new();
         if inst.legs.is_empty() {
             let day = inst.day.as_ref().and_then(Dated::day);
-            let ctx = self.timeline_ctx(inst.law, day.map_or(cut, |d| d.min(cut)));
+            let ctx = self.timeline_ctx(inst.law.first(), day.map_or(cut, |d| d.min(cut)));
             let Some(places) = self.leg_ends(m, mv, inst, ctx)? else {
                 return Ok(Vec::new());
             };
@@ -958,12 +960,11 @@ impl Engine {
                 inst.exists = Exists::Unknown(h);
                 return Ok(true);
             }
-            Law::Day(d) => Some(d),
-            Law::None => None,
+            law @ (Law::Day(_) | Law::Window(..) | Law::None) => law,
         };
-        inst.law = law;
+        inst.law = law.clone();
         self.push();
-        let v = self.ev(m, &mv.decl.on, &inst.env, tctx.at_law(law));
+        let v = self.day_over_law(m, mv, inst, tctx);
         let day_coll = self.pop_alone();
         self.absorb(&day_coll);
         inst.day_coll = day_coll;
@@ -1013,19 +1014,69 @@ impl Engine {
             inst.exists = Exists::No;
             return Ok(true);
         }
-        let body = self.inst_body(
-            m,
-            mv,
-            inst,
-            self.timeline_ctx(law, cut),
-            seed.exists.clone(),
-        )?;
+        let body = self.body_over_law(m, mv, inst, self.timeline_ctx(None, cut))?;
         inst.exists = body.exists;
         inst.legs = body.legs;
         inst.attrs = body.attrs;
         inst.for_period = body.for_period;
         inst.fulfils = body.fulfils;
         Ok(true)
+    }
+
+    /// An instance's day: its `on` read at its law date, and under a window `at` at each law
+    /// date the window can take, `HOLE-IMPRECISE` where they differ (refcore's `eval_inst`,
+    /// its `lds`). L §4.3, §5.14 `at e`.
+    fn day_over_law(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        inst: &Inst,
+        tctx: Ctx,
+    ) -> Result<Value, Stop> {
+        let first = self.ev(m, &mv.decl.on, &inst.env, tctx.at_law(inst.law.first()))?;
+        let Some(window) = inst.law.window() else {
+            return Ok(first);
+        };
+        for day in inst.law.rest() {
+            let other = self.ev(m, &mv.decl.on, &inst.env, tctx.at_law(Some(*day)))?;
+            if other != first {
+                return Ok(Value::Hole(imprecise_law(window, &inst.id)));
+            }
+        }
+        Ok(first)
+    }
+
+    /// An instance's body at its law date in context `ctx`, its cut set, from its tuple's
+    /// existence; under a window `at`, at each law date the window can take: one body where
+    /// all agree, else each leg's amount `HOLE-IMPRECISE`, and its existence where that
+    /// differs too (refcore's `body_over_law`). L §4.3, §5.14 `at e`, E §5 step 1.
+    ///
+    /// # Errors
+    ///
+    /// The refusals of its parts.
+    pub(super) fn body_over_law(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        inst: &Inst,
+        ctx: Ctx,
+    ) -> Result<Body, Stop> {
+        let exists = inst.exists.clone();
+        let first = self.inst_body(m, mv, inst, ctx.at_law(inst.law.first()), exists.clone())?;
+        let Some(window) = inst.law.window() else {
+            return Ok(first);
+        };
+        for day in inst.law.rest() {
+            let other = self.inst_body(m, mv, inst, ctx.at_law(Some(*day)), exists.clone())?;
+            if !same_body(&other, &first) {
+                return Ok(imprecise_body(
+                    first,
+                    &other,
+                    &imprecise_law(window, &inst.id),
+                ));
+            }
+        }
+        Ok(first)
     }
 
     /// An instance's body in context `ctx`, its law date and cut set: its `when`, period,
@@ -1122,6 +1173,50 @@ impl Engine {
             for_period,
             fulfils,
         })
+    }
+}
+
+/// Whether two bodies are the same, read at two law dates: their existence and each leg's
+/// name, places, amount and day (refcore's `body_key`). L §4.3.
+fn same_body(a: &Body, b: &Body) -> bool {
+    a.exists == b.exists
+        && a.legs.len() == b.legs.len()
+        && a.legs.iter().zip(&b.legs).all(|(x, y)| {
+            x.name == y.name
+                && x.from == y.from
+                && x.to == y.to
+                && x.amount == y.amount
+                && x.day == y.day
+        })
+}
+
+/// The body of a window `at` whose law dates give two bodies: the first's, each leg's amount
+/// the hole `hole` (the second's legs where the first has none), its existence the hole too
+/// where the two differ (refcore's `body_over_law`). L §4.3, §8.1.
+fn imprecise_body(first: Body, other: &Body, hole: &Hole) -> Body {
+    let src = if first.legs.is_empty() {
+        &other.legs
+    } else {
+        &first.legs
+    };
+    let legs = src
+        .iter()
+        .map(|lg| LegVal {
+            amount: Amount::Hole(hole.clone()),
+            ..lg.clone()
+        })
+        .collect();
+    let exists = if first.exists == other.exists {
+        first.exists
+    } else {
+        Exists::Unknown(hole.clone())
+    };
+    Body {
+        exists,
+        legs,
+        attrs: first.attrs,
+        for_period: first.for_period,
+        fulfils: first.fulfils,
     }
 }
 

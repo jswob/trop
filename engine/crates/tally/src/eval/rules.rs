@@ -20,7 +20,7 @@ use crate::base::{Load, Run};
 use crate::hole::{Hole, spread};
 use crate::model::{
     Class, DefInfo, KeyVal, Node, NodeKind, Number, Reality, RuleVer, Shown, Ty, Unit, Value,
-    pattern_text,
+    Window, pattern_text,
 };
 use crate::read::{Clocks, Test, candidates, choose, origin, rule_in_force, worded};
 use crate::syntax::{LawDate, RuleValue, Stop};
@@ -30,7 +30,7 @@ use super::convert::{ConvertFor, Converted, convert_read};
 use super::memo::{CellId, CellKey, LawClass, Read, rows_class, rules_class};
 use super::read::{at_keys, pinned_at, shown};
 use super::trace::{RuleState, Seen};
-use super::windows::as_read;
+use super::windows::{as_read, window_days};
 
 impl Engine {
     /// A read of def `def` at keys already made keys (refcore's `read_def`): its law date by
@@ -168,11 +168,12 @@ impl Engine {
                 if let Value::Hole(_) = law {
                     return Ok(Err(law));
                 }
-                if let Value::Window(_) = law {
-                    // a window `at` reads the def once per law-date class the window overlaps
-                    // (L §4.3, §5.14 `at e`): not a load refusal, and not built (M2, with
-                    // `windows each`)
-                    return Err(Stop::NotBuilt("a def's law date set by a window"));
+                if let Value::Window(w) = &law
+                    && matches!(w.lo, Value::Day(_))
+                {
+                    // a window `at` reads the def at each law date the window can take
+                    // (L §4.3, §5.14 `at e`); the memo shares a class's cells
+                    return self.def_window(m, def, (keys, env), ctx, w).map(Err);
                 }
                 let Value::Day(day) = law else {
                     return Err(bad_law_date(m, def, &law)?);
@@ -181,6 +182,63 @@ impl Engine {
             }
         };
         Ok(Ok(cell))
+    }
+
+    /// Def `def` whose `at` gives window `w`: its cell at each law date the window can take,
+    /// one value where all agree, else `HOLE-IMPRECISE` (refcore's `def_window`). L §4.3,
+    /// E §3.2.
+    ///
+    /// # Errors
+    ///
+    /// The refusals of its cells; not built where every day gives the gap rule's hole and
+    /// they differ only by the day they name (E §3.2's classes, refcore's `window_bounded`).
+    fn def_window(
+        &mut self,
+        m: &Reality,
+        def: &DefInfo,
+        (keys, env): (&[KeyVal], &Env),
+        ctx: Ctx,
+        w: &Window,
+    ) -> Result<Value, Stop> {
+        let mut vals = Vec::new();
+        for day in window_days(w)? {
+            let value = self.def_cell(m, def, keys, env, ctx.at_law(Some(day)))?;
+            vals.push(as_read(value, (&def.id, keys), ctx.world()));
+        }
+        let Some((first, rest)) = vals.split_first() else {
+            return Err(invariant("a window with no day"));
+        };
+        if rest.iter().all(|v| v == first) {
+            return Ok(first.clone());
+        }
+        let window = w.question_text(m).map_err(num_stop)?;
+        let imprecise = Value::Hole(Hole::asked(
+            &format!(
+                "date within {window} not precise enough for the law date of {}",
+                def.id
+            ),
+            &origin(&def.id, keys),
+        ));
+        let mut undated = Vec::with_capacity(vals.len());
+        for v in &vals {
+            let Value::Hole(h) = v else {
+                return Ok(imprecise);
+            };
+            undated.push(h.undated());
+        }
+        // every day a hole, alike but for the day the gap rule's names: one law-date class
+        // or two, by the spans inside the window (E §3.2)
+        let dated = undated.iter().any(|(_, dated)| *dated);
+        let alike = match undated.split_first() {
+            Some(((head, _), others)) => others.iter().all(|(q, _)| q == head),
+            None => true,
+        };
+        if dated && alike {
+            return Err(Stop::NotBuilt(
+                "a window `at` whose days give the gap rule's holes (E §3.2's classes)",
+            ));
+        }
+        Ok(imprecise)
     }
 
     /// A def's cell: the memo's result, or the rules evaluated now and kept (refcore's

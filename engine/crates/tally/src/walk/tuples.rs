@@ -12,7 +12,7 @@
 
 use super::plan::{Exists, date_of, invariant, join, refuse};
 use crate::base::{Code, Refusal, Run};
-use crate::eval::{Collected, Ctx, Engine, Env, Member, reads_name};
+use crate::eval::{Collected, Ctx, Decided, Engine, Env, Member, reads_name};
 use crate::hole::Hole;
 use crate::model::{Domain, KeyVal, MoveInfo, Reality, Value};
 use crate::syntax::Stop;
@@ -80,10 +80,9 @@ impl Engine {
                     });
                     continue;
                 }
-                Law::Day(d) => Some(d),
-                Law::None => None,
+                law @ (Law::Day(_) | Law::Window(..) | Law::None) => law,
             };
-            let members = match self.binding_members(m, &bind.node, &tuple.env, ctx.at_law(law))? {
+            let members = match self.members_over_law(m, mv, (&bind.node, &tuple.env), &law, ctx)? {
                 Err((h, read)) => {
                     decided.merge(&read);
                     out.push(Tuple {
@@ -106,6 +105,35 @@ impl Engine {
             work.extend(next.into_iter().rev());
         }
         Ok(out)
+    }
+
+    /// The members of binding `bind` in scope `env` at law date `law`: under a window `at`,
+    /// read at each law date the window can take, `HOLE-IMPRECISE` as the domain's hole where
+    /// they differ (refcore's `move_tuples`, its `lds`). L §4.3, §5.14 `at e`.
+    fn members_over_law(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        (bind, env): (&crate::syntax::Bind, &Env),
+        law: &Law,
+        ctx: Ctx,
+    ) -> Result<Decided, Stop> {
+        let first = self.binding_members(m, bind, env, ctx.at_law(law.first()))?;
+        let Law::Window(_, text) = law else {
+            return Ok(first);
+        };
+        let Ok(members) = &first else {
+            return Ok(first);
+        };
+        let key = members_key(members);
+        for day in law.rest() {
+            let other = self.binding_members(m, bind, env, ctx.at_law(Some(*day)))?;
+            let same = other.as_ref().is_ok_and(|o| members_key(o) == key);
+            if !same {
+                return Ok(Err((imprecise_law(text, &mv.id), Collected::default())));
+            }
+        }
+        Ok(first)
     }
 
     /// A move's law date by its `at`, with the keys bound so far: none while it reads a key
@@ -145,10 +173,13 @@ impl Engine {
                 format!("never in the law date of {}", mv.id),
             ));
         }
-        if let Value::Window(_) = v {
-            // a window `at` makes the instance once per law-date class the window overlaps
-            // (L §5.14 `at e`, §4.3; refcore's `m_move_law`): no one-day read, and not built
-            return Err(Stop::NotBuilt("a movement's law date set by a window"));
+        if let Value::Window(w) = &v
+            && matches!(w.lo, Value::Day(_))
+        {
+            // a window `at` reads the instance at each law date it can take (L §5.14 `at e`,
+            // §4.3; refcore's `m_move_law`, `law_days`): the memo shares a class's cells
+            let text = w.question_text(m).map_err(crate::eval::num_stop)?;
+            return Ok(Law::Window(crate::eval::window_days(w)?, text));
         }
         Ok(Law::Day(date_of(&v)?))
     }
@@ -207,8 +238,8 @@ impl Engine {
     ) -> Result<bool, Stop> {
         let law = match self.move_law(m, mv, env, tctx)? {
             Law::Hole(_) => return Ok(true),
-            Law::Day(d) => Some(d),
-            Law::None => None,
+            // a window `at`: its first law date (refcore's `link_tuple`, `law_days(law)[0]`)
+            law @ (Law::Day(_) | Law::Window(..) | Law::None) => law.first(),
         };
         let w = self.ev(m, when, env, tctx.at_law(law))?;
         Ok(w != Value::Bool(false))
@@ -232,8 +263,8 @@ impl Engine {
         let none = std::collections::BTreeSet::new();
         let law = match self.move_law(m, mv, env, tctx) {
             Ok(Law::Hole(_)) => return Ok(none),
-            Ok(Law::Day(d)) => Some(d),
-            Ok(Law::None) => None,
+            // a window `at`: its first law date (refcore's `link_places`, `law_days(law)[0]`)
+            Ok(law @ (Law::Day(_) | Law::Window(..) | Law::None)) => law.first(),
             Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => return Ok(none),
             Err(stop) => return Err(stop),
         };
@@ -256,14 +287,73 @@ impl Engine {
     }
 }
 
-/// A move's law date: none, a day, or a hole.
-pub(super) enum Law {
+/// A move's law date: none, a day, a window, or a hole (L §4.3, §5.14 `at e`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Law {
     /// No `at`, or one that reads a key not yet bound.
     None,
     /// A day.
     Day(Day),
+    /// A window: the instance is read at each law date it can take, its first first, and
+    /// one value where they all agree (L §4.3, §5.14 `at e`); with the window as a question
+    /// names it.
+    Window(Vec<Day>, String),
     /// A hole.
     Hole(Hole),
+}
+
+impl Law {
+    /// The law date an instance is read at first: the day, a window's first; none for no
+    /// law date or a hole. L §4.3.
+    #[must_use]
+    pub fn first(&self) -> Option<Day> {
+        match self {
+            Law::Day(d) => Some(*d),
+            Law::Window(days, _) => days.first().copied(),
+            Law::None | Law::Hole(_) => None,
+        }
+    }
+
+    /// The law dates past the first that a window `at` reads too, in order. L §4.3.
+    #[must_use]
+    pub fn rest(&self) -> &[Day] {
+        match self {
+            Law::Window(days, _) => match days.as_slice() {
+                [_, rest @ ..] => rest,
+                [] => &[],
+            },
+            Law::Day(_) | Law::None | Law::Hole(_) => &[],
+        }
+    }
+
+    /// The window as a question names it, for a window `at`. L §4.4.
+    #[must_use]
+    pub fn window(&self) -> Option<&str> {
+        match self {
+            Law::Window(_, text) => Some(text),
+            Law::Day(_) | Law::None | Law::Hole(_) => None,
+        }
+    }
+}
+
+/// `HOLE-IMPRECISE` of a window `at` whose law dates give `what` different values:
+/// `?"date within <w> not precise enough for the law date of <what>" (<what>)` (refcore's
+/// `imprecise_law`). L §4.3, §4.4, §8.1.
+pub(super) fn imprecise_law(window: &str, what: &str) -> Hole {
+    let text = format!("date within {window} not precise enough for the law date of {what}");
+    Hole::asked(&text, what)
+}
+
+/// What a binding's members are, to compare them across law dates: each member's scope, its
+/// `where`'s hole and whether it was refused (refcore's `vkey`s of `bind_each`, a refusal
+/// as `'err'`). L §4.3.
+fn members_key(
+    members: &[(Member, Collected, Option<Refusal>)],
+) -> Vec<(&Env, Option<&Hole>, bool)> {
+    members
+        .iter()
+        .map(|(member, _, refused)| (&member.env, member.unknown.as_ref(), refused.is_some()))
+        .collect()
 }
 
 /// A tuple extended by one binding's member: its variable bound, its key made a key of the

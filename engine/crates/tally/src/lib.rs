@@ -182,6 +182,7 @@ pub mod eval {
     mod windows;
     mod years;
 
+    pub(crate) use aggregate::Decided;
     pub use aggregate::Member;
     pub use arith::{Op, Test, arith, compare, currency_of, int_of, negate, same_value};
     pub(crate) use bindings::{names_in, order_text, reads_name};
@@ -199,7 +200,7 @@ pub mod eval {
     pub(crate) use time_arith::periods_of;
     pub(crate) use timelines::combinations;
     pub(crate) use trace::{Balance as TracedBalance, Kind as TraceKind, RuleLine, Trace, Walked};
-    pub(crate) use windows::one_day;
+    pub(crate) use windows::{one_day, window_days};
     pub(crate) use years::year_form;
 }
 
@@ -245,6 +246,7 @@ pub mod walk {
         ALL, Change, Checkpoint, Ent, Group, Log, Progress, Projected, St, Taken, Today, Walk,
         WalkObs,
     };
+    pub use tuples::Law;
 }
 
 /// The book (E §5, §6.1, §6.3): observations the cut sees, the places versions cover and the

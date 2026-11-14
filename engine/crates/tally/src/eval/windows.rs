@@ -322,7 +322,7 @@ pub(crate) fn one_day(m: &Reality, v: &Value, what: &str) -> Result<Result<Day, 
 /// # Errors
 ///
 /// `ENGINE-INVARIANT` for a window of numbers; `RUN-LIMIT` past the calendar's edge.
-pub(super) fn window_days(w: &Window) -> Result<Vec<Day>, Stop> {
+pub(crate) fn window_days(w: &Window) -> Result<Vec<Day>, Stop> {
     if let Some(days) = &w.days {
         return Ok(days.clone());
     }

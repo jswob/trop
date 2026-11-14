@@ -118,6 +118,28 @@ impl Hole {
         out.join(" ")
     }
 
+    /// The questions with the day each gap-rule question names (`…: no value at <d>`) written
+    /// `D`, sorted, each once; and whether any named one. Two days of one law-date class give
+    /// holes alike but for that day (L §4.6 step 5; E §3.2; refcore's `def_window`, `norm`).
+    #[must_use]
+    pub fn undated(&self) -> (Vec<(String, String)>, bool) {
+        let mut out = Vec::with_capacity(self.questions.len());
+        let mut dated = false;
+        for asked in &self.questions {
+            let text = match gap_stem(&asked.text) {
+                Some(stem) => {
+                    dated = true;
+                    format!("{stem}: no value at D")
+                }
+                None => asked.text.clone(),
+            };
+            out.push((text, asked.figure.clone()));
+        }
+        out.sort();
+        out.dedup();
+        (out, dated)
+    }
+
     /// The question texts, sorted, for a register line or a test (L §8.2).
     #[must_use]
     pub fn question_texts(&self) -> Vec<String> {
@@ -125,6 +147,18 @@ impl Hole {
         out.dedup();
         out
     }
+}
+
+/// The text before a gap-rule question's `: no value at <yyyy-mm-dd>` at its end, or none
+/// for another question (L §4.6 step 5).
+fn gap_stem(text: &str) -> Option<&str> {
+    let (stem, day) = text.rsplit_once(": no value at ")?;
+    let shape = day.len() == 10
+        && day.char_indices().all(|(i, c)| match i {
+            4 | 7 => c == '-',
+            _ => c.is_ascii_digit(),
+        });
+    shape.then_some(stem)
 }
 
 /// `?"text" (figures)`, the text's `\` and `"` escaped (L §8.1, §2.4).
