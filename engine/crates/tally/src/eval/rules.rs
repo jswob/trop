@@ -184,10 +184,13 @@ impl Engine {
             let met = cell.met.clone();
             self.absorb(&met);
             self.narrow(ctx.law, class);
-            self.read(Read::Cell(CellId::new(key, ctx.law)));
-            if let Seen::Met(at) = seen {
-                self.trace_again(at);
+            let id = CellId::new(key, ctx.law);
+            match seen {
+                Seen::Met(at) => self.trace_again(at),
+                Seen::Dropped(at) => self.trace_taken_back(id.clone(), at),
+                Seen::Untraced | Seen::Unmet => {}
             }
+            self.read(Read::Cell(id));
             #[cfg(feature = "counters")]
             self.counts.add(crate::Unit::DefHit);
             return Ok(Err(result));

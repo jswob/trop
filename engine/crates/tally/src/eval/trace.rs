@@ -150,6 +150,10 @@ pub(crate) struct Trace {
     open: Vec<usize>,
     /// Each def cell traced, by its node.
     cells: BTreeMap<CellId, usize>,
+    /// Each def cell traced by a term an extreme's explanation dropped, by its node, kept so
+    /// a later read takes the node back rather than trace the cell's cone again: each cell
+    /// is traced once per explain (E §3.2, §10; P7).
+    dropped: BTreeMap<CellId, usize>,
     /// The ask's memo, back once the trace ends.
     saved: Cells,
     /// Whether a traced read reached the walk or a structure it shares: its causes are a
@@ -168,6 +172,10 @@ pub(crate) enum Seen {
     Unmet,
     /// The trace met the cell, at this node: the memo gives it, referenced by its node.
     Met(usize),
+    /// The trace met the cell at this node under a term an extreme's explanation dropped:
+    /// the memo gives it, and its node is taken back where it is read now, printed in full
+    /// where it is first reached, as the cell traced again would be (E §10).
+    Dropped(usize),
 }
 
 /// Where a trace stood before a `min`, `max`, `argmin` or `argmax` read its terms: the node
@@ -359,6 +367,7 @@ impl Engine {
             ],
             open: vec![ROOT],
             cells: BTreeMap::new(),
+            dropped: BTreeMap::new(),
             saved,
             walked: false,
             stop: None,
@@ -479,14 +488,16 @@ impl Engine {
     }
 
     /// Whether a read now is traced and the trace has met def cell `key` at law date `law`,
-    /// with its node.
+    /// with its node, or met it under a term an extreme's explanation dropped.
     pub(super) fn trace_seen(&self, key: &CellKey, law: Option<Day>) -> Seen {
         let Some(trace) = self.trace.as_ref().filter(|_| self.tracing()) else {
             return Seen::Untraced;
         };
-        match trace.cells.get(&CellId::new(key.clone(), law)) {
-            Some(at) => Seen::Met(*at),
-            None => Seen::Unmet,
+        let id = CellId::new(key.clone(), law);
+        match (trace.cells.get(&id), trace.dropped.get(&id)) {
+            (Some(at), _) => Seen::Met(*at),
+            (None, Some(at)) => Seen::Dropped(*at),
+            (None, None) => Seen::Unmet,
         }
     }
 
@@ -494,6 +505,19 @@ impl Engine {
     /// "a cause met again is referenced by its line").
     pub(super) fn trace_again(&mut self, at: usize) {
         if let Some(trace) = self.trace.as_mut() {
+            let done = trace.reference(at);
+            trace.keep(done);
+        }
+    }
+
+    /// Takes back the node at `at` of def cell `id`, met under a term an extreme's
+    /// explanation dropped: met again from now on, and referenced from the innermost open
+    /// node, where it prints in full if nothing printed it before, as the cell traced again
+    /// would (E §10, §3.2: one evaluation per cell; P7).
+    pub(super) fn trace_taken_back(&mut self, id: CellId, at: usize) {
+        if let Some(trace) = self.trace.as_mut() {
+            trace.dropped.remove(&id);
+            trace.cells.insert(id, at);
             let done = trace.reference(at);
             trace.keep(done);
         }
@@ -701,8 +725,9 @@ impl Engine {
     }
 
     /// Drops what the terms traced since `snap`, so the first winning term can be traced
-    /// again alone; the cells they traced are traced anew where met again (refcore's
-    /// `trace_winner`, its drop). L §5.18, E §10.
+    /// again alone; the cells they traced are set aside, each node taken back where its cell
+    /// is met again, never traced a second time (refcore's `trace_winner`, its drop, which
+    /// traces them anew). L §5.18, E §10, §3.2; P7.
     fn trace_drop(&mut self, snap: Snap) {
         let Some(trace) = self.trace.as_mut() else {
             return;
@@ -711,7 +736,11 @@ impl Engine {
             Ok(node) => node.children.truncate(snap.children),
             Err(stop) => trace.keep(Err(stop)),
         }
-        trace.cells.retain(|_, at| *at < snap.nodes);
+        let (kept, dropped) = core::mem::take(&mut trace.cells)
+            .into_iter()
+            .partition(|(_, at)| *at < snap.nodes);
+        trace.cells = kept;
+        trace.dropped.extend::<BTreeMap<CellId, usize>>(dropped);
     }
 
     /// Explains a `min`, `max`, `argmin` or `argmax` whose result is `result` by its first
