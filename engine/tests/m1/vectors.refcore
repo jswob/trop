@@ -316584,7 +316584,7 @@ o9: 2
 w: 10
   pinned: r[k1] = 9
   law date 2026-06-30, cut 2026-06-30
-,13:r7/t_f4_views,8:fixes-r7,79:run m.tally s.tally --ask a_reg a_inp v_reg w_reg w_exp w_inp s_reg s_exp s_inp,1234:7:m.tally,835:model c7v
+,13:r7/t_f4_views,8:fixes-r7,85:run m.tally s.tally --ask a_reg a_exp a_inp v_reg w_reg w_exp w_inp s_reg s_exp s_inp,1234:7:m.tally,835:model c7v
   tally 2
   on 2026-06-30
   start 2026-01-01
@@ -316629,7 +316629,43 @@ version wide_rows
 ask s_reg: tot in wide with r[k1] = 9 law 2026-06-30
 ask s_exp: explain tot in wide with r[k1] = 9 law 2026-06-30
 ask s_inp: inputs-of tot in wide with r[k1] = 9 law 2026-06-30
-,,1:0,1673:a_reg: 14
+,,1:0,3054:a_reg: 14
+  pinned: r[*] = 7
+  law date 2026-06-30, cut 2026-06-30
+a_exp: 14
+  [1] the pins, evaluated outside them
+    [2] pin r[k1] = 9
+  [3] inside the pins: 14
+    [4] inner = 14, law date 2026-06-30
+        rule base: won
+          [5] as if {...}
+            [6] the pins, evaluated outside the as if
+              [7] row v:seven = 7
+                  version v, source card, "invented", governs 2026-01-01.., known 2026-01-01
+              [8] pin r[*] = 7
+            [9] inside the as if: 14
+              [10] tot = 14, law date 2026-06-30
+                  rule base: won
+            [11] outside the as if: 10
+              [12] tot = 10, law date 2026-06-30
+                  rule base: won
+                    [13] row v:r = 1
+                        version v, source card, "invented", governs 2026-01-01.., known 2026-01-01
+  [14] outside the pins: 14
+    [15] inner = 14, law date 2026-06-30
+        rule base: won
+          [16] as if {...}
+            [17] the pins, evaluated outside the as if
+              (v:seven: see [7])
+              [18] pin r[*] = 7
+            [19] inside the as if: 14
+              [20] tot = 14, law date 2026-06-30
+                  rule base: won
+            [21] outside the as if: 2
+              [22] tot = 2, law date 2026-06-30
+                  rule base: won
+                    (v:r: see [13])
+                    (v:r: see [13])
   pinned: r[*] = 7
   law date 2026-06-30, cut 2026-06-30
 a_inp:

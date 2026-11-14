@@ -12,3 +12,5 @@ s2/l5_10_priced_field	m1_fixes	#101	P34 (tally 2.1.7, S2): `priced p.f`, a recor
 s2/l5_10_priced_field_keyed	m1_fixes	#101	P34 (tally 2.1.7, S2): `priced p.f`, a record input's field as the price input; the engine stops it not implemented (M2 builds prices read from records, CHANGES 2.1.7-19)
 s2/l5_10_priced_field_type	m1_fixes	#101	P34 (tally 2.1.7, S2): `priced p.f`, a record input's field as the price input; the engine stops it not implemented (M2 builds prices read from records, CHANGES 2.1.7-19)
 s2/l5_10_priced_field_unknown	m1_fixes	#101	P34 (tally 2.1.7, S2): `priced p.f`, a record input's field as the price input; the engine stops it not implemented (M2 builds prices read from records, CHANGES 2.1.7-19)
+r3/l4_4_windows_added_entries	m1_fixes	#158	P43 (tally 2.1.7, R3): `windows each` with entries added inside the window; the engine lacks windows each (filed for M2, #158), refcore's bytes stored
+r7/t_f18	m1_fixes	#132	P43 (tally 2.1.7, R7): `explain` of a balance cause; the engine's half of #132 is open in M2, refcore's bytes stored

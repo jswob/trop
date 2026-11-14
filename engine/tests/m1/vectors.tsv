@@ -1673,7 +1673,7 @@ r5/l8_4_load_price_opening_row	fixes-r5		engine/tests/m1/fixes/r5/l8_4_load_pric
 r5/l8_4_leg_unit_at_run	fixes-r5		engine/tests/m1/fixes/r5/l8_4_leg_unit_at_run	engine/tests/m1/fixes/r5/l8_4_leg_unit_at_run/m.tally			R5
 r5/l3_2_key_diff_outside_index	fixes-r5		engine/tests/m1/fixes/r5/l3_2_key_diff_outside_index	engine/tests/m1/fixes/r5/l3_2_key_diff_outside_index/m.tally			R5
 r7/l8_2_ask_pin_shadowed	fixes-r7		engine/tests/m1/fixes/r7/l8_2_ask_pin_shadowed	engine/tests/m1/fixes/r7/l8_2_ask_pin_shadowed/m.tally			R7
-r7/t_f4_views	fixes-r7		engine/tests/m1/fixes/r7/t_f4_views	engine/tests/m1/fixes/r7/t_f4_views/m.tally engine/tests/m1/fixes/r7/t_f4_views/s.tally	a_reg a_inp v_reg w_reg w_exp w_inp s_reg s_exp s_inp		R7
+r7/t_f4_views	fixes-r7		engine/tests/m1/fixes/r7/t_f4_views	engine/tests/m1/fixes/r7/t_f4_views/m.tally engine/tests/m1/fixes/r7/t_f4_views/s.tally	a_reg a_exp a_inp v_reg w_reg w_exp w_inp s_reg s_exp s_inp		R7
 r9/e4_1_decision_move_id_term	fixes-r9		engine/tests/m1/fixes/r9/e4_1_decision_move_id_term	engine/tests/m1/fixes/r9/e4_1_decision_move_id_term/m.tally			R9
 s9/l8_3_balnow_outside_line	fixes-s		engine/tests/m1/fixes/s9/l8_3_balnow_outside_line	engine/tests/m1/fixes/s9/l8_3_balnow_outside_line/m.tally			S9
 b1/l4_6_reading_at_date	fixes-b		engine/tests/m1/fixes/b1/l4_6_reading_at_date	engine/tests/m1/fixes/b1/l4_6_reading_at_date/m.tally			B1
