@@ -2934,3 +2934,9 @@ Three commits: 4f8d6ad (the run half), 35e3be8 (prices at load), and this one (t
   - `ask/walked.rs` (a lifespan's start): invariant; `ls/c.tally` → `LOAD-LIFESPAN c's lifespan has no start`, and `ls/m.tally` shows the main walk opens at zero only from a start (`a`), else `no reading or opening before it` (`b`).
   - `load/random.rs` (a discrete with no binding): invariant; `dn/m.tally` → `LOAD-PARSE cannot parse: expected "for"`.
   - No STOP-REPORT: no site reachable where refcore prints `None`. **Sweep:** none SAME → DIFF, no `ENGINE-INVARIANT`; gating 0 red. **Exceptions:** +0.
+
+## 2026-11-14 tally 2.1.7, P47: gate 8 run 43582832630's survivors listed
+
+- **List** (`engine/MUTANTS-SURVIVORS.md`): the 10 rows the job names dropped (9 caught, `run_one_body` gone); the job's 28 unlisted keys judged at their code: **equivalent 2** (`one_more_left_out` `<` → `<=` stores the same day; `<` → `==`, a move's left-out instances noted in the movement order), **missed with a kill text 10** (`tmp/kills/k1` `after_run_line` ×2, `k2` `may_touch` ×2, `k4` `changed_after`, `k5` `Sums::unbooked` ×5; each text's engine output equals refcore's; `tmp/kills/README.md` says what each mutant prints), **missed open 16** (each row names the input that tells it apart; no text yet), **defects 0**.
+- **Hand-off (the step's budget):** texts for the 16 open rows: `may_touch` `delete !` (a refused leg place; a hole place leaves the instance unrefused), `schedule_decided` ×3, `after_run`, `decision_runs`, `flows_place`, `Gathered::decided` ×2, `run_time` and `read_or_refused` (a load refusal met at run, F4; possibly equivalent), `projected_days`, `value.rs` ×4 (prices keyed by a kind, `by p last`). T proves k1, k2, k4, k5 by single-mutant proofs.
+- **Local:** `mutants-survivors` over run 1's shards: score 91.2 % = caught 1719 / (1719 + 303 − 137), every survivor listed. **Exceptions:** +0.
