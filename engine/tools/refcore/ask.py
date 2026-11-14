@@ -1375,10 +1375,11 @@ class Asker:
         # that point"
         out = []
         byp = {r.point: r.id for r in w.decs.values() if getattr(r, 'point', None) is not None}
+        from .walk import dec_head
         for p in sorted(cells):
             import datetime as _dt
             d = _dt.date.fromordinal(p[0])
-            out.append('%s at (%s, stratum %s, %s): %s' % (org, d, p[2], byp.get(p, p[3].split('|')[0]),
+            out.append('%s at (%s, stratum %s, %s): %s' % (org, d, p[2], byp.get(p, dec_head(p[3])),
                                                            fmt_value(cells[p])))
             # the state just before the reader's own booking at p: "its running reads as balances up to that point"
             ctx2 = w.tctx.but(cut=min(d, w.K), walk=w, wp=p[:4] + (p[4] - 0.5,))
@@ -1779,8 +1780,10 @@ class Asker:
 
     def point_text(self, p):
         import datetime as _dt
+        from .walk import DSEP
         d = _dt.date.fromordinal(p[0])
-        return '(%s, stratum %s, %s)' % (d, p[2], p[3])
+        # a decision's entry text prints its terms joined by `|`, as written before SR-B4 (walk.DSEP)
+        return '(%s, stratum %s, %s)' % (d, p[2], p[3].replace(DSEP, '|') if isinstance(p[3], str) else p[3])
 
     def explain_lines(self, root, ctx):
         if isinstance(root, ExplainLines):

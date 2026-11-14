@@ -1,0 +1,62 @@
+# E §4.1 (tally 2.1.7, the builder's SR-B4, pick P40): movements sort by (day, stratum, move id, keys, ...), "each term
+# compared as its own type, never as text". Two decisions on one day, of moves feed and feed2 that read pocket and
+# change konto: feed's entry comes first, so a projection's counted lines list it first. refcore 2.1.7 joined the move
+# id and the instance as one text, `feed2|000000` before `feed|000000` (`2` below `|`); T's G5 fixtures met it once
+# R5 let their runs go on (2.1.6 refused them at load).
+=== m.tally
+model t
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-03
+place konto: accounts PLN lives 2026-01-01..
+place pocket: cash PLN lives 2026-01-01..
+place shop: outside lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input amt: money PLN
+input small: money PLN
+input big: money PLN
+input dom: int
+
+move feed[m in month]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  reads pocket
+  leg cash from konto to shop amount if bal(pocket) > big then amt else small
+
+move feed2[m in month]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  reads pocket
+  leg cash from konto to world amount if bal(pocket) > big then amt else small
+
+ask p: explain bal(konto, 2026-02-15) from 2026-02-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 5.00 PLN
+  small = 1.00 PLN
+  big = 10.00 PLN
+  dom = 15
+  opening[konto] = 100.00 PLN at 2026-01-01 start
+  opening[pocket] = 50.00 PLN at 2026-01-01 start
+=== expect
+p: 80.00 PLN
+  projection of konto (PLN) from 2026-02-01 to the end of 2026-02-15
+  holder: ask p (an ask line leaves out nothing, L §5.14.1)
+  clauses: windows none, random none, without uncertain
+  start: 90.00 PLN at the start of 2026-02-01
+  counted:
+    2026-02-15:
+      feed[2026-02].cash (plan): -5.00 PLN
+      feed2[2026-02].cash (plan): -5.00 PLN
+  left out: none
+  unfulfilled: feed2[2026-01]
+  unfulfilled: feed[2026-01]
+  cut 2026-02-15

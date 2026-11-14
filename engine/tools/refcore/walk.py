@@ -53,6 +53,27 @@ def kday(key):
     return datetime.date.fromordinal(key[0])
 
 
+# A decision's entry key holds its move id and its instance as two terms, compared each as its own type (E §4.1:
+# "never as text"): joined by a character below every identifier's, the text sorts as the terms do, `feed` before
+# `feed2`. tally 2.1.7 (the builder's SR-B4, pick P40): `|`, above them, put `feed2|000000` first.
+DSEP = '\x1f'
+
+
+def dec_text(*terms):
+    return DSEP.join(terms)
+
+
+def dec_head(t):
+    """The first term of a decision's entry text: its move id, or its group's first."""
+    return t.split(DSEP, 1)[0]
+
+
+def dec_move(t):
+    """The move id of a decision's entry text, inside a group too."""
+    parts = t.split(DSEP)
+    return parts[-1] if len(parts) > 2 else parts[0]
+
+
 def plan_key(x):
     """A movement's place among its day's plans: the movement order of E §4.1, each term typed (#33's key), never its
     text. tally 2.1.6 (issue #57): refcore 2.1.5 took `<move>|<keys>` as text, so `ab` booked before `a` and a key
@@ -1597,7 +1618,7 @@ class Walk:
             insts = self.tie_order(mi, insts, d)
         group = []
         for n, i in enumerate(insts):
-            k = key[:3] + ('%s|%06d' % (mi.id, n), 0)
+            k = key[:3] + (dec_text(mi.id, '%06d' % n), 0)
             run = self.run_one(i, k)
             group.append(run)
         if len(group) > 1 and not mi.decl.tie and mi.self_reads:
@@ -1608,7 +1629,7 @@ class Walk:
                     if (rb.live_places & ra.changed) or (ra.live_places & rb.changed):
                         err = refuse('RUN-TIE', '%s has a tie at %s that changes the result, and no ties by' % (
                             mi.id, ', '.join(r.id for r in group)))
-                        k = key[:3] + ('%s|999999' % mi.id, 9)
+                        k = key[:3] + (dec_text(mi.id, '999999'), 9)
                         for r in group:
                             for p in r.changed:
                                 self.add(p, m.place_unit(m.things[p]) or '*', Ent(k, 'bad', err=err))
@@ -1800,7 +1821,7 @@ class Walk:
             left.discard(ready[0])
         seq = 0
         for x in sorted(bad, key=rank):
-            k = key[:3] + ('%s|%06d|%s' % (g[0], seq, info[x][0].move.id), 0)
+            k = key[:3] + (dec_text(g[0], '%06d' % seq, info[x][0].move.id), 0)
             seq += 1
             ch = info[x][1]
             if ch:
@@ -1810,7 +1831,7 @@ class Walk:
                 self.add('*', '*', Ent(k, 'bad', err=bad[x]))
             self.refused_run(info[x][0], k, bad[x])
         for x in order:
-            k = key[:3] + ('%s|%06d|%s' % (g[0], seq, info[x][0].move.id), 0)
+            k = key[:3] + (dec_text(g[0], '%06d' % seq, info[x][0].move.id), 0)
             seq += 1
             self.run_one(info[x][0], k)
 
@@ -2222,11 +2243,11 @@ def m_proj_walk(self, ctx, t, leftout, clauses):
 
 def _act_after(k, point):
     """Whether a day's decision act, keyed (day, 3, stratum, move id, 0), runs after a walk point: by (day, step,
-    stratum), then by move id (E §4.1), the point's own move id taken apart from its instance number (`sw|000000`).
+    stratum), then by move id (E §4.1), the point's own move id taken apart from its instance number (dec_head).
     tally 2.1.2 (issue #32): the two were compared as one text, so `sw_b`, whose `_` sorts before `|`, counted as
     booked at sw's point and a projection read there left its act out (L §5.14.1: "counts only the movements not yet
     booked")."""
-    head = point[3].split('|', 1)[0] if isinstance(point[3], str) else point[3]
+    head = dec_head(point[3]) if isinstance(point[3], str) else point[3]
     return (k[:3], k[3]) > (tuple(point[:3]), head)
 
 

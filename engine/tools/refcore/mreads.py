@@ -14,7 +14,7 @@ from .model import Span, _kv, key_text, WindowUndecided
 from .values import (Num, Money, Int, Hole, Thing, Mv, Iv, Rec, Text, Code, Key, NONE, CURRENCIES, fmt,
                      fmt_hole, vkey)
 from .moves import item_in_world, Inst, ObsMv, AdjMv, PadMv, qty, unit_of_value, day_lo, day_hi, merge, order_key
-from .walk import K_end, K_start, K_before, kday, add_q, St
+from .walk import K_end, K_start, K_before, kday, add_q, St, dec_move
 
 
 def install(E):
@@ -1006,7 +1006,7 @@ def m_bal_day(self, place, unit, d, key, ctx):
             if d > t:
                 raise refuse('RUN-FUTURE', 'a decision on %s reads %s at %s after its day' % (t, place, d))
             raise refuse('RUN-CYCLE', '%s reads itself through bal(%s, %s): a decision\'s plain read of its own day'
-                         % (ctx.wp[3].split('|')[-1 if ctx.wp[3].count('|') > 1 else 0], place, d))
+                         % (dec_move(ctx.wp[3]), place, d))
         return less_own_obs(w, place, unit, key, self.read_state(w, place, unit, key))
     w = self.main_walk(ctx)
     v = self.read_state(w, place, unit, key)
