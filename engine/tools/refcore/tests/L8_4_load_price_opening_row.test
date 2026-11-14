@@ -1,0 +1,33 @@
+# L §8.4 R-load, L §5.10 Value (tally 2.1.7 R5, #144; the review's finding 3, pick P41): an opening row states broker's
+# balance in EUR, which load sees as it sees a leg's written unit, so value(broker, d) in PLN with no by, over a place of
+# unit any, is LOAD-PRICE at load, at the value's line. refcore 2.1.7 refused it at run, with no line, refusing the
+# reality.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+
+kind brokerages: place any min 0
+
+input vd: date
+
+place konto: accounts PLN lives 2026-01-01..
+
+ask k: value(broker, vd) in PLN
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  brokerages + [broker] lives 2026-01-01..
+  vd = 2026-06-30
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start
+  opening[broker] = 50.00 EUR at 2026-01-01 start
+=== expect
+refused: LOAD-PRICE value(broker) in PLN holds units in EUR and states no by (m.tally:17)

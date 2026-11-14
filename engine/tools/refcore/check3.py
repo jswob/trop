@@ -874,6 +874,14 @@ def m_t_value(self, n, sc, expect):
                 pc = m.price_of(c)
             except Unspecified:
                 pc = None
+            if pc is None and m.place_unit(c) == 'any':
+                # a place of any unit holds what its legs bring; a unit a leg writes (its kind's leg unit or its
+                # amount's type) load sees, so a position in another unit than CUR with no by is refused here,
+                # whatever the asks read (L §5.10 Value, §8.4 R-load; tally 2.1.7 R5, the review's finding 3)
+                other = sorted(u for u in _units_into(self, c) if u != n.cur)
+                if other:
+                    raise LoadError('LOAD-PRICE', 'value(%s) in %s holds units in %s and states no by' % (
+                        _txt(n.ref), n.cur, other[0]), n.loc)
             if pc is not None and getattr(pc, '_mode', None) == 'unit' and pc._cur != n.cur:
                 # a place's price per unit in another currency than the value's: load sees both, with the priced
                 # kinds' price inputs, whatever reads them (tally 2.1.7 R5; L §5.10, §8.4)
@@ -990,6 +998,50 @@ def _seen_places(m, ref, cands):
             return [t] if t is not None else []
         return list(pi.things.values())
     return list(cands)
+
+
+def _units_into(self, c):
+    """The units load sees reach place c: each leg whose end is c, written or a binding over a kind
+    that holds it, in its kind's leg unit where that is a unit, else its amount's type (money's currency, a quantity
+    of one unit)."""
+    m = self.m
+    out = set()
+    for mi in m.moves.values():
+        for ln, d in getattr(mi, 'legs', []) or []:
+            reach = False
+            for e in (ln.frm, ln.to):
+                if e is None:
+                    continue
+                if self.literal_place(e) == c.name:
+                    reach = True
+                    continue
+                t = getattr(e, '_t', None)
+                if self.literal_place(e) is None and t is not None and t.k == 'key' and t.ix in m.kinds and \
+                        c.base in m.kinds[t.ix].subtree(m):
+                    reach = True
+            if not reach:
+                continue
+            if d.unit in CURRENCIES or d.unit in m.units:
+                out.add(d.unit)
+                continue
+            t = getattr(getattr(ln, 'amount', None), '_t', None)
+            if t is None:
+                continue
+            if t.k == 'money' and getattr(t, 'cur', None):
+                out.add(t.cur)
+            elif t.k == 'num' and len(t.u or ()) == 1 and t.u[0][1] == 1:
+                out.add(t.u[0][0])
+    # the rows that state its balance (an opening, a reading) bring their written unit too
+    for iid in ('opening', 'stated'):
+        inf = m.inputs.get(iid)
+        for r in (inf.rows if inf is not None else ()):
+            pat = r.pattern
+            if not (len(pat) == 1 and pat[0][0] == 'k' and getattr(pat[0][1], 'name', None) == c.name):
+                continue
+            v = r.value
+            if getattr(v, 'k', None) == 'num' and v.unit and len(v.unit) == 1 and v.unit[0][1] == 1:
+                out.add(v.unit[0][0])
+    return out
 
 
 def _unit_name(self, c, u):
