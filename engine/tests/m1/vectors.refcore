@@ -317084,6 +317084,76 @@ version v
 ,,1:0,82:a: 100.00 PLN
   cut 2026-01-01
 warning: WARN-UNREAD input owns is read by nothing
+,23:r9/p46_owns_month_place,8:fixes-r9,11:run m.tally,805:7:m.tally,790:model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind savings: place one min 0
+  owned by arrive
+  step minor(PLN)
+  takes k for w prorata
+place konto: savings PLN lives 2025-01-01..
+input wd: date
+input owns[mm in months, x in places]: num
+input wa: money PLN
+place world: outside lives 1900-01-01..
+kind pays: event certain
+  leg cash: PLN
+move wage: pays
+  on wd
+  leg cash from world to konto amount wa
+def arrive[m in events, p in parties]: num = (if p == ania then 1 else 0) at m.day
+
+ask a: wa
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  opening[konto] = 0 PLN at 2026-01-01 start
+  wd = 2026-02-01
+  wa = 100.00 PLN
+  owns[2026-01, konto] = 1
+,,1:1,73:refused: LOAD-PARTS owns[2026-01, konto]: konto keeps parts (m.tally:36)
+,28:r9/p46_owns_month_place_twin,8:fixes-r9,14:run twin.tally,602:10:twin.tally,583:model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+kind savings: place PLN min 0
+place konto: savings lives 2025-01-01..
+input wd: date
+input owns[mm in months, x in places]: num
+input wa: money PLN
+place world: outside lives 1900-01-01..
+kind pays: event certain
+  leg cash: PLN
+move wage: pays
+  on wd
+  leg cash from world to konto amount wa
+
+ask a: wa
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 0 PLN at 2026-01-01 start
+  wd = 2026-02-01
+  wa = 100.00 PLN
+  owns[2026-01, konto] = 1
+,,1:0,82:a: 100.00 PLN
+  cut 2026-01-01
+warning: WARN-UNREAD input owns is read by nothing
 ,27:s9/l8_3_balnow_outside_line,7:fixes-s,11:run m.tally,341:7:m.tally,326:model t
   tally 2
   on 2026-10-18

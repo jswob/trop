@@ -1683,6 +1683,8 @@ r9/l5_7_kind_places_alone_twin	fixes-r9		engine/tests/m1/fixes/r9/l5_7_kind_plac
 r9/l5_7_kind_place_bare	fixes-r9		engine/tests/m1/fixes/r9/l5_7_kind_place_bare	engine/tests/m1/fixes/r9/l5_7_kind_place_bare/no.tally			R9
 r9/l5_7_kind_place_bare_twin	fixes-r9		engine/tests/m1/fixes/r9/l5_7_kind_place_bare	engine/tests/m1/fixes/r9/l5_7_kind_place_bare/twin.tally			R9
 r9/p45_owns_party_place	fixes-r9		engine/tests/m1/fixes/r9/p45_owns_party_place	engine/tests/m1/fixes/r9/p45_owns_party_place/m.tally			R9
+r9/p46_owns_month_place	fixes-r9		engine/tests/m1/fixes/r9/p46_owns_month_place	engine/tests/m1/fixes/r9/p46_owns_month_place/m.tally			R9
+r9/p46_owns_month_place_twin	fixes-r9		engine/tests/m1/fixes/r9/p46_owns_month_place	engine/tests/m1/fixes/r9/p46_owns_month_place/twin.tally			R9
 s9/l8_3_balnow_outside_line	fixes-s		engine/tests/m1/fixes/s9/l8_3_balnow_outside_line	engine/tests/m1/fixes/s9/l8_3_balnow_outside_line/m.tally			S9
 b1/l4_6_reading_at_date	fixes-b		engine/tests/m1/fixes/b1/l4_6_reading_at_date	engine/tests/m1/fixes/b1/l4_6_reading_at_date/m.tally			B1
 b1/l4_6_period_held_by_key	fixes-b		engine/tests/m1/fixes/b1/l4_6_period_held_by_key	engine/tests/m1/fixes/b1/l4_6_period_held_by_key/m.tally			B1
