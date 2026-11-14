@@ -473,10 +473,17 @@ impl Engine {
                 }
             }
         }
+        let before = self.trace_walked();
+        let planned = out.len();
         for o in self.observations(m, cut)? {
             if sub.contains(&o.kind) {
                 out.push(Moving::Obs(o.clone()));
             }
+        }
+        if out.len() == planned {
+            // no observation is a member: the read holds no cause the walk's forms print
+            // (E §10)
+            self.trace_walked_back(before);
         }
         if sub.contains("adjustments") {
             out.extend(

@@ -398,6 +398,33 @@ impl Engine {
         }
     }
 
+    /// Gives the trace's note of a walk read back as it stood at `back`: the reads since were
+    /// a structure the explanation prints in its own form, a move's instances traced or an
+    /// observation pass that met no member (E §10).
+    pub(crate) fn trace_walked_back(&mut self, back: Walked) {
+        if let Some(trace) = self.trace.as_mut() {
+            trace.walked = back.0;
+        }
+    }
+
+    /// Opens a shared structure computed while a read is traced, a move's instances: a read
+    /// set of its own, as [`Engine::reads_apart`] opens, so its reads are never the reading
+    /// cell's, but traced, so the rows and cells it reads print as causes of the read (E §3.2,
+    /// §10).
+    pub(crate) fn trace_plan_open(&mut self) {
+        self.open_reads();
+    }
+
+    /// Closes [`Engine::trace_plan_open`]; returns the trace's note of a walk read then.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a read set closed out of order.
+    pub(crate) fn trace_plan_close(&mut self) -> Result<Walked, Stop> {
+        self.close_reads()?;
+        Ok(self.trace_walked())
+    }
+
     /// Whether the trace has noted a read of the walk, false with none: what a balance read
     /// gives back once its own read of the walk is its node (E §10).
     pub(crate) fn trace_walked(&self) -> Walked {

@@ -457,17 +457,49 @@ impl Engine {
             )));
         }
         self.plan_active.insert(key.clone());
-        let made = self.make_instances(m, mv, cut, None);
+        let made = if self.tracing() {
+            self.traced_instances(m, mv, cut)
+        } else {
+            self.make_instances(m, mv, cut, None).map(|out| (out, None))
+        };
         self.plan_active.remove(&key);
-        let mut out = made?;
+        let (mut out, back) = made?;
         // refcore computes a status when it is first read, after the instances are kept
         self.plans.insert(key.clone(), Rc::new(out.clone()));
         for inst in &mut out {
             inst.status = self.status(m, mv, inst, cut)?;
         }
+        if let Some(back) = back {
+            // the observations a status reads print nothing (refcore reads them untraced):
+            // the plan isn't a walk the explanation lacks a form for
+            self.trace_walked_back(back);
+        }
         let shared = Rc::new(out);
         self.plans.insert(key, Rc::clone(&shared));
         Ok(shared)
+    }
+
+    /// A move's instances computed while a read is traced, the first time the ask reaches
+    /// them: what they read is kept from the reading cell, as the plan's always is, but traced,
+    /// so the rows and cells their bindings, days, `when`s and amounts read print under the
+    /// read (refcore traces the instances it computes while it explains, once per ask); with
+    /// the trace's note of a walk read then. E §10, §3.2, §4.1; L §5.18 Explanation order.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::make_instances`].
+    fn traced_instances(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        cut: Day,
+    ) -> Result<(Vec<Inst>, Option<crate::eval::Walked>), Stop> {
+        let outer = self.holding(Node::new(NodeKind::Move, &mv.id));
+        self.trace_plan_open();
+        let made = self.make_instances_held(m, mv, cut, None);
+        let back = self.trace_plan_close();
+        self.holder = outer;
+        Ok((made?, Some(back?)))
     }
 
     /// A move's instances for the walk being planned: all of them, or, for a walk up to a
