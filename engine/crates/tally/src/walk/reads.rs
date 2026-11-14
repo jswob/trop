@@ -347,8 +347,10 @@ impl Engine {
     /// A place's balance at a point of a walk, with its register: the entries since its last
     /// reading, in a projection's walk those of the walks it continues before its point, the
     /// adjustments with a remainder there, the moves left out that touch it, in this walk and
-    /// those it continues (refcore's `read_state`, `merge_cum`, `st_value`). L §5.10, §8.2;
-    /// E §4.3.
+    /// those it continues (refcore's `read_state`, `merge_cum`, `st_value`). The run's ends
+    /// are tested here, once, so every walked read of a day outside them (`bal`, `value`, a
+    /// running read) is the hole naming the end it passes (refcore's `run_ends`). L §5.10,
+    /// §8.1 `HOLE-PRERUN`, `HOLE-POSTRUN`, §8.2; E §2, §4.3.
     pub(super) fn read_state(
         &mut self,
         m: &Reality,
@@ -357,6 +359,9 @@ impl Engine {
         unit: &str,
         at: At,
     ) -> Result<Value, Stop> {
+        if let Some(hole) = outside_run(m, at.day, place) {
+            return Ok(Value::Hole(hole));
+        }
         let walk = self.walk(id)?;
         let st = walk.pstate(m, place, unit, at);
         let anchor = walk.anchor_question(place);
