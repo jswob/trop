@@ -30,7 +30,7 @@ use crate::base::{Load, Run};
 use crate::hole::{Hole, spread};
 use crate::model::{Code, KeyVal, Reality, Value, Window};
 use crate::num::Num;
-use crate::read::Asked;
+use crate::read::{Asked, Found, read_input};
 use crate::syntax::{Call, Expr, Stop, Value as Written};
 use crate::time::{Added, Day, Period};
 
@@ -603,7 +603,7 @@ impl Engine {
             if let Added::Hole(question) = added {
                 unknown.push(Hole::asked(question, name));
             }
-            if added.may_be(day) && self.window_takes((name, entry), added, (day, ctx))? {
+            if added.may_be(day) && self.window_takes(m, (name, &keys, entry), added, (day, ctx))? {
                 return Ok(Value::Bool(false));
             }
         }
@@ -668,6 +668,40 @@ impl Engine {
         Ok(value)
     }
 
+    /// The row calendar `name`'s read at `keys` on `day` takes, by its stable id, or `pin`
+    /// where a pin gives the calendar: what names its added windows, each entry of each row
+    /// a read of its own (L §4.4, §4.6 step 1).
+    ///
+    /// # Errors
+    ///
+    /// The read rule's refusals; `ENGINE-INVARIANT` for a calendar whose read took no row.
+    fn calendar_row(
+        &mut self,
+        m: &Reality,
+        (name, keys): (&str, &[KeyVal]),
+        (day, ctx): (Day, Ctx),
+    ) -> Result<String, Stop> {
+        let input = m
+            .inputs
+            .get(name)
+            .ok_or_else(|| invariant("a calendar input load didn't build"))?;
+        let ctx = ctx.at_law(Some(day));
+        if self.pin_of(name, keys, ctx)?.is_some() {
+            return Ok("pin".to_owned());
+        }
+        let clocks = self.clocks(ctx, name)?;
+        match read_input(m, input, keys, clocks, Asked::Calendar)? {
+            Found::Row(at) => input
+                .rows
+                .get(at)
+                .map(|row| row.sid.clone())
+                .ok_or_else(|| invariant("the read rule took a row the input lacks")),
+            Found::None | Found::Hole(_) => {
+                Err(invariant("a calendar's added window read from no row"))
+            }
+        }
+    }
+
     /// Whether calendar `name`'s added window `added`, which may be `day`, takes it: under a
     /// `windows each` in context `ctx`, the day the line's choice names (L §4.4: the clause
     /// splits the line by "a day in a calendar's added list"); else this pass's choice for it,
@@ -675,14 +709,16 @@ impl Engine {
     /// `business`, its `window_choice` and `cal_choice`). L §4.2, §4.4.
     fn window_takes(
         &mut self,
-        (name, entry): (&str, usize),
+        m: &Reality,
+        (name, keys, entry): (&str, &[KeyVal], usize),
         added: &Added,
         (day, ctx): (Day, Ctx),
     ) -> Result<bool, Stop> {
         if self.chooses(ctx)? {
-            // each entry of each row a read of its own: two rows' entries are two unknowns
-            // (L §4.4)
-            let id = format!("calendar {name}#{entry} {}", added.text());
+            // each entry of each row a read of its own: two rows' entries are two unknowns,
+            // whatever their text (L §4.4; pick P32)
+            let row = self.calendar_row(m, (name, keys), (day, ctx))?;
+            let id = format!("calendar {name}#{entry} {row}");
             if let Some(named) = self.named_day(ctx, &id)? {
                 return Ok(named == day);
             }
