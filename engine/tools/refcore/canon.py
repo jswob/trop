@@ -771,7 +771,9 @@ class FilePrinter:
             return Open(('key', key_text(k)), 'member ' + data)
         if k.k == 'krange':
             return (self.key_at(k.a, how, data, dom), 0, Rev(self.key_at(k.b, how, data, dom)))
-        if k.k == 'placekey':
+        if k.k == 'placekey' and how not in ('value', 'kind'):
+            # tally 2.1.7 R9 (the builder's SR-B5): only an order by position or by text keeps 2.1.6's rank for it;
+            # under the kind-first order it ranks as a thing's key does (key_value), not as a month-day
             return ((2, key_text(k)), 1)
         return (self.key_at(k, how, data, dom), 1)
 

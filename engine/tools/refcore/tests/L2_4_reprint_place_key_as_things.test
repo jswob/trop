@@ -1,0 +1,35 @@
+# L §2.4 Inside a section (tally 2.1.7 R9, issue #148; the builder's SR-B5, pick P40): "a place keyed by things
+# (`konto[ana]`) is one key, sorted as things are"; at a position whose index isn't loaded keys sort by kind first,
+# a thing's name ranking as a key. So a keyed place sorts among the plain things in their text order. refcore 2.1.7
+# kept 2.1.6's rank for it (that of a month-day under the kind-first order) and printed every keyed place first.
+=== options reprint
+=== s.tally
+scenario s over m
+  tally 2
+  from 2026-01-01
+
+version w
+  cite c
+  governs always
+  known 2026-01-01
+  opening[wcash[ike]] = 1 PLN at 2026-01-01 start
+  opening[marek] = 2 PLN at 2026-01-01 start
+  opening[gotowka] = 3 PLN at 2026-01-01 start
+  opening[wunits[ike]] = 4 PLN at 2026-01-01 start
+  opening[konto] = 5 PLN at 2026-01-01 start
+=== expect
+...
+scenario s over m
+  tally 2
+  from 2026-01-01
+
+version w
+  cite c
+  governs always
+  known 2026-01-01
+  opening[gotowka] = 3 PLN at 2026-01-01 start
+  opening[konto] = 5 PLN at 2026-01-01 start
+  opening[marek] = 2 PLN at 2026-01-01 start
+  opening[wcash[ike]] = 1 PLN at 2026-01-01 start
+  opening[wunits[ike]] = 4 PLN at 2026-01-01 start
+sha256 ...
