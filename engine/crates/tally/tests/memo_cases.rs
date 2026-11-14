@@ -167,6 +167,137 @@ ask t: taxed_at[i] for i in [1, 2, 3, 4, 5, 6]
         assert_eq!(answer(Memo::Exact).lines(), LINES, "the twin's lines");
     }
 
+    /// A def's and a move's `at` that give a window, across a span's end and inside one
+    /// span, read once per law-date class under `Memo::Classes` and at every law date under
+    /// `Memo::Exact` (L §4.4's cost line, §4.3; pick P33).
+    const WINDOWS: &str = r#"model memo_w
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source card "a card"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+
+input w: date
+
+input v: date
+
+input pd: date
+
+def due: money PLN = fee at w
+
+def flat: money PLN = fee at v
+
+move pay: transfers
+  on pd
+  at w
+  leg cash from world to konto amount fee
+
+move calm: transfers
+  on pd
+  at v
+  leg cash from world to konto amount fee
+
+version early
+  cite card
+  governs ..2026-03-31
+  known 2026-01-01
+  fee = 10.00 PLN "a"
+
+version late
+  cite card
+  governs 2026-04-01..
+  known 2026-01-01
+  fee = 20.00 PLN "b"
+
+version dated
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-29, 2026-04-02) "c"
+  v = window(2026-01-05, 2026-02-20) "c"
+  pd = 2026-05-04 "c"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
+
+ask a: due
+
+ask b: due windows each
+
+ask c: flat
+
+ask p: pay.cash.amount
+
+ask pw: pay.cash.amount windows each
+
+ask q: calm.cash.amount
+
+ask k: bal(konto, 2026-06-01)
+"#;
+
+    /// refcore's lines for [`WINDOWS`].
+    const WINDOW_LINES: [&str; 20] = [
+        "a: ?\"date within window(2026-03-29, 2026-04-02) not precise enough for the law date of due\" (due)",
+        "  cut 2026-06-30",
+        "b [w = 2026-03-29 .. 2026-03-31]: 10.00 PLN",
+        "  cut 2026-06-30",
+        "b [w = 2026-04-01 .. 2026-04-02]: 20.00 PLN",
+        "  cut 2026-06-30",
+        "c: 10.00 PLN",
+        "  cut 2026-06-30",
+        "k: ?\"date within window(2026-03-29, 2026-04-02) not precise enough for the law date of pay\" (pay)",
+        "  unfulfilled: calm",
+        "  unfulfilled: pay",
+        "  cut 2026-06-30",
+        "p: ?\"date within window(2026-03-29, 2026-04-02) not precise enough for the law date of pay\" (pay)",
+        "  cut 2026-06-30",
+        "pw [w = 2026-03-29 .. 2026-03-31, v = 2026-01-05 .. 2026-02-20]: 10.00 PLN",
+        "  cut 2026-06-30",
+        "pw [w = 2026-04-01 .. 2026-04-02, v = 2026-01-05 .. 2026-02-20]: 20.00 PLN",
+        "  cut 2026-06-30",
+        "q: 10.00 PLN",
+        "  cut 2026-06-30",
+    ];
+
+    /// [`WINDOWS`]' answer with the memo keeping cells as `memo` says.
+    fn window_answer(memo: Memo) -> Answer {
+        let given = vec![Given {
+            path: "w.tally".to_owned(),
+            bytes: Some(WINDOWS.as_bytes().to_vec()),
+        }];
+        let request = Request {
+            asks: Asks::Every,
+            pin: Pin::Canonical,
+            days: Days::Events,
+        };
+        run_with_memo(given, &request, memo).expect("an answer")
+    }
+
+    #[test]
+    fn a_window_at_read_once_per_class_answers_as_refcore() {
+        assert_eq!(
+            window_answer(Memo::Classes).lines(),
+            WINDOW_LINES,
+            "refcore's lines"
+        );
+    }
+
+    #[test]
+    fn a_window_at_read_at_every_law_date_answers_as_refcore() {
+        assert_eq!(
+            window_answer(Memo::Exact).lines(),
+            WINDOW_LINES,
+            "the twin's lines"
+        );
+    }
+
     /// The `def_misses` count of a counted run's statistics line.
     #[cfg(feature = "counters")]
     fn misses(answer: &Answer) -> u64 {

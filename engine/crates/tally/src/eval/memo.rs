@@ -15,8 +15,10 @@
 //! be `held` to d's side of the ask's cut, and a text that names d (a hole's question, a
 //! `held` entry, `RUN-CONFLICT`, `RUN-NO-RULE`), a reading, a calendar's days and a priced
 //! figure to d alone; a cell read at the reader's own law date narrows the reader to the read
-//! cell's class; a cycle met narrows every open cell to its own day; a walk-bound cell is kept
-//! at its exact law date; under `Memo::Exact` every class is one day; a cell read under the
+//! cell's class; a cycle met narrows every open cell to its own day; a window's law date read
+//! outside a cell (a move's `at`, a def's window `at`) runs in a class of its own, which
+//! narrows the cell around it as its reads would have; a walk-bound cell is kept at its exact
+//! law date; under `Memo::Exact` every class is one day; a cell read under the
 //! ask line's `with uncertain` is a cell of its own. A kept cell's read set holds the inputs it
 //! read at their keys, the rows, bands and band rows it chose and the cells it read, never what
 //! those cells read, nor what a walk, a plan, adjustments or links read while it first needed
@@ -656,7 +658,12 @@ impl Engine {
             .ok_or_else(|| invariant("a law date class closed with none open"))?;
         self.frames.truncate(mark);
         self.narrow(Some(day), class);
-        Ok(class)
+        // the plain twin reads every law date of a window, each its own (P §3.3's on/off
+        // test)
+        Ok(match self.cells.memo {
+            Memo::Classes => class,
+            Memo::Exact => LawClass::day(day),
+        })
     }
 
     /// Closes the innermost def cell's class and returns it.
