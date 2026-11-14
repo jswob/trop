@@ -673,7 +673,7 @@ impl Engine {
         if kind_certainty(m, &mv.kind) == Some(Certainty::Uncertain) && inst.obs.is_empty() {
             return Ok(Status::Uncertain);
         }
-        if d < cut && self.touches_covered(m, inst, cut) {
+        if d < cut && self.touches_covered(m, inst, cut)? {
             return Ok(Status::Modelled);
         }
         Ok(if d < cut { Status::Past } else { Status::Plan })

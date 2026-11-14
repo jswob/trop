@@ -353,6 +353,15 @@ impl Engine {
         if value.as_hole().is_none() {
             return Ok(Value::Bool(false));
         }
+        // a row known in a window that holds the cut is decided as the read decided it; one
+        // no `windows each` decides is no missing row (L §4.5)
+        let Ok(view) = self.input_view(m, input, &keys, ctx)? else {
+            return Ok(Value::Bool(false));
+        };
+        let input = match &view {
+            Some(seen) => seen,
+            None => input,
+        };
         let held = match read_input(m, input, &keys, self.clocks(ctx, &input.id)?, Asked::Plain)? {
             Found::Hole(_) => true,
             Found::Row(at) => input

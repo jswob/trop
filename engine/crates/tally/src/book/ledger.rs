@@ -294,7 +294,7 @@ impl Engine {
             }
             if let Some(day) = day {
                 let shown =
-                    !self.covering(m, place, day, m.on).is_empty() || fulfilled.contains(&inst.id);
+                    !self.covering(m, place, day, m.on)?.is_empty() || fulfilled.contains(&inst.id);
                 if !(span.contains(day) && shown) {
                     continue;
                 }
@@ -335,7 +335,7 @@ impl Engine {
             let Some(day) = inst.day.as_ref().and_then(Dated::lo) else {
                 continue;
             };
-            if !span.contains(day) || self.covering(m, place, day, m.on).is_empty() {
+            if !span.contains(day) || self.covering(m, place, day, m.on)?.is_empty() {
                 continue;
             }
             if let Some(err) = &inst.err {

@@ -441,6 +441,55 @@ pub fn candidates(
     Ok(out)
 }
 
+/// A row a read meets whose `known` is a window holding the cut: whether the cut sees it is
+/// the line's `windows each`'s, else `HOLE-IMPRECISE` (L §4.5).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct KnownInside {
+    /// Its position among the rows.
+    pub at: usize,
+    /// The window's first day and last.
+    pub window: (Day, Day),
+    /// Whose `known` it is: the row's own (its stable id), else its version's (refcore's
+    /// `row_known_sid`).
+    pub sid: String,
+}
+
+/// The rows of `rows` a read at `keys` meets, as [`candidates`] tests them, whose `known` is
+/// a window holding the read's cut: its first day on or before the cut, its last after it
+/// (refcore's `visible`, its undecided case). L §4.5, §4.6 step 1.
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for a row whose version is missing.
+pub fn known_inside(
+    m: &Reality,
+    rows: &[Row],
+    (binds, keys): (&[BindInfo], &[KeyVal]),
+    clocks: Clocks,
+) -> Result<Vec<KnownInside>, Stop> {
+    let mut out = Vec::new();
+    for (at, row) in rows.iter().enumerate() {
+        let version = m.versions.get(&row.version).ok_or_else(no_version)?;
+        let (window, sid) = match (row.own_known, row.own_window) {
+            (Some(lo), Some(hi)) => ((lo, hi), row.sid.clone()),
+            (Some(_), None) => continue,
+            (None, _) => match version.window {
+                Some(hi) => ((version.known, hi), version.id.clone()),
+                None => continue,
+            },
+        };
+        let inside = window.0 <= clocks.cut && clocks.cut < window.1;
+        if inside
+            && m.scenarios.sees(clocks.world, Some(&row.version))
+            && row_matches(m, row, binds, keys)
+            && unstated_ok(m, row, (binds, keys), clocks.world)?
+        {
+            out.push(KnownInside { at, window, sid });
+        }
+    }
+    Ok(out)
+}
+
 /// The candidates among `cands` that entered into force by the day of the read's `wording`
 /// pin, each row by its own time where it states one; all of them outside such a pin
 /// (L §4.3, §5.3; refcore's `wording_ok`).

@@ -367,6 +367,53 @@ impl Engine {
         Ok(self.window_day(ctx, window)?.map_or(v, Value::Day))
     }
 
+    /// Whether the cut of `ctx` sees something known in window `(lo, hi)`, which holds the
+    /// cut, the `known` of `sid` (a version, or a row with its own): under `windows each`,
+    /// the day the line's choice names for it is on or before the cut, the window noted as
+    /// met; none with no `windows each`, the read then `HOLE-IMPRECISE` (refcore's
+    /// `visible`, `known_window_id`). L §4.5, §4.4.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a freed layer; `RUN-LIMIT` past the calendar's edge.
+    pub(crate) fn known_seen(
+        &mut self,
+        ctx: Ctx,
+        (lo, hi): (Day, Day),
+        sid: &str,
+    ) -> Result<Option<bool>, Stop> {
+        if !self.chooses(ctx)? {
+            return Ok(None);
+        }
+        let mut days = vec![lo];
+        let mut day = lo;
+        while day < hi {
+            day = day.next().ok_or_else(|| super::state::past_days(1))?;
+            days.push(day);
+        }
+        let window = Met {
+            id: format!("known {sid}"),
+            label: format!("known of {sid}"),
+            days,
+        };
+        Ok(self.window_day(ctx, window)?.map(|d| d <= ctx.cut))
+    }
+}
+
+/// `HOLE-IMPRECISE` of something known in window `(lo, hi)`, which holds cut `cut`, with no
+/// `windows each`: `date within window(lo, hi) not precise enough for the cut K`, asked of
+/// `sid` (refcore's `known_vis`). L §4.5, §8.1.
+pub(crate) fn known_hole((lo, hi): (Day, Day), cut: Day, sid: &str) -> Hole {
+    let text = format!(
+        "date within window({}, {}) not precise enough for the cut {}",
+        lo.text(),
+        hi.text(),
+        cut.text()
+    );
+    Hole::asked(&text, sid)
+}
+
+impl Engine {
     /// `window(a, b)`: one day from a to b, not yet known (refcore's `c_window`). L §4.4, §8.4.
     pub(super) fn window_call(
         &mut self,

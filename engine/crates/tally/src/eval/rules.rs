@@ -22,13 +22,13 @@ use crate::model::{
     Class, DefInfo, KeyVal, Node, NodeKind, Number, Reality, RuleVer, Shown, Ty, Unit, Value,
     Window, pattern_text,
 };
-use crate::read::{Clocks, Test, candidates, choose, origin, rule_in_force, worded};
+use crate::read::{Clocks, Test, candidates, choose, known_inside, origin, rule_in_force, worded};
 use crate::syntax::{LawDate, RuleValue, Stop};
 use crate::time::Day;
 
 use super::convert::{ConvertFor, Converted, convert_read};
 use super::memo::{CellId, CellKey, LawClass, Read, rows_class, rules_class};
-use super::read::{at_keys, pinned_at, shown};
+use super::read::{at_keys, kept_rows, pinned_at, shown};
 use super::trace::{RuleState, Seen};
 use super::windows::{as_read, window_days};
 
@@ -648,13 +648,26 @@ impl Engine {
         }
         let clocks = self.clocks(ctx, &def.id)?;
         let binds = (def.binds.as_slice(), keys);
-        let cands = candidates(m, &def.givens, binds, Test::At(ctx.law), clocks)?;
-        let cands = worded(m, &def.givens, cands, clocks)?;
-        let Some(at) = choose(m, &def.givens, &def.binds, &cands, ctx.cut, &def.id)? else {
+        // a given known in a window that holds the cut: the line's `windows each` decides
+        // it, else the read is `HOLE-IMPRECISE` (L §4.5)
+        let inside = known_inside(m, &def.givens, binds, clocks)?;
+        let hidden = match self.hidden_rows(&inside, ctx)? {
+            Err(h) => return Ok(Some(Value::Hole(h))),
+            Ok(hidden) => hidden,
+        };
+        let seen;
+        let givens = if hidden.is_empty() {
+            &def.givens
+        } else {
+            seen = kept_rows(&def.givens, &hidden);
+            &seen
+        };
+        let cands = candidates(m, givens, binds, Test::At(ctx.law), clocks)?;
+        let cands = worded(m, givens, cands, clocks)?;
+        let Some(at) = choose(m, givens, &def.binds, &cands, ctx.cut, &def.id)? else {
             return Ok(None);
         };
-        let row = def
-            .givens
+        let row = givens
             .get(at)
             .ok_or_else(|| invariant("the read rule took a given the def lacks"))?;
         let figure = origin(&def.id, keys);

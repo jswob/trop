@@ -367,8 +367,8 @@ pub mod read {
         read_last,
     };
     pub use rows::{
-        Clocks, Point, Test, candidates, choose, held, lawless, need_law, row_known, row_place,
-        row_span, standing_rows, time_point, worded,
+        Clocks, KnownInside, Point, Test, candidates, choose, held, known_inside, lawless,
+        need_law, row_known, row_place, row_span, standing_rows, time_point, worded,
     };
     pub use rules::rule_in_force;
 }

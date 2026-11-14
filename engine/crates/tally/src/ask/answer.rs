@@ -17,7 +17,7 @@
 //! `LoadAtRun`); every construct not built yet stops the run `NotBuilt` at the ask that meets
 //! it, never a guessed line.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use super::axes::{Axes, fanned_lines};
 use super::check::{Printed, check_line};
@@ -301,7 +301,7 @@ fn cross_lines(
 struct World {
     /// What its asks' engines gather.
     seen: Seen,
-    /// Whether it holds a known window or a `moves` line, which the run doesn't take yet.
+    /// Whether it holds a known window the run doesn't take yet.
     unbuilt: bool,
     /// Whether it keeps parts, which the run doesn't take yet.
     parts: bool,
@@ -323,7 +323,7 @@ impl World {
                 #[cfg(feature = "counters")]
                 counts: crate::Counters::default(),
             },
-            unbuilt: windows_or_moves(m),
+            unbuilt: known_windows_unbuilt(m),
             parts: keeps_parts(m),
         }
     }
@@ -336,7 +336,10 @@ impl World {
             return Ok(vec![format!("{}: refused: {}", ask.id, refusal.text())]);
         }
         if self.unbuilt {
-            return Err(Stop::NotBuilt("a known window or a moves line at run"));
+            return Err(Stop::NotBuilt(
+                "a row's own known window, a moves line, or a reading's, a rule's, a band \
+                 table's, a key's or an entry's known window at run",
+            ));
         }
         if self.parts {
             return Err(Stop::NotBuilt("parts at run"));
@@ -348,21 +351,32 @@ impl World {
     }
 }
 
-/// Whether the reality holds a known window (a version's, a row's or an observation's own) or
-/// a `moves` line: load checks them (L §4.5, §5.3), the run doesn't take them (not built), so
-/// an ask that would read them stops `NotBuilt`.
-fn windows_or_moves(m: &Reality) -> bool {
-    let versions = m
-        .versions
-        .entries()
-        .any(|(_, v)| v.window.is_some() || !v.moved_by.is_empty());
-    if versions {
-        return true;
+/// Whether the reality holds a known window or a `moves` line the run doesn't take yet
+/// (L §4.5, §5.3), so an ask of it stops `NotBuilt`: a reading's window (an opening's or a
+/// stated balance's row), or the window of a version that brings a rule, a band table, an
+/// index key or a thing's entry. A version's window on an input's or a def's rows, on an
+/// observation and on a coverage is taken (`eval/read.rs`, `book/observe.rs`). A row's own
+/// window and a `moves` line are taken too, but stop here while M1's test pins their stop
+/// (G3's STOP-REPORT in `BUILD-LOG.md`).
+fn known_windows_unbuilt(m: &Reality) -> bool {
+    let mut windowed = BTreeSet::new();
+    for (_, v) in m.versions.entries() {
+        if !v.moved_by.is_empty() {
+            return true;
+        }
+        if v.window.is_some() {
+            windowed.insert(v.id.as_str());
+        }
     }
+    own_row_windows(m)
+        || readings_windowed(m, &windowed)
+        || (!windowed.is_empty() && brought_windowed(m, &windowed))
+}
+
+/// Whether an input's row or a def's given row is known in its own window (L §4.5).
+fn own_row_windows(m: &Reality) -> bool {
     for (_, input) in m.inputs.entries() {
-        let rows = input.rows.iter().any(|r| r.own_window.is_some());
-        let unread = |o: &crate::model::Observation| o.own_window.is_some();
-        if rows || input.observations.iter().any(unread) {
+        if input.rows.iter().any(|r| r.own_window.is_some()) {
             return true;
         }
     }
@@ -372,6 +386,72 @@ fn windows_or_moves(m: &Reality) -> bool {
         }
     }
     false
+}
+
+/// Whether an opening's or a stated balance's row is known in a window, its own or its
+/// version's (one of `windowed`) (L §4.5, §5.19).
+fn readings_windowed(m: &Reality, windowed: &BTreeSet<&str>) -> bool {
+    for id in ["opening", "stated"] {
+        let Some(input) = m.inputs.get(id) else {
+            continue;
+        };
+        for r in &input.rows {
+            if r.own_window.is_some() || windowed.contains(r.version.as_str()) {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+/// Whether one of `windowed`, the versions known in a window, brings a rule, a band table,
+/// an index key or a thing's entry (L §4.5).
+fn brought_windowed(m: &Reality, windowed: &BTreeSet<&str>) -> bool {
+    for (_, d) in m.defs.entries() {
+        for (_, vers) in &d.rules {
+            for r in vers {
+                if in_windowed(windowed, r.version.as_deref())
+                    || in_windowed(windowed, r.v.as_deref())
+                {
+                    return true;
+                }
+            }
+        }
+    }
+    for (_, b) in m.bands.entries() {
+        if b.tables
+            .iter()
+            .any(|t| windowed.contains(t.version.as_str()))
+        {
+            return true;
+        }
+    }
+    for (_, ix) in m.indexes.entries() {
+        if ix
+            .keys()
+            .iter()
+            .any(|k| in_windowed(windowed, ix.added_by(k)))
+        {
+            return true;
+        }
+    }
+    for (_, t) in m.things.entries() {
+        if t.entries
+            .iter()
+            .any(|e| in_windowed(windowed, e.version.as_deref()))
+        {
+            return true;
+        }
+    }
+    false
+}
+
+/// Whether `version` is one of `windowed`.
+fn in_windowed(windowed: &BTreeSet<&str>, version: Option<&str>) -> bool {
+    match version {
+        Some(v) => windowed.contains(v),
+        None => false,
+    }
 }
 
 /// Whether a kind of the reality keeps parts, or a reading states parts: load checks them

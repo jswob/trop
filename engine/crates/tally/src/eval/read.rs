@@ -18,7 +18,7 @@ use super::convert::{ConvertFor, Converted, convert_read};
 use super::keys::Given;
 use super::memo::{LawClass, Read, may_hold, rows_class};
 use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load};
-use super::windows::{as_read, one_day};
+use super::windows::{as_read, known_hole, one_day};
 use crate::base::{Load, Run};
 use crate::hole::Hole;
 use crate::model::{
@@ -26,8 +26,8 @@ use crate::model::{
     Unit, Value,
 };
 use crate::read::{
-    Asked, Clocks, Found, held, last_began, origin, read_input, read_last, standing_rows,
-    time_point,
+    Asked, Clocks, Found, KnownInside, held, known_inside, last_began, origin, read_input,
+    read_last, standing_rows, time_point,
 };
 use crate::syntax::{Call, Expr, Stop, Value as Written};
 use crate::time::{Day, PeriodKind};
@@ -89,6 +89,18 @@ fn no_reading(figure: &str, day: Day) -> Hole {
 /// law date, cut and pins the read depends on decide (L §4.4; refcore's `('row', sid, …)`).
 fn row_cell(row: &Row) -> String {
     format!("row {}", row.sid)
+}
+
+/// The rows of `rows` but those at the positions `hidden`, which the cut doesn't see under
+/// the line's choice (L §4.5).
+pub(super) fn kept_rows(rows: &[Row], hidden: &[usize]) -> Vec<Row> {
+    let mut out = Vec::new();
+    for (at, row) in rows.iter().enumerate() {
+        if !hidden.contains(&at) {
+            out.push(row.clone());
+        }
+    }
+    out
 }
 
 /// Whether `last(x, d)` reads its row past it, for day `day`: a reading past its instant's
@@ -165,6 +177,16 @@ impl Engine {
             id: input.id.clone(),
             keys: keys.to_vec(),
         });
+        // a row known in a window that holds the cut: the line's `windows each` decides it,
+        // else the read is `HOLE-IMPRECISE` (L §4.5)
+        let view = match self.input_view(m, input, keys, ctx)? {
+            Err(h) => return Ok(Value::Hole(h)),
+            Ok(view) => view,
+        };
+        let input = match &view {
+            Some(seen) => seen,
+            None => input,
+        };
         let by_law = self.read_class(m, input, ctx, asked)?;
         let found = read_input(m, input, keys, clocks, asked)?;
         if by_law && !matches!(found, Found::Row(_)) {
@@ -191,6 +213,59 @@ impl Engine {
             Found::None => Ok(Value::None),
             Found::Hole(q) => Ok(Value::Hole(Hole::asked(&q.text, &q.origin))),
         }
+    }
+
+    /// Input `input` as a read at `keys` in `ctx` sees its rows: a row whose `known` window
+    /// holds the cut is left out where the line's choice puts its day after the cut; none
+    /// where every row stands; the hole where no `windows each` decides one (refcore's
+    /// `row_visible`, `known_vis`). L §4.5, §4.4.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a freed layer or a row whose version is missing.
+    pub(super) fn input_view(
+        &mut self,
+        m: &Reality,
+        input: &InputInfo,
+        keys: &[KeyVal],
+        ctx: Ctx,
+    ) -> Result<Result<Option<InputInfo>, Hole>, Stop> {
+        let clocks = self.clocks(ctx, &input.id)?;
+        let inside = known_inside(m, &input.rows, (&input.binds, keys), clocks)?;
+        let hidden = match self.hidden_rows(&inside, ctx)? {
+            Err(h) => return Ok(Err(h)),
+            Ok(hidden) => hidden,
+        };
+        if hidden.is_empty() {
+            return Ok(Ok(None));
+        }
+        Ok(Ok(Some(InputInfo {
+            rows: kept_rows(&input.rows, &hidden),
+            ..input.clone()
+        })))
+    }
+
+    /// The positions of the rows `inside`, each known in a window that holds the cut, that
+    /// the line's choice leaves out; the hole of the first where no `windows each` decides
+    /// it (refcore's `known_vis`). L §4.5, §4.4.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a freed layer.
+    pub(super) fn hidden_rows(
+        &mut self,
+        inside: &[KnownInside],
+        ctx: Ctx,
+    ) -> Result<Result<Vec<usize>, Hole>, Stop> {
+        let mut out = Vec::new();
+        for row in inside {
+            match self.known_seen(ctx, row.window, &row.sid)? {
+                Some(true) => {}
+                Some(false) => out.push(row.at),
+                None => return Ok(Err(known_hole(row.window, ctx.cut, &row.sid))),
+            }
+        }
+        Ok(Ok(out))
     }
 
     /// Narrows the reading cell's law date class by what a read of `input` tests its law
@@ -400,6 +475,17 @@ impl Engine {
             id: input.id.clone(),
             keys: keys.clone(),
         });
+        // a row known in a window that holds the cut: the line's `windows each` decides it,
+        // else the read is `HOLE-IMPRECISE` (L §4.5)
+        let view = match self.input_view(m, input, &keys, ctx)? {
+            Err(h) => return Ok(Err(Value::Hole(h))),
+            Ok(view) => view,
+        };
+        let all = input;
+        let input = match &view {
+            Some(seen) => seen,
+            None => input,
+        };
         let clocks = self.clocks(ctx, &input.id)?;
         let found = match past {
             // `since` reads only the day the latest rows began, which they share: one reading
@@ -435,10 +521,16 @@ impl Engine {
             version: row.version.clone(),
             sid: row.sid.clone(),
         });
+        // its place among all the input's rows, the ones the cut doesn't see included
+        let among = all
+            .rows
+            .iter()
+            .position(|r| r.sid == row.sid)
+            .ok_or_else(|| invariant("a row of a read past its input's rows"))?;
         Ok(Ok(Latest {
             input: input.id.clone(),
             keys,
-            at,
+            at: among,
             day,
         }))
     }

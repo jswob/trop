@@ -425,7 +425,7 @@ impl Engine {
         for lg in &o.legs {
             let day = lg.day.day().unwrap_or(o.day);
             for p in [&lg.from, &lg.to].into_iter().filter_map(End::place) {
-                if !self.covering(m, p, day, cut).is_empty() {
+                if !self.covering(m, p, day, cut)?.is_empty() {
                     return Ok(true);
                 }
             }

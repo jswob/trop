@@ -690,7 +690,7 @@ impl Engine {
         let mut on = [true, true];
         for (end, slot) in [&lg.from, &lg.to].into_iter().zip(on.iter_mut()) {
             if let Some(p) = end.place() {
-                *slot = self.obs_end_on(m, &wo.obs, p, day, cut);
+                *slot = self.obs_end_on(m, &wo.obs, p, day, cut)?;
             }
         }
         let [from, to] = on;
