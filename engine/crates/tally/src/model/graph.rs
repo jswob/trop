@@ -291,6 +291,9 @@ pub struct Graph {
     /// The axes each ask reaches that its pins don't fix: each one forks its answer
     /// (refcore's `a._axes`). L §5.5.
     pub ask_axes: BTreeMap<String, BTreeSet<String>>,
+    /// Each ask's file, for a refusal at its line met when the run plans its worlds (a diff
+    /// across two stacks, `LOAD-FORKS`). L §5.5, §6.4.
+    pub ask_files: BTreeMap<String, String>,
     /// Each item's reads of inputs and defs by role: a sample, a distribution, a read in a
     /// query, a plain value, each role once (refcore's `rand_edges`). L §5.16.
     pub rand_edges: BTreeMap<Node, BTreeMap<Node, Vec<ReadRole>>>,
