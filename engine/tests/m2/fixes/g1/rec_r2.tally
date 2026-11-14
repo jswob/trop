@@ -1,0 +1,28 @@
+model rr
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+
+input r1: (a num, b int)
+input r2: (a num PLN)
+input r3: (note text)
+input r4: (a money PLN)
+
+ask a1: r1 law 2026-03-01
+ask a2: r2 law 2026-03-01
+ask a3: r3 law 2026-03-01
+ask a4: r4 law 2026-03-01
+ask a5: r1.a law 2026-03-01
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  r1 = (a: 12.50, b: 3)
+  r2 = (a: 12.50 PLN)
+  r3 = (note: "x")
+  r4 = (a: 12.50 PLN)

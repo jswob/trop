@@ -1,0 +1,43 @@
+model x_wb
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place sav: accounts PLN lives 2026-01-01..
+
+place work: outside lives 1900-01-01..
+
+input amt[m in months]: money PLN
+
+input keep: money PLN
+
+def excess[m in months]: money PLN = max(bal(konto) - keep, 0)
+
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from work to konto amount amt[m]
+
+move save[m in months]: transfers
+  on end_of(m)
+  reads konto
+  leg cash from konto to sav amount excess[m]
+
+ask e1: explain excess[2026-02]
+ask e2: explain excess[2026-08]
+ask b: bal(sav, 2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[2026-01..2026-12] = 10.00 PLN "plan"
+  keep = 3.00 PLN "keep"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "own"

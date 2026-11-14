@@ -1,0 +1,60 @@
+model r7_f18b
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+kind pays: event certain
+  leg cash: PLN
+
+kind subpays: pays
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+input big: money PLN
+input dom[m in month]: int
+input skip[m in month]: bool
+
+def pday[m in month]: date = day_of(m, dom[m])
+
+def amt[m in month]: money PLN = fee + big
+
+move pay[m in month]: subpays
+  on pday[m]
+  when not skip[m]
+  leg cash from world to konto amount amt[m]
+
+move tip[m in month]: pays
+  on start_of(m)
+  leg cash from world to konto amount fee
+
+def n_big[m in month]: int = count(p in pays over m)
+
+def both[m in month]: int = n_big[m] + count(p in subpays over m)
+
+def tot[m in month]: money PLN = sum(p.cash.amount for p in pays over m)
+
+ask e1: explain n_big[2026-02]
+ask e2: explain both[2026-02]
+ask e3: explain tot[2026-03]
+ask v: tot[2026-03]
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 10.00 PLN "the card"
+  big = 50.00 PLN "big"
+  dom[2026-01..2026-06] = 5 "the card"
+  skip[2026-01..2026-06] = false "s"
+  skip[2026-02] = true "s2"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "the card"

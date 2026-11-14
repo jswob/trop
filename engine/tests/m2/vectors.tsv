@@ -53,3 +53,5 @@ fixes/g3/k4	fixes-windows		engine/tests/m2/fixes/g3	engine/tests/m2/fixes/g3/k4.
 fixes/g3/h2	fixes-windows		engine/tests/m2/fixes/g3	engine/tests/m2/fixes/g3/h2.tally	q		-
 fixes/g3/n6	fixes-windows		engine/tests/m2/fixes/g3	engine/tests/m2/fixes/g3/n6.tally	sw		-
 fixes/g3/n7	fixes-windows		engine/tests/m2/fixes/g3	engine/tests/m2/fixes/g3/n7.tally	bw		-
+fixes/g1/legf	fixes-forms		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/legf.tally	q_y		-
+fixes/g1/legf_z	fixes-forms		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/legf_z.tally	q_w q_z		-

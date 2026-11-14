@@ -1,0 +1,66 @@
+model bm
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+unit PLN: currency minor 0.01
+
+input x1: money PLN
+input x2: money PLN
+input y: int
+
+band sc(x: money PLN): num PLN
+band nb(x: money PLN): num PLN
+band ky(n: int): num
+
+def lo1: money PLN = band_lo(sc, x1) at reader
+def hi1: money PLN = band_hi(sc, x1) at reader
+def lo2: money PLN = band_lo(sc, x2) at reader
+def hi2: money PLN = band_hi(sc, x2) at reader
+def v1: num PLN = sc(x1) at reader
+def v2: num PLN = sc(x2) at reader
+def n1: num PLN = nb(x1) at reader
+def k1: int = band_hi(ky, y) at reader
+def k2: int = band_lo(ky, y) at reader
+
+ask a_lo1: lo1 law 2021-06-01
+ask a_hi1: hi1 law 2021-06-01
+ask a_lo2: lo2 law 2022-06-01
+ask a_hi2: hi2 law 2022-06-01
+ask a_v1: v1 law 2021-06-01
+ask a_v2: v2 law 2022-06-01
+ask a_hi1b: hi1 law 2022-06-01
+ask a_n1: n1 law 2022-06-01
+ask a_k1: k1 law 2022-06-01
+ask a_k2: k2 law 2022-06-01
+
+version v0
+  cite s
+  governs always
+  known 2020-01-01
+  x1 = 50000 PLN
+  x2 = 150000 PLN
+  y = 7
+
+version v20
+  cite s
+  governs 2020..
+  known 2020-01-01
+  sc: [0, inf) = x * 0.1
+  nb: [0, 10] = 1
+  nb: (10, inf) = 2
+  ky: [0, 5) = 1
+  ky: [5, inf) = 2
+
+version v22
+  cite s
+  governs 2022..
+  known 2021-11-01
+  replace sc: [0, 120000] = x * 0.12
+  replace sc: (120000, inf) = x * 0.32
+  replace nb: [0, 20] = 3
+  replace nb: (20, inf) = 4
+

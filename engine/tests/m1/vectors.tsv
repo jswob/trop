@@ -1584,6 +1584,47 @@ fixes/gate8/m2_g3_k4	fixes-gate8		engine/tests/m2/fixes/g3	engine/tests/m2/fixes
 fixes/gate8/m2_g3_n6	fixes-gate8		engine/tests/m2/fixes/g3	engine/tests/m2/fixes/g3/n6.tally	sww aw bw		-
 fixes/gate8/m2_g3_n7	fixes-gate8		engine/tests/m2/fixes/g3	engine/tests/m2/fixes/g3/n7.tally	bww aw		-
 fixes/gate8/m2_g3_ez06	fixes-gate8		engine/tests/m2/fixes/g3	engine/tests/m2/fixes/g3/ez06.tally	d		-
+fixes/gate8/m2_g1_band	fixes-gate8		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/band.tally			-
+fixes/gate8/m2_g1_band_m2	fixes-gate8		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/band_m2.tally			-
+fixes/gate8/m2_g1_band_m3	fixes-gate8		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/band_m3.tally			-
+fixes/gate8/m2_g1_bands_b	fixes-gate8		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/bands_b.tally			-
+fixes/gate8/m2_g1_bands_b2	fixes-gate8		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/bands_b2.tally			-
+fixes/gate8/m2_g1_bands_b3	fixes-gate8		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/bands_b3.tally			-
+fixes/gate8/m2_g1_bands_b4	fixes-gate8		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/bands_b4.tally			-
+fixes/gate8/m2_g1_law_k	fixes-gate8		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/law_k.tally			-
+fixes/gate8/m2_g1_n1_after	fixes-gate8		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/n1_after.tally			-
+fixes/gate8/m2_g1_n1_before	fixes-gate8		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/n1_before.tally			-
+fixes/gate8/m2_g1_n1_law	fixes-gate8		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/n1_law.tally			-
+fixes/gate8/m2_g1_n1_na	fixes-gate8		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/n1_na.tally			-
+fixes/gate8/m2_g1_n1_nb	fixes-gate8		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/n1_nb.tally			-
+fixes/gate8/m2_g1_legf	fixes-gate8		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/legf.tally	q_fc_lo q_fc_hi q_bal		-
+fixes/gate8/m2_g1_legf_z	fixes-gate8		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/legf_z.tally	q_fc_lo q_fc_hi q_bal		-
+fixes/gate8/m2_g1_q_f2	fixes-gate8		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/q_f2.tally			-
+fixes/gate8/m2_g1_q_forms_nopriced	fixes-gate8		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/q_forms_nopriced.tally			-
+fixes/gate8/m2_g1_q_q	fixes-gate8		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/q_q.tally			-
+fixes/gate8/m2_g1_rec_r	fixes-gate8		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/rec_r.tally			-
+fixes/gate8/m2_g1_rec_r2	fixes-gate8		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/rec_r2.tally			-
+fixes/gate8/m2_g1_ul15	fixes-gate8		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/ul15.tally			-
+fixes/gate8/m2_g2_any_b	fixes-gate8		engine/tests/m2/fixes/g2	engine/tests/m2/fixes/g2/any_b.tally			-
+fixes/gate8/m2_g2_any_c	fixes-gate8		engine/tests/m2/fixes/g2	engine/tests/m2/fixes/g2/any_c.tally			-
+fixes/gate8/m2_g2_any_d	fixes-gate8		engine/tests/m2/fixes/g2	engine/tests/m2/fixes/g2/any_d.tally			-
+fixes/gate8/m2_g2_any_e	fixes-gate8		engine/tests/m2/fixes/g2	engine/tests/m2/fixes/g2/any_e.tally			-
+fixes/gate8/m2_g2_f18	fixes-gate8		engine/tests/m2/fixes/g2	engine/tests/m2/fixes/g2/f18.tally			-
+fixes/gate8/m2_g2_f18_m2	fixes-gate8		engine/tests/m2/fixes/g2	engine/tests/m2/fixes/g2/f18_m2.tally			-
+fixes/gate8/m2_g2_f18_m3	fixes-gate8		engine/tests/m2/fixes/g2	engine/tests/m2/fixes/g2/f18_m3.tally			-
+fixes/gate8/m2_g2_f18_m4	fixes-gate8		engine/tests/m2/fixes/g2	engine/tests/m2/fixes/g2/f18_m4.tally			-
+fixes/gate8/m2_g2_f18_m5	fixes-gate8		engine/tests/m2/fixes/g2	engine/tests/m2/fixes/g2/f18_m5.tally			-
+fixes/gate8/m2_g2_f18_m6	fixes-gate8		engine/tests/m2/fixes/g2	engine/tests/m2/fixes/g2/f18_m6.tally			-
+fixes/gate8/m2_g2_f18_m7	fixes-gate8		engine/tests/m2/fixes/g2	engine/tests/m2/fixes/g2/f18_m7.tally			-
+fixes/gate8/m2_g2_rw	fixes-gate8		engine/tests/m2/fixes/g2	engine/tests/m2/fixes/g2/rw.tally			-
+fixes/gate8/m2_g2_rw_m4	fixes-gate8		engine/tests/m2/fixes/g2	engine/tests/m2/fixes/g2/rw_m4.tally			-
+fixes/gate8/m2_g2_wb_w	fixes-gate8		engine/tests/m2/fixes/g2	engine/tests/m2/fixes/g2/wb_w.tally			-
+fixes/gate8/m2_g2_wb2_p	fixes-gate8		engine/tests/m2/fixes/g2	engine/tests/m2/fixes/g2/wb2_p.tally			-
+fixes/gate8/m2_g2_wb2_pb	fixes-gate8		engine/tests/m2/fixes/g2	engine/tests/m2/fixes/g2/wb2_pb.tally			-
+fixes/gate8/m2_g2_wb2_pc	fixes-gate8		engine/tests/m2/fixes/g2	engine/tests/m2/fixes/g2/wb2_pc.tally			-
+fixes/gate8/m2_g3_lc_e0	fixes-gate8		engine/tests/m2/fixes/g3	engine/tests/m2/fixes/g3/lc_e0.tally			-
+fixes/gate8/m2_g2_bf	fixes-gate8		engine/tests/m2/fixes/g2/bf	engine/tests/m2/fixes/g2/bf/h.tally engine/tests/m2/fixes/g2/bf/hh.tally engine/tests/m2/fixes/g2/bf/late.tally			-
+fixes/gate8/m2_g1_sv	fixes-gate8		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/sv.tally			-
 r1/l8_reads_first_last_stop	fixes-r1		engine/tests/m1/fixes/r1/l8_reads_first_last_stop	engine/tests/m1/fixes/r1/l8_reads_first_last_stop/m.tally	a b c		R1
 r1/l8_reads_things_ties_order_then_where	fixes-r1		engine/tests/m1/fixes/r1/l8_reads_things_ties_order_then_where	engine/tests/m1/fixes/r1/l8_reads_things_ties_order_then_where/m.tally	t1 t2 t3 t4 t5		R1
 r1/l8_reads_ties_second_term_tied_only	fixes-r1		engine/tests/m1/fixes/r1/l8_reads_ties_second_term_tied_only	engine/tests/m1/fixes/r1/l8_reads_ties_second_term_tied_only/m.tally	a b		R1

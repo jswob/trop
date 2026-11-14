@@ -1,0 +1,48 @@
+model household
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2027-12-31
+
+source plan "plan"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input adv_day: date
+input adv_law: date
+input hd: date
+
+move adv: transfers
+  on adv_day
+  at adv_law
+  leg cash from konto to world amount amt
+
+move advh: transfers
+  on hd
+  at adv_law
+  leg cash from konto to world amount amt
+
+move advl: transfers
+  on adv_day
+  at adv_law
+  leg cash from konto to world amount amt on hd
+
+version base
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  amt = 10.00 PLN "own"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "wyciąg"
+
+version dates
+  cite plan
+  governs always
+  known 2026-01-01
+  adv_day = 2026-12-15 "own"
+  adv_law = 2027-01-01 "own"
+
+ask p1: bal(konto, 2026-12-31) in late
+ask p2: flows(konto, 2026-12-01 .. 2027-01-31) in late
+ask p3: explain bal(konto, 2026-12-31) in late
+ask p4: bal(konto, 2027-12-31) in late
