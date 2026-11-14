@@ -129,7 +129,7 @@ pub mod model {
     pub use kind::{Entry, KindInfo, KindSpec, Labels, PRELUDE_KINDS, PlaceKeys, Thing, prelude};
     pub use reality::{
         BUILTIN_INDEXES, BUILTIN_INPUTS, Joint, MemberAsks, NameKind, Priced, Reality, SamePair,
-        price_id,
+        price_fields, price_id,
     };
     pub use ty::{CodeKind, PeriodWord, Shown, Ty};
     pub use unit::{PERIODS, Scaled, Unit, UnitError, is_currency_code};
@@ -189,7 +189,7 @@ pub mod eval {
     pub(crate) use context::{GUARDED, UNSET_AXIS, world_named};
     pub(crate) use convert::{ConvertFor, Converted, convert, convert_row, field_literal};
     pub(crate) use expr::equal_sides;
-    pub(crate) use keys::{thing_seen, to_key};
+    pub(crate) use keys::{Given, thing_seen, to_key};
     pub use memo::Memo;
     pub(crate) use pins::after_on;
     pub(crate) use ranges::range_literal_key;

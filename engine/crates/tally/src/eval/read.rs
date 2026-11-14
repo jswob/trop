@@ -410,7 +410,58 @@ impl Engine {
     pub(crate) fn price_at(
         &mut self,
         m: &Reality,
-        (id, given): (&str, Vec<Value>),
+        (id, given): (&str, Vec<Given>),
+        (day, last): (Day, bool),
+        ctx: Ctx,
+    ) -> Result<Value, Stop> {
+        match self.price_keys(m, (id, given), day, ctx)? {
+            Err(hole) => Ok(Value::Hole(hole)),
+            Ok(keys) => self.price_read_at(m, (id, &keys), (day, last), ctx),
+        }
+    }
+
+    /// The keys a price is read at on day `day`: each given key made a key of its input's or
+    /// def's binds; a hole key that hole (refcore's `key_values`, at the price's day). L §5.10,
+    /// §2.5.
+    ///
+    /// # Errors
+    ///
+    /// The refusals of the keys; `ENGINE-INVARIANT` for an id that load checked is an input
+    /// or a def.
+    pub(crate) fn price_keys(
+        &mut self,
+        m: &Reality,
+        (id, given): (&str, Vec<Given>),
+        day: Day,
+        ctx: Ctx,
+    ) -> Result<Result<Vec<KeyVal>, Hole>, Stop> {
+        let at = Ctx {
+            law: Some(day),
+            ..ctx
+        };
+        let binds = if let Some(input) = m.inputs.get(id) {
+            &input.binds
+        } else {
+            &m.defs
+                .get(id)
+                .ok_or_else(|| invariant("a price that is neither an input nor a def"))?
+                .binds
+        };
+        self.make_keys(m, id, binds, given, at)
+    }
+
+    /// A price's read on day `day` at keys already made: input or def `id` at law date
+    /// `day`, or the input through its carry, `last(id[keys], day)` (refcore's
+    /// `m_priced_read`, its reads). L §5.10, §4.6.
+    ///
+    /// # Errors
+    ///
+    /// The refusals of the read rule and the row's value; `ENGINE-INVARIANT` for an id that
+    /// load checked is an input or a def.
+    pub(crate) fn price_read_at(
+        &mut self,
+        m: &Reality,
+        (id, keys): (&str, &[KeyVal]),
         (day, last): (Day, bool),
         ctx: Ctx,
     ) -> Result<Value, Stop> {
@@ -418,16 +469,11 @@ impl Engine {
             law: Some(day),
             ..ctx
         };
-        let given: Vec<Given> = given.into_iter().map(Given::Value).collect();
         if let Some(input) = m.inputs.get(id) {
-            let keys = match self.make_keys(m, id, &input.binds, given, at)? {
-                Err(hole) => return Ok(Value::Hole(hole)),
-                Ok(keys) => keys,
-            };
             if !last {
-                return self.read_input_at(m, input, &keys, at, Asked::Plain);
+                return self.read_input_at(m, input, keys, at, Asked::Plain);
             }
-            return match self.latest_at(m, (input, keys), day, Past::Price, at)? {
+            return match self.latest_at(m, (input, keys.to_vec()), day, Past::Price, at)? {
                 Err(value) => Ok(value),
                 Ok(latest) => self.last_value(m, &latest, at),
             };
@@ -436,10 +482,7 @@ impl Engine {
             .defs
             .get(id)
             .ok_or_else(|| invariant("a price that is neither an input nor a def"))?;
-        match self.make_keys(m, id, &def.binds, given, at)? {
-            Err(hole) => Ok(Value::Hole(hole)),
-            Ok(keys) => self.read_def_at(m, def, &keys, at),
-        }
+        self.read_def_at(m, def, keys, at)
     }
 
     /// A chosen row's value with the register entries every read of it makes: `assumed`, its

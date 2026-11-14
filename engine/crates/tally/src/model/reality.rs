@@ -20,7 +20,7 @@ use super::ty::Ty;
 use super::world::{Scenarios, World};
 use crate::base::{Internal, Interner, Place, Refusal, Table, Warn};
 use crate::num::Num;
-use crate::syntax::{Ask, Axis, Expr, Fill, Header, Price, Sign, Source, Type};
+use crate::syntax::{Ask, Axis, Expr, Fill, Header, Postfix, Price, Sign, Source, Type};
 use crate::time::Day;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -79,6 +79,35 @@ pub fn price_id(input: &Expr) -> Option<&str> {
         return Some(id);
     }
     None
+}
+
+/// A price reference split at its fields: the read it names, `px` or `px[k]`, and the
+/// record fields `.f` read of it, in order; none where a field comes before keys or the
+/// reference is no name (L §2.3 `ref`, §5.10; refcore's `m_resolve_price`, its peeled
+/// fields).
+#[must_use]
+pub fn price_fields(input: &Expr) -> Option<(Expr, Vec<&str>)> {
+    let Expr::Post(base, posts) = input else {
+        return matches!(input, Expr::Name(_)).then(|| (input.clone(), Vec::new()));
+    };
+    if !matches!(base.as_ref(), Expr::Name(_)) {
+        return None;
+    }
+    let (read, rest) = match posts.as_slice() {
+        [Postfix::Keys(keys), rest @ ..] => (
+            Expr::Post(base.clone(), vec![Postfix::Keys(keys.clone())]),
+            rest,
+        ),
+        rest => (base.as_ref().clone(), rest),
+    };
+    let mut fields = Vec::new();
+    for post in rest {
+        let Postfix::Field(field) = post else {
+            return None;
+        };
+        fields.push(field.as_str());
+    }
+    Some((read, fields))
 }
 
 /// The inputs the language declares (refcore's `BUILTIN_INPUTS`). L §5.19.
@@ -404,18 +433,23 @@ impl Reality {
     }
 
     /// The input or def a price clause names, and how it values its place, from its declared
-    /// type (refcore's `pn._r`, `pn._mode`). L §5.10.
+    /// type, a record's field's for `priced p.f` (refcore's `pn._r`, `pn._mode`). L §5.10,
+    /// §2.3.
     #[must_use]
     pub fn clause_mode(&self, price: &Price) -> Option<(String, Priced)> {
         let id = price_id(&price.input)?;
+        let (_, fields) = price_fields(&price.input)?;
         let kind = self.names.kind(id)?;
-        let ty = if kind == NameKind::Input {
+        let mut ty = if kind == NameKind::Input {
             self.inputs.get(id)?.ty.clone()
         } else if kind == NameKind::Def {
             Some(self.defs.get(id)?.ty.clone())
         } else {
             return None;
         };
+        for field in fields {
+            ty = ty.and_then(|t| t.field(field).cloned());
+        }
         Some((id.to_owned(), self.price_mode(ty.as_ref())?))
     }
 

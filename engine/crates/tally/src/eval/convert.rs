@@ -328,6 +328,13 @@ fn field_value(m: &Reality, written: &FieldValue, ty: &Ty, target: &str) -> Resu
     if let FieldValue::None | FieldValue::Expr(Expr::None) = written {
         return Ok(Value::None);
     }
+    if let FieldValue::Expr(Expr::Str(s)) = written {
+        // a text field, as a row's text is (refcore's `convert_value`, its `str` arm)
+        if *ty == Ty::Text {
+            return Ok(Value::Text(s.clone()));
+        }
+        return Err(wrong_for("text", ty));
+    }
     let lit = field_literal(written).ok_or(Stop::NotBuilt(
         "a record field that is a hole or an expression",
     ))?;
