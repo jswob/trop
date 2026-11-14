@@ -31,7 +31,9 @@ mutants profile's `terminate-after`, not a test's verdict) isn't "now caught": a
 slowdown, such as an equivalent mutant that only turns off a fast path, mustn't flip a
 listed row (R-87, 2026-11-07; nightly run 42194515919). It stays a listed survivor,
 counted as timed out, and a notice names the killed tests. An unlisted mutant caught
-that way still counts as caught. Until the lead sets
+that way still counts as caught, and a notice names it and its killed tests too: since
+2026-11-14 no check fails on a slow T test (R-88, issue #165), so a kill is shown where
+it happens. Until the lead sets
 the kernel at S (tools/kernel.toml), it reports the same problems and exits 0, since the
 stubs' mutants test nothing (R-85).
 """
@@ -167,6 +169,10 @@ def main(argv):
         counts["timeout"] += n
         print(f"mutants-survivors: notice: {key[0]}: {key[2]} is listed and was caught only by slow-timeout kills "
               f"({', '.join(sorted(killed[key]))}): counted as timed out, not as now caught (R-87)")
+    for key in sorted(k for k in killed if k not in rows):
+        # an unlisted one stays caught; the notice shows the kill (R-88, 2026-11-14)
+        print(f"mutants-survivors: notice: {key[0]}: {key[2]} was caught only by slow-timeout kills "
+              f"({', '.join(sorted(killed[key]))}): counted as caught; a kill is meant to be a hang (R-88)")
     for key in seen:
         seen[key] = ["CaughtMutant" if s == KILLED_ONLY else s for s in seen[key]]
     equivalent = 0

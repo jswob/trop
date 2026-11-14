@@ -825,11 +825,12 @@ def ci_problems():
         if not re.search(r"\n  long-fuzz:\n(    [^\n]*\n|\n)*?        env:\n(          [^\n]*\n)*?          ASAN_OPTIONS: quarantine_size_mb=64\n", text):
             problems.append("R-92: .github/workflows/engine.yml's long fuzz job doesn't set ASAN_OPTIONS: quarantine_size_mb=64")
         # R-84, R-88, R-133 (2026-11-12): gate 8 runs through tools/mutants-gate. The baseline
-        # runs T's tests (tools/milestones args) and fails a test over 20 s; the coverage map
-        # comes from the commit; 100 planned shards; the nightly's twin map
+        # runs T's tests (tools/milestones args); its test times are a report that never fails
+        # (R-88, 2026-11-14, issue #165); the coverage map comes from the commit; 100 planned
+        # shards; the nightly's twin map
         gate = {
             "R-84: the mutants baseline doesn't run `tools/mutants-gate baseline`": r"\n  mutants-baseline:\n(    [^\n]*\n|\n)*?        run: tools/mutants-gate baseline ",
-            "R-88: no job fails a baseline test over 20 s (`tools/mutants-gate slow`)": r"\n        run: engine/tools/mutants-gate slow ",
+            "R-88: the baseline's test-time report (`tools/mutants-gate slow`) can fail its job": r"\n        continue-on-error: true\n        working-directory: engine\n        run: tools/mutants-gate slow ",
             "R-133: the shards don't wait for this run's coverage map": r"\n  mutants:\n    name: mutants \$\{\{ matrix.shard \}\}/100\n    needs: \[mutants-baseline, mutants-coverage\]\n",
             "R-133: no job makes the coverage map (`tools/mutants-gate coverage`)": r"\n  mutants-coverage:\n(    [^\n]*\n|\n)*?        run: tools/mutants-gate coverage ",
             "R-84: the shards don't run `tools/mutants-gate shard`": r"\n        run: tools/mutants-gate shard \$\{\{ matrix.shard \}\}/100 ",
@@ -840,6 +841,9 @@ def ci_problems():
         for problem, pattern in gate.items():
             if not re.search(pattern, text):
                 problems.append(f"{problem} (.github/workflows/engine.yml)")
+        # gate 8 fails on no test's time (R-88, 2026-11-14, issue #165): the job that did is gone
+        if re.search(r"\n  mutants-slow-tests:\n", text):
+            problems.append("R-88: a job fails gate 8 on a test's time, `mutants-slow-tests` (.github/workflows/engine.yml)")
     return problems
 
 

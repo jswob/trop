@@ -57,10 +57,9 @@ def marker():
             data = tomllib.load(f)
     except (OSError, tomllib.TOMLDecodeError) as e:
         raise MilestoneError(f"tools/milestones.toml can't be read: {e}") from e
-    # `fence_catchers` is `mutants-local --fences`'s alone (fence_catchers()), and
-    # `mutants_slow_tests` gate 8's 20 s check's (slow_tests()), so this reader doesn't ask
-    # for them
-    if sorted(set(data) - {"fence_catchers", "mutants_slow_tests"}) != ["gating", "milestones", "mutants_leave_out"]:
+    # `fence_catchers` is `mutants-local --fences`'s alone (fence_catchers()), so this reader
+    # doesn't ask for it
+    if sorted(set(data) - {"fence_catchers"}) != ["gating", "milestones", "mutants_leave_out"]:
         raise MilestoneError("tools/milestones.toml holds exactly `milestones`, `gating` and `mutants_leave_out`, "
                              "and `mutants-local --fences`'s `fence_catchers`")
     milestones, gating, leave_out = data["milestones"], data["gating"], data["mutants_leave_out"]
@@ -106,33 +105,6 @@ def fence_catchers():
             raise MilestoneError("tools/milestones.toml: each fence_catchers entry is { package, test } or "
                                  f"{{ package, lib = \"<module>::\" }}, not {c!r}")
         out.append((c["package"], c.get("test"), c.get("lib")))
-    return out
-
-
-def slow_tests():
-    """The T tests gate 8's 20 s check names, each a single vector T can't split (R-88; pick
-    P73, issue #108, 2026-11-12): {test: (seconds, ceiling)}, its time and its ceiling on the
-    median runner, checked: each entry is exactly { test, seconds, ceiling, measured }, the
-    time under the ceiling, no test twice. None listed is an empty list, so every test
-    keeps the 20 s."""
-    try:
-        with open(MARKER, "rb") as f:
-            listed = tomllib.load(f).get("mutants_slow_tests", [])
-    except (OSError, tomllib.TOMLDecodeError) as e:
-        raise MilestoneError(f"tools/milestones.toml can't be read: {e}") from e
-    if not isinstance(listed, list):
-        raise MilestoneError("tools/milestones.toml: mutants_slow_tests is a list of tables")
-    out = {}
-    for c in listed:
-        ok = isinstance(c, dict) and sorted(c) == ["ceiling", "measured", "seconds", "test"]
-        ok = ok and isinstance(c["test"], str) and isinstance(c["measured"], str) and c["measured"].strip() != ""
-        ok = ok and all(isinstance(c[k], (int, float)) and not isinstance(c[k], bool) for k in ("seconds", "ceiling"))
-        if not ok or not 0 < c["seconds"] < c["ceiling"]:
-            raise MilestoneError("tools/milestones.toml: each mutants_slow_tests entry is { test, seconds, ceiling, "
-                                 f"measured }}, its seconds under its ceiling, not {c!r}")
-        if c["test"] in out:
-            raise MilestoneError(f"tools/milestones.toml: mutants_slow_tests names {c['test']} twice")
-        out[c["test"]] = (float(c["seconds"]), float(c["ceiling"]))
     return out
 
 
