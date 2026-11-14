@@ -682,6 +682,10 @@ def self_test(checks):
         # 8m. M2's vectors (issue #167): refcore's bytes for m2/vectors.tsv, each check tied to its stored baseline
         p = subprocess.run([sys.executable, '-I', '-B', T + 'm2/vectors.py', '--check'], capture_output=True, text=True)
         say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])
+        # 8n. the M2 run's item 10 (issue #167): G12's 63 over-specified vectors name the asks restate_g12.py picks
+        p = subprocess.run([sys.executable, '-I', '-B', T + 'm1/restate_g12.py', '--check'], capture_output=True,
+                           text=True)
+        say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])
         # 9. U2 (4.5f): under fast, a check with no baseline runs on refcore (its cache entry is refcore's)
         nb = dict(fast, baseline='')
         _, r, _ = session([nb], checks, **dict(kw, runtimes=['pypy+fast']))

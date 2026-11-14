@@ -14,7 +14,7 @@ The checks M2 (replay against reality) must turn green, from BUILD-ORDER § M2 (
 | 4 | the codes of M2's constructs no output prints, one fixture each: `HOLE-SAME`'s disagreement form and four `RUN-RECORD` forms | chunk C6 | `m2_codes` | 5 | plan | not written |
 | 5 | the properties of § M2: masking at K, the three-way split, the fixed past, forks on and off | chunks C7, C8 | `m2_properties`, `m2_forks` | 6 | plan | not written |
 | 6 | the brief's in-scope items: #147, #101, #158, #132, #42, #163, #164, item 9's pair | chunk C2; 15 rows held in `held.tsv` for #147 (9), #101 (4), #158 (1), #132 (1), all `m1_fixes` | `m2_items` | 1 | plan | not written; the 15 held rows red on the engine (not implemented) |
-| 7 | item 10: the 63 over-specified `fixes/g12/*` vectors restated to their asks | chunk C3 | `m1_fixes`, `m1_lows` (gating) | 1 | — | chunk C3 |
+| 7 | item 10: the 63 over-specified `fixes/g12/*` vectors restated to their asks | chunk C3: `m1/restate_g12.py` (`--check` in `run.py --self-test`, 8n), 582 asks; `MILESTONE-M1.md` § Item 10 | `m1_fixes`, `m1_lows` (gating) | 1 | — | done: `m1/vectors.refcore` 318 591 lines, 11 281 620 bytes before; 229 737 lines, 7 575 415 bytes after (the 63's output 95 744 → 6 890 lines); each prints its asks as its whole run did |
 | 8 | the builder groups' review fixes and gate 8's survivors | chunk C9 on | `m2_fixes` | 1, 8 | each group | — |
 
 `check`'s report line counts the `m2_…` targets' tests: `milestone-report: M2: 2/3 green (gates once M2 is tagged)` after chunk C1.
