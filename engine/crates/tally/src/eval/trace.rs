@@ -764,6 +764,62 @@ impl Engine {
         }
     }
 
+    /// Adds the node of observation `id` of observed input `input` under the open node, a
+    /// read of its leg giving `leg`: `row <version>:<id>` with its version, source, locator,
+    /// day and known date, as a row prints (E §10: every row read, "the traced value equals
+    /// the stored one"; refcore omits it, #169).
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for an observation or a version load didn't build.
+    pub(crate) fn trace_observation(
+        &mut self,
+        m: &Reality,
+        (input, id): (&str, &str),
+        leg: &Value,
+    ) -> Result<(), Stop> {
+        if self.traced().is_none() {
+            return Ok(());
+        }
+        let built = m
+            .inputs
+            .get(input)
+            .ok_or_else(|| invariant("an observation's input load didn't build"))?;
+        let o = built
+            .observations
+            .iter()
+            .find(|o| o.sid() == id)
+            .ok_or_else(|| invariant("an observation load didn't build"))?;
+        let version = m
+            .versions
+            .get(&o.version)
+            .ok_or_else(|| invariant("an observation of a version load didn't build"))?;
+        let mut bits = vec![
+            format!("version {}", o.version),
+            format!("source {}", version.cite),
+        ];
+        if let Some(source) = m.sources.get(&version.cite) {
+            bits.push(format!("\"{}\"", source.title));
+        }
+        if let Some(locator) = &o.locator {
+            bits.push(format!("locator \"{locator}\""));
+        }
+        if let Some(day) = o.day {
+            bits.push(format!("on {}", day.text()));
+        }
+        bits.push(format!(
+            "known {}",
+            o.own_known.unwrap_or(version.known).text()
+        ));
+        let mut node = Node::new(Kind::Row, format!("{}:{id}", o.version));
+        node.lines.push(bits.join(", "));
+        node.value = Some(Item::Value(leg.clone()));
+        if let Some(trace) = self.traced() {
+            trace.added(node);
+        }
+        Ok(())
+    }
+
     /// Adds the node of a band row under the open node: `<figure>: row <interval> (version
     /// v[, "locator"])` (refcore's `band_value`, its node). E §10.
     pub(super) fn trace_band_row(

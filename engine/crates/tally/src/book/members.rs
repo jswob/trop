@@ -770,7 +770,12 @@ impl Engine {
                 return Err(Stop::Refused(err));
             }
             self.trace_walked_back(back);
-            return leg_record(m, lg);
+            let record = leg_record(m, lg)?;
+            // an observation a read counts is a cause, printed as its row (E §10)
+            if let Moving::Obs(o) = src {
+                self.trace_observation(m, (&o.input, &o.id), &record)?;
+            }
+            return Ok(record);
         }
         if let Moving::Plan(i) = src
             && (i.exists == Exists::No || i.status == Status::None)
