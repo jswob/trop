@@ -541,6 +541,22 @@ class Loader:
                 if k.spec == 'event':
                     # a subkind of an event kind keeps its parent's legs and attributes
                     pass
+        # L §5.7, §8.3 (the grammar: "unit and sign: required, LOAD-PLACEKIND"): a place kind states its unit and its
+        # sign rule, or takes them from the place kind it is a subkind of; the root places states neither, so a
+        # subkind of it whose chain states no unit, or no sign, is refused at its line, whatever the asks (P44: refcore
+        # loaded `kind foo: places`, and printed `keeps parts and is None` for one with parts clauses)
+        for s, rid in decls:
+            k = K[s.id if rid is None else '%s.%s' % (rid, s.id)]
+            if k.spec != 'place':
+                continue
+            unit = sign = None
+            x = k
+            while x is not None and (unit is None or sign is None):
+                unit = x.unit if unit is None else unit
+                sign = x.sign if sign is None else sign
+                x = K[x.parent] if x.parent is not None else None
+            if unit is None or sign is None:
+                raise LoadError('LOAD-PLACEKIND', 'place kind %s has no unit or sign rule' % k.id, s.loc)
         for kid, k in K.items():
             if k.spec == 'event' and k.certainty is None:
                 x = k

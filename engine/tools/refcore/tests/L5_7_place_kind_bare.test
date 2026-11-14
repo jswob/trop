@@ -1,0 +1,23 @@
+# L §5.7's grammar: `"place" [CUR | ID | "any" | "one"] [sign] ...   (unit and sign: required, LOAD-PLACEKIND, not
+# LOAD-PARSE)` (pick P44, the twin of L5_7_place_kind_no_unit_sign): `kind bar: place` with neither is LOAD-PLACEKIND at
+# its line. refcore 2.1.7 refused it as LOAD-PARSE, expecting a unit.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind bar: place
+input y: int
+ask q: y
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  y = 1
+=== expect
+refused: LOAD-PLACEKIND place kind bar has no unit or sign rule (m.tally:9)
