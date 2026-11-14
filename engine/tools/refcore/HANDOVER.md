@@ -54,6 +54,18 @@ named. **1345 tests, all pass** (1251, 94 new, 8 changed; `refcore_fast` byte-eq
   base's own walk from S to the from, which R7's `before from:` listing needs (the base books holes there that the
   branch doesn't); a run of one ask walks the base nowhere else, so there is no walk to share. walk.py's copy of
   `m_prefix_walk`, which mreads' shadowed, is gone.
+- **P40 and P41** (the builder's five STOP-REPORTs, the review's findings refcore shared; 1 365 tests): `moves.refuse`
+  goes through `errors.at_run` like the other run modules, and `leg_amount`'s unit checks through it (SR-B1);
+  `key_diff` of a key outside its index is `RUN-DOMAIN` in the operands' words (SR-B2); a decision's entry key joins
+  its terms with `walk.DSEP`, below every identifier character, so its text sorts as E §4.1's terms (`dec_text`,
+  `dec_head`, `dec_move`; a walk point still prints `|`; SR-B4); `canon.key_comp` ranks a keyed place as a thing's key
+  under the kind-first order (SR-B5); `mreads.run_ends` is S1's test, made at `read_state`, the walked read every
+  balance takes (finding 2); `check3._units_into` gives the units load sees reach a place of unit any, a leg's written
+  unit or a row's, so `value` with no by is `LOAD-PRICE` at load (finding 3); `pin_value` records the ask pins a read
+  took or met under another claim, and `print_line` drops one met only under another (finding 4; a pin no read reaches
+  stays listed: F9's and F11's walk reads don't reach a refused result yet); `balnow_items` keeps its read's loc (S9).
+  Left: the run modules still raise 49 `LOAD-*` sites of 20 codes as themselves (LOAD-PRICE, LOAD-TO, LOAD-KEY in
+  evaluate, LOAD-OVERLAP, …), most likely unreachable; none is proven reachable or not.
 
 ## tally 2.1.6 (the spec round after M0: 24 issues)
 
