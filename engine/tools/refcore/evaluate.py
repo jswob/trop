@@ -209,8 +209,6 @@ class Engine:
         self.active = set()
         self.ask_K = m.on
         self.ask_pin_cells = {}     # an ask's with value pin's text -> the cell it pins, as printed (ask.print_line)
-        self.ask_pins_taken = set()     # the ask pins a read took (pin_value)
-        self.ask_pins_shadowed = set()  # the ask pins a read met under an inner or narrower claim (pin_value)
         self.pin_record = True          # off while explain derives a comparison outside the result (P42)
         self.tracing = False
         self.trace_stack = []
@@ -814,13 +812,13 @@ class Engine:
                                                                                 self.origin(info, keys)))
         p = best[0]
         if self.ask_pin_cells and self.pin_record:
-            # L §8.2 One read set (R7; the review's finding 4): an ask's with pin is listed where a read takes it, not
-            # where an inner or narrower claim of the cell (an as if, a solve's variable; R4's cascade) gave the read
+            # L §8.2 One read set (R7; the review's finding 4): an ask's with pin is listed where a read takes it (its
+            # `pinned:` entry, below), not where an inner or narrower claim of the cell (an as if, a solve's variable;
+            # R4's cascade) gave the read: that read's set records the pin it met, `pin met`, which prints nothing and
+            # travels with the result's reads, a memo cell's and each fan-out line's alike (P45)
             for q in met:
                 if q is not p and q.kind == 'set' and q.text in self.ask_pin_cells:
-                    self.ask_pins_shadowed.add(q.text)
-            if p.kind == 'set' and p.text in self.ask_pin_cells:
-                self.ask_pins_taken.add(p.text)
+                    self.reg(('pin met', q.text))
         if p.fields:
             return ('fields', p)
         if p.kind == 'set':

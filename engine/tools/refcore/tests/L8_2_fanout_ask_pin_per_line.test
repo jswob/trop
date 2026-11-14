@@ -1,0 +1,39 @@
+# L §8.2 One read set (tally 2.1.7 R7, #146; the fix review's defect B, pick P45): "an entry is listed under a result
+# exactly when a read in its set gives it", and each line of a fan-out is a result. In t5 and t1 the k1 line reads r[k1]
+# under the ask's with pin, the k2 line under an inner as if alone: the pin is listed on the k1 line only. refcore after
+# P41 kept one record of the pins reads took per ask, so the k2 line listed it too.
+=== m.tally
+model c7
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+index ks = [k1, k2]
+input r[k in ks]: num
+input seven: num
+def one: num = r[k1] at reader
+
+ask t5: (if k == k2 then (one as if {r[k1] = 3}) else one) for k in ks with r[k1] = 9 law 2026-06-30
+ask t1: (if k == k2 then (one as if {r[k1] = seven}) else one) for k in ks with r[*] = 9 law 2026-06-30
+
+version v
+  cite card
+  governs 2026..
+  known 2026-01-01
+  r[*] = 1
+  seven = 7
+=== expect
+t1 (k = k1): 9
+  pinned: r[*] = 9
+  law date 2026-06-30, cut 2026-06-30
+t1 (k = k2): 7
+  pinned: r[k1] = 7
+  law date 2026-06-30, cut 2026-06-30
+t5 (k = k1): 9
+  pinned: r[k1] = 9
+  law date 2026-06-30, cut 2026-06-30
+t5 (k = k2): 3
+  pinned: r[k1] = 3
+  law date 2026-06-30, cut 2026-06-30
