@@ -13,7 +13,7 @@
 use super::plan::invariant;
 use super::point::At;
 use super::reads::refuse;
-use crate::base::{Code, Load, Refusal, Run};
+use crate::base::{Load, Refusal, Run};
 use crate::eval::{Ctx, Engine, Env};
 use crate::hole::{Hole, spread};
 use crate::model::{Domain, KeyVal, Priced, Reality, Value};
@@ -132,7 +132,7 @@ impl Engine {
         }
         if valued.by.is_none() {
             return Err(Stop::Refused(Refusal::new(
-                Code::Load(Load::Price),
+                Load::Price.at_run(),
                 format!(
                     "value({}) in {cur} holds units in {whole} and states no by",
                     valued.place
@@ -210,7 +210,7 @@ impl Engine {
         let (cur, place) = (read.currency.as_str(), valued.place.as_str());
         let Some(price) = &valued.priced else {
             return Err(Stop::Refused(Refusal::new(
-                Code::Load(Load::Price),
+                Load::Price.at_run(),
                 format!("value({place}) in {cur} holds units in {u} and states no by"),
             )));
         };
@@ -285,7 +285,7 @@ impl Engine {
                     Domain::Range => "a stepped range",
                 };
                 return Err(Stop::Refused(Refusal::new(
-                    Code::Load(Load::Key),
+                    Load::Key.at_run(),
                     format!(
                         "{place} is priced by {pid}, keyed by {over}, which holds neither {place} nor its unit"
                     ),

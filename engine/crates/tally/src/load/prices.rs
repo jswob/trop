@@ -8,16 +8,16 @@
 //! then the places' by thing name, a keyed place's clause once; each refusal is put at the
 //! line its clause or its value is written on; a value reads its places' prices at its day.
 
-use super::check::{Checker, Files, Scope, Stands, invariant};
+use super::check::{Checker, Files, LegEnds, Scope, Stands, invariant};
 use super::targets::{literal_place, named_parts, place_section, place_target};
 use super::texts::text;
 use super::types::{Typed, is_date, name_word, refused, uerr};
 use crate::base::{Code, Load, Place as At, Refusal};
 use crate::model::{
-    Domain, Entry, Mark, NameKind, Node, NodeKind, PlaceInfo, Priced, Reality, Rel, Shown, Thing,
-    Ty, Unit,
+    Domain, Entry, KeyVal, Mark, NameKind, Node, NodeKind, Pat, PlaceInfo, Priced, Reality, Rel,
+    Shown, Thing, Ty, Unit,
 };
-use crate::syntax::{Expr, Postfix, Price, Stop, Valuation};
+use crate::syntax::{Expr, Lit, Postfix, Price, Stop, Valuation, Value as Written};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// What a value with no `by` finds its place priced by (refcore's `priced`).
@@ -349,6 +349,9 @@ impl Checker {
         };
         for name in seen_places(m, scope, &value.place, literal.as_deref(), &cands) {
             if let Some(thing) = m.things.get(&name) {
+                if value.by.is_none() {
+                    any_unit_no_by(m, (&self.leg_amounts, &self.leg_ends), value, thing)?;
+                }
                 fits_value(m, &self.leg_amounts, value, thing, per.as_deref())?;
             }
         }
@@ -571,6 +574,114 @@ fn fits_value(
         ));
     }
     Ok(())
+}
+
+/// A value with no `by` of a place of unit `any` that nothing prices: `LOAD-PRICE` where a
+/// unit load sees come into it is another than `CUR`, whatever the asks read (refcore's
+/// `m_t_value`, its `_units_into`). L §5.10 Value, §8.4 R-load.
+fn any_unit_no_by(
+    m: &Reality,
+    (amounts, legs): (&LegTypes, &BTreeMap<(String, String), LegEnds>),
+    value: &Valuation,
+    thing: &Thing,
+) -> Result<(), Stop> {
+    let cur = &value.currency;
+    if m.price_of(thing).is_some() || m.place_unit(thing).as_deref() != Some("any") {
+        return Ok(());
+    }
+    let units = units_into(m, (amounts, legs), thing)?;
+    let Some(other) = units.iter().find(|u| *u != cur) else {
+        return Ok(());
+    };
+    Err(refused(
+        Load::Price,
+        format!(
+            "value({}) in {cur} holds units in {other} and states no by",
+            text(&value.place)
+        ),
+    ))
+}
+
+/// The units load sees come into place `thing`: each leg with an end at it, written or of a
+/// kind that holds it, in its kind's leg unit where that is a currency or a unit, else its
+/// amount's (money's currency, a quantity of one unit); and the unit an opening or a reading
+/// row of it states (refcore's `_units_into`). L §5.10, §5.14, §4.6.
+fn units_into(
+    m: &Reality,
+    (amounts, legs): (&LegTypes, &BTreeMap<(String, String), LegEnds>),
+    thing: &Thing,
+) -> Result<BTreeSet<String>, Stop> {
+    let mut out = BTreeSet::new();
+    for (id, leg) in legs {
+        if !leg.ends.iter().any(|end| end_reaches(m, thing, end)) {
+            continue;
+        }
+        if m.currencies.contains_key(&leg.unit) || m.units.contains(&leg.unit) {
+            out.insert(leg.unit.clone());
+            continue;
+        }
+        out.extend(amounts.get(id).and_then(one_unit));
+    }
+    for input in ["opening", "stated"] {
+        let Some(info) = m.inputs.get(input) else {
+            continue;
+        };
+        for row in &info.rows {
+            if let [Pat::Key(KeyVal::Thing(name))] = row.pattern.as_slice()
+                && *name == thing.name
+            {
+                out.extend(value_unit(&row.value)?);
+            }
+        }
+    }
+    Ok(out)
+}
+
+/// Whether a leg's end reaches place `thing`: a literal place that is it, or an end of a kind
+/// whose subtree holds its kind (refcore's `_units_into`). L §5.14.
+fn end_reaches(m: &Reality, thing: &Thing, (literal, t): &(Option<String>, Ty)) -> bool {
+    if let Some(name) = literal {
+        return *name == thing.name;
+    }
+    let (Ty::Key(kind), Some(base)) = (t, &thing.base) else {
+        return false;
+    };
+    m.kinds.get(kind).is_some() && m.subtree(kind).contains(base)
+}
+
+/// The one unit an amount's type names: money's currency, or a quantity of one unit.
+fn one_unit(t: &Ty) -> Option<String> {
+    if let Ty::Money(cur) = t {
+        return Some(cur.clone());
+    }
+    let Ty::Num(unit, _) = t else {
+        return None;
+    };
+    if let [(base, 1)] = unit.terms() {
+        return Some(base.clone());
+    }
+    None
+}
+
+/// The one unit a row's written number states, a currency or a unit to the first power
+/// (refcore's `_units_into`, its rows).
+fn value_unit(value: &Written) -> Result<Option<String>, Stop> {
+    let Written::Lit(Lit::Num(number)) = value else {
+        return Ok(None);
+    };
+    let Some(written) = &number.unit else {
+        return Ok(None);
+    };
+    let terms = written
+        .terms
+        .iter()
+        .map(|t| (t.base.clone(), t.power.clone()))
+        .collect();
+    let (unit, _) = Unit::from_syntax(terms).map_err(super::steps::unit_num_stop)?;
+    if let [(base, 1)] = unit.terms() {
+        return Ok(Some(base.clone()));
+    }
+    Ok(None)
 }
 
 /// A per-unit price's unit as a message names it: a price keyed by unit (`$u`) names the

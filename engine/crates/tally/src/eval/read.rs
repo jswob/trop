@@ -14,7 +14,7 @@
 
 use super::arith::{Op, arith};
 use super::builtin::read_parts;
-use super::convert::{ConvertFor, Converted, convert};
+use super::convert::{ConvertFor, Converted, convert_read};
 use super::keys::Given;
 use super::memo::{LawClass, Read, may_hold, rows_class};
 use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load};
@@ -638,7 +638,7 @@ fn row_value(
         .as_ref()
         .ok_or(Stop::NotBuilt("the value of an observed row"))?;
     let of = ConvertFor::row(&input.unit_factor, ty, &input.binds, &row.pattern);
-    let value = match convert(m, &row.value, ty, &input.id, &of)? {
+    let value = match convert_read(m, &row.value, ty, &input.id, &of)? {
         Converted::Hole(text) => Value::Hole(Hole::asked(&text, figure)),
         Converted::Value(Value::Window(mut w)) => {
             // its holes are asked of this row (L §8.1); the read that made it is stamped by

@@ -10,7 +10,7 @@
 //! and the settlements; the settlements are checked after every other check of the walk, as
 //! refcore meets them after load; a type load doesn't see refuses nothing.
 
-use super::check::{Checker, DayRead, Scope};
+use super::check::{Checker, DayRead, LegEnds, Scope};
 use super::overlap::at_obs;
 use super::reads::is_place_type;
 use super::same::instance_text;
@@ -37,6 +37,7 @@ impl Checker {
         let places = Ty::Key("places".to_owned());
         let assets = m.subtree("assets");
         let mut ends: Vec<String> = Vec::new();
+        let mut seen = Vec::new();
         for (side, end) in [("from", &leg.from), ("to", &leg.to)] {
             let t = self.expr(m, scope, end, Some(&places), 0)?;
             if matches!(t, Ty::Hole) {
@@ -63,8 +64,15 @@ impl Checker {
                     format!("a leg to or from an asset ({} of {})", leg.name, mv.id),
                 )));
             }
+            seen.push((thing.clone(), t));
             ends.extend(thing);
         }
+        let leg_ends = LegEnds {
+            unit: unit.to_owned(),
+            ends: seen,
+        };
+        self.leg_ends
+            .insert((mv.id.clone(), leg.name.clone()), leg_ends);
         let mut units = BTreeSet::new();
         for name in &ends {
             if let Some(held) = m.things.get(name).and_then(|thing| m.place_unit(thing))

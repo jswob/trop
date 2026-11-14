@@ -23,7 +23,7 @@ use crate::read::{Clocks, Test, candidates, choose, origin, rule_in_force, worde
 use crate::syntax::{LawDate, RuleValue, Stop};
 use crate::time::Day;
 
-use super::convert::{ConvertFor, Converted, convert};
+use super::convert::{ConvertFor, Converted, convert_read};
 use super::memo::{CellId, CellKey, LawClass, Read, rows_class, rules_class};
 use super::read::{at_keys, pinned_at, shown};
 use super::trace::Seen;
@@ -566,7 +566,7 @@ impl Engine {
             // a scenario's expression row, at the def's law date (L §6.4)
             self.row_expr(m, (row, e), &figure, ctx)?
         } else {
-            match convert(m, &row.value, &def.ty, &def.id, &of)? {
+            match convert_read(m, &row.value, &def.ty, &def.id, &of)? {
                 Converted::Hole(text) => Value::Hole(Hole::asked(&text, &figure)),
                 Converted::Value(v) => v,
             }

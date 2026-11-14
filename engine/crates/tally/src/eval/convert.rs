@@ -174,6 +174,32 @@ fn refuse_load(code: Load, message: String) -> Stop {
     Stop::Refused(Refusal::new(crate::base::Code::Load(code), message))
 }
 
+/// A row's value converted at run, where it is read: load converted the same row with the
+/// same type first, every input's row and every def's given (`check_rows`), so a fault of
+/// its value was refused there, at its line (L §8.3, §8.4 R-load); met here, it is a broken
+/// promise (E §11).
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for a load refusal; `NotBuilt` as [`convert`].
+pub(crate) fn convert_read(
+    m: &Reality,
+    value: &Written,
+    ty: &Ty,
+    target: &str,
+    of: &ConvertFor,
+) -> Result<Converted, Stop> {
+    match convert(m, value, ty, target, of) {
+        Err(Stop::Refused(refusal)) if matches!(refusal.code(), crate::base::Code::Load(_)) => {
+            Err(Stop::Refused(Refusal::new(
+                crate::base::Code::EngineInvariant,
+                "a row's value refused at run: load converts every row first".to_owned(),
+            )))
+        }
+        other => other,
+    }
+}
+
 /// `LOAD-UNIT` with `message`.
 fn unit_refusal(message: String) -> Stop {
     refuse_load(Load::Unit, message)

@@ -487,6 +487,16 @@ pub(super) struct Walked {
     pub(super) narrow_used: BTreeSet<SiteKey>,
 }
 
+/// A leg as load sees it: its kind's leg unit, and each end's literal place, if it is one,
+/// with its type. L §5.14, §5.10.
+#[derive(Debug, Clone)]
+pub(super) struct LegEnds {
+    /// The kind's leg unit, as written.
+    pub(super) unit: String,
+    /// Each end: its literal place, and its type.
+    pub(super) ends: Vec<(Option<String>, Ty)>,
+}
+
 /// The checker's state over the walk (refcore's `Checker`).
 #[derive(Debug, Default)]
 pub(super) struct Checker {
@@ -513,6 +523,9 @@ pub(super) struct Checker {
     /// Each checked move's legs' amounts' types, by (move, leg): the unit a leg brings to a place
     /// of any unit (refcore's `ln.amount._t`).
     pub(super) leg_amounts: BTreeMap<(String, String), Ty>,
+    /// Each checked move's legs' units and ends, by (move, leg): the places a leg reaches,
+    /// for the units load sees come into a place of any unit (refcore's `_units_into`).
+    pub(super) leg_ends: BTreeMap<(String, String), LegEnds>,
     /// The key literals reads write at stepped ranges of literal ends, kept for load's check
     /// as a row's are (refcore's `register_range_lit` from `key_pos`; R5, #106).
     pub(super) range_keys: Vec<RangeKey>,
