@@ -814,11 +814,25 @@ def m_bal_unit(self, n, place, env, ctx):
     return pu
 
 
+def m_run_ends(self, place, d):
+    """The walk holds the days S to E: a day outside them is a hole naming the end it passes, for every read of a
+    balance (L §8.1 HOLE-PRERUN, HOLE-POSTRUN; E §2; tally 2.1.7 S1, #93), or None."""
+    if d < self.m.S:
+        return Hole([('before the run\'s start', place)])
+    if d > self.m.E:
+        return Hole([('after the run\'s end', place)])
+    return None
+
+
 def m_read_state(self, w, place, unit, key):
-    """The balance of a place at an instant of a walk, with its register (L §8.2)."""
+    """The balance of a place at an instant of a walk, with its register (L §8.2). The run's ends are tested here,
+    once, so every walked read (bal, value, bal of, a running read) meets them alike (the review's finding 2)."""
+    d = kday(key)
+    out = self.run_ends(place, d)
+    if out is not None:
+        return out
     st = w.pstate(place, unit, key, raw=True)
     self.merge_cum(w, place, unit, key)
-    d = kday(key)
     for (ad, e) in w.adj_regs.get(place, ()):
         if ad <= d:
             self.reg(e)
@@ -921,13 +935,12 @@ def m_e_bal(self, n, env, ctx):
 
 def m_bal_at(self, n, place, unit, d, env, ctx, regs_to=None):
     """bal(x, d) with the read's own clauses (L §5.14.1): the one read `bal` and the forms defined by it (`low`, L §5,
-    a form defined by another; tally 2.1.7 R6, #125) make. The walk holds the days S to E: a day outside them is a
-    hole naming the end it passes (L §8.1 HOLE-PRERUN, HOLE-POSTRUN; E §2; tally 2.1.7 S1, #93)."""
+    a form defined by another; tally 2.1.7 R6, #125) make. A day outside the run is its hole (run_ends) before the
+    read's own forms: a projection's and the modelled walk's checks come after it."""
     if isinstance(d, datetime.date):
-        if d < self.m.S:
-            return Hole([('before the run\'s start', place)])
-        if d > self.m.E:
-            return Hole([('after the run\'s end', place)])
+        out = self.run_ends(place, d)
+        if out is not None:
+            return out
     form = n._form
     if form == 'proj':
         return self.proj_bal(n, place, unit, d, env, ctx, regs_to)
