@@ -405,12 +405,9 @@ impl Engine {
             Past::Since => match last_began(m, input, &keys, day, clocks)? {
                 Ok(kept) => {
                     let stand = standing_rows(m, &input.rows, &kept)?;
-                    let read = stand.into_iter().find(|at| {
-                        input
-                            .rows
-                            .get(*at)
-                            .is_some_and(|row| row.value != Written::None)
-                    });
+                    let read = stand.into_iter().find(
+                        |at| matches!(input.rows.get(*at), Some(row) if row.value != Written::None),
+                    );
                     let Some(at) = read else {
                         let figure = origin(&input.id, &keys);
                         return Ok(Err(Value::Hole(no_reading(&figure, day))));

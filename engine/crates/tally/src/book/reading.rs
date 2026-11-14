@@ -155,16 +155,22 @@ pub fn per_unit(walk: &crate::walk::Walk, r: &Reading) -> Vec<Reading> {
     if r.unit != crate::walk::ALL {
         return vec![r.clone()];
     }
-    let units: Vec<Reading> = walk
+    let mut units = Vec::new();
+    for (place, unit) in walk
         .logs
         .range((r.place.clone(), String::new())..)
-        .take_while(|((place, _), _)| *place == r.place)
-        .filter(|((_, unit), _)| unit != crate::walk::ALL)
-        .map(|((_, unit), _)| Reading {
-            unit: unit.clone(),
-            ..r.clone()
-        })
-        .collect();
+        .map(|(k, _)| k)
+    {
+        if *place != r.place {
+            break;
+        }
+        if unit != crate::walk::ALL {
+            units.push(Reading {
+                unit: unit.clone(),
+                ..r.clone()
+            });
+        }
+    }
     if units.is_empty() {
         return vec![r.clone()];
     }
