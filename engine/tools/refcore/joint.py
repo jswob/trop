@@ -470,12 +470,22 @@ def joint_texts(texts, uses, options, pool=None, jfile=None, own=None):
     jlines = [(f, split_lines(src, f)) for f, src in own]
     units = prescan_units([ls for f, ls in jlines] + [ls for a in mlines for fn, ls in mlines[a]])
     decls = {a: collect_decls(a, mlines[a], units) for a in mlines}
+    # L §6.1 (P44): every file's header states `tally N`; a file whose header doesn't is refused by its own header
+    # check (LOAD-HEADER) before the members' versions are compared, so the comparison only ever sees numbers
+    from .parser import parse_header
     tally = None
     for f, ls in jlines:
         if ls and ls[0].toks and ls[0].toks[0].s == 'model':
             tally = header_tally(ls)
+            if tally is None:
+                parse_header(ls, units)
     for a in sorted(mlines):
         for fn, ls in mlines[a]:
+            if header_tally(ls) is None:
+                try:
+                    parse_header(ls, units)
+                except TallyError as e:
+                    raise MemberRefused(a, e)
             if header_tally(ls) != tally:
                 raise LoadError('LOAD-VERSION', 'member %s declares tally %s, the joint model %s' % (
                     a, header_tally(ls), tally))
