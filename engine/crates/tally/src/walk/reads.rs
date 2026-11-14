@@ -689,7 +689,7 @@ impl Uncertain {
                 let dated = leg
                     .day
                     .day()
-                    .or_else(|| movement.day.as_ref().and_then(Dated::day));
+                    .or_else(|| movement.day.as_ref().and_then(Dated::lo));
                 if counted(dated, window) {
                     self.leg(place, movement, leg)?;
                 }
@@ -741,7 +741,7 @@ pub(crate) fn state_value(m: &Reality, st: &St, unit: &str, anchor: &Hole) -> Re
         return Err(Stop::Refused(r.clone()));
     }
     let missing = st.val.is_none().then_some(anchor);
-    if let Some(h) = spread(&[st.hole.as_ref(), st.perm.as_ref(), missing]) {
+    if let Some(h) = st.questions(missing) {
         return Ok(Value::Hole(h));
     }
     let v = st

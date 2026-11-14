@@ -575,9 +575,12 @@ fn reset_value(m: &Reality, e: &Ent, unit: &str) -> Result<String, Stop> {
     match &e.change {
         Change::Reset { qs: Some(h), .. } => Ok(h.text()),
         Change::Reset { val, qs: None } => quantity_text(m, val, unit),
-        Change::Delta(_) | Change::Hole(_) | Change::Perm(_) | Change::Bad(_) | Change::Mark => {
-            Err(invariant("a reading that is no reset"))
-        }
+        Change::Delta(_)
+        | Change::Hole(_)
+        | Change::Perm(_)
+        | Change::Bad(_)
+        | Change::ImpOn(_)
+        | Change::Mark => Err(invariant("a reading that is no reset")),
     }
 }
 
@@ -614,6 +617,10 @@ fn entry_text(
             format!("{head}: {sign}{}", quantity_text(m, f, unit)?)
         }
         Change::Hole(h) | Change::Perm(h) => format!("{head}: hole: {}", h.text()),
+        Change::ImpOn(h) => {
+            let window = e.window.as_ref().map_or("", |(_, w)| w.question.as_str());
+            format!("{head}: its window {window} opens: {}", h.text())
+        }
         Change::Bad(r) => format!("{head}: refused: {}", r.text()),
         Change::Reset { .. } => {
             let sid = e
@@ -673,7 +680,7 @@ fn uncertain_rows(
     rows: &mut Vec<(Day, String)>,
 ) -> Result<(), Stop> {
     for inst in &walk.uncertain {
-        let day = inst.day.as_ref().and_then(crate::walk::Dated::day);
+        let day = inst.day.as_ref().and_then(crate::walk::Dated::lo);
         for lg in &inst.legs {
             let Some(gd) = lg.day.day().or(day) else {
                 continue;

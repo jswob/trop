@@ -26,7 +26,7 @@ use std::rc::Rc;
 
 use super::agenda::{Act, Mv};
 use super::order::{CycleItem, Run};
-use super::plan::{Amount, Dated, Inst, LegVal, Order, invariant};
+use super::plan::{Amount, Dated, DayWindow, Inst, LegVal, Order, invariant};
 use super::point::{At, Step};
 use crate::base::{Refusal, Warn};
 use crate::eval::{Collected, Entry};
@@ -59,6 +59,10 @@ pub enum Change {
     Perm(Hole),
     /// A refusal that holds from here (E §4.2 step 5).
     Bad(Refusal),
+    /// A movement dated by a window may fall from here: the balance is `HOLE-IMPRECISE`
+    /// until its leg is booked at the window's last day; the window is the entry's (L §4.4;
+    /// refcore's `imp_on`).
+    ImpOn(Hole),
     /// A register entry and nothing else: a modelled-past instance nothing fulfils (L §5.19).
     Mark,
 }
@@ -74,11 +78,25 @@ pub struct St {
     pub perm: Option<Hole>,
     /// The refusal that holds from a refused leg on.
     pub bad: Option<Refusal>,
+    /// The movements dated by a window that may still fall, each by its window's id, with
+    /// the question it puts (L §4.4; refcore's `imp`).
+    pub imp: Vec<(String, Hole)>,
     /// The position of the last reset in its log.
     pub rst: Option<usize>,
 }
 
 impl St {
+    /// Every question the state's balance rests on: its holes, those no reading answers,
+    /// the windows that may still fall, and `missing`, a balance not known yet (refcore's
+    /// `st_value`). L §8.1, §4.4.
+    #[must_use]
+    pub fn questions(&self, missing: Option<&Hole>) -> Option<Hole> {
+        let mut all = vec![self.hole.as_ref(), self.perm.as_ref()];
+        all.extend(self.imp.iter().map(|(_, h)| Some(h)));
+        all.push(missing);
+        spread(&all)
+    }
+
     /// A state of balance `val` and nothing else. E §4.2.
     fn of(val: Option<Num>) -> St {
         St {
@@ -86,6 +104,7 @@ impl St {
             hole: None,
             perm: None,
             bad: None,
+            imp: Vec::new(),
             rst: None,
         }
     }
@@ -94,7 +113,8 @@ impl St {
     /// "Each warning is tested only where the balance is known").
     #[must_use]
     pub fn known(&self) -> Option<&Num> {
-        if self.hole.is_some() || self.perm.is_some() || self.bad.is_some() {
+        if self.hole.is_some() || self.perm.is_some() || self.bad.is_some() || !self.imp.is_empty()
+        {
             return None;
         }
         self.val.as_ref()
@@ -114,6 +134,9 @@ pub struct Ent {
     pub leg: Option<String>,
     /// The register entries it makes (`unfulfilled:`).
     pub reg: Vec<Entry>,
+    /// For a leg dated by a window, the window's id (`<movement>.<leg>`) and the window: an
+    /// `ImpOn` opens its imprecision, the leg's booking ends it (refcore's `wid`, `win`).
+    pub window: Option<(String, DayWindow)>,
     /// What its movement's evaluation met.
     pub coll: Option<Collected>,
     /// A pad's flow at its reading's own place, where the reset books it: the gap, a number
@@ -133,6 +156,7 @@ impl Ent {
             mv: None,
             leg: None,
             reg: Vec::new(),
+            window: None,
             coll: None,
             flow: None,
             st: St::of(None),
@@ -515,7 +539,7 @@ impl Walk {
             None => self.default_state(m, place, unit),
         };
         let log = self.logs.entry(key).or_insert_with(Log::default);
-        ent.st = apply(&prev, &ent.change, log.ents.len())?;
+        ent.st = apply_ent(&prev, &ent, log.ents.len())?;
         log.ents.push(ent);
         if place != ALL
             && let Some(today) = &mut self.today
@@ -650,7 +674,7 @@ impl Walk {
             None => start,
         };
         for (j, e) in log.ents.iter_mut().enumerate().skip(first) {
-            e.st = apply(&prev, &e.change, j)?;
+            e.st = apply_ent(&prev, e, j)?;
             prev = e.st.clone();
         }
         Ok(dropped)
@@ -828,6 +852,7 @@ fn fold(mut st: St, any: St, all: St) -> St {
     for other in [any, all] {
         st.hole = spread(&[st.hole.as_ref(), other.hole.as_ref()]);
         st.perm = spread(&[st.perm.as_ref(), other.perm.as_ref()]);
+        st.imp.extend(other.imp);
         if st.bad.is_none() {
             st.bad = other.bad;
         }
@@ -882,7 +907,23 @@ fn apply(prev: &St, change: &Change, at: usize) -> Result<St, Stop> {
                 st.bad = Some(r.clone());
             }
         }
-        Change::Mark => {}
+        // its window's id is the entry's (`apply_ent`)
+        Change::ImpOn(_) | Change::Mark => {}
+    }
+    Ok(st)
+}
+
+/// The state after entry `ent`: its change applied; a movement dated by a window may fall
+/// from its `ImpOn` on, until its leg's booking at the window's last day (refcore's `apply`,
+/// its `wid`). E §4.2, L §4.4.
+fn apply_ent(prev: &St, ent: &Ent, at: usize) -> Result<St, Stop> {
+    let mut st = apply(prev, &ent.change, at)?;
+    if let Some((wid, _)) = &ent.window {
+        match &ent.change {
+            Change::ImpOn(h) => st.imp.push((wid.clone(), h.clone())),
+            Change::Delta(_) | Change::Hole(_) => st.imp.retain(|(w, _)| w != wid),
+            Change::Reset { .. } | Change::Perm(_) | Change::Bad(_) | Change::Mark => {}
+        }
     }
     Ok(st)
 }

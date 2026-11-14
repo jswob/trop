@@ -7,7 +7,7 @@
 //! Invariants: a refused `flows` keeps the register it met before the refusal, as refcore
 //! registers while it counts; a read of a projection's walk reads the walks it continues
 //! through the point each continues from.
-use super::plan::{Amount, Dated, Exists, Inst, Status, invariant, qty_value};
+use super::plan::{Amount, Dated, DayWindow, Exists, Inst, Status, invariant, qty_value};
 use super::point::At;
 use super::reads::{Sees, expr_text, refuse};
 use super::state::{ALL, Change, Ent, Walk};
@@ -121,7 +121,10 @@ impl Engine {
         } else {
             vec![pu.clone()]
         };
-        let mut sums = Sums::default();
+        let mut sums = Sums {
+            span: Some((start, last)),
+            ..Sums::default()
+        };
         for (wid, cut) in &chain {
             if let Err(stop) = sums.logs(self.walk(*wid)?, place, &units, (lo, *cut)) {
                 // refcore registers as it reads the logs: a refusal keeps what came before it
@@ -171,7 +174,8 @@ impl Engine {
         moves.sort_by_key(|mv| mv.decision);
         for mv in moves {
             for i in self.move_instances(m, mv, ctx.cut)?.iter() {
-                let Some(Dated::Day(day)) = i.day else {
+                // a window's first day (refcore's `note_post_e`, `day_lo`)
+                let Some(day) = i.day.as_ref().and_then(Dated::lo) else {
                     continue;
                 };
                 if day <= m.end || i.status != Status::LeftOut {
@@ -243,9 +247,28 @@ impl Engine {
     }
 }
 
+/// `HOLE-IMPRECISE` of flows over a span a movement dated by window `w` may fall in or out
+/// of, asked of the movement entry `e` books (refcore's `flows_place`). L §4.4, §8.1.
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for an entry that books no movement.
+fn imprecise_flows(w: &DayWindow, place: &str, e: &Ent) -> Result<Hole, Stop> {
+    let text = format!(
+        "date within {} not precise enough for flows of {place}",
+        w.question
+    );
+    let movement =
+        e.mv.as_deref()
+            .ok_or_else(|| invariant("a window's entry that books no movement"))?;
+    Ok(Hole::asked(&text, movement))
+}
+
 /// What a place's flows gather: the totals per unit, the holes, the register.
 #[derive(Default)]
 struct Sums {
+    /// The span's first and last day, which a movement dated by a window must fall inside.
+    span: Option<(Day, Day)>,
     /// The booked flows per unit.
     totals: std::collections::BTreeMap<String, Num>,
     /// The holes met.
@@ -291,7 +314,11 @@ impl Sums {
                         self.met.merge(c);
                     }
                 }
-                Change::Bad(_) | Change::Reset { .. } | Change::Delta(_) | Change::Mark => {}
+                Change::Bad(_)
+                | Change::Reset { .. }
+                | Change::Delta(_)
+                | Change::ImpOn(_)
+                | Change::Mark => {}
             }
         }
         Ok(())
@@ -305,7 +332,14 @@ impl Sums {
         unit: &str,
         (lo, limit): (At, At),
     ) -> Result<(), Stop> {
+        // the movements dated by a window that may fall in the span (refcore's `wins`)
+        let mut windows: BTreeSet<String> = BTreeSet::new();
         for e in walk.entries(place, unit) {
+            if let (Change::ImpOn(_), Some((wid, _))) = (&e.change, &e.window)
+                && e.at <= limit
+            {
+                windows.insert(wid.clone());
+            }
             if e.at <= lo {
                 if let Change::Perm(h) = &e.change
                     && e.at <= limit
@@ -315,6 +349,12 @@ impl Sums {
                 continue;
             }
             if e.at > limit {
+                // one booked after the span that may have fallen inside it (L §4.4)
+                if let (Change::Delta(_), Some((wid, w))) = (&e.change, &e.window)
+                    && windows.contains(wid)
+                {
+                    self.holes.push(imprecise_flows(w, place, e)?);
+                }
                 continue;
             }
             match &e.change {
@@ -326,7 +366,13 @@ impl Sums {
                         self.met.merge(c);
                     }
                 }
-                Change::Delta(f) => self.count(e, unit, Ok(f))?,
+                Change::Delta(f) => match &e.window {
+                    // a window not inside the span may have fallen outside it (L §4.4)
+                    Some((_, w)) if !self.span.is_some_and(|(a, b)| a <= w.lo && w.hi <= b) => {
+                        self.holes.push(imprecise_flows(w, place, e)?);
+                    }
+                    Some(_) | None => self.count(e, unit, Ok(f))?,
+                },
                 // a pad's end at its reading's own place (E §6.1); an anchor's or an
                 // opening's reset carries no flow, and `flows` doesn't count it
                 Change::Reset { .. } => match &e.flow {
@@ -334,7 +380,7 @@ impl Sums {
                     Some(Amount::Hole(h)) => self.count(e, unit, Err(h))?,
                     Some(Amount::Refused(_)) | None => {}
                 },
-                Change::Mark => {}
+                Change::ImpOn(_) | Change::Mark => {}
             }
         }
         Ok(())
@@ -345,7 +391,12 @@ impl Sums {
     /// L §5.14.3.
     fn unbooked(&mut self, i: &Inst, place: &str, (first, last): (Day, Day)) -> Result<(), Stop> {
         for lg in &i.legs {
-            if lg.day.day().is_none_or(|d| d < first || d > last) {
+            // a leg dated by a window counts where the window meets the span (refcore's
+            // `flows_post_e`, `day_lo`, `day_hi`)
+            let (Some(lo), Some(hi)) = (lg.day.lo(), lg.day.hi()) else {
+                continue;
+            };
+            if hi < first || lo > last {
                 continue;
             }
             let (out, into) = (lg.from.place() == Some(place), lg.to.place() == Some(place));

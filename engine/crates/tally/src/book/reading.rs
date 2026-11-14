@@ -553,7 +553,7 @@ pub(super) fn booked_amount(st: &St, anchor: &Hole) -> Amount {
         return Amount::Refused(r.clone());
     }
     let missing = st.val.is_none().then_some(anchor);
-    if let Some(h) = spread(&[st.hole.as_ref(), st.perm.as_ref(), missing]) {
+    if let Some(h) = st.questions(missing) {
         return Amount::Hole(h);
     }
     match &st.val {

@@ -234,8 +234,7 @@ fn cut_text(inst: &Inst) -> String {
 /// day. L §5.14.
 fn day_text(day: Option<&Dated>) -> String {
     match day {
-        Some(Dated::Day(d)) => d.text(),
-        Some(Dated::Hole(h)) => h.text(),
+        Some(day) => day.text(),
         None => "-".to_owned(),
     }
 }

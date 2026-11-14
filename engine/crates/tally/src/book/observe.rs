@@ -186,7 +186,7 @@ impl Engine {
             let Some(day) = leg
                 .day
                 .day()
-                .or_else(|| inst.day.as_ref().and_then(Dated::day))
+                .or_else(|| inst.day.as_ref().and_then(Dated::lo))
             else {
                 continue;
             };

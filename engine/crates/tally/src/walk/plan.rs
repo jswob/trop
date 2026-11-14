@@ -60,13 +60,33 @@ pub enum Amount {
     Refused(Refusal),
 }
 
-/// The day a movement or a leg falls on: a day, or a hole (L §5.14 `on d`).
+/// The day a movement or a leg falls on: a day, a window of days, or a hole (L §5.14 `on d`,
+/// §4.4).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Dated {
     /// A day.
     Day(Day),
+    /// A window: the movement falls on one of its days, which no one knows yet.
+    Window(DayWindow),
     /// A hole.
     Hole(Hole),
+}
+
+/// A window of days a movement or a leg falls on, with no `windows each` choosing a day: it
+/// books at the window's last day, and a balance read inside the window is `HOLE-IMPRECISE`
+/// (L §4.4; E §4.2 Holes in the walk).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DayWindow {
+    /// Its first day.
+    pub lo: Day,
+    /// Its last day.
+    pub hi: Day,
+    /// The window as a question names it (refcore's `window_text`).
+    pub question: String,
+    /// The window as L §2.4 prints the value.
+    pub shown: String,
+    /// The window as a value, which a read of the movement's `day` gives.
+    pub value: Box<crate::model::Window>,
 }
 
 impl Dated {
@@ -75,19 +95,75 @@ impl Dated {
     pub fn day(&self) -> Option<Day> {
         match self {
             Dated::Day(d) => Some(*d),
+            Dated::Window(_) | Dated::Hole(_) => None,
+        }
+    }
+
+    /// The first day it can be: the day, a window's first; none for a hole (refcore's
+    /// `day_lo`). L §4.4, §5.14.
+    #[must_use]
+    pub fn lo(&self) -> Option<Day> {
+        match self {
+            Dated::Day(d) => Some(*d),
+            Dated::Window(w) => Some(w.lo),
             Dated::Hole(_) => None,
         }
     }
 
-    /// The day as L §2.4 prints a value: a date in ISO, a hole as the hole (refcore's
-    /// `day_text`). L §2.4 Values.
+    /// The last day it can be: the day, a window's last; none for a hole (refcore's
+    /// `day_hi`). L §4.4, §5.14.
+    #[must_use]
+    pub fn hi(&self) -> Option<Day> {
+        match self {
+            Dated::Day(d) => Some(*d),
+            Dated::Window(w) => Some(w.hi),
+            Dated::Hole(_) => None,
+        }
+    }
+
+    /// The day as a value: a date, a window, or a hole (refcore's `mv_field`). L §5.14.
+    #[must_use]
+    pub fn value(&self) -> Value {
+        match self {
+            Dated::Day(d) => Value::Day(*d),
+            Dated::Window(w) => Value::Window(w.value.clone()),
+            Dated::Hole(h) => Value::Hole(h.clone()),
+        }
+    }
+
+    /// The day as L §2.4 prints a value: a date in ISO, a window as its value, a hole as the
+    /// hole (refcore's `day_text`). L §2.4 Values.
     #[must_use]
     pub fn text(&self) -> String {
         match self {
             Dated::Day(d) => d.text(),
+            Dated::Window(w) => w.shown.clone(),
             Dated::Hole(h) => h.text(),
         }
     }
+}
+
+/// The day window `w` gives a movement or a leg: none for a window of numbers (L §4.4).
+///
+/// # Errors
+///
+/// As [`Value::text`].
+pub(super) fn day_window(m: &Reality, w: &crate::model::Window) -> Result<Option<Dated>, Stop> {
+    let (Value::Day(lo), Value::Day(hi)) = (&w.lo, &w.hi) else {
+        return Ok(None);
+    };
+    let question = w.question_text(m).map_err(crate::eval::num_stop)?;
+    let value = Box::new(w.clone());
+    let shown = Value::Window(value.clone())
+        .text(m)
+        .map_err(crate::eval::num_stop)?;
+    Ok(Some(Dated::Window(DayWindow {
+        lo: *lo,
+        hi: *hi,
+        question,
+        shown,
+        value,
+    })))
 }
 
 /// A leg of an instance, evaluated (refcore's `Leg`).
@@ -563,12 +639,16 @@ impl Engine {
         cut: Day,
     ) -> Result<Status, Stop> {
         inst.obs = self.obs_links_for(m, &inst.id, cut)?;
-        let day = inst.day.as_ref().and_then(Dated::day);
+        // a window's first day and its last (refcore's `day_lo`, `day_hi`)
+        let (day, last) = match &inst.day {
+            Some(dated) => (dated.lo(), dated.hi()),
+            None => (None, None),
+        };
         if inst.exists == Exists::No {
             return Ok(Status::None);
         }
-        if let Some(d) = day
-            && (d < m.start || d > m.end)
+        if let (Some(d), Some(hi)) = (day, last)
+            && (hi < m.start || d > m.end)
         {
             return Ok(Status::LeftOut);
         }
@@ -791,7 +871,7 @@ impl Engine {
         if mv.decision {
             return Ok(());
         }
-        let day = inst.day.as_ref().and_then(Dated::day);
+        let day = inst.day.as_ref().and_then(Dated::lo);
         // the cut its body is measured at: a later version's, for a re-measure (E §5 step 1),
         // else min(t, K)
         let cut = match (at_cut, day) {
@@ -897,7 +977,7 @@ impl Engine {
     ) -> Result<Vec<(String, String)>, Stop> {
         let mut ends: Vec<(String, Option<String>)> = Vec::new();
         if inst.legs.is_empty() {
-            let day = inst.day.as_ref().and_then(Dated::day);
+            let day = inst.day.as_ref().and_then(Dated::lo);
             let ctx = self.timeline_ctx(inst.law.first(), day.map_or(cut, |d| d.min(cut)));
             let Some(places) = self.leg_ends(m, mv, inst, ctx)? else {
                 return Ok(Vec::new());
@@ -974,7 +1054,11 @@ impl Engine {
         }
         let day = match v {
             Value::Hole(h) => Dated::Hole(h),
-            Value::Window(_) => return Err(Stop::NotBuilt("a movement dated by a window")),
+            // a window no `windows each` chose a day of (L §4.4)
+            Value::Window(w) => match day_window(m, &w)? {
+                Some(day) => day,
+                None => Dated::Day(date_of(&Value::Window(w))?),
+            },
             Value::Number(_)
             | Value::Money(_)
             | Value::Bool(_)
@@ -998,23 +1082,37 @@ impl Engine {
         if mv.decision {
             return Ok(true);
         }
-        if let (Some(upto), Dated::Day(d)) = (seed.upto, &day)
-            && *d > upto
+        if let (Some(upto), Some(d)) = (seed.upto, day.lo())
+            && d > upto
         {
-            // a walk up to a day books nothing after it (refcore's `eval_inst`, `upto`)
+            // a walk up to a day books nothing after it, nor a movement whose window's
+            // first day falls after it (refcore's `eval_inst`, `upto`; L §4.4)
             return Ok(false);
         }
-        let cut = match (seed.at_cut, &day) {
-            (Some(c), _) => c,
-            (None, Dated::Day(d)) => (*d).min(tctx.cut),
-            (None, Dated::Hole(_)) => tctx.cut,
+        // the booking cut min(t, K); a window's at its first day and its last (refcore's
+        // `cuts`)
+        let (cut, last) = match (seed.at_cut, day.lo(), day.hi()) {
+            (Some(c), _, _) => (c, c),
+            (None, Some(lo), Some(hi)) => (lo.min(tctx.cut), hi.min(tctx.cut)),
+            (None, _, _) => (tctx.cut, tctx.cut),
         };
         inst.cut = Some(cut);
-        if !keys_seen(m, mv, &inst.keys, (cut, self.timeline_world())) {
+        if !keys_seen(m, mv, &inst.keys, (last, self.timeline_world())) {
             inst.exists = Exists::No;
             return Ok(true);
         }
-        let body = self.body_over_law(m, mv, inst, self.timeline_ctx(None, cut))?;
+        let mut body = self.body_over_law(m, mv, inst, self.timeline_ctx(None, cut))?;
+        if let (Dated::Window(w), true) = (&day, last != cut) {
+            let other = self.body_over_law(m, mv, inst, self.timeline_ctx(None, last))?;
+            if !same_body(&body, &other) {
+                // a version known inside the window of a windowed instance (L §5.14.3)
+                let text = format!(
+                    "date within {} not precise enough for the booking cut of {}",
+                    w.question, inst.id
+                );
+                body = imprecise_body(body, &other, &Hole::asked(&text, &inst.id));
+            }
+        }
         inst.exists = body.exists;
         inst.legs = body.legs;
         inst.attrs = body.attrs;
@@ -1293,8 +1391,9 @@ fn scenario_early(m: &Reality, mv: &MoveInfo, inst: &Inst) -> bool {
     let Some(from) = scenario_from(m, &mv.id) else {
         return false;
     };
-    let legs = inst.legs.iter().filter_map(|leg| leg.day.day());
-    let day = inst.day.as_ref().and_then(Dated::day);
+    // a window's first day (refcore's `day_lo`)
+    let legs = inst.legs.iter().filter_map(|leg| leg.day.lo());
+    let day = inst.day.as_ref().and_then(Dated::lo);
     day.into_iter().chain(legs).any(|d| d < from)
 }
 
@@ -1335,7 +1434,8 @@ fn inst_order(m: &Reality, mv: &MoveInfo, inst: &Inst) -> Order {
         keys.push(place.unwrap_or_else(|| (1, 0, key.text())));
     }
     Order {
-        day: inst.day.as_ref().and_then(Dated::day),
+        // a window's first day (refcore's `inst_order`, `day_lo`)
+        day: inst.day.as_ref().and_then(Dated::lo),
         stratum: mv.stratum,
         move_id: mv.id.clone(),
         keys,

@@ -24,7 +24,7 @@ use crate::model::{Fulfils, KeyVal, MoveInfo, MvRef, MvSrc, Reality, Span, Value
 use crate::syntax::{Bind, Call, Expr, Stop};
 use crate::time::Day;
 use crate::walk::{
-    Amount, Dated, End, Exists, Inst, LegVal, Status, Term, WalkAt, invariant, qty_value,
+    Amount, Dated, DayWindow, End, Exists, Inst, LegVal, Status, Term, WalkAt, invariant, qty_value,
 };
 
 /// What a binding over movements ranges over (refcore's `_dom`, `event` or `obs`).
@@ -89,6 +89,7 @@ impl Moving {
     fn sort_key(&self) -> Result<(Day, Term), Stop> {
         let day = match self.day() {
             Some(Dated::Day(d)) => d,
+            Some(Dated::Window(w)) => w.lo,
             Some(Dated::Hole(_)) | None => Day::LAST,
         };
         let order = match self {
@@ -227,6 +228,19 @@ impl Engine {
                 Some(Dated::Hole(h)) => Some(h),
                 Some(Dated::Day(d)) if sp.contains(d) => None,
                 Some(Dated::Day(_)) => continue,
+                // a window inside the span is a member, one outside it isn't, one across its
+                // edge may be (refcore's `span_members`; L §4.4)
+                Some(Dated::Window(w)) => match window_member(&w, sp) {
+                    Some(true) => None,
+                    Some(false) => continue,
+                    None => {
+                        let text = format!(
+                            "date within {} not precise enough for a binding over {}",
+                            w.question, dom.1
+                        );
+                        Some(Hole::asked(&text, x.id()))
+                    }
+                },
             };
             if let Moving::Plan(i) = &x {
                 if let Exists::Unknown(h) = &i.exists {
@@ -315,19 +329,32 @@ impl Engine {
         // its holes and refusals name the form as written, not its definition's bound
         // variable or the day's value (L §5 A form defined by another; tally 2.1.7 R6, SR-7)
         let written = crate::load::expr_text(&Expr::Call(Box::new(call.clone())));
-        let Some(top) = members.iter().filter_map(|x| x.day.day()).min() else {
+        // the first last day, and every member that may fall on or before it: a window's
+        // first and last days (refcore's `first_by_day`, `day_lo`, `day_hi`)
+        let Some(top) = members.iter().filter_map(|x| x.day.hi()).min() else {
             let text = format!("{written}: no {kind} yet, and its span reaches past the cut");
             return Ok(Value::Hole(Hole::asked(&text, kind)));
         };
         let firsts: Vec<&MvMember> = members
             .iter()
-            .filter(|x| x.day.day() == Some(top))
+            .filter(|x| matches!(x.day.lo(), Some(lo) if lo <= top))
             .collect();
         let unknown: Vec<Option<&Hole>> = firsts.iter().map(|x| x.unknown.as_ref()).collect();
         if let Some(h) = spread(&unknown) {
             return Ok(Value::Hole(h));
         }
         let [first] = firsts.as_slice() else {
+            if let Some((w, id)) = firsts.iter().find_map(|x| match &x.day {
+                Dated::Window(w) => Some((w, &x.id)),
+                Dated::Day(_) | Dated::Hole(_) => None,
+            }) {
+                // which comes first is a comparison of windows, undecided (L §4.4)
+                let text = format!(
+                    "date within {} not precise enough for {written}",
+                    w.question
+                );
+                return Ok(Value::Hole(Hole::asked(&text, id)));
+            }
             let ids: Vec<&str> = firsts.iter().map(|x| x.id.as_str()).collect();
             return Err(Stop::Refused(Refusal::new(
                 Code::Run(Run::Tie),
@@ -673,8 +700,7 @@ impl Engine {
         }
         match name {
             "day" => Ok(match src.day() {
-                Some(Dated::Day(d)) => Value::Day(d),
-                Some(Dated::Hole(h)) => Value::Hole(h),
+                Some(day) => day.value(),
                 None => Value::None,
             }),
             "fulfils" => self.fulfils_of(m, &src, ctx.cut),
@@ -847,7 +873,7 @@ fn body_hole(src: &Moving) -> Option<Hole> {
     }
     match &i.day {
         Some(Dated::Hole(h)) => Some(h.clone()),
-        Some(Dated::Day(_)) | None => None,
+        Some(Dated::Day(_) | Dated::Window(_)) | None => None,
     }
 }
 
@@ -857,10 +883,7 @@ fn leg_record(m: &Reality, lg: &LegVal) -> Result<Value, Stop> {
         End::Place(p) => Value::Key(KeyVal::Thing(p.clone())),
         End::Hole(h) => Value::Hole(h.clone()),
     };
-    let day = match &lg.day {
-        Dated::Day(d) => Value::Day(*d),
-        Dated::Hole(h) => Value::Hole(h.clone()),
-    };
+    let day = lg.day.value();
     Ok(Value::Record(vec![
         ("from".to_owned(), end(&lg.from)),
         ("to".to_owned(), end(&lg.to)),
@@ -888,7 +911,7 @@ fn amount_value(m: &Reality, a: &Amount, unit: Option<&str>) -> Result<Value, St
 pub(crate) fn inst_ref(i: &Inst) -> MvRef {
     MvRef {
         id: i.id.clone(),
-        day: i.day.as_ref().and_then(Dated::day),
+        day: i.day.as_ref().and_then(Dated::lo),
         src: MvSrc::Inst(i.move_id.clone(), i.keys.clone()),
     }
 }
@@ -899,6 +922,18 @@ pub(super) fn row_key(o: &Obs) -> &str {
         .and_then(|r| r.strip_prefix('['))
         .and_then(|r| r.strip_suffix(']'))
         .unwrap_or(&o.id)
+}
+
+/// Whether a movement dated by window `w` is a member of a binding over span `sp`: true
+/// inside it, false wholly outside it, none across its edge (refcore's `span_members`).
+/// L §4.4, §5.19 Bindings.
+fn window_member(w: &DayWindow, sp: &Span) -> Option<bool> {
+    if sp.contains(w.lo) && sp.contains(w.hi) {
+        return Some(true);
+    }
+    let after = sp.end().is_some_and(|end| w.lo >= end);
+    let before = sp.start().is_some_and(|start| w.hi < start);
+    (after || before).then_some(false)
 }
 
 /// A running read's binding over a kind the walk itself books, decisions or pads, through a
@@ -945,7 +980,7 @@ fn unfulfilled(m: &Reality, i: &Inst, cut: Day) -> bool {
         return false;
     }
     if m.moves.get(&i.move_id).is_some_and(|mv| mv.decision) {
-        return i.day.as_ref().and_then(Dated::day).is_some_and(|d| d < cut);
+        return i.day.as_ref().and_then(Dated::lo).is_some_and(|d| d < cut);
     }
     i.status == Status::Past
 }

@@ -46,12 +46,13 @@ impl Engine {
                         format!("the day of leg {} of {} is none here", leg.name, inst.id),
                     ));
                 }
-                if let Value::Window(_) = v {
-                    // a leg dated by a window is a movement dated by one (L §4.4), as the
-                    // instance's own day: not a load refusal, and not built
-                    return Err(Stop::NotBuilt("a movement dated by a window"));
-                }
-                if let Value::Hole(h) = v {
+                if let Value::Window(w) = &v
+                    && let Some(day) = super::plan::day_window(m, w)?
+                {
+                    // a leg dated by a window no `windows each` chose a day of: a movement
+                    // dated by one, as the instance's own day (L §4.4)
+                    day
+                } else if let Value::Hole(h) = v {
                     Dated::Hole(h)
                 } else {
                     Dated::Day(date_of(&v)?)

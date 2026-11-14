@@ -12,7 +12,7 @@
 
 use super::flows::span_last;
 use super::order::WalkAt;
-use super::plan::{Amount, Dated, Exists, Inst, Status, invariant, qty_value};
+use super::plan::{Amount, Dated, DayWindow, Exists, Inst, Status, invariant, qty_value};
 use super::reads::refuse;
 use super::state::Progress;
 use crate::base::{Refusal, Run};
@@ -122,7 +122,22 @@ impl Engine {
                     acc.holes.push(h.clone());
                     continue;
                 }
-                Some(Dated::Day(d)) => *d,
+                Some(Dated::Day(d)) if sp.contains(*d) => Some(*d),
+                Some(Dated::Day(_)) => continue,
+                // a window inside the span counts, one outside it doesn't, one across its
+                // edge may fall either side (refcore's `flows_move`; L §4.4)
+                Some(Dated::Window(w)) => match window_in(w, sp, last) {
+                    Some(true) => None,
+                    Some(false) => continue,
+                    None => {
+                        let text = format!(
+                            "date within {} not precise enough for flows of {}",
+                            w.question, mv.id
+                        );
+                        acc.holes.push(Hole::asked(&text, &i.id));
+                        continue;
+                    }
+                },
                 None => {
                     return Err(i
                         .err
@@ -130,10 +145,7 @@ impl Engine {
                         .map_or_else(|| invariant("an instance with no day"), Stop::Refused));
                 }
             };
-            if !sp.contains(day) {
-                continue;
-            }
-            if mv.decision && day > m.end {
+            if mv.decision && day.is_some_and(|d| d > m.end) {
                 // never walked, so its amount reads a walk that doesn't hold its day (E §2)
                 acc.holes.push(Hole::after_run(&i.id));
                 continue;
@@ -166,7 +178,7 @@ impl Engine {
                     }
                     Amount::Qty(q) => q,
                 };
-                let leg_day = lg.day.day().or(Some(day));
+                let leg_day = lg.day.day().or(day);
                 if !q.is_zero()
                     && let Some(err) = self.leg_refused(m, (&i.id, &lg.name), leg_day, ctx)?
                 {
@@ -278,7 +290,7 @@ impl Engine {
                 // an instance no walk ran: its day a hole, or after the run's end (E §2)
                 let unwalked = match i.day {
                     Some(Dated::Day(d)) => d > m.end,
-                    Some(Dated::Hole(_)) | None => true,
+                    Some(Dated::Window(_) | Dated::Hole(_)) | None => true,
                 };
                 if unwalked && i.exists != Exists::No {
                     out.push(i.clone());
@@ -498,6 +510,17 @@ fn wanted(leg: Option<&str>, name: &str) -> bool {
         None => true,
         Some(l) => l == name,
     }
+}
+
+/// Whether window `w` lies inside span `sp`, whose last day is `last`: true inside it, false
+/// wholly outside it, none across its edge (refcore's `flows_move`). L §4.4, §5.14.3.
+fn window_in(w: &DayWindow, sp: &Span, last: Day) -> Option<bool> {
+    if sp.contains(w.lo) && w.hi <= last {
+        return Some(true);
+    }
+    let after = sp.end().is_some() && w.lo > last;
+    let before = sp.start().is_some_and(|start| w.hi < start);
+    (after || before).then_some(false)
 }
 
 #[cfg(test)]

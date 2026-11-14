@@ -278,7 +278,7 @@ impl Engine {
             insts.extend(self.move_instances(m, mv, cut)?.iter().cloned());
         }
         for inst in insts {
-            let day = match model_day(&inst)? {
+            let day = match model_day(&inst, span)? {
                 Modelled::Skip => continue,
                 Modelled::Undated => None,
                 Modelled::On(day) => Some(day),
@@ -332,7 +332,7 @@ impl Engine {
             .collect();
         let mut out = Vec::new();
         for inst in runs {
-            let Some(Dated::Day(day)) = inst.day else {
+            let Some(day) = inst.day.as_ref().and_then(Dated::lo) else {
                 continue;
             };
             if !span.contains(day) || self.covering(m, place, day, m.on).is_empty() {
@@ -457,8 +457,10 @@ fn refusal_of(inst: &Inst) -> Stop {
 
 /// Where an instance of the model stands (refcore's `m_residuals`, its status test): one
 /// that doesn't exist is no line; a refused one stands where its day is, and refuses the
-/// ledger where it may touch the place. E §6.3, L §8.4.
-fn model_day(inst: &Inst) -> Result<Modelled, Stop> {
+/// ledger where it may touch the place; a window inside one month stands at its first day,
+/// one across months in the `?` group, unless it falls wholly outside the span. E §6.3
+/// Grouping, L §8.4, §4.4.
+fn model_day(inst: &Inst, span: &Span) -> Result<Modelled, Stop> {
     match inst.status {
         Status::None | Status::LeftOut => return Ok(Modelled::Skip),
         Status::Refused
@@ -472,6 +474,18 @@ fn model_day(inst: &Inst) -> Result<Modelled, Stop> {
     }
     match &inst.day {
         Some(Dated::Day(d)) => Ok(Modelled::On(*d)),
+        Some(Dated::Window(w)) if (w.lo.year(), w.lo.month()) == (w.hi.year(), w.hi.month()) => {
+            Ok(Modelled::On(w.lo))
+        }
+        Some(Dated::Window(w)) => {
+            let after = span.end().is_some_and(|end| w.lo >= end);
+            let before = span.start().is_some_and(|start| w.hi < start);
+            Ok(if after || before {
+                Modelled::Skip
+            } else {
+                Modelled::Undated
+            })
+        }
         Some(Dated::Hole(_)) => Ok(Modelled::Undated),
         None => Err(invariant("an instance with no day, not refused")),
     }
@@ -508,9 +522,9 @@ fn instance_line(
     inst: &Inst,
     fulfilling: &Fulfilling,
 ) -> Result<(), Stop> {
-    let day = match &inst.day {
-        Some(Dated::Day(d)) => *d,
-        Some(Dated::Hole(_)) | None => return Err(invariant("a ledger instance with no day")),
+    // a window inside one month: its first day (refcore's `day_lo`)
+    let Some(day) = inst.day.as_ref().and_then(Dated::lo) else {
+        return Err(invariant("a ledger instance with no day"));
     };
     let mdl = flow_into(&inst.legs, &lines.place, &lines.unit)?;
     let os = fulfilling.of(&inst.id);
@@ -685,14 +699,19 @@ fn undated_line(
     if mdl.is_zero() {
         return Ok(());
     }
-    let Some(Dated::Hole(day_hole)) = &inst.day else {
-        return Err(invariant("an undated instance whose day isn't a hole"));
+    // a hole as the hole, a window as a question names it (refcore's `window_text`)
+    let day_text = match &inst.day {
+        Some(Dated::Hole(h)) => h.text(),
+        Some(Dated::Window(w)) => w.question.clone(),
+        Some(Dated::Day(_)) | None => {
+            return Err(invariant("an undated instance whose day isn't a hole"));
+        }
     };
     let diff = fig_sub(Some(&Fig::Qty(Num::zero())), Some(&mdl))?;
     let text = format!(
         "expected but missing {} on {}: model {}",
         inst.id,
-        day_hole.text(),
+        day_text,
         fig_text(m, &mdl, &lines.unit)?
     );
     lines.out.push(Line {

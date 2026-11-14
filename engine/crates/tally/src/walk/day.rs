@@ -17,7 +17,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::agenda::{Act, Mv, Reading};
-use super::plan::{Amount, Dated, End, Inst, LegVal, Status, invariant, qty_value};
+use super::plan::{Amount, Dated, DayWindow, End, Inst, LegVal, Status, invariant, qty_value};
 use super::point::At;
 use super::state::{ALL, Change, Ent, Group, Progress, Taken, Today, Walk, WalkObs};
 use crate::base::{Code, Refusal, Run, Warn};
@@ -387,6 +387,11 @@ impl Engine {
                 }
                 self.book_leg(m, id, (&movement, &lg), at, &reg)
             }
+            Act::ImpOn(mv, leg) => {
+                let (movement, lg) = self.movement_leg(id, mv, leg)?;
+                self.walk_mut(id)?
+                    .imprecise_ends(m, (&movement.id, &lg), at, &movement.coll)
+            }
             Act::LegHole(mv, leg, qs) => {
                 let (movement, lg) = self.movement_leg(id, mv, leg)?;
                 let h = match &lg.amount {
@@ -518,6 +523,7 @@ impl Engine {
                     ent.mv = Some(movement.to_owned());
                     ent.leg = Some(lg.name.clone());
                     ent.reg = reg.to_vec();
+                    ent.window = leg_window(movement, lg);
                     ent.coll = Some(coll.clone());
                     walk.add(m, p, &unit, ent)?;
                 }
@@ -622,6 +628,7 @@ impl Engine {
             ent.mv = Some(movement.to_owned());
             ent.leg = Some(lg.name.clone());
             ent.reg = reg.to_vec();
+            ent.window = leg_window(movement, lg);
             ent.coll = Some(coll.clone());
             walk.add(m, p, &unit, ent)?;
         }
@@ -978,6 +985,56 @@ impl Walk {
             self.add(m, p, &unit, ent)?;
         }
         Ok(())
+    }
+
+    /// A leg dated by a window, from the window's first day: each place it names is
+    /// `HOLE-IMPRECISE` for a balance, its amount's questions too where that is a hole, until
+    /// the leg books at the window's last day (refcore's `imp_on`). L §4.4, §8.1; E §4.2.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a leg not dated by a window.
+    fn imprecise_ends(
+        &mut self,
+        m: &Reality,
+        (movement, lg): (&str, &LegVal),
+        at: At,
+        coll: &Collected,
+    ) -> Result<(), Stop> {
+        let Dated::Window(w) = &lg.day else {
+            return Err(invariant("an imprecise leg not dated by a window"));
+        };
+        let text = format!(
+            "date within {} not precise enough for a balance",
+            w.question
+        );
+        let own = Hole::asked(&text, movement);
+        let amount = match &lg.amount {
+            Amount::Hole(h) => Some(h),
+            Amount::Qty(_) | Amount::Refused(_) => None,
+        };
+        let q = match spread(&[Some(&own), amount]) {
+            Some(both) => both,
+            None => own,
+        };
+        let unit = lg.unit.clone().unwrap_or_else(|| ALL.to_owned());
+        for p in ends(lg) {
+            let mut ent = Ent::new(at, Change::ImpOn(q.clone()));
+            ent.mv = Some(movement.to_owned());
+            ent.window = leg_window(movement, lg);
+            ent.coll = Some(coll.clone());
+            self.add(m, p, &unit, ent)?;
+        }
+        Ok(())
+    }
+}
+
+/// A leg's window id, `<movement>.<leg>`, and its window, where its day is one (refcore's
+/// `wid`, `win`). L §4.4.
+fn leg_window(movement: &str, lg: &LegVal) -> Option<(String, DayWindow)> {
+    match &lg.day {
+        Dated::Window(w) => Some((format!("{movement}.{}", lg.name), w.clone())),
+        Dated::Day(_) | Dated::Hole(_) => None,
     }
 }
 
