@@ -1729,6 +1729,7 @@ s10/t_f1_known	fixes-s		engine/tests/m1/fixes/s10/t_f1	engine/tests/m1/fixes/s10
 s10/t_f1_at	fixes-s		engine/tests/m1/fixes/s10/t_f1	engine/tests/m1/fixes/s10/t_f1/at.tally			S10
 r1/reach_if	fixes-r1		engine/tests/m1/fixes/r1/reach	engine/tests/m1/fixes/r1/reach/m.tally	i_untaken i_taken		R1
 r1/reach_rules	fixes-r1		engine/tests/m1/fixes/r1/reach	engine/tests/m1/fixes/r1/reach/m.tally	b_beaten b_when_false b_taken		R1
+r1/m2_164_argmin_ties_hole	fixes-r1		engine/tests/m2/items/sweep	engine/tests/m2/items/sweep/forms.tally	am_tied am_untied		-
 r2/reach_arith	fixes-r2		engine/tests/m1/fixes/r2/reach	engine/tests/m1/fixes/r2/reach/m.tally	a a_hole_only		R2
 r2/reach_count	fixes-r2		engine/tests/m1/fixes/r2/reach	engine/tests/m1/fixes/r2/reach/m.tally	c_span c_before		R2
 r3/reach_year	fixes-r3		engine/tests/m1/fixes/r3/reach	engine/tests/m1/fixes/r3/reach/m.tally	y y_hole		R3
@@ -1775,8 +1776,11 @@ r9/p45_owns_party_place	fixes-r9		engine/tests/m1/fixes/r9/p45_owns_party_place	
 r9/p46_owns_month_place	fixes-r9		engine/tests/m1/fixes/r9/p46_owns_month_place	engine/tests/m1/fixes/r9/p46_owns_month_place/m.tally			R9
 r9/p46_owns_month_place_twin	fixes-r9		engine/tests/m1/fixes/r9/p46_owns_month_place	engine/tests/m1/fixes/r9/p46_owns_month_place/twin.tally			R9
 s9/l8_3_balnow_outside_line	fixes-s		engine/tests/m1/fixes/s9/l8_3_balnow_outside_line	engine/tests/m1/fixes/s9/l8_3_balnow_outside_line/m.tally			S9
+s5/m2_164_order_four	fixes-s		engine/tests/m2/items/sweep	engine/tests/m2/items/sweep/order4.tally			-
+s5/m2_164_cycle_left	fixes-s		engine/tests/m2/items/sweep	engine/tests/m2/items/sweep/cycle.tally			-
 b1/l4_6_reading_at_date	fixes-b		engine/tests/m1/fixes/b1/l4_6_reading_at_date	engine/tests/m1/fixes/b1/l4_6_reading_at_date/m.tally			B1
 b1/l4_6_period_held_by_key	fixes-b		engine/tests/m1/fixes/b1/l4_6_period_held_by_key	engine/tests/m1/fixes/b1/l4_6_period_held_by_key/m.tally			B1
+b1/m2_164_month_ends	fixes-b		engine/tests/m2/items/sweep	engine/tests/m2/items/sweep/forms.tally	k30 kfeb l29 l30 l31 n31		-
 fixes/g13/r_agent_w_model_with_r_agent_w_a14_a14	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/r_agent_w_model.tally engine/tests/m1/fixes/g13/r_agent_w_a14.tally	a14		G13
 fixes/g13/r_agent_w_model_with_r_agent_w_i1_i1	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/r_agent_w_model.tally engine/tests/m1/fixes/g13/r_agent_w_i1.tally	i1		G13
 fixes/g13/r_agent_w_model_with_r_agent_w_i2_i2	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/r_agent_w_model.tally engine/tests/m1/fixes/g13/r_agent_w_i2.tally	i2		G13

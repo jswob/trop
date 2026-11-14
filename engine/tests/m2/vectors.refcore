@@ -16831,4 +16831,93 @@ version v
   law date 2026-10-25, cut 2026-10-25
 q_z: 10.00 DUK
   law date 2026-10-25, cut 2026-10-25
+,26:items/sweep/next_uncertain,11:items-sweep,31:run forms.tally --ask nx nx_unc,1961:11:forms.tally,1940:model sweep_forms
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 C2, #164's forms (the 2.1.7 engine review's): a month-stepped range from the 29th, 30th and 31st as an ask's binding (l29, l30, l31, n31) and as an input's key (dk, k30, kfeb); R1, argmin whose ties by term is a hole on a candidate not tied (am_untied) and on a tied one (am_tied); next(K, d) over an uncertain kind's movement, without and with uncertain (nx, nx_unc)"
+
+source s "synthetic"
+
+unit PLN: currency minor 0.01
+
+kind maybe: transfers uncertain
+
+index ks = [a, b, c]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input c1[k in ks]: num
+
+input c2[k in ks]: num
+
+input h[k in ks]: num
+
+input d1: date
+
+input d2: date
+
+input a1: money PLN
+
+input a2: money PLN
+
+input dk[d in 2026-01-30 .. 2026-06-30 step 1 month]: int
+
+move m1: maybe
+  on d1
+  leg cash from world to konto amount a1
+
+move m2: transfers
+  on d2
+  leg cash from world to konto amount a2
+
+ask l29: d for d in 2026-01-29 .. 2026-05-31 step 1 month
+
+ask l30: d for d in 2026-01-30 .. 2026-05-31 step 1 month
+
+ask l31: d for d in 2026-01-31 .. 2026-06-30 step 1 month
+
+ask n31: count(d in 2026-01-31 .. 2026-12-31 step 1 month)
+
+ask k30: dk[d] for d in 2026-01-30 .. 2026-06-30 step 1 month
+
+ask kfeb: dk[2026-02-28]
+
+ask am_untied: argmin(c1[k] for k in ks) ties by h[k]
+
+ask am_tied: argmin(c2[k] for k in ks) ties by h[k]
+
+ask nx: next(transfers, 2026-03-01).cash.amount
+
+ask nx_unc: next(transfers, 2026-03-01).cash.amount with uncertain
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  c1[a] = 3 "s"
+  c1[b] = 1 "s"
+  c1[c] = 2 "s"
+  c2[a] = 1 "s"
+  c2[b] = 2 "s"
+  c2[c] = 1 "s"
+  h[a] = 1 "s"
+  h[b] = 2 "s"
+  d1 = 2026-03-10 "s"
+  d2 = 2026-03-20 "s"
+  a1 = 7.00 PLN "s"
+  a2 = 9.00 PLN "s"
+  dk[2026-01-30] = 1 "s"
+  dk[2026-02-28] = 2 "s"
+  dk[2026-03-30] = 3 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+,,1:0,98:nx: 9.00 PLN
+  unfulfilled: m2
+  cut 2026-06-30
+nx_unc: 7.00 PLN
+  uncertain: m1
+  cut 2026-06-30
 ,

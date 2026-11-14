@@ -55,3 +55,4 @@ fixes/g3/n6	fixes-windows		engine/tests/m2/fixes/g3	engine/tests/m2/fixes/g3/n6.
 fixes/g3/n7	fixes-windows		engine/tests/m2/fixes/g3	engine/tests/m2/fixes/g3/n7.tally	bw		-
 fixes/g1/legf	fixes-forms		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/legf.tally	q_y		-
 fixes/g1/legf_z	fixes-forms		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/legf_z.tally	q_w q_z		-
+items/sweep/next_uncertain	items-sweep		engine/tests/m2/items/sweep	engine/tests/m2/items/sweep/forms.tally	nx nx_unc		sweep

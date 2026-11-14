@@ -17,11 +17,12 @@ mod tests {
     use tally_runner::m2::VECTORS;
 
     /// The groups this target tests, one `#[test]` each.
-    const GROUPS: [&str; 4] = [
+    const GROUPS: [&str; 5] = [
         "items-green",
         "items-forms",
         "items-explain",
         "items-windows",
+        "items-sweep",
     ];
 
     /// Runs every vector of `group` on the engine and holds it to refcore's run.
@@ -98,5 +99,13 @@ mod tests {
     #[test]
     fn m2_items_windows() {
         group_holds("items-windows");
+    }
+
+    /// The sweep group's (#164): `next(K, d)` over an uncertain kind's movement, without and
+    /// with `with uncertain` (L §5.14, the table's `next`); the engine stops the second not
+    /// implemented. #164's other forms gate in `m1_fixes` (`fixes-b`, `fixes-r1`, `fixes-s`).
+    #[test]
+    fn m2_items_sweep() {
+        group_holds("items-sweep");
     }
 }

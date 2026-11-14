@@ -234196,6 +234196,93 @@ b_when_false: 18
   cut 2026-03-01
 b_taken: refused: RUN-DIV division by zero
   cut 2026-03-01
+,26:r1/m2_164_argmin_ties_hole,8:fixes-r1,39:run forms.tally --ask am_tied am_untied,1961:11:forms.tally,1940:model sweep_forms
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 C2, #164's forms (the 2.1.7 engine review's): a month-stepped range from the 29th, 30th and 31st as an ask's binding (l29, l30, l31, n31) and as an input's key (dk, k30, kfeb); R1, argmin whose ties by term is a hole on a candidate not tied (am_untied) and on a tied one (am_tied); next(K, d) over an uncertain kind's movement, without and with uncertain (nx, nx_unc)"
+
+source s "synthetic"
+
+unit PLN: currency minor 0.01
+
+kind maybe: transfers uncertain
+
+index ks = [a, b, c]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input c1[k in ks]: num
+
+input c2[k in ks]: num
+
+input h[k in ks]: num
+
+input d1: date
+
+input d2: date
+
+input a1: money PLN
+
+input a2: money PLN
+
+input dk[d in 2026-01-30 .. 2026-06-30 step 1 month]: int
+
+move m1: maybe
+  on d1
+  leg cash from world to konto amount a1
+
+move m2: transfers
+  on d2
+  leg cash from world to konto amount a2
+
+ask l29: d for d in 2026-01-29 .. 2026-05-31 step 1 month
+
+ask l30: d for d in 2026-01-30 .. 2026-05-31 step 1 month
+
+ask l31: d for d in 2026-01-31 .. 2026-06-30 step 1 month
+
+ask n31: count(d in 2026-01-31 .. 2026-12-31 step 1 month)
+
+ask k30: dk[d] for d in 2026-01-30 .. 2026-06-30 step 1 month
+
+ask kfeb: dk[2026-02-28]
+
+ask am_untied: argmin(c1[k] for k in ks) ties by h[k]
+
+ask am_tied: argmin(c2[k] for k in ks) ties by h[k]
+
+ask nx: next(transfers, 2026-03-01).cash.amount
+
+ask nx_unc: next(transfers, 2026-03-01).cash.amount with uncertain
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  c1[a] = 3 "s"
+  c1[b] = 1 "s"
+  c1[c] = 2 "s"
+  c2[a] = 1 "s"
+  c2[b] = 2 "s"
+  c2[c] = 1 "s"
+  h[a] = 1 "s"
+  h[b] = 2 "s"
+  d1 = 2026-03-10 "s"
+  d2 = 2026-03-20 "s"
+  a1 = 7.00 PLN "s"
+  a2 = 9.00 PLN "s"
+  dk[2026-01-30] = 1 "s"
+  dk[2026-02-28] = 2 "s"
+  dk[2026-03-30] = 3 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+,,1:0,83:am_tied: ?"h at c: no value" (h[c])
+  cut 2026-06-30
+am_untied: b
+  cut 2026-06-30
 ,14:r2/reach_arith,8:fixes-r2,31:run m.tally --ask a a_hole_only,1702:7:m.tally,1686:model r2_reach
   tally 2
   on 2026-03-01
@@ -236739,6 +236826,164 @@ version v
   opening[konto] = 0.00 PLN at 2026-01-01 start
   y = 1
 ,,1:1,109:refused: LOAD-READS nd holds bal(x) with no day: a running read outside a decision and its defs (m.tally:12)
+,20:s5/m2_164_order_four,7:fixes-s,16:run order4.tally,1520:12:order4.tally,1498:model order4
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 C2, #164 (S5, L §5.14.2): written orders compose through four decisions: s1 before s2, s2 before s3, s3 before s4 order s1 before s4, whose reads (s4 books into a, which s1 reads) would make a cycle; the day's order is s1, s2, s3, s4"
+
+source s "s"
+unit PLN: currency minor 0.01
+input day: date
+input keep: money PLN
+place a: accounts PLN lives 2025-01-01..
+place b: accounts PLN lives 2025-01-01..
+place c: accounts PLN lives 2025-01-01..
+place e: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+
+move s1: transfers
+  on day
+  reads a
+  before s2
+  leg cash from a to b amount max(0 PLN, bal(a) - keep)
+
+move s2: transfers
+  on day
+  reads b
+  before s3
+  leg cash from b to c amount max(0 PLN, bal(b) - keep)
+
+move s3: transfers
+  on day
+  reads c
+  before s4
+  leg cash from c to e amount max(0 PLN, bal(c) - keep)
+
+move s4: transfers
+  on day
+  reads e
+  leg cash from e to a amount max(0 PLN, bal(e) - keep)
+
+ask f1: flows(s1, 2026-01-15)
+ask f2: flows(s2, 2026-01-15)
+ask f3: flows(s3, 2026-01-15)
+ask f4: flows(s4, 2026-01-15)
+ask ba: bal(a, 2026-01-15)
+ask be: bal(e, 2026-01-15)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  day = 2026-01-15 "s"
+  keep = 10.00 PLN "s"
+  opening[a] = 100.00 PLN at 2026-01-01 start "s"
+  opening[b] = 0.00 PLN at 2026-01-01 start "s"
+  opening[c] = 0.00 PLN at 2026-01-01 start "s"
+  opening[e] = 0.00 PLN at 2026-01-01 start "s"
+,,1:0,562:ba: 70.00 PLN
+  unfulfilled: s1
+  unfulfilled: s2
+  unfulfilled: s3
+  unfulfilled: s4
+  cut 2026-10-18
+be: 10.00 PLN
+  unfulfilled: s1
+  unfulfilled: s2
+  unfulfilled: s3
+  unfulfilled: s4
+  cut 2026-10-18
+f1: 90.00 PLN
+  unfulfilled: s1
+  cut 2026-10-18
+f2: 80.00 PLN
+  unfulfilled: s1
+  unfulfilled: s2
+  cut 2026-10-18
+f3: 70.00 PLN
+  unfulfilled: s1
+  unfulfilled: s2
+  unfulfilled: s3
+  cut 2026-10-18
+f4: 60.00 PLN
+  unfulfilled: s1
+  unfulfilled: s2
+  unfulfilled: s3
+  unfulfilled: s4
+  cut 2026-10-18
+warning: WARN-UNREAD place world is read by nothing
+,20:s5/m2_164_cycle_left,7:fixes-s,15:run cycle.tally,1569:11:cycle.tally,1548:model order_cycle
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 C2, #164 (S5, L §5.14.2): a cycle left after composing: s1 before s2 and s3 before s4 are written, and the reads add s2 before s3 (s3 reads c, which s2 books) and s4 before s1 (s1 reads a, which s4 books): s1, s2, s3, s4 read each other, refused RUN-ORDER at run, where the day is an input"
+
+source s "s"
+unit PLN: currency minor 0.01
+input day: date
+input keep: money PLN
+place a: accounts PLN lives 2025-01-01..
+place b: accounts PLN lives 2025-01-01..
+place c: accounts PLN lives 2025-01-01..
+place e: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+
+move s1: transfers
+  on day
+  reads a
+  before s2
+  leg cash from a to b amount max(0 PLN, bal(a) - keep)
+
+move s2: transfers
+  on day
+  reads b
+
+  leg cash from b to c amount max(0 PLN, bal(b) - keep)
+
+move s3: transfers
+  on day
+  reads c
+  before s4
+  leg cash from c to e amount max(0 PLN, bal(c) - keep)
+
+move s4: transfers
+  on day
+  reads e
+  leg cash from e to a amount max(0 PLN, bal(e) - keep)
+
+ask f1: flows(s1, 2026-01-15)
+ask f2: flows(s2, 2026-01-15)
+ask f3: flows(s3, 2026-01-15)
+ask f4: flows(s4, 2026-01-15)
+ask ba: bal(a, 2026-01-15)
+ask be: bal(e, 2026-01-15)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  day = 2026-01-15 "s"
+  keep = 10.00 PLN "s"
+  opening[a] = 100.00 PLN at 2026-01-01 start "s"
+  opening[b] = 0.00 PLN at 2026-01-01 start "s"
+  opening[c] = 0.00 PLN at 2026-01-01 start "s"
+  opening[e] = 0.00 PLN at 2026-01-01 start "s"
+,,1:0,676:ba: refused: RUN-ORDER decisions s1 and s2 and s3 and s4 read each other on 2026-01-15
+  cut 2026-10-18
+be: refused: RUN-ORDER decisions s1 and s2 and s3 and s4 read each other on 2026-01-15
+  cut 2026-10-18
+f1: refused: RUN-ORDER decisions s1 and s2 and s3 and s4 read each other on 2026-01-15
+  cut 2026-10-18
+f2: refused: RUN-ORDER decisions s1 and s2 and s3 and s4 read each other on 2026-01-15
+  cut 2026-10-18
+f3: refused: RUN-ORDER decisions s1 and s2 and s3 and s4 read each other on 2026-01-15
+  cut 2026-10-18
+f4: refused: RUN-ORDER decisions s1 and s2 and s3 and s4 read each other on 2026-01-15
+  cut 2026-10-18
+warning: WARN-UNREAD place world is read by nothing
 ,23:b1/l4_6_reading_at_date,7:fixes-b,11:run m.tally,256:7:m.tally,241:model t
   tally 2
   on 2026-12-31
@@ -236780,6 +237025,137 @@ version v
 ask held: yfirst[2022-06] law 2026-10-18
 ,,1:0,55:held: 2022-04-06
   law date 2026-10-18, cut 2026-10-18
+,20:b1/m2_164_month_ends,7:fixes-b,46:run forms.tally --ask k30 kfeb l29 l30 l31 n31,1961:11:forms.tally,1940:model sweep_forms
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 C2, #164's forms (the 2.1.7 engine review's): a month-stepped range from the 29th, 30th and 31st as an ask's binding (l29, l30, l31, n31) and as an input's key (dk, k30, kfeb); R1, argmin whose ties by term is a hole on a candidate not tied (am_untied) and on a tied one (am_tied); next(K, d) over an uncertain kind's movement, without and with uncertain (nx, nx_unc)"
+
+source s "synthetic"
+
+unit PLN: currency minor 0.01
+
+kind maybe: transfers uncertain
+
+index ks = [a, b, c]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input c1[k in ks]: num
+
+input c2[k in ks]: num
+
+input h[k in ks]: num
+
+input d1: date
+
+input d2: date
+
+input a1: money PLN
+
+input a2: money PLN
+
+input dk[d in 2026-01-30 .. 2026-06-30 step 1 month]: int
+
+move m1: maybe
+  on d1
+  leg cash from world to konto amount a1
+
+move m2: transfers
+  on d2
+  leg cash from world to konto amount a2
+
+ask l29: d for d in 2026-01-29 .. 2026-05-31 step 1 month
+
+ask l30: d for d in 2026-01-30 .. 2026-05-31 step 1 month
+
+ask l31: d for d in 2026-01-31 .. 2026-06-30 step 1 month
+
+ask n31: count(d in 2026-01-31 .. 2026-12-31 step 1 month)
+
+ask k30: dk[d] for d in 2026-01-30 .. 2026-06-30 step 1 month
+
+ask kfeb: dk[2026-02-28]
+
+ask am_untied: argmin(c1[k] for k in ks) ties by h[k]
+
+ask am_tied: argmin(c2[k] for k in ks) ties by h[k]
+
+ask nx: next(transfers, 2026-03-01).cash.amount
+
+ask nx_unc: next(transfers, 2026-03-01).cash.amount with uncertain
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  c1[a] = 3 "s"
+  c1[b] = 1 "s"
+  c1[c] = 2 "s"
+  c2[a] = 1 "s"
+  c2[b] = 2 "s"
+  c2[c] = 1 "s"
+  h[a] = 1 "s"
+  h[b] = 2 "s"
+  d1 = 2026-03-10 "s"
+  d2 = 2026-03-20 "s"
+  a1 = 7.00 PLN "s"
+  a2 = 9.00 PLN "s"
+  dk[2026-01-30] = 1 "s"
+  dk[2026-02-28] = 2 "s"
+  dk[2026-03-30] = 3 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+,,1:0,1231:k30 (d = 2026-01-30): 1
+  cut 2026-06-30
+k30 (d = 2026-02-28): 2
+  cut 2026-06-30
+k30 (d = 2026-03-30): 3
+  cut 2026-06-30
+k30 (d = 2026-04-30): ?"dk at 2026-04-30: no value" (dk[2026-04-30])
+  cut 2026-06-30
+k30 (d = 2026-05-30): ?"dk at 2026-05-30: no value" (dk[2026-05-30])
+  cut 2026-06-30
+k30 (d = 2026-06-30): ?"dk at 2026-06-30: no value" (dk[2026-06-30])
+  cut 2026-06-30
+kfeb: 2
+  cut 2026-06-30
+l29 (d = 2026-01-29): 2026-01-29
+  cut 2026-06-30
+l29 (d = 2026-02-28): 2026-02-28
+  cut 2026-06-30
+l29 (d = 2026-03-29): 2026-03-29
+  cut 2026-06-30
+l29 (d = 2026-04-29): 2026-04-29
+  cut 2026-06-30
+l29 (d = 2026-05-29): 2026-05-29
+  cut 2026-06-30
+l30 (d = 2026-01-30): 2026-01-30
+  cut 2026-06-30
+l30 (d = 2026-02-28): 2026-02-28
+  cut 2026-06-30
+l30 (d = 2026-03-30): 2026-03-30
+  cut 2026-06-30
+l30 (d = 2026-04-30): 2026-04-30
+  cut 2026-06-30
+l30 (d = 2026-05-30): 2026-05-30
+  cut 2026-06-30
+l31 (d = 2026-01-31): 2026-01-31
+  cut 2026-06-30
+l31 (d = 2026-02-28): 2026-02-28
+  cut 2026-06-30
+l31 (d = 2026-03-31): 2026-03-31
+  cut 2026-06-30
+l31 (d = 2026-04-30): 2026-04-30
+  cut 2026-06-30
+l31 (d = 2026-05-31): 2026-05-31
+  cut 2026-06-30
+l31 (d = 2026-06-30): 2026-06-30
+  cut 2026-06-30
+n31: 12
+  cut 2026-06-30
 ,48:fixes/g13/r_agent_w_model_with_r_agent_w_a14_a14,9:fixes-g13,55:run r_agent_w_model.tally r_agent_w_a14.tally --ask a14,894:21:r_agent_w_model.tally,767:model rv
   tally 2
   on 2026-03-01
