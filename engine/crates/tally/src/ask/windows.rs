@@ -22,11 +22,16 @@ use super::answer::{ask_pins_listed, env_text, form_line};
 use super::axes::{Axes, grouped};
 use super::check::Printed;
 use super::register::{check_register_lines, register_lines};
-use crate::base::{Code, Refusal};
+use crate::base::{Code, Refusal, Run};
 use crate::eval::{Choice, Collected, Ctx, Engine, Entry, Env, Member, Met};
 use crate::model::Reality;
 use crate::syntax::{Ask, Stop};
 use crate::time::Day;
+
+/// The most day combinations one line's `windows each` runs: past it the line is refused
+/// `RUN-LIMIT` (pick P28, #174: refcore's point, until the spec names one cap for every
+/// fan-out).
+const EACH_CAP: usize = 20_000;
 
 /// One tuple's lines under `windows each`: each with its window part, ` [wd = a .. b]`, or
 /// none for the plain line, its result, and the runs it stands for (refcore's `each_rows`,
@@ -327,6 +332,17 @@ fn each_rows(
             let mut next = choice.clone();
             next.push((new.id.clone(), *day));
             pending.push_front(next);
+        }
+        // the fan-out's cap, refcore's point (pick P28, #174, interim)
+        if pending
+            .len()
+            .checked_add(done.len())
+            .is_none_or(|n| n > EACH_CAP)
+        {
+            return Err(Stop::Refused(Refusal::new(
+                Code::Run(Run::Limit),
+                "windows each over more than 20 000 day combinations".to_owned(),
+            )));
         }
         if !labels.iter().any(|w| w.id == new.id) {
             labels.push(new);
