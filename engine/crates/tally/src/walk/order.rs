@@ -782,6 +782,37 @@ impl Engine {
         Ok(ix)
     }
 
+    /// Puts walk `id`'s running reads back as decision run `run` read them at its point, its
+    /// own observations booked before its day left out, for a cell traced again there; returns
+    /// what [`Engine::leave_run`] puts back (`explain` of a walk-bound def: "the traced value
+    /// equals the stored one"). E §10, §4.2 step 3, L §5.19.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a run with no day or a walk the engine lacks.
+    pub(crate) fn enter_run(
+        &mut self,
+        m: &Reality,
+        id: usize,
+        run: &Run,
+    ) -> Result<Option<Vec<LegVal>>, Stop> {
+        let Some(Dated::Day(t)) = run.inst.day else {
+            return Err(invariant("a decision run with no day"));
+        };
+        let own = self.own_earlier_obs(m, id, &run.inst, t)?;
+        Ok(core::mem::replace(&mut self.walk_mut(id)?.less_obs, own))
+    }
+
+    /// Puts back walk `id`'s running reads as [`Engine::enter_run`] found them. E §4.2 step 3.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a walk the engine lacks.
+    pub(crate) fn leave_run(&mut self, id: usize, prev: Option<Vec<LegVal>>) -> Result<(), Stop> {
+        self.walk_mut(id)?.less_obs = prev;
+        Ok(())
+    }
+
     /// The legs of a decision's own observations booked on their days before its day, the
     /// cut and after the walk's start: its computation reads the balances less them (refcore's
     /// `run_one_body`, `less_obs`). E §4.2 step 3, L §5.19.

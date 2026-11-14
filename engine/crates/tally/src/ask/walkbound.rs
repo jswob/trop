@@ -74,16 +74,32 @@ pub(super) fn walk_bound_line(
             reader(engine.walk(main)?, *point),
             plain_text(m, &value)?
         ));
-        // the state just before the reader's own booking at its point (E §10: "its running
-        // reads as balances up to that point")
+        // the state just before the reader's own booking at its point, as the decision read
+        // it: its law date, its own earlier observations left out (E §10: "its running reads
+        // as balances up to that point"; "the traced value equals the stored one")
+        let run = engine
+            .walk(main)?
+            .runs
+            .iter()
+            .find(|r| r.point == *point)
+            .cloned();
+        let law = run.as_ref().map_or(ctx.law, |r| r.inst.law);
         let there = Ctx {
             at: Some(WalkAt {
                 walk: main,
                 point: point.just_before(),
             }),
-            ..engine.timeline_ctx(ctx.law, point.day.min(ctx.cut))
+            ..engine.timeline_ctx(law, point.day.min(ctx.cut))
         };
-        for line in traced_at(m, engine, reference, env, there)? {
+        let prev = match &run {
+            Some(run) => Some(engine.enter_run(m, main, run)?),
+            None => None,
+        };
+        let lines = traced_at(m, engine, reference, env, there);
+        if let Some(prev) = prev {
+            engine.leave_run(main, prev)?;
+        }
+        for line in lines? {
             body.push(format!("    {line}"));
         }
     }
