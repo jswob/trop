@@ -388,18 +388,16 @@ impl Engine {
         if let Some(earlier) = &pin.tied {
             return Err(conflict(earlier, &pin.text, item, keys));
         }
-        // L §8.2 One read set: the pins this read met under the claim it took (R4's cascade)
+        // L §8.2 One read set: the ask pins this read met under the claim it took (R4's
+        // cascade), each noted in the read's own set as `pin met`, which prints nothing
         let passed: Vec<String> = met
             .iter()
-            .filter(|q| q.text != pin.text)
+            .filter(|q| q.text != pin.text && self.pins_read.records(&q.text))
             .map(|q| q.text.clone())
             .collect();
         let (value, text, solve) = (pin.value.clone(), pin.text.clone(), pin.solve);
-        if self.pins_read.keeping {
-            self.pins_read.shadowed.extend(passed);
-            if !self.pins_read.taken.contains(&text) {
-                self.pins_read.taken.insert(text.clone());
-            }
+        for other in passed {
+            self.note("pin met", other, String::new());
         }
         if !solve {
             self.note("pinned", text, String::new());

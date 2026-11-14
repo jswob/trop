@@ -442,26 +442,25 @@ pub(super) struct Task {
     pub unwound: Vec<CellId>,
 }
 
-/// The pins an ask's reads chose, by their text, as the register prints them: those a read
-/// took, and those a read met under an inner or narrower claim of the cell (L §4.6's
-/// cascade). Kept while the ask has `with` pins, and not while `explain` derives a
-/// comparison outside the result, which is no read of it (refcore's `ask_pins_taken`,
-/// `ask_pins_shadowed`, `pin_record`). L §8.2 One read set.
+/// An ask's `with` pins, by their text as the register prints them, whose meeting a read
+/// records in its own set: a read that met one under an inner or narrower claim of the cell
+/// (L §4.6's cascade) notes `pin met`, which prints nothing and travels with the result's
+/// reads, a memo cell's and each line's alike. Not while `explain` derives a comparison
+/// outside the result, which is no read of it (refcore's `ask_pin_cells`, `pin_record`).
+/// L §8.2 One read set.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(crate) struct PinsRead {
-    /// Whether the reads are kept now.
+    /// Whether the reads record them now.
     pub(crate) keeping: bool,
-    /// The pins a read took.
-    pub(crate) taken: BTreeSet<String>,
-    /// The pins a read met and didn't take.
-    pub(crate) shadowed: BTreeSet<String>,
+    /// The ask's pins.
+    pub(crate) ask: BTreeSet<String>,
 }
 
 impl PinsRead {
-    /// Whether ask pin `text` is in no read of its result: met only under another claim.
+    /// Whether a read that met pin `text` under another claim records it.
     #[must_use]
-    pub(crate) fn shadowed_only(&self, text: &str) -> bool {
-        self.shadowed.contains(text) && !self.taken.contains(text)
+    pub(crate) fn records(&self, text: &str) -> bool {
+        self.keeping && self.ask.contains(text)
     }
 }
 

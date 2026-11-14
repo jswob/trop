@@ -26,8 +26,8 @@ use super::register::{check_register_lines, register_lines, warning_lines};
 use super::residuals::residual_lines;
 use crate::base::{Code, Load, Place, Reach, Refusal, Req, Run, Warn};
 use crate::eval::{
-    Collected, Ctx, Engine, Entry, Env, Item, Member, Memo, PinsRead, after_on, names_in, num_stop,
-    one_day, past_days, world_named,
+    Collected, Ctx, Engine, Entry, Env, Item, Member, Memo, after_on, names_in, num_stop, one_day,
+    past_days, world_named,
 };
 use crate::model::{Reality, Value};
 use crate::syntax::{Ask, AskBody, Bind, Domain, Expr, Key, Lit, OfQ, Pin, PinForm, Step, Stop};
@@ -532,6 +532,12 @@ fn ask_body(m: &Reality, ask: &Ask, engine: &mut Engine, cut: Day) -> Result<Vec
         engine.ask_cut = inside.cut;
         engine.unpinned = Some(ctx);
         engine.pins_read.keeping = true;
+        engine.pins_read.ask = pinned
+            .entries
+            .iter()
+            .filter(|e| e.word == "pinned")
+            .map(|e| e.text.clone())
+            .collect();
         engine.open_layer(m, inside)?;
         inside
     };
@@ -612,8 +618,7 @@ fn tuple_lines(
         let mut line = form_line(m, ask, engine, &tuple.env, ctx)?;
         out.extend(line.lines(&head));
         line.met.merge(&tuple.brought);
-        line.met
-            .merge(&ask_pins_listed(pinned, &line.met, &engine.pins_read));
+        line.met.merge(&ask_pins_listed(pinned, &line.met));
         let register = match line.laws {
             Some(laws) => check_register_lines(&line.met, ctx, laws)?,
             None => register_lines(&line.met, ctx)?,
@@ -623,16 +628,22 @@ fn tuple_lines(
     Ok(out)
 }
 
-/// The ask's `with` pins and what they read, as a line lists them: an ask pin the line didn't
-/// list, which the ask's reads met only under an inner or narrower claim of its cell (an
-/// `as if`'s pin, a `solve`'s variable; the innermost claim wins, L §4.6), is in no read of
-/// it and isn't listed; a pin no read reaches stays listed, as refcore's walk reads don't
-/// reach a refused result yet (L §8.2 One read set; tally 2.1.7 R7; refcore's `print_line`,
-/// `pin_value`).
-pub(super) fn ask_pins_listed(pinned: &Collected, line: &Collected, read: &PinsRead) -> Collected {
+/// The ask's `with` pins and what they read, as a line lists them: an ask pin the line's
+/// reads didn't take, which its own read set records as met under an inner or narrower claim
+/// of its cell (`pin met`: an `as if`'s pin, a `solve`'s variable; the innermost claim wins,
+/// L §4.6), is in no read of it and isn't listed; a pin no read reaches stays listed, as
+/// refcore's walk reads don't reach a refused result yet (L §8.2 One read set; tally 2.1.7
+/// R7, P45; refcore's `print_line`, `pin_value`).
+pub(super) fn ask_pins_listed(pinned: &Collected, line: &Collected) -> Collected {
     let mut kept = pinned.clone();
-    kept.entries
-        .retain(|e| e.word != "pinned" || line.entries.contains(e) || !read.shadowed_only(&e.text));
+    kept.entries.retain(|e| {
+        let met = Entry {
+            word: "pin met",
+            text: e.text.clone(),
+            figure: String::new(),
+        };
+        e.word != "pinned" || line.entries.contains(e) || !line.entries.contains(&met)
+    });
     kept
 }
 

@@ -2912,3 +2912,20 @@ Three commits: 4f8d6ad (the run half), 35e3be8 (prices at load), and this one (t
 - **What I tried:** found no type printer for an absent sign or an absent `tally`; refcore's twins (`parts.py` l.94, `joint.py` l.480) print `None` the same way, so a change would leave refcore's bytes.
 - **What I ask:** the words for each: e.g. a sub-kind of `places` with no sign refused earlier (`LOAD-PLACEKIND`), or `… keeps parts and states no sign`; a member with no `tally` refused by its own header check before the joint one. Then refcore and the engine change together. The other `"None"` prints the review lists as likely unreachable (`walk/reads.rs:413`, `walk/lows.rs:836`, `ask/walked.rs:465`, `load/random.rs:273`) and `kind_unit(..).unwrap_or("None")` in `load/places.rs:75`, `load/kinds.rs:372` were not in this step.
 - **State:** green; this commit holds the entry.
+
+## 2026-11-14 tally 2.1.7, P44–P45: place kinds whole, per-result ask pins
+
+- **P44** (`load/kinds.rs` `place_kinds_whole`, `syntax/decls.rs` `place_kind`, `load/merge.rs` `check_tally`): a declared place kind whose chain states no unit or no sign rule is `LOAD-PLACEKIND place kind <K> has no unit or sign rule` at its line, a bare `place` too (refcore's c5748f5); a joint model file with no `tally` meets its own header check first, `LOAD-HEADER missing tally version` (8cd7428).
+- **Invariants added, each with its probe** (`tmp/spec-2.1.7-build/r9n/`, refcore and the engine print the same):
+  - `load/parts.rs` a parts kind with no sign: `kind savings: places` + parts clauses → `LOAD-PLACEKIND … (b.tally:10)`;
+  - `load/places.rs` a place's kind with no unit: `kind foo: places` + `place a: foo` → `LOAD-PLACEKIND (p1.tally:9)`; `place a: places` → `LOAD-LEAF a enters places, which has subkinds`;
+  - `load/kinds.rs` an entry's kind with no unit: `foo + [x]` → `LOAD-PLACEKIND (p2.tally:9)`; `places + [x]` → `LOAD-LEAF`;
+  - `load/merge.rs` a tally with no version: a member file with no `tally` → `member a: LOAD-HEADER missing tally version (ana.tally:1)`; a joint file with none → `LOAD-HEADER … (joint.tally:1)` (refcore's `L6_1_joint_header_tally`).
+- **P45 A** (`load/parts.rs` `owns_rows`): the parts check passes over an `owns` row whose keys are no things, printing a key as its type prints it, as refcore does; the review's owns-by-months text gives `tally run: not implemented` (parts at M1), no `ENGINE-INVARIANT`.
+- **P45 B** (`eval/context.rs` `pin_of`, `eval/state.rs` `PinsRead`, `ask/answer.rs` `ask_pins_listed`, `ask/register.rs`): a read that meets an ask pin under another claim notes `pin met` in its own read set (no view prints it); a line drops an ask pin its own set met and didn't take. The per-ask record of my P41 commit goes (refcore's 179ff92).
+- **`load/decls.rs:284`:** refcore prints `… is defined for every key (L §5.7)` there too (`loader.py` l.900): the bytes already agree; nothing changed.
+- **Correction to the last entry:** `walk/value.rs:135` and `:213` still build `LOAD-PRICE` (through `Load::at_run`, which maps only Unit, Domain and Key), and `eval/convert.rs:173` keeps its own `refuse_load`. No probe reaches them after P41's load check; they go to the follow-ups with refcore's 49 `LOAD-*` run sites (F4).
+- **Left for the hand-off** (the step's budget): the `"None"` prints at `walk/reads.rs:418`, `walk/lows.rs:836` (a left-out move's first day), `ask/walked.rs:465` (a lifespan's start), `load/random.rs:273` (a discrete with no bind), each still to print with its type's printer or become a probed invariant.
+- **Turned green (5, 366116b's `Logged-Red:`):** `r9/l5_7_kind_parts`, `r9/l5_7_kind_places_alone`, `r9/l5_7_kind_place_bare`, `r7/p45_fanout_pin_one_line`, `fixes/g14/r_p_base_with_r_p_asks`. **Gating:** 0 red.
+- **Sweep:** refcore's side rebuilt whole; none SAME → DIFF; 4 DIFF → SAME (refcore's new `L5_7_place_kind_bare`, `_no_unit_sign`, `L6_1_joint_header_tally`, `L8_2_fanout_ask_pin_per_line`); no `ENGINE-INVARIANT`.
+- **Size:** 196 changed lines (134 added, 62 removed). **Exceptions:** +0. **Check:** `check commit: green, 23 steps`, on each commit's own tree.
