@@ -20,7 +20,7 @@ use std::collections::BTreeMap;
 use crate::base::{Code, Load, Refusal};
 use crate::eval::{Collected, Engine, Entry, Rows};
 use crate::hole::{Hole, spread};
-use crate::model::{GapRole, Reality, RowInstant, Shown, Ty, Unit, World};
+use crate::model::{GapRole, Reality, RowInstant, World};
 use crate::num::Num;
 use crate::read::row_known;
 use crate::syntax::{Edge, Stop};
@@ -71,7 +71,8 @@ type Kept = (Day, Day, Edge, crate::model::Row);
 /// A row load left without its version; `NotBuilt` for a reading `after` a movement or at a
 /// day with no edge, and for a place of unit `any`.
 pub fn readings(m: &Reality, (cut, world): (Day, World), rows: Rows) -> Result<Vec<Seen>, Stop> {
-    let mut cands: BTreeMap<(String, String, String), Vec<Kept>> = BTreeMap::new();
+    // a place of unit `any` holds a reading per unit (L §4.6): a row's key holds its unit
+    let mut cands: BTreeMap<(String, String, String, Option<String>), Vec<Kept>> = BTreeMap::new();
     for input in ["opening", "stated"] {
         let Some(info) = m.inputs.get(input) else {
             continue;
@@ -97,7 +98,16 @@ pub fn readings(m: &Reality, (cut, world): (Day, World), rows: Rows) -> Result<V
                     ));
                 }
             };
-            let key = (place.clone(), instant_text(day, edge), input.to_owned());
+            let unit = m
+                .reading_ty(place, &row.value)
+                .map_err(crate::eval::num_stop)?
+                .map(|(unit, _)| unit);
+            let key = (
+                place.clone(),
+                instant_text(day, edge),
+                input.to_owned(),
+                unit,
+            );
             cands
                 .entry(key)
                 .or_insert_with(Vec::new)
@@ -105,7 +115,7 @@ pub fn readings(m: &Reality, (cut, world): (Day, World), rows: Rows) -> Result<V
         }
     }
     let mut out = Vec::with_capacity(cands.len());
-    for ((place, instant, input), rows_at) in cands {
+    for ((place, instant, input, _), rows_at) in cands {
         let Some((_, day, edge, row)) = standing(m, rows_at) else {
             continue;
         };
@@ -227,18 +237,15 @@ fn reading_of(
     instant: &str,
     row: &crate::model::Row,
 ) -> Result<Option<Reading>, Stop> {
-    let unit = m
-        .things
-        .get(place)
-        .and_then(|t| m.place_unit(t))
-        .filter(|u| u != "any")
-        .ok_or(Stop::NotBuilt("a reading of a place of unit any"))?;
-    let ty = if m.currencies.contains_key(&unit) {
-        Ty::Money(unit.clone())
-    } else {
-        let u = Unit::make(vec![(unit.clone(), 1)]).map_err(crate::eval::num_stop)?;
-        Ty::Num(u, Shown::Plain)
-    };
+    if row.value == crate::syntax::Value::None {
+        return Ok(None);
+    }
+    let (unit, ty) = m
+        .reading_ty(place, &row.value)
+        .map_err(crate::eval::num_stop)?
+        .ok_or(Stop::NotBuilt(
+            "a reading whose unit neither its place nor its row states",
+        ))?;
     let mut coll = Collected::default();
     coll.versions.insert(row.version.clone());
     if let Some(reason) = &row.assumed {

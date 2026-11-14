@@ -22,8 +22,8 @@ use super::windows::{as_read, one_day};
 use crate::base::{Load, Run};
 use crate::hole::Hole;
 use crate::model::{
-    BindInfo, Class, Domain, InputInfo, KeyVal, Number, Reality, Row, RowInstant, TimePos, Unit,
-    Value,
+    BindInfo, Class, Domain, InputInfo, KeyVal, Number, Pat, Reality, Row, RowInstant, TimePos,
+    Unit, Value,
 };
 use crate::read::{Asked, Clocks, Found, held, origin, read_input, read_last, time_point};
 use crate::syntax::{Call, Expr, Stop, Value as Written};
@@ -676,10 +676,20 @@ fn row_value(
     (input, row, keys): (&InputInfo, &Row, &[KeyVal]),
     figure: &str,
 ) -> Result<Value, Stop> {
-    let ty = input
-        .ty
-        .as_ref()
-        .ok_or(Stop::NotBuilt("the value of an observed row"))?;
+    let reading;
+    let ty = match (&input.ty, input.reading, row.pattern.first()) {
+        (Some(ty), ..) => ty,
+        // a balance reading's value is a quantity in its place's unit, or the unit its row
+        // states at a place of unit `any` (L §4.6 Readings, §5.19)
+        (None, true, Some(Pat::Key(KeyVal::Thing(place)))) => {
+            reading = m.reading_ty(place, &row.value).map_err(num_stop)?;
+            match &reading {
+                Some((_, ty)) => ty,
+                None => return Err(Stop::NotBuilt("the value of a reading of no unit")),
+            }
+        }
+        (None, ..) => return Err(Stop::NotBuilt("the value of an observed row")),
+    };
     let of = ConvertFor::row(&input.unit_factor, ty, &input.binds, &row.pattern);
     let value = match convert_read(m, &row.value, ty, &input.id, &of)? {
         Converted::Hole(text) => Value::Hole(Hole::asked(&text, figure)),

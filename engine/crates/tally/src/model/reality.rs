@@ -406,6 +406,45 @@ impl Reality {
         }
     }
 
+    /// The unit and type of a balance reading of place `place` whose row states `value`: a
+    /// quantity in the place's unit, money where it is a currency; at a place of unit `any`,
+    /// in the one unit its row states, which load checked; none where the place has no unit,
+    /// or the row of a place of unit `any` states none (a hole, `none`) (refcore's
+    /// `place_value`). L §4.6 Readings, §5.19, §5.7.
+    ///
+    /// # Errors
+    ///
+    /// A number error of the unit's power.
+    pub fn reading_ty(
+        &self,
+        place: &str,
+        value: &crate::syntax::Value,
+    ) -> Result<Option<(String, Ty)>, crate::num::NumError> {
+        let Some(unit) = self.things.get(place).and_then(|t| self.place_unit(t)) else {
+            return Ok(None);
+        };
+        let unit = if unit == "any" {
+            let crate::syntax::Value::Lit(crate::syntax::Lit::Num(number)) = value else {
+                return Ok(None);
+            };
+            let Some([term]) = number.unit.as_ref().map(|u| u.terms.as_slice()) else {
+                return Ok(None);
+            };
+            term.base.clone()
+        } else {
+            unit
+        };
+        let ty = if self.currencies.contains_key(&unit) {
+            Ty::Money(unit.clone())
+        } else {
+            Ty::Num(
+                super::unit::Unit::make(vec![(unit.clone(), 1)])?,
+                super::ty::Shown::Plain,
+            )
+        };
+        Ok(Some((unit, ty)))
+    }
+
     /// How a price input of type `ty` values a place: `num CUR` (or `money CUR`) whole, `num
     /// CUR/u` per unit u, else not a price (refcore's `m_resolve_price`, its type test).
     /// L §5.10.
