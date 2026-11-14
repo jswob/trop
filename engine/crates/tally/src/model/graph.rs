@@ -272,6 +272,10 @@ pub struct Graph {
     pub from_decisions: BTreeSet<Node>,
     /// The walk-bound defs: they reach a mark and a decision reaches them (E §3.1 step 7).
     pub walk_bound: BTreeSet<String>,
+    /// Whether a read states `windows each` (a projection's, a `low`'s): every ask line runs
+    /// once per sub-window combination such a read meets, the read taking the run's choice
+    /// (L §4.4 "for that read"; refcore's `read_each`).
+    pub read_each: bool,
     /// Each decision's decisions to act after (E §3.1 step 8).
     pub after: BTreeMap<String, BTreeSet<String>>,
     /// The cycles of decisions no written order breaks, each one stratum, ordered at run.

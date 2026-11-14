@@ -44,6 +44,24 @@ impl Engine {
     /// `LOAD-READS` for `bal(x)` outside a decision; `LOAD-UNIT` for a unit a place doesn't
     /// hold; the refusals of the walk; `NotBuilt` for what S doesn't build.
     pub(crate) fn bal(&mut self, m: &Reality, b: &Bal, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
+        // a projection's own `windows each` holds for that read: the line's run's choice
+        // (L §4.4)
+        let inside = if b.proj.windows_each {
+            self.read_windows(ctx)?
+        } else {
+            None
+        };
+        let Some(inside) = inside else {
+            return self.bal_read(m, b, env, ctx);
+        };
+        self.open_layer(m, inside)?;
+        let v = self.bal_read(m, b, env, inside);
+        self.end_layer(inside.layer, v.as_ref().err())?;
+        v
+    }
+
+    /// [`Engine::bal`] in context `ctx`, a projection's own clause taken. L §5.10, §5.14.1.
+    fn bal_read(&mut self, m: &Reality, b: &Bal, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
         let place = match self.place_arg(m, &b.place, env, ctx)? {
             Err(h) => return Ok(Value::Hole(h)),
             Ok(p) => p,
@@ -57,9 +75,6 @@ impl Engine {
         }
         if b.modelled {
             return Err(Stop::NotBuilt("a modelled balance (the ledger)"));
-        }
-        if b.proj.windows_each {
-            return Err(Stop::NotBuilt("`windows each` on a balance read"));
         }
         let Some(day_arg) = b.args.last() else {
             let Some(at) = ctx.at else {

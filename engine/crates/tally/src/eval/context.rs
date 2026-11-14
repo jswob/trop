@@ -131,6 +131,9 @@ pub(crate) struct LayerData {
     /// `windows each`'s choice in force: the day each window met takes, by the window's
     /// identity, in the order met; none where no `windows each` holds (L §4.4).
     pub(super) windows: Option<Choice>,
+    /// The choice of a run of a line that reaches a read stating `windows each`: only such a
+    /// read takes it (L §4.4 "for that read"; refcore's `each-read` assignment).
+    pub(super) read_windows: Option<Choice>,
 }
 
 /// One run of a `windows each` line: the day each window it met takes, by the window's
@@ -157,6 +160,7 @@ impl LayerData {
             && self.wording.is_empty()
             && self.axes.is_empty()
             && self.windows.is_none()
+            && self.read_windows.is_none()
     }
 
     /// Whether every pin, wording pin and axis option of this layer is one of `other`'s.
@@ -168,6 +172,7 @@ impl LayerData {
                 .iter()
                 .all(|(axis, option)| other.axes.get(axis) == Some(option))
             && (self.windows.is_none() || self.windows == other.windows)
+            && (self.read_windows.is_none() || self.read_windows == other.read_windows)
     }
 
     /// Whether `pin` is one of the layer's pins, by target and value.
@@ -181,6 +186,7 @@ impl LayerData {
             && self.wording.len() == other.wording.len()
             && self.axes.len() == other.axes.len()
             && self.windows == other.windows
+            && self.read_windows == other.read_windows
             && self.within(other)
     }
 
@@ -216,6 +222,7 @@ impl LayerData {
             // a window is a value, not an item of the graph: which cells read one is known
             // only at run, so the choice stays in every context it holds (E §3.2)
             windows: self.windows.clone(),
+            read_windows: self.read_windows.clone(),
         }
     }
 
@@ -622,6 +629,44 @@ impl Engine {
         data.windows = Some(choice.clone());
         let layer = self.intern(data)?;
         Ok(Ctx { layer, ..ctx })
+    }
+
+    /// Context `ctx` under the choice `choice` of a run of a line that reaches a read stating
+    /// `windows each`: only that read takes it ([`Engine::read_windows`]). L §4.4.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a freed layer.
+    pub(crate) fn with_read_windows(&mut self, ctx: Ctx, choice: &Choice) -> Result<Ctx, Stop> {
+        let mut data = self.layer_data(ctx.layer)?.clone();
+        data.read_windows = Some(choice.clone());
+        let layer = self.intern(data)?;
+        Ok(Ctx { layer, ..ctx })
+    }
+
+    /// The context a read stating `windows each` is read in: the line's run's choice, taken
+    /// by that read; none where the line's own clause holds already (L §4.4 "for that read";
+    /// refcore's `proj_clauses`).
+    ///
+    /// # Errors
+    ///
+    /// `NotBuilt` for a line that runs no loop for the read (a `diff`, a ledger);
+    /// `ENGINE-INVARIANT` for a freed layer.
+    pub(crate) fn read_windows(&mut self, ctx: Ctx) -> Result<Option<Ctx>, Stop> {
+        let data = if ctx.layer.is_base() {
+            LayerData::default()
+        } else {
+            self.layer_data(ctx.layer)?.clone()
+        };
+        if data.windows.is_some() {
+            return Ok(None);
+        }
+        let Some(choice) = data.read_windows else {
+            return Err(Stop::NotBuilt(
+                "a read's `windows each` on a line that runs no loop for it",
+            ));
+        };
+        self.with_windows(ctx, &choice).map(Some)
     }
 
     /// Whether a `windows each` holds in context `ctx`, so a window met there takes one day

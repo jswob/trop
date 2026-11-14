@@ -64,7 +64,7 @@ pub(super) fn each_lines(
     } else {
         // the tuples are bound once, outside the runs: a window met there takes its first
         // day (refcore's `members` under the line's empty choice)
-        let bind_ctx = engine.with_windows(ctx, &Vec::new())?;
+        let bind_ctx = under(engine, ask, ctx, &Vec::new())?;
         engine.open_layer(m, bind_ctx)?;
         let members = engine.tuples(m, &ask.binds, bind_ctx);
         engine.end_layer(bind_ctx.layer, members.as_ref().err())?;
@@ -222,6 +222,17 @@ fn meets_all(choice: &Choice, all: &BTreeSet<&str>) -> bool {
     choice.len() == all.len() && choice.iter().all(|(id, _)| all.contains(id.as_str()))
 }
 
+/// Context `ctx` under choice `choice`: every read of the line takes it where the line
+/// states `windows each`, else only the reads that state it (refcore's `each` and
+/// `each-read` modes). L §4.4.
+fn under(engine: &mut Engine, ask: &Ask, ctx: Ctx, choice: &Choice) -> Result<Ctx, Stop> {
+    if ask.windows_each {
+        engine.with_windows(ctx, choice)
+    } else {
+        engine.with_read_windows(ctx, choice)
+    }
+}
+
 /// One run of the line under choice `choice`: its result and the windows it met that the
 /// choice names no day of, in the order met. L §4.4.
 fn run_once(
@@ -247,7 +258,7 @@ fn run_inside(
     (env, ctx): (&Env, Ctx),
     choice: &Choice,
 ) -> Result<Printed, Stop> {
-    let inside = engine.with_windows(ctx, choice)?;
+    let inside = under(engine, ask, ctx, choice)?;
     engine.open_layer(m, inside)?;
     let line = form_line(m, ask, engine, env, inside);
     engine.end_layer(inside.layer, line.as_ref().err())?;

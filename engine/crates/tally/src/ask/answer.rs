@@ -667,7 +667,8 @@ fn tuple_lines(
     engine: &mut Engine,
     (ctx, pinned): (Ctx, &Collected),
 ) -> Result<Vec<String>, Stop> {
-    if ask.windows_each {
+    if ask.windows_each || m.graph.read_each {
+        // the line's clause, or a read's the line may reach: one run per sub-window (L §4.4)
         return super::windows::each_lines(m, ask, engine, (ctx, pinned));
     }
     if let Some(axes) = Axes::of(m, ask)? {

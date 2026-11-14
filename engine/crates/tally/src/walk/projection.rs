@@ -110,7 +110,7 @@ impl Engine {
     /// `RUN-EMPTY` for a window with no day (b before a: L §5.11, `min` over no keys);
     /// `RUN-DOMAIN` for a first day before the projection's start, a start that isn't a day;
     /// `LOAD-UNIT` for a place of unit `any`; `RUN-FUTURE` for a decision's projection from a
-    /// later day; the refusals of the walk; `NotBuilt` for `windows each`.
+    /// later day; the refusals of the walk.
     pub(crate) fn low(
         &mut self,
         m: &Reality,
@@ -118,6 +118,23 @@ impl Engine {
         env: &Env,
         ctx: Ctx,
     ) -> Result<Value, Stop> {
+        // its own `windows each` holds for that read: the line's run's choice (L §4.4)
+        let inside = if read.proj.windows_each {
+            self.read_windows(ctx)?
+        } else {
+            None
+        };
+        let Some(inside) = inside else {
+            return self.low_read(m, read, env, ctx);
+        };
+        self.open_layer(m, inside)?;
+        let v = self.low_read(m, read, env, inside);
+        self.end_layer(inside.layer, v.as_ref().err())?;
+        v
+    }
+
+    /// [`Engine::low`] in context `ctx`, its own clause taken. L §5.14.1, E §4.3.
+    fn low_read(&mut self, m: &Reality, read: &Low, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
         let place = match self.place_arg(m, &read.place, env, ctx)? {
             Err(h) => return Ok(Value::Hole(h)),
             Ok(p) => p,
@@ -134,9 +151,6 @@ impl Engine {
         if last < first {
             // `min(bal(x, d) … for d in a .. b step 1 day)` over no day: its terms are never read
             return Err(refuse(Run::Empty, "low over no keys".to_owned()));
-        }
-        if read.proj.windows_each {
-            return Err(Stop::NotBuilt("`windows each` on a balance read"));
         }
         let start = match &read.proj.from {
             None => None,
