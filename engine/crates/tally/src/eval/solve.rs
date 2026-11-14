@@ -186,13 +186,21 @@ impl Engine {
             Sign::Of(sign) => sign,
         };
         if at_lo == at_hi {
+            // each end as v's type takes it, a bare figure included (refcore's `fmt` of the
+            // typed literal)
+            let ends = [(&lo, &form.lo, &lq), (&hi, &form.hi, &hq)];
+            let mut shown = Vec::with_capacity(ends.len());
+            for (end, written, q) in ends {
+                let typed = if bare(written) {
+                    target.grid.value(m, q)?
+                } else {
+                    end.clone()
+                };
+                shown.push(typed.text(m).map_err(num_stop)?);
+            }
             return Err(refuse(
                 Run::Solve,
-                format!(
-                    "no sign change on [{}, {}]",
-                    lo.text(m).map_err(num_stop)?,
-                    hi.text(m).map_err(num_stop)?
-                ),
+                format!("no sign change on [{}]", shown.join(", ")),
             ));
         }
         // step 2: halve [low, high] on the grid while it holds more than one step; F(low)
