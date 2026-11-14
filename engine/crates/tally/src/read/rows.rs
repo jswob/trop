@@ -454,17 +454,20 @@ pub struct KnownInside {
     pub sid: String,
 }
 
-/// The rows of `rows` a read at `keys` meets, as [`candidates`] tests them, whose `known` is
-/// a window holding the read's cut: its first day on or before the cut, its last after it
-/// (refcore's `visible`, its undecided case). L §4.5, §4.6 step 1.
+/// The rows of `rows` a read at `keys` by time test `test` meets, as [`candidates`] tests
+/// them but for the cut, whose `known` is a window holding the read's cut: its first day on
+/// or before the cut, its last after it. A row that doesn't apply at the read's time changes
+/// nothing the read sees, so it is none of them (L §4.5, §4.6 step 1; E §5 step 1).
 ///
 /// # Errors
 ///
-/// `ENGINE-INVARIANT` for a row whose version is missing.
+/// `ENGINE-INVARIANT` for a row whose version is missing, and as [`candidates`] for a dated
+/// row read with no law date.
 pub fn known_inside(
     m: &Reality,
     rows: &[Row],
     (binds, keys): (&[BindInfo], &[KeyVal]),
+    test: Test,
     clocks: Clocks,
 ) -> Result<Vec<KnownInside>, Stop> {
     let mut out = Vec::new();
@@ -483,6 +486,7 @@ pub fn known_inside(
             && m.scenarios.sees(clocks.world, Some(&row.version))
             && row_matches(m, row, binds, keys)
             && unstated_ok(m, row, (binds, keys), clocks.world)?
+            && in_time(m, row, test, clocks.cut)?
         {
             out.push(KnownInside { at, window, sid });
         }

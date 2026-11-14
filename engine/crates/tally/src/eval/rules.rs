@@ -650,7 +650,7 @@ impl Engine {
         let binds = (def.binds.as_slice(), keys);
         // a given known in a window that holds the cut: the line's `windows each` decides
         // it, else the read is `HOLE-IMPRECISE` (L §4.5)
-        let inside = known_inside(m, &def.givens, binds, clocks)?;
+        let inside = known_inside(m, &def.givens, binds, Test::At(ctx.law), clocks)?;
         let hidden = match self.hidden_rows(&inside, ctx)? {
             Err(h) => return Ok(Some(Value::Hole(h))),
             Ok(hidden) => hidden,

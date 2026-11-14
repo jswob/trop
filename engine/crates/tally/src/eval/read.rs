@@ -26,8 +26,8 @@ use crate::model::{
     Unit, Value,
 };
 use crate::read::{
-    Asked, Clocks, Found, KnownInside, held, known_inside, last_began, origin, read_input,
-    read_last, standing_rows, time_point,
+    Asked, Clocks, Found, KnownInside, Test, held, known_inside, last_began, need_law, origin,
+    read_input, read_last, standing_rows, time_point,
 };
 use crate::syntax::{Call, Expr, Stop, Value as Written};
 use crate::time::{Day, PeriodKind};
@@ -177,9 +177,11 @@ impl Engine {
             id: input.id.clone(),
             keys: keys.to_vec(),
         });
+        // every row's span, the ones a known window hides included, decides the read's class
+        let by_law = self.read_class(m, input, ctx, asked)?;
         // a row known in a window that holds the cut: the line's `windows each` decides it,
         // else the read is `HOLE-IMPRECISE` (L §4.5)
-        let view = match self.input_view(m, input, keys, ctx)? {
+        let view = match self.input_view(m, input, keys, None, ctx)? {
             Err(h) => return Ok(Value::Hole(h)),
             Ok(view) => view,
         };
@@ -187,7 +189,6 @@ impl Engine {
             Some(seen) => seen,
             None => input,
         };
-        let by_law = self.read_class(m, input, ctx, asked)?;
         let found = read_input(m, input, keys, clocks, asked)?;
         if by_law && !matches!(found, Found::Row(_)) {
             // a thing's lifespan or the question's text: the day itself (L §4.6 step 5)
@@ -215,23 +216,39 @@ impl Engine {
         }
     }
 
-    /// Input `input` as a read at `keys` in `ctx` sees its rows: a row whose `known` window
-    /// holds the cut is left out where the line's choice puts its day after the cut; none
-    /// where every row stands; the hole where no `windows each` decides one (refcore's
-    /// `row_visible`, `known_vis`). L §4.5, §4.4.
+    /// Input `input` as a read at `keys` in `ctx` sees its rows, a read at its law date or,
+    /// for `last(x, d)` and `since`, on or before day `past`: a row whose `known` window
+    /// holds the cut and that applies at the read's time is left out where the line's choice
+    /// puts its day after the cut; none where every row stands; the hole where no `windows
+    /// each` decides one (refcore's `row_visible`, `known_vis`). L §4.5, §4.4, §4.6 step 1.
     ///
     /// # Errors
     ///
-    /// `ENGINE-INVARIANT` for a freed layer or a row whose version is missing.
+    /// `ENGINE-INVARIANT` for a freed layer or a row whose version is missing; as
+    /// [`read_input`] for a dated read with no law date.
     pub(super) fn input_view(
         &mut self,
         m: &Reality,
         input: &InputInfo,
         keys: &[KeyVal],
+        past: Option<Day>,
         ctx: Ctx,
     ) -> Result<Result<Option<InputInfo>, Hole>, Stop> {
         let clocks = self.clocks(ctx, &input.id)?;
-        let inside = known_inside(m, &input.rows, (&input.binds, keys), clocks)?;
+        let test = match past {
+            Some(day) => Test::Last(day),
+            // a reading stands from its instant on (L §4.6 Readings)
+            None if input.reading => match clocks.law {
+                Some(day) => Test::Last(day),
+                None => Test::At(None),
+            },
+            None => {
+                let point = time_point(input, keys, clocks.law)?;
+                need_law(m, input, point.day)?;
+                Test::At(point.day)
+            }
+        };
+        let inside = known_inside(m, &input.rows, (&input.binds, keys), test, clocks)?;
         let hidden = match self.hidden_rows(&inside, ctx)? {
             Err(h) => return Ok(Err(h)),
             Ok(hidden) => hidden,
@@ -477,7 +494,7 @@ impl Engine {
         });
         // a row known in a window that holds the cut: the line's `windows each` decides it,
         // else the read is `HOLE-IMPRECISE` (L §4.5)
-        let view = match self.input_view(m, input, &keys, ctx)? {
+        let view = match self.input_view(m, input, &keys, Some(day), ctx)? {
             Err(h) => return Ok(Err(Value::Hole(h))),
             Ok(view) => view,
         };
