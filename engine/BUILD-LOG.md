@@ -2873,3 +2873,18 @@ Three commits: 4f8d6ad (the run half), 35e3be8 (prices at load), and this one (t
 - **Sweep:** none SAME → DIFF; 3 asks DIFF → SAME over S8's; no new `ENGINE-INVARIANT`.
 - **Size:** 62 changed lines (36 added, 26 removed). **M1 code replaced:** the two placeless refusals. **Exceptions:** +0.
 - **Check:** `check commit: green, 23 steps`.
+
+## 2026-11-14 tally 2.1.7, S10: a written literal takes no parentheses (issue #113, pick P29)
+
+- **Written literals read as written** (L §2.3; `syntax/parse.rs` `lit`, `lit_unsigned`): a row's keys, an index's and a key list's keys, a `governs`, a header's `on`, a version's `known` and an instant's day take no expression, so `(2026)` there is `LOAD-PARSE cannot parse: expected a literal, got (` (refcore's `lit`). An expression's brackets are untouched (R10 reaches through them). The builder's own format case for a `same` side's keys follows: `fee[(a1)]` is refused, as refcore does.
+- **Turned green (3):** `carried/years/p_governs`, `p_list`, `p_row_key`. Gating: 28 of the 287 still red (and the 4 rows of the second STOP-REPORT).
+- **Sweep:** none SAME → DIFF, none DIFF → SAME over S9's; no new `ENGINE-INVARIANT`.
+- **Size:** 40 changed lines (8 added, 32 removed). **M1 code replaced:** `paren_lit` (pre-M1's P6, M1's P12). **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps`.
+
+## 2026-11-14 tally 2.1.7, the builder's close
+
+- **All 18 items built** (P38): S1, R5, R1, R2, R3, R4, R6, R7, R9, R10 (nothing), B1, B3 (nothing), S4, S5, S7 (nothing), S8, S9, S10; R8's engine part and S2 are M2's (P2, P34).
+- **Still red (32):** 28 of the 287 and the 4 rows of the second STOP-REPORT (`fixes/g13/fix_i3_…_i3`, `_i4`, `fixes/g13/r_agent_w_…_i1`, `_i2`). Of the 28: the fourth STOP-REPORT's 9 (`fixes/g12/…order_order`, the feed2/feed order), the fifth's 14 (`I:X:…`, refcore's keyed-place rank against L §2.4), the third's 1 (`r5/l5_7_lifespan_of_movement`, the lifespan text), and 4 that wait on what the engine lacks: `r3/l4_4_windows_added_entries` (windows each), `r5/l3_3_accrue_yearly` (accrue), `r7/t_f18` (explain of a movement cause), `s1/e6_3_residuals_after_end`.
+- **Exceptions:** +0 over the round. **Sweep:** no SAME → DIFF at any commit; no new `ENGINE-INVARIANT`.
+- **Check:** `check commit: green, 23 steps`.

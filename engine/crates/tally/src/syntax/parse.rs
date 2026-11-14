@@ -8,7 +8,7 @@
 //!
 //! The expressions are in `expr.rs`, the sections in `item.rs`; both extend this parser.
 
-use super::lex::{Canon, Kind, Line, Mark, Paren, Read, Role, Tok, cannot};
+use super::lex::{Canon, Kind, Line, Mark, Read, Role, Tok, cannot};
 use super::tree::{Known, LSpan, Lit, Number, Site, Unit, UnitTerm};
 use crate::base::{Code, Internal, Load, Place, Reach, Refusal};
 use crate::num::Num;
@@ -726,11 +726,9 @@ impl<'a> P<'a> {
     }
 
     /// A literal: a number with a unit, a date, a key, a code word, `true`/`false`, `inf`;
-    /// a `-` before a number or `inf` is its sign; in parentheses, the literal itself.
+    /// a `-` before a number or `inf` is its sign. A written literal takes no expression,
+    /// so `(2026)` is `LOAD-PARSE` (L §2.3 Written literals).
     pub(super) fn lit(&mut self) -> Result<Lit, Stop> {
-        if self.at("(", 0) {
-            return self.paren_lit(Self::lit);
-        }
         if self.at("-", 0) {
             match self.kind(1) {
                 Some(Kind::Int(_) | Kind::Dec(_)) => {
@@ -748,26 +746,9 @@ impl<'a> P<'a> {
     }
 
     /// A literal with no sign before it (a currency's minor unit, an `sref`'s key, a band
-    /// row's key), in parentheses or not.
+    /// row's key); no parentheses (L §2.3 Written literals).
     pub(super) fn lit_unsigned(&mut self) -> Result<Lit, Stop> {
-        if self.at("(", 0) {
-            return self.paren_lit(Self::lit_unsigned);
-        }
         self.lit_after(Minus::None)
-    }
-
-    /// `( lit )` where a literal stands: a parenthesised literal is that literal (L §2.1;
-    /// the M1 run's picks P6 and P12), `inner` reading it as the position reads a bare one;
-    /// the pair is counted as a bracket (`LOAD-DEPTH`) and marked plain, so the canonical
-    /// form leaves it out (L §2.4).
-    fn paren_lit(&mut self, inner: fn(&mut Self) -> Result<Lit, Stop>) -> Result<Lit, Stop> {
-        self.skip(1)?;
-        self.mark(self.back(), |m| m.paren = Paren::Plain);
-        self.open()?;
-        let lit = inner(self)?;
-        self.expect(")")?;
-        self.close()?;
-        Ok(lit)
     }
 
     /// A literal, after the `-` of `minus` if one was taken.
