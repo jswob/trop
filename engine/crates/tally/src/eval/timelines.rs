@@ -120,18 +120,23 @@ pub(crate) fn combinations(counts: &[usize], cap: usize) -> Option<Vec<Vec<usize
     Some(combos)
 }
 
-/// The refusal of leg `wanted` in every walk of `each`, which must be the same (P48).
+/// The refusal of leg `wanted` in every walk of `each`, which is the same: a read of a leg at a
+/// place the walk guards reaches the balances, so its ask fans out over their axes and reads
+/// it inside its combination; a leg at unguarded places is refused alike in every walk (L §5.5,
+/// tally 2.1.7 R8; P48).
 ///
 /// # Errors
 ///
-/// `NotBuilt` where two walks differ on it, the line being then one per combination.
+/// `NotBuilt` where two walks differ on it, which only a read outside its ask's line meets
+/// (its `law`, `as known` or `with` pins), as an axis read there does (refcore's interpreter
+/// guard).
 fn agreed(each: &[LegRefusals], wanted: &(String, String)) -> Result<Option<Refusal>, Stop> {
     let mut seen: Option<Option<&Refusal>> = None;
     for legs in each {
         let got = legs.get(wanted);
         if seen.is_some_and(|first| first != got) {
             return Err(Stop::NotBuilt(
-                "a leg's refusal that differs by an axis its ask doesn't fan out over",
+                "a leg's refusal that differs by an axis, read outside its ask's line",
             ));
         }
         seen = Some(got);

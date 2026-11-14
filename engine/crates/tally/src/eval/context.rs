@@ -544,16 +544,18 @@ impl Engine {
     ///
     /// # Errors
     ///
-    /// `NotBuilt` for an axis the context sets no option of: read outside the ask's line
-    /// (its `law`, `as known` or `with` pins, which refcore reads without the axes, its
-    /// interpreter guard); `ENGINE-INVARIANT` for a freed layer.
-    pub(super) fn axis_option(&self, axis: &str, ctx: Ctx) -> Result<Value, Stop> {
+    /// `NotBuilt` for an axis the context sets no option of, noted in `unset_axis`: read
+    /// outside the ask's line (its `law`, `as known` or `with` pins, which refcore reads
+    /// without the axes, its interpreter guard), or by an `explain`'s derivation outside its
+    /// pins, which then fans out over it; `ENGINE-INVARIANT` for a freed layer.
+    pub(super) fn axis_option(&mut self, axis: &str, ctx: Ctx) -> Result<Value, Stop> {
         let option = if ctx.layer.is_base() {
             None
         } else {
             self.layer_data(ctx.layer)?.axes.get(axis).cloned()
         };
         let Some(name) = option else {
+            self.unset_axis = Some(axis.to_owned());
             return Err(Stop::NotBuilt(UNSET_AXIS));
         };
         Ok(Value::Key(KeyVal::Key {

@@ -110,6 +110,8 @@ pub(super) fn balance_line(
         text,
         body: body.into_iter().map(|l| format!("  {l}")).collect(),
         bare: false,
+
+        whole: false,
         met,
         laws: None,
     })

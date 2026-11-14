@@ -24,6 +24,8 @@ pub(super) struct Printed {
     /// Whether the head stands alone and the lines under it are the result: `inputs-of`'s
     /// (refcore's `print_line`, its `RowSet`).
     pub bare: bool,
+    /// Whether the lines under the head are part of the result, as a `diff`'s are (L §5.5).
+    pub whole: bool,
     /// The register entries the line met.
     pub met: Collected,
     /// A check's sides' law dates, where a side's own `as if {law D}` makes them differ.
@@ -45,11 +47,12 @@ impl Printed {
     }
 
     /// Whether `other` gives the same result: the same text, and the same lines under a bare
-    /// head (refcore's `Result.key`, `rkey`). L §5.5.
+    /// head or a diff's (refcore's `Result.key`, `rkey`, `diff_print`). L §5.5.
     pub(super) fn same(&self, other: &Printed) -> bool {
         self.text == other.text
             && self.bare == other.bare
-            && (!self.bare || self.body == other.body)
+            && self.whole == other.whole
+            && (!(self.bare || self.whole) || self.body == other.body)
     }
 }
 
@@ -80,6 +83,8 @@ pub(super) fn check_line(
         text,
         body: Vec::new(),
         bare: false,
+
+        whole: false,
         met,
         laws: (laws.0 != laws.1).then_some(laws),
     })

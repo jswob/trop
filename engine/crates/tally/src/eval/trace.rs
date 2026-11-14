@@ -261,25 +261,54 @@ impl Trace {
 
     /// The trace of an ask's line explained under its `with` pins, this trace read inside
     /// them: under the root, the pins with their values, then this derivation with the value
-    /// inside them, then `outside`'s, read outside them, with its value (refcore's
-    /// `explain_pins`). E §10.
+    /// inside them, then each of `outside`'s, read outside them, with its options' tag and its
+    /// value (refcore's `explain_pins`, `outside_of`). E §10, L §5.5.
     ///
     /// # Errors
     ///
     /// `ENGINE-INVARIANT` for a trace past the nodes it can number.
     pub(crate) fn beside_pins(
         mut self,
-        outside: Trace,
+        outside: Vec<(String, Trace, Item)>,
         pins: Vec<String>,
-        (inside_value, outside_value): (Item, Item),
+        inside_value: Item,
     ) -> Result<Trace, Stop> {
+        let mut outer = Vec::with_capacity(outside.len());
+        for (tag, trace, value) in outside {
+            let top = self.taken_in(trace)?;
+            let mut side = Node::new(Kind::Side, format!("outside the pins{tag}"));
+            side.value = Some(value);
+            side.children = top;
+            outer.push(side);
+        }
+        let inside_top = core::mem::take(&mut self.node_mut(ROOT)?.children);
+        let mut group = Node::new(Kind::Group, "the pins, evaluated outside them".to_owned());
+        for line in pins {
+            let pin = Node::new(Kind::Group, format!("pin {line}"));
+            group.children.push(self.add_apart(pin));
+        }
+        let mut inside = Node::new(Kind::Side, "inside the pins".to_owned());
+        inside.value = Some(inside_value);
+        inside.children = inside_top;
+        let mut top = vec![self.add_apart(group), self.add_apart(inside)];
+        for side in outer {
+            top.push(self.add_apart(side));
+        }
+        self.node_mut(ROOT)?.children = top;
+        Ok(self)
+    }
+
+    /// Trace `other`'s nodes taken into this one, each renumbered past this one's: the
+    /// places of the causes its root read.
+    fn taken_in(&mut self, other: Trace) -> Result<Vec<usize>, Stop> {
         let offset = self.nodes.len();
-        let read_outside = &outside.node(ROOT)?.children;
-        let outside_top: Vec<usize> = read_outside
+        let top: Vec<usize> = other
+            .node(ROOT)?
+            .children
             .iter()
             .map(|c| shifted(*c, offset))
             .collect::<Result<_, Stop>>()?;
-        for mut node in outside.nodes {
+        for mut node in other.nodes {
             node.children = node
                 .children
                 .iter()
@@ -291,25 +320,7 @@ impl Trace {
             }
             self.nodes.push(node);
         }
-        let inside_top = core::mem::take(&mut self.node_mut(ROOT)?.children);
-        let mut group = Node::new(Kind::Group, "the pins, evaluated outside them".to_owned());
-        for line in pins {
-            let pin = Node::new(Kind::Group, format!("pin {line}"));
-            group.children.push(self.add_apart(pin));
-        }
-        let mut inside = Node::new(Kind::Side, "inside the pins".to_owned());
-        inside.value = Some(inside_value);
-        inside.children = inside_top;
-        let mut outer = Node::new(Kind::Side, "outside the pins".to_owned());
-        outer.value = Some(outside_value);
-        outer.children = outside_top;
-        let top = vec![
-            self.add_apart(group),
-            self.add_apart(inside),
-            self.add_apart(outer),
-        ];
-        self.node_mut(ROOT)?.children = top;
-        Ok(self)
+        Ok(top)
     }
 }
 

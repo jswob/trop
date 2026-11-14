@@ -9,8 +9,10 @@
 //! Invariants: every id the run names is checked before any ask is answered; the refused
 //! scenarios print first, by id; the asks go by id, then by world, the base's first; an ask
 //! that names scenarios is answered on the reality of the deepest, whose stack holds the
-//! others, each world under it seen with the layers over it hidden; one whose worlds are on two
-//! stacks stops the run `NotBuilt` (refcore's cross evaluation).
+//! others, each world under it seen with the layers over it hidden; the base's diff whose two
+//! worlds are on two stacks is answered side by side, each side in the reality holding its
+//! stack (refcore's `cross_stack_diff`); any other ask whose worlds are on two stacks stops
+//! the run `NotBuilt` (refcore's cross evaluation).
 
 use super::answer::{Answered, How, Turn, answer_turns, no_ask};
 use super::register::warning_lines;
@@ -83,7 +85,7 @@ pub fn answer_worlds(w: &Worlds, asks: &Asks, days: Days, how: How) -> Result<An
             )));
             continue;
         }
-        turns.push(world_turn(w, &named, (*at, world), &ask.id)?);
+        turns.push(world_turn(w, &named, (*at, world), (ask, model))?);
     }
     // the base's reality first, then each loaded scenario's by id, as `world_turn` counts them
     let realities: Vec<&Reality> = core::iter::once(&w.base).chain(w.loaded.values()).collect();
@@ -97,20 +99,24 @@ pub fn answer_worlds(w: &Worlds, asks: &Asks, days: Days, how: How) -> Result<An
 ///
 /// # Errors
 ///
-/// `NotBuilt` for an ask whose worlds are on two stacks of scenarios (refcore's
-/// `cross_stack_diff`, `make_cross`).
+/// `NotBuilt` for an ask other than the base's diff whose worlds are on two stacks of
+/// scenarios (refcore's `make_cross`).
 fn world_turn(
     w: &Worlds,
     named: &BTreeSet<String>,
     (at, own): (Option<usize>, &str),
-    id: &str,
+    (ask, model): (&Ask, &str),
 ) -> Result<Turn, Stop> {
+    let id = ask.id.as_str();
     if named.is_empty() {
         let base_at = at.ok_or_else(|| invariant("a scenario's ask that names no world"))?;
         return Ok(Turn::Ask(0, base_at));
     }
     let deepest = named.iter().find(|world| stack_holds(w, world, named));
     let Some(deepest) = deepest else {
+        if let (AskBody::Diff(diff), true) = (&ask.body, own.is_empty()) {
+            return cross_turn(w, id, [&diff.world, &diff.against], model);
+        }
         return Err(Stop::NotBuilt(
             "an ask whose worlds are on two stacks of scenarios (refcore's cross evaluation)",
         ));
@@ -129,6 +135,54 @@ fn world_turn(
         .checked_add(1)
         .ok_or_else(|| invariant("a count of worlds"))?;
     Ok(Turn::Ask(place, ask_at))
+}
+
+/// The turn of the base's diff `id` whose two worlds `sides` sit on two stacks: each side in
+/// the reality of its own world, else of the first scenario by id whose stack holds it, the
+/// model's in the base's, each as that reality holds the ask (refcore's `run_worlds`, its
+/// `cross_stack_diff`). L §6.4, §5.18.
+///
+/// # Errors
+///
+/// `NotBuilt` where the reality holding a side's stack holds no ask `id` (refcore's own
+/// limit there).
+fn cross_turn(w: &Worlds, id: &str, sides: [&String; 2], model: &str) -> Result<Turn, Stop> {
+    let mut out = Vec::with_capacity(sides.len());
+    for world in sides {
+        let (place, reality) = if world == model {
+            (0, &w.base)
+        } else {
+            let own = w.loaded.iter().position(|(s, _)| s == world);
+            let holding = || {
+                w.loaded
+                    .values()
+                    .position(|m| m.scenarios.over.contains_key(world))
+            };
+            let at = own
+                .or_else(holding)
+                .ok_or_else(|| invariant("a diff's world no loaded stack holds"))?;
+            let reality = w
+                .loaded
+                .values()
+                .nth(at)
+                .ok_or_else(|| invariant("a diff's side past the realities"))?;
+            let place = at
+                .checked_add(1)
+                .ok_or_else(|| invariant("a count of worlds"))?;
+            (place, reality)
+        };
+        let Some(at) = reality.asks.iter().position(|ask| ask.id == id) else {
+            return Err(Stop::NotBuilt(
+                "a diff whose worlds sit on different stacks, asked where one is not loaded",
+            ));
+        };
+        out.push((place, at, world.clone()));
+    }
+    let mut out = out.into_iter();
+    let (Some(ours), Some(theirs), None) = (out.next(), out.next(), out.next()) else {
+        return Err(invariant("a diff with other than two sides"));
+    };
+    Ok(Turn::Cross([ours, theirs]))
 }
 
 /// Whether world `world` is a loaded scenario whose stack holds every world of `named`

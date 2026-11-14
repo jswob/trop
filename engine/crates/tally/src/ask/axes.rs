@@ -31,6 +31,7 @@ use crate::time::Day;
 
 /// The axes an ask fans out over, in id order, each with its options' names in the order
 /// written (refcore's `a._axes` and `m.axes[ax].options`). L §5.5.
+#[derive(Debug)]
 pub(super) struct Axes {
     /// Each axis's id and its options.
     axes: Vec<(String, Vec<String>)>,
@@ -38,7 +39,7 @@ pub(super) struct Axes {
 
 /// One combination of the axes' options: each axis's option by its position, the axes in id
 /// order.
-type Combo = Vec<usize>;
+pub(super) type Combo = Vec<usize>;
 
 /// Each axis's options a line names, by their positions, the axes in id order: one product.
 type Product = Vec<BTreeSet<usize>>;
@@ -54,6 +55,16 @@ impl Axes {
         let Some(ids) = m.graph.ask_axes.get(&ask.id) else {
             return Ok(None);
         };
+        Axes::named(m, ids)
+    }
+
+    /// The axes of ids `ids`, in id order, each with its options; none when `ids` is empty.
+    /// L §5.5.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for an axis load didn't build.
+    pub(super) fn named(m: &Reality, ids: &BTreeSet<String>) -> Result<Option<Axes>, Stop> {
         if ids.is_empty() {
             return Ok(None);
         }
@@ -75,13 +86,18 @@ impl Axes {
     /// # Errors
     ///
     /// `ENGINE-INVARIANT` for more combinations than load lets through.
-    fn combinations(&self) -> Result<Vec<Combo>, Stop> {
+    pub(super) fn combinations(&self) -> Result<Vec<Combo>, Stop> {
         let counts: Vec<usize> = self.axes.iter().map(|(_, options)| options.len()).collect();
         combinations(&counts, 64).ok_or_else(|| invariant("more combinations than load's 64"))
     }
 
+    /// The ids of the axes, in id order.
+    pub(super) fn ids(&self) -> BTreeSet<String> {
+        self.axes.iter().map(|(id, _)| id.clone()).collect()
+    }
+
     /// Combination `combo` as each axis's id with its option's name.
-    fn options_of(&self, combo: &[usize]) -> Result<Vec<(String, String)>, Stop> {
+    pub(super) fn options_of(&self, combo: &[usize]) -> Result<Vec<(String, String)>, Stop> {
         let mut out = Vec::with_capacity(combo.len());
         for ((id, options), at) in self.axes.iter().zip(combo) {
             let option = options
@@ -341,10 +357,26 @@ fn tuple_lines(
         let hole = spread(&operands).ok_or_else(|| invariant("a where's hole that is none"))?;
         return Ok(vec![format!("{head}: {}", hole.text())]);
     }
+    result_lines((axes, combos), &head, &tuple.results, (ctx, pinned))
+}
+
+/// The lines of one head's `results`, each by its combination's place in `combos`: one line
+/// per product of options that give one result, the register under it with the `with` pins'
+/// `pinned` and the line's `reading:` entries (refcore's `group`, `print_line`, `diff_print`).
+/// L §5.5, §8.2.
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for a result past the combinations.
+pub(super) fn result_lines(
+    (axes, combos): (&Axes, &[Combo]),
+    head: &str,
+    results: &[(usize, Printed)],
+    (ctx, pinned): (Ctx, &Collected),
+) -> Result<Vec<String>, Stop> {
     let mut out = Vec::new();
-    for line in grouped(axes, combos, &tuple.results)? {
-        let (_, first) = tuple
-            .results
+    for line in grouped(axes, combos, results)? {
+        let (_, first) = results
             .get(line.first)
             .ok_or_else(|| invariant("a line's result past the results"))?;
         out.extend(first.lines(&format!("{head} [{}]", axes.head(&line.product)?)));

@@ -4,8 +4,9 @@
 //! date), §4.5 (the cut), §5.11 (an ask's `law`, `as known` or pin that is a hole makes the ask
 //! line that hole), §8.2 (the register), §8.4 (a run-time refusal prints as the ask's line),
 //! §8.5 (warnings last), §6.4 (the line's world: its `in`, else the model's; `law` and
-//! `as known` in the model's), §5.5 (an ask that reaches axes fans out, `axes.rs`); E §11
-//! (`REQ-ASK`, tally 2.1.3; `REQ-CLOCK`).
+//! `as known` in the model's), §5.5 (tally 2.1.7 R8: an ask of any form fans out over the
+//! axes it reaches, `axes.rs`; a `diff`'s and a ledger's results are their sets of lines,
+//! `diff.rs`, `residuals.rs`); E §11 (`REQ-ASK`, tally 2.1.3; `REQ-CLOCK`).
 //! Twin: engine/tools/refcore/ask.py (`Asker.run`, `req_ask`, `answer`, `_answer`,
 //! `_answer_in`, `evaluate`, `one`, `one_solve`, `print_line`, `fmt_value`, `fmt_bind`) and
 //! evaluate.py (`date_of`, `apply_pins`); refcore answers an `as known` after `on` where E §11
@@ -20,7 +21,7 @@ use std::collections::BTreeMap;
 
 use super::axes::{Axes, fanned_lines};
 use super::check::{Printed, check_line};
-use super::diff::diff_lines;
+use super::diff::{Cells, cells_lines, crossed, diff_cells, diff_lines};
 use super::explain::{explain_line, inputs_line, readers_line};
 use super::register::{check_register_lines, register_lines, warning_lines};
 use super::residuals::residual_lines;
@@ -58,12 +59,25 @@ struct Seen {
     memo: Memo,
     /// How each ask's engine reads a written projection's common case (E §4.3, P §2.3).
     lows: Lows,
+    /// The side of a diff across two stacks the next ask answers, its cells once answered.
+    side: Option<Side>,
     /// The fault planted in the run while it waits for its day (INTERFACE §4).
     #[cfg(feature = "fault-injection")]
     plant: Option<crate::walk::Fault>,
     /// The engines' counts together.
     #[cfg(feature = "counters")]
     counts: crate::Counters,
+}
+
+/// One side of a diff whose two worlds sit on two stacks of scenarios: the world this
+/// reality's stack holds, and the diff's cells there once its ask is answered (refcore's
+/// `_diff_only`, `_diff_side`). L §6.4.
+#[derive(Debug)]
+struct Side {
+    /// The world.
+    world: String,
+    /// The cells, once answered.
+    cells: Option<Cells>,
 }
 
 /// How a run's engines compute: keeping their cells as `memo` says and reading a written
@@ -113,6 +127,10 @@ impl Answered {
 pub(crate) enum Turn {
     /// The ask at this place of the asks of the reality at this place of the run's.
     Ask(usize, usize),
+    /// A diff whose two worlds sit on two stacks of scenarios: each side, the world compared
+    /// first, by the place of the reality whose stack holds it, its ask's place there and
+    /// the world (refcore's `cross_stack_diff`, L §6.4).
+    Cross([(usize, usize, String); 2]),
     /// A line, printed as it is.
     Line(String),
 }
@@ -201,6 +219,7 @@ pub(crate) fn answer_turns(
                     lines => out.extend(lines?),
                 }
             }
+            Turn::Cross(sides) => out.extend(cross_lines(realities, &mut worlds, sides, days)?),
             Turn::Line(line) => out.push(line.clone()),
         }
         // the fault is planted once per run, whichever world's walk met its day
@@ -234,6 +253,49 @@ pub(crate) fn answer_turns(
     })
 }
 
+/// The lines of a diff whose two worlds sit on two stacks of scenarios: each side answered by
+/// the world of the reality whose stack holds it, as that reality holds the ask, then printed
+/// as one diff, cell by cell over the axes either side reads; a side whose ask is refused or
+/// a hole before its cells prints that line alone (refcore's `cross_stack_diff`). L §6.4,
+/// §5.5, §5.18.
+///
+/// # Errors
+///
+/// A load refusal met at run; `NotBuilt` for a construct not built yet.
+fn cross_lines(
+    realities: &[&Reality],
+    worlds: &mut [World],
+    sides: &[(usize, usize, String); 2],
+    days: Days,
+) -> Result<Vec<String>, Stop> {
+    let mut got = Vec::with_capacity(sides.len());
+    for (place, at, world) in sides {
+        let m = realities.get(*place).ok_or_else(no_turn)?;
+        let gathered = worlds.get_mut(*place).ok_or_else(no_turn)?;
+        gathered.seen.side = Some(Side {
+            world: world.clone(),
+            cells: None,
+        });
+        let lines = gathered.answer(m, *at, days);
+        let side = gathered.seen.side.take();
+        let lines = lines?;
+        match side.and_then(|s| s.cells) {
+            Some(cells) => got.push(cells),
+            None => return Ok(lines),
+        }
+    }
+    let [(place, at, _), _] = sides;
+    let m = realities.get(*place).ok_or_else(no_turn)?;
+    let ask = m.asks.get(*at).ok_or_else(no_turn)?;
+    let AskBody::Diff(diff) = &ask.body else {
+        return Err(no_turn());
+    };
+    let [ours, theirs] = got.as_slice() else {
+        return Err(no_turn());
+    };
+    cells_lines(m, (ask, diff), &crossed(m, (ours, theirs))?)
+}
+
 /// What a world's asks' engines gather, and what its reality holds that the run doesn't take
 /// yet (refcore's `Asker` of a world).
 struct World {
@@ -255,6 +317,7 @@ impl World {
                 booked: BTreeMap::new(),
                 memo: how.memo,
                 lows: how.lows,
+                side: None,
                 #[cfg(feature = "fault-injection")]
                 plant: how.fault,
                 #[cfg(feature = "counters")]
@@ -412,7 +475,7 @@ fn ask_lines(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<
         .with_booked(core::mem::take(&mut seen.booked));
     #[cfg(feature = "fault-injection")]
     engine.plant.clone_from(&seen.plant);
-    let out = ask_body(m, ask, &mut engine, cut);
+    let out = ask_body(m, ask, &mut engine, (cut, seen.side.as_mut()));
     gather(seen, &mut engine);
     let lines = out?;
     // E §9 item 4: asks move no money; the walks the ask made are as they were when walked
@@ -467,9 +530,14 @@ fn gather(seen: &mut Seen, engine: &mut Engine) {
 }
 
 /// One ask's lines from its cut on: its law date, then a line per binding tuple with the
-/// register under it, or the residual ledger (refcore's `_answer`, `_answer_in`). L §5.18,
-/// E §6.3.
-fn ask_body(m: &Reality, ask: &Ask, engine: &mut Engine, cut: Day) -> Result<Vec<String>, Stop> {
+/// register under it, or the residual ledger; for a diff's `side` on one stack, no line, its
+/// cells kept there (refcore's `_answer`, `_answer_in`). L §5.18, E §6.3.
+fn ask_body(
+    m: &Reality,
+    ask: &Ask,
+    engine: &mut Engine,
+    (cut, side): (Day, Option<&mut Side>),
+) -> Result<Vec<String>, Stop> {
     let mut law = None;
     if let Some(e) = &ask.law {
         if names_a_for(ask, e) {
@@ -557,13 +625,17 @@ fn ask_body(m: &Reality, ask: &Ask, engine: &mut Engine, cut: Day) -> Result<Vec
             }
             Ok(vec![readers_line(m, ask, reference)?])
         }
-        // a diff or residuals ask doesn't fan out yet: its lines over the axes it reaches are
-        // unwritten (L §5.5, §5.18; P47, #122)
-        AskBody::Residuals(_) | AskBody::Diff(_) if Axes::of(m, ask)?.is_some() => Err(
-            Stop::NotBuilt("a diff or residuals ask over the axes it reaches"),
-        ),
         AskBody::Residuals(r) => residual_lines(m, ask, r, engine, (ctx, &pinned)),
-        AskBody::Diff(diff) => diff_lines(m, (ask, diff), engine, (ctx, &pinned)),
+        // one side of a diff whose worlds sit on two stacks: its cells, kept for the turn
+        // that prints both (refcore's `_diff_only`, `_diff_side`)
+        AskBody::Diff(diff) => match side {
+            Some(side) => {
+                let cells = diff_cells(m, (ask, diff), engine, (ctx, &pinned), Some(&side.world))?;
+                side.cells = Some(cells);
+                Ok(Vec::new())
+            }
+            None => diff_lines(m, (ask, diff), engine, (ctx, &pinned)),
+        },
     }
 }
 
@@ -667,6 +739,8 @@ pub(super) fn form_line(
                 text: line_values(m, &items)?,
                 body: Vec::new(),
                 bare: false,
+
+                whole: false,
                 met,
                 laws: None,
             })
@@ -678,6 +752,8 @@ pub(super) fn form_line(
                 text: item_text(m, &item)?,
                 body: Vec::new(),
                 bare: false,
+
+                whole: false,
                 met,
                 laws: None,
             })

@@ -580,6 +580,10 @@ pub struct Engine {
     /// The ask line's context outside its `with` pins, where it has any: an `explain`'s
     /// derivation outside them (E §10; refcore's `_outside_ctx`).
     pub(crate) unpinned: Option<Ctx>,
+    /// The axis whose option the last read of an axis found unset, which stopped it
+    /// (`UNSET_AXIS`; refcore's guard's `axis`): an `explain` outside its pins fans out over
+    /// it (E §10, L §5.5).
+    pub(crate) unset_axis: Option<String>,
     /// The pins the ask's reads took, and those they met under an inner or narrower claim:
     /// an ask's `with` pin is listed where a read takes it (L §8.2 One read set).
     pub(crate) pins_read: PinsRead,
@@ -644,6 +648,7 @@ impl Engine {
             keep_rows: Rows::Unkept,
             trace: None,
             unpinned: None,
+            unset_axis: None,
             pins_read: PinsRead::default(),
             bind_texts: BTreeMap::new(),
             #[cfg(feature = "counters")]

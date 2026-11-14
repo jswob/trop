@@ -58,6 +58,8 @@ pub(super) fn instance_line(
         text,
         body: lines?.into_iter().map(|l| format!("  {l}")).collect(),
         bare: false,
+
+        whole: false,
         met,
         laws: None,
     })
