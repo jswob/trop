@@ -682,6 +682,26 @@ impl Engine {
         Ok(self.layer_data(ctx.layer)?.windows.is_some())
     }
 
+    /// The day the line's choice names for window `id` in context `ctx`, where a `windows
+    /// each` holds and names it; none else, so the window's days are listed only for a
+    /// window met newly (L §4.4).
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a freed layer.
+    pub(crate) fn named_day(&self, ctx: Ctx, id: &str) -> Result<Option<Day>, Stop> {
+        if ctx.layer.is_base() {
+            return Ok(None);
+        }
+        let Some(choice) = &self.layer_data(ctx.layer)?.windows else {
+            return Ok(None);
+        };
+        Ok(choice
+            .iter()
+            .find(|(named, _)| named == id)
+            .map(|(_, day)| *day))
+    }
+
     /// The day window `window` takes in context `ctx`, where a `windows each` holds: the day
     /// its choice names, else its first, the window noted as met so the line runs again once
     /// per day of it; none where no `windows each` holds, so the window stays one (refcore's

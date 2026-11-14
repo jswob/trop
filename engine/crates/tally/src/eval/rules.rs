@@ -200,10 +200,17 @@ impl Engine {
         ctx: Ctx,
         w: &Window,
     ) -> Result<Value, Stop> {
+        // once per law-date class: a day its class holds gives what it gave (L §4.4's cost)
         let mut vals = Vec::new();
+        let mut class: Option<LawClass> = None;
         for day in window_days(w)? {
-            let value = self.def_cell(m, def, keys, env, ctx.at_law(Some(day)))?;
-            vals.push(as_read(value, (&def.id, keys), ctx.world()));
+            if class.is_some_and(|c| c.holds(day)) {
+                continue;
+            }
+            let mark = self.open_law_class(day);
+            let value = self.def_cell(m, def, keys, env, ctx.at_law(Some(day)));
+            class = Some(self.close_law_class(mark, day)?);
+            vals.push(as_read(value?, (&def.id, keys), ctx.world()));
         }
         let Some((first, rest)) = vals.split_first() else {
             return Err(invariant("a window with no day"));

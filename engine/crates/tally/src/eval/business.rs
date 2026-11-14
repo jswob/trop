@@ -682,8 +682,12 @@ impl Engine {
         if self.chooses(ctx)? {
             // each entry of each row a read of its own: two rows' entries are two unknowns
             // (L §4.4)
+            let id = format!("calendar {name}#{entry} {}", added.text());
+            if let Some(named) = self.named_day(ctx, &id)? {
+                return Ok(named == day);
+            }
             let window = Met {
-                id: format!("calendar {name}#{entry} {}", added.text()),
+                id,
                 label: format!("added {}", added.text()),
                 days: added
                     .days()

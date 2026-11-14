@@ -83,7 +83,7 @@ impl LawClass {
     }
 
     /// Whether it holds law date `day`.
-    fn holds(self, day: Day) -> bool {
+    pub(crate) fn holds(self, day: Day) -> bool {
         self.from.is_none_or(|f| f <= day) && self.until.is_none_or(|u| day < u)
     }
 
@@ -629,6 +629,34 @@ impl Engine {
             law,
             class: LawClass::all(),
         });
+    }
+
+    /// Opens the class of a computation at law date `day` that is no def cell (a window's
+    /// law dates read once per class, L §4.4's cost line; E §3.2); returns the mark
+    /// [`Engine::close_law_class`] takes.
+    pub(crate) fn open_law_class(&mut self, day: Day) -> usize {
+        let mark = self.frames.len();
+        self.open_class(Some(day));
+        mark
+    }
+
+    /// Closes the class opened at `mark` for law date `day`, and every class a refusal left
+    /// open inside it, and returns it: the law dates that give what the computation gave.
+    /// The cell that holds the computation is narrowed by it where its own law date is
+    /// `day`, as the computation's reads would have narrowed it (E §3.2).
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a class closed with none open at `mark`.
+    pub(crate) fn close_law_class(&mut self, mark: usize, day: Day) -> Result<LawClass, Stop> {
+        let class = self
+            .frames
+            .get(mark)
+            .map(|f| f.class)
+            .ok_or_else(|| invariant("a law date class closed with none open"))?;
+        self.frames.truncate(mark);
+        self.narrow(Some(day), class);
+        Ok(class)
     }
 
     /// Closes the innermost def cell's class and returns it.

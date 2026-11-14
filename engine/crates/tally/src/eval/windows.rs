@@ -359,6 +359,9 @@ impl Engine {
         if !matches!(w.lo, Value::Day(_)) || !self.chooses(ctx)? {
             return Ok(v);
         }
+        if let Some(day) = self.named_day(ctx, &id)? {
+            return Ok(Value::Day(day));
+        }
         let window = Met {
             id,
             label: label.to_owned(),
@@ -385,6 +388,10 @@ impl Engine {
         if !self.chooses(ctx)? {
             return Ok(None);
         }
+        let id = format!("known {sid}");
+        if let Some(day) = self.named_day(ctx, &id)? {
+            return Ok(Some(day <= ctx.cut));
+        }
         let mut days = vec![lo];
         let mut day = lo;
         while day < hi {
@@ -392,7 +399,7 @@ impl Engine {
             days.push(day);
         }
         let window = Met {
-            id: format!("known {sid}"),
+            id,
             label: format!("known of {sid}"),
             days,
         };

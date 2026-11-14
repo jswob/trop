@@ -15,7 +15,7 @@
 
 use super::tuples::{Law, Tuple, imprecise_law};
 use crate::base::{Code, Load, Refusal, Run};
-use crate::eval::{Collected, Ctx, Engine, Env, order_text, thing_seen};
+use crate::eval::{Collected, Ctx, Engine, Env, LawClass, order_text, thing_seen};
 use crate::hole::{Hole, spread};
 use crate::model::{
     Domain, KeyVal, MoveInfo, Node, NodeKind, Number, Reality, Value, World, currency_id,
@@ -1145,17 +1145,37 @@ impl Engine {
         inst: &Inst,
         tctx: Ctx,
     ) -> Result<Value, Stop> {
-        let first = self.ev(m, &mv.decl.on, &inst.env, tctx.at_law(inst.law.first()))?;
-        let Some(window) = inst.law.window() else {
-            return Ok(first);
+        let (Some(window), Some(day)) = (inst.law.window(), inst.law.first()) else {
+            return self.ev(m, &mv.decl.on, &inst.env, tctx.at_law(inst.law.first()));
         };
-        for day in inst.law.rest() {
-            let other = self.ev(m, &mv.decl.on, &inst.env, tctx.at_law(Some(*day)))?;
+        // once per law-date class: a day its class holds gives what it gave (L §4.4's cost)
+        let (first, mut class) = self.on_at(m, mv, inst, (tctx, day))?;
+        for at in inst.law.rest() {
+            if class.holds(*at) {
+                continue;
+            }
+            let (other, next) = self.on_at(m, mv, inst, (tctx, *at))?;
             if other != first {
                 return Ok(Value::Hole(imprecise_law(window, &inst.id)));
             }
+            class = next;
         }
         Ok(first)
+    }
+
+    /// An instance's `on` read at law date `day`, with the law dates that give the same
+    /// (E §3.2). L §4.3, §5.14 `at e`.
+    fn on_at(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        inst: &Inst,
+        (tctx, day): (Ctx, Day),
+    ) -> Result<(Value, LawClass), Stop> {
+        let mark = self.open_law_class(day);
+        let value = self.ev(m, &mv.decl.on, &inst.env, tctx.at_law(Some(day)));
+        let class = self.close_law_class(mark, day);
+        Ok((value?, class?))
     }
 
     /// An instance's body at its law date in context `ctx`, its cut set, from its tuple's
@@ -1174,12 +1194,16 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Body, Stop> {
         let exists = inst.exists.clone();
-        let first = self.inst_body(m, mv, inst, ctx.at_law(inst.law.first()), exists.clone())?;
-        let Some(window) = inst.law.window() else {
-            return Ok(first);
+        let (Some(window), Some(day)) = (inst.law.window(), inst.law.first()) else {
+            return self.inst_body(m, mv, inst, ctx.at_law(inst.law.first()), exists);
         };
-        for day in inst.law.rest() {
-            let other = self.inst_body(m, mv, inst, ctx.at_law(Some(*day)), exists.clone())?;
+        // once per law-date class: a day its class holds gives what it gave (L §4.4's cost)
+        let (first, mut class) = self.body_at(m, mv, inst, (ctx, day))?;
+        for at in inst.law.rest() {
+            if class.holds(*at) {
+                continue;
+            }
+            let (other, next) = self.body_at(m, mv, inst, (ctx, *at))?;
             if !same_body(&other, &first) {
                 return Ok(imprecise_body(
                     first,
@@ -1187,8 +1211,24 @@ impl Engine {
                     &imprecise_law(window, &inst.id),
                 ));
             }
+            class = next;
         }
         Ok(first)
+    }
+
+    /// An instance's body at law date `day`, with the law dates that give the same (E §3.2).
+    /// L §4.3, §5.14 `at e`.
+    fn body_at(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        inst: &Inst,
+        (ctx, day): (Ctx, Day),
+    ) -> Result<(Body, LawClass), Stop> {
+        let mark = self.open_law_class(day);
+        let body = self.inst_body(m, mv, inst, ctx.at_law(Some(day)), inst.exists.clone());
+        let class = self.close_law_class(mark, day);
+        Ok((body?, class?))
     }
 
     /// An instance's body in context `ctx`, its law date and cut set: its `when`, period,

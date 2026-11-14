@@ -191,6 +191,7 @@ pub mod eval {
     pub(crate) use convert::{ConvertFor, Converted, convert, convert_row, field_literal};
     pub(crate) use expr::equal_sides;
     pub(crate) use keys::{Given, thing_seen, to_key};
+    pub(crate) use memo::LawClass;
     pub use memo::Memo;
     pub(crate) use pins::after_on;
     pub(crate) use ranges::range_literal_key;

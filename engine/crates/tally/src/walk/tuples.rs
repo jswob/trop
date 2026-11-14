@@ -12,7 +12,7 @@
 
 use super::plan::{Exists, date_of, invariant, join, refuse};
 use crate::base::{Code, Refusal, Run};
-use crate::eval::{Collected, Ctx, Decided, Engine, Env, Member, reads_name};
+use crate::eval::{Collected, Ctx, Decided, Engine, Env, LawClass, Member, reads_name};
 use crate::hole::Hole;
 use crate::model::{Domain, KeyVal, MoveInfo, Reality, Value};
 use crate::syntax::Stop;
@@ -118,22 +118,41 @@ impl Engine {
         law: &Law,
         ctx: Ctx,
     ) -> Result<Decided, Stop> {
-        let first = self.binding_members(m, bind, env, ctx.at_law(law.first()))?;
-        let Law::Window(_, text) = law else {
-            return Ok(first);
+        let (Law::Window(_, text), Some(day)) = (law, law.first()) else {
+            return self.binding_members(m, bind, env, ctx.at_law(law.first()));
         };
+        // once per law-date class: a day its class holds gives what it gave (L §4.4's cost)
+        let (first, mut class) = self.members_at(m, (bind, env), (ctx, day))?;
         let Ok(members) = &first else {
             return Ok(first);
         };
         let key = members_key(members);
-        for day in law.rest() {
-            let other = self.binding_members(m, bind, env, ctx.at_law(Some(*day)))?;
+        for at in law.rest() {
+            if class.holds(*at) {
+                continue;
+            }
+            let (other, next) = self.members_at(m, (bind, env), (ctx, *at))?;
             let same = other.as_ref().is_ok_and(|o| members_key(o) == key);
             if !same {
                 return Ok(Err((imprecise_law(text, &mv.id), Collected::default())));
             }
+            class = next;
         }
         Ok(first)
+    }
+
+    /// A binding's members at law date `day`, with the law dates that give the same
+    /// (E §3.2). L §4.3, §5.14 `at e`.
+    fn members_at(
+        &mut self,
+        m: &Reality,
+        (bind, env): (&crate::syntax::Bind, &Env),
+        (ctx, day): (Ctx, Day),
+    ) -> Result<(Decided, LawClass), Stop> {
+        let mark = self.open_law_class(day);
+        let members = self.binding_members(m, bind, env, ctx.at_law(Some(day)));
+        let class = self.close_law_class(mark, day);
+        Ok((members?, class?))
     }
 
     /// A move's law date by its `at`, with the keys bound so far: none while it reads a key
