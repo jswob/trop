@@ -79,11 +79,6 @@ pub(super) fn each_lines(
     (ctx, pinned): (Ctx, &Collected),
 ) -> Result<Vec<String>, Stop> {
     let axes = Axes::of(m, ask)?;
-    if !ask.binds.is_empty() && axes.is_none() {
-        // the line binds inside each run: a window the binding meets splits its members
-        // as it splits every value (L §4.4)
-        return bound_lines(m, ask, engine, (ctx, pinned));
-    }
     let tuples = if ask.binds.is_empty() {
         vec![Member {
             env: Env::empty(),
@@ -91,12 +86,20 @@ pub(super) fn each_lines(
             brought: Collected::default(),
         }]
     } else {
-        // under an axis the tuples are bound once, outside the runs: a window met there
-        // takes its first day (refcore's `members` under the line's empty choice)
+        // the tuples are bound once, outside the runs, each tuple's line then split by the
+        // windows it meets (refcore's `members` under the line's empty choice)
+        let outer = engine.each_met.replace(Vec::new());
         let bind_ctx = under(engine, ask, ctx, &Vec::new())?;
         engine.open_layer(m, bind_ctx)?;
         let members = engine.tuples(m, &ask.binds, bind_ctx);
         engine.end_layer(bind_ctx.layer, members.as_ref().err())?;
+        let met = core::mem::replace(&mut engine.each_met, outer)
+            .ok_or_else(|| invariant("a binding's windows met taken while it ran"))?;
+        if !met.is_empty() && axes.is_none() {
+            // the binding meets a window: it binds inside each run, so the window splits
+            // its members as it splits every value (L §4.4)
+            return bound_lines(m, ask, engine, (ctx, pinned));
+        }
         match members? {
             Err(hole) => return Ok(vec![format!("{}: {}", ask.id, hole.text())]),
             Ok(tuples) => tuples,
