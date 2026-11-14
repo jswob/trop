@@ -209,6 +209,8 @@ class Engine:
         self.active = set()
         self.ask_K = m.on
         self.ask_pin_cells = {}     # an ask's with value pin's text -> the cell it pins, as printed (ask.print_line)
+        self.ask_pins_taken = set()     # the ask pins a read took (pin_value)
+        self.ask_pins_shadowed = set()  # the ask pins a read met under an inner or narrower claim (pin_value)
         self.tracing = False
         self.trace_stack = []
         self.trace_cells = {}
@@ -793,6 +795,7 @@ class Engine:
             hits.append(p)
         if not hits:
             return NOPIN
+        met = list(hits)
         top = max(p.layer for p in hits)
         hits = [p for p in hits if p.layer == top]
 
@@ -809,6 +812,14 @@ class Engine:
             raise refuse('RUN-CONFLICT', 'pins %s and %s both hold for %s' % (pair[0], pair[1],
                                                                                 self.origin(info, keys)))
         p = best[0]
+        if self.ask_pin_cells:
+            # L §8.2 One read set (R7; the review's finding 4): an ask's with pin is listed where a read takes it, not
+            # where an inner or narrower claim of the cell (an as if, a solve's variable; R4's cascade) gave the read
+            for q in met:
+                if q is not p and q.kind == 'set' and q.text in self.ask_pin_cells:
+                    self.ask_pins_shadowed.add(q.text)
+            if p.kind == 'set' and p.text in self.ask_pin_cells:
+                self.ask_pins_taken.add(p.text)
         if p.fields:
             return ('fields', p)
         if p.kind == 'set':
@@ -2780,8 +2791,8 @@ class Engine:
                 pinsv = [q for q in pinsv if q.key()[:4] != pv.key()[:4] or q.layer != layer]
                 pinsv.append(pv)
                 if ask:
-                    # an ask's with pins are printed with its lines (L §5.18 The world of an ask), but not under a
-                    # line where an inner pin of the same cell gave every read of it (R7, T's SR-6: ask.print_line)
+                    # an ask's with pins are listed with its lines (L §5.18, §8.2), but not where every read of the
+                    # cell an ask's reads met took an inner or narrower claim (R7, R4; ask.print_line, pin_value)
                     self.reg(('pinned', text))
                     self.ask_pin_cells[text] = text.split(' = ')[0]
         return ctx.but(law=law, cut=cut, pins=tuple(sorted(pinsv, key=lambda q: repr(q.key()))),
