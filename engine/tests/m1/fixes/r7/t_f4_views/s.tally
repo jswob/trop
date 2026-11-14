@@ -1,0 +1,13 @@
+scenario wide over c7v
+  tally 2
+  from 2026-01-01
+
+version wide_rows
+  cite card
+  governs 2026-01-01..
+  known 2025-12-01
+  replace r[*] = 5 "the scenario's rows, which hide the ask's pin"
+
+ask s_reg: tot in wide with r[k1] = 9 law 2026-06-30
+ask s_exp: explain tot in wide with r[k1] = 9 law 2026-06-30
+ask s_inp: inputs-of tot in wide with r[k1] = 9 law 2026-06-30

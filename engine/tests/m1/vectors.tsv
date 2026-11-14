@@ -1570,7 +1570,6 @@ r5/l5_10_value_keyed_price_currency	fixes-r5		engine/tests/m1/fixes/r5/l5_10_val
 r5/l5_10_value_price_keyed_by_places	fixes-r5		engine/tests/m1/fixes/r5/l5_10_value_price_keyed_by_places	engine/tests/m1/fixes/r5/l5_10_value_price_keyed_by_places/p130_one_units.tally engine/tests/m1/fixes/r5/l5_10_value_price_keyed_by_places/p130_one_up_pln.tally			R5
 r5/e3_1_priced_kinds_first	fixes-r5		engine/tests/m1/fixes/r5/e3_1_priced_kinds_first	engine/tests/m1/fixes/r5/e3_1_priced_kinds_first/forms.tally engine/tests/m1/fixes/r5/e3_1_priced_kinds_first/forms_a.tally	fa_fund		R5
 r5/l5_7_lifespan_of_movement	fixes-r5		engine/tests/m1/fixes/r5/l5_7_lifespan_of_movement	engine/tests/m1/fixes/r5/l5_7_lifespan_of_movement/b6_model.tally engine/tests/m1/fixes/r5/l5_7_lifespan_of_movement/b6_l3.tally			R5
-r5/l3_3_accrue_yearly	fixes-r5		engine/tests/m1/fixes/r5/l3_3_accrue_yearly	engine/tests/m1/fixes/r5/l3_3_accrue_yearly/m.tally			R5
 r5/l3_3_rate_periods	fixes-r5		engine/tests/m1/fixes/r5/l3_3_rate_periods	engine/tests/m1/fixes/r5/l3_3_rate_periods/m.tally			R5
 r6/l4_6_last_no_start	fixes-r6		engine/tests/m1/fixes/r6/l4_6_last_no_start	engine/tests/m1/fixes/r6/l4_6_last_no_start/m.tally	q1 q2 q3		R6
 r6/l5_14_1_low_uncertain_no_from	fixes-r6		engine/tests/m1/fixes/r6/l5_14_1_low_uncertain_no_from	engine/tests/m1/fixes/r6/l5_14_1_low_uncertain_no_from/lowu.tally	p_u2		R6
@@ -1618,7 +1617,6 @@ b7/l6_4_scenario_open_index_left_out	fixes-b		engine/tests/m1/fixes/b7/l6_4_scen
 s1/e2_walked_after_end	fixes-s		engine/tests/m1/fixes/s1/e2_walked_after_end	engine/tests/m1/fixes/s1/e2_walked_after_end/m.tally			S1
 s1/e2_walked_before_start	fixes-s		engine/tests/m1/fixes/s1/e2_walked_before_start	engine/tests/m1/fixes/s1/e2_walked_before_start/pre.tally			S1
 s1/e2_flows_after_end	fixes-s		engine/tests/m1/fixes/s1/e2_flows_after_end	engine/tests/m1/fixes/s1/e2_flows_after_end/d3.tally			S1
-s1/e6_3_residuals_after_end	fixes-s		engine/tests/m1/fixes/s1/e6_3_residuals_after_end	engine/tests/m1/fixes/s1/e6_3_residuals_after_end/r3.tally			S1
 s2/l5_10_priced_field	fixes-s		engine/tests/m1/fixes/s2/l5_10_priced_field	engine/tests/m1/fixes/s2/l5_10_priced_field/m.tally			S2
 s2/l5_10_priced_field_keyed	fixes-s		engine/tests/m1/fixes/s2/l5_10_priced_field_keyed	engine/tests/m1/fixes/s2/l5_10_priced_field_keyed/k.tally			S2
 s2/l5_10_priced_field_type	fixes-s		engine/tests/m1/fixes/s2/l5_10_priced_field_type	engine/tests/m1/fixes/s2/l5_10_priced_field_type/bad_type.tally			S2
@@ -1669,3 +1667,26 @@ carried/years/p_list	carried-5		engine/tests/m1/carried/years	engine/tests/m1/ca
 carried/years/p_governs	carried-5		engine/tests/m1/carried/years	engine/tests/m1/carried/years/model.tally engine/tests/m1/carried/years/p_governs.tally	p_governs		S10
 carried/years/p_row_key	carried-5		engine/tests/m1/carried/years	engine/tests/m1/carried/years/model.tally engine/tests/m1/carried/years/p_row_key.tally	p_row_key		S10
 r5/s4_clock	fixes-r5		engine/tests/integration/blind7/S4	engine/tests/integration/blind7/S4/s4.tally engine/tests/m1/fixes/r5/s4_clock/clock.tally	j5_true		R5
+s1/l8_1_value_run_ends	fixes-s		engine/tests/m1/fixes/s1/l8_1_value_run_ends	engine/tests/m1/fixes/s1/l8_1_value_run_ends/m.tally			S1
+r5/l8_4_load_price_unread	fixes-r5		engine/tests/m1/fixes/r5/l8_4_load_price_unread	engine/tests/m1/fixes/r5/l8_4_load_price_unread/m.tally			R5
+r5/l8_4_load_price_opening_row	fixes-r5		engine/tests/m1/fixes/r5/l8_4_load_price_opening_row	engine/tests/m1/fixes/r5/l8_4_load_price_opening_row/m.tally			R5
+r5/l8_4_leg_unit_at_run	fixes-r5		engine/tests/m1/fixes/r5/l8_4_leg_unit_at_run	engine/tests/m1/fixes/r5/l8_4_leg_unit_at_run/m.tally			R5
+r5/l3_2_key_diff_outside_index	fixes-r5		engine/tests/m1/fixes/r5/l3_2_key_diff_outside_index	engine/tests/m1/fixes/r5/l3_2_key_diff_outside_index/m.tally			R5
+r7/l8_2_ask_pin_shadowed	fixes-r7		engine/tests/m1/fixes/r7/l8_2_ask_pin_shadowed	engine/tests/m1/fixes/r7/l8_2_ask_pin_shadowed/m.tally			R7
+r7/t_f4_views	fixes-r7		engine/tests/m1/fixes/r7/t_f4_views	engine/tests/m1/fixes/r7/t_f4_views/m.tally engine/tests/m1/fixes/r7/t_f4_views/s.tally	a_reg a_inp v_reg w_reg w_exp w_inp s_reg s_exp s_inp		R7
+r9/e4_1_decision_move_id_term	fixes-r9		engine/tests/m1/fixes/r9/e4_1_decision_move_id_term	engine/tests/m1/fixes/r9/e4_1_decision_move_id_term/m.tally			R9
+s9/l8_3_balnow_outside_line	fixes-s		engine/tests/m1/fixes/s9/l8_3_balnow_outside_line	engine/tests/m1/fixes/s9/l8_3_balnow_outside_line/m.tally			S9
+b1/l4_6_reading_at_date	fixes-b		engine/tests/m1/fixes/b1/l4_6_reading_at_date	engine/tests/m1/fixes/b1/l4_6_reading_at_date/m.tally			B1
+b1/l4_6_period_held_by_key	fixes-b		engine/tests/m1/fixes/b1/l4_6_period_held_by_key	engine/tests/m1/fixes/b1/l4_6_period_held_by_key/m.tally			B1
+fixes/g13/r_agent_w_model_with_r_agent_w_a14_a14	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/r_agent_w_model.tally engine/tests/m1/fixes/g13/r_agent_w_a14.tally	a14		G13
+fixes/g13/r_agent_w_model_with_r_agent_w_i1_i1	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/r_agent_w_model.tally engine/tests/m1/fixes/g13/r_agent_w_i1.tally	i1		G13
+fixes/g13/r_agent_w_model_with_r_agent_w_i2_i2	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/r_agent_w_model.tally engine/tests/m1/fixes/g13/r_agent_w_i2.tally	i2		G13
+fixes/g13/r_agent_w_model_with_r_agent_w_l1_l1	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/r_agent_w_model.tally engine/tests/m1/fixes/g13/r_agent_w_l1.tally	l1		G13
+fixes/g13/rf_w_model_with_rf_w_w08_w08	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/rf_w_model.tally engine/tests/m1/fixes/g13/rf_w_w08.tally	w08		G13
+fixes/g13/rf_w_model_with_rf_w_w09_w09	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/rf_w_model.tally engine/tests/m1/fixes/g13/rf_w_w09.tally	w09		G13
+fixes/g13/rf_w_model_with_rf_w_w17_w17	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/rf_w_model.tally engine/tests/m1/fixes/g13/rf_w_w17.tally	w17		G13
+fixes/g14/b6_model_with_b6_l1_l1	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/b6_model.tally engine/tests/m1/fixes/g14/b6_l1.tally	l1		G14
+fixes/g14/b6_model_with_b6_l2_l2	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/b6_model.tally engine/tests/m1/fixes/g14/b6_l2.tally	l2		G14
+fixes/g14/b6_model_with_b6_l3_l3	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/b6_model.tally engine/tests/m1/fixes/g14/b6_l3.tally	l3		G14
+fixes/g13/fix_i3_model_with_fix_i3_i3_i3	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/fix_i3_model.tally engine/tests/m1/fixes/g13/fix_i3_i3.tally	i3		G13
+fixes/g13/fix_i3_model_with_fix_i3_i3_i4	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/fix_i3_model.tally engine/tests/m1/fixes/g13/fix_i3_i3.tally	i4		G13

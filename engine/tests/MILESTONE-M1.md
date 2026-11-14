@@ -142,6 +142,10 @@ no item names, written from the rule's text (`m1/fixes/r<n>/reach/`). `HOLE-POST
 (`codes/m1` `decide/post-run`). Held now, 13: R8's (#147, M2's first group) `fixes/g7/sc_w_diff`, `pr1_q_fc`,
 `pr2_q_fc` and `r8/*` (6); S2's `s2/*` (4, #101, M2: prices read from records). T's STOP-REPORTs SR-1 to SR-14
 (`GAPS.md`) were ruled by P36 and their ten held rows released on refcore a98820c.
+After the builder's group, P40 (its five STOP-REPORTs) and P41 (the review's four findings) fixed refcore (d8ea818, 1 365
+tests): their tests are vectors (`s1/l8_1_value_run_ends`, `r5/l8_4_*`, `r5/l3_2_key_diff_outside_index`, `r7/l8_2_ask_pin_shadowed`,
+`r9/e4_1_decision_move_id_term`, `s9/l8_3_balnow_outside_line`, `b1/l4_6_*`), and the 17 `m1/spec.tsv` rows refcore
+now answers moved to `m1/vectors.tsv` (19 stay where it still crashes).
 
 ## Keeping master green
 

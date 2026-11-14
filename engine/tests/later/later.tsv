@@ -1,2 +1,4 @@
 id	milestone	issue	rule
 M7/sample_order	M7	#49	L §8.2, §5.16 (tally 2.1.6, P23): a path's sample lines in canonical order, keys in index order (m2 before m10)
+M2/s1_residuals_after_end	M2	#93	E §6.3, L §8.1 HOLE-POSTRUN (tally 2.1.7, S1): a residuals ask over months past the run's end; residuals asks are built at M2 (BUILD-ORDER M2, E §6.3), refcore's test E6_3_residuals_after_end
+M6/r5_accrue_yearly	M6	#144	L §3.3, §8.4 RUN-DOMAIN (tally 2.1.7, R5): accrue of a monthly rate refused at the value; accrue, an L §3.3 function beyond X's forms, is built at M6 (BUILD-ORDER M6), refcore's test L3_3_accrue_yearly

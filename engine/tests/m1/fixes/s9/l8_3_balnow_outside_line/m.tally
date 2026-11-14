@@ -1,0 +1,21 @@
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+input y: int
+
+def nd: money PLN = bal(konto)
+
+ask r: y
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 0.00 PLN at 2026-01-01 start
+  y = 1

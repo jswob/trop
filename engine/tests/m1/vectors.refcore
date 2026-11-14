@@ -181289,8 +181289,8 @@ zx24: 2 783.00 PLN
   2026-03-05:
     rent_pay[2026-03].cash (plan): -600.00 PLN
   2026-03-15:
-    feed2[2026-03].cash (plan): -5.00 PLN
     feed[2026-03].cash (plan): -5.00 PLN
+    feed2[2026-03].cash (plan): -5.00 PLN
   2026-03-20:
     topup[2026-03].cash (plan): +1 000.00 PLN
     stash[first, 2026-03].cash (plan): -100.00 PLN
@@ -181312,8 +181312,8 @@ zx25: 1 884.00 PLN
   2026-03-05:
     rent_pay[2026-03].cash (plan): -600.00 PLN
   2026-03-15:
-    feed2[2026-03].cash (plan): -5.00 PLN
     feed[2026-03].cash (plan): -5.00 PLN
+    feed2[2026-03].cash (plan): -5.00 PLN
   anchor: konto 2026-01-31 end, stated 2 200.00 PLN, difference -100.00 PLN
   anchor: pocket 2026-02-10 start, stated 45.00 PLN, difference -5.00 PLN
   cut 2026-02-15
@@ -181331,8 +181331,8 @@ zx26: 2 783.00 PLN
   2026-03-05:
     rent_pay[2026-03].cash (plan): -600.00 PLN
   2026-03-15:
-    feed2[2026-03].cash (plan): -5.00 PLN
     feed[2026-03].cash (plan): -5.00 PLN
+    feed2[2026-03].cash (plan): -5.00 PLN
   2026-03-20:
     topup[2026-03].cash (plan): +1 000.00 PLN
     stash[first, 2026-03].cash (plan): -100.00 PLN
@@ -192656,8 +192656,8 @@ zx16: 1 884.00 PLN
   2026-03-05:
     rent_pay[2026-03].cash (plan): -600.00 PLN
   2026-03-15:
-    feed2[2026-03].cash (plan): -5.00 PLN
     feed[2026-03].cash (plan): -5.00 PLN
+    feed2[2026-03].cash (plan): -5.00 PLN
   anchor: konto 2026-01-31 end, stated 2 200.00 PLN, difference -100.00 PLN
   anchor: pocket 2026-02-10 start, stated 45.00 PLN, difference -5.00 PLN
   cut 2026-02-15
@@ -192676,8 +192676,8 @@ zx17: 2 783.00 PLN
   2026-03-05:
     rent_pay[2026-03].cash (plan): -600.00 PLN
   2026-03-15:
-    feed2[2026-03].cash (plan): -5.00 PLN
     feed[2026-03].cash (plan): -5.00 PLN
+    feed2[2026-03].cash (plan): -5.00 PLN
   2026-03-20:
     topup[2026-03].cash (plan): +1 000.00 PLN
     stash[first, 2026-03].cash (plan): -100.00 PLN
@@ -201463,8 +201463,8 @@ zx10: 1 590.00 PLN
     2026-02-05:
       rent_pay[2026-02].cash (plan): -600.00 PLN
     2026-02-15:
-      feed2[2026-02].cash (plan): -5.00 PLN
       feed[2026-02].cash (plan): -5.00 PLN
+      feed2[2026-02].cash (plan): -5.00 PLN
   left out: none
   anchor: konto 2026-01-31 end, stated 2 200.00 PLN, difference -100.00 PLN
   cut 2026-02-15
@@ -201491,8 +201491,8 @@ zx11: 1 590.00 PLN
   start: 1 600.00 PLN at the start of 2026-02-09
   counted:
     2026-02-15:
-      feed2[2026-02].cash (plan): -5.00 PLN
       feed[2026-02].cash (plan): -5.00 PLN
+      feed2[2026-02].cash (plan): -5.00 PLN
   left out: none
   anchor: konto 2026-01-31 end, stated 2 200.00 PLN, difference -100.00 PLN
   cut 2026-02-15
@@ -201503,8 +201503,8 @@ zx12: 2 489.00 PLN
   start: 1 600.00 PLN at the start of 2026-02-10
   counted:
     2026-02-15:
-      feed2[2026-02].cash (plan): -5.00 PLN
       feed[2026-02].cash (plan): -5.00 PLN
+      feed2[2026-02].cash (plan): -5.00 PLN
     2026-02-20:
       topup[2026-02].cash (plan): +1 000.00 PLN
       stash[second, 2026-02].cash (plan): -100.00 PLN
@@ -201520,8 +201520,8 @@ zx13: 2 489.00 PLN
   start: 1 600.00 PLN at the start of 2026-02-12
   counted:
     2026-02-15:
-      feed2[2026-02].cash (plan): -5.00 PLN
       feed[2026-02].cash (plan): -5.00 PLN
+      feed2[2026-02].cash (plan): -5.00 PLN
     2026-02-20:
       topup[2026-02].cash (plan): +1 000.00 PLN
       stash[second, 2026-02].cash (plan): -100.00 PLN
@@ -201537,8 +201537,8 @@ zx14: 2 778.00 PLN
   start: 1 600.00 PLN at the start of 2026-02-14
   counted:
     2026-02-15:
-      feed2[2026-02].cash (plan): -5.00 PLN
       feed[2026-02].cash (plan): -5.00 PLN
+      feed2[2026-02].cash (plan): -5.00 PLN
     2026-02-20:
       topup[2026-02].cash (plan): +1 000.00 PLN
       stash[second, 2026-02].cash (plan): -100.00 PLN
@@ -201546,8 +201546,8 @@ zx14: 2 778.00 PLN
     2026-03-05:
       rent_pay[2026-03].cash (plan): -600.00 PLN
     2026-03-15:
-      feed2[2026-03].cash (plan): -5.00 PLN
       feed[2026-03].cash (plan): -5.00 PLN
+      feed2[2026-03].cash (plan): -5.00 PLN
     2026-03-20:
       topup[2026-03].cash (plan): +1 000.00 PLN
       stash[first, 2026-03].cash (plan): -100.00 PLN
@@ -201563,8 +201563,8 @@ zx15: 2 778.00 PLN
   start: 1 600.00 PLN at the start of 2026-02-15
   counted:
     2026-02-15:
-      feed2[2026-02].cash (plan): -5.00 PLN
       feed[2026-02].cash (plan): -5.00 PLN
+      feed2[2026-02].cash (plan): -5.00 PLN
     2026-02-20:
       topup[2026-02].cash (plan): +1 000.00 PLN
       stash[second, 2026-02].cash (plan): -100.00 PLN
@@ -201572,8 +201572,8 @@ zx15: 2 778.00 PLN
     2026-03-05:
       rent_pay[2026-03].cash (plan): -600.00 PLN
     2026-03-15:
-      feed2[2026-03].cash (plan): -5.00 PLN
       feed[2026-03].cash (plan): -5.00 PLN
+      feed2[2026-03].cash (plan): -5.00 PLN
     2026-03-20:
       topup[2026-03].cash (plan): +1 000.00 PLN
       stash[first, 2026-03].cash (plan): -100.00 PLN
@@ -201595,8 +201595,8 @@ zx16: 2 783.00 PLN
     2026-03-05:
       rent_pay[2026-03].cash (plan): -600.00 PLN
     2026-03-15:
-      feed2[2026-03].cash (plan): -5.00 PLN
       feed[2026-03].cash (plan): -5.00 PLN
+      feed2[2026-03].cash (plan): -5.00 PLN
     2026-03-20:
       topup[2026-03].cash (plan): +1 000.00 PLN
       stash[first, 2026-03].cash (plan): -100.00 PLN
@@ -201715,8 +201715,8 @@ zx3: 1 689.00 PLN
     2026-01-05:
       rent_pay[2026-01].cash (plan): -600.00 PLN
     2026-01-15:
-      feed2[2026-01].cash (plan): -5.00 PLN
       feed[2026-01].cash (plan): -5.00 PLN
+      feed2[2026-01].cash (plan): -5.00 PLN
     2026-01-20:
       stash[first, 2026-01].cash (plan): -100.00 PLN
       stash[second, 2026-01].cash (plan): -1.00 PLN
@@ -201807,8 +201807,8 @@ zx4: 1 689.00 PLN
     2026-01-05:
       rent_pay[2026-01].cash (plan): -600.00 PLN
     2026-01-15:
-      feed2[2026-01].cash (plan): -5.00 PLN
       feed[2026-01].cash (plan): -5.00 PLN
+      feed2[2026-01].cash (plan): -5.00 PLN
     2026-01-20:
       stash[first, 2026-01].cash (plan): -100.00 PLN
       stash[second, 2026-01].cash (plan): -1.00 PLN
@@ -211376,8 +211376,8 @@ zx10: 1 590.00 PLN
     2026-02-05:
       rent_pay[2026-02].cash (plan): -600.00 PLN
     2026-02-15:
-      feed2[2026-02].cash (plan): -5.00 PLN
       feed[2026-02].cash (plan): -5.00 PLN
+      feed2[2026-02].cash (plan): -5.00 PLN
   left out: none
   anchor: konto 2026-01-31 end, stated 2 200.00 PLN, difference -100.00 PLN
   cut 2026-02-15
@@ -211404,8 +211404,8 @@ zx11: 1 590.00 PLN
   start: 1 600.00 PLN at the start of 2026-02-09
   counted:
     2026-02-15:
-      feed2[2026-02].cash (plan): -5.00 PLN
       feed[2026-02].cash (plan): -5.00 PLN
+      feed2[2026-02].cash (plan): -5.00 PLN
   left out: none
   anchor: konto 2026-01-31 end, stated 2 200.00 PLN, difference -100.00 PLN
   cut 2026-02-15
@@ -211416,8 +211416,8 @@ zx12: 2 489.00 PLN
   start: 1 600.00 PLN at the start of 2026-02-10
   counted:
     2026-02-15:
-      feed2[2026-02].cash (plan): -5.00 PLN
       feed[2026-02].cash (plan): -5.00 PLN
+      feed2[2026-02].cash (plan): -5.00 PLN
     2026-02-20:
       topup[2026-02].cash (plan): +1 000.00 PLN
       stash[second, 2026-02].cash (plan): -100.00 PLN
@@ -211433,8 +211433,8 @@ zx13: 2 489.00 PLN
   start: 1 600.00 PLN at the start of 2026-02-12
   counted:
     2026-02-15:
-      feed2[2026-02].cash (plan): -5.00 PLN
       feed[2026-02].cash (plan): -5.00 PLN
+      feed2[2026-02].cash (plan): -5.00 PLN
     2026-02-20:
       topup[2026-02].cash (plan): +1 000.00 PLN
       stash[second, 2026-02].cash (plan): -100.00 PLN
@@ -211450,8 +211450,8 @@ zx14: 2 778.00 PLN
   start: 1 600.00 PLN at the start of 2026-02-14
   counted:
     2026-02-15:
-      feed2[2026-02].cash (plan): -5.00 PLN
       feed[2026-02].cash (plan): -5.00 PLN
+      feed2[2026-02].cash (plan): -5.00 PLN
     2026-02-20:
       topup[2026-02].cash (plan): +1 000.00 PLN
       stash[second, 2026-02].cash (plan): -100.00 PLN
@@ -211459,8 +211459,8 @@ zx14: 2 778.00 PLN
     2026-03-05:
       rent_pay[2026-03].cash (plan): -600.00 PLN
     2026-03-15:
-      feed2[2026-03].cash (plan): -5.00 PLN
       feed[2026-03].cash (plan): -5.00 PLN
+      feed2[2026-03].cash (plan): -5.00 PLN
     2026-03-20:
       topup[2026-03].cash (plan): +1 000.00 PLN
       stash[first, 2026-03].cash (plan): -100.00 PLN
@@ -211476,8 +211476,8 @@ zx15: 2 778.00 PLN
   start: 1 600.00 PLN at the start of 2026-02-15
   counted:
     2026-02-15:
-      feed2[2026-02].cash (plan): -5.00 PLN
       feed[2026-02].cash (plan): -5.00 PLN
+      feed2[2026-02].cash (plan): -5.00 PLN
     2026-02-20:
       topup[2026-02].cash (plan): +1 000.00 PLN
       stash[second, 2026-02].cash (plan): -100.00 PLN
@@ -211485,8 +211485,8 @@ zx15: 2 778.00 PLN
     2026-03-05:
       rent_pay[2026-03].cash (plan): -600.00 PLN
     2026-03-15:
-      feed2[2026-03].cash (plan): -5.00 PLN
       feed[2026-03].cash (plan): -5.00 PLN
+      feed2[2026-03].cash (plan): -5.00 PLN
     2026-03-20:
       topup[2026-03].cash (plan): +1 000.00 PLN
       stash[first, 2026-03].cash (plan): -100.00 PLN
@@ -211508,8 +211508,8 @@ zx16: 2 783.00 PLN
     2026-03-05:
       rent_pay[2026-03].cash (plan): -600.00 PLN
     2026-03-15:
-      feed2[2026-03].cash (plan): -5.00 PLN
       feed[2026-03].cash (plan): -5.00 PLN
+      feed2[2026-03].cash (plan): -5.00 PLN
     2026-03-20:
       topup[2026-03].cash (plan): +1 000.00 PLN
       stash[first, 2026-03].cash (plan): -100.00 PLN
@@ -211628,8 +211628,8 @@ zx3: 1 689.00 PLN
     2026-01-05:
       rent_pay[2026-01].cash (plan): -600.00 PLN
     2026-01-15:
-      feed2[2026-01].cash (plan): -5.00 PLN
       feed[2026-01].cash (plan): -5.00 PLN
+      feed2[2026-01].cash (plan): -5.00 PLN
     2026-01-20:
       stash[first, 2026-01].cash (plan): -100.00 PLN
       stash[second, 2026-01].cash (plan): -1.00 PLN
@@ -211720,8 +211720,8 @@ zx4: 1 689.00 PLN
     2026-01-05:
       rent_pay[2026-01].cash (plan): -600.00 PLN
     2026-01-15:
-      feed2[2026-01].cash (plan): -5.00 PLN
       feed[2026-01].cash (plan): -5.00 PLN
+      feed2[2026-01].cash (plan): -5.00 PLN
     2026-01-20:
       stash[first, 2026-01].cash (plan): -100.00 PLN
       stash[second, 2026-01].cash (plan): -1.00 PLN
@@ -220566,8 +220566,8 @@ zx24: 2 783.00 PLN
   2026-03-05:
     rent_pay[2026-03].cash (plan): -600.00 PLN
   2026-03-15:
-    feed2[2026-03].cash (plan): -5.00 PLN
     feed[2026-03].cash (plan): -5.00 PLN
+    feed2[2026-03].cash (plan): -5.00 PLN
   2026-03-20:
     topup[2026-03].cash (plan): +1 000.00 PLN
     stash[first, 2026-03].cash (plan): -100.00 PLN
@@ -220589,8 +220589,8 @@ zx25: 1 884.00 PLN
   2026-03-05:
     rent_pay[2026-03].cash (plan): -600.00 PLN
   2026-03-15:
-    feed2[2026-03].cash (plan): -5.00 PLN
     feed[2026-03].cash (plan): -5.00 PLN
+    feed2[2026-03].cash (plan): -5.00 PLN
   anchor: konto 2026-01-31 end, stated 2 200.00 PLN, difference -100.00 PLN
   anchor: pocket 2026-02-10 start, stated 45.00 PLN, difference -5.00 PLN
   cut 2026-02-15
@@ -220608,8 +220608,8 @@ zx26: 2 783.00 PLN
   2026-03-05:
     rent_pay[2026-03].cash (plan): -600.00 PLN
   2026-03-15:
-    feed2[2026-03].cash (plan): -5.00 PLN
     feed[2026-03].cash (plan): -5.00 PLN
+    feed2[2026-03].cash (plan): -5.00 PLN
   2026-03-20:
     topup[2026-03].cash (plan): +1 000.00 PLN
     stash[first, 2026-03].cash (plan): -100.00 PLN
@@ -225801,8 +225801,8 @@ zx24: 2 783.00 PLN
   2026-03-05:
     rent_pay[2026-03].cash (plan): -600.00 PLN
   2026-03-15:
-    feed2[2026-03].cash (plan): -5.00 PLN
     feed[2026-03].cash (plan): -5.00 PLN
+    feed2[2026-03].cash (plan): -5.00 PLN
   2026-03-20:
     topup[2026-03].cash (plan): +1 000.00 PLN
     stash[first, 2026-03].cash (plan): -100.00 PLN
@@ -225824,8 +225824,8 @@ zx25: 1 884.00 PLN
   2026-03-05:
     rent_pay[2026-03].cash (plan): -600.00 PLN
   2026-03-15:
-    feed2[2026-03].cash (plan): -5.00 PLN
     feed[2026-03].cash (plan): -5.00 PLN
+    feed2[2026-03].cash (plan): -5.00 PLN
   anchor: konto 2026-01-31 end, stated 2 200.00 PLN, difference -100.00 PLN
   anchor: pocket 2026-02-10 start, stated 45.00 PLN, difference -5.00 PLN
   cut 2026-02-15
@@ -225843,8 +225843,8 @@ zx26: 2 783.00 PLN
   2026-03-05:
     rent_pay[2026-03].cash (plan): -600.00 PLN
   2026-03-15:
-    feed2[2026-03].cash (plan): -5.00 PLN
     feed[2026-03].cash (plan): -5.00 PLN
+    feed2[2026-03].cash (plan): -5.00 PLN
   2026-03-20:
     topup[2026-03].cash (plan): +1 000.00 PLN
     stash[first, 2026-03].cash (plan): -100.00 PLN
@@ -231282,8 +231282,8 @@ zx16: 1 884.00 PLN
   2026-03-05:
     rent_pay[2026-03].cash (plan): -600.00 PLN
   2026-03-15:
-    feed2[2026-03].cash (plan): -5.00 PLN
     feed[2026-03].cash (plan): -5.00 PLN
+    feed2[2026-03].cash (plan): -5.00 PLN
   anchor: konto 2026-01-31 end, stated 2 200.00 PLN, difference -100.00 PLN
   anchor: pocket 2026-02-10 start, stated 45.00 PLN, difference -5.00 PLN
   cut 2026-02-15
@@ -231302,8 +231302,8 @@ zx17: 2 783.00 PLN
   2026-03-05:
     rent_pay[2026-03].cash (plan): -600.00 PLN
   2026-03-15:
-    feed2[2026-03].cash (plan): -5.00 PLN
     feed[2026-03].cash (plan): -5.00 PLN
+    feed2[2026-03].cash (plan): -5.00 PLN
   2026-03-20:
     topup[2026-03].cash (plan): +1 000.00 PLN
     stash[first, 2026-03].cash (plan): -100.00 PLN
@@ -235359,8 +235359,8 @@ zx10: 1 590.00 PLN
     2026-02-05:
       rent_pay[2026-02].cash (plan): -600.00 PLN
     2026-02-15:
-      feed2[2026-02].cash (plan): -5.00 PLN
       feed[2026-02].cash (plan): -5.00 PLN
+      feed2[2026-02].cash (plan): -5.00 PLN
   left out: none
   anchor: konto 2026-01-31 end, stated 2 200.00 PLN, difference -100.00 PLN
   cut 2026-02-15
@@ -235387,8 +235387,8 @@ zx11: 1 590.00 PLN
   start: 1 600.00 PLN at the start of 2026-02-09
   counted:
     2026-02-15:
-      feed2[2026-02].cash (plan): -5.00 PLN
       feed[2026-02].cash (plan): -5.00 PLN
+      feed2[2026-02].cash (plan): -5.00 PLN
   left out: none
   anchor: konto 2026-01-31 end, stated 2 200.00 PLN, difference -100.00 PLN
   cut 2026-02-15
@@ -235399,8 +235399,8 @@ zx12: 2 489.00 PLN
   start: 1 600.00 PLN at the start of 2026-02-10
   counted:
     2026-02-15:
-      feed2[2026-02].cash (plan): -5.00 PLN
       feed[2026-02].cash (plan): -5.00 PLN
+      feed2[2026-02].cash (plan): -5.00 PLN
     2026-02-20:
       topup[2026-02].cash (plan): +1 000.00 PLN
       stash[second, 2026-02].cash (plan): -100.00 PLN
@@ -235416,8 +235416,8 @@ zx13: 2 489.00 PLN
   start: 1 600.00 PLN at the start of 2026-02-12
   counted:
     2026-02-15:
-      feed2[2026-02].cash (plan): -5.00 PLN
       feed[2026-02].cash (plan): -5.00 PLN
+      feed2[2026-02].cash (plan): -5.00 PLN
     2026-02-20:
       topup[2026-02].cash (plan): +1 000.00 PLN
       stash[second, 2026-02].cash (plan): -100.00 PLN
@@ -235433,8 +235433,8 @@ zx14: 2 778.00 PLN
   start: 1 600.00 PLN at the start of 2026-02-14
   counted:
     2026-02-15:
-      feed2[2026-02].cash (plan): -5.00 PLN
       feed[2026-02].cash (plan): -5.00 PLN
+      feed2[2026-02].cash (plan): -5.00 PLN
     2026-02-20:
       topup[2026-02].cash (plan): +1 000.00 PLN
       stash[second, 2026-02].cash (plan): -100.00 PLN
@@ -235442,8 +235442,8 @@ zx14: 2 778.00 PLN
     2026-03-05:
       rent_pay[2026-03].cash (plan): -600.00 PLN
     2026-03-15:
-      feed2[2026-03].cash (plan): -5.00 PLN
       feed[2026-03].cash (plan): -5.00 PLN
+      feed2[2026-03].cash (plan): -5.00 PLN
     2026-03-20:
       topup[2026-03].cash (plan): +1 000.00 PLN
       stash[first, 2026-03].cash (plan): -100.00 PLN
@@ -235459,8 +235459,8 @@ zx15: 2 778.00 PLN
   start: 1 600.00 PLN at the start of 2026-02-15
   counted:
     2026-02-15:
-      feed2[2026-02].cash (plan): -5.00 PLN
       feed[2026-02].cash (plan): -5.00 PLN
+      feed2[2026-02].cash (plan): -5.00 PLN
     2026-02-20:
       topup[2026-02].cash (plan): +1 000.00 PLN
       stash[second, 2026-02].cash (plan): -100.00 PLN
@@ -235468,8 +235468,8 @@ zx15: 2 778.00 PLN
     2026-03-05:
       rent_pay[2026-03].cash (plan): -600.00 PLN
     2026-03-15:
-      feed2[2026-03].cash (plan): -5.00 PLN
       feed[2026-03].cash (plan): -5.00 PLN
+      feed2[2026-03].cash (plan): -5.00 PLN
     2026-03-20:
       topup[2026-03].cash (plan): +1 000.00 PLN
       stash[first, 2026-03].cash (plan): -100.00 PLN
@@ -235491,8 +235491,8 @@ zx16: 2 783.00 PLN
     2026-03-05:
       rent_pay[2026-03].cash (plan): -600.00 PLN
     2026-03-15:
-      feed2[2026-03].cash (plan): -5.00 PLN
       feed[2026-03].cash (plan): -5.00 PLN
+      feed2[2026-03].cash (plan): -5.00 PLN
     2026-03-20:
       topup[2026-03].cash (plan): +1 000.00 PLN
       stash[first, 2026-03].cash (plan): -100.00 PLN
@@ -235611,8 +235611,8 @@ zx3: 1 689.00 PLN
     2026-01-05:
       rent_pay[2026-01].cash (plan): -600.00 PLN
     2026-01-15:
-      feed2[2026-01].cash (plan): -5.00 PLN
       feed[2026-01].cash (plan): -5.00 PLN
+      feed2[2026-01].cash (plan): -5.00 PLN
     2026-01-20:
       stash[first, 2026-01].cash (plan): -100.00 PLN
       stash[second, 2026-01].cash (plan): -1.00 PLN
@@ -235703,8 +235703,8 @@ zx4: 1 689.00 PLN
     2026-01-05:
       rent_pay[2026-01].cash (plan): -600.00 PLN
     2026-01-15:
-      feed2[2026-01].cash (plan): -5.00 PLN
       feed[2026-01].cash (plan): -5.00 PLN
+      feed2[2026-01].cash (plan): -5.00 PLN
     2026-01-20:
       stash[first, 2026-01].cash (plan): -100.00 PLN
       stash[second, 2026-01].cash (plan): -1.00 PLN
@@ -240170,8 +240170,8 @@ zx10: 1 590.00 PLN
     2026-02-05:
       rent_pay[2026-02].cash (plan): -600.00 PLN
     2026-02-15:
-      feed2[2026-02].cash (plan): -5.00 PLN
       feed[2026-02].cash (plan): -5.00 PLN
+      feed2[2026-02].cash (plan): -5.00 PLN
   left out: none
   anchor: konto 2026-01-31 end, stated 2 200.00 PLN, difference -100.00 PLN
   cut 2026-02-15
@@ -240198,8 +240198,8 @@ zx11: 1 590.00 PLN
   start: 1 600.00 PLN at the start of 2026-02-09
   counted:
     2026-02-15:
-      feed2[2026-02].cash (plan): -5.00 PLN
       feed[2026-02].cash (plan): -5.00 PLN
+      feed2[2026-02].cash (plan): -5.00 PLN
   left out: none
   anchor: konto 2026-01-31 end, stated 2 200.00 PLN, difference -100.00 PLN
   cut 2026-02-15
@@ -240210,8 +240210,8 @@ zx12: 2 489.00 PLN
   start: 1 600.00 PLN at the start of 2026-02-10
   counted:
     2026-02-15:
-      feed2[2026-02].cash (plan): -5.00 PLN
       feed[2026-02].cash (plan): -5.00 PLN
+      feed2[2026-02].cash (plan): -5.00 PLN
     2026-02-20:
       topup[2026-02].cash (plan): +1 000.00 PLN
       stash[second, 2026-02].cash (plan): -100.00 PLN
@@ -240227,8 +240227,8 @@ zx13: 2 489.00 PLN
   start: 1 600.00 PLN at the start of 2026-02-12
   counted:
     2026-02-15:
-      feed2[2026-02].cash (plan): -5.00 PLN
       feed[2026-02].cash (plan): -5.00 PLN
+      feed2[2026-02].cash (plan): -5.00 PLN
     2026-02-20:
       topup[2026-02].cash (plan): +1 000.00 PLN
       stash[second, 2026-02].cash (plan): -100.00 PLN
@@ -240244,8 +240244,8 @@ zx14: 2 778.00 PLN
   start: 1 600.00 PLN at the start of 2026-02-14
   counted:
     2026-02-15:
-      feed2[2026-02].cash (plan): -5.00 PLN
       feed[2026-02].cash (plan): -5.00 PLN
+      feed2[2026-02].cash (plan): -5.00 PLN
     2026-02-20:
       topup[2026-02].cash (plan): +1 000.00 PLN
       stash[second, 2026-02].cash (plan): -100.00 PLN
@@ -240253,8 +240253,8 @@ zx14: 2 778.00 PLN
     2026-03-05:
       rent_pay[2026-03].cash (plan): -600.00 PLN
     2026-03-15:
-      feed2[2026-03].cash (plan): -5.00 PLN
       feed[2026-03].cash (plan): -5.00 PLN
+      feed2[2026-03].cash (plan): -5.00 PLN
     2026-03-20:
       topup[2026-03].cash (plan): +1 000.00 PLN
       stash[first, 2026-03].cash (plan): -100.00 PLN
@@ -240270,8 +240270,8 @@ zx15: 2 778.00 PLN
   start: 1 600.00 PLN at the start of 2026-02-15
   counted:
     2026-02-15:
-      feed2[2026-02].cash (plan): -5.00 PLN
       feed[2026-02].cash (plan): -5.00 PLN
+      feed2[2026-02].cash (plan): -5.00 PLN
     2026-02-20:
       topup[2026-02].cash (plan): +1 000.00 PLN
       stash[second, 2026-02].cash (plan): -100.00 PLN
@@ -240279,8 +240279,8 @@ zx15: 2 778.00 PLN
     2026-03-05:
       rent_pay[2026-03].cash (plan): -600.00 PLN
     2026-03-15:
-      feed2[2026-03].cash (plan): -5.00 PLN
       feed[2026-03].cash (plan): -5.00 PLN
+      feed2[2026-03].cash (plan): -5.00 PLN
     2026-03-20:
       topup[2026-03].cash (plan): +1 000.00 PLN
       stash[first, 2026-03].cash (plan): -100.00 PLN
@@ -240302,8 +240302,8 @@ zx16: 2 783.00 PLN
     2026-03-05:
       rent_pay[2026-03].cash (plan): -600.00 PLN
     2026-03-15:
-      feed2[2026-03].cash (plan): -5.00 PLN
       feed[2026-03].cash (plan): -5.00 PLN
+      feed2[2026-03].cash (plan): -5.00 PLN
     2026-03-20:
       topup[2026-03].cash (plan): +1 000.00 PLN
       stash[first, 2026-03].cash (plan): -100.00 PLN
@@ -240422,8 +240422,8 @@ zx3: 1 689.00 PLN
     2026-01-05:
       rent_pay[2026-01].cash (plan): -600.00 PLN
     2026-01-15:
-      feed2[2026-01].cash (plan): -5.00 PLN
       feed[2026-01].cash (plan): -5.00 PLN
+      feed2[2026-01].cash (plan): -5.00 PLN
     2026-01-20:
       stash[first, 2026-01].cash (plan): -100.00 PLN
       stash[second, 2026-01].cash (plan): -1.00 PLN
@@ -240514,8 +240514,8 @@ zx4: 1 689.00 PLN
     2026-01-05:
       rent_pay[2026-01].cash (plan): -600.00 PLN
     2026-01-15:
-      feed2[2026-01].cash (plan): -5.00 PLN
       feed[2026-01].cash (plan): -5.00 PLN
+      feed2[2026-01].cash (plan): -5.00 PLN
     2026-01-20:
       stash[first, 2026-01].cash (plan): -100.00 PLN
       stash[second, 2026-01].cash (plan): -1.00 PLN
@@ -294536,7 +294536,7 @@ ask a10: count(k in qs where (f[k] as if {v[k] = m[k]}) > m[k])
 ask a11: gk[q1] as if {v[q1] = 10}
 
 ask a12: f[k] as if {v[k] = 5} for k in qs with v[q1] = 0
-,,1:0,1801:a1: 12
+,,1:0,1761:a1: 12
   pinned: v[k] = 3 for k in qs
   cut 2026-03-01
 a10: 2
@@ -294548,11 +294548,9 @@ a11: 26
   cut 2026-03-01
 a12 (k = q1): 10
   pinned: v[k] = 5 for k in qs
-  pinned: v[q1] = 0
   cut 2026-03-01
 a12 (k = q2): 10
   pinned: v[k] = 5 for k in qs
-  pinned: v[q1] = 0
   cut 2026-03-01
 a2: (2, 2)
   pinned: v[k] = 1 for k in qs
@@ -308281,7 +308279,10 @@ version card_2026
   z = 0 "the card"
   opening[konto] = 0 PLN at 2026-01-01 start "the card"
   opening[kasa] = 0 EUR at 2026-01-01 start "the card"
-,,1:1,91:refused: LOAD-UNIT the amount of leg cash of nil[kasa, konto] (0) is in no unit of a place
+,,1:0,224:b: refused: RUN-DOMAIN the amount of leg cash of nil[kasa, konto] (0) is in no unit of a place
+  cut 2026-01-01
+f: refused: RUN-DOMAIN the amount of leg cash of nil[kasa, konto] (0) is in no unit of a place
+  cut 2026-01-01
 ,21:fixes/gate8/r137_none,11:fixes-gate8,69:run r137_base.tally r137_none.tally --ask s3a s3b s3c s3d s3e s3f s3g,2563:15:r137_base.tally,1561:model rb
   tally 2
   on 2026-04-30
@@ -310632,33 +310633,6 @@ version vl3
   known 2026-01-01
   fee3 = 10.00 PLN "c"
 ,,1:1,102:refused: LOAD-UNIT lifespan of key transfers: a movement has its day, not a lifespan (b6_l3.tally:10)
-,21:r5/l3_3_accrue_yearly,8:fixes-r5,11:run m.tally,409:7:m.tally,394:model t
-  tally 2
-  on 2026-12-31
-  start 2026-01-01
-  end 2026-12-31
-
-source s "s"
-unit PLN: currency minor 0.01
-
-input p: money PLN
-input r: rate
-input d1: date
-input d2: date
-def a: num PLN = accrue(p, r, d1, d2, act365, simple) at reader
-
-version v
-  cite s
-  governs 2026..
-  known 2026-01-01
-  p = 1 000.00 PLN
-  r = 1 %/month
-  d1 = 2026-01-01
-  d2 = 2026-07-01
-
-ask q: a law 2026-06-30
-,,1:0,115:q: refused: RUN-DOMAIN accrue takes a yearly rate, not 0.01 /month (L §3.3)
-  law date 2026-06-30, cut 2026-12-31
 ,20:r5/l3_3_rate_periods,8:fixes-r5,11:run m.tally,319:7:m.tally,304:model t
   tally 2
   on 2026-01-01
@@ -313521,96 +313495,6 @@ sw6: 100.00 PLN
 w: 300.00 PLN
   unfulfilled: gift[2026-06]
   cut 2026-10-18
-,27:s1/e6_3_residuals_after_end,7:fixes-s,12:run r3.tally,2034:8:r3.tally,2017:model hh
-  tally 2
-  on 2026-10-20
-  start 2026-01-01
-  end 2026-03-15
-
-source plan "plan"
-source bank_2026_02 "bank"
-source bank_2026_03 "bank"
-unit PLN: currency minor 0.01
-kind wages: event certain
-  leg cash: PLN
-kind groceries: transfers
-  attr payee: text
-input bank: observed
-input wage_amt: money PLN
-input rent_amt: money PLN
-input wage_dom: int
-input rent_dom: int
-place konto: accounts PLN lives 2019-05-01..
-place landlord: outside lives 1900-01-01..
-place world: outside lives 1900-01-01..
-place unexplained: outside lives 1900-01-01..
-
-move wage[m in months]: wages
-  on day_of(m, wage_dom)
-  at start_of(m)
-  leg cash from world to konto amount wage_amt
-
-move rent[m in months]: transfers
-  on day_of(m, rent_dom)
-  at start_of(m)
-  leg cash from konto to landlord amount rent_amt
-
-version plan_2026
-  cite plan
-  governs 2026..
-  known 2026-01-01
-  wage_amt = 5 000.00 PLN "umowa"
-  rent_amt = 2 000.00 PLN "umowa najmu"
-  wage_dom = 10 "umowa"
-  rent_dom = 3 "umowa najmu"
-  opening[konto] = 10 000.00 PLN at 2026-01-01 start "wyciąg"
-
-version statement_02
-  cite bank_2026_02
-  governs 2026-02
-  known 2026-03-02
-  covers konto
-  pad konto from unexplained
-  bank[r1] = (on: 2026-02-03, kind: transfers, leg cash from konto to landlord amount 2 000.00 PLN, fulfils: rent[2026-02]) "line 1"
-  bank[r2] = (on: 2026-02-12, kind: wages, leg cash from world to konto amount 5 300.00 PLN, fulfils: wage[2026-02]) "line 2"
-  bank[r3] = (on: 2026-02-20, kind: groceries, leg cash from konto to world amount 400.00 PLN, payee: "BIEDRONKA") "line 3"
-  stated[konto] = 15 800.00 PLN at 2026-02-28 end "saldo"
-
-version statement_03
-  cite bank_2026_03
-  governs 2026-03
-  known 2026-04-02
-  covers konto
-  pad konto from unexplained
-  bank[r4] = (on: 2026-03-03, kind: transfers, leg cash from konto to landlord amount 2 000.00 PLN, fulfils: rent[2026-03]) "line 4"
-  stated[konto] = 13 800.00 PLN at 2026-03-31 end "saldo"
-
-ask led: residuals konto 2026-01..2026-03
-ask led2: residuals konto 2026-03..2026-05
-,,1:0,2018:led: residuals konto 2026-01 .. 2026-03
-  after the run's end: model ?"after the run's end" (konto), observed ?"after the run's end" (konto), difference ?"after the run's end" (konto)
-    days 2026-03-16 .. 2026-03-31: ?"after the run's end" (konto)
-  2026-03 move wage: model 5 000.00 PLN, observed 0.00 PLN, difference -5 000.00 PLN
-    expected but missing wage[2026-03] on 2026-03-10: model 5 000.00 PLN
-  2026-02 unexplained: model 0.00 PLN, observed -400.00 PLN, difference -400.00 PLN
-    unexplained bank[r3] on 2026-02-20: observed -400.00 PLN
-  2026-02 move wage: model 5 000.00 PLN, observed 5 300.00 PLN, difference 300.00 PLN
-    matched wage[2026-02] on 2026-02-10: model 5 000.00 PLN, observed 5 300.00 PLN, difference 300.00 PLN, timing +2 days
-  2026-02 balance: model 15 900.00 PLN, observed 15 800.00 PLN, difference -100.00 PLN
-    balance konto 2026-02-28 end (padded): booked 15 900.00 PLN, stated 15 800.00 PLN, gap -100.00 PLN
-  2026-02 move rent: model -2 000.00 PLN, observed -2 000.00 PLN, difference 0.00 PLN
-    matched rent[2026-02] on 2026-02-03: model -2 000.00 PLN, observed -2 000.00 PLN, difference 0.00 PLN, timing +0 days
-  2026-03 move rent: model -2 000.00 PLN, observed -2 000.00 PLN, difference 0.00 PLN
-    matched rent[2026-03] on 2026-03-03: model -2 000.00 PLN, observed -2 000.00 PLN, difference 0.00 PLN, timing +0 days
-  cut 2026-10-20
-led2: residuals konto 2026-03 .. 2026-05
-  after the run's end: model ?"after the run's end" (konto), observed ?"after the run's end" (konto), difference ?"after the run's end" (konto)
-    days 2026-03-16 .. 2026-05-31: ?"after the run's end" (konto)
-  2026-03 move wage: model 5 000.00 PLN, observed 0.00 PLN, difference -5 000.00 PLN
-    expected but missing wage[2026-03] on 2026-03-10: model 5 000.00 PLN
-  2026-03 move rent: model -2 000.00 PLN, observed -2 000.00 PLN, difference 0.00 PLN
-    matched rent[2026-03] on 2026-03-03: model -2 000.00 PLN, observed -2 000.00 PLN, difference 0.00 PLN, timing +0 days
-  cut 2026-10-20
 ,21:s2/l5_10_priced_field,7:fixes-s,11:run m.tally,917:7:m.tally,902:model pr
   tally 2
   on 2026-06-30
@@ -316483,4 +316367,1293 @@ version deed_d2
 
 ask j5_true: worth[p, 2027-12-31] for p in persons over .. where p != edvin with reason_true[edvin_estate, lea] = true as known 2028-01-01
 ,,1:1,74:refused: REQ-CLOCK as known 2028-01-01 is after the model's on 2027-12-31
+,22:s1/l8_1_value_run_ends,7:fixes-s,11:run m.tally,673:7:m.tally,658:model g
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+input pay_day: date
+input pay_amt: money PLN
+place konto: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on pay_day
+  leg cash from world to konto amount pay_amt
+
+ask va: value(konto, 2026-08-31) in PLN
+ask vb: value(konto, 2025-12-31) in PLN
+ask vin: value(konto, 2026-06-30) in PLN
+ask ba: bal(konto, 2026-08-31)
+ask bb: bal(konto, 2025-12-31)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  pay_day = 2026-02-02
+  pay_amt = 500.00 PLN
+  opening[konto] = 0.00 PLN at 2026-01-01 start
+,,1:0,263:ba: ?"after the run's end" (konto)
+  cut 2026-10-20
+bb: ?"before the run's start" (konto)
+  cut 2026-10-20
+va: ?"after the run's end" (konto)
+  cut 2026-10-20
+vb: ?"before the run's start" (konto)
+  cut 2026-10-20
+vin: 500 PLN
+  unfulfilled: pay
+  cut 2026-10-20
+,25:r5/l8_4_load_price_unread,8:fixes-r5,11:run m.tally,865:7:m.tally,850:model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+
+kind brokerages: place any min 0
+kind fx_buys: event certain
+  leg eur: EUR
+  leg cash: PLN
+
+input buy_day: date
+input vd: date
+input eur_amt: money EUR
+input pln_amt: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+place market: outside lives 1900-01-01..
+
+move buy: fx_buys
+  on buy_day
+  leg eur from market to broker amount eur_amt
+  leg cash from konto to market amount pln_amt
+
+def unread: num PLN = value(broker, vd) in PLN
+
+ask k: bal(konto, buy_day)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  brokerages + [broker] lives 2026-01-01..
+  buy_day = 2026-03-02
+  vd = 2026-06-30
+  eur_amt = 100.00 EUR
+  pln_amt = 425.00 PLN
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start
+,,1:1,90:refused: LOAD-PRICE value(broker) in PLN holds units in EUR and states no by (m.tally:29)
+,30:r5/l8_4_load_price_opening_row,8:fixes-r5,11:run m.tally,507:7:m.tally,492:model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+
+kind brokerages: place any min 0
+
+input vd: date
+
+place konto: accounts PLN lives 2026-01-01..
+
+ask k: value(broker, vd) in PLN
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  brokerages + [broker] lives 2026-01-01..
+  vd = 2026-06-30
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start
+  opening[broker] = 50.00 EUR at 2026-01-01 start
+,,1:1,90:refused: LOAD-PRICE value(broker) in PLN holds units in EUR and states no by (m.tally:17)
+,23:r5/l8_4_leg_unit_at_run,8:fixes-r5,11:run m.tally,675:7:m.tally,660:model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind anys: event certain
+  leg cash: any
+input d1: date
+input z: num
+place konto: accounts PLN lives 2026-01-01..
+place kasa: accounts EUR lives 2026-01-01..
+
+move nil[p in accounts on d1, q in accounts on d1 where p != q]: anys
+  on d1
+  leg cash from p to q amount z
+
+ask b: bal(konto, 2026-06-30)
+
+ask f: flows(nil, 2026-01-01 .. 2026-12-31)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d1 = 2026-03-01
+  z = 0
+  opening[konto] = 0 PLN at 2026-01-01 start
+  opening[kasa] = 0 EUR at 2026-01-01 start
+,,1:0,224:b: refused: RUN-DOMAIN the amount of leg cash of nil[kasa, konto] (0) is in no unit of a place
+  cut 2026-01-01
+f: refused: RUN-DOMAIN the amount of leg cash of nil[kasa, konto] (0) is in no unit of a place
+  cut 2026-01-01
+,30:r5/l3_2_key_diff_outside_index,8:fixes-r5,11:run m.tally,341:7:m.tally,326:model t
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+index qs = [q1, q2]
+input kq: key qs
+input kp: key qs
+def z1: int = q1 - (kq + 1)
+def z2: int = (kq + 1) - kp
+def z3: int = kq - kp
+
+ask a1: z1
+ask a2: z2
+ask a3: z3
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  kq = q2
+  kp = q1
+,,1:0,129:a1: refused: RUN-DOMAIN q1 - q2 + 1
+  cut 2026-03-01
+a2: refused: RUN-DOMAIN q2 + 1 - q1
+  cut 2026-03-01
+a3: 1
+  cut 2026-03-01
+,24:r7/l8_2_ask_pin_shadowed,8:fixes-r7,11:run m.tally,663:7:m.tally,648:model c7
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+index ks = [k1, k2]
+input r[k in ks]: num
+input seven: num
+input xv: num
+input target: num
+def tot: num = sum(r[k] for k in ks) at reader
+def inner: num = tot as if {r[*] = seven} at reader
+def sq: num = xv * xv at reader
+
+ask o3: inner with r[k1] = 9 law 2026-06-30
+ask o6: (tot as if {r[*] = seven}) with r[k1] = 9 law 2026-06-30
+ask o9: solve sq == target for xv in [0, 4] to 1 with xv = 2 law 2026-06-30
+ask w: tot with r[k1] = 9 law 2026-06-30
+
+version v
+  cite card
+  governs 2026..
+  known 2026-01-01
+  r[*] = 1
+  seven = 7
+  xv = 1
+  target = 4
+,,1:0,236:o3: 14
+  pinned: r[*] = 7
+  law date 2026-06-30, cut 2026-06-30
+o6: 14
+  pinned: r[*] = 7
+  law date 2026-06-30, cut 2026-06-30
+o9: 2
+  law date 2026-06-30, cut 2026-06-30
+w: 10
+  pinned: r[k1] = 9
+  law date 2026-06-30, cut 2026-06-30
+,13:r7/t_f4_views,8:fixes-r7,79:run m.tally s.tally --ask a_reg a_inp v_reg w_reg w_exp w_inp s_reg s_exp s_inp,1234:7:m.tally,835:model c7v
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+index ks = [k1, k2]
+input r[k in ks]: num
+input seven: num
+input xv: num
+input target: num
+def tot: num = sum(r[k] for k in ks) at reader
+def inner: num = tot as if {r[*] = seven} at reader
+def sq: num = xv * xv at reader
+
+ask a_reg: (tot as if {r[*] = seven}) with r[k1] = 9 law 2026-06-30
+ask a_exp: explain inner with r[k1] = 9 law 2026-06-30
+ask a_inp: inputs-of inner with r[k1] = 9 law 2026-06-30
+ask v_reg: solve sq == target for xv in [0, 4] to 1 with xv = 2 law 2026-06-30
+ask w_reg: tot with r[k1] = 9 law 2026-06-30
+ask w_exp: explain tot with r[k1] = 9 law 2026-06-30
+ask w_inp: inputs-of tot with r[k1] = 9 law 2026-06-30
+
+version v
+  cite card
+  governs 2026..
+  known 2026-01-01
+  r[*] = 1
+  seven = 7
+  xv = 1
+  target = 4
+,7:s.tally,369:scenario wide over c7v
+  tally 2
+  from 2026-01-01
+
+version wide_rows
+  cite card
+  governs 2026-01-01..
+  known 2025-12-01
+  replace r[*] = 5 "the scenario's rows, which hide the ask's pin"
+
+ask s_reg: tot in wide with r[k1] = 9 law 2026-06-30
+ask s_exp: explain tot in wide with r[k1] = 9 law 2026-06-30
+ask s_inp: inputs-of tot in wide with r[k1] = 9 law 2026-06-30
+,,1:0,1673:a_reg: 14
+  pinned: r[*] = 7
+  law date 2026-06-30, cut 2026-06-30
+a_inp:
+  v:seven (source card "invented")
+  pinned: r[*] = 7
+  law date 2026-06-30, cut 2026-06-30
+v_reg: 2
+  law date 2026-06-30, cut 2026-06-30
+w_reg: 10
+  pinned: r[k1] = 9
+  law date 2026-06-30, cut 2026-06-30
+w_exp: 10
+  [1] the pins, evaluated outside them
+    [2] pin r[k1] = 9
+  [3] inside the pins: 10
+    [4] tot = 10, law date 2026-06-30
+        rule base: won
+          [5] row v:r = 1
+              version v, source card, "invented", governs 2026-01-01.., known 2026-01-01
+  [6] outside the pins: 2
+    [7] tot = 2, law date 2026-06-30
+        rule base: won
+          (v:r: see [5])
+          (v:r: see [5])
+  pinned: r[k1] = 9
+  law date 2026-06-30, cut 2026-06-30
+w_inp:
+  v:r (source card "invented")
+  pinned: r[k1] = 9
+  law date 2026-06-30, cut 2026-06-30
+s_reg: 14
+  pinned: r[k1] = 9
+  world: wide
+  law date 2026-06-30, cut 2026-06-30
+s_exp: 14
+  [1] the pins, evaluated outside them
+    [2] pin r[k1] = 9
+  [3] inside the pins: 14
+    [4] tot = 14, law date 2026-06-30
+        rule base: won
+          [5] row wide_rows:r = 5
+              version wide_rows, source card, "invented", locator "the scenario's rows, which hide the ask's pin", governs 2026-01-01.., known 2025-12-01
+  [6] outside the pins: 10
+    [7] tot = 10, law date 2026-06-30
+        rule base: won
+          (wide_rows:r: see [5])
+          (wide_rows:r: see [5])
+  pinned: r[k1] = 9
+  world: wide
+  law date 2026-06-30, cut 2026-06-30
+s_inp:
+  wide_rows:r (source card "invented", locator "the scenario's rows, which hide the ask's pin")
+  pinned: r[k1] = 9
+  world: wide
+  law date 2026-06-30, cut 2026-06-30
+,29:r9/e4_1_decision_move_id_term,8:fixes-r9,11:run m.tally,1019:7:m.tally,1003:model t
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-03
+place konto: accounts PLN lives 2026-01-01..
+place pocket: cash PLN lives 2026-01-01..
+place shop: outside lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input amt: money PLN
+input small: money PLN
+input big: money PLN
+input dom: int
+
+move feed[m in month]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  reads pocket
+  leg cash from konto to shop amount if bal(pocket) > big then amt else small
+
+move feed2[m in month]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  reads pocket
+  leg cash from konto to world amount if bal(pocket) > big then amt else small
+
+ask p: explain bal(konto, 2026-02-15) from 2026-02-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 5.00 PLN
+  small = 1.00 PLN
+  big = 10.00 PLN
+  dom = 15
+  opening[konto] = 100.00 PLN at 2026-01-01 start
+  opening[pocket] = 50.00 PLN at 2026-01-01 start
+,,1:0,452:p: 80.00 PLN
+  projection of konto (PLN) from 2026-02-01 to the end of 2026-02-15
+  holder: ask p (an ask line leaves out nothing, L §5.14.1)
+  clauses: windows none, random none, without uncertain
+  start: 90.00 PLN at the start of 2026-02-01
+  counted:
+    2026-02-15:
+      feed[2026-02].cash (plan): -5.00 PLN
+      feed2[2026-02].cash (plan): -5.00 PLN
+  left out: none
+  unfulfilled: feed2[2026-01]
+  unfulfilled: feed[2026-01]
+  cut 2026-02-15
+,27:s9/l8_3_balnow_outside_line,7:fixes-s,11:run m.tally,341:7:m.tally,326:model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+input y: int
+
+def nd: money PLN = bal(konto)
+
+ask r: y
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 0.00 PLN at 2026-01-01 start
+  y = 1
+,,1:1,109:refused: LOAD-READS nd holds bal(x) with no day: a running read outside a decision and its defs (m.tally:12)
+,23:b1/l4_6_reading_at_date,7:fixes-b,11:run m.tally,256:7:m.tally,241:model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input cpi[m in months]: num
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  cpi[2026-03] = 101.5
+
+ask q1: cpi[2026-03-17]
+ask q2: cpi[2027-01-05]
+,,1:0,94:q1: 101.5
+  cut 2026-12-31
+q2: refused: RUN-KEY 2027-01-05 is outside months
+  cut 2026-12-31
+,26:b1/l4_6_period_held_by_key,7:fixes-b,11:run m.tally,294:7:m.tally,279:model f1
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "minimal text"
+index tyear = year 2022..2023 from 04-06
+
+def yfirst[y in tyear]: date = start_of(y)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+
+ask held: yfirst[2022-06] law 2026-10-18
+,,1:0,55:held: 2022-04-06
+  law date 2026-10-18, cut 2026-10-18
+,48:fixes/g13/r_agent_w_model_with_r_agent_w_a14_a14,9:fixes-g13,55:run r_agent_w_model.tally r_agent_w_a14.tally --ask a14,894:21:r_agent_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,19:r_agent_w_a14.tally,70:part a14
+  tally 2
+
+ask a14: count(d in w .. 2026-12-31 step 1 month)
+,,1:0,504:a14: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range end" (w)
+  cut 2026-03-01
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,46:fixes/g13/r_agent_w_model_with_r_agent_w_i1_i1,9:fixes-g13,53:run r_agent_w_model.tally r_agent_w_i1.tally --ask i1,975:21:r_agent_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,18:r_agent_w_i1.tally,151:part i1
+  tally 2
+
+def z1: int = (kq + 1) - q1
+
+input kq: key qs
+
+version vk
+  cite card
+  governs always
+  known 2026-01-01
+  kq = q2 "c"
+
+ask i1: z1
+,,1:0,450:i1: refused: RUN-DOMAIN q2 + 1 - q1
+  cut 2026-03-01
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,46:fixes/g13/r_agent_w_model_with_r_agent_w_i2_i2,9:fixes-g13,53:run r_agent_w_model.tally r_agent_w_i2.tally --ask i2,1007:21:r_agent_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,18:r_agent_w_i2.tally,183:part i2
+  tally 2
+
+input kp: key qs
+
+def z2: int = (kq + 1) - kp
+
+input kq: key qs
+
+version vk
+  cite card
+  governs always
+  known 2026-01-01
+  kq = q2 "c"
+  kp = q1 "c"
+
+ask i2: z2
+,,1:0,450:i2: refused: RUN-DOMAIN q2 + 1 - q1
+  cut 2026-03-01
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,46:fixes/g13/r_agent_w_model_with_r_agent_w_l1_l1,9:fixes-g13,53:run r_agent_w_model.tally r_agent_w_l1.tally --ask l1,1173:21:r_agent_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,18:r_agent_w_l1.tally,349:part l1
+  tally 2
+
+kind evs: event certain
+  leg cash: PLN
+
+input fee: money PLN
+
+move mv: evs
+  on d1
+  leg cash from konto to world amount fee
+
+ask l1: count(m in evs over d1 .. d2 where lifespan(m).from <= d2)
+
+version vl
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 10.00 PLN "c"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "c"
+,,1:1,103:refused: LOAD-UNIT lifespan of key evs: a movement has its day, not a lifespan (r_agent_w_l1.tally:13)
+,38:fixes/g13/rf_w_model_with_rf_w_w08_w08,9:fixes-g13,45:run rf_w_model.tally rf_w_w08.tally --ask w08,871:16:rf_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,14:rf_w_w08.tally,57:part w08
+  tally 2
+
+ask w08: count(n in 1 .. age(w, d2))
+,,1:0,455:w08: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range end" (w)
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,38:fixes/g13/rf_w_model_with_rf_w_w09_w09,9:fixes-g13,45:run rf_w_model.tally rf_w_w09.tally --ask w09,871:16:rf_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,14:rf_w_w09.tally,57:part w09
+  tally 2
+
+ask w09: count(n in age(w, d2) .. 5)
+,,1:0,455:w09: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range end" (w)
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,38:fixes/g13/rf_w_model_with_rf_w_w17_w17,9:fixes-g13,45:run rf_w_model.tally rf_w_w17.tally --ask w17,891:16:rf_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,14:rf_w_w17.tally,77:part w17
+  tally 2
+
+ask w17: sum(r2[1, f] for f in 0 .. age(w, d2) step 0.5)
+,,1:0,406:w17: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range end" (w)
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,32:fixes/g14/b6_model_with_b6_l1_l1,9:fixes-g14,39:run b6_model.tally b6_l1.tally --ask l1,1159:14:b6_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,11:b6_l1.tally,349:part l1
+  tally 2
+
+kind evs: event certain
+  leg cash: PLN
+
+input fee: money PLN
+
+move mv: evs
+  on d1
+  leg cash from konto to world amount fee
+
+ask l1: count(m in evs over d1 .. d2 where lifespan(m).from <= d2)
+
+version vl
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 10.00 PLN "c"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "c"
+,,1:1,96:refused: LOAD-UNIT lifespan of key evs: a movement has its day, not a lifespan (b6_l1.tally:13)
+,32:fixes/g14/b6_model_with_b6_l2_l2,9:fixes-g14,39:run b6_model.tally b6_l2.tally --ask l2,1082:14:b6_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,11:b6_l2.tally,272:part l2
+  tally 2
+
+input fee2: money PLN
+
+move mv2: transfers
+  on d1
+  leg cash from konto to world amount fee2
+
+ask l2: count(m in transfers over d1 .. d2 where lifespan(m).to == never)
+
+version vl2
+  cite card
+  governs always
+  known 2026-01-01
+  fee2 = 10.00 PLN "c"
+,,1:1,102:refused: LOAD-UNIT lifespan of key transfers: a movement has its day, not a lifespan (b6_l2.tally:10)
+,32:fixes/g14/b6_model_with_b6_l3_l3,9:fixes-g14,39:run b6_model.tally b6_l3.tally --ask l3,1035:14:b6_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,11:b6_l3.tally,225:part l3
+  tally 2
+
+input fee3: money PLN
+
+move mv3: transfers
+  on d1
+  leg cash from konto to world amount fee3
+
+ask l3: lifespan(mv3).from
+
+version vl3
+  cite card
+  governs always
+  known 2026-01-01
+  fee3 = 10.00 PLN "c"
+,,1:1,102:refused: LOAD-UNIT lifespan of key transfers: a movement has its day, not a lifespan (b6_l3.tally:10)
+,40:fixes/g13/fix_i3_model_with_fix_i3_i3_i3,9:fixes-g13,47:run fix_i3_model.tally fix_i3_i3.tally --ask i3,1046:18:fix_i3_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,15:fix_i3_i3.tally,228:part i3
+  tally 2
+
+input kq: key qs
+
+input kq1: key qs
+
+def z3: int = q1 - (kq + 1)
+
+def z4: int = kq1 - (kq + 1)
+
+ask i3: z3
+
+ask i4: z4
+
+version vi3
+  cite card
+  governs always
+  known 2026-01-01
+  kq = q2 "c"
+  kq1 = q1 "c"
+,,1:0,450:i3: refused: RUN-DOMAIN q1 - q2 + 1
+  cut 2026-03-01
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,40:fixes/g13/fix_i3_model_with_fix_i3_i3_i4,9:fixes-g13,47:run fix_i3_model.tally fix_i3_i3.tally --ask i4,1046:18:fix_i3_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,15:fix_i3_i3.tally,228:part i3
+  tally 2
+
+input kq: key qs
+
+input kq1: key qs
+
+def z3: int = q1 - (kq + 1)
+
+def z4: int = kq1 - (kq + 1)
+
+ask i3: z3
+
+ask i4: z4
+
+version vi3
+  cite card
+  governs always
+  known 2026-01-01
+  kq = q2 "c"
+  kq1 = q1 "c"
+,,1:0,450:i4: refused: RUN-DOMAIN q1 - q2 + 1
+  cut 2026-03-01
+warning: WARN-UNREAD input d2 is read by nothing
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
 ,
