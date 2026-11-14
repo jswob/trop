@@ -27,8 +27,8 @@ HOLE-SAME	L §8.1	M2	<p> and <q> are one, but <x> differs on <d>: <a> (<row>) an
 HOLE-SAME	L §8.1	M2	<movement> crosses to <member> with no link	0	-	-
 HOLE-PRERUN	L §8.1	S	*	71	S	kernel/g7/flows
 HOLE-PRERUN	L §8.1	S	before the run's start	71	S	kernel/g7/flows
-HOLE-POSTRUN	L §8.1	-	*	17	M1	codes/m1/decide/post-run
-HOLE-POSTRUN	L §8.1	-	after the run's end	17	M1	codes/m1/decide/post-run
+HOLE-POSTRUN	L §8.1	-	*	16	M1	codes/m1/decide/post-run
+HOLE-POSTRUN	L §8.1	-	after the run's end	16	M1	codes/m1/decide/post-run
 HOLE-PART	L §8.1	M5b	*	3	M5b	I:S1:S1-01~s1
 HOLE-PART	L §8.1	M5b	<place>: <amount> may be <q>'s: <questions>	3	M5b	I:S1:S1-01~s1
 LOAD-PATH	L §8.3	M0	*	2	M0	codes/LOAD-PATH/alone
@@ -84,8 +84,8 @@ LOAD-LIFESPAN	L §8.3	M0	<k> enters <kind> without lives	1	M0	codes/m0/basic/lif
 LOAD-LIFESPAN	L §8.3	M0	<k>'s lifespan has no start	1	M0	codes/m0/basic/lifespan
 LOAD-LEAF	L §8.3	M0	*	1	M0	codes/m0/basic/leaf
 LOAD-LEAF	L §8.3	M0	<k> enters <kind>, which has subkinds	1	M0	codes/m0/basic/leaf
-LOAD-PLACEKIND	L §8.3	M0	*	2	M0	codes/m0/basic/placekind
-LOAD-PLACEKIND	L §8.3	M0	place kind <K> has no unit or sign rule	1	M0	codes/m0/basic/placekind
+LOAD-PLACEKIND	L §8.3	M0	*	5	M0	codes/m0/basic/placekind
+LOAD-PLACEKIND	L §8.3	M0	place kind <K> has no unit or sign rule	4	M0	codes/m0/basic/placekind
 LOAD-PLACEKIND	L §8.3	M0	<k> enters a kind of unit one without its unit	1	M0	codes/m0/basic/placekind-one
 LOAD-PARTS	L §8.3	M0	*	15	M0	U:own/OWN-11/p21-signed
 LOAD-PARTS	L §8.3	M0	kind <K>: <clause> missing	1	M0	codes/m0/own/parts-missing
@@ -300,7 +300,7 @@ RUN-LIMIT	L §8.4	S	a day comes before 0001-01-01	2	S	kernel/g14/days
 RUN-LIMIT	L §8.4	S	<a> .. <b> holds more than 1 000 000 keys	9	S	kernel/g14/day_range_end
 RUN-DIV	L §8.4	S	*	83	S	kernel/g1/text
 RUN-DIV	L §8.4	S	division by zero	83	S	kernel/g1/text
-RUN-DOMAIN	L §8.4	S	*	117	S	kernel/g1/rate_duration
+RUN-DOMAIN	L §8.4	S	*	116	S	kernel/g1/rate_duration
 RUN-DOMAIN	L §8.4	S	ln, sqrt or pow outside its domain	0	-	-
 RUN-DOMAIN	L §8.4	S	<operation> with a step <s> that is not positive	1	S	kernel/g1/step
 RUN-DOMAIN	L §8.4	S	a stepped range whose step <s> is not positive	5	M1	m1/fixes/g13/r_p_dz
@@ -310,7 +310,7 @@ RUN-DOMAIN	L §8.4	S	<code> is not a <family> code	0	-	-
 RUN-DOMAIN	L §8.4	S	of <q> at <x>, which keeps no labels of its sort	0	-	-
 RUN-DOMAIN	L §8.4	S	calendar <c> has no business day	2	S	kernel/g14/calendar
 RUN-DOMAIN	L §8.4	S	known <d> is after the model's on <on>	1	M1	m1/r5/e11_cut_computed_after_on
-RUN-DOMAIN	L §8.4	S	?	107	S	kernel/g1/rate_duration
+RUN-DOMAIN	L §8.4	S	?	106	S	kernel/g1/rate_duration
 RUN-UNDECIDED	L §8.4	M6	*	0	-	-
 RUN-UNDECIDED	L §8.4	M6	<function> to <u> not decided within the precision cap	0	-	-
 RUN-PARAM	L §8.4	M6	*	1	M6	I:M:CH-03

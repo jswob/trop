@@ -316776,6 +316776,106 @@ version v
   unfulfilled: feed2[2026-01]
   unfulfilled: feed[2026-01]
   cut 2026-02-15
+,18:r9/l5_7_kind_parts,8:fixes-r9,12:run no.tally,605:8:no.tally,589:model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind savings: places
+  owned by arrive
+  step minor(PLN)
+  takes k for w order if k.owner == ania then 0 else 1
+place konto: savings lives 2026-01-01..
+def arrive[m in events, p in parties]: num at m.day
+  rule base = if p == ania then 1 else 0
+ask q: bal(konto, 2026-06-30)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  persons + [tomek] lives 1981-01-01..
+  opening[konto] = 0 PLN at 2026-01-01 start
+,,1:1,82:refused: LOAD-PLACEKIND place kind savings has no unit or sign rule (no.tally:10)
+,25:r9/l5_7_kind_places_alone,8:fixes-r9,12:run no.tally,314:8:no.tally,298:model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind foo: places
+place konto: foo lives 2026-01-01..
+ask q: bal(konto, 2026-06-30)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 5 PLN at 2026-01-01 start
+,,1:1,77:refused: LOAD-PLACEKIND place kind foo has no unit or sign rule (no.tally:9)
+,30:r9/l5_7_kind_places_alone_twin,8:fixes-r9,14:run twin.tally,326:10:twin.tally,307:model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind foo: place PLN min 0
+place konto: foo lives 2026-01-01..
+ask q: bal(konto, 2026-06-30)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 5 PLN at 2026-01-01 start
+,,1:0,29:q: 5.00 PLN
+  cut 2026-01-01
+,23:r9/l5_7_kind_place_bare,8:fixes-r9,12:run no.tally,232:8:no.tally,216:model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind bar: place
+input y: int
+ask q: y
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  y = 1
+,,1:1,77:refused: LOAD-PLACEKIND place kind bar has no unit or sign rule (no.tally:9)
+,28:r9/l5_7_kind_place_bare_twin,8:fixes-r9,14:run twin.tally,245:10:twin.tally,226:model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind bar: place PLN min 0
+input y: int
+ask q: y
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  y = 1
+,,1:0,22:q: 1
+  cut 2026-01-01
 ,27:s9/l8_3_balnow_outside_line,7:fixes-s,11:run m.tally,341:7:m.tally,326:model t
   tally 2
   on 2026-10-18

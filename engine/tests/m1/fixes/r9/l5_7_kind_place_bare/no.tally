@@ -1,0 +1,17 @@
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind bar: place
+input y: int
+ask q: y
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  y = 1

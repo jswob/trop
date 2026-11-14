@@ -1,0 +1,25 @@
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind savings: places
+  owned by arrive
+  step minor(PLN)
+  takes k for w order if k.owner == ania then 0 else 1
+place konto: savings lives 2026-01-01..
+def arrive[m in events, p in parties]: num at m.day
+  rule base = if p == ania then 1 else 0
+ask q: bal(konto, 2026-06-30)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  persons + [tomek] lives 1981-01-01..
+  opening[konto] = 0 PLN at 2026-01-01 start

@@ -1675,6 +1675,11 @@ r5/l3_2_key_diff_outside_index	fixes-r5		engine/tests/m1/fixes/r5/l3_2_key_diff_
 r7/l8_2_ask_pin_shadowed	fixes-r7		engine/tests/m1/fixes/r7/l8_2_ask_pin_shadowed	engine/tests/m1/fixes/r7/l8_2_ask_pin_shadowed/m.tally			R7
 r7/t_f4_views	fixes-r7		engine/tests/m1/fixes/r7/t_f4_views	engine/tests/m1/fixes/r7/t_f4_views/m.tally engine/tests/m1/fixes/r7/t_f4_views/s.tally	a_reg a_exp a_inp v_reg w_reg w_exp w_inp s_reg s_exp s_inp		R7
 r9/e4_1_decision_move_id_term	fixes-r9		engine/tests/m1/fixes/r9/e4_1_decision_move_id_term	engine/tests/m1/fixes/r9/e4_1_decision_move_id_term/m.tally			R9
+r9/l5_7_kind_parts	fixes-r9		engine/tests/m1/fixes/r9/l5_7_kind_parts	engine/tests/m1/fixes/r9/l5_7_kind_parts/no.tally			R9
+r9/l5_7_kind_places_alone	fixes-r9		engine/tests/m1/fixes/r9/l5_7_kind_places_alone	engine/tests/m1/fixes/r9/l5_7_kind_places_alone/no.tally			R9
+r9/l5_7_kind_places_alone_twin	fixes-r9		engine/tests/m1/fixes/r9/l5_7_kind_places_alone	engine/tests/m1/fixes/r9/l5_7_kind_places_alone/twin.tally			R9
+r9/l5_7_kind_place_bare	fixes-r9		engine/tests/m1/fixes/r9/l5_7_kind_place_bare	engine/tests/m1/fixes/r9/l5_7_kind_place_bare/no.tally			R9
+r9/l5_7_kind_place_bare_twin	fixes-r9		engine/tests/m1/fixes/r9/l5_7_kind_place_bare	engine/tests/m1/fixes/r9/l5_7_kind_place_bare/twin.tally			R9
 s9/l8_3_balnow_outside_line	fixes-s		engine/tests/m1/fixes/s9/l8_3_balnow_outside_line	engine/tests/m1/fixes/s9/l8_3_balnow_outside_line/m.tally			S9
 b1/l4_6_reading_at_date	fixes-b		engine/tests/m1/fixes/b1/l4_6_reading_at_date	engine/tests/m1/fixes/b1/l4_6_reading_at_date/m.tally			B1
 b1/l4_6_period_held_by_key	fixes-b		engine/tests/m1/fixes/b1/l4_6_period_held_by_key	engine/tests/m1/fixes/b1/l4_6_period_held_by_key/m.tally			B1

@@ -1,0 +1,17 @@
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind foo: place PLN min 0
+place konto: foo lives 2026-01-01..
+ask q: bal(konto, 2026-06-30)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 5 PLN at 2026-01-01 start
