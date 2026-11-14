@@ -1,0 +1,50 @@
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+unit etf "fund unit"
+
+kind funds: place etf min 0
+kind mixed: place any min 0
+kind buys: event certain
+  leg units: etf
+
+input px: num PLN/etf reading
+input day: date
+input amt: num etf
+input eur_amt: money EUR
+
+place fund: funds lives 2026-01-01..
+place box: mixed lives 2026-01-01..
+place market: outside lives 1900-01-01..
+
+move buy: buys
+  on day
+  leg units from market to fund amount amt
+
+move buy2: buys
+  on day
+  leg units from market to box amount amt
+
+move fx: transfers
+  on day
+  leg cash from market to box amount eur_amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  px = 12 PLN/etf at 2026-03-01 "kurs"
+  day = 2026-02-02 "own"
+  amt = 1 etf "own"
+  eur_amt = 1.00 EUR "own"
+
+ask q1: value(fund, 2026-06-30) in PLN by last(px)
+ask q2: value(fund, 2026-06-30) in PLN by px law 2026-06-30
+ask q3: value(fund, 2026-01-31) in PLN by last(px)
+ask q4: value(box, 2026-06-30) in PLN by last(px)

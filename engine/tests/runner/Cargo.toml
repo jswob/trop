@@ -136,3 +136,17 @@ name = "m1_invariant"
 path = "milestone/m1_invariant.rs"
 test = false
 required-features = ["fault-injection"]
+
+# M2: the checks of BUILD-ORDER § M2 that s_kernel doesn't hold, refcore's whole output for
+# each (m2/vectors.refcore; MILESTONE-M2.md row 1), one test per builder group
+[[test]]
+name = "m2_checks"
+path = "milestone/m2_checks.rs"
+test = false
+
+# Milestone M2's in-scope items (issue #167, MILESTONE-M2.md row 6): `test = false` until M2
+# is in tools/milestones.toml's `gating`, as m2_checks.
+[[test]]
+name = "m2_items"
+path = "milestone/m2_items.rs"
+test = false

@@ -1,0 +1,33 @@
+id	group	check	cwd	files	asks	options	for
+I:X:wife_net@c3_fast	checks-green	I:X:wife_net@c3_fast					-
+I:X:social_and_health@c3_fast	checks-green	I:X:social_and_health@c3_fast					-
+I:X:pit37@c3_fast	checks-green	I:X:pit37@c3_fast					-
+I:X:wife_net@v3_fast	checks-green	I:X:wife_net@v3_fast					-
+I:X:social_and_health@v3_fast	checks-green	I:X:social_and_health@v3_fast					-
+I:X:pit37@v3_fast	checks-green	I:X:pit37@v3_fast					-
+I:M:LH-14	checks-green	I:M:LH-14					-
+I:M:RC-08	checks-green	I:M:RC-08					-
+I:M:UL-06	checks-green	I:M:UL-06					-
+I:M:UL-09	checks-green	I:M:UL-09					-
+I:M:CH-04	checks-green	I:M:CH-04					-
+U:law/LAW-04	checks-green	U:law/LAW-04					-
+U:rec/REC-01	checks-green	U:rec/REC-01					-
+U:rec/REC-02	checks-green	U:rec/REC-02					-
+U:rec/REC-05	checks-green	U:rec/REC-05					-
+U:rec/REC-07	checks-green	U:rec/REC-07					-
+U:rule/RULE-06	checks-green	U:rule/RULE-06					-
+U:scen/SCEN-02/SCEN-02	checks-green	U:scen/SCEN-02/SCEN-02					-
+U:set/scen/SCEN-02/SCEN-02	checks-green	U:set/scen/SCEN-02/SCEN-02					-
+U:val/VAL-05	checks-green	U:val/VAL-05					-
+U:rule/RULE-07	checks-records	U:rule/RULE-07					records
+U:rule/RULE-08	checks-forms	U:rule/RULE-08					forms
+I:M:UL-15	checks-forms	I:M:UL-15					forms
+items/r8/reach2	items-green		engine/tests/m2/items/r8	engine/tests/m2/items/r8/reach2.tally	b_axis b_lo i_axis i_lo r_lo s_axis s_lo		-
+items/s2/forms	items-forms		engine/tests/m2/items/s2	engine/tests/m2/items/s2/forms.tally			forms
+items/shift/hole	items-green		engine/tests/m2/items/shift	engine/tests/m2/items/shift/hole.tally	h_in h_in2 s_back s_fwd		-
+items/law09/each_year	items-green		engine/tests/unit/probes/law	engine/tests/unit/probes/law/LAW-09.tally	each_year		-
+items/explain/m	items-explain		engine/tests/m2/items/explain	engine/tests/m2/items/explain/m.tally			explain
+items/explain/any	items-explain		engine/tests/m2/items/explain	engine/tests/m2/items/explain/any.tally			explain
+items/explain/from	items-explain		engine/tests/m2/items/explain/from	engine/tests/m2/items/explain/from/household.tally engine/tests/m2/items/explain/from/late.tally			explain
+items/windows/m	items-windows		engine/tests/m2/items/windows	engine/tests/m2/items/windows/m.tally			windows
+items/windows/known	items-windows		engine/tests/m2/items/windows	engine/tests/m2/items/windows/known.tally			windows

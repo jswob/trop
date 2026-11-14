@@ -9,9 +9,9 @@
 /// `held.tsv`: id, the target that would run it, the issue it waits for, why.
 pub const HELD: &str = include_str!("../../held.tsv");
 
-/// The targets a row may name: the gating ones, and M1's vector stores (issue #108), whose
-/// targets gate from M1's marker.
-pub const TARGETS: [&str; 11] = [
+/// The targets a row may name: the gating ones, M1's vector stores (issue #108), whose
+/// targets gate from M1's marker, and M2's (issue #167), whose targets gate from M2's.
+pub const TARGETS: [&str; 12] = [
     "s_kernel",
     "m0_codes",
     "m0_format",
@@ -23,6 +23,7 @@ pub const TARGETS: [&str; 11] = [
     "m1_codes",
     "m1_fixes",
     "m1_properties",
+    "m2_checks",
 ];
 
 /// One held vector.
@@ -79,6 +80,7 @@ mod tests {
     use crate::laws_m1::M1_CORPUS;
     use crate::m0::{FORMAT, LOAD, format_vectors, load_vectors};
     use crate::m1::VECTORS as M1_VECTORS;
+    use crate::m2::VECTORS as M2_VECTORS;
     use std::collections::BTreeSet;
 
     /// Every row reads, names its id once, and names a vector its target's store holds, so a
@@ -131,6 +133,11 @@ mod tests {
             .into_iter()
             .map(|v| v.id)
             .collect();
+        let m2: BTreeSet<String> = vectors(M2_VECTORS)
+            .expect("m2")
+            .into_iter()
+            .map(|v| v.id)
+            .collect();
         for h in &rs {
             let store = match h.target.as_str() {
                 "s_kernel" => &kernel,
@@ -140,6 +147,7 @@ mod tests {
                 "m1_checks" | "m1_carried" | "m1_goldens" | "m1_fixes" => &m1,
                 "m1_codes" => &m1_codes,
                 "m1_properties" => &m1_cases,
+                "m2_checks" => &m2,
                 _ => &cases,
             };
             assert!(
