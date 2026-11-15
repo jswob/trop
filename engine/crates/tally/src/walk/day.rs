@@ -340,6 +340,10 @@ impl Engine {
                 ent.coll = Some(coll);
                 self.walk_mut(id)?.add(m, &place, ALL, ent)
             }
+            Act::CoverHole(place, h) => {
+                self.walk_mut(id)?
+                    .add(m, &place, ALL, Ent::new(at, Change::Hole(h)))
+            }
             Act::GlobalHole(h) => {
                 self.walk_mut(id)?
                     .add(m, ALL, ALL, Ent::new(at, Change::Perm(h)))

@@ -204,7 +204,7 @@ pub mod eval {
     pub(crate) use time_arith::periods_of;
     pub(crate) use timelines::combinations;
     pub(crate) use trace::{Balance as TracedBalance, Kind as TraceKind, RuleLine, Trace, Walked};
-    pub(crate) use windows::{one_day, window_days};
+    pub(crate) use windows::{known_hole, one_day, window_days};
     pub(crate) use years::year_form;
 }
 
