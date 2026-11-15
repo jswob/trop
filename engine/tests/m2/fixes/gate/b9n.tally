@@ -1,0 +1,62 @@
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bk "bank"
+unit PLN: currency minor 0.01
+input bank: observed
+input g_amt: money PLN
+input g_dom: int
+input divisor[m in months]: num
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+move groc[m in months]: transfers
+  on day_of(m, g_dom * divisor[m] / divisor[m])
+  at start_of(m)
+  leg cash from konto to world amount g_amt
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  g_amt = 500.00 PLN "plan"
+  g_dom = 5 "plan"
+  divisor[2026-01] = 1 "ok"
+  divisor[2026-02] = 1 "ok"
+  divisor[2026-03] = 0 "zero"
+  divisor[2026-04] = 1 "ok"
+  divisor[2026-05] = 1 "ok"
+  divisor[2026-06] = 1 "ok"
+  divisor[2026-07] = 1 "ok"
+  divisor[2026-08] = 1 "ok"
+  divisor[2026-09] = 1 "ok"
+  divisor[2026-10] = 1 "ok"
+  divisor[2026-11] = 1 "ok"
+  divisor[2026-12] = 1 "ok"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "wyciąg"
+
+version statement_02
+  cite bk
+  governs 2026-02..2026-03
+  known 2026-04-02
+  covers konto
+  pad konto from unexplained
+  bank[r1] = (on: 2026-02-05, kind: transfers, leg cash from konto to world amount 300.00 PLN, fulfils: groc[2026-02]) "l1"
+
+ask r1: residuals konto 2026-02
+ask r2: residuals konto 2026-03
+ask r3: residuals konto 2026-02..2026-03
+ask f1: flows(groc, 2026-02), flows(groc, 2026-03), bal(konto, 2026-02-28), bal(konto, 2026-03-31) modelled
+ask c1: count(t in transfers over 2026-02)
+ask c2: sum(t.cash.amount for t in transfers over 2026-02)
+ask c3: count(t in transfers over 2026-04..2026-05)
+ask n1: next(transfers, 2026-02-01).day
+ask fl1: flows(konto, ..2026-03-31)
+ask fl2: flows(groc, ..2026-02-28)
+ask cv1: covered(konto, ..2026-03-31)
+ask bm: bal(konto, 2026-02-28) modelled
