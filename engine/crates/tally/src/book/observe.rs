@@ -687,6 +687,9 @@ fn seen_observations(
 /// two statements fulfils what either row states, so both rows stand in for it (L §5.19 One
 /// movement on two statements, §6.1).
 fn share_fulfils(groups: &BTreeMap<String, Vec<String>>, seen: &mut [Obs]) {
+    if groups.is_empty() {
+        return;
+    }
     let mut stated: BTreeMap<String, Fulfils> = BTreeMap::new();
     for o in seen.iter() {
         if let Some(f) = &o.fulfils {

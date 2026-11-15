@@ -79,6 +79,9 @@ impl Engine {
         key: At,
     ) -> Result<(), Stop> {
         let walk = self.walk(id)?;
+        if walk.after.is_empty() {
+            return Ok(());
+        }
         let run = walk
             .runs
             .get(ix)

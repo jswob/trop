@@ -300,7 +300,8 @@ impl Engine {
         } else {
             None
         };
-        let after = input.rows.iter().any(|row| after_at(row, place));
+        // only `stated` and `opening` hold readings `after m`
+        let after = input.reading && input.rows.iter().any(|row| after_at(row, place));
         if hidden.is_empty() && !after {
             return Ok(Ok(None));
         }
