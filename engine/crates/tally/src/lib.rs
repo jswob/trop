@@ -268,7 +268,8 @@ pub mod book {
     mod same;
     mod settle;
 
-    pub use adjust::{Adjustment, Settled};
+    pub(crate) use adjust::hole_booked_before;
+    pub use adjust::{Adjustment, Measured, Settled};
     pub use ledger::{Fig, Ledger, Line, UnitLedger, fig_text};
     pub use ledger_order::{Group, GroupKey};
     pub(crate) use members::{MvDom, MvMember, inst_ref};

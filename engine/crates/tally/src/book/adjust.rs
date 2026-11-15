@@ -67,6 +67,17 @@ pub struct Adjustment {
     pub made: bool,
 }
 
+/// A move's measure over one of its lists at a cut: its adjustments, and the hole bookings
+/// its versions answered, as the instances they become (refcore's `adjust_move`'s cache).
+/// E §5 steps 1–4.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Measured {
+    /// The adjustments, in their order.
+    pub adjustments: Vec<Adjustment>,
+    /// The answered hole bookings.
+    pub answered: Vec<Inst>,
+}
+
 /// A leg that settles an adjustment, or a waiver (refcore's `AdjMv.settled`). E §5 step 5.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Settled {
@@ -184,9 +195,10 @@ impl Adjustment {
 }
 
 impl Engine {
-    /// The adjustments of one plan move's booked instances at cut `cut`, kept per move and cut;
-    /// a hole booking a later version answers becomes, in the move's instances at the cut,
-    /// what that version gives (refcore's `adjust_move`). E §5 steps 1–4.
+    /// The adjustments of one plan move's booked instances at cut `cut`, kept per move, cut
+    /// and the list they measure (the whole list, or a walk up to a day's); a hole booking a
+    /// later version answers becomes, in that list, what that version gives (refcore's
+    /// `adjust_move`, its key with `upto_tag`). E §5 steps 1–4, §3.2.
     ///
     /// # Errors
     ///
@@ -197,12 +209,13 @@ impl Engine {
         mv: &MoveInfo,
         cut: Day,
     ) -> Result<Vec<Adjustment>, Stop> {
-        let key = (mv.id.clone(), cut);
+        let upto = self.list_upto(mv, cut);
+        let key = (mv.id.clone(), cut, upto);
         if let Some(hit) = self.adjustments.get(&key) {
-            return Ok(hit.clone());
+            return Ok(hit.adjustments.clone());
         }
         if super::settle::settlement_move(m, mv)? {
-            self.adjustments.insert(key, Vec::new());
+            self.adjustments.insert(key, Measured::default());
             return Ok(Vec::new());
         }
         if self.adjust_active.contains(&key) {
@@ -218,16 +231,25 @@ impl Engine {
         let made = self.measure_move(m, mv, cut);
         self.reads_back(mark);
         self.adjust_active.remove(&key);
-        let (out, answered) = made?;
-        self.answer_holes(&mv.id, cut, &answered);
-        self.adjustments.insert(key, out.clone());
+        let (adjustments, answered) = made?;
+        self.answer_holes(&mv.id, (cut, upto), &answered);
+        let out = adjustments.clone();
+        self.adjustments.insert(
+            key,
+            Measured {
+                adjustments,
+                answered,
+            },
+        );
         Ok(out)
     }
 
-    /// Where the instances `insts` of plan move `mv` at cut `cut` hold a hole booking before
-    /// the cut, the move's adjustments at the cut, so a later version that answers it does so
-    /// in the move's instances there, whatever reads them first; a refusal the measuring meets
-    /// stays its own readers' (E §5 step 1, steps 2–4).
+    /// Plan move `mv`'s list at cut `cut` holds a hole booking before the cut: the move's
+    /// adjustments over that list, so a later version that answers it does so there, whatever
+    /// reads it first; a measure made before the list was gives it its answers too; a refusal the
+    /// measuring meets stays its own readers'. A cycle it meets kept the open cells at their
+    /// own law dates: they read the list with its holes unanswered, which turns on the measure
+    /// in progress (E §5 step 1, steps 2–4; E §3.2).
     ///
     /// # Errors
     ///
@@ -236,10 +258,16 @@ impl Engine {
         &mut self,
         m: &Reality,
         mv: &MoveInfo,
-        (insts, cut): (&[Inst], Day),
+        cut: Day,
     ) -> Result<(), Stop> {
-        let due = !mv.decision && insts.iter().any(|i| hole_booked_before(i, cut));
-        if !due || self.adjust_active.contains(&(mv.id.clone(), cut)) {
+        let upto = self.list_upto(mv, cut);
+        let key = (mv.id.clone(), cut, upto);
+        if self.adjust_active.contains(&key) {
+            return Ok(());
+        }
+        if let Some(hit) = self.adjustments.get(&key) {
+            let answered = hit.answered.clone();
+            self.answer_holes(&mv.id, (cut, upto), &answered);
             return Ok(());
         }
         // the plan's own measure is no walk read of an explanation the instances are read
@@ -253,11 +281,20 @@ impl Engine {
         }
     }
 
-    /// The move's instances at cut `cut`, its whole list and each list up to a day, with each
-    /// hole booking a later version answered by `answered` in its place (refcore's in-place
-    /// `i.exists, i.legs = j.exists, j.legs`). E §5 step 1.
-    fn answer_holes(&mut self, move_id: &str, cut: Day, answered: &[Inst]) {
+    /// The move's list at cut `cut` that the answers' measure took, with each hole booking a
+    /// later version answered by `answered` in its place: the whole list, and the lists up to
+    /// a day kept, or the one list up to a day `upto` (refcore's in-place `i.exists, i.legs =
+    /// j.exists, j.legs`). E §5 step 1.
+    fn answer_holes(&mut self, move_id: &str, (cut, upto): (Day, Option<Day>), answered: &[Inst]) {
         if answered.is_empty() {
+            return;
+        }
+        if let Some(day) = upto {
+            let key = (move_id.to_owned(), cut, day);
+            if let Some(list) = self.prefixes.plans.get(&key) {
+                let patched = with_answers(list, answered);
+                self.prefixes.plans.insert(key, patched);
+            }
             return;
         }
         let key = (move_id.to_owned(), cut);
@@ -392,6 +429,7 @@ impl Engine {
                 answer.exists = j.exists.clone();
                 answer.legs.clone_from(&j.legs);
                 answer.coll.merge(&j.coll);
+                answer.answered = Some((c, step.vids.clone()));
                 answer.status = self.status(m, mv, &mut answer, cut)?;
                 answered.push(answer);
                 hole0 = false;
@@ -742,7 +780,7 @@ fn is_refused_leg(lg: &LegVal) -> bool {
 
 /// Whether an instance is a hole movement booked before cut `cut`: dated before it, past (or
 /// a hole, or none so far), its booking a hole (refcore's `hole0`). E §5 step 1.
-fn hole_booked_before(inst: &Inst, cut: Day) -> bool {
+pub(crate) fn hole_booked_before(inst: &Inst, cut: Day) -> bool {
     let day = inst.day.as_ref().and_then(crate::walk::Dated::day);
     matches!(inst.status, Status::Past | Status::Hole | Status::None)
         && day.is_some_and(|t| t < cut)

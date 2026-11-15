@@ -137,7 +137,14 @@ fn instance_lines(
         return Ok(out);
     }
     if let Some(cut) = inst.cut {
-        out.extend(booked_derivation(m, engine, (mv, &inst), cut, ctx)?);
+        let head = format!("derivation at {}:", cut.text());
+        out.extend(booked_derivation(m, engine, (mv, &inst), (cut, head), ctx)?);
+    }
+    if let Some((at, vids)) = &inst.answered {
+        // a hole booking a later version answered: that version's evaluation is its
+        // existence and legs (E §5 step 1)
+        let head = format!("answered at {} (version {}):", at.text(), vids.join(", "));
+        out.extend(booked_derivation(m, engine, (mv, &inst), (*at, head), ctx)?);
     }
     for adj in engine.all_adjustments(m, ctx.cut)? {
         if adj.inst_id == inst.id {
@@ -274,9 +281,10 @@ fn end_text(end: &End) -> String {
     }
 }
 
-/// A plan instance's derivation at its booking cut: the instance evaluated again there with
+/// A plan instance's derivation at cut `cut`, its booking cut or the cut of the version that
+/// answered its hole booking, under the line `head`: the instance evaluated again there with
 /// tracing on, its day at the line's cut, every cause numbered once (refcore's
-/// `explain_instance`, its `eval_inst` traced at `at_cut`). E §10, §4.1 step 2.
+/// `explain_instance`, its `eval_inst` traced at `at_cut`). E §10, §4.1 step 2, §5 step 1.
 ///
 /// # Errors
 ///
@@ -285,7 +293,7 @@ fn booked_derivation(
     m: &Reality,
     engine: &mut Engine,
     (mv, inst): (&MoveInfo, &Inst),
-    cut: Day,
+    (cut, head): (Day, String),
     ctx: Ctx,
 ) -> Result<Vec<String>, Stop> {
     let seed = Seed {
@@ -309,7 +317,7 @@ fn booked_derivation(
     if sub.is_empty() {
         return Ok(sub);
     }
-    let mut out = vec![format!("derivation at {}:", cut.text())];
+    let mut out = vec![head];
     out.extend(sub);
     Ok(out)
 }
