@@ -15,7 +15,8 @@ in this folder. The figure is the ask's value on its first line, the `item`-th o
 
 These runs are engine benchmarks, not checks of `engine/tools/check`: on 2026-11-15 the quick profile took 4 s and
 2.1 GB to 2036, 80 s and 12.1 GB to 2050, 103 s and 12.5 GB to 2056, past the 8 GB a check may take. The gate's
-timing run uses them (GOLDENS.md names the three horizons).
+timing run uses them (GOLDENS.md names the three horizons). P54: nobody runs this on the Mac until the engine's
+runs of the three horizons fit in 8 GB (G6's word); memcap.py now stops an engine run past the cap in any profile.
 
     python3 -I -B engine/tests/m2/bank/pins_long.py --engine PATH   -> one line per pin; exit 1 if one unheld differs
     python3 -I -B engine/tests/m2/bank/pins_long.py --check         -> the table's shape only (no run)
