@@ -547,14 +547,17 @@ fn last_standing_in(walk: &Walk, links: &[String], place: &str) -> Result<Option
     let pool = if touching.is_empty() { all } else { touching };
     Ok(pool
         .into_iter()
-        .max_by(|a, b| {
-            let rank = |x: &Booked| match x {
-                Booked::Step(at) => at.rank,
-                Booked::AtDecision => 0,
-            };
-            (a.0, a.1, rank(&a.2)).cmp(&(b.0, b.1, rank(&b.2)))
-        })
+        .max_by(|a, b| (a.0, a.1, booked_rank(&a.2)).cmp(&(b.0, b.1, booked_rank(&b.2))))
         .map(|(_, _, booked)| booked))
+}
+
+/// Where a booked observation stands among its day's: its rank in the day's first batch,
+/// 0 at a decision's point. E §4.2 steps 1 and 3.
+fn booked_rank(booked: &Booked) -> u32 {
+    match booked {
+        Booked::Step(at) => at.rank,
+        Booked::AtDecision => 0,
+    }
 }
 
 /// The point of a reading at the start or the end of `day`, `rank` its place among the

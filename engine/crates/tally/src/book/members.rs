@@ -810,7 +810,7 @@ impl Engine {
         };
         let day = [x, first, other]
             .into_iter()
-            .find_map(|mv| mv.day().and_then(|d| d.day()))
+            .find_map(|mv| mv.day().as_ref().and_then(Dated::day))
             .map_or_else(|| "every day".to_owned(), Day::text);
         let (one, two) = (first.id(), other.id());
         let text = format!(
@@ -847,11 +847,10 @@ impl Engine {
         };
         let all = self.observations(m, cut)?;
         // in the order the same lines name them
-        let others: Vec<&Obs> = group
-            .iter()
-            .filter(|y| **y != o.id)
-            .filter_map(|y| all.iter().find(|x| x.id == *y))
-            .collect();
+        let mut others: Vec<&Obs> = Vec::new();
+        for y in group.iter().filter(|y| **y != o.id) {
+            others.extend(all.iter().find(|x| x.id == *y));
+        }
         if others.is_empty() {
             return Ok(None);
         }

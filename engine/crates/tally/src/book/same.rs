@@ -49,7 +49,7 @@ pub fn same_groups(m: &Reality) -> BTreeMap<String, Vec<String>> {
     for side in &order {
         by_root
             .entry(root(&parent, side))
-            .or_default()
+            .or_insert_with(Vec::new)
             .push((*side).to_owned());
     }
     let mut out = BTreeMap::new();
@@ -129,11 +129,10 @@ pub fn same_differ(
     leg: Option<&str>,
 ) -> Result<Option<Hole>, Stop> {
     for other in others {
-        for mine in row
-            .legs
-            .iter()
-            .filter(|lg| leg.is_none_or(|name| lg.name == name))
-        {
+        for mine in &row.legs {
+            if leg.is_some_and(|name| mine.name != name) {
+                continue;
+            }
             let Some(theirs) = other.legs.iter().find(|lg| lg.name == mine.name) else {
                 continue;
             };
@@ -371,6 +370,25 @@ fn realised_leg(
     ]))
 }
 
+/// Row `o` refused `err` unless it was refused already: a row keeps the first refusal it
+/// meets (refcore's `unjoined_refused`, `o.err is None`). L §5.19.
+fn refuse_once(bad: &mut Vec<(String, Refusal)>, o: &Obs, err: &Refusal) {
+    if !bad.iter().any(|(id, _)| *id == o.id) {
+        bad.push((o.id.clone(), err.clone()));
+    }
+}
+
+/// Whether some place of `one` and some place of `two` differ: each version covers a
+/// different one of them. L §5.19.
+fn some_differ(one: &BTreeSet<String>, two: &BTreeSet<String>) -> bool {
+    for x in one {
+        if two.iter().any(|y| y != x) {
+            return true;
+        }
+    }
+    false
+}
+
 /// The places an observed row's legs name. L §5.19.
 fn row_places(o: &Obs) -> BTreeSet<&str> {
     o.legs
@@ -402,9 +420,10 @@ impl Engine {
             return Ok(Value::None);
         }
         let all = self.observations(m, cut)?;
-        let obs: Vec<Obs> = links
+        // in the observations' order, as the links are
+        let obs: Vec<Obs> = all
             .iter()
-            .filter_map(|id| all.iter().find(|o| o.id == *id))
+            .filter(|o| links.contains(&o.id))
             .cloned()
             .collect();
         for o in &obs {
@@ -526,12 +545,8 @@ impl Engine {
                         a.id, b.id
                     ),
                 );
-                // a row keeps the first refusal it meets
-                let fresh: Vec<&Obs> = [a, b]
-                    .into_iter()
-                    .filter(|o| !bad.iter().any(|(id, _)| *id == o.id))
-                    .collect();
-                bad.extend(fresh.into_iter().map(|o| (o.id.clone(), err.clone())));
+                refuse_once(&mut bad, a, &err);
+                refuse_once(&mut bad, b, &err);
             }
         }
         Ok(bad)
@@ -558,7 +573,7 @@ impl Engine {
             self.row_covers(m, a, &places, cut)?,
             self.row_covers(m, b, &places, cut)?,
         );
-        Ok(in_a.iter().any(|x| in_b.iter().any(|y| x != y)))
+        Ok(some_differ(&in_a, &in_b))
     }
 
     /// Of places `places`, those row `o`'s own version covers on its legs' days (refcore's
@@ -603,11 +618,13 @@ impl Engine {
             .iter()
             .map(|o| o.id.clone())
             .collect();
-        Ok(groups
-            .into_iter()
-            .filter(|(x, group)| group.iter().any(|y| y != x && observed.contains(y)))
-            .map(|(x, _)| x)
-            .collect())
+        let mut out = BTreeSet::new();
+        for (x, group) in groups {
+            if group.iter().any(|y| *y != x && observed.contains(y)) {
+                out.insert(x);
+            }
+        }
+        Ok(out)
     }
 
     /// The ends of leg `lg` of `mover` its booking keeps under the `same` lines: an end the
@@ -650,7 +667,10 @@ impl Engine {
                         coll.clone(),
                     );
                     let walk = self.walk_mut(id)?;
-                    walk.same_waiting.entry(decision).or_default().push(waiting);
+                    walk.same_waiting
+                        .entry(decision)
+                        .or_insert_with(Vec::new)
+                        .push(waiting);
                 }
                 EndBook::Hole(h) => {
                     let Some(p) = end.place() else {
@@ -881,12 +901,17 @@ impl Engine {
             });
         }
         // the members in the order the same lines write them
-        touch.sort_by_key(|(x, _, _)| group.iter().position(|y| y.as_str() == x.id()));
-        let ids: Vec<&str> = touch.iter().map(|(x, _, _)| x.id()).collect();
-        let days: BTreeSet<Day> = touch.iter().filter_map(|(_, g, _)| g.day.day()).collect();
+        let mut placed = Vec::with_capacity(touch.len());
+        for t in touch {
+            placed.push((group.iter().position(|y| y.as_str() == t.0.id()), t));
+        }
+        placed.sort_by_key(|(at, _)| *at);
+        let ordered: Vec<(&Member, &LegVal, usize)> = placed.into_iter().map(|(_, t)| t).collect();
+        let ids: Vec<&str> = ordered.iter().map(|(x, _, _)| x.id()).collect();
+        let days: BTreeSet<Day> = ordered.iter().filter_map(|(_, g, _)| g.day.day()).collect();
         let days: Vec<String> = days.into_iter().map(Day::text).collect();
-        let mut parts = Vec::with_capacity(touch.len());
-        for (x, g, _) in &touch {
+        let mut parts = Vec::with_capacity(ordered.len());
+        for (x, g, _) in &ordered {
             parts.push(format!("{} ({})", amount_text(m, g)?, x.id()));
         }
         let text = format!(

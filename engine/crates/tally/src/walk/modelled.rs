@@ -10,7 +10,7 @@
 //! out and the modelled-past instances' legs in x's unit through d are counted; a hole entry
 //! or leg makes it a hole with every question met; a refused entry or leg refuses it.
 
-use super::plan::{Amount, Dated, Inst, LegVal, invariant, qty_value};
+use super::plan::{Amount, Dated, Inst, invariant, qty_value};
 use super::point::At;
 use super::state::{Change, Ent};
 use crate::eval::Engine;
@@ -96,7 +96,15 @@ impl Engine {
             }
         }
         let since = from.map(|(_, at)| at);
-        for (inst, lg, sign) in modelled_legs(&walk.modelled, (place, unit), d, since) {
+        for (ii, li, sign) in modelled_legs(&walk.modelled, (place, unit), d, since) {
+            let inst = walk
+                .modelled
+                .get(ii)
+                .ok_or_else(|| invariant("a modelled instance the walk lacks"))?;
+            let lg = inst
+                .legs
+                .get(li)
+                .ok_or_else(|| invariant("a leg the instance lacks"))?;
             met.push(inst.coll.clone());
             match &lg.amount {
                 Amount::Hole(h) => holes.push(h.clone()),
@@ -119,20 +127,20 @@ impl Engine {
     }
 }
 
-/// The legs of the modelled-past instances `modelled` at place `place` in unit `unit`, each
-/// with its sign there (−1 out, +1 in), dated (by the leg's day, else the instance's first)
-/// after the reading at `since` through day `d` (refcore's `m_bal_modelled`, its loop over
-/// `w.modelled`). E §6.2.
-fn modelled_legs<'a>(
-    modelled: &'a [Inst],
+/// The legs of the modelled-past instances `modelled` at place `place` in unit `unit`, by
+/// position (the instance's, the leg's), each with its sign there (−1 out, +1 in), dated (by
+/// the leg's day, else the instance's first) after the reading at `since` through day `d`
+/// (refcore's `m_bal_modelled`, its loop over `w.modelled`). E §6.2.
+fn modelled_legs(
+    modelled: &[Inst],
     (place, unit): (&str, &str),
     d: Day,
     since: Option<At>,
-) -> Vec<(&'a Inst, &'a LegVal, i64)> {
+) -> Vec<(usize, usize, i64)> {
     let mut out = Vec::new();
-    for inst in modelled {
+    for (ii, inst) in modelled.iter().enumerate() {
         let inst_day = inst.day.as_ref().and_then(Dated::lo);
-        for lg in &inst.legs {
+        for (li, lg) in inst.legs.iter().enumerate() {
             let Some(gd) = lg.day.day().or(inst_day) else {
                 continue;
             };
@@ -143,7 +151,7 @@ fn modelled_legs<'a>(
             }
             for (end, sign) in [(&lg.from, -1_i64), (&lg.to, 1_i64)] {
                 if end.place() == Some(place) {
-                    out.push((inst, lg, sign));
+                    out.push((ii, li, sign));
                 }
             }
         }
@@ -164,9 +172,13 @@ fn modelled_start(ents: &[Ent], last: Option<usize>, d: Day) -> Option<usize> {
         return Some(rst);
     }
     let last = last?;
-    (0..=last)
-        .rev()
-        .find(|j| ents.get(*j).is_some_and(|e| e.at.day == d && is_opening(e)))
+    (0..=last).rev().find(|j| opening_on(ents, *j, d))
+}
+
+/// Whether entry `j` of a place's log `ents` is an opening reading's reset on day `d`.
+/// L §5.19.
+fn opening_on(ents: &[Ent], j: usize, d: Day) -> bool {
+    ents.get(j).is_some_and(|e| e.at.day == d && is_opening(e))
 }
 
 /// Whether an entry is an opening reading's reset: the walk's reset with no movement and no

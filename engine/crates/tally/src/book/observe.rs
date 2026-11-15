@@ -414,9 +414,10 @@ impl Engine {
                 .entry((cut, tid.to_owned()))
                 .or_insert_with(|| err.clone());
         }
+        let refused: BTreeSet<&str> = unjoined.iter().map(|(id, _)| id.as_str()).collect();
         let good = good
             .into_iter()
-            .filter(|o| !unjoined.iter().any(|(id, _)| *id == o.id))
+            .filter(|o| !refused.contains(o.id.as_str()))
             .map(|o| o.id)
             .collect();
         errs.extend(unjoined);
