@@ -1281,6 +1281,20 @@ def m_obs_links_for(self, tid, ctx):
             o.target = _LinkTarget(tid, self, mi, list(kv), ctx)
             res.append(o)
         res = self.unjoined_refused(tid, res, ctx)
+        # rows stated same are one movement, "its fulfils ... stated on either row" (L §5.19 One movement on two
+        # statements): a row with no fulfils of its own stated same as one that fulfils tid fulfils it too, so which
+        # row carries the link changes no answer (a decision's own observations, its point, the walk's booking)
+        groups = same_groups(m)
+        if res and any(o.id in groups for o in res):
+            by_id = dict((x.id, x) for x in self.observations(ctx))
+            for o in list(res):
+                for y in groups.get(o.id, ()):
+                    x = by_id.get(y)
+                    if x is None or x.fulfils is not None or x.err is not None or any(z is x for z in res):
+                        continue
+                    if x.target is None:
+                        x.target = o.target
+                    res.append(x)
     finally:
         self.stack.pop()
         self.inst_active.discard(key)
@@ -1966,14 +1980,25 @@ def m_settle_links(self, adjs, ctx):
             iid = '%s[%s]' % (mid, ', '.join(key_text(k) for k in kv)) if kv else mid
             named.setdefault((iid, leg, vid), []).append(o)
     if named:
+        groups = same_groups(m)
+        by_id = None
         for a in adjs:
             for vid in a.vids:
-                for o in named.get((a.inst.id, a.leg.name, vid), ()):
+                # rows stated same are one movement (L §5.19 One movement on two statements), so one settlement:
+                # counted once, its amount the disagreement's hole (HOLE-SAME) where the rows disagree
+                for o, _ in once_obs(m, named.get((a.inst.id, a.leg.name, vid), ())):
                     # one adjustment of a step of several versions, named by each of them (E §5 step 4)
                     if not o.legs:
                         links.append((a, o, None))
                         continue
-                    links.append((a, o, [(settle_sign(lg, a, o), lg.amount) for lg in o.legs]))
+                    h = None
+                    if o.id in groups:
+                        if by_id is None:
+                            by_id = dict((x.id, x) for x in self.observations(ctx))
+                        others = [by_id[y] for y in groups[o.id] if y != o.id and y in by_id]
+                        h = same_obs_differ(o, others)
+                    links.append((a, o, [(settle_sign(lg, a, o), h if h is not None else lg.amount)
+                                         for lg in o.legs]))
     return links
 
 

@@ -1,0 +1,60 @@
+# E §6.3: "a pair of rows stated same is one movement: the ledger lists it once, on one line, and names both rows";
+# L §6.1: "a place two of them book ... where they give it different amounts or days it is a hole movement there
+# (HOLE-SAME)". Two statements both cover konto, their rows of one transfer stated same and disagreeing (950.00 and
+# 940.00; M2 patch case P35, P46, G4's fix review item 1, its probes g3_amt and p_both_konto_amt): konto's balance is
+# the HOLE-SAME, and its ledger lists the movement once, observed that hole (refcore listed both rows: observed
+# -1 890.00, difference -940.00).
+=== m.tally
+model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+input bank: observed
+input keep: money PLN
+input d_save: int
+
+move save[m in months]: transfers
+  on day_of(m, d_save)
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+ask q_konto: bal(konto, 2026-03-31)
+ask q_led: residuals konto 2026-03
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  d_save = 15 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+version st_konto
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "a"
+
+version st_k2
+  cite s
+  governs 2026-03
+  known 2026-04-04
+  covers konto
+  bank[c1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 940.00 PLN, fulfils: save[2026-03]) "c"
+  same bank[a2] = bank[c1]
+=== expect
+q_konto: ?"bank[a2] and bank[c1] are one, but the leg at konto differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[c1])" (bank[a2], bank[c1])
+  cut 2026-04-10
+q_led: residuals konto 2026-03
+  2026-03 move save: model -950.00 PLN, observed ?"bank[a2] and bank[c1] are one, but the leg at konto differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[c1])" (bank[a2], bank[c1]), difference ?"bank[a2] and bank[c1] are one, but the leg at konto differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[c1])" (bank[a2], bank[c1])
+    matched save[2026-03] on 2026-03-15: model -950.00 PLN, observed ?"bank[a2] and bank[c1] are one, but the leg at konto differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[c1])" (bank[a2], bank[c1]), difference ?"bank[a2] and bank[c1] are one, but the leg at konto differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[c1])" (bank[a2], bank[c1]), timing +0 days
+  cut 2026-04-10
+warning: WARN-LEGS the two observations of save[2026-03] disagree: bank[a2] (950.00 PLN) and bank[c1] (940.00 PLN)

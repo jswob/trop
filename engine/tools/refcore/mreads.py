@@ -1654,7 +1654,8 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
                 for x in [o] + others:
                     if x.coll is not None:
                         self.cur.merge(x.coll)
-                h = same_obs_differ(o, others, leg)
+                # the group's every row, its fulfils "stated on either row" (L §5.19)
+                h = self.same_rows_hole(o, leg, ctx)
                 if h is not None:
                     holes.append(h)
                     continue
@@ -2104,7 +2105,7 @@ def m_c_observed(self, n, env, ctx):
         day = None
         hole = None
         for o, others in once:
-            h = same_obs_differ(o, others, ld.name)
+            h = self.same_rows_hole(o, ld.name, ctx)
             if hole is None:
                 hole = h
             for lg in o.legs:
