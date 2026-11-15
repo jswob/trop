@@ -134,3 +134,7 @@ fixes/g5/p4_hole	fixes-ledger		engine/tests/m2/fixes/g5	engine/tests/m2/fixes/g5
 fixes/g5/p4_when	fixes-ledger		engine/tests/m2/fixes/g5	engine/tests/m2/fixes/g5/p4_when.tally	b1 f1 a1 e1 c1 p1		ledger
 fixes/g5/p3_any	fixes-ledger		engine/tests/m2/fixes/g5	engine/tests/m2/fixes/g5/p3_any.tally	led byc		ledger
 fixes/g5/p3_anyhole	fixes-ledger		engine/tests/m2/fixes/g5	engine/tests/m2/fixes/g5/p3_anyhole.tally	led byc bp		ledger
+fixes/g5/a1_one2	fixes-ledger		engine/tests/m2/fixes/g5	engine/tests/m2/fixes/g5/a1_one2.tally	t1		ledger
+fixes/g5/p4_inp_e3	fixes-ledger		engine/tests/m2/fixes/g5	engine/tests/m2/fixes/g5/p4_inp.tally	e3		ledger
+fixes/g5/p4_wexp_e3	fixes-ledger		engine/tests/m2/fixes/g5	engine/tests/m2/fixes/g5/p4_wexp.tally	e3		ledger
+fixes/g5/p4_hole_e2	fixes-ledger		engine/tests/m2/fixes/g5	engine/tests/m2/fixes/g5/p4_hole.tally	e2		ledger
