@@ -186,8 +186,9 @@ fn written_before(m: &Reality, earlier: &str, later: &str) -> bool {
     let Some(group) = groups.get(earlier) else {
         return false;
     };
-    let at = |id: &str| group.iter().position(|member| member == id);
-    matches!((at(earlier), at(later)), (Some(one), Some(two)) if one < two)
+    let first = group.iter().position(|member| member == earlier);
+    let second = group.iter().position(|member| member == later);
+    matches!((first, second), (Some(one), Some(two)) if one < two)
 }
 
 /// Two legs' amounts as they print where both are numbers that differ (refcore's `vkey`
