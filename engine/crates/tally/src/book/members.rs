@@ -550,7 +550,7 @@ impl Engine {
             out.extend(pads.into_iter().map(|(p, at)| Moving::Pad(p, at)));
         }
         out.extend(self.decided_members(m, &decided, ctx)?);
-        in_order(once_by_same(m, out))
+        in_order(once_by_same(m, out, ctx.cut)?)
     }
 
     /// The runs of the decision moves `decided` that a binding over their kind ranges over,
@@ -771,7 +771,7 @@ impl Engine {
         kind: &str,
         ctx: Ctx,
     ) -> Result<Option<Hole>, Stop> {
-        let groups = same_groups(m);
+        let groups = same_groups(m, ctx.cut)?;
         let Some(group) = groups.get(x.id()) else {
             return Ok(None);
         };
@@ -836,7 +836,7 @@ impl Engine {
         leg: Option<&str>,
         cut: Day,
     ) -> Result<Option<Hole>, Stop> {
-        let groups = same_groups(m);
+        let groups = same_groups(m, cut)?;
         let Some(group) = groups.get(&o.id) else {
             return Ok(None);
         };
@@ -849,7 +849,7 @@ impl Engine {
         if others.is_empty() {
             return Ok(None);
         }
-        same_differ(m, o, &others, leg)
+        same_differ(m, &groups, o, &others, leg)
     }
 
     /// What a movement's `fulfils` names at the cut: the instance or the adjustment, or none
@@ -1170,20 +1170,20 @@ fn entry(word: &'static str, text: &str) -> Entry {
 
 /// The movements `movements`, a group stated `same` bound once, by the member its same lines
 /// name first (refcore's `once_by_same`). L §6.1, §5.19.
-fn once_by_same(m: &Reality, movements: Vec<Moving>) -> Vec<Moving> {
-    let groups = same_groups(m);
+fn once_by_same(m: &Reality, movements: Vec<Moving>, cut: Day) -> Result<Vec<Moving>, Stop> {
+    let groups = same_groups(m, cut)?;
     if groups.is_empty() {
-        return movements;
+        return Ok(movements);
     }
     let keep = {
         let ids: Vec<&str> = movements.iter().map(Moving::id).collect();
         kept_once(&groups, &ids)
     };
-    movements
+    Ok(movements
         .into_iter()
         .zip(keep)
         .filter_map(|(mv, kept)| kept.then_some(mv))
-        .collect()
+        .collect())
 }
 
 /// Movements in movement order: by day, then by their typed order, ties as they came (refcore's

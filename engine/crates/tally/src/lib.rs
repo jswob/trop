@@ -282,8 +282,8 @@ pub mod book {
     pub use observe::{Coverage, Linked, Obs, inst_id};
     pub use reading::{AfterDays, Pad, Seen, Stands, per_unit, reading_rank};
     pub(crate) use reading::{gap_text, instant_text, reading_place};
+    pub use same::{Groups, kept_once, once_obs, same_differ, same_groups};
     pub(crate) use same::{Member, Waiting, stated_same};
-    pub use same::{kept_once, once_obs, same_differ, same_groups};
     pub(crate) use settle::settlement_move;
 }
 

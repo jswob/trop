@@ -255,8 +255,9 @@ pub enum SamePair {
     /// Two rows: each input's id and keys, and the version whose line states them, none in a
     /// joint model's header (its `known` holds for the line, L §4.5).
     Rows(String, Vec<KeyVal>, String, Vec<KeyVal>, Option<String>),
-    /// Two movements: each instance's id, `m[k]` or an observed row's `x[id]`.
-    Moves(String, String),
+    /// Two movements: each instance's id, `m[k]` or an observed row's `x[id]`, and the
+    /// version whose line states them, none in a joint model's header (L §4.5).
+    Moves(String, String, Option<String>),
 }
 
 impl SamePair {

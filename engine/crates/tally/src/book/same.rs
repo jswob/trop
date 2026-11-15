@@ -25,16 +25,54 @@ use crate::walk::{
     qty_value,
 };
 
-/// Each movement stated `same` with its group, the group's members in the order the same
-/// lines first name them (refcore's `same_groups`). L §6.1.
-#[must_use]
-pub fn same_groups(m: &Reality) -> BTreeMap<String, Vec<String>> {
-    let mut order: Vec<&str> = Vec::new();
-    let mut parent: BTreeMap<String, String> = BTreeMap::new();
+/// The `same` lines of movements cut `cut` sees, each its two sides, in the order written:
+/// a line in a joint model's header always, a version's from its `known` day (L §4.5: a
+/// `known` holds for everything the version brings).
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for a version load didn't build; not built for a line whose version
+/// is known in a window that holds the cut, which makes the rows one movement or two.
+fn move_lines(m: &Reality, cut: Day) -> Result<Vec<(&String, &String)>, Stop> {
+    let mut out = Vec::new();
     for pair in &m.sames {
-        let SamePair::Moves(left, right) = pair else {
+        let SamePair::Moves(left, right, version) = pair else {
             continue;
         };
+        if let Some(id) = version {
+            let v = m
+                .versions
+                .get(id)
+                .ok_or_else(|| invariant("a same line's version load didn't build"))?;
+            if v.known > cut {
+                continue;
+            }
+            if v.window.is_some_and(|hi| cut < hi) {
+                return Err(Stop::NotBuilt(
+                    "a movement `same` line known in a window that holds the cut",
+                ));
+            }
+        }
+        out.push((left, right));
+    }
+    Ok(out)
+}
+
+/// Each movement stated `same`, by id, with its group's members in the order the same lines
+/// first name them (L §6.1).
+pub type Groups = BTreeMap<String, Vec<String>>;
+
+/// Each movement stated `same` by a line cut `cut` sees, with its group, the group's
+/// members in the order the same lines first name them (refcore's `same_groups`). L §6.1,
+/// §4.5.
+///
+/// # Errors
+///
+/// As `move_lines`.
+pub fn same_groups(m: &Reality, cut: Day) -> Result<Groups, Stop> {
+    let mut order: Vec<&str> = Vec::new();
+    let mut parent: BTreeMap<String, String> = BTreeMap::new();
+    for (left, right) in move_lines(m, cut)? {
         for side in [left.as_str(), right.as_str()] {
             if !order.contains(&side) {
                 order.push(side);
@@ -58,7 +96,7 @@ pub fn same_groups(m: &Reality) -> BTreeMap<String, Vec<String>> {
             out.insert(member.clone(), group.clone());
         }
     }
-    out
+    Ok(out)
 }
 
 /// The root of `start` among the links `parent`, a union-find (refcore's `find`); a walk up
@@ -137,6 +175,7 @@ pub fn kept_once(groups: &BTreeMap<String, Vec<String>>, ids: &[&str]) -> Vec<bo
 /// A number error printing an amount.
 pub fn same_differ(
     m: &Reality,
+    groups: &BTreeMap<String, Vec<String>>,
     row: &Obs,
     others: &[&Obs],
     leg: Option<&str>,
@@ -157,12 +196,12 @@ pub fn same_differ(
                 continue;
             };
             // the two rows in the order the same lines write them (P51, #177)
-            let ((first, first_leg, one), (second, two)) = if written_before(m, &other.id, &row.id)
-            {
-                ((*other, theirs, two), (row, one))
-            } else {
-                ((row, mine, one), (*other, two))
-            };
+            let ((first, first_leg, one), (second, two)) =
+                if written_before(groups, &other.id, &row.id) {
+                    ((*other, theirs, two), (row, one))
+                } else {
+                    ((row, mine, one), (*other, two))
+                };
             let day = first_leg.day.day().unwrap_or(first.day);
             let text = format!(
                 "{} and {} are one, but {what} differs on {}: {one} ({}) and {two} ({})",
@@ -181,8 +220,7 @@ pub fn same_differ(
 
 /// Whether the same lines name row `earlier` before row `later` in their group, the order
 /// the household wrote them (refcore's, P51 for #177). L §6.1, §8.1.
-fn written_before(m: &Reality, earlier: &str, later: &str) -> bool {
-    let groups = same_groups(m);
+fn written_before(groups: &BTreeMap<String, Vec<String>>, earlier: &str, later: &str) -> bool {
     let Some(group) = groups.get(earlier) else {
         return false;
     };
@@ -276,21 +314,28 @@ impl Member {
 /// An end waiting for a decision's point: the movement, its leg, the side, what it carries.
 pub(crate) type Waiting = (String, LegVal, usize, Vec<Entry>, Collected);
 
-/// Whether movement `id` is named by a `same` line. L §6.1.
-#[must_use]
-pub(crate) fn stated_same(m: &Reality, id: &str) -> bool {
-    m.sames
+/// Whether movement `id` is named by a `same` line cut `cut` sees. L §6.1, §4.5.
+///
+/// # Errors
+///
+/// As `move_lines`.
+pub(crate) fn stated_same(m: &Reality, id: &str, cut: Day) -> Result<bool, Stop> {
+    Ok(move_lines(m, cut)?
         .iter()
-        .any(|pair| matches!(pair, SamePair::Moves(a, b) if a == id || b == id))
+        .any(|(a, b)| *a == id || *b == id))
 }
 
-/// The first `same` line naming movement `id`, its two sides (refcore's `same_pairs`, its
-/// lines). L §6.1.
-fn first_line(m: &Reality, id: &str) -> Option<(String, String)> {
-    m.sames.iter().find_map(|pair| match pair {
-        SamePair::Moves(a, b) if a == id || b == id => Some((a.clone(), b.clone())),
-        SamePair::Moves(..) | SamePair::Rows(..) => None,
-    })
+/// The first `same` line cut `cut` sees naming movement `id`, its two sides (refcore's
+/// `same_pairs`, its lines). L §6.1, §4.5.
+///
+/// # Errors
+///
+/// As `move_lines`.
+fn first_line(m: &Reality, id: &str, cut: Day) -> Result<Option<(String, String)>, Stop> {
+    Ok(move_lines(m, cut)?
+        .into_iter()
+        .find(|(a, b)| *a == id || *b == id)
+        .map(|(a, b)| (a.clone(), b.clone())))
 }
 
 /// A leg's amount as a `HOLE-SAME` question prints it: the amount, `refused`, or the hole.
@@ -352,11 +397,11 @@ impl Realised {
 }
 
 /// Leg `leg` of instance `tid`'s realised movement, over its observations `obs` grouped
-/// `once` (refcore's `m_c_observed`, a leg). L §5.19 Realised amounts, One movement on two
-/// statements.
+/// `once` by the `same` groups `groups` (refcore's `m_c_observed`, a leg). L §5.19 Realised
+/// amounts, One movement on two statements.
 fn realised_leg(
     m: &Reality,
-    tid: &str,
+    (tid, groups): (&str, &Groups),
     (obs, once): (&[Obs], &[(usize, Vec<usize>)]),
     leg: &str,
 ) -> Result<Value, Stop> {
@@ -369,7 +414,7 @@ fn realised_leg(
             .ok_or_else(|| invariant("a same group with no first row"))?;
         let others: Vec<&Obs> = rest.iter().filter_map(|&k| obs.get(k)).collect();
         if differs.is_none() {
-            differs = same_differ(m, row, &others, Some(leg))?;
+            differs = same_differ(m, groups, row, &others, Some(leg))?;
         }
         for lg in row.legs.iter().filter(|lg| lg.name == leg) {
             met = true;
@@ -464,10 +509,11 @@ impl Engine {
             .moves
             .get(name)
             .ok_or_else(|| invariant("an observed movement of a move load didn't build"))?;
-        let once = once_obs(&same_groups(m), &obs);
+        let groups = same_groups(m, ctx.cut)?;
+        let once = once_obs(&groups, &obs);
         let mut fields = Vec::new();
         for (leg, _, _) in m.kind_legs(&mv.kind) {
-            let value = realised_leg(m, &v.id, (&obs, &once), &leg)?;
+            let value = realised_leg(m, (&v.id, &groups), (&obs, &once), &leg)?;
             fields.push((leg, value));
         }
         let day = obs
@@ -497,7 +543,7 @@ impl Engine {
         cut: Day,
     ) -> Result<(Vec<Obs>, BTreeMap<String, String>), Stop> {
         let mut also = BTreeMap::new();
-        let groups = same_groups(m);
+        let groups = same_groups(m, cut)?;
         if groups.is_empty() {
             return Ok((obs, also));
         }
@@ -511,7 +557,10 @@ impl Engine {
                 keep.push(o.clone());
                 continue;
             };
-            if self.left_to_partner(m, (o, &obs, group), place, cut)? {
+            // a row stated same shows at the place only where its own statement books its
+            // end there; where it doesn't, another row's statement does, or none (L §5.19:
+            // each end is booked once, from the statement that covers it)
+            if !self.books_ends_at(m, o, place, cut)? {
                 continue;
             }
             let row = match self.end_book_at(m, id, o, place)? {
@@ -539,50 +588,23 @@ impl Engine {
         Ok((keep, also))
     }
 
-    /// Whether row `o` of `same` group `group` leaves its end at `place` to another row of
-    /// the group among `obs`: its own statement doesn't book it there and the other's does,
-    /// so the walk books the movement there once, by the other row (E §6.3, §6.1; L §5.19
-    /// Coverage, One movement on two statements).
+    /// Whether row `o` books each of its ends at `place` by its own coverage: each on a day
+    /// no version covers the place, or its own version does (refcore's `m_residuals`, its
+    /// `obs_end_on` test). E §6.3, §6.1; L §5.19 Coverage, One movement on two statements.
     ///
     /// # Errors
     ///
     /// As [`Engine::obs_end_on`].
-    fn left_to_partner(
-        &mut self,
-        m: &Reality,
-        (o, obs, group): (&Obs, &[Obs], &[String]),
-        place: &str,
-        cut: Day,
-    ) -> Result<bool, Stop> {
-        if self.books_end_at(m, o, place, cut)? {
-            return Ok(false);
-        }
-        for other in obs.iter().filter(|x| x.id != o.id && group.contains(&x.id)) {
-            if self.books_end_at(m, other, place, cut)? {
-                return Ok(true);
-            }
-        }
-        Ok(false)
-    }
-
-    /// Whether row `o` books an end at `place` by its own coverage: a leg there on a day no
-    /// version covers the place, or its own version does (refcore's `obs_end_on`). E §6.1,
-    /// L §5.19 Coverage.
-    ///
-    /// # Errors
-    ///
-    /// As [`Engine::obs_end_on`].
-    fn books_end_at(&mut self, m: &Reality, o: &Obs, place: &str, cut: Day) -> Result<bool, Stop> {
+    fn books_ends_at(&mut self, m: &Reality, o: &Obs, place: &str, cut: Day) -> Result<bool, Stop> {
         for lg in &o.legs {
-            if lg.from.place() != Some(place) && lg.to.place() != Some(place) {
-                continue;
-            }
             let day = lg.day.day().unwrap_or(o.day);
-            if self.obs_end_on(m, o, place, day, cut)? {
-                return Ok(true);
+            for end in [&lg.from, &lg.to] {
+                if end.place() == Some(place) && !self.obs_end_on(m, o, place, day, cut)? {
+                    return Ok(false);
+                }
             }
         }
-        Ok(false)
+        Ok(true)
     }
 
     /// What row `o`'s end at `place` books under the `same` lines, as walk `id` books it:
@@ -634,7 +656,7 @@ impl Engine {
         if good.len() < 2 {
             return Ok(bad);
         }
-        let groups = same_groups(m);
+        let groups = same_groups(m, cut)?;
         for (i, a) in good.iter().enumerate() {
             for b in good.iter().skip(i).skip(1) {
                 if !self.one_transfer(m, &groups, (a, b), cut)? {
@@ -711,7 +733,7 @@ impl Engine {
         m: &Reality,
         cut: Day,
     ) -> Result<BTreeSet<String>, Stop> {
-        let groups = same_groups(m);
+        let groups = same_groups(m, cut)?;
         if groups.is_empty() {
             return Ok(BTreeSet::new());
         }
@@ -822,7 +844,8 @@ impl Engine {
         id: usize,
         (mover, lg): (&Member, &LegVal),
     ) -> Result<[EndBook; 2], Stop> {
-        let groups = same_groups(m);
+        let cut = self.walk(id)?.cut;
+        let groups = same_groups(m, cut)?;
         let Some(group) = groups.get(mover.id()) else {
             return Ok([EndBook::Written, EndBook::Written]);
         };
@@ -831,7 +854,7 @@ impl Engine {
         for x in group.iter().filter(|x| x.as_str() != mover.id()) {
             let Some(found) = self.walk_member(m, id, x)? else {
                 let (left, right) =
-                    first_line(m, x).unwrap_or_else(|| (x.clone(), mover.id().to_owned()));
+                    first_line(m, x, cut)?.unwrap_or_else(|| (x.clone(), mover.id().to_owned()));
                 return Err(Stop::Refused(Refusal::new(
                     Code::Run(Run::Record),
                     format!("same {left} = {right}: {x} doesn't exist"),

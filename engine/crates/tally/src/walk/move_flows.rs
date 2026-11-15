@@ -227,7 +227,7 @@ impl Engine {
                 figure: String::new(),
             });
         }
-        let groups = same_groups(m);
+        let groups = same_groups(m, cut)?;
         for (first, rest) in once_obs(&groups, &obs) {
             let others: Vec<&Obs> = rest.iter().filter_map(|&k| obs.get(k)).collect();
             let Some(o) = obs.get(first) else {
@@ -237,7 +237,7 @@ impl Engine {
             for x in &others {
                 acc.met.merge(&x.coll);
             }
-            if let Some(h) = same_differ(m, o, &others, leg)? {
+            if let Some(h) = same_differ(m, &groups, o, &others, leg)? {
                 acc.holes.push(h);
                 continue;
             }

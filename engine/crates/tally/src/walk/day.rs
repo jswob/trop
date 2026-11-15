@@ -394,7 +394,10 @@ impl Engine {
         at: At,
         reg: &[Entry],
     ) -> Result<(), Stop> {
-        let world = self.walk(id)?.world;
+        let (world, cut) = {
+            let walk = self.walk(id)?;
+            (walk.world, walk.cut)
+        };
         let mut reg = reg.to_vec();
         let day = lg
             .day
@@ -404,7 +407,7 @@ impl Engine {
             reg.extend(before_from(m, world, (&inst.move_id, day), &inst.coll));
         }
         let mut mask = Ends::both();
-        if stated_same(m, &inst.id) && !matches!(lg.amount, Amount::Refused(_)) {
+        if stated_same(m, &inst.id, cut)? && !matches!(lg.amount, Amount::Refused(_)) {
             // one movement on two statements books each place once (L §6.1)
             let mover = self.mover_of(m, id, inst)?;
             mask = self.same_mask(m, id, (&mover, lg), at, (&reg, &inst.coll), mask)?;
@@ -618,7 +621,7 @@ impl Engine {
             to,
             whole: false,
         };
-        if stated_same(m, &wo.obs.id) {
+        if stated_same(m, &wo.obs.id, cut)? {
             // one movement on two statements books each place once (L §6.1)
             let mover = Member::Obs(wo.obs.clone());
             mask = self.same_mask(m, id, (&mover, lg), at, (&[], &wo.obs.coll), mask)?;

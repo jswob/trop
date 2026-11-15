@@ -164,7 +164,7 @@ impl Engine {
             // `HOLE-IMPRECISE` (L §4.5)
             let known = self.known_at_cut(known_windows(m)?, cut)?;
             let mut seen = seen_observations(m, (cut, world), self.keep_rows, &known)?;
-            share_fulfils(&super::same_groups(m), &mut seen);
+            share_fulfils(&super::same_groups(m, cut)?, &mut seen);
             self.observed.insert(cut, seen);
         }
         self.observed
@@ -796,10 +796,15 @@ fn seen_observations(
             let o = observation_at(input, kept.top.1)?;
             let undecided = known.question(&known_sid(o), cut);
             // a removal known in a window the cut leaves undecided removes the row or not, so
-            // the restatement before it stands, its legs that hole (L §4.4, §4.5)
-            let shown = match (o.removed, &undecided, kept.before) {
+            // the restatement before it stands, its legs that hole; before it a removal, or
+            // nothing, both outcomes leave no row (L §4.4, §4.5)
+            let before = match kept.before {
+                Some((_, at)) => Some(observation_at(input, at)?),
+                None => None,
+            };
+            let shown = match (o.removed, &undecided, before) {
                 (false, _, _) => o,
-                (true, Some(_), Some((_, at))) => observation_at(input, at)?,
+                (true, Some(_), Some(earlier)) if !earlier.removed => earlier,
                 (true, _, _) => continue,
             };
             let mut seen = observation(shown)?;

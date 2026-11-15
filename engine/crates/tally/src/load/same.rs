@@ -113,7 +113,10 @@ impl Loader {
                     let version = same.version.clone();
                     self.m.sames.push(SamePair::Rows(a, ka, b, kb, version));
                 }
-                (Side::Move(a), Side::Move(b)) => self.m.sames.push(SamePair::Moves(a, b)),
+                (Side::Move(a), Side::Move(b)) => {
+                    let version = same.version.clone();
+                    self.m.sames.push(SamePair::Moves(a, b, version));
+                }
                 (Side::Thing, Side::Thing) => {
                     return Err(at(format!(
                         "same {l} = {r}: a thing written with keys that is not a keyed place"
