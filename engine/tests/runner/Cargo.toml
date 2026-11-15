@@ -157,3 +157,10 @@ test = false
 name = "m2_fixes"
 path = "milestone/m2_fixes.rs"
 test = false
+
+# Milestone M2's goldens (issue #167, #114, GOLDENS.md): the bank history's goldens over
+# m2/bank/; `test = false` until M2 gates.
+[[test]]
+name = "m2_goldens"
+path = "milestone/m2_goldens.rs"
+test = false

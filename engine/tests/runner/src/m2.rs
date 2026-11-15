@@ -23,8 +23,8 @@ mod tests {
     use std::collections::BTreeSet;
 
     /// The runner tests' groups, `<target>-<group>`: `checks-…` for `m2_checks`, `items-…`
-    /// for `m2_items`, `fixes-…` for `m2_fixes`.
-    const TARGETS: [&str; 3] = ["checks-", "items-", "fixes-"];
+    /// for `m2_items`, `fixes-…` for `m2_fixes`, `goldens-…` for `m2_goldens`.
+    const TARGETS: [&str; 4] = ["checks-", "items-", "fixes-", "goldens-"];
 
     #[test]
     fn the_m2_vectors_read_and_their_tables_hold_every_path_they_name() {

@@ -9,7 +9,10 @@ DONE gate 2: the prototype's goldens G1–G10 and its 36 pins (`engine/spec/veri
 - **A difference** is allowed only where `goldens.md` names the finding that moves it; any other is a STOP-REPORT in `GAPS.md`, and a wrong number from refcore on a valid household text is the M1 brief's §3 patch case.
 - **The law-level figures reuse household X's law** (`integration/amendments/real11/c1`): X is the prototype's household rewritten, and its employment law is the prototype's `employment_pl@2022` (X's wife at 7 000 gross prints the pin `wife_tax/net[2026-10]`, 5 101.67, byte for byte). `m1/goldens/law/golden.tally` adds the prototype's `my_job` (12 000 gross; 12 480 from 2027 by `index.wage`).
 
-## What the repository can't restate: the prototype's bank history
+## The prototype's bank history (M2, #114)
+
+M2 tracks it: `m2/bank/ledger.json` (synthetic, seed 20261017), its record parts and R7's bank half (`m2/bank/README.md`), so G2, G4 and G5 now hold below. R7's forward half (the 15th rule, IKE first, the business, OKI, Marek) is not yet written, so G1, G3, the net-worth halves of G6 and G10 and the 20 pins stay blocked. The paragraph that follows is M1's.
+
 
 The prototype's fixtures name a bank history they don't contain. `01-month.json`'s daily spending is `hist_daily(category, 365) * index.prices`, learned from the bank rows, and G2's konto (11 685.67 on 2026-10-16) is "bank rows before today" (P-01). No block holds those rows, and no tracked file of the repository does (X has one invented month, `records/mbank/2026-09.tally`, not the prototype's history). Every figure that reads konto's history or the spending learned from it can't be restated without inventing it, and an invented history makes the prototype's figure meaningless as a key. Those are marked **blocked** below; what unblocks them is a question to the coordinator on issue #108 (T's chunk C2 report).
 
@@ -18,8 +21,10 @@ The prototype's fixtures name a bank history they don't contain. `01-month.json`
 | Golden | The prototype's figure | Restated by | refcore (tally 2.1.6) | Verdict |
 |---|---|---|---|---|
 | G1 | net worth −40.96 (claim) / −2 040.96 (outside) | — | — | **blocked**: the household's net worth reads konto's history (14-marek's ledger alone gives neither figure) |
-| G2 | konto 11 685.67 on 2026-10-16 | — | — | **blocked**: bank rows before today |
+| G2 | konto 11 685.67 on 2026-10-16 | `goldens/bank_g2` (M2, #114: `m2/bank/reality.tally` over the ledger's 34 record parts, `m2/vectors.tsv`) | 11 685.67 PLN (and 12 000.00 PLN on 2026-10-15, after the 15th's habit) (tally 2.1.7) | **holds** (the plain sum of the observed rows, each month anchored at its end, every gap 0.00) |
 | G3 | the 15th: 7 887.29 invested, konto 11 594.97, 1 000.00 on 12-06 | — | — | **blocked**: the rule reads konto |
+| G4 | one mismatch, the pay of 2025-12: model 13 611.54 against bank 16 611.54 | `goldens/bank_g4_residuals`, `bank_g4_by_cat`, `bank_g4_pay` (M2: the pay law of `employment_pl@2022`, each pay fulfilled by P1's rule) | 2025-12 `wynagrodzenie`: model 13 611.54, observed 16 611.54, difference 3 000.00 PLN, one matched line `my_pay[2025-11]` +3 000.00; every other pay month and every rent month 0.00 (January's 13 359.54 on both sides: the second threshold in December) (tally 2.1.7) | **holds** (`goldens.md`: the category-month view is one lens over the residual ledger; the by-employer view is the same lines) |
+| G5 | learned daily spending 234.22 | `goldens/bank_g5` (M2: `spend_daily`, the last 365 days' `codzienne` rows / 365 × `prices`, `prices` 1, guarded by `covered`) | 234.22 PLN (tally 2.1.7) | **holds** (`index.prices` flat over the window, as BUILD-ORDER asks) |
 | G6 | my net in 2027-03, 8 837.78 → 9 262.77 with a 5 % raise from March | `goldens/pins_employment`, `goldens/g6_raise` (`m1/goldens/law/raise.tally`: 12 480 × 1.05 = 13 104 from 2027-03, on top of indexation, P7) | 8 837.78 PLN; 9 262.77 PLN in `raise` | **holds** |
 | G6 | net worth 4 630 247 → 4 829 659; FIRE Feb 2050 → Feb 2049 | — | — | **blocked**: net worth reads konto's history |
 | G7 | a rent of 2 500 from 2028 must not book 2 652.25 | `goldens/g7_price_year` (`m1/goldens/rent/model.tally`: the row's price year stated, 2028, and its twin in 2026 money) | 2 500.00 PLN, and 2 652.25 PLN for the twin | **holds**: the price year is stated, as U-13 asks |
