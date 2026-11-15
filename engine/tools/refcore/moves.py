@@ -1966,14 +1966,25 @@ def m_settle_links(self, adjs, ctx):
             iid = '%s[%s]' % (mid, ', '.join(key_text(k) for k in kv)) if kv else mid
             named.setdefault((iid, leg, vid), []).append(o)
     if named:
+        groups = same_groups(m)
+        by_id = None
         for a in adjs:
             for vid in a.vids:
-                for o in named.get((a.inst.id, a.leg.name, vid), ()):
+                # rows stated same are one movement (L §5.19 One movement on two statements), so one settlement:
+                # counted once, its amount the disagreement's hole (HOLE-SAME) where the rows disagree
+                for o, _ in once_obs(m, named.get((a.inst.id, a.leg.name, vid), ())):
                     # one adjustment of a step of several versions, named by each of them (E §5 step 4)
                     if not o.legs:
                         links.append((a, o, None))
                         continue
-                    links.append((a, o, [(settle_sign(lg, a, o), lg.amount) for lg in o.legs]))
+                    h = None
+                    if o.id in groups:
+                        if by_id is None:
+                            by_id = dict((x.id, x) for x in self.observations(ctx))
+                        others = [by_id[y] for y in groups[o.id] if y != o.id and y in by_id]
+                        h = same_obs_differ(o, others)
+                    links.append((a, o, [(settle_sign(lg, a, o), h if h is not None else lg.amount)
+                                         for lg in o.legs]))
     return links
 
 
