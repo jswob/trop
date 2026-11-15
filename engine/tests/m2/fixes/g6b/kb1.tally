@@ -1,0 +1,59 @@
+model pw
+  tally 2
+  on 2026-04-25
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): an observation known in a window, cuts before, on its ends and after (review's kb1)"
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index ks = [a, b]
+kind mixed: place any signed
+place konto: accounts PLN lives 2026-01-01..
+place wallet: mixed lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input dk[k in ks]: date
+input d0: date
+input dd: int
+
+move pay[m in months]: transfers
+  on day_of(m, dd)
+  leg cash from world to konto amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "s"
+  d0 = 2026-01-01 "s"
+  dd = 10 "s"
+  dk[a] = window(2026-03-01, 2026-03-10) "s"
+  dk[b] = 2026-03-05 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+
+ask b0: bal(konto, 2026-03-31) as known 2026-03-31
+ask c0: covered(konto, 2026-03) as known 2026-03-31
+ask e0: bal(konto, 2026-03-31) as known 2026-03-31 windows each
+ask b1: bal(konto, 2026-03-31) as known 2026-04-01
+ask c1: covered(konto, 2026-03) as known 2026-04-01
+ask e1: bal(konto, 2026-03-31) as known 2026-04-01 windows each
+ask b2: bal(konto, 2026-03-31) as known 2026-04-10
+ask c2: covered(konto, 2026-03) as known 2026-04-10
+ask e2: bal(konto, 2026-03-31) as known 2026-04-10 windows each
+ask b3: bal(konto, 2026-03-31) as known 2026-04-20
+ask c3: covered(konto, 2026-03) as known 2026-04-20
+ask e3: bal(konto, 2026-03-31) as known 2026-04-20 windows each
+ask b4: bal(konto, 2026-03-31) as known 2026-04-21
+ask c4: covered(konto, 2026-03) as known 2026-04-21
+ask e4: bal(konto, 2026-03-31) as known 2026-04-21 windows each
+
+version st
+  cite s
+  governs 2026-03
+  known window(2026-04-01, 2026-04-20)
+  covers konto
+  bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 12.00 PLN) "r1"

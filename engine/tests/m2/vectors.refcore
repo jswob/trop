@@ -106151,6 +106151,70 @@ l16: ?"stated[konto] has no reading on or before 2026-03-16" (stated[konto])
   cut 2026-04-10
 l31: ?"stated[konto] has no reading on or before 2026-03-31" (stated[konto])
   cut 2026-04-10
+,30:fixes/gate8/r437_after_m_start,11:fixes-sweep,49:run after_m_start.tally --ask l01 l02 l06 b02 b15,1575:19:after_m_start.tally,1546:model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+  note "T, M2 gate 8 run 43702332507 on 6a58624c: an after-m reading whose fulfilling leg at konto is on the run's first day (book/reading.rs last_standing_day)"
+
+source s "s"
+unit PLN: currency minor 0.01
+kind savings: place PLN min 0
+place konto: accounts PLN lives 2026-01-01..
+place sav: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input keep: money PLN
+input d_save: int
+
+move save[m in months]: transfers
+  on day_of(m, d_save)
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  d_save = 15 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[o1] = (on: 2026-03-01, kind: transfers, leg cash from konto to sav amount 500.00 PLN, fulfils: save[2026-03]) "o1"
+  bank[o2] = (on: 2026-03-05, kind: transfers, leg cash from sav to world amount 20.00 PLN, fulfils: save[2026-03]) "o2"
+
+version rd
+  cite s
+  governs 2026-03..2026-04
+  known 2026-04-04
+  pad konto from world
+  stated[konto] = 90.00 PLN after save[2026-03] "saldo"
+
+ask l01: last(stated[konto], 2026-03-01)
+ask l02: last(stated[konto], 2026-03-02)
+ask l06: last(stated[konto], 2026-03-06)
+ask b02: bal(konto, 2026-03-02)
+ask b04: bal(konto, 2026-03-04)
+ask b05: bal(konto, 2026-03-05)
+ask b15: bal(konto, 2026-03-15)
+,,1:0,348:l01: ?"stated[konto] has no reading on or before 2026-03-01" (stated[konto])
+  cut 2026-04-10
+l02: ?"stated[konto] has no reading on or before 2026-03-02" (stated[konto])
+  cut 2026-04-10
+l06: ?"stated[konto] has no reading on or before 2026-03-06" (stated[konto])
+  cut 2026-04-10
+b02: 550.00 PLN
+  cut 2026-04-10
+b15: 550.00 PLN
+  cut 2026-04-10
 ,17:fixes/g5/a1_alone,12:fixes-ledger,27:run a1_alone.tally --ask t3,959:14:a1_alone.tally,936:model b
   tally 2
   on 2027-06-30
@@ -107394,4 +107458,956 @@ ask e2: explain pay[2026-02].cash.amount
   [3] row v2:amt[2026-02] = 200.00 PLN
       version v2, source s, "s", locator "s", governs 2026-01-01.., known 2026-03-01
   cut 2026-06-30
+,12:fixes/g6b/b1,11:fixes-sweep,12:run b1.tally,635:8:b1.tally,619:model pi
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): B1, a calendar stated same, only the other side has a row, windows each (L 6.1, 4.4)"
+
+source card "invented"
+input cal: calendar
+input cal2: calendar
+input d1: date
+
+ask q: add_business(d1, 1, cal) windows each
+ask q2: add_business(d1, 1, cal)
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-05-29 "c"
+  cal2 = calendar(weekends [sat, sun], added [window(2026-06-01, 2026-06-02)]) "c"
+
+version sm
+  cite card
+  known 2026-01-02
+  same cal = cal2
+,,1:0,269:q [added window(2026-06-01, 2026-06-02) = 2026-06-01]: 2026-06-02
+  cut 2026-03-01
+q [added window(2026-06-01, 2026-06-02) = 2026-06-02]: 2026-06-01
+  cut 2026-03-01
+q2: window(2026-06-01, 2026-06-02)
+  cut 2026-03-01
+warning: WARN-UNREAD input cal2 is read by nothing
+,12:fixes/g6b/b2,11:fixes-sweep,12:run b2.tally,471:8:b2.tally,455:model p
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): B2, a window read through a same row keeps its name (L 4.4)"
+
+source s "s"
+input a: date
+input b: date
+
+ask q1: a == a
+ask q2: a windows each
+ask q3: b == b
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = window(2026-03-01, 2026-03-03) "s"
+
+version sm
+  cite s
+  known 2026-01-02
+  same a = b
+,,1:0,199:q1: true
+  cut 2026-06-30
+q2 [a = 2026-03-01]: 2026-03-01
+  cut 2026-06-30
+q2 [a = 2026-03-02]: 2026-03-02
+  cut 2026-06-30
+q2 [a = 2026-03-03]: 2026-03-03
+  cut 2026-06-30
+q3: true
+  cut 2026-06-30
+,14:fixes/g6b/b3_q,11:fixes-sweep,20:run b3.tally --ask q,985:8:b3.tally,969:model p
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): B3, a removal known in a window that holds the cut (L 4.4, 4.5)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-01
+  covers konto
+  bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 12.00 PLN) "r1"
+
+version fx
+  cite s
+  governs 2026-03
+  known window(2026-04-05, 2026-04-20)
+  replace bank[r1] = none "r1"
+
+ask q: bal(konto, 2026-03-31) as known 2026-04-10
+ask q2: bal(konto, 2026-03-31) as known 2026-04-10 windows each
+ask q3: bal(konto, 2026-03-31) as known 2026-04-21
+ask q4: bal(konto, 2026-03-31) as known 2026-04-04
+,,1:0,29:q: 0.00 PLN
+  cut 2026-04-10
+,17:fixes/g6b/b4_q1q3,11:fixes-sweep,24:run b4.tally --ask q1 q3,502:8:b4.tally,486:model p
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): B4, a version's same line read at a cut before the version is known (L 4.5)"
+
+source s "s"
+input x: int
+input y: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x = 3 "s"
+  y = 4 "s"
+
+ask q1: x as known 2026-01-01
+ask q2: x
+ask q3: y as known 2026-03-01
+
+version sm
+  cite s
+  governs always
+  known 2026-03-02
+  same x = y
+,,1:0,208:q1: ?"x and y are one, but the value differs on every day: 3 (v:x) and 4 (v:y)" (x, y)
+  cut 2026-01-01
+q3: ?"y and x are one, but the value differs on every day: 4 (v:y) and 3 (v:x)" (y, x)
+  cut 2026-03-01
+,16:fixes/g6b/sr2_q7,11:fixes-sweep,22:run sr2.tally --ask q7,1168:9:sr2.tally,1150:model p
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): rows stated same that agree and that disagree, read by a key binding and by explain (review's sr2; q7 B4)"
+
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [a, e]
+input x[k in ks]: int
+input y[k in ks]: int
+input r[m in months]: money PLN
+input t[m in months]: money PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x[a] = 1 "s"
+  y[a] = 1 "s"
+  x[e] = 3 "s"
+  y[e] = 4 "s"
+  r[2026-03] = 10.00 PLN "s"
+  t[2026-03] = 12.00 PLN "s"
+  r[2026-04] = 7.00 PLN "s"
+  t[2026-04] = 7.00 PLN "s"
+
+ask q1: x[k] + 1 for k in ks
+ask q2: y[k] for k in ks
+ask q3: x[k] == y[k] for k in ks
+ask q4: explain x[a]
+ask q5: explain x[e]
+ask q6: explain y[e]
+ask q7: x[e] as known 2026-01-01
+ask q8: r[m] for m in months where m == 2026-03 or m == 2026-04
+ask q9: explain t[2026-03] law 2026-03-15
+ask q10: explain r[2026-04] law 2026-04-15
+ask q11: x[e] == y[e]
+
+version sm
+  cite s
+  known 2026-01-02
+  same x[a] = y[a]
+  same x[e] = y[e]
+  same r[2026-03] = t[2026-03]
+  same r[2026-04] = t[2026-04]
+,,1:0,122:q7: ?"x[e] and y[e] are one, but the value differs on every day: 3 (v:x[e]) and 4 (v:y[e])" (x[e], y[e])
+  cut 2026-01-01
+,18:fixes/g6b/pd3_q2q6,11:fixes-sweep,25:run pd3.tally --ask q2 q6,735:9:pd3.tally,718:model pd
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): a def's given row holding a window literal, pinned and copied (G6's pd3; q2, q6 P30)"
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+input x: date
+input y: date
+
+def dd: date
+  rule base = y
+
+def ee: date
+  rule base = dd
+
+ask q1: dd == ee windows each
+ask q2: x == dd with x = dd windows each
+ask q3: dd == y windows each
+ask q4: dd
+ask q5: dd == ee
+ask q6: x == ee with x = dd windows each
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  x = 2026-01-05 "c"
+  y = window(2026-01-01, 2026-01-02) "c"
+  given dd = window(2026-01-01, 2026-01-02) "g"
+,,1:0,474:q2 [dd = 2026-01-01]: true
+  given: dd = window(2026-01-01, 2026-01-02) (v)
+  pinned: x = 2026-01-01
+  cut 2026-03-01
+q2 [dd = 2026-01-02]: false
+  given: dd = window(2026-01-01, 2026-01-02) (v)
+  pinned: x = 2026-01-01
+  cut 2026-03-01
+q6 [dd = 2026-01-01]: true
+  given: dd = window(2026-01-01, 2026-01-02) (v)
+  pinned: x = 2026-01-01
+  cut 2026-03-01
+q6 [dd = 2026-01-02]: false
+  given: dd = window(2026-01-01, 2026-01-02) (v)
+  pinned: x = 2026-01-01
+  cut 2026-03-01
+,16:fixes/g6b/w1b_q5,11:fixes-sweep,22:run w1b.tally --ask q5,1066:9:w1b.tally,1048:model px
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): a keyed windows each line under an axis binds inside each run (G6's w1b; q5 P29)"
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+axis ax
+  lo "low"
+  hi "high"
+
+index kk = [a, b, c]
+input d[k in kk]: date
+input e[k in kk]: date
+input amt: money PLN
+
+def a2: money PLN
+  rule base = amt
+  rule hi beats base = amt + amt when ax == hi
+
+ask q1: e[k] < 2026-03-02 for k in kk where d[k] < 2026-03-02 windows each
+ask q2: a2 for k in kk where d[k] < 2026-03-02 windows each
+ask q3: e[k] < 2026-03-02, a2 for k in kk windows each
+ask q4: a2 for k in kk
+ask q5: e[k] < 2026-03-02, a2 for k in kk where d[k] < 2026-03-02 windows each
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "c"
+  d[a] = window(2026-03-01, 2026-03-02) "c"
+  d[b] = 2026-01-01 "c"
+  d[c] = 2026-01-01 "c"
+  e[a] = 2026-01-01 "c"
+  e[b] = window(2026-03-01, 2026-03-02) "c"
+  e[c] = 2026-01-01 "c"
+,,1:0,690:q5 (k = a) [ax = lo]: (true, 10.00 PLN)
+  reading: ax = lo
+  cut 2026-03-01
+q5 (k = a) [ax = hi]: (true, 20.00 PLN)
+  reading: ax = hi
+  cut 2026-03-01
+q5 (k = b) [e[b] = 2026-03-01] [ax = lo]: (true, 10.00 PLN)
+  reading: ax = lo
+  cut 2026-03-01
+q5 (k = b) [e[b] = 2026-03-02] [ax = lo]: (false, 10.00 PLN)
+  reading: ax = lo
+  cut 2026-03-01
+q5 (k = b) [e[b] = 2026-03-01] [ax = hi]: (true, 20.00 PLN)
+  reading: ax = hi
+  cut 2026-03-01
+q5 (k = b) [e[b] = 2026-03-02] [ax = hi]: (false, 20.00 PLN)
+  reading: ax = hi
+  cut 2026-03-01
+q5 (k = c) [ax = lo]: (true, 10.00 PLN)
+  reading: ax = lo
+  cut 2026-03-01
+q5 (k = c) [ax = hi]: (true, 20.00 PLN)
+  reading: ax = hi
+  cut 2026-03-01
+,18:fixes/g6b/le1_each,11:fixes-sweep,24:run le1.tally --ask q q2,1417:9:le1.tally,1399:model pw
+  tally 2
+  on 2026-04-25
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): a ledger's windows each over a window-dated move: the set differs by sub-window (G6's le1; #186)"
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index ks = [a, b]
+kind mixed: place any signed
+place konto: accounts PLN lives 2026-01-01..
+place wallet: mixed lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input dk[k in ks]: date
+input d0: date
+input dd: int
+
+move one: transfers
+  on dk[a]
+  leg cash from world to konto amount amt
+
+move pay[m in months]: transfers
+  on day_of(m, dd)
+  leg cash from world to konto amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "s"
+  d0 = 2026-01-01 "s"
+  dd = 10 "s"
+  dk[a] = window(2026-03-01, 2026-03-10) "s"
+  dk[b] = 2026-03-05 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+
+ask q: residuals konto 2026-03 as known 2026-04-10 windows each
+ask q2: residuals konto 2026-03 windows each
+ask q3: residuals konto 2026-03 as known 2026-04-10
+
+version st
+  cite s
+  governs 2026-03
+  known window(2026-04-01, 2026-04-20)
+  covers konto
+  bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 12.00 PLN) "r1"
+,,1:0,1039:q: residuals konto 2026-03
+  2026-03 unexplained: model 0.00 PLN, observed 12.00 PLN, difference 12.00 PLN
+    unexplained bank[r1] on 2026-03-10: observed 12.00 PLN
+  2026-03 move one: model 10.00 PLN, observed 0.00 PLN, difference -10.00 PLN
+    expected but missing one on 2026-03-01: model 10.00 PLN
+  2026-03 move pay: model 10.00 PLN, observed 0.00 PLN, difference -10.00 PLN
+    expected but missing pay[2026-03] on 2026-03-10: model 10.00 PLN
+  cut 2026-04-10
+q2: residuals konto 2026-03
+  2026-03 unexplained: model 0.00 PLN, observed 12.00 PLN, difference 12.00 PLN
+    unexplained bank[r1] on 2026-03-10: observed 12.00 PLN
+  2026-03 move one: model 10.00 PLN, observed 0.00 PLN, difference -10.00 PLN
+    expected but missing one on 2026-03-01: model 10.00 PLN
+  2026-03 move pay: model 10.00 PLN, observed 0.00 PLN, difference -10.00 PLN
+    expected but missing pay[2026-03] on 2026-03-10: model 10.00 PLN
+  cut 2026-04-25
+warning: WARN-UNREAD input d0 is read by nothing
+warning: WARN-UNREAD place wallet is read by nothing
+,18:fixes/g6b/le5_each,11:fixes-sweep,27:run le5.tally --ask q q3 q4,1473:9:le5.tally,1455:model pw
+  tally 2
+  on 2026-04-25
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): a windows each ledger, runs 1-2 agree, run 3 differs (review's le5; #186)"
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index ks = [a, b]
+kind mixed: place any signed
+place konto: accounts PLN lives 2026-01-01..
+place wallet: mixed lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input dk[k in ks]: date
+input d0: date
+input dd: int
+
+move one: transfers
+  on dk[a]
+  leg cash from world to konto amount amt
+
+move pay[m in months]: transfers
+  on day_of(m, dd)
+  leg cash from world to konto amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "s"
+  d0 = 2026-01-01 "s"
+  dd = 10 "s"
+  dk[a] = window(2026-03-30, 2026-04-01) "s"
+  dk[b] = 2026-03-05 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+
+ask q: residuals konto 2026-04 windows each
+ask q2: residuals konto 2026-02 windows each
+ask q3: residuals konto 2026-03 windows each
+ask q4: residuals konto 2026-04 as known 2026-04-10 windows each
+ask q5: residuals konto 2026-04
+
+version st
+  cite s
+  governs 2026-03..2026-04
+  known window(2026-04-01, 2026-04-20)
+  covers konto
+  bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 12.00 PLN) "r1"
+,,1:0,954:q: residuals konto 2026-04
+  2026-04 move pay: model 10.00 PLN, observed 0.00 PLN, difference -10.00 PLN
+    expected but missing pay[2026-04] on 2026-04-10: model 10.00 PLN
+  cut 2026-04-25
+q3: residuals konto 2026-03
+  2026-03 unexplained: model 0.00 PLN, observed 12.00 PLN, difference 12.00 PLN
+    unexplained bank[r1] on 2026-03-10: observed 12.00 PLN
+  2026-03 move one: model 10.00 PLN, observed 0.00 PLN, difference -10.00 PLN
+    expected but missing one on 2026-03-30: model 10.00 PLN
+  2026-03 move pay: model 10.00 PLN, observed 0.00 PLN, difference -10.00 PLN
+    expected but missing pay[2026-03] on 2026-03-10: model 10.00 PLN
+  cut 2026-04-25
+q4: residuals konto 2026-04
+  2026-04 move pay: model 10.00 PLN, observed 0.00 PLN, difference -10.00 PLN
+    expected but missing pay[2026-04] on 2026-04-10: model 10.00 PLN
+  cut 2026-04-10
+warning: WARN-UNREAD input d0 is read by nothing
+warning: WARN-UNREAD place wallet is read by nothing
+,29:fixes/gate8/r437_same_outside,11:fixes-sweep,32:run same_outside.tally --ask l_k,1356:18:same_outside.tally,1328:model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+  note "T, M2 gate 8: a same group whose rows book no end at konto, beside a row outside the group that does (book/same.rs left_to_partner)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place card: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1000.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+  opening[card] = 0.00 PLN at 2026-03-01 start "s"
+
+ask l_k: residuals konto 2026-03
+ask l_s: residuals sav 2026-03
+ask b_k: bal(konto, 2026-03-31)
+ask b_s: bal(sav, 2026-03-31)
+
+version sta
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[x1] = (on: 2026-03-05, kind: transfers, leg cash from konto to world amount 30.00 PLN) "x1"
+
+version stc
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers sav
+  bank[c1] = (on: 2026-03-10, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "c1"
+
+version std
+  cite s
+  governs 2026-03
+  known 2026-04-04
+  covers card
+  bank[d1] = (on: 2026-03-10, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "d1"
+  same bank[d1] = bank[c1]
+,,1:0,239:l_k: residuals konto 2026-03
+  2026-03 unexplained: model 0.00 PLN, observed -30.00 PLN, difference -30.00 PLN
+    unexplained bank[x1] on 2026-03-05: observed -30.00 PLN
+  cut 2026-04-10
+warning: WARN-UNREAD place card is read by nothing
+,28:fixes/gate8/r437_after_m_end,11:fixes-sweep,35:run after_m_end.tally --ask b31 l31,1841:17:after_m_end.tally,1814:model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-03-31
+  note "T, M2 gate 8 run 43702332507: last of a reading after m, m fulfilled by o1 at konto on the run's last day E (03-31), o3 at konto on 04-02 past E, the cut after E: the reading stands on E (book/reading.rs last_standing_day > to ==, > to >=; walk/agenda.rs last_standing_in || to &&)"
+
+source s "s"
+unit PLN: currency minor 0.01
+kind savings: place PLN min 0
+place konto: accounts PLN lives 2026-01-01..
+place sav: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input keep: money PLN
+input d_save: int
+
+move save[m in months]: transfers
+  on day_of(m, d_save)
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  d_save = 15 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[o1] = (on: 2026-03-31, kind: transfers, leg cash from konto to sav amount 500.00 PLN, fulfils: save[2026-03]) "o1"
+  bank[o2] = (on: 2026-03-16, kind: transfers, leg cash from sav to world amount 20.00 PLN, fulfils: save[2026-03]) "o2"
+
+version late
+  cite s
+  governs 2026-04
+  known 2026-04-03
+  bank[o3] = (on: 2026-04-02, kind: transfers, leg cash from konto to sav amount 5.00 PLN, fulfils: save[2026-03]) "o3"
+
+version rd
+  cite s
+  governs 2026-03
+  known 2026-04-04
+  pad konto from world
+  stated[konto] = 90.00 PLN after save[2026-03] "saldo"
+
+ask l16: last(stated[konto], 2026-03-16)
+ask l30: last(stated[konto], 2026-03-30)
+ask l31: last(stated[konto], 2026-03-31)
+ask b16: bal(konto, 2026-03-16)
+ask b30: bal(konto, 2026-03-30)
+ask b31: bal(konto, 2026-03-31)
+,,1:0,352:b31: 550.00 PLN
+  cut 2026-04-10
+l31: ?"stated[konto] has no reading on or before 2026-03-31" (stated[konto])
+  cut 2026-04-10
+warning: WARN-LEGS the two observations of save[2026-03] disagree: bank[o1] (500.00 PLN) and bank[o3] (5.00 PLN)
+warning: WARN-LEGS the two observations of save[2026-03] disagree: bank[o2] (20.00 PLN) and bank[o3] (5.00 PLN)
+,25:fixes/gate8/r437_am_rank3,11:fixes-sweep,36:run am_rank3.tally --ask l14 b14 b31,1648:14:am_rank3.tally,1624:model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+  note "T, M2 gate 8 run 43702332507: a reading after m whose two fulfilling rows (c1, a1) stand on one day around an unlinked row b1, written c1, b1, a1: the reading stands after the last by rank, c1 (walk/agenda.rs booked_rank, last_standing_in's rank)"
+
+source s "s"
+unit PLN: currency minor 0.01
+kind savings: place PLN min 0
+place konto: accounts PLN lives 2026-01-01..
+place sav: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input keep: money PLN
+input d_save: int
+
+move save[m in months]: transfers
+  on day_of(m, d_save)
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  d_save = 15 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[c1] = (on: 2026-03-14, kind: transfers, leg cash from konto to sav amount 10.00 PLN, fulfils: save[2026-03]) "c1"
+  bank[b1] = (on: 2026-03-14, kind: transfers, leg cash from world to konto amount 50.00 PLN) "b1"
+  bank[a1] = (on: 2026-03-14, kind: transfers, leg cash from konto to sav amount 500.00 PLN, fulfils: save[2026-03]) "a1"
+
+version rd
+  cite s
+  governs 2026-03..2026-04
+  known 2026-04-04
+  pad konto from world
+  stated[konto] = 90.00 PLN after save[2026-03] "saldo"
+ask l14: last(stated[konto], 2026-03-14)
+ask b13: bal(konto, 2026-03-13)
+ask b14: bal(konto, 2026-03-14)
+ask b31: bal(konto, 2026-03-31)
+,,1:0,160:l14: ?"stated[konto] has no reading on or before 2026-03-14" (stated[konto])
+  cut 2026-04-10
+b14: 590.00 PLN
+  cut 2026-04-10
+b31: 590.00 PLN
+  cut 2026-04-10
+,26:fixes/gate8/r437_am_rank2l,11:fixes-sweep,37:run am_rank2l.tally --ask l14 b14 b31,1587:15:am_rank2l.tally,1562:model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+  note "T, M2 gate 8 run 43702332507: a reading after m whose one fulfilling row has two legs at konto on one day, declared zfee before cash: the reading stands after the last by rank, zfee (walk/agenda.rs booked_rank -> 0, -> 1)"
+
+source s "s"
+unit PLN: currency minor 0.01
+kind savings: place PLN min 0
+place konto: accounts PLN lives 2026-01-01..
+place sav: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input fee: money PLN
+kind twos: event certain
+  leg zfee: PLN
+  leg cash: PLN
+input keep: money PLN
+input d_save: int
+
+move save[m in months]: twos
+  on day_of(m, d_save)
+  reads konto
+  leg zfee from konto to world amount fee
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep - fee)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  fee = 5.00 PLN "s"
+  d_save = 15 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[a1] = (on: 2026-03-14, kind: twos, leg zfee from konto to world amount 5.00 PLN, leg cash from konto to sav amount 500.00 PLN, fulfils: save[2026-03]) "a1"
+
+version rd
+  cite s
+  governs 2026-03..2026-04
+  known 2026-04-04
+  pad konto from world
+  stated[konto] = 90.00 PLN after save[2026-03] "saldo"
+ask l14: last(stated[konto], 2026-03-14)
+ask b13: bal(konto, 2026-03-13)
+ask b14: bal(konto, 2026-03-14)
+ask b31: bal(konto, 2026-03-31)
+,,1:0,160:l14: ?"stated[konto] has no reading on or before 2026-03-14" (stated[konto])
+  cut 2026-04-10
+b14: 545.00 PLN
+  cut 2026-04-10
+b31: 545.00 PLN
+  cut 2026-04-10
+,16:fixes/g7/b1_tree,11:fixes-sweep,17:run b1_tree.tally,1698:13:b1_tree.tally,1675:model f6tree
+  tally 2
+  on 2026-04-15
+  start 2026-01-01
+  end 2026-12-31
+
+source card "G7 review probe B1: F5's guard and F6's parked failed walk"
+
+unit DUK: currency minor 0.01
+
+index month = month 2026-01..2026-12
+
+place konto: accounts DUK lives 2026-01-01..
+
+place big: accounts DUK lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input pay: money DUK
+
+input big_on: int
+
+input e1: num
+
+input five: money DUK
+
+def e2: num = e1 * e1
+
+def e3: num = e2 * e2
+
+def e4: num = e3 * e3
+
+def e5: num = e4 * e4
+
+def e6: num = e5 * e5
+
+def e7: num = e6 * e6
+
+def e8: num = e7 * e7
+
+def e9: num = e8 * e8
+
+def e10: num = e9 * e9
+
+def e11: num = e10 * e10
+
+def e12: num = e11 * e11
+
+def flood_amt: money DUK = round(five * e12 * e11 * e10 * e9 * e8 * e7 * e6 * e5 * e4 * e3 * e1 * big_on, minor(DUK), down)
+
+move salary[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount pay
+
+move flood[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to big amount flood_amt
+
+ask b_pair: bal(big, 2026-12-31) from 2026-01-20 with uncertain, bal(konto, 2026-12-31) from 2026-01-20
+
+ask b_pair_rev: bal(konto, 2026-12-31) from 2026-01-20, bal(big, 2026-12-31) from 2026-01-20 with uncertain
+
+ask b_big: bal(big, 2026-12-31) from 2026-01-20 with uncertain
+
+ask b_konto: bal(konto, 2026-12-31) from 2026-01-20
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 1000.00
+  big_on = 1
+  e1 = 10
+  five = 5.00
+  opening[konto] = 500.00 at 2026-01-01 start
+  opening[big] = 0.00 at 2026-01-01 start
+
+version later
+  cite card
+  governs always
+  known 2026-02-01
+  replace big_on = 0 "the flood stopped"
+,,1:0,16736:b_big: 600 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000.00 DUK
+  unfulfilled: flood[2026-01]
+  cut 2026-04-15
+b_konto: 12 500.00 DUK
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+b_pair: (600 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000.00 DUK, 12 500.00 DUK)
+  unfulfilled: flood[2026-01]
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+b_pair_rev: (12 500.00 DUK, 600 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000.00 DUK)
+  unfulfilled: flood[2026-01]
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+,19:fixes/g7/p3_after_m,11:fixes-sweep,45:run p3_after_same.tally --ask a_late a_stated,1959:19:p3_after_same.tally,1930:model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+  note "G7 review probe: after-reading and same inside a kept walk"
+
+source s "s"
+unit PLN: currency minor 0.01
+kind savings: place PLN min 0
+place konto: accounts PLN lives 2026-01-01..
+place sav: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input keep: money PLN
+input d_save: int
+
+move save[m in months]: transfers
+  on day_of(m, d_save)
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  d_save = 15 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[o1] = (on: 2026-03-14, kind: transfers, leg cash from konto to sav amount 500.00 PLN, fulfils: save[2026-03]) "o1"
+  bank[o2] = (on: 2026-03-16, kind: transfers, leg cash from sav to world amount 20.00 PLN, fulfils: save[2026-03]) "o2"
+  bank[o3] = (on: 2026-03-14, kind: transfers, leg cash from konto to sav amount 500.00 PLN, fulfils: save[2026-03]) "o3"
+  same bank[o3] = bank[o1]
+
+version rd
+  cite s
+  governs 2026-03..2026-04
+  known 2026-04-04
+  pad konto from world
+  stated[konto] = 90.00 PLN after save[2026-03] "saldo"
+
+
+ask a_min: min(bal(konto, d) from 2026-03-10 for d in 2026-03-10 .. 2026-04-30 step 1 day)
+
+ask a_back: bal(sav, d) from 2026-03-12 for d in [2026-03-20, 2026-03-14, 2026-04-30, 2026-03-16, 2026-04-01]
+
+ask a_both: min(bal(konto, d) from 2026-03-13 + bal(sav, d) from 2026-03-13 for d in 2026-03-13 .. 2026-04-20 step 1 day)
+
+ask a_late: min(bal(konto, d) from 2026-04-12 for d in 2026-04-12 .. 2026-04-30 step 1 day)
+
+ask a_known: min(bal(konto, d) from 2026-03-10 for d in 2026-03-10 .. 2026-04-30 step 1 day) as known 2026-04-03
+
+ask a_stated: last(stated[konto], 2026-03-31)
+,,1:0,135:a_late: 100.00 PLN
+  cut 2026-04-10
+a_stated: ?"stated[konto] has no reading on or before 2026-03-31" (stated[konto])
+  cut 2026-04-10
+,28:fixes/gate8/g6r_hole_cuts_l2,12:fixes-ledger,28:run hole_cuts.tally --ask l2,1411:15:hole_cuts.tally,1386:model b
+  tally 2
+  on 2027-06-30
+  start 2027-01-01
+  end 2027-12-31
+  note "T, M2 gate 8: a hole booking (fee) a version known 2027-03-01 answers, read at a cut before it, after it, then before it again in one run (book/adjust.rs Engine::answer_holes && to ||)"
+
+source s "s"
+unit PLN: currency minor 0.01
+kind ovs: event certain
+  leg cash: PLN
+place acct: accounts PLN lives 2027-01-01..
+place bank: outside lives 2027-01-01..
+input fee[m in months]: money PLN question "fee?"
+input dom: int
+def p[m in months]: money PLN = if pos(m) == 1 then 0 else p[m - 1] + sum(o.cash.amount for o in ovs over m)
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from bank to acct amount p[m]
+move op[m in months]: ovs
+  on start_of(m)
+  leg cash from acct to bank amount 1 PLN
+move z_fee[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from acct to bank amount fee[m]
+
+version v1
+  cite s
+  governs always
+  known 2027-01-01
+  dom = 10 "s"
+  opening[acct] = 100.00 PLN at 2027-01-01 start "s"
+
+version v2
+  cite s
+  governs always
+  known 2027-03-01
+  fee = 0.50 PLN "s"
+
+ask e1: p[2027-06] as known 2027-02-15
+ask e2: bal(acct, 2027-06-30) as known 2027-02-15
+ask l1: p[2027-06] as known 2027-04-15
+ask l2: bal(acct, 2027-06-30) as known 2027-04-15
+ask e3: p[2027-05] as known 2027-02-15
+ask e4: bal(acct, 2027-05-31) as known 2027-02-15
+ask n1: p[2027-04]
+,,1:0,370:l2: ?"fee?" (fee[2027-01], fee[2027-02])
+  unfulfilled: op[2027-01]
+  unfulfilled: op[2027-02]
+  unfulfilled: op[2027-03]
+  unfulfilled: op[2027-04]
+  unfulfilled: pay[2027-02]
+  unfulfilled: pay[2027-03]
+  unfulfilled: pay[2027-04]
+  unfulfilled: z_fee[2027-01]
+  unfulfilled: z_fee[2027-02]
+  unfulfilled: z_fee[2027-03]
+  unfulfilled: z_fee[2027-04]
+  cut 2027-04-15
+,24:fixes/gate8/g6r_dec_same,12:fixes-ledger,44:run dec_same.tally --ask b_k b_s b_k15 b_s15,1173:14:dec_same.tally,1149:model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+  note "T, M2 gate 8: a decision stated same as an observed row at a covered place, agreeing (book/same.rs book_key, same_end, same_release)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input d10: date
+
+move dec: transfers
+  on d10
+  reads konto
+  leg cash from konto to sav amount amt + 0 * bal(konto)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1000.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+  amt = 100.00 PLN "s"
+  d10 = 2026-03-10 "s"
+
+ask b_k: bal(konto, 2026-03-31)
+ask b_s: bal(sav, 2026-03-31)
+ask b_k15: bal(konto, 2026-03-15)
+ask b_s15: bal(sav, 2026-03-15)
+ask l_k: residuals konto 2026-03
+ask n_t: count(t in transfers over 2026-03)
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "r1"
+  same bank[r1] = dec
+,,1:0,188:b_k: 1 000.00 PLN
+  cut 2026-04-10
+b_s: 0.00 PLN
+  cut 2026-04-10
+b_k15: 1 000.00 PLN
+  cut 2026-04-10
+b_s15: 0.00 PLN
+  cut 2026-04-10
+warning: WARN-UNREAD place world is read by nothing
 ,

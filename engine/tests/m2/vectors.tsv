@@ -151,6 +151,7 @@ fixes/g6/b3	fixes-sweep		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/b3.ta
 fixes/g6/b4	fixes-sweep		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/b4.tally	q2 q3 q4		-
 fixes/g6/r4_d2	fixes-sweep		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/r4.tally	d2		-
 fixes/gate8/r437_after_m_last	fixes-sweep		engine/tests/m2/fixes/gate8/r437	engine/tests/m2/fixes/gate8/r437/after_m_last.tally	l14 l15 l16 l31		-
+fixes/gate8/r437_after_m_start	fixes-sweep		engine/tests/m2/fixes/gate8/r437	engine/tests/m2/fixes/gate8/r437/after_m_start.tally	l01 l02 l06 b02 b15		-
 fixes/g5/a1_alone	fixes-ledger		engine/tests/m2/fixes/g5	engine/tests/m2/fixes/g5/a1_alone.tally	t3		ledger
 fixes/g5/a1_noprefix	fixes-ledger		engine/tests/m2/fixes/g5	engine/tests/m2/fixes/g5/a1_noprefix.tally	t1		ledger
 fixes/g5/a1_prefix	fixes-ledger		engine/tests/m2/fixes/g5	engine/tests/m2/fixes/g5/a1_prefix.tally	t3		ledger
@@ -167,3 +168,20 @@ fixes/g5/p4_wexp_e3	fixes-ledger		engine/tests/m2/fixes/g5	engine/tests/m2/fixes
 fixes/g5/p4_hole_e2	fixes-ledger		engine/tests/m2/fixes/g5	engine/tests/m2/fixes/g5/p4_hole.tally	e2		ledger
 fixes/gate8/d512_hole_ans	fixes-ledger		engine/tests/m2/fixes/gate8/d512	engine/tests/m2/fixes/gate8/d512/hole_ans.tally			ledger
 fixes/g5/p4_adj_e2	fixes-ledger		engine/tests/m2/fixes/g5	engine/tests/m2/fixes/g5/p4_adj.tally	e2		-
+fixes/g6b/b1	fixes-sweep		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/b1.tally			sweep
+fixes/g6b/b2	fixes-sweep		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/b2.tally			sweep
+fixes/g6b/b3_q	fixes-sweep		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/b3.tally	q		-
+fixes/g6b/b4_q1q3	fixes-sweep		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/b4.tally	q1 q3		-
+fixes/g6b/sr2_q7	fixes-sweep		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/sr2.tally	q7		-
+fixes/g6b/pd3_q2q6	fixes-sweep		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/pd3.tally	q2 q6		-
+fixes/g6b/w1b_q5	fixes-sweep		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/w1b.tally	q5		-
+fixes/g6b/le1_each	fixes-sweep		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/le1.tally	q q2		-
+fixes/g6b/le5_each	fixes-sweep		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/le5.tally	q q3 q4		-
+fixes/gate8/r437_same_outside	fixes-sweep		engine/tests/m2/fixes/gate8/r437	engine/tests/m2/fixes/gate8/r437/same_outside.tally	l_k		sweep
+fixes/gate8/r437_after_m_end	fixes-sweep		engine/tests/m2/fixes/gate8/r437	engine/tests/m2/fixes/gate8/r437/after_m_end.tally	b31 l31		-
+fixes/gate8/r437_am_rank3	fixes-sweep		engine/tests/m2/fixes/gate8/r437	engine/tests/m2/fixes/gate8/r437/am_rank3.tally	l14 b14 b31		-
+fixes/gate8/r437_am_rank2l	fixes-sweep		engine/tests/m2/fixes/gate8/r437	engine/tests/m2/fixes/gate8/r437/am_rank2l.tally	l14 b14 b31		-
+fixes/g7/b1_tree	fixes-sweep		engine/tests/m2/fixes/g7	engine/tests/m2/fixes/g7/b1_tree.tally			sweep
+fixes/g7/p3_after_m	fixes-sweep		engine/tests/m2/fixes/g7	engine/tests/m2/fixes/g7/p3_after_same.tally	a_late a_stated		-
+fixes/gate8/g6r_hole_cuts_l2	fixes-ledger		engine/tests/m2/fixes/gate8/g6r	engine/tests/m2/fixes/gate8/g6r/hole_cuts.tally	l2		-
+fixes/gate8/g6r_dec_same	fixes-ledger		engine/tests/m2/fixes/gate8/g6r	engine/tests/m2/fixes/gate8/g6r/dec_same.tally	b_k b_s b_k15 b_s15		-

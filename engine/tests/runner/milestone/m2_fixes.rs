@@ -112,7 +112,8 @@ mod tests {
     /// The sweep group's: `add_business` past the day range with a hole on the way (P5, P15)
     /// and a four-digit literal where money is expected (P16), held for #169; G6's partial
     /// answers refcore prints linear (`pa1` q6, q7) and an observed row's `none` field (`obsrow`
-    /// o5), held for #169.
+    /// o5), held for #169; G6's last part: B1 and B2 (`same` rows under `windows each`, for the
+    /// sweep's fix), B3 and B4, P29 and P30 held for #169, a set split by sub-window for #186.
     #[test]
     fn m2_fixes_sweep() {
         group_holds(VECTORS, "fixes-sweep");
@@ -171,7 +172,9 @@ mod tests {
 
     /// The spec's answers for G6's held probes (L §5.18 partial answers, L §8.4 an observed
     /// row's `none` field) and for P60's census forms refcore can't run: an ask's `law`,
-    /// `as known` and `with` formed per its own `for`'s binding tuple (L §5.18, §5.11).
+    /// `as known` and `with` formed per its own `for`'s binding tuple (L §5.18, §5.11); G6's
+    /// last part: a removal known in a window holding the cut (B3), a `same` line before its
+    /// version is known (B4), P29's and P30's lines.
     #[test]
     fn m2_fixes_spec_sweep() {
         group_holds(SPEC, "spec-sweep");

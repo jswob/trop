@@ -1,0 +1,44 @@
+model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+  note "T, M2 gate 8: a decision stated same as an observed row at a covered place, agreeing (book/same.rs book_key, same_end, same_release)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input d10: date
+
+move dec: transfers
+  on d10
+  reads konto
+  leg cash from konto to sav amount amt + 0 * bal(konto)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1000.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+  amt = 100.00 PLN "s"
+  d10 = 2026-03-10 "s"
+
+ask b_k: bal(konto, 2026-03-31)
+ask b_s: bal(sav, 2026-03-31)
+ask b_k15: bal(konto, 2026-03-15)
+ask b_s15: bal(sav, 2026-03-15)
+ask l_k: residuals konto 2026-03
+ask n_t: count(t in transfers over 2026-03)
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "r1"
+  same bank[r1] = dec

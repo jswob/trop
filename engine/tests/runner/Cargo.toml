@@ -185,3 +185,10 @@ test = false
 name = "m2_properties"
 path = "milestone/m2_properties.rs"
 test = false
+
+# M2: fence F6 on every store and corpus, the forks switch on against off through the CLI's
+# re-export of the library (pick P9; MILESTONE-M2.md row 5): a fence's equivalence test
+# (R-130), run by default since G7 built the switch (9f98aa56).
+[[test]]
+name = "m2_forks"
+path = "milestone/m2_forks.rs"
