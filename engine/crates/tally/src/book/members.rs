@@ -183,11 +183,11 @@ impl Engine {
             (Some(on), _) => {
                 let v = self.ev(m, on, env, ctx)?;
                 if let Value::Hole(h) = v {
-                    return self.unknown_day(m, bind, dom, h, ctx);
+                    return self.unknown_day(m, (bind, env), dom, h, ctx);
                 }
                 let d = match crate::eval::one_day(m, &v, "the day of a binding")? {
                     Ok(d) => d,
-                    Err(h) => return self.unknown_day(m, bind, dom, h, ctx),
+                    Err(h) => return self.unknown_day(m, (bind, env), dom, h, ctx),
                 };
                 let next = d
                     .next()
@@ -195,7 +195,7 @@ impl Engine {
                 Span::between(Some(d), Some(next))
             }
             (None, Some(over)) => match self.span_value(m, over, env, ctx)? {
-                Err(h) => return self.unknown_day(m, bind, dom, h, ctx),
+                Err(h) => return self.unknown_day(m, (bind, env), dom, h, ctx),
                 Ok(sp) => sp,
             },
             (None, None) => {
@@ -207,25 +207,27 @@ impl Engine {
         self.span_members(m, dom, &span, ctx).map(Ok)
     }
 
-    /// A binding whose day or span is a hole: no member when the kind has none, else that
-    /// hole (refcore's `bind_day`, `kind_has_member`). L §5.7, §8.1.
+    /// A binding whose day or span is a hole: no member when no movement of the kind the cut
+    /// knows could be one (none, or its `where` rules each out), else that hole (refcore's
+    /// `bind_day`, `kind_has_member`). L §5.7, §8.1.
     fn unknown_day(
         &mut self,
         m: &Reality,
-        bind: &Bind,
+        (bind, env): (&Bind, &Env),
         dom: (MvDom, &str),
         h: Hole,
         ctx: Ctx,
     ) -> Result<Result<Vec<MvMember>, Hole>, Stop> {
-        if self.movements_of(m, dom, ctx)?.is_empty() {
-            return Ok(Ok(Vec::new()));
-        }
-        if bind.filter.is_some() {
-            return Err(Stop::NotBuilt(
-                "a binding whose day is a hole and whose where may rule its members out",
-            ));
-        }
-        Ok(Err(h))
+        let cands = self
+            .movements_of(m, dom, ctx)?
+            .iter()
+            .map(Moving::value)
+            .collect();
+        Ok(if self.may_hold(m, (bind, env), cands, ctx)? {
+            Err(h)
+        } else {
+            Ok(Vec::new())
+        })
     }
 
     /// The movements of the domain dated in span `sp`, an instance and the observations that
