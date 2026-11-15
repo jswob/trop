@@ -236,6 +236,34 @@ k="$(tools/mutants-gate key)" || exit 1
 for f in list plan map; do sed "s/@KEY@/$k/g" "zz-gate/$f.in" > "zz-gate/$f.json"; done
 tools/mutants-gate shard 0/1 zz-gate/list.json zz-gate/map.json zz-gate/plan.json zz-gate/out
 
+# P31 (issue #167, 2026-11-15): a dispatch with `next` counts the next milestone's tests green
+# unmutated; the baseline job and the coverage job each run them (`mutants-gate next`), and
+# the filter is in the tree's key. A map made from another `next` run than the plan's (here
+# it kept tests::b, the plan's kept tests::a) is refused, so no shard selects tests the
+# baseline didn't see green.
+
+case: next-map-from-another-next-run-refused
+tool: run
+expect: FAIL mutants-gate: the coverage map's key
+--- write zz-gate/next-a.json
+{"milestone": "M2", "extra": ["--test=m2_planted"], "expr": "not (binary_id(=tally-runner::m2_planted)) | (binary_id(=tally-runner::m2_planted) & test(=tests::a))", "green": ["tally-runner::m2_planted tests::a"], "red": ["tally-runner::m2_planted tests::b"]}
+--- write zz-gate/next-b.json
+{"milestone": "M2", "extra": ["--test=m2_planted"], "expr": "not (binary_id(=tally-runner::m2_planted)) | (binary_id(=tally-runner::m2_planted) & test(=tests::b))", "green": ["tally-runner::m2_planted tests::b"], "red": ["tally-runner::m2_planted tests::a"]}
+--- write zz-gate/list.in
+{"key": "@KEY@", "mutants": []}
+--- write zz-gate/plan.in
+{"key": "@KEY@", "shards": [[]], "o1": [], "killers": {}, "order": []}
+--- write zz-gate/map.in
+{"key": "@KEY@", "args": [], "tests": {}}
+--- run
+ka="$(tools/mutants-gate key --next zz-gate/next-a.json)" || exit 1
+kb="$(tools/mutants-gate key --next zz-gate/next-b.json)" || exit 1
+k="$(tools/mutants-gate key)" || exit 1
+[ "$ka" != "$kb" ] && [ "$ka" != "$k" ] || { echo "R-88 broken: the key doesn't hold next's filter"; exit 1; }
+for f in list plan; do sed "s/@KEY@/$ka/g" "zz-gate/$f.in" > "zz-gate/$f.json"; done
+sed "s/@KEY@/$kb/g" zz-gate/map.in > zz-gate/map.json
+tools/mutants-gate shard 0/1 zz-gate/list.json zz-gate/map.json zz-gate/plan.json zz-gate/out --next zz-gate/next-a.json
+
 # The plan builds the last run's survivors with the kernel at opt-level 1 (overflow checks
 # and debug assertions stay on), and nextest's exit 100 is a catch. The planted history
 # says the mutant was missed; the fake cargo records what it was asked to build.

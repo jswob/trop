@@ -31,6 +31,10 @@ on:
         description: 'Run gate 8 alone: the mutants jobs, none of the others'
         type: boolean
         default: false
+      next:
+        description: "Gate 8 counts the next milestone's tests too, those green unmutated (R-88)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -257,7 +261,12 @@ jobs:
   # Gate 8 (R-84, R-88, R-133; the mutation study, approved 2026-11-12): each mutant on the T
   # tests that enter its function, through engine/tools/mutants-gate. The baseline and the
   # coverage map run side by side; then 100 shards of even predicted cost, which GitHub's
-  # queue hands to the jobs the account runs at once; then the survivors and the history
+  # queue hands to the jobs the account runs at once; then the survivors and the history.
+  # A dispatch with `next` (R-88, issue #167, pick P31) counts the next milestone's tests too,
+  # as `mutants-local --next` does: each job adds its targets and keeps, through a nextest
+  # filter, only the tests green in an unmutated run of them (`tools/mutants-gate next`), the
+  # red ones listed in the log; the filter is in the tree's key, so the shards refuse a map
+  # made from another such run than the plan's. Push and nightly runs are unchanged
   mutants-baseline:
     name: mutants baseline
     if: github.event_name != 'pull_request'
@@ -272,16 +281,21 @@ jobs:
       - name: Install the toolchains and the cargo tools
         working-directory: engine
         run: *install
+      # a dispatch with `next`: the next milestone's tests unmutated, those green kept (R-88)
+      - name: The next milestone's tests green unmutated (a dispatch with next)
+        if: inputs.next
+        working-directory: engine
+        run: tools/mutants-gate next target/mutants-plan/next.json
       # T's tests must pass unmutated before any mutant runs (R-88): the runner's default
       # targets and every gating milestone's, but the marker's mutants_leave_out (R-84,
       # tools/milestones args), the shards' own set; each test's time is kept for the report
       - name: The tests pass unmutated, fresh
         working-directory: engine
-        run: tools/mutants-gate baseline target/mutants-plan
+        run: tools/mutants-gate baseline target/mutants-plan ${{ inputs.next && '--next target/mutants-plan/next.json' || '' }}
       # cargo-mutants' list, each mutant's diff checked against its file, with the tree's key
       - name: The mutants
         working-directory: engine
-        run: tools/mutants-gate list target/mutants-plan/mutants.json
+        run: tools/mutants-gate list target/mutants-plan/mutants.json ${{ inputs.next && '--next target/mutants-plan/next.json' || '' }}
       # the last run's history, which the history job caches; the first is the study's run 4
       - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -325,9 +339,15 @@ jobs:
       - name: Install the toolchains and the cargo tools
         working-directory: engine
         run: *install
+      # the same tests as the baseline's, from a run of its own beside it; a different
+      # filter gives a different key, which the shards refuse (R-133)
+      - name: The next milestone's tests green unmutated (a dispatch with next)
+        if: inputs.next
+        working-directory: engine
+        run: tools/mutants-gate next target/mutants-map/next.json
       - name: Each T test's kernel functions
         working-directory: engine
-        run: tools/mutants-gate coverage target/mutants-map/map.json
+        run: tools/mutants-gate coverage target/mutants-map/map.json ${{ inputs.next && '--next target/mutants-map/next.json' || '' }}
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: mutants-map
@@ -357,7 +377,7 @@ jobs:
       - name: The twin map equals the shards' map
         working-directory: engine
         run: |
-          tools/mutants-gate coverage target/mutants-twin/map.json
+          tools/mutants-gate coverage target/mutants-twin/map.json ${{ inputs.next && '--next target/mutants-map/next.json' || '' }}
           tools/mutants-gate same-map target/mutants-map/map.json target/mutants-twin/map.json
 
   # the plan's 100 shards, each about 8 minutes on the median runner; GitHub's queue starts a
@@ -394,7 +414,7 @@ jobs:
       # (R-133). Missed and timed-out mutants are judged by the survivors job, not here
       - name: The plan's shard ${{ matrix.shard }}, each mutant on the T tests that enter its function
         working-directory: engine
-        run: tools/mutants-gate shard ${{ matrix.shard }}/100 target/mutants-plan/mutants.json target/mutants-map/map.json target/mutants-plan/plan.json target/mutants-shard
+        run: tools/mutants-gate shard ${{ matrix.shard }}/100 target/mutants-plan/mutants.json target/mutants-map/map.json target/mutants-plan/plan.json target/mutants-shard ${{ inputs.next && '--next target/mutants-plan/next.json' || '' }}
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -412,6 +432,20 @@ jobs:
         with:
           pattern: mutants-shard-*
           path: engine/target/mutants
+      # a dispatch with `next`: the verdicts are read as on any run, and the log says the run
+      # counted the next milestone's tests (R-88, pick P31)
+      - if: inputs.next
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: mutants-plan
+          path: engine/target/mutants-plan
+      - name: The next milestone's tests were counted (a dispatch with next)
+        if: inputs.next
+        run: |
+          next=engine/target/mutants-plan/next.json
+          echo "mutants-survivors: this run counted $(jq -r .milestone "$next")'s tests green unmutated too:" \
+            "$(jq '.green | length' "$next") kept, $(jq '.red | length' "$next") left out (R-88, a dispatch with next)"
+          jq -r '.red[] | "mutants-survivors: left out, red unmutated: \(.)"' "$next"
       # the score needs every shard: a missing artifact fails here, not silently
       - name: Every survivor is listed with its reason, and no listed one is caught now (R-87)
         run: |
