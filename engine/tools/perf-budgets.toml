@@ -189,9 +189,10 @@ blocks = "pr"
 # continued from the last checkpoint before it; its plain twin is the unforked walk. P8-14
 # stays as fixed at S. These rows are not PERFORMANCE §8's (their ids aren't P8 ids, as B1's
 # isn't), so trace's PERF: check (R-130) reads the P8 id P8-14 on F6's line, and the line
-# names these rows beside it. Every number below is proposed until M2's gate, whose timing
-# run (uptime under 2) measures them with forks on (PERFORMANCE §8: proposed until the
-# milestone that measures it).
+# names these rows beside it. Every number below was proposed until M2's gate, whose timing
+# run measured them with forks on (PERFORMANCE §8: proposed until the milestone that
+# measures it); fixed 2026-11-15 from that run (engine/perf/M2.md, the timing run; issue
+# #167), each changed only through a logged row.
 #
 # X's repeated walks: one row per change set whose checks share a start (T's names,
 # `I:X:*@c[1-4,6,7]_fast` and `@v[34]_fast`, one run of three asks each), each timed on its
@@ -199,7 +200,9 @@ blocks = "pr"
 # compare across sets; F6-c7 times P8-2's check. The budget is §8.2's for a check at 1x,
 # 1 worker: 1 s, 512 MB; a row is judged once T writes its digest in
 # engine/tests/perf-digests.tsv (T's chunk C8), unjudged until then. They are also F6's
-# benchmark (R-91): X end to end through tools/perf, no bench file of its own.
+# benchmark (R-91): X end to end through tools/perf, no bench file of its own. Fixed
+# 2026-11-15 at §8.2's 1 s, 512 MB: M2's gate timed each at 81-83 ms, at most 13.8 MB, every
+# output T's digest (engine/perf/M2.md, the timing run at bdb0e7b1).
 [[row]]
 id = "F6-c1"
 group = "C"
@@ -274,16 +277,18 @@ blocks = "tag"
 
 # Forks' count row (the plan's pick, build-plan §5): walks shared and days stepped with forks
 # on, on P8-14's check, X's 21 walks (PERFORMANCE §2.5: "20 in X"; S: 926 days stepped, 906
-# non-empty, unforked). Proposed: days_stepped at most the unforked walk's figure on the same
-# check, walks_shared at least 1. Neither is a `counts` key yet, so `perf counts F6-X`
-# reports both and fails on neither; the gate sets days_stepped from its first forks-on
-# figure x 1.2 (as S set P8-14's def misses), and walks_shared's floor needs a lower bound
-# tools/perf doesn't read yet. CI's counts step lists the row once its budget is set.
+# non-empty, unforked). Fixed 2026-11-15 (M2's gate, issue #167): days_stepped is the first
+# forks-on figure on the final code x 1.2, as S set P8-14's def misses: 960 days at 476032fd
+# (the builder's P73 fix; `perf counts F6-X`, confirmed by the rules step at 3c06b396, 582
+# walks shared), so 1 152; the gate's timing run's 1 826 at bdb0e7b1 came before that fix
+# (engine/perf/M2.md). walks_shared stays reported, no budget: its floor needs a lower bound
+# tools/perf doesn't read (the fence hand-off §3). CI's counts step lists the row.
 [[row]]
 id = "F6-X"
 group = "C"
 what = "forks' counts on I:X:replay_september@b_r1: walks shared, days stepped, forks on"
 recipe = "check:I:X:replay_september@b_r1"
+counts = { days_stepped = 1152 }
 blocks = "pr"
 
 # 8.3 Group L: the load rows at full size; a Monte Carlo row's wall is its deterministic part
