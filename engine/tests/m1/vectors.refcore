@@ -251737,4 +251737,278 @@ q3: 1 257.00 PLN
 q4: (150.00 PLN, 657.00 PLN)
   unfulfilled: salary[2026-01]
   cut 2026-01-20
+,30:fixes/gate8/m2_g6r_nested_park,11:fixes-gate8,21:run nested_park.tally,1408:17:nested_park.tally,1381:model t
+  tally 2
+  on 2026-01-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 gate 8: a decision inside a projection's walk reads that same projection, then four others, so a parked walk is the one the outer read still walks (walk/projection.rs end_projection > to <, > to ==; walk/fork.rs park_projection)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input pay: money PLN
+input dpay: date
+input ddec: date
+input dread: date
+input f1: date
+input f2: date
+input f3: date
+input f4: date
+input f5: date
+
+move salary: transfers
+  on dpay
+  leg cash from world to konto amount pay
+
+move dec: transfers
+  on ddec
+  reads konto
+  leg cash from konto to world amount pay + 0 * (bal(konto, dread) from f1 + bal(konto, dread) from f2 + bal(konto, dread) from f3 + bal(konto, dread) from f4 + bal(konto, dread) from f5)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "s"
+  dpay = 2026-03-01 "s"
+  ddec = 2026-03-15 "s"
+  dread = 2026-03-10 "s"
+  f1 = 2026-02-01 "s"
+  f2 = 2026-02-02 "s"
+  f3 = 2026-02-03 "s"
+  f4 = 2026-02-04 "s"
+  f5 = 2026-02-05 "s"
+  opening[konto] = 50.00 PLN at 2026-01-01 start "s"
+
+ask q1: bal(konto, 2026-06-30) from 2026-02-01
+ask q2: bal(konto, 2026-03-31) from 2026-02-01, bal(konto, 2026-06-30) from 2026-02-01
+ask q3: bal(konto, 2026-06-30)
+,,1:0,106:q1: 50.00 PLN
+  cut 2026-01-20
+q2: (50.00 PLN, 50.00 PLN)
+  cut 2026-01-20
+q3: 50.00 PLN
+  cut 2026-01-20
+,28:fixes/gate8/m2_g6r_hole_cuts,11:fixes-gate8,43:run hole_cuts.tally --ask e1 e2 l1 e3 e4 n1,1411:15:hole_cuts.tally,1386:model b
+  tally 2
+  on 2027-06-30
+  start 2027-01-01
+  end 2027-12-31
+  note "T, M2 gate 8: a hole booking (fee) a version known 2027-03-01 answers, read at a cut before it, after it, then before it again in one run (book/adjust.rs Engine::answer_holes && to ||)"
+
+source s "s"
+unit PLN: currency minor 0.01
+kind ovs: event certain
+  leg cash: PLN
+place acct: accounts PLN lives 2027-01-01..
+place bank: outside lives 2027-01-01..
+input fee[m in months]: money PLN question "fee?"
+input dom: int
+def p[m in months]: money PLN = if pos(m) == 1 then 0 else p[m - 1] + sum(o.cash.amount for o in ovs over m)
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from bank to acct amount p[m]
+move op[m in months]: ovs
+  on start_of(m)
+  leg cash from acct to bank amount 1 PLN
+move z_fee[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from acct to bank amount fee[m]
+
+version v1
+  cite s
+  governs always
+  known 2027-01-01
+  dom = 10 "s"
+  opening[acct] = 100.00 PLN at 2027-01-01 start "s"
+
+version v2
+  cite s
+  governs always
+  known 2027-03-01
+  fee = 0.50 PLN "s"
+
+ask e1: p[2027-06] as known 2027-02-15
+ask e2: bal(acct, 2027-06-30) as known 2027-02-15
+ask l1: p[2027-06] as known 2027-04-15
+ask l2: bal(acct, 2027-06-30) as known 2027-04-15
+ask e3: p[2027-05] as known 2027-02-15
+ask e4: bal(acct, 2027-05-31) as known 2027-02-15
+ask n1: p[2027-04]
+,,1:0,834:e1: 5.00 PLN
+  unfulfilled: op[2027-02]
+  cut 2027-02-15
+e2: ?"fee?" (fee[2027-01], fee[2027-02], fee[2027-03], fee[2027-04], fee[2027-05], fee[2027-06])
+  unfulfilled: op[2027-01]
+  unfulfilled: op[2027-02]
+  unfulfilled: pay[2027-02]
+  unfulfilled: z_fee[2027-01]
+  unfulfilled: z_fee[2027-02]
+  cut 2027-02-15
+l1: 5.00 PLN
+  unfulfilled: op[2027-02]
+  unfulfilled: op[2027-03]
+  unfulfilled: op[2027-04]
+  cut 2027-04-15
+e3: 4.00 PLN
+  unfulfilled: op[2027-02]
+  cut 2027-02-15
+e4: ?"fee?" (fee[2027-01], fee[2027-02], fee[2027-03], fee[2027-04], fee[2027-05])
+  unfulfilled: op[2027-01]
+  unfulfilled: op[2027-02]
+  unfulfilled: pay[2027-02]
+  unfulfilled: z_fee[2027-01]
+  unfulfilled: z_fee[2027-02]
+  cut 2027-02-15
+n1: 3.00 PLN
+  unfulfilled: op[2027-02]
+  unfulfilled: op[2027-03]
+  unfulfilled: op[2027-04]
+  cut 2027-06-30
+,37:fixes/gate8/m2_g6r_same_holes_partial,11:fixes-gate8,28:run same_holes_partial.tally,715:24:same_holes_partial.tally,682:model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 gate 8: two input rows stated same whose values are holes, read in a partial sum (hole/questions.rs spread, delete field lin; eval/read.rs read_same_rows)"
+
+source s "s"
+unit PLN: currency minor 0.01
+input x: money PLN
+input y: money PLN
+input z: money PLN
+input ten: money PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x = ?"x amount" "s"
+  y = ?"y amount" "s"
+  z = 5.00 PLN "s"
+  ten = 10.00 PLN "s"
+
+version sm
+  cite s
+  governs always
+  known 2026-01-02
+  same x = y
+
+ask q1: x + ten partial
+ask q2: x + ten
+ask q3: y + z partial
+ask q4: x + y partial
+ask q5: z + ten partial
+,,1:0,243:q1: ?"x amount" (x) ?"y amount" (y)
+  cut 2026-06-30
+q2: ?"x amount" (x) ?"y amount" (y)
+  cut 2026-06-30
+q3: ?"x amount" (x) ?"y amount" (y)
+  cut 2026-06-30
+q4: ?"x amount" (x) ?"y amount" (y)
+  cut 2026-06-30
+q5: 15.00 PLN
+  cut 2026-06-30
+,27:fixes/gate8/m2_g6r_dec_same,11:fixes-gate8,32:run dec_same.tally --ask l_k n_t,1173:14:dec_same.tally,1149:model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+  note "T, M2 gate 8: a decision stated same as an observed row at a covered place, agreeing (book/same.rs book_key, same_end, same_release)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input d10: date
+
+move dec: transfers
+  on d10
+  reads konto
+  leg cash from konto to sav amount amt + 0 * bal(konto)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1000.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+  amt = 100.00 PLN "s"
+  d10 = 2026-03-10 "s"
+
+ask b_k: bal(konto, 2026-03-31)
+ask b_s: bal(sav, 2026-03-31)
+ask b_k15: bal(konto, 2026-03-15)
+ask b_s15: bal(sav, 2026-03-15)
+ask l_k: residuals konto 2026-03
+ask n_t: count(t in transfers over 2026-03)
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "r1"
+  same bank[r1] = dec
+,,1:0,264:l_k: residuals konto 2026-03
+  2026-03 move dec: model -100.00 PLN, observed 0.00 PLN, difference 100.00 PLN
+    expected but missing dec on 2026-03-10: model -100.00 PLN
+  cut 2026-04-10
+n_t: 1
+  cut 2026-04-10
+warning: WARN-UNREAD place world is read by nothing
+,34:fixes/gate8/m2_g6r_partial_noreset,11:fixes-gate8,25:run partial_noreset.tally,1024:21:partial_noreset.tally,994:model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 gate 8: a place with no reading or opening, born mid-run, a hole leg into it, read partial in the main walk and from a projection (walk/state.rs partial_legs' guard)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place jar: accounts PLN lives 2026-03-01..
+place world: outside lives 1900-01-01..
+input gift: money PLN
+input ten: money PLN
+input dg: date
+input dt: date
+
+move g: transfers
+  on dg
+  leg cash from world to jar amount gift
+
+move t2: transfers
+  on dt
+  leg cash from world to jar amount ten
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 10.00 PLN at 2026-01-01 start "s"
+  gift = ?"gift amount" "s"
+  ten = 10.00 PLN "s"
+  dg = 2026-04-01 "s"
+  dt = 2026-05-01 "s"
+
+ask q1: bal(jar, 2026-06-30) partial
+ask q2: bal(jar, 2026-06-30) from 2026-03-15 partial
+ask q3: bal(jar, 2026-06-30)
+ask q4: bal(world, 2026-06-30) partial
+,,1:0,306:q1: 10.00 PLN + 1 × ?"gift amount" (gift)
+  cut 2026-01-01
+q2: ?"gift amount" (gift)
+  cut 2026-01-01
+q3: ?"gift amount" (gift)
+  cut 2026-01-01
+q4: refused: RUN-DOMAIN bal(world, d) of a place of unit any states its unit: bal(x, u, d)
+  cut 2026-01-01
+warning: WARN-UNREAD place konto is read by nothing
 ,

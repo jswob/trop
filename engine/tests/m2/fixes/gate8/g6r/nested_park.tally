@@ -1,0 +1,48 @@
+model t
+  tally 2
+  on 2026-01-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 gate 8: a decision inside a projection's walk reads that same projection, then four others, so a parked walk is the one the outer read still walks (walk/projection.rs end_projection > to <, > to ==; walk/fork.rs park_projection)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input pay: money PLN
+input dpay: date
+input ddec: date
+input dread: date
+input f1: date
+input f2: date
+input f3: date
+input f4: date
+input f5: date
+
+move salary: transfers
+  on dpay
+  leg cash from world to konto amount pay
+
+move dec: transfers
+  on ddec
+  reads konto
+  leg cash from konto to world amount pay + 0 * (bal(konto, dread) from f1 + bal(konto, dread) from f2 + bal(konto, dread) from f3 + bal(konto, dread) from f4 + bal(konto, dread) from f5)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "s"
+  dpay = 2026-03-01 "s"
+  ddec = 2026-03-15 "s"
+  dread = 2026-03-10 "s"
+  f1 = 2026-02-01 "s"
+  f2 = 2026-02-02 "s"
+  f3 = 2026-02-03 "s"
+  f4 = 2026-02-04 "s"
+  f5 = 2026-02-05 "s"
+  opening[konto] = 50.00 PLN at 2026-01-01 start "s"
+
+ask q1: bal(konto, 2026-06-30) from 2026-02-01
+ask q2: bal(konto, 2026-03-31) from 2026-02-01, bal(konto, 2026-06-30) from 2026-02-01
+ask q3: bal(konto, 2026-06-30)

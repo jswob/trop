@@ -6008,4 +6008,117 @@ ask a_stated: last(stated[konto], 2026-03-31)
 a_stated: 90.00 PLN
   held: stated[konto] = 90.00 PLN (rd), read for 2026-03-31
   cut 2026-04-10
+,27:spec/gate8/g6r_hole_cuts_l2,11:spec-ledger,28:run hole_cuts.tally --ask l2,1411:15:hole_cuts.tally,1386:model b
+  tally 2
+  on 2027-06-30
+  start 2027-01-01
+  end 2027-12-31
+  note "T, M2 gate 8: a hole booking (fee) a version known 2027-03-01 answers, read at a cut before it, after it, then before it again in one run (book/adjust.rs Engine::answer_holes && to ||)"
+
+source s "s"
+unit PLN: currency minor 0.01
+kind ovs: event certain
+  leg cash: PLN
+place acct: accounts PLN lives 2027-01-01..
+place bank: outside lives 2027-01-01..
+input fee[m in months]: money PLN question "fee?"
+input dom: int
+def p[m in months]: money PLN = if pos(m) == 1 then 0 else p[m - 1] + sum(o.cash.amount for o in ovs over m)
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from bank to acct amount p[m]
+move op[m in months]: ovs
+  on start_of(m)
+  leg cash from acct to bank amount 1 PLN
+move z_fee[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from acct to bank amount fee[m]
+
+version v1
+  cite s
+  governs always
+  known 2027-01-01
+  dom = 10 "s"
+  opening[acct] = 100.00 PLN at 2027-01-01 start "s"
+
+version v2
+  cite s
+  governs always
+  known 2027-03-01
+  fee = 0.50 PLN "s"
+
+ask e1: p[2027-06] as known 2027-02-15
+ask e2: bal(acct, 2027-06-30) as known 2027-02-15
+ask l1: p[2027-06] as known 2027-04-15
+ask l2: bal(acct, 2027-06-30) as known 2027-04-15
+ask e3: p[2027-05] as known 2027-02-15
+ask e4: bal(acct, 2027-05-31) as known 2027-02-15
+ask n1: p[2027-04]
+,,1:0,344:l2: 106.00 PLN
+  unfulfilled: op[2027-01]
+  unfulfilled: op[2027-02]
+  unfulfilled: op[2027-03]
+  unfulfilled: op[2027-04]
+  unfulfilled: pay[2027-02]
+  unfulfilled: pay[2027-03]
+  unfulfilled: pay[2027-04]
+  unfulfilled: z_fee[2027-01]
+  unfulfilled: z_fee[2027-02]
+  unfulfilled: z_fee[2027-03]
+  unfulfilled: z_fee[2027-04]
+  cut 2027-04-15
+,23:spec/gate8/g6r_dec_same,11:spec-ledger,44:run dec_same.tally --ask b_k b_s b_k15 b_s15,1173:14:dec_same.tally,1149:model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+  note "T, M2 gate 8: a decision stated same as an observed row at a covered place, agreeing (book/same.rs book_key, same_end, same_release)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input d10: date
+
+move dec: transfers
+  on d10
+  reads konto
+  leg cash from konto to sav amount amt + 0 * bal(konto)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1000.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+  amt = 100.00 PLN "s"
+  d10 = 2026-03-10 "s"
+
+ask b_k: bal(konto, 2026-03-31)
+ask b_s: bal(sav, 2026-03-31)
+ask b_k15: bal(konto, 2026-03-15)
+ask b_s15: bal(sav, 2026-03-15)
+ask l_k: residuals konto 2026-03
+ask n_t: count(t in transfers over 2026-03)
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "r1"
+  same bank[r1] = dec
+,,1:0,188:b_k: 900.00 PLN
+  cut 2026-04-10
+b_s: 100.00 PLN
+  cut 2026-04-10
+b_k15: 900.00 PLN
+  cut 2026-04-10
+b_s15: 100.00 PLN
+  cut 2026-04-10
+warning: WARN-UNREAD place world is read by nothing
 ,

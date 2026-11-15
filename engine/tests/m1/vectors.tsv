@@ -1988,3 +1988,8 @@ fixes/gate8/m2_g7_p8m4	fixes-gate8		engine/tests/m2/fixes/g7	engine/tests/m2/fix
 fixes/gate8/m2_g7_p8m4_noopen	fixes-gate8		engine/tests/m2/fixes/g7	engine/tests/m2/fixes/g7/p8m4_noopen.tally			-
 fixes/gate8/m2_g7_p8m4_t2	fixes-gate8		engine/tests/m2/fixes/g7	engine/tests/m2/fixes/g7/p8m4_t2.tally			-
 fixes/gate8/m2_g7_cont_dis	fixes-gate8		engine/tests/m2/fixes/g7	engine/tests/m2/fixes/g7/cont_dis.tally			-
+fixes/gate8/m2_g6r_nested_park	fixes-gate8		engine/tests/m2/fixes/gate8/g6r	engine/tests/m2/fixes/gate8/g6r/nested_park.tally			-
+fixes/gate8/m2_g6r_hole_cuts	fixes-gate8		engine/tests/m2/fixes/gate8/g6r	engine/tests/m2/fixes/gate8/g6r/hole_cuts.tally	e1 e2 l1 e3 e4 n1		-
+fixes/gate8/m2_g6r_same_holes_partial	fixes-gate8		engine/tests/m2/fixes/gate8/g6r	engine/tests/m2/fixes/gate8/g6r/same_holes_partial.tally			-
+fixes/gate8/m2_g6r_dec_same	fixes-gate8		engine/tests/m2/fixes/gate8/g6r	engine/tests/m2/fixes/gate8/g6r/dec_same.tally	l_k n_t		-
+fixes/gate8/m2_g6r_partial_noreset	fixes-gate8		engine/tests/m2/fixes/gate8/g6r	engine/tests/m2/fixes/gate8/g6r/partial_noreset.tally			-
