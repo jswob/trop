@@ -106090,6 +106090,67 @@ warning: WARN-UNREAD input four is read by nothing
 warning: WARN-UNREAD input one_duk is read by nothing
 warning: WARN-UNREAD input y is read by nothing
 warning: WARN-UNREAD input z is read by nothing
+,29:fixes/gate8/r437_after_m_last,11:fixes-sweep,44:run after_m_last.tally --ask l14 l15 l16 l31,1609:18:after_m_last.tally,1581:model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+  note "T, M2 gate 8 run 43702332507 on 6a58624c: last of a reading after m, m fulfilled by o1 at konto on 03-14 and o2 elsewhere on 03-16: the reading stands on 03-14 (book/reading.rs last_standing_day)"
+
+source s "s"
+unit PLN: currency minor 0.01
+kind savings: place PLN min 0
+place konto: accounts PLN lives 2026-01-01..
+place sav: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input keep: money PLN
+input d_save: int
+
+move save[m in months]: transfers
+  on day_of(m, d_save)
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  d_save = 15 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[o1] = (on: 2026-03-14, kind: transfers, leg cash from konto to sav amount 500.00 PLN, fulfils: save[2026-03]) "o1"
+  bank[o2] = (on: 2026-03-16, kind: transfers, leg cash from sav to world amount 20.00 PLN, fulfils: save[2026-03]) "o2"
+
+version rd
+  cite s
+  governs 2026-03..2026-04
+  known 2026-04-04
+  pad konto from world
+  stated[konto] = 90.00 PLN after save[2026-03] "saldo"
+
+ask l13: last(stated[konto], 2026-03-13)
+ask l14: last(stated[konto], 2026-03-14)
+ask l15: last(stated[konto], 2026-03-15)
+ask l16: last(stated[konto], 2026-03-16)
+ask l31: last(stated[konto], 2026-03-31)
+ask ls: last(stated[sav], 2026-03-31)
+,,1:0,376:l14: ?"stated[konto] has no reading on or before 2026-03-14" (stated[konto])
+  cut 2026-04-10
+l15: ?"stated[konto] has no reading on or before 2026-03-15" (stated[konto])
+  cut 2026-04-10
+l16: ?"stated[konto] has no reading on or before 2026-03-16" (stated[konto])
+  cut 2026-04-10
+l31: ?"stated[konto] has no reading on or before 2026-03-31" (stated[konto])
+  cut 2026-04-10
 ,17:fixes/g5/a1_alone,12:fixes-ledger,27:run a1_alone.tally --ask t3,959:14:a1_alone.tally,936:model b
   tally 2
   on 2027-06-30
