@@ -551,9 +551,9 @@ fn refusal_of(inst: &Inst) -> Stop {
 
 /// Where an instance of the model stands (refcore's `m_residuals`, its status test): one
 /// that doesn't exist is no line; a refused one stands where its day is, and refuses the
-/// ledger where it may touch the place; a window inside one month stands at its first day,
-/// one across months in the `?` group, unless it falls wholly outside the span. E §6.3
-/// Grouping, L §8.4, §4.4.
+/// ledger where it may touch the place, and one whose day is refused stands on none; a window
+/// inside one month stands at its first day, one across months in the `?` group, unless it
+/// falls wholly outside the span. E §6.3 Grouping, L §8.4, §4.4.
 fn model_day(inst: &Inst, span: &Span) -> Result<Modelled, Stop> {
     match inst.status {
         Status::None | Status::LeftOut => return Ok(Modelled::Skip),
@@ -581,6 +581,9 @@ fn model_day(inst: &Inst, span: &Span) -> Result<Modelled, Stop> {
             })
         }
         Some(Dated::Hole(_)) => Ok(Modelled::Undated),
+        // a refused day stands on no day of the span: the walk's refusal reaches the ledger
+        // through the balances it reads (L §8.4)
+        None if inst.status == Status::Refused => Ok(Modelled::Skip),
         None => Err(invariant("an instance with no day, not refused")),
     }
 }
