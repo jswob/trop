@@ -681,7 +681,8 @@ impl Engine {
     /// The ends of leg `lg` of `mover` its booking keeps under the `same` lines: an end the
     /// group's latest member books instead, or one waiting for a decision's point, is dropped;
     /// one where the members disagree takes the `HOLE-SAME` hole (refcore's `book_leg`, its
-    /// `consol`). L §6.1 (a place two of them book takes it once), §5.19, E §4.2 step 5.
+    /// `consol`). L §6.1 (a place two of them book takes it once), §5.19, E §6.1 (one
+    /// movement books each end once).
     ///
     /// # Errors
     ///
