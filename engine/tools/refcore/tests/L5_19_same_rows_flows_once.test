@@ -1,0 +1,62 @@
+# L §5.19 One movement on two statements: rows stated same are one movement, "counted once by observed(m[k]) and
+# flows" (L §6.1: "counted once by flows and observed"). One transfer of 950.00 from konto to sav on both
+# statements, each row fulfilling save[2026-03], the second statement stating them same: flows of save and
+# observed(save[2026-03]) count it once, as the binding and the balances do (M2 patch case P35; refcore counted it
+# twice, 1 900.00). save is a decision dated the rows' day.
+=== m.tally
+model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-03-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+input bank: observed
+input keep: money PLN
+input d_save: int
+
+move save[m in months]: transfers
+  on day_of(m, d_save)
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+ask q_save: flows(save, 2026-03-01 .. 2026-03-31)
+ask q_obs: observed(save[2026-03]).cash.amount
+ask q_moved: sum(t.cash.amount for t in transfers over 2026-03)
+ask q_sav: bal(sav, 2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  d_save = 15 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+version st_konto
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "a"
+
+version st_sav
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers sav
+  bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "b"
+  same bank[a2] = bank[b1]
+=== expect
+q_moved: 950.00 PLN
+  cut 2026-04-10
+q_obs: 950.00 PLN
+  cut 2026-04-10
+q_sav: 950.00 PLN
+  cut 2026-04-10
+q_save: 950.00 PLN
+  cut 2026-04-10
