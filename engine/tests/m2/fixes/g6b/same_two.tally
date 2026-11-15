@@ -1,0 +1,31 @@
+model p
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): two same lines sharing a row, the last one read (the review's non-blocking; #187, today's answer)"
+
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [a, b, c, d]
+input x[k in ks]: int
+input y[k in ks]: int
+input r[m in months]: money PLN
+input t[m in months]: money PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  y[a] = 3 "s"
+  y[b] = 4 "s"
+
+ask q1: x[a]
+ask q2: y[a]
+ask q3: y[b]
+
+version sm
+  cite s
+  known 2026-01-02
+  same x[a] = y[a]
+  same x[a] = y[b]

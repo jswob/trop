@@ -1,0 +1,33 @@
+model pd
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): a def's given row holding a window literal, pinned and copied (G6's pd3; q2, q6 P30)"
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+input x: date
+input y: date
+
+def dd: date
+  rule base = y
+
+def ee: date
+  rule base = dd
+
+ask q1: dd == ee windows each
+ask q2: x == dd with x = dd windows each
+ask q3: dd == y windows each
+ask q4: dd
+ask q5: dd == ee
+ask q6: x == ee with x = dd windows each
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  x = 2026-01-05 "c"
+  y = window(2026-01-01, 2026-01-02) "c"
+  given dd = window(2026-01-01, 2026-01-02) "g"

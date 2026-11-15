@@ -168,3 +168,12 @@ fixes/g5/p4_wexp_e3	fixes-ledger		engine/tests/m2/fixes/g5	engine/tests/m2/fixes
 fixes/g5/p4_hole_e2	fixes-ledger		engine/tests/m2/fixes/g5	engine/tests/m2/fixes/g5/p4_hole.tally	e2		ledger
 fixes/gate8/d512_hole_ans	fixes-ledger		engine/tests/m2/fixes/gate8/d512	engine/tests/m2/fixes/gate8/d512/hole_ans.tally			ledger
 fixes/g5/p4_adj_e2	fixes-ledger		engine/tests/m2/fixes/g5	engine/tests/m2/fixes/g5/p4_adj.tally	e2		-
+fixes/g6b/b1	fixes-sweep		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/b1.tally			sweep
+fixes/g6b/b2	fixes-sweep		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/b2.tally			sweep
+fixes/g6b/b3_q	fixes-sweep		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/b3.tally	q		-
+fixes/g6b/b4_q1q3	fixes-sweep		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/b4.tally	q1 q3		-
+fixes/g6b/sr2_q7	fixes-sweep		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/sr2.tally	q7		-
+fixes/g6b/pd3_q2q6	fixes-sweep		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/pd3.tally	q2 q6		-
+fixes/g6b/w1b_q5	fixes-sweep		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/w1b.tally	q5		-
+fixes/g6b/le1_each	fixes-sweep		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/le1.tally	q q2		-
+fixes/g6b/le5_each	fixes-sweep		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/le5.tally	q q3 q4		-

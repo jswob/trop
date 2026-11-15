@@ -1955,3 +1955,18 @@ fixes/g14/b6_model_with_b6_l2_l2	fixes-g14		engine/tests/m1/fixes/g14	engine/tes
 fixes/g14/b6_model_with_b6_l3_l3	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/b6_model.tally engine/tests/m1/fixes/g14/b6_l3.tally	l3		G14
 fixes/g13/fix_i3_model_with_fix_i3_i3_i3	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/fix_i3_model.tally engine/tests/m1/fixes/g13/fix_i3_i3.tally	i3		G13
 fixes/g13/fix_i3_model_with_fix_i3_i3_i4	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/fix_i3_model.tally engine/tests/m1/fixes/g13/fix_i3_i3.tally	i4		G13
+fixes/gate8/m2_g6b_ow1	fixes-gate8		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/ow1.tally			-
+fixes/gate8/m2_g6b_rw1	fixes-gate8		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/rw1.tally			-
+fixes/gate8/m2_g6b_rw2	fixes-gate8		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/rw2.tally			-
+fixes/gate8/m2_g6b_sr1	fixes-gate8		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/sr1.tally			-
+fixes/gate8/m2_g6b_cw1	fixes-gate8		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/cw1.tally			-
+fixes/gate8/m2_g6b_kb1	fixes-gate8		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/kb1.tally			-
+fixes/gate8/m2_g6b_kb2	fixes-gate8		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/kb2.tally			-
+fixes/gate8/m2_g6b_same_two	fixes-gate8		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/same_two.tally			-
+fixes/gate8/m2_g6b_sr2	fixes-gate8		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/sr2.tally	q1 q2 q3 q4 q5 q6 q8 q9 q10 q11		-
+fixes/gate8/m2_g6b_pd3	fixes-gate8		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/pd3.tally	q1 q3 q4 q5		-
+fixes/gate8/m2_g6b_w1b	fixes-gate8		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/w1b.tally	q3 q4		-
+fixes/gate8/m2_g6b_le1	fixes-gate8		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/le1.tally	q3		-
+fixes/gate8/m2_g6b_le5	fixes-gate8		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/le5.tally	q2 q5		-
+fixes/gate8/m2_g6b_b3	fixes-gate8		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/b3.tally	q2 q3 q4		-
+fixes/gate8/m2_g6b_b4	fixes-gate8		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/b4.tally	q2		-

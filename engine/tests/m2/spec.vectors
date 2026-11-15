@@ -5530,4 +5530,227 @@ b02: 90.00 PLN
 b15: 90.00 PLN
   pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of -460.00 PLN
   cut 2026-04-10
+,13:spec/g6b/b3_q,10:spec-sweep,20:run b3.tally --ask q,985:8:b3.tally,969:model p
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): B3, a removal known in a window that holds the cut (L 4.4, 4.5)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-01
+  covers konto
+  bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 12.00 PLN) "r1"
+
+version fx
+  cite s
+  governs 2026-03
+  known window(2026-04-05, 2026-04-20)
+  replace bank[r1] = none "r1"
+
+ask q: bal(konto, 2026-03-31) as known 2026-04-10
+ask q2: bal(konto, 2026-03-31) as known 2026-04-10 windows each
+ask q3: bal(konto, 2026-03-31) as known 2026-04-21
+ask q4: bal(konto, 2026-03-31) as known 2026-04-04
+,,1:0,123:q: ?"date within window(2026-04-05, 2026-04-20) not precise enough for the cut 2026-04-10" (bank[r1], fx)
+  cut 2026-04-10
+,16:spec/g6b/b4_q1q3,10:spec-sweep,24:run b4.tally --ask q1 q3,502:8:b4.tally,486:model p
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): B4, a version's same line read at a cut before the version is known (L 4.5)"
+
+source s "s"
+input x: int
+input y: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x = 3 "s"
+  y = 4 "s"
+
+ask q1: x as known 2026-01-01
+ask q2: x
+ask q3: y as known 2026-03-01
+
+version sm
+  cite s
+  governs always
+  known 2026-03-02
+  same x = y
+,,1:0,46:q1: 3
+  cut 2026-01-01
+q3: 4
+  cut 2026-03-01
+,15:spec/g6b/sr2_q7,10:spec-sweep,22:run sr2.tally --ask q7,1168:9:sr2.tally,1150:model p
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): rows stated same that agree and that disagree, read by a key binding and by explain (review's sr2; q7 B4)"
+
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [a, e]
+input x[k in ks]: int
+input y[k in ks]: int
+input r[m in months]: money PLN
+input t[m in months]: money PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x[a] = 1 "s"
+  y[a] = 1 "s"
+  x[e] = 3 "s"
+  y[e] = 4 "s"
+  r[2026-03] = 10.00 PLN "s"
+  t[2026-03] = 12.00 PLN "s"
+  r[2026-04] = 7.00 PLN "s"
+  t[2026-04] = 7.00 PLN "s"
+
+ask q1: x[k] + 1 for k in ks
+ask q2: y[k] for k in ks
+ask q3: x[k] == y[k] for k in ks
+ask q4: explain x[a]
+ask q5: explain x[e]
+ask q6: explain y[e]
+ask q7: x[e] as known 2026-01-01
+ask q8: r[m] for m in months where m == 2026-03 or m == 2026-04
+ask q9: explain t[2026-03] law 2026-03-15
+ask q10: explain r[2026-04] law 2026-04-15
+ask q11: x[e] == y[e]
+
+version sm
+  cite s
+  known 2026-01-02
+  same x[a] = y[a]
+  same x[e] = y[e]
+  same r[2026-03] = t[2026-03]
+  same r[2026-04] = t[2026-04]
+,,1:0,23:q7: 3
+  cut 2026-01-01
+,17:spec/g6b/pd3_q2q6,10:spec-sweep,25:run pd3.tally --ask q2 q6,735:9:pd3.tally,718:model pd
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): a def's given row holding a window literal, pinned and copied (G6's pd3; q2, q6 P30)"
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+input x: date
+input y: date
+
+def dd: date
+  rule base = y
+
+def ee: date
+  rule base = dd
+
+ask q1: dd == ee windows each
+ask q2: x == dd with x = dd windows each
+ask q3: dd == y windows each
+ask q4: dd
+ask q5: dd == ee
+ask q6: x == ee with x = dd windows each
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  x = 2026-01-05 "c"
+  y = window(2026-01-01, 2026-01-02) "c"
+  given dd = window(2026-01-01, 2026-01-02) "g"
+,,1:0,240:q2: true
+  given: dd = window(2026-01-01, 2026-01-02) (v)
+  pinned: x = window(2026-01-01, 2026-01-02)
+  cut 2026-03-01
+q6: true
+  given: dd = window(2026-01-01, 2026-01-02) (v)
+  pinned: x = window(2026-01-01, 2026-01-02)
+  cut 2026-03-01
+,15:spec/g6b/w1b_q5,10:spec-sweep,22:run w1b.tally --ask q5,1066:9:w1b.tally,1048:model px
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): a keyed windows each line under an axis binds inside each run (G6's w1b; q5 P29)"
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+axis ax
+  lo "low"
+  hi "high"
+
+index kk = [a, b, c]
+input d[k in kk]: date
+input e[k in kk]: date
+input amt: money PLN
+
+def a2: money PLN
+  rule base = amt
+  rule hi beats base = amt + amt when ax == hi
+
+ask q1: e[k] < 2026-03-02 for k in kk where d[k] < 2026-03-02 windows each
+ask q2: a2 for k in kk where d[k] < 2026-03-02 windows each
+ask q3: e[k] < 2026-03-02, a2 for k in kk windows each
+ask q4: a2 for k in kk
+ask q5: e[k] < 2026-03-02, a2 for k in kk where d[k] < 2026-03-02 windows each
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "c"
+  d[a] = window(2026-03-01, 2026-03-02) "c"
+  d[b] = 2026-01-01 "c"
+  d[c] = 2026-01-01 "c"
+  e[a] = 2026-01-01 "c"
+  e[b] = window(2026-03-01, 2026-03-02) "c"
+  e[c] = 2026-01-01 "c"
+,,1:0,730:q5 (k = a) [d[a] = 2026-03-01] [ax = lo]: (true, 10.00 PLN)
+  reading: ax = lo
+  cut 2026-03-01
+q5 (k = a) [d[a] = 2026-03-01] [ax = hi]: (true, 20.00 PLN)
+  reading: ax = hi
+  cut 2026-03-01
+q5 (k = b) [e[b] = 2026-03-01] [ax = lo]: (true, 10.00 PLN)
+  reading: ax = lo
+  cut 2026-03-01
+q5 (k = b) [e[b] = 2026-03-02] [ax = lo]: (false, 10.00 PLN)
+  reading: ax = lo
+  cut 2026-03-01
+q5 (k = b) [e[b] = 2026-03-01] [ax = hi]: (true, 20.00 PLN)
+  reading: ax = hi
+  cut 2026-03-01
+q5 (k = b) [e[b] = 2026-03-02] [ax = hi]: (false, 20.00 PLN)
+  reading: ax = hi
+  cut 2026-03-01
+q5 (k = c) [ax = lo]: (true, 10.00 PLN)
+  reading: ax = lo
+  cut 2026-03-01
+q5 (k = c) [ax = hi]: (true, 20.00 PLN)
+  reading: ax = hi
+  cut 2026-03-01
 ,
