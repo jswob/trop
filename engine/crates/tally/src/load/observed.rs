@@ -308,6 +308,8 @@ impl Loader {
             FieldValue::Lit(lit) | FieldValue::Expr(Expr::Lit(lit)) => Value::Lit(lit.clone()),
             FieldValue::Expr(Expr::Name(word)) => Value::Lit(Lit::Name(word.clone())),
             FieldValue::Hole(text) => Value::Hole(text.clone()),
+            // a text attribute, `payee: "BIEDRONKA"` (L §3.1 text)
+            FieldValue::Expr(Expr::Str(text)) => Value::Str(text.clone()),
             FieldValue::None | FieldValue::Expr(Expr::None) => Value::None,
             FieldValue::Expr(Expr::Post(..)) => {
                 // a read with keys or a field that names no movement: no value of a row

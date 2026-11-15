@@ -18,6 +18,7 @@
 //! `book/settle.rs`'s).
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::rc::Rc;
 
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{Collected, Engine};
@@ -61,6 +62,9 @@ pub struct Adjustment {
     pub settled: Vec<Settled>,
     /// Whether a movement of a kind with no legs waives it (L §5.14.3).
     pub waived: bool,
+    /// Whether its step made the instance exist, the state before it not existing: the leg's
+    /// places are then this version's (E §5 step 1).
+    pub made: bool,
 }
 
 /// A leg that settles an adjustment, or a waiver (refcore's `AdjMv.settled`). E §5 step 5.
@@ -180,13 +184,13 @@ impl Adjustment {
 }
 
 impl Engine {
-    /// The adjustments of one plan move's booked instances at cut `cut`, kept per move and cut
-    /// (refcore's `adjust_move`). E §5 steps 1–4.
+    /// The adjustments of one plan move's booked instances at cut `cut`, kept per move and cut;
+    /// a hole booking a later version answers becomes, in the move's instances at the cut,
+    /// what that version gives (refcore's `adjust_move`). E §5 steps 1–4.
     ///
     /// # Errors
     ///
-    /// `RUN-CYCLE` for adjustments that read themselves; the refusals of the measuring;
-    /// `NotBuilt` for a version that answers a hole movement.
+    /// `RUN-CYCLE` for adjustments that read themselves; the refusals of the measuring.
     pub(crate) fn adjust_move(
         &mut self,
         m: &Reality,
@@ -214,21 +218,72 @@ impl Engine {
         let made = self.measure_move(m, mv, cut);
         self.reads_back(mark);
         self.adjust_active.remove(&key);
-        let out = made?;
+        let (out, answered) = made?;
+        self.answer_holes(&mv.id, cut, &answered);
         self.adjustments.insert(key, out.clone());
         Ok(out)
     }
 
-    /// Each booked instance before the cut measured at each later step (refcore's
+    /// Where the instances `insts` of plan move `mv` at cut `cut` hold a hole booking before
+    /// the cut, the move's adjustments at the cut, so a later version that answers it does so
+    /// in the move's instances there, whatever reads them first; a refusal the measuring meets
+    /// stays its own readers' (E §5 step 1, steps 2–4).
+    ///
+    /// # Errors
+    ///
+    /// A stop other than a refusal that measuring the move meets.
+    pub(crate) fn answer_hole_bookings(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        (insts, cut): (&[Inst], Day),
+    ) -> Result<(), Stop> {
+        let due = !mv.decision && insts.iter().any(|i| hole_booked_before(i, cut));
+        if !due || self.adjust_active.contains(&(mv.id.clone(), cut)) {
+            return Ok(());
+        }
+        // the plan's own measure is no walk read of an explanation the instances are read
+        // under: its causes are the plan's, as its status's are (E §10)
+        let back = self.trace_walked();
+        let measured = self.adjust_move(m, mv, cut);
+        self.trace_walked_back(back);
+        match measured {
+            Ok(_) | Err(Stop::Refused(_)) => Ok(()),
+            Err(stop) => Err(stop),
+        }
+    }
+
+    /// The move's instances at cut `cut`, its whole list and each list up to a day, with each
+    /// hole booking a later version answered by `answered` in its place (refcore's in-place
+    /// `i.exists, i.legs = j.exists, j.legs`). E §5 step 1.
+    fn answer_holes(&mut self, move_id: &str, cut: Day, answered: &[Inst]) {
+        if answered.is_empty() {
+            return;
+        }
+        let key = (move_id.to_owned(), cut);
+        if let Some(list) = self.plans.get(&key) {
+            let patched = with_answers(list, answered);
+            self.plans.insert(key, patched);
+        }
+        for ((id, at, _), list) in &mut self.prefixes.plans {
+            if id == move_id && *at == cut {
+                *list = with_answers(list, answered);
+            }
+        }
+    }
+
+    /// Each booked instance before the cut measured at each later step, with the hole
+    /// bookings a step answers, as the instances they become (refcore's
     /// `adjust_move_compute`). E §5 steps 1–4.
     fn measure_move(
         &mut self,
         m: &Reality,
         mv: &MoveInfo,
         cut: Day,
-    ) -> Result<Vec<Adjustment>, Stop> {
+    ) -> Result<(Vec<Adjustment>, Vec<Inst>), Stop> {
         let steps_all = known_dates(m);
         let mut out = Vec::new();
+        let mut answered = Vec::new();
         for inst in self.plan_list(m, mv, cut)?.iter() {
             if !matches!(inst.status, Status::Past | Status::Hole | Status::None) {
                 continue;
@@ -246,7 +301,7 @@ impl Engine {
             if steps.is_empty() {
                 continue;
             }
-            out.extend(self.measure_inst(m, mv, (inst, t), &steps, cut)?);
+            out.extend(self.measure_inst(m, mv, (inst, t), (&steps, cut), &mut answered)?);
         }
         out.sort_by(|a, b| {
             (a.day, &a.move_id, &a.inst_id, &a.leg.name).cmp(&(
@@ -256,22 +311,23 @@ impl Engine {
                 &b.leg.name,
             ))
         });
-        Ok(out)
+        Ok((out, answered))
     }
 
     /// One instance measured at each step: δ per leg against the state before (refcore's
     /// `adjust_move_compute`, its steps). A booking refused at κ₀ stays refused and records
-    /// nothing; a refused step makes each leg's adjustment refused, a step whose `when` is a
-    /// hole makes each a hole but a leg's whose amount is refused on either side, refused
-    /// (tally 2.1.6), and the step after either is measured against it (tally 2.1.2). E §5
-    /// steps 1–4.
+    /// nothing; a hole booking stays a hole until a step answers it, which `answered` gets as
+    /// the instance at the cut; a refused step makes each leg's adjustment refused, a step
+    /// whose `when` is a hole makes each a hole but a leg's whose amount is refused on either
+    /// side, refused (tally 2.1.6), and the step after either is measured against it (tally
+    /// 2.1.2). E §5 steps 1–4.
     fn measure_inst(
         &mut self,
         m: &Reality,
         mv: &MoveInfo,
         (inst, t): (&Inst, Day),
-        steps: &[&(Day, BTreeSet<String>)],
-        cut: Day,
+        (steps, cut): (&[&(Day, BTreeSet<String>)], Day),
+        answered: &mut Vec<Inst>,
     ) -> Result<Vec<Adjustment>, Stop> {
         let mut out = Vec::new();
         // E §5 step 1 (tally 2.1.2, "refused stays refused"): its re-measurements record nothing
@@ -283,7 +339,7 @@ impl Engine {
             exists: inst.exists == Exists::Yes,
             unknown: None,
         };
-        let hole0 = matches!(inst.exists, Exists::Unknown(_)) || inst.legs.iter().any(is_hole_leg);
+        let mut hole0 = is_hole_booking(inst);
         for (c, vids) in steps.iter().map(|s| (s.0, &s.1)) {
             let seed = Seed {
                 env: inst.env.clone(),
@@ -329,9 +385,18 @@ impl Engine {
                 if matches!(j.exists, Exists::Unknown(_)) || j.legs.iter().any(is_hole_leg) {
                     continue;
                 }
-                return Err(Stop::NotBuilt(
-                    "a version that answers a hole movement (E §5 step 1)",
-                ));
+                // a version answers the hole movement: its existence and amounts are the
+                // instance's under cuts from its known, and the steps after measure against
+                // them (E §5 step 1)
+                let mut answer = inst.clone();
+                answer.exists = j.exists.clone();
+                answer.legs.clone_from(&j.legs);
+                answer.coll.merge(&j.coll);
+                answer.status = self.status(m, mv, &mut answer, cut)?;
+                answered.push(answer);
+                hole0 = false;
+                prev = Prev::after(&j);
+                continue;
             }
             if let Exists::Unknown(h) = &j.exists {
                 // tally 2.1.2: a `when` that is a hole makes each leg's adjustment that hole,
@@ -510,10 +575,12 @@ fn measured(step: &Step, inst: &Inst, prev: &Prev, j: &Inst) -> Result<Vec<Adjus
         &inst.legs
     };
     let pool: Vec<&LegVal> = base.iter().chain(before.values().copied()).collect();
+    // this step makes the instance exist: its legs' places are this version's (E §5 step 1)
+    let made = !prev.exists && j.exists == Exists::Yes;
     let mut out = Vec::new();
     for ln in names {
         let (a, b) = (before.get(ln).copied(), after.get(ln).copied());
-        if let Some(adj) = leg_change(step, &pool, a, b, ln)? {
+        if let Some(adj) = leg_change(step, &pool, (a, b, made), ln)? {
             out.push(adj);
         }
     }
@@ -539,14 +606,14 @@ struct Step {
     coll: Collected,
 }
 
-/// The adjustment of one leg at one step: δ between the step before and this one, recorded for
-/// δ ≠ 0, a hole, or a change of places (refcore's `adjust_move_compute`, a leg). E §5 steps
-/// 3–4, L §5.14.3.
+/// The adjustment of one leg at one step: δ between the step before (`a`) and this one (`b`),
+/// recorded for δ ≠ 0, a hole, or a change of places; a δ in number marked `made` where the
+/// step made the instance exist (refcore's `adjust_move_compute`, a leg, `adj.made`). E §5
+/// steps 1, 3–4, L §5.14.3.
 fn leg_change(
     step: &Step,
     pool: &[&LegVal],
-    a: Option<&LegVal>,
-    b: Option<&LegVal>,
+    (a, b, made): (Option<&LegVal>, Option<&LegVal>, bool),
     name: &str,
 ) -> Result<Option<Adjustment>, Stop> {
     let qa = a.map(|lg| &lg.amount);
@@ -595,7 +662,9 @@ fn leg_change(
     };
     let mut leg = leg;
     leg.unit.clone_from(&either.unit);
-    Ok(Some(make(step, leg, Amount::Qty(delta), ends)))
+    let mut adj = make(step, leg, Amount::Qty(delta), ends);
+    adj.made = made;
+    Ok(Some(adj))
 }
 
 /// An adjustment of `leg` by `delta` at a step, named by the step's versions, the first in
@@ -615,6 +684,7 @@ fn make(
         before_ends,
         settled: Vec::new(),
         waived: false,
+        made: false,
         move_id: step.move_id.clone(),
         inst_day: step.inst_day,
         leg,
@@ -668,6 +738,34 @@ fn is_hole_leg(lg: &LegVal) -> bool {
 /// Whether a leg's amount is refused. E §5 step 1.
 fn is_refused_leg(lg: &LegVal) -> bool {
     matches!(lg.amount, Amount::Refused(_))
+}
+
+/// Whether an instance is a hole movement booked before cut `cut`: dated before it, past (or
+/// a hole, or none so far), its booking a hole (refcore's `hole0`). E §5 step 1.
+fn hole_booked_before(inst: &Inst, cut: Day) -> bool {
+    let day = inst.day.as_ref().and_then(crate::walk::Dated::day);
+    matches!(inst.status, Status::Past | Status::Hole | Status::None)
+        && day.is_some_and(|t| t < cut)
+        && is_hole_booking(inst)
+}
+
+/// A move's instance list with each instance a version answered replaced by its answer
+/// (refcore mutates the cached instance). E §5 step 1.
+fn with_answers(list: &Rc<Vec<Inst>>, answered: &[Inst]) -> Rc<Vec<Inst>> {
+    let mut out = list.to_vec();
+    for inst in &mut out {
+        if let Some(a) = answered.iter().find(|a| a.id == inst.id) {
+            a.clone_into(inst);
+        }
+    }
+    Rc::new(out)
+}
+
+/// Whether a booking is a hole movement: its existence or a leg's amount a hole, no leg's
+/// refused (refcore's `hole0`). E §5 step 1.
+pub(crate) fn is_hole_booking(inst: &Inst) -> bool {
+    let hole = matches!(inst.exists, Exists::Unknown(_)) || inst.legs.iter().any(is_hole_leg);
+    hole && !inst.legs.iter().any(is_refused_leg)
 }
 
 /// The days versions became known, each with the versions known then: versions' `known`,

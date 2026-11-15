@@ -261,6 +261,7 @@ pub mod walk {
 pub mod book {
     mod adjust;
     mod ledger;
+    mod ledger_order;
     mod members;
     mod observe;
     mod reading;
@@ -268,7 +269,8 @@ pub mod book {
     mod settle;
 
     pub use adjust::{Adjustment, Settled};
-    pub use ledger::{Fig, Group, GroupKey, Ledger, Line, fig_text};
+    pub use ledger::{Fig, Ledger, Line, UnitLedger, fig_text};
+    pub use ledger_order::{Group, GroupKey};
     pub(crate) use members::{MvDom, MvMember, inst_ref};
     pub use observe::{Coverage, Linked, Obs, inst_id};
     pub use reading::{

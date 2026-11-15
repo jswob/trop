@@ -10,8 +10,8 @@
 //! `obs_booked`, `mv_field`, `mv_record`, `mv_by_id`, `mv_kind_in`).
 //! Invariants: members come in movement order, by day (a hole day after every day), then by
 //! their order compared term by term as its types (E §4.1); a member's register reaches its reader only when the member
-//! passes the binding's `where`; the walk's own movements (pads, decisions) and `with
-//! uncertain` members stop `NotBuilt`.
+//! passes the binding's `where`; an uncertain instance is a member only `with uncertain`, and
+//! brings its `uncertain:` line.
 
 use std::collections::BTreeSet;
 
@@ -23,6 +23,7 @@ use crate::base::{Code, Load, Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Entry, Env};
 use crate::hole::{Hole, spread};
 use crate::model::{Fulfils, KeyVal, MoveInfo, MvRef, MvSrc, Reality, Span, Value};
+use crate::num::Num;
 use crate::syntax::{Bind, Call, Expr, Stop};
 use crate::time::Day;
 use crate::walk::{
@@ -182,11 +183,11 @@ impl Engine {
             (Some(on), _) => {
                 let v = self.ev(m, on, env, ctx)?;
                 if let Value::Hole(h) = v {
-                    return self.unknown_day(m, bind, dom, h, ctx);
+                    return self.unknown_day(m, (bind, env), dom, h, ctx);
                 }
                 let d = match crate::eval::one_day(m, &v, "the day of a binding")? {
                     Ok(d) => d,
-                    Err(h) => return self.unknown_day(m, bind, dom, h, ctx),
+                    Err(h) => return self.unknown_day(m, (bind, env), dom, h, ctx),
                 };
                 let next = d
                     .next()
@@ -194,7 +195,7 @@ impl Engine {
                 Span::between(Some(d), Some(next))
             }
             (None, Some(over)) => match self.span_value(m, over, env, ctx)? {
-                Err(h) => return self.unknown_day(m, bind, dom, h, ctx),
+                Err(h) => return self.unknown_day(m, (bind, env), dom, h, ctx),
                 Ok(sp) => sp,
             },
             (None, None) => {
@@ -206,25 +207,27 @@ impl Engine {
         self.span_members(m, dom, &span, ctx).map(Ok)
     }
 
-    /// A binding whose day or span is a hole: no member when the kind has none, else that
-    /// hole (refcore's `bind_day`, `kind_has_member`). L §5.7, §8.1.
+    /// A binding whose day or span is a hole: no member when no movement of the kind the cut
+    /// knows could be one (none, or its `where` rules each out), else that hole (refcore's
+    /// `bind_day`, `kind_has_member`). L §5.7, §8.1.
     fn unknown_day(
         &mut self,
         m: &Reality,
-        bind: &Bind,
+        (bind, env): (&Bind, &Env),
         dom: (MvDom, &str),
         h: Hole,
         ctx: Ctx,
     ) -> Result<Result<Vec<MvMember>, Hole>, Stop> {
-        if self.movements_of(m, dom, ctx)?.is_empty() {
-            return Ok(Ok(Vec::new()));
-        }
-        if bind.filter.is_some() {
-            return Err(Stop::NotBuilt(
-                "a binding whose day is a hole and whose where may rule its members out",
-            ));
-        }
-        Ok(Err(h))
+        let cands = self
+            .movements_of(m, dom, ctx)?
+            .iter()
+            .map(Moving::value)
+            .collect();
+        Ok(if self.may_hold(m, (bind, env), cands, ctx)? {
+            Err(h)
+        } else {
+            Ok(Vec::new())
+        })
     }
 
     /// The movements of the domain dated in span `sp`, an instance and the observations that
@@ -509,14 +512,10 @@ impl Engine {
             }
             for i in self.move_instances(m, mv, cut)?.iter() {
                 match i.status {
-                    Status::None | Status::Modelled | Status::Uncertain if !ctx.unc => {}
-                    Status::Uncertain => {
-                        return Err(Stop::NotBuilt(
-                            "a binding over uncertain movements under `with uncertain`",
-                        ));
-                    }
                     Status::None | Status::Modelled => {}
-                    Status::Open
+                    Status::Uncertain if !ctx.unc => {}
+                    Status::Uncertain
+                    | Status::Open
                     | Status::LeftOut
                     | Status::Refused
                     | Status::Hole
@@ -584,12 +583,8 @@ impl Engine {
                 match run.inst.status {
                     Status::Modelled | Status::None => {}
                     Status::Uncertain if !ctx.unc => {}
-                    Status::Uncertain => {
-                        return Err(Stop::NotBuilt(
-                            "a binding over uncertain movements under `with uncertain`",
-                        ));
-                    }
-                    Status::Open
+                    Status::Uncertain
+                    | Status::Open
                     | Status::LeftOut
                     | Status::Refused
                     | Status::Hole
@@ -929,22 +924,8 @@ impl Engine {
         if let Moving::Plan(i) = src
             && (i.exists == Exists::No || i.status == Status::None)
         {
-            // a later version may have made it exist (E §5 step 1): a plan's leg some
-            // adjustment of the cut changes; else it is none here (refcore's
-            // `made_to_exist_leg`, then `RUN-NONE`)
-            let mv = m
-                .moves
-                .get(&i.move_id)
-                .ok_or_else(|| invariant("an instance of a move load didn't build"))?;
-            if !mv.decision
-                && self
-                    .adjust_move(m, mv, ctx.cut)?
-                    .iter()
-                    .any(|a| a.inst_id == i.id && a.leg.name == name)
-            {
-                return Err(Stop::NotBuilt(
-                    "a leg of an instance a later version made exist",
-                ));
+            if let Some(made) = self.made_to_exist_leg(m, i, name, ctx)? {
+                return Ok(made);
             }
             return Err(Stop::Refused(Refusal::new(
                 Code::Run(Run::None),
@@ -958,6 +939,43 @@ impl Engine {
             Code::Load(Load::Field),
             format!("{name} is not a field of {}", src.id()),
         )))
+    }
+
+    /// Leg `name` of plan instance `i`, which didn't exist at its booking cut, as a later
+    /// version made it exist: the leg of the last of the cut's adjustments of it whose step
+    /// made it exist, with that version's places, booked at amount 0; none where no step made
+    /// it exist (refcore's `made_to_exist_leg`). E §5 steps 1, 3 and 6, L §5.14.3.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::adjust_move`].
+    fn made_to_exist_leg(
+        &mut self,
+        m: &Reality,
+        i: &Inst,
+        name: &str,
+        ctx: Ctx,
+    ) -> Result<Option<Value>, Stop> {
+        let mv = m
+            .moves
+            .get(&i.move_id)
+            .ok_or_else(|| invariant("an instance of a move load didn't build"))?;
+        if mv.decision {
+            return Ok(None);
+        }
+        let adjustments = self.adjust_move(m, mv, ctx.cut)?;
+        let Some(a0) = adjustments
+            .iter()
+            .rev()
+            .find(|a| a.inst_id == i.id && a.leg.name == name && a.made)
+        else {
+            return Ok(None);
+        };
+        let (coll, mut leg) = (a0.coll.clone(), a0.leg.clone());
+        self.absorb(&coll);
+        // booked at A₀ = 0 (E §5 step 1); a later read sees A₀ plus the settlements (step 6)
+        leg.amount = Amount::Qty(Num::zero());
+        leg_record(m, &leg).map(Some)
     }
 
     /// Whether a movement value is of kind `kind`: its record's kind is in the kind's subtree;
