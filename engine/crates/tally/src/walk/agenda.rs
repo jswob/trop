@@ -175,7 +175,7 @@ impl Engine {
         };
         let readings = if main {
             let after = self.after_days(m, cut)?;
-            crate::book::readings(m, (cut, world), self.keep_rows, &after)?
+            self.seen_readings(m, (cut, world), (self.keep_rows, &after))?
         } else {
             Vec::new()
         };

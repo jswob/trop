@@ -114,12 +114,17 @@ pub(crate) struct KnownAtCut {
 }
 
 impl KnownAtCut {
-    /// The hole of what `sid`'s `known` brings, asked of `source`, where the cut `cut` leaves
-    /// it undecided (L §4.5, §8.1).
-    pub(crate) fn hole(&self, sid: &str, cut: Day, source: &str) -> Option<Hole> {
+    /// The question of what `sid`'s `known` brings, where the cut `cut` leaves it undecided:
+    /// `date within window(a, b) not precise enough for the cut K` (L §4.5, §8.1).
+    pub(crate) fn question(&self, sid: &str, cut: Day) -> Option<String> {
         self.undecided
             .get(sid)
-            .map(|window| crate::eval::known_hole(*window, cut, source))
+            .map(|window| crate::eval::known_question(*window, cut))
+    }
+
+    /// [`KnownAtCut::question`]'s hole, asked of `source` (L §4.5, §8.1).
+    pub(crate) fn hole(&self, sid: &str, cut: Day, source: &str) -> Option<Hole> {
+        self.question(sid, cut).map(|q| Hole::asked(&q, source))
     }
 }
 

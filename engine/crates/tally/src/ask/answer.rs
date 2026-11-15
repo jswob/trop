@@ -337,8 +337,8 @@ impl World {
         }
         if self.unbuilt {
             return Err(Stop::NotBuilt(
-                "a reading's, a moves line's, a rule's, a band table's, a key's or an \
-                 entry's known window at run",
+                "a moves line's, a rule's, a band table's, a key's or an entry's known \
+                 window at run",
             ));
         }
         if self.parts {
@@ -352,11 +352,11 @@ impl World {
 }
 
 /// Whether the reality holds a known window the run doesn't take yet (L §4.5, §5.3), so an
-/// ask of it stops `NotBuilt`: a reading's window (an opening's or a stated balance's row),
-/// a `moves` line's, or the window of a version that brings a rule, a band table, an index
-/// key or a thing's entry. A version's or a row's own window on an input's or a def's rows,
-/// on an observation and on a coverage is taken (`eval/read.rs`, `book/observe.rs`), and so
-/// is a `moves` line known on a day.
+/// ask of it stops `NotBuilt`: a `moves` line's, or the window of a version that brings a
+/// rule, a band table, an index key or a thing's entry. A version's or a row's own window on
+/// an input's or a def's rows, on a reading, on an observation and on a coverage is taken
+/// (`eval/read.rs`, `book/reading.rs`, `book/observe.rs`), and so is a `moves` line known on
+/// a day.
 fn known_windows_unbuilt(m: &Reality) -> bool {
     let mut windowed = BTreeSet::new();
     for (_, v) in m.versions.entries() {
@@ -367,23 +367,7 @@ fn known_windows_unbuilt(m: &Reality) -> bool {
             windowed.insert(v.id.as_str());
         }
     }
-    readings_windowed(m, &windowed) || (!windowed.is_empty() && brought_windowed(m, &windowed))
-}
-
-/// Whether an opening's or a stated balance's row is known in a window, its own or its
-/// version's (one of `windowed`) (L §4.5, §5.19).
-fn readings_windowed(m: &Reality, windowed: &BTreeSet<&str>) -> bool {
-    for id in ["opening", "stated"] {
-        let Some(input) = m.inputs.get(id) else {
-            continue;
-        };
-        for r in &input.rows {
-            if r.own_window.is_some() || windowed.contains(r.version.as_str()) {
-                return true;
-            }
-        }
-    }
-    false
+    !windowed.is_empty() && brought_windowed(m, &windowed)
 }
 
 /// Whether one of `windowed`, the versions known in a window, brings a rule, a band table,

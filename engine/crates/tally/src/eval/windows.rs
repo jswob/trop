@@ -410,14 +410,19 @@ impl Engine {
 /// `HOLE-IMPRECISE` of something known in window `(lo, hi)`, which holds cut `cut`, with no
 /// `windows each`: `date within window(lo, hi) not precise enough for the cut K`, asked of
 /// `sid` (refcore's `known_vis`). L §4.5, §8.1.
-pub(crate) fn known_hole((lo, hi): (Day, Day), cut: Day, sid: &str) -> Hole {
-    let text = format!(
+pub(crate) fn known_hole(window: (Day, Day), cut: Day, sid: &str) -> Hole {
+    Hole::asked(&known_question(window, cut), sid)
+}
+
+/// The question of [`known_hole`]: `date within window(lo, hi) not precise enough for the
+/// cut K`. L §4.5, §8.1.
+pub(crate) fn known_question((lo, hi): (Day, Day), cut: Day) -> String {
+    format!(
         "date within window({}, {}) not precise enough for the cut {}",
         lo.text(),
         hi.text(),
         cut.text()
-    );
-    Hole::asked(&text, sid)
+    )
 }
 
 impl Engine {

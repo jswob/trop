@@ -204,7 +204,7 @@ pub mod eval {
     pub(crate) use time_arith::periods_of;
     pub(crate) use timelines::combinations;
     pub(crate) use trace::{Balance as TracedBalance, Kind as TraceKind, RuleLine, Trace, Walked};
-    pub(crate) use windows::{known_hole, one_day, window_days};
+    pub(crate) use windows::{known_question, one_day, window_days};
     pub(crate) use years::year_form;
 }
 
@@ -277,9 +277,7 @@ pub mod book {
     pub use ledger_order::{Group, GroupKey};
     pub(crate) use members::{MvDom, MvMember, inst_ref};
     pub use observe::{Coverage, Linked, Obs, inst_id};
-    pub use reading::{
-        AfterDays, Pad, Seen, Stands, first_readings, per_unit, reading_rank, readings,
-    };
+    pub use reading::{AfterDays, Pad, Seen, Stands, per_unit, reading_rank};
     pub(crate) use reading::{gap_text, instant_text, reading_place};
     pub(crate) use same::{Member, Waiting, stated_same};
     pub use same::{kept_once, once_obs, same_differ, same_groups};
