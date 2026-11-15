@@ -17,7 +17,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::base::{Code, Refusal, Run, Warn};
 use crate::eval::{Collected, Engine, Rows};
-use crate::hole::Hole;
+use crate::hole::{Hole, spread};
 use crate::model::{Fulfils, InputInfo, KeyVal, MvRef, MvSrc, Reality, Span, Value, World};
 use crate::syntax::{Expr, Key, Stop};
 use crate::time::Day;
@@ -811,7 +811,12 @@ fn seen_observations(
             // one known in a window the cut leaves undecided is booked or not: each of its
             // legs is that hole (L §4.5; refcore's `observations`, its `undecided`)
             if let Some(question) = &undecided {
-                let hole = Hole::asked(question, &seen.id);
+                // a removal's hole is asked of the row and of the version that removes it, as
+                // a cover known in a window is asked of its version (refcore's twin form; P70)
+                let row = Hole::asked(question, &seen.id);
+                let removal = o.removed.then(|| Hole::asked(question, &o.version));
+                let hole = spread(&[Some(&row), removal.as_ref()])
+                    .ok_or_else(|| invariant("a removal's hole spread from none"))?;
                 for lg in &mut seen.legs {
                     lg.amount = Amount::Hole(hole.clone());
                 }

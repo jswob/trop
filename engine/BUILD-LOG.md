@@ -3619,3 +3619,20 @@ G7's builder, on the fix review (`tmp/m2/review-g7-fix.md`), after e4758c5d (G6'
 - **Size:** in `engine/crates`, `walk/lows.rs` 18 added and 13 removed.
 - **Exceptions:** +0.
 - **Check:** `check commit: green, 23 steps (108s)`; M2 42/42; report-only hits 9, as before.
+
+## 2026-11-15 M2 G7's builder, a turn before the gate: P71 and P70 (issue #167)
+
+After 70019d96 (T's `m2_forks` and G7's vectors merged, the fence's catchers): `milestone-report: M2: 40/42`, red `fixes/g7/b1_tree` and `spec/g6b/b3_q`, both the engine's (`tmp/m2/auto-picks.md` P70, P71). Outputs in `tmp/m2/b/g7last/`.
+
+- **Commits:**
+  - d15db1ab `fix(num): count money's cap on its value, not on its minor units`
+  - This entry's commit, with P70's change.
+- **P71, `fixes/g7/b1_tree` (L §7.1: "the digits are counted on the reduced fraction"):** money counted the cap on its minor units: 6·10^4094 DUK (4 095 digits) is 6·10^4096 minor units (4 097), so `num_money`'s capped division and `Money::from_big` refused it `RUN-DIGITS`. Now `Money::from_big` checks the reduced fraction of units × minor unit; `checked_add`/`checked_sub` take the minor unit (their one engine caller, `load/parts.rs` `amounts_over`, passes it); `checked_neg` keeps the digits, so meets no cap; `Num::to_money_in` makes money of a value under the cap whatever its minor units' digits (`num_money`, `round_to_money` through it), and `Num::is_whole_in` tests whole minor units the same way (`walk/legs.rs`, a leg's amount as money of its unit). Unit test `num::money::tests::the_cap_counts_the_value_not_its_minor_units` (6·10^4094 and 9·10^4095 PLN pass, their negations and sum under the cap; 1.8·10^4096 is refused). F5's cap bound: the widening to every currency's minor unit (22823434, the fix review's N4) is gone, since money is capped as its value now; the bound counts values, as the cap does, and stays sound (`b1_cons` stays refused, Tree = Walk = refcore, forks on and off: `fork_oracle`).
+  - `b1_tree`: `b_big: 600 000 … 000.00 DUK` (6·10^4094), `b_konto: 12 500.00 DUK`, `b_pair` and `b_pair_rev` with both: refcore's lines byte for byte (`b1_tree.me` = `b1_tree.rc`).
+- **P70, `spec/g6b/b3_q`:** a removal known in a window that holds the cut, undecided, leaves the restatement before it standing, its legs a hole; that hole is now asked of the row and of the removal's version, spread as one question (`book/observe.rs` `observations`), the form a cover known in a window gives (`ow1`: the leg's hole and the cover's, asked of its version, `(bank[r1], st)`). `q: ?"date within window(2026-04-05, 2026-04-20) not precise enough for the cut 2026-04-10" (bank[r1], fx)`; `q2`'s two lines 0.00 and 12.00 PLN, `q3` 0.00, `q4` 12.00, as before. An observation (not a removal) known in a window keeps its hole asked of the row alone: no ruling or vector names more.
+- **Report line:** `milestone-report: M2: 42/42 green`.
+- **Oracles:** `fork_oracle` and `walk_oracle`, 13 of 13, in `check quick`.
+- **S/M0/M1 (P53):** the 17 targets, `--all-features`, quick, niced: `465 tests run: 465 passed, 0 skipped` (`tmp/m2/b/g7last/smm2.log`).
+- **Size:** in `engine/crates` over the two commits, 122 added and 42 removed (`num/money.rs`, `model/value.rs`, `walk/legs.rs`, `walk/lows.rs`, `load/parts.rs`, `book/observe.rs`).
+- **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps (98s)`; M2 42/42; report-only hits 9, as before.
