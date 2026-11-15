@@ -7,26 +7,153 @@
 //! Twin: engine/tools/refcore/mreads.py (`m_bal_modelled`).
 //! Invariants: a reading on day d is never its start, so the reading it is compared with
 //! isn't in it; after its start, the observations' entries and the readings' resets are left
-//! out and the modelled-past instances' legs in x's unit through d are counted; a hole entry
-//! or leg makes it a hole with every question met; a refused entry or leg refuses it.
+//! out and the modelled-past instances' legs in x's unit through d that stand after the start
+//! in the day walk's order are counted (a leg on the day of a reading at that day's end
+//! stands before it); a hole entry or leg makes it a hole with every question met; a refused
+//! entry or leg refuses it. `explain` lists what the value counts (`Counted`).
 
-use super::plan::{Amount, Dated, Inst, invariant, qty_value};
-use super::point::At;
-use super::state::{Change, Ent};
+use super::plan::{Amount, Dated, Inst, LegVal, invariant, qty_value};
+use super::point::{At, Step};
+use super::state::{Change, Ent, Walk};
 use crate::eval::Engine;
 use crate::hole::{Hole, spread};
 use crate::model::{Reality, Value};
 use crate::syntax::Stop;
 use crate::time::Day;
 
+/// What `bal(x, d) modelled` counts in a main walk: where it starts, the log entries and the
+/// modelled-past legs after that start through d. E §6.2.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct Counted {
+    /// The reading it starts from, by its place in the place's log; none where it starts from
+    /// the place's opening balance.
+    pub(crate) start: Option<usize>,
+    /// The entries of the place's log it counts, by their place in the log: every one after
+    /// its start through the end of d but the observations' and the readings'; a refused one
+    /// kept, as it refuses the balance.
+    pub(crate) ents: Vec<usize>,
+    /// The modelled-past instances' legs it counts, by position (the instance's, the leg's),
+    /// each with its sign at the place (−1 out, +1 in).
+    pub(crate) legs: Vec<(usize, usize, i64)>,
+}
+
+impl Walk {
+    /// What `bal(x, d) modelled` of place `place` in unit `unit` counts in this main walk: its
+    /// last reading dated before day d (an opening on day d where none is, the place's opening
+    /// balance before the first), each booked entry since through the end of d but the
+    /// observations' and the readings', and each modelled-past instance's leg at the place
+    /// that stands after that reading in the day walk's order, through d (refcore's
+    /// `m_bal_modelled`). E §6.2, §4.2 (a reading at a day's end stands after its movements).
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a log or an order past its entries.
+    pub(crate) fn modelled_counted(
+        &self,
+        m: &Reality,
+        (place, unit): (&str, &str),
+        d: Day,
+    ) -> Result<Counted, Stop> {
+        let (_, last) = self.state(m, place, unit, At::end(d));
+        let log = self.entries(place, unit);
+        let start = modelled_start(log, last, d);
+        let first = match start {
+            Some(at) => at
+                .checked_add(1)
+                .ok_or_else(|| invariant("a log past its entries"))?,
+            None => 0,
+        };
+        let through = match last {
+            Some(i) => i
+                .checked_add(1)
+                .ok_or_else(|| invariant("a log past its entries"))?,
+            None => 0,
+        };
+        let obs: Vec<&str> = self.obs.iter().map(|wo| wo.obs.id.as_str()).collect();
+        let since_start = log
+            .get(first..through)
+            .ok_or_else(|| invariant("a modelled balance past its log"))?;
+        let mut ents = Vec::new();
+        for (j, e) in (first..).zip(since_start) {
+            if matches!(e.change, Change::Bad(_)) || !booked_elsewhere(e, &obs) {
+                ents.push(j);
+            }
+        }
+        let since = match start {
+            Some(at) => Some(
+                log.get(at)
+                    .ok_or_else(|| invariant("a reading past its log"))?
+                    .at,
+            ),
+            None => None,
+        };
+        let legs = self.modelled_legs((place, unit), d, since)?;
+        Ok(Counted { start, ents, legs })
+    }
+
+    /// The legs of the modelled-past instances at place `place` in unit `unit`, by position
+    /// (the instance's, the leg's), each with its sign there (−1 out, +1 in), dated (by the
+    /// leg's day, else the instance's first) through day `d` and standing after the reading at
+    /// `since` in the day walk's order (refcore's `m_bal_modelled`, its loop over
+    /// `w.modelled`). E §6.2, §4.2 step 3.
+    fn modelled_legs(
+        &self,
+        (place, unit): (&str, &str),
+        d: Day,
+        since: Option<At>,
+    ) -> Result<Vec<(usize, usize, i64)>, Stop> {
+        let mut out = Vec::new();
+        for (ii, inst) in self.modelled.iter().enumerate() {
+            let inst_day = inst.day.as_ref().and_then(Dated::lo);
+            for (li, lg) in inst.legs.iter().enumerate() {
+                let Some(gd) = lg.day.day().or(inst_day) else {
+                    continue;
+                };
+                let in_unit = lg.unit.as_deref().is_none_or(|u| u == unit);
+                if gd > d || !in_unit {
+                    continue;
+                }
+                if let Some(s) = since
+                    && self.leg_point(inst, gd)? <= s
+                {
+                    continue;
+                }
+                for sign in signs_at(lg, place) {
+                    out.push((ii, li, sign));
+                }
+            }
+        }
+        Ok(out)
+    }
+
+    /// Where a modelled-past instance's leg dated `gd` stands in the day walk's order, as the
+    /// walk books a leg: a decision's on its own day at its run's point, any other at its
+    /// day's plans, at the instance's place in the movement order (`walk/order.rs` `book_run`,
+    /// `walk/agenda.rs` `schedule_modelled`). E §4.2 steps 2 and 3.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a movement order past its length.
+    fn leg_point(&self, inst: &Inst, gd: Day) -> Result<At, Stop> {
+        if let Some(run) = self
+            .runs
+            .iter()
+            .find(|r| r.point.day == gd && r.inst.id == inst.id)
+        {
+            return Ok(run.point);
+        }
+        Ok(At {
+            rank: self.plan_rank(&inst.order)?,
+            ..At::of(gd, Step::Plans)
+        })
+    }
+}
+
 impl Engine {
     /// `bal(x, d) modelled` of place `place` in unit `unit`, from the main walk at the read's
-    /// cut: the balance its last reading dated before day d states (an opening on day d where
-    /// none is, the place's opening balance before the first), plus each booked entry since
-    /// through the end of d but the observations' and the readings', plus each modelled-past
-    /// instance's leg at the place dated after that reading through d; a hole with every
-    /// question where an entry or a leg is a hole, `HOLE-ANCHOR` with no reading or opening
-    /// (refcore's `m_bal_modelled`). E §6.2, L §5.19, §8.1.
+    /// cut: what [`Walk::modelled_counted`] counts, added to the balance its start states; a
+    /// hole with every question where an entry or a leg is a hole, `HOLE-ANCHOR` with no
+    /// reading or opening (refcore's `m_bal_modelled`). E §6.2, L §5.19, §8.1.
     ///
     /// # Errors
     ///
@@ -40,63 +167,43 @@ impl Engine {
     ) -> Result<Value, Stop> {
         let id = self.main_walk(m, cut)?;
         let walk = self.walk(id)?;
-        let (_, last) = walk.state(m, place, unit, At::end(d));
+        let counted = walk.modelled_counted(m, (place, unit), d)?;
         let ents = walk.entries(place, unit);
-        let start = modelled_start(ents, last, d);
-        let (from, value) = match start {
+        let value = match counted.start {
             Some(at) => {
-                let e = ents
+                let reading = ents
                     .get(at)
                     .ok_or_else(|| invariant("a reading past its log"))?;
-                let Change::Reset { val, qs } = &e.change else {
+                let Change::Reset { val, qs } = &reading.change else {
                     return Err(invariant("a modelled balance's start that is no reading"));
                 };
-                if let Some(h) = qs {
-                    return Ok(Value::Hole(h.clone()));
+                if let Some(hole) = qs {
+                    return Ok(Value::Hole(hole.clone()));
                 }
-                (Some((at, e.at)), Some(val.clone()))
+                Some(val.clone())
             }
-            None => (None, walk.default_state(m, place, unit).val),
+            None => walk.default_state(m, place, unit).val,
         };
         let Some(mut q) = value else {
             return Ok(Value::Hole(walk.anchor_question(place)));
         };
-        let obs: Vec<&str> = walk.obs.iter().map(|wo| wo.obs.id.as_str()).collect();
-        let first = match from {
-            Some((at, _)) => at
-                .checked_add(1)
-                .ok_or_else(|| invariant("a log past its entries"))?,
-            None => 0,
-        };
-        let through = match last {
-            Some(i) => i
-                .checked_add(1)
-                .ok_or_else(|| invariant("a log past its entries"))?,
-            None => 0,
-        };
         let mut holes: Vec<Hole> = Vec::new();
         let mut met = Vec::new();
-        let since_start = ents
-            .get(first..through)
-            .ok_or_else(|| invariant("a modelled balance past its log"))?;
-        for e in since_start {
-            if let Change::Bad(err) = &e.change {
-                return Err(Stop::Refused(err.clone()));
+        for at in &counted.ents {
+            let entry = ents
+                .get(*at)
+                .ok_or_else(|| invariant("a modelled balance past its log"))?;
+            match &entry.change {
+                Change::Bad(err) => return Err(Stop::Refused(err.clone())),
+                Change::Delta(flow) => q = q.checked_add(flow).map_err(crate::eval::num_stop)?,
+                Change::Hole(hole) | Change::Perm(hole) => holes.push(hole.clone()),
+                Change::Reset { .. } | Change::ImpOn(_) | Change::Mark => {}
             }
-            if booked_elsewhere(e, &obs) {
-                continue;
-            }
-            match &e.change {
-                Change::Delta(f) => q = q.checked_add(f).map_err(crate::eval::num_stop)?,
-                Change::Hole(h) | Change::Perm(h) => holes.push(h.clone()),
-                Change::Reset { .. } | Change::Bad(_) | Change::ImpOn(_) | Change::Mark => {}
-            }
-            if let Some(c) = &e.coll {
-                met.push(c.clone());
+            if let Some(coll) = &entry.coll {
+                met.push(coll.clone());
             }
         }
-        let since = from.map(|(_, at)| at);
-        for (ii, li, sign) in modelled_legs(&walk.modelled, (place, unit), d, since) {
+        for (ii, li, sign) in counted.legs {
             let inst = walk
                 .modelled
                 .get(ii)
@@ -107,56 +214,34 @@ impl Engine {
                 .ok_or_else(|| invariant("a leg the instance lacks"))?;
             met.push(inst.coll.clone());
             match &lg.amount {
-                Amount::Hole(h) => holes.push(h.clone()),
-                Amount::Refused(r) => return Err(Stop::Refused(r.clone())),
-                Amount::Qty(a) if sign < 0 => {
-                    q = q.checked_sub(a).map_err(crate::eval::num_stop)?;
+                Amount::Hole(hole) => holes.push(hole.clone()),
+                Amount::Refused(refusal) => return Err(Stop::Refused(refusal.clone())),
+                Amount::Qty(amount) if sign < 0 => {
+                    q = q.checked_sub(amount).map_err(crate::eval::num_stop)?;
                 }
-                Amount::Qty(a) => {
-                    q = q.checked_add(a).map_err(crate::eval::num_stop)?;
+                Amount::Qty(amount) => {
+                    q = q.checked_add(amount).map_err(crate::eval::num_stop)?;
                 }
             }
         }
-        for c in &met {
-            self.absorb(c);
+        for coll in &met {
+            self.absorb(coll);
         }
-        if let Some(h) = spread(&holes.iter().map(Some).collect::<Vec<_>>()) {
-            return Ok(Value::Hole(h));
+        if let Some(hole) = spread(&holes.iter().map(Some).collect::<Vec<_>>()) {
+            return Ok(Value::Hole(hole));
         }
         qty_value(m, &q, unit)
     }
 }
 
-/// The legs of the modelled-past instances `modelled` at place `place` in unit `unit`, by
-/// position (the instance's, the leg's), each with its sign there (−1 out, +1 in), dated (by
-/// the leg's day, else the instance's first) after the reading at `since` through day `d`
-/// (refcore's `m_bal_modelled`, its loop over `w.modelled`). E §6.2.
-fn modelled_legs(
-    modelled: &[Inst],
-    (place, unit): (&str, &str),
-    d: Day,
-    since: Option<At>,
-) -> Vec<(usize, usize, i64)> {
-    let mut out = Vec::new();
-    for (ii, inst) in modelled.iter().enumerate() {
-        let inst_day = inst.day.as_ref().and_then(Dated::lo);
-        for (li, lg) in inst.legs.iter().enumerate() {
-            let Some(gd) = lg.day.day().or(inst_day) else {
-                continue;
-            };
-            let after = since.is_none_or(|s| At::end(gd) > s);
-            let in_unit = lg.unit.as_deref().is_none_or(|u| u == unit);
-            if gd > d || !after || !in_unit {
-                continue;
-            }
-            for (end, sign) in [(&lg.from, -1_i64), (&lg.to, 1_i64)] {
-                if end.place() == Some(place) {
-                    out.push((ii, li, sign));
-                }
-            }
-        }
-    }
-    out
+/// The signs of leg `lg`'s ends at place `place`: −1 where it leaves, +1 where it enters
+/// (refcore's `m_bal_modelled`, its `(g.frm, -1), (g.to, 1)`). E §6.2.
+fn signs_at(lg: &LegVal, place: &str) -> Vec<i64> {
+    [(&lg.from, -1_i64), (&lg.to, 1_i64)]
+        .into_iter()
+        .filter(|(end, _)| end.place() == Some(place))
+        .map(|(_, sign)| sign)
+        .collect()
 }
 
 /// Where a modelled balance on day `d` starts in a place's log `ents`, whose last entry

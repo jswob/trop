@@ -657,13 +657,13 @@ fn over_axes(
         engine.end_layer(inside.layer, rows.as_ref().err())?;
         each.push(rows?.0);
     }
-    // a combination's result is its lines, compared as the text they print (refcore's
-    // `EachRes.key`)
+    // a combination's result is its lines, compared as the results they print, an
+    // `inputs-of`'s rows included (refcore's `EachRes.key`, `rkey`)
     let mut results = Vec::with_capacity(each.len());
     for (at, rows) in each.iter().enumerate() {
         let parts: Vec<String> = rows
             .iter()
-            .map(|(suffix, row, _)| format!("{suffix}\u{0}{}", row.text))
+            .map(|(suffix, row, _)| format!("{suffix}\u{0}{}", row.key()))
             .collect();
         let text = parts.join("\u{0}");
         results.push((

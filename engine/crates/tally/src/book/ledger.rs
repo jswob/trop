@@ -273,8 +273,9 @@ impl Engine {
     ) -> Result<(), Stop> {
         let obs = self.ledger_obs(m, &lines.of, span)?;
         let (model, undated) = self.ledger_model(m, &lines.of, span, cut, &obs)?;
-        // rows stated same are one movement: listed once, naming both rows (L §6.1)
-        let (obs, also) = self.same_once_at(m, &lines.of.place, obs, cut)?;
+        // rows stated same are one movement: listed once, naming both rows (L §6.1); the
+        // `same` lines are the observations' side, so read as known on `on`, as the rows are
+        let (obs, also) = self.same_once_at(m, &lines.of.place, obs, m.on)?;
         let fulfilling = fulfilling(&obs);
         for inst in &model {
             instance_line(m, lines, inst, &fulfilling)?;
@@ -551,9 +552,10 @@ fn refusal_of(inst: &Inst) -> Stop {
 
 /// Where an instance of the model stands (refcore's `m_residuals`, its status test): one
 /// that doesn't exist is no line; a refused one stands where its day is, and refuses the
-/// ledger where it may touch the place; a window inside one month stands at its first day,
-/// one across months in the `?` group, unless it falls wholly outside the span. E §6.3
-/// Grouping, L §8.4, §4.4.
+/// ledger where it may touch the place, and one whose day is refused stands undated, so it
+/// refuses every ledger it may touch; a window inside one month stands at its first day, one
+/// across months in the `?` group, unless it falls wholly outside the span. E §6.3 Grouping,
+/// L §8.4, §4.4.
 fn model_day(inst: &Inst, span: &Span) -> Result<Modelled, Stop> {
     match inst.status {
         Status::None | Status::LeftOut => return Ok(Modelled::Skip),
@@ -581,6 +583,9 @@ fn model_day(inst: &Inst, span: &Span) -> Result<Modelled, Stop> {
             })
         }
         Some(Dated::Hole(_)) => Ok(Modelled::Undated),
+        // a refused day may be any day: the instance refuses every ledger of a place it may
+        // touch, whatever its span (L §8.4: "every day, for a day that is a hole or refused")
+        None if inst.status == Status::Refused => Ok(Modelled::Undated),
         None => Err(invariant("an instance with no day, not refused")),
     }
 }
