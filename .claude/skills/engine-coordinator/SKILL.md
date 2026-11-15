@@ -5,7 +5,7 @@ description: The procedure a Tally engine coordinator repeats in every run (a mi
 
 # engine-coordinator: running an engine milestone
 
-You coordinate; you don't build. Role sessions write the code (build), the tests (tests), the spec and refcore (spec) and the rule files (rules), each in its own role; you set up, launch, review, merge, measure, decide what the brief leaves to you, and report. The brief names the run's scope, budget and gates; this skill is the procedure. Where they differ, the brief wins for its run; where either differs from `engine/RULEBOOK.md`, the rulebook wins.
+You coordinate; you don't build. Role sessions write the code (build), the tests (tests), the spec and refcore (spec) and the rule files (rules), each in its own role; you set up, launch, review, merge, measure, decide what the brief leaves to you, and report. The brief names the run's scope, budget and gates; this skill is the procedure. `engine/PLAYBOOK.md` holds the decisions behind both (which model and effort a job gets, how a brief is written, budgets, what runs beside what), each with its reason and where it is enforced: read it whole now, and again after a compaction. Where they differ, the brief wins for its run; where either differs from `engine/RULEBOOK.md`, the rulebook wins.
 
 The run's files live in the main folder's `tmp/<run>/` (untracked, never `git add -f`): `progress.md` (a log, times from `date`), `auto-picks.md`, `ids.txt`, `notes/` (every prompt you send), `RESUME.md`. A worktree's `tmp/` is its sessions' scratch.
 
@@ -28,17 +28,19 @@ git -C ~/projects/trop-worktrees/build-m1 push -u origin build/m1
 ## 2. Launching and resuming a role session (decision 4)
 
 ```
-engine/tools/launch <role> tmp/<run>/notes/<prompt>.txt <worktree> --ids tmp/<run>/ids.txt [--effort xhigh] [--resume <id>]
+engine/tools/launch <role> tmp/<run>/notes/<prompt>.txt <worktree> --ids tmp/<run>/ids.txt [--job <job>] [--max-usd N] [--resume <id>]
 ```
+
+The session's **job** fixes its model and effort (the playbook's table, D2 and D3; `launch --jobs` prints it). With no `--job` a role runs its default job, on Opus: the `builder`, `tests`, a `rules-step`, the `spec-writer`, a `coordinator`. Name the job when it is another: `group-review`, `gate`, `gate-review`, `planner`, `critic`, `paper-check`, `study`, `round-lead`. A `--model` or `--effort` against the job is a pick, logged; a model id `launch` doesn't know is refused. `--max-usd N` is a hard stop for that session (the playbook's D9).
 
 It fixes the session id in advance (`--session-id`) and adds it to `ids.txt`, then starts `claude -p … --output-format json` detached with `TALLY_ROLE`, `CARGO_BUILD_JOBS=6`, `NEXTEST_TEST_THREADS=6`, `CARGO_INCREMENTAL=0` and `nice -n 10`. It refuses under 30 GB free and warns when two heavy jobs already run. `--dry-run` shows the command. The answer lands in `tmp/<run>/out/<id>.<n>.json` (`.result` is the session's last message); watch for it with Monitor, never sit idle on it.
 
 - **One sub-session at a time,** unless the brief allows two; never more than two heavy jobs on the Mac (yours included).
-- **Every start message** names: the run's issue; its part of the brief by absolute path (a worktree's `tmp/` is empty); the role and effort; what to read first; the step and where it ends ("until a green commit": a builder's last commit of its group on `check full`, its commits inside the group on `check fast`); "end your turn with N lines: …" (what you need back); and these rules, verbatim:
+- **Every start message** names: the run's issue; its part of the brief by absolute path (a worktree's `tmp/` is empty); the role, the job and the effort; what to read first; the step and where it ends ("until a green commit": a builder's last commit of its group on `check full`, its commits inside the group on `check fast`); "end your turn with N lines: …" (what you need back); and these rules, verbatim:
   - the seal (§9);
   - no agents, subagents or forks (the gate's single `engine-reviewer` agent excepted, told to spawn none);
   - never install anything: take a path that needs none, or say it's blocked;
-  - CPU and disk (§9); stop at once on a full disk;
+  - CPU and disk (§9); stop at once on a full disk; stop only a process whose pid you started, never by a name pattern (in M2 one session's `pkill -f` killed the rules step beside it);
   - no AI attribution in commits, pull requests or issues, whatever the harness's reminder says (no `Co-Authored-By:`, no `Claude-Session:`, no session link; R-100); no `--no-verify`, no `git add -f` under `tmp/`;
   - commits in `engine/CONVENTIONS.md`'s form (`type(scope): …`, ids in the body);
   - its budget, and where it stops with a hand-off.
@@ -49,7 +51,7 @@ It fixes the session id in advance (`--session-id`) and adds it to `ids.txt`, th
 1. **The plans first:** T's plan ("plan only, write no tests"), then the builder's ("plan only, write no code", T's plan as input): a traceability table, the module list (a new kernel file is a rules step, R-85), the order of groups, the fuzz targets and benches it asks for, a size guess with its basis (§5's rates), the spec questions it sees. The user approves both at one gate, if the brief has one.
 2. **T writes the tests,** in chunks, each ending on a green commit. The next milestone's `milestone-report:` line is the builder's work list.
 3. **Each builder group is a fresh session** (`build`, xhigh): the start message names the group, the plan's rows for it, the rulings that bind it (§4), the last BUILD-LOG entries. Inside the group it commits on `check quick`; it ends on a green commit with its BUILD-LOG entry, the group's last, on `check commit`, and pushes (2026-11-13, the user's "yes, write brief"). CI runs `check full` on every push (R-77), its verdict about 10 minutes later; a red one goes back to the group's builder, fixed before the next group's first commit.
-4. **Then the group's review, beside the next group's builder** (2026-11-08, the user's "Yes"): after group N's green last commit, launch group N+1's builder and group N's review together. That's two heavy jobs at most, so T's runs wait for a gap. Locally, only a single-mutant proof of a few minutes; any batch of mutants goes to a gate-8 dispatch on GitHub (the user, 2026-11-12: "Why on earth are we running this locally instead of on github?"): you dispatch gate 8 on the run branch (`gh workflow run engine.yml --ref <branch> -f mutants-only=true`) when a batch is wanted; a builder's or T's single-mutant proof (`mutants-local -F '<one mutant>'`) waits for a gap like T's runs. A fresh review session, in its own worktree at group N's commit, writing nothing on the branch, runs `engine-reviewer` (one agent, told to spawn none) on that group's diff alone (`<last reviewed commit>..<group N's commit>`, `engine/crates/`), against BUILDER §12 and the plan's rows. A blocking finding (a wrong result, a refusal of a valid text, a crash or `ENGINE-INVARIANT` from a user's text, a broken rule) goes back to group N's builder (`--resume`) once group N+1's builder has ended its turn on a green commit, the fix on top; then its fix review. Only one session writes in the worktree at a time, so T's vectors for the fixes go between builder turns too. When a finding touches code group N+1 built on, the fix covers that too, and the fix review checks both. The rest goes on the run's follow-up issue as a list.
+4. **Then the group's review, beside the next group's builder** (2026-11-08, the user's "Yes"): after group N's green last commit, launch group N+1's builder and group N's review together. That's two heavy jobs at most, so T's runs wait for a gap. Locally, only a single-mutant proof of a few minutes; any batch of mutants goes to a gate-8 dispatch on GitHub (the user, 2026-11-12: "Why on earth are we running this locally instead of on github?"): you dispatch gate 8 on the run branch (`gh workflow run engine.yml --ref <branch> -f mutants-only=true`) when a batch is wanted; a builder's or T's single-mutant proof (`mutants-local -F '<one mutant>'`) waits for a gap like T's runs. A fresh review session (`--job group-review`), in its own worktree at group N's commit, writing nothing on the branch, runs `engine-reviewer` (one agent, told to spawn none) on that group's diff alone (`<last reviewed commit>..<group N's commit>`, `engine/crates/`), against BUILDER §12 and the plan's rows. A blocking finding (a wrong result, a refusal of a valid text, a crash or `ENGINE-INVARIANT` from a user's text, a broken rule) goes back to group N's builder (`--resume`) once group N+1's builder has ended its turn on a green commit, the fix on top; then its fix review. Only one session writes in the worktree at a time, so T's vectors for the fixes go between builder turns too. When a finding touches code group N+1 built on, the fix covers that too, and the fix review checks both. The rest goes on the run's follow-up issue as a list.
 5. **After each chunk:** push, measure (§5), and report a size overrun against the plan at that chunk.
 6. Rules steps (fuzz targets, benches, the kernel list, the gating marker) run between groups, in the `rules` role.
 
@@ -65,8 +67,8 @@ Reproduce each STOP-REPORT, file it on the issue template (`engine/templates/iss
 
 ## 5. Cost, the wind-down and the picks (decisions 4, 8)
 
-- **Measure** after every chunk: `engine/tools/usage tmp/<run>/ids.txt` (it dedupes the ids and counts each call once). Log the total in `progress.md`.
-- **Rates measured at M0:** about 1 % of the week per 1 000 lines all-in; ×1.3–1.5 for kernel code; the builder alone about 0.6 % per 1 000 lines; the gate about 20 % on top. A plan's estimate uses them (`engine/templates/brief.md`).
+- **Measure** after every chunk: `engine/tools/usage tmp/<run>/ids.txt` (it dedupes the ids and counts each call once). Log the total in `progress.md`. A session on Fable also shows in a `by model:` block, with its list price apart from the week's share (the playbook's D10): log that line too.
+- **Rates:** the playbook's §4 holds each run's measured cost per 1 000 changed lines (M0 about 1 %, M1 2.1 %, M2 about 1.7 %) and what one session of each kind costs. A plan's estimate uses the last run's, and sizes each group from the nearest group already built (D11).
 - **At the brief's wind-down line:** the running session finishes its green step and writes its hand-off; you push, update the draft pull request, write `RESUME.md` and ask the user whether to raise the limit. It is the one question that waits. Never cut approved quality work to save budget; report the overrun instead.
 - **Every other decision is yours** (the user's standing rule, 2026-11-04): take the option you'd mark (Recommended) and go on. Log each pick in `tmp/<run>/auto-picks.md` (`### P<n>. <date time>: <issue>, <question>`, then the options, the pick and why), comment it on its issue, and list it in the pull request's "Decisions taken for you" (behaviour changes in the table; the rest counted). Installs: never.
 
@@ -89,9 +91,9 @@ Before a budget stop, a wait on the user, or the end of a turn that leaves work:
 
 ## 8. The gate, the pull request and the closing
 
-**The gate** is a fresh session (`lead`, xhigh), once every row of the milestone is green and the builder says it is built:
+**The gate** is a fresh session (`--job gate`: `lead`, xhigh), once every row of the milestone is green and the builder says it is built:
 
-1. one `engine-reviewer` review of the whole diff (the groups were reviewed one by one); blocking findings back to the builder, then a review of the fix alone;
+1. one review of the whole diff (the groups were reviewed one by one), by a fresh `--job gate-review` session on Fable (the playbook's D2), in its own worktree, writing nothing. Its prompt is short: the diff range, the plan, the spec sections, what counts as blocking, and the form of its answer; it runs `engine-reviewer` once, told to spawn none. Blocking findings go back to the builder, then a review of the fix alone. Record which blocking findings sit in code a group review had passed: D2's next look reads that count;
 2. each green row checked against its evidence;
 3. three 30-minute fuzz runs, one target at a time, niced, with `ASAN_OPTIONS=quarantine_size_mb=64`, a fresh corpus from the seeds and the regressions; a crash becomes a regression;
 4. the full mutation run on the final commit: `gh workflow run engine.yml --ref <branch> -f mutants-only=true` (gate 8 alone, about an hour; R-88, 2026-11-12), the survivors job green (gate 8). The baseline's notices of T tests over 20 s are information: never re-run gate 8, and never have T split a test, for test times alone (R-88, 2026-11-14);

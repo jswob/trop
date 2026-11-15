@@ -9,6 +9,15 @@ counted once by its message id across all of them, so an id listed twice, or a c
 in two files, counts once. Weights and calibration are those of
 tmp/session8c/tools/usage.py: input 1, cache reads 0.1, output 5, cache writes 1.25 (5 min)
 or 2 (1 h), and 8.6 M weighted tokens to 1 % of the week.
+
+Those weights are Opus's, and so is the calibration: every line but the last block weighs
+each token as Opus's, whatever model spent it ("Opus-weighted"). When a session ran on
+another model, a `by model:` block splits the same total by the model each call names,
+and for a model in PRICED adds what its tokens cost at Anthropic's list price beside
+Opus 5.5's (Fable 5.2: twice on input, output and cache writes, the same on cache reads;
+platform.claude.com, 2026-11-15) and in dollars. How the user's plan meters such a model
+isn't known to this tool, so it is reported apart and never added to the week's share
+(engine/PLAYBOOK.md, D10).
 """
 
 import glob
@@ -19,6 +28,13 @@ import sys
 
 PER_PERCENT = 8.6e6
 WEIGHTS = {"input_tokens": 1, "cache_read_input_tokens": 0.1, "output_tokens": 5}
+OPUS = "claude-opus-5-5"
+# model: (its weights beside Opus's: input, output and cache writes; cache reads), then
+# dollars per million tokens: input, output, cache reads, cache writes 5 min and 1 h
+PRICED = {
+    OPUS: ((1, 1), (4, 20, 0.20, 5, 8)),
+    "claude-fable-5-2": ((2, 1), (8, 40, 0.20, 10, 16)),
+}
 UUID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
 
 
@@ -37,14 +53,46 @@ def ids_of(args):
     return seen
 
 
-def weighted(usage):
-    total = sum(w * (usage.get(k) or 0) for k, w in WEIGHTS.items())
+def tokens(usage):
+    """A call's tokens: input, output, cache reads, cache writes kept 5 minutes and 1 hour."""
     split = usage.get("cache_creation") or {}
-    if split:
-        total += 1.25 * (split.get("ephemeral_5m_input_tokens") or 0) + 2 * (split.get("ephemeral_1h_input_tokens") or 0)
-    else:
-        total += 1.25 * (usage.get("cache_creation_input_tokens") or 0)
-    return total
+    w5, w1 = (split.get("ephemeral_5m_input_tokens") or 0, split.get("ephemeral_1h_input_tokens") or 0) if split \
+        else (usage.get("cache_creation_input_tokens") or 0, 0)
+    return usage.get("input_tokens") or 0, usage.get("output_tokens") or 0, usage.get("cache_read_input_tokens") or 0, w5, w1
+
+
+def weighted(usage, factors=(1, 1)):
+    """The call in Opus-weighted tokens; `factors` scale them to another model's list price."""
+    i, o, r, w5, w1 = tokens(usage)
+    rest, read = factors
+    return rest * (WEIGHTS["input_tokens"] * i + WEIGHTS["output_tokens"] * o + 1.25 * w5 + 2 * w1) \
+        + read * WEIGHTS["cache_read_input_tokens"] * r
+
+
+def dollars(usage, prices):
+    return sum(n * p for n, p in zip(tokens(usage), prices)) / 1e6
+
+
+def by_model(calls):
+    """The `by model:` lines, or none when every call ran on Opus."""
+    models = {}
+    for usage in calls.values():
+        models.setdefault(usage.get("model") or "an unnamed model", []).append(usage)
+    if set(models) <= {OPUS}:
+        return []
+    lines = ["by model:"]
+    for model in sorted(models):
+        total = sum(weighted(u) for u in models[model])
+        line = f"  {model}: {len(models[model])} calls, {total / 1e6:.2f} M weighted, about {total / PER_PERCENT:.2f} % Opus-weighted"
+        if model in PRICED and model != OPUS:
+            factors, prices = PRICED[model]
+            own = sum(weighted(u, factors) for u in models[model])
+            line += (f"; at its list price about {own / PER_PERCENT:.2f} %, ${sum(dollars(u, prices) for u in models[model]):.2f}: "
+                     "reported apart, not the week's share")
+        elif model not in PRICED:
+            line += "; no list price here"
+        lines.append(line)
+    return lines
 
 
 def calls_of(session, bases):
@@ -61,7 +109,7 @@ def calls_of(session, bases):
                         continue
                     m = entry.get("message") or {}
                     if entry.get("type") == "assistant" and isinstance(m, dict) and m.get("usage"):
-                        calls[m.get("id") or entry.get("uuid")] = m["usage"]
+                        calls[m.get("id") or entry.get("uuid")] = {**m["usage"], "model": m.get("model")}
     return calls
 
 
@@ -88,6 +136,8 @@ def main(argv):
         total = sum(weighted(u) for u in fresh.values())
         grand += total
         print(f"session {s}: {len(fresh)} calls, {total / 1e6:.2f} M weighted, about {total / PER_PERCENT:.2f} % of the week")
+    for line in by_model(seen):
+        print(line)
     print(f"all {len(sessions)} sessions: about {grand / PER_PERCENT:.2f} % of the week")
     return 0
 

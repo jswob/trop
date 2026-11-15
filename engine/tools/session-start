@@ -2,11 +2,18 @@
 # The build role's SessionStart hook, at startup and after each compaction (D6-2, BUILDER §11):
 # prints engine/CLAUDE.md, which Claude Code adds to the session's context, since a nested
 # CLAUDE.md isn't loaded at the start nor after a compaction. The lead role is told to invoke the
-# skill engine-coordinator (the retro after M0, decision 4). Other roles get nothing.
+# skill engine-coordinator (the retro after M0, decision 4). The lead, the rules role and app work
+# (the master session) are pointed at engine/PLAYBOOK.md, so how sessions are run survives a
+# compaction (2026-11-15). The tests and spec roles get nothing.
 d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || exit 0
-if [ "${TALLY_ROLE:-}" = lead ]; then
-  echo "engine: a coordinator session (TALLY_ROLE=lead): invoke the skill engine-coordinator first; it holds the procedure."
-  exit 0
-fi
+playbook="engine/PLAYBOOK.md holds how engine sessions are run (briefs, model and effort per job, launching, cost, hand-offs), each decision with where it is enforced: read it before you write a brief, launch or schedule a session, or change one of those tools."
+case "${TALLY_ROLE:-}" in
+  lead)
+    echo "engine: a coordinator session (TALLY_ROLE=lead): invoke the skill engine-coordinator first; it holds the procedure. $playbook"
+    exit 0 ;;
+  rules|"")
+    echo "engine: $playbook"
+    exit 0 ;;
+esac
 [ "${TALLY_ROLE:-}" = build ] || exit 0
 cat "$d/../CLAUDE.md" || echo "engine: engine/CLAUDE.md is missing; the build session has no rules to read (D6-2)"
