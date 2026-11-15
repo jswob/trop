@@ -216,6 +216,8 @@ impl Engine {
     ) -> Result<(), Stop> {
         let obs = self.ledger_obs(m, &lines.place, span)?;
         let (model, undated) = self.ledger_model(m, &lines.place, span, cut, &obs)?;
+        // rows stated same are one movement: listed once, naming both rows (L §6.1)
+        let (obs, also) = self.same_once_at(m, &lines.place, obs, cut)?;
         let fulfilling = fulfilling(&obs);
         for inst in &model {
             instance_line(m, lines, inst, &fulfilling)?;
@@ -238,7 +240,8 @@ impl Engine {
             {
                 continue;
             }
-            unexplained_line(m, lines, o)?;
+            let ids = also.get(&o.id).map_or(o.id.as_str(), String::as_str);
+            unexplained_line(m, lines, o, ids)?;
         }
         self.balance_lines(m, lines, span, cut)?;
         after_run_line(m, lines, span)
@@ -796,12 +799,13 @@ fn after_run_line(m: &Reality, lines: &mut Lines, span: &Span) -> Result<(), Sto
 }
 
 /// An unexplained line: an observation that fulfils nothing the model at the cut holds, its
-/// amount the difference (refcore's unexplained `RLine`). E §6.3 unexplained.
-fn unexplained_line(m: &Reality, lines: &mut Lines, o: &Obs) -> Result<(), Stop> {
+/// amount the difference, named by `ids` (its id, or its `same` group's) (refcore's
+/// unexplained `RLine`). E §6.3 unexplained.
+fn unexplained_line(m: &Reality, lines: &mut Lines, o: &Obs, ids: &str) -> Result<(), Stop> {
     let ob = flow_into(&o.legs, &lines.place, &lines.unit)?;
     let text = format!(
         "unexplained {} on {}: observed {}",
-        o.id,
+        ids,
         o.day.text(),
         fig_text(m, &ob, &lines.unit)?
     );

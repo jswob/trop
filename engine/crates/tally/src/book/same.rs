@@ -430,6 +430,70 @@ impl Engine {
         Ok(Value::Record(fields))
     }
 
+    /// Of the observations `obs` a ledger at `place` lists, the row of a `same` group whose
+    /// end there another member books is left out, so a movement whose rows agree there is
+    /// listed once; each row kept that is stated `same`, with its group's ids among `obs`,
+    /// sorted, as its line's evidence (refcore's `m_residuals`, its `also`). E §6.3, L §6.1.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::main_walk`].
+    pub(crate) fn same_once_at(
+        &mut self,
+        m: &Reality,
+        place: &str,
+        obs: Vec<Obs>,
+        cut: Day,
+    ) -> Result<(Vec<Obs>, BTreeMap<String, String>), Stop> {
+        let mut also = BTreeMap::new();
+        let groups = same_groups(m);
+        if groups.is_empty() {
+            return Ok((obs, also));
+        }
+        let id = self.main_walk(m, cut)?;
+        let present: BTreeSet<String> = obs.iter().map(|o| o.id.clone()).collect();
+        let mut keep = Vec::with_capacity(obs.len());
+        for o in obs {
+            if self.skipped_at(m, id, &o, place)? {
+                continue;
+            }
+            if let Some(group) = groups.get(&o.id) {
+                // sorted by code point (refcore's `sorted`)
+                let ids: BTreeSet<&str> = group
+                    .iter()
+                    .filter(|x| present.contains(*x))
+                    .map(String::as_str)
+                    .collect();
+                let ids: Vec<&str> = ids.into_iter().collect();
+                also.insert(o.id.clone(), ids.join(", "));
+            }
+            keep.push(o);
+        }
+        Ok((keep, also))
+    }
+
+    /// Whether row `o`'s end at `place` is booked by another member of its `same` group;
+    /// a refusal there leaves it as written (refcore's `m_residuals`, its `consol`). E §6.3,
+    /// L §6.1.
+    fn skipped_at(&mut self, m: &Reality, id: usize, o: &Obs, place: &str) -> Result<bool, Stop> {
+        let mover = Member::Obs(o.clone());
+        for lg in &o.legs {
+            let books = match self.same_ends(m, id, (&mover, lg)) {
+                Ok(books) => books,
+                Err(Stop::Refused(_)) => continue,
+                Err(stop) => return Err(stop),
+            };
+            let sides = [&lg.from, &lg.to].into_iter().zip(books);
+            if sides
+                .into_iter()
+                .any(|(end, book)| end.place() == Some(place) && book == EndBook::Skip)
+            {
+                return Ok(true);
+            }
+        }
+        Ok(false)
+    }
+
     /// Of the observations `good` whose links to instance `tid` stand, those two unjoined
     /// rows of one transfer make: each refused `RUN-RECORD <r> and <r'> state one transfer
     /// and both fulfil <instance>: state them same` (refcore's `unjoined_refused`). L §5.19
