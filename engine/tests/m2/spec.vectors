@@ -4972,4 +4972,129 @@ ask q: sum(x[j] for j in ks) for k in ks with x[k] = 9
 q (k = b): 10
   pinned: x[b] = 9
   cut 2026-06-30
+,16:spec/p60/pin_two,10:spec-sweep,17:run pin_two.tally,403:13:pin_two.tally,381:model p
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 P60 (G6's census of run-time stops): eval/pins.rs:396, a pin per binding tuple naming two bindings in one part"
+
+source s "s"
+index ks = [a, b]
+input z[k in ks, j in ks]: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  z = 1 "s"
+
+ask q: z[k, j] for k in ks, j in ks with z[k, j] = 5
+,,1:0,236:q (k = a, j = a): 5
+  pinned: z[a, a] = 5
+  cut 2026-06-30
+q (k = a, j = b): 5
+  pinned: z[a, b] = 5
+  cut 2026-06-30
+q (k = b, j = a): 5
+  pinned: z[b, a] = 5
+  cut 2026-06-30
+q (k = b, j = b): 5
+  pinned: z[b, b] = 5
+  cut 2026-06-30
+,22:spec/p60/key_range_num,10:spec-sweep,23:run key_range_num.tally,396:19:key_range_num.tally,368:model p
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 P60 (G6's census of run-time stops): load/rows.rs:463, a row's key range over a stepped range of values not integers"
+
+source s "s"
+input r[w in 0.5 .. 1.5 step 0.5]: int
+
+version rr
+  cite s
+  governs always
+  known 2026-01-01
+  r[0.5 .. 1.0] = 1 "s"
+  r[1.5] = 2 "s"
+
+ask q: r[1.0]
+,,1:0,22:q: 1
+  cut 2026-06-30
+,15:spec/p60/wa_for,10:spec-sweep,28:run wa_for.tally --ask d3 d4,1652:12:wa_for.tally,1630:model wa_for
+  tally 2
+  on 2026-08-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 P60 (G6's census of run-time stops): walk/flows.rs:54 and walk/plan.rs imprecise_part, flows for a period of moves whose at is a window crossing a law change, one whose for differs across it and one whose for doesn't; one whose when differs"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+input wl: date
+input pq: date
+input pf: date
+input pg: date
+input a1: money PLN
+input go: bool
+
+move md: transfers
+  on pq
+  at wl
+  for month_of(pf)
+  leg cash from world to konto amount a1
+
+move me: transfers
+  on pq
+  at wl
+  for month_of(pg)
+  leg cash from world to konto amount a1
+
+move mw: transfers
+  on pq
+  at wl
+  when go
+  leg cash from world to konto amount a1
+
+ask d3: flows(md, 2026-04-01 .. 2026-04-30, for 2026-03)
+ask d4: flows(md, 2026-04-01 .. 2026-04-30, for 2026-04)
+ask e5: flows(me, 2026-04-01 .. 2026-04-30, for 2026-05)
+ask e4: flows(me, 2026-04-01 .. 2026-04-30, for 2026-04)
+ask w: flows(mw, 2026-04-01 .. 2026-04-30)
+ask k: bal(konto, 2026-04-30)
+ask n: count(t in transfers over 2026-04)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  wl = window(2026-03-30, 2026-04-02) "s"
+  a1 = 1.00 PLN "s"
+  pg = 2026-05-15 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+
+version old
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-01-01
+  pq = 2026-04-10 "s"
+  pf = 2026-03-15 "s"
+  go = true "s"
+
+version new
+  cite s
+  governs 2026-04-01..
+  known 2026-01-01
+  pq = 2026-04-10 "s"
+  pf = 2026-04-15 "s"
+  go = false "s"
+,,1:0,268:d3: ?\"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of md\" (md)
+  unfulfilled: md
+  cut 2026-08-01
+d4: ?\"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of md\" (md)
+  unfulfilled: md
+  cut 2026-08-01
 ,
