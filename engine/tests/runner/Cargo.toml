@@ -171,3 +171,10 @@ test = false
 name = "m2_goldens"
 path = "milestone/m2_goldens.rs"
 test = false
+
+# Milestone M2's hindcasts (issue #167, DONE gate 4, hindcast.md): the fixtures H0-H5, H8, H9
+# over m2/hindcast/; `test = false` until M2 gates.
+[[test]]
+name = "m2_hindcasts"
+path = "milestone/m2_hindcasts.rs"
+test = false

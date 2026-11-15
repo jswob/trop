@@ -1,0 +1,19 @@
+fixture	ask	kind	move	from	to	field	value
+h1	back	matched	pay_a	2025-01	2025-12	difference	364.50 PLN
+h1	back29	matched	pay_a	2023-07	2025-12	difference	364.50 PLN
+h9	back	matched	pay_a	2025-01	2025-12	difference	364.50 PLN
+h9	back29	matched	pay_a	2023-07	2025-12	difference	364.50 PLN
+h2	replay	unexplained	-	2024-06	2024-06	observed	-2 340.00 PLN
+h2	back	unexplained	-	2024-06	2024-06	observed	-2 340.00 PLN
+h3	replay	matched	pay_a	2021-01	2025-12	difference	-1.00 PLN
+h3	replay	matched	pay_b	2021-01	2025-12	difference	-1.00 PLN
+h3	back	matched	pay_a	2021-01	2025-12	difference	-1.00 PLN
+h3	back	matched	pay_b	2021-01	2025-12	difference	-1.00 PLN
+h4	replay	matched	rent	2022-09	2025-12	timing	+2 days
+h4	back	matched	rent	2022-09	2025-12	timing	+2 days
+h9	replay	matched	rent	2022-09	2025-12	timing	+2 days
+h9	back	matched	rent	2022-09	2025-12	timing	+2 days
+h9	back29	matched	rent	2022-09	2025-12	timing	+2 days
+h5	replay	missing	sub	2024-11	2025-12	model	-49.99 PLN
+h5	back	missing	sub	2024-11	2025-12	model	-49.99 PLN
+h8	back	matched	pay_b	2025-05	2025-12	difference	215.00 PLN

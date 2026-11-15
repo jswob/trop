@@ -1,0 +1,128 @@
+model hindcast
+  tally 2
+  on 2026-01-05
+  start 2021-01-01
+  end 2025-12-31
+  note "T, M2 (issue #167), DONE gate 4: the hindcast fixtures' model M, the modeller's, one for every fixture (engine/spec/verification/hindcast.md, restated in tally 2's residual ledger, E §6.3). Written by gen.py with the ledger it is run over: synthetic, no bank record was ever used. S = 2021-01 (month 0), K = 2025-01 (month 48), E = 2026-01 (month 60); on is past the last statement's known day, so every row is known."
+
+index month = month 2021-01..2025-12
+index category = [food, transport, utilities, health, clothes, leisure]
+
+source contracts "umowy"
+source statements "wyciągi bankowe"
+source slips "paski płacowe"
+source statute "ustawa (syntetyczna)"
+unit PLN: currency minor 0.01
+
+kind wages: event certain
+  leg cash: PLN
+
+input bank: observed
+input gross_plan_a: money PLN
+input gross_plan_b: money PLN
+input slip_a[m in month]: money PLN
+input slip_b[m in month]: money PLN
+input tax_rate: num
+input law_truncates: bool
+input pay_dom_a: int
+input pay_dom_b: int
+input rent_amt: money PLN
+input rent_dom: int
+input invest_amt: money PLN
+input invest_dom: int
+input sub_amt: money PLN
+input sub_dom: int
+input spend_amt[c in category]: money PLN
+input spend_dom[c in category]: int
+
+place konto: accounts PLN lives 2020-01-01..
+place broker: accounts PLN lives 2020-01-01..
+place employer_a: outside lives 1900-01-01..
+place employer_b: outside lives 1900-01-01..
+place landlord: outside lives 1900-01-01..
+place streaming: outside lives 1900-01-01..
+place shops: outside lives 1900-01-01..
+place garage: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+def gross_a[m in month]: money PLN at start_of(m)
+  rule contract = gross_plan_a
+  rule slip beats contract v plan = slip_a[m] when not missing(slip_a[m])
+def gross_b[m in month]: money PLN at start_of(m)
+  rule contract = gross_plan_b
+  rule slip beats contract v plan = slip_b[m] when not missing(slip_b[m])
+def tax_a[m in month]: money PLN at start_of(m)
+  rule half_up = round(gross_a[m] * tax_rate, 1, half-up)
+  rule truncated beats half_up = round(gross_a[m] * tax_rate, 1, down) when law_truncates
+def tax_b[m in month]: money PLN at start_of(m)
+  rule half_up = round(gross_b[m] * tax_rate, 1, half-up)
+  rule truncated beats half_up = round(gross_b[m] * tax_rate, 1, down) when law_truncates
+def net_a[m in month]: money PLN = gross_a[m] - tax_a[m] at start_of(m)
+def net_b[m in month]: money PLN = gross_b[m] - tax_b[m] at start_of(m)
+
+move pay_a[m in month]: wages
+  on day_of(m, pay_dom_a)
+  at start_of(m)
+  leg cash from employer_a to konto amount net_a[m]
+move pay_b[m in month]: wages
+  on day_of(m, pay_dom_b)
+  at start_of(m)
+  leg cash from employer_b to konto amount net_b[m]
+move rent[m in month]: transfers
+  on day_of(m, rent_dom)
+  at start_of(m)
+  leg cash from konto to landlord amount rent_amt
+move invest[m in month]: transfers
+  on day_of(m, invest_dom)
+  at start_of(m)
+  leg cash from konto to broker amount invest_amt
+move sub[m in month]: transfers
+  on day_of(m, sub_dom)
+  at start_of(m)
+  leg cash from konto to streaming amount sub_amt
+move spend[c in category, m in month]: transfers
+  on day_of(m, spend_dom[c])
+  at start_of(m)
+  leg cash from konto to shops amount spend_amt[c]
+
+version plan
+  cite contracts
+  governs always
+  known 2021-01-01
+  gross_plan_a = 8770.00 PLN "umowa A"
+  gross_plan_b = 6450.00 PLN "umowa B"
+  pay_dom_a = 10 "umowa A"
+  pay_dom_b = 25 "umowa B"
+  rent_amt = 2900.00 PLN "umowa najmu"
+  rent_dom = 1 "umowa najmu"
+  invest_amt = 1500.00 PLN "zlecenie stałe"
+  invest_dom = 11 "zlecenie stałe"
+  sub_amt = 49.99 PLN "abonament"
+  sub_dom = 15 "abonament"
+  spend_amt[food] = 1240.00 PLN "budżet"
+  spend_dom[food] = 6 "budżet"
+  spend_amt[transport] = 310.00 PLN "budżet"
+  spend_dom[transport] = 8 "budżet"
+  spend_amt[utilities] = 455.20 PLN "budżet"
+  spend_dom[utilities] = 12 "budżet"
+  spend_amt[health] = 120.00 PLN "budżet"
+  spend_dom[health] = 20 "budżet"
+  spend_amt[clothes] = 260.00 PLN "budżet"
+  spend_dom[clothes] = 22 "budżet"
+  spend_amt[leisure] = 380.00 PLN "budżet"
+  spend_dom[leisure] = 26 "budżet"
+  opening[konto] = 5000.00 PLN at 2021-01-01 start "wyciąg"
+  opening[broker] = 0.00 PLN at 2021-01-01 start "wyciąg"
+
+version tax_law
+  cite statute
+  governs always
+  known 2021-01-01
+  tax_rate = 0.17 "art. 1: podatek płacowy"
+  law_truncates = false "art. 2: zaokrąglenie do pełnych złotych, połowa w górę"
+
+ask replay: residuals konto 2021-01..2025-12
+ask back: residuals konto 2021-01..2025-12 as known 2025-01-02
+ask back29: residuals konto 2021-01..2025-12 as known 2023-07-02
+ask mask_bal: bal(konto, 2025-12-31) as known 2025-01-02
+ask mask_net: net_b[2025-09] as known 2025-01-02
