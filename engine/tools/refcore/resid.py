@@ -206,10 +206,12 @@ def m_residuals(self, place, span, by, ctx, unit=None):
     # rows stated `same` are one movement (L §5.19, §6.1 SF-25): where their legs at x agree it is booked once, by the
     # latest of them, and listed once; where they disagree each shows (E §6.1)
     also = {}
+    hole_at = {}     # a row whose same group's rows both book x and disagree there: its observed at x, the HOLE-SAME
     if getattr(w, 'same_pairs', None) is not None and w.same_pairs():
         keep = []
         pairs = w.same_pairs()
         ids_in = set(o.id for o in obs)
+        kept_groups = set()
         for o in obs:
             skip = False
             for lg in o.legs:
@@ -228,6 +230,16 @@ def m_residuals(self, place, span, by, ctx, unit=None):
                             cs = (None, None)
                         if cs[si] == 'skip':
                             skip = True
+                        elif isinstance(cs[si], Hole) and o.id in pairs:
+                            # rows that both book x and disagree are one hole movement there (L §6.1, HOLE-SAME), so
+                            # the ledger lists it once, on one line (E §6.3), its observed that hole
+                            g = tuple(pairs[o.id][0])
+                            if g in kept_groups:
+                                skip = True
+                            else:
+                                hole_at[o.id] = cs[si]
+            if not skip and o.id in hole_at:
+                kept_groups.add(tuple(pairs[o.id][0]))
             if not skip:
                 keep.append(o)
                 pr = pairs.get(o.id)
@@ -235,6 +247,10 @@ def m_residuals(self, place, span, by, ctx, unit=None):
                     # "names both rows as its evidence" (E §6.3)
                     also[o.id] = sorted(x for x in pr[0] if x in ids_in)
         obs = keep
+
+    def obs_flow(o):
+        h = hole_at.get(o.id)
+        return h if h is not None else self_flow(o.legs, place, unit)
     by_target = {}
     by_adj = {}
     lone = []
@@ -294,7 +310,7 @@ def m_residuals(self, place, span, by, ctx, unit=None):
             continue
         ob = None
         for o in os:
-            ob = _add(ob, self_flow(o.legs, place, unit))
+            ob = _add(ob, obs_flow(o))
         diff = _sub(ob, mdl)
         grp = (month_period(dd.year, dd.month), field_group(os, i.move.id))
         timing = ', '.join(sorted(set('%+d days' % (o.day - dd).days for o in os)))
@@ -332,7 +348,7 @@ def m_residuals(self, place, span, by, ctx, unit=None):
             mdl = dl if isinstance(dl, Hole) else sgn * dl.q
             ob = None
             for o in os:
-                ob = _add(ob, self_flow(o.legs, place, unit))
+                ob = _add(ob, obs_flow(o))
             diff = _sub(ob, mdl)
             dd = a.day
             grp = (month_period(dd.year, dd.month), field_group(os, a.inst.move.id))
@@ -351,7 +367,7 @@ def m_residuals(self, place, span, by, ctx, unit=None):
             mdl = self_flow(i.legs, place, unit)
             ob = None
             for o in os:
-                ob = _add(ob, self_flow(o.legs, place, unit))
+                ob = _add(ob, obs_flow(o))
             diff = _sub(ob, mdl)
             grp = (month_period(dd.year, dd.month), field_group(os, i.move.id))
             timing = ', '.join(sorted(set('%+d days' % (o.day - dd).days for o in os)))
@@ -377,7 +393,7 @@ def m_residuals(self, place, span, by, ctx, unit=None):
             # that instance's
             continue
         # an observation that fulfils nothing, or whose instance or adjustment the model at K doesn't hold (E §6.3)
-        ob = self_flow(o.legs, place, unit)
+        ob = obs_flow(o)
         if by is not None:
             g = obs_field(o, by) or 'unexplained'
         else:
