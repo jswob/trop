@@ -1,0 +1,63 @@
+model hh
+  tally 2
+  on 2027-02-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6 vectors: G6's clocks: K after E, every day past; bal after E HOLE-POSTRUN, before S HOLE-PRERUN"
+
+source plan "plan"
+source bk "bank"
+unit PLN: currency minor 0.01
+kind groceries: transfers
+  attr cat: text
+input bank: observed
+input g_amt: money PLN
+input g_dom: int
+input g_cat: text
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+move groc[m in months]: groceries
+  on day_of(m, g_dom)
+  at start_of(m)
+  leg cash from konto to world amount g_amt
+  attr cat = g_cat
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2025-01-01
+  g_amt = 500.00 PLN "plan"
+  g_dom = 5 "plan"
+  g_cat = "plan" "plan"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "wyciąg"
+
+version statement_02
+  cite bk
+  governs 2026-02..2026-03
+  known 2026-04-02
+  covers konto
+  pad konto from unexplained
+  bank[r1] = (on: 2026-02-05, kind: groceries, leg cash from konto to world amount 300.00 PLN, cat: "food", fulfils: groc[2026-02]) "l1"
+  bank[r2] = (on: 2026-02-06, kind: groceries, leg cash from konto to world amount 250.00 PLN, cat: "food", fulfils: groc[2026-02]) "l2"
+  bank[r3] = (on: 2026-03-05, kind: groceries, leg cash from konto to world amount 300.00 PLN, cat: "food", fulfils: groc[2026-03]) "l3"
+  bank[r4] = (on: 2026-03-06, kind: groceries, leg cash from konto to world amount 250.00 PLN, cat: "home", fulfils: groc[2026-03]) "l4"
+  bank[r5] = (on: 2026-03-07, kind: groceries, leg cash from konto to world amount 5.00 PLN, cat: "home") "l5"
+  stated[konto] = 8 000.00 PLN at 2026-03-31 end "saldo"
+
+ask k1: bal(konto, 2026-12-31)
+ask k2: bal(konto, 2026-03-31)
+ask k3: cut
+ask k4: sum(t.cash.amount for t in groceries over 2026-03)
+ask k5: bal(konto, 2027-01-05)
+ask k6: bal(konto, 2025-12-31)
+ask k7: flows(konto, 2026-02)
+ask k8: bal(konto, 2026-12-31) as known 2026-03-01
+ask k9: bal(konto, 2026-03-31) as known 2026-05-01
+ask k10: count(t in groceries over 2026-02)
+ask k11: bank[r5]
+ask k12: bal(konto, 2026-12-31) as known 2027-02-01
+ask k13: bal(konto, 2026-12-31) as known 2025-06-01
+ask k14: groc[2026-02].cash.amount
+ask k15: sum(t.cash.amount for t in groceries over 2026)

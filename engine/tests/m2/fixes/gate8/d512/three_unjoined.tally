@@ -1,0 +1,66 @@
+model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+  note "T, M2 gate 8 run 43690242450 on d512fe7b: three unjoined rows of one transfer (book/same.rs unjoined, refuse_once)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input d15: int
+input d10: int
+input amt: money PLN
+kind wages: transfers
+kind shop: transfers
+kind twos: event certain
+  leg cash: PLN
+  leg fee: PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1000.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+  d15 = 15 "s"
+  d10 = 10 "s"
+  amt = 500.00 PLN "s"
+
+move save[m in months]: transfers
+  on day_of(m, d15)
+  leg cash from konto to sav amount amt
+
+ask l_k: residuals konto 2026-03
+ask l_s: residuals sav 2026-03
+ask b_k: bal(konto, 2026-03-31)
+ask b_s: bal(sav, 2026-03-31)
+ask q_obs: observed(save[2026-03]).cash.amount
+ask r_b: bank[b1].cash.amount
+ask r_c: bank[c1].cash.amount
+ask r_a: bank[a1].cash.amount
+ask f_s: flows(sav, 2026-03-01 .. 2026-03-31)
+
+version st_konto
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[a1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 300.00 PLN, fulfils: save[2026-03]) "a1"
+
+version st_sav
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers sav
+  bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 300.00 PLN, fulfils: save[2026-03]) "b1"
+
+version st_sav2
+  cite s
+  governs 2026-03
+  known 2026-04-04
+  covers sav
+  bank[c1] = (on: 2026-03-16, kind: transfers, leg cash from konto to sav amount 300.00 PLN, fulfils: save[2026-03]) "c1"

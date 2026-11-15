@@ -28,12 +28,13 @@ mod tests {
     ];
 
     /// The groups of `m2/spec.vectors`, one `#[test]` each.
-    const SPEC_GROUPS: [&str; 5] = [
+    const SPEC_GROUPS: [&str; 6] = [
         "spec-forms",
         "spec-explain",
         "spec-windows",
         "spec-records",
         "spec-ledger",
+        "spec-sweep",
     ];
 
     /// Runs every vector of `group` in `store` on the engine, less the held ones, and holds it
@@ -109,7 +110,9 @@ mod tests {
     }
 
     /// The sweep group's: `add_business` past the day range with a hole on the way (P5, P15)
-    /// and a four-digit literal where money is expected (P16), held for #169.
+    /// and a four-digit literal where money is expected (P16), held for #169; G6's partial
+    /// answers refcore prints linear (`pa1` q6, q7) and an observed row's `none` field (`obsrow`
+    /// o5), held for #169.
     #[test]
     fn m2_fixes_sweep() {
         group_holds(VECTORS, "fixes-sweep");
@@ -164,5 +167,13 @@ mod tests {
     #[test]
     fn m2_fixes_spec_windows() {
         group_holds(SPEC, "spec-windows");
+    }
+
+    /// The spec's answers for G6's held probes (L §5.18 partial answers, L §8.4 an observed
+    /// row's `none` field) and for P60's census forms refcore can't run: an ask's `law`,
+    /// `as known` and `with` formed per its own `for`'s binding tuple (L §5.18, §5.11).
+    #[test]
+    fn m2_fixes_spec_sweep() {
+        group_holds(SPEC, "spec-sweep");
     }
 }
