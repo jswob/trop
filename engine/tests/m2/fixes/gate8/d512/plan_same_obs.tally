@@ -1,0 +1,49 @@
+model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+  note "T, M2 gate 8 run 43690242450 on d512fe7b: a plan instance stated same as a row that disagrees (walk/day.rs book_leg; book/same.rs same_end, book_key)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input d15: int
+input d10: int
+input amt: money PLN
+kind wages: transfers
+kind shop: transfers
+kind twos: event certain
+  leg cash: PLN
+  leg fee: PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1000.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+  d15 = 15 "s"
+  d10 = 10 "s"
+  amt = 500.00 PLN "s"
+
+move pay[m in months]: wages
+  on day_of(m, d10)
+  leg cash from world to konto amount amt
+
+ask b_k: bal(konto, 2026-03-31)
+ask f_k: flows(konto, 2026-03-01 .. 2026-03-31)
+ask l_k: residuals konto 2026-03
+ask n_t: count(t in transfers over 2026-03)
+ask n_i: count(t in wages over 2026-03)
+ask s_i: sum(t.cash.amount for t in wages over 2026-03)
+ask n_m: count(t in transfers over 2026-03)
+
+version st
+  cite s
+  known 2026-04-02
+  bank[r1] = (on: 2026-03-10, kind: wages, leg cash from world to konto amount 450.00 PLN) "r1"
+  same bank[r1] = pay[2026-03]

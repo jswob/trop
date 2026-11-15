@@ -1,0 +1,49 @@
+model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+  note "T, M2 gate 8 run 43690242450 on d512fe7b: two rows of one version covering both places fulfil one instance (book/same.rs one_transfer)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input d15: int
+input d10: int
+input amt: money PLN
+kind wages: transfers
+kind shop: transfers
+kind twos: event certain
+  leg cash: PLN
+  leg fee: PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1000.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+  d15 = 15 "s"
+  d10 = 10 "s"
+  amt = 500.00 PLN "s"
+
+
+move save[m in months]: transfers
+  on day_of(m, d15)
+  leg cash from konto to sav amount amt
+
+ask l_k: residuals konto 2026-03
+ask b_k: bal(konto, 2026-03-31)
+ask b_s: bal(sav, 2026-03-31)
+ask q_obs: observed(save[2026-03]).cash.amount
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto, sav
+  bank[a1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 100.00 PLN, fulfils: save[2026-03]) "a1"
+  bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 200.00 PLN, fulfils: save[2026-03]) "a2"
