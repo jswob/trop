@@ -2017,3 +2017,5 @@ fixes/gate8/m2_g8b_aw	fixes-gate8		engine/tests/m2/fixes/gate8/g8b	engine/tests/
 fixes/gate8/m2_g8b_aw2	fixes-gate8		engine/tests/m2/fixes/gate8/g8b	engine/tests/m2/fixes/gate8/g8b/aw2.tally			-
 fixes/gate8/m2_g8b_ot	fixes-gate8		engine/tests/m2/fixes/gate8/g8b	engine/tests/m2/fixes/gate8/g8b/ot.tally			-
 fixes/gate8/m2_g8b_ot2	fixes-gate8		engine/tests/m2/fixes/gate8/g8b	engine/tests/m2/fixes/gate8/g8b/ot2.tally			-
+fixes/gate8/m2_g8c_b2	fixes-gate8		engine/tests/m2/fixes/gate8/g8c	engine/tests/m2/fixes/gate8/g8c/b2.tally			-
+fixes/gate8/m2_g8c_b1f	fixes-gate8		engine/tests/m2/fixes/gate8/g8c	engine/tests/m2/fixes/gate8/g8c/b1f.tally			-

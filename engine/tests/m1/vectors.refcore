@@ -254320,4 +254320,282 @@ t_to: sav
   cut 2026-04-10
 warning: WARN-NEGATIVE konto is below zero from 2026-03-17
 warning: WARN-UNREAD place unexplained is read by nothing
+,21:fixes/gate8/m2_g8c_b2,11:fixes-gate8,12:run b2.tally,2188:8:b2.tally,2171:model b2
+  tally 2
+  on 2026-04-15
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 gate 8 run 43749994847 on 205157a2: a sweep decision run on the 18th books its leg 33 days later, in the next month; a projection from January read day by day across the month's end, a kept walk continued past the day it walked to (walk/fork.rs booked_ahead, continue_with: the legs booked ahead carried)"
+
+source card "invented for F6's twin"
+
+unit DUK: currency minor 0.01
+
+axis pay_reading
+  low "the lower pay"
+  high "the higher pay"
+
+index month = month 2026-01..2026-12
+
+place konto: accounts DUK lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input pay_low: money DUK
+
+input pay_high: money DUK
+
+input rent: money DUK
+
+input floor: money DUK
+
+input share: num
+
+input late: int
+
+input rent_off: int
+
+input sweep_off: int
+
+input reach: int
+
+def pay: money DUK at reader
+  rule base = pay_low
+  rule hi beats base = pay_high when pay_reading == high
+
+def room[m in month]: money DUK = min(bal(konto, d) from start_of(m) for d in start_of(m) .. add_days(start_of(m), reach) step 1 day) at start_of(m)
+
+move salary[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount pay
+
+move rent_pay[m in month]: transfers
+  on add_days(start_of(m), rent_off)
+  at start_of(m)
+  leg cash from konto to world amount rent
+
+move sweep[m in month]: transfers
+  on add_days(start_of(m), sweep_off)
+  at start_of(m)
+  reads konto
+  leg cash from konto to world amount round(max(0, room[m] - floor) * share, minor(DUK), down) on add_days(start_of(m), late)
+
+ask b2_min: min(bal(konto, d) from 2026-01-10 for d in 2026-01-10 .. 2026-02-10 step 1 day)
+ask b2_all: bal(konto, d) from 2026-01-10 for d in 2026-01-28 .. 2026-02-06 step 1 day
+ask b2_one: bal(konto, 2026-02-05) from 2026-01-10
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  pay_low = 1000.00
+  pay_high = 1300.00
+  rent = 900.00
+  floor = 200.00
+  share = 0.5
+  late = 33
+  rent_off = 9
+  sweep_off = 17
+  reach = 15
+  opening[konto] = 500.00 at 2026-01-01 start
+
+version later
+  cite card
+  governs 2026-05-01..
+  known 2026-03-01
+  replace rent = 950.00 "the rent rose"
+,,1:0,3164:b2_all (d = 2026-01-28) [pay_reading = low]: 600.00 DUK
+  reading: pay_reading = low
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+b2_all (d = 2026-01-28) [pay_reading = high]: 900.00 DUK
+  reading: pay_reading = high
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+b2_all (d = 2026-01-29) [pay_reading = low]: 600.00 DUK
+  reading: pay_reading = low
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+b2_all (d = 2026-01-29) [pay_reading = high]: 900.00 DUK
+  reading: pay_reading = high
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+b2_all (d = 2026-01-30) [pay_reading = low]: 600.00 DUK
+  reading: pay_reading = low
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+b2_all (d = 2026-01-30) [pay_reading = high]: 900.00 DUK
+  reading: pay_reading = high
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+b2_all (d = 2026-01-31) [pay_reading = low]: 600.00 DUK
+  reading: pay_reading = low
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+b2_all (d = 2026-01-31) [pay_reading = high]: 900.00 DUK
+  reading: pay_reading = high
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+b2_all (d = 2026-02-01) [pay_reading = low]: 1 600.00 DUK
+  reading: pay_reading = low
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+b2_all (d = 2026-02-01) [pay_reading = high]: 2 200.00 DUK
+  reading: pay_reading = high
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+b2_all (d = 2026-02-02) [pay_reading = low]: 1 600.00 DUK
+  reading: pay_reading = low
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+b2_all (d = 2026-02-02) [pay_reading = high]: 2 200.00 DUK
+  reading: pay_reading = high
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+b2_all (d = 2026-02-03) [pay_reading = low]: 900.00 DUK
+  reading: pay_reading = low
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+b2_all (d = 2026-02-03) [pay_reading = high]: 1 200.00 DUK
+  reading: pay_reading = high
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+b2_all (d = 2026-02-04) [pay_reading = low]: 900.00 DUK
+  reading: pay_reading = low
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+b2_all (d = 2026-02-04) [pay_reading = high]: 1 200.00 DUK
+  reading: pay_reading = high
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+b2_all (d = 2026-02-05) [pay_reading = low]: 900.00 DUK
+  reading: pay_reading = low
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+b2_all (d = 2026-02-05) [pay_reading = high]: 1 200.00 DUK
+  reading: pay_reading = high
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+b2_all (d = 2026-02-06) [pay_reading = low]: 900.00 DUK
+  reading: pay_reading = low
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+b2_all (d = 2026-02-06) [pay_reading = high]: 1 200.00 DUK
+  reading: pay_reading = high
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+b2_min [pay_reading = low]: 0.00 DUK
+  reading: pay_reading = low
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+b2_min [pay_reading = high]: 300.00 DUK
+  reading: pay_reading = high
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+b2_one [pay_reading = low]: 900.00 DUK
+  reading: pay_reading = low
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+b2_one [pay_reading = high]: 1 200.00 DUK
+  reading: pay_reading = high
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+,22:fixes/gate8/m2_g8c_b1f,11:fixes-gate8,13:run b1f.tally,2169:9:b1f.tally,2151:model b1f
+  tally 2
+  on 2026-04-15
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 gate 8 run 43749994847 on 205157a2: five projections from different days read in turn across a month's end (past the four kept walks the one kept first is freed), then the first read again (walk/fork.rs free_projection: a freed walk's key goes with it)"
+
+source card "invented for F6's twin"
+
+unit DUK: currency minor 0.01
+
+axis pay_reading
+  low "the lower pay"
+  high "the higher pay"
+
+index month = month 2026-01..2026-12
+
+place konto: accounts DUK lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input pay_low: money DUK
+
+input pay_high: money DUK
+
+input rent: money DUK
+
+input floor: money DUK
+
+input share: num
+
+input late: int
+
+input rent_off: int
+
+input sweep_off: int
+
+input reach: int
+
+def pay: money DUK at reader
+  rule base = pay_low
+  rule hi beats base = pay_high when pay_reading == high
+
+def room[m in month]: money DUK = min(bal(konto, d) from start_of(m) for d in start_of(m) .. add_days(start_of(m), reach) step 1 day) at start_of(m)
+
+move salary[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount pay
+
+move rent_pay[m in month]: transfers
+  on add_days(start_of(m), rent_off)
+  at start_of(m)
+  leg cash from konto to world amount rent
+
+move sweep[m in month]: transfers
+  on add_days(start_of(m), sweep_off)
+  at start_of(m)
+  reads konto
+  leg cash from konto to world amount round(max(0, room[m] - floor) * share, minor(DUK), down) on add_days(start_of(m), late)
+
+ask f_then: min(bal(konto, d) from 2026-02-01 + bal(konto, d) from 2026-02-02 + bal(konto, d) from 2026-02-03 + bal(konto, d) from 2026-02-04 + bal(konto, d) from 2026-02-05 for d in 2026-02-20 .. 2026-03-10 step 1 day) + bal(konto, 2026-03-20) from 2026-02-01
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  pay_low = 1000.00
+  pay_high = 1300.00
+  rent = 900.00
+  floor = 200.00
+  share = 0.5
+  late = 25
+  rent_off = 9
+  sweep_off = 17
+  reach = 15
+  opening[konto] = 500.00 at 2026-01-01 start
+
+version later
+  cite card
+  governs 2026-05-01..
+  known 2026-03-01
+  replace rent = 950.00 "the rent rose"
+,,1:0,424:f_then [pay_reading = low]: 200.00 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+f_then [pay_reading = high]: 1 250.00 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
 ,
