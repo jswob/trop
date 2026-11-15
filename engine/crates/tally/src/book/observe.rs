@@ -394,17 +394,32 @@ impl Engine {
             if let Some(lg) = lack
                 && !m.kind_legs(&o.kind).is_empty()
             {
-                errs.push((
-                    o.id.clone(),
-                    record(format!(
-                        "observation {} fulfils {tid} and lacks its leg {}",
-                        o.id, lg.name
-                    )),
+                let err = record(format!(
+                    "observation {} fulfils {tid} and lacks its leg {}",
+                    o.id, lg.name
                 ));
+                // what reads the instance's realised movement rests on the refused record
+                // (L §8.4)
+                self.bad_links
+                    .entry((cut, tid.to_owned()))
+                    .or_insert_with(|| err.clone());
+                errs.push((o.id.clone(), err));
                 continue;
             }
-            good.push(o.id.clone());
+            good.push(o);
         }
+        let unjoined = self.unjoined(m, tid, &good, cut)?;
+        if let Some((_, err)) = unjoined.first() {
+            self.bad_links
+                .entry((cut, tid.to_owned()))
+                .or_insert_with(|| err.clone());
+        }
+        let good = good
+            .into_iter()
+            .filter(|o| !unjoined.iter().any(|(id, _)| *id == o.id))
+            .map(|o| o.id)
+            .collect();
+        errs.extend(unjoined);
         Ok((good, errs))
     }
 

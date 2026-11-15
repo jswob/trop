@@ -275,7 +275,104 @@ fn amount_text(m: &Reality, lg: &LegVal) -> Result<String, Stop> {
     }
 }
 
+/// The places an observed row's legs name. L §5.19.
+fn row_places(o: &Obs) -> BTreeSet<&str> {
+    o.legs
+        .iter()
+        .flat_map(|lg| [lg.from.place(), lg.to.place()])
+        .flatten()
+        .collect()
+}
+
 impl Engine {
+    /// Of the observations `good` whose links to instance `tid` stand, those two unjoined
+    /// rows of one transfer make: each refused `RUN-RECORD <r> and <r'> state one transfer
+    /// and both fulfil <instance>: state them same` (refcore's `unjoined_refused`). L §5.19
+    /// One movement on two statements, §8.4.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::covering`].
+    pub(crate) fn unjoined(
+        &mut self,
+        m: &Reality,
+        tid: &str,
+        good: &[Obs],
+        cut: Day,
+    ) -> Result<Vec<(String, Refusal)>, Stop> {
+        let mut bad: Vec<(String, Refusal)> = Vec::new();
+        if good.len() < 2 {
+            return Ok(bad);
+        }
+        let groups = same_groups(m);
+        for (i, a) in good.iter().enumerate() {
+            for b in good.iter().skip(i).skip(1) {
+                if !self.one_transfer(m, &groups, (a, b), cut)? {
+                    continue;
+                }
+                let err = Refusal::new(
+                    Code::Run(Run::Record),
+                    format!(
+                        "{} and {} state one transfer and both fulfil {tid}: state them same",
+                        a.id, b.id
+                    ),
+                );
+                // a row keeps the first refusal it meets
+                let fresh: Vec<&Obs> = [a, b]
+                    .into_iter()
+                    .filter(|o| !bad.iter().any(|(id, _)| *id == o.id))
+                    .collect();
+                bad.extend(fresh.into_iter().map(|o| (o.id.clone(), err.clone())));
+            }
+        }
+        Ok(bad)
+    }
+
+    /// Whether rows `a` and `b` of different versions, not stated `same`, name the same two
+    /// places, each version covering a different one of them: each would book one end and
+    /// count the whole (refcore's `unjoined_refused`, its test). L §5.19.
+    fn one_transfer(
+        &mut self,
+        m: &Reality,
+        groups: &BTreeMap<String, Vec<String>>,
+        (a, b): (&Obs, &Obs),
+        cut: Day,
+    ) -> Result<bool, Stop> {
+        if a.version == b.version || groups.get(&a.id).is_some_and(|g| g.contains(&b.id)) {
+            return Ok(false);
+        }
+        let places = row_places(a);
+        if places.len() != 2 || row_places(b) != places {
+            return Ok(false);
+        }
+        let (in_a, in_b) = (
+            self.row_covers(m, a, &places, cut)?,
+            self.row_covers(m, b, &places, cut)?,
+        );
+        Ok(in_a.iter().any(|x| in_b.iter().any(|y| x != y)))
+    }
+
+    /// Of places `places`, those row `o`'s own version covers on its legs' days (refcore's
+    /// `unjoined_refused`, `covered`). L §5.19 Coverage.
+    fn row_covers(
+        &mut self,
+        m: &Reality,
+        o: &Obs,
+        places: &BTreeSet<&str>,
+        cut: Day,
+    ) -> Result<BTreeSet<String>, Stop> {
+        let mut out = BTreeSet::new();
+        for lg in &o.legs {
+            let day = lg.day.day().unwrap_or(o.day);
+            for p in places {
+                if self.covering(m, p, day, cut)?.contains(&o.version) {
+                    out.insert((*p).to_owned());
+                }
+            }
+        }
+        Ok(out)
+    }
+
     /// The plan instances and decisions stated `same` as an observation the cut sees: the
     /// group is one movement, observed, so none of them is unfulfilled or open (refcore's
     /// `same_observed`). L §6.1, §5.19.

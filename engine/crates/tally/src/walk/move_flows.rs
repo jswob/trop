@@ -211,6 +211,10 @@ impl Engine {
         acc: &mut Counted,
     ) -> Result<(), Stop> {
         let obs = self.standing_in(m, i, cut)?;
+        if let Some(bad) = self.bad_links.get(&(cut, i.id.clone())) {
+            // its realised movement rests on a refused record (L §5.19, §8.4)
+            return Err(Stop::Refused(bad.clone()));
+        }
         if obs.is_empty() {
             acc.met.entries.insert(Entry {
                 word: "open",
