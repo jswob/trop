@@ -7,8 +7,8 @@
 //! without debug assertions (R-51); counting never changes what a run prints (gate 12); a
 //! count that would pass `u64` prints `overflow`, never a clamped figure (R-23).
 //!
-//! Parts groups, walks shared and cells recomputed locally stay 0 at S: no place keeps parts,
-//! no timeline forks and no worker runs (BUILD-ORDER § S).
+//! Parts groups and cells recomputed locally stay 0: no place keeps parts and no worker runs
+//! yet (BUILD-ORDER § S); walks shared counts fence F6's continued walks (P §2.5, from M2).
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -28,6 +28,9 @@ pub(crate) enum Unit {
     NonEmptyDay,
     /// A walk made: a cut's main walk, or a projection's own (E §3.3, §4.3).
     Walk,
+    /// A walk shared: a projection's read that took a kept walk's days, which the unforked
+    /// walk walks again (fence F6, P §2.5).
+    WalkShared,
     /// A movement leg written to a place's log.
     Leg,
     /// An exact value an expression node made: a number or money.
@@ -85,6 +88,8 @@ pub struct Counters {
     nonempty_days: Count,
     /// Walks made.
     walks: Count,
+    /// Walks shared.
+    walks_shared: Count,
     /// Legs booked.
     legs_booked: Count,
     /// Exact values made.
@@ -104,6 +109,7 @@ impl Default for Counters {
             days_stepped: Count::ZERO,
             nonempty_days: Count::ZERO,
             walks: Count::ZERO,
+            walks_shared: Count::ZERO,
             legs_booked: Count::ZERO,
             num_results: Count::ZERO,
         }
@@ -120,6 +126,7 @@ impl Counters {
             Unit::Day => self.days_stepped.bump(),
             Unit::NonEmptyDay => self.day_with_acts(),
             Unit::Walk => self.walks.bump(),
+            Unit::WalkShared => self.walks_shared.bump(),
             Unit::Leg => self.legs_booked.bump(),
             Unit::NumResult => self.num_results.bump(),
         }
@@ -165,6 +172,7 @@ impl Counters {
         self.days_stepped.plus(other.days_stepped);
         self.nonempty_days.plus(other.nonempty_days);
         self.walks.plus(other.walks);
+        self.walks_shared.plus(other.walks_shared);
         self.legs_booked.plus(other.legs_booked);
         self.num_results.plus(other.num_results);
     }
@@ -181,7 +189,7 @@ impl Counters {
         format!(
             "stats: ev={} def_hits={} def_misses={} def_unwound={} reads={} distinct_reads={} \
              days_stepped={} nonempty_days={} walks={} legs_booked={} parts_groups=0 \
-             walks_shared=0 recomputed_locally=0 num_results={}\n",
+             walks_shared={} recomputed_locally=0 num_results={}\n",
             self.ev.text(),
             self.def_hits.text(),
             self.def_misses.text(),
@@ -192,6 +200,7 @@ impl Counters {
             self.nonempty_days.text(),
             self.walks.text(),
             self.legs_booked.text(),
+            self.walks_shared.text(),
             self.num_results.text(),
         )
     }

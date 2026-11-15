@@ -25,7 +25,7 @@ mod oracle;
 pub use api::run_faulted;
 pub use api::{
     Answer, Asks, Given, Pin, Request, Source, load_report, reprint, reprint_in, run, run_in,
-    run_with_lows, run_with_memo,
+    run_with_forks, run_with_how, run_with_lows, run_with_memo,
 };
 #[cfg(feature = "counters")]
 pub use counters::Counters;
@@ -216,6 +216,7 @@ pub mod walk {
     mod agenda;
     mod day;
     mod flows;
+    mod fork;
     mod legs;
     mod lows;
     mod modelled;
@@ -235,6 +236,8 @@ pub mod walk {
     #[cfg(feature = "fault-injection")]
     pub use day::Fault;
     pub(crate) use flows::span_last;
+    pub use fork::Forks;
+    pub(crate) use fork::Parked;
     pub(crate) use lows::Trees;
     pub use lows::{Lows, RangeMinimum};
     pub use order::{Run, WalkAt};

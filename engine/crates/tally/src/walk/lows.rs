@@ -1060,7 +1060,7 @@ version rise
         };
         let expr = exprs.first().expect("a value");
         let mut engine = Engine::new(m.on)
-            .with_how((Memo::Classes, lows))
+            .with_how((Memo::Classes, lows, crate::walk::Forks::Off))
             .for_ask(ask);
         let mut ctx = Ctx::new(None, m.on).in_world(m.scenarios.model_world());
         ctx.unc = ask.uncertain;
@@ -1100,7 +1100,7 @@ version rise
         let first = ids.first().expect("an ask");
         let holder = m.asks.iter().find(|a| a.id == *first).expect("the ask");
         let mut engine = Engine::new(m.on)
-            .with_how((Memo::Classes, lows))
+            .with_how((Memo::Classes, lows, crate::walk::Forks::Off))
             .for_ask(holder);
         let ctx = Ctx::new(None, m.on).in_world(m.scenarios.model_world());
         engine.enter_timeline(m, ctx).expect("its timeline");

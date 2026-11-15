@@ -537,6 +537,12 @@ pub struct Engine {
     /// How a written projection's common case is read: fence F5's tree, or its plain twin,
     /// the projection's own walk (E §4.3, P §2.3).
     pub(crate) lows: crate::walk::Lows,
+    /// Whether a projection's walk read again through a later day continues from where it
+    /// stood: fence F6, or its plain twin, a new walk per read (P §2.5; `walk/fork.rs`).
+    pub(crate) forks: crate::walk::Forks,
+    /// The projections' walks the timeline in force keeps past their reads, for fence F6
+    /// (P §2.5, §3.5; `walk/fork.rs`).
+    pub(crate) parked: crate::walk::Parked,
     /// The fault planted in the run, while it waits for its day: none once planted, and
     /// always none without it (INTERFACE §4, pick P8).
     #[cfg(feature = "fault-injection")]
@@ -657,6 +663,8 @@ impl Engine {
             walk_warnings: Vec::new(),
             proj_walks: BTreeMap::new(),
             lows: crate::walk::Lows::Tree,
+            forks: crate::walk::Forks::On,
+            parked: crate::walk::Parked::default(),
             #[cfg(feature = "fault-injection")]
             plant: None,
             trees: crate::walk::Trees::default(),
@@ -729,12 +737,18 @@ impl Engine {
     /// The engine computing as its fences say: keeping its cells as `memo` says, shared by a
     /// law date class or at each exact law date, the plain twin (E §3.2, P §3.3); and reading
     /// a written projection's common case as `lows` says, from fence F5's tree or through the
-    /// projection's own walk, the plain twin (E §4.3, P §2.3).
+    /// projection's own walk, the plain twin (E §4.3, P §2.3); and continuing a projection's
+    /// walk read again through a later day as `forks` says, fence F6, or walking it anew, the
+    /// plain twin (P §2.5).
     #[must_use]
-    pub fn with_how(self, (memo, lows): (Memo, crate::walk::Lows)) -> Engine {
+    pub fn with_how(
+        self,
+        (memo, lows, forks): (Memo, crate::walk::Lows, crate::walk::Forks),
+    ) -> Engine {
         Engine {
             cells: Cells::new(memo),
             lows,
+            forks,
             ..self
         }
     }

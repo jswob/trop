@@ -17,6 +17,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::agenda::{Act, Mv};
+use super::fork::Forks;
 use super::plan::{Amount, Dated, DayWindow, End, Inst, LegVal, Status, invariant, qty_value};
 use super::point::At;
 use super::readings::Broke;
@@ -101,7 +102,8 @@ impl Engine {
     }
 
     /// [`Engine::advance_to`], what it reads the walk's own, not the reading cell's: every
-    /// cell that reads the walk shares it (E §3.2, §3.3). A walk that failed on a day refuses
+    /// cell that reads the walk shares it (E §3.2, §3.3); once its plan pass is done, a
+    /// projection's walk may continue a kept one (`fork.rs`, P §2.5). A walk that failed on a day refuses
     /// the reads that reach it, and a read through an earlier day reads the walk as it stood
     /// there, so a read's answer is the same whichever read walked the walk first (pick P54,
     /// #127). E §4.2, §4.3, §9 item 4; L §8.4.
@@ -111,7 +113,9 @@ impl Engine {
             let step = match &walk.progress {
                 Progress::Done => return Ok(()),
                 Progress::Failed(stop, on) => return before_failure(stop, *on, last),
-                Progress::Planning => self.plan_alone(m, id),
+                Progress::Planning => self
+                    .plan_alone(m, id)
+                    .and_then(|()| self.continue_planned(id)),
                 Progress::Walking if walk.paused_after(self.days, last) => return Ok(()),
                 Progress::Walking => self.step_day(m, id),
                 Progress::Walked => self.close_walk(m, id),
@@ -177,11 +181,12 @@ impl Engine {
     }
 
     /// The next day of the walk, opened and walked, the checkpoints of the months it enters
-    /// kept before it; the walk done when the day source has no day left (refcore's `run_to`).
-    /// E §4.2, P §2.2, §2.4.
+    /// kept before it, and with forks on a projection's walk keeping the day's plan acts for a
+    /// later read to compare (`fork.rs`); the walk done when the day source has no day left
+    /// (refcore's `run_to`). E §4.2, P §2.2, §2.4, §2.5.
     fn step_day(&mut self, m: &Reality, id: usize) -> Result<(), Stop> {
         if self.walk(id)?.today.is_none() {
-            let days = self.days;
+            let (days, forks) = (self.days, self.forks);
             let walk = self.walk_mut(id)?;
             let next = walk.next_day(days, &walk.endings);
             walk.keep_checkpoints(next)?;
@@ -191,6 +196,9 @@ impl Engine {
             };
             let mut acts = walk.agenda.remove(&day).unwrap_or_else(Vec::new);
             acts.sort_by_key(|a| a.0);
+            if forks == Forks::On && walk.proj.is_some() {
+                walk.keep_walked(day, &acts);
+            }
             #[cfg(feature = "counters")]
             let unit = if acts.is_empty() {
                 crate::Unit::Day

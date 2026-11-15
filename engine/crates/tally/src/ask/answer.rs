@@ -33,7 +33,7 @@ use crate::eval::{
 use crate::model::{Reality, Value};
 use crate::syntax::{Ask, AskBody, Bind, Domain, Expr, Key, Lit, OfQ, Pin, PinForm, Step, Stop};
 use crate::time::Day;
-use crate::walk::{Bookings, Lows, invariant};
+use crate::walk::{Bookings, Forks, Lows, invariant};
 use crate::{Asks, Days};
 
 /// What a run's asks print, and, in the `counters` build, what their engines did.
@@ -59,6 +59,8 @@ struct Seen {
     memo: Memo,
     /// How each ask's engine reads a written projection's common case (E §4.3, P §2.3).
     lows: Lows,
+    /// Whether each ask's engine continues a projection's walk read again (P §2.5).
+    forks: Forks,
     /// The side of a diff across two stacks the next ask answers, its cells once answered.
     side: Option<Side>,
     /// The fault planted in the run while it waits for its day (INTERFACE §4).
@@ -80,28 +82,31 @@ struct Side {
     cells: Option<Cells>,
 }
 
-/// How a run's engines compute: keeping their cells as `memo` says and reading a written
-/// projection's common case as `lows` says, the fences' forms or their plain twins (E §3.2,
-/// §4.3, P §2.3, §3.3); with the `fault-injection` feature, the fault planted in the run
-/// (INTERFACE §4).
+/// How a run's engines compute: keeping their cells as `memo` says, reading a written
+/// projection's common case as `lows` says and continuing a projection's walk read again as
+/// `forks` says, the fences' forms or their plain twins (E §3.2, §4.3, P §2.3, §2.5, §3.3);
+/// with the `fault-injection` feature, the fault planted in the run (INTERFACE §4).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct How {
     /// How the engines keep their cells across law dates.
     pub memo: Memo,
     /// How the engines read a written projection's common case.
     pub lows: Lows,
+    /// Whether the engines continue a projection's walk read again through a later day.
+    pub forks: Forks,
     /// The fault planted, if any.
     #[cfg(feature = "fault-injection")]
     pub fault: Option<crate::walk::Fault>,
 }
 
 impl How {
-    /// The engines computing as `memo` and `lows` say, no fault planted.
+    /// The engines computing as `memo`, `lows` and `forks` say, no fault planted.
     #[must_use]
-    pub fn new(memo: Memo, lows: Lows) -> How {
+    pub const fn new(memo: Memo, lows: Lows, forks: Forks) -> How {
         How {
             memo,
             lows,
+            forks,
             #[cfg(feature = "fault-injection")]
             fault: None,
         }
@@ -317,6 +322,7 @@ impl World {
                 booked: BTreeMap::new(),
                 memo: how.memo,
                 lows: how.lows,
+                forks: how.forks,
                 side: None,
                 #[cfg(feature = "fault-injection")]
                 plant: how.fault,
@@ -979,13 +985,13 @@ fn formed_per_tuple(ask: &Ask) -> bool {
     pins_name_for(ask)
 }
 
-/// An engine answering ask `ask` at cut `cut` in scope `env`, the world's memo, lows and the
-/// bookings the asks before it made taken from `seen` (refcore's `Asker`, its engine per
+/// An engine answering ask `ask` at cut `cut` in scope `env`, the world's memo, lows, forks
+/// and the bookings the asks before it made taken from `seen` (refcore's `Asker`, its engine per
 /// ask). L §5.18.
 fn ask_engine(cut: Day, (ask, env): (&Ask, &Env), days: Days, seen: &mut Seen) -> Engine {
     let engine = Engine::new(cut)
         .with_days(days)
-        .with_how((seen.memo, seen.lows));
+        .with_how((seen.memo, seen.lows, seen.forks));
     let mut engine = engine
         .for_ask(ask)
         .in_tuple(env)
