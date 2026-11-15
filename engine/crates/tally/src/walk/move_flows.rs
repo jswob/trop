@@ -16,6 +16,7 @@ use super::plan::{Amount, Dated, DayWindow, Exists, Inst, Status, invariant, qty
 use super::reads::refuse;
 use super::state::Progress;
 use crate::base::{Refusal, Run};
+use crate::book::{Obs, once_obs, same_differ, same_groups};
 use crate::eval::{Collected, Ctx, Engine, Entry, Env, GUARDED, UNSET_AXIS};
 use crate::hole::{Hole, spread};
 use crate::model::{KeyVal, MoveInfo, Reality, Span, Value};
@@ -198,8 +199,9 @@ impl Engine {
     }
 
     /// A modelled instance's flows: the observations that stand in for it on its covered
-    /// day, `open:` when none does (refcore's `flows_move`, its modelled past). L §5.14.3,
-    /// §5.19.
+    /// day, `open:` when none does; rows stated `same` are one movement, counted once, and
+    /// where they disagree on the leg read its `HOLE-SAME` (refcore's `flows_move`, its
+    /// modelled past). L §5.14.3, §5.19, §6.1.
     fn count_standing_in(
         &mut self,
         m: &Reality,
@@ -209,6 +211,10 @@ impl Engine {
         acc: &mut Counted,
     ) -> Result<(), Stop> {
         let obs = self.standing_in(m, i, cut)?;
+        if let Some(bad) = self.bad_links.get(&(cut, i.id.clone())) {
+            // its realised movement rests on a refused record (L §5.19, §8.4)
+            return Err(Stop::Refused(bad.clone()));
+        }
         if obs.is_empty() {
             acc.met.entries.insert(Entry {
                 word: "open",
@@ -216,8 +222,20 @@ impl Engine {
                 figure: String::new(),
             });
         }
-        for o in &obs {
+        let groups = same_groups(m);
+        for (first, rest) in once_obs(&groups, &obs) {
+            let others: Vec<&Obs> = rest.iter().filter_map(|&k| obs.get(k)).collect();
+            let Some(o) = obs.get(first) else {
+                return Err(invariant("a same group with no first row"));
+            };
             acc.met.merge(&o.coll);
+            for x in &others {
+                acc.met.merge(&x.coll);
+            }
+            if let Some(h) = same_differ(m, o, &others, leg)? {
+                acc.holes.push(h);
+                continue;
+            }
             for lg in o.legs.iter().filter(|lg| wanted(leg, &lg.name)) {
                 let Amount::Qty(q) = &lg.amount else {
                     return Err(invariant("an observed leg with no amount"));

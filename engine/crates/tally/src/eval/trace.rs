@@ -970,8 +970,9 @@ fn provenance(m: &Reality, row: &Row, ask_cut: Day) -> Result<String, Stop> {
             };
             bits.push(format!("at {}{edge}", day.text()));
         }
-        Some(RowInstant::After(_)) => {
-            return Err(Stop::NotBuilt("explain of a reading after a movement"));
+        // L §4.6's instant: refcore prints its node's object here, no stored vector's text
+        Some(RowInstant::After(node)) => {
+            bits.push(format!("after {}", crate::load::expr_text(node)));
         }
         None => {
             let span = row_span(m, row, ask_cut)?.map_or_else(|| "?".to_owned(), |s| s.text());

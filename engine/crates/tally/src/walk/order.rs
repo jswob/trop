@@ -17,9 +17,10 @@ use core::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::agenda::{Act, Mv};
-use super::day::{Broke, ends};
+use super::day::ends;
 use super::plan::{Amount, Dated, Exists, Inst, LegVal, Status, invariant, kind_certainty};
 use super::point::{At, Step};
+use super::readings::Broke;
 use super::state::{ALL, Change, Ent, Group, Taken, WalkObs};
 use crate::base::{Code, Refusal, Run as RunCode};
 use crate::eval::{Ctx, Engine, Entry};
@@ -302,7 +303,7 @@ impl Engine {
     /// The places an instance's legs give; a hole place gives none, and none where one is
     /// neither a thing nor a hole, or refused (refcore's `inst_places`, its changes).
     /// L §5.14.2, §8.4.
-    fn leg_places(
+    pub(crate) fn leg_places(
         &mut self,
         m: &Reality,
         mv: &MoveInfo,
@@ -589,6 +590,8 @@ impl Engine {
                 &Broke::Decision(run_id),
             )?;
         }
+        // the readings after it, each tested as it is booked (E §4.2 steps 3 and 5)
+        self.readings_after(m, id, ix, key)?;
         Ok(ix)
     }
 
@@ -661,7 +664,10 @@ impl Engine {
             self.refused_at_point(m, mv, &mut run.inst, ctx.at_law(law))?;
         }
         self.walk_mut(id)?.group = Some(Group::new());
-        self.book_run(m, id, run, t)
+        let ix = self.book_run(m, id, run, t)?;
+        // the ends stated same as this decision that waited for its point (L §6.1)
+        self.same_release(m, id, ix)?;
+        Ok(ix)
     }
 
     /// The legs of decision instance `inst`, refused before its point, with their places read
@@ -784,7 +790,8 @@ impl Engine {
         }
         run.inst.status = if t < cut { Status::Past } else { Status::Plan };
         let mut reg = Vec::new();
-        if t < cut && run.inst.obs.is_empty() {
+        // one stated same as an observed row was observed (L §6.1)
+        if t < cut && run.inst.obs.is_empty() && !walk.same_observed.contains(&run.inst.id) {
             reg.push(Entry {
                 word: "unfulfilled",
                 text: run.inst.id.clone(),

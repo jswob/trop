@@ -41,9 +41,9 @@ use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::agenda::{left_out_day, left_out_lines, one_more_left_out};
-use super::day::place_sign;
 use super::plan::{Amount, Dated, End, Exists, Inst, LegVal, Status, invariant, qty_value};
 use super::point::At;
+use super::readings::place_sign;
 use super::state::Progress;
 use crate::eval::{Collected, Engine, Entry, num_stop};
 use crate::model::{MoveInfo, Reality, Value, World};
@@ -637,7 +637,8 @@ impl Engine {
         left_out: &BTreeSet<String>,
     ) -> Result<(Tree, Vec<Num>), Stop> {
         // the projection's walk reads its cut's first readings before its plan pass
-        crate::book::first_readings(m, (cut, world))?;
+        let after = self.after_days(m, cut)?;
+        crate::book::first_readings(m, (cut, world), &after)?;
         let mut got = Gathered {
             tree: Tree::new(cut),
             legs: Vec::new(),

@@ -542,6 +542,9 @@ pub struct Engine {
     pub(crate) link_active: BTreeSet<(Day, String)>,
     /// The refusals of observations' records, per cut, by observation (L §5.19 Links).
     pub(crate) obs_errs: BTreeMap<(Day, String), Refusal>,
+    /// The refusal an instance's realised movement rests on, per cut, by instance: a record
+    /// its link refused (refcore's `badlinks`; L §5.19, §8.4).
+    pub(crate) bad_links: BTreeMap<(Day, String), Refusal>,
     /// The adjustments a settlement move's binding over adjustments is held to while its
     /// candidates are made (refcore's `_adj_restrict`, E §5 step 5).
     pub(crate) adj_restrict: Option<Vec<Adjustment>>,
@@ -645,6 +648,7 @@ impl Engine {
             links: BTreeMap::new(),
             link_active: BTreeSet::new(),
             obs_errs: BTreeMap::new(),
+            bad_links: BTreeMap::new(),
             adj_restrict: None,
             settled: BTreeMap::new(),
             unsettled: BTreeMap::new(),

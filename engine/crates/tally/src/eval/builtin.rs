@@ -71,8 +71,33 @@ impl Engine {
             "periodic" | "factor" => self.rate_call(m, call, env, ctx),
             "next" => self.next_movement(m, call, env, ctx),
             "lifespan" => self.lifespan_of(m, call, env, ctx),
+            "observed" => self.observed_call(m, call, env, ctx),
             _ => Err(Stop::NotBuilt("a built-in M1's realities don't call")),
         }
+    }
+
+    /// `observed(m[k])`: its movement, a hole key's hole (refcore's `m_c_observed`).
+    /// L §5.19 Realised amounts.
+    fn observed_call(
+        &mut self,
+        m: &Reality,
+        call: &Call,
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Value, Stop> {
+        let [arg] = call.args.as_slice() else {
+            return Err(arity());
+        };
+        let v = self.ev(m, arg, env, ctx)?;
+        if let Value::Hole(h) = v {
+            return Ok(Value::Hole(h));
+        }
+        let Value::Mv(mv) = v else {
+            return Err(invariant(
+                "observed of a value load let through that is no movement",
+            ));
+        };
+        self.observed_of(m, &mv, ctx)
     }
 
     /// `gap(x, d)`: its two arguments, read by the walk (refcore's `m_c_gap`). L §5.19.

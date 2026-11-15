@@ -31,7 +31,7 @@ use super::point::{At, Step};
 use super::state::{Progress, Walk, WalkObs};
 use crate::Days;
 use crate::base::Refusal;
-use crate::book::Seen;
+use crate::book::{Seen, Stands};
 use crate::eval::{Collected, Engine, Entry};
 use crate::hole::Hole;
 use crate::model::{KeyVal, MoveInfo, Reality, Value};
@@ -170,10 +170,22 @@ impl Engine {
             (walk.cut, walk.proj.is_none(), walk.world)
         };
         let readings = if main {
-            crate::book::readings(m, (cut, world), self.keep_rows)?
+            let after = self.after_days(m, cut)?;
+            crate::book::readings(m, (cut, world), self.keep_rows, &after)?
         } else {
             Vec::new()
         };
+        // the observations that fulfil each m a reading `after m` names, which stand in for a
+        // modelled-past m (L §4.6, E §4.2 step 3)
+        let mut standing_in = BTreeMap::new();
+        for seen in &readings {
+            if let Stands::After(mid) = &seen.stands
+                && !standing_in.contains_key(mid)
+            {
+                let links = self.obs_links_for(m, mid, cut)?;
+                standing_in.insert(mid.clone(), links);
+            }
+        }
         let mut observed = Vec::new();
         let mut legs_warned = Vec::new();
         if main {
@@ -216,8 +228,10 @@ impl Engine {
         for wo in &mut observed {
             wo.err = self.obs_err(m, &wo.obs, cut)?;
         }
+        let same_observed = self.same_observed_ids(m, cut)?;
         let walk = self.walk_mut(id)?;
         walk.orders = orders;
+        walk.same_observed = same_observed;
         for w in legs_warned {
             if !walk.warnings.contains(&w) {
                 walk.warnings.push(w);
@@ -225,6 +239,7 @@ impl Engine {
         }
         schedule_readings(walk, &readings)?;
         schedule_observations(walk, observed)?;
+        schedule_after(walk, &readings, &standing_in)?;
         for inst in plans {
             if left_out_of(walk, &inst.move_id) {
                 if inst.status != Status::None {
@@ -418,10 +433,15 @@ fn ranked3(mut decisions: Vec<(String, u32, Vec<Inst>)>) -> Vec<(String, u32, Ve
 fn schedule_readings(walk: &mut Walk, readings: &[Seen]) -> Result<(), Stop> {
     let (start, end, cut) = (walk.start, walk.end, walk.cut);
     for (rank, seen) in readings.iter().enumerate() {
-        let (day, edge) = (&seen.day, &seen.edge);
+        let day = &seen.day;
         let first = walk.first_reading.entry(seen.place.clone()).or_insert(*day);
         *first = (*first).min(*day);
         let Some(reading) = &seen.reading else {
+            continue;
+        };
+        // a reading `after m` stands where m is booked, or the observations standing in for
+        // it (`schedule_after`)
+        let Stands::Edge(edge) = &seen.stands else {
             continue;
         };
         let rank = u32::try_from(rank).map_err(|_| super::plan::invariant("a reading's rank"))?;
@@ -442,6 +462,102 @@ fn schedule_readings(walk: &mut Walk, readings: &[Seen]) -> Result<(), Stop> {
         );
     }
     Ok(())
+}
+
+/// Puts each reading `after m` before the cut where it stands: right after the last
+/// observed leg that fulfils m where one does (the leg that touches the reading's place,
+/// else any), booked in step 1 or, where it is dated m's day, at m's point; right after m
+/// otherwise, which m's run decides (refcore's `after_mv`). L §4.6 Readings, E §4.2 step 3.
+fn schedule_after(
+    walk: &mut Walk,
+    readings: &[Seen],
+    standing_in: &BTreeMap<String, Vec<String>>,
+) -> Result<(), Stop> {
+    for seen in readings {
+        let (Stands::After(mid), Some(reading)) = (&seen.stands, &seen.reading) else {
+            continue;
+        };
+        if seen.day >= walk.cut {
+            continue;
+        }
+        let links: &[String] = standing_in.get(mid).map_or(&[], Vec::as_slice);
+        match last_standing_in(walk, links, &seen.place)? {
+            // after an observed leg booked in step 1, in the day's first batch
+            Some(Booked::Step(at)) => {
+                let at = at.with_sub(1);
+                let key = (
+                    reading.place.clone(),
+                    reading.instant.clone(),
+                    reading.version.clone(),
+                );
+                walk.after_at.insert(key, at);
+                walk.at(at, Act::Read(Box::new(reading.clone())));
+            }
+            // after m, or the observations booked at its point
+            Some(Booked::AtDecision) | None => walk
+                .after
+                .entry(mid.clone())
+                .or_insert_with(Vec::new)
+                .push(reading.clone()),
+        }
+    }
+    Ok(())
+}
+
+/// Where an observed leg standing in for a decision is booked: in step 1 at its point, or at
+/// the decision's point (E §4.2 steps 1 and 3).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Booked {
+    /// In step 1, at this point.
+    Step(At),
+    /// At the decision's point, on its day.
+    AtDecision,
+}
+
+/// The last booked of the observed legs of the observations `links` that touch `place`, or of
+/// all their legs where none does: by day, then step 1 before the decision's point, then rank
+/// (refcore's `after_mv`, its leg). E §4.2 steps 1 and 3.
+fn last_standing_in(walk: &Walk, links: &[String], place: &str) -> Result<Option<Booked>, Stop> {
+    let mut touching: Vec<(Day, u8, Booked)> = Vec::new();
+    let mut all: Vec<(Day, u8, Booked)> = Vec::new();
+    for wo in walk.obs.iter().filter(|wo| links.contains(&wo.obs.id)) {
+        for lg in &wo.obs.legs {
+            let Some(d) = lg.day.day() else {
+                continue;
+            };
+            if d < walk.start || d > walk.end || d >= walk.cut {
+                continue;
+            }
+            let booked = if wo.decision_day == Some(d) {
+                (d, 1, Booked::AtDecision)
+            } else {
+                let rank = walk.obs_rank(&leg_text(&wo.obs.id, &lg.name))?;
+                let at = At {
+                    rank,
+                    ..At::of(d, Step::Observations)
+                };
+                (d, 0, Booked::Step(at))
+            };
+            if [&lg.from, &lg.to].iter().any(|e| e.place() == Some(place)) {
+                touching.push(booked);
+            }
+            all.push(booked);
+        }
+    }
+    let pool = if touching.is_empty() { all } else { touching };
+    Ok(pool
+        .into_iter()
+        .max_by(|a, b| (a.0, a.1, booked_rank(&a.2)).cmp(&(b.0, b.1, booked_rank(&b.2))))
+        .map(|(_, _, booked)| booked))
+}
+
+/// Where a booked observation stands among its day's: its rank in the day's first batch,
+/// 0 at a decision's point. E §4.2 steps 1 and 3.
+fn booked_rank(booked: &Booked) -> u32 {
+    match booked {
+        Booked::Step(at) => at.rank,
+        Booked::AtDecision => 0,
+    }
 }
 
 /// The point of a reading at the start or the end of `day`, `rank` its place among the
@@ -496,9 +612,10 @@ fn leg_text(id: &str, leg: &str) -> String {
 }
 
 /// A modelled-past instance: kept for the ledger, and one nothing fulfils marks its places
-/// `open` from its legs' days (refcore's `prepare`, its modelled plans). E §4.1 step 3, L §5.19.
+/// `open` from its legs' days; one stated `same` as an observed row is that observed
+/// movement (refcore's `prepare`, its modelled plans). E §4.1 step 3, L §5.19, §6.1.
 fn schedule_modelled(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
-    if inst.obs.is_empty() {
+    if inst.obs.is_empty() && !walk.same_observed.contains(&inst.id) {
         let rank = walk.plan_rank(&inst.order)?;
         for lg in &inst.legs {
             let Dated::Day(d) = lg.day else {

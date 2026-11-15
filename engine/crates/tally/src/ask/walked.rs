@@ -563,7 +563,8 @@ fn reading_instant(m: &Reality, sid: &str) -> Result<String, Stop> {
     let row = found.ok_or_else(|| invariant("a reading's row load didn't build"))?;
     match &row.instant {
         Some(RowInstant::At(day, Some(edge))) => Ok(instant_text(*day, *edge)),
-        Some(_) | None => Err(Stop::NotBuilt(
+        Some(RowInstant::After(node)) => Ok(format!("after {}", crate::load::expr_text(node))),
+        Some(RowInstant::At(_, None)) | None => Err(Stop::NotBuilt(
             "explain of a reading at an instant other than a day's start or end",
         )),
     }

@@ -107,7 +107,8 @@ impl Engine {
             // an observation known in a window that holds the cut is seen where the line's
             // `windows each` puts its day on or before the cut (L §4.5)
             let unseen = self.unseen_known(known_windows(m)?, cut)?;
-            let seen = seen_observations(m, (cut, world), self.keep_rows, &unseen)?;
+            let mut seen = seen_observations(m, (cut, world), self.keep_rows, &unseen)?;
+            share_fulfils(&super::same_groups(m), &mut seen);
             self.observed.insert(cut, seen);
         }
         self.observed
@@ -394,17 +395,33 @@ impl Engine {
             if let Some(lg) = lack
                 && !m.kind_legs(&o.kind).is_empty()
             {
-                errs.push((
-                    o.id.clone(),
-                    record(format!(
-                        "observation {} fulfils {tid} and lacks its leg {}",
-                        o.id, lg.name
-                    )),
+                let err = record(format!(
+                    "observation {} fulfils {tid} and lacks its leg {}",
+                    o.id, lg.name
                 ));
+                // what reads the instance's realised movement rests on the refused record
+                // (L §8.4)
+                self.bad_links
+                    .entry((cut, tid.to_owned()))
+                    .or_insert_with(|| err.clone());
+                errs.push((o.id.clone(), err));
                 continue;
             }
-            good.push(o.id.clone());
+            good.push(o);
         }
+        let unjoined = self.unjoined(m, tid, &good, cut)?;
+        if let Some((_, err)) = unjoined.first() {
+            self.bad_links
+                .entry((cut, tid.to_owned()))
+                .or_insert_with(|| err.clone());
+        }
+        let refused: BTreeSet<&str> = unjoined.iter().map(|(id, _)| id.as_str()).collect();
+        let good = good
+            .into_iter()
+            .filter(|o| !refused.contains(o.id.as_str()))
+            .map(|o| o.id)
+            .collect();
+        errs.extend(unjoined);
         Ok((good, errs))
     }
 
@@ -663,6 +680,30 @@ fn seen_observations(
     }
     out.sort_by(|a, b| (a.day, &a.id).cmp(&(b.day, &b.id)));
     Ok(out)
+}
+
+/// A row of `seen` stated `same` with others that states no `fulfils` takes its group's: the
+/// first of the group's seen rows, in the same lines' order, that states one. A movement on
+/// two statements fulfils what either row states, so both rows stand in for it (L §5.19 One
+/// movement on two statements, §6.1).
+fn share_fulfils(groups: &BTreeMap<String, Vec<String>>, seen: &mut [Obs]) {
+    if groups.is_empty() {
+        return;
+    }
+    let mut stated: BTreeMap<String, Fulfils> = BTreeMap::new();
+    for o in seen.iter() {
+        if let Some(f) = &o.fulfils {
+            stated.insert(o.id.clone(), f.clone());
+        }
+    }
+    for o in seen.iter_mut().filter(|o| o.fulfils.is_none()) {
+        let Some(group) = groups.get(&o.id) else {
+            continue;
+        };
+        if let Some(f) = group.iter().find_map(|member| stated.get(member)) {
+            o.fulfils = Some(f.clone());
+        }
+    }
 }
 
 /// Whose `known` an observation's is: its own (`input[key]`), else its version's (refcore's

@@ -215,20 +215,22 @@ pub mod walk {
     mod flows;
     mod legs;
     mod lows;
+    mod modelled;
     mod move_flows;
     mod order;
     mod plan;
     mod point;
     mod projection;
+    mod readings;
     mod reads;
     mod state;
     mod tuples;
     mod value;
 
     pub use agenda::{Act, Mv, Reading, endings, reading_point};
+    pub use day::Ends;
     #[cfg(feature = "fault-injection")]
     pub use day::Fault;
-    pub use day::{Broke, Ends};
     pub(crate) use flows::span_last;
     pub(crate) use lows::Trees;
     pub use lows::{Lows, RangeMinimum};
@@ -241,6 +243,8 @@ pub mod walk {
     pub use point::{At, Step};
     pub use projection::ProjKey;
     pub(crate) use projection::own_unit;
+    pub use readings::Broke;
+    pub(crate) use readings::{breaks, takes_text};
     pub(crate) use reads::state_value;
     pub(crate) use state::GapAt;
     pub use state::{
@@ -260,14 +264,19 @@ pub mod book {
     mod members;
     mod observe;
     mod reading;
+    mod same;
     mod settle;
 
     pub use adjust::{Adjustment, Settled};
     pub use ledger::{Fig, Group, GroupKey, Ledger, Line, fig_text};
     pub(crate) use members::{MvDom, MvMember, inst_ref};
     pub use observe::{Coverage, Linked, Obs, inst_id};
-    pub use reading::{Pad, Seen, first_readings, per_unit, reading_rank, readings};
-    pub(crate) use reading::{gap_text, instant_text};
+    pub use reading::{
+        AfterDays, Pad, Seen, Stands, first_readings, per_unit, reading_rank, readings,
+    };
+    pub(crate) use reading::{gap_text, instant_text, reading_place};
+    pub(crate) use same::{Member, Waiting, stated_same};
+    pub use same::{kept_once, once_obs, same_differ, same_groups};
     pub(crate) use settle::settlement_move;
 }
 
@@ -348,7 +357,7 @@ pub mod load {
     pub(crate) use pins::{forks_past_cap, reach_axes};
     pub(crate) use srows::ask_worlds;
     pub use steps::load;
-    pub(crate) use texts::{children as expr_children, text as expr_text};
+    pub(crate) use texts::{children as expr_children, post_text, text as expr_text};
     pub use worlds::{Loaded, Split, Worlds, load_run, split_files};
 }
 
