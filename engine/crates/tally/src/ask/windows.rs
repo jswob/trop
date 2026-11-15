@@ -495,8 +495,18 @@ fn over_axes(
             .ok_or_else(|| invariant("a result past the combinations"))?;
         let part = format!(" [{}]", axes.head(&line.product)?);
         let readings = axes.readings(&line.product)?;
-        for (suffix, row, _) in rows {
-            out.push((format!("{suffix}{part}"), row.clone(), readings.clone()));
+        for (row_at, (suffix, row, _)) in rows.iter().enumerate() {
+            // a grouped line's register is every combination's in it (L §8.2, §5.5)
+            let mut row = row.clone();
+            for at in &line.members {
+                let (other, _) = results
+                    .get(*at)
+                    .ok_or_else(|| invariant("a member's result past the results"))?;
+                if let Some((_, same, _)) = each.get(*other).and_then(|r| r.get(row_at)) {
+                    row.met.merge(&same.met);
+                }
+            }
+            out.push((format!("{suffix}{part}"), row, readings.clone()));
         }
     }
     Ok(out)
