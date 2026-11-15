@@ -181,3 +181,5 @@ fixes/gate8/r437_same_outside	fixes-sweep		engine/tests/m2/fixes/gate8/r437	engi
 fixes/gate8/r437_after_m_end	fixes-sweep		engine/tests/m2/fixes/gate8/r437	engine/tests/m2/fixes/gate8/r437/after_m_end.tally	b31 l31		-
 fixes/gate8/r437_am_rank3	fixes-sweep		engine/tests/m2/fixes/gate8/r437	engine/tests/m2/fixes/gate8/r437/am_rank3.tally	l14 b14 b31		-
 fixes/gate8/r437_am_rank2l	fixes-sweep		engine/tests/m2/fixes/gate8/r437	engine/tests/m2/fixes/gate8/r437/am_rank2l.tally	l14 b14 b31		-
+fixes/g7/b1_tree	fixes-sweep		engine/tests/m2/fixes/g7	engine/tests/m2/fixes/g7/b1_tree.tally			sweep
+fixes/g7/p3_after_m	fixes-sweep		engine/tests/m2/fixes/g7	engine/tests/m2/fixes/g7/p3_after_same.tally	a_late a_stated		-

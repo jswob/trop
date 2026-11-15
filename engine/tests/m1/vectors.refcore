@@ -250015,4 +250015,1726 @@ s_i: 450.00 PLN
   cut 2026-04-10
 warning: WARN-UNREAD input d15 is read by nothing
 warning: WARN-UNREAD place sav is read by nothing
+,25:fixes/gate8/m2_g7_b1_cons,11:fixes-gate8,17:run b1_cons.tally,1768:13:b1_cons.tally,1745:model f6tree
+  tally 2
+  on 2026-04-15
+  start 2026-01-01
+  end 2026-12-31
+
+source card "G7 review probe B1: F5's guard and F6's parked failed walk"
+
+unit DUK: currency minor 0.01
+
+index month = month 2026-01..2026-12
+
+place konto: accounts DUK lives 2026-01-01..
+
+index n = month 2016-01..2026-12
+
+place big[k in n]: accounts DUK lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input pay: money DUK
+
+input big_on: int
+
+input flood_day: date
+
+input e1: num
+
+input five: money DUK
+
+def e2: num = e1 * e1
+
+def e3: num = e2 * e2
+
+def e4: num = e3 * e3
+
+def e5: num = e4 * e4
+
+def e6: num = e5 * e5
+
+def e7: num = e6 * e6
+
+def e8: num = e7 * e7
+
+def e9: num = e8 * e8
+
+def e10: num = e9 * e9
+
+def e11: num = e10 * e10
+
+def e12: num = e11 * e11
+
+def flood_amt: money DUK = round(five * e12 * e11 * e10 * e9 * e8 * e7 * e6 * e5 * e4 * e3 * e1 * big_on, minor(DUK), down)
+
+move salary[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount pay
+
+move flood[k in n]: transfers
+  on flood_day
+  at flood_day
+  leg cash from world to big[k] amount flood_amt
+
+ask b_pair: bal(big[2016-01], 2026-12-31) from 2026-01-20 with uncertain, bal(konto, 2026-12-31) from 2026-01-20
+
+ask b_pair_rev: bal(konto, 2026-12-31) from 2026-01-20, bal(big[2016-01], 2026-12-31) from 2026-01-20 with uncertain
+
+ask b_big: bal(big[2016-01], 2026-12-31) from 2026-01-20 with uncertain
+
+ask b_konto: bal(konto, 2026-12-31) from 2026-01-20
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 1000.00
+  big_on = 1
+  e1 = 10
+  flood_day = 2026-02-01
+  five = 9.00
+  opening[konto] = 500.00 at 2026-01-01 start
+
+version later
+  cite card
+  governs always
+  known 2026-02-01
+  replace big_on = 0 "the flood stopped"
+,,1:0,566:b_big: refused: RUN-DIGITS a value passes 4 096 digits; round where the law rounds
+  cut 2026-04-15
+b_konto: refused: RUN-DIGITS a value passes 4 096 digits; round where the law rounds
+  cut 2026-04-15
+b_pair: (refused: RUN-DIGITS a value passes 4 096 digits; round where the law rounds, refused: RUN-DIGITS a value passes 4 096 digits; round where the law rounds)
+  cut 2026-04-15
+b_pair_rev: (refused: RUN-DIGITS a value passes 4 096 digits; round where the law rounds, refused: RUN-DIGITS a value passes 4 096 digits; round where the law rounds)
+  cut 2026-04-15
+,24:fixes/gate8/m2_g7_b1_dec,11:fixes-gate8,16:run b1_dec.tally,1568:12:b1_dec.tally,1546:model p
+  tally 2
+  on 2026-04-15
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented probe for F5"
+
+unit DUK: currency minor 0.01
+
+index month = month 2026-01..2026-12
+
+place konto: accounts DUK lives 2026-01-01..
+
+input prio: int
+
+input amt: money DUK
+
+input dec_day: date
+
+place big: accounts DUK lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input pay: money DUK
+
+input rent: money DUK
+
+input off: int
+
+move salary[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount pay
+
+move rent_pay[m in month]: transfers
+  on add_days(start_of(m), off)
+  at start_of(m)
+  leg cash from konto to world amount rent
+
+move pick[k in month]: transfers
+  on dec_day
+  at dec_day
+  reads big
+  ties by add_days(start_of(k), prio)
+  leg cash from world to big amount amt + 0 * bal(big, dec_day start)
+
+
+
+
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 1000.00
+  rent = 900.00
+  off = 9
+  opening[konto] = 500.00 at 2026-01-01 start
+  opening[big] = 0.00 at 2026-01-01 start
+  amt = 5.00
+  dec_day = 2026-05-01
+
+version later
+  cite card
+  governs always
+  known 2026-02-01
+  prio = 1
+
+ask b_pair: bal(big, 2026-12-31) from 2026-01-20, bal(konto, 2026-12-31) from 2026-01-20
+
+ask b_pair_u: bal(big, 2026-12-31) from 2026-01-20 with uncertain, bal(konto, 2026-12-31) from 2026-01-20
+
+ask b_pair_rev: bal(konto, 2026-12-31) from 2026-01-20, bal(big, 2026-12-31) from 2026-01-20
+
+ask b_konto: bal(konto, 2026-12-31) from 2026-01-20
+
+ask b_big: bal(big, 2026-12-31) from 2026-01-20
+,,1:0,500:b_big: refused: RUN-TIE pick: its ties by is a hole
+  cut 2026-04-15
+b_konto: refused: RUN-TIE pick: its ties by is a hole
+  cut 2026-04-15
+b_pair: (refused: RUN-TIE pick: its ties by is a hole, refused: RUN-TIE pick: its ties by is a hole)
+  cut 2026-04-15
+b_pair_rev: (refused: RUN-TIE pick: its ties by is a hole, refused: RUN-TIE pick: its ties by is a hole)
+  cut 2026-04-15
+b_pair_u: (refused: RUN-TIE pick: its ties by is a hole, refused: RUN-TIE pick: its ties by is a hole)
+  cut 2026-04-15
+,25:fixes/gate8/m2_g7_p1_cuts,11:fixes-gate8,17:run p1_cuts.tally,3614:13:p1_cuts.tally,3591:model days
+  tally 2
+  on 2026-04-15
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented for F6's twin"
+
+unit DUK: currency minor 0.01
+
+axis pay_reading
+  low "the lower pay"
+  high "the higher pay"
+
+index month = month 2026-01..2026-12
+
+place konto: accounts DUK lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input pay_low: money DUK
+
+input pay_high: money DUK
+
+input rent: money DUK
+
+input floor: money DUK
+
+input share: num
+
+input late: int
+
+input rent_off: int
+
+input sweep_off: int
+
+input reach: int
+
+def pay: money DUK at reader
+  rule base = pay_low
+  rule hi beats base = pay_high when pay_reading == high
+
+def room[m in month]: money DUK = min(bal(konto, d) from start_of(m) for d in start_of(m) .. add_days(start_of(m), reach) step 1 day) at start_of(m)
+
+move salary[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount pay
+
+move rent_pay[m in month]: transfers
+  on add_days(start_of(m), rent_off)
+  at start_of(m)
+  leg cash from konto to world amount rent
+
+move sweep[m in month]: transfers
+  on add_days(start_of(m), sweep_off)
+  at start_of(m)
+  reads konto
+  leg cash from konto to world amount round(max(0, room[m] - floor) * share, minor(DUK), down) on add_days(start_of(m), late)
+
+ask d_min: min(bal(konto, d) from 2026-02-01 for d in 2026-02-01 .. 2026-03-15 step 1 day)
+
+ask d_back: bal(konto, d) from 2026-02-03 for d in [2026-03-10, 2026-02-20, 2026-03-31, 2026-03-31, 2026-02-03]
+
+ask d_many: min(bal(konto, d) from 2026-02-01 + bal(konto, d) from 2026-02-02 + bal(konto, d) from 2026-02-03 + bal(konto, d) from 2026-02-04 + bal(konto, d) from 2026-02-05 for d in 2026-02-05 .. 2026-02-25 step 1 day)
+
+ask d_axis: min(bal(konto, d) from 2026-03-01 for d in 2026-03-01 .. 2026-03-25 step 1 day)
+
+ask d_uncertain: min(bal(konto, d) from 2026-05-02 with uncertain for d in 2026-05-02 .. 2026-06-10 step 1 day)
+
+ask d_room: room[m] for m in [2026-02, 2026-03, 2026-07]
+
+ask k_early: min(bal(konto, d) from 2026-04-20 for d in 2026-04-20 .. 2026-06-10 step 1 day) as known 2026-02-15
+
+ask k_late: min(bal(konto, d) from 2026-04-20 for d in 2026-04-20 .. 2026-06-10 step 1 day) as known 2026-03-15
+
+ask k_two: min(bal(konto, d) from 2026-02-20 for d in 2026-02-20 .. 2026-05-20 step 1 day), min(bal(konto, d) from 2026-03-05 for d in 2026-03-05 .. 2026-05-20 step 1 day)
+
+ask k_mix: bal(konto, d) from 2026-02-20 for d in [2026-02-25, 2026-05-05, 2026-03-02, 2026-06-30, 2026-04-01, 2026-06-30, 2026-12-31]
+
+ask k_six: min(bal(konto, d) from 2026-02-01 + bal(konto, d) from 2026-02-02 + bal(konto, d) from 2026-02-03 + bal(konto, d) from 2026-02-04 + bal(konto, d) from 2026-02-05 + bal(konto, d) from 2026-02-06 for d in 2026-02-06 .. 2026-04-25 step 1 day)
+
+ask k_six_back: max(bal(konto, d) from 2026-02-06 - bal(konto, d) from 2026-02-01 + bal(konto, d) from 2026-02-05 - bal(konto, d) from 2026-02-02 + bal(konto, d) from 2026-02-04 - bal(konto, d) from 2026-02-03 for d in [2026-04-25, 2026-02-10, 2026-03-15, 2026-03-01, 2026-06-01])
+
+ask k_room: room[m] for m in [2026-02, 2026-03, 2026-04, 2026-05, 2026-06, 2026-07, 2026-08]
+
+ask k_hi: min(bal(konto, d) from 2026-03-01 for d in 2026-03-01 .. 2026-06-25 step 1 day) with pay_reading = high
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  pay_low = 1000.00
+  pay_high = 1300.00
+  rent = 900.00
+  floor = 200.00
+  share = 0.5
+  late = 25
+  rent_off = 9
+  sweep_off = 17
+  reach = 15
+  opening[konto] = 500.00 at 2026-01-01 start
+
+version later
+  cite card
+  governs 2026-05-01..
+  known 2026-03-01
+  replace rent = 950.00 "the rent rose"
+,,1:0,19065:d_axis [pay_reading = low]: 450.00 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  cut 2026-04-15
+d_axis [pay_reading = high]: 975.00 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  cut 2026-04-15
+d_back (d = 2026-03-10) [pay_reading = low]: -50.00 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+d_back (d = 2026-03-10) [pay_reading = high]: 325.00 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+d_back (d = 2026-02-20) [pay_reading = low]: 500.00 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+d_back (d = 2026-02-20) [pay_reading = high]: 950.00 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+d_back (d = 2026-03-31) [pay_reading = low]: -50.00 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+d_back (d = 2026-03-31) [pay_reading = high]: 262.50 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+d_back (d = 2026-02-03) [pay_reading = low]: 1 400.00 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+d_back (d = 2026-02-03) [pay_reading = high]: 1 850.00 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+d_many [pay_reading = low]: 2 500.00 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+d_many [pay_reading = high]: 4 750.00 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+d_min [pay_reading = low]: 350.00 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+d_min [pay_reading = high]: 575.00 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+d_room (m = 2026-02) [pay_reading = low]: 500.00 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+d_room (m = 2026-02) [pay_reading = high]: 950.00 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+d_room (m = 2026-03) [pay_reading = low]: 450.00 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  cut 2026-04-15
+d_room (m = 2026-03) [pay_reading = high]: 975.00 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  cut 2026-04-15
+d_room (m = 2026-07) [pay_reading = low]: 315.63 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: rent_pay[2026-04]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: salary[2026-04]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  unfulfilled: sweep[2026-03]
+  held: rent = 950.00 DUK (later), read for 2026-05-01
+  held: rent = 950.00 DUK (later), read for 2026-06-01
+  held: rent = 950.00 DUK (later), read for 2026-07-01
+  cut 2026-04-15
+d_room (m = 2026-07) [pay_reading = high]: 910.94 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: rent_pay[2026-04]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: salary[2026-04]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  unfulfilled: sweep[2026-03]
+  held: rent = 950.00 DUK (later), read for 2026-05-01
+  held: rent = 950.00 DUK (later), read for 2026-06-01
+  held: rent = 950.00 DUK (later), read for 2026-07-01
+  cut 2026-04-15
+d_uncertain [pay_reading = low]: -218.75 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: rent_pay[2026-04]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: salary[2026-04]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  unfulfilled: sweep[2026-03]
+  held: rent = 950.00 DUK (later), read for 2026-05-01
+  held: rent = 950.00 DUK (later), read for 2026-06-01
+  cut 2026-04-15
+d_uncertain [pay_reading = high]: -78.12 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: rent_pay[2026-04]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: salary[2026-04]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  unfulfilled: sweep[2026-03]
+  held: rent = 950.00 DUK (later), read for 2026-05-01
+  held: rent = 950.00 DUK (later), read for 2026-06-01
+  cut 2026-04-15
+k_early [pay_reading = low]: 362.50 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-02-15
+k_early [pay_reading = high]: 793.75 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-02-15
+k_hi: 571.88 DUK
+  pinned: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  held: rent = 950.00 DUK (later), read for 2026-05-01
+  held: rent = 950.00 DUK (later), read for 2026-06-01
+  cut 2026-04-15
+k_late [pay_reading = low]: 337.50 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  held: rent = 950.00 DUK (later), read for 2026-05-01
+  held: rent = 950.00 DUK (later), read for 2026-06-01
+  cut 2026-03-15
+k_late [pay_reading = high]: 768.75 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  held: rent = 950.00 DUK (later), read for 2026-05-01
+  held: rent = 950.00 DUK (later), read for 2026-06-01
+  cut 2026-03-15
+k_mix (d = 2026-02-25) [pay_reading = low]: 500.00 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+k_mix (d = 2026-02-25) [pay_reading = high]: 950.00 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+k_mix (d = 2026-05-05) [pay_reading = low]: 1 350.00 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+k_mix (d = 2026-05-05) [pay_reading = high]: 1 987.50 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+k_mix (d = 2026-03-02) [pay_reading = low]: 1 500.00 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+k_mix (d = 2026-03-02) [pay_reading = high]: 2 250.00 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+k_mix (d = 2026-06-30) [pay_reading = low]: 312.50 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+k_mix (d = 2026-06-30) [pay_reading = high]: 621.88 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+k_mix (d = 2026-12-31) [pay_reading = low]: 300.20 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+k_mix (d = 2026-12-31) [pay_reading = high]: 600.35 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+k_mix (d = 2026-04-01) [pay_reading = low]: 1 400.00 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+k_mix (d = 2026-04-01) [pay_reading = high]: 2 075.00 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+k_room (m = 2026-02) [pay_reading = low]: 500.00 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+k_room (m = 2026-02) [pay_reading = high]: 950.00 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+k_room (m = 2026-03) [pay_reading = low]: 450.00 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  cut 2026-04-15
+k_room (m = 2026-03) [pay_reading = high]: 975.00 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  cut 2026-04-15
+k_room (m = 2026-04) [pay_reading = low]: 425.00 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  unfulfilled: sweep[2026-03]
+  cut 2026-04-15
+k_room (m = 2026-04) [pay_reading = high]: 987.50 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  unfulfilled: sweep[2026-03]
+  cut 2026-04-15
+k_room (m = 2026-05) [pay_reading = low]: 362.50 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: rent_pay[2026-04]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: salary[2026-04]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  unfulfilled: sweep[2026-03]
+  held: rent = 950.00 DUK (later), read for 2026-05-01
+  cut 2026-04-15
+k_room (m = 2026-05) [pay_reading = high]: 943.75 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: rent_pay[2026-04]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: salary[2026-04]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  unfulfilled: sweep[2026-03]
+  held: rent = 950.00 DUK (later), read for 2026-05-01
+  cut 2026-04-15
+k_room (m = 2026-06) [pay_reading = low]: 331.25 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: rent_pay[2026-04]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: salary[2026-04]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  unfulfilled: sweep[2026-03]
+  held: rent = 950.00 DUK (later), read for 2026-05-01
+  held: rent = 950.00 DUK (later), read for 2026-06-01
+  cut 2026-04-15
+k_room (m = 2026-06) [pay_reading = high]: 921.88 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: rent_pay[2026-04]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: salary[2026-04]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  unfulfilled: sweep[2026-03]
+  held: rent = 950.00 DUK (later), read for 2026-05-01
+  held: rent = 950.00 DUK (later), read for 2026-06-01
+  cut 2026-04-15
+k_room (m = 2026-07) [pay_reading = low]: 315.63 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: rent_pay[2026-04]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: salary[2026-04]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  unfulfilled: sweep[2026-03]
+  held: rent = 950.00 DUK (later), read for 2026-05-01
+  held: rent = 950.00 DUK (later), read for 2026-06-01
+  held: rent = 950.00 DUK (later), read for 2026-07-01
+  cut 2026-04-15
+k_room (m = 2026-07) [pay_reading = high]: 910.94 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: rent_pay[2026-04]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: salary[2026-04]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  unfulfilled: sweep[2026-03]
+  held: rent = 950.00 DUK (later), read for 2026-05-01
+  held: rent = 950.00 DUK (later), read for 2026-06-01
+  held: rent = 950.00 DUK (later), read for 2026-07-01
+  cut 2026-04-15
+k_room (m = 2026-08) [pay_reading = low]: 307.82 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: rent_pay[2026-04]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: salary[2026-04]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  unfulfilled: sweep[2026-03]
+  held: rent = 950.00 DUK (later), read for 2026-05-01
+  held: rent = 950.00 DUK (later), read for 2026-06-01
+  held: rent = 950.00 DUK (later), read for 2026-07-01
+  held: rent = 950.00 DUK (later), read for 2026-08-01
+  cut 2026-04-15
+k_room (m = 2026-08) [pay_reading = high]: 905.47 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: rent_pay[2026-04]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: salary[2026-04]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  unfulfilled: sweep[2026-03]
+  held: rent = 950.00 DUK (later), read for 2026-05-01
+  held: rent = 950.00 DUK (later), read for 2026-06-01
+  held: rent = 950.00 DUK (later), read for 2026-07-01
+  held: rent = 950.00 DUK (later), read for 2026-08-01
+  cut 2026-04-15
+k_six [pay_reading = low]: -400.00 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+k_six [pay_reading = high]: 200.00 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+k_six_back [pay_reading = *]: 0.00 DUK
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+k_two [pay_reading = low]: (350.00 DUK, -175.00 DUK)
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  held: rent = 950.00 DUK (later), read for 2026-05-01
+  cut 2026-04-15
+k_two [pay_reading = high]: (687.50 DUK, -62.50 DUK)
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  held: rent = 950.00 DUK (later), read for 2026-05-01
+  cut 2026-04-15
+,20:fixes/gate8/m2_g7_p2,11:fixes-gate8,33:run p2_base.tally p2_richer.tally,2844:13:p2_base.tally,2312:model days
+  tally 2
+  on 2026-04-15
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented for F6's twin"
+
+unit DUK: currency minor 0.01
+
+axis pay_reading
+  low "the lower pay"
+  high "the higher pay"
+
+index month = month 2026-01..2026-12
+
+place konto: accounts DUK lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input pay_low: money DUK
+
+input pay_high: money DUK
+
+input rent: money DUK
+
+input floor: money DUK
+
+input share: num
+
+input late: int
+
+input rent_off: int
+
+input sweep_off: int
+
+input reach: int
+
+def pay: money DUK at reader
+  rule base = pay_low
+  rule hi beats base = pay_high when pay_reading == high
+
+def room[m in month]: money DUK = min(bal(konto, d) from start_of(m) for d in start_of(m) .. add_days(start_of(m), reach) step 1 day) at start_of(m)
+
+move salary[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount pay
+
+move rent_pay[m in month]: transfers
+  on add_days(start_of(m), rent_off)
+  at start_of(m)
+  leg cash from konto to world amount rent
+
+move sweep[m in month]: transfers
+  on add_days(start_of(m), sweep_off)
+  at start_of(m)
+  reads konto
+  leg cash from konto to world amount round(max(0, room[m] - floor) * share, minor(DUK), down) on add_days(start_of(m), late)
+
+ask d_min: min(bal(konto, d) from 2026-02-01 for d in 2026-02-01 .. 2026-03-15 step 1 day)
+
+ask d_back: bal(konto, d) from 2026-02-03 for d in [2026-03-10, 2026-02-20, 2026-03-31, 2026-03-31, 2026-02-03]
+
+ask d_many: min(bal(konto, d) from 2026-02-01 + bal(konto, d) from 2026-02-02 + bal(konto, d) from 2026-02-03 + bal(konto, d) from 2026-02-04 + bal(konto, d) from 2026-02-05 for d in 2026-02-05 .. 2026-02-25 step 1 day)
+
+ask d_axis: min(bal(konto, d) from 2026-03-01 for d in 2026-03-01 .. 2026-03-25 step 1 day)
+
+ask d_uncertain: min(bal(konto, d) from 2026-05-02 with uncertain for d in 2026-05-02 .. 2026-06-10 step 1 day)
+
+ask d_room: room[m] for m in [2026-02, 2026-03, 2026-07]
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  pay_low = 1000.00
+  pay_high = 1300.00
+  rent = 900.00
+  floor = 200.00
+  share = 0.5
+  late = 25
+  rent_off = 9
+  sweep_off = 17
+  reach = 15
+  opening[konto] = 500.00 at 2026-01-01 start
+
+version later
+  cite card
+  governs 2026-05-01..
+  known 2026-03-01
+  replace rent = 950.00 "the rent rose"
+,15:p2_richer.tally,485:scenario richer over days
+  tally 2
+  from 2026-03-10
+
+version richer_pay
+  cite card
+  governs 2026-03-10..
+  known 2026-01-01
+  replace pay_low = 1150.00 "a raise"
+  replace rent_off = 3 "rent earlier"
+
+ask s_min: min(bal(konto, d) from 2026-02-01 for d in 2026-02-01 .. 2026-05-15 step 1 day) in richer
+
+ask s_back: bal(konto, d) from 2026-03-12 for d in [2026-04-30, 2026-03-15, 2026-06-01, 2026-03-12] in richer
+
+ask s_room: room[m] for m in [2026-03, 2026-04, 2026-05] in richer
+,,1:0,12941:d_axis [pay_reading = low]: 450.00 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  cut 2026-04-15
+d_axis [pay_reading = high]: 975.00 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  cut 2026-04-15
+d_back (d = 2026-03-10) [pay_reading = low]: -50.00 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+d_back (d = 2026-03-10) [pay_reading = high]: 325.00 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+d_back (d = 2026-02-20) [pay_reading = low]: 500.00 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+d_back (d = 2026-02-20) [pay_reading = high]: 950.00 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+d_back (d = 2026-03-31) [pay_reading = low]: -50.00 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+d_back (d = 2026-03-31) [pay_reading = high]: 262.50 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+d_back (d = 2026-02-03) [pay_reading = low]: 1 400.00 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+d_back (d = 2026-02-03) [pay_reading = high]: 1 850.00 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+d_many [pay_reading = low]: 2 500.00 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+d_many [pay_reading = high]: 4 750.00 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+d_min [pay_reading = low]: 350.00 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+d_min [pay_reading = high]: 575.00 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+d_room (m = 2026-02) [pay_reading = low]: 500.00 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+d_room (m = 2026-02) [pay_reading = high]: 950.00 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: sweep[2026-01]
+  cut 2026-04-15
+d_room (m = 2026-03) [pay_reading = low]: 450.00 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  cut 2026-04-15
+d_room (m = 2026-03) [pay_reading = high]: 975.00 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  cut 2026-04-15
+d_room (m = 2026-07) [pay_reading = low]: 315.63 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: rent_pay[2026-04]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: salary[2026-04]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  unfulfilled: sweep[2026-03]
+  held: rent = 950.00 DUK (later), read for 2026-05-01
+  held: rent = 950.00 DUK (later), read for 2026-06-01
+  held: rent = 950.00 DUK (later), read for 2026-07-01
+  cut 2026-04-15
+d_room (m = 2026-07) [pay_reading = high]: 910.94 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: rent_pay[2026-04]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: salary[2026-04]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  unfulfilled: sweep[2026-03]
+  held: rent = 950.00 DUK (later), read for 2026-05-01
+  held: rent = 950.00 DUK (later), read for 2026-06-01
+  held: rent = 950.00 DUK (later), read for 2026-07-01
+  cut 2026-04-15
+d_uncertain [pay_reading = low]: -218.75 DUK
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: rent_pay[2026-04]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: salary[2026-04]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  unfulfilled: sweep[2026-03]
+  held: rent = 950.00 DUK (later), read for 2026-05-01
+  held: rent = 950.00 DUK (later), read for 2026-06-01
+  cut 2026-04-15
+d_uncertain [pay_reading = high]: -78.12 DUK
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: rent_pay[2026-04]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: salary[2026-04]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  unfulfilled: sweep[2026-03]
+  held: rent = 950.00 DUK (later), read for 2026-05-01
+  held: rent = 950.00 DUK (later), read for 2026-06-01
+  cut 2026-04-15
+s_back (d = 2026-04-30) [pay_reading = low]: 362.50 DUK
+  world: richer
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  cut 2026-04-15
+s_back (d = 2026-04-30) [pay_reading = high]: 493.75 DUK
+  world: richer
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  cut 2026-04-15
+s_back (d = 2026-03-15) [pay_reading = low]: 450.00 DUK
+  world: richer
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  cut 2026-04-15
+s_back (d = 2026-03-15) [pay_reading = high]: 975.00 DUK
+  world: richer
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  cut 2026-04-15
+s_back (d = 2026-06-01) [pay_reading = low]: 1 531.25 DUK
+  world: richer
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  held: pay_low = 1 150.00 DUK (richer_pay), read for 2026-05-01
+  held: pay_low = 1 150.00 DUK (richer_pay), read for 2026-06-01
+  held: rent = 950.00 DUK (later), read for 2026-05-01
+  held: rent_off = 3 (richer_pay), read for 2026-05-01
+  cut 2026-04-15
+s_back (d = 2026-06-01) [pay_reading = high]: 1 821.88 DUK
+  world: richer
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  held: rent = 950.00 DUK (later), read for 2026-05-01
+  held: rent_off = 3 (richer_pay), read for 2026-05-01
+  cut 2026-04-15
+s_back (d = 2026-03-12) [pay_reading = low]: 450.00 DUK
+  world: richer
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  cut 2026-04-15
+s_back (d = 2026-03-12) [pay_reading = high]: 975.00 DUK
+  world: richer
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  cut 2026-04-15
+s_min [pay_reading = low]: 325.00 DUK
+  world: richer
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: sweep[2026-01]
+  held: pay_low = 1 150.00 DUK (richer_pay), read for 2026-05-01
+  held: rent_off = 3 (richer_pay), read for 2026-05-01
+  cut 2026-04-15
+s_min [pay_reading = high]: 575.00 DUK
+  world: richer
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: sweep[2026-01]
+  held: rent_off = 3 (richer_pay), read for 2026-05-01
+  cut 2026-04-15
+s_room (m = 2026-03) [pay_reading = low]: 450.00 DUK
+  world: richer
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  cut 2026-04-15
+s_room (m = 2026-03) [pay_reading = high]: 975.00 DUK
+  world: richer
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  cut 2026-04-15
+s_room (m = 2026-04) [pay_reading = low]: 575.00 DUK
+  world: richer
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  unfulfilled: sweep[2026-03]
+  cut 2026-04-15
+s_room (m = 2026-04) [pay_reading = high]: 987.50 DUK
+  world: richer
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  unfulfilled: sweep[2026-03]
+  cut 2026-04-15
+s_room (m = 2026-05) [pay_reading = low]: 587.50 DUK
+  world: richer
+  reading: pay_reading = low
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: rent_pay[2026-04]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: salary[2026-04]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  unfulfilled: sweep[2026-03]
+  held: pay_low = 1 150.00 DUK (richer_pay), read for 2026-05-01
+  held: rent = 950.00 DUK (later), read for 2026-05-01
+  held: rent_off = 3 (richer_pay), read for 2026-05-01
+  cut 2026-04-15
+s_room (m = 2026-05) [pay_reading = high]: 943.75 DUK
+  world: richer
+  reading: pay_reading = high
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: rent_pay[2026-04]
+  unfulfilled: salary[2026-01]
+  unfulfilled: salary[2026-02]
+  unfulfilled: salary[2026-03]
+  unfulfilled: salary[2026-04]
+  unfulfilled: sweep[2026-01]
+  unfulfilled: sweep[2026-02]
+  unfulfilled: sweep[2026-03]
+  held: rent = 950.00 DUK (later), read for 2026-05-01
+  held: rent_off = 3 (richer_pay), read for 2026-05-01
+  cut 2026-04-15
+,31:fixes/gate8/m2_g7_p3_after_same,11:fixes-gate8,57:run p3_after_same.tally --ask a_min a_back a_both a_known,1959:19:p3_after_same.tally,1930:model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+  note "G7 review probe: after-reading and same inside a kept walk"
+
+source s "s"
+unit PLN: currency minor 0.01
+kind savings: place PLN min 0
+place konto: accounts PLN lives 2026-01-01..
+place sav: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input keep: money PLN
+input d_save: int
+
+move save[m in months]: transfers
+  on day_of(m, d_save)
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  d_save = 15 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[o1] = (on: 2026-03-14, kind: transfers, leg cash from konto to sav amount 500.00 PLN, fulfils: save[2026-03]) "o1"
+  bank[o2] = (on: 2026-03-16, kind: transfers, leg cash from sav to world amount 20.00 PLN, fulfils: save[2026-03]) "o2"
+  bank[o3] = (on: 2026-03-14, kind: transfers, leg cash from konto to sav amount 500.00 PLN, fulfils: save[2026-03]) "o3"
+  same bank[o3] = bank[o1]
+
+version rd
+  cite s
+  governs 2026-03..2026-04
+  known 2026-04-04
+  pad konto from world
+  stated[konto] = 90.00 PLN after save[2026-03] "saldo"
+
+
+ask a_min: min(bal(konto, d) from 2026-03-10 for d in 2026-03-10 .. 2026-04-30 step 1 day)
+
+ask a_back: bal(sav, d) from 2026-03-12 for d in [2026-03-20, 2026-03-14, 2026-04-30, 2026-03-16, 2026-04-01]
+
+ask a_both: min(bal(konto, d) from 2026-03-13 + bal(sav, d) from 2026-03-13 for d in 2026-03-13 .. 2026-04-20 step 1 day)
+
+ask a_late: min(bal(konto, d) from 2026-04-12 for d in 2026-04-12 .. 2026-04-30 step 1 day)
+
+ask a_known: min(bal(konto, d) from 2026-03-10 for d in 2026-03-10 .. 2026-04-30 step 1 day) as known 2026-04-03
+
+ask a_stated: last(stated[konto], 2026-03-31)
+,,1:0,373:a_min: 100.00 PLN
+  cut 2026-04-10
+a_back (d = 2026-03-20): 950.00 PLN
+  cut 2026-04-10
+a_back (d = 2026-03-14): 0.00 PLN
+  cut 2026-04-10
+a_back (d = 2026-04-30): 950.00 PLN
+  cut 2026-04-10
+a_back (d = 2026-03-16): 950.00 PLN
+  cut 2026-04-10
+a_back (d = 2026-04-01): 950.00 PLN
+  cut 2026-04-10
+a_both: 1 050.00 PLN
+  cut 2026-04-10
+a_known: 100.00 PLN
+  cut 2026-04-03
+,27:fixes/gate8/m2_g7_p4_failed,11:fixes-gate8,19:run p4_failed.tally,1658:15:p4_failed.tally,1633:model p
+  tally 2
+  on 2026-04-15
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented probe for F5"
+
+unit DUK: currency minor 0.01
+
+index month = month 2026-01..2026-12
+
+place konto: accounts DUK lives 2026-01-01..
+
+input prio: int
+
+input amt: money DUK
+
+input dec_day: date
+
+place world: outside lives 2026-01-01..
+
+input pay: money DUK
+
+input rent: money DUK
+
+input off: int
+
+move salary[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount pay
+
+move rent_pay[m in month]: transfers
+  on add_days(start_of(m), off)
+  at start_of(m)
+  leg cash from konto to world amount rent
+
+move pick[k in month]: transfers
+  on dec_day
+  at dec_day
+  reads konto
+  ties by add_days(start_of(k), prio)
+  leg cash from world to konto amount amt + 0 * bal(konto, dec_day start)
+
+
+
+
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 1000.00
+  rent = 900.00
+  off = 9
+  opening[konto] = 500.00 at 2026-01-01 start
+  amt = 5.00
+  dec_day = 2026-05-01
+
+version later
+  cite card
+  governs always
+  known 2026-02-01
+  prio = 1
+
+ask g_days: min(bal(konto, d) from 2026-01-20 for d in 2026-04-20 .. 2026-05-05 step 1 day)
+
+ask g_list: bal(konto, d) from 2026-01-20 for d in [2026-04-28, 2026-04-30, 2026-05-01, 2026-04-29, 2026-05-02, 2026-04-30]
+
+ask g_short_long: bal(konto, 2026-03-31) from 2026-01-20, bal(konto, 2026-04-30) from 2026-01-20, bal(konto, 2026-06-30) from 2026-01-20, bal(konto, 2026-04-15) from 2026-01-20
+
+ask g_low_then: low(konto, 2026-01-20 .. 2026-04-30) from 2026-01-20, low(konto, 2026-01-20 .. 2026-06-30) from 2026-01-20, bal(konto, 2026-04-30) from 2026-01-20
+,,1:0,1118:g_days: refused: RUN-TIE pick: its ties by is a hole
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+g_list (d = 2026-04-28): 900.00 DUK
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+g_list (d = 2026-04-30): 900.00 DUK
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+g_list (d = 2026-05-01): refused: RUN-TIE pick: its ties by is a hole
+  cut 2026-04-15
+g_list (d = 2026-04-29): 900.00 DUK
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+g_list (d = 2026-05-02): refused: RUN-TIE pick: its ties by is a hole
+  cut 2026-04-15
+g_list (d = 2026-04-30): 900.00 DUK
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+g_low_then: (600.00 DUK, refused: RUN-TIE pick: its ties by is a hole, 900.00 DUK)
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+g_short_long: (800.00 DUK, 900.00 DUK, refused: RUN-TIE pick: its ties by is a hole, 900.00 DUK)
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+,22:fixes/gate8/m2_g7_p8m4,11:fixes-gate8,14:run p8m4.tally,617:10:p8m4.tally,598:model p8m4
+  tally 2
+  on 2025-01-01
+  start 2025-01-01
+  end 2058-01-01
+
+source card "P8-M4 reality"
+
+unit DUK: currency minor 0.01
+
+kind ext: place DUK signed outside
+
+place out: ext lives 2025-01-01..
+
+place x: accounts DUK lives 2025-01-01..
+
+input amt: money DUK
+
+move pay[d in days]: transfers
+  on d
+  leg cash from out to x amount amt
+
+version facts
+  cite card
+  governs always
+  known 2025-01-01
+  amt = 1.25
+  opening[x] = 100.00 at 2025-01-01 start
+
+ask plain: bal(x, 2058-01-01)
+
+ask proj: bal(x, 2058-01-01) from 2025-01-01
+
+ask lowp: low(x, 2025-01-01 .. 2058-01-01) from 2025-01-01
+,,1:0,109:lowp: 101.25 DUK
+  cut 2025-01-01
+plain: 15 167.50 DUK
+  cut 2025-01-01
+proj: 15 167.50 DUK
+  cut 2025-01-01
+,29:fixes/gate8/m2_g7_p8m4_noopen,11:fixes-gate8,21:run p8m4_noopen.tally,583:17:p8m4_noopen.tally,557:model p8m4
+  tally 2
+  on 2025-01-01
+  start 2025-01-01
+  end 2058-01-01
+
+source card "P8-M4 reality"
+
+unit DUK: currency minor 0.01
+
+kind ext: place DUK signed outside
+
+place out: ext lives 2025-01-01..
+
+place x: accounts DUK lives 2025-01-01..
+
+input amt: money DUK
+
+move pay[d in days]: transfers
+  on d
+  leg cash from out to x amount amt
+
+version facts
+  cite card
+  governs always
+  known 2025-01-01
+  amt = 1.25
+
+
+ask plain: bal(x, 2058-01-01)
+
+ask proj: bal(x, 2058-01-01) from 2025-01-01
+
+ask lowp: low(x, 2025-01-01 .. 2058-01-01) from 2025-01-01
+,,1:0,107:lowp: 1.25 DUK
+  cut 2025-01-01
+plain: 15 067.50 DUK
+  cut 2025-01-01
+proj: 15 067.50 DUK
+  cut 2025-01-01
+,25:fixes/gate8/m2_g7_p8m4_t2,11:fixes-gate8,17:run p8m4_t2.tally,620:13:p8m4_t2.tally,598:model p8m4
+  tally 2
+  on 2025-01-01
+  start 2025-01-01
+  end 2058-01-01
+
+source card "P8-M4 reality"
+
+unit DUK: currency minor 0.01
+
+kind ext: place DUK signed outside
+
+place out: ext lives 2025-01-01..
+
+place x: accounts DUK lives 2025-01-01..
+
+input amt: money DUK
+
+move pay[d in days]: transfers
+  on d
+  leg cash from out to x amount amt
+
+version facts
+  cite card
+  governs always
+  known 2025-01-01
+  amt = 1.25
+  opening[x] = 100.00 at 2025-01-01 start
+
+ask plain: bal(x, 2058-01-01)
+
+ask proj: bal(x, 2058-01-01) from 2025-01-02
+
+ask lowp: low(x, 2025-01-01 .. 2058-01-01) from 2025-01-02
+,,1:0,204:lowp: refused: RUN-DOMAIN low(x, 2025-01-01 .. 2058-01-01) from 2025-01-02: a day before the projection's start
+  cut 2025-01-01
+plain: 15 167.50 DUK
+  cut 2025-01-01
+proj: 15 167.50 DUK
+  cut 2025-01-01
+,26:fixes/gate8/m2_g7_cont_dis,11:fixes-gate8,18:run cont_dis.tally,1283:14:cont_dis.tally,1259:model t
+  tally 2
+  on 2026-01-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G7 review N4: a projection's kept walk planned through 03-31, read again through 12-31 where a move first dated in June joins the plan (walk/fork.rs continue_planned disagreeing), then through 05-31 (meet_parked: planned past the read, freed)"
+
+source s "s"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-12
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input pay: money PLN
+input bonus: money PLN
+input dlate: date
+
+move salary[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount pay
+
+move late: transfers
+  on dlate
+  at dlate
+  leg cash from world to konto amount bonus
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "s"
+  bonus = 7.00 PLN "s"
+  dlate = 2026-06-10 "s"
+  opening[konto] = 50.00 PLN at 2026-01-01 start "s"
+
+ask q1: bal(konto, 2026-03-31) from 2026-01-20, bal(konto, 2026-12-31) from 2026-01-20, bal(konto, 2026-05-31) from 2026-01-20
+ask q2: bal(konto, 2026-03-31) from 2026-01-20
+ask q3: bal(konto, 2026-12-31) from 2026-01-20
+ask q4: low(konto, 2026-01-20 .. 2026-12-31) from 2026-01-20, bal(konto, 2026-06-30) from 2026-01-20
+,,1:0,296:q1: (350.00 PLN, 1 257.00 PLN, 550.00 PLN)
+  unfulfilled: salary[2026-01]
+  cut 2026-01-20
+q2: 350.00 PLN
+  unfulfilled: salary[2026-01]
+  cut 2026-01-20
+q3: 1 257.00 PLN
+  unfulfilled: salary[2026-01]
+  cut 2026-01-20
+q4: (150.00 PLN, 657.00 PLN)
+  unfulfilled: salary[2026-01]
+  cut 2026-01-20
 ,

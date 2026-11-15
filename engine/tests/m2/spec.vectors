@@ -5941,4 +5941,71 @@ b14: 90.00 PLN
 b31: 90.00 PLN
   pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of -455.00 PLN
   cut 2026-04-10
+,18:spec/g7/p3_after_m,12:spec-records,45:run p3_after_same.tally --ask a_late a_stated,1959:19:p3_after_same.tally,1930:model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+  note "G7 review probe: after-reading and same inside a kept walk"
+
+source s "s"
+unit PLN: currency minor 0.01
+kind savings: place PLN min 0
+place konto: accounts PLN lives 2026-01-01..
+place sav: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input keep: money PLN
+input d_save: int
+
+move save[m in months]: transfers
+  on day_of(m, d_save)
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  d_save = 15 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[o1] = (on: 2026-03-14, kind: transfers, leg cash from konto to sav amount 500.00 PLN, fulfils: save[2026-03]) "o1"
+  bank[o2] = (on: 2026-03-16, kind: transfers, leg cash from sav to world amount 20.00 PLN, fulfils: save[2026-03]) "o2"
+  bank[o3] = (on: 2026-03-14, kind: transfers, leg cash from konto to sav amount 500.00 PLN, fulfils: save[2026-03]) "o3"
+  same bank[o3] = bank[o1]
+
+version rd
+  cite s
+  governs 2026-03..2026-04
+  known 2026-04-04
+  pad konto from world
+  stated[konto] = 90.00 PLN after save[2026-03] "saldo"
+
+
+ask a_min: min(bal(konto, d) from 2026-03-10 for d in 2026-03-10 .. 2026-04-30 step 1 day)
+
+ask a_back: bal(sav, d) from 2026-03-12 for d in [2026-03-20, 2026-03-14, 2026-04-30, 2026-03-16, 2026-04-01]
+
+ask a_both: min(bal(konto, d) from 2026-03-13 + bal(sav, d) from 2026-03-13 for d in 2026-03-13 .. 2026-04-20 step 1 day)
+
+ask a_late: min(bal(konto, d) from 2026-04-12 for d in 2026-04-12 .. 2026-04-30 step 1 day)
+
+ask a_known: min(bal(konto, d) from 2026-03-10 for d in 2026-03-10 .. 2026-04-30 step 1 day) as known 2026-04-03
+
+ask a_stated: last(stated[konto], 2026-03-31)
+,,1:0,215:a_late: 90.00 PLN
+  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of -460.00 PLN
+  cut 2026-04-10
+a_stated: 90.00 PLN
+  held: stated[konto] = 90.00 PLN (rd), read for 2026-03-31
+  cut 2026-04-10
 ,

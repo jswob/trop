@@ -1978,3 +1978,13 @@ fixes/gate8/m2_r4371_cover_on_end	fixes-gate8		engine/tests/m2/fixes/gate8/r4371
 fixes/gate8/m2_r4371_flows_for_after	fixes-gate8		engine/tests/m2/fixes/gate8/r4371	engine/tests/m2/fixes/gate8/r4371/flows_for_after.tally			-
 fixes/gate8/m2_r4371_modelled_open	fixes-gate8		engine/tests/m2/fixes/gate8/r4371	engine/tests/m2/fixes/gate8/r4371/modelled_open.tally			-
 fixes/gate8/m2_r4371_same_refused	fixes-gate8		engine/tests/m2/fixes/gate8/r4371	engine/tests/m2/fixes/gate8/r4371/same_refused.tally			-
+fixes/gate8/m2_g7_b1_cons	fixes-gate8		engine/tests/m2/fixes/g7	engine/tests/m2/fixes/g7/b1_cons.tally			-
+fixes/gate8/m2_g7_b1_dec	fixes-gate8		engine/tests/m2/fixes/g7	engine/tests/m2/fixes/g7/b1_dec.tally			-
+fixes/gate8/m2_g7_p1_cuts	fixes-gate8		engine/tests/m2/fixes/g7	engine/tests/m2/fixes/g7/p1_cuts.tally			-
+fixes/gate8/m2_g7_p2	fixes-gate8		engine/tests/m2/fixes/g7	engine/tests/m2/fixes/g7/p2_base.tally engine/tests/m2/fixes/g7/p2_richer.tally			-
+fixes/gate8/m2_g7_p3_after_same	fixes-gate8		engine/tests/m2/fixes/g7	engine/tests/m2/fixes/g7/p3_after_same.tally	a_min a_back a_both a_known		-
+fixes/gate8/m2_g7_p4_failed	fixes-gate8		engine/tests/m2/fixes/g7	engine/tests/m2/fixes/g7/p4_failed.tally			-
+fixes/gate8/m2_g7_p8m4	fixes-gate8		engine/tests/m2/fixes/g7	engine/tests/m2/fixes/g7/p8m4.tally			-
+fixes/gate8/m2_g7_p8m4_noopen	fixes-gate8		engine/tests/m2/fixes/g7	engine/tests/m2/fixes/g7/p8m4_noopen.tally			-
+fixes/gate8/m2_g7_p8m4_t2	fixes-gate8		engine/tests/m2/fixes/g7	engine/tests/m2/fixes/g7/p8m4_t2.tally			-
+fixes/gate8/m2_g7_cont_dis	fixes-gate8		engine/tests/m2/fixes/g7	engine/tests/m2/fixes/g7/cont_dis.tally			-
