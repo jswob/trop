@@ -406,18 +406,15 @@ pub fn money_num(m: &Reality, money: &Money) -> Result<Num, NumError> {
 }
 
 /// `q` units of currency `cur` as money; `Domain` when it isn't a whole number of minor units
-/// (L §3.1, `LOAD-PRECISION` where load sees it).
+/// (L §3.1, `LOAD-PRECISION` where load sees it). The cap is `q`'s, counted on its reduced
+/// fraction, never on its minor units (L §7.1).
 ///
 /// # Errors
 ///
 /// `Domain` for a fraction of the minor unit; as [`currency`].
 pub fn num_money(m: &Reality, q: &Num, cur: Currency) -> Result<Money, NumError> {
     let (_, minor) = currency(m, cur)?;
-    let units = q.checked_div(minor)?;
-    if !units.is_integer() {
-        return Err(NumError::Domain);
-    }
-    units.to_money(cur)
+    q.to_money_in(minor, cur)
 }
 
 /// The unit of a currency, `PLN` to the first power (L §3.2).

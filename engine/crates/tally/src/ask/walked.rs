@@ -30,8 +30,8 @@ use crate::num::Num;
 use crate::syntax::{Ask, Bal, Expr, Low, Proj, Stop};
 use crate::time::Day;
 use crate::walk::{
-    ALL, Amount, At, Change, Ent, LegVal, Status, Walk, own_unit, qty_value, quantity, span_last,
-    state_value,
+    ALL, Amount, At, Change, Dated, Ent, LegVal, Status, Walk, own_unit, qty_value, quantity,
+    span_last, state_value,
 };
 
 /// A balance read `explain` explains: `bal(…)`, plain or a projection, or `low(…)`.
@@ -141,8 +141,8 @@ fn place_unit(
 
 /// A balance read's derivation: a plain balance's place and instant, where it starts (its
 /// last reading, or the opening), then every movement the walk booked there since, through
-/// that instant, by day; a projection's from its own walk (refcore's `_explain_bal_lines`).
-/// E §10, §6.1.
+/// that instant, by day; a projection's from its own walk; a modelled one's what its value
+/// counts (refcore's `_explain_bal_lines`). E §10, §6.1, §6.2.
 fn balance_lines(
     m: &Reality,
     engine: &mut Engine,
@@ -191,9 +191,71 @@ fn balance_lines(
         return projection_lines(m, engine, (ask, &place, &unit), (t, low, end), (unc, ctx));
     }
     let start = matches!(read, Read::Bal(b) if b.start);
-    let uncertain = read.proj().uncertain;
     let id = engine.main_walk(m, ctx.cut)?;
+    if matches!(read, Read::Bal(b) if b.modelled) {
+        return modelled_lines(m, engine, id, (&place, &unit), (end, start));
+    }
+    let uncertain = read.proj().uncertain;
     plain_lines(m, engine, id, (&place, &unit), (end, start, uncertain))
+}
+
+/// `explain bal(x, d) modelled`: its place and day, where it starts (its last reading before
+/// the day, or the opening), then what the value counts, by day: the movements booked since
+/// but the observations, and the modelled-past instances' legs, each `(modelled)` (refcore's
+/// `_explain_bal_lines`, its `modelled` form). E §10 ("the traced value equals the stored
+/// one"), §6.2.
+fn modelled_lines(
+    m: &Reality,
+    engine: &Engine,
+    id: usize,
+    (place, unit): (&str, &str),
+    (end, start): (Day, bool),
+) -> Result<Vec<String>, Stop> {
+    let walk = engine.walk(id)?;
+    let edge = if start { "start" } else { "end" };
+    let mut out = vec![format!(
+        "balance of {place} ({unit}) at the {edge} of {}, modelled",
+        end.text()
+    )];
+    let counted = walk.modelled_counted(m, (place, unit), end)?;
+    let log = walk.entries(place, unit);
+    out.push(match counted.start {
+        Some(r) => {
+            let e = log
+                .get(r)
+                .ok_or_else(|| invariant("a reading past its log"))?;
+            format!("from: {}", reading_text(m, walk, (place, unit), e)?)
+        }
+        None => opening_text(m, walk, (place, unit))?,
+    });
+    let mut ents: Vec<(&Ent, &str)> = Vec::with_capacity(counted.ents.len());
+    for j in &counted.ents {
+        let e = log
+            .get(*j)
+            .ok_or_else(|| invariant("a modelled balance past its log"))?;
+        ents.push((e, unit));
+    }
+    let mut rows = entry_rows(m, engine, walk, ents)?;
+    for (ii, li, sign) in counted.legs {
+        let inst = walk
+            .modelled
+            .get(ii)
+            .ok_or_else(|| invariant("a modelled instance the walk lacks"))?;
+        let lg = inst
+            .legs
+            .get(li)
+            .ok_or_else(|| invariant("a leg the instance lacks"))?;
+        let gd = lg
+            .day
+            .day()
+            .or_else(|| inst.day.as_ref().and_then(Dated::lo))
+            .ok_or_else(|| invariant("a modelled leg with no day"))?;
+        let side = if sign < 0 { Side::Out } else { Side::In };
+        let amount = amount_text(m, lg, side)?;
+        rows.push((gd, format!("{}.{} (modelled): {amount}", inst.id, lg.name)));
+    }
+    out.extend(by_day(rows));
+    Ok(out)
 }
 
 /// `explain low(x, a .. b)` with no `from`: the lowest of the plain end-of-day balances
@@ -685,7 +747,7 @@ fn uncertain_rows(
     rows: &mut Vec<(Day, String)>,
 ) -> Result<(), Stop> {
     for inst in &walk.uncertain {
-        let day = inst.day.as_ref().and_then(crate::walk::Dated::lo);
+        let day = inst.day.as_ref().and_then(Dated::lo);
         for lg in &inst.legs {
             let Some(gd) = lg.day.day().or(day) else {
                 continue;

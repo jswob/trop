@@ -251,7 +251,7 @@ fn leg_amount(
         ));
     }
     if let Some(minor) = m.currencies.get(&unit)
-        && !q.checked_div(minor).map_err(num_err)?.is_integer()
+        && !q.is_whole_in(minor).map_err(num_err)?
     {
         return Err(refuse_load(
             Load::Unit,

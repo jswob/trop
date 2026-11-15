@@ -227,7 +227,7 @@ impl Engine {
                 figure: String::new(),
             });
         }
-        let groups = same_groups(m);
+        let groups = same_groups(m, cut)?;
         for (first, rest) in once_obs(&groups, &obs) {
             let others: Vec<&Obs> = rest.iter().filter_map(|&k| obs.get(k)).collect();
             let Some(o) = obs.get(first) else {
@@ -237,15 +237,17 @@ impl Engine {
             for x in &others {
                 acc.met.merge(&x.coll);
             }
-            if let Some(h) = same_differ(m, o, &others, leg)? {
+            if let Some(h) = same_differ(m, &groups, o, &others, leg)? {
                 acc.holes.push(h);
                 continue;
             }
             for lg in o.legs.iter().filter(|lg| wanted(leg, &lg.name)) {
-                let Amount::Qty(q) = &lg.amount else {
-                    return Err(invariant("an observed leg with no amount"));
-                };
-                acc.add(q, lg.unit.as_ref())?;
+                // a row known in a window that holds the cut has its legs a hole (L §4.4, §4.5)
+                match &lg.amount {
+                    Amount::Qty(q) => acc.add(q, lg.unit.as_ref())?,
+                    Amount::Hole(h) => acc.holes.push(h.clone()),
+                    Amount::Refused(r) => return Err(Stop::Refused(r.clone())),
+                }
             }
         }
         Ok(())
