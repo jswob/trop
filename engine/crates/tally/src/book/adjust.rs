@@ -61,6 +61,9 @@ pub struct Adjustment {
     pub settled: Vec<Settled>,
     /// Whether a movement of a kind with no legs waives it (L §5.14.3).
     pub waived: bool,
+    /// Whether its step made the instance exist, the state before it not existing: the leg's
+    /// places are then this version's (E §5 step 1).
+    pub made: bool,
 }
 
 /// A leg that settles an adjustment, or a waiver (refcore's `AdjMv.settled`). E §5 step 5.
@@ -510,10 +513,12 @@ fn measured(step: &Step, inst: &Inst, prev: &Prev, j: &Inst) -> Result<Vec<Adjus
         &inst.legs
     };
     let pool: Vec<&LegVal> = base.iter().chain(before.values().copied()).collect();
+    // this step makes the instance exist: its legs' places are this version's (E §5 step 1)
+    let made = !prev.exists && j.exists == Exists::Yes;
     let mut out = Vec::new();
     for ln in names {
         let (a, b) = (before.get(ln).copied(), after.get(ln).copied());
-        if let Some(adj) = leg_change(step, &pool, a, b, ln)? {
+        if let Some(adj) = leg_change(step, &pool, (a, b, made), ln)? {
             out.push(adj);
         }
     }
@@ -539,14 +544,14 @@ struct Step {
     coll: Collected,
 }
 
-/// The adjustment of one leg at one step: δ between the step before and this one, recorded for
-/// δ ≠ 0, a hole, or a change of places (refcore's `adjust_move_compute`, a leg). E §5 steps
-/// 3–4, L §5.14.3.
+/// The adjustment of one leg at one step: δ between the step before (`a`) and this one (`b`),
+/// recorded for δ ≠ 0, a hole, or a change of places; a δ in number marked `made` where the
+/// step made the instance exist (refcore's `adjust_move_compute`, a leg, `adj.made`). E §5
+/// steps 1, 3–4, L §5.14.3.
 fn leg_change(
     step: &Step,
     pool: &[&LegVal],
-    a: Option<&LegVal>,
-    b: Option<&LegVal>,
+    (a, b, made): (Option<&LegVal>, Option<&LegVal>, bool),
     name: &str,
 ) -> Result<Option<Adjustment>, Stop> {
     let qa = a.map(|lg| &lg.amount);
@@ -595,7 +600,9 @@ fn leg_change(
     };
     let mut leg = leg;
     leg.unit.clone_from(&either.unit);
-    Ok(Some(make(step, leg, Amount::Qty(delta), ends)))
+    let mut adj = make(step, leg, Amount::Qty(delta), ends);
+    adj.made = made;
+    Ok(Some(adj))
 }
 
 /// An adjustment of `leg` by `delta` at a step, named by the step's versions, the first in
@@ -615,6 +622,7 @@ fn make(
         before_ends,
         settled: Vec::new(),
         waived: false,
+        made: false,
         move_id: step.move_id.clone(),
         inst_day: step.inst_day,
         leg,

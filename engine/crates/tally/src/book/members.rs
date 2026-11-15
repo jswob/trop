@@ -23,6 +23,7 @@ use crate::base::{Code, Load, Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Entry, Env};
 use crate::hole::{Hole, spread};
 use crate::model::{Fulfils, KeyVal, MoveInfo, MvRef, MvSrc, Reality, Span, Value};
+use crate::num::Num;
 use crate::syntax::{Bind, Call, Expr, Stop};
 use crate::time::Day;
 use crate::walk::{
@@ -929,22 +930,8 @@ impl Engine {
         if let Moving::Plan(i) = src
             && (i.exists == Exists::No || i.status == Status::None)
         {
-            // a later version may have made it exist (E §5 step 1): a plan's leg some
-            // adjustment of the cut changes; else it is none here (refcore's
-            // `made_to_exist_leg`, then `RUN-NONE`)
-            let mv = m
-                .moves
-                .get(&i.move_id)
-                .ok_or_else(|| invariant("an instance of a move load didn't build"))?;
-            if !mv.decision
-                && self
-                    .adjust_move(m, mv, ctx.cut)?
-                    .iter()
-                    .any(|a| a.inst_id == i.id && a.leg.name == name)
-            {
-                return Err(Stop::NotBuilt(
-                    "a leg of an instance a later version made exist",
-                ));
+            if let Some(made) = self.made_to_exist_leg(m, i, name, ctx)? {
+                return Ok(made);
             }
             return Err(Stop::Refused(Refusal::new(
                 Code::Run(Run::None),
@@ -958,6 +945,43 @@ impl Engine {
             Code::Load(Load::Field),
             format!("{name} is not a field of {}", src.id()),
         )))
+    }
+
+    /// Leg `name` of plan instance `i`, which didn't exist at its booking cut, as a later
+    /// version made it exist: the leg of the last of the cut's adjustments of it whose step
+    /// made it exist, with that version's places, booked at amount 0; none where no step made
+    /// it exist (refcore's `made_to_exist_leg`). E §5 steps 1, 3 and 6, L §5.14.3.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::adjust_move`].
+    fn made_to_exist_leg(
+        &mut self,
+        m: &Reality,
+        i: &Inst,
+        name: &str,
+        ctx: Ctx,
+    ) -> Result<Option<Value>, Stop> {
+        let mv = m
+            .moves
+            .get(&i.move_id)
+            .ok_or_else(|| invariant("an instance of a move load didn't build"))?;
+        if mv.decision {
+            return Ok(None);
+        }
+        let adjustments = self.adjust_move(m, mv, ctx.cut)?;
+        let Some(a0) = adjustments
+            .iter()
+            .rev()
+            .find(|a| a.inst_id == i.id && a.leg.name == name && a.made)
+        else {
+            return Ok(None);
+        };
+        let (coll, mut leg) = (a0.coll.clone(), a0.leg.clone());
+        self.absorb(&coll);
+        // booked at A₀ = 0 (E §5 step 1); a later read sees A₀ plus the settlements (step 6)
+        leg.amount = Amount::Qty(Num::zero());
+        leg_record(m, &leg).map(Some)
     }
 
     /// Whether a movement value is of kind `kind`: its record's kind is in the kind's subtree;
