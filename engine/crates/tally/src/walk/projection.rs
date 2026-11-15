@@ -18,6 +18,7 @@ use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::agenda::left_out_lines;
+use super::fork::Held;
 use super::lows::{Base, Lows};
 use super::plan::invariant;
 use super::point::At;
@@ -382,8 +383,9 @@ impl Engine {
 
     /// The walk of a projection from day `t` through day `through`, from where
     /// [`Engine::proj_base`] starts it; its cut min(t, K): one a read holds now that plans
-    /// that far, else a new one; taken by the read until [`Engine::end_projection`] (refcore's
-    /// `proj_walk`). E §4.3 step 1, L §5.14.1; P §2.3, §3.5.
+    /// that far, or with forks on one kept past its reads (`fork.rs`), else a new one; taken
+    /// by the read until [`Engine::end_projection`] (refcore's `proj_walk`). E §4.3 step 1,
+    /// L §5.14.1; P §2.3, §2.5, §3.5.
     fn proj_walk(
         &mut self,
         m: &Reality,
@@ -395,16 +397,17 @@ impl Engine {
         let c = t.min(cut);
         let key: ProjKey = (base, point, c, left_out);
         let held = self.proj_walks.get(&key).copied();
-        let id = match held {
-            Some(id) if self.walk(id)?.plans_through() >= through => id,
-            Some(_) | None => {
-                let after = self.after_days(m, c)?;
-                let walk = self.continued(m, (base, point), (c, t, through), (&key.3, &after))?;
-                let id = self.walks.len();
-                self.walks.push(walk);
-                #[cfg(feature = "counters")]
-                self.counts.add(crate::Unit::Walk);
-                self.proj_walks.insert(key, id);
+        let found = match held {
+            Some(id) if self.is_parked(id) => self.meet_parked(id, through)?,
+            Some(id) if self.walk(id)?.plans_through() >= through => Held::Kept(id),
+            Some(_) | None => Held::New,
+        };
+        let id = match found {
+            Held::Kept(id) => id,
+            Held::New => self.new_proj_walk(m, key, t, through)?,
+            Held::Continue(kept) => {
+                let id = self.new_proj_walk(m, key, t, through)?;
+                self.wait_to_continue(id, *kept);
                 id
             }
         };
@@ -420,10 +423,31 @@ impl Engine {
         Ok(id)
     }
 
+    /// A new walk of projection `key` from day `t`, planned through day `through`, put under
+    /// its key (refcore's `proj_walk`, its new `Walk`). E §4.3 step 1.
+    fn new_proj_walk(
+        &mut self,
+        m: &Reality,
+        key: ProjKey,
+        t: Day,
+        through: Day,
+    ) -> Result<usize, Stop> {
+        let (base, point, c) = (key.0, key.1, key.2);
+        let after = self.after_days(m, c)?;
+        let walk = self.continued(m, (base, point), (c, t, through), (&key.3, &after))?;
+        let id = self.walks.len();
+        self.walks.push(walk);
+        #[cfg(feature = "counters")]
+        self.counts.add(crate::Unit::Walk);
+        self.proj_walks.insert(key, id);
+        Ok(id)
+    }
+
     /// A projection's read of walk `id` ended, with `stop` if it stopped: when no other read
-    /// holds the walk it is freed, and its key with it, its memory released as its scope ends;
-    /// a read cut short past the counted depth or given up for a guarded cell keeps it, to walk
-    /// on when read again (P §3.5, §1 item 9, D1-6; E §4.3; R-16).
+    /// holds the walk it is freed, and its key with it, its memory released as its scope ends,
+    /// or with forks on kept for the projection's next read (`fork.rs`, P §2.5); a read cut
+    /// short past the counted depth or given up for a guarded cell keeps it, to walk on when
+    /// read again (P §3.5, §1 item 9, D1-6; E §4.3; R-16).
     fn end_projection(&mut self, id: usize, stop: Option<&Stop>) -> Result<(), Stop> {
         let resumes = match stop {
             Some(Stop::Deep) => true,
@@ -444,9 +468,7 @@ impl Engine {
         if resumes || p.readers > 0 {
             return Ok(());
         }
-        *walk = walk.freed();
-        self.proj_walks.retain(|_, held| *held != id);
-        Ok(())
+        self.park_projection(id)
     }
 
     /// A new projection's walk of cut `c` from day `t`, continuing walk `base` after `point`:

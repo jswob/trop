@@ -252,10 +252,29 @@ impl Joint {
 /// Two rows or two movements stated `same` (refcore's `same_rows`, `same_moves`). L §6.1.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SamePair {
-    /// Two rows: each input's id and keys.
-    Rows(String, Vec<KeyVal>, String, Vec<KeyVal>),
+    /// Two rows: each input's id and keys, and the version whose line states them, none in a
+    /// joint model's header (its `known` holds for the line, L §4.5).
+    Rows(String, Vec<KeyVal>, String, Vec<KeyVal>, Option<String>),
     /// Two movements: each instance's id, `m[k]` or an observed row's `x[id]`.
     Moves(String, String),
+}
+
+impl SamePair {
+    /// The other side of a line of rows that names input `id`'s at `keys`, with the version
+    /// whose line it is; none where the line names other rows (L §6.1).
+    #[must_use]
+    pub fn other_row(&self, id: &str, keys: &[KeyVal]) -> Option<(&str, &[KeyVal], Option<&str>)> {
+        let SamePair::Rows(a, ka, b, kb, version) = self else {
+            return None;
+        };
+        if a == id && ka.as_slice() == keys {
+            Some((b, kb, version.as_deref()))
+        } else if b == id && kb.as_slice() == keys {
+            Some((a, ka, version.as_deref()))
+        } else {
+            None
+        }
+    }
 }
 
 impl Reality {

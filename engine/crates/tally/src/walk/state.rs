@@ -359,6 +359,13 @@ pub struct Walk {
     /// A walk up to a day: that day, past which its plan pass listed no plan's instance
     /// (refcore's prefix walk; E §3.2, §4.1); none for a main walk or a projection's.
     pub(crate) upto: Option<Day>,
+    /// With forks on, a projection's walk's plan acts of each day it walked, in walk order:
+    /// what a later read's plan is compared with before it continues the walk (P §2.5,
+    /// `fork.rs`); empty otherwise.
+    pub(crate) walked: BTreeMap<Day, Vec<(At, Act)>>,
+    /// The lengths of `uncertain` and `modelled` when its plan pass ended: the plan's part of
+    /// each, which the walk then adds to (P §2.5, `fork.rs`).
+    pub(crate) plan_lists: (usize, usize),
 }
 
 /// A stated reading's gap, as the walk met it: the reading less the booked balance at its
@@ -548,6 +555,8 @@ impl Walk {
             same_observed: BTreeSet::new(),
             pads: Vec::new(),
             upto: None,
+            walked: BTreeMap::new(),
+            plan_lists: (0, 0),
         }
     }
 

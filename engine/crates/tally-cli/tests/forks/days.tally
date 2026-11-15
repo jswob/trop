@@ -1,0 +1,92 @@
+model days
+  tally 2
+  on 2026-04-15
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented for F6's twin"
+
+unit DUK: currency minor 0.01
+
+axis pay_reading
+  low "the lower pay"
+  high "the higher pay"
+
+index month = month 2026-01..2026-12
+
+place konto: accounts DUK lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input pay_low: money DUK
+
+input pay_high: money DUK
+
+input rent: money DUK
+
+input floor: money DUK
+
+input share: num
+
+input late: int
+
+input rent_off: int
+
+input sweep_off: int
+
+input reach: int
+
+def pay: money DUK at reader
+  rule base = pay_low
+  rule hi beats base = pay_high when pay_reading == high
+
+def room[m in month]: money DUK = min(bal(konto, d) from start_of(m) for d in start_of(m) .. add_days(start_of(m), reach) step 1 day) at start_of(m)
+
+move salary[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount pay
+
+move rent_pay[m in month]: transfers
+  on add_days(start_of(m), rent_off)
+  at start_of(m)
+  leg cash from konto to world amount rent
+
+move sweep[m in month]: transfers
+  on add_days(start_of(m), sweep_off)
+  at start_of(m)
+  reads konto
+  leg cash from konto to world amount round(max(0, room[m] - floor) * share, minor(DUK), down) on add_days(start_of(m), late)
+
+ask d_min: min(bal(konto, d) from 2026-02-01 for d in 2026-02-01 .. 2026-03-15 step 1 day)
+
+ask d_back: bal(konto, d) from 2026-02-03 for d in [2026-03-10, 2026-02-20, 2026-03-31, 2026-03-31, 2026-02-03]
+
+ask d_many: min(bal(konto, d) from 2026-02-01 + bal(konto, d) from 2026-02-02 + bal(konto, d) from 2026-02-03 + bal(konto, d) from 2026-02-04 + bal(konto, d) from 2026-02-05 for d in 2026-02-05 .. 2026-02-25 step 1 day)
+
+ask d_axis: min(bal(konto, d) from 2026-03-01 for d in 2026-03-01 .. 2026-03-25 step 1 day)
+
+ask d_uncertain: min(bal(konto, d) from 2026-05-02 with uncertain for d in 2026-05-02 .. 2026-06-10 step 1 day)
+
+ask d_room: room[m] for m in [2026-02, 2026-03, 2026-07]
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  pay_low = 1000.00
+  pay_high = 1300.00
+  rent = 900.00
+  floor = 200.00
+  share = 0.5
+  late = 25
+  rent_off = 9
+  sweep_off = 17
+  reach = 15
+  opening[konto] = 500.00 at 2026-01-01 start
+
+version later
+  cite card
+  governs 2026-05-01..
+  known 2026-03-01
+  replace rent = 950.00 "the rent rose"

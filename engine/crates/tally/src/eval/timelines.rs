@@ -26,7 +26,7 @@ use crate::book::{Adjustment, Coverage, Linked, Measured, Obs};
 use crate::model::{Reality, World};
 use crate::syntax::Stop;
 use crate::time::Day;
-use crate::walk::{Bookings, Inst, ProjKey, Trees, Walk};
+use crate::walk::{Bookings, Inst, Parked, ProjKey, Trees, Walk};
 
 /// A timeline's key: the world its walks are walked in and the pins on items they reach
 /// (E §3.3). It has no order of its own (R-47): timelines are found by equality.
@@ -68,6 +68,8 @@ pub(crate) struct Timeline {
     proj_walks: BTreeMap<ProjKey, usize>,
     /// Fence F5's trees.
     trees: Trees,
+    /// The projections' walks kept past their reads, for fence F6.
+    parked: Parked,
     /// The observations each cut sees.
     observed: BTreeMap<Day, Vec<Obs>>,
     /// The versions each cut sees that cover each place.
@@ -438,6 +440,7 @@ impl Engine {
             adjust_active: core::mem::take(&mut self.adjust_active),
             proj_walks: core::mem::take(&mut self.proj_walks),
             trees: core::mem::take(&mut self.trees),
+            parked: core::mem::take(&mut self.parked),
             observed: core::mem::take(&mut self.observed),
             covered: core::mem::take(&mut self.covered),
             links: core::mem::take(&mut self.links),
@@ -465,6 +468,7 @@ impl Engine {
         self.adjust_active = t.adjust_active;
         self.proj_walks = t.proj_walks;
         self.trees = t.trees;
+        self.parked = t.parked;
         self.observed = t.observed;
         self.covered = t.covered;
         self.links = t.links;
