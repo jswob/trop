@@ -234,7 +234,7 @@ pub(super) fn fill_ref(
 }
 
 /// A base with its postfixes, `x[k].f`.
-pub(super) fn post_text(base: &Expr, posts: &[Postfix]) -> String {
+pub(crate) fn post_text(base: &Expr, posts: &[Postfix]) -> String {
     let mut out = text(base);
     for post in posts {
         match post {

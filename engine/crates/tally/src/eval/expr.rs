@@ -351,13 +351,22 @@ impl Engine {
             }
             _ => (self.ev(m, base, env, ctx)?, posts),
         };
-        for post in rest {
+        let taken = posts
+            .len()
+            .checked_sub(rest.len())
+            .ok_or_else(|| invariant("a postfix chain's rest is its tail"))?;
+        for (at, post) in rest.iter().enumerate() {
             value = match post {
                 Postfix::Field(name) => {
                     if let Value::Mv(mv) = &value {
                         self.mv_field(m, mv, name, ctx)?
                     } else {
-                        field(m, value, name)?
+                        // the record read is the base with the postfixes before this field
+                        let before = taken
+                            .checked_add(at)
+                            .and_then(|upto| posts.get(..upto))
+                            .ok_or_else(|| invariant("a postfix's position"))?;
+                        field(m, value, name, (base, before))?
                     }
                 }
                 Postfix::Keys(_) => return Err(Stop::NotBuilt("keys after a value")),
@@ -1011,15 +1020,23 @@ pub(super) fn compare_values(
     }))
 }
 
-/// A record's field `name` (refcore's `e_field`). L §3.1.
-fn field(m: &Reality, v: Value, name: &str) -> Result<Value, Stop> {
+/// A record's field `name`, the record `v` read by the written `object` (refcore's
+/// `e_field`); a field read of `none` is refused, naming the object as written (L §3.1;
+/// §8.4 `RUN-NONE`).
+fn field(
+    m: &Reality,
+    v: Value,
+    name: &str,
+    (base, posts): (&Expr, &[Postfix]),
+) -> Result<Value, Stop> {
     if let Value::Hole(_) = v {
         return Ok(v);
     }
     if v == Value::None {
+        let object = crate::load::post_text(base, posts);
         return Err(refuse(
             Run::None,
-            format!("a value is none here: a field read of it ({name})"),
+            format!("{object} is none here: a field read of it"),
         ));
     }
     let Value::Record(fields) = v else {
