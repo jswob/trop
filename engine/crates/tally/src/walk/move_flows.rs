@@ -242,10 +242,12 @@ impl Engine {
                 continue;
             }
             for lg in o.legs.iter().filter(|lg| wanted(leg, &lg.name)) {
-                let Amount::Qty(q) = &lg.amount else {
-                    return Err(invariant("an observed leg with no amount"));
-                };
-                acc.add(q, lg.unit.as_ref())?;
+                // a row known in a window that holds the cut has its legs a hole (L §4.4, §4.5)
+                match &lg.amount {
+                    Amount::Qty(q) => acc.add(q, lg.unit.as_ref())?,
+                    Amount::Hole(h) => acc.holes.push(h.clone()),
+                    Amount::Refused(r) => return Err(Stop::Refused(r.clone())),
+                }
             }
         }
         Ok(())
