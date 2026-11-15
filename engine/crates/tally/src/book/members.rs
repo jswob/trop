@@ -10,8 +10,8 @@
 //! `obs_booked`, `mv_field`, `mv_record`, `mv_by_id`, `mv_kind_in`).
 //! Invariants: members come in movement order, by day (a hole day after every day), then by
 //! their order compared term by term as its types (E §4.1); a member's register reaches its reader only when the member
-//! passes the binding's `where`; the walk's own movements (pads, decisions) and `with
-//! uncertain` members stop `NotBuilt`.
+//! passes the binding's `where`; an uncertain instance is a member only `with uncertain`, and
+//! brings its `uncertain:` line.
 
 use std::collections::BTreeSet;
 
@@ -512,14 +512,10 @@ impl Engine {
             }
             for i in self.move_instances(m, mv, cut)?.iter() {
                 match i.status {
-                    Status::None | Status::Modelled | Status::Uncertain if !ctx.unc => {}
-                    Status::Uncertain => {
-                        return Err(Stop::NotBuilt(
-                            "a binding over uncertain movements under `with uncertain`",
-                        ));
-                    }
                     Status::None | Status::Modelled => {}
-                    Status::Open
+                    Status::Uncertain if !ctx.unc => {}
+                    Status::Uncertain
+                    | Status::Open
                     | Status::LeftOut
                     | Status::Refused
                     | Status::Hole
@@ -587,12 +583,8 @@ impl Engine {
                 match run.inst.status {
                     Status::Modelled | Status::None => {}
                     Status::Uncertain if !ctx.unc => {}
-                    Status::Uncertain => {
-                        return Err(Stop::NotBuilt(
-                            "a binding over uncertain movements under `with uncertain`",
-                        ));
-                    }
-                    Status::Open
+                    Status::Uncertain
+                    | Status::Open
                     | Status::LeftOut
                     | Status::Refused
                     | Status::Hole
