@@ -679,6 +679,27 @@ fn schedule_decided(
     Ok(())
 }
 
+/// Whether a projection's walk leaves plan instance `inst` out: dated before the walk's first
+/// day t (E §4.3 step 2), or dated after the last day it plans and every leg of it too, each
+/// on a known day; a leg is booked on its own day (E §4.2 step 2), so one inside the window
+/// keeps the instance, as refcore's walk to the run's end books it (P §2.3; #183 asks which
+/// day a projection counts).
+fn outside_window(walk: &Walk, inst: &Inst) -> bool {
+    // a window's first day (refcore's `day_lo`)
+    let Some(first) = inst.day.as_ref().and_then(Dated::lo) else {
+        return false;
+    };
+    if first < walk.start {
+        return true;
+    }
+    let through = walk.plans_through();
+    first > through
+        && inst
+            .legs
+            .iter()
+            .all(|lg| lg.day.lo().is_some_and(|d| d > through))
+}
+
 /// Puts a plan instance's legs on their days by its status: left out, uncertain, refused, a
 /// hole, modelled past, or booked, each at its rank in the typed movement order (refcore's
 /// `prepare`, its plans; tally 2.1.6, #57). A refused instance refuses the places its legs
@@ -696,10 +717,7 @@ fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
         }
         Status::Refused | Status::Hole | Status::Past | Status::Plan => {}
     }
-    // a window's first day (refcore's `day_lo`)
-    let first = inst.day.as_ref().and_then(Dated::lo);
-    if walk.proj.is_some() && first.is_some_and(|d| d < walk.start || d > walk.plans_through()) {
-        // a projection counts the movements dated t through d (E §4.3 step 2)
+    if walk.proj.is_some() && outside_window(walk, &inst) {
         return Ok(());
     }
     let ix = walk.insts.len();

@@ -554,7 +554,10 @@ impl Engine {
         if world != self.timeline_world() {
             return Ok(None);
         }
-        // the projection's own walk, failed on a day the read reaches, refuses it (P54)
+        // the projection's own walk, failed on a day the read reaches, refuses it (M1 G9's B1).
+        // A projection's walk is freed, its key with it, when the last read holding it ends
+        // (P54), so the key is found only while such a read is still open, a read nested in
+        // it; a walk that failed under an ended read refused that read already
         if let Some(id) = self.proj_walks.get(&(base, point, c, left_out.clone()))
             && fails_by(&self.walk(*id)?.progress, last)
         {
