@@ -15,7 +15,7 @@ use super::axes::{Axes, result_lines};
 use super::check::Printed;
 use super::register::register_lines;
 use crate::base::Code;
-use crate::book::{Ledger, fig_text};
+use crate::book::{Ledger, UnitLedger, fig_text};
 use crate::eval::{Collected, Ctx, Engine};
 use crate::model::Reality;
 use crate::syntax::{Ask, Expr, Lit, Residuals, Span, Stop};
@@ -72,36 +72,55 @@ fn ledger_result(
     let ledger = engine.residuals(m, r, ctx);
     let mut met = engine.pop_alone();
     met.merge(pinned);
-    let (place, unit, groups) = match ledger? {
+    let (place, per_unit, ledgers) = match ledger? {
         Ledger::Hole(h) => return Ok(Err(h.text())),
         Ledger::Groups {
             place,
-            unit,
-            groups,
-        } => (place, unit, groups),
+            per_unit,
+            ledgers,
+        } => (place, per_unit, ledgers),
     };
     let mut body = Vec::new();
-    for g in &groups {
-        let name = match g.key.month {
-            Some(month) => format!("{} {}", month.label(), g.key.name),
-            None => g.key.name.clone(),
+    for one in &ledgers {
+        // a place of unit `any`: each unit's ledger under its own head (E §6.3)
+        let indent = if per_unit {
+            body.push(format!("  ledger {}:", one.unit));
+            "    "
+        } else {
+            "  "
         };
-        body.push(format!(
-            "  {name}: model {}, observed {}, difference {}",
-            fig_text(m, &g.model, &unit)?,
-            fig_text(m, &g.observed, &unit)?,
-            fig_text(m, &g.diff, &unit)?
-        ));
-        body.extend(g.lines.iter().map(|l| format!("    {}", l.text)));
+        body.extend(group_lines(m, one, indent)?);
     }
+    let by = r.by.as_ref().map_or(String::new(), |f| format!(" by {f}"));
     Ok(Ok(Printed {
-        text: format!("residuals {place} {}", span_text(&r.span)?),
+        text: format!("residuals {place} {}{by}", span_text(&r.span)?),
         body,
         bare: false,
         whole: true,
         met,
         laws: None,
     }))
+}
+
+/// One ledger's lines, each indented by `indent`: each group's month and name with its totals,
+/// then its lines under it (refcore's `answer_residuals`, its groups). E §6.3 Totals.
+fn group_lines(m: &Reality, ledger: &UnitLedger, indent: &str) -> Result<Vec<String>, Stop> {
+    let unit = &ledger.unit;
+    let mut out = Vec::new();
+    for g in &ledger.groups {
+        let name = match g.key.month {
+            Some(month) => format!("{} {}", month.label(), g.key.name),
+            None => g.key.name.clone(),
+        };
+        out.push(format!(
+            "{indent}{name}: model {}, observed {}, difference {}",
+            fig_text(m, &g.model, unit)?,
+            fig_text(m, &g.observed, unit)?,
+            fig_text(m, &g.diff, unit)?
+        ));
+        out.extend(g.lines.iter().map(|l| format!("{indent}  {}", l.text)));
+    }
+    Ok(out)
 }
 
 /// One combination's result: its ledger, or the hole of its place or span, or the run-time

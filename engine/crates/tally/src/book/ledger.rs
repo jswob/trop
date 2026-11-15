@@ -1,13 +1,14 @@
 //! The residual ledger: a place over a span, the model at the ask's cut against the observations, line by line, each line in its group (`ledger_order.rs` totals and orders them).
 //! Spec: E §6.3 (the lines: matched, expected but missing, unexplained, partly fulfilled,
-//! balance; each line's group: by month and move id, the `?`, `unexplained` and `balance`
-//! groups; zero lines; signs), §6.2 (the model: each instance as booked or modelled at its
+//! balance; each line's group: by month and move id, or with `by f` by the observations'
+//! field, the `?`, `unexplained` and `balance` groups; a place of unit `any` gives one ledger
+//! per unit; zero lines; signs), §6.2 (the model: each instance as booked or modelled at its
 //! booking cut, the settlements dated in the span, each decision as the walk at K ran it),
 //! §6.1 (a reading's gap: the reading less the booked balance at its instant); L §5.19 (a day
 //! no statement covers holds no line, but an instance an observation fulfils; observations
-//! stand in for their instance), §5.18 (`residuals x span`).
-//! Twin: engine/tools/refcore/resid.py (`m_residuals`, `m_flow_into`, `m_touches`,
-//! `m_resid_held`, `m_rtext`).
+//! stand in for their instance), §5.18 (`residuals x span [by f]`).
+//! Twin: engine/tools/refcore/resid.py (`m_residuals`, `m_residual_units`, `m_flow_into`,
+//! `m_touches`, `m_resid_held`, `obs_field`, `m_rtext`) and ask.py (`answer_residuals`).
 //! Invariants: every amount is signed as a flow into the place; a hole on either side makes a
 //! difference a hole, never 0; the ledger books nothing: it reads the plan pass's instances,
 //! the main walk at the cut and the observations.
@@ -18,7 +19,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::adjust::Adjustment;
 use super::ledger_order::{Group, GroupKey, abs, fig_add, fig_sub, grouped, month_group};
 use super::observe::{Obs, inst_id};
-use super::reading::{Seen, Stands, booked_amount, reading_rank, readings};
+use super::reading::{Seen, Stands, booked_amount, per_unit, reading_rank, readings};
 use crate::base::{Load, Refusal};
 use crate::eval::{Ctx, Engine, Env, Rows, num_stop};
 use crate::hole::{Hole, spread};
@@ -27,7 +28,7 @@ use crate::num::Num;
 use crate::syntax::{Certainty, Residuals, Stop};
 use crate::time::Day;
 use crate::walk::{
-    Amount, Dated, Exists, Inst, LegVal, Status, Term, invariant, kind_certainty, qty_value,
+    ALL, Amount, Dated, Exists, Inst, LegVal, Status, Term, invariant, kind_certainty, qty_value,
     reading_point,
 };
 
@@ -78,20 +79,57 @@ pub struct Line {
     pub(super) order: Term,
 }
 
-/// What a `residuals` ask reads: the hole its place or span is, or the ledger.
+/// What a `residuals` ask reads: the hole its place or span is, or the ledgers.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Ledger {
     /// The place or the span is a hole.
     Hole(Hole),
-    /// The ledger of a place.
+    /// The ledgers of a place: its unit's, or for a place of unit `any` one per unit.
     Groups {
         /// The place.
         place: String,
-        /// Its unit.
-        unit: String,
-        /// The groups, in order.
-        groups: Vec<Group>,
+        /// Whether the place is of unit `any`, so each ledger is one unit's.
+        per_unit: bool,
+        /// The ledgers, in the order of their units' ids.
+        ledgers: Vec<UnitLedger>,
     },
+}
+
+/// One ledger of a place: its unit and its groups. E §6.3.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct UnitLedger {
+    /// The unit.
+    pub unit: String,
+    /// The groups, in order.
+    pub groups: Vec<Group>,
+}
+
+/// The place a ledger is of and its unit; for one unit's ledger of a place of unit `any`
+/// (`only`), a leg in another unit is another ledger's (refcore's `only`). E §6.3.
+#[derive(Debug, Clone)]
+struct Of {
+    /// The place.
+    place: String,
+    /// The ledger's unit.
+    unit: String,
+    /// Whether it is one unit's ledger of a place of unit `any`.
+    only: bool,
+}
+
+impl Of {
+    /// Whether this ledger counts leg `lg`: every leg, or in one unit's ledger a leg in that
+    /// unit or stating none (refcore's `m_touches` with a unit, `m_flow_into` with `only`).
+    /// E §6.3.
+    fn counts(&self, lg: &LegVal) -> bool {
+        !self.only || lg.unit.as_ref().is_none_or(|u| *u == self.unit)
+    }
+
+    /// Whether a movement's legs that this ledger counts touch its place (refcore's
+    /// `m_touches`). E §6.3.
+    fn touches(&self, legs: &[LegVal]) -> bool {
+        legs.iter()
+            .any(|lg| self.counts(lg) && at_place(lg, &self.place))
+    }
 }
 
 /// The observations that fulfil each instance, by instance id; those that fulfil each
@@ -115,12 +153,13 @@ impl Fulfilling {
     }
 }
 
-/// The lines made so far, the place and unit they are of, and the observations they hold.
+/// The lines made so far, the ledger they are of, the field they go by, and the observations
+/// they hold.
 struct Lines {
-    /// The place.
-    place: String,
-    /// Its unit.
-    unit: String,
+    /// The place, the unit, and whether the ledger is one unit's.
+    of: Of,
+    /// `by f`: the field of the observed input the lines go by.
+    by: Option<String>,
     /// The lines, in the order made.
     out: Vec<Line>,
     /// The observations a line holds, by id.
@@ -128,25 +167,20 @@ struct Lines {
 }
 
 impl Engine {
-    /// A `residuals` ask's ledger: its place and span read, then the ledger of that place
-    /// over that span at the context's cut (refcore's `answer_residuals`, its reads). E §6.3,
-    /// L §5.18.
+    /// A `residuals` ask's ledgers: its place and span read, then the ledger of that place
+    /// over that span at the context's cut, grouped by month and move or by field `by`; a
+    /// place of unit `any` gives one ledger per unit, in the order of the units' ids
+    /// (refcore's `answer_residuals`, its reads). E §6.3, L §5.18.
     ///
     /// # Errors
     ///
-    /// The refusals reading the place, the span or the ledger meets; `NotBuilt` for `by f`
-    /// and for a place of unit `any`.
+    /// The refusals reading the place, the span or the ledgers meets.
     pub(crate) fn ledger_of(
         &mut self,
         m: &Reality,
         r: &Residuals,
         ctx: Ctx,
     ) -> Result<Ledger, Stop> {
-        if r.by.is_some() {
-            return Err(Stop::NotBuilt(
-                "residuals by a field (the ledger in full, M2)",
-            ));
-        }
         let env = Env::empty();
         let place = match self.place_arg(m, &r.place, &env, ctx)? {
             Err(h) => return Ok(Ledger::Hole(h)),
@@ -156,27 +190,76 @@ impl Engine {
             Err(h) => return Ok(Ledger::Hole(h)),
             Ok(s) => s,
         };
-        let unit = m
+        let place_unit = m
             .things
             .get(&place)
             .and_then(|t| m.place_unit(t))
             .ok_or_else(|| invariant("a place with no unit"))?;
-        if unit == "any" {
-            return Err(Stop::NotBuilt("the ledgers of a place of unit any"));
-        }
-        let mut lines = Lines {
-            place: place.clone(),
-            unit: unit.clone(),
-            out: Vec::new(),
-            seen: BTreeSet::new(),
+        let per_unit = place_unit == "any";
+        let units = if per_unit {
+            self.ledger_units(m, &place, ctx.cut)?
+        } else {
+            vec![place_unit]
         };
-        self.ledger(m, &mut lines, &span, ctx.cut)?;
-        let groups = grouped(lines.out)?;
+        let mut ledgers = Vec::with_capacity(units.len());
+        for unit in units {
+            let mut lines = Lines {
+                of: Of {
+                    place: place.clone(),
+                    unit: unit.clone(),
+                    only: per_unit,
+                },
+                by: r.by.clone(),
+                out: Vec::new(),
+                seen: BTreeSet::new(),
+            };
+            self.ledger(m, &mut lines, &span, ctx.cut)?;
+            let groups = grouped(lines.out)?;
+            ledgers.push(UnitLedger { unit, groups });
+        }
         Ok(Ledger::Groups {
             place,
-            unit,
-            groups,
+            per_unit,
+            ledgers,
         })
+    }
+
+    /// The units of a place of unit `any`'s ledgers: those of the plan instances' legs at cut
+    /// `cut` and of the observations' legs, as known on the model's `on` date, that touch it,
+    /// and of its readings that state one, in the order of the units' ids (refcore's
+    /// `m_residual_units`). E §6.3.
+    fn ledger_units(&mut self, m: &Reality, place: &str, cut: Day) -> Result<Vec<String>, Stop> {
+        let mut units: BTreeSet<String> = BTreeSet::new();
+        let mut add = |legs: &[LegVal]| {
+            for lg in legs {
+                if let Some(u) = &lg.unit
+                    && at_place(lg, place)
+                {
+                    units.insert(u.clone());
+                }
+            }
+        };
+        let mut moves = m.moves_in(self.timeline_world());
+        moves.retain(|mv| !mv.decision);
+        for mv in moves {
+            for inst in self.move_instances(m, mv, cut)?.iter() {
+                add(&inst.legs);
+            }
+        }
+        for o in self.observations(m, m.on)? {
+            add(&o.legs);
+        }
+        let world = self.timeline_world();
+        let after_on = self.after_days(m, m.on)?;
+        for seen in readings(m, (m.on, world), Rows::Unkept, &after_on)? {
+            if let Some(r) = &seen.reading
+                && seen.place == place
+                && r.unit != ALL
+            {
+                units.insert(r.unit.clone());
+            }
+        }
+        Ok(units.into_iter().collect())
     }
 
     /// The ledger's lines: the model at cut `cut` against the observations as known on the
@@ -188,10 +271,10 @@ impl Engine {
         span: &Span,
         cut: Day,
     ) -> Result<(), Stop> {
-        let obs = self.ledger_obs(m, &lines.place, span)?;
-        let (model, undated) = self.ledger_model(m, &lines.place, span, cut, &obs)?;
+        let obs = self.ledger_obs(m, &lines.of, span)?;
+        let (model, undated) = self.ledger_model(m, &lines.of, span, cut, &obs)?;
         // rows stated same are one movement: listed once, naming both rows (L §6.1)
-        let (obs, also) = self.same_once_at(m, &lines.place, obs, cut)?;
+        let (obs, also) = self.same_once_at(m, &lines.of.place, obs, cut)?;
         let fulfilling = fulfilling(&obs);
         for inst in &model {
             instance_line(m, lines, inst, &fulfilling)?;
@@ -221,13 +304,13 @@ impl Engine {
         after_run_line(m, lines, span)
     }
 
-    /// The observations as known on the model's `on` date that touch the place, dated in the
-    /// span (refcore's `obs`). E §6.3.
-    fn ledger_obs(&mut self, m: &Reality, place: &str, span: &Span) -> Result<Vec<Obs>, Stop> {
+    /// The observations as known on the model's `on` date that touch the ledger's place,
+    /// dated in the span (refcore's `obs`). E §6.3.
+    fn ledger_obs(&mut self, m: &Reality, of: &Of, span: &Span) -> Result<Vec<Obs>, Stop> {
         let all = self.observations(m, m.on)?;
         Ok(all
             .iter()
-            .filter(|o| touches(&o.legs, place) && span.contains(o.day))
+            .filter(|o| of.touches(&o.legs) && span.contains(o.day))
             .cloned()
             .collect())
     }
@@ -239,7 +322,7 @@ impl Engine {
     fn ledger_model(
         &mut self,
         m: &Reality,
-        place: &str,
+        of: &Of,
         span: &Span,
         cut: Day,
         obs: &[Obs],
@@ -262,16 +345,16 @@ impl Engine {
             };
             let refused = inst.status == Status::Refused;
             let touching = if refused {
-                may_touch(m, &inst, place)
+                may_touch(m, &inst, of)
             } else {
-                touches(&inst.legs, place)
+                of.touches(&inst.legs)
             };
             if !touching {
                 continue;
             }
             if let Some(day) = day {
-                let shown =
-                    !self.covering(m, place, day, m.on)?.is_empty() || fulfilled.contains(&inst.id);
+                let shown = !self.covering(m, &of.place, day, m.on)?.is_empty()
+                    || fulfilled.contains(&inst.id);
                 if !(span.contains(day) && shown) {
                     continue;
                 }
@@ -284,7 +367,7 @@ impl Engine {
                 Some(_) => model.push(inst),
             }
         }
-        model.extend(self.ledger_runs(m, place, span, cut)?);
+        model.extend(self.ledger_runs(m, of, span, cut)?);
         model.sort_by(|a, b| a.order.cmp(&b.order));
         Ok((model, undated))
     }
@@ -295,7 +378,7 @@ impl Engine {
     fn ledger_runs(
         &mut self,
         m: &Reality,
-        place: &str,
+        of: &Of,
         span: &Span,
         cut: Day,
     ) -> Result<Vec<Inst>, Stop> {
@@ -312,16 +395,16 @@ impl Engine {
             let Some(day) = inst.day.as_ref().and_then(Dated::lo) else {
                 continue;
             };
-            if !span.contains(day) || self.covering(m, place, day, m.on)?.is_empty() {
+            if !span.contains(day) || self.covering(m, &of.place, day, m.on)?.is_empty() {
                 continue;
             }
             if let Some(err) = &inst.err {
-                if may_touch(m, &inst, place) {
+                if may_touch(m, &inst, of) {
                     return Err(Stop::Refused(err.clone()));
                 }
                 continue;
             }
-            if touches(&inst.legs, place) {
+            if of.touches(&inst.legs) {
                 out.push(inst);
             }
         }
@@ -376,10 +459,10 @@ impl Engine {
         let walked = readings(m, (cut, world), Rows::Unkept, &after)?;
         let after_on = self.after_days(m, m.on)?;
         for mut seen in readings(m, (m.on, world), Rows::Unkept, &after_on)? {
-            if seen.input != "stated" || seen.place != lines.place {
+            if seen.input != "stated" || seen.place != lines.of.place {
                 continue;
             }
-            let Some(reading) = seen.reading.clone() else {
+            let Some(stated) = seen.reading.clone() else {
                 continue;
             };
             let at = match &seen.stands {
@@ -389,9 +472,9 @@ impl Engine {
                 // where it didn't (refcore's `after_keys`; E §6.3 Grouping, L §4.6)
                 Stands::After(_) => {
                     let key = (
-                        reading.place.clone(),
-                        reading.instant.clone(),
-                        reading.version.clone(),
+                        stated.place.clone(),
+                        stated.instant.clone(),
+                        stated.version.clone(),
                     );
                     match self.walk(id)?.after_at.get(&key) {
                         Some(at) => *at,
@@ -404,6 +487,18 @@ impl Engine {
                 continue;
             }
             let walk = self.walk(id)?;
+            // one unit's ledger shows that unit's readings (E §6.3), and a reading that
+            // states no unit where it stands for that unit (pick P22, #173)
+            let reading = if lines.of.only {
+                let mut mine = per_unit(walk, &stated, at);
+                mine.retain(|r| r.unit == lines.of.unit);
+                match mine.pop() {
+                    Some(r) => r,
+                    None => continue,
+                }
+            } else {
+                stated
+            };
             let st = walk.pstate_before(m, &reading.place, &reading.unit, at);
             let booked = match booked_amount(&st, &walk.anchor_question(&reading.place)) {
                 Amount::Qty(q) => Fig::Qty(q),
@@ -428,18 +523,18 @@ enum Modelled {
     On(Day),
 }
 
-/// Whether a refused instance refuses the ledger of `place`: exactly where a hole one would be
-/// a line of it, a place its legs give or any place where a leg's place couldn't be read; with
-/// no legs, wherever its move has some (refcore's `may_touch`; tally 2.1.7 R1, R2, SR-1).
-/// E §6.3, L §8.4.
-fn may_touch(m: &Reality, inst: &Inst, place: &str) -> bool {
+/// Whether a refused instance refuses ledger `of`: exactly where a hole one would be a line of
+/// it, a place its legs give or any place where a leg's place couldn't be read; with no legs,
+/// wherever its move has some (refcore's `may_touch`; tally 2.1.7 R1, R2, SR-1). E §6.3,
+/// L §8.4.
+fn may_touch(m: &Reality, inst: &Inst, of: &Of) -> bool {
     if inst.legs.is_empty() {
         return m
             .moves
             .get(&inst.move_id)
             .is_some_and(|mv| !mv.decl.legs.is_empty());
     }
-    touches(&inst.legs, place)
+    of.touches(&inst.legs)
         || inst
             .legs
             .iter()
@@ -525,10 +620,10 @@ fn instance_line(
     let Some(day) = inst.day.as_ref().and_then(Dated::lo) else {
         return Err(invariant("a ledger instance with no day"));
     };
-    let mdl = flow_into(&inst.legs, &lines.place, &lines.unit)?;
+    let mdl = flow_into(&inst.legs, &lines.of)?;
     let os = fulfilling.of(&inst.id);
     lines.seen.extend(os.iter().map(|o| o.id.clone()));
-    let group = month_group(day, format!("move {}", inst.move_id))?;
+    let group = move_group(m, lines, day, &inst.move_id, os)?;
     if os.is_empty() {
         if mdl.is_zero() {
             return Ok(());
@@ -538,7 +633,7 @@ fn instance_line(
             "expected but missing {} on {}: model {}",
             inst.id,
             day.text(),
-            fig_text(m, &mdl, &lines.unit)?
+            fig_text(m, &mdl, &lines.of.unit)?
         );
         lines.out.push(Line {
             day: Some(day),
@@ -551,7 +646,7 @@ fn instance_line(
         });
         return Ok(());
     }
-    let ob = observed_sum(os, &lines.place, &lines.unit)?;
+    let ob = observed_sum(os, &lines.of)?;
     let diff = fig_sub(Some(&ob), Some(&mdl))?;
     let uncertain = m
         .moves
@@ -565,7 +660,7 @@ fn instance_line(
     let text = if partly {
         partly_text(m, lines, inst, day, (&mdl, &ob, &diff))?
     } else {
-        matched_text(m, &lines.unit, &inst.id, day, (&mdl, &ob, &diff), os)?
+        matched_text(m, &lines.of.unit, &inst.id, day, (&mdl, &ob, &diff), os)?
     };
     lines.out.push(Line {
         day: Some(day),
@@ -589,7 +684,7 @@ fn partly_text(
     (mdl, ob, diff): (&Fig, &Fig, &Fig),
 ) -> Result<String, Stop> {
     let rem = fig_sub(Some(mdl), Some(ob))?;
-    let unit = &lines.unit;
+    let unit = &lines.of.unit;
     Ok(format!(
         "partly fulfilled {} on {}: model {}, observed {}, difference {}, remainder {}: when \
          does the rest arrive, or is it written off?",
@@ -651,14 +746,14 @@ fn adjustment_line(
     let mdl = match &a.delta {
         Amount::Refused(r) => return Err(Stop::Refused(r.clone())),
         Amount::Hole(h) => Fig::Hole(h.clone()),
-        Amount::Qty(q) => Fig::Qty(signed(q, way_at(&a.leg, &lines.place))?),
+        Amount::Qty(q) => Fig::Qty(signed(q, way_at(&a.leg, &lines.of.place))?),
     };
-    let ob = observed_sum(os, &lines.place, &lines.unit)?;
+    let ob = observed_sum(os, &lines.of)?;
     let diff = fig_sub(Some(&ob), Some(&mdl))?;
-    let text = matched_text(m, &lines.unit, &a.id, a.day, (&mdl, &ob, &diff), os)?;
+    let text = matched_text(m, &lines.of.unit, &a.id, a.day, (&mdl, &ob, &diff), os)?;
     lines.out.push(Line {
         day: Some(a.day),
-        group: month_group(a.day, format!("move {}", a.move_id))?,
+        group: move_group(m, lines, a.day, &a.move_id, os)?,
         model: Some(mdl),
         observed: Some(ob),
         diff,
@@ -677,16 +772,16 @@ fn undated_line(
     inst: &Inst,
     fulfilling: &Fulfilling,
 ) -> Result<(), Stop> {
-    let mdl = flow_into(&inst.legs, &lines.place, &lines.unit)?;
+    let mdl = flow_into(&inst.legs, &lines.of)?;
     let os = fulfilling.of(&inst.id);
     if let Some(day) = os.iter().map(|o| o.day).max() {
         lines.seen.extend(os.iter().map(|o| o.id.clone()));
-        let ob = observed_sum(os, &lines.place, &lines.unit)?;
+        let ob = observed_sum(os, &lines.of)?;
         let diff = fig_sub(Some(&ob), Some(&mdl))?;
-        let text = matched_text(m, &lines.unit, &inst.id, day, (&mdl, &ob, &diff), os)?;
+        let text = matched_text(m, &lines.of.unit, &inst.id, day, (&mdl, &ob, &diff), os)?;
         lines.out.push(Line {
             day: Some(day),
-            group: month_group(day, format!("move {}", inst.move_id))?,
+            group: move_group(m, lines, day, &inst.move_id, os)?,
             model: Some(mdl),
             observed: Some(ob),
             diff,
@@ -711,7 +806,7 @@ fn undated_line(
         "expected but missing {} on {}: model {}",
         inst.id,
         day_text,
-        fig_text(m, &mdl, &lines.unit)?
+        fig_text(m, &mdl, &lines.of.unit)?
     );
     lines.out.push(Line {
         day: None,
@@ -750,12 +845,12 @@ fn after_run_line(m: &Reality, lines: &mut Lines, span: &Span) -> Result<(), Sto
         .next()
         .ok_or_else(|| invariant("a run ending at the calendar's end"))?
         .max(first);
-    let hole = Fig::Hole(Hole::after_run(&lines.place));
+    let hole = Fig::Hole(Hole::after_run(&lines.of.place));
     let text = format!(
         "days {} .. {}: {}",
         after.text(),
         last.text(),
-        fig_text(m, &hole, &lines.unit)?
+        fig_text(m, &hole, &lines.of.unit)?
     );
     lines.out.push(Line {
         day: Some(after),
@@ -773,19 +868,24 @@ fn after_run_line(m: &Reality, lines: &mut Lines, span: &Span) -> Result<(), Sto
 }
 
 /// An unexplained line: an observation that fulfils nothing the model at the cut holds, its
-/// amount the difference, named by `ids` (its id, or its `same` group's) (refcore's
-/// unexplained `RLine`). E §6.3 unexplained.
+/// amount the difference, named by `ids` (its id, or its `same` group's); in its month's
+/// `unexplained` group, or with `by f` in the group of its value of f where it has one
+/// (refcore's unexplained `RLine`). E §6.3 unexplained, Grouping.
 fn unexplained_line(m: &Reality, lines: &mut Lines, o: &Obs, ids: &str) -> Result<(), Stop> {
-    let ob = flow_into(&o.legs, &lines.place, &lines.unit)?;
+    let ob = flow_into(&o.legs, &lines.of)?;
     let text = format!(
         "unexplained {} on {}: observed {}",
         ids,
         o.day.text(),
-        fig_text(m, &ob, &lines.unit)?
+        fig_text(m, &ob, &lines.of.unit)?
     );
+    let field = match &lines.by {
+        Some(f) => obs_field(m, o, f)?,
+        None => None,
+    };
     lines.out.push(Line {
         day: Some(o.day),
-        group: month_group(o.day, "unexplained".to_owned())?,
+        group: month_group(o.day, field.unwrap_or_else(|| "unexplained".to_owned()))?,
         model: None,
         observed: Some(ob.clone()),
         diff: ob,
@@ -818,12 +918,12 @@ fn balance_line(
     };
     let anchored = roles
         .iter()
-        .any(|(p, role)| *p == lines.place && *role == GapRole::Anchor);
+        .any(|(p, role)| *p == lines.of.place && *role == GapRole::Anchor);
     let mark = if anchored { "anchored" } else { "padded" };
-    let unit = &lines.unit;
+    let unit = &lines.of.unit;
     let text = format!(
         "balance {} {} ({mark}): booked {}, stated {}, gap {}",
-        lines.place,
+        lines.of.place,
         reading.instant,
         fig_text(m, &booked, unit)?,
         fig_text(m, &stated, unit)?,
@@ -875,20 +975,22 @@ fn signed(q: &Num, way: Way) -> Result<Num, Stop> {
     }
 }
 
-/// Whether a movement's legs touch a place (refcore's `m_touches`). E §6.3.
-fn touches(legs: &[LegVal], place: &str) -> bool {
-    legs.iter()
-        .any(|lg| lg.to.place() == Some(place) || lg.from.place() == Some(place))
+/// Whether leg `lg` touches `place`, from it or to it (refcore's `m_touches`, one leg).
+/// E §6.3.
+fn at_place(lg: &LegVal, place: &str) -> bool {
+    lg.to.place() == Some(place) || lg.from.place() == Some(place)
 }
 
-/// A movement's flow into the place, signed: in +, out −; the holes of the amounts that
-/// touch it; a leg's refusal refuses it (refcore's `m_flow_into`). E §6.3 Signs.
-fn flow_into(legs: &[LegVal], place: &str, unit: &str) -> Result<Fig, Stop> {
+/// A movement's flow into the ledger's place, signed: in +, out −; the holes of the amounts
+/// that touch it; a leg's refusal refuses it; in one unit's ledger, a leg in another unit is
+/// another ledger's (refcore's `m_flow_into`). E §6.3 Signs.
+fn flow_into(legs: &[LegVal], of: &Of) -> Result<Fig, Stop> {
+    let (place, unit) = (of.place.as_str(), of.unit.as_str());
     let mut total = Num::zero();
     let mut holes: Vec<&Hole> = Vec::new();
     for lg in legs {
         let way = way_at(lg, place);
-        if way == Way::Neither {
+        if way == Way::Neither || !of.counts(lg) {
             continue;
         }
         let q = match &lg.amount {
@@ -913,13 +1015,49 @@ fn flow_into(legs: &[LegVal], place: &str, unit: &str) -> Result<Fig, Stop> {
     Ok(spread(&operands).map_or(Fig::Qty(total), Fig::Hole))
 }
 
-/// The observations' flow into the place, summed (refcore's `ob`, by `_add`). E §6.3.
-fn observed_sum(os: &[Obs], place: &str, unit: &str) -> Result<Fig, Stop> {
+/// The observations' flow into the ledger's place, summed (refcore's `ob`, by `_add`).
+/// E §6.3.
+fn observed_sum(os: &[Obs], of: &Of) -> Result<Fig, Stop> {
     let mut sum: Option<Fig> = None;
     for o in os {
-        sum = Some(fig_add(sum, &flow_into(&o.legs, place, unit)?)?);
+        sum = Some(fig_add(sum, &flow_into(&o.legs, of)?)?);
     }
     sum.ok_or_else(|| invariant("a sum of no observations"))
+}
+
+/// The group of a line on `day` of move `move_id` whose observations are `os`: with `by f`,
+/// the value of f the observations agree on; else, or where they disagree, one lacks it or
+/// there are none, `move <id>` (refcore's `field_group`). E §6.3 Grouping.
+fn move_group(
+    m: &Reality,
+    lines: &Lines,
+    day: Day,
+    move_id: &str,
+    os: &[Obs],
+) -> Result<GroupKey, Stop> {
+    let mut agreed = None;
+    if let Some(f) = &lines.by {
+        let mut values: BTreeSet<Option<String>> = BTreeSet::new();
+        for o in os {
+            values.insert(obs_field(m, o, f)?);
+        }
+        if let [Some(v)] = values.into_iter().collect::<Vec<_>>().as_slice() {
+            agreed = Some(v.clone());
+        }
+    }
+    month_group(day, agreed.unwrap_or_else(|| format!("move {move_id}")))
+}
+
+/// The text of field `f` of an observation: its kind, or its attribute `f` as it prints; none
+/// where it has no such field (refcore's `obs_field`). E §6.3 Grouping; L §5.19.
+fn obs_field(m: &Reality, o: &Obs, f: &str) -> Result<Option<String>, Stop> {
+    if f == "kind" {
+        return Ok(Some(o.kind.clone()));
+    }
+    match o.values.iter().find(|(name, _)| name == f) {
+        Some((_, v)) => Ok(Some(v.text(m).map_err(num_stop)?)),
+        None => Ok(None),
+    }
 }
 
 /// A figure as a line prints it: the quantity in the place's unit, or the hole (refcore's
