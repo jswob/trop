@@ -1,23 +1,22 @@
-//! The residual ledger: a place over a span, the model at the ask's cut against the observations, line by line, grouped by month and move.
+//! The residual ledger: a place over a span, the model at the ask's cut against the observations, line by line, each line in its group (`ledger_order.rs` totals and orders them).
 //! Spec: E §6.3 (the lines: matched, expected but missing, unexplained, partly fulfilled,
-//! balance; grouping by month and move id, the `?`, `unexplained` and `balance` groups; zero
-//! lines; signs; totals; order), §6.2 (the model: each instance as booked or modelled at its
+//! balance; each line's group: by month and move id, the `?`, `unexplained` and `balance`
+//! groups; zero lines; signs), §6.2 (the model: each instance as booked or modelled at its
 //! booking cut, the settlements dated in the span, each decision as the walk at K ran it),
 //! §6.1 (a reading's gap: the reading less the booked balance at its instant); L §5.19 (a day
 //! no statement covers holds no line, but an instance an observation fulfils; observations
-//! stand in for their instance), §5.18 (`residuals x span`), §8.1 (holes sort first, by their
-//! first question).
+//! stand in for their instance), §5.18 (`residuals x span`).
 //! Twin: engine/tools/refcore/resid.py (`m_residuals`, `m_flow_into`, `m_touches`,
-//! `m_resid_held`, `sk`, `m_rtext`, `_add`, `_sub`).
+//! `m_resid_held`, `m_rtext`).
 //! Invariants: every amount is signed as a flow into the place; a hole on either side makes a
 //! difference a hole, never 0; the ledger books nothing: it reads the plan pass's instances,
-//! the main walk at the cut and the observations; groups and lines are ordered by explicit
-//! keys (size, day, group, movement order), ties in the order they were made.
+//! the main walk at the cut and the observations.
 
 use core::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::adjust::Adjustment;
+use super::ledger_order::{Group, GroupKey, abs, fig_add, fig_sub, grouped, month_group};
 use super::observe::{Obs, inst_id};
 use super::reading::{Seen, Stands, booked_amount, reading_rank, readings};
 use crate::base::{Load, Refusal};
@@ -26,7 +25,7 @@ use crate::hole::{Hole, spread};
 use crate::model::{Fulfils, GapRole, Reality, Span};
 use crate::num::Num;
 use crate::syntax::{Certainty, Residuals, Stop};
-use crate::time::{Day, Period};
+use crate::time::Day;
 use crate::walk::{
     Amount, Dated, Exists, Inst, LegVal, Status, Term, invariant, kind_certainty, qty_value,
     reading_point,
@@ -44,7 +43,7 @@ pub enum Fig {
 
 impl Fig {
     /// The hole, when the figure is one. L §8.1.
-    fn hole(&self) -> Option<&Hole> {
+    pub(super) fn hole(&self) -> Option<&Hole> {
         match self {
             Fig::Qty(_) => None,
             Fig::Hole(h) => Some(h),
@@ -60,48 +59,23 @@ impl Fig {
     }
 }
 
-/// A group's key: its month, none for the `?` group, and its name (`move rent_pay`,
-/// `unexplained`, `balance`, `?`). E §6.3 Grouping.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct GroupKey {
-    /// The month; none for the group of instances whose day is a hole.
-    pub month: Option<Period>,
-    /// The name.
-    pub name: String,
-}
-
 /// One line of the ledger (refcore's `RLine`). E §6.3.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Line {
     /// Its day; none for a line of the `?` group.
-    day: Option<Day>,
+    pub(super) day: Option<Day>,
     /// Its group.
-    group: GroupKey,
+    pub(super) group: GroupKey,
     /// The model's amount; none for an unexplained line.
-    model: Option<Fig>,
+    pub(super) model: Option<Fig>,
     /// The observed amount; none for an expected-but-missing line.
-    observed: Option<Fig>,
+    pub(super) observed: Option<Fig>,
     /// The difference.
-    diff: Fig,
+    pub(super) diff: Fig,
     /// Its text.
     pub text: String,
     /// Its movement's order, typed: the last tie's key (E §6.3 Order, tally 2.1.2).
-    order: Term,
-}
-
-/// A group of the ledger: its lines and its totals. E §6.3 Totals.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Group {
-    /// Its key.
-    pub key: GroupKey,
-    /// The model's total (the booked balances, for a balance group).
-    pub model: Fig,
-    /// The observations' total (the stated balances, for a balance group).
-    pub observed: Fig,
-    /// The difference, observed less model.
-    pub diff: Fig,
-    /// Its lines, in order.
-    pub lines: Vec<Line>,
+    pub(super) order: Term,
 }
 
 /// What a `residuals` ask reads: the hole its place or span is, or the ledger.
@@ -868,15 +842,6 @@ fn balance_line(
     Ok(())
 }
 
-/// The group of a line on `day` named `name`: its month's. E §6.3 Grouping.
-fn month_group(day: Day, name: String) -> Result<GroupKey, Stop> {
-    let month = Period::month_of(day).ok_or_else(|| invariant("a month past the calendar"))?;
-    Ok(GroupKey {
-        month: Some(month),
-        name,
-    })
-}
-
 /// The way a leg runs at a place: into it, out of it, or neither (both ends there, or none)
 /// (refcore's `s`). E §6.3 Signs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -957,48 +922,6 @@ fn observed_sum(os: &[Obs], place: &str, unit: &str) -> Result<Fig, Stop> {
     sum.ok_or_else(|| invariant("a sum of no observations"))
 }
 
-/// `a + b`, where `a` may be no figure yet: holes spread (refcore's `_add`). E §6.3 Totals.
-fn fig_add(a: Option<Fig>, b: &Fig) -> Result<Fig, Stop> {
-    let Some(a) = a else {
-        return Ok(b.clone());
-    };
-    if let (Fig::Qty(x), Fig::Qty(y)) = (&a, b) {
-        return Ok(Fig::Qty(x.checked_add(y).map_err(num_stop)?));
-    }
-    spread(&[a.hole(), b.hole()])
-        .map(Fig::Hole)
-        .ok_or_else(|| invariant("a sum of holes with no hole"))
-}
-
-/// `a − b`, where no figure is 0: a hole on either side makes the difference a hole
-/// (refcore's `_sub`). E §6.3 Signs.
-fn fig_sub(a: Option<&Fig>, b: Option<&Fig>) -> Result<Fig, Stop> {
-    let holes = [a.and_then(Fig::hole), b.and_then(Fig::hole)];
-    if let Some(h) = spread(&holes) {
-        return Ok(Fig::Hole(h));
-    }
-    let x = qty_or_zero(a);
-    let y = qty_or_zero(b);
-    Ok(Fig::Qty(x.checked_sub(&y).map_err(num_stop)?))
-}
-
-/// A figure's quantity, where no figure is 0 (refcore's `(a or 0)`); a hole is never one
-/// here, `fig_sub` having taken it. E §6.3.
-fn qty_or_zero(f: Option<&Fig>) -> Num {
-    match f {
-        Some(Fig::Qty(q)) => q.clone(),
-        Some(Fig::Hole(_)) | None => Num::zero(),
-    }
-}
-
-/// `|q|`. E §6.3 Order.
-fn abs(q: &Num) -> Result<Num, Stop> {
-    if q.is_negative() {
-        return q.checked_neg().map_err(num_stop);
-    }
-    Ok(q.clone())
-}
-
 /// A figure as a line prints it: the quantity in the place's unit, or the hole (refcore's
 /// `m_rtext`). E §6.3, L §8.1.
 ///
@@ -1010,171 +933,4 @@ pub fn fig_text(m: &Reality, fig: &Fig, unit: &str) -> Result<String, Stop> {
         Fig::Hole(h) => Ok(h.text()),
         Fig::Qty(q) => qty_value(m, q, unit)?.text(m).map_err(num_stop),
     }
-}
-
-/// What a line or a group sorts by (refcore's sort keys). E §6.3 Order.
-struct SortKey {
-    /// A group's: whether it has a month, so the `?` group comes first; false for a line.
-    dated: bool,
-    /// The difference, by size: holes first, then the biggest.
-    size: Fig,
-    /// A line's day, a group's month's first day; none sorts first.
-    day: Option<Day>,
-    /// The group's name.
-    name: String,
-    /// A line's movement order; the empty tuple for a group, whose order no tie reaches.
-    order: Term,
-}
-
-/// Two figures by size: holes first, among themselves by their first question, then by
-/// absolute value, the biggest first (refcore's `sk`). E §6.3 Order, L §8.1.
-fn size_cmp(a: &Fig, b: &Fig) -> Result<Ordering, Stop> {
-    match (a, b) {
-        (Fig::Hole(x), Fig::Hole(y)) => Ok(first_question(x).cmp(&first_question(y))),
-        (Fig::Hole(_), Fig::Qty(_)) => Ok(Ordering::Less),
-        (Fig::Qty(_), Fig::Hole(_)) => Ok(Ordering::Greater),
-        (Fig::Qty(x), Fig::Qty(y)) => abs(y)?.compare(&abs(x)?).map_err(num_stop),
-    }
-}
-
-/// A hole's first question, by code point; the empty text for one with none. L §8.1.
-fn first_question(h: &Hole) -> String {
-    match h.question_texts().into_iter().next() {
-        Some(q) => q,
-        None => String::new(),
-    }
-}
-
-/// Two sort keys: a group's month first, then the size, the day, the group's name and the
-/// movement order (refcore's `sort` keys). E §6.3 Order.
-fn key_cmp(a: &SortKey, b: &SortKey) -> Result<Ordering, Stop> {
-    let first = a.dated.cmp(&b.dated).then(size_cmp(&a.size, &b.size)?);
-    let rest = a.day.cmp(&b.day).then_with(|| a.name.cmp(&b.name));
-    Ok(first.then(rest).then_with(|| a.order.cmp(&b.order)))
-}
-
-/// The positions of `keys` in sorted order, ties in their order: a merge sort from runs of
-/// one, since comparing two sizes can refuse at the digits' cap (refcore's stable `sort`).
-/// E §6.3 Order.
-fn sorted_positions(keys: &[SortKey]) -> Result<Vec<usize>, Stop> {
-    let mut runs: Vec<Vec<usize>> = (0..keys.len()).map(|i| vec![i]).collect();
-    while runs.len() > 1 {
-        let mut next = Vec::new();
-        let mut pairs = runs.into_iter();
-        while let Some(left) = pairs.next() {
-            match pairs.next() {
-                Some(right) => next.push(merged(keys, left, right)?),
-                None => next.push(left),
-            }
-        }
-        runs = next;
-    }
-    match runs.into_iter().next() {
-        Some(order) => Ok(order),
-        None => Ok(Vec::new()),
-    }
-}
-
-/// Two sorted runs merged, the left one's first on a tie, so the sort is stable. E §6.3
-/// Order.
-fn merged(keys: &[SortKey], left: Vec<usize>, right: Vec<usize>) -> Result<Vec<usize>, Stop> {
-    let mut out = Vec::new();
-    let mut lefts = left.into_iter().peekable();
-    let mut rights = right.into_iter().peekable();
-    loop {
-        let take_right = match (lefts.peek(), rights.peek()) {
-            (Some(a), Some(b)) => {
-                key_cmp(key_at(keys, *a)?, key_at(keys, *b)?)? == Ordering::Greater
-            }
-            (Some(_), None) => false,
-            (None, Some(_)) => true,
-            (None, None) => return Ok(out),
-        };
-        out.extend(if take_right {
-            rights.next()
-        } else {
-            lefts.next()
-        });
-    }
-}
-
-/// The sort key at position `i`. E §6.3 Order.
-fn key_at(keys: &[SortKey], i: usize) -> Result<&SortKey, Stop> {
-    keys.get(i).ok_or_else(|| invariant("a ledger's sort"))
-}
-
-/// The lines in groups, each group's lines and totals, the groups in order (refcore's
-/// `groups`, `out`). E §6.3 Grouping, Totals, Order.
-fn grouped(lines: Vec<Line>) -> Result<Vec<Group>, Stop> {
-    let mut made: Vec<(GroupKey, Vec<Line>)> = Vec::new();
-    for line in lines {
-        match made.iter_mut().find(|(k, _)| *k == line.group) {
-            Some((_, ls)) => ls.push(line),
-            None => made.push((line.group.clone(), vec![line])),
-        }
-    }
-    let mut groups = Vec::with_capacity(made.len());
-    for (key, ls) in made {
-        groups.push(group_of(key, ls)?);
-    }
-    let keys: Vec<SortKey> = groups
-        .iter()
-        .map(|g| SortKey {
-            dated: g.key.month.is_some(),
-            size: g.diff.clone(),
-            day: g.key.month.map(Period::start),
-            name: g.key.name.clone(),
-            order: Term::Tuple(Vec::new()),
-        })
-        .collect();
-    let order = sorted_positions(&keys)?;
-    let mut slots: Vec<Option<Group>> = groups.into_iter().map(Some).collect();
-    let mut sorted = Vec::with_capacity(order.len());
-    for i in &order {
-        let group = slots.get_mut(*i).and_then(Option::take);
-        sorted.push(group.ok_or_else(|| invariant("a ledger's group sorted twice"))?);
-    }
-    Ok(sorted)
-}
-
-/// One group: its totals, the model's and the observations' (none counting 0), the
-/// difference, its lines in order. E §6.3 Totals, Order.
-fn group_of(key: GroupKey, lines: Vec<Line>) -> Result<Group, Stop> {
-    let mut model: Option<Fig> = None;
-    let mut observed: Option<Fig> = None;
-    for line in &lines {
-        if let Some(f) = &line.model {
-            model = Some(fig_add(model, f)?);
-        }
-        if let Some(f) = &line.observed {
-            observed = Some(fig_add(observed, f)?);
-        }
-    }
-    let model = model.unwrap_or_else(|| Fig::Qty(Num::zero()));
-    let observed = observed.unwrap_or_else(|| Fig::Qty(Num::zero()));
-    let diff = fig_sub(Some(&observed), Some(&model))?;
-    let keys: Vec<SortKey> = lines
-        .iter()
-        .map(|l| SortKey {
-            dated: false,
-            size: l.diff.clone(),
-            day: l.day,
-            name: l.group.name.clone(),
-            order: l.order.clone(),
-        })
-        .collect();
-    let order = sorted_positions(&keys)?;
-    let mut slots: Vec<Option<Line>> = lines.into_iter().map(Some).collect();
-    let mut sorted = Vec::with_capacity(order.len());
-    for i in &order {
-        let line = slots.get_mut(*i).and_then(Option::take);
-        sorted.push(line.ok_or_else(|| invariant("a ledger's line sorted twice"))?);
-    }
-    Ok(Group {
-        key,
-        model,
-        observed,
-        diff,
-        lines: sorted,
-    })
 }
