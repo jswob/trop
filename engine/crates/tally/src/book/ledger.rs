@@ -273,8 +273,9 @@ impl Engine {
     ) -> Result<(), Stop> {
         let obs = self.ledger_obs(m, &lines.of, span)?;
         let (model, undated) = self.ledger_model(m, &lines.of, span, cut, &obs)?;
-        // rows stated same are one movement: listed once, naming both rows (L §6.1)
-        let (obs, also) = self.same_once_at(m, &lines.of.place, obs, cut)?;
+        // rows stated same are one movement: listed once, naming both rows (L §6.1); the
+        // `same` lines are the observations' side, so read as known on `on`, as the rows are
+        let (obs, also) = self.same_once_at(m, &lines.of.place, obs, m.on)?;
         let fulfilling = fulfilling(&obs);
         for inst in &model {
             instance_line(m, lines, inst, &fulfilling)?;
