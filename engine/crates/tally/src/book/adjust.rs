@@ -250,7 +250,12 @@ impl Engine {
         if !due || self.adjust_active.contains(&(mv.id.clone(), cut)) {
             return Ok(());
         }
-        match self.adjust_move(m, mv, cut) {
+        // the plan's own measure is no walk read of an explanation the instances are read
+        // under: its causes are the plan's, as its status's are (E §10)
+        let back = self.trace_walked();
+        let measured = self.adjust_move(m, mv, cut);
+        self.trace_walked_back(back);
+        match measured {
             Ok(_) | Err(Stop::Refused(_)) => Ok(()),
             Err(stop) => Err(stop),
         }
