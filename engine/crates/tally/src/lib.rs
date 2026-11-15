@@ -220,15 +220,16 @@ pub mod walk {
     mod plan;
     mod point;
     mod projection;
+    mod readings;
     mod reads;
     mod state;
     mod tuples;
     mod value;
 
     pub use agenda::{Act, Mv, Reading, endings, reading_point};
+    pub use day::Ends;
     #[cfg(feature = "fault-injection")]
     pub use day::Fault;
-    pub use day::{Broke, Ends};
     pub(crate) use flows::span_last;
     pub(crate) use lows::Trees;
     pub use lows::{Lows, RangeMinimum};
@@ -241,6 +242,7 @@ pub mod walk {
     pub use point::{At, Step};
     pub use projection::ProjKey;
     pub(crate) use projection::own_unit;
+    pub use readings::Broke;
     pub(crate) use reads::state_value;
     pub(crate) use state::GapAt;
     pub use state::{
