@@ -698,7 +698,7 @@ fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
     }
     // a window's first day (refcore's `day_lo`)
     let first = inst.day.as_ref().and_then(Dated::lo);
-    if walk.proj.is_some() && first.is_some_and(|d| d < walk.start) {
+    if walk.proj.is_some() && first.is_some_and(|d| d < walk.start || d > walk.plans_through()) {
         // a projection counts the movements dated t through d (E §4.3 step 2)
         return Ok(());
     }
@@ -811,7 +811,7 @@ fn schedule_decision(
                 }
                 return Ok(());
             }
-            if d < walk.start || d > walk.end {
+            if d < walk.start || d > walk.plans_through() {
                 if walk.proj.is_none() && (d < m.start || d > m.end) {
                     note_left_out(walk, &inst)?;
                 }

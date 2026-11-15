@@ -395,6 +395,11 @@ pub struct Projected {
     pub root: (Day, Day),
     /// The world the chain's walks are walked in (L §6.4).
     pub world: World,
+    /// The last day its read walks it through, d: it counts the movements dated t through d
+    /// and plans none after (E §4.3 step 2; P §2.3, one walk of its window).
+    pub through: Day,
+    /// The reads that hold it now; the walk is freed when the last of them ends (P §3.5).
+    pub readers: u32,
 }
 
 impl Projected {
@@ -428,6 +433,28 @@ impl Projected {
 }
 
 impl Walk {
+    /// The last day the walk plans a movement on: a projection's read's last day, else its
+    /// end (E §4.3 step 2, §4.1).
+    #[must_use]
+    pub fn plans_through(&self) -> Day {
+        self.proj
+            .as_ref()
+            .map_or(self.end, |p| p.through.min(self.end))
+    }
+
+    /// The walk freed when its scope ends, a projection's read: it keeps nothing, and a read
+    /// of it is refused as the invariant it breaks (P §3.5, D1-6; E §4.3).
+    #[must_use]
+    pub fn freed(&self) -> Walk {
+        Walk {
+            progress: Progress::Failed(
+                invariant("a projection's walk read after its read ended"),
+                None,
+            ),
+            ..Walk::new(self.cut, (self.start, self.end), self.world)
+        }
+    }
+
     /// A projection's walk of cut `cut` from `start` to `end`, continuing `projected` in its
     /// world, each place's first reading as `first_reading` gives it; nothing planned yet.
     /// E §4.3.
