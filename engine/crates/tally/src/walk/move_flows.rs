@@ -34,7 +34,7 @@ impl Engine {
         &mut self,
         m: &Reality,
         (mv, keys, leg): (&MoveInfo, &[Key], Option<&str>),
-        sp: &Span,
+        (sp, fk): (&Span, Option<&Value>),
         env: &Env,
         ctx: Ctx,
     ) -> Result<Value, Stop> {
@@ -51,7 +51,7 @@ impl Engine {
         let mut acc = Counted::default();
         let counted = self.count_move(
             m,
-            (mv, &want, leg),
+            (mv, &want, leg, fk),
             (insts.as_slice(), sp, last),
             ctx,
             &mut acc,
@@ -106,7 +106,7 @@ impl Engine {
     fn count_move(
         &mut self,
         m: &Reality,
-        (mv, want, leg): (&MoveInfo, &[KeyVal], Option<&str>),
+        (mv, want, leg, fk): (&MoveInfo, &[KeyVal], Option<&str>, Option<&Value>),
         (insts, sp, last): (&[Inst], &Span, Day),
         ctx: Ctx,
         acc: &mut Counted,
@@ -146,6 +146,11 @@ impl Engine {
                         .map_or_else(|| invariant("an instance with no day"), Stop::Refused));
                 }
             };
+            if let Some(k) = fk
+                && !for_period_of(i, k, acc)
+            {
+                continue;
+            }
             if mv.decision && day.is_some_and(|d| d > m.end) {
                 // never walked, so its amount reads a walk that doesn't hold its day (E §2)
                 acc.holes.push(Hole::after_run(&i.id));
@@ -400,6 +405,27 @@ impl Engine {
         }
         Ok(None)
     }
+}
+
+/// Whether instance `i` is for period `k` under `flows(…, for k)`: its period equal to `k`;
+/// a period that is a hole (an `at` window across a law change, L §4.3) is that hole in
+/// `acc`, the instance unfulfilled where it is past (L §8.1, §8.2; P64). L §5.14.3.
+fn for_period_of(i: &Inst, k: &Value, acc: &mut Counted) -> bool {
+    let Some(period) = &i.for_period else {
+        return false;
+    };
+    if let Value::Hole(h) = period {
+        if i.status == Status::Past {
+            acc.met.entries.insert(Entry {
+                word: "unfulfilled",
+                text: i.id.clone(),
+                figure: String::new(),
+            });
+        }
+        acc.holes.push(h.clone());
+        return false;
+    }
+    period == k
 }
 
 /// What a move's flows gather: the total, the units its legs are in, the holes, the
