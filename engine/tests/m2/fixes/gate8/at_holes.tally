@@ -1,0 +1,50 @@
+model at_holes
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 gate 8 (run 43657284122): a def whose at is a window and whose every day reads a hole, the holes not alike (hole/questions.rs Hole::undated, gap_stem): two plain questions (ax); two questions shaped like the gap rule's but with ten digits for the day (ay); two with an eleven-character day (az). Each is HOLE-IMPRECISE for the def's law date (L §4.4, E §3.2)"
+
+source s "s"
+
+input x: num
+
+input y: num
+
+input z: num
+
+input wd: date
+
+def dx: num = x at wd
+
+def dy: num = y at wd
+
+def dz: num = z at wd
+
+ask ax: dx
+
+ask ay: dy
+
+ask az: dz
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  wd = window(2026-03-01, 2026-03-02) "s"
+
+version r1
+  cite s
+  governs 2026-01-01..2026-03-01
+  known 2026-01-01
+  x = ?"a" "s"
+  y = ?"z: no value at 2026010105" "s"
+  z = ?"z: no value at 2026-03-051" "s"
+
+version r2
+  cite s
+  governs 2026-03-02..
+  known 2026-01-01
+  x = ?"b" "s"
+  y = ?"z: no value at 2026010106" "s"
+  z = ?"z: no value at 2026-03-052" "s"

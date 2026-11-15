@@ -1,0 +1,51 @@
+part bank_2026_10
+  tally 2
+  note "The prototype's bank history for 2026-10, synthetic (ledger.json, seed 20261017): no bank record was ever used. Written by to_tally.py; links by P1's rule: wynagrodzenie from pracodawca fulfils my_pay of the month before, from pracodawca_zony wife_pay of the month before, czynsz rent_pay of the month; no other row is linked."
+
+version bank_2026_10
+  cite ledger
+  governs 2026-10-01..2026-10-16
+  known 2026-10-17
+  covers konto
+  anchor konto
+  bank[r20261001a] = (on: 2026-10-01, kind: bank_line, leg cash from konto to wynajmujacy amount 3200.00 PLN, cat: czynsz, fulfils: rent_pay[2026-10]) "ledger.json row 1903"
+  bank[r20261001b] = (on: 2026-10-01, kind: bank_line, leg cash from konto to sklepy amount 196.78 PLN, cat: codzienne) "ledger.json row 1904"
+  bank[r20261002a] = (on: 2026-10-02, kind: bank_line, leg cash from konto to sklepy amount 44.63 PLN, cat: codzienne) "ledger.json row 1905"
+  bank[r20261002b] = (on: 2026-10-02, kind: bank_line, leg cash from konto to sklepy amount 40.97 PLN, cat: codzienne) "ledger.json row 1906"
+  bank[r20261003a] = (on: 2026-10-03, kind: bank_line, leg cash from konto to sklepy amount 55.73 PLN, cat: codzienne) "ledger.json row 1907"
+  bank[r20261003b] = (on: 2026-10-03, kind: bank_line, leg cash from konto to sklepy amount 193.87 PLN, cat: codzienne) "ledger.json row 1908"
+  bank[r20261005a] = (on: 2026-10-05, kind: bank_line, leg cash from konto to sklepy amount 148.32 PLN, cat: codzienne) "ledger.json row 1909"
+  bank[r20261005b] = (on: 2026-10-05, kind: bank_line, leg cash from konto to sklepy amount 112.00 PLN, cat: codzienne) "ledger.json row 1910"
+  bank[r20261005c] = (on: 2026-10-05, kind: bank_line, leg cash from konto to sklepy amount 164.81 PLN, cat: codzienne) "ledger.json row 1911"
+  bank[r20261006a] = (on: 2026-10-06, kind: bank_line, leg cash from pracodawca to konto amount 8509.87 PLN, cat: wynagrodzenie, fulfils: my_pay[2026-09]) "ledger.json row 1912"
+  bank[r20261006b] = (on: 2026-10-06, kind: bank_line, leg cash from konto to sklepy amount 197.64 PLN, cat: codzienne) "ledger.json row 1913"
+  bank[r20261006c] = (on: 2026-10-06, kind: bank_line, leg cash from konto to sklepy amount 118.28 PLN, cat: codzienne) "ledger.json row 1914"
+  bank[r20261006d] = (on: 2026-10-06, kind: bank_line, leg cash from konto to sklepy amount 70.67 PLN, cat: codzienne) "ledger.json row 1915"
+  bank[r20261007a] = (on: 2026-10-07, kind: bank_line, leg cash from konto to sklepy amount 146.65 PLN, cat: codzienne) "ledger.json row 1916"
+  bank[r20261007b] = (on: 2026-10-07, kind: bank_line, leg cash from konto to sklepy amount 178.03 PLN, cat: codzienne) "ledger.json row 1917"
+  bank[r20261008a] = (on: 2026-10-08, kind: bank_line, leg cash from konto to sklepy amount 70.39 PLN, cat: codzienne) "ledger.json row 1918"
+  bank[r20261008b] = (on: 2026-10-08, kind: bank_line, leg cash from konto to sklepy amount 165.40 PLN, cat: codzienne) "ledger.json row 1919"
+  bank[r20261008c] = (on: 2026-10-08, kind: bank_line, leg cash from konto to sklepy amount 79.05 PLN, cat: codzienne) "ledger.json row 1920"
+  bank[r20261009a] = (on: 2026-10-09, kind: bank_line, leg cash from pracodawca_zony to konto amount 5101.67 PLN, cat: wynagrodzenie, fulfils: wife_pay[2026-09]) "ledger.json row 1921"
+  bank[r20261009b] = (on: 2026-10-09, kind: bank_line, leg cash from konto to sklepy amount 160.13 PLN, cat: codzienne) "ledger.json row 1922"
+  bank[r20261009c] = (on: 2026-10-09, kind: bank_line, leg cash from konto to sklepy amount 192.08 PLN, cat: codzienne) "ledger.json row 1923"
+  bank[r20261009d] = (on: 2026-10-09, kind: bank_line, leg cash from konto to sklepy amount 46.65 PLN, cat: codzienne) "ledger.json row 1924"
+  bank[r20261010a] = (on: 2026-10-10, kind: bank_line, leg cash from klienci to konto amount 6000.00 PLN, cat: faktury) "ledger.json row 1925"
+  bank[r20261010b] = (on: 2026-10-10, kind: bank_line, leg cash from klienci to konto amount 1380.00 PLN, cat: faktury) "ledger.json row 1926"
+  bank[r20261011a] = (on: 2026-10-11, kind: bank_line, leg cash from konto to sklepy amount 68.62 PLN, cat: codzienne) "ledger.json row 1927"
+  bank[r20261012a] = (on: 2026-10-12, kind: bank_line, leg cash from konto to sklepy amount 107.23 PLN, cat: codzienne) "ledger.json row 1928"
+  bank[r20261012b] = (on: 2026-10-12, kind: bank_line, leg cash from konto to sklepy amount 109.95 PLN, cat: codzienne) "ledger.json row 1929"
+  bank[r20261012c] = (on: 2026-10-12, kind: bank_line, leg cash from konto to sklepy amount 50.55 PLN, cat: codzienne) "ledger.json row 1930"
+  bank[r20261013a] = (on: 2026-10-13, kind: bank_line, leg cash from konto to sklepy amount 108.64 PLN, cat: codzienne) "ledger.json row 1931"
+  bank[r20261013b] = (on: 2026-10-13, kind: bank_line, leg cash from konto to sklepy amount 111.21 PLN, cat: codzienne) "ledger.json row 1932"
+  bank[r20261014a] = (on: 2026-10-14, kind: bank_line, leg cash from konto to sklepy amount 131.31 PLN, cat: codzienne) "ledger.json row 1933"
+  bank[r20261014b] = (on: 2026-10-14, kind: bank_line, leg cash from konto to sklepy amount 76.60 PLN, cat: codzienne) "ledger.json row 1934"
+  bank[r20261014c] = (on: 2026-10-14, kind: bank_line, leg cash from konto to sklepy amount 102.75 PLN, cat: codzienne) "ledger.json row 1935"
+  bank[r20261015a] = (on: 2026-10-15, kind: bank_line, leg cash from konto to dostawcy amount 492.00 PLN, cat: inne) "ledger.json row 1936"
+  bank[r20261015b] = (on: 2026-10-15, kind: bank_line, leg cash from konto to sklepy amount 180.90 PLN, cat: codzienne) "ledger.json row 1937"
+  bank[r20261015c] = (on: 2026-10-15, kind: bank_line, leg cash from konto to sklepy amount 105.27 PLN, cat: codzienne) "ledger.json row 1938"
+  bank[r20261015d] = (on: 2026-10-15, kind: bank_line, leg cash from konto to sklepy amount 47.86 PLN, cat: codzienne) "ledger.json row 1939"
+  bank[r20261015e] = (on: 2026-10-15, kind: bank_line, leg cash from konto to maklerskie amount 5217.64 PLN, cat: inwestycje) "ledger.json row 1940"
+  bank[r20261016a] = (on: 2026-10-16, kind: bank_line, leg cash from konto to sklepy amount 147.89 PLN, cat: codzienne) "ledger.json row 1941"
+  bank[r20261016b] = (on: 2026-10-16, kind: bank_line, leg cash from konto to sklepy amount 166.44 PLN, cat: codzienne) "ledger.json row 1942"
+  stated[konto] = 11685.67 at 2026-10-16 end "the opening plus every row to the day"

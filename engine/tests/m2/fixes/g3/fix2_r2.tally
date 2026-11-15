@@ -1,0 +1,21 @@
+model px
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+input x: date
+input y: date
+
+ask q: x == y with x = y windows each
+ask q0: x == y with x = y
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  x = 2026-01-05 "c"
+  y = window(2026-01-01, 2026-01-02) "c"

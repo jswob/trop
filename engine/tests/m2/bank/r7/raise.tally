@@ -1,0 +1,12 @@
+scenario raise over tropek_r7
+  tally 2
+  from 2027-03-01
+  note "G6 (09-raise.json podwyzka: set_arg my_job gross before * 1.05 from 2027-03-01), stated on top of indexation as M1's P7 reads it (m1/goldens/law/raise.tally): the gross becomes 12 600 * index.wage from March 2027, so 13 104 in 2027."
+
+source raise_case "the prototype's block 09-raise.json (engine/spec/verification/blocks/cases): Podwyżka 5% od marca"
+
+version raise_2027
+  cite raise_case
+  governs 2027-03-01..
+  known 2026-10-19
+  replace salary[my_job] = 12600 "12 000 * 1.05: in.gross before * 1.05 from 2027-03-01, times index.wage as before"

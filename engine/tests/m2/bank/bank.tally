@@ -1,0 +1,200 @@
+part bank_half
+  tally 2
+  note "T, M2 (issues #167, #114), DONE gate 2: the bank half of the prototype's reality R7 (engine/spec/verification/goldens.md: G2, G4, G5), restated over the prototype's bank history (ledger.json, synthetic, seed 20261017; records/, written by to_tally.py). Its plan is the part of blocks 01-month and 04-employment the ledger's links reach: my pay (my_job, 12 000 gross), my wife's (wife_job, 7 000 gross), each paid in the month after the month it earns, and the rent of 3 200 on the 1st. Everything else in the ledger is an observed movement the plan doesn't hold, with its category. The model's header is reality.tally (the bank run, to 2027-01-31) or one of r7/'s (the forward half, to a horizon), which each declare the month and year indexes."
+  note "The pay law is the prototype's employment_pl@2022 as household X writes it (integration/amendments/real11/c1/law/pl/employment.tally) and m1/goldens/y22/model.tally restates it: ZUS on the gross up to the year's 30-fold cap, health on the rest, the advance on the running base to whole zloty less a twelfth of the reducing amount. The gross is job_pl@1's in.gross * p.index.wage, and the rent najem@1's in.rent * p.index.prices: both indexes are 1 until 2027-01-01, so the bank run reads the stated figures. Not stated: child relief and residence, which no asked figure reads. The prototype ran its 2026 law over its whole past (make-ledger.ts: one run of the model), so the rows here govern from 2024."
+  note "Pay days: over the bank history (the modelled past) my pay is planned on the 5th, the middle of the 3rd–7th window, and my wife's on the 10th. From plan_from on, the planned pays fall where the prototype plans them: an inflow over a window on its last day (window@1), the 7th, and my wife's on the 10th, each moved to the business day before (bd prev) by the prototype's calendar."
+
+source ledger "the prototype's bank history, engine/tests/m2/bank/ledger.json, made by make-ledger.ts (seed 20261017); synthetic"
+
+source prototype "the prototype's blocks 01-month.json and 04-employment.json and its template employment_pl@2022 (engine/spec/verification/blocks)"
+
+source calendar_pl "the prototype's calendar.ts: Polish public holidays by the ustawa o dniach wolnych od pracy (New Year, Epiphany, Easter and Easter Monday, 1 and 3 May, Pentecost, Corpus Christi, 15 August, 1 and 11 November, 25 and 26 December, Wigilia from 2025)"
+
+unit PLN: currency minor 0.01
+
+kind bank_line: transfers
+  attr cat: key category
+  note "a row of the prototype's ledger, with its category"
+
+kind job
+
+kind person
+
+index category = [codzienne, czynsz, faktury, inne, inwestycje, pit_firma, pit_roczny, skladki_zus, vat, wynagrodzenie]
+
+index zus_part = [pension, disability, sickness]
+
+place dostawcy: outside lives 2024-01-01..
+
+place ike: accounts PLN lives 2024-01-01..
+
+place klienci: outside lives 2024-01-01..
+
+place konto: accounts PLN lives 2024-01-01..
+
+place maklerskie: accounts PLN lives 2024-01-01..
+
+place pracodawca: outside lives 2024-01-01..
+
+place pracodawca_zony: outside lives 2024-01-01..
+
+place sklepy: outside lives 2024-01-01..
+
+place urzad_skarbowy: outside lives 2024-01-01..
+
+place wynajmujacy: outside lives 2024-01-01..
+
+place zus: outside lives 2024-01-01..
+
+input bank: observed
+  note "the ledger's rows, one part a month (records/)"
+
+input ee_rate[z in zus_part]: num
+
+input health_rate: num
+
+input holidays_pl: calendar
+
+input inflation: num
+
+input kup_month: money PLN
+
+input learn_first: date
+
+input learn_last: date
+
+input pay_dom[j in job]: int
+
+input pit_reduction_month: money PLN
+
+input plan_dom[j in job]: int
+
+input plan_from: month
+
+input prices: num
+
+input proj_wage: money PLN
+
+input rent: money PLN
+
+input salary[j in job]: money PLN
+
+input wage_growth: num
+
+input zus_cap_factor: int
+
+band pit_scale(x: num PLN): num PLN
+  note "art. 27 ust. 1: the tax before reliefs, after the reducing amount"
+
+def gross[j in job, m in month]: num PLN = salary[j] * wage_index[year_of(m)] at start_of(m)
+  note "job_pl@1: in.gross * p.index.wage, not rounded"
+
+def price_index[y in cal_year]: num at start_of(y)
+  note "01-month.json index.prices: 1 from 2000-01-01, then before * (1 + assume.inflation) each year from 2027-01-01"
+  rule initial = 1 when pos(y) == 1
+  rule next = price_index[y - 1] * (1 + inflation) when pos(y) > 1
+
+def wage_index[y in cal_year]: num at start_of(y)
+  note "01-month.json index.wage: 1 from 2000-01-01, then before * (1 + assume.wage_growth) each year from 2027-01-01"
+  rule initial = 1 when pos(y) == 1
+  rule next = wage_index[y - 1] * (1 + wage_growth) when pos(y) > 1
+
+def zus_base[j in job, m in month]: num PLN = max(0, min(gross[j, m], zus_cap_factor * proj_wage - sum(gross[j, k] for k in month where year_of(k) == year_of(m) and k < m))) at start_of(m)
+  note "employment_pl@2022 soc.cap_base: the gross up to the year's cap (30 times the projected average wage) less the gross before the month"
+
+def emp_zus[j in job, m in month]: money PLN = round(zus_base[j, m] * ee_rate[pension], minor(PLN), half-up) + round(zus_base[j, m] * ee_rate[disability], minor(PLN), half-up) + round(gross[j, m] * ee_rate[sickness], minor(PLN), half-up) at start_of(m)
+
+def emp_health[j in job, m in month]: money PLN = round((gross[j, m] - emp_zus[j, m]) * health_rate, minor(PLN), half-up) at start_of(m)
+
+def emp_pit_base[j in job, m in month]: money PLN = round(max(0, gross[j, m] - emp_zus[j, m] - kup_month), 1, half-up) at start_of(m)
+
+def emp_cum[j in job, m in month]: money PLN = sum(emp_pit_base[j, k] for k in month where year_of(k) == year_of(m) and k <= m) at start_of(m)
+
+def emp_pit_adv[j in job, m in month]: money PLN = max(0, round(pit_scale(emp_cum[j, m]) - pit_scale(emp_cum[j, m] - emp_pit_base[j, m]) - pit_reduction_month, 1, half-up)) at start_of(m)
+  note "art. 32: the advance on the running base, less a twelfth of the reducing amount, to whole zloty"
+
+def emp_net[j in job, m in month]: money PLN = round(gross[j, m] - emp_zus[j, m] - emp_health[j, m] - emp_pit_adv[j, m], minor(PLN), half-up) at start_of(m)
+
+def pay_day[j in job, m in month]: date at start_of(m)
+  rule history = add_months(day_of(m, pay_dom[j]), 1)
+  rule planned beats history = schedule(month_of(add_months(start_of(m), 1)), plan_dom[j], preceding, holidays_pl) when m >= plan_from
+
+def spend_daily: money PLN at learn_last
+  note "01-month.json: spending is hist_daily(codzienne, 365) * index.prices, the average daily spending of the last 365 days of the bank history, following prices (G5)"
+  rule learned = round(sum(o.cash.amount for o in bank_line over learn_first .. learn_last where o.cat == codzienne) / (days_between(learn_first, learn_last) + 1) * prices, minor(PLN), half-up) when covered(konto, learn_first .. learn_last)
+
+move my_pay[m in month]: transfers
+  on pay_day[my_job, m]
+  at start_of(m)
+  for m
+  leg cash from pracodawca to konto amount emp_net[my_job, m]
+
+move rent_pay[m in month]: transfers
+  on day_of(m, 1)
+  at start_of(m)
+  for m
+  leg cash from konto to wynajmujacy amount round(rent * price_index[year_of(m)], minor(PLN), half-up)
+
+move wife_pay[m in month]: transfers
+  on pay_day[wife_job, m]
+  at start_of(m)
+  for m
+  leg cash from pracodawca_zony to konto amount emp_net[wife_job, m]
+
+version household
+  cite prototype
+  governs always
+  known 2023-12-31
+  person + [me] lives 1991-02-14..
+  person + [wife] lives 1992-07-03..
+  job + [my_job] lives 2024-01-01..
+  job + [wife_job] lives 2024-01-01..
+  salary[my_job] = 12000 "01-month.json: my_job, person me, gross 12 000"
+  salary[wife_job] = 7000 "04-employment.json: wife_job, person wife, gross 7 000"
+  pay_dom[my_job] = 5 "01-month.json: my pay between the 3rd and the 7th of the next month; over the history, the 5th, the window's middle"
+  pay_dom[wife_job] = 10 "04-employment.json: the wife's pay about the 10th of the next month"
+  plan_dom[my_job] = 7 "01-month.json: my_tax pay_on next_month:3-7, an inflow planned on the window's last day (window@1), bd prev"
+  plan_dom[wife_job] = 10 "04-employment.json: wife_tax pay_on next_month:10, bd prev"
+  plan_from = 2026-10 "the first month whose pay the prototype plans: October's, paid in November, after today (2026-10-17)"
+  rent = 3200 "01-month.json: rent 3 200 on the 1st"
+  learn_first = 2025-10-17 "01-month.json: hist_daily(codzienne, 365), the 365 days before today (2026-10-17)"
+  learn_last = 2026-10-16 "the last of those days, the day before today"
+  prices = 1 "01-month.json: index.prices is 1 until 2027-01-01, flat over the learning window (G5)"
+  inflation = 0 governs 2024-01-01..2026-12-31 "01-month.json: index.prices is 1 until 2027-01-01"
+  wage_growth = 0 governs 2024-01-01..2026-12-31 "01-month.json: index.wage is 1 until 2027-01-01"
+
+version openings
+  cite ledger
+  governs always
+  known 2024-01-01
+  opening[ike] = 30000 at 2024-01-01 start "ledger.json row 1, otwarcie"
+  opening[konto] = 12000 at 2024-01-01 start "ledger.json row 0, otwarcie"
+  opening[maklerskie] = 20000 at 2024-01-01 start "ledger.json row 2, otwarcie"
+
+version employment_pl
+  cite prototype
+  governs always
+  known 2023-12-31
+  ee_rate[disability] = 0.015 "employment_pl@2022: the employee's disability share"
+  ee_rate[pension] = 0.0976 "employment_pl@2022: the employee's pension share"
+  ee_rate[sickness] = 0.0245 "employment_pl@2022: sickness"
+  health_rate = 0.09 "employment_pl@2022: health, 9 %"
+  kup_month = 250 "employment_pl@2022: costs of earning, 250 a month"
+  pit_reduction_month = 300 "employment_pl@2022: a twelfth of 3 600"
+  zus_cap_factor = 30 "04-employment.json zus.annual_cap: 30 * p.wage.projected_average (ustawa o sus art. 19 ust. 1)"
+  pit_scale: [0, 120000] = x * 0.12 - 3600 "employment_pl@2022: art. 27 ust. 1, first threshold"
+  pit_scale: (120000, inf) = 10800 + (x - 120000) * 0.32 "employment_pl@2022: art. 27 ust. 1, second threshold"
+
+version projected_wage
+  cite prototype
+  governs always
+  known 2023-12-31
+  proj_wage = 7824 governs 2024-01-01..2024-12-31 "04-employment.json wage.projected_average: obwieszczenie MRiPS na 2024 r."
+  proj_wage = 8673 governs 2025-01-01..2025-12-31 "ustawa budżetowa 2025"
+  proj_wage = 9420 governs 2026-01-01.. "M.P. 2025 poz. 1206; the prototype holds it past its last entry (law held after today)"
+
+version holidays
+  cite calendar_pl
+  governs always
+  known 2023-12-31
+  holidays_pl = calendar(weekends [sat, sun], added [2024-01-01, 2024-01-06, 2024-03-31, 2024-04-01, 2024-05-01, 2024-05-03, 2024-05-19, 2024-05-30, 2024-08-15, 2024-11-01, 2024-11-11, 2024-12-25, 2024-12-26, 2025-01-01, 2025-01-06, 2025-04-20, 2025-04-21, 2025-05-01, 2025-05-03, 2025-06-08, 2025-06-19, 2025-08-15, 2025-11-01, 2025-11-11, 2025-12-24, 2025-12-25, 2025-12-26, 2026-01-01, 2026-01-06, 2026-04-05, 2026-04-06, 2026-05-01, 2026-05-03, 2026-05-24, 2026-06-04, 2026-08-15, 2026-11-01, 2026-11-11, 2026-12-24, 2026-12-25, 2026-12-26, 2027-01-01, 2027-01-06, 2027-03-28, 2027-03-29, 2027-05-01, 2027-05-03, 2027-05-16, 2027-05-27, 2027-08-15, 2027-11-01, 2027-11-11, 2027-12-24, 2027-12-25, 2027-12-26, 2028-01-01, 2028-01-06, 2028-04-16, 2028-04-17, 2028-05-01, 2028-05-03, 2028-06-04, 2028-06-15, 2028-08-15, 2028-11-01, 2028-11-11, 2028-12-24, 2028-12-25, 2028-12-26, 2029-01-01, 2029-01-06, 2029-04-01, 2029-04-02, 2029-05-01, 2029-05-03, 2029-05-20, 2029-05-31, 2029-08-15, 2029-11-01, 2029-11-11, 2029-12-24, 2029-12-25, 2029-12-26, 2030-01-01, 2030-01-06, 2030-04-21, 2030-04-22, 2030-05-01, 2030-05-03, 2030-06-09, 2030-06-20, 2030-08-15, 2030-11-01, 2030-11-11, 2030-12-24, 2030-12-25, 2030-12-26, 2031-01-01, 2031-01-06, 2031-04-13, 2031-04-14, 2031-05-01, 2031-05-03, 2031-06-01, 2031-06-12, 2031-08-15, 2031-11-01, 2031-11-11, 2031-12-24, 2031-12-25, 2031-12-26, 2032-01-01, 2032-01-06, 2032-03-28, 2032-03-29, 2032-05-01, 2032-05-03, 2032-05-16, 2032-05-27, 2032-08-15, 2032-11-01, 2032-11-11, 2032-12-24, 2032-12-25, 2032-12-26, 2033-01-01, 2033-01-06, 2033-04-17, 2033-04-18, 2033-05-01, 2033-05-03, 2033-06-05, 2033-06-16, 2033-08-15, 2033-11-01, 2033-11-11, 2033-12-24, 2033-12-25, 2033-12-26, 2034-01-01, 2034-01-06, 2034-04-09, 2034-04-10, 2034-05-01, 2034-05-03, 2034-05-28, 2034-06-08, 2034-08-15, 2034-11-01, 2034-11-11, 2034-12-24, 2034-12-25, 2034-12-26, 2035-01-01, 2035-01-06, 2035-03-25, 2035-03-26, 2035-05-01, 2035-05-03, 2035-05-13, 2035-05-24, 2035-08-15, 2035-11-01, 2035-11-11, 2035-12-24, 2035-12-25, 2035-12-26, 2036-01-01, 2036-01-06, 2036-04-13, 2036-04-14, 2036-05-01, 2036-05-03, 2036-06-01, 2036-06-12, 2036-08-15, 2036-11-01, 2036-11-11, 2036-12-24, 2036-12-25, 2036-12-26, 2037-01-01, 2037-01-06, 2037-04-05, 2037-04-06, 2037-05-01, 2037-05-03, 2037-05-24, 2037-06-04, 2037-08-15, 2037-11-01, 2037-11-11, 2037-12-24, 2037-12-25, 2037-12-26, 2038-01-01, 2038-01-06, 2038-04-25, 2038-04-26, 2038-05-01, 2038-05-03, 2038-06-13, 2038-06-24, 2038-08-15, 2038-11-01, 2038-11-11, 2038-12-24, 2038-12-25, 2038-12-26, 2039-01-01, 2039-01-06, 2039-04-10, 2039-04-11, 2039-05-01, 2039-05-03, 2039-05-29, 2039-06-09, 2039-08-15, 2039-11-01, 2039-11-11, 2039-12-24, 2039-12-25, 2039-12-26, 2040-01-01, 2040-01-06, 2040-04-01, 2040-04-02, 2040-05-01, 2040-05-03, 2040-05-20, 2040-05-31, 2040-08-15, 2040-11-01, 2040-11-11, 2040-12-24, 2040-12-25, 2040-12-26, 2041-01-01, 2041-01-06, 2041-04-21, 2041-04-22, 2041-05-01, 2041-05-03, 2041-06-09, 2041-06-20, 2041-08-15, 2041-11-01, 2041-11-11, 2041-12-24, 2041-12-25, 2041-12-26, 2042-01-01, 2042-01-06, 2042-04-06, 2042-04-07, 2042-05-01, 2042-05-03, 2042-05-25, 2042-06-05, 2042-08-15, 2042-11-01, 2042-11-11, 2042-12-24, 2042-12-25, 2042-12-26, 2043-01-01, 2043-01-06, 2043-03-29, 2043-03-30, 2043-05-01, 2043-05-03, 2043-05-17, 2043-05-28, 2043-08-15, 2043-11-01, 2043-11-11, 2043-12-24, 2043-12-25, 2043-12-26, 2044-01-01, 2044-01-06, 2044-04-17, 2044-04-18, 2044-05-01, 2044-05-03, 2044-06-05, 2044-06-16, 2044-08-15, 2044-11-01, 2044-11-11, 2044-12-24, 2044-12-25, 2044-12-26, 2045-01-01, 2045-01-06, 2045-04-09, 2045-04-10, 2045-05-01, 2045-05-03, 2045-05-28, 2045-06-08, 2045-08-15, 2045-11-01, 2045-11-11, 2045-12-24, 2045-12-25, 2045-12-26, 2046-01-01, 2046-01-06, 2046-03-25, 2046-03-26, 2046-05-01, 2046-05-03, 2046-05-13, 2046-05-24, 2046-08-15, 2046-11-01, 2046-11-11, 2046-12-24, 2046-12-25, 2046-12-26, 2047-01-01, 2047-01-06, 2047-04-14, 2047-04-15, 2047-05-01, 2047-05-03, 2047-06-02, 2047-06-13, 2047-08-15, 2047-11-01, 2047-11-11, 2047-12-24, 2047-12-25, 2047-12-26, 2048-01-01, 2048-01-06, 2048-04-05, 2048-04-06, 2048-05-01, 2048-05-03, 2048-05-24, 2048-06-04, 2048-08-15, 2048-11-01, 2048-11-11, 2048-12-24, 2048-12-25, 2048-12-26, 2049-01-01, 2049-01-06, 2049-04-18, 2049-04-19, 2049-05-01, 2049-05-03, 2049-06-06, 2049-06-17, 2049-08-15, 2049-11-01, 2049-11-11, 2049-12-24, 2049-12-25, 2049-12-26, 2050-01-01, 2050-01-06, 2050-04-10, 2050-04-11, 2050-05-01, 2050-05-03, 2050-05-29, 2050-06-09, 2050-08-15, 2050-11-01, 2050-11-11, 2050-12-24, 2050-12-25, 2050-12-26, 2051-01-01, 2051-01-06, 2051-04-02, 2051-04-03, 2051-05-01, 2051-05-03, 2051-05-21, 2051-06-01, 2051-08-15, 2051-11-01, 2051-11-11, 2051-12-24, 2051-12-25, 2051-12-26, 2052-01-01, 2052-01-06, 2052-04-21, 2052-04-22, 2052-05-01, 2052-05-03, 2052-06-09, 2052-06-20, 2052-08-15, 2052-11-01, 2052-11-11, 2052-12-24, 2052-12-25, 2052-12-26, 2053-01-01, 2053-01-06, 2053-04-06, 2053-04-07, 2053-05-01, 2053-05-03, 2053-05-25, 2053-06-05, 2053-08-15, 2053-11-01, 2053-11-11, 2053-12-24, 2053-12-25, 2053-12-26, 2054-01-01, 2054-01-06, 2054-03-29, 2054-03-30, 2054-05-01, 2054-05-03, 2054-05-17, 2054-05-28, 2054-08-15, 2054-11-01, 2054-11-11, 2054-12-24, 2054-12-25, 2054-12-26, 2055-01-01, 2055-01-06, 2055-04-18, 2055-04-19, 2055-05-01, 2055-05-03, 2055-06-06, 2055-06-17, 2055-08-15, 2055-11-01, 2055-11-11, 2055-12-24, 2055-12-25, 2055-12-26, 2056-01-01, 2056-01-06, 2056-04-02, 2056-04-03, 2056-05-01, 2056-05-03, 2056-05-21, 2056-06-01, 2056-08-15, 2056-11-01, 2056-11-11, 2056-12-24, 2056-12-25, 2056-12-26, 2057-01-01, 2057-01-06, 2057-04-22, 2057-04-23, 2057-05-01, 2057-05-03, 2057-06-10, 2057-06-21, 2057-08-15, 2057-11-01, 2057-11-11, 2057-12-24, 2057-12-25, 2057-12-26]) "calendar.ts holidays(y) for 2024 to 2057, Easter by the anonymous Gregorian algorithm"

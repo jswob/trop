@@ -1,0 +1,22 @@
+model tropek_r7
+  tally 2
+  on 2026-10-17
+  start 2024-01-01
+  end 2050-03-31
+  note "T, M2 (issues #167, #114), DONE gate 2: R7 (to2028.tally's texts) to 2050-03-31, for G6 (net worth on 2046-10-17, 13-fire.json's target, 4 630 247 and 4 829 659 with the raise; FIRE, fire@1 kiedy, Feb 2050 and Feb 2049 with the raise: raise.tally) and OKI's tax of 2040 (10 409). Not stored: refcore and refcore_fast pass the 8 GB cap on this horizon (stopped at 8.3 GB after 50 and 55 s), as every 15th's projection walks to the end (P2, GOLDENS.md)."
+
+index cal_year = year 2024..2050
+
+index day = day 2026-10-17..2050-03-31
+
+index month = month 2024-01..2050-03
+
+ask g6_fire: first(m in month where m >= fire_from and fire_on_track[m])
+
+ask g6_fire_raise: first(m in month where m >= fire_from and fire_on_track[m]) in raise
+
+ask g6_net_worth: net_worth[2046-10-17]
+
+ask g6_net_worth_raise: net_worth[2046-10-17] in raise
+
+ask pin_oki_tax_2040: oki_tax[2040]

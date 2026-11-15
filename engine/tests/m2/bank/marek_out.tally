@@ -1,0 +1,30 @@
+part marek_outside
+  tally 2
+  note "T, M2 (issues #167, #114), DONE gate 2, G1 (engine-requirements §3.2, 8.1): lending Marek 2 000 on 2026-03-12 moved net worth that day by -40.96 if Marek is a claim (only that day's spending), by -2 040.96 if he's outside. 14-marek.json: place marek, kind claim; its ledger rows, bank rows on konto, each in a version that covers konto on its day beside the month's record. Read with the bank run (reality.tally, bank.tally, records/); net worth's change on the day is the flows of the household's places, outside places left out in writing (L §3.6, D-1). The twin of marek.tally: the same rows, marek outside."
+
+source marek_case "the prototype's block 14-marek.json (engine/spec/verification/blocks/cases): Marek jest nam winien 2 000 zł, oddał już 1 200"
+
+place marek: outside lives 2026-01-01..
+
+version marek_rows
+  cite marek_case
+  governs 2026-03-12..2026-03-12
+  known 2026-10-17
+  covers konto
+  bank[m20260312] = (on: 2026-03-12, kind: transfers, leg cash from konto to marek amount 2000.00 PLN) "14-marek.json ledger row 0, pozyczka"
+
+version marek_rows_06
+  cite marek_case
+  governs 2026-06-30..2026-06-30
+  known 2026-10-17
+  covers konto
+  bank[m20260630] = (on: 2026-06-30, kind: transfers, leg cash from marek to konto amount 700.00 PLN) "14-marek.json ledger row 1, pozyczka"
+
+version marek_rows_09
+  cite marek_case
+  governs 2026-09-15..2026-09-15
+  known 2026-10-17
+  covers konto
+  bank[m20260915] = (on: 2026-09-15, kind: transfers, leg cash from marek to konto amount 500.00 PLN) "14-marek.json ledger row 2, pozyczka"
+
+ask g1_net_change: sum(flows(x, 2026-03-12) for x in places over .. where not x in outside)

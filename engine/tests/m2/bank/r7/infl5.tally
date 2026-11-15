@@ -1,0 +1,12 @@
+scenario infl5 over tropek_r7
+  tally 2
+  from 2027-01-01
+  note "G10's scenario: 5 % inflation a year from 2027 instead of 3 % (m1/goldens/rent/infl5.tally): index.prices, so the rent and the daily spending, follow it; today's money divides by index.prices of the year."
+
+source infl5_case "the prototype's 5 % inflation what-if (engine/spec/verification/goldens.md G10)"
+
+version infl5_rates
+  cite infl5_case
+  governs 2027-01-01..
+  known 2026-10-17
+  replace inflation = 0.05 governs 2027-01-01.. "the scenario's inflation"

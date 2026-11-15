@@ -33,6 +33,11 @@ pub const M1: &[u8] = include_bytes!("../../codes/m1.refcore");
 /// engine's twin is `run_faulted` (`INTERFACE.md` §4, the coordinator's pick P8).
 pub const M1_INVARIANT: &[u8] = include_bytes!("../../codes/m1_invariant.refcore");
 
+/// `codes/m2.refcore`: M2's fixtures of the codes and message forms of M2's constructs no
+/// other output prints (`codes/m2.py`, issue #167), in [`M1`]'s form: each family's base,
+/// its answers, then each fixture (`HOLE-SAME`'s disagreement and `RUN-RECORD`'s forms).
+pub const M2: &[u8] = include_bytes!("../../codes/m2.refcore");
+
 /// One vector of `codes/m0.refcore`: a family's base text, which loads clean, or a fixture
 /// written off it by one edit.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -175,7 +180,7 @@ pub fn fixtures(tsv: &str) -> Result<Vec<Fixture>, String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{FIXTURES, M0, M1, M1_INVARIANT, fixtures, m0_fixtures};
+    use super::{FIXTURES, M0, M1, M1_INVARIANT, M2, fixtures, m0_fixtures};
     use crate::corpus::paths;
     use std::collections::BTreeSet;
 
@@ -291,6 +296,52 @@ mod tests {
                     .out
                     .contains("refused: ENGINE-INVARIANT conservation: ")),
             "one fixture, refused ENGINE-INVARIANT under the plant"
+        );
+    }
+
+    /// M2's store (issue #167, chunk C6): the family `records` loads clean and its 4 answers
+    /// print no refusal and no hole; 4 fixtures of 2 codes: `HOLE-SAME`'s disagreement (with
+    /// its one `WARN-LEGS` line, E §6) and three `RUN-RECORD` forms; the fourth form, a
+    /// reading after a modelled-past instance, is held for #169 (`codes/m2/held.tsv`).
+    #[test]
+    fn the_m2_fixtures_read_and_print_their_codes() {
+        let vs = m0_fixtures(M2).expect("codes/m2.refcore reads");
+        let mut ids = BTreeSet::new();
+        for v in &vs {
+            assert!(ids.insert(v.id.clone()), "{}: twice", v.id);
+            let warnings = v.run.out.matches("warning: ").count();
+            let legs = v.run.out.matches("warning: WARN-LEGS ").count();
+            assert!(
+                warnings == 0 || (v.code == "HOLE-SAME" && warnings == 1 && legs == 1),
+                "{}: no warning but a HOLE-SAME fixture's WARN-LEGS",
+                v.id
+            );
+            if v.id.contains("/answers/") {
+                assert!(
+                    v.run.code == 0
+                        && !v.run.out.contains("refused: ")
+                        && !v.run.out.contains("?\""),
+                    "{}: a family answers clean",
+                    v.id
+                );
+            } else if !v.is_base() && !v.code.starts_with("HOLE-") {
+                assert!(
+                    v.run.out.contains(&format!("refused: {} ", v.code)),
+                    "{}: prints {}",
+                    v.id,
+                    v.code
+                );
+            }
+        }
+        let codes: BTreeSet<&str> = vs
+            .iter()
+            .filter(|v| !v.is_base() && !v.id.contains("/answers/"))
+            .map(|v| v.code.as_str())
+            .collect();
+        assert_eq!(
+            (vs.len(), codes.len()),
+            (9, 2),
+            "1 base, 4 answers, 4 fixtures of 2 codes"
         );
     }
 
