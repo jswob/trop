@@ -6,10 +6,13 @@
 //! makes the ask line that hole).
 //! Twin: engine/tools/refcore/ask.py (`answer_residuals`) and check.py (`_txt`, a span's text);
 //! refcore doesn't fan a ledger out (its interpreter guard), so the fanned layout is a value's.
-//! Invariants: the head names the place and the span as written; each group prints its month
-//! and name, then its model, observed and difference totals; every line sits under its group;
-//! the register is what reading the ledger met, with the ask's own entries; a combination's
-//! layer is open only while its ledger is read.
+//! Invariants: the head names the place and the span as written, and ` by f` where the ask
+//! groups by a field; each group prints its month and name (a field's value under `by f`),
+//! then its model, observed and difference totals; every line sits under its group; at a
+//! place of unit `any`, each unit's ledger prints under its own `ledger <unit>:` head, in the
+//! order of the units' ids, its groups one step further in; the register is what reading the
+//! ledger met, with the ask's own entries; a combination's layer is open only while its
+//! ledger is read.
 
 use super::axes::{Axes, result_lines};
 use super::check::Printed;
