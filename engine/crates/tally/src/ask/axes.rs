@@ -213,7 +213,7 @@ pub(super) fn fanned_lines(
         options.push(axes.options_of(combo)?);
     }
     let mut bound = if ask.binds.is_empty() {
-        let mut one = Bound::new(Vec::new(), Env::empty());
+        let mut one = Bound::new(Vec::new(), engine.ask_env.clone());
         for at in 0..combos.len() {
             one.combos.push((at, Collected::default()));
         }

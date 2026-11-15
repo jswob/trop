@@ -96,7 +96,7 @@ fn ledger_result(
     }
     let by = r.by.as_ref().map_or(String::new(), |f| format!(" by {f}"));
     Ok(Ok(Printed {
-        text: format!("residuals {place} {}{by}", span_text(&r.span)?),
+        text: format!("residuals {place} {}{by}", span_text(&r.span)),
         body,
         bare: false,
         whole: true,
@@ -154,25 +154,25 @@ fn combination_result(
 
 /// A span as the ask wrote it: its first end, then ` .. ` and its last when `..` was
 /// written (refcore's `_txt` of a span). L §5.18.
-fn span_text(sp: &Span) -> Result<String, Stop> {
+fn span_text(sp: &Span) -> String {
     let first = match &sp.from {
-        Some(e) => end_text(e)?,
+        Some(e) => end_text(e),
         None => String::new(),
     };
     if !sp.dots {
-        return Ok(first);
+        return first;
     }
     match &sp.to {
-        Some(e) => Ok(format!("{first} .. {}", end_text(e)?)),
-        None => Ok(format!("{first} ..")),
+        Some(e) => format!("{first} .. {}", end_text(e)),
+        None => format!("{first} .."),
     }
 }
 
-/// A span's end as written: a name, or a day, a month, a quarter or a key (refcore's `_txt`).
-/// L §5.18.
-fn end_text(e: &Expr) -> Result<String, Stop> {
+/// A span's end as written: a name, a day, a month, a quarter, a key, or any other
+/// expression's text, `end_of(2026-03)` (refcore's `_txt`). L §5.18.
+fn end_text(e: &Expr) -> String {
     if let Expr::Name(n) = e {
-        return Ok(n.clone());
+        return n.clone();
     }
     if let Expr::Lit(lit) = e
         && matches!(
@@ -180,9 +180,7 @@ fn end_text(e: &Expr) -> Result<String, Stop> {
             Lit::Day(_) | Lit::Month(..) | Lit::Quarter(..) | Lit::Key(_) | Lit::Name(_)
         )
     {
-        return Ok(lit.text());
+        return lit.text();
     }
-    Err(Stop::NotBuilt(
-        "the text of a span's end other than a name, a day, a month or a quarter",
-    ))
+    crate::load::expr_text(e)
 }

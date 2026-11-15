@@ -311,8 +311,18 @@ impl Loader {
             // a text attribute, `payee: "BIEDRONKA"` (L §3.1 text)
             FieldValue::Expr(Expr::Str(text)) => Value::Str(text.clone()),
             FieldValue::None | FieldValue::Expr(Expr::None) => Value::None,
-            FieldValue::Expr(Expr::Post(..)) => {
-                // a read with keys or a field that names no movement: no value of a row
+            FieldValue::Expr(
+                Expr::Post(..)
+                | Expr::Sum(..)
+                | Expr::Prod(..)
+                | Expr::Cmp(_)
+                | Expr::And(_)
+                | Expr::Or(_)
+                | Expr::Not(_)
+                | Expr::In(_),
+            ) => {
+                // a read with keys or a field that names no movement, or an operation: no
+                // value of a row (refcore's `convert_value`, its last line)
                 return Err(at.refuse(
                     Load::Unit,
                     format!("a value of the wrong type for {}", at.sid),

@@ -384,22 +384,27 @@ impl Engine {
             _ => return Err(invariant("a pin load didn't check")),
         };
         let keyed = |key: &Key| matches!(key, Key::Expr(e) if env.read_by(e));
-        let per_tuple = if env.read_by(written) || target.keys.iter().flatten().any(keyed) {
-            // L §8.2: a pin formed per binding tuple prints once, as written, with its
-            // binding (refcore's `_pertuple`): the value's, then each key's
-            let mut parts = vec![written];
-            for key in target.keys.iter().flatten() {
-                if let Key::Expr(e) = key {
-                    parts.push(e);
+        // an ask's pin in its own binding tuple's scope is that tuple's line's own pin, its
+        // keys as they read (L §5.11 A pin's keys, §5.18): only a pin inside one line prints
+        // once with its binding
+        let inside_line = how != Pinning::Ask;
+        let per_tuple =
+            if inside_line && (env.read_by(written) || target.keys.iter().flatten().any(keyed)) {
+                // L §8.2: a pin formed per binding tuple prints once, as written, with its
+                // binding (refcore's `_pertuple`): the value's, then each key's
+                let mut parts = vec![written];
+                for key in target.keys.iter().flatten() {
+                    if let Key::Expr(e) = key {
+                        parts.push(e);
+                    }
                 }
-            }
-            let named = env.binds_named(&parts).ok_or(Stop::NotBuilt(
+                let named = env.binds_named(&parts).ok_or(Stop::NotBuilt(
                 "a pin per binding tuple naming two bindings in one part, or through an aggregate",
             ))?;
-            (!named.is_empty()).then(|| format!("{pin} for {}", named.join(", ")))
-        } else {
-            None
-        };
+                (!named.is_empty()).then(|| format!("{pin} for {}", named.join(", ")))
+            } else {
+                None
+            };
         let mut keys = Vec::with_capacity(binds.len());
         let mut texts = Vec::with_capacity(binds.len());
         let all_written = match target.keys.as_deref() {

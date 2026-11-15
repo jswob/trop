@@ -9,7 +9,7 @@
 
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Env, Item, Op, arith, equal_sides, num_stop};
-use crate::model::{Reality, Value};
+use crate::model::{KeyVal, Reality, Value};
 use crate::syntax::{Expr, PinForm, Stop};
 use crate::time::Day;
 
@@ -153,7 +153,7 @@ fn side(read: Result<Value, Stop>) -> Result<Item, Stop> {
 /// (refcore's `_check`). L §5.18, §3.2.
 fn difference(m: &Reality, a: &Value, b: &Value) -> Result<String, Stop> {
     let numbers = |v: &Value| matches!(v, Value::Number(_) | Value::Money(_));
-    if numbers(a) && numbers(b) {
+    if numbers(a) && numbers(b) || keys_of_one_index(m, a, b) {
         return match arith(m, Op::Sub, a, b) {
             Ok(d) => Ok(format!(", difference {}", plain(m, &d)?)),
             Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {
@@ -161,6 +161,10 @@ fn difference(m: &Reality, a: &Value, b: &Value) -> Result<String, Stop> {
             }
             Err(stop) => Err(stop),
         };
+    }
+    if matches!(a, Value::Key(KeyVal::Thing(_))) && matches!(b, Value::Key(KeyVal::Thing(_))) {
+        // things of a kind: a kind is no index, so no difference (refcore's `_check`)
+        return Ok(String::new());
     }
     if matches!(a, Value::Key(_) | Value::Period(_))
         && matches!(b, Value::Key(_) | Value::Period(_))
@@ -170,6 +174,17 @@ fn difference(m: &Reality, a: &Value, b: &Value) -> Result<String, Stop> {
         return Err(Stop::NotBuilt("a check's difference of two keys"));
     }
     Ok(String::new())
+}
+
+/// Whether `a` and `b` are keys of one list index, which a key carries at run: their
+/// difference is the int of positions between them (L §4.2, refcore's `key_diff`).
+fn keys_of_one_index(m: &Reality, a: &Value, b: &Value) -> bool {
+    let (Value::Key(KeyVal::Key { index, .. }), Value::Key(KeyVal::Key { index: other, .. })) =
+        (a, b)
+    else {
+        return false;
+    };
+    index == other && m.indexes.get(index).is_some()
 }
 
 /// A side as a check prints it in place of a decided comparison: a refusal as `refused: …`, a

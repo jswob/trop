@@ -91,7 +91,7 @@ pub(super) fn each_lines(
     let axes = Axes::of(m, ask)?;
     let tuples = if ask.binds.is_empty() {
         vec![Member {
-            env: Env::empty(),
+            env: engine.ask_env.clone(),
             unknown: None,
             brought: Collected::default(),
         }]

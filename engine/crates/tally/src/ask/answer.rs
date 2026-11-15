@@ -487,7 +487,21 @@ fn no_turn() -> Stop {
 /// `LoadAtRun`: a load refusal load can't see, such as a rate per year times days read
 /// through rows, L §3.3); a request's refusal is the run's one result (E §11). L §8.3, §8.4.
 fn answer_one(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<String>, Stop> {
-    match ask_lines(m, ask, days, seen) {
+    if formed_per_tuple(ask) {
+        return tuple_asks(m, ask, days, seen);
+    }
+    answer_in(m, ask, &Env::empty(), days, seen)
+}
+
+/// [`answer_one`] of ask `ask` in scope `env`, its own binding tuple's where it has one.
+fn answer_in(
+    m: &Reality,
+    ask: &Ask,
+    env: &Env,
+    days: Days,
+    seen: &mut Seen,
+) -> Result<Vec<String>, Stop> {
+    match ask_lines(m, ask, env, days, seen) {
         Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_) | Code::Req(_)) => {
             Ok(vec![format!("{}: refused: {}", ask.id, r.text())])
         }
@@ -498,7 +512,13 @@ fn answer_one(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec
 /// One ask's lines: its cut by `as known`, its law date by `law`, then one line per binding
 /// tuple with the register under it; once answered, the timelines its engines walked are
 /// checked unchanged (refcore's `_answer`, `_answer_in`). L §5.18, E §9 item 4.
-fn ask_lines(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<String>, Stop> {
+fn ask_lines(
+    m: &Reality,
+    ask: &Ask,
+    env: &Env,
+    days: Days,
+    seen: &mut Seen,
+) -> Result<Vec<String>, Stop> {
     if ask.windows_each && matches!(ask.body, AskBody::Diff(_) | AskBody::Residuals(_)) {
         // a diff's and a ledger's result is their set of lines (R8): split by the windows
         // they meet, each sub-window's set, which no layout yet writes
@@ -507,22 +527,16 @@ fn ask_lines(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<
     let mut cut = m.on;
     let mut known_engine = None;
     if let Some(known) = &ask.known {
-        if names_a_for(ask, known) {
-            // a cut per the ask's own binding tuple (L §5.18) needs the line's context per
-            // tuple; refcore stops there too (`KeyError`)
-            return Err(Stop::NotBuilt(
-                "an ask's as known formed per its own for's binding tuple",
-            ));
-        }
         let mut engine = Engine::new(m.on)
             .with_days(days)
             .with_how((seen.memo, seen.lows))
             .for_ask(ask)
+            .in_tuple(env)
             .with_booked(core::mem::take(&mut seen.booked));
         #[cfg(feature = "fault-injection")]
         engine.plant.clone_from(&seen.plant);
-        let v = model_ctx(m, &mut engine, (None, cut))
-            .and_then(|ctx| engine.value(m, known, &Env::empty(), ctx));
+        let v =
+            model_ctx(m, &mut engine, (None, cut)).and_then(|ctx| engine.value(m, known, env, ctx));
         gather(seen, &mut engine);
         let v = v?;
         if let Value::Hole(_) = v {
@@ -539,6 +553,7 @@ fn ask_lines(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<
         .with_days(days)
         .with_how((seen.memo, seen.lows))
         .for_ask(ask)
+        .in_tuple(env)
         .with_booked(core::mem::take(&mut seen.booked));
     #[cfg(feature = "fault-injection")]
     engine.plant.clone_from(&seen.plant);
@@ -607,13 +622,9 @@ fn ask_body(
 ) -> Result<Vec<String>, Stop> {
     let mut law = None;
     if let Some(e) = &ask.law {
-        if names_a_for(ask, e) {
-            return Err(Stop::NotBuilt(
-                "an ask's law formed per its own for's binding tuple",
-            ));
-        }
         let in_model = model_ctx(m, engine, (None, cut))?;
-        let v = engine.value(m, e, &Env::empty(), in_model)?;
+        let env = engine.ask_env.clone();
+        let v = engine.value(m, e, &env, in_model)?;
         if let Value::Hole(_) = v {
             return Ok(vec![format!("{}: {}", ask.id, shown(m, &v)?)]);
         }
@@ -652,13 +663,6 @@ fn ask_body(
         // the ask's `with` pins: evaluated once, outside the line, their register under every
         // line (refcore's `apply_pins` with `ask=True`); a pin whose key or date is a hole makes
         // the ask line that hole (L §5.11)
-        if pins_name_for(ask) {
-            // a pin formed per the ask's own binding tuple (L §8.2) needs the line's context
-            // per tuple; refcore stops there too (`KeyError`)
-            return Err(Stop::NotBuilt(
-                "an ask's with pin formed per its own for's binding tuple",
-            ));
-        }
         engine.push();
         let read = engine.with_pins(m, &ask.pins, ctx);
         pinned.merge(&engine.pop_alone());
@@ -789,7 +793,7 @@ fn plain_lines(
     }
     let tuples = if ask.binds.is_empty() {
         vec![Member {
-            env: Env::empty(),
+            env: engine.ask_env.clone(),
             unknown: None,
             brought: Collected::default(),
         }]
@@ -995,6 +999,58 @@ fn bound_text(m: &Reality, bind: &Bind, v: &Value) -> Result<String, Stop> {
         return Ok(whole.to_string());
     }
     shown(m, v)
+}
+
+/// Whether ask `ask`'s `as known`, `law` or a `with` pin names a variable of its own `for`:
+/// each is then formed per binding tuple, so each tuple is a line of its own, with its own
+/// cut, law date and pins (L §5.18, §5.11 A pin's keys).
+fn formed_per_tuple(ask: &Ask) -> bool {
+    if ask.binds.is_empty() {
+        return false;
+    }
+    let names = |e: &Option<Expr>| e.as_ref().is_some_and(|e| names_a_for(ask, e));
+    names(&ask.known) || names(&ask.law) || pins_name_for(ask)
+}
+
+/// The lines of ask `ask` whose cut, law date or pins are formed per its own binding tuple:
+/// the binding's tuples read in the model's world at its `on`, then each tuple's line as an
+/// ask of its own, its head the tuple's (`q (k = a)`), in the tuple's scope; a tuple whose
+/// membership is a hole prints that hole (L §5.18, §5.11, §2.5).
+fn tuple_asks(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<String>, Stop> {
+    let mut engine = Engine::new(m.on)
+        .with_days(days)
+        .with_how((seen.memo, seen.lows))
+        .for_ask(ask)
+        .with_booked(core::mem::take(&mut seen.booked));
+    #[cfg(feature = "fault-injection")]
+    engine.plant.clone_from(&seen.plant);
+    let read =
+        model_ctx(m, &mut engine, (None, m.on)).and_then(|ctx| engine.tuples(m, &ask.binds, ctx));
+    gather(seen, &mut engine);
+    let members = match read {
+        Ok(Ok(members)) => members,
+        Ok(Err(hole)) => return Ok(vec![format!("{}: {}", ask.id, hole.text())]),
+        Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_) | Code::Req(_)) => {
+            return Ok(vec![format!("{}: refused: {}", ask.id, r.text())]);
+        }
+        Err(stop) => return Err(stop),
+    };
+    engine.asks_moved_no_money()?;
+    let mut out = Vec::new();
+    for member in members {
+        let head = env_text(m, &ask.binds, &member.env)?;
+        if let Some(hole) = member.unknown {
+            out.push(format!("{}{head}: {}", ask.id, hole.text()));
+            continue;
+        }
+        let one = Ask {
+            id: format!("{}{head}", ask.id),
+            binds: Vec::new(),
+            ..ask.clone()
+        };
+        out.extend(answer_in(m, &one, &member.env, days, seen)?);
+    }
+    Ok(out)
 }
 
 /// Whether one of ask `ask`'s `with` pins names a variable of its own `for`, by its value, a
