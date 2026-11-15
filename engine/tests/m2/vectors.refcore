@@ -104954,88 +104954,6 @@ warning: WARN-UNREAD input hi is read by nothing
 warning: WARN-UNREAD input ids is read by nothing
 warning: WARN-UNREAD input lo is read by nothing
 warning: WARN-UNREAD input x is read by nothing
-,20:fixes/p60/flows_conv,11:fixes-sweep,20:run flows_conv.tally,1529:16:flows_conv.tally,1503:model p
-  tally 2
-  on 2026-06-30
-  start 2026-01-01
-  end 2026-12-31
-  note "T, M2 P60 (G6's census of run-time stops): walk/flows.rs:54, flows converted to another currency (L §5.14 flows ... in CUR at fx mode)"
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-index ks = [a, b]
-kind twos: event certain
-  leg cash: PLN
-  leg fee: PLN
-place konto: accounts PLN lives 2026-01-01..
-place jar[k in ks]: accounts PLN lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input amt: money PLN
-input dom: int
-input fx: num EUR/PLN
-input x[k in ks]: int
-input pday: date
-input lo: money PLN
-input hi: money PLN
-input ids: text
-input plaw: date
-
-move pay[m in months]: transfers
-  on day_of(m, dom)
-  at start_of(m)
-  for m
-  leg cash from world to konto amount amt
-
-move buy[m in months]: twos
-  on day_of(m, dom)
-  at start_of(m)
-  leg cash from konto to world amount amt
-  leg fee from konto to world amount amt
-
-move put[k in ks]: transfers
-  on pday
-  at plaw
-  leg cash from world to jar[k] amount amt
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  amt = 10.00 PLN "s"
-  dom = 5 "s"
-  fx = 0.25 "s"
-  x[a] = 1 "s"
-  pday = 2026-03-05 "s"
-  lo = 0.00 PLN "s"
-  hi = 0.02 PLN "s"
-  ids = "a" "s"
-  plaw = 2026-03-01 "s"
-  x[b] = 2 "s"
-  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
-  opening[jar[a]] = 0.00 PLN at 2026-01-01 start "s"
-  opening[jar[b]] = 0.00 PLN at 2026-01-01 start "s"
-
-ask q: flows(konto, 2026-01-01 .. 2026-06-30) in EUR at fx half-up
-,,1:0,622:q: -15.00 EUR
-  unfulfilled: buy[2026-01]
-  unfulfilled: buy[2026-02]
-  unfulfilled: buy[2026-03]
-  unfulfilled: buy[2026-04]
-  unfulfilled: buy[2026-05]
-  unfulfilled: buy[2026-06]
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  unfulfilled: pay[2026-03]
-  unfulfilled: pay[2026-04]
-  unfulfilled: pay[2026-05]
-  unfulfilled: pay[2026-06]
-  cut 2026-06-30
-warning: WARN-NEGATIVE konto is below zero from 2026-11-05
-warning: WARN-UNREAD input hi is read by nothing
-warning: WARN-UNREAD input ids is read by nothing
-warning: WARN-UNREAD input lo is read by nothing
-warning: WARN-UNREAD input x is read by nothing
 ,16:fixes/p60/wa_for,11:fixes-sweep,16:run wa_for.tally,1652:12:wa_for.tally,1630:model wa_for
   tally 2
   on 2026-08-01
@@ -105901,6 +105819,338 @@ version pk
   known 2026-01-01
   pick = pay
 ,,1:1,71:refused: LOAD-KEY wrong number of keys for pay (mv_row_value.tally:84)
+,11:fixes/g6/n1,11:fixes-sweep,12:run n1.tally,952:8:n1.tally,936:model p
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6 review and fix review (tmp/m2/review-g6.md, review-g6-fix.md): N1, a partial sum of two rates, one a hole (L §5.18, §3.3)"
+source card "probe"
+unit DUK: currency minor 0.01
+index ks = [a, b]
+place konto: accounts DUK lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input ga: money DUK
+input wibor: rate
+input margin: rate
+input d[k in ks]: date
+input lim: date
+input lo: date
+input gd: date
+move gift: transfers
+  on gd
+  leg cash from world to konto amount ga
+ask q1: wibor + margin law 2026-12-31 partial
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  opening[konto] = 100.00 DUK at 2026-01-01 start "c"
+  ga = ?"gift amount" "c"
+  wibor = 5.85 %/year "c"
+  margin = ?"bank margin" "c"
+  d[a] = window(2026-03-01, 2026-03-02) "c"
+  d[b] = 2026-05-01 "c"
+  lim = 2026-06-01 "c"
+  lo = 2026-03-01 "c"
+  gd = 2026-02-01 "c"
+,,1:0,233:q1: 0.0585 /year + 1 × ?"bank margin" (margin)
+  law date 2026-12-31, cut 2026-01-01
+warning: WARN-UNREAD input d is read by nothing
+warning: WARN-UNREAD input lim is read by nothing
+warning: WARN-UNREAD input lo is read by nothing
+,11:fixes/g6/n2,11:fixes-sweep,12:run n2.tally,1027:8:n2.tally,1010:model p
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6 review and fix review (tmp/m2/review-g6.md, review-g6-fix.md): N2, a partial sum of movements' amounts over a binding, one leg a hole (L §5.18)"
+source card "probe"
+unit DUK: currency minor 0.01
+index ks = [a, b]
+place konto: accounts DUK lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input ga: money DUK
+input wibor: rate
+input margin: rate
+input d[k in ks]: date
+input lim: date
+input lo: date
+input gd: date
+move gift: transfers
+  on gd
+  leg cash from world to konto amount ga
+ask q2: sum(g.cash.amount for g in transfers over 2026-01-01 .. 2026-12-31) law 2026-12-31 partial
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  opening[konto] = 100.00 DUK at 2026-01-01 start "c"
+  ga = ?"gift amount" "c"
+  wibor = 5.85 %/year "c"
+  margin = ?"bank margin" "c"
+  d[a] = window(2026-03-01, 2026-03-02) "c"
+  d[b] = 2026-05-01 "c"
+  lim = 2026-06-01 "c"
+  lo = 2026-03-01 "c"
+  gd = 2026-02-01 "c"
+,,1:0,323:q2: 0 + 1 × ?"gift amount" (ga)
+  law date 2026-12-31, cut 2026-01-01
+warning: WARN-UNREAD input d is read by nothing
+warning: WARN-UNREAD input lim is read by nothing
+warning: WARN-UNREAD input lo is read by nothing
+warning: WARN-UNREAD input margin is read by nothing
+warning: WARN-UNREAD input wibor is read by nothing
+,11:fixes/g6/b1,11:fixes-sweep,12:run b1.tally,922:8:b1.tally,906:model p
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6 review and fix review (tmp/m2/review-g6.md, review-g6-fix.md): P62, a projection counts a movement whose leg day is in [t, d] though its date is after d (100.00)"
+source card "probe"
+unit DUK: currency minor 0.01
+place konto: accounts DUK lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input amt: money DUK
+input d_mv: date
+input d_leg: date
+move early: transfers
+  on d_mv
+  leg cash from world to konto amount amt on d_leg
+ask a: bal(konto, 2026-04-30) from 2026-02-01 with uncertain, bal(konto, 2026-04-30) from 2026-02-01, bal(konto, 2026-04-30)
+ask b: low(konto, 2026-02-01 .. 2026-04-30) from 2026-02-01 with uncertain
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 DUK "c"
+  d_mv = 2026-06-01 "c"
+  d_leg = 2026-03-01 "c"
+  opening[konto] = 0.00 DUK at 2026-01-01 start "c"
+,,1:0,86:a: (100.00 DUK, 100.00 DUK, 100.00 DUK)
+  cut 2026-01-01
+b: 0.00 DUK
+  cut 2026-01-01
+,12:fixes/g6/b1b,11:fixes-sweep,13:run b1b.tally,880:9:b1b.tally,863:model p
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6 review and fix review (tmp/m2/review-g6.md, review-g6-fix.md): P62, b1 with the day after the leg (0.00, 0.00, 100.00)"
+source card "probe"
+unit DUK: currency minor 0.01
+place konto: accounts DUK lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input amt: money DUK
+input d_mv: date
+input d_leg: date
+move early: transfers
+  on d_mv
+  leg cash from world to konto amount amt on d_leg
+ask a: bal(konto, 2026-04-30) from 2026-02-01 with uncertain, bal(konto, 2026-04-30) from 2026-02-01, bal(konto, 2026-04-30)
+ask b: low(konto, 2026-02-01 .. 2026-04-30) from 2026-02-01 with uncertain
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 DUK "c"
+  d_mv = 2026-01-15 "c"
+  d_leg = 2026-03-01 "c"
+  opening[konto] = 0.00 DUK at 2026-01-01 start "c"
+,,1:0,82:a: (0.00 DUK, 0.00 DUK, 100.00 DUK)
+  cut 2026-01-01
+b: 0.00 DUK
+  cut 2026-01-01
+,11:fixes/g6/b3,11:fixes-sweep,20:run b3.tally --ask q,899:8:b3.tally,883:model p
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6 review and fix review (tmp/m2/review-g6.md, review-g6-fix.md): B3, a partial balance whose decision's day is a hole: the plain hole (L §5.18)"
+source card "probe"
+unit DUK: currency minor 0.01
+place konto: accounts DUK lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input a: money DUK
+input dd: date
+input dg: date
+input ten: money DUK
+move gift: transfers
+  on dg
+  leg cash from world to konto amount a
+move topup: transfers
+  on dd
+  reads konto
+  leg cash from world to konto amount ten + 0 * bal(konto)
+ask q: bal(konto, 2026-06-30) partial
+ask q2: bal(konto, 2026-06-30)
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  opening[konto] = 100.00 DUK at 2026-01-01 start "c"
+  a = ?"gift amount" "c"
+  dd = ?"top-up day" "c"
+  ten = 10.00 DUK "c"
+  dg = 2026-02-01 "c"
+,,1:0,57:q: 100.00 DUK + 1 × ?"gift amount" (a)
+  cut 2026-01-01
+,11:fixes/g6/b4,11:fixes-sweep,27:run b4.tally --ask q2 q3 q4,791:8:b4.tally,775:model p
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6 review and fix review (tmp/m2/review-g6.md, review-g6-fix.md): B4, B5, partial over a period, a key and a function of one: the plain hole (L §5.18)"
+source card "probe"
+unit DUK: currency minor 0.01
+place konto: accounts DUK lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input pm: month
+index colors = [red, green, blue]
+input k: key colors
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  pm = ?"which month" "c"
+  k = ?"which colour" "c"
+ask q1: pm - 2026-01 law 2026-12-31 partial
+ask q2: 2026-06 - pm law 2026-12-31 partial
+ask q3: pos(k) + 1 law 2026-12-31 partial
+ask q4: year_of(start_of(pm)) + 1 law 2026-12-31 partial
+ask q5: pm - 2026-01 law 2026-12-31
+,,1:0,324:q2: 2026-06 + -1 × ?"which month" (pm)
+  law date 2026-12-31, cut 2026-01-01
+q3: 1 + 1 × ?"which colour" (k)
+  law date 2026-12-31, cut 2026-01-01
+q4: 1 + 1 × ?"which month" (pm)
+  law date 2026-12-31, cut 2026-01-01
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,14:fixes/g6/r4_d2,11:fixes-sweep,21:run r4.tally --ask d2,1400:8:r4.tally,1383:model r1
+  tally 2
+  on 2026-01-01
+  start 2025-01-01
+  end 2025-12-31
+  note "T, M2 G6 review and fix review (tmp/m2/review-g6.md, review-g6-fix.md): NB-6, x / 0 with x a hole: RUN-DIV, a refusal outranks a hole (L §8)"
+unit DUK: currency minor 0.01
+source s "s"
+index ks = [a, b, c]
+kind two: transfers
+  leg cash: DUK
+  leg fee: DUK
+place w: accounts DUK lives 2025-01-01..
+place v2: accounts DUK lives 2025-01-01..
+place shop: outside lives 2025-01-01..
+input four: int
+input five: int
+input one_duk: money DUK
+input x: int question "x?"
+input y: int question "y?"
+input three: int question "three?"
+input d3: date
+input mx: money DUK question "mx?"
+input my: money DUK question "my?"
+input z[k in ks]: int question "z?"
+input f[k in ks]: bool question "f?"
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  opening[w] = 100.00 DUK at 2025-01-01 start "o"
+  opening[v2] = 0.00 DUK at 2025-01-01 start "o"
+  three = 3 "t"
+  four = 4 "f"
+  five = 5 "f"
+  one_duk = 1.00 DUK "u"
+  d3 = 2025-03-01 "d"
+  x = ?"x?" "x"
+  y = ?"y?" "y"
+  mx = ?"mx?" "mx"
+  my = ?"my?" "my"
+  z[a] = 5 "a"
+  z[b] = 6 "b"
+  z[c] = 7 "c"
+  f[a] = true "a"
+  f[b] = ?"is b?" "b"
+  f[c] = false "c"
+def third: int = x / three at reader
+move two_legs: two
+  on d3
+  leg cash from w to shop amount mx
+  leg fee from w to v2 amount my
+ask d1: x / 0 law 2025-12-31 partial
+ask d2: x / 0 law 2025-12-31
+,,1:0,402:d2: ?"x?" (x)
+  law date 2025-12-31, cut 2026-01-01
+warning: WARN-UNREAD def third is read by nothing
+warning: WARN-UNREAD input f is read by nothing
+warning: WARN-UNREAD input five is read by nothing
+warning: WARN-UNREAD input four is read by nothing
+warning: WARN-UNREAD input one_duk is read by nothing
+warning: WARN-UNREAD input y is read by nothing
+warning: WARN-UNREAD input z is read by nothing
+,29:fixes/gate8/r437_after_m_last,11:fixes-sweep,44:run after_m_last.tally --ask l14 l15 l16 l31,1609:18:after_m_last.tally,1581:model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+  note "T, M2 gate 8 run 43702332507 on 6a58624c: last of a reading after m, m fulfilled by o1 at konto on 03-14 and o2 elsewhere on 03-16: the reading stands on 03-14 (book/reading.rs last_standing_day)"
+
+source s "s"
+unit PLN: currency minor 0.01
+kind savings: place PLN min 0
+place konto: accounts PLN lives 2026-01-01..
+place sav: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input keep: money PLN
+input d_save: int
+
+move save[m in months]: transfers
+  on day_of(m, d_save)
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  d_save = 15 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[o1] = (on: 2026-03-14, kind: transfers, leg cash from konto to sav amount 500.00 PLN, fulfils: save[2026-03]) "o1"
+  bank[o2] = (on: 2026-03-16, kind: transfers, leg cash from sav to world amount 20.00 PLN, fulfils: save[2026-03]) "o2"
+
+version rd
+  cite s
+  governs 2026-03..2026-04
+  known 2026-04-04
+  pad konto from world
+  stated[konto] = 90.00 PLN after save[2026-03] "saldo"
+
+ask l13: last(stated[konto], 2026-03-13)
+ask l14: last(stated[konto], 2026-03-14)
+ask l15: last(stated[konto], 2026-03-15)
+ask l16: last(stated[konto], 2026-03-16)
+ask l31: last(stated[konto], 2026-03-31)
+ask ls: last(stated[sav], 2026-03-31)
+,,1:0,376:l14: ?"stated[konto] has no reading on or before 2026-03-14" (stated[konto])
+  cut 2026-04-10
+l15: ?"stated[konto] has no reading on or before 2026-03-15" (stated[konto])
+  cut 2026-04-10
+l16: ?"stated[konto] has no reading on or before 2026-03-16" (stated[konto])
+  cut 2026-04-10
+l31: ?"stated[konto] has no reading on or before 2026-03-31" (stated[konto])
+  cut 2026-04-10
 ,17:fixes/g5/a1_alone,12:fixes-ledger,27:run a1_alone.tally --ask t3,959:14:a1_alone.tally,936:model b
   tally 2
   on 2027-06-30

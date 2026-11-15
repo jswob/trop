@@ -1,0 +1,35 @@
+model p
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6 review and fix review (tmp/m2/review-g6.md, review-g6-fix.md): N1, a partial sum of two rates, one a hole (L §5.18, §3.3)"
+source card "probe"
+unit DUK: currency minor 0.01
+index ks = [a, b]
+place konto: accounts DUK lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input ga: money DUK
+input wibor: rate
+input margin: rate
+input d[k in ks]: date
+input lim: date
+input lo: date
+input gd: date
+move gift: transfers
+  on gd
+  leg cash from world to konto amount ga
+ask q1: wibor + margin law 2026-12-31 partial
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  opening[konto] = 100.00 DUK at 2026-01-01 start "c"
+  ga = ?"gift amount" "c"
+  wibor = 5.85 %/year "c"
+  margin = ?"bank margin" "c"
+  d[a] = window(2026-03-01, 2026-03-02) "c"
+  d[b] = 2026-05-01 "c"
+  lim = 2026-06-01 "c"
+  lo = 2026-03-01 "c"
+  gd = 2026-02-01 "c"
