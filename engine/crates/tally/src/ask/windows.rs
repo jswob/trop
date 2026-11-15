@@ -49,6 +49,13 @@ struct Done {
     tuples: Vec<Tuple>,
 }
 
+impl Done {
+    /// Its tuple of binding part `head`, where the run binds it.
+    fn tuple(&self, head: &str) -> Option<&Tuple> {
+        self.tuples.iter().find(|t| t.head == head)
+    }
+}
+
 /// What one run gives: its result to compare, and under a binding each tuple's line.
 type Ran = (Printed, Vec<Tuple>);
 
@@ -229,10 +236,10 @@ fn tuple_lines(
             .iter()
             .filter_map(|at| labels.get(*at).cloned())
             .collect();
-        let projected: Vec<Vec<Day>> = days
-            .iter()
-            .map(|t| kept.iter().filter_map(|at| t.get(*at).copied()).collect())
-            .collect();
+        let mut projected: Vec<Vec<Day>> = Vec::with_capacity(days.len());
+        for t in &days {
+            projected.push(kept.iter().filter_map(|at| t.get(*at).copied()).collect());
+        }
         for (bounds, runs) in tuple_boxes(&sub, &projected, &keys)? {
             let suffix = if sub.is_empty() {
                 String::new()
@@ -258,7 +265,7 @@ fn tuple_lines(
 
 /// What tuple `head` gives in run `d`, as it prints; none where the run doesn't bind it.
 fn tuple_key(d: &Done, head: &str) -> Option<String> {
-    let t = d.tuples.iter().find(|t| t.head == head)?;
+    let t = d.tuple(head)?;
     Some(match &t.line {
         Ok(l) => format!(
             "{}\u{0}{}\u{0}{}",
@@ -287,12 +294,12 @@ fn windows_that_matter(
             if t.get(at).is_none() {
                 return Err(invariant("a run's days past the windows met"));
             }
-            let rest: Vec<Day> = t
-                .iter()
-                .enumerate()
-                .filter(|(i, _)| *i != at)
-                .map(|(_, d)| *d)
-                .collect();
+            let mut rest: Vec<Day> = Vec::with_capacity(t.len());
+            for (i, d) in t.iter().enumerate() {
+                if i != at {
+                    rest.push(*d);
+                }
+            }
             match seen.get(&rest) {
                 Some(other) if *other != key => {
                     matters = true;
@@ -337,13 +344,12 @@ fn tuple_boxes(
             }
         }
         for bounds in boxes(sub, &cells)? {
-            let runs: Vec<usize> = projected
-                .iter()
-                .zip(keys)
-                .enumerate()
-                .filter(|(_, (t, key))| *key == answer && inside(t, &bounds))
-                .map(|(at, _)| at)
-                .collect();
+            let mut runs: Vec<usize> = Vec::new();
+            for (at, (t, key)) in projected.iter().zip(keys).enumerate() {
+                if key == answer && inside(t, &bounds) {
+                    runs.push(at);
+                }
+            }
             rows.push((bounds, runs));
         }
     }
@@ -363,7 +369,7 @@ fn tuple_box_lines(
     let first = runs
         .first()
         .and_then(|at| done.get(*at))
-        .and_then(|d| d.tuples.iter().find(|t| t.head == head))
+        .and_then(|d| d.tuple(head))
         .ok_or_else(|| invariant("a tuple's box no run binds"))?;
     let line_head = format!("{}{head}{suffix}", ask.id);
     let line = match &first.line {
@@ -373,9 +379,7 @@ fn tuple_box_lines(
     let mut out = line.lines(&line_head);
     let mut met = Collected::default();
     for at in runs {
-        let same = done
-            .get(*at)
-            .and_then(|d| d.tuples.iter().find(|t| t.head == head));
+        let same = done.get(*at).and_then(|d| d.tuple(head));
         if let Some(Tuple { line: Ok(l), .. }) = same {
             met.merge(&l.met);
         }

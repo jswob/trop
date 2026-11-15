@@ -670,12 +670,8 @@ impl Walk {
         let Some(known) = st.val else {
             return Ok(None);
         };
-        let past = |n: usize| {
-            n.checked_add(1)
-                .ok_or_else(|| invariant("a log past the integers"))
-        };
         let from = match st.rst {
-            Some(r) => past(r)?,
+            Some(r) => next_entry(r)?,
             None if self.proj.is_some() || self.default_state(m, place, unit).hole.is_some() => {
                 return Ok(None);
             }
@@ -683,7 +679,7 @@ impl Walk {
         };
         let mut legs = Vec::new();
         let mut seen: Vec<Option<&Hole>> = Vec::new();
-        for e in log.ents.iter().take(past(i)?).skip(from) {
+        for e in log.ents.iter().take(next_entry(i)?).skip(from) {
             let Change::Hole(h) = &e.change else {
                 continue;
             };
@@ -987,6 +983,12 @@ impl Taken {
             Taken::Closing(d) => at.day == d && at.step == Step::End,
         }
     }
+}
+
+/// The position after entry `n` of a log. E §4.2.
+fn next_entry(n: usize) -> Result<usize, Stop> {
+    n.checked_add(1)
+        .ok_or_else(|| invariant("a log past the integers"))
 }
 
 /// A place's state in one unit with the holes and refusals of all its units and of the

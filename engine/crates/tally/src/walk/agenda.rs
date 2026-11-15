@@ -693,11 +693,16 @@ fn outside_window(walk: &Walk, inst: &Inst) -> bool {
         return true;
     }
     let through = walk.plans_through();
-    first > through
-        && inst
-            .legs
-            .iter()
-            .all(|lg| lg.day.lo().is_some_and(|d| d > through))
+    if first <= through {
+        return false;
+    }
+    for lg in &inst.legs {
+        match lg.day.lo() {
+            Some(d) if d > through => {}
+            Some(_) | None => return false,
+        }
+    }
+    true
 }
 
 /// Puts a plan instance's legs on their days by its status: left out, uncertain, refused, a
