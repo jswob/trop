@@ -326,6 +326,9 @@ pub struct Walk {
     /// The plan instances and decisions stated `same` as an observation: observed, so never
     /// unfulfilled nor open (refcore's `same_observed`; L §6.1).
     pub(crate) same_observed: BTreeSet<String>,
+    /// The pads this walk booked or refused, each at its point, in the order it met them
+    /// (refcore's `pads`; E §6.1): the members of a binding over pads.
+    pub(crate) pads: Vec<(crate::book::Pad, At)>,
     /// A walk up to a day: that day, past which its plan pass listed no plan's instance
     /// (refcore's prefix walk; E §3.2, §4.1); none for a main walk or a projection's.
     pub(crate) upto: Option<Day>,
@@ -489,6 +492,7 @@ impl Walk {
             after_at: BTreeMap::new(),
             same_waiting: BTreeMap::new(),
             same_observed: BTreeSet::new(),
+            pads: Vec::new(),
             upto: None,
         }
     }

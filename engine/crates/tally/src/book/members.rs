@@ -17,6 +17,7 @@ use std::collections::BTreeSet;
 
 use super::adjust::Adjustment;
 use super::observe::Obs;
+use super::reading::Pad;
 use super::same::{kept_once, same_differ, same_groups};
 use crate::base::{Code, Load, Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Entry, Env};
@@ -25,7 +26,8 @@ use crate::model::{Fulfils, KeyVal, MoveInfo, MvRef, MvSrc, Reality, Span, Value
 use crate::syntax::{Bind, Call, Expr, Stop};
 use crate::time::Day;
 use crate::walk::{
-    Amount, Dated, DayWindow, End, Exists, Inst, LegVal, Status, Term, WalkAt, invariant, qty_value,
+    Amount, At, Dated, DayWindow, End, Exists, Inst, LegVal, Status, Term, WalkAt, invariant,
+    qty_value,
 };
 
 /// What a binding over movements ranges over (refcore's `_dom`, `event` or `obs`).
@@ -46,6 +48,8 @@ pub(crate) enum Moving {
     Obs(Obs),
     /// An adjustment.
     Adj(Adjustment),
+    /// A pad the walk booked, at its point.
+    Pad(Pad, At),
 }
 
 /// A member of a binding over movements: the movement as a value, its unknown-member hole,
@@ -71,6 +75,7 @@ impl Moving {
             Moving::Plan(i) => &i.id,
             Moving::Obs(o) => &o.id,
             Moving::Adj(a) => &a.id,
+            Moving::Pad(p, _) => &p.id,
         }
     }
 
@@ -81,6 +86,7 @@ impl Moving {
             Moving::Plan(i) => i.day.clone(),
             Moving::Obs(o) => Some(Dated::Day(o.day)),
             Moving::Adj(a) => Some(Dated::Day(a.day)),
+            Moving::Pad(_, at) => Some(Dated::Day(at.day)),
         }
     }
 
@@ -97,6 +103,14 @@ impl Moving {
             Moving::Plan(i) => i.order.term()?,
             Moving::Obs(o) => o.order(),
             Moving::Adj(a) => a.order(),
+            // a day's pads come after its plans and decisions, whatever the strata
+            // (refcore's `PadMv.order`; E §4.1, tally 2.1.2, #39)
+            Moving::Pad(p, at) => Term::Tuple(vec![
+                Term::Day(at.day),
+                Term::Int(PADS_STRATUM),
+                Term::text("pads"),
+                Term::text(&p.id),
+            ]),
         };
         Ok((day, order))
     }
@@ -121,6 +135,11 @@ impl Moving {
                     vids: a.vids.clone(),
                 },
             },
+            Moving::Pad(p, at) => MvRef {
+                id: p.id.clone(),
+                day: Some(at.day),
+                src: MvSrc::Pad,
+            },
         }))
     }
 
@@ -134,9 +153,14 @@ impl Moving {
                 .ok_or_else(|| invariant("an instance of a move load didn't build")),
             Moving::Obs(o) => Ok(o.kind.clone()),
             Moving::Adj(_) => Ok("adjustments".to_owned()),
+            Moving::Pad(..) => Ok("pads".to_owned()),
         }
     }
 }
+
+/// A pad's stratum in its day's movement order: after every plan and decision (refcore's
+/// `PADS_STRATUM`, 2⁶²). E §4.1.
+const PADS_STRATUM: i64 = 4_611_686_018_427_387_904;
 
 impl Engine {
     /// The members of binding `bind` over movements: those dated on its day or in its span,
@@ -280,6 +304,7 @@ impl Engine {
                 }
                 Moving::Obs(o) => coll.merge(&o.coll),
                 Moving::Adj(a) => coll.merge(&a.coll),
+                Moving::Pad(p, _) => coll.merge(&p.coll),
             }
             let day = x
                 .day()
@@ -391,7 +416,7 @@ impl Engine {
             .iter()
             .filter_map(|(x, _)| match x {
                 Moving::Plan(i) => Some(i.id.as_str()),
-                Moving::Obs(_) | Moving::Adj(_) => None,
+                Moving::Obs(_) | Moving::Adj(_) | Moving::Pad(..) => None,
             })
             .collect();
         for iid in fulfilled.iter().filter(|t| ids.contains(t.as_str())) {
@@ -471,11 +496,6 @@ impl Engine {
         // (L §6.4)
         let mut moves = m.moves_in(ctx.world);
         moves.retain(|mv| sub.contains(&mv.kind));
-        if sub.contains("pads") {
-            return Err(Stop::NotBuilt(
-                "a binding over pads (the walk's own movements)",
-            ));
-        }
         let mut out = Vec::new();
         let mut decided = Vec::new();
         for mv in moves {
@@ -524,6 +544,11 @@ impl Engine {
                     .into_iter()
                     .map(Moving::Adj),
             );
+        }
+        if sub.contains("pads") {
+            // the walk's own movements, as it booked them (L §5.14.1 Running reads)
+            let pads = self.walk_pads(m, ctx)?;
+            out.extend(pads.into_iter().map(|(p, at)| Moving::Pad(p, at)));
         }
         out.extend(self.decided_members(m, &decided, ctx)?);
         in_order(once_by_same(m, out))
@@ -602,7 +627,25 @@ impl Engine {
                 }
                 self.observation_by_id(m, &v.id, cut)
             }
+            MvSrc::Pad => {
+                let pads = self.walk_pads(m, ctx)?;
+                Ok(pads
+                    .into_iter()
+                    .find(|(p, _)| p.id == v.id)
+                    .map(|(p, at)| Moving::Pad(p, at)))
+            }
         }
+    }
+
+    /// The pads a binding over pads ranges over: inside a decision, those its walk and the
+    /// walks it continues booked before its point; else the main walk's of the read's
+    /// timeline (refcore's `movements_of`, its pads). L §5.14.1 Running reads, E §6.1.
+    fn walk_pads(&mut self, m: &Reality, ctx: Ctx) -> Result<Vec<(Pad, At)>, Stop> {
+        let (walk, limit) = match ctx.at {
+            Some(WalkAt { walk, point }) => (walk, Some(point)),
+            None => (self.main_walk(m, ctx.cut)?, None),
+        };
+        self.chain_pads(walk, limit)
     }
 
     /// A move's instance by id at the read's cut; a decision's as the walk ran it: inside a
@@ -690,6 +733,7 @@ impl Engine {
             (Moving::Plan(i), "day") => self.absorb(&i.day_coll),
             (Moving::Plan(i), _) => self.absorb(&i.coll),
             (Moving::Obs(o), _) => self.absorb(&o.coll),
+            (Moving::Pad(p, _), _) => self.absorb(&p.coll),
         }
         match &src {
             Moving::Plan(i) => {
@@ -702,7 +746,7 @@ impl Engine {
                     return Err(Stop::Refused(e));
                 }
             }
-            Moving::Adj(_) => {}
+            Moving::Adj(_) | Moving::Pad(..) => {}
         }
         if let Moving::Obs(o) = &src
             && (name == "day" || is_leg)
@@ -819,7 +863,7 @@ impl Engine {
     fn fulfils_of(&mut self, m: &Reality, src: &Moving, cut: Day) -> Result<Value, Stop> {
         let fulfils = match src {
             Moving::Plan(i) => return Ok(i.fulfils.clone().unwrap_or(Value::None)),
-            Moving::Adj(_) => return Ok(Value::None),
+            Moving::Adj(_) | Moving::Pad(..) => return Ok(Value::None),
             Moving::Obs(o) => o.fulfils.clone(),
         };
         match fulfils {
@@ -859,6 +903,7 @@ impl Engine {
             Moving::Plan(i) => &i.legs,
             Moving::Obs(o) => &o.legs,
             Moving::Adj(_) => &[],
+            Moving::Pad(p, _) => core::slice::from_ref(&p.leg),
         };
         if let Some(lg) = legs.iter().find(|lg| lg.name == name) {
             if let Amount::Refused(r) = &lg.amount {
@@ -959,6 +1004,8 @@ fn attr_field(m: &Reality, src: &Moving, name: &str) -> Result<Value, Stop> {
             "change" => Some(amount_value(m, &a.delta, a.leg.unit.as_deref())?),
             _ => None,
         },
+        // a pad has no attributes (refcore's `PadMv.attrs`)
+        Moving::Pad(..) => None,
     };
     if let Some(v) = found {
         return Ok(v);

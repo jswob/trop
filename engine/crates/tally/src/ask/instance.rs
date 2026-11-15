@@ -82,7 +82,7 @@ fn instance_lines(
                     .ok_or_else(|| invariant("a movement of a move load didn't build"))?;
                 found_inst(m, engine, mv, &v.id, ctx)?.map(|inst| (mv, inst))
             }
-            MvSrc::Obs | MvSrc::Adj { .. } | MvSrc::Kind(_) | MvSrc::Missing => None,
+            MvSrc::Obs | MvSrc::Adj { .. } | MvSrc::Kind(_) | MvSrc::Missing | MvSrc::Pad => None,
         },
         Item::Value(_) | Item::Refused(_) => None,
     };

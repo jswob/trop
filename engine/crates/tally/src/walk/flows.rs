@@ -233,6 +233,31 @@ impl Engine {
         Ok(None)
     }
 
+    /// The pads walk `id` and the walks it continues booked, each once, the nearest first; a
+    /// running read's only those before its point `limit` (refcore's `movements_of`, its
+    /// pads). L §5.14.1 Running reads, E §6.1.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a walk the engine lacks.
+    pub(crate) fn chain_pads(
+        &self,
+        id: usize,
+        limit: Option<At>,
+    ) -> Result<Vec<(crate::book::Pad, At)>, Stop> {
+        let mut seen: BTreeSet<&str> = BTreeSet::new();
+        let mut out = Vec::new();
+        for wid in self.chain(id)? {
+            for (pad, at) in &self.walk(wid)?.pads {
+                if !seen.insert(pad.id.as_str()) || limit.is_some_and(|point| *at >= point) {
+                    continue;
+                }
+                out.push((pad.clone(), *at));
+            }
+        }
+        Ok(out)
+    }
+
     /// Walk `id` read through `limit`, then each walk it continues read through the point
     /// the walk after it starts after, the nearest first (refcore's `flows_place`, its
     /// chain). E §4.3 step 1, L §5.14.1.

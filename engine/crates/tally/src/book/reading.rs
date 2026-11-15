@@ -523,6 +523,8 @@ impl Engine {
             }
             GapRole::Pad(other) => {
                 let pad = make_pad(r, &other, &gap, bc, at)?;
+                // a member of a binding over pads from its point (L §5.14.1)
+                self.walk_mut(id)?.pads.push((pad.clone(), at));
                 let text = format!(
                     "{} {}, {} of {}",
                     r.place,

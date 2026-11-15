@@ -231,6 +231,8 @@ pub enum MvSrc {
     /// A movement known by its id alone, found again at the reader's cut: a move's instance no
     /// binding tuple gives there, or a movement an observed row's attribute names (L §3.1).
     Missing,
+    /// A pad the walk booked, by its id (E §6.1).
+    Pad,
     /// A movement of an event kind as the type sampler sees one: never a run's value.
     Kind(String),
 }
