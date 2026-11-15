@@ -88,6 +88,11 @@ COV_TARGET = os.path.join(ENGINE, "target", "mutants-cov")
 LOCAL = os.path.join(ENGINE, "target", "mutants-local")
 PASSED = ("CARGO_BUILD_JOBS", "NEXTEST_TEST_THREADS")
 RUNNER = milestones.RUNNER
+# the work counters (R-51, D4-8) in every build of gate 8, its baseline, `next`, both maps, the
+# shards and the local mode: T's counts tests kill the fence's mutants that keep the output
+# but change the counts (R-87, R-88; pick P75, issue #167, 2026-11-15). The runner's feature
+# `counters` turns on tally-cli's; the mutants profile has debug assertions, as R-51 needs
+COUNTERS = f"--features={RUNNER}/counters"
 # the files the key holds, relative to engine/ (R-133)
 KEYED = ["crates", "tests", "Cargo.toml", "Cargo.lock", "rust-toolchain.toml", ".config/nextest.toml",
          "tools/milestones.toml", "tools/mutants_gate.py", "tools/mutants-cov-wrap", "tools/mutants-cov.toml"]
@@ -129,9 +134,11 @@ def run_env():
 
 
 def selection():
-    """T's mutation targets (R-84): `tools/milestones args`, the baseline's and every shard's."""
+    """T's mutation targets (R-84): `tools/milestones args`, the baseline's and every shard's,
+    with the counters on (COUNTERS)."""
     try:
-        return milestones.selection(dict(os.environ))
+        chosen = milestones.selection(dict(os.environ))
+        return chosen if COUNTERS in chosen else [*chosen, COUNTERS]
     except milestones.MilestoneError as e:
         raise GateError(f"tools/milestones: {e}") from e
 

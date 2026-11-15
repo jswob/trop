@@ -145,7 +145,7 @@ def next_targets(env):
     if not names:
         print(f"mutants-local: --next: {m or 'no milestone'} has no test target to add", file=sys.stderr)
         return None
-    selected = [*(f"--features={f}" for f in features), *(f"--test={n}" for n in names)]
+    selected = [*(f"--features={f}" for f in features), mutants_gate.COUNTERS, *(f"--test={n}" for n in names)]
     print(f"mutants-local: {m}'s tests, unmutated (the batch's baseline)", flush=True)
     run = subprocess.run(["cargo", "nextest", "run", "--locked", "-p", "tally-runner", "--cargo-profile", "mutants",
                           "--profile", "mutants", "--no-fail-fast", *selected], cwd=ENGINE, env=env,
