@@ -1,0 +1,53 @@
+model ls
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 gate 8 run 43690242450 on d512fe7b: an adjustment settled by two observed rows stated same that disagree: the settlement is the HOLE-SAME (book/settle.rs link_observed)"
+
+source s "s"
+unit PLN: currency minor 0.01
+input bank: observed
+input amt: money PLN
+input dom: int
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to sav amount amt
+
+version v1
+  cite s
+  governs 2026..
+  known 2026-01-01
+  dom = 10 "s"
+  amt = 100.00 PLN "s"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
+
+version v2
+  cite s
+  governs 2026-02
+  known 2026-04-01
+  replace amt = 150.00 PLN "s"
+
+version st_konto
+  cite s
+  governs 2026-04
+  known 2026-05-02
+  covers konto
+  bank[a1] = (on: 2026-04-10, kind: transfers, leg cash from konto to sav amount 50.00 PLN, fulfils: adjustments[pay[2026-02].cash, v2]) "a1"
+
+version st_sav
+  cite s
+  governs 2026-04
+  known 2026-05-03
+  covers sav
+  bank[b1] = (on: 2026-04-10, kind: transfers, leg cash from konto to sav amount 60.00 PLN, fulfils: adjustments[pay[2026-02].cash, v2]) "b1"
+  same bank[a1] = bank[b1]
+
+ask q_list: a.change for a in adjustments over ..
+ask q_konto: bal(konto, 2026-05-31)
+ask q_sav: bal(sav, 2026-05-31)
