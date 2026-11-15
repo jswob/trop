@@ -828,6 +828,7 @@ fn observation(o: &crate::model::Observation) -> Result<Obs, Stop> {
             amount: Amount::Qty(lg.amount.clone()),
             unit: Some(lg.unit.clone()),
             day: Dated::Day(lg.day.unwrap_or(day)),
+            src: None,
         })
         .collect();
     let mut coll = Collected::default();

@@ -292,7 +292,43 @@ impl Engine {
             return self.less_own_obs(m, at.walk, (place, unit), key, v);
         }
         let id = self.main_walk(m, ctx.cut)?;
-        self.read_state(m, id, place, unit, key)
+        let v = self.read_state(m, id, place, unit, key)?;
+        if ctx.partial
+            && let Value::Hole(h) = v
+        {
+            return self.partial_bal(m, id, (place, unit), key, h);
+        }
+        Ok(v)
+    }
+
+    /// A balance read by a `partial` line: "its opening plus what is booked since" (L §5.19,
+    /// §5.10), a sum, so the line prints its known part and each hole leg's amount, read again
+    /// as the line reads it and signed by its direction at the place (L §5.18); a hole of any
+    /// other making stays the plain hole (refcore's `m_partial_bal`).
+    fn partial_bal(
+        &mut self,
+        m: &Reality,
+        id: usize,
+        (place, unit): (&str, &str),
+        key: At,
+        v: Hole,
+    ) -> Result<Value, Stop> {
+        let Some(read) = self.walk(id)?.partial_legs(m, place, unit, key) else {
+            return Ok(Value::Hole(v));
+        };
+        let mut legs: Vec<(Hole, bool)> = Vec::with_capacity(read.legs.len());
+        for (into, src) in &read.legs {
+            let Value::Hole(h) = self.ev(m, &src.amount, &src.env, src.ctx.partial())? else {
+                return Ok(Value::Hole(v));
+            };
+            legs.push((h, *into));
+        }
+        if !read.all_met {
+            return Ok(Value::Hole(v));
+        }
+        let known = qty_value(m, &read.known, unit)?;
+        let legs: Vec<(&Hole, bool)> = legs.iter().map(|(h, into)| (h, *into)).collect();
+        crate::eval::lin_balance(m, (&v, known), &legs)
     }
 
     /// A running read of a modelled decision, against the booked balance less its own

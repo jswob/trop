@@ -218,6 +218,8 @@ pub(crate) struct CellKey {
     at: Option<WalkAt>,
     /// Whether the cell is read under the ask line's `with uncertain` (L §5.18).
     unc: bool,
+    /// Whether the cell is read under the ask line's `partial`, a cell of its own (L §5.18).
+    partial: bool,
     /// The pins in force, trimmed to those the def reaches (E §3.2, P §3.1).
     layer: Layer,
     /// The world the cell is read in (L §6.4), never trimmed: no cell is shared across worlds.
@@ -239,6 +241,7 @@ impl CellKey {
             cut: ctx.cut,
             at: ctx.at,
             unc: ctx.unc,
+            partial: ctx.partial,
             layer: ctx.layer,
             world: ctx.world,
         }
@@ -262,7 +265,8 @@ impl CellKey {
             .cut
             .cmp(&other.cut)
             .then_with(|| walk_at_order(self.at, other.at))
-            .then_with(|| self.unc.cmp(&other.unc));
+            .then_with(|| self.unc.cmp(&other.unc))
+            .then_with(|| self.partial.cmp(&other.partial));
         clocks
             .then_with(|| self.layer.number().cmp(&other.layer.number()))
             .then_with(|| world_order(self.world, other.world))

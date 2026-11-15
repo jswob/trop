@@ -9,8 +9,8 @@
 //! is one, else a place's.
 
 use super::plan::{
-    Amount, Dated, End, Inst, LegVal, date_of, invariant, num_err, quantity, refuse, refuse_load,
-    shown,
+    Amount, Dated, End, HoleSrc, Inst, LegVal, date_of, invariant, num_err, quantity, refuse,
+    refuse_load, shown,
 };
 use crate::base::{Code, Load, Refusal, Run};
 use crate::eval::{Ctx, Engine};
@@ -60,6 +60,13 @@ impl Engine {
             }
         };
         let read = self.ev(m, &leg.amount, &inst.env, ctx);
+        let src = matches!(read, Ok(Value::Hole(_))).then(|| {
+            Box::new(HoleSrc {
+                amount: leg.amount.clone(),
+                env: inst.env.clone(),
+                ctx,
+            })
+        });
         let ends = (&from, &to);
         let (amount, unit) = match read {
             Ok(v) => amount_of(m, &inst.id, &leg.name, kind_unit, &v, ends)?,
@@ -75,6 +82,7 @@ impl Engine {
             amount,
             unit,
             day,
+            src,
         })
     }
 }

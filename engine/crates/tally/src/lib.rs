@@ -147,7 +147,7 @@ pub mod model {
 pub mod hole {
     mod questions;
 
-    pub use questions::{Hole, spread};
+    pub use questions::{Hole, Linear, atom_text, spread};
 }
 
 /// The evaluator (E §3.2): expressions over the reality, def cells in the memo, rules, bands,
@@ -166,6 +166,7 @@ pub mod eval {
     mod extremes;
     mod keys;
     mod memo;
+    mod partial;
     mod pins;
     mod prorata;
     mod queries;
@@ -194,6 +195,7 @@ pub mod eval {
     pub(crate) use keys::{Given, thing_seen, to_key};
     pub(crate) use memo::LawClass;
     pub use memo::Memo;
+    pub(crate) use partial::{lin_balance, partial_text};
     pub(crate) use pins::after_on;
     pub(crate) use ranges::range_literal_key;
     pub use stack::Item;

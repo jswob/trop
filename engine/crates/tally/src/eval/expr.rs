@@ -15,6 +15,7 @@ use core::cmp::Ordering;
 
 use super::arith::{Op, Test, arith, compare, negate, same_value};
 use super::keys::{Given, lacks_at_run, literal_key};
+use super::partial;
 use super::state::{
     Ctx, Engine, Env, Figures, invariant, not_typed, num_stop, refuse, refuse_load, unit_stop,
 };
@@ -43,6 +44,13 @@ impl Engine {
         #[cfg(feature = "counters")]
         self.counts.add(crate::Unit::Ev);
         let v = self.node(m, e, env, ctx);
+        // under a `partial` line a rounding, `min`, `max`, a band or a comparison meeting a
+        // hole makes it plain (L §5.18 Partial answers)
+        let v = if ctx.partial && partial::plain_node(m, e) {
+            v.map(partial::made_plain)
+        } else {
+            v
+        };
         #[cfg(feature = "counters")]
         if let Ok(Value::Number(_) | Value::Money(_)) = &v {
             self.counts.add(crate::Unit::NumResult);
@@ -643,7 +651,7 @@ impl Engine {
                 AddOp::Add => Op::Add,
                 AddOp::Sub => Op::Sub,
             };
-            acc = binop(m, op, &acc, &b)?;
+            acc = binop(m, op, &acc, &b, ctx)?;
         }
         Ok(acc)
     }
@@ -664,7 +672,7 @@ impl Engine {
                 MulOp::Mul => Op::Mul,
                 MulOp::Div => Op::Div,
             };
-            acc = binop(m, op, &acc, &b)?;
+            acc = binop(m, op, &acc, &b, ctx)?;
         }
         Ok(acc)
     }
@@ -672,7 +680,10 @@ impl Engine {
     /// `-e` (refcore's `e_neg`). L §3.2.
     fn minus(&mut self, m: &Reality, x: &Expr, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
         let v = self.ev(m, x, env, ctx)?;
-        if let Value::Hole(_) = v {
+        if let Value::Hole(h) = &v {
+            if ctx.partial {
+                return partial::lin_neg(m, h);
+            }
             return Ok(v);
         }
         if v == Value::None {
@@ -830,8 +841,15 @@ fn boolean(v: Value, word: &str) -> Result<Value, Stop> {
 }
 
 /// `a op b` on two values: a hole spreads, unless the other is `none` or `never`, which are
-/// refused whatever the hole holds (refcore's `binop`). L §3.1, §8.4.
-pub(super) fn binop(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Result<Value, Stop> {
+/// refused whatever the hole holds; under a `partial` line it is linear in its holes where the
+/// operation is (refcore's `binop`, `lin_bin`). L §3.1, §8.4, §5.18.
+pub(super) fn binop(
+    m: &Reality,
+    op: Op,
+    lhs: &Value,
+    rhs: &Value,
+    ctx: Ctx,
+) -> Result<Value, Stop> {
     for v in [lhs, rhs] {
         if *v == Value::Never {
             return Err(refuse(Run::None, "never in arithmetic".to_owned()));
@@ -844,6 +862,9 @@ pub(super) fn binop(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Result<Val
         }
     }
     if lhs.as_hole().is_some() || rhs.as_hole().is_some() {
+        if ctx.partial {
+            return partial::lin_bin(m, op, lhs, rhs);
+        }
         return hole_of(&[lhs.as_hole(), rhs.as_hole()]);
     }
     let words = if matches!(lhs, Value::Word(_)) || matches!(rhs, Value::Word(_)) {
