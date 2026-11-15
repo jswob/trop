@@ -1,0 +1,2 @@
+id	code	family	file	old	new	asks	rule	form	held
+records/reading-after	RUN-RECORD	records	base.tally	, fulfils: top[2026-03]) "DOPLATA"	) "DOPLATA"	q_konto	L §4.6, §8.4 RUN-RECORD: a reading after a decision's instance in the covered past that nothing fulfils	reading <r> after <m>: <m> is modelled past and nothing fulfils it	#169 (P11): refcore 2.1.7 doesn't meet a reading after m (q_konto prints 200.00 with no anchor line), so it prints no refusal; the engine follows L §4.6 and §8.4

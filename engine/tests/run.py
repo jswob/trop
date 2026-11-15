@@ -674,6 +674,10 @@ def self_test(checks):
         # its hole's question, refcore's bytes; the ENGINE-INVARIANT fixture is refcore's run under the planted fault
         p = subprocess.run([sys.executable, '-I', '-B', T + 'codes/m1.py', '--check'], capture_output=True, text=True)
         say(p.returncode == 0, ' '.join(p.stdout.strip().split('\n')[-2:]) if p.stdout.strip() else p.stderr[-200:])
+        # 8k2. M2's code fixtures (issue #167): the family records loads and answers clean, each fixture prints its
+        # code or its hole's question, refcore's bytes
+        p = subprocess.run([sys.executable, '-I', '-B', T + 'codes/m2.py', '--check'], capture_output=True, text=True)
+        say(p.returncode == 0, ' '.join(p.stdout.strip().split('\n')[-2:]) if p.stdout.strip() else p.stderr[-200:])
         # 8l. M1's properties (issue #108, PROPERTIES.md § M1): m1.corpus is what gen_m1.py's seeds give, m1.refcore
         # refcore's runs of it, and each law holds on them but the cases held.tsv holds for an issue
         p = subprocess.run([sys.executable, '-I', '-B', T + 'properties/laws_m1.py', '--check'], capture_output=True,

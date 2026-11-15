@@ -33,6 +33,7 @@ prints with a message no form of its matches, in the catalogue's order:
     python3 -I -B engine/tests/tools/xref_check.py --check      -> exit 1 if map/codes.tsv isn't what the sources give
     python3 -I -B engine/tests/tools/xref_check.py --gate M0    -> exit 1 while a LOAD-* code has no output at S or M0
     python3 -I -B engine/tests/tools/xref_check.py --gate M1    -> exit 1 while a code built by M1 has no output by M1
+    python3 -I -B engine/tests/tools/xref_check.py --gate M2    -> exit 1 while a code built by M2 has no output by M2
 
 `--check` runs in run.py --self-test. `--gate M0` is M0's gate (MILESTONE-M0.md row 5): red until G4's fixtures land.
 `--gate M1` is M1's (MILESTONE-M1.md row 3): every code built at S, M0 or M1 printed by an output at S, M0 or M1.
@@ -182,7 +183,9 @@ def outputs():
                                         ('codes/m0.refcore', 7, 6, 'M0', 'codes/m0/'),
                                         ('m1/vectors.refcore', 6, 5, 'M1', 'm1/'),
                                         ('codes/m1.refcore', 7, 6, 'M1', 'codes/m1/'),
-                                        ('codes/m1_invariant.refcore', 7, 6, 'M1', 'codes/m1/')]:
+                                        ('codes/m1_invariant.refcore', 7, 6, 'M1', 'codes/m1/'),
+                                        ('m2/vectors.refcore', 6, 5, 'M2', 'm2/'),
+                                        ('codes/m2.refcore', 7, 6, 'M2', 'codes/m2/')]:
         ns = netstrings(open(T + path, 'rb').read())
         out += [(prefix + ns[k], ms, ns[k + at]) for k in range(0, len(ns), width)]
     for r in csv.DictReader(open(T + 'codes/fixtures.tsv', encoding='utf-8'), delimiter='\t', quoting=csv.QUOTE_NONE):
@@ -320,11 +323,16 @@ def main(argv):
         len(m1), sum(r['built'] in ORDER[:3] for r in codes), ' '.join(m1)))
     print('M1: %d message forms of codes built by M1 have no output by M1 (tier 2; codes/m1/held.tsv holds the '
           'fixtures held and why)' % len(m1_forms))
+    m2, m2_forms = unshown_by(rows, 'M2'), unshown_forms_by(rows, 'M2')
+    print('M2: %d of %d codes built by M2 have no output by M2: %s' % (
+        len(m2), sum(r['built'] in ORDER[:4] for r in codes), ' '.join(m2)))
+    print('M2: %d message forms of codes built by M2 have no output by M2 (tier 2; codes/m2/held.tsv holds the '
+          'fixtures held and why)' % len(m2_forms))
     if '--gate' in argv:
         ms = argv[argv.index('--gate') + 1]
-        if ms not in ('M0', 'M1'):
-            sys.exit('--gate knows M0 and M1 only')
-        return 1 if (load if ms == 'M0' else m1) else 0
+        if ms not in ('M0', 'M1', 'M2'):
+            sys.exit('--gate knows M0, M1 and M2 only')
+        return 1 if {'M0': load, 'M1': m1, 'M2': m2}[ms] else 0
     if '--check' in argv:
         old = open(OUT, encoding='utf-8').read() if os.path.exists(OUT) else ''
         if old != data:
