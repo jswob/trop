@@ -23,8 +23,8 @@ use crate::base::{Load, Run};
 use crate::book::reading_place;
 use crate::hole::{Hole, spread};
 use crate::model::{
-    BindInfo, Class, Domain, InputInfo, KeyVal, Number, Pat, Reality, Row, RowInstant, SamePair,
-    TimePos, Unit, Value,
+    BindInfo, Class, Domain, InputInfo, KeyVal, Number, Pat, Reality, Row, RowInstant, TimePos,
+    Unit, Value,
 };
 use crate::read::{
     Asked, Clocks, Found, KnownInside, Test, held, known_inside, last_began, need_law, origin,
@@ -37,21 +37,8 @@ use crate::time::{Day, PeriodKind};
 /// id, or what the read finds where it takes none; and the read's day (L §6.1).
 type SameSide = (Result<(Value, String), Found>, Option<Day>);
 
-/// The row a `same` line states one with input `id`'s at `keys`: the other side's input and
-/// keys, the last such line's where several name it (refcore's `same_rows`). L §6.1, §5.19.
-fn same_row_of(m: &Reality, id: &str, keys: &[KeyVal]) -> Option<(String, Vec<KeyVal>)> {
-    let mut out = None;
-    for pair in &m.sames {
-        if let SamePair::Rows(a, ka, b, kb) = pair {
-            if a == id && ka.as_slice() == keys {
-                out = Some((b, kb));
-            } else if b == id && kb.as_slice() == keys {
-                out = Some((a, ka));
-            }
-        }
-    }
-    out.map(|(other, other_keys)| (other.clone(), other_keys.clone()))
-}
+/// The other side of a `same` line of rows: its input and keys (L §6.1).
+pub(super) type SameRow = (String, Vec<KeyVal>);
 
 /// Which read past a row's span: `last(x, d)` or `since(x, d)` (L §4.6).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -203,10 +190,14 @@ impl Engine {
             return self.pin_chosen(value, &origin(&input.id, keys), ctx);
         }
         // two rows stated `same` are read together (L §6.1, §5.19)
-        if !input.reading
-            && let Some(other) = same_row_of(m, &input.id, keys)
-        {
-            return self.read_same_rows(m, (input, keys), (&other.0, &other.1), ctx, asked);
+        if !input.reading {
+            match self.same_row_of(m, (&input.id, keys), ctx)? {
+                Err(h) => return Ok(Value::Hole(h)),
+                Ok(Some(other)) => {
+                    return self.read_same_rows(m, (input, keys), (&other.0, &other.1), ctx, asked);
+                }
+                Ok(None) => {}
+            }
         }
         let clocks = self.clocks(ctx, &input.id)?;
         #[cfg(feature = "counters")]
@@ -245,18 +236,94 @@ impl Engine {
                 });
                 let value = self.row_value(m, input, row, keys, ctx)?;
                 let value = self.priced(m, input, keys, ctx, value)?;
-                // only a window keeps its read, and only a window takes a day (L §4.4)
-                if !matches!(value, Value::Window(_)) {
-                    return Ok(value);
-                }
-                let value = as_read(value, (&input.id, keys), row_cell(row));
-                // under `windows each`, the window the read gave takes its day (L §4.4)
-                let figure = origin(&input.id, keys);
-                self.chosen(value, (format!("row {} {figure}", row.sid), &figure), ctx)
+                self.row_window(value, (input, keys), row, ctx)
             }
             Found::None => Ok(Value::None),
             Found::Hole(q) => Ok(Value::Hole(Hole::asked(&q.text, &q.origin))),
         }
+    }
+
+    /// Row `row`'s value `value` as the read of input `input` at `keys` gives it: a window is
+    /// named by that read, its row and figure, and under `windows each` takes its day; any
+    /// other value is itself (L §4.4 "One unknown day, named by its read").
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::chosen`].
+    fn row_window(
+        &mut self,
+        value: Value,
+        (input, keys): (&InputInfo, &[KeyVal]),
+        row: &Row,
+        ctx: Ctx,
+    ) -> Result<Value, Stop> {
+        // only a window keeps its read, and only a window takes a day (L §4.4)
+        if !matches!(value, Value::Window(_)) {
+            return Ok(value);
+        }
+        let value = as_read(value, (&input.id, keys), row_cell(row));
+        let figure = origin(&input.id, keys);
+        self.chosen(value, (format!("row {} {figure}", row.sid), &figure), ctx)
+    }
+
+    /// The row a `same` line the cut of `ctx` sees states one with input `id`'s at `keys`:
+    /// the other side's input and keys, the last such line's where several name it; the hole
+    /// where no `windows each` decides a line whose version is known in a window that holds
+    /// the cut (refcore's `same_rows`). L §6.1, §5.19, §4.5.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::same_seen`].
+    pub(super) fn same_row_of(
+        &mut self,
+        m: &Reality,
+        (id, keys): (&str, &[KeyVal]),
+        ctx: Ctx,
+    ) -> Result<Result<Option<SameRow>, Hole>, Stop> {
+        let mut out = None;
+        for pair in &m.sames {
+            let Some((other, other_keys, version)) = pair.other_row(id, keys) else {
+                continue;
+            };
+            match self.same_seen(m, version, ctx)? {
+                Err(h) => return Ok(Err(h)),
+                Ok(true) => out = Some((other.to_owned(), other_keys.to_vec())),
+                Ok(false) => {}
+            }
+        }
+        Ok(Ok(out))
+    }
+
+    /// Whether the cut of `ctx` sees a `same` line of version `version`: one in a joint
+    /// model's header always; else its version's `known` is on or before the cut, a window
+    /// that holds it decided by the line's `windows each`, else `HOLE-IMPRECISE` (L §4.5:
+    /// a `known` holds for everything the version brings).
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a version load didn't build; as [`Engine::known_seen`].
+    fn same_seen(
+        &mut self,
+        m: &Reality,
+        version: Option<&str>,
+        ctx: Ctx,
+    ) -> Result<Result<bool, Hole>, Stop> {
+        let Some(id) = version else {
+            return Ok(Ok(true));
+        };
+        let info = m
+            .versions
+            .get(id)
+            .ok_or_else(|| invariant("a same line's version load didn't build"))?;
+        let (lo, cut) = (info.known, ctx.cut);
+        // a window that ends on or before the cut is seen, one that starts after it unseen
+        let Some(hi) = info.window.filter(|hi| lo <= cut && cut < *hi) else {
+            return Ok(Ok(lo <= cut));
+        };
+        Ok(match self.known_seen(ctx, (lo, hi), &info.id)? {
+            Some(seen) => Ok(seen),
+            None => Err(known_hole((lo, hi), cut, &info.id)),
+        })
     }
 
     /// A read of input `input` at `keys`, whose row a `same` line states one with input
@@ -372,6 +439,8 @@ impl Engine {
             sid: row.sid.clone(),
         });
         let value = self.row_value(m, input, row, keys, ctx)?;
+        // a window read through a `same` line is its row's read, as a plain read's (L §4.4)
+        let value = self.row_window(value, (input, keys), row, ctx)?;
         Ok(Ok((Ok((value, row.sid.clone())), day)))
     }
 

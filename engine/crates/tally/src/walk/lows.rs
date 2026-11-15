@@ -639,7 +639,10 @@ impl Engine {
         (cut, world): (Day, World),
         left_out: &BTreeSet<String>,
     ) -> Result<(Tree, Vec<Num>), Stop> {
-        // the projection's walk reads its cut's first readings before its plan pass
+        // the projection's walk reads its cut's first readings before its plan pass; the tree
+        // needs no anchor, only that read's effects, so its value goes unused: its refusals
+        // come first, as the walk's do, and under `windows each` it meets the readings' known
+        // windows the walk meets, so the line splits as the walk's would (L §4.4, §4.5)
         let after = self.after_days(m, cut)?;
         self.first_readings(m, (cut, world), &after)?;
         let mut got = Gathered {

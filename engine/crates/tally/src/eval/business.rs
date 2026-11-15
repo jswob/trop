@@ -671,7 +671,9 @@ impl Engine {
     /// The row calendar `name`'s read at `keys` on `day` takes, by its stable id, or `pin`
     /// where a pin gives the calendar: what names its added windows, each entry of each row
     /// a read of its own; among the rows a known window leaves visible under the line's
-    /// choice, as the calendar's own read sees them (L §4.4, §4.5, §4.6 step 1).
+    /// choice, as the calendar's own read sees them; where it takes none, the row of the
+    /// calendar a `same` line states one with it, whose value the read then is (L §4.4,
+    /// §4.5, §4.6 step 1, §6.1 What `same` does).
     ///
     /// # Errors
     ///
@@ -683,18 +685,50 @@ impl Engine {
         (name, keys): (&str, &[KeyVal]),
         (day, ctx): (Day, Ctx),
     ) -> Result<String, Stop> {
-        let input = m
-            .inputs
-            .get(name)
-            .ok_or_else(|| invariant("a calendar input load didn't build"))?;
         let ctx = ctx.at_law(Some(day));
         if self.pin_of(name, keys, ctx)?.is_some() {
             return Ok("pin".to_owned());
         }
+        if let Some(row) = self.calendar_own_row(m, (name, keys), ctx)? {
+            return Ok(row);
+        }
+        let other = self
+            .same_row_of(m, (name, keys), ctx)?
+            .map_err(|h| invariant(&format!("a calendar's same line undecided: {}", h.text())))?;
+        let Some((other, other_keys)) = other else {
+            return Err(invariant("a calendar's added window read from no row"));
+        };
+        self.calendar_own_row(m, (&other, &other_keys), ctx)?
+            .ok_or_else(|| invariant("a calendar's added window read from no row"))
+    }
+
+    /// The row input `name`'s own read at `keys` in `ctx` takes, by its stable id, among the
+    /// rows a known window leaves visible under the line's choice; none where it takes none
+    /// (L §4.5, §4.6 step 1).
+    ///
+    /// # Errors
+    ///
+    /// The read rule's refusals; `ENGINE-INVARIANT` for an input load didn't build, or a
+    /// known window no `windows each` decides (the caller reads under one).
+    fn calendar_own_row(
+        &mut self,
+        m: &Reality,
+        (name, keys): (&str, &[KeyVal]),
+        ctx: Ctx,
+    ) -> Result<Option<String>, Stop> {
+        let input = m
+            .inputs
+            .get(name)
+            .ok_or_else(|| invariant("a calendar input load didn't build"))?;
         let clocks = self.clocks(ctx, name)?;
         let view = self
             .input_view(m, input, keys, (None, clocks), ctx)?
-            .map_err(|_| invariant("a calendar's known window no `windows each` decides"))?;
+            .map_err(|h| {
+                invariant(&format!(
+                    "a calendar's known window no `windows each` decides: {}",
+                    h.text()
+                ))
+            })?;
         let input = match &view {
             Some(seen) => seen,
             None => input,
@@ -703,11 +737,9 @@ impl Engine {
             Found::Row(at) => input
                 .rows
                 .get(at)
-                .map(|row| row.sid.clone())
+                .map(|row| Some(row.sid.clone()))
                 .ok_or_else(|| invariant("the read rule took a row the input lacks")),
-            Found::None | Found::Hole(_) => {
-                Err(invariant("a calendar's added window read from no row"))
-            }
+            Found::None | Found::Hole(_) => Ok(None),
         }
     }
 

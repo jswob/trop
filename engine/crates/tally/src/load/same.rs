@@ -110,7 +110,8 @@ impl Loader {
                             shown_type(tyb.as_ref())
                         )));
                     }
-                    self.m.sames.push(SamePair::Rows(a, ka, b, kb));
+                    let version = same.version.clone();
+                    self.m.sames.push(SamePair::Rows(a, ka, b, kb, version));
                 }
                 (Side::Move(a), Side::Move(b)) => self.m.sames.push(SamePair::Moves(a, b)),
                 (Side::Thing, Side::Thing) => {
@@ -156,7 +157,7 @@ impl Loader {
                     .collect();
                 let at = |x: &str, xs: &[KeyVal]| x == id && xs.iter().eq(keys.iter().copied());
                 let stated = self.m.sames.iter().any(|pair| match pair {
-                    SamePair::Rows(a, ka, b, kb) => at(a, ka) || at(b, kb),
+                    SamePair::Rows(a, ka, b, kb, _) => at(a, ka) || at(b, kb),
                     SamePair::Moves(..) => false,
                 });
                 if !stated || keys.len() != input.binds.len() {

@@ -18,7 +18,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::base::{Code, Refusal, Run, Warn};
 use crate::eval::{Collected, Engine, Rows};
 use crate::hole::Hole;
-use crate::model::{Fulfils, KeyVal, MvRef, MvSrc, Reality, Span, Value, World};
+use crate::model::{Fulfils, InputInfo, KeyVal, MvRef, MvSrc, Reality, Span, Value, World};
 use crate::syntax::{Expr, Key, Stop};
 use crate::time::Day;
 use crate::walk::{Amount, Dated, End, Inst, LegVal, Term, invariant};
@@ -727,6 +727,38 @@ fn record(message: String) -> Refusal {
     Refusal::new(Code::Run(Run::Record), message)
 }
 
+/// One row id's restatements the cut sees, each its `known` day and its position among the
+/// input's observations: the latest, and the latest before it, which a removal known in a
+/// window the cut leaves undecided may leave standing (L §5.19, §4.5).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Latest {
+    /// The latest restatement; of two known the same day, the first written.
+    top: (Day, usize),
+    /// The latest before it, if any.
+    before: Option<(Day, usize)>,
+}
+
+impl Latest {
+    /// Restatement `at`, known on `known_on`, kept where it is later than what is kept
+    /// (L §5.19: each row id's latest restatement).
+    fn keep(&mut self, (known_on, at): (Day, usize)) {
+        if known_on > self.top.0 {
+            self.before = Some(self.top);
+            self.top = (known_on, at);
+        } else if self.before.is_none_or(|(k, _)| known_on > k) {
+            self.before = Some((known_on, at));
+        }
+    }
+}
+
+/// Input `input`'s observation at position `at` (L §5.19).
+fn observation_at(input: &InputInfo, at: usize) -> Result<&crate::model::Observation, Stop> {
+    input
+        .observations
+        .get(at)
+        .ok_or_else(|| invariant("an observation past the input's"))
+}
+
 /// The observations the cut and the world of `seen` see: per observed input, each row id's
 /// latest restatement known by the cut in a version the world sees, `none` removing it; sorted
 /// by day and id, each with its row among what it met where `rows` says so (refcore's
@@ -739,8 +771,8 @@ fn seen_observations(
 ) -> Result<Vec<Obs>, Stop> {
     let mut out = Vec::new();
     for (_, input) in m.inputs.entries() {
-        let mut latest: BTreeMap<&str, (Day, &crate::model::Observation)> = BTreeMap::new();
-        for o in &input.observations {
+        let mut latest: BTreeMap<&str, Latest> = BTreeMap::new();
+        for (at, o) in input.observations.iter().enumerate() {
             let version = m
                 .versions
                 .get(&o.version)
@@ -752,28 +784,37 @@ fn seen_observations(
             {
                 continue;
             }
-            if latest
-                .get(o.key.as_str())
-                .is_none_or(|(k, _)| known_on > *k)
-            {
-                latest.insert(o.key.as_str(), (known_on, o));
-            }
+            latest
+                .entry(o.key.as_str())
+                .and_modify(|kept| kept.keep((known_on, at)))
+                .or_insert(Latest {
+                    top: (known_on, at),
+                    before: None,
+                });
         }
-        for (_, (_, o)) in latest {
-            if o.removed {
-                continue;
-            }
-            let mut seen = observation(o)?;
+        for (_, kept) in latest {
+            let o = observation_at(input, kept.top.1)?;
+            let undecided = known.question(&known_sid(o), cut);
+            // a removal known in a window the cut leaves undecided removes the row or not, so
+            // the restatement before it stands, its legs that hole (L §4.4, §4.5)
+            let shown = match (o.removed, &undecided, kept.before) {
+                (false, _, _) => o,
+                (true, Some(_), Some((_, at))) => observation_at(input, at)?,
+                (true, _, _) => continue,
+            };
+            let mut seen = observation(shown)?;
             // one known in a window the cut leaves undecided is booked or not: each of its
             // legs is that hole (L §4.5; refcore's `observations`, its `undecided`)
-            if let Some(hole) = known.hole(&known_sid(o), cut, &seen.id) {
+            if let Some(question) = &undecided {
+                let hole = Hole::asked(question, &seen.id);
                 for lg in &mut seen.legs {
                     lg.amount = Amount::Hole(hole.clone());
                 }
             }
             // the row as `inputs-of` lists it, kept by an engine answering one (E §10)
             if rows == Rows::Kept {
-                seen.coll.note_row(&seen.id, &o.version, o.locator.as_ref());
+                seen.coll
+                    .note_row(&seen.id, &shown.version, shown.locator.as_ref());
             }
             out.push(seen);
         }
