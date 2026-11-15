@@ -13,7 +13,8 @@ from .evaluate import member_owns, member_moves, move_owner
 from .model import Span, _kv, key_text, WindowUndecided
 from .values import (Num, Money, Int, Hole, Thing, Mv, Iv, Rec, Text, Code, Key, NONE, CURRENCIES, fmt,
                      fmt_hole, vkey)
-from .moves import item_in_world, Inst, ObsMv, AdjMv, PadMv, qty, unit_of_value, day_lo, day_hi, merge, order_key
+from .moves import (item_in_world, Inst, ObsMv, AdjMv, PadMv, qty, unit_of_value, day_lo, day_hi, merge, order_key,
+                    same_groups, once_obs, same_obs_differ)
 from .walk import K_end, K_start, K_before, kday, add_q, St, dec_move
 
 
@@ -286,6 +287,13 @@ def m_mv_field(self, n, env, ctx):
         # reads `a.adjusts` or `a.day` takes it or leaves it out (E §5 step 5; tally 2.1.2, issue #34, T's
         # STOP-REPORT on g11/adjust: the identity read refused, and with it every move bound over adjustments)
         raise src.err
+    if what in ('day', 'leg') and isinstance(src, ObsMv):
+        # L §5.19 One movement on two statements: where rows stated same disagree on an amount or a day, "a read of
+        # the movement away from its places (its leg's amount ... through a binding) is the disagreement's hole,
+        # HOLE-SAME, naming both rows"
+        h = self.same_rows_hole(src, name if what == 'leg' else None, ctx)
+        if h is not None:
+            return h
     if what == 'day':
         return src.day
     if what == 'fulfils':
@@ -335,6 +343,17 @@ def m_mv_field(self, n, env, ctx):
             return h
         raise refuse('LOAD-FIELD', '%s is not a field of %s' % (name, v.id))
     raise NotYet('the field %s of a movement' % name)
+
+
+def m_same_rows_hole(self, o, leg, ctx):
+    """The HOLE-SAME of an observed row whose same group's other observed rows disagree with it on a leg's amount or
+    day (on leg alone, where given), else None (L §5.19, L §8.1's form; moves.same_obs_differ)."""
+    g = same_groups(self.m).get(o.id)
+    if not g:
+        return None
+    idx = dict((x.id, x) for x in self.observations(ctx))
+    others = [idx[y] for y in g if y != o.id and y in idx]
+    return same_obs_differ(o, others, leg) if others else None
 
 
 def _body_hole(src):
@@ -584,28 +603,7 @@ def m_same_kind_hole(self, x, kind, ctx):
     sm = getattr(m, 'same_moves', None)
     if not sm or not hasattr(x, 'id'):
         return None
-    groups = getattr(m, '_same_groups', None)
-    if groups is None:
-        parent = {}
-
-        def find(a):
-            while parent.get(a, a) != a:
-                a = parent[a]
-            return a
-        order = []
-        for a, b, loc in sm:
-            for y in (a, b):
-                if y not in order:
-                    order.append(y)
-            ra, rb = find(a), find(b)
-            if ra != rb:
-                parent[rb] = ra
-        groups = {}
-        for y in order:
-            groups.setdefault(find(y), []).append(y)
-        groups = dict((y, g) for g in groups.values() for y in g)
-        m._same_groups = groups
-    g = groups.get(x.id)
+    g = same_groups(m).get(x.id)
     if g is None:
         return None
     idx = {}
@@ -975,7 +973,7 @@ def less_own_obs(w, place, unit, key, v):
     if not legs or not isinstance(v, Num):
         return v
     delta = Fraction(0)
-    for lg in legs:
+    for lg, frm_booked, to_booked in legs:
         o = lg.day.toordinal()
         if not (key[0] > o or (key[0] == o and key[1] > 1)):
             continue
@@ -983,9 +981,10 @@ def less_own_obs(w, place, unit, key, v):
             continue
         if unit not in (None, '*') and lg.unit not in (None, '*') and lg.unit != unit:
             continue
-        if isinstance(lg.frm, Thing) and lg.frm.name == place:
+        # only the ends it booked: of two rows stated same, each books the end its statement covers (L §5.19)
+        if frm_booked and isinstance(lg.frm, Thing) and lg.frm.name == place:
             delta += lg.amount.q
-        if isinstance(lg.to, Thing) and lg.to.name == place:
+        if to_booked and isinstance(lg.to, Thing) and lg.to.name == place:
             delta -= lg.amount.q
     if delta == 0:
         return v
@@ -1644,11 +1643,21 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
         if st == 'modelled':
             # on a day a statement covers, the observations that fulfil the instance stand in for it (L §5.14.3)
             obs = getattr(i, 'obs', None) or self.obs_links_for(i.id, ctx)
+            bad = self.run_cache.get(('badlinks', self.wkey(ctx)), {}).get(i.id)
+            if bad is not None:
+                # its realised movement rests on a refused record (L §5.19, §8.4: a refusal propagates like a hole)
+                raise bad
             if not obs:
                 self.reg(('open', i.id))
-            for o in obs:
-                if o.coll is not None:
-                    self.cur.merge(o.coll)
+            # rows stated same are one movement, counted once by flows, their disagreement a HOLE-SAME (L §5.19)
+            for o, others in once_obs(m, obs):
+                for x in [o] + others:
+                    if x.coll is not None:
+                        self.cur.merge(x.coll)
+                h = same_obs_differ(o, others, leg)
+                if h is not None:
+                    holes.append(h)
+                    continue
                 for lg in o.legs:
                     if leg is not None and lg.name != leg:
                         continue
@@ -2084,12 +2093,20 @@ def m_c_observed(self, n, env, ctx):
         return NONE
     mi = m.moves[a._r[1]]
     legs = []
+    # rows stated same are one movement, counted once (L §5.19: "counted once by observed(m[k])"); where they
+    # disagree, the leg's amount is the disagreement's hole, HOLE-SAME
+    once = once_obs(m, obs)
+    for o in obs:
+        self.cur.rows[o.row.sid] = o.row
     for ld in m.kind_legs(mi.kind):
         tot = None
         frm = to = None
         day = None
-        for o in obs:
-            self.cur.rows[o.row.sid] = o.row
+        hole = None
+        for o, others in once:
+            h = same_obs_differ(o, others, ld.name)
+            if hole is None:
+                hole = h
             for lg in o.legs:
                 if lg.name != ld.name:
                     continue
@@ -2106,6 +2123,8 @@ def m_c_observed(self, n, env, ctx):
         if tot is None:
             # unreachable: an observation that lacks a leg of the instance it fulfils is RUN-RECORD (L §5.19)
             raise refuse('RUN-RECORD', 'the observations fulfilling %s lack its leg %s' % (v.id, ld.name))
+        if hole is not None:
+            tot = hole
         legs.append((ld.name, Rec([('from', frm), ('to', to), ('amount', tot), ('day', day)])))
     day = max(o.day for o in obs)
     return Rec(legs + [('day', day)])

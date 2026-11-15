@@ -1405,10 +1405,11 @@ class Walk:
         d = lg.day
         if not d < self.K:
             return
-        if o.target is not None and o.target.decision and day_lo(o.target.day) is not None and \
+        if o.err is None and o.target is not None and o.target.decision and day_lo(o.target.day) is not None and \
                 d == day_lo(o.target.day):
             # one that fulfils a decision instance dated its day is booked at the instance's point; every other on
-            # its own day, one dated before or after the instance it fulfils included (E §4.2 step 1, L §5.19)
+            # its own day, one dated before or after the instance it fulfils included (E §4.2 step 1, L §5.19); a
+            # refused one (its link refused, RUN-RECORD) on its own day, where it refuses its places' balances
             return
         self.book_obs_now(o, lg, key)
 
@@ -1916,7 +1917,10 @@ class Walk:
         self.reads = run.read_places
         self.live = run.live_places
         # its own observations booked before its day (step 1), which its computation doesn't see (E §4.2 step 3)
-        own = [] if self.proj else [lg for o in eng.obs_links_for(inst.id, self.tctx) if o.err is None
+        # with the ends each booked (an end another version's row books, as a row stated same, isn't its own; L §5.19)
+        own = [] if self.proj else [(lg, isinstance(lg.frm, Thing) and self.obs_end_on(o, lg.frm, lg.day),
+                                     isinstance(lg.to, Thing) and self.obs_end_on(o, lg.to, lg.day))
+                                    for o in eng.obs_links_for(inst.id, self.tctx) if o.err is None
                                     for lg in o.legs
                                     if isinstance(lg.day, datetime.date) and lg.day < t and lg.day < self.K and
                                     lg.day >= self.start]

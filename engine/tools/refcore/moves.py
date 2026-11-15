@@ -1280,6 +1280,7 @@ def m_obs_links_for(self, tid, ctx):
                 continue
             o.target = _LinkTarget(tid, self, mi, list(kv), ctx)
             res.append(o)
+        res = self.unjoined_refused(tid, res, ctx)
     finally:
         self.stack.pop()
         self.inst_active.discard(key)
@@ -1291,6 +1292,131 @@ def m_obs_links_for(self, tid, ctx):
     self.cur.merge(c)
     self.run_cache[key] = (res, c)
     return res
+
+
+def same_groups(m):
+    """{movement id: its group, in the order the same lines name them} (L §6.1, round 14: "same is an equivalence:
+    lines that share a side make one group"; "A group of movements is one movement")."""
+    groups = getattr(m, '_same_groups', None)
+    if groups is not None:
+        return groups
+    parent = {}
+
+    def find(a):
+        while parent.get(a, a) != a:
+            a = parent[a]
+        return a
+    order = []
+    for a, b, loc in getattr(m, 'same_moves', None) or ():
+        for y in (a, b):
+            if y not in order:
+                order.append(y)
+        ra, rb = find(a), find(b)
+        if ra != rb:
+            parent[rb] = ra
+    by = {}
+    for y in order:
+        by.setdefault(find(y), []).append(y)
+    groups = dict((y, g) for g in by.values() for y in g)
+    m._same_groups = groups
+    return groups
+
+
+def once_obs(m, obs):
+    """The observations that fulfil one instance, a group stated same counted once (L §5.19 One movement on two
+    statements: "the movement is ... counted once by observed(m[k]) and flows"): [(the group's first row, the group's
+    other rows)], in the order given."""
+    groups = same_groups(m)
+    out = []
+    at = {}
+    for o in obs:
+        g = groups.get(o.id)
+        r = g[0] if g else o.id
+        if r in at:
+            out[at[r]][1].append(o)
+            continue
+        at[r] = len(out)
+        out.append((o, []))
+    return out
+
+
+def same_obs_differ(a, others, leg=None):
+    """Where rows stated same disagree on a leg's amount or day (L §5.19: "a read of the movement away from its places
+    (its leg's amount in observed, in flows of a move or through a binding) is the disagreement's hole, HOLE-SAME,
+    naming both rows"): that hole, in L §8.1's form, else None.  leg, where given, is the one leg read."""
+    from .joint import shown
+    for b in others:
+        lb = dict((g.name, g) for g in b.legs)
+        for g in a.legs:
+            if leg is not None and g.name != leg:
+                continue
+            h = lb.get(g.name)
+            if h is None:
+                continue
+            for what, x, y in (('the amount of %s' % g.name, g.amount, h.amount), ('the day of %s' % g.name, g.day,
+                                                                                       h.day)):
+                if isinstance(x, Hole) or isinstance(y, Hole) or vkey(x) == vkey(y):
+                    continue
+                d = g.day if isinstance(g.day, datetime.date) else a.day
+                q = '%s and %s are one, but %s differs on %s: %s (%s) and %s (%s)' % (
+                    shown(a.id), shown(b.id), what, d, fmt(x), shown(a.id), fmt(y), shown(b.id))
+                return Hole([(q, '%s, %s' % (shown(a.id), shown(b.id)))])
+    return None
+
+
+def m_unjoined_refused(self, tid, res, ctx):
+    """L §5.19 One movement on two statements: "Two unjoined rows of one transfer that both fulfil one instance, their
+    legs naming the same two places and their versions each covering a different one of them, would each book one end
+    and count the whole: they are refused (RUN-RECORD)"; L §8.4 `<r> and <r'> state one transfer and both fulfil
+    <instance>: state them same`.  Returns the links left."""
+    if len(res) < 2:
+        return res
+    from .joint import shown
+    groups = same_groups(self.m)
+
+    def ends(o):
+        ps = set()
+        for g in o.legs:
+            for p in (g.frm, g.to):
+                if isinstance(p, Thing):
+                    ps.add(p.name)
+        return ps
+
+    def covered(o, ps):
+        out = set()
+        for g in o.legs:
+            d = g.day if isinstance(g.day, datetime.date) else o.day
+            if not isinstance(d, datetime.date):
+                continue
+            for p in ps:
+                if o.row.version in self.covering(p, d, ctx):
+                    out.add(p)
+        return out
+    bad = set()
+    for i, a in enumerate(res):
+        for b in res[i + 1:]:
+            if a.row.version is b.row.version:
+                continue
+            ga = groups.get(a.id)
+            if ga is not None and b.id in ga:
+                continue
+            ps = ends(a)
+            if len(ps) != 2 or ends(b) != ps:
+                continue
+            ca, cb = covered(a, ps), covered(b, ps)
+            if not any(x != y for x in ca for y in cb):
+                continue
+            e = refuse('RUN-RECORD', '%s and %s state one transfer and both fulfil %s: state them same' % (
+                shown(a.id), shown(b.id), shown(tid)))
+            for o in (a, b):
+                if o.err is None:
+                    o.err = e
+                bad.add(id(o))
+            # what reads the instance's realised movement rests on the refused records (L §8.4)
+            self.run_cache.setdefault(('badlinks', self.wkey(ctx)), {}).setdefault(tid, e)
+    if not bad:
+        return res
+    return [o for o in res if id(o) not in bad]
 
 
 class _LinkTarget:
