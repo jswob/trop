@@ -17,7 +17,7 @@ use std::rc::Rc;
 
 use crate::Days;
 use crate::base::{Code, Refusal, Run, Warn};
-use crate::book::{Adjustment, Coverage, Linked, Obs};
+use crate::book::{Adjustment, Coverage, Linked, Measured, Obs};
 use crate::model::{Domain, KeyVal, Node, NodeKind, Reality, Thing, UnitError, Value, World};
 use crate::num::NumError;
 use crate::syntax::{Ask, AskBody, Expr, Stop};
@@ -502,10 +502,11 @@ pub struct Engine {
     pub(crate) plans: BTreeMap<(String, Day), Rc<Vec<Inst>>>,
     /// The moves whose instances are being computed (RUN-CYCLE).
     pub(crate) plan_active: BTreeSet<(String, Day)>,
-    /// Each plan move's adjustments per cut (E §5).
-    pub(crate) adjustments: BTreeMap<(String, Day), Vec<Adjustment>>,
-    /// The moves whose adjustments are being computed (RUN-CYCLE).
-    pub(crate) adjust_active: BTreeSet<(String, Day)>,
+    /// Each plan move's measure per cut and list (the whole, or a walk up to a day's): its
+    /// adjustments and the hole bookings answered (E §5, §3.2).
+    pub(crate) adjustments: BTreeMap<(String, Day, Option<Day>), Measured>,
+    /// The moves whose adjustments are being computed, by cut and list (RUN-CYCLE).
+    pub(crate) adjust_active: BTreeSet<(String, Day, Option<Day>)>,
     /// The cells in progress when a leg's read started its walk: a walk that needs one of them
     /// is given up for the walk up to the leg's day (refcore's `guarded_walk`).
     pub(crate) guarded: Option<BTreeSet<CellId>>,

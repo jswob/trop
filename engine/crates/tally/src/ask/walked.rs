@@ -651,7 +651,11 @@ fn status_word(engine: &Engine, walk: &Walk, id: &str) -> Option<&'static str> {
     if walk.obs.iter().any(|o| o.obs.id == id) {
         return Some("observed");
     }
-    let adjusted = engine.adjustments.values().flatten().any(|a| a.id == id);
+    let adjusted = engine
+        .adjustments
+        .values()
+        .flat_map(|x| x.adjustments.iter())
+        .any(|a| a.id == id);
     adjusted.then_some("adjustment")
 }
 

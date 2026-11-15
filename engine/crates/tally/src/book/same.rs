@@ -156,22 +156,39 @@ pub fn same_differ(
             } else {
                 continue;
             };
-            let day = mine.day.day().unwrap_or(row.day);
+            // the two rows in the order the same lines write them (P51, #177)
+            let ((first, first_leg, one), (second, two)) = if written_before(m, &other.id, &row.id)
+            {
+                ((*other, theirs, two), (row, one))
+            } else {
+                ((row, mine, one), (*other, two))
+            };
+            let day = first_leg.day.day().unwrap_or(first.day);
             let text = format!(
                 "{} and {} are one, but {what} differs on {}: {one} ({}) and {two} ({})",
-                row.id,
-                other.id,
+                first.id,
+                second.id,
                 day.text(),
-                row.id,
-                other.id
+                first.id,
+                second.id
             );
-            return Ok(Some(Hole::asked(
-                &text,
-                &format!("{}, {}", row.id, other.id),
-            )));
+            let ids = format!("{}, {}", first.id, second.id);
+            return Ok(Some(Hole::asked(&text, &ids)));
         }
     }
     Ok(None)
+}
+
+/// Whether the same lines name row `earlier` before row `later` in their group, the order
+/// the household wrote them (refcore's, P51 for #177). L §6.1, §8.1.
+fn written_before(m: &Reality, earlier: &str, later: &str) -> bool {
+    let groups = same_groups(m);
+    let Some(group) = groups.get(earlier) else {
+        return false;
+    };
+    let first = group.iter().position(|member| member == earlier);
+    let second = group.iter().position(|member| member == later);
+    matches!((first, second), (Some(one), Some(two)) if one < two)
 }
 
 /// Two legs' amounts as they print where both are numbers that differ (refcore's `vkey`

@@ -546,16 +546,39 @@ impl Loader {
     }
 
     /// Each row's stable id, `version:target[keys]`, with its own span or instant where two
-    /// rows of a version share a pattern (refcore's `check_rows`, its end). L §2.5.
+    /// rows of a version share a pattern (refcore's `check_rows`, its end); and each input's
+    /// note of a row known in a window or standing `after m`, so a read of an input with
+    /// neither sees every row at once. L §2.5, §4.5, §4.6 Readings.
     pub(super) fn finish_rows(&mut self) {
+        let versions = &self.m.versions;
         for (_, input) in self.m.inputs.entries_mut() {
             if !input.observed {
                 set_sids(&input.id, &mut input.rows);
             }
+            input.holds.known_window = input.rows.iter().any(|row| known_in_window(versions, row));
+            input.holds.after = input
+                .rows
+                .iter()
+                .any(|row| matches!(row.instant, Some(RowInstant::After(_))));
         }
         for (_, def) in self.m.defs.entries_mut() {
             set_sids(&def.id, &mut def.givens);
         }
+    }
+}
+
+/// Whether row `row` is known in a window: its own `known` window, or, with no `known` of its
+/// own, its version's (refcore's `row_known_sid`, as `known_inside` tests it). L §4.5.
+fn known_in_window(
+    versions: &crate::base::Table<crate::model::VersionId, crate::model::VersionInfo>,
+    row: &Row,
+) -> bool {
+    match (row.own_known, row.own_window) {
+        (Some(_), Some(_)) => true,
+        (Some(_), None) => false,
+        (None, _) => versions
+            .get(&row.version)
+            .is_some_and(|version| version.window.is_some()),
     }
 }
 

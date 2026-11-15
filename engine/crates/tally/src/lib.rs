@@ -117,7 +117,8 @@ pub mod model {
 
     pub use decl::{
         BandEnd, BandInfo, BandRow, BindInfo, DefInfo, Domain, Fulfils, InputInfo, MoveInfo,
-        ObsLeg, Observation, PlaceInfo, Row, RowInstant, RuleVer, Table as BandTable, TimePos,
+        ObsLeg, Observation, PlaceInfo, Row, RowInstant, RowsHold, RuleVer, Table as BandTable,
+        TimePos,
     };
     pub use graph::{Graph, Mark, Node, NodeKind, ReadRole, Rel, Shift, Target};
     pub use ids::{
@@ -268,7 +269,8 @@ pub mod book {
     mod same;
     mod settle;
 
-    pub use adjust::{Adjustment, Settled};
+    pub(crate) use adjust::hole_booked_before;
+    pub use adjust::{Adjustment, Measured, Settled};
     pub use ledger::{Fig, Ledger, Line, UnitLedger, fig_text};
     pub use ledger_order::{Group, GroupKey};
     pub(crate) use members::{MvDom, MvMember, inst_ref};

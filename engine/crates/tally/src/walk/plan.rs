@@ -442,6 +442,9 @@ pub struct Inst {
     pub day_coll: Collected,
     /// Its place in the movement order.
     pub order: Order,
+    /// For a hole booking a later version answered: the cut that version is known from and
+    /// the step's versions, whose evaluation its existence and legs are (E §5 step 1, §10).
+    pub answered: Option<(Day, Vec<String>)>,
 }
 
 impl Inst {
@@ -477,6 +480,7 @@ impl Inst {
                 move_id: mv.id.clone(),
                 keys: Vec::new(),
             },
+            answered: None,
         }
     }
 }
@@ -549,19 +553,84 @@ impl Engine {
         let (mut out, back) = made?;
         // refcore computes a status when it is first read, after the instances are kept
         self.plans.insert(key.clone(), Rc::new(out.clone()));
+        let mut due = false;
         for inst in &mut out {
             inst.status = self.status(m, mv, inst, cut)?;
+            due = due || crate::book::hole_booked_before(inst, cut);
         }
-        if let Some(back) = back {
+        if let Some(back) = &back {
             // the observations a status reads print nothing (refcore reads them untraced):
             // the plan isn't a walk the explanation lacks a form for
-            self.trace_walked_back(back);
+            self.trace_walked_back(*back);
         }
         let shared = Rc::new(out);
+        if !due || mv.decision {
+            self.plans.insert(key, Rc::clone(&shared));
+            return Ok(shared);
+        }
         self.plans.insert(key.clone(), Rc::clone(&shared));
-        // a hole booking a later version answers is that version's here (E §5 step 1)
-        self.answer_hole_bookings(m, mv, (&shared, cut))?;
-        Ok(self.plans.get(&key).map_or(shared, Rc::clone))
+        // a hole booking a later version answers is that version's here (E §5 step 1); a
+        // stop other than a refusal leaves no list kept that it didn't answer
+        if let Err(stop) = self.answer_hole_bookings(m, mv, cut) {
+            self.plans.remove(&key);
+            return Err(stop);
+        }
+        let answered = self.plans.get(&key).map_or(shared, Rc::clone);
+        if back.is_some() {
+            self.trace_answers(m, mv, &answered, cut)?;
+        }
+        Ok(answered)
+    }
+
+    /// The answered instances of a list a read traces, each evaluated again at the cut of the
+    /// version that answered it, traced, so the read names the rows that give the answer
+    /// (E §10, §5 step 1; L §5.18).
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::make_instances`].
+    fn trace_answers(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        insts: &[Inst],
+        cut: Day,
+    ) -> Result<(), Stop> {
+        let outer = self.holding(Node::new(NodeKind::Move, &mv.id));
+        self.trace_plan_open();
+        let mut made = Ok(None);
+        for inst in insts {
+            let Some((at, _)) = &inst.answered else {
+                continue;
+            };
+            let seed = Seed {
+                env: inst.env.clone(),
+                keys: inst.keys.clone(),
+                exists: Exists::Yes,
+                at_cut: Some(*at),
+                upto: None,
+            };
+            made = self.eval_inst(m, mv, &seed, self.timeline_ctx(None, cut));
+            if made.is_err() {
+                break;
+            }
+        }
+        let closed = self.trace_plan_close();
+        self.holder = outer;
+        made?;
+        closed?;
+        Ok(())
+    }
+
+    /// The day a list of move `mv`'s instances at cut `cut` stops at: a walk up to a day's,
+    /// or none for the whole list, where [`Engine::plan_list`] takes it (refcore's
+    /// `upto_tag`). E §4.1, §3.2.
+    pub(crate) fn list_upto(&self, mv: &MoveInfo, cut: Day) -> Option<Day> {
+        let upto = self.body_upto?;
+        let whole = mv.decision
+            || mv.decl.legs.iter().any(|leg| leg.on.is_some())
+            || self.plans.contains_key(&(mv.id.clone(), cut));
+        (!whole).then_some(upto)
     }
 
     /// A move's instances computed while a read is traced, the first time the ask reaches
@@ -601,16 +670,10 @@ impl Engine {
         mv: &MoveInfo,
         cut: Day,
     ) -> Result<Rc<Vec<Inst>>, Stop> {
-        let Some(upto) = self.body_upto else {
+        let Some(upto) = self.list_upto(mv, cut) else {
             return self.move_instances(m, mv, cut);
         };
         let active = (mv.id.clone(), cut);
-        let whole = mv.decision
-            || self.plans.contains_key(&active)
-            || mv.decl.legs.iter().any(|leg| leg.on.is_some());
-        if whole {
-            return self.move_instances(m, mv, cut);
-        }
         let key = (mv.id.clone(), cut, upto);
         if let Some(hit) = self.prefixes.plans.get(&key) {
             return Ok(Rc::clone(hit));
@@ -630,13 +693,24 @@ impl Engine {
         self.prefixes
             .plans
             .insert(key.clone(), Rc::new(out.clone()));
+        let mut due = false;
         for inst in &mut out {
             inst.status = self.status(m, mv, inst, cut)?;
+            due = due || crate::book::hole_booked_before(inst, cut);
         }
         let shared = Rc::new(out);
+        if !due {
+            self.prefixes.plans.insert(key, Rc::clone(&shared));
+            return Ok(shared);
+        }
         self.prefixes.plans.insert(key.clone(), Rc::clone(&shared));
-        // a hole booking a later version answers is that version's here too (E §5 step 1)
-        self.answer_hole_bookings(m, mv, (&shared, cut))?;
+        // a hole booking a later version answers is that version's here too, measured over
+        // this list (E §5 step 1); a stop other than a refusal leaves no list kept that it
+        // didn't answer
+        if let Err(stop) = self.answer_hole_bookings(m, mv, cut) {
+            self.prefixes.plans.remove(&key);
+            return Err(stop);
+        }
         Ok(self.prefixes.plans.get(&key).map_or(shared, Rc::clone))
     }
 

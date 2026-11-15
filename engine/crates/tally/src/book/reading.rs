@@ -413,7 +413,8 @@ impl Engine {
     pub(crate) fn after_days(&mut self, m: &Reality, cut: Day) -> Result<AfterDays, Stop> {
         let mut out = AfterDays::new();
         for input in ["opening", "stated"] {
-            let Some(info) = m.inputs.get(input) else {
+            // an input with no reading `after m` plans nothing here (L §4.6 Readings)
+            let Some(info) = m.inputs.get(input).filter(|info| info.holds.after) else {
                 continue;
             };
             for row in &info.rows {

@@ -22,7 +22,7 @@ use std::rc::Rc;
 use super::context::Layer;
 use super::state::{Ctx, Engine, invariant};
 use crate::base::{Refusal, Warn};
-use crate::book::{Adjustment, Coverage, Linked, Obs};
+use crate::book::{Adjustment, Coverage, Linked, Measured, Obs};
 use crate::model::{Reality, World};
 use crate::syntax::Stop;
 use crate::time::Day;
@@ -60,10 +60,10 @@ pub(crate) struct Timeline {
     plans: BTreeMap<(String, Day), Rc<Vec<Inst>>>,
     /// The moves whose instances are being computed.
     plan_active: BTreeSet<(String, Day)>,
-    /// Each plan move's adjustments per cut.
-    adjustments: BTreeMap<(String, Day), Vec<Adjustment>>,
+    /// Each plan move's measure per cut and list.
+    adjustments: BTreeMap<(String, Day, Option<Day>), Measured>,
     /// The moves whose adjustments are being computed.
-    adjust_active: BTreeSet<(String, Day)>,
+    adjust_active: BTreeSet<(String, Day, Option<Day>)>,
     /// The projections' walks.
     proj_walks: BTreeMap<ProjKey, usize>,
     /// Fence F5's trees.
