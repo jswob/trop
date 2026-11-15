@@ -431,8 +431,8 @@ fn keeps_parts(m: &Reality) -> bool {
 }
 
 /// A form load checks (M0) that the run doesn't evaluate yet, where the ask meets it: a random
-/// ask, `orient`, a fill or a `same` line of the reality, or a joint model's merged reality
-/// (L §5.12, §5.16, §5.18, §6.1).
+/// ask, `orient`, a fill, or a joint model's merged reality (L §5.12, §5.16, §5.18, §6.1). A
+/// version's rows and movements stated `same` are built (`eval/read.rs`, `book/same.rs`).
 fn unbuilt_at_run(m: &Reality, ask: &Ask) -> Option<&'static str> {
     if ask.random.is_some() || ask.paths.is_some() || ask.path.is_some() {
         return Some("a random ask at run");
@@ -442,15 +442,6 @@ fn unbuilt_at_run(m: &Reality, ask: &Ask) -> Option<&'static str> {
     }
     if !m.fills.is_empty() {
         return Some("fills at run");
-    }
-    // a version's movements stated `same` are built (L §5.19, §6.1); rows stated `same` are
-    // not yet
-    let rows = m
-        .sames
-        .iter()
-        .any(|pair| matches!(pair, crate::model::SamePair::Rows(..)));
-    if rows {
-        return Some("rows stated same at run");
     }
     if m.joint.is_some() {
         return Some("a joint model's asks at run");
