@@ -232676,6 +232676,3077 @@ q_sav: refused: RUN-RECORD bank[a2] and bank[b1] state one transfer and both ful
 q_save: refused: RUN-RECORD bank[a2] and bank[b1] state one transfer and both fulfil save[2026-03]: state them same
   cut 2026-04-10
 warning: WARN-UNREAD place unexplained is read by nothing
+,32:fixes/gate8/m2_rt_e6_1_warn_legs,11:fixes-gate8,24:run e6_1_warn_legs.tally,1333:20:e6_1_warn_legs.tally,1303:model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bank_a "bank A"
+source bank_b "bank B"
+unit PLN: currency minor 0.01
+input bank: observed
+input save_amt: money PLN
+input save_dom: int
+place konto: accounts PLN lives 2019-05-01..
+place savings: accounts PLN lives 2019-05-01..
+place unexplained: outside lives 1900-01-01..
+
+move save[m in months]: transfers
+  on day_of(m, save_dom)
+  at start_of(m)
+  leg cash from konto to savings amount save_amt
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  save_amt = 1 000.00 PLN "own"
+  save_dom = 5 "own"
+  opening[konto] = 5 000.00 PLN at 2026-01-01 start "wyciąg"
+  opening[savings] = 0 PLN at 2026-01-01 start "wyciąg"
+
+version stmt_a
+  cite bank_a
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+  pad konto from unexplained
+  bank[a1] = (on: 2026-02-05, kind: transfers, leg cash from konto to savings amount 1 000.00 PLN, fulfils: save[2026-02]) "a1"
+
+version stmt_b
+  cite bank_b
+  governs 2026-02
+  known 2026-03-03
+  covers savings
+  pad savings from unexplained
+  bank[b1] = (on: 2026-02-05, kind: transfers, leg cash from konto to savings amount 1 200.00 PLN, fulfils: save[2026-02]) "b1"
+  same bank[a1] = bank[b1]
+
+ask k: bal(konto, 2026-02-28), bal(savings, 2026-02-28)
+,,1:0,256:k: (3 000.00 PLN, 2 200.00 PLN)
+  unfulfilled: save[2026-01]
+  cut 2026-10-20
+warning: WARN-LEGS the two observations of save[2026-02] disagree: bank[a1] (1 000.00 PLN) and bank[b1] (1 200.00 PLN)
+warning: WARN-NEGATIVE konto is below zero from 2026-06-05
+,43:fixes/gate8/m2_rt_e6_3_residuals_adjustment,11:fixes-gate8,35:run e6_3_residuals_adjustment.tally,1165:31:e6_3_residuals_adjustment.tally,1124:model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source act "act"
+source bank_export "bank"
+unit PLN: currency minor 0.01
+kind wages: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+input wage_amt: money PLN
+input wage_dom: int
+input bank: observed
+def net[m in months]: money PLN = wage_amt at start_of(m)
+
+move wage[m in months]: wages
+  on day_of(m, wage_dom)
+  at start_of(m)
+  leg cash from world to konto amount net[m]
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  wage_amt = 5 000.00 PLN "umowa"
+  wage_dom = 10 "umowa"
+  opening[konto] = 0 PLN at 2026-01-01 start "wyciąg"
+
+version raise_2026
+  cite act
+  governs 2026-03
+  known 2026-05-01
+  replace wage_amt = 5 500.00 PLN "aneks"
+
+version back_pay
+  cite bank_export
+  governs 2026-05
+  known 2026-05-20
+  covers konto 2026-05-15..2026-05-15
+  bank[r1] = (on: 2026-05-15, kind: wages, leg cash from world to konto amount 500.00 PLN, fulfils: adjustments[wage[2026-03].cash, raise_2026]) "line 1"
+
+ask led: residuals konto 2026-05
+,,1:0,273:led: residuals konto 2026-05
+  2026-05 move wage: model 500.00 PLN, observed 500.00 PLN, difference 0.00 PLN
+    matched adjustments[wage[2026-03].cash, raise_2026] on 2026-05-01: model 500.00 PLN, observed 500.00 PLN, difference 0.00 PLN, timing +14 days
+  cut 2026-10-20
+,52:fixes/gate8/m2_rt_e6_3_residuals_adjustment_not_held,11:fixes-gate8,44:run e6_3_residuals_adjustment_not_held.tally,1228:40:e6_3_residuals_adjustment_not_held.tally,1178:model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source act "act"
+source bank_export "bank"
+unit PLN: currency minor 0.01
+kind wages: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+input wage_amt: money PLN
+input wage_dom: int
+input bank: observed
+def net[m in months]: money PLN = wage_amt at start_of(m)
+
+move wage[m in months]: wages
+  on day_of(m, wage_dom)
+  at start_of(m)
+  leg cash from world to konto amount net[m]
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  wage_amt = 5 000.00 PLN "umowa"
+  wage_dom = 10 "umowa"
+  opening[konto] = 0 PLN at 2026-01-01 start "wyciąg"
+
+version raise_2026
+  cite act
+  governs 2026-03
+  known 2026-05-01
+  replace wage_amt = 5 500.00 PLN "aneks"
+
+version back_pay
+  cite bank_export
+  governs 2026-05
+  known 2026-05-20
+  covers konto 2026-05-15..2026-05-15
+  bank[r1] = (on: 2026-05-15, kind: wages, leg cash from world to konto amount 500.00 PLN, fulfils: adjustments[wage[2026-03].cash, raise_2026]) "line 1"
+
+ask led: residuals konto 2026-05
+ask back: residuals konto 2026-05 as known 2026-04-15
+,,1:0,462:back: residuals konto 2026-05
+  2026-05 unexplained: model 0.00 PLN, observed 500.00 PLN, difference 500.00 PLN
+    unexplained bank[r1] on 2026-05-15: observed 500.00 PLN
+  cut 2026-04-15
+led: residuals konto 2026-05
+  2026-05 move wage: model 500.00 PLN, observed 500.00 PLN, difference 0.00 PLN
+    matched adjustments[wage[2026-03].cash, raise_2026] on 2026-05-01: model 500.00 PLN, observed 500.00 PLN, difference 0.00 PLN, timing +14 days
+  cut 2026-10-20
+,46:fixes/gate8/m2_rt_e6_3_residuals_tie_elsewhere,11:fixes-gate8,38:run e6_3_residuals_tie_elsewhere.tally,1055:34:e6_3_residuals_tie_elsewhere.tally,1011:model sr1
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bank "bank"
+unit PLN: currency minor 0.01
+index ks = [k1, k2]
+input bank_rows: observed
+input dday: date
+input fee: money PLN
+place konto: accounts PLN lives 2026-01-01..
+place jar: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+move pull[k in ks]: transfers
+  on dday
+  reads jar
+  leg cash from jar to world amount bal(jar) - fee
+
+ask led: residuals konto 2026-02
+ask b: bal(jar, 2026-03-01)
+
+version plan_2026
+  cite plan
+  governs always
+  known 2026-01-01
+  dday = 2026-02-10 "c"
+  fee = 100.00 PLN "c"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "c"
+  opening[jar] = 800.00 PLN at 2026-01-01 start "c"
+
+version statement_02
+  cite bank
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+  pad konto from unexplained
+  bank_rows[r1] = (on: 2026-02-20, kind: transfers, leg cash from konto to world amount 400.00 PLN) "line 1"
+,,1:0,334:b: refused: RUN-TIE pull has a tie at pull[k1], pull[k2] that changes the result, and no ties by
+  unfulfilled: pull[k1]
+  cut 2026-10-20
+led: residuals konto 2026-02
+  2026-02 unexplained: model 0.00 PLN, observed -400.00 PLN, difference -400.00 PLN
+    unexplained bank_rows[r1] on 2026-02-20: observed -400.00 PLN
+  cut 2026-10-20
+,43:fixes/gate8/m2_rt_e6_3_residuals_ties_typed,11:fixes-gate8,35:run e6_3_residuals_ties_typed.tally,1264:31:e6_3_residuals_ties_typed.tally,1223:model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bank_2026_02 "bank"
+unit PLN: currency minor 0.01
+index flats = [f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11]
+input bank: observed
+input rent_amt: money PLN
+input rent_day: date
+place konto: accounts PLN lives 2019-05-01..
+place landlord: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+move rent[f in flats]: transfers
+  on rent_day
+  when pos(f) == 3 or pos(f) == 11
+  leg cash from konto to landlord amount rent_amt
+
+version plan_2026
+  cite plan
+  governs always
+  known 2026-01-01
+  rent_amt = 2 000.00 PLN "umowa najmu"
+  rent_day = 2026-02-03 "umowa najmu"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "wyciąg"
+
+version statement_02
+  cite bank_2026_02
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+  pad konto from unexplained
+  bank[r1] = (on: 2026-02-03, kind: transfers, leg cash from konto to landlord amount 2 000.00 PLN, fulfils: rent[f11]) "line 1"
+  bank[r2] = (on: 2026-02-03, kind: transfers, leg cash from konto to landlord amount 2 000.00 PLN, fulfils: rent[f3]) "line 2"
+  stated[konto] = 6 000.00 PLN at 2026-02-28 end "saldo"
+
+ask led: residuals konto 2026-02
+,,1:0,547:led: residuals konto 2026-02
+  2026-02 balance: model 6 000.00 PLN, observed 6 000.00 PLN, difference 0.00 PLN
+    balance konto 2026-02-28 end (padded): booked 6 000.00 PLN, stated 6 000.00 PLN, gap 0.00 PLN
+  2026-02 move rent: model -4 000.00 PLN, observed -4 000.00 PLN, difference 0.00 PLN
+    matched rent[f3] on 2026-02-03: model -2 000.00 PLN, observed -2 000.00 PLN, difference 0.00 PLN, timing +0 days
+    matched rent[f11] on 2026-02-03: model -2 000.00 PLN, observed -2 000.00 PLN, difference 0.00 PLN, timing +0 days
+  cut 2026-10-20
+,53:fixes/gate8/m2_rt_e6_3_residuals_uncovered_and_unheld,11:fixes-gate8,45:run e6_3_residuals_uncovered_and_unheld.tally,1696:41:e6_3_residuals_uncovered_and_unheld.tally,1645:model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bank "bank"
+unit PLN: currency minor 0.01
+input bank_rows: observed
+input wage_amt: money PLN
+input wage_dom: int
+input extra_on[m in months]: bool
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+move wage[m in months]: transfers
+  on day_of(m, wage_dom)
+  at start_of(m)
+  leg cash from world to konto amount wage_amt
+
+move extra[m in months]: transfers
+  on day_of(m, wage_dom)
+  at start_of(m)
+  when extra_on[m]
+  leg cash from world to konto amount wage_amt
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  wage_amt = 1 000.00 PLN "umowa"
+  wage_dom = 10 "umowa"
+  extra_on = false "umowa"
+  opening[konto] = 0 PLN at 2026-01-01 start "wyciąg"
+
+version extra_feb
+  cite plan
+  governs 2026-02
+  known 2026-02-01
+  extra_on[2026-02] = true "aneks"
+
+version bank_jan
+  cite bank
+  governs 2026-01
+  known 2026-02-02
+  bank_rows[r1] = (on: 2026-01-11, kind: transfers, leg cash from world to konto amount 1 000.00 PLN, fulfils: wage[2026-01]) "line 1"
+
+version bank_feb
+  cite bank
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+  pad konto from unexplained
+  bank_rows[r2] = (on: 2026-02-10, kind: transfers, leg cash from world to konto amount 1 000.00 PLN, fulfils: wage[2026-02]) "line 2"
+  bank_rows[r3] = (on: 2026-02-10, kind: transfers, leg cash from world to konto amount 1 000.00 PLN, fulfils: extra[2026-02]) "line 3"
+
+ask led: residuals konto 2026-01..2026-02
+ask back: residuals konto 2026-01..2026-02 as known 2026-01-15
+,,1:0,1290:back: residuals konto 2026-01 .. 2026-02
+  2026-02 unexplained: model 0.00 PLN, observed 1 000.00 PLN, difference 1 000.00 PLN
+    unexplained bank_rows[r3] on 2026-02-10: observed 1 000.00 PLN
+  2026-01 move wage: model 1 000.00 PLN, observed 1 000.00 PLN, difference 0.00 PLN
+    matched wage[2026-01] on 2026-01-10: model 1 000.00 PLN, observed 1 000.00 PLN, difference 0.00 PLN, timing +1 days
+  2026-02 move wage: model 1 000.00 PLN, observed 1 000.00 PLN, difference 0.00 PLN
+    matched wage[2026-02] on 2026-02-10: model 1 000.00 PLN, observed 1 000.00 PLN, difference 0.00 PLN, timing +0 days
+  cut 2026-01-15
+led: residuals konto 2026-01 .. 2026-02
+  2026-01 move wage: model 1 000.00 PLN, observed 1 000.00 PLN, difference 0.00 PLN
+    matched wage[2026-01] on 2026-01-10: model 1 000.00 PLN, observed 1 000.00 PLN, difference 0.00 PLN, timing +1 days
+  2026-02 move extra: model 1 000.00 PLN, observed 1 000.00 PLN, difference 0.00 PLN
+    matched extra[2026-02] on 2026-02-10: model 1 000.00 PLN, observed 1 000.00 PLN, difference 0.00 PLN, timing +0 days
+  2026-02 move wage: model 1 000.00 PLN, observed 1 000.00 PLN, difference 0.00 PLN
+    matched wage[2026-02] on 2026-02-10: model 1 000.00 PLN, observed 1 000.00 PLN, difference 0.00 PLN, timing +0 days
+  cut 2026-10-20
+,48:fixes/gate8/m2_rt_e6_3_same_rows_both_cover_hole,11:fixes-gate8,40:run e6_3_same_rows_both_cover_hole.tally,1146:36:e6_3_same_rows_both_cover_hole.tally,1100:model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+input bank: observed
+input keep: money PLN
+input d_save: int
+
+move save[m in months]: transfers
+  on day_of(m, d_save)
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+ask q_konto: bal(konto, 2026-03-31)
+ask q_led: residuals konto 2026-03
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  d_save = 15 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+version st_konto
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "a"
+
+version st_k2
+  cite s
+  governs 2026-03
+  known 2026-04-04
+  covers konto
+  bank[c1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 940.00 PLN, fulfils: save[2026-03]) "c"
+  same bank[a2] = bank[c1]
+,,1:0,1082:q_konto: ?"bank[a2] and bank[c1] are one, but the leg at konto differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[c1])" (bank[a2], bank[c1])
+  cut 2026-04-10
+q_led: residuals konto 2026-03
+  2026-03 move save: model -950.00 PLN, observed ?"bank[a2] and bank[c1] are one, but the leg at konto differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[c1])" (bank[a2], bank[c1]), difference ?"bank[a2] and bank[c1] are one, but the leg at konto differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[c1])" (bank[a2], bank[c1])
+    matched save[2026-03] on 2026-03-15: model -950.00 PLN, observed ?"bank[a2] and bank[c1] are one, but the leg at konto differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[c1])" (bank[a2], bank[c1]), difference ?"bank[a2] and bank[c1] are one, but the leg at konto differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[c1])" (bank[a2], bank[c1]), timing +0 days
+  cut 2026-04-10
+warning: WARN-LEGS the two observations of save[2026-03] disagree: bank[a2] (950.00 PLN) and bank[c1] (940.00 PLN)
+,44:fixes/gate8/m2_rt_e6_3_same_rows_ledger_once,11:fixes-gate8,36:run e6_3_same_rows_ledger_once.tally,1187:32:e6_3_same_rows_ledger_once.tally,1145:model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+input bank: observed
+input keep: money PLN
+input d_save: int
+
+move save[m in months]: transfers
+  on day_of(m, d_save)
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+ask q_flk: flows(konto, 2026-03-01 .. 2026-03-31)
+ask q_led: residuals konto 2026-03
+ask q_ls: residuals sav 2026-03
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  d_save = 15 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+version st_konto
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "a"
+
+version st_sav
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers sav
+  bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "b"
+  same bank[a2] = bank[b1]
+,,1:0,525:q_flk: -950.00 PLN
+  cut 2026-04-10
+q_led: residuals konto 2026-03
+  2026-03 move save: model -950.00 PLN, observed -950.00 PLN, difference 0.00 PLN
+    matched save[2026-03] on 2026-03-15: model -950.00 PLN, observed -950.00 PLN, difference 0.00 PLN, timing +0 days
+  cut 2026-04-10
+q_ls: residuals sav 2026-03
+  2026-03 move save: model 950.00 PLN, observed 950.00 PLN, difference 0.00 PLN
+    matched save[2026-03] on 2026-03-15: model 950.00 PLN, observed 950.00 PLN, difference 0.00 PLN, timing +0 days
+  cut 2026-04-10
+,44:fixes/gate8/m2_rt_l2_5_stepped_range_fulfils,11:fixes-gate8,36:run l2_5_stepped_range_fulfils.tally,850:32:l2_5_stepped_range_fulfils.tally,809:model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input cnt: int
+input first_day: date
+input bank: observed
+
+move pay[n in 1 .. cnt]: transfers
+  on add_days(first_day, n)
+  leg cash from konto to world amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "s"
+  cnt = 3 "s"
+  first_day = 2026-01-01 "s"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+
+version st
+  cite s
+  governs 2026-01
+  known 2026-02-01
+  covers konto
+  bank[r1] = (on: 2026-01-03, kind: transfers, leg cash from konto to world amount 12.00 PLN, fulfils: pay[2]) "l1"
+
+ask q: bal(konto, 2026-01-31), observed(pay[2]).cash.amount
+,,1:0,73:q: (88.00 PLN, 12.00 PLN)
+  open: pay[1]
+  open: pay[3]
+  cut 2026-12-31
+,48:fixes/gate8/m2_rt_l2_5_stepped_range_fulfils_out,11:fixes-gate8,40:run l2_5_stepped_range_fulfils_out.tally,824:36:l2_5_stepped_range_fulfils_out.tally,779:model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input cnt: int
+input first_day: date
+input bank: observed
+
+move pay[n in 1 .. cnt]: transfers
+  on add_days(first_day, n)
+  leg cash from konto to world amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "s"
+  cnt = 3 "s"
+  first_day = 2026-01-01 "s"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+
+version st
+  cite s
+  governs 2026-01
+  known 2026-02-01
+  covers konto
+  bank[r1] = (on: 2026-01-03, kind: transfers, leg cash from konto to world amount 12.00 PLN, fulfils: pay[5]) "l1"
+
+ask q: bal(konto, 2026-01-31)
+,,1:0,170:q: refused: RUN-RECORD observation bank[r1] fulfils pay[5], which doesn't exist or doesn't touch its places
+  open: pay[1]
+  open: pay[2]
+  open: pay[3]
+  cut 2026-12-31
+,41:fixes/gate8/m2_rt_l4_6_after_plan_refused,11:fixes-gate8,33:run l4_6_after_plan_refused.tally,625:29:l4_6_after_plan_refused.tally,587:model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input dom: int
+
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to world amount amt
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  anchor konto
+  amt = 100.00 PLN
+  dom = 5
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  stated[konto] = 900.00 PLN after pay[2026-01] "s"
+
+ask q: bal(konto, 2026-01-31)
+,,1:1,130:refused: LOAD-ORDER stated[konto] after pay[2026-01]: pay[2026-01] is a plan or an observation (l4_6_after_plan_refused.tally:27)
+,27:fixes/gate8/m2_rt_l4_6_last,11:fixes-gate8,19:run l4_6_last.tally,273:15:l4_6_last.tally,249:model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input n: int
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  n = 1 governs 2026-01..2026-03
+  n = 2 governs 2026-05..2026-06
+
+ask q1: last(n, 2026-09-15)
+,,1:0,62:q1: 2
+  held: n = 2 (v), read for 2026-09-15
+  cut 2026-12-31
+,36:fixes/gate8/m2_rt_l4_6_last_no_start,11:fixes-gate8,28:run l4_6_last_no_start.tally,529:24:l4_6_last_no_start.tally,496:model lastalw
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+index ds = day 2023-01-01..2026-12-31
+
+input s: num
+
+input t: num
+
+def sv[d in ds]: num = s
+def tv[d in ds]: num = t at d
+ask q0: sv[2026-03-01], tv[2023-03-01]
+ask q1: last(s, 2026-03-01)
+ask q2: last(t, 2026-03-01)
+ask q3: last(t, 2023-03-01)
+
+version v1
+  cite card
+  governs always
+  known 2024-01-01
+  s = 3 "c"
+
+version v2
+  cite card
+  governs ..2024-06-30
+  known 2024-01-01
+  t = 4 "c"
+,,1:0,137:q0: (3, 4)
+  cut 2026-03-01
+q1: 3
+  cut 2026-03-01
+q2: 4
+  held: t = 4 (v2), read for 2026-03-01
+  cut 2026-03-01
+q3: 4
+  cut 2026-03-01
+,44:fixes/gate8/m2_rt_l4_6_last_since_no_reading,11:fixes-gate8,36:run l4_6_last_since_no_reading.tally,343:32:l4_6_last_since_no_reading.tally,302:model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input r: num reading
+
+version v
+  cite s
+  known 2026-01-01
+  r = 5 at 2026-06-01 "s"
+
+ask q1: last(r, 2026-03-01) law 2026-12-31
+ask q2: since(r, 2026-03-01) law 2026-12-31
+ask q3: since(r, 2026-06-11) law 2026-12-31
+,,1:0,225:q1: ?"r has no reading on or before 2026-03-01" (r)
+  law date 2026-12-31, cut 2026-12-31
+q2: ?"r has no reading on or before 2026-03-01" (r)
+  law date 2026-12-31, cut 2026-12-31
+q3: 10
+  law date 2026-12-31, cut 2026-12-31
+,38:fixes/gate8/m2_rt_l4_6_reading_at_date,11:fixes-gate8,30:run l4_6_reading_at_date.tally,276:26:l4_6_reading_at_date.tally,241:model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input cpi[m in months]: num
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  cpi[2026-03] = 101.5
+
+ask q1: cpi[2026-03-17]
+ask q2: cpi[2027-01-05]
+,,1:0,94:q1: 101.5
+  cut 2026-12-31
+q2: refused: RUN-KEY 2027-01-05 is outside months
+  cut 2026-12-31
+,44:fixes/gate8/m2_rt_l4_6_reading_longer_period,11:fixes-gate8,36:run l4_6_reading_longer_period.tally,252:32:l4_6_reading_longer_period.tally,211:model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input cpi[m in months]: num
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  cpi[2026-03] = 101.5
+
+ask q3: cpi[2026]
+,,1:1,109:refused: LOAD-KEY a year holds no key of months, whose keys are months (l4_6_reading_longer_period.tally:17)
+,31:fixes/gate8/m2_rt_l4_6_readings,11:fixes-gate8,23:run l4_6_readings.tally,739:19:l4_6_readings.tally,711:model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+
+input px[u in currencies]: num PLN/u reading
+input max_age: int
+def quote_now[d in days]: num PLN/EUR at d
+  rule base = last(px[EUR], d)
+  rule stale beats base = ?"the last quote is older than the bound" when since(px[EUR], d) > max_age
+
+version r
+  cite s
+  known 2026-03-05
+  px[EUR] = 4.3 PLN/EUR at 2026-03-02
+
+version cfg
+  cite s
+  governs always
+  known 2026-01-01
+  max_age = 5
+
+ask q1: px[EUR] law 2026-03-02
+ask q2: px[EUR] law 2026-03-03
+ask q3: last(px[EUR], 2026-03-10), since(px[EUR], 2026-03-10)
+ask q4: quote_now[2026-03-10], quote_now[2026-03-06]
+,,1:0,396:q1: 4.3 PLN/EUR
+  law date 2026-03-02, cut 2026-12-31
+q2: ?"px[EUR] has no reading at 2026-03-03" (px[EUR])
+  law date 2026-03-03, cut 2026-12-31
+q3: (4.3 PLN/EUR, 8)
+  held: px[EUR] = 4.3 PLN/EUR (r), read for 2026-03-10
+  cut 2026-12-31
+q4: (?"the last quote is older than the bound" (quote_now[2026-03-10]), 4.3 PLN/EUR)
+  held: px[EUR] = 4.3 PLN/EUR (r), read for 2026-03-06
+  cut 2026-12-31
+,43:fixes/gate8/m2_rt_l5_14_1_pads_binding_plan,11:fixes-gate8,35:run l5_14_1_pads_binding_plan.tally,530:31:l5_14_1_pads_binding_plan.tally,490:model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input day: date
+
+move fix: transfers
+  on day
+  leg cash from world to konto amount sum(p.cash.amount for p in pads over month_of(day) - 1)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  day = 2026-03-10
+  opening[konto] = 0 PLN at 2026-01-01 start
+
+ask q: bal(konto, 2026-03-31)
+,,1:1,125:refused: LOAD-READS fix reaches a running read or projection of pads without reads pads (l5_14_1_pads_binding_plan.tally:13)
+,44:fixes/gate8/m2_rt_l5_14_1_pads_binding_reads,11:fixes-gate8,36:run l5_14_1_pads_binding_reads.tally,544:32:l5_14_1_pads_binding_reads.tally,503:model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input day: date
+
+move fix: transfers
+  on day
+  reads pads
+  leg cash from world to konto amount sum(p.cash.amount for p in pads over month_of(day) - 1)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  day = 2026-03-10
+  opening[konto] = 0 PLN at 2026-01-01 start
+
+ask q: bal(konto, 2026-03-31)
+,,1:0,29:q: 0.00 PLN
+  cut 2026-06-30
+,53:fixes/gate8/m2_rt_l5_19_bind_instance_and_observation,11:fixes-gate8,45:run l5_19_bind_instance_and_observation.tally,881:41:l5_19_bind_instance_and_observation.tally,831:model hh
+  tally 2
+  on 2026-04-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-01-01..
+place landlord: outside lives 1900-01-01..
+input rent_amt: money PLN
+input rent_day: date
+input bank: observed
+
+move rent: transfers
+  on rent_day
+  leg cash from konto to landlord amount rent_amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  rent_amt = 2 000.00 PLN "umowa"
+  rent_day = 2026-03-05 "umowa"
+  opening[konto] = 5 000.00 PLN at 2026-01-01 start "wyciąg"
+
+version stmt
+  cite s
+  governs 2026-03
+  known 2026-03-10
+  bank[r1] = (on: 2026-03-05, kind: transfers, leg cash from konto to landlord amount 2 000.00 PLN, fulfils: rent) "linia 1"
+
+ask q: count(x in transfers over 2026-03)
+ask n: sum(x.cash.amount for x in transfers over 2026-03)
+,,1:0,55:n: 2 000.00 PLN
+  cut 2026-04-01
+q: 1
+  cut 2026-04-01
+,31:fixes/gate8/m2_rt_l5_19_covered,11:fixes-gate8,23:run l5_19_covered.tally,1418:19:l5_19_covered.tally,1389:model hh
+  tally 2
+  on 2026-10-20
+  start 2025-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index categories = [food, rent]
+input spend_budget[c in categories]: money PLN
+input spend_window: key months
+kind spending: transfers
+  attr category: key categories
+input bank: observed
+place konto: accounts PLN lives 2019-05-01..
+place shop: outside lives 1900-01-01..
+place landlord: outside lives 1900-01-01..
+
+def spend_month[c in categories]: money PLN at end_of(spend_window)
+  rule budget = spend_budget[c]
+  rule learned beats budget = sum(-o.cash.amount for o in spending over spend_window where o.category == c) when covered(konto, spend_window)
+
+version budget
+  cite s
+  governs 2025..
+  known 2025-01-01
+  spend_budget = 1 000.00 PLN
+  spend_window = 2025-11
+
+version statement_11
+  cite s
+  governs 2025-11
+  known 2025-12-01
+  covers konto
+  anchor konto
+  bank[r1] = (on: 2025-11-04, kind: spending, leg cash from konto to shop amount 234.22 PLN, category: food) "BIEDRONKA"
+  bank[r2] = (on: 2025-11-12, kind: spending, leg cash from konto to shop amount 100.00 PLN, category: food) "LIDL"
+  bank[r3] = (on: 2025-11-03, kind: spending, leg cash from konto to landlord amount 2 800.00 PLN, category: rent) "czynsz"
+
+ask nov: spend_month[food] with spend_window = 2025-11 law 2026-01-01
+ask dec: spend_month[food] with spend_window = 2025-12 law 2026-01-01
+,,1:0,177:dec: 1 000.00 PLN
+  pinned: spend_window = 2025-12
+  law date 2026-01-01, cut 2026-10-20
+nov: -334.22 PLN
+  pinned: spend_window = 2025-11
+  law date 2026-01-01, cut 2026-10-20
+,39:fixes/gate8/m2_rt_l5_19_covered_example,11:fixes-gate8,31:run l5_19_covered_example.tally,1372:27:l5_19_covered_example.tally,1335:model hh
+  tally 2
+  on 2026-10-20
+  start 2025-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index categories = [food, rent]
+input spend_budget[c in categories]: money PLN
+input spend_window: key months
+kind spending: transfers
+  attr category: key categories
+input bank: observed
+place konto: accounts PLN lives 2019-05-01..
+place shop: outside lives 1900-01-01..
+place landlord: outside lives 1900-01-01..
+
+def spend_month[c in categories]: money PLN
+  rule budget = spend_budget[c]
+  rule learned beats budget = sum(-o.cash.amount for o in spending over spend_window where o.category == c) when covered(konto, spend_window)
+
+version budget
+  cite s
+  governs always
+  known 2025-01-01
+  spend_budget = 1 000.00 PLN
+  spend_window = 2025-11
+
+version statement_11
+  cite s
+  governs 2025-11
+  known 2025-12-01
+  covers konto
+  anchor konto
+  bank[r1] = (on: 2025-11-04, kind: spending, leg cash from konto to shop amount 234.22 PLN, category: food) "BIEDRONKA"
+  bank[r2] = (on: 2025-11-12, kind: spending, leg cash from konto to shop amount 100.00 PLN, category: food) "LIDL"
+  bank[r3] = (on: 2025-11-03, kind: spending, leg cash from konto to landlord amount 2 800.00 PLN, category: rent) "czynsz"
+
+ask nov: spend_month[food] with spend_window = 2025-11
+ask dec: spend_month[food] with spend_window = 2025-12
+,,1:0,135:dec: 1 000.00 PLN
+  pinned: spend_window = 2025-12
+  cut 2026-10-20
+nov: -334.22 PLN
+  pinned: spend_window = 2025-11
+  cut 2026-10-20
+,43:fixes/gate8/m2_rt_l5_19_event_kind_no_guard,11:fixes-gate8,35:run l5_19_event_kind_no_guard.tally,970:31:l5_19_event_kind_no_guard.tally,930:model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bank "bank"
+unit PLN: currency minor 0.01
+input bank_rows: observed
+input amt: money PLN
+input dom: int
+place konto: accounts PLN lives 2019-05-01..
+place savings: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+def spent[m in months]: money PLN = sum(o.cash.amount for o in transfers over m)
+
+version stmt
+  cite bank
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+  pad konto from unexplained
+  bank_rows[r1] = (on: 2026-02-05, kind: transfers, leg cash from konto to world amount 100.00 PLN) "line 1"
+
+ask q: spent[2026-02]
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  amt = 1 000.00 PLN "own"
+  dom = 5 "own"
+  opening[konto] = 5 000.00 PLN at 2026-01-01 start "wyciąg"
+  opening[savings] = 0 PLN at 2026-01-01 start "wyciąg"
+,,1:0,185:q: 100.00 PLN
+  cut 2026-10-20
+warning: WARN-UNREAD input amt is read by nothing
+warning: WARN-UNREAD input dom is read by nothing
+warning: WARN-UNREAD place savings is read by nothing
+,47:fixes/gate8/m2_rt_l5_19_fulfils_adjustment_none,11:fixes-gate8,39:run l5_19_fulfils_adjustment_none.tally,1166:35:l5_19_fulfils_adjustment_none.tally,1121:model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source act "act"
+source bank_export "bank"
+unit PLN: currency minor 0.01
+kind wages: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+input wage_amt: money PLN
+input wage_dom: int
+input bank: observed
+def net[m in months]: money PLN = wage_amt at start_of(m)
+
+move wage[m in months]: wages
+  on day_of(m, wage_dom)
+  at start_of(m)
+  leg cash from world to konto amount net[m]
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  wage_amt = 5 000.00 PLN "umowa"
+  wage_dom = 10 "umowa"
+  opening[konto] = 0 PLN at 2026-01-01 start "wyciąg"
+
+version raise_2026
+  cite act
+  governs 2026-03
+  known 2026-05-01
+  replace wage_amt = 5 500.00 PLN "aneks"
+
+version back_pay
+  cite bank_export
+  governs 2026-05
+  known 2026-05-20
+  covers konto 2026-05-15..2026-05-15
+  bank[r1] = (on: 2026-05-15, kind: wages, leg cash from world to konto amount 500.00 PLN, fulfils: adjustments[wage[2026-04].cash, raise_2026]) "line 1"
+
+ask b: bal(konto, 2026-05-31)
+,,1:0,379:b: refused: RUN-RECORD bank[r1] fulfils adjustments[wage[2026-04].cash, raise_2026], which no version made by the cut
+  adjustment: wage[2026-03] by 500.00 PLN on 2026-05-01 (version raise_2026), remaining 500.00 PLN
+  unfulfilled: wage[2026-01]
+  unfulfilled: wage[2026-02]
+  unfulfilled: wage[2026-03]
+  unfulfilled: wage[2026-04]
+  unfulfilled: wage[2026-05]
+  cut 2026-10-20
+,41:fixes/gate8/m2_rt_l5_19_fulfils_lacks_leg,11:fixes-gate8,33:run l5_19_fulfils_lacks_leg.tally,850:29:l5_19_fulfils_lacks_leg.tally,812:model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind splits: event certain
+  leg fee: PLN
+  leg main: PLN
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input pday: date
+
+move pay: splits
+  on pday
+  leg fee from konto to world amount amt
+  leg main from konto to world amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 5.00 PLN
+  pday = 2026-03-02
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-01
+  covers konto
+  bank[r1] = (on: 2026-03-02, kind: transfers, leg cash from konto to world amount 10.00 PLN, fulfils: pay) "l1"
+
+ask q: bal(konto, 2026-03-31)
+ask r: observed(pay)
+,,1:0,202:q: refused: RUN-RECORD observation bank[r1] fulfils pay and lacks its leg fee
+  open: pay
+  cut 2026-12-31
+r: refused: RUN-RECORD observation bank[r1] fulfils pay and lacks its leg fee
+  cut 2026-12-31
+,27:fixes/gate8/m2_rt_l5_19_gap,11:fixes-gate8,19:run l5_19_gap.tally,881:15:l5_19_gap.tally,857:model g
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+source bank_export "bank"
+unit PLN: currency minor 0.01
+
+input bank: observed
+input pay_day: date
+input pay_amt: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on pay_day
+  leg cash from world to konto amount pay_amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  pay_day = 2026-02-02
+  pay_amt = 500.00 PLN
+
+version stmt_02
+  cite bank_export
+  governs 2026-02
+  known 2026-03-01
+  covers konto
+  anchor konto
+  bank[r1] = (on: 2026-02-02, kind: transfers, leg cash from world to konto amount 500.00 PLN, fulfils: pay) "line 1"
+  stated[konto] = 520.00 PLN at 2026-02-28 end "saldo końcowe"
+
+ask g28: gap(konto, 2026-02-28)
+ask g27: gap(konto, 2026-02-27)
+ask b28: bal(konto, 2026-02-28)
+,,1:0,221:b28: 520.00 PLN
+  anchor: konto 2026-02-28 end, stated 520.00 PLN, difference 20.00 PLN
+  cut 2026-10-20
+g27: ?"stated[konto] has no reading at 2026-02-27" (stated[konto])
+  cut 2026-10-20
+g28: 20.00 PLN
+  cut 2026-10-20
+,43:fixes/gate8/m2_rt_l5_19_gap_plan_load_reads,11:fixes-gate8,35:run l5_19_gap_plan_load_reads.tally,498:31:l5_19_gap_plan_load_reads.tally,458:model g8
+  tally 2
+  on 2025-01-01
+  start 2025-01-01
+  end 2025-03-31
+unit DUK: currency minor 0.01
+source s "s"
+place konto: accounts DUK lives 2025-01-01..
+place world: outside lives 2025-01-01..
+move fee[m in months]: transfers
+  on end_of(m)
+  leg cash from world to konto amount gap(konto, start_of(m))
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  anchor konto
+  stated[konto] = 5.00 DUK at 2025-01-01 end "s"
+ask q: bal(konto, 2025-03-31)
+,,1:1,127:refused: LOAD-READS fee reaches a running read or projection of konto without reads konto (l5_19_gap_plan_load_reads.tally:10)
+,47:fixes/gate8/m2_rt_l5_19_link_reads_another_link,11:fixes-gate8,39:run l5_19_link_reads_another_link.tally,1352:35:l5_19_link_reads_another_link.tally,1307:model m
+  tally 2
+  on 2026-10-19
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bank "bank"
+unit PLN: currency minor 0.01
+input bank_rows: observed
+input adv: money PLN
+input fee: money PLN
+input adv_dom: int
+input probe_dom: int
+place konto: accounts PLN lives 2019-05-01..
+place us: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+move adv_pay[m in months]: transfers
+  on day_of(m, adv_dom)
+  at start_of(m)
+  leg cash from konto to us amount adv
+
+move probe[m in months]: transfers
+  on day_of(m, probe_dom)
+  at start_of(m)
+  when flows(adv_pay[m], m) > adv
+  leg cash from konto to us amount fee
+
+ask q: bal(konto, 2026-03-31)
+ask f: flows(adv_pay[2026-03], 2026-03)
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  adv = 100.00 PLN "own"
+  fee = 10.00 PLN "own"
+  adv_dom = 20 "own"
+  probe_dom = 5 "own"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "wyciąg"
+
+version stmt
+  cite bank
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  pad konto from unexplained
+  bank_rows[r1] = (on: 2026-03-05, kind: transfers, leg cash from konto to us amount 10.00 PLN, fulfils: probe[2026-03]) "line 1"
+  bank_rows[r2] = (on: 2026-03-20, kind: transfers, leg cash from konto to us amount 150.00 PLN, fulfils: adv_pay[2026-03]) "line 2"
+,,1:0,126:f: 150.00 PLN
+  cut 2026-10-19
+q: 640.00 PLN
+  unfulfilled: adv_pay[2026-01]
+  unfulfilled: adv_pay[2026-02]
+  cut 2026-10-19
+,53:fixes/gate8/m2_rt_l5_19_link_reads_another_link_order,11:fixes-gate8,45:run l5_19_link_reads_another_link_order.tally,1358:41:l5_19_link_reads_another_link_order.tally,1307:model m
+  tally 2
+  on 2026-10-19
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bank "bank"
+unit PLN: currency minor 0.01
+input bank_rows: observed
+input adv: money PLN
+input fee: money PLN
+input adv_dom: int
+input probe_dom: int
+place konto: accounts PLN lives 2019-05-01..
+place us: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+move adv_pay[m in months]: transfers
+  on day_of(m, adv_dom)
+  at start_of(m)
+  leg cash from konto to us amount adv
+
+move probe[m in months]: transfers
+  on day_of(m, probe_dom)
+  at start_of(m)
+  when flows(adv_pay[m], m) > adv
+  leg cash from konto to us amount fee
+
+ask q: bal(konto, 2026-03-31)
+ask f: flows(adv_pay[2026-03], 2026-03)
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  adv = 100.00 PLN "own"
+  fee = 10.00 PLN "own"
+  adv_dom = 20 "own"
+  probe_dom = 5 "own"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "wyciąg"
+
+version stmt
+  cite bank
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  pad konto from unexplained
+  bank_rows[r1] = (on: 2026-03-05, kind: transfers, leg cash from konto to us amount 10.00 PLN, fulfils: probe[2026-03]) "line 1"
+  bank_rows[r2] = (on: 2026-03-20, kind: transfers, leg cash from konto to us amount 150.00 PLN, fulfils: adv_pay[2026-03]) "line 2"
+,,1:0,126:f: 150.00 PLN
+  cut 2026-10-19
+q: 640.00 PLN
+  unfulfilled: adv_pay[2026-01]
+  unfulfilled: adv_pay[2026-02]
+  cut 2026-10-19
+,36:fixes/gate8/m2_rt_l5_19_load_covered,11:fixes-gate8,28:run l5_19_load_covered.tally,963:24:l5_19_load_covered.tally,930:model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bank "bank"
+unit PLN: currency minor 0.01
+input bank_rows: observed
+input amt: money PLN
+input dom: int
+place konto: accounts PLN lives 2019-05-01..
+place savings: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+def spent[m in months]: money PLN = sum(o.cash.amount for o in bank_rows over m)
+
+version stmt
+  cite bank
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+  pad konto from unexplained
+  bank_rows[r1] = (on: 2026-02-05, kind: transfers, leg cash from konto to world amount 100.00 PLN) "line 1"
+
+ask q: spent[2026-02]
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  amt = 1 000.00 PLN "own"
+  dom = 5 "own"
+  opening[konto] = 5 000.00 PLN at 2026-01-01 start "wyciąg"
+  opening[savings] = 0 PLN at 2026-01-01 start "wyciąg"
+,,1:1,127:refused: LOAD-COVERED spent aggregates observations over a span with no covered() guard (o in m) (l5_19_load_covered.tally:18)
+,41:fixes/gate8/m2_rt_l5_19_load_covers_place,11:fixes-gate8,33:run l5_19_load_covers_place.tally,783:29:l5_19_load_covers_place.tally,745:model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bank "bank"
+unit PLN: currency minor 0.01
+input bank_rows: observed
+input amt: money PLN
+input dom: int
+place konto: accounts PLN lives 2019-05-01..
+place savings: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+version stmt
+  cite bank
+  governs 2026-02
+  known 2026-03-02
+  covers amt
+  pad konto from unexplained
+
+ask q: bal(konto, 2026-03-31)
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  amt = 1 000.00 PLN "own"
+  dom = 5 "own"
+  opening[konto] = 5 000.00 PLN at 2026-01-01 start "wyciąg"
+  opening[savings] = 0 PLN at 2026-01-01 start "wyciąg"
+,,1:1,75:refused: LOAD-COVERS amt is not a place (l5_19_load_covers_place.tally:18)
+,40:fixes/gate8/m2_rt_l5_19_load_covers_span,11:fixes-gate8,32:run l5_19_load_covers_span.tally,893:28:l5_19_load_covers_span.tally,856:model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bank "bank"
+unit PLN: currency minor 0.01
+input bank_rows: observed
+input amt: money PLN
+input dom: int
+place konto: accounts PLN lives 2019-05-01..
+place savings: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+version stmt
+  cite bank
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+  pad konto from unexplained
+  bank_rows[r1] = (on: 2026-03-05, kind: transfers, leg cash from konto to world amount 100.00 PLN) "line 1"
+
+ask q: bal(konto, 2026-03-31)
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  amt = 1 000.00 PLN "own"
+  dom = 5 "own"
+  opening[konto] = 5 000.00 PLN at 2026-01-01 start "wyciąg"
+  opening[savings] = 0 PLN at 2026-01-01 start "wyciąg"
+,,1:1,128:refused: LOAD-COVERS observation bank_rows[r1] of konto is dated outside the span stmt covers (l5_19_load_covers_span.tally:24)
+,36:fixes/gate8/m2_rt_l5_19_load_gaprole,11:fixes-gate8,28:run l5_19_load_gaprole.tally,808:24:l5_19_load_gaprole.tally,775:model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bank "bank"
+unit PLN: currency minor 0.01
+input bank_rows: observed
+input amt: money PLN
+input dom: int
+place konto: accounts PLN lives 2019-05-01..
+place savings: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+version stmt
+  cite bank
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+  stated[konto] = 3 000.00 PLN at 2026-02-28 end "saldo"
+
+ask q: bal(konto, 2026-03-31)
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  amt = 1 000.00 PLN "own"
+  dom = 5 "own"
+  opening[konto] = 5 000.00 PLN at 2026-01-01 start "wyciąg"
+  opening[savings] = 0 PLN at 2026-01-01 start "wyciąg"
+,,1:1,118:refused: LOAD-GAPROLE stmt states balance readings of konto with neither pad nor anchor (l5_19_load_gaprole.tally:23)
+,36:fixes/gate8/m2_rt_l5_19_load_instant,11:fixes-gate8,28:run l5_19_load_instant.tally,833:24:l5_19_load_instant.tally,800:model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bank "bank"
+unit PLN: currency minor 0.01
+input bank_rows: observed
+input amt: money PLN
+input dom: int
+place konto: accounts PLN lives 2019-05-01..
+place savings: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+version stmt
+  cite bank
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+  pad konto from unexplained
+  stated[konto] = 3 000.00 PLN at 2026-02-28 "saldo"
+
+ask q: bal(konto, 2026-03-31)
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  amt = 1 000.00 PLN "own"
+  dom = 5 "own"
+  opening[konto] = 5 000.00 PLN at 2026-01-01 start "wyciąg"
+  opening[savings] = 0 PLN at 2026-01-01 start "wyciąg"
+,,1:1,115:refused: LOAD-INSTANT balance reading stated at 2026-02-28 needs start, end or after (l5_19_load_instant.tally:24)
+,54:fixes/gate8/m2_rt_l5_19_modelled_decision_less_own_obs,11:fixes-gate8,46:run l5_19_modelled_decision_less_own_obs.tally,1082:42:l5_19_modelled_decision_less_own_obs.tally,1030:model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bank "bank"
+unit PLN: currency minor 0.01
+input bank_rows: observed
+input keep: money PLN
+input dom: int
+place konto: accounts PLN lives 2019-05-01..
+place savings: accounts PLN lives 2019-05-01..
+place unexplained: outside lives 1900-01-01..
+
+move sweep[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  reads konto
+  leg cash from konto to savings amount max(0, bal(konto) - keep)
+
+version stmt
+  cite bank
+  governs 2026-01
+  known 2026-02-02
+  covers konto
+  pad konto from unexplained
+  bank_rows[r1] = (on: 2026-01-08, kind: transfers, leg cash from konto to savings amount 300.00 PLN, fulfils: sweep[2026-01]) "line 1"
+
+ask q: bal(konto, 2026-01-31), bal(konto, 2026-01-31) modelled
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  keep = 500.00 PLN "own"
+  dom = 10 "own"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "wyciąg"
+  opening[savings] = 0 PLN at 2026-01-01 start "wyciąg"
+,,1:0,45:q: (700.00 PLN, 500.00 PLN)
+  cut 2026-10-20
+,52:fixes/gate8/m2_rt_l5_19_modelled_from_reading_before,11:fixes-gate8,44:run l5_19_modelled_from_reading_before.tally,1175:40:l5_19_modelled_from_reading_before.tally,1125:model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bank "bank"
+unit PLN: currency minor 0.01
+input bank_rows: observed
+input keep: money PLN
+input dom: int
+place konto: accounts PLN lives 2019-05-01..
+place savings: accounts PLN lives 2019-05-01..
+place unexplained: outside lives 1900-01-01..
+
+move sweep[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  reads konto
+  leg cash from konto to savings amount max(0, bal(konto) - keep)
+
+version stmt
+  cite bank
+  governs 2026-01
+  known 2026-02-02
+  covers konto
+  pad konto from unexplained
+  bank_rows[r1] = (on: 2026-01-08, kind: transfers, leg cash from konto to savings amount 300.00 PLN, fulfils: sweep[2026-01]) "line 1"
+  stated[konto] = 700.00 PLN at 2026-01-31 end "saldo"
+
+ask q: bal(konto, 2026-01-31), bal(konto, 2026-01-31) modelled
+ask q2: bal(konto, 2026-01-31) modelled
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  keep = 500.00 PLN "own"
+  dom = 10 "own"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "wyciąg"
+  opening[savings] = 0 PLN at 2026-01-01 start "wyciąg"
+,,1:0,149:q: (700.00 PLN, 500.00 PLN)
+  pad: konto 2026-01-31 end, pads:stmt:konto@2026-01-31 end of 0.00 PLN
+  cut 2026-10-20
+q2: 500.00 PLN
+  cut 2026-10-20
+,46:fixes/gate8/m2_rt_l5_19_observation_on_cut_day,11:fixes-gate8,38:run l5_19_observation_on_cut_day.tally,661:34:l5_19_observation_on_cut_day.tally,618:model t
+  tally 2
+  on 2026-03-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+source b "b"
+unit PLN: currency minor 0.01
+input bank: observed
+place konto: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+
+version st
+  cite b
+  governs 2026-03
+  known 2026-03-10
+  covers konto
+  bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 50.00 PLN) "r1"
+
+ask atk: bal(konto, 2026-03-10) as known 2026-03-10
+ask after: flows(konto, 2026-03-10 .. 2026-03-10)
+,,1:0,67:after: 50.00 PLN
+  cut 2026-03-20
+atk: 100.00 PLN
+  cut 2026-03-10
+,53:fixes/gate8/m2_rt_l5_19_observation_own_day_uncovered,11:fixes-gate8,45:run l5_19_observation_own_day_uncovered.tally,907:41:l5_19_observation_own_day_uncovered.tally,857:model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+source own "own"
+unit PLN: currency minor 0.01
+input bank: observed
+input dom: int
+input fee_amt[y in years]: money PLN question "fee?"
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+move fee_out[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to world amount fee_amt[year_of(m)]
+ask q: flows(fee_out, 2026-07), flows(fee_out, 2026-08)
+ask q2: bal(konto, 2026-07-31), flows(konto, 2026-07)
+version v
+  cite own
+  governs 2026..
+  known 2026-01-01
+  dom = 7 "own"
+  fee_amt[2026] = 4.00 PLN "own"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "o"
+version b
+  cite own
+  known 2026-07-08
+  bank[r1] = (on: 2026-07-07, kind: transfers, leg cash from konto to world amount 5.00 PLN, fulfils: fee_out[2026-07]) "x"
+,,1:0,309:q: (5.00 PLN, 4.00 PLN)
+  unfulfilled: fee_out[2026-08]
+  cut 2026-10-20
+q2: (71.00 PLN, -5.00 PLN)
+  unfulfilled: fee_out[2026-01]
+  unfulfilled: fee_out[2026-02]
+  unfulfilled: fee_out[2026-03]
+  unfulfilled: fee_out[2026-04]
+  unfulfilled: fee_out[2026-05]
+  unfulfilled: fee_out[2026-06]
+  cut 2026-10-20
+,36:fixes/gate8/m2_rt_l5_19_observations,11:fixes-gate8,28:run l5_19_observations.tally,2099:24:l5_19_observations.tally,2065:model hh
+  tally 2
+  on 2026-10-20
+  start 2025-10-01
+  end 2026-12-31
+
+source bank_export_2025_11 "bank"
+source fund_register "fund"
+unit PLN: currency minor 0.01
+kind funds: unit
+
+kind groceries: transfers
+kind fund_buys: event certain
+  leg units: funds
+  leg cash: PLN
+
+input bank: observed
+input fund: observed
+input rent_amt: money PLN
+input rent_off: int
+
+place konto: accounts PLN lives 2019-05-01..
+kind payees: place PLN signed outside
+place landlord: payees lives 1900-01-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+place market: outside lives 1900-01-01..
+place ike: holdings etf lives 2026-01-01..
+place ike_cash: accounts PLN lives 2026-01-01..
+
+move rent[m in months]: transfers
+  on add_days(start_of(m), rent_off)
+  leg cash from konto to landlord amount rent_amt
+
+version units
+  cite fund_register
+  governs always
+  known 2025-01-01
+  funds + [etf] lives 2020-01-01..
+  rent_amt = 2 800.00 PLN
+  rent_off = 2
+
+version statement_11
+  cite bank_export_2025_11
+  governs 2025-11
+  known 2025-12-01
+  covers konto
+  pad konto from unexplained
+  bank[r17] = (on: 2025-11-03, kind: transfers, leg cash from konto to landlord amount 2 800.00 PLN, fulfils: rent[2025-11]) "line 17"
+  bank[r18] = (on: 2025-11-04, kind: groceries, leg cash from konto to world amount 234.22 PLN) "BIEDRONKA 1234"
+  stated[konto] = 4 150.00 PLN at 2025-11-30 end "saldo końcowe"
+
+version register_2026_02
+  cite fund_register
+  governs 2026-02
+  known 2026-03-05
+  covers ike
+  fund[r3] = (on: 2026-02-02, kind: fund_buys, leg units from market to ike amount 4.2167 etf, leg cash from ike_cash to market amount 500.00 PLN) "register line 3"
+
+ask before: bal(konto, 2025-10-31)
+ask nov: bal(konto, 2025-11-30)
+ask dec: bal(konto, 2025-12-31)
+ask land: flows(landlord, 2025-11)
+ask obs: observed(rent[2025-11]).cash.amount, observed(rent[2025-12]) == none
+ask cov: covered(konto, 2025-11), covered(konto, 2025-10-15 .. 2025-11-15)
+ask ike_: bal(ike, 2026-02-28), bal(ike_cash, 2026-02-28)
+ask n: count(o in bank over 2025-11)
+,,1:0,752:before: ?"konto has no balance before 2025-11-30" (konto)
+  unfulfilled: rent[2025-10]
+  cut 2026-10-20
+cov: (true, false)
+  cut 2026-10-20
+dec: 1 350.00 PLN
+  pad: konto 2025-11-30 end, pads:statement_11:konto@2025-11-30 end of ?"konto has no balance before 2025-11-30" (konto)
+  unfulfilled: rent[2025-12]
+  cut 2026-10-20
+ike_: (4.2167 etf, -500.00 PLN)
+  cut 2026-10-20
+land: 2 800.00 PLN
+  cut 2026-10-20
+n: 2
+  cut 2026-10-20
+nov: 4 150.00 PLN
+  pad: konto 2025-11-30 end, pads:statement_11:konto@2025-11-30 end of ?"konto has no balance before 2025-11-30" (konto)
+  cut 2026-10-20
+obs: (2 800.00 PLN, true)
+  cut 2026-10-20
+warning: WARN-NEGATIVE ike_cash is below zero from 2026-02-02
+warning: WARN-NEGATIVE konto is below zero from 2026-01-03
+,42:fixes/gate8/m2_rt_l5_19_observed_attr_hole,11:fixes-gate8,34:run l5_19_observed_attr_hole.tally,1067:30:l5_19_observed_attr_hole.tally,1027:model t
+  tally 2
+  on 2026-02-10
+  start 2026-01-01
+  end 2026-01-31
+
+source s "s"
+unit DUK: currency minor 0.01
+
+kind persons: parties
+kind withdrawals: transfers
+  attr paid_from: key persons
+
+place sav: accounts DUK lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+input bank_rows: observed
+
+version cast
+  cite s
+  known 2026-01-01
+  persons + [ania] lives 1988-04-12..
+  persons + [tomek] lives 1986-09-03..
+
+version rows
+  cite s
+  governs 2026-01
+  known 2026-02-03
+  opening[sav] = 1000.00 DUK at 2026-01-01 start "line 0"
+  bank_rows[r1] = (on: 2026-01-25, kind: withdrawals, leg cash from sav to world amount 900.00 DUK, paid_from: ?"whose money paid?") "line 1"
+  bank_rows[r2] = (on: 2026-01-26, kind: withdrawals, leg cash from sav to world amount 50.00 DUK, paid_from: tomek) "line 2"
+
+ask q1: o.paid_from for o in withdrawals over 2026-01-25..2026-01-25
+ask q2: o.paid_from == ania for o in withdrawals over 2026-01-25..2026-01-25
+ask q3: o.paid_from for o in withdrawals over 2026-01-26..2026-01-26
+,,1:0,203:q1 (o = bank_rows[r1]): ?"whose money paid?" (bank_rows[r1])
+  cut 2026-02-10
+q2 (o = bank_rows[r1]): ?"whose money paid?" (bank_rows[r1])
+  cut 2026-02-10
+q3 (o = bank_rows[r2]): tomek
+  cut 2026-02-10
+,49:fixes/gate8/m2_rt_l5_19_observed_different_places,11:fixes-gate8,41:run l5_19_observed_different_places.tally,1229:37:l5_19_observed_different_places.tally,1182:model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bank "bank"
+unit PLN: currency minor 0.01
+
+input rows: observed
+input rent_amt: money PLN
+input rent_off: int
+
+place konto: accounts PLN lives 2019-05-01..
+place savings: accounts PLN lives 2019-05-01..
+place landlord: outside lives 1900-01-01..
+
+move rent[m in months]: transfers
+  on add_days(start_of(m), rent_off)
+  leg cash from konto to landlord amount rent_amt
+
+version p
+  cite plan
+  governs always
+  known 2026-01-01
+  rent_amt = 2 800.00 PLN
+  rent_off = 2
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "wyciąg"
+  opening[savings] = 10 000.00 PLN at 2026-01-01 start "wyciąg"
+
+version stmt
+  cite bank
+  governs 2026-03
+  known 2026-04-01
+  rows[r1] = (on: 2026-03-03, kind: transfers, leg cash from konto to landlord amount 1 000.00 PLN, fulfils: rent[2026-03]) "line 1"
+  rows[r2] = (on: 2026-03-05, kind: transfers, leg cash from savings to landlord amount 1 800.00 PLN, fulfils: rent[2026-03]) "line 2"
+
+ask q1: observed(rent[2026-03]).cash.amount, observed(rent[2026-03]).cash.from == none
+ask q2: observed(rent[2026-03]).cash.to, observed(rent[2026-03]).day
+,,1:0,86:q1: (2 800.00 PLN, true)
+  cut 2026-10-20
+q2: (landlord, 2026-03-05)
+  cut 2026-10-20
+,46:fixes/gate8/m2_rt_l5_19_opening_parts_no_total,11:fixes-gate8,38:run l5_19_opening_parts_no_total.tally,1195:34:l5_19_opening_parts_no_total.tally,1151:model own
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): a place kind that keeps parts by owner, its opening stated by parts; it loads clean"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind persons: parties
+
+kind savings: place PLN min 0
+  owned by arrive
+  step minor(PLN)
+  takes k for w prorata
+
+place sav: savings lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input amt: money PLN
+
+input day: date
+
+def arrive[m in events, p in parties]: num at m.day
+  rule base v card_2026 = (if p == ania then 1 else 0)
+
+move dep: transfers
+  on day
+  leg cash from world to sav amount amt
+
+ask q: bal(sav, 2026-12-31) of p for p in parties on 2026-12-31
+
+version card_cast
+  cite card
+  known 2026-01-01
+  persons + [ania] lives 1988-04-12..
+  persons + [tomek] lives 1986-09-03..
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  opening[sav] of ania = 10.00 PLN at 2026-01-01 start "the card"
+  opening[sav] of tomek = 20.00 PLN at 2026-01-01 start "the card"
+,,1:1,124:refused: LOAD-PARTS the parts of sav at 2026-01-01 start have no total in card_2026 (l5_19_opening_parts_no_total.tally:48)
+,38:fixes/gate8/m2_rt_l5_19_parts_no_total,11:fixes-gate8,30:run l5_19_parts_no_total.tally,1508:26:l5_19_parts_no_total.tally,1472:model t
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind couples: parties
+kind savings: place PLN min 0
+  owned by arrive
+  step minor(PLN)
+  takes k for w order if k.owner == ania then 0 else 1
+kind tomeks: transfers
+place konto: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+place shop: outside lives 1900-01-01..
+input a1_day: date
+input a1_amt: money PLN
+input t1_day: date
+input t1_amt: money PLN
+def arrive[m in events, p in parties]: num at m.day
+  rule base = if p == ania then 1 else 0
+  rule t beats base = if p == tomek then 1 else 0 when m in tomeks
+move a1: transfers
+  on a1_day
+  leg cash from world to konto amount a1_amt
+move t1: tomeks
+  on t1_day
+  leg cash from world to konto amount t1_amt
+ask q: bal(konto, 2026-03-31), bal(konto, 2026-03-31) of ania, bal(konto, 2026-03-31) of tomek
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  persons + [tomek] lives 1981-01-01..
+  couples + [ania_tomek] lives 2010-06-01..
+  opening[konto] = 0 PLN at 2026-01-01 start
+  a1_day = 2026-02-01
+  a1_amt = 100.00 PLN
+  t1_day = 2026-02-02
+  t1_amt = 50.00 PLN
+
+version stmt
+  cite s
+  governs 2026-03
+  known 2026-04-01
+  anchor konto
+  stated[konto] = 150.00 PLN at 2026-03-31 end
+
+version stmt2
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  anchor konto
+  stated[konto] of ania = 90.00 PLN at 2026-03-31 end
+,,1:1,112:refused: LOAD-PARTS the parts of konto at 2026-03-31 end have no total in stmt2 (l5_19_parts_no_total.tally:59)
+,37:fixes/gate8/m2_rt_l5_19_parts_of_sort,11:fixes-gate8,29:run l5_19_parts_of_sort.tally,1430:25:l5_19_parts_of_sort.tally,1395:model t
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind couples: parties
+kind savings: place PLN min 0
+  owned by arrive
+  step minor(PLN)
+  takes k for w order if k.owner == ania then 0 else 1
+kind tomeks: transfers
+place konto: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+place shop: outside lives 1900-01-01..
+input a1_day: date
+input a1_amt: money PLN
+input t1_day: date
+input t1_amt: money PLN
+def arrive[m in events, p in parties]: num at m.day
+  rule base = if p == ania then 1 else 0
+  rule t beats base = if p == tomek then 1 else 0 when m in tomeks
+move a1: transfers
+  on a1_day
+  leg cash from world to konto amount a1_amt
+move t1: tomeks
+  on t1_day
+  leg cash from world to konto amount t1_amt
+ask q: bal(konto, 2026-03-31), bal(konto, 2026-03-31) of ania, bal(konto, 2026-03-31) of tomek
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  persons + [tomek] lives 1981-01-01..
+  couples + [ania_tomek] lives 2010-06-01..
+  opening[konto] = 0 PLN at 2026-01-01 start
+  a1_day = 2026-02-01
+  a1_amt = 100.00 PLN
+  t1_day = 2026-02-02
+  t1_amt = 50.00 PLN
+
+version stmt
+  cite s
+  governs 2026-03
+  known 2026-04-01
+  anchor konto
+  stated[konto] = 150.00 PLN at 2026-03-31 end
+  stated[konto] of a1 = 100.00 PLN at 2026-03-31 end
+,,1:1,101:refused: LOAD-PARTS of a1 at konto, which keeps no labels of its sort (l5_19_parts_of_sort.tally:53)
+,43:fixes/gate8/m2_rt_l5_19_parts_other_instant,11:fixes-gate8,35:run l5_19_parts_other_instant.tally,1438:31:l5_19_parts_other_instant.tally,1397:model t
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind couples: parties
+kind savings: place PLN min 0
+  owned by arrive
+  step minor(PLN)
+  takes k for w order if k.owner == ania then 0 else 1
+kind tomeks: transfers
+place konto: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+place shop: outside lives 1900-01-01..
+input a1_day: date
+input a1_amt: money PLN
+input t1_day: date
+input t1_amt: money PLN
+def arrive[m in events, p in parties]: num at m.day
+  rule base = if p == ania then 1 else 0
+  rule t beats base = if p == tomek then 1 else 0 when m in tomeks
+move a1: transfers
+  on a1_day
+  leg cash from world to konto amount a1_amt
+move t1: tomeks
+  on t1_day
+  leg cash from world to konto amount t1_amt
+ask q: bal(konto, 2026-03-31), bal(konto, 2026-03-31) of ania, bal(konto, 2026-03-31) of tomek
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  persons + [tomek] lives 1981-01-01..
+  couples + [ania_tomek] lives 2010-06-01..
+  opening[konto] = 0 PLN at 2026-01-01 start
+  a1_day = 2026-02-01
+  a1_amt = 100.00 PLN
+  t1_day = 2026-02-02
+  t1_amt = 50.00 PLN
+
+version stmt
+  cite s
+  governs 2026-03
+  known 2026-04-01
+  anchor konto
+  stated[konto] = 150.00 PLN at 2026-03-31 end
+  stated[konto] of ania = 100.00 PLN at 2026-03-30 end
+,,1:1,116:refused: LOAD-PARTS the parts of konto at 2026-03-30 end have no total in stmt (l5_19_parts_other_instant.tally:53)
+,40:fixes/gate8/m2_rt_l5_19_parts_over_total,11:fixes-gate8,32:run l5_19_parts_over_total.tally,1489:28:l5_19_parts_over_total.tally,1451:model t
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind couples: parties
+kind savings: place PLN min 0
+  owned by arrive
+  step minor(PLN)
+  takes k for w order if k.owner == ania then 0 else 1
+kind tomeks: transfers
+place konto: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+place shop: outside lives 1900-01-01..
+input a1_day: date
+input a1_amt: money PLN
+input t1_day: date
+input t1_amt: money PLN
+def arrive[m in events, p in parties]: num at m.day
+  rule base = if p == ania then 1 else 0
+  rule t beats base = if p == tomek then 1 else 0 when m in tomeks
+move a1: transfers
+  on a1_day
+  leg cash from world to konto amount a1_amt
+move t1: tomeks
+  on t1_day
+  leg cash from world to konto amount t1_amt
+ask q: bal(konto, 2026-03-31), bal(konto, 2026-03-31) of ania, bal(konto, 2026-03-31) of tomek
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  persons + [tomek] lives 1981-01-01..
+  couples + [ania_tomek] lives 2010-06-01..
+  opening[konto] = 0 PLN at 2026-01-01 start
+  a1_day = 2026-02-01
+  a1_amt = 100.00 PLN
+  t1_day = 2026-02-02
+  t1_amt = 50.00 PLN
+
+version stmt
+  cite s
+  governs 2026-03
+  known 2026-04-01
+  anchor konto
+  stated[konto] = 100.00 PLN at 2026-03-31 end
+  stated[konto] of ania = 70.00 PLN at 2026-03-31 end
+  stated[konto] of tomek = 40.00 PLN at 2026-03-31 end
+,,1:1,125:refused: LOAD-PARTS the stated parts of konto sum to 110.00 PLN, over its total 100.00 PLN (l5_19_parts_over_total.tally:54)
+,42:fixes/gate8/m2_rt_l5_19_parts_row_of_other,11:fixes-gate8,34:run l5_19_parts_row_of_other.tally,974:30:l5_19_parts_row_of_other.tally,935:model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind couples: parties
+kind savings: place PLN min 0
+  owned by arrive
+  step minor(PLN)
+  takes k for w order if k.owner == ania then 0 else 1
+kind tomeks: transfers
+input rate: num
+place konto: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+place shop: outside lives 1900-01-01..
+def arrive[m in events, p in parties]: num at m.day
+  rule base = if p == ania then 1 else 0
+  rule t beats base = if p == tomek then 1 else 0 when m in tomeks
+ask q: bal(konto, 2026-01-31), bal(konto, 2026-01-31) of ania, bal(konto, 2026-01-31) of tomek
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  persons + [tomek] lives 1981-01-01..
+  couples + [ania_tomek] lives 2010-06-01..
+  opening[konto] = 0 PLN at 2026-01-01 start
+  rate of ania = 0.5
+,,1:1,76:refused: LOAD-PARTS of on a row of rate (l5_19_parts_row_of_other.tally:33)
+,45:fixes/gate8/m2_rt_l5_19_parts_stated_negative,11:fixes-gate8,37:run l5_19_parts_stated_negative.tally,1439:33:l5_19_parts_stated_negative.tally,1396:model t
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind couples: parties
+kind savings: place PLN min 0
+  owned by arrive
+  step minor(PLN)
+  takes k for w order if k.owner == ania then 0 else 1
+kind tomeks: transfers
+place konto: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+place shop: outside lives 1900-01-01..
+input a1_day: date
+input a1_amt: money PLN
+input t1_day: date
+input t1_amt: money PLN
+def arrive[m in events, p in parties]: num at m.day
+  rule base = if p == ania then 1 else 0
+  rule t beats base = if p == tomek then 1 else 0 when m in tomeks
+move a1: transfers
+  on a1_day
+  leg cash from world to konto amount a1_amt
+move t1: tomeks
+  on t1_day
+  leg cash from world to konto amount t1_amt
+ask q: bal(konto, 2026-03-31), bal(konto, 2026-03-31) of ania, bal(konto, 2026-03-31) of tomek
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  persons + [tomek] lives 1981-01-01..
+  couples + [ania_tomek] lives 2010-06-01..
+  opening[konto] = 0 PLN at 2026-01-01 start
+  a1_day = 2026-02-01
+  a1_amt = 100.00 PLN
+  t1_day = 2026-02-02
+  t1_amt = 50.00 PLN
+
+version stmt
+  cite s
+  governs 2026-03
+  known 2026-04-01
+  anchor konto
+  stated[konto] = 150.00 PLN at 2026-03-31 end
+  stated[konto] of ania = -5.00 PLN at 2026-03-31 end
+,,1:1,103:refused: LOAD-PARTS the stated part of ania at konto is below 0 (l5_19_parts_stated_negative.tally:53)
+,44:fixes/gate8/m2_rt_l5_19_parts_stated_overlap,11:fixes-gate8,36:run l5_19_parts_stated_overlap.tally,1389:32:l5_19_parts_stated_overlap.tally,1347:model t
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind couples: parties
+kind savings: place PLN min 0
+  owned by arrive
+  batched
+  step minor(PLN)
+  takes k for w order k.batch.day
+kind tomeks: transfers
+place konto: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+place shop: outside lives 1900-01-01..
+input a1_day: date
+input a1_amt: money PLN
+def arrive[m in events, p in parties]: num at m.day
+  rule base = if p == ania then 1 else 0
+  rule t beats base = if p == tomek then 1 else 0 when m in tomeks
+move a1: transfers
+  on a1_day
+  leg cash from world to konto amount a1_amt
+ask q: bal(konto, 2026-03-31), bal(konto, 2026-03-31) of ania, bal(konto, 2026-03-31) of tomek, bal(konto, 2026-03-31) of a1, bal(konto, 2026-03-31) of (tomek, a1)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  persons + [tomek] lives 1981-01-01..
+  couples + [ania_tomek] lives 2010-06-01..
+  opening[konto] = 0 PLN at 2026-01-01 start
+  a1_day = 2026-02-01
+  a1_amt = 100.00 PLN
+
+version stmt
+  cite s
+  governs 2026-03
+  known 2026-04-01
+  anchor konto
+  stated[konto] = 150.00 PLN at 2026-03-31 end
+  stated[konto] of ania = 50.00 PLN at 2026-03-31 end
+  stated[konto] of a1 = 50.00 PLN at 2026-03-31 end
+,,1:1,104:refused: LOAD-PARTS the stated parts ania and a1 of konto overlap (l5_19_parts_stated_overlap.tally:48)
+,36:fixes/gate8/m2_rt_l5_19_reading_none,11:fixes-gate8,28:run l5_19_reading_none.tally,944:24:l5_19_reading_none.tally,911:model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source bank "bank"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-05-01..
+place unexplained: outside lives 1900-01-01..
+
+version open
+  cite bank
+  governs 2026..
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "wyciąg"
+
+version s1
+  cite bank
+  known 2026-04-01
+  pad konto from unexplained
+  stated[konto] = 1 500.00 PLN at 2026-03-31 end "saldo"
+  stated[konto] = none at 2026-02-28 end "brak"
+
+version s2
+  cite bank
+  known 2026-06-01
+  pad konto from unexplained
+  stated[konto] = 2 000.00 PLN at 2026-05-31 end "saldo"
+
+version s3
+  cite bank
+  known 2026-07-01
+  pad konto from unexplained
+  replace stated[konto] = none at 2026-05-31 end "korekta"
+
+ask q1: bal(konto, 2026-02-28), bal(konto, 2026-03-31)
+ask q2: bal(konto, 2026-06-30)
+ask q3: bal(konto, 2026-06-30) as known 2026-06-15
+,,1:0,334:q1: (1 000.00 PLN, 1 500.00 PLN)
+  pad: konto 2026-03-31 end, pads:s1:konto@2026-03-31 end of 500.00 PLN
+  cut 2026-10-20
+q2: 1 500.00 PLN
+  pad: konto 2026-03-31 end, pads:s1:konto@2026-03-31 end of 500.00 PLN
+  cut 2026-10-20
+q3: 2 000.00 PLN
+  pad: konto 2026-05-31 end, pads:s2:konto@2026-05-31 end of 500.00 PLN
+  cut 2026-06-15
+,34:fixes/gate8/m2_rt_l5_19_run_record,11:fixes-gate8,26:run l5_19_run_record.tally,1125:22:l5_19_run_record.tally,1093:model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bank "bank"
+unit PLN: currency minor 0.01
+input bank_rows: observed
+input amt: money PLN
+input dom: int
+place konto: accounts PLN lives 2019-05-01..
+place savings: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+input skip[m in months]: bool
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  when not skip[m]
+  leg cash from konto to world amount amt
+
+version stmt
+  cite bank
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+  pad konto from unexplained
+  bank_rows[r1] = (on: 2026-02-05, kind: transfers, leg cash from konto to savings amount 100.00 PLN, fulfils: pay[2026-02]) "line 1"
+
+ask q: bal(konto, 2026-02-28)
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  amt = 1 000.00 PLN "own"
+  dom = 5 "own"
+  opening[konto] = 5 000.00 PLN at 2026-01-01 start "wyciąg"
+  opening[savings] = 0 PLN at 2026-01-01 start "wyciąg"
+  skip = false "own"
+  skip[2026-02] = true "own"
+,,1:0,164:q: refused: RUN-RECORD observation bank_rows[r1] fulfils pay[2026-02], which doesn't exist or doesn't touch its places
+  unfulfilled: pay[2026-01]
+  cut 2026-10-20
+,53:fixes/gate8/m2_rt_l5_19_same_rows_disagree_flows_hole,11:fixes-gate8,45:run l5_19_same_rows_disagree_flows_hole.tally,1272:41:l5_19_same_rows_disagree_flows_hole.tally,1221:model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-03-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+input bank: observed
+input keep: money PLN
+input d_save: int
+
+move save[m in months]: transfers
+  on day_of(m, d_save)
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+ask q_save: flows(save, 2026-03-01 .. 2026-03-31)
+ask q_obs: observed(save[2026-03]).cash.amount
+ask q_sav: bal(sav, 2026-03-31)
+ask q_moved: sum(t.cash.amount for t in transfers over 2026-03)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  d_save = 15 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+version st_konto
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "a"
+
+version st_sav
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers sav
+  bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 940.00 PLN, fulfils: save[2026-03]) "b"
+  same bank[a2] = bank[b1]
+,,1:0,672:q_moved: ?"bank[a2] and bank[b1] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
+  cut 2026-04-10
+q_obs: ?"bank[a2] and bank[b1] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
+  cut 2026-04-10
+q_sav: 940.00 PLN
+  cut 2026-04-10
+q_save: ?"bank[a2] and bank[b1] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
+  cut 2026-04-10
+warning: WARN-LEGS the two observations of save[2026-03] disagree: bank[a2] (950.00 PLN) and bank[b1] (940.00 PLN)
+,44:fixes/gate8/m2_rt_l5_19_same_rows_flows_once,11:fixes-gate8,36:run l5_19_same_rows_flows_once.tally,1263:32:l5_19_same_rows_flows_once.tally,1221:model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-03-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+input bank: observed
+input keep: money PLN
+input d_save: int
+
+move save[m in months]: transfers
+  on day_of(m, d_save)
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+ask q_save: flows(save, 2026-03-01 .. 2026-03-31)
+ask q_obs: observed(save[2026-03]).cash.amount
+ask q_moved: sum(t.cash.amount for t in transfers over 2026-03)
+ask q_sav: bal(sav, 2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  d_save = 15 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+version st_konto
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "a"
+
+version st_sav
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers sav
+  bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "b"
+  same bank[a2] = bank[b1]
+,,1:0,143:q_moved: 950.00 PLN
+  cut 2026-04-10
+q_obs: 950.00 PLN
+  cut 2026-04-10
+q_sav: 950.00 PLN
+  cut 2026-04-10
+q_save: 950.00 PLN
+  cut 2026-04-10
+,48:fixes/gate8/m2_rt_l5_19_same_rows_link_on_second,11:fixes-gate8,40:run l5_19_same_rows_link_on_second.tally,1167:36:l5_19_same_rows_link_on_second.tally,1121:model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+input bank: observed
+input keep: money PLN
+input d_save: int
+
+move save[m in months]: transfers
+  on day_of(m, d_save)
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+ask q_save: flows(save, 2026-03-01 .. 2026-03-31)
+ask q_led: residuals konto 2026-03
+ask q_ls: residuals sav 2026-03
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  d_save = 15 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+version st_konto
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN) "a"
+
+version st_sav
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers sav
+  bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "b"
+  same bank[b1] = bank[a2]
+,,1:0,525:q_led: residuals konto 2026-03
+  2026-03 move save: model -950.00 PLN, observed -950.00 PLN, difference 0.00 PLN
+    matched save[2026-03] on 2026-03-15: model -950.00 PLN, observed -950.00 PLN, difference 0.00 PLN, timing +0 days
+  cut 2026-04-10
+q_ls: residuals sav 2026-03
+  2026-03 move save: model 950.00 PLN, observed 950.00 PLN, difference 0.00 PLN
+    matched save[2026-03] on 2026-03-15: model 950.00 PLN, observed 950.00 PLN, difference 0.00 PLN, timing +0 days
+  cut 2026-04-10
+q_save: 950.00 PLN
+  cut 2026-04-10
+,50:fixes/gate8/m2_rt_l5_19_same_rows_one_fulfils_hole,11:fixes-gate8,42:run l5_19_same_rows_one_fulfils_hole.tally,1216:38:l5_19_same_rows_one_fulfils_hole.tally,1168:model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+input bank: observed
+input keep: money PLN
+input d_save: int
+
+move save[m in months]: transfers
+  on day_of(m, d_save)
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+ask q_save: flows(save, 2026-03-01 .. 2026-03-31)
+ask q_obs: observed(save[2026-03]).cash.amount
+ask q_led: residuals konto 2026-03
+ask q_ls: residuals sav 2026-03
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  d_save = 15 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+version st_konto
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "a"
+
+version st_sav
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers sav
+  bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 940.00 PLN) "b"
+  same bank[a2] = bank[b1]
+,,1:0,955:q_led: residuals konto 2026-03
+  2026-03 move save: model -950.00 PLN, observed -950.00 PLN, difference 0.00 PLN
+    matched save[2026-03] on 2026-03-15: model -950.00 PLN, observed -950.00 PLN, difference 0.00 PLN, timing +0 days
+  cut 2026-04-10
+q_ls: residuals sav 2026-03
+  2026-03 move save: model 950.00 PLN, observed 940.00 PLN, difference -10.00 PLN
+    matched save[2026-03] on 2026-03-15: model 950.00 PLN, observed 940.00 PLN, difference -10.00 PLN, timing +0 days
+  cut 2026-04-10
+q_obs: ?"bank[a2] and bank[b1] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
+  cut 2026-04-10
+q_save: ?"bank[a2] and bank[b1] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
+  cut 2026-04-10
+warning: WARN-LEGS the two observations of save[2026-03] disagree: bank[a2] (950.00 PLN) and bank[b1] (940.00 PLN)
+,50:fixes/gate8/m2_rt_l5_19_uncertain_covered_not_open,11:fixes-gate8,42:run l5_19_uncertain_covered_not_open.tally,966:38:l5_19_uncertain_covered_not_open.tally,919:model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+source bk "bank"
+unit PLN: currency minor 0.01
+kind bonuses: event uncertain
+  leg cash: PLN
+kind wages: event certain
+  leg cash: PLN
+input bank: observed
+input day: date
+input b_amt: money PLN
+input w_amt: money PLN
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 2026-01-01..
+place unexplained: outside lives 2026-01-01..
+
+move bonus: bonuses
+  on day
+  leg cash from world to konto amount b_amt
+
+move wage: wages
+  on day
+  leg cash from world to konto amount w_amt
+
+ask q: bal(konto, 2026-01-31)
+ask q2: bal(konto, 2026-01-31) with uncertain
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  day = 2026-01-15
+  b_amt = 100.00 PLN
+  w_amt = 50.00 PLN
+  opening[konto] = 0 PLN at 2026-01-01 start
+
+version st
+  cite bk
+  governs 2026-01
+  known 2026-02-02
+  covers konto
+  pad konto from unexplained
+,,1:0,106:q: 0.00 PLN
+  open: wage
+  cut 2026-06-30
+q2: 100.00 PLN
+  open: wage
+  uncertain: bonus
+  cut 2026-06-30
+,45:fixes/gate8/m2_rt_l5_19_unjoined_rows_refused,11:fixes-gate8,37:run l5_19_unjoined_rows_refused.tally,1237:33:l5_19_unjoined_rows_refused.tally,1194:model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-03-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+input bank: observed
+input keep: money PLN
+input d_save: int
+
+move save[m in months]: transfers
+  on day_of(m, d_save)
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+ask q_save: flows(save, 2026-03-01 .. 2026-03-31)
+ask q_obs: observed(save[2026-03]).cash.amount
+ask q_moved: sum(t.cash.amount for t in transfers over 2026-03)
+ask q_sav: bal(sav, 2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  d_save = 15 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+version st_konto
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "a"
+
+version st_sav
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers sav
+  bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "b"
+,,1:0,531:q_moved: refused: RUN-RECORD bank[a2] and bank[b1] state one transfer and both fulfil save[2026-03]: state them same
+  cut 2026-04-10
+q_obs: refused: RUN-RECORD bank[a2] and bank[b1] state one transfer and both fulfil save[2026-03]: state them same
+  cut 2026-04-10
+q_sav: refused: RUN-RECORD bank[a2] and bank[b1] state one transfer and both fulfil save[2026-03]: state them same
+  cut 2026-04-10
+q_save: refused: RUN-RECORD bank[a2] and bank[b1] state one transfer and both fulfil save[2026-03]: state them same
+  cut 2026-04-10
+,40:fixes/gate8/m2_rt_l5_19_window_in_leg_on,11:fixes-gate8,32:run l5_19_window_in_leg_on.tally,658:28:l5_19_window_in_leg_on.tally,621:model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source bank "bank"
+unit PLN: currency minor 0.01
+input bank_rows: observed
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+version stmt
+  cite bank
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+  pad konto from unexplained
+  opening[konto] = 5 000.00 PLN at 2026-02-01 start "wyciąg"
+  bank_rows[r1] = (on: 2026-02-05, kind: transfers, leg cash from konto to world amount 100.00 PLN on window(2026-02-03, 2026-02-05)) "line 1"
+
+ask q: bal(konto, 2026-02-28)
+,,1:1,134:refused: LOAD-LEG the on of leg cash of bank_rows[r1] is a window; a window belongs in an attribute (l5_19_window_in_leg_on.tally:21)
+,36:fixes/gate8/m2_rt_l5_19_window_in_on,11:fixes-gate8,28:run l5_19_window_in_on.tally,640:24:l5_19_window_in_on.tally,607:model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source bank "bank"
+unit PLN: currency minor 0.01
+input bank_rows: observed
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+version stmt
+  cite bank
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+  pad konto from unexplained
+  opening[konto] = 5 000.00 PLN at 2026-02-01 start "wyciąg"
+  bank_rows[r1] = (on: window(2026-02-03, 2026-02-05), kind: transfers, leg cash from konto to world amount 100.00 PLN) "line 1"
+
+ask q: bal(konto, 2026-02-28)
+,,1:1,118:refused: LOAD-LEG the on of bank_rows[r1] is a window; a window belongs in an attribute (l5_19_window_in_on.tally:21)
+,45:fixes/gate8/m2_rt_l6_1_same_decision_disagree,11:fixes-gate8,37:run l6_1_same_decision_disagree.tally,843:33:l6_1_same_decision_disagree.tally,801:model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-01-01..
+place savings: accounts PLN lives 2019-01-01..
+input bank: observed
+input sweep_day: date
+
+move sweep: transfers
+  on sweep_day
+  reads konto
+  leg cash from konto to savings amount bal(konto)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  sweep_day = 2026-03-31 "plan"
+  opening[konto] = 300.00 PLN at 2026-01-01 start "wyciąg"
+  opening[savings] = 0.00 PLN at 2026-01-01 start "wyciąg"
+
+version stmt
+  cite s
+  known 2026-04-02
+  bank[r1] = (on: 2026-03-31, kind: transfers, leg cash from konto to savings amount 250.00 PLN) "linia 1"
+  same bank[r1] = sweep
+
+ask k: bal(konto, 2026-12-31)
+ask sv: bal(savings, 2026-12-31)
+,,1:0,319:k: ?"bank[r1] and sweep are one, but the leg at konto differs on 2026-03-31: 250.00 PLN (bank[r1]) and 300.00 PLN (sweep)" (bank[r1], sweep)
+  cut 2026-10-20
+sv: ?"bank[r1] and sweep are one, but the leg at savings differs on 2026-03-31: 250.00 PLN (bank[r1]) and 300.00 PLN (sweep)" (bank[r1], sweep)
+  cut 2026-10-20
+,42:fixes/gate8/m2_rt_l6_1_same_decision_waits,11:fixes-gate8,34:run l6_1_same_decision_waits.tally,840:30:l6_1_same_decision_waits.tally,801:model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-01-01..
+place savings: accounts PLN lives 2019-01-01..
+input bank: observed
+input sweep_day: date
+
+move sweep: transfers
+  on sweep_day
+  reads konto
+  leg cash from konto to savings amount bal(konto)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  sweep_day = 2026-03-31 "plan"
+  opening[konto] = 300.00 PLN at 2026-01-01 start "wyciąg"
+  opening[savings] = 0.00 PLN at 2026-01-01 start "wyciąg"
+
+version stmt
+  cite s
+  known 2026-04-02
+  bank[r1] = (on: 2026-03-31, kind: transfers, leg cash from konto to savings amount 300.00 PLN) "linia 1"
+  same bank[r1] = sweep
+
+ask k: bal(konto, 2026-12-31)
+ask sv: bal(savings, 2026-12-31)
+,,1:0,61:k: 0.00 PLN
+  cut 2026-10-20
+sv: 300.00 PLN
+  cut 2026-10-20
+,33:fixes/gate8/m2_rt_l6_1_same_group,11:fixes-gate8,25:run l6_1_same_group.tally,946:21:l6_1_same_group.tally,916:model hh
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source bank_export "wyciąg"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+
+version opening_2026
+  cite bank_export
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "saldo"
+
+version statement_01
+  cite bank_export
+  governs 2026-01
+  known 2026-02-01
+  covers konto
+  bank[r31] = (on: 2026-01-12, kind: transfers, leg cash from konto to world amount 100.00 PLN) "line 31"
+  bank[r32] = (on: 2026-01-12, kind: transfers, leg cash from konto to world amount 100.00 PLN) "line 32"
+  bank[r33] = (on: 2026-01-12, kind: transfers, leg cash from konto to world amount 100.00 PLN) "line 33"
+  same bank[r32] = bank[r31]
+  same bank[r33] = bank[r32]
+
+ask b: bal(konto, 2026-01-31)
+ask n: count(x in transfers over 2026-01)
+,,1:0,53:b: 900.00 PLN
+  cut 2026-03-01
+n: 1
+  cut 2026-03-01
+,36:fixes/gate8/m2_rt_l6_1_same_in_model,11:fixes-gate8,28:run l6_1_same_in_model.tally,772:24:l6_1_same_in_model.tally,739:model hh
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source bank_export "wyciąg"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+
+version opening_2026
+  cite bank_export
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "saldo"
+
+version statement_01
+  cite bank_export
+  governs 2026-01
+  known 2026-02-01
+  covers konto
+  bank[r31] = (on: 2026-01-12, kind: transfers, leg cash from konto to world amount 100.00 PLN) "line 31"
+  bank[r32] = (on: 2026-01-12, kind: transfers, leg cash from konto to world amount 100.00 PLN) "line 32"
+  same bank[r32] = bank[r31]
+
+ask b: bal(konto, 2026-01-31)
+,,1:0,31:b: 900.00 PLN
+  cut 2026-03-01
+,45:fixes/gate8/m2_rt_l6_1_same_in_model_disagree,11:fixes-gate8,37:run l6_1_same_in_model_disagree.tally,780:33:l6_1_same_in_model_disagree.tally,738:model hh
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source bank_export "wyciąg"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+
+version opening_2026
+  cite bank_export
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "saldo"
+
+version statement_01
+  cite bank_export
+  governs 2026-01
+  known 2026-02-01
+  covers konto
+  bank[r31] = (on: 2026-01-12, kind: transfers, leg cash from konto to world amount 100.00 PLN) "line 31"
+  bank[r32] = (on: 2026-01-12, kind: transfers, leg cash from konto to world amount 90.00 PLN) "line 32"
+  same bank[r32] = bank[r31]
+
+ask b: bal(konto, 2026-01-31)
+,,1:0,172:b: ?"bank[r32] and bank[r31] are one, but the leg at konto differs on 2026-01-12: 90.00 PLN (bank[r32]) and 100.00 PLN (bank[r31])" (bank[r32], bank[r31])
+  cut 2026-03-01
+,42:fixes/gate8/m2_rt_l6_1_same_in_model_thing,11:fixes-gate8,34:run l6_1_same_in_model_thing.tally,770:30:l6_1_same_in_model_thing.tally,731:model hh
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source bank_export "wyciąg"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+
+version opening_2026
+  cite bank_export
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "saldo"
+
+version statement_01
+  cite bank_export
+  governs 2026-01
+  known 2026-02-01
+  covers konto
+  bank[r31] = (on: 2026-01-12, kind: transfers, leg cash from konto to world amount 100.00 PLN) "line 31"
+  bank[r32] = (on: 2026-01-12, kind: transfers, leg cash from konto to world amount 100.00 PLN) "line 32"
+  same konto = world
+
+ask b: bal(konto, 2026-01-31)
+,,1:1,111:refused: LOAD-SAME same konto = world in a version names a kind or a thing (l6_1_same_in_model_thing.tally:26)
+,53:fixes/gate8/m2_rt_l6_1_same_observed_contrast_fulfils,11:fixes-gate8,45:run l6_1_same_observed_contrast_fulfils.tally,719:41:l6_1_same_observed_contrast_fulfils.tally,669:model one
+  tally 2
+  on 2026-10-25
+  start 2024-01-01
+  end 2024-12-31
+
+source s "made up"
+
+unit DUK: currency minor 0.01
+
+place acc: accounts DUK lives 2024-01-01..
+
+place other: outside lives 2024-01-01..
+
+input stmt: observed
+
+input g_day: date
+
+input g_amt: money DUK
+
+move gift: transfers
+  on g_day
+  leg cash from other to acc amount g_amt
+
+ask q: flows(acc, 2024)
+
+version v
+  cite s
+  governs 2024-05
+  known 2024-05-02
+  covers acc
+  stmt[r1] = (on: 2024-05-02, kind: transfers, leg cash from other to acc amount 5000.00 DUK, fulfils: gift) "r1"
+
+version plan
+  cite s
+  governs always
+  known 2024-01-01
+  g_day = 2024-05-02 "plan"
+  g_amt = 5000.00 "plan"
+,,1:0,33:q: 5 000.00 DUK
+  cut 2026-10-25
+,54:fixes/gate8/m2_rt_l6_1_same_observed_contrast_nocovers,11:fixes-gate8,46:run l6_1_same_observed_contrast_nocovers.tally,715:42:l6_1_same_observed_contrast_nocovers.tally,664:model one
+  tally 2
+  on 2026-10-25
+  start 2024-01-01
+  end 2024-12-31
+
+source s "made up"
+
+unit DUK: currency minor 0.01
+
+place acc: accounts DUK lives 2024-01-01..
+
+place other: outside lives 2024-01-01..
+
+input stmt: observed
+
+input g_day: date
+
+input g_amt: money DUK
+
+move gift: transfers
+  on g_day
+  leg cash from other to acc amount g_amt
+
+ask q: flows(acc, 2024)
+
+version v
+  cite s
+  governs 2024-05
+  known 2024-05-02
+  stmt[r1] = (on: 2024-05-02, kind: transfers, leg cash from other to acc amount 5000.00 DUK) "r1"
+  same stmt[r1] = gift
+
+version plan
+  cite s
+  governs always
+  known 2024-01-01
+  g_day = 2024-05-02 "plan"
+  g_amt = 5000.00 "plan"
+,,1:0,33:q: 5 000.00 DUK
+  cut 2026-10-25
+,52:fixes/gate8/m2_rt_l6_1_same_observed_contrast_nosame,11:fixes-gate8,44:run l6_1_same_observed_contrast_nosame.tally,703:40:l6_1_same_observed_contrast_nosame.tally,654:model one
+  tally 2
+  on 2026-10-25
+  start 2024-01-01
+  end 2024-12-31
+
+source s "made up"
+
+unit DUK: currency minor 0.01
+
+place acc: accounts DUK lives 2024-01-01..
+
+place other: outside lives 2024-01-01..
+
+input stmt: observed
+
+input g_day: date
+
+input g_amt: money DUK
+
+move gift: transfers
+  on g_day
+  leg cash from other to acc amount g_amt
+
+ask q: flows(acc, 2024)
+
+version v
+  cite s
+  governs 2024-05
+  known 2024-05-02
+  covers acc
+  stmt[r1] = (on: 2024-05-02, kind: transfers, leg cash from other to acc amount 5000.00 DUK) "r1"
+
+version plan
+  cite s
+  governs always
+  known 2024-01-01
+  g_day = 2024-05-02 "plan"
+  g_amt = 5000.00 "plan"
+,,1:0,33:q: 5 000.00 DUK
+  cut 2026-10-25
+,44:fixes/gate8/m2_rt_l6_1_same_observed_covered,11:fixes-gate8,36:run l6_1_same_observed_covered.tally,790:32:l6_1_same_observed_covered.tally,749:model one
+  tally 2
+  on 2026-10-25
+  start 2024-01-01
+  end 2024-12-31
+
+source s "made up"
+
+unit DUK: currency minor 0.01
+
+place acc: accounts DUK lives 2024-01-01..
+
+place other: outside lives 2024-01-01..
+
+input stmt: observed
+
+input g_day: date
+
+input g_amt: money DUK
+
+move gift: transfers
+  on g_day
+  leg cash from other to acc amount g_amt
+
+ask q: flows(acc, 2024)
+
+version v
+  cite s
+  governs 2024-05
+  known 2024-05-02
+  covers acc
+  stmt[r1] = (on: 2024-05-02, kind: transfers, leg cash from other to acc amount 5000.00 DUK) "r1"
+  same stmt[r1] = gift
+
+version plan
+  cite s
+  governs always
+  known 2024-01-01
+  g_day = 2024-05-02 "plan"
+  g_amt = 5000.00 "plan"
+
+ask q_bal: bal(acc, 2024-12-31)
+
+ask q_x: explain bal(acc, 2024-05-02)
+,,1:0,262:q: 5 000.00 DUK
+  cut 2026-10-25
+q_bal: 5 000.00 DUK
+  cut 2026-10-25
+q_x: 5 000.00 DUK
+  balance of acc (DUK) at the end of 2024-05-02
+  from: 0 at the start of its lifespan, 2024-01-01
+  2024-05-02:
+    stmt[r1].cash (observed): +5 000.00 DUK
+  cut 2026-10-25
+,38:fixes/gate8/m2_rt_l6_1_same_rows_kinds,11:fixes-gate8,30:run l6_1_same_rows_kinds.tally,961:26:l6_1_same_rows_kinds.tally,926:model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+source bank "bank"
+unit PLN: currency minor 0.01
+kind spending: transfers
+kind groceries: spending
+kind rent: spending
+input bank_rows: observed
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+version stmt
+  cite bank
+  governs 2026-02
+  known 2026-03-02
+  bank_rows[r1] = (on: 2026-02-20, kind: groceries, leg cash from konto to world amount 400.00 PLN) "line 1"
+  bank_rows[r2] = (on: 2026-02-20, kind: rent, leg cash from konto to world amount 400.00 PLN) "line 2"
+  bank_rows[r3] = (on: 2026-02-21, kind: groceries, leg cash from konto to world amount 50.00 PLN) "line 3"
+  same bank_rows[r2] = bank_rows[r1]
+ask b: count(true for t in groceries over 2026-02)
+ask c: sum(t.cash.amount for t in rent over 2026-02)
+ask d: count(true for o in bank_rows over 2026-02)
+ask e: count(true for t in spending over 2026-02)
+,,1:0,408:b: ?"bank_rows[r2] and bank_rows[r1] are one, but the kind differs on 2026-02-20: rent (bank_rows[r2]) and groceries (bank_rows[r1])" (bank_rows[r2], bank_rows[r1])
+  cut 2026-10-20
+c: ?"bank_rows[r2] and bank_rows[r1] are one, but the kind differs on 2026-02-20: rent (bank_rows[r2]) and groceries (bank_rows[r1])" (bank_rows[r2], bank_rows[r1])
+  cut 2026-10-20
+d: 3
+  cut 2026-10-20
+e: 2
+  cut 2026-10-20
+,43:fixes/gate8/m2_rt_w_b_3_residuals_same_rows,11:fixes-gate8,35:run w_b_3_residuals_same_rows.tally,923:31:w_b_3_residuals_same_rows.tally,883:model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bank "bank"
+unit PLN: currency minor 0.01
+input bank_rows: observed
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "wyciąg"
+
+version statement_02
+  cite bank
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+  pad konto from unexplained
+  bank_rows[r1] = (on: 2026-02-20, kind: transfers, leg cash from konto to world amount 400.00 PLN) "line 1"
+  bank_rows[r2] = (on: 2026-02-20, kind: transfers, leg cash from konto to world amount 400.00 PLN) "line 2"
+  same bank_rows[r2] = bank_rows[r1]
+
+ask led: residuals konto 2026-02
+ask b: bal(konto, 2026-02-28), flows(konto, 2026-02)
+,,1:0,257:b: (600.00 PLN, -400.00 PLN)
+  cut 2026-10-20
+led: residuals konto 2026-02
+  2026-02 unexplained: model 0.00 PLN, observed -400.00 PLN, difference -400.00 PLN
+    unexplained bank_rows[r1], bank_rows[r2] on 2026-02-20: observed -400.00 PLN
+  cut 2026-10-20
 ,27:r1/l8_reads_first_last_stop,8:fixes-r1,23:run m.tally --ask a b c,392:7:m.tally,377:model t
   tally 2
   on 2026-03-01

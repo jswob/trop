@@ -1,0 +1,32 @@
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bank "bank"
+unit PLN: currency minor 0.01
+input bank_rows: observed
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "wyciąg"
+
+version statement_02
+  cite bank
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+  pad konto from unexplained
+  bank_rows[r1] = (on: 2026-02-20, kind: transfers, leg cash from konto to world amount 400.00 PLN) "line 1"
+  bank_rows[r2] = (on: 2026-02-20, kind: transfers, leg cash from konto to world amount 400.00 PLN) "line 2"
+  same bank_rows[r2] = bank_rows[r1]
+
+ask led: residuals konto 2026-02
+ask b: bal(konto, 2026-02-28), flows(konto, 2026-02)
