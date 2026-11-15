@@ -14,7 +14,7 @@
 //! instances at the read's cut, held for reads at that cut, and gathered again at any other
 //! cut, updated in place where x's days are the same; a read is the walk's wherever that walk
 //! could take a number past the cap at any place (its start balances and every leg the cut
-//! books, bounded in bits; a reading the cut sees from t on), since that walk then refuses it
+//! books, bounded in bits; it books no reading), since that walk then refuses it
 //! (L §7.1, pick P54, #127): whether a walk is kept never decides it (F6); the sums are whole
 //! minor units of x's unit only where every position's legs are, and exact otherwise (pick
 //! P56, #128).
@@ -48,7 +48,7 @@ use super::plan::{Amount, Dated, End, Exists, Inst, LegVal, Status, invariant, q
 use super::point::At;
 use super::readings::place_sign;
 use super::state::St;
-use crate::eval::{Collected, Engine, Entry, Rows, num_stop};
+use crate::eval::{Collected, Engine, Entry, num_stop};
 use crate::model::{MoveInfo, Reality, Value, World};
 use crate::num::Num;
 use crate::syntax::{Sign, Stop};
@@ -106,8 +106,8 @@ struct Tree {
     /// rule or a lifespan may refuse, a leg on another day than its movement): a read that
     /// counts one of them is the walk's.
     acts: BTreeSet<Day>,
-    /// The days of the hole and refused movements that reach x or every place, and of the
-    /// readings the cut sees at any place: a read from a day on or before one is the walk's.
+    /// The days of the hole and refused movements that reach x or every place: a read from a
+    /// day on or before one is the walk's.
     later: BTreeSet<Day>,
     /// The most bits the legs the cut books, at every place, can add to a start balance's
     /// (L §7.1): none where no bound holds, so every read is the walk's.
@@ -538,7 +538,7 @@ struct Size {
     /// Each leg's whole number of its unit's minor units (1 for a unit with none), summed;
     /// none past a `u128`.
     whole: Option<u128>,
-    /// The widest of those minor units, in bits.
+    /// The widest of those minor units, and of every currency's, in bits.
     minor: u64,
     /// The other legs' bits, each with one more for its sum; none past a `u64`.
     rest: Option<u64>,
@@ -725,12 +725,14 @@ impl Engine {
         (cut, world): (Day, World),
         left_out: &BTreeSet<String>,
     ) -> Result<(Tree, Vec<Num>), Stop> {
-        // the projection's walk reads its cut's readings before its plan pass; the tree needs
-        // no anchor, only that read's effects and the readings' days: its refusals come first,
-        // as the walk's do, and under `windows each` it meets the readings' known windows the
-        // walk meets, so the line splits as the walk's would (L §4.4, §4.5)
+        // the projection's walk reads its cut's first readings before its plan pass, and books
+        // none (a projection's plan pass schedules no reading, E §4.3 counts movements only);
+        // the tree needs no anchor, only that read's effects, so its value goes unused: its
+        // refusals come first, as the walk's do, and under `windows each` it meets the
+        // readings' known windows the walk meets, so the line splits as the walk's would
+        // (L §4.4, §4.5)
         let after = self.after_days(m, cut)?;
-        let seen = self.seen_readings(m, (cut, world), (Rows::Unkept, &after))?;
+        self.first_readings(m, (cut, world), &after)?;
         let mut got = Gathered {
             tree: Tree::new(cut),
             legs: Vec::new(),
@@ -738,9 +740,6 @@ impl Engine {
             touching: BTreeSet::new(),
             size: Size::new(),
         };
-        // a reading the walk meets in a window sets its place's balance and books a pad, at
-        // any place: the sums hold neither, and the bound below doesn't count them
-        got.tree.later.extend(seen.iter().map(|s| s.day));
         for mv in m.moves_in(world) {
             let insts = self.move_instances(m, mv, cut)?;
             for inst in insts.iter() {
@@ -929,6 +928,12 @@ impl Gathered {
         seen: (Day, World),
     ) -> Result<(Tree, Vec<Num>), Stop> {
         let mut tree = self.tree;
+        // money is capped in minor units: any balance may be read in its currency's (L §7.1)
+        self.size.minor = m
+            .currencies
+            .values()
+            .map(Num::bits)
+            .fold(self.size.minor, u64::max);
         tree.adds = self.size.bits();
         if matches!(place_sign(m, place), Some(Sign::Min0 | Sign::Max0)) {
             tree.open = false;

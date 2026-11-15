@@ -3602,3 +3602,20 @@ The fix review: `tmp/m2/review-g6b-fix.md` (1 blocking, F1). T's hand-off: `tmp/
 - **Size:** in `engine/crates`, 135 added and 100 removed (ea0db30f: `book/same.rs` 99/76, `book/members.rs` 9/9, `book/observe.rs` 9/4, `walk/day.rs` 6/3, `load/same.rs` 4/1, `model/reality.rs` 3/2, `book/settle.rs` 2/2, `walk/move_flows.rs` 2/2, `lib.rs` 1/1).
 - **Exceptions:** +0.
 - **Check:** `check commit: green, 23 steps (96s)`; M2 42/42; report-only hits 9, as before.
+
+## 2026-11-15 M2 G7 `forks`, third turn: P8-M4's fallback (addendum to G7's entry; issue #167)
+
+G7's builder, on the fix review (`tmp/m2/review-g7-fix.md`), after e4758c5d (G6's sixth turn). Probes in `tmp/m2/b/g7last/` (the probe crate of `tmp/m2/b/g7fix/probe`; `p8m4.tally`, P8-M4's reality as `tools/gungraun/benches/p8_m4.rs` writes it).
+
+- **Commits:**
+  - This entry's commit, with the fix.
+- **The fix (the review's B1, introduced by 91bb5b26):** the rule that sent a read to the walk wherever the cut saw a reading from t on, at any place, is gone: a projection's walk books no reading (`walk/agenda.rs` `plan_walk` schedules readings for a main walk only; E §4.3 counts movements only), so the rule's reason was false, and P8-M4's opening on its start day sent its read to the walk (CI's gungraun on becc3d81: 3 589 426 067 Ir against the limit 3 263 720 006). `build_tree` reads the cut's first readings again for their effects only, as at 60c872cb; the header's, `Tree::later`'s and `build_tree`'s texts are corrected. The cap bound stays: `b1_cons` stays refused.
+- **The review's N4, one line:** money is capped in minor units, so `Gathered::finish` widens `Size`'s minor unit to every currency's of the reality, not only those of whole legs (a balance read in its currency's minor units stays under the bound).
+- **P8-M4's read takes the tree again** (the probe, `--ask=proj`, counters build): Tree 1 walk, 12 054 days stepped (the main walk alone); Walk 2 walks, 24 108; both print `proj: 15 167.50 DUK` (100.00 + 12 054 × 1.25), forks on and off alike. The instruction count is CI's gungraun, on this push.
+- **Probes, on and off under both `Lows`:** `b1_cons` (all four asks refused, refcore's lines), `b1_dec`, `b1_tree`, `p1_cuts`, `p2_base` + `p2_richer`, `p3_after_same`, `p4_failed`: same bytes, answers as at becc3d81. The tree serves more than at becc3d81: Tree's days stepped `p1` 10 760 (11 381) against Walk's 69 085, `p2` 3 022 (3 574) against 20 526. P8-14's check: `def_misses 25462, days_stepped 1826, walks_shared 534`, as before.
+- **Oracles:** `fork_oracle` and `walk_oracle`, 13 of 13, in `check quick`.
+- **For T (the review's guard):** a counters-build test that Tree steps fewer days than Walk on a P8-M4-like read would catch the tree no longer serving; the oracles compare bytes only. The review's N1–N3, N5–N7 stay on the follow-up list.
+- **S/M0/M1 (P53):** the 17 targets, `--all-features`, quick, niced: `465 tests run: 465 passed, 0 skipped` (`tmp/m2/b/g7last/smm.log`).
+- **Size:** in `engine/crates`, `walk/lows.rs` 18 added and 13 removed.
+- **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps (108s)`; M2 42/42; report-only hits 9, as before.
