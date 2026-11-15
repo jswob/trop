@@ -1,0 +1,44 @@
+part r7_returns_joint
+  tally 2
+  note "T, M2 (issues #167, #114): the twin of returns.tally, the prototype's own joint return (04-employment.json pit_joint: pit_return@2022 with a = my_tax, b = wife_tax), which L-26 (art. 6 ust. 8 PIT) bars beside the ryczałt of 05-side-business. Read in place of returns.tally, it shows that L-26 alone moves the pins it moves: on this twin R7 prints the prototype's figures. tax = zl(2 * max(0, brackets(p.pit.scale, (base_a + base_b) / 2) - p.pit.reduction)), due = tax - both spouses' advances, filed under my name (my_job's row; wife_job's 0)."
+
+source prototype_ret "the prototype's block 04-employment.json, template pit_return@2022 (engine/spec/verification/blocks)"
+
+kind settles: event certain
+  leg pay: PLN
+  leg refund: PLN
+
+input joint_halves: int
+
+input return_day: int
+
+input return_month: int
+
+def pit_income[j in job, y in cal_year]: num PLN = sum(gross[j, m] - kup_month - emp_zus[j, m] for m in month where year_of(m) == y) at start_of(y)
+  note "employment_pl@2022 income: gross - costs of earning - social contributions, summed over the year"
+
+def pit_base[j in job, y in cal_year]: money PLN = round(max(0, pit_income[j, y]), 1, half-up) at start_of(y)
+  note "pit_return@2022 base_a, base_b: zl(max(0, year_sum(income)))"
+
+def pit_adv_year[y in cal_year]: money PLN = sum(emp_pit_adv[my_job, m] + emp_pit_adv[wife_job, m] for m in month where year_of(m) == y) at start_of(y)
+  note "pit_return@2022 advances: year_sum(a, pit.advance) + year_sum(b, pit.advance)"
+
+def pit_due[j in job, y in cal_year]: money PLN at start_of(y)
+  note "pit_return@2022 due: v('tax') - v('advances'), the joint return's tax on half the two bases, twice; pit_scale already takes the reducing amount off"
+  rule joint = round(joint_halves * max(0, pit_scale((pit_base[my_job, y] + pit_base[wife_job, y]) / joint_halves)), 1, half-up) - pit_adv_year[y] when j == my_job
+  rule spouse beats joint = 0 when j == wife_job
+
+move pit_return[y in cal_year, j in job on end_of(y)]: settles
+  on schedule(month_of(add_months(add_years(start_of(y), 1), return_month - 1)), return_day, following, holidays_pl)
+  at start_of(y)
+  for y
+  leg pay from konto to urzad_skarbowy amount max(0, pit_due[j, y])
+  leg refund from urzad_skarbowy to konto amount max(0, -pit_due[j, y])
+
+version returns_2022
+  cite prototype_ret
+  governs always
+  known 2023-12-31
+  joint_halves = 2 "pit_return@2022 tax: twice the tax on half the joint base"
+  return_month = 4 "pit_return@2022 due: next_year:04-30, bd next"
+  return_day = 30 "next_year:04-30"

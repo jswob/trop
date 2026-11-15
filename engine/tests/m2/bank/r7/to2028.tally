@@ -1,0 +1,33 @@
+model tropek_r7
+  tally 2
+  on 2026-10-17
+  start 2024-01-01
+  end 2028-06-30
+  note "T, M2 (issues #167, #114), DONE gate 2: R7, the prototype's reality (load.ts REALITY: blocks 01, 03, 04, 05, 07) over its bank history, to 2028-06-30: the bank half (../bank.tally, ../records/) and the forward half (forward.tally, business.tally, returns.tally). Asked: G3 (the 15th rule on 2026-11-15), the 15th rule's pins of 2026 and 2027 (invest_15/invest, to_ike; invest_15_oki/to_ike, to_rest), konto and net worth on 2026-11-01 and 2027-06-30, OKI's tax of 2027. The end is past the last asked rule's next pay (2027-12's, on 2028-01-07): the prototype's model ran to 2059, so its rule never met the run's end before an asked day."
+  note "invest_15/invest (pins-1-7.json) is case 2's model (blocks 01, 02, 04, 05: the rule without IKE first and OKI); its amount is the surplus, which neither IKE first nor OKI changes before OKI's first tax (2028-05-31): asked here as surplus."
+
+index cal_year = year 2024..2028
+
+index day = day 2026-10-17..2028-06-30
+
+index month = month 2024-01..2028-06
+
+ask g3_konto: bal(konto, d) for d in [2026-11-14, 2026-11-15, 2026-12-06, 2026-12-07]
+
+ask g3_pay: emp_net[my_job, 2026-11], pay_day[my_job, 2026-11]
+
+ask g3_rule: surplus[2026-11], to_ike[2026-11], rest[2026-11]
+
+ask pin_invest: surplus[m] for m in [2026-11, 2026-12, 2027-01]
+
+ask pin_konto: bal(konto, d) for d in [2026-11-01, 2027-06-30]
+
+ask pin_net_worth: net_worth[d] for d in [2026-11-01, 2027-06-30]
+
+ask pin_oki_tax: oki_tax[2027]
+
+ask pin_pit: pit_due[j, y] for j in job over .., y in [2026, 2027]
+
+ask pin_to_ike: to_ike[m] for m in [2026-11, 2026-12, 2027-01]
+
+ask pin_to_rest: rest[2027-12]

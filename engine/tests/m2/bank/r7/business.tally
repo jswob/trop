@@ -1,0 +1,154 @@
+part r7_business
+  tally 2
+  note "T, M2 (issues #167, #114): the side business of R7 (05-side-business.json: dzialalnosc@1 from 2026-03-01, revenue 6 000 a month, costs 400 with 92 of VAT; jdg_pl@2026 form ryczalt, zus_stage zbieg, no sickness; vat_pl@2026), every line with its movement on konto, as M1's restatement (m1/goldens/business/model.tally) gives its 2026 pins. The lines follow the prototype's template: the health of the month by the revenue from the year's start (ytd), the advance on the year's running base less half the year's health, settled with the year's return; the year's health settled in May; VAT on the 25th. Days: revenue and its VAT next_month:10, costs day:15, health and the advance next_month:20 bd next, VAT next_month:25 bd next, the settlements next_year:04-30 and 05-20 bd next."
+  note "Not stated: the social contributions, 0 every month in concurrence (zbieg: base 0, so zus.pay is 0 and books nothing); the car lines, 0. The ryczałt health wage is held past its last entry (9 228.64 from 2026), as the prototype holds it."
+
+source prototype_biz "the prototype's block 05-side-business.json and its templates dzialalnosc@1, jdg_pl@2026, vat_pl@2026 (engine/spec/verification/blocks)"
+
+kind fee_pays: event certain
+  leg net: PLN
+  leg vat: PLN
+
+index tier = [low, mid, high]
+
+input biz_from: month
+
+input cost_dom: int
+
+input cost_net: money PLN
+
+input cost_vat: money PLN
+
+input fee_dom: int
+
+input fee_net: money PLN
+
+input health_settle_day: int
+
+input health_settle_month: int
+
+input health_share[t in tier]: num
+
+input pit_settle_day: int
+
+input pit_settle_month: int
+
+input ryczalt_health_ded: num
+
+input ryczalt_rate: num
+
+input ryczalt_wage: money PLN
+
+input vat_dom: int
+
+input vat_rate: num
+
+input zus_dom: int
+
+band health_tier(rev: num PLN): key tier
+  note "health.ryczalt_tiers: the band of the year's revenue less social contributions (band: the last row whose from is below)"
+
+def rev_ytd[m in month]: money PLN = sum(fee_net for k in month where year_of(k) == year_of(m) and k >= biz_from and k <= m) at start_of(m)
+  note "ytd('revenue', in.business) - ytd('zus.social'), the social contributions 0"
+
+def biz_health[m in month]: money PLN = round(round(ryczalt_wage * health_share[health_tier(rev_ytd[m])], minor(PLN), half-up) * health_rate, minor(PLN), half-up) at start_of(m)
+  note "jdg_pl@2026 health, ryczalt: grosze(grosze(p.health.ryczalt_wage * band(tiers, ytd revenue - ytd social)) * p.health.rate)"
+
+def biz_health_ytd[m in month]: money PLN = sum(biz_health[k] for k in month where year_of(k) == year_of(m) and k >= biz_from and k <= m) at start_of(m)
+
+def biz_tax_ytd[m in month]: num PLN = ryczalt_rate * round(max(0, rev_ytd[m] - ryczalt_health_ded * biz_health_ytd[m]), 1, half-up) at start_of(m)
+  note "tax.base zl(max(0, ytd revenue - ytd social - p.pit.ryczalt_health_share * ytd health)); tax.ytd in.ryczalt_rate * tax.base"
+
+def biz_adv[m in month]: money PLN = max(0, round(biz_tax_ytd[m], 1, half-up) - sum(biz_adv[k] for k in month where year_of(k) == year_of(m) and k >= biz_from and k < m)) at start_of(m)
+  note "pit.advance: max(0, zl(v('tax.ytd')) - ytd_before('pit.advance'))"
+
+def biz_months[y in cal_year]: int = count(k in month where year_of(k) == y and k >= biz_from) at start_of(y)
+
+def biz_pit_settle[y in cal_year]: money PLN = round(biz_tax_ytd[month_of(add_days(end_of(y), -1))], 1, half-up) - sum(biz_adv[k] for k in month where year_of(k) == y and k >= biz_from) at start_of(y)
+  note "pit.settle: zl(last('tax.ytd')) - total('pit.advance')"
+
+def biz_health_settle[y in cal_year]: money PLN = biz_months[y] * round(round(ryczalt_wage * health_share[health_tier(rev_ytd[month_of(add_days(end_of(y), -1))])], minor(PLN), half-up) * health_rate, minor(PLN), half-up) - sum(biz_health[k] for k in month where year_of(k) == y and k >= biz_from) at start_of(y)
+  note "health.settle: total('active') * grosze(grosze(p.health.ryczalt_wage * band(tiers, total revenue - total social)) * p.health.rate) - total('health')"
+
+def biz_vat[m in month]: money PLN = round(fee_net * vat_rate, minor(PLN), half-up) - cost_vat at start_of(m)
+  note "vat.due: v('vat.out') - v('vat.in'), vat.out grosze(revenue * p.vat.rate)"
+
+move biz_fee[m in month]: fee_pays
+  on add_months(day_of(m, fee_dom), 1)
+  at start_of(m)
+  for m
+  when m >= biz_from
+  leg net from klienci to konto amount fee_net
+  leg vat from klienci to konto amount round(fee_net * vat_rate, minor(PLN), half-up)
+
+move biz_costs[m in month]: transfers
+  on day_of(m, cost_dom)
+  at start_of(m)
+  for m
+  when m >= biz_from
+  leg cash from konto to dostawcy amount cost_net + cost_vat
+
+move biz_health_pay[m in month]: transfers
+  on schedule(month_of(add_months(start_of(m), 1)), zus_dom, following, holidays_pl)
+  at start_of(m)
+  for m
+  when m >= biz_from
+  leg cash from konto to zus amount biz_health[m]
+
+move biz_adv_pay[m in month]: transfers
+  on schedule(month_of(add_months(start_of(m), 1)), zus_dom, following, holidays_pl)
+  at start_of(m)
+  for m
+  when m >= biz_from
+  leg cash from konto to urzad_skarbowy amount biz_adv[m]
+
+move biz_vat_pay[m in month]: transfers
+  on schedule(month_of(add_months(start_of(m), 1)), vat_dom, following, holidays_pl)
+  at start_of(m)
+  for m
+  when m >= biz_from
+  leg cash from konto to urzad_skarbowy amount biz_vat[m]
+
+move biz_pit_settle_pay[y in cal_year]: settles
+  on schedule(month_of(add_months(add_years(start_of(y), 1), pit_settle_month - 1)), pit_settle_day, following, holidays_pl)
+  at start_of(y)
+  for y
+  when end_of(y) > start_of(biz_from)
+  leg pay from konto to urzad_skarbowy amount max(0, biz_pit_settle[y])
+  leg refund from urzad_skarbowy to konto amount max(0, -biz_pit_settle[y])
+
+move biz_health_settle_pay[y in cal_year]: settles
+  on schedule(month_of(add_months(add_years(start_of(y), 1), health_settle_month - 1)), health_settle_day, following, holidays_pl)
+  at start_of(y)
+  for y
+  when end_of(y) > start_of(biz_from)
+  leg pay from konto to zus amount max(0, biz_health_settle[y])
+  leg refund from zus to konto amount max(0, -biz_health_settle[y])
+
+version business_2026
+  cite prototype_biz
+  governs always
+  known 2023-12-31
+  note "stated for the whole run, as the prototype's fixture is one model with one today; the business itself starts 2026-03-01"
+  biz_from = 2026-03 "05-side-business.json: business from 2026-03-01"
+  fee_net = 6000 "dzialalnosc@1: revenue 6 000 a month"
+  cost_net = 400 "dzialalnosc@1: costs 400"
+  cost_vat = 92 "dzialalnosc@1: costs_vat 92"
+  fee_dom = 10 "revenue.cash, vat.out: next_month:10"
+  cost_dom = 15 "costs.cash: day:15"
+  zus_dom = 20 "health.pay, pit.advance: next_month:20, bd next"
+  vat_dom = 25 "vat.due: next_month:25, bd next"
+  pit_settle_month = 4 "pit.settle: next_year:04-30, bd next"
+  pit_settle_day = 30 "next_year:04-30"
+  health_settle_month = 5 "health.settle: next_year:05-20, bd next"
+  health_settle_day = 20 "next_year:05-20"
+  ryczalt_rate = 0.12 "jdg_pl@2026 ryczalt_rate, 12 %"
+  ryczalt_health_ded = 0.5 "pit.ryczalt_health_share: ustawa o ryczałcie art. 11 ust. 1a"
+  ryczalt_wage = 9228.64 "health.ryczalt_wage from 2026: GUS, IV kw. 2025, M.P. 2026 poz. 117; held after"
+  health_share[low] = 0.6 "health.ryczalt_tiers: ustawa o świadczeniach art. 81 ust. 2h"
+  health_share[mid] = 1 "art. 81 ust. 2h"
+  health_share[high] = 1.8 "art. 81 ust. 2h"
+  health_tier: [0, 60000] = low "art. 81 ust. 2h: to 60 000"
+  health_tier: (60000, 300000] = mid "art. 81 ust. 2h: to 300 000"
+  health_tier: (300000, inf) = high "art. 81 ust. 2h: above 300 000"
+  vat_rate = 0.23 "vat.rate"
