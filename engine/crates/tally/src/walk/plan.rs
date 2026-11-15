@@ -551,8 +551,10 @@ impl Engine {
             self.trace_walked_back(back);
         }
         let shared = Rc::new(out);
-        self.plans.insert(key, Rc::clone(&shared));
-        Ok(shared)
+        self.plans.insert(key.clone(), Rc::clone(&shared));
+        // a hole booking a later version answers is that version's here (E §5 step 1)
+        self.answer_hole_bookings(m, mv, (&shared, cut))?;
+        Ok(self.plans.get(&key).map_or(shared, Rc::clone))
     }
 
     /// A move's instances computed while a read is traced, the first time the ask reaches
@@ -625,13 +627,15 @@ impl Engine {
             inst.status = self.status(m, mv, inst, cut)?;
         }
         let shared = Rc::new(out);
-        self.prefixes.plans.insert(key, Rc::clone(&shared));
-        Ok(shared)
+        self.prefixes.plans.insert(key.clone(), Rc::clone(&shared));
+        // a hole booking a later version answers is that version's here too (E §5 step 1)
+        self.answer_hole_bookings(m, mv, (&shared, cut))?;
+        Ok(self.prefixes.plans.get(&key).map_or(shared, Rc::clone))
     }
 
     /// An instance's status at cut `cut`, the observations that fulfil it judged first
     /// (refcore's `status`). E §4.1 step 3, L §5.19.
-    fn status(
+    pub(crate) fn status(
         &mut self,
         m: &Reality,
         mv: &MoveInfo,
