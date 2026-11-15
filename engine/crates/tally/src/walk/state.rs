@@ -679,11 +679,10 @@ impl Walk {
         let Some(known) = st.val else {
             return Ok(None);
         };
+        // a main walk's (its one reader is the plain read at the cut, `bal_day`): a place it
+        // hasn't reset opens with no hole (`opening_state`), so its log holds every hole leg
         let from = match st.rst {
             Some(r) => next_entry(r)?,
-            None if self.proj.is_some() || self.default_state(m, place, unit).hole.is_some() => {
-                return Ok(None);
-            }
             None => 0,
         };
         let mut legs = Vec::new();

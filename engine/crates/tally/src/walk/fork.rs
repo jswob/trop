@@ -195,7 +195,7 @@ impl Engine {
     /// the plan's part of each; where a kept walk waits for it and agrees with its plan on
     /// every day it walked, walk `id` becomes that walk, continued with this plan from the day
     /// after its last walked day; otherwise it walks from its first day, as the twin's
-    /// (P §2.5). E §4.1, §4.3.
+    /// (P §2.5). Walk `id` has walked no day yet: its plan pass has just ended. E §4.1, §4.3.
     ///
     /// # Errors
     ///
@@ -208,7 +208,7 @@ impl Engine {
             return Ok(());
         };
         let planned = self.walk(id)?;
-        if !(planned.done.is_none() && planned.walked.is_empty() && agrees(&kept, planned)) {
+        if !agrees(&kept, planned) {
             return Ok(());
         }
         let stub = planned.freed();
@@ -298,7 +298,8 @@ fn same_days(kept: &Walk, fresh: &Walk) -> bool {
 
 /// Whether two acts are one: the same kind and terms, an instance by what it is (its body,
 /// as the plan pass made it) and not by its place in its walk's list, a day's decisions by
-/// the instances due (E §4.1, §4.2).
+/// the instances due; any other act by its terms, an observation's among them, which only a
+/// main walk books, never a projection's (E §4.1, §4.2 step 1).
 fn same_act((one, act): (&Walk, &Act), (other, like): (&Walk, &Act)) -> bool {
     match (act, like) {
         (Act::Leg(mv, leg), Act::Leg(mv2, leg2))
@@ -307,9 +308,6 @@ fn same_act((one, act): (&Walk, &Act), (other, like): (&Walk, &Act)) -> bool {
         | (Act::LegBad(mv, leg, _), Act::LegBad(mv2, leg2, _))
         | (Act::Perm(mv, leg, _), Act::Perm(mv2, leg2, _)) => {
             leg == leg2 && same_mv((one, *mv), (other, *mv2)) && same_terms(act, like)
-        }
-        (Act::Obs(at, leg), Act::Obs(at2, leg2)) => {
-            leg == leg2 && one.obs.get(*at).is_some() && one.obs.get(*at) == other.obs.get(*at2)
         }
         (Act::Decide(id, day), Act::Decide(id2, day2)) => {
             let key = (id.clone(), *day);
