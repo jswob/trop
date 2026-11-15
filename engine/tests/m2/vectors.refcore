@@ -105308,4 +105308,210 @@ byc: refused: RUN-DOMAIN residuals of w, a place of unit any, read as one ledger
 bp: 786.00 PLN
   unfulfilled: pay[2026-01]
   cut 2026-10-20
+,16:fixes/g5/a1_one2,12:fixes-ledger,26:run a1_one2.tally --ask t1,1062:13:a1_one2.tally,1039:model b
+  tally 2
+  on 2027-06-30
+  start 2027-01-01
+  end 2027-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind ovs: event certain
+  leg cash: PLN
+place acct: accounts PLN lives 2027-01-01..
+place bank: outside lives 2027-01-01..
+input fee[m in months]: money PLN question "fee?"
+input dom: int
+def p[m in months]: money PLN = if pos(m) == 1 then 0 else p[m - 1] + sum(o.cash.amount for o in ovs over m)
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from bank to acct amount p[m]
+move op[m in months]: ovs
+  on start_of(m)
+  leg cash from acct to bank amount 1 PLN
+move z_fee[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from acct to bank amount fee[m]
+
+version v1
+  cite s
+  governs always
+  known 2027-01-01
+  dom = 10 "s"
+  opening[acct] = 100.00 PLN at 2027-01-01 start "s"
+
+version v2
+  cite s
+  governs always
+  known 2027-03-01
+  fee = 0.50 PLN "s"
+
+ask t1: p[2027-06], bal(acct, 2027-06-30), z_fee[2027-01].cash.amount, sum(z.cash.amount for z in transfers over 2027-01 .. 2027-06)
+,,1:0,601:t1: (5.00 PLN, ?"fee?" (fee[2027-01], fee[2027-02]), 0.50 PLN, 18.00 PLN)
+  unfulfilled: op[2027-01]
+  unfulfilled: op[2027-02]
+  unfulfilled: op[2027-03]
+  unfulfilled: op[2027-04]
+  unfulfilled: op[2027-05]
+  unfulfilled: op[2027-06]
+  unfulfilled: pay[2027-01]
+  unfulfilled: pay[2027-02]
+  unfulfilled: pay[2027-03]
+  unfulfilled: pay[2027-04]
+  unfulfilled: pay[2027-05]
+  unfulfilled: pay[2027-06]
+  unfulfilled: z_fee[2027-01]
+  unfulfilled: z_fee[2027-02]
+  unfulfilled: z_fee[2027-03]
+  unfulfilled: z_fee[2027-04]
+  unfulfilled: z_fee[2027-05]
+  unfulfilled: z_fee[2027-06]
+  cut 2027-06-30
+,18:fixes/g5/p4_inp_e3,12:fixes-ledger,25:run p4_inp.tally --ask e3,712:12:p4_inp.tally,691:model hh
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input amt[m in months]: money PLN question "Ile?"
+input dom: int
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to world amount amt[m]
+
+version v1
+  cite s
+  governs 2026..
+  known 2026-01-01
+  dom = 10 "s"
+  amt[2026-01] = 100.00 PLN "s"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+
+version v2
+  cite s
+  governs 2026..
+  known 2026-03-01
+  amt[2026-02] = 200.00 PLN "s"
+
+ask i1: inputs-of pay[2026-02]
+ask e3: explain pay[2026-02]
+,,1:0,294:e3: pay[2026-02]
+  plan, day 2026-02-10, booking cut 2026-02-10, status past
+  leg cash from konto to world amount ?"Ile?" (amt[2026-02])
+  derivation at 2026-02-10:
+    [1] row v1:dom = 10
+        version v1, source s, "s", locator "s", governs 2026-01-01.., known 2026-01-01
+  cut 2026-06-30
+,19:fixes/g5/p4_wexp_e3,12:fixes-ledger,26:run p4_wexp.tally --ask e3,728:13:p4_wexp.tally,706:model hh
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input amt[m in months]: money PLN question "Ile?"
+input dom: int
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  when amt[m] > 0 PLN
+  leg cash from konto to world amount amt[m]
+
+version v1
+  cite s
+  governs 2026..
+  known 2026-01-01
+  dom = 10 "s"
+  amt[2026-01] = 100.00 PLN "s"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+
+version v2
+  cite s
+  governs 2026..
+  known 2026-03-01
+  amt[2026-02] = 0 PLN "s"
+
+ask e3: explain pay[2026-02]
+ask e4: explain pay[2026-01]
+,,1:0,327:e3: pay[2026-02]
+  plan, day 2026-02-10, booking cut 2026-02-10, status hole
+  exists: ?"Ile?" (amt[2026-02])
+  leg cash from konto to world amount ?"Ile?" (amt[2026-02])
+  derivation at 2026-02-10:
+    [1] row v1:dom = 10
+        version v1, source s, "s", locator "s", governs 2026-01-01.., known 2026-01-01
+  cut 2026-06-30
+,19:fixes/g5/p4_hole_e2,12:fixes-ledger,26:run p4_hole.tally --ask e2,990:13:p4_hole.tally,968:model hh
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input amt[m in months]: money PLN question "Ile?"
+input dom: int
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to world amount amt[m]
+
+version v1
+  cite s
+  governs 2026..
+  known 2026-01-01
+  dom = 10 "s"
+  amt[2026-01] = 100.00 PLN "s"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+
+version v2
+  cite s
+  governs 2026..
+  known 2026-03-01
+  amt[2026-02] = 200.00 PLN "s"
+
+ask b1: bal(konto, 2026-02-28)
+ask b2: bal(konto, 2026-02-28) as known 2026-02-15
+ask f1: flows(konto, 2026-02-01 .. 2026-02-28)
+ask a1: pay[2026-02].cash.amount
+ask n1: count(a in adjustments over 2026)
+ask s1: sum(a.change for a in adjustments over 2026)
+ask e1: explain bal(konto, 2026-02-28)
+ask e2: explain pay[2026-02].cash.amount
+,,1:0,688:e2: ?"Ile?" (amt[2026-02])
+  [1] row v1:dom = 10
+      version v1, source s, "s", locator "s", governs 2026-01-01.., known 2026-01-01
+  [2] row v1:amt[2026-01] = 100.00 PLN
+      version v1, source s, "s", locator "s", governs 2026-01-01.., known 2026-01-01
+  (v1:dom: see [1])
+  (v1:dom: see [1])
+  (v1:dom: see [1])
+  (v1:dom: see [1])
+  (v1:dom: see [1])
+  (v1:dom: see [1])
+  (v1:dom: see [1])
+  (v1:dom: see [1])
+  (v1:dom: see [1])
+  (v1:dom: see [1])
+  (v1:dom: see [1])
+  (v1:dom: see [1])
+  (v1:amt[2026-01]: see [2])
+  (v1:dom: see [1])
+  [3] row v2:amt[2026-02] = 200.00 PLN
+      version v2, source s, "s", locator "s", governs 2026-01-01.., known 2026-03-01
+  cut 2026-06-30
 ,
