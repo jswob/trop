@@ -19,7 +19,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use super::adjust::Adjustment;
 use super::observe::{Obs, inst_id};
-use super::reading::{Seen, booked_amount, reading_rank, readings};
+use super::reading::{Seen, Stands, booked_amount, reading_rank, readings};
 use crate::base::{Load, Refusal};
 use crate::eval::{Ctx, Engine, Env, Rows, num_stop};
 use crate::hole::{Hole, spread};
@@ -395,15 +395,37 @@ impl Engine {
     ) -> Result<(), Stop> {
         let id = self.main_walk(m, cut)?;
         let world = self.timeline_world();
-        let walked = readings(m, (cut, world), Rows::Unkept)?;
-        for seen in readings(m, (m.on, world), Rows::Unkept)? {
-            if seen.input != "stated" || seen.place != lines.place || !span.contains(seen.day) {
+        let after = self.after_days(m, cut)?;
+        let walked = readings(m, (cut, world), Rows::Unkept, &after)?;
+        let after_on = self.after_days(m, m.on)?;
+        for mut seen in readings(m, (m.on, world), Rows::Unkept, &after_on)? {
+            if seen.input != "stated" || seen.place != lines.place {
                 continue;
             }
-            let Some(reading) = &seen.reading else {
+            let Some(reading) = seen.reading.clone() else {
                 continue;
             };
-            let at = reading_point(seen.day, seen.edge, reading_rank(&walked, &seen)?);
+            let at = match &seen.stands {
+                Stands::Edge(edge) => reading_point(seen.day, *edge, reading_rank(&walked, &seen)?),
+                // a reading after m stands right after m, or the observations standing in
+                // for it, on the day of the last of them, where the walk applied it; none
+                // where it didn't (refcore's `after_keys`; E §6.3 Grouping, L §4.6)
+                Stands::After(_) => {
+                    let key = (
+                        reading.place.clone(),
+                        reading.instant.clone(),
+                        reading.version.clone(),
+                    );
+                    match self.walk(id)?.after_at.get(&key) {
+                        Some(at) => *at,
+                        None => continue,
+                    }
+                }
+            };
+            seen.day = at.day;
+            if !span.contains(seen.day) {
+                continue;
+            }
             let walk = self.walk(id)?;
             let st = walk.pstate_before(m, &reading.place, &reading.unit, at);
             let booked = match booked_amount(&st, &walk.anchor_question(&reading.place)) {

@@ -637,7 +637,8 @@ impl Engine {
         left_out: &BTreeSet<String>,
     ) -> Result<(Tree, Vec<Num>), Stop> {
         // the projection's walk reads its cut's first readings before its plan pass
-        crate::book::first_readings(m, (cut, world))?;
+        let after = self.after_days(m, cut)?;
+        crate::book::first_readings(m, (cut, world), &after)?;
         let mut got = Gathered {
             tree: Tree::new(cut),
             legs: Vec::new(),

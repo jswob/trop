@@ -16,15 +16,20 @@ use std::collections::BTreeSet;
 
 use super::agenda::Reading;
 use super::day::ends;
-use super::plan::{End, LegVal, invariant, qty_value};
+use super::plan::{End, LegVal, Status, invariant, qty_value};
 use super::point::At;
-use super::state::{Change, Ent, Group, Taken, Walk};
+use super::state::{ALL, Change, Ent, Group, Taken, Walk};
 use crate::base::{Code, Refusal, Run};
 use crate::eval::Engine;
 use crate::model::Reality;
 use crate::num::Num;
 use crate::syntax::{Sign, Stop};
 use crate::time::Day;
+
+/// The sub-step of a decision's point where the readings `after` it stand: after its legs
+/// (0), the observations booked there (1) and its group's test (2) (refcore's `key[4] + 5`).
+/// E §4.2 step 3.
+const AFTER_SUB: u32 = 5;
 
 /// How a refusal of the sign rule names what broke it (refcore's `check_group` messages).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -57,6 +62,70 @@ impl Engine {
             }
         }
         Ok(())
+    }
+
+    /// The readings `after m` that wait on decision run `ix`, applied right after it at its
+    /// point `key`, after its group is tested, each tested as it is booked: where m is booked
+    /// before the cut, and where m is modelled past and observations booked at its point stand
+    /// in for it; where m is modelled past and nothing fulfils it, the reading's place is
+    /// refused from there (`RUN-RECORD`); none where m doesn't exist, is a hole, uncertain or
+    /// refused (refcore's `after_mv`, `run_one`'s `_after`). E §4.2 steps 3 and 5, L §4.6
+    /// Readings, §5.10 point 2, §5.19.
+    pub(super) fn readings_after(
+        &mut self,
+        m: &Reality,
+        id: usize,
+        ix: usize,
+        key: At,
+    ) -> Result<(), Stop> {
+        let walk = self.walk(id)?;
+        let run = walk
+            .runs
+            .get(ix)
+            .ok_or_else(|| invariant("a run just made"))?;
+        let (mid, status, linked) = (
+            run.inst.id.clone(),
+            run.inst.status,
+            !run.inst.obs.is_empty(),
+        );
+        let Some(waiting) = self.walk_mut(id)?.after.remove(&mid) else {
+            return Ok(());
+        };
+        let at = key.with_sub(AFTER_SUB);
+        for r in waiting {
+            match status {
+                Status::Past => self.apply_after(m, id, at, &r)?,
+                Status::Modelled if linked => self.apply_after(m, id, at, &r)?,
+                Status::Modelled => {
+                    let err = Refusal::new(
+                        Code::Run(Run::Record),
+                        format!(
+                            "reading {}[{}] {}: {mid} is modelled past and nothing fulfils it",
+                            r.input, r.place, r.instant
+                        ),
+                    );
+                    self.walk_mut(id)?
+                        .add(m, &r.place, &r.unit, Ent::new(at, Change::Bad(err)))?;
+                }
+                Status::Open
+                | Status::None
+                | Status::LeftOut
+                | Status::Refused
+                | Status::Hole
+                | Status::Decision
+                | Status::Uncertain
+                | Status::Plan => {}
+            }
+        }
+        Ok(())
+    }
+
+    /// A reading `after m` at point `at`, its point kept for its balance line (refcore's
+    /// `after_keys`). E §6.3 Grouping, L §4.6.
+    fn apply_after(&mut self, m: &Reality, id: usize, at: At, r: &Reading) -> Result<(), Stop> {
+        let key = (r.place.clone(), r.instant.clone(), r.version.clone());
+        self.walk_mut(id)?.after_at.insert(key, at);
+        self.apply_reading(m, id, at, r)
     }
 
     /// The sign rule after the day's first batch, its legs taken together (refcore's
@@ -187,24 +256,98 @@ impl Walk {
         None
     }
 
-    /// An anchored reading's place, an opening's included, tested at the reading's point by
-    /// its kind's sign rule: a number at a `min 0` or `max 0` place joins the point's group
-    /// with no leg, and the group's test refuses it there when it breaks the rule (refcore's
-    /// `sign_anchor`; tally 2.1.2). L §5.10, §5.19; E §4.2 step 5.
+    /// A leg refused as it is booked: kept among the refused legs, and its places refused
+    /// from `at` by it (refcore's `bad_legs`, `book_leg`'s refusal). E §4.2 step 5.
     ///
     /// # Errors
     ///
-    /// `NotBuilt` for a reading after a decision, where no group is open (M2).
+    /// As [`Walk::add`].
+    pub(crate) fn refuse_leg(
+        &mut self,
+        m: &Reality,
+        (movement, lg): (&str, &LegVal),
+        err: &Refusal,
+        at: At,
+    ) -> Result<(), Stop> {
+        self.bad_legs
+            .insert((movement.to_owned(), lg.name.clone()), err.clone());
+        let unit = lg.unit.clone().unwrap_or_else(|| ALL.to_owned());
+        for p in ends(lg) {
+            let mut ent = Ent::new(at, Change::Bad(err.clone()));
+            ent.mv = Some(movement.to_owned());
+            self.add(m, p, &unit, ent)?;
+        }
+        Ok(())
+    }
+
+    /// A leg booked outside every group of the sign rule, tested as it is booked: each end
+    /// `on` names, with its sign, against its balance at `at` with the leg; the first that
+    /// breaks its kind's rule refuses the leg (`RUN-PLACE <movement> takes <place> …`); an end
+    /// whose balance isn't known isn't tested (refcore's `book_leg`, no group). L §5.10 point
+    /// 2, E §4.2 step 5.
+    ///
+    /// # Errors
+    ///
+    /// A number error.
+    pub(super) fn tested_alone(
+        &self,
+        m: &Reality,
+        (movement, q): (&str, &Num),
+        on: &[(String, i64)],
+        unit: &str,
+        at: At,
+    ) -> Result<Option<Refusal>, Stop> {
+        for (p, sign) in on {
+            let st = self.pstate(m, p, unit, at);
+            let Some(v) = st.known() else {
+                continue;
+            };
+            let moved = if *sign < 0 {
+                v.checked_sub(q)
+            } else {
+                v.checked_add(q)
+            }
+            .map_err(crate::eval::num_stop)?;
+            if breaks(m, p, &moved) {
+                return Ok(Some(Refusal::new(
+                    Code::Run(Run::Place),
+                    takes_text(m, movement, p),
+                )));
+            }
+        }
+        Ok(None)
+    }
+
+    /// An anchored reading's place, an opening's included, tested at the reading's point by
+    /// its kind's sign rule: a number at a `min 0` or `max 0` place joins the point's group
+    /// with no leg, and the group's test refuses it there when it breaks the rule; a reading
+    /// after a decision, where no group is open, is tested as it is booked (refcore's
+    /// `sign_anchor`; tally 2.1.2). L §5.10 (point 2), §5.19; E §4.2 step 5.
+    ///
+    /// # Errors
+    ///
+    /// A number error.
     pub(crate) fn sign_anchor(&mut self, m: &Reality, at: At, r: &Reading) -> Result<(), Stop> {
         let ruled = matches!(place_sign(m, &r.place), Some(Sign::Min0 | Sign::Max0));
-        if r.value.is_err() || !ruled {
+        let Ok(value) = &r.value else {
+            return Ok(());
+        };
+        if !ruled {
             return Ok(());
         }
         let key = (r.place.clone(), r.unit.clone());
         let Some(group) = self.open_group(at) else {
-            return Err(Stop::NotBuilt(
-                "a reading after a decision (the sign rule's point 2)",
-            ));
+            if !breaks(m, &r.place, value) {
+                return Ok(());
+            }
+            let shown = qty_value(m, value, &r.unit)?
+                .text(m)
+                .map_err(crate::eval::num_stop)?;
+            let err = Refusal::new(
+                Code::Run(Run::Place),
+                format!("{} is {shown} after its reading at {}", r.place, r.instant),
+            );
+            return self.add(m, &r.place, &r.unit, Ent::new(at, Change::Bad(err)));
         };
         group.entry(key.clone()).or_insert_with(Vec::new);
         self.today
@@ -284,7 +427,7 @@ pub(super) fn place_sign(m: &Reality, place: &str) -> Option<Sign> {
 }
 
 /// Whether balance `v` breaks its place's sign rule (L §5.10).
-fn breaks(m: &Reality, place: &str, v: &Num) -> bool {
+pub(crate) fn breaks(m: &Reality, place: &str, v: &Num) -> bool {
     match place_sign(m, place) {
         Some(Sign::Min0) => v.is_negative(),
         Some(Sign::Max0) => !v.is_negative() && !v.is_zero(),
@@ -302,6 +445,17 @@ fn units_word(m: &Reality, place: &str) -> &'static str {
     if holds { " units" } else { "" }
 }
 
+/// `<mover> takes <place> below 0`, ` units` after it for a holding, or `above 0`: a leg
+/// the sign rule refuses where it is tested alone or with a decision's (refcore's
+/// `check_group`, `book_leg` messages). L §5.10.
+pub(crate) fn takes_text(m: &Reality, mover: &str, place: &str) -> String {
+    let side = match place_sign(m, place) {
+        Some(Sign::Max0) => "above 0".to_owned(),
+        Some(Sign::Min0 | Sign::Signed) | None => format!("below 0{}", units_word(m, place)),
+    };
+    format!("{mover} takes {place} {side}")
+}
+
 /// The message of a refusal of the sign rule (refcore's `check_group` messages). L §5.10.
 fn broke_text(
     m: &Reality,
@@ -310,16 +464,12 @@ fn broke_text(
     shown: &str,
     legs: &[(String, LegVal)],
 ) -> String {
-    let side = match place_sign(m, place) {
-        Some(Sign::Max0) => "above 0".to_owned(),
-        Some(Sign::Min0 | Sign::Signed) | None => format!("below 0{}", units_word(m, place)),
-    };
     match broke {
         Broke::Batch(day) => format!(
             "{place} is {shown} after the day's observations and plans of {}",
             day.text()
         ),
-        Broke::Decision(run) => format!("{run} takes {place} {side}"),
+        Broke::Decision(run) => takes_text(m, run, place),
         Broke::Closing => {
             let ids: BTreeSet<&str> = legs.iter().map(|(mv, _)| mv.as_str()).collect();
             let all: Vec<&str> = ids.into_iter().collect();

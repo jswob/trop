@@ -29,14 +29,14 @@ use crate::walk::{
     Amount, At, Change, Dated, End, Ends, Ent, GapAt, LegVal, Reading, St, invariant, qty_value,
 };
 
-/// A reading the cut sees: its day, its edge, its place, its input, and what it states (none
-/// for a row whose value is `none`).
+/// A reading the cut sees: its day, where it stands in the day, its place, its input, and
+/// what it states (none for a row whose value is `none`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Seen {
-    /// Its day.
+    /// Its day: for a reading `after m`, m's day.
     pub day: Day,
-    /// Its edge: the day's start or end.
-    pub edge: Edge,
+    /// Where it stands in its day.
+    pub stands: Stands,
     /// The place.
     pub place: String,
     /// The input: `opening` or `stated`.
@@ -44,6 +44,20 @@ pub struct Seen {
     /// What it states; none for a row whose value is `none`.
     pub reading: Option<Reading>,
 }
+
+/// Where a reading stands in its day (L §4.6 Readings): at its start (before the day's
+/// movements), at its end (after them), or right after a movement, by its id.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Stands {
+    /// `at D start` or `at D end`.
+    Edge(Edge),
+    /// `after m`: m's instance id, as written (refcore's `_txt`).
+    After(String),
+}
+
+/// The day of each movement a reading `after m` names, by its id, where the plan pass gives
+/// it one (E §4.2 step 3, L §4.6).
+pub type AfterDays = BTreeMap<String, Day>;
 
 /// A pad: a movement of `pads` that takes up a statement's gap (refcore's `PadMv`). E §6.1.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -58,7 +72,7 @@ pub struct Pad {
 
 /// A reading row kept as the latest of its key: when it became known, its day and edge, the
 /// row (L §5.19).
-type Kept = (Day, Day, Edge, crate::model::Row);
+type Kept = (Day, Day, Stands, crate::model::Row);
 
 /// A kept reading row with the unit its value states, none for a hole or `none` at a place
 /// of unit `any` (pick P22, #173).
@@ -67,14 +81,19 @@ type UnitKept = (Option<String>, Kept);
 /// The readings cut `cut` sees in world `world`: each `opening` and `stated` row known by
 /// the cut, of a version the world sees, a restated one replaced as `replace` says (a
 /// scenario's over its base's whatever their `known` dates, as `standing` takes it), sorted
-/// by place, instant and input, each with its row among what it met where `rows` says so
-/// (refcore's `readings`, `world_ok`). L §5.19, §4.6 step 2, §6.4; E §10.
+/// by place, instant and input, each with its row among what it met where `rows` says so; a
+/// reading `after m` on m's day by `after`, none where m has no day there (refcore's
+/// `readings`, `world_ok`). L §5.19, §4.6 step 2, Readings, §6.4; E §10.
 ///
 /// # Errors
 ///
-/// A row load left without its version; `NotBuilt` for a reading `after` a movement or at a
-/// day with no edge.
-pub fn readings(m: &Reality, (cut, world): (Day, World), rows: Rows) -> Result<Vec<Seen>, Stop> {
+/// A row load left without its version; `NotBuilt` for a reading at a day with no edge.
+pub fn readings(
+    m: &Reality,
+    (cut, world): (Day, World),
+    rows: Rows,
+    after: &AfterDays,
+) -> Result<Vec<Seen>, Stop> {
     // a reading row is keyed by its place and instant, its unit in its value: a place of unit
     // `any` holds a reading per unit (L §4.6), and a row that states no unit (a hole, `none`)
     // stands for every unit at its instant (pick P22, #173)
@@ -96,9 +115,17 @@ pub fn readings(m: &Reality, (cut, world): (Day, World), rows: Rows) -> Result<V
             else {
                 return Err(Stop::NotBuilt("a reading of a place not named"));
             };
-            let (day, edge) = match &row.instant {
-                Some(RowInstant::At(day, Some(edge))) => (*day, *edge),
-                Some(_) | None => {
+            let (day, stands) = match &row.instant {
+                Some(RowInstant::At(day, Some(edge))) => (*day, Stands::Edge(*edge)),
+                Some(RowInstant::After(node)) => {
+                    let id = crate::load::expr_text(node);
+                    // an m the plan pass gives no day: the reading has no instant
+                    let Some(day) = after.get(&id) else {
+                        continue;
+                    };
+                    (*day, Stands::After(id))
+                }
+                Some(RowInstant::At(_, None)) | None => {
                     return Err(Stop::NotBuilt(
                         "a reading at an instant other than a day's start or end",
                     ));
@@ -108,11 +135,11 @@ pub fn readings(m: &Reality, (cut, world): (Day, World), rows: Rows) -> Result<V
                 .reading_ty(place, &row.value)
                 .map_err(crate::eval::num_stop)?
                 .map(|(unit, _)| unit);
-            let key = (place.clone(), instant_text(day, edge), input.to_owned());
+            let key = (place.clone(), stands_text(day, &stands), input.to_owned());
             cands
                 .entry(key)
                 .or_insert_with(Vec::new)
-                .push((unit, (known, day, edge, row.clone())));
+                .push((unit, (known, day, stands, row.clone())));
         }
     }
     let mut out = Vec::with_capacity(cands.len());
@@ -124,7 +151,7 @@ pub fn readings(m: &Reality, (cut, world): (Day, World), rows: Rows) -> Result<V
                 .filter(|(u, _)| u.is_none() || *u == unit)
                 .map(|(_, kept)| kept.clone())
                 .collect();
-            let Some((_, day, edge, row)) = standing(m, rows_of) else {
+            let Some((_, day, stands, row)) = standing(m, rows_of) else {
                 continue;
             };
             let mut reading = reading_of(m, (&input, &place, &instant), &row, unit.as_deref())?;
@@ -137,7 +164,7 @@ pub fn readings(m: &Reality, (cut, world): (Day, World), rows: Rows) -> Result<V
             }
             out.push(Seen {
                 day,
-                edge,
+                stands: stands.clone(),
                 place: place.clone(),
                 input: input.clone(),
                 reading,
@@ -225,14 +252,14 @@ fn replaced(m: &Reality, rows_at: &[Kept], (known, row): (Day, &crate::model::Ro
 pub fn reading_rank(walked: &[Seen], seen: &Seen) -> Result<u32, Stop> {
     let key = (
         seen.place.as_str(),
-        instant_text(seen.day, seen.edge),
+        stands_text(seen.day, &seen.stands),
         seen.input.as_str(),
     );
     let mut before: u32 = 0;
     for other in walked {
         let theirs = (
             other.place.as_str(),
-            instant_text(other.day, other.edge),
+            stands_text(other.day, &other.stands),
             other.input.as_str(),
         );
         if theirs < key {
@@ -250,9 +277,13 @@ pub fn reading_rank(walked: &[Seen], seen: &Seen) -> Result<u32, Stop> {
 /// # Errors
 ///
 /// As [`readings`].
-pub fn first_readings(m: &Reality, by: (Day, World)) -> Result<BTreeMap<String, Day>, Stop> {
+pub fn first_readings(
+    m: &Reality,
+    by: (Day, World),
+    after: &AfterDays,
+) -> Result<BTreeMap<String, Day>, Stop> {
     let mut out: BTreeMap<String, Day> = BTreeMap::new();
-    for seen in readings(m, by, Rows::Unkept)? {
+    for seen in readings(m, by, Rows::Unkept, after)? {
         let first = out.entry(seen.place).or_insert(seen.day);
         *first = (*first).min(seen.day);
     }
@@ -266,6 +297,15 @@ pub(crate) fn instant_text(day: Day, edge: Edge) -> String {
         Edge::End => "end",
     };
     format!("{} {word}", day.text())
+}
+
+/// Where a reading stands, as text: its instant, `2026-09-30 end`, or `after save[2026-03]`
+/// (refcore's `instant_text`). L §4.6.
+pub(crate) fn stands_text(day: Day, stands: &Stands) -> String {
+    match stands {
+        Stands::Edge(edge) => instant_text(day, *edge),
+        Stands::After(id) => format!("after {id}"),
+    }
 }
 
 /// A reading's row as the walk applies it, for unit `stands` among its instant's: its value
@@ -323,6 +363,68 @@ fn reading_of(
 }
 
 impl Engine {
+    /// The day of each decision instance a reading `after m` of `stated` or `opening` names,
+    /// as the plan pass at cut `cut` gives it; none for an m it doesn't list or whose day is a
+    /// hole or a window, so the reading has no instant. What the plan pass meets is the walk's,
+    /// kept apart from the read that asks (refcore's `after`, keyed by `_txt`). E §4.2 step 3,
+    /// L §4.6 Readings.
+    ///
+    /// # Errors
+    ///
+    /// The refusals of the plan pass.
+    pub(crate) fn after_days(&mut self, m: &Reality, cut: Day) -> Result<AfterDays, Stop> {
+        let mut out = AfterDays::new();
+        for input in ["opening", "stated"] {
+            let Some(info) = m.inputs.get(input) else {
+                continue;
+            };
+            for row in &info.rows {
+                let Some(RowInstant::After(node)) = &row.instant else {
+                    continue;
+                };
+                let id = crate::load::expr_text(node);
+                if out.contains_key(&id) {
+                    continue;
+                }
+                self.push();
+                let day = self.instance_day(m, node, &id, cut);
+                self.pop_alone();
+                if let Some(day) = day? {
+                    out.insert(id, day);
+                }
+            }
+        }
+        Ok(out)
+    }
+
+    /// The day of the decision instance `id` that `node` names, as the plan pass at cut `cut`
+    /// lists it; none for a move that isn't a decision, an instance it doesn't list, or a day
+    /// that is a hole or a window (refcore's `after_mv`, its test). E §4.2 step 3.
+    fn instance_day(
+        &mut self,
+        m: &Reality,
+        node: &crate::syntax::Expr,
+        id: &str,
+        cut: Day,
+    ) -> Result<Option<Day>, Stop> {
+        let base = if let crate::syntax::Expr::Post(inner, _) = node {
+            inner.as_ref()
+        } else {
+            node
+        };
+        let crate::syntax::Expr::Name(name) = base else {
+            return Ok(None);
+        };
+        let Some(mv) = m.moves.get(name).filter(|mv| mv.decision) else {
+            return Ok(None);
+        };
+        let insts = self.plan_list(m, mv, cut)?;
+        Ok(insts
+            .iter()
+            .find(|inst| inst.id == id)
+            .and_then(|inst| inst.day.as_ref().and_then(Dated::day)))
+    }
+
     /// A `stated` reading at its point: its gap against the booked balance, then, by its
     /// version's gap role, an anchor that sets the balance or a pad that books the gap from
     /// the other place (refcore's `apply_reading`). E §6.1, L §5.19.
@@ -438,7 +540,24 @@ impl Engine {
                     to: pad.leg.to.place() == Some(other.as_str()),
                     whole: true,
                 };
-                self.book_leg_ends(m, id, (&pad.id, &pad.leg), at, (&reg, &pad.coll), ends)?;
+                let grouped = self.walk_mut(id)?.open_group(at).is_some();
+                let breaking = match (&gap, &r.value) {
+                    (Amount::Qty(_), Ok(v)) => !grouped && crate::walk::breaks(m, &r.place, v),
+                    (Amount::Qty(_) | Amount::Hole(_) | Amount::Refused(_), _) => false,
+                };
+                if breaking {
+                    // after a decision, where no group is open, the reading's own place is
+                    // tested as it is booked, the pad refused before anything is (L §5.10
+                    // point 2, E §4.2 step 5; refcore's `apply_reading`)
+                    let err = Refusal::new(
+                        Code::Run(crate::base::Run::Place),
+                        crate::walk::takes_text(m, &pad.id, &r.place),
+                    );
+                    self.walk_mut(id)?
+                        .refuse_leg(m, (&pad.id, &pad.leg), &err, at)?;
+                } else {
+                    self.book_leg_ends(m, id, (&pad.id, &pad.leg), at, (&reg, &pad.coll), ends)?;
+                }
                 let padded = self.walk_mut(id)?;
                 let key = (pad.id.clone(), pad.leg.name.clone());
                 let refused = padded.bad_legs.contains_key(&key);
@@ -449,16 +568,14 @@ impl Engine {
                         .or_insert_with(Num::zero);
                     *sum = sum.checked_add(g).map_err(crate::eval::num_stop)?;
                     // L §5.10, E §4.2 step 5 (tally 2.1.2): the reading's own place is tested
-                    // at its point too, in the point's group with the pad's leg
-                    let Some(group) = padded.open_group(at) else {
-                        return Err(Stop::NotBuilt(
-                            "a reading after a decision (the sign rule's point 2)",
-                        ));
-                    };
-                    let at_place = group.entry((r.place.clone(), r.unit.clone()));
-                    at_place
-                        .or_insert_with(Vec::new)
-                        .push((pad.id.clone(), pad.leg.clone()));
+                    // at its point too, in the point's group with the pad's leg; outside every
+                    // group it was tested above
+                    if let Some(group) = padded.open_group(at) {
+                        let at_place = group.entry((r.place.clone(), r.unit.clone()));
+                        at_place
+                            .or_insert_with(Vec::new)
+                            .push((pad.id.clone(), pad.leg.clone()));
+                    }
                 }
                 let sub = at
                     .sub

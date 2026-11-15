@@ -24,7 +24,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::rc::Rc;
 
-use super::agenda::{Act, Mv};
+use super::agenda::{Act, Mv, Reading};
 use super::order::{CycleItem, Run};
 use super::plan::{Amount, Dated, DayWindow, Inst, LegVal, Order, invariant};
 use super::point::{At, Step};
@@ -314,6 +314,12 @@ pub struct Walk {
     /// The gaps of the `stated` readings it applied, per (place, day), in the order applied
     /// (L §5.19 `gap(x, d)`, E §6.1).
     pub(crate) gaps: BTreeMap<(String, Day), Vec<GapAt>>,
+    /// The readings `after m` before the cut that wait on decision instance m's run, by its
+    /// id, in the order the cut sees them (L §4.6, E §4.2 step 3).
+    pub(crate) after: BTreeMap<String, Vec<Reading>>,
+    /// Where each reading `after m` applied, by (place, instant, version), for its balance
+    /// line (refcore's `after_keys`; E §6.3 Grouping).
+    pub(crate) after_at: BTreeMap<(String, String, String), At>,
     /// A walk up to a day: that day, past which its plan pass listed no plan's instance
     /// (refcore's prefix walk; E §3.2, §4.1); none for a main walk or a projection's.
     pub(crate) upto: Option<Day>,
@@ -473,6 +479,8 @@ impl Walk {
             less_obs: None,
             checkpoints: Vec::new(),
             gaps: BTreeMap::new(),
+            after: BTreeMap::new(),
+            after_at: BTreeMap::new(),
             upto: None,
         }
     }

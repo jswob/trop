@@ -486,9 +486,10 @@ impl Engine {
             return Ok(());
         }
         if err.is_none() && !on.is_empty() && !self.group_legs(id, at, movement, lg, &on, &unit)? {
-            return Err(Stop::NotBuilt(
-                "a leg booked outside every group of the sign rule (a reading after a movement)",
-            ));
+            // outside every group (a reading's pad after a decision): tested as it is booked
+            err = self
+                .walk(id)?
+                .tested_alone(m, (movement, &q), &on, &unit, at)?;
         }
         #[cfg(feature = "counters")]
         if err.is_none() {
@@ -496,14 +497,7 @@ impl Engine {
         }
         let walk = self.walk_mut(id)?;
         if let Some(e) = err {
-            walk.bad_legs
-                .insert((movement.to_owned(), lg.name.clone()), e.clone());
-            for p in ends(lg) {
-                let mut ent = Ent::new(at, Change::Bad(e.clone()));
-                ent.mv = Some(movement.to_owned());
-                walk.add(m, p, &unit, ent)?;
-            }
-            return Ok(());
+            return walk.refuse_leg(m, (movement, lg), &e, at);
         }
         let whole = !dropped || mask.whole;
         for (p, sign) in &on {

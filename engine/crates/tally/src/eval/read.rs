@@ -106,10 +106,18 @@ pub(super) fn kept_rows(rows: &[Row], hidden: &[usize]) -> Vec<Row> {
 /// Whether `last(x, d)` reads its row past it, for day `day`: a reading past its instant's
 /// day, a state row past its span's end; a row that governs `always` is timeless (L §4.6
 /// Past the last row, Readings; §8.2 `held`; refcore's `last_value`).
-fn read_past(m: &Reality, row: &Row, day: Day, cut: Day) -> Result<bool, Stop> {
+fn read_past(
+    m: &Reality,
+    row: &Row,
+    (day, cut): (Day, Day),
+    after: &crate::book::AfterDays,
+) -> Result<bool, Stop> {
     match &row.instant {
         Some(RowInstant::At(at, _)) => Ok(day > *at),
-        Some(RowInstant::After(_)) => Ok(false),
+        // a reading after m stands on m's day (L §4.6 Readings)
+        Some(RowInstant::After(node)) => Ok(after
+            .get(&crate::load::expr_text(node))
+            .is_some_and(|at| day > *at)),
         None => {
             let Some(span) = crate::read::row_span(m, row, cut)? else {
                 return Ok(false);
@@ -281,13 +289,36 @@ impl Engine {
             Err(h) => return Ok(Err(h)),
             Ok(hidden) => hidden,
         };
-        if hidden.is_empty() {
+        let after = input
+            .rows
+            .iter()
+            .any(|row| matches!(row.instant, Some(RowInstant::After(_))));
+        if hidden.is_empty() && !after {
             return Ok(Ok(None));
         }
+        let mut rows = kept_rows(&input.rows, &hidden);
+        if after {
+            self.after_on_days(m, &mut rows, clocks.cut)?;
+        }
         Ok(Ok(Some(InputInfo {
-            rows: kept_rows(&input.rows, &hidden),
+            rows,
             ..input.clone()
         })))
+    }
+
+    /// A reading `after m` among `rows` read on m's day, as the plan pass at cut `cut` gives
+    /// it, so `last`, `since` and a plain read find it there; one whose m has no day keeps
+    /// no instant a read finds (L §4.6 Readings; E §4.2 step 3).
+    fn after_on_days(&mut self, m: &Reality, rows: &mut [Row], cut: Day) -> Result<(), Stop> {
+        let days = self.after_days(m, cut)?;
+        for row in rows {
+            if let Some(RowInstant::After(node)) = &row.instant
+                && let Some(day) = days.get(&crate::load::expr_text(node))
+            {
+                row.instant = Some(RowInstant::At(*day, None));
+            }
+        }
+        Ok(())
     }
 
     /// The positions of the rows `inside`, each known in a window that holds the cut, that
@@ -415,7 +446,12 @@ impl Engine {
             ..ctx
         };
         let value = self.row_converted(m, (input, row, &latest.keys), &figure, at)?;
-        if read_past(m, row, latest.day, ctx.cut)? {
+        let after = if matches!(row.instant, Some(RowInstant::After(_))) {
+            self.after_days(m, ctx.cut)?
+        } else {
+            crate::book::AfterDays::new()
+        };
+        if read_past(m, row, (latest.day, ctx.cut), &after)? {
             let text = format!(
                 "{figure} = {} ({}), read for {}",
                 shown(m, &value)?,

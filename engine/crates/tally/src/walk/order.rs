@@ -590,6 +590,8 @@ impl Engine {
                 &Broke::Decision(run_id),
             )?;
         }
+        // the readings after it, each tested as it is booked (E §4.2 steps 3 and 5)
+        self.readings_after(m, id, ix, key)?;
         Ok(ix)
     }
 

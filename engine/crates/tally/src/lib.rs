@@ -243,6 +243,7 @@ pub mod walk {
     pub use projection::ProjKey;
     pub(crate) use projection::own_unit;
     pub use readings::Broke;
+    pub(crate) use readings::{breaks, takes_text};
     pub(crate) use reads::state_value;
     pub(crate) use state::GapAt;
     pub use state::{
@@ -268,7 +269,9 @@ pub mod book {
     pub use ledger::{Fig, Group, GroupKey, Ledger, Line, fig_text};
     pub(crate) use members::{MvDom, MvMember, inst_ref};
     pub use observe::{Coverage, Linked, Obs, inst_id};
-    pub use reading::{Pad, Seen, first_readings, per_unit, reading_rank, readings};
+    pub use reading::{
+        AfterDays, Pad, Seen, Stands, first_readings, per_unit, reading_rank, readings,
+    };
     pub(crate) use reading::{gap_text, instant_text};
     pub(crate) use settle::settlement_move;
 }
