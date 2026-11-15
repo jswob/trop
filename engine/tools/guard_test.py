@@ -986,7 +986,7 @@ def launch_usage_checks(root, expect, failures):
     dry run on the throwaway and its refusals; usage on planted transcripts, an id listed
     twice and a call in two files counted once. The model and the effort come from the
     job (engine/PLAYBOOK.md, D2 and D3; 2026-11-15), and a Fable session's cost is split
-    out by model. No session is started."""
+    out by model and counted at Fable's list price. No session is started."""
     prompt = os.path.join(root, "engine", "target", "prompt.txt")
     ids = os.path.join(root, "engine", "target", "run", "ids.txt")
     os.makedirs(os.path.dirname(ids), exist_ok=True)
@@ -1070,8 +1070,8 @@ def launch_usage_checks(root, expect, failures):
                                                                                      "cache_read_input_tokens": 10000}}}
     other = {"type": "assistant", "message": {"id": "msg_2", "model": opus, "usage": {"input_tokens": 0, "output_tokens": 0,
                                                                                       "cache_creation_input_tokens": 800}}}
-    judge = {"type": "assistant", "message": {"id": "msg_3", "model": fable, "usage": {"input_tokens": 1000, "output_tokens": 200,
-                                                                                       "cache_read_input_tokens": 10000}}}
+    judge = {"type": "assistant", "message": {"id": "msg_3", "model": fable, "usage": {"input_tokens": 1000000, "output_tokens": 200000,
+                                                                                       "cache_read_input_tokens": 10000000}}}
     for folder, sid, lines in (("p1", a, [call, call]), ("p2", a, [call, other]), ("p1", b, [call]), ("p1", c, [judge])):
         os.makedirs(os.path.join(projects, folder), exist_ok=True)
         with open(os.path.join(projects, folder, sid + ".jsonl"), "a", encoding="utf-8") as f:
@@ -1086,13 +1086,14 @@ def launch_usage_checks(root, expect, failures):
             failures.append(f"usage: lacks {says!r}: {r.stdout.strip()[:300]}")
     if "by model" in r.stdout:
         failures.append(f"usage: splits by model a run that is all Opus: {r.stdout.strip()[:300]}")
-    # a Fable session beside them: the same total as Opus-weighted, and its list price apart.
-    # msg_3 as Opus: 3000 weighted; at Fable's price 2 * (1000 + 5 * 200) + 1000 = 5000, and
-    # (1000 * 8 + 200 * 40 + 10000 * 0.20) / 1e6 = $0.018
+    # a Fable session beside them counts at Fable's list price, in the week's share (the user,
+    # 2026-11-15: the same weekly limit). msg_3 as Opus's tokens: 1 M + 5 * 0.2 M + 0.1 * 10 M =
+    # 3 M, 0.35 %; at Fable's price 2 * 2 M + 1 M = 5 M, 0.58 %; 8 + 8 + 2 = $18.00
     r = subprocess.run([os.path.join(root, "engine/tools/usage"), ids, c, "--projects", projects], capture_output=True, text=True, check=False)
     expect("usage of an ids file and a Fable session", r.returncode, 0, r.stderr)
-    for says in (f"session {c}: 1 calls", "by model:", f"  {opus}: 2 calls", f"  {fable}: 1 calls, 0.00 M weighted", "$0.02",
-                 "reported apart, not the week's share", "all 3 sessions"):
+    for says in (f"session {c}: 1 calls, 5.00 M weighted, about 0.58 % of the week", "by model:", f"  {opus}: 2 calls",
+                 f"  {fable}: 1 calls, 5.00 M weighted, about 0.58 % of the week", "as Opus's tokens 0.35 %", "$18.00",
+                 "all 3 sessions: about 0.58 % of the week"):
         if says not in r.stdout:
             failures.append(f"usage with a Fable session: lacks {says!r}: {r.stdout.strip()[:400]}")
     if not r.stdout.rstrip().splitlines()[-1].startswith("all 3 sessions"):

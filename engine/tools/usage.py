@@ -10,14 +10,13 @@ in two files, counts once. Weights and calibration are those of
 tmp/session8c/tools/usage.py: input 1, cache reads 0.1, output 5, cache writes 1.25 (5 min)
 or 2 (1 h), and 8.6 M weighted tokens to 1 % of the week.
 
-Those weights are Opus's, and so is the calibration: every line but the last block weighs
-each token as Opus's, whatever model spent it ("Opus-weighted"). When a session ran on
-another model, a `by model:` block splits the same total by the model each call names,
-and for a model in PRICED adds what its tokens cost at Anthropic's list price beside
-Opus 5.5's (Fable 5.2: twice on input, output and cache writes, the same on cache reads;
-platform.claude.com, 2026-11-15) and in dollars. How the user's plan meters such a model
-isn't known to this tool, so it is reported apart and never added to the week's share
-(engine/PLAYBOOK.md, D10).
+Those weights are Opus's, and so is the calibration. A call on another model in PRICED
+counts at that model's list price beside Opus 5.5's (Fable 5.2: twice on input, output and
+cache writes, the same on cache reads; platform.claude.com, 2026-11-15), since Fable draws
+on the same weekly limit (the user, 2026-11-15; engine/PLAYBOOK.md, D10). When a session
+ran on another model than Opus, a `by model:` block splits the total by the model each
+call names, with what a priced model's tokens would be as Opus's and their dollars at list
+price. A model with no price here counts as Opus, and its line says so.
 """
 
 import glob
@@ -61,10 +60,10 @@ def tokens(usage):
     return usage.get("input_tokens") or 0, usage.get("output_tokens") or 0, usage.get("cache_read_input_tokens") or 0, w5, w1
 
 
-def weighted(usage, factors=(1, 1)):
-    """The call in Opus-weighted tokens; `factors` scale them to another model's list price."""
+def weighted(usage, factors=None):
+    """The call in weighted tokens, at its model's list price beside Opus's (or at `factors`)."""
     i, o, r, w5, w1 = tokens(usage)
-    rest, read = factors
+    rest, read = factors or PRICED.get(usage.get("model"), PRICED[OPUS])[0]
     return rest * (WEIGHTS["input_tokens"] * i + WEIGHTS["output_tokens"] * o + 1.25 * w5 + 2 * w1) \
         + read * WEIGHTS["cache_read_input_tokens"] * r
 
@@ -83,14 +82,13 @@ def by_model(calls):
     lines = ["by model:"]
     for model in sorted(models):
         total = sum(weighted(u) for u in models[model])
-        line = f"  {model}: {len(models[model])} calls, {total / 1e6:.2f} M weighted, about {total / PER_PERCENT:.2f} % Opus-weighted"
+        line = f"  {model}: {len(models[model])} calls, {total / 1e6:.2f} M weighted, about {total / PER_PERCENT:.2f} % of the week"
         if model in PRICED and model != OPUS:
-            factors, prices = PRICED[model]
-            own = sum(weighted(u, factors) for u in models[model])
-            line += (f"; at its list price about {own / PER_PERCENT:.2f} %, ${sum(dollars(u, prices) for u in models[model]):.2f}: "
-                     "reported apart, not the week's share")
+            as_opus = sum(weighted(u, PRICED[OPUS][0]) for u in models[model])
+            line += (f", at its list price beside Opus's; as Opus's tokens {as_opus / PER_PERCENT:.2f} %; "
+                     f"${sum(dollars(u, PRICED[model][1]) for u in models[model]):.2f}")
         elif model not in PRICED:
-            line += "; no list price here"
+            line += ", counted as Opus's: no list price here"
         lines.append(line)
     return lines
 

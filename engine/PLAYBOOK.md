@@ -119,10 +119,11 @@ A **run** is one coordinator, one pull request: a milestone (M2), a spec round (
 
 ### D10. Measuring cost
 
-- **Pick:** `engine/tools/usage <the run's ids file>` after every chunk, logged in `progress.md`. Its figure is a share of the week, weighing every token as Opus's ("Opus-weighted"; 8.6 million weighted tokens to 1 %). When a session ran on another model it adds a block by model, and for Fable its list price (twice Opus's, cache reads the same) and dollars, reported apart from the week's share.
-- **Why apart:** the calibration is Opus's on the user's plan. How the plan meters Fable is the user's to say: on 2026-11-15, "I have 3 resets on it so we could use it safely". Claude Code's docs say only that "Fable usage can bill to usage credits instead of drawing on your plan's included limits".
-- **Options:** Fable inside the week's share at twice Opus's weight; a second ids file for Fable sessions (the master's first practice, not needed now: `launch` writes each session's job and model, and `usage` splits by the model each call names).
+- **Pick:** `engine/tools/usage <the run's ids file>` after every chunk, logged in `progress.md`. Its figure is a share of the week (8.6 million weighted tokens to 1 %, calibrated on Opus). A Fable call counts inside it at Fable's list price beside Opus's: twice on input, output and cache writes, the same on cache reads. One ids file a run holds every session, whatever its model; a block by model shows each model's part, and Fable's tokens as Opus's and in dollars.
+- **Decided:** the user, 2026-11-15, asked how their plan limits Fable: it draws on the same weekly limit as Opus, about twice per token, and the "3 resets" they have are resets of that limit. So a run's budget and its stops count Fable.
+- **Options:** Fable apart from the week's share, in a second ids file (the master's first practice, when the metering wasn't known); Fable in dollars only (if it billed to usage credits, as Claude Code's docs say it can).
 - **Enforced:** `usage`'s `PRICED` table; `guard-test`'s planted transcripts.
+- **Revisit:** the factor is the list-price ratio, not a reading of the plan's meter. At 2.1.8, read the week's meter (`/usage`) before and after the planner's session and compare with this tool's figure for it.
 
 ### D11. Estimating size and cost
 
@@ -252,7 +253,7 @@ Measured sizes, in words: M1's brief 2 247, 2.1.7's 2 978, M2's 2 291; a rules s
 - **One session:** a group's builder 1 to 3 %; a group review about 0.4 %; a fix review 0.15 to 0.4 %; a turn of T 0.5 to 1.4 %; a study or a rules session 0.25 to 1.1 %.
 - **A group's builder and review together,** M2: 0.85 to 1.85 % per 1 000 lines; the highest was a small group of corner cases.
 - **Wall time:** a group with its fix loop 2.5 to 5 hours; a gate-8 dispatch 1 to 2 hours with its queue.
-- A Fable session's figure from `usage` is Opus-weighted; its list price is twice that, less on cache reads (D10).
+- A Fable session costs about 1.6 times the same tokens on Opus by `usage`'s figure: twice on what it writes and reads fresh, the same on cache reads (D10; this file's own session, 0.22 % as Opus's tokens, 0.34 % as Fable's).
 
 ## 5. Sources
 
