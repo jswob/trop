@@ -12,7 +12,7 @@
 //! Invariants: a row's value has its input's declared type; a hole is built in the hole
 //! module.
 
-use super::arith::{Op, arith};
+use super::arith::{Op, arith, same_value};
 use super::builtin::read_parts;
 use super::convert::{ConvertFor, Converted, convert_read};
 use super::keys::Given;
@@ -21,10 +21,10 @@ use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load};
 use super::windows::{as_read, known_hole, one_day};
 use crate::base::{Load, Run};
 use crate::book::reading_place;
-use crate::hole::Hole;
+use crate::hole::{Hole, spread};
 use crate::model::{
-    BindInfo, Class, Domain, InputInfo, KeyVal, Number, Pat, Reality, Row, RowInstant, TimePos,
-    Unit, Value,
+    BindInfo, Class, Domain, InputInfo, KeyVal, Number, Pat, Reality, Row, RowInstant, SamePair,
+    TimePos, Unit, Value,
 };
 use crate::read::{
     Asked, Clocks, Found, KnownInside, Test, held, known_inside, last_began, need_law, origin,
@@ -32,6 +32,26 @@ use crate::read::{
 };
 use crate::syntax::{Call, Expr, Stop, Value as Written};
 use crate::time::{Day, PeriodKind};
+
+/// One side of two rows stated `same`: the value of the row its read takes with the row's
+/// id, or what the read finds where it takes none; and the read's day (L §6.1).
+type SameSide = (Result<(Value, String), Found>, Option<Day>);
+
+/// The row a `same` line states one with input `id`'s at `keys`: the other side's input and
+/// keys, the last such line's where several name it (refcore's `same_rows`). L §6.1, §5.19.
+fn same_row_of(m: &Reality, id: &str, keys: &[KeyVal]) -> Option<(String, Vec<KeyVal>)> {
+    let mut out = None;
+    for pair in &m.sames {
+        if let SamePair::Rows(a, ka, b, kb) = pair {
+            if a == id && ka.as_slice() == keys {
+                out = Some((b, kb));
+            } else if b == id && kb.as_slice() == keys {
+                out = Some((a, ka));
+            }
+        }
+    }
+    out.map(|(other, other_keys)| (other.clone(), other_keys.clone()))
+}
 
 /// Which read past a row's span: `last(x, d)` or `since(x, d)` (L §4.6).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -88,7 +108,7 @@ fn no_reading(figure: &str, day: Day) -> Hole {
 
 /// The cell a read of an input names its window by: the row its read rule took, which the
 /// law date, cut and pins the read depends on decide (L §4.4; refcore's `('row', sid, …)`).
-fn row_cell(row: &Row) -> String {
+pub(super) fn row_cell(row: &Row) -> String {
     format!("row {}", row.sid)
 }
 
@@ -182,6 +202,12 @@ impl Engine {
             let value = pinned_at(pinned, &input.binds, keys)?;
             return self.pin_chosen(value, &origin(&input.id, keys), ctx);
         }
+        // two rows stated `same` are read together (L §6.1, §5.19)
+        if !input.reading
+            && let Some(other) = same_row_of(m, &input.id, keys)
+        {
+            return self.read_same_rows(m, (input, keys), (&other.0, &other.1), ctx, asked);
+        }
         let clocks = self.clocks(ctx, &input.id)?;
         #[cfg(feature = "counters")]
         self.counts
@@ -231,6 +257,122 @@ impl Engine {
             Found::None => Ok(Value::None),
             Found::Hole(q) => Ok(Value::Hole(Hole::asked(&q.text, &q.origin))),
         }
+    }
+
+    /// A read of input `input` at `keys`, whose row a `same` line states one with input
+    /// `other`'s at its keys: both sides read by the read rule; where only one side has a row
+    /// its value is the fact, a hole on either side is the hole, two values that agree are the
+    /// value, and two that differ are `HOLE-SAME` naming both rows; where neither side has
+    /// one, `input`'s read finds none (refcore's `read_same_row`; a joint model's own row that
+    /// settles them is M5c's). L §6.1 What `same` does, §5.19, §8.1.
+    ///
+    /// # Errors
+    ///
+    /// The refusals of either side's read rule and row value; `ENGINE-INVARIANT` for an input
+    /// load didn't build.
+    fn read_same_rows(
+        &mut self,
+        m: &Reality,
+        (input, keys): (&InputInfo, &[KeyVal]),
+        (other, other_keys): (&str, &[KeyVal]),
+        ctx: Ctx,
+        asked: Asked,
+    ) -> Result<Value, Stop> {
+        let other = m
+            .inputs
+            .get(other)
+            .ok_or_else(|| invariant("a row stated same of an input load didn't build"))?;
+        let (a, day_a) = match self.same_side(m, (input, keys), ctx, asked)? {
+            Err(h) => return Ok(Value::Hole(h)),
+            Ok(side) => side,
+        };
+        let (b, day_b) = match self.same_side(m, (other, other_keys), ctx, asked)? {
+            Err(h) => return Ok(Value::Hole(h)),
+            Ok(side) => side,
+        };
+        let ((va, ra), (vb, rb)) = match (a, b) {
+            (Err(found), Err(_)) => {
+                return Ok(match found {
+                    Found::Hole(q) => Value::Hole(Hole::asked(&q.text, &q.origin)),
+                    Found::None | Found::Row(_) => Value::None,
+                });
+            }
+            (Err(_), Ok((v, _))) | (Ok((v, _)), Err(_)) => return Ok(v),
+            (Ok(a), Ok(b)) => (a, b),
+        };
+        match (&va, &vb) {
+            (Value::Hole(ha), Value::Hole(hb)) => {
+                let both = spread(&[Some(ha), Some(hb)])
+                    .ok_or_else(|| invariant("two holes spread to none"))?;
+                return Ok(Value::Hole(both));
+            }
+            (Value::Hole(_), _) => return Ok(va),
+            (_, Value::Hole(_)) => return Ok(vb),
+            _ => {}
+        }
+        if same_value(m, &va, &vb)? {
+            return Ok(va);
+        }
+        let (ta, tb) = (origin(&input.id, keys), origin(&other.id, other_keys));
+        let day = match day_a.or(day_b) {
+            Some(d) => d.text(),
+            None => "every day".to_owned(),
+        };
+        let text = format!(
+            "{ta} and {tb} are one, but the value differs on {day}: {} ({ra}) and {} ({rb})",
+            va.text(m).map_err(num_stop)?,
+            vb.text(m).map_err(num_stop)?,
+        );
+        Ok(Value::Hole(Hole::asked(&text, &format!("{ta}, {tb}"))))
+    }
+
+    /// One side of two rows stated `same`: the value of the row the read rule takes for
+    /// `input` at `keys`, with the row's id, or what the read finds where it takes none; and
+    /// the read's day (refcore's `read_same_row`, its `side`). The hole where no `windows
+    /// each` decides a row known in a window. L §6.1, §4.6, §4.5.
+    ///
+    /// # Errors
+    ///
+    /// The refusals of the read rule and of the row's value.
+    fn same_side(
+        &mut self,
+        m: &Reality,
+        (input, keys): (&InputInfo, &[KeyVal]),
+        ctx: Ctx,
+        asked: Asked,
+    ) -> Result<Result<SameSide, Hole>, Stop> {
+        let clocks = self.clocks(ctx, &input.id)?;
+        self.read(Read::Input {
+            id: input.id.clone(),
+            keys: keys.to_vec(),
+        });
+        let by_law = self.read_class(m, input, ctx, asked)?;
+        let view = match self.input_view(m, input, keys, (None, clocks), ctx)? {
+            Err(h) => return Ok(Err(h)),
+            Ok(view) => view,
+        };
+        let input = match &view {
+            Some(seen) => seen,
+            None => input,
+        };
+        let day = time_point(input, keys, ctx.law)?.day;
+        let found = read_input(m, input, keys, clocks, asked)?;
+        let Found::Row(at) = found else {
+            if by_law {
+                self.narrow_to_day(ctx.law);
+            }
+            return Ok(Ok((Err(found), day)));
+        };
+        let row = input
+            .rows
+            .get(at)
+            .ok_or_else(|| invariant("the read rule took a row the input lacks"))?;
+        self.read(Read::Row {
+            version: row.version.clone(),
+            sid: row.sid.clone(),
+        });
+        let value = self.row_value(m, input, row, keys, ctx)?;
+        Ok(Ok((Ok((value, row.sid.clone())), day)))
     }
 
     /// A pinned value `value` of figure `figure` as a `windows each` in `ctx` takes it: a
@@ -837,7 +979,7 @@ impl Engine {
             index_at_day.as_hole(),
             index_at_year.as_hole(),
         ];
-        if let Some(hole) = crate::hole::spread(&operands) {
+        if let Some(hole) = spread(&operands) {
             return Ok(Value::Hole(hole));
         }
         let plain = as_plain(m, &value)?;

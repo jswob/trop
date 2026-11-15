@@ -337,8 +337,8 @@ impl World {
         }
         if self.unbuilt {
             return Err(Stop::NotBuilt(
-                "a reading's, a moves line's, a rule's, a band table's, a key's or an \
-                 entry's known window at run",
+                "a moves line's, a rule's, a band table's, a key's or an entry's known \
+                 window at run",
             ));
         }
         if self.parts {
@@ -352,11 +352,11 @@ impl World {
 }
 
 /// Whether the reality holds a known window the run doesn't take yet (L §4.5, §5.3), so an
-/// ask of it stops `NotBuilt`: a reading's window (an opening's or a stated balance's row),
-/// a `moves` line's, or the window of a version that brings a rule, a band table, an index
-/// key or a thing's entry. A version's or a row's own window on an input's or a def's rows,
-/// on an observation and on a coverage is taken (`eval/read.rs`, `book/observe.rs`), and so
-/// is a `moves` line known on a day.
+/// ask of it stops `NotBuilt`: a `moves` line's, or the window of a version that brings a
+/// rule, a band table, an index key or a thing's entry. A version's or a row's own window on
+/// an input's or a def's rows, on a reading, on an observation and on a coverage is taken
+/// (`eval/read.rs`, `book/reading.rs`, `book/observe.rs`), and so is a `moves` line known on
+/// a day.
 fn known_windows_unbuilt(m: &Reality) -> bool {
     let mut windowed = BTreeSet::new();
     for (_, v) in m.versions.entries() {
@@ -367,23 +367,7 @@ fn known_windows_unbuilt(m: &Reality) -> bool {
             windowed.insert(v.id.as_str());
         }
     }
-    readings_windowed(m, &windowed) || (!windowed.is_empty() && brought_windowed(m, &windowed))
-}
-
-/// Whether an opening's or a stated balance's row is known in a window, its own or its
-/// version's (one of `windowed`) (L §4.5, §5.19).
-fn readings_windowed(m: &Reality, windowed: &BTreeSet<&str>) -> bool {
-    for id in ["opening", "stated"] {
-        let Some(input) = m.inputs.get(id) else {
-            continue;
-        };
-        for r in &input.rows {
-            if r.own_window.is_some() || windowed.contains(r.version.as_str()) {
-                return true;
-            }
-        }
-    }
-    false
+    !windowed.is_empty() && brought_windowed(m, &windowed)
 }
 
 /// Whether one of `windowed`, the versions known in a window, brings a rule, a band table,
@@ -447,8 +431,8 @@ fn keeps_parts(m: &Reality) -> bool {
 }
 
 /// A form load checks (M0) that the run doesn't evaluate yet, where the ask meets it: a random
-/// ask, `orient`, a fill or a `same` line of the reality, or a joint model's merged reality
-/// (L §5.12, §5.16, §5.18, §6.1).
+/// ask, `orient`, a fill, or a joint model's merged reality (L §5.12, §5.16, §5.18, §6.1). A
+/// version's rows and movements stated `same` are built (`eval/read.rs`, `book/same.rs`).
 fn unbuilt_at_run(m: &Reality, ask: &Ask) -> Option<&'static str> {
     if ask.random.is_some() || ask.paths.is_some() || ask.path.is_some() {
         return Some("a random ask at run");
@@ -458,15 +442,6 @@ fn unbuilt_at_run(m: &Reality, ask: &Ask) -> Option<&'static str> {
     }
     if !m.fills.is_empty() {
         return Some("fills at run");
-    }
-    // a version's movements stated `same` are built (L §5.19, §6.1); rows stated `same` are
-    // not yet
-    let rows = m
-        .sames
-        .iter()
-        .any(|pair| matches!(pair, crate::model::SamePair::Rows(..)));
-    if rows {
-        return Some("rows stated same at run");
     }
     if m.joint.is_some() {
         return Some("a joint model's asks at run");
@@ -519,11 +494,6 @@ fn ask_lines(
     days: Days,
     seen: &mut Seen,
 ) -> Result<Vec<String>, Stop> {
-    if ask.windows_each && matches!(ask.body, AskBody::Diff(_) | AskBody::Residuals(_)) {
-        // a diff's and a ledger's result is their set of lines (R8): split by the windows
-        // they meet, each sub-window's set, which no layout yet writes
-        return Err(Stop::NotBuilt("a diff's or a ledger's `windows each`"));
-    }
     let mut cut = m.on;
     let mut known_engine = None;
     if let Some(known) = &ask.known {
@@ -668,6 +638,13 @@ fn ask_body(
         engine.open_layer(m, inside)?;
         inside
     };
+    if ask.windows_each && matches!(ask.body, AskBody::Diff(_) | AskBody::Residuals(_)) {
+        if side.is_some() {
+            return Err(Stop::NotBuilt("a diff's `windows each` over two stacks"));
+        }
+        // a diff's and a ledger's result is their set of lines (R8), run per sub-window
+        return super::windows::each_set(m, ask, engine, (ctx, &pinned));
+    }
     match &ask.body {
         AskBody::Exprs(_)
         | AskBody::Check(..)

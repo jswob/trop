@@ -28,7 +28,7 @@ use crate::time::Day;
 
 use super::convert::{ConvertFor, Converted, convert_read};
 use super::memo::{CellId, CellKey, LawClass, Read, rows_class, rules_class};
-use super::read::{at_keys, kept_rows, pinned_at, shown};
+use super::read::{at_keys, kept_rows, pinned_at, row_cell, shown};
 use super::trace::{RuleState, Seen};
 use super::windows::{as_read, window_days};
 
@@ -711,7 +711,14 @@ impl Engine {
             let line = format!("given {}{keys_text} (version {})", def.id, row.version);
             self.trace_line(node, line);
         }
-        Ok(Some(value))
+        // only a window keeps its read, and under `windows each` a given's window takes its
+        // day, named by its row and figure as an input row's is (L §4.4)
+        if !matches!(value, Value::Window(_)) {
+            return Ok(Some(value));
+        }
+        let value = as_read(value, (&def.id, keys), row_cell(row));
+        let chosen = self.chosen(value, (format!("row {} {figure}", row.sid), &figure), ctx)?;
+        Ok(Some(chosen))
     }
 }
 

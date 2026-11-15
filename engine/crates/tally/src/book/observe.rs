@@ -17,6 +17,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::base::{Code, Refusal, Run, Warn};
 use crate::eval::{Collected, Engine, Rows};
+use crate::hole::Hole;
 use crate::model::{Fulfils, KeyVal, MvRef, MvSrc, Reality, Span, Value, World};
 use crate::syntax::{Expr, Key, Stop};
 use crate::time::Day;
@@ -98,7 +99,34 @@ pub fn inst_id(mv: &str, keys: &[KeyVal]) -> String {
 type Refused = (String, Refusal);
 
 /// Known windows, each its first and last day with whose `known` it is (L §4.5).
-type Windows = Vec<((Day, Day), String)>;
+pub(crate) type Windows = Vec<((Day, Day), String)>;
+
+/// What a cut makes of the `known` windows that hold it (L §4.5, §4.4): whose the line's
+/// `windows each` puts after the cut, which the cut doesn't see, and whose no `windows each`
+/// decides, each with its window: what they bring is `HOLE-IMPRECISE` (refcore's `visible`,
+/// None).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub(crate) struct KnownAtCut {
+    /// Whose `known` the cut doesn't see.
+    pub(crate) unseen: BTreeSet<String>,
+    /// Whose `known` the cut leaves undecided, with its window.
+    pub(crate) undecided: BTreeMap<String, (Day, Day)>,
+}
+
+impl KnownAtCut {
+    /// The question of what `sid`'s `known` brings, where the cut `cut` leaves it undecided:
+    /// `date within window(a, b) not precise enough for the cut K` (L §4.5, §8.1).
+    pub(crate) fn question(&self, sid: &str, cut: Day) -> Option<String> {
+        self.undecided
+            .get(sid)
+            .map(|window| crate::eval::known_question(*window, cut))
+    }
+
+    /// [`KnownAtCut::question`]'s hole, asked of `source` (L §4.5, §8.1).
+    pub(crate) fn hole(&self, sid: &str, cut: Day, source: &str) -> Option<Hole> {
+        self.question(sid, cut).map(|q| Hole::asked(&q, source))
+    }
+}
 
 /// A link judged: the observations that fulfil an instance, by id, and what judging read.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -109,9 +137,16 @@ pub struct Linked {
     pub coll: Collected,
 }
 
-/// The versions that cover each place under one cut: the span and the version (refcore's
-/// `coverage`). L §5.19 Coverage.
-pub type Coverage = BTreeMap<String, Vec<(Span, String)>>;
+/// The versions that cover each place under one cut, and the covers the cut leaves undecided
+/// (refcore's `coverage`, `coverage_undecided`). L §5.19 Coverage, §4.5.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Coverage {
+    /// Each place's covered spans, each with the version that covers it.
+    pub spans: BTreeMap<String, Vec<(Span, String)>>,
+    /// Each cover of a version known in a window that holds the cut, with no `windows each`:
+    /// the place, the span, and the hole its balance is from the span's first day.
+    pub undecided: Vec<(String, Span, Hole)>,
+}
 
 impl Engine {
     /// The observations cut `cut` sees, each row's latest restatement, a row restated `none`
@@ -119,15 +154,16 @@ impl Engine {
     ///
     /// # Errors
     ///
-    /// `ENGINE-INVARIANT` for a row load left without its day, kind or version; `NotBuilt` for
-    /// a row known in a window.
+    /// `ENGINE-INVARIANT` for a row load left without its day, kind or version, or for a freed
+    /// layer.
     pub(crate) fn observations(&mut self, m: &Reality, cut: Day) -> Result<&[Obs], Stop> {
         let world = self.timeline_world();
         if !self.observed.contains_key(&cut) {
             // an observation known in a window that holds the cut is seen where the line's
-            // `windows each` puts its day on or before the cut (L §4.5)
-            let unseen = self.unseen_known(known_windows(m)?, cut)?;
-            let mut seen = seen_observations(m, (cut, world), self.keep_rows, &unseen)?;
+            // `windows each` puts its day on or before the cut, and with none its legs are
+            // `HOLE-IMPRECISE` (L §4.5)
+            let known = self.known_at_cut(known_windows(m)?, cut)?;
+            let mut seen = seen_observations(m, (cut, world), self.keep_rows, &known)?;
             share_fulfils(&super::same_groups(m), &mut seen);
             self.observed.insert(cut, seen);
         }
@@ -175,15 +211,15 @@ impl Engine {
     ///
     /// # Errors
     ///
-    /// `NotBuilt` for a covering version known in a window that holds the cut, with no
-    /// `windows each`; `ENGINE-INVARIANT` for a freed layer.
+    /// `ENGINE-INVARIANT` for a freed layer.
     pub(crate) fn coverage(&mut self, m: &Reality, cut: Day) -> Result<&Coverage, Stop> {
         let world = self.timeline_world();
         if !self.covered.contains_key(&cut) {
             // a version known in a window that holds the cut covers its places where the
-            // line's `windows each` puts its day on or before the cut (L §4.5)
-            let unseen = self.unseen_known(covering_windows(m), cut)?;
-            let seen = seen_coverage(m, (cut, world), &unseen);
+            // line's `windows each` puts its day on or before the cut, and with none whether
+            // it covers them is undecided (L §4.5)
+            let known = self.known_at_cut(covering_windows(m), cut)?;
+            let seen = seen_coverage(m, (cut, world), &known);
             self.covered.insert(cut, seen);
         }
         self.covered
@@ -191,18 +227,16 @@ impl Engine {
             .ok_or_else(|| invariant("a coverage just kept"))
     }
 
-    /// The `known` windows of `windowed` (each with whose it is) that hold cut `cut` and
-    /// that the line's choice puts after it, which the cut doesn't see (refcore's `visible`).
-    /// L §4.5, §4.4.
+    /// What cut `cut` makes of the `known` windows of `windowed` (each with whose it is) that
+    /// hold it: whose the line's choice puts after it, unseen, and whose no `windows each`
+    /// decides (refcore's `visible`). L §4.5, §4.4.
     ///
     /// # Errors
     ///
-    /// `NotBuilt` for one that holds the cut with no `windows each`: its observations or
-    /// coverage are `HOLE-IMPRECISE` at run, which isn't built; `ENGINE-INVARIANT` for a
-    /// freed layer.
-    fn unseen_known(&mut self, windowed: Windows, cut: Day) -> Result<BTreeSet<String>, Stop> {
+    /// `ENGINE-INVARIANT` for a freed layer; `RUN-LIMIT` past the calendar's edge.
+    pub(crate) fn known_at_cut(&mut self, windowed: Windows, cut: Day) -> Result<KnownAtCut, Stop> {
         let ctx = self.timeline_ctx(None, cut);
-        let mut out = BTreeSet::new();
+        let mut out = KnownAtCut::default();
         for (window, sid) in windowed {
             if !(window.0 <= cut && cut < window.1) {
                 continue;
@@ -210,13 +244,10 @@ impl Engine {
             match self.known_seen(ctx, window, &sid)? {
                 Some(true) => {}
                 Some(false) => {
-                    out.insert(sid);
+                    out.unseen.insert(sid);
                 }
                 None => {
-                    return Err(Stop::NotBuilt(
-                        "an observation or a coverage known in a window that holds the cut, \
-                         with no `windows each`",
-                    ));
+                    out.undecided.insert(sid, window);
                 }
             }
         }
@@ -236,7 +267,7 @@ impl Engine {
         day: Day,
         cut: Day,
     ) -> Result<Vec<String>, Stop> {
-        let Some(spans) = self.coverage(m, cut)?.get(place) else {
+        let Some(spans) = self.coverage(m, cut)?.spans.get(place) else {
             return Ok(Vec::new());
         };
         let mut out = Vec::new();
@@ -272,7 +303,7 @@ impl Engine {
         let (Some(mut d), Some(end)) = (sp.start(), sp.end()) else {
             return Ok(Value::Bool(false));
         };
-        let spans: Vec<Span> = match self.coverage(m, ctx.cut)?.get(&name) {
+        let spans: Vec<Span> = match self.coverage(m, ctx.cut)?.spans.get(&name) {
             Some(list) => list.iter().map(|(s, _)| s.clone()).collect(),
             None => Vec::new(),
         };
@@ -658,11 +689,13 @@ fn disagree(a: &Obs, b: &Obs) -> bool {
     a.legs.iter().any(|la| differs(b, la))
 }
 
-/// Whether observation `b` states leg `la`'s name with another amount. E §6.1.
+/// Whether observation `b` states leg `la`'s name with another amount; a leg of `la`'s that
+/// is a hole differs from nothing (refcore's `prepare`, its links). E §6.1.
 fn differs(b: &Obs, la: &LegVal) -> bool {
-    b.legs
-        .iter()
-        .any(|lb| lb.name == la.name && lb.amount != la.amount)
+    !matches!(la.amount, Amount::Hole(_))
+        && b.legs
+            .iter()
+            .any(|lb| lb.name == la.name && lb.amount != la.amount)
 }
 
 /// Whether observation `o` states a leg named `name`. L §5.19 Links.
@@ -676,6 +709,10 @@ fn amounts(m: &Reality, o: &Obs) -> Result<String, Stop> {
     legs.sort_by(|a, b| a.name.cmp(&b.name));
     let mut out = Vec::with_capacity(legs.len());
     for lg in legs {
+        if let Amount::Hole(h) = &lg.amount {
+            out.push(h.text());
+            continue;
+        }
         let (Amount::Qty(q), Some(unit)) = (&lg.amount, &lg.unit) else {
             return Err(invariant("an observed leg with no amount"));
         };
@@ -698,7 +735,7 @@ fn seen_observations(
     m: &Reality,
     (cut, world): (Day, World),
     rows: Rows,
-    unseen: &BTreeSet<String>,
+    known: &KnownAtCut,
 ) -> Result<Vec<Obs>, Stop> {
     let mut out = Vec::new();
     for (_, input) in m.inputs.entries() {
@@ -708,15 +745,18 @@ fn seen_observations(
                 .versions
                 .get(&o.version)
                 .ok_or_else(|| invariant("an observation of a version load didn't build"))?;
-            let known = o.own_known.unwrap_or(version.known);
-            if known > cut
-                || unseen.contains(&known_sid(o))
+            let known_on = o.own_known.unwrap_or(version.known);
+            if known_on > cut
+                || known.unseen.contains(&known_sid(o))
                 || !m.scenarios.sees(world, Some(&o.version))
             {
                 continue;
             }
-            if latest.get(o.key.as_str()).is_none_or(|(k, _)| known > *k) {
-                latest.insert(o.key.as_str(), (known, o));
+            if latest
+                .get(o.key.as_str())
+                .is_none_or(|(k, _)| known_on > *k)
+            {
+                latest.insert(o.key.as_str(), (known_on, o));
             }
         }
         for (_, (_, o)) in latest {
@@ -724,6 +764,13 @@ fn seen_observations(
                 continue;
             }
             let mut seen = observation(o)?;
+            // one known in a window the cut leaves undecided is booked or not: each of its
+            // legs is that hole (L §4.5; refcore's `observations`, its `undecided`)
+            if let Some(hole) = known.hole(&known_sid(o), cut, &seen.id) {
+                for lg in &mut seen.legs {
+                    lg.amount = Amount::Hole(hole.clone());
+                }
+            }
             // the row as `inputs-of` lists it, kept by an engine answering one (E §10)
             if rows == Rows::Kept {
                 seen.coll.note_row(&seen.id, &o.version, o.locator.as_ref());
@@ -849,26 +896,36 @@ fn observation(o: &crate::model::Observation) -> Result<Obs, Stop> {
 /// The versions the cut and the world of `seen` see that cover each place, by version id: each
 /// place with its span, the one written or the version's `governs` (refcore's `coverage`).
 /// L §5.19 Coverage, §6.4.
-fn seen_coverage(m: &Reality, (cut, world): (Day, World), unseen: &BTreeSet<String>) -> Coverage {
-    let mut out = Coverage::new();
+fn seen_coverage(m: &Reality, (cut, world): (Day, World), known: &KnownAtCut) -> Coverage {
+    let mut out = Coverage::default();
     let mut versions: Vec<&crate::model::VersionInfo> =
         m.versions.entries().map(|(_, v)| v).collect();
     versions.sort_by(|a, b| a.id.cmp(&b.id));
     for v in versions {
         if v.covers.is_empty()
             || v.known > cut
-            || unseen.contains(&v.id)
+            || known.unseen.contains(&v.id)
             || !m.scenarios.sees(world, Some(&v.id))
         {
             continue;
         }
+        // one known in a window the cut leaves undecided covers nothing, and each place it
+        // covers is that hole from its span's first day (L §4.5; refcore's `covund`)
+        let undecided = known.hole(&v.id, cut, &v.id);
         for (place, span) in &v.covers {
             let Some(span) = span.as_ref().or_else(|| v.span_at(cut)) else {
                 continue;
             };
-            out.entry(place.clone())
-                .or_insert_with(Vec::new)
-                .push((span.clone(), v.id.clone()));
+            match &undecided {
+                Some(hole) => out
+                    .undecided
+                    .push((place.clone(), span.clone(), hole.clone())),
+                None => out
+                    .spans
+                    .entry(place.clone())
+                    .or_insert_with(Vec::new)
+                    .push((span.clone(), v.id.clone())),
+            }
         }
     }
     out

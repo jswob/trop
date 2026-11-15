@@ -19,7 +19,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::adjust::Adjustment;
 use super::ledger_order::{Group, GroupKey, abs, fig_add, fig_sub, grouped, month_group};
 use super::observe::{Obs, inst_id};
-use super::reading::{Seen, Stands, booked_amount, per_unit, reading_rank, readings};
+use super::reading::{Seen, Stands, booked_amount, per_unit, reading_rank};
 use crate::base::{Load, Refusal};
 use crate::eval::{Ctx, Engine, Env, Rows, num_stop};
 use crate::hole::{Hole, spread};
@@ -251,7 +251,7 @@ impl Engine {
         }
         let world = self.timeline_world();
         let after_on = self.after_days(m, m.on)?;
-        for seen in readings(m, (m.on, world), Rows::Unkept, &after_on)? {
+        for seen in self.seen_readings(m, (m.on, world), (Rows::Unkept, &after_on))? {
             if let Some(r) = &seen.reading
                 && seen.place == place
                 && r.unit != ALL
@@ -456,9 +456,9 @@ impl Engine {
         let id = self.main_walk(m, cut)?;
         let world = self.timeline_world();
         let after = self.after_days(m, cut)?;
-        let walked = readings(m, (cut, world), Rows::Unkept, &after)?;
+        let walked = self.seen_readings(m, (cut, world), (Rows::Unkept, &after))?;
         let after_on = self.after_days(m, m.on)?;
-        for mut seen in readings(m, (m.on, world), Rows::Unkept, &after_on)? {
+        for mut seen in self.seen_readings(m, (m.on, world), (Rows::Unkept, &after_on))? {
             if seen.input != "stated" || seen.place != lines.of.place {
                 continue;
             }

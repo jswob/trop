@@ -454,12 +454,14 @@ impl Engine {
     /// cut sees, else the walk's it continues (refcore's `Walk(base=…, point=…)` and
     /// `anchor_question`). E §4.3 step 1, L §8.1.
     fn continued(
-        &self,
+        &mut self,
         m: &Reality,
         (base, point): (usize, At),
         (c, t, through): (Day, Day, Day),
         (left_out, after): (&BTreeSet<String>, &crate::book::AfterDays),
     ) -> Result<Walk, Stop> {
+        let world = self.walk(base)?.world;
+        let mut first_reading = self.first_readings(m, (c, world), after)?;
         let from = self.walk(base)?;
         let mut states: BTreeMap<(String, String), St> = BTreeMap::new();
         for (place, unit) in from.logs.keys() {
@@ -474,7 +476,6 @@ impl Engine {
                 p.root
             }
         };
-        let mut first_reading = crate::book::first_readings(m, (c, from.world), after)?;
         for (place, day) in &from.first_reading {
             first_reading.entry(place.clone()).or_insert(*day);
         }
