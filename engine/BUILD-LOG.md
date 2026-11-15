@@ -3407,3 +3407,52 @@ Picks P60–P63 (`tmp/m2/auto-picks.md`). The review: `tmp/m2/review-g6.md`, its
 - **S/M0/M1 (P53):** the 17 targets, `--all-features`, quick, niced: `465 tests run: 465 passed, 0 skipped` (`tmp/m2/b/g6/smm2.log`).
 - **Exceptions:** +0.
 - **Check:** `check commit: green, 23 steps (181s)`.
+
+## 2026-11-15 M2 G6 `sweep`, third turn: the fix review's three, P60's census forms (addendum to G6's entry; issue #167, #185)
+
+Brief: the coordinator's third-turn message; the review `tmp/m2/review-g6-fix.md` (probes `tmp/m2/review-g6fix-probes/p/`); T's hand-offs `tmp/m2/handoff-g6.md`, `handoff-p60b.md`, `handoff-p60c.md`. Probes and runners in `tmp/m2/b/g6c/` (`run.sh`: a review probe on the quick binary against the review's outputs; `vec.sh`: a vector against its stored answer, refcore's run now for `fixes/*`).
+
+- **Not merged:** `origin/tests/m2c`'s aeb65a7a (T's #169 hold and three gate-8 kills). The guard refuses `git merge` in the build role (R-79), as at the second turn; the coordinator merges it. This turn's work is on 6a58624c.
+- **Commits:**
+  - 112a2f02 `fix(eval): rate and leg reads stay linear; tuples in binding order`: N1–N3, non-blocking 3 and 4.
+  - 77e2831f `feat(ask): an ask's law, as known and pins formed per its own tuple`: five census forms.
+  - 5fe22fcc `feat(eval): numeric key lists and ranges, pos of a literal, #185 refused`: six forms, #185.
+  - c7bdb26a `feat(walk): flows for a period, its instance's for a hole the hole`: two forms.
+  - This entry's commit.
+- **N1, N2** (`eval/partial.rs` `reads_a_number`): a read is plain under `partial` only when its declared type is a known non-number (a key, a period, a day, a flag, a text); a read whose class the samples can't see keeps its linear part: a rate (its input's sample falls to a bare word), a run-time movement's leg, an opening or `stated` read (L §5.18, §3.3). `n1` q1: `0.0585 /year + 1 × ?"bank margin" (margin)`; `n2` q2: `0 + 1 × ?"gift amount" (ga)`; both byte-equal to refcore. `n` q2b (`bal(konto, 2026-12-31) - opening[konto] partial`): `100.00 DUK + 1 × ?"gift amount" (ga) + -1 × ?"opening[konto] has no reading at 2026-12-31" (opening[konto])` (refcore can't run `n`).
+- **N3** (`ask/windows.rs` `binding_order`, new): a keyed `windows each` line's tuples print in binding order, each run's order merged (a head a run adds goes after that run's last head placed); two heads no run holds together go later run's first. `n3` q3: `q3 (k = a) [d[a] = 2026-03-02]: true`, then `q3 (k = b): true`, as q4 (no `windows each`) orders them; refcore prints `(k = b)` alone (P29).
+- **Non-blocking 3, 4:** `sample`'s error reads as an unseen class, commented; `partial.rs`'s Spec line states the rule. 1 (`last(…)` over period holes), 2 (`LegOf`, `gap`, `value`: S3) and 5 (`tuple_key`'s linear search) not done.
+- **Every probe of G6's two reviews after the fixes** (`tmp/m2/b/g6c/p/`): byte-equal to the fix review's engine output except `n`, `n1`, `n2`, `n3`; b1, b1b, b2, cen, ch, explain_dated, kw, r2, r3, sw byte-equal to refcore; b2c, b2d, b3, b4, obs, r1, r4 differ from refcore as the reviews say.
+- **to2050** (`r7/to2050.tally` with pins_long's files, `pin_oki_tax_2040`, quick, niced, memcap 8 GB on, my watchdog stopped by its PID after): `10 409.00 PLN`, 17.6 s, peak footprint 1.69 GB; output byte-equal to the second turn's.
+- **P60, built** (vectors `for` = sweep, both engines' or the spec's bytes):
+  - An ask's own `for` named by its `as known`, `law` or a `with` pin (`ask/answer.rs` `formed_per_tuple`, `tuple_asks`; `eval/state.rs` `Engine::ask_env`, `in_tuple`): the binding's tuples read in the model's world at its on, then each tuple a line of its own in its scope, with its own cut, law date and pins, a pin's keys as read (`pinned: x[a] = 9`; `eval/pins.rs`). L §5.18, §5.11, §2.5. spec/p60/ask_for_law, ask_for_known, ask_for_with, pin_two.
+  - A check's two keys of one list index differ by their positions; two things of a kind by nothing (`ask/check.rs`). fixes/p60/check_keys.
+  - A span's end of any other form prints as written (`ask/residuals.rs` `end_text`). fixes/p60/residual_end.
+  - A keyed move named as a row's value without its keys: `LOAD-KEY` (`eval/convert.rs` `moved_value`). fixes/p60/mv_row_value.
+  - An observed attribute written as an operation: `LOAD-UNIT` (`load/observed.rs`). fixes/p60/obs_attr_expr.
+  - A key list of numbers keys as a stepped range's values do, a key read back by its text too (`eval/keys.rs` `list_key`, `walk/tuples.rs`). spec/p60/num_list_key, flows_num_key.
+  - A row's key range over a stepped range orders its values as numbers (`load/rows.rs`, `read/rows.rs`, `load/overlap.rs`; a range of money stays not built). spec/p60/key_range_num; twins `r[0.5]` 1, `r[1.5]` 2.
+  - `pos` of a bare key literal: the one list index holding it (`eval/builtin.rs` `literal_key`). fixes/p60/pos_key.
+  - A window as a term of an aggregate other than min, max, argmin, argmax: `HOLE-IMPRECISE … for a term of sum` (`eval/aggregate.rs`, L §4.4). spec/p60/sum_days_win.
+  - A settlement by `fulfils`' static type (`book/settle.rs` `settlement_move`): `fulfils a.adjusts` over adjustments is measured and reads its own instances, `RUN-CYCLE fix reads its own instances`. fixes/p60/settle_lit.
+  - `flows(…, for k)` of a place and of a move: the movements whose `for` is k, no reset; an instance whose `for` is a hole is that hole, `unfulfilled:` where past (P64) (`walk/flows.rs` `movements_for`, `Sums::other_period`; `walk/move_flows.rs` `for_period_of`). fixes/p60/flows_for, spec/p60/wa_for.
+  - **#185:** `residuals jar[k] 2026-03 for k in ks`: `q: refused: RUN-DOMAIN a residual ledger at a place keyed by the ask's own for` (`ask/residuals.rs`), never `ENGINE-INVARIANT`, until #185 rules.
+- **P60, still red, named (5 of fixes-sweep):** `flows_conv` (a conversion at a rate: the evaluator has none yet, BUILD-ORDER M4); `led_each` (a ledger's `windows each`, `ask/answer.rs:505`); `read_known_win` and `obs_known_win` (a reading's and an observation's known window at run, `ask/answer.rs:339`, `book/observe.rs:216`); `same_rows` (rows stated same at run, `ask/answer.rs:348`). Each needs a new piece of the read path (budget). spec-sweep's two reds, **for T:** `spec/p60/sum_days_win` and `wa_for` store a backslash before each quote (`?\"date…\"`): `spec.py`'s `unescape` takes only `\\` and `\n`, so a `\"` in `spec.tsv` stays two bytes; the engine prints the rows' lines without it.
+- **Census of the 73 M1/M2 sites** (turn 1's table, lines at 6a58624c; `tmp/m2/b/g6c/sites3.txt` lists the 147 `NotBuilt` lines now, 153 before):
+
+  | Status | Sites (under `crates/tally/src/`) |
+  |---|---|
+  | Built (17; * the reached form, the site kept for others) | `ask/answer.rs:513`, `:611`, `:658`; `ask/check.rs:170`* (keys of a period, day or int index: the static type isn't kept at run); `ask/residuals.rs:185`; `load/observed.rs:322`* (a call, a list); `eval/arith.rs:128`* (an aggregate's term; no other text found); `book/settle.rs:221`* (`:228` merged into it); `eval/builtin.rs:348`* (pos of a value with no index); `eval/convert.rs:403`* (an unkeyed move or an input as the value); `eval/keys.rs:235`*, `:331`* (a list of names; a range's literal); `eval/pins.rs:396`* (an ask's pin; a pin inside a line naming two bindings stays); `load/rows.rs:463`* (money); `walk/flows.rs:54`* (converted); `walk/tuples.rs:403`; `eval/ty.rs:27` (G6, an attribute's 0) |
+  | Reached, not built (4), #167: G7 or the gate | `ask/answer.rs:339` (read_known_win), `:505` (led_each), `:348` (same_rows); `book/observe.rs:216` (obs_known_win); and `walk/flows.rs:54`'s conversion (flows_conv, M4) |
+  | Guards (34): load or an earlier refusal first (T's rounds 1–3) | A walk read while walked (5: `walk/lows.rs:609`, `walk/projection.rs:502`, `walk/reads.rs:609`, `:638`, `:663`): RUN-FUTURE, RUN-CYCLE or `left out:` first. `book/reading.rs:169` (LOAD-INSTANT), `:380`, `eval/read.rs:954` (LOAD-UNIT); `walk/reads.rs:226` (the hole first); `book/settle.rs:228` (LOAD-UNIT, RUN-CYCLE); `eval/bindings.rs:57` (LOAD-DOMAIN), `:100` (LOAD-NAME), `:128` (LOAD-ALIVE), `:404` (LOAD-PARSE); `eval/builtin.rs:416`, `eval/expr.rs:196`, `:239`, `:383`, `walk/move_flows.rs:268`, `load/indexes.rs:99` (LOAD-PARSE); `eval/context.rs:398` (LOAD-ASIF); `eval/expr.rs:582`, `:585`, `:936`, `eval/ranges.rs:264`, `walk/flows.rs:553` (LOAD-UNIT); `eval/extremes.rs:133` (LOAD-PARSE), `:570` (LOAD-DOMAIN); `eval/keys.rs:76`, `walk/move_flows.rs:263` (LOAD-KEY); `eval/ranges.rs:120`, `:567`, `:613` (LOAD-DOMAIN), `:320` (LOAD-PRECISION) |
+  | No text found (8), #167 | `eval/context.rs:665`, `eval/arith.rs:514`, `book/reading.rs:156`, `ask/answer.rs:725`, `eval/convert.rs:338`, `eval/expr.rs:361`, `walk/projection.rs:329`, `walk/reads.rs:831` |
+  | Named for the spec (8): the 2.1.8 round | `eval/rules.rs:245`, `eval/read.rs:957` (refcore NotYet; E §3.2's classes, an observed row's value with no type); `explain` with no E §10 text (6: `ask/explain.rs:108`, `ask/instance.rs:312`, `ask/walked.rs:240`, `:405`, `:567`, `walk/reads.rs:109`) |
+  | Not tried (2), #167 | `eval/convert.rs:167` (a scenario's expression row), `walk/order.rs:1212` (`ties by` over two kinds) |
+
+- **P61, the sweep's rest, not done (budget):** B2 under an axis (a keyed line that fans out over axes binds once: `tuple_lines` inside the axis fan-out), a pinned def's window from a literal named after the literal, `calendar_row` reading a known window's view. G2's N-a waits for the gate; G4's NB-3/5/7/8/14 stay (P65).
+- **Gate 8** (run 43702332507 on 6a58624c): queued when checked, not reached; no rows removed.
+- **Spec questions:** none new; the backslash rows above are T's.
+- **Size:** in `engine/crates`, 509 added and 198 removed over the four commits (112a2f02 73/21, 77e2831f 173/60, 5fe22fcc 162/109, c7bdb26a 101/8).
+- **S/M0/M1 (P53):** the 17 targets, `--all-features`, quick, niced: `465 tests run: 465 passed, 0 skipped` (`tmp/m2/b/g6c/smm3.log`).
+- **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps (178s)`; M2 40/42 (spec-sweep 2 of 11 differ, the backslash rows; fixes-sweep 5 of 24). The last commit also takes two builder chains into `ask/answer.rs` `ask_engine` and a nested closure out of `formed_per_tuple`, which `check commit`'s report-only reviews flagged; same behaviour.

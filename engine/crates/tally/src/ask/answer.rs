@@ -527,14 +527,7 @@ fn ask_lines(
     let mut cut = m.on;
     let mut known_engine = None;
     if let Some(known) = &ask.known {
-        let mut engine = Engine::new(m.on)
-            .with_days(days)
-            .with_how((seen.memo, seen.lows))
-            .for_ask(ask)
-            .in_tuple(env)
-            .with_booked(core::mem::take(&mut seen.booked));
-        #[cfg(feature = "fault-injection")]
-        engine.plant.clone_from(&seen.plant);
+        let mut engine = ask_engine(m.on, (ask, env), days, seen);
         let v =
             model_ctx(m, &mut engine, (None, cut)).and_then(|ctx| engine.value(m, known, env, ctx));
         gather(seen, &mut engine);
@@ -549,14 +542,7 @@ fn ask_lines(
         cut = after_on(m, cut)?;
         known_engine = Some(engine);
     }
-    let mut engine = Engine::new(cut)
-        .with_days(days)
-        .with_how((seen.memo, seen.lows))
-        .for_ask(ask)
-        .in_tuple(env)
-        .with_booked(core::mem::take(&mut seen.booked));
-    #[cfg(feature = "fault-injection")]
-    engine.plant.clone_from(&seen.plant);
+    let mut engine = ask_engine(cut, (ask, env), days, seen);
     let out = ask_body(m, ask, &mut engine, (cut, seen.side.as_mut()));
     gather(seen, &mut engine);
     let lines = out?;
@@ -1008,8 +994,28 @@ fn formed_per_tuple(ask: &Ask) -> bool {
     if ask.binds.is_empty() {
         return false;
     }
-    let names = |e: &Option<Expr>| e.as_ref().is_some_and(|e| names_a_for(ask, e));
-    names(&ask.known) || names(&ask.law) || pins_name_for(ask)
+    for e in [&ask.known, &ask.law].into_iter().flatten() {
+        if names_a_for(ask, e) {
+            return true;
+        }
+    }
+    pins_name_for(ask)
+}
+
+/// An engine answering ask `ask` at cut `cut` in scope `env`, the world's memo, lows and the
+/// bookings the asks before it made taken from `seen` (refcore's `Asker`, its engine per
+/// ask). L §5.18.
+fn ask_engine(cut: Day, (ask, env): (&Ask, &Env), days: Days, seen: &mut Seen) -> Engine {
+    let engine = Engine::new(cut)
+        .with_days(days)
+        .with_how((seen.memo, seen.lows));
+    let mut engine = engine
+        .for_ask(ask)
+        .in_tuple(env)
+        .with_booked(core::mem::take(&mut seen.booked));
+    #[cfg(feature = "fault-injection")]
+    engine.plant.clone_from(&seen.plant);
+    engine
 }
 
 /// The lines of ask `ask` whose cut, law date or pins are formed per its own binding tuple:
@@ -1017,13 +1023,7 @@ fn formed_per_tuple(ask: &Ask) -> bool {
 /// ask of its own, its head the tuple's (`q (k = a)`), in the tuple's scope; a tuple whose
 /// membership is a hole prints that hole (L §5.18, §5.11, §2.5).
 fn tuple_asks(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<String>, Stop> {
-    let mut engine = Engine::new(m.on)
-        .with_days(days)
-        .with_how((seen.memo, seen.lows))
-        .for_ask(ask)
-        .with_booked(core::mem::take(&mut seen.booked));
-    #[cfg(feature = "fault-injection")]
-    engine.plant.clone_from(&seen.plant);
+    let mut engine = ask_engine(m.on, (ask, &Env::empty()), days, seen);
     let read =
         model_ctx(m, &mut engine, (None, m.on)).and_then(|ctx| engine.tuples(m, &ask.binds, ctx));
     gather(seen, &mut engine);
