@@ -16920,4 +16920,171 @@ version v
 nx_unc: 7.00 PLN
   uncertain: m1
   cut 2026-06-30
+,16:fixes/g3/fix2_r2,13:fixes-windows,25:run fix2_r2.tally --ask q,362:13:fix2_r2.tally,340:model px
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+input x: date
+input y: date
+
+ask q: x == y with x = y windows each
+ask q0: x == y with x = y
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  x = 2026-01-05 "c"
+  y = window(2026-01-01, 2026-01-02) "c"
+,,1:0,135:q [y = 2026-01-01]: true
+  pinned: x = 2026-01-01
+  cut 2026-03-01
+q [y = 2026-01-02]: false
+  pinned: x = 2026-01-01
+  cut 2026-03-01
+,16:fixes/g3/fix2_c2,13:fixes-windows,26:run fix2_c2.tally --ask qc,640:13:fix2_c2.tally,618:model pc
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+input cal: calendar
+input d1: date
+
+ask qc: add_business(d1, 1, cal) windows each
+ask qp: add_business(d1, 1, cal)
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-06-29 "c"
+
+version c1
+  cite card
+  governs ..2026-06-30
+  known 2026-01-01
+  cal = calendar(weekends [sat, sun], added [window(2026-06-30, 2026-07-01)]) "c"
+
+version c2
+  cite card
+  governs 2026-07-01..
+  known 2026-01-01
+  cal = calendar(weekends [sat, sun], added [window(2026-06-30, 2026-07-01)]) "c"
+,,1:0,238:qc [added window(2026-06-30, 2026-07-01) = 2026-06-30]: 2026-07-01
+  held: cal = calendar(weekends [sat, sun]) (c2), read for 2026-07-01
+  cut 2026-03-01
+qc [added window(2026-06-30, 2026-07-01) = 2026-07-01]: 2026-06-30
+  cut 2026-03-01
+,15:fixes/g3/fix2_d,13:fixes-windows,28:run fix2_d.tally --ask qd ql,454:12:fix2_d.tally,433:model pd
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+input x: date
+input y: date
+
+def dd: date
+  rule base = x
+
+ask qd: dd == y with dd = y windows each
+ask ql: last(x, 2026-02-01) == y with x = y windows each
+ask qd0: dd == y with dd = y
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  x = 2026-01-05 "c"
+  y = window(2026-01-01, 2026-01-02) "c"
+,,1:0,276:qd [y = 2026-01-01]: true
+  pinned: dd = 2026-01-01
+  cut 2026-03-01
+qd [y = 2026-01-02]: false
+  pinned: dd = 2026-01-01
+  cut 2026-03-01
+ql [y = 2026-01-01]: true
+  pinned: x = 2026-01-01
+  cut 2026-03-01
+ql [y = 2026-01-02]: false
+  pinned: x = 2026-01-01
+  cut 2026-03-01
+,30:items/explain/walk_bound_dated,13:items-explain,35:run explain_dated.tally --ask e_lim,1247:19:explain_dated.tally,1218:model explain_dated
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 gate 8 (run 43657284122): explain of balances that a decision moves, the decision reading bal(x, d) with a day through a def, and that def explained, walk-bound (walk/reads.rs bal_read: a read inside a decision is no traced read of its own; E §10)"
+
+source s "s"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place sav: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input amt: money PLN
+
+input keep: money PLN
+
+input dsv: int
+
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from world to konto amount amt
+
+def lim[m in months]: money PLN = bal(konto, start_of(m)) - keep at start_of(m)
+
+move sv[m in months]: transfers
+  on day_of(m, dsv)
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, lim[m])
+
+ask e_sav: explain bal(sav, 2026-03-31)
+
+ask e_lim: explain lim[2026-02]
+
+ask e_konto: explain bal(konto, 2026-02-28)
+
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  keep = 30.00 PLN "s"
+  dsv = 15 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
+,,1:0,810:e_lim: walk-bound, read at 1 walk point
+  lim[2026-02] at (2026-02-15, stratum 1, sv[2026-02]): 100.00 PLN
+      [1] lim[2026-02] = 100.00 PLN, law date 2026-02-01
+          rule base: won
+            [2] bal(konto, 2026-02-01) = 130.00 PLN
+                balance of konto (PLN) at the end of 2026-02-01
+                from: opening v:opening[konto] = 0.00 PLN, 2026-01-01 start (version v, source s, locator "s")
+                2026-01-01:
+                  pay[2026-01].cash (past): +100.00 PLN
+                2026-01-15:
+                  sv[2026-01].cash (past): -70.00 PLN
+                2026-02-01:
+                  pay[2026-02].cash (past): +100.00 PLN
+            [3] row v:keep = 30.00 PLN
+                version v, source s, "s", locator "s", governs always, known 2026-01-01
+  cut 2026-06-30
 ,

@@ -56,3 +56,7 @@ fixes/g3/n7	fixes-windows		engine/tests/m2/fixes/g3	engine/tests/m2/fixes/g3/n7.
 fixes/g1/legf	fixes-forms		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/legf.tally	q_y		-
 fixes/g1/legf_z	fixes-forms		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/legf_z.tally	q_w q_z		-
 items/sweep/next_uncertain	items-sweep		engine/tests/m2/items/sweep	engine/tests/m2/items/sweep/forms.tally	nx nx_unc		sweep
+fixes/g3/fix2_r2	fixes-windows		engine/tests/m2/fixes/g3	engine/tests/m2/fixes/g3/fix2_r2.tally	q		-
+fixes/g3/fix2_c2	fixes-windows		engine/tests/m2/fixes/g3	engine/tests/m2/fixes/g3/fix2_c2.tally	qc		-
+fixes/g3/fix2_d	fixes-windows		engine/tests/m2/fixes/g3	engine/tests/m2/fixes/g3/fix2_d.tally	qd ql		-
+items/explain/walk_bound_dated	items-explain		engine/tests/m2/fixes/gate8	engine/tests/m2/fixes/gate8/explain_dated.tally	e_lim		explain

@@ -1593,4 +1593,100 @@ q_z [pa = lo]: refused: RUN-PLACE kasa is -5.00 DUK after the day's observations
 q_z [pa = hi]: 10.00 DUK
   reading: pa = hi
   law date 2026-10-25, cut 2026-10-25
+,15:spec/g3/fix2_r2,12:spec-windows,25:run fix2_r2.tally --ask q,362:13:fix2_r2.tally,340:model px
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+input x: date
+input y: date
+
+ask q: x == y with x = y windows each
+ask q0: x == y with x = y
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  x = 2026-01-05 "c"
+  y = window(2026-01-01, 2026-01-02) "c"
+,,1:0,70:q: true
+  pinned: x = window(2026-01-01, 2026-01-02)
+  cut 2026-03-01
+,15:spec/g3/fix2_c2,12:spec-windows,26:run fix2_c2.tally --ask qc,640:13:fix2_c2.tally,618:model pc
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+input cal: calendar
+input d1: date
+
+ask qc: add_business(d1, 1, cal) windows each
+ask qp: add_business(d1, 1, cal)
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-06-29 "c"
+
+version c1
+  cite card
+  governs ..2026-06-30
+  known 2026-01-01
+  cal = calendar(weekends [sat, sun], added [window(2026-06-30, 2026-07-01)]) "c"
+
+version c2
+  cite card
+  governs 2026-07-01..
+  known 2026-01-01
+  cal = calendar(weekends [sat, sun], added [window(2026-06-30, 2026-07-01)]) "c"
+,,1:0,564:qc [added window(2026-06-30, 2026-07-01) = 2026-06-30, added window(2026-06-30, 2026-07-01) = 2026-06-30]: 2026-07-01
+  held: cal = calendar(weekends [sat, sun]) (c2), read for 2026-07-01
+  cut 2026-03-01
+qc [added window(2026-06-30, 2026-07-01) = 2026-06-30, added window(2026-06-30, 2026-07-01) = 2026-07-01]: 2026-07-02
+  held: cal = calendar(weekends [sat, sun]) (c2), read for 2026-07-01
+  held: cal = calendar(weekends [sat, sun]) (c2), read for 2026-07-02
+  cut 2026-03-01
+qc [added window(2026-06-30, 2026-07-01) = 2026-07-01]: 2026-06-30
+  cut 2026-03-01
+,14:spec/g3/fix2_d,12:spec-windows,28:run fix2_d.tally --ask qd ql,454:12:fix2_d.tally,433:model pd
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+input x: date
+input y: date
+
+def dd: date
+  rule base = x
+
+ask qd: dd == y with dd = y windows each
+ask ql: last(x, 2026-02-01) == y with x = y windows each
+ask qd0: dd == y with dd = y
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  x = 2026-01-05 "c"
+  y = window(2026-01-01, 2026-01-02) "c"
+,,1:0,143:qd: true
+  pinned: dd = window(2026-01-01, 2026-01-02)
+  cut 2026-03-01
+ql: true
+  pinned: x = window(2026-01-01, 2026-01-02)
+  cut 2026-03-01
 ,

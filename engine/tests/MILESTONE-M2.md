@@ -83,6 +83,8 @@ From the builders' review probes (`tmp/m2/b/`, the BUILD-LOG addenda of G1–G3)
 - **Held, the engine wrong too** (no spec row; `for` names the group): `fixes/g1/y4` (P16, LOAD-LITERAL, `sweep`), `fixes/g1/edge_hole` and `g14/past_64_counts` (P5, P15, `sweep`), `fixes/g2/after_m` (P11, P12, `records`).
 - **Not stored:** `i2`'s `qp` (NB-4, the `(cal)` source tag) and `anyhole`'s `l1` (NB-4's held text): on the follow-up list, unruled. P20's probe (`g2/any/a` `e2`) answers alike on both engines now, so it gates with the others.
 
+**Gate 8 run 43657284122** (89.4 %, the first to count M2's tests; `tmp/m2/gate8-next-survivors.txt`): texts in `m2/fixes/gate8/` (`at_holes`, `window_moves`, `at_window`, `at_ties`, `explain_dated`) and G3's last fix's probes `m2/fixes/g3/fix2_*`, each gating in `fixes-gate8` where both engines answer alike: a def whose window `at` reads unlike holes (`hole/questions.rs`), movements dated by windows at each edge of a span through `flows`, a binding, the residual ledger and the place's flows (`window_in`, `window_member`, `model_day`, `place_log`), moves whose window `at` reads rows that agree or not (`plan.rs`, `tuples.rs`, `order.rs` `ties_differ`). Held for #169 with spec rows: G3's last fix's `r2` `q`, `c2` `qc`, `d` `qd`, `ql`. Red for `explain`: `items/explain/walk_bound_dated`, where the engine leaves out a dated `bal` from a walk-bound derivation that refcore prints.
+
 ## What rulings hold back
 
 None of row 1's vectors waits on a ruling: refcore and the stored baselines agree on all 26. The 15 rows `held.tsv` holds for M2's items (#147, #101, #158, #132) are row 6's; each is released by T once its builder group turns it green.
