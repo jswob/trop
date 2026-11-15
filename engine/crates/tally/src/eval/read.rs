@@ -20,6 +20,7 @@ use super::memo::{LawClass, Read, may_hold, rows_class};
 use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load};
 use super::windows::{as_read, known_hole, one_day};
 use crate::base::{Load, Run};
+use crate::book::reading_place;
 use crate::hole::Hole;
 use crate::model::{
     BindInfo, Class, Domain, InputInfo, KeyVal, Number, Pat, Reality, Row, RowInstant, TimePos,
@@ -103,6 +104,11 @@ pub(super) fn kept_rows(rows: &[Row], hidden: &[usize]) -> Vec<Row> {
     out
 }
 
+/// Whether `row` is a reading `after m` of `place`. L §4.6 Readings, step 1.
+fn after_at(row: &Row, place: Option<&str>) -> bool {
+    matches!(row.instant, Some(RowInstant::After(_))) && reading_place(row) == place
+}
+
 /// Whether `last(x, d)` reads its row past it, for day `day`: a reading past its instant's
 /// day, a state row past its span's end; a row that governs `always` is timeless (L §4.6
 /// Past the last row, Readings; §8.2 `held`; refcore's `last_value`).
@@ -110,14 +116,12 @@ fn read_past(
     m: &Reality,
     row: &Row,
     (day, cut): (Day, Day),
-    after: &crate::book::AfterDays,
+    after: Option<Day>,
 ) -> Result<bool, Stop> {
     match &row.instant {
         Some(RowInstant::At(at, _)) => Ok(day > *at),
-        // a reading after m stands on m's day (L §4.6 Readings)
-        Some(RowInstant::After(node)) => Ok(after
-            .get(&crate::load::expr_text(node))
-            .is_some_and(|at| day > *at)),
+        // a reading after m stands on the day the walk applies it (L §4.6 Readings)
+        Some(RowInstant::After(_)) => Ok(after.is_some_and(|at| day > at)),
         None => {
             let Some(span) = crate::read::row_span(m, row, cut)? else {
                 return Ok(false);
@@ -289,16 +293,20 @@ impl Engine {
             Err(h) => return Ok(Err(h)),
             Ok(hidden) => hidden,
         };
-        let after = input
-            .rows
-            .iter()
-            .any(|row| matches!(row.instant, Some(RowInstant::After(_))));
+        // a read takes its keys' rows only (L §4.6 step 1): a reading after m at another
+        // place plans nothing here (L §5.14.2)
+        let place = if let Some(KeyVal::Thing(p)) = keys.first() {
+            Some(p.as_str())
+        } else {
+            None
+        };
+        let after = input.rows.iter().any(|row| after_at(row, place));
         if hidden.is_empty() && !after {
             return Ok(Ok(None));
         }
         let mut rows = kept_rows(&input.rows, &hidden);
         if after {
-            self.after_on_days(m, &mut rows, clocks.cut)?;
+            self.after_on_days(m, &mut rows, place, clocks.cut)?;
         }
         Ok(Ok(Some(InputInfo {
             rows,
@@ -306,19 +314,41 @@ impl Engine {
         })))
     }
 
-    /// A reading `after m` among `rows` read on m's day, as the plan pass at cut `cut` gives
-    /// it, so `last`, `since` and a plain read find it there; one whose m has no day keeps
-    /// no instant a read finds (L §4.6 Readings; E §4.2 step 3).
-    fn after_on_days(&mut self, m: &Reality, rows: &mut [Row], cut: Day) -> Result<(), Stop> {
-        let days = self.after_days(m, cut)?;
+    /// Each reading `after m` of `place` among `rows` read on the day the walk at cut `cut`
+    /// applies it ([`Engine::reading_day`]), so `last`, `since` and a plain read find it
+    /// there; one whose m has no day keeps no instant a read finds; a reading of another
+    /// place is left as it is (L §4.6 Readings; E §4.2 step 3).
+    fn after_on_days(
+        &mut self,
+        m: &Reality,
+        rows: &mut [Row],
+        place: Option<&str>,
+        cut: Day,
+    ) -> Result<(), Stop> {
         for row in rows {
-            if let Some(RowInstant::After(node)) = &row.instant
-                && let Some(day) = days.get(&crate::load::expr_text(node))
-            {
-                row.instant = Some(RowInstant::At(*day, None));
+            if !after_at(row, place) {
+                continue;
+            }
+            let (Some(RowInstant::After(node)), Some(at)) = (&row.instant, reading_place(row))
+            else {
+                continue;
+            };
+            let (node, at) = (node.clone(), at.to_owned());
+            if let Some(day) = self.reading_day(m, &node, &at, cut)? {
+                row.instant = Some(RowInstant::At(day, None));
             }
         }
         Ok(())
+    }
+
+    /// The day a reading row `after m` stands on at cut `cut`, as the walk applies it; none
+    /// for any other row, or an m with no day (L §4.6 Readings; E §4.2 step 3).
+    fn row_after_day(&mut self, m: &Reality, row: &Row, cut: Day) -> Result<Option<Day>, Stop> {
+        let (Some(RowInstant::After(node)), Some(place)) = (&row.instant, reading_place(row))
+        else {
+            return Ok(None);
+        };
+        self.reading_day(m, node, place, cut)
     }
 
     /// The positions of the rows `inside`, each known in a window that holds the cut, that
@@ -446,12 +476,8 @@ impl Engine {
             ..ctx
         };
         let value = self.row_converted(m, (input, row, &latest.keys), &figure, at)?;
-        let after = if matches!(row.instant, Some(RowInstant::After(_))) {
-            self.after_days(m, ctx.cut)?
-        } else {
-            crate::book::AfterDays::new()
-        };
-        if read_past(m, row, (latest.day, ctx.cut), &after)? {
+        let after = self.row_after_day(m, row, ctx.cut)?;
+        if read_past(m, row, (latest.day, ctx.cut), after)? {
             let text = format!(
                 "{figure} = {} ({}), read for {}",
                 shown(m, &value)?,
@@ -490,8 +516,14 @@ impl Engine {
             .inputs
             .get(&latest.input)
             .ok_or_else(|| invariant("an input of since load didn't build"))?;
-        let Some(RowInstant::At(at, _)) = &latest_of(input, latest.at)?.instant else {
-            return Err(invariant("since read a reading with no day"));
+        let row = latest_of(input, latest.at)?;
+        let at = match &row.instant {
+            Some(RowInstant::At(at, _)) => *at,
+            // a reading after m counts from the day the walk applies it (L §4.6 Readings)
+            Some(RowInstant::After(_)) => self
+                .row_after_day(m, row, ctx.cut)?
+                .ok_or_else(|| invariant("since took a reading after an m with no day"))?,
+            None => return Err(invariant("since read a reading with no day")),
         };
         let days = at
             .days_to(latest.day)

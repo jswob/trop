@@ -17,6 +17,7 @@
 
 use std::collections::BTreeMap;
 
+use super::observe::Obs;
 use crate::base::{Code, Load, Refusal};
 use crate::eval::{Collected, Engine, Entry, Rows};
 use crate::hole::{Hole, spread};
@@ -55,9 +56,48 @@ pub enum Stands {
     After(String),
 }
 
-/// The day of each movement a reading `after m` names, by its id, where the plan pass gives
-/// it one (E §4.2 step 3, L §4.6).
-pub type AfterDays = BTreeMap<String, Day>;
+/// The day each reading `after m` stands on, by m's id and the reading's place, where the
+/// plan pass gives m one: the day the walk applies it (E §4.2 step 3, L §4.6).
+pub type AfterDays = BTreeMap<(String, String), Day>;
+
+/// The place a reading row names, its one key (L §4.6 Readings); none where its key is no
+/// thing.
+#[must_use]
+pub(crate) fn reading_place(row: &crate::model::Row) -> Option<&str> {
+    match row.pattern.first() {
+        Some(crate::model::Pat::Key(crate::model::KeyVal::Thing(place))) => Some(place),
+        Some(_) | None => None,
+    }
+}
+
+/// The day of the last leg of the observations `obs` that links `links` names, booked from
+/// `start` through `end` before the cut, a leg at `place` first, all where none is: where a
+/// reading `after m` with m modelled past stands, just after the observations that fulfil m,
+/// "on the day of the last of them" (as the walk's `last_standing_in` places it). L §4.6
+/// Readings, E §4.2 step 3.
+fn last_standing_day(
+    obs: &[Obs],
+    links: &[String],
+    place: &str,
+    (start, end, cut): (Day, Day, Day),
+) -> Option<Day> {
+    let (mut touching, mut all): (Option<Day>, Option<Day>) = (None, None);
+    for o in obs.iter().filter(|o| links.contains(&o.id)) {
+        for lg in &o.legs {
+            let Some(d) = lg.day.day() else {
+                continue;
+            };
+            if d < start || d > end || d >= cut {
+                continue;
+            }
+            all = all.max(Some(d));
+            if lg.from.place() == Some(place) || lg.to.place() == Some(place) {
+                touching = touching.max(Some(d));
+            }
+        }
+    }
+    touching.or(all)
+}
 
 /// A pad: a movement of `pads` that takes up a statement's gap (refcore's `PadMv`). E §6.1.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -120,7 +160,7 @@ pub fn readings(
                 Some(RowInstant::After(node)) => {
                     let id = crate::load::expr_text(node);
                     // an m the plan pass gives no day: the reading has no instant
-                    let Some(day) = after.get(&id) else {
+                    let Some(day) = after.get(&(id.clone(), place.clone())) else {
                         continue;
                     };
                     (*day, Stands::After(id))
@@ -363,11 +403,9 @@ fn reading_of(
 }
 
 impl Engine {
-    /// The day of each decision instance a reading `after m` of `stated` or `opening` names,
-    /// as the plan pass at cut `cut` gives it; none for an m it doesn't list or whose day is a
-    /// hole or a window, so the reading has no instant. What the plan pass meets is the walk's,
-    /// kept apart from the read that asks (refcore's `after`, keyed by `_txt`). E §4.2 step 3,
-    /// L §4.6 Readings.
+    /// The day each reading `after m` of `stated` or `opening` stands on at cut `cut`, by m
+    /// and the reading's place ([`Engine::reading_day`]): the walk's whole plan pass. E §4.2
+    /// step 3, L §4.6 Readings.
     ///
     /// # Errors
     ///
@@ -379,22 +417,65 @@ impl Engine {
                 continue;
             };
             for row in &info.rows {
-                let Some(RowInstant::After(node)) = &row.instant else {
+                let (Some(RowInstant::After(node)), Some(place)) =
+                    (&row.instant, reading_place(row))
+                else {
                     continue;
                 };
-                let id = crate::load::expr_text(node);
-                if out.contains_key(&id) {
+                let key = (crate::load::expr_text(node), place.to_owned());
+                if out.contains_key(&key) {
                     continue;
                 }
-                self.push();
-                let day = self.instance_day(m, node, &id, cut);
-                self.pop_alone();
-                if let Some(day) = day? {
-                    out.insert(id, day);
+                if let Some(day) = self.reading_day(m, node, place, cut)? {
+                    out.insert(key, day);
                 }
             }
         }
         Ok(out)
+    }
+
+    /// The day a reading of `place` `after m` stands on at cut `cut`, m the decision instance
+    /// `node` names, as the walk applies it: just after the observations that fulfil m, on
+    /// the day of the last of them, where any do; else on m's day as the plan pass lists it;
+    /// none for an m it doesn't list or whose day is a hole or a window, so the reading has
+    /// no instant. What the plan pass and the links meet is the walk's, kept apart from the
+    /// read that asks (refcore's `after`, keyed by `_txt`). L §4.6 Readings, E §4.2 step 3.
+    ///
+    /// # Errors
+    ///
+    /// The refusals of the plan pass and of judging m's links.
+    pub(crate) fn reading_day(
+        &mut self,
+        m: &Reality,
+        node: &crate::syntax::Expr,
+        place: &str,
+        cut: Day,
+    ) -> Result<Option<Day>, Stop> {
+        let id = crate::load::expr_text(node);
+        self.push();
+        let found = self.standing_day(m, (node, &id), place, cut);
+        self.pop_alone();
+        found
+    }
+
+    /// [`Engine::reading_day`], its reads collected by the caller. L §4.6, E §4.2 step 3.
+    fn standing_day(
+        &mut self,
+        m: &Reality,
+        (node, id): (&crate::syntax::Expr, &str),
+        place: &str,
+        cut: Day,
+    ) -> Result<Option<Day>, Stop> {
+        let Some(day) = self.instance_day(m, node, id, cut)? else {
+            return Ok(None);
+        };
+        let links = self.obs_links_for(m, id, cut)?;
+        if links.is_empty() {
+            return Ok(Some(day));
+        }
+        let obs = self.observations(m, cut)?;
+        let last = last_standing_day(obs, &links, place, (m.start, m.end, cut));
+        Ok(Some(last.unwrap_or(day)))
     }
 
     /// The day of the decision instance `id` that `node` names, as the plan pass at cut `cut`
