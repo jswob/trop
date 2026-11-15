@@ -3692,3 +3692,22 @@ G7's builder, resumed after the gate (`engine/perf/M2.md` § "P8-14's wall, the 
 - **Size:** in `engine/crates`, 31 added and 9 removed.
 - **Exceptions:** +0.
 - **Check:** `check commit: green, 23 steps (90s)`; report-only hits 9, as before.
+
+## 2026-11-15 M2 gate 8's fence survivors (addendum to P73's entry; pick P75, issue #167)
+
+Gate 8's record run 43749994847 on 205157a2: 88.1 %, 113 survivors unlisted; 67 of them in the fence's files (`walk/fork.rs` 55, `walk/projection.rs` 5, `walk/lows.rs` 4, `walk/state.rs` 2, `walk/order.rs` 1), each judged at its code. The lists for T, with the inputs that tell each apart: `tmp/m2/b/handoff-g8-205.md`.
+
+- **Commits:** 5f4d8b45 `refactor(walk): drop three checks no input reaches`; this entry's commit (the rows and this log).
+- **Sorted:** (A) 44 a counts test tells apart (days stepped, def misses, walks shared: forks on = off and F5's tree = its walk keep the bytes, not the counts); (B) 6 change a value or a refusal; (C) 4 removed as dead code; (D) 13 `R-87: equivalent:` rows.
+- **(C), 5f4d8b45:** `walk/fork.rs` `continue_planned`: the read's walk has walked no day when its plan pass ends, so only `agrees` decides (`&& → ||` gone); `same_act`: the arm for an observation's act, which only a main walk books, while `agrees` compares projections' walks (its `delete match arm` gone); `walk/state.rs` `partial_legs`: the arm for a projection's walk or a place opening with a hole, since its one reader (`bal_day`'s plain read at the cut, through `partial_bal`) asks the main walk, whose places open with no hole (`opening_state`) (the guard's `→ false` and `|| → &&` gone).
+- **(D), `engine/MUTANTS-SURVIVORS.md`:** `agrees` `< → <=`; `same_act` `delete match arm (Act::Decide …)`, `&& → ||`, `→ true`; `same_days` `&& → ||`, `→ true`, `|| → &&`; `same_mv` `&& → ||`, `→ true`; `same_terms` its three `delete match arm`, `→ true`. Each leaves the check's answer as it is on every input that reaches it: a plan of one projection's key planned further differs from the kept walk's only after its horizon (`agenda.rs` `outside_window`, `schedule_decision`'s `plans_through`), so the same walks continue, with the same bytes and counts.
+- **(B), for T:** `free_projection` `!= → ==` (the freed walk's key kept: its next read refused `ENGINE-INVARIANT`); `booked_ahead → false` (a decision's leg booked past the kept walk's last day dropped on continuing); `proj_walk`'s guard `plans_through() >= through → true` (a walk held but not parked walks past its horizon); `start_bits → Ok(0)`, `→ Ok(1)` (`tally-cli/tests/forks/b1_cons.tally`'s `b_konto`, refused `RUN-DIGITS`, answered by F5's tree); `leave_run → Ok(())` (explain's walk-bound trace at a point no run holds reads the previous run's observations left out).
+- **(A), for T:** listed by key with its input in the hand-off; `agrees` `&& → ||` is mixed: 9 of its 18 columns are R4's (the base walk's `levels` grow between two reads), the 9 in `same_plan` equivalent, a row to add once T's test kills the others.
+- **The counters in gate 8's build: no.** The runner (`tests/runner/Cargo.toml`) has only `fault-injection`; `engine.yml`'s `tools/mutants-gate` commands pass no `--features=`; every count is `#[cfg(feature = "counters")]` and no always-on field reaches `run`'s `Answer`. A counts test needs the rules step: a runner feature `counters = ["tally-cli/counters"]` and `--features=counters` on gate 8's shard, baseline, `next` and coverage map (the `mutants` profile inherits `test`, so R-51 allows it).
+- **Existing rows the counts rule moves to (A)** (F5's `Tree::common`, `common_low`, `common_case`, the `Gathered` guards, `ends_book`, `end_books`, `holds_one`, `carried`; `end_projection → Ok(())`, `> → >=`, likely `== → !=`): left as they are, named in the hand-off for the coordinator.
+- **Stale rows removed:** `book/ledger.rs` `may_touch` `→ false` (now caught), `walk/modelled.rs` `modelled_legs` `> → >=` (no run produced it).
+- **Kernel functions touched:** `walk/fork.rs` `Engine::continue_planned`, `same_act`; `walk/state.rs` `Walk::partial_legs`.
+- **Size:** in `engine/crates`, 6 added and 9 removed.
+- **Local mutants:** none run (no row's equivalence was in doubt enough to need a proof; T's tests can't reach the forks-off twin, so a proof would show only survival).
+- **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps (99s)`.
