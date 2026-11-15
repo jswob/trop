@@ -3099,3 +3099,29 @@ Rulings: picks P26–P30 (`tmp/m2/auto-picks.md`); the review `tmp/m2/review-g3.
 - **Checks:** each commit on `check quick` (green, 11 steps, 96–99 s). B1, B3 and B4 were checked together on one tree and committed file by file; NB-6/NB-7 and P30 the same. **Exceptions:** +0 (report-only hits 9, as the lock). No single-mutant proofs (gate 8's).
 - **Size:** 586 added, 173 removed (759 changed) in `engine/crates` over the eight commits.
 - **Check:** `check commit: green, 23 steps (71s)`, at 5b887b14's tree with this entry.
+
+## 2026-11-15 M2 G3 `windows`, the last fix (addendum to G3's entry; issue #167, #169)
+
+Rulings: picks P32–P36 (`tmp/m2/auto-picks.md`); the fix's review `tmp/m2/review-g3-fix.md`. Probes: the review's `r1`, `r2` and `r3` copied into `tmp/m2/b/g3fix2/` (`run.sh`), plus `c2.tally`, `d.tally` and `memo_w.tally`; each answer is the quick binary's against refcore on pypy. Where refcore keeps the wrong answer, T holds the vector for #169.
+
+- **r1** (2e51f8f5, `ask/windows.rs` `each_lines`): a keyed line binds once, under the empty choice, and each tuple's line splits only by the windows it meets. Only where the binding meets a window does it bind inside each run (B2). `r1.tally` matches refcore: `q (k = a)` split by `d[a]`, then `q (k = b): true`. `g2.tally` `qw` is unchanged.
+- **r2, (d)** (69b015a0, `eval/read.rs` new `pin_chosen`; `read_input_at`, `latest_at`; `eval/rules.rs` `cell_ctx`): a pinned window is named after the read it came from, so it is taken with its own name once. A literal pin is named by the figure pinned (P30).
+  - `r2.tally`: `q: true` with `pinned: x = window(2026-01-01, 2026-01-02)`. Refcore pins the first day and prints `q [y = 2026-01-02]: false` (held).
+  - `d.tally`: the pinned def `qd: true` and `last`'s pin `ql: true`, where refcore prints a `false` line for each (held).
+  - `h2.tally` is unchanged.
+- **r3** (8238ec1d, `walk/flows.rs` new `zero_amount`, `place_log`, `unbooked`; `walk/day.rs` `imprecise_ends`, an `ImpOn` entry carries its leg's amount): a zero leg whose window crosses the span leaves the flows decided. `r3.tally` `fa: 0.00 PLN` matches refcore. `f.tally` and `f2.tally` are unchanged.
+- **(c)** (5ea19426, `eval/business.rs` new `calendar_row`, `window_takes`): a calendar's added window is named by calendar, entry and the row the read took (`pin` for a pinned calendar). `c2.tally` has two rows with one added text, `window(2026-06-30, 2026-07-01)`, across their governs boundary. `qc` prints 3 nested lines: both on 06-30 gives `2026-07-01`, 06-30 then 07-01 gives `2026-07-02`, and 07-01 gives `2026-06-30`. Refcore takes them as one window and prints 2 lines (held). `i2.tally` is unchanged.
+- **P33** (782ba999, `eval/memo.rs` `close_law_class`; `tests/memo_cases.rs`): under `Memo::Exact` a window's law date read outside a cell is a class of one day, so the plain twin reads every law date. The memo cases add `memo_w.tally`'s text (a def's and a move's window `at`, across a span's end and inside one span), 20 lines byte-equal to refcore under both memos. The memo's `//!` names the class frames.
+- **P34:** `explain` keeps one law-date node per class; nothing changed.
+- **P26 with P36** (b0e9831d, `ask/answer.rs` `known_windows_unbuilt`; `tests/load_cases.rs`): the stop on a row's own known window and on a `moves` line known on a day is gone; a `moves` line known in a window still stops. M1's test retires its edits 2 and 3 from the stop list, and they now assert refcore's first line `q: 200.00 PLN`. Edit 1, a version's window over an opening's row, still stops. `items/windows/known` (`tmp/m2/b/g3/w/known.tally` and `engine/tests/m2/items/windows/known.tally`) matches refcore. The report goes from `milestone-report: M2: 14/18 green` to `15/18`.
+- **Re-run:** every probe of the last turn (`tmp/m2/b/g3fix/`: a, b, b2, c, d, e4, f, f2, g, g2, h, h2, i, i2, j, j2, j3, k2, k4, n6, n7) prints what it printed then. G3's vectors (`w/m.tally`, `from/`) still match refcore.
+- **Not done, for the next builder:**
+  - NB-2's `over_axes` register, and B2 under an axis.
+  - A keyed line whose binding meets a window still splits every tuple by every window met.
+  - A pinned def whose window came from a literal in its rule is named by the def's read, not the literal's.
+  - `calendar_row` reads the full rows, not a known window's view.
+  - NB-4, NB-5 and NB-9 are on the follow-up list.
+- **Code no vector covers** (for T): `pin_chosen`'s def and `last` sites, `zero_amount`, `calendar_row`'s `pin` branch, a `moves` line known in a window (still a stop).
+- **Exceptions:** +0. No single-mutant proofs.
+- **Size:** 271 added, 59 removed (330 changed) in `engine/crates` over the six commits.
+- **Check:** `check commit: green, 23 steps (76s)`, at b0e9831d's tree with this entry.
