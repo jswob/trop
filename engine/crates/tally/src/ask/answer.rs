@@ -459,8 +459,14 @@ fn unbuilt_at_run(m: &Reality, ask: &Ask) -> Option<&'static str> {
     if !m.fills.is_empty() {
         return Some("fills at run");
     }
-    if !m.sames.is_empty() {
-        return Some("same lines at run");
+    // a version's movements stated `same` are built (L §5.19, §6.1); rows stated `same` are
+    // not yet
+    let rows = m
+        .sames
+        .iter()
+        .any(|pair| matches!(pair, crate::model::SamePair::Rows(..)));
+    if rows {
+        return Some("rows stated same at run");
     }
     if m.joint.is_some() {
         return Some("a joint model's asks at run");

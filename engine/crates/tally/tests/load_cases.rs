@@ -3787,11 +3787,13 @@ version v1
         for &(edits, expected) in probes {
             assert_eq!(refusal(&edited(SAMES, edits)), expected, "{edits:?}");
         }
+        // M2 builds a version's movements stated `same` at run (G4, the plan's item 3; as picks
+        // P26, P36 retired G3's stop): refcore's first line
         let with_ask = edited(SAMES, &[("version v1", "ask q: count\n\nversion v1")]);
         assert_eq!(
             ask_line(&with_ask, "q:"),
-            None,
-            "an ask over same lines is not built at run"
+            Some("q: 1".to_owned()),
+            "an ask over a version's same lines answers at run, as refcore"
         );
     }
 

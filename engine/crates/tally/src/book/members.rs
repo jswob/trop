@@ -17,6 +17,7 @@ use std::collections::BTreeSet;
 
 use super::adjust::Adjustment;
 use super::observe::Obs;
+use super::same::{kept_once, same_differ, same_groups};
 use crate::base::{Code, Load, Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Entry, Env};
 use crate::hole::{Hole, spread};
@@ -254,6 +255,11 @@ impl Engine {
                 && let Some(t) = self.obs_target(m, o, ctx.cut)?
             {
                 fulfilled.insert(t);
+            }
+            if dom.0 == MvDom::Event
+                && let Some(h) = self.same_kind_hole(m, &x, dom.1, ctx)?
+            {
+                st = spread(&[st.as_ref(), Some(&h)]);
             }
             out.push((x, st));
         }
@@ -520,7 +526,7 @@ impl Engine {
             );
         }
         out.extend(self.decided_members(m, &decided, ctx)?);
-        in_order(out)
+        in_order(once_by_same(m, out))
     }
 
     /// The runs of the decision moves `decided` that a binding over their kind ranges over,
@@ -698,6 +704,12 @@ impl Engine {
             }
             Moving::Adj(_) => {}
         }
+        if let Moving::Obs(o) = &src
+            && (name == "day" || is_leg)
+            && let Some(h) = self.same_rows_hole(m, o, (name != "day").then_some(name), ctx.cut)?
+        {
+            return Ok(Value::Hole(h));
+        }
         match name {
             "day" => Ok(match src.day() {
                 Some(day) => day.value(),
@@ -707,6 +719,99 @@ impl Engine {
             _ if is_leg => self.leg_field(m, &src, name, ctx),
             _ => attr_field(m, &src, name),
         }
+    }
+
+    /// A movement of a `same` group whose members state kinds not all inside the binding's
+    /// kind `kind`: an unknown member of it, the `HOLE-SAME` naming the first member and the
+    /// first whose kind differs; none where every kind the group states is inside `kind`
+    /// (refcore's `same_kind_hole`). L §6.1 (one movement has one base kind), §8.1.
+    fn same_kind_hole(
+        &mut self,
+        m: &Reality,
+        x: &Moving,
+        kind: &str,
+        ctx: Ctx,
+    ) -> Result<Option<Hole>, Stop> {
+        let groups = same_groups(m);
+        let Some(group) = groups.get(x.id()) else {
+            return Ok(None);
+        };
+        let mut members: Vec<(Moving, String)> = Vec::new();
+        for y in group {
+            let found = match self.observation_by_id(m, y, ctx.cut)? {
+                Some(o) => Some(o),
+                None => self.planned_by_id(m, y, ctx.cut)?,
+            };
+            if let Some(member) = found {
+                let k = member.kind(m)?;
+                members.push((member, k));
+            }
+        }
+        let mut kinds: Vec<&str> = Vec::new();
+        for (_, k) in &members {
+            if !kinds.contains(&k.as_str()) {
+                kinds.push(k);
+            }
+        }
+        let sub = m.subtree(kind);
+        if kinds.len() < 2 || kinds.iter().all(|k| sub.contains(*k)) {
+            return Ok(None);
+        }
+        let ([(first, first_kind), rest @ ..], Some(differs)) = (members.as_slice(), kinds.get(1))
+        else {
+            return Ok(None);
+        };
+        let Some((other, other_kind)) = rest.iter().find(|(_, k)| k == differs) else {
+            return Ok(None);
+        };
+        let day = [x, first, other]
+            .into_iter()
+            .find_map(|mv| mv.day().and_then(|d| d.day()))
+            .map_or_else(|| "every day".to_owned(), Day::text);
+        let (one, two) = (first.id(), other.id());
+        let text = format!(
+            "{one} and {two} are one, but the kind differs on {day}: {first_kind} ({one}) and {other_kind} ({two})"
+        );
+        Ok(Some(Hole::asked(&text, &format!("{one}, {two}"))))
+    }
+
+    /// A plan's instance by id at the cut, a move named by the id's head (refcore's
+    /// `plan_insts`, by id). L §5.14.
+    fn planned_by_id(&mut self, m: &Reality, id: &str, cut: Day) -> Result<Option<Moving>, Stop> {
+        let name = id.split_once('[').map_or(id, |(n, _)| n);
+        let Some(mv) = m.moves.get(name).filter(|mv| !mv.decision) else {
+            return Ok(None);
+        };
+        let insts = self.move_instances(m, mv, cut)?;
+        Ok(insts.iter().find(|i| i.id == id).cloned().map(Moving::Plan))
+    }
+
+    /// The `HOLE-SAME` of observed row `o` where the other observed rows of its `same` group
+    /// disagree with it on a leg's amount or day (on leg `leg` alone, where given): a read of
+    /// the movement away from its places (refcore's `same_rows_hole`). L §5.19 One movement
+    /// on two statements, §6.1, §8.1.
+    fn same_rows_hole(
+        &mut self,
+        m: &Reality,
+        o: &Obs,
+        leg: Option<&str>,
+        cut: Day,
+    ) -> Result<Option<Hole>, Stop> {
+        let groups = same_groups(m);
+        let Some(group) = groups.get(&o.id) else {
+            return Ok(None);
+        };
+        let all = self.observations(m, cut)?;
+        // in the order the same lines name them
+        let others: Vec<&Obs> = group
+            .iter()
+            .filter(|y| **y != o.id)
+            .filter_map(|y| all.iter().find(|x| x.id == *y))
+            .collect();
+        if others.is_empty() {
+            return Ok(None);
+        }
+        same_differ(m, o, &others, leg)
     }
 
     /// What a movement's `fulfils` names at the cut: the instance or the adjustment, or none
@@ -997,6 +1102,24 @@ fn entry(word: &'static str, text: &str) -> Entry {
         text: text.to_owned(),
         figure: String::new(),
     }
+}
+
+/// The movements `movements`, a group stated `same` bound once, by the member its same lines
+/// name first (refcore's `once_by_same`). L §6.1, §5.19.
+fn once_by_same(m: &Reality, movements: Vec<Moving>) -> Vec<Moving> {
+    let groups = same_groups(m);
+    if groups.is_empty() {
+        return movements;
+    }
+    let keep = {
+        let ids: Vec<&str> = movements.iter().map(Moving::id).collect();
+        kept_once(&groups, &ids)
+    };
+    movements
+        .into_iter()
+        .zip(keep)
+        .filter_map(|(mv, kept)| kept.then_some(mv))
+        .collect()
 }
 
 /// Movements in movement order: by day, then by their typed order, ties as they came (refcore's
