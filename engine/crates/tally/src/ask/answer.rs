@@ -337,8 +337,8 @@ impl World {
         }
         if self.unbuilt {
             return Err(Stop::NotBuilt(
-                "a row's own known window, a moves line, or a reading's, a rule's, a band \
-                 table's, a key's or an entry's known window at run",
+                "a reading's, a moves line's, a rule's, a band table's, a key's or an \
+                 entry's known window at run",
             ));
         }
         if self.parts {
@@ -351,41 +351,23 @@ impl World {
     }
 }
 
-/// Whether the reality holds a known window or a `moves` line the run doesn't take yet
-/// (L §4.5, §5.3), so an ask of it stops `NotBuilt`: a reading's window (an opening's or a
-/// stated balance's row), or the window of a version that brings a rule, a band table, an
-/// index key or a thing's entry. A version's window on an input's or a def's rows, on an
-/// observation and on a coverage is taken (`eval/read.rs`, `book/observe.rs`). A row's own
-/// window and a `moves` line are taken too, but stop here while M1's test pins their stop
-/// (G3's STOP-REPORT in `BUILD-LOG.md`).
+/// Whether the reality holds a known window the run doesn't take yet (L §4.5, §5.3), so an
+/// ask of it stops `NotBuilt`: a reading's window (an opening's or a stated balance's row),
+/// a `moves` line's, or the window of a version that brings a rule, a band table, an index
+/// key or a thing's entry. A version's or a row's own window on an input's or a def's rows,
+/// on an observation and on a coverage is taken (`eval/read.rs`, `book/observe.rs`), and so
+/// is a `moves` line known on a day.
 fn known_windows_unbuilt(m: &Reality) -> bool {
     let mut windowed = BTreeSet::new();
     for (_, v) in m.versions.entries() {
-        if !v.moved_by.is_empty() {
+        if v.moved_by.iter().any(|mv| mv.window.is_some()) {
             return true;
         }
         if v.window.is_some() {
             windowed.insert(v.id.as_str());
         }
     }
-    own_row_windows(m)
-        || readings_windowed(m, &windowed)
-        || (!windowed.is_empty() && brought_windowed(m, &windowed))
-}
-
-/// Whether an input's row or a def's given row is known in its own window (L §4.5).
-fn own_row_windows(m: &Reality) -> bool {
-    for (_, input) in m.inputs.entries() {
-        if input.rows.iter().any(|r| r.own_window.is_some()) {
-            return true;
-        }
-    }
-    for (_, def) in m.defs.entries() {
-        if def.givens.iter().any(|r| r.own_window.is_some()) {
-            return true;
-        }
-    }
-    false
+    readings_windowed(m, &windowed) || (!windowed.is_empty() && brought_windowed(m, &windowed))
 }
 
 /// Whether an opening's or a stated balance's row is known in a window, its own or its

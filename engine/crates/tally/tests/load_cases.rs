@@ -1034,6 +1034,8 @@ version bank_a
         }
     }
 
+    /// A version known in a window over an opening's row is not built yet; a row's own known
+    /// window and a `moves` line, which M1 stopped on, run since M2 (picks P6, P26, P36).
     #[test]
     fn an_ask_over_a_known_window_or_a_moves_line_is_not_built_yet() {
         assert_eq!(
@@ -1041,11 +1043,17 @@ version bank_a
             Some("q: 200.00 PLN"),
             "refcore's first line"
         );
-        let edits = [
-            (
-                "  known 2026-01-01\n  amt",
-                "  known window(2025-12-01, 2026-01-01)\n  amt",
-            ),
+        let unbuilt = [(
+            "  known 2026-01-01\n  amt",
+            "  known window(2025-12-01, 2026-01-01)\n  amt",
+        )];
+        for (old, new) in unbuilt {
+            assert!(VERSIONS.contains(old), "{old} is in the base");
+            let text = VERSIONS.replacen(old, new, 1);
+            assert_eq!(refusal(&text), "loaded", "{new} loads");
+            assert_eq!(first_line(&text), None, "{new}: M1 runs it");
+        }
+        let built = [
             (
                 "  rate[q2] = 2 \"the card\"",
                 "  rate[q2] = 2 known window(2026-01-02, 2026-02-01) \"the card\"",
@@ -1055,11 +1063,15 @@ version bank_a
                 "\"the statement\"\n\nversion card_b\n  cite card\n  governs 2026-04-01..\n  known 2026-04-01\n  moves bank_a to 2026-02-01..2026-03-31\n",
             ),
         ];
-        for (old, new) in edits {
+        for (old, new) in built {
             assert!(VERSIONS.contains(old), "{old} is in the base");
             let text = VERSIONS.replacen(old, new, 1);
             assert_eq!(refusal(&text), "loaded", "{new} loads");
-            assert_eq!(first_line(&text), None, "{new}: M1 runs it");
+            assert_eq!(
+                first_line(&text).as_deref(),
+                Some("q: 200.00 PLN"),
+                "{new}: refcore's first line"
+            );
         }
     }
 
