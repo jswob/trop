@@ -179,6 +179,9 @@ impl Engine {
         env: &Env,
         (ctx, read): (Ctx, Ctx),
     ) -> Result<Value, Stop> {
+        if m.inputs.get(id).is_some_and(|i| i.observed) {
+            return self.observed_row(m, (id, keys), read.cut);
+        }
         let mut given = Vec::with_capacity(keys.len());
         for key in keys {
             let Key::Expr(e) = key else {
