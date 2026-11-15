@@ -73,9 +73,6 @@ impl Engine {
         if b.of.is_some() {
             return Err(Stop::NotBuilt("bal of a party or a batch (M5a)"));
         }
-        if b.modelled {
-            return Err(Stop::NotBuilt("a modelled balance (the ledger)"));
-        }
         let Some(day_arg) = b.args.last() else {
             let Some(at) = ctx.at else {
                 return Err(Stop::Refused(Refusal::new(
@@ -107,6 +104,16 @@ impl Engine {
             Err(imprecise) => return Ok(Value::Hole(imprecise)),
         };
         let outside = outside_run(m, d, &place).map(Value::Hole);
+        if b.modelled {
+            if ctx.at.is_none() && self.tracing() {
+                return Err(Stop::NotBuilt("explain of a modelled balance"));
+            }
+            // before S or after E it is the run's hole, as every balance (E §6.2, §2)
+            return match outside {
+                Some(hole) => Ok(hole),
+                None => self.bal_modelled(m, (&place, &unit), d, ctx.cut),
+            };
+        }
         if b.proj.from.is_some() {
             return match outside {
                 Some(hole) => Ok(hole),

@@ -215,6 +215,7 @@ pub mod walk {
     mod flows;
     mod legs;
     mod lows;
+    mod modelled;
     mod move_flows;
     mod order;
     mod plan;
