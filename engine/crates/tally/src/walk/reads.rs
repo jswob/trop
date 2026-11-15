@@ -132,7 +132,9 @@ impl Engine {
                 }
             }),
         };
-        if ctx.at.is_none() && self.tracing() {
+        // traced wherever a read is: a walk reads apart, so inside a decision only a walk-bound
+        // def's cell read again at its point traces it (E §10)
+        if self.tracing() {
             self.trace_bal(m, walked, (place, unit, ctx.cut), (d, b), &got)?;
         }
         got
