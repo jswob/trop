@@ -6,7 +6,9 @@
 //! twins, the family's base (the load probe) and the answers of its asks on the base (each
 //! answered clean). `tools/xref_check.py --gate M2` counts them. One test per code, for the
 //! builder group G4 `records`; the reading-after form is held for #169 (`codes/m2/held.tsv`:
-//! refcore 2.1.7 prints no refusal there). `test = false` until M2's marker.
+//! refcore 2.1.7 prints no refusal there). Where refcore drops the base's reading after m
+//! (`records/answers/q_konto`, `records/adjustment-unmade`), `held.tsv` holds the vector for
+//! #169 (P43) and the test leaves it out. `test = false` until M2's marker.
 
 #![forbid(unsafe_code)]
 
@@ -15,6 +17,7 @@ mod tests {
     use std::collections::BTreeSet;
     use tally_runner::codes::{M0Fixture, M2, m0_fixtures};
     use tally_runner::engine::run_args;
+    use tally_runner::held::is_held;
     use tally_runner::kernel::difference;
 
     /// The codes this target tests, one `#[test]` each.
@@ -47,6 +50,7 @@ mod tests {
         let twins = vs.iter().filter(|v| wanted.contains(&v.id));
         let failed: Vec<String> = twins
             .chain(mine.iter().copied())
+            .filter(|v| !is_held("m2_codes", &v.id))
             .filter_map(|v| {
                 difference(&v.run, &run_args(&v.args, &v.files)).map(|d| format!("{}: {d}", v.id))
             })
