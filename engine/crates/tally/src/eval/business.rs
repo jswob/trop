@@ -670,11 +670,13 @@ impl Engine {
 
     /// The row calendar `name`'s read at `keys` on `day` takes, by its stable id, or `pin`
     /// where a pin gives the calendar: what names its added windows, each entry of each row
-    /// a read of its own (L §4.4, §4.6 step 1).
+    /// a read of its own; among the rows a known window leaves visible under the line's
+    /// choice, as the calendar's own read sees them (L §4.4, §4.5, §4.6 step 1).
     ///
     /// # Errors
     ///
-    /// The read rule's refusals; `ENGINE-INVARIANT` for a calendar whose read took no row.
+    /// The read rule's refusals; `ENGINE-INVARIANT` for a calendar whose read took no row,
+    /// or a known window no `windows each` decides (the caller reads under one).
     fn calendar_row(
         &mut self,
         m: &Reality,
@@ -690,6 +692,13 @@ impl Engine {
             return Ok("pin".to_owned());
         }
         let clocks = self.clocks(ctx, name)?;
+        let view = self
+            .input_view(m, input, keys, (None, clocks), ctx)?
+            .map_err(|_| invariant("a calendar's known window no `windows each` decides"))?;
+        let input = match &view {
+            Some(seen) => seen,
+            None => input,
+        };
         match read_input(m, input, keys, clocks, Asked::Calendar)? {
             Found::Row(at) => input
                 .rows
