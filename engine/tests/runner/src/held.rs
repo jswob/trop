@@ -11,7 +11,7 @@ pub const HELD: &str = include_str!("../../held.tsv");
 
 /// The targets a row may name: the gating ones, M1's vector stores (issue #108), whose
 /// targets gate from M1's marker, and M2's (issue #167), whose targets gate from M2's.
-pub const TARGETS: [&str; 17] = [
+pub const TARGETS: [&str; 18] = [
     "s_kernel",
     "m0_codes",
     "m0_format",
@@ -29,6 +29,7 @@ pub const TARGETS: [&str; 17] = [
     "m2_goldens",
     "m2_codes",
     "m2_hindcasts",
+    "m2_properties",
 ];
 
 /// One held vector.
@@ -83,6 +84,7 @@ mod tests {
     use crate::kernel::{VECTORS, vectors};
     use crate::laws_m0::M0_CORPUS;
     use crate::laws_m1::M1_CORPUS;
+    use crate::laws_m2::M2_CORPUS;
     use crate::m0::{FORMAT, LOAD, format_vectors, load_vectors};
     use crate::m1::VECTORS as M1_VECTORS;
     use crate::m2::VECTORS as M2_VECTORS;
@@ -123,6 +125,11 @@ mod tests {
             .into_iter()
             .map(|r| r.case)
             .collect();
+        let m2_cases: BTreeSet<String> = records(M2_CORPUS)
+            .expect("m2 corpus")
+            .into_iter()
+            .map(|r| r.case)
+            .collect();
         let m1_cases: BTreeSet<String> = records(M1_CORPUS)
             .expect("m1 corpus")
             .into_iter()
@@ -157,6 +164,7 @@ mod tests {
                 "m1_checks" | "m1_carried" | "m1_goldens" | "m1_fixes" => &m1,
                 "m1_codes" => &m1_codes,
                 "m1_properties" => &m1_cases,
+                "m2_properties" => &m2_cases,
                 "m2_checks" | "m2_items" | "m2_fixes" | "m2_goldens" | "m2_hindcasts" => &m2,
                 "m2_codes" => &m2_codes,
                 _ => &cases,

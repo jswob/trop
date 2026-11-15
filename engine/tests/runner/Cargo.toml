@@ -178,3 +178,10 @@ test = false
 name = "m2_hindcasts"
 path = "milestone/m2_hindcasts.rs"
 test = false
+
+# Milestone M2's properties (issue #167, DONE gate 6, PROPERTIES.md § M2): masking at K, the
+# replay's split, the fixed past over properties/m2.corpus; `test = false` until M2 gates.
+[[test]]
+name = "m2_properties"
+path = "milestone/m2_properties.rs"
+test = false
