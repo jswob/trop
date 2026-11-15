@@ -109130,4 +109130,123 @@ e2: 1 130.00 PLN
   unfulfilled: save[2026-01]
   cut 2026-04-10
 warning: WARN-NEGATIVE konto is below zero from 2026-03-15
+,17:fixes/g8b/ob1_b31,11:fixes-sweep,23:run ob1.tally --ask b31,1466:9:ob1.tally,1448:model ob1
+  tally 2
+  on 2026-04-25
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 gate 8 run 43749994847 on 205157a2: a removal known in a window the cut leaves open, three restatements known before it after it in the text; the restatement shown is the latest before the removal (book/observe.rs Latest::keep)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+
+version v1
+  cite s
+  governs always
+  known 2026-03-01
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 10.00 PLN) "r1"
+
+version v2
+  cite s
+  governs 2026-03
+  known 2026-03-02
+  replace bank[r1] = none known window(2026-04-01, 2026-04-10) "rm"
+
+version v3
+  cite s
+  governs 2026-03
+  known 2026-03-05
+  replace bank[r1] = (on: 2026-03-12, kind: transfers, leg cash from world to konto amount 12.00 PLN) "r1b"
+
+version v4
+  cite s
+  governs 2026-03
+  known 2026-03-06
+  replace bank[r1] = (on: 2026-03-13, kind: transfers, leg cash from world to konto amount 13.00 PLN) "r1c"
+
+ask b11: bal(konto, 2026-03-11) as known 2026-04-05
+ask b12: bal(konto, 2026-03-12) as known 2026-04-05
+ask b31: bal(konto, 2026-03-31) as known 2026-04-05
+ask led: residuals konto 2026-03 as known 2026-04-05
+ask late: bal(konto, 2026-03-31) as known 2026-04-11
+ask early: bal(konto, 2026-03-31) as known 2026-03-31
+,,1:0,31:b31: 0.00 PLN
+  cut 2026-04-05
+,17:fixes/g8b/aw_attr,11:fixes-sweep,23:run aw.tally --ask n_ma,1544:8:aw.tally,1527:model aw
+  tally 2
+  on 2026-08-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 gate 8 run 43749994847 on 205157a2: moves whose at is a window crossing a law change on 2026-04-01, legs alike on both sides: an attribute that differs and one that doesn't (ma, mb), a when that differs (mw), one that exists on both (mx) (walk/plan.rs imprecise_body)"
+
+source s "s"
+unit PLN: currency minor 0.01
+kind ev: event certain
+  leg cash: PLN
+  attr n: int
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input wl: date
+input pq: date
+input a1: money PLN
+input nv: int
+input ns: int
+input on1: int
+
+move ma: ev
+  on pq
+  at wl
+  attr n = nv
+  leg cash from world to konto amount a1
+
+move mb: ev
+  on pq
+  at wl
+  attr n = ns
+  leg cash from world to konto amount a1
+
+move mw: ev
+  on pq
+  at wl
+  when on1 > 0
+  attr n = ns
+  leg cash from world to konto amount a1
+
+ask n_ma: ma.n
+ask n_mb: mb.n
+ask f_ma: flows(ma, 2026-04-01 .. 2026-04-30)
+ask f_mb: flows(mb, 2026-04-01 .. 2026-04-30)
+ask f_mw: flows(mw, 2026-04-01 .. 2026-04-30)
+ask c: count(t in ev over 2026-04)
+ask b: bal(konto, 2026-04-30)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  wl = window(2026-03-30, 2026-04-02) "s"
+  a1 = 1.00 PLN "s"
+  pq = 2026-04-10 "s"
+  ns = 7 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+
+version old
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-01-01
+  nv = 1 "s"
+  on1 = 1 "s"
+
+version new
+  cite s
+  governs 2026-04-01..
+  known 2026-01-01
+  nv = 2 "s"
+  on1 = 0 "s"
+,,1:0,25:n_ma: 1
+  cut 2026-08-01
 ,

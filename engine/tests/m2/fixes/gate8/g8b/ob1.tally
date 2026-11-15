@@ -1,0 +1,44 @@
+model ob1
+  tally 2
+  on 2026-04-25
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 gate 8 run 43749994847 on 205157a2: a removal known in a window the cut leaves open, three restatements known before it after it in the text; the restatement shown is the latest before the removal (book/observe.rs Latest::keep)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+
+version v1
+  cite s
+  governs always
+  known 2026-03-01
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 10.00 PLN) "r1"
+
+version v2
+  cite s
+  governs 2026-03
+  known 2026-03-02
+  replace bank[r1] = none known window(2026-04-01, 2026-04-10) "rm"
+
+version v3
+  cite s
+  governs 2026-03
+  known 2026-03-05
+  replace bank[r1] = (on: 2026-03-12, kind: transfers, leg cash from world to konto amount 12.00 PLN) "r1b"
+
+version v4
+  cite s
+  governs 2026-03
+  known 2026-03-06
+  replace bank[r1] = (on: 2026-03-13, kind: transfers, leg cash from world to konto amount 13.00 PLN) "r1c"
+
+ask b11: bal(konto, 2026-03-11) as known 2026-04-05
+ask b12: bal(konto, 2026-03-12) as known 2026-04-05
+ask b31: bal(konto, 2026-03-31) as known 2026-04-05
+ask led: residuals konto 2026-03 as known 2026-04-05
+ask late: bal(konto, 2026-03-31) as known 2026-04-11
+ask early: bal(konto, 2026-03-31) as known 2026-03-31

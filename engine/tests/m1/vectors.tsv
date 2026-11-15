@@ -2009,3 +2009,11 @@ fixes/gate8/m2_gate_p5	fixes-gate8		engine/tests/m2/fixes/gate	engine/tests/m2/f
 fixes/gate8/m2_gate_p7a	fixes-gate8		engine/tests/m2/fixes/gate	engine/tests/m2/fixes/gate/p7a.tally	m14 m15		-
 fixes/gate8/m2_gate_p7b	fixes-gate8		engine/tests/m2/fixes/gate	engine/tests/m2/fixes/gate/p7b.tally	b m14 m15 g r		-
 fixes/gate8/m2_gate_p1	fixes-gate8		engine/tests/m2/fixes/gate	engine/tests/m2/fixes/gate/p1.tally engine/tests/m2/fixes/gate/p1_sc.tally			-
+fixes/gate8/m2_g8b_sc1	fixes-gate8		engine/tests/m2/fixes/gate8/g8b	engine/tests/m2/fixes/gate8/g8b/sc1.tally			-
+fixes/gate8/m2_g8b_sc2	fixes-gate8		engine/tests/m2/fixes/gate8/g8b	engine/tests/m2/fixes/gate8/g8b/sc2.tally			-
+fixes/gate8/m2_g8b_ob1	fixes-gate8		engine/tests/m2/fixes/gate8/g8b	engine/tests/m2/fixes/gate8/g8b/ob1.tally	b11 b12 led late early		-
+fixes/gate8/m2_g8b_ob2	fixes-gate8		engine/tests/m2/fixes/gate8/g8b	engine/tests/m2/fixes/gate8/g8b/ob2.tally			-
+fixes/gate8/m2_g8b_aw	fixes-gate8		engine/tests/m2/fixes/gate8/g8b	engine/tests/m2/fixes/gate8/g8b/aw.tally	n_mb f_ma f_mb f_mw c b		-
+fixes/gate8/m2_g8b_aw2	fixes-gate8		engine/tests/m2/fixes/gate8/g8b	engine/tests/m2/fixes/gate8/g8b/aw2.tally			-
+fixes/gate8/m2_g8b_ot	fixes-gate8		engine/tests/m2/fixes/gate8/g8b	engine/tests/m2/fixes/gate8/g8b/ot.tally			-
+fixes/gate8/m2_g8b_ot2	fixes-gate8		engine/tests/m2/fixes/gate8/g8b	engine/tests/m2/fixes/gate8/g8b/ot2.tally			-
