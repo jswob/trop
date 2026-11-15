@@ -1,0 +1,46 @@
+model pw
+  tally 2
+  on 2026-04-25
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 gate 8 run 43690242450 on d512fe7b: two reads of one projection walk in one cell, a later day first (walk/projection.rs end_projection, P54)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input dh: date
+input k: num
+input dd: int
+input de: int
+input da: date
+input dm: date
+input dz: date
+
+move pay[m in months]: transfers
+  on day_of(m, dd)
+  leg cash from world to konto amount amt
+
+def two: money PLN = bal(konto, dm) from da + bal(konto, dz) from da
+def twob: money PLN = bal(konto, dz) from da - bal(konto, dm) from da
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "s"
+  k = 0.1 "s"
+  dd = 10 "s"
+  de = 20 "s"
+  da = 2026-01-01 "s"
+  dm = 2026-03-31 "s"
+  dz = 2026-12-31 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
+
+ask q: two
+ask q2: twob
+ask q3: two, twob
+ask q4: bal(konto, 2026-03-31) from 2026-01-01 + bal(konto, 2026-12-31) from 2026-01-01
