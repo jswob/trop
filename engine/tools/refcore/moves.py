@@ -1281,6 +1281,20 @@ def m_obs_links_for(self, tid, ctx):
             o.target = _LinkTarget(tid, self, mi, list(kv), ctx)
             res.append(o)
         res = self.unjoined_refused(tid, res, ctx)
+        # rows stated same are one movement, "its fulfils ... stated on either row" (L §5.19 One movement on two
+        # statements): a row with no fulfils of its own stated same as one that fulfils tid fulfils it too, so which
+        # row carries the link changes no answer (a decision's own observations, its point, the walk's booking)
+        groups = same_groups(m)
+        if res and any(o.id in groups for o in res):
+            by_id = dict((x.id, x) for x in self.observations(ctx))
+            for o in list(res):
+                for y in groups.get(o.id, ()):
+                    x = by_id.get(y)
+                    if x is None or x.fulfils is not None or x.err is not None or any(z is x for z in res):
+                        continue
+                    if x.target is None:
+                        x.target = o.target
+                    res.append(x)
     finally:
         self.stack.pop()
         self.inst_active.discard(key)
