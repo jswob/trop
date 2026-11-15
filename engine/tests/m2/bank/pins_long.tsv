@@ -1,6 +1,6 @@
 id	header	ask	item	expected	prototype	hold	why
 pins_long/konto_2036	r7/to2036.tally	pin_2036	0	14 072.28 PLN	konto@2036-10-17 14072.28	-	P45: the prototype's figure, the joint twin
-pins_long/net_worth_2036	r7/to2036.tally	pin_2036	1	1 746 077.48 PLN	networth@2036-10-17 1746077.48	#114	P45: the prototype's figure; the engine printed 1 746 061.56 (-15.92) on 2026-11-15 with konto equal: likely the text's stated units_step and etf_price_step against the prototype's floats (forward.tally's notes), unjudged by refcore (past 8 GB)
+pins_long/net_worth_2036	r7/to2036.tally	pin_2036	1	1 746 077.48 PLN	networth@2036-10-17 1746077.48	#114	P45: the prototype's figure; the engine printed 1 746 061.56 (-15.92) on 2026-11-15 with konto equal; cause unknown, past 2030 (P57: not the ETF steps: a 1e-18 twin prints the same net worth to the grosz to 2030 on refcore, and refcore = engine to 2030; the blocks state no figure 2031-2035 to bisect against)
 pins_long/konto_2056	r7/to2056.tally	pin_2056	0	22 613.79 PLN	konto@2056-10-17 22613.79	-	P45: the prototype's figure, the joint twin
 pins_long/net_worth_2056	r7/to2056.tally	pin_2056	1	10 093 811.25 PLN	networth@2056-10-17 10093811.25	#114	P45: the prototype's figure; the engine printed 10 093 756.45 (-54.80), as net_worth_2036
 pins_long/oki_tax_2040	r7/to2050.tally	pin_oki_tax_2040	-	10 409.00 PLN	oki_tax/tax[2040] 10409	-	P45: the prototype's figure, the joint twin (L-26 moves it on separate returns)

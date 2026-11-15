@@ -28,7 +28,13 @@ mod tests {
     ];
 
     /// The groups of `m2/spec.vectors`, one `#[test]` each.
-    const SPEC_GROUPS: [&str; 4] = ["spec-forms", "spec-explain", "spec-windows", "spec-records"];
+    const SPEC_GROUPS: [&str; 5] = [
+        "spec-forms",
+        "spec-explain",
+        "spec-windows",
+        "spec-records",
+        "spec-ledger",
+    ];
 
     /// Runs every vector of `group` in `store` on the engine, less the held ones, and holds it
     /// to the stored run.
@@ -118,10 +124,19 @@ mod tests {
     }
 
     /// The ledger group's: `HOLE-SAME` names its rows in the `same` line's written order
-    /// (P51, #177; `adj_amt`'s settlement and its adjustment's remainder).
+    /// (P51, #177; `adj_amt`'s settlement and its adjustment's remainder); G5's review probes
+    /// (`m2/fixes/g5/`): `by f`, unit `any`, the made-exist leg, the answered hole, bindings
+    /// under `with uncertain` and over hole days, the prefix walk's pair (B2).
     #[test]
     fn m2_fixes_ledger() {
         group_holds(VECTORS, "fixes-ledger");
+    }
+
+    /// The spec's answers for G5's held probes: a hole booking a later version answers (E §5
+    /// step 1, #169) and unit `any`'s ledgers (P22, #173).
+    #[test]
+    fn m2_fixes_spec_ledger() {
+        group_holds(SPEC, "spec-ledger");
     }
 
     /// The spec's answers for G4's held probes (P43) and the `nb3_*` texts refcore can't run:

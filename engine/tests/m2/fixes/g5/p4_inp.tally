@@ -1,0 +1,34 @@
+model hh
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input amt[m in months]: money PLN question "Ile?"
+input dom: int
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to world amount amt[m]
+
+version v1
+  cite s
+  governs 2026..
+  known 2026-01-01
+  dom = 10 "s"
+  amt[2026-01] = 100.00 PLN "s"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+
+version v2
+  cite s
+  governs 2026..
+  known 2026-03-01
+  amt[2026-02] = 200.00 PLN "s"
+
+ask i1: inputs-of pay[2026-02]
+ask e3: explain pay[2026-02]
