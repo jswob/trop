@@ -472,8 +472,13 @@ impl Engine {
         let id = self.main_walk(m, cut)?;
         let present: BTreeSet<String> = obs.iter().map(|o| o.id.clone()).collect();
         let mut keep = Vec::with_capacity(obs.len());
-        for o in obs {
-            if self.skipped_at(m, id, &o, place)? {
+        for o in &obs {
+            if let Some(group) = groups.get(&o.id)
+                && self.left_to_partner(m, (o, &obs, group), place, cut)?
+            {
+                continue;
+            }
+            if self.skipped_at(m, id, o, place)? {
                 continue;
             }
             if let Some(group) = groups.get(&o.id) {
@@ -486,9 +491,55 @@ impl Engine {
                 let ids: Vec<&str> = ids.into_iter().collect();
                 also.insert(o.id.clone(), ids.join(", "));
             }
-            keep.push(o);
+            keep.push(o.clone());
         }
         Ok((keep, also))
+    }
+
+    /// Whether row `o` of `same` group `group` leaves its end at `place` to another row of
+    /// the group among `obs`: its own statement doesn't book it there and the other's does,
+    /// so the walk books the movement there once, by the other row (E §6.3, §6.1; L §5.19
+    /// Coverage, One movement on two statements).
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::obs_end_on`].
+    fn left_to_partner(
+        &mut self,
+        m: &Reality,
+        (o, obs, group): (&Obs, &[Obs], &[String]),
+        place: &str,
+        cut: Day,
+    ) -> Result<bool, Stop> {
+        if self.books_end_at(m, o, place, cut)? {
+            return Ok(false);
+        }
+        for other in obs.iter().filter(|x| x.id != o.id && group.contains(&x.id)) {
+            if self.books_end_at(m, other, place, cut)? {
+                return Ok(true);
+            }
+        }
+        Ok(false)
+    }
+
+    /// Whether row `o` books an end at `place` by its own coverage: a leg there on a day no
+    /// version covers the place, or its own version does (refcore's `obs_end_on`). E §6.1,
+    /// L §5.19 Coverage.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::obs_end_on`].
+    fn books_end_at(&mut self, m: &Reality, o: &Obs, place: &str, cut: Day) -> Result<bool, Stop> {
+        for lg in &o.legs {
+            if lg.from.place() != Some(place) && lg.to.place() != Some(place) {
+                continue;
+            }
+            let day = lg.day.day().unwrap_or(o.day);
+            if self.obs_end_on(m, o, place, day, cut)? {
+                return Ok(true);
+            }
+        }
+        Ok(false)
     }
 
     /// Whether row `o`'s end at `place` is booked by another member of its `same` group;
