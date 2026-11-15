@@ -4878,4 +4878,98 @@ ask o9: bank[r1].fulfils
 ask o10: count(t in groceries over 2026-03 where t == bank[r4])
 ,,1:0,81:o5: refused: RUN-NONE bank[r5] is none here: a field read of it
   cut 2026-03-01
+,20:spec/p60/ask_for_law,10:spec-sweep,21:run ask_for_law.tally,645:17:ask_for_law.tally,619:model p
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 P60 (G6's census of run-time stops): ask/answer.rs:611, an ask's law formed per its own for's binding tuple"
+
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [a, b]
+input amt: money PLN
+input dk[k in ks]: date
+
+version v
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-01-01
+  amt = 10.00 PLN "s"
+
+version v2
+  cite s
+  governs 2026-04-01..
+  known 2026-01-01
+  amt = 20.00 PLN "s"
+
+version d
+  cite s
+  governs always
+  known 2026-01-01
+  dk[a] = 2026-03-31 "s"
+  dk[b] = 2026-04-30 "s"
+
+ask q: amt for k in ks law dk[k]
+,,1:0,118:q (k = a): 10.00 PLN
+  law date 2026-03-31, cut 2026-06-30
+q (k = b): 20.00 PLN
+  law date 2026-04-30, cut 2026-06-30
+,22:spec/p60/ask_for_known,10:spec-sweep,23:run ask_for_known.tally,587:19:ask_for_known.tally,559:model p
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 P60 (G6's census of run-time stops): ask/answer.rs:513, an ask's as known formed per its own for's binding tuple"
+
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [a, b]
+input amt: money PLN
+input dk[k in ks]: date
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "s"
+  dk[a] = 2026-03-31 "s"
+  dk[b] = 2026-04-30 "s"
+
+version v3
+  cite s
+  governs always
+  known 2026-04-15
+  replace amt = 30.00 PLN "s"
+
+ask q: amt for k in ks as known dk[k]
+,,1:0,76:q (k = a): 10.00 PLN
+  cut 2026-03-31
+q (k = b): 30.00 PLN
+  cut 2026-04-30
+,21:spec/p60/ask_for_with,10:spec-sweep,22:run ask_for_with.tally,421:18:ask_for_with.tally,394:model p
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 P60 (G6's census of run-time stops): ask/answer.rs:658, an ask's with pin formed per its own for's binding tuple"
+
+source s "s"
+index ks = [a, b]
+input x[k in ks]: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x[a] = 1 "s"
+  x[b] = 2 "s"
+
+ask q: sum(x[j] for j in ks) for k in ks with x[k] = 9
+,,1:0,100:q (k = a): 11
+  pinned: x[a] = 9
+  cut 2026-06-30
+q (k = b): 10
+  pinned: x[b] = 9
+  cut 2026-06-30
 ,

@@ -1,0 +1,19 @@
+model p
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 P60 (G6's census of run-time stops): ask/answer.rs:658, an ask's with pin formed per its own for's binding tuple"
+
+source s "s"
+index ks = [a, b]
+input x[k in ks]: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x[a] = 1 "s"
+  x[b] = 2 "s"
+
+ask q: sum(x[j] for j in ks) for k in ks with x[k] = 9

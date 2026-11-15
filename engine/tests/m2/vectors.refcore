@@ -104878,6 +104878,543 @@ ask o9: bank[r1].fulfils
 ask o10: count(t in groceries over 2026-03 where t == bank[r4])
 ,,1:0,83:o5: refused: RUN-NONE a movement is none here: a field read of it
   cut 2026-03-01
+,19:fixes/p60/flows_for,11:fixes-sweep,19:run flows_for.tally,1564:15:flows_for.tally,1539:model p
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 P60 (G6's census of run-time stops): walk/flows.rs:54, flows of a place and of a move for a period (L §5.14 for k)"
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index ks = [a, b]
+kind twos: event certain
+  leg cash: PLN
+  leg fee: PLN
+place konto: accounts PLN lives 2026-01-01..
+place jar[k in ks]: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input dom: int
+input fx: num PLN/EUR
+input x[k in ks]: int
+input pday: date
+input lo: money PLN
+input hi: money PLN
+input ids: text
+input plaw: date
+
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  for m
+  leg cash from world to konto amount amt
+
+move buy[m in months]: twos
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to world amount amt
+  leg fee from konto to world amount amt
+
+move put[k in ks]: transfers
+  on pday
+  at plaw
+  leg cash from world to jar[k] amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "s"
+  dom = 5 "s"
+  fx = 4.25 "s"
+  x[a] = 1 "s"
+  pday = 2026-03-05 "s"
+  lo = 0.00 PLN "s"
+  hi = 0.02 PLN "s"
+  ids = "a" "s"
+  plaw = 2026-03-01 "s"
+  x[b] = 2 "s"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+  opening[jar[a]] = 0.00 PLN at 2026-01-01 start "s"
+  opening[jar[b]] = 0.00 PLN at 2026-01-01 start "s"
+
+ask q: flows(konto, 2026-01-01 .. 2026-06-30, for 2026-03)
+ask q2: flows(pay, 2026-01-01 .. 2026-06-30, for 2026-03)
+,,1:0,421:q: 10.00 PLN
+  unfulfilled: pay[2026-03]
+  cut 2026-06-30
+q2: 10.00 PLN
+  unfulfilled: pay[2026-03]
+  cut 2026-06-30
+warning: WARN-NEGATIVE konto is below zero from 2026-11-05
+warning: WARN-UNREAD input fx is read by nothing
+warning: WARN-UNREAD input hi is read by nothing
+warning: WARN-UNREAD input ids is read by nothing
+warning: WARN-UNREAD input lo is read by nothing
+warning: WARN-UNREAD input x is read by nothing
+,20:fixes/p60/flows_conv,11:fixes-sweep,20:run flows_conv.tally,1529:16:flows_conv.tally,1503:model p
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 P60 (G6's census of run-time stops): walk/flows.rs:54, flows converted to another currency (L §5.14 flows ... in CUR at fx mode)"
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index ks = [a, b]
+kind twos: event certain
+  leg cash: PLN
+  leg fee: PLN
+place konto: accounts PLN lives 2026-01-01..
+place jar[k in ks]: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input dom: int
+input fx: num EUR/PLN
+input x[k in ks]: int
+input pday: date
+input lo: money PLN
+input hi: money PLN
+input ids: text
+input plaw: date
+
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  for m
+  leg cash from world to konto amount amt
+
+move buy[m in months]: twos
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to world amount amt
+  leg fee from konto to world amount amt
+
+move put[k in ks]: transfers
+  on pday
+  at plaw
+  leg cash from world to jar[k] amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "s"
+  dom = 5 "s"
+  fx = 0.25 "s"
+  x[a] = 1 "s"
+  pday = 2026-03-05 "s"
+  lo = 0.00 PLN "s"
+  hi = 0.02 PLN "s"
+  ids = "a" "s"
+  plaw = 2026-03-01 "s"
+  x[b] = 2 "s"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+  opening[jar[a]] = 0.00 PLN at 2026-01-01 start "s"
+  opening[jar[b]] = 0.00 PLN at 2026-01-01 start "s"
+
+ask q: flows(konto, 2026-01-01 .. 2026-06-30) in EUR at fx half-up
+,,1:0,622:q: -15.00 EUR
+  unfulfilled: buy[2026-01]
+  unfulfilled: buy[2026-02]
+  unfulfilled: buy[2026-03]
+  unfulfilled: buy[2026-04]
+  unfulfilled: buy[2026-05]
+  unfulfilled: buy[2026-06]
+  unfulfilled: pay[2026-01]
+  unfulfilled: pay[2026-02]
+  unfulfilled: pay[2026-03]
+  unfulfilled: pay[2026-04]
+  unfulfilled: pay[2026-05]
+  unfulfilled: pay[2026-06]
+  cut 2026-06-30
+warning: WARN-NEGATIVE konto is below zero from 2026-11-05
+warning: WARN-UNREAD input hi is read by nothing
+warning: WARN-UNREAD input ids is read by nothing
+warning: WARN-UNREAD input lo is read by nothing
+warning: WARN-UNREAD input x is read by nothing
+,16:fixes/p60/wa_for,11:fixes-sweep,16:run wa_for.tally,1652:12:wa_for.tally,1630:model wa_for
+  tally 2
+  on 2026-08-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 P60 (G6's census of run-time stops): walk/flows.rs:54 and walk/plan.rs imprecise_part, flows for a period of moves whose at is a window crossing a law change, one whose for differs across it and one whose for doesn't; one whose when differs"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+input wl: date
+input pq: date
+input pf: date
+input pg: date
+input a1: money PLN
+input go: bool
+
+move md: transfers
+  on pq
+  at wl
+  for month_of(pf)
+  leg cash from world to konto amount a1
+
+move me: transfers
+  on pq
+  at wl
+  for month_of(pg)
+  leg cash from world to konto amount a1
+
+move mw: transfers
+  on pq
+  at wl
+  when go
+  leg cash from world to konto amount a1
+
+ask d3: flows(md, 2026-04-01 .. 2026-04-30, for 2026-03)
+ask d4: flows(md, 2026-04-01 .. 2026-04-30, for 2026-04)
+ask e5: flows(me, 2026-04-01 .. 2026-04-30, for 2026-05)
+ask e4: flows(me, 2026-04-01 .. 2026-04-30, for 2026-04)
+ask w: flows(mw, 2026-04-01 .. 2026-04-30)
+ask k: bal(konto, 2026-04-30)
+ask n: count(t in transfers over 2026-04)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  wl = window(2026-03-30, 2026-04-02) "s"
+  a1 = 1.00 PLN "s"
+  pg = 2026-05-15 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+
+version old
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-01-01
+  pq = 2026-04-10 "s"
+  pf = 2026-03-15 "s"
+  go = true "s"
+
+version new
+  cite s
+  governs 2026-04-01..
+  known 2026-01-01
+  pq = 2026-04-10 "s"
+  pf = 2026-04-15 "s"
+  go = false "s"
+,,1:0,567:d3: 1.00 PLN
+  unfulfilled: md
+  cut 2026-08-01
+d4: 0.00 PLN
+  cut 2026-08-01
+e4: 0.00 PLN
+  cut 2026-08-01
+e5: 1.00 PLN
+  unfulfilled: me
+  cut 2026-08-01
+k: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+  unfulfilled: md
+  unfulfilled: me
+  cut 2026-08-01
+n: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+  unfulfilled: md
+  unfulfilled: me
+  cut 2026-08-01
+w: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+  cut 2026-08-01
+,17:fixes/p60/pos_key,11:fixes-sweep,17:run pos_key.tally,1479:13:pos_key.tally,1456:model p
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 P60 (G6's census of run-time stops): eval/builtin.rs:348, pos of a bare key literal, and of a bound key"
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index ks = [a, b]
+kind twos: event certain
+  leg cash: PLN
+  leg fee: PLN
+place konto: accounts PLN lives 2026-01-01..
+place jar[k in ks]: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input dom: int
+input fx: num PLN/EUR
+input x[k in ks]: int
+input pday: date
+input lo: money PLN
+input hi: money PLN
+input ids: text
+input plaw: date
+
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  for m
+  leg cash from world to konto amount amt
+
+move buy[m in months]: twos
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to world amount amt
+  leg fee from konto to world amount amt
+
+move put[k in ks]: transfers
+  on pday
+  at plaw
+  leg cash from world to jar[k] amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "s"
+  dom = 5 "s"
+  fx = 4.25 "s"
+  x[a] = 1 "s"
+  pday = 2026-03-05 "s"
+  lo = 0.00 PLN "s"
+  hi = 0.02 PLN "s"
+  ids = "a" "s"
+  plaw = 2026-03-01 "s"
+  x[b] = 2 "s"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+  opening[jar[a]] = 0.00 PLN at 2026-01-01 start "s"
+  opening[jar[b]] = 0.00 PLN at 2026-01-01 start "s"
+
+ask q: pos(b)
+ask q2: sum(pos(k) for k in ks)
+,,1:0,290:q: 2
+  cut 2026-06-30
+q2: 3
+  cut 2026-06-30
+warning: WARN-UNREAD input fx is read by nothing
+warning: WARN-UNREAD input hi is read by nothing
+warning: WARN-UNREAD input ids is read by nothing
+warning: WARN-UNREAD input lo is read by nothing
+warning: WARN-UNREAD input x is read by nothing
+,20:fixes/p60/check_keys,11:fixes-sweep,20:run check_keys.tally,1465:16:check_keys.tally,1439:model p
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 P60 (G6's census of run-time stops): ask/check.rs:170, a check whose sides are two keys"
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index ks = [a, b]
+kind twos: event certain
+  leg cash: PLN
+  leg fee: PLN
+place konto: accounts PLN lives 2026-01-01..
+place jar[k in ks]: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input dom: int
+input fx: num PLN/EUR
+input x[k in ks]: int
+input pday: date
+input lo: money PLN
+input hi: money PLN
+input ids: text
+input plaw: date
+
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  for m
+  leg cash from world to konto amount amt
+
+move buy[m in months]: twos
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to world amount amt
+  leg fee from konto to world amount amt
+
+move put[k in ks]: transfers
+  on pday
+  at plaw
+  leg cash from world to jar[k] amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "s"
+  dom = 5 "s"
+  fx = 4.25 "s"
+  x[a] = 1 "s"
+  pday = 2026-03-05 "s"
+  lo = 0.00 PLN "s"
+  hi = 0.02 PLN "s"
+  ids = "a" "s"
+  plaw = 2026-03-01 "s"
+  x[b] = 2 "s"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+  opening[jar[a]] = 0.00 PLN at 2026-01-01 start "s"
+  opening[jar[b]] = 0.00 PLN at 2026-01-01 start "s"
+
+ask q: check first(k in ks) == last(k in ks)
+,,1:0,319:q: differs: first(...) = a, last(...) = b, difference -1
+  cut 2026-06-30
+warning: WARN-UNREAD input fx is read by nothing
+warning: WARN-UNREAD input hi is read by nothing
+warning: WARN-UNREAD input ids is read by nothing
+warning: WARN-UNREAD input lo is read by nothing
+warning: WARN-UNREAD input x is read by nothing
+,22:fixes/p60/residual_end,11:fixes-sweep,22:run residual_end.tally,1492:18:residual_end.tally,1464:model p
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 P60 (G6's census of run-time stops): ask/residuals.rs:185, residuals over a span whose end is an expression"
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index ks = [a, b]
+kind twos: event certain
+  leg cash: PLN
+  leg fee: PLN
+place konto: accounts PLN lives 2026-01-01..
+place jar[k in ks]: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input dom: int
+input fx: num PLN/EUR
+input x[k in ks]: int
+input pday: date
+input lo: money PLN
+input hi: money PLN
+input ids: text
+input plaw: date
+
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  for m
+  leg cash from world to konto amount amt
+
+move buy[m in months]: twos
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to world amount amt
+  leg fee from konto to world amount amt
+
+move put[k in ks]: transfers
+  on pday
+  at plaw
+  leg cash from world to jar[k] amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "s"
+  dom = 5 "s"
+  fx = 4.25 "s"
+  x[a] = 1 "s"
+  pday = 2026-03-05 "s"
+  lo = 0.00 PLN "s"
+  hi = 0.02 PLN "s"
+  ids = "a" "s"
+  plaw = 2026-03-01 "s"
+  x[b] = 2 "s"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+  opening[jar[a]] = 0.00 PLN at 2026-01-01 start "s"
+  opening[jar[b]] = 0.00 PLN at 2026-01-01 start "s"
+
+ask q: residuals konto 2026-01 .. end_of(2026-03)
+,,1:0,367:q: residuals konto 2026-01 .. end_of(2026-03)
+  cut 2026-06-30
+warning: WARN-NEGATIVE konto is below zero from 2026-11-05
+warning: WARN-UNREAD input fx is read by nothing
+warning: WARN-UNREAD input hi is read by nothing
+warning: WARN-UNREAD input ids is read by nothing
+warning: WARN-UNREAD input lo is read by nothing
+warning: WARN-UNREAD input x is read by nothing
+,23:fixes/p60/obs_attr_expr,11:fixes-sweep,23:run obs_attr_expr.tally,1794:19:obs_attr_expr.tally,1765:model p
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 P60 (G6's census of run-time stops): load/observed.rs:322, an observed attribute written as an expression"
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index ks = [a, b]
+kind twos: event certain
+  leg cash: PLN
+  leg fee: PLN
+place konto: accounts PLN lives 2026-01-01..
+place jar[k in ks]: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input dom: int
+input fx: num PLN/EUR
+input x[k in ks]: int
+input pday: date
+input dk[k in ks]: date
+input bank: observed
+kind cats: transfers
+  attr cat: text
+input lo: money PLN
+input hi: money PLN
+input ids: text
+input plaw: date
+
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  for m
+  leg cash from world to konto amount amt
+
+move buy[m in months]: twos
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to world amount amt
+  leg fee from konto to world amount amt
+
+move put[k in ks]: transfers
+  on pday
+  at plaw
+  leg cash from world to jar[k] amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "s"
+  dom = 5 "s"
+  fx = 4.25 "s"
+  x[a] = 1 "s"
+  pday = 2026-03-05 "s"
+  dk[a] = 2026-03-31 "s"
+  dk[b] = 2026-04-30 "s"
+  lo = 0.00 PLN "s"
+  hi = 0.02 PLN "s"
+  ids = "a" "s"
+  plaw = 2026-03-01 "s"
+  x[b] = 2 "s"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+  opening[jar[a]] = 0.00 PLN at 2026-01-01 start "s"
+  opening[jar[b]] = 0.00 PLN at 2026-01-01 start "s"
+
+ask q: sum(t.cash.amount for t in cats over 2026-03)
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  bank[r1] = (on: 2026-03-10, kind: cats, leg cash from konto to world amount 7.00 PLN, cat: "a" + "b") "r1"
+,,1:1,83:refused: LOAD-UNIT a value of the wrong type for bank[r1] (obs_attr_expr.tally:75)
 ,17:fixes/g5/a1_alone,12:fixes-ledger,27:run a1_alone.tally --ask t3,959:14:a1_alone.tally,936:model b
   tally 2
   on 2027-06-30
