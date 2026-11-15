@@ -683,6 +683,11 @@ def self_test(checks):
         p = subprocess.run([sys.executable, '-I', '-B', T + 'properties/laws_m1.py', '--check'], capture_output=True,
                            text=True)
         say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])
+        # 8l2. M2's properties (issue #167, PROPERTIES.md § M2): m2.corpus is gen_m2.py's, m2.refcore refcore's runs of
+        # it, and each law holds on them
+        p = subprocess.run([sys.executable, '-I', '-B', T + 'properties/laws_m2.py', '--check'], capture_output=True,
+                           text=True)
+        say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])
         # 8m. M2's vectors (issue #167): refcore's bytes for m2/vectors.tsv, each check tied to its stored baseline
         p = subprocess.run([sys.executable, '-I', '-B', T + 'm2/vectors.py', '--check'], capture_output=True, text=True)
         say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])
@@ -697,6 +702,14 @@ def self_test(checks):
         p = subprocess.run([sys.executable, '-I', '-B', T + 'm2/bank/to_tally.py', '--check'], capture_output=True,
                            text=True)
         say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])
+        # 8q. R7's long-horizon pins (P45): the table's shape; the runs are the gate's timing run's
+        p = subprocess.run([sys.executable, '-I', '-B', T + 'm2/bank/pins_long.py', '--check'], capture_output=True,
+                           text=True)
+        say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])
+        # 8r. the hindcasts (DONE gate 4): the texts are gen.py's, and refcore's stored ledgers meet the answer key
+        for script, flag in (('m2/hindcast/gen.py', ['--check']), ('m2/hindcast/judge.py', [])):
+            p = subprocess.run([sys.executable, '-I', '-B', T + script] + flag, capture_output=True, text=True)
+            say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])
         # 9. U2 (4.5f): under fast, a check with no baseline runs on refcore (its cache entry is refcore's)
         nb = dict(fast, baseline='')
         _, r, _ = session([nb], checks, **dict(kw, runtimes=['pypy+fast']))

@@ -10,6 +10,8 @@
 //!   on refcore's runs of `properties/m0.corpus`;
 //! - [`laws_m1`]: M1's thirteen laws (`PROPERTIES.md` § M1), proven the same way on
 //!   refcore's runs of `properties/m1.corpus`;
+//! - [`laws_m2`]: M2's three laws (`PROPERTIES.md` § M2), proven the same way on
+//!   refcore's runs of `properties/m2.corpus`;
 //! - [`household`]: household X's base as milestone S runs it, and HH4's hand-checked
 //!   vectors restated on it (`hh4/vectors.tsv`), proven on refcore's outputs the same way;
 //! - [`codes`]: T's fixtures of the codes no check prints (`codes/fixtures.tsv`), `LOAD-PATH`
@@ -52,6 +54,7 @@ pub mod kernel;
 pub mod laws;
 pub mod laws_m0;
 pub mod laws_m1;
+pub mod laws_m2;
 pub mod m0;
 pub mod m0_spec_texts;
 pub mod m0_texts;

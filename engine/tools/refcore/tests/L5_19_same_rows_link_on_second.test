@@ -1,0 +1,64 @@
+# L §5.19 One movement on two statements: a pair stated same is one movement, "its fulfils is stated on either row, or
+# on both alike", so which row carries the link changes no answer. save is a decision measuring bal(konto) on the
+# 15th; the link is on sav's row (bank[b1]) alone, konto's row (bank[a2]) stated same (M2 patch case P35, P50, T's
+# probe p_rev_onefulfils): both rows are save[2026-03]'s observations, booked at its point, so it measures 1 050.00
+# and its model is 950.00, as with the link on konto's row (E6_3_same_rows_ledger_once). refcore booked bank[a2] at
+# konto before the decision (bal 100.00, model 0.00: konto's ledger difference -950.00, sav's +950.00).
+=== m.tally
+model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+input bank: observed
+input keep: money PLN
+input d_save: int
+
+move save[m in months]: transfers
+  on day_of(m, d_save)
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+ask q_save: flows(save, 2026-03-01 .. 2026-03-31)
+ask q_led: residuals konto 2026-03
+ask q_ls: residuals sav 2026-03
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  d_save = 15 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+version st_konto
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN) "a"
+
+version st_sav
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers sav
+  bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "b"
+  same bank[b1] = bank[a2]
+=== expect
+q_led: residuals konto 2026-03
+  2026-03 move save: model -950.00 PLN, observed -950.00 PLN, difference 0.00 PLN
+    matched save[2026-03] on 2026-03-15: model -950.00 PLN, observed -950.00 PLN, difference 0.00 PLN, timing +0 days
+  cut 2026-04-10
+q_ls: residuals sav 2026-03
+  2026-03 move save: model 950.00 PLN, observed 950.00 PLN, difference 0.00 PLN
+    matched save[2026-03] on 2026-03-15: model 950.00 PLN, observed 950.00 PLN, difference 0.00 PLN, timing +0 days
+  cut 2026-04-10
+q_save: 950.00 PLN
+  cut 2026-04-10

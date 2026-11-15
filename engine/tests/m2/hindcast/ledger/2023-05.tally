@@ -1,0 +1,29 @@
+part hc_2023_05
+  tally 2
+  note "the base (H0): month 28 (2023-05) of the hindcast's 60, written by gen.py from M*; synthetic."
+
+version st_2023_05
+  cite statements
+  governs 2023-05
+  known 2023-06-02
+  covers konto
+  pad konto from unexplained
+  bank[r20230501a] = (on: 2023-05-01, kind: transfers, leg cash from konto to landlord amount 2900.00 PLN, fulfils: rent[2023-05]) "czynsz"
+  bank[r20230506a] = (on: 2023-05-06, kind: transfers, leg cash from konto to shops amount 1240.00 PLN, fulfils: spend[food, 2023-05]) "food"
+  bank[r20230508a] = (on: 2023-05-08, kind: transfers, leg cash from konto to shops amount 310.00 PLN, fulfils: spend[transport, 2023-05]) "transport"
+  bank[r20230510a] = (on: 2023-05-10, kind: wages, leg cash from employer_a to konto amount 7279.00 PLN, fulfils: pay_a[2023-05]) "wynagrodzenie A"
+  bank[r20230511a] = (on: 2023-05-11, kind: transfers, leg cash from konto to broker amount 1500.00 PLN, fulfils: invest[2023-05]) "przelew do biura maklerskiego"
+  bank[r20230512a] = (on: 2023-05-12, kind: transfers, leg cash from konto to shops amount 455.20 PLN, fulfils: spend[utilities, 2023-05]) "utilities"
+  bank[r20230515a] = (on: 2023-05-15, kind: transfers, leg cash from konto to streaming amount 49.99 PLN, fulfils: sub[2023-05]) "abonament"
+  bank[r20230520a] = (on: 2023-05-20, kind: transfers, leg cash from konto to shops amount 120.00 PLN, fulfils: spend[health, 2023-05]) "health"
+  bank[r20230522a] = (on: 2023-05-22, kind: transfers, leg cash from konto to shops amount 260.00 PLN, fulfils: spend[clothes, 2023-05]) "clothes"
+  bank[r20230525a] = (on: 2023-05-25, kind: wages, leg cash from employer_b to konto amount 5353.00 PLN, fulfils: pay_b[2023-05]) "wynagrodzenie B"
+  bank[r20230526a] = (on: 2023-05-26, kind: transfers, leg cash from konto to shops amount 380.00 PLN, fulfils: spend[leisure, 2023-05]) "leisure"
+  stated[konto] = 162087.49 PLN at 2023-05-31 end "saldo"
+
+version slips_2023_05
+  cite slips
+  governs 2023-05
+  known 2023-05-10
+  slip_a[2023-05] = 8770.00 PLN "pasek A"
+  slip_b[2023-05] = 6450.00 PLN "pasek B"

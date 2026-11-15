@@ -18,15 +18,17 @@ mod tests {
     use tally_runner::m2::{SPEC, VECTORS};
 
     /// The held groups of `m2/vectors.refcore` this target tests, one `#[test]` each.
-    const GROUPS: [&str; 4] = [
+    const GROUPS: [&str; 6] = [
         "fixes-forms",
         "fixes-explain",
         "fixes-windows",
         "fixes-sweep",
+        "fixes-records",
+        "fixes-ledger",
     ];
 
     /// The groups of `m2/spec.vectors`, one `#[test]` each.
-    const SPEC_GROUPS: [&str; 3] = ["spec-forms", "spec-explain", "spec-windows"];
+    const SPEC_GROUPS: [&str; 4] = ["spec-forms", "spec-explain", "spec-windows", "spec-records"];
 
     /// Runs every vector of `group` in `store` on the engine, less the held ones, and holds it
     /// to the stored run.
@@ -105,6 +107,28 @@ mod tests {
     #[test]
     fn m2_fixes_sweep() {
         group_holds(VECTORS, "fixes-sweep");
+    }
+
+    /// G4's review probes where refcore drops a reading after a modelled-past m (P43 B1, B2,
+    /// B4; `a_*`, `c_since`), held for #169: their asks both engines answer alike gate as
+    /// m1's `fixes/gate8/m2_g4_*`.
+    #[test]
+    fn m2_fixes_records() {
+        group_holds(VECTORS, "fixes-records");
+    }
+
+    /// The ledger group's: `HOLE-SAME` names its rows in the `same` line's written order
+    /// (P51, #177; `adj_amt`'s settlement and its adjustment's remainder).
+    #[test]
+    fn m2_fixes_ledger() {
+        group_holds(VECTORS, "fixes-ledger");
+    }
+
+    /// The spec's answers for G4's held probes (P43) and the `nb3_*` texts refcore can't run:
+    /// a link's `when` that reads a reading after its own instance is `RUN-CYCLE` (L §5.14.2).
+    #[test]
+    fn m2_fixes_spec_records() {
+        group_holds(SPEC, "spec-records");
     }
 
     /// The spec's answers for G1's forms: a quantile's `none` level (P17 B-1), `residuals`

@@ -1,0 +1,24 @@
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input day: date
+
+move fix: transfers
+  on day
+  leg cash from world to konto amount sum(p.cash.amount for p in pads over month_of(day) - 1)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  day = 2026-03-10
+  opening[konto] = 0 PLN at 2026-01-01 start
+
+ask q: bal(konto, 2026-03-31)
