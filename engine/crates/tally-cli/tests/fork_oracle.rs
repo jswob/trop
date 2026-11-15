@@ -37,6 +37,12 @@ mod tests {
     /// at a time (past the walks a timeline keeps), and with `with uncertain`.
     const DAYS: &str = include_str!("forks/days.tally");
 
+    /// F6's review's reality B1: 132 places each given a number under the cap, whose sum at
+    /// the outside place they come from passes it, so the projection's walk from 2026-01-20
+    /// refuses every read through a day from 2026-02-01 on, at any place; konto read alone,
+    /// after such a read and before it.
+    const CAP: &str = include_str!("forks/b1_cons.tally");
+
     /// F5's realities, each read through projections: under axes and in a scenario's world,
     /// across cuts, after a walk refused on a decision's day, past a covered month, and with a
     /// rent's day moving between cuts.
@@ -274,6 +280,27 @@ mod tests {
                     "{lows:?}: {line} is printed"
                 );
             }
+        }
+    }
+
+    #[test]
+    fn a_walk_refused_at_another_place_refuses_the_read_on_and_off() {
+        let files = bytes(&[("b1_cons.tally", CAP)]);
+        let refused = "refused: RUN-DIGITS a value passes 4 096 digits; round where the law rounds";
+        // refcore's lines (tally 2.1.7), byte for byte
+        let expected = [
+            format!("b_big: {refused}"),
+            "  cut 2026-04-15".to_owned(),
+            format!("b_konto: {refused}"),
+            "  cut 2026-04-15".to_owned(),
+            format!("b_pair: ({refused}, {refused})"),
+            "  cut 2026-04-15".to_owned(),
+            format!("b_pair_rev: ({refused}, {refused})"),
+            "  cut 2026-04-15".to_owned(),
+        ];
+        for lows in [Lows::Tree, Lows::Walk] {
+            let lines = alike("b1_cons.tally", &files, &Asks::Every, lows).expect("answered");
+            assert_eq!(lines, expected, "{lows:?}: refcore's lines");
         }
     }
 

@@ -41,7 +41,7 @@ pub(super) enum Repr {
 
 /// The largest bit length a part may have and pass the cap without a comparison:
 /// 10^4096 has 13 607 bits, so 13 606 bits are always fewer than 4 097 digits. L §7.1.
-const CAP_SURE_BITS: u64 = 13_606;
+pub(crate) const CAP_SURE_BITS: u64 = 13_606;
 /// The exponent of the cap, 4 096 decimal digits. L §7.1.
 const CAP_DIGITS: u32 = 4_096;
 

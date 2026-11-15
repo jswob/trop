@@ -363,6 +363,9 @@ pub struct Walk {
     /// what a later read's plan is compared with before it continues the walk (P §2.5,
     /// `fork.rs`); empty otherwise.
     pub(crate) walked: BTreeMap<Day, Vec<(At, Act)>>,
+    /// The lengths of `uncertain` and `modelled` when its plan pass ended: the plan's part of
+    /// each, which the walk then adds to (P §2.5, `fork.rs`).
+    pub(crate) plan_lists: (usize, usize),
 }
 
 /// A stated reading's gap, as the walk met it: the reading less the booked balance at its
@@ -553,6 +556,7 @@ impl Walk {
             pads: Vec::new(),
             upto: None,
             walked: BTreeMap::new(),
+            plan_lists: (0, 0),
         }
     }
 

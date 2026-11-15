@@ -405,6 +405,7 @@ pub mod num {
     mod text;
 
     pub use money::{Currency, Money};
+    pub(crate) use rational::CAP_SURE_BITS;
     pub use rational::{Num, NumError};
     pub use round::Mode;
     pub use split::{Largest, SplitError, Tie, Weights};

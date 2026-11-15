@@ -14,7 +14,8 @@
 //! keeps what it walked and takes the read's plan for the days after; any other read takes a
 //! new walk, as the twin does; at most `PARKED` walks are kept past their reads in a timeline,
 //! the one kept first freed first, with the walks that continue it; a walk a read holds is
-//! never parked, continued or freed.
+//! never parked, continued or freed; a kept walk outlives its read under its key, so nothing
+//! else may learn from that key what an ended read did (F5's tree asks the cap instead).
 //! PERF: P8-14 and the budget table's F6-c1 to F6-v4 and F6-X (X's repeated walks: a
 //! projection read day by day, `min(bal(konto, d) from t … for d in t .. b step 1 day)`, walks
 //! its window once, each read continued from the last, where a new walk per read walks t
@@ -168,7 +169,6 @@ impl Engine {
         let kept = self.walk(id)?;
         let planned = kept.plans_through();
         if planned == through {
-            self.count_shared();
             return Ok(Held::Kept(id));
         }
         if planned > through || !paused(kept) {
@@ -187,7 +187,8 @@ impl Engine {
         self.parked.waiting.insert(id, kept);
     }
 
-    /// Walk `id`'s plan pass done: where a kept walk waits for it and agrees with its plan on
+    /// Walk `id`'s plan pass done: the lengths of its plan's uncertain and modelled lists kept,
+    /// the plan's part of each; where a kept walk waits for it and agrees with its plan on
     /// every day it walked, walk `id` becomes that walk, continued with this plan from the day
     /// after its last walked day; otherwise it walks from its first day, as the twin's
     /// (P §2.5). E §4.1, §4.3.
@@ -197,6 +198,8 @@ impl Engine {
     /// `ENGINE-INVARIANT` for a walk the engine lacks, or one with no day walked or no
     /// projection.
     pub(crate) fn continue_planned(&mut self, id: usize) -> Result<(), Stop> {
+        let walk = self.walk_mut(id)?;
+        walk.plan_lists = (walk.uncertain.len(), walk.modelled.len());
         let Some(mut kept) = self.parked.waiting.remove(&id) else {
             return Ok(());
         };
@@ -229,7 +232,8 @@ fn paused(walk: &Walk) -> bool {
 /// Whether kept walk `kept` and the read's plan `fresh` agree on every day `kept` walked, and
 /// on everything else the plan hands the walk: its days, cut and world, the movement orders,
 /// each place's last day and first reading, the observed `same` ids, the uncertain and the
-/// modelled-past instances (which the walk then adds to), and what the projection continues
+/// modelled-past instances (the plan's part of each the whole of the read's plan's; the walk
+/// then adds to them), and what the projection continues
 /// and leaves out (P §2.5, the first different day from the plan pass's outputs). E §4.1,
 /// §4.3.
 fn agrees(kept: &Walk, fresh: &Walk) -> bool {
@@ -251,6 +255,7 @@ fn agrees(kept: &Walk, fresh: &Walk) -> bool {
         && kept.endings == fresh.endings
         && kept.first_reading == fresh.first_reading
         && kept.same_observed == fresh.same_observed
+        && kept.plan_lists == fresh.plan_lists
         && kept.uncertain.starts_with(&fresh.uncertain)
         && kept.modelled.starts_with(&fresh.modelled);
     same_projection && same_plan && same_days(kept, fresh)
