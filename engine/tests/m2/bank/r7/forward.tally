@@ -1,7 +1,7 @@
 part r7_forward
   tally 2
   note "T, M2 (issues #167, #114), DONE gate 2: the forward half of the prototype's reality R7 (load.ts REALITY: blocks 01-month, 03-ike-first, 04-employment, 05-side-business, 07-oki; engine/spec/verification/goldens.md: G1, G3, G6, G10 and the 20 pins), beside the bank half (../bank.tally), from today, 2026-10-17. Here: the daily spending (01), the 15th rule with IKE first (02, 03, 07), the ETF units and their price (01), OKI's tax (07), net worth and FIRE (13). The side business is business.tally, the yearly returns returns.tally; the header (to2036.tally, to2050.tally, to2056.tally) states the horizon."
-  note "The holdings: the prototype converts each movement into a holding at that day's price.etf (run.ts post: units = amount / price), and price.etf changes only on the 1st of a month. So the PLN the bank history moves into ike and maklerskie (accounts here, as the records state them) is bought at the month's last day at that month's price (buy_ike, buy_mak), which gives the prototype's units, and the 15th rule buys its units on its day. Units are kept to units_step (the prototype keeps floats); price.etf from 2026-11 is 126 * (1 + assume.etf_return)^(k/12) after k months, to 1e-15."
+  note "The holdings: the prototype converts each movement into a holding at that day's price.etf (run.ts post: units = amount / price), and price.etf changes only on the 1st of a month. So the PLN the bank history moves into ike and maklerskie (accounts here, as the records state them) is bought at the month's last day at that month's price (buy_ike, buy_mak), which gives the prototype's units, and the 15th rule buys its units on its day. Units are kept to units_step and each month's price to etf_price_step (the prototype keeps floats); price.etf from 2026-11 is the month before's times pow(1.06, 1 / 12), stated as the factor."
   note "The 15th rule (nadwyzka_ike@1, instances invest_15 and from 2027 invest_15_oki): surplus = max(0, low_point(konto, next_date(my_tax/net)) - floor), the lowest end-of-day konto from the rule's day to the day before my next pay, the rule's own buy left out (L §5.14.1); to IKE min(surplus, max(0, ike.limit - in_year(ike))), the rest to maklerskie, and from 2027 to OKI. One move takes both, as the prototype computes the surplus once. The prototype runs it from today on: invest_from."
   note "Not stated: belka_mak (03), the 19 % tax on gains realised on maklerskie, which nothing sells, so its tax is 0 every year; the side business's social contributions, 0 in concurrence (business.tally)."
 
@@ -35,11 +35,11 @@ place oki_u: holdings etf_unit lives 2024-01-01..
 
 place rynek: outside lives 2024-01-01..
 
-input etf_base: num PLN/etf_unit
-
 input etf_from: month
 
-input etf_return: num
+input etf_month_factor: num
+
+input etf_price_step: num PLN/etf_unit
 
 input etf_seen: num PLN/etf_unit
 
@@ -80,9 +80,9 @@ input oki_tax_month: int
 input units_step: num etf_unit
 
 def etf_price[m in month]: num PLN/etf_unit at start_of(m)
-  note "01-month.json price.etf: the synthetic history to 2026-10, then before * pow(1 + assume.etf_return, 1 / 12) each month from 2026-11-01"
+  note "01-month.json price.etf: the synthetic history to 2026-10, then before * pow(1 + assume.etf_return, 1 / 12) each month from 2026-11-01: before times the month's factor, the float the prototype multiplies by, each month's price kept to etf_price_step (the prototype's floats keep about 16 digits)"
   rule seen = etf_seen
-  rule assumed beats seen = etf_base * (pow(1 + etf_return, count(k in month where k >= etf_from and k <= m) * (1 month / 1 year)) to 1e-15) when m >= etf_from
+  rule assumed beats seen = round(etf_price[m - 1] * etf_month_factor, etf_price_step, half-even) when m >= etf_from
 
 def spend_rate: num PLN at learn_last
   note "01-month.json wydatki@1: hist_daily(codzienne, 365), the sum of the last 365 days' codzienne rows / 365, not rounded (run.ts hist_daily)"
@@ -181,8 +181,7 @@ version prototype_assumptions
   known 2026-10-17
   inflation = 0.03 governs 2027-01-01.. "01-month.json assume.inflation: 3 % a year from 2027-01-01 (NBP target 2.5 % ± 1)"
   wage_growth = 0.04 governs 2027-01-01.. "01-month.json assume.wage_growth: 4 % a year from 2027-01-01"
-  etf_base = 126 "price.etf's entry from 2026-07-01, the before of the first month of growth"
-  etf_return = 0.06 "01-month.json assume.etf_return: 6 % a year, nominal, from 2026-10-17"
+  etf_month_factor = 1.004867550565343 "01-month.json assume.etf_return, 6 % a year from 2026-10-17, as price.etf applies it each month: pow(1 + 0.06, 1 / 12), the float the prototype multiplies by"
 
 version prototype_rules
   cite prototype_fwd
@@ -197,6 +196,7 @@ version prototype_rules
   etf_seen = 126 governs 2026-07-01.. "price.etf, syntetyczne, the last entry before the assumed growth"
   etf_from = 2026-11 "price.etf grows each month from 2026-11-01"
   units_step = 0.000000000001 "the prototype keeps units as floats; here to 1e-12 of a unit"
+  etf_price_step = 0.000000000001 "the prototype keeps price.etf as a float; here each month's price to 1e-12 zł"
   invest_dom = 15 "02-rule-15.json: on the 15th of each month"
   invest_from = 2026-11 "run.ts runs a rule's line from today (2026-10-17) on: the first 15th is 2026-11-15"
   floor_15 = 1000 "02-rule-15.json, 03-ike-first.json: floor 1 000"

@@ -3,7 +3,7 @@ model tropek_r7
   on 2026-10-17
   start 2024-01-01
   end 2056-11-30
-  note "T, M2 (issues #167, #114), DONE gate 2: R7 (to2028.tally's texts) to 2056-11-30, for konto and net worth on 2056-10-17 (pins-1-7.json: 22 613.79, 10 093 811.25; moved by L-26) and G10 (net worth in 2056 at 5 % inflation, infl5.tally, about 5 980k nominal; in today's money, divided by index.prices of 2056, about 4 159k and 1 384k). Not stored: refcore and refcore_fast pass the 8 GB cap on this horizon (stopped at 8.3 and 8.1 GB after 50 s each), as every 15th's projection walks to the end (P2, GOLDENS.md)."
+  note "T, M2 (issues #167, #114), DONE gate 2: R7 (to2028.tally's texts) to 2056-11-30, for konto and net worth on 2056-10-17 (pins-1-7.json: 22 613.79, 10 093 811.25; moved by L-26) and G10 (net worth in 2056 at 5 % inflation, infl5.tally, about 5 980k nominal; in today's money, divided by index.prices of 2056, about 4 159k and 1 384k). Not stored: refcore and refcore_fast pass the 8 GB cap on this horizon (stopped at 8.4 and 8.7 GB after 55 and 57 s), as every 15th's projection walks to the end (P2, GOLDENS.md)."
 
 index cal_year = year 2024..2056
 
