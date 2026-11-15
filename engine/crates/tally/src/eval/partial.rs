@@ -1,10 +1,10 @@
 //! Partial answers: under a `partial` ask line a hole carries its known part and the named holes it is linear in.
 //! Spec: L §5.18 Partial answers (a line marked `partial` prints, when its value is a hole, its
-//! known part and the named holes it is linear in, each with its coefficient: sums,
-//! differences, and products and quotients by known numbers; a rounding, `min`, `max`, a band,
-//! a comparison or a product of two holes meeting a hole makes the line a plain hole naming
-//! every hole; every named hole is printed; defs are unchanged), §5.19 and §5.10 (a balance is
-//! its opening plus what is booked since, a sum).
+//! known part and the named holes it is linear in, each with its coefficient: a hole stays
+//! linear only through reads of numbers or money, sums, differences, products and quotients
+//! by known numbers, `sum` and a balance; any other operation it passes through makes the line
+//! a plain hole naming every hole; every named hole is printed; defs are unchanged), §5.19 and
+//! §5.10 (a balance is its opening plus what is booked since, a sum).
 //! Twin: engine/tools/refcore/evaluate.py (`plain_node`, `lin_of`, `lin_add`, `lin_scale`,
 //! `lin_bin`, `e_neg`, `e_agg`'s `sum` under `ctx.partial`), ask.py (`fmt_partial`) and
 //! mreads.py (`m_partial_bal`).
@@ -78,17 +78,38 @@ fn keeps_linear(e: &Expr) -> bool {
     }
 }
 
-/// Whether a read `e` (a name, a postfix chain) is of a number or money by its declared type;
-/// other nodes pass. A read of a key, a period, a day or a type the run can't see is no
-/// coefficient's operand. L §5.18, §3.1.
+/// Whether a read `e` (a name, a postfix chain) may be of a number or money; other nodes
+/// pass. A read whose declared type is a key, a period, a day, a flag or a text is no
+/// coefficient's operand. A read whose class the run's samples can't see (a rate, L §3.3,
+/// whose input's sample falls to a bare word; a run-time movement's leg; an opening or
+/// `stated` read) keeps its linear part: `lin_of` still takes only a number or money as a
+/// known part, and a sample that fails to tell the class (`sample`'s `NotBuilt`) says
+/// nothing about the value, so it is not the line's answer. L §5.18, §3.1, §3.3.
 fn reads_a_number(m: &Reality, e: &Expr, env: &Env, ctx: Ctx) -> bool {
     if !matches!(e, Expr::Name(_) | Expr::Post(..)) {
         return true;
     }
-    matches!(
-        sample(m, e, env, ctx),
-        Ok(Some(Value::Number(_) | Value::Money(_)))
-    )
+    match sample(m, e, env, ctx) {
+        Ok(Some(Value::Number(_) | Value::Money(_) | Value::Word(_)) | None) | Err(_) => true,
+        Ok(Some(
+            Value::Hole(_)
+            | Value::Bool(_)
+            | Value::Day(_)
+            | Value::Period(_)
+            | Value::MonthDay(..)
+            | Value::Key(_)
+            | Value::Text(_)
+            | Value::Code(_)
+            | Value::Record(_)
+            | Value::List(_)
+            | Value::Calendar(_)
+            | Value::None
+            | Value::Never
+            | Value::OutKey { .. }
+            | Value::Mv(_)
+            | Value::Window(_),
+        )) => false,
+    }
 }
 
 /// What value `v` is linear in: a known number or money is its own known part, any other

@@ -216,20 +216,14 @@ fn tuple_lines(
     (done, labels): (&[Done], &[Met]),
     (ctx, pinned): (Ctx, &Collected),
 ) -> Result<Vec<String>, Stop> {
-    let mut heads: Vec<&str> = Vec::new();
-    for d in done {
-        for t in &d.tuples {
-            if !heads.contains(&t.head.as_str()) {
-                heads.push(&t.head);
-            }
-        }
-    }
+    let heads = binding_order(done)?;
     let mut days = Vec::with_capacity(done.len());
     for d in done {
         days.push(tuple_of(labels, &d.choice)?);
     }
     let mut out = Vec::new();
-    for head in heads {
+    for head in &heads {
+        let head = head.as_str();
         let keys: Vec<Option<String>> = done.iter().map(|d| tuple_key(d, head)).collect();
         let kept = windows_that_matter(labels.len(), &days, &keys)?;
         let sub: Vec<Met> = kept
@@ -355,6 +349,43 @@ fn tuple_boxes(
     }
     rows.sort_by_key(|(bounds, _)| first_days(bounds));
     Ok(rows)
+}
+
+/// Every run's tuple heads in binding order (one line per binding tuple, L §2.5): each run
+/// lists its tuples in the binding's order, so a head a run adds goes right after the last
+/// head of that run already placed, or first. Two heads no run holds together are ordered by
+/// no run: the one a later run adds goes before. L §2.5, §4.4.
+fn binding_order(done: &[Done]) -> Result<Vec<String>, Stop> {
+    let mut heads: Vec<String> = Vec::new();
+    for d in done {
+        let mut at = 0;
+        for t in &d.tuples {
+            match heads.iter().position(|h| *h == t.head) {
+                Some(p) => at = p,
+                None => heads = placed_at(heads, at, &t.head),
+            }
+            at = at
+                .checked_add(1)
+                .ok_or_else(|| invariant("a binding past the integers"))?;
+        }
+    }
+    Ok(heads)
+}
+
+/// `heads` with `head` placed before position `at` (at the end past it).
+fn placed_at(heads: Vec<String>, at: usize, head: &str) -> Vec<String> {
+    let past = at >= heads.len();
+    let mut out = Vec::new();
+    for (i, h) in heads.into_iter().enumerate() {
+        if i == at {
+            out.push(head.to_owned());
+        }
+        out.push(h);
+    }
+    if past {
+        out.push(head.to_owned());
+    }
+    out
 }
 
 /// One box's line of tuple `head`: its first run's line under `suffix`, with every run's
