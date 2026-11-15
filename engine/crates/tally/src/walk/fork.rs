@@ -357,12 +357,11 @@ fn continue_with(walk: &mut Walk, fresh: Walk) -> Result<(), Stop> {
     walk.agenda = later;
     walk.insts = fresh.insts;
     walk.due = fresh.due;
-    let through = fresh
+    let (through, readers) = fresh
         .proj
         .as_ref()
-        .map(|p| p.through)
+        .map(|p| (p.through, p.readers))
         .ok_or_else(|| super::plan::invariant("a projection's walk with no projection"))?;
-    let readers = fresh.proj.as_ref().map_or(0, |p| p.readers);
     let p = walk
         .proj
         .as_mut()
