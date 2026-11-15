@@ -108,7 +108,7 @@ fn no_reading(figure: &str, day: Day) -> Hole {
 
 /// The cell a read of an input names its window by: the row its read rule took, which the
 /// law date, cut and pins the read depends on decide (L §4.4; refcore's `('row', sid, …)`).
-fn row_cell(row: &Row) -> String {
+pub(super) fn row_cell(row: &Row) -> String {
     format!("row {}", row.sid)
 }
 
