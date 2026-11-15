@@ -320,6 +320,12 @@ pub struct Walk {
     /// Where each reading `after m` applied, by (place, instant, version), for its balance
     /// line (refcore's `after_keys`; E §6.3 Grouping).
     pub(crate) after_at: BTreeMap<(String, String, String), At>,
+    /// The ends stated `same` as a decision not yet run, by the decision's id: booked at its
+    /// point (refcore's `same_waiting`; L §6.1).
+    pub(crate) same_waiting: BTreeMap<String, Vec<crate::book::Waiting>>,
+    /// The plan instances and decisions stated `same` as an observation: observed, so never
+    /// unfulfilled nor open (refcore's `same_observed`; L §6.1).
+    pub(crate) same_observed: BTreeSet<String>,
     /// A walk up to a day: that day, past which its plan pass listed no plan's instance
     /// (refcore's prefix walk; E §3.2, §4.1); none for a main walk or a projection's.
     pub(crate) upto: Option<Day>,
@@ -481,6 +487,8 @@ impl Walk {
             gaps: BTreeMap::new(),
             after: BTreeMap::new(),
             after_at: BTreeMap::new(),
+            same_waiting: BTreeMap::new(),
+            same_observed: BTreeSet::new(),
             upto: None,
         }
     }

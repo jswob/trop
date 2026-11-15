@@ -22,6 +22,7 @@ use super::point::At;
 use super::readings::Broke;
 use super::state::{ALL, Change, Ent, Group, Progress, Taken, Today, Walk, WalkObs};
 use crate::base::{Code, Refusal, Run, Warn};
+use crate::book::{Member, stated_same};
 use crate::eval::{Collected, Engine, Entry, GUARDED};
 use crate::hole::{Hole, spread};
 use crate::model::{Reality, World};
@@ -273,7 +274,11 @@ impl Engine {
             Act::Leg(mv, leg) => {
                 let (movement, lg) = self.movement_leg(id, mv, leg)?;
                 let mut reg = Vec::new();
-                if movement.status == Status::Past {
+                // one stated same as an observed row was observed (L §6.1)
+                if movement.status == Status::Past
+                    && movement.obs.is_empty()
+                    && !self.walk(id)?.same_observed.contains(&movement.id)
+                {
                     reg.push(Entry {
                         word: "unfulfilled",
                         text: movement.id.clone(),
@@ -386,7 +391,16 @@ impl Engine {
         if let Some(day) = day {
             reg.extend(before_from(m, world, (&inst.move_id, day), &inst.coll));
         }
-        self.book_leg_ends(m, id, (&inst.id, lg), at, (&reg, &inst.coll), Ends::both())
+        let mut mask = Ends::both();
+        if stated_same(m, &inst.id) && !matches!(lg.amount, Amount::Refused(_)) {
+            // one movement on two statements books each place once (L §6.1)
+            let mover = self.mover_of(m, id, inst)?;
+            mask = self.same_mask(m, id, (&mover, lg), at, (&reg, &inst.coll), mask)?;
+            if !mask.from && !mask.to {
+                return Ok(());
+            }
+        }
+        self.book_leg_ends(m, id, (&inst.id, lg), at, (&reg, &inst.coll), mask)
     }
 
     /// Books the ends of a leg `ends` names, as [`Engine::book_leg`] books both: an
@@ -583,11 +597,19 @@ impl Engine {
             }
         }
         let [from, to] = on;
-        let mask = Ends {
+        let mut mask = Ends {
             from,
             to,
             whole: false,
         };
+        if stated_same(m, &wo.obs.id) {
+            // one movement on two statements books each place once (L §6.1)
+            let mover = Member::Obs(wo.obs.clone());
+            mask = self.same_mask(m, id, (&mover, lg), at, (&[], &wo.obs.coll), mask)?;
+            if !mask.from && !mask.to {
+                return Ok(());
+            }
+        }
         self.book_leg_ends(m, id, (&wo.obs.id, lg), at, (&[], &wo.obs.coll), mask)
     }
 
@@ -708,7 +730,7 @@ impl Engine {
 
 impl Walk {
     /// A refused leg: its places refused from here (refcore's `leg_bad`). E §4.2 step 5.
-    pub(super) fn leg_bad(
+    pub(crate) fn leg_bad(
         &mut self,
         m: &Reality,
         movement: &str,

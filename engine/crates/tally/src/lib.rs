@@ -275,6 +275,7 @@ pub mod book {
         AfterDays, Pad, Seen, Stands, first_readings, per_unit, reading_rank, readings,
     };
     pub(crate) use reading::{gap_text, instant_text};
+    pub(crate) use same::{Member, Waiting, stated_same};
     pub use same::{kept_once, once_obs, same_differ, same_groups};
     pub(crate) use settle::settlement_move;
 }

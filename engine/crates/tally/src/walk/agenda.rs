@@ -228,8 +228,10 @@ impl Engine {
         for wo in &mut observed {
             wo.err = self.obs_err(m, &wo.obs, cut)?;
         }
+        let same_observed = self.same_observed_ids(m, cut)?;
         let walk = self.walk_mut(id)?;
         walk.orders = orders;
+        walk.same_observed = same_observed;
         for w in legs_warned {
             if !walk.warnings.contains(&w) {
                 walk.warnings.push(w);
@@ -607,9 +609,10 @@ fn leg_text(id: &str, leg: &str) -> String {
 }
 
 /// A modelled-past instance: kept for the ledger, and one nothing fulfils marks its places
-/// `open` from its legs' days (refcore's `prepare`, its modelled plans). E §4.1 step 3, L §5.19.
+/// `open` from its legs' days; one stated `same` as an observed row is that observed
+/// movement (refcore's `prepare`, its modelled plans). E §4.1 step 3, L §5.19, §6.1.
 fn schedule_modelled(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
-    if inst.obs.is_empty() {
+    if inst.obs.is_empty() && !walk.same_observed.contains(&inst.id) {
         let rank = walk.plan_rank(&inst.order)?;
         for lg in &inst.legs {
             let Dated::Day(d) = lg.day else {
