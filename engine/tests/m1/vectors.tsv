@@ -1782,6 +1782,11 @@ fixes/gate8/m2_d512_proj_twice	fixes-gate8		engine/tests/m2/fixes/gate8/d512	eng
 fixes/gate8/m2_d512_made_exist_again	fixes-gate8		engine/tests/m2/fixes/gate8/d512	engine/tests/m2/fixes/gate8/d512/made_exist_again.tally			-
 fixes/gate8/m2_r437_before_failure	fixes-gate8		engine/tests/m2/fixes/gate8/r437	engine/tests/m2/fixes/gate8/r437/before_failure.tally			-
 fixes/gate8/m2_r437_before_failure_cycle	fixes-gate8		engine/tests/m2/fixes/gate8/r437	engine/tests/m2/fixes/gate8/r437/before_failure_cycle.tally			-
+fixes/gate8/m2_r437_outside_window	fixes-gate8		engine/tests/m2/fixes/gate8/r437	engine/tests/m2/fixes/gate8/r437/outside_window.tally			-
+fixes/gate8/m2_r437_one_day_low	fixes-gate8		engine/tests/m2/fixes/gate8/r437	engine/tests/m2/fixes/gate8/r437/one_day_low.tally			-
+fixes/gate8/m2_r437_partial_plain	fixes-gate8		engine/tests/m2/fixes/gate8/r437	engine/tests/m2/fixes/gate8/r437/partial_plain.tally			-
+fixes/gate8/m2_r437_window_at_partial	fixes-gate8		engine/tests/m2/fixes/gate8/r437	engine/tests/m2/fixes/gate8/r437/window_at_partial.tally			-
+fixes/gate8/m2_r437_window_at_rest	fixes-gate8		engine/tests/m2/fixes/gate8/r437	engine/tests/m2/fixes/gate8/r437/window_at_rest.tally	e5 e4 w k n kp mqf		-
 r1/l8_reads_first_last_stop	fixes-r1		engine/tests/m1/fixes/r1/l8_reads_first_last_stop	engine/tests/m1/fixes/r1/l8_reads_first_last_stop/m.tally	a b c		R1
 r1/l8_reads_things_ties_order_then_where	fixes-r1		engine/tests/m1/fixes/r1/l8_reads_things_ties_order_then_where	engine/tests/m1/fixes/r1/l8_reads_things_ties_order_then_where/m.tally	t1 t2 t3 t4 t5		R1
 r1/l8_reads_ties_second_term_tied_only	fixes-r1		engine/tests/m1/fixes/r1/l8_reads_ties_second_term_tied_only	engine/tests/m1/fixes/r1/l8_reads_ties_second_term_tied_only/m.tally	a b		R1

@@ -238365,6 +238365,354 @@ ask q: bal(sav, 2026-03-31), bal(konto, 2026-01-19), bal(konto, 2026-01-20), bal
 warning: WARN-UNREAD input db is read by nothing
 warning: WARN-UNREAD input dh is read by nothing
 warning: WARN-UNREAD input dm is read by nothing
+,34:fixes/gate8/m2_r437_outside_window,11:fixes-gate8,24:run outside_window.tally,931:20:outside_window.tally,902:model p
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 gate 8 run 43702332507 on 6a58624c: a projection to 04-30 of a movement dated 06-01 whose leg is on 04-30, the last day it plans (walk/agenda.rs outside_window)"
+source card "probe"
+unit DUK: currency minor 0.01
+place konto: accounts DUK lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input amt: money DUK
+input d_mv: date
+input d_leg: date
+move early: transfers
+  on d_mv
+  leg cash from world to konto amount amt on d_leg
+ask a: bal(konto, 2026-04-30) from 2026-02-01 with uncertain, bal(konto, 2026-04-30) from 2026-02-01, bal(konto, 2026-04-30)
+ask b: low(konto, 2026-02-01 .. 2026-04-30) from 2026-02-01 with uncertain
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 DUK "c"
+  d_mv = 2026-06-01 "c"
+  d_leg = 2026-04-30 "c"
+  opening[konto] = 0.00 DUK at 2026-01-01 start "c"
+,,1:0,86:a: (100.00 DUK, 100.00 DUK, 100.00 DUK)
+  cut 2026-01-01
+b: 0.00 DUK
+  cut 2026-01-01
+,31:fixes/gate8/m2_r437_one_day_low,11:fixes-gate8,21:run one_day_low.tally,1182:17:one_day_low.tally,1155:model pw
+  tally 2
+  on 2026-04-25
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 gate 8 run 43702332507 on 6a58624c: a decision reading a one-day low of a projection: its left out line (walk/projection.rs days_read)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input dh: date
+input k: num
+input dd: int
+input de: int
+input da: date
+input db: date
+input dm: date
+input dz: date
+
+move pay[m in months]: transfers
+  on day_of(m, dd)
+  leg cash from world to konto amount amt
+
+move sw[m in months]: transfers
+  on day_of(m, de)
+  reads konto
+  leg cash from konto to sav amount round(low(konto, dm .. dm) from da * k, minor(PLN), down)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "s"
+  k = 0.1 "s"
+  dd = 10 "s"
+  de = 20 "s"
+  da = 2026-01-01 "s"
+  db = 2026-03-01 "s"
+  dm = 2026-03-31 "s"
+  dz = 2026-12-31 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
+
+ask q: bal(sav, 2026-12-31)
+ask q2: bal(konto, 2026-06-30)
+,,1:0,628:q: 36.00 PLN
+  unfulfilled: sw[2026-01]
+  unfulfilled: sw[2026-02]
+  unfulfilled: sw[2026-03]
+  unfulfilled: sw[2026-04]
+  left out: sw, 3 instances, first 2026-01-20
+  cut 2026-04-25
+q2: 42.00 PLN
+  unfulfilled: pay[2026-01]
+  unfulfilled: pay[2026-02]
+  unfulfilled: pay[2026-03]
+  unfulfilled: pay[2026-04]
+  unfulfilled: sw[2026-01]
+  unfulfilled: sw[2026-02]
+  unfulfilled: sw[2026-03]
+  unfulfilled: sw[2026-04]
+  left out: sw, 3 instances, first 2026-01-20
+  cut 2026-04-25
+warning: WARN-UNREAD input db is read by nothing
+warning: WARN-UNREAD input dh is read by nothing
+warning: WARN-UNREAD input dz is read by nothing
+,33:fixes/gate8/m2_r437_partial_plain,11:fixes-gate8,23:run partial_plain.tally,1596:19:partial_plain.tally,1567:model r1
+  tally 2
+  on 2026-01-01
+  start 2025-01-01
+  end 2025-12-31
+  note "T, M2 gate 8 run 43702332507 on 6a58624c: abs, round, max and a comparison over a hole under partial: the plain hole (hole/questions.rs spread, plain; L §5.18)"
+unit DUK: currency minor 0.01
+source s "s"
+index ks = [a, b, c]
+kind two: transfers
+  leg cash: DUK
+  leg fee: DUK
+place w: accounts DUK lives 2025-01-01..
+place v2: accounts DUK lives 2025-01-01..
+place shop: outside lives 2025-01-01..
+input four: int
+input five: int
+input one_duk: money DUK
+input x: int question "x?"
+input y: int question "y?"
+input three: int question "three?"
+input d3: date
+input mx: money DUK question "mx?"
+input my: money DUK question "my?"
+input z[k in ks]: int question "z?"
+input f[k in ks]: bool question "f?"
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  opening[w] = 100.00 DUK at 2025-01-01 start "o"
+  opening[v2] = 0.00 DUK at 2025-01-01 start "o"
+  three = 3 "t"
+  four = 4 "f"
+  five = 5 "f"
+  one_duk = 1.00 DUK "u"
+  d3 = 2025-03-01 "d"
+  x = ?"x?" "x"
+  y = ?"y?" "y"
+  mx = ?"mx?" "mx"
+  my = ?"my?" "my"
+  z[a] = 5 "a"
+  z[b] = 6 "b"
+  z[c] = 7 "c"
+  f[a] = true "a"
+  f[b] = ?"is b?" "b"
+  f[c] = false "c"
+def third: int = x / three at reader
+move two_legs: two
+  on d3
+  leg cash from w to shop amount mx
+  leg fee from w to v2 amount my
+ask a1: abs(x) + 1 law 2025-12-31 partial
+ask a2: round(mx, 1 DUK, half-up) + one_duk law 2025-12-31 partial
+ask a3: max(x, 1) + 1 law 2025-12-31 partial
+ask a4: (x > 1) law 2025-12-31 partial
+ask a5: abs(x) law 2025-12-31 partial
+,,1:0,558:a1: ?"x?" (x)
+  law date 2025-12-31, cut 2026-01-01
+a2: ?"mx?" (mx)
+  law date 2025-12-31, cut 2026-01-01
+a3: ?"x?" (x)
+  law date 2025-12-31, cut 2026-01-01
+a4: ?"x?" (x)
+  law date 2025-12-31, cut 2026-01-01
+a5: ?"x?" (x)
+  law date 2025-12-31, cut 2026-01-01
+warning: WARN-UNREAD def third is read by nothing
+warning: WARN-UNREAD input f is read by nothing
+warning: WARN-UNREAD input five is read by nothing
+warning: WARN-UNREAD input four is read by nothing
+warning: WARN-UNREAD input y is read by nothing
+warning: WARN-UNREAD input z is read by nothing
+,37:fixes/gate8/m2_r437_window_at_partial,11:fixes-gate8,27:run window_at_partial.tally,1363:23:window_at_partial.tally,1330:model wa_for
+  tally 2
+  on 2026-08-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 gate 8 run 43702332507 on 6a58624c: a hole amount under a window at whose law dates differ on when, read partial (walk/plan.rs imprecise_body)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+input wl: date
+input pq: date
+input pf: date
+input pg: date
+input a1: money PLN
+input go: bool
+
+move md: transfers
+  on pq
+  at wl
+  for month_of(pf)
+  leg cash from world to konto amount a1
+
+move me: transfers
+  on pq
+  at wl
+  for month_of(pg)
+  leg cash from world to konto amount a1
+
+move mw: transfers
+  on pq
+  at wl
+  when go
+  leg cash from world to konto amount a1
+
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  wl = window(2026-03-30, 2026-04-02) "s"
+  a1 = ?"amt" "s"
+  pg = 2026-05-15 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+
+version old
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-01-01
+  pq = 2026-04-10 "s"
+  pf = 2026-03-15 "s"
+  go = true "s"
+
+version new
+  cite s
+  governs 2026-04-01..
+  known 2026-01-01
+  pq = 2026-04-10 "s"
+  pf = 2026-04-15 "s"
+  go = false "s"
+ask kw: flows(mw, 2026-04-01 .. 2026-04-30) partial
+ask kp: bal(konto, 2026-04-30) partial
+ask kd: flows(md, 2026-04-01 .. 2026-04-30) partial
+,,1:0,327:kd: ?"amt" (a1)
+  unfulfilled: md
+  cut 2026-08-01
+kp: ?"amt" (a1) ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+  unfulfilled: md
+  unfulfilled: me
+  cut 2026-08-01
+kw: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+  cut 2026-08-01
+,34:fixes/gate8/m2_r437_window_at_rest,11:fixes-gate8,49:run window_at_rest.tally --ask e5 e4 w k n kp mqf,1845:20:window_at_rest.tally,1815:model wa_for
+  tally 2
+  on 2026-08-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 gate 8 run 43702332507 on 6a58624c: wa_for's asks both engines answer alike: me's for alike on both sides of the law change and mq on pq, whose rows old and new state one day (walk/plan.rs same_body)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+input wl: date
+input pq: date
+input pf: date
+input pg: date
+input a1: money PLN
+input go: bool
+
+move md: transfers
+  on pq
+  at wl
+  for month_of(pf)
+  leg cash from world to konto amount a1
+
+move me: transfers
+  on pq
+  at wl
+  for month_of(pg)
+  leg cash from world to konto amount a1
+
+move mq: transfers
+  on pq
+  at wl
+  leg cash from world to konto amount a1
+
+move mw: transfers
+  on pq
+  at wl
+  when go
+  leg cash from world to konto amount a1
+
+ask d3: flows(md, 2026-04-01 .. 2026-04-30, for 2026-03)
+ask d4: flows(md, 2026-04-01 .. 2026-04-30, for 2026-04)
+ask e5: flows(me, 2026-04-01 .. 2026-04-30, for 2026-05)
+ask e4: flows(me, 2026-04-01 .. 2026-04-30, for 2026-04)
+ask w: flows(mw, 2026-04-01 .. 2026-04-30)
+ask k: bal(konto, 2026-04-30)
+ask n: count(t in transfers over 2026-04)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  wl = window(2026-03-30, 2026-04-02) "s"
+  a1 = 1.00 PLN "s"
+  pg = 2026-05-15 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+
+version old
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-01-01
+  pq = 2026-04-10 "s"
+  pf = 2026-03-15 "s"
+  go = true "s"
+
+version new
+  cite s
+  governs 2026-04-01..
+  known 2026-01-01
+  pq = 2026-04-10 "s"
+  pf = 2026-04-15 "s"
+  go = false "s"
+ask kp: bal(konto, 2026-04-30) partial
+ask mqf: flows(mq, 2026-04-01 .. 2026-04-30)
+ask kpm: bal(konto, 2026-04-30) - bal(konto, 2026-03-01) partial
+,,1:0,742:e5: 1.00 PLN
+  unfulfilled: me
+  cut 2026-08-01
+e4: 0.00 PLN
+  cut 2026-08-01
+w: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+  cut 2026-08-01
+k: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+  unfulfilled: md
+  unfulfilled: me
+  unfulfilled: mq
+  cut 2026-08-01
+n: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+  unfulfilled: md
+  unfulfilled: me
+  unfulfilled: mq
+  cut 2026-08-01
+kp: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+  unfulfilled: md
+  unfulfilled: me
+  unfulfilled: mq
+  cut 2026-08-01
+mqf: 1.00 PLN
+  unfulfilled: mq
+  cut 2026-08-01
 ,27:r1/l8_reads_first_last_stop,8:fixes-r1,23:run m.tally --ask a b c,392:7:m.tally,377:model t
   tally 2
   on 2026-03-01
