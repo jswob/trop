@@ -3670,3 +3670,25 @@ The gate's review `tmp/m2/gate-review.md` (B1–B9), ruled by pick P72 (`tmp/m2/
 - **Exceptions:** +0.
 - **Check:** `check commit: green, 23 steps (165s)`, at this commit's code; M2 gating, green; report-only hits 9, as before.
 - **Addendum, the fix review's blocking 1 (`tmp/m2/review-gatefix.md`; B9 introduced it):** `model_day` skipped a refused instance with no day, so a ledger with no balance line printed empty (the review's probe `tmp/m2/gatefix-review-probes/b9n.tally`, `r2: residuals konto 2026-03`). A refused day now stands undated, so `ledger_model`'s `may_touch` test and `refusal_of` refuse every ledger it may touch, whatever the span (L §8.4: "from its day (every day, for a day that is a hole or refused) it refuses … every `flows` and binding over a span it may fall in"). `b9n` `r1`, `r2`, `r3`: `refused: RUN-DIV division by zero` (was an empty ledger for `r2`). `gate-probes-agent/p5` `r2`, `r3` unchanged (`RUN-DIV`); `r1` (February) is `RUN-DIV` too, where refcore prints February's ledger and refcore prints `b9n`'s empty ledger: T holds those vectors for #169 (the review's Q1). Every other gate probe byte-equal to the fix's (`resweep.sh`, 30 of 31 files). `check commit: green, 23 steps (96s)`; report-only hits 9; exceptions +0.
+
+## 2026-11-15 M2 P8-14's wall: a projection's walk plans on to its month's end (pick P73; issue #167)
+
+G7's builder, resumed after the gate (`engine/perf/M2.md` § "P8-14's wall, the one budget missed": 1.97 s against 1.00 s, 30.1 G instructions against S's 11.86 G). Outputs in `tmp/m2/b/g7last/`.
+
+- **Cause** (the gate's profile `tmp/m2/gate/profile-p8-14.txt`): P54 plans a projection's walk only through its read's day, and F6 continues a kept walk only after the next read's own plan pass agrees with it, so `min(bal(konto, d) from t for d in t .. b step 1 day)` ran one plan pass per day read: 605 walks, 51 % of the time in `plan_walk`, 22 % in `memcmp`/`memmove` (the agreement and its copies).
+- **The change:**
+  - `walk/projection.rs` `horizon` (new): a new projection's walk read through day d is planned through the last day of d's month (P §2.4's interval), within the run, not through d alone: P54's memory bound becomes the window plus at most a month. `proj_walk` plans each new walk, and each that continues a kept one, through it.
+  - `walk/fork.rs` `meet_parked`: a kept walk that plans through the read's day or further is taken as it is, as an open walk always was (`proj_walk`'s `plans_through() >= through`): a read through a day it walked past reads its log, one through a later day walks on. It counts as a walk shared where the read walks past what the kept walk had walked. Before, only a walk planned through exactly that day was taken, and one planned further was freed.
+  - So the reads of one projection within a month share one plan pass and one walk; a read into the next month continues the kept walk with F6's agreement, once a month.
+  - Why the bytes don't move: a walk planned further walks no further than a read asks, and through the read's day it books what one planned through that day books; past the window only instances it never reaches change (`agenda.rs` `outside_window`; E §4.1, §4.3). S planned every projection's walk to the run's end with the same bytes, and T's digests hold here.
+- **P8-14** (`I:X:replay_september@b_r1`):
+  - Counts (`perf counts P8-14 F6-X`): `def_misses 25318, days_stepped 960, walks_shared 582` (were 25 462, 1 826, 534; S stepped 926).
+  - Instructions (`perf row P8-14 --runs 1`): 13 710 659 685, against S's 11.86 G and the gate's 30.1 G; T's digest holds (no `WRONG`).
+  - Profile (`perf profile P8-14`, 906 samples): `plan_walk` 8.7 % (51 %), `memcmp` 9.6 %, `memmove` 8.2 %; the rest is F5's tree gathered at each new cut (`tree_at` 39 %), as before P54.
+  - Wall (`perf row P8-14`, the release binary, not niced, 2 warm-ups and 10 runs): median 884.97 ms against 1.00 s (S 761 ms), peak footprint 171.2 MB, 13 717 948 607 instructions; `uptime`'s 1-minute load 1.91 before and 1.85 after (a run a minute earlier, load 2.00 before and 1.99 after: 890.38 ms).
+- **P54's memory, R7 to 2056** (`r7/to2056.tally` with `pins_long.py`'s files, `--ask pin_2056`, the release binary, niced, the memcap watchdog on at 8 GB, stopped by its PID after): peak footprint 2.73 GB, 25.1 s; `pin_2056: (22 613.79 PLN, 10 093 756.45 PLN)`, as before.
+- **Targets:** every `tally-runner` target of S, M0, M1 and M2 (25), `--all-features`, quick, niced: `721 tests run: 721 passed, 0 skipped` (`tmp/m2/b/g7last/all.log`). `fork_oracle` and `walk_oracle` 13 of 13 (`check quick`).
+- **Kernel functions touched:** `walk/projection.rs` `Engine::proj_walk`, `horizon` (new); `walk/fork.rs` `Engine::meet_parked`.
+- **Size:** in `engine/crates`, 31 added and 9 removed.
+- **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps (90s)`; report-only hits 9, as before.

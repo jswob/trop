@@ -157,9 +157,10 @@ impl Engine {
     }
 
     /// Kept walk `id`, met by a read of its projection through day `through`: taken as it is
-    /// where it plans through that day; taken out of the list to be continued where it plans
-    /// less far and stands between two days; freed otherwise, the read walking anew as the
-    /// twin does (P §2.5, §3.5). E §4.3.
+    /// where it plans through that day or further, as an open walk is (a read through a day
+    /// it walked past reads its log, one through a later day walks on); taken out of the list
+    /// to be continued where it plans less far and stands between two days; freed otherwise,
+    /// the read walking anew as the twin does (P §2.5, §3.5; pick P73). E §4.3.
     ///
     /// # Errors
     ///
@@ -167,11 +168,14 @@ impl Engine {
     pub(crate) fn meet_parked(&mut self, id: usize, through: Day) -> Result<Held, Stop> {
         self.parked.ids.retain(|kept| *kept != id);
         let kept = self.walk(id)?;
-        let planned = kept.plans_through();
-        if planned == through {
+        if kept.plans_through() >= through {
+            // the twin walks this read's days again; here the days walked are shared
+            if kept.done.is_some_and(|walked| walked < through) {
+                self.count_shared();
+            }
             return Ok(Held::Kept(id));
         }
-        if planned > through || !paused(kept) {
+        if !paused(kept) {
             self.free_projection(id)?;
             return Ok(Held::New);
         }
