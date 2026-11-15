@@ -11,10 +11,11 @@
 //! candidates bound to the adjustments being settled are made apart from its instances, never
 //! kept as them; a waiver leaves no remainder.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use super::adjust::{Adjustment, Settled};
-use super::observe::inst_id;
+use super::observe::{Obs, inst_id};
+use super::{once_obs, same_differ};
 use crate::base::{Code, Load, Refusal, Run};
 use crate::eval::Engine;
 use crate::model::{Domain, Fulfils, MoveInfo, Reality, Value, World};
@@ -158,9 +159,10 @@ impl Engine {
             }
         }
         let observed = self.observations(m, cut)?.to_vec();
+        let groups = super::same_groups(m);
         for a in adjs.iter_mut() {
             for vid in a.vids.clone() {
-                link_observed(a, &vid, &observed)?;
+                link_observed(m, a, &vid, (&observed, &groups))?;
             }
         }
         Ok(())
@@ -286,27 +288,56 @@ fn link_instance(
 }
 
 /// The observed rows that name adjustment `a` as `adjustments[<inst>.<leg>, <vid>]` linked
-/// to it: a row with no legs waives it (refcore's `settle`, its observed rows). E §5 step 5,
-/// L §5.14.3, §5.19.
+/// to it: a row with no legs waives it; a group stated `same` settles once, by its first row
+/// met, its amount the group's `HOLE-SAME` where its rows disagree (refcore's `settle`, its
+/// observed rows). E §5 step 5, L §5.14.3, §5.19 One movement on two statements.
 fn link_observed(
+    m: &Reality,
     a: &mut Adjustment,
     vid: &str,
-    observed: &[super::observe::Obs],
+    (observed, groups): (&[Obs], &BTreeMap<String, Vec<String>>),
 ) -> Result<(), Stop> {
-    for o in observed {
-        let Some(Fulfils::Adjustment(mid, keys, leg, v)) = &o.fulfils else {
-            continue;
-        };
-        if v != vid || *leg != a.leg.name || inst_id(mid, keys) != a.inst_id {
-            continue;
-        }
+    let naming: Vec<Obs> = observed
+        .iter()
+        .filter(|o| names_adjustment(o, a, vid))
+        .cloned()
+        .collect();
+    // rows stated same are one movement: it settles once, its rows' disagreement a hole
+    // (L §5.19 One movement on two statements)
+    for (first, rest) in once_obs(groups, &naming) {
+        let o = naming
+            .get(first)
+            .ok_or_else(|| invariant("a settling row once_obs kept"))?;
         if o.legs.is_empty() {
             waive(a, &o.id, Some(o.day));
             continue;
         }
-        link(a, &o.id, Some(o.day), &o.legs)?;
+        let others: Vec<&Obs> = rest.iter().filter_map(|&k| naming.get(k)).collect();
+        match same_differ(m, o, &others, None)? {
+            None => link(a, &o.id, Some(o.day), &o.legs)?,
+            Some(hole) => {
+                let legs: Vec<LegVal> = o
+                    .legs
+                    .iter()
+                    .map(|lg| LegVal {
+                        amount: Amount::Hole(hole.clone()),
+                        ..lg.clone()
+                    })
+                    .collect();
+                link(a, &o.id, Some(o.day), &legs)?;
+            }
+        }
     }
     Ok(())
+}
+
+/// Whether observed row `o` names adjustment `a` of version `vid` as
+/// `adjustments[<inst>.<leg>, <vid>]` (refcore's `settle`, its observed rows). L §5.19.
+fn names_adjustment(o: &Obs, a: &Adjustment, vid: &str) -> bool {
+    let Some(Fulfils::Adjustment(mid, keys, leg, v)) = &o.fulfils else {
+        return false;
+    };
+    v == vid && *leg == a.leg.name && inst_id(mid, keys) == a.inst_id
 }
 
 /// A settling movement's legs added to adjustment `a`, each with its sign (refcore's
