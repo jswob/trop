@@ -236,7 +236,9 @@ impl Engine {
                 match self.when_at_cut(m, mv, when, &tuple.env, tctx) {
                     Ok(false) => return Ok(None),
                     Ok(true) => {}
-                    Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {}
+                    // a cycle is never taken as existing: the link would stand unjudged
+                    Err(Stop::Refused(r))
+                        if !matches!(r.code(), Code::Load(_) | Code::Run(Run::Cycle)) => {}
                     Err(stop) => return Err(stop),
                 }
             }
