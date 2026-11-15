@@ -237987,6 +237987,71 @@ ask t: sum(x[k] for k in ks) - 1 partial
   cut 2026-01-01
 t: 4 + 1 × ?"x?" (x[b])
   cut 2026-01-01
+,33:fixes/gate8/m2_d512_known_win_end,11:fixes-gate8,23:run known_win_end.tally,1390:19:known_win_end.tally,1361:model pw
+  tally 2
+  on 2026-04-25
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 gate 8 run 43690242450 on d512fe7b: a statement known in a window, read as known on its last day, the day after and before it (book/observe.rs unseen_known: the window holds a cut before its last day only)"
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index ks = [a, b]
+kind mixed: place any signed
+place konto: accounts PLN lives 2026-01-01..
+place wallet: mixed lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input dk[k in ks]: date
+input d0: date
+input dd: int
+
+move pay[m in months]: transfers
+  on day_of(m, dd)
+  leg cash from world to konto amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "s"
+  d0 = 2026-01-01 "s"
+  dd = 10 "s"
+  dk[a] = window(2026-03-01, 2026-03-10) "s"
+  dk[b] = 2026-03-05 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+
+ask q: bal(konto, 2026-03-31) as known 2026-04-20
+ask q2: bal(konto, 2026-03-31) as known 2026-04-21
+ask q3: bal(konto, 2026-03-31) as known 2026-03-31
+
+version st
+  cite s
+  governs 2026-03
+  known window(2026-04-01, 2026-04-20)
+  covers konto
+  bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 12.00 PLN) "r1"
+,,1:0,481:q: 32.00 PLN
+  unfulfilled: pay[2026-01]
+  unfulfilled: pay[2026-02]
+  open: pay[2026-03]
+  cut 2026-04-20
+q2: 32.00 PLN
+  unfulfilled: pay[2026-01]
+  unfulfilled: pay[2026-02]
+  open: pay[2026-03]
+  cut 2026-04-21
+q3: 30.00 PLN
+  unfulfilled: pay[2026-01]
+  unfulfilled: pay[2026-02]
+  unfulfilled: pay[2026-03]
+  cut 2026-03-31
+warning: WARN-UNREAD input d0 is read by nothing
+warning: WARN-UNREAD input dk is read by nothing
+warning: WARN-UNREAD place wallet is read by nothing
 ,27:r1/l8_reads_first_last_stop,8:fixes-r1,23:run m.tally --ask a b c,392:7:m.tally,377:model t
   tally 2
   on 2026-03-01
