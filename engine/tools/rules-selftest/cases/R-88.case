@@ -93,14 +93,15 @@ print('R-88 --next: no filter from a baseline that didn\'t run' if e is None els
 
 # P55 (issue #108, 2026-11-09): `mutants-local --fences` adds the fences' equivalence tests,
 # tools/milestones.toml's `fence_catchers`, as catchers of a local batch: F5's `walk_oracle`
-# whole and `tally`'s `walk::lows::tests`. The filter selects each test target by its binary
+# whole and `tally`'s `walk::lows::tests`, and since M2 (pick P9) F6's `fork_oracle` whole and
+# `tally`'s `walk::fork::tests`. The filter selects each test target by its binary
 # and each lib module by its tests' path; an entry that names both a target and a module is
 # refused.
 
 case: fences-select-their-tests
 tool: run
 exit: any
-expect: R-88 --fences: binary_id(=tally-cli::walk_oracle) | (binary_id(=tally) & test(/^walk::lows::tests::/))
+expect: R-88 --fences: binary_id(=tally-cli::walk_oracle) | (binary_id(=tally) & test(/^walk::lows::tests::/)) | binary_id(=tally-cli::fork_oracle) | (binary_id(=tally) & test(/^walk::fork::tests::/))
 --- run
 python3 -I -B -c "
 import sys; sys.path.insert(0, 'tools'); import milestones, mutants_local as m
