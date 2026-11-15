@@ -5753,4 +5753,192 @@ q5 (k = c) [ax = lo]: (true, 10.00 PLN)
 q5 (k = c) [ax = hi]: (true, 20.00 PLN)
   reading: ax = hi
   cut 2026-03-01
+,27:spec/gate8/r437_after_m_end,12:spec-records,35:run after_m_end.tally --ask b31 l31,1841:17:after_m_end.tally,1814:model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-03-31
+  note "T, M2 gate 8 run 43702332507: last of a reading after m, m fulfilled by o1 at konto on the run's last day E (03-31), o3 at konto on 04-02 past E, the cut after E: the reading stands on E (book/reading.rs last_standing_day > to ==, > to >=; walk/agenda.rs last_standing_in || to &&)"
+
+source s "s"
+unit PLN: currency minor 0.01
+kind savings: place PLN min 0
+place konto: accounts PLN lives 2026-01-01..
+place sav: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input keep: money PLN
+input d_save: int
+
+move save[m in months]: transfers
+  on day_of(m, d_save)
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  d_save = 15 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[o1] = (on: 2026-03-31, kind: transfers, leg cash from konto to sav amount 500.00 PLN, fulfils: save[2026-03]) "o1"
+  bank[o2] = (on: 2026-03-16, kind: transfers, leg cash from sav to world amount 20.00 PLN, fulfils: save[2026-03]) "o2"
+
+version late
+  cite s
+  governs 2026-04
+  known 2026-04-03
+  bank[o3] = (on: 2026-04-02, kind: transfers, leg cash from konto to sav amount 5.00 PLN, fulfils: save[2026-03]) "o3"
+
+version rd
+  cite s
+  governs 2026-03
+  known 2026-04-04
+  pad konto from world
+  stated[konto] = 90.00 PLN after save[2026-03] "saldo"
+
+ask l16: last(stated[konto], 2026-03-16)
+ask l30: last(stated[konto], 2026-03-30)
+ask l31: last(stated[konto], 2026-03-31)
+ask b16: bal(konto, 2026-03-16)
+ask b30: bal(konto, 2026-03-30)
+ask b31: bal(konto, 2026-03-31)
+,,1:0,372:b31: 90.00 PLN
+  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of -460.00 PLN
+  cut 2026-04-10
+l31: 90.00 PLN
+  cut 2026-04-10
+warning: WARN-LEGS the two observations of save[2026-03] disagree: bank[o1] (500.00 PLN) and bank[o3] (5.00 PLN)
+warning: WARN-LEGS the two observations of save[2026-03] disagree: bank[o2] (20.00 PLN) and bank[o3] (5.00 PLN)
+,24:spec/gate8/r437_am_rank3,12:spec-records,36:run am_rank3.tally --ask l14 b14 b31,1648:14:am_rank3.tally,1624:model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+  note "T, M2 gate 8 run 43702332507: a reading after m whose two fulfilling rows (c1, a1) stand on one day around an unlinked row b1, written c1, b1, a1: the reading stands after the last by rank, c1 (walk/agenda.rs booked_rank, last_standing_in's rank)"
+
+source s "s"
+unit PLN: currency minor 0.01
+kind savings: place PLN min 0
+place konto: accounts PLN lives 2026-01-01..
+place sav: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input keep: money PLN
+input d_save: int
+
+move save[m in months]: transfers
+  on day_of(m, d_save)
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  d_save = 15 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[c1] = (on: 2026-03-14, kind: transfers, leg cash from konto to sav amount 10.00 PLN, fulfils: save[2026-03]) "c1"
+  bank[b1] = (on: 2026-03-14, kind: transfers, leg cash from world to konto amount 50.00 PLN) "b1"
+  bank[a1] = (on: 2026-03-14, kind: transfers, leg cash from konto to sav amount 500.00 PLN, fulfils: save[2026-03]) "a1"
+
+version rd
+  cite s
+  governs 2026-03..2026-04
+  known 2026-04-04
+  pad konto from world
+  stated[konto] = 90.00 PLN after save[2026-03] "saldo"
+ask l14: last(stated[konto], 2026-03-14)
+ask b13: bal(konto, 2026-03-13)
+ask b14: bal(konto, 2026-03-14)
+ask b31: bal(konto, 2026-03-31)
+,,1:0,262:l14: 90.00 PLN
+  cut 2026-04-10
+b14: 90.00 PLN
+  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of -500.00 PLN
+  cut 2026-04-10
+b31: 90.00 PLN
+  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of -500.00 PLN
+  cut 2026-04-10
+,25:spec/gate8/r437_am_rank2l,12:spec-records,37:run am_rank2l.tally --ask l14 b14 b31,1587:15:am_rank2l.tally,1562:model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+  note "T, M2 gate 8 run 43702332507: a reading after m whose one fulfilling row has two legs at konto on one day, declared zfee before cash: the reading stands after the last by rank, zfee (walk/agenda.rs booked_rank -> 0, -> 1)"
+
+source s "s"
+unit PLN: currency minor 0.01
+kind savings: place PLN min 0
+place konto: accounts PLN lives 2026-01-01..
+place sav: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input fee: money PLN
+kind twos: event certain
+  leg zfee: PLN
+  leg cash: PLN
+input keep: money PLN
+input d_save: int
+
+move save[m in months]: twos
+  on day_of(m, d_save)
+  reads konto
+  leg zfee from konto to world amount fee
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep - fee)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  fee = 5.00 PLN "s"
+  d_save = 15 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[a1] = (on: 2026-03-14, kind: twos, leg zfee from konto to world amount 5.00 PLN, leg cash from konto to sav amount 500.00 PLN, fulfils: save[2026-03]) "a1"
+
+version rd
+  cite s
+  governs 2026-03..2026-04
+  known 2026-04-04
+  pad konto from world
+  stated[konto] = 90.00 PLN after save[2026-03] "saldo"
+ask l14: last(stated[konto], 2026-03-14)
+ask b13: bal(konto, 2026-03-13)
+ask b14: bal(konto, 2026-03-14)
+ask b31: bal(konto, 2026-03-31)
+,,1:0,262:l14: 90.00 PLN
+  cut 2026-04-10
+b14: 90.00 PLN
+  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of -455.00 PLN
+  cut 2026-04-10
+b31: 90.00 PLN
+  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of -455.00 PLN
+  cut 2026-04-10
 ,

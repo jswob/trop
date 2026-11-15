@@ -177,3 +177,7 @@ fixes/g6b/pd3_q2q6	fixes-sweep		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/
 fixes/g6b/w1b_q5	fixes-sweep		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/w1b.tally	q5		-
 fixes/g6b/le1_each	fixes-sweep		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/le1.tally	q q2		-
 fixes/g6b/le5_each	fixes-sweep		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/le5.tally	q q3 q4		-
+fixes/gate8/r437_same_outside	fixes-sweep		engine/tests/m2/fixes/gate8/r437	engine/tests/m2/fixes/gate8/r437/same_outside.tally	l_k		sweep
+fixes/gate8/r437_after_m_end	fixes-sweep		engine/tests/m2/fixes/gate8/r437	engine/tests/m2/fixes/gate8/r437/after_m_end.tally	b31 l31		-
+fixes/gate8/r437_am_rank3	fixes-sweep		engine/tests/m2/fixes/gate8/r437	engine/tests/m2/fixes/gate8/r437/am_rank3.tally	l14 b14 b31		-
+fixes/gate8/r437_am_rank2l	fixes-sweep		engine/tests/m2/fixes/gate8/r437	engine/tests/m2/fixes/gate8/r437/am_rank2l.tally	l14 b14 b31		-

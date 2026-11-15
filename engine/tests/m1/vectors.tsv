@@ -1970,3 +1970,10 @@ fixes/gate8/m2_g6b_le1	fixes-gate8		engine/tests/m2/fixes/g6b	engine/tests/m2/fi
 fixes/gate8/m2_g6b_le5	fixes-gate8		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/le5.tally	q2 q5		-
 fixes/gate8/m2_g6b_b3	fixes-gate8		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/b3.tally	q2 q3 q4		-
 fixes/gate8/m2_g6b_b4	fixes-gate8		engine/tests/m2/fixes/g6b	engine/tests/m2/fixes/g6b/b4.tally	q2		-
+fixes/gate8/m2_r437_same_outside	fixes-gate8		engine/tests/m2/fixes/gate8/r437	engine/tests/m2/fixes/gate8/r437/same_outside.tally	l_s b_k b_s		-
+fixes/gate8/m2_r437_after_m_end	fixes-gate8		engine/tests/m2/fixes/gate8/r437	engine/tests/m2/fixes/gate8/r437/after_m_end.tally	b16 b30 l16 l30		-
+fixes/gate8/m2_r437_am_rank3	fixes-gate8		engine/tests/m2/fixes/gate8/r437	engine/tests/m2/fixes/gate8/r437/am_rank3.tally	b13		-
+fixes/gate8/m2_r437_am_rank2l	fixes-gate8		engine/tests/m2/fixes/gate8/r437	engine/tests/m2/fixes/gate8/r437/am_rank2l.tally	b13		-
+fixes/gate8/m2_r4371_cover_on_end	fixes-gate8		engine/tests/m2/fixes/gate8/r4371	engine/tests/m2/fixes/gate8/r4371/cover_on_end.tally			-
+fixes/gate8/m2_r4371_flows_for_after	fixes-gate8		engine/tests/m2/fixes/gate8/r4371	engine/tests/m2/fixes/gate8/r4371/flows_for_after.tally			-
+fixes/gate8/m2_r4371_modelled_open	fixes-gate8		engine/tests/m2/fixes/gate8/r4371	engine/tests/m2/fixes/gate8/r4371/modelled_open.tally			-
