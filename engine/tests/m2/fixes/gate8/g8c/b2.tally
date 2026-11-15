@@ -1,0 +1,85 @@
+model b2
+  tally 2
+  on 2026-04-15
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 gate 8 run 43749994847 on 205157a2: a sweep decision run on the 18th books its leg 33 days later, in the next month; a projection from January read day by day across the month's end, a kept walk continued past the day it walked to (walk/fork.rs booked_ahead, continue_with: the legs booked ahead carried)"
+
+source card "invented for F6's twin"
+
+unit DUK: currency minor 0.01
+
+axis pay_reading
+  low "the lower pay"
+  high "the higher pay"
+
+index month = month 2026-01..2026-12
+
+place konto: accounts DUK lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input pay_low: money DUK
+
+input pay_high: money DUK
+
+input rent: money DUK
+
+input floor: money DUK
+
+input share: num
+
+input late: int
+
+input rent_off: int
+
+input sweep_off: int
+
+input reach: int
+
+def pay: money DUK at reader
+  rule base = pay_low
+  rule hi beats base = pay_high when pay_reading == high
+
+def room[m in month]: money DUK = min(bal(konto, d) from start_of(m) for d in start_of(m) .. add_days(start_of(m), reach) step 1 day) at start_of(m)
+
+move salary[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount pay
+
+move rent_pay[m in month]: transfers
+  on add_days(start_of(m), rent_off)
+  at start_of(m)
+  leg cash from konto to world amount rent
+
+move sweep[m in month]: transfers
+  on add_days(start_of(m), sweep_off)
+  at start_of(m)
+  reads konto
+  leg cash from konto to world amount round(max(0, room[m] - floor) * share, minor(DUK), down) on add_days(start_of(m), late)
+
+ask b2_min: min(bal(konto, d) from 2026-01-10 for d in 2026-01-10 .. 2026-02-10 step 1 day)
+ask b2_all: bal(konto, d) from 2026-01-10 for d in 2026-01-28 .. 2026-02-06 step 1 day
+ask b2_one: bal(konto, 2026-02-05) from 2026-01-10
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  pay_low = 1000.00
+  pay_high = 1300.00
+  rent = 900.00
+  floor = 200.00
+  share = 0.5
+  late = 33
+  rent_off = 9
+  sweep_off = 17
+  reach = 15
+  opening[konto] = 500.00 at 2026-01-01 start
+
+version later
+  cite card
+  governs 2026-05-01..
+  known 2026-03-01
+  replace rent = 950.00 "the rent rose"

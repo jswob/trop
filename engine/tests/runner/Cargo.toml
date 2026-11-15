@@ -13,6 +13,9 @@ tally-cli = { workspace = true }
 # `m1_invariant` alone (`required-features`), so no other build of the runner has it.
 [features]
 fault-injection = ["tally-cli/fault-injection"]
+# The work counters behind `--stats` (R-51, BUILDER §13.2), for `m2_counts` alone
+# (`required-features`): fence F6's counts, days stepped and walks shared (pick P75's addendum).
+counters = ["tally-cli/counters"]
 
 [lints]
 workspace = true
@@ -192,3 +195,12 @@ test = false
 [[test]]
 name = "m2_forks"
 path = "milestone/m2_forks.rs"
+
+# M2: fence F6's counts on fixed inputs, forks on and off (issue #167, gate 8 run 43749994847,
+# the builder's R1-R7 and T5; MILESTONE-M2.md row 5): the counters build only (R-51), as
+# m1_invariant takes the fault; `test = false`, gating with M2.
+[[test]]
+name = "m2_counts"
+path = "milestone/m2_counts.rs"
+test = false
+required-features = ["counters"]
