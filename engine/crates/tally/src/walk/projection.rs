@@ -30,7 +30,7 @@ use crate::hole::{Hole, spread};
 use crate::model::{Reality, Value};
 use crate::num::Num;
 use crate::syntax::{Bal, Low, Stop};
-use crate::time::Day;
+use crate::time::{Day, Period};
 
 /// A projection's walk by what makes it: the walk it continues, the point it starts after,
 /// its cut, the moves it leaves out (refcore's `proj_walk` key).
@@ -404,9 +404,9 @@ impl Engine {
         };
         let id = match found {
             Held::Kept(id) => id,
-            Held::New => self.new_proj_walk(m, key, t, through)?,
+            Held::New => self.new_proj_walk(m, key, t, horizon(m, through))?,
             Held::Continue(kept) => {
-                let id = self.new_proj_walk(m, key, t, through)?;
+                let id = self.new_proj_walk(m, key, t, horizon(m, through))?;
                 self.wait_to_continue(id, *kept);
                 id
             }
@@ -425,6 +425,11 @@ impl Engine {
 
     /// A new walk of projection `key` from day `t`, planned through day `through`, put under
     /// its key (refcore's `proj_walk`, its new `Walk`). E §4.3 step 1.
+    ///
+    /// # Errors
+    ///
+    /// The refusals the walk's first readings meet; `ENGINE-INVARIANT` for a walk the engine
+    /// lacks.
     fn new_proj_walk(
         &mut self,
         m: &Reality,
@@ -554,6 +559,19 @@ struct Days {
     first: Day,
     /// The last day, b.
     last: Day,
+}
+
+/// The day a projection's walk read through `through` is planned through: on to the last day
+/// of that day's month (P §2.4's interval), within the run, so that a projection read day by
+/// day plans once a month, not once a read, while its walk stays within a month of its window
+/// (P §3.5, pick P54). Planned further, a walk walks no further than a read asks and books
+/// the same through it: past the window only instances the walk never reaches change (E §4.1,
+/// §4.3; pick P73).
+fn horizon(m: &Reality, through: Day) -> Day {
+    match Period::month_of(through).and_then(|month| month.end().previous()) {
+        Some(last) => last.min(m.end).max(through),
+        None => through,
+    }
 }
 
 /// The lowest of a `low`'s daily balances, the first of equal ones; the holes of every day
