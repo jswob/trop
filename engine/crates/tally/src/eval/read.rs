@@ -194,7 +194,7 @@ impl Engine {
         let by_law = self.read_class(m, input, ctx, asked)?;
         // a row known in a window that holds the cut: the line's `windows each` decides it,
         // else the read is `HOLE-IMPRECISE` (L §4.5)
-        let view = match self.input_view(m, input, keys, None, ctx)? {
+        let view = match self.input_view(m, input, keys, (None, clocks), ctx)? {
             Err(h) => return Ok(Value::Hole(h)),
             Ok(view) => view,
         };
@@ -219,6 +219,10 @@ impl Engine {
                 });
                 let value = self.row_value(m, input, row, keys, ctx)?;
                 let value = self.priced(m, input, keys, ctx, value)?;
+                // only a window keeps its read, and only a window takes a day (L §4.4)
+                if !matches!(value, Value::Window(_)) {
+                    return Ok(value);
+                }
                 let value = as_read(value, (&input.id, keys), row_cell(row));
                 // under `windows each`, the window the read gave takes its day (L §4.4)
                 let figure = origin(&input.id, keys);
@@ -256,11 +260,12 @@ impl Engine {
         self.chosen(value, (id, &label), ctx)
     }
 
-    /// Input `input` as a read at `keys` in `ctx` sees its rows, a read at its law date or,
-    /// for `last(x, d)` and `since`, on or before day `past`: a row whose `known` window
-    /// holds the cut and that applies at the read's time is left out where the line's choice
-    /// puts its day after the cut; none where every row stands; the hole where no `windows
-    /// each` decides one (refcore's `row_visible`, `known_vis`). L §4.5, §4.4, §4.6 step 1.
+    /// Input `input` as a read at `keys` in `ctx` under `clocks` sees its rows, a read at its
+    /// law date or, for `last(x, d)` and `since`, on or before day `past`: a row whose `known`
+    /// window holds the cut and that applies at the read's time is left out where the line's
+    /// choice puts its day after the cut; none where every row stands, at once for an input
+    /// with no row known in a window and none `after m`; the hole where no `windows each`
+    /// decides one (refcore's `row_visible`, `known_vis`). L §4.5, §4.4, §4.6 step 1.
     ///
     /// # Errors
     ///
@@ -271,10 +276,12 @@ impl Engine {
         m: &Reality,
         input: &InputInfo,
         keys: &[KeyVal],
-        past: Option<Day>,
+        (past, clocks): (Option<Day>, Clocks),
         ctx: Ctx,
     ) -> Result<Result<Option<InputInfo>, Hole>, Stop> {
-        let clocks = self.clocks(ctx, &input.id)?;
+        if !input.holds.known_window && !input.holds.after {
+            return Ok(Ok(None));
+        }
         let test = match past {
             Some(day) => Test::Last(day),
             // a reading stands from its instant on (L §4.6 Readings)
@@ -301,7 +308,7 @@ impl Engine {
             None
         };
         // only `stated` and `opening` hold readings `after m`
-        let after = input.reading && input.rows.iter().any(|row| after_at(row, place));
+        let after = input.holds.after && input.rows.iter().any(|row| after_at(row, place));
         if hidden.is_empty() && !after {
             return Ok(Ok(None));
         }
@@ -596,7 +603,8 @@ impl Engine {
         });
         // a row known in a window that holds the cut: the line's `windows each` decides it,
         // else the read is `HOLE-IMPRECISE` (L §4.5)
-        let view = match self.input_view(m, input, &keys, Some(day), ctx)? {
+        let clocks = self.clocks(ctx, &input.id)?;
+        let view = match self.input_view(m, input, &keys, (Some(day), clocks), ctx)? {
             Err(h) => return Ok(Err(Value::Hole(h))),
             Ok(view) => view,
         };
@@ -605,7 +613,6 @@ impl Engine {
             Some(seen) => seen,
             None => input,
         };
-        let clocks = self.clocks(ctx, &input.id)?;
         let found = match past {
             // `since` reads only the day the latest rows began, which they share: one reading
             // per unit at a place of unit `any` is no tie for it (L §4.6 Readings); a reading

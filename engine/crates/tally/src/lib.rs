@@ -117,7 +117,8 @@ pub mod model {
 
     pub use decl::{
         BandEnd, BandInfo, BandRow, BindInfo, DefInfo, Domain, Fulfils, InputInfo, MoveInfo,
-        ObsLeg, Observation, PlaceInfo, Row, RowInstant, RuleVer, Table as BandTable, TimePos,
+        ObsLeg, Observation, PlaceInfo, Row, RowInstant, RowsHold, RuleVer, Table as BandTable,
+        TimePos,
     };
     pub use graph::{Graph, Mark, Node, NodeKind, ReadRole, Rel, Shift, Target};
     pub use ids::{
