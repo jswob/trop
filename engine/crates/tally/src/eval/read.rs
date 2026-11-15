@@ -39,18 +39,18 @@ type SameSide = (Result<(Value, String), Found>, Option<Day>);
 
 /// The row a `same` line states one with input `id`'s at `keys`: the other side's input and
 /// keys, the last such line's where several name it (refcore's `same_rows`). L §6.1, §5.19.
-fn same_row_of<'m>(m: &'m Reality, id: &str, keys: &[KeyVal]) -> Option<(&'m str, &'m [KeyVal])> {
+fn same_row_of(m: &Reality, id: &str, keys: &[KeyVal]) -> Option<(String, Vec<KeyVal>)> {
     let mut out = None;
     for pair in &m.sames {
         if let SamePair::Rows(a, ka, b, kb) = pair {
             if a == id && ka.as_slice() == keys {
-                out = Some((b.as_str(), kb.as_slice()));
+                out = Some((b, kb));
             } else if b == id && kb.as_slice() == keys {
-                out = Some((a.as_str(), ka.as_slice()));
+                out = Some((a, ka));
             }
         }
     }
-    out
+    out.map(|(other, other_keys)| (other.clone(), other_keys.clone()))
 }
 
 /// Which read past a row's span: `last(x, d)` or `since(x, d)` (L §4.6).
@@ -206,7 +206,7 @@ impl Engine {
         if !input.reading
             && let Some(other) = same_row_of(m, &input.id, keys)
         {
-            return self.read_same_rows(m, (input, keys), other, ctx, asked);
+            return self.read_same_rows(m, (input, keys), (&other.0, &other.1), ctx, asked);
         }
         let clocks = self.clocks(ctx, &input.id)?;
         #[cfg(feature = "counters")]
