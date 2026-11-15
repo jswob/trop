@@ -697,6 +697,10 @@ def self_test(checks):
         p = subprocess.run([sys.executable, '-I', '-B', T + 'm2/bank/to_tally.py', '--check'], capture_output=True,
                            text=True)
         say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])
+        # 8q. R7's long-horizon pins (P45): the table's shape; the runs are the gate's timing run's
+        p = subprocess.run([sys.executable, '-I', '-B', T + 'm2/bank/pins_long.py', '--check'], capture_output=True,
+                           text=True)
+        say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])
         # 9. U2 (4.5f): under fast, a check with no baseline runs on refcore (its cache entry is refcore's)
         nb = dict(fast, baseline='')
         _, r, _ = session([nb], checks, **dict(kw, runtimes=['pypy+fast']))
