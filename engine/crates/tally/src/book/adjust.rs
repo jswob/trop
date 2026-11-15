@@ -238,15 +238,7 @@ impl Engine {
         mv: &MoveInfo,
         (insts, cut): (&[Inst], Day),
     ) -> Result<(), Stop> {
-        let due = !mv.decision
-            && insts.iter().any(|i| {
-                matches!(i.status, Status::Past | Status::Hole | Status::None)
-                    && i.day
-                        .as_ref()
-                        .and_then(crate::walk::Dated::day)
-                        .is_some_and(|t| t < cut)
-                    && is_hole_booking(i)
-            });
+        let due = !mv.decision && insts.iter().any(|i| hole_booked_before(i, cut));
         if !due || self.adjust_active.contains(&(mv.id.clone(), cut)) {
             return Ok(());
         }
@@ -268,23 +260,14 @@ impl Engine {
         if answered.is_empty() {
             return;
         }
-        let swap = |list: &Rc<Vec<Inst>>| -> Rc<Vec<Inst>> {
-            let mut out = list.to_vec();
-            for inst in &mut out {
-                if let Some(a) = answered.iter().find(|a| a.id == inst.id) {
-                    a.clone_into(inst);
-                }
-            }
-            Rc::new(out)
-        };
         let key = (move_id.to_owned(), cut);
         if let Some(list) = self.plans.get(&key) {
-            let patched = swap(list);
+            let patched = with_answers(list, answered);
             self.plans.insert(key, patched);
         }
         for ((id, at, _), list) in &mut self.prefixes.plans {
             if id == move_id && *at == cut {
-                *list = swap(list);
+                *list = with_answers(list, answered);
             }
         }
     }
@@ -755,6 +738,27 @@ fn is_hole_leg(lg: &LegVal) -> bool {
 /// Whether a leg's amount is refused. E §5 step 1.
 fn is_refused_leg(lg: &LegVal) -> bool {
     matches!(lg.amount, Amount::Refused(_))
+}
+
+/// Whether an instance is a hole movement booked before cut `cut`: dated before it, past (or
+/// a hole, or none so far), its booking a hole (refcore's `hole0`). E §5 step 1.
+fn hole_booked_before(inst: &Inst, cut: Day) -> bool {
+    let day = inst.day.as_ref().and_then(crate::walk::Dated::day);
+    matches!(inst.status, Status::Past | Status::Hole | Status::None)
+        && day.is_some_and(|t| t < cut)
+        && is_hole_booking(inst)
+}
+
+/// A move's instance list with each instance a version answered replaced by its answer
+/// (refcore mutates the cached instance). E §5 step 1.
+fn with_answers(list: &Rc<Vec<Inst>>, answered: &[Inst]) -> Rc<Vec<Inst>> {
+    let mut out = list.to_vec();
+    for inst in &mut out {
+        if let Some(a) = answered.iter().find(|a| a.id == inst.id) {
+            a.clone_into(inst);
+        }
+    }
+    Rc::new(out)
 }
 
 /// Whether a booking is a hole movement: its existence or a leg's amount a hole, no leg's

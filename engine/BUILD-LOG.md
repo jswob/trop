@@ -3208,3 +3208,67 @@ Rulings: picks P46–P48 (`tmp/m2/auto-picks.md`); the fix's review `tmp/m2/revi
 - **Exceptions:** +0. No single-mutant proofs (gate 8's).
 - **Size:** in `engine/crates`, 119 added and 45 removed (164 changed) over the four commits.
 - **Check:** `check commit: green, 23 steps (81s)`, at this commit's tree.
+
+## 2026-11-15 M2 G5 `ledger`, first turn (issue #167; serves #114)
+
+Picks P1, P2, P22 (#173's interim for unit `any`), P42, P45, P46 and P49 (C5's and C7's reds reach G5 at its next turn) (`tmp/m2/auto-picks.md`). Probes in `tmp/m2/b/g5/` (`run.sh`, `bank.sh`: the quick binary against refcore on pypy). Refcore's own tests are copied to `rt/` (260) and `all/` (1 378) and run by `tools/rt.py`.
+
+- **Gate 8 first:** c209708d drops the 8 rows the list names: `walk/day.rs` `open_group` and `sign_anchor`; `walk/order.rs` `cycle_order` ×2; `walk/move_flows.rs` `leg_refused`; `take_back` ×3, now under `walk/readings.rs`.
+- **Commits:**
+  - 35979162: the split. The ledger's grouping, totals and order move to `book/ledger_order.rs`, byte-equal.
+  - ba6cc725: `residuals … by f`, and one ledger per unit at a place of unit `any`.
+  - 493e8aeb: an observed row's text attribute, `payee: "BIEDRONKA"`.
+  - e825a466: a leg of an instance a later version made exist.
+  - 552769ae: a version that answers a hole movement (E §5 step 1).
+  - 9db8c921: a hole-day binding whose `where` rules every member out.
+  - ce997697: a binding over uncertain movements under `with uncertain`.
+  - 58dd7cf0: the hole answer's measure is no walk read of an explanation (a regression of 552769ae, below).
+  - bdbdb925: a hole day after 9999-12-31 in the movement order.
+  - This entry.
+- **Turned green:**
+  - `goldens-ledger`: `goldens/bank_g4_residuals` (`g4_my_pay`, `g4_wife_pay`, `g4_rent`) and `goldens/bank_g4_by_cat` (`g4_by_cat`).
+  - `items-sweep`: `items/sweep/next_uncertain` (`nx`, `nx_unc`). It is on G6's list; the `with uncertain` corner turned it green.
+  - Every stored `goldens/bank_*` and `goldens/r7_*` vector is green: C4's bank halves G1–G5 and the pins to 2030. `to2036`, `to2050` and `to2056` wait for the user's ruling (P2).
+  - **Report line:** `milestone-report: M2: 20/24 green` before, `22/24` after. Still red: `m2_code_run_record` (held for #169) and `m2_items_explain` (G6).
+- **Byte-equal to refcore beyond T's vectors:**
+  - Ledger tests: `E6_3_residuals` (`back`, and `byp` by payee), `_after_end`, `_after_reading`, `_partly`, `_hole_day_matched`, `_adjustment`, `_adjustment_not_held`, `_tie_elsewhere`, `_ties_typed`, `_uncovered_and_unheld`, `E6_3_same_rows_*`.
+  - Booking tests: `L5_14_3_settle_adjusts_ends`, `L5_14_3_flows_move_settlement_span`, `L6_5_change5`, `L6_5_change3`, `L5_7_bind_hole_day`, `L5_14_with_uncertain`, `E4_1_hole_day_after_9999_12_31`.
+  - Matching only their `...` lines: `E6_3_residuals_unit_any`, `E6_3_residuals_hole_day`, `L6_5_change3_bare`.
+  - `t_mb5_lx`'s x1 (0.00 PLN), which `m1/vectors.tsv` leaves out as not built.
+- **Files:** new `book/ledger_order.rs` (K, the split). Changed: `book/` ledger, adjust, members (K); `ask/residuals.rs`; `eval/bindings.rs` (K); `walk/plan.rs` (K); `load/observed.rs`; `lib.rs`. Map line for ARCHITECTURE.md:
+  - `book/ledger_order.rs`: the residual ledger's groups (a month and a move, a field's value, `unexplained`, `?`), their totals and their order (E §6.3 Grouping, Totals, Order; L §8.1).
+- **Kernel functions touched:**
+  - `book/ledger_order.rs` (moved): `month_group`, `fig_add`, `fig_sub`, `qty_or_zero`, `abs`, `size_cmp`, `first_question`, `key_cmp`, `sorted_positions`, `merged`, `key_at`, `grouped`, `group_of`.
+  - `book/ledger.rs`: `ledger`, `ledger_obs`, `may_touch`, `instance_line`, `partly_text`, `adjustment_line`, `undated_line`, `after_run_line`, `balance_lines`, `balance_line`, `unexplained_line`, `flow_into`, `observed_sum`; new `Of::counts`, `Of::touches`, `ledger_units`, `at_place`, `move_group`, `obs_field`.
+  - `ask/residuals.rs`: `ledger_result`; new `group_lines`.
+  - `load/observed.rs`: `attr_value`.
+  - `book/adjust.rs`: `make`, `measured`, `leg_change`, `adjust_move`, `measure_move`, `measure_inst`; new `answer_holes`, `answer_hole_bookings`, `is_hole_booking`.
+  - `book/members.rs`: `leg_field`, `movement_members`, `unknown_day`, `movements_of`, `decided_members`; new `made_to_exist_leg`.
+  - `eval/bindings.rs`: `kind_values`; `empty_or_unknown`, now a method; new `may_hold`.
+  - `walk/plan.rs`: `move_instances`, `plan_list`, `status` (now `pub(crate)`), `Order::term`, `Term::rank`, `Term::cmp`; new `Term::End`.
+- **Spec questions met: 3; settled by existing rules 2; new 1.**
+  - (1) SQ8, `by f` over rows that lack f. Neither load nor refcore refuses it. The engine takes the plan's (a), E §6.3's fallback, as refcore does: a matched line groups by `move <id>`, an unexplained one by `unexplained`. New for 2.1.8: whether a `by f` over an input whose rows may lack f should be a load refusal.
+  - (2) Unit `any` balance lines. E §6.3 gives each unit's ledger the readings of that unit. Refcore gives every unit's ledger every reading, and refuses `RUN-DOMAIN` when a unitless reading (a hole or none) meets unit `any`. The engine follows the spec and P22's interim: a unitless reading row stands for each unit the place holds. No stored vector reaches the difference; it goes to #169/#173.
+  - (3) A version answering a hole movement. Refcore answers it only when something measures the move's adjustments, so an ask that reads the instances first sees the hole. E §5 step 1 says the instance stays a hole until a version answers it, whatever reads it, so the engine answers it where the move's instances are made. No stored vector reaches the difference.
+- **Run-time stops left, for G6's census:**
+  - A binding over movements with no day or span (`book/members.rs` `movement_members`). Load refuses it (`LOAD-ALIVE`) except for a key bind, which never ranges, and refcore has no path, so nothing reaches it.
+  - `flows` for a period or converted (3 refcore tests), a read with fewer or more keys than binds (3), and the rest of the census (`tmp/m2/b/g5/census2.txt`) are not G5's.
+- **Survivors moved or killed, for the next dispatch:**
+  - Row `book/members.rs` `movements_of` `replace match guard !ctx.unc with true`: caught by a single-mutant proof (below). The dispatch drops it.
+  - `decided_members`' four rows: the uncertain arm is built now, but `nx_unc` binds no decision, so they stay open.
+  - `leg_field`'s three rows: the made-exist read is built (e825a466), and its decision test moved to `made_to_exist_leg` (`if mv.decision`). `t_mb5_lx`'s x1, which `m1/vectors.tsv` leaves out as not built, would catch them once T stores it.
+  - `book/ledger.rs` `after_run_line` and `may_touch`: the functions now take the ledger's `Of`; their mutants and reasons are unchanged.
+- **Code no vector covers** (refcore's tests and probes only; for T):
+  - `by f` beyond the bank's texts: `byp`, a field no row agrees on, a text attribute.
+  - Unit `any` with balance lines and readings.
+  - `made_to_exist_leg` (`t_mb5_lx` x1 is ready).
+  - The hole answer (`L6_5_change5` e1, e3), at a prefix walk too, and its measure under `explain`.
+  - `may_hold` over things and over movements (`L5_7_bind_hole_day` `ruled_out`, `L6_5_change3` `old`), with a `where` that is a hole, none or a refusal.
+  - A hole day after 9999-12-31 (`E4_1_hole_day_after_9999_12_31`), and `Term::End` in a binding's order.
+- **Found on the way (for the coordinator; a rules matter):** `check quick`'s test step names the gating milestones' targets (`--test=m1_fixes` and the rest) beside `--workspace --tests`, but its run holds none of them: 280 tests across 18 binaries, none `s_*`, `m0_*` or `m1_*` (`engine/target/check-logs/tests.log`). So S, M0 and M1's tests run only in CI's `gating` step and in `mutants-local`'s baseline. That baseline caught a regression of 552769ae which `check quick` passed: `fixes/gate8/m2_g2_sum2` (`explain tot[2026-09]`) stopped not built, because measuring the move for a hole answer noted a walk read on the trace. 58dd7cf0 fixes it. At bdbdb925's tree the baseline passes all 499 tests (S, M0, M1 and M2's).
+- **P8-14:** `ok P8-14 counts(1w): def_misses 25312, days_stepped 926` (budget 30 400), as at S. The bank's 1 940 rows: each bank ask runs in 0.03–0.11 s at ≤ 45 MB on the quick binary, and the observation pass is computed once per cut (`book/observe.rs` `observations`, keyed by the cut).
+- **Single-mutant proofs:** `crates/tally/src/book/members.rs:516:42: replace match guard !ctx.unc with true in Engine::movements_of`: caught (`--next`, 95 tests selected). A second run's filter, for the new `Term` arm in `walk/plan.rs`, matched no mutant name; its baseline served as the regression run above.
+- **Exceptions:** +0 (`EXCEPTIONS.lock` unchanged). `check commit` found 1 report-only hit (a nested closure in `book/adjust.rs` `answer_hole_bookings`, and one in `answer_holes`). This entry's commit restructures them away into the named functions `hole_booked_before` and `with_answers`. The corner tests above, refcore's 260-test set and `m2_g2_sum2` answer as before.
+- **Size:** in `engine/crates`, 818 added and 470 removed over the nine commits. Apart from the split (35979162, 282 added and 260 removed, about 240 of them moved), that is 548 added and 222 removed: 0.55 k new against the plan's 1.8 k, and 0.26 k moved against its 0.4 k. The plan's C4/C5/C7 corners (≈ 700) haven't come yet, and the bank residue was green already. New file: `book/ledger_order.rs`, 264 lines; `book/ledger.rs` is 1 074.
+- **What G5's next turn takes:** C5's reds (H1–H5, H8, H9) and C7's (the three-way split, the fixed past) once tests/m2 is merged; P51 (`HOLE-SAME` names its rows in the `same` line's order); the review's fixes.
+- **Check:** `check commit: green, 23 steps (179s)`, at this commit's tree.
