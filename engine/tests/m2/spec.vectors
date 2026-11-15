@@ -5091,10 +5091,10 @@ version new
   pq = 2026-04-10 "s"
   pf = 2026-04-15 "s"
   go = false "s"
-,,1:0,268:d3: ?\"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of md\" (md)
+,,1:0,264:d3: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of md" (md)
   unfulfilled: md
   cut 2026-08-01
-d4: ?\"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of md\" (md)
+d4: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of md" (md)
   unfulfilled: md
   cut 2026-08-01
 ,21:spec/p60/sum_days_win,10:spec-sweep,30:run sum_days_win.tally --ask q,1010:18:sum_days_win.tally,983:model pw
@@ -5135,8 +5135,9 @@ version v
   opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
 
 ask q: sum(days_between(d0, dk[k]) for k in ks)
-,,1:0,113:q: ?\"date within window(2026-03-01, 2026-03-10) not precise enough for a term of sum\" (dk[a])
+,,1:0,164:q: ?"date within window(2026-03-01, 2026-03-10) not precise enough for a term of sum" (dk[a])
   cut 2026-04-25
+warning: WARN-UNREAD place wallet is read by nothing
 ,21:spec/p60/num_list_key,10:spec-sweep,30:run num_list_key.tally --ask q,642:18:num_list_key.tally,615:model pw
   tally 2
   on 2026-04-25
