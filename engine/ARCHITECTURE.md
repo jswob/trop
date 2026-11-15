@@ -486,6 +486,11 @@ refuses later, with another code or not at all (issues #72, #73, #75, and at M1 
   - F5 the written projection's common case (`walk/lows.rs`, P8-5, P8-M4), opened at M1:
     twin the projection's own walk (`Lows::Walk`), compared with the tree (`Lows::Tree`) on
     T's corpora by `m1_lows` and on F5's realities by `tally-cli/tests/walk_oracle.rs`.
+  - F6 the forks (`walk/fork.rs`, PERFORMANCE §2.5; P8-14 and the budget table's `F6-*`
+    rows, X's repeated walks and forks' counts), wired by M2's rules step before group G7
+    builds it: twin the unforked walk (`Forks::Off`), compared on every store and corpus by
+    `m2_forks` and on the builder's realities by `tally-cli/tests/fork_oracle.rs`; its
+    benchmark is X end to end, the `F6-*` rows through `tools/perf`.
 
 ## Where the next milestones plug in
 
