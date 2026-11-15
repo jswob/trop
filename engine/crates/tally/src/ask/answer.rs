@@ -503,11 +503,6 @@ fn ask_lines(
     days: Days,
     seen: &mut Seen,
 ) -> Result<Vec<String>, Stop> {
-    if ask.windows_each && matches!(ask.body, AskBody::Diff(_) | AskBody::Residuals(_)) {
-        // a diff's and a ledger's result is their set of lines (R8): split by the windows
-        // they meet, each sub-window's set, which no layout yet writes
-        return Err(Stop::NotBuilt("a diff's or a ledger's `windows each`"));
-    }
     let mut cut = m.on;
     let mut known_engine = None;
     if let Some(known) = &ask.known {
@@ -652,6 +647,13 @@ fn ask_body(
         engine.open_layer(m, inside)?;
         inside
     };
+    if ask.windows_each && matches!(ask.body, AskBody::Diff(_) | AskBody::Residuals(_)) {
+        if side.is_some() {
+            return Err(Stop::NotBuilt("a diff's `windows each` over two stacks"));
+        }
+        // a diff's and a ledger's result is their set of lines (R8), run per sub-window
+        return super::windows::each_set(m, ask, engine, (ctx, &pinned));
+    }
     match &ask.body {
         AskBody::Exprs(_)
         | AskBody::Check(..)

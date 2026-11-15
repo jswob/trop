@@ -21,11 +21,13 @@ use std::collections::{BTreeSet, VecDeque};
 use super::answer::{ask_pins_listed, env_text, form_line};
 use super::axes::{Axes, grouped};
 use super::check::Printed;
+use super::diff::diff_lines;
 use super::register::{check_register_lines, register_lines};
+use super::residuals::residual_lines;
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{Choice, Collected, Ctx, Engine, Entry, Env, Member, Met};
 use crate::model::Reality;
-use crate::syntax::{Ask, Stop};
+use crate::syntax::{Ask, AskBody, Stop};
 use crate::time::Day;
 
 /// The most day combinations one line's `windows each` runs: past it the line is refused
@@ -585,10 +587,7 @@ fn each_rows(
             .checked_add(done.len())
             .is_none_or(|n| n > EACH_CAP)
         {
-            return Err(Stop::Refused(Refusal::new(
-                Code::Run(Run::Limit),
-                "windows each over more than 20 000 day combinations".to_owned(),
-            )));
+            return Err(past_cap());
         }
         if !labels.iter().any(|w| w.id == new.id) {
             labels.push(new);
@@ -612,6 +611,91 @@ fn each_rows(
         nested(&labels, &done)?
     };
     Ok((rows, done, labels))
+}
+
+/// The lines of ask `ask`, a residual ledger or a diff, which states `windows each`: its set
+/// of lines (R8) run once per combination of the days the windows it meets can take, depth
+/// first, as a line's runs go ([`each_rows`]); the one set where every run prints the same
+/// lines, as the answer doesn't depend on the day (L §4.4), which is refcore's one run with
+/// each window at its first day (`answer_residuals`, `answer_diff` under `windows each`).
+///
+/// # Errors
+///
+/// A refusal a run meets; `RUN-LIMIT` past the cap; `NotBuilt` where two runs' sets differ:
+/// a set of lines split by sub-windows has no printed form yet.
+pub(super) fn each_set(
+    m: &Reality,
+    ask: &Ask,
+    engine: &mut Engine,
+    (ctx, pinned): (Ctx, &Collected),
+) -> Result<Vec<String>, Stop> {
+    let mut pending: VecDeque<Choice> = VecDeque::from([Vec::new()]);
+    let mut first: Option<Vec<String>> = None;
+    let mut runs: usize = 0;
+    while let Some(choice) = pending.pop_front() {
+        let outer = engine.each_met.replace(Vec::new());
+        let lines = set_inside(m, ask, engine, (ctx, pinned), &choice);
+        let met = core::mem::replace(&mut engine.each_met, outer)
+            .ok_or_else(|| invariant("a set's windows met taken while it ran"))?;
+        let lines = lines?;
+        if let Some(new) = met.into_iter().find(|w| !names(&choice, &w.id)) {
+            for day in new.days.iter().rev() {
+                let mut next = choice.clone();
+                next.push((new.id.clone(), *day));
+                pending.push_front(next);
+            }
+            if pending.len().checked_add(runs).is_none_or(|n| n > EACH_CAP) {
+                return Err(past_cap());
+            }
+            continue;
+        }
+        runs = runs
+            .checked_add(1)
+            .ok_or_else(|| invariant("a set's runs past the integers"))?;
+        match &first {
+            None => first = Some(lines),
+            Some(set) if *set == lines => {}
+            Some(_) => {
+                return Err(Stop::NotBuilt(
+                    "a ledger's or a diff's `windows each` whose lines differ by sub-window",
+                ));
+            }
+        }
+    }
+    first.ok_or_else(|| invariant("windows each with no run"))
+}
+
+/// The set of lines of ask `ask`, a residual ledger or a diff, in context `ctx` under choice
+/// `choice`, its layer open while it is evaluated. L §4.4, E §6.3, L §5.18.
+fn set_inside(
+    m: &Reality,
+    ask: &Ask,
+    engine: &mut Engine,
+    (ctx, pinned): (Ctx, &Collected),
+    choice: &Choice,
+) -> Result<Vec<String>, Stop> {
+    let inside = under(engine, ask, ctx, choice)?;
+    engine.open_layer(m, inside)?;
+    let lines = match &ask.body {
+        AskBody::Residuals(r) => residual_lines(m, ask, r, engine, (inside, pinned)),
+        AskBody::Diff(diff) => diff_lines(m, (ask, diff), engine, (inside, pinned)),
+        AskBody::Exprs(_)
+        | AskBody::Check(..)
+        | AskBody::Solve(_)
+        | AskBody::Explain(_)
+        | AskBody::InputsOf(_)
+        | AskBody::ReadersOf(_) => Err(invariant("a set of lines of an ask with one line")),
+    };
+    engine.end_layer(inside.layer, lines.as_ref().err())?;
+    lines
+}
+
+/// `RUN-LIMIT` past [`EACH_CAP`] day combinations (pick P28, #174, interim).
+fn past_cap() -> Stop {
+    Stop::Refused(Refusal::new(
+        Code::Run(Run::Limit),
+        "windows each over more than 20 000 day combinations".to_owned(),
+    ))
 }
 
 /// Whether choice `choice` names a day of every window in `all`, and of no other.
