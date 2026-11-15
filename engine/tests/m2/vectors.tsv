@@ -131,7 +131,6 @@ fixes/g5/p4_when_none	fixes-sweep		engine/tests/m2/fixes/g5	engine/tests/m2/fixe
 fixes/g6/pa1_q6q7	fixes-sweep		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/pa1.tally	q6 q7		-
 fixes/g6/obsrow_o5	fixes-sweep		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/obsrow.tally	o5		-
 fixes/p60/flows_for	fixes-sweep		engine/tests/m2/fixes/p60	engine/tests/m2/fixes/p60/flows_for.tally			sweep
-fixes/p60/flows_conv	fixes-sweep		engine/tests/m2/fixes/p60	engine/tests/m2/fixes/p60/flows_conv.tally			sweep
 fixes/p60/wa_for	fixes-sweep		engine/tests/m2/fixes/p60	engine/tests/m2/fixes/p60/wa_for.tally			-
 fixes/p60/pos_key	fixes-sweep		engine/tests/m2/fixes/p60	engine/tests/m2/fixes/p60/pos_key.tally			sweep
 fixes/p60/check_keys	fixes-sweep		engine/tests/m2/fixes/p60	engine/tests/m2/fixes/p60/check_keys.tally			sweep
