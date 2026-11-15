@@ -22,7 +22,7 @@ use crate::model::{
     money_num, num_money,
 };
 use crate::num::Num;
-use crate::syntax::{Certainty, Stop};
+use crate::syntax::{Certainty, Expr, Stop};
 use crate::time::{Day, PeriodKind};
 use core::cmp::Ordering;
 use std::collections::BTreeMap;
@@ -167,7 +167,7 @@ pub(super) fn day_window(m: &Reality, w: &crate::model::Window) -> Result<Option
 }
 
 /// A leg of an instance, evaluated (refcore's `Leg`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Eq)]
 pub struct LegVal {
     /// The leg's name.
     pub name: String,
@@ -181,6 +181,36 @@ pub struct LegVal {
     pub unit: Option<String>,
     /// Its day.
     pub day: Dated,
+    /// Where a hole amount was read: a `partial` ask line reads it again for the holes it is
+    /// linear in (L §5.18 Partial answers; refcore's `Leg.src`).
+    pub src: Option<Box<HoleSrc>>,
+}
+
+/// Two legs are the same leg when they book the same: where a hole amount was read is how a
+/// `partial` line reads it again, not what the leg books (E §9 invariant 5, L §5.18).
+impl PartialEq for LegVal {
+    /// The same name, places, amount, unit and day, wherever a hole amount was read. L §5.14
+    /// Legs, E §9 invariant 5.
+    fn eq(&self, other: &LegVal) -> bool {
+        self.name == other.name
+            && self.from == other.from
+            && self.to == other.to
+            && self.amount == other.amount
+            && self.unit == other.unit
+            && self.day == other.day
+    }
+}
+
+/// A hole amount's expression, the scope and the context it was read in (refcore's
+/// `Leg.src`). L §5.18 Partial answers.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct HoleSrc {
+    /// The leg's amount as written.
+    pub amount: Expr,
+    /// Its instance's scope.
+    pub env: Env,
+    /// The context it was read in.
+    pub ctx: Ctx,
 }
 
 /// The booked plan amounts of one timeline, by (instance, booking cut, the day a walk up to a
@@ -1010,6 +1040,7 @@ impl Engine {
                 amount: Amount::Refused(err.clone()),
                 unit: None,
                 day: day.clone(),
+                src: None,
             })
             .collect();
         Ok(Some(legs))
@@ -1098,7 +1129,7 @@ impl Engine {
     pub(super) fn read_or_refused(
         &mut self,
         m: &Reality,
-        e: &crate::syntax::Expr,
+        e: &Expr,
         env: &Env,
         ctx: Ctx,
     ) -> Result<Option<Value>, Stop> {
@@ -1454,6 +1485,7 @@ fn imprecise_body(first: Body, other: &Body, hole: &Hole) -> Body {
         src.iter()
             .map(|lg| LegVal {
                 amount: Amount::Hole(hole.clone()),
+                src: None,
                 ..lg.clone()
             })
             .collect()

@@ -13,11 +13,13 @@ use super::expr::{literal, typed};
 use super::state::{Ctx, Env, num_stop, refuse};
 use crate::base::Run;
 use crate::model::{
-    Class, Code, IndexInfo, KeyVal, MvRef, MvSrc, Number, Reality, Ty, Unit, Value, currency_id,
-    currency_unit, num_money,
+    Class, Code, IndexInfo, KeyVal, MvRef, MvSrc, Number, Reality, Shown, Ty, Unit, Value,
+    currency_id, currency_unit, num_money,
 };
 use crate::num::{Money, Num};
-use crate::syntax::{AddOp, Agg, AggFn, Bind, Call, Domain as Over, Expr, MulOp, Postfix, Stop};
+use crate::syntax::{
+    AddOp, Agg, AggFn, Bind, Call, Domain as Over, Expr, MulOp, Postfix, Stop, Type,
+};
 use crate::time::{Day, Period};
 
 /// The class of a term the run can't see stops here.
@@ -414,8 +416,8 @@ fn mv_field_sample(m: &Reality, kind: &str, name: &str) -> Result<Option<Value>,
             return Ok(Some(leg_sample(unit_sample(m, &unit)?)));
         }
     }
-    if m.kind_attrs(kind).iter().any(|(a, _)| a == name) {
-        return Ok(None);
+    if let Some((_, ty)) = m.kind_attrs(kind).into_iter().find(|(a, _)| a == name) {
+        return attr_sample(m, (kind, name), ty.as_ref());
     }
     match name {
         "day" => {
@@ -430,11 +432,62 @@ fn mv_field_sample(m: &Reality, kind: &str, name: &str) -> Result<Option<Value>,
         return Ok(None);
     }
     for (id, k) in m.kinds.entries() {
-        if k.spec == crate::model::KindSpec::Event && has_leg(m, id, name) {
+        if k.spec != crate::model::KindSpec::Event {
+            continue;
+        }
+        if has_leg(m, id, name) {
             return Ok(Some(leg_sample(dyn_sample())));
+        }
+        if let Some((_, ty)) = m.kind_attrs(id).into_iter().find(|(a, _)| a == name) {
+            return attr_sample(m, (id, name), ty.as_ref());
         }
     }
     Ok(None)
+}
+
+/// A sample of attribute `name` of event kind `kind`, of its declared type: an attribute
+/// written without one is read at run, a bare figure, but an adjustment's `adjusts`, which is
+/// a movement (check3.py's `movement_field`); none for a type S's samples don't take.
+/// L §5.7 (attributes), §5.14.3 (`adjusts`, `change`), §3.1.
+fn attr_sample(
+    m: &Reality,
+    (kind, name): (&str, &str),
+    ty: Option<&Type>,
+) -> Result<Option<Value>, Stop> {
+    let events = m.subtree("events");
+    let Some(ty) = ty else {
+        let adjusts = name == "adjusts" && m.subtree("adjustments").contains(kind);
+        return Ok(Some(if adjusts {
+            mv_sample("events")
+        } else {
+            dyn_sample()
+        }));
+    };
+    let declared = match ty {
+        Type::Money(cur) => Ty::Money(cur.clone()),
+        Type::Key(k) if events.contains(k) => return Ok(Some(mv_sample(k))),
+        Type::Key(k) => Ty::Key(k.clone()),
+        Type::Num(None) => Ty::Num(Unit::one(), Shown::Plain),
+        Type::Num(Some(unit)) => {
+            let mut terms = Vec::with_capacity(unit.terms.len());
+            for t in &unit.terms {
+                let (true, Some(power)) = (m.units.contains(&t.base), t.power.to_i64()) else {
+                    return Ok(None);
+                };
+                terms.push((t.base.clone(), power));
+            }
+            Ty::Num(Unit::make(terms).map_err(|_| unseen())?, Shown::Plain)
+        }
+        Type::Word(word) => match word.as_str() {
+            "int" => Ty::Int,
+            "bool" => Ty::Bool,
+            "text" => Ty::Text,
+            "date" => Ty::Date,
+            _ => return Ok(None),
+        },
+        Type::Dist(_) | Type::Record(_) => return Ok(None),
+    };
+    ty_sample(m, &declared)
 }
 
 /// Whether event kind `kind` has a leg named `name`. L §5.14.

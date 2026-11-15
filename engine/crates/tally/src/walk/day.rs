@@ -20,7 +20,7 @@ use super::agenda::{Act, Mv};
 use super::plan::{Amount, Dated, DayWindow, End, Inst, LegVal, Status, invariant, qty_value};
 use super::point::At;
 use super::readings::Broke;
-use super::state::{ALL, Change, Ent, Group, Progress, Taken, Today, Walk, WalkObs};
+use super::state::{ALL, Change, Ent, Group, HoleLeg, Progress, Taken, Today, Walk, WalkObs};
 use crate::base::{Code, Refusal, Run, Warn};
 use crate::book::{Member, stated_same};
 use crate::eval::{Collected, Engine, Entry, GUARDED};
@@ -424,13 +424,17 @@ impl Engine {
                 let walk = self.walk_mut(id)?;
                 let unit = lg.unit.clone().unwrap_or_else(|| ALL.to_owned());
                 walk.worth_add(&unit, None)?;
-                for (end, on_end) in [(&lg.from, mask.from), (&lg.to, mask.to)] {
+                for (end, on_end, into) in [(&lg.from, mask.from, false), (&lg.to, mask.to, true)] {
                     let Some(p) = end.place().filter(|_| on_end) else {
                         continue;
                     };
                     let mut ent = Ent::new(at, Change::Hole(h.clone()));
                     ent.mv = Some(movement.to_owned());
                     ent.leg = Some(lg.name.clone());
+                    ent.hole_leg = Some(HoleLeg {
+                        into,
+                        src: lg.src.clone(),
+                    });
                     ent.reg = reg.to_vec();
                     ent.window = leg_window(movement, lg);
                     ent.coll = Some(coll.clone());

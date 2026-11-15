@@ -17,10 +17,30 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::base::{Code, Refusal, Run, Warn};
 use crate::eval::{Collected, Engine, Rows};
-use crate::model::{Fulfils, KeyVal, Reality, Span, Value, World};
-use crate::syntax::Stop;
+use crate::model::{Fulfils, KeyVal, MvRef, MvSrc, Reality, Span, Value, World};
+use crate::syntax::{Expr, Key, Stop};
 use crate::time::Day;
 use crate::walk::{Amount, Dated, End, Inst, LegVal, Term, invariant};
+
+/// The id an observed row is read by, as written: `r5` of `bank[r5]` (refcore's
+/// `resolve_text` of the read's one key). L §5.19.
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for keys load refuses (`LOAD-KEY`: an observation is read by its id).
+fn row_written(keys: &[Key]) -> Result<String, Stop> {
+    if let [Key::Expr(e)] = keys {
+        if let Expr::Name(name) = e.unbracketed() {
+            return Ok(name.clone());
+        }
+        if let Expr::Lit(lit) = e.unbracketed() {
+            return Ok(lit.text());
+        }
+    }
+    Err(invariant(
+        "an observation read by other than its id: load refuses it",
+    ))
+}
 
 /// An observation the cut sees (refcore's `ObsMv`). L §5.19.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -117,6 +137,39 @@ impl Engine {
             .ok_or_else(|| invariant("observations just kept"))
     }
 
+    /// A read of observed input `input` by a row's id, `bank[r5]`: the observation cut `cut`
+    /// sees with that id as a movement, its row recorded as read; `none` where the cut sees
+    /// none (refcore's `m_e_obsrow`). L §5.19 (observation rows are keyed by their ids).
+    ///
+    /// # Errors
+    ///
+    /// The observations' (`observations`); `ENGINE-INVARIANT` for a key load refuses
+    /// (`LOAD-KEY`: an observation is read by its id).
+    pub(crate) fn observed_row(
+        &mut self,
+        m: &Reality,
+        (input, keys): (&str, &[Key]),
+        cut: Day,
+    ) -> Result<Value, Stop> {
+        let id = format!("{input}[{}]", row_written(keys)?);
+        let rows = self.observations(m, cut)?;
+        let Some(o) = rows.iter().find(|o| o.id == id) else {
+            return Ok(Value::None);
+        };
+        let mut met = Collected::default();
+        met.versions.insert(o.version.clone());
+        if let Some(seen) = o.coll.rows.get(&id) {
+            met.rows.insert(id.clone(), seen.clone());
+        }
+        let day = Some(o.day);
+        self.absorb(&met);
+        Ok(Value::Mv(Box::new(MvRef {
+            id,
+            day,
+            src: MvSrc::Obs,
+        })))
+    }
+
     /// The versions cut `cut` sees that cover each place, with the span each covers
     /// (refcore's `coverage`). L §5.19 Coverage.
     ///
@@ -205,7 +258,7 @@ impl Engine {
     pub(crate) fn covered_call(
         &mut self,
         m: &Reality,
-        (place, span): (&crate::syntax::Expr, &crate::syntax::Span),
+        (place, span): (&Expr, &crate::syntax::Span),
         env: &crate::eval::Env,
         ctx: crate::eval::Ctx,
     ) -> Result<Value, Stop> {
@@ -775,6 +828,7 @@ fn observation(o: &crate::model::Observation) -> Result<Obs, Stop> {
             amount: Amount::Qty(lg.amount.clone()),
             unit: Some(lg.unit.clone()),
             day: Dated::Day(lg.day.unwrap_or(day)),
+            src: None,
         })
         .collect();
     let mut coll = Collected::default();

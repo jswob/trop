@@ -85,7 +85,23 @@ impl Engine {
             return Ok(v);
         }
         let left_out = self.holder_left_out(m)?;
-        let id = self.proj_walk(m, ctx, start, left_out)?;
+        let id = self.proj_walk(m, ctx, (start, day), left_out)?;
+        let value = self.projected_bal(m, id, (place, unit), (start, day), (read, ctx));
+        self.end_projection(id, value.as_ref().err())?;
+        value
+    }
+
+    /// [`Engine::projection`]'s read of its walk `id` from day `start`: x at the end of `day`,
+    /// the moves it leaves out listed, its uncertain movements counted under `with uncertain`
+    /// (refcore's `proj_bal`). L §5.14.1, E §4.3.
+    fn projected_bal(
+        &mut self,
+        m: &Reality,
+        id: usize,
+        (place, unit): (&str, &str),
+        (start, day): (Day, Day),
+        (read, ctx): (&Bal, Ctx),
+    ) -> Result<Value, Stop> {
         if let Some(at) = ctx.at {
             self.note_read(at.walk, place, Sees::AtPoint)?;
         }
@@ -220,10 +236,25 @@ impl Engine {
         (start, days): (Day, Days),
         (read, ctx): (&Low, Ctx),
     ) -> Result<Vec<Value>, Stop> {
+        let left_out = self.holder_left_out(m)?;
+        let id = self.proj_walk(m, ctx, (start, days.last), left_out)?;
+        let balances = self.days_read(m, id, (place, unit), (start, days), (read, ctx));
+        self.end_projection(id, balances.as_ref().err())?;
+        balances
+    }
+
+    /// [`Engine::projected_days`]' read of its walk `id`: each day's end balance, the walk
+    /// walked through that day first (refcore's `m_e_low`, its `proj` form). L §5.14.1, E §4.3.
+    fn days_read(
+        &mut self,
+        m: &Reality,
+        id: usize,
+        (place, unit): (&str, &str),
+        (start, days): (Day, Days),
+        (read, ctx): (&Low, Ctx),
+    ) -> Result<Vec<Value>, Stop> {
         // the read's own clause, else the ask line's, which no decision's context carries
         let uncertain = read.proj.uncertain || ctx.unc;
-        let left_out = self.holder_left_out(m)?;
-        let id = self.proj_walk(m, ctx, start, left_out)?;
         if let Some(at) = ctx.at {
             self.note_read(at.walk, place, Sees::AtPoint)?;
         }
@@ -287,7 +318,7 @@ impl Engine {
         through: Day,
     ) -> Result<usize, Stop> {
         let left_out = self.holder_left_out(m)?;
-        let id = self.proj_walk(m, ctx, t, left_out)?;
+        let id = self.proj_walk(m, ctx, (t, through), left_out)?;
         self.walk_projection(m, id, through)?;
         Ok(id)
     }
@@ -349,29 +380,72 @@ impl Engine {
         }
     }
 
-    /// The walk of a projection from day `t`, from where [`Engine::proj_base`] starts it; its
-    /// cut min(t, K) (refcore's `proj_walk`). E §4.3 step 1, L §5.14.1.
+    /// The walk of a projection from day `t` through day `through`, from where
+    /// [`Engine::proj_base`] starts it; its cut min(t, K): one a read holds now that plans
+    /// that far, else a new one; taken by the read until [`Engine::end_projection`] (refcore's
+    /// `proj_walk`). E §4.3 step 1, L §5.14.1; P §2.3, §3.5.
     fn proj_walk(
         &mut self,
         m: &Reality,
         ctx: Ctx,
-        t: Day,
+        (t, through): (Day, Day),
         left_out: BTreeSet<String>,
     ) -> Result<usize, Stop> {
         let (cut, base, point) = self.proj_base(m, ctx, t)?;
         let c = t.min(cut);
         let key: ProjKey = (base, point, c, left_out);
-        if let Some(id) = self.proj_walks.get(&key) {
-            return Ok(*id);
-        }
-        let after = self.after_days(m, c)?;
-        let walk = self.continued(m, (base, point), (c, t), (key.3.clone(), &after))?;
-        let id = self.walks.len();
-        self.walks.push(walk);
-        #[cfg(feature = "counters")]
-        self.counts.add(crate::Unit::Walk);
-        self.proj_walks.insert(key, id);
+        let held = self.proj_walks.get(&key).copied();
+        let id = match held {
+            Some(id) if self.walk(id)?.plans_through() >= through => id,
+            Some(_) | None => {
+                let after = self.after_days(m, c)?;
+                let walk = self.continued(m, (base, point), (c, t, through), (&key.3, &after))?;
+                let id = self.walks.len();
+                self.walks.push(walk);
+                #[cfg(feature = "counters")]
+                self.counts.add(crate::Unit::Walk);
+                self.proj_walks.insert(key, id);
+                id
+            }
+        };
+        let p = self
+            .walk_mut(id)?
+            .proj
+            .as_mut()
+            .ok_or_else(|| invariant("a projection's walk with no projection"))?;
+        p.readers = p
+            .readers
+            .checked_add(1)
+            .ok_or_else(|| invariant("a projection's readers past 32 bits"))?;
         Ok(id)
+    }
+
+    /// A projection's read of walk `id` ended, with `stop` if it stopped: when no other read
+    /// holds the walk it is freed, and its key with it, its memory released as its scope ends;
+    /// a read cut short past the counted depth or given up for a guarded cell keeps it, to walk
+    /// on when read again (P §3.5, §1 item 9, D1-6; E §4.3; R-16).
+    fn end_projection(&mut self, id: usize, stop: Option<&Stop>) -> Result<(), Stop> {
+        let resumes = match stop {
+            Some(Stop::Deep) => true,
+            Some(Stop::NotBuilt(why)) => *why == crate::eval::GUARDED,
+            Some(Stop::Refused(_)) | None => false,
+        };
+        let walking = self.walking.contains(&id);
+        let walk = self.walk_mut(id)?;
+        let p = walk
+            .proj
+            .as_mut()
+            .ok_or_else(|| invariant("a projection's walk with no projection"))?;
+        p.readers = p
+            .readers
+            .checked_sub(1)
+            .ok_or_else(|| invariant("a projection's read ended twice"))?;
+        if resumes || walking || p.readers > 0 {
+            return Ok(());
+        }
+        *walk = walk.freed();
+        self.proj_walks.retain(|_, held| *held != id);
+        Ok(())
     }
 
     /// A new projection's walk of cut `c` from day `t`, continuing walk `base` after `point`:
@@ -382,8 +456,8 @@ impl Engine {
         &self,
         m: &Reality,
         (base, point): (usize, At),
-        (c, t): (Day, Day),
-        (left_out, after): (BTreeSet<String>, &crate::book::AfterDays),
+        (c, t, through): (Day, Day, Day),
+        (left_out, after): (&BTreeSet<String>, &crate::book::AfterDays),
     ) -> Result<Walk, Stop> {
         let from = self.walk(base)?;
         let mut states: BTreeMap<(String, String), St> = BTreeMap::new();
@@ -406,11 +480,13 @@ impl Engine {
         let projected = Projected {
             base,
             point,
-            left_out,
+            left_out: left_out.clone(),
             counted: BTreeMap::new(),
             levels,
             root,
             world: from.world,
+            through,
+            readers: 0,
         };
         Ok(Walk::projection(c, (t, m.end), projected, first_reading))
     }

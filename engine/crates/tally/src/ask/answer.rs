@@ -504,9 +504,6 @@ fn ask_lines(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<
         // they meet, each sub-window's set, which no layout yet writes
         return Err(Stop::NotBuilt("a diff's or a ledger's `windows each`"));
     }
-    if ask.partial {
-        return Err(Stop::NotBuilt("a partial answer"));
-    }
     let mut cut = m.on;
     let mut known_engine = None;
     if let Some(known) = &ask.known {
@@ -646,6 +643,8 @@ fn ask_body(
     } else {
         plain
     };
+    // and its `partial` (L §5.18 Partial answers)
+    let ctx = if ask.partial { ctx.partial() } else { ctx };
     engine.enter_timeline(m, ctx)?;
     let ctx = if ask.pins.is_empty() {
         ctx
@@ -929,6 +928,12 @@ fn line_values(m: &Reality, items: &[Item]) -> Result<String, Stop> {
 /// A value as a line prints it: by its type, a key outside its index and a refusal as
 /// `refused: <code> <message>` (refcore's `fmt_value`). L §5.18, §8.4.
 pub(super) fn item_text(m: &Reality, item: &Item) -> Result<String, Stop> {
+    if let Item::Value(Value::Hole(h)) = item
+        && let Some(text) = crate::eval::partial_text(m, h)?
+    {
+        // a `partial` line's hole: its known part and the holes it is linear in (L §5.18)
+        return Ok(text);
+    }
     match item {
         Item::Refused(r) => Ok(format!("refused: {}", r.text())),
         Item::Value(Value::OutKey { index, text }) => Ok(format!(

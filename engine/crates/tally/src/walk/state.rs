@@ -26,7 +26,7 @@ use std::rc::Rc;
 
 use super::agenda::{Act, Mv, Reading};
 use super::order::{CycleItem, Run};
-use super::plan::{Amount, Dated, DayWindow, Inst, LegVal, Order, invariant};
+use super::plan::{Amount, Dated, DayWindow, HoleSrc, Inst, LegVal, Order, invariant};
 use super::point::{At, Step};
 use crate::base::{Refusal, Warn};
 use crate::eval::{Collected, Entry};
@@ -142,8 +142,34 @@ pub struct Ent {
     /// A pad's flow at its reading's own place, where the reset books it: the gap, a number
     /// or a hole, which `flows` of the place counts (E §6.1; L §5.19).
     pub flow: Option<Amount>,
+    /// A hole leg's direction at the place and where its amount was read, which a `partial`
+    /// line reads again (refcore's `sgn`, `leg`; L §5.18).
+    pub hole_leg: Option<HoleLeg>,
     /// The state after it.
     pub st: St,
+}
+
+/// A hole leg as a `partial` line reads a balance through it: into the place or out of it, and
+/// where its amount was read, none where nothing read it (refcore's `Ent.sgn`, `Leg.src`).
+/// L §5.18 Partial answers, §5.19.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct HoleLeg {
+    /// Whether it enters the place (`+`) or leaves it (`-`).
+    pub into: bool,
+    /// Where its amount was read.
+    pub src: Option<Box<HoleSrc>>,
+}
+
+/// What a `partial` line reads of a balance that is a hole: the known part booked since the
+/// last reset, each hole leg's direction and source since, and whether those legs' questions
+/// are all the balance's own (refcore's `m_partial_bal`, its walk side). L §5.18, §5.19.
+pub(crate) struct PartialLegs {
+    /// The known part.
+    pub known: Num,
+    /// Each hole leg's direction and where its amount was read.
+    pub legs: Vec<(bool, HoleSrc)>,
+    /// Whether the legs' questions are the balance's holes, every one.
+    pub all_met: bool,
 }
 
 impl Ent {
@@ -159,6 +185,7 @@ impl Ent {
             window: None,
             coll: None,
             flow: None,
+            hole_leg: None,
             st: St::of(None),
         }
     }
@@ -395,6 +422,11 @@ pub struct Projected {
     pub root: (Day, Day),
     /// The world the chain's walks are walked in (L §6.4).
     pub world: World,
+    /// The last day its read walks it through, d: it counts the movements dated t through d
+    /// and plans none after (E §4.3 step 2; P §2.3, one walk of its window).
+    pub through: Day,
+    /// The reads that hold it now; the walk is freed when the last of them ends (P §3.5).
+    pub readers: u32,
 }
 
 impl Projected {
@@ -428,6 +460,28 @@ impl Projected {
 }
 
 impl Walk {
+    /// The last day the walk plans a movement on: a projection's read's last day, else its
+    /// end (E §4.3 step 2, §4.1).
+    #[must_use]
+    pub fn plans_through(&self) -> Day {
+        self.proj
+            .as_ref()
+            .map_or(self.end, |p| p.through.min(self.end))
+    }
+
+    /// The walk freed when its scope ends, a projection's read: it keeps nothing, and a read
+    /// of it is refused as the invariant it breaks (P §3.5, D1-6; E §4.3).
+    #[must_use]
+    pub fn freed(&self) -> Walk {
+        Walk {
+            progress: Progress::Failed(
+                invariant("a projection's walk read after its read ended"),
+                None,
+            ),
+            ..Walk::new(self.cut, (self.start, self.end), self.world)
+        }
+    }
+
     /// A projection's walk of cut `cut` from `start` to `end`, continuing `projected` in its
     /// world, each place's first reading as `first_reading` gives it; nothing planned yet.
     /// E §4.3.
@@ -584,6 +638,62 @@ impl Walk {
             Some(e) => (e.st.clone(), Some(i)),
             None => (self.default_state(m, place, unit), None),
         }
+    }
+
+    /// What a `partial` line reads of a place's balance at `at` in one unit: its known part
+    /// and the hole legs booked since its last reset; none where the balance is a hole of
+    /// another making (an anchor, a refusal, a window, a question no reading answers, a hole
+    /// with no leg's amount to read again) (refcore's `m_partial_bal`, its walk side).
+    /// L §5.18 Partial answers, §5.19.
+    #[must_use]
+    pub(crate) fn partial_legs(
+        &self,
+        m: &Reality,
+        place: &str,
+        unit: &str,
+        at: At,
+    ) -> Option<PartialLegs> {
+        let log = self.logs.get(&(place.to_owned(), unit.to_owned()))?;
+        let (st, Some(i)) = self.state(m, place, unit, at) else {
+            return None;
+        };
+        if st.bad.is_some() || st.perm.is_some() || !st.imp.is_empty() {
+            return None;
+        }
+        let known = st.val?;
+        let from = match st.rst {
+            Some(r) => r.checked_add(1)?,
+            None if self.proj.is_some() || self.default_state(m, place, unit).hole.is_some() => {
+                return None;
+            }
+            None => 0,
+        };
+        let mut legs = Vec::new();
+        let mut seen: Vec<Option<&Hole>> = Vec::new();
+        for e in log.ents.iter().take(i.checked_add(1)?).skip(from) {
+            let Change::Hole(h) = &e.change else {
+                continue;
+            };
+            let HoleLeg {
+                into,
+                src: Some(src),
+            } = e.hole_leg.as_ref()?
+            else {
+                return None;
+            };
+            legs.push((*into, HoleSrc::clone(src)));
+            seen.push(Some(h));
+        }
+        let all_met = match (spread(&seen), &st.hole) {
+            (Some(legs_holes), Some(own)) => legs_holes.same_questions(own),
+            (None, None) => true,
+            (Some(_), None) | (None, Some(_)) => false,
+        };
+        Some(PartialLegs {
+            known,
+            legs,
+            all_met,
+        })
     }
 
     /// A place's state at `at` with what holds for all its units and for the whole walk: their

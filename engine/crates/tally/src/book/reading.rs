@@ -731,6 +731,7 @@ fn make_pad(r: &Reading, other: &str, gap: &Amount, coll: Collected, at: At) -> 
             amount,
             unit: Some(r.unit.clone()),
             day: Dated::Day(at.day),
+            src: None,
         },
         coll,
     })

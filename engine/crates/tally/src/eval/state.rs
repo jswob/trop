@@ -48,6 +48,9 @@ pub struct Ctx {
     /// reads reach takes (L §5.18). A timeline's and a decision's contexts are made anew
     /// without it, so no decision sees it (L §5.14: "the clause is the read's").
     pub unc: bool,
+    /// The ask line's `partial`: a hole carries its known part and the holes it is linear in
+    /// (L §5.18). A timeline's and a decision's contexts are made anew without it.
+    pub partial: bool,
     /// The pins and wording pins in force, as one interned layer (E §3.2; `context.rs`). A
     /// timeline's and a decision's contexts take the timeline's: the pins the walk reaches.
     pub layer: Layer,
@@ -84,8 +87,18 @@ impl Ctx {
             cut,
             at: None,
             unc: false,
+            partial: false,
             layer: Layer::BASE,
             world: World::Whole,
+        }
+    }
+
+    /// The context of a `partial` ask line (L §5.18 Partial answers).
+    #[must_use]
+    pub fn partial(self) -> Ctx {
+        Ctx {
+            partial: true,
+            ..self
         }
     }
 

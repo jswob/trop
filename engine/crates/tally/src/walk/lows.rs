@@ -1049,7 +1049,7 @@ version rise
     }
 
     /// Ask `id`'s value, read by an engine reading a projection's common case as `lows` says;
-    /// the projection walks it made and the trees it built.
+    /// the projection walks it made (each freed when its read ended) and the trees it built.
     fn read(m: &Reality, id: &str, lows: Lows) -> (Value, usize, usize) {
         let ask = m.asks.iter().find(|a| a.id == id).expect("the ask");
         let AskBody::Exprs(exprs) = &ask.body else {
@@ -1063,7 +1063,16 @@ version rise
         ctx.unc = ask.uncertain;
         engine.enter_timeline(m, ctx).expect("its timeline");
         let v = engine.value(m, expr, &Env::empty(), ctx).expect("a value");
-        (v, engine.proj_walks.len(), engine.trees.built.len())
+        let made = engine
+            .walks
+            .len()
+            .checked_sub(engine.main_walks.len())
+            .expect("the main walks among the walks");
+        assert!(
+            engine.proj_walks.is_empty(),
+            "{id}: no walk kept past its read"
+        );
+        (v, made, engine.trees.built.len())
     }
 
     #[test]
