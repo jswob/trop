@@ -1765,6 +1765,17 @@ fixes/gate8/m2_d512_mod_open3	fixes-gate8		engine/tests/m2/fixes/gate8/d512	engi
 fixes/gate8/m2_d512_mod_read	fixes-gate8		engine/tests/m2/fixes/gate8/d512	engine/tests/m2/fixes/gate8/d512/mod_read.tally			-
 fixes/gate8/m2_d512_pads_run	fixes-gate8		engine/tests/m2/fixes/gate8/d512	engine/tests/m2/fixes/gate8/d512/pads_run.tally			-
 fixes/gate8/m2_d512_any_units	fixes-gate8		engine/tests/m2/fixes/gate8/d512	engine/tests/m2/fixes/gate8/d512/any_units.tally			-
+fixes/gate8/m2_g6_pa1	fixes-gate8		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/pa1.tally	q1 q2 q3 q4 q5 q6b q8 q9 q10 q11 q12 q13 q14		-
+fixes/gate8/m2_g6_obsrow	fixes-gate8		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/obsrow.tally	o1 o2 o3 o4 o6 o7 o8 o9 o10		-
+fixes/gate8/m2_g6_kbs2	fixes-gate8		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/kbs2.tally			-
+fixes/gate8/m2_g6_kae	fixes-gate8		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/kae.tally			-
+fixes/gate8/m2_g6_kin2	fixes-gate8		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/kin2.tally			-
+fixes/gate8/m2_g6_attr0	fixes-gate8		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/attr0.tally			-
+fixes/gate8/m2_g6_rt_f8_partial_round_plain	fixes-gate8		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/rt_f8_partial_round_plain.tally			-
+fixes/gate8/m2_g6_rt_l5_18_partial_balance	fixes-gate8		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/rt_l5_18_partial_balance.tally			-
+fixes/gate8/m2_g6_rt_l5_18_partial_balance_when	fixes-gate8		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/rt_l5_18_partial_balance_when.tally			-
+fixes/gate8/m2_g6_rt_l5_18_q7_partial	fixes-gate8		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/rt_l5_18_q7_partial.tally			-
+fixes/gate8/m2_g6_rt_w_b_2_partial_sum_known_terms	fixes-gate8		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/rt_w_b_2_partial_sum_known_terms.tally			-
 r1/l8_reads_first_last_stop	fixes-r1		engine/tests/m1/fixes/r1/l8_reads_first_last_stop	engine/tests/m1/fixes/r1/l8_reads_first_last_stop/m.tally	a b c		R1
 r1/l8_reads_things_ties_order_then_where	fixes-r1		engine/tests/m1/fixes/r1/l8_reads_things_ties_order_then_where	engine/tests/m1/fixes/r1/l8_reads_things_ties_order_then_where/m.tally	t1 t2 t3 t4 t5		R1
 r1/l8_reads_ties_second_term_tied_only	fixes-r1		engine/tests/m1/fixes/r1/l8_reads_ties_second_term_tied_only	engine/tests/m1/fixes/r1/l8_reads_ties_second_term_tied_only/m.tally	a b		R1

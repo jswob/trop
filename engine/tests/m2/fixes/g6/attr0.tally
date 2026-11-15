@@ -1,0 +1,41 @@
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6 vectors: G6's attribute's 0 (L §5.11): a sum over no members of an int, money and num attribute and of adjustments' change takes 0 in its type"
+source plan "plan"
+unit PLN: currency minor 0.01
+kind groceries: transfers
+  attr n: int
+  attr fee: money PLN
+  attr share: num
+input g_amt: money PLN
+input g_dom: int
+input g_fee: money PLN
+input g_last: date
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+move groc[m in months]: groceries
+  on day_of(m, g_dom)
+  when m <= month_of(g_last)
+  at start_of(m)
+  leg cash from konto to world amount g_amt
+  attr n = g_dom
+  attr fee = g_fee
+  attr share = g_dom / g_dom
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  g_amt = 500.00 PLN "plan"
+  g_dom = 5 "plan"
+  g_fee = 2.00 PLN "plan"
+  g_last = 2026-03-31 "plan"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "wyciąg"
+ask a1: sum(t.n for t in groceries over 2026-07)
+ask a2: sum(t.fee for t in groceries over 2026-07)
+ask a3: sum(t.share for t in groceries over 2026-07)
+ask a4: sum(t.fee for t in groceries over 2026-02)
+ask a5: sum(a.change for a in adjustments over 2026-07)
+ask a6: sum(t.n for t in groceries over 2026-01 .. 2026-03)

@@ -1,0 +1,55 @@
+model m
+  tally 2
+  on 2026-01-01
+  start 2025-01-01
+  end 2025-12-31
+  note "T, M2 G6 vectors: G6's partial answers (L §5.18): sums, differences, products and quotients by known numbers, a product of two holes, x / 0, a sum's hole terms, a partial balance with a hole leg and a difference of two; q6 and q7 are held (spec/g6/pa1_q6q7)"
+unit DUK: currency minor 0.01
+source s "s"
+index ks = [a, b, c]
+place w: accounts DUK lives 2025-01-01..
+place shop: outside lives 2025-01-01..
+input sp[m in months]: money DUK question "spent?"
+input two: int question "two?"
+input x: int question "x?"
+input y: int question "y?"
+input z[k in ks]: int question "z?"
+input f[k in ks]: bool question "f?"
+version o
+  cite s
+  known 2025-01-01
+  opening[w] = 100.00 DUK at 2025-01-01 start
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  sp[*] = 0.00 DUK "the other months"
+  sp[2025-03] = ?"What was spent in March?" "March"
+  sp[2025-05] = ?"May?" "May"
+  two = 2 "two"
+  x = ?"x?" "x"
+  y = ?"y?" "y"
+  z[a] = 5 "a"
+  z[c] = 7 "c"
+  f[a] = true "a"
+  f[c] = true "c"
+def aa: int = x * two + y at reader
+def ii: int = x + aa - y at reader
+move spent[m in months]: transfers
+  on end_of(m) - 1
+  leg cash from w to shop amount sp[m] * two
+ask q1: aa law 2025-12-31 partial
+ask q2: -(x - y) * two law 2025-12-31 partial
+ask q3: x * y + 1 law 2025-12-31 partial
+ask q4: min(x, 0) + 1 law 2025-12-31 partial
+ask q5: two * x - x * two law 2025-12-31 partial
+ask q6: sum(z[k] * two for k in ks where f[k]) law 2025-12-31 partial
+ask q6b: sum(z[k] * two for k in ks) law 2025-12-31 partial
+ask q7: -(min(x, 0)) + 1 law 2025-12-31 partial
+ask q8: bal(w, 2025-12-31) law 2025-12-31 partial
+ask q9: bal(w, 2025-12-31) - bal(w, 2025-02-01) law 2025-12-31 partial
+ask q10: aa, ii law 2025-12-31 partial
+ask q11: aa law 2025-12-31
+ask q12: x / 0 law 2025-12-31 partial
+ask q13: x / two - y / two law 2025-12-31 partial
+ask q14: bal(w, 2025-04-01) law 2025-12-31 partial

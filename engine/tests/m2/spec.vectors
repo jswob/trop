@@ -4698,4 +4698,184 @@ e2: 750.00 PLN
   unfulfilled: pay[2026-01]
   unfulfilled: pay[2026-02]
   cut 2026-06-30
+,17:spec/g5/p4_adj_e2,11:spec-ledger,25:run p4_adj.tally --ask e2,998:12:p4_adj.tally,977:model hh
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input amt[m in months]: money PLN question "Ile?"
+input dom: int
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to world amount amt[m]
+
+version v1
+  cite s
+  governs 2026..
+  known 2026-01-01
+  dom = 10 "s"
+  amt[2026-01..2026-02] = 100.00 PLN "s"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+
+version v2
+  cite s
+  governs 2026..
+  known 2026-03-01
+  amt[2026-02] = 200.00 PLN "s"
+
+ask b1: bal(konto, 2026-02-28)
+ask b2: bal(konto, 2026-02-28) as known 2026-02-15
+ask f1: flows(konto, 2026-02-01 .. 2026-02-28)
+ask a1: pay[2026-02].cash.amount
+ask n1: count(a in adjustments over 2026)
+ask s1: sum(a.change for a in adjustments over 2026)
+ask e1: explain bal(konto, 2026-02-28)
+ask e2: explain pay[2026-02].cash.amount
+,,1:0,530:e2: 100.00 PLN
+  [1] row v1:dom = 10
+      version v1, source s, "s", locator "s", governs 2026-01-01.., known 2026-01-01
+  [2] row v1:amt[2026-01..2026-02] = 100.00 PLN
+      version v1, source s, "s", locator "s", governs 2026-01-01.., known 2026-01-01
+  (v1:dom: see [1])
+  (v1:amt[2026-01..2026-02]: see [2])
+  (v1:dom: see [1])
+  (v1:dom: see [1])
+  (v1:dom: see [1])
+  (v1:dom: see [1])
+  (v1:dom: see [1])
+  (v1:dom: see [1])
+  (v1:dom: see [1])
+  (v1:dom: see [1])
+  (v1:dom: see [1])
+  (v1:dom: see [1])
+  cut 2026-06-30
+,16:spec/g6/pa1_q6q7,10:spec-sweep,25:run pa1.tally --ask q6 q7,1971:9:pa1.tally,1953:model m
+  tally 2
+  on 2026-01-01
+  start 2025-01-01
+  end 2025-12-31
+  note "T, M2 G6 vectors: G6's partial answers (L §5.18): sums, differences, products and quotients by known numbers, a product of two holes, x / 0, a sum's hole terms, a partial balance with a hole leg and a difference of two; q6 and q7 are held (spec/g6/pa1_q6q7)"
+unit DUK: currency minor 0.01
+source s "s"
+index ks = [a, b, c]
+place w: accounts DUK lives 2025-01-01..
+place shop: outside lives 2025-01-01..
+input sp[m in months]: money DUK question "spent?"
+input two: int question "two?"
+input x: int question "x?"
+input y: int question "y?"
+input z[k in ks]: int question "z?"
+input f[k in ks]: bool question "f?"
+version o
+  cite s
+  known 2025-01-01
+  opening[w] = 100.00 DUK at 2025-01-01 start
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  sp[*] = 0.00 DUK "the other months"
+  sp[2025-03] = ?"What was spent in March?" "March"
+  sp[2025-05] = ?"May?" "May"
+  two = 2 "two"
+  x = ?"x?" "x"
+  y = ?"y?" "y"
+  z[a] = 5 "a"
+  z[c] = 7 "c"
+  f[a] = true "a"
+  f[c] = true "c"
+def aa: int = x * two + y at reader
+def ii: int = x + aa - y at reader
+move spent[m in months]: transfers
+  on end_of(m) - 1
+  leg cash from w to shop amount sp[m] * two
+ask q1: aa law 2025-12-31 partial
+ask q2: -(x - y) * two law 2025-12-31 partial
+ask q3: x * y + 1 law 2025-12-31 partial
+ask q4: min(x, 0) + 1 law 2025-12-31 partial
+ask q5: two * x - x * two law 2025-12-31 partial
+ask q6: sum(z[k] * two for k in ks where f[k]) law 2025-12-31 partial
+ask q6b: sum(z[k] * two for k in ks) law 2025-12-31 partial
+ask q7: -(min(x, 0)) + 1 law 2025-12-31 partial
+ask q8: bal(w, 2025-12-31) law 2025-12-31 partial
+ask q9: bal(w, 2025-12-31) - bal(w, 2025-02-01) law 2025-12-31 partial
+ask q10: aa, ii law 2025-12-31 partial
+ask q11: aa law 2025-12-31
+ask q12: x / 0 law 2025-12-31 partial
+ask q13: x / two - y / two law 2025-12-31 partial
+ask q14: bal(w, 2025-04-01) law 2025-12-31 partial
+,,1:0,120:q6: ?"f?" (f[b]) ?"z?" (z[b])
+  law date 2025-12-31, cut 2026-01-01
+q7: ?"x?" (x)
+  law date 2025-12-31, cut 2026-01-01
+,17:spec/g6/obsrow_o5,10:spec-sweep,25:run obsrow.tally --ask o5,2129:12:obsrow.tally,2107:model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6 vectors: G6's observed row read by its id (L §5.19): the row, a leg, its day, its fulfils, explain and inputs-of of its attribute, a sum over no member; o5 is held (spec/g6/obsrow_o5)"
+
+source plan "plan"
+source bk "bank"
+unit PLN: currency minor 0.01
+kind groceries: transfers
+  attr cat: text
+input bank: observed
+input g_amt: money PLN
+input g_dom: int
+input g_cat: text
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+move groc[m in months]: groceries
+  on day_of(m, g_dom)
+  at start_of(m)
+  leg cash from konto to world amount g_amt
+  attr cat = g_cat
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  g_amt = 500.00 PLN "plan"
+  g_dom = 5 "plan"
+  g_cat = "plan" "plan"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "wyciąg"
+
+version statement_02
+  cite bk
+  governs 2026-02..2026-03
+  known 2026-04-02
+  covers konto
+  pad konto from unexplained
+  bank[r1] = (on: 2026-02-05, kind: groceries, leg cash from konto to world amount 300.00 PLN, cat: "food", fulfils: groc[2026-02]) "l1"
+  bank[r2] = (on: 2026-02-06, kind: groceries, leg cash from konto to world amount 250.00 PLN, cat: "food", fulfils: groc[2026-02]) "l2"
+  bank[r3] = (on: 2026-03-05, kind: groceries, leg cash from konto to world amount 300.00 PLN, cat: "food", fulfils: groc[2026-03]) "l3"
+  bank[r4] = (on: 2026-03-06, kind: groceries, leg cash from konto to world amount 250.00 PLN, cat: "home", fulfils: groc[2026-03]) "l4"
+  bank[r5] = (on: 2026-03-07, kind: groceries, leg cash from konto to world amount 5.00 PLN, cat: "home") "l5"
+  stated[konto] = 8 000.00 PLN at 2026-03-31 end "saldo"
+
+
+
+
+ask o1: bank[r9]
+ask o2: bank[r5].cash.amount
+ask o3: bank[r5]
+ask o4: bank[r1].day
+ask o5: bank[r5].cat as known 2026-03-01
+ask o6: explain bank[r5].cat
+ask o7: inputs-of bank[r5].cat
+ask o8: sum(t.cash.amount for t in groceries over 2026-07)
+ask o9: bank[r1].fulfils
+ask o10: count(t in groceries over 2026-03 where t == bank[r4])
+,,1:0,81:o5: refused: RUN-NONE bank[r5] is none here: a field read of it
+  cut 2026-03-01
 ,

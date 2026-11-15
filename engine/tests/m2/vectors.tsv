@@ -128,6 +128,8 @@ fixes/g5/p2c_rows	fixes-sweep		engine/tests/m2/fixes/g5	engine/tests/m2/fixes/g5
 fixes/g5/p2d_rows	fixes-sweep		engine/tests/m2/fixes/g5	engine/tests/m2/fixes/g5/p2d.tally	c3		sweep
 fixes/g5/p4_hole_none	fixes-sweep		engine/tests/m2/fixes/g5	engine/tests/m2/fixes/g5/p4_hole.tally	s1		sweep
 fixes/g5/p4_when_none	fixes-sweep		engine/tests/m2/fixes/g5	engine/tests/m2/fixes/g5/p4_when.tally	s1		sweep
+fixes/g6/pa1_q6q7	fixes-sweep		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/pa1.tally	q6 q7		-
+fixes/g6/obsrow_o5	fixes-sweep		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/obsrow.tally	o5		-
 fixes/g5/a1_alone	fixes-ledger		engine/tests/m2/fixes/g5	engine/tests/m2/fixes/g5/a1_alone.tally	t3		ledger
 fixes/g5/a1_noprefix	fixes-ledger		engine/tests/m2/fixes/g5	engine/tests/m2/fixes/g5/a1_noprefix.tally	t1		ledger
 fixes/g5/a1_prefix	fixes-ledger		engine/tests/m2/fixes/g5	engine/tests/m2/fixes/g5/a1_prefix.tally	t3		ledger
@@ -143,3 +145,4 @@ fixes/g5/p4_inp_e3	fixes-ledger		engine/tests/m2/fixes/g5	engine/tests/m2/fixes/
 fixes/g5/p4_wexp_e3	fixes-ledger		engine/tests/m2/fixes/g5	engine/tests/m2/fixes/g5/p4_wexp.tally	e3		ledger
 fixes/g5/p4_hole_e2	fixes-ledger		engine/tests/m2/fixes/g5	engine/tests/m2/fixes/g5/p4_hole.tally	e2		ledger
 fixes/gate8/d512_hole_ans	fixes-ledger		engine/tests/m2/fixes/gate8/d512	engine/tests/m2/fixes/gate8/d512/hole_ans.tally			ledger
+fixes/g5/p4_adj_e2	fixes-ledger		engine/tests/m2/fixes/g5	engine/tests/m2/fixes/g5/p4_adj.tally	e2		-

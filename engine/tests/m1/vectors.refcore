@@ -237063,6 +237063,930 @@ version st
     2026-03 unexplained: model 0.00 PLN, observed 7.00 PLN, difference 7.00 PLN
       unexplained bank[r1] on 2026-03-12: observed 7.00 PLN
   cut 2026-04-10
+,21:fixes/gate8/m2_g6_pa1,11:fixes-gate8,64:run pa1.tally --ask q1 q2 q3 q4 q5 q6b q8 q9 q10 q11 q12 q13 q14,1971:9:pa1.tally,1953:model m
+  tally 2
+  on 2026-01-01
+  start 2025-01-01
+  end 2025-12-31
+  note "T, M2 G6 vectors: G6's partial answers (L §5.18): sums, differences, products and quotients by known numbers, a product of two holes, x / 0, a sum's hole terms, a partial balance with a hole leg and a difference of two; q6 and q7 are held (spec/g6/pa1_q6q7)"
+unit DUK: currency minor 0.01
+source s "s"
+index ks = [a, b, c]
+place w: accounts DUK lives 2025-01-01..
+place shop: outside lives 2025-01-01..
+input sp[m in months]: money DUK question "spent?"
+input two: int question "two?"
+input x: int question "x?"
+input y: int question "y?"
+input z[k in ks]: int question "z?"
+input f[k in ks]: bool question "f?"
+version o
+  cite s
+  known 2025-01-01
+  opening[w] = 100.00 DUK at 2025-01-01 start
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  sp[*] = 0.00 DUK "the other months"
+  sp[2025-03] = ?"What was spent in March?" "March"
+  sp[2025-05] = ?"May?" "May"
+  two = 2 "two"
+  x = ?"x?" "x"
+  y = ?"y?" "y"
+  z[a] = 5 "a"
+  z[c] = 7 "c"
+  f[a] = true "a"
+  f[c] = true "c"
+def aa: int = x * two + y at reader
+def ii: int = x + aa - y at reader
+move spent[m in months]: transfers
+  on end_of(m) - 1
+  leg cash from w to shop amount sp[m] * two
+ask q1: aa law 2025-12-31 partial
+ask q2: -(x - y) * two law 2025-12-31 partial
+ask q3: x * y + 1 law 2025-12-31 partial
+ask q4: min(x, 0) + 1 law 2025-12-31 partial
+ask q5: two * x - x * two law 2025-12-31 partial
+ask q6: sum(z[k] * two for k in ks where f[k]) law 2025-12-31 partial
+ask q6b: sum(z[k] * two for k in ks) law 2025-12-31 partial
+ask q7: -(min(x, 0)) + 1 law 2025-12-31 partial
+ask q8: bal(w, 2025-12-31) law 2025-12-31 partial
+ask q9: bal(w, 2025-12-31) - bal(w, 2025-02-01) law 2025-12-31 partial
+ask q10: aa, ii law 2025-12-31 partial
+ask q11: aa law 2025-12-31
+ask q12: x / 0 law 2025-12-31 partial
+ask q13: x / two - y / two law 2025-12-31 partial
+ask q14: bal(w, 2025-04-01) law 2025-12-31 partial
+,,1:0,1234:q1: 2 × ?"x?" (x) + 1 × ?"y?" (y)
+  law date 2025-12-31, cut 2026-01-01
+q2: -2 × ?"x?" (x) + 2 × ?"y?" (y)
+  law date 2025-12-31, cut 2026-01-01
+q3: ?"x?" (x) ?"y?" (y)
+  law date 2025-12-31, cut 2026-01-01
+q4: ?"x?" (x)
+  law date 2025-12-31, cut 2026-01-01
+q5: 0 × ?"x?" (x)
+  law date 2025-12-31, cut 2026-01-01
+q6b: 24 + 2 × ?"z?" (z[b])
+  law date 2025-12-31, cut 2026-01-01
+q8: 100.00 DUK + -2 × ?"May?" (sp[2025-05]) + -2 × ?"What was spent in March?" (sp[2025-03])
+  unfulfilled: spent[2025-03]
+  unfulfilled: spent[2025-05]
+  law date 2025-12-31, cut 2026-01-01
+q9: 0.00 DUK + -2 × ?"May?" (sp[2025-05]) + -2 × ?"What was spent in March?" (sp[2025-03])
+  unfulfilled: spent[2025-03]
+  unfulfilled: spent[2025-05]
+  law date 2025-12-31, cut 2026-01-01
+q10: (2 × ?"x?" (x) + 1 × ?"y?" (y), 3 × ?"x?" (x) + 0 × ?"y?" (y))
+  law date 2025-12-31, cut 2026-01-01
+q11: ?"x?" (x) ?"y?" (y)
+  law date 2025-12-31, cut 2026-01-01
+q12: refused: RUN-DIV division by zero
+  law date 2025-12-31, cut 2026-01-01
+q13: 0.5 × ?"x?" (x) + -0.5 × ?"y?" (y)
+  law date 2025-12-31, cut 2026-01-01
+q14: 100.00 DUK + -2 × ?"What was spent in March?" (sp[2025-03])
+  unfulfilled: spent[2025-03]
+  law date 2025-12-31, cut 2026-01-01
+,24:fixes/gate8/m2_g6_obsrow,11:fixes-gate8,50:run obsrow.tally --ask o1 o2 o3 o4 o6 o7 o8 o9 o10,2129:12:obsrow.tally,2107:model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6 vectors: G6's observed row read by its id (L §5.19): the row, a leg, its day, its fulfils, explain and inputs-of of its attribute, a sum over no member; o5 is held (spec/g6/obsrow_o5)"
+
+source plan "plan"
+source bk "bank"
+unit PLN: currency minor 0.01
+kind groceries: transfers
+  attr cat: text
+input bank: observed
+input g_amt: money PLN
+input g_dom: int
+input g_cat: text
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+move groc[m in months]: groceries
+  on day_of(m, g_dom)
+  at start_of(m)
+  leg cash from konto to world amount g_amt
+  attr cat = g_cat
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  g_amt = 500.00 PLN "plan"
+  g_dom = 5 "plan"
+  g_cat = "plan" "plan"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "wyciąg"
+
+version statement_02
+  cite bk
+  governs 2026-02..2026-03
+  known 2026-04-02
+  covers konto
+  pad konto from unexplained
+  bank[r1] = (on: 2026-02-05, kind: groceries, leg cash from konto to world amount 300.00 PLN, cat: "food", fulfils: groc[2026-02]) "l1"
+  bank[r2] = (on: 2026-02-06, kind: groceries, leg cash from konto to world amount 250.00 PLN, cat: "food", fulfils: groc[2026-02]) "l2"
+  bank[r3] = (on: 2026-03-05, kind: groceries, leg cash from konto to world amount 300.00 PLN, cat: "food", fulfils: groc[2026-03]) "l3"
+  bank[r4] = (on: 2026-03-06, kind: groceries, leg cash from konto to world amount 250.00 PLN, cat: "home", fulfils: groc[2026-03]) "l4"
+  bank[r5] = (on: 2026-03-07, kind: groceries, leg cash from konto to world amount 5.00 PLN, cat: "home") "l5"
+  stated[konto] = 8 000.00 PLN at 2026-03-31 end "saldo"
+
+
+
+
+ask o1: bank[r9]
+ask o2: bank[r5].cash.amount
+ask o3: bank[r5]
+ask o4: bank[r1].day
+ask o5: bank[r5].cat as known 2026-03-01
+ask o6: explain bank[r5].cat
+ask o7: inputs-of bank[r5].cat
+ask o8: sum(t.cash.amount for t in groceries over 2026-07)
+ask o9: bank[r1].fulfils
+ask o10: count(t in groceries over 2026-03 where t == bank[r4])
+,,1:0,331:o1: none
+  cut 2026-10-20
+o2: 5.00 PLN
+  cut 2026-10-20
+o3: bank[r5]
+  cut 2026-10-20
+o4: 2026-02-05
+  cut 2026-10-20
+o6: "home"
+  cut 2026-10-20
+o7:
+  bank[r5] (source bk "bank", locator "l5")
+  cut 2026-10-20
+o8: 500.00 PLN
+  unfulfilled: groc[2026-07]
+  cut 2026-10-20
+o9: groc[2026-02]
+  cut 2026-10-20
+o10: 1
+  cut 2026-10-20
+,22:fixes/gate8/m2_g6_kbs2,11:fixes-gate8,14:run kbs2.tally,2171:10:kbs2.tally,2151:model hh
+  tally 2
+  on 2025-06-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6 vectors: G6's clocks: K before S (#182, today's answer, both engines): an observation dated in [K, E] whose version is known before K"
+
+source plan "plan"
+source bk "bank"
+unit PLN: currency minor 0.01
+kind groceries: transfers
+  attr cat: text
+input bank: observed
+input g_amt: money PLN
+input g_dom: int
+input g_cat: text
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+move groc[m in months]: groceries
+  on day_of(m, g_dom)
+  at start_of(m)
+  leg cash from konto to world amount g_amt
+  attr cat = g_cat
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2025-01-01
+  g_amt = 500.00 PLN "plan"
+  g_dom = 5 "plan"
+  g_cat = "plan" "plan"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "wyciąg"
+
+version statement_02
+  cite bk
+  governs 2026-02..2026-03
+  known 2025-05-01
+  covers konto
+  pad konto from unexplained
+  bank[r1] = (on: 2026-02-05, kind: groceries, leg cash from konto to world amount 300.00 PLN, cat: "food", fulfils: groc[2026-02]) "l1"
+  bank[r2] = (on: 2026-02-06, kind: groceries, leg cash from konto to world amount 250.00 PLN, cat: "food", fulfils: groc[2026-02]) "l2"
+  bank[r3] = (on: 2026-03-05, kind: groceries, leg cash from konto to world amount 300.00 PLN, cat: "food", fulfils: groc[2026-03]) "l3"
+  bank[r4] = (on: 2026-03-06, kind: groceries, leg cash from konto to world amount 250.00 PLN, cat: "home", fulfils: groc[2026-03]) "l4"
+  bank[r5] = (on: 2026-03-07, kind: groceries, leg cash from konto to world amount 5.00 PLN, cat: "home") "l5"
+  stated[konto] = 8 000.00 PLN at 2026-03-31 end "saldo"
+
+ask k1: bal(konto, 2026-12-31)
+ask k2: bal(konto, 2026-03-31)
+ask k3: cut
+ask k4: sum(t.cash.amount for t in groceries over 2026-03)
+ask k5: bal(konto, 2027-01-05)
+ask k6: bal(konto, 2025-12-31)
+ask k7: flows(konto, 2026-02)
+ask k10: count(t in groceries over 2026-02)
+ask k11: bank[r5]
+ask k13: bal(konto, 2026-12-31) as known 2025-06-01
+ask k14: groc[2026-02].cash.amount
+ask k15: sum(t.cash.amount for t in groceries over 2026)
+,,1:0,5771:k1: 5 000.00 PLN
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-01-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-04-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-05-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-06-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-07-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-08-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-09-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-10-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-11-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-12-01
+  held: g_cat = "plan" (plan_2026), read for 2026-01-01
+  held: g_cat = "plan" (plan_2026), read for 2026-04-01
+  held: g_cat = "plan" (plan_2026), read for 2026-05-01
+  held: g_cat = "plan" (plan_2026), read for 2026-06-01
+  held: g_cat = "plan" (plan_2026), read for 2026-07-01
+  held: g_cat = "plan" (plan_2026), read for 2026-08-01
+  held: g_cat = "plan" (plan_2026), read for 2026-09-01
+  held: g_cat = "plan" (plan_2026), read for 2026-10-01
+  held: g_cat = "plan" (plan_2026), read for 2026-11-01
+  held: g_cat = "plan" (plan_2026), read for 2026-12-01
+  held: g_dom = 5 (plan_2026), read for 2026-01-01
+  held: g_dom = 5 (plan_2026), read for 2026-04-01
+  held: g_dom = 5 (plan_2026), read for 2026-05-01
+  held: g_dom = 5 (plan_2026), read for 2026-06-01
+  held: g_dom = 5 (plan_2026), read for 2026-07-01
+  held: g_dom = 5 (plan_2026), read for 2026-08-01
+  held: g_dom = 5 (plan_2026), read for 2026-09-01
+  held: g_dom = 5 (plan_2026), read for 2026-10-01
+  held: g_dom = 5 (plan_2026), read for 2026-11-01
+  held: g_dom = 5 (plan_2026), read for 2026-12-01
+  cut 2025-06-01
+k10: 2
+  cut 2025-06-01
+k11: bank[r5]
+  cut 2025-06-01
+k13: 5 000.00 PLN
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-01-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-04-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-05-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-06-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-07-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-08-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-09-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-10-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-11-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-12-01
+  held: g_cat = "plan" (plan_2026), read for 2026-01-01
+  held: g_cat = "plan" (plan_2026), read for 2026-04-01
+  held: g_cat = "plan" (plan_2026), read for 2026-05-01
+  held: g_cat = "plan" (plan_2026), read for 2026-06-01
+  held: g_cat = "plan" (plan_2026), read for 2026-07-01
+  held: g_cat = "plan" (plan_2026), read for 2026-08-01
+  held: g_cat = "plan" (plan_2026), read for 2026-09-01
+  held: g_cat = "plan" (plan_2026), read for 2026-10-01
+  held: g_cat = "plan" (plan_2026), read for 2026-11-01
+  held: g_cat = "plan" (plan_2026), read for 2026-12-01
+  held: g_dom = 5 (plan_2026), read for 2026-01-01
+  held: g_dom = 5 (plan_2026), read for 2026-04-01
+  held: g_dom = 5 (plan_2026), read for 2026-05-01
+  held: g_dom = 5 (plan_2026), read for 2026-06-01
+  held: g_dom = 5 (plan_2026), read for 2026-07-01
+  held: g_dom = 5 (plan_2026), read for 2026-08-01
+  held: g_dom = 5 (plan_2026), read for 2026-09-01
+  held: g_dom = 5 (plan_2026), read for 2026-10-01
+  held: g_dom = 5 (plan_2026), read for 2026-11-01
+  held: g_dom = 5 (plan_2026), read for 2026-12-01
+  cut 2025-06-01
+k14: 500.00 PLN
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-02-01
+  held: g_cat = "plan" (plan_2026), read for 2026-02-01
+  held: g_dom = 5 (plan_2026), read for 2026-02-01
+  cut 2025-06-01
+k15: 6 105.00 PLN
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-01-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-04-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-05-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-06-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-07-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-08-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-09-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-10-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-11-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-12-01
+  held: g_cat = "plan" (plan_2026), read for 2026-01-01
+  held: g_cat = "plan" (plan_2026), read for 2026-04-01
+  held: g_cat = "plan" (plan_2026), read for 2026-05-01
+  held: g_cat = "plan" (plan_2026), read for 2026-06-01
+  held: g_cat = "plan" (plan_2026), read for 2026-07-01
+  held: g_cat = "plan" (plan_2026), read for 2026-08-01
+  held: g_cat = "plan" (plan_2026), read for 2026-09-01
+  held: g_cat = "plan" (plan_2026), read for 2026-10-01
+  held: g_cat = "plan" (plan_2026), read for 2026-11-01
+  held: g_cat = "plan" (plan_2026), read for 2026-12-01
+  held: g_dom = 5 (plan_2026), read for 2026-01-01
+  held: g_dom = 5 (plan_2026), read for 2026-04-01
+  held: g_dom = 5 (plan_2026), read for 2026-05-01
+  held: g_dom = 5 (plan_2026), read for 2026-06-01
+  held: g_dom = 5 (plan_2026), read for 2026-07-01
+  held: g_dom = 5 (plan_2026), read for 2026-08-01
+  held: g_dom = 5 (plan_2026), read for 2026-09-01
+  held: g_dom = 5 (plan_2026), read for 2026-10-01
+  held: g_dom = 5 (plan_2026), read for 2026-11-01
+  held: g_dom = 5 (plan_2026), read for 2026-12-01
+  cut 2025-06-01
+k2: 9 500.00 PLN
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-01-01
+  held: g_cat = "plan" (plan_2026), read for 2026-01-01
+  held: g_dom = 5 (plan_2026), read for 2026-01-01
+  cut 2025-06-01
+k3: 2025-06-01
+  cut 2025-06-01
+k4: 555.00 PLN
+  cut 2025-06-01
+k5: ?"after the run's end" (konto)
+  cut 2025-06-01
+k6: ?"before the run's start" (konto)
+  cut 2025-06-01
+k7: 0.00 PLN
+  cut 2025-06-01
+,21:fixes/gate8/m2_g6_kae,11:fixes-gate8,13:run kae.tally,2285:9:kae.tally,2267:model hh
+  tally 2
+  on 2027-02-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6 vectors: G6's clocks: K after E, every day past; bal after E HOLE-POSTRUN, before S HOLE-PRERUN"
+
+source plan "plan"
+source bk "bank"
+unit PLN: currency minor 0.01
+kind groceries: transfers
+  attr cat: text
+input bank: observed
+input g_amt: money PLN
+input g_dom: int
+input g_cat: text
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+move groc[m in months]: groceries
+  on day_of(m, g_dom)
+  at start_of(m)
+  leg cash from konto to world amount g_amt
+  attr cat = g_cat
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2025-01-01
+  g_amt = 500.00 PLN "plan"
+  g_dom = 5 "plan"
+  g_cat = "plan" "plan"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "wyciąg"
+
+version statement_02
+  cite bk
+  governs 2026-02..2026-03
+  known 2026-04-02
+  covers konto
+  pad konto from unexplained
+  bank[r1] = (on: 2026-02-05, kind: groceries, leg cash from konto to world amount 300.00 PLN, cat: "food", fulfils: groc[2026-02]) "l1"
+  bank[r2] = (on: 2026-02-06, kind: groceries, leg cash from konto to world amount 250.00 PLN, cat: "food", fulfils: groc[2026-02]) "l2"
+  bank[r3] = (on: 2026-03-05, kind: groceries, leg cash from konto to world amount 300.00 PLN, cat: "food", fulfils: groc[2026-03]) "l3"
+  bank[r4] = (on: 2026-03-06, kind: groceries, leg cash from konto to world amount 250.00 PLN, cat: "home", fulfils: groc[2026-03]) "l4"
+  bank[r5] = (on: 2026-03-07, kind: groceries, leg cash from konto to world amount 5.00 PLN, cat: "home") "l5"
+  stated[konto] = 8 000.00 PLN at 2026-03-31 end "saldo"
+
+ask k1: bal(konto, 2026-12-31)
+ask k2: bal(konto, 2026-03-31)
+ask k3: cut
+ask k4: sum(t.cash.amount for t in groceries over 2026-03)
+ask k5: bal(konto, 2027-01-05)
+ask k6: bal(konto, 2025-12-31)
+ask k7: flows(konto, 2026-02)
+ask k8: bal(konto, 2026-12-31) as known 2026-03-01
+ask k9: bal(konto, 2026-03-31) as known 2026-05-01
+ask k10: count(t in groceries over 2026-02)
+ask k11: bank[r5]
+ask k12: bal(konto, 2026-12-31) as known 2027-02-01
+ask k13: bal(konto, 2026-12-31) as known 2025-06-01
+ask k14: groc[2026-02].cash.amount
+ask k15: sum(t.cash.amount for t in groceries over 2026)
+,,1:0,5242:k1: 3 500.00 PLN
+  pad: konto 2026-03-31 end, pads:statement_02:konto@2026-03-31 end of -395.00 PLN
+  unfulfilled: groc[2026-04]
+  unfulfilled: groc[2026-05]
+  unfulfilled: groc[2026-06]
+  unfulfilled: groc[2026-07]
+  unfulfilled: groc[2026-08]
+  unfulfilled: groc[2026-09]
+  unfulfilled: groc[2026-10]
+  unfulfilled: groc[2026-11]
+  unfulfilled: groc[2026-12]
+  cut 2027-02-01
+k10: 2
+  cut 2027-02-01
+k11: bank[r5]
+  cut 2027-02-01
+k12: 3 500.00 PLN
+  pad: konto 2026-03-31 end, pads:statement_02:konto@2026-03-31 end of -395.00 PLN
+  unfulfilled: groc[2026-04]
+  unfulfilled: groc[2026-05]
+  unfulfilled: groc[2026-06]
+  unfulfilled: groc[2026-07]
+  unfulfilled: groc[2026-08]
+  unfulfilled: groc[2026-09]
+  unfulfilled: groc[2026-10]
+  unfulfilled: groc[2026-11]
+  unfulfilled: groc[2026-12]
+  cut 2027-02-01
+k13: 4 000.00 PLN
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-01-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-02-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-03-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-04-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-05-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-06-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-07-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-08-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-09-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-10-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-11-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-12-01
+  held: g_cat = "plan" (plan_2026), read for 2026-01-01
+  held: g_cat = "plan" (plan_2026), read for 2026-02-01
+  held: g_cat = "plan" (plan_2026), read for 2026-03-01
+  held: g_cat = "plan" (plan_2026), read for 2026-04-01
+  held: g_cat = "plan" (plan_2026), read for 2026-05-01
+  held: g_cat = "plan" (plan_2026), read for 2026-06-01
+  held: g_cat = "plan" (plan_2026), read for 2026-07-01
+  held: g_cat = "plan" (plan_2026), read for 2026-08-01
+  held: g_cat = "plan" (plan_2026), read for 2026-09-01
+  held: g_cat = "plan" (plan_2026), read for 2026-10-01
+  held: g_cat = "plan" (plan_2026), read for 2026-11-01
+  held: g_cat = "plan" (plan_2026), read for 2026-12-01
+  held: g_dom = 5 (plan_2026), read for 2026-01-01
+  held: g_dom = 5 (plan_2026), read for 2026-02-01
+  held: g_dom = 5 (plan_2026), read for 2026-03-01
+  held: g_dom = 5 (plan_2026), read for 2026-04-01
+  held: g_dom = 5 (plan_2026), read for 2026-05-01
+  held: g_dom = 5 (plan_2026), read for 2026-06-01
+  held: g_dom = 5 (plan_2026), read for 2026-07-01
+  held: g_dom = 5 (plan_2026), read for 2026-08-01
+  held: g_dom = 5 (plan_2026), read for 2026-09-01
+  held: g_dom = 5 (plan_2026), read for 2026-10-01
+  held: g_dom = 5 (plan_2026), read for 2026-11-01
+  held: g_dom = 5 (plan_2026), read for 2026-12-01
+  cut 2025-06-01
+k14: 500.00 PLN
+  cut 2027-02-01
+k15: 6 105.00 PLN
+  unfulfilled: groc[2026-01]
+  unfulfilled: groc[2026-04]
+  unfulfilled: groc[2026-05]
+  unfulfilled: groc[2026-06]
+  unfulfilled: groc[2026-07]
+  unfulfilled: groc[2026-08]
+  unfulfilled: groc[2026-09]
+  unfulfilled: groc[2026-10]
+  unfulfilled: groc[2026-11]
+  unfulfilled: groc[2026-12]
+  cut 2027-02-01
+k2: 8 000.00 PLN
+  pad: konto 2026-03-31 end, pads:statement_02:konto@2026-03-31 end of -395.00 PLN
+  cut 2027-02-01
+k3: 2027-02-01
+  cut 2027-02-01
+k4: 555.00 PLN
+  cut 2027-02-01
+k5: ?"after the run's end" (konto)
+  cut 2027-02-01
+k6: ?"before the run's start" (konto)
+  cut 2027-02-01
+k7: -550.00 PLN
+  cut 2027-02-01
+k8: 4 000.00 PLN
+  unfulfilled: groc[2026-01]
+  unfulfilled: groc[2026-02]
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-04-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-05-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-06-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-07-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-08-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-09-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-10-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-11-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-12-01
+  held: g_cat = "plan" (plan_2026), read for 2026-04-01
+  held: g_cat = "plan" (plan_2026), read for 2026-05-01
+  held: g_cat = "plan" (plan_2026), read for 2026-06-01
+  held: g_cat = "plan" (plan_2026), read for 2026-07-01
+  held: g_cat = "plan" (plan_2026), read for 2026-08-01
+  held: g_cat = "plan" (plan_2026), read for 2026-09-01
+  held: g_cat = "plan" (plan_2026), read for 2026-10-01
+  held: g_cat = "plan" (plan_2026), read for 2026-11-01
+  held: g_cat = "plan" (plan_2026), read for 2026-12-01
+  held: g_dom = 5 (plan_2026), read for 2026-04-01
+  held: g_dom = 5 (plan_2026), read for 2026-05-01
+  held: g_dom = 5 (plan_2026), read for 2026-06-01
+  held: g_dom = 5 (plan_2026), read for 2026-07-01
+  held: g_dom = 5 (plan_2026), read for 2026-08-01
+  held: g_dom = 5 (plan_2026), read for 2026-09-01
+  held: g_dom = 5 (plan_2026), read for 2026-10-01
+  held: g_dom = 5 (plan_2026), read for 2026-11-01
+  held: g_dom = 5 (plan_2026), read for 2026-12-01
+  cut 2026-03-01
+k9: 8 000.00 PLN
+  pad: konto 2026-03-31 end, pads:statement_02:konto@2026-03-31 end of -395.00 PLN
+  cut 2026-05-01
+,22:fixes/gate8/m2_g6_kin2,11:fixes-gate8,14:run kin2.tally,2201:10:kin2.tally,2181:model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6 vectors: G6's clocks: an ask's own known date before and at K"
+
+source plan "plan"
+source bk "bank"
+unit PLN: currency minor 0.01
+kind groceries: transfers
+  attr cat: text
+input bank: observed
+input g_amt: money PLN
+input g_dom: int
+input g_cat: text
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+move groc[m in months]: groceries
+  on day_of(m, g_dom)
+  at start_of(m)
+  leg cash from konto to world amount g_amt
+  attr cat = g_cat
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2025-01-01
+  g_amt = 500.00 PLN "plan"
+  g_dom = 5 "plan"
+  g_cat = "plan" "plan"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "wyciąg"
+
+version statement_02
+  cite bk
+  governs 2026-02..2026-03
+  known 2026-04-02
+  covers konto
+  pad konto from unexplained
+  bank[r1] = (on: 2026-02-05, kind: groceries, leg cash from konto to world amount 300.00 PLN, cat: "food", fulfils: groc[2026-02]) "l1"
+  bank[r2] = (on: 2026-02-06, kind: groceries, leg cash from konto to world amount 250.00 PLN, cat: "food", fulfils: groc[2026-02]) "l2"
+  bank[r3] = (on: 2026-03-05, kind: groceries, leg cash from konto to world amount 300.00 PLN, cat: "food", fulfils: groc[2026-03]) "l3"
+  bank[r4] = (on: 2026-03-06, kind: groceries, leg cash from konto to world amount 250.00 PLN, cat: "home", fulfils: groc[2026-03]) "l4"
+  bank[r5] = (on: 2026-03-07, kind: groceries, leg cash from konto to world amount 5.00 PLN, cat: "home") "l5"
+  stated[konto] = 8 000.00 PLN at 2026-03-31 end "saldo"
+
+ask k1: bal(konto, 2026-12-31)
+ask k2: bal(konto, 2026-03-31)
+ask k3: cut
+ask k4: sum(t.cash.amount for t in groceries over 2026-03)
+ask k5: bal(konto, 2027-01-05)
+ask k6: bal(konto, 2025-12-31)
+ask k7: flows(konto, 2026-02)
+ask k8: bal(konto, 2026-12-31) as known 2026-03-01
+ask k9: bal(konto, 2026-03-31) as known 2026-05-01
+ask k10: count(t in groceries over 2026-02)
+ask k11: bank[r5]
+ask k13: bal(konto, 2026-12-31) as known 2025-06-01
+ask k14: groc[2026-02].cash.amount
+ask k15: sum(t.cash.amount for t in groceries over 2026)
+,,1:0,5415:k1: 3 500.00 PLN
+  pad: konto 2026-03-31 end, pads:statement_02:konto@2026-03-31 end of -395.00 PLN
+  unfulfilled: groc[2026-04]
+  unfulfilled: groc[2026-05]
+  unfulfilled: groc[2026-06]
+  unfulfilled: groc[2026-07]
+  unfulfilled: groc[2026-08]
+  unfulfilled: groc[2026-09]
+  unfulfilled: groc[2026-10]
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-11-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-12-01
+  held: g_cat = "plan" (plan_2026), read for 2026-11-01
+  held: g_cat = "plan" (plan_2026), read for 2026-12-01
+  held: g_dom = 5 (plan_2026), read for 2026-11-01
+  held: g_dom = 5 (plan_2026), read for 2026-12-01
+  cut 2026-10-20
+k10: 2
+  cut 2026-10-20
+k11: bank[r5]
+  cut 2026-10-20
+k13: 4 000.00 PLN
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-01-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-02-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-03-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-04-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-05-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-06-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-07-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-08-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-09-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-10-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-11-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-12-01
+  held: g_cat = "plan" (plan_2026), read for 2026-01-01
+  held: g_cat = "plan" (plan_2026), read for 2026-02-01
+  held: g_cat = "plan" (plan_2026), read for 2026-03-01
+  held: g_cat = "plan" (plan_2026), read for 2026-04-01
+  held: g_cat = "plan" (plan_2026), read for 2026-05-01
+  held: g_cat = "plan" (plan_2026), read for 2026-06-01
+  held: g_cat = "plan" (plan_2026), read for 2026-07-01
+  held: g_cat = "plan" (plan_2026), read for 2026-08-01
+  held: g_cat = "plan" (plan_2026), read for 2026-09-01
+  held: g_cat = "plan" (plan_2026), read for 2026-10-01
+  held: g_cat = "plan" (plan_2026), read for 2026-11-01
+  held: g_cat = "plan" (plan_2026), read for 2026-12-01
+  held: g_dom = 5 (plan_2026), read for 2026-01-01
+  held: g_dom = 5 (plan_2026), read for 2026-02-01
+  held: g_dom = 5 (plan_2026), read for 2026-03-01
+  held: g_dom = 5 (plan_2026), read for 2026-04-01
+  held: g_dom = 5 (plan_2026), read for 2026-05-01
+  held: g_dom = 5 (plan_2026), read for 2026-06-01
+  held: g_dom = 5 (plan_2026), read for 2026-07-01
+  held: g_dom = 5 (plan_2026), read for 2026-08-01
+  held: g_dom = 5 (plan_2026), read for 2026-09-01
+  held: g_dom = 5 (plan_2026), read for 2026-10-01
+  held: g_dom = 5 (plan_2026), read for 2026-11-01
+  held: g_dom = 5 (plan_2026), read for 2026-12-01
+  cut 2025-06-01
+k14: 500.00 PLN
+  cut 2026-10-20
+k15: 6 105.00 PLN
+  unfulfilled: groc[2026-01]
+  unfulfilled: groc[2026-04]
+  unfulfilled: groc[2026-05]
+  unfulfilled: groc[2026-06]
+  unfulfilled: groc[2026-07]
+  unfulfilled: groc[2026-08]
+  unfulfilled: groc[2026-09]
+  unfulfilled: groc[2026-10]
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-11-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-12-01
+  held: g_cat = "plan" (plan_2026), read for 2026-11-01
+  held: g_cat = "plan" (plan_2026), read for 2026-12-01
+  held: g_dom = 5 (plan_2026), read for 2026-11-01
+  held: g_dom = 5 (plan_2026), read for 2026-12-01
+  cut 2026-10-20
+k2: 8 000.00 PLN
+  pad: konto 2026-03-31 end, pads:statement_02:konto@2026-03-31 end of -395.00 PLN
+  cut 2026-10-20
+k3: 2026-10-20
+  cut 2026-10-20
+k4: 555.00 PLN
+  cut 2026-10-20
+k5: ?"after the run's end" (konto)
+  cut 2026-10-20
+k6: ?"before the run's start" (konto)
+  cut 2026-10-20
+k7: -550.00 PLN
+  cut 2026-10-20
+k8: 4 000.00 PLN
+  unfulfilled: groc[2026-01]
+  unfulfilled: groc[2026-02]
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-04-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-05-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-06-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-07-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-08-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-09-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-10-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-11-01
+  held: g_amt = 500.00 PLN (plan_2026), read for 2026-12-01
+  held: g_cat = "plan" (plan_2026), read for 2026-04-01
+  held: g_cat = "plan" (plan_2026), read for 2026-05-01
+  held: g_cat = "plan" (plan_2026), read for 2026-06-01
+  held: g_cat = "plan" (plan_2026), read for 2026-07-01
+  held: g_cat = "plan" (plan_2026), read for 2026-08-01
+  held: g_cat = "plan" (plan_2026), read for 2026-09-01
+  held: g_cat = "plan" (plan_2026), read for 2026-10-01
+  held: g_cat = "plan" (plan_2026), read for 2026-11-01
+  held: g_cat = "plan" (plan_2026), read for 2026-12-01
+  held: g_dom = 5 (plan_2026), read for 2026-04-01
+  held: g_dom = 5 (plan_2026), read for 2026-05-01
+  held: g_dom = 5 (plan_2026), read for 2026-06-01
+  held: g_dom = 5 (plan_2026), read for 2026-07-01
+  held: g_dom = 5 (plan_2026), read for 2026-08-01
+  held: g_dom = 5 (plan_2026), read for 2026-09-01
+  held: g_dom = 5 (plan_2026), read for 2026-10-01
+  held: g_dom = 5 (plan_2026), read for 2026-11-01
+  held: g_dom = 5 (plan_2026), read for 2026-12-01
+  cut 2026-03-01
+k9: 8 000.00 PLN
+  pad: konto 2026-03-31 end, pads:statement_02:konto@2026-03-31 end of -395.00 PLN
+  cut 2026-05-01
+,23:fixes/gate8/m2_g6_attr0,11:fixes-gate8,15:run attr0.tally,1312:11:attr0.tally,1291:model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6 vectors: G6's attribute's 0 (L §5.11): a sum over no members of an int, money and num attribute and of adjustments' change takes 0 in its type"
+source plan "plan"
+unit PLN: currency minor 0.01
+kind groceries: transfers
+  attr n: int
+  attr fee: money PLN
+  attr share: num
+input g_amt: money PLN
+input g_dom: int
+input g_fee: money PLN
+input g_last: date
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+move groc[m in months]: groceries
+  on day_of(m, g_dom)
+  when m <= month_of(g_last)
+  at start_of(m)
+  leg cash from konto to world amount g_amt
+  attr n = g_dom
+  attr fee = g_fee
+  attr share = g_dom / g_dom
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  g_amt = 500.00 PLN "plan"
+  g_dom = 5 "plan"
+  g_fee = 2.00 PLN "plan"
+  g_last = 2026-03-31 "plan"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "wyciąg"
+ask a1: sum(t.n for t in groceries over 2026-07)
+ask a2: sum(t.fee for t in groceries over 2026-07)
+ask a3: sum(t.share for t in groceries over 2026-07)
+ask a4: sum(t.fee for t in groceries over 2026-02)
+ask a5: sum(a.change for a in adjustments over 2026-07)
+ask a6: sum(t.n for t in groceries over 2026-01 .. 2026-03)
+,,1:0,269:a1: 0
+  cut 2026-10-20
+a2: 0.00 PLN
+  cut 2026-10-20
+a3: 0
+  cut 2026-10-20
+a4: 2.00 PLN
+  unfulfilled: groc[2026-02]
+  cut 2026-10-20
+a5: 0
+  cut 2026-10-20
+a6: 15
+  unfulfilled: groc[2026-01]
+  unfulfilled: groc[2026-02]
+  unfulfilled: groc[2026-03]
+  cut 2026-10-20
+,43:fixes/gate8/m2_g6_rt_f8_partial_round_plain,11:fixes-gate8,35:run rt_f8_partial_round_plain.tally,620:31:rt_f8_partial_round_plain.tally,580:model t10
+  tally 2
+  on 2026-01-15
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6 vectors: refcore's F8_partial_round_plain: a rounding meeting a hole makes the partial line plain (L §5.18)"
+unit DUK: currency minor 0.01
+input a: money DUK
+def h: money DUK = a + 1 at reader
+def x: money DUK = round(h / (1 + 1), minor(DUK), down) at reader
+def y: money DUK = h - x at reader
+def z: money DUK = h - min(h, 1) at reader
+def c: int = (if h > 1 then 1 else 0) + 1 at reader
+ask q: x, y law 2026-01-15 partial
+ask q2: z law 2026-01-15 partial
+ask q3: c law 2026-01-15 partial
+,,1:0,260:q: (?"a: no value at 2026-01-15" (a), ?"a: no value at 2026-01-15" (a))
+  law date 2026-01-15, cut 2026-01-15
+q2: ?"a: no value at 2026-01-15" (a)
+  law date 2026-01-15, cut 2026-01-15
+q3: ?"a: no value at 2026-01-15" (a)
+  law date 2026-01-15, cut 2026-01-15
+,42:fixes/gate8/m2_g6_rt_l5_18_partial_balance,11:fixes-gate8,34:run rt_l5_18_partial_balance.tally,765:30:rt_l5_18_partial_balance.tally,726:model m
+  tally 2
+  on 2026-01-01
+  start 2025-01-01
+  end 2025-12-31
+  note "T, M2 G6 vectors: refcore's L5_18_partial_balance: a balance's known part and its hole leg (L §5.18)"
+unit DUK: currency minor 0.01
+source s "s"
+place w: accounts DUK lives 2025-01-01..
+place shop: outside lives 2025-01-01..
+input sp[m in months]: money DUK question "spent?"
+version o
+  cite s
+  known 2025-01-01
+  opening[w] = 100.00 DUK at 2025-01-01 start
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  sp[*] = 0.00 DUK "the other months"
+  sp[2025-03] = ?"What was spent in March?" "March"
+move spent[m in months]: transfers
+  on end_of(m) - 1
+  leg cash from w to shop amount sp[m]
+ask q: bal(w, 2025-12-31) law 2025-12-31 partial
+,,1:0,132:q: 100.00 DUK + -1 × ?"What was spent in March?" (sp[2025-03])
+  unfulfilled: spent[2025-03]
+  law date 2025-12-31, cut 2026-01-01
+,47:fixes/gate8/m2_g6_rt_l5_18_partial_balance_when,11:fixes-gate8,39:run rt_l5_18_partial_balance_when.tally,792:35:rt_l5_18_partial_balance_when.tally,748:model m
+  tally 2
+  on 2026-01-01
+  start 2025-01-01
+  end 2025-12-31
+  note "T, M2 G6 vectors: refcore's L5_18_partial_balance_when: a partial balance with a hole when (L §5.18)"
+
+unit DUK: currency minor 0.01
+source s "s"
+place w: accounts DUK lives 2025-01-01..
+place shop: outside lives 2025-01-01..
+input sp[m in months]: money DUK question "spent?"
+
+version o
+  cite s
+  known 2025-01-01
+  opening[w] = 100.00 DUK at 2025-01-01 start
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  sp[*] = none "the other months"
+  sp[2025-03] = ?"What was spent in March?" "March"
+
+move spent[m in months]: transfers
+  on end_of(m) - 1
+  when sp[m] != none
+  leg cash from w to shop amount sp[m]
+
+ask q: bal(w, 2025-12-31) law 2025-12-31 partial
+,,1:0,83:q: ?"What was spent in March?" (sp[2025-03])
+  law date 2025-12-31, cut 2026-01-01
+,37:fixes/gate8/m2_g6_rt_l5_18_q7_partial,11:fixes-gate8,29:run rt_l5_18_q7_partial.tally,737:25:rt_l5_18_q7_partial.tally,703:model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6 vectors: refcore's L5_18_q7_partial: the q7 forms (L §5.18)"
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input flat: money PLN
+input savings: money PLN
+input firm_share: money PLN
+
+def estate_value: money PLN at reader
+  rule base = flat + savings + firm_share
+def rounded: money PLN at reader
+  rule base = round(estate_value, 1 PLN, half-up)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  flat = 400 000.00 PLN
+  savings = 12 300.00 PLN
+  firm_share = ?"value of the firm share"
+
+ask q7: estate_value law 2026-06-30 partial
+ask q7b: estate_value law 2026-06-30
+ask q7c: rounded law 2026-06-30 partial
+,,1:0,270:q7: 412 300.00 PLN + 1 × ?"value of the firm share" (firm_share)
+  law date 2026-06-30, cut 2026-12-31
+q7b: ?"value of the firm share" (firm_share)
+  law date 2026-06-30, cut 2026-12-31
+q7c: ?"value of the firm share" (firm_share)
+  law date 2026-06-30, cut 2026-12-31
+,50:fixes/gate8/m2_g6_rt_w_b_2_partial_sum_known_terms,11:fixes-gate8,42:run rt_w_b_2_partial_sum_known_terms.tally,469:38:rt_w_b_2_partial_sum_known_terms.tally,422:model m
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6 vectors: refcore's W_B_2_partial_sum_known_terms: a sum's known terms and its hole terms (L §5.18)"
+
+source src "a source"
+
+index ks = [a, b]
+
+input x[k in ks]: int question "x?"
+
+version v
+  cite src
+  governs always
+  known 2026-01-01
+  x[a] = 5 "row"
+
+ask s: sum(x[k] for k in ks) partial
+
+ask t: sum(x[k] for k in ks) - 1 partial
+,,1:0,84:s: 5 + 1 × ?"x?" (x[b])
+  cut 2026-01-01
+t: 4 + 1 × ?"x?" (x[b])
+  cut 2026-01-01
 ,27:r1/l8_reads_first_last_stop,8:fixes-r1,23:run m.tally --ask a b c,392:7:m.tally,377:model t
   tally 2
   on 2026-03-01
