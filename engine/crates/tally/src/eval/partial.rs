@@ -1,10 +1,10 @@
 //! Partial answers: under a `partial` ask line a hole carries its known part and the named holes it is linear in.
 //! Spec: L §5.18 Partial answers (a line marked `partial` prints, when its value is a hole, its
-//! known part and the named holes it is linear in, each with its coefficient: sums,
-//! differences, and products and quotients by known numbers; a rounding, `min`, `max`, a band,
-//! a comparison or a product of two holes meeting a hole makes the line a plain hole naming
-//! every hole; every named hole is printed; defs are unchanged), §5.19 and §5.10 (a balance is
-//! its opening plus what is booked since, a sum).
+//! known part and the named holes it is linear in, each with its coefficient: a hole stays
+//! linear only through reads of numbers or money, sums, differences, products and quotients
+//! by known numbers, `sum` and a balance; any other operation it passes through makes the line
+//! a plain hole naming every hole; every named hole is printed; defs are unchanged), §5.19 and
+//! §5.10 (a balance is its opening plus what is booked since, a sum).
 //! Twin: engine/tools/refcore/evaluate.py (`plain_node`, `lin_of`, `lin_add`, `lin_scale`,
 //! `lin_bin`, `e_neg`, `e_agg`'s `sum` under `ctx.partial`), ask.py (`fmt_partial`) and
 //! mreads.py (`m_partial_bal`).
@@ -13,52 +13,131 @@
 //! a hole whose linear part can't be told is plain, never a guessed one.
 
 use super::arith::{Op, arith, negate};
-use super::state::{invariant, num_stop};
+use super::state::{Ctx, Env, invariant, num_stop};
+use super::ty::sample;
 use crate::hole::{Hole, Linear, atom_text, spread};
 use crate::model::{Reality, Value};
 use crate::syntax::{AggFn, Expr, Stop};
 
-/// The calls a partial answer can't see through: a rounding, `min`, `max`, `abs`, `pow`
-/// (refcore's `_PLAIN_CALLS`; a band is one too, below). L §5.18.
-const PLAIN_CALLS: [&str; 7] = ["round", "min", "max", "abs", "pow", "marginal", "band_lo"];
+/// Node `e`'s value `v` as a `partial` line reads it: a hole stays linear in its holes only
+/// through the operations L §5.18 names (sums, differences, products and quotients by known
+/// numbers, `sum`, a balance) and a read of a number or money; any other node a hole passes
+/// through (a call, a comparison, a key, a period, a field of a hole) makes it plain.
+/// L §5.18 Partial answers.
+pub(super) fn partial_value(m: &Reality, e: &Expr, env: &Env, ctx: Ctx, v: Value) -> Value {
+    let Value::Hole(h) = &v else {
+        return v;
+    };
+    if keeps_linear(e) && reads_a_number(m, e, env, ctx) {
+        return v;
+    }
+    Value::Hole(h.plain())
+}
 
-/// Whether node `e` makes a hole it meets plain under a `partial` line: a comparison, logic,
-/// membership, a rounding, `min`, `max`, a band, and the aggregates `min`, `max`, `argmin`,
-/// `argmax`, `count`, `all`, `any` (refcore's `plain_node`). L §5.18 Partial answers.
-pub(super) fn plain_node(m: &Reality, e: &Expr) -> bool {
-    if matches!(
-        e,
-        Expr::Cmp(_) | Expr::Not(_) | Expr::And(_) | Expr::Or(_) | Expr::In(_)
-    ) {
+/// Whether node `e` passes a hole's linear part on: a read, a sum or difference, a product
+/// or quotient, a minus, `sum`, `first` or `last`, a balance, a choice, `last(x, d)`, an
+/// `as if`; L §5.18's first sentence, every other node plain.
+fn keeps_linear(e: &Expr) -> bool {
+    match e {
+        Expr::Name(_)
+        | Expr::Post(..)
+        | Expr::Paren(_)
+        | Expr::Sum(..)
+        | Expr::Prod(..)
+        | Expr::Neg(_)
+        | Expr::Bal(_)
+        | Expr::If(_)
+        | Expr::Last(_)
+        | Expr::AsIf(..) => true,
+        Expr::Agg(agg) => matches!(agg.func, AggFn::Sum | AggFn::First | AggFn::Last),
+        Expr::Lit(_)
+        | Expr::Str(_)
+        | Expr::None
+        | Expr::Never
+        | Expr::Cut
+        | Expr::Or(_)
+        | Expr::And(_)
+        | Expr::Not(_)
+        | Expr::Cmp(_)
+        | Expr::In(_)
+        | Expr::Call(_)
+        | Expr::LegOf(..)
+        | Expr::To(..)
+        | Expr::Record(_)
+        | Expr::List(_)
+        | Expr::Flows(_)
+        | Expr::Covered(_)
+        | Expr::Calendar(_)
+        | Expr::Value(_)
+        | Expr::Query(_)
+        | Expr::Low(_)
+        | Expr::Crps(_)
+        | Expr::DistFn(_)
+        | Expr::Dist(_)
+        | Expr::Prorata(_) => false,
+    }
+}
+
+/// Whether a read `e` (a name, a postfix chain) may be of a number or money; other nodes
+/// pass. A read whose declared type is a key, a period, a day, a flag or a text is no
+/// coefficient's operand. A read whose class the run's samples can't see (a rate, L §3.3,
+/// whose input's sample falls to a bare word; a run-time movement's leg; an opening or
+/// `stated` read) keeps its linear part: `lin_of` still takes only a number or money as a
+/// known part, and a sample that fails to tell the class (`sample`'s `NotBuilt`) says
+/// nothing about the value, so it is not the line's answer. L §5.18, §3.1, §3.3.
+fn reads_a_number(m: &Reality, e: &Expr, env: &Env, ctx: Ctx) -> bool {
+    if !matches!(e, Expr::Name(_) | Expr::Post(..)) {
         return true;
     }
-    if let Expr::Call(call) = e {
-        return m.bands.get(&call.name).is_some() || PLAIN_CALLS.contains(&call.name.as_str());
+    match sample(m, e, env, ctx) {
+        Ok(Some(Value::Number(_) | Value::Money(_) | Value::Word(_)) | None) | Err(_) => true,
+        Ok(Some(
+            Value::Hole(_)
+            | Value::Bool(_)
+            | Value::Day(_)
+            | Value::Period(_)
+            | Value::MonthDay(..)
+            | Value::Key(_)
+            | Value::Text(_)
+            | Value::Code(_)
+            | Value::Record(_)
+            | Value::List(_)
+            | Value::Calendar(_)
+            | Value::None
+            | Value::Never
+            | Value::OutKey { .. }
+            | Value::Mv(_)
+            | Value::Window(_),
+        )) => false,
     }
-    if let Expr::Agg(agg) = e {
-        return !matches!(agg.func, AggFn::Sum | AggFn::First | AggFn::Last);
-    }
-    false
 }
 
-/// A value a plain node made: a hole is plain (L §5.18).
-pub(super) fn made_plain(v: Value) -> Value {
-    if let Value::Hole(h) = &v {
-        return Value::Hole(h.plain());
-    }
-    v
-}
-
-/// What value `v` is linear in: a known value is its own known part; a hole, what it says
-/// (refcore's `lin_of`). L §5.18.
+/// What value `v` is linear in: a known number or money is its own known part, any other
+/// known value none; a hole, what it says (refcore's `lin_of`). L §5.18.
 fn lin_of(v: &Value) -> Option<Linear> {
-    if let Value::Hole(h) = v {
-        return h.linear_part();
+    match v {
+        Value::Hole(h) => h.linear_part(),
+        Value::Number(_) | Value::Money(_) => Some(Linear {
+            known: Some(v.clone()),
+            terms: Vec::new(),
+        }),
+        Value::Bool(_)
+        | Value::Day(_)
+        | Value::Period(_)
+        | Value::MonthDay(..)
+        | Value::Key(_)
+        | Value::Text(_)
+        | Value::Code(_)
+        | Value::Record(_)
+        | Value::List(_)
+        | Value::Calendar(_)
+        | Value::None
+        | Value::Never
+        | Value::Word(_)
+        | Value::OutKey { .. }
+        | Value::Mv(_)
+        | Value::Window(_) => None,
     }
-    Some(Linear {
-        known: Some(v.clone()),
-        terms: Vec::new(),
-    })
 }
 
 /// `a + b`, or `a - b`, of two linear parts: the known parts and each hole's coefficients

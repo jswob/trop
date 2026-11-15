@@ -129,8 +129,9 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Result<Ctx, Hole>, Stop> {
         let mark = self.mark();
+        let env = self.ask_env.clone();
         loop {
-            match self.pinned(m, pins, &Env::empty(), ctx, Pinning::Ask) {
+            match self.pinned(m, pins, &env, ctx, Pinning::Ask) {
                 Err(Stop::Deep) if mark.outermost => self.replay(m, &mark)?,
                 result => {
                     self.read_ended(&mark);

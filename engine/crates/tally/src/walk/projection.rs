@@ -430,7 +430,6 @@ impl Engine {
             Some(Stop::NotBuilt(why)) => *why == crate::eval::GUARDED,
             Some(Stop::Refused(_)) | None => false,
         };
-        let walking = self.walking.contains(&id);
         let walk = self.walk_mut(id)?;
         let p = walk
             .proj
@@ -440,7 +439,9 @@ impl Engine {
             .readers
             .checked_sub(1)
             .ok_or_else(|| invariant("a projection's read ended twice"))?;
-        if resumes || walking || p.readers > 0 {
+        // a walk being walked has a reader still: every walk of a projection's walk is a
+        // read's (`projected_bal`, `low`'s days, explain's `projection_walk`), which holds it
+        if resumes || p.readers > 0 {
             return Ok(());
         }
         *walk = walk.freed();

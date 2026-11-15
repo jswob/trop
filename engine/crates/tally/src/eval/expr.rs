@@ -44,10 +44,9 @@ impl Engine {
         #[cfg(feature = "counters")]
         self.counts.add(crate::Unit::Ev);
         let v = self.node(m, e, env, ctx);
-        // under a `partial` line a rounding, `min`, `max`, a band or a comparison meeting a
-        // hole makes it plain (L §5.18 Partial answers)
-        let v = if ctx.partial && partial::plain_node(m, e) {
-            v.map(partial::made_plain)
+        // under a `partial` line a hole stays linear only through L §5.18's operations
+        let v = if ctx.partial {
+            v.map(|x| partial::partial_value(m, e, env, ctx, x))
         } else {
             v
         };
@@ -861,6 +860,10 @@ pub(super) fn binop(
             ));
         }
     }
+    if op == Op::Div && lhs.as_hole().is_some() && known_zero(rhs) {
+        // refusals outrank holes (L §8): a hole divided by a known 0 is refused
+        return Err(refuse(Run::Div, "division by zero".to_owned()));
+    }
     if lhs.as_hole().is_some() || rhs.as_hole().is_some() {
         if ctx.partial {
             return partial::lin_bin(m, op, lhs, rhs);
@@ -880,6 +883,17 @@ pub(super) fn binop(
         return window_arith(m, op, a, b);
     }
     arith(m, op, a, b)
+}
+
+/// Whether `v` is a known number or money of 0, a divisor that refuses (L §8.4 `RUN-DIV`).
+fn known_zero(v: &Value) -> bool {
+    if let Value::Number(n) = v {
+        return n.q.is_zero();
+    }
+    if let Value::Money(money) = v {
+        return money.is_zero();
+    }
+    false
 }
 
 /// Key literals in arithmetic, resolved as load resolved them (L §2.5): by the key, thing or
@@ -1046,15 +1060,16 @@ pub(super) fn compare_values(
 
 /// A record's field `name`, the record `v` read by the written `object` (refcore's
 /// `e_field`); a field read of `none` is refused, naming the object as written (L §3.1;
-/// §8.4 `RUN-NONE`).
+/// §8.4 `RUN-NONE`); a field of a hole is the hole, which a `partial` line can't see
+/// through (L §5.18).
 fn field(
     m: &Reality,
     v: Value,
     name: &str,
     (base, posts): (&Expr, &[Postfix]),
 ) -> Result<Value, Stop> {
-    if let Value::Hole(_) = v {
-        return Ok(v);
+    if let Value::Hole(h) = &v {
+        return Ok(Value::Hole(h.plain()));
     }
     if v == Value::None {
         let object = crate::load::post_text(base, posts);

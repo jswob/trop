@@ -213,7 +213,7 @@ pub(super) fn fanned_lines(
         options.push(axes.options_of(combo)?);
     }
     let mut bound = if ask.binds.is_empty() {
-        let mut one = Bound::new(Vec::new(), Env::empty());
+        let mut one = Bound::new(Vec::new(), engine.ask_env.clone());
         for at in 0..combos.len() {
             one.combos.push((at, Collected::default()));
         }
@@ -405,6 +405,9 @@ pub(super) struct Grouped {
     /// The first combination's result, by its place among the tuple's results: its text
     /// after the line's head, the lines under it.
     pub(super) first: usize,
+    /// Every combination's result inside the product, by its place among the tuple's
+    /// results, the first first.
+    pub(super) members: Vec<usize>,
     /// What the line's combinations met, together.
     met: Collected,
     /// A check's sides' law dates, as its first combination read them.
@@ -462,6 +465,7 @@ fn product_line(
 ) -> Result<Grouped, Stop> {
     let mut met = Collected::default();
     let mut first: Option<(usize, &Printed)> = None;
+    let mut inside = Vec::new();
     for at in members {
         let combo = combo_of(combos, results, *at)?;
         if !product
@@ -475,6 +479,7 @@ fn product_line(
             .get(*at)
             .ok_or_else(|| invariant("a result past the results"))?;
         met.merge(&printed.met);
+        inside.push(*at);
         if first.is_none() {
             first = Some((*at, printed));
         }
@@ -484,6 +489,7 @@ fn product_line(
     Ok(Grouped {
         product,
         first: at,
+        members: inside,
         met,
         laws: first.laws,
     })

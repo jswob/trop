@@ -340,10 +340,12 @@ impl Engine {
         if let Value::OutKey { index, text } = &v {
             return Err(refuse(Run::Key, format!("{text} is outside {index}")));
         }
-        let index = if let Some(ix) = written_index(arg, env) {
-            ix
+        let (index, key) = if let Some(ix) = written_index(arg, env) {
+            (ix, pos_key(m, &v)?)
         } else if let Value::Key(KeyVal::Key { index, .. }) = &v {
-            index.clone()
+            (index.clone(), pos_key(m, &v)?)
+        } else if let Some(found) = literal_key(m, &v) {
+            found
         } else {
             return Err(Stop::NotBuilt("pos of a key whose index the run can't see"));
         };
@@ -351,7 +353,6 @@ impl Engine {
             .indexes
             .get(&index)
             .ok_or_else(|| invariant("a key of an index load didn't build"))?;
-        let key = pos_key(m, &v)?;
         let at = ix
             .pos(&key)
             .ok_or_else(|| refuse(Run::Key, format!("{} is outside {}", key.text(), ix.id)))?;
@@ -578,6 +579,29 @@ fn written_index(arg: &Expr, env: &Env) -> Option<String> {
         return None;
     };
     Some(ix.clone())
+}
+
+/// A bare key literal's index and key, `pos(b)`: the one list index holding its text, as
+/// load resolves it (refcore's `c_pos`; two holding it is `LOAD-KEY` at load); none for a
+/// text no list index or more than one holds. L §2.5, §4.2.
+fn literal_key(m: &Reality, v: &Value) -> Option<(String, KeyVal)> {
+    let (Value::Word(text) | Value::Key(KeyVal::Thing(text))) = v else {
+        return None;
+    };
+    let mut found = None;
+    for (id, ix) in m.indexes.entries() {
+        let key = KeyVal::Key {
+            index: id.clone(),
+            name: text.clone(),
+        };
+        if ix.pos(&key).is_some() {
+            if found.is_some() {
+                return None;
+            }
+            found = Some((id.clone(), key));
+        }
+    }
+    found
 }
 
 /// A value `pos` reads as a key of its index (refcore's `c_pos`). L §4.2.

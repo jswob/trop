@@ -20,7 +20,7 @@ use crate::base::{Code, Load, Refusal, Run};
 use crate::eval::Engine;
 use crate::model::{Domain, Fulfils, MoveInfo, Reality, Value, World};
 use crate::num::Num;
-use crate::syntax::{Expr, Stop};
+use crate::syntax::{Expr, Postfix, Stop};
 use crate::time::Day;
 use crate::walk::{Amount, End, Exists, Inst, LegVal, invariant};
 
@@ -206,9 +206,10 @@ fn plan_moves(m: &Reality, world: World) -> Vec<&MoveInfo> {
     out
 }
 
-/// Whether `mv` is a settlement, never measured: its `fulfils` names an adjustment, the
-/// variable of a binding over a kind adjustments is of (refcore's `settlement_move`,
-/// `fulfils_adj`). E §5 step 2, L §5.14.3.
+/// Whether `mv` is a settlement, never measured: its `fulfils` is a key of a kind adjustments
+/// are of (refcore's `settlement_move`, `fulfils_adj`, by its static type): the variable of a
+/// binding over such a kind is; the variable of a binding over any other kind isn't, nor is an
+/// adjustment's `adjusts`, a plan's movement. E §5 step 2, L §5.14.3.
 ///
 /// # Errors
 ///
@@ -217,18 +218,21 @@ pub(crate) fn settlement_move(m: &Reality, mv: &MoveInfo) -> Result<bool, Stop> 
     let Some(f) = &mv.decl.fulfils else {
         return Ok(false);
     };
-    let Expr::Name(var) = f else {
-        return Err(Stop::NotBuilt(
-            "a move's fulfils that isn't the variable of its binding over adjustments",
-        ));
-    };
-    let bound = mv.binds.iter().find(|b| b.var == *var);
-    match bound.map(|b| &b.domain) {
-        Some(Domain::Kind(k)) if m.subtree("adjustments").contains(k) => Ok(true),
-        _ => Err(Stop::NotBuilt(
-            "a move's fulfils that isn't the variable of its binding over adjustments",
-        )),
+    if let Expr::Name(var) = f
+        && let Some(bound) = mv.binds.iter().find(|b| b.var == *var)
+        && let Domain::Kind(k) = &bound.domain
+    {
+        return Ok(m.subtree("adjustments").contains(k));
     }
+    if let Expr::Post(_, posts) = f
+        && let [.., Postfix::Field(field)] = posts.as_slice()
+        && field == "adjusts"
+    {
+        return Ok(false);
+    }
+    Err(Stop::NotBuilt(
+        "a move's fulfils that isn't the variable of its binding over a kind",
+    ))
 }
 
 /// Whether a settlement move's `fulfils` is the variable of its one binding over a kind whose

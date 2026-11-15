@@ -50,17 +50,28 @@ impl Engine {
             };
             return Ok(Value::Hole(Hole::before_run(&figure)));
         }
-        if f.for_key.is_some() || f.convert.is_some() {
-            return Err(Stop::NotBuilt("flows for a period or converted"));
+        if f.convert.is_some() {
+            return Err(Stop::NotBuilt("flows converted"));
         }
+        // `, for k`: only the movements for period k (L §5.14.3); a hole k is the line's
+        let fk = match &f.for_key {
+            Some(e) => {
+                let k = self.ev(m, e, env, ctx)?;
+                if let Value::Hole(h) = k {
+                    return Ok(Value::Hole(h));
+                }
+                Some(k)
+            }
+            None => None,
+        };
         let Some((mv, posts)) = named else {
             return match self.place_arg(m, &f.target, env, ctx)? {
                 Err(h) => Ok(Value::Hole(h)),
-                Ok(place) => self.flows_place(m, &place, &sp, ctx),
+                Ok(place) => self.flows_place(m, &place, (&sp, fk.as_ref()), ctx),
             };
         };
         let (keys, leg) = keys_and_leg(posts)?;
-        self.flows_move(m, (mv, keys, leg), &sp, env, ctx)
+        self.flows_move(m, (mv, keys, leg), (&sp, fk.as_ref()), env, ctx)
     }
 
     /// A place's flows over a span: every movement booked there in it, holes and refusals
@@ -71,7 +82,7 @@ impl Engine {
         &mut self,
         m: &Reality,
         place: &str,
-        sp: &Span,
+        (sp, fk): (&Span, Option<&Value>),
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let last = span_last(m, sp)?;
@@ -121,11 +132,16 @@ impl Engine {
         } else {
             vec![pu.clone()]
         };
+        let keep = match fk {
+            Some(k) => Some(self.movements_for(m, k, &chain, ctx)?),
+            None => None,
+        };
         let mut sums = Sums {
             span: (start, last),
             totals: BTreeMap::new(),
             holes: Vec::new(),
             met: Collected::default(),
+            keep,
         };
         for (wid, cut) in &chain {
             if let Err(stop) = sums.logs(self.walk(*wid)?, place, &units, (lo, *cut)) {
@@ -183,6 +199,9 @@ impl Engine {
                 if day <= m.end || i.status != Status::LeftOut {
                     continue;
                 }
+                if sums.keep.as_ref().is_some_and(|keep| !keep.contains(&i.id)) {
+                    continue;
+                }
                 if !mv.decision {
                     sums.unbooked(i, place, days)?;
                 } else if day >= days.0 && day <= days.1 && self.may_touch(m, mv, i, place, ctx)? {
@@ -214,6 +233,36 @@ impl Engine {
             }
         }
         Ok(false)
+    }
+
+    /// The movements for period `k` by id: the plans' instances at the cut and the decisions'
+    /// runs in the walks of `chain` whose `for` is k (refcore's `mv_for`). L §5.14.3.
+    fn movements_for(
+        &mut self,
+        m: &Reality,
+        k: &Value,
+        chain: &[(usize, At)],
+        ctx: Ctx,
+    ) -> Result<BTreeSet<String>, Stop> {
+        let mut out = BTreeSet::new();
+        for mv in m.moves_in(self.timeline_world()) {
+            if mv.decision {
+                continue;
+            }
+            for i in self.move_instances(m, mv, ctx.cut)?.iter() {
+                if i.for_period.as_ref() == Some(k) {
+                    out.insert(i.id.clone());
+                }
+            }
+        }
+        for (wid, _) in chain {
+            for run in &self.walk(*wid)?.runs {
+                if run.inst.for_period.as_ref() == Some(k) {
+                    out.insert(run.inst.id.clone());
+                }
+            }
+        }
+        Ok(out)
     }
 
     /// The run of decision instance `inst` in walk `id` or in a walk it continues, the
@@ -305,6 +354,8 @@ struct Sums {
     holes: Vec<Hole>,
     /// The register met.
     met: Collected,
+    /// Under `, for k`, the movements for period k by id; none counts every movement.
+    keep: Option<BTreeSet<String>>,
 }
 
 impl Sums {
@@ -354,6 +405,16 @@ impl Sums {
         Ok(())
     }
 
+    /// Whether `, for k` leaves entry `e` out: a movement not for period k, or a reset (a pad's
+    /// end), which is for no period (refcore's `other_for`). L §5.14.3.
+    fn other_period(&self, e: &Ent) -> bool {
+        let Some(keep) = &self.keep else {
+            return false;
+        };
+        matches!(e.change, Change::Reset { .. })
+            || e.mv.as_ref().is_some_and(|id| !keep.contains(id))
+    }
+
     /// One unit's log of the place over the span (refcore's `flows_place`, its logs). L §5.14.3.
     fn place_log(
         &mut self,
@@ -382,6 +443,12 @@ impl Sums {
                 continue;
             }
             if e.at > limit {
+                continue;
+            }
+            if let Change::Bad(r) = &e.change {
+                return Err(Stop::Refused(r.clone()));
+            }
+            if self.other_period(e) {
                 continue;
             }
             match &e.change {

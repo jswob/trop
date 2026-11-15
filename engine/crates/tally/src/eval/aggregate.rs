@@ -16,7 +16,7 @@ use super::bindings::{Values, bind_domain};
 use super::expr::hole_of;
 use super::extremes::{bare_key, min_max};
 use super::partial;
-use super::state::{Collected, Ctx, Engine, Env, invariant, not_typed, refuse};
+use super::state::{Collected, Ctx, Engine, Env, invariant, not_typed, num_stop, refuse};
 use super::trace::Snap;
 use super::ty::zero_of;
 use super::windows::End;
@@ -231,6 +231,19 @@ impl Engine {
             }
             if t == Value::None {
                 return Err(refuse(Run::None, format!("a term of {word} is none here")));
+            }
+            if let Value::Window(w) = &t
+                && !matches!(
+                    agg.func,
+                    AggFn::Min | AggFn::Max | AggFn::Argmin | AggFn::Argmax
+                )
+            {
+                // only a comparison decides an interval: a term of any other aggregate needs
+                // its one value (L §4.4), `HOLE-IMPRECISE` named by the window's input
+                let window = w.question_text(m).map_err(num_stop)?;
+                let text = format!("date within {window} not precise enough for a term of {word}");
+                holes.push(Hole::asked(&text, w.figure()));
+                continue;
             }
             terms.push((&member.env, t));
         }

@@ -610,6 +610,10 @@ pub struct Engine {
     /// The ask line's context outside its `with` pins, where it has any: an `explain`'s
     /// derivation outside them (E §10; refcore's `_outside_ctx`).
     pub(crate) unpinned: Option<Ctx>,
+    /// The scope of the ask's own binding tuple, where its `as known`, `law` or a `with` pin
+    /// names a variable of its `for`: the line, its cut, its law and its pins are each formed
+    /// in it (L §5.18, §5.11); empty otherwise.
+    pub(crate) ask_env: Env,
     /// The axis whose option the last read of an axis found unset, which stopped it
     /// (`UNSET_AXIS`; refcore's guard's `axis`): an `explain` outside its pins fans out over
     /// it (E §10, L §5.5).
@@ -682,6 +686,7 @@ impl Engine {
             keep_rows: Rows::Unkept,
             trace: None,
             unpinned: None,
+            ask_env: Env::empty(),
             unset_axis: None,
             pins_read: PinsRead::default(),
             bind_texts: BTreeMap::new(),
@@ -750,6 +755,15 @@ impl Engine {
                 | AskBody::Solve(_)
                 | AskBody::Diff(_) => Rows::Unkept,
             },
+            ..self
+        }
+    }
+
+    /// The engine with the scope `env` of the ask's own binding tuple (L §5.18, §5.11).
+    #[must_use]
+    pub fn in_tuple(self, env: &Env) -> Engine {
+        Engine {
+            ask_env: env.clone(),
             ..self
         }
     }

@@ -643,57 +643,66 @@ impl Walk {
     /// What a `partial` line reads of a place's balance at `at` in one unit: its known part
     /// and the hole legs booked since its last reset; none where the balance is a hole of
     /// another making (an anchor, a refusal, a window, a question no reading answers, a hole
-    /// with no leg's amount to read again) (refcore's `m_partial_bal`, its walk side).
-    /// L §5.18 Partial answers, §5.19.
-    #[must_use]
+    /// the place or the walk holds for every unit, as a decision's hole day books it, a hole
+    /// with no leg's amount to read again): the balance read is the folded state `pstate`
+    /// (refcore's `m_partial_bal`, its walk side). L §5.18 Partial answers, §5.19.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a log position past the integers.
     pub(crate) fn partial_legs(
         &self,
         m: &Reality,
         place: &str,
         unit: &str,
         at: At,
-    ) -> Option<PartialLegs> {
-        let log = self.logs.get(&(place.to_owned(), unit.to_owned()))?;
-        let (st, Some(i)) = self.state(m, place, unit, at) else {
-            return None;
+    ) -> Result<Option<PartialLegs>, Stop> {
+        let Some(log) = self.logs.get(&(place.to_owned(), unit.to_owned())) else {
+            return Ok(None);
         };
-        if st.bad.is_some() || st.perm.is_some() || !st.imp.is_empty() {
-            return None;
+        let (st, Some(i)) = self.state(m, place, unit, at) else {
+            return Ok(None);
+        };
+        let read = self.pstate(m, place, unit, at);
+        if read.bad.is_some() || read.perm.is_some() || !read.imp.is_empty() {
+            return Ok(None);
         }
-        let known = st.val?;
+        let Some(known) = st.val else {
+            return Ok(None);
+        };
         let from = match st.rst {
-            Some(r) => r.checked_add(1)?,
+            Some(r) => next_entry(r)?,
             None if self.proj.is_some() || self.default_state(m, place, unit).hole.is_some() => {
-                return None;
+                return Ok(None);
             }
             None => 0,
         };
         let mut legs = Vec::new();
         let mut seen: Vec<Option<&Hole>> = Vec::new();
-        for e in log.ents.iter().take(i.checked_add(1)?).skip(from) {
+        for e in log.ents.iter().take(next_entry(i)?).skip(from) {
             let Change::Hole(h) = &e.change else {
                 continue;
             };
-            let HoleLeg {
+            let Some(HoleLeg {
                 into,
                 src: Some(src),
-            } = e.hole_leg.as_ref()?
+            }) = e.hole_leg.as_ref()
             else {
-                return None;
+                return Ok(None);
             };
             legs.push((*into, HoleSrc::clone(src)));
             seen.push(Some(h));
         }
-        let all_met = match (spread(&seen), &st.hole) {
+        let all_met = match (spread(&seen), &read.hole) {
             (Some(legs_holes), Some(own)) => legs_holes.same_questions(own),
             (None, None) => true,
             (Some(_), None) | (None, Some(_)) => false,
         };
-        Some(PartialLegs {
+        Ok(Some(PartialLegs {
             known,
             legs,
             all_met,
-        })
+        }))
     }
 
     /// A place's state at `at` with what holds for all its units and for the whole walk: their
@@ -974,6 +983,12 @@ impl Taken {
             Taken::Closing(d) => at.day == d && at.step == Step::End,
         }
     }
+}
+
+/// The position after entry `n` of a log. E §4.2.
+fn next_entry(n: usize) -> Result<usize, Stop> {
+    n.checked_add(1)
+        .ok_or_else(|| invariant("a log past the integers"))
 }
 
 /// A place's state in one unit with the holes and refusals of all its units and of the

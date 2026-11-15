@@ -313,7 +313,7 @@ impl Engine {
         key: At,
         v: Hole,
     ) -> Result<Value, Stop> {
-        let Some(read) = self.walk(id)?.partial_legs(m, place, unit, key) else {
+        let Some(read) = self.walk(id)?.partial_legs(m, place, unit, key)? else {
             return Ok(Value::Hole(v));
         };
         let mut legs: Vec<(Hole, bool)> = Vec::with_capacity(read.legs.len());
