@@ -1,8 +1,9 @@
 # L §5.19 One movement on two statements: "Where the two rows disagree on an amount or a day, ... a read of the
 # movement away from its places (its leg's amount in observed, in flows of a move or through a binding) is the
 # disagreement's hole, HOLE-SAME, naming both rows"; L §8.1 HOLE-SAME "<p> and <q> are one, but <x> differs on <d>:
-# <a> (<row>) and <b> (<row>)". L5_19_same_rows_flows_once with sav's row at 940.00 (M2 patch case P35): flows of save
-# and observed are that hole, sav books its own statement's 940.00, and WARN-LEGS is printed.
+# <a> (<row>) and <b> (<row>)". L5_19_same_rows_flows_once with sav's row at 940.00 (M2 patch case P35, P37): flows
+# of save, observed and the binding's t.cash.amount are that hole (refcore's binding read 950.00, a2's), sav books its
+# own statement's 940.00, and WARN-LEGS is printed.
 === m.tally
 model t
   tally 2
@@ -26,6 +27,7 @@ move save[m in months]: transfers
 ask q_save: flows(save, 2026-03-01 .. 2026-03-31)
 ask q_obs: observed(save[2026-03]).cash.amount
 ask q_sav: bal(sav, 2026-03-31)
+ask q_moved: sum(t.cash.amount for t in transfers over 2026-03)
 
 version v
   cite s
@@ -51,6 +53,8 @@ version st_sav
   bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 940.00 PLN, fulfils: save[2026-03]) "b"
   same bank[a2] = bank[b1]
 === expect
+q_moved: ?"bank[a2] and bank[b1] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
+  cut 2026-04-10
 q_obs: ?"bank[a2] and bank[b1] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
   cut 2026-04-10
 q_sav: 940.00 PLN

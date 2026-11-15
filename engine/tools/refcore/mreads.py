@@ -287,6 +287,13 @@ def m_mv_field(self, n, env, ctx):
         # reads `a.adjusts` or `a.day` takes it or leaves it out (E §5 step 5; tally 2.1.2, issue #34, T's
         # STOP-REPORT on g11/adjust: the identity read refused, and with it every move bound over adjustments)
         raise src.err
+    if what in ('day', 'leg') and isinstance(src, ObsMv):
+        # L §5.19 One movement on two statements: where rows stated same disagree on an amount or a day, "a read of
+        # the movement away from its places (its leg's amount ... through a binding) is the disagreement's hole,
+        # HOLE-SAME, naming both rows"
+        h = self.same_rows_hole(src, name if what == 'leg' else None, ctx)
+        if h is not None:
+            return h
     if what == 'day':
         return src.day
     if what == 'fulfils':
@@ -336,6 +343,17 @@ def m_mv_field(self, n, env, ctx):
             return h
         raise refuse('LOAD-FIELD', '%s is not a field of %s' % (name, v.id))
     raise NotYet('the field %s of a movement' % name)
+
+
+def m_same_rows_hole(self, o, leg, ctx):
+    """The HOLE-SAME of an observed row whose same group's other observed rows disagree with it on a leg's amount or
+    day (on leg alone, where given), else None (L §5.19, L §8.1's form; moves.same_obs_differ)."""
+    g = same_groups(self.m).get(o.id)
+    if not g:
+        return None
+    idx = dict((x.id, x) for x in self.observations(ctx))
+    others = [idx[y] for y in g if y != o.id and y in idx]
+    return same_obs_differ(o, others, leg) if others else None
 
 
 def _body_hole(src):
