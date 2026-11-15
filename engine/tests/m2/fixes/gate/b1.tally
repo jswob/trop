@@ -1,0 +1,56 @@
+model rec
+  tally 2
+  on 2026-04-10
+  start 2026-01-01
+  end 2026-12-31
+  note "gate B1: a transfer on two statements stated same, in a backtest (as known before on)"
+
+source s "synthetic"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place sav: accounts PLN lives 2026-01-01..
+
+input bank: observed
+
+input amt: money PLN
+
+input d_save: int
+
+move save[m in months]: transfers
+  on day_of(m, d_save)
+  leg cash from konto to sav amount amt
+
+ask on_konto: residuals konto 2026-03
+ask back_konto: residuals konto 2026-03 as known 2026-02-20
+ask on_sav: residuals sav 2026-03
+ask back_sav: residuals sav 2026-03 as known 2026-02-20
+ask back_between: residuals konto 2026-03 as known 2026-04-02
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 1000.00 PLN "s"
+  d_save = 15 "s"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
+
+version st_konto
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  anchor konto
+  bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "NA OSZCZEDNOSCI"
+
+version st_sav
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers sav
+  anchor sav
+  bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "Z KONTA"
+  same bank[a2] = bank[b1]

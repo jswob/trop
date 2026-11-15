@@ -185,3 +185,13 @@ fixes/g7/b1_tree	fixes-sweep		engine/tests/m2/fixes/g7	engine/tests/m2/fixes/g7/
 fixes/g7/p3_after_m	fixes-sweep		engine/tests/m2/fixes/g7	engine/tests/m2/fixes/g7/p3_after_same.tally	a_late a_stated		-
 fixes/gate8/g6r_hole_cuts_l2	fixes-ledger		engine/tests/m2/fixes/gate8/g6r	engine/tests/m2/fixes/gate8/g6r/hole_cuts.tally	l2		-
 fixes/gate8/g6r_dec_same	fixes-ledger		engine/tests/m2/fixes/gate8/g6r	engine/tests/m2/fixes/gate8/g6r/dec_same.tally	b_k b_s b_k15 b_s15		-
+fixes/gate/b1_back	fixes-sweep		engine/tests/m2/fixes/gate	engine/tests/m2/fixes/gate/b1.tally	back_konto back_sav back_between		-
+fixes/gate/b5a_b5b	fixes-sweep		engine/tests/m2/fixes/gate	engine/tests/m2/fixes/gate/b5a.tally	m16 m31		-
+fixes/gate/p7a_b5b	fixes-sweep		engine/tests/m2/fixes/gate	engine/tests/m2/fixes/gate/p7a.tally	m16 m31		-
+fixes/gate/p7b_b5b	fixes-sweep		engine/tests/m2/fixes/gate	engine/tests/m2/fixes/gate/p7b.tally	m16 m31		-
+fixes/gate/b5a_p43	fixes-sweep		engine/tests/m2/fixes/gate	engine/tests/m2/fixes/gate/b5a.tally	b g r		-
+fixes/gate/p7a_p43	fixes-sweep		engine/tests/m2/fixes/gate	engine/tests/m2/fixes/gate/p7a.tally	b g r		-
+fixes/gate/w1_w19	fixes-sweep		engine/tests/m2/fixes/gate	engine/tests/m2/fixes/gate/w1.tally	w19		-
+fixes/gate/b9n_feb	fixes-sweep		engine/tests/m2/fixes/gate	engine/tests/m2/fixes/gate/b9n.tally	r1 r2 r3		-
+fixes/gate/p5_feb	fixes-sweep		engine/tests/m2/fixes/gate	engine/tests/m2/fixes/gate/p5.tally	r1		-
+fixes/gate/a3_explain	fixes-sweep		engine/tests/m2/fixes/gate	engine/tests/m2/fixes/gate/a3.tally	e1 e2		-
