@@ -297,8 +297,8 @@ impl PartialOrd for Order {
 }
 
 impl Order {
-    /// The order as one typed term, `(day, stratum, move, ((kind, place, id), …))`, the last
-    /// day there is for a hole day, so a binding's members and the residual ledger's last ties
+    /// The order as one typed term, `(day, stratum, move, ((kind, place, id), …))`, a hole
+    /// day after every day, 9999-12-31 included, so a binding's members and the residual ledger's last ties
     /// compare it term by term (refcore's `inst_order` under `order_key`; tally 2.1.2). E §4.1,
     /// §6.3 Order; L §2.5, §5.19 Bindings.
     ///
@@ -316,11 +316,11 @@ impl Order {
             ]));
         }
         let day = match self.day {
-            Some(d) => d,
-            None => Day::LAST,
+            Some(d) => Term::Day(d),
+            None => Term::End,
         };
         Ok(Term::Tuple(vec![
-            Term::Day(day),
+            day,
             Term::Int(i64::from(self.stratum)),
             Term::text(&self.move_id),
             Term::Tuple(keys),
@@ -338,6 +338,9 @@ impl Order {
 pub enum Term {
     /// A day.
     Day(Day),
+    /// A hole day's place: after every day, 9999-12-31 included (refcore's `END`; tally 2.1.6,
+    /// #48).
+    End,
     /// A number: a stratum, a key's place in its index.
     Int(i64),
     /// A text: an id or a stable id.
@@ -362,11 +365,11 @@ impl Term {
         Term::Tuple(terms)
     }
 
-    /// The term's type, as refcore's `order_key` ranks it: a day, a number, a text, a tuple.
-    /// E §4.1.
+    /// The term's type, as refcore's `order_key` ranks it: a day (a hole day's place among
+    /// them), a number, a text, a tuple. E §4.1.
     fn rank(&self) -> u8 {
         match self {
-            Term::Day(_) => 1,
+            Term::Day(_) | Term::End => 1,
             Term::Int(_) => 2,
             Term::Text(_) => 3,
             Term::Tuple(_) => 4,
@@ -379,10 +382,14 @@ impl Ord for Term {
     fn cmp(&self, other: &Term) -> Ordering {
         match (self, other) {
             (Term::Day(a), Term::Day(b)) => a.cmp(b),
+            // a hole day after every day (E §4.1, tally 2.1.6)
+            (Term::End, Term::End) => Ordering::Equal,
+            (Term::Day(_), Term::End) => Ordering::Less,
+            (Term::End, Term::Day(_)) => Ordering::Greater,
             (Term::Int(a), Term::Int(b)) => a.cmp(b),
             (Term::Text(a), Term::Text(b)) => a.cmp(b),
             (Term::Tuple(a), Term::Tuple(b)) => a.cmp(b),
-            (Term::Day(_) | Term::Int(_) | Term::Text(_) | Term::Tuple(_), _) => {
+            (Term::Day(_) | Term::End | Term::Int(_) | Term::Text(_) | Term::Tuple(_), _) => {
                 self.rank().cmp(&other.rank())
             }
         }
