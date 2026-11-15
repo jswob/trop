@@ -3157,3 +3157,30 @@ Picks P11, P12, P22, P26/P36, P35/P37, P38 (`tmp/m2/auto-picks.md`). Probes in `
 - **What I tried:** nothing to refcore or a test. The engine follows the spec's text in d5d2cb4e.
 - **What I ask:** T holds vectors of the three probes for #169; refcore's fix waits for 2.1.8.
 - **State:** green at 90c58aad; this entry rides with G4's last commit; nothing else uncommitted.
+
+## 2026-11-15 M2 G4 `records`, the review's fixes (addendum to G4's entry; issue #167, #169)
+
+Rulings: picks P42–P44 (`tmp/m2/auto-picks.md`); the review `tmp/m2/review-g4.md`. Probes: the review's texts copied into `tmp/m2/b/g4fix/` (`run.sh`: the quick binary against refcore on pypy), the review's own outputs in `tmp/m2/review-g4-probes/`. Where refcore keeps the old answer, T holds the vector: for #169 (B1, B2, B4), or for the spec session's refcore fix (B3, L1, P42).
+
+- **B1, B2, B4** (f0645ddb; `book/reading.rs` new `reading_place`, `last_standing_day`, `Engine::reading_day`, `standing_day`, `after_days`, `readings`; `eval/read.rs` `read_past`, `input_view`, `after_on_days`, new `row_after_day`, `after_at`, `last_value`, `since_read`). One day for a reading `after m`, for the walk and the reads: m's day, or where observations stand in for m, the last of their legs' days in the run before the cut, a leg at the reading's place first (the walk's `last_standing_in`). `AfterDays` is keyed by m and place. A read plans these days only for the after-rows at its own key.
+  - `b1_since.tally`: `sn: 30` (was `ENGINE-INVARIANT`). save[2026-03] books on 04-01, since `end_of(m)` is the next month's first day; the twin with the reading `at 2026-03-31 end` gives 31, as refcore. Refcore drops the reading: a hole (held, #169).
+  - `b2_last.tally`: `l14: 90.00 PLN`, as ruled. `s14` (on 03-15) now reads past the reading's day 03-14 and prints `held:`, as `l16` does. Refcore: the hole (held, #169).
+  - `b4_cycle.tally`: `b: ?"stated[jar] has no reading on or before 2026-02-01"` (was `RUN-CYCLE`), as `b4_twin` and refcore. Its only other line that differs from refcore is `la` (held, #169). NB-10's cost goes with it.
+- **B3** (8de95fed; `book/observe.rs` new `share_fulfils`, called where the observations are seen). A row stated `same` that states no `fulfils` takes its group's, the first in the same lines' order (L §5.19 "either row"). Both rows then stand in for the instance everywhere: walk, ledger, `observed`, `WARN-LEGS`. `b3_onefulfils.tally` prints the bytes of refcore's `L5_19_same_rows_disagree_flows_hole` expect (where both rows state it): `q_obs` and `q_save` are `HOLE-SAME` naming bank[a2] and bank[b1], plus the `WARN-LEGS` line. Refcore prints 950.00 (P42).
+- **L1** (e7625d3b; `book/same.rs` `same_once_at`, new `left_to_partner`, `books_end_at`). At the ledger's place, a `same` row whose own statement doesn't book its end there leaves it to the group's row that does, as the walk books it (E §6.3, §6.1).
+  - `l_s_agree.tally`: konto `observed -950.00 PLN, difference 0.00 PLN`; sav 950.00.
+  - `l_s_amt.tally`: konto -950.00 (difference 0.00); sav 940.00 (difference -10.00).
+  - The probes `s_agree`, `s_amt`, `s_day`, `a_cov`, `p_pad`, `m_mod` and `a_mp` move the same way. Their konto lines count one movement, and `a_cov` and `p_pad` reorder their groups by the absolute difference (E §6.3 Order). `a_mp`'s model figure, -1 890.00, is unchanged.
+  - Refcore prints the old bytes (P42).
+- **NB-14** (the matched line names both rows): not done. E §6.3's table shows a matched line's differences and no row ids, and refcore's layout names none. The unexplained line already names both (`W_B_3`). The form waits for the spec session's refcore fix (P42), and the engine then follows its bytes.
+- **NB-13** (8fc6c4fa; `eval/expr.rs` `post`, `field`; `load/texts.rs` `post_text` crate-wide). A field read of `none` names the record as written, L §8.4's form. `a_unc.tally`: `q_obs: refused: RUN-NONE observed(save[2026-03]) is none here: a field read of it`, byte-equal to refcore.
+- **NB-2** (the next commit): `same_mask` cites E §6.1 (one movement books each end once), not E §4.2 step 5.
+- **NB-12:** `RUN-RECORD <r> fulfils adjustments[<instance>.<leg>, <v>], which no version made by the cut` is `book/settle.rs` `measure_all` (line 114). It came before G4. `records/adjustment-unmade` prints it, red only by #169's base reading (the review's table). Nothing to build.
+- **Kept as today:** NB-4, NB-6, NB-11 (#175, #176). **Follow-up list:** NB-1 (`book/same.rs` is now 1 120 lines), NB-3, NB-5, NB-7, NB-8, NB-9.
+- **Regressions:**
+  - Every probe in `g4fix/` prints what it printed in the review, apart from the lines above.
+  - `rt/`, `rt2/`, `rt3/` and a new `g4fix/rt4/` (148 of refcore's `L5_19`, `L6_1`, `E6_1`, `E6_3`, `W_B_3` tests) are unchanged. Every remaining difference is a joint model's pin, an `...` expect line `rt.py` doesn't match, or `not implemented`.
+- **Code no vector covers** (for T; the probes are ready vectors): `reading_day` with observations (B2) and its reads (`row_after_day` in `since`, `last`, a plain read), `after_at`'s key filter (B4), `share_fulfils` (B3), `left_to_partner` (L1), `field`'s object text (NB-13).
+- **Exceptions:** +0. No single-mutant proofs (gate 8's).
+- **Size:** in `engine/crates`, 261 added and 57 removed (318 changed) over the five commits.
+- **Check:** `check commit: green, 23 steps (160s)`, at this commit's tree.
