@@ -37,4 +37,7 @@ fence_catchers = [
   # F5 (walk/lows.rs): the tree against the projection's walk on T's corpora, byte for byte
   { package = "tally-cli", test = "walk_oracle" },
   { package = "tally", lib = "walk::lows::tests::" },
+  # F6 (walk/fork.rs): the walk read again from its kept checkpoint against the fresh walk
+  { package = "tally-cli", test = "fork_oracle" },
+  { package = "tally", lib = "walk::fork::tests::" },
 ]
