@@ -55,6 +55,22 @@ impl Printed {
             && self.whole == other.whole
             && (!(self.bare || self.whole) || self.body == other.body)
     }
+
+    /// The result as one text, equal for two lines exactly where `same` holds: the text, the
+    /// two kinds, and the lines under a bare head or a diff's (refcore's `rkey`). L §5.5.
+    pub(super) fn key(&self) -> String {
+        let under = if self.bare || self.whole {
+            self.body.join("\u{0}")
+        } else {
+            String::new()
+        };
+        format!(
+            "{}\u{0}{}{}\u{0}{under}",
+            self.text,
+            u8::from(self.bare),
+            u8::from(self.whole)
+        )
+    }
 }
 
 /// The line of `check left == right` in scope `env` and context `ctx` (refcore's `check`,
