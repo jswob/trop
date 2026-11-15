@@ -397,11 +397,9 @@ fn extend(
         k.clone()
     } else if let Value::Mv(r) = &value {
         KeyVal::Mv(r.clone())
-    } else if let (Value::Number(n), true) = (&value, listed) {
-        KeyVal::Int(
-            n.q.to_i64()
-                .ok_or(Stop::NotBuilt("a key that isn't an integer"))?,
-        )
+    } else if let (Value::Number(_), true) = (&value, listed) {
+        // an integer an int key, any other number by its value (L §2.5, §5.6)
+        crate::eval::value_key(m, &value)?.ok_or_else(|| invariant("a number no key holds"))?
     } else if let (Value::Day(d), true) = (&value, listed) {
         KeyVal::Day(*d)
     } else {

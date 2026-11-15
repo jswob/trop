@@ -17,7 +17,7 @@
 use super::axes::{Axes, result_lines};
 use super::check::Printed;
 use super::register::register_lines;
-use crate::base::Code;
+use crate::base::{Code, Refusal, Run};
 use crate::book::{Ledger, UnitLedger, fig_text};
 use crate::eval::{Collected, Ctx, Engine};
 use crate::model::Reality;
@@ -38,6 +38,14 @@ pub(super) fn residual_lines(
     engine: &mut Engine,
     (ctx, pinned): (Ctx, &Collected),
 ) -> Result<Vec<String>, Stop> {
+    if super::answer::names_a_for(ask, &r.place) {
+        // a ledger at a place its own `for` keys: one ledger per tuple (L §5.18) or a load
+        // refusal, which #185 rules; until then a refusal of this run, never an invariant
+        return Err(Stop::Refused(Refusal::new(
+            Code::Run(Run::Domain),
+            "a residual ledger at a place keyed by the ask's own for".to_owned(),
+        )));
+    }
     let Some(axes) = Axes::of(m, ask)? else {
         let result = match ledger_result(m, r, engine, (ctx, pinned))? {
             Ok(result) => result,

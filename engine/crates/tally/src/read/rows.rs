@@ -18,8 +18,9 @@
 use crate::base::{Code, Load, Refusal};
 use crate::model::{
     BindInfo, Domain, InputInfo, KeyVal, OwnTime, Pat, Reality, Row, RowInstant, Span, TimePos,
-    World,
+    Value, World,
 };
+use crate::num::Num;
 use crate::syntax::Stop;
 use crate::time::Day;
 
@@ -214,8 +215,8 @@ enum Rank {
     Pos(usize),
     /// A stable id's text, compared by code point.
     Text(String),
-    /// An integer.
-    Int(i64),
+    /// A number of a stepped range, an integer one too.
+    Num(Num),
     /// A day, or a period's first day.
     Day(Day),
 }
@@ -225,7 +226,11 @@ fn rank_le(a: &Rank, b: &Rank) -> Option<bool> {
     match (a, b) {
         (Rank::Pos(x), Rank::Pos(y)) => Some(x <= y),
         (Rank::Text(x), Rank::Text(y)) => Some(x <= y),
-        (Rank::Int(x), Rank::Int(y)) => Some(x <= y),
+        // a number error is no order between them
+        (Rank::Num(x), Rank::Num(y)) => x
+            .compare(y)
+            .ok()
+            .map(|order| order != core::cmp::Ordering::Greater),
         (Rank::Day(x), Rank::Day(y)) => Some(x <= y),
         _ => None,
     }
@@ -248,10 +253,17 @@ fn rank(m: &Reality, domain: &Domain, key: &KeyVal) -> Option<Rank> {
             Some(Rank::Text(format!("{base}:{name}")))
         }
         Domain::Range => match key {
-            KeyVal::Int(n) => Some(Rank::Int(*n)),
+            KeyVal::Int(n) => Some(Rank::Num(Num::int(*n))),
+            KeyVal::Value(v) => {
+                if let Value::Number(n) = &v.value {
+                    Some(Rank::Num(n.q.clone()))
+                } else {
+                    None
+                }
+            }
             KeyVal::Day(day) => Some(Rank::Day(*day)),
             KeyVal::Period(period) => Some(Rank::Day(period.start())),
-            KeyVal::Key { .. } | KeyVal::Thing(_) | KeyVal::Mv(_) | KeyVal::Value(_) => None,
+            KeyVal::Key { .. } | KeyVal::Thing(_) | KeyVal::Mv(_) => None,
         },
         Domain::Axis(_) => None,
     }

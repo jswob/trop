@@ -1080,7 +1080,7 @@ fn pins_name_for(ask: &Ask) -> bool {
 /// Whether expression `e` names a variable of ask `ask`'s own `for`, by the walk of the names
 /// it reads; a form whose names that walk doesn't follow (an aggregate, a walk's read) is
 /// walked by [`mentions`]. L §8.2.
-fn names_a_for(ask: &Ask, e: &Expr) -> bool {
+pub(super) fn names_a_for(ask: &Ask, e: &Expr) -> bool {
     let Some(names) = names_in(e) else {
         return ask.binds.iter().any(|b| mentions(e, &b.var));
     };
