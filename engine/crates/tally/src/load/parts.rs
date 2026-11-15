@@ -22,7 +22,7 @@ use super::worlds::no_version;
 use crate::base::{Code, Load};
 use crate::model::{
     DefInfo, Domain, Graph, InputInfo, KeyVal, KindInfo, KindSpec, Labels, NameKind, Node,
-    NodeKind, Number, Pat, Reality, Row, RowInstant, Ty, Value,
+    NodeKind, Number, Pat, Reality, Row, RowInstant, Ty, Value, currency,
 };
 use crate::num::{Money, Num};
 use crate::syntax::{
@@ -785,7 +785,7 @@ impl Loader {
             let Some(values) = values else {
                 continue;
             };
-            let Some(sum) = amounts_over(&total_value, &values)? else {
+            let Some(sum) = amounts_over(&self.m, &total_value, &values)? else {
                 continue;
             };
             let Some(Pat::Key(KeyVal::Thing(place))) = total.pattern.first() else {
@@ -976,8 +976,9 @@ fn is_negative(value: &Value) -> bool {
 /// The parts' sum where it is over the total, every amount of the total's unit; none where
 /// it isn't over, or an amount is of another unit (refcore sums their quantities as they
 /// are, a corner only a place of unit `any` meets).
-fn amounts_over(total: &Value, parts: &[&Value]) -> Result<Option<Value>, Stop> {
+fn amounts_over(m: &Reality, total: &Value, parts: &[&Value]) -> Result<Option<Value>, Stop> {
     if let Value::Money(t) = total {
+        let (_, minor) = currency(m, t.currency()).map_err(num_stop)?;
         let mut sum = Money::from_minor(0, t.currency());
         for part in parts {
             let Value::Money(p) = part else {
@@ -986,7 +987,7 @@ fn amounts_over(total: &Value, parts: &[&Value]) -> Result<Option<Value>, Stop> 
             if p.currency() != t.currency() {
                 return Ok(None);
             }
-            sum = sum.checked_add(p).map_err(num_stop)?;
+            sum = sum.checked_add(p, minor).map_err(num_stop)?;
         }
         let over = sum.compare(t).map_err(num_stop)? == Ordering::Greater;
         return Ok(over.then_some(Value::Money(sum)));

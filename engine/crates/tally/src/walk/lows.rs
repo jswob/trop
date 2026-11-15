@@ -538,7 +538,7 @@ struct Size {
     /// Each leg's whole number of its unit's minor units (1 for a unit with none), summed;
     /// none past a `u128`.
     whole: Option<u128>,
-    /// The widest of those minor units, and of every currency's, in bits.
+    /// The widest of those minor units, in bits.
     minor: u64,
     /// The other legs' bits, each with one more for its sum; none past a `u64`.
     rest: Option<u64>,
@@ -928,12 +928,8 @@ impl Gathered {
         seen: (Day, World),
     ) -> Result<(Tree, Vec<Num>), Stop> {
         let mut tree = self.tree;
-        // money is capped in minor units: any balance may be read in its currency's (L §7.1)
-        self.size.minor = m
-            .currencies
-            .values()
-            .map(Num::bits)
-            .fold(self.size.minor, u64::max);
+        // the cap counts a value's reduced fraction, money's too, never its minor units
+        // (L §7.1): the bound counts values alone
         tree.adds = self.size.bits();
         if matches!(place_sign(m, place), Some(Sign::Min0 | Sign::Max0)) {
             tree.open = false;
