@@ -74,6 +74,19 @@ fn root(parent: &BTreeMap<String, String>, start: &str) -> String {
     at
 }
 
+/// Row `o` with each leg that touches `place` taking the hole `hole`: a `same` group whose
+/// members disagree there, as the walk books it, the ledger's one line there (E §6.3; L §5.19
+/// One movement on two statements).
+fn holed_at(o: &Obs, place: &str, hole: &Hole) -> Obs {
+    let mut row = o.clone();
+    for lg in &mut row.legs {
+        if lg.from.place() == Some(place) || lg.to.place() == Some(place) {
+            lg.amount = Amount::Hole(hole.clone());
+        }
+    }
+    row
+}
+
 /// The observations `obs`, a group stated `same` counted once: each group's first row met,
 /// with the group's other rows among `obs`, by position, in the order given (refcore's
 /// `once_obs`). L §5.19 One movement on two statements, §6.1.
@@ -451,8 +464,10 @@ impl Engine {
 
     /// Of the observations `obs` a ledger at `place` lists, the row of a `same` group whose
     /// end there another member books is left out, so a movement whose rows agree there is
-    /// listed once; each row kept that is stated `same`, with its group's ids among `obs`,
-    /// sorted, as its line's evidence (refcore's `m_residuals`, its `also`). E §6.3, L §6.1.
+    /// listed once; where they disagree there, the group is listed once, by its first row
+    /// met, as the disagreement's hole; each row kept that is stated `same`, with its group's
+    /// ids among `obs`, sorted, as its line's evidence (refcore's `m_residuals`, its
+    /// `also`). E §6.3, L §6.1.
     ///
     /// # Errors
     ///
@@ -472,26 +487,37 @@ impl Engine {
         let id = self.main_walk(m, cut)?;
         let present: BTreeSet<String> = obs.iter().map(|o| o.id.clone()).collect();
         let mut keep = Vec::with_capacity(obs.len());
+        // the groups listed already as their disagreement's hole, by their first member
+        let mut holed: BTreeSet<&str> = BTreeSet::new();
         for o in &obs {
-            if let Some(group) = groups.get(&o.id)
-                && self.left_to_partner(m, (o, &obs, group), place, cut)?
-            {
+            let Some(group) = groups.get(&o.id) else {
+                keep.push(o.clone());
+                continue;
+            };
+            if self.left_to_partner(m, (o, &obs, group), place, cut)? {
                 continue;
             }
-            if self.skipped_at(m, id, o, place)? {
-                continue;
-            }
-            if let Some(group) = groups.get(&o.id) {
-                // sorted by code point (refcore's `sorted`)
-                let ids: BTreeSet<&str> = group
-                    .iter()
-                    .filter(|x| present.contains(*x))
-                    .map(String::as_str)
-                    .collect();
-                let ids: Vec<&str> = ids.into_iter().collect();
-                also.insert(o.id.clone(), ids.join(", "));
-            }
-            keep.push(o.clone());
+            let row = match self.end_book_at(m, id, o, place)? {
+                EndBook::Skip => continue,
+                EndBook::Written | EndBook::Wait(_) => o.clone(),
+                // the walk books the movement there once, as the hole: listed once with it
+                EndBook::Hole(hole) => {
+                    let lead = group.first().map_or(o.id.as_str(), String::as_str);
+                    if !holed.insert(lead) {
+                        continue;
+                    }
+                    holed_at(o, place, &hole)
+                }
+            };
+            // sorted by code point (refcore's `sorted`)
+            let ids: BTreeSet<&str> = group
+                .iter()
+                .filter(|x| present.contains(*x))
+                .map(String::as_str)
+                .collect();
+            let ids: Vec<&str> = ids.into_iter().collect();
+            also.insert(o.id.clone(), ids.join(", "));
+            keep.push(row);
         }
         Ok((keep, also))
     }
@@ -542,10 +568,17 @@ impl Engine {
         Ok(false)
     }
 
-    /// Whether row `o`'s end at `place` is booked by another member of its `same` group;
-    /// a refusal there leaves it as written (refcore's `m_residuals`, its `consol`). E §6.3,
-    /// L §6.1.
-    fn skipped_at(&mut self, m: &Reality, id: usize, o: &Obs, place: &str) -> Result<bool, Stop> {
+    /// What row `o`'s end at `place` books under the `same` lines, as walk `id` books it:
+    /// nothing where another member of its group books it, the group's `HOLE-SAME` where the
+    /// members disagree there, else as written; a refusal there leaves it as written
+    /// (refcore's `m_residuals`, its `consol`). E §6.3, §6.1; L §6.1.
+    fn end_book_at(
+        &mut self,
+        m: &Reality,
+        id: usize,
+        o: &Obs,
+        place: &str,
+    ) -> Result<EndBook, Stop> {
         let mover = Member::Obs(o.clone());
         for lg in &o.legs {
             let books = match self.same_ends(m, id, (&mover, lg)) {
@@ -553,15 +586,16 @@ impl Engine {
                 Err(Stop::Refused(_)) => continue,
                 Err(stop) => return Err(stop),
             };
-            let sides = [&lg.from, &lg.to].into_iter().zip(books);
-            if sides
-                .into_iter()
-                .any(|(end, book)| end.place() == Some(place) && book == EndBook::Skip)
-            {
-                return Ok(true);
+            for (end, book) in [&lg.from, &lg.to].into_iter().zip(books) {
+                if end.place() != Some(place) {
+                    continue;
+                }
+                if let EndBook::Skip | EndBook::Hole(_) = book {
+                    return Ok(book);
+                }
             }
         }
-        Ok(false)
+        Ok(EndBook::Written)
     }
 
     /// Of the observations `good` whose links to instance `tid` stand, those two unjoined
