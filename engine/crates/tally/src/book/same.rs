@@ -14,14 +14,14 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use super::observe::Obs;
 use crate::base::{Code, Refusal, Run};
-use crate::eval::{Collected, Engine, Entry, num_stop};
+use crate::eval::{Collected, Ctx, Engine, Entry, num_stop};
 use crate::hole::Hole;
-use crate::model::{Reality, SamePair, Value};
+use crate::model::{KeyVal, MvRef, Reality, SamePair, Value};
 use crate::num::Num;
 use crate::syntax::Stop;
 use crate::time::Day;
 use crate::walk::{
-    ALL, Amount, At, Change, Dated, Ends, Ent, Exists, Inst, LegVal, Status, Step, invariant,
+    ALL, Amount, At, Change, Dated, End, Ends, Ent, Exists, Inst, LegVal, Status, Step, invariant,
     qty_value,
 };
 
@@ -275,6 +275,102 @@ fn amount_text(m: &Reality, lg: &LegVal) -> Result<String, Stop> {
     }
 }
 
+/// One leg of a realised movement as its rows build it (refcore's `m_c_observed`, a leg).
+#[derive(Debug, Default)]
+struct Realised {
+    /// Its `from`: the first row's, none where their legs name different places.
+    from: Option<Value>,
+    /// Its `to`, likewise.
+    to: Option<Value>,
+    /// The sum of its amounts, in its unit.
+    amount: Option<(Num, String)>,
+    /// A hole amount among them.
+    hole: Option<Hole>,
+    /// The last of its days.
+    day: Option<Day>,
+}
+
+impl Realised {
+    /// Adds one row's leg `lg`. L §5.19 Realised amounts.
+    fn add(&mut self, lg: &LegVal) -> Result<(), Stop> {
+        let end = |e: &End| match e {
+            End::Place(p) => Value::Key(KeyVal::Thing(p.clone())),
+            End::Hole(h) => Value::Hole(h.clone()),
+        };
+        let (from, to) = (end(&lg.from), end(&lg.to));
+        let first = self.from.is_none() && self.to.is_none();
+        if first || self.from.as_ref().is_some_and(|f| *f != from) {
+            self.from = Some(if first { from } else { Value::None });
+        }
+        if first || self.to.as_ref().is_some_and(|t| *t != to) {
+            self.to = Some(if first { to } else { Value::None });
+        }
+        match (&lg.amount, &lg.unit, &self.amount) {
+            (Amount::Refused(r), _, _) => return Err(Stop::Refused(r.clone())),
+            (Amount::Hole(h), _, _) => self.hole = self.hole.take().or_else(|| Some(h.clone())),
+            (Amount::Qty(q), Some(unit), None) => self.amount = Some((q.clone(), unit.clone())),
+            (Amount::Qty(q), Some(_), Some((sum, unit))) => {
+                let total = sum.checked_add(q).map_err(num_stop)?;
+                self.amount = Some((total, unit.clone()));
+            }
+            (Amount::Qty(_), None, _) => return Err(invariant("an observed amount with no unit")),
+        }
+        if let Some(d) = lg.day.day() {
+            self.day = Some(self.day.map_or(d, |last| last.max(d)));
+        }
+        Ok(())
+    }
+}
+
+/// Leg `leg` of instance `tid`'s realised movement, over its observations `obs` grouped
+/// `once` (refcore's `m_c_observed`, a leg). L §5.19 Realised amounts, One movement on two
+/// statements.
+fn realised_leg(
+    m: &Reality,
+    tid: &str,
+    (obs, once): (&[Obs], &[(usize, Vec<usize>)]),
+    leg: &str,
+) -> Result<Value, Stop> {
+    let mut built = Realised::default();
+    let mut differs = None;
+    let mut met = false;
+    for (first, rest) in once {
+        let row = obs
+            .get(*first)
+            .ok_or_else(|| invariant("a same group with no first row"))?;
+        let others: Vec<&Obs> = rest.iter().filter_map(|&k| obs.get(k)).collect();
+        if differs.is_none() {
+            differs = same_differ(m, row, &others, Some(leg))?;
+        }
+        for lg in row.legs.iter().filter(|lg| lg.name == leg) {
+            met = true;
+            built.add(lg)?;
+        }
+    }
+    if !met {
+        // an observation that lacks a leg of the instance it fulfils is refused before here
+        return Err(Stop::Refused(Refusal::new(
+            Code::Run(Run::Record),
+            format!("the observations fulfilling {tid} lack its leg {leg}"),
+        )));
+    }
+    let amount = match (differs.or(built.hole), built.amount) {
+        (Some(h), _) => Value::Hole(h),
+        (None, Some((sum, unit))) => qty_value(m, &sum, &unit)?,
+        (None, None) => return Err(invariant("a realised leg with no amount")),
+    };
+    let day = built
+        .day
+        .map(Value::Day)
+        .ok_or_else(|| invariant("a realised leg with no day"))?;
+    Ok(Value::Record(vec![
+        ("from".to_owned(), built.from.unwrap_or(Value::None)),
+        ("to".to_owned(), built.to.unwrap_or(Value::None)),
+        ("amount".to_owned(), amount),
+        ("day".to_owned(), day),
+    ]))
+}
+
 /// The places an observed row's legs name. L §5.19.
 fn row_places(o: &Obs) -> BTreeSet<&str> {
     o.legs
@@ -285,6 +381,55 @@ fn row_places(o: &Obs) -> BTreeSet<&str> {
 }
 
 impl Engine {
+    /// `observed(m[k])`: the realised movement of planned instance `v`, a record whose legs
+    /// sum the legs of the observations that fulfil it, rows stated `same` counted once and
+    /// their disagreement a leg's `HOLE-SAME` amount, a `from` or `to` none where their legs
+    /// name different places, and whose `day` is the last of their days; none when nothing
+    /// fulfils it (refcore's `m_c_observed`). L §5.19 Realised amounts, One movement on two
+    /// statements.
+    ///
+    /// # Errors
+    ///
+    /// The refusal of a record its realised movement rests on; `RUN-RECORD` where its
+    /// observations lack one of its legs.
+    pub(crate) fn observed_of(&mut self, m: &Reality, v: &MvRef, ctx: Ctx) -> Result<Value, Stop> {
+        let cut = ctx.cut;
+        let links = self.obs_links_for(m, &v.id, cut)?;
+        if let Some(bad) = self.bad_links.get(&(cut, v.id.clone())) {
+            return Err(Stop::Refused(bad.clone()));
+        }
+        if links.is_empty() {
+            return Ok(Value::None);
+        }
+        let all = self.observations(m, cut)?;
+        let obs: Vec<Obs> = links
+            .iter()
+            .filter_map(|id| all.iter().find(|o| o.id == *id))
+            .cloned()
+            .collect();
+        for o in &obs {
+            self.absorb(&o.coll);
+        }
+        let name = v.id.split_once('[').map_or(v.id.as_str(), |(n, _)| n);
+        let mv = m
+            .moves
+            .get(name)
+            .ok_or_else(|| invariant("an observed movement of a move load didn't build"))?;
+        let once = once_obs(&same_groups(m), &obs);
+        let mut fields = Vec::new();
+        for (leg, _, _) in m.kind_legs(&mv.kind) {
+            let value = realised_leg(m, &v.id, (&obs, &once), &leg)?;
+            fields.push((leg, value));
+        }
+        let day = obs
+            .iter()
+            .map(|o| o.day)
+            .max()
+            .ok_or_else(|| invariant("a realised movement with no observation"))?;
+        fields.push(("day".to_owned(), Value::Day(day)));
+        Ok(Value::Record(fields))
+    }
+
     /// Of the observations `good` whose links to instance `tid` stand, those two unjoined
     /// rows of one transfer make: each refused `RUN-RECORD <r> and <r'> state one transfer
     /// and both fulfil <instance>: state them same` (refcore's `unjoined_refused`). L §5.19
