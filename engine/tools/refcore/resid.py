@@ -12,7 +12,7 @@ from fractions import Fraction
 from .errors import TallyError, Refusal, Unspecified, at_run
 from .values import Num, Hole, Thing, Text, Key, Iv, fmt, fmt_hole
 from .dates import month_period
-from .moves import Inst, qty, day_lo, merge, key_text, instant_text, order_key
+from .moves import Inst, qty, day_lo, merge, key_text, instant_text, order_key, same_groups
 from .walk import K_start, K_end, kday
 
 
@@ -215,6 +215,13 @@ def m_residuals(self, place, span, by, ctx, unit=None):
             for lg in o.legs:
                 for si, p in enumerate((lg.frm, lg.to)):
                     if isinstance(p, Thing) and p.name == place:
+                        gd = lg.day if isinstance(lg.day, datetime.date) else o.day
+                        if o.id in pairs and isinstance(gd, datetime.date) and not w.obs_end_on(o, p, gd):
+                            # E §6.3: "a pair of rows stated same is one movement: the ledger lists it once, on one
+                            # line, and names both rows"; at x it is what x's statement books (L §5.19: "each end is
+                            # booked once, from the statement that covers it"), not the other row's end
+                            skip = True
+                            continue
                         try:
                             cs = w.consol(o, lg)
                         except TallyError:
@@ -231,8 +238,17 @@ def m_residuals(self, place, span, by, ctx, unit=None):
     by_target = {}
     by_adj = {}
     lone = []
+    # a pair stated same is one movement, "its fulfils ... stated on either row" (L §5.19): a row's link is its
+    # partner's where it states none
+    groups = same_groups(m)
+    all_obs = None
     for o in obs:
         f = o.fulfils
+        if f is None and o.id in groups:
+            if all_obs is None:
+                all_obs = dict((x.id, x) for x in self.observations(octx))
+            f = next((all_obs[x].fulfils for x in groups[o.id] if x in all_obs and all_obs[x].fulfils is not None),
+                     None)
         if f is None:
             lone.append(o)
             continue

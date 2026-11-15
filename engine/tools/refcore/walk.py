@@ -13,7 +13,7 @@ import bisect
 import datetime
 
 from .dates import ONE_DAY, next_day
-from .moves import item_in_world, order_key
+from .moves import item_in_world, order_key, same_groups
 from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, RandomLine
 from .model import known_first, key_text, SameDiffers, in_world
 from .values import Num, Money, Hole, Thing, Mv, Iv, Rec, Text, NONE, CURRENCIES, fmt, fmt_hole, vkey
@@ -452,9 +452,19 @@ class Walk:
                 if d <= self.end:
                     self.at((d.toordinal(), 0, 0, 'covers ' + place, 0), 'covhole', (place, q))
             links = eng.obs_links(ctx)
-            # two observations of versions covering the two ends that fulfil one instance and disagree (E §6.1)
+            # two observations of versions covering the two ends that fulfil one instance and disagree (E §6.1); a row
+            # stated same as one that fulfils it is one of them, its fulfils "stated on either row" (L §5.19)
+            groups = same_groups(m)
+            obs_by_id = None
             for tid in sorted(links):
-                os = links[tid]
+                os = list(links[tid])
+                for o in links[tid]:
+                    for x in groups.get(o.id, ()):
+                        if x != o.id and all(y.id != x for y in os):
+                            if obs_by_id is None:
+                                obs_by_id = dict((y.id, y) for y in eng.observations(ctx))
+                            if x in obs_by_id:
+                                os.append(obs_by_id[x])
                 for a_i in range(len(os)):
                     for b_i in range(a_i + 1, len(os)):
                         oa, ob = os[a_i], os[b_i]
