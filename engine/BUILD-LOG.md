@@ -3184,3 +3184,27 @@ Rulings: picks P42–P44 (`tmp/m2/auto-picks.md`); the review `tmp/m2/review-g4.
 - **Exceptions:** +0. No single-mutant proofs (gate 8's).
 - **Size:** in `engine/crates`, 261 added and 57 removed (318 changed) over the five commits.
 - **Check:** `check commit: green, 23 steps (160s)`, at this commit's tree.
+
+## 2026-11-15 M2 G4 `records`, the last fix (addendum to G4's entry; issue #167, #169)
+
+Rulings: picks P46–P48 (`tmp/m2/auto-picks.md`); the fix's review `tmp/m2/review-g4-fix.md`. Probes: the review's texts copied into `tmp/m2/b/g4fix2/` (`run.sh`: the quick binary against refcore on pypy), plus `adj_amt.tally` and `nb3*.tally`. Where refcore keeps the old answer, the spec session's refcore fix takes it (P42, P46).
+
+- **Blocking 1** (82e14aa0; `book/settle.rs` `settle`, `link_observed`, new `names_adjustment`): observed rows stated `same` that name one adjustment settle it once, the group's first row met (`once_obs`, as `flows` counts). Where the rows disagree, the settlement is the group's `HOLE-SAME` (`same_differ`, as `flows` of the move) (L §5.19, §5.14.3).
+  - `adj_same.tally`: `fw: 5 500.00 PLN` with no remaining line, byte-equal to refcore.
+  - `adj_both.tally` (`fulfils` on both rows): the same `fw: 5 500.00 PLN`. Refcore still prints `6 000.00 PLN` and `remaining -500.00 PLN` (P46 (1)).
+  - `adj_amt.tally` (c1 at 400.00): `fw` and the adjustment's remaining are `?"bank[c1] and bank[r1] are one, but the amount of cash differs on 2026-05-15: …"`. The rows are named in the observations' order, as `flows` of a move names them.
+- **P46 (2)** (d9b533e3; `book/same.rs` `same_once_at`, `skipped_at` becomes `end_book_at`, new `holed_at`): where both rows of a group book their end at the ledger's place and disagree there, the walk books one `HOLE-SAME`. The ledger lists the group once there, on its first row met, and its observed figure is that hole (E §6.3).
+  - `p_both_konto_amt.tally`, `g3_amt.tally`: konto's matched save[2026-03] has observed and difference `?"bank[a2] and bank[c1] are one, but the leg at konto differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[c1])"`, the same hole as `q_konto`. Refcore prints `observed -1 890.00 PLN, difference -940.00 PLN` (P46).
+  - `adj_amt`'s ledger line at konto takes its hole the same way.
+- **Non-blocking 3, real** (2159eaa1; `walk/tuples.rs` `link_tuple`). A `when` refused `RUN-CYCLE` was taken as existing, so the link stood with the `when` never judged. It is now refused. Other run-time refusals of a `when` are still taken as existing, as refcore does. Probe `nb3.tally`: decision `sw` with `when last(stated[konto], start_of(m)) < lim`, a reading `stated[konto] = 70.00 PLN after sw[2026-03]`, and bank[o1] fulfilling sw[2026-03].
+  - `nb3_after` (lim 0.00, so the `when` is false): before, `q_obs: 10.00 PLN`, `q_konto: 90.00 PLN` and no `RUN-RECORD`, as if sw[2026-03] existed. Now every ask is `refused: RUN-CYCLE the link to sw[2026-03] reads its own observations`.
+  - `nb3_afterT` (lim 1000.00): the same `RUN-CYCLE`. The reading's day needs the link, the link needs the `when`, and the `when` reads the reading (L §4.6, E §4.2 step 3), as the review called `b4own_cyc` a real cycle.
+  - The twins `nb3_at` and `nb3_atT` (the reading `at 2026-03-10 end`) answer as before: `RUN-RECORD observation bank[o1] fulfils sw[2026-03], which doesn't exist …`, and `q_konto: 60.00 PLN`.
+  - Refcore can't run the text: `REFCORE-NOT-YET … 'NoneType' object has no attribute 'k'`.
+- **Gate 12** (e9a744f4; `eval/read.rs` `input_view`; `walk/readings.rs` `readings_after`; `book/observe.rs` `share_fulfils`). By reading the code (CI measures), the instructions went to `input_view`. G4 made it scan every row of every input on each uncached read, for a reading `after m`. Before G4 a read with no hidden rows returned without touching the rows; the scan ran before that return, after-rows or not. It now tests `input.reading` first, so only `stated` and `opening` rows are scanned, and those only at the read's key. `readings_after` returns before cloning a run's id when no reading waits. `share_fulfils` returns at once with no `same` lines. The other G4 costs on a plain run are small and stay: `after_days`' one scan of the readings per walk, `same_groups` and `stated_same` over no `same` lines, and an id clone per after-row in `readings`. The limit is unchanged.
+- **#177** (P48): `same` rows with different `fulfils`, and rows of two kinds, keep today's answers.
+- **Regressions:** every `g4fix2/` probe prints what the review's run printed, apart from the lines above and the `exit` line `run.sh` adds. `rt/`, `rt2/`, `rt3/` and `g4fix/rt4/` are unchanged (14, 4, 1 and 51 tests equal).
+- **Code no vector covers** (for T; the probes are ready vectors): the settlement once and its hole (`adj_same`, `adj_both`, `adj_amt`), `holed_at` (`p_both_konto_amt`), a cycling `when` in `link_tuple` (`nb3_after`, `nb3_afterT`).
+- **Exceptions:** +0. No single-mutant proofs (gate 8's).
+- **Size:** in `engine/crates`, 119 added and 45 removed (164 changed) over the four commits.
+- **Check:** `check commit: green, 23 steps (81s)`, at this commit's tree.
