@@ -143,6 +143,13 @@ fixes/p60/same_rows	fixes-sweep		engine/tests/m2/fixes/p60	engine/tests/m2/fixes
 fixes/p60/settle_lit	fixes-sweep		engine/tests/m2/fixes/p60	engine/tests/m2/fixes/p60/settle_lit.tally			sweep
 fixes/p60/sum_days_win	fixes-sweep		engine/tests/m2/fixes/p60	engine/tests/m2/fixes/p60/sum_days_win.tally			-
 fixes/p60/mv_row_value	fixes-sweep		engine/tests/m2/fixes/p60	engine/tests/m2/fixes/p60/mv_row_value.tally			sweep
+fixes/g6/n1	fixes-sweep		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/n1.tally			sweep
+fixes/g6/n2	fixes-sweep		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/n2.tally			sweep
+fixes/g6/b1	fixes-sweep		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/b1.tally			sweep
+fixes/g6/b1b	fixes-sweep		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/b1b.tally			sweep
+fixes/g6/b3	fixes-sweep		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/b3.tally	q		-
+fixes/g6/b4	fixes-sweep		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/b4.tally	q2 q3 q4		-
+fixes/g6/r4_d2	fixes-sweep		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/r4.tally	d2		-
 fixes/g5/a1_alone	fixes-ledger		engine/tests/m2/fixes/g5	engine/tests/m2/fixes/g5/a1_alone.tally	t3		ledger
 fixes/g5/a1_noprefix	fixes-ledger		engine/tests/m2/fixes/g5	engine/tests/m2/fixes/g5/a1_noprefix.tally	t1		ledger
 fixes/g5/a1_prefix	fixes-ledger		engine/tests/m2/fixes/g5	engine/tests/m2/fixes/g5/a1_prefix.tally	t3		ledger

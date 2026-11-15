@@ -1,0 +1,24 @@
+model p
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6 review and fix review (tmp/m2/review-g6.md, review-g6-fix.md): B4, B5, partial over a period, a key and a function of one: the plain hole (L §5.18)"
+source card "probe"
+unit DUK: currency minor 0.01
+place konto: accounts DUK lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input pm: month
+index colors = [red, green, blue]
+input k: key colors
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  pm = ?"which month" "c"
+  k = ?"which colour" "c"
+ask q1: pm - 2026-01 law 2026-12-31 partial
+ask q2: 2026-06 - pm law 2026-12-31 partial
+ask q3: pos(k) + 1 law 2026-12-31 partial
+ask q4: year_of(start_of(pm)) + 1 law 2026-12-31 partial
+ask q5: pm - 2026-01 law 2026-12-31
