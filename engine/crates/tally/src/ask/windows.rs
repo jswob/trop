@@ -55,6 +55,9 @@ type Ran = (Printed, Vec<Tuple>);
 /// One box of days: each window's first and last day, its line, the runs it stands for.
 type Boxed = (Vec<(Day, Day)>, Printed, Vec<usize>);
 
+/// One box of a tuple's days: each window's first and last day, the runs it stands for.
+type TupleBox = (Vec<(Day, Day)>, Vec<usize>);
+
 /// One tuple of a binding taken inside a run: its head's binding part, and its line or the
 /// hole its line prints (L §5.18).
 struct Tuple {
@@ -115,7 +118,7 @@ pub(super) fn each_lines(
         let lines = if let Some(axes) = &axes {
             over_axes(m, ask, engine, (&tuple.env, ctx), axes)?
         } else {
-            let (rows, _) = each_rows(m, ask, engine, (&tuple.env, ctx), Shape::Line)?;
+            let (rows, _, _) = each_rows(m, ask, engine, (&tuple.env, ctx), Shape::Line)?;
             rows.into_iter()
                 .map(|(suffix, row, _)| (suffix, row, Vec::new()))
                 .collect()
@@ -157,7 +160,11 @@ fn bound_lines(
     engine: &mut Engine,
     (ctx, pinned): (Ctx, &Collected),
 ) -> Result<Vec<String>, Stop> {
-    let (rows, done) = each_rows(m, ask, engine, (&Env::empty(), ctx), Shape::Bound)?;
+    let (rows, done, labels) = each_rows(m, ask, engine, (&Env::empty(), ctx), Shape::Bound)?;
+    let all: BTreeSet<&str> = labels.iter().map(|w| w.id.as_str()).collect();
+    if rows.len() > 1 && done.iter().all(|d| meets_all(&d.choice, &all)) {
+        return tuple_lines(ask, (&done, &labels), (ctx, pinned));
+    }
     let mut out = Vec::new();
     for (suffix, _, runs) in rows {
         let first = runs
@@ -189,6 +196,196 @@ fn bound_lines(
             out.extend(register.into_iter().map(|l| format!("  {l}")));
         }
     }
+    Ok(out)
+}
+
+/// The lines of a keyed `windows each` line whose binding meets a window, every run having met
+/// every window: tuple by tuple, in the order the runs bind them, each tuple's lines split only
+/// by the windows its own line or its membership depends on, its sub-windows merged as a line's
+/// are; none where a sub-window doesn't bind it (L §4.4, §5.18; pick P29). A line's register is
+/// what its tuple's runs read (L §8.2).
+fn tuple_lines(
+    ask: &Ask,
+    (done, labels): (&[Done], &[Met]),
+    (ctx, pinned): (Ctx, &Collected),
+) -> Result<Vec<String>, Stop> {
+    let mut heads: Vec<&str> = Vec::new();
+    for d in done {
+        for t in &d.tuples {
+            if !heads.contains(&t.head.as_str()) {
+                heads.push(&t.head);
+            }
+        }
+    }
+    let mut days = Vec::with_capacity(done.len());
+    for d in done {
+        days.push(tuple_of(labels, &d.choice)?);
+    }
+    let mut out = Vec::new();
+    for head in heads {
+        let keys: Vec<Option<String>> = done.iter().map(|d| tuple_key(d, head)).collect();
+        let kept = windows_that_matter(labels.len(), &days, &keys)?;
+        let sub: Vec<Met> = kept
+            .iter()
+            .filter_map(|at| labels.get(*at).cloned())
+            .collect();
+        let projected: Vec<Vec<Day>> = days
+            .iter()
+            .map(|t| kept.iter().filter_map(|at| t.get(*at).copied()).collect())
+            .collect();
+        for (bounds, runs) in tuple_boxes(&sub, &projected, &keys)? {
+            let suffix = if sub.is_empty() {
+                String::new()
+            } else {
+                let parts: Vec<String> = sub
+                    .iter()
+                    .zip(&bounds)
+                    .map(|(w, (lo, hi))| format!("{} = {}", w.label, span_text(*lo, *hi)))
+                    .collect();
+                format!(" [{}]", parts.join(", "))
+            };
+            out.extend(tuple_box_lines(
+                ask,
+                done,
+                (head, &suffix),
+                &runs,
+                (ctx, pinned),
+            )?);
+        }
+    }
+    Ok(out)
+}
+
+/// What tuple `head` gives in run `d`, as it prints; none where the run doesn't bind it.
+fn tuple_key(d: &Done, head: &str) -> Option<String> {
+    let t = d.tuples.iter().find(|t| t.head == head)?;
+    Some(match &t.line {
+        Ok(l) => format!(
+            "{}\u{0}{}\u{0}{}",
+            l.text,
+            u8::from(l.bare),
+            l.body.join("\u{0}")
+        ),
+        Err(hole) => format!("?{hole}"),
+    })
+}
+
+/// The windows, by their place in the order met, on whose day a tuple's result `keys` (one per
+/// run, the runs' days `days`) depends: two runs whose days differ in that window alone give
+/// different results. L §4.4 (one line where the answer doesn't depend on the day).
+fn windows_that_matter(
+    count: usize,
+    days: &[Vec<Day>],
+    keys: &[Option<String>],
+) -> Result<Vec<usize>, Stop> {
+    let mut kept = Vec::new();
+    for at in 0..count {
+        let mut seen: std::collections::BTreeMap<Vec<Day>, &Option<String>> =
+            std::collections::BTreeMap::new();
+        let mut matters = false;
+        for (t, key) in days.iter().zip(keys) {
+            if t.get(at).is_none() {
+                return Err(invariant("a run's days past the windows met"));
+            }
+            let rest: Vec<Day> = t
+                .iter()
+                .enumerate()
+                .filter(|(i, _)| *i != at)
+                .map(|(_, d)| *d)
+                .collect();
+            match seen.get(&rest) {
+                Some(other) if *other != key => {
+                    matters = true;
+                    break;
+                }
+                Some(_) => {}
+                None => {
+                    seen.insert(rest, key);
+                }
+            }
+        }
+        if matters {
+            kept.push(at);
+        }
+    }
+    Ok(kept)
+}
+
+/// A tuple's boxes over the windows `sub` it depends on: per result, in the order first given,
+/// the maximal boxes of its runs' days `projected` (as [`boxed`] grows them), sorted by their
+/// first days, each with the runs inside it; a result where the tuple isn't bound has none.
+fn tuple_boxes(
+    sub: &[Met],
+    projected: &[Vec<Day>],
+    keys: &[Option<String>],
+) -> Result<Vec<TupleBox>, Stop> {
+    let mut answers: Vec<&Option<String>> = Vec::new();
+    for key in keys {
+        if !answers.contains(&key) {
+            answers.push(key);
+        }
+    }
+    let mut rows = Vec::new();
+    for answer in answers {
+        if answer.is_none() {
+            continue;
+        }
+        let mut cells: Vec<(Vec<Day>, usize)> = Vec::new();
+        for (at, (t, key)) in projected.iter().zip(keys).enumerate() {
+            if key == answer && !cells.iter().any(|(c, _)| c == t) {
+                cells.push((t.clone(), at));
+            }
+        }
+        for bounds in boxes(sub, &cells)? {
+            let runs: Vec<usize> = projected
+                .iter()
+                .zip(keys)
+                .enumerate()
+                .filter(|(_, (t, key))| *key == answer && inside(t, &bounds))
+                .map(|(at, _)| at)
+                .collect();
+            rows.push((bounds, runs));
+        }
+    }
+    rows.sort_by_key(|(bounds, _)| first_days(bounds));
+    Ok(rows)
+}
+
+/// One box's line of tuple `head`: its first run's line under `suffix`, with every run's
+/// register, or the hole that stands for it (L §5.18, §8.2).
+fn tuple_box_lines(
+    ask: &Ask,
+    done: &[Done],
+    (head, suffix): (&str, &str),
+    runs: &[usize],
+    (ctx, pinned): (Ctx, &Collected),
+) -> Result<Vec<String>, Stop> {
+    let first = runs
+        .first()
+        .and_then(|at| done.get(*at))
+        .and_then(|d| d.tuples.iter().find(|t| t.head == head))
+        .ok_or_else(|| invariant("a tuple's box no run binds"))?;
+    let line_head = format!("{}{head}{suffix}", ask.id);
+    let line = match &first.line {
+        Err(hole) => return Ok(vec![format!("{line_head}: {hole}")]),
+        Ok(line) => line,
+    };
+    let mut out = line.lines(&line_head);
+    let mut met = Collected::default();
+    for at in runs {
+        let same = done
+            .get(*at)
+            .and_then(|d| d.tuples.iter().find(|t| t.head == head));
+        if let Some(Tuple { line: Ok(l), .. }) = same {
+            met.merge(&l.met);
+        }
+    }
+    met.merge(&ask_pins_listed(pinned, &met));
+    let register = match line.laws {
+        Some(laws) => check_register_lines(&met, ctx, laws)?,
+        None => register_lines(&met, ctx)?,
+    };
+    out.extend(register.into_iter().map(|l| format!("  {l}")));
     Ok(out)
 }
 
@@ -309,14 +506,15 @@ fn over_axes(
 /// days the windows it meets can take, depth first, and merged: one plain line where every
 /// run gives one answer, else the nested sub-windows where the runs met different windows,
 /// else the maximal boxes of days (refcore's `each_rows`). Under a binding (`Shape::Bound`)
-/// each run binds the line's keys itself. With the rows, the runs they stand for. L §4.4.
+/// each run binds the line's keys itself. With the rows, the runs, and the windows met in the
+/// order met. L §4.4.
 fn each_rows(
     m: &Reality,
     ask: &Ask,
     engine: &mut Engine,
     (env, ctx): (&Env, Ctx),
     shape: Shape,
-) -> Result<(Rows, Vec<Done>), Stop> {
+) -> Result<(Rows, Vec<Done>, Vec<Met>), Stop> {
     let mut pending: VecDeque<Choice> = VecDeque::from([Vec::new()]);
     let mut done: Vec<Done> = Vec::new();
     let mut labels: Vec<Met> = Vec::new();
@@ -360,7 +558,7 @@ fn each_rows(
             line.met.merge(&d.line.met);
         }
         let runs = (0..done.len()).collect();
-        return Ok((vec![(String::new(), line, runs)], done));
+        return Ok((vec![(String::new(), line, runs)], done, labels));
     }
     let all: BTreeSet<&str> = labels.iter().map(|w| w.id.as_str()).collect();
     let rows = if done.iter().all(|d| meets_all(&d.choice, &all)) {
@@ -368,7 +566,7 @@ fn each_rows(
     } else {
         nested(&labels, &done)?
     };
-    Ok((rows, done))
+    Ok((rows, done, labels))
 }
 
 /// Whether choice `choice` names a day of every window in `all`, and of no other.
