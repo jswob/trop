@@ -2,10 +2,11 @@
 //! Spec: L §5.18 (`residuals x span [by f]`), E §6.3 (the ledger, its groups and totals), L §5.5
 //! (tally 2.1.7 R8: an ask of any form fans out over the axes it reads, each combination a
 //! result, equal results under one head), §8.2 (the register), §8.4 (a run-time refusal
-//! prints as the ask's line, or as its combination's), §8.1 (a place or span that is a hole
-//! makes the ask line that hole).
-//! Twin: engine/tools/refcore/ask.py (`answer_residuals`) and check.py (`_txt`, a span's text);
-//! refcore doesn't fan a ledger out (its interpreter guard), so the fanned layout is a value's.
+//! prints as its tuple's or combination's line, alone), §8.1 (a place or span that is a hole
+//! makes that line the hole, alone; tally 2.1.8 R13.1: a result is all the form prints for
+//! one binding tuple, one combination, one window).
+//! Twin: engine/tools/refcore/ask.py (`answer_residuals`, `one`) and check.py (`_txt`, a
+//! span's text).
 //! Invariants: the head names the place and the span as written, and ` by f` where the ask
 //! groups by a field; each group prints its month and name (a field's value under `by f`),
 //! then its model, observed and difference totals; every line sits under its group; at a

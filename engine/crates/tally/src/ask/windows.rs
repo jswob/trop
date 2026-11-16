@@ -1,14 +1,16 @@
-//! An ask line's `windows each`: the plain line read again with each unknown day its answer carries, and its results merged into maximal sub-windows.
+//! An ask's `windows each`: a line, ledger or diff read again with each unknown day it carries, merged into maximal sub-windows; two stacks crossed.
 //! Spec: L §4.4 (`windows each` prints one line per maximal sub-window, or combination of
 //! sub-windows, over which the answer is constant, and one plain line when the answer doesn't
 //! depend on the day; where the windows a line meets depend on the day an earlier window
-//! takes, the combinations nest; the clause on an ask line holds for every window the line
-//! meets through the whole walk; one run per sub-window combination it finds, bounded by the
+//! takes, the combinations nest; the clause on an ask line holds for every window its result
+//! reads, tally 2.1.8 R13; one run per sub-window combination it finds, bounded by the
 //! windows' days), §5.5 (under an axis, each combination's result is its windows' lines, and
 //! combinations whose lines are the same print under one head, the window part first), §5.18
-//! (one line per binding tuple), §8.2.
+//! (one line per binding tuple; tally 2.1.8 R13.1: a ledger's and a diff's blocks, each a
+//! result; a diff over two stacks crosses its sides' windows, `crossed_lines`), §7.6 item 6
+//! (at most 20 000 runs, `past_cap`), §8.2.
 //! Twin: engine/tools/refcore/ask.py (`each_lines`, `each_over_axes`, `each_rows`,
-//! `each_next`, `each_key`, `each_nested`, `boxes`, `_box_cells`, `EachRes`).
+//! `each_next`, `each_key`, `each_nested`, `boxes`, `_box_cells`, `EachRes`, `diff_each`).
 //! Invariants: the runs go depth first, a run whose answer carries an unknown day its choice
 //! names no day of run again once per day of the first of them its reads met, those runs
 //! before every run left, so a window the result never reads is never taken (tally 2.1.8
