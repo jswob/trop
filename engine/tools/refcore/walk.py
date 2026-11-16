@@ -535,9 +535,8 @@ class Walk:
             if st == 'uncertain':
                 self.uncertain.append(i)
                 continue
-            d = day_lo(i.day)
-            if d is not None and d < S and self.proj:
-                continue
+            # a projection counts each leg by its own day, t through d, whatever the movement's (L §5.14.1, E §4.3
+            # step 2; tally 2.1.8 R16, #183): sched_leg leaves out the legs dated before its start
             if st == 'refused':
                 self.sched_refused(i)
                 continue
@@ -572,6 +571,10 @@ class Walk:
                         if not self.proj and (d < m.S or d > m.E):
                             self.note_leftout(i)
                             self.note_post_e(i, d)
+                        if self.proj and d < S:
+                            # computed in the walk the projection continues; its legs dated in the window are counted
+                            # by their own day (L §5.14.1, E §4.3 step 2; tally 2.1.8 R16, #183)
+                            self.base_legs(i)
                         continue
                     k = (qid, d)
                     if k not in self.decday:
@@ -594,6 +597,19 @@ class Walk:
         if not self.proj:
             for a in eng.adjustments(ctx):
                 self.sched_adj(a)
+
+    def base_legs(self, i):
+        """A decision dated before a projection's start: the legs its run in the base walk booked on days from the
+        start on, scheduled here on their own days (#183)."""
+        run, ww = None, self.base
+        while ww is not None and run is None:
+            run = ww.decs.get(i.id)
+            ww = ww.base
+        if run is None or getattr(run, 'status', None) not in ('past', 'plan'):
+            return
+        for lg in run.legs:
+            if isinstance(lg.day, datetime.date) and self.start <= lg.day <= self.end:
+                self.at((lg.day.toordinal(), 2, 0, plan_key(run), 0), 'leg', (run, lg))
 
     def dec_hole(self, i, key, h, ctx):
         """A decision instance whose day is a hole (or a window no clause fixes) is a hole movement: both ends of its
