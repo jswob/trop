@@ -1,4 +1,4 @@
-//! A `diff` ask's lines: its value in two worlds, key by key changed, added, removed or unchanged, per combination of the axes it reads, then the register of both.
+//! A `diff` ask's result: its value in two worlds, key by key changed, added, removed or unchanged, then the register of both.
 //! Spec: L §5.18 (`diff(e [for binds]) in S against B`: e evaluated in world S and in world B,
 //! keyed by the binding tuple, a diff line in the world where its `where` is a hole printed as
 //! that hole), §5.5 (tally 2.1.7 R8: an ask of any form fans out over the axes it reads, a
@@ -11,7 +11,8 @@
 //! `diff_print`, `rkey`, `fmt_value`, `fmt_bind`), cli.py (`cross_stack_diff`) and check.py
 //! (`_txt`, the key of a diff without bindings).
 //! Invariants: a cell per combination, in refcore's order, each with its combination's layer
-//! open only while it is evaluated; in a cell each world is evaluated in its own timeline,
+//! open only while it is evaluated (the ask's loop, `answer.rs` `tuple_lines`, or here for a
+//! diff across two stacks); in a cell each world is evaluated in its own timeline,
 //! entered and left around it, in the order written (S, then B); a key is its tuple's
 //! variables, or the expression's text with no bindings; S's lines come in their order, then
 //! B's keys that S lacks; two values are unchanged only when they are the same value, a hole
@@ -72,21 +73,22 @@ pub(super) struct Cells {
     ctx: Ctx,
 }
 
-/// A `diff` ask's lines (refcore's `answer_diff`, `diff_print`): per distinct result across
-/// the combinations of the axes it reads, the head with the counts, a line per key changed,
-/// added or removed, then the register of both worlds. L §5.18, §5.5, §6.4.
+/// A `diff` ask's result in context `ctx` (refcore's `answer_diff`, `diff_print`): the
+/// counts, a line per key changed, added or removed, the register of both worlds with the
+/// ask's pins `pinned`; the ask's loop fans it out over the axes it reads, one combination's
+/// cell each. L §5.18, §5.5, §6.4.
 ///
 /// # Errors
 ///
-/// A load refusal met at run; `NotBuilt` past what the engine builds.
-pub(super) fn diff_lines(
+/// A refusal met at run; `NotBuilt` past what the engine builds.
+pub(super) fn diff_result(
     m: &Reality,
-    (ask, diff): (&Ask, &Diff),
+    diff: &Diff,
     engine: &mut Engine,
     (ctx, pinned): (Ctx, &Collected),
-) -> Result<Vec<String>, Stop> {
-    let cells = diff_cells(m, (ask, diff), engine, (ctx, pinned), None)?;
-    cells_lines(m, (ask, diff), &cells)
+) -> Result<Printed, Stop> {
+    let made = cell(m, diff, engine, (ctx, pinned), (Vec::new(), None))?;
+    result(m, diff, &made)
 }
 
 /// A diff's cells, one per combination of the axes the ask fans out over: in each, the
@@ -288,6 +290,7 @@ fn result(m: &Reality, diff: &Diff, cell: &Cell) -> Result<Printed, Stop> {
         body: lines,
         bare: false,
         whole: true,
+        alone: false,
         met: cell.met.clone(),
         laws: None,
     })

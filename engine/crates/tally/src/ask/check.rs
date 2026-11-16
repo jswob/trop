@@ -27,6 +27,9 @@ pub(super) struct Printed {
     pub bare: bool,
     /// Whether the lines under the head are part of the result, as a `diff`'s are (L §5.5).
     pub whole: bool,
+    /// Whether the line prints alone, no register under it: a residual ledger whose place or
+    /// span is a hole (refcore's `answer_residuals`, L §8.1).
+    pub alone: bool,
     /// The register entries the line met.
     pub met: Collected,
     /// A check's sides' law dates, where a side's own `as if {law D}` makes them differ.
@@ -102,6 +105,7 @@ pub(super) fn check_line(
         bare: false,
 
         whole: false,
+        alone: false,
         met,
         laws: (laws.0 != laws.1).then_some(laws),
     })

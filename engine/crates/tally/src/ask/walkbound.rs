@@ -168,6 +168,7 @@ fn printed(text: String, body: Vec<String>) -> Printed {
         body,
         bare: false,
         whole: false,
+        alone: false,
         met: Collected::default(),
         laws: None,
     }

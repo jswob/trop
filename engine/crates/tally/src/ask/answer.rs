@@ -24,10 +24,10 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use super::axes::{Axes, fanned_lines};
 use super::check::{Printed, check_line};
-use super::diff::{Cells, cells_lines, crossed, diff_cells, diff_lines};
+use super::diff::{Cells, cells_lines, crossed, diff_cells, diff_result};
 use super::explain::{explain_line, inputs_line, readers_line};
 use super::register::{check_register_lines, register_lines, warning_lines};
-use super::residuals::residual_lines;
+use super::residuals::residual_result;
 use crate::base::{Code, Load, Place, Reach, Refusal, Req, Run, Warn};
 use crate::book::SameMet;
 use crate::eval::{
@@ -834,22 +834,10 @@ fn ask_body(
         engine.open_layer(m, inside)?;
         inside
     };
-    if ask.windows_each && matches!(ask.body, AskBody::Diff(_) | AskBody::Residuals(_)) {
-        if side.is_some() {
-            return Err(Stop::NotBuilt("a diff's `windows each` over two stacks"));
-        }
-        // a diff's and a ledger's result is their set of lines (R8), run per sub-window
-        return super::windows::each_set(m, ask, engine, (ctx, &pinned));
-    }
-    match &ask.body {
-        AskBody::Exprs(_)
-        | AskBody::Check(..)
-        | AskBody::Solve(_)
-        | AskBody::Explain(_)
-        | AskBody::InputsOf(_) => tuple_lines(m, ask, engine, (ctx, &pinned)),
+    match (&ask.body, side) {
         // `readers-of` is static: its tuples are read for a domain that is a hole, and it
         // fans out over no axis (refcore's `_answer_in`, its readers-of return)
-        AskBody::ReadersOf(reference) => {
+        (AskBody::ReadersOf(reference), _) => {
             if !ask.binds.is_empty()
                 && let Err(hole) = engine.tuples(m, &ask.binds, ctx)?
             {
@@ -857,17 +845,19 @@ fn ask_body(
             }
             Ok(vec![readers_line(m, ask, reference)?])
         }
-        AskBody::Residuals(r) => residual_lines(m, ask, r, engine, (ctx, &pinned)),
         // one side of a diff whose worlds sit on two stacks: its cells, kept for the turn
         // that prints both (refcore's `_diff_only`, `_diff_side`)
-        AskBody::Diff(diff) => match side {
-            Some(side) => {
-                let cells = diff_cells(m, (ask, diff), engine, (ctx, &pinned), Some(&side.world))?;
-                side.cells = Some(cells);
-                Ok(Vec::new())
+        (AskBody::Diff(diff), Some(side)) => {
+            if ask.windows_each {
+                return Err(Stop::NotBuilt("a diff's `windows each` over two stacks"));
             }
-            None => diff_lines(m, (ask, diff), engine, (ctx, &pinned)),
-        },
+            let cells = diff_cells(m, (ask, diff), engine, (ctx, &pinned), Some(&side.world))?;
+            side.cells = Some(cells);
+            Ok(Vec::new())
+        }
+        // every other form: per binding tuple, axis combination and sub-window, its result
+        // what the form prints (L §5.18, tally 2.1.8 R13)
+        _ => tuple_lines(m, ask, engine, (ctx, &pinned)),
     }
 }
 
@@ -883,15 +873,40 @@ fn model_ctx(
     Ok(ctx)
 }
 
-/// An ask's form a tuple's line doesn't hold: a residual ledger, a diff, `readers-of`.
-fn beyond_built() -> Stop {
-    Stop::NotBuilt("an ask's form beyond values, check, solve, explain and inputs-of")
+/// An ask's lines: a line per binding tuple with the register under it, fanned out over the
+/// axes the ask reaches and, under `windows each`, split by sub-window, each line the result
+/// its form prints: values, a check, a solve, an `explain`, an `inputs-of`, a residual ledger
+/// or a diff (refcore's `_answer_in`, `print_line`). L §5.18 (tally 2.1.8 R13: every clause
+/// stands on every form), §5.5, §4.4.
+fn tuple_lines(
+    m: &Reality,
+    ask: &Ask,
+    engine: &mut Engine,
+    (ctx, pinned): (Ctx, &Collected),
+) -> Result<Vec<String>, Stop> {
+    if !ask.binds.is_empty() && matches!(ask.body, AskBody::Residuals(_) | AskBody::Diff(_)) {
+        // a ledger and a diff take no binding of the ask's own: a diff's is in its brackets,
+        // and a ledger's own `for` is #185's
+        if let AskBody::Residuals(r) = &ask.body
+            && names_a_for(ask, &r.place)
+        {
+            return Err(Stop::Refused(Refusal::new(
+                Code::Run(Run::Domain),
+                "a residual ledger at a place keyed by the ask's own for".to_owned(),
+            )));
+        }
+        let unbound = Ask {
+            binds: Vec::new(),
+            ..ask.clone()
+        };
+        return clause_lines(m, &unbound, engine, (ctx, pinned));
+    }
+    clause_lines(m, ask, engine, (ctx, pinned))
 }
 
-/// An ask's lines of values, of a check or of a solve: a line per binding tuple with the
-/// register under it, fanned out over the axes the ask reaches (refcore's `_answer_in`,
-/// `print_line`). L §5.18, §5.5.
-fn tuple_lines(
+/// [`tuple_lines`] of an ask whose binding its form takes: its `windows each` clause, a
+/// read's, or neither. L §4.4, §5.18.
+fn clause_lines(
     m: &Reality,
     ask: &Ask,
     engine: &mut Engine,
@@ -969,8 +984,11 @@ fn plain_lines(
             out.push(format!("{head}: {}", hole.text()));
             continue;
         }
-        let mut line = form_line(m, ask, engine, &tuple.env, ctx)?;
+        let mut line = form_line(m, ask, engine, (&tuple.env, ctx, pinned))?;
         out.extend(line.lines(&head));
+        if line.alone {
+            continue;
+        }
         line.met.merge(&tuple.brought);
         line.met.merge(&ask_pins_listed(pinned, &line.met));
         let register = match line.laws {
@@ -1001,15 +1019,17 @@ pub(super) fn ask_pins_listed(pinned: &Collected, line: &Collected) -> Collected
     kept
 }
 
-/// One tuple's line after its head, with the register entries it met: the values of
-/// `e, f, …`, a `check`'s or a `solve`'s (refcore's `evaluate`). A line holding a bare key
-/// literal meets its `LOAD-KEY ambiguous key` where it is evaluated (L §2.5, §8.3; P39).
+/// One tuple's line after its head in scope `env` and context `ctx`, with the register
+/// entries it met: the result its form prints, the values of `e, f, …`, a `check`'s, a
+/// `solve`'s, an `explain`'s, an `inputs-of`'s, a residual ledger or a diff, whose register
+/// holds the ask's pins `pinned` (refcore's `evaluate`, `answer_residuals`, `answer_diff`). A
+/// line holding a bare key literal meets its `LOAD-KEY ambiguous key` where it is evaluated
+/// (L §2.5, §8.3; P39). L §5.18 (tally 2.1.8 R13).
 pub(super) fn form_line(
     m: &Reality,
     ask: &Ask,
     engine: &mut Engine,
-    env: &Env,
-    ctx: Ctx,
+    (env, ctx, pinned): (&Env, Ctx, &Collected),
 ) -> Result<Printed, Stop> {
     match &ask.body {
         AskBody::Exprs(exprs) => {
@@ -1023,6 +1043,7 @@ pub(super) fn form_line(
                 bare: false,
 
                 whole: false,
+                alone: false,
                 met,
                 laws: None,
             })
@@ -1036,13 +1057,16 @@ pub(super) fn form_line(
                 bare: false,
 
                 whole: false,
+                alone: false,
                 met,
                 laws: None,
             })
         }
         AskBody::Explain(reference) => explain_line(m, (ask, reference), engine, env, ctx),
         AskBody::InputsOf(reference) => inputs_line(m, (ask, reference), engine, env, ctx),
-        AskBody::Residuals(_) | AskBody::ReadersOf(_) | AskBody::Diff(_) => Err(beyond_built()),
+        AskBody::Residuals(r) => residual_result(m, ask, r, engine, (ctx, pinned)),
+        AskBody::Diff(diff) => diff_result(m, diff, engine, (ctx, pinned)),
+        AskBody::ReadersOf(_) => Err(invariant("readers-of read as a tuple's line")),
     }
 }
 

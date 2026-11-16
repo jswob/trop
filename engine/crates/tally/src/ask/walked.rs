@@ -112,6 +112,7 @@ pub(super) fn balance_line(
         bare: false,
 
         whole: false,
+        alone: false,
         met,
         laws: None,
     })

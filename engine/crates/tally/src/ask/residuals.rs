@@ -1,4 +1,4 @@
-//! A `residuals` ask's lines: its head, each group of the residual ledger with its totals and its lines under it, per combination of the axes it reads, then the register.
+//! A `residuals` ask's result: its head, each group of the residual ledger with its totals and its lines under it, then the register; the ask's loop fans it out.
 //! Spec: L §5.18 (`residuals x span [by f]`), E §6.3 (the ledger, its groups and totals), L §5.5
 //! (tally 2.1.7 R8: an ask of any form fans out over the axes it reads, each combination a
 //! result, equal results under one head), §8.2 (the register), §8.4 (a run-time refusal
@@ -11,63 +11,49 @@
 //! then its model, observed and difference totals; every line sits under its group; at a
 //! place of unit `any`, each unit's ledger prints under its own `ledger <unit>:` head, in the
 //! order of the units' ids, its groups one step further in; the register is what reading the
-//! ledger met, with the ask's own entries; a combination's layer is open only while its
-//! ledger is read.
+//! ledger met, with the ask's own entries; the ask's loop (`answer.rs` `tuple_lines`) opens a
+//! combination's layer only while its ledger is read.
 
-use super::axes::{Axes, result_lines};
+use super::axes::Axes;
 use super::check::Printed;
-use super::register::register_lines;
-use crate::base::{Code, Refusal, Run};
+use crate::base::Code;
 use crate::book::{Ledger, UnitLedger, fig_text};
 use crate::eval::{Collected, Ctx, Engine};
 use crate::model::Reality;
 use crate::syntax::{Ask, Expr, Lit, Residuals, Span, Stop};
 
-/// A `residuals` ask's lines (refcore's `answer_residuals`): the head, then each group's line
-/// and its lines, then the register; over the axes it reads, one such result per distinct
-/// ledger across their combinations, under a head naming its options. E §6.3, L §5.18, §5.5.
+/// A `residuals` ask's result in context `ctx` (refcore's `answer_residuals`): the head, then
+/// each group's line and its lines, its register with the ask's pins `pinned`; a hole place or
+/// span alone. Where the ask reads axes, this is one combination's: the hole, or the run-time
+/// refusal it met, is its text, with the register (`combination_result`). E §6.3, L §5.18,
+/// §5.5.
 ///
 /// # Errors
 ///
 /// The refusals the ledger meets, which the ask prints as its line; `NotBuilt` past what the
 /// engine builds.
-pub(super) fn residual_lines(
+pub(super) fn residual_result(
     m: &Reality,
     ask: &Ask,
     r: &Residuals,
     engine: &mut Engine,
     (ctx, pinned): (Ctx, &Collected),
-) -> Result<Vec<String>, Stop> {
-    if super::answer::names_a_for(ask, &r.place) {
-        // a ledger at a place its own `for` keys: one ledger per tuple (L §5.18) or a load
-        // refusal, which #185 rules; until then a refusal of this run, never an invariant
-        return Err(Stop::Refused(Refusal::new(
-            Code::Run(Run::Domain),
-            "a residual ledger at a place keyed by the ask's own for".to_owned(),
-        )));
+) -> Result<Printed, Stop> {
+    if Axes::of(m, ask)?.is_some() {
+        return combination_result(m, r, engine, (ctx, pinned));
     }
-    let Some(axes) = Axes::of(m, ask)? else {
-        let result = match ledger_result(m, r, engine, (ctx, pinned))? {
-            Ok(result) => result,
-            Err(hole) => return Ok(vec![format!("{}: {hole}", ask.id)]),
-        };
-        let mut out = result.lines(&ask.id);
-        let register = register_lines(&result.met, ctx)?;
-        out.extend(register.into_iter().map(|l| format!("  {l}")));
-        return Ok(out);
-    };
-    let combos = axes.combinations()?;
-    let mut results = Vec::with_capacity(combos.len());
-    for (at, combo) in combos.iter().enumerate() {
-        let inside = engine.with_options(ctx, &axes.options_of(combo)?)?;
-        engine.open_layer(m, inside)?;
-        let read = combination_result(m, r, engine, (inside, pinned));
-        engine.end_layer(inside.layer, read.as_ref().err())?;
-        results.push((at, read?));
-    }
-    // the ask's pins are in each result's register already
-    let pins = Collected::default();
-    result_lines((&axes, &combos), &ask.id, &results, (ctx, &pins))
+    Ok(match ledger_result(m, r, engine, (ctx, pinned))? {
+        Ok(result) => result,
+        Err(hole) => Printed {
+            text: hole,
+            body: Vec::new(),
+            bare: false,
+            whole: true,
+            alone: true,
+            met: Collected::default(),
+            laws: None,
+        },
+    })
 }
 
 /// The ledger of `r` in context `ctx` as a result: its head's text, its groups' lines under
@@ -108,6 +94,7 @@ fn ledger_result(
         body,
         bare: false,
         whole: true,
+        alone: false,
         met,
         laws: None,
     }))
@@ -155,6 +142,7 @@ fn combination_result(
         body: Vec::new(),
         bare: false,
         whole: true,
+        alone: false,
         met: pinned.clone(),
         laws: None,
     })

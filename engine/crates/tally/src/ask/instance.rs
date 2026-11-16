@@ -60,6 +60,7 @@ pub(super) fn instance_line(
         bare: false,
 
         whole: false,
+        alone: false,
         met,
         laws: None,
     })

@@ -84,6 +84,7 @@ pub(super) fn explain_line(
         bare: false,
 
         whole: false,
+        alone: false,
         met,
         laws: None,
     })
@@ -255,6 +256,7 @@ pub(super) fn inputs_line(
         bare: true,
 
         whole: false,
+        alone: false,
         met,
         laws: None,
     })

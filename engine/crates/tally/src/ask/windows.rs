@@ -21,9 +21,7 @@ use std::collections::{BTreeSet, VecDeque};
 use super::answer::{ask_pins_listed, env_text, form_line};
 use super::axes::{Axes, grouped};
 use super::check::Printed;
-use super::diff::diff_lines;
 use super::register::{check_register_lines, register_lines};
-use super::residuals::residual_lines;
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{Choice, Collected, Ctx, Engine, Entry, Env, Member, Met};
 use crate::model::Reality;
@@ -125,9 +123,9 @@ pub(super) fn each_lines(
             continue;
         }
         let lines = if let Some(axes) = &axes {
-            over_axes(m, ask, engine, (&tuple.env, ctx), axes)?
+            over_axes(m, ask, engine, (&tuple.env, ctx, pinned), axes)?
         } else {
-            let (rows, _, _) = each_rows(m, ask, engine, (&tuple.env, ctx), Shape::Line)?;
+            let (rows, _, _) = each_rows(m, ask, engine, (&tuple.env, ctx, pinned), Shape::Line)?;
             rows.into_iter()
                 .map(|(suffix, row, _)| (suffix, row, Vec::new()))
                 .collect()
@@ -136,6 +134,9 @@ pub(super) fn each_lines(
         // (L §8.2)
         for (suffix, mut row, readings) in lines {
             out.extend(row.lines(&format!("{head}{suffix}")));
+            if row.alone {
+                continue;
+            }
             row.met.merge(&tuple.brought);
             row.met.merge(&ask_pins_listed(pinned, &row.met));
             for reading in readings {
@@ -189,21 +190,22 @@ fn bound_lines(
         return bound_over_axes(m, ask, engine, (ctx, pinned), axes);
     }
     let mut out = Vec::new();
-    for row in bound_rows(m, ask, engine, ctx)? {
+    for row in bound_rows(m, ask, engine, (ctx, pinned))? {
         out.extend(row_lines(ask, row, ("", &[]), (ctx, pinned))?);
     }
     Ok(out)
 }
 
-/// The rows of ask `ask`'s keyed `windows each` line in context `ctx`, its binding taken
-/// inside each run ([`bound_lines`]). L §4.4, §5.18.
+/// The rows of ask `ask`'s keyed `windows each` line in context `ctx` with the ask's pins
+/// `pinned`, its binding taken inside each run ([`bound_lines`]). L §4.4, §5.18.
 fn bound_rows(
     m: &Reality,
     ask: &Ask,
     engine: &mut Engine,
-    ctx: Ctx,
+    (ctx, pinned): (Ctx, &Collected),
 ) -> Result<Vec<BoundRow>, Stop> {
-    let (rows, done, labels) = each_rows(m, ask, engine, (&Env::empty(), ctx), Shape::Bound)?;
+    let (rows, done, labels) =
+        each_rows(m, ask, engine, (&Env::empty(), ctx, pinned), Shape::Bound)?;
     let all: BTreeSet<&str> = labels.iter().map(|w| w.id.as_str()).collect();
     if rows.len() > 1 && done.iter().all(|d| meets_all(&d.choice, &all)) {
         return tuple_rows(&done, &labels);
@@ -293,7 +295,7 @@ fn bound_over_axes(
     for combo in &combos {
         let inside = engine.with_options(ctx, &axes.options_of(combo)?)?;
         engine.open_layer(m, inside)?;
-        let rows = bound_rows(m, ask, engine, inside);
+        let rows = bound_rows(m, ask, engine, (inside, pinned));
         engine.end_layer(inside.layer, rows.as_ref().err())?;
         each.push(rows?);
     }
@@ -376,6 +378,7 @@ fn compared(rows: &[&BoundRow]) -> Printed {
         body: Vec::new(),
         bare: false,
         whole: false,
+        alone: false,
         met: Collected::default(),
         laws: None,
     }
@@ -582,13 +585,14 @@ fn tuple_box_row(
     })
 }
 
-/// One run's binding and each tuple's line in context `ctx`: the tuples, and the run's
-/// result to compare, every tuple's head and line as they print (L §5.18, §4.4).
+/// One run's binding and each tuple's line in context `ctx` with the ask's pins `pinned`:
+/// the tuples, and the run's result to compare, every tuple's head and line as they print
+/// (L §5.18, §4.4).
 fn bound_run(
     m: &Reality,
     ask: &Ask,
     engine: &mut Engine,
-    ctx: Ctx,
+    (ctx, pinned): (Ctx, &Collected),
 ) -> Result<(Printed, Vec<Tuple>), Stop> {
     let mut tuples = Vec::new();
     match engine.tuples(m, &ask.binds, ctx)? {
@@ -602,7 +606,7 @@ fn bound_run(
                 let line = if let Some(hole) = member.unknown {
                     Err(hole.text())
                 } else {
-                    let mut line = form_line(m, ask, engine, &member.env, ctx)?;
+                    let mut line = form_line(m, ask, engine, (&member.env, ctx, pinned))?;
                     line.met.merge(&member.brought);
                     Ok(line)
                 };
@@ -631,6 +635,7 @@ fn bound_run(
         body: Vec::new(),
         bare: false,
         whole: false,
+        alone: false,
         met,
         laws: None,
     };
@@ -645,7 +650,7 @@ fn over_axes(
     m: &Reality,
     ask: &Ask,
     engine: &mut Engine,
-    (env, ctx): (&Env, Ctx),
+    (env, ctx, pinned): (&Env, Ctx, &Collected),
     axes: &Axes,
 ) -> Result<Vec<(String, Printed, Vec<String>)>, Stop> {
     let combos = axes.combinations()?;
@@ -653,7 +658,7 @@ fn over_axes(
     for combo in &combos {
         let inside = engine.with_options(ctx, &axes.options_of(combo)?)?;
         engine.open_layer(m, inside)?;
-        let rows = each_rows(m, ask, engine, (env, inside), Shape::Line);
+        let rows = each_rows(m, ask, engine, (env, inside, pinned), Shape::Line);
         engine.end_layer(inside.layer, rows.as_ref().err())?;
         each.push(rows?.0);
     }
@@ -673,6 +678,7 @@ fn over_axes(
                 body: Vec::new(),
                 bare: false,
                 whole: false,
+                alone: false,
                 met: Collected::default(),
                 laws: None,
             },
@@ -705,24 +711,29 @@ fn over_axes(
     Ok(out)
 }
 
-/// The line of ask `ask` in scope `env` and context `ctx`, run once per combination of the
-/// days the windows it meets can take, depth first, and merged: one plain line where every
-/// run gives one answer, else the nested sub-windows where the runs met different windows,
-/// else the maximal boxes of days (refcore's `each_rows`). Under a binding (`Shape::Bound`)
-/// each run binds the line's keys itself. With the rows, the runs, and the windows met in the
-/// order met. L §4.4.
+/// The line of ask `ask` in scope `env` and context `ctx` with the ask's pins `pinned`, run
+/// once per combination of the days the windows it meets can take, depth first, and merged:
+/// one plain line where every run gives one answer, else the nested sub-windows where the
+/// runs met different windows, else the maximal boxes of days (refcore's `each_rows`). Under
+/// a binding (`Shape::Bound`) each run binds the line's keys itself. With the rows, the runs,
+/// and the windows met in the order met. L §4.4.
+///
+/// # Errors
+///
+/// A refusal a run meets; `RUN-LIMIT` past the cap; `NotBuilt` for a ledger or a diff whose
+/// runs' sets differ: a set of lines split by sub-windows has no printed form yet.
 fn each_rows(
     m: &Reality,
     ask: &Ask,
     engine: &mut Engine,
-    (env, ctx): (&Env, Ctx),
+    (env, ctx, pinned): (&Env, Ctx, &Collected),
     shape: Shape,
 ) -> Result<(Rows, Vec<Done>, Vec<Met>), Stop> {
     let mut pending: VecDeque<Choice> = VecDeque::from([Vec::new()]);
     let mut done: Vec<Done> = Vec::new();
     let mut labels: Vec<Met> = Vec::new();
     while let Some(choice) = pending.pop_front() {
-        let ((line, tuples), met) = run_once(m, ask, engine, (env, ctx), (&choice, shape))?;
+        let ((line, tuples), met) = run_once(m, ask, engine, (env, ctx, pinned), (&choice, shape))?;
         let new = met.into_iter().find(|w| !names(&choice, &w.id));
         let Some(new) = new else {
             done.push(Done {
@@ -760,6 +771,11 @@ fn each_rows(
         let runs = (0..done.len()).collect();
         return Ok((vec![(String::new(), line, runs)], done, labels));
     }
+    if matches!(ask.body, AskBody::Residuals(_) | AskBody::Diff(_)) {
+        return Err(Stop::NotBuilt(
+            "a ledger's or a diff's `windows each` whose lines differ by sub-window",
+        ));
+    }
     let all: BTreeSet<&str> = labels.iter().map(|w| w.id.as_str()).collect();
     let rows = if done.iter().all(|d| meets_all(&d.choice, &all)) {
         boxed(&labels, &done)?
@@ -767,83 +783,6 @@ fn each_rows(
         nested(&labels, &done)?
     };
     Ok((rows, done, labels))
-}
-
-/// The lines of ask `ask`, a residual ledger or a diff, which states `windows each`: its set
-/// of lines (R8) run once per combination of the days the windows it meets can take, depth
-/// first, as a line's runs go ([`each_rows`]); the one set where every run prints the same
-/// lines, as the answer doesn't depend on the day (L §4.4), which is refcore's one run with
-/// each window at its first day (`answer_residuals`, `answer_diff` under `windows each`).
-///
-/// # Errors
-///
-/// A refusal a run meets; `RUN-LIMIT` past the cap; `NotBuilt` where two runs' sets differ:
-/// a set of lines split by sub-windows has no printed form yet.
-pub(super) fn each_set(
-    m: &Reality,
-    ask: &Ask,
-    engine: &mut Engine,
-    (ctx, pinned): (Ctx, &Collected),
-) -> Result<Vec<String>, Stop> {
-    let mut pending: VecDeque<Choice> = VecDeque::from([Vec::new()]);
-    let mut first: Option<Vec<String>> = None;
-    let mut runs: usize = 0;
-    while let Some(choice) = pending.pop_front() {
-        let outer = engine.each_met.replace(Vec::new());
-        let lines = set_inside(m, ask, engine, (ctx, pinned), &choice);
-        let met = core::mem::replace(&mut engine.each_met, outer)
-            .ok_or_else(|| invariant("a set's windows met taken while it ran"))?;
-        let lines = lines?;
-        if let Some(new) = met.into_iter().find(|w| !names(&choice, &w.id)) {
-            for day in new.days.iter().rev() {
-                let mut next = choice.clone();
-                next.push((new.id.clone(), *day));
-                pending.push_front(next);
-            }
-            if pending.len().checked_add(runs).is_none_or(|n| n > EACH_CAP) {
-                return Err(past_cap());
-            }
-            continue;
-        }
-        runs = runs
-            .checked_add(1)
-            .ok_or_else(|| invariant("a set's runs past the integers"))?;
-        match &first {
-            None => first = Some(lines),
-            Some(set) if *set == lines => {}
-            Some(_) => {
-                return Err(Stop::NotBuilt(
-                    "a ledger's or a diff's `windows each` whose lines differ by sub-window",
-                ));
-            }
-        }
-    }
-    first.ok_or_else(|| invariant("windows each with no run"))
-}
-
-/// The set of lines of ask `ask`, a residual ledger or a diff, in context `ctx` under choice
-/// `choice`, its layer open while it is evaluated. L §4.4, E §6.3, L §5.18.
-fn set_inside(
-    m: &Reality,
-    ask: &Ask,
-    engine: &mut Engine,
-    (ctx, pinned): (Ctx, &Collected),
-    choice: &Choice,
-) -> Result<Vec<String>, Stop> {
-    let inside = under(engine, ask, ctx, choice)?;
-    engine.open_layer(m, inside)?;
-    let lines = match &ask.body {
-        AskBody::Residuals(r) => residual_lines(m, ask, r, engine, (inside, pinned)),
-        AskBody::Diff(diff) => diff_lines(m, (ask, diff), engine, (inside, pinned)),
-        AskBody::Exprs(_)
-        | AskBody::Check(..)
-        | AskBody::Solve(_)
-        | AskBody::Explain(_)
-        | AskBody::InputsOf(_)
-        | AskBody::ReadersOf(_) => Err(invariant("a set of lines of an ask with one line")),
-    };
-    engine.end_layer(inside.layer, lines.as_ref().err())?;
-    lines
 }
 
 /// `RUN-LIMIT` past [`EACH_CAP`] day combinations (pick P28, #174, interim).
@@ -886,31 +825,33 @@ fn run_once(
     m: &Reality,
     ask: &Ask,
     engine: &mut Engine,
-    (env, ctx): (&Env, Ctx),
+    (env, ctx, pinned): (&Env, Ctx, &Collected),
     (choice, shape): (&Choice, Shape),
 ) -> Result<(Ran, Vec<Met>), Stop> {
     let outer = engine.each_met.replace(Vec::new());
-    let line = run_inside(m, ask, engine, (env, ctx), (choice, shape));
+    let line = run_inside(m, ask, engine, (env, ctx, pinned), (choice, shape));
     let met = core::mem::replace(&mut engine.each_met, outer)
         .ok_or_else(|| invariant("a run's windows met taken while it ran"))?;
     Ok((line?, met))
 }
 
 /// The line of ask `ask` in scope `env`, or under a binding (`Shape::Bound`) its tuples'
-/// lines, in context `ctx` under choice `choice`, its layer open while it is evaluated.
-/// L §4.4.
+/// lines, in context `ctx` under choice `choice` with the ask's pins `pinned`, its layer open
+/// while it is evaluated. L §4.4.
 fn run_inside(
     m: &Reality,
     ask: &Ask,
     engine: &mut Engine,
-    (env, ctx): (&Env, Ctx),
+    (env, ctx, pinned): (&Env, Ctx, &Collected),
     (choice, shape): (&Choice, Shape),
 ) -> Result<(Printed, Vec<Tuple>), Stop> {
     let inside = under(engine, ask, ctx, choice)?;
     engine.open_layer(m, inside)?;
     let line = match shape {
-        Shape::Bound => bound_run(m, ask, engine, inside),
-        Shape::Line => form_line(m, ask, engine, env, inside).map(|line| (line, Vec::new())),
+        Shape::Bound => bound_run(m, ask, engine, (inside, pinned)),
+        Shape::Line => {
+            form_line(m, ask, engine, (env, inside, pinned)).map(|line| (line, Vec::new()))
+        }
     };
     engine.end_layer(inside.layer, line.as_ref().err())?;
     line
