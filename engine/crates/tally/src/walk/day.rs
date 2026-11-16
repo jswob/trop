@@ -320,7 +320,12 @@ impl Engine {
             }
             Act::LegBad(mv, leg, err) => {
                 let (movement, lg) = self.movement_leg(id, mv, leg)?;
-                self.walk_mut(id)?.leg_bad(m, &movement.id, &lg, &err, at)
+                let walk = self.walk_mut(id)?;
+                if movement.day.as_ref().and_then(Dated::lo).is_none() {
+                    // its day is a hole or refused (tally 2.1.8, R11)
+                    return walk.leg_bad_undated(m, &movement.id, &lg, &err, at);
+                }
+                walk.leg_bad(m, &movement.id, &lg, &err, at)
             }
             Act::Perm(mv, leg, h) => {
                 let (movement, lg) = self.movement_leg(id, mv, leg)?;
@@ -748,7 +753,10 @@ impl Engine {
 }
 
 impl Walk {
-    /// A refused leg: its places refused from here (refcore's `leg_bad`). E §4.2 step 5.
+    /// A refused leg: its places refused from here to each one's next reading; a leg whose
+    /// amount is refused has no unit of its own, so it is kept at its place's unit, where that
+    /// reading ends it, or at every unit of a place of unit `any` (refcore's `leg_bad`). E §4.2
+    /// step 5; L §8 (Refusals outrank holes, tally 2.1.8).
     pub(crate) fn leg_bad(
         &mut self,
         m: &Reality,
@@ -757,13 +765,44 @@ impl Walk {
         err: &Refusal,
         at: At,
     ) -> Result<(), Stop> {
-        let unit = lg.unit.clone().unwrap_or_else(|| ALL.to_owned());
+        self.leg_refused(m, (movement, lg), &Change::Bad(err.clone()), at)
+    }
+
+    /// A refused leg's `change`, a dated refusal or one no reading ends, at each place it
+    /// names, in its unit or its place's (refcore's `leg_bad`, its kind). E §4.2 step 5.
+    fn leg_refused(
+        &mut self,
+        m: &Reality,
+        (movement, lg): (&str, &LegVal),
+        change: &Change,
+        at: At,
+    ) -> Result<(), Stop> {
         for p in ends(lg) {
-            let mut ent = Ent::new(at, Change::Bad(err.clone()));
+            let unit = lg
+                .unit
+                .clone()
+                .or_else(|| m.things.get(p).and_then(|t| m.place_unit(t)))
+                .filter(|u| u != "any")
+                .unwrap_or_else(|| ALL.to_owned());
+            let mut ent = Ent::new(at, change.clone());
             ent.mv = Some(movement.to_owned());
             self.add(m, p, &unit, ent)?;
         }
         Ok(())
+    }
+
+    /// A refused movement's leg whose day is a hole or refused: it may fall after any reading,
+    /// so no reading ends its places' refusal, as a hole day's hole (refcore's `leg_bad`,
+    /// `pbad`). L §8, §5.19; E §4.2 Holes in the walk.
+    fn leg_bad_undated(
+        &mut self,
+        m: &Reality,
+        movement: &str,
+        lg: &LegVal,
+        err: &Refusal,
+        at: At,
+    ) -> Result<(), Stop> {
+        self.leg_refused(m, (movement, lg), &Change::PermBad(err.clone()), at)
     }
 
     /// A hole movement's leg: a hole at both its places (refcore's `act`, `legq` and

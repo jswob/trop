@@ -341,12 +341,14 @@ impl Engine {
     /// Whether binding `bind`, its day or span a hole, could hold one of the candidates on some
     /// day: one its `where` doesn't rule out. A member whose `where` is false is outside the
     /// binding whatever its day, so the domain is decided without the day; a `where` that is a
-    /// hole, none or a refusal leaves the candidate in. What the `where` reads reaches no
-    /// reader (refcore's `kind_has_member`). L §5.7 Bindings, §8.1 ("It stops propagating").
+    /// hole or none leaves the candidate in. What the `where` reads reaches no reader
+    /// (refcore's `kind_has_member`). L §5.7 Bindings, §8.1 ("It stops propagating").
     ///
     /// # Errors
     ///
-    /// A stop other than a refusal that a `where` meets.
+    /// A refusal a `where` meets: it is read on the hole day too, so its refusal reaches the
+    /// binding and outranks the day's hole (L §8, R1 and Refusals outrank holes; tally 2.1.8,
+    /// #180); any other stop it meets.
     pub(crate) fn may_hold(
         &mut self,
         m: &Reality,
@@ -365,7 +367,7 @@ impl Engine {
             self.pop_alone();
             match tested {
                 Ok(Value::Bool(false)) => {}
-                Ok(_) | Err(Stop::Refused(_)) => return Ok(true),
+                Ok(_) => return Ok(true),
                 Err(stop) => return Err(stop),
             }
         }

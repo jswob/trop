@@ -743,7 +743,18 @@ impl Engine {
                     Amount::Refused(_) => None,
                     Amount::Qty(_) | Amount::Hole(_) => Some(gap),
                 };
-                padded.add(m, &r.place, &r.unit, ent)
+                padded.add(m, &r.place, &r.unit, ent)?;
+                match padded.bad_legs.get(&key).filter(|_| breaking).cloned() {
+                    // the balance the reading states breaks its place's sign rule: refused from
+                    // there to the place's next reading, as an anchor's is, not ended by its own
+                    // (L §5.10, E §4.2 step 5; tally 2.1.8, R11)
+                    Some(err) => {
+                        let mut held = Ent::new(at.with_sub(sub), Change::Bad(err));
+                        held.mv = Some(pad.id.clone());
+                        padded.add(m, &r.place, &r.unit, held)
+                    }
+                    None => Ok(()),
+                }
             }
         }
     }

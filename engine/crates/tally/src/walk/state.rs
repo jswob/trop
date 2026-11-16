@@ -7,11 +7,12 @@
 //! §6.4 (a walk is walked in one world: the places and lifespans it sees);
 //! P §2.4 (monthly checkpoints: every place's state and the legs booked ahead, a state that
 //! didn't change shared, not copied; D2-6).
-//! Twin: engine/tools/refcore/walk.py (`St`, `Ent`, `Log`, `apply`, `Walk.log`, `default`,
-//! `add`, `state`, `pstate`, `cum`, `unbook`, `st_value`, `anchor_question`).
+//! Twin: engine/tools/refcore/walk.py (`St` with its `pbad`, `Ent`, `Log`, `apply`, `Walk.log`,
+//! `default`, `add`, `state`, `pstate`, `cum`, `unbook`, `st_value`, `anchor_question`).
 //! Invariants: a log's entries are in walk order and each holds the state after it; a state's
 //! value is known, or none before the place's first reading; a refusal, once met at a place,
-//! holds from that point; the register of a balance is every entry's since the last reset; a
+//! holds from that point to the place's next reading, and past every reading where the
+//! movement's day is a hole or refused (L §8, tally 2.1.8); the register of a balance is every entry's since the last reset; a
 //! projection's walk starts each place as the walk it continues stood at its point; a main
 //! walk's checkpoint at the first of a month holds each place's state before that day, the one
 //! of the checkpoint before where it is the same, and the decision legs dated that day or later.
@@ -57,8 +58,12 @@ pub enum Change {
     Hole(Hole),
     /// A hole no reading answers: a hole day, `HOLE-CHANGED` (E §4.2, E §5 step 5).
     Perm(Hole),
-    /// A refusal that holds from here (E §4.2 step 5).
+    /// A refusal that holds from here to the place's next reading: a dated refused movement's,
+    /// or the sign rule's (E §4.2 step 5; L §8, tally 2.1.8).
     Bad(Refusal),
+    /// A refusal no reading ends: a refused movement whose day is a hole or refused, which may
+    /// fall after any reading (L §8, §5.19; tally 2.1.8; refcore's `pbad`).
+    PermBad(Refusal),
     /// A movement dated by a window may fall from here: the balance is `HOLE-IMPRECISE`
     /// until its leg is booked at the window's last day; the window is the entry's (L §4.4;
     /// refcore's `imp_on`).
@@ -76,8 +81,10 @@ pub struct St {
     pub hole: Option<Hole>,
     /// The questions no reading answers.
     pub perm: Option<Hole>,
-    /// The refusal that holds from a refused leg on.
+    /// The refusal that holds from a refused leg on, to the place's next reading.
     pub bad: Option<Refusal>,
+    /// The refusal no reading ends (refcore's `pbad`): kept as `bad` at a reset.
+    pub perm_bad: Option<Refusal>,
     /// The movements dated by a window that may still fall, each by its window's id, with
     /// the question it puts (L §4.4; refcore's `imp`).
     pub imp: Vec<(String, Hole)>,
@@ -104,6 +111,7 @@ impl St {
             hole: None,
             perm: None,
             bad: None,
+            perm_bad: None,
             imp: Vec::new(),
             rst: None,
         }
@@ -1009,6 +1017,9 @@ fn fold(mut st: St, any: St, all: St) -> St {
         if st.bad.is_none() {
             st.bad = other.bad;
         }
+        if st.perm_bad.is_none() {
+            st.perm_bad = other.perm_bad;
+        }
     }
     st
 }
@@ -1039,13 +1050,16 @@ fn opening_state(
     }
 }
 
-/// The state after `change` (refcore's `apply`). E §4.2, §6.1.
+/// The state after `change`: a reading ends the holes and the dated refusals since the last
+/// one, and keeps those no reading ends (refcore's `apply`). E §4.2, §6.1; L §8 (Refusals
+/// outrank holes, tally 2.1.8).
 fn apply(prev: &St, change: &Change, at: usize) -> Result<St, Stop> {
     let mut st = prev.clone();
     match change {
         Change::Reset { val, qs } => {
             st.val = Some(val.clone());
             st.hole.clone_from(qs);
+            st.bad.clone_from(&st.perm_bad);
             st.rst = Some(at);
         }
         Change::Delta(q) => {
@@ -1058,6 +1072,14 @@ fn apply(prev: &St, change: &Change, at: usize) -> Result<St, Stop> {
         Change::Bad(r) => {
             if st.bad.is_none() {
                 st.bad = Some(r.clone());
+            }
+        }
+        Change::PermBad(r) => {
+            if st.bad.is_none() {
+                st.bad = Some(r.clone());
+            }
+            if st.perm_bad.is_none() {
+                st.perm_bad = Some(r.clone());
             }
         }
         // its window's id is the entry's (`apply_ent`)
@@ -1075,7 +1097,11 @@ fn apply_ent(prev: &St, ent: &Ent, at: usize) -> Result<St, Stop> {
         match &ent.change {
             Change::ImpOn(h) => st.imp.push((wid.clone(), h.clone())),
             Change::Delta(_) | Change::Hole(_) => st.imp.retain(|(w, _)| w != wid),
-            Change::Reset { .. } | Change::Perm(_) | Change::Bad(_) | Change::Mark => {}
+            Change::Reset { .. }
+            | Change::Perm(_)
+            | Change::Bad(_)
+            | Change::PermBad(_)
+            | Change::Mark => {}
         }
     }
     Ok(st)
@@ -1333,5 +1359,19 @@ ask bank_end: bal(bank, 2025-07-10)
         let other = Refusal::new(Code::Run(Run::Lifespan), "y".to_owned());
         let again = apply(&refused, &Change::Bad(other), 6).expect("refused");
         assert_eq!(again.bad, Some(bad), "the first refusal holds");
+        let read = Change::Reset {
+            val: Num::int(2),
+            qs: None,
+        };
+        let ended = apply(&again, &read, 7).expect("a reset");
+        assert_eq!(ended.bad, None, "a reading ends a dated refusal (R11)");
+        let lasting = Refusal::new(Code::Run(Run::Div), "z".to_owned());
+        let kept = apply(&ended, &Change::PermBad(lasting.clone()), 8).expect("refused");
+        let still = apply(&kept, &read, 9).expect("a reset");
+        assert_eq!(
+            still.bad,
+            Some(lasting),
+            "no reading ends a hole day's refusal"
+        );
     }
 }

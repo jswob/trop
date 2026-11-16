@@ -75,7 +75,8 @@ impl Walk {
             .ok_or_else(|| invariant("a modelled balance past its log"))?;
         let mut ents = Vec::new();
         for (j, e) in (first..).zip(since_start) {
-            if matches!(e.change, Change::Bad(_)) || !booked_elsewhere(e, &obs) {
+            if matches!(e.change, Change::Bad(_) | Change::PermBad(_)) || !booked_elsewhere(e, &obs)
+            {
                 ents.push(j);
             }
         }
@@ -194,7 +195,7 @@ impl Engine {
                 .get(*at)
                 .ok_or_else(|| invariant("a modelled balance past its log"))?;
             match &entry.change {
-                Change::Bad(err) => return Err(Stop::Refused(err.clone())),
+                Change::Bad(err) | Change::PermBad(err) => return Err(Stop::Refused(err.clone())),
                 Change::Delta(flow) => q = q.checked_add(flow).map_err(crate::eval::num_stop)?,
                 Change::Hole(hole) | Change::Perm(hole) => holes.push(hole.clone()),
                 Change::Reset { .. } | Change::ImpOn(_) | Change::Mark => {}

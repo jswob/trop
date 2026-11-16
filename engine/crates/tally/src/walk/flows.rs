@@ -386,7 +386,7 @@ impl Sums {
                 continue;
             }
             match &e.change {
-                Change::Bad(r) if e.at >= lo || e.at == first => {
+                Change::Bad(r) | Change::PermBad(r) if e.at >= lo || e.at == first => {
                     return Err(Stop::Refused(r.clone()));
                 }
                 Change::Perm(h) | Change::Hole(h) => {
@@ -396,6 +396,7 @@ impl Sums {
                     }
                 }
                 Change::Bad(_)
+                | Change::PermBad(_)
                 | Change::Reset { .. }
                 | Change::Delta(_)
                 | Change::ImpOn(_)
@@ -435,24 +436,33 @@ impl Sums {
                 windows.insert(wid, (w, mv));
             }
             if e.at <= lo {
-                if let Change::Perm(h) = &e.change
-                    && e.at <= limit
-                {
-                    self.holes.push(h.clone());
+                match &e.change {
+                    Change::Perm(h) if e.at <= limit => self.holes.push(h.clone()),
+                    // a refused movement whose day is a hole or refused may fall in the span,
+                    // as a hole day's (tally 2.1.8, R11)
+                    Change::PermBad(r) if e.at <= limit => return Err(Stop::Refused(r.clone())),
+                    Change::Perm(_)
+                    | Change::PermBad(_)
+                    | Change::Bad(_)
+                    | Change::Reset { .. }
+                    | Change::Delta(_)
+                    | Change::Hole(_)
+                    | Change::ImpOn(_)
+                    | Change::Mark => {}
                 }
                 continue;
             }
             if e.at > limit {
                 continue;
             }
-            if let Change::Bad(r) = &e.change {
+            if let Change::Bad(r) | Change::PermBad(r) = &e.change {
                 return Err(Stop::Refused(r.clone()));
             }
             if self.other_period(e) {
                 continue;
             }
             match &e.change {
-                Change::Bad(r) => return Err(Stop::Refused(r.clone())),
+                Change::Bad(r) | Change::PermBad(r) => return Err(Stop::Refused(r.clone())),
                 Change::Hole(h) | Change::Perm(h) => {
                     self.holes.push(h.clone());
                     self.met.entries.extend(e.reg.iter().cloned());
