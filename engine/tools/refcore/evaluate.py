@@ -2145,6 +2145,10 @@ class Engine:
                     raise refuse('RUN-NONE', 'never in arithmetic')
                 if not isinstance(v, Hole):
                     self.no_none(v, 'arithmetic')
+            if op == '/' and isinstance(b, Num) and b.q == 0:
+                # x / 0 is refused whatever x is: the outcome is decided without the hole (L §8.1), and the refusal
+                # outranks it (L §8; tally 2.1.8 R11, #169-a)
+                raise refuse('RUN-DIV', 'division by zero')
             if ctx.partial:
                 return lin_bin(op, a, b, n)
             return merge(a, b)
@@ -2846,9 +2850,9 @@ class Engine:
             e2[b.var] = v
             self.push()
             try:
+                # a where that refuses is read on the hole day too, so its refusal reaches the binding and outranks
+                # the day's hole (L §8 R1 and Refusals outrank holes; tally 2.1.8 R11, #180)
                 w = self.ev(b.where, e2, ctx)
-            except TallyError:
-                return True
             finally:
                 self.stack.pop()
             if w is not False:
@@ -4232,6 +4236,9 @@ class Engine:
         if k == 0:
             raise refuse('RUN-ZERO', 'add_business(%s, 0, %s)' % (d, _ntxt(n.args[2])))
         step = 1 if k > 0 else -1
+        # k business days move at least k days: past the day range that is refused whatever a hole on the way says,
+        # since a refusal the outcome meets outranks the hole (L §8, §8.1; tally 2.1.8 R11, #169-a)
+        add_days(d, k)
 
         def count():
             left = abs(k)
