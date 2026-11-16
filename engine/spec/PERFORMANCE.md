@@ -176,7 +176,7 @@ The checkpoints serve the forks (§2.5) and the walk restart (§4.2).
 
 Two timelines whose acts agree up to day d share the walk to d: the engine walks the shared prefix once, takes the last checkpoint before d, and walks each timeline on from it (D1-4, second step; R1 §3 Q3).
 - **Which timelines:** the `windows each` sub-windows of one line, axis combinations the moves reach, rolling origins, the cuts of `as known`, scenario worlds, and a member's walk asked twice.
-- **The first different day** comes from the plan pass's outputs: the first act whose day, legs or amounts differ between the two. For a scenario it is not its `from` alone, since movements before `from` can differ through what reads the scenario's facts, which E §9 invariant 3 lists (L §6.4); the fork takes the earliest of these.
+- **The first different day** is the earliest of two days: that of the first plan act whose day, legs or amounts differ between the two, and that of the first act whose evaluation reads, through the item graph, a fact, an axis option, a pin, a window's day or a version that differs between them (tally 2.1.8). For a scenario those reads are E §9 invariant 3's (L §6.4), so the day is not its `from` alone. This is L §8's rule that a result reads only what its definition reads, said of walks.
 - **Built second,** after the event-driven walk matches refcore on every check. Its oracle is the unforked walk: the same bytes, fewer walks. The counter "walk shared" (§1.1) shows the saving.
 
 `shape.md`'s repetition is the target: 64 walks in A (`windows each`), 8–12 in E2 (members and asks), 20 in X (19 of them projections). How late those timelines diverge is unknown, so the fork's saving is an unknown until the engine runs (§10).
