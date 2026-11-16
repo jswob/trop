@@ -112,6 +112,7 @@ class Checker:
         self.random_items = set()
         self.fill_infos = {}       # fill id -> its bindings' domains and taken's type (L §5.12)
         self.marks = {}            # item -> {(running read, target)} (E §3.1 step 7)
+        self.modelled_marks = {}   # item -> {target}: its bal(x, d) modelled reads (L §5.19; tally 2.1.8 R16)
         self.proj_nc = {}          # item -> {target}: its projections with no random clause (L §8.3 item 10)
         self.cycle_cands = []      # (move, bal node, day node): a decision's plain bal at a day (L §5.14.1)
         self.period_cands = []     # (index, key node, holder item): a period read at a time index's key (L §4.6)

@@ -1890,7 +1890,7 @@ class Asker:
             eng.stack.pop()
 
     def _explain_bal_lines(self, eng, a, n, env, ctx, day=None):
-        from .walk import K_end, K_start, kday, gtext
+        from .walk import K_end, K_start, kday, gtext, St
         p = eng.place_arg(n.ref, env, ctx)
         if isinstance(p, Hole):
             return ['the place is a hole: %s' % fmt_hole(p)]
@@ -1922,6 +1922,10 @@ class Asker:
         out = ['balance of %s (%s) at the %s of %s%s' % (place, unit, 'start' if getattr(n, 'start', False) else 'end', end,
                                                           ', modelled' if modelled else '')]
         st, lg, i = w.state(place, unit, key)
+        if modelled:
+            # the model's own account (L §5.19; tally 2.1.8 R16): its start, entries and modelled legs
+            lg, r0, m_ents, m_legs = eng.modelled_account(w, place, unit, key, end)
+            st = St(st.val, st.hole, st.perm, st.imp, st.bad, r0, st.pbad)
         since = None
         lo = -1
         if lg is None or st.rst < 0:
@@ -1943,22 +1947,23 @@ class Asker:
             since = e.key
             out.append('from: %s' % self._reading_text(w, place, e, gtext, unit))
         ents = []
-        if lg is not None:
+        if modelled:
+            ents.extend(m_ents)
+        elif lg is not None:
             ents.extend(lg.ents[lo + 1:i + 1])
         wl = w.logs.get((place, '*'))
         if wl is not None:
             ents.extend(x for x in wl.ents if (since is None or x.key > since) and x.key <= key)
-        from .moves import ObsMv
         rows = []
         for x in sorted(ents, key=lambda x: x.key):
-            if modelled and isinstance(x.mv, ObsMv):
-                continue
             t = self._entry_text(x, gtext)
             if t is not None:
                 rows.append((kday(x.key), t))
         extra = []
         if modelled:
-            extra.extend((x, 'modelled') for x in w.modelled)
+            for x, g, sg, bk in m_legs:
+                if g is not None:
+                    rows.append((kday(bk), '%s.%s (modelled): %s' % (x.id, g.name, self._amount_text(g.amount, sg))))
         if n.proj and n.proj.get('uncertain'):
             extra.extend((x, 'uncertain') for x in w.uncertain)
         for x, stt in extra:

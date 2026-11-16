@@ -587,6 +587,7 @@ def m_t_bal(self, n, sc, expect):
         raise LoadError('LOAD-PARSE', 'cannot parse: bal(x) with no day takes no clause', n.loc)
     if n.modelled:
         n._form = 'modelled'
+        self.modelled_marks.setdefault(sc.item, set()).add(target)
     elif n.proj and 'frm' in n.proj:
         n._form = 'proj'
         self.check_proj(n, sc, target)
@@ -1443,11 +1444,30 @@ def m_check_moves_graph(self):
         memo[item] = out
         return out
     self.reached_marks = reached
+
+    def reached_modelled(item):
+        # the bal(x, d) modelled reads an item reaches through defs, fills and its day (L §5.19; tally 2.1.8 R16)
+        out, seen, stack = set(), set(), [item]
+        while stack:
+            x = stack.pop()
+            if x in seen:
+                continue
+            seen.add(x)
+            out |= self.modelled_marks.get(x, set())
+            for t in E.get(x, {}):
+                if t[0] in ('def', 'fill', 'moveon'):
+                    stack.append(t)
+        return out
     # LOAD-READS (L §5.14.1, E §3.1 step 7)
     for qid in sorted(m.moves):
         mi = m.moves[qid]
-        rs = reached(('move', qid))
         loc = mi.decl.loc
+        mm = reached_modelled(('move', qid)) | reached_modelled(('moveon', qid))
+        if mm:
+            # the model's account exists after the walk, so no movement reads it (L §5.19; tally 2.1.8 R16, #176)
+            raise LoadError('LOAD-READS', '%s reaches bal(%s) modelled' % (qid, _tname(sorted(mm, key=repr)[0])),
+                            loc)
+        rs = reached(('move', qid))
         if not mi.decision:
             if rs:
                 w, tgt = sorted(rs, key=repr)[0]

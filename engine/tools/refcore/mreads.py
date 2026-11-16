@@ -980,7 +980,8 @@ def m_bal_at(self, n, place, unit, d, env, ctx, regs_to=None):
     if form == 'proj':
         return self.proj_bal(n, place, unit, d, env, ctx, regs_to)
     if form == 'modelled':
-        return self.bal_modelled(place, unit, d, ctx)
+        # bal(x, d) in the model's own account, at the plain read's instant (L §5.19; tally 2.1.8 R16, B5)
+        return self.bal_modelled(place, unit, d, ctx, start=getattr(n, 'start', False))
     key = K_start(d) if getattr(n, 'start', False) else K_end(d)
     if n.proj and 'windows' in n.proj:
         # the read's own clause; windows each takes the day the line's run assigns (m_proj_clauses)
@@ -1254,65 +1255,99 @@ def m_proj_uncertain(self, w, place, unit, d, v, ctx=None):
     return qty(v.q + add, unit)
 
 
-def m_bal_modelled(self, place, unit, d, ctx):
-    """`bal(x, d) modelled` (L §5.19, E §6.2): "from x's last reading before d" (round 18, C2-13: E said "at or
-    before d"), "the opening, before the first", plus every booked movement of x since through d, the modelled-past
-    instances in place of the observations on covered days; "Comparing it with the reading is the residual", so a
-    reading on day d itself is not its start, and the gaps of readings on d are left out (they are not movements)."""
-    w = self.main_walk(ctx)
-    key = K_end(d)
+def m_modelled_account(self, w, place, unit, key, d):
+    """`bal(x, d) modelled` is bal(x, d) in the model's own account (L §5.19; tally 2.1.8 R16): from x's last reading
+    before day d (the opening, before the first; a reading on day d is what it is compared with), every booked movement
+    of x since that is no observation, with every instance the observations stand in for (the modelled past) at the
+    point its walk books it, up to the read's instant; m's leg is never counted after a reading `after m`.
+    Returns (lg, r0, ents, legs): r0 the start reading's index in lg (-1: the place's default), ents the log entries
+    counted, legs the modelled instances' legs, (x, g, sign, key) or (x, None, err or hole, None) for an instance whose
+    day is refused or a hole, which may fall anywhere."""
+    from .walk import same_book_key
+    from .check import _txt
     st, lg, i = w.state(place, unit, key)
+    r0 = -1
     if lg is not None:
-        # the last reading dated before day d; else an opening on day d (the opening, before the first reading)
         st0, _, i0 = w.state(place, unit, (d.toordinal(), -2, 0, '', 0))
         r0 = st0.rst if i0 >= 0 else -1
         if r0 < 0:
             r0 = next((j for j in range(i, -1, -1) if lg.ents[j].kind == 'reset' and
                        lg.ents[j].note == 'opening' and lg.ents[j].key[0] == d.toordinal()), -1)
-        st = St(st.val, st.hole, st.perm, st.imp, st.bad, r0, st.pbad)
-    if lg is None or st.rst < 0:
-        start = None
+    since = lg.ents[r0].key if (lg is not None and r0 >= 0) else None
+    after = None
+    if since is not None:
+        ins = getattr(lg.ents[r0].row, 'instant', None)
+        if isinstance(ins, tuple) and ins[0] == 'after':
+            after = _txt(ins[1])
+    ents = []
+    if lg is not None:
+        for e in lg.ents[r0 + 1:i + 1]:
+            if isinstance(e.mv, ObsMv) or e.kind == 'reset':
+                # an observation is the reality the model is compared with; a reading on day d its comparison
+                continue
+            ents.append(e)
+    legs = []
+    for x in w.modelled:
+        if after is not None and x.id == after:
+            continue
+        for g in x.legs:
+            if not any(isinstance(p, Thing) and p.name == place for p in (g.frm, g.to)):
+                continue
+            if not isinstance(g.day, datetime.date) and day_lo(x.day) is None:
+                bad = x.err if getattr(x, 'err', None) is not None else x.day if isinstance(x.day, Hole) else None
+                if bad is not None:
+                    legs.append((x, None, bad, None))
+                continue
+            bk = same_book_key(x, g)
+            if bk > key or (since is not None and bk <= since):
+                continue
+            for p, s in ((g.frm, -1), (g.to, 1)):
+                if isinstance(p, Thing) and p.name == place:
+                    legs.append((x, g, s, bk))
+    return lg, r0, ents, legs
+
+
+def m_bal_modelled(self, place, unit, d, ctx, start=False):
+    """`bal(x, d) modelled` (L §5.19; tally 2.1.8 R16): the account modelled_account gives, at the plain read's
+    instant (`start` included), with its holes and refusals."""
+    w = self.main_walk(ctx)
+    key = K_start(d) if start else K_end(d)
+    lg, r0, ents, legs = self.modelled_account(w, place, unit, key, d)
+    if lg is None or r0 < 0:
         v = w.default(place, unit).val
-        lo = -1
     else:
-        e = lg.ents[st.rst]
+        e = lg.ents[r0]
         v = e.val
-        lo = st.rst
         if e.qs:
             return Hole(e.qs)
     if v is None:
         return Hole([w.anchor_question(place)])
     q = v.q
     hs = []
-    for j in range(lo + 1, (i if lg is not None else -1) + 1):
-        e = lg.ents[j]
+    for e in ents:
         if e.kind in ('bad', 'pbad'):
             raise e.err
-        if isinstance(e.mv, ObsMv) or e.kind == 'reset':
-            # a reading on day d is what the modelled balance is compared with, not where it starts (C2-13)
-            continue
         if e.kind == 'delta':
             q += e.flow.q
         elif e.kind in ('hole', 'perm'):
             hs.append(Hole(e.qs))
         if e.coll is not None:
             self.cur.merge(e.coll)
-    since = lg.ents[lo].key if (lg is not None and lo >= 0) else None
-    for x in w.modelled:
-        for g in x.legs:
-            gd = g.day if isinstance(g.day, datetime.date) else day_lo(x.day)
-            if gd is None or gd > d or (since is not None and K_end(gd) <= since):
-                continue
-            for p, s in ((g.frm, -1), (g.to, 1)):
-                if isinstance(p, Thing) and p.name == place:
-                    if x.coll is not None:
-                        self.cur.merge(x.coll)
-                    if isinstance(g.amount, Hole):
-                        hs.append(g.amount)
-                    elif isinstance(g.amount, TallyError):
-                        raise g.amount
-                    else:
-                        q += s * g.amount.q
+    for x, g, s, _bk in legs:
+        if g is None:
+            # an instance whose day is refused or a hole may fall on any day (L §8.4, §5.14 `on d`)
+            if isinstance(s, TallyError):
+                raise s
+            hs.append(s)
+            continue
+        if x.coll is not None:
+            self.cur.merge(x.coll)
+        if isinstance(g.amount, Hole):
+            hs.append(g.amount)
+        elif isinstance(g.amount, TallyError):
+            raise g.amount
+        else:
+            q += s * g.amount.q
     if hs:
         return merge(*hs)
     return qty(q, unit)

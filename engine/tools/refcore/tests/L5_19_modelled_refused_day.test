@@ -1,0 +1,51 @@
+# tally 2.1.8 R16 (the gate's rest 12), L §5.19, §8.4: an instance of x whose day is refused may fall on any day,
+# as a hole day's, so bal(x, d) modelled is refused from the reading before it; after the reading of 2026-03-31 it
+# reads again (960.00 PLN). refcore did so already; the engine answered 1 000.00 PLN.
+=== m.tally
+model t
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input dd: int
+input dv[m in months]: int
+input fee: money PLN
+
+move rent[m in months]: transfers
+  on day_of(m, dd * dv[m] / dv[m])
+  leg cash from konto to world amount fee
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fee = 30.00 PLN "s"
+  dd = 20 "s"
+  dv[2026-03] = 0 "s"
+  dv[2026-04..2026-06] = 1 "s"
+  opening[konto] = 1 000.00 PLN at 2026-03-01 start "s"
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  pad konto from world
+  stated[konto] = 990.00 PLN at 2026-03-31 end "saldo"
+
+ask b: bal(konto, 2026-03-20)
+ask q1: bal(konto, 2026-03-20) modelled
+ask q2: bal(konto, 2026-04-20) modelled
+=== expect
+b: refused: RUN-DIV division by zero
+  cut 2026-06-10
+q1: refused: RUN-DIV division by zero
+  cut 2026-06-10
+q2: 960.00 PLN
+  cut 2026-06-10
