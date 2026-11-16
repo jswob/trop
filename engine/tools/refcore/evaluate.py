@@ -915,17 +915,17 @@ class Engine:
     def row_visible(self, r, ctx):
         if not in_world(r.version):
             return False
-        return self.known_vis(r.known, row_known_sid(r), 'a row', ctx)
+        return self.known_vis(r.known, row_known_sid(r), 'a row', ctx, r.version.id)
 
-    def known_vis(self, known, sid, what, ctx):
+    def known_vis(self, known, sid, what, ctx, vid=None):
         """Whether something known on `known` is seen at the cut. A window that holds the cut "states a windows clause
         or is HOLE-IMPRECISE ... This holds for everything the version or row brings: its rows, band tables and rules"
-        (L §4.5)."""
+        (L §4.5). The hole names the row and its version (tally 2.1.8 R12, P70)."""
         vis = visible(known, ctx.cut, sid or what)
         if vis is None:
             lo, hi = known
-            raise HoleSignal(Hole([('date within window(%s, %s) not precise enough for the cut %s' % (
-                lo, hi, ctx.cut), sid)]))
+            q = 'date within window(%s, %s) not precise enough for the cut %s' % (lo, hi, ctx.cut)
+            raise HoleSignal(Hole([(q, x) for x in (sid, vid) if x] or [(q, sid)]))
         return vis
 
     def wording_ok(self, version, item, ctx, own=None):
@@ -992,14 +992,21 @@ class Engine:
 
     def candidates(self, rows, keys, d, ctx, info, instant=None, last_before=None):
         out = []
+        undecided = []
         self._K = ctx.cut
         for r in rows:
             if not self.row_matches(r, keys, info):
                 continue
             if not self.unstated_ok(r, keys, info):
                 continue
-            if not self.row_visible(r, ctx):
-                continue
+            try:
+                if not self.row_visible(r, ctx):
+                    continue
+                und = None
+            except HoleSignal as h:
+                # known in a window that holds the cut: a hole only where the row would be read (L §4.5, tally 2.1.8
+                # R12, #169-f), so its other tests are made first
+                und = h.hole
             own = r.own_span if r.own_span is not None else (r.instant[0] if r.instant is not None and
                                                                  isinstance(r.instant[0], datetime.date) else None)
             if not self.wording_ok(r.version, info.id, ctx, own):
@@ -1017,6 +1024,9 @@ class Engine:
                 if d is None and last_before is None:
                     if not sp.always:
                         raise NotYet(LAWGUARD % ('a read of %s' % info.id))
+                    if und is not None:
+                        undecided.append(und)
+                        continue
                     out.append(r)
                     continue
                 if last_before is not None:
@@ -1026,7 +1036,12 @@ class Engine:
                         continue
                 elif not sp.contains(d):
                     continue
+            if und is not None:
+                undecided.append(und)
+                continue
             out.append(r)
+        if undecided:
+            raise HoleSignal(merge(*undecided))
         return out
 
     def row_value(self, r, info, keys, ctx, d, period):
@@ -1181,9 +1196,10 @@ class Engine:
         """Whether the same line joining a row pair is seen at ctx: the header's always, a version's when known by the
         cut and in the worlds its file is in (L §4.5 Whatever a version states is read as its rows are, tally 2.1.8
         R12; undecided inside a known window: as seen)."""
-        from .model import visible, in_world
+        from .model import same_seen
         v = getattr(self.m, 'same_row_version', {}).get(skey)
-        return v is None or (in_world(v) and visible(v.known, ctx.cut, v.id) is not False)
+        pinf, pkeys, ta, tb = self.m.same_rows[skey]
+        return same_seen(v, ctx, (ta, tb))
 
     def read_same_row(self, info, keys, ctx, skey, period):
         """Two rows stated same (L §6.1): read together.  A row of the joint model's own states their value; else

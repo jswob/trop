@@ -11,7 +11,8 @@ import datetime
 
 from .dates import Period, ONE_DAY, END, past_days
 from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, RandomLine, at_run
-from .model import visible, row_known_sid, known_first, PlaceThing, _kv, key_text, in_world, _WSET
+from .model import visible, row_known_sid, known_first, PlaceThing, _kv, key_text, in_world, _WSET, _SAMEMET, \
+    same_seen, same_key
 from .values import Num, Money, Hole, Thing, Mv, Iv, Rec, Text, NONE, NEVER, CURRENCIES, fmt, vkey
 
 # the stratum a pad takes in the movement order: above every decision's, as observations and adjustments take -1,
@@ -141,6 +142,7 @@ class ObsMv(Movement):
         self.attrs = {a: _obs_attr(v, o) for a, v in o.attrs.items()} if o.attrs else o.attrs
         self.fulfils = o.fulfils
         self.forp = None
+        self.und = None         # the hole of a row known in a window that holds the cut (m_observations)
         self.err = None
         self.status = 'observed'
         self.coll = None
@@ -422,6 +424,7 @@ def m_observations(self, ctx):
         if not inf.observed:
             continue
         by = {}
+        by_dec = {}     # each row id's latest restatement whose known the cut decides
         undecided = {}
         for o in getattr(inf, 'obs', []):
             if not self.world_ok(o.version, ctx):
@@ -432,21 +435,32 @@ def m_observations(self, ctx):
                 # everything the version or row brings: ... its observations" (HOLE-IMPRECISE): it is booked or not,
                 # so each of its legs is a hole carrying that question
                 lo, hi = o.known
-                undecided[id(o)] = Hole([('date within window(%s, %s) not precise enough for the cut %s' % (
-                    lo, hi, ctx.cut), o.sid)])
+                # tally 2.1.8 R12 (P70): the hole names the row and its version
+                q = 'date within window(%s, %s) not precise enough for the cut %s' % (lo, hi, ctx.cut)
+                undecided[id(o)] = Hole([(q, o.sid), (q, o.version.id)])
             elif not vis:
                 continue
-            cur = by.get(o.key)
             # the latest restatement; a scenario's stands above its base's whatever their known dates (L §4.6 step 2)
-            if cur is None or (row_layer(m, o), known_first(o.known)) > (row_layer(m, cur), known_first(cur.known)):
-                by[o.key] = o
+            for tab in ((by,) if id(o) in undecided else (by, by_dec)):
+                cur = tab.get(o.key)
+                if cur is None or (row_layer(m, o), known_first(o.known)) > (row_layer(m, cur), known_first(cur.known)):
+                    tab[o.key] = o
         for k in sorted(by):
             o = by[k]
+            hq = undecided.get(id(o))
+            if hq is not None and o.removed:
+                # an undecided removal removes the row or not (L §4.5, tally 2.1.8 R12, #169-f): the restatement before
+                # it stands, its legs that hole
+                o = by_dec.get(k)
+                if o is None:
+                    continue
             if o.removed:
                 continue
-            hq = undecided.get(id(o))
             legs = [Leg(n, f, t, hq if hq is not None else a, u, d or o.day) for n, f, t, a, u, d in o.legs]
             ob = ObsMv(o, legs)
+            # seen and unseen are two accounts of one movement (L §4.5, tally 2.1.8 R12): a binding meets it as one,
+            # an unknown member where the two differ (m_span_members)
+            ob.und = hq
             ob.coll = _coll()
             ob.coll.rows[o.sid] = o
             if ob.fulfils is not None and ob.fulfils[0] == 'inst':
@@ -1318,14 +1332,18 @@ def same_lines(m, ctx):
     ows = getattr(m, 'same_owners', None) or [''] * len(sm)
     if ctx is None:
         return [(a, b, loc, o) for (a, b, loc), o in zip(sm, ows)]
-    key = (ctx.cut, repr(getattr(ctx.cut, 'windows', None)), _WSET[0])
+    key = same_key(ctx)
     cache = m.__dict__.setdefault('_same_lines', {})
     hit = cache.get(key)
     if hit is not None:
+        if _SAMEMET[0] is not None:
+            for (a, b, loc), v in zip(sm, vs):
+                if v is not None:
+                    same_seen(v, ctx, (a, b))
         return hit
     out = []
     for (a, b, loc), v, o in zip(sm, vs, ows):
-        if v is not None and (not in_world(v) or visible(v.known, ctx.cut, v.id) is False):
+        if not same_seen(v, ctx, (a, b)):
             continue
         out.append((a, b, loc, o))
     cache[key] = out
@@ -1337,7 +1355,7 @@ def same_groups(m, ctx):
     lines that share a side make one group"; "A group of movements is one movement"), of the lines seen at ctx
     (same_lines)."""
     lines = same_lines(m, ctx)
-    key = None if ctx is None else (ctx.cut, repr(getattr(ctx.cut, 'windows', None)), _WSET[0])
+    key = None if ctx is None else same_key(ctx)
     cache = m.__dict__.setdefault('_same_groups', {})
     groups = cache.get(key)
     if groups is not None:
@@ -1367,7 +1385,7 @@ def same_groups(m, ctx):
 def same_pairs(m, ctx):
     """{movement id: (group, the same line naming it)} from the same lines seen at ctx (same_lines). L §6.1 (round 14):
     "same is an equivalence: lines that share a side make one group"; "A group of movements is one movement"."""
-    key = None if ctx is None else (ctx.cut, repr(getattr(ctx.cut, 'windows', None)), _WSET[0])
+    key = None if ctx is None else same_key(ctx)
     cache = m.__dict__.setdefault('_same_pairs', {})
     sp = cache.get(key)
     if sp is not None:

@@ -702,6 +702,20 @@ def m_span_members(self, dom, sp, ctx, owner=None):
     for x in self.movements_of(b._dom, ctx, owner):
         d = x.day
         st = True
+        und = getattr(x, 'und', None) if isinstance(x, ObsMv) else None
+        if und is not None:
+            # a row known in a window that holds the cut is one movement read seen and unseen (L §4.5, tally 2.1.8
+            # R12): unseen, a row of an observed input is no row, and a movement of an event kind is the instance it
+            # fulfils, if any; a member on both sides is one member, else an unknown member, that hole
+            alt = None
+            if b._dom[0] == 'event' and x.target is not None:
+                alt = getattr(x.target, 'day', None)
+            seen_in = isinstance(d, datetime.date) and sp.contains(d)
+            unseen_in = isinstance(alt, datetime.date) and sp.contains(alt)
+            if not seen_in and not unseen_in:
+                continue
+            out.append((x.mv(), True if (seen_in and unseen_in) else und, x))
+            continue
         if d is None and x.err is not None:
             # refused before its day was known: whether it is a member is refused with it (L §8.4)
             raise x.err
@@ -2007,8 +2021,17 @@ def m_first_by_day(self, res, what):
 
     def hi(x):
         return day_hi(x.day)
-    known = [(v, s, x) for v, s, x in res if not isinstance(x.day, Hole)]
-    holes = [s for v, s, x in res if isinstance(x.day, Hole)]
+    def two_days(x):
+        # a row known in a window that holds the cut, whose day and its instance's differ: which comes first is that
+        # hole (L §4.5, tally 2.1.8 R12, B6), never a tie
+        und = getattr(x, 'und', None) if isinstance(x, ObsMv) else None
+        if und is None:
+            return None
+        alt = getattr(x.target, 'day', None) if x.target is not None else None
+        return und if alt != x.day else None
+    known = [(v, s, x) for v, s, x in res if not isinstance(x.day, Hole) and two_days(x) is None]
+    holes = [s for v, s, x in res if isinstance(x.day, Hole)] + [two_days(x) for v, s, x in res
+                                                                 if two_days(x) is not None]
     if holes:
         # a movement whose day is a hole may come first (L §5.14)
         return merge(*holes)
@@ -2030,7 +2053,9 @@ def m_first_by_day(self, res, what):
 
 
 def m_c_covered(self, n, env, ctx):
-    """covered(x, span): versions known by the cut cover x on every day of the span; never a hole (L §5.19)."""
+    """covered(x, span): versions known by the cut cover x on every day of the span (L §5.19); where a cover is known in
+    a window that holds the cut and the answer differs seen and unseen, HOLE-IMPRECISE naming its version (L §4.5,
+    tally 2.1.8 R12)."""
     p = self.ev(n.args[0], env, ctx)
     if isinstance(p, Hole) or p is NONE:
         return False
@@ -2039,7 +2064,17 @@ def m_c_covered(self, n, env, ctx):
         return False
     if sp.start is None or sp.end is None:
         return False
-    spans = sorted((s for s, v in self.coverage(ctx).get(p.name, ())), key=lambda s: s.start or datetime.date.min)
+    dec = [s for s, v in self.coverage(ctx).get(p.name, ())]
+    und = [(s, q) for x, s, q in self.coverage_undecided(ctx) if x == p.name]
+    unseen = covers_all(dec, sp)
+    if und and covers_all(dec + [s for s, q in und], sp) != unseen:
+        return Hole([q for s, q in und])
+    return unseen
+
+
+def covers_all(spans, sp):
+    """Whether the spans cover every day of span sp."""
+    spans = sorted(spans, key=lambda s: s.start or datetime.date.min)
     d = sp.start
     while d < sp.end:
         nxt = None

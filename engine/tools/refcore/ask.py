@@ -457,7 +457,7 @@ class Asker:
         eng.ask_K = ctx.cut
         old_ws = set_world(eng.world_chain(ctx.world))
         try:
-            out = self._answer_in(eng, a, ctx, pins_coll)
+            out = self.answer_same_undecided(eng, a, ctx, pins_coll)
         finally:
             set_world(old_ws)
         # E §9 invariant 4: asks move no money; the timelines the ask walked are as they were when walked
@@ -467,6 +467,77 @@ class Asker:
                 return ['%s: refused: ENGINE-INVARIANT asks move no money: the timeline at cut %s changed while the '
                         'ask was answered (E §9 invariant 4)' % (a.id, w.K)]
         return out
+
+    def answer_same_undecided(self, eng, a, ctx, pins_coll):
+        """L §4.5 Whatever a version states is read as its rows are (tally 2.1.8 R12; #187's known-window comment): a
+        same line known in a window that holds the cut is read as seen and as unseen, and a result on which the two
+        differ is HOLE-IMPRECISE, naming the rows it joins and its version; one on which they agree answers. The line
+        is answered with every such line it meets seen, then again with each other choice, on fresh caches."""
+        from . import model as MD
+        if MD._SAMEMET[0] is not None or MD._SAMEPICK[0] is not None:
+            return self._answer_in(eng, a, ctx, pins_coll)
+        MD._SAMEMET[0] = {}
+        try:
+            out = self._answer_in(eng, a, ctx, pins_coll)
+            met = MD._SAMEMET[0]
+        finally:
+            MD._SAMEMET[0] = None
+        if not met:
+            return out
+        vids = sorted(met)
+        picks = [()]
+        for v in vids:
+            picks = [p + ((v, s),) for p in picks for s in (True, False)]
+        names = ('memo', 'run_cache', 'walks', 'walk_cells', '_fast', 'walk_warnings')
+        saved = dict((n, eng.__dict__[n]) for n in names if n in eng.__dict__)
+        outs = [out]
+        try:
+            for p in picks[1:]:
+                for n in names:
+                    if n == '_fast':
+                        eng.__dict__.pop(n, None)
+                    elif n in saved:
+                        eng.__dict__[n] = [] if n == 'walk_warnings' else {}
+                MD._SAMEPICK[0] = dict(p)
+                try:
+                    outs.append(self._answer_in(eng, a, ctx, pins_coll))
+                finally:
+                    MD._SAMEPICK[0] = None
+        finally:
+            for n in names:
+                eng.__dict__.pop(n, None)
+            eng.__dict__.update(saved)
+        if all(o == out for o in outs):
+            return out
+        qs = []
+        for v in vids:
+            (lo, hi), rows = met[v]
+            q = 'date within window(%s, %s) not precise enough for the cut %s' % (lo, hi, ctx.cut)
+            qs += [(q, x) for x in sorted(rows)] + [(q, v)]
+        hole = fmt_value(Hole(qs))
+
+        def blocks(lines):
+            bs = []
+            for ln in lines:
+                if ln.startswith(' ') and bs:
+                    bs[-1].append(ln)
+                else:
+                    bs.append([ln])
+            return bs
+        bss = [blocks(o) for o in outs]
+        heads = [[b[0].split(': ', 1)[0] for b in bs] for bs in bss]
+        if any(h != heads[0] for h in heads):
+            regs = [ln for ln in bss[0][-1][1:] if ln.startswith(('  cut', '  law date'))] if bss[0] else []
+            return ['%s: %s' % (a.id, hole)] + regs[-1:]
+        res = []
+        for i, b in enumerate(bss[0]):
+            if all(bs[i][0] == b[0] for bs in bss) or not b[0].split(': ', 1)[1:]:
+                res.extend(b)
+                continue
+            # the value differs between the two accounts: the hole, with the register the seen account gives
+            res.append('%s: %s' % (heads[0][i], hole))
+            res.extend(b[1:])
+        return res
 
     def _answer_in(self, eng, a, ctx, pins_coll):
         m = self.m

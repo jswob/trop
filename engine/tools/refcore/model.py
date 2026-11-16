@@ -137,6 +137,37 @@ class WCut(datetime.date):
         return self._plain().replace(*args, **kw)
 
 
+# A same line known in a window that holds the cut is read seen and unseen (L §4.5, tally 2.1.8 R12): the line being
+# answered records the ones it meets ({version id: (known, the rows it names)}), and is read again with each choice
+# ({version id: seen}); ask.Asker.answer_same_undecided.
+_SAMEMET = [None]
+_SAMEPICK = [None]
+
+
+def same_seen(v, ctx, names):
+    """Whether a version's same line is seen at ctx: its world and its known, a known window that holds the cut taken
+    as the pick says, or as seen while it is recorded."""
+    if v is None:
+        return True
+    if not in_world(v):
+        return False
+    vis = visible(v.known, ctx.cut, v.id)
+    if vis is not None:
+        return vis
+    pick = _SAMEPICK[0]
+    if pick is not None and v.id in pick:
+        return pick[v.id]
+    if _SAMEMET[0] is not None:
+        _SAMEMET[0].setdefault(v.id, (v.known, set())).__getitem__(1).update(names)
+    return True
+
+
+def same_key(ctx):
+    """The key of the same lines ctx sees: its cut, its windows choice, its world and the pick."""
+    pick = _SAMEPICK[0]
+    return (ctx.cut, repr(getattr(ctx.cut, 'windows', None)), _WSET[0], tuple(sorted(pick.items())) if pick else ())
+
+
 _EACH = [None]   # the windows met by the line windows each is running, {window id: (label, days)} (ask.each_rows)
 
 
