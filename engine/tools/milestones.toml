@@ -4,8 +4,8 @@
 # Each milestone's Rust tests are a `tally-runner` test target named for it (`s_properties`,
 # then `m0_…`, `m5a_…`) with `test = false`: red until the milestone is built, so a plain
 # run leaves them out. A milestone in `gating` has its tests run as failing steps by
-# `check quick`, `check full`, CI and the mutants run; the first milestone not in it is
-# reported (`S: 3/7 green`), never failing.
+# `check commit`, `check full`, CI and the mutants run (not by `check quick`, since
+# 2026-11-16); the first milestone not in it is reported (`S: 3/7 green`), never failing.
 #
 # The rules role adds a milestone to `gating` in the commit right after the gate session
 # tags it ("marker at the tag", the user's choice at T1's gate G-T, 2026-10-31): within a
@@ -42,4 +42,14 @@ fence_catchers = [
   # F6 (walk/fork.rs): the walk read again from its kept checkpoint against the fresh walk
   { package = "tally-cli", test = "fork_oracle" },
   { package = "tally", lib = "walk::fork::tests::" },
+]
+# The test targets that run by default which `check quick` leaves out and `check commit`
+# runs (R-82; the user's "I agree to chagnes 1,2 and 3", 2026-11-16, on the process study
+# after M2): the fences' equivalence suites, 97 % of quick's test time in M2. A fence's suite
+# joins by its line here; `engine/tools/check fences` runs them alone, for a builder working
+# on a fence. Each entry names a package and a test target that runs by default.
+quick_leaves_out = [
+  { package = "tally-cli", test = "walk_oracle" },     # F5, the CLI's
+  { package = "tally-cli", test = "fork_oracle" },     # F6, the CLI's
+  { package = "tally-runner", test = "m2_forks" },     # F6 on every store and corpus, T's
 ]

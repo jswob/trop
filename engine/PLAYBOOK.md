@@ -94,8 +94,9 @@ A **run** is one coordinator, one pull request: a milestone (M2), a spec round (
 
 ### D7. What runs beside what
 
-- **Pick:** one writer in a worktree at a time. Group N's review runs beside group N+1's builder, in its own worktree. T gets its own worktree and branch when it must write beside a builder, and the coordinator merges it in. A plan-only session never shares a worktree with a writer. Two heavy jobs at most (D18).
-- **Why:** M1's builders sat idle through each review until the overlap (the user's "Yes", 2026-11-08). In M2 a plan-only builder's Stop hook went red on T's uncommitted edits in the same worktree (pick P10), and T's long ledger work blocked the next group until T moved to its own worktree (P39).
+- **Pick:** one writer in a worktree at a time, and the build worktree never waits. Group N+1's builder starts with group N's review, in the same minute; if it lacks T's vectors or a patch, it starts on the part of its plan that needs neither. T writes in its own worktree and branch from its first chunk, and the coordinator merges it in between builder turns. A plan-only session never shares a worktree with a writer. Two heavy jobs at most (D18).
+- **Why:** M1's builders sat idle through each review until the overlap (the user's "Yes", 2026-11-08). In M2 a plan-only builder's Stop hook went red on T's uncommitted edits in the same worktree (pick P10), and T's long ledger work blocked the next group until T moved to its own worktree (P39). In M2 the build worktree stood idle 2.8 hours for reviews from G4 on, and 27 minutes for a turn of T's inside it.
+- **Decided:** the user, 2026-11-16, on the process study after M2: "I agree to chagnes 1,2 and 3".
 - **Enforced:** the skill's §3; `launch` warns when two heavy jobs already run.
 
 ### D8. Sub-agents
@@ -148,17 +149,17 @@ A **run** is one coordinator, one pull request: a milestone (M2), a spec round (
 
 ### D14. The check loops
 
-- **Pick:** `check quick` after an edit, `check commit` before a commit, the full check on GitHub for every push. A check's time is a requirement with a target, reported at every gate beside the cost. A change to a tool or to CI is proven by its selftest case and the pull request's own CI.
-- **Decided:** the user, 2026-11-11: "it's impossible to develop anything with checks so slow."
-- **Why:** at M1 the local full check took 15 to 47 minutes and builders waited 54 % of their active time. PR #139 brought the loops to 32 s, 59 s and 8.5 minutes.
-- **Enforced:** `engine/tools/check`'s modes; R-77 and R-82; the Stop hook.
+- **Pick:** `check quick` after an edit, `check commit` before a commit, the full check on GitHub for every push. The two local checks stop at the first red step and say which steps didn't run. `quick` runs the lints, the unit tests and the next milestone's report; `commit` adds T's gating vectors and the fences' equivalence suites, which `quick` leaves out. Targets: `quick` 45 s, `commit` 3 min, a pull request's CI 12 min with no gate-8 run beside it. A check's time is a requirement with a target, reported at every gate beside the cost. A change to a tool or to CI is proven by its selftest case and the pull request's own CI.
+- **Decided:** the user, 2026-11-11: "it's impossible to develop anything with checks so slow." The stop, the suites out of `quick` and T's vectors in `commit`: the user, 2026-11-16, "I agree to chagnes 1,2 and 3", on the process study after M2.
+- **Why:** at M1 the local full check took 15 to 47 minutes and builders waited 54 % of their active time. PR #139 brought the loops to 32 s, 59 s and 8.5 minutes. In M2 the loops grew back unseen: `quick` ran at a median 109 s over 189 runs and builders spent 7.4 of 32.5 hours in checks; 65 red runs failed on a lint and still ran every test; three fence suites were 97 % of `quick`'s test time, and no local check ran T's vectors (pick P53).
+- **Enforced:** `engine/tools/check`'s modes, `check fences` for a builder on a fence, and `engine/tools/milestones.toml`'s `quick_leaves_out`; R-77 and R-82, with R-82's selftest cases; the Stop hook.
 
 ### D15. Spec questions and spec rounds
 
-- **Pick, mid-build:** where the spec is clear the engine follows it, T holds the vector, and refcore waits for the round. The coordinator rules a spec question at once and sorts it: settled by an existing rule (cited), or new (an issue for the next round, labelled with its class). A patch release mid-build only for a wrong number or an unsound rule.
+- **Pick, mid-build:** where the spec is clear the engine follows it, T holds the vector, and refcore waits for the round. The coordinator rules a spec question at once and sorts it: settled by an existing rule (cited), or new (an issue for the next round, labelled with its class). A patch release mid-build only for a wrong number or an unsound rule. A patch never holds a builder: the builder starts on the spec's text, and the patch and its pin merge at the next turn boundary.
 - **Pick, the round:** factoring before any text. Questions are grouped into classes, each given one rule in a named solved form. A rule passes only if it decides 3 or more items across 2 or more features with no exception, replaces case text and adds no construct. A fresh read-only critic tries to break the plan, and the planner answers once. The round closes whole: spec, refcore, tests and engine agree when it merges. The spec, counted in words, doesn't grow.
 - **Decided:** the user, 2026-11-10: "we should think about general rules our engine could follow so we hit a lot of birds with one stone"; 2026-11-13: "I just don't want spec rounds to produce more edge cases. The point is that they make spec simpler and cleaner."
-- **Why:** M0's three mid-build patches cost the builder about 3.5 hours of waiting, six steps each. 2.1.6 ruled case by case: 1 918 words for 24 issues. 2.1.7 factored: 361 words for 84 questions.
+- **Why:** M0's three mid-build patches cost the builder about 3.5 hours of waiting, six steps each. 2.1.6 ruled case by case: 1 918 words for 24 issues. 2.1.7 factored: 361 words for 84 questions. M2's first patch took 10 minutes to write and 60 to re-run the stored baselines, and G4's builder waited 86 minutes for it.
 - **Tripwires for 2.1.8** (the master, 2026-11-15): M2's new questions fold into about 5 rules and the spec gets no longer, or the language is simplified before M4; a paper check before M5.
 - **Enforced:** the skill's §4; the round's brief; the word counts in the pull request's "How it was checked".
 
@@ -252,7 +253,7 @@ Measured sizes, in words: M1's brief 2 247, 2.1.7's 2 978, M2's 2 291; a rules s
 
 - **One session:** a group's builder 1 to 3 %; a group review about 0.4 %; a fix review 0.15 to 0.4 %; a turn of T 0.5 to 1.4 %; a study or a rules session 0.25 to 1.1 %.
 - **A group's builder and review together,** M2: 0.85 to 1.85 % per 1 000 lines; the highest was a small group of corner cases.
-- **Wall time:** a group with its fix loop 2.5 to 5 hours; a gate-8 dispatch 1 to 2 hours with its queue.
+- **Wall time:** a group with its fix loop 2.5 to 5 hours, about 38 % of a builder's time inside checks at M2; a gate-8 dispatch 56 to 129 minutes, its runner-minutes over 20; a pull request's CI 11 minutes alone, 18.5 beside a gate-8 run.
 - A Fable session costs 1.3 to 1.6 times the same tokens on Opus by `usage`'s figure, not twice: twice on what it writes and reads fresh, the same on cache reads (D10). M2's gate review was 0.95 % as Opus's tokens and 1.22 % as Fable's; this file's own session 0.22 % and 0.34 %.
 
 ## 5. Sources

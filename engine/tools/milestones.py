@@ -18,9 +18,12 @@ out. The marker, tools/milestones.toml, lists the milestones in build order and 
 gating ones, always the first few: the rules role adds a milestone in the commit right
 after the gate session tags it.
 
-`check` runs the gating milestones' targets as failing steps (`gating`, and
-`gating-release` in `check full`) and the next milestone's as a report that never
-fails (`milestone-report`, a line such as `S: 3/7 green`). A runner test target with
+`check` runs the gating milestones' targets as failing steps (`check commit`'s `tests`;
+`gating` and `gating-release` in `check full`) and the next milestone's as a report that
+never fails (`milestone-report`, a line such as `S: 3/7 green`). `check quick` leaves the
+gating targets out, and the fences' suites the marker's `quick_leaves_out` lists, which
+`check commit` runs (R-82, 2026-11-16); both name the targets from cargo metadata
+(default_tests), never by `--tests`. A runner test target with
 `test = false` whose name starts with no milestone fails: it would run nowhere.
 
 A mutation run (R-84, R-88; the user, 2026-11-06) selects the same targets but those the
@@ -57,11 +60,11 @@ def marker():
             data = tomllib.load(f)
     except (OSError, tomllib.TOMLDecodeError) as e:
         raise MilestoneError(f"tools/milestones.toml can't be read: {e}") from e
-    # `fence_catchers` is `mutants-local --fences`'s alone (fence_catchers()), so this reader
-    # doesn't ask for it
-    if sorted(set(data) - {"fence_catchers"}) != ["gating", "milestones", "mutants_leave_out"]:
+    # `fence_catchers` is `mutants-local --fences`'s alone (fence_catchers()) and
+    # `quick_leaves_out` is `check`'s (quick_leaves_out()), so this reader doesn't ask for them
+    if sorted(set(data) - {"fence_catchers", "quick_leaves_out"}) != ["gating", "milestones", "mutants_leave_out"]:
         raise MilestoneError("tools/milestones.toml holds exactly `milestones`, `gating` and `mutants_leave_out`, "
-                             "and `mutants-local --fences`'s `fence_catchers`")
+                             "`mutants-local --fences`'s `fence_catchers` and `check`'s `quick_leaves_out`")
     milestones, gating, leave_out = data["milestones"], data["gating"], data["mutants_leave_out"]
     if not isinstance(leave_out, list) or not all(isinstance(t, str) for t in leave_out):
         raise MilestoneError("tools/milestones.toml: mutants_leave_out is a list of test target names")
@@ -106,6 +109,64 @@ def fence_catchers():
                                  f"{{ package, lib = \"<module>::\" }}, not {c!r}")
         out.append((c["package"], c.get("test"), c.get("lib")))
     return out
+
+
+def quick_leaves_out():
+    """The test targets that run by default which `check quick` leaves out and `check commit`
+    runs (R-82, 2026-11-16): the fences' equivalence suites, 97 % of quick's test time in M2,
+    as (package, test target), checked; [] when the marker has none."""
+    try:
+        with open(MARKER, "rb") as f:
+            listed = tomllib.load(f).get("quick_leaves_out", [])
+    except (OSError, tomllib.TOMLDecodeError) as e:
+        raise MilestoneError(f"tools/milestones.toml can't be read: {e}") from e
+    if not isinstance(listed, list):
+        raise MilestoneError("tools/milestones.toml: quick_leaves_out is a list of { package, test } tables")
+    out = []
+    for c in listed:
+        ok = isinstance(c, dict) and sorted(c) == ["package", "test"] and all(isinstance(v, str) for v in c.values())
+        if not ok or not re.fullmatch(r"[A-Za-z0-9_-]+", c["test"]):
+            raise MilestoneError(f"tools/milestones.toml: each quick_leaves_out entry is {{ package, test }}, not {c!r}")
+        if (c["package"], c["test"]) in out:
+            raise MilestoneError(f"tools/milestones.toml: quick_leaves_out names {c['package']}'s {c['test']} twice")
+        out.append((c["package"], c["test"]))
+    return out
+
+
+# a default target's cargo argument, by its kind (a lib by `--lib`, the rest by name)
+SELECTS = {"bin": "--bin", "test": "--test", "bench": "--bench", "example": "--example"}
+
+
+def default_tests(env, leave_out):
+    """The cargo arguments that select every workspace target a plain `cargo test` runs
+    (`test = true`) but the (package, test target) pairs `leave_out` names, each by name:
+    `--tests` can't be used, since beside it a `--test=<name>` of a `test = false` target is
+    dropped (pick P53 in M2; the rules step after the M2 study, 2026-11-16). A name that
+    selects a target left out and one kept alike, in two packages, can't be told apart."""
+    r = subprocess.run(["cargo", "metadata", "--no-deps", "--format-version", "1", "--locked"], cwd=ENGINE, env=env,
+                       capture_output=True, text=True, check=False)
+    if r.returncode != 0:
+        raise MilestoneError(f"cargo metadata failed: {(r.stderr.strip().splitlines() or ['(no output)'])[-1]}")
+    wanted = set(leave_out)
+    kept, dropped, found = set(), set(), set()
+    for p in json.loads(r.stdout)["packages"]:
+        for t in p["targets"]:
+            kind = "lib" if t["kind"][0] in LIB_KINDS else t["kind"][0]
+            if kind != "lib" and kind not in SELECTS:
+                continue
+            arg = "--lib" if kind == "lib" else f"{SELECTS[kind]}={t['name']}"
+            left = kind == "test" and (p["name"], t["name"]) in wanted
+            found.update([(p["name"], t["name"])] if left and t.get("test", True) else [])
+            (kept if t.get("test", True) and not left else dropped).add(arg)
+    for package, test in leave_out:
+        if (package, test) not in found:
+            raise MilestoneError(f"tools/milestones.toml: quick_leaves_out names {package}'s {test}, which is no "
+                                 "test target of it that runs by default")
+    clash = sorted(kept & dropped)
+    if clash:
+        raise MilestoneError(f"{clash[0]} selects a target that runs and one that doesn't, in two packages: "
+                             "rename one")
+    return sorted(kept, key=lambda a: (a != "--lib", a))
 
 
 def runner_package(env):

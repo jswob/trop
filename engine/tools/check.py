@@ -3,12 +3,16 @@
     engine/tools/check quick    after an edit, before each commit inside a group, and the Stop
                                 hook: fmt, both clippy passes, the counter (`--fast`),
                                 check-frozen, check-rules, headers, trace, the ast-grep scan, then
-                                every test of the workspace and of the gating milestones in the
-                                `quick` profile (`tests`), and the next milestone's report
-    engine/tools/check commit   before a group's last commit: quick with the counter in full, and
-                                build, doc, doctest, gungraun-build, both deny runs, the tree
-                                probe, ast-grep's tests, special-casing, both spec load checks
-                                and the fault-injection probe
+                                every test of the workspace that runs by default but the fences'
+                                suites (the marker's `quick_leaves_out`) in the `quick` profile
+                                (`tests`), and the next milestone's report
+    engine/tools/check commit   before a group's last commit: quick with the counter in full, its
+                                `tests` adding the fences' suites and every gating milestone's
+                                targets (T's vectors), and build, doc, doctest, gungraun-build,
+                                both deny runs, the tree probe, ast-grep's tests, special-casing,
+                                both spec load checks and the fault-injection probe
+    engine/tools/check fences   the fences' suites alone, in the `quick` profile: after an edit
+                                to a fence (R-130), which `quick` doesn't test
     engine/tools/check full     everything CI runs on a pull request (C §6)
     engine/tools/check group G  one CI job's steps of `full` (R-77, 2026-11-13); `check list` names them
     engine/tools/check groups   fails unless every step of `full` is in exactly one group and
@@ -23,11 +27,15 @@
 `fast` is `quick`'s old name. It runs from engine/ with a clean environment: nothing from the
 caller's shell changes the flags, the compiler, the profiles or the test seeds. `full`,
 `group` and `step` build without incremental caches (CARGO_INCREMENTAL=0) and on every core;
-`quick` and `commit` build incrementally, with 6 build jobs and 6 test threads (the Mac's
-rule, R-82, 2026-11-13); the caller's CARGO_INCREMENTAL (0 or 1), CARGO_BUILD_JOBS and
+`quick`, `commit` and `fences` build incrementally, with 6 build jobs and 6 test threads (the
+Mac's rule, R-82, 2026-11-13); the caller's CARGO_INCREMENTAL (0 or 1), CARGO_BUILD_JOBS and
 NEXTEST_TEST_THREADS win. It prints one line per failed step and keeps each step's full
 output in target/check-logs/<step>.log. A report step prints its one line and never fails:
 `milestone-report`, the next milestone's tests (tools/milestones.py).
+
+`quick` and `commit` stop at the first red step, and their last line names the steps that
+didn't run (R-82, 2026-11-16: in M2, 65 red runs failed on a lint and still ran every test);
+`full`, `group` and `step` run every step, so CI reports every red at once.
 
 The memo (R-82, 2026-11-13): a green `quick`, `commit` or `full` keeps its key in
 target/check-memo/<mode>: the hash of every file git sees (tracked, or untracked and not
@@ -70,6 +78,8 @@ NIGHTLY = "nightly-2026-10-21"
 FUZZ_SECONDS = 20  # per target; three targets keep the step near its one-target time (R-91, 2026-11-04)
 FUZZ_TIMEOUT = 10  # seconds one input may run before it counts as a hang
 MODES = ("quick", "commit", "full")  # each runs at least what the one before it runs
+# the modes that stop at their first red step (R-82, 2026-11-16); full and CI's groups don't
+STOPS = ("quick", "commit")
 # quick and commit's build jobs and test threads, unless the caller sets them (R-82, 2026-11-13)
 LOCAL_JOBS = "6"
 
@@ -119,7 +129,7 @@ def mode_env(mode):
     jobs and 6 test threads, unless the caller sets them (R-82, 2026-11-13); none of the
     three changes a result."""
     env = clean_env()
-    if mode in ("quick", "commit"):
+    if mode in ("quick", "commit", "fences"):
         if os.environ.get("CARGO_INCREMENTAL") not in ("0", "1"):
             env["CARGO_INCREMENTAL"] = "1"
         for name in ("CARGO_BUILD_JOBS", "NEXTEST_TEST_THREADS"):
@@ -136,11 +146,10 @@ CLIPPY_TESTS = [*CLIPPY, "--tests", "--benches", "--", "-D", "warnings", "-A", "
 
 # T's runner, the way every step that runs it runs it
 RUNNER = ["cargo", "nextest", "run", "--locked", "-p", "tally-runner", "--all-features"]
-# quick's one test run: every test target of the workspace (T's runner, tally's and the CLI's
-# own), optimised with debug assertions and overflow checks on (R-82, 2026-11-13); the gating
-# milestones' targets are added by name
-QUICK_TESTS = ["cargo", "nextest", "run", "--locked", "--workspace", "--all-features", "--tests",
-               "--cargo-profile", "quick"]
+# the local modes' one test run, optimised with debug assertions and overflow checks on (R-82,
+# 2026-11-13); its targets are added by name (local_tests), never by `--tests`, which drops a
+# `test = false` target named beside it (pick P53 in M2)
+QUICK_TESTS = ["cargo", "nextest", "run", "--locked", "--workspace", "--all-features", "--cargo-profile", "quick"]
 
 
 class Report(str):
@@ -195,7 +204,7 @@ def steps(mode):
         ("spec-loadcheck", ["python3", "-I", "-B", "spec/tools/loadcheck.py", *spec_realities()], {}),
     ]
     if mode in ("quick", "commit"):
-        quick = [*lint, ("tests", tests, {}), ("milestone-report", milestone_report(["--cargo-profile", "quick"]), {})]
+        quick = [*lint, ("tests", tests(mode), {}), ("milestone-report", milestone_report(["--cargo-profile", "quick"]), {})]
         return quick if mode == "quick" else quick + compiled
     return [
         *lint[:3],
@@ -396,22 +405,42 @@ def memo_used():
     return not FRESH and os.environ.get("GITHUB_ACTIONS") != "true" and not os.environ.get("CI")
 
 
-def tests(env, log):
-    """quick's test step (R-82, R-77; 2026-11-13): every test target of the workspace and every
-    gating milestone's, in one nextest run in the quick profile."""
-    try:
-        gates, names = milestones.gating_targets(env)
-    except milestones.MilestoneError as e:
-        return str(e)
-    code, out = run([*QUICK_TESTS, *(f"--test={t}" for t in names)], env, log)
-    if code == 0:
-        return None
+def local_tests(mode, env):
+    """(argv, what it runs) of a local mode's test run (R-82, R-77; 2026-11-16): `quick`, every
+    workspace target that runs by default but the fences' suites (the marker's
+    `quick_leaves_out`); `commit`, those suites too and every gating milestone's targets;
+    `fences`, the suites alone. A MilestoneError when the marker or the targets can't be read."""
+    leave_out = milestones.quick_leaves_out()
+    suites = [f"--test={t}" for _, t in leave_out]
+    if mode == "fences":
+        return [*QUICK_TESTS, *suites], "the fences' suites"
+    if mode == "quick":
+        return [*QUICK_TESTS, *milestones.default_tests(env, leave_out)], "the workspace's but the fences' suites"
+    gates, names = milestones.gating_targets(env)
     which = f"the workspace's and the gating {', '.join(gates)}'s" if gates else "the workspace's"
-    counted = milestones.tally(out)
-    if counted is None:
-        return f"the tests ({which}) don't run: {first_error(out)}"
-    total, passed = counted
-    return f"{total - passed} of {total} tests are red ({which})"
+    return [*QUICK_TESTS, *milestones.default_tests(env, []), *(f"--test={t}" for t in names)], which
+
+
+def tests(mode):
+    """A local mode's test step: one nextest run in the quick profile (local_tests)."""
+
+    def step(env, log):
+        try:
+            argv, which = local_tests(mode, env)
+        except milestones.MilestoneError as e:
+            return str(e)
+        if mode == "fences" and len(argv) == len(QUICK_TESTS):
+            return Report("tools/milestones.toml's quick_leaves_out names no suite")
+        code, out = run(argv, env, log)
+        if code == 0:
+            return None
+        counted = milestones.tally(out)
+        if counted is None:
+            return f"the tests ({which}) don't run: {first_error(out)}"
+        total, passed = counted
+        return f"{total - passed} of {total} tests are red ({which})"
+
+    return step
 
 
 def run(argv, env, log, cwd=ENGINE):
@@ -641,7 +670,8 @@ def first_error(out):
     return lines[-1] if lines else "(no output)"
 
 
-USAGE = "usage: engine/tools/check quick|commit|full|group <name>|groups [--matrix]|list|step <name>|walls-key [--fresh]"
+USAGE = ("usage: engine/tools/check quick|commit|full|fences|group <name>|groups [--matrix]|list|step <name>|walls-key "
+         "[--fresh]")
 
 
 def choose(args):
@@ -649,6 +679,8 @@ def choose(args):
     if args in (["fast"], ["quick"], ["commit"], ["full"]):
         mode = "quick" if args[0] == "fast" else args[0]
         return mode, steps(mode)
+    if args == ["fences"]:
+        return "fences", [("fences", tests("fences"), {})]
     if len(args) == 2 and args[0] == "step" and any(s[0] == args[1] for s in steps("full")):
         return f"step {args[1]}", [s for s in steps("full") if s[0] == args[1]]
     if len(args) == 2 and args[0] == "group" and args[1] in group_names():
@@ -672,6 +704,7 @@ def main():
     if args == ["list"]:
         for m in MODES:
             print(f"{m}: {' '.join(name for name, _, _ in steps(m))}")
+        print("fences: fences")
         for g in group_names():
             print(f"group {g}: {' '.join(name for name, _, _ in group_steps(g))}")
         return 0
@@ -699,9 +732,12 @@ def main():
             return 0
     os.makedirs(LOGS, exist_ok=True)
     env = mode_env(mode)
-    failed = []
+    failed, ran = [], 0
     began = time.monotonic()
     for name, what, extra in chosen:
+        if failed and mode in STOPS:
+            break  # R-82, 2026-11-16: a local check stops at its first red step
+        ran += 1
         path = os.path.join(LOGS, f"{name}.log")
         with open(path, "w", encoding="utf-8") as log:
             step_env = {**env, **extra}
@@ -722,6 +758,11 @@ def main():
             print(f"FAIL {name}: {problem}  (target/check-logs/{name}.log)")
     total = len(chosen)
     took = time.monotonic() - began
+    if failed and ran < total:
+        skipped = [name for name, _, _ in chosen[ran:]]
+        print(f"check {mode}: red at {failed[0]}, stopped after {ran} of {total} steps ({took:.0f}s); not run: "
+              f"{' '.join(skipped)} (`check full` and CI run every step)")
+        return 1
     if failed:
         print(f"check {mode}: red, {len(failed)} of {total} steps failed ({took:.0f}s)")
         return 1
