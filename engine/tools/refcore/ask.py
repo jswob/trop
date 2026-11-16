@@ -587,7 +587,15 @@ class Asker:
             regs = [ln for ln in bss[0][-1][1:] if ln.startswith(('  cut', '  law date'))] if bss[0] else []
             return ['%s: %s' % (a.id, hole)] + regs[-1:]
         res = []
+        # a result is all the form prints (R13.1): a ledger, a diff, an explanation or a read set that differs in any
+        # line is the hole; a value's, a check's or a solve's register may differ (tally 2.1.8, item 5)
+        whole = a.form in ('diff', 'explain', 'inputs-of', 'readers-of', 'residuals')
         for i, b in enumerate(bss[0]):
+            if whole and any(bs[i] != b for bs in bss):
+                regs = [ln for ln in b[1:] if ln.startswith(('  cut', '  law date'))]
+                res.append('%s: %s' % (heads[0][i], hole))
+                res.extend(regs[-1:])
+                continue
             if all(bs[i][0] == b[0] for bs in bss) or not b[0].split(': ', 1)[1:]:
                 res.extend(b)
                 continue
