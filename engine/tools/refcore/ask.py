@@ -537,6 +537,11 @@ class Asker:
         if not met:
             return out
         vids = sorted(met)
+        if 2 ** len(vids) > EACH_LIMIT:
+            # L §7.6 limit 6 (tally 2.1.8, pick P27): a plain line takes at most 20 000 seen and unseen choices,
+            # refused before any rerun
+            from .evaluate import refuse
+            raise refuse('RUN-LIMIT', 'seen and unseen over more than 20 000 choices')
         picks = [()]
         for v in vids:
             picks = [p + ((v, s),) for p in picks for s in (True, False)]
