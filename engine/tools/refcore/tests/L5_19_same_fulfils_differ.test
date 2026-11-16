@@ -1,0 +1,69 @@
+# tally 2.1.8 S1 (#177), L §5.19 One movement on two statements, §8.4: rows stated same are one movement whose
+# fulfils is stated on either row or on both alike; rows that state different ones (pay[2026-03] and top[2026-03])
+# are refused, RUN-RECORD naming both rows in id order, as two unjoined rows that fulfil one instance are. Every read
+# of the movement, of the places it books and of either instance's realised movement is refused. 2.1.7 booked it
+# (konto 900.00 PLN).
+=== m.tally
+model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+input bank: observed
+input amt: money PLN
+input d_p: int
+
+move pay[m in months]: transfers
+  on day_of(m, d_p)
+  leg cash from konto to sav amount amt
+
+move top[m in months]: transfers
+  on day_of(m, d_p)
+  leg cash from konto to sav amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  d_p = 10 "s"
+  opening[konto] = 1000.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+version st_konto
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[a1] = (on: 2026-03-10, kind: transfers, leg cash from konto to sav amount 100.00 PLN, fulfils: pay[2026-03]) "a"
+
+version st_sav
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers sav
+  bank[b1] = (on: 2026-03-10, kind: transfers, leg cash from konto to sav amount 100.00 PLN, fulfils: top[2026-03]) "b"
+  same bank[a1] = bank[b1]
+
+ask k: bal(konto, 2026-03-31)
+ask sv: bal(sav, 2026-03-31)
+ask o: observed(pay[2026-03]).cash.amount
+ask f: flows(top, 2026-03)
+=== expect
+f: refused: RUN-RECORD bank[a1] and bank[b1] are stated same and fulfil pay[2026-03] and top[2026-03]
+  cut 2026-04-10
+k: refused: RUN-RECORD bank[a1] and bank[b1] are stated same and fulfil pay[2026-03] and top[2026-03]
+  open: pay[2026-03]
+  open: top[2026-03]
+  cut 2026-04-10
+o: refused: RUN-RECORD bank[a1] and bank[b1] are stated same and fulfil pay[2026-03] and top[2026-03]
+  cut 2026-04-10
+sv: refused: RUN-RECORD bank[a1] and bank[b1] are stated same and fulfil pay[2026-03] and top[2026-03]
+  open: pay[2026-03]
+  open: top[2026-03]
+  cut 2026-04-10

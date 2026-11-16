@@ -1329,6 +1329,7 @@ def m_obs_links_for(self, tid, ctx):
                 continue
             o.target = _LinkTarget(tid, self, mi, list(kv), ctx)
             res.append(o)
+        res = self.same_fulfils_differ(tid, res, ctx)
         res = self.unjoined_refused(tid, res, ctx)
         # rows stated same are one movement, "its fulfils ... stated on either row" (L §5.19 One movement on two
         # statements): a row with no fulfils of its own stated same as one that fulfils tid fulfils it too, so which
@@ -1493,6 +1494,42 @@ def same_obs_differ(a, others, leg=None):
                     shown(a.id), shown(b.id), what, d, fmt(x), shown(a.id), fmt(y), shown(b.id))
                 return Hole([(q, '%s, %s' % (shown(a.id), shown(b.id)))])
     return None
+
+
+def m_same_fulfils_differ(self, tid, res, ctx):
+    """L §5.19 One movement on two statements (tally 2.1.8 S1, #177): rows stated same whose fulfils name different
+    instances are refused, RUN-RECORD `<r> and <r'> are stated same and fulfil <a> and <b>`, the rows in id order, each
+    with its own. Returns the links left."""
+    groups = same_groups(self.m, ctx)
+    if not res or not any(o.id in groups for o in res):
+        return res
+    from .joint import shown
+    tid_of = {}
+    for t2, os in self.link_targets(ctx).items():
+        for o in os:
+            tid_of[o.id] = t2
+    by_id = dict((x.id, x) for x in self.observations(ctx))
+    bad = set()
+    for o in res:
+        for y in groups.get(o.id, ()):
+            x = by_id.get(y)
+            t2 = tid_of.get(y)
+            if x is None or x.fulfils is None or t2 is None or t2 == tid:
+                continue
+            (a, ta), (b, tb) = sorted([(o, tid), (x, t2)], key=lambda p: p[0].id)
+            e = refuse('RUN-RECORD', '%s and %s are stated same and fulfil %s and %s' % (
+                shown(a.id), shown(b.id), shown(ta), shown(tb)))
+            for z in (o, x):
+                if z.err is None:
+                    z.err = e
+            bad.add(id(o))
+            # what reads either instance's realised movement rests on the refused records (L §8.4)
+            badl = self.run_cache.setdefault(('badlinks', self.wkey(ctx)), {})
+            badl.setdefault(tid, e)
+            badl.setdefault(t2, e)
+    if not bad:
+        return res
+    return [o for o in res if id(o) not in bad]
 
 
 def m_unjoined_refused(self, tid, res, ctx):
