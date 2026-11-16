@@ -101,9 +101,9 @@ pub(super) fn diff_result(
     m: &Reality,
     diff: &Diff,
     engine: &mut Engine,
-    (ctx, pinned): (Ctx, &Collected),
+    (env, ctx, pinned): (&Env, Ctx, &Collected),
 ) -> Result<Printed, Stop> {
-    let made = cell(m, diff, engine, (ctx, pinned), (Vec::new(), None))?;
+    let made = cell(m, diff, engine, (env, ctx, pinned), (Vec::new(), None))?;
     result(m, diff, &made)
 }
 
@@ -120,12 +120,18 @@ pub(super) fn diff_cells(
     m: &Reality,
     (ask, diff): (&Ask, &Diff),
     engine: &mut Engine,
-    (ctx, pinned): (Ctx, &Collected),
+    (env, ctx, pinned): (&Env, Ctx, &Collected),
     only: &str,
 ) -> Result<Cells, Stop> {
     let axes = Axes::of(m, ask)?;
     let Some(fanned) = &axes else {
-        let cell = side_cell(m, (ask, diff), engine, (ctx, pinned), (Vec::new(), only))?;
+        let cell = side_cell(
+            m,
+            (ask, diff),
+            engine,
+            (env, ctx, pinned),
+            (Vec::new(), only),
+        )?;
         return Ok(Cells {
             axes,
             each: vec![cell],
@@ -138,7 +144,13 @@ pub(super) fn diff_cells(
         let options = fanned.options_of(combo)?;
         let inside = engine.with_options(ctx, &options)?;
         engine.open_layer(m, inside)?;
-        let made = side_cell(m, (ask, diff), engine, (inside, pinned), (options, only));
+        let made = side_cell(
+            m,
+            (ask, diff),
+            engine,
+            (env, inside, pinned),
+            (options, only),
+        );
         engine.end_layer(inside.layer, made.as_ref().err())?;
         each.push(made?);
     }
@@ -152,17 +164,17 @@ fn side_cell(
     m: &Reality,
     (ask, diff): (&Ask, &Diff),
     engine: &mut Engine,
-    (ctx, pinned): (Ctx, &Collected),
+    (env, ctx, pinned): (&Env, Ctx, &Collected),
     (options, only): (Vec<(String, String)>, &str),
 ) -> Result<Cell, Stop> {
     if !ask.windows_each {
-        return cell(m, diff, engine, (ctx, pinned), (options, Some(only)));
+        return cell(m, diff, engine, (env, ctx, pinned), (options, Some(only)));
     }
     let mut pending: VecDeque<Choice> = VecDeque::from([Vec::new()]);
     let mut runs = Runs::default();
     while let Some(choice) = pending.pop_front() {
         let outer = engine.each_met.replace(Vec::new());
-        let made = chosen_cell(m, diff, engine, (ctx, pinned), (&choice, only));
+        let made = chosen_cell(m, diff, engine, (env, ctx, pinned), (&choice, only));
         let met = core::mem::replace(&mut engine.each_met, outer)
             .ok_or_else(|| invariant("a run's windows met taken while it ran"))?;
         let made = made?;
@@ -202,12 +214,18 @@ fn chosen_cell(
     m: &Reality,
     diff: &Diff,
     engine: &mut Engine,
-    (ctx, pinned): (Ctx, &Collected),
+    (env, ctx, pinned): (&Env, Ctx, &Collected),
     (choice, only): (&Choice, &str),
 ) -> Result<Cell, Stop> {
     let inside = engine.with_windows(ctx, choice)?;
     engine.open_layer(m, inside)?;
-    let made = cell(m, diff, engine, (inside, pinned), (Vec::new(), Some(only)));
+    let made = cell(
+        m,
+        diff,
+        engine,
+        (env, inside, pinned),
+        (Vec::new(), Some(only)),
+    );
     engine.end_layer(inside.layer, made.as_ref().err())?;
     made
 }
@@ -308,6 +326,17 @@ fn joined(ours: &Choice, theirs: &Choice) -> Option<Choice> {
 }
 
 impl Cells {
+    /// Merges `brought`, what a binding tuple brought (the movements it binds), into every
+    /// cell's register and every run's (L §8.2).
+    pub(super) fn bring(&mut self, brought: &Collected) {
+        for cell in &mut self.each {
+            cell.met.merge(brought);
+            for (_, run) in &mut cell.runs.each {
+                run.met.merge(brought);
+            }
+        }
+    }
+
     /// The cell at the options of `options` of the axes this side reads.
     fn at(&self, options: &[(String, String)]) -> Result<&Cell, Stop> {
         let ids: BTreeSet<String> = self.axes.iter().flat_map(Axes::ids).collect();
@@ -323,16 +352,17 @@ impl Cells {
     }
 }
 
-/// A diff's lines from its cells: its one result without a head when it reads no axis, else
-/// one line per distinct result under a head naming its options, as a value's lines are
-/// (refcore's `diff_print`). L §5.5, §5.18.
+/// A diff's lines from its cells under head `head`, the ask's id and a tuple's binding part:
+/// its one result with no axis part when it reads no axis, else one line per distinct result
+/// under a head naming its options, as a value's lines are (refcore's `diff_print`).
+/// L §5.5, §5.18.
 ///
 /// # Errors
 ///
 /// `ENGINE-INVARIANT` for a cell with a side unevaluated.
 pub(super) fn cells_lines(
     m: &Reality,
-    (ask, diff): (&Ask, &Diff),
+    (ask, diff, head): (&Ask, &Diff, &str),
     cells: &Cells,
 ) -> Result<Vec<String>, Stop> {
     if ask.windows_each {
@@ -344,7 +374,7 @@ pub(super) fn cells_lines(
             }
             each.push((runs, cell.runs.windows.clone()));
         }
-        return crossed_lines(ask, cells.axes.as_ref(), each, cells.ctx);
+        return crossed_lines(head, cells.axes.as_ref(), each, cells.ctx);
     }
     let mut results = Vec::with_capacity(cells.each.len());
     for (at, cell) in cells.each.iter().enumerate() {
@@ -354,14 +384,14 @@ pub(super) fn cells_lines(
         let combos = axes.combinations()?;
         // the ask's pins are in each cell's register already
         let pins = Collected::default();
-        return result_lines((axes, &combos), &ask.id, &results, (cells.ctx, &pins));
+        return result_lines((axes, &combos), head, &results, (cells.ctx, &pins));
     }
     let [(_, only)] = results.as_slice() else {
         return Err(invariant(
             "a diff that reads no axis with other than one cell",
         ));
     };
-    let mut out = only.lines(&ask.id);
+    let mut out = only.lines(head);
     let register = register_lines(&only.met, cells.ctx)?;
     out.extend(register.into_iter().map(|l| format!("  {l}")));
     Ok(out)
@@ -373,14 +403,14 @@ fn cell(
     m: &Reality,
     diff: &Diff,
     engine: &mut Engine,
-    (ctx, pinned): (Ctx, &Collected),
+    (env, ctx, pinned): (&Env, Ctx, &Collected),
     (options, only): (Vec<(String, String)>, Option<&str>),
 ) -> Result<Cell, Stop> {
     let mut met = pinned.clone();
     let mut sides = [None, None];
     for (slot, world) in sides.iter_mut().zip([&diff.world, &diff.against]) {
         if only.is_none_or(|w| w == world.as_str()) {
-            *slot = Some(side(m, (diff, world), engine, (ctx, &mut met))?);
+            *slot = Some(side(m, (diff, world), engine, (env, ctx, &mut met))?);
         }
     }
     let [ours, theirs] = sides;
@@ -456,7 +486,7 @@ fn side(
     m: &Reality,
     (diff, world): (&Diff, &str),
     engine: &mut Engine,
-    (ctx, met): (Ctx, &mut Collected),
+    (env, ctx, met): (&Env, Ctx, &mut Collected),
 ) -> Result<Side, Stop> {
     met.entries.insert(Entry {
         word: "world",
@@ -465,7 +495,7 @@ fn side(
     });
     let inside = ctx.in_world(world_named(m, world)?);
     engine.enter_timeline(m, inside)?;
-    let lines = side_lines(m, diff, engine, (inside, met));
+    let lines = side_lines(m, diff, engine, (env, inside, met));
     engine.leave_timeline()?;
     lines
 }
@@ -477,16 +507,14 @@ fn side_lines(
     m: &Reality,
     diff: &Diff,
     engine: &mut Engine,
-    (ctx, met): (Ctx, &mut Collected),
+    (env, ctx, met): (&Env, Ctx, &mut Collected),
 ) -> Result<Side, Stop> {
     let text = crate::load::expr_text(&diff.expr);
     if diff.binds.is_empty() {
-        return Ok(vec![(
-            text,
-            one(m, diff, engine, (&Env::empty(), ctx), met)?,
-        )]);
+        return Ok(vec![(text, one(m, diff, engine, (env, ctx), met)?)]);
     }
-    let tuples = match engine.tuples(m, &diff.binds, ctx)? {
+    // the diff's own binding, inside the ask's tuple (L §5.18, tally 2.1.8 R13)
+    let tuples = match engine.tuples(m, &diff.binds, (env, ctx))? {
         Err(hole) => return Ok(vec![(text, Item::Value(Value::Hole(hole)))]),
         Ok(tuples) => tuples,
     };

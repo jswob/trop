@@ -141,10 +141,11 @@ impl Engine {
         }
     }
 
-    /// The binding tuples of an ask's `for`, read from outside the evaluator: each tuple's
-    /// scope with the hole of a `where` that is one and the registers of the movements it
-    /// binds, kept for its own line; or the hole of the first domain that is one (refcore's
-    /// `members` with `regs`, as `_answer_in` reads it). L §5.18, §5.11, §8.2.
+    /// The binding tuples of an ask's `for`, or of a diff's own binding inside a tuple's scope
+    /// `env`, read from outside the evaluator: each tuple's scope with the hole of a `where`
+    /// that is one and the registers of the movements it binds, kept for its own line; or the
+    /// hole of the first domain that is one (refcore's `members` with `regs`, as `_answer_in`
+    /// reads it). L §5.18, §5.11, §8.2.
     ///
     /// # Errors
     ///
@@ -153,11 +154,11 @@ impl Engine {
         &mut self,
         m: &Reality,
         binds: &[Bind],
-        ctx: Ctx,
+        (env, ctx): (&Env, Ctx),
     ) -> Result<Result<Vec<Member>, Hole>, Stop> {
         let mark = self.mark();
         loop {
-            match self.members(m, binds, &Env::empty(), ctx, Brings::ToTuple) {
+            match self.members(m, binds, env, ctx, Brings::ToTuple) {
                 Err(Stop::Deep) if mark.outermost => self.replay(m, &mark)?,
                 result => {
                     self.read_ended(&mark);

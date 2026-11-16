@@ -5,9 +5,11 @@
 //! hole; §8.4 `RUN-NONE` for `none` and `never`), §5.19 Bindings (movements by day, a hole
 //! day last), §8.2 (the register: `assumed`, `held`, `world`, the law date and the cut; a
 //! tuple's `unfulfilled:` on its own line), §8.4 (a run-time refusal stands as its value,
-//! with the register met before it; L §5.14.3 a refused `flows`, L §5.14 `with uncertain`).
+//! with the register met before it; L §5.14.3 a refused `flows`, L §5.14 `with uncertain`);
+//! tally 2.1.8 R13.1 (a diff's own `for`, one block per tuple, on one stack and on two).
 //! Twin: engine/tools/refcore/ask.py (`Asker`); the expected lines are refcore's run of the
-//! same text (`python3 -m refcore run`).
+//! same text (`python3 -m refcore run`), but where refcore stops or misses: there the lines
+//! are the spec's, and the case's comment says so.
 //! Invariants: reads no test, vector or answer key (R-93); the text is written here, small.
 
 #![forbid(unsafe_code)]
@@ -545,5 +547,111 @@ with_gifts: refused: RUN-DIV division by zero
             ],
             "refcore's lines for `--ask nolaw later`"
         );
+    }
+
+    /// The lines a run of the files `files`, each a path and its text, prints, every ask.
+    fn lines_of_files(files: &[(&str, &str)]) -> Vec<String> {
+        let given = files
+            .iter()
+            .map(|(path, text)| Given {
+                path: (*path).to_owned(),
+                bytes: Some(text.as_bytes().to_vec()),
+            })
+            .collect();
+        let request = Request {
+            asks: Asks::Every,
+            pin: Pin::Canonical,
+            days: Days::Events,
+        };
+        let answer = run(given, &request).expect("an answer");
+        answer.lines().to_vec()
+    }
+
+    /// A diff's own `for`: two keys, a scenario that moves one (`sd`) and one that moves the
+    /// other (`sc`), the two on two stacks (the review of group 1's B1).
+    const DIFF_FOR: &str = "model pw
+  tally 2
+  on 2026-04-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s \"s\"
+index ks = [a, b]
+input dk[k in ks]: date
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  dk[a] = 2026-03-05 \"s\"
+  dk[b] = 2026-03-05 \"s\"
+
+ask h1: diff(dk[k]) in sd against pw for k in ks law 2026-03-01
+ask h2: diff(dk[j] for j in ks) in sd against pw for k in [b] law 2026-03-01
+ask h3: diff(dk[k]) in sd against sc for k in ks law 2026-03-01
+";
+
+    /// Scenario `sd`: dk[b] moves.
+    const DIFF_FOR_SD: &str = "scenario sd over pw
+  tally 2
+  from 2026-01-01
+
+version sd_v
+  cite s
+  governs 2026-01-01..
+  known 2026-01-01
+  replace dk[b] = 2026-03-07 \"s\"
+";
+
+    /// Scenario `sc`: dk[a] moves.
+    const DIFF_FOR_SC: &str = "scenario sc over pw
+  tally 2
+  from 2026-01-01
+
+version sc_v
+  cite s
+  governs 2026-01-01..
+  known 2026-01-01
+  replace dk[a] = 2026-03-06 \"s\"
+";
+
+    /// The spec's lines, not refcore's: refcore stops `REFCORE-NOT-YET (KeyError: 'k')` on h1
+    /// and h3 and prints h2 as one block with no binding part (L §5.18, tally 2.1.8 R13.1:
+    /// every clause stands on every form, one block per binding tuple).
+    const DIFF_FOR_LINES: &str =
+        "h1 (k = a): diff in sd against pw: 0 changed, 0 added, 0 removed, 1 unchanged
+  world: pw
+  world: sd
+  law date 2026-03-01, cut 2026-04-25
+h1 (k = b): diff in sd against pw: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed dk[k]: 2026-03-07 against 2026-03-05
+  world: pw
+  world: sd
+  law date 2026-03-01, cut 2026-04-25
+h2 (k = b): diff in sd against pw: 1 changed, 0 added, 0 removed, 1 unchanged
+  changed (j = b): 2026-03-07 against 2026-03-05
+  world: pw
+  world: sd
+  law date 2026-03-01, cut 2026-04-25
+h3 (k = a): diff in sd against sc: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed dk[k]: 2026-03-05 against 2026-03-06
+  world: sc
+  world: sd
+  law date 2026-03-01, cut 2026-04-25
+h3 (k = b): diff in sd against sc: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed dk[k]: 2026-03-07 against 2026-03-05
+  world: sc
+  world: sd
+  law date 2026-03-01, cut 2026-04-25";
+
+    #[test]
+    fn a_diff_reads_its_own_for_one_block_per_tuple_on_one_stack_and_two() {
+        let files = [
+            ("pw.tally", DIFF_FOR),
+            ("sc.tally", DIFF_FOR_SC),
+            ("sd.tally", DIFF_FOR_SD),
+        ];
+        let want: Vec<&str> = DIFF_FOR_LINES.lines().collect();
+        assert_eq!(lines_of_files(&files), want, "one block per tuple");
     }
 }

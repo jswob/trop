@@ -35,7 +35,9 @@ use crate::eval::{
     names_in, num_stop, one_day, past_days, world_named,
 };
 use crate::model::{Reality, Value};
-use crate::syntax::{Ask, AskBody, Bind, Domain, Expr, Key, Lit, OfQ, Pin, PinForm, Step, Stop};
+use crate::syntax::{
+    Ask, AskBody, Bind, Diff, Domain, Expr, Key, Lit, OfQ, Pin, PinForm, Step, Stop,
+};
 use crate::time::Day;
 use crate::walk::{Bookings, Forks, Lows, invariant};
 use crate::{Asks, Days};
@@ -82,9 +84,14 @@ struct Seen {
 struct Side {
     /// The world.
     world: String,
-    /// The cells, once answered.
-    cells: Option<Cells>,
+    /// The cells per binding tuple, once answered.
+    cells: Option<SideCells>,
 }
+
+/// One side of a diff over two stacks: per binding tuple of the ask's `for`, its binding
+/// part, ` (k = a)`, and its cells or the hole its line prints; one tuple with no part where
+/// the ask binds nothing.
+type SideCells = Vec<(String, Result<Cells, String>)>;
 
 /// How a run's engines compute: keeping their cells as `memo` says, reading a written
 /// projection's common case as `lows` says and continuing a projection's walk read again as
@@ -302,7 +309,62 @@ fn cross_lines(
     let [ours, theirs] = got.as_slice() else {
         return Err(no_turn());
     };
-    cells_lines(m, (ask, diff), &crossed(m, (ours, theirs))?)
+    // one block per binding tuple, each side's at that tuple (L §5.18, tally 2.1.8 R13)
+    let mut out = Vec::new();
+    for (part, left) in ours {
+        let head = format!("{}{part}", ask.id);
+        let right = theirs
+            .iter()
+            .find(|(other, _)| other == part)
+            .map(|(_, cells)| cells)
+            .ok_or(Stop::NotBuilt(
+                "a diff over two stacks whose sides bind other tuples",
+            ))?;
+        match (left, right) {
+            (Err(hole), _) | (_, Err(hole)) => out.push(format!("{head}: {hole}")),
+            (Ok(l), Ok(r)) => {
+                out.extend(cells_lines(m, (ask, diff, &head), &crossed(m, (l, r))?)?);
+            }
+        }
+    }
+    Ok(out)
+}
+
+/// One side of a diff whose worlds sit on two stacks, in context `ctx` with the ask's pins
+/// `pinned`: its cells in world `world` per binding tuple of the ask's `for`, each with what
+/// its tuple brought; a tuple whose `where` is a hole that hole; or the one line of a domain
+/// that is a hole (L §5.18, tally 2.1.8 R13; §6.4).
+///
+/// # Errors
+///
+/// A load refusal met at run; `NotBuilt` past what the engine builds.
+fn side_tuples(
+    m: &Reality,
+    (ask, diff): (&Ask, &Diff),
+    engine: &mut Engine,
+    (ctx, pinned): (Ctx, &Collected),
+    world: &str,
+) -> Result<Result<SideCells, String>, Stop> {
+    if ask.binds.is_empty() {
+        let cells = diff_cells(m, (ask, diff), engine, (&Env::empty(), ctx, pinned), world)?;
+        return Ok(Ok(vec![(String::new(), Ok(cells))]));
+    }
+    let tuples = match engine.tuples(m, &ask.binds, (&Env::empty(), ctx))? {
+        Err(hole) => return Ok(Err(format!("{}: {}", ask.id, hole.text()))),
+        Ok(tuples) => tuples,
+    };
+    let mut out = Vec::with_capacity(tuples.len());
+    for tuple in tuples {
+        let part = env_text(m, &ask.binds, &tuple.env)?;
+        if let Some(hole) = tuple.unknown {
+            out.push((part, Err(hole.text())));
+            continue;
+        }
+        let mut cells = diff_cells(m, (ask, diff), engine, (&tuple.env, ctx, pinned), world)?;
+        cells.bring(&tuple.brought);
+        out.push((part, Ok(cells)));
+    }
+    Ok(Ok(out))
 }
 
 /// What a world's asks' engines gather, and what its reality holds that the run doesn't take
@@ -839,7 +901,7 @@ fn ask_body(
         // fans out over no axis (refcore's `_answer_in`, its readers-of return)
         (AskBody::ReadersOf(reference), _) => {
             if !ask.binds.is_empty()
-                && let Err(hole) = engine.tuples(m, &ask.binds, ctx)?
+                && let Err(hole) = engine.tuples(m, &ask.binds, (&Env::empty(), ctx))?
             {
                 return Ok(vec![format!("{}: {}", ask.id, hole.text())]);
             }
@@ -849,8 +911,10 @@ fn ask_body(
         // each cell's runs, kept for the turn that prints both (refcore's `_diff_only`,
         // `_diff_side`; tally 2.1.8 R13, #186)
         (AskBody::Diff(diff), Some(side)) => {
-            let cells = diff_cells(m, (ask, diff), engine, (ctx, &pinned), &side.world)?;
-            side.cells = Some(cells);
+            match side_tuples(m, (ask, diff), engine, (ctx, &pinned), &side.world)? {
+                Ok(cells) => side.cells = Some(cells),
+                Err(line) => return Ok(vec![line]),
+            }
             Ok(Vec::new())
         }
         // every other form: per binding tuple, axis combination and sub-window, its result
@@ -882,15 +946,6 @@ fn tuple_lines(
     engine: &mut Engine,
     (ctx, pinned): (Ctx, &Collected),
 ) -> Result<Vec<String>, Stop> {
-    if !ask.binds.is_empty() && matches!(ask.body, AskBody::Diff(_)) {
-        // a diff's binding is the one in its brackets; the ask's own `for` on a diff isn't
-        // read yet, as before R13
-        let unbound = Ask {
-            binds: Vec::new(),
-            ..ask.clone()
-        };
-        return clause_lines(m, &unbound, engine, (ctx, pinned));
-    }
     clause_lines(m, ask, engine, (ctx, pinned))
 }
 
@@ -962,7 +1017,7 @@ fn plain_lines(
             brought: Collected::default(),
         }]
     } else {
-        match engine.tuples(m, &ask.binds, ctx)? {
+        match engine.tuples(m, &ask.binds, (&Env::empty(), ctx))? {
             Err(hole) => return Ok(vec![format!("{}: {}", ask.id, hole.text())]),
             Ok(tuples) => tuples,
         }
@@ -1060,7 +1115,7 @@ pub(super) fn form_line(
         AskBody::Explain(reference) => explain_line(m, (ask, reference), engine, env, ctx),
         AskBody::InputsOf(reference) => inputs_line(m, (ask, reference), engine, env, ctx),
         AskBody::Residuals(r) => residual_result(m, ask, r, engine, (env, ctx, pinned)),
-        AskBody::Diff(diff) => diff_result(m, diff, engine, (ctx, pinned)),
+        AskBody::Diff(diff) => diff_result(m, diff, engine, (env, ctx, pinned)),
         AskBody::ReadersOf(_) => Err(invariant("readers-of read as a tuple's line")),
     }
 }
@@ -1218,8 +1273,8 @@ fn ask_engine(cut: Day, (ask, env): (&Ask, &Env), days: Days, seen: &mut Seen) -
 /// membership is a hole prints that hole (L §5.18, §5.11, §2.5).
 fn tuple_asks(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<String>, Stop> {
     let mut engine = ask_engine(m.on, (ask, &Env::empty()), days, seen);
-    let read =
-        model_ctx(m, &mut engine, (None, m.on)).and_then(|ctx| engine.tuples(m, &ask.binds, ctx));
+    let read = model_ctx(m, &mut engine, (None, m.on))
+        .and_then(|ctx| engine.tuples(m, &ask.binds, (&Env::empty(), ctx)));
     gather(seen, &mut engine);
     let members = match read {
         Ok(Ok(members)) => members,

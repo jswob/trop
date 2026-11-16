@@ -115,7 +115,7 @@ pub(super) fn each_lines(
         let outer = engine.each_met.replace(Vec::new());
         let bind_ctx = under(engine, ask, ctx, &Vec::new())?;
         engine.open_layer(m, bind_ctx)?;
-        let members = engine.tuples(m, &ask.binds, bind_ctx);
+        let members = engine.tuples(m, &ask.binds, (&Env::empty(), bind_ctx));
         engine.end_layer(bind_ctx.layer, members.as_ref().err())?;
         let met = core::mem::replace(&mut engine.each_met, outer)
             .ok_or_else(|| invariant("a binding's windows met taken while it ran"))?;
@@ -186,14 +186,15 @@ fn fanned_lines(
 /// The lines of a diff whose worlds sit on two stacks, under `windows each`: each cell's runs
 /// `cells` merged into rows as a line's runs are, one block per run of sub-windows that agree,
 /// one unlabelled block where all agree; over the axes either side reads, the cells grouped as
-/// a fan-out groups them; each block under the ask's id, its window part then its axis part,
-/// with its register (L §4.4, §5.5, §6.4; tally 2.1.8 R13, #186).
+/// a fan-out groups them; each block under head `head` (the ask's id and a tuple's binding
+/// part), its window part then its axis part, with its register (L §4.4, §5.5, §6.4; tally
+/// 2.1.8 R13, #186).
 ///
 /// # Errors
 ///
 /// `ENGINE-INVARIANT` for a cell with no run.
 pub(super) fn crossed_lines(
-    ask: &Ask,
+    head: &str,
     axes: Option<&Axes>,
     cells: Vec<CellRuns>,
     ctx: Ctx,
@@ -220,7 +221,7 @@ pub(super) fn crossed_lines(
     };
     // a cell's register holds the ask's pins already
     let none = Collected::default();
-    fanned_lines(&ask.id, lines, (&none, &none), ctx)
+    fanned_lines(head, lines, (&none, &none), ctx)
 }
 
 /// One line of a keyed `windows each` line whose binding meets a window: its head after the
@@ -665,7 +666,7 @@ fn bound_run(
 ) -> Result<(Printed, Vec<Tuple>), Stop> {
     let mut tuples = Vec::new();
     let mut carried = Vec::new();
-    match engine.tuples(m, &ask.binds, ctx)? {
+    match engine.tuples(m, &ask.binds, (&Env::empty(), ctx))? {
         Err(hole) => {
             carry_union(&mut carried, hole.carried());
             tuples.push(Tuple {

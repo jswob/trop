@@ -253,7 +253,7 @@ fn bind_tuples(
     for (at, set) in options.iter().enumerate() {
         let inside = engine.with_options(ctx, set)?;
         engine.open_layer(m, inside)?;
-        let members = engine.tuples(m, &ask.binds, inside);
+        let members = engine.tuples(m, &ask.binds, (&Env::empty(), inside));
         engine.end_layer(inside.layer, members.as_ref().err())?;
         let members = match members? {
             Err(hole) => return Ok(Err(hole)),
