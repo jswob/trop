@@ -148,10 +148,10 @@ A **run** is one coordinator, one pull request: a milestone (M2), a spec round (
 
 ### D14. The check loops
 
-- **Pick:** `check quick` after an edit, `check commit` before a commit, the full check on GitHub for every push. A check's time is a requirement with a target, reported at every gate beside the cost. A change to a tool or to CI is proven by its selftest case and the pull request's own CI.
-- **Decided:** the user, 2026-11-11: "it's impossible to develop anything with checks so slow."
-- **Why:** at M1 the local full check took 15 to 47 minutes and builders waited 54 % of their active time. PR #139 brought the loops to 32 s, 59 s and 8.5 minutes.
-- **Enforced:** `engine/tools/check`'s modes; R-77 and R-82; the Stop hook.
+- **Pick:** `check quick` after an edit, `check commit` before a commit, the full check on GitHub for every push. The two local checks stop at the first red step and say which steps didn't run. `quick` runs the lints, the unit tests and the next milestone's report; `commit` adds T's gating vectors and the fences' equivalence suites, which `quick` leaves out. Targets: `quick` 45 s, `commit` 3 min, a pull request's CI 12 min with no gate-8 run beside it. A check's time is a requirement with a target, reported at every gate beside the cost. A change to a tool or to CI is proven by its selftest case and the pull request's own CI.
+- **Decided:** the user, 2026-11-11: "it's impossible to develop anything with checks so slow." The stop, the suites out of `quick` and T's vectors in `commit`: the user, 2026-11-16, "I agree to chagnes 1,2 and 3", on the process study after M2.
+- **Why:** at M1 the local full check took 15 to 47 minutes and builders waited 54 % of their active time. PR #139 brought the loops to 32 s, 59 s and 8.5 minutes. In M2 the loops grew back unseen: `quick` ran at a median 109 s over 189 runs and builders spent 7.4 of 32.5 hours in checks; 65 red runs failed on a lint and still ran every test; three fence suites were 97 % of `quick`'s test time, and no local check ran T's vectors (pick P53).
+- **Enforced:** `engine/tools/check`'s modes, `check fences` for a builder on a fence, and `engine/tools/milestones.toml`'s `quick_leaves_out`; R-77 and R-82, with R-82's selftest cases; the Stop hook.
 
 ### D15. Spec questions and spec rounds
 

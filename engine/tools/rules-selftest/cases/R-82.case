@@ -325,3 +325,156 @@ python3 -I -B zz_memo.py run commit | sed 's/^/commit after a green quick: /'
 python3 -I -B zz_memo.py run quick --fresh | sed 's/^/quick --fresh: /'
 GITHUB_ACTIONS=true python3 -I -B zz_memo.py run quick | sed 's/^/quick on CI: /'
 CI=true python3 -I -B zz_memo.py run quick | sed 's/^/quick with CI set: /'
+
+# The rules step after the M2 study (2026-11-16, the user's "I agree to chagnes 1,2 and 3"):
+# `quick` and `commit` stop at their first red step and name the steps that didn't run; a red
+# run keeps nothing in the memo. A planted red fmt: the run ends there, the test step's log is
+# absent, and the memo holds no key.
+case: local-modes-stop-at-the-first-red
+tool: run
+exit: any
+expect: quick: FAIL fmt
+expect: quick: check quick: red at fmt, stopped after 1 of 11 steps
+expect: not run: clippy-lib clippy-tests exceptions check-frozen check-rules headers trace ast-grep-scan tests milestone-report (`check full` and CI run every step)
+expect: commit: check commit: red at fmt, stopped after 1 of 23 steps
+expect: quick: no test log
+expect: commit: no test log
+expect: quick: nothing kept in the memo
+expect: commit: nothing kept in the memo
+--- module
+/// Planted.
+pub fn planted( a : u8 ) -> u8 { a }
+--- run
+unset CI GITHUB_ACTIONS
+for mode in quick commit; do
+  rm -rf target/check-memo target/check-logs/tests.log
+  tools/check $mode | sed "s/^/$mode: /"
+  test -e target/check-logs/tests.log || echo "$mode: no test log"
+  test -n "$(ls target/check-memo 2>/dev/null)" || echo "$mode: nothing kept in the memo"
+done
+
+# `check full` with the same planted red runs every step: the real fmt step, then a planted
+# one after it, which must run in full and must not in quick.
+case: full-runs-every-step-after-a-red
+tool: run
+exit: any
+expect: full: FAIL fmt
+expect: full: the step after the red ran
+expect: full: check full: red, 1 of 2 steps failed
+expect: quick: check quick: red at fmt, stopped after 1 of 2 steps
+expect: not run: planted-after (`check full` and CI run every step)
+--- module
+/// Planted.
+pub fn planted( a : u8 ) -> u8 { a }
+--- write zz_after.py
+"""Planted: check's main with the real fmt step and a planted step after it, which prints."""
+import sys
+
+sys.path.insert(0, "tools")
+import check
+
+real = check.steps
+
+
+def after(env, log):
+    print("the step after the red ran", flush=True)
+
+
+check.steps = lambda m: [s for s in real(m) if s[0] == "fmt"] + [("planted-after", after, {})]
+sys.argv = ["check", sys.argv[1], "--fresh"]
+sys.exit(check.main())
+--- run
+python3 -I -B zz_after.py full | sed 's/^/full: /'
+python3 -I -B zz_after.py quick | sed 's/^/quick: /'
+
+# Which targets each local mode's test run selects, from cargo's unit graph (no build): every
+# gating milestone's targets and every fence suite (the marker's `quick_leaves_out`) run in
+# `commit`, and `quick` runs no suite. A gating target or a suite no local mode runs fails it.
+case: local-modes-run-every-gating-target-and-suite
+tool: run
+exit: any
+expect: commit runs every gating target and every fence suite
+expect: quick runs no fence suite
+expect: fences runs exactly the fence suites
+--- write zz_selected.py
+"""Planted: the test targets of each local mode's run, as cargo's unit graph selects them; the
+nextest argv's selection, its profile as cargo's."""
+import json
+import subprocess
+import sys
+
+sys.path.insert(0, "tools")
+import check
+import milestones
+
+
+def selected(mode):
+    env = check.mode_env(mode)
+    argv, _ = check.local_tests(mode, env)
+    args = ["--profile" if a == "--cargo-profile" else a for a in argv[3:]]
+    r = subprocess.run(["cargo", f"+{check.NIGHTLY}", "test", "--no-run", "-Z", "unstable-options", "--unit-graph",
+                        *args], cwd=check.ENGINE, env=env, capture_output=True, text=True, check=False)
+    lines = [l for l in r.stdout.splitlines() if l.startswith('{"version"')]
+    if not lines:
+        sys.exit(f"cargo's unit graph for {mode}: {r.stderr.strip()[-300:]}")
+    return {u["target"]["name"] for u in json.loads(lines[0])["units"] if u["mode"] == "test"}
+
+
+env = check.mode_env("commit")
+_, gated = milestones.gating_targets(env)
+suites = {t for _, t in milestones.quick_leaves_out()}
+quick, commit, fences = selected("quick"), selected("commit"), selected("fences")
+missing = sorted((set(gated) | suites) - commit - quick)
+for t in missing:
+    print(f"no local mode runs {t}")
+if not missing and set(gated) | suites <= commit:
+    print("commit runs every gating target and every fence suite")
+print("quick runs no fence suite" if not quick & suites else f"quick runs {', '.join(sorted(quick & suites))}")
+print("fences runs exactly the fence suites" if fences == suites else f"fences runs {', '.join(sorted(fences))}")
+--- run
+python3 -I -B zz_selected.py
+
+# The planted violation of the case above: `--tests` back in the local modes' test run drops
+# every `test = false` target named beside it (pick P53 in M2), so no local mode runs T's
+# gating vectors, and the probe says so.
+case: tests-flag-drops-the-gating-targets
+tool: run
+exit: any
+expect: no local mode runs s_kernel
+expect: no local mode runs m2_items
+--- replace tools/check.py
+QUICK_TESTS = ["cargo", "nextest", "run", "--locked", "--workspace", "--all-features", "--cargo-profile", "quick"]
+--- with
+QUICK_TESTS = ["cargo", "nextest", "run", "--locked", "--workspace", "--all-features", "--tests", "--cargo-profile",
+               "quick"]
+--- write zz_selected.py
+"""Planted: as in local-modes-run-every-gating-target-and-suite."""
+import json
+import subprocess
+import sys
+
+sys.path.insert(0, "tools")
+import check
+import milestones
+
+
+def selected(mode):
+    env = check.mode_env(mode)
+    argv, _ = check.local_tests(mode, env)
+    args = ["--profile" if a == "--cargo-profile" else a for a in argv[3:]]
+    r = subprocess.run(["cargo", f"+{check.NIGHTLY}", "test", "--no-run", "-Z", "unstable-options", "--unit-graph",
+                        *args], cwd=check.ENGINE, env=env, capture_output=True, text=True, check=False)
+    lines = [l for l in r.stdout.splitlines() if l.startswith('{"version"')]
+    if not lines:
+        sys.exit(f"cargo's unit graph for {mode}: {r.stderr.strip()[-300:]}")
+    return {u["target"]["name"] for u in json.loads(lines[0])["units"] if u["mode"] == "test"}
+
+
+env = check.mode_env("commit")
+_, gated = milestones.gating_targets(env)
+suites = {t for _, t in milestones.quick_leaves_out()}
+quick, commit = selected("quick"), selected("commit")
+for t in sorted((set(gated) | suites) - commit - quick):
+    print(f"no local mode runs {t}")
+--- run
+python3 -I -B zz_selected.py
