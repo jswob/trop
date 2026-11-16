@@ -380,6 +380,10 @@ pub(super) fn result_lines(
             .get(line.first)
             .ok_or_else(|| invariant("a line's result past the results"))?;
         out.extend(first.lines(&format!("{head} [{}]", axes.head(&line.product)?)));
+        // a ledger's hole or refusal prints alone, with no register (refcore's `one`)
+        if first.alone {
+            continue;
+        }
         let mut met = line.met;
         met.merge(&super::answer::ask_pins_listed(pinned, &met));
         for reading in axes.readings(&line.product)? {

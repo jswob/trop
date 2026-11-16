@@ -1120,7 +1120,7 @@ pub(super) fn form_line(
         }
         AskBody::Explain(reference) => explain_line(m, (ask, reference), engine, env, ctx),
         AskBody::InputsOf(reference) => inputs_line(m, (ask, reference), engine, env, ctx),
-        AskBody::Residuals(r) => residual_result(m, ask, r, engine, (env, ctx, pinned)),
+        AskBody::Residuals(r) => residual_result(m, r, engine, (env, ctx, pinned)),
         AskBody::Diff(diff) => diff_result(m, diff, engine, (env, ctx, pinned)),
         AskBody::ReadersOf(_) => Err(invariant("readers-of read as a tuple's line")),
     }

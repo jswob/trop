@@ -14,48 +14,47 @@
 //! ledger met, with the ask's own entries; the ask's loop (`answer.rs` `tuple_lines`) opens a
 //! combination's layer only while its ledger is read.
 
-use super::axes::Axes;
 use super::check::Printed;
 use crate::base::Code;
 use crate::book::{Ledger, UnitLedger, fig_text};
 use crate::eval::{Collected, Ctx, Engine, Env};
 use crate::hole::Hole;
 use crate::model::Reality;
-use crate::syntax::{Ask, Expr, Lit, Residuals, Span, Stop};
+use crate::syntax::{Expr, Lit, Residuals, Span, Stop};
 
-/// A `residuals` ask's result in context `ctx` (refcore's `answer_residuals`): the head, then
-/// each group's line and its lines, its register with the ask's pins `pinned`; a hole place or
-/// span alone. Where the ask reads axes, this is one combination's: the hole, or the run-time
-/// refusal it met, is its text, with the register (`combination_result`). E §6.3, L §5.18,
-/// §5.5.
+/// A `residuals` ask's result in context `ctx`, for one binding tuple and one combination of
+/// the axes it reads (refcore's `answer_residuals`): the head, then each group's line and its
+/// lines, its register with the ask's pins `pinned`; or the hole its place or span is, or the
+/// run-time refusal its ledger met, that line alone with no register (tally 2.1.8 R13.1;
+/// refcore's `one`). E §6.3, L §5.18, §5.5, §8.4.
 ///
 /// # Errors
 ///
-/// The refusals the ledger meets, which the ask prints as its line; `NotBuilt` past what the
-/// engine builds.
+/// A load refusal met at run; `NotBuilt` past what the engine builds.
 pub(super) fn residual_result(
     m: &Reality,
-    ask: &Ask,
     r: &Residuals,
     engine: &mut Engine,
     (env, ctx, pinned): (&Env, Ctx, &Collected),
 ) -> Result<Printed, Stop> {
-    if Axes::of(m, ask)?.is_some() {
-        return combination_result(m, r, engine, (env, ctx, pinned));
-    }
-    Ok(match ledger_result(m, r, engine, (env, ctx, pinned))? {
-        Ok(result) => result,
-        Err(hole) => Printed {
-            text: hole.text(),
-            body: Vec::new(),
-            bare: false,
-            whole: true,
-            alone: true,
-            met: Collected::default(),
-            laws: None,
-            carried: hole.carried().to_vec(),
-            causes: None,
-        },
+    let (text, carried) = match ledger_result(m, r, engine, (env, ctx, pinned)) {
+        Ok(Ok(result)) => return Ok(result),
+        Ok(Err(hole)) => (hole.text(), hole.carried().to_vec()),
+        Err(Stop::Refused(refusal)) if !matches!(refusal.code(), Code::Load(_)) => {
+            (format!("refused: {}", refusal.text()), Vec::new())
+        }
+        Err(stop) => return Err(stop),
+    };
+    Ok(Printed {
+        text,
+        body: Vec::new(),
+        bare: false,
+        whole: true,
+        alone: true,
+        met: Collected::default(),
+        laws: None,
+        carried,
+        causes: None,
     })
 }
 
@@ -135,35 +134,6 @@ fn group_lines(m: &Reality, ledger: &UnitLedger, indent: &str) -> Result<Vec<Str
         out.extend(g.lines.iter().map(|l| format!("{indent}  {}", l.text)));
     }
     Ok(out)
-}
-
-/// One combination's result: its ledger, or the hole of its place or span, or the run-time
-/// refusal it met, each in its own line with what it read (L §5.5, §8.4).
-fn combination_result(
-    m: &Reality,
-    r: &Residuals,
-    engine: &mut Engine,
-    (env, ctx, pinned): (&Env, Ctx, &Collected),
-) -> Result<Printed, Stop> {
-    let (text, carried) = match ledger_result(m, r, engine, (env, ctx, pinned)) {
-        Ok(Ok(result)) => return Ok(result),
-        Ok(Err(hole)) => (hole.text(), hole.carried().to_vec()),
-        Err(Stop::Refused(refusal)) if !matches!(refusal.code(), Code::Load(_)) => {
-            (format!("refused: {}", refusal.text()), Vec::new())
-        }
-        Err(stop) => return Err(stop),
-    };
-    Ok(Printed {
-        text,
-        body: Vec::new(),
-        bare: false,
-        whole: true,
-        alone: false,
-        met: pinned.clone(),
-        laws: None,
-        carried,
-        causes: None,
-    })
 }
 
 /// A span as the ask wrote it: its first end, then ` .. ` and its last when `..` was

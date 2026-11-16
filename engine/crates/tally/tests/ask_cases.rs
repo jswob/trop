@@ -842,4 +842,101 @@ version v1
             "fifteen versions"
         );
     }
+
+    /// A ledger per binding tuple, per day of a window and per option of an axis, one of each
+    /// dividing by zero or reading a hole key (the review of group 1's B4 and N8).
+    const LEDGER_REFUSED: &str = "model pw
+  tally 2
+  on 2026-04-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s \"s\"
+unit PLN: currency minor 0.01
+index ks = [a, b]
+axis ax
+  lo \"low\"
+  hi \"high\"
+
+place jar[k in ks]: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input dv[k in ks]: int
+input dk[k in ks]: date
+input d0: date
+
+def kz: key ks at reader
+  rule base = a
+  rule hi beats base = b when ax == hi
+
+def kh: key ks at reader
+  rule base = a
+  rule hi beats base = ?\"which jar\" when ax == hi
+
+move one[k in ks]: transfers
+  on dk[k]
+  at d0
+  leg cash from world to jar[k] amount amt / dv[k]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN \"s\"
+  dv[a] = 1 \"s\"
+  dv[b] = 0 \"s\"
+  dk[a] = window(2026-03-01, 2026-03-02) \"s\"
+  dk[b] = 2026-03-05 \"s\"
+  d0 = 2026-01-01 \"s\"
+  opening[jar[a]] = 0.00 PLN at 2026-01-01 start \"s\"
+  opening[jar[b]] = 0.00 PLN at 2026-01-01 start \"s\"
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-01
+  covers jar[a], jar[b]
+  bank[r3] = (on: 2026-03-06, kind: transfers, leg cash from world to jar[a] amount 10.00 PLN) \"r3\"
+
+ask q: residuals jar[k] 2026-03 for k in ks
+ask q2: residuals jar[k] 2026-03 for k in ks windows each
+ask r: residuals jar[kz] 2026-03 law 2026-03-01
+ask r2: residuals jar[kh] 2026-03 law 2026-03-01
+";
+
+    #[test]
+    fn a_refused_ledger_prints_alone_on_its_tuples_or_combinations_line() {
+        let lines = lines_of_files(&[("pw.tally", LEDGER_REFUSED)]);
+        let heads: Vec<&str> = lines
+            .iter()
+            .map(String::as_str)
+            .filter(|l| !l.starts_with(' '))
+            .collect();
+        assert_eq!(
+            heads,
+            [
+                "q (k = a): residuals jar[a] 2026-03",
+                "q (k = b): refused: RUN-DIV division by zero",
+                "q2 (k = a) [dk[a] = 2026-03-01]: residuals jar[a] 2026-03",
+                "q2 (k = a) [dk[a] = 2026-03-02]: residuals jar[a] 2026-03",
+                "q2 (k = b): refused: RUN-DIV division by zero",
+                "r [ax = lo]: residuals jar[a] 2026-03",
+                "r [ax = hi]: refused: RUN-DIV division by zero",
+                "r2 [ax = lo]: residuals jar[a] 2026-03",
+                "r2 [ax = hi]: ?\"which jar\" (kh)",
+            ],
+            "each tuple's and combination's line, the answers first"
+        );
+        // a refused or hole ledger's line has nothing under it: no register (refcore's `one`)
+        for (line, next) in lines.iter().zip(lines.iter().skip(1)) {
+            if line.contains("refused") || line.contains("?\"") {
+                assert!(!next.starts_with(' '), "{line} stands alone, not {next}");
+            }
+        }
+        assert!(
+            lines.last().is_some_and(|l| l.starts_with("r2 [ax = hi]")),
+            "the last line is the hole alone"
+        );
+    }
 }
