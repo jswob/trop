@@ -1,7 +1,7 @@
-# E §6.1: "Two observations of versions covering the two ends that fulfil one instance and disagree print WARN-LEGS;
-# each end is booked as its own statement says" (L §8.5 wording).  Own reality: save[m] moves 1 000.00 PLN from konto
-# to savings on day 5; February's is observed by bank A (covers konto) as 1 000.00 and by bank B (covers savings) as
-# 1 200.00.  konto: 5 000 - 1 000 (January, booked) - 1 000 (A) = 3 000.00; savings: 1 000 + 1 200 (B) = 2 200.00.
+# E §6.1: "Two rows stated same that disagree print WARN-LEGS; each end is booked as its own statement says" (L §8.5
+# wording).  Own reality: save[m] moves 1 000.00 PLN from konto to savings on day 5; February's is observed by bank A
+# (covers konto) as 1 000.00 and by bank B (covers savings) as 1 200.00, stated same (M2 P35: unjoined, the two rows
+# are refused, RUN-RECORD, L5_19_unjoined_rows_refused).  konto: 5 000 - 1 000 (January, booked) - 1 000 (A) = 3 000.00; savings: 1 000 + 1 200 (B) = 2 200.00.
 # E §9 invariant 1 (conservation) does not hold on that day, by E §6.1's own rule: the interpreter leaves those
 # ends out of its check (reported as a contradiction).  WARN-NEGATIVE: konto falls below zero on 2026-06-05 (3 000
 # less 1 000 in each of March to June, L §8.5).
@@ -52,6 +52,7 @@ version stmt_b
   covers savings
   pad savings from unexplained
   bank[b1] = (on: 2026-02-05, kind: transfers, leg cash from konto to savings amount 1 200.00 PLN, fulfils: save[2026-02]) "b1"
+  same bank[a1] = bank[b1]
 
 ask k: bal(konto, 2026-02-28), bal(savings, 2026-02-28)
 === expect

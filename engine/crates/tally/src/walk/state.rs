@@ -24,9 +24,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::rc::Rc;
 
-use super::agenda::{Act, Mv};
+use super::agenda::{Act, Mv, Reading};
 use super::order::{CycleItem, Run};
-use super::plan::{Amount, Dated, Inst, LegVal, Order, invariant};
+use super::plan::{Amount, Dated, DayWindow, HoleSrc, Inst, LegVal, Order, invariant};
 use super::point::{At, Step};
 use crate::base::{Refusal, Warn};
 use crate::eval::{Collected, Entry};
@@ -59,6 +59,10 @@ pub enum Change {
     Perm(Hole),
     /// A refusal that holds from here (E §4.2 step 5).
     Bad(Refusal),
+    /// A movement dated by a window may fall from here: the balance is `HOLE-IMPRECISE`
+    /// until its leg is booked at the window's last day; the window is the entry's (L §4.4;
+    /// refcore's `imp_on`).
+    ImpOn(Hole),
     /// A register entry and nothing else: a modelled-past instance nothing fulfils (L §5.19).
     Mark,
 }
@@ -74,11 +78,25 @@ pub struct St {
     pub perm: Option<Hole>,
     /// The refusal that holds from a refused leg on.
     pub bad: Option<Refusal>,
+    /// The movements dated by a window that may still fall, each by its window's id, with
+    /// the question it puts (L §4.4; refcore's `imp`).
+    pub imp: Vec<(String, Hole)>,
     /// The position of the last reset in its log.
     pub rst: Option<usize>,
 }
 
 impl St {
+    /// Every question the state's balance rests on: its holes, those no reading answers,
+    /// the windows that may still fall, and `missing`, a balance not known yet (refcore's
+    /// `st_value`). L §8.1, §4.4.
+    #[must_use]
+    pub fn questions(&self, missing: Option<&Hole>) -> Option<Hole> {
+        let mut all = vec![self.hole.as_ref(), self.perm.as_ref()];
+        all.extend(self.imp.iter().map(|(_, h)| Some(h)));
+        all.push(missing);
+        spread(&all)
+    }
+
     /// A state of balance `val` and nothing else. E §4.2.
     fn of(val: Option<Num>) -> St {
         St {
@@ -86,6 +104,7 @@ impl St {
             hole: None,
             perm: None,
             bad: None,
+            imp: Vec::new(),
             rst: None,
         }
     }
@@ -94,7 +113,8 @@ impl St {
     /// "Each warning is tested only where the balance is known").
     #[must_use]
     pub fn known(&self) -> Option<&Num> {
-        if self.hole.is_some() || self.perm.is_some() || self.bad.is_some() {
+        if self.hole.is_some() || self.perm.is_some() || self.bad.is_some() || !self.imp.is_empty()
+        {
             return None;
         }
         self.val.as_ref()
@@ -114,13 +134,42 @@ pub struct Ent {
     pub leg: Option<String>,
     /// The register entries it makes (`unfulfilled:`).
     pub reg: Vec<Entry>,
+    /// For a leg dated by a window, the window's id (`<movement>.<leg>`) and the window: an
+    /// `ImpOn` opens its imprecision, the leg's booking ends it (refcore's `wid`, `win`).
+    pub window: Option<(String, DayWindow)>,
     /// What its movement's evaluation met.
     pub coll: Option<Collected>,
     /// A pad's flow at its reading's own place, where the reset books it: the gap, a number
     /// or a hole, which `flows` of the place counts (E §6.1; L §5.19).
     pub flow: Option<Amount>,
+    /// A hole leg's direction at the place and where its amount was read, which a `partial`
+    /// line reads again (refcore's `sgn`, `leg`; L §5.18).
+    pub hole_leg: Option<HoleLeg>,
     /// The state after it.
     pub st: St,
+}
+
+/// A hole leg as a `partial` line reads a balance through it: into the place or out of it, and
+/// where its amount was read, none where nothing read it (refcore's `Ent.sgn`, `Leg.src`).
+/// L §5.18 Partial answers, §5.19.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct HoleLeg {
+    /// Whether it enters the place (`+`) or leaves it (`-`).
+    pub into: bool,
+    /// Where its amount was read.
+    pub src: Option<Box<HoleSrc>>,
+}
+
+/// What a `partial` line reads of a balance that is a hole: the known part booked since the
+/// last reset, each hole leg's direction and source since, and whether those legs' questions
+/// are all the balance's own (refcore's `m_partial_bal`, its walk side). L §5.18, §5.19.
+pub(crate) struct PartialLegs {
+    /// The known part.
+    pub known: Num,
+    /// Each hole leg's direction and where its amount was read.
+    pub legs: Vec<(bool, HoleSrc)>,
+    /// Whether the legs' questions are the balance's holes, every one.
+    pub all_met: bool,
 }
 
 impl Ent {
@@ -133,8 +182,10 @@ impl Ent {
             mv: None,
             leg: None,
             reg: Vec::new(),
+            window: None,
             coll: None,
             flow: None,
+            hole_leg: None,
             st: St::of(None),
         }
     }
@@ -290,9 +341,31 @@ pub struct Walk {
     /// The gaps of the `stated` readings it applied, per (place, day), in the order applied
     /// (L §5.19 `gap(x, d)`, E §6.1).
     pub(crate) gaps: BTreeMap<(String, Day), Vec<GapAt>>,
+    /// The readings `after m` before the cut that wait on decision instance m's run, by its
+    /// id, in the order the cut sees them (L §4.6, E §4.2 step 3).
+    pub(crate) after: BTreeMap<String, Vec<Reading>>,
+    /// Where each reading `after m` applied, by (place, instant, version), for its balance
+    /// line (refcore's `after_keys`; E §6.3 Grouping).
+    pub(crate) after_at: BTreeMap<(String, String, String), At>,
+    /// The ends stated `same` as a decision not yet run, by the decision's id: booked at its
+    /// point (refcore's `same_waiting`; L §6.1).
+    pub(crate) same_waiting: BTreeMap<String, Vec<crate::book::Waiting>>,
+    /// The plan instances and decisions stated `same` as an observation: observed, so never
+    /// unfulfilled nor open (refcore's `same_observed`; L §6.1).
+    pub(crate) same_observed: BTreeSet<String>,
+    /// The pads this walk booked or refused, each at its point, in the order it met them
+    /// (refcore's `pads`; E §6.1): the members of a binding over pads.
+    pub(crate) pads: Vec<(crate::book::Pad, At)>,
     /// A walk up to a day: that day, past which its plan pass listed no plan's instance
     /// (refcore's prefix walk; E §3.2, §4.1); none for a main walk or a projection's.
     pub(crate) upto: Option<Day>,
+    /// With forks on, a projection's walk's plan acts of each day it walked, in walk order:
+    /// what a later read's plan is compared with before it continues the walk (P §2.5,
+    /// `fork.rs`); empty otherwise.
+    pub(crate) walked: BTreeMap<Day, Vec<(At, Act)>>,
+    /// The lengths of `uncertain` and `modelled` when its plan pass ended: the plan's part of
+    /// each, which the walk then adds to (P §2.5, `fork.rs`).
+    pub(crate) plan_lists: (usize, usize),
 }
 
 /// A stated reading's gap, as the walk met it: the reading less the booked balance at its
@@ -356,6 +429,11 @@ pub struct Projected {
     pub root: (Day, Day),
     /// The world the chain's walks are walked in (L §6.4).
     pub world: World,
+    /// The last day its read walks it through, d: it counts the movements dated t through d
+    /// and plans none after (E §4.3 step 2; P §2.3, one walk of its window).
+    pub through: Day,
+    /// The reads that hold it now; the walk is freed when the last of them ends (P §3.5).
+    pub readers: u32,
 }
 
 impl Projected {
@@ -389,6 +467,28 @@ impl Projected {
 }
 
 impl Walk {
+    /// The last day the walk plans a movement on: a projection's read's last day, else its
+    /// end (E §4.3 step 2, §4.1).
+    #[must_use]
+    pub fn plans_through(&self) -> Day {
+        self.proj
+            .as_ref()
+            .map_or(self.end, |p| p.through.min(self.end))
+    }
+
+    /// The walk freed when its scope ends, a projection's read: it keeps nothing, and a read
+    /// of it is refused as the invariant it breaks (P §3.5, D1-6; E §4.3).
+    #[must_use]
+    pub fn freed(&self) -> Walk {
+        Walk {
+            progress: Progress::Failed(
+                invariant("a projection's walk read after its read ended"),
+                None,
+            ),
+            ..Walk::new(self.cut, (self.start, self.end), self.world)
+        }
+    }
+
     /// A projection's walk of cut `cut` from `start` to `end`, continuing `projected` in its
     /// world, each place's first reading as `first_reading` gives it; nothing planned yet.
     /// E §4.3.
@@ -449,7 +549,14 @@ impl Walk {
             less_obs: None,
             checkpoints: Vec::new(),
             gaps: BTreeMap::new(),
+            after: BTreeMap::new(),
+            after_at: BTreeMap::new(),
+            same_waiting: BTreeMap::new(),
+            same_observed: BTreeSet::new(),
+            pads: Vec::new(),
             upto: None,
+            walked: BTreeMap::new(),
+            plan_lists: (0, 0),
         }
     }
 
@@ -515,7 +622,7 @@ impl Walk {
             None => self.default_state(m, place, unit),
         };
         let log = self.logs.entry(key).or_insert_with(Log::default);
-        ent.st = apply(&prev, &ent.change, log.ents.len())?;
+        ent.st = apply_ent(&prev, &ent, log.ents.len())?;
         log.ents.push(ent);
         if place != ALL
             && let Some(today) = &mut self.today
@@ -540,6 +647,70 @@ impl Walk {
             Some(e) => (e.st.clone(), Some(i)),
             None => (self.default_state(m, place, unit), None),
         }
+    }
+
+    /// What a `partial` line reads of a place's balance at `at` in one unit: its known part
+    /// and the hole legs booked since its last reset; none where the balance is a hole of
+    /// another making (an anchor, a refusal, a window, a question no reading answers, a hole
+    /// the place or the walk holds for every unit, as a decision's hole day books it, a hole
+    /// with no leg's amount to read again): the balance read is the folded state `pstate`
+    /// (refcore's `m_partial_bal`, its walk side). L §5.18 Partial answers, §5.19.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a log position past the integers.
+    pub(crate) fn partial_legs(
+        &self,
+        m: &Reality,
+        place: &str,
+        unit: &str,
+        at: At,
+    ) -> Result<Option<PartialLegs>, Stop> {
+        let Some(log) = self.logs.get(&(place.to_owned(), unit.to_owned())) else {
+            return Ok(None);
+        };
+        let (st, Some(i)) = self.state(m, place, unit, at) else {
+            return Ok(None);
+        };
+        let read = self.pstate(m, place, unit, at);
+        if read.bad.is_some() || read.perm.is_some() || !read.imp.is_empty() {
+            return Ok(None);
+        }
+        let Some(known) = st.val else {
+            return Ok(None);
+        };
+        // a main walk's (its one reader is the plain read at the cut, `bal_day`): a place it
+        // hasn't reset opens with no hole (`opening_state`), so its log holds every hole leg
+        let from = match st.rst {
+            Some(r) => next_entry(r)?,
+            None => 0,
+        };
+        let mut legs = Vec::new();
+        let mut seen: Vec<Option<&Hole>> = Vec::new();
+        for e in log.ents.iter().take(next_entry(i)?).skip(from) {
+            let Change::Hole(h) = &e.change else {
+                continue;
+            };
+            let Some(HoleLeg {
+                into,
+                src: Some(src),
+            }) = e.hole_leg.as_ref()
+            else {
+                return Ok(None);
+            };
+            legs.push((*into, HoleSrc::clone(src)));
+            seen.push(Some(h));
+        }
+        let all_met = match (spread(&seen), &read.hole) {
+            (Some(legs_holes), Some(own)) => legs_holes.same_questions(own),
+            (None, None) => true,
+            (Some(_), None) | (None, Some(_)) => false,
+        };
+        Ok(Some(PartialLegs {
+            known,
+            legs,
+            all_met,
+        }))
     }
 
     /// A place's state at `at` with what holds for all its units and for the whole walk: their
@@ -650,7 +821,7 @@ impl Walk {
             None => start,
         };
         for (j, e) in log.ents.iter_mut().enumerate().skip(first) {
-            e.st = apply(&prev, &e.change, j)?;
+            e.st = apply_ent(&prev, e, j)?;
             prev = e.st.clone();
         }
         Ok(dropped)
@@ -822,12 +993,19 @@ impl Taken {
     }
 }
 
+/// The position after entry `n` of a log. E §4.2.
+fn next_entry(n: usize) -> Result<usize, Stop> {
+    n.checked_add(1)
+        .ok_or_else(|| invariant("a log past the integers"))
+}
+
 /// A place's state in one unit with the holes and refusals of all its units and of the
 /// whole walk folded in, its own refusal first (refcore's `pstate`, raw). E §4.2.
 fn fold(mut st: St, any: St, all: St) -> St {
     for other in [any, all] {
         st.hole = spread(&[st.hole.as_ref(), other.hole.as_ref()]);
         st.perm = spread(&[st.perm.as_ref(), other.perm.as_ref()]);
+        st.imp.extend(other.imp);
         if st.bad.is_none() {
             st.bad = other.bad;
         }
@@ -882,7 +1060,23 @@ fn apply(prev: &St, change: &Change, at: usize) -> Result<St, Stop> {
                 st.bad = Some(r.clone());
             }
         }
-        Change::Mark => {}
+        // its window's id is the entry's (`apply_ent`)
+        Change::ImpOn(_) | Change::Mark => {}
+    }
+    Ok(st)
+}
+
+/// The state after entry `ent`: its change applied; a movement dated by a window may fall
+/// from its `ImpOn` on, until its leg's booking at the window's last day (refcore's `apply`,
+/// its `wid`). E §4.2, L §4.4.
+fn apply_ent(prev: &St, ent: &Ent, at: usize) -> Result<St, Stop> {
+    let mut st = apply(prev, &ent.change, at)?;
+    if let Some((wid, _)) = &ent.window {
+        match &ent.change {
+            Change::ImpOn(h) => st.imp.push((wid.clone(), h.clone())),
+            Change::Delta(_) | Change::Hole(_) => st.imp.retain(|(w, _)| w != wid),
+            Change::Reset { .. } | Change::Perm(_) | Change::Bad(_) | Change::Mark => {}
+        }
     }
     Ok(st)
 }

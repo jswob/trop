@@ -1,0 +1,42 @@
+model hh
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input amt: money PLN
+input go[m in months]: bool
+input dom: int
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place other: outside lives 1900-01-01..
+
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  when go[m]
+  leg cash from konto to world amount amt
+
+version v1
+  cite s
+  governs 2026..
+  known 2026-01-01
+  dom = 10 "s"
+  amt = 100.00 PLN "s"
+  go = false "s"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+
+version v2
+  cite s
+  governs 2026-02
+  known 2026-03-01
+  go[2026-02] = true "s"
+
+ask n1: count(a in adjustments over 2026)
+ask s1: sum(a.change for a in adjustments over 2026)
+ask f1: count(a in adjustments over 2026 where a.adjusts.cash.from == konto)
+ask f2: count(a in adjustments over 2026 where a.adjusts.cash.to == world)
+ask f3: sum(a.adjusts.cash.amount for a in adjustments over 2026)
+ask b1: bal(konto, 2026-03-31)

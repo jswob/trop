@@ -1,0 +1,25 @@
+model pd
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+input x: date
+input y: date
+
+def dd: date
+  rule base = x
+
+ask qd: dd == y with dd = y windows each
+ask ql: last(x, 2026-02-01) == y with x = y windows each
+ask qd0: dd == y with dd = y
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  x = 2026-01-05 "c"
+  y = window(2026-01-01, 2026-01-02) "c"

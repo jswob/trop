@@ -1,0 +1,29 @@
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input dom: int
+
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to world amount amt
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  anchor konto
+  amt = 100.00 PLN
+  dom = 5
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  stated[konto] = 900.00 PLN after pay[2026-01] "s"
+
+ask q: bal(konto, 2026-01-31)

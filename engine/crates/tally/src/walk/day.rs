@@ -1,14 +1,14 @@
-//! One day of the walk: its acts in order, each leg booked at both ends, the sign rule after each batch, and the day's close.
+//! One day of the walk: its acts in order, each leg booked at both ends, and the day's close.
 //! Spec: E §4.2 (steps 0–5: readings, plans, decisions, the close, the checks of the places;
-//! holes in the walk), §9 (items 1 and 6: conservation, things hold nothing outside their
-//! lifespans); L §5.10 (the sign rule and the points it is checked at; `WARN-NEGATIVE`),
-//! §5.14 (a leg of 0 books nothing; a leg outside a lifespan is `RUN-LIFESPAN`), §5.19 (an
-//! observed leg before K, each end from the observation of the version that covers its place
-//! that day, or from this one where none does; one that fulfils a decision dated its day at
-//! the decision's point; a record refused refuses its places), §8.5; E §6.1.
-//! Twin: engine/tools/refcore/walk.py (`run_to`, `walk_day`, `check_batch`, `check_group`,
-//! `act`, `leg_bad`, `book_leg`, `book_obs_leg`, `book_obs_now`, `apply_reading`,
-//! `reading_group`, `sign_anchor`, `alive_day`, `close_day`).
+//! holes in the walk; the readings and the sign rule's groups are `walk/readings.rs`'s), §9
+//! (items 1 and 6: conservation, things hold nothing outside their lifespans); L §5.10
+//! (`WARN-NEGATIVE`), §5.14 (a leg of 0 books nothing; a leg outside a lifespan is
+//! `RUN-LIFESPAN`), §5.19 (an observed leg before K, each end from the observation of the
+//! version that covers its place that day, or from this one where none does; one that fulfils
+//! a decision dated its day at the decision's point; a record refused refuses its places),
+//! §8.5; E §6.1.
+//! Twin: engine/tools/refcore/walk.py (`run_to`, `walk_day`, `act`, `leg_bad`, `book_leg`,
+//! `book_obs_leg`, `book_obs_now`, `alive_day`, `close_day`).
 //! Invariants: a leg is booked at both its ends or refused at both; a refused leg is taken back
 //! and refuses its places from that point; the legs booked on a day sum to zero per unit; a
 //! day's acts run in walk order, and a day cut short past the counted depth resumes at the act
@@ -16,16 +16,19 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use super::agenda::{Act, Mv, Reading};
-use super::plan::{Amount, End, Inst, LegVal, Status, invariant, qty_value};
+use super::agenda::{Act, Mv};
+use super::fork::Forks;
+use super::plan::{Amount, Dated, DayWindow, End, Inst, LegVal, Status, invariant, qty_value};
 use super::point::At;
-use super::state::{ALL, Change, Ent, Group, Progress, Taken, Today, Walk, WalkObs};
+use super::readings::Broke;
+use super::state::{ALL, Change, Ent, Group, HoleLeg, Progress, Taken, Today, Walk, WalkObs};
 use crate::base::{Code, Refusal, Run, Warn};
+use crate::book::{Member, stated_same};
 use crate::eval::{Collected, Engine, Entry, GUARDED};
 use crate::hole::{Hole, spread};
 use crate::model::{Reality, World};
 use crate::num::Num;
-use crate::syntax::{Sign, Stop};
+use crate::syntax::Stop;
 use crate::time::Day;
 
 /// A fault planted in a run, so a test sees the refusal an engine bug gives, `ENGINE-INVARIANT`
@@ -65,17 +68,6 @@ impl Ends {
     }
 }
 
-/// How a refusal of the sign rule names what broke it (refcore's `check_group` messages).
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Broke {
-    /// The day's first batch.
-    Batch(Day),
-    /// A decision's legs, by its instance.
-    Decision(String),
-    /// The closing readings.
-    Closing,
-}
-
 impl Engine {
     /// Walks timeline `id` to its last day: its plan pass first, then each day the day source
     /// gives, a day cut short past the counted depth resumed where it stopped (refcore's
@@ -110,7 +102,8 @@ impl Engine {
     }
 
     /// [`Engine::advance_to`], what it reads the walk's own, not the reading cell's: every
-    /// cell that reads the walk shares it (E §3.2, §3.3). A walk that failed on a day refuses
+    /// cell that reads the walk shares it (E §3.2, §3.3); once its plan pass is done, a
+    /// projection's walk may continue a kept one (`fork.rs`, P §2.5). A walk that failed on a day refuses
     /// the reads that reach it, and a read through an earlier day reads the walk as it stood
     /// there, so a read's answer is the same whichever read walked the walk first (pick P54,
     /// #127). E §4.2, §4.3, §9 item 4; L §8.4.
@@ -120,7 +113,9 @@ impl Engine {
             let step = match &walk.progress {
                 Progress::Done => return Ok(()),
                 Progress::Failed(stop, on) => return before_failure(stop, *on, last),
-                Progress::Planning => self.plan_alone(m, id),
+                Progress::Planning => self
+                    .plan_alone(m, id)
+                    .and_then(|()| self.continue_planned(id)),
                 Progress::Walking if walk.paused_after(self.days, last) => return Ok(()),
                 Progress::Walking => self.step_day(m, id),
                 Progress::Walked => self.close_walk(m, id),
@@ -186,11 +181,12 @@ impl Engine {
     }
 
     /// The next day of the walk, opened and walked, the checkpoints of the months it enters
-    /// kept before it; the walk done when the day source has no day left (refcore's `run_to`).
-    /// E §4.2, P §2.2, §2.4.
+    /// kept before it, and with forks on a projection's walk keeping the day's plan acts for a
+    /// later read to compare (`fork.rs`); the walk done when the day source has no day left
+    /// (refcore's `run_to`). E §4.2, P §2.2, §2.4, §2.5.
     fn step_day(&mut self, m: &Reality, id: usize) -> Result<(), Stop> {
         if self.walk(id)?.today.is_none() {
-            let days = self.days;
+            let (days, forks) = (self.days, self.forks);
             let walk = self.walk_mut(id)?;
             let next = walk.next_day(days, &walk.endings);
             walk.keep_checkpoints(next)?;
@@ -200,6 +196,9 @@ impl Engine {
             };
             let mut acts = walk.agenda.remove(&day).unwrap_or_else(Vec::new);
             acts.sort_by_key(|a| a.0);
+            if forks == Forks::On && walk.proj.is_some() {
+                walk.keep_walked(day, &acts);
+            }
             #[cfg(feature = "counters")]
             let unit = if acts.is_empty() {
                 crate::Unit::Day
@@ -269,97 +268,10 @@ impl Engine {
         Ok(())
     }
 
-    /// The sign rule after the day's first batch, its legs taken together (refcore's
-    /// `check_batch`). L §5.10, E §4.2 step 5.
-    fn check_batch(&mut self, m: &Reality, id: usize, day: Day) -> Result<(), Stop> {
-        let Some(batch) = self.today_mut(id)?.batch.take() else {
-            return Ok(());
-        };
-        self.check_group(
-            m,
-            id,
-            &batch,
-            At::batch_end(day),
-            Taken::Batch(day),
-            &Broke::Batch(day),
-        )
-    }
-
-    /// The sign rule at one of its points: each place tested against the balance the group
-    /// leaves, and a place that breaks its kind's rule refused from there with the group's
-    /// legs at it, which are taken back; an anchored place with no leg there is refused with
-    /// its reading's message (refcore's `check_group`). L §5.10, §8.4, E §4.2 step 5.
-    pub(super) fn check_group(
-        &mut self,
-        m: &Reality,
-        id: usize,
-        group: &Group,
-        at: At,
-        taken: Taken,
-        broke: &Broke,
-    ) -> Result<(), Stop> {
-        let mut bad = Vec::new();
-        for ((place, unit), legs) in group {
-            let st = self.walk(id)?.pstate(m, place, unit, at);
-            let Some(nv) = st.known() else {
-                continue;
-            };
-            if breaks(m, place, nv) {
-                bad.push((place.clone(), unit.clone(), nv.clone(), legs.clone()));
-            }
-        }
-        for (place, unit, nv, legs) in bad {
-            let shown = qty_value(m, &nv, &unit)?
-                .text(m)
-                .map_err(crate::eval::num_stop)?;
-            if legs.is_empty() {
-                // an anchored place with no leg of the group at it: refused from here, with
-                // its reading's message (L §8.4; tally 2.1.2)
-                let instant = self
-                    .today(id)?
-                    .anchors
-                    .get(&(place.clone(), unit.clone()))
-                    .cloned()
-                    .ok_or_else(|| invariant("a place in a group with no leg and no anchor"))?;
-                let err = Refusal::new(
-                    Code::Run(Run::Place),
-                    format!("{place} is {shown} after its reading at {instant}"),
-                );
-                self.walk_mut(id)?
-                    .add(m, &place, &unit, Ent::new(at, Change::Bad(err)))?;
-                continue;
-            }
-            let err = Refusal::new(
-                Code::Run(Run::Place),
-                broke_text(m, broke, &place, &shown, &legs),
-            );
-            for (mv, leg) in &legs {
-                let walk = self.walk_mut(id)?;
-                let key = (mv.clone(), leg.name.clone());
-                if walk.bad_legs.contains_key(&key) {
-                    continue;
-                }
-                walk.bad_legs.insert(key, err.clone());
-                for p in ends(leg) {
-                    walk.take_back(m, p, &unit, (mv, leg), taken)?;
-                }
-                for p in ends(leg) {
-                    let mut ent = Ent::new(at, Change::Bad(err.clone()));
-                    ent.mv = Some(mv.clone());
-                    walk.add(m, p, &unit, ent)?;
-                }
-            }
-        }
-        Ok(())
-    }
-
     /// One act of the day (refcore's `act`). E §4.2 steps 0–2, Holes in the walk, E §5 step 5.
     fn act(&mut self, m: &Reality, id: usize, at: At, act: Act) -> Result<(), Stop> {
         match act {
-            Act::Read(reading) if reading.input == "opening" => {
-                self.walk_mut(id)?.apply_opening(m, at, &reading)
-            }
-            Act::Read(reading) => self.apply_stated(m, id, at, &reading),
+            Act::Read(reading) => self.apply_reading(m, id, at, &reading),
             Act::Obs(ix, leg) => self.book_obs_leg(m, id, ix, leg, at),
             Act::Mark(place, unit, entry, coll) => {
                 let mut ent = Ent::new(at, Change::Mark);
@@ -370,22 +282,23 @@ impl Engine {
             Act::Leg(mv, leg) => {
                 let (movement, lg) = self.movement_leg(id, mv, leg)?;
                 let mut reg = Vec::new();
-                if movement.status == Status::Past {
+                // one stated same as an observed row was observed (L §6.1)
+                if movement.status == Status::Past
+                    && movement.obs.is_empty()
+                    && !self.walk(id)?.same_observed.contains(&movement.id)
+                {
                     reg.push(Entry {
                         word: "unfulfilled",
                         text: movement.id.clone(),
                         figure: String::new(),
                     });
                 }
-                let move_id = movement.move_id.clone();
-                self.book_leg(
-                    m,
-                    id,
-                    (&movement.id, &move_id, &lg),
-                    at,
-                    &reg,
-                    &movement.coll,
-                )
+                self.book_leg(m, id, (&movement, &lg), at, &reg)
+            }
+            Act::ImpOn(mv, leg) => {
+                let (movement, lg) = self.movement_leg(id, mv, leg)?;
+                self.walk_mut(id)?
+                    .imprecise_ends(m, (&movement.id, &lg), at, &movement.coll)
             }
             Act::LegHole(mv, leg, qs) => {
                 let (movement, lg) = self.movement_leg(id, mv, leg)?;
@@ -435,6 +348,10 @@ impl Engine {
                 ent.coll = Some(coll);
                 self.walk_mut(id)?.add(m, &place, ALL, ent)
             }
+            Act::CoverHole(place, h) => {
+                self.walk_mut(id)?
+                    .add(m, &place, ALL, Ent::new(at, Change::Hole(h)))
+            }
             Act::GlobalHole(h) => {
                 self.walk_mut(id)?
                     .add(m, ALL, ALL, Ent::new(at, Change::Perm(h)))
@@ -463,24 +380,42 @@ impl Engine {
         Ok((inst.clone(), lg))
     }
 
-    /// Books a leg's two ends: a hole at both for a hole amount, nothing for 0, `RUN-LIFESPAN`
-    /// for an end outside its place's lifespan; in a group of the sign rule it waits for the
-    /// group, otherwise it is tested at once (refcore's `book_leg`). E §4.2 step 2, step 5;
-    /// L §5.14 Legs.
+    /// Books instance `inst`'s leg `lg`'s two ends: a hole at both for a hole amount, nothing
+    /// for 0, `RUN-LIFESPAN` for an end outside its place's lifespan; in a group of the sign
+    /// rule it waits for the group, otherwise it is tested at once (refcore's `book_leg`).
+    /// Its `before from:` entry is dated by the leg's day, else the instance's, and a leg
+    /// dated by neither has none (refcore's `before_from`). E §4.2 step 2, step 5, §9 item 3;
+    /// L §5.14 Legs, §8.2 `before from:`.
     pub(super) fn book_leg(
         &mut self,
         m: &Reality,
         id: usize,
-        (movement, move_id, lg): (&str, &str, &LegVal),
+        (inst, lg): (&Inst, &LegVal),
         at: At,
         reg: &[Entry],
-        coll: &Collected,
     ) -> Result<(), Stop> {
-        let day = lg.day.day().unwrap_or(at.day);
-        let world = self.walk(id)?.world;
+        let (world, cut) = {
+            let walk = self.walk(id)?;
+            (walk.world, walk.cut)
+        };
         let mut reg = reg.to_vec();
-        reg.extend(before_from(m, world, (move_id, day), coll));
-        self.book_leg_ends(m, id, (movement, lg), at, (&reg, coll), Ends::both())
+        let day = lg
+            .day
+            .day()
+            .or_else(|| inst.day.as_ref().and_then(Dated::day));
+        if let Some(day) = day {
+            reg.extend(before_from(m, world, (&inst.move_id, day), &inst.coll));
+        }
+        let mut mask = Ends::both();
+        if stated_same(m, &inst.id, cut)? && !matches!(lg.amount, Amount::Refused(_)) {
+            // one movement on two statements books each place once (L §6.1)
+            let mover = self.mover_of(m, id, inst)?;
+            mask = self.same_mask(m, id, (&mover, lg), at, (&reg, &inst.coll), mask)?;
+            if !mask.from && !mask.to {
+                return Ok(());
+            }
+        }
+        self.book_leg_ends(m, id, (&inst.id, lg), at, (&reg, &inst.coll), mask)
     }
 
     /// Books the ends of a leg `ends` names, as [`Engine::book_leg`] books both: an
@@ -504,14 +439,19 @@ impl Engine {
                 let walk = self.walk_mut(id)?;
                 let unit = lg.unit.clone().unwrap_or_else(|| ALL.to_owned());
                 walk.worth_add(&unit, None)?;
-                for (end, on_end) in [(&lg.from, mask.from), (&lg.to, mask.to)] {
+                for (end, on_end, into) in [(&lg.from, mask.from, false), (&lg.to, mask.to, true)] {
                     let Some(p) = end.place().filter(|_| on_end) else {
                         continue;
                     };
                     let mut ent = Ent::new(at, Change::Hole(h.clone()));
                     ent.mv = Some(movement.to_owned());
                     ent.leg = Some(lg.name.clone());
+                    ent.hole_leg = Some(HoleLeg {
+                        into,
+                        src: lg.src.clone(),
+                    });
                     ent.reg = reg.to_vec();
+                    ent.window = leg_window(movement, lg);
                     ent.coll = Some(coll.clone());
                     walk.add(m, p, &unit, ent)?;
                 }
@@ -579,9 +519,10 @@ impl Engine {
             return Ok(());
         }
         if err.is_none() && !on.is_empty() && !self.group_legs(id, at, movement, lg, &on, &unit)? {
-            return Err(Stop::NotBuilt(
-                "a leg booked outside every group of the sign rule (a reading after a movement)",
-            ));
+            // outside every group (a reading's pad after a decision): tested as it is booked
+            err = self
+                .walk(id)?
+                .tested_alone(m, (movement, &q), &on, &unit, at)?;
         }
         #[cfg(feature = "counters")]
         if err.is_none() {
@@ -589,14 +530,7 @@ impl Engine {
         }
         let walk = self.walk_mut(id)?;
         if let Some(e) = err {
-            walk.bad_legs
-                .insert((movement.to_owned(), lg.name.clone()), e.clone());
-            for p in ends(lg) {
-                let mut ent = Ent::new(at, Change::Bad(e.clone()));
-                ent.mv = Some(movement.to_owned());
-                walk.add(m, p, &unit, ent)?;
-            }
-            return Ok(());
+            return walk.refuse_leg(m, (movement, lg), &e, at);
         }
         let whole = !dropped || mask.whole;
         for (p, sign) in &on {
@@ -616,6 +550,7 @@ impl Engine {
             ent.mv = Some(movement.to_owned());
             ent.leg = Some(lg.name.clone());
             ent.reg = reg.to_vec();
+            ent.window = leg_window(movement, lg);
             ent.coll = Some(coll.clone());
             walk.add(m, p, &unit, ent)?;
         }
@@ -677,40 +612,24 @@ impl Engine {
         let mut on = [true, true];
         for (end, slot) in [&lg.from, &lg.to].into_iter().zip(on.iter_mut()) {
             if let Some(p) = end.place() {
-                *slot = self.obs_end_on(m, &wo.obs, p, day, cut);
+                *slot = self.obs_end_on(m, &wo.obs, p, day, cut)?;
             }
         }
         let [from, to] = on;
-        let mask = Ends {
+        let mut mask = Ends {
             from,
             to,
             whole: false,
         };
-        self.book_leg_ends(m, id, (&wo.obs.id, lg), at, (&[], &wo.obs.coll), mask)
-    }
-
-    /// Puts a leg's booked ends in the group of the sign rule it waits for: the day's first
-    /// batch, the running decision's legs, or the closing readings; false when none is open
-    /// (refcore's `book_leg`, its groups). L §5.10, E §4.2 step 5.
-    fn group_legs(
-        &mut self,
-        id: usize,
-        at: At,
-        movement: &str,
-        lg: &LegVal,
-        on: &[(String, i64)],
-        unit: &str,
-    ) -> Result<bool, Stop> {
-        let Some(group) = self.walk_mut(id)?.open_group(at) else {
-            return Ok(false);
-        };
-        for (p, _) in on {
-            group
-                .entry((p.clone(), unit.to_owned()))
-                .or_insert_with(Vec::new)
-                .push((movement.to_owned(), lg.clone()));
+        if stated_same(m, &wo.obs.id, cut)? {
+            // one movement on two statements books each place once (L §6.1)
+            let mover = Member::Obs(wo.obs.clone());
+            mask = self.same_mask(m, id, (&mover, lg), at, (&[], &wo.obs.coll), mask)?;
+            if !mask.from && !mask.to {
+                return Ok(());
+            }
         }
-        Ok(true)
+        self.book_leg_ends(m, id, (&wo.obs.id, lg), at, (&[], &wo.obs.coll), mask)
     }
 
     /// The planted fault, once per run: on the first day a walk that is no projection's books
@@ -829,115 +748,8 @@ impl Engine {
 }
 
 impl Walk {
-    /// The group of the sign rule a booking at `at` waits for: the day's first batch, the
-    /// running decision's legs, or the closing readings; none when none is open (refcore's
-    /// `reading_group`, `book_leg`'s groups). L §5.10, E §4.2 step 5.
-    pub(crate) fn open_group(&mut self, at: At) -> Option<&mut Group> {
-        let in_batch =
-            at.in_first_batch() && self.today.as_ref().is_some_and(|t| t.batch.is_some());
-        if in_batch {
-            return self.today.as_mut().and_then(|t| t.batch.as_mut());
-        }
-        if self.group.is_some() {
-            return self.group.as_mut();
-        }
-        if at.at_or_after_end() {
-            return self.today.as_mut().and_then(|t| t.closing.as_mut());
-        }
-        None
-    }
-
-    /// An anchored reading's place, an opening's included, tested at the reading's point by
-    /// its kind's sign rule: a number at a `min 0` or `max 0` place joins the point's group
-    /// with no leg, and the group's test refuses it there when it breaks the rule (refcore's
-    /// `sign_anchor`; tally 2.1.2). L §5.10, §5.19; E §4.2 step 5.
-    ///
-    /// # Errors
-    ///
-    /// `NotBuilt` for a reading after a decision, where no group is open (M2).
-    pub(crate) fn sign_anchor(&mut self, m: &Reality, at: At, r: &Reading) -> Result<(), Stop> {
-        let ruled = matches!(place_sign(m, &r.place), Some(Sign::Min0 | Sign::Max0));
-        if r.value.is_err() || !ruled {
-            return Ok(());
-        }
-        let key = (r.place.clone(), r.unit.clone());
-        let Some(group) = self.open_group(at) else {
-            return Err(Stop::NotBuilt(
-                "a reading after a decision (the sign rule's point 2)",
-            ));
-        };
-        group.entry(key.clone()).or_insert_with(Vec::new);
-        self.today
-            .as_mut()
-            .ok_or_else(|| invariant("a reading with no day open"))?
-            .anchors
-            .insert(key, r.instant.clone());
-        Ok(())
-    }
-
-    /// An opening reading: its place's balance set to it, the holes since answered, a stated
-    /// hole's questions kept; it always anchors, so its place is tested at its point (refcore's
-    /// `apply_reading`, an opening). L §5.19, §5.10, E §4.2 step 0.
-    fn apply_opening(&mut self, m: &Reality, at: At, reading: &Reading) -> Result<(), Stop> {
-        if self.inside(m, &reading.place) {
-            // E §9 item 2: an opening states the place's worth; its change counts as stated
-            let expected = match &reading.value {
-                Ok(v) => {
-                    let prev = self.pstate(m, &reading.place, &reading.unit, at);
-                    match (&prev.val, prev.known()) {
-                        (None, _) => Some(v.clone()),
-                        (Some(_), Some(p)) => {
-                            Some(v.checked_sub(p).map_err(crate::eval::num_stop)?)
-                        }
-                        (Some(_), None) => None,
-                    }
-                }
-                Err(_) => None,
-            };
-            self.worth_add(&reading.unit, expected.as_ref())?;
-        }
-        let change = match &reading.value {
-            Ok(v) => Change::Reset {
-                val: v.clone(),
-                qs: None,
-            },
-            Err(h) => Change::Reset {
-                val: Num::zero(),
-                qs: Some(h.clone()),
-            },
-        };
-        let mut ent = Ent::new(at, change);
-        ent.coll = Some(reading.coll.clone());
-        self.add(m, &reading.place, &reading.unit, ent)?;
-        self.sign_anchor(m, at, reading)
-    }
-
-    /// Takes back a refused leg's entries at its end `p` (refcore's `unbook`); what came back
-    /// across the boundary leaves the day's worth (E §9 item 2). E §4.2 step 5.
-    fn take_back(
-        &mut self,
-        m: &Reality,
-        p: &str,
-        unit: &str,
-        (movement, leg): (&str, &LegVal),
-        taken: Taken,
-    ) -> Result<(), Stop> {
-        let back = self.unbook(m, p, unit, (movement, &leg.name), taken)?;
-        let other = if leg.from.place() == Some(p) {
-            &leg.to
-        } else {
-            &leg.from
-        };
-        let within = matches!(other, End::Place(o) if self.inside(m, o));
-        if self.inside(m, p) && !within {
-            let undone = back.checked_neg().map_err(crate::eval::num_stop)?;
-            self.worth_add(unit, Some(&undone))?;
-        }
-        Ok(())
-    }
-
     /// A refused leg: its places refused from here (refcore's `leg_bad`). E §4.2 step 5.
-    pub(super) fn leg_bad(
+    pub(crate) fn leg_bad(
         &mut self,
         m: &Reality,
         movement: &str,
@@ -972,6 +784,58 @@ impl Walk {
             self.add(m, p, &unit, ent)?;
         }
         Ok(())
+    }
+
+    /// A leg dated by a window, from the window's first day: each place it names is
+    /// `HOLE-IMPRECISE` for a balance, its amount's questions too where that is a hole, until
+    /// the leg books at the window's last day (refcore's `imp_on`). L §4.4, §8.1; E §4.2.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a leg not dated by a window.
+    fn imprecise_ends(
+        &mut self,
+        m: &Reality,
+        (movement, lg): (&str, &LegVal),
+        at: At,
+        coll: &Collected,
+    ) -> Result<(), Stop> {
+        let Dated::Window(w) = &lg.day else {
+            return Err(invariant("an imprecise leg not dated by a window"));
+        };
+        let text = format!(
+            "date within {} not precise enough for a balance",
+            w.question
+        );
+        let own = Hole::asked(&text, movement);
+        let amount = match &lg.amount {
+            Amount::Hole(h) => Some(h),
+            Amount::Qty(_) | Amount::Refused(_) => None,
+        };
+        let q = match spread(&[Some(&own), amount]) {
+            Some(both) => both,
+            None => own,
+        };
+        let unit = lg.unit.clone().unwrap_or_else(|| ALL.to_owned());
+        for p in ends(lg) {
+            let mut ent = Ent::new(at, Change::ImpOn(q.clone()));
+            ent.mv = Some(movement.to_owned());
+            ent.window = leg_window(movement, lg);
+            ent.coll = Some(coll.clone());
+            // the leg's amount, which `flows` reads to tell a zero leg (L §4.4)
+            ent.flow = Some(lg.amount.clone());
+            self.add(m, p, &unit, ent)?;
+        }
+        Ok(())
+    }
+}
+
+/// A leg's window id, `<movement>.<leg>`, and its window, where its day is one (refcore's
+/// `wid`, `win`). L §4.4.
+fn leg_window(movement: &str, lg: &LegVal) -> Option<(String, DayWindow)> {
+    match &lg.day {
+        Dated::Window(w) => Some((format!("{movement}.{}", lg.name), w.clone())),
+        Dated::Day(_) | Dated::Hole(_) => None,
     }
 }
 
@@ -1110,61 +974,6 @@ fn before_failure(stop: &Stop, on: Option<Day>, last: Option<Day>) -> Result<(),
     match (on, last) {
         (Some(failed), Some(read)) if read < failed => Ok(()),
         (Some(_) | None, Some(_) | None) => Err(stop.clone()),
-    }
-}
-
-/// A place's kind's sign rule (L §5.10).
-pub(super) fn place_sign(m: &Reality, place: &str) -> Option<Sign> {
-    let base = m.things.get(place)?.base.as_deref()?;
-    m.kind_sign(base)
-}
-
-/// Whether balance `v` breaks its place's sign rule (L §5.10).
-fn breaks(m: &Reality, place: &str, v: &Num) -> bool {
-    match place_sign(m, place) {
-        Some(Sign::Min0) => v.is_negative(),
-        Some(Sign::Max0) => !v.is_negative() && !v.is_zero(),
-        Some(Sign::Signed) | None => false,
-    }
-}
-
-/// ` units` for a holding: its balance is units, not money (refcore's message). L §5.10.
-fn units_word(m: &Reality, place: &str) -> &'static str {
-    let holds = m
-        .things
-        .get(place)
-        .and_then(|t| t.base.as_ref())
-        .is_some_and(|b| m.subtree("holdings").contains(b));
-    if holds { " units" } else { "" }
-}
-
-/// The message of a refusal of the sign rule (refcore's `check_group` messages). L §5.10.
-fn broke_text(
-    m: &Reality,
-    broke: &Broke,
-    place: &str,
-    shown: &str,
-    legs: &[(String, LegVal)],
-) -> String {
-    let side = match place_sign(m, place) {
-        Some(Sign::Max0) => "above 0".to_owned(),
-        Some(Sign::Min0 | Sign::Signed) | None => format!("below 0{}", units_word(m, place)),
-    };
-    match broke {
-        Broke::Batch(day) => format!(
-            "{place} is {shown} after the day's observations and plans of {}",
-            day.text()
-        ),
-        Broke::Decision(run) => format!("{run} takes {place} {side}"),
-        Broke::Closing => {
-            let ids: BTreeSet<&str> = legs.iter().map(|(mv, _)| mv.as_str()).collect();
-            let all: Vec<&str> = ids.into_iter().collect();
-            let plain = match place_sign(m, place) {
-                Some(Sign::Max0) => "above 0",
-                Some(Sign::Min0 | Sign::Signed) | None => "below 0",
-            };
-            format!("{} takes {place} {plain}", all.join(", "))
-        }
     }
 }
 

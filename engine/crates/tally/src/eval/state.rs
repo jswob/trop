@@ -17,12 +17,12 @@ use std::rc::Rc;
 
 use crate::Days;
 use crate::base::{Code, Refusal, Run, Warn};
-use crate::book::{Adjustment, Coverage, Linked, Obs};
+use crate::book::{Adjustment, Coverage, Linked, Measured, Obs};
 use crate::model::{Domain, KeyVal, Node, NodeKind, Reality, Thing, UnitError, Value, World};
 use crate::num::NumError;
 use crate::syntax::{Ask, AskBody, Expr, Stop};
 use crate::time::Day;
-use crate::walk::{Inst, ProjKey, Walk, WalkAt};
+use crate::walk::{At, Inst, ProjKey, Walk, WalkAt};
 
 use super::bindings::{names_in, reads_name};
 use super::context::{Layer, Layers};
@@ -48,6 +48,9 @@ pub struct Ctx {
     /// reads reach takes (L §5.18). A timeline's and a decision's contexts are made anew
     /// without it, so no decision sees it (L §5.14: "the clause is the read's").
     pub unc: bool,
+    /// The ask line's `partial`: a hole carries its known part and the holes it is linear in
+    /// (L §5.18). A timeline's and a decision's contexts are made anew without it.
+    pub partial: bool,
     /// The pins and wording pins in force, as one interned layer (E §3.2; `context.rs`). A
     /// timeline's and a decision's contexts take the timeline's: the pins the walk reaches.
     pub layer: Layer,
@@ -55,6 +58,11 @@ pub struct Ctx {
     /// them (L §6.4; refcore's `Ctx.world`). A timeline's contexts take the timeline's.
     pub world: World,
 }
+
+/// A walk-bound def's cells by the walk that read them and the def at its keys as a figure
+/// (`avail[2026-03]`), each by the decision's point that read it: its value or refusal
+/// (refcore's `walk_cells`). E §10, §3.2.
+pub(crate) type WalkCells = BTreeMap<(usize, String), BTreeMap<At, Result<Value, Refusal>>>;
 
 /// The walks up to a day of one timeline (refcore's `prefix_walks`, `plan_list`'s cache and
 /// `_walk_blocked`). E §3.2, §4.1, §4.2 step 5.
@@ -79,8 +87,18 @@ impl Ctx {
             cut,
             at: None,
             unc: false,
+            partial: false,
             layer: Layer::BASE,
             world: World::Whole,
+        }
+    }
+
+    /// The context of a `partial` ask line (L §5.18 Partial answers).
+    #[must_use]
+    pub fn partial(self) -> Ctx {
+        Ctx {
+            partial: true,
+            ..self
         }
     }
 
@@ -497,10 +515,11 @@ pub struct Engine {
     pub(crate) plans: BTreeMap<(String, Day), Rc<Vec<Inst>>>,
     /// The moves whose instances are being computed (RUN-CYCLE).
     pub(crate) plan_active: BTreeSet<(String, Day)>,
-    /// Each plan move's adjustments per cut (E §5).
-    pub(crate) adjustments: BTreeMap<(String, Day), Vec<Adjustment>>,
-    /// The moves whose adjustments are being computed (RUN-CYCLE).
-    pub(crate) adjust_active: BTreeSet<(String, Day)>,
+    /// Each plan move's measure per cut and list (the whole, or a walk up to a day's): its
+    /// adjustments and the hole bookings answered (E §5, §3.2).
+    pub(crate) adjustments: BTreeMap<(String, Day, Option<Day>), Measured>,
+    /// The moves whose adjustments are being computed, by cut and list (RUN-CYCLE).
+    pub(crate) adjust_active: BTreeSet<(String, Day, Option<Day>)>,
     /// The cells in progress when a leg's read started its walk: a walk that needs one of them
     /// is given up for the walk up to the leg's day (refcore's `guarded_walk`).
     pub(crate) guarded: Option<BTreeSet<CellId>>,
@@ -518,6 +537,12 @@ pub struct Engine {
     /// How a written projection's common case is read: fence F5's tree, or its plain twin,
     /// the projection's own walk (E §4.3, P §2.3).
     pub(crate) lows: crate::walk::Lows,
+    /// Whether a projection's walk read again through a later day continues from where it
+    /// stood: fence F6, or its plain twin, a new walk per read (P §2.5; `walk/fork.rs`).
+    pub(crate) forks: crate::walk::Forks,
+    /// The projections' walks the timeline in force keeps past their reads, for fence F6
+    /// (P §2.5, §3.5; `walk/fork.rs`).
+    pub(crate) parked: crate::walk::Parked,
     /// The fault planted in the run, while it waits for its day: none once planted, and
     /// always none without it (INTERFACE §4, pick P8).
     #[cfg(feature = "fault-injection")]
@@ -537,6 +562,9 @@ pub struct Engine {
     pub(crate) link_active: BTreeSet<(Day, String)>,
     /// The refusals of observations' records, per cut, by observation (L §5.19 Links).
     pub(crate) obs_errs: BTreeMap<(Day, String), Refusal>,
+    /// The refusal an instance's realised movement rests on, per cut, by instance: a record
+    /// its link refused (refcore's `badlinks`; L §5.19, §8.4).
+    pub(crate) bad_links: BTreeMap<(Day, String), Refusal>,
     /// The adjustments a settlement move's binding over adjustments is held to while its
     /// candidates are made (refcore's `_adj_restrict`, E §5 step 5).
     pub(crate) adj_restrict: Option<Vec<Adjustment>>,
@@ -551,12 +579,20 @@ pub struct Engine {
     pub(crate) booked: crate::walk::Bookings,
     /// Each main walk's signature once it is done, by its place in `walks` (E §9 item 4).
     pub(crate) signatures: BTreeMap<usize, crate::invariant::Signature>,
+    /// Each walk-bound def's cells a decision read at its point of a main walk (E §10).
+    pub(crate) walk_cells: WalkCells,
+    /// Whether `explain` reads a walk-bound def's cell again at a walk point, a read the walk
+    /// didn't make, so not kept in `walk_cells` (refcore's `_explaining_wb`). E §10.
+    pub(crate) rereading: bool,
     /// The legs each combination's main walk of a cut refused, where the main walk read an
     /// axis the timeline sets no option of (E §3.3, §4.2 step 5).
     pub(crate) each_refused: BTreeMap<Day, Vec<super::timelines::LegRefusals>>,
     /// The pass a business-day function runs now over the days its calendar's added windows
     /// can take (L §4.2, §4.4).
     pub(super) calendar_pass: Option<super::business::CalendarPass>,
+    /// The windows a `windows each` run met that its choice names no day of, in the order
+    /// met; none outside such a run (L §4.4; refcore's `each_met`).
+    pub(crate) each_met: Option<Vec<super::context::Met>>,
     /// The splits `prorata`'s `rest largest` made, once per total, step and weights (L §5.13
     /// Cost).
     pub(super) splits: super::prorata::Splits,
@@ -580,6 +616,14 @@ pub struct Engine {
     /// The ask line's context outside its `with` pins, where it has any: an `explain`'s
     /// derivation outside them (E §10; refcore's `_outside_ctx`).
     pub(crate) unpinned: Option<Ctx>,
+    /// The scope of the ask's own binding tuple, where its `as known`, `law` or a `with` pin
+    /// names a variable of its `for`: the line, its cut, its law and its pins are each formed
+    /// in it (L §5.18, §5.11); empty otherwise.
+    pub(crate) ask_env: Env,
+    /// The axis whose option the last read of an axis found unset, which stopped it
+    /// (`UNSET_AXIS`; refcore's guard's `axis`): an `explain` outside its pins fans out over
+    /// it (E §10, L §5.5).
+    pub(crate) unset_axis: Option<String>,
     /// The pins the ask's reads took, and those they met under an inner or narrower claim:
     /// an ask's `with` pin is listed where a read takes it (L §8.2 One read set).
     pub(crate) pins_read: PinsRead,
@@ -619,6 +663,8 @@ impl Engine {
             walk_warnings: Vec::new(),
             proj_walks: BTreeMap::new(),
             lows: crate::walk::Lows::Tree,
+            forks: crate::walk::Forks::On,
+            parked: crate::walk::Parked::default(),
             #[cfg(feature = "fault-injection")]
             plant: None,
             trees: crate::walk::Trees::default(),
@@ -628,14 +674,18 @@ impl Engine {
             links: BTreeMap::new(),
             link_active: BTreeSet::new(),
             obs_errs: BTreeMap::new(),
+            bad_links: BTreeMap::new(),
             adj_restrict: None,
             settled: BTreeMap::new(),
             unsettled: BTreeMap::new(),
             adjust_all_active: BTreeSet::new(),
             booked: BTreeMap::new(),
             signatures: BTreeMap::new(),
+            walk_cells: WalkCells::new(),
+            rereading: false,
             each_refused: BTreeMap::new(),
             calendar_pass: None,
+            each_met: None,
             splits: super::prorata::Splits::default(),
             layers: Layers::default(),
             timelines: Timelines::default(),
@@ -644,6 +694,8 @@ impl Engine {
             keep_rows: Rows::Unkept,
             trace: None,
             unpinned: None,
+            ask_env: Env::empty(),
+            unset_axis: None,
             pins_read: PinsRead::default(),
             bind_texts: BTreeMap::new(),
             #[cfg(feature = "counters")]
@@ -685,12 +737,18 @@ impl Engine {
     /// The engine computing as its fences say: keeping its cells as `memo` says, shared by a
     /// law date class or at each exact law date, the plain twin (E §3.2, P §3.3); and reading
     /// a written projection's common case as `lows` says, from fence F5's tree or through the
-    /// projection's own walk, the plain twin (E §4.3, P §2.3).
+    /// projection's own walk, the plain twin (E §4.3, P §2.3); and continuing a projection's
+    /// walk read again through a later day as `forks` says, fence F6, or walking it anew, the
+    /// plain twin (P §2.5).
     #[must_use]
-    pub fn with_how(self, (memo, lows): (Memo, crate::walk::Lows)) -> Engine {
+    pub fn with_how(
+        self,
+        (memo, lows, forks): (Memo, crate::walk::Lows, crate::walk::Forks),
+    ) -> Engine {
         Engine {
             cells: Cells::new(memo),
             lows,
+            forks,
             ..self
         }
     }
@@ -711,6 +769,15 @@ impl Engine {
                 | AskBody::Solve(_)
                 | AskBody::Diff(_) => Rows::Unkept,
             },
+            ..self
+        }
+    }
+
+    /// The engine with the scope `env` of the ask's own binding tuple (L §5.18, §5.11).
+    #[must_use]
+    pub fn in_tuple(self, env: &Env) -> Engine {
+        Engine {
+            ask_env: env.clone(),
             ..self
         }
     }

@@ -1,6 +1,7 @@
 //! Load's checker, its prices: each priced place's price input, an asset that names none, a price named twice, and `value(x, d) in CUR [by p]`.
-//! Spec: L §5.10 (Value; A priced place: one home for a price input), §2.3 (`price`), §4.6
-//! (`last`), §8.3 (`LOAD-PRICE`, `-UNIT`, `-NAME`, `-KEY`).
+//! Spec: L §5.10 (Value; A priced place: one home for a price input), §2.3 (`price`, a `ref`
+//! with a record's fields), §4.6 (`last`), §8.3 (`LOAD-PRICE`, `-UNIT`, `-NAME`, `-KEY`,
+//! `-FIELD`).
 //! Twin: engine/tools/refcore/check3.py (`m_check_priced`, `m_resolve_price`, `m_t_value`,
 //! `_all_priced`, `m_price_edges`); model.py (`price_of`, its `LOAD-PRICE`); loader.py
 //! (`Loader.build`, its loop over `price_of` before the checker).
@@ -15,7 +16,7 @@ use super::types::{Typed, is_date, name_word, refused, uerr};
 use crate::base::{Code, Load, Place as At, Refusal};
 use crate::model::{
     Domain, Entry, KeyVal, Mark, NameKind, Node, NodeKind, Pat, PlaceInfo, Priced, Reality, Rel,
-    Shown, Thing, Ty, Unit,
+    Shown, Thing, Ty, Unit, price_fields,
 };
 use crate::syntax::{Expr, Lit, Postfix, Price, Stop, Valuation, Value as Written};
 use std::collections::{BTreeMap, BTreeSet};
@@ -246,36 +247,38 @@ impl Checker {
             }
             (other, _) => other,
         };
-        let Some((id, posts)) = named_parts(&price.input) else {
+        let Some((id, _)) = named_parts(&price.input) else {
             return Err(invariant(
                 "unreachable: the parser reads a price as L §2.3's `ref`, so a price that isn't \
                  a reference is LOAD-PARSE before load (T's `written/price-paren`)"
                     .to_owned(),
             ));
         };
-        let keyed = matches!(posts, [Postfix::Keys(_)]);
-        if !keyed && !posts.is_empty() {
-            return Err(Stop::NotBuilt("a priced reference with fields"));
-        }
-        if keyed {
+        // `priced p.f`: a record's field as the price, its fields peeled off the read
+        let Some((written, fields)) = price_fields(&price.input) else {
+            return Err(Stop::NotBuilt(
+                "a priced reference with a field before its keys",
+            ));
+        };
+        if let Expr::Post(..) = written {
             let scope = Scope::new(Node::new(NodeKind::Price, what), Stands::Rule, file, line);
             let scope = match section {
                 Some(info) => self.keyed(m, scope, &info.binds)?,
                 None => scope,
             };
-            self.expr(m, &scope, &price.input, None, 0)?;
+            self.expr(m, &scope, &written, None, 0)?;
             let read = m.names.kind(id).filter(|_| !scope.is_var(id));
             if !matches!(read, Some(NameKind::Input | NameKind::Def)) {
                 let message = format!(
                     "{what} is priced by {}, not an input or a def",
-                    text(&price.input)
+                    text(&written)
                 );
                 return Err(at_clause(uerr(message)));
             }
             if price.last && read != Some(NameKind::Input) {
                 let message = format!(
                     "{what} is priced by last({}): last reads an input (L §4.6)",
-                    text(&price.input)
+                    text(&written)
                 );
                 return Err(at_clause(uerr(message)));
             }
@@ -285,7 +288,7 @@ impl Checker {
                 refused(Load::Name, format!("unknown id {id}")).naming(id),
             ));
         };
-        let Some((_, ty, keys)) = input_or_def_info(m, id) else {
+        let Some((_, mut ty, keys)) = input_or_def_info(m, id) else {
             let message = format!(
                 "{what} is priced by {id}, a {}, not an input or a def",
                 name_word(kind)
@@ -296,10 +299,23 @@ impl Checker {
             let message = format!("{what} is priced by last({id}): last reads an input (L §4.6)");
             return Err(at_clause(uerr(message)));
         }
+        for field in &fields {
+            let Some(next) = ty.as_ref().and_then(|t| t.field(field)).cloned() else {
+                let shown = ty.as_ref().map_or_else(|| "?".to_owned(), Ty::show);
+                let message = format!("{field} is not a field of {shown}");
+                return Err(at_clause(refused(Load::Field, message)));
+            };
+            ty = Some(next);
+        }
         if m.price_mode(ty.as_ref()).is_none() {
             let shown = ty.as_ref().map_or_else(|| "?".to_owned(), Ty::show);
+            let named = if fields.is_empty() {
+                id.to_owned()
+            } else {
+                text(&price.input)
+            };
             let message = format!(
-                "{what} is priced by {id} of type {shown}, not num CUR (a value) or num CUR/u (a price per unit)"
+                "{what} is priced by {named} of type {shown}, not num CUR (a value) or num CUR/u (a price per unit)"
             );
             return Err(at_clause(uerr(message)));
         }

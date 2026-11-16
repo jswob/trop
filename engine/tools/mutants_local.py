@@ -27,8 +27,10 @@ unmutated run of those targets just before the mutants, the batch's baseline (th
 profile, no fail-fast, the features their targets require). A test red there would count
 as catching every mutant (pre-M1's P13), so it is left out, and listed; the rest are
 kept through a nextest filter (`-E`) on the baseline and the coverage run, so the map, and
-with it each mutant's tests, holds only them. Without --next the run is CI's, the next
-milestone's tests left out, the gating ones' required features on (R2).
+with it each mutant's tests, holds only them. Without --next the run is CI's push and
+nightly run's, the next milestone's tests left out, the gating ones' required features on
+(R2); a gate-8 dispatch with `next` takes --next's targets and filter (tools/mutants-gate
+next, issue #167, pick P31).
 
 --fences (R-88, R-130; pick P55, 2026-11-09) adds the fences' equivalence tests that
 tools/milestones.toml's `fence_catchers` lists (F5's: `tally-cli`'s `walk_oracle`, `tally`'s
@@ -109,7 +111,7 @@ def main(argv):
         added = next_targets(env)
         if added is None:
             return 1
-        selected, runner_filter = added
+        selected, runner_filter, _, _ = added
         extra += selected
     if fences:
         added = fence_targets(env)
@@ -130,9 +132,10 @@ def main(argv):
 
 
 def next_targets(env):
-    """--next: the cargo arguments that add the next milestone's targets, and the nextest
-    filter that keeps of them the tests green at the batch's baseline (none when no test is:
-    the targets are then left out); None when they can't be told (R-88)."""
+    """--next: the cargo arguments that add the next milestone's targets, the nextest filter
+    that keeps of them the tests green at the batch's baseline (none when no test is: the
+    targets are then left out), and those green and red; None when they can't be told (R-88).
+    A gate-8 dispatch with `next` takes the same (tools/mutants-gate next, pick P31)."""
     try:
         m, names = milestones.next_milestone(env)
         features = milestones.required_features(env, names) if names else []
@@ -142,7 +145,7 @@ def next_targets(env):
     if not names:
         print(f"mutants-local: --next: {m or 'no milestone'} has no test target to add", file=sys.stderr)
         return None
-    selected = [*(f"--features={f}" for f in features), *(f"--test={n}" for n in names)]
+    selected = [*(f"--features={f}" for f in features), mutants_gate.COUNTERS, *(f"--test={n}" for n in names)]
     print(f"mutants-local: {m}'s tests, unmutated (the batch's baseline)", flush=True)
     run = subprocess.run(["cargo", "nextest", "run", "--locked", "-p", "tally-runner", "--cargo-profile", "mutants",
                           "--profile", "mutants", "--no-fail-fast", *selected], cwd=ENGINE, env=env,
@@ -159,8 +162,8 @@ def next_targets(env):
     for b, t in red:
         print(f"mutants-local: left out, red at the baseline (R-88): {b} {t}")
     if not green:
-        return [], None
-    return selected, expr
+        return [], None, green, red
+    return selected, expr, green, red
 
 
 def fence_filter_of(catchers):

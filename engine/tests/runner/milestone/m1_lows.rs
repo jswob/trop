@@ -10,7 +10,8 @@
 //! only where the tree declines; this target reaches it on every read, so the twin's mutants
 //! are T's to catch (R-84 counts T's tests at gate 8; `mutants-local --next` counts this
 //! target). One test per source, and the fix vectors one per group (pick P69), so a failure
-//! names it. `test = false` until M1's marker (pick P4).
+//! names it; a large group runs in parts, and a vector whose twin is slow unoptimised runs
+//! alone (pick P74). `test = false` until M1's marker (pick P4).
 
 #![forbid(unsafe_code)]
 
@@ -22,7 +23,7 @@ mod tests {
     use tally_cli::tally::walk::{Lows, RangeMinimum};
     use tally_cli::tally::{Asks, Days, Given, NotImplemented, Pin, Request, run_with_lows};
     use tally_runner::corpus::{KERNEL_CORPUS, netstrings, records};
-    use tally_runner::kernel::vectors;
+    use tally_runner::kernel::{Vector, vectors};
     use tally_runner::laws_m1::M1_CORPUS;
     use tally_runner::m1::VECTORS;
 
@@ -245,11 +246,17 @@ mod tests {
     /// modulo `parts` (a large group runs as several tests, together every vector), each ask
     /// alike under the tree and the twin; at least `answered` of them answered by both (no
     /// vacuous pass).
-    fn fixes_hold(group: &str, (part, parts): (usize, usize), answered: usize) {
+    fn fixes_hold(group: &str, parts: (usize, usize), answered: usize) {
+        fixes_hold_but(group, &[], parts, answered);
+    }
+
+    /// As `fixes_hold`, but the vectors of `group` named in `alone` are left out: each runs as
+    /// its own test (`fix_alone`).
+    fn fixes_hold_but(group: &str, alone: &[&str], (part, parts): (usize, usize), answered: usize) {
         let all = vectors(VECTORS).expect("m1/vectors.refcore reads");
         let mine: Vec<_> = all
             .iter()
-            .filter(|v| v.group == group)
+            .filter(|v| v.group == group && !alone.contains(&v.id.as_str()))
             .enumerate()
             .filter(|(i, _)| i.checked_rem(parts) == Some(part))
             .map(|(_, v)| v)
@@ -258,9 +265,28 @@ mod tests {
             !mine.is_empty(),
             "the group {group} has vectors in part {part} of {parts}"
         );
+        hold(group, &mine, answered);
+    }
+
+    /// The fix vector `id` of `group` alone, alike under the tree and the twin and answered by
+    /// both: a vector whose twin is slow in an unoptimised build gets a test of its own, so its
+    /// group's parts stay well under nextest's limit at gate 8 (pick P74).
+    fn fix_alone(group: &str, id: &str) {
+        let all = vectors(VECTORS).expect("m1/vectors.refcore reads");
+        let mine: Vec<_> = all
+            .iter()
+            .filter(|v| v.group == group && v.id == id)
+            .collect();
+        assert_eq!(mine.len(), 1, "the group {group} has the vector {id} once");
+        hold(group, &mine, 1);
+    }
+
+    /// Each of `mine` (vectors of `group`) alike under the tree and the twin; at least
+    /// `answered` of them answered by both.
+    fn hold(group: &str, mine: &[&Vector], answered: usize) {
         let mut answered_by_both = Vec::new();
         let mut failed = Vec::new();
-        for v in &mine {
+        for v in mine {
             let run = request_of(&v.args)
                 .and_then(|(paths, request)| Ok((given_of(&paths, &v.files)?, request)))
                 .and_then(|(files, request)| same(&files, &request));
@@ -1127,10 +1153,59 @@ mod tests {
         fixes_hold("fixes-open", (0, 1), 3);
     }
 
-    /// Gate 8's open survivors' texts (`m1/fixes/gate8/`).
+    /// Gate 8's vectors whose twin is slow in the mutants profile, each its own test below
+    /// (pick P74; the debug build, 2026-11-15, tree and twin in this order: 11.2 s, 8.9 s, 9.0 s,
+    /// 6.0 s, 3.5 s; the other 320 vectors 5.5 s together). The length is the count of those tests.
+    const GATE8_ALONE: [&str; 5] = [
+        "fixes/gate8/m2_g7_p1_cuts",
+        "fixes/gate8/m2_g7_p8m4",
+        "fixes/gate8/m2_g7_p8m4_noopen",
+        "fixes/gate8/m2_g7_p8m4_t2",
+        "fixes/gate8/m2_g7_p2",
+    ];
+
+    /// Gate 8's open survivors' texts (`m1/fixes/gate8/`) but `GATE8_ALONE`, part 1 of 2 (at
+    /// 0 modulo 2).
     #[test]
-    fn m1_lows_the_tree_prints_the_walk_on_fixes_gate8() {
-        fixes_hold("fixes-gate8", (0, 1), 20);
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_gate8_part_1() {
+        fixes_hold_but("fixes-gate8", &GATE8_ALONE, (0, 2), 160);
+    }
+
+    /// Gate 8's open survivors' texts (`m1/fixes/gate8/`) but `GATE8_ALONE`, part 2 of 2 (at
+    /// 1 modulo 2).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_gate8_part_2() {
+        fixes_hold_but("fixes-gate8", &GATE8_ALONE, (1, 2), 160);
+    }
+
+    /// Gate 8's `fixes/gate8/m2_g7_p1_cuts` alone (cuts past four kept walks, a walk planned past the read freed; `GATE8_ALONE`).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_gate8_p1_cuts() {
+        fix_alone("fixes-gate8", "fixes/gate8/m2_g7_p1_cuts");
+    }
+
+    /// Gate 8's `fixes/gate8/m2_g7_p8m4` alone (P8-M4's long walk; `GATE8_ALONE`).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_gate8_p8m4() {
+        fix_alone("fixes-gate8", "fixes/gate8/m2_g7_p8m4");
+    }
+
+    /// Gate 8's `fixes/gate8/m2_g7_p8m4_noopen` alone (P8-M4's long walk without an opening reading; `GATE8_ALONE`).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_gate8_p8m4_noopen() {
+        fix_alone("fixes-gate8", "fixes/gate8/m2_g7_p8m4_noopen");
+    }
+
+    /// Gate 8's `fixes/gate8/m2_g7_p8m4_t2` alone (P8-M4's long walk, a second read; `GATE8_ALONE`).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_gate8_p8m4_t2() {
+        fix_alone("fixes-gate8", "fixes/gate8/m2_g7_p8m4_t2");
+    }
+
+    /// Gate 8's `fixes/gate8/m2_g7_p2` alone (a base and a richer scenario; `GATE8_ALONE`).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_gate8_p2() {
+        fix_alone("fixes-gate8", "fixes/gate8/m2_g7_p2");
     }
 
     /// tally 2.1.7's rule R1: its items' vectors and its reach (`m1/fixes/r1/`).

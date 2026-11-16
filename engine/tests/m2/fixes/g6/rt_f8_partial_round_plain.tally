@@ -1,0 +1,16 @@
+model t10
+  tally 2
+  on 2026-01-15
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6 vectors: refcore's F8_partial_round_plain: a rounding meeting a hole makes the partial line plain (L §5.18)"
+unit DUK: currency minor 0.01
+input a: money DUK
+def h: money DUK = a + 1 at reader
+def x: money DUK = round(h / (1 + 1), minor(DUK), down) at reader
+def y: money DUK = h - x at reader
+def z: money DUK = h - min(h, 1) at reader
+def c: int = (if h > 1 then 1 else 0) + 1 at reader
+ask q: x, y law 2026-01-15 partial
+ask q2: z law 2026-01-15 partial
+ask q3: c law 2026-01-15 partial

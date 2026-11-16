@@ -7,6 +7,9 @@ run.py's run_one (plain refcore, its 90 s budget, the watchdog). Never an engine
 
     python3 -I -B engine/tests/tools/perf_digests.py [--jobs N<=2]       -> writes engine/tests/perf-digests.tsv
     python3 -I -B engine/tests/tools/perf_digests.py --check             -> exit 1 if the file differs
+    ... --table PATH                                                     -> the rows of another budget table (a
+                                                                            rules branch's, before it is merged)
+One line per check: rows that time the same check (F6-c7 and P8-2, F6-X and P8-14) share its digest.
 """
 import hashlib
 import os
@@ -22,14 +25,19 @@ TABLE = R.ROOT + 'engine/tools/perf-budgets.toml'
 OUT = T + 'perf-digests.tsv'
 
 
-def rows():
-    with open(TABLE, 'rb') as f:
-        return [r for r in tomllib.load(f)['row'] if r['recipe'].startswith('check:')]
+def rows(table):
+    with open(table, 'rb') as f:
+        out, seen = [], set()
+        for r in tomllib.load(f)['row']:
+            if r['recipe'].startswith('check:') and r['recipe'] not in seen:
+                seen.add(r['recipe'])
+                out.append(r)
+        return out
 
 
-def text(jobs):
+def text(jobs, table=TABLE):
     by = {c['id']: c for c in R.load_checks()}
-    rs = rows()
+    rs = rows(table)
     R.need_watchdog()
     rc_hash = R.refcore_hash()
     cs = [by[r['recipe'][len('check:'):]] for r in rs]
@@ -46,7 +54,7 @@ def text(jobs):
 
 def main(argv):
     jobs = min(int(argv[argv.index('--jobs') + 1]) if '--jobs' in argv else 2, 2)
-    t = text(jobs)
+    t = text(jobs, argv[argv.index('--table') + 1] if '--table' in argv else TABLE)
     if '--check' in argv:
         same = os.path.exists(OUT) and open(OUT, encoding='utf-8').read() == t
         print('perf-digests.tsv %s refcore\'s runs' % ('matches' if same else 'DIFFERS from'))

@@ -110,7 +110,15 @@ pub(super) fn load_among(
     super::overlap::check_obs(&loader.m)?;
     loader.check_sames()?;
     super::scenarios::check_scenarios(&loader.m)?;
-    super::bands::check_bands(&loader.m)?;
+    for (band, at) in super::bands::check_bands(&loader.m)? {
+        let table = loader
+            .m
+            .bands
+            .get_mut(&band)
+            .and_then(|b| b.tables.get_mut(at))
+            .ok_or_else(|| invariant("a whole table its band lacks".to_owned()))?;
+        table.whole = true;
+    }
     loader.collect_asks();
     loader.build_graph()?;
     check_range_keys(&loader.m, &loader.range_keys)?;

@@ -13,11 +13,13 @@
 
 use core::cmp::Ordering;
 
-use super::arith::{Op, Test, arith, compare, duration, negate, same_value};
+use super::arith::{Op, Test, arith, compare, negate, same_value};
 use super::keys::{Given, lacks_at_run, literal_key};
+use super::partial;
 use super::state::{
     Ctx, Engine, Env, Figures, invariant, not_typed, num_stop, refuse, refuse_load, unit_stop,
 };
+use super::time_arith::duration;
 use super::ty::{figure_like, sample};
 use super::windows::{as_window, window_arith, window_compare, window_negated};
 use super::years::{as_year, period_like, period_literal, year_literal};
@@ -42,6 +44,12 @@ impl Engine {
         #[cfg(feature = "counters")]
         self.counts.add(crate::Unit::Ev);
         let v = self.node(m, e, env, ctx);
+        // under a `partial` line a hole stays linear only through L §5.18's operations
+        let v = if ctx.partial {
+            v.map(|x| partial::partial_value(m, e, env, ctx, x))
+        } else {
+            v
+        };
         #[cfg(feature = "counters")]
         if let Ok(Value::Number(_) | Value::Money(_)) = &v {
             self.counts.add(crate::Unit::NumResult);
@@ -81,7 +89,7 @@ impl Engine {
             Expr::Covered(c) => self.covered_call(m, (&c.0, &c.1), env, ctx),
             Expr::Calendar(..) => Err(Stop::NotBuilt("a calendar written in a rule")),
             Expr::Value(v) => self.valuation(m, v, env, ctx),
-            Expr::Query(..) => Err(Stop::NotBuilt("a query (mean, share, quantile)")),
+            Expr::Query(query) => self.key_query(m, query, env, ctx),
             Expr::Low(low) => self.low(m, low, env, ctx),
             Expr::Crps(..) => Err(Stop::NotBuilt("`crps`")),
             Expr::DistFn(..) => Err(Stop::NotBuilt("`cdf`, `pdf` and `pmf`")),
@@ -178,6 +186,9 @@ impl Engine {
         env: &Env,
         (ctx, read): (Ctx, Ctx),
     ) -> Result<Value, Stop> {
+        if m.inputs.get(id).is_some_and(|i| i.observed) {
+            return self.observed_row(m, (id, keys), read.cut);
+        }
         let mut given = Vec::with_capacity(keys.len());
         for key in keys {
             let Key::Expr(e) = key else {
@@ -350,13 +361,22 @@ impl Engine {
             }
             _ => (self.ev(m, base, env, ctx)?, posts),
         };
-        for post in rest {
+        let taken = posts
+            .len()
+            .checked_sub(rest.len())
+            .ok_or_else(|| invariant("a postfix chain's rest is its tail"))?;
+        for (at, post) in rest.iter().enumerate() {
             value = match post {
                 Postfix::Field(name) => {
                     if let Value::Mv(mv) = &value {
                         self.mv_field(m, mv, name, ctx)?
                     } else {
-                        field(m, value, name)?
+                        // the record read is the base with the postfixes before this field
+                        let before = taken
+                            .checked_add(at)
+                            .and_then(|upto| posts.get(..upto))
+                            .ok_or_else(|| invariant("a postfix's position"))?;
+                        field(m, value, name, (base, before))?
                     }
                 }
                 Postfix::Keys(_) => return Err(Stop::NotBuilt("keys after a value")),
@@ -630,7 +650,7 @@ impl Engine {
                 AddOp::Add => Op::Add,
                 AddOp::Sub => Op::Sub,
             };
-            acc = binop(m, op, &acc, &b)?;
+            acc = binop(m, op, &acc, &b, ctx)?;
         }
         Ok(acc)
     }
@@ -651,7 +671,7 @@ impl Engine {
                 MulOp::Mul => Op::Mul,
                 MulOp::Div => Op::Div,
             };
-            acc = binop(m, op, &acc, &b)?;
+            acc = binop(m, op, &acc, &b, ctx)?;
         }
         Ok(acc)
     }
@@ -659,7 +679,10 @@ impl Engine {
     /// `-e` (refcore's `e_neg`). L §3.2.
     fn minus(&mut self, m: &Reality, x: &Expr, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
         let v = self.ev(m, x, env, ctx)?;
-        if let Value::Hole(_) = v {
+        if let Value::Hole(h) = &v {
+            if ctx.partial {
+                return partial::lin_neg(m, h);
+            }
             return Ok(v);
         }
         if v == Value::None {
@@ -817,8 +840,15 @@ fn boolean(v: Value, word: &str) -> Result<Value, Stop> {
 }
 
 /// `a op b` on two values: a hole spreads, unless the other is `none` or `never`, which are
-/// refused whatever the hole holds (refcore's `binop`). L §3.1, §8.4.
-pub(super) fn binop(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Result<Value, Stop> {
+/// refused whatever the hole holds; under a `partial` line it is linear in its holes where the
+/// operation is (refcore's `binop`, `lin_bin`). L §3.1, §8.4, §5.18.
+pub(super) fn binop(
+    m: &Reality,
+    op: Op,
+    lhs: &Value,
+    rhs: &Value,
+    ctx: Ctx,
+) -> Result<Value, Stop> {
     for v in [lhs, rhs] {
         if *v == Value::Never {
             return Err(refuse(Run::None, "never in arithmetic".to_owned()));
@@ -830,7 +860,14 @@ pub(super) fn binop(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Result<Val
             ));
         }
     }
+    if op == Op::Div && lhs.as_hole().is_some() && known_zero(rhs) {
+        // refusals outrank holes (L §8): a hole divided by a known 0 is refused
+        return Err(refuse(Run::Div, "division by zero".to_owned()));
+    }
     if lhs.as_hole().is_some() || rhs.as_hole().is_some() {
+        if ctx.partial {
+            return partial::lin_bin(m, op, lhs, rhs);
+        }
         return hole_of(&[lhs.as_hole(), rhs.as_hole()]);
     }
     let words = if matches!(lhs, Value::Word(_)) || matches!(rhs, Value::Word(_)) {
@@ -846,6 +883,17 @@ pub(super) fn binop(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Result<Val
         return window_arith(m, op, a, b);
     }
     arith(m, op, a, b)
+}
+
+/// Whether `v` is a known number or money of 0, a divisor that refuses (L §8.4 `RUN-DIV`).
+fn known_zero(v: &Value) -> bool {
+    if let Value::Number(n) = v {
+        return n.q.is_zero();
+    }
+    if let Value::Money(money) = v {
+        return money.is_zero();
+    }
+    false
 }
 
 /// Key literals in arithmetic, resolved as load resolved them (L §2.5): by the key, thing or
@@ -1010,15 +1058,24 @@ pub(super) fn compare_values(
     }))
 }
 
-/// A record's field `name` (refcore's `e_field`). L §3.1.
-fn field(m: &Reality, v: Value, name: &str) -> Result<Value, Stop> {
-    if let Value::Hole(_) = v {
-        return Ok(v);
+/// A record's field `name`, the record `v` read by the written `object` (refcore's
+/// `e_field`); a field read of `none` is refused, naming the object as written (L §3.1;
+/// §8.4 `RUN-NONE`); a field of a hole is the hole, which a `partial` line can't see
+/// through (L §5.18).
+fn field(
+    m: &Reality,
+    v: Value,
+    name: &str,
+    (base, posts): (&Expr, &[Postfix]),
+) -> Result<Value, Stop> {
+    if let Value::Hole(h) = &v {
+        return Ok(Value::Hole(h.plain()));
     }
     if v == Value::None {
+        let object = crate::load::post_text(base, posts);
         return Err(refuse(
             Run::None,
-            format!("a value is none here: a field read of it ({name})"),
+            format!("{object} is none here: a field read of it"),
         ));
     }
     let Value::Record(fields) = v else {

@@ -1,0 +1,46 @@
+model px
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+unit etf "fund unit"
+index funds = [fa, fb]
+
+place h[f in funds]: holdings etf priced px[f] lives 2026-01-01..
+place g[f in funds]: holdings etf priced last(px[f]) lives 2026-01-01..
+place r[f in funds]: holdings etf priced pr[f].nav lives 2026-01-01..
+place sl[f in funds]: holdings etf priced last(pr[f].nav) lives 2026-01-01..
+place w: holdings etf priced pd[fb] lives 2026-01-01..
+
+input px[f in funds]: num PLN/etf reading
+input two: int
+input pr[f in funds]: (nav num PLN/etf, note text) reading
+def pd[f in funds]: num PLN/etf = px[f] * two at reader
+
+ask a1: value(h[fa], 2026-03-01) in PLN law 2026-06-30
+ask a2: value(h[fb], 2026-03-01) in PLN law 2026-06-30
+ask a3: value(g[fa], 2026-04-01) in PLN law 2026-06-30
+ask a4: value(r[fa], 2026-03-01) in PLN law 2026-06-30
+ask a5: value(sl[fa], 2026-04-01) in PLN law 2026-06-30
+ask a6: value(sl[fb], 2026-04-01) in PLN law 2026-06-30
+ask a7: value(w, 2026-03-01) in PLN law 2026-06-30
+ask a8: value(h[f], 2026-03-01) in PLN for f in funds law 2026-06-30
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  px[fa] = 10.00 PLN/etf at 2026-03-01 "q"
+  px[fb] = 20.00 PLN/etf at 2026-03-01 "q"
+  pr[fa] = (nav: 12.50 PLN/etf, note: "x") at 2026-03-01 "w"
+  opening[h[fa]] = 3 etf at 2026-01-01 start "own"
+  opening[h[fb]] = 2 etf at 2026-01-01 start "own"
+  opening[g[fa]] = 3 etf at 2026-01-01 start "own"
+  opening[r[fa]] = 4 etf at 2026-01-01 start "own"
+  opening[sl[fa]] = 4 etf at 2026-01-01 start "own"
+  opening[sl[fb]] = 4 etf at 2026-01-01 start "own"
+  opening[w] = 1 etf at 2026-01-01 start "own"
+  two = 2

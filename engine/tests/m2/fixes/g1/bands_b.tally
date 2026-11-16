@@ -1,0 +1,43 @@
+model bd
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+
+band za(x: money PLN): num
+band zb(x: money PLN): num
+band zc(x: money PLN): num
+
+ask a_whole_alone: za(60.00 PLN) law 2026-09-15
+ask a_whole_over: za(60.00 PLN) law 2026-03-15
+ask b_patch: zb(60.00 PLN) law 2026-03-15
+ask c_patch_alone: zc(60.00 PLN) law 2026-03-15 as known 2026-02-15
+ask c_patch_late: zc(60.00 PLN) law 2026-03-15
+
+version a1
+  cite s
+  governs 2026-01..2026-06
+  known 2026-01-01
+  za: [0, 50) = 1 "a"
+  za: [50, inf) = 2 "a"
+  zb: [0, 50) = 1 "a"
+  zb: [50, inf) = 2 "a"
+
+version a2
+  cite s
+  governs 2026-01..2026-12
+  known 2026-02-01
+  replace za: [0, 100) = 3 "whole"
+  replace za: [100, inf) = 4 "whole"
+  replace zb: [50, inf) = 5 "patch"
+  replace zc: [50, inf) = 7 "patch"
+
+version a3
+  cite s
+  governs 2026-01..2026-12
+  known 2026-03-01
+  zc: [0, 50) = 1 "late base"
+  zc: [50, inf) = 2 "late base"

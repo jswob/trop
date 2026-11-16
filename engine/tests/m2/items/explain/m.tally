@@ -1,0 +1,95 @@
+model x_explain
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 C2, G2: readers-of a kind through its subkind (#132: rk, rk_sub); explain of a balance whose last reading pads (e_sav), anchors (e_konto), or has a hole movement since it (e_jar) (#132); last of a reading after m, before its day (#163, #164: la_before; on and after its day refcore 2.1.7 prints a hole, L §4.6 reads the reading: not stored, a refcore case), last of a reading at a day end read past it and on it (ls, lj); explain of a def bound by the walk (#163: e_wb)"
+
+source s "synthetic"
+
+unit PLN: currency minor 0.01
+
+kind pays: event certain
+  leg cash: PLN
+
+kind subpays: pays
+
+place konto: accounts PLN lives 2026-01-01..
+
+place jar: accounts PLN lives 2026-01-01..
+
+place sav: accounts PLN lives 2026-01-01..
+
+place work: outside lives 1900-01-01..
+
+input amt[m in months]: money PLN
+
+input fee[m in months]: money PLN
+
+def n_pays[m in months]: int = count(p in pays over m)
+
+def wb[m in months]: money PLN = bal(konto, end_of(m)) at end_of(m)
+
+move pay[m in months]: subpays
+  on start_of(m)
+  leg cash from work to konto amount amt[m]
+
+move tip[m in months]: transfers
+  on start_of(m)
+  leg cash from work to jar amount fee[m]
+
+move save[m in months]: transfers
+  on end_of(m)
+  reads konto
+  leg cash from konto to sav amount max(bal(konto) - amt[m], 0)
+
+ask rk: readers-of pays
+
+ask rk_sub: readers-of subpays
+
+ask n2: n_pays[2026-02]
+
+ask e_konto: explain bal(konto, 2026-04-30)
+
+ask e_sav: explain bal(sav, 2026-02-28)
+
+ask e_jar: explain bal(jar, 2026-04-30)
+
+ask la_before: last(stated[konto], 2026-03-30)
+
+ask ls: last(stated[sav], 2026-03-01)
+
+ask lj: last(stated[jar], 2026-02-02)
+
+ask e_wb: explain wb[2026-02]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[2026-01..2026-12] = 10.00 PLN "plan"
+  fee[2026-01..2026-02] = 5.00 PLN "plan"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
+  opening[jar] = 0.00 PLN at 2026-01-01 start "own"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "own"
+
+version konto_read
+  cite s
+  governs 2026-03
+  known 2026-03-05
+  anchor konto
+  stated[konto] = 10.00 PLN after save[2026-03] "saldo"
+
+version sav_read
+  cite s
+  governs 2026-01
+  known 2026-02-01
+  pad sav from work
+  stated[sav] = 0.50 PLN at 2026-01-31 end "saldo"
+
+version jar_read
+  cite s
+  governs 2026-02
+  known 2026-02-03
+  anchor jar
+  stated[jar] = 10.00 PLN at 2026-02-02 end "saldo"

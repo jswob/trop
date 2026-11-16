@@ -1,0 +1,26 @@
+model sv
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+
+input p: money PLN
+input goal: money PLN
+input r: num
+input r2: num
+
+ask s1: solve p == goal for p in [0, 10] to 0.01 PLN
+ask s2: solve p == goal for p in [0 PLN, 10 PLN] to 0.01 PLN
+ask s3: solve r == r2 for r in [0, 1] to 0.5
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  p = 5.00 PLN
+  goal = 50.00 PLN
+  r = 0.5
+  r2 = 2

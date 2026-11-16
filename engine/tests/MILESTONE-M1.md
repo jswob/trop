@@ -147,6 +147,34 @@ tests): their tests are vectors (`s1/l8_1_value_run_ends`, `r5/l8_4_*`, `r5/l3_2
 `r9/e4_1_decision_move_id_term`, `s9/l8_3_balnow_outside_line`, `b1/l4_6_*`), and the 17 `m1/spec.tsv` rows refcore
 now answers moved to `m1/vectors.tsv` (19 stay where it still crashes).
 
+## Item 10 of the M2 run: G12's 63 over-specified vectors restated to their asks
+
+The M2 run's brief (issue #167, item 10; T's chunk C3, 2026-11-14): 63 of `fixes-g12`'s vectors (row 8) were G12's
+review and fix probes stored as whole runs, with no `asks` column: a source group's text with `explain` asks over every
+balance, projection and `low` it holds (`pb_g9_sign_sign`: 476 asks, 472 of them `explain`), up to 2 811 lines of output
+each, so one change to how a ledger prints rewrote some 96 k lines. They are the `fixes/g12` vectors whose whole run
+printed 397 lines or more (the next prints 316). Only 34 of their texts differ, and 20 models (a text less its asks):
+29 are copies under other ids.
+
+`m1/restate_g12.py` (`--check` in `run.py --self-test`, 8n) fills each one's `asks` column by one mechanical rule from
+refcore's whole run of its text, the vectors in order of size, each fact keyed by its model: an ask that isn't an
+explanation is kept the first time its model meets it; an explanation is kept when it shows its model a new sort of
+head (a value, a hole, a refusal) or a new kind of line for its form (the word, the function, the kind of its first
+argument's place; a line's kind is its depth, its words from the explanation's vocabulary, its codes and whether it holds
+a hole); a copy keeps its first ask. Each vector keeps its id, text, group and part; `m1/vectors.py` stored refcore's run
+of the restated asks, so every expected byte is still refcore's, and each restated vector prints its asks as its whole
+run printed them (the ask rule; checked on all 63, 0 differ).
+
+| | Lines | Bytes |
+|---|---|---|
+| `m1/vectors.refcore` before | 318 591 | 11 281 620 |
+| `m1/vectors.refcore` after | 229 737 | 7 575 415 |
+| the 63's output, before | 95 744 | 4 053 218 |
+| the 63's output, after (582 asks) | 6 890 | 343 293 |
+
+The coordinator compares gate 8's next dispatch on `build/m2` with the last one: an ask whose loss leaves a mutant
+missed comes back.
+
 ## Keeping master green
 
 As at S and M0 (`MILESTONE-S.md` § Keeping master green): every `m1_…` target has `test = false` and runs only as `check`'s report until M1 is in `engine/tools/milestones.toml`'s `gating`, which the rules step adds in `build/m1`'s last commit (the marker, pick P20).

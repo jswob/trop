@@ -1,0 +1,69 @@
+# L §5.19 One movement on two statements: a pair of rows stated same "is counted once by observed(m[k]) and flows; and
+# its fulfils is stated on either row, or on both alike. Where the two rows disagree on an amount or a day, ... WARN-LEGS
+# is printed ... and a read of the movement away from its places ... is the disagreement's hole, HOLE-SAME, naming both
+# rows". L5_19_same_rows_disagree_flows_hole with fulfils on bank[a2] alone (M2 patch case P35, P42, G4's review B3,
+# its probe b3_onefulfils): flows of save and observed are the hole, with WARN-LEGS (refcore read a2 alone: 950.00, no
+# warning). Each place's ledger observes its own statement's row (E §6.3, the review's L1, its probe l_s_amt): konto
+# -950.00, sav 940.00 (refcore counted both rows at each place: -1 890.00 and 1 890.00).
+=== m.tally
+model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+input bank: observed
+input keep: money PLN
+input d_save: int
+
+move save[m in months]: transfers
+  on day_of(m, d_save)
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+ask q_save: flows(save, 2026-03-01 .. 2026-03-31)
+ask q_obs: observed(save[2026-03]).cash.amount
+ask q_led: residuals konto 2026-03
+ask q_ls: residuals sav 2026-03
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  d_save = 15 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+version st_konto
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "a"
+
+version st_sav
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers sav
+  bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 940.00 PLN) "b"
+  same bank[a2] = bank[b1]
+=== expect
+q_led: residuals konto 2026-03
+  2026-03 move save: model -950.00 PLN, observed -950.00 PLN, difference 0.00 PLN
+    matched save[2026-03] on 2026-03-15: model -950.00 PLN, observed -950.00 PLN, difference 0.00 PLN, timing +0 days
+  cut 2026-04-10
+q_ls: residuals sav 2026-03
+  2026-03 move save: model 950.00 PLN, observed 940.00 PLN, difference -10.00 PLN
+    matched save[2026-03] on 2026-03-15: model 950.00 PLN, observed 940.00 PLN, difference -10.00 PLN, timing +0 days
+  cut 2026-04-10
+q_obs: ?"bank[a2] and bank[b1] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
+  cut 2026-04-10
+q_save: ?"bank[a2] and bank[b1] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
+  cut 2026-04-10
+warning: WARN-LEGS the two observations of save[2026-03] disagree: bank[a2] (950.00 PLN) and bank[b1] (940.00 PLN)

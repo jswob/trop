@@ -1,0 +1,29 @@
+part hc_2022_10
+  tally 2
+  note "H9: month 21 (2022-10) of the hindcast's 60, written by gen.py from M*; synthetic."
+
+version st_2022_10
+  cite statements
+  governs 2022-10
+  known 2022-11-02
+  covers konto
+  pad konto from unexplained
+  bank[r20221003a] = (on: 2022-10-03, kind: transfers, leg cash from konto to landlord amount 2900.00 PLN, fulfils: rent[2022-10]) "czynsz"
+  bank[r20221006a] = (on: 2022-10-06, kind: transfers, leg cash from konto to shops amount 1240.00 PLN, fulfils: spend[food, 2022-10]) "food"
+  bank[r20221008a] = (on: 2022-10-08, kind: transfers, leg cash from konto to shops amount 310.00 PLN, fulfils: spend[transport, 2022-10]) "transport"
+  bank[r20221010a] = (on: 2022-10-10, kind: wages, leg cash from employer_a to konto amount 7279.00 PLN, fulfils: pay_a[2022-10]) "wynagrodzenie A"
+  bank[r20221011a] = (on: 2022-10-11, kind: transfers, leg cash from konto to broker amount 1500.00 PLN, fulfils: invest[2022-10]) "przelew do biura maklerskiego"
+  bank[r20221012a] = (on: 2022-10-12, kind: transfers, leg cash from konto to shops amount 455.20 PLN, fulfils: spend[utilities, 2022-10]) "utilities"
+  bank[r20221015a] = (on: 2022-10-15, kind: transfers, leg cash from konto to streaming amount 49.99 PLN, fulfils: sub[2022-10]) "abonament"
+  bank[r20221020a] = (on: 2022-10-20, kind: transfers, leg cash from konto to shops amount 120.00 PLN, fulfils: spend[health, 2022-10]) "health"
+  bank[r20221022a] = (on: 2022-10-22, kind: transfers, leg cash from konto to shops amount 260.00 PLN, fulfils: spend[clothes, 2022-10]) "clothes"
+  bank[r20221025a] = (on: 2022-10-25, kind: wages, leg cash from employer_b to konto amount 5353.00 PLN, fulfils: pay_b[2022-10]) "wynagrodzenie B"
+  bank[r20221026a] = (on: 2022-10-26, kind: transfers, leg cash from konto to shops amount 380.00 PLN, fulfils: spend[leisure, 2022-10]) "leisure"
+  stated[konto] = 124169.82 PLN at 2022-10-31 end "saldo"
+
+version slips_2022_10
+  cite slips
+  governs 2022-10
+  known 2022-10-10
+  slip_a[2022-10] = 8770.00 PLN "pasek A"
+  slip_b[2022-10] = 6450.00 PLN "pasek B"

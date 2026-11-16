@@ -118,10 +118,14 @@ fn range_end(m: &Reality, value: &Value) -> Result<BandEnd, Stop> {
 /// only with `replace`, all its rows `replace`, patching the earlier table's intervals or
 /// forming a whole table, and a patch only where a table is in force. L §5.9.
 ///
+/// The tables whose `replace` rows form a whole table, by band and place among its tables,
+/// come back for the read (refcore's `whole_ok`).
+///
 /// # Errors
 ///
 /// `LOAD-BAND`, `LOAD-OVERLAP` or `LOAD-REPLACE`, at the table's first row.
-pub(super) fn check_bands(m: &Reality) -> Result<(), Stop> {
+pub(super) fn check_bands(m: &Reality) -> Result<Vec<(String, usize)>, Stop> {
+    let mut wholes = Vec::new();
     for (id, band) in m.bands.entries() {
         for table in &band.tables {
             check_table(m, band, table, Whole::Unless)?;
@@ -139,22 +143,33 @@ pub(super) fn check_bands(m: &Reality) -> Result<(), Stop> {
                 .filter(|t| t.key.as_ref() == key)
                 .collect();
             for at in 0..tables.len() {
-                tables_of_one_key(m, id, band, at, &tables)?;
+                if !tables_of_one_key(m, id, band, at, &tables)? {
+                    continue;
+                }
+                let table = tables
+                    .get(at)
+                    .ok_or_else(|| invariant("a band table past its key's".to_owned()))?;
+                let place = band
+                    .tables
+                    .iter()
+                    .position(|t| t.version == table.version && t.key == table.key)
+                    .ok_or_else(|| invariant("a key's table its band lacks".to_owned()))?;
+                wholes.push((id.to_owned(), place));
             }
         }
     }
-    Ok(())
+    Ok(wholes)
 }
 
 /// One table against the other tables of its key (refcore's `check_bands`, its loop over a
-/// key's tables). L §5.9.
+/// key's tables): whether its `replace` rows form a whole table (`whole_ok`). L §5.9.
 fn tables_of_one_key(
     m: &Reality,
     id: &str,
     band: &BandInfo,
     at: usize,
     tables: &[&BandTable],
-) -> Result<(), Stop> {
+) -> Result<bool, Stop> {
     let table = *tables
         .get(at)
         .ok_or_else(|| invariant("a band table past its key's".to_owned()))?;
@@ -200,7 +215,7 @@ fn tables_of_one_key(
             );
             return Err(refuse(Load::Overlap, message, &file, line));
         }
-        return Ok(());
+        return Ok(false);
     }
     if !table.rows.iter().all(|r| r.replace) {
         let message = format!("band {id} in {vid} mixes replace rows and plain rows");
@@ -234,10 +249,10 @@ fn tables_of_one_key(
         return Err(refuse(Load::Band, message, &file, line));
     }
     if whole {
-        return Ok(());
+        return Ok(true);
     }
     let Some(span) = version_span(m, vid)? else {
-        return Ok(());
+        return Ok(false);
     };
     let mut others = Vec::new();
     for e in &earlier {
@@ -252,7 +267,7 @@ fn tables_of_one_key(
         );
         return Err(refuse(Load::Replace, message, &file, line));
     }
-    Ok(())
+    Ok(false)
 }
 
 /// Whether a table of `replace` rows only is checked: when asked whether it is whole, never

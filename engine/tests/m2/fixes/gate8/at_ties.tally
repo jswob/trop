@@ -1,0 +1,114 @@
+model at_ties
+  tally 2
+  on 2026-08-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 gate 8 (run 43657284122): at_window.tally with tb, two decisions on one day whose ties by reads rows that differ across their window at (walk/order.rs ties_differ): RUN-TIE, its ties by a hole (L §5.14.2, §4.4)"
+
+source s "s"
+
+unit PLN: currency minor 0.01
+
+index ks = [p, q]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place jar[k in ks]: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input wl: date
+
+input pq: date
+
+input pf: date
+
+input aq: money PLN
+
+input on_off[k in ks]: int
+
+input on2[k in ks]: int
+
+input rank[k in ks]: int
+
+input rank2[k in ks]: int
+
+input a1: money PLN
+
+move mq: transfers
+  on pq
+  at wl
+  leg cash from world to konto amount aq
+
+move md: transfers
+  on pq
+  at wl
+  for month_of(pf)
+  leg cash from world to konto amount a1
+
+move mk[k in ks where on_off[k] > 0]: transfers
+  on pq
+  at wl
+  leg cash from world to jar[k] amount a1
+
+move ta[k in ks]: transfers
+  on pq
+  at wl
+  reads jar
+  ties by rank[k]
+  leg cash from world to jar[k] amount max(a1, bal(jar[k]))
+
+move tb[k in ks]: transfers
+  on pq
+  at wl
+  reads jar
+  ties by rank2[k]
+  leg cash from world to jar[k] amount max(a1, bal(jar[k]))
+
+ask f_mq: flows(mq, 2026-04-01 .. 2026-04-30)
+ask f_md: flows(md, 2026-04-01 .. 2026-04-30)
+ask f_mk: flows(mk, 2026-04-01 .. 2026-04-30)
+ask f_ta: flows(ta, 2026-04-01 .. 2026-04-30)
+ask f_tb: flows(tb, 2026-04-01 .. 2026-04-30)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  wl = window(2026-03-30, 2026-04-02) "s"
+  a1 = 1.00 PLN "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  opening[jar[p]] = 0.00 PLN at 2026-01-01 start "s"
+  opening[jar[q]] = 0.00 PLN at 2026-01-01 start "s"
+
+version old
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-01-01
+  pq = 2026-04-10 "s"
+  pf = 2026-03-15 "s"
+  aq = 5.00 PLN "s"
+  on_off[p] = 1 "s"
+  on_off[q] = 0 "s"
+  on2[p] = 1 "s"
+  on2[q] = 0 "s"
+  rank[p] = 1 "s"
+  rank[q] = 2 "s"
+  rank2[p] = 1 "s"
+  rank2[q] = 2 "s"
+
+version new
+  cite s
+  governs 2026-04-01..
+  known 2026-01-01
+  pq = 2026-04-10 "s"
+  pf = 2026-04-15 "s"
+  aq = 5.00 PLN "s"
+  on_off[p] = 1 "s"
+  on_off[q] = 0 "s"
+  on2[p] = 1 "s"
+  on2[q] = 1 "s"
+  rank[p] = 1 "s"
+  rank[q] = 2 "s"
+  rank2[p] = 2 "s"
+  rank2[q] = 1 "s"

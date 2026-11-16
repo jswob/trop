@@ -12,9 +12,12 @@
 //! rules, and run no decision; it then gives that walk's value and register, and every other
 //! read is the walk's; one tree per (place, unit, moves left out) in a timeline, built from the
 //! instances at the read's cut, held for reads at that cut, and gathered again at any other
-//! cut, updated in place where x's days are the same; a read the projection's walk refuses on
-//! a day it reaches is the walk's (pick P54, #127); the sums are whole minor units of x's unit
-//! only where every position's legs are, and exact otherwise (pick P56, #128).
+//! cut, updated in place where x's days are the same; a read is the walk's wherever that walk
+//! could take a number past the cap at any place (its start balances and every leg the cut
+//! books, bounded in bits; it books no reading), since that walk then refuses it
+//! (L §7.1, pick P54, #127): whether a walk is kept never decides it (F6); the sums are whole
+//! minor units of x's unit only where every position's legs are, and exact otherwise (pick
+//! P56, #128).
 //! PERF: P8-5, P8-M4 (one read of a written projection in E §4.3's common case: O(log n) in
 //! the n days x moves, where the walk plans and walks the window and reads each of its days;
 //! S measured P8-M4's read at 72.9 ms); plain twin: projection.rs (`projection`,
@@ -41,10 +44,10 @@ use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::agenda::{left_out_day, left_out_lines, one_more_left_out};
-use super::day::place_sign;
 use super::plan::{Amount, Dated, End, Exists, Inst, LegVal, Status, invariant, qty_value};
 use super::point::At;
-use super::state::Progress;
+use super::readings::place_sign;
+use super::state::St;
 use crate::eval::{Collected, Engine, Entry, num_stop};
 use crate::model::{MoveInfo, Reality, Value, World};
 use crate::num::Num;
@@ -106,6 +109,9 @@ struct Tree {
     /// The days of the hole and refused movements that reach x or every place: a read from a
     /// day on or before one is the walk's.
     later: BTreeSet<Day>,
+    /// The most bits the legs the cut books, at every place, can add to a start balance's
+    /// (L §7.1): none where no bound holds, so every read is the walk's.
+    adds: Option<u64>,
     /// The days the projection's walk runs a decision or ends x's lifespan: a read whose
     /// window holds one is the walk's.
     runs: BTreeSet<Day>,
@@ -131,6 +137,7 @@ impl Tree {
             registers: Vec::new(),
             acts: BTreeSet::new(),
             later: BTreeSet::new(),
+            adds: None,
             runs: BTreeSet::new(),
             left_out: Vec::new(),
             counted: BTreeMap::new(),
@@ -519,6 +526,62 @@ struct Gathered {
     outside: BTreeMap<String, (u32, Dated)>,
     /// The moves outside the run with an instance whose leg touches x.
     touching: BTreeSet<String>,
+    /// What every leg the cut books, at any place, can add to a balance.
+    size: Size,
+}
+
+/// What the legs of a cut, at every place, can add to a balance, for L §7.1's cap: a sum of a
+/// start `s` and some of them is `s + w·minor + r`, with `|w|` at most `whole` and `r` a sum of
+/// the legs no whole number of minor units, so its bits are at most `s`'s, plus `whole`'s and
+/// the widest minor unit's, plus each other leg's and one for each sum, plus 2.
+struct Size {
+    /// Each leg's whole number of its unit's minor units (1 for a unit with none), summed;
+    /// none past a `u128`.
+    whole: Option<u128>,
+    /// The widest of those minor units, in bits.
+    minor: u64,
+    /// The other legs' bits, each with one more for its sum; none past a `u64`.
+    rest: Option<u64>,
+}
+
+impl Size {
+    /// No leg yet. L §7.1.
+    fn new() -> Size {
+        Size {
+            whole: Some(0),
+            minor: 0,
+            rest: Some(0),
+        }
+    }
+
+    /// One leg's quantity `q`, in a unit whose minor unit is `minor` (a currency's) or 1. L §7.1,
+    /// §7.2.
+    fn add(&mut self, q: &Num, minor: Option<&Num>) {
+        let one = Num::int(1);
+        let minor = match minor {
+            Some(unit) => unit,
+            None => &one,
+        };
+        // a leg too wide to divide is no whole number of minor units: it counts with the rest
+        if let Ok(Some(n)) = q.checked_div(minor).map(|units| units.to_i64()) {
+            let n = u128::from(n.unsigned_abs());
+            self.whole = self.whole.and_then(|w| w.checked_add(n));
+            self.minor = self.minor.max(minor.bits());
+        } else {
+            let wide = q.bits().checked_add(1);
+            self.rest = self.rest.zip(wide).and_then(|(r, b)| r.checked_add(b));
+        }
+    }
+
+    /// The most bits these legs add to a start's, as the struct says; none where no bound
+    /// holds. L §7.1.
+    fn bits(&self) -> Option<u64> {
+        let whole = u64::from(u128::BITS.checked_sub(self.whole?.leading_zeros())?);
+        whole
+            .checked_add(self.minor)?
+            .checked_add(self.rest?)?
+            .checked_add(2)
+    }
 }
 
 impl Engine {
@@ -554,12 +617,6 @@ impl Engine {
         if world != self.timeline_world() {
             return Ok(None);
         }
-        // the projection's own walk, failed on a day the read reaches, refuses it (P54)
-        if let Some(id) = self.proj_walks.get(&(base, point, c, left_out.clone()))
-            && fails_by(&self.walk(*id)?.progress, last)
-        {
-            return Ok(None);
-        }
         let key = (place.to_owned(), unit.to_owned(), left_out.clone());
         self.tree_at(m, (place, unit), (c, world), &key)?;
         let tree = self
@@ -568,6 +625,15 @@ impl Engine {
             .get(&key)
             .ok_or_else(|| invariant("a tree just built"))?;
         if !tree.common(t, counts, last) {
+            return Ok(None);
+        }
+        // the projection's own walk refuses a read once a number passes the cap at any place
+        // (M1 G9's B1, F6's review B1 and B2): the tree serves only where none can, by bits
+        // alone, so no walk need be walked, or kept, to know it
+        let Some(adds) = tree.adds else {
+            return Ok(None);
+        };
+        if !under_cap(self.start_bits(m, (base, point))?, adds) {
             return Ok(None);
         }
         let Some(start) = self
@@ -589,6 +655,29 @@ impl Engine {
         self.chain_register(m, (base, point), (place, unit), &mut met)?;
         self.absorb(&met);
         qty_value(m, &low, unit).map(Some)
+    }
+
+    /// The widest balance, in bits, that a projection's walk continued from `base` at `point`
+    /// starts from at any place: each place's state there, and those of the walks it continues
+    /// (a hole's known part too, which the walk still sums). E §4.3 step 1, L §7.1.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a walk the engine lacks.
+    fn start_bits(&self, m: &Reality, (base, point): (usize, At)) -> Result<u64, Stop> {
+        let from = self.walk(base)?;
+        let mut head = 0;
+        for (place, unit) in from.logs.keys() {
+            if let (St { val: Some(v), .. }, _) = from.state(m, place, unit, point) {
+                head = head.max(v.bits());
+            }
+        }
+        for level in from.proj.iter().flat_map(|p| p.levels.iter()) {
+            for v in level.values().filter_map(|st| st.val.as_ref()) {
+                head = head.max(v.bits());
+            }
+        }
+        Ok(head)
     }
 
     /// The tree of `key` at cut `cut`, gathered from the cut's instances unless it is already,
@@ -636,13 +725,20 @@ impl Engine {
         (cut, world): (Day, World),
         left_out: &BTreeSet<String>,
     ) -> Result<(Tree, Vec<Num>), Stop> {
-        // the projection's walk reads its cut's first readings before its plan pass
-        crate::book::first_readings(m, (cut, world))?;
+        // the projection's walk reads its cut's first readings before its plan pass, and books
+        // none (a projection's plan pass schedules no reading, E §4.3 counts movements only);
+        // the tree needs no anchor, only that read's effects, so its value goes unused: its
+        // refusals come first, as the walk's do, and under `windows each` it meets the
+        // readings' known windows the walk meets, so the line splits as the walk's would
+        // (L §4.4, §4.5)
+        let after = self.after_days(m, cut)?;
+        self.first_readings(m, (cut, world), &after)?;
         let mut got = Gathered {
             tree: Tree::new(cut),
             legs: Vec::new(),
             outside: BTreeMap::new(),
             touching: BTreeSet::new(),
+            size: Size::new(),
         };
         for mv in m.moves_in(world) {
             let insts = self.move_instances(m, mv, cut)?;
@@ -675,6 +771,13 @@ impl Gathered {
         inst: &Inst,
     ) -> Result<(), Stop> {
         let day = inst.day.as_ref().and_then(Dated::day);
+        // every leg with a number, at any place and whatever the walk does with it, for the cap
+        for lg in &inst.legs {
+            if let Amount::Qty(q) = &lg.amount {
+                let minor = lg.unit.as_deref().and_then(|u| m.currencies.get(u));
+                self.size.add(q, minor);
+            }
+        }
         match inst.status {
             Status::LeftOut => self.outside_run(inst, place)?,
             Status::Modelled if inst.obs.is_empty() => self.marks(inst, place),
@@ -698,7 +801,7 @@ impl Gathered {
     /// it carried at x from its day, where a leg gives x, a position that moves nothing
     /// (refcore's `note_none`). L §8.2 One read set (tally 2.1.7 R7).
     fn decided(&mut self, inst: &Inst, (place, unit): (&str, &str), places: &[(String, String)]) {
-        let Some(d) = inst.day.as_ref().and_then(Dated::day) else {
+        let Some(d) = inst.day.as_ref().and_then(Dated::lo) else {
             return;
         };
         if places
@@ -777,6 +880,12 @@ impl Gathered {
         }
         let d = match lg.day {
             Dated::Day(d) => d,
+            // a leg dated by a window is imprecise at x until the window's last day (L §4.4):
+            // the sums don't hold that, so every read is the walk's
+            Dated::Window(_) => {
+                self.tree.open = false;
+                return Ok(());
+            }
             Dated::Hole(_) => {
                 if let Some(first) = day {
                     self.tree.later.insert(first);
@@ -819,6 +928,9 @@ impl Gathered {
         seen: (Day, World),
     ) -> Result<(Tree, Vec<Num>), Stop> {
         let mut tree = self.tree;
+        // the cap counts a value's reduced fraction, money's too, never its minor units
+        // (L §7.1): the bound counts values alone
+        tree.adds = self.size.bits();
         if matches!(place_sign(m, place), Some(Sign::Min0 | Sign::Max0)) {
             tree.open = false;
         }
@@ -904,13 +1016,12 @@ fn count_left_out(tree: &mut Tree, mv: &MoveInfo, inst: &Inst) {
     }
 }
 
-/// Whether a projection's walk in `progress` refuses a read through day `last`: it failed on
-/// that day or before it, or in its plan pass or close (pick P54, #127). E §4.3, L §8.4.
-fn fails_by(progress: &Progress, last: Day) -> bool {
-    match progress {
-        Progress::Failed(_, on) => on.is_none_or(|d| d <= last),
-        Progress::Planning | Progress::Walking | Progress::Walked | Progress::Done => false,
-    }
+/// Whether a sum of a start balance of `head` bits and legs that add at most `adds` stays
+/// under the cap, whose parts of at most `CAP_SURE_BITS` bits always do (pick P54, #127).
+/// L §7.1, E §4.3.
+fn under_cap(head: u64, adds: u64) -> bool {
+    head.checked_add(adds)
+        .is_some_and(|bits| bits <= crate::num::CAP_SURE_BITS)
 }
 
 /// Whether a leg has an end at `place`. E §4.2.
@@ -1042,7 +1153,7 @@ version rise
     }
 
     /// Ask `id`'s value, read by an engine reading a projection's common case as `lows` says;
-    /// the projection walks it made and the trees it built.
+    /// the projection walks it made (each freed when its read ended) and the trees it built.
     fn read(m: &Reality, id: &str, lows: Lows) -> (Value, usize, usize) {
         let ask = m.asks.iter().find(|a| a.id == id).expect("the ask");
         let AskBody::Exprs(exprs) = &ask.body else {
@@ -1050,13 +1161,22 @@ version rise
         };
         let expr = exprs.first().expect("a value");
         let mut engine = Engine::new(m.on)
-            .with_how((Memo::Classes, lows))
+            .with_how((Memo::Classes, lows, crate::walk::Forks::Off))
             .for_ask(ask);
         let mut ctx = Ctx::new(None, m.on).in_world(m.scenarios.model_world());
         ctx.unc = ask.uncertain;
         engine.enter_timeline(m, ctx).expect("its timeline");
         let v = engine.value(m, expr, &Env::empty(), ctx).expect("a value");
-        (v, engine.proj_walks.len(), engine.trees.built.len())
+        let made = engine
+            .walks
+            .len()
+            .checked_sub(engine.main_walks.len())
+            .expect("the main walks among the walks");
+        assert!(
+            engine.proj_walks.is_empty(),
+            "{id}: no walk kept past its read"
+        );
+        (v, made, engine.trees.built.len())
     }
 
     #[test]
@@ -1081,7 +1201,7 @@ version rise
         let first = ids.first().expect("an ask");
         let holder = m.asks.iter().find(|a| a.id == *first).expect("the ask");
         let mut engine = Engine::new(m.on)
-            .with_how((Memo::Classes, lows))
+            .with_how((Memo::Classes, lows, crate::walk::Forks::Off))
             .for_ask(holder);
         let ctx = Ctx::new(None, m.on).in_world(m.scenarios.model_world());
         engine.enter_timeline(m, ctx).expect("its timeline");

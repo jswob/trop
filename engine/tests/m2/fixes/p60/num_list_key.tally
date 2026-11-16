@@ -1,0 +1,27 @@
+model pw
+  tally 2
+  on 2026-04-25
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 P60 (G6's census of run-time stops): walk/tuples.rs:403, a move keyed by a list of numbers not integers"
+
+source s "s"
+unit PLN: currency minor 0.01
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input dm: date
+
+move ml[x in [1.5, 2]]: transfers
+  on dm
+  leg cash from world to sav amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "s"
+  dm = 2026-03-31 "s"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
+
+ask q: bal(sav, 2026-06-30)

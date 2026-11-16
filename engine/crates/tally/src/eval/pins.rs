@@ -136,8 +136,9 @@ impl Engine {
 
     /// The context of an ask's line of context `line` outside the ask's `with` pins:
     /// `unpinned`, the line's context before them, with the options of the axes the line fans
-    /// out over, those in `fixed`, which the pins fix, left out (refcore's `explain_pins`, its
-    /// `octx`). E §10, L §5.5.
+    /// out over, those in `fixed`, which the pins fix, left out, and the day choice of the
+    /// `windows each` run the line is in, which sets the world it is read in and which the
+    /// pins don't undo (refcore's `explain_pins`, its `octx`). E §10, L §5.5, §4.4.
     ///
     /// # Errors
     ///
@@ -147,13 +148,20 @@ impl Engine {
         (unpinned, line): (Ctx, Ctx),
         fixed: &BTreeSet<String>,
     ) -> Result<Ctx, Stop> {
-        let axes = &self.layer_data(line.layer)?.axes;
-        let options: Vec<(String, String)> = axes
+        let in_line = self.layer_data(line.layer)?;
+        let options: Vec<(String, String)> = in_line
+            .axes
             .iter()
             .filter(|(axis, _)| !fixed.contains(*axis))
             .map(|(axis, option)| (axis.clone(), option.clone()))
             .collect();
-        self.with_options(unpinned, &options)
+        let (windows, read_windows) = (in_line.windows.clone(), in_line.read_windows.clone());
+        let outside = self.with_options(unpinned, &options)?;
+        let mut kept = self.layer_data(outside.layer)?.clone();
+        kept.windows = windows;
+        kept.read_windows = read_windows;
+        let layer = self.intern(kept)?;
+        Ok(Ctx { layer, ..outside })
     }
 
     /// What the pins of `inside` change from `outside`, each as text: the value pins with
@@ -384,22 +392,27 @@ impl Engine {
             _ => return Err(invariant("a pin load didn't check")),
         };
         let keyed = |key: &Key| matches!(key, Key::Expr(e) if env.read_by(e));
-        let per_tuple = if env.read_by(written) || target.keys.iter().flatten().any(keyed) {
-            // L §8.2: a pin formed per binding tuple prints once, as written, with its
-            // binding (refcore's `_pertuple`): the value's, then each key's
-            let mut parts = vec![written];
-            for key in target.keys.iter().flatten() {
-                if let Key::Expr(e) = key {
-                    parts.push(e);
+        // an ask's pin in its own binding tuple's scope is that tuple's line's own pin, its
+        // keys as they read (L §5.11 A pin's keys, §5.18): only a pin inside one line prints
+        // once with its binding
+        let inside_line = how != Pinning::Ask;
+        let per_tuple =
+            if inside_line && (env.read_by(written) || target.keys.iter().flatten().any(keyed)) {
+                // L §8.2: a pin formed per binding tuple prints once, as written, with its
+                // binding (refcore's `_pertuple`): the value's, then each key's
+                let mut parts = vec![written];
+                for key in target.keys.iter().flatten() {
+                    if let Key::Expr(e) = key {
+                        parts.push(e);
+                    }
                 }
-            }
-            let named = env.binds_named(&parts).ok_or(Stop::NotBuilt(
+                let named = env.binds_named(&parts).ok_or(Stop::NotBuilt(
                 "a pin per binding tuple naming two bindings in one part, or through an aggregate",
             ))?;
-            (!named.is_empty()).then(|| format!("{pin} for {}", named.join(", ")))
-        } else {
-            None
-        };
+                (!named.is_empty()).then(|| format!("{pin} for {}", named.join(", ")))
+            } else {
+                None
+            };
         let mut keys = Vec::with_capacity(binds.len());
         let mut texts = Vec::with_capacity(binds.len());
         let all_written = match target.keys.as_deref() {

@@ -12,10 +12,11 @@
 
 use std::collections::BTreeSet;
 
-use super::arith::{step_count, whole_of};
+use super::arith::whole_of;
 use super::expr::hole_of;
 use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load};
 use super::state::{a_day, not_typed, past_days};
+use super::time_arith::step_count;
 use super::windows::{End, as_window, imprecise, interval, single, window_end};
 use super::years::as_year;
 use crate::base::{Load, Run};

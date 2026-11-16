@@ -1,0 +1,71 @@
+model g
+  tally 2
+  on 2026-06-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "an invented card"
+
+unit PLN: currency minor 0.01
+
+kind wages: event certain
+  leg cash: PLN
+
+index qs = [q1, q2]
+
+index tiers = [t1, t2, t3]
+
+input amt: money PLN
+
+input pay_day: date
+
+input rate[k in qs]: num
+
+input fee[k in qs, j in tiers]: num
+
+input price: num PLN reading
+
+input bank: observed
+
+band scale(x: int): num
+
+band dated(d: date): num
+
+band tier(x: money PLN): num
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: wages
+  on pay_day
+  leg cash from world to konto amount amt
+
+ask q: amt + amt law 2026-05-01
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  pay_day = 2026-02-10 "the card"
+  rate[q1] = 1 "the card"
+  rate[q2] = 2 "the card"
+  fee[q1, t1] = 1 "the card"
+  price = 10 PLN at 2026-01-05 "the card"
+  scale: [0, 10] = 1 "the card"
+  scale: [11, 20) = 2 "the card"
+  scale: [20, inf) = 3 "the card"
+  dated: [2026-01-01, 2026-07-01) = 1 "the card"
+  dated: [2026-07-01, inf) = 2 "the card"
+  tier: [0, 100) = 1 "the card"
+  tier: [100, inf) = 2 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+
+version bank_a
+  cite card
+  governs 2026-02
+  known 2026-03-01
+  covers konto
+  anchor konto
+  bank[r1] = (on: 2026-02-10, kind: wages, leg cash from world to konto amount 100.00 PLN, fulfils: pay) "the statement"

@@ -1,0 +1,55 @@
+model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+  note "T, M2 gate 8 run 43690242450 on d512fe7b: same rows differing on one leg's amount or on the day, a field read of each (book/members.rs mv_field)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input d15: int
+input d10: int
+input amt: money PLN
+kind wages: transfers
+kind shop: transfers
+kind twos: event certain
+  leg cash: PLN
+  leg fee: PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1000.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+  d15 = 15 "s"
+  d10 = 10 "s"
+  amt = 500.00 PLN "s"
+
+ask t_day: count(t in transfers over 2026-03 where t.day == 2026-03-12)
+ask t_d10: count(t in transfers over 2026-03 where t.day == 2026-03-10)
+ask t_cash: sum(t.cash.amount for t in twos over 2026-03)
+ask t_fee: sum(t.fee.amount for t in twos over 2026-03)
+ask b_k: bal(konto, 2026-03-31)
+
+version st1
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[a1] = (on: 2026-03-10, kind: twos, leg cash from konto to world amount 100.00 PLN, leg fee from konto to world amount 1.00 PLN) "a1"
+
+version st2
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers sav
+  bank[b1] = (on: 2026-03-10, kind: twos, leg cash from konto to world amount 100.00 PLN, leg fee from konto to world amount 2.00 PLN) "b1"
+  bank[c1] = (on: 2026-03-12, kind: transfers, leg cash from konto to world amount 50.00 PLN) "c1"
+  bank[d1] = (on: 2026-03-10, kind: transfers, leg cash from konto to world amount 50.00 PLN) "d1"
+  same bank[a1] = bank[b1]
+  same bank[d1] = bank[c1]

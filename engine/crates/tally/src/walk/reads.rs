@@ -44,6 +44,24 @@ impl Engine {
     /// `LOAD-READS` for `bal(x)` outside a decision; `LOAD-UNIT` for a unit a place doesn't
     /// hold; the refusals of the walk; `NotBuilt` for what S doesn't build.
     pub(crate) fn bal(&mut self, m: &Reality, b: &Bal, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
+        // a projection's own `windows each` holds for that read: the line's run's choice
+        // (L §4.4)
+        let inside = if b.proj.windows_each {
+            self.read_windows(ctx)?
+        } else {
+            None
+        };
+        let Some(inside) = inside else {
+            return self.bal_read(m, b, env, ctx);
+        };
+        self.open_layer(m, inside)?;
+        let v = self.bal_read(m, b, env, inside);
+        self.end_layer(inside.layer, v.as_ref().err())?;
+        v
+    }
+
+    /// [`Engine::bal`] in context `ctx`, a projection's own clause taken. L §5.10, §5.14.1.
+    fn bal_read(&mut self, m: &Reality, b: &Bal, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
         let place = match self.place_arg(m, &b.place, env, ctx)? {
             Err(h) => return Ok(Value::Hole(h)),
             Ok(p) => p,
@@ -55,12 +73,6 @@ impl Engine {
         if b.of.is_some() {
             return Err(Stop::NotBuilt("bal of a party or a batch (M5a)"));
         }
-        if b.modelled {
-            return Err(Stop::NotBuilt("a modelled balance (the ledger)"));
-        }
-        if b.proj.windows_each {
-            return Err(Stop::NotBuilt("`windows each` on a balance read"));
-        }
         let Some(day_arg) = b.args.last() else {
             let Some(at) = ctx.at else {
                 return Err(Stop::Refused(Refusal::new(
@@ -70,7 +82,9 @@ impl Engine {
             };
             self.note_read(at.walk, &place, Sees::AtPoint)?;
             let v = self.read_state(m, at.walk, &place, &unit, at.point)?;
-            return self.less_own_obs(m, at.walk, (&place, &unit), at.point, v);
+            let v = self.less_own_obs(m, at.walk, (&place, &unit), at.point, v)?;
+            self.trace_running(m, &place, &v, at.point.day)?;
+            return Ok(v);
         };
         let d = self.ev(m, day_arg, env, ctx)?;
         if let Value::Hole(_) = d {
@@ -90,6 +104,16 @@ impl Engine {
             Err(imprecise) => return Ok(Value::Hole(imprecise)),
         };
         let outside = outside_run(m, d, &place).map(Value::Hole);
+        if b.modelled {
+            if ctx.at.is_none() && self.tracing() {
+                return Err(Stop::NotBuilt("explain of a modelled balance"));
+            }
+            // before S or after E it is the run's hole, as every balance (E §6.2, §2)
+            return match outside {
+                Some(hole) => Ok(hole),
+                None => self.bal_modelled(m, (&place, &unit), d, ctx.cut),
+            };
+        }
         if b.proj.from.is_some() {
             return match outside {
                 Some(hole) => Ok(hole),
@@ -108,7 +132,9 @@ impl Engine {
                 }
             }),
         };
-        if ctx.at.is_none() && self.tracing() {
+        // traced wherever a read is: a walk reads apart, so inside a decision only a walk-bound
+        // def's cell read again at its point traces it (E §10)
+        if self.tracing() {
             self.trace_bal(m, walked, (place, unit, ctx.cut), (d, b), &got)?;
         }
         got
@@ -266,7 +292,43 @@ impl Engine {
             return self.less_own_obs(m, at.walk, (place, unit), key, v);
         }
         let id = self.main_walk(m, ctx.cut)?;
-        self.read_state(m, id, place, unit, key)
+        let v = self.read_state(m, id, place, unit, key)?;
+        if ctx.partial
+            && let Value::Hole(h) = v
+        {
+            return self.partial_bal(m, id, (place, unit), key, h);
+        }
+        Ok(v)
+    }
+
+    /// A balance read by a `partial` line: "its opening plus what is booked since" (L §5.19,
+    /// §5.10), a sum, so the line prints its known part and each hole leg's amount, read again
+    /// as the line reads it and signed by its direction at the place (L §5.18); a hole of any
+    /// other making stays the plain hole (refcore's `m_partial_bal`).
+    fn partial_bal(
+        &mut self,
+        m: &Reality,
+        id: usize,
+        (place, unit): (&str, &str),
+        key: At,
+        v: Hole,
+    ) -> Result<Value, Stop> {
+        let Some(read) = self.walk(id)?.partial_legs(m, place, unit, key)? else {
+            return Ok(Value::Hole(v));
+        };
+        let mut legs: Vec<(Hole, bool)> = Vec::with_capacity(read.legs.len());
+        for (into, src) in &read.legs {
+            let Value::Hole(h) = self.ev(m, &src.amount, &src.env, src.ctx.partial())? else {
+                return Ok(Value::Hole(v));
+            };
+            legs.push((h, *into));
+        }
+        if !read.all_met {
+            return Ok(Value::Hole(v));
+        }
+        let known = qty_value(m, &read.known, unit)?;
+        let legs: Vec<(&Hole, bool)> = legs.iter().map(|(h, into)| (h, *into)).collect();
+        crate::eval::lin_balance(m, (&v, known), &legs)
     }
 
     /// A running read of a modelled decision, against the booked balance less its own
@@ -687,7 +749,7 @@ impl Uncertain {
                 let dated = leg
                     .day
                     .day()
-                    .or_else(|| movement.day.as_ref().and_then(Dated::day));
+                    .or_else(|| movement.day.as_ref().and_then(Dated::lo));
                 if counted(dated, window) {
                     self.leg(place, movement, leg)?;
                 }
@@ -739,7 +801,7 @@ pub(crate) fn state_value(m: &Reality, st: &St, unit: &str, anchor: &Hole) -> Re
         return Err(Stop::Refused(r.clone()));
     }
     let missing = st.val.is_none().then_some(anchor);
-    if let Some(h) = spread(&[st.hole.as_ref(), st.perm.as_ref(), missing]) {
+    if let Some(h) = st.questions(missing) {
         return Ok(Value::Hole(h));
     }
     let v = st

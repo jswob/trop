@@ -84,13 +84,58 @@ pub(crate) struct Balance {
 pub(crate) struct RuleLine {
     /// Its label.
     pub label: String,
-    /// Its state: `won (version v, source s)`, `beaten by a, b`, `not applicable`,
-    /// `unknown`, `candidate`; empty while it has none, and then it doesn't print.
-    pub state: String,
+    /// Its state; none while it has none, and then it doesn't print.
+    pub state: Option<RuleState>,
     /// The group its `when` read, if it has one and it was read.
     pub when: Option<usize>,
     /// The group the winner's value read.
     pub value: Option<usize>,
+}
+
+impl RuleLine {
+    /// The rule with its state, where it has one: a rule that prints (L §5.18).
+    pub(crate) fn stated(&self) -> Option<(&RuleLine, &RuleState)> {
+        Some((self, self.state.as_ref()?))
+    }
+}
+
+/// The state of a rule of a traced def cell (L §5.18 Explanation order: won; beaten, by
+/// whom; not applicable; unknown, when its `when` is a hole; refcore's `rule_states`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum RuleState {
+    /// It won: `won`, with the version that states it and its source where it cites one,
+    /// `won (version v, source s)`.
+    Won(Option<(String, String)>),
+    /// It applies and rules that beat it do, by their labels in their text's order:
+    /// `beaten by a, b`.
+    Beaten(Vec<String>),
+    /// Its `when` is false: `not applicable`.
+    NotApplicable,
+    /// Its `when` is a hole: `unknown`.
+    Unknown,
+    /// It was the first candidate when a hole decided the value: `candidate`.
+    Candidate,
+}
+
+impl RuleState {
+    /// The state as `explain` prints it after the rule's label. L §5.18.
+    pub(crate) fn text(&self) -> String {
+        match self {
+            RuleState::Won(None) => "won".to_owned(),
+            RuleState::Won(Some((version, cite))) => {
+                format!("won (version {version}, source {cite})")
+            }
+            RuleState::Beaten(by) => format!("beaten by {}", by.join(", ")),
+            RuleState::NotApplicable => "not applicable".to_owned(),
+            RuleState::Unknown => "unknown".to_owned(),
+            RuleState::Candidate => "candidate".to_owned(),
+        }
+    }
+
+    /// Whether the rule won, so its value's causes print under it. L §5.18.
+    pub(crate) fn won(&self) -> bool {
+        matches!(self, RuleState::Won(_))
+    }
 }
 
 /// A node of a trace (refcore's `TraceNode`).
@@ -150,6 +195,10 @@ pub(crate) struct Trace {
     open: Vec<usize>,
     /// Each def cell traced, by its node.
     cells: BTreeMap<CellId, usize>,
+    /// Each def cell traced by a term an extreme's explanation dropped, by its node, kept so
+    /// a later read takes the node back rather than trace the cell's cone again: each cell
+    /// is traced once per explain (E §3.2, §10; P7).
+    dropped: BTreeMap<CellId, usize>,
     /// The ask's memo, back once the trace ends.
     saved: Cells,
     /// Whether a traced read reached the walk or a structure it shares: its causes are a
@@ -168,6 +217,10 @@ pub(crate) enum Seen {
     Unmet,
     /// The trace met the cell, at this node: the memo gives it, referenced by its node.
     Met(usize),
+    /// The trace met the cell at this node under a term an extreme's explanation dropped:
+    /// the memo gives it, and its node is taken back where it is read now, printed in full
+    /// where it is first reached, as the cell traced again would be (E §10).
+    Dropped(usize),
 }
 
 /// Where a trace stood before a `min`, `max`, `argmin` or `argmax` read its terms: the node
@@ -253,7 +306,7 @@ impl Trace {
         let rules = &mut self.node_mut(at)?.rules;
         Ok(rules.entry(label.to_owned()).or_insert_with(|| RuleLine {
             label: label.to_owned(),
-            state: String::new(),
+            state: None,
             when: None,
             value: None,
         }))
@@ -261,25 +314,54 @@ impl Trace {
 
     /// The trace of an ask's line explained under its `with` pins, this trace read inside
     /// them: under the root, the pins with their values, then this derivation with the value
-    /// inside them, then `outside`'s, read outside them, with its value (refcore's
-    /// `explain_pins`). E §10.
+    /// inside them, then each of `outside`'s, read outside them, with its options' tag and its
+    /// value (refcore's `explain_pins`, `outside_of`). E §10, L §5.5.
     ///
     /// # Errors
     ///
     /// `ENGINE-INVARIANT` for a trace past the nodes it can number.
     pub(crate) fn beside_pins(
         mut self,
-        outside: Trace,
+        outside: Vec<(String, Trace, Item)>,
         pins: Vec<String>,
-        (inside_value, outside_value): (Item, Item),
+        inside_value: Item,
     ) -> Result<Trace, Stop> {
+        let mut outer = Vec::with_capacity(outside.len());
+        for (tag, trace, value) in outside {
+            let top = self.taken_in(trace)?;
+            let mut side = Node::new(Kind::Side, format!("outside the pins{tag}"));
+            side.value = Some(value);
+            side.children = top;
+            outer.push(side);
+        }
+        let inside_top = core::mem::take(&mut self.node_mut(ROOT)?.children);
+        let mut group = Node::new(Kind::Group, "the pins, evaluated outside them".to_owned());
+        for line in pins {
+            let pin = Node::new(Kind::Group, format!("pin {line}"));
+            group.children.push(self.add_apart(pin));
+        }
+        let mut inside = Node::new(Kind::Side, "inside the pins".to_owned());
+        inside.value = Some(inside_value);
+        inside.children = inside_top;
+        let mut top = vec![self.add_apart(group), self.add_apart(inside)];
+        for side in outer {
+            top.push(self.add_apart(side));
+        }
+        self.node_mut(ROOT)?.children = top;
+        Ok(self)
+    }
+
+    /// Trace `other`'s nodes taken into this one, each renumbered past this one's: the
+    /// places of the causes its root read.
+    fn taken_in(&mut self, other: Trace) -> Result<Vec<usize>, Stop> {
         let offset = self.nodes.len();
-        let read_outside = &outside.node(ROOT)?.children;
-        let outside_top: Vec<usize> = read_outside
+        let top: Vec<usize> = other
+            .node(ROOT)?
+            .children
             .iter()
             .map(|c| shifted(*c, offset))
             .collect::<Result<_, Stop>>()?;
-        for mut node in outside.nodes {
+        for mut node in other.nodes {
             node.children = node
                 .children
                 .iter()
@@ -291,25 +373,7 @@ impl Trace {
             }
             self.nodes.push(node);
         }
-        let inside_top = core::mem::take(&mut self.node_mut(ROOT)?.children);
-        let mut group = Node::new(Kind::Group, "the pins, evaluated outside them".to_owned());
-        for line in pins {
-            let pin = Node::new(Kind::Group, format!("pin {line}"));
-            group.children.push(self.add_apart(pin));
-        }
-        let mut inside = Node::new(Kind::Side, "inside the pins".to_owned());
-        inside.value = Some(inside_value);
-        inside.children = inside_top;
-        let mut outer = Node::new(Kind::Side, "outside the pins".to_owned());
-        outer.value = Some(outside_value);
-        outer.children = outside_top;
-        let top = vec![
-            self.add_apart(group),
-            self.add_apart(inside),
-            self.add_apart(outer),
-        ];
-        self.node_mut(ROOT)?.children = top;
-        Ok(self)
+        Ok(top)
     }
 }
 
@@ -348,6 +412,7 @@ impl Engine {
             ],
             open: vec![ROOT],
             cells: BTreeMap::new(),
+            dropped: BTreeMap::new(),
             saved,
             walked: false,
             stop: None,
@@ -385,6 +450,33 @@ impl Engine {
         if let Some(trace) = self.traced() {
             trace.walked = true;
         }
+    }
+
+    /// Gives the trace's note of a walk read back as it stood at `back`: the reads since were
+    /// a structure the explanation prints in its own form, a move's instances traced or an
+    /// observation pass that met no member (E §10).
+    pub(crate) fn trace_walked_back(&mut self, back: Walked) {
+        if let Some(trace) = self.trace.as_mut() {
+            trace.walked = back.0;
+        }
+    }
+
+    /// Opens a shared structure computed while a read is traced, a move's instances: a read
+    /// set of its own, as [`Engine::reads_apart`] opens, so its reads are never the reading
+    /// cell's, but traced, so the rows and cells it reads print as causes of the read (E §3.2,
+    /// §10).
+    pub(crate) fn trace_plan_open(&mut self) {
+        self.open_reads();
+    }
+
+    /// Closes [`Engine::trace_plan_open`]; returns the trace's note of a walk read then.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a read set closed out of order.
+    pub(crate) fn trace_plan_close(&mut self) -> Result<Walked, Stop> {
+        self.close_reads()?;
+        Ok(self.trace_walked())
     }
 
     /// Whether the trace has noted a read of the walk, false with none: what a balance read
@@ -441,14 +533,16 @@ impl Engine {
     }
 
     /// Whether a read now is traced and the trace has met def cell `key` at law date `law`,
-    /// with its node.
+    /// with its node, or met it under a term an extreme's explanation dropped.
     pub(super) fn trace_seen(&self, key: &CellKey, law: Option<Day>) -> Seen {
         let Some(trace) = self.trace.as_ref().filter(|_| self.tracing()) else {
             return Seen::Untraced;
         };
-        match trace.cells.get(&CellId::new(key.clone(), law)) {
-            Some(at) => Seen::Met(*at),
-            None => Seen::Unmet,
+        let id = CellId::new(key.clone(), law);
+        match (trace.cells.get(&id), trace.dropped.get(&id)) {
+            (Some(at), _) => Seen::Met(*at),
+            (None, Some(at)) => Seen::Dropped(*at),
+            (None, None) => Seen::Unmet,
         }
     }
 
@@ -456,6 +550,19 @@ impl Engine {
     /// "a cause met again is referenced by its line").
     pub(super) fn trace_again(&mut self, at: usize) {
         if let Some(trace) = self.trace.as_mut() {
+            let done = trace.reference(at);
+            trace.keep(done);
+        }
+    }
+
+    /// Takes back the node at `at` of def cell `id`, met under a term an extreme's
+    /// explanation dropped: met again from now on, and referenced from the innermost open
+    /// node, where it prints in full if nothing printed it before, as the cell traced again
+    /// would (E §10, §3.2: one evaluation per cell; P7).
+    pub(super) fn trace_taken_back(&mut self, id: CellId, at: usize) {
+        if let Some(trace) = self.trace.as_mut() {
+            trace.dropped.remove(&id);
+            trace.cells.insert(id, at);
             let done = trace.reference(at);
             trace.keep(done);
         }
@@ -508,6 +615,32 @@ impl Engine {
         if let Some(trace) = self.traced() {
             trace.added(Node::new(Kind::Group, label));
         }
+    }
+
+    /// Adds a running read of `place`, `value`, under the open node: a walk-bound def's cell
+    /// read again at its walk point prints "its running reads as balances up to that point"
+    /// of `day` (E §10; refcore's `e_bal`, its `now` form).
+    ///
+    /// # Errors
+    ///
+    /// A number error printing the value.
+    pub(crate) fn trace_running(
+        &mut self,
+        m: &Reality,
+        place: &str,
+        value: &Value,
+        day: Day,
+    ) -> Result<(), Stop> {
+        if self.traced().is_none() {
+            return Ok(());
+        }
+        let label = format!(
+            "running read bal({place}) = {}, the balance up to this point of {}",
+            super::read::shown(m, value)?,
+            day.text()
+        );
+        self.trace_leaf(label);
+        Ok(())
     }
 
     /// Closes the node at `at`, opened last.
@@ -571,12 +704,12 @@ impl Engine {
     }
 
     /// Sets the state of the rule labelled `label` of the def cell's node `node`.
-    pub(super) fn trace_state(&mut self, node: Option<usize>, label: &str, state: String) {
+    pub(super) fn trace_state(&mut self, node: Option<usize>, label: &str, state: RuleState) {
         let Some((trace, at)) = self.traced_node(node) else {
             return;
         };
         match trace.rule_mut(at, label) {
-            Ok(rule) => rule.state = state,
+            Ok(rule) => rule.state = Some(state),
             Err(stop) => trace.keep(Err(stop)),
         }
     }
@@ -631,6 +764,62 @@ impl Engine {
         }
     }
 
+    /// Adds the node of observation `id` of observed input `input` under the open node, a
+    /// read of its leg giving `leg`: `row <version>:<id>` with its version, source, locator,
+    /// day and known date, as a row prints (E §10: every row read, "the traced value equals
+    /// the stored one"; refcore omits it, #169).
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for an observation or a version load didn't build.
+    pub(crate) fn trace_observation(
+        &mut self,
+        m: &Reality,
+        (input, id): (&str, &str),
+        leg: &Value,
+    ) -> Result<(), Stop> {
+        if self.traced().is_none() {
+            return Ok(());
+        }
+        let built = m
+            .inputs
+            .get(input)
+            .ok_or_else(|| invariant("an observation's input load didn't build"))?;
+        let o = built
+            .observations
+            .iter()
+            .find(|o| o.sid() == id)
+            .ok_or_else(|| invariant("an observation load didn't build"))?;
+        let version = m
+            .versions
+            .get(&o.version)
+            .ok_or_else(|| invariant("an observation of a version load didn't build"))?;
+        let mut bits = vec![
+            format!("version {}", o.version),
+            format!("source {}", version.cite),
+        ];
+        if let Some(source) = m.sources.get(&version.cite) {
+            bits.push(format!("\"{}\"", source.title));
+        }
+        if let Some(locator) = &o.locator {
+            bits.push(format!("locator \"{locator}\""));
+        }
+        if let Some(day) = o.day {
+            bits.push(format!("on {}", day.text()));
+        }
+        bits.push(format!(
+            "known {}",
+            o.own_known.unwrap_or(version.known).text()
+        ));
+        let mut node = Node::new(Kind::Row, format!("{}:{id}", o.version));
+        node.lines.push(bits.join(", "));
+        node.value = Some(Item::Value(leg.clone()));
+        if let Some(trace) = self.traced() {
+            trace.added(node);
+        }
+        Ok(())
+    }
+
     /// Adds the node of a band row under the open node: `<figure>: row <interval> (version
     /// v[, "locator"])` (refcore's `band_value`, its node). E §10.
     pub(super) fn trace_band_row(
@@ -663,8 +852,9 @@ impl Engine {
     }
 
     /// Drops what the terms traced since `snap`, so the first winning term can be traced
-    /// again alone; the cells they traced are traced anew where met again (refcore's
-    /// `trace_winner`, its drop). L §5.18, E §10.
+    /// again alone; the cells they traced are set aside, each node taken back where its cell
+    /// is met again, never traced a second time (refcore's `trace_winner`, its drop, which
+    /// traces them anew). L §5.18, E §10, §3.2; P7.
     fn trace_drop(&mut self, snap: Snap) {
         let Some(trace) = self.trace.as_mut() else {
             return;
@@ -673,7 +863,11 @@ impl Engine {
             Ok(node) => node.children.truncate(snap.children),
             Err(stop) => trace.keep(Err(stop)),
         }
-        trace.cells.retain(|_, at| *at < snap.nodes);
+        let (kept, dropped) = core::mem::take(&mut trace.cells)
+            .into_iter()
+            .partition(|(_, at)| *at < snap.nodes);
+        trace.cells = kept;
+        trace.dropped.extend::<BTreeMap<CellId, usize>>(dropped);
     }
 
     /// Explains a `min`, `max`, `argmin` or `argmax` whose result is `result` by its first
@@ -776,8 +970,9 @@ fn provenance(m: &Reality, row: &Row, ask_cut: Day) -> Result<String, Stop> {
             };
             bits.push(format!("at {}{edge}", day.text()));
         }
-        Some(RowInstant::After(_)) => {
-            return Err(Stop::NotBuilt("explain of a reading after a movement"));
+        // L §4.6's instant: refcore prints its node's object here, no stored vector's text
+        Some(RowInstant::After(node)) => {
+            bits.push(format!("after {}", crate::load::expr_text(node)));
         }
         None => {
             let span = row_span(m, row, ask_cut)?.map_or_else(|| "?".to_owned(), |s| s.text());

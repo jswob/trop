@@ -1,0 +1,29 @@
+part hc_2025_08
+  tally 2
+  note "H1: month 55 (2025-08) of the hindcast's 60, written by gen.py from M*; synthetic."
+
+version st_2025_08
+  cite statements
+  governs 2025-08
+  known 2025-09-02
+  covers konto
+  pad konto from unexplained
+  bank[r20250801a] = (on: 2025-08-01, kind: transfers, leg cash from konto to landlord amount 2900.00 PLN, fulfils: rent[2025-08]) "czynsz"
+  bank[r20250806a] = (on: 2025-08-06, kind: transfers, leg cash from konto to shops amount 1240.00 PLN, fulfils: spend[food, 2025-08]) "food"
+  bank[r20250808a] = (on: 2025-08-08, kind: transfers, leg cash from konto to shops amount 310.00 PLN, fulfils: spend[transport, 2025-08]) "transport"
+  bank[r20250810a] = (on: 2025-08-10, kind: wages, leg cash from employer_a to konto amount 7643.50 PLN, fulfils: pay_a[2025-08]) "wynagrodzenie A"
+  bank[r20250811a] = (on: 2025-08-11, kind: transfers, leg cash from konto to broker amount 1500.00 PLN, fulfils: invest[2025-08]) "przelew do biura maklerskiego"
+  bank[r20250812a] = (on: 2025-08-12, kind: transfers, leg cash from konto to shops amount 455.20 PLN, fulfils: spend[utilities, 2025-08]) "utilities"
+  bank[r20250815a] = (on: 2025-08-15, kind: transfers, leg cash from konto to streaming amount 49.99 PLN, fulfils: sub[2025-08]) "abonament"
+  bank[r20250820a] = (on: 2025-08-20, kind: transfers, leg cash from konto to shops amount 120.00 PLN, fulfils: spend[health, 2025-08]) "health"
+  bank[r20250822a] = (on: 2025-08-22, kind: transfers, leg cash from konto to shops amount 260.00 PLN, fulfils: spend[clothes, 2025-08]) "clothes"
+  bank[r20250825a] = (on: 2025-08-25, kind: wages, leg cash from employer_b to konto amount 5353.00 PLN, fulfils: pay_b[2025-08]) "wynagrodzenie B"
+  bank[r20250826a] = (on: 2025-08-26, kind: transfers, leg cash from konto to shops amount 380.00 PLN, fulfils: spend[leisure, 2025-08]) "leisure"
+  stated[konto] = 317818.36 PLN at 2025-08-31 end "saldo"
+
+version slips_2025_08
+  cite slips
+  governs 2025-08
+  known 2025-08-10
+  slip_a[2025-08] = 9208.50 PLN "pasek A"
+  slip_b[2025-08] = 6450.00 PLN "pasek B"

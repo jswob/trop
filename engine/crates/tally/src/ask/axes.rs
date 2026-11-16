@@ -31,6 +31,7 @@ use crate::time::Day;
 
 /// The axes an ask fans out over, in id order, each with its options' names in the order
 /// written (refcore's `a._axes` and `m.axes[ax].options`). L §5.5.
+#[derive(Debug)]
 pub(super) struct Axes {
     /// Each axis's id and its options.
     axes: Vec<(String, Vec<String>)>,
@@ -38,7 +39,7 @@ pub(super) struct Axes {
 
 /// One combination of the axes' options: each axis's option by its position, the axes in id
 /// order.
-type Combo = Vec<usize>;
+pub(super) type Combo = Vec<usize>;
 
 /// Each axis's options a line names, by their positions, the axes in id order: one product.
 type Product = Vec<BTreeSet<usize>>;
@@ -54,6 +55,16 @@ impl Axes {
         let Some(ids) = m.graph.ask_axes.get(&ask.id) else {
             return Ok(None);
         };
+        Axes::named(m, ids)
+    }
+
+    /// The axes of ids `ids`, in id order, each with its options; none when `ids` is empty.
+    /// L §5.5.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for an axis load didn't build.
+    pub(super) fn named(m: &Reality, ids: &BTreeSet<String>) -> Result<Option<Axes>, Stop> {
         if ids.is_empty() {
             return Ok(None);
         }
@@ -75,13 +86,18 @@ impl Axes {
     /// # Errors
     ///
     /// `ENGINE-INVARIANT` for more combinations than load lets through.
-    fn combinations(&self) -> Result<Vec<Combo>, Stop> {
+    pub(super) fn combinations(&self) -> Result<Vec<Combo>, Stop> {
         let counts: Vec<usize> = self.axes.iter().map(|(_, options)| options.len()).collect();
         combinations(&counts, 64).ok_or_else(|| invariant("more combinations than load's 64"))
     }
 
+    /// The ids of the axes, in id order.
+    pub(super) fn ids(&self) -> BTreeSet<String> {
+        self.axes.iter().map(|(id, _)| id.clone()).collect()
+    }
+
     /// Combination `combo` as each axis's id with its option's name.
-    fn options_of(&self, combo: &[usize]) -> Result<Vec<(String, String)>, Stop> {
+    pub(super) fn options_of(&self, combo: &[usize]) -> Result<Vec<(String, String)>, Stop> {
         let mut out = Vec::with_capacity(combo.len());
         for ((id, options), at) in self.axes.iter().zip(combo) {
             let option = options
@@ -94,7 +110,7 @@ impl Axes {
 
     /// A line's options as its head prints them, `a = *, b = x | y` (refcore's `print_line`).
     /// L §5.5.
-    fn head(&self, product: &[BTreeSet<usize>]) -> Result<String, Stop> {
+    pub(super) fn head(&self, product: &[BTreeSet<usize>]) -> Result<String, Stop> {
         let mut parts = Vec::with_capacity(product.len());
         for ((id, options), named) in self.axes.iter().zip(product) {
             let shown = if named.len() == options.len() {
@@ -109,7 +125,7 @@ impl Axes {
 
     /// A line's `reading:` entries: each axis it doesn't print `*`, with the options it
     /// names, in id order (refcore's `group`, its `reading`). L §5.5, §8.2.
-    fn readings(&self, product: &[BTreeSet<usize>]) -> Result<Vec<String>, Stop> {
+    pub(super) fn readings(&self, product: &[BTreeSet<usize>]) -> Result<Vec<String>, Stop> {
         let mut out = Vec::new();
         for ((id, options), named) in self.axes.iter().zip(product) {
             if named.len() != options.len() {
@@ -197,7 +213,7 @@ pub(super) fn fanned_lines(
         options.push(axes.options_of(combo)?);
     }
     let mut bound = if ask.binds.is_empty() {
-        let mut one = Bound::new(Vec::new(), Env::empty());
+        let mut one = Bound::new(Vec::new(), engine.ask_env.clone());
         for at in 0..combos.len() {
             one.combos.push((at, Collected::default()));
         }
@@ -341,10 +357,26 @@ fn tuple_lines(
         let hole = spread(&operands).ok_or_else(|| invariant("a where's hole that is none"))?;
         return Ok(vec![format!("{head}: {}", hole.text())]);
     }
+    result_lines((axes, combos), &head, &tuple.results, (ctx, pinned))
+}
+
+/// The lines of one head's `results`, each by its combination's place in `combos`: one line
+/// per product of options that give one result, the register under it with the `with` pins'
+/// `pinned` and the line's `reading:` entries (refcore's `group`, `print_line`, `diff_print`).
+/// L §5.5, §8.2.
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for a result past the combinations.
+pub(super) fn result_lines(
+    (axes, combos): (&Axes, &[Combo]),
+    head: &str,
+    results: &[(usize, Printed)],
+    (ctx, pinned): (Ctx, &Collected),
+) -> Result<Vec<String>, Stop> {
     let mut out = Vec::new();
-    for line in grouped(axes, combos, &tuple.results)? {
-        let (_, first) = tuple
-            .results
+    for line in grouped(axes, combos, results)? {
+        let (_, first) = results
             .get(line.first)
             .ok_or_else(|| invariant("a line's result past the results"))?;
         out.extend(first.lines(&format!("{head} [{}]", axes.head(&line.product)?)));
@@ -367,12 +399,15 @@ fn tuple_lines(
 }
 
 /// One line of a fan-out: the product of options it names and the result they give.
-struct Grouped {
+pub(super) struct Grouped {
     /// Each axis's options the line names.
-    product: Product,
+    pub(super) product: Product,
     /// The first combination's result, by its place among the tuple's results: its text
     /// after the line's head, the lines under it.
-    first: usize,
+    pub(super) first: usize,
+    /// Every combination's result inside the product, by its place among the tuple's
+    /// results, the first first.
+    pub(super) members: Vec<usize>,
     /// What the line's combinations met, together.
     met: Collected,
     /// A check's sides' law dates, as its first combination read them.
@@ -383,7 +418,7 @@ struct Grouped {
 /// combinations that give one result, the results in the order first met, each set split into
 /// products by the axes in id order; then every line sorted by each axis's first option, `*`
 /// first, the sort keeping the order made between equal keys (refcore's `group`). L §5.5.
-fn grouped(
+pub(super) fn grouped(
     axes: &Axes,
     combos: &[Combo],
     results: &[(usize, Printed)],
@@ -430,6 +465,7 @@ fn product_line(
 ) -> Result<Grouped, Stop> {
     let mut met = Collected::default();
     let mut first: Option<(usize, &Printed)> = None;
+    let mut inside = Vec::new();
     for at in members {
         let combo = combo_of(combos, results, *at)?;
         if !product
@@ -443,6 +479,7 @@ fn product_line(
             .get(*at)
             .ok_or_else(|| invariant("a result past the results"))?;
         met.merge(&printed.met);
+        inside.push(*at);
         if first.is_none() {
             first = Some((*at, printed));
         }
@@ -452,6 +489,7 @@ fn product_line(
     Ok(Grouped {
         product,
         first: at,
+        members: inside,
         met,
         laws: first.laws,
     })

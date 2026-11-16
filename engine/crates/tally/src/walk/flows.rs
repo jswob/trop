@@ -1,30 +1,24 @@
-//! The walk's flows reads: a place's flows over a span and a move's flows, each with what it rests on in the register.
-//! Spec: L §5.14.3 (`flows(x, span)`, `flows(m, span)`: their units, holes and refusals; a
-//! move's flows at some of its keys; a modelled instance counted by the observations that stand
-//! in for it, `open:` when none does; settlements dated in the span, `HOLE-CHANGED` where
-//! nothing settles); §5.19 (a pad's flow at its reading's place, on the reset); §8.2 (the
-//! register: `unfulfilled:`, `left out:`, `adjustment:`, `open:`);
-//! E §4.2 (a refused leg refuses every read of it), E §4.3 (a read of a projection's walk
-//! rests on the walks it continues).
-//! Twin: engine/tools/refcore/mreads.py (`e_flows`, `flows_place`, `flows_place_walk`,
-//! `flows_move`, `leg_refused`).
+//! The walk's flows reads: a place's flows over a span, with what it rests on in the register; a move's are `move_flows.rs`'s.
+//! Spec: L §5.14.3 (`flows(x, span)`, `flows(m, span)`: their units, holes and refusals);
+//! §5.19 (a pad's flow at its reading's place, on the reset); §8.2 (the register:
+//! `unfulfilled:`, `left out:`, `adjustment:`, `open:`); E §4.2 (a refused leg refuses every
+//! read of it), E §4.3 (a read of a projection's walk rests on the walks it continues).
+//! Twin: engine/tools/refcore/mreads.py (`e_flows`, `flows_place`, `flows_place_walk`).
 //! Invariants: a refused `flows` keeps the register it met before the refusal, as refcore
-//! registers while it counts; a leg refused by a walk a projection's walk continues is refused
-//! in it too, and a decision run there counts in its `flows`.
-
-use super::order::WalkAt;
-use super::plan::{Amount, Dated, Exists, Inst, Status, invariant, qty_value};
+//! registers while it counts; a read of a projection's walk reads the walks it continues
+//! through the point each continues from.
+use super::plan::{Amount, Dated, DayWindow, Exists, Inst, Status, invariant, qty_value};
 use super::point::At;
 use super::reads::{Sees, expr_text, refuse};
-use super::state::{ALL, Change, Ent, Progress, Walk};
-use crate::base::{Refusal, Run};
-use crate::eval::{Collected, Ctx, Engine, Entry, Env, GUARDED, UNSET_AXIS};
+use super::state::{ALL, Change, Ent, Walk};
+use crate::base::Run;
+use crate::eval::{Collected, Ctx, Engine, Env};
 use crate::hole::{Hole, spread};
 use crate::model::{KeyVal, MoveInfo, Reality, Span, Value};
 use crate::num::Num;
 use crate::syntax::{Expr, Flows, Key, Postfix, Stop};
 use crate::time::Day;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 impl Engine {
     /// `flows(x, span)`, of a place or of a move (refcore's `e_flows`). L §5.14.3.
@@ -56,17 +50,28 @@ impl Engine {
             };
             return Ok(Value::Hole(Hole::before_run(&figure)));
         }
-        if f.for_key.is_some() || f.convert.is_some() {
-            return Err(Stop::NotBuilt("flows for a period or converted"));
+        if f.convert.is_some() {
+            return Err(Stop::NotBuilt("flows converted"));
         }
+        // `, for k`: only the movements for period k (L §5.14.3); a hole k is the line's
+        let fk = match &f.for_key {
+            Some(e) => {
+                let k = self.ev(m, e, env, ctx)?;
+                if let Value::Hole(h) = k {
+                    return Ok(Value::Hole(h));
+                }
+                Some(k)
+            }
+            None => None,
+        };
         let Some((mv, posts)) = named else {
             return match self.place_arg(m, &f.target, env, ctx)? {
                 Err(h) => Ok(Value::Hole(h)),
-                Ok(place) => self.flows_place(m, &place, &sp, ctx),
+                Ok(place) => self.flows_place(m, &place, (&sp, fk.as_ref()), ctx),
             };
         };
         let (keys, leg) = keys_and_leg(posts)?;
-        self.flows_move(m, (mv, keys, leg), &sp, env, ctx)
+        self.flows_move(m, (mv, keys, leg), (&sp, fk.as_ref()), env, ctx)
     }
 
     /// A place's flows over a span: every movement booked there in it, holes and refusals
@@ -77,7 +82,7 @@ impl Engine {
         &mut self,
         m: &Reality,
         place: &str,
-        sp: &Span,
+        (sp, fk): (&Span, Option<&Value>),
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let last = span_last(m, sp)?;
@@ -127,7 +132,17 @@ impl Engine {
         } else {
             vec![pu.clone()]
         };
-        let mut sums = Sums::default();
+        let keep = match fk {
+            Some(k) => Some(self.movements_for(m, k, &chain, ctx)?),
+            None => None,
+        };
+        let mut sums = Sums {
+            span: (start, last),
+            totals: BTreeMap::new(),
+            holes: Vec::new(),
+            met: Collected::default(),
+            keep,
+        };
         for (wid, cut) in &chain {
             if let Err(stop) = sums.logs(self.walk(*wid)?, place, &units, (lo, *cut)) {
                 // refcore registers as it reads the logs: a refusal keeps what came before it
@@ -177,10 +192,14 @@ impl Engine {
         moves.sort_by_key(|mv| mv.decision);
         for mv in moves {
             for i in self.move_instances(m, mv, ctx.cut)?.iter() {
-                let Some(Dated::Day(day)) = i.day else {
+                // a window's first day (refcore's `note_post_e`, `day_lo`)
+                let Some(day) = i.day.as_ref().and_then(Dated::lo) else {
                     continue;
                 };
                 if day <= m.end || i.status != Status::LeftOut {
+                    continue;
+                }
+                if sums.keep.as_ref().is_some_and(|keep| !keep.contains(&i.id)) {
                     continue;
                 }
                 if !mv.decision {
@@ -216,270 +235,32 @@ impl Engine {
         Ok(false)
     }
 
-    /// A move's flows over a span: its movements dated in it, a decision's as the walk ran
-    /// them, the adjustments nothing settles a hole (refcore's `flows_move`). What the count
-    /// met reaches the reader even when the count is refused, as refcore registers while it
-    /// counts. L §5.14.3, E §5, L §8.2.
-    fn flows_move(
+    /// The movements for period `k` by id: the plans' instances at the cut and the decisions'
+    /// runs in the walks of `chain` whose `for` is k (refcore's `mv_for`). L §5.14.3.
+    fn movements_for(
         &mut self,
         m: &Reality,
-        (mv, keys, leg): (&MoveInfo, &[Key], Option<&str>),
-        sp: &Span,
-        env: &Env,
+        k: &Value,
+        chain: &[(usize, At)],
         ctx: Ctx,
-    ) -> Result<Value, Stop> {
-        let want = match self.move_keys(m, mv, keys, env, ctx)? {
-            Err(h) => return Ok(Value::Hole(h)),
-            Ok(k) => k,
-        };
-        let last = span_last(m, sp)?;
-        let insts = if mv.decision {
-            std::rc::Rc::new(self.decision_runs(m, mv, last, ctx)?)
-        } else {
-            self.move_instances(m, mv, ctx.cut)?
-        };
-        let mut acc = Counted::default();
-        let counted = self.count_move(
-            m,
-            (mv, &want, leg),
-            (insts.as_slice(), sp, last),
-            ctx,
-            &mut acc,
-        );
-        self.absorb(&acc.met);
-        counted?;
-        let Counted {
-            total,
-            mut units,
-            holes,
-            settle_unit,
-            ..
-        } = acc;
-        if units.is_empty()
-            && let Some(u) = settle_unit
-        {
-            units.insert(u);
-        }
-        if let Some(h) = spread(&holes.iter().map(Some).collect::<Vec<_>>()) {
-            return Ok(Value::Hole(h));
-        }
-        if units.len() > 1 {
-            let all: Vec<&str> = units.iter().map(String::as_str).collect();
-            return Err(refuse(
-                Run::Domain,
-                format!("flows of {}: movements in {}", mv.id, all.join(" and ")),
-            ));
-        }
-        let sum = match total {
-            Some(t) => t,
-            None => Num::zero(),
-        };
-        if let Some(u) = units.into_iter().next() {
-            return qty_value(m, &sum, &u);
-        }
-        match static_unit(m, mv, leg) {
-            Some(u) => qty_value(m, &sum, &u),
-            None => Err(refuse(
-                Run::Domain,
-                format!(
-                    "flows of {} over a span with no movement: its unit is unknown",
-                    mv.id
-                ),
-            )),
-        }
-    }
-
-    /// A move's movements and adjustments counted into `acc`, in refcore's order: each
-    /// instance's register and `unfulfilled:` before its legs, so a refusal that stops the
-    /// count leaves in `acc` what it met before (refcore's `flows_move`, its loop, which
-    /// registers as it goes). L §5.14.3, E §5 steps 5–6, L §8.2.
-    fn count_move(
-        &mut self,
-        m: &Reality,
-        (mv, want, leg): (&MoveInfo, &[KeyVal], Option<&str>),
-        (insts, sp, last): (&[Inst], &Span, Day),
-        ctx: Ctx,
-        acc: &mut Counted,
-    ) -> Result<(), Stop> {
-        for i in insts {
-            if !i.keys.starts_with(want) {
+    ) -> Result<BTreeSet<String>, Stop> {
+        let mut out = BTreeSet::new();
+        for mv in m.moves_in(self.timeline_world()) {
+            if mv.decision {
                 continue;
             }
-            if matches!(i.status, Status::None | Status::Uncertain) {
-                continue;
-            }
-            let day = match &i.day {
-                Some(Dated::Hole(h)) => {
-                    acc.holes.push(h.clone());
-                    continue;
-                }
-                Some(Dated::Day(d)) => *d,
-                None => {
-                    return Err(i
-                        .err
-                        .clone()
-                        .map_or_else(|| invariant("an instance with no day"), Stop::Refused));
-                }
-            };
-            if !sp.contains(day) {
-                continue;
-            }
-            if mv.decision && day > m.end {
-                // never walked, so its amount reads a walk that doesn't hold its day (E §2)
-                acc.holes.push(Hole::after_run(&i.id));
-                continue;
-            }
-            if i.status == Status::Modelled {
-                self.count_standing_in(m, i, leg, ctx.cut, acc)?;
-                continue;
-            }
-            if let Some(err) = &i.err {
-                return Err(Stop::Refused(err.clone()));
-            }
-            acc.met.merge(&i.coll);
-            if let Exists::Unknown(h) = &i.exists {
-                acc.holes.push(h.clone());
-                continue;
-            }
-            if i.status == Status::Past {
-                acc.met.entries.insert(Entry {
-                    word: "unfulfilled",
-                    text: i.id.clone(),
-                    figure: String::new(),
-                });
-            }
-            for lg in i.legs.iter().filter(|lg| wanted(leg, &lg.name)) {
-                let q = match &lg.amount {
-                    Amount::Refused(r) => return Err(Stop::Refused(r.clone())),
-                    Amount::Hole(h) => {
-                        acc.holes.push(h.clone());
-                        continue;
-                    }
-                    Amount::Qty(q) => q,
-                };
-                let leg_day = lg.day.day().or(Some(day));
-                if !q.is_zero()
-                    && let Some(err) = self.leg_refused(m, (&i.id, &lg.name), leg_day, ctx)?
-                {
-                    return Err(Stop::Refused(err));
-                }
-                acc.add(q, lg.unit.as_ref())?;
-            }
-        }
-        if !mv.decision {
-            for adj in self.settled_move(m, mv, ctx.cut)? {
-                if leg.is_none_or(|l| l == adj.leg.name) && adj.inst_keys.starts_with(want) {
-                    count_adjustment(m, &adj, sp, last, acc)?;
+            for i in self.move_instances(m, mv, ctx.cut)?.iter() {
+                if i.for_period.as_ref() == Some(k) {
+                    out.insert(i.id.clone());
                 }
             }
         }
-        Ok(())
-    }
-
-    /// A modelled instance's flows: the observations that stand in for it on its covered
-    /// day, `open:` when none does (refcore's `flows_move`, its modelled past). L §5.14.3,
-    /// §5.19.
-    fn count_standing_in(
-        &mut self,
-        m: &Reality,
-        i: &Inst,
-        leg: Option<&str>,
-        cut: Day,
-        acc: &mut Counted,
-    ) -> Result<(), Stop> {
-        let obs = self.standing_in(m, i, cut)?;
-        if obs.is_empty() {
-            acc.met.entries.insert(Entry {
-                word: "open",
-                text: i.id.clone(),
-                figure: String::new(),
-            });
-        }
-        for o in &obs {
-            acc.met.merge(&o.coll);
-            for lg in o.legs.iter().filter(|lg| wanted(leg, &lg.name)) {
-                let Amount::Qty(q) = &lg.amount else {
-                    return Err(invariant("an observed leg with no amount"));
-                };
-                acc.add(q, lg.unit.as_ref())?;
-            }
-        }
-        Ok(())
-    }
-
-    /// A move's keys as written in a flows read: all of them, or none (refcore's
-    /// `flows_move`, its keys). L §5.14.3.
-    fn move_keys(
-        &mut self,
-        m: &Reality,
-        mv: &MoveInfo,
-        keys: &[Key],
-        env: &Env,
-        ctx: Ctx,
-    ) -> Result<Result<Vec<KeyVal>, Hole>, Stop> {
-        if keys.is_empty() {
-            return Ok(Ok(Vec::new()));
-        }
-        let Some(binds) = mv.binds.get(..keys.len()) else {
-            return Err(Stop::NotBuilt("flows of a move at more keys than it binds"));
-        };
-        let mut given = Vec::with_capacity(keys.len());
-        for key in keys {
-            let Key::Expr(e) = key else {
-                return Err(Stop::NotBuilt("`*` in a move's keys"));
-            };
-            given.push(self.given_key(m, e, env, ctx)?);
-        }
-        self.make_keys(m, &mv.id, binds, given, ctx)
-    }
-
-    /// A decision move's runs a flows read counts: the main walk's, or inside a decision the
-    /// running walk's and the walks' it continues, before its point; an instance whose day is
-    /// a hole counted as that hole, and one whose day is refused as its refusal, in any span
-    /// (L §8.4, tally 2.1.6); one refused by its key's `where` is a run (refcore's
-    /// `flows_move`, its decisions). L §5.14.1, §5.14.3, E §4.3.
-    fn decision_runs(
-        &mut self,
-        m: &Reality,
-        mv: &MoveInfo,
-        last: Day,
-        ctx: Ctx,
-    ) -> Result<Vec<Inst>, Stop> {
-        let (id, limit) = match ctx.at {
-            Some(at) => {
-                let t = at.point.day;
-                if last > t {
-                    return Err(refuse(
-                        Run::Future,
-                        format!(
-                            "a decision on {} reads flows of {} through {}, after its day",
-                            t.text(),
-                            mv.id,
-                            last.text()
-                        ),
-                    ));
+        for (wid, _) in chain {
+            for run in &self.walk(*wid)?.runs {
+                if run.inst.for_period.as_ref() == Some(k) {
+                    out.insert(run.inst.id.clone());
                 }
-                (at.walk, (last == t).then_some(at.point))
             }
-            None => (self.main_walk(m, ctx.cut)?, None),
-        };
-        let mut out = Vec::new();
-        for i in self.move_instances(m, mv, ctx.cut)?.iter() {
-            let Some(run) = self.chain_run(id, &i.id)? else {
-                // an instance no walk ran: its day a hole, or after the run's end (E §2)
-                let unwalked = match i.day {
-                    Some(Dated::Day(d)) => d > m.end,
-                    Some(Dated::Hole(_)) | None => true,
-                };
-                if unwalked && i.exists != Exists::No {
-                    out.push(i.clone());
-                }
-                continue;
-            };
-            if limit.is_some_and(|l| run.point >= l) {
-                continue;
-            }
-            out.push(run.inst.clone());
         }
         Ok(out)
     }
@@ -501,6 +282,31 @@ impl Engine {
         Ok(None)
     }
 
+    /// The pads walk `id` and the walks it continues booked, each once, the nearest first; a
+    /// running read's only those before its point `limit` (refcore's `movements_of`, its
+    /// pads). L §5.14.1 Running reads, E §6.1.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a walk the engine lacks.
+    pub(crate) fn chain_pads(
+        &self,
+        id: usize,
+        limit: Option<At>,
+    ) -> Result<Vec<(crate::book::Pad, At)>, Stop> {
+        let mut seen: BTreeSet<&str> = BTreeSet::new();
+        let mut out = Vec::new();
+        for wid in self.chain(id)? {
+            for (pad, at) in &self.walk(wid)?.pads {
+                if !seen.insert(pad.id.as_str()) || limit.is_some_and(|point| *at >= point) {
+                    continue;
+                }
+                out.push((pad.clone(), *at));
+            }
+        }
+        Ok(out)
+    }
+
     /// Walk `id` read through `limit`, then each walk it continues read through the point
     /// the walk after it starts after, the nearest first (refcore's `flows_place`, its
     /// chain). E §4.3 step 1, L §5.14.1.
@@ -515,185 +321,41 @@ impl Engine {
         }
         Ok(out)
     }
-
-    /// The refusal of a leg the walk refused, the leg dated `day`: inside a decision, what its
-    /// walk and the walks it continues refused so far; at the ask's cut, the main walk's, or
-    /// where that walk reads an axis the timeline sets no option of, each combination's
-    /// walk's; where the main walk needs a cell still being computed outside it, the walk up
-    /// to the leg's day, since a leg's refusal rests on the walk up to its day only (refcore's
-    /// `leg_refused`, `guarded_walk`). A walk refused at run gives no refusal of the leg; a
-    /// load refusal met at run and `ENGINE-INVARIANT` stop the read (R-66). E §4.2 step 5,
-    /// §4.3, §3.3, §3.2.
-    pub(crate) fn leg_refused(
-        &mut self,
-        m: &Reality,
-        key: (&str, &str),
-        day: Option<Day>,
-        ctx: Ctx,
-    ) -> Result<Option<Refusal>, Stop> {
-        let wanted = (key.0.to_owned(), key.1.to_owned());
-        if let Some(WalkAt { walk, .. }) = ctx.at {
-            return self.chain_refusal(walk, &wanted);
-        }
-        let mut id = self.main_walks.get(&ctx.cut).copied();
-        let busy = !self.plan_active.is_empty()
-            || !self.adjust_active.is_empty()
-            || !self.walking.is_empty();
-        let ours = !busy && ctx.cut == self.ask_cut;
-        if ours && let Some(read) = self.refused_by_each(&wanted, ctx.cut) {
-            return read;
-        }
-        let unfinished = match id {
-            None => true,
-            Some(w) => matches!(
-                self.walk(w)?.progress,
-                Progress::Planning | Progress::Walking | Progress::Walked
-            ),
-        };
-        let blocked = self
-            .prefixes
-            .blocked
-            .get(&ctx.cut)
-            .is_some_and(|cells| !cells.is_disjoint(&self.active));
-        if ours && unfinished && blocked {
-            id = self.prefix_walk(m, ctx.cut, day)?;
-        } else if ours && unfinished {
-            let outer = self.guarded.replace(self.active.clone());
-            let built = self.main_walk(m, ctx.cut);
-            self.guarded = outer;
-            id = match built {
-                Ok(w) => Some(w),
-                Err(Stop::Refused(r)) if super::order::run_time(&r) => return Ok(None),
-                // the walk needs a cell this read is inside: the walk up to the leg's day
-                Err(Stop::NotBuilt(why)) if why == GUARDED => {
-                    self.prefixes.blocked.insert(ctx.cut, self.active.clone());
-                    self.prefix_walk(m, ctx.cut, day)?
-                }
-                // the walk read an axis the timeline sets no option of (E §3.3)
-                Err(Stop::NotBuilt(why)) if why == UNSET_AXIS => {
-                    return self.refused_in_each(m, &wanted, ctx.cut, Stop::NotBuilt(why));
-                }
-                Err(stop) => return Err(stop),
-            };
-        }
-        let Some(w) = id else {
-            return Ok(None);
-        };
-        self.chain_refusal(w, &wanted)
-    }
-
-    /// The refusal of leg `wanted` in walk `id` or in a walk it continues, the nearest first:
-    /// a projection's walk keeps what the walks it continues have refused so far (refcore's
-    /// `leg_refused`, its loop over `w.base`). E §4.2 step 5, §4.3 step 1.
-    fn chain_refusal(&self, id: usize, wanted: &(String, String)) -> Result<Option<Refusal>, Stop> {
-        for wid in self.chain(id)? {
-            if let Some(refusal) = self.walk(wid)?.bad_legs.get(wanted) {
-                return Ok(Some(refusal.clone()));
-            }
-        }
-        Ok(None)
-    }
 }
 
-/// What a move's flows gather: the total, the units its legs are in, the holes, the
-/// register, the unit of the first settlement counted.
-#[derive(Default)]
-struct Counted {
-    /// The total, once a leg is counted.
-    total: Option<Num>,
-    /// The units of the legs counted.
-    units: BTreeSet<String>,
-    /// The holes met.
-    holes: Vec<Hole>,
-    /// The register met.
-    met: Collected,
-    /// The unit of the first settlement leg counted.
-    settle_unit: Option<String>,
+/// `HOLE-IMPRECISE` of flows over a span movement `movement`, dated by window `w`, may fall
+/// in or out of (refcore's `flows_place`). L §4.4, §8.1.
+fn imprecise_flows(w: &DayWindow, place: &str, movement: &str) -> Hole {
+    let text = format!(
+        "date within {} not precise enough for flows of {place}",
+        w.question
+    );
+    Hole::asked(&text, movement)
 }
 
-impl Counted {
-    /// A leg's amount counted, its unit noted. L §5.14.3.
-    fn add(&mut self, q: &Num, unit: Option<&String>) -> Result<(), Stop> {
-        self.total = Some(add_to(self.total.take(), q)?);
-        if let Some(u) = unit {
-            self.units.insert(u.clone());
-        }
-        Ok(())
-    }
+/// Whether a leg's amount is zero, so its day can't change a sum (L §4.4).
+fn zero_amount(amount: &Amount) -> bool {
+    matches!(amount, Amount::Qty(q) if q.is_zero())
 }
 
-/// One adjustment of a move's flows: refused over a span reaching its day when its change
-/// is; `HOLE-CHANGED` from its day when nothing settles it; else its remainder in the
-/// register and its settlements dated in the span, each signed by the way it runs
-/// (refcore's `flows_move`, its adjustments). E §5 steps 5–6, L §5.14.3.
-fn count_adjustment(
-    m: &Reality,
-    adj: &crate::book::Adjustment,
-    sp: &Span,
-    last: Day,
-    acc: &mut Counted,
-) -> Result<(), Stop> {
-    if let Amount::Refused(err) = &adj.delta {
-        // tally 2.1.2: settled or not, as an unsettled one is the HOLE-CHANGED hole
-        if last >= adj.day {
-            return Err(Stop::Refused(err.clone()));
-        }
-        return Ok(());
-    }
-    if adj.settled.is_empty() {
-        if last >= adj.day {
-            acc.holes.push(adj.question());
-        }
-        return Ok(());
-    }
-    if last >= adj.day
-        && let Some(text) = adj.remainder_text(m)?
-    {
-        acc.met.entries.insert(Entry {
-            word: "adjustment",
-            text,
-            figure: String::new(),
-        });
-    }
-    for s in &adj.settled {
-        if s.sign == 0 || !s.day.is_some_and(|d| sp.contains(d)) {
-            continue;
-        }
-        let q = match &s.amount {
-            Amount::Refused(r) => return Err(Stop::Refused(r.clone())),
-            Amount::Hole(h) => {
-                acc.holes.push(h.clone());
-                continue;
-            }
-            Amount::Qty(q) => q
-                .checked_mul(&Num::int(s.sign))
-                .map_err(crate::eval::num_stop)?,
-        };
-        acc.total = Some(add_to(acc.total.take(), &q)?);
-        if acc.settle_unit.is_none() {
-            acc.settle_unit.clone_from(&adj.leg.unit);
-        }
-    }
-    Ok(())
-}
-
-/// A running total with `q` added. L §5.14.3.
-fn add_to(total: Option<Num>, q: &Num) -> Result<Num, Stop> {
-    match total {
-        None => Ok(q.clone()),
-        Some(t) => t.checked_add(q).map_err(crate::eval::num_stop),
-    }
+/// Whether window `w` meets the span `(first, last)` without lying inside it: the movement
+/// it dates may fall in the span or out of it (L §4.4).
+fn crosses(w: &DayWindow, (first, last): (Day, Day)) -> bool {
+    w.lo <= last && w.hi >= first && !(first <= w.lo && w.hi <= last)
 }
 
 /// What a place's flows gather: the totals per unit, the holes, the register.
-#[derive(Default)]
 struct Sums {
+    /// The span's first and last day, which a movement dated by a window must fall inside.
+    span: (Day, Day),
     /// The booked flows per unit.
-    totals: std::collections::BTreeMap<String, Num>,
+    totals: BTreeMap<String, Num>,
     /// The holes met.
     holes: Vec<Hole>,
     /// The register met.
     met: Collected,
+    /// Under `, for k`, the movements for period k by id; none counts every movement.
+    keep: Option<BTreeSet<String>>,
 }
 
 impl Sums {
@@ -733,10 +395,24 @@ impl Sums {
                         self.met.merge(c);
                     }
                 }
-                Change::Bad(_) | Change::Reset { .. } | Change::Delta(_) | Change::Mark => {}
+                Change::Bad(_)
+                | Change::Reset { .. }
+                | Change::Delta(_)
+                | Change::ImpOn(_)
+                | Change::Mark => {}
             }
         }
         Ok(())
+    }
+
+    /// Whether `, for k` leaves entry `e` out: a movement not for period k, or a reset (a pad's
+    /// end), which is for no period (refcore's `other_for`). L §5.14.3.
+    fn other_period(&self, e: &Ent) -> bool {
+        let Some(keep) = &self.keep else {
+            return false;
+        };
+        matches!(e.change, Change::Reset { .. })
+            || e.mv.as_ref().is_some_and(|id| !keep.contains(id))
     }
 
     /// One unit's log of the place over the span (refcore's `flows_place`, its logs). L §5.14.3.
@@ -747,7 +423,17 @@ impl Sums {
         unit: &str,
         (lo, limit): (At, At),
     ) -> Result<(), Stop> {
+        // the movements dated by a window met by the span's end: each whose window crosses
+        // the span is its hole, booked in the walk or past its end (L §4.4; refcore's `wins`)
+        let mut windows: BTreeMap<&str, (&DayWindow, &str)> = BTreeMap::new();
         for e in walk.entries(place, unit) {
+            // a zero leg's day can't change the sum: decided (L §4.4)
+            if let (Change::ImpOn(_), Some((wid, w)), Some(mv)) = (&e.change, &e.window, &e.mv)
+                && e.at <= limit
+                && !e.flow.as_ref().is_some_and(zero_amount)
+            {
+                windows.insert(wid, (w, mv));
+            }
             if e.at <= lo {
                 if let Change::Perm(h) = &e.change
                     && e.at <= limit
@@ -759,6 +445,12 @@ impl Sums {
             if e.at > limit {
                 continue;
             }
+            if let Change::Bad(r) = &e.change {
+                return Err(Stop::Refused(r.clone()));
+            }
+            if self.other_period(e) {
+                continue;
+            }
             match &e.change {
                 Change::Bad(r) => return Err(Stop::Refused(r.clone())),
                 Change::Hole(h) | Change::Perm(h) => {
@@ -768,7 +460,11 @@ impl Sums {
                         self.met.merge(c);
                     }
                 }
-                Change::Delta(f) => self.count(e, unit, Ok(f))?,
+                Change::Delta(f) => match &e.window {
+                    // a window that crosses the span is its hole, below (L §4.4)
+                    Some((_, w)) if crosses(w, self.span) => {}
+                    Some(_) | None => self.count(e, unit, Ok(f))?,
+                },
                 // a pad's end at its reading's own place (E §6.1); an anchor's or an
                 // opening's reset carries no flow, and `flows` doesn't count it
                 Change::Reset { .. } => match &e.flow {
@@ -776,7 +472,12 @@ impl Sums {
                     Some(Amount::Hole(h)) => self.count(e, unit, Err(h))?,
                     Some(Amount::Refused(_)) | None => {}
                 },
-                Change::Mark => {}
+                Change::ImpOn(_) | Change::Mark => {}
+            }
+        }
+        for (w, movement) in windows.into_values() {
+            if crosses(w, self.span) {
+                self.holes.push(imprecise_flows(w, place, movement));
             }
         }
         Ok(())
@@ -787,7 +488,12 @@ impl Sums {
     /// L §5.14.3.
     fn unbooked(&mut self, i: &Inst, place: &str, (first, last): (Day, Day)) -> Result<(), Stop> {
         for lg in &i.legs {
-            if lg.day.day().is_none_or(|d| d < first || d > last) {
+            // a leg dated by a window counts where the window meets the span (refcore's
+            // `flows_post_e`, `day_lo`, `day_hi`)
+            let (Some(lo), Some(hi)) = (lg.day.lo(), lg.day.hi()) else {
+                continue;
+            };
+            if hi < first || lo > last {
                 continue;
             }
             let (out, into) = (lg.from.place() == Some(place), lg.to.place() == Some(place));
@@ -800,6 +506,15 @@ impl Sums {
             self.met.merge(&i.coll);
             if let Exists::Unknown(h) = &i.exists {
                 self.holes.push(h.clone());
+                continue;
+            }
+            // a leg whose window crosses the span may fall in it or out, unless it moves
+            // nothing (L §4.4)
+            if let Dated::Window(w) = &lg.day
+                && crosses(w, (first, last))
+                && !zero_amount(&lg.amount)
+            {
+                self.holes.push(imprecise_flows(w, place, &i.id));
                 continue;
             }
             let q = match &lg.amount {
@@ -849,7 +564,7 @@ impl Sums {
 fn one_unit(
     m: &Reality,
     place: &str,
-    totals: &std::collections::BTreeMap<String, Num>,
+    totals: &BTreeMap<String, Num>,
     units: &[String],
 ) -> Result<Value, Stop> {
     if totals.len() > 1 {
@@ -903,127 +618,5 @@ fn keys_and_leg(posts: &[Postfix]) -> Result<(&[Key], Option<&str>), Stop> {
         [Postfix::Field(leg)] => Ok((&[], Some(leg.as_str()))),
         [Postfix::Keys(k), Postfix::Field(leg)] => Ok((k.as_slice(), Some(leg.as_str()))),
         [_, _, ..] => Err(Stop::NotBuilt("flows of a move's field")),
-    }
-}
-
-/// The unit of a move's flows load can see: its legs' kind unit when it is one, else their
-/// places' one fixed unit (refcore's `_t`, `_leg_unit`). L §5.14.3.
-fn static_unit(m: &Reality, mv: &MoveInfo, leg: Option<&str>) -> Option<String> {
-    let kind_legs = m.kind_legs(&mv.kind);
-    let mut found = BTreeSet::new();
-    for lg in mv.decl.legs.iter().filter(|lg| wanted(leg, &lg.name)) {
-        let unit = kind_legs
-            .iter()
-            .find(|(name, _, _)| *name == lg.name)
-            .map(|(_, unit, _)| unit.clone());
-        if let Some(u) = unit.filter(|u| m.currencies.contains_key(u) || m.units.contains(u)) {
-            found.insert(u);
-            continue;
-        }
-        for end in [&lg.from, &lg.to] {
-            if let Expr::Name(p) = end
-                && let Some(u) = m.things.get(p).and_then(|t| m.place_unit(t))
-                && u != "any"
-            {
-                found.insert(u);
-            }
-        }
-    }
-    if found.len() == 1 {
-        return found.into_iter().next();
-    }
-    None
-}
-
-/// Whether a leg's movement wanted by a flows read: every leg, or the one it names
-/// (L §5.14.3). L §5.14.3.
-fn wanted(leg: Option<&str>, name: &str) -> bool {
-    match leg {
-        None => true,
-        Some(l) => l == name,
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::Days;
-    use crate::api::{Asks, Given, Pin, Request, run};
-
-    /// A decision over three months whose day is refused in February (a division by zero),
-    /// its flows read over January and over February.
-    const REFUSED_DAY: &str = r#"model refused_day
-  tally 2
-  on 2026-02-15
-  start 2026-01-01
-  end 2026-03-31
-
-source fixture "invented values"
-
-unit PLN: currency minor 0.01
-
-index month = month 2026-01..2026-03
-
-place box: accounts PLN lives 2026-01-01..
-
-place world: outside lives 2026-01-01..
-
-input dec_dom: int
-
-input fee_amt: money PLN
-
-input small_put: money PLN
-
-input divisor[m in month]: num
-
-move split[m in month]: transfers
-  on day_of(m, dec_dom * divisor[m] / divisor[m])
-  at start_of(m)
-  reads box
-  leg cash from world to box amount if bal(box) >= small_put then small_put else fee_amt
-
-ask q_fl: flows(split, 2026-01-01 .. 2026-01-31), flows(split, 2026-02-01 .. 2026-02-28) law cut
-
-version facts
-  cite fixture
-  governs always
-  known 2025-12-01
-  dec_dom = 20 "the decision's day of the month"
-  fee_amt = 3.00 "a fee"
-  small_put = 1.00 "a small amount"
-  divisor[2026-01] = 1 "answered"
-  divisor[2026-02] = 0 "a division by zero, refused"
-  divisor[2026-03] = 2 "answered"
-
-version openings
-  cite fixture
-  governs always
-  known 2025-12-31
-  opening[box] = 0 at 2026-01-01 start
-"#;
-
-    #[test]
-    fn flows_of_a_decision_whose_day_is_refused_is_refused_over_any_span() {
-        // L §8.4 (tally 2.1.6): split[2026-02]'s day is refused, so it may fall in any span,
-        // and every flows of its move is that refusal; refcore prints 0.00 PLN for February
-        // (#104, refcore's flows_move counts an unrun instance only for a hole day)
-        let given = vec![Given {
-            path: "refused_day.tally".to_owned(),
-            bytes: Some(REFUSED_DAY.as_bytes().to_vec()),
-        }];
-        let request = Request {
-            asks: Asks::Named(vec!["q_fl".to_owned()]),
-            pin: Pin::Canonical,
-            days: Days::Events,
-        };
-        let answer = run(given, &request).expect("an answer");
-        assert_eq!(
-            answer.lines(),
-            [
-                "q_fl: (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)",
-                "  unfulfilled: split[2026-01]",
-                "  law date 2026-02-15, cut 2026-02-15"
-            ],
-            "both spans refused"
-        );
     }
 }

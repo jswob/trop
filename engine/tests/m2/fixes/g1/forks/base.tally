@@ -1,0 +1,48 @@
+model fk
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+
+axis x
+  x1 "1"
+  x2 "2"
+  x3 "3"
+  x4 "4"
+
+axis y
+  y1 "1"
+  y2 "2"
+  y3 "3"
+  y4 "4"
+
+axis z
+  z1 "1"
+  z2 "2"
+  z3 "3"
+  z4 "4"
+
+axis w
+  w1 "1"
+  w2 "2"
+  w3 "3"
+  w4 "4"
+
+input flag: bool
+
+def d: int at reader
+  rule base = 1
+  rule bx beats base = 0 when x == x2 and y == y2
+  rule bz beats base, bx = 1 when flag
+
+ask q: diff(d) in sa against sb law 2026-06-01
+
+ask plain: d law 2026-06-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  flag = false

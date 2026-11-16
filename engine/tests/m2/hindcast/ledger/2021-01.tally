@@ -1,0 +1,29 @@
+part hc_2021_01
+  tally 2
+  note "the base (H0): month 0 (2021-01) of the hindcast's 60, written by gen.py from M*; synthetic."
+
+version st_2021_01
+  cite statements
+  governs 2021-01
+  known 2021-02-02
+  covers konto
+  pad konto from unexplained
+  bank[r20210101a] = (on: 2021-01-01, kind: transfers, leg cash from konto to landlord amount 2900.00 PLN, fulfils: rent[2021-01]) "czynsz"
+  bank[r20210106a] = (on: 2021-01-06, kind: transfers, leg cash from konto to shops amount 1240.00 PLN, fulfils: spend[food, 2021-01]) "food"
+  bank[r20210108a] = (on: 2021-01-08, kind: transfers, leg cash from konto to shops amount 310.00 PLN, fulfils: spend[transport, 2021-01]) "transport"
+  bank[r20210110a] = (on: 2021-01-10, kind: wages, leg cash from employer_a to konto amount 7279.00 PLN, fulfils: pay_a[2021-01]) "wynagrodzenie A"
+  bank[r20210111a] = (on: 2021-01-11, kind: transfers, leg cash from konto to broker amount 1500.00 PLN, fulfils: invest[2021-01]) "przelew do biura maklerskiego"
+  bank[r20210112a] = (on: 2021-01-12, kind: transfers, leg cash from konto to shops amount 455.20 PLN, fulfils: spend[utilities, 2021-01]) "utilities"
+  bank[r20210115a] = (on: 2021-01-15, kind: transfers, leg cash from konto to streaming amount 49.99 PLN, fulfils: sub[2021-01]) "abonament"
+  bank[r20210120a] = (on: 2021-01-20, kind: transfers, leg cash from konto to shops amount 120.00 PLN, fulfils: spend[health, 2021-01]) "health"
+  bank[r20210122a] = (on: 2021-01-22, kind: transfers, leg cash from konto to shops amount 260.00 PLN, fulfils: spend[clothes, 2021-01]) "clothes"
+  bank[r20210125a] = (on: 2021-01-25, kind: wages, leg cash from employer_b to konto amount 5353.00 PLN, fulfils: pay_b[2021-01]) "wynagrodzenie B"
+  bank[r20210126a] = (on: 2021-01-26, kind: transfers, leg cash from konto to shops amount 380.00 PLN, fulfils: spend[leisure, 2021-01]) "leisure"
+  stated[konto] = 10416.81 PLN at 2021-01-31 end "saldo"
+
+version slips_2021_01
+  cite slips
+  governs 2021-01
+  known 2021-01-10
+  slip_a[2021-01] = 8770.00 PLN "pasek A"
+  slip_b[2021-01] = 6450.00 PLN "pasek B"

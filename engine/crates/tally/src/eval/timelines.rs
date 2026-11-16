@@ -22,11 +22,11 @@ use std::rc::Rc;
 use super::context::Layer;
 use super::state::{Ctx, Engine, invariant};
 use crate::base::{Refusal, Warn};
-use crate::book::{Adjustment, Coverage, Linked, Obs};
+use crate::book::{Adjustment, Coverage, Linked, Measured, Obs};
 use crate::model::{Reality, World};
 use crate::syntax::Stop;
 use crate::time::Day;
-use crate::walk::{Bookings, Inst, ProjKey, Trees, Walk};
+use crate::walk::{Bookings, Inst, Parked, ProjKey, Trees, Walk};
 
 /// A timeline's key: the world its walks are walked in and the pins on items they reach
 /// (E §3.3). It has no order of its own (R-47): timelines are found by equality.
@@ -60,14 +60,16 @@ pub(crate) struct Timeline {
     plans: BTreeMap<(String, Day), Rc<Vec<Inst>>>,
     /// The moves whose instances are being computed.
     plan_active: BTreeSet<(String, Day)>,
-    /// Each plan move's adjustments per cut.
-    adjustments: BTreeMap<(String, Day), Vec<Adjustment>>,
+    /// Each plan move's measure per cut and list.
+    adjustments: BTreeMap<(String, Day, Option<Day>), Measured>,
     /// The moves whose adjustments are being computed.
-    adjust_active: BTreeSet<(String, Day)>,
+    adjust_active: BTreeSet<(String, Day, Option<Day>)>,
     /// The projections' walks.
     proj_walks: BTreeMap<ProjKey, usize>,
     /// Fence F5's trees.
     trees: Trees,
+    /// The projections' walks kept past their reads, for fence F6.
+    parked: Parked,
     /// The observations each cut sees.
     observed: BTreeMap<Day, Vec<Obs>>,
     /// The versions each cut sees that cover each place.
@@ -78,6 +80,8 @@ pub(crate) struct Timeline {
     link_active: BTreeSet<(Day, String)>,
     /// The refusals of observations' records per cut.
     obs_errs: BTreeMap<(Day, String), Refusal>,
+    /// The refusal each instance's realised movement rests on, per cut.
+    bad_links: BTreeMap<(Day, String), Refusal>,
     /// Each plan move's adjustments per cut, settled.
     settled: BTreeMap<(String, Day), Vec<Adjustment>>,
     /// Every adjustment per cut, unsettled.
@@ -88,6 +92,8 @@ pub(crate) struct Timeline {
     booked: Bookings,
     /// Each main walk's signature once it is done.
     signatures: BTreeMap<usize, crate::invariant::Signature>,
+    /// Each walk-bound def's cells a decision read at its point of a main walk.
+    walk_cells: super::state::WalkCells,
     /// The walks up to a day.
     prefixes: super::state::Prefixes,
     /// The legs each combination's main walk of a cut refused, where the main walk read an
@@ -120,18 +126,23 @@ pub(crate) fn combinations(counts: &[usize], cap: usize) -> Option<Vec<Vec<usize
     Some(combos)
 }
 
-/// The refusal of leg `wanted` in every walk of `each`, which must be the same (P48).
+/// The refusal of leg `wanted` in every walk of `each`, which is the same: a read of a leg at a
+/// place the walk guards reaches the balances, so its ask fans out over their axes and reads
+/// it inside its combination; a leg at unguarded places is refused alike in every walk (L §5.5,
+/// tally 2.1.7 R8; P48).
 ///
 /// # Errors
 ///
-/// `NotBuilt` where two walks differ on it, the line being then one per combination.
+/// `NotBuilt` where two walks differ on it, which only a read outside its ask's line meets
+/// (its `law`, `as known` or `with` pins), as an axis read there does (refcore's interpreter
+/// guard).
 fn agreed(each: &[LegRefusals], wanted: &(String, String)) -> Result<Option<Refusal>, Stop> {
     let mut seen: Option<Option<&Refusal>> = None;
     for legs in each {
         let got = legs.get(wanted);
         if seen.is_some_and(|first| first != got) {
             return Err(Stop::NotBuilt(
-                "a leg's refusal that differs by an axis its ask doesn't fan out over",
+                "a leg's refusal that differs by an axis, read outside its ask's line",
             ));
         }
         seen = Some(got);
@@ -431,16 +442,19 @@ impl Engine {
             adjust_active: core::mem::take(&mut self.adjust_active),
             proj_walks: core::mem::take(&mut self.proj_walks),
             trees: core::mem::take(&mut self.trees),
+            parked: core::mem::take(&mut self.parked),
             observed: core::mem::take(&mut self.observed),
             covered: core::mem::take(&mut self.covered),
             links: core::mem::take(&mut self.links),
             link_active: core::mem::take(&mut self.link_active),
             obs_errs: core::mem::take(&mut self.obs_errs),
+            bad_links: core::mem::take(&mut self.bad_links),
             settled: core::mem::take(&mut self.settled),
             unsettled: core::mem::take(&mut self.unsettled),
             adjust_all_active: core::mem::take(&mut self.adjust_all_active),
             booked: core::mem::take(&mut self.booked),
             signatures: core::mem::take(&mut self.signatures),
+            walk_cells: core::mem::take(&mut self.walk_cells),
             prefixes: core::mem::take(&mut self.prefixes),
         }
     }
@@ -457,16 +471,19 @@ impl Engine {
         self.adjust_active = t.adjust_active;
         self.proj_walks = t.proj_walks;
         self.trees = t.trees;
+        self.parked = t.parked;
         self.observed = t.observed;
         self.covered = t.covered;
         self.links = t.links;
         self.link_active = t.link_active;
         self.obs_errs = t.obs_errs;
+        self.bad_links = t.bad_links;
         self.settled = t.settled;
         self.unsettled = t.unsettled;
         self.adjust_all_active = t.adjust_all_active;
         self.booked = t.booked;
         self.signatures = t.signatures;
+        self.walk_cells = t.walk_cells;
         self.prefixes = t.prefixes;
     }
 }

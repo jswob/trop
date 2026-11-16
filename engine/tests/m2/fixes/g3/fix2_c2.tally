@@ -1,0 +1,32 @@
+model pc
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+input cal: calendar
+input d1: date
+
+ask qc: add_business(d1, 1, cal) windows each
+ask qp: add_business(d1, 1, cal)
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-06-29 "c"
+
+version c1
+  cite card
+  governs ..2026-06-30
+  known 2026-01-01
+  cal = calendar(weekends [sat, sun], added [window(2026-06-30, 2026-07-01)]) "c"
+
+version c2
+  cite card
+  governs 2026-07-01..
+  known 2026-01-01
+  cal = calendar(weekends [sat, sun], added [window(2026-06-30, 2026-07-01)]) "c"

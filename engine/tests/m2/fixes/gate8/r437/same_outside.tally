@@ -1,0 +1,49 @@
+model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+  note "T, M2 gate 8: a same group whose rows book no end at konto, beside a row outside the group that does (book/same.rs left_to_partner)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place card: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1000.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+  opening[card] = 0.00 PLN at 2026-03-01 start "s"
+
+ask l_k: residuals konto 2026-03
+ask l_s: residuals sav 2026-03
+ask b_k: bal(konto, 2026-03-31)
+ask b_s: bal(sav, 2026-03-31)
+
+version sta
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[x1] = (on: 2026-03-05, kind: transfers, leg cash from konto to world amount 30.00 PLN) "x1"
+
+version stc
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers sav
+  bank[c1] = (on: 2026-03-10, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "c1"
+
+version std
+  cite s
+  governs 2026-03
+  known 2026-04-04
+  covers card
+  bank[d1] = (on: 2026-03-10, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "d1"
+  same bank[d1] = bank[c1]

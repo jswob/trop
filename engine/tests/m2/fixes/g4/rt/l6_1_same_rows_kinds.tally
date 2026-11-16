@@ -1,0 +1,25 @@
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+source bank "bank"
+unit PLN: currency minor 0.01
+kind spending: transfers
+kind groceries: spending
+kind rent: spending
+input bank_rows: observed
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+version stmt
+  cite bank
+  governs 2026-02
+  known 2026-03-02
+  bank_rows[r1] = (on: 2026-02-20, kind: groceries, leg cash from konto to world amount 400.00 PLN) "line 1"
+  bank_rows[r2] = (on: 2026-02-20, kind: rent, leg cash from konto to world amount 400.00 PLN) "line 2"
+  bank_rows[r3] = (on: 2026-02-21, kind: groceries, leg cash from konto to world amount 50.00 PLN) "line 3"
+  same bank_rows[r2] = bank_rows[r1]
+ask b: count(true for t in groceries over 2026-02)
+ask c: sum(t.cash.amount for t in rent over 2026-02)
+ask d: count(true for o in bank_rows over 2026-02)
+ask e: count(true for t in spending over 2026-02)

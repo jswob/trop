@@ -21,8 +21,8 @@ use super::state::{
 use super::windows::{End, as_window, imprecise};
 use crate::base::{Load, Run};
 use crate::model::{
-    Class, Code, Domain, KeyVal, Number, Reality, Shown, Unit, Value, currency_unit, money_num,
-    num_money,
+    BindInfo, Class, Code, Domain, KeyVal, Number, Reality, Shown, Unit, Value, currency_unit,
+    money_num, num_money,
 };
 use crate::num::{Mode, Num, NumError};
 use crate::read::{Asked, Found, read_input};
@@ -63,6 +63,7 @@ impl Engine {
             "pow" => self.pow(m, call, env, ctx),
             "minor" => minor_of(m, call),
             "marginal" => self.marginal(m, call, env, ctx),
+            "band_lo" | "band_hi" => self.band_edge(m, call, env, ctx),
             "pos" => self.pos(m, call, env, ctx),
             "missing" => self.missing(m, call, env, ctx),
             "since" => self.since_read(m, call, env, ctx),
@@ -70,8 +71,33 @@ impl Engine {
             "periodic" | "factor" => self.rate_call(m, call, env, ctx),
             "next" => self.next_movement(m, call, env, ctx),
             "lifespan" => self.lifespan_of(m, call, env, ctx),
+            "observed" => self.observed_call(m, call, env, ctx),
             _ => Err(Stop::NotBuilt("a built-in M1's realities don't call")),
         }
+    }
+
+    /// `observed(m[k])`: its movement, a hole key's hole (refcore's `m_c_observed`).
+    /// L §5.19 Realised amounts.
+    fn observed_call(
+        &mut self,
+        m: &Reality,
+        call: &Call,
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Value, Stop> {
+        let [arg] = call.args.as_slice() else {
+            return Err(arity());
+        };
+        let v = self.ev(m, arg, env, ctx)?;
+        if let Value::Hole(h) = v {
+            return Ok(Value::Hole(h));
+        }
+        let Value::Mv(mv) = v else {
+            return Err(invariant(
+                "observed of a value load let through that is no movement",
+            ));
+        };
+        self.observed_of(m, &mv, ctx)
     }
 
     /// `gap(x, d)`: its two arguments, read by the walk (refcore's `m_c_gap`). L §5.19.
@@ -314,10 +340,12 @@ impl Engine {
         if let Value::OutKey { index, text } = &v {
             return Err(refuse(Run::Key, format!("{text} is outside {index}")));
         }
-        let index = if let Some(ix) = written_index(arg, env) {
-            ix
+        let (index, key) = if let Some(ix) = written_index(arg, env) {
+            (ix, pos_key(m, &v)?)
         } else if let Value::Key(KeyVal::Key { index, .. }) = &v {
-            index.clone()
+            (index.clone(), pos_key(m, &v)?)
+        } else if let Some(found) = literal_key(m, &v) {
+            found
         } else {
             return Err(Stop::NotBuilt("pos of a key whose index the run can't see"));
         };
@@ -325,7 +353,6 @@ impl Engine {
             .indexes
             .get(&index)
             .ok_or_else(|| invariant("a key of an index load didn't build"))?;
-        let key = pos_key(m, &v)?;
         let at = ix
             .pos(&key)
             .ok_or_else(|| refuse(Run::Key, format!("{} is outside {}", key.text(), ix.id)))?;
@@ -352,7 +379,17 @@ impl Engine {
         if value.as_hole().is_none() {
             return Ok(Value::Bool(false));
         }
-        let held = match read_input(m, input, &keys, self.clocks(ctx, &input.id)?, Asked::Plain)? {
+        // a row known in a window that holds the cut is decided as the read decided it; one
+        // no `windows each` decides is no missing row (L §4.5)
+        let clocks = self.clocks(ctx, &input.id)?;
+        let Ok(view) = self.input_view(m, input, &keys, (None, clocks), ctx)? else {
+            return Ok(Value::Bool(false));
+        };
+        let input = match &view {
+            Some(seen) => seen,
+            None => input,
+        };
+        let held = match read_input(m, input, &keys, clocks, Asked::Plain)? {
             Found::Hole(_) => true,
             Found::Row(at) => input
                 .rows
@@ -382,6 +419,24 @@ impl Engine {
             given.push(self.given_key(m, e, env, ctx)?);
         }
         Ok(given)
+    }
+
+    /// The keys of a read of `item` written `keys`, made keys of its binds' domains, or the
+    /// hole a key is, carrying the keys' questions (refcore's `key_values`). L §2.5, §8.1.
+    ///
+    /// # Errors
+    ///
+    /// `RUN-KEY`, `RUN-NONE` and the refusals of the keys' evaluation.
+    pub(crate) fn read_keys(
+        &mut self,
+        m: &Reality,
+        (item, binds): (&str, &[BindInfo]),
+        keys: &[Key],
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Result<Vec<KeyVal>, crate::hole::Hole>, Stop> {
+        let given = self.given_keys(m, keys, env, ctx)?;
+        self.make_keys(m, item, binds, given, ctx)
     }
 
     /// `periodic(r, P, c)`, the rate per period P under compounding c, and `factor(r, n, P,
@@ -524,6 +579,29 @@ fn written_index(arg: &Expr, env: &Env) -> Option<String> {
         return None;
     };
     Some(ix.clone())
+}
+
+/// A bare key literal's index and key, `pos(b)`: the one list index holding its text, as
+/// load resolves it (refcore's `c_pos`; two holding it is `LOAD-KEY` at load); none for a
+/// text no list index or more than one holds. L §2.5, §4.2.
+fn literal_key(m: &Reality, v: &Value) -> Option<(String, KeyVal)> {
+    let (Value::Word(text) | Value::Key(KeyVal::Thing(text))) = v else {
+        return None;
+    };
+    let mut found = None;
+    for (id, ix) in m.indexes.entries() {
+        let key = KeyVal::Key {
+            index: id.clone(),
+            name: text.clone(),
+        };
+        if ix.pos(&key).is_some() {
+            if found.is_some() {
+                return None;
+            }
+            found = Some((id.clone(), key));
+        }
+    }
+    found
 }
 
 /// A value `pos` reads as a key of its index (refcore's `c_pos`). L §4.2.

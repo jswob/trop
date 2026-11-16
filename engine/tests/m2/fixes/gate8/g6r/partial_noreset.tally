@@ -1,0 +1,39 @@
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 gate 8: a place with no reading or opening, born mid-run, a hole leg into it, read partial in the main walk and from a projection (walk/state.rs partial_legs' guard)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place jar: accounts PLN lives 2026-03-01..
+place world: outside lives 1900-01-01..
+input gift: money PLN
+input ten: money PLN
+input dg: date
+input dt: date
+
+move g: transfers
+  on dg
+  leg cash from world to jar amount gift
+
+move t2: transfers
+  on dt
+  leg cash from world to jar amount ten
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 10.00 PLN at 2026-01-01 start "s"
+  gift = ?"gift amount" "s"
+  ten = 10.00 PLN "s"
+  dg = 2026-04-01 "s"
+  dt = 2026-05-01 "s"
+
+ask q1: bal(jar, 2026-06-30) partial
+ask q2: bal(jar, 2026-06-30) from 2026-03-15 partial
+ask q3: bal(jar, 2026-06-30)
+ask q4: bal(world, 2026-06-30) partial

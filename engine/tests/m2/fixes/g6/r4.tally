@@ -1,0 +1,54 @@
+model r1
+  tally 2
+  on 2026-01-01
+  start 2025-01-01
+  end 2025-12-31
+  note "T, M2 G6 review and fix review (tmp/m2/review-g6.md, review-g6-fix.md): NB-6, x / 0 with x a hole: RUN-DIV, a refusal outranks a hole (L §8)"
+unit DUK: currency minor 0.01
+source s "s"
+index ks = [a, b, c]
+kind two: transfers
+  leg cash: DUK
+  leg fee: DUK
+place w: accounts DUK lives 2025-01-01..
+place v2: accounts DUK lives 2025-01-01..
+place shop: outside lives 2025-01-01..
+input four: int
+input five: int
+input one_duk: money DUK
+input x: int question "x?"
+input y: int question "y?"
+input three: int question "three?"
+input d3: date
+input mx: money DUK question "mx?"
+input my: money DUK question "my?"
+input z[k in ks]: int question "z?"
+input f[k in ks]: bool question "f?"
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  opening[w] = 100.00 DUK at 2025-01-01 start "o"
+  opening[v2] = 0.00 DUK at 2025-01-01 start "o"
+  three = 3 "t"
+  four = 4 "f"
+  five = 5 "f"
+  one_duk = 1.00 DUK "u"
+  d3 = 2025-03-01 "d"
+  x = ?"x?" "x"
+  y = ?"y?" "y"
+  mx = ?"mx?" "mx"
+  my = ?"my?" "my"
+  z[a] = 5 "a"
+  z[b] = 6 "b"
+  z[c] = 7 "c"
+  f[a] = true "a"
+  f[b] = ?"is b?" "b"
+  f[c] = false "c"
+def third: int = x / three at reader
+move two_legs: two
+  on d3
+  leg cash from w to shop amount mx
+  leg fee from w to v2 amount my
+ask d1: x / 0 law 2025-12-31 partial
+ask d2: x / 0 law 2025-12-31

@@ -17,9 +17,10 @@ use core::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::agenda::{Act, Mv};
-use super::day::{Broke, ends};
+use super::day::ends;
 use super::plan::{Amount, Dated, Exists, Inst, LegVal, Status, invariant, kind_certainty};
 use super::point::{At, Step};
+use super::readings::Broke;
 use super::state::{ALL, Change, Ent, Group, Taken, WalkObs};
 use crate::base::{Code, Refusal, Run as RunCode};
 use crate::eval::{Ctx, Engine, Entry};
@@ -237,7 +238,7 @@ impl Engine {
         (day, at): (Day, At),
     ) -> Result<CycleMember, Stop> {
         let cut = self.walk(id)?.cut;
-        let ctx = self.timeline_ctx(inst.law, day.min(cut));
+        let ctx = self.timeline_ctx(inst.law.first(), day.min(cut));
         self.push();
         let read = self.cycle_reads(m, mv, &inst, ctx);
         let running = Ctx {
@@ -302,7 +303,7 @@ impl Engine {
     /// The places an instance's legs give; a hole place gives none, and none where one is
     /// neither a thing nor a hole, or refused (refcore's `inst_places`, its changes).
     /// L §5.14.2, §8.4.
-    fn leg_places(
+    pub(crate) fn leg_places(
         &mut self,
         m: &Reality,
         mv: &MoveInfo,
@@ -476,6 +477,28 @@ impl Engine {
         Ok(())
     }
 
+    /// Whether a window `at` gives instance `inst`'s `ties by` other values at a later law
+    /// date than `vals`, its first law date's (refcore's `tie_order`, its `lds`). L §4.3,
+    /// §5.14.2.
+    fn ties_differ(
+        &mut self,
+        m: &Reality,
+        ties: &[crate::syntax::Expr],
+        inst: &Inst,
+        (vals, ctx): (&[Value], Ctx),
+    ) -> Result<bool, Stop> {
+        for day in inst.law.rest() {
+            let mut other = Vec::with_capacity(ties.len());
+            for x in ties {
+                other.push(self.ev(m, x, &inst.env, ctx.at_law(Some(*day)))?);
+            }
+            if other != vals {
+                return Ok(true);
+            }
+        }
+        Ok(false)
+    }
+
     /// One move's instances due on a day, in the order of its `ties by`: a hole there is
     /// `RUN-TIE`, and so are two instances it doesn't tell apart (refcore's `tie_order`).
     /// L §5.14.2.
@@ -493,7 +516,7 @@ impl Engine {
         let cut = self.walk(id)?.cut.min(day);
         let mut scored: Vec<(Vec<Value>, Inst)> = Vec::with_capacity(insts.len());
         for inst in insts {
-            let ctx = self.timeline_ctx(inst.law, cut);
+            let ctx = self.timeline_ctx(inst.law.first(), cut);
             let mut vals = Vec::with_capacity(ties.len());
             for x in ties {
                 let v = self.ev(m, x, &inst.env, ctx)?;
@@ -504,6 +527,13 @@ impl Engine {
                     ));
                 }
                 vals.push(v);
+            }
+            if self.ties_differ(m, ties, &inst, (&vals, ctx))? {
+                // `HOLE-IMPRECISE` for the ties by, a hole there (refcore's `tie_order`)
+                return Err(refuse(
+                    RunCode::Tie,
+                    format!("{}: its ties by is a hole", mv.id),
+                ));
             }
             scored.push((vals, inst));
         }
@@ -560,6 +590,8 @@ impl Engine {
                 &Broke::Decision(run_id),
             )?;
         }
+        // the readings after it, each tested as it is booked (E §4.2 steps 3 and 5)
+        self.readings_after(m, id, ix, key)?;
         Ok(ix)
     }
 
@@ -582,7 +614,7 @@ impl Engine {
                 walk: id,
                 point: key,
             }),
-            ..self.timeline_ctx(inst.law, t.min(cut))
+            ..self.timeline_ctx(None, t.min(cut))
         };
         let own = self.own_earlier_obs(m, id, &inst, t)?;
         let prev_less = core::mem::replace(&mut self.walk_mut(id)?.less_obs, own);
@@ -593,7 +625,7 @@ impl Engine {
             // refused before its point (its key's `where`): nothing of its body is read but its
             // places (tally 2.1.7 R2, #104)
             Some(err) => Err(Stop::Refused(err.clone())),
-            None => self.inst_body(m, mv, &inst, ctx, inst.exists.clone()),
+            None => self.body_over_law(m, mv, &inst, ctx),
         };
         let met = self.pop_alone();
         self.walk_mut(id)?.less_obs = prev_less;
@@ -628,10 +660,14 @@ impl Engine {
         // a refused instance's legs' places are still read, at its point, so the refusal
         // reaches the places its legs give (L §8.4; tally 2.1.7 R2, #104)
         if run.inst.err.is_some() && run.inst.legs.is_empty() && !mv.decl.legs.is_empty() {
-            self.refused_at_point(m, mv, &mut run.inst, ctx)?;
+            let law = run.inst.law.first();
+            self.refused_at_point(m, mv, &mut run.inst, ctx.at_law(law))?;
         }
         self.walk_mut(id)?.group = Some(Group::new());
-        self.book_run(m, id, run, t)
+        let ix = self.book_run(m, id, run, t)?;
+        // the ends stated same as this decision that waited for its point (L §6.1)
+        self.same_release(m, id, ix)?;
+        Ok(ix)
     }
 
     /// The legs of decision instance `inst`, refused before its point, with their places read
@@ -671,7 +707,7 @@ impl Engine {
             (walk.cut, walk.proj.is_none())
         };
         let modelled = main
-            && ((t < cut && self.touches_covered(m, &run.inst, cut)) || !run.inst.obs.is_empty());
+            && ((t < cut && self.touches_covered(m, &run.inst, cut)?) || !run.inst.obs.is_empty());
         let legless = m
             .moves
             .get(&run.inst.move_id)
@@ -754,7 +790,8 @@ impl Engine {
         }
         run.inst.status = if t < cut { Status::Past } else { Status::Plan };
         let mut reg = Vec::new();
-        if t < cut && run.inst.obs.is_empty() {
+        // one stated same as an observed row was observed (L §6.1)
+        if t < cut && run.inst.obs.is_empty() && !walk.same_observed.contains(&run.inst.id) {
             reg.push(Entry {
                 word: "unfulfilled",
                 text: run.inst.id.clone(),
@@ -762,7 +799,6 @@ impl Engine {
             });
         }
         let legs = run.inst.legs.clone();
-        let (mv_id, coll) = (run.inst.id.clone(), run.inst.coll.clone());
         let later_rank = walk.plan_rank(&run.inst.order)?;
         let inst = run.inst.clone();
         walk.record(run);
@@ -777,10 +813,41 @@ impl Engine {
                 self.walk_mut(id)?.at(at, Act::Leg(Mv::Run(ix), li));
                 continue;
             }
-            self.book_leg(m, id, (&mv_id, &inst.move_id, lg), key, &reg, &coll)?;
+            self.book_leg(m, id, (&inst, lg), key, &reg)?;
         }
         self.book_own_obs(m, id, &inst, key)?;
         Ok(ix)
+    }
+
+    /// Puts walk `id`'s running reads back as decision run `run` read them at its point, its
+    /// own observations booked before its day left out, for a cell traced again there; returns
+    /// what [`Engine::leave_run`] puts back (`explain` of a walk-bound def: "the traced value
+    /// equals the stored one"). E §10, §4.2 step 3, L §5.19.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a run with no day or a walk the engine lacks.
+    pub(crate) fn enter_run(
+        &mut self,
+        m: &Reality,
+        id: usize,
+        run: &Run,
+    ) -> Result<Option<Vec<LegVal>>, Stop> {
+        let Some(Dated::Day(t)) = run.inst.day else {
+            return Err(invariant("a decision run with no day"));
+        };
+        let own = self.own_earlier_obs(m, id, &run.inst, t)?;
+        Ok(core::mem::replace(&mut self.walk_mut(id)?.less_obs, own))
+    }
+
+    /// Puts back walk `id`'s running reads as [`Engine::enter_run`] found them. E §4.2 step 3.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a walk the engine lacks.
+    pub(crate) fn leave_run(&mut self, id: usize, prev: Option<Vec<LegVal>>) -> Result<(), Stop> {
+        self.walk_mut(id)?.less_obs = prev;
+        Ok(())
     }
 
     /// The legs of a decision's own observations booked on their days before its day, the

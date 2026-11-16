@@ -1,0 +1,44 @@
+model p
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): input rows stated same: agreeing, a missing side, a hole on one and both sides, a period-keyed pair under law (G6's sr1; eval/read.rs read_same_rows)"
+
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [a, b, c, d]
+input x[k in ks]: int
+input y[k in ks]: int
+input r[m in months]: money PLN
+input t[m in months]: money PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x[a] = 1 "s"
+  y[a] = 1 "s"
+  x[b] = 2 "s"
+  y[c] = ? "y c open" "s"
+  x[c] = 5 "s"
+  x[d] = ? "x d open" "s"
+  y[d] = ? "y d open" "s"
+  r[2026-03] = 10.00 PLN "s"
+  t[2026-03] = 12.00 PLN "s"
+
+ask q1: x[a] + y[a]
+ask q2: x[b], y[b]
+ask q3: x[c], y[c]
+ask q4: x[d], y[d]
+ask q5: r[2026-03] law 2026-03-15
+ask q6: t[2026-03]
+
+version sm
+  cite s
+  known 2026-01-02
+  same x[a] = y[a]
+  same x[b] = y[b]
+  same x[c] = y[c]
+  same x[d] = y[d]
+  same r[2026-03] = t[2026-03]

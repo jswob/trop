@@ -1,0 +1,50 @@
+model qq
+  tally 2
+  on 2025-06-15
+  start 2025-01-01
+  end 2025-06-30
+
+source card "made up"
+
+unit DUK: currency minor 0.01
+
+index ks = [a, b, c, d]
+
+input sp[m in months]: money DUK
+
+input n[k in ks]: int
+
+input hole_n[k in ks]: int
+
+ask q_mean: mean(sp[k] for k in months where k < 2025-04)
+
+ask q_mean_int: mean(n[k] for k in ks)
+
+ask q_share: share(n[k] > n[d] for k in ks)
+
+ask q_q25: quantile(n[k] for k in ks, 25 %)
+
+ask q_q50: quantile(n[k] for k in ks, 50 %)
+
+ask q_q100: quantile(sp[k] for k in months where k < 2025-04, 100 %)
+
+ask q_q0: quantile(n[k] for k in ks, 0 %)
+
+ask q_empty: mean(n[k] for k in ks where n[k] > n[a] * n[a])
+
+ask q_hole: mean(hole_n[k] for k in ks)
+
+ask q_hole_where: share(n[k] > n[b] for k in ks where hole_n[k] > n[b])
+
+version card_2025
+  cite card
+  governs always
+  known 2025-01-01
+  sp[2025-01] = 3100 "January"
+  sp[2025-02] = 2900 "February"
+  sp[2025-03] = 3650 "March"
+  n[a] = 4 "x"
+  n[b] = 1 "x"
+  n[c] = 3 "x"
+  n[d] = 2 "x"
+  hole_n[a] = 1 "x"

@@ -1,0 +1,29 @@
+part hc_2024_04
+  tally 2
+  note "the base (H0): month 39 (2024-04) of the hindcast's 60, written by gen.py from M*; synthetic."
+
+version st_2024_04
+  cite statements
+  governs 2024-04
+  known 2024-05-02
+  covers konto
+  pad konto from unexplained
+  bank[r20240401a] = (on: 2024-04-01, kind: transfers, leg cash from konto to landlord amount 2900.00 PLN, fulfils: rent[2024-04]) "czynsz"
+  bank[r20240406a] = (on: 2024-04-06, kind: transfers, leg cash from konto to shops amount 1240.00 PLN, fulfils: spend[food, 2024-04]) "food"
+  bank[r20240408a] = (on: 2024-04-08, kind: transfers, leg cash from konto to shops amount 310.00 PLN, fulfils: spend[transport, 2024-04]) "transport"
+  bank[r20240410a] = (on: 2024-04-10, kind: wages, leg cash from employer_a to konto amount 7279.00 PLN, fulfils: pay_a[2024-04]) "wynagrodzenie A"
+  bank[r20240411a] = (on: 2024-04-11, kind: transfers, leg cash from konto to broker amount 1500.00 PLN, fulfils: invest[2024-04]) "przelew do biura maklerskiego"
+  bank[r20240412a] = (on: 2024-04-12, kind: transfers, leg cash from konto to shops amount 455.20 PLN, fulfils: spend[utilities, 2024-04]) "utilities"
+  bank[r20240415a] = (on: 2024-04-15, kind: transfers, leg cash from konto to streaming amount 49.99 PLN, fulfils: sub[2024-04]) "abonament"
+  bank[r20240420a] = (on: 2024-04-20, kind: transfers, leg cash from konto to shops amount 120.00 PLN, fulfils: spend[health, 2024-04]) "health"
+  bank[r20240422a] = (on: 2024-04-22, kind: transfers, leg cash from konto to shops amount 260.00 PLN, fulfils: spend[clothes, 2024-04]) "clothes"
+  bank[r20240425a] = (on: 2024-04-25, kind: wages, leg cash from employer_b to konto amount 5353.00 PLN, fulfils: pay_b[2024-04]) "wynagrodzenie B"
+  bank[r20240426a] = (on: 2024-04-26, kind: transfers, leg cash from konto to shops amount 380.00 PLN, fulfils: spend[leisure, 2024-04]) "leisure"
+  stated[konto] = 221672.40 PLN at 2024-04-30 end "saldo"
+
+version slips_2024_04
+  cite slips
+  governs 2024-04
+  known 2024-04-10
+  slip_a[2024-04] = 8770.00 PLN "pasek A"
+  slip_b[2024-04] = 6450.00 PLN "pasek B"

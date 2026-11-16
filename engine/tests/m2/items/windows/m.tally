@@ -1,0 +1,64 @@
+model w_each
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 C2, G3 (#158, #164 R6): windows each on an ask over add_business (ab), on low with from under a pin (lwf; without from refcore 2.1.7 prints the unsplit holes, against L §4.4: not stored, a question), on a balance whose move's at is a window (bw, bw_plain), and under an axis (bx)"
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+axis ax
+  lo "low"
+  hi "high"
+
+place konto: accounts PLN lives 2026-01-01..
+place work: outside lives 1900-01-01..
+
+input cal: calendar
+input pd: date
+input wd: date
+input rate: money PLN
+input twice: int
+
+def bonus_amt: money PLN at wd
+  rule base = rate
+  rule hi beats base = rate * twice when ax == hi
+
+move bonus: transfers
+  on pd
+  at wd
+  leg cash from work to konto amount rate
+
+move gift: transfers
+  on wd
+  leg cash from work to konto amount bonus_amt
+
+ask ab: add_business(2026-05-29, 1, cal) windows each
+ask lwf: low(konto, 2026-03-01 .. 2026-04-30) from 2026-03-01 windows each with ax = lo
+ask bw: bal(konto, 2026-04-30) windows each
+ask bw_plain: bal(konto, 2026-04-30)
+ask bx: bal(konto, 2026-04-30) with ax = hi windows each
+ask bxx: bal(konto, 2026-04-30) windows each
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  cal = calendar(weekends [sat, sun], added [window(2026-06-01, 2026-06-02)]) "c"
+  pd = 2026-04-01 "c"
+  wd = window(2026-03-28, 2026-04-03) "c"
+  twice = 2 "c"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
+
+version r1
+  cite card
+  governs ..2026-03-31
+  known 2026-01-01
+  rate = 10.00 PLN "c"
+
+version r2
+  cite card
+  governs 2026-04-01..
+  known 2026-01-01
+  rate = 12.00 PLN "c"

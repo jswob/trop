@@ -37,13 +37,38 @@ impl PartialOrd for Asked {
 }
 
 /// A missing fact: the questions it carries, each once (L §8.1).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Eq)]
 pub struct Hole {
     /// The questions, sorted by their text, then the figure (code point order).
     questions: BTreeSet<Asked>,
     /// A bound on the unknown, which a later milestone states; empty at S (L §8.1 "a bound on
     /// the unknown can be added later", seam U).
     bound: Bound,
+    /// What a `partial` ask line knows of it (L §5.18 Partial answers).
+    lin: Lin,
+}
+
+/// What a `partial` ask line knows of a hole (L §5.18 Partial answers; refcore's `Hole.lin`):
+/// nothing said, so one question is linear in itself and more are not; plain, as a rounding,
+/// `min`, `max`, a band or a comparison made it; or its known part and its named holes.
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum Lin {
+    /// Nothing said (refcore's `None`).
+    Unsaid,
+    /// Not linear in its holes (refcore's `False`).
+    Plain,
+    /// Its known part and the holes it is linear in.
+    Linear(Box<Linear>),
+}
+
+/// A value linear in named holes: its known part and each hole with its coefficient, sorted
+/// by the question's text, then its figure (L §5.18 Partial answers).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Linear {
+    /// The known part; none where no known term met it.
+    pub known: Option<crate::model::Value>,
+    /// Each hole as (its question's text, the figure it was asked of), with its coefficient.
+    pub terms: Vec<((String, String), crate::model::Value)>,
 }
 
 /// The slot for a hole's bound: none is ever stated at S (seam U).
@@ -51,6 +76,15 @@ pub struct Hole {
 enum Bound {
     /// No bound is known.
     Unbounded,
+}
+
+/// Two holes are the same hole when they carry the same questions and bound: what a `partial`
+/// line knows of them is how one line prints it, not the hole (L §8.1, §5.18).
+impl PartialEq for Hole {
+    /// The same questions and bound, whatever a `partial` line knows of them. L §8.1, §5.18.
+    fn eq(&self, other: &Hole) -> bool {
+        self.questions == other.questions && self.bound == other.bound
+    }
 }
 
 impl Hole {
@@ -66,7 +100,69 @@ impl Hole {
         Hole {
             questions,
             bound: Bound::Unbounded,
+            lin: Lin::Unsaid,
         }
+    }
+
+    /// The hole of `self`'s questions that is linear in its named holes as `lin` says, for a
+    /// `partial` ask line (L §5.18 Partial answers).
+    #[must_use]
+    pub fn linear(&self, lin: Linear) -> Hole {
+        Hole {
+            lin: Lin::Linear(Box::new(lin)),
+            ..self.clone()
+        }
+    }
+
+    /// The hole of `self`'s questions, not linear in them: a rounding, `min`, `max`, a band,
+    /// a comparison or a product of two holes met it (L §5.18 Partial answers).
+    #[must_use]
+    pub fn plain(&self) -> Hole {
+        Hole {
+            lin: Lin::Plain,
+            ..self.clone()
+        }
+    }
+
+    /// What it is linear in, where a `partial` line can say: its own known part and holes,
+    /// or one question alone, which is 1 × that hole; none for a plain hole or several
+    /// questions nothing said of (refcore's `lin_of`). L §5.18 Partial answers.
+    #[must_use]
+    pub fn linear_part(&self) -> Option<Linear> {
+        match &self.lin {
+            Lin::Plain => None,
+            Lin::Linear(lin) => Some(Linear::clone(lin)),
+            Lin::Unsaid => {
+                let mut all = self.questions.iter();
+                let (Some(one), None) = (all.next(), all.next()) else {
+                    return None;
+                };
+                Some(Linear {
+                    known: None,
+                    terms: vec![(
+                        (one.text.clone(), one.figure.clone()),
+                        crate::model::Value::int(1),
+                    )],
+                })
+            }
+        }
+    }
+
+    /// Its known part and holes as a `partial` line prints them, where an operation computed
+    /// them; none for a hole nothing said of or a plain one (refcore's `fmt_value`, its
+    /// `partial and v.lin`). L §5.18 Partial answers.
+    #[must_use]
+    pub fn printed_linear(&self) -> Option<&Linear> {
+        match &self.lin {
+            Lin::Linear(lin) => Some(lin),
+            Lin::Unsaid | Lin::Plain => None,
+        }
+    }
+
+    /// Whether the two holes carry the same questions. L §8.1.
+    #[must_use]
+    pub fn same_questions(&self, other: &Hole) -> bool {
+        self.questions == other.questions
     }
 
     /// `HOLE-PRERUN`'s hole, asked of `figure`: a walked value of a day before the run's
@@ -118,6 +214,28 @@ impl Hole {
         out.join(" ")
     }
 
+    /// The questions with the day each gap-rule question names (`…: no value at <d>`) written
+    /// `D`, sorted, each once; and whether any named one. Two days of one law-date class give
+    /// holes alike but for that day (L §4.6 step 5; E §3.2; refcore's `def_window`, `norm`).
+    #[must_use]
+    pub fn undated(&self) -> (Vec<(String, String)>, bool) {
+        let mut out = Vec::with_capacity(self.questions.len());
+        let mut dated = false;
+        for asked in &self.questions {
+            let text = match gap_stem(&asked.text) {
+                Some(stem) => {
+                    dated = true;
+                    format!("{stem}: no value at D")
+                }
+                None => asked.text.clone(),
+            };
+            out.push((text, asked.figure.clone()));
+        }
+        out.sort();
+        out.dedup();
+        (out, dated)
+    }
+
     /// The question texts, sorted, for a register line or a test (L §8.2).
     #[must_use]
     pub fn question_texts(&self) -> Vec<String> {
@@ -125,6 +243,27 @@ impl Hole {
         out.dedup();
         out
     }
+}
+
+/// The text before a gap-rule question's `: no value at <yyyy-mm-dd>` at its end, or none
+/// for another question (L §4.6 step 5).
+fn gap_stem(text: &str) -> Option<&str> {
+    let (stem, day) = text.rsplit_once(": no value at ")?;
+    let shape = day.len() == 10
+        && day.char_indices().all(|(i, c)| match i {
+            4 | 7 => c == '-',
+            _ => c.is_ascii_digit(),
+        });
+    shape.then_some(stem)
+}
+
+/// One named hole of a partial answer, `?"text" (figure)` (L §5.18 Partial answers, §8.1).
+#[must_use]
+pub fn atom_text(text: &str, figure: &str) -> String {
+    if figure.is_empty() {
+        return one_question(text, &[]);
+    }
+    one_question(text, &[figure])
 }
 
 /// `?"text" (figures)`, the text's `\` and `"` escaped (L §8.1, §2.4).
@@ -144,7 +283,14 @@ pub fn spread(operands: &[Option<&Hole>]) -> Option<Hole> {
     let mut out: Option<Hole> = None;
     for hole in operands.iter().flatten() {
         match &mut out {
-            None => out = Some(Hole::clone(hole)),
+            None => {
+                // an operation that merely spreads them can't tell what its hole is linear in:
+                // it is plain (refcore's `merge`, whose `lin` is `False`; L §5.18)
+                out = Some(Hole {
+                    lin: Lin::Plain,
+                    ..Hole::clone(hole)
+                });
+            }
             Some(acc) => acc.questions.extend(hole.questions.iter().cloned()),
         }
     }

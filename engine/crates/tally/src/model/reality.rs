@@ -20,7 +20,7 @@ use super::ty::Ty;
 use super::world::{Scenarios, World};
 use crate::base::{Internal, Interner, Place, Refusal, Table, Warn};
 use crate::num::Num;
-use crate::syntax::{Ask, Axis, Expr, Fill, Header, Price, Sign, Source, Type};
+use crate::syntax::{Ask, Axis, Expr, Fill, Header, Postfix, Price, Sign, Source, Type};
 use crate::time::Day;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -79,6 +79,35 @@ pub fn price_id(input: &Expr) -> Option<&str> {
         return Some(id);
     }
     None
+}
+
+/// A price reference split at its fields: the read it names, `px` or `px[k]`, and the
+/// record fields `.f` read of it, in order; none where a field comes before keys or the
+/// reference is no name (L §2.3 `ref`, §5.10; refcore's `m_resolve_price`, its peeled
+/// fields).
+#[must_use]
+pub fn price_fields(input: &Expr) -> Option<(Expr, Vec<&str>)> {
+    let Expr::Post(base, posts) = input else {
+        return matches!(input, Expr::Name(_)).then(|| (input.clone(), Vec::new()));
+    };
+    if !matches!(base.as_ref(), Expr::Name(_)) {
+        return None;
+    }
+    let (read, rest) = match posts.as_slice() {
+        [Postfix::Keys(keys), rest @ ..] => (
+            Expr::Post(base.clone(), vec![Postfix::Keys(keys.clone())]),
+            rest,
+        ),
+        rest => (base.as_ref().clone(), rest),
+    };
+    let mut fields = Vec::new();
+    for post in rest {
+        let Postfix::Field(field) = post else {
+            return None;
+        };
+        fields.push(field.as_str());
+    }
+    Some((read, fields))
 }
 
 /// The inputs the language declares (refcore's `BUILTIN_INPUTS`). L §5.19.
@@ -223,10 +252,30 @@ impl Joint {
 /// Two rows or two movements stated `same` (refcore's `same_rows`, `same_moves`). L §6.1.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SamePair {
-    /// Two rows: each input's id and keys.
-    Rows(String, Vec<KeyVal>, String, Vec<KeyVal>),
-    /// Two movements: each instance's id, `m[k]` or an observed row's `x[id]`.
-    Moves(String, String),
+    /// Two rows: each input's id and keys, and the version whose line states them, none in a
+    /// joint model's header (its `known` holds for the line, L §4.5).
+    Rows(String, Vec<KeyVal>, String, Vec<KeyVal>, Option<String>),
+    /// Two movements: each instance's id, `m[k]` or an observed row's `x[id]`, and the
+    /// version whose line states them, none in a joint model's header (L §4.5).
+    Moves(String, String, Option<String>),
+}
+
+impl SamePair {
+    /// The other side of a line of rows that names input `id`'s at `keys`, with the version
+    /// whose line it is; none where the line names other rows (L §6.1).
+    #[must_use]
+    pub fn other_row(&self, id: &str, keys: &[KeyVal]) -> Option<(&str, &[KeyVal], Option<&str>)> {
+        let SamePair::Rows(a, ka, b, kb, version) = self else {
+            return None;
+        };
+        if a == id && ka.as_slice() == keys {
+            Some((b, kb, version.as_deref()))
+        } else if b == id && kb.as_slice() == keys {
+            Some((a, ka, version.as_deref()))
+        } else {
+            None
+        }
+    }
 }
 
 impl Reality {
@@ -377,6 +426,45 @@ impl Reality {
         }
     }
 
+    /// The unit and type of a balance reading of place `place` whose row states `value`: a
+    /// quantity in the place's unit, money where it is a currency; at a place of unit `any`,
+    /// in the one unit its row states, which load checked; none where the place has no unit,
+    /// or the row of a place of unit `any` states none (a hole, `none`) (refcore's
+    /// `place_value`). L §4.6 Readings, §5.19, §5.7.
+    ///
+    /// # Errors
+    ///
+    /// A number error of the unit's power.
+    pub fn reading_ty(
+        &self,
+        place: &str,
+        value: &crate::syntax::Value,
+    ) -> Result<Option<(String, Ty)>, crate::num::NumError> {
+        let Some(unit) = self.things.get(place).and_then(|t| self.place_unit(t)) else {
+            return Ok(None);
+        };
+        let unit = if unit == "any" {
+            let crate::syntax::Value::Lit(crate::syntax::Lit::Num(number)) = value else {
+                return Ok(None);
+            };
+            let Some([term]) = number.unit.as_ref().map(|u| u.terms.as_slice()) else {
+                return Ok(None);
+            };
+            term.base.clone()
+        } else {
+            unit
+        };
+        let ty = if self.currencies.contains_key(&unit) {
+            Ty::Money(unit.clone())
+        } else {
+            Ty::Num(
+                super::unit::Unit::make(vec![(unit.clone(), 1)])?,
+                super::ty::Shown::Plain,
+            )
+        };
+        Ok(Some((unit, ty)))
+    }
+
     /// How a price input of type `ty` values a place: `num CUR` (or `money CUR`) whole, `num
     /// CUR/u` per unit u, else not a price (refcore's `m_resolve_price`, its type test).
     /// L §5.10.
@@ -404,18 +492,23 @@ impl Reality {
     }
 
     /// The input or def a price clause names, and how it values its place, from its declared
-    /// type (refcore's `pn._r`, `pn._mode`). L §5.10.
+    /// type, a record's field's for `priced p.f` (refcore's `pn._r`, `pn._mode`). L §5.10,
+    /// §2.3.
     #[must_use]
     pub fn clause_mode(&self, price: &Price) -> Option<(String, Priced)> {
         let id = price_id(&price.input)?;
+        let (_, fields) = price_fields(&price.input)?;
         let kind = self.names.kind(id)?;
-        let ty = if kind == NameKind::Input {
+        let mut ty = if kind == NameKind::Input {
             self.inputs.get(id)?.ty.clone()
         } else if kind == NameKind::Def {
             Some(self.defs.get(id)?.ty.clone())
         } else {
             return None;
         };
+        for field in fields {
+            ty = ty.and_then(|t| t.field(field).cloned());
+        }
         Some((id.to_owned(), self.price_mode(ty.as_ref())?))
     }
 

@@ -1,0 +1,40 @@
+model b
+  tally 2
+  on 2027-06-30
+  start 2027-01-01
+  end 2027-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind ovs: event certain
+  leg cash: PLN
+place acct: accounts PLN lives 2027-01-01..
+place bank: outside lives 2027-01-01..
+input fee[m in months]: money PLN question "fee?"
+input dom: int
+def p[m in months]: money PLN = if pos(m) == 1 then 0 else p[m - 1] + sum(o.cash.amount for o in ovs over m)
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from bank to acct amount p[m]
+move op[m in months]: ovs
+  on start_of(m)
+  leg cash from acct to bank amount 1 PLN
+move z_fee[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from acct to bank amount fee[m]
+
+version v1
+  cite s
+  governs always
+  known 2027-01-01
+  dom = 10 "s"
+  opening[acct] = 100.00 PLN at 2027-01-01 start "s"
+
+version v2
+  cite s
+  governs always
+  known 2027-03-01
+  fee = 0.50 PLN "s"
+
+ask t3: bal(acct, 2027-06-30)

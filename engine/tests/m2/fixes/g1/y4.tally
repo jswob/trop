@@ -1,0 +1,20 @@
+model y4
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+
+band sc(x: money PLN): num PLN
+
+def z: num PLN = sc(1000) at reader
+
+ask a1: z law 2026-03-01
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  sc: [0, inf) = x

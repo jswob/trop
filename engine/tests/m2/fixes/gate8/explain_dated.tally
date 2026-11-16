@@ -1,0 +1,50 @@
+model explain_dated
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 gate 8 (run 43657284122): explain of balances that a decision moves, the decision reading bal(x, d) with a day through a def, and that def explained, walk-bound (walk/reads.rs bal_read: a read inside a decision is no traced read of its own; E §10)"
+
+source s "s"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place sav: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input amt: money PLN
+
+input keep: money PLN
+
+input dsv: int
+
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from world to konto amount amt
+
+def lim[m in months]: money PLN = bal(konto, start_of(m)) - keep at start_of(m)
+
+move sv[m in months]: transfers
+  on day_of(m, dsv)
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, lim[m])
+
+ask e_sav: explain bal(sav, 2026-03-31)
+
+ask e_lim: explain lim[2026-02]
+
+ask e_konto: explain bal(konto, 2026-02-28)
+
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  keep = 30.00 PLN "s"
+  dsv = 15 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "s"

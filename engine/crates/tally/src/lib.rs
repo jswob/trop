@@ -25,7 +25,7 @@ mod oracle;
 pub use api::run_faulted;
 pub use api::{
     Answer, Asks, Given, Pin, Request, Source, load_report, reprint, reprint_in, run, run_in,
-    run_with_lows, run_with_memo,
+    run_with_forks, run_with_how, run_with_lows, run_with_memo,
 };
 #[cfg(feature = "counters")]
 pub use counters::Counters;
@@ -117,7 +117,8 @@ pub mod model {
 
     pub use decl::{
         BandEnd, BandInfo, BandRow, BindInfo, DefInfo, Domain, Fulfils, InputInfo, MoveInfo,
-        ObsLeg, Observation, PlaceInfo, Row, RowInstant, RuleVer, Table as BandTable, TimePos,
+        ObsLeg, Observation, PlaceInfo, Row, RowInstant, RowsHold, RuleVer, Table as BandTable,
+        TimePos,
     };
     pub use graph::{Graph, Mark, Node, NodeKind, ReadRole, Rel, Shift, Target};
     pub use ids::{
@@ -129,7 +130,7 @@ pub mod model {
     pub use kind::{Entry, KindInfo, KindSpec, Labels, PRELUDE_KINDS, PlaceKeys, Thing, prelude};
     pub use reality::{
         BUILTIN_INDEXES, BUILTIN_INPUTS, Joint, MemberAsks, NameKind, Priced, Reality, SamePair,
-        price_id,
+        price_fields, price_id,
     };
     pub use ty::{CodeKind, PeriodWord, Shown, Ty};
     pub use unit::{PERIODS, Scaled, Unit, UnitError, is_currency_code};
@@ -146,7 +147,7 @@ pub mod model {
 pub mod hole {
     mod questions;
 
-    pub use questions::{Hole, spread};
+    pub use questions::{Hole, Linear, atom_text, spread};
 }
 
 /// The evaluator (E §3.2): expressions over the reality, def cells in the memo, rules, bands,
@@ -165,8 +166,10 @@ pub mod eval {
     mod extremes;
     mod keys;
     mod memo;
+    mod partial;
     mod pins;
     mod prorata;
+    mod queries;
     mod ranges;
     mod read;
     mod rules;
@@ -174,30 +177,34 @@ pub mod eval {
     mod srows;
     mod stack;
     mod state;
+    mod time_arith;
     mod timelines;
     mod trace;
     mod ty;
     mod windows;
     mod years;
 
+    pub(crate) use aggregate::Decided;
     pub use aggregate::Member;
-    pub(crate) use arith::periods_of;
     pub use arith::{Op, Test, arith, compare, currency_of, int_of, negate, same_value};
     pub(crate) use bindings::{names_in, order_text, reads_name};
     pub use context::Layer;
-    pub(crate) use context::{GUARDED, UNSET_AXIS, world_named};
+    pub(crate) use context::{Choice, GUARDED, Met, UNSET_AXIS, world_named};
     pub(crate) use convert::{ConvertFor, Converted, convert, convert_row, field_literal};
     pub(crate) use expr::equal_sides;
-    pub(crate) use keys::{thing_seen, to_key};
+    pub(crate) use keys::{Given, thing_seen, to_key};
+    pub(crate) use memo::LawClass;
     pub use memo::Memo;
+    pub(crate) use partial::{lin_balance, partial_text};
     pub(crate) use pins::after_on;
-    pub(crate) use ranges::range_literal_key;
+    pub(crate) use ranges::{range_literal_key, value_key};
     pub use stack::Item;
     pub use state::{Collected, Ctx, Engine, Entry, Env, RowSeen, Rows};
     pub(crate) use state::{a_day, num_stop, past_days};
+    pub(crate) use time_arith::periods_of;
     pub(crate) use timelines::combinations;
-    pub(crate) use trace::{Balance as TracedBalance, Kind as TraceKind, Trace, Walked};
-    pub(crate) use windows::one_day;
+    pub(crate) use trace::{Balance as TracedBalance, Kind as TraceKind, RuleLine, Trace, Walked};
+    pub(crate) use windows::{known_question, one_day, window_days};
     pub(crate) use years::year_form;
 }
 
@@ -209,39 +216,48 @@ pub mod walk {
     mod agenda;
     mod day;
     mod flows;
+    mod fork;
     mod legs;
     mod lows;
+    mod modelled;
+    mod move_flows;
     mod order;
     mod plan;
     mod point;
     mod projection;
+    mod readings;
     mod reads;
     mod state;
     mod tuples;
     mod value;
 
     pub use agenda::{Act, Mv, Reading, endings, reading_point};
+    pub use day::Ends;
     #[cfg(feature = "fault-injection")]
     pub use day::Fault;
-    pub use day::{Broke, Ends};
     pub(crate) use flows::span_last;
+    pub use fork::Forks;
+    pub(crate) use fork::Parked;
     pub(crate) use lows::Trees;
     pub use lows::{Lows, RangeMinimum};
     pub use order::{Run, WalkAt};
     pub use plan::{
-        Amount, Booked, BookedLeg, Bookings, Dated, End, Exists, Inst, LegVal, Order, Seed, Status,
-        Term, kind_certainty, qty_value,
+        Amount, Booked, BookedLeg, Bookings, Dated, DayWindow, End, Exists, Inst, LegVal, Order,
+        Seed, Status, Term, kind_certainty, qty_value,
     };
     pub(crate) use plan::{invariant, quantity};
     pub use point::{At, Step};
     pub use projection::ProjKey;
     pub(crate) use projection::own_unit;
+    pub use readings::Broke;
+    pub(crate) use readings::{breaks, takes_text};
     pub(crate) use reads::state_value;
     pub(crate) use state::GapAt;
     pub use state::{
         ALL, Change, Checkpoint, Ent, Group, Log, Progress, Projected, St, Taken, Today, Walk,
         WalkObs,
     };
+    pub use tuples::Law;
 }
 
 /// The book (E §5, §6.1, §6.3): observations the cut sees, the places versions cover and the
@@ -251,17 +267,23 @@ pub mod walk {
 pub mod book {
     mod adjust;
     mod ledger;
+    mod ledger_order;
     mod members;
     mod observe;
     mod reading;
+    mod same;
     mod settle;
 
-    pub use adjust::{Adjustment, Settled};
-    pub use ledger::{Fig, Group, GroupKey, Ledger, Line, fig_text};
+    pub(crate) use adjust::hole_booked_before;
+    pub use adjust::{Adjustment, Measured, Settled};
+    pub use ledger::{Fig, Ledger, Line, UnitLedger, fig_text};
+    pub use ledger_order::{Group, GroupKey};
     pub(crate) use members::{MvDom, MvMember, inst_ref};
     pub use observe::{Coverage, Linked, Obs, inst_id};
-    pub use reading::{Pad, Seen, first_readings, reading_rank, readings};
-    pub(crate) use reading::{gap_text, instant_text};
+    pub use reading::{AfterDays, Pad, Seen, Stands, per_unit, reading_rank};
+    pub(crate) use reading::{gap_text, instant_text, reading_place};
+    pub use same::{Groups, kept_once, once_obs, same_differ, same_groups};
+    pub(crate) use same::{Member, Waiting, stated_same};
     pub(crate) use settle::settlement_move;
 }
 
@@ -276,7 +298,9 @@ pub mod ask {
     mod instance;
     mod register;
     mod residuals;
+    mod walkbound;
     mod walked;
+    mod windows;
     mod worlds;
 
     pub use answer::{Answered, How, answer};
@@ -337,10 +361,10 @@ pub mod load {
     pub(crate) use joint::reprint_members;
     pub use keys::index_key_of;
     pub(crate) use keys::literal_end;
-    pub(crate) use pins::reach_axes;
+    pub(crate) use pins::{forks_past_cap, reach_axes};
     pub(crate) use srows::ask_worlds;
     pub use steps::load;
-    pub(crate) use texts::{children as expr_children, text as expr_text};
+    pub(crate) use texts::{children as expr_children, post_text, text as expr_text};
     pub use worlds::{Loaded, Split, Worlds, load_run, split_files};
 }
 
@@ -356,11 +380,12 @@ pub mod read {
 
     pub use bands::{BandAt, band_no_row, band_no_table, band_origin, band_rows, table_held};
     pub use gap::{
-        Asked, Found, Question, member_span, no_candidate, origin, read_input, read_last,
+        Asked, Found, Question, last_began, member_span, no_candidate, origin, read_input,
+        read_last,
     };
     pub use rows::{
-        Clocks, Point, Test, candidates, choose, held, lawless, need_law, row_known, row_place,
-        row_span, time_point, worded,
+        Clocks, KnownInside, Point, Test, candidates, choose, held, known_inside, lawless,
+        need_law, row_known, row_place, row_span, standing_rows, time_point, worded,
     };
     pub use rules::rule_in_force;
 }
@@ -380,6 +405,7 @@ pub mod num {
     mod text;
 
     pub use money::{Currency, Money};
+    pub(crate) use rational::CAP_SURE_BITS;
     pub use rational::{Num, NumError};
     pub use round::Mode;
     pub use split::{Largest, SplitError, Tie, Weights};

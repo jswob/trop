@@ -113,15 +113,15 @@ impl Engine {
             (Some(on), _) => {
                 let day = self.ev(m, on, env, ctx)?;
                 if let Value::Hole(h) = day {
-                    return empty_or_unknown(bind, &things, h);
+                    return self.empty_or_unknown(m, (bind, env), &things, h, ctx);
                 }
                 match one_day(m, &day, "the day of a binding")? {
                     Ok(day_on) => When::Day(day_on),
-                    Err(h) => return empty_or_unknown(bind, &things, h),
+                    Err(h) => return self.empty_or_unknown(m, (bind, env), &things, h, ctx),
                 }
             }
             (None, Some(over)) => match self.span_value(m, over, env, ctx)? {
-                Err(h) => return empty_or_unknown(bind, &things, h),
+                Err(h) => return self.empty_or_unknown(m, (bind, env), &things, h, ctx),
                 Ok(span) => When::Over(span),
             },
             (None, None) => {
@@ -315,18 +315,62 @@ fn span_end(m: &Reality, v: &Value) -> Result<Result<Day, Hole>, Stop> {
     Err(wrong_type(m, "a span end is", v))
 }
 
-/// A binding whose day or span is a hole: no members where no thing of the kind could be one,
-/// else a domain that is that hole (refcore's `bind_day`, `kind_has_member`). L §5.7.
-fn empty_or_unknown(bind: &Bind, things: &[&Thing], h: Hole) -> Result<Values, Stop> {
-    if things.is_empty() {
-        return Ok(Values::Known(Vec::new()));
+impl Engine {
+    /// A binding over a kind whose day or span is a hole: no members where no thing of the
+    /// kind could be one, else a domain that is that hole (refcore's `bind_day`,
+    /// `kind_has_member`). L §5.7, §8.1.
+    fn empty_or_unknown(
+        &mut self,
+        m: &Reality,
+        (bind, env): (&Bind, &Env),
+        things: &[&Thing],
+        h: Hole,
+        ctx: Ctx,
+    ) -> Result<Values, Stop> {
+        let cands = things
+            .iter()
+            .map(|t| Value::Key(KeyVal::Thing(t.name.clone())))
+            .collect();
+        Ok(if self.may_hold(m, (bind, env), cands, ctx)? {
+            Values::Unknown(h)
+        } else {
+            Values::Known(Vec::new())
+        })
     }
-    if bind.filter.is_some() {
-        return Err(Stop::NotBuilt(
-            "a binding whose day is a hole and whose where may rule its members out",
-        ));
+
+    /// Whether binding `bind`, its day or span a hole, could hold one of the candidates on some
+    /// day: one its `where` doesn't rule out. A member whose `where` is false is outside the
+    /// binding whatever its day, so the domain is decided without the day; a `where` that is a
+    /// hole, none or a refusal leaves the candidate in. What the `where` reads reaches no
+    /// reader (refcore's `kind_has_member`). L §5.7 Bindings, §8.1 ("It stops propagating").
+    ///
+    /// # Errors
+    ///
+    /// A stop other than a refusal that a `where` meets.
+    pub(crate) fn may_hold(
+        &mut self,
+        m: &Reality,
+        (bind, env): (&Bind, &Env),
+        cands: Vec<Value>,
+        ctx: Ctx,
+    ) -> Result<bool, Stop> {
+        let Some(filter) = &bind.filter else {
+            return Ok(!cands.is_empty());
+        };
+        let written = self.bind_text(&bind.text);
+        for value in cands {
+            let inner = env.with_bind((&bind.var, &written), value, bind_domain(m, bind));
+            self.push();
+            let tested = self.ev(m, filter, &inner, ctx);
+            self.pop_alone();
+            match tested {
+                Ok(Value::Bool(false)) => {}
+                Ok(_) | Err(Stop::Refused(_)) => return Ok(true),
+                Err(stop) => return Err(stop),
+            }
+        }
+        Ok(false)
     }
-    Ok(Values::Unknown(h))
 }
 
 /// Whether a thing is of the kind on the day or over the span, in the world of `seen`: one

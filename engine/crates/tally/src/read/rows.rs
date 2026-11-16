@@ -18,8 +18,9 @@
 use crate::base::{Code, Load, Refusal};
 use crate::model::{
     BindInfo, Domain, InputInfo, KeyVal, OwnTime, Pat, Reality, Row, RowInstant, Span, TimePos,
-    World,
+    Value, World,
 };
+use crate::num::Num;
 use crate::syntax::Stop;
 use crate::time::Day;
 
@@ -214,8 +215,8 @@ enum Rank {
     Pos(usize),
     /// A stable id's text, compared by code point.
     Text(String),
-    /// An integer.
-    Int(i64),
+    /// A number of a stepped range, an integer one too.
+    Num(Num),
     /// A day, or a period's first day.
     Day(Day),
 }
@@ -225,7 +226,11 @@ fn rank_le(a: &Rank, b: &Rank) -> Option<bool> {
     match (a, b) {
         (Rank::Pos(x), Rank::Pos(y)) => Some(x <= y),
         (Rank::Text(x), Rank::Text(y)) => Some(x <= y),
-        (Rank::Int(x), Rank::Int(y)) => Some(x <= y),
+        // a number error is no order between them
+        (Rank::Num(x), Rank::Num(y)) => x
+            .compare(y)
+            .ok()
+            .map(|order| order != core::cmp::Ordering::Greater),
         (Rank::Day(x), Rank::Day(y)) => Some(x <= y),
         _ => None,
     }
@@ -248,10 +253,17 @@ fn rank(m: &Reality, domain: &Domain, key: &KeyVal) -> Option<Rank> {
             Some(Rank::Text(format!("{base}:{name}")))
         }
         Domain::Range => match key {
-            KeyVal::Int(n) => Some(Rank::Int(*n)),
+            KeyVal::Int(n) => Some(Rank::Num(Num::int(*n))),
+            KeyVal::Value(v) => {
+                if let Value::Number(n) = &v.value {
+                    Some(Rank::Num(n.q.clone()))
+                } else {
+                    None
+                }
+            }
             KeyVal::Day(day) => Some(Rank::Day(*day)),
             KeyVal::Period(period) => Some(Rank::Day(period.start())),
-            KeyVal::Key { .. } | KeyVal::Thing(_) | KeyVal::Mv(_) | KeyVal::Value(_) => None,
+            KeyVal::Key { .. } | KeyVal::Thing(_) | KeyVal::Mv(_) => None,
         },
         Domain::Axis(_) => None,
     }
@@ -441,6 +453,59 @@ pub fn candidates(
     Ok(out)
 }
 
+/// A row a read meets whose `known` is a window holding the cut: whether the cut sees it is
+/// the line's `windows each`'s, else `HOLE-IMPRECISE` (L §4.5).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct KnownInside {
+    /// Its position among the rows.
+    pub at: usize,
+    /// The window's first day and last.
+    pub window: (Day, Day),
+    /// Whose `known` it is: the row's own (its stable id), else its version's (refcore's
+    /// `row_known_sid`).
+    pub sid: String,
+}
+
+/// The rows of `rows` a read at `keys` by time test `test` meets, as [`candidates`] tests
+/// them but for the cut, whose `known` is a window holding the read's cut: its first day on
+/// or before the cut, its last after it. A row that doesn't apply at the read's time changes
+/// nothing the read sees, so it is none of them (L §4.5, §4.6 step 1; E §5 step 1).
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for a row whose version is missing, and as [`candidates`] for a dated
+/// row read with no law date.
+pub fn known_inside(
+    m: &Reality,
+    rows: &[Row],
+    (binds, keys): (&[BindInfo], &[KeyVal]),
+    test: Test,
+    clocks: Clocks,
+) -> Result<Vec<KnownInside>, Stop> {
+    let mut out = Vec::new();
+    for (at, row) in rows.iter().enumerate() {
+        let version = m.versions.get(&row.version).ok_or_else(no_version)?;
+        let (window, sid) = match (row.own_known, row.own_window) {
+            (Some(lo), Some(hi)) => ((lo, hi), row.sid.clone()),
+            (Some(_), None) => continue,
+            (None, _) => match version.window {
+                Some(hi) => ((version.known, hi), version.id.clone()),
+                None => continue,
+            },
+        };
+        let inside = window.0 <= clocks.cut && clocks.cut < window.1;
+        if inside
+            && m.scenarios.sees(clocks.world, Some(&row.version))
+            && row_matches(m, row, binds, keys)
+            && unstated_ok(m, row, (binds, keys), clocks.world)?
+            && in_time(m, row, test, clocks.cut)?
+        {
+            out.push(KnownInside { at, window, sid });
+        }
+    }
+    Ok(out)
+}
+
 /// The candidates among `cands` that entered into force by the day of the read's `wording`
 /// pin, each row by its own time where it states one; all of them outside such a pin
 /// (L §4.3, §5.3; refcore's `wording_ok`).
@@ -538,6 +603,16 @@ fn narrower(m: &Reality, binds: &[BindInfo], a: &[Pat], b: &[Pat]) -> bool {
         }
     }
     strict
+}
+
+/// The candidates `cands` that stand: none a `replace` row beats, of the innermost layer
+/// that holds any (L §4.6 step 2, §6.4; refcore's `choose`, before precedence).
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for a candidate past its rows or a row whose version is missing.
+pub fn standing_rows(m: &Reality, rows: &[Row], cands: &[usize]) -> Result<Vec<usize>, Stop> {
+    top_layer(m, rows, &unreplaced(m, rows, cands)?)
 }
 
 /// The candidates no `replace` row beats: a row at the same keys that says `replace` wins
@@ -667,7 +742,7 @@ pub fn choose(
     if cands.is_empty() {
         return Ok(None);
     }
-    let mut keep = top_layer(m, rows, &unreplaced(m, rows, cands)?)?;
+    let mut keep = standing_rows(m, rows, cands)?;
     if keep.len() > 1 {
         keep = narrowest(m, rows, binds, &keep);
     }
