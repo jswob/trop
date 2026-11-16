@@ -3167,6 +3167,13 @@ class Checker:
         if not (getattr(r, '_r', None) and r._r[0] == 'read' and r._r[1] == 'input'):
             raise LoadError('LOAD-PARSE', 'cannot parse: last(x[k], d) takes a read of an input', n.loc)
         self.tdate(n.d, sc, n)
+        if t is None and r._r[2] in ('stated', 'opening') and getattr(r, 'keys', None) and r.keys[0].k == 'name':
+            # a reading's value is in its place's unit (L §4.6, §5.10): a comparison in a when reads it so (spec/g4/
+            # nb3_at; 2.1.8's first refcore stopped on the untyped side)
+            th = self.m.things.get(r.keys[0].id)
+            cur = self.m.place_unit(th) if th is not None else None
+            if isinstance(cur, str) and cur in CURRENCIES:
+                t = T.money(cur)
         return t
 
     def t_star(self, n, sc, expect):

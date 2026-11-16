@@ -1,0 +1,75 @@
+# tally 2.1.8 R11 (item 6 of the follow-up; T's spec/g4/nb3_at): a when comparing last(stated[konto], d) with money
+# types the reading in its place's unit. sw[2026-03] doesn't exist (konto's last reading before March is 100.00 PLN),
+# so bank[o1]'s link is refused, and konto's reading on 2026-03-10 ends that refusal: q_konto 70.00 PLN, the gap
+# refused. 2.1.8's first refcore stopped REFCORE-NOT-YET (an untyped side of the comparison).
+=== m.tally
+model nb3
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+input bank: observed
+input d_sw: int
+input amt: money PLN
+input lim: money PLN
+
+move sw[m in months]: transfers
+  on day_of(m, d_sw)
+  reads konto
+  when last(stated[konto], start_of(m)) < lim
+  leg cash from konto to sav amount amt + bal(konto) * 0
+
+ask q_sw: flows(sw, 2026-01-01 .. 2026-04-30)
+ask q_konto: bal(konto, 2026-04-30)
+ask q_obs: observed(sw[2026-03]).cash.amount
+ask q_last: last(stated[konto], 2026-03-31)
+ask q_led: residuals konto 2026-03
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start "own"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "own"
+  d_sw = 10 "plan"
+  amt = 10.00 PLN "plan"
+  lim = 0.00 PLN "plan"
+
+version rd0
+  cite s
+  governs 2026-01
+  known 2026-01-02
+  anchor konto
+  stated[konto] = 100.00 PLN at 2026-01-01 end "saldo"
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[o1] = (on: 2026-03-10, kind: transfers, leg cash from konto to sav amount 10.00 PLN, fulfils: sw[2026-03]) "o1"
+
+version rd
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  anchor konto
+  stated[konto] = 70.00 PLN at 2026-03-10 end "saldo"
+=== expect
+q_konto: 70.00 PLN
+  anchor: konto 2026-03-10 end, stated 70.00 PLN, difference refused: RUN-RECORD observation bank[o1] fulfils sw[2026-03], which doesn't exist or doesn't touch its places
+  cut 2026-06-30
+q_last: 70.00 PLN
+  held: stated[konto] = 70.00 PLN (rd), read for 2026-03-31
+  cut 2026-06-30
+q_led: refused: RUN-RECORD observation bank[o1] fulfils sw[2026-03], which doesn't exist or doesn't touch its places
+q_obs: refused: RUN-NONE observed(sw[2026-03]) is none here: a field read of it
+  held: stated[konto] = 100.00 PLN (rd0), read for 2026-03-01
+  cut 2026-06-30
+q_sw: 0.00 PLN
+  cut 2026-06-30
