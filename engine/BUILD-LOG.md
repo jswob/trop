@@ -3711,3 +3711,13 @@ Gate 8's record run 43749994847 on 205157a2: 88.1 %, 113 survivors unlisted; 67 
 - **Local mutants:** none run (no row's equivalence was in doubt enough to need a proof; T's tests can't reach the forks-off twin, so a proof would show only survival).
 - **Exceptions:** +0.
 - **Check:** `check commit: green, 23 steps (99s)`.
+
+## 2026-11-16 M2 gate 8's last rows (addendum; pick P75, issue #167)
+
+Gate 8's record run 43768585261 on f6b44af4: 91.9 %, the survivors job red only on the list (46 unlisted, 17 to remove). No code change; the rows from the run's output and T's `tmp/m2/t/handoff-g8-205.md` (in tests-m2), written by `tmp/m2/b/g8-f6/rows.py`.
+
+- **Removed 17** (now caught): `book/adjust.rs` 2, `walk/agenda.rs` 3, `walk/lows.rs` 8, `walk/projection.rs` 4.
+- **Added 46:** 4 `R-87: equivalent:` (`Num::to_money_in`'s guard → true and `Num::is_whole_in` → `Ok(true)`, T's reading: load's types keep every money value whole and the two errors print alike; `model_day`'s guard → true: its other arm is an invariant no plan makes; `step_day` `&& → ||`: `keep_walked`'s record is read only for a projection with forks on, so only memory moves); 42 `R-87: missed:`, each with what would catch it and #192 (39 open, 3 not built at M2: the walk held but not parked is explain's `projection_walk`'s, read once, T's r8).
+- **Check on the run's shards** (`gh run download 43768585261 -p 'mutants-shard-*'`, `tools/mutants-survivors`): `score 92.0% = caught 2451 / (caught 2451 + missed 370 + timed out 0 - equivalent 158)`; every survivor listed, no row to remove.
+- **Exceptions:** +0.
+- **Check:** `check commit: green, 23 steps (63s)`.
