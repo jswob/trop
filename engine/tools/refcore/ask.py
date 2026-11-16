@@ -1485,8 +1485,12 @@ class Asker:
         # per result, not per ask). tally 2.1.8 §4 (#161): an entry is listed exactly when a read in its set gives it,
         # so a with pin on a cell that no read of the line took, met or not, isn't listed either
         cells = getattr(self, 'pin_cells', {})
+        refused = bool(vals) and all(isinstance(v, TallyError) for v in vals)
         for e in [e for e in pins_coll.reg if e[0] == 'pinned' and e[1] in cells and e not in ln.coll.reg]:
-            coll.reg.discard(e)
+            # a refusal carries no read set of its own: what it rests on took the pin unless an inner claim met it
+            # (item 9 of the follow-up; the stored m1 vectors)
+            if not refused or ('pin met', e[1]) in ln.coll.reg:
+                coll.reg.discard(e)
         laws = getattr(vals[0], 'laws', None) if vals else None
         out.extend('  ' + r for r in self.register(coll, ln.reading, ctx, a.path is not None, laws))
         if a.orient is not None:

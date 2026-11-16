@@ -514,6 +514,8 @@ def m_movements_of(self, dom, ctx, owner=None):
     key = ('mvs', dom, self.wkey(ctx), ctx.unc, id(ctx.walk) if ctx.walk is not None else None, ctx.wp, owner)
     hit = self.run_cache.get(key)
     if hit is not None:
+        for e in self.run_cache.get(('mvpins',) + key, ()):
+            self.reg(e)
         return hit
     out = []
     if dom[0] == 'obs':
@@ -525,16 +527,24 @@ def m_movements_of(self, dom, ctx, owner=None):
         self.run_cache[key] = out
         return out
     sub = m.kinds[dom[1]].subtree(m)
+    pins = set()
     for mi in self.plan_moves():
         if mi.kind not in sub:
             continue
         for i in self.move_instances(mi, ctx):
             st = self.status(i, ctx)
             if st in ('none', 'modelled'):
+                # the binding read its day to leave it out, so the pins that day took are the binding's reads too
+                # (R7; item 9 of the follow-up: a count that finds none lists its pin)
+                ic = getattr(i, 'coll', None)
+                pins |= {e for e in (ic.reg if ic is not None else ()) if e[0] == 'pinned'}
                 continue
             if st == 'uncertain' and not ctx.unc:
                 continue
             out.append(i)
+    self.run_cache[('mvpins',) + key] = pins
+    for e in sorted(pins, key=str):
+        self.reg(e)
     for o in self.observations(ctx):
         if o.kind in sub:
             out.append(o)
