@@ -1,0 +1,50 @@
+# tally 2.1.8 R13, the repaired definition (pick P29 on fixes/g3/h2): a < b over two window rows carries a, then b;
+# windows each takes a first and b under each of a's days, until the answer carries none (qw, qe); with pins of
+# windows the nested form names b only where a leaves the answer open (q: a = 2026-01-02 decides it). 2.1.8's first
+# refcore left qw the hole. T's fixes/g3/h2.
+=== m.tally
+model ph
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+input a: date
+input b: date
+
+ask q: a < b with a = window(2026-01-01, 2026-01-02), b = window(2026-01-01, 2026-01-02) windows each
+ask qw: a < b windows each
+ask qe: a == b windows each
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  a = window(2026-01-01, 2026-01-02) "c"
+  b = window(2026-01-01, 2026-01-02) "c"
+=== expect
+q [a = 2026-01-01, b = 2026-01-01]: false
+  pinned: a = window(2026-01-01, 2026-01-02)
+  pinned: b = window(2026-01-01, 2026-01-02)
+  cut 2026-03-01
+q [a = 2026-01-01, b = 2026-01-02]: true
+  pinned: a = window(2026-01-01, 2026-01-02)
+  pinned: b = window(2026-01-01, 2026-01-02)
+  cut 2026-03-01
+q [a = 2026-01-02]: false
+  pinned: a = window(2026-01-01, 2026-01-02)
+  pinned: b = window(2026-01-01, 2026-01-02)
+  cut 2026-03-01
+qe [a = 2026-01-01, b = 2026-01-01]: true
+  cut 2026-03-01
+qe [a = 2026-01-01, b = 2026-01-02]: false
+  cut 2026-03-01
+qe [a = 2026-01-02, b = 2026-01-01]: false
+  cut 2026-03-01
+qe [a = 2026-01-02, b = 2026-01-02]: true
+  cut 2026-03-01
+qw: ?"date within window(2026-01-01, 2026-01-02) not precise enough for a < b" (a)
+  cut 2026-03-01

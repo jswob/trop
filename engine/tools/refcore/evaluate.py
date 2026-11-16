@@ -1833,7 +1833,8 @@ class Engine:
         pins = ctx.pins if cone is None else tuple(q for q in ctx.pins if getattr(q, 'item', None) in cone)
         nm = ('def', info.id, tuple(_kv(k) for k in keys), ctx.law, ctx.cut, tuple(repr(q.key()) for q in pins),
               ctx.axes, ctx.windows, ctx.world, ctx.path)
-        return Iv(v.lo, v.hi, v.days, v.src, origin=v.origin, name=nm)
+        # the unknown days it was computed from travel with it (L §4.4 l.668, X2; item 11 of the follow-up)
+        return Iv(v.lo, v.hi, v.days, v.src, origin=v.origin, name=nm, carry=getattr(v, 'carry', None))
 
     def def_cone(self, qid):
         """The ids of the items a def's cone reaches, or None when it reaches movements or balances (whose walk any pin
