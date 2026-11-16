@@ -1814,8 +1814,15 @@ class Walk:
         # other runs, and orders as true
         from .moves import law_days
         info = []
+        ord_reads = []      # what each instance's places and when read here: a refusal of the order rests on it
         for i in insts:
-            ch, rd, mv = self.inst_places(i, d)
+            rc = _coll()
+            rc.merge(i.coll)
+            eng.stack.append(rc)
+            try:
+                ch, rd, mv = self.inst_places(i, d)
+            finally:
+                eng.stack.pop()
             wf, seen = False, set()
             mi = i.move
             if mi.decl.when is not None:
@@ -1825,14 +1832,17 @@ class Walk:
                 self.wp = key
                 self.reads = set()
                 self.live = set()
+                eng.stack.append(rc)
                 try:
                     wf = eng.ev(mi.decl.when, i.env, ctx) is False
                     seen = set(self.live)
                 except TallyError:
                     wf = False
                 finally:
+                    eng.stack.pop()
                     self.wp, self.reads, self.live = old
             info.append((i, ch, rd, mv, wf, seen))
+            ord_reads.append(rc)
         n = len(info)
         off = []
         for x in range(n):
@@ -1905,11 +1915,17 @@ class Walk:
             k = key[:3] + (dec_text(g[0], '%06d' % seq, info[x][0].move.id), 0)
             seq += 1
             ch = info[x][1]
+            # the refusal rests on what the decisions due that day read to be ordered (their days, keys, places and
+            # whens): their read sets, so a pin those reads took is listed with the refused result (L §8.2 One read
+            # set; tally 2.1.8 §4, #161)
+            rc = _coll()
+            for y in range(n):
+                rc.merge(ord_reads[y])
             if ch:
                 for p in sorted(ch):
-                    self.add(p, m.place_unit(m.things[p]) or '*', Ent(k, 'bad', err=bad[x]))
+                    self.add(p, m.place_unit(m.things[p]) or '*', Ent(k, 'bad', err=bad[x], coll=rc))
             else:
-                self.add('*', '*', Ent(k, 'bad', err=bad[x]))
+                self.add('*', '*', Ent(k, 'bad', err=bad[x], coll=rc))
             self.refused_run(info[x][0], k, bad[x])
         for x in order:
             k = key[:3] + (dec_text(g[0], '%06d' % seq, info[x][0].move.id), 0)

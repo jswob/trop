@@ -1445,11 +1445,11 @@ class Asker:
         # reads of its cell met only under an inner or narrower claim (an as if's pin, a solve's variable; R4: the
         # innermost claim wins) is in no read of the line, so it isn't listed. The line's own read set says both:
         # a read that took the pin registered it, one that met it under another claim `pin met` (eng.pin_value; P45:
-        # per result, not per ask)
+        # per result, not per ask). tally 2.1.8 §4 (#161): an entry is listed exactly when a read in its set gives it,
+        # so a with pin on a cell that no read of the line took, met or not, isn't listed either
         cells = getattr(self, 'pin_cells', {})
         for e in [e for e in pins_coll.reg if e[0] == 'pinned' and e[1] in cells and e not in ln.coll.reg]:
-            if ('pin met', e[1]) in ln.coll.reg:
-                coll.reg.discard(e)
+            coll.reg.discard(e)
         laws = getattr(vals[0], 'laws', None) if vals else None
         out.extend('  ' + r for r in self.register(coll, ln.reading, ctx, a.path is not None, laws))
         if a.orient is not None:
