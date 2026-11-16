@@ -619,8 +619,8 @@ fn ask_lines(
 ///
 /// # Errors
 ///
-/// A load or request refusal a run meets; `NotBuilt` for a diff over two stacks, or past
-/// [`SAME_CAP`] choices.
+/// A load or request refusal a run meets; `RUN-LIMIT` past [`SAME_LIMIT`] choices;
+/// `NotBuilt` for a diff over two stacks.
 fn picked_lines(
     m: &Reality,
     (ask, env): (&Ask, &Env),
@@ -654,13 +654,14 @@ fn picked_lines(
 ///
 /// # Errors
 ///
-/// `NotBuilt` past 64 choices: more than six such lines in one line's reads.
+/// `RUN-LIMIT` past [`SAME_LIMIT`] choices, before any is read (S7, pick P27 on #174).
 fn same_picks(met: &SameMet) -> Result<Vec<BTreeMap<String, bool>>, Stop> {
     let counts = vec![2; met.len()];
-    let Some(combos) = combinations(&counts, SAME_CAP) else {
-        return Err(Stop::NotBuilt(
-            "more than six `same` lines known in a window that holds the cut in one line",
-        ));
+    let Some(combos) = combinations(&counts, SAME_LIMIT) else {
+        return Err(Stop::Refused(Refusal::new(
+            Code::Run(Run::Limit),
+            SAME_LIMIT_TEXT.to_owned(),
+        )));
     };
     let mut out = Vec::new();
     for combo in combos.into_iter().skip(1) {
@@ -674,9 +675,14 @@ fn same_picks(met: &SameMet) -> Result<Vec<BTreeMap<String, bool>>, Stop> {
     Ok(out)
 }
 
-/// The most choices of seen and unseen one line is read under (64: six `same` lines known
-/// in a window that holds the cut, as many as an ask's axes take, L §5.5).
-const SAME_CAP: usize = 64;
+/// The most choices of seen and unseen one line is read under: S7's limit, which reaches a
+/// line's seen and unseen choices as it reaches its day combinations (pick P27, on #174;
+/// L §7.6 item 6). Past it the line is `RUN-LIMIT`, [`SAME_LIMIT_TEXT`].
+const SAME_LIMIT: usize = 20_000;
+
+/// The message of a line past [`SAME_LIMIT`]: the builder's words, until the spec's commit
+/// gives the bytes (`spec(ask): a line's seen and unseen choices fall under its limit`).
+const SAME_LIMIT_TEXT: &str = "seen and unseen over more than 20 000 choices";
 
 /// The `HOLE-IMPRECISE` of the `same` lines `met` under cut `cut`: for each line's version,
 /// `date within window(a, b) not precise enough for the cut K`, asked of the rows or

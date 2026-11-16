@@ -774,4 +774,72 @@ x_in: ?\"calendar cq doesn't cover 2027\" (cq)
         let want: Vec<&str> = SHIFT_ROWS_LINES.lines().collect();
         assert_eq!(lines_of_files(&files), want, "an expression row's days");
     }
+
+    /// `n` pairs of observations of two covered places, each pair stated `same` by a version
+    /// of its own known in a window that holds the cut, and one line that counts them (the
+    /// review of group 1's B3).
+    fn same_links(n: usize) -> String {
+        let mut text = "model sev
+  tally 2
+  on 2026-05-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s \"s\"
+unit PLN: currency minor 0.01
+input bank: observed
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+
+version v1
+  cite s
+  governs 2026..
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start \"s\"
+  opening[sav] = 0.00 PLN at 2026-01-01 start \"s\"
+"
+        .to_owned();
+        let mut parts: Vec<String> = Vec::new();
+        for (side, place, known) in [("a", "konto", "02"), ("b", "sav", "03")] {
+            parts.push(format!(
+                "\nversion st_{place}\n  cite s\n  governs 2026-04\n  known 2026-04-{known}\n  covers {place}\n"
+            ));
+            for (i, day) in (1..=n).zip(2_usize..) {
+                parts.push(format!("  bank[{side}{i}] = (on: 2026-04-{day:02}, kind: transfers, leg cash from konto to sav amount {i}.00 PLN) \"{side}\"\n"));
+            }
+        }
+        for i in 1..=n {
+            parts.push(format!("\nversion link{i}\n  cite s\n  governs always\n  known window(2026-05-01, 2026-05-20)\n  same bank[a{i}] = bank[b{i}]\n"));
+        }
+        parts.push("\nask c: count(t in transfers over 2026-04) as known 2026-05-10\n".to_owned());
+        text.push_str(&parts.concat());
+        text
+    }
+
+    #[test]
+    fn a_lines_seen_and_unseen_choices_fall_under_its_limit() {
+        let seven = same_links(7);
+        let mut named: Vec<String> = Vec::new();
+        for side in ["a", "b"] {
+            named.extend((1..=7).map(|i| format!("bank[{side}{i}]")));
+        }
+        named.extend((1..=7).map(|i| format!("link{i}")));
+        let hole = format!(
+            "c: ?\"date within window(2026-05-01, 2026-05-20) not precise enough for the cut 2026-05-10\" ({})",
+            named.join(", ")
+        );
+        assert_eq!(
+            lines_of_files(&[("sev.tally", &seven)]),
+            [hole.as_str(), "  cut 2026-05-10"],
+            "seven versions, 128 choices: refcore's hole"
+        );
+        // 2^15 choices pass S7's 20 000: refused before any is read (P27; the message is the
+        // builder's until the spec's commit gives its bytes)
+        let fifteen = same_links(15);
+        assert_eq!(
+            lines_of_files(&[("sev.tally", &fifteen)]),
+            ["c: refused: RUN-LIMIT seen and unseen over more than 20 000 choices"],
+            "fifteen versions"
+        );
+    }
 }
