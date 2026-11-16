@@ -13,7 +13,7 @@
 use super::arith::int_of;
 use super::ranges::value_key;
 use super::state::{Ctx, Engine, Env, Figures, a_day, invariant, num_stop, refuse};
-use super::windows::imprecise;
+use super::windows::{imprecise, single};
 use crate::base::Run;
 use crate::hole::Hole;
 use crate::load::index_key_of;
@@ -83,6 +83,11 @@ impl Engine {
         let mut keys = Vec::with_capacity(binds.len());
         let mut holes: Vec<Hole> = Vec::new();
         for (bind, written) in binds.iter().zip(given) {
+            // a window of one day is that day (L §4.4; refcore's `one_day`)
+            let written = match written {
+                Given::Value(v @ Value::Window(_)) => Given::Value(single(&v).clone()),
+                other @ (Given::Value(_) | Given::Literal(_)) => other,
+            };
             let made = match written {
                 Given::Value(Value::Hole(h)) => Err(h),
                 // a window where one key is needed is imprecise, the read its hole (L §4.4,

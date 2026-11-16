@@ -938,6 +938,52 @@ version sc_link
         );
     }
 
+    /// A window of one day read as a key, beside the plain day (the review of group 1's N6).
+    const ONE_DAY_KEY: &str = "model w
+  tally 2
+  on 2026-04-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s \"s\"
+input d: date
+input e: date
+input x[m in months]: int
+input y[t in days]: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d = window(2026-03-05, 2026-03-05) \"s\"
+  e = 2026-03-05 \"s\"
+  x[2026-03] = 7 \"s\"
+  y[2026-03-05] = 9 \"s\"
+
+ask c: x[d]
+ask ce: x[e]
+ask f: y[d]
+ask fe: y[e]
+";
+
+    #[test]
+    fn a_window_of_one_day_as_a_key_is_that_day() {
+        assert_eq!(
+            lines_of_files(&[("w.tally", ONE_DAY_KEY)]),
+            [
+                "c: 7",
+                "  cut 2026-04-25",
+                "ce: 7",
+                "  cut 2026-04-25",
+                "f: 9",
+                "  cut 2026-04-25",
+                "fe: 9",
+                "  cut 2026-04-25",
+            ],
+            "L §4.4: a window of one day is that day, so not imprecise for a key"
+        );
+    }
+
     /// A ledger per binding tuple, per day of a window and per option of an axis, one of each
     /// dividing by zero or reading a hole key (the review of group 1's B4 and N8).
     const LEDGER_REFUSED: &str = "model pw
