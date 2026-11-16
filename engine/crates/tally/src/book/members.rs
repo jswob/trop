@@ -401,12 +401,13 @@ impl Engine {
             self.span_members(m, (MvDom::Event, kind), &Span::between(Some(d), None), ctx)?;
         // a member whose day is a hole may come first, and so may an undecided row's
         // movement where its two days differ, never a tie (L §4.5, tally 2.1.8 R12, B6)
-        let hole_days: Vec<Option<&Hole>> = members
-            .iter()
-            .filter(|x| matches!(x.day, Dated::Hole(_)))
-            .map(|x| x.unknown.as_ref())
-            .chain(members.iter().map(|x| x.two_days.as_ref()))
-            .collect();
+        let mut hole_days: Vec<Option<&Hole>> = Vec::with_capacity(members.len());
+        for x in &members {
+            if matches!(x.day, Dated::Hole(_)) {
+                hole_days.push(x.unknown.as_ref());
+            }
+        }
+        hole_days.extend(members.iter().map(|x| x.two_days.as_ref()));
         if let Some(h) = spread(&hole_days) {
             return Ok(Value::Hole(h));
         }

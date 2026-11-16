@@ -858,10 +858,13 @@ fn each_rows(
 /// 2.1.8 R13.
 fn each_next(met: &[Met], choice: &Choice, (carried, forced): (&[Met], &[String])) -> Option<Met> {
     let open: Vec<&Met> = carried.iter().filter(|w| !names(choice, &w.id)).collect();
-    let wanted = |id: &str| {
-        open.iter().any(|w| w.id == id) || (forced.iter().any(|f| f == id) && !names(choice, id))
-    };
-    if let Some(w) = met.iter().find(|w| wanted(&w.id)) {
+    let mut wanted: Vec<&str> = open.iter().map(|w| w.id.as_str()).collect();
+    for f in forced {
+        if !names(choice, f) {
+            wanted.push(f);
+        }
+    }
+    if let Some(w) = met.iter().find(|w| wanted.contains(&w.id.as_str())) {
         return Some(w.clone());
     }
     open.first().map(|w| Met::clone(w))

@@ -771,6 +771,16 @@ impl Engine {
         {
             return Ok(Status::LeftOut);
         }
+        if let (Some(d), Some(hi)) = (day, last)
+            && d < m.start
+            && m.start <= hi
+            && inst.exists != Exists::No
+            && inst.err.is_none()
+        {
+            // inside the run on some of the window's days, before its start on the rest: the
+            // instance is the window's hole (E §4.1 step 2; tally 2.1.8 item 77)
+            return Ok(day_depends(inst));
+        }
         if scenario_early(m, mv, inst) {
             return Ok(Status::LeftOut);
         }
@@ -792,7 +802,16 @@ impl Engine {
         if kind_certainty(m, &mv.kind) == Some(Certainty::Uncertain) && !applied {
             return Ok(Status::Uncertain);
         }
-        if d < cut && self.touches_covered(m, inst, cut)? {
+        let modelled = d < cut && self.touches_covered(m, inst, (cut, None))?;
+        if let Some(hi) = last.filter(|hi| *hi != d) {
+            // modelled past on some of the window's days and booked on the rest: the
+            // instance is the window's hole (E §4.1 step 2; tally 2.1.8 item 77)
+            let last_modelled = hi < cut && self.touches_covered(m, inst, (cut, Some(hi)))?;
+            if modelled != last_modelled {
+                return Ok(day_depends(inst));
+            }
+        }
+        if modelled {
             return Ok(Status::Modelled);
         }
         Ok(if d < cut { Status::Past } else { Status::Plan })
@@ -1745,6 +1764,21 @@ pub(super) fn refuse_load(code: Load, message: String) -> Stop {
 /// A broken promise: `ENGINE-INVARIANT` (E §11).
 pub(crate) fn invariant(what: &str) -> Stop {
     Stop::Refused(Refusal::new(Code::EngineInvariant, what.to_owned()))
+}
+
+/// The status of instance `inst`, dated by a window, where its class depends on the
+/// window's day: a hole movement, its day the window's hole carrying the unknown day
+/// (E §4.1 step 2; L §4.4; tally 2.1.8 item 77).
+fn day_depends(inst: &mut Inst) -> Status {
+    if let Some(Dated::Window(w)) = &inst.day {
+        let text = format!(
+            "date within {} not precise enough for the day of {}",
+            w.question, inst.id
+        );
+        let h = Hole::asked(&text, &inst.id).carrying(&w.value.carry);
+        inst.day = Some(Dated::Hole(h));
+    }
+    Status::Hole
 }
 
 #[cfg(test)]

@@ -707,7 +707,8 @@ impl Engine {
             (walk.cut, walk.proj.is_none())
         };
         let modelled = main
-            && ((t < cut && self.touches_covered(m, &run.inst, cut)?) || !run.inst.obs.is_empty());
+            && ((t < cut && self.touches_covered(m, &run.inst, (cut, None))?)
+                || !run.inst.obs.is_empty());
         let legless = m
             .moves
             .get(&run.inst.move_id)

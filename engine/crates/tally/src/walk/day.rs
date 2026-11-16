@@ -20,7 +20,7 @@ use super::agenda::{Act, Mv};
 use super::fork::Forks;
 use super::plan::{Amount, Dated, DayWindow, End, Inst, LegVal, Status, invariant, qty_value};
 use super::point::At;
-use super::readings::Broke;
+use super::readings::{Broke, breaks};
 use super::state::{ALL, Change, Ent, Group, HoleLeg, Progress, Taken, Today, Walk, WalkObs};
 use crate::base::{Code, Refusal, Run, Warn};
 use crate::book::Member;
@@ -463,6 +463,13 @@ impl Engine {
         if q.is_zero() {
             return Ok(());
         }
+        if let Some(h) = self.lifespan_depends(m, id, (movement, lg))? {
+            // inside a lifespan on some of the window's days and outside it on the rest: the
+            // leg is the window's hole (E §4.1 step 2; tally 2.1.8 item 77)
+            let mut hole_leg = lg.clone();
+            hole_leg.amount = Amount::Hole(h);
+            return self.book_leg_ends(m, id, (movement, &hole_leg), at, (reg, coll), mask);
+        }
         let unit = lg
             .unit
             .clone()
@@ -655,6 +662,43 @@ impl Engine {
         Ok(())
     }
 
+    /// The window's hole of leg `lg` of `movement`, dated by a window whose first day and last
+    /// day sit on two sides of the lifespan of a place it moves into or out of; none where
+    /// both are inside or both outside, which are the lifespan's yes and no (E §4.1 step 2,
+    /// §4.2 step 5; L §4.4; tally 2.1.8 item 77).
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a leg's place load didn't build.
+    fn lifespan_depends(
+        &self,
+        m: &Reality,
+        id: usize,
+        (movement, lg): (&str, &LegVal),
+    ) -> Result<Option<Hole>, Stop> {
+        let Dated::Window(w) = &lg.day else {
+            return Ok(None);
+        };
+        let walk = self.walk(id)?;
+        for p in ends(lg) {
+            let thing = m
+                .things
+                .get(p)
+                .ok_or_else(|| invariant("a leg's place load didn't build"))?;
+            let Some(sp) = m.lifespan(thing, (walk.cut, walk.world)) else {
+                continue;
+            };
+            if sp.end_question().is_none() && sp.contains(w.lo) != sp.contains(w.hi) {
+                let text = format!(
+                    "date within {} not precise enough for a balance",
+                    w.question
+                );
+                return Ok(Some(Hole::asked(&text, movement).carrying(&w.value.carry)));
+            }
+        }
+        Ok(None)
+    }
+
     /// The day's close: conservation, `WARN-NEGATIVE` at the accounts and cash it touched, and
     /// `RUN-LIFESPAN` for a place whose lifespan ends holding something (refcore's
     /// `close_day`). E §4.2 steps 4–5, E §9 items 1 and 6.
@@ -712,6 +756,16 @@ impl Engine {
         for place in ending {
             for unit in walk.units_of(&place) {
                 let st = walk.pstate(m, &place, &unit, at);
+                // legs dated by a window may still fall here: whether it holds nothing at its
+                // close is asked of the least and the greatest balance they allow; where they
+                // differ, the place is the windows' hole (E §4.1 step 2; tally 2.1.8 item 77)
+                if let (Some((lo, hi)), Some(h)) = (st.imp_range()?, st.imp_hole())
+                    && (lo.is_zero() || hi.is_zero() || lo.is_negative() != hi.is_negative())
+                    && !(lo.is_zero() && hi.is_zero())
+                {
+                    walk.add(m, &place, &unit, Ent::new(at, Change::Hole(h)))?;
+                    continue;
+                }
                 let Some(v) = st.val.clone().filter(|v| !v.is_zero()) else {
                     continue;
                 };
@@ -774,10 +828,11 @@ impl Walk {
         at: At,
     ) -> Result<(), Stop> {
         for p in ends(lg) {
+            let own = m.things.get(p).and_then(|t| m.place_unit(t));
             let unit = lg
                 .unit
                 .clone()
-                .or_else(|| m.things.get(p).and_then(|t| m.place_unit(t)))
+                .or(own)
                 .filter(|u| u != "any")
                 .unwrap_or_else(|| ALL.to_owned());
             let mut ent = Ent::new(at, change.clone());
@@ -859,9 +914,46 @@ impl Walk {
             ent.coll = Some(coll.clone());
             // the leg's amount, which `flows` reads to tell a zero leg (L §4.4)
             ent.flow = Some(lg.amount.clone());
+            ent.signed = match &lg.amount {
+                Amount::Qty(a) => {
+                    let into = lg.to.place() == Some(p);
+                    Some(signed(a, if into { 1 } else { -1 })?)
+                }
+                Amount::Hole(_) | Amount::Refused(_) => None,
+            };
             self.add(m, p, &unit, ent)?;
+            self.imp_sign_test(m, (p, &unit), at)?;
         }
         Ok(())
+    }
+
+    /// The sign rule at `place` in `unit` at point `at` while legs dated by a window may still
+    /// fall there, asked of the least and the greatest balance they allow: where one breaks the
+    /// place's rule and the other doesn't, the place is the windows' hole from here to its next
+    /// reading, as far as the refusal would reach; where both pass, or both break, as before
+    /// (E §4.1 step 2, §4.2 step 5; L §4.4; tally 2.1.8 item 77).
+    ///
+    /// # Errors
+    ///
+    /// A number past the cap; `ENGINE-INVARIANT` for a place load didn't build.
+    pub(super) fn imp_sign_test(
+        &mut self,
+        m: &Reality,
+        (place, unit): (&str, &str),
+        at: At,
+    ) -> Result<bool, Stop> {
+        let st = self.pstate(m, place, unit, at);
+        let Some((lo, hi)) = st.imp_range()? else {
+            return Ok(false);
+        };
+        if breaks(m, place, &lo) == breaks(m, place, &hi) {
+            return Ok(false);
+        }
+        let Some(h) = st.imp_hole() else {
+            return Ok(false);
+        };
+        self.add(m, place, unit, Ent::new(at, Change::Hole(h)))?;
+        Ok(true)
     }
 }
 

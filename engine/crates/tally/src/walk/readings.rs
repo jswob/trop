@@ -164,6 +164,9 @@ impl Engine {
         for ((place, unit), legs) in group {
             let st = self.walk(id)?.pstate(m, place, unit, at);
             let Some(nv) = st.known() else {
+                // legs dated by a window may still fall here: the three-valued test (E §4.1
+                // step 2; tally 2.1.8 item 77)
+                self.walk_mut(id)?.imp_sign_test(m, (place, unit), at)?;
                 continue;
             };
             if breaks(m, place, nv) {

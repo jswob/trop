@@ -353,8 +353,9 @@ impl Engine {
         spread(&holes).map_or(Ok(Value::Bool(unseen)), |h| Ok(Value::Hole(h)))
     }
 
-    /// Whether an instance touches a place a version covers on its leg's day, or the
-    /// instance's (refcore's `touches_covered`). E §4.1 step 3, L §5.19 Coverage.
+    /// Whether an instance touches a place a version covers under cut `cut` on its leg's day,
+    /// or on day `on`, or the instance's (refcore's `touches_covered`). E §4.1 step 3,
+    /// L §5.19 Coverage.
     ///
     /// # Errors
     ///
@@ -363,12 +364,13 @@ impl Engine {
         &mut self,
         m: &Reality,
         inst: &Inst,
-        cut: Day,
+        (cut, on): (Day, Option<Day>),
     ) -> Result<bool, Stop> {
         for leg in &inst.legs {
             let Some(day) = leg
                 .day
                 .day()
+                .or(on)
                 .or_else(|| inst.day.as_ref().and_then(Dated::lo))
             else {
                 continue;

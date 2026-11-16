@@ -86,8 +86,9 @@ pub struct St {
     /// The refusal no reading ends (refcore's `pbad`): kept as `bad` at a reset.
     pub perm_bad: Option<Refusal>,
     /// The movements dated by a window that may still fall, each by its window's id, with
-    /// the question it puts (L §4.4; refcore's `imp`).
-    pub imp: Vec<(String, Hole)>,
+    /// the question it puts and its leg's amount signed as a flow into the place, where known
+    /// (L §4.4; refcore's `imp`; tally 2.1.8 item 77).
+    pub imp: Vec<(String, Hole, Option<Num>)>,
     /// The position of the last reset in its log.
     pub rst: Option<usize>,
 }
@@ -99,7 +100,7 @@ impl St {
     #[must_use]
     pub fn questions(&self, missing: Option<&Hole>) -> Option<Hole> {
         let mut all = vec![self.hole.as_ref(), self.perm.as_ref()];
-        all.extend(self.imp.iter().map(|(_, h)| Some(h)));
+        all.extend(self.imp.iter().map(|(_, h, _)| Some(h)));
         all.push(missing);
         spread(&all)
     }
@@ -127,6 +128,42 @@ impl St {
         }
         self.val.as_ref()
     }
+
+    /// The least and the greatest balance the legs dated by a window that may still fall here
+    /// allow, each booked or not; none where the balance isn't known but for them, or one's
+    /// amount isn't (E §4.1 step 2, §4.2 step 5; tally 2.1.8 item 77).
+    ///
+    /// # Errors
+    ///
+    /// A number past the cap.
+    pub fn imp_range(&self) -> Result<Option<(Num, Num)>, Stop> {
+        if self.imp.is_empty() || self.hole.is_some() || self.perm.is_some() || self.bad.is_some() {
+            return Ok(None);
+        }
+        let Some(val) = &self.val else {
+            return Ok(None);
+        };
+        let (mut lo, mut hi) = (val.clone(), val.clone());
+        for (_, _, amount) in &self.imp {
+            let Some(a) = amount else {
+                return Ok(None);
+            };
+            if a.is_negative() {
+                lo = lo.checked_add(a).map_err(crate::eval::num_stop)?;
+            } else {
+                hi = hi.checked_add(a).map_err(crate::eval::num_stop)?;
+            }
+        }
+        Ok(Some((lo, hi)))
+    }
+
+    /// The hole of the windows that may still fall here: what their days leave open
+    /// (L §4.4; tally 2.1.8 item 77).
+    #[must_use]
+    pub fn imp_hole(&self) -> Option<Hole> {
+        let all: Vec<Option<&Hole>> = self.imp.iter().map(|(_, h, _)| Some(h)).collect();
+        spread(&all)
+    }
 }
 
 /// One entry of a place's log (refcore's `Ent`).
@@ -153,6 +190,9 @@ pub struct Ent {
     /// A hole leg's direction at the place and where its amount was read, which a `partial`
     /// line reads again (refcore's `sgn`, `leg`; L §5.18).
     pub hole_leg: Option<HoleLeg>,
+    /// An `ImpOn`'s leg amount signed as a flow into the place, where known (tally 2.1.8
+    /// item 77).
+    pub signed: Option<Num>,
     /// The state after it.
     pub st: St,
 }
@@ -194,6 +234,7 @@ impl Ent {
             coll: None,
             flow: None,
             hole_leg: None,
+            signed: None,
             st: St::of(None),
         }
     }
@@ -1091,8 +1132,8 @@ fn apply_ent(prev: &St, ent: &Ent, at: usize) -> Result<St, Stop> {
     let mut st = apply(prev, &ent.change, at)?;
     if let Some((wid, _)) = &ent.window {
         match &ent.change {
-            Change::ImpOn(h) => st.imp.push((wid.clone(), h.clone())),
-            Change::Delta(_) | Change::Hole(_) => st.imp.retain(|(w, _)| w != wid),
+            Change::ImpOn(h) => st.imp.push((wid.clone(), h.clone(), ent.signed.clone())),
+            Change::Delta(_) | Change::Hole(_) => st.imp.retain(|(w, ..)| w != wid),
             Change::Reset { .. }
             | Change::Perm(_)
             | Change::Bad(_)
