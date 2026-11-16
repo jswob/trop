@@ -322,7 +322,7 @@ Either way, from the instant on x's balance is the statement's, plus what is boo
 
 On covered days before K, every plan and decision instance with a leg touching a covered place is computed at its booking cut and kept as modelled past (N-1202). So is every instance that an observation the cut applies fulfils, on any day: the observations stand in for it (LANGUAGE §5.19). A decision's modelled past is computed against the real balances less its own observations (§4.2 step 3). These instances are never booked, so the model's version of the past can't double the real one.
 
-**`bal(x, d) modelled`** (LANGUAGE §5.19) is x's balance at its last reading before d (the opening, before the first), plus every booked movement of x after it through d, with the modelled-past instances in place of the observations on covered days. It is the model's own account of the days the statement covers.
+**`bal(x, d) modelled`** (LANGUAGE §5.19) is the model's own account of the days the statement covers, from the opening where x has no reading before d.
 
 Law for the past reads observations and facts, not the modelled past (N-1203):
 - A def that needs what was really paid reads `flows` of a place, or `observed(m[k])`, which on covered days are the observations.
