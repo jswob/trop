@@ -63,7 +63,6 @@ q4 [wd = 2026-03-28 .. 2026-03-31]: 0.00 PLN
         rule hi: won
           [6] row r2:rate = 12.00 PLN
               version r2, source card, "invented", locator "c", governs 2026-04-01.., known 2026-01-01
-          (r2:rate: see [6])
   [7] outside the pins [ax = lo]: 10.00 PLN
     (v:pd: see [4])
     [8] f = 10.00 PLN, law date 2026-04-01
@@ -82,7 +81,6 @@ q4 [wd = 2026-03-28 .. 2026-03-31]: 0.00 PLN
         rule base: beaten by hi
         rule hi: won
           (r2:rate: see [6])
-          (r2:rate: see [6])
   pinned: ax = hi
   held: rate = 12.00 PLN (r2), read for 2026-04-01
   cut 2026-03-01
@@ -97,7 +95,6 @@ q4 [wd = 2026-04-01 .. 2026-04-03]: 0.00 PLN
         rule hi: won
           [6] row r2:rate = 12.00 PLN
               version r2, source card, "invented", locator "c", governs 2026-04-01.., known 2026-01-01
-          (r2:rate: see [6])
   [7] outside the pins [ax = lo]: 12.00 PLN
     (v:pd: see [4])
     [8] f = 12.00 PLN, law date 2026-04-01
@@ -114,7 +111,6 @@ q4 [wd = 2026-04-01 .. 2026-04-03]: 0.00 PLN
     [12] f = 0.00 PLN, law date 2026-04-01
         rule base: beaten by hi
         rule hi: won
-          (r2:rate: see [6])
           (r2:rate: see [6])
   pinned: ax = hi
   held: rate = 12.00 PLN (r2), read for 2026-04-01

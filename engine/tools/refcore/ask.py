@@ -2140,8 +2140,9 @@ class Asker:
         out = []
         self._no = 0
         self._seen = {}
+        under = set()
         for kind, ch in root.children:
-            self.explain_node(ch, kind, 1, out)
+            self.explain_node(ch, kind, 1, out, under)
         return out
 
     def def_causes(self, tn):
@@ -2165,13 +2166,13 @@ class Asker:
                 return ch
         return None
 
-    def explain_step(self, tn, ch, kind, depth, out):
+    def explain_step(self, tn, ch, kind, depth, out, under):
         """A def cell's cause. A chain of more than 3 cells of one def, each read by the one before it, folds (E §10
         Long derivations fold; tally 2.1.7 S4, #131): tn, then `… <n> more steps of <x>, <k2> .. <kn-1> …` where its
         second step would print, then its last step there; a cause only the folded steps read prints where it is next
         met, as they never print."""
         if ch.kind != 'def' or getattr(ch, 'def_id', None) != getattr(tn, 'def_id', None) or id(ch) in self._seen:
-            self.explain_node(ch, kind, depth, out)
+            self.explain_node(ch, kind, depth, out, under)
             return
         rest = [ch]
         taken = {id(tn), id(ch)}
@@ -2182,19 +2183,25 @@ class Asker:
             rest.append(nx)
             taken.add(id(nx))
         if 1 + len(rest) <= 3:
-            self.explain_node(ch, kind, depth, out)
+            self.explain_node(ch, kind, depth, out, under)
             return
         keys = lambda c: ', '.join(key_text(k) for k in c.keys)
         out.append('%s\u2026 %d more steps of %s, %s .. %s \u2026' % (
             '  ' * depth, len(rest) - 1, tn.def_id, keys(rest[0]), keys(rest[-2])))
-        self.explain_node(rest[-1], kind, depth, out)
+        self.explain_node(rest[-1], kind, depth, out, under)
 
-    def explain_node(self, tn, kind, depth, out):
+    def explain_node(self, tn, kind, depth, out, under):
+        """tn under a line whose causes printed so far are under (a set of their idents)."""
         ind = '  ' * depth
         ident = ('row', tn.label) if tn.kind in ('row', 'bandrow') else id(tn)
         # a cause prints in full where it is first printed and as a reference after (L §5.18 "Each cause prints
         # once; a cause met again is referenced by its line"): the print order (rules in canonical order) need not
-        # be the evaluation order (beaters first), so a cell traced first may print second
+        # be the evaluation order (beaters first), so a cell traced first may print second.  E §10 (tally 2.1.8 S8,
+        # #181): "A cause met again is referenced by its line, once under each line that reads it", whatever order
+        # the cells were computed in: a line's cause met again under that line prints nothing more
+        if ident in under:
+            return
+        under.add(ident)
         if ident in self._seen:
             out.append('%s(%s: see [%d])' % (ind, tn.label, self._seen[ident]))
             return
@@ -2236,20 +2243,23 @@ class Asker:
                         extra = ' (version %s, source %s)' % (vv.id, vv.cite)
                 out.append('%s    rule %s: %s%s' % (ind, lab, st, extra))
                 w = whens.get(lab)
+                below = set()       # the rule's line reads its when and, the winner, its value
                 if w is not None:
                     for k2, ch in w.children:
-                        self.explain_step(tn, ch, k2, depth + 3, out)
+                        self.explain_step(tn, ch, k2, depth + 3, out, below)
                 if st == 'won':
                     vc = getattr(tn, 'value_children', None)
                     if vc is not None:
                         for k2, ch in vc.children:
-                            self.explain_step(tn, ch, k2, depth + 3, out)
+                            self.explain_step(tn, ch, k2, depth + 3, out, below)
+            below = set()
             for k2, ch in tn.children:
-                self.explain_step(tn, ch, k2, depth + 2, out)
+                self.explain_step(tn, ch, k2, depth + 2, out, below)
             return
         out.append('%s[%d] %s' % (ind, no, tn.label))
+        below = set()
         for k2, ch in tn.children:
-            self.explain_node(ch, k2, depth + 1, out)
+            self.explain_node(ch, k2, depth + 1, out, below)
 
 
 def trace_key(tn):
