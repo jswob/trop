@@ -1400,7 +1400,9 @@ class Engine:
                         return self.row_value(r, inf, ks, ctx, None, None)
                     continue
                 if r is not None:
-                    got.append((t, self.row_value(r, inf, ks, ctx, None, None), r))
+                    v = self.row_value(r, inf, ks, ctx, None, None)
+                    if v is not NONE:     # a reading replaced by none is removed (carry_latest; #169-c)
+                        got.append((t, v, r))
         except HoleSignal as h:
             return h.hole
         org = self.origin(info, keys)
@@ -1468,22 +1470,12 @@ class Engine:
         if not any(cands for inf, ks, t, cands in sides):
             return NONE
 
-        def began(c, inf):
-            if inf.reading:
-                return self.reading_on(c, inf, ctx)
-            sp = c.span(ctx.cut)
-            return datetime.date.min if sp.always or sp.start is None else sp.start
         # rows stated same carry together (L §6.1 l.1806, tally 2.1.8 §4, #187): the latest row of the class; where
         # two sides' latest rows began that day and disagree, HOLE-SAME
-        latest = max(began(c, inf) for inf, ks, t, cands in sides for c in cands)
-        got = []
-        side = None
-        for inf, ks, t, cands in sides:
-            cands = [c for c in cands if began(c, inf) == latest]
-            if cands:
-                row = self.choose(cands, inf, 'last')
-                got.append((t, self.row_value(row, inf, ks, ctx, None, None), row))
-                side = side or (inf, ks)
+        hit = self.carry_latest(sides, ctx)
+        if hit is None:
+            return NONE
+        latest, got, side = hit
         v = self.same_value(latest, got)
         if len(got) > 1 and isinstance(v, Hole):
             return v
@@ -1497,6 +1489,36 @@ class Engine:
         if past:
             self.reg(('held', '%s = %s (%s), read for %s' % (self.origin(info, keys), fmt(v), row.version.id, d)))
         return v
+
+    def carry_began(self, c, inf, ctx):
+        """The day a row carries from: a reading's instant (reading_on), a state row's span start."""
+        if inf.reading:
+            return self.reading_on(c, inf, ctx)
+        sp = c.span(ctx.cut)
+        return datetime.date.min if sp.always or sp.start is None else sp.start
+
+    def carry_latest(self, sides, ctx):
+        """The latest day some side's rows began on, with each side's row there and its value, [(text, value, row)],
+        and the first such side (input, keys); None when none began.  A reading replaced by `none` is removed, so
+        the instant before it is the last (L §4.6 Readings, L §5.19 l.1728; tally 2.1.8 §4, #169-c, P24): last,
+        since and a plain read skip it."""
+        days = sorted(set(self.carry_began(c, inf, ctx) for inf, ks, t, cands in sides for c in cands), reverse=True)
+        for day in days:
+            got = []
+            side = None
+            for inf, ks, t, cands in sides:
+                cs = [c for c in cands if self.carry_began(c, inf, ctx) == day]
+                if not cs:
+                    continue
+                row = self.choose(cs, inf, 'last')
+                v = self.row_value(row, inf, ks, ctx, None, None)
+                if inf.reading and v is NONE:
+                    continue
+                got.append((t, v, row))
+                side = side or (inf, ks)
+            if got:
+                return day, got, side
+        return None
 
     def carry_sides(self, info, keys, d, ctx):
         """[(input, keys, text, the rows that began on or before d)] that last and since read: x[k]'s, or each row's
@@ -1536,8 +1558,12 @@ class Engine:
                 if isinstance(rd, Iv):
                     # since reads the day itself: a window's is imprecise (L §4.4)
                     return self.imprecise(rd, 'the day of %s' % self.after_text(c)).hole
-        latest = max(self.reading_on(c, inf, ctx) for inf, ks, t, cands in sides for c in cands)
-        return Int((d - latest).days)
+        # the latest reading not removed by a replace to none (carry_latest; #169-c)
+        hit = self.carry_latest(sides, ctx)
+        if hit is None:
+            org = self.origin(info, keys)
+            return Hole([('%s has no reading on or before %s' % (org, d), org)])
+        return Int((d - hit[0]).days)
 
     def after_text(self, r):
         from .moves import instant_text
