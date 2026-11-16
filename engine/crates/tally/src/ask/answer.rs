@@ -845,13 +845,11 @@ fn ask_body(
             }
             Ok(vec![readers_line(m, ask, reference)?])
         }
-        // one side of a diff whose worlds sit on two stacks: its cells, kept for the turn
-        // that prints both (refcore's `_diff_only`, `_diff_side`)
+        // one side of a diff whose worlds sit on two stacks: its cells, under `windows each`
+        // each cell's runs, kept for the turn that prints both (refcore's `_diff_only`,
+        // `_diff_side`; tally 2.1.8 R13, #186)
         (AskBody::Diff(diff), Some(side)) => {
-            if ask.windows_each {
-                return Err(Stop::NotBuilt("a diff's `windows each` over two stacks"));
-            }
-            let cells = diff_cells(m, (ask, diff), engine, (ctx, &pinned), Some(&side.world))?;
+            let cells = diff_cells(m, (ask, diff), engine, (ctx, &pinned), &side.world)?;
             side.cells = Some(cells);
             Ok(Vec::new())
         }
@@ -884,17 +882,9 @@ fn tuple_lines(
     engine: &mut Engine,
     (ctx, pinned): (Ctx, &Collected),
 ) -> Result<Vec<String>, Stop> {
-    if !ask.binds.is_empty() && matches!(ask.body, AskBody::Residuals(_) | AskBody::Diff(_)) {
-        // a ledger and a diff take no binding of the ask's own: a diff's is in its brackets,
-        // and a ledger's own `for` is #185's
-        if let AskBody::Residuals(r) = &ask.body
-            && names_a_for(ask, &r.place)
-        {
-            return Err(Stop::Refused(Refusal::new(
-                Code::Run(Run::Domain),
-                "a residual ledger at a place keyed by the ask's own for".to_owned(),
-            )));
-        }
+    if !ask.binds.is_empty() && matches!(ask.body, AskBody::Diff(_)) {
+        // a diff's binding is the one in its brackets; the ask's own `for` on a diff isn't
+        // read yet, as before R13
         let unbound = Ask {
             binds: Vec::new(),
             ..ask.clone()
@@ -1064,7 +1054,7 @@ pub(super) fn form_line(
         }
         AskBody::Explain(reference) => explain_line(m, (ask, reference), engine, env, ctx),
         AskBody::InputsOf(reference) => inputs_line(m, (ask, reference), engine, env, ctx),
-        AskBody::Residuals(r) => residual_result(m, ask, r, engine, (ctx, pinned)),
+        AskBody::Residuals(r) => residual_result(m, ask, r, engine, (env, ctx, pinned)),
         AskBody::Diff(diff) => diff_result(m, diff, engine, (ctx, pinned)),
         AskBody::ReadersOf(_) => Err(invariant("readers-of read as a tuple's line")),
     }

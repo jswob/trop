@@ -18,7 +18,7 @@ use super::axes::Axes;
 use super::check::Printed;
 use crate::base::Code;
 use crate::book::{Ledger, UnitLedger, fig_text};
-use crate::eval::{Collected, Ctx, Engine};
+use crate::eval::{Collected, Ctx, Engine, Env};
 use crate::model::Reality;
 use crate::syntax::{Ask, Expr, Lit, Residuals, Span, Stop};
 
@@ -37,12 +37,12 @@ pub(super) fn residual_result(
     ask: &Ask,
     r: &Residuals,
     engine: &mut Engine,
-    (ctx, pinned): (Ctx, &Collected),
+    (env, ctx, pinned): (&Env, Ctx, &Collected),
 ) -> Result<Printed, Stop> {
     if Axes::of(m, ask)?.is_some() {
-        return combination_result(m, r, engine, (ctx, pinned));
+        return combination_result(m, r, engine, (env, ctx, pinned));
     }
-    Ok(match ledger_result(m, r, engine, (ctx, pinned))? {
+    Ok(match ledger_result(m, r, engine, (env, ctx, pinned))? {
         Ok(result) => result,
         Err(hole) => Printed {
             text: hole,
@@ -63,10 +63,10 @@ fn ledger_result(
     m: &Reality,
     r: &Residuals,
     engine: &mut Engine,
-    (ctx, pinned): (Ctx, &Collected),
+    (env, ctx, pinned): (&Env, Ctx, &Collected),
 ) -> Result<Result<Printed, String>, Stop> {
     engine.push();
-    let ledger = engine.residuals(m, r, ctx);
+    let ledger = engine.residuals(m, r, (env, ctx));
     let mut met = engine.pop_alone();
     met.merge(pinned);
     let (place, per_unit, ledgers) = match ledger? {
@@ -127,9 +127,9 @@ fn combination_result(
     m: &Reality,
     r: &Residuals,
     engine: &mut Engine,
-    (ctx, pinned): (Ctx, &Collected),
+    (env, ctx, pinned): (&Env, Ctx, &Collected),
 ) -> Result<Printed, Stop> {
-    let text = match ledger_result(m, r, engine, (ctx, pinned)) {
+    let text = match ledger_result(m, r, engine, (env, ctx, pinned)) {
         Ok(Ok(result)) => return Ok(result),
         Ok(Err(hole)) => hole,
         Err(Stop::Refused(refusal)) if !matches!(refusal.code(), Code::Load(_)) => {

@@ -167,17 +167,22 @@ impl Engine {
         }
     }
 
-    /// A `residuals` ask's ledger, read from outside the evaluator: as [`Engine::value`], for
-    /// its place, its span and the ledger's lines (refcore's `answer_residuals`, its reads).
-    /// E §6.3, §3.2.
+    /// A `residuals` ask's ledger in scope `env`, read from outside the evaluator: as
+    /// [`Engine::value`], for its place, its span and the ledger's lines (refcore's
+    /// `answer_residuals`, its reads). E §6.3, §3.2.
     ///
     /// # Errors
     ///
     /// The refusals reading them meets; `NotBuilt` past what S builds.
-    pub fn residuals(&mut self, m: &Reality, r: &Residuals, ctx: Ctx) -> Result<Ledger, Stop> {
+    pub fn residuals(
+        &mut self,
+        m: &Reality,
+        r: &Residuals,
+        (env, ctx): (&Env, Ctx),
+    ) -> Result<Ledger, Stop> {
         let mark = self.mark();
         loop {
-            match self.ledger_of(m, r, ctx) {
+            match self.ledger_of(m, r, (env, ctx)) {
                 Err(Stop::Deep) if mark.outermost => self.replay(m, &mark)?,
                 result => {
                     self.read_ended(&mark);

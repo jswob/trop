@@ -19,24 +19,32 @@
 use std::collections::{BTreeSet, VecDeque};
 
 use super::answer::{ask_pins_listed, env_text, form_line};
-use super::axes::{Axes, grouped};
+use super::axes::{Axes, Combo, grouped};
 use super::check::Printed;
 use super::register::{check_register_lines, register_lines};
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{Choice, Collected, Ctx, Engine, Entry, Env, Member, Met};
 use crate::model::Reality;
-use crate::syntax::{Ask, AskBody, Stop};
+use crate::syntax::{Ask, Stop};
 use crate::time::Day;
 
 /// The most day combinations one line's `windows each` runs: past it the line is refused
 /// `RUN-LIMIT` (pick P28, #174: refcore's point, until the spec names one cap for every
 /// fan-out).
-const EACH_CAP: usize = 20_000;
+pub(super) const EACH_CAP: usize = 20_000;
 
 /// One tuple's lines under `windows each`: each with its window part, ` [wd = a .. b]`, or
 /// none for the plain line, its result, and the runs it stands for (refcore's `each_rows`,
 /// `(suffix, Line)`).
 type Rows = Vec<(String, Printed, Vec<usize>)>;
+
+/// One tuple's lines over the axes: each with its window part then its axis part, its result,
+/// and the `reading:` entries of its axis part (refcore's `each_over_axes`).
+type Fanned = Vec<(String, Printed, Vec<String>)>;
+
+/// One cell's runs of a diff across two stacks under `windows each`: each choice of days with
+/// the result it gives, then the windows met in the order met (L §4.4, §6.4).
+pub(super) type CellRuns = (Vec<(Choice, Printed)>, Vec<Met>);
 
 /// One run of the line: its choice, the windows in the order met each with its day, and its
 /// result.
@@ -130,30 +138,83 @@ pub(super) fn each_lines(
                 .map(|(suffix, row, _)| (suffix, row, Vec::new()))
                 .collect()
         };
-        // a line's register is what it read, the movements its tuple binds included
-        // (L §8.2)
-        for (suffix, mut row, readings) in lines {
-            out.extend(row.lines(&format!("{head}{suffix}")));
-            if row.alone {
-                continue;
-            }
-            row.met.merge(&tuple.brought);
-            row.met.merge(&ask_pins_listed(pinned, &row.met));
-            for reading in readings {
-                row.met.entries.insert(Entry {
-                    word: "reading",
-                    text: reading,
-                    figure: String::new(),
-                });
-            }
-            let register = match row.laws {
-                Some(laws) => check_register_lines(&row.met, ctx, laws)?,
-                None => register_lines(&row.met, ctx)?,
-            };
-            out.extend(register.into_iter().map(|l| format!("  {l}")));
-        }
+        out.extend(fanned_lines(&head, lines, (&tuple.brought, pinned), ctx)?);
     }
     Ok(out)
+}
+
+/// The lines of one tuple's rows `lines` under head `head`: each row's window and axis parts
+/// after the head, its result, then its register: what it read, what its tuple brought
+/// `brought` (the movements it binds), the ask's pins `pinned` and its `reading:` entries; a
+/// row that prints alone has none (L §8.2, §4.4).
+fn fanned_lines(
+    head: &str,
+    lines: Fanned,
+    (brought, pinned): (&Collected, &Collected),
+    ctx: Ctx,
+) -> Result<Vec<String>, Stop> {
+    let mut out = Vec::new();
+    for (suffix, mut row, readings) in lines {
+        out.extend(row.lines(&format!("{head}{suffix}")));
+        if row.alone {
+            continue;
+        }
+        row.met.merge(brought);
+        row.met.merge(&ask_pins_listed(pinned, &row.met));
+        for reading in readings {
+            row.met.entries.insert(Entry {
+                word: "reading",
+                text: reading,
+                figure: String::new(),
+            });
+        }
+        let register = match row.laws {
+            Some(laws) => check_register_lines(&row.met, ctx, laws)?,
+            None => register_lines(&row.met, ctx)?,
+        };
+        out.extend(register.into_iter().map(|l| format!("  {l}")));
+    }
+    Ok(out)
+}
+
+/// The lines of a diff whose worlds sit on two stacks, under `windows each`: each cell's runs
+/// `cells` merged into rows as a line's runs are, one block per run of sub-windows that agree,
+/// one unlabelled block where all agree; over the axes either side reads, the cells grouped as
+/// a fan-out groups them; each block under the ask's id, its window part then its axis part,
+/// with its register (L §4.4, §5.5, §6.4; tally 2.1.8 R13, #186).
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for a cell with no run.
+pub(super) fn crossed_lines(
+    ask: &Ask,
+    axes: Option<&Axes>,
+    cells: Vec<CellRuns>,
+    ctx: Ctx,
+) -> Result<Vec<String>, Stop> {
+    let mut each: Vec<Rows> = Vec::with_capacity(cells.len());
+    for (runs, labels) in cells {
+        let done: Vec<Done> = runs
+            .into_iter()
+            .map(|(choice, line)| Done {
+                choice,
+                line,
+                tuples: Vec::new(),
+            })
+            .collect();
+        each.push(rows_of(&done, &labels)?);
+    }
+    let lines = match axes {
+        Some(axes) => grouped_rows(axes, &axes.combinations()?, &each)?,
+        None => each
+            .into_iter()
+            .flatten()
+            .map(|(suffix, row, _)| (suffix, row, Vec::new()))
+            .collect(),
+    };
+    // a cell's register holds the ask's pins already
+    let none = Collected::default();
+    fanned_lines(&ask.id, lines, (&none, &none), ctx)
 }
 
 /// One line of a keyed `windows each` line whose binding meets a window: its head after the
@@ -652,7 +713,7 @@ fn over_axes(
     engine: &mut Engine,
     (env, ctx, pinned): (&Env, Ctx, &Collected),
     axes: &Axes,
-) -> Result<Vec<(String, Printed, Vec<String>)>, Stop> {
+) -> Result<Fanned, Stop> {
     let combos = axes.combinations()?;
     let mut each: Vec<Rows> = Vec::with_capacity(combos.len());
     for combo in &combos {
@@ -662,6 +723,12 @@ fn over_axes(
         engine.end_layer(inside.layer, rows.as_ref().err())?;
         each.push(rows?.0);
     }
+    grouped_rows(axes, &combos, &each)
+}
+
+/// The rows `each` of the combinations `combos` of `axes`, one combination's rows its result,
+/// grouped as [`over_axes`] groups them. L §5.5, §4.4.
+fn grouped_rows(axes: &Axes, combos: &[Combo], each: &[Rows]) -> Result<Fanned, Stop> {
     // a combination's result is its lines, compared as the results they print, an
     // `inputs-of`'s rows included (refcore's `EachRes.key`, `rkey`)
     let mut results = Vec::with_capacity(each.len());
@@ -685,7 +752,7 @@ fn over_axes(
         ));
     }
     let mut out = Vec::new();
-    for line in grouped(axes, &combos, &results)? {
+    for line in grouped(axes, combos, &results)? {
         let (combo, _) = results
             .get(line.first)
             .ok_or_else(|| invariant("a line's result past the results"))?;
@@ -716,12 +783,12 @@ fn over_axes(
 /// one plain line where every run gives one answer, else the nested sub-windows where the
 /// runs met different windows, else the maximal boxes of days (refcore's `each_rows`). Under
 /// a binding (`Shape::Bound`) each run binds the line's keys itself. With the rows, the runs,
-/// and the windows met in the order met. L §4.4.
+/// and the windows met in the order met. A ledger's or a diff's result is its block of lines,
+/// so its rows are blocks, each under its window part (L §4.4; tally 2.1.8 R13, #186).
 ///
 /// # Errors
 ///
-/// A refusal a run meets; `RUN-LIMIT` past the cap; `NotBuilt` for a ledger or a diff whose
-/// runs' sets differ: a set of lines split by sub-windows has no printed form yet.
+/// A refusal a run meets; `RUN-LIMIT` past the cap.
 fn each_rows(
     m: &Reality,
     ask: &Ask,
@@ -760,7 +827,15 @@ fn each_rows(
             labels.push(new);
         }
     }
-    let [first, rest @ ..] = done.as_slice() else {
+    let rows = rows_of(&done, &labels)?;
+    Ok((rows, done, labels))
+}
+
+/// The rows the runs `done` give, the windows they met `labels`: one plain line where every
+/// run gives one answer, else the nested sub-windows where the runs met different windows,
+/// else the maximal boxes of days (refcore's `each_rows`, its end). L §4.4.
+fn rows_of(done: &[Done], labels: &[Met]) -> Result<Rows, Stop> {
+    let [first, rest @ ..] = done else {
         return Err(invariant("windows each with no run"));
     };
     if rest.iter().all(|d| d.line.same(&first.line)) {
@@ -769,24 +844,18 @@ fn each_rows(
             line.met.merge(&d.line.met);
         }
         let runs = (0..done.len()).collect();
-        return Ok((vec![(String::new(), line, runs)], done, labels));
-    }
-    if matches!(ask.body, AskBody::Residuals(_) | AskBody::Diff(_)) {
-        return Err(Stop::NotBuilt(
-            "a ledger's or a diff's `windows each` whose lines differ by sub-window",
-        ));
+        return Ok(vec![(String::new(), line, runs)]);
     }
     let all: BTreeSet<&str> = labels.iter().map(|w| w.id.as_str()).collect();
-    let rows = if done.iter().all(|d| meets_all(&d.choice, &all)) {
-        boxed(&labels, &done)?
+    if done.iter().all(|d| meets_all(&d.choice, &all)) {
+        boxed(labels, done)
     } else {
-        nested(&labels, &done)?
-    };
-    Ok((rows, done, labels))
+        nested(labels, done)
+    }
 }
 
 /// `RUN-LIMIT` past [`EACH_CAP`] day combinations (pick P28, #174, interim).
-fn past_cap() -> Stop {
+pub(super) fn past_cap() -> Stop {
     Stop::Refused(Refusal::new(
         Code::Run(Run::Limit),
         "windows each over more than 20 000 day combinations".to_owned(),
@@ -1210,7 +1279,7 @@ fn same_first(done: &[Done], a: &[usize], b: &[usize]) -> Result<bool, Stop> {
 }
 
 /// Whether choice `choice` names a day of window `id`.
-fn names(choice: &Choice, id: &str) -> bool {
+pub(super) fn names(choice: &Choice, id: &str) -> bool {
     choice.iter().any(|(named, _)| named == id)
 }
 

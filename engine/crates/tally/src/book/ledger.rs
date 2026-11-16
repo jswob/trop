@@ -167,10 +167,11 @@ struct Lines {
 }
 
 impl Engine {
-    /// A `residuals` ask's ledgers: its place and span read, then the ledger of that place
-    /// over that span at the context's cut, grouped by month and move or by field `by`; a
-    /// place of unit `any` gives one ledger per unit, in the order of the units' ids
-    /// (refcore's `answer_residuals`, its reads). E §6.3, L §5.18.
+    /// A `residuals` ask's ledgers: its place and span read in scope `env`, the ask's binding
+    /// tuple's, then the ledger of that place over that span at the context's cut, grouped by
+    /// month and move or by field `by`; a place of unit `any` gives one ledger per unit, in
+    /// the order of the units' ids (refcore's `answer_residuals`, its reads). E §6.3, L §5.18
+    /// (tally 2.1.8 R13: a ledger per binding tuple).
     ///
     /// # Errors
     ///
@@ -179,14 +180,13 @@ impl Engine {
         &mut self,
         m: &Reality,
         r: &Residuals,
-        ctx: Ctx,
+        (env, ctx): (&Env, Ctx),
     ) -> Result<Ledger, Stop> {
-        let env = Env::empty();
-        let place = match self.place_arg(m, &r.place, &env, ctx)? {
+        let place = match self.place_arg(m, &r.place, env, ctx)? {
             Err(h) => return Ok(Ledger::Hole(h)),
             Ok(p) => p,
         };
-        let span = match self.span_value(m, &r.span, &env, ctx)? {
+        let span = match self.span_value(m, &r.span, env, ctx)? {
             Err(h) => return Ok(Ledger::Hole(h)),
             Ok(s) => s,
         };
