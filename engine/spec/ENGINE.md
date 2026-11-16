@@ -68,7 +68,7 @@ This is spec M-20's `run(model, history, clocks[, scenario]) → timeline`. The 
 | `pad` | a movement that takes up a statement's gap (§6.1) |
 | `hole` | a movement whose amount, day or existence is a hole |
 
-The **modelled past** (planned movements on covered days before K, and instances an observation the cut sees fulfils, §6.2) is computed and kept for the residual ledger, but it isn't in the timeline's balances.
+The **modelled past** (planned movements on covered days before K, and instances an observation the cut applies fulfils, §6.2) is computed and kept for the residual ledger, but it isn't in the timeline's balances.
 
 **Stored as aggregates.** A result is stored under its hash. Paths are not stored; any one is recomputed on demand (§7, N-2004).
 
@@ -83,8 +83,8 @@ The four clocks of the spec (T-16, N-1219):
 | Clock | Comes from | What it does |
 |---|---|---|
 | **S**, run start | the header's `start` | the first day walked. Balances open at S from `opening` readings (LANGUAGE §5.10). Nothing before S is walked: a walked value or a `flows` of a day before S is `HOLE-PRERUN` (LANGUAGE §8.1) |
-| **K**, knowledge date | the ask's `as known D`, else the model's `on` | masks every version and row known after K: law, facts, observations, readings, entries of things. It splits the past (before K) from the plan (from K) |
-| **[K, E]**, evaluation window | E is the header's `end` | the plan runs to E, and nothing after E is walked: a walked value of a day after E is `HOLE-POSTRUN` (LANGUAGE §8.1). Observations in [K, E] are never read by the run at cut K; only the evaluation layer compares them (§8) |
+| **K**, knowledge date | the ask's `as known D`, else the model's `on` | masks whatever a version or row known after K states (LANGUAGE §4.5). It splits the past (before K) from the plan (from K) |
+| **[K, E]**, evaluation window | E is the header's `end` | the plan runs to E, and nothing after E is walked: a walked value of a day after E is `HOLE-POSTRUN` (LANGUAGE §8.1). Observations in [K, E] are never applied by the run at cut K; only the evaluation layer compares them (§8) |
 | **R**, record time | the store: the reality's files as they stood at R | "what did we think in March?" is the reality at R = March, asked as known in March (N-1222). The language has no R; the store keeps the history of the files (`OPERATIONS.md` §1) |
 
 - **A plain forecast** has K = `on`. S is the header's start. Covered days before K replay observations, and the plan starts at K.
@@ -194,7 +194,7 @@ For each plan move m, in the dependency order of the item graph:
 3. **Classify** the instance:
    - dated outside [S, E]: kept for bindings, and after E for `flows` (`flows` over days before S is `HOLE-PRERUN`, §2), never booked, listed (`left out:`);
    - of an uncertain kind with no observation fulfilling it: kept as `uncertain` (§1);
-   - on a day before K where an end of a leg is a covered place, or, on any day, fulfilled by an observation the cut sees, which stands in for it (LANGUAGE §5.19): **modelled past**, kept for the ledger, never booked (§6.2);
+   - on a day before K where an end of a leg is a covered place, or, on any day, fulfilled by an observation the cut applies, which stands in for it (LANGUAGE §5.19): **modelled past**, kept for the ledger, never booked (§6.2);
    - otherwise booked, as `past` before K and `plan` from K.
 4. **Adjustments.** Apply later versions to a booked instance (§5).
 
@@ -209,7 +209,7 @@ The walk is a fold over days, a read of day t reading its prefix through t (LANG
 3. **Decisions.** Run the decision instances due on t, stratum by stratum (§3.1 step 8): inside a stratum, the instances due on t are ordered by the places their legs give on t (LANGUAGE §5.14.2): one that reads a place another changes runs after it, and two that read what each other changes run in the `before`/`after` order or the move's `ties by` (`RUN-ORDER`, `RUN-TIE` otherwise); the others are independent, and an instance whose `when` is false orders nothing. Each one:
    - evaluates its `when` and amounts with running reads at this point of the walk, its law and facts at cut min(t, K) and its projections as of day t (§4.3); its day must be precise, or the line states `windows each` (LANGUAGE §4.4), and it is `HOLE-IMPRECISE` otherwise; a walk-bound def it reads is evaluated afresh at this point (§3.2);
    - books its legs dated t at once, so the next decision sees them, and a leg with its own later `on` on its day (LANGUAGE §5.14);
-   - on a covered day before K, or where an observation the cut sees fulfils it (LANGUAGE §5.19), is modelled past instead. It is computed against the booked balances, which come from the observations ("did we follow the rule?", N-1221), less its own observations (one dated before t was booked on its own day, step 1), and it isn't booked. Its own observations dated t are booked at this point, after it is computed (LANGUAGE §5.19).
+   - on a covered day before K, or where an observation the cut applies fulfils it (LANGUAGE §5.19), is modelled past instead. It is computed against the booked balances, which come from the observations ("did we follow the rule?", N-1221), less its own observations (one dated before t was booked on its own day, step 1), and it isn't booked. Its own observations dated t are booked at this point, after it is computed (LANGUAGE §5.19).
    - A reading `after m`, m a decision (one booked in the day's first batch is refused, LANGUAGE §4.6), pads or anchors its place right after m is booked; where m is modelled past (a covered day before K, LANGUAGE §5.19), right after the observations that fulfil it are booked, in step 1 or at m's point here, on the day of the last of them (LANGUAGE §4.6).
 4. **Close the day.** The day's readings at `t end` that the cut sees, with t before K, pad or anchor their places (§6.1). Then each place's end-of-day balance is stored as a change point. Balances are step functions, so only days with movements or readings cost anything.
 5. **Check the places.**
@@ -315,12 +315,12 @@ The balance at S comes from `opening`, and from each `stated` reading on, by its
 Either way, from the instant on x's balance is the statement's, plus what is booked since; before x's first reading, it is the opening plus what is booked since.
 - **Holes and refusals.** A hole or refused movement of x dated on or before the instant stops there, as LANGUAGE §5.19 says; the gap carries it (a hole or refused gap makes a pad's amount one too).
 - **Decisions.** A reading at the close of D is applied after D's decisions, so it never changes a decision dated on or before D; a decision after it reads the stated balance through the walk, under every cut that sees the row (§9 invariant 5).
-- **Cuts.** A cut before the reading's `known` doesn't see it (LANGUAGE §4.6), so its walk has no pad or anchor there and its balances are the booked ones.
+- **Cuts:** LANGUAGE §4.5.
 - **The modelled past** on covered days up to the instant is computed against the walk's balances on those days (§6.2), which a reading doesn't change: it changes only the balances after its instant.
 
 ### 6.2 The modelled past
 
-On covered days before K, every plan and decision instance with a leg touching a covered place is computed at its booking cut and kept as modelled past (N-1202). So is every instance that an observation the cut sees fulfils, on any day: the observations stand in for it (LANGUAGE §5.19). A decision's modelled past is computed against the real balances less its own observations (§4.2 step 3). These instances are never booked, so the model's version of the past can't double the real one.
+On covered days before K, every plan and decision instance with a leg touching a covered place is computed at its booking cut and kept as modelled past (N-1202). So is every instance that an observation the cut applies fulfils, on any day: the observations stand in for it (LANGUAGE §5.19). A decision's modelled past is computed against the real balances less its own observations (§4.2 step 3). These instances are never booked, so the model's version of the past can't double the real one.
 
 **`bal(x, d) modelled`** (LANGUAGE §5.19) is x's balance at its last reading before d (the opening, before the first), plus every booked movement of x after it through d, with the modelled-past instances in place of the observations on covered days. It is the model's own account of the days the statement covers.
 
@@ -330,7 +330,7 @@ Law for the past reads observations and facts, not the modelled past (N-1203):
 
 ### 6.3 The residual ledger
 
-`ask q: residuals x span [by f]` compares, for place x over the span, the model at the ask's cut K with the observations as known on the model's `on` date. A place of unit `any` gives one ledger per unit, in the order of the units' ids. The model there is each instance as booked or modelled at its booking cut (§6.2), plus the settlements dated in the span: the plan as it stood on that day.
+`ask q: residuals x span [by f]` compares, for place x over the span, the model at the ask's cut K with the observations as known on the model's `on` date, their `same` lines, links and covers with them. A place of unit `any` gives one ledger per unit, in the order of the units' ids. The model there is each instance as booked or modelled at its booking cut (§6.2), plus the settlements dated in the span: the plan as it stood on that day.
 - When K = `on`, this is the replay.
 - When K is earlier, it is the backtest of the forecast over [K, E] (§8).
 - A day no statement covers for x prints no line, since nothing states x's observations there complete (LANGUAGE §5.19); an instance dated there that an observation fulfils is compared all the same, its matched line on the instance's day.
