@@ -26,6 +26,14 @@ from .eval2 import QOut
 REG_ORDER = ['assumed', 'given', 'missing', 'pinned', 'pinned sample', 'sample', 'world', 'reading', 'anchor', 'pad',
              'adjustment', 'unfulfilled', 'open', 'left out', 'uncertain', 'held']
 MAX_PATHS = 100000   # E §7: N <= 100 000 (REQ-PATHS)
+# L §7.6 Limits 6 (tally 2.1.8 S7, #174): "One line's windows each takes at most 20 000 combinations of days, for one
+# binding tuple and one combination of axis options (RUN-LIMIT)"; L §8.4's form
+EACH_LIMIT = 20000
+
+
+def each_limit():
+    from .evaluate import refuse
+    return refuse('RUN-LIMIT', 'windows each over more than 20 000 day combinations')
 
 
 class LoadAtRun(Exception):
@@ -996,8 +1004,8 @@ class Asker:
                 w, label, days = nxt
                 labels[w] = (label, days)
                 pending = [asg + ((w, d),) for d in days] + pending
-                if len(pending) + len(done) > 20000:
-                    raise NotYet('windows each over more than 20 000 day combinations')
+                if len(pending) + len(done) > EACH_LIMIT:
+                    raise each_limit()
                 continue
             for env, st, rg in mem:
                 if isinstance(st, tuple) and st[0] == 'domainhole':
@@ -1100,8 +1108,8 @@ class Asker:
                 w, label, days = nxt
                 labels[w] = (label, days)
                 pending = [asg + ((w, d),) for d in days] + pending
-                if len(pending) + len(done) > 20000:
-                    raise NotYet('windows each over more than 20 000 day combinations')
+                if len(pending) + len(done) > EACH_LIMIT:
+                    raise each_limit()
                 continue
             done.append((assigned, res))
             seqs.append(asg)
