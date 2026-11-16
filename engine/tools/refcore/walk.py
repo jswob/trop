@@ -1557,6 +1557,18 @@ class Walk:
                     if crosses or not whole:
                         self.inv2_add(u, s * amt.q)
 
+    def own_obs(self, iid, t):
+        """A decision's own observations booked before its day t (E §4.2 step 1), which its computation doesn't see
+        (step 3), with the ends each booked (an end another version's row books, as a row stated same, isn't its own;
+        L §5.19); None for none. Its run and its explain's trace (E §10 l.472) both read them."""
+        own = [] if self.proj else [(lg, isinstance(lg.frm, Thing) and self.obs_end_on(o, lg.frm, lg.day),
+                                     isinstance(lg.to, Thing) and self.obs_end_on(o, lg.to, lg.day))
+                                    for o in self.eng.obs_links_for(iid, self.tctx) if o.err is None
+                                    for lg in o.legs
+                                    if isinstance(lg.day, datetime.date) and lg.day < t and lg.day < self.K and
+                                    lg.day >= self.start]
+        return own or None
+
     def window_lifespan(self, mv, lg, key, sides, reg, coll):
         """A window-dated leg's lifespan test asked of each of its days (L §4.4, E §4.1 step 2; tally 2.1.8 item 77):
         where some days are inside every lifespan it reaches and some aren't, the leg is the window's hole at both
@@ -2147,13 +2159,7 @@ class Walk:
         self.live = run.live_places
         # its own observations booked before its day (step 1), which its computation doesn't see (E §4.2 step 3)
         # with the ends each booked (an end another version's row books, as a row stated same, isn't its own; L §5.19)
-        own = [] if self.proj else [(lg, isinstance(lg.frm, Thing) and self.obs_end_on(o, lg.frm, lg.day),
-                                     isinstance(lg.to, Thing) and self.obs_end_on(o, lg.to, lg.day))
-                                    for o in eng.obs_links_for(inst.id, self.tctx) if o.err is None
-                                    for lg in o.legs
-                                    if isinstance(lg.day, datetime.date) and lg.day < t and lg.day < self.K and
-                                    lg.day >= self.start]
-        self.less_obs = own or None
+        self.less_obs = self.own_obs(inst.id, t)
         eng.stack.append(run.coll)
         try:
             try:

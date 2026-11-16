@@ -1736,6 +1736,10 @@ class Asker:
                                                            fmt_value(cells[p])))
             # the state just before the reader's own booking at p: "its running reads as balances up to that point"
             ctx2 = w.tctx.but(cut=min(d, w.K), walk=w, wp=p[:4] + (p[4] - 0.5,))
+            # inside the reader's run: its own earlier observations left out, as its value was (E §10 l.472, §4.2
+            # step 3; tally 2.1.8 #169-g)
+            old_less = getattr(w, 'less_obs', None)
+            w.less_obs = w.own_obs(byp[p], d) if p in byp else None
             eng._explaining_wb = True
             eng.tracing = True
             eng.trace_cells = {}
@@ -1760,6 +1764,7 @@ class Asker:
                 eng.trace_stack = []
                 eng.memo = saved
                 eng._explaining_wb = False
+                w.less_obs = old_less
             root.value = v2
             out.extend('  ' + l for l in self.explain_lines(root, ctx2))
         return CheckOut('walk-bound, read at %d walk point%s' % (len(cells), '' if len(cells) == 1 else 's'),

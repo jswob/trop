@@ -1981,10 +1981,14 @@ def m_adjust_move(self, mi, ctx):
     if key in self.inst_active:
         raise refuse('RUN-CYCLE', 'the adjustments of %s read themselves' % mi.id)
     self.inst_active.add(key)
+    # the re-measurements are the adjustments' own reads, not the instance's: a trace of a read of it (a field read,
+    # a balance) prints the rows its value reads (E §10 l.472; R1; tally 2.1.8 #169-g)
+    tracing, self.tracing = self.tracing, False
     try:
         out = self.adjust_move_compute(mi, ctx)
     finally:
         self.inst_active.discard(key)
+        self.tracing = tracing
     self.run_cache[key] = out
     return out
 
