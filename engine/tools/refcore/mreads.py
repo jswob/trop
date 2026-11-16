@@ -367,7 +367,7 @@ def m_mv_field(self, n, env, ctx):
         h = _body_hole(src)
         if h is not None:
             return h
-        raise refuse('LOAD-FIELD', '%s is not a field of %s' % (name, v.id))
+        raise refuse('RUN-DOMAIN', '%s is not a field of %s' % (name, v.id))
     raise NotYet('the field %s of a movement' % name)
 
 

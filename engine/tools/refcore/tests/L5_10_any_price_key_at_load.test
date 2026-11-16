@@ -1,0 +1,38 @@
+# tally 2.1.8 §4 (#162's comment, P48), L §8.4 Load refuses what load sees: broker is of unit any, priced by pxp,
+# keyed by currencies; move buy writes a leg of unit etf into it, which currencies doesn't hold: LOAD-KEY at load,
+# whatever the asks read (a reads n alone). 2.1.7's refcore loaded it clean and gave a hole where value read it.
+=== m.tally
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit etf "fund unit"
+kind brokerages: place any min 0 priced pxp
+kind buys: event certain
+  leg u: etf
+place broker: brokerages lives 2026-01-01..
+place market: outside lives 1900-01-01..
+input pxp[u in currencies]: num PLN/u
+input d: date
+input q: num etf
+input n: int
+
+move buy: buys
+  on d
+  leg u from market to broker amount q
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d = 2026-02-01 "s"
+  q = 3 etf "s"
+  n = 1 "s"
+
+ask a: n
+=== expect
+refused: LOAD-KEY broker is priced by pxp, keyed by currencies, which holds neither broker nor etf (m.tally:10)

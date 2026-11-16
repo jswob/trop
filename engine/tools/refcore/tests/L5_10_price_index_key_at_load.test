@@ -1,0 +1,27 @@
+# tally 2.1.8 §4 (#162), L §8.4 Load refuses what load sees: flat's price px is keyed by the index ks, which holds
+# neither flat nor PLN: LOAD-KEY at load, whatever the asks read, as for a price keyed by a kind (tally 2.1.7 R5).
+# 2.1.7's refcore loaded it clean (RUN-KEY where value read it).
+=== m.tally
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [a, b]
+kind homes: place PLN min 0 priced px
+place flat: homes lives 2026-01-01..
+input px[k in ks]: num PLN
+input n: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  n = 1 "s"
+
+ask q: n
+=== expect
+refused: LOAD-KEY flat is priced by px, keyed by ks, which holds neither flat nor its unit (m.tally:10)

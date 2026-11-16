@@ -1162,8 +1162,10 @@ def m_check_priced(self):
         fixed = pu not in (None, 'any', 'one')
         if info.binds:
             dom = info.binds[0].dom
-            if dom[0] == 'kind' and not m.thing_in(name, dom[1]) and fixed and \
-                    not (pu in m.things and m.thing_in(pu, dom[1])):
+            if dom[0] in ('kind', 'index') and fixed and not self.price_key_holds(dom, name) and \
+                    not self.price_key_holds(dom, pu):
+                # tally 2.1.8 §4 (#162, L §8.4 Load refuses what load sees): an index-keyed price as a kind-keyed one
+                # (a place of unit any: check_any_priced, once the moves' legs are read)
                 faults.append(LoadError('LOAD-KEY', '%s is priced by %s, keyed by %s, which holds neither %s nor its '
                                         'unit' % (name, pid, dom[1], name), pn.loc))
                 continue
@@ -1172,6 +1174,59 @@ def m_check_priced(self):
                 name, pn._cur, name, pn._cur, pn._per, pn._cur, pu), pn.loc))
     if faults:
         raise min(faults, key=lambda e: _loc_order(e.loc))
+
+
+def m_check_any_priced(self):
+    """A place of unit any priced by an input keyed by a kind or an index: each unit a move's written leg brings into
+    or takes out of it must be a key of the price (LOAD-KEY at load; tally 2.1.8 §4, #162's comment, P48: L §8.4 Load
+    refuses what load sees, the written leg). Made after the moves are checked, which resolve the legs' places."""
+    m = self.m
+    faults = []
+    for name in sorted(m.things):
+        th = m.things[name]
+        if m.place_unit(th) != 'any':
+            continue
+        try:
+            pn = m.price_of(th)
+        except Unspecified:
+            continue
+        if pn is None or getattr(pn, '_expr', None) is not None or getattr(pn, '_r', None) is None:
+            continue
+        kind, pid = pn._r
+        info = m.inputs[pid] if kind == 'input' else m.defs[pid]
+        if not info.binds or info.binds[0].dom[0] not in ('kind', 'index'):
+            continue
+        dom = info.binds[0].dom
+        if self.price_key_holds(dom, name):
+            continue
+        bad = [u for u in self.written_units(name) if not self.price_key_holds(dom, u)]
+        if bad:
+            faults.append(LoadError('LOAD-KEY', '%s is priced by %s, keyed by %s, which holds neither %s nor %s' % (
+                name, pid, dom[1], name, bad[0]), pn.loc))
+    if faults:
+        raise min(faults, key=lambda e: _loc_order(e.loc))
+
+
+def m_price_key_holds(self, dom, x):
+    """Whether a price input's first key position (a kind or an index) holds x, a place's id or a unit."""
+    m = self.m
+    if dom[0] == 'kind':
+        return x in m.things and m.thing_in(x, dom[1])
+    ix = m.indexes.get(dom[1])
+    return ix is not None and x in (ix.texts or ())
+
+
+def m_written_units(self, place):
+    """The units the moves' legs written into or out of a place state (a leg whose kind declares its unit), sorted."""
+    m = self.m
+    out = set()
+    for qid in sorted(m.moves):
+        for ln, d in m.moves[qid].legs:
+            if d is None or d.unit in (None, 'any') or d.unit in m.kinds:
+                continue
+            if place in (self.literal_place(ln.frm), self.literal_place(ln.to)):
+                out.add(d.unit)
+    return sorted(out)
 
 
 def _loc_order(loc):

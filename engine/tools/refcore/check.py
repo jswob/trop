@@ -160,6 +160,7 @@ class Checker:
         # and fills by id)
         for qid in list(m.moves):
             self.check_move(m.moves[qid])
+        self.check_any_priced()
         for qid in list(m.fills):
             self.check_fill(qid)
         for qid, d in m.defs.items():
@@ -626,7 +627,7 @@ class Checker:
         f = a.form
         if f == 'exprs':
             for e in a.exprs:
-                self.tc(e, sc)
+                self.open_key(e, self.tc(e, sc), sc)
         elif f == 'check':
             l, r = a.check
             lt = self.tc(l, sc)
@@ -635,7 +636,7 @@ class Checker:
                 self.tc(l, sc, expect=rt)
             self.compare('==', l, r, a.loc)
         elif f in ('explain', 'inputs-of'):
-            self.tc(a.ref, sc)
+            self.open_key(a.ref, self.tc(a.ref, sc), sc)
             ok = ('name', 'index', 'field') + (('bal', 'low') if f == 'explain' else ())
             if a.ref.k not in ok:
                 raise LoadError('LOAD-PARSE', 'cannot parse: %s takes a reference' % f, a.loc)
@@ -998,6 +999,21 @@ class Checker:
         m = self.m
         return (any(name in (x.keys or ()) for x in m.indexes.values())
                 or any(name in a.options for a in m.axes.values()) or name in m.things)
+
+    def open_key(self, e, t, sc):
+        """A key literal an ask states with no position to name its index (L §2.5): resolved when one index, axis or
+        thing holds it, else refused here, at load (LOAD-KEY `ambiguous key <k>`; L §8.4 Load refuses what load sees,
+        tally 2.1.8 §4, #162: 2.1.7's refcore met it at run)."""
+        if t is None or t.k != 'keylit':
+            return t
+        m = self.m
+        hits = [('ix', ix.id) for ix in m.indexes.values() if t.n in ix.texts]
+        hits += [('ax', ax.id) for ax in m.axes.values() if t.n in ax.options]
+        if t.n in m.things:
+            hits.append(('thing', m.things[t.n].base))
+        if len(hits) != 1:
+            raise LoadError('LOAD-KEY', 'ambiguous key %s' % t.n, e.loc)
+        return t
 
     def keylit(self, n, sc, expect):
         """A key literal: resolved by the type its position expects (L §2.5)."""
