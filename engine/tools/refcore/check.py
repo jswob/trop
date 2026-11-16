@@ -618,6 +618,11 @@ class Checker:
             t = self.tc(a.known, sc)
             if not self.is_date(t):
                 raise uerr('as known of ask %s is %s, not a date' % (a.id, T.show(t)), a.loc)
+            kv = getattr(a.known, 'v', None)
+            if isinstance(kv, datetime.date):
+                # a band patch under the ask's written cut (R5; #162's rest)
+                from .loader import patch_under_cut
+                patch_under_cut(self.m, kv)
         if a.random is not None and a.random[0] == 'quantile':
             scq = sc.child()
             scq.allow_lit = True   # the level of a quantile (L §7.1 An ask)

@@ -2538,6 +2538,31 @@ def count_limit(ix, n, loc):
         raise LoadError('LOAD-LIMIT', 'index %s holds more than 1 000 000 keys' % ix.id, loc)
 
 
+def patch_under_cut(m, K):
+    """L §5.9 Rows replaced under an ask's written cut K (R5; #162's rest, m2/g1/bands_b): a band's patch that
+    finds no table in force on a day of its span, among the tables K sees, is LOAD-REPLACE at load, as under the
+    model's on (Loader.check_bands), in the words run gave it."""
+    for bid in sorted(m.bands):
+        b = m.bands[bid]
+        for t in b.tables:
+            if not any(r.replace for r in t.rows) or getattr(t, 'whole_ok', False) or \
+                    not known_first(t.version.known) <= K:
+                continue
+            lt = version_layer(m, t.version)
+            seen = [o for o in b.tables if o is not t and known_first(o.version.known) <= K and
+                    (_kv(o.key) if o.key is not None else None) == (_kv(t.key) if t.key is not None else None) and
+                    _span_ov(o.version, t.version, K) and (version_layer(m, o.version) < lt or (
+                        version_layer(m, o.version) == lt and
+                        known_first(o.version.known) < known_first(t.version.known)))]
+            sp = t.version.span_at(K)
+            if sp is None:
+                continue
+            gap = _uncovered(sp, [o.version.span_at(K) for o in seen]) if seen else sp
+            if gap is not None:
+                raise LoadError('LOAD-REPLACE', 'replace rows of %s in %s patch no table on %s' % (
+                    bid, t.version.id, gap.text()), t.loc)
+
+
 def _uncovered(span, others):
     """The first stretch of span that no span of others covers, as a Span, or None."""
     lo_d, hi_d = datetime.date.min, END
