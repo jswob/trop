@@ -1284,7 +1284,7 @@ def m_obs_links_for(self, tid, ctx):
         # rows stated same are one movement, "its fulfils ... stated on either row" (L §5.19 One movement on two
         # statements): a row with no fulfils of its own stated same as one that fulfils tid fulfils it too, so which
         # row carries the link changes no answer (a decision's own observations, its point, the walk's booking)
-        groups = same_groups(m)
+        groups = same_groups(m, ctx)
         if res and any(o.id in groups for o in res):
             by_id = dict((x.id, x) for x in self.observations(ctx))
             for o in list(res):
@@ -1308,10 +1308,38 @@ def m_obs_links_for(self, tid, ctx):
     return res
 
 
-def same_groups(m):
+def same_lines(m, ctx):
+    """[(a, b, loc, owner)] of the movements' same lines seen at ctx's cut in the world it reads (L §4.5 Whatever a
+    version states is read as its rows are, tally 2.1.8 R12): a version's line only when known by the cut (its
+    visibility undecided, inside a known window, as seen; m_same_undecided) and in the worlds its file is in (§6.4);
+    the header's always. ctx None: every line (load's own reads)."""
+    sm = getattr(m, 'same_moves', None) or ()
+    vs = getattr(m, 'same_versions', None) or [None] * len(sm)
+    ows = getattr(m, 'same_owners', None) or [''] * len(sm)
+    if ctx is None:
+        return [(a, b, loc, o) for (a, b, loc), o in zip(sm, ows)]
+    key = (ctx.cut, repr(getattr(ctx.cut, 'windows', None)), _WSET[0])
+    cache = m.__dict__.setdefault('_same_lines', {})
+    hit = cache.get(key)
+    if hit is not None:
+        return hit
+    out = []
+    for (a, b, loc), v, o in zip(sm, vs, ows):
+        if v is not None and (not in_world(v) or visible(v.known, ctx.cut, v.id) is False):
+            continue
+        out.append((a, b, loc, o))
+    cache[key] = out
+    return out
+
+
+def same_groups(m, ctx):
     """{movement id: its group, in the order the same lines name them} (L §6.1, round 14: "same is an equivalence:
-    lines that share a side make one group"; "A group of movements is one movement")."""
-    groups = getattr(m, '_same_groups', None)
+    lines that share a side make one group"; "A group of movements is one movement"), of the lines seen at ctx
+    (same_lines)."""
+    lines = same_lines(m, ctx)
+    key = None if ctx is None else (ctx.cut, repr(getattr(ctx.cut, 'windows', None)), _WSET[0])
+    cache = m.__dict__.setdefault('_same_groups', {})
+    groups = cache.get(key)
     if groups is not None:
         return groups
     parent = {}
@@ -1321,7 +1349,7 @@ def same_groups(m):
             a = parent[a]
         return a
     order = []
-    for a, b, loc in getattr(m, 'same_moves', None) or ():
+    for a, b, loc, _o in lines:
         for y in (a, b):
             if y not in order:
                 order.append(y)
@@ -1332,15 +1360,51 @@ def same_groups(m):
     for y in order:
         by.setdefault(find(y), []).append(y)
     groups = dict((y, g) for g in by.values() for y in g)
-    m._same_groups = groups
+    cache[key] = groups
     return groups
 
 
-def once_obs(m, obs):
+def same_pairs(m, ctx):
+    """{movement id: (group, the same line naming it)} from the same lines seen at ctx (same_lines). L §6.1 (round 14):
+    "same is an equivalence: lines that share a side make one group"; "A group of movements is one movement"."""
+    key = None if ctx is None else (ctx.cut, repr(getattr(ctx.cut, 'windows', None)), _WSET[0])
+    cache = m.__dict__.setdefault('_same_pairs', {})
+    sp = cache.get(key)
+    if sp is not None:
+        return sp
+    parent = {}
+
+    def find(x):
+        while parent.get(x, x) != x:
+            x = parent[x]
+        return x
+    lines = {}
+    order = []
+    for a, b, loc, _o in same_lines(m, ctx):
+        for x in (a, b):
+            if x not in order:
+                order.append(x)
+        ra, rb = find(a), find(b)
+        if ra != rb:
+            parent[rb] = ra
+        lines.setdefault(a, (a, b))
+        lines.setdefault(b, (a, b))
+    groups = {}
+    for x in order:
+        groups.setdefault(find(x), []).append(x)
+    sp = {}
+    for g in groups.values():
+        for x in g:
+            sp[x] = (g, lines[x])
+    cache[key] = sp
+    return sp
+
+
+def once_obs(m, obs, ctx):
     """The observations that fulfil one instance, a group stated same counted once (L §5.19 One movement on two
     statements: "the movement is ... counted once by observed(m[k]) and flows"): [(the group's first row, the group's
     other rows)], in the order given."""
-    groups = same_groups(m)
+    groups = same_groups(m, ctx)
     out = []
     at = {}
     for o in obs:
@@ -1386,7 +1450,7 @@ def m_unjoined_refused(self, tid, res, ctx):
     if len(res) < 2:
         return res
     from .joint import shown
-    groups = same_groups(self.m)
+    groups = same_groups(self.m, ctx)
 
     def ends(o):
         ps = set()
@@ -1980,13 +2044,13 @@ def m_settle_links(self, adjs, ctx):
             iid = '%s[%s]' % (mid, ', '.join(key_text(k) for k in kv)) if kv else mid
             named.setdefault((iid, leg, vid), []).append(o)
     if named:
-        groups = same_groups(m)
+        groups = same_groups(m, ctx)
         by_id = None
         for a in adjs:
             for vid in a.vids:
                 # rows stated same are one movement (L §5.19 One movement on two statements), so one settlement:
                 # counted once, its amount the disagreement's hole (HOLE-SAME) where the rows disagree
-                for o, _ in once_obs(m, named.get((a.inst.id, a.leg.name, vid), ())):
+                for o, _ in once_obs(m, named.get((a.inst.id, a.leg.name, vid), ()), ctx):
                     # one adjustment of a step of several versions, named by each of them (E §5 step 4)
                     if not o.legs:
                         links.append((a, o, None))

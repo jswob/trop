@@ -1156,7 +1156,7 @@ class Engine:
         sr = getattr(self.m, 'same_rows', None)
         if sr:
             skey = (info.id, tuple(_kv(k) for k in keys))
-            if skey in sr:
+            if skey in sr and self.same_row_seen(skey, ctx):
                 return self.read_same_row(info, keys, ctx, skey, period)
         self.need_law(d, info)
         try:
@@ -1176,6 +1176,14 @@ class Engine:
             v = self.prices(info, keys, ctx, v, d)
         v = self.apply_field_pins(info, keys, ctx, v)
         return v
+
+    def same_row_seen(self, skey, ctx):
+        """Whether the same line joining a row pair is seen at ctx: the header's always, a version's when known by the
+        cut and in the worlds its file is in (L §4.5 Whatever a version states is read as its rows are, tally 2.1.8
+        R12; undecided inside a known window: as seen)."""
+        from .model import visible, in_world
+        v = getattr(self.m, 'same_row_version', {}).get(skey)
+        return v is None or (in_world(v) and visible(v.known, ctx.cut, v.id) is not False)
 
     def read_same_row(self, info, keys, ctx, skey, period):
         """Two rows stated same (L §6.1): read together.  A row of the joint model's own states their value; else

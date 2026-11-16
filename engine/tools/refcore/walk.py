@@ -459,7 +459,7 @@ class Walk:
             links = eng.obs_links(ctx)
             # two observations of versions covering the two ends that fulfil one instance and disagree (E §6.1); a row
             # stated same as one that fulfils it is one of them, its fulfils "stated on either row" (L §5.19)
-            groups = same_groups(m)
+            groups = same_groups(m, ctx)
             obs_by_id = None
             for tid in sorted(links):
                 os = list(links[tid])
@@ -1037,37 +1037,9 @@ class Walk:
 
     # -- same lines and consolidation (L §6.1, §5.19 SF-25) -----------------------------------------------------
     def same_pairs(self):
-        """{movement id: (group, the same line naming it)} from the same lines naming movements. L §6.1 (round 14):
-        "same is an equivalence: lines that share a side make one group"; "A group of movements is one movement"."""
-        sp = getattr(self, '_same_pairs', None)
-        if sp is not None:
-            return sp
-        parent = {}
-
-        def find(x):
-            while parent.get(x, x) != x:
-                x = parent[x]
-            return x
-        lines = {}
-        order = []
-        for a, b, loc in getattr(self.m, 'same_moves', None) or ():
-            for x in (a, b):
-                if x not in order:
-                    order.append(x)
-            ra, rb = find(a), find(b)
-            if ra != rb:
-                parent[rb] = ra
-            lines.setdefault(a, (a, b))
-            lines.setdefault(b, (a, b))
-        groups = {}
-        for x in order:
-            groups.setdefault(find(x), []).append(x)
-        sp = {}
-        for g in groups.values():
-            for x in g:
-                sp[x] = (g, lines[x])
-        self._same_pairs = sp
-        return sp
+        """{movement id: (group, the same line naming it)} of the lines the walk's cut sees (moves.same_pairs)."""
+        from .moves import same_pairs
+        return same_pairs(self.m, self.tctx)
 
     def same_observed(self, i):
         """Whether a plan instance is stated same as an observation (L §6.1: the group is one movement, and it was
@@ -1445,14 +1417,14 @@ class Walk:
         ends = tuple(self.obs_end_on(o, p, d) for p in (lg.frm, lg.to))
         self.book_leg(o, lg, key, coll=o.coll, ends=ends)
 
-    def obs_end_on(self, o, p, d):
+    def obs_end_on(self, o, p, d, ctx=None):
         """Whether observation o books its end at place p on day d (L §5.19 Booking an observation): "from the
         observation of the version that covers that place on that day; an end at a place no version covers ... from
         the observation itself". The joint model's own row into a member's place that only members' versions cover
         is the joint's own movement there, booked only where same or fulfils links it, else a hole naming it until the
         member's next reading, listed under left out: (L §6.1 SF-32, consol; the migrator's F-j)."""
         from .joint import owner_of
-        cov = self.eng.covering(p.name, d, self.tctx)
+        cov = self.eng.covering(p.name, d, ctx if ctx is not None else self.tctx)
         if not cov or o.row.version in cov:
             return True
         return getattr(self.m, 'joint', None) is not None and isinstance(p, Thing) and \

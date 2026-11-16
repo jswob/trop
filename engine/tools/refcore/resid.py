@@ -12,7 +12,7 @@ from fractions import Fraction
 from .errors import TallyError, Refusal, Unspecified, at_run
 from .values import Num, Hole, Thing, Text, Key, Iv, fmt, fmt_hole
 from .dates import month_period
-from .moves import Inst, qty, day_lo, merge, key_text, instant_text, order_key, same_groups
+from .moves import Inst, qty, day_lo, merge, key_text, instant_text, order_key, same_groups, same_pairs
 from .walk import K_start, K_end, kday
 
 
@@ -209,9 +209,10 @@ def m_residuals(self, place, span, by, ctx, unit=None):
     # latest of them, and listed once; where they disagree each shows (E §6.1)
     also = {}
     hole_at = {}     # a row whose same group's rows both book x and disagree there: its observed at x, the HOLE-SAME
-    if getattr(w, 'same_pairs', None) is not None and w.same_pairs():
+    # the pairs as known on `on`, the observations' own cut (E §6.3; tally 2.1.8 R12: their same lines with them)
+    if same_pairs(m, octx):
         keep = []
-        pairs = w.same_pairs()
+        pairs = same_pairs(m, octx)
         ids_in = set(o.id for o in obs)
         kept_groups = set()
         for o in obs:
@@ -220,7 +221,7 @@ def m_residuals(self, place, span, by, ctx, unit=None):
                 for si, p in enumerate((lg.frm, lg.to)):
                     if isinstance(p, Thing) and p.name == place:
                         gd = lg.day if isinstance(lg.day, datetime.date) else o.day
-                        if o.id in pairs and isinstance(gd, datetime.date) and not w.obs_end_on(o, p, gd):
+                        if o.id in pairs and isinstance(gd, datetime.date) and not w.obs_end_on(o, p, gd, octx):
                             # E §6.3: "a pair of rows stated same is one movement: the ledger lists it once, on one
                             # line, and names both rows"; at x it is what x's statement books (L §5.19: "each end is
                             # booked once, from the statement that covers it"), not the other row's end
@@ -258,7 +259,7 @@ def m_residuals(self, place, span, by, ctx, unit=None):
     lone = []
     # a pair stated same is one movement, "its fulfils ... stated on either row" (L §5.19): a row's link is its
     # partner's where it states none
-    groups = same_groups(m)
+    groups = same_groups(m, octx)
     all_obs = None
     for o in obs:
         f = o.fulfils

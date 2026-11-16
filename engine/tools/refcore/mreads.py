@@ -14,7 +14,7 @@ from .model import Span, _kv, key_text, WindowUndecided
 from .values import (Num, Money, Int, Hole, Thing, Mv, Iv, Rec, Text, Code, Key, NONE, CURRENCIES, fmt,
                      fmt_hole, vkey)
 from .moves import (item_in_world, Inst, ObsMv, AdjMv, PadMv, qty, unit_of_value, day_lo, day_hi, merge, order_key,
-                    same_groups, once_obs, same_obs_differ)
+                    same_groups, same_lines, once_obs, same_obs_differ)
 from .walk import K_end, K_start, K_before, kday, add_q, St, dec_move
 
 
@@ -348,7 +348,7 @@ def m_mv_field(self, n, env, ctx):
 def m_same_rows_hole(self, o, leg, ctx):
     """The HOLE-SAME of an observed row whose same group's other observed rows disagree with it on a leg's amount or
     day (on leg alone, where given), else None (L §5.19, L §8.1's form; moves.same_obs_differ)."""
-    g = same_groups(self.m).get(o.id)
+    g = same_groups(self.m, ctx).get(o.id)
     if not g:
         return None
     idx = dict((x.id, x) for x in self.observations(ctx))
@@ -546,21 +546,19 @@ def m_movements_of(self, dom, ctx, owner=None):
     if owner is not None:
         from .joint import owns
         out = [x for x in out if owns(owner, move_owner(x))]
-    out = once_by_same(m, out, owner)
+    out = once_by_same(m, out, ctx, owner)
     out.sort(key=lambda x: (day_lo(x.day) or END, order_key(x.order)))
     self.run_cache[key] = out
     return out
 
 
-def once_by_same(m, out, owner=None):
+def once_by_same(m, out, ctx, owner=None):
     """Two movements stated same are one: "a movement listed twice counts once" (L §6.1), so a binding over them
-    binds the left one of the same line. Inside a member (owner), only the same lines of its own versions: a member
-    is closed, so the joint model's lines change none of its answers (L §6.1)."""
-    sm = getattr(m, 'same_moves', None)
-    if sm and owner is not None:
-        from .joint import owns
-        ows = getattr(m, 'same_owners', None) or [''] * len(sm)
-        sm = [x for x, o in zip(sm, ows) if owns(owner, o)]
+    binds the left one of the same line, of the lines seen at ctx (moves.same_lines, R12). Inside a member (owner),
+    only the same lines of its own versions: a member is closed, so the joint model's lines change none of its
+    answers (L §6.1)."""
+    from .joint import owns
+    sm = [(a, b, loc) for a, b, loc, o in same_lines(m, ctx) if owner is None or owns(owner, o)]
     if not sm:
         return out
     ids = set(getattr(x, 'id', None) for x in out)
@@ -600,10 +598,9 @@ def m_same_kind_hole(self, x, kind, ctx):
     that holds both kinds meets the one movement once, whatever its kind")."""
     from .joint import shown
     m = self.m
-    sm = getattr(m, 'same_moves', None)
-    if not sm or not hasattr(x, 'id'):
+    if not hasattr(x, 'id'):
         return None
-    g = same_groups(m).get(x.id)
+    g = same_groups(m, ctx).get(x.id)
     if g is None:
         return None
     idx = {}
@@ -1653,7 +1650,7 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
             if not obs:
                 self.reg(('open', i.id))
             # rows stated same are one movement, counted once by flows, their disagreement a HOLE-SAME (L §5.19)
-            for o, others in once_obs(m, obs):
+            for o, others in once_obs(m, obs, ctx):
                 for x in [o] + others:
                     if x.coll is not None:
                         self.cur.merge(x.coll)
@@ -2099,7 +2096,7 @@ def m_c_observed(self, n, env, ctx):
     legs = []
     # rows stated same are one movement, counted once (L §5.19: "counted once by observed(m[k])"); where they
     # disagree, the leg's amount is the disagreement's hole, HOLE-SAME
-    once = once_obs(m, obs)
+    once = once_obs(m, obs, ctx)
     for o in obs:
         self.cur.rows[o.row.sid] = o.row
     for ld in m.kind_legs(mi.kind):
