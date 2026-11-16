@@ -1,9 +1,12 @@
 # <Milestone or round>: <outcome, in spec words>
 
 <!-- A milestone brief, from engine/templates/brief.md. It holds only this run's scope;
-     the procedure is the skill engine-coordinator, the conventions engine/CONVENTIONS.md. -->
+     the procedure is the skill engine-coordinator, the conventions engine/CONVENTIONS.md.
+     How a brief is written, and to which model, is engine/PLAYBOOK.md §3: a brief for a
+     Fable job (a spec round's lead, a planner, a critic, a study) gives the goal, the bar,
+     the inputs and the output's form, and leaves the method to the session. -->
 
-**You are the <run> coordinator,** a lead-role session at effort high. The master session wrote this brief on <date>. Invoke the skill `engine-coordinator` first; it holds the procedure. Your run folder is `tmp/<run>/`.
+**You are the <run> coordinator,** a lead-role session: the job `coordinator`, Opus 5.5 at effort high (a spec round's is `round-lead`, Fable 5.2 at high: `--model claude-fable-5-2`). The master session wrote this brief on <date>. Invoke the skill `engine-coordinator` first; it holds the procedure. Your run folder is `tmp/<run>/`.
 
 **How the user starts you,** in the main folder, on an up-to-date master:
 
@@ -26,14 +29,17 @@ Then the user pastes: "You are the <run> coordinator. Your brief is tmp/active/<
 
 ## 2. Who does what
 
-| Who              | Role, effort       | Does                                                                |
-| ---------------- | ------------------ | ------------------------------------------------------------------- |
-| T                | tests, xhigh       | the tests first; for each group's review, the fixes as tests        |
-| the builder      | build, xhigh       | its plan; one fresh session per group                               |
-| the group review | lead, high         | `engine-reviewer` on each group's diff                              |
-| rules steps      | rules, high        | fuzz targets, benches, the kernel list, `gating`                    |
-| the gate         | lead, xhigh, fresh | the whole review, the evidence, fuzz, mutants, timing, the report   |
-| you              | lead, high         | the worktree, launches, merges in, picks, the pull request, the tag |
+| Who               | Job (`launch --job`) | Role, model, effort      | Does                                                                |
+| ----------------- | -------------------- | ------------------------ | ------------------------------------------------------------------- |
+| T                 | `tests`              | tests, Opus, xhigh       | the tests first; for each group's review, the fixes as tests        |
+| the builder       | `builder`            | build, Opus, xhigh       | its plan; one fresh session per group                               |
+| the group review  | `group-review`       | lead, Opus, high         | `engine-reviewer` on each group's diff                              |
+| rules steps       | `rules-step`         | rules, Opus, high        | fuzz targets, benches, the kernel list, `gating`                    |
+| the gate          | `gate`               | lead, Opus, xhigh, fresh | the evidence, fuzz, mutants, timing, the report                     |
+| the gate's review | `gate-review`        | lead, Fable, high, fresh | the one review of the whole diff                                    |
+| you               | `coordinator`        | lead, Opus, high         | the worktree, launches, merges in, picks, the pull request, the tag |
+
+A spec round has a `planner` and a fresh `critic` (spec, Fable, high) and a `spec-writer` (spec, Opus, high) for the ruled patch. The table every job comes from is `engine/PLAYBOOK.md` §1.
 
 ## 3. What differs in this run
 
@@ -51,7 +57,7 @@ Everything else is yours: take the (Recommended) option and log it (the skill, �
 
 **Limit <L> % of the week; wind down at <L − 1> %.** Measure with `engine/tools/usage tmp/<run>/ids.txt` after every chunk.
 
-**The estimate,** from M0's measured rates (the retro after M0):
+**The estimate,** from the last run's measured rates (`engine/PLAYBOOK.md` §4; the rows below are M0's, and M1 ran 2.1 % and M2 2.2 % per 1 000 changed lines all-in):
 
 | Part                                     | Rate                                                | This run        |
 | ---------------------------------------- | --------------------------------------------------- | --------------- |
@@ -60,7 +66,7 @@ Everything else is yours: take the (Recommended) option and log it (the skill, �
 | the gate                                 | about 20 % on top of the all-in                     | <x> %           |
 | **total**                                |                                                     | **<x> %**       |
 
-A plan's size guess states its basis; S's and M0's guesses ran 2–3× low.
+A plan's size guess states its basis: each group from the measured lines of the nearest group already built (the playbook's D11). S's, M0's and M1's guesses from refcore's length ran 2–4× low.
 
 ## 6. Hard rules for this run
 

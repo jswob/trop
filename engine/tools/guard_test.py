@@ -984,7 +984,9 @@ def worktree_done_checks(root, expect, failures):
 def launch_usage_checks(root, expect, failures):
     """launch and usage, the coordinator's tools (the retro after M0, decision 4): launch's
     dry run on the throwaway and its refusals; usage on planted transcripts, an id listed
-    twice and a call in two files counted once. No session is started."""
+    twice and a call in two files counted once. The model and the effort come from the
+    job (engine/PLAYBOOK.md, D2 and D3; 2026-11-15), and a Fable session's cost is split
+    out by model and counted at Fable's list price. No session is started."""
     prompt = os.path.join(root, "engine", "target", "prompt.txt")
     ids = os.path.join(root, "engine", "target", "run", "ids.txt")
     os.makedirs(os.path.dirname(ids), exist_ok=True)
@@ -1001,7 +1003,8 @@ def launch_usage_checks(root, expect, failures):
     r = launch("tests", prompt, root, "--ids", ids, "--dry-run")
     expect("launch --dry-run as lead", r.returncode, 0, r.stderr)
     for says in ("TALLY_ROLE=tests", "CARGO_BUILD_JOBS=6", "NEXTEST_TEST_THREADS=6", "CARGO_INCREMENTAL=0", "nice -n 10",
-                 "--output-format json", "--session-id", "--effort xhigh", "dry run: nothing started"):
+                 "--output-format json", "--session-id", "--effort xhigh", "job tests", "--model claude-opus-5-5",
+                 "dry run: nothing started"):
         if says not in r.stdout:
             failures.append(f"launch --dry-run: its command lacks {says!r}: {r.stdout.strip()[:300]}")
     if os.path.exists(ids):
@@ -1010,8 +1013,43 @@ def launch_usage_checks(root, expect, failures):
     expect("launch --dry-run --resume in app work", r.returncode, 0, r.stderr)
     if "--resume 0e1d2c3b-4a59-4687-9a1b-2c3d4e5f6a7b" not in r.stdout:
         failures.append(f"launch --resume: the command doesn't resume that id: {r.stdout.strip()[:300]}")
+    # the job sets the model and the effort; an override is noted for the picks' log
+    r = launch("spec", prompt, root, "--ids", ids, "--dry-run", "--job", "critic", "--max-usd", "60")
+    expect("launch --dry-run --job critic", r.returncode, 0, r.stderr)
+    for says in ("job critic", "--model claude-fable-5-2", "--effort high", "--max-budget-usd 60 "):
+        if says not in r.stdout:
+            failures.append(f"launch --job critic: its command lacks {says!r}: {r.stdout.strip()[:300]}")
+    if "log it as a pick" in r.stdout:
+        failures.append(f"launch --job critic: notes an override where there is none: {r.stdout.strip()[:300]}")
+    r = launch("build", prompt, root, "--ids", ids, "--dry-run", "--effort", "high")
+    expect("launch --dry-run --effort high as the builder", r.returncode, 0, r.stderr)
+    if "effort high for xhigh" not in r.stdout or "log it as a pick" not in r.stdout:
+        failures.append(f"launch --effort high: no note that it overrides the builder's xhigh: {r.stdout.strip()[:300]}")
+    r = launch("--jobs")
+    expect("launch --jobs", r.returncode, 0, r.stderr)
+    playbook = os.path.join(os.path.dirname(TOOLS), "PLAYBOOK.md")
+    with open(playbook, encoding="utf-8") as f:
+        rows = [[c.strip(" `") for c in line.split("|")[1:5]] for line in f if line.startswith("| `")]
+    jobs = [line.split() for line in r.stdout.splitlines()]
+    if len(jobs) < 5:
+        failures.append(f"launch --jobs: prints {len(jobs)} jobs: {r.stdout.strip()[:300]}")
+    for job in jobs:
+        if job not in rows:
+            failures.append(f"launch --jobs: engine/PLAYBOOK.md's table has no row {' | '.join(job)} (D2, D3: the two change together)")
+    for row in rows:
+        if row[1] in ("build", "tests", "rules", "spec", "lead") and row not in jobs:
+            failures.append(f"engine/PLAYBOOK.md's job row {' | '.join(row)} isn't one of launch's jobs")
     for label, args, role, extra, says in (
         ("as build", ("tests", prompt, root, "--ids", ids, "--dry-run"), "build", None, "only a coordinator"),
+        ("a job of another role", ("lead", prompt, root, "--ids", ids, "--dry-run", "--job", "critic"), "lead", None,
+         "runs in the spec role"),
+        ("an unknown job", ("lead", prompt, root, "--ids", ids, "--dry-run", "--job", "boss"), "lead", None, "isn't a job"),
+        ("a stale model id", ("lead", prompt, root, "--ids", ids, "--dry-run", "--model", "claude-fable-5-1"), "lead", None,
+         "isn't a model id this tool knows"),
+        ("an unknown effort", ("lead", prompt, root, "--ids", ids, "--dry-run", "--effort", "ultra"), "lead", None,
+         "isn't an effort"),
+        ("a budget that isn't dollars", ("lead", prompt, root, "--ids", ids, "--dry-run", "--max-usd", "2%"), "lead", None,
+         "isn't an amount in dollars"),
         ("an unknown role", ("tester", prompt, root, "--ids", ids, "--dry-run"), "lead", None, "isn't a role"),
         ("a missing prompt", ("tests", prompt + ".none", root, "--ids", ids, "--dry-run"), "lead", None, "isn't a file"),
         ("a folder that isn't a checkout", ("tests", prompt, os.path.dirname(root), "--ids", ids, "--dry-run"), "lead", None,
@@ -1026,12 +1064,15 @@ def launch_usage_checks(root, expect, failures):
             failures.append(f"launch refuses {label}: stderr lacks {says!r}: {r.stderr.strip()[:200]}")
     # usage: two transcripts under a planted projects folder, one call in both
     projects = os.path.join(root, "engine", "target", "projects")
-    a, b = "11111111-1111-4111-8111-111111111111", "22222222-2222-4222-8222-222222222222"
-    call = {"type": "assistant", "message": {"id": "msg_1", "usage": {"input_tokens": 1000, "output_tokens": 200,
-                                                                      "cache_read_input_tokens": 10000}}}
-    other = {"type": "assistant", "message": {"id": "msg_2", "usage": {"input_tokens": 0, "output_tokens": 0,
-                                                                       "cache_creation_input_tokens": 800}}}
-    for folder, sid, lines in (("p1", a, [call, call]), ("p2", a, [call, other]), ("p1", b, [call])):
+    a, b, c = "11111111-1111-4111-8111-111111111111", "22222222-2222-4222-8222-222222222222", "33333333-3333-4333-8333-333333333333"
+    opus, fable = "claude-opus-5-5", "claude-fable-5-2"
+    call = {"type": "assistant", "message": {"id": "msg_1", "model": opus, "usage": {"input_tokens": 1000, "output_tokens": 200,
+                                                                                     "cache_read_input_tokens": 10000}}}
+    other = {"type": "assistant", "message": {"id": "msg_2", "model": opus, "usage": {"input_tokens": 0, "output_tokens": 0,
+                                                                                      "cache_creation_input_tokens": 800}}}
+    judge = {"type": "assistant", "message": {"id": "msg_3", "model": fable, "usage": {"input_tokens": 1000000, "output_tokens": 200000,
+                                                                                       "cache_read_input_tokens": 10000000}}}
+    for folder, sid, lines in (("p1", a, [call, call]), ("p2", a, [call, other]), ("p1", b, [call]), ("p1", c, [judge])):
         os.makedirs(os.path.join(projects, folder), exist_ok=True)
         with open(os.path.join(projects, folder, sid + ".jsonl"), "a", encoding="utf-8") as f:
             f.writelines(json.dumps(x) + "\n" for x in lines + [{"type": "user"}])
@@ -1043,6 +1084,20 @@ def launch_usage_checks(root, expect, failures):
     for says in (f"session {a}: 2 calls, 0.00 M weighted", f"session {b}: 0 calls", "all 2 sessions"):
         if says not in r.stdout:
             failures.append(f"usage: lacks {says!r}: {r.stdout.strip()[:300]}")
+    if "by model" in r.stdout:
+        failures.append(f"usage: splits by model a run that is all Opus: {r.stdout.strip()[:300]}")
+    # a Fable session beside them counts at Fable's list price, in the week's share (the user,
+    # 2026-11-15: the same weekly limit). msg_3 as Opus's tokens: 1 M + 5 * 0.2 M + 0.1 * 10 M =
+    # 3 M, 0.35 %; at Fable's price 2 * 2 M + 1 M = 5 M, 0.58 %; 8 + 8 + 2 = $18.00
+    r = subprocess.run([os.path.join(root, "engine/tools/usage"), ids, c, "--projects", projects], capture_output=True, text=True, check=False)
+    expect("usage of an ids file and a Fable session", r.returncode, 0, r.stderr)
+    for says in (f"session {c}: 1 calls, 5.00 M weighted, about 0.58 % of the week", "by model:", f"  {opus}: 2 calls",
+                 f"  {fable}: 1 calls, 5.00 M weighted, about 0.58 % of the week", "as Opus's tokens 0.35 %", "$18.00",
+                 "all 3 sessions: about 0.58 % of the week"):
+        if says not in r.stdout:
+            failures.append(f"usage with a Fable session: lacks {says!r}: {r.stdout.strip()[:400]}")
+    if not r.stdout.rstrip().splitlines()[-1].startswith("all 3 sessions"):
+        failures.append(f"usage: its last line isn't the total: {r.stdout.strip()[-200:]}")
 
 
 # nextest's log of check quick's `tests` step, two of three tests red (R-83, issue #108):
@@ -1405,6 +1460,13 @@ def main():
                                        env={**env, "TALLY_ROLE": "lead"}, check=False)
                     if r.returncode != 0 or "engine-coordinator" not in r.stdout:
                         failures.append(f"SessionStart hook as lead: doesn't name the skill engine-coordinator: {r.stdout[:200]!r}")
+                    # the playbook's pointer, for those who write briefs, launch or change the tools (2026-11-15)
+                    for who, want in (("lead", True), ("rules", True), ("", True), ("tests", False), ("spec", False)):
+                        r = subprocess.run(["/bin/sh", "-c", start or "false"], capture_output=True, text=True,
+                                           env={**env, "TALLY_ROLE": who}, check=False)
+                        if r.returncode != 0 or ("engine/PLAYBOOK.md" in r.stdout) != want:
+                            failures.append(f"SessionStart hook as {who or 'app work'}: engine/PLAYBOOK.md is "
+                                            f"{'not named' if want else 'named'}: {r.stdout[:200]!r}")
                 finally:
                     subprocess.run(["git", "-C", root, "worktree", "remove", "--force", wt], check=False, capture_output=True)
                     subprocess.run(["git", "-C", root, "branch", "-q", "-D", "build/m1"], check=False, capture_output=True)
