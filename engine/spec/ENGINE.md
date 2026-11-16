@@ -460,7 +460,7 @@ The test suite adds **determinism**: every case is run twice, with 1 and with 6 
 | Of | It prints |
 |---|---|
 | a def cell | its rules and causes in LANGUAGE §5.18's explanation order, the winner with its `v` version and source; the register |
-| a movement instance | its class (plan or decision), its day, booking cut and leg derivations; a cause that is its day prints its day's derivation; for a decision, its stratum and what it read at its walk point; each later version with its δ, the adjustment it made and what settles or waives it |
+| a movement instance | its class (plan or decision), its day, booking cut and leg derivations; a cause that is its day prints its day's derivation; for a decision, its stratum and what it read at its walk point; each later version with its δ, the adjustment it made and what settles or waives it; a version that answers a hole booking prints `answered at <cut> (version <V>):` before its rows |
 | a balance | its last reading with its gap role, version, source and gap (§6.1, §6.3), or the opening, and every movement since, up to that day, grouped by day, with each movement's status and id |
 | a projection | its holder and day t, the start balance, the movements it counted with the clauses applied, and the movements it left out (§4.3) |
 | a path value | the seed and path number, the samples it reached in canonical order, and the derivation on that path |
