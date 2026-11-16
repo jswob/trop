@@ -3768,6 +3768,10 @@ class Engine:
         q = self.ev(n.q, env, ctx)
         if isinstance(q, Hole):
             return q
+        if q.q <= 0 or q.q > 1:
+            # type 1 over its terms has no smallest term for such a level (L §5.11, §5.16; tally 2.1.8 R16, #171)
+            from .values import fmt_q
+            raise refuse('RUN-DOMAIN', 'quantile has no meaning for the level %s' % fmt_q(q.q))
         srt = sorted(terms, key=lambda t: t.q if isinstance(t, Num) else t)
         need = q.q * len(srt)
         for i, t in enumerate(srt, 1):

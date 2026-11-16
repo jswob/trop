@@ -93,6 +93,24 @@ class Scope:
         return s
 
 
+def _level_literal(q):
+    """A quantile level written as a literal (a number, or minus one), as a fraction; None otherwise."""
+    from fractions import Fraction
+    neg = False
+    if q.k == 'neg':
+        neg, q = True, q.e
+    if q.k != 'num':
+        return None
+    v = getattr(q, '_val', None)
+    if v is None:
+        v = getattr(q, 'v', None)
+    try:
+        f = Fraction(v)
+    except (TypeError, ValueError):
+        return None
+    return -f if neg else f
+
+
 class Checker:
     def __init__(self, m):
         self.m = m
@@ -2563,8 +2581,11 @@ class Checker:
         qt = self.tc(n.q, scq)
         if self.numcls(qt) not in ('num', 'flex', 'int'):
             raise uerr('the level of quantile is %s' % T.show(qt), n.loc)
-        if sc.where in ('def', 'at') and not (n.q.k == 'num' and n.q.v in (0, 1)):
-            pass
+        lv = _level_literal(n.q)
+        if lv is not None and (lv <= 0 or lv > 1):
+            # type 1 over its terms, its range of q included (L §5.11, §5.16; tally 2.1.8 R16, #171): load sees it
+            from .values import fmt_q
+            raise LoadError('LOAD-DOMAIN', 'quantile has no meaning for the level %s' % fmt_q(lv), n.loc)
         return tt
 
     # -- calls -----------------------------------------------------------------------------
