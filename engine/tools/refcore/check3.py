@@ -559,10 +559,20 @@ def m_place_arg(self, r, sc, what):
     return t
 
 
+def m_any_needs_unit(self, n):
+    """bal(x, d) of a place written by name whose unit is any names no unit, which load sees (R5; item 76, #162's
+    sweep): LOAD-UNIT, in the words run gave it. low(x, a .. b) is refused so, as the bal(x, d) of its definition."""
+    th = self.literal_place(n.ref)
+    if th is not None and self.m.place_unit(self.m.things[th]) in (None, 'any'):
+        raise LoadError('LOAD-UNIT', 'bal(%s, d) of a place of unit any states its unit: bal(x, u, d)' % th, n.loc)
+
+
 def m_t_bal(self, n, sc, expect):
     m = self.m
     t = self.place_arg(n.ref, sc, 'bal')
     ut = self.place_type_unit(t, n.ref)
+    if len(n.args) == 1 and not n.modelled:
+        self.any_needs_unit(n)
     target = self.place_target(n.ref)
     args = n.args
     n._unit = None
@@ -701,6 +711,7 @@ def m_check_proj(self, n, sc, target):
 def m_t_low(self, n, sc, expect):
     t = self.place_arg(n.ref, sc, 'low')
     ut = self.place_type_unit(t, n.ref)
+    self.any_needs_unit(n)
     target = self.place_target(n.ref)
     self.span(n.span, sc)
     if n.span.a is None or n.span.b is None:

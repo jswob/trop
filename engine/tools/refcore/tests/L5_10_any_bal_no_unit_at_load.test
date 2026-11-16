@@ -1,0 +1,30 @@
+# tally 2.1.8 R5 (item 76, #162's sweep, pick P29): bal(x, d) of a place written by name whose unit is any names no
+# unit, which load sees: LOAD-UNIT at load, and low(x, a .. b) so, as the bal(x, d) of its definition. 2.1.8's first
+# refcore refused each value at run (RUN-DOMAIN). The plan's c9low.
+=== m.tally
+model t
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind wallets: place any signed
+place broker: wallets lives 2025-01-01..
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  anchor broker
+  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
+  opening[broker] = 2.00 PLN at 2026-01-01 start "s"
+  stated[broker] = 4.00 EUR at 2026-02-15 end "s"
+  stated[broker] = 10.00 PLN at 2026-02-15 end "s"
+
+
+ask w: low(broker, 2026-02-10 .. 2026-02-20), bal(broker, 2026-02-20)
+=== expect
+refused: LOAD-UNIT bal(broker, d) of a place of unit any states its unit: bal(x, u, d) (m.tally:24)
