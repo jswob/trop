@@ -843,6 +843,101 @@ version v1
         );
     }
 
+    /// Two observations of each of two transfers, one pair stated `same` in the model, the
+    /// other in the scenario, each by a version known in a window (the review of group 1's
+    /// `a1_diff`, N5).
+    const SAME_DIFF: &str = "model ls
+  tally 2
+  on 2026-05-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s \"s\"
+unit PLN: currency minor 0.01
+input bank: observed
+input amt: money PLN
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place inv: accounts PLN lives 2026-01-01..
+
+version v1
+  cite s
+  governs 2026..
+  known 2026-01-01
+  amt = 100.00 PLN \"s\"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start \"s\"
+  opening[sav] = 0.00 PLN at 2026-01-01 start \"s\"
+  opening[inv] = 0.00 PLN at 2026-01-01 start \"s\"
+
+version st_konto
+  cite s
+  governs 2026-04
+  known 2026-04-02
+  covers konto
+  bank[a1] = (on: 2026-04-10, kind: transfers, leg cash from konto to sav amount 100.00 PLN) \"a1\"
+  bank[c1] = (on: 2026-04-12, kind: transfers, leg cash from konto to inv amount 30.00 PLN) \"c1\"
+
+version st_sav
+  cite s
+  governs 2026-04
+  known 2026-04-03
+  covers sav
+  bank[b1] = (on: 2026-04-10, kind: transfers, leg cash from konto to sav amount 100.00 PLN) \"b1\"
+
+version st_inv
+  cite s
+  governs 2026-04
+  known 2026-04-03
+  covers inv
+  bank[d1] = (on: 2026-04-12, kind: transfers, leg cash from konto to inv amount 30.00 PLN) \"d1\"
+
+version link1
+  cite s
+  governs always
+  known window(2026-05-01, 2026-05-20)
+  same bank[a1] = bank[b1]
+ask d1: diff(count(t in transfers over 2026-04)) in sc against ls as known 2026-05-10
+ask d2: diff(count(t in transfers over 2026-04)) in sc against ls as known 2026-05-25
+";
+
+    const SAME_DIFF_SC: &str = "scenario sc over ls
+  tally 2
+  from 2026-01-01
+
+version sc_v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  replace amt = 200.00 PLN \"s\"
+
+version sc_link
+  cite s
+  governs always
+  known window(2026-05-08, 2026-05-15)
+  same bank[c1] = bank[d1]
+";
+
+    /// A diff's block that seen and unseen print differently is the hole and its cut alone,
+    /// not the seen account's lines (pick P27, on #196: compared by all a form prints).
+    #[test]
+    fn a_diff_that_seen_and_unseen_print_differently_is_the_hole_alone() {
+        let hole = "d1: ?\"date within window(2026-05-01, 2026-05-20) not precise enough for the cut 2026-05-10\" (bank[a1], bank[b1], link1) ?\"date within window(2026-05-08, 2026-05-15) not precise enough for the cut 2026-05-10\" (bank[c1], bank[d1], sc_link)";
+        assert_eq!(
+            lines_of_files(&[("ls.tally", SAME_DIFF), ("sc.tally", SAME_DIFF_SC)]),
+            [
+                hole,
+                "  cut 2026-05-10",
+                "d2: diff in sc against ls: 1 changed, 0 added, 0 removed, 0 unchanged",
+                "  changed count(...): 2 against 3",
+                "  world: ls",
+                "  world: sc",
+                "  cut 2026-05-25",
+                "warning: WARN-UNREAD input amt is read by nothing",
+            ],
+            "d1's counts differ seen and unseen; d2's cut is past both windows"
+        );
+    }
+
     /// A ledger per binding tuple, per day of a window and per option of an axis, one of each
     /// dividing by zero or reading a hole key (the review of group 1's B4 and N8).
     const LEDGER_REFUSED: &str = "model pw

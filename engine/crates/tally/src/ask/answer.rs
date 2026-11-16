@@ -609,7 +609,12 @@ fn ask_lines(
     }
     let hole = same_hole(&met, engine.ask_cut)?;
     let others = picked_lines(m, (ask, env), (cut, days), seen, &met)?;
-    Ok(undecided_lines(ask, &lines, &others, &hole))
+    Ok(undecided_lines(
+        (&ask.id, by_every_line(ask)),
+        &lines,
+        &others,
+        &hole,
+    ))
 }
 
 /// Ask `ask`'s lines in scope `env` at cut `cut` under each choice of seen and unseen for
@@ -705,15 +710,18 @@ fn same_hole(met: &SameMet, cut: Day) -> Result<crate::hole::Hole, Stop> {
     crate::hole::spread(&operands).ok_or_else(|| invariant("a same line's hole with no line"))
 }
 
-/// Ask `ask`'s lines where its first run, `first`, saw every `same` line known in a window
-/// that holds the cut and the runs `others` took the other choices: the lines where every run
-/// prints them; else each block (a line and the lines under it) whose first line differs
-/// becomes its head and `hole`, the first run's register under it; and where the runs' heads
-/// differ, the one line of `hole` with the first run's last cut or law date line (refcore's
-/// `answer_same_undecided`). L §4.5 (tally 2.1.8 R12: a read on which seen and unseen
-/// differ is `HOLE-IMPRECISE`), §8.2.
+/// The lines of ask `id` where its first run, `first`, saw every `same` line known in a
+/// window that holds the cut and the runs `others` took the other choices: the lines where
+/// every run prints them; where the runs' heads differ, the one line of `hole` with the first
+/// run's last cut or law date line (refcore's `answer_same_undecided`). Else block by block (a
+/// line and the lines under it): a block of a form that prints lines of its own (`whole`: a
+/// ledger, a diff, an `explain`, an `inputs-of`) that differs in any line becomes its head
+/// and `hole`, with its last cut or law date line, as where heads differ (pick P27, on #196);
+/// a value, `check` or `solve` block whose first line differs becomes its head and `hole`,
+/// the first run's register under it, its register free to differ. L §4.5 (tally 2.1.8 R12: a
+/// read on which seen and unseen differ is `HOLE-IMPRECISE`), §8.2.
 fn undecided_lines(
-    ask: &Ask,
+    (id, whole): (&str, bool),
     first: &[String],
     others: &[Vec<String>],
     hole: &crate::hole::Hole,
@@ -723,25 +731,55 @@ fn undecided_lines(
     }
     let own = heads(first);
     if others.iter().any(|lines| heads(lines) != own) {
-        let mut out = vec![format!("{}: {}", ask.id, hole.text())];
+        let mut out = vec![format!("{id}: {}", hole.text())];
         out.extend(last_clock(first).cloned());
         return out;
     }
-    let theirs: Vec<Vec<&str>> = others.iter().map(|lines| leads(lines)).collect();
+    let theirs: Vec<Vec<Vec<&str>>> = others.iter().map(|lines| blocks(lines)).collect();
     let mut out = Vec::new();
     for (at, block) in blocks(first).into_iter().enumerate() {
         let Some((lead, under)) = block.split_first() else {
             continue;
         };
-        let agree = theirs.iter().all(|led| led.get(at) == Some(lead));
+        let agree = theirs.iter().all(|bs| match bs.get(at) {
+            Some(other) if whole => *other == block,
+            Some(other) => other.first() == Some(lead),
+            None => false,
+        });
         if agree || !lead.contains(": ") {
             out.extend(block.iter().map(|l| (*l).to_owned()));
             continue;
         }
         out.push(format!("{}: {}", line_head(lead), hole.text()));
-        out.extend(under.iter().map(|l| (*l).to_owned()));
+        if whole {
+            out.extend(block_clock(under).map(|l| (*l).to_owned()));
+        } else {
+            out.extend(under.iter().map(|l| (*l).to_owned()));
+        }
     }
     out
+}
+
+/// Whether seen and unseen compare ask `ask`'s blocks by every line: a ledger, a diff, an
+/// `explain` or an `inputs-of` prints its result in lines under its head; a value, `check`,
+/// `solve` or `readers-of` block by its first line, its register free to differ (pick P27,
+/// on #196). L §4.5 (tally 2.1.8 R12), §5.18.
+fn by_every_line(ask: &Ask) -> bool {
+    match ask.body {
+        AskBody::Residuals(_) | AskBody::Diff(_) | AskBody::Explain(_) | AskBody::InputsOf(_) => {
+            true
+        }
+        AskBody::Exprs(_) | AskBody::Check(..) | AskBody::Solve(_) | AskBody::ReadersOf(_) => false,
+    }
+}
+
+/// The last cut or law date line among a block's lines `under`.
+fn block_clock<'a>(under: &[&'a str]) -> Option<&'a str> {
+    under
+        .iter()
+        .rev()
+        .find(|l| l.starts_with("  cut") || l.starts_with("  law date"))
+        .copied()
 }
 
 /// Lines `lines` in blocks: a line and the indented lines under it.
@@ -1473,5 +1511,71 @@ fn pin_parts(pin: &Pin) -> Vec<&Expr> {
         }
         PinForm::Law(e) | PinForm::Known(e) | PinForm::Wording(e, _) => vec![e],
         PinForm::Scenario(_) => Vec::new(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::undecided_lines;
+    use crate::hole::Hole;
+
+    fn owned(lines: &[&str]) -> Vec<String> {
+        lines.iter().map(|l| (*l).to_owned()).collect()
+    }
+
+    const HEAD: &str = "r: residuals konto 2026-04";
+    const GROUP: &str =
+        "  2026-04 unexplained: model 0.00 PLN, observed -100.00 PLN, difference -100.00 PLN";
+
+    /// Seen and unseen accounts of one block under one first line (the review of group 1's
+    /// N5; pick P27, on #196): a ledger's, a diff's, an `explain`'s or an `inputs-of`'s block
+    /// that differs in any line is the hole, with its last cut or law date line; a value's
+    /// block compares by its first line, its register free to differ.
+    #[test]
+    fn a_block_of_lines_is_compared_by_every_line() {
+        let hole = Hole::asked(
+            "date within window(2026-05-01, 2026-05-20) not precise enough for the cut 2026-05-10",
+            "link1",
+        );
+        let hole_line = format!("r: {}", hole.text());
+        let seen = owned(&[
+            HEAD,
+            GROUP,
+            "    unexplained bank[a1], bank[b1] on 2026-04-10: observed -100.00 PLN",
+            "  law date 2026-04-01, cut 2026-05-10",
+            "q: 3",
+            "  cut 2026-05-10",
+        ]);
+        let unseen = owned(&[
+            HEAD,
+            GROUP,
+            "    unexplained bank[a1] on 2026-04-10: observed -100.00 PLN",
+            "  law date 2026-04-01, cut 2026-05-10",
+            "q: 3",
+            "  cut 2026-05-10",
+        ]);
+        let others = [unseen];
+        assert_eq!(
+            undecided_lines(("r", true), &seen, &others, &hole),
+            [
+                hole_line.as_str(),
+                "  law date 2026-04-01, cut 2026-05-10",
+                "q: 3",
+                "  cut 2026-05-10"
+            ],
+            "a ledger's line under one head moves: the hole and its clock"
+        );
+        assert_eq!(
+            undecided_lines(("r", false), &seen, &others, &hole),
+            seen,
+            "a value's block: its first line agrees"
+        );
+        let moved = owned(&["q: 3", "  open: two", "  cut 2026-05-10"]);
+        let still = owned(&["q: 3", "  cut 2026-05-10"]);
+        assert_eq!(
+            undecided_lines(("q", false), &moved, &[still], &hole),
+            moved,
+            "a value's register may differ"
+        );
     }
 }
