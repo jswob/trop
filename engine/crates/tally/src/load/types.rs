@@ -614,6 +614,11 @@ impl Checker {
                 lit_rule(scope, Figure::Num, &n.text, Some(&n.value))?;
                 return Ok(Ty::Int);
             }
+            if matches!(expect, Some(Ty::Money(_))) {
+                // where money is expected a four-digit figure is a figure, never a year: a
+                // row's in a rule (L §3.2 Inline figures; tally 2.1.8 item 65)
+                lit_rule(scope, Figure::Num, &n.text, Some(&n.value))?;
+            }
             self.push_year4(scope, n);
             return Ok(Ty::Year4);
         }
