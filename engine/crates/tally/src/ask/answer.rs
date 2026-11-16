@@ -325,9 +325,16 @@ fn cross_lines(
             ))?;
         match (left, right) {
             (Err(hole), _) | (_, Err(hole)) => out.push(format!("{head}: {hole}")),
-            (Ok(l), Ok(r)) => {
-                out.extend(cells_lines(m, (ask, diff, &head), &crossed(m, (l, r))?)?);
-            }
+            (Ok(l), Ok(r)) => match crossed(m, (l, r))
+                .and_then(|cells| cells_lines(m, (ask, diff, &head), &cells))
+            {
+                Ok(lines) => out.extend(lines),
+                // a run-time refusal, past S7's runs say, prints as the tuple's line (L §8.4)
+                Err(Stop::Refused(refusal)) if !matches!(refusal.code(), Code::Load(_)) => {
+                    out.push(format!("{head}: refused: {}", refusal.text()));
+                }
+                Err(stop) => return Err(stop),
+            },
         }
     }
     Ok(out)

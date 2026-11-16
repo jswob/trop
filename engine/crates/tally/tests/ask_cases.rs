@@ -984,6 +984,48 @@ ask fe: y[e]
         );
     }
 
+    /// Two stacks, each side's comparison undecided over a window of its own of 200 days:
+    /// 200 runs a side, 40 000 pairs (the review of group 1's N7).
+    const PAIRS_BASE: &str = "model m
+  tally 2
+  on 2026-04-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s \"s\"
+input da: date
+input db: date
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  da = 2026-04-01 \"s\"
+  db = 2026-04-01 \"s\"
+
+ask p: diff(da < db) in sa against sb law 2026-03-01 windows each
+";
+
+    fn pairs_side(name: &str, input: &str) -> String {
+        format!(
+            "scenario {name} over m\n  tally 2\n  from 2026-01-01\n\nversion {name}_v\n  cite s\n  governs 2026-01-01..\n  known 2026-01-01\n  replace {input} = window(2026-01-01, 2026-07-19) \"s\"\n"
+        )
+    }
+
+    #[test]
+    fn a_diff_over_two_stacks_pairs_its_runs_under_s7s_limit() {
+        let (sa, sb) = (pairs_side("sa", "da"), pairs_side("sb", "db"));
+        assert_eq!(
+            lines_of_files(&[
+                ("m.tally", PAIRS_BASE),
+                ("sa.tally", &sa),
+                ("sb.tally", &sb)
+            ]),
+            ["p: refused: RUN-LIMIT windows each over more than 20 000 day combinations"],
+            "40 000 pairs pass 20 000 (L §7.6 item 6): the tuple's line, not the run's"
+        );
+    }
+
     /// A ledger per binding tuple, per day of a window and per option of an axis, one of each
     /// dividing by zero or reading a hole key (the review of group 1's B4 and N8).
     const LEDGER_REFUSED: &str = "model pw

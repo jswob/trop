@@ -238,7 +238,8 @@ fn chosen_cell(
 ///
 /// # Errors
 ///
-/// `ENGINE-INVARIANT` for a side with no cell at a combination's options.
+/// `ENGINE-INVARIANT` for a side with no cell at a combination's options; `RUN-LIMIT` past
+/// [`EACH_CAP`] pairs of runs under `windows each`.
 pub(super) fn crossed(m: &Reality, (ours, theirs): (&Cells, &Cells)) -> Result<Cells, Stop> {
     let mut ids: BTreeSet<String> = BTreeSet::new();
     for side in [ours, theirs] {
@@ -267,7 +268,7 @@ pub(super) fn crossed(m: &Reality, (ours, theirs): (&Cells, &Cells)) -> Result<C
             ours: left.ours.clone(),
             theirs: right.theirs.clone(),
             met,
-            runs: paired(&left.runs, &right.runs),
+            runs: paired(&left.runs, &right.runs)?,
         });
     }
     Ok(Cells {
@@ -281,7 +282,11 @@ pub(super) fn crossed(m: &Reality, (ours, theirs): (&Cells, &Cells)) -> Result<C
 /// world's side with each of the other side's whose choice takes the same day of every window
 /// both meet, the choices joined, the compared world's windows first, as one stack's run
 /// meets them (L §4.4, §6.4).
-fn paired(left: &Runs, right: &Runs) -> Runs {
+///
+/// # Errors
+///
+/// `RUN-LIMIT` past [`EACH_CAP`] pairs, as a line's runs (L §7.6 item 6; pick P28, #174).
+fn paired(left: &Runs, right: &Runs) -> Result<Runs, Stop> {
     let mut windows = left.windows.clone();
     for w in &right.windows {
         if !windows.iter().any(|x| x.id == w.id) {
@@ -306,9 +311,12 @@ fn paired(left: &Runs, right: &Runs) -> Runs {
                     runs: Runs::default(),
                 },
             ));
+            if each.len() > EACH_CAP {
+                return Err(past_cap());
+            }
         }
     }
-    Runs { each, windows }
+    Ok(Runs { each, windows })
 }
 
 /// Choice `ours` then the days of `theirs` it names no day of; none where the two take
