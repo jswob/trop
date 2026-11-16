@@ -228,6 +228,10 @@ def m_movement_field(self, n, t, sc):
     for ld in legs:
         if ld.name == name:
             n._r = ('mvfield', 'leg', name)
+            if sc.item is not None and sc.item[0] == 'ask':
+                # an ask's read of a leg reads the walk that books it, and so the axes the walk reads (L §5.5
+                # Fan-out; tally 2.1.8 R13, #169-k): mreads.m_mv_field
+                self.edge(sc, ('balances',), 'leg')
             return self.leg_type(ld)
     for a, at in m.kind_attrs(kid):
         if a == name:
@@ -707,6 +711,10 @@ def m_t_low(self, n, sc, expect):
         n._form = 'day'
         self.mark(sc, 'bal', target)
         n._ctgt = ('bal', target)
+        if n.proj and n.proj.get('windows') == 'each':
+            # L §4.4 "for that read": a line that reaches a low stating windows each splits by the windows it meets
+            # (ask.Asker), as for a projection's (tally 2.1.8 R13, #169: P11's low without from)
+            self.m.read_each = True
     self.edge(sc, ('balances',), 'bal')
     return ut
 

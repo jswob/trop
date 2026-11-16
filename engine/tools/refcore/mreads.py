@@ -134,30 +134,35 @@ def m_leg_refused(self, iid, leg, ctx, day=None):
     walk's (a walk being built, as in the plan pass, has refused nothing yet that a plan may read, E §4.1). Read
     inside a cell's evaluation, the walk is built only as far as it needs: a walk to the leg's day when the whole walk
     needs a cell still being evaluated (m_guarded_walk; E §3.2 "Evaluation is demand-driven")."""
-    w = ctx.walk
-    if w is None:
-        if not self.m.places and not self.m.moves:
-            return None
-        wk = ('walk',) + self.wkey(self.tctx(ctx))
-        w = self.walks.get(wk)
-        busy = bool(getattr(self, "inst_active", None)) or getattr(self, '_prefix_running', 0) or \
-            any(getattr(x, "running", False) for x in self.walks.values())
-        if not busy and ctx.cut == getattr(self, 'ask_K', None) and \
-                (w is None or (w.done < w.end and getattr(w, 'failed', None) is None)):
-            # only the ask's own timeline (a read at an instance's booking cut is part of the plan pass)
-            if self.active and isinstance(day, datetime.date):
-                w = self.guarded_walk(ctx, day)
-            else:
-                try:
-                    w = self.main_walk(ctx)
-                except TallyError:
-                    return None
+    w = ctx.walk if ctx.walk is not None else self.ask_walk(ctx, day)
     while w is not None:
         err = w.bad_legs.get((iid, leg))
         if err is not None:
             return err
         w = w.base
     return None
+
+
+def m_ask_walk(self, ctx, day=None):
+    """The walk an ask's read outside it sees, or None: the main walk of the ask's own timeline, never one a read at
+    an instance's booking cut would start (that read is part of the plan pass, E §4.1)."""
+    if not self.m.places and not self.m.moves:
+        return None
+    wk = ('walk',) + self.wkey(self.tctx(ctx))
+    w = self.walks.get(wk)
+    busy = bool(getattr(self, "inst_active", None)) or getattr(self, '_prefix_running', 0) or \
+        any(getattr(x, "running", False) for x in self.walks.values())
+    if not busy and ctx.cut == getattr(self, 'ask_K', None) and \
+            (w is None or (w.done < w.end and getattr(w, 'failed', None) is None)):
+        # only the ask's own timeline (a read at an instance's booking cut is part of the plan pass)
+        if self.active and isinstance(day, datetime.date):
+            w = self.guarded_walk(ctx, day)
+        else:
+            try:
+                w = self.main_walk(ctx)
+            except TallyError:
+                return None
+    return w
 
 
 def m_outer_hit(self):
@@ -287,6 +292,27 @@ def m_mv_field(self, n, env, ctx):
         # reads `a.adjusts` or `a.day` takes it or leaves it out (E §5 step 5; tally 2.1.2, issue #34, T's
         # STOP-REPORT on g11/adjust: the identity read refused, and with it every move bound over adjustments)
         raise src.err
+    if what == 'leg' and isinstance(src, Inst) and ctx.walk is None and ctx.wp is None and \
+            getattr(src, 'status', None) in ('past', 'plan'):
+        # a leg the walk books is read with the axes the walk read to book it, so the read fans out over them (L §5.5
+        # Fan-out; tally 2.1.8 R13, #169-k); a leg the walk refused is refused below (leg_refused)
+        w = self.ask_walk(ctx, src.day if isinstance(src.day, datetime.date) else None)
+        for lg in (src.legs if w is not None else ()):
+            if lg.name != name:
+                continue
+            for p in (lg.frm, lg.to):
+                if not isinstance(p, Thing) or p.name not in self.m.things:
+                    continue
+                u = lg.unit or self.m.place_unit(self.m.things[p.name]) or '*'
+                log = w.logs.get((p.name, u))
+                if log is None:
+                    continue
+                at = [j for j, e in enumerate(log.ents) if getattr(e.mv, 'id', None) == src.id]
+                if at:
+                    # what the walk read to book it there: the axes only, not the place's register
+                    c = w.cum(log, at[-1])
+                    if c is not None:
+                        self.cur.axes |= c.axes
     if what in ('day', 'leg') and isinstance(src, ObsMv):
         # L §5.19 One movement on two statements: where rows stated same disagree on an amount or a day, "a read of
         # the movement away from its places (its leg's amount ... through a binding) is the disagreement's hole,
@@ -957,7 +983,8 @@ def m_bal_at(self, n, place, unit, d, env, ctx, regs_to=None):
         return self.bal_modelled(place, unit, d, ctx)
     key = K_start(d) if getattr(n, 'start', False) else K_end(d)
     if n.proj and 'windows' in n.proj:
-        ctx = ctx.but(windows=n.proj['windows'])
+        # the read's own clause; windows each takes the day the line's run assigns (m_proj_clauses)
+        ctx = ctx.but(windows=self.proj_clauses({'windows': n.proj['windows']}, ctx)[0])
     v = self.bal_day(place, unit, d, key, ctx)
     # a plain read counts uncertain movements only when it states the clause; the line's clause reaches
     # projections and bindings (L §5.14, §5.18)
