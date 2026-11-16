@@ -266,13 +266,19 @@ def m_prefix_walk(self, ctx, day):
     return w
 
 
+def _ntxt(n):
+    from .evaluate import _ntxt as f
+    return f(n)
+
+
 def m_mv_field(self, n, env, ctx):
     """`s.cash`, `s.day`, an attribute, `a.adjusts`, `a.change` (L §5.14, §5.14.3)."""
     v = self.ev(n.obj, env, ctx)
     if isinstance(v, Hole):
         return v
     if v is NONE:
-        raise refuse('RUN-NONE', 'a movement is none here: a field read of it')
+        # the read that gave none, as an observed row's id (L §8.4; tally 2.1.8 #169-l)
+        raise refuse('RUN-NONE', '%s is none here: a field read of it' % _ntxt(n.obj))
     if not isinstance(v, Mv):
         raise refuse('LOAD-FIELD', '%s is not a field of %s' % (n.name, fmt(v)))
     src = self.mv_record(v, ctx)

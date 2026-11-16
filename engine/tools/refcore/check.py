@@ -2236,6 +2236,14 @@ class Checker:
                 self.tc(node, Scope(self, ('x', None), None, 'ask'), expect=target)
                 return
             raise LoadError('LOAD-KEY', 'ambiguous key %s for %s' % (t.n, what), loc)
+        if tk == 'money' and k == 'year4':
+            # a four-digit figure where money is expected is a figure, not a year, and the literal rule takes it
+            # (L §3.2 Inline figures, §7.1; tally 2.1.8 #169-l)
+            sc = getattr(node, '_litsc', None)
+            if sc is not None:
+                self.lit_rule(sc, node, 'num', node.v)
+            node._t = t = T.flex(node.v)
+            k = 'flex'
         if tk == 'money':
             if k == 'money' and t.cur == target.cur:
                 return
