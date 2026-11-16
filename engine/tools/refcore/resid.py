@@ -165,8 +165,10 @@ def m_residuals(self, place, span, by, ctx, unit=None):
                 continue
             touches = may_touch if st == 'refused' else (lambda j: self_touch(j.legs, place))
             d = i.day
-            if isinstance(d, Hole) or (isinstance(d, Iv) and isinstance(d.lo, datetime.date) and
-                                       (d.lo.year, d.lo.month) != (d.hi.year, d.hi.month)):
+            # a refused instance whose day is refused may fall on any day, as a hole day's (tally 2.1.8 R11, #191 Q1)
+            if isinstance(d, Hole) or (st == 'refused' and day_lo(d) is None) or \
+                    (isinstance(d, Iv) and isinstance(d.lo, datetime.date) and
+                     (d.lo.year, d.lo.month) != (d.hi.year, d.hi.month)):
                 # E §6.3 Grouping (round 12): "An instance that nothing fulfils whose day is a hole, or a window not
                 # inside one month, prints an expected-but-missing line in a group of its own named ?, first among
                 # the groups, with its day's questions; it counts in no month's totals" (writer 5's T-102)

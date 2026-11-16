@@ -1179,7 +1179,7 @@ def m_bal_modelled(self, place, unit, d, ctx):
         if r0 < 0:
             r0 = next((j for j in range(i, -1, -1) if lg.ents[j].kind == 'reset' and
                        lg.ents[j].note == 'opening' and lg.ents[j].key[0] == d.toordinal()), -1)
-        st = St(st.val, st.hole, st.perm, st.imp, st.bad, r0)
+        st = St(st.val, st.hole, st.perm, st.imp, st.bad, r0, st.pbad)
     if lg is None or st.rst < 0:
         start = None
         v = w.default(place, unit).val
@@ -1196,7 +1196,7 @@ def m_bal_modelled(self, place, unit, d, ctx):
     hs = []
     for j in range(lo + 1, (i if lg is not None else -1) + 1):
         e = lg.ents[j]
-        if e.kind == 'bad':
+        if e.kind in ('bad', 'pbad'):
             raise e.err
         if isinstance(e.mv, ObsMv) or e.kind == 'reset':
             # a reading on day d is what the modelled balance is compared with, not where it starts (C2-13)
@@ -1446,7 +1446,7 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ct
         for e in glog.ents:
             if e.key > limit:
                 continue
-            if e.kind == 'bad' and (e.key >= lo or e.key == k0):
+            if e.kind in ('bad', 'pbad') and (e.key >= lo or e.key == k0):
                 # tally 2.1.7 R2 (#107): a refusal keyed before a day's first event is the refusal "from its day"
                 # (K_before): a span that starts on that day may hold the movement, so its flows is refused too
                 raise e.err
@@ -1463,6 +1463,9 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ct
             if e.key <= lo:
                 if e.kind == 'perm' and e.key <= limit:
                     holes.append(Hole(e.qs))
+                if e.kind == 'pbad' and e.key <= limit:
+                    # a refused movement whose day is a hole or refused may fall in the span, as perm's (R11)
+                    raise e.err
                 if e.kind == 'imp_on':
                     wins[e.wid] = e.win
                 continue
@@ -1471,7 +1474,7 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ct
                     holes.append(Hole([('date within %s not precise enough for flows of %s' % (
                         e.win.window_text(), place), e.mv.id)]))
                 continue
-            if e.kind == 'bad':
+            if e.kind in ('bad', 'pbad'):
                 raise e.err
             if e.kind == 'imp_on':
                 wins[e.wid] = e.win

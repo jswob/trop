@@ -96,15 +96,16 @@ def same_book_key(x, lg):
 
 
 class St:
-    __slots__ = ('val', 'hole', 'perm', 'imp', 'bad', 'rst')
+    __slots__ = ('val', 'hole', 'perm', 'imp', 'bad', 'rst', 'pbad')
 
-    def __init__(self, val, hole=EMPTY, perm=EMPTY, imp=(), bad=None, rst=-1):
+    def __init__(self, val, hole=EMPTY, perm=EMPTY, imp=(), bad=None, rst=-1, pbad=None):
         self.val = val          # Num, or None before the place's first reading (HOLE-ANCHOR)
         self.hole = hole        # questions of hole movements since the last reset
         self.perm = perm        # questions no reading answers
         self.imp = imp          # ((window id, questions), ...) of movements that may still fall
         self.bad = bad          # the refusal that holds from a refused leg on
         self.rst = rst          # index of the last reset entry in its log
+        self.pbad = pbad        # the refusal no reading ends: a refused movement whose day is a hole or refused
 
 
 class LeftHole(Hole):
@@ -156,10 +157,12 @@ def add_q(a, b, sign=1):
 def apply(st, e, idx):
     k = e.kind
     if k == 'reset':
-        return St(e.val, frozenset(e.qs), st.perm, st.imp, st.bad, idx)
+        # a reading ends a dated refusal as it ends a hole (L §8 Refusals outrank holes, tally 2.1.8 R11): what is
+        # left is the refusal of a movement that may fall after any reading, as perm is for holes
+        return St(e.val, frozenset(e.qs), st.perm, st.imp, st.pbad, idx, st.pbad)
     if k == 'init':
         s = e.val
-        return St(s.val, s.hole, s.perm, s.imp, s.bad, idx)
+        return St(s.val, s.hole, s.perm, s.imp, s.bad, idx, s.pbad)
     if k == 'delta':
         v = st.val
         if v is not None:
@@ -167,18 +170,20 @@ def apply(st, e, idx):
         imp = st.imp
         if e.wid is not None:
             imp = tuple(x for x in imp if x[0] != e.wid)
-        return St(v, st.hole, st.perm, imp, st.bad, st.rst)
+        return St(v, st.hole, st.perm, imp, st.bad, st.rst, st.pbad)
     if k == 'hole':
         imp = st.imp
         if e.wid is not None:
             imp = tuple(x for x in imp if x[0] != e.wid)
-        return St(st.val, st.hole | e.qs, st.perm, imp, st.bad, st.rst)
+        return St(st.val, st.hole | e.qs, st.perm, imp, st.bad, st.rst, st.pbad)
     if k == 'perm':
-        return St(st.val, st.hole, st.perm | e.qs, st.imp, st.bad, st.rst)
+        return St(st.val, st.hole, st.perm | e.qs, st.imp, st.bad, st.rst, st.pbad)
     if k == 'imp_on':
-        return St(st.val, st.hole, st.perm, st.imp + ((e.wid, e.qs),), st.bad, st.rst)
+        return St(st.val, st.hole, st.perm, st.imp + ((e.wid, e.qs),), st.bad, st.rst, st.pbad)
     if k == 'bad':
-        return St(st.val, st.hole, st.perm, st.imp, st.bad or e.err, st.rst)
+        return St(st.val, st.hole, st.perm, st.imp, st.bad or e.err, st.rst, st.pbad)
+    if k == 'pbad':
+        return St(st.val, st.hole, st.perm, st.imp, st.bad or e.err, st.rst, st.pbad or e.err)
     return st
 
 
@@ -306,7 +311,7 @@ class Walk:
     def default(self, place, unit):
         if self.base is not None:
             b = self.base.pstate(place, unit, self.point, raw=True)
-            return St(b.val, b.hole, b.perm, b.imp, b.bad, -1)
+            return St(b.val, b.hole, b.perm, b.imp, b.bad, -1, b.pbad)
         if place == '*' or unit == '*':
             return St(Num(0), rst=-1) if place == '*' else St(None)
         m = self.m
@@ -387,7 +392,7 @@ class Walk:
             g, _, _ = self.state('*', '*', key)
             if a.hole or a.perm or a.imp or a.bad or g.hole or g.perm or g.imp or g.bad:
                 return St(st.val, st.hole | a.hole | g.hole, st.perm | a.perm | g.perm, st.imp + a.imp + g.imp,
-                          st.bad or a.bad or g.bad, st.rst)
+                          st.bad or a.bad or g.bad, st.rst, st.pbad or a.pbad or g.pbad)
             return st
         return st
 
@@ -975,7 +980,9 @@ class Walk:
             self.add(place, '*', Ent(key, 'hole', qs=frozenset([q]), mv=None, coll=None, flow=Hole([q])))
         elif kind == 'legbad':
             i, lg, err = obj
-            self.leg_bad(i, lg, err, key)
+            # a refused movement whose day is a hole or refused may fall after any reading, so no reading ends its
+            # refusal (tally 2.1.8 R11; its hole twin is sched_hole's perm)
+            self.leg_bad(i, lg, err, key, 'pbad' if day_lo(i.day) is None else 'bad')
         elif kind == 'perm':
             i, lg, qs = obj
             for p in (lg.frm, lg.to):
@@ -1001,10 +1008,14 @@ class Walk:
             place, err, i = obj
             self.add(place, '*', Ent(key, 'bad', err=err, mv=i))
 
-    def leg_bad(self, mv, lg, err, key):
+    def leg_bad(self, mv, lg, err, key, kind='bad'):
+        """A refused leg refuses its places from key; a leg whose amount is refused has no unit of its own, so it is
+        kept at its place's unit, where the place's next reading ends it (tally 2.1.8 R11), or at every unit of a
+        place of unit any."""
         for p in (lg.frm, lg.to):
             if isinstance(p, Thing):
-                self.add(p.name, lg.unit or '*', Ent(key, 'bad', err=err, mv=mv))
+                u = lg.unit or (self.m.place_unit(self.m.things[p.name]) if p.name in self.m.things else None)
+                self.add(p.name, u or '*', Ent(key, kind, err=err, mv=mv))
 
     def after_mv(self, mv, key, lg=None):
         """Apply the readings `after m` of movement mv just after it (L §4.6): once, after the leg that touches the
@@ -1558,6 +1569,11 @@ class Walk:
                                   val=rv if not isinstance(rv, Hole) else qty(0, unit),
                                   qs=frozenset(rv.qs) if isinstance(rv, Hole) else EMPTY, coll=c, reg=reg,
                                   mv=pad, flow=flow, note='pad', row=r))
+        if grp is None and (pad.id, lg.name) in self.bad_legs and isinstance(rv, Num) and \
+                self.sign_breaks(place, rv.q):
+            # the balance the reading states breaks its place's sign rule: refused from there to the place's next
+            # reading, as an anchor's is (L §5.10, E §4.2 step 5; tally 2.1.8 R11), not ended by its own reading
+            self.add(place, unit, Ent(key[:4] + (key[4] + 1,), 'bad', err=self.bad_legs[(pad.id, lg.name)], mv=pad))
 
     def booked_coll(self, place, unit, key):
         """The register of a place's booked balance at an instant (as a balance read gathers it, mreads.read_state)."""

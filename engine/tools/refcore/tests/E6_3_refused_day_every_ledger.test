@@ -1,0 +1,61 @@
+# E §6.3, L §8.4 (tally 2.1.8 R11, #191 Q1, T's fixes/gate/b9n_feb): a plan instance whose day is refused may fall
+# on any day, as a hole day's, so it refuses every ledger of a place its legs may give, every month: groc[2026-03]'s day
+# divides by zero, and konto's ledgers of February, March and both are refused. 2.1.7's refcore printed February's.
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bk "bank"
+unit PLN: currency minor 0.01
+input bank: observed
+input g_amt: money PLN
+input g_dom: int
+input divisor[m in months]: num
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+move groc[m in months]: transfers
+  on day_of(m, g_dom * divisor[m] / divisor[m])
+  at start_of(m)
+  leg cash from konto to world amount g_amt
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  g_amt = 500.00 PLN "plan"
+  g_dom = 5 "plan"
+  divisor[2026-01] = 1 "ok"
+  divisor[2026-02] = 1 "ok"
+  divisor[2026-03] = 0 "zero"
+  divisor[2026-04] = 1 "ok"
+  divisor[2026-05] = 1 "ok"
+  divisor[2026-06] = 1 "ok"
+  divisor[2026-07] = 1 "ok"
+  divisor[2026-08] = 1 "ok"
+  divisor[2026-09] = 1 "ok"
+  divisor[2026-10] = 1 "ok"
+  divisor[2026-11] = 1 "ok"
+  divisor[2026-12] = 1 "ok"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "wyciąg"
+
+version statement_02
+  cite bk
+  governs 2026-02..2026-03
+  known 2026-04-02
+  covers konto
+  pad konto from unexplained
+  bank[r1] = (on: 2026-02-05, kind: transfers, leg cash from konto to world amount 300.00 PLN, fulfils: groc[2026-02]) "l1"
+
+ask r1: residuals konto 2026-02
+ask r2: residuals konto 2026-03
+ask r3: residuals konto 2026-02..2026-03
+=== expect
+r1: refused: RUN-DIV division by zero
+r2: refused: RUN-DIV division by zero
+r3: refused: RUN-DIV division by zero

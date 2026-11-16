@@ -1762,7 +1762,7 @@ class Asker:
         if x.kind == 'imp_on':
             return '%s: its window %s opens: %s' % (head, x.win.window_text() if x.win is not None else '',
                                                     fmt_hole(Hole(x.qs)))
-        if x.kind == 'bad':
+        if x.kind in ('bad', 'pbad'):
             return '%s: refused: %s %s' % (head, x.err.code, x.err.msg)
         if x.kind == 'reset':
             return '%s' % self._reading_text_plain(x)
