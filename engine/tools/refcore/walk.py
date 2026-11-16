@@ -83,6 +83,11 @@ def plan_key(x):
     return order_key(o if o is not None else x.id)
 
 
+def leg_at(lg, place):
+    """Whether a leg has an end at place."""
+    return any(isinstance(p, Thing) and p.name == place for p in (lg.frm, lg.to))
+
+
 def same_book_key(x, lg):
     """Where a movement's leg is booked in the day's order (Walk.prepare's keys): observations before plans, plans
     before decisions, a decision at its point (E §4.2 steps 1-3)."""
@@ -181,7 +186,8 @@ def apply(st, e, idx):
         return St(st.val, st.hole, st.perm | e.qs, st.imp, st.bad, st.rst, st.pbad)
     if k == 'imp_on':
         return St(st.val, st.hole, st.perm, st.imp + ((e.wid, e.qs),), st.bad, st.rst, st.pbad)
-    if k == 'bad':
+    if k in ('bad', 'rbad'):
+        # rbad: a reading after m refused where m doesn't exist, from m's point (L §4.6; tally 2.1.8 R16)
         return St(st.val, st.hole, st.perm, st.imp, st.bad or e.err, st.rst, st.pbad)
     if k == 'pbad':
         return St(st.val, st.hole, st.perm, st.imp, st.bad or e.err, st.rst, st.pbad or e.err)
@@ -208,6 +214,7 @@ class Walk:
         self.done = start - ONE_DAY
         self.sched = {}
         self.after = {}
+        self.obs_done = set()       # observations whose every leg is booked (after_standing)
         self.after_keys = {}     # id(reading after m) -> the walk key it was applied at (E §6.3 balance lines)
         self.decs = {}              # decision instance id -> its run in this walk
         self.wp = None              # the walk point being evaluated
@@ -1019,10 +1026,47 @@ class Walk:
                 u = lg.unit or (self.m.place_unit(self.m.things[p.name]) if p.name in self.m.things else None)
                 self.add(p.name, u or '*', Ent(key, kind, err=err, mv=mv))
 
-    def after_mv(self, mv, key, lg=None):
+    def after_standing(self, o, key, lg):
+        """A reading `after m` with m modelled past stands after the last of the observations that stand in for m, on
+        its day (L §4.6, E §4.2 step 3; tally 2.1.8 R16, #169-b)."""
+        # by the last of them at the reading's place, as m's own leg there would (a running balance of that place,
+        # printed row by row: an observation elsewhere isn't on it)
+        self.obs_done.add((o.id, lg.name))
+        if not self.after or self.proj:
+            return
+        k2 = key[:4] + (key[4] + 5,)
+        for mid in sorted(self.after):
+            for iid, place, unit, r in self.after[mid]:
+                if id(r) in self.after_keys or not leg_at(lg, place):
+                    continue
+                obs = self.eng.obs_links_for(mid, self.tctx)
+                if not any(x is o or x.id == o.id for x in obs):
+                    continue
+                if any((x.id, g.name) not in self.obs_done and leg_at(g, place) and isinstance(g.day, datetime.date)
+                       and self.start <= g.day <= self.end and g.day < self.K for x in obs for g in x.legs):
+                    continue
+                self.after_keys[id(r)] = k2
+                self.apply_reading(k2, iid, place, unit, r)
+
+    def after_missing(self, run, key, why="doesn't exist"):
+        """A reading `after m` where m doesn't exist, or is modelled past with nothing standing in for it, is refused
+        from m's point on (L §4.6, §8.4; tally 2.1.8 R16)."""
+        for iid, place, unit, r in self.after.get(run.id, ()):
+            err = self.eng.after_refusal(iid, r, run.id, why)
+            k2 = key[:4] + (key[4] + 5,)
+            role = r.version.gap_roles.get(place)
+            if role is not None and role[0] == 'pad':
+                # its pad is a refused movement there, which flows reads too (L §8.4)
+                for p in (place, role[1].name):
+                    self.add(p, unit, Ent(k2, 'bad', err=err))
+            else:
+                self.add(place, unit, Ent(k2, 'rbad', err=err))
+
+    def after_mv(self, mv, key, lg=None, rid=None):
         """Apply the readings `after m` of movement mv just after it (L §4.6): once, after the leg that touches the
-        reading's place (an observation's legs are booked one by one), else after its last leg."""
-        rs = self.after.get(mv.id)
+        reading's place (an observation's legs are booked one by one), else after its last leg; rid, the movement
+        the readings name where mv is an observation that stands in for it."""
+        rs = self.after.get(rid or mv.id)
         if not rs:
             return
         k2 = key[:4] + (key[4] + 5,)
@@ -1413,11 +1457,13 @@ class Walk:
         d = lg.day
         if o.err is not None:
             self.leg_bad(o, lg, o.err, key)
-            return
-        # every observation is booked on its own day (L §5.19, E §4.2 step 1): each end of each leg from the
-        # observation of the version that covers its place that day, an end no version covers from this one (E §6.1)
-        ends = tuple(self.obs_end_on(o, p, d) for p in (lg.frm, lg.to))
-        self.book_leg(o, lg, key, coll=o.coll, ends=ends)
+        else:
+            # every observation is booked on its own day (L §5.19, E §4.2 step 1): each end of each leg from the
+            # observation of the version that covers its place that day, an end no version covers from this one
+            # (E §6.1)
+            ends = tuple(self.obs_end_on(o, p, d) for p in (lg.frm, lg.to))
+            self.book_leg(o, lg, key, coll=o.coll, ends=ends)
+        self.after_standing(o, key, lg)
 
     def obs_end_on(self, o, p, d, ctx=None):
         """Whether observation o books its end at place p on day d (L §5.19 Booking an observation): "from the
@@ -1977,6 +2023,7 @@ class Walk:
             return run
         if run.exists is False:
             run.status = 'none'
+            self.after_missing(run, key)
             self.book_own_obs(run, key)
             self.same_release(run, key)
             return run
@@ -1990,6 +2037,8 @@ class Walk:
             run.status = 'modelled'
             run.modelled = True
             self.modelled.append(run)
+            if not run.obs:
+                self.after_missing(run, key, 'is modelled past and nothing fulfils it')
             self.book_own_obs(run, key)
             self.same_release(run, key)
             return run

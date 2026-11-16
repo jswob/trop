@@ -1035,10 +1035,25 @@ class Engine:
             if not self.wording_ok(r.version, info.id, ctx, own):
                 continue
             if r.instant is not None:
-                if instant is not None and r.instant[0] != instant:
+                rd = r.instant[0]
+                if rd == 'after':
+                    # a reading after m stands on m's day as the walk books m (L §4.6; tally 2.1.8 R16): a hole where
+                    # that is one, a window's days imprecise inside it, refused where m doesn't exist
+                    rd = self.after_day(r, info.id, ctx)
+                    if isinstance(rd, Hole):
+                        undecided.append(rd)
+                        continue
+                    if isinstance(rd, Iv):
+                        probe = instant if instant is not None else last_before
+                        if probe is None or probe < rd.lo or (instant is not None and instant > rd.hi):
+                            continue
+                        if instant is not None or probe < rd.hi:
+                            undecided.append(self.imprecise(rd, 'the day of %s' % self.after_text(r)).hole)
+                            continue
+                        rd = rd.hi
+                if instant is not None and rd != instant:
                     continue
-                if last_before is not None and not (isinstance(r.instant[0], datetime.date)
-                                                     and r.instant[0] <= last_before):
+                if last_before is not None and not (isinstance(rd, datetime.date) and rd <= last_before):
                     continue
             else:
                 sp = r.span(ctx.cut)
@@ -1387,8 +1402,8 @@ class Engine:
             sp = c.span(ctx.cut)
             return datetime.date.min if sp.always or sp.start is None else sp.start
         if info.reading:
-            latest = max(c.instant[0] for c in cands)
-            cands = [c for c in cands if c.instant[0] == latest]
+            latest = max(self.reading_on(c, info, ctx) for c in cands)
+            cands = [c for c in cands if self.reading_on(c, info, ctx) == latest]
         else:
             latest = max(began(c) for c in cands)
             cands = [c for c in cands if began(c) == latest]
@@ -1397,7 +1412,8 @@ class Engine:
         sp = row.span(ctx.cut)
         # held where it is read past its row's span (L §4.6, §8.2; tally 2.1.7 R7, P31): a reading past its instant's
         # day, a state row past its span's end; a row that governs always is timeless
-        past = (d > row.instant[0]) if info.reading else (not sp.always and sp.end is not None and d >= sp.end)
+        past = (d > self.reading_on(row, info, ctx)) if info.reading else (
+            not sp.always and sp.end is not None and d >= sp.end)
         if past:
             self.reg(('held', '%s = %s (%s), read for %s' % (self.origin(info, keys), fmt(v), row.version.id, d)))
         return v
@@ -1420,8 +1436,25 @@ class Engine:
             # L §4.6 Readings / L §8.1 HOLE-NOREADING: "<x>[k] has no reading on or before <d>"
             org = self.origin(info, keys)
             return Hole([('%s has no reading on or before %s' % (org, d), org)])
-        latest = max(c.instant[0] for c in cands)
+        for c in cands:
+            rd = self.after_day(c, info.id, ctx) if c.instant[0] == 'after' else None
+            if isinstance(rd, Iv):
+                # since reads the day itself: a window's is imprecise (L §4.4)
+                return self.imprecise(rd, 'the day of %s' % self.after_text(c)).hole
+        latest = max(self.reading_on(c, info, ctx) for c in cands)
         return Int((d - latest).days)
+
+    def after_text(self, r):
+        from .moves import instant_text
+        return instant_text(r)
+
+    def reading_on(self, r, info, ctx):
+        """A reading's day: its instant's, or for a reading after m the day m gives it (after_day; a window's last
+        day once the read is past it)."""
+        if r.instant[0] != 'after':
+            return r.instant[0]
+        rd = self.after_day(r, info.id, ctx)
+        return rd.hi if isinstance(rd, Iv) else rd
 
     # -- defs (L §5.11) ----------------------------------------------------------------
     def def_axes(self, qid):

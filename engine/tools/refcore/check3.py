@@ -2086,6 +2086,27 @@ def m_check_after_readings(self):
             if (mv is not None and not mv.decision) or obs:
                 raise LoadError('LOAD-ORDER', '%s%s after %s: %s is a plan or an observation' % (
                     iid, r.keys_text(), _txt(node), _txt(node)), r.loc)
+            if mv is not None and node.k == 'index':
+                # a key load sees that isn't a key of m's index (L §4.6, §8.3 R5; tally 2.1.8 R16, #175)
+                for kn, b in zip(node.keys, mv.binds):
+                    kv = _after_key(kn)
+                    dom = getattr(b, 'dom', None)
+                    if kv is not None and isinstance(dom, tuple) and dom[0] == 'index' and dom[1] in m.indexes \
+                            and m.indexes[dom[1]].pos(kv) is None:
+                        raise LoadError('LOAD-KEY', '%s%s after %s: %s is not a key of %s' % (
+                            iid, r.keys_text(), _txt(node), _txt(kn), dom[1]), r.loc)
+
+
+def _after_key(kn):
+    """A literal key of a reading's `after m[k]` as a key value, or None where load doesn't see it."""
+    from .dates import month_period, quarter_period, year_period
+    if kn.k == 'month' and getattr(kn, '_r', None) is None:
+        return month_period(*kn.v)
+    if kn.k == 'quarter' and getattr(kn, '_r', None) is None:
+        return quarter_period(*kn.v)
+    if kn.k == 'date':
+        return kn.v
+    return None
 
 
 def m_check_proj_seen(self):

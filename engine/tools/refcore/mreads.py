@@ -1307,6 +1307,75 @@ def m_modelled_account(self, w, place, unit, key, d):
     return lg, r0, ents, legs
 
 
+def m_after_day(self, r, iid, ctx):
+    """The day of a reading `after m` (L §4.6; tally 2.1.8 R16): m's day as the walk books m, or, where observations
+    stand in for m, the day of the last of them; a hole or a window where m's day is one; before S a fact the walk
+    doesn't apply, on that day. Refused where m doesn't exist (RUN-RECORD)."""
+    from .check import _txt
+    node = r.instant[1]
+    mid = _txt(node)
+    base = node.obj if node.k == 'index' else node
+    mi = self.m.moves.get(base.id)
+    active = self.__dict__.setdefault('_after_active', set())
+    if id(r) in active:
+        # m's day or existence reads the reading that stands after it (L §8.4)
+        raise refuse('RUN-CYCLE', '%s reads its own instances' % (mi.id if mi is not None else mid))
+    active.add(id(r))
+    try:
+        w = ctx.walk if ctx.walk is not None else self.main_walk(ctx)
+        ck = ('afterday', id(r), id(w))
+        hit = self.run_cache.get(ck)
+        if hit is not None:
+            if isinstance(hit, TallyError):
+                raise hit
+            return hit
+        run = None
+        ww = w
+        while ww is not None and run is None:
+            run = ww.decs.get(mid)
+            ww = ww.base
+        if run is None:
+            run = next((i for i in self.decision_instances(mi, w.tctx) if i.id == mid), None) if mi is not None \
+                else None
+        days = []
+        if run is not None and run.exists is not False and not isinstance(run.exists, Hole):
+            from .walk import leg_at
+            place = r.pattern[0][1].name
+            # the legs the walk books: inside [S, E] and before the cut (E §4.2 step 1)
+            legs = [lg for o in self.obs_links_for(mid, w.tctx) for lg in o.legs if isinstance(lg.day, datetime.date)
+                    and self.m.S <= lg.day <= self.m.E and lg.day < w.K]
+            # the last standing-in leg at the reading's place, else the last of them (L §4.6)
+            days = [lg.day for lg in legs if leg_at(lg, place)] or [lg.day for lg in legs]
+        if run is not None and getattr(run, 'err', None) is not None and \
+                not isinstance(run.day, (datetime.date, Hole, Iv)):
+            # m's day is refused: so is the reading's (L §8.4)
+            out = run.err
+        elif run is None or run.exists is False or getattr(run, 'status', None) == 'none':
+            out = self.after_refusal(iid, r, mid)
+        elif isinstance(run.exists, Hole):
+            out = run.exists
+        elif days:
+            out = max(days)
+        elif getattr(run, 'status', None) == 'modelled':
+            # modelled past with no observation standing in: nothing books it by the cut (L §4.6)
+            out = self.after_refusal(iid, r, mid, 'is modelled past and nothing fulfils it')
+        else:
+            out = run.day
+        if not w.proj:
+            self.run_cache[ck] = out
+        if isinstance(out, TallyError):
+            raise out
+        return out
+    finally:
+        active.discard(id(r))
+
+
+def m_after_refusal(self, iid, r, mid, why="doesn't exist"):
+    """RUN-RECORD `reading <r> after <m>: <m> doesn't exist`, `... <m> is modelled past and nothing fulfils it`
+    (L §4.6, §8.4; tally 2.1.8 R16)."""
+    return refuse('RUN-RECORD', "reading %s%s after %s: %s %s" % (iid, r.keys_text(), mid, mid, why))
+
+
 def m_bal_modelled(self, place, unit, d, ctx, start=False):
     """`bal(x, d) modelled` (L §5.19; tally 2.1.8 R16): the account modelled_account gives, at the plain read's
     instant (`start` included), with its holes and refusals."""
@@ -1325,7 +1394,7 @@ def m_bal_modelled(self, place, unit, d, ctx, start=False):
     q = v.q
     hs = []
     for e in ents:
-        if e.kind in ('bad', 'pbad'):
+        if e.kind in ('bad', 'pbad', 'rbad'):
             raise e.err
         if e.kind == 'delta':
             q += e.flow.q
