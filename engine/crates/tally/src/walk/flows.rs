@@ -330,7 +330,7 @@ fn imprecise_flows(w: &DayWindow, place: &str, movement: &str) -> Hole {
         "date within {} not precise enough for flows of {place}",
         w.question
     );
-    Hole::asked(&text, movement)
+    Hole::asked(&text, movement).carrying(&w.value.carry)
 }
 
 /// Whether a leg's amount is zero, so its day can't change a sum (L §4.4).

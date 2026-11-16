@@ -1252,7 +1252,7 @@ impl Engine {
                 "date within {} not precise enough for the booking cut of {}",
                 w.question, inst.id
             );
-            let hole = Hole::asked(&text, &inst.id);
+            let hole = Hole::asked(&text, &inst.id).carrying(&w.value.carry);
             if seen.0 == seen.1 {
                 let other = self.body_over_law(m, mv, inst, self.timeline_ctx(None, last))?;
                 if !same_body(&body, &other) {

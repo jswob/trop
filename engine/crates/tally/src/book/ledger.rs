@@ -22,7 +22,7 @@ use super::observe::{Obs, inst_id};
 use super::reading::{Seen, Stands, booked_amount, per_unit, reading_rank};
 use crate::base::{Load, Refusal};
 use crate::eval::{Ctx, Engine, Env, Rows, num_stop};
-use crate::hole::{Hole, spread};
+use crate::hole::{Hole, Unknown, carry_union, spread};
 use crate::model::{Fulfils, GapRole, Reality, Span};
 use crate::num::Num;
 use crate::syntax::{Certainty, Residuals, Stop};
@@ -43,6 +43,13 @@ pub enum Fig {
 }
 
 impl Fig {
+    /// The unknown days the figure carries, a hole's, added to `into` in order. L §4.4.
+    pub fn carried_into(&self, into: &mut Vec<Unknown>) {
+        if let Fig::Hole(h) = self {
+            carry_union(into, h.carried());
+        }
+    }
+
     /// The hole, when the figure is one. L §8.1.
     pub(super) fn hole(&self) -> Option<&Hole> {
         match self {
@@ -77,6 +84,27 @@ pub struct Line {
     pub text: String,
     /// Its movement's order, typed: the last tie's key (E §6.3 Order, tally 2.1.2).
     pub(super) order: Term,
+    /// The unknown days the day it prints carries: an expected instance's window or hole
+    /// (L §4.4; tally 2.1.8 R13; refcore's `carry_day`).
+    pub(super) carry: Vec<Unknown>,
+}
+
+impl Line {
+    /// The unknown days it prints, its figures' and its day's, added to `into` in order
+    /// (refcore's `answer_residuals`, its `vals`). L §4.4.
+    pub fn carried_into(&self, into: &mut Vec<Unknown>) {
+        for fig in [
+            self.model.as_ref(),
+            self.observed.as_ref(),
+            Some(&self.diff),
+        ]
+        .into_iter()
+        .flatten()
+        {
+            fig.carried_into(into);
+        }
+        carry_union(into, &self.carry);
+    }
 }
 
 /// What a `residuals` ask reads: the hole its place or span is, or the ledgers.
@@ -640,6 +668,12 @@ fn instance_line(
             day.text(),
             fig_text(m, &mdl, &lines.of.unit)?
         );
+        // a window inside one month: the day it prints is an unknown day the ledger carries
+        // (tally 2.1.8 R13, L §4.4)
+        let carry = match &inst.day {
+            Some(Dated::Window(w)) => w.value.carry.clone(),
+            Some(Dated::Day(_) | Dated::Hole(_)) | None => Vec::new(),
+        };
         lines.out.push(Line {
             day: Some(day),
             group,
@@ -648,6 +682,7 @@ fn instance_line(
             diff,
             text,
             order: inst.order.term()?,
+            carry,
         });
         return Ok(());
     }
@@ -675,6 +710,7 @@ fn instance_line(
         diff,
         text,
         order: inst.order.term()?,
+        carry: Vec::new(),
     });
     Ok(())
 }
@@ -764,6 +800,7 @@ fn adjustment_line(
         diff,
         text,
         order: a.order(),
+        carry: Vec::new(),
     });
     Ok(())
 }
@@ -792,16 +829,18 @@ fn undated_line(
             diff,
             text,
             order: inst.order.term()?,
+            carry: Vec::new(),
         });
         return Ok(());
     }
     if mdl.is_zero() {
         return Ok(());
     }
-    // a hole as the hole, a window as a question names it (refcore's `window_text`)
-    let day_text = match &inst.day {
-        Some(Dated::Hole(h)) => h.text(),
-        Some(Dated::Window(w)) => w.question.clone(),
+    // a hole as the hole, a window as a question names it (refcore's `window_text`); the
+    // day it prints is an unknown day the ledger carries (tally 2.1.8 R13, L §4.4)
+    let (day_text, carry) = match &inst.day {
+        Some(Dated::Hole(h)) => (h.text(), h.carried().to_vec()),
+        Some(Dated::Window(w)) => (w.question.clone(), w.value.carry.clone()),
         Some(Dated::Day(_)) | None => {
             return Err(invariant("an undated instance whose day isn't a hole"));
         }
@@ -824,6 +863,7 @@ fn undated_line(
         diff,
         text,
         order: inst.order.term()?,
+        carry,
     });
     Ok(())
 }
@@ -868,6 +908,7 @@ fn after_run_line(m: &Reality, lines: &mut Lines, span: &Span) -> Result<(), Sto
         diff: hole,
         text,
         order: Term::Tuple(Vec::new()),
+        carry: Vec::new(),
     });
     Ok(())
 }
@@ -896,6 +937,7 @@ fn unexplained_line(m: &Reality, lines: &mut Lines, o: &Obs, ids: &str) -> Resul
         diff: ob,
         text,
         order: o.order(),
+        carry: Vec::new(),
     });
     Ok(())
 }
@@ -943,6 +985,7 @@ fn balance_line(
         text,
         // a balance line's order is `(day, 9)`, after a day's movements (refcore's `RLine`)
         order: Term::Tuple(vec![Term::Day(seen.day), Term::Int(9)]),
+        carry: Vec::new(),
     });
     Ok(())
 }

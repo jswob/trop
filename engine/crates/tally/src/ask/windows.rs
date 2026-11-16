@@ -1,4 +1,4 @@
-//! An ask line's `windows each`: the line run once per combination of the days the windows it meets can take, and its results merged into maximal sub-windows.
+//! An ask line's `windows each`: the plain line read again with each unknown day its answer carries, and its results merged into maximal sub-windows.
 //! Spec: L §4.4 (`windows each` prints one line per maximal sub-window, or combination of
 //! sub-windows, over which the answer is constant, and one plain line when the answer doesn't
 //! depend on the day; where the windows a line meets depend on the day an earlier window
@@ -8,11 +8,12 @@
 //! combinations whose lines are the same print under one head, the window part first), §5.18
 //! (one line per binding tuple), §8.2.
 //! Twin: engine/tools/refcore/ask.py (`each_lines`, `each_over_axes`, `each_rows`,
-//! `each_nested`, `boxes`, `_box_cells`, `EachRes`).
-//! Invariants: the runs go depth first, a run that meets a window its choice names no day of
-//! run again once per day of the first such window, those runs before every run left; a run's
-//! layer is open only while it runs; two runs give one answer when their lines print the same
-//! text; the boxes are made per answer, in the order the answers were first given, each grown
+//! `each_next`, `each_key`, `each_nested`, `boxes`, `_box_cells`, `EachRes`).
+//! Invariants: the runs go depth first, a run whose answer carries an unknown day its choice
+//! names no day of run again once per day of the first of them its reads met, those runs
+//! before every run left, so a window the result never reads is never taken (tally 2.1.8
+//! R13); a run's layer is open only while it runs; two runs give one answer when their lines
+//! print the same text, an `explain`'s causes too; the boxes are made per answer, in the order the answers were first given, each grown
 //! greedily from its least day tuple, window by window in the order met, then sorted by their
 //! first days; a line's register is every run's of its box together.
 
@@ -24,6 +25,7 @@ use super::check::Printed;
 use super::register::{check_register_lines, register_lines};
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{Choice, Collected, Ctx, Engine, Entry, Env, Member, Met};
+use crate::hole::carry_union;
 use crate::model::Reality;
 use crate::syntax::{Ask, Stop};
 use crate::time::Day;
@@ -66,6 +68,10 @@ impl Done {
 
 /// What one run gives: its result to compare, and under a binding each tuple's line.
 type Ran = (Printed, Vec<Tuple>);
+
+/// What one run met: the windows its choice names no day of, in the order met, and the `same`
+/// lines known in a window it took as seen untaken, by id.
+type RunMet = (Vec<Met>, Vec<String>);
 
 /// One box of days: each window's first and last day, its line, the runs it stands for.
 type Boxed = (Vec<(Day, Day)>, Printed, Vec<usize>);
@@ -442,6 +448,8 @@ fn compared(rows: &[&BoundRow]) -> Printed {
         alone: false,
         met: Collected::default(),
         laws: None,
+        carried: Vec::new(),
+        causes: None,
     }
 }
 
@@ -656,15 +664,20 @@ fn bound_run(
     (ctx, pinned): (Ctx, &Collected),
 ) -> Result<(Printed, Vec<Tuple>), Stop> {
     let mut tuples = Vec::new();
+    let mut carried = Vec::new();
     match engine.tuples(m, &ask.binds, ctx)? {
-        Err(hole) => tuples.push(Tuple {
-            head: String::new(),
-            line: Err(hole.text()),
-        }),
+        Err(hole) => {
+            carry_union(&mut carried, hole.carried());
+            tuples.push(Tuple {
+                head: String::new(),
+                line: Err(hole.text()),
+            });
+        }
         Ok(members) => {
             for member in members {
                 let head = env_text(m, &ask.binds, &member.env)?;
                 let line = if let Some(hole) = member.unknown {
+                    carry_union(&mut carried, hole.carried());
                     Err(hole.text())
                 } else {
                     let mut line = form_line(m, ask, engine, (&member.env, ctx, pinned))?;
@@ -687,6 +700,7 @@ fn bound_run(
                     l.body.join("\u{0}")
                 ));
                 met.merge(&l.met);
+                carry_union(&mut carried, &l.carried);
             }
             Err(hole) => parts.push(format!("{}\u{0}?{hole}", t.head)),
         }
@@ -699,6 +713,8 @@ fn bound_run(
         alone: false,
         met,
         laws: None,
+        carried,
+        causes: None,
     };
     Ok((line, tuples))
 }
@@ -748,6 +764,8 @@ fn grouped_rows(axes: &Axes, combos: &[Combo], each: &[Rows]) -> Result<Fanned, 
                 alone: false,
                 met: Collected::default(),
                 laws: None,
+                carried: Vec::new(),
+                causes: None,
             },
         ));
     }
@@ -778,13 +796,15 @@ fn grouped_rows(axes: &Axes, combos: &[Combo], each: &[Rows]) -> Result<Fanned, 
     Ok(out)
 }
 
-/// The line of ask `ask` in scope `env` and context `ctx` with the ask's pins `pinned`, run
-/// once per combination of the days the windows it meets can take, depth first, and merged:
+/// The line of ask `ask` in scope `env` and context `ctx` with the ask's pins `pinned`: the
+/// plain line, read again with the unknown day its answer carries, the first its reads met,
+/// taken as each of its days, depth first, until a run's answer carries none; then merged:
 /// one plain line where every run gives one answer, else the nested sub-windows where the
-/// runs met different windows, else the maximal boxes of days (refcore's `each_rows`). Under
-/// a binding (`Shape::Bound`) each run binds the line's keys itself. With the rows, the runs,
-/// and the windows met in the order met. A ledger's or a diff's result is its block of lines,
-/// so its rows are blocks, each under its window part (L §4.4; tally 2.1.8 R13, #186).
+/// runs took different windows, else the maximal boxes of days (refcore's `each_rows`,
+/// `each_next`). Under a binding (`Shape::Bound`) each run binds the line's keys itself. With
+/// the rows, the runs, and the windows taken in the order taken. A ledger's or a diff's result
+/// is its block of lines, so its rows are blocks, each under its window part (L §4.4; tally
+/// 2.1.8 R13, #186).
 ///
 /// # Errors
 ///
@@ -800,9 +820,9 @@ fn each_rows(
     let mut done: Vec<Done> = Vec::new();
     let mut labels: Vec<Met> = Vec::new();
     while let Some(choice) = pending.pop_front() {
-        let ((line, tuples), met) = run_once(m, ask, engine, (env, ctx, pinned), (&choice, shape))?;
-        let new = met.into_iter().find(|w| !names(&choice, &w.id));
-        let Some(new) = new else {
+        let ((line, tuples), (met, forced)) =
+            run_once(m, ask, engine, (env, ctx, pinned), (&choice, shape))?;
+        let Some(new) = each_next(&met, &choice, (&line.carried, &forced)) else {
             done.push(Done {
                 choice,
                 line,
@@ -831,6 +851,22 @@ fn each_rows(
     Ok((rows, done, labels))
 }
 
+/// The unknown day `windows each` takes after a run under choice `choice` that met the
+/// windows `met`, in order: of those its answer carries, `carried`, and the `same` lines it
+/// rests on, `forced`, that the choice names no day of, the first the run met; else the first
+/// its answer carries; none where it carries none (refcore's `each_next`). L §4.4; tally
+/// 2.1.8 R13.
+fn each_next(met: &[Met], choice: &Choice, (carried, forced): (&[Met], &[String])) -> Option<Met> {
+    let open: Vec<&Met> = carried.iter().filter(|w| !names(choice, &w.id)).collect();
+    let wanted = |id: &str| {
+        open.iter().any(|w| w.id == id) || (forced.iter().any(|f| f == id) && !names(choice, id))
+    };
+    if let Some(w) = met.iter().find(|w| wanted(&w.id)) {
+        return Some(w.clone());
+    }
+    open.first().map(|w| Met::clone(w))
+}
+
 /// The rows the runs `done` give, the windows they met `labels`: one plain line where every
 /// run gives one answer, else the nested sub-windows where the runs met different windows,
 /// else the maximal boxes of days (refcore's `each_rows`, its end). L §4.4.
@@ -838,7 +874,7 @@ fn rows_of(done: &[Done], labels: &[Met]) -> Result<Rows, Stop> {
     let [first, rest @ ..] = done else {
         return Err(invariant("windows each with no run"));
     };
-    if rest.iter().all(|d| d.line.same(&first.line)) {
+    if rest.iter().all(|d| d.line.same_run(&first.line)) {
         let mut line = first.line.clone();
         for d in rest {
             line.met.merge(&d.line.met);
@@ -888,20 +924,22 @@ enum Shape {
 }
 
 /// One run of the line under choice `choice`: its result, its tuples under a binding
-/// (`Shape::Bound`), and the windows it met that the choice names no day of, in the order
-/// met. L §4.4.
+/// (`Shape::Bound`), the windows it met that the choice names no day of, in the order met,
+/// and the `same` lines known in a window it took as seen untaken. L §4.4, §4.5.
 fn run_once(
     m: &Reality,
     ask: &Ask,
     engine: &mut Engine,
     (env, ctx, pinned): (&Env, Ctx, &Collected),
     (choice, shape): (&Choice, Shape),
-) -> Result<(Ran, Vec<Met>), Stop> {
+) -> Result<(Ran, RunMet), Stop> {
     let outer = engine.each_met.replace(Vec::new());
+    let outer_forced = core::mem::take(&mut engine.each_forced);
     let line = run_inside(m, ask, engine, (env, ctx, pinned), (choice, shape));
+    let forced = core::mem::replace(&mut engine.each_forced, outer_forced);
     let met = core::mem::replace(&mut engine.each_met, outer)
         .ok_or_else(|| invariant("a run's windows met taken while it ran"))?;
-    Ok((line?, met))
+    Ok((line?, (met, forced)))
 }
 
 /// The line of ask `ask` in scope `env`, or under a binding (`Shape::Bound`) its tuples'
@@ -1171,7 +1209,7 @@ fn one_answer(done: &[Done], members: &[usize]) -> Result<bool, Stop> {
             .get(*at)
             .ok_or_else(|| invariant("a run past the runs"))?;
         match first {
-            Some(f) if !f.same(&d.line) => return Ok(false),
+            Some(f) if !f.same_run(&d.line) => return Ok(false),
             Some(_) => {}
             None => first = Some(&d.line),
         }
@@ -1275,7 +1313,7 @@ fn same_first(done: &[Done], a: &[usize], b: &[usize]) -> Result<bool, Stop> {
     let (Some(x), Some(y)) = (done.get(*x), done.get(*y)) else {
         return Err(invariant("a run past the runs"));
     };
-    Ok(x.line.same(&y.line))
+    Ok(x.line.same_run(&y.line))
 }
 
 /// Whether choice `choice` names a day of window `id`.

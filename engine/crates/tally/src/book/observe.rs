@@ -125,9 +125,30 @@ impl KnownAtCut {
             .map(|window| crate::eval::known_question(*window, cut))
     }
 
-    /// [`KnownAtCut::question`]'s hole, asked of `source` (L §4.5, §8.1).
-    pub(crate) fn hole(&self, sid: &str, cut: Day, source: &str) -> Option<Hole> {
-        self.question(sid, cut).map(|q| Hole::asked(&q, source))
+    /// The unknown day of `sid`'s `known`, where the cut leaves it undecided (L §4.4, §4.5).
+    ///
+    /// # Errors
+    ///
+    /// `RUN-LIMIT` past the calendar's edge.
+    pub(crate) fn unknown(&self, sid: &str) -> Result<Option<crate::hole::Unknown>, Stop> {
+        self.undecided
+            .get(sid)
+            .map(|window| crate::eval::known_unknown(*window, sid))
+            .transpose()
+    }
+
+    /// [`KnownAtCut::question`]'s hole, asked of `source`, carrying that unknown day (L §4.5,
+    /// §4.4, §8.1).
+    ///
+    /// # Errors
+    ///
+    /// `RUN-LIMIT` past the calendar's edge.
+    pub(crate) fn hole(&self, sid: &str, cut: Day, source: &str) -> Result<Option<Hole>, Stop> {
+        let Some(q) = self.question(sid, cut) else {
+            return Ok(None);
+        };
+        let carry: Vec<crate::hole::Unknown> = self.unknown(sid)?.into_iter().collect();
+        Ok(Some(Hole::asked(&q, source).carrying(&carry)))
     }
 }
 
@@ -223,7 +244,7 @@ impl Engine {
             // line's `windows each` puts its day on or before the cut, and with none whether
             // it covers them is undecided (L §4.5)
             let known = self.known_at_cut(covering_windows(m), cut)?;
-            let seen = seen_coverage(m, (cut, world), &known);
+            let seen = seen_coverage(m, (cut, world), &known)?;
             self.covered.insert(cut, seen);
         }
         self.covered
@@ -822,8 +843,11 @@ fn seen_observations(
                 // (tally 2.1.8 R12, P70; refcore's `observations`)
                 let row = Hole::asked(question, &seen.id);
                 let version = Hole::asked(question, &o.version);
+                let carry: Vec<crate::hole::Unknown> =
+                    known.unknown(&known_sid(o))?.into_iter().collect();
                 let hole = spread(&[Some(&row), Some(&version)])
-                    .ok_or_else(|| invariant("an undecided row's hole spread from none"))?;
+                    .ok_or_else(|| invariant("an undecided row's hole spread from none"))?
+                    .carrying(&carry);
                 for lg in &mut seen.legs {
                     lg.amount = Amount::Hole(hole.clone());
                 }
@@ -978,7 +1002,15 @@ fn observation(o: &crate::model::Observation) -> Result<Obs, Stop> {
 /// The versions the cut and the world of `seen` see that cover each place, by version id: each
 /// place with its span, the one written or the version's `governs` (refcore's `coverage`).
 /// L §5.19 Coverage, §6.4.
-fn seen_coverage(m: &Reality, (cut, world): (Day, World), known: &KnownAtCut) -> Coverage {
+///
+/// # Errors
+///
+/// `RUN-LIMIT` past the calendar's edge.
+fn seen_coverage(
+    m: &Reality,
+    (cut, world): (Day, World),
+    known: &KnownAtCut,
+) -> Result<Coverage, Stop> {
     let mut out = Coverage::default();
     let mut versions: Vec<&crate::model::VersionInfo> =
         m.versions.entries().map(|(_, v)| v).collect();
@@ -993,7 +1025,7 @@ fn seen_coverage(m: &Reality, (cut, world): (Day, World), known: &KnownAtCut) ->
         }
         // one known in a window the cut leaves undecided covers nothing, and each place it
         // covers is that hole from its span's first day (L §4.5; refcore's `covund`)
-        let undecided = known.hole(&v.id, cut, &v.id);
+        let undecided = known.hole(&v.id, cut, &v.id)?;
         for (place, span) in &v.covers {
             let Some(span) = span
                 .as_ref()
@@ -1013,5 +1045,5 @@ fn seen_coverage(m: &Reality, (cut, world): (Day, World), known: &KnownAtCut) ->
             }
         }
     }
-    out
+    Ok(out)
 }

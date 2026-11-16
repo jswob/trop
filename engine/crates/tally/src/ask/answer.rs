@@ -23,7 +23,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::axes::{Axes, fanned_lines};
-use super::check::{Printed, check_line};
+use super::check::{Printed, carried_of, check_line};
 use super::diff::{Cells, cells_lines, crossed, diff_cells, diff_result};
 use super::explain::{explain_line, inputs_line, readers_line};
 use super::register::{check_register_lines, register_lines, warning_lines};
@@ -1027,6 +1027,7 @@ pub(super) fn form_line(
             if let Some(place) = m.asks_unresolved.get(&ask.id) {
                 unresolved_word(&items, place)?;
             }
+            let carried = carried_of(&items.iter().collect::<Vec<_>>());
             Ok(Printed {
                 text: line_values(m, &items)?,
                 body: Vec::new(),
@@ -1036,6 +1037,8 @@ pub(super) fn form_line(
                 alone: false,
                 met,
                 laws: None,
+                carried,
+                causes: None,
             })
         }
         AskBody::Check(left, right) => check_line(m, engine, (left, right), env, ctx),
@@ -1050,6 +1053,8 @@ pub(super) fn form_line(
                 alone: false,
                 met,
                 laws: None,
+                carried: carried_of(&[&item]),
+                causes: None,
             })
         }
         AskBody::Explain(reference) => explain_line(m, (ask, reference), engine, env, ctx),
@@ -1122,7 +1127,9 @@ pub(super) fn item_text(m: &Reality, item: &Item) -> Result<String, Stop> {
             // a window prints as a date; any other interval needs its one value (L §4.4)
             let window = w.question_text(m).map_err(num_stop)?;
             let text = format!("date within {window} not precise enough for a print");
-            Ok(crate::hole::Hole::asked(&text, w.figure()).text())
+            Ok(crate::hole::Hole::asked(&text, w.figure())
+                .carrying(&w.carry)
+                .text())
         }
         Item::Value(v) => v.typed_text(m).map_err(num_stop),
     }

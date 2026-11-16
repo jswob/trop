@@ -842,7 +842,7 @@ impl Walk {
             "date within {} not precise enough for a balance",
             w.question
         );
-        let own = Hole::asked(&text, movement);
+        let own = Hole::asked(&text, movement).carrying(&w.value.carry);
         let amount = match &lg.amount {
             Amount::Hole(h) => Some(h),
             Amount::Qty(_) | Amount::Refused(_) => None,

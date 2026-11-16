@@ -439,6 +439,14 @@ fn result(m: &Reality, diff: &Diff, cell: &Cell) -> Result<Printed, Stop> {
         alone: false,
         met: cell.met.clone(),
         laws: None,
+        carried: super::check::carried_of(
+            &ours
+                .iter()
+                .chain(theirs)
+                .map(|(_, v)| v)
+                .collect::<Vec<_>>(),
+        ),
+        causes: None,
     })
 }
 

@@ -9,7 +9,9 @@
 //! and a use that needs one value, is the window's `HOLE-IMPRECISE`, asked of the row it came
 //! from; a window keeps the text it was written with and its row's figure through every
 //! operation that keeps it a window, but only a read of an item gives it a read, so a value
-//! an operation computed is never decided against itself (#115, pick P28).
+//! an operation computed is never decided against itself (#115, pick P28); under `windows
+//! each` a window not yet taken stays a window carrying its unknown day, and every interval
+//! and hole made of it carries it too (tally 2.1.8 R13).
 
 use core::cmp::Ordering;
 
@@ -32,7 +34,7 @@ use crate::time::{Day, PeriodKind};
 pub(super) fn imprecise(m: &Reality, w: &Window, what: &str) -> Result<Hole, Stop> {
     let window = w.question_text(m).map_err(num_stop)?;
     let text = format!("date within {window} not precise enough for {what}");
-    Ok(Hole::asked(&text, w.figure()))
+    Ok(Hole::asked(&text, w.figure()).carrying(&w.carry))
 }
 
 /// The window of a value, if it is one.
@@ -99,6 +101,7 @@ pub(super) fn interval(m: &Reality, (a, b): (Value, Value), from: &Window) -> Re
         src: from.src.clone(),
         figure: from.figure.clone(),
         read: None,
+        carry: from.carry.clone(),
     })))
 }
 
@@ -128,6 +131,7 @@ pub(super) fn window_arith(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Res
         src: w.src.clone(),
         figure: w.figure.clone(),
         read: None,
+        carry: w.carry.clone(),
     })))
 }
 
@@ -144,6 +148,7 @@ pub(super) fn window_negated(w: &Window) -> Result<Option<Value>, Stop> {
         src: w.src.clone(),
         figure: w.figure.clone(),
         read: None,
+        carry: w.carry.clone(),
     }))))
 }
 
@@ -341,8 +346,10 @@ pub(crate) fn window_days(w: &Window) -> Result<Vec<Day>, Stop> {
 impl Engine {
     /// Value `v`, as a `windows each` in force in `ctx` takes it: a window of days takes the
     /// day the line's choice names for it, the window named `id` and labelled `label` (a read's
-    /// row and figure, or the window as written); any other value, or a context no `windows
-    /// each` holds, leaves it as it is (refcore's `window_choice`, `window_id`). L §4.4.
+    /// row and figure, or the window as written); one the choice names no day of stays a
+    /// window, carrying that unknown day; any other value, or a context no `windows each`
+    /// holds, is left as it is (refcore's `window_choice`, `window_id`). L §4.4; tally 2.1.8
+    /// R13.
     ///
     /// # Errors
     ///
@@ -353,11 +360,11 @@ impl Engine {
         (id, label): (String, &str),
         ctx: Ctx,
     ) -> Result<Value, Stop> {
-        let Value::Window(w) = &v else {
+        let Value::Window(mut w) = v else {
             return Ok(v);
         };
         if !matches!(w.lo, Value::Day(_)) || !self.chooses(ctx)? {
-            return Ok(v);
+            return Ok(Value::Window(w));
         }
         if let Some(day) = self.named_day(ctx, &id)? {
             return Ok(Value::Day(day));
@@ -365,9 +372,15 @@ impl Engine {
         let window = Met {
             id,
             label: label.to_owned(),
-            days: window_days(w)?,
+            days: window_days(&w)?,
         };
-        Ok(self.window_day(ctx, window)?.map_or(v, Value::Day))
+        if let Some(day) = self.window_day(ctx, window.clone())? {
+            return Ok(Value::Day(day));
+        }
+        let mut carry = vec![window];
+        crate::hole::carry_union(&mut carry, &w.carry);
+        w.carry = carry;
+        Ok(Value::Window(w))
     }
 
     /// Whether the cut of `ctx` sees something known in window `(lo, hi)`, which holds the
@@ -388,30 +401,44 @@ impl Engine {
         if !self.chooses(ctx)? {
             return Ok(None);
         }
-        let id = format!("known {sid}");
-        if let Some(day) = self.named_day(ctx, &id)? {
+        let window = known_unknown((lo, hi), sid)?;
+        if let Some(day) = self.named_day(ctx, &window.id)? {
             return Ok(Some(day <= ctx.cut));
         }
-        let mut days = vec![lo];
-        let mut day = lo;
-        while day < hi {
-            day = day.next().ok_or_else(|| super::state::past_days(1))?;
-            days.push(day);
-        }
-        let window = Met {
-            id,
-            label: format!("known of {sid}"),
-            days,
-        };
         Ok(self.window_day(ctx, window)?.map(|d| d <= ctx.cut))
     }
 }
 
-/// `HOLE-IMPRECISE` of something known in window `(lo, hi)`, which holds cut `cut`, with no
-/// `windows each`: `date within window(lo, hi) not precise enough for the cut K`, asked of
-/// `sid` (refcore's `known_vis`). L §4.5, §8.1.
-pub(crate) fn known_hole(window: (Day, Day), cut: Day, sid: &str) -> Hole {
-    Hole::asked(&known_question(window, cut), sid)
+/// The unknown day of something known in window `(lo, hi)`, the `known` of `sid`: named
+/// `known <sid>`, labelled `known of <sid>` (refcore's `known_window_id`, `known_carry`).
+/// L §4.4, §4.5.
+///
+/// # Errors
+///
+/// `RUN-LIMIT` past the calendar's edge.
+pub(crate) fn known_unknown((lo, hi): (Day, Day), sid: &str) -> Result<Met, Stop> {
+    let mut days = vec![lo];
+    let mut day = lo;
+    while day < hi {
+        day = day.next().ok_or_else(|| super::state::past_days(1))?;
+        days.push(day);
+    }
+    Ok(Met {
+        id: format!("known {sid}"),
+        label: format!("known of {sid}"),
+        days,
+    })
+}
+
+/// `HOLE-IMPRECISE` of something known in window `(lo, hi)`, which holds cut `cut`, as the
+/// plain line reads it: `date within window(lo, hi) not precise enough for the cut K`, asked of
+/// `sid`, carrying that unknown day (refcore's `known_vis`). L §4.5, §4.4, §8.1.
+///
+/// # Errors
+///
+/// `RUN-LIMIT` past the calendar's edge.
+pub(crate) fn known_hole(window: (Day, Day), cut: Day, sid: &str) -> Result<Hole, Stop> {
+    Ok(Hole::asked(&known_question(window, cut), sid).carrying(&[known_unknown(window, sid)?]))
 }
 
 /// The question of [`known_hole`]: `date within window(lo, hi) not precise enough for the
@@ -460,6 +487,7 @@ impl Engine {
             src: Some(written.clone()),
             figure: None,
             read: None,
+            carry: Vec::new(),
         }));
         self.chosen(window, (format!("src {written}"), &written), ctx)
     }
@@ -527,6 +555,7 @@ mod tests {
             src: None,
             figure: None,
             read: None,
+            carry: Vec::new(),
         };
         assert!(
             one_of_holds(&w, &Value::Day(day(2026, 6, 5))),

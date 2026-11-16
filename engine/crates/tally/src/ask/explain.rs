@@ -67,6 +67,7 @@ pub(super) fn explain_line(
         unresolved_word(core::slice::from_ref(&item), place)?;
     }
     let text = head_text(m, &item)?;
+    let mut carried = super::check::carried_of(&[&item]);
     let trace = match engine.unpinned {
         Some(unpinned) if !ask.pins.is_empty() => outside_pins(
             m,
@@ -78,6 +79,9 @@ pub(super) fn explain_line(
         )?,
         _ => trace,
     };
+    // what the derivation prints carries its unknown days too: a window only the part outside
+    // the pins meets splits the line (L §4.4; tally 2.1.8 R13, #191 Q4)
+    crate::hole::carry_union(&mut carried, &trace.carried());
     Ok(Printed {
         text,
         body: derivation(m, &trace)?,
@@ -87,6 +91,8 @@ pub(super) fn explain_line(
         alone: false,
         met,
         laws: None,
+        carried,
+        causes: Some(derivation_as(m, &trace, Laws::Left)?.join("\u{0}")),
     })
 }
 
@@ -259,6 +265,9 @@ pub(super) fn inputs_line(
         alone: false,
         met,
         laws: None,
+        // the rows rest on the value read: its unknown days (refcore's `RowSet.read`)
+        carried: super::check::carried_of(&items.iter().collect::<Vec<_>>()),
+        causes: None,
     })
 }
 
@@ -548,6 +557,22 @@ fn cell_keys(trace: &Trace, at: usize) -> Result<String, Stop> {
 /// in the balance form, from the walk it read (P63); a node met again as `(<label>: see
 /// [n])`, a row by its stable id, a balance by its read. L §5.18, E §10.
 pub(super) fn derivation(m: &Reality, trace: &Trace) -> Result<Vec<String>, Stop> {
+    derivation_as(m, trace, Laws::Printed)
+}
+
+/// Whether a derivation's lines print each def cell's law date (E §10), or leave it out, as two
+/// runs of `windows each` compare their causes (refcore's `trace_key`; tally 2.1.8 R13).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Laws {
+    /// Printed, as E §10 prints a derivation.
+    Printed,
+    /// Left out.
+    Left,
+}
+
+/// [`derivation`], its law dates printed or left out as `laws` says (refcore's
+/// `explain_lines`, `trace_key`). L §5.18, E §10; tally 2.1.8 R13.
+fn derivation_as(m: &Reality, trace: &Trace, laws: Laws) -> Result<Vec<String>, Stop> {
     let mut out = Vec::new();
     let mut numbered: BTreeMap<usize, usize> = BTreeMap::new();
     let mut rows: BTreeMap<String, usize> = BTreeMap::new();
@@ -601,7 +626,7 @@ pub(super) fn derivation(m: &Reality, trace: &Trace) -> Result<Vec<String>, Stop
                 numbered.insert(at, count);
             }
         }
-        let (head, below) = node_lines(m, trace, (at, depth), count)?;
+        let (head, below) = node_lines(m, trace, (at, depth), (count, laws))?;
         out.extend(head);
         todo.extend(below.into_iter().rev());
     }
@@ -620,7 +645,7 @@ fn node_lines(
     m: &Reality,
     trace: &Trace,
     (at, depth): (usize, usize),
-    no: usize,
+    (no, laws): (usize, Laws),
 ) -> Result<(Vec<String>, Vec<Step>), Stop> {
     let node = trace.node(at)?;
     let ind = indent(depth);
@@ -646,7 +671,9 @@ fn node_lines(
         }
         TraceKind::BandRow => head.push(format!("{ind}[{no}] band row {}", node.label)),
         TraceKind::Def(law) => {
-            let law = law.map_or_else(String::new, |d| format!(", law date {}", d.text()));
+            let law = law
+                .filter(|_| laws == Laws::Printed)
+                .map_or_else(String::new, |d| format!(", law date {}", d.text()));
             head.push(format!(
                 "{ind}[{no}] {} = {}{law}",
                 node.label,
@@ -733,7 +760,9 @@ pub(super) fn plain_text(m: &Reality, item: &Item) -> Result<String, Stop> {
         Item::Value(Value::Window(w)) if !w.of_days() => {
             let window = w.question_text(m).map_err(num_stop)?;
             let text = format!("date within {window} not precise enough for a print");
-            Ok(crate::hole::Hole::asked(&text, w.figure()).text())
+            Ok(crate::hole::Hole::asked(&text, w.figure())
+                .carrying(&w.carry)
+                .text())
         }
         Item::Value(v) => v.text(m).map_err(num_stop),
     }

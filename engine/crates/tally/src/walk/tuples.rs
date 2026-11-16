@@ -13,7 +13,7 @@
 use super::plan::{Exists, date_of, invariant, join, refuse};
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{Collected, Ctx, Decided, Engine, Env, LawClass, Member, reads_name};
-use crate::hole::Hole;
+use crate::hole::{Hole, Unknown};
 use crate::model::{Domain, KeyVal, MoveInfo, Reality, Value};
 use crate::syntax::Stop;
 use crate::time::Day;
@@ -118,7 +118,7 @@ impl Engine {
         law: &Law,
         ctx: Ctx,
     ) -> Result<Decided, Stop> {
-        let (Law::Window(_, text), Some(day)) = (law, law.first()) else {
+        let (Law::Window(_, text, carry), Some(day)) = (law, law.first()) else {
             return self.binding_members(m, bind, env, ctx.at_law(law.first()));
         };
         // once per law-date class: a day its class holds gives what it gave (L §4.4's cost)
@@ -134,7 +134,10 @@ impl Engine {
             let (other, next) = self.members_at(m, (bind, env), (ctx, *at))?;
             let same = other.as_ref().is_ok_and(|o| members_key(o) == key);
             if !same {
-                return Ok(Err((imprecise_law(text, &mv.id), Collected::default())));
+                return Ok(Err((
+                    imprecise_law((text, carry), &mv.id),
+                    Collected::default(),
+                )));
             }
             class = next;
         }
@@ -198,7 +201,11 @@ impl Engine {
             // a window `at` reads the instance at each law date it can take (L §5.14 `at e`,
             // §4.3; refcore's `m_move_law`, `law_days`): the memo shares a class's cells
             let text = w.question_text(m).map_err(crate::eval::num_stop)?;
-            return Ok(Law::Window(crate::eval::window_days(w)?, text));
+            return Ok(Law::Window(
+                crate::eval::window_days(w)?,
+                text,
+                w.carry.clone(),
+            ));
         }
         Ok(Law::Day(date_of(&v)?))
     }
@@ -317,8 +324,8 @@ pub enum Law {
     Day(Day),
     /// A window: the instance is read at each law date it can take, its first first, and
     /// one value where they all agree (L §4.3, §5.14 `at e`); with the window as a question
-    /// names it.
-    Window(Vec<Day>, String),
+    /// names it, and the unknown days it carries (L §4.4; tally 2.1.8 R13).
+    Window(Vec<Day>, String, Vec<Unknown>),
     /// A hole.
     Hole(Hole),
 }
@@ -330,7 +337,7 @@ impl Law {
     pub fn first(&self) -> Option<Day> {
         match self {
             Law::Day(d) => Some(*d),
-            Law::Window(days, _) => days.first().copied(),
+            Law::Window(days, ..) => days.first().copied(),
             Law::None | Law::Hole(_) => None,
         }
     }
@@ -339,7 +346,7 @@ impl Law {
     #[must_use]
     pub fn rest(&self) -> &[Day] {
         match self {
-            Law::Window(days, _) => match days.as_slice() {
+            Law::Window(days, ..) => match days.as_slice() {
                 [_, rest @ ..] => rest,
                 [] => &[],
             },
@@ -347,22 +354,23 @@ impl Law {
         }
     }
 
-    /// The window as a question names it, for a window `at`. L §4.4.
+    /// The window as a question names it, and the unknown days it carries, for a window
+    /// `at`. L §4.4.
     #[must_use]
-    pub fn window(&self) -> Option<&str> {
+    pub fn window(&self) -> Option<(&str, &[Unknown])> {
         match self {
-            Law::Window(_, text) => Some(text),
+            Law::Window(_, text, carry) => Some((text, carry)),
             Law::Day(_) | Law::None | Law::Hole(_) => None,
         }
     }
 }
 
 /// `HOLE-IMPRECISE` of a window `at` whose law dates give `what` different values:
-/// `?"date within <w> not precise enough for the law date of <what>" (<what>)` (refcore's
-/// `imprecise_law`). L §4.3, §4.4, §8.1.
-pub(super) fn imprecise_law(window: &str, what: &str) -> Hole {
+/// `?"date within <w> not precise enough for the law date of <what>" (<what>)`, carrying the
+/// window's unknown days (refcore's `imprecise_law`). L §4.3, §4.4, §8.1.
+pub(super) fn imprecise_law((window, carry): (&str, &[Unknown]), what: &str) -> Hole {
     let text = format!("date within {window} not precise enough for the law date of {what}");
-    Hole::asked(&text, what)
+    Hole::asked(&text, what).carrying(carry)
 }
 
 /// What a binding's members are, to compare them across law dates: each member's scope, its

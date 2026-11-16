@@ -135,7 +135,8 @@ impl Engine {
                             "date within {} not precise enough for flows of {}",
                             w.question, mv.id
                         );
-                        acc.holes.push(Hole::asked(&text, &i.id));
+                        acc.holes
+                            .push(Hole::asked(&text, &i.id).carrying(&w.value.carry));
                         continue;
                     }
                 },

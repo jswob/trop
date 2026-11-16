@@ -895,7 +895,7 @@ fn schedule_decision(
                 "date within {} not precise enough for the day of {}",
                 w.question, inst.id
             );
-            let h = Hole::asked(&text, &inst.id);
+            let h = Hole::asked(&text, &inst.id).carrying(&w.value.carry);
             decision_hole(walk, (at, h), &inst, places)?;
         }
         None => {

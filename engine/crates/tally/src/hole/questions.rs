@@ -6,9 +6,12 @@
 //! Invariants: a hole is built only here (R-116): its fields are private, so no other module
 //! can make one, and an operator that meets holes calls [`spread`], the one rule. A hole is
 //! never 0 and never a default (R-27). The bound a later milestone adds to a hole has its slot
-//! here, empty at S (seam U).
+//! here, empty at S (seam U). The unknown days a hole carries (`windows each`'s, L §4.4, tally
+//! 2.1.8 R13) spread with its questions and are no part of its identity.
 
 use std::collections::BTreeSet;
+
+use crate::time::Day;
 
 /// One question of a hole and the figure it was asked of (`pay[ana, 2026-01]`), or the empty
 /// text for a hole no figure names (a record's field written `?"…"`). L §8.1.
@@ -46,6 +49,33 @@ pub struct Hole {
     bound: Bound,
     /// What a `partial` ask line knows of it (L §5.18 Partial answers).
     lin: Lin,
+    /// The unknown days it was made of, in the order the line's reads met them, each once:
+    /// what `windows each` takes next (L §4.4: "a hole made of either carries them too";
+    /// tally 2.1.8 R13). No part of the hole's identity.
+    carry: Vec<Unknown>,
+}
+
+/// An unknown day a value or a hole carries under `windows each`: its identity (the read that
+/// gave it, a calendar's entry, a version's or row's `known`), the label a line's head names it
+/// by, and the days it can take, in order (refcore's `window_id`, `each_met`). L §4.4.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Unknown {
+    /// Its identity.
+    pub id: String,
+    /// Its label: `wd`, `added window(…)`, `known of v`.
+    pub label: String,
+    /// The days it can take, in order.
+    pub days: Vec<Day>,
+}
+
+/// `into` with each unknown day of `more` it lacks added at its end, in order (refcore's
+/// `carry_union`). L §4.4.
+pub fn carry_union(into: &mut Vec<Unknown>, more: &[Unknown]) {
+    for u in more {
+        if !into.iter().any(|have| have.id == u.id) {
+            into.push(u.clone());
+        }
+    }
 }
 
 /// What a `partial` ask line knows of a hole (L §5.18 Partial answers; refcore's `Hole.lin`):
@@ -101,7 +131,22 @@ impl Hole {
             questions,
             bound: Bound::Unbounded,
             lin: Lin::Unsaid,
+            carry: Vec::new(),
         }
+    }
+
+    /// The hole, carrying the unknown days `unknowns` too, after its own (refcore's
+    /// `carry_hole`). L §4.4; tally 2.1.8 R13.
+    #[must_use]
+    pub fn carrying(mut self, unknowns: &[Unknown]) -> Hole {
+        carry_union(&mut self.carry, unknowns);
+        self
+    }
+
+    /// The unknown days it carries, in the order met (refcore's `carried` of a hole). L §4.4.
+    #[must_use]
+    pub fn carried(&self) -> &[Unknown] {
+        &self.carry
     }
 
     /// The hole of `self`'s questions that is linear in its named holes as `lin` says, for a
@@ -276,8 +321,9 @@ fn one_question(text: &str, figures: &[&str]) -> String {
 }
 
 /// The one rule of every operator that meets holes: the result is the hole of every
-/// operand's questions, the union, each once; `None` when no operand is a hole (L §8.1 "it
-/// carries the questions of every operand, `where` and term it evaluated").
+/// operand's questions, the union, each once, and their unknown days, in order; `None` when
+/// no operand is a hole (L §8.1 "it carries the questions of every operand, `where` and term
+/// it evaluated"; L §4.4).
 #[must_use]
 pub fn spread(operands: &[Option<&Hole>]) -> Option<Hole> {
     let mut out: Option<Hole> = None;
@@ -291,7 +337,10 @@ pub fn spread(operands: &[Option<&Hole>]) -> Option<Hole> {
                     ..Hole::clone(hole)
                 });
             }
-            Some(acc) => acc.questions.extend(hole.questions.iter().cloned()),
+            Some(acc) => {
+                acc.questions.extend(hole.questions.iter().cloned());
+                carry_union(&mut acc.carry, &hole.carry);
+            }
         }
     }
     out

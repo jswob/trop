@@ -106,15 +106,18 @@ pub(super) fn balance_line(
             }
         }
     };
+    let body: Vec<String> = body.into_iter().map(|l| format!("  {l}")).collect();
     Ok(Printed {
         text,
-        body: body.into_iter().map(|l| format!("  {l}")).collect(),
+        causes: Some(super::check::undated_causes(&body)),
+        body,
         bare: false,
 
         whole: false,
         alone: false,
         met,
         laws: None,
+        carried: super::check::carried_of(&[&item]),
     })
 }
 

@@ -147,7 +147,7 @@ pub mod model {
 pub mod hole {
     mod questions;
 
-    pub use questions::{Hole, Linear, atom_text, spread};
+    pub use questions::{Hole, Linear, Unknown, atom_text, carry_union, spread};
 }
 
 /// The evaluator (E §3.2): expressions over the reality, def cells in the memo, rules, bands,
@@ -204,7 +204,7 @@ pub mod eval {
     pub(crate) use time_arith::periods_of;
     pub(crate) use timelines::combinations;
     pub(crate) use trace::{Balance as TracedBalance, Kind as TraceKind, RuleLine, Trace, Walked};
-    pub(crate) use windows::{known_question, one_day, window_days};
+    pub(crate) use windows::{known_question, known_unknown, one_day, window_days};
     pub(crate) use years::year_form;
 }
 

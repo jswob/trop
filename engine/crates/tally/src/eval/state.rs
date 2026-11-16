@@ -593,6 +593,10 @@ pub struct Engine {
     /// The windows a `windows each` run met that its choice names no day of, in the order
     /// met; none outside such a run (L §4.4; refcore's `each_met`).
     pub(crate) each_met: Option<Vec<super::context::Met>>,
+    /// The unknown days a `windows each` run rests on with no hole to carry them, by id: the
+    /// `same` lines known in a window it met untaken, which it takes as seen (L §4.5, §4.4;
+    /// tally 2.1.8 R12, R13; refcore's `EachMet.forced`).
+    pub(crate) each_forced: Vec<String>,
     /// How this run of the ask's line reads the `same` lines known in a window that holds the
     /// cut, which no `windows each` decides (L §4.5, tally 2.1.8 R12).
     pub(crate) same_picks: crate::book::SamePicks,
@@ -689,6 +693,7 @@ impl Engine {
             each_refused: BTreeMap::new(),
             calendar_pass: None,
             each_met: None,
+            each_forced: Vec::new(),
             same_picks: crate::book::SamePicks::default(),
             splits: super::prorata::Splits::default(),
             layers: Layers::default(),

@@ -289,7 +289,7 @@ impl Engine {
                             "date within {} not precise enough for a binding over {}",
                             w.question, dom.1
                         );
-                        Some(Hole::asked(&text, x.id()))
+                        Some(Hole::asked(&text, x.id()).carrying(&w.value.carry))
                     }
                 },
             };
@@ -437,7 +437,7 @@ impl Engine {
                     "date within {} not precise enough for {written}",
                     w.question
                 );
-                return Ok(Value::Hole(Hole::asked(&text, id)));
+                return Ok(Value::Hole(Hole::asked(&text, id).carrying(&w.value.carry)));
             }
             let ids: Vec<&str> = firsts.iter().map(|x| x.id.as_str()).collect();
             return Err(Stop::Refused(Refusal::new(

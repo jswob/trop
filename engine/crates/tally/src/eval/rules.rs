@@ -220,13 +220,16 @@ impl Engine {
             return Ok(first.clone());
         }
         let window = w.question_text(m).map_err(num_stop)?;
-        let imprecise = Value::Hole(Hole::asked(
-            &format!(
-                "date within {window} not precise enough for the law date of {}",
-                def.id
-            ),
-            &origin(&def.id, keys),
-        ));
+        let imprecise = Value::Hole(
+            Hole::asked(
+                &format!(
+                    "date within {window} not precise enough for the law date of {}",
+                    def.id
+                ),
+                &origin(&def.id, keys),
+            )
+            .carrying(&w.carry),
+        );
         let mut undated = Vec::with_capacity(vals.len());
         for v in &vals {
             let Value::Hole(h) = v else {

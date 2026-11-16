@@ -552,7 +552,7 @@ impl Engine {
             match self.known_seen(ctx, row.window, &row.sid)? {
                 Some(true) => {}
                 Some(false) => out.push(row.at),
-                None => return Ok(Err(known_hole(row.window, ctx.cut, &row.sid))),
+                None => return Ok(Err(known_hole(row.window, ctx.cut, &row.sid)?)),
             }
         }
         Ok(Ok(out))

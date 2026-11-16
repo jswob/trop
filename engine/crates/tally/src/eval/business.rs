@@ -20,7 +20,6 @@ use std::collections::{BTreeMap, VecDeque};
 
 use super::arith::whole_of;
 use super::builtin::read_parts;
-use super::context::Met;
 use super::dates::period_arg;
 use super::expr::hole_of;
 use super::memo::rows_class;
@@ -34,9 +33,13 @@ use crate::read::{Asked, Found, read_input};
 use crate::syntax::{Call, Expr, Stop, Value as Written};
 use crate::time::{Added, Day, Period};
 
-/// An added window of a calendar, by the calendar's input, the entry's place in its `added`
-/// and the window as written: two entries are two unknown days (tally 2.1.7 R3, F5).
-type WindowId = (String, usize, String);
+/// An added window of a calendar, by the calendar's input, the entry's place in its `added`,
+/// the window as written and the row that states it: two entries, or one entry of two rows,
+/// are two unknown days (tally 2.1.7 R3, F5; tally 2.1.8 R13, pick P32).
+type WindowId = (String, usize, String, String);
+
+/// The added windows the passes met, each with its days, in the order met.
+type MetWindows = Vec<(WindowId, Vec<Day>)>;
 
 /// One pass of a business-day function: the day each added window takes in it, and the
 /// windows it met that no choice names yet, with the days each can take (refcore's
@@ -45,8 +48,19 @@ type WindowId = (String, usize, String);
 pub(crate) struct CalendarPass {
     /// The day each window takes in this pass.
     chosen: BTreeMap<WindowId, Day>,
-    /// The windows met that no choice names, with their days in order.
-    met: BTreeMap<WindowId, Vec<Day>>,
+    /// The windows met that no choice names, in the order met, with their days in order.
+    met: MetWindows,
+}
+
+/// The unknown day of added window `id` that can take `days` (refcore's `added_carry`, the
+/// identity `windows each` names it by). L §4.4.
+fn added_unknown(id: &WindowId, days: &[Day]) -> crate::hole::Unknown {
+    let (name, entry, text, row) = id;
+    crate::hole::Unknown {
+        id: format!("calendar {name}#{entry} {row}"),
+        label: format!("added {text}"),
+        days: days.to_vec(),
+    }
 }
 
 /// A scheduled day's roll to a business day (L §4.2 `schedule`; ISDA 2006 section 4.12).
@@ -293,8 +307,9 @@ impl Engine {
 
     /// Business-day function `f` evaluated at each day the added windows of its calendar can
     /// take: one value when the passes agree; days that differ give their window; an
-    /// `is_business` that differs is `HOLE-IMPRECISE`, asked of the calendar (refcore's
-    /// `over_added`). L §4.2, §4.4.
+    /// `is_business` that differs is `HOLE-IMPRECISE`, asked of the calendar; either carries
+    /// the windows the passes met, in the order met (refcore's `over_added`). L §4.2, §4.4;
+    /// tally 2.1.8 R13.
     fn over_added(
         &mut self,
         m: &Reality,
@@ -308,7 +323,7 @@ impl Engine {
         };
         let found = self.passes(m, (cal, env, ctx), f, start);
         self.calendar_pass = outer;
-        let (out, first_met) = found?;
+        let (out, met) = found?;
         let holes: Vec<Option<&Hole>> = out.iter().map(Value::as_hole).collect();
         if let Some(h) = spread(&holes) {
             return Ok(Value::Hole(h));
@@ -319,11 +334,17 @@ impl Engine {
         if rest.iter().all(|v| v == first) {
             return Ok(first.clone());
         }
-        let (cal_id, _, written) = first_met.ok_or_else(|| invariant("passes with no window"))?;
+        let ((cal_id, _, written, _), _) = met
+            .first()
+            .ok_or_else(|| invariant("passes with no window"))?;
+        let carry: Vec<crate::hole::Unknown> = met
+            .iter()
+            .map(|(id, days)| added_unknown(id, days))
+            .collect();
         if let Value::Bool(_) = first {
             let call_text = crate::load::expr_text(&Expr::Call(Box::new(call.clone())));
             let text = format!("date within {written} not precise enough for {call_text}");
-            return Ok(Value::Hole(Hole::asked(&text, &cal_id)));
+            return Ok(Value::Hole(Hole::asked(&text, cal_id).carrying(&carry)));
         }
         let mut days = Vec::with_capacity(out.len());
         for v in &out {
@@ -342,34 +363,41 @@ impl Engine {
             src: None,
             figure: None,
             read: None,
+            carry,
         })))
     }
 
     /// The passes of `f`, from the choices `start` names: each pass that meets a window no
     /// choice names is run again once per day of the first such window; the values of the
-    /// others, in order, and the first window met (refcore's `over_added`, its loop).
-    /// L §4.2, §4.4.
+    /// others, in order, and the windows met, in the order the passes met them (refcore's
+    /// `over_added`, its loop, `met_order`). L §4.2, §4.4.
     fn passes(
         &mut self,
         m: &Reality,
         (cal, env, ctx): (&Expr, &Env, Ctx),
         f: &Business,
         start: BTreeMap<WindowId, Day>,
-    ) -> Result<(Vec<Value>, Option<WindowId>), Stop> {
+    ) -> Result<(Vec<Value>, MetWindows), Stop> {
         let mut todo = VecDeque::from([start]);
         let mut out = Vec::new();
-        let mut first_met: Option<WindowId> = None;
+        let mut order: MetWindows = Vec::new();
         while let Some(chosen) = todo.pop_front() {
             self.calendar_pass = Some(CalendarPass {
                 chosen: chosen.clone(),
-                met: BTreeMap::new(),
+                met: Vec::new(),
             });
             let v = self.pass(m, (cal, env, ctx), f)?;
-            let met = self.calendar_pass.take().map(|p| p.met);
-            if let Some((id, days)) = met.and_then(|met| met.into_iter().next()) {
-                if first_met.is_none() {
-                    first_met = Some(id.clone());
+            let met = self
+                .calendar_pass
+                .take()
+                .ok_or_else(|| invariant("a pass's windows taken while it ran"))?
+                .met;
+            for (id, days) in &met {
+                if !order.iter().any(|(k, _)| k == id) {
+                    order.push((id.clone(), days.clone()));
                 }
+            }
+            if let Some((id, days)) = met.into_iter().next() {
                 for d in days {
                     let mut next = chosen.clone();
                     next.insert(id.clone(), d);
@@ -379,7 +407,7 @@ impl Engine {
             }
             out.push(v);
         }
-        Ok((out, first_met))
+        Ok((out, order))
     }
 
     /// One pass of business-day function `f` (refcore's closures under `over_added`).
@@ -733,9 +761,11 @@ impl Engine {
 
     /// Whether calendar `name`'s added window `added`, which may be `day`, takes it: under a
     /// `windows each` in context `ctx`, the day the line's choice names (L §4.4: the clause
-    /// splits the line by "a day in a calendar's added list"); else this pass's choice for it,
-    /// or its first day where the pass meets it newly, which the pass records (refcore's
-    /// `business`, its `window_choice` and `cal_choice`). L §4.2, §4.4.
+    /// splits the line by "a day in a calendar's added list"); else, as the plain line reads
+    /// it, this pass's choice for it, or its first day where the pass meets it newly, which the
+    /// pass records (refcore's `business`, its `window_choice` and `cal_choice`). Each entry of
+    /// each row is a read of its own: two rows' entries are two unknowns, whatever their text
+    /// (L §4.4; pick P32; tally 2.1.8 R13). L §4.2, §4.4.
     fn window_takes(
         &mut self,
         m: &Reality,
@@ -743,36 +773,31 @@ impl Engine {
         added: &Added,
         (day, ctx): (Day, Ctx),
     ) -> Result<bool, Stop> {
+        let row = self.calendar_row(m, (name, keys), (day, ctx))?;
+        let id: WindowId = (name.to_owned(), entry, added.text(), row);
+        let days = added
+            .days()
+            .ok_or_else(|| invariant("a window's days past the calendar"))?;
         if self.chooses(ctx)? {
-            // each entry of each row a read of its own: two rows' entries are two unknowns,
-            // whatever their text (L §4.4; pick P32)
-            let row = self.calendar_row(m, (name, keys), (day, ctx))?;
-            let id = format!("calendar {name}#{entry} {row}");
-            if let Some(named) = self.named_day(ctx, &id)? {
+            let window = added_unknown(&id, &days);
+            if let Some(named) = self.named_day(ctx, &window.id)? {
                 return Ok(named == day);
             }
-            let window = Met {
-                id,
-                label: format!("added {}", added.text()),
-                days: added
-                    .days()
-                    .ok_or_else(|| invariant("a window's days past the calendar"))?,
-            };
-            return Ok(self.window_day(ctx, window)? == Some(day));
+            if let Some(taken) = self.window_day(ctx, window)? {
+                return Ok(taken == day);
+            }
         }
         let pass = self
             .calendar_pass
             .as_mut()
             .ok_or_else(|| invariant("a calendar's added window read outside a pass"))?;
-        let id = (name.to_owned(), entry, added.text());
         if let Some(chosen) = pass.chosen.get(&id) {
             return Ok(*chosen == day);
         }
-        let days = added
-            .days()
-            .ok_or_else(|| invariant("a window's days past the calendar"))?;
         let first = days.first().copied();
-        pass.met.entry(id).or_insert(days);
+        if !pass.met.iter().any(|(k, _)| *k == id) {
+            pass.met.push((id, days));
+        }
         Ok(first == Some(day))
     }
 }

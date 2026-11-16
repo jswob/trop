@@ -105,6 +105,16 @@ impl Engine {
         if let Some(seen) = self.known_seen(ctx, (lo, hi), &info.id)? {
             return Ok(seen);
         }
+        if self.chooses(ctx)? {
+            // under `windows each`, a line not yet taken is an unknown day the line's answer
+            // rests on: the run takes it as seen, and the line takes its days next (L §4.5,
+            // §4.4; tally 2.1.8 R12, R13; refcore's `same_seen`, its `forced`)
+            let forced = crate::eval::known_unknown((lo, hi), &info.id)?.id;
+            if !self.each_forced.contains(&forced) {
+                self.each_forced.push(forced);
+            }
+            return Ok(true);
+        }
         Ok(self.same_picks.seen(&info.id, (lo, hi), sides))
     }
 

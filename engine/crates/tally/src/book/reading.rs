@@ -202,6 +202,13 @@ pub(crate) fn readings(
                 continue;
             };
             let mut reading = reading_of(m, (&input, &place, &instant), &row, unit.as_deref())?;
+            // one known in a window the cut leaves undecided: the hole it states carries that
+            // unknown day (L §4.4; tally 2.1.8 R13; refcore's `CARRY_TEXT`)
+            if let Some(Reading { value: Err(h), .. }) = &mut reading
+                && let Some(u) = known.unknown(&row_known_sid(&row))?
+            {
+                *h = h.clone().carrying(&[u]);
+            }
             // the row as `inputs-of` lists it, kept by an engine answering one (E §10)
             if rows == Rows::Kept
                 && let Some(r) = &mut reading

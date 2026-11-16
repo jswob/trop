@@ -19,6 +19,7 @@ use super::check::Printed;
 use crate::base::Code;
 use crate::book::{Ledger, UnitLedger, fig_text};
 use crate::eval::{Collected, Ctx, Engine, Env};
+use crate::hole::Hole;
 use crate::model::Reality;
 use crate::syntax::{Ask, Expr, Lit, Residuals, Span, Stop};
 
@@ -45,13 +46,15 @@ pub(super) fn residual_result(
     Ok(match ledger_result(m, r, engine, (env, ctx, pinned))? {
         Ok(result) => result,
         Err(hole) => Printed {
-            text: hole,
+            text: hole.text(),
             body: Vec::new(),
             bare: false,
             whole: true,
             alone: true,
             met: Collected::default(),
             laws: None,
+            carried: hole.carried().to_vec(),
+            causes: None,
         },
     })
 }
@@ -64,13 +67,13 @@ fn ledger_result(
     r: &Residuals,
     engine: &mut Engine,
     (env, ctx, pinned): (&Env, Ctx, &Collected),
-) -> Result<Result<Printed, String>, Stop> {
+) -> Result<Result<Printed, Hole>, Stop> {
     engine.push();
     let ledger = engine.residuals(m, r, (env, ctx));
     let mut met = engine.pop_alone();
     met.merge(pinned);
     let (place, per_unit, ledgers) = match ledger? {
-        Ledger::Hole(h) => return Ok(Err(h.text())),
+        Ledger::Hole(h) => return Ok(Err(h)),
         Ledger::Groups {
             place,
             per_unit,
@@ -78,7 +81,18 @@ fn ledger_result(
         } => (place, per_unit, ledgers),
     };
     let mut body = Vec::new();
+    let mut carried = Vec::new();
     for one in &ledgers {
+        // the unknown days its figures and days carry (refcore's `answer_residuals`, its
+        // `vals`; tally 2.1.8 R13)
+        for g in &one.groups {
+            for fig in [&g.model, &g.observed, &g.diff] {
+                fig.carried_into(&mut carried);
+            }
+            for line in &g.lines {
+                line.carried_into(&mut carried);
+            }
+        }
         // a place of unit `any`: each unit's ledger under its own head (E §6.3)
         let indent = if per_unit {
             body.push(format!("  ledger {}:", one.unit));
@@ -97,6 +111,8 @@ fn ledger_result(
         alone: false,
         met,
         laws: None,
+        carried,
+        causes: None,
     }))
 }
 
@@ -129,11 +145,11 @@ fn combination_result(
     engine: &mut Engine,
     (env, ctx, pinned): (&Env, Ctx, &Collected),
 ) -> Result<Printed, Stop> {
-    let text = match ledger_result(m, r, engine, (env, ctx, pinned)) {
+    let (text, carried) = match ledger_result(m, r, engine, (env, ctx, pinned)) {
         Ok(Ok(result)) => return Ok(result),
-        Ok(Err(hole)) => hole,
+        Ok(Err(hole)) => (hole.text(), hole.carried().to_vec()),
         Err(Stop::Refused(refusal)) if !matches!(refusal.code(), Code::Load(_)) => {
-            format!("refused: {}", refusal.text())
+            (format!("refused: {}", refusal.text()), Vec::new())
         }
         Err(stop) => return Err(stop),
     };
@@ -145,6 +161,8 @@ fn combination_result(
         alone: false,
         met: pinned.clone(),
         laws: None,
+        carried,
+        causes: None,
     })
 }
 

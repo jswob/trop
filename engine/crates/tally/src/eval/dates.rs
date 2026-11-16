@@ -420,6 +420,7 @@ fn window_weekday(w: &Window) -> Result<Value, Stop> {
         src: w.src.clone(),
         figure: w.figure.clone(),
         read: None,
+        carry: w.carry.clone(),
     })))
 }
 
