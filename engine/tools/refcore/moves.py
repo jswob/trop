@@ -1750,6 +1750,7 @@ def m_status(self, i, ctx):
     d = i.day
     lo, hi = day_lo(d), day_hi(d)
     i.class_q = None
+    i.class_member = False
     if i.exists is False:
         st = 'none'
     elif lo is not None and (hi < S or lo > E):
@@ -1769,6 +1770,7 @@ def m_status(self, i, ctx):
     elif self.window_class_depends(i, ctx, lo, hi):
         # booked on some of its window's days and not on the rest: the window's hole (E §4.1 step 2, L §4.4)
         st = 'hole'
+        i.class_member = self.window_class_depends(i, ctx, lo, hi) == 'covered'
         i.class_q = frozenset([('date within %s not precise enough for a balance' % d.window_text(), i.id)])
         carry_hole(Hole(i.class_q), d)
     elif i.decision:
@@ -1832,7 +1834,7 @@ def m_window_class_depends(self, i, ctx, lo, hi):
         return False
     S, K = self.m.S, ctx.cut
     if lo < S <= hi:
-        return True
+        return 'start'
     if lo >= K:
         return False
     rs = []
@@ -1840,7 +1842,8 @@ def m_window_class_depends(self, i, ctx, lo, hi):
     while d <= hi:
         rs.append(d < K and self.touches_covered(i, ctx, d))
         d = d + datetime.timedelta(1)
-    return any(rs) and not all(rs)
+    # modelled past on some days: whether it is a binding's member depends on the day too (mreads)
+    return 'covered' if any(rs) and not all(rs) else False
 
 
 def m_touches_covered(self, i, ctx, day=None):

@@ -785,6 +785,13 @@ def m_span_members(self, dom, sp, ctx, owner=None):
             continue
         if isinstance(x, Inst) and isinstance(x.exists, Hole):
             st = x.exists if st is True else merge(st, x.exists)
+        cq = getattr(x, 'class_member', False) if isinstance(x, Inst) else False
+        if cq:
+            # booked on some of its window's days, modelled or left out on the rest (moves.m_window_class_depends):
+            # whether it is a member is the window's hole (E §4.1 step 2; item 10 of the follow-up)
+            h = carry_hole(Hole([('date within %s not precise enough for a binding over %s' % (
+                d.window_text(), b._dom[1]), x.id)]), d)
+            st = h if st is True else merge(st, h)
         if isinstance(x, Inst) and x.err is not None:
             raise x.err
         if isinstance(x, ObsMv) and x.target is not None:
