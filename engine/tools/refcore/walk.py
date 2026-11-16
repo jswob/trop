@@ -189,6 +189,10 @@ def apply(st, e, idx):
         return St(st.val, st.hole | e.qs, st.perm, imp, st.bad, st.rst, st.pbad)
     if k == 'perm':
         return St(st.val, st.hole, st.perm | e.qs, st.imp, st.bad, st.rst, st.pbad)
+    if k == 'unperm':
+        # a hole movement that can no longer fall after a reading: its place-wide hole becomes each unit's, which the
+        # next reading ends (dec_win_end)
+        return St(st.val, st.hole, st.perm - e.qs, st.imp, st.bad, st.rst, st.pbad)
     if k == 'imp_on':
         lg = e.leg
         amt = lg.amount.q * e.sgn if lg is not None and isinstance(lg.amount, Num) else None
@@ -600,6 +604,8 @@ class Walk:
                     q = carry_hole(Hole([('date within %s not precise enough for the day of %s' % (
                         d.window_text(), i.id), i.id)]), d)
                     self.dec_hole(i, K_before(max(d.lo, S)), q, ctx)
+                    if d.hi <= self.end:
+                        self.at((d.hi.toordinal(), 4, 2, i.id, 0), 'dec_win_end', (i, d, frozenset(q.qs)))
                 elif isinstance(d, Hole):
                     self.dec_hole(i, K_before(S), d, ctx)
                 elif isinstance(i.err, RandomLine) and ctx.path is None:
@@ -625,6 +631,31 @@ class Walk:
         for lg in run.legs:
             if isinstance(lg.day, datetime.date) and self.start <= lg.day <= self.end:
                 self.at((lg.day.toordinal(), 2, 0, plan_key(run), 0), 'leg', (run, lg))
+
+    def dec_win_end(self, key, i, w, qs):
+        """The end of the last day of a decision's window (L §4.6, §4.4; pick P29 on #175's p6win): the decision has
+        fallen, so the hole it leaves its places is one a reading ends; a reading `after` it then stands where nothing
+        else touched its place inside the window (the balance is the reading plus what is booked since, the same for
+        every day of the window), else the hole stays up to the next reading."""
+        for (p, u) in sorted(self.logs, key=str):
+            if any(e.kind == 'perm' and e.mv is i for e in self.logs[(p, u)].ents):
+                self.add(p, u, Ent(key, 'unperm', qs=qs, mv=i))
+                units = sorted(x for (q, x) in self.logs if q == p and x != '*') if u == '*' else [u]
+                if u == '*' and not units and p in self.m.things:
+                    units = [self.m.place_unit(self.m.things[p])]
+                for x in units:
+                    self.add(p, x, Ent(key, 'hole', qs=qs, mv=i, flow=Hole(qs)))
+        lo, hi = w.lo.toordinal(), w.hi.toordinal()
+        for iid, place, unit, r in self.after.get(i.id, ()):
+            if id(r) in self.after_keys or not w.hi < self.K:
+                continue
+            others = [e for pu in ((place, unit), (place, '*')) if pu in self.logs for e in self.logs[pu].ents
+                      if lo <= e.key[0] <= hi and e.mv is not i and e.kind not in ('init', 'unperm')]
+            if others:
+                continue
+            k2 = key[:4] + (key[4] + 1,)
+            self.after_keys[id(r)] = k2
+            self.apply_reading(k2, iid, place, unit, r)
 
     def dec_hole(self, i, key, h, ctx):
         """A decision instance whose day is a hole (or a window no clause fixes) is a hole movement: both ends of its
@@ -1132,6 +1163,8 @@ class Walk:
         elif kind == 'decided':
             place, unit, c = obj
             self.add(place, unit or '*', Ent(key, 'mark', reg=(), coll=c))
+        elif kind == 'dec_win_end':
+            self.dec_win_end(key, *obj)
         elif kind == 'placehole':
             place, qs, i = obj
             self.add(place, '*', Ent(key, 'perm', qs=qs, mv=i, coll=i.coll, flow=Hole(qs)))
