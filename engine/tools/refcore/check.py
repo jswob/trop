@@ -3502,6 +3502,19 @@ class Checker:
         self.lawdated = lawdated
 
         for a in m.asks:
+            if a.law is not None:
+                # the ask's law expression is itself read with no law date, so a def it reaches that takes its
+                # reader's is refused at load, where load sees it (R5; #162, m2/g1/n1_law; the message run gave)
+                seen, todo = set(), [x._r[2] for x in walk(a.law) if getattr(x, '_r', None) and x._r[0] == 'read'
+                                     and x._r[1] == 'def']
+                while todo:
+                    q = todo.pop()
+                    if q in seen or q not in m.defs:
+                        continue
+                    seen.add(q)
+                    if m.defs[q].at is not None and m.defs[q].at.k == 'law_reader':
+                        raise LoadError('LOAD-LAWDATE', 'ask reaches an at reader def (%s) without law' % q)
+                    todo.extend(t[1] for t in E.get(('def', q), {}) if t[0] == 'def')
             if a._has_law:
                 continue
             for t, rels in E.get(('ask', a.id), {}).items():

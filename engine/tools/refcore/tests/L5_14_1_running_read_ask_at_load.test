@@ -1,0 +1,70 @@
+# tally 2.1.8 R5 (#162's rest, pick P29; T's m2/g2/wb2_p): an ask's value that reaches a running bal(x) with no day
+# (room, through its rules) reads it outside a decision, which load sees: refused at load, whatever the asks, in the
+# words run gave it; explain reads a walk-bound def at its walk points (a1). 2.1.8's first refcore found it at run,
+# so a1 alone answered.
+=== m.tally
+model wbp
+  tally 2
+  on 2026-03-15
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-05
+
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place work: outside lives 1900-01-01..
+
+input pay: money PLN
+input keep: money PLN
+input rate: num
+input dom: int
+
+def room[m in month]: money PLN
+  rule base = bal(konto) - keep
+  rule low beats base = 0 PLN when bal(konto) < keep
+
+def put[m in month]: money PLN = max(round(room[m] * rate, minor(PLN), down), 0) at start_of(m)
+
+
+move salary[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from work to konto amount pay
+
+move save[m in month]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  reads konto
+  leg cash from konto to sav amount put[m]
+
+move skim[m in month]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  reads konto
+  when room[m] > 0
+  leg cash from sav to work amount 1 PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  pay = 1000.00 PLN "own"
+  keep = 1200.00 PLN "own"
+  rate = 0.5 "own"
+  dom = 10 "own"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "own"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "own"
+
+ask a1: explain room[2026-02]
+ask a2: explain put[2026-03]
+ask a3: explain room[2026-05]
+ask a4: explain room[2026-01]
+ask a6: explain put[2026-01] law cut
+ask a7: room[2026-02]
+=== expect a1
+refused: LOAD-READS bal(konto) with no day outside a decision

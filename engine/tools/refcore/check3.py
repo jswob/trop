@@ -1562,6 +1562,22 @@ def m_check_moves_graph(self):
             raise LoadError('LOAD-READS', '%s holds bal(x) with no day: a running read outside a decision and its '
                             'defs' % item[1], self.balnow_items[item])
     m.from_decisions = from_decisions
+    # an ask's value that reaches such a read is outside a decision too, which load sees (R5; #162, m2/g2/wb2_p): in
+    # the words run gave it; explain, inputs-of and readers-of read a walk-bound def at its walk points
+    for a in m.asks:
+        if a.form in ('explain', 'inputs-of', 'readers-of'):
+            continue
+        seen, stack = set(), [('ask', a.id)]
+        while stack:
+            x = stack.pop()
+            if x in seen:
+                continue
+            seen.add(x)
+            if x in self.balnow_items:
+                tg = sorted((t for w, t in self.marks.get(x, ()) if w == 'balnow'), key=repr)
+                raise LoadError('LOAD-READS', 'bal(%s) with no day outside a decision' % (
+                    _tname(tg[0]) if tg else x[1]))
+            stack.extend(t for t in E.get(x, {}) if t[0] in ('def', 'fill'))
     # walk-bound defs: "A def that reaches a mark and that a decision reaches is walk-bound: its cells carry the walk
     # point (§3.2); in an ask, or a def no movement reaches, a plain bal(x, d) is the balance on day d at the ask's
     # cut" (E §3.1 step 7, round 18 C3-8; L §5.14.1). A plan that reaches a mark is LOAD-READS (above).
