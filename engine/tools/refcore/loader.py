@@ -3049,7 +3049,7 @@ def convert_value(m, node, ty, loc, factor, target, binds=None, pattern=None, al
                 added.append(('window', a.a, a.b))
             else:
                 added.append(('oneof', frozenset(a.days)))
-        return Cal(tuple(node.weekends), tuple(node.yearly), node.yfrom, tuple(added))
+        return Cal(tuple(node.weekends), tuple(node.yearly), node.yfrom, tuple(added), at=repr(getattr(node, 'loc', None)))
     if tk == 'key' and ty.ix in m.kinds and ty.ix in m.kinds['events'].subtree(m) and k in ('index', 'name'):
         # a key of an event kind is a movement (L §3.1 `key K`, "a thing of kind K"; L §5.7; L §2.3 field: a ref): an
         # observed row `kb[k03]` or a move's instance, kept by its id and read as that movement (writer 11, the

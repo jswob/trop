@@ -140,6 +140,9 @@ class Result:
     def key(self):
         return tuple(rkey(v) for v in self.vals)
 
+    def carry_vals(self):
+        return list(self.vals) + ([self.trace] if self.trace is not None else [])
+
 
 def rkey(v):
     if isinstance(v, TallyError):
@@ -165,9 +168,13 @@ def lin_key(l):
 
 
 class CheckOut:
-    def __init__(self, text, kind):
+    def __init__(self, text, kind, vals=()):
         self.text = text
         self.kind = kind
+        self.vals = vals
+
+    def carry_vals(self):
+        return self.vals
 
     def key(self):
         return (self.kind, self.text)
@@ -176,9 +183,13 @@ class CheckOut:
 class DiffOut:
     """A diff cell's answer: its head's counts and its lines (L §5.18)."""
 
-    def __init__(self, counted, body):
+    def __init__(self, counted, body, vals=()):
         self.counted = counted
         self.body = body
+        self.vals = vals
+
+    def carry_vals(self):
+        return self.vals
 
     def key(self):
         return ('diff', self.counted, tuple(self.body))
@@ -188,18 +199,26 @@ class Ledgers:
     """residuals' answer: its head (the place, the span, the grouping) and its lines, each ledger's groups with
     their totals and lines (E §6.3)."""
 
-    def __init__(self, head, lines):
+    def __init__(self, head, lines, vals=()):
         self.head = head
         self.lines = lines
+        self.vals = vals
+
+    def carry_vals(self):
+        return self.vals
 
     def key(self):
         return ('ledgers', self.head, tuple(self.lines))
 
 
 class RowSet:
-    def __init__(self, rows, texts):
+    def __init__(self, rows, texts, read=None):
         self.rows = rows
         self.texts = texts
+        self.read = read          # the value whose rows they are: what the set rests on (tally 2.1.8 R13)
+
+    def carry_vals(self):
+        return [self.read]
 
 
 def day_text(d, inst=None):
@@ -708,7 +727,7 @@ class Asker:
         def evalf(xctx):
             res, coll, _c, t = self.diff_worlds(eng, a, xctx, pins_coll)
             counted, body = self.diff_lines(a, res, xctx, t)
-            return Result((DiffOut(counted, body),), coll)
+            return Result((DiffOut(counted, body, [v for lines in res.values() for _k, v in lines]),), coll)
         results = {}
         for c in combos:
             cctx = ctx.but(axes=tuple(sorted(pinned + list(c)))) if c else ctx
@@ -865,18 +884,21 @@ class Asker:
                 raise LoadAtRun(err)
             return err
         out = []
+        vals = []
         for u, groups, unit in ledgers:
             ind = '  '
             if u is not None:
                 out.append('  ledger %s:' % u)
                 ind = '    '
             for g, mt, ot, dt, ls in groups:
+                vals += [mt, ot, dt] + [x for ln in ls for x in (ln.model, ln.observed, ln.diff, ln.day,
+                                                           getattr(ln, 'carry_day', None))]
                 out.append('%s%s: model %s, observed %s, difference %s' % (
                     ind, ('%s %s' % (g[0].label(), g[1])) if g[0] is not None else g[1], eng.rtext(mt, unit),
                     eng.rtext(ot, unit), eng.rtext(dt, unit)))
                 for ln in ls:
                     out.append(ind + '  ' + ln.text)
-        return Ledgers('%s %s%s' % (p.name, _txt(sp), (' by %s' % by) if by else ''), out)
+        return Ledgers('%s %s%s' % (p.name, _txt(sp), (' by %s' % by) if by else ''), out, vals)
 
     # -- windows each (L §4.4, §5.18) ----------------------------------------------------------------
     def each_lines(self, eng, a, env, env_text, ctx, pins_coll):
@@ -969,12 +991,11 @@ class Asker:
                 eng.each_met = None
             for k, v in (coll.each or {}).items():
                 dict.setdefault(met, k, v)
-            assigned = dict(asg)
-            new = [w for w in met if w not in assigned]
-            if new:
-                w = new[0]
-                labels[w] = met[w]
-                pending = [asg + ((w, d),) for d in met[w][1]] + pending
+            nxt = each_next(met, dict(asg), [st for _e, st, _r in mem], met.forced)
+            if nxt is not None:
+                w, label, days = nxt
+                labels[w] = (label, days)
+                pending = [asg + ((w, d),) for d in days] + pending
                 if len(pending) + len(done) > 20000:
                     raise NotYet('windows each over more than 20 000 day combinations')
                 continue
@@ -1074,10 +1095,9 @@ class Asker:
             for k, v in (getattr(getattr(res, 'coll', None), 'each', None) or {}).items():
                 dict.setdefault(met, k, v)
             assigned = dict(asg)
-            new = [w for w in met if w not in assigned]
-            if new:
-                w = new[0]
-                label, days = met[w]
+            nxt = each_next(met, assigned, res, met.forced)
+            if nxt is not None:
+                w, label, days = nxt
                 labels[w] = (label, days)
                 pending = [asg + ((w, d),) for d in days] + pending
                 if len(pending) + len(done) > 20000:
@@ -1122,7 +1142,9 @@ class Asker:
         run's own law date is no part of it: a block prints its first sub-window's."""
         k = r.key()
         if isinstance(r.trace, ExplainLines):
-            k = k + (tuple(r.trace.lines),)
+            # its causes and their values, whatever days they fall on: a block prints its first sub-window's
+            k = k + (tuple(sorted(re.sub(r'\d{4}-\d{2}-\d{2}', 'D', ln) for ln in r.trace.lines
+                                  if not re.match(r'^\s*\d{4}-\d{2}-\d{2}:$', ln))),)
         elif isinstance(r.trace, TraceNode):
             k = k + (trace_key(r.trace),)
         return k
@@ -1233,7 +1255,7 @@ class Asker:
                 texts = {}
                 for sid, r in sub.rows.items():
                     texts[sid] = self.row_line(r)
-                vals = (RowSet(set(texts), texts),)
+                vals = (RowSet(set(texts), texts, v),)
                 trace = None
             else:
                 raise NotYet('ask form %s' % f)
@@ -1293,7 +1315,7 @@ class Asker:
         lt, rt = _txt(l), _txt(r)
         if isinstance(lv, (TallyError, Hole)) or isinstance(rv, (TallyError, Hole)):
             return CheckOut('%s = %s, %s = %s' % (lt, fmt_value(lv, ctx.partial), rt, fmt_value(rv, ctx.partial)),
-                            'open')
+                            'open', (lv, rv))
         try:
             same = eng.compare('==', lv, rv, None, ctx)
         except TallyError as err:
@@ -1301,7 +1323,7 @@ class Asker:
                 raise LoadAtRun(err)
             return CheckOut('refused: %s %s' % (err.code, err.msg), 'refused')
         if isinstance(same, Hole):
-            return CheckOut('%s = %s, %s = %s' % (lt, fmt_value(lv), rt, fmt_value(rv)), 'open')
+            return CheckOut('%s = %s, %s = %s' % (lt, fmt_value(lv), rt, fmt_value(rv)), 'open', (lv, rv, same))
         if same:
             return CheckOut('ok', 'ok')
         diff = ''
@@ -1644,6 +1666,7 @@ class Asker:
                 return nodes
             tag = (' [%s]' % ', '.join('%s = %s' % f for f in fixed)) if fixed else ''
             node = TraceNode('group', 'outside the pins%s: %s' % (tag, _tfmt(vo)))
+            node.carry_v = vo
             node.children = oroot.children
             return [node]
         outs = outside_of(octx, ())
@@ -2228,6 +2251,22 @@ def trace_key(tn):
     for ch in subs:
         out.append(trace_key(ch) if isinstance(ch, TraceNode) else repr(ch))
     return tuple(out)
+
+
+def each_next(met, assigned, answer, forced=()):
+    """The unknown day windows each takes next (L §4.4; tally 2.1.8 R13): of those the answer carries and the run
+    hasn't taken, the first its reads met; (id, label, days), or None when it carries none."""
+    from .evaluate import carried
+    cs = [w for w in carried(answer) if w[0] not in assigned]
+    ids = set(w[0] for w in cs) | set(w for w in forced if w not in assigned and w in met)
+    if not ids:
+        return None
+    for w in met:
+        if w in ids:
+            label, days = met[w]
+            return w, label, days
+    w = cs[0]
+    return w[0], w[1], list(w[2])
 
 
 def boxes(cells, axes_days):

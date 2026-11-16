@@ -132,6 +132,7 @@ class EachMet(dict):
     def __init__(self, eng):
         dict.__init__(self)
         self.eng = eng
+        self.forced = []          # windows the answer rests on with no hole to carry them (model.same_seen)
 
     def setdefault(self, k, v):
         c = self.eng.cur
@@ -175,6 +176,17 @@ class TraceNode:
         self.children = []
         self.when_children = []
         self.line_no = None
+
+    def carry_vals(self):
+        """What the node prints, for the unknown days it carries (tally 2.1.8 R13)."""
+        # a row prints what it states: a window there is the row's, no unknown day of the answer
+        out = [None if self.kind == 'row' else self.value, getattr(self, 'carry_v', None)]
+        out += [ch for _k, ch in self.children]
+        out += [w for _k, w in self.when_children]
+        vc = getattr(self, 'value_children', None)
+        if vc is not None:
+            out.append(vc)
+        return out
 
 
 NOPIN = object()
@@ -320,7 +332,7 @@ class Engine:
         if isinstance(v, Num):
             return Num(-v.q, v.u, money=v.money, isint=v.isint, rate=v.rate, enc=enc_neg(v.enc))
         if isinstance(v, Iv):
-            return Iv(self.neg1(v.hi), self.neg1(v.lo), None, v.src, origin=v.origin)
+            return Iv(self.neg1(v.hi), self.neg1(v.lo), None, v.src, origin=v.origin, carry=iv_carry(v))
         raise refuse('LOAD-UNIT', 'unary minus on %s' % fmt(v))
 
     def neg1(self, x):
@@ -925,7 +937,8 @@ class Engine:
         if vis is None:
             lo, hi = known
             q = 'date within window(%s, %s) not precise enough for the cut %s' % (lo, hi, ctx.cut)
-            raise HoleSignal(Hole([(q, x) for x in (sid, vid) if x] or [(q, sid)]))
+            raise HoleSignal(carry_hole(Hole([(q, x) for x in (sid, vid) if x] or [(q, sid)]),
+                                        ids=[known_carry(sid or what, known)]))
         return vis
 
     def wording_ok(self, version, item, ctx, own=None):
@@ -1110,9 +1123,11 @@ class Engine:
             for x, d in ws[1]:
                 if x == wid:
                     return d
+            # not yet taken: the read is the plain line's, a window (tally 2.1.8 R13: windows each is the plain line
+            # read again with the unknown day its answer carries)
             if self.each_met is not None:
                 self.each_met.setdefault(wid, (label, days))
-            return days[0]
+            return v
         return v
 
     def no_candidate(self, info, keys, ctx, d, period, calendar=False):
@@ -1164,6 +1179,12 @@ class Engine:
         self.index_assumed(info)
         pv = self.pin_value(info, keys, ctx)
         if pv is not NOPIN and not (isinstance(pv, tuple) and pv[0] == 'fields'):
+            if isinstance(pv, Iv) and pv.origin is None and isinstance(pv.lo, datetime.date):
+                # a pin whose value is a window written there: an unknown day named by the read it pins (L §4.4: a
+                # copy keeps the name), which windows each takes as the read's (tally 2.1.8 R13; P30)
+                org = self.origin(info, keys)
+                pv = self.window_choice(Iv(pv.lo, pv.hi, pv.days, pv.src, origin=('pin %s' % org, org),
+                                           name=('pin', info.id, tuple(_kv(k) for k in keys))), ctx)
             return pv
         d, period = self.time_point(info, keys, ctx)
         if info.reading:
@@ -1513,8 +1534,8 @@ class Engine:
         vals = []
         for dd in days:
             vals.append(self.def_cell(info, keys, env, ctx.but(law=dd)))
-        imprecise = Hole([('date within %s not precise enough for the law date of %s' % (w.window_text(), info.id),
-                           self.origin(info, keys))])
+        imprecise = carry_hole(Hole([('date within %s not precise enough for the law date of %s' % (
+            w.window_text(), info.id), self.origin(info, keys))]), w)
 
         def same(a, b):
             if isinstance(a, Hole) or isinstance(b, Hole):
@@ -2313,7 +2334,7 @@ class Engine:
             lo, hi = hi, lo
         org = a.origin if isinstance(a, Iv) else b.origin
         # a computed value: no name (tally 2.1.7 R3, L §4.4: only a copy is the same unknown)
-        return Iv(lo, hi, None, src, origin=org)
+        return Iv(lo, hi, None, src, origin=org, carry=carry_union(a, b))
 
     def binop_plain(self, n, a, b, ctx):
         da = getattr(n, '_datearith', None)
@@ -2324,8 +2345,8 @@ class Engine:
         return arith(n.op, a, b, n._t, n.l._t, n.r._t)
 
     def imprecise(self, v, use):
-        return HoleSignal(Hole([('date within %s not precise enough for %s' % (v.window_text(), use),
-                                 v.origin[1] if v.origin else '')]))
+        return HoleSignal(carry_hole(Hole([('date within %s not precise enough for %s' % (v.window_text(), use),
+                                            v.origin[1] if v.origin else '')]), v))
 
     def e_not(self, n, env, ctx):
         v = self.ev(n.e, env, ctx)
@@ -2526,8 +2547,8 @@ class Engine:
             if disjoint:
                 return op == '!='
         w = a if isinstance(a, Iv) else b
-        return Hole([('date within %s not precise enough for %s' % (w.window_text(), _ntxt(n) if n else 'a comparison'),
-                      w.origin[1] if w.origin else '')])
+        return carry_hole(Hole([('date within %s not precise enough for %s' % (
+            w.window_text(), _ntxt(n) if n else 'a comparison'), w.origin[1] if w.origin else '')]), w)
 
     def e_in(self, n, env, ctx):
         x = self.ev(n.l, env, ctx)
@@ -3367,7 +3388,7 @@ class Engine:
                 return lo
             # a computed interval has no name, but its questions name the read it came from (L §8.1; tally 2.1.7
             # R3, T's SR-5): the first window's
-            return Iv(lo, hi, None, first.src, origin=first.origin)
+            return Iv(lo, hi, None, first.src, origin=first.origin, carry=carry_union(*ts))
         return self.extreme(ts, fn, n)
 
     def extreme(self, ts, fn, n=None):
@@ -3752,9 +3773,9 @@ class Engine:
             if r is None or r is NONE:
                 raise self.imprecise(ivs[0], 'a built-in that is none on part of the window')
             outs.append(r)
-        return self.interval_of(outs, ivs[0])
+        return self.interval_of(outs, ivs[0], carry_union(*ivs))
 
-    def interval_of(self, outs, iv):
+    def interval_of(self, outs, iv, carry=None):
         """The values an operation takes over a window's days: one value when they agree, else their interval (a
         computed window, no name)."""
         a = b = outs[0]
@@ -3765,7 +3786,7 @@ class Engine:
                 b = r
         if self.cmp3(a, b, None) == 0:
             return a
-        return Iv(a, b, None, iv.src, origin=iv.origin)
+        return Iv(a, b, None, iv.src, origin=iv.origin, carry=carry if carry is not None else iv_carry(iv))
 
     def per_day(self, iv, fn, n):
         """An operation that isn't monotone in its window is evaluated for each day the window can take (L §4.4; tally
@@ -3944,13 +3965,13 @@ class Engine:
         d = self.as_date_or_iv(d, 'weekday')
         if isinstance(d, Iv):
             if d.days is None and (d.hi - d.lo).days >= 6:
-                return Iv(Int(1), Int(7), None, d.src, origin=d.origin)
+                return Iv(Int(1), Int(7), None, d.src, origin=d.origin, carry=iv_carry(d))
             days = sorted(d.days) if d.days else [d.lo + datetime.timedelta(days=i)
                                                   for i in range((d.hi - d.lo).days + 1)]
             ws = sorted(set(x.isoweekday() for x in days))
             if len(ws) == 1:
                 return Int(ws[0])
-            return Iv(Int(min(ws)), Int(max(ws)), None, d.src, origin=d.origin)
+            return Iv(Int(min(ws)), Int(max(ws)), None, d.src, origin=d.origin, carry=iv_carry(d))
         return Int(d.isoweekday())
 
     def c_pos(self, n, env, ctx):
@@ -4159,32 +4180,38 @@ class Engine:
                 # meets, so a result that depends on its day is HOLE-IMPRECISE unless the line states windows each"
                 if a[0] == 'window':
                     wt = 'window(%s, %s)' % (a[1], a[2])
-                    iv = Iv(a[1], a[2], None, wt, origin=('calendar %s#%d' % (node._r[2], ai), 'added %s' % wt),
+                    iv = Iv(a[1], a[2], None, wt, origin=('calendar %s#%d%s' % (node._r[2], ai, cal_at_text(cal)), 'added %s' % wt),
                             name=('added', node._r[2], ai))
                     days = [a[1] + datetime.timedelta(days=i) for i in range((a[2] - a[1]).days + 1)]
                 else:
                     wt = 'one_of([%s])' % ', '.join(str(x) for x in sorted(a[1]))
-                    iv = Iv(min(a[1]), max(a[1]), set(a[1]), wt, origin=('calendar %s#%d' % (node._r[2], ai), 'added %s' % wt),
+                    iv = Iv(min(a[1]), max(a[1]), set(a[1]), wt, origin=('calendar %s#%d%s' % (node._r[2], ai, cal_at_text(cal)), 'added %s' % wt),
                             name=('added', node._r[2], ai))
                     days = sorted(a[1])
                 if ctx.windows in ('earliest', 'latest') or (isinstance(ctx.windows, tuple) and ctx.windows and
                                                              ctx.windows[0] == 'each'):
-                    # L §4.4: windows each splits the line by it, "a day in a calendar's added list (§4.2)"
-                    if self.window_choice(iv, ctx) == day:
-                        return False
-                    continue
+                    # L §4.4: windows each splits the line by it, "a day in a calendar's added list (§4.2)"; an entry
+                    # not yet taken is read as the plain line reads it (tally 2.1.8 R13)
+                    ch = self.window_choice(iv, ctx)
+                    if not isinstance(ch, Iv):
+                        if ch == day:
+                            return False
+                        continue
+                    if ctx.windows in ('earliest', 'latest'):
+                        continue
                 if self.cal_choice is not None:
                     # evaluated at each day the window can take (over_added): this pass's day, or the first while
                     # the window is newly met (that pass is run again per day)
                     # each entry of the list is an unknown day of its own (tally 2.1.7 R3, F5)
-                    k = (node._r[2], wt, ai)
+                    k = (node._r[2] + cal_at_text(cal), wt, ai)
                     if k not in self.cal_choice:
                         self.cal_met.setdefault(k, days)
+                        self.cal_met_days[k] = days
                     if self.cal_choice.get(k, days[0]) == day:
                         return False
                     continue
-                unknown.append(Hole([('date within %s not precise enough for is_business(%s, %s)' % (
-                    wt, day, _ntxt(node)), node._r[2])]))
+                unknown.append(carry_hole(Hole([('date within %s not precise enough for is_business(%s, %s)' % (
+                    wt, day, _ntxt(node)), node._r[2])]), iv))
         if unknown:
             return merge(*unknown)
         return True
@@ -4201,6 +4228,7 @@ class Engine:
         todo = [dict(outer) if outer is not None else {}]
         out = []
         first_met = None
+        met_order = []
         try:
             while todo:
                 ch = todo.pop(0)
@@ -4212,6 +4240,9 @@ class Engine:
                     k = new[0]
                     if first_met is None:
                         first_met = k
+                    for k2 in new:
+                        if k2 not in met_order:
+                            met_order.append(k2)
                     for d in self.cal_met[k]:
                         c2 = dict(ch)
                         c2[k] = d
@@ -4226,10 +4257,14 @@ class Engine:
         v0 = out[0]
         if all(vkey(v) == vkey(v0) for v in out[1:]):
             return v0
+        # the entries met, in the order the passes met them: the unknown days the result carries (tally 2.1.8 R13)
+        carry = tuple(added_carry(k, self.cal_met_days.get(k, ())) for k in met_order)
         if isinstance(v0, bool):
-            cal_id, wt = first_met[0], first_met[1]
-            return Hole([('date within %s not precise enough for %s' % (wt, _ntxt(n)), cal_id)])
-        return Iv(min(out), max(out), None, None, origin=(first_met[0], first_met[0]) if first_met else None)
+            cal_id, wt = first_met[0].split(' @')[0], first_met[1]
+            return carry_hole(Hole([('date within %s not precise enough for %s' % (wt, _ntxt(n)), cal_id)]),
+                              ids=carry)
+        return Iv(min(out), max(out), None, None, origin=(first_met[0].split(' @')[0], first_met[0].split(' @')[0]) if first_met else None,
+                  carry=carry)
 
     def c_is_business(self, n, env, ctx):
         d = self.ev(n.args[0], env, ctx)
@@ -4396,6 +4431,95 @@ def range_is_literal(d):
         return n.k in ('num', 'date', 'month', 'quarter', 'year', 'dur', 'duration') or (
             n.k == 'num' and not getattr(n, 'unit', None))
     return lit(d.a) and lit(d.b) and lit(getattr(d, 'step', None))
+
+# The unknown days a hole carries (tally 2.1.8 R13, L §4.4: "a hole made of either carries them too"): each question
+# of a HOLE-IMPRECISE, keyed as the hole holds it, to the windows it was made of, (id, label, days) in the order the
+# line's reads met them. A hole made of others keeps their questions, so it carries their windows.
+CARRY = {}
+CARRY_TEXT = {}   # a question known only by its text (a reading's row known in a window), to the same
+
+
+def known_carry(sid, known):
+    """The unknown day of a known window (model.known_window_id): (id, label, days)."""
+    from .model import known_window_id
+    lo, hi = known
+    wid, label = known_window_id(sid)
+    return (wid, label, [lo + datetime.timedelta(days=i) for i in range((hi - lo).days + 1)])
+
+
+def cal_at_text(cal):
+    """The row a calendar's entries belong to, for their identity (Cal.at)."""
+    at = getattr(cal, 'at', None)
+    return ' @%s' % at if at else ''
+
+
+def added_carry(k, days):
+    """The unknown day of a calendar's added entry k = (calendar, text, index), as window_id names it."""
+    cal, wt, ai = k
+    name, _sep, at = cal.partition(' @')
+    return (('row', 'calendar %s#%d%s' % (name, ai, (' @' + at) if at else ''), 'added %s' % wt), 'added %s' % wt,
+            list(days))
+
+
+def iv_carry(v):
+    """The unknown days a window value carries: a computed one's, or a read's own."""
+    if getattr(v, 'carry', None) is not None:
+        return v.carry
+    wi = window_id(v) if isinstance(v, Iv) else None
+    return (wi,) if wi is not None else ()
+
+
+def carry_union(*vals):
+    """The unknown days of several operands, in order, each once."""
+    out = []
+    seen = set()
+    for v in vals:
+        if isinstance(v, Iv):
+            for w in iv_carry(v):
+                if w[0] not in seen:
+                    seen.add(w[0])
+                    out.append(w)
+    return tuple(out)
+
+
+def carry_hole(h, *vals, ids=None):
+    """h, recorded as carrying the unknown days of vals (window values), or ids ((id, label, days) triples)."""
+    ws = tuple(ids) if ids is not None else carry_union(*vals)
+    if ws:
+        for q in h.qs:
+            if q not in CARRY:
+                CARRY[q] = ws
+    return h
+
+
+def carried(v):
+    """The unknown days an answer carries: its holes' and its window values', each once (L §4.4)."""
+    out = []
+    seen = set()
+
+    def add(ws):
+        for w in ws:
+            if w[0] not in seen:
+                seen.add(w[0])
+                out.append(w)
+
+    def walk(x, depth=0):
+        if depth > 50:
+            return
+        if isinstance(x, Hole):
+            for q in sorted(x.qs, key=repr):
+                add(CARRY.get(q) or CARRY_TEXT.get(q[0], ()))
+        elif isinstance(x, Iv):
+            add(iv_carry(x))
+        elif isinstance(x, (tuple, list, frozenset, set)):
+            for y in x:
+                walk(y, depth + 1)
+        elif hasattr(x, 'carry_vals'):
+            for y in x.carry_vals():
+                walk(y, depth + 1)
+    walk(v)
+    return out
+
 
 def window_id(v):
     """A window's identity under windows each: its row (or its written text), its label and its days."""

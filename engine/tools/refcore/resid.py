@@ -310,6 +310,10 @@ def m_residuals(self, place, span, by, ctx, unit=None):
             lines.append(RLine('expected but missing', dd, grp, mdl, None, diff,
                                'expected but missing %s on %s: model %s' % (i.id, dd, self.rtext(mdl, unit)),
                                i.order))
+            if isinstance(i.day, Iv):
+                # a window inside one month: the day it prints is an unknown day the ledger carries (tally 2.1.8
+                # R13, L §4.4)
+                lines[-1].carry_day = i.day
             continue
         ob = None
         for o in os:
@@ -387,6 +391,8 @@ def m_residuals(self, place, span, by, ctx, unit=None):
         lines.append(RLine('expected but missing', None, (None, '?'), mdl, None, _sub(Fraction(0), mdl),
                            'expected but missing %s on %s: model %s' % (i.id, dtxt, self.rtext(mdl, unit)),
                            i.order))
+        # the day it prints is an unknown day the ledger carries (tally 2.1.8 R13, L §4.4)
+        lines[-1].carry_day = d
     for o in obs:
         if o.id in seen:
             continue

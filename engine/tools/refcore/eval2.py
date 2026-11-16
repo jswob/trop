@@ -23,6 +23,7 @@ def install(E):
     E.ask_paths = None
     E.path_cache = None
     E.each_met = None
+    E.cal_met_days = {}
 
 
 def _ev():

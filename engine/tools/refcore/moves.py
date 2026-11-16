@@ -14,6 +14,7 @@ from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_no
 from .model import visible, row_known_sid, known_first, PlaceThing, _kv, key_text, in_world, _WSET, _SAMEMET, \
     same_seen, same_key
 from .values import Num, Money, Hole, Thing, Mv, Iv, Rec, Text, NONE, NEVER, CURRENCIES, fmt, vkey
+from .evaluate import carry_hole, known_carry, CARRY_TEXT
 
 # the stratum a pad takes in the movement order: above every decision's, as observations and adjustments take -1,
 # below every plan's 0 (E §4.1, tally 2.1.2; tally 2.1.1 wrote 9, which only text compare put after stratum 10)
@@ -379,6 +380,7 @@ def m_coverage(self, ctx):
             # (HOLE-IMPRECISE)
             lo, hi = v.known
             q = ('date within window(%s, %s) not precise enough for the cut %s' % (lo, hi, ctx.cut), vid)
+            carry_hole(Hole([q]), ids=[known_carry(v.id, v.known)])
             for th, sp in v.covers:
                 span = sp if sp is not None else v.span_at(ctx.cut)
                 if span is not None:
@@ -437,7 +439,8 @@ def m_observations(self, ctx):
                 lo, hi = o.known
                 # tally 2.1.8 R12 (P70): the hole names the row and its version
                 q = 'date within window(%s, %s) not precise enough for the cut %s' % (lo, hi, ctx.cut)
-                undecided[id(o)] = Hole([(q, o.sid), (q, o.version.id)])
+                undecided[id(o)] = carry_hole(Hole([(q, o.sid), (q, o.version.id)]), ids=[known_carry(
+                    o.version.id if getattr(o, 'own_known', None) is None else o.sid, o.known)])
             elif not vis:
                 continue
             # the latest restatement; a scenario's stands above its base's whatever their known dates (L §4.6 step 2)
@@ -508,6 +511,7 @@ def m_readings(self, ctx):
                 lo, hi = r.known
                 r = copy.copy(r)
                 r.val = ('hole', 'date within window(%s, %s) not precise enough for the cut %s' % (lo, hi, ctx.cut))
+                CARRY_TEXT.setdefault(r.val[1], (known_carry(row_known_sid(r), r.known),))
             elif not vis:
                 continue
             place = r.pattern[0][1].name
@@ -603,7 +607,8 @@ def law_days(law):
 
 
 def imprecise_law(law, what):
-    return Hole([('date within %s not precise enough for the law date of %s' % (law.window_text(), what), what)])
+    return carry_hole(Hole([('date within %s not precise enough for the law date of %s' % (law.window_text(), what),
+                             what)]), law)
 
 
 def m_move_tuples(self, mi, ctx):
@@ -953,8 +958,8 @@ def m_eval_inst(self, mi, env, keys, tctx, exists0=True, at_cut=None, upto=None)
             b0 = bodies[0]
             if len(bodies) > 1 and body_key(bodies[0]) != body_key(bodies[1]):
                 # a version known inside a windowed instance's window (L §5.14.3)
-                hq = Hole([('date within %s not precise enough for the booking cut of %s' % (day.window_text(),
-                                                                                             inst.id), inst.id)])
+                hq = carry_hole(Hole([('date within %s not precise enough for the booking cut of %s' % (
+                    day.window_text(), inst.id), inst.id)]), day)
                 b1 = bodies[1]
                 src = b0[1] if b0[1] else b1[1]
                 legs = [Leg(lg.name, lg.frm, lg.to, hq, lg.unit, lg.day) for lg in src]

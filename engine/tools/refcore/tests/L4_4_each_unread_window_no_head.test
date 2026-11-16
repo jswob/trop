@@ -1,0 +1,61 @@
+# L §4.4 (tally 2.1.8 R13, X1; c3n t2): windows each takes only the unknown days the line's answer carries. The
+# balance on 2026-03-06 carries w1 and w2 (m1, m2); m3's day w3 in May is met by the walk but never read by the
+# result, so no head names it. 2.1.7's refcore ended every head with w3 = 2026-05-01 .. 2026-05-03.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input w1: date
+input w2: date
+input w3: date
+input a: date
+input b[d in days]: date
+
+move m1: transfers
+  on w1
+  leg cash from world to konto amount amt
+
+move m2: transfers
+  on w2
+  leg cash from world to konto amount amt
+
+move m3: transfers
+  on w3
+  leg cash from world to konto amount amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  amt = 100.00 PLN "s"
+  w1 = window(2026-03-05, 2026-03-07) "s"
+  w2 = window(2026-03-06, 2026-03-08) "s"
+  w3 = window(2026-05-01, 2026-05-03) "s"
+  a = window(2026-03-01, 2026-03-02) "s"
+  b[2026-03-01] = window(2026-04-01, 2026-04-02) "s"
+  b[2026-03-02] = 2026-05-01 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+
+ask t1: bal(konto, 2026-03-06)
+ask t2: bal(konto, 2026-03-06) windows each
+=== expect
+t1: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (m1) ?"date within window(2026-03-06, 2026-03-08) not precise enough for a balance" (m2)
+  cut 2026-01-01
+t2 [w1 = 2026-03-05 .. 2026-03-06, w2 = 2026-03-06]: 200.00 PLN
+  cut 2026-01-01
+t2 [w1 = 2026-03-05 .. 2026-03-06, w2 = 2026-03-07 .. 2026-03-08]: 100.00 PLN
+  cut 2026-01-01
+t2 [w1 = 2026-03-07, w2 = 2026-03-06]: 100.00 PLN
+  cut 2026-01-01
+t2 [w1 = 2026-03-07, w2 = 2026-03-07 .. 2026-03-08]: 0.00 PLN
+  cut 2026-01-01
+warning: WARN-UNREAD input a is read by nothing
+warning: WARN-UNREAD input b is read by nothing

@@ -9,7 +9,7 @@ from fractions import Fraction
 from . import units as U
 from .dates import Period, ONE_DAY, next_day, END
 from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, at_run
-from .evaluate import member_owns, member_moves, move_owner
+from .evaluate import member_owns, member_moves, move_owner, carry_hole
 from .model import Span, _kv, key_text, WindowUndecided
 from .values import (Num, Money, Int, Hole, Thing, Mv, Iv, Rec, Text, Code, Key, NONE, CURRENCIES, fmt,
                      fmt_hole, vkey)
@@ -753,8 +753,8 @@ def m_span_members(self, dom, sp, ctx, owner=None):
             if outside:
                 continue
             if not inside:
-                st = Hole([('date within %s not precise enough for a binding over %s' % (d.window_text(),
-                                                                                         b._dom[1]), x.id)])
+                st = carry_hole(Hole([('date within %s not precise enough for a binding over %s' % (
+                    d.window_text(), b._dom[1]), x.id)]), d)
         elif isinstance(d, datetime.date):
             if not sp.contains(d):
                 continue
@@ -1453,8 +1453,8 @@ def m_flows_post_e(self, w, place, sp, last, conv, env, ctx, fk, totals, holes):
                 holes.append(i.exists)
                 continue
             if lo != hi and not (sp.contains(lo) and hi <= last):
-                holes.append(Hole([('date within %s not precise enough for flows of %s' % (
-                    lg.day.window_text(), place), i.id)]))
+                holes.append(carry_hole(Hole([('date within %s not precise enough for flows of %s' % (
+                    lg.day.window_text(), place), i.id)]), lg.day))
                 continue
             a = lg.amount
             if isinstance(a, TallyError):
@@ -1509,8 +1509,8 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ct
                 continue
             if e.key > limit:
                 if e.kind == 'delta' and e.wid is not None and e.wid in wins:
-                    holes.append(Hole([('date within %s not precise enough for flows of %s' % (
-                        e.win.window_text(), place), e.mv.id)]))
+                    holes.append(carry_hole(Hole([('date within %s not precise enough for flows of %s' % (
+                        e.win.window_text(), place), e.mv.id)]), e.win))
                 continue
             if e.kind in ('bad', 'pbad'):
                 raise e.err
@@ -1535,8 +1535,8 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ct
             if e.kind == 'delta' and e.wid is not None:
                 win = e.win
                 if not (sp.contains(win.lo) and win.hi <= last):
-                    holes.append(Hole([('date within %s not precise enough for flows of %s' % (
-                        win.window_text(), place), e.mv.id)]))
+                    holes.append(carry_hole(Hole([('date within %s not precise enough for flows of %s' % (
+                        win.window_text(), place), e.mv.id)]), win))
                     continue
             for r in e.reg:
                 self.reg(r)
@@ -1674,8 +1674,8 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
             elif (sp.end is not None and d.lo > last) or d.hi < sp.start:
                 continue
             else:
-                holes.append(Hole([('date within %s not precise enough for flows of %s' % (d.window_text(), mi.id),
-                                    i.id)]))
+                holes.append(carry_hole(Hole([('date within %s not precise enough for flows of %s' % (
+                    d.window_text(), mi.id), i.id)]), d))
                 continue
         elif not sp.contains(d):
             continue
@@ -2074,7 +2074,8 @@ def m_first_by_day(self, res, what):
     if wins:
         # their order is a comparison of windows, undecided (L §4.4)
         w = wins[0]
-        return Hole([('date within %s not precise enough for %s' % (w.day.window_text(), what), w.id)])
+        return carry_hole(Hole([('date within %s not precise enough for %s' % (w.day.window_text(), what), w.id)]),
+                          w.day)
     raise refuse('RUN-TIE', "%s has a tie at %s that changes the result, and its ties by doesn't break it" % (
         what, ', '.join(x.id for v, s, x in cands)))
 

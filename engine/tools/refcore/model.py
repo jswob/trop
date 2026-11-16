@@ -154,6 +154,11 @@ def same_seen(v, ctx, names):
     vis = visible(v.known, ctx.cut, v.id)
     if vis is not None:
         return vis
+    if _EACH[0] is not None and getattr(_EACH[0], 'forced', None) is not None:
+        # under windows each, a same line not yet taken is an unknown day the line's answer rests on (L §4.5, §4.4;
+        # tally 2.1.8 R12, R13): the run takes it, so it is no choice of the line's (ask.answer_same_undecided)
+        _EACH[0].forced.append(known_window_id(v.id)[0])
+        return True
     pick = _SAMEPICK[0]
     if pick is not None and v.id in pick:
         return pick[v.id]
@@ -210,9 +215,10 @@ class WindowUndecided(NotYet):
         self.origin = origin
 
     def hole(self):
+        from .evaluate import carry_hole, known_carry
         lo, hi = self.known
-        return Hole([('date within window(%s, %s) not precise enough for the cut %s' % (lo, hi, self.K),
-                      self.origin)])
+        return carry_hole(Hole([('date within window(%s, %s) not precise enough for the cut %s' % (lo, hi, self.K),
+                                 self.origin)]), ids=[known_carry(self.origin, self.known)])
 
 
 class LifeHole(WindowUndecided):
@@ -248,7 +254,8 @@ def visible(known, K, sid=None):
             days = [lo + datetime.timedelta(days=i) for i in range((hi - lo).days + 1)]
             if _EACH[0] is not None:
                 _EACH[0].setdefault(wid, (label, days))
-            return days[0] <= K
+            # not yet taken: the plain line's, undecided (tally 2.1.8 R13)
+            return None
         return None
     return known <= K
 

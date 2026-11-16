@@ -17,6 +17,7 @@ from .moves import item_in_world, order_key, same_groups
 from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, RandomLine
 from .model import known_first, key_text, SameDiffers, in_world
 from .values import Num, Money, Hole, Thing, Mv, Iv, Rec, Text, NONE, CURRENCIES, fmt, fmt_hole, vkey
+from .evaluate import carry_hole
 from .moves import Leg, Inst, ObsMv, AdjMv, PadMv, qty, unit_of_value, day_lo, day_hi, instant_text, merge
 
 EMPTY = frozenset()
@@ -571,8 +572,8 @@ class Walk:
                         self.at((d.toordinal(), 3, mi.stratum, qid, 0), 'decday', (mi, d))
                     self.decday[k].append(i)
                 elif isinstance(d, Iv) and isinstance(d.lo, datetime.date):
-                    q = Hole([('date within %s not precise enough for the day of %s' % (d.window_text(), i.id),
-                               i.id)])
+                    q = carry_hole(Hole([('date within %s not precise enough for the day of %s' % (
+                        d.window_text(), i.id), i.id)]), d)
                     self.dec_hole(i, K_before(max(d.lo, S)), q, ctx)
                 elif isinstance(d, Hole):
                     self.dec_hole(i, K_before(S), d, ctx)
@@ -697,6 +698,7 @@ class Walk:
         elif isinstance(d, Iv) and isinstance(d.lo, datetime.date):
             wid = '%s.%s' % (i.id, lg.name)
             q = frozenset([('date within %s not precise enough for a balance' % d.window_text(), i.id)])
+            carry_hole(Hole(q), d)
             if isinstance(lg.amount, Hole):
                 # every question the balance rests on is printed (L §8.1): the amount's too
                 q = q | frozenset(lg.amount.qs)
@@ -1845,8 +1847,8 @@ class Walk:
             for dd in lds[1:]:
                 v2 = [eng.ev(x, i.env, ctx.but(law=dd)) for x in mi.decl.tie]
                 if [vkey(v) for v in v2] != [vkey(v) for v in vals]:
-                    vals = [Hole([('date within %s not precise enough for the ties by of %s' % (
-                        i.law.window_text(), mi.id), i.id)])]
+                    vals = [carry_hole(Hole([('date within %s not precise enough for the ties by of %s' % (
+                        i.law.window_text(), mi.id), i.id)]), i.law)]
                     break
             scored.append((vals, i))
         out = []
