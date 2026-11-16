@@ -1681,7 +1681,7 @@ class Loader:
         """`same p = q` naming two rows or two movements, in a joint model's header or in a version: two rows are
         read together (HOLE-SAME where they disagree, a joint model's own row settles them), two movements count once
         (the walk).  Things, places and kinds were joined before parsing (joint.py)."""
-        from .joint import owner_of, shown
+        from .joint import owner_deep, owner_of, shown
         m = self.m
         m.same_moves = []
         m.same_owners = []      # the member whose version states each same_moves line ('' the joint's own)
@@ -1698,6 +1698,15 @@ class Loader:
             if v is not None and (a[0] == 'thing' or b[0] == 'thing'):
                 raise LoadError('LOAD-SAME', 'same %s = %s in a version names a kind or a thing' % (
                     shown(_txt_node(l)), shown(_txt_node(r))), loc)
+            if v is not None and a[0] == b[0] == 'move' and set((a[2], b[2])) == set(('row', 'instance')) and \
+                    owner_deep(a[1]) == owner_deep(b[1]) == owner_deep(v.id):
+                # L §6.1 Identities are written (tally 2.1.8, the user's cut): inside one model a row realises an
+                # instance by its fulfils (§5.19), so a version's same between the two is refused; a joint model's
+                # line between two members' movements, or a member's and its own, stands
+                row, inst = (l, r) if a[2] == 'row' else (r, l)
+                raise LoadError('LOAD-SAME', 'same %s = %s: an observed row and a planned instance of one model; '
+                                             'state fulfils on the row' % (shown(_txt_node(row)), shown(_txt_node(inst))),
+                                loc)
             if a[0] == 'other' or b[0] == 'other' or a[0] != b[0]:
                 wa = what.get(a[0]) or ('a %s' % a[1])
                 wb = what.get(b[0]) or ('a %s' % b[1])
@@ -1904,11 +1913,11 @@ class Loader:
                 raise LoadError('LOAD-KEY', 'wrong number of keys for %s' % info.id, loc)
             kvs = self.move_keys(info, keys, loc)
             iid = '%s[%s]' % (info.id, ', '.join(key_text(k) for k in kvs)) if kvs else info.id
-            return ('move', iid)
+            return ('move', iid, 'instance')
         if kind == 'input' and info.observed:
             if len(keys) != 1 or keys[0].k not in ('name', 'key', 'num'):
                 raise LoadError('LOAD-KEY', 'an observation row is named by its id: %s[<id>]' % info.id, loc)
-            return ('move', '%s[%s]' % (info.id, resolve_text(keys[0])))
+            return ('move', '%s[%s]' % (info.id, resolve_text(keys[0])), 'row')
         if kind == 'input':
             if len(keys) != len(info.binds):
                 raise LoadError('LOAD-KEY', 'wrong number of keys for %s' % info.id, loc)

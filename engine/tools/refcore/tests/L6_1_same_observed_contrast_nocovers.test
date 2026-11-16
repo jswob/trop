@@ -5,6 +5,9 @@
 # a covered day before K are the modelled past, "never booked", and "its observations stand in for it where they are
 # booked".
 # The contrast without covers acc: no day is covered, gift is the plan and books acc, stmt[r1] (same) is the one movement, booked once: 5 000.00 DUK, as snap14.
+# tally 2.1.8 (the user's cut, plan §13; #187; L §6.1 Identities are written): inside one model a version's same between
+# an observed row and a move instance is refused at load, LOAD-SAME: the row states fulfils instead (§5.19). This test
+# is about that line, so it is kept as the refusal; a joint model's line between two members still books the pair once.
 === m.tally
 model one
   tally 2
@@ -46,5 +49,4 @@ version plan
   g_day = 2024-05-02 "plan"
   g_amt = 5000.00 "plan"
 === expect
-q: 5 000.00 DUK
-  cut 2026-10-25
+refused: LOAD-SAME same stmt[r1] = gift: an observed row and a planned instance of one model; state fulfils on the row (m.tally:32)
