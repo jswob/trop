@@ -1749,6 +1749,7 @@ def m_status(self, i, ctx):
     applied = [o for o in i.obs if not (isinstance(o.day, datetime.date) and o.day >= K)]
     d = i.day
     lo, hi = day_lo(d), day_hi(d)
+    i.class_q = None
     if i.exists is False:
         st = 'none'
     elif lo is not None and (hi < S or lo > E):
@@ -1765,6 +1766,11 @@ def m_status(self, i, ctx):
         st = 'modelled'
     elif isinstance(d, Hole) or isinstance(i.exists, Hole):
         st = 'hole'
+    elif self.window_class_depends(i, ctx, lo, hi):
+        # booked on some of its window's days and not on the rest: the window's hole (E §4.1 step 2, L §4.4)
+        st = 'hole'
+        i.class_q = frozenset([('date within %s not precise enough for a balance' % d.window_text(), i.id)])
+        carry_hole(Hole(i.class_q), d)
     elif i.decision:
         st = 'decision'
     elif self.kind_certainty(i.kind) == 'uncertain' and not applied:
@@ -1818,9 +1824,28 @@ def m_before_scen_from(self, i, day):
     return True
 
 
-def m_touches_covered(self, i, ctx):
+def m_window_class_depends(self, i, ctx, lo, hi):
+    """Whether a plan instance dated by a window takes its class (E §4.1 step 3) one way on some of the window's days
+    and another on the rest (E §4.1 step 2, L §4.4; tally 2.1.8 item 77): inside [S, E] or before it (a window that
+    crosses E is its hole already, in the walk), and modelled past or booked."""
+    if lo is None or lo == hi or not isinstance(i.day, Iv) or i.decision:
+        return False
+    S, K = self.m.S, ctx.cut
+    if lo < S <= hi:
+        return True
+    if lo >= K:
+        return False
+    rs = []
+    d = lo
+    while d <= hi:
+        rs.append(d < K and self.touches_covered(i, ctx, d))
+        d = d + datetime.timedelta(1)
+    return any(rs) and not all(rs)
+
+
+def m_touches_covered(self, i, ctx, day=None):
     for lg in i.legs:
-        ld = lg.day if isinstance(lg.day, datetime.date) else day_lo(i.day)
+        ld = lg.day if isinstance(lg.day, datetime.date) else (day or day_lo(i.day))
         if ld is None:
             continue
         for p in (lg.frm, lg.to):

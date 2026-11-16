@@ -1,0 +1,60 @@
+# tally 2.1.8 item 77 (#201), E §4.1 step 2 and L §4.4: a test of a window-dated movement that comes out one way on
+# some of its days and another on the rest is the window's hole, as far as the refusal or the other class would reach.
+# The reach: out's sign-rule hole at jar holds up to jar's next reading, on 04-15, and ends there (r3, r4: 80.00 PLN,
+# the anchor's difference the hole). 2.1.7's refcore: 50.00 PLN before the reading, a difference of 30.00 PLN at it.
+# The plan's c5s with a reading of jar in April.
+=== m.tally
+model t
+  tally 2
+  on 2026-05-01
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+kind savings: place PLN min 0
+place jar: savings lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input wd: date
+input dd: date
+
+move out: transfers
+  on wd
+  leg cash from jar to world amount amt
+
+move inn: transfers
+  on dd
+  leg cash from world to jar amount amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  anchor jar
+  amt = 100.00 PLN "s"
+  wd = window(2026-03-05, 2026-03-10) "s"
+  dd = 2026-03-07 "s"
+  opening[jar] = 50.00 PLN at 2026-01-01 start "s"
+  stated[jar] = 80.00 PLN at 2026-04-15 end "s"
+
+ask r1: bal(jar, 2026-03-31)
+ask r2: bal(jar, 2026-04-14)
+ask r3: bal(jar, 2026-04-30)
+ask r4: bal(jar, 2026-04-30) windows each
+=== expect
+r1: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (out)
+  unfulfilled: inn
+  unfulfilled: out
+  cut 2026-05-01
+r2: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (out)
+  unfulfilled: inn
+  unfulfilled: out
+  cut 2026-05-01
+r3: 80.00 PLN
+  anchor: jar 2026-04-15 end, stated 80.00 PLN, difference ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (out)
+  cut 2026-05-01
+r4: 80.00 PLN
+  anchor: jar 2026-04-15 end, stated 80.00 PLN, difference ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (out)
+  cut 2026-05-01

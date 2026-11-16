@@ -1,0 +1,76 @@
+# tally 2.1.8 item 77 (#201), E §4.1 step 2 and L §4.4: a test of a window-dated movement that comes out one way on
+# some of its days and another on the rest is the window's hole, as far as the refusal or the other class would reach.
+# early is dated in window(2025-12-30, 2026-01-03) across the run's start, so it is left out on two days and booked on
+# three: s1 is the hole and s2 splits it. late's window crosses the run's end, already its hole (e1). 2.1.7's refcore
+# booked early (100.00 PLN). The plan's i77c.
+=== m.tally
+model t
+  tally 2
+  on 2025-12-01
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input ws: date
+input we: date
+
+move early: transfers
+  on ws
+  leg cash from world to konto amount amt
+
+move late: transfers
+  on we
+  leg cash from world to konto amount amt
+
+version v
+  cite s
+  governs always
+  known 2025-11-01
+  amt = 100.00 PLN "s"
+  ws = window(2025-12-30, 2026-01-03) "s"
+  we = window(2026-06-28, 2026-07-03) "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+
+ask s1: bal(konto, 2026-01-31)
+ask s2: bal(konto, 2026-01-31) windows each
+ask s3: flows(early, 2026-01)
+ask s4: count(t in transfers over 2025-12-01 .. 2026-01-31)
+ask e1: bal(konto, 2026-06-30)
+ask e2: bal(konto, 2026-06-30) windows each
+=== expect
+e1: ?"date within window(2025-12-30, 2026-01-03) not precise enough for a balance" (early) ?"date within window(2026-06-28, 2026-07-03) not precise enough for a balance" (late)
+  cut 2025-12-01
+e2 [ws = 2025-12-30 .. 2025-12-31, we = 2026-06-28 .. 2026-06-30]: 100.00 PLN
+  left out: early, 1 instances, first 2025-12-30
+  left out: early, 1 instances, first 2025-12-31
+  cut 2025-12-01
+e2 [ws = 2025-12-30 .. 2025-12-31, we = 2026-07-01 .. 2026-07-03]: 0.00 PLN
+  left out: early, 1 instances, first 2025-12-30
+  left out: early, 1 instances, first 2025-12-31
+  left out: late, 1 instances, first 2026-07-01
+  left out: late, 1 instances, first 2026-07-02
+  left out: late, 1 instances, first 2026-07-03
+  cut 2025-12-01
+e2 [ws = 2026-01-01 .. 2026-01-03, we = 2026-06-28 .. 2026-06-30]: 200.00 PLN
+  cut 2025-12-01
+e2 [ws = 2026-01-01 .. 2026-01-03, we = 2026-07-01 .. 2026-07-03]: 100.00 PLN
+  left out: late, 1 instances, first 2026-07-01
+  left out: late, 1 instances, first 2026-07-02
+  left out: late, 1 instances, first 2026-07-03
+  cut 2025-12-01
+s1: ?"date within window(2025-12-30, 2026-01-03) not precise enough for a balance" (early)
+  cut 2025-12-01
+s2 [ws = 2025-12-30 .. 2025-12-31]: 0.00 PLN
+  left out: early, 1 instances, first 2025-12-30
+  left out: early, 1 instances, first 2025-12-31
+  cut 2025-12-01
+s2 [ws = 2026-01-01 .. 2026-01-03]: 100.00 PLN
+  cut 2025-12-01
+s3: ?"date within window(2025-12-30, 2026-01-03) not precise enough for flows of early" (early)
+  cut 2025-12-01
+s4: 1
+  cut 2025-12-01

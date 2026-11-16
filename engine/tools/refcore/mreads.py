@@ -136,7 +136,7 @@ def m_leg_refused(self, iid, leg, ctx, day=None):
     needs a cell still being evaluated (m_guarded_walk; E §3.2 "Evaluation is demand-driven")."""
     w = ctx.walk if ctx.walk is not None else self.ask_walk(ctx, day)
     while w is not None:
-        err = w.bad_legs.get((iid, leg))
+        err = w.bad_legs.get((iid, leg)) or getattr(w, 'hole_legs', {}).get((iid, leg))
         if err is not None:
             return err
         w = w.base
@@ -346,6 +346,8 @@ def m_mv_field(self, n, env, ctx):
                     raise lg.amount
                 err = self.leg_refused(src.id, name, ctx, lg.day if isinstance(lg.day, datetime.date) else
                                        src.day)
+                if isinstance(err, Hole):
+                    return err
                 if err is not None:
                     raise err
                 return lg.rec()
@@ -1860,6 +1862,11 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
                 continue
         elif not sp.contains(d):
             continue
+        if st == 'hole' and getattr(i, 'class_q', None):
+            # booked on some of its window's days, modelled or left out on the rest (E §4.1 step 2, L §4.4)
+            holes.append(carry_hole(Hole([('date within %s not precise enough for flows of %s' % (
+                d.window_text(), mi.id), i.id)]), d))
+            continue
         if fk is not None and not isinstance(i.forp, Hole) and (i.forp is None or vkey(i.forp) != vkey(fk)):
             continue
         if st == 'modelled':
@@ -1921,6 +1928,12 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
                 continue
             err = self.leg_refused(i.id, lg.name, ctx, lg.day if isinstance(lg.day, datetime.date) else i.day) \
                 if a.q != 0 else None
+            if isinstance(err, Hole):
+                # a window leg whose lifespan test some of its days pass (walk.window_lifespan): the flows read's hole
+                w = lg.day if isinstance(lg.day, Iv) else d
+                holes.append(carry_hole(Hole([('date within %s not precise enough for flows of %s' % (
+                    w.window_text(), mi.id), i.id)]), w))
+                continue
             if err is not None:
                 raise err
             if conv is not None:
