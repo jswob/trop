@@ -724,6 +724,8 @@ class Asker:
         """diff(e [for binds]) in S against B, evaluated per combination of the axes it reads (L §5.5, tally 2.1.7
         R8): each combination a cell, `diff_worlds`; the cells' results printed by `diff_print`. On a stack that holds
         one of the two worlds (cli.cross_stack_diff) the cells of that side are kept for the caller instead."""
+        if a.binds and getattr(self, '_diff_env', None) is None:
+            return self.diff_binds(eng, a, ctx, pins_coll)
         if isinstance(ctx.windows, tuple) and ctx.windows and getattr(self, '_diff_only', None) is None:
             return self.diff_each(eng, a, ctx, pins_coll)
         axes = self.diff_axes(a, ctx)
@@ -736,6 +738,27 @@ class Asker:
             self._diff_side = (axes, cells, ctx)
             return []
         return self.diff_print(a, axes, cells, ctx)
+
+    def diff_binds(self, eng, a, ctx, pins_coll):
+        """A diff with an ask-level `for`: the body per binding tuple (L §5.18; tally 2.1.8 R13.1, item 3 of the
+        follow-up), each tuple's block under the head naming it, `h (k = b): diff in …`; a tuple whose where is a
+        hole prints its line as that hole."""
+        out = []
+        for env, st in list(eng.members(a.binds, {}, ctx)):
+            if isinstance(st, tuple) and st[0] == 'domainhole':
+                out.append('%s: %s' % (a.id, fmt_value(st[1])))
+                continue
+            txt = ' (%s)' % ', '.join('%s = %s' % (b.var, fmt_bind(b, env[b.var])) for b in a.binds)
+            if isinstance(st, Hole):
+                out.append('%s%s: %s' % (a.id, txt, fmt_value(st)))
+                continue
+            self._diff_env = env
+            try:
+                lines = self.answer_diff(eng, a, ctx, pins_coll)
+            finally:
+                self._diff_env = None
+            out.extend(a.id + txt + ln[len(a.id):] if ln.startswith(a.id) else ln for ln in lines)
+        return out
 
     def diff_each(self, eng, a, ctx, pins_coll):
         """diff under windows each: each combination's cell read again per sub-window (each_rows), one block per run
@@ -778,6 +801,7 @@ class Asker:
         coll.merge(pins_coll)
         res = {}
         only = getattr(self, '_diff_only', None)
+        base = getattr(self, '_diff_env', None) or {}
         for w in (sw, bw):
             if only is not None and w != only:
                 continue
@@ -789,7 +813,7 @@ class Asker:
                 eng.reg(('world', w))
                 lines = []
                 if bs:
-                    mem = list(eng.members(bs, {}, wctx))
+                    mem = list(eng.members(bs, dict(base), wctx))
                     for env, st in mem:
                         if isinstance(st, tuple) and st[0] == 'domainhole':
                             lines.append((_txt(e), st[1]))
@@ -801,7 +825,7 @@ class Asker:
                             continue
                         lines.append((key, self.one(eng, e, env, wctx)))
                 else:
-                    lines.append((_txt(e), self.one(eng, e, {}, wctx)))
+                    lines.append((_txt(e), self.one(eng, e, dict(base), wctx)))
             finally:
                 eng.stack.pop()
                 set_world(old)
