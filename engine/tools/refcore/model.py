@@ -440,10 +440,13 @@ class SameDiffers(WindowUndecided):
 
     def hole(self):
         from .joint import shown
-        parts = ' and '.join('%s (%s)' % (sp, shown(row)) for sp, row in self.sides)
-        q = '%s are one, but the entry into %s differs on %s: %s' % (' and '.join(shown(n) for n in self.names),
+        from .moves import and_list
+        # L §8.1 HOLE-SAME, the sides in the order of their ids, each of a larger class named (tally 2.1.8 S6)
+        order = sorted(range(len(self.names)), key=lambda i: shown(self.names[i]))
+        parts = and_list('%s (%s)' % (self.sides[i][0], shown(self.sides[i][1])) for i in order)
+        q = '%s are one, but the entry into %s differs on %s: %s' % (and_list(shown(self.names[i]) for i in order),
                                                                    shown(self.kind), self.when, parts)
-        return Hole([(q, ', '.join(shown(n) for n in self.names))])
+        return Hole([(q, ', '.join(shown(self.names[i]) for i in order))])
 
 
 class PlaceThing(ThingInfo):

@@ -646,12 +646,16 @@ def m_same_kind_hole(self, x, kind, ctx):
     sub = m.kinds[kind].subtree(m)
     if all(k in sub for k in kinds):
         return None
-    a, b = mem[0], next(o for o in mem[1:] if getattr(o, 'kind', None) != mem[0].kind)
-    d = x.day if isinstance(x.day, datetime.date) else (a.day if isinstance(a.day, datetime.date) else b.day)
-    q = '%s and %s are one, but the kind differs on %s: %s (%s) and %s (%s)' % (
-        shown(a.id), shown(b.id), d if isinstance(d, datetime.date) else 'every day', a.kind, shown(a.id), b.kind,
-        shown(b.id))
-    return Hole([(q, '%s, %s' % (shown(a.id), shown(b.id)))])
+    from .moves import and_list
+    mem = [o for o in mem if getattr(o, 'kind', None) is not None]
+    a = mem[0]
+    d = x.day if isinstance(x.day, datetime.date) else next(
+        (o.day for o in mem if isinstance(o.day, datetime.date)), None)
+    # L §8.1 HOLE-SAME, the rows in the order of their ids (same_groups'), each of a larger class named (tally 2.1.8 S6)
+    q = '%s are one, but the kind differs on %s: %s' % (
+        and_list(shown(o.id) for o in mem), d if isinstance(d, datetime.date) else 'every day',
+        and_list('%s (%s)' % (o.kind, shown(o.id)) for o in mem))
+    return Hole([(q, ', '.join(shown(o.id) for o in mem))])
 
 
 def m_obs_booked(self, o, ctx):

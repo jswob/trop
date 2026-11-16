@@ -1686,8 +1686,8 @@ class Loader:
         m.same_moves = []
         m.same_owners = []      # the member whose version states each same_moves line ('' the joint's own)
         m.same_versions = []    # the version that states each line (None: the header), read by its cut (R12)
-        m.same_rows = {}
-        m.same_row_version = {}     # the version stating each row pair's line (None: the header), read by its cut
+        m.same_rows = {}            # {a row's key: (its input, its keys, its text)} for every row a same line names
+        m.same_row_edges = []       # (one row's key, the other's, the version stating the line or None: the header)
         m.same_settle = {}
         pairs = [(l, r, m.header.loc, None) for l, r in m.header.sames] + [(it.l, it.r, it.loc, v) for v, it in m.sames]
         for l, r, loc, v in pairs:
@@ -1729,9 +1729,11 @@ class Loader:
                         shown(ta), shown(tb), T.show(ia.type), T.show(ib.type)), loc)
                 kka = (ia.id, tuple(_kv(k) for k in ka))
                 kkb = (ib.id, tuple(_kv(k) for k in kb))
-                m.same_rows[kka] = (ib, kb, ta, tb)
-                m.same_rows[kkb] = (ia, ka, tb, ta)
-                m.same_row_version[kka] = m.same_row_version[kkb] = v
+                # L §6.1 l.1805: same is an equivalence, lines that share a side make one class (tally 2.1.8 S6,
+                # #187): each line is an edge, read by its version's cut (evaluate.same_class)
+                m.same_rows.setdefault(kka, (ia, ka, ta))
+                m.same_rows.setdefault(kkb, (ib, kb, tb))
+                m.same_row_edges.append((kka, kkb, v))
                 continue
             m.same_moves.append((a[1], b[1], loc))
             m.same_owners.append(owner_of(v.id) if v is not None else '')

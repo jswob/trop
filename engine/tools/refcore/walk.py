@@ -1211,13 +1211,13 @@ class Walk:
                 # "where they give that place different amounts or days, it is a hole movement there (HOLE-SAME)
                 # that may fall on either day": each member's end there is that hole
                 # L §8.1 HOLE-SAME: "<p> and <q> are one, but <x> differs on <d>: <a> (<row>) and <b> (<row>)", the
-                # members in the order the same lines write them
-                pos = {x: n for n, x in enumerate(group)}
-                touch.sort(key=lambda t: pos.get(t[0].id, 0))
-                names = ' and '.join(shown(t[0].id) for t in touch)
+                # members in the order of their ids, each of a larger class named (tally 2.1.8 S6, #177)
+                from .moves import and_list
+                touch.sort(key=lambda t: shown(t[0].id))
+                names = and_list(shown(t[0].id) for t in touch)
                 days = sorted(set(g.day for o, g, sj in touch if isinstance(g.day, datetime.date)))
-                parts = ' and '.join('%s (%s)' % (fmt(g.amount) if not isinstance(g.amount, TallyError) else 'refused',
-                                                  shown(o.id)) for o, g, sj in touch)
+                parts = and_list('%s (%s)' % (fmt(g.amount) if not isinstance(g.amount, TallyError) else 'refused',
+                                              shown(o.id)) for o, g, sj in touch)
                 q = '%s are one, but the leg at %s differs on %s: %s' % (
                     names, shown(p.name), ', '.join(str(d) for d in days), parts)
                 out.append(Hole([(q, ', '.join(shown(t[0].id) for t in touch))]))

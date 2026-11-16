@@ -590,15 +590,19 @@ def same_hole_row(m, iid, place, it, rows):
     import copy
     from .joint import shown
     J = m.joint
-    names = [n for (o, n, out) in J.groups.get(place, ())]
-    a, b = rows[0], rows[1]
-    q = '%s and %s are one, but %s differs on %s: %s (%s) and %s (%s)' % (
-        names[0] if names else shown(place), names[1] if len(names) > 1 else shown(place), iid, it,
-        fmt(a.val) if not isinstance(a.val, tuple) else '?', shown(a.sid or ''),
-        fmt(b.val) if not isinstance(b.val, tuple) else '?', shown(b.sid or ''))
-    r = copy.copy(a)
+    names = sorted((shown(n) for (o, n, out) in J.groups.get(place, ())), key=str) or [shown(place)] * 2
+    rows = sorted(rows, key=lambda r: shown(r.sid or ''))
+    vals = ['%s (%s)' % (fmt(r.val) if not isinstance(r.val, tuple) else '?', shown(r.sid or '')) for r in rows]
+    q = '%s are one, but %s differs on %s: %s' % (and_list(names), iid, it, and_list(vals))
+    r = copy.copy(rows[0])
     r.val = ('hole', q)
     return r
+
+
+def and_list(xs):
+    """`a`, `a and b`, `a, b and c`: how L §8.1's HOLE-SAME names a class's rows and values (tally 2.1.8 S6)."""
+    xs = list(xs)
+    return xs[0] if len(xs) == 1 else '%s and %s' % (', '.join(xs[:-1]), xs[-1])
 
 
 # -- move instances (E §4.1, §5 steps 0-1) -------------------------------------------------------------------------
@@ -1387,8 +1391,9 @@ def same_lines(m, ctx):
 
 
 def same_groups(m, ctx):
-    """{movement id: its group, in the order the same lines name them} (L §6.1, round 14: "same is an equivalence:
-    lines that share a side make one group"; "A group of movements is one movement"), of the lines seen at ctx
+    """{movement id: its group, in the order of the members' ids compared by code point (L §2.5; tally 2.1.8 S6, #177:
+    a class joined by lines in two files has no written order)} (L §6.1, round 14: "same is an equivalence: lines
+    that share a side make one group"; "A group of movements is one movement"), of the lines seen at ctx
     (same_lines)."""
     lines = same_lines(m, ctx)
     key = None if ctx is None else same_key(ctx)
@@ -1411,7 +1416,8 @@ def same_groups(m, ctx):
         if ra != rb:
             parent[rb] = ra
     by = {}
-    for y in order:
+    from .joint import shown
+    for y in sorted(order, key=shown):
         by.setdefault(find(y), []).append(y)
     groups = dict((y, g) for g in by.values() for y in g)
     cache[key] = groups
@@ -1444,7 +1450,8 @@ def same_pairs(m, ctx):
         lines.setdefault(a, (a, b))
         lines.setdefault(b, (a, b))
     groups = {}
-    for x in order:
+    from .joint import shown
+    for x in sorted(order, key=shown):
         groups.setdefault(find(x), []).append(x)
     sp = {}
     for g in groups.values():
@@ -1477,22 +1484,24 @@ def same_obs_differ(a, others, leg=None):
     (its leg's amount in observed, in flows of a move or through a binding) is the disagreement's hole, HOLE-SAME,
     naming both rows"): that hole, in L §8.1's form, else None.  leg, where given, is the one leg read."""
     from .joint import shown
-    for b in others:
-        lb = dict((g.name, g) for g in b.legs)
-        for g in a.legs:
-            if leg is not None and g.name != leg:
+    for g in a.legs:
+        if leg is not None and g.name != leg:
+            continue
+        mem = [(a, g)] + [(b, h) for b in others for h in b.legs if h.name == g.name]
+        if len(mem) < 2:
+            continue
+        mem.sort(key=lambda t: shown(t[0].id))
+        for what, get in (('the amount of %s' % g.name, lambda h: h.amount), ('the day of %s' % g.name,
+                                                                                lambda h: h.day)):
+            xs = [get(h) for o, h in mem]
+            if any(isinstance(x, Hole) for x in xs) or len(set(vkey(x) for x in xs)) == 1:
                 continue
-            h = lb.get(g.name)
-            if h is None:
-                continue
-            for what, x, y in (('the amount of %s' % g.name, g.amount, h.amount), ('the day of %s' % g.name, g.day,
-                                                                                       h.day)):
-                if isinstance(x, Hole) or isinstance(y, Hole) or vkey(x) == vkey(y):
-                    continue
-                d = g.day if isinstance(g.day, datetime.date) else a.day
-                q = '%s and %s are one, but %s differs on %s: %s (%s) and %s (%s)' % (
-                    shown(a.id), shown(b.id), what, d, fmt(x), shown(a.id), fmt(y), shown(b.id))
-                return Hole([(q, '%s, %s' % (shown(a.id), shown(b.id)))])
+            d = g.day if isinstance(g.day, datetime.date) else a.day
+            # L §8.1 HOLE-SAME, the rows in the order of their ids, each of a larger class named (tally 2.1.8 S6)
+            q = '%s are one, but %s differs on %s: %s' % (
+                and_list(shown(o.id) for o, h in mem), what, d,
+                and_list('%s (%s)' % (fmt(get(h)), shown(o.id)) for o, h in mem))
+            return Hole([(q, ', '.join(shown(o.id) for o, h in mem))])
     return None
 
 

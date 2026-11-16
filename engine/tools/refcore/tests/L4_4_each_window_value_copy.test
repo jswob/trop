@@ -33,4 +33,3 @@ q2 [a = 2026-03-03]: 2026-03-03
   cut 2026-06-30
 q2p: window(2026-03-01, 2026-03-03)
   cut 2026-06-30
-warning: WARN-UNREAD input b is read by nothing

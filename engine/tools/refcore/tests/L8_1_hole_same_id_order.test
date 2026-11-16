@@ -1,0 +1,29 @@
+# tally 2.1.8 S6 (#177), L §8.1 HOLE-SAME: the rows in the order of their ids (L §2.5), whatever order the same line
+# writes them in: same zeta = alpha names alpha first, from either side. Reopens P51, which took the written order.
+=== m.tally
+model t
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input zeta: money PLN
+input alpha: money PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  zeta = 10.00 PLN "s"
+  alpha = 12.00 PLN "s"
+  same zeta = alpha
+
+ask z: zeta
+ask a: alpha
+=== expect
+a: ?"alpha and zeta are one, but the value differs on every day: 12.00 PLN (v:alpha) and 10.00 PLN (v:zeta)" (alpha, zeta)
+  cut 2026-03-01
+z: ?"alpha and zeta are one, but the value differs on every day: 12.00 PLN (v:alpha) and 10.00 PLN (v:zeta)" (alpha, zeta)
+  cut 2026-03-01
