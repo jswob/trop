@@ -2367,6 +2367,12 @@ def m_c_gap(self, n, env, ctx):
     w = self.main_walk(ctx)
     gs = w.gaps.get((p.name, d))
     if not gs:
+        ends = self.run_ends(p.name, d)
+        if ends is not None and any(iid == 'stated' and pl == p.name and r.instant[0] == d
+                                    for iid, pl, u, r in self.readings(ctx)):
+            # a reading at an instant outside [S, E]: the booked balance it is less is the run's hole there, so the
+            # gap is too (L §5.19 gap, L §8.1 HOLE-PRERUN, HOLE-POSTRUN; tally 2.1.8 #159)
+            return ends
         return Hole([('stated[%s] has no reading at %s' % (p.name, d), 'stated[%s]' % p.name)])
     gs = sorted(gs, key=lambda x: x[0])
     key, gap, r, role, unit, bc = gs[-1]
