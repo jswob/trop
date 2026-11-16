@@ -29,7 +29,7 @@ use crate::base::{Load, Run};
 use crate::hole::{Hole, spread};
 use crate::model::{Code, KeyVal, Reality, Value, Window};
 use crate::num::Num;
-use crate::read::{Asked, Found, read_input};
+use crate::read::{Asked, Found, read_input, row_span};
 use crate::syntax::{Call, Expr, Stop, Value as Written};
 use crate::time::{Added, Day, Period};
 
@@ -442,6 +442,7 @@ impl Engine {
     ) -> Result<Value, Stop> {
         if passes_edge(from, step, count) {
             self.past_edge(m, (cal, env, ctx), (from, step))?;
+            return self.days_to_edge(m, (cal, env, ctx), (from, step));
         }
         let mut left = count;
         let mut current = from;
@@ -460,15 +461,46 @@ impl Engine {
         Ok(Value::Day(current))
     }
 
+    /// A shift that passes the calendar's edge from `from` by steps of `step` where its
+    /// classes can't stand for the days ([`Engine::past_edge`]): each day read from the day
+    /// after `from` to the edge, in day order, the first read's refusal standing; a hole on the
+    /// way decides nothing, the shift passing the edge whatever it says (L §8 head R1, §8.1;
+    /// tally 2.1.8 R11, #169-a); past a hole where no row of the calendar can govern a day
+    /// on to the edge, every read is that hole, so the edge is met at once. L §4.2, §7.6
+    /// item 1.
+    ///
+    /// # Errors
+    ///
+    /// The first day's refusal, else `RUN-LIMIT`.
+    fn days_to_edge(
+        &mut self,
+        m: &Reality,
+        (cal, env, ctx): (&Expr, &Env, Ctx),
+        (from, step): (Day, i64),
+    ) -> Result<Value, Stop> {
+        let Ok((name, _)) = self.calendar_input(m, (cal, env, ctx))? else {
+            return Err(past_days(step));
+        };
+        let mut current = from;
+        loop {
+            current = current.add_days(step).ok_or_else(|| past_days(step))?;
+            let read = self.business(m, (cal, env, ctx), (current, true))?;
+            if read.as_hole().is_some() && no_row_ahead(m, &name, (current, step), ctx)? {
+                return Err(past_days(step));
+            }
+        }
+    }
+
     /// A shift that passes the calendar's edge from `from` by steps of `step`: its value is
     /// computed from the reads the walk makes, in day order (L §8 head, R1), so the calendar
     /// is read once per law-date class of its rows, the span over which the read can't change
     /// (E §3.2), from the day after `from` to the edge; the first read's refusal stands, else
     /// `RUN-LIMIT`; a hole on the way decides nothing, the shift passing the edge whatever it
     /// says, so the walk goes on to the next class (L §8, §8.1; tally 2.1.8 R11, #169-a;
-    /// refcore's `add_business_at`). Returns, for the walk day by day, where the classes can't
-    /// stand for the days (a key that is a hole, a reading, a row that is an instant or an
-    /// expression, a key that is a thing with a lifespan). L §4.2, §7.6 item 1, §8.4.
+    /// refcore's `add_business_at`). A key that is a hole reads no calendar, so nothing on the
+    /// way refuses: `RUN-LIMIT`. Returns, for [`Engine::days_to_edge`], where the classes can't
+    /// stand for the days (a reading, a row that is an instant or an expression, a key that is
+    /// a thing with a lifespan). L §4.2, §7.6 item 1, §8.4.
     ///
     /// # Errors
     ///
@@ -480,7 +512,7 @@ impl Engine {
         (from, step): (Day, i64),
     ) -> Result<(), Stop> {
         let Ok((name, keys)) = self.calendar_input(m, (cal, env, ctx))? else {
-            return Ok(());
+            return Err(past_days(step));
         };
         let input = m
             .inputs
@@ -800,6 +832,40 @@ impl Engine {
         }
         Ok(first == Some(day))
     }
+}
+
+/// Whether no row of calendar input `name` can govern a day from `day` on by steps of `step`,
+/// in the cut and world of `ctx`, so each read there is the hole of no row: a reading, an
+/// instant row or a row whose span reaches past `day` that way may (L §4.6, §8.1).
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for an input or a version load didn't build.
+fn no_row_ahead(m: &Reality, name: &str, (day, step): (Day, i64), ctx: Ctx) -> Result<bool, Stop> {
+    let input = m
+        .inputs
+        .get(name)
+        .ok_or_else(|| invariant("a calendar input load didn't build"))?;
+    if input.reading {
+        return Ok(false);
+    }
+    for row in &input.rows {
+        if row.instant.is_some() {
+            return Ok(false);
+        }
+        let Some(span) = row_span(m, row, (ctx.cut, ctx.world))? else {
+            continue;
+        };
+        let ahead = if step > 0 {
+            span.end().is_none_or(|end| end > day)
+        } else {
+            span.start().is_none_or(|start| start <= day)
+        };
+        if ahead {
+            return Ok(false);
+        }
+    }
+    Ok(true)
 }
 
 /// Whether `count` business days by steps of `step` from `from` outnumber the days to the

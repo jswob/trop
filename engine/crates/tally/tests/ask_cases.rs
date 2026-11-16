@@ -6,7 +6,8 @@
 //! day last), §8.2 (the register: `assumed`, `held`, `world`, the law date and the cut; a
 //! tuple's `unfulfilled:` on its own line), §8.4 (a run-time refusal stands as its value,
 //! with the register met before it; L §5.14.3 a refused `flows`, L §5.14 `with uncertain`);
-//! tally 2.1.8 R13.1 (a diff's own `for`, one block per tuple, on one stack and on two).
+//! tally 2.1.8 R13.1 (a diff's own `for`, one block per tuple, on one stack and on two), R11
+//! (L §4.2 `add_business` past the day range, a hole on the way read day by day).
 //! Twin: engine/tools/refcore/ask.py (`Asker`); the expected lines are refcore's run of the
 //! same text (`python3 -m refcore run`), but where refcore stops or misses: there the lines
 //! are the spec's, and the case's comment says so.
@@ -653,5 +654,124 @@ h3 (k = b): diff in sd against sc: 1 changed, 0 added, 0 removed, 0 unchanged
         ];
         let want: Vec<&str> = DIFF_FOR_LINES.lines().collect();
         assert_eq!(lines_of_files(&files), want, "one block per tuple");
+    }
+
+    /// `add_business` past the day range over a calendar read day by day: a key that is a
+    /// hole, and a scenario's expression row governing 2026 only, the base's row before 2026
+    /// a calendar with no business day (the review of group 1's B2).
+    const SHIFT_HOLE_KEY: &str = "model hk
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source plan \"plan\"
+index cs = [pl, de]
+input who: key cs
+input calk[c in cs]: calendar
+input d: date
+input nf: int
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  d = 2026-06-01 \"a day\"
+  nf = 2912292 \"far\"
+  calk[pl] = calendar(weekends [sat, sun]) \"s\"
+  calk[de] = calendar(weekends [sat, sun]) \"s\"
+
+ask k: add_business(d, nf, calk[who])
+ask kp: add_business(d, nf, calk[pl])
+";
+
+    /// The base of the expression row's case.
+    const SHIFT_ROWS: &str = "model a6
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source plan \"plan\"
+input d: date
+input cr: calendar
+input cq: calendar
+input huge: int
+input n3: int
+input n300: int
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  d = 2026-06-01 \"a day\"
+  huge = 100000000000000000000 \"10^20\"
+  n3 = 3 \"three\"
+  n300 = 300 \"300\"
+
+version v26
+  cite plan
+  governs 2026
+  known 2026-01-01
+  cr = calendar(weekends [sat, sun]) \"s\"
+  cq = calendar(weekends [sat, sun]) \"s\"
+
+version v25
+  cite plan
+  governs ..2025
+  known 2026-01-01
+  cq = calendar(weekends [mon, tue, wed, thu, fri, sat, sun]) \"none\"
+
+ask q_fwd: add_business(d, huge, cq)
+ask x_fwd: add_business(d, huge, cq) in sx
+ask x_back: add_business(d, -huge, cq) in sx
+ask x_in: add_business(d, n300, cq) in sx
+ask x_3: add_business(d, n3, cq) in sx
+";
+
+    /// The scenario whose row is an expression.
+    const SHIFT_ROWS_SX: &str = "scenario sx over a6
+  tally 2
+  from 2026-01-01
+
+version sx_v
+  cite plan
+  governs 2026
+  known 2026-01-01
+  replace cq = a6.cr \"s\"
+";
+
+    /// refcore's lines but `x_back`'s: the ruled order (P27), the calendar's `RUN-DOMAIN` met
+    /// on the way back before the edge, where refcore refuses `RUN-LIMIT` before any read.
+    const SHIFT_ROWS_LINES: &str = "q_fwd: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 2026-12-31
+x_3: 2026-06-04
+  world: sx
+  cut 2026-12-31
+x_back: refused: RUN-DOMAIN calendar cq has no business day
+  world: sx
+  cut 2026-12-31
+x_fwd: refused: RUN-LIMIT a day passes 9999-12-31
+  world: sx
+  cut 2026-12-31
+x_in: ?\"calendar cq doesn't cover 2027\" (cq)
+  world: sx
+  cut 2026-12-31";
+
+    #[test]
+    fn a_shift_past_the_day_range_passes_a_hole_read_day_by_day() {
+        assert_eq!(
+            lines_of_files(&[("hk.tally", SHIFT_HOLE_KEY)]),
+            [
+                "k: refused: RUN-LIMIT a day passes 9999-12-31",
+                "  cut 2026-12-31",
+                "kp: refused: RUN-LIMIT a day passes 9999-12-31",
+                "  cut 2026-12-31",
+            ],
+            "a key that is a hole reads no calendar"
+        );
+        let files = [("a6.tally", SHIFT_ROWS), ("sx.tally", SHIFT_ROWS_SX)];
+        let want: Vec<&str> = SHIFT_ROWS_LINES.lines().collect();
+        assert_eq!(lines_of_files(&files), want, "an expression row's days");
     }
 }
