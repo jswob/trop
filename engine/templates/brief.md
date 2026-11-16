@@ -57,7 +57,7 @@ Everything else is yours: take the (Recommended) option and log it (the skill, �
 
 **Limit <L> % of the week; wind down at <L − 1> %.** Measure with `engine/tools/usage tmp/<run>/ids.txt` after every chunk.
 
-**The estimate,** from the last run's measured rates (`engine/PLAYBOOK.md` §4; the rows below are M0's, and M1 ran 2.1 % and M2 about 1.7 % per 1 000 changed lines all-in):
+**The estimate,** from the last run's measured rates (`engine/PLAYBOOK.md` §4; the rows below are M0's, and M1 ran 2.1 % and M2 2.2 % per 1 000 changed lines all-in):
 
 | Part                                     | Rate                                                | This run        |
 | ---------------------------------------- | --------------------------------------------------- | --------------- |

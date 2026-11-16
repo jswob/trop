@@ -243,21 +243,21 @@ Measured sizes, in words: M1's brief 2 247, 2.1.7's 2 978, M2's 2 291; a rules s
 
 ## 4. The numbers a plan uses
 
-| Run                     | Cost, % of the week | Changed lines in `engine/crates` | % per 1 000 lines | Note                                                 |
-| ----------------------- | ------------------- | -------------------------------- | ----------------- | ---------------------------------------------------- |
-| M0 (PR #70)             | 26.4                | 32 800 added                     | about 1.05        | the builder alone 0.6; the gate about 20 % on top    |
-| M1 (PR #110)            | 49.9                | 24 000                           | 2.1               | three limit raises; gate 8's method changed mid-gate |
-| 2.1.7 (PR #157)         | 20.2                | 2 800                            | not comparable    | 84 questions, 10 rules; the planner 6.5 of it        |
-| M2 to group 5 (PR #168) | 21.0                | 12 600                           | 1.66              | T 3.9, the coordinator 1.7, spec steps 0.8 of it     |
+| Run             | Cost, % of the week | Changed lines in `engine/crates` | % per 1 000 lines | Note                                                 |
+| --------------- | ------------------- | -------------------------------- | ----------------- | ---------------------------------------------------- |
+| M0 (PR #70)     | 26.4                | 32 800 added                     | about 1.05        | the builder alone 0.6; the gate about 20 % on top    |
+| M1 (PR #110)    | 49.9                | 24 000                           | 2.1               | three limit raises; gate 8's method changed mid-gate |
+| 2.1.7 (PR #157) | 20.2                | 2 800                            | not comparable    | 84 questions, 10 rules; the planner 6.5 of it        |
+| M2 (PR #168)    | 37.6                | 17 300                           | 2.2               | 1.66 after group 5; the Fable gate review 1.2 of it  |
 
 - **One session:** a group's builder 1 to 3 %; a group review about 0.4 %; a fix review 0.15 to 0.4 %; a turn of T 0.5 to 1.4 %; a study or a rules session 0.25 to 1.1 %.
 - **A group's builder and review together,** M2: 0.85 to 1.85 % per 1 000 lines; the highest was a small group of corner cases.
 - **Wall time:** a group with its fix loop 2.5 to 5 hours; a gate-8 dispatch 1 to 2 hours with its queue.
-- A Fable session costs about 1.6 times the same tokens on Opus by `usage`'s figure: twice on what it writes and reads fresh, the same on cache reads (D10; this file's own session, 0.22 % as Opus's tokens, 0.34 % as Fable's).
+- A Fable session costs 1.3 to 1.6 times the same tokens on Opus by `usage`'s figure, not twice: twice on what it writes and reads fresh, the same on cache reads (D10). M2's gate review was 0.95 % as Opus's tokens and 1.22 % as Fable's; this file's own session 0.22 % and 0.34 %.
 
 ## 5. Sources
 
 - **Anthropic, read 2026-11-15** on `platform.claude.com/docs/en/`: `models/fable-5-2/overview`, `models/fable-5-2/whats-new-fable-5-2`, `models/fable-5-2/migration-guide` (its second half only as a summary), `about-claude/models/overview`, `build-with-claude/effort`, `build-with-claude/prompt-engineering/prompting-claude-fable-5-2`.
 - **Claude Code, read 2026-11-15** on `code.claude.com/docs/en/`: `model-config`, `cli-reference`, `headless`, `sub-agents`, `skills`, `costs`, `settings`. The installed version is 2.1.325; its binary names `claude-fable-5-2` and `claude-opus-5-5`.
 - **Not confirmed:** Claude Code's default effort for each model; how a Pro or Max plan meters Fable, and what a "reset" is; whether `--max-budget-usd` and `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH` behave as their docs say on our runs; any guidance from Anthropic on emphasis words, examples, or step scripts against goals for Fable.
-- **Ours:** PR #70 (M0) and the retro after it, PR #92 (the process round), #110 (M1), #139 (the check loops), #157 (2.1.7), #166 (the slow-test check), #168 (M2, running when this was written).
+- **Ours:** PR #70 (M0) and the retro after it, PR #92 (the process round), #110 (M1), #139 (the check loops), #157 (2.1.7), #166 (the slow-test check), #168 (M2).
