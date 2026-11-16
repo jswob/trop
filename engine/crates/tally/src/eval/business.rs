@@ -436,11 +436,11 @@ impl Engine {
     /// computed from the reads the walk makes, in day order (L §8 head, R1), so the calendar
     /// is read once per law-date class of its rows, the span over which the read can't change
     /// (E §3.2), from the day after `from` to the edge; the first read's refusal stands, else
-    /// `RUN-LIMIT`. Returns, for the walk day by day, where the classes can't stand for the
-    /// days (a key that is a hole, a reading, a row that is an instant or an expression, a
-    /// key that is a thing with a lifespan) and at a hole on the way, which the walk meets
-    /// first as refcore does (L §8 head R2 reads it refused: the STOP-REPORT of 2026-11-14).
-    /// L §4.2, §7.6 item 1, §8.4.
+    /// `RUN-LIMIT`; a hole on the way decides nothing, the shift passing the edge whatever it
+    /// says, so the walk goes on to the next class (L §8, §8.1; tally 2.1.8 R11, #169-a;
+    /// refcore's `add_business_at`). Returns, for the walk day by day, where the classes can't
+    /// stand for the days (a key that is a hole, a reading, a row that is an instant or an
+    /// expression, a key that is a thing with a lifespan). L §4.2, §7.6 item 1, §8.4.
     ///
     /// # Errors
     ///
@@ -470,16 +470,8 @@ impl Engine {
         }
         let mut current = from.add_days(step).ok_or_else(|| past_days(step))?;
         loop {
-            // the read's refusal stands; a hole, read or added, is met by the walk
-            let value = self.calendar_on(m, (&name, &keys), ctx, (current, true))?;
-            let unknown = if let Value::Calendar(c) = &value {
-                c.added().iter().any(|a| matches!(a, Added::Hole(_)))
-            } else {
-                true
-            };
-            if unknown {
-                return Ok(());
-            }
+            // the read's refusal stands; a hole, read or added, is passed like a known class
+            self.calendar_on(m, (&name, &keys), ctx, (current, true))?;
             let class = rows_class(m, &input.rows, ctx.cut, current)?;
             current = class.beyond(step).ok_or_else(|| past_days(step))?;
         }
