@@ -851,7 +851,7 @@ fn undecided_lines(
         }
         out.push(format!("{}: {}", line_head(lead), hole.text()));
         if whole {
-            out.extend(block_clock(under).map(|l| (*l).to_owned()));
+            out.extend(block_clock(under));
         } else {
             out.extend(under.iter().map(|l| (*l).to_owned()));
         }
@@ -873,12 +873,12 @@ fn by_every_line(ask: &Ask) -> bool {
 }
 
 /// The last cut or law date line among a block's lines `under`.
-fn block_clock<'a>(under: &[&'a str]) -> Option<&'a str> {
+fn block_clock(under: &[&str]) -> Option<String> {
     under
         .iter()
         .rev()
         .find(|l| l.starts_with("  cut") || l.starts_with("  law date"))
-        .copied()
+        .map(|l| (*l).to_owned())
 }
 
 /// Lines `lines` in blocks: a line and the indented lines under it.
