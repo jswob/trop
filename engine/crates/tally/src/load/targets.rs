@@ -17,7 +17,7 @@ use super::reads::{is_move_type, is_place_type};
 use super::types::{is_date, refused, uerr};
 use crate::base::{Code, Load};
 use crate::model::{KindSpec, MoveInfo, NameKind, Node, NodeKind, Reality, Rel, Target, Ty};
-use crate::syntax::{Expr, Key, Lit, Order, Postfix, Stop};
+use crate::syntax::{Expr, Key, Leg, Lit, Order, Postfix, Sign, Stop};
 use std::collections::BTreeSet;
 
 impl Checker {
@@ -78,6 +78,10 @@ impl Checker {
                 let change = change_of(m, &scope, end).map_err(|s| on_leg.place(s))?;
                 push_once(&mut changes, change);
             }
+            let guarded = leg_guarded(m, &scope, leg).map_err(|s| on_leg.place(s))?;
+            let key = (mv.id.clone(), leg.name.clone());
+            let before = self.leg_guarded.get(&key).copied().is_some_and(|g| g);
+            self.leg_guarded.insert(key, before || guarded);
         }
         self.attrs(m, &scope, mv)?;
         if let Some(fulfils) = &decl.fulfils {
@@ -378,6 +382,27 @@ fn change_of(m: &Reality, scope: &Scope, end: &Expr) -> Result<Target, Stop> {
         return Ok(Target::PlaceSec(section));
     }
     Ok(place_kind(m, scope, end).map_or(Target::Unknown, Target::Kind))
+}
+
+/// Whether leg `leg` touches a place the walk guards: one of its places has a kind whose sign
+/// rule is `min 0` or `max 0`, or keeps parts, or load can't name it. Its booking then reads
+/// that place's balance, so its amount is read inside its combination (refcore's
+/// `m_leg_guarded`; L §5.5, tally 2.1.7 R8; L §5.10).
+fn leg_guarded(m: &Reality, scope: &Scope, leg: &Leg) -> Result<bool, Stop> {
+    for end in [&leg.from, &leg.to] {
+        let Some(name) = literal_place(m, scope, end)? else {
+            return Ok(true);
+        };
+        let thing = m
+            .things
+            .get(&name)
+            .ok_or_else(|| invariant(format!("a literal place {name} that is no thing")))?;
+        let sign = thing.base.as_deref().and_then(|base| m.kind_sign(base));
+        if matches!(sign, Some(Sign::Min0 | Sign::Max0)) || m.thing_parts(thing).is_some() {
+            return Ok(true);
+        }
+    }
+    Ok(false)
 }
 
 /// The kind a place expression's type names, where load sees it: a variable bound over a

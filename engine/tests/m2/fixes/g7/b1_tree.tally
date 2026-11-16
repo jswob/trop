@@ -1,0 +1,84 @@
+model f6tree
+  tally 2
+  on 2026-04-15
+  start 2026-01-01
+  end 2026-12-31
+
+source card "G7 review probe B1: F5's guard and F6's parked failed walk"
+
+unit DUK: currency minor 0.01
+
+index month = month 2026-01..2026-12
+
+place konto: accounts DUK lives 2026-01-01..
+
+place big: accounts DUK lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input pay: money DUK
+
+input big_on: int
+
+input e1: num
+
+input five: money DUK
+
+def e2: num = e1 * e1
+
+def e3: num = e2 * e2
+
+def e4: num = e3 * e3
+
+def e5: num = e4 * e4
+
+def e6: num = e5 * e5
+
+def e7: num = e6 * e6
+
+def e8: num = e7 * e7
+
+def e9: num = e8 * e8
+
+def e10: num = e9 * e9
+
+def e11: num = e10 * e10
+
+def e12: num = e11 * e11
+
+def flood_amt: money DUK = round(five * e12 * e11 * e10 * e9 * e8 * e7 * e6 * e5 * e4 * e3 * e1 * big_on, minor(DUK), down)
+
+move salary[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount pay
+
+move flood[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to big amount flood_amt
+
+ask b_pair: bal(big, 2026-12-31) from 2026-01-20 with uncertain, bal(konto, 2026-12-31) from 2026-01-20
+
+ask b_pair_rev: bal(konto, 2026-12-31) from 2026-01-20, bal(big, 2026-12-31) from 2026-01-20 with uncertain
+
+ask b_big: bal(big, 2026-12-31) from 2026-01-20 with uncertain
+
+ask b_konto: bal(konto, 2026-12-31) from 2026-01-20
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 1000.00
+  big_on = 1
+  e1 = 10
+  five = 5.00
+  opening[konto] = 500.00 at 2026-01-01 start
+  opening[big] = 0.00 at 2026-01-01 start
+
+version later
+  cite card
+  governs always
+  known 2026-02-01
+  replace big_on = 0 "the flood stopped"

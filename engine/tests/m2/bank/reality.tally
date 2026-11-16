@@ -1,0 +1,24 @@
+model tropek_bank
+  tally 2
+  on 2026-10-17
+  start 2024-01-01
+  end 2027-01-31
+  note "T, M2 (issues #167, #114), DONE gate 2: the bank run of the prototype's reality R7 (engine/spec/verification/goldens.md: G2, G4, G5): the bank half (bank.tally) over the prototype's bank history (records/), to 2027-01-31. The forward half and its horizons are r7/."
+
+index cal_year = year 2024..2026
+
+index month = month 2024-01..2026-12
+
+ask g2_konto: bal(konto, d) for d in [2026-10-15, 2026-10-16]
+
+ask g4_by_cat: residuals konto 2025-11 .. 2026-01 by cat
+
+ask g4_my_pay: residuals pracodawca 2024-01 .. 2026-10
+
+ask g4_pay: emp_net[j, m] for j in job over .., m in [2024-12, 2025-11, 2025-12]
+
+ask g4_rent: residuals wynajmujacy 2024-01 .. 2026-10
+
+ask g4_wife_pay: residuals pracodawca_zony 2024-01 .. 2026-10
+
+ask g5_spend: spend_daily

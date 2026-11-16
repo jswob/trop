@@ -15,8 +15,10 @@
 //! be `held` to d's side of the ask's cut, and a text that names d (a hole's question, a
 //! `held` entry, `RUN-CONFLICT`, `RUN-NO-RULE`), a reading, a calendar's days and a priced
 //! figure to d alone; a cell read at the reader's own law date narrows the reader to the read
-//! cell's class; a cycle met narrows every open cell to its own day; a walk-bound cell is kept
-//! at its exact law date; under `Memo::Exact` every class is one day; a cell read under the
+//! cell's class; a cycle met narrows every open cell to its own day; a window's law date read
+//! outside a cell (a move's `at`, a def's window `at`) runs in a class of its own, which
+//! narrows the cell around it as its reads would have; a walk-bound cell is kept at its exact
+//! law date; under `Memo::Exact` every class is one day; a cell read under the
 //! ask line's `with uncertain` is a cell of its own. A kept cell's read set holds the inputs it
 //! read at their keys, the rows, bands and band rows it chose and the cells it read, never what
 //! those cells read, nor what a walk, a plan, adjustments or links read while it first needed
@@ -72,8 +74,18 @@ impl LawClass {
         }
     }
 
+    /// The first day past it in the direction of `step`: the day after its last, or for a
+    /// negative step the day before its first; none where it is open that way or the day
+    /// would pass the calendar's edge (E §3.2, L §7.6 item 1).
+    pub(super) fn beyond(self, step: i64) -> Option<Day> {
+        if step > 0 {
+            return self.until.filter(|d| !d.is_end());
+        }
+        self.from.and_then(Day::previous)
+    }
+
     /// Whether it holds law date `day`.
-    fn holds(self, day: Day) -> bool {
+    pub(crate) fn holds(self, day: Day) -> bool {
         self.from.is_none_or(|f| f <= day) && self.until.is_none_or(|u| day < u)
     }
 
@@ -206,6 +218,8 @@ pub(crate) struct CellKey {
     at: Option<WalkAt>,
     /// Whether the cell is read under the ask line's `with uncertain` (L §5.18).
     unc: bool,
+    /// Whether the cell is read under the ask line's `partial`, a cell of its own (L §5.18).
+    partial: bool,
     /// The pins in force, trimmed to those the def reaches (E §3.2, P §3.1).
     layer: Layer,
     /// The world the cell is read in (L §6.4), never trimmed: no cell is shared across worlds.
@@ -227,6 +241,7 @@ impl CellKey {
             cut: ctx.cut,
             at: ctx.at,
             unc: ctx.unc,
+            partial: ctx.partial,
             layer: ctx.layer,
             world: ctx.world,
         }
@@ -250,7 +265,8 @@ impl CellKey {
             .cut
             .cmp(&other.cut)
             .then_with(|| walk_at_order(self.at, other.at))
-            .then_with(|| self.unc.cmp(&other.unc));
+            .then_with(|| self.unc.cmp(&other.unc))
+            .then_with(|| self.partial.cmp(&other.partial));
         clocks
             .then_with(|| self.layer.number().cmp(&other.layer.number()))
             .then_with(|| world_order(self.world, other.world))
@@ -619,6 +635,39 @@ impl Engine {
             law,
             class: LawClass::all(),
         });
+    }
+
+    /// Opens the class of a computation at law date `day` that is no def cell (a window's
+    /// law dates read once per class, L §4.4's cost line; E §3.2); returns the mark
+    /// [`Engine::close_law_class`] takes.
+    pub(crate) fn open_law_class(&mut self, day: Day) -> usize {
+        let mark = self.frames.len();
+        self.open_class(Some(day));
+        mark
+    }
+
+    /// Closes the class opened at `mark` for law date `day`, and every class a refusal left
+    /// open inside it, and returns it: the law dates that give what the computation gave.
+    /// The cell that holds the computation is narrowed by it where its own law date is
+    /// `day`, as the computation's reads would have narrowed it (E §3.2).
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a class closed with none open at `mark`.
+    pub(crate) fn close_law_class(&mut self, mark: usize, day: Day) -> Result<LawClass, Stop> {
+        let class = self
+            .frames
+            .get(mark)
+            .map(|f| f.class)
+            .ok_or_else(|| invariant("a law date class closed with none open"))?;
+        self.frames.truncate(mark);
+        self.narrow(Some(day), class);
+        // the plain twin reads every law date of a window, each its own (P §3.3's on/off
+        // test)
+        Ok(match self.cells.memo {
+            Memo::Classes => class,
+            Memo::Exact => LawClass::day(day),
+        })
     }
 
     /// Closes the innermost def cell's class and returns it.

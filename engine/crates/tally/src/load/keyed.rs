@@ -482,7 +482,7 @@ impl Checker {
         }
         if let Some((fill, fkeys, keys, used)) = fill_ref(m, scope, base, posts) {
             let ty = self.fill_read(m, scope, &fill, (&fkeys, &keys), depth)?;
-            return Self::post_rest(m, scope, base, posts, (ty, used));
+            return self.post_rest((m, scope), base, posts, (ty, used));
         }
         let ty = match first {
             Postfix::Keys(keys) => self.index(m, scope, base, keys, depth)?,
@@ -491,7 +491,7 @@ impl Checker {
                 self.field(m, scope, Some(base), &t, field)?
             }
         };
-        Self::post_rest(m, scope, base, posts, (ty, 1))
+        self.post_rest((m, scope), base, posts, (ty, 1))
     }
 
     /// `<base>.x` and its postfixes `rest` in a scenario's expression row: x read in the base,
@@ -524,8 +524,8 @@ impl Checker {
     /// The postfixes after the first `done` of `posts`, the value so far of type `ty`: fields
     /// of it; a key there is no read (refcore's `t_index`, `t_field`). L §2.5, §3.1.
     fn post_rest(
-        m: &Reality,
-        scope: &Scope,
+        &mut self,
+        (m, scope): (&Reality, &Scope),
         base: &Expr,
         posts: &[Postfix],
         (mut ty, mut done): (Ty, usize),
@@ -539,7 +539,7 @@ impl Checker {
                         format!("cannot parse: {prefix} is not read with keys"),
                     ));
                 }
-                Postfix::Field(field) => ty = Self::field_of(m, scope, None, &ty, field)?.0,
+                Postfix::Field(field) => ty = self.field(m, scope, None, &ty, field)?,
             }
             done = done
                 .checked_add(1)
@@ -605,7 +605,31 @@ impl Checker {
         if let Some(test) = used {
             self.narrow_used.insert(test);
         }
+        if let Ty::Key(kind) = t
+            && self.reads_guarded_leg(m, kind, field)?
+        {
+            // a leg at a place the walk guards is booked against that place's balance, so
+            // its record, read inside its combination, reads what the balances read (L §5.5,
+            // R8), as `flows` of its move does
+            self.edge(&scope.item, Node::balances(), Rel::Flows);
+        }
         Ok(ty)
+    }
+
+    /// Whether field `field` of a movement of kind `kind` is the leg of a move of that kind,
+    /// or of a kind under it, that touches a place the walk guards (`leg_guarded`). L §5.5,
+    /// §5.14.
+    fn reads_guarded_leg(&self, m: &Reality, kind: &str, field: &str) -> Result<bool, Stop> {
+        for ((id, leg), guarded) in &self.leg_guarded {
+            if !*guarded || leg != field {
+                continue;
+            }
+            let mv = m.moves.at(m.names.move_id(id)?)?;
+            if kind == "events" || m.chain(&mv.kind).iter().any(|k| k.id == kind) {
+                return Ok(true);
+            }
+        }
+        Ok(false)
     }
 
     /// `x.f` of a value of type `t`, and the site of the kind test whose narrowing gave it, if

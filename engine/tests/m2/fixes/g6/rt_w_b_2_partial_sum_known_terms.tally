@@ -1,0 +1,22 @@
+model m
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G6 vectors: refcore's W_B_2_partial_sum_known_terms: a sum's known terms and its hole terms (L §5.18)"
+
+source src "a source"
+
+index ks = [a, b]
+
+input x[k in ks]: int question "x?"
+
+version v
+  cite src
+  governs always
+  known 2026-01-01
+  x[a] = 5 "row"
+
+ask s: sum(x[k] for k in ks) partial
+
+ask t: sum(x[k] for k in ks) - 1 partial

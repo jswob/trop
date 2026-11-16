@@ -1,0 +1,57 @@
+model r1
+  tally 2
+  on 2026-01-01
+  start 2025-01-01
+  end 2025-12-31
+  note "T, M2 gate 8 run 43702332507 on 6a58624c: abs, round, max and a comparison over a hole under partial: the plain hole (hole/questions.rs spread, plain; L §5.18)"
+unit DUK: currency minor 0.01
+source s "s"
+index ks = [a, b, c]
+kind two: transfers
+  leg cash: DUK
+  leg fee: DUK
+place w: accounts DUK lives 2025-01-01..
+place v2: accounts DUK lives 2025-01-01..
+place shop: outside lives 2025-01-01..
+input four: int
+input five: int
+input one_duk: money DUK
+input x: int question "x?"
+input y: int question "y?"
+input three: int question "three?"
+input d3: date
+input mx: money DUK question "mx?"
+input my: money DUK question "my?"
+input z[k in ks]: int question "z?"
+input f[k in ks]: bool question "f?"
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  opening[w] = 100.00 DUK at 2025-01-01 start "o"
+  opening[v2] = 0.00 DUK at 2025-01-01 start "o"
+  three = 3 "t"
+  four = 4 "f"
+  five = 5 "f"
+  one_duk = 1.00 DUK "u"
+  d3 = 2025-03-01 "d"
+  x = ?"x?" "x"
+  y = ?"y?" "y"
+  mx = ?"mx?" "mx"
+  my = ?"my?" "my"
+  z[a] = 5 "a"
+  z[b] = 6 "b"
+  z[c] = 7 "c"
+  f[a] = true "a"
+  f[b] = ?"is b?" "b"
+  f[c] = false "c"
+def third: int = x / three at reader
+move two_legs: two
+  on d3
+  leg cash from w to shop amount mx
+  leg fee from w to v2 amount my
+ask a1: abs(x) + 1 law 2025-12-31 partial
+ask a2: round(mx, 1 DUK, half-up) + one_duk law 2025-12-31 partial
+ask a3: max(x, 1) + 1 law 2025-12-31 partial
+ask a4: (x > 1) law 2025-12-31 partial
+ask a5: abs(x) law 2025-12-31 partial

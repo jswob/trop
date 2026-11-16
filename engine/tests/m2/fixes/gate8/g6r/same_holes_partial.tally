@@ -1,0 +1,34 @@
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 gate 8: two input rows stated same whose values are holes, read in a partial sum (hole/questions.rs spread, delete field lin; eval/read.rs read_same_rows)"
+
+source s "s"
+unit PLN: currency minor 0.01
+input x: money PLN
+input y: money PLN
+input z: money PLN
+input ten: money PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x = ?"x amount" "s"
+  y = ?"y amount" "s"
+  z = 5.00 PLN "s"
+  ten = 10.00 PLN "s"
+
+version sm
+  cite s
+  governs always
+  known 2026-01-02
+  same x = y
+
+ask q1: x + ten partial
+ask q2: x + ten
+ask q3: y + z partial
+ask q4: x + y partial
+ask q5: z + ten partial

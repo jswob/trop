@@ -837,6 +837,13 @@ def ci_problems():
             "R-88: a shard's job isn't capped at 45 minutes": r"\n  mutants:\n(    [^\n]*\n)*?    timeout-minutes: 45\n",
             "R-88: the survivors job doesn't need all 100 shards": r'\[ "\$shards" -eq 100 \]',
             "R-133: the nightly doesn't compare twin maps (`tools/mutants-gate same-map`)": r"\n  mutants-twin-map:\n(    [^\n]*\n|\n)*?    if: github.event_name == 'schedule'\n(    [^\n]*\n|\n)*?          tools/mutants-gate same-map ",
+            # a dispatch with `next` counts the next milestone's tests green unmutated (R-88,
+            # issue #167, pick P31): its baseline, list, map and shards all take `--next`
+            "R-88: no dispatch input `next`": r"\n  workflow_dispatch:\n(    [^\n]*\n)*?      next:\n        description: [^\n]*\n        type: boolean\n        default: false\n",
+            "R-88: the baseline job doesn't count `next`'s tests": r"\n  mutants-baseline:\n(    [^\n]*\n|\n)*?        if: inputs.next\n        working-directory: engine\n        run: tools/mutants-gate next target/mutants-plan/next.json\n(    [^\n]*\n|\n)*?        run: tools/mutants-gate baseline target/mutants-plan \$\{\{ inputs.next && '--next target/mutants-plan/next.json' \|\| '' \}\}\n(    [^\n]*\n|\n)*?        run: tools/mutants-gate list target/mutants-plan/mutants.json \$\{\{ inputs.next && '--next target/mutants-plan/next.json' \|\| '' \}\}\n",
+            "R-88: the coverage map doesn't count `next`'s tests": r"\n  mutants-coverage:\n(    [^\n]*\n|\n)*?        if: inputs.next\n        working-directory: engine\n        run: tools/mutants-gate next target/mutants-map/next.json\n(    [^\n]*\n|\n)*?        run: tools/mutants-gate coverage target/mutants-map/map.json \$\{\{ inputs.next && '--next target/mutants-map/next.json' \|\| '' \}\}\n",
+            "R-88: the survivors job doesn't say a `next` run counted the next milestone": r"\n  mutants-survivors:\n(    [^\n]*\n|\n)*?        if: inputs.next\n        run: \|\n[^\n]*\n          echo \"mutants-survivors: this run counted ",
+            "R-88: the shards don't count `next`'s tests": r"\n        run: tools/mutants-gate shard [^\n]* target/mutants-shard \$\{\{ inputs.next && '--next target/mutants-plan/next.json' \|\| '' \}\}\n",
         }
         for problem, pattern in gate.items():
             if not re.search(pattern, text):

@@ -1,0 +1,43 @@
+model hh
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 gate 8 run 43690242450 on d512fe7b: two instances a later version made exist, each leg read (book/members.rs made_to_exist_leg)"
+
+source s "s"
+unit PLN: currency minor 0.01
+input amt: money PLN
+input go[m in months]: bool
+input dom: int
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  when go[m]
+  leg cash from konto to world amount amt
+
+version v1
+  cite s
+  governs 2026..
+  known 2026-01-01
+  dom = 10 "s"
+  amt = 100.00 PLN "s"
+  go = false "s"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+
+version v2
+  cite s
+  governs 2026-02..2026-03
+  known 2026-04-01
+  go[2026-02] = true "s"
+  go[2026-03] = true "s"
+
+ask c2: pay[2026-02].cash
+ask c3: pay[2026-03].cash
+ask a2: pay[2026-02].cash.amount
+ask d3: pay[2026-03].cash.day
+ask c4: pay[2026-04].cash
+ask b1: bal(konto, 2026-04-30)

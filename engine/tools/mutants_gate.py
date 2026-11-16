@@ -10,7 +10,17 @@
     engine/tools/mutants-gate shard I/N LIST MAP PLAN DIR   shard I's mutants, judged
     engine/tools/mutants-gate history OUT DIR...       a run's costs, for the next plan
     engine/tools/mutants-gate key                      this tree's key
+    engine/tools/mutants-gate next OUT.json            the next milestone's tests green unmutated
     engine/tools/mutants-gate local [FILE…] [-F REGEX] the same on this machine, one shard
+
+`baseline`, `list`, `coverage`, `shard` and `key` take `--next NEXT.json`, `next`'s output: a
+gate-8 dispatch with `next` (R-88, issue #167; the M2 coordinator's pick P31) counts the next
+milestone's tests too, as `mutants-local --next` does (its code): `next` runs that milestone's
+test targets unmutated (tools/milestones: the first milestone not gating), and the others add
+those targets and keep, through a nextest filter (`-E`) on the baseline and the coverage run,
+only the tests green there; the red ones are listed and left out, since each would count as
+catching every mutant. The filter is part of the key, so a coverage map made from another
+`next` run than the plan's is refused. Push, pull-request and nightly runs take no `--next`.
 
 cargo-mutants makes the mutants (`cargo mutants --list --json`: names, spans, diffs). For
 each one, the tests are those whose unmutated run entered the mutant's function, in the
@@ -26,7 +36,7 @@ left in place by a killed run (target/mutants-gate/in-place.json) is put back fi
 
 The map, the list and the plan carry the tree's key: the hash of engine/crates' and
 engine/tests' files, the workspace's Cargo.toml and Cargo.lock, the toolchain, the nextest
-config, the marker, this tool and its coverage files, the proptest seed and the targets. A
+config, the marker, this tool and its coverage files, the proptest seed, the targets and the filter. A
 shard refuses a map, a list or a plan whose key isn't its own, and a plan that doesn't hold
 every listed mutant exactly once.
 
@@ -78,6 +88,11 @@ COV_TARGET = os.path.join(ENGINE, "target", "mutants-cov")
 LOCAL = os.path.join(ENGINE, "target", "mutants-local")
 PASSED = ("CARGO_BUILD_JOBS", "NEXTEST_TEST_THREADS")
 RUNNER = milestones.RUNNER
+# the work counters (R-51, D4-8) in every build of gate 8, its baseline, `next`, both maps, the
+# shards and the local mode: T's counts tests kill the fence's mutants that keep the output
+# but change the counts (R-87, R-88; pick P75, issue #167, 2026-11-15). The runner's feature
+# `counters` turns on tally-cli's; the mutants profile has debug assertions, as R-51 needs
+COUNTERS = f"--features={RUNNER}/counters"
 # the files the key holds, relative to engine/ (R-133)
 KEYED = ["crates", "tests", "Cargo.toml", "Cargo.lock", "rust-toolchain.toml", ".config/nextest.toml",
          "tools/milestones.toml", "tools/mutants_gate.py", "tools/mutants-cov-wrap", "tools/mutants-cov.toml"]
@@ -119,16 +134,19 @@ def run_env():
 
 
 def selection():
-    """T's mutation targets (R-84): `tools/milestones args`, the baseline's and every shard's."""
+    """T's mutation targets (R-84): `tools/milestones args`, the baseline's and every shard's,
+    with the counters on (COUNTERS)."""
     try:
-        return milestones.selection(dict(os.environ))
+        chosen = milestones.selection(dict(os.environ))
+        return chosen if COUNTERS in chosen else [*chosen, COUNTERS]
     except milestones.MilestoneError as e:
         raise GateError(f"tools/milestones: {e}") from e
 
 
-def tree_key(args):
-    """The key of this tree for the targets `args` (R-133): every keyed file's path and bytes,
-    tracked or new (never an ignored one, nor a stray profile), the seed and the targets."""
+def tree_key(args, expr=None):
+    """The key of this tree for the targets `args` and the nextest filter `expr` (R-133): every
+    keyed file's path and bytes, tracked or new (never an ignored one, nor a stray profile), the
+    seed, the targets and the filter (`--next`'s; a run without one keys as before)."""
     out = subprocess.run(["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard", "--", *KEYED],
                          cwd=ENGINE, capture_output=True, check=False)
     if out.returncode != 0:
@@ -140,7 +158,10 @@ def tree_key(args):
             continue  # tracked, deleted here
         with open(path, "rb") as f:
             h.update(rel.encode() + b"\0" + hashlib.sha256(f.read()).digest())
-    h.update(json.dumps({"seed": check.FIXED["PROPTEST_RNG_SEED"], "args": args}).encode())
+    keyed = {"seed": check.FIXED["PROPTEST_RNG_SEED"], "args": args}
+    if expr:
+        keyed["expr"] = expr
+    h.update(json.dumps(keyed).encode())
     return h.hexdigest()[:16]
 
 
@@ -264,7 +285,7 @@ def narrowed_config(files):
     return path
 
 
-def list_mutants(out, args, files=None, regex=None):
+def list_mutants(out, args, files=None, regex=None, expr=None):
     """cargo-mutants' mutants (`--list --json`), keyed; REGEX keeps those whose name matches it,
     struct-field deletions included (cargo-mutants 27.1.0's -F skips them)."""
     argv = ["cargo", "mutants", "--config", narrowed_config(files), "--list", "--json", "-C=--locked"]
@@ -292,7 +313,7 @@ def list_mutants(out, args, files=None, regex=None):
             raise GateError(f"{m['name']}: {e}") from e
         if same:
             raise GateError(f"{m['name']}: its diff changes nothing")
-    dump_json(out, {"key": tree_key(args), "mutants": mutants})
+    dump_json(out, {"key": tree_key(args, expr), "mutants": mutants})
     print(f"mutants-gate: {len(mutants)} mutants")
     return mutants
 
@@ -514,15 +535,15 @@ def features_of(args):
     return sorted({a for a in args if a.startswith("--features=")})
 
 
-def shard(spec, list_path, map_path, plan_path, out):
+def shard(spec, list_path, map_path, plan_path, out, extra=(), expr=None):
     """Shard I of N: the plan's shard I, judged, after every key and the plan are checked."""
     try:
         i, n = (int(x) for x in spec.split("/"))
     except ValueError as e:
         raise GateError(f"{spec}: a shard is I/N") from e
     put_back()
-    args = selection()
-    key = tree_key(args)
+    args = [*selection(), *extra]
+    key = tree_key(args, expr)
     listed, cov, plan = load_json(list_path), load_json(map_path), load_json(plan_path)
     same_key("mutants list", listed, key)
     same_key("coverage map", cov, key)
@@ -581,7 +602,7 @@ def coverage(out, extra=(), expr=None):
     run once, each test with its own LLVM profile (tools/mutants-cov-wrap); for each test the
     kernel functions it entered. Fails unless every test passes and leaves exactly one profile."""
     args = [*selection(), *extra]
-    key = tree_key(args)
+    key = tree_key(args, expr)
     work = os.path.join(WORK, "cov")
     shutil.rmtree(work, ignore_errors=True)
     profiles, stray = os.path.join(work, "profiles"), os.path.join(work, "stray")
@@ -759,6 +780,44 @@ def slow_report(times, past):
 # --- on this machine -------------------------------------------------------------------
 
 
+# --- the next milestone's tests, a dispatch's (R-88, issue #167, pick P31) ---------------
+
+
+def make_next(out):
+    """`next OUT`: the next milestone's tests unmutated, as `mutants-local --next` runs them
+    (its next_targets); OUT gets the cargo arguments that add them and the nextest filter that
+    keeps those green there, with the green and the red. 1 when they can't be told."""
+    import mutants_local  # noqa: PLC0415  it imports this tool, so it is imported here, when used
+
+    env = run_env()
+    added = mutants_local.next_targets(env)
+    if added is None:
+        return 1
+    m, _ = milestones.next_milestone(env)
+    extra, expr, green, red = added
+    dump_json(out, {"milestone": m, "extra": extra, "expr": expr,
+                    "green": [" ".join(t) for t in green], "red": [" ".join(t) for t in red]})
+    print(f"mutants-gate: {out}: {m}'s targets added, {len(green)} of {len(green) + len(red)} tests kept "
+          f"(R-88, a dispatch with next)")
+    return 0
+
+
+def next_of(path):
+    """The targets and the filter `next` wrote to `path` ((), None without one): the cargo
+    arguments and the nextest filter of `--next`."""
+    if path is None:
+        return [], None
+    data = load_json(path)
+    if not isinstance(data, dict):
+        raise GateError(f"{path}: not `mutants-gate next`'s output (its `extra` and `expr`)")
+    extra, expr = data.get("extra"), data.get("expr")
+    if not isinstance(extra, list) or not all(isinstance(a, str) for a in extra) or not (expr is None or isinstance(expr, str)):
+        raise GateError(f"{path}: not `mutants-gate next`'s output (its `extra` and `expr`)")
+    print(f"mutants-gate: {data.get('milestone')}'s tests green unmutated counted too, "
+          f"{len(data.get('green', []))} kept, {len(data.get('red', []))} left out (R-88, --next {path})", file=sys.stderr)
+    return extra, expr
+
+
 def local_key(args, expr):
     """This tree's key for a local run's baseline and map (R-88, 2026-11-13): check's memo key
     (every file git sees, the tags, the environment, the tools' versions) with the targets
@@ -832,12 +891,22 @@ def main(argv):
         print(__doc__.strip())
         return 0 if argv else 64
     cmd, rest = argv[0], argv[1:]
+    nxt = None
+    if "--next" in rest:
+        at = rest.index("--next")
+        if cmd not in ("key", "baseline", "list", "coverage", "shard") or at + 1 >= len(rest):
+            print("mutants-gate: --next NEXT.json goes with baseline, list, coverage, shard or key", file=sys.stderr)
+            return 64
+        nxt, rest = rest[at + 1], rest[:at] + rest[at + 2:]
     try:
+        extra, expr = next_of(nxt)
         if cmd == "key" and not rest:
-            print(tree_key(selection()))
+            print(tree_key([*selection(), *extra], expr))
             return 0
+        if cmd == "next" and len(rest) == 1:
+            return make_next(rest[0])
         if cmd == "baseline" and len(rest) == 1:
-            return 0 if baseline(rest[0]) else 1
+            return 0 if baseline(rest[0], extra, expr) else 1
         if cmd == "slow" and len(rest) == 2:
             # a report: whatever goes wrong in it is printed, never a failure (R-88, issue #165)
             try:
@@ -846,10 +915,10 @@ def main(argv):
                 print(f"::notice title=R-88 report::the report couldn't be made: {e}")
                 return 0
         if cmd == "list" and len(rest) == 1:
-            list_mutants(rest[0], selection())
+            list_mutants(rest[0], [*selection(), *extra], expr=expr)
             return 0
         if cmd == "coverage" and len(rest) == 1:
-            return coverage(rest[0])
+            return coverage(rest[0], extra, expr)
         if cmd == "same-map" and len(rest) == 2:
             a, b = load_json(rest[0]), load_json(rest[1])
             if a != b:
@@ -870,7 +939,7 @@ def main(argv):
                   f"{len(plan['new'])} new to the history")
             return 0
         if cmd == "shard" and len(rest) == 5:
-            return shard(*rest)
+            return shard(*rest, extra, expr)
         if cmd == "history" and len(rest) >= 2:
             return history(rest[0], rest[1:])
         if cmd == "local":

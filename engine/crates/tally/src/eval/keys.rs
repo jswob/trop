@@ -11,7 +11,7 @@
 
 use super::arith::int_of;
 use super::ranges::value_key;
-use super::state::{Ctx, Engine, Env, a_day, invariant, num_stop, refuse};
+use super::state::{Ctx, Engine, Env, Figures, a_day, invariant, num_stop, refuse};
 use crate::base::Run;
 use crate::hole::Hole;
 use crate::load::index_key_of;
@@ -232,8 +232,47 @@ pub(crate) fn to_key(m: &Reality, item: &str, v: &Value, domain: &Domain) -> Res
                 ),
             )),
         },
-        Domain::List(_) => Err(Stop::NotBuilt("a key of a key list")),
+        Domain::List(lits) => match list_key(m, v, lits)? {
+            Some(key) => Ok(key),
+            None => Err(refuse(
+                Run::Key,
+                format!("{} is not a key of its list", v.text(m).map_err(num_stop)?),
+            )),
+        },
     }
+}
+
+/// Value `v` as a key of a written key list `lits`, `[1.5, 2]`: keyed as a stepped range's
+/// value is (an integer an int key, any other number by its value, a day itself), or a key's
+/// written text, `1.5`, by the literal written so, where the list holds it; none where it
+/// doesn't (L §2.5, §5.14).
+///
+/// # Errors
+///
+/// `NotBuilt` for a list of names or of any value no number or day keys.
+fn list_key(m: &Reality, v: &Value, lits: &[Lit]) -> Result<Option<KeyVal>, Stop> {
+    let unbuilt = || Stop::NotBuilt("a key of a key list of names");
+    if let Value::Word(text) = v {
+        for lit in lits {
+            if lit.text() == *text {
+                let held = super::expr::literal(m, lit, Figures::Rule)?;
+                return value_key(m, &held)?.ok_or_else(unbuilt).map(Some);
+            }
+        }
+        return Ok(None);
+    }
+    let key = if let Value::Key(key) = v {
+        key.clone()
+    } else {
+        value_key(m, v)?.ok_or_else(unbuilt)?
+    };
+    for lit in lits {
+        let held = super::expr::literal(m, lit, Figures::Rule)?;
+        if value_key(m, &held)?.ok_or_else(unbuilt)? == key {
+            return Ok(Some(key));
+        }
+    }
+    Ok(None)
 }
 
 /// A value made a key of index `ix`: an int of an integer index, the key holding a day or a
@@ -327,9 +366,11 @@ pub(super) fn literal_key(m: &Reality, lit: &Lit, domain: &Domain) -> Result<Opt
             index: axis.clone(),
             name: text,
         })),
-        Domain::List(_) | Domain::Range => {
-            Err(Stop::NotBuilt("a key literal of a key list or a range"))
+        Domain::List(lits) => {
+            let v = super::expr::literal(m, lit, Figures::Rule)?;
+            list_key(m, &v, lits)
         }
+        Domain::Range => Err(Stop::NotBuilt("a key literal of a range")),
     }
 }
 

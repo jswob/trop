@@ -272,6 +272,10 @@ pub struct Graph {
     pub from_decisions: BTreeSet<Node>,
     /// The walk-bound defs: they reach a mark and a decision reaches them (E §3.1 step 7).
     pub walk_bound: BTreeSet<String>,
+    /// Whether a read states `windows each` (a projection's, a `low`'s): every ask line runs
+    /// once per sub-window combination such a read meets, the read taking the run's choice
+    /// (L §4.4 "for that read"; refcore's `read_each`).
+    pub read_each: bool,
     /// Each decision's decisions to act after (E §3.1 step 8).
     pub after: BTreeMap<String, BTreeSet<String>>,
     /// The cycles of decisions no written order breaks, each one stratum, ordered at run.
@@ -291,6 +295,9 @@ pub struct Graph {
     /// The axes each ask reaches that its pins don't fix: each one forks its answer
     /// (refcore's `a._axes`). L §5.5.
     pub ask_axes: BTreeMap<String, BTreeSet<String>>,
+    /// Each ask's file, for a refusal at its line met when the run plans its worlds (a diff
+    /// across two stacks, `LOAD-FORKS`). L §5.5, §6.4.
+    pub ask_files: BTreeMap<String, String>,
     /// Each item's reads of inputs and defs by role: a sample, a distribution, a read in a
     /// query, a plain value, each role once (refcore's `rand_edges`). L §5.16.
     pub rand_edges: BTreeMap<Node, BTreeMap<Node, Vec<ReadRole>>>,

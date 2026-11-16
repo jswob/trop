@@ -132,6 +132,19 @@ pub struct InputInfo {
     pub part_rows: Vec<Row>,
     /// Its line.
     pub line: Option<u32>,
+    /// What its rows hold that a read must look for, set once they are loaded.
+    pub holds: RowsHold,
+}
+
+/// What an input's rows hold that a read must look for: a read of an input with neither sees
+/// every row as stated (L §4.5, §4.6 Readings).
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct RowsHold {
+    /// A row known in a window, its own or its version's: only then can a cut fall inside a
+    /// row's `known` (L §4.5).
+    pub known_window: bool,
+    /// A row standing `after m`, a balance reading's (L §4.6 Readings).
+    pub after: bool,
 }
 
 impl InputInfo {
@@ -154,6 +167,7 @@ impl InputInfo {
             observations: Vec::new(),
             part_rows: Vec::new(),
             line,
+            holds: RowsHold::default(),
         }
     }
 }
@@ -243,6 +257,10 @@ pub struct Table {
     pub key: Option<KeyVal>,
     /// Its rows.
     pub rows: Vec<BandRow>,
+    /// Whether its rows are all `replace` and form a whole table, which then replaces the
+    /// table under it wholly where they don't all match its intervals; set by load's band
+    /// checks (refcore's `whole_ok`; L §5.9 Rows replaced).
+    pub whole: bool,
 }
 
 /// A band (refcore's `BandInfo`).

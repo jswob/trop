@@ -328,6 +328,13 @@ fn field_value(m: &Reality, written: &FieldValue, ty: &Ty, target: &str) -> Resu
     if let FieldValue::None | FieldValue::Expr(Expr::None) = written {
         return Ok(Value::None);
     }
+    if let FieldValue::Expr(Expr::Str(s)) = written {
+        // a text field, as a row's text is (refcore's `convert_value`, its `str` arm)
+        if *ty == Ty::Text {
+            return Ok(Value::Text(s.clone()));
+        }
+        return Err(wrong_for("text", ty));
+    }
     let lit = field_literal(written).ok_or(Stop::NotBuilt(
         "a record field that is a hole or an expression",
     ))?;
@@ -393,7 +400,7 @@ fn convert_lit(
                     Some(NameKind::Move | NameKind::Input)
                 ) =>
         {
-            Err(Stop::NotBuilt("a movement named as a row's value"))
+            moved_value(m, text)
         }
         Lit::Name(text) | Lit::Key(text) | Lit::Cur(text) => word_value(m, lit, text, ty),
         Lit::Nominal(times) => {
@@ -427,6 +434,20 @@ fn dated(m: &Reality, lit: &Lit, ty: &Ty, own: Option<Value>, what: &str) -> Res
         return key_value(m, lit, ix);
     }
     Err(wrong_for(what, ty))
+}
+
+/// A movement or an input named as a row's value of a kind's key: a move with key binds
+/// named without its keys is `LOAD-KEY` (refcore's `convert_value` through `resolve_ref`);
+/// an unkeyed move's or an input's movement as the value is not built. L §3.1, §5.14.
+fn moved_value(m: &Reality, text: &str) -> Result<Value, Stop> {
+    let keyed = m.moves.get(text).is_some_and(|mv| !mv.binds.is_empty());
+    if keyed {
+        return Err(refuse_load(
+            Load::Key,
+            format!("wrong number of keys for {text}"),
+        ));
+    }
+    Err(Stop::NotBuilt("a movement named as a row's value"))
 }
 
 /// A word of a row: a key of `key ix`, or a code word of its code type (refcore's

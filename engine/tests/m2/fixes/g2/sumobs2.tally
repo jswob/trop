@@ -1,0 +1,55 @@
+model sumdec
+  tally 2
+  on 2026-03-15
+  start 2026-01-01
+  end 2026-06-30
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+
+kind pays: event certain
+  leg cash: PLN
+
+place konto: accounts PLN lives 2026-01-01..
+place work: outside lives 1900-01-01..
+
+input amt[m in months]: money PLN
+input cap: money PLN
+input dom: int
+input big: money PLN
+input small: money PLN
+input bank: observed
+
+def tot[m in months]: money PLN = sum(p.cash.amount for p in pays over m)
+def cnt[m in months]: int = count(p in pays over m)
+
+move pay[m in months]: pays
+  on start_of(m)
+  leg cash from work to konto amount amt[m]
+
+ask i3: inputs-of tot[2026-03]
+ask i2: inputs-of tot[2026-02]
+ask e1: explain tot[2026-02]
+ask e2: explain tot[2026-05]
+ask e3: explain tot[2026-03]
+ask v2: tot[2026-02]
+ask v5: tot[2026-05]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[2026-01..2026-06] = 10.00 PLN "plan"
+  cap = 12.00 PLN "cap"
+  dom = 20 "day"
+  big = 5.00 PLN "big"
+  small = 1.00 PLN "small"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
+
+version b
+  cite s
+  governs 2026-03
+  known 2026-03-10
+  covers konto
+  anchor konto
+  bank[o1] = (on: 2026-03-01, kind: pays, leg cash from work to konto amount 11.00 PLN, fulfils: pay[2026-03]) "paid"

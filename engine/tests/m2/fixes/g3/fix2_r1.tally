@@ -1,0 +1,21 @@
+model px
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+index kk = [a, b]
+input d[k in kk]: date
+
+ask q: d[k] < 2026-03-02 for k in kk windows each
+ask q0: d[k] < 2026-03-02 for k in kk
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  d[a] = window(2026-03-01, 2026-03-02) "c"
+  d[b] = 2026-01-01 "c"

@@ -1,0 +1,44 @@
+model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+  note "T, M2 gate 8 run 43690242450 on d512fe7b: bal modelled before and on an opening after the run's start (walk/modelled.rs opening_on, is_opening)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input d10: int
+
+move pay[m in months]: transfers
+  on day_of(m, d10)
+  leg cash from konto to world amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  d10 = 10 "s"
+  opening[konto] = 1000.00 PLN at 2026-03-03 start "s"
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from konto to world amount 120.00 PLN, fulfils: pay[2026-03]) "r1"
+
+ask m01: bal(konto, 2026-03-01) modelled
+ask m02: bal(konto, 2026-03-02) modelled
+ask m03: bal(konto, 2026-03-03) modelled
+ask m05: bal(konto, 2026-03-05) modelled
+ask m06: bal(konto, 2026-03-06) modelled
+ask m09: bal(konto, 2026-03-09) modelled
+ask m10: bal(konto, 2026-03-10) modelled
+ask m11: bal(konto, 2026-03-11) modelled
+ask m31: bal(konto, 2026-03-31) modelled
+ask r10: bal(konto, 2026-03-10)

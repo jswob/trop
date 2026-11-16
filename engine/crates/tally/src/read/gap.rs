@@ -13,7 +13,8 @@
 use std::collections::BTreeSet;
 
 use super::rows::{
-    Clocks, Point, Test, candidates, choose, invariant, need_law, row_start, time_point, worded,
+    Clocks, Point, Test, candidates, choose, invariant, need_law, row_start, standing_rows,
+    time_point, worded,
 };
 use crate::model::{Domain, InputInfo, KeyVal, Reality, Span, Thing, World};
 use crate::syntax::Stop;
@@ -211,30 +212,36 @@ pub fn read_last(
     day: Day,
     clocks: Clocks,
 ) -> Result<Found, Stop> {
+    let kept = match last_began(m, input, keys, day, clocks)? {
+        Ok(kept) => kept,
+        Err(found) => return Ok(found),
+    };
+    match choose(m, &input.rows, &input.binds, &kept, clocks.cut, &input.id)? {
+        Some(at) => Ok(Found::Row(at)),
+        None => Err(invariant("last's candidates chose no row")),
+    }
+}
+
+/// The rows of `input` at `keys` whose span began on or before `day` (a span with no start
+/// before every day; a reading's instants on or before it) that began latest; with none,
+/// what `last(x[k], d)` reads instead: `HOLE-NOREADING` for a reading, else the gap rule's
+/// question at `day`. `since(x[k], d)` reads only the day they began, which they share, so
+/// it takes none over another: at a place of unit `any`, one reading per unit (L §4.6 step
+/// 5, Readings, Past the last row; refcore's `e_lastx`, `e_call_since`).
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` where load's promises break.
+pub fn last_began(
+    m: &Reality,
+    input: &InputInfo,
+    keys: &[KeyVal],
+    day: Day,
+    clocks: Clocks,
+) -> Result<Result<Vec<usize>, Found>, Stop> {
     let test = Test::Last(day);
     let cands = candidates(m, &input.rows, (&input.binds, keys), test, clocks)?;
     let cands = worded(m, &input.rows, cands, clocks)?;
-    if cands.is_empty() {
-        if input.reading {
-            let figure = origin(&input.id, keys);
-            return Ok(Found::Hole(Question {
-                text: format!("{figure} has no reading on or before {}", day.text()),
-                origin: figure,
-            }));
-        }
-        let point = Point {
-            day: Some(day),
-            period: None,
-        };
-        return no_candidate(
-            m,
-            input,
-            keys,
-            &point,
-            (clocks.cut, clocks.world),
-            Asked::Plain,
-        );
-    }
     let mut starts = Vec::with_capacity(cands.len());
     for &at in &cands {
         let row = input
@@ -243,16 +250,53 @@ pub fn read_last(
             .ok_or_else(|| invariant("a candidate past its rows"))?;
         starts.push((at, row_start(m, row, clocks.cut)?));
     }
-    let latest = starts.iter().map(|(_, start)| *start).max();
-    let kept: Vec<usize> = starts
-        .into_iter()
-        .filter(|(_, start)| Some(*start) == latest)
-        .map(|(at, _)| at)
-        .collect();
-    match choose(m, &input.rows, &input.binds, &kept, clocks.cut, &input.id)? {
-        Some(at) => Ok(Found::Row(at)),
-        None => Err(invariant("last's candidates chose no row")),
+    let began: BTreeSet<Option<Day>> = starts.iter().map(|(_, start)| *start).collect();
+    // the latest instant whose reading was removed, held for the note when no reading stands
+    let mut gone = None;
+    for latest in began.into_iter().rev() {
+        let kept: Vec<usize> = starts
+            .iter()
+            .filter(|(_, start)| *start == latest)
+            .map(|(at, _)| *at)
+            .collect();
+        // a reading `replace … = none` removed leaves its instant with no reading, so the
+        // reading before it is the last (L §5.19, L §4.6 Readings; pick P24, SQ-1)
+        let stand = standing_rows(m, &input.rows, &kept)?;
+        if !(input.reading && !stand.is_empty() && stand.iter().all(|at| removed(input, *at))) {
+            return Ok(Ok(kept));
+        }
+        if gone.is_none() {
+            gone = Some(kept);
+        }
     }
+    if let Some(kept) = gone {
+        return Ok(Ok(kept));
+    }
+    if input.reading {
+        let figure = origin(&input.id, keys);
+        return Ok(Err(Found::Hole(Question {
+            text: format!("{figure} has no reading on or before {}", day.text()),
+            origin: figure,
+        })));
+    }
+    let point = Point {
+        day: Some(day),
+        period: None,
+    };
+    no_candidate(
+        m,
+        input,
+        keys,
+        &point,
+        (clocks.cut, clocks.world),
+        Asked::Plain,
+    )
+    .map(Err)
+}
+
+/// Whether the row at position `at` of `input` states `none`: a reading it removes (L §5.19).
+fn removed(input: &InputInfo, at: usize) -> bool {
+    matches!(input.rows.get(at), Some(row) if row.value == crate::syntax::Value::None)
 }
 
 /// A plain read of a reading at law date d: the reading at that instant, else a hole naming
@@ -270,7 +314,10 @@ fn read_reading(
     let test = Test::Instant(day);
     let cands = candidates(m, &input.rows, (&input.binds, keys), test, clocks)?;
     let cands = worded(m, &input.rows, cands, clocks)?;
-    if let Some(at) = choose(m, &input.rows, &input.binds, &cands, clocks.cut, &input.id)? {
+    // a reading `replace … = none` removed leaves its instant with no reading (L §5.19)
+    if let Some(at) = choose(m, &input.rows, &input.binds, &cands, clocks.cut, &input.id)?
+        && !removed(input, at)
+    {
         return Ok(Found::Row(at));
     }
     let figure = origin(&input.id, keys);

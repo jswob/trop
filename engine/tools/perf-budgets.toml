@@ -184,6 +184,113 @@ footprint_mb = 512
 counts = { def_misses = 74, days_stepped = 12 }
 blocks = "pr"
 
+# Fence F6, the forks (walk/fork.rs, M2's group G7; PERFORMANCE §2.5, D5-6, R-130; pick P9,
+# issue #167, 2026-11-15): timelines that agree up to a day share the walk to it, each
+# continued from the last checkpoint before it; its plain twin is the unforked walk. P8-14
+# stays as fixed at S. These rows are not PERFORMANCE §8's (their ids aren't P8 ids, as B1's
+# isn't), so trace's PERF: check (R-130) reads the P8 id P8-14 on F6's line, and the line
+# names these rows beside it. Every number below was proposed until M2's gate, whose timing
+# run measured them with forks on (PERFORMANCE §8: proposed until the milestone that
+# measures it); fixed 2026-11-15 from that run (engine/perf/M2.md, the timing run; issue
+# #167), each changed only through a logged row.
+#
+# X's repeated walks: one row per change set whose checks share a start (T's names,
+# `I:X:*@c[1-4,6,7]_fast` and `@v[34]_fast`, one run of three asks each), each timed on its
+# pit37 check, the slowest X ask on refcore at M1 (P8-2's 1x twin, pick P11), so the rows
+# compare across sets; F6-c7 times P8-2's check. The budget is §8.2's for a check at 1x,
+# 1 worker: 1 s, 512 MB; a row is judged once T writes its digest in
+# engine/tests/perf-digests.tsv (T's chunk C8), unjudged until then. They are also F6's
+# benchmark (R-91): X end to end through tools/perf, no bench file of its own. Fixed
+# 2026-11-15 at §8.2's 1 s, 512 MB: M2's gate timed each at 81-83 ms, at most 13.8 MB, every
+# output T's digest (engine/perf/M2.md, the timing run at bdb0e7b1).
+[[row]]
+id = "F6-c1"
+group = "C"
+what = "X's repeated walks with forks, change 1: I:X:pit37@c1_fast"
+recipe = "check:I:X:pit37@c1_fast"
+wall_s = 1.0
+footprint_mb = 512
+blocks = "tag"
+
+[[row]]
+id = "F6-c2"
+group = "C"
+what = "X's repeated walks with forks, change 2: I:X:pit37@c2_fast"
+recipe = "check:I:X:pit37@c2_fast"
+wall_s = 1.0
+footprint_mb = 512
+blocks = "tag"
+
+[[row]]
+id = "F6-c3"
+group = "C"
+what = "X's repeated walks with forks, change 3: I:X:pit37@c3_fast"
+recipe = "check:I:X:pit37@c3_fast"
+wall_s = 1.0
+footprint_mb = 512
+blocks = "tag"
+
+[[row]]
+id = "F6-c4"
+group = "C"
+what = "X's repeated walks with forks, change 4: I:X:pit37@c4_fast"
+recipe = "check:I:X:pit37@c4_fast"
+wall_s = 1.0
+footprint_mb = 512
+blocks = "tag"
+
+[[row]]
+id = "F6-c6"
+group = "C"
+what = "X's repeated walks with forks, change 6: I:X:pit37@c6_fast"
+recipe = "check:I:X:pit37@c6_fast"
+wall_s = 1.0
+footprint_mb = 512
+blocks = "tag"
+
+[[row]]
+id = "F6-c7"
+group = "C"
+what = "X's repeated walks with forks, change 7: I:X:pit37@c7_fast (P8-2's check)"
+recipe = "check:I:X:pit37@c7_fast"
+wall_s = 1.0
+footprint_mb = 512
+blocks = "tag"
+
+[[row]]
+id = "F6-v3"
+group = "C"
+what = "X's repeated walks with forks, version 3: I:X:pit37@v3_fast"
+recipe = "check:I:X:pit37@v3_fast"
+wall_s = 1.0
+footprint_mb = 512
+blocks = "tag"
+
+[[row]]
+id = "F6-v4"
+group = "C"
+what = "X's repeated walks with forks, version 4: I:X:pit37@v4_fast"
+recipe = "check:I:X:pit37@v4_fast"
+wall_s = 1.0
+footprint_mb = 512
+blocks = "tag"
+
+# Forks' count row (the plan's pick, build-plan §5): walks shared and days stepped with forks
+# on, on P8-14's check, X's 21 walks (PERFORMANCE §2.5: "20 in X"; S: 926 days stepped, 906
+# non-empty, unforked). Fixed 2026-11-15 (M2's gate, issue #167): days_stepped is the first
+# forks-on figure on the final code x 1.2, as S set P8-14's def misses: 960 days at 476032fd
+# (the builder's P73 fix; `perf counts F6-X`, confirmed by the rules step at 3c06b396, 582
+# walks shared), so 1 152; the gate's timing run's 1 826 at bdb0e7b1 came before that fix
+# (engine/perf/M2.md). walks_shared stays reported, no budget: its floor needs a lower bound
+# tools/perf doesn't read (the fence hand-off §3). CI's counts step lists the row.
+[[row]]
+id = "F6-X"
+group = "C"
+what = "forks' counts on I:X:replay_september@b_r1: walks shared, days stepped, forks on"
+recipe = "check:I:X:replay_september@b_r1"
+counts = { days_stepped = 1152 }
+blocks = "pr"
+
 # 8.3 Group L: the load rows at full size; a Monte Carlo row's wall is its deterministic part
 [[row]]
 id = "P8-L1"

@@ -417,6 +417,8 @@ impl Checker {
         if proj.random.is_some() {
             return Err(Stop::NotBuilt("a projection's `random at`"));
         }
+        // the read's `windows each` splits every line that reaches it (L §4.4)
+        self.graph.read_each |= proj.windows_each;
         self.graph.holders.insert(scope.item.clone());
         self.mark(&scope.item, Mark::Proj, target);
         Ok(())
@@ -438,6 +440,8 @@ impl Checker {
         if low.proj.from.is_some() {
             self.proj(m, scope, &low.proj, target, depth)?;
         } else {
+            // a `low`'s own `windows each` holds for that read, with `from` or without (L §4.4)
+            self.graph.read_each |= low.proj.windows_each;
             self.mark(&scope.item, Mark::Bal, target);
         }
         self.edge(&scope.item, Node::balances(), Rel::Bal);
@@ -534,6 +538,13 @@ impl Checker {
             ut = lt.clone();
         }
         self.edge(&scope.item, Node::new(NodeKind::Move, id), Rel::Flows);
+        // a leg at a place the walk guards is booked against that place's balance, so its
+        // amount, read inside its combination, reads what the balances read; a move not
+        // checked yet is taken as guarded, as refcore's unannotated leg is (L §5.5, R8)
+        let key = (id.to_owned(), name.clone());
+        if !matches!(self.leg_guarded.get(&key), Some(false)) {
+            self.edge(&scope.item, Node::balances(), Rel::Flows);
+        }
         if mv.decision {
             self.mark(&scope.item, Mark::Flows, Target::Move(id.to_owned()));
         }

@@ -1,0 +1,233 @@
+part r7_forward
+  tally 2
+  note "T, M2 (issues #167, #114), DONE gate 2: the forward half of the prototype's reality R7 (load.ts REALITY: blocks 01-month, 03-ike-first, 04-employment, 05-side-business, 07-oki; engine/spec/verification/goldens.md: G1, G3, G6, G10 and the 20 pins), beside the bank half (../bank.tally), from today, 2026-10-17. Here: the daily spending (01), the 15th rule with IKE first (02, 03, 07), the ETF units and their price (01), OKI's tax (07), net worth and FIRE (13). The side business is business.tally, the yearly returns returns.tally; the header (to2036.tally, to2050.tally, to2056.tally) states the horizon."
+  note "The holdings: the prototype converts each movement into a holding at that day's price.etf (run.ts post: units = amount / price), and price.etf changes only on the 1st of a month. So the PLN the bank history moves into ike and maklerskie (accounts here, as the records state them) is bought at the month's last day at that month's price (buy_ike, buy_mak), which gives the prototype's units, and the 15th rule buys its units on its day. Units are kept to units_step and each month's price to etf_price_step (the prototype keeps floats); price.etf from 2026-11 is the month before's times pow(1.06, 1 / 12), stated as the factor."
+  note "The 15th rule (nadwyzka_ike@1, instances invest_15 and from 2027 invest_15_oki): surplus = max(0, low_point(konto, next_date(my_tax/net)) - floor), the lowest end-of-day konto from the rule's day to the day before my next pay, the rule's own buy left out (L §5.14.1); to IKE min(surplus, max(0, ike.limit - in_year(ike))), the rest to maklerskie, and from 2027 to OKI. One move takes both, as the prototype computes the surplus once. The prototype runs it from today on: invest_from."
+  note "Not stated: belka_mak (03), the 19 % tax on gains realised on maklerskie, which nothing sells, so its tax is 0 every year; the side business's social contributions, 0 in concurrence (business.tally)."
+
+source prototype_fwd "the prototype's blocks 01-month.json, 02-rule-15.json, 03-ike-first.json, 07-oki.json and 13-fire.json, and its engine (run.ts) (engine/spec/verification/blocks)"
+
+source rpp "Komunikaty Rady Polityki Pieniężnej o stopach procentowych NBP (07-oki.json nbp.ref_rate)"
+
+source oki_act "Ustawa o osobistych kontach inwestycyjnych, Dz.U. 2026 poz. 1098 (07-oki.json, z prototypu)"
+
+source ike_act "Ustawa o IKE art. 13 (03-ike-first.json ike.limit)"
+
+unit etf_unit "jednostka funduszu ETF na świat"
+
+kind etf_buys: event certain
+  leg cash: PLN
+  leg units: etf_unit
+
+kind rule15_buys: event certain
+  leg to_ike: PLN
+  leg ike_units: etf_unit
+  leg to_mak: PLN
+  leg mak_units: etf_unit
+  leg to_oki: PLN
+  leg oki_units: etf_unit
+
+place ike_u: holdings etf_unit lives 2024-01-01..
+
+place mak_u: holdings etf_unit lives 2024-01-01..
+
+place oki_u: holdings etf_unit lives 2024-01-01..
+
+place rynek: outside lives 2024-01-01..
+
+input etf_from: month
+
+input etf_month_factor: num
+
+input etf_price_step: num PLN/etf_unit
+
+input etf_seen: num PLN/etf_unit
+
+input fire_from: month
+
+input fire_rate: num
+
+input floor_15: money PLN
+
+input ike_limit: money PLN
+
+input invest_dom: int
+
+input invest_from: month
+
+input nbp_months: int
+
+input nbp_ref: num
+
+input oki_exempt: money PLN
+
+input oki_from: month
+
+input oki_rate_first: num
+
+input oki_rate_floor: num
+
+input oki_rate_step: num
+
+input oki_ref_from: date
+
+input oki_ref_share: num
+
+input oki_tax_day: int
+
+input oki_tax_month: int
+
+input units_step: num etf_unit
+
+def etf_price[m in month]: num PLN/etf_unit at start_of(m)
+  note "01-month.json price.etf: the synthetic history to 2026-10, then before * pow(1 + assume.etf_return, 1 / 12) each month from 2026-11-01: before times the month's factor, the float the prototype multiplies by, each month's price kept to etf_price_step (the prototype's floats keep about 16 digits)"
+  rule seen = etf_seen
+  rule assumed beats seen = round(etf_price[m - 1] * etf_month_factor, etf_price_step, half-even) when m >= etf_from
+
+def spend_rate: num PLN at learn_last
+  note "01-month.json wydatki@1: hist_daily(codzienne, 365), the sum of the last 365 days' codzienne rows / 365, not rounded (run.ts hist_daily)"
+  rule learned = sum(o.cash.amount for o in bank_line over learn_first .. learn_last where o.cat == codzienne) / (days_between(learn_first, learn_last) + 1) when covered(konto, learn_first .. learn_last)
+
+def spend_amount[y in cal_year]: money PLN = round(spend_rate * price_index[y], minor(PLN), half-up) at start_of(y)
+  note "a day's spending, hist_daily * index.prices, to the grosz as run.ts books every movement"
+
+def next_pay[m in month]: date = pay_day[my_job, m] at start_of(m)
+  note "next_date(my_tax/net) on the 15th of m: the pay for m, on the 3rd to 7th of the next month (the pay for m - 1 falls before the 15th)"
+
+def surplus[m in month]: money PLN = max(0, low(konto, day_of(m, invest_dom) .. add_days(next_pay[m], -1)) from day_of(m, invest_dom) - floor_15) at start_of(m)
+  note "nadwyzka_ike@1 surplus: max(0, low_point(in.from, next_date(in.until)) - in.floor)"
+
+def ike_seen[y in cal_year]: money PLN at start_of(y)
+  note "in_year(ike) from the bank history: the year's rows into ike up to the last day of the history"
+  rule history = sum(o.cash.amount for o in bank_line over start_of(y) .. learn_last where o.cash.to == ike) when start_of(y) <= learn_last
+  rule after beats history = 0 when start_of(y) > learn_last
+
+def ike_in[m in month]: money PLN = ike_seen[year_of(m)] + flows(invest.to_ike, start_of(year_of(m)) .. add_days(day_of(m, invest_dom), -1)) at start_of(m)
+  note "in_year(ike): what went into the IKE this year before the rule's day"
+
+def to_ike[m in month]: money PLN = min(surplus[m], max(0, ike_limit - ike_in[m])) at start_of(m)
+  note "nadwyzka_ike@1 to_ike: min(v('surplus'), max(0, p.ike.limit - in_year(in.ike)))"
+
+def rest[m in month]: money PLN = surplus[m] - to_ike[m] at start_of(m)
+  note "nadwyzka_ike@1 to_rest: v('surplus') - v('to_ike'), to maklerskie (invest_15) and from 2027 to OKI (invest_15_oki)"
+
+def oki_rate[y in cal_year]: num at start_of(y)
+  note "07-oki.json oki.rate: 0.85 % in 2027, then 19 % of the NBP reference rate of 31 October before, down to 0.01 pp, at least 0.1 %"
+  rule first = oki_rate_first
+  rule by_ref beats first = max(oki_rate_floor, round(oki_ref_share * nbp_ref_oct[y], oki_rate_step, floor)) when start_of(y) >= oki_ref_from
+
+def nbp_ref_oct[y in cal_year]: num = nbp_ref at add_months(add_days(start_of(y), -1), -nbp_months)
+  note "the NBP reference rate on 31 October of the year before"
+
+def oki_avg[y in cal_year]: num PLN = sum(value(oki_u, d) in PLN by etf_price[month_of(d)] for d in start_of(y) .. add_days(end_of(y), -1) step 1 day) / days_between(start_of(y), end_of(y)) at start_of(y)
+  note "oki_pl@2027 avg: avg_balance(in.oki), the mean end-of-day value over the year's days (OKI from 2027-01-01)"
+
+def oki_tax[y in cal_year]: money PLN = round(max(0, oki_avg[y] - oki_exempt) * oki_rate[y], 1, half-up) at start_of(y)
+  note "oki_pl@2027 tax: zl(max(0, v('avg') - v('exempt')) * p.oki.rate), holds foreign: no exempt amount"
+
+def net_worth[d in day]: money PLN = round(bal(konto, d) + bal(ike, d) + bal(maklerskie, d) + value(ike_u, d) in PLN by etf_price[month_of(d)] + value(mak_u, d) in PLN by etf_price[month_of(d)] + value(oki_u, d) in PLN by etf_price[month_of(d)], minor(PLN), half-up) at d
+  note "run.ts networthAt: every place that isn't outside, a holding at units * price (the household's places, all its own; M1's P7)"
+
+def fire_costs[m in month]: num PLN = spend_rate * price_index[year_of(m)] * days_between(start_of(m), end_of(m)) + rent * price_index[year_of(m)] at start_of(m)
+  note "fire@1 costs: total('spend', spending) + v('rent', housing), the lines' values before rounding (run.ts stores them so)"
+
+def fire_on_track[m in month]: bool = net_worth[add_days(end_of(m), -1)] >= fire_costs[m] * (1 year / 1 month) / fire_rate at start_of(m)
+  note "fire@1 on_track: have >= need, have at the month's end, need = costs * 12 / p.assume.fire_swr"
+
+move buy_ike[m in month]: etf_buys
+  on add_days(end_of(m), -1)
+  at start_of(m)
+  when m < invest_from
+  reads ike
+  leg cash from ike to rynek amount bal(ike)
+  leg units from rynek to ike_u amount round(bal(ike) / etf_price[m], units_step, half-even)
+
+move buy_mak[m in month]: etf_buys
+  on add_days(end_of(m), -1)
+  at start_of(m)
+  when m < invest_from
+  reads maklerskie
+  leg cash from maklerskie to rynek amount bal(maklerskie)
+  leg units from rynek to mak_u amount round(bal(maklerskie) / etf_price[m], units_step, half-even)
+
+move invest[m in month]: rule15_buys
+  on day_of(m, invest_dom)
+  at start_of(m)
+  when m >= invest_from
+  reads konto, invest
+  leg to_ike from konto to rynek amount to_ike[m]
+  leg ike_units from rynek to ike_u amount round(to_ike[m] / etf_price[m], units_step, half-even)
+  leg to_mak from konto to rynek amount if m < oki_from then rest[m] else 0 PLN
+  leg mak_units from rynek to mak_u amount if m < oki_from then round(rest[m] / etf_price[m], units_step, half-even) else 0 etf_unit
+  leg to_oki from konto to rynek amount if m >= oki_from then rest[m] else 0 PLN
+  leg oki_units from rynek to oki_u amount if m >= oki_from then round(rest[m] / etf_price[m], units_step, half-even) else 0 etf_unit
+
+move oki_tax_pay[y in cal_year]: transfers
+  on schedule(month_of(add_months(add_years(start_of(y), 1), oki_tax_month - 1)), oki_tax_day, following, holidays_pl)
+  at start_of(y)
+  for y
+  when start_of(y) >= start_of(oki_from)
+  reads oki_u
+  leg cash from konto to urzad_skarbowy amount oki_tax[y]
+
+move spend[d in day]: transfers
+  on d
+  at d
+  leg cash from konto to sklepy amount spend_amount[year_of(d)]
+
+version prototype_assumptions
+  cite prototype_fwd
+  governs always
+  known 2026-10-17
+  inflation = 0.03 governs 2027-01-01.. "01-month.json assume.inflation: 3 % a year from 2027-01-01 (NBP target 2.5 % ± 1)"
+  wage_growth = 0.04 governs 2027-01-01.. "01-month.json assume.wage_growth: 4 % a year from 2027-01-01"
+  etf_month_factor = 1.004867550565343 "01-month.json assume.etf_return, 6 % a year from 2026-10-17, as price.etf applies it each month: pow(1 + 0.06, 1 / 12), the float the prototype multiplies by"
+
+version prototype_rules
+  cite prototype_fwd
+  governs always
+  known 2023-12-31
+  note "the prototype's fixture is one model with one today: its price history, its rule and its plan are stated for the whole run, so the instances before today read them"
+  etf_seen = 100 governs 2024-01-01..2024-06-30 "01-month.json price.etf, syntetyczne"
+  etf_seen = 108 governs 2024-07-01..2024-12-31 "price.etf, syntetyczne"
+  etf_seen = 113 governs 2025-01-01..2025-06-30 "price.etf, syntetyczne"
+  etf_seen = 110 governs 2025-07-01..2025-12-31 "price.etf, syntetyczne"
+  etf_seen = 121 governs 2026-01-01..2026-06-30 "price.etf, syntetyczne"
+  etf_seen = 126 governs 2026-07-01.. "price.etf, syntetyczne, the last entry before the assumed growth"
+  etf_from = 2026-11 "price.etf grows each month from 2026-11-01"
+  units_step = 0.000000000001 "the prototype keeps units as floats; here to 1e-12 of a unit"
+  etf_price_step = 0.000000000001 "the prototype keeps price.etf as a float; here each month's price to 1e-12 zł"
+  invest_dom = 15 "02-rule-15.json: on the 15th of each month"
+  invest_from = 2026-11 "run.ts runs a rule's line from today (2026-10-17) on: the first 15th is 2026-11-15"
+  floor_15 = 1000 "02-rule-15.json, 03-ike-first.json: floor 1 000"
+  oki_from = 2027-01 "07-oki.json: invest_15 until 2027-01-01, invest_15_oki and oki_tax from 2027-01-01"
+  fire_rate = 0.04 "13-fire.json assume.fire_swr: 4 %"
+  fire_from = 2026-10 "fire@1 kiedy: first('on_track') over the line's months from today's (run.ts answers: evalDate >= today)"
+
+version ike_limits
+  cite ike_act
+  governs always
+  known 2025-12-31
+  ike_limit = 23472 governs 2024-01-01..2024-12-31 "03-ike-first.json ike.limit: 3 × 7 824 zł"
+  ike_limit = 26019 governs 2025-01-01..2025-12-31 "3 × 8 673 zł"
+  ike_limit = 28260 governs 2026-01-01.. "3 × 9 420 zł (M.P. 2025 poz. 1206); the prototype holds it past its last entry (law held after today)"
+
+version nbp_2026_03
+  cite rpp
+  governs 2026-03-05..
+  known 2026-03-04
+  nbp_ref = 0.0375 "07-oki.json nbp.ref_rate: RPP, decyzja z 4.03.2026, utrzymana 6–7.10.2026; held past its last entry"
+
+version oki_2027
+  cite oki_act
+  governs always
+  known 2026-07-15
+  oki_rate_first = 0.0085 "art. 43: the first year's rate"
+  oki_ref_from = 2028-01-01 "art. 25: from 2028, the rate follows the NBP reference rate"
+  oki_ref_share = 0.19 "art. 25: 19 % of the NBP reference rate"
+  oki_rate_step = 0.0001 "art. 25: down to 0.01 pp"
+  oki_rate_floor = 0.001 "art. 25: at least 0.1 %"
+  oki_exempt = 0 "art. 26: holds foreign (oki_tax holds: foreign): no exempt amount"
+  oki_tax_month = 5 "oki_pl@2027 tax: next_year:05-31, bd next"
+  oki_tax_day = 31 "next_year:05-31"
+  nbp_months = 2 "art. 25: the rate of 31 October, two months before the year's 31 December"

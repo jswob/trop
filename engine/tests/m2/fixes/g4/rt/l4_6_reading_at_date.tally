@@ -1,0 +1,18 @@
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input cpi[m in months]: num
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  cpi[2026-03] = 101.5
+
+ask q1: cpi[2026-03-17]
+ask q2: cpi[2027-01-05]

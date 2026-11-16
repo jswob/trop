@@ -1,0 +1,37 @@
+model pk
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+unit etf "fund unit"
+index funds = [fa, fb]
+
+place w: holdings etf priced px[pick] lives 2026-01-01..
+
+input px[f in funds]: num PLN/etf reading
+input pick: funds
+
+ask k1: value(w, 2026-03-01) in PLN law 2026-06-30
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  px[fa] = 10.00 PLN/etf at 2026-03-01 "q"
+  px[fb] = 20.00 PLN/etf at 2026-03-01 "q"
+  opening[w] = 1 etf at 2026-01-01 start "own"
+
+version early
+  cite s
+  governs 2026-01..2026-03
+  known 2026-01-01
+  pick = fa
+
+version late
+  cite s
+  governs 2026-04..
+  known 2026-01-01
+  pick = fb

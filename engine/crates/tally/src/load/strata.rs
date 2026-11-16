@@ -22,7 +22,7 @@ use super::check::{Files, ShiftRead, walk};
 use super::cone::{check_path_lines, finish_random};
 use super::lawdates::{check_lawdates, check_move_lawdates};
 use super::parts::{arrival_reads, parts_walk_bound};
-use super::pins::check_forks;
+use super::pins::{ask_files, check_forks};
 use super::srows::check_srow_reads;
 use super::steps::{Loader, refuse};
 use super::texts::text;
@@ -78,6 +78,7 @@ impl Loader {
         recurrences(&self.m, &walked.graph, &walked.shifts)?;
         let dated = check_lawdates(&self.m, &walked, &files)?;
         walked.graph.ask_axes = check_forks(&self.m, &walked.graph, &files)?;
+        walked.graph.ask_files = ask_files(&self.m, &files)?;
         let unread_items = unread(&self.m, &walked.graph);
         self.m.warnings.extend(unread_items);
         let decided = from_decisions(&self.m, &walked.graph);

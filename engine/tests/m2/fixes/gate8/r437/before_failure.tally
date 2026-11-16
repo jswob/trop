@@ -1,0 +1,48 @@
+model pw
+  tally 2
+  on 2026-04-25
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 gate 8 run 43702332507 on 6a58624c: a walk failed by a decision on 2026-01-20 (RUN-FUTURE), read again before, on and after that day in one line (aimed at walk/day.rs before_failure, P54: single-mutant proofs show it does not reach a failed walk)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input dh: date
+input k: num
+input dd: int
+input de: int
+input da: date
+input db: date
+input dm: date
+input dz: date
+
+move pay[m in months]: transfers
+  on day_of(m, dd)
+  leg cash from world to konto amount amt
+
+move sw[m in months]: transfers
+  on day_of(m, de)
+  reads konto
+  leg cash from konto to sav amount round(bal(konto, dz) * k, minor(PLN), down)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "s"
+  k = 0.1 "s"
+  dd = 10 "s"
+  de = 20 "s"
+  da = 2026-01-01 "s"
+  db = 2026-03-01 "s"
+  dm = 2026-03-31 "s"
+  dz = 2026-12-31 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
+
+ask q: bal(sav, 2026-03-31), bal(konto, 2026-01-19), bal(konto, 2026-01-20)
+ask q2: bal(konto, 2026-01-19), bal(konto, 2026-01-20), bal(konto, 2026-01-19)

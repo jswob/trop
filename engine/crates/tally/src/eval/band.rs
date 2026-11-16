@@ -1,10 +1,10 @@
-//! A band's call `b(x)`: the table the read rule takes, the row holding x and its value with x bound; `marginal(b, x)`, the rows below x by width.
+//! A band's reads: `b(x)`, the value of the row holding x; `marginal(b, x)`; `band_lo`, `band_hi`, that row's ends.
 //! Spec: L §5.9 (bands: rows by interval, every bare literal in a row a figure, a keyed band's
-//! key; `marginal`), §4.6 (the read rule over tables), §8.1 (`HOLE-UNGOVERNED`: no table, no
-//! row), §8.2 (`assumed` and `held` of a band row).
+//! key; `marginal`, `band_lo`, `band_hi`), §4.6 (the read rule over tables), §8.1
+//! (`HOLE-UNGOVERNED`: no table, no row), §8.2 (`assumed` and `held` of a band row).
 //! Twin: engine/tools/refcore/evaluate.py (`call_band`, `band_key`, `band_rows`,
-//! `band_no_row`, `band_value`, `band_x`, `c_marginal`, `interval_text`) and model.py
-//! (`BandRow.holds`).
+//! `band_no_row`, `band_value`, `band_x`, `c_marginal`, `c_band_lo`, `band_end_value`,
+//! `interval_text`) and model.py (`BandRow.holds`).
 //! Invariants: the row is the one whose interval holds the argument's value in the
 //! argument's unit; a row's value of a money band is money, a bare figure takes the band's
 //! type; a hole argument or key makes the call that hole; `marginal` reads every row whose
@@ -171,6 +171,47 @@ impl Engine {
             return Ok(Value::Number(Number::plain(Num::zero(), unit)));
         };
         Ok(Value::Number(Number::plain(q, unit)))
+    }
+
+    /// `band_lo(b, x)`, `band_hi(b, x)`: the lower or upper end of the row holding x, in the
+    /// band's argument type; `none` for `-inf` or `inf`; the hole of no row, as `b(x)`'s
+    /// (refcore's `c_band_lo`, `band_end_value`). L §5.9.
+    pub(super) fn band_edge(
+        &mut self,
+        m: &Reality,
+        call: &Call,
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Value, Stop> {
+        let [written, arg] = call.args.as_slice() else {
+            return Err(invariant("a band's end read with other than two arguments"));
+        };
+        let (id, key_written) = band_written(written)?;
+        let band = m
+            .bands
+            .get(id)
+            .ok_or_else(|| invariant("a band's end of a band load didn't build"))?;
+        let BandRead { key, x, rows } =
+            match self.band_rows_at(m, band, key_written, arg, env, ctx)? {
+                Err(hole) => return Ok(Value::Hole(hole)),
+                Ok(found) => found,
+            };
+        let point = band_x(m, &x)?;
+        for at in rows {
+            let (_, row) = band_row(band, at)?;
+            if !holds(row, &point)? {
+                continue;
+            }
+            let end = if call.name == "band_lo" {
+                &row.lo
+            } else {
+                &row.hi
+            };
+            return end
+                .as_ref()
+                .map_or(Ok(Value::None), |e| end_value(m, band, e));
+        }
+        Ok(Value::Hole(self.no_row(m, band, key.as_ref(), &x, ctx)?))
     }
 
     /// The key, the argument and the rows the read rule takes of a band read at `arg`; the
@@ -354,8 +395,30 @@ fn band_x(m: &Reality, x: &Value) -> Result<Num, Stop> {
     Err(wrong_type(m, "a band argument", x))
 }
 
-/// The band `marginal` names, `b` or `b[k]`, and its key as written (load's `band_ref`).
-/// L §5.9.
+/// A row's end as a value of the band's argument type: money in its currency, an int, a
+/// `num` in its unit, a date, a period, a key (refcore's `band_end_value`). L §5.9.
+fn end_value(m: &Reality, band: &BandInfo, end: &BandEnd) -> Result<Value, Stop> {
+    let q = match end {
+        BandEnd::Num(q) => q,
+        BandEnd::Day(day) => return Ok(Value::Day(*day)),
+        BandEnd::Period(period) => return Ok(Value::Period(*period)),
+        BandEnd::Key(_, key) => return Ok(Value::Key(key.clone())),
+    };
+    if let Ty::Num(unit, shown) = &band.arg_type {
+        return Ok(Value::Number(Number {
+            q: q.clone(),
+            class: Class::Num(unit.clone(), *shown),
+        }));
+    }
+    if let Ty::Money(_) | Ty::Int = &band.arg_type {
+        return typed(m, q, &band.arg_type)?
+            .ok_or_else(|| invariant("a band's end its argument type doesn't take"));
+    }
+    Err(Stop::NotBuilt("a band's end over a range's keys"))
+}
+
+/// The band `marginal`, `band_lo` and `band_hi` name, `b` or `b[k]`, and its key as written
+/// (load's `band_ref`). L §5.9.
 fn band_written(e: &Expr) -> Result<(&str, Option<&Key>), Stop> {
     if let Expr::Name(id) = e {
         return Ok((id, None));
@@ -366,7 +429,7 @@ fn band_written(e: &Expr) -> Result<(&str, Option<&Key>), Stop> {
     {
         return Ok((id, Some(key)));
     }
-    Err(invariant("marginal of a band load didn't read"))
+    Err(invariant("a band's call of a band load didn't read"))
 }
 
 /// A number's value and unit; money's in its currency's units (refcore's `v.q`, `v.u`).

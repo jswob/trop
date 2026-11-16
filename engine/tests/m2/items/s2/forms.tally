@@ -1,0 +1,36 @@
+model s2_forms
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 C2, #101's other forms (L §2.3 ref with fields, §5.10 priced, §5.19 readings): an unkeyed record input's field as the price (fund3), last of a keyed and an unkeyed field (l1, l2), value by a field (v1), and a field read before its first reading (l0)"
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+unit etf "fund unit"
+index bx = [b1, b2]
+
+place fund: holdings etf priced fp[b1].nav lives 2026-01-01..
+place fund3: holdings etf priced fq.nav lives 2026-01-01..
+place hold: holdings etf lives 2026-01-01..
+
+input fp[b in bx]: (nav num PLN/etf, note text) reading
+input fq: (nav num PLN/etf, note text) reading
+
+ask a1: value(fund, 2026-03-01) in PLN law 2026-06-30
+ask a3: value(fund3, 2026-04-01) in PLN law 2026-06-30
+ask l0: last(fq, 2026-02-01).nav
+ask l1: last(fq, 2026-04-01).nav
+ask l2: last(fp[b1], 2026-04-01).nav
+ask vby: value(hold, 2026-03-01) in PLN by fp[b1].nav law 2026-06-30
+ask vby2: value(hold, 2026-04-01) in PLN by fp[b1].nav law 2026-06-30
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  fp[b1] = (nav: 12.50 PLN/etf, note: "x") at 2026-03-01 "wycena"
+  fq = (nav: 11.00 PLN/etf, note: "y") at 2026-03-01 "wycena"
+  opening[fund] = 10 etf at 2026-01-01 start "own"
+  opening[fund3] = 4 etf at 2026-01-01 start "own"
+  opening[hold] = 2 etf at 2026-01-01 start "own"

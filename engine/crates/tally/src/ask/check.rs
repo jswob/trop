@@ -9,12 +9,13 @@
 
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Env, Item, Op, arith, equal_sides, num_stop};
-use crate::model::{Reality, Value};
+use crate::model::{KeyVal, Reality, Value};
 use crate::syntax::{Expr, PinForm, Stop};
 use crate::time::Day;
 
 /// What an ask's line prints after its head: its text, the lines under it, the register
 /// entries it met, and, for a `check`, each side's law date where they differ.
+#[derive(Debug, Clone)]
 pub(super) struct Printed {
     /// The line's values, or a check's `ok`, `differs: …` or both sides.
     pub text: String,
@@ -24,6 +25,8 @@ pub(super) struct Printed {
     /// Whether the head stands alone and the lines under it are the result: `inputs-of`'s
     /// (refcore's `print_line`, its `RowSet`).
     pub bare: bool,
+    /// Whether the lines under the head are part of the result, as a `diff`'s are (L §5.5).
+    pub whole: bool,
     /// The register entries the line met.
     pub met: Collected,
     /// A check's sides' law dates, where a side's own `as if {law D}` makes them differ.
@@ -45,11 +48,28 @@ impl Printed {
     }
 
     /// Whether `other` gives the same result: the same text, and the same lines under a bare
-    /// head (refcore's `Result.key`, `rkey`). L §5.5.
+    /// head or a diff's (refcore's `Result.key`, `rkey`, `diff_print`). L §5.5.
     pub(super) fn same(&self, other: &Printed) -> bool {
         self.text == other.text
             && self.bare == other.bare
-            && (!self.bare || self.body == other.body)
+            && self.whole == other.whole
+            && (!(self.bare || self.whole) || self.body == other.body)
+    }
+
+    /// The result as one text, equal for two lines exactly where `same` holds: the text, the
+    /// two kinds, and the lines under a bare head or a diff's (refcore's `rkey`). L §5.5.
+    pub(super) fn key(&self) -> String {
+        let under = if self.bare || self.whole {
+            self.body.join("\u{0}")
+        } else {
+            String::new()
+        };
+        format!(
+            "{}\u{0}{}{}\u{0}{under}",
+            self.text,
+            u8::from(self.bare),
+            u8::from(self.whole)
+        )
     }
 }
 
@@ -80,6 +100,8 @@ pub(super) fn check_line(
         text,
         body: Vec::new(),
         bare: false,
+
+        whole: false,
         met,
         laws: (laws.0 != laws.1).then_some(laws),
     })
@@ -147,7 +169,7 @@ fn side(read: Result<Value, Stop>) -> Result<Item, Stop> {
 /// (refcore's `_check`). L §5.18, §3.2.
 fn difference(m: &Reality, a: &Value, b: &Value) -> Result<String, Stop> {
     let numbers = |v: &Value| matches!(v, Value::Number(_) | Value::Money(_));
-    if numbers(a) && numbers(b) {
+    if numbers(a) && numbers(b) || keys_of_one_index(m, a, b) {
         return match arith(m, Op::Sub, a, b) {
             Ok(d) => Ok(format!(", difference {}", plain(m, &d)?)),
             Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {
@@ -155,6 +177,10 @@ fn difference(m: &Reality, a: &Value, b: &Value) -> Result<String, Stop> {
             }
             Err(stop) => Err(stop),
         };
+    }
+    if matches!(a, Value::Key(KeyVal::Thing(_))) && matches!(b, Value::Key(KeyVal::Thing(_))) {
+        // things of a kind: a kind is no index, so no difference (refcore's `_check`)
+        return Ok(String::new());
     }
     if matches!(a, Value::Key(_) | Value::Period(_))
         && matches!(b, Value::Key(_) | Value::Period(_))
@@ -164,6 +190,17 @@ fn difference(m: &Reality, a: &Value, b: &Value) -> Result<String, Stop> {
         return Err(Stop::NotBuilt("a check's difference of two keys"));
     }
     Ok(String::new())
+}
+
+/// Whether `a` and `b` are keys of one list index, which a key carries at run: their
+/// difference is the int of positions between them (L §4.2, refcore's `key_diff`).
+fn keys_of_one_index(m: &Reality, a: &Value, b: &Value) -> bool {
+    let (Value::Key(KeyVal::Key { index, .. }), Value::Key(KeyVal::Key { index: other, .. })) =
+        (a, b)
+    else {
+        return false;
+    };
+    index == other && m.indexes.get(index).is_some()
 }
 
 /// A side as a check prints it in place of a decided comparison: a refusal as `refused: …`, a

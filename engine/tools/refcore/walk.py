@@ -13,7 +13,7 @@ import bisect
 import datetime
 
 from .dates import ONE_DAY, next_day
-from .moves import item_in_world, order_key
+from .moves import item_in_world, order_key, same_groups
 from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, RandomLine
 from .model import known_first, key_text, SameDiffers, in_world
 from .values import Num, Money, Hole, Thing, Mv, Iv, Rec, Text, NONE, CURRENCIES, fmt, fmt_hole, vkey
@@ -452,9 +452,19 @@ class Walk:
                 if d <= self.end:
                     self.at((d.toordinal(), 0, 0, 'covers ' + place, 0), 'covhole', (place, q))
             links = eng.obs_links(ctx)
-            # two observations of versions covering the two ends that fulfil one instance and disagree (E §6.1)
+            # two observations of versions covering the two ends that fulfil one instance and disagree (E §6.1); a row
+            # stated same as one that fulfils it is one of them, its fulfils "stated on either row" (L §5.19)
+            groups = same_groups(m)
+            obs_by_id = None
             for tid in sorted(links):
-                os = links[tid]
+                os = list(links[tid])
+                for o in links[tid]:
+                    for x in groups.get(o.id, ()):
+                        if x != o.id and all(y.id != x for y in os):
+                            if obs_by_id is None:
+                                obs_by_id = dict((y.id, y) for y in eng.observations(ctx))
+                            if x in obs_by_id:
+                                os.append(obs_by_id[x])
                 for a_i in range(len(os)):
                     for b_i in range(a_i + 1, len(os)):
                         oa, ob = os[a_i], os[b_i]
@@ -1405,10 +1415,11 @@ class Walk:
         d = lg.day
         if not d < self.K:
             return
-        if o.target is not None and o.target.decision and day_lo(o.target.day) is not None and \
+        if o.err is None and o.target is not None and o.target.decision and day_lo(o.target.day) is not None and \
                 d == day_lo(o.target.day):
             # one that fulfils a decision instance dated its day is booked at the instance's point; every other on
-            # its own day, one dated before or after the instance it fulfils included (E §4.2 step 1, L §5.19)
+            # its own day, one dated before or after the instance it fulfils included (E §4.2 step 1, L §5.19); a
+            # refused one (its link refused, RUN-RECORD) on its own day, where it refuses its places' balances
             return
         self.book_obs_now(o, lg, key)
 
@@ -1916,7 +1927,10 @@ class Walk:
         self.reads = run.read_places
         self.live = run.live_places
         # its own observations booked before its day (step 1), which its computation doesn't see (E §4.2 step 3)
-        own = [] if self.proj else [lg for o in eng.obs_links_for(inst.id, self.tctx) if o.err is None
+        # with the ends each booked (an end another version's row books, as a row stated same, isn't its own; L §5.19)
+        own = [] if self.proj else [(lg, isinstance(lg.frm, Thing) and self.obs_end_on(o, lg.frm, lg.day),
+                                     isinstance(lg.to, Thing) and self.obs_end_on(o, lg.to, lg.day))
+                                    for o in eng.obs_links_for(inst.id, self.tctx) if o.err is None
                                     for lg in o.legs
                                     if isinstance(lg.day, datetime.date) and lg.day < t and lg.day < self.K and
                                     lg.day >= self.start]

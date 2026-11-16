@@ -1,0 +1,16 @@
+scenario richer over days
+  tally 2
+  from 2026-03-10
+
+version richer_pay
+  cite card
+  governs 2026-03-10..
+  known 2026-01-01
+  replace pay_low = 1150.00 "a raise"
+  replace rent_off = 3 "rent earlier"
+
+ask s_min: min(bal(konto, d) from 2026-02-01 for d in 2026-02-01 .. 2026-05-15 step 1 day) in richer
+
+ask s_back: bal(konto, d) from 2026-03-12 for d in [2026-04-30, 2026-03-15, 2026-06-01, 2026-03-12] in richer
+
+ask s_room: room[m] for m in [2026-03, 2026-04, 2026-05] in richer

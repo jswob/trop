@@ -594,6 +594,8 @@ ask bank_end: bal(bank, 2025-03-31)
             levels: Vec::new(),
             root: (m.on, m.start),
             world: crate::model::World::Whole,
+            through: m.end,
+            readers: 0,
         }));
         let projected = engine.walks.len();
         engine.walks.push(walk);

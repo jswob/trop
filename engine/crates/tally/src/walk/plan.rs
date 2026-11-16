@@ -13,16 +13,16 @@
 //! min(t, K); a run-time refusal met evaluating an instance stays with that instance; a move's
 //! instances are computed once per cut, and a move that reads its own instances is `RUN-CYCLE`.
 
-use super::tuples::{Law, Tuple};
+use super::tuples::{Law, Tuple, imprecise_law};
 use crate::base::{Code, Load, Refusal, Run};
-use crate::eval::{Collected, Ctx, Engine, Env, order_text, thing_seen};
+use crate::eval::{Collected, Ctx, Engine, Env, LawClass, order_text, thing_seen};
 use crate::hole::{Hole, spread};
 use crate::model::{
     Domain, KeyVal, MoveInfo, Node, NodeKind, Number, Reality, Value, World, currency_id,
     money_num, num_money,
 };
 use crate::num::Num;
-use crate::syntax::{Certainty, Stop};
+use crate::syntax::{Certainty, Expr, Stop};
 use crate::time::{Day, PeriodKind};
 use core::cmp::Ordering;
 use std::collections::BTreeMap;
@@ -60,13 +60,33 @@ pub enum Amount {
     Refused(Refusal),
 }
 
-/// The day a movement or a leg falls on: a day, or a hole (L §5.14 `on d`).
+/// The day a movement or a leg falls on: a day, a window of days, or a hole (L §5.14 `on d`,
+/// §4.4).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Dated {
     /// A day.
     Day(Day),
+    /// A window: the movement falls on one of its days, which no one knows yet.
+    Window(DayWindow),
     /// A hole.
     Hole(Hole),
+}
+
+/// A window of days a movement or a leg falls on, with no `windows each` choosing a day: it
+/// books at the window's last day, and a balance read inside the window is `HOLE-IMPRECISE`
+/// (L §4.4; E §4.2 Holes in the walk).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DayWindow {
+    /// Its first day.
+    pub lo: Day,
+    /// Its last day.
+    pub hi: Day,
+    /// The window as a question names it (refcore's `window_text`).
+    pub question: String,
+    /// The window as L §2.4 prints the value.
+    pub shown: String,
+    /// The window as a value, which a read of the movement's `day` gives.
+    pub value: Box<crate::model::Window>,
 }
 
 impl Dated {
@@ -75,23 +95,79 @@ impl Dated {
     pub fn day(&self) -> Option<Day> {
         match self {
             Dated::Day(d) => Some(*d),
+            Dated::Window(_) | Dated::Hole(_) => None,
+        }
+    }
+
+    /// The first day it can be: the day, a window's first; none for a hole (refcore's
+    /// `day_lo`). L §4.4, §5.14.
+    #[must_use]
+    pub fn lo(&self) -> Option<Day> {
+        match self {
+            Dated::Day(d) => Some(*d),
+            Dated::Window(w) => Some(w.lo),
             Dated::Hole(_) => None,
         }
     }
 
-    /// The day as L §2.4 prints a value: a date in ISO, a hole as the hole (refcore's
-    /// `day_text`). L §2.4 Values.
+    /// The last day it can be: the day, a window's last; none for a hole (refcore's
+    /// `day_hi`). L §4.4, §5.14.
+    #[must_use]
+    pub fn hi(&self) -> Option<Day> {
+        match self {
+            Dated::Day(d) => Some(*d),
+            Dated::Window(w) => Some(w.hi),
+            Dated::Hole(_) => None,
+        }
+    }
+
+    /// The day as a value: a date, a window, or a hole (refcore's `mv_field`). L §5.14.
+    #[must_use]
+    pub fn value(&self) -> Value {
+        match self {
+            Dated::Day(d) => Value::Day(*d),
+            Dated::Window(w) => Value::Window(w.value.clone()),
+            Dated::Hole(h) => Value::Hole(h.clone()),
+        }
+    }
+
+    /// The day as L §2.4 prints a value: a date in ISO, a window as its value, a hole as the
+    /// hole (refcore's `day_text`). L §2.4 Values.
     #[must_use]
     pub fn text(&self) -> String {
         match self {
             Dated::Day(d) => d.text(),
+            Dated::Window(w) => w.shown.clone(),
             Dated::Hole(h) => h.text(),
         }
     }
 }
 
+/// The day window `w` gives a movement or a leg: none for a window of numbers (L §4.4).
+///
+/// # Errors
+///
+/// As [`Value::text`].
+pub(super) fn day_window(m: &Reality, w: &crate::model::Window) -> Result<Option<Dated>, Stop> {
+    let (Value::Day(lo), Value::Day(hi)) = (&w.lo, &w.hi) else {
+        return Ok(None);
+    };
+    let question = w.question_text(m).map_err(crate::eval::num_stop)?;
+    let value = Box::new(w.clone());
+    let shown = Value::Window(value.clone())
+        .text(m)
+        .map_err(crate::eval::num_stop)?;
+    Ok(Some(Dated::Window(DayWindow {
+        lo: *lo,
+        hi: *hi,
+        question,
+        shown,
+        value,
+    })))
+}
+
 /// A leg of an instance, evaluated (refcore's `Leg`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Eq)]
 pub struct LegVal {
     /// The leg's name.
     pub name: String,
@@ -105,6 +181,36 @@ pub struct LegVal {
     pub unit: Option<String>,
     /// Its day.
     pub day: Dated,
+    /// Where a hole amount was read: a `partial` ask line reads it again for the holes it is
+    /// linear in (L §5.18 Partial answers; refcore's `Leg.src`).
+    pub src: Option<Box<HoleSrc>>,
+}
+
+/// Two legs are the same leg when they book the same: where a hole amount was read is how a
+/// `partial` line reads it again, not what the leg books (E §9 invariant 5, L §5.18).
+impl PartialEq for LegVal {
+    /// The same name, places, amount, unit and day, wherever a hole amount was read. L §5.14
+    /// Legs, E §9 invariant 5.
+    fn eq(&self, other: &LegVal) -> bool {
+        self.name == other.name
+            && self.from == other.from
+            && self.to == other.to
+            && self.amount == other.amount
+            && self.unit == other.unit
+            && self.day == other.day
+    }
+}
+
+/// A hole amount's expression, the scope and the context it was read in (refcore's
+/// `Leg.src`). L §5.18 Partial answers.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct HoleSrc {
+    /// The leg's amount as written.
+    pub amount: Expr,
+    /// Its instance's scope.
+    pub env: Env,
+    /// The context it was read in.
+    pub ctx: Ctx,
 }
 
 /// The booked plan amounts of one timeline, by (instance, booking cut, the day a walk up to a
@@ -221,8 +327,8 @@ impl PartialOrd for Order {
 }
 
 impl Order {
-    /// The order as one typed term, `(day, stratum, move, ((kind, place, id), …))`, the last
-    /// day there is for a hole day, so a binding's members and the residual ledger's last ties
+    /// The order as one typed term, `(day, stratum, move, ((kind, place, id), …))`, a hole
+    /// day after every day, 9999-12-31 included, so a binding's members and the residual ledger's last ties
     /// compare it term by term (refcore's `inst_order` under `order_key`; tally 2.1.2). E §4.1,
     /// §6.3 Order; L §2.5, §5.19 Bindings.
     ///
@@ -240,11 +346,11 @@ impl Order {
             ]));
         }
         let day = match self.day {
-            Some(d) => d,
-            None => Day::LAST,
+            Some(d) => Term::Day(d),
+            None => Term::End,
         };
         Ok(Term::Tuple(vec![
-            Term::Day(day),
+            day,
             Term::Int(i64::from(self.stratum)),
             Term::text(&self.move_id),
             Term::Tuple(keys),
@@ -262,6 +368,9 @@ impl Order {
 pub enum Term {
     /// A day.
     Day(Day),
+    /// A hole day's place: after every day, 9999-12-31 included (refcore's `END`; tally 2.1.6,
+    /// #48).
+    End,
     /// A number: a stratum, a key's place in its index.
     Int(i64),
     /// A text: an id or a stable id.
@@ -286,11 +395,11 @@ impl Term {
         Term::Tuple(terms)
     }
 
-    /// The term's type, as refcore's `order_key` ranks it: a day, a number, a text, a tuple.
-    /// E §4.1.
+    /// The term's type, as refcore's `order_key` ranks it: a day (a hole day's place among
+    /// them), a number, a text, a tuple. E §4.1.
     fn rank(&self) -> u8 {
         match self {
-            Term::Day(_) => 1,
+            Term::Day(_) | Term::End => 1,
             Term::Int(_) => 2,
             Term::Text(_) => 3,
             Term::Tuple(_) => 4,
@@ -303,10 +412,14 @@ impl Ord for Term {
     fn cmp(&self, other: &Term) -> Ordering {
         match (self, other) {
             (Term::Day(a), Term::Day(b)) => a.cmp(b),
+            // a hole day after every day (E §4.1, tally 2.1.6)
+            (Term::End, Term::End) => Ordering::Equal,
+            (Term::Day(_), Term::End) => Ordering::Less,
+            (Term::End, Term::Day(_)) => Ordering::Greater,
             (Term::Int(a), Term::Int(b)) => a.cmp(b),
             (Term::Text(a), Term::Text(b)) => a.cmp(b),
             (Term::Tuple(a), Term::Tuple(b)) => a.cmp(b),
-            (Term::Day(_) | Term::Int(_) | Term::Text(_) | Term::Tuple(_), _) => {
+            (Term::Day(_) | Term::End | Term::Int(_) | Term::Text(_) | Term::Tuple(_), _) => {
                 self.rank().cmp(&other.rank())
             }
         }
@@ -333,8 +446,8 @@ pub struct Inst {
     pub id: String,
     /// Its day, at the cut K; none when its evaluation was refused before it.
     pub day: Option<Dated>,
-    /// Its law date by the move's `at`.
-    pub law: Option<Day>,
+    /// Its law date by the move's `at`: a day, or a window it is read at each day of.
+    pub law: Law,
     /// Its booking cut min(t, K), for a booked plan.
     pub cut: Option<Day>,
     /// The period it is for.
@@ -359,6 +472,9 @@ pub struct Inst {
     pub day_coll: Collected,
     /// Its place in the movement order.
     pub order: Order,
+    /// For a hole booking a later version answered: the cut that version is known from and
+    /// the step's versions, whose evaluation its existence and legs are (E §5 step 1, §10).
+    pub answered: Option<(Day, Vec<String>)>,
 }
 
 impl Inst {
@@ -376,7 +492,7 @@ impl Inst {
             env,
             id,
             day: None,
-            law: None,
+            law: Law::None,
             cut: None,
             for_period: None,
             exists: Exists::Yes,
@@ -394,6 +510,7 @@ impl Inst {
                 move_id: mv.id.clone(),
                 keys: Vec::new(),
             },
+            answered: None,
         }
     }
 }
@@ -457,17 +574,116 @@ impl Engine {
             )));
         }
         self.plan_active.insert(key.clone());
-        let made = self.make_instances(m, mv, cut, None);
+        let made = if self.tracing() {
+            self.traced_instances(m, mv, cut)
+        } else {
+            self.make_instances(m, mv, cut, None).map(|out| (out, None))
+        };
         self.plan_active.remove(&key);
-        let mut out = made?;
+        let (mut out, back) = made?;
         // refcore computes a status when it is first read, after the instances are kept
         self.plans.insert(key.clone(), Rc::new(out.clone()));
+        let mut due = false;
         for inst in &mut out {
             inst.status = self.status(m, mv, inst, cut)?;
+            due = due || crate::book::hole_booked_before(inst, cut);
+        }
+        if let Some(back) = &back {
+            // the observations a status reads print nothing (refcore reads them untraced):
+            // the plan isn't a walk the explanation lacks a form for
+            self.trace_walked_back(*back);
         }
         let shared = Rc::new(out);
-        self.plans.insert(key, Rc::clone(&shared));
-        Ok(shared)
+        if !due || mv.decision {
+            self.plans.insert(key, Rc::clone(&shared));
+            return Ok(shared);
+        }
+        self.plans.insert(key.clone(), Rc::clone(&shared));
+        // a hole booking a later version answers is that version's here (E §5 step 1); a
+        // stop other than a refusal leaves no list kept that it didn't answer
+        if let Err(stop) = self.answer_hole_bookings(m, mv, cut) {
+            self.plans.remove(&key);
+            return Err(stop);
+        }
+        let answered = self.plans.get(&key).map_or(shared, Rc::clone);
+        if back.is_some() {
+            self.trace_answers(m, mv, &answered, cut)?;
+        }
+        Ok(answered)
+    }
+
+    /// The answered instances of a list a read traces, each evaluated again at the cut of the
+    /// version that answered it, traced, so the read names the rows that give the answer
+    /// (E §10, §5 step 1; L §5.18).
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::make_instances`].
+    fn trace_answers(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        insts: &[Inst],
+        cut: Day,
+    ) -> Result<(), Stop> {
+        let outer = self.holding(Node::new(NodeKind::Move, &mv.id));
+        self.trace_plan_open();
+        let mut made = Ok(None);
+        for inst in insts {
+            let Some((at, _)) = &inst.answered else {
+                continue;
+            };
+            let seed = Seed {
+                env: inst.env.clone(),
+                keys: inst.keys.clone(),
+                exists: Exists::Yes,
+                at_cut: Some(*at),
+                upto: None,
+            };
+            made = self.eval_inst(m, mv, &seed, self.timeline_ctx(None, cut));
+            if made.is_err() {
+                break;
+            }
+        }
+        let closed = self.trace_plan_close();
+        self.holder = outer;
+        made?;
+        closed?;
+        Ok(())
+    }
+
+    /// The day a list of move `mv`'s instances at cut `cut` stops at: a walk up to a day's,
+    /// or none for the whole list, where [`Engine::plan_list`] takes it (refcore's
+    /// `upto_tag`). E §4.1, §3.2.
+    pub(crate) fn list_upto(&self, mv: &MoveInfo, cut: Day) -> Option<Day> {
+        let upto = self.body_upto?;
+        let whole = mv.decision
+            || mv.decl.legs.iter().any(|leg| leg.on.is_some())
+            || self.plans.contains_key(&(mv.id.clone(), cut));
+        (!whole).then_some(upto)
+    }
+
+    /// A move's instances computed while a read is traced, the first time the ask reaches
+    /// them: what they read is kept from the reading cell, as the plan's always is, but traced,
+    /// so the rows and cells their bindings, days, `when`s and amounts read print under the
+    /// read (refcore traces the instances it computes while it explains, once per ask); with
+    /// the trace's note of a walk read then. E §10, §3.2, §4.1; L §5.18 Explanation order.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::make_instances`].
+    fn traced_instances(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        cut: Day,
+    ) -> Result<(Vec<Inst>, Option<crate::eval::Walked>), Stop> {
+        let outer = self.holding(Node::new(NodeKind::Move, &mv.id));
+        self.trace_plan_open();
+        let made = self.make_instances_held(m, mv, cut, None);
+        let back = self.trace_plan_close();
+        self.holder = outer;
+        Ok((made?, Some(back?)))
     }
 
     /// A move's instances for the walk being planned: all of them, or, for a walk up to a
@@ -484,16 +700,10 @@ impl Engine {
         mv: &MoveInfo,
         cut: Day,
     ) -> Result<Rc<Vec<Inst>>, Stop> {
-        let Some(upto) = self.body_upto else {
+        let Some(upto) = self.list_upto(mv, cut) else {
             return self.move_instances(m, mv, cut);
         };
         let active = (mv.id.clone(), cut);
-        let whole = mv.decision
-            || self.plans.contains_key(&active)
-            || mv.decl.legs.iter().any(|leg| leg.on.is_some());
-        if whole {
-            return self.move_instances(m, mv, cut);
-        }
         let key = (mv.id.clone(), cut, upto);
         if let Some(hit) = self.prefixes.plans.get(&key) {
             return Ok(Rc::clone(hit));
@@ -513,17 +723,30 @@ impl Engine {
         self.prefixes
             .plans
             .insert(key.clone(), Rc::new(out.clone()));
+        let mut due = false;
         for inst in &mut out {
             inst.status = self.status(m, mv, inst, cut)?;
+            due = due || crate::book::hole_booked_before(inst, cut);
         }
         let shared = Rc::new(out);
-        self.prefixes.plans.insert(key, Rc::clone(&shared));
-        Ok(shared)
+        if !due {
+            self.prefixes.plans.insert(key, Rc::clone(&shared));
+            return Ok(shared);
+        }
+        self.prefixes.plans.insert(key.clone(), Rc::clone(&shared));
+        // a hole booking a later version answers is that version's here too, measured over
+        // this list (E §5 step 1); a stop other than a refusal leaves no list kept that it
+        // didn't answer
+        if let Err(stop) = self.answer_hole_bookings(m, mv, cut) {
+            self.prefixes.plans.remove(&key);
+            return Err(stop);
+        }
+        Ok(self.prefixes.plans.get(&key).map_or(shared, Rc::clone))
     }
 
     /// An instance's status at cut `cut`, the observations that fulfil it judged first
     /// (refcore's `status`). E §4.1 step 3, L §5.19.
-    fn status(
+    pub(crate) fn status(
         &mut self,
         m: &Reality,
         mv: &MoveInfo,
@@ -531,12 +754,16 @@ impl Engine {
         cut: Day,
     ) -> Result<Status, Stop> {
         inst.obs = self.obs_links_for(m, &inst.id, cut)?;
-        let day = inst.day.as_ref().and_then(Dated::day);
+        // a window's first day and its last (refcore's `day_lo`, `day_hi`)
+        let (day, last) = match &inst.day {
+            Some(dated) => (dated.lo(), dated.hi()),
+            None => (None, None),
+        };
         if inst.exists == Exists::No {
             return Ok(Status::None);
         }
-        if let Some(d) = day
-            && (d < m.start || d > m.end)
+        if let (Some(d), Some(hi)) = (day, last)
+            && (hi < m.start || d > m.end)
         {
             return Ok(Status::LeftOut);
         }
@@ -561,7 +788,7 @@ impl Engine {
         if kind_certainty(m, &mv.kind) == Some(Certainty::Uncertain) && inst.obs.is_empty() {
             return Ok(Status::Uncertain);
         }
-        if d < cut && self.touches_covered(m, inst, cut) {
+        if d < cut && self.touches_covered(m, inst, cut)? {
             return Ok(Status::Modelled);
         }
         Ok(if d < cut { Status::Past } else { Status::Plan })
@@ -759,7 +986,7 @@ impl Engine {
         if mv.decision {
             return Ok(());
         }
-        let day = inst.day.as_ref().and_then(Dated::day);
+        let day = inst.day.as_ref().and_then(Dated::lo);
         // the cut its body is measured at: a later version's, for a re-measure (E §5 step 1),
         // else min(t, K)
         let cut = match (at_cut, day) {
@@ -767,7 +994,9 @@ impl Engine {
             (None, Some(d)) => d.min(tctx.cut),
             (None, None) => tctx.cut,
         };
-        if let Some(legs) = self.refused_places(m, mv, inst, self.timeline_ctx(inst.law, cut))? {
+        if let Some(legs) =
+            self.refused_places(m, mv, inst, self.timeline_ctx(inst.law.first(), cut))?
+        {
             inst.legs = legs;
         }
         Ok(())
@@ -811,6 +1040,7 @@ impl Engine {
                 amount: Amount::Refused(err.clone()),
                 unit: None,
                 day: day.clone(),
+                src: None,
             })
             .collect();
         Ok(Some(legs))
@@ -863,8 +1093,8 @@ impl Engine {
     ) -> Result<Vec<(String, String)>, Stop> {
         let mut ends: Vec<(String, Option<String>)> = Vec::new();
         if inst.legs.is_empty() {
-            let day = inst.day.as_ref().and_then(Dated::day);
-            let ctx = self.timeline_ctx(inst.law, day.map_or(cut, |d| d.min(cut)));
+            let day = inst.day.as_ref().and_then(Dated::lo);
+            let ctx = self.timeline_ctx(inst.law.first(), day.map_or(cut, |d| d.min(cut)));
             let Some(places) = self.leg_ends(m, mv, inst, ctx)? else {
                 return Ok(Vec::new());
             };
@@ -899,7 +1129,7 @@ impl Engine {
     pub(super) fn read_or_refused(
         &mut self,
         m: &Reality,
-        e: &crate::syntax::Expr,
+        e: &Expr,
         env: &Env,
         ctx: Ctx,
     ) -> Result<Option<Value>, Stop> {
@@ -926,12 +1156,11 @@ impl Engine {
                 inst.exists = Exists::Unknown(h);
                 return Ok(true);
             }
-            Law::Day(d) => Some(d),
-            Law::None => None,
+            law @ (Law::Day(_) | Law::Window(..) | Law::None) => law,
         };
-        inst.law = law;
+        inst.law = law.clone();
         self.push();
-        let v = self.ev(m, &mv.decl.on, &inst.env, tctx.at_law(law));
+        let v = self.day_over_law(m, mv, inst, tctx);
         let day_coll = self.pop_alone();
         self.absorb(&day_coll);
         inst.day_coll = day_coll;
@@ -941,7 +1170,11 @@ impl Engine {
         }
         let day = match v {
             Value::Hole(h) => Dated::Hole(h),
-            Value::Window(_) => return Err(Stop::NotBuilt("a movement dated by a window")),
+            // a window no `windows each` chose a day of (L §4.4)
+            Value::Window(w) => match day_window(m, &w)? {
+                Some(day) => day,
+                None => Dated::Day(date_of(&Value::Window(w))?),
+            },
             Value::Number(_)
             | Value::Money(_)
             | Value::Bool(_)
@@ -965,35 +1198,153 @@ impl Engine {
         if mv.decision {
             return Ok(true);
         }
-        if let (Some(upto), Dated::Day(d)) = (seed.upto, &day)
-            && *d > upto
+        if let (Some(upto), Some(d)) = (seed.upto, day.lo())
+            && d > upto
         {
-            // a walk up to a day books nothing after it (refcore's `eval_inst`, `upto`)
+            // a walk up to a day books nothing after it, nor a movement whose window's
+            // first day falls after it (refcore's `eval_inst`, `upto`; L §4.4)
             return Ok(false);
         }
-        let cut = match (seed.at_cut, &day) {
-            (Some(c), _) => c,
-            (None, Dated::Day(d)) => (*d).min(tctx.cut),
-            (None, Dated::Hole(_)) => tctx.cut,
+        // the booking cut min(t, K); a window's at its first day and its last (refcore's
+        // `cuts`)
+        let (cut, last) = match (seed.at_cut, day.lo(), day.hi()) {
+            (Some(c), _, _) => (c, c),
+            (None, Some(lo), Some(hi)) => (lo.min(tctx.cut), hi.min(tctx.cut)),
+            (None, _, _) => (tctx.cut, tctx.cut),
         };
         inst.cut = Some(cut);
-        if !keys_seen(m, mv, &inst.keys, (cut, self.timeline_world())) {
+        let world = self.timeline_world();
+        let first = keys_seen(m, mv, &inst.keys, (cut, world));
+        let seen = if last == cut {
+            (first, first)
+        } else {
+            (first, keys_seen(m, mv, &inst.keys, (last, world)))
+        };
+        if seen == (false, false) {
             inst.exists = Exists::No;
             return Ok(true);
         }
-        let body = self.inst_body(
-            m,
-            mv,
-            inst,
-            self.timeline_ctx(law, cut),
-            seed.exists.clone(),
-        )?;
+        let mut body = self.body_over_law(m, mv, inst, self.timeline_ctx(None, cut))?;
+        if let (Dated::Window(w), true) = (&day, last != cut) {
+            // a version known inside the window of a windowed instance (L §5.14.3)
+            let text = format!(
+                "date within {} not precise enough for the booking cut of {}",
+                w.question, inst.id
+            );
+            let hole = Hole::asked(&text, &inst.id);
+            if seen.0 == seen.1 {
+                let other = self.body_over_law(m, mv, inst, self.timeline_ctx(None, last))?;
+                if !same_body(&body, &other) {
+                    body = imprecise_body(body, &other, &hole);
+                }
+            } else {
+                // a key added or dropped inside the window: whether the instance exists
+                // turns on the day (E §5 step 1)
+                body.exists = join(body.exists, &hole);
+            }
+        }
         inst.exists = body.exists;
         inst.legs = body.legs;
         inst.attrs = body.attrs;
         inst.for_period = body.for_period;
         inst.fulfils = body.fulfils;
         Ok(true)
+    }
+
+    /// An instance's day: its `on` read at its law date, and under a window `at` at each law
+    /// date the window can take, `HOLE-IMPRECISE` where they differ (refcore's `eval_inst`,
+    /// its `lds`). L §4.3, §5.14 `at e`.
+    fn day_over_law(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        inst: &Inst,
+        tctx: Ctx,
+    ) -> Result<Value, Stop> {
+        let (Some(window), Some(day)) = (inst.law.window(), inst.law.first()) else {
+            return self.ev(m, &mv.decl.on, &inst.env, tctx.at_law(inst.law.first()));
+        };
+        // once per law-date class: a day its class holds gives what it gave (L §4.4's cost)
+        let (first, mut class) = self.on_at(m, mv, inst, (tctx, day))?;
+        for at in inst.law.rest() {
+            if class.holds(*at) {
+                continue;
+            }
+            let (other, next) = self.on_at(m, mv, inst, (tctx, *at))?;
+            if other != first {
+                return Ok(Value::Hole(imprecise_law(window, &inst.id)));
+            }
+            class = next;
+        }
+        Ok(first)
+    }
+
+    /// An instance's `on` read at law date `day`, with the law dates that give the same
+    /// (E §3.2). L §4.3, §5.14 `at e`.
+    fn on_at(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        inst: &Inst,
+        (tctx, day): (Ctx, Day),
+    ) -> Result<(Value, LawClass), Stop> {
+        let mark = self.open_law_class(day);
+        let value = self.ev(m, &mv.decl.on, &inst.env, tctx.at_law(Some(day)));
+        let class = self.close_law_class(mark, day);
+        Ok((value?, class?))
+    }
+
+    /// An instance's body at its law date in context `ctx`, its cut set, from its tuple's
+    /// existence; under a window `at`, at each law date the window can take: one body where
+    /// all agree, else each leg's amount `HOLE-IMPRECISE`, and its existence where that
+    /// differs too (refcore's `body_over_law`). L §4.3, §5.14 `at e`, E §5 step 1.
+    ///
+    /// # Errors
+    ///
+    /// The refusals of its parts.
+    pub(super) fn body_over_law(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        inst: &Inst,
+        ctx: Ctx,
+    ) -> Result<Body, Stop> {
+        let exists = inst.exists.clone();
+        let (Some(window), Some(day)) = (inst.law.window(), inst.law.first()) else {
+            return self.inst_body(m, mv, inst, ctx.at_law(inst.law.first()), exists);
+        };
+        // once per law-date class: a day its class holds gives what it gave (L §4.4's cost)
+        let (first, mut class) = self.body_at(m, mv, inst, (ctx, day))?;
+        for at in inst.law.rest() {
+            if class.holds(*at) {
+                continue;
+            }
+            let (other, next) = self.body_at(m, mv, inst, (ctx, *at))?;
+            if !same_body(&other, &first) {
+                return Ok(imprecise_body(
+                    first,
+                    &other,
+                    &imprecise_law(window, &inst.id),
+                ));
+            }
+            class = next;
+        }
+        Ok(first)
+    }
+
+    /// An instance's body at law date `day`, with the law dates that give the same (E §3.2).
+    /// L §4.3, §5.14 `at e`.
+    fn body_at(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        inst: &Inst,
+        (ctx, day): (Ctx, Day),
+    ) -> Result<(Body, LawClass), Stop> {
+        let mark = self.open_law_class(day);
+        let body = self.inst_body(m, mv, inst, ctx.at_law(Some(day)), inst.exists.clone());
+        let class = self.close_law_class(mark, day);
+        Ok((body?, class?))
     }
 
     /// An instance's body in context `ctx`, its law date and cut set: its `when`, period,
@@ -1093,6 +1444,83 @@ impl Engine {
     }
 }
 
+/// Whether two bodies are the same, read at two law dates or two cuts: their existence, each
+/// leg's name, places, amount and day, their attributes, `for` and `fulfils` (refcore's
+/// `body_key`, its legs). L §4.3, E §5 step 1.
+fn same_body(a: &Body, b: &Body) -> bool {
+    a.exists == b.exists
+        && same_legs(&a.legs, &b.legs)
+        && a.attrs == b.attrs
+        && a.for_period == b.for_period
+        && a.fulfils == b.fulfils
+}
+
+/// Whether two bodies' legs are the same: each leg's name, places, amount and day (refcore's
+/// `body_key`). L §4.3.
+fn same_legs(a: &[LegVal], b: &[LegVal]) -> bool {
+    a.len() == b.len()
+        && a.iter().zip(b).all(|(x, y)| {
+            x.name == y.name
+                && x.from == y.from
+                && x.to == y.to
+                && x.amount == y.amount
+                && x.day == y.day
+        })
+}
+
+/// The body of a window `at` whose law dates give two bodies: the first's, each leg's amount
+/// the hole `hole` (the second's legs where the first has none) unless only attributes, `for`
+/// or `fulfils` differ, its existence the hole too where the two differ, and each attribute,
+/// `for` and `fulfils` the two give differently the hole (refcore's `body_over_law`). L §4.3,
+/// §8.1, E §5 step 1.
+fn imprecise_body(first: Body, other: &Body, hole: &Hole) -> Body {
+    let legs = if first.exists == other.exists && same_legs(&first.legs, &other.legs) {
+        first.legs
+    } else {
+        let src = if first.legs.is_empty() {
+            &other.legs
+        } else {
+            &first.legs
+        };
+        src.iter()
+            .map(|lg| LegVal {
+                amount: Amount::Hole(hole.clone()),
+                src: None,
+                ..lg.clone()
+            })
+            .collect()
+    };
+    let exists = if first.exists == other.exists {
+        first.exists
+    } else {
+        Exists::Unknown(hole.clone())
+    };
+    let mut attrs = first.attrs;
+    for (name, value) in &mut attrs {
+        let theirs = other.attrs.iter().find(|(n, _)| n == name).map(|(_, v)| v);
+        if theirs != Some(&*value) {
+            *value = Value::Hole(hole.clone());
+        }
+    }
+    Body {
+        exists,
+        legs,
+        attrs,
+        for_period: imprecise_part(first.for_period, other.for_period.as_ref(), hole),
+        fulfils: imprecise_part(first.fulfils, other.fulfils.as_ref(), hole),
+    }
+}
+
+/// A body's `for` or `fulfils` read two ways: the first where both agree, else the hole
+/// `hole` (L §4.3, §8.1).
+fn imprecise_part(first: Option<Value>, other: Option<&Value>, hole: &Hole) -> Option<Value> {
+    if first.as_ref() == other {
+        first
+    } else {
+        Some(Value::Hole(hole.clone()))
+    }
+}
+
 /// Existence joined with a hole: the union of the questions (L §8.1).
 pub(super) fn join(ex: Exists, h: &Hole) -> Exists {
     match ex {
@@ -1166,8 +1594,9 @@ fn scenario_early(m: &Reality, mv: &MoveInfo, inst: &Inst) -> bool {
     let Some(from) = scenario_from(m, &mv.id) else {
         return false;
     };
-    let legs = inst.legs.iter().filter_map(|leg| leg.day.day());
-    let day = inst.day.as_ref().and_then(Dated::day);
+    // a window's first day (refcore's `day_lo`)
+    let legs = inst.legs.iter().filter_map(|leg| leg.day.lo());
+    let day = inst.day.as_ref().and_then(Dated::lo);
     day.into_iter().chain(legs).any(|d| d < from)
 }
 
@@ -1208,7 +1637,8 @@ fn inst_order(m: &Reality, mv: &MoveInfo, inst: &Inst) -> Order {
         keys.push(place.unwrap_or_else(|| (1, 0, key.text())));
     }
     Order {
-        day: inst.day.as_ref().and_then(Dated::day),
+        // a window's first day (refcore's `inst_order`, `day_lo`)
+        day: inst.day.as_ref().and_then(Dated::lo),
         stratum: mv.stratum,
         move_id: mv.id.clone(),
         keys,

@@ -1,0 +1,18 @@
+model p
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 P60 (G6's census of run-time stops): eval/pins.rs:396, a pin per binding tuple naming two bindings in one part"
+
+source s "s"
+index ks = [a, b]
+input z[k in ks, j in ks]: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  z = 1 "s"
+
+ask q: z[k, j] for k in ks, j in ks with z[k, j] = 5

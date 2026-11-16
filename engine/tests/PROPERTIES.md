@@ -48,6 +48,9 @@ No expected value is worked out by hand. Each law is a relation between runs, an
 | `properties/gen_m1.py`, `properties/m1.corpus` | M1's generator (`SEED = 20261109`) and its 648 records |
 | `properties/laws_m1.py`, `properties/m1.refcore` | M1's laws on refcore, and its 648 runs |
 | `runner/src/laws_m1.rs`, `runner/milestone/m1_properties.rs` | M1's laws in Rust, and M1's tests on the engine |
+| `properties/gen_m2.py`, `properties/m2.corpus` | M2's generator (`SEED = 20261115`) and its 168 records |
+| `properties/laws_m2.py`, `properties/m2.refcore` | M2's laws on refcore, and its 168 runs |
+| `runner/src/laws_m2.rs`, `runner/milestone/m2_properties.rs` | M2's laws in Rust, and M2's tests on the engine |
 
 ## § M0: the parser's and the format's laws
 
@@ -97,4 +100,24 @@ Milestone M1's part (BUILD-ORDER § M1, "the properties"; DONE gate 6; `MILESTON
 
 **#98's law, checked without trusting refcore.** Each `steps` case declares one index of a kind in turn (`year`, `month`, `day`, an anchored `year … from MM-DD`, an anchored `month … from DD`, `int`), with a random start, 4–9 keys and a step `by n` (years 1, 2, 3, 5; months 1, 2, 3, 6, 12; days 1, 2, 7, 14; anchored 1–3; ints 1, 2, 3, 5), a key k and a move m from −3 to 3. Its defs, keyed by the index, are read at k: (a) `v[q + mm]` (a def keyed by the index, read at the moved key) is pos(k) + m inside the index and `RUN-KEY` outside it; (b) `pos(q + mm)` the same; (c) the duration form `v[q + mn * 1 <period>]`, mn = m·n, agrees with (a); (d) a duration that isn't a whole number of steps, `start_of(q + mx * 1 <period>)` with mx = m·n + 1, is `RUN-DOMAIN`; (e) `start_of(q + mm)` and its duration twin are the key at position pos(k) + m of the grid start + i·n periods, anchored by `from`, past the index's ends too (`start_of` takes a value, not a key, l.623). On an integer index a key in a value position is an int, so a whole step is `q + mn`, and `q + mx` is `RUN-KEY`. The generator computes what each must print with Python's `datetime` from the declaration alone and writes it into the model's note (`steps oracle: …`); the law reads the note, never refcore. `pos` is 1-based.
 
-**Not here, and why:** a scenario's movement listed through `lifespan(k)` or a binding over a span reaching D (E §9 item 3's other two kinds; P45 leaves `lifespan(k)` "not implemented" in M1); a decision's projection over a scenario row; revaluation and anchor gaps in E §9.2; `next(K, d)` against its `first` form; 1 against 6 workers (M7).
+**Not here, and why (M1):** a scenario's movement listed through `lifespan(k)` or a binding over a span reaching D (E §9 item 3's other two kinds; P45 leaves `lifespan(k)` "not implemented" in M1); a decision's projection over a scenario row; revaluation and anchor gaps in E §9.2; `next(K, d)` against its `first` form; 1 against 6 workers (M7).
+
+## § M2: masking at K, the replay's split, the fixed past
+
+Milestone M2's part (BUILD-ORDER § M2, "the properties"; DONE gate 6; `MILESTONE-M2.md` row 5), written by T for issue #167, chunk C7, 2026-11-15 (T's plan §2.4). It runs as M1's part does.
+
+1. **The generator** `properties/gen_m2.py` (`SEED = 20261115`, 24 cases per law) writes `properties/m2.corpus`: 168 records, 72 cases. A reality is a household month by month in M2's forms: `konto` covered by monthly statements (`covers konto`, `pad konto from unexplained`, each row linked by `fulfils:` to the instance it realises, an unlinked row in about a third of the months, `stated[konto]` at each month's end), a savings account, pay from a flat tax law over the month's payslip where one is known and the contract's gross otherwise (a cited `missing()` rule, L §5.11), rent and a monthly saving. Every figure is a stated row.
+2. **The proof on the oracle:** `properties/laws_m2.py` (`--check` in `run.py --self-test`, 8l2). **Result, 2026-11-15, refcore 2.1.7 with P35, P42, P46 and P50's patches: all 72 cases hold, every control fails its law, and none of the 480 reads the laws compare is a hole.**
+3. **The same laws in Rust:** `runner/src/laws_m2.rs`; its own tests (`every_m2_law_holds_on_refcore`, `each_m2_law_fails_on_a_planted_fault`) run in `check`.
+4. **On the engine:** `runner/milestone/m2_properties.rs` (4 tests, `test = false` until M2's marker). **2026-11-15, the engine at 33abaf56: 4 of 4 green.**
+
+| Test (`m2_properties`) | Law | Source | Generator (`gen_m2.py`) | Control |
+|---|---|---|---|---|
+| `m2_masking_at_k` | an ask `as known K` prints the same bytes with and without one row known after K, of a random kind: an observed row in the first statement known after K, a version changing rent's amount, a payslip (`k_` asks: balances before and after K, the savings, a net pay after K, the run's flows) | E §2; L §4.5, §4.6; hindcast H8 | `masking`: K in 2025-02-03 .. 03-30, the late row known in (K, `on`] | the same reads at `on` (`o_` asks) see it |
+| `m2_the_replay_shows_no_law_difference` | in the replay (`residuals` at K = `on`, the law reading the payslips), every matched line of pay, a law-computed instance, has amount difference 0.00 | E §6.2, §6.3; hindcast.md §4 (the three-way split) | `split`: six months of payslips whose tax rounds differently half-up and down in at least one | the twin whose law rounds down (`law_truncates`), as H3 |
+| `m2_the_past_is_fixed` | a version known on D changing a plan's amount leaves every balance and flow before D as without it | L §5.14.3; E §5 | `fixed-past`: D in 2025-02-10 .. 05-25, three balances and the flows before D | the same version known before the first booking moves them |
+| `m2_determinism_across_runs` | every record run twice prints the same bytes, and the engine answers every record refcore answers | DONE gate 6 | the whole corpus | an unanswered run fails |
+
+**The hindcasts** (`m2/hindcast/`, `MILESTONE-M2.md` row 3) are the split's and masking's fixed cases: `judge.py` checks that only H3's replay shows a law line and that H8's `as known` K reads equal H0's.
+
+**Not here, and why (M2):** a reading `after m` or a `stated` reading as the late row (E §2 holds them, but a reading's day is #169's ground on refcore, P43); forks on and off (C8, with the forks group's switch).

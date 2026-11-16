@@ -1,0 +1,31 @@
+model m
+  tally 2
+  on 2026-01-01
+  start 2025-01-01
+  end 2025-12-31
+  note "T, M2 G6 vectors: refcore's L5_18_partial_balance_when: a partial balance with a hole when (L §5.18)"
+
+unit DUK: currency minor 0.01
+source s "s"
+place w: accounts DUK lives 2025-01-01..
+place shop: outside lives 2025-01-01..
+input sp[m in months]: money DUK question "spent?"
+
+version o
+  cite s
+  known 2025-01-01
+  opening[w] = 100.00 DUK at 2025-01-01 start
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  sp[*] = none "the other months"
+  sp[2025-03] = ?"What was spent in March?" "March"
+
+move spent[m in months]: transfers
+  on end_of(m) - 1
+  when sp[m] != none
+  leg cash from w to shop amount sp[m]
+
+ask q: bal(w, 2025-12-31) law 2025-12-31 partial

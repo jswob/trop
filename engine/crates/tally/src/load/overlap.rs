@@ -14,8 +14,9 @@ use super::check::invariant;
 use super::steps::refuse;
 use crate::base::Load;
 use crate::model::{
-    BindInfo, Domain, KeyVal, Observation, Pat, Reality, Row, RowInstant, Span, pattern_text,
+    BindInfo, Domain, KeyVal, Observation, Pat, Reality, Row, RowInstant, Span, Value, pattern_text,
 };
+use crate::num::Num;
 use crate::syntax::Stop;
 use crate::time::Day;
 use core::cmp::Ordering;
@@ -394,10 +395,17 @@ fn rank(m: &Reality, domain: &Domain, key: &KeyVal, compare: Compare) -> Option<
             Some(Rank::Text(format!("{base}:{name}")))
         }
         Domain::Range => match key {
-            KeyVal::Int(n) => Some(Rank::Int(*n)),
+            KeyVal::Int(n) => Some(Rank::Num(Num::int(*n))),
+            KeyVal::Value(v) => {
+                if let Value::Number(n) = &v.value {
+                    Some(Rank::Num(n.q.clone()))
+                } else {
+                    None
+                }
+            }
             KeyVal::Day(day) => Some(Rank::Day(*day)),
             KeyVal::Period(p) => (compare == Compare::Before).then(|| Rank::Day(p.start())),
-            KeyVal::Key { .. } | KeyVal::Thing(_) | KeyVal::Mv(_) | KeyVal::Value(_) => None,
+            KeyVal::Key { .. } | KeyVal::Thing(_) | KeyVal::Mv(_) => None,
         },
         Domain::Axis(_) => None,
     }
@@ -410,8 +418,8 @@ enum Rank {
     Pos(usize),
     /// A stable id, by code point.
     Text(String),
-    /// An integer.
-    Int(i64),
+    /// A number of a stepped range, an integer one too.
+    Num(Num),
     /// A day.
     Day(Day),
 }
@@ -422,7 +430,8 @@ fn rank_cmp(a: &Rank, b: &Rank) -> Option<Ordering> {
     match (a, b) {
         (Rank::Pos(x), Rank::Pos(y)) => Some(x.cmp(y)),
         (Rank::Text(x), Rank::Text(y)) => Some(x.as_str().cmp(y.as_str())),
-        (Rank::Int(x), Rank::Int(y)) => Some(x.cmp(y)),
+        // a number error is no order between them
+        (Rank::Num(x), Rank::Num(y)) => x.compare(y).ok(),
         (Rank::Day(x), Rank::Day(y)) => Some(x.cmp(y)),
         _ => None,
     }

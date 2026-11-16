@@ -1,0 +1,40 @@
+model pk
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+axis ax
+  lo "low"
+  hi "high"
+
+place konto: accounts PLN lives 2026-01-01..
+place work: outside lives 1900-01-01..
+
+input amt: money PLN
+input pd: date
+input bank: observed
+
+def a2: money PLN
+  rule base = amt
+
+
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from work to konto amount a2
+
+ask s: sum(x.cash.amount for x in transfers over 2026-01-01 .. 2026-02-28)
+ask t: x.cash.amount for x in transfers over 2026-01-01 .. 2026-02-28
+ask b: bal(konto, 2026-02-28)
+ask p: bal(konto, 2026-04-30) from 2026-03-01 windows each
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "c"
+  pd = 2026-04-01 "c"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"

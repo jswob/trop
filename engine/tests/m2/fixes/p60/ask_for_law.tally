@@ -1,0 +1,33 @@
+model p
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 P60 (G6's census of run-time stops): ask/answer.rs:611, an ask's law formed per its own for's binding tuple"
+
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [a, b]
+input amt: money PLN
+input dk[k in ks]: date
+
+version v
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-01-01
+  amt = 10.00 PLN "s"
+
+version v2
+  cite s
+  governs 2026-04-01..
+  known 2026-01-01
+  amt = 20.00 PLN "s"
+
+version d
+  cite s
+  governs always
+  known 2026-01-01
+  dk[a] = 2026-03-31 "s"
+  dk[b] = 2026-04-30 "s"
+
+ask q: amt for k in ks law dk[k]

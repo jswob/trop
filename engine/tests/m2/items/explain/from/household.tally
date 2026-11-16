@@ -1,0 +1,45 @@
+model household
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2027-12-31
+  note "T, M2 C2, G2 (#164 R7, #163): before from: under flows (fl) and under bal (bl), for an instance dated before the scenario's from whose law date is after it (adv); a leg whose day is a window (advw) under windows each (blw)"
+
+source plan "plan"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input adv_day: date
+input adv_law: date
+input wd: date
+
+move adv: transfers
+  on adv_day
+  at adv_law
+  leg cash from konto to world amount amt
+
+move advw: transfers
+  on wd
+  at adv_law
+  leg cash from konto to world amount amt
+
+version base
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  amt = 10.00 PLN "own"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "wyciąg"
+
+version dates
+  cite plan
+  governs always
+  known 2026-01-01
+  adv_day = 2026-12-15 "own"
+  adv_law = 2027-01-01 "own"
+  wd = window(2026-12-20, 2026-12-28) "own"
+
+ask fl: flows(konto, 2026-12-01 .. 2027-01-31) in late windows each
+ask bl: bal(konto, 2026-12-31) in late windows each
+ask blw: bal(konto, 2026-12-24) in late windows each
+ask bl_plain: bal(konto, 2026-12-31) in late

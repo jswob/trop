@@ -1,0 +1,9 @@
+part hc_h3_law
+  tally 2
+  note "H3 (hindcast.md §3), written by gen.py: M's law rounds the tax down (truncates) where M* rounds half-up, a law bug in M only; the ledger is the base's."
+
+version tax_law_h3
+  cite statute
+  governs always
+  known 2021-01-02
+  replace law_truncates = true "the modeller's reading of art. 2"

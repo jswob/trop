@@ -1,0 +1,57 @@
+model order_cycle
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 C2, #164 (S5, L §5.14.2): a cycle left after composing: s1 before s2 and s3 before s4 are written, and the reads add s2 before s3 (s3 reads c, which s2 books) and s4 before s1 (s1 reads a, which s4 books): s1, s2, s3, s4 read each other, refused RUN-ORDER at run, where the day is an input"
+
+source s "s"
+unit PLN: currency minor 0.01
+input day: date
+input keep: money PLN
+place a: accounts PLN lives 2025-01-01..
+place b: accounts PLN lives 2025-01-01..
+place c: accounts PLN lives 2025-01-01..
+place e: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+
+move s1: transfers
+  on day
+  reads a
+  before s2
+  leg cash from a to b amount max(0 PLN, bal(a) - keep)
+
+move s2: transfers
+  on day
+  reads b
+
+  leg cash from b to c amount max(0 PLN, bal(b) - keep)
+
+move s3: transfers
+  on day
+  reads c
+  before s4
+  leg cash from c to e amount max(0 PLN, bal(c) - keep)
+
+move s4: transfers
+  on day
+  reads e
+  leg cash from e to a amount max(0 PLN, bal(e) - keep)
+
+ask f1: flows(s1, 2026-01-15)
+ask f2: flows(s2, 2026-01-15)
+ask f3: flows(s3, 2026-01-15)
+ask f4: flows(s4, 2026-01-15)
+ask ba: bal(a, 2026-01-15)
+ask be: bal(e, 2026-01-15)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  day = 2026-01-15 "s"
+  keep = 10.00 PLN "s"
+  opening[a] = 100.00 PLN at 2026-01-01 start "s"
+  opening[b] = 0.00 PLN at 2026-01-01 start "s"
+  opening[c] = 0.00 PLN at 2026-01-01 start "s"
+  opening[e] = 0.00 PLN at 2026-01-01 start "s"

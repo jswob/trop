@@ -1,0 +1,28 @@
+model t
+  tally 2
+  on 2026-03-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+source b "b"
+unit PLN: currency minor 0.01
+input bank: observed
+place konto: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+
+version st
+  cite b
+  governs 2026-03
+  known 2026-03-10
+  covers konto
+  bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 50.00 PLN) "r1"
+
+ask atk: bal(konto, 2026-03-10) as known 2026-03-10
+ask after: flows(konto, 2026-03-10 .. 2026-03-10)

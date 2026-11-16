@@ -9,14 +9,17 @@
 //! Invariants: every id the run names is checked before any ask is answered; the refused
 //! scenarios print first, by id; the asks go by id, then by world, the base's first; an ask
 //! that names scenarios is answered on the reality of the deepest, whose stack holds the
-//! others, each world under it seen with the layers over it hidden; one whose worlds are on two
-//! stacks stops the run `NotBuilt` (refcore's cross evaluation).
+//! others, each world under it seen with the layers over it hidden; the base's diff whose two
+//! worlds are on two stacks is answered side by side, each side in the reality holding its
+//! stack (refcore's `cross_stack_diff`), refused `LOAD-FORKS` before any ask is answered where
+//! the axes both sides reach pass 64 combinations; any other ask whose worlds are on two stacks stops
+//! the run `NotBuilt` (refcore's cross evaluation).
 
 use super::answer::{Answered, How, Turn, answer_turns, no_ask};
 use super::register::warning_lines;
 use crate::Asks;
-use crate::base::Warn;
-use crate::load::{Loaded, Worlds};
+use crate::base::{Code, Load, Place, Refusal, Warn};
+use crate::load::{Loaded, Worlds, forks_past_cap};
 use crate::model::Reality;
 use crate::oracle::Days;
 use crate::syntax::{Ask, AskBody, PinForm, Stop};
@@ -83,7 +86,7 @@ pub fn answer_worlds(w: &Worlds, asks: &Asks, days: Days, how: How) -> Result<An
             )));
             continue;
         }
-        turns.push(world_turn(w, &named, (*at, world), &ask.id)?);
+        turns.push(world_turn(w, &named, (*at, world), (ask, model))?);
     }
     // the base's reality first, then each loaded scenario's by id, as `world_turn` counts them
     let realities: Vec<&Reality> = core::iter::once(&w.base).chain(w.loaded.values()).collect();
@@ -97,20 +100,24 @@ pub fn answer_worlds(w: &Worlds, asks: &Asks, days: Days, how: How) -> Result<An
 ///
 /// # Errors
 ///
-/// `NotBuilt` for an ask whose worlds are on two stacks of scenarios (refcore's
-/// `cross_stack_diff`, `make_cross`).
+/// `NotBuilt` for an ask other than the base's diff whose worlds are on two stacks of
+/// scenarios (refcore's `make_cross`).
 fn world_turn(
     w: &Worlds,
     named: &BTreeSet<String>,
     (at, own): (Option<usize>, &str),
-    id: &str,
+    (ask, model): (&Ask, &str),
 ) -> Result<Turn, Stop> {
+    let id = ask.id.as_str();
     if named.is_empty() {
         let base_at = at.ok_or_else(|| invariant("a scenario's ask that names no world"))?;
         return Ok(Turn::Ask(0, base_at));
     }
     let deepest = named.iter().find(|world| stack_holds(w, world, named));
     let Some(deepest) = deepest else {
+        if let (AskBody::Diff(diff), true) = (&ask.body, own.is_empty()) {
+            return cross_turn(w, id, [&diff.world, &diff.against], model);
+        }
         return Err(Stop::NotBuilt(
             "an ask whose worlds are on two stacks of scenarios (refcore's cross evaluation)",
         ));
@@ -129,6 +136,85 @@ fn world_turn(
         .checked_add(1)
         .ok_or_else(|| invariant("a count of worlds"))?;
     Ok(Turn::Ask(place, ask_at))
+}
+
+/// The turn of the base's diff `id` whose two worlds `sides` sit on two stacks: each side in
+/// the reality of its own world, else of the first scenario by id whose stack holds it, the
+/// model's in the base's, each as that reality holds the ask (refcore's `run_worlds`, its
+/// `cross_stack_diff`). L §6.4, §5.18.
+///
+/// # Errors
+///
+/// `LOAD-FORKS` where the axes both sides reach pass 64 combinations: the diff's cone is both
+/// worlds' (L §5.5 Refusals; pick P17); `NotBuilt` where the reality holding a side's stack
+/// holds no ask `id` (refcore's own limit there).
+fn cross_turn(w: &Worlds, id: &str, sides: [&String; 2], model: &str) -> Result<Turn, Stop> {
+    let mut out = Vec::with_capacity(sides.len());
+    let mut options: BTreeMap<&str, usize> = BTreeMap::new();
+    for world in sides {
+        let (place, reality) = if world == model {
+            (0, &w.base)
+        } else {
+            let own = w.loaded.iter().position(|(s, _)| s == world);
+            let holding = w
+                .loaded
+                .values()
+                .position(|m| m.scenarios.over.contains_key(world));
+            let at = own
+                .or(holding)
+                .ok_or_else(|| invariant("a diff's world no loaded stack holds"))?;
+            let reality = w
+                .loaded
+                .values()
+                .nth(at)
+                .ok_or_else(|| invariant("a diff's side past the realities"))?;
+            let place = at
+                .checked_add(1)
+                .ok_or_else(|| invariant("a count of worlds"))?;
+            (place, reality)
+        };
+        let Some(at) = reality.asks.iter().position(|ask| ask.id == id) else {
+            return Err(Stop::NotBuilt(
+                "a diff whose worlds sit on different stacks, asked where one is not loaded",
+            ));
+        };
+        for axis in reality.graph.ask_axes.get(id).into_iter().flatten() {
+            let declared = reality
+                .axes
+                .get(axis)
+                .ok_or_else(|| invariant("an axis load didn't build"))?;
+            options.insert(axis, declared.options.len());
+        }
+        out.push((place, at, world.clone()));
+    }
+    let counts: Vec<usize> = options.into_values().collect();
+    if let Some(message) = forks_past_cap(id, &counts)? {
+        return Err(Stop::Refused(cross_forks(w, id, message)?));
+    }
+    let mut out = out.into_iter();
+    let (Some(ours), Some(theirs), None) = (out.next(), out.next(), out.next()) else {
+        return Err(invariant("a diff with other than two sides"));
+    };
+    Ok(Turn::Cross([ours, theirs]))
+}
+
+/// `LOAD-FORKS` with `message` at the base's ask `id`'s file and line, as load puts it.
+/// L §5.5, §8.3.
+fn cross_forks(w: &Worlds, id: &str, message: String) -> Result<Refusal, Stop> {
+    let ask = w
+        .base
+        .asks
+        .iter()
+        .find(|ask| ask.id == id)
+        .ok_or_else(|| invariant("a diff's ask the base lacks"))?;
+    let file = w
+        .base
+        .graph
+        .ask_files
+        .get(id)
+        .ok_or_else(|| invariant("an ask with no file"))?;
+    let place = Place::Line(file.clone(), ask.line);
+    Ok(Refusal::at(Code::Load(Load::Forks), message, place))
 }
 
 /// Whether world `world` is a loaded scenario whose stack holds every world of `named`

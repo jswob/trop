@@ -25,7 +25,10 @@ use super::check::Printed;
 use super::instance::instance_line;
 use super::walked::{Read, balance_line};
 use crate::base::{Code, Refusal, Run};
-use crate::eval::{Collected, Ctx, Engine, Env, Item, Trace, TraceKind, TracedBalance, num_stop};
+use crate::eval::{
+    Collected, Ctx, Engine, Env, Item, RuleLine, Trace, TraceKind, TracedBalance, UNSET_AXIS,
+    num_stop,
+};
 use crate::model::{NameKind, Node, NodeKind, Reality, Value};
 use crate::syntax::{Ask, Expr, PinForm, Postfix, Stop};
 
@@ -53,7 +56,9 @@ pub(super) fn explain_line(
     }
     match walk_form(m, reference) {
         Form::Instance => return instance_line(m, (ask, reference), engine, env, ctx),
-        Form::WalkBound => return Err(Stop::NotBuilt("explain of a walk-bound def")),
+        Form::WalkBound => {
+            return super::walkbound::walk_bound_line(m, reference, engine, env, ctx);
+        }
         Form::Traced => {}
     }
     let (item, met, trace) = traced(m, engine, reference, env, ctx)?;
@@ -77,6 +82,8 @@ pub(super) fn explain_line(
         text,
         body: derivation(m, &trace)?,
         bare: false,
+
+        whole: false,
         met,
         laws: None,
     })
@@ -137,14 +144,57 @@ fn outside_pins(
         .collect();
     let outside = engine.outside_pins((unpinned, ctx), &fixed)?;
     let pins = engine.pin_lines(m, outside, ctx)?;
-    engine.open_layer(m, outside)?;
-    // the derivation outside the pins is no read of the result (L §8.2 One read set; P42)
-    let keeping = core::mem::replace(&mut engine.pins_read.keeping, false);
-    let read = traced(m, engine, reference, env, outside);
-    engine.pins_read.keeping = keeping;
-    engine.end_layer(outside.layer, read.as_ref().err())?;
-    let (value, _, outside_trace) = read?;
-    trace.beside_pins(outside_trace, pins, (inside, value))
+    // outside the pins, an axis the ask pinned is read as any line reads an axis: the
+    // derivation fans out over the options of each one it meets, in the order written, each
+    // group named by the options it fixed (L §5.5, R8; refcore's `outside_of`); a worklist,
+    // the first option's groups first (R-16)
+    let mut groups = Vec::new();
+    let mut work: Vec<Vec<(String, String)>> = vec![Vec::new()];
+    while let Some(chosen) = work.pop() {
+        let inside_options = engine.with_options(outside, &chosen)?;
+        engine.open_layer(m, inside_options)?;
+        // the derivation outside the pins is no read of the result (L §8.2 One read set; P42)
+        let keeping = core::mem::replace(&mut engine.pins_read.keeping, false);
+        engine.unset_axis = None;
+        let read = traced(m, engine, reference, env, inside_options);
+        engine.pins_read.keeping = keeping;
+        engine.end_layer(inside_options.layer, read.as_ref().err())?;
+        let met = engine.unset_axis.take();
+        match read {
+            Err(Stop::NotBuilt(why)) if why == UNSET_AXIS => {
+                let axis = met
+                    .filter(|a| fixed.contains(a))
+                    .ok_or(Stop::NotBuilt(why))?;
+                if chosen.iter().any(|(b, _)| *b == axis) {
+                    return Err(Stop::NotBuilt(why));
+                }
+                let options = m
+                    .axes
+                    .get(&axis)
+                    .ok_or_else(|| invariant("an axis load didn't build"))?;
+                for (option, _) in options.options.iter().rev() {
+                    let mut longer = chosen.clone();
+                    longer.push((axis.clone(), option.clone()));
+                    work.push(longer);
+                }
+            }
+            read => {
+                let (value, _, outside_trace) = read?;
+                groups.push((options_tag(&chosen), outside_trace, value));
+            }
+        }
+    }
+    trace.beside_pins(groups, pins, inside)
+}
+
+/// The options an `explain`'s derivation outside its pins fixed, as its group names them:
+/// ` [a = x, b = y]`, nothing when it fixed none (refcore's `outside_of`, its `tag`). E §10.
+fn options_tag(chosen: &[(String, String)]) -> String {
+    if chosen.is_empty() {
+        return String::new();
+    }
+    let named: Vec<String> = chosen.iter().map(|(a, o)| format!("{a} = {o}")).collect();
+    format!(" [{}]", named.join(", "))
 }
 
 /// The form `explain` gives a reference by what it names (refcore's `evaluate`, its explain
@@ -203,6 +253,8 @@ pub(super) fn inputs_line(
         text: String::new(),
         body: row_lines(m, &met)?,
         bare: true,
+
+        whole: false,
         met,
         laws: None,
     })
@@ -408,15 +460,13 @@ enum Step {
 fn def_causes(trace: &Trace, at: usize) -> Result<Vec<usize>, Stop> {
     let node = trace.node(at)?;
     let mut out = Vec::new();
-    for rule in node
+    for (rule, state) in node
         .rules
         .values()
-        .filter(|r| node.shown && !r.state.is_empty())
+        .filter_map(RuleLine::stated)
+        .filter(|_| node.shown)
     {
-        let groups = [
-            rule.when,
-            rule.value.filter(|_| rule.state.starts_with("won")),
-        ];
+        let groups = [rule.when, rule.value.filter(|_| state.won())];
         for group in groups.into_iter().flatten() {
             out.extend(trace.node(group)?.children.iter().copied());
         }
@@ -608,16 +658,15 @@ fn node_lines(
             let shown = node
                 .rules
                 .values()
-                .filter(|r| node.shown && !r.state.is_empty());
-            for rule in shown {
+                .filter_map(RuleLine::stated)
+                .filter(|_| node.shown);
+            for (rule, state) in shown {
                 below.push(Step::Line(format!(
                     "{ind}    rule {}: {}",
-                    rule.label, rule.state
+                    rule.label,
+                    state.text()
                 )));
-                let groups = [
-                    rule.when,
-                    rule.value.filter(|_| rule.state.starts_with("won")),
-                ];
+                let groups = [rule.when, rule.value.filter(|_| state.won())];
                 for group in groups.into_iter().flatten() {
                     let children = &trace.node(group)?.children;
                     below.extend(children.iter().map(|c| Step::Cause(at, *c, inner)));

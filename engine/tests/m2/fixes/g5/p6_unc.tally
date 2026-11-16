@@ -1,0 +1,47 @@
+model u
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source own "own"
+unit PLN: currency minor 0.01
+kind promises: event uncertain
+  leg cash: PLN
+kind gifts: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2020-01-01..
+place friend: outside lives 1900-01-01..
+input owed[m in months]: money PLN
+input repay_dom: int
+input gift: money PLN
+input lim: money PLN
+
+move repay[m in months]: promises
+  on day_of(m, repay_dom)
+  at start_of(m)
+  leg cash from friend to konto amount owed[m]
+
+move g[m in months]: gifts
+  on day_of(m, repay_dom)
+  at start_of(m)
+  leg cash from friend to konto amount gift
+
+version v
+  cite own
+  governs 2026..
+  known 2026-01-01
+  owed = 500.00 PLN "note"
+  owed[2026-03] = ?"ile w marcu?" "note"
+  repay_dom = 1 "note"
+  gift = 10.00 PLN "note"
+  lim = 400.00 PLN "note"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "statement"
+
+ask c1: count(x in promises over 2026-02) with uncertain
+ask c2: count(x in promises over 2026-02)
+ask c3: count(x in promises over 2026-01..2026-04 where x.cash.amount > lim) law 2026-01-01 with uncertain
+ask c4: sum(x.cash.amount for x in promises over 2026-01..2026-02) law 2026-01-01 with uncertain
+ask c5: sum(x.cash.amount for x in gifts over 2026-01..2026-02) law 2026-01-01 with uncertain
+ask c6: count(x in promises over 2026-03) with uncertain
+ask c7: sum(x.cash.amount for x in promises over 2026-03) law 2026-01-01

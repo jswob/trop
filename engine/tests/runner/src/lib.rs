@@ -10,6 +10,8 @@
 //!   on refcore's runs of `properties/m0.corpus`;
 //! - [`laws_m1`]: M1's thirteen laws (`PROPERTIES.md` § M1), proven the same way on
 //!   refcore's runs of `properties/m1.corpus`;
+//! - [`laws_m2`]: M2's three laws (`PROPERTIES.md` § M2), proven the same way on
+//!   refcore's runs of `properties/m2.corpus`;
 //! - [`household`]: household X's base as milestone S runs it, and HH4's hand-checked
 //!   vectors restated on it (`hh4/vectors.tsv`), proven on refcore's outputs the same way;
 //! - [`codes`]: T's fixtures of the codes no check prints (`codes/fixtures.tsv`), `LOAD-PATH`
@@ -23,6 +25,8 @@
 //! - [`m1`]: milestone M1's vectors, refcore's whole output for each (`m1/vectors.refcore`,
 //!   issue #108), and #109's text with the law it is held to, a canonical text reprints as
 //!   itself;
+//! - [`m2`]: milestone M2's vectors, refcore's whole output for each (`m2/vectors.refcore`,
+//!   issue #167);
 //! - [`engine`]: a run on the engine, in process;
 //! - [`held`]: the gating vectors T holds "for #n" (`held.tsv`), which the targets leave out.
 //!
@@ -31,7 +35,8 @@
 //! `milestone/m0_format.rs`, `milestone/m0_load.rs`, `milestone/m0_loadcheck.rs` and
 //! `milestone/m0_properties.rs` for M0, `milestone/m1_checks.rs`, `milestone/m1_format.rs`,
 //! `milestone/m1_goldens.rs`, `milestone/m1_codes.rs`, `milestone/m1_carried.rs` and
-//! `milestone/m1_fixes.rs` and `milestone/m1_properties.rs` for M1),
+//! `milestone/m1_fixes.rs` and `milestone/m1_properties.rs` for M1, `milestone/m2_checks.rs`
+//! for M2),
 //! with `test = false`:
 //! red until their milestone is built. The marker `engine/tools/milestones.toml` gates a
 //! milestone's targets once it is tagged, and `check` reports the next milestone's, never
@@ -49,8 +54,10 @@ pub mod kernel;
 pub mod laws;
 pub mod laws_m0;
 pub mod laws_m1;
+pub mod laws_m2;
 pub mod m0;
 pub mod m0_spec_texts;
 pub mod m0_texts;
 pub mod m1;
+pub mod m2;
 pub mod output;

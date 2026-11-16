@@ -1,0 +1,18 @@
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input n: int
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  n = 1 governs 2026-01..2026-03
+  n = 2 governs 2026-05..2026-06
+
+ask q1: last(n, 2026-09-15)

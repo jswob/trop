@@ -56,7 +56,7 @@ GUNGRAUN = os.path.join(TOOLS, "gungraun", "benches")
 OUT = os.path.join(ENGINE, "target", "perf")
 CEILING_KB = 8 * 1024 * 1024  # D4-7: 8 GB on any run
 TIMEOUT_S = 90.0  # the user's hard budget for one run
-COUNT_KEYS = ("def_misses", "days_stepped")
+COUNT_KEYS = ("def_misses", "days_stepped", "walks_shared")  # walks shared: fence F6's (PERFORMANCE §2.5)
 
 
 def rows():

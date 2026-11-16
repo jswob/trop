@@ -55,7 +55,7 @@ pub(super) fn check_forks(
             .into_iter()
             .filter(|axis| !pinned.contains(axis.as_str()))
             .collect();
-        let mut n = Num::int(1);
+        let mut counts = Vec::with_capacity(forked.len());
         for axis in &forked {
             let options = m
                 .axes
@@ -63,19 +63,9 @@ pub(super) fn check_forks(
                 .ok_or_else(|| super::check::invariant(format!("axis {axis} isn't declared")))?
                 .options
                 .len();
-            let count = i64::try_from(options).map_err(|_| too_many(NumError::Digits))?;
-            n = n.checked_mul(&Num::int(count)).map_err(too_many)?;
+            counts.push(options);
         }
-        let over = n.compare(&Num::int(FORKS_CAP)).map_err(too_many)?.is_gt();
-        if over {
-            // refcore's `%d`: the whole count in plain digits.
-            let shown = n.integer_text().ok_or_else(|| {
-                super::check::invariant("a count of axis combinations, not whole".to_owned())
-            })?;
-            let message = format!(
-                "ask {} reaches {shown} axis combinations; the cap is 64",
-                ask.id
-            );
+        if let Some(message) = forks_past_cap(&ask.id, &counts)? {
             return Err(refuse(
                 Load::Forks,
                 message,
@@ -84,6 +74,45 @@ pub(super) fn check_forks(
             ));
         }
         out.insert(ask.id.clone(), forked);
+    }
+    Ok(out)
+}
+
+/// `LOAD-FORKS`'s message for ask `id` whose axes have `counts` options each, where their
+/// combinations pass 64, counted exactly; none within the cap (refcore's `check_graph`, its
+/// forks). L §5.5 Refusals.
+///
+/// # Errors
+///
+/// `NotBuilt` for a count past the number kernel's digits.
+pub(crate) fn forks_past_cap(id: &str, counts: &[usize]) -> Result<Option<String>, Stop> {
+    let mut n = Num::int(1);
+    for options in counts {
+        let count = i64::try_from(*options).map_err(|_| too_many(NumError::Digits))?;
+        n = n.checked_mul(&Num::int(count)).map_err(too_many)?;
+    }
+    if !n.compare(&Num::int(FORKS_CAP)).map_err(too_many)?.is_gt() {
+        return Ok(None);
+    }
+    // refcore's `%d`: the whole count in plain digits.
+    let shown = n.integer_text().ok_or_else(|| {
+        super::check::invariant("a count of axis combinations, not whole".to_owned())
+    })?;
+    Ok(Some(format!(
+        "ask {id} reaches {shown} axis combinations; the cap is 64"
+    )))
+}
+
+/// Each ask's file, for a refusal at its line met once the run plans its worlds: a diff whose
+/// two worlds sit on two stacks, whose cone is both worlds' (`LOAD-FORKS`). L §5.5, §6.4.
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for an ask with no section.
+pub(super) fn ask_files(m: &Reality, files: &Files) -> Result<BTreeMap<String, String>, Stop> {
+    let mut out = BTreeMap::new();
+    for ask in &m.asks {
+        out.insert(ask.id.clone(), files.get("ask", &ask.id)?.to_owned());
     }
     Ok(out)
 }

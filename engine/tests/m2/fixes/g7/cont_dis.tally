@@ -1,0 +1,39 @@
+model t
+  tally 2
+  on 2026-01-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 G7 review N4: a projection's kept walk planned through 03-31, read again through 12-31 where a move first dated in June joins the plan (walk/fork.rs continue_planned disagreeing), then through 05-31 (meet_parked: planned past the read, freed)"
+
+source s "s"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-12
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input pay: money PLN
+input bonus: money PLN
+input dlate: date
+
+move salary[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount pay
+
+move late: transfers
+  on dlate
+  at dlate
+  leg cash from world to konto amount bonus
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "s"
+  bonus = 7.00 PLN "s"
+  dlate = 2026-06-10 "s"
+  opening[konto] = 50.00 PLN at 2026-01-01 start "s"
+
+ask q1: bal(konto, 2026-03-31) from 2026-01-20, bal(konto, 2026-12-31) from 2026-01-20, bal(konto, 2026-05-31) from 2026-01-20
+ask q2: bal(konto, 2026-03-31) from 2026-01-20
+ask q3: bal(konto, 2026-12-31) from 2026-01-20
+ask q4: low(konto, 2026-01-20 .. 2026-12-31) from 2026-01-20, bal(konto, 2026-06-30) from 2026-01-20

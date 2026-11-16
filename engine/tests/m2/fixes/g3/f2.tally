@@ -1,0 +1,39 @@
+model pf
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place work: outside lives 1900-01-01..
+
+input wd: date
+input wd2: date
+input amt: money PLN
+
+move g: transfers
+  on wd
+  leg cash from work to konto amount amt
+
+move h: transfers
+  on wd2
+  leg cash from work to konto amount amt
+
+ask fa: flows(konto, 2026-12-01 .. 2026-12-31)
+ask fb: flows(konto, 2027-01-01 .. 2027-01-31)
+ask fc: flows(konto, 2027-02-01 .. 2027-02-28)
+ask be: bal(konto, 2026-12-31)
+ask bea: bal(konto, 2027-01-31)
+ask few: flows(konto, 2026-12-01 .. 2026-12-31) windows each
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "c"
+  wd = window(2026-12-20, 2027-01-10) "c"
+  wd2 = 2027-03-01 "c"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"

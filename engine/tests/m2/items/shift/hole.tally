@@ -1,0 +1,51 @@
+model shift_hole
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 C2, item 9 (pick P5): add_business past the calendar's edge with a hole on the way. cal_h is governed in 2026 only, so every day outside 2026 reads a hole (HOLE-UNGOVERNED). n business days move at least n days, so h_back and h_fwd pass the edge whatever the hole: decided without it (L §8.1), refused (R2, L §8): RUN-LIMIT. Twins: the same shifts over cal, governed always (s_back, s_fwd); shifts that land inside the edge, where the hole decides (h_in2) or isn't met (h_in)"
+
+source plan "plan"
+
+input d: date
+
+input cal: calendar
+
+input cal_h: calendar
+
+input nb: int
+
+input nf: int
+
+input n5: int
+
+input n200: int
+
+ask h_back: add_business(d, nb, cal_h)
+
+ask h_fwd: add_business(d, nf, cal_h)
+
+ask s_back: add_business(d, nb, cal)
+
+ask s_fwd: add_business(d, nf, cal)
+
+ask h_in: add_business(d, n5, cal_h)
+
+ask h_in2: add_business(d, n200, cal_h)
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  d = 2026-06-01
+  cal = calendar(weekends [sat, sun])
+  nb = -739768
+  nf = 2912292
+  n5 = 5
+  n200 = 200
+
+version v2026
+  cite plan
+  governs 2026
+  known 2026-01-01
+  cal_h = calendar(weekends [sat, sun])

@@ -1,0 +1,37 @@
+model ob2
+  tally 2
+  on 2026-04-25
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 gate 8 run 43749994847 on 205157a2: a removal known in a window the cut leaves open after a removal the cut sees; no row stands either way (book/observe.rs seen_observations)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+
+version v1
+  cite s
+  governs always
+  known 2026-03-01
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 10.00 PLN) "r1"
+  bank[r2] = (on: 2026-03-11, kind: transfers, leg cash from world to konto amount 1.00 PLN) "r2"
+
+version v2
+  cite s
+  governs 2026-03
+  known 2026-03-02
+  replace bank[r1] = none "rm"
+
+version v3
+  cite s
+  governs 2026-03
+  known 2026-03-03
+  replace bank[r1] = none known window(2026-04-01, 2026-04-10) "rm2"
+
+ask b31: bal(konto, 2026-03-31) as known 2026-04-05
+ask n: count(t in transfers over 2026-03) as known 2026-04-05
+ask fl: flows(konto, 2026-03-01 .. 2026-03-31) as known 2026-04-05
+ask led: residuals konto 2026-03 as known 2026-04-05

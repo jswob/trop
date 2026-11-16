@@ -1,0 +1,28 @@
+model hh
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source bank_export "wyciąg"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+
+version opening_2026
+  cite bank_export
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "saldo"
+
+version statement_01
+  cite bank_export
+  governs 2026-01
+  known 2026-02-01
+  covers konto
+  bank[r31] = (on: 2026-01-12, kind: transfers, leg cash from konto to world amount 100.00 PLN) "line 31"
+  bank[r32] = (on: 2026-01-12, kind: transfers, leg cash from konto to world amount 90.00 PLN) "line 32"
+  same bank[r32] = bank[r31]
+
+ask b: bal(konto, 2026-01-31)

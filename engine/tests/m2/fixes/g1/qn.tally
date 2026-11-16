@@ -1,0 +1,26 @@
+model qn
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+index ix = [a, b, c]
+
+input v[k in ix]: money PLN
+input lvl: num
+input half: num
+
+ask q_none: quantile(v[k] for k in ix, lvl)
+ask q_half: quantile(v[k] for k in ix, half)
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  v[a] = 1.00 PLN
+  v[b] = 2.00 PLN
+  v[c] = 3.00 PLN
+  lvl = none
+  half = 0.5

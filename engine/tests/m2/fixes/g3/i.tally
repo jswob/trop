@@ -1,0 +1,42 @@
+model pi
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+input cal: calendar
+input d1: date
+input d2: date
+
+ask q: add_business(d1, 1, cal) windows each
+ask r: add_business(d2, 1, cal) law 2026-11-30 windows each
+ask qr: x1 < x2 windows each
+ask qd: x2 law 2026-05-01 windows each
+
+def x1: date at d1
+  rule base = add_business(d1, 1, cal)
+
+def x2: date at d2
+  rule base = add_business(d2, 1, cal)
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  d1 = 2026-05-29 "c"
+  d2 = 2026-11-30 "c"
+
+version c1
+  cite card
+  governs ..2026-06-30
+  known 2026-01-01
+  cal = calendar(weekends [sat, sun], added [window(2026-06-01, 2026-06-02)]) "c"
+
+version c2
+  cite card
+  governs 2026-07-01..
+  known 2026-01-01
+  cal = calendar(weekends [sat, sun], added [window(2026-12-01, 2026-12-02)]) "c"

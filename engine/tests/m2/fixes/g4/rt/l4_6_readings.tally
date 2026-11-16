@@ -1,0 +1,31 @@
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+
+input px[u in currencies]: num PLN/u reading
+input max_age: int
+def quote_now[d in days]: num PLN/EUR at d
+  rule base = last(px[EUR], d)
+  rule stale beats base = ?"the last quote is older than the bound" when since(px[EUR], d) > max_age
+
+version r
+  cite s
+  known 2026-03-05
+  px[EUR] = 4.3 PLN/EUR at 2026-03-02
+
+version cfg
+  cite s
+  governs always
+  known 2026-01-01
+  max_age = 5
+
+ask q1: px[EUR] law 2026-03-02
+ask q2: px[EUR] law 2026-03-03
+ask q3: last(px[EUR], 2026-03-10), since(px[EUR], 2026-03-10)
+ask q4: quote_now[2026-03-10], quote_now[2026-03-06]

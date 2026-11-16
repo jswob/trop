@@ -1,0 +1,14 @@
+model tropek_r7
+  tally 2
+  on 2026-10-17
+  start 2024-01-01
+  end 2036-11-30
+  note "T, M2 (issues #167, #114), DONE gate 2: R7 (to2028.tally's texts) to 2036-11-30, for konto and net worth on 2036-10-17 (pins-1-7.json: 14 072.28, 1 746 077.48; moved by L-26, joint.tally the twin). Not stored: refcore and refcore_fast pass the 8 GB cap on this horizon (stopped at 8.2 and 8.3 GB after 46 and 43 s), as every 15th's projection walks to the end (P2, GOLDENS.md)."
+
+index cal_year = year 2024..2036
+
+index day = day 2026-10-17..2036-11-30
+
+index month = month 2024-01..2036-11
+
+ask pin_2036: bal(konto, 2036-10-17), net_worth[2036-10-17]

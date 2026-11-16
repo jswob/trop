@@ -15,7 +15,8 @@ use super::arith::{Op, arith};
 use super::bindings::{Values, bind_domain};
 use super::expr::hole_of;
 use super::extremes::{bare_key, min_max};
-use super::state::{Collected, Ctx, Engine, Env, invariant, not_typed, refuse};
+use super::partial;
+use super::state::{Collected, Ctx, Engine, Env, invariant, not_typed, num_stop, refuse};
 use super::trace::Snap;
 use super::ty::zero_of;
 use super::windows::End;
@@ -207,6 +208,7 @@ impl Engine {
         };
         let mut terms: Vec<(&Env, Value)> = Vec::with_capacity(members.len());
         let mut holes: Vec<Hole> = Vec::new();
+        let mut unknown_member = false;
         for member in members {
             let t = match &agg.term {
                 None => bare_key(agg, &member.env)?,
@@ -216,6 +218,7 @@ impl Engine {
                 if agg.func == AggFn::Sum && is_zero(&t) {
                     continue;
                 }
+                unknown_member = true;
                 holes.push(unknown.clone());
                 if let Value::Hole(h) = t {
                     holes.push(h);
@@ -229,9 +232,30 @@ impl Engine {
             if t == Value::None {
                 return Err(refuse(Run::None, format!("a term of {word} is none here")));
             }
+            if let Value::Window(w) = &t
+                && !matches!(
+                    agg.func,
+                    AggFn::Min | AggFn::Max | AggFn::Argmin | AggFn::Argmax
+                )
+            {
+                // only a comparison decides an interval: a term of any other aggregate needs
+                // its one value (L §4.4), `HOLE-IMPRECISE` named by the window's input
+                let window = w.question_text(m).map_err(num_stop)?;
+                let text = format!("date within {window} not precise enough for a term of {word}");
+                holes.push(Hole::asked(&text, w.figure()));
+                continue;
+            }
             terms.push((&member.env, t));
         }
         if !holes.is_empty() {
+            if ctx.partial && agg.func == AggFn::Sum && !unknown_member {
+                // a `partial` line's sum: its known terms' sum and each hole term; a member
+                // whose `where` is a hole isn't a term it is linear in, so that sum is plain
+                // (L §5.18)
+                let known = terms.into_iter().map(|(_, t)| t).collect();
+                let known = sum_terms(m, agg, known, env, ctx)?;
+                return partial::lin_sum(m, known, &holes);
+            }
             let operands: Vec<Option<&Hole>> = holes.iter().map(Some).collect();
             return hole_of(&operands);
         }

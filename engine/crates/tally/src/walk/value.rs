@@ -2,8 +2,9 @@
 //! Spec: L §5.10 (`value(x, d) in CUR [by p]`: a position in CUR at its amount, one in another
 //! unit at its price, `by p` an input or def of type `num CUR/u` keyed by unit or an expression
 //! of that type written with its keys, `by last(px)` through its carry; A priced place, priced
-//! per unit or whole; `HOLE-PRICE`, `LOAD-PRICE`), §3.2 (per-unit prices of a unit kind), §3.4
-//! (a price's year), §4.6 (a price read through its carry), §8.1 (`HOLE-PRICE`'s question).
+//! per unit or whole; `HOLE-PRICE`, `LOAD-PRICE`), §2.3 (a price `ref` with its keys and a
+//! record's fields), §3.2 (per-unit prices of a unit kind), §3.4 (a price's year), §4.6 (a
+//! price read through its carry), §8.1 (`HOLE-PRICE`'s question).
 //! Twin: engine/tools/refcore/mreads.py (`m_e_value`, `m_priced_read`, `m_price_read`,
 //! `m_last_of`).
 //! Invariants: `value` multiplies exactly and never rounds; a position with no price is a hole
@@ -14,11 +15,11 @@ use super::plan::invariant;
 use super::point::At;
 use super::reads::refuse;
 use crate::base::{Load, Refusal, Run};
-use crate::eval::{Ctx, Engine, Env};
+use crate::eval::{Ctx, Engine, Env, Given};
 use crate::hole::{Hole, spread};
-use crate::model::{Domain, KeyVal, Priced, Reality, Value};
+use crate::model::{Domain, KeyVal, Priced, Reality, Value, price_fields};
 use crate::num::Num;
-use crate::syntax::{Expr, Price, Stop, Valuation};
+use crate::syntax::{Expr, Key, Postfix, Price, Stop, Valuation};
 use crate::time::Day;
 
 impl Engine {
@@ -32,7 +33,7 @@ impl Engine {
     ///
     /// `LOAD-PRICE`, `LOAD-UNIT`, `LOAD-KEY` for a price load lets by and the run meets;
     /// `RUN-DOMAIN` for a price in another unit, `RUN-NONE` for a written price that is none;
-    /// the refusals of the walk; `NotBuilt` for `of q` and a price clause with keys.
+    /// the refusals of the walk; `NotBuilt` for `of q`.
     pub(crate) fn valuation(
         &mut self,
         m: &Reality,
@@ -122,7 +123,7 @@ impl Engine {
         (price, id, whole): (&Price, &str, &str),
         (env, ctx): (&Env, Ctx),
     ) -> Result<Value, Stop> {
-        let amount = match self.priced_read(m, (read, valued), (price, id), None, ctx)? {
+        let amount = match self.priced_read(m, (read, valued), (price, id), None, (env, ctx))? {
             Err(h) => return Ok(Value::Hole(h)),
             Ok(q) => q,
         };
@@ -193,7 +194,7 @@ impl Engine {
                 self.named_price(m, (read, valued), (pid, *last), u, ctx)
             }
             (Some(By::Written), None) | (None, _) => {
-                self.priced_position(m, (read, valued), u, ctx)
+                self.priced_position(m, (read, valued), u, (env, ctx))
             }
         }
     }
@@ -205,7 +206,7 @@ impl Engine {
         m: &Reality,
         (read, valued): (&Valuation, &Valued),
         u: &str,
-        ctx: Ctx,
+        (env, ctx): (&Env, Ctx),
     ) -> Result<Result<Num, Hole>, Stop> {
         let (cur, place) = (read.currency.as_str(), valued.place.as_str());
         let Some(price) = &valued.priced else {
@@ -228,7 +229,7 @@ impl Engine {
                 format!("value({place}) in {cur}: {place} is priced in {pc}/{per}, not {cur}/{u}"),
             )));
         }
-        self.priced_read(m, (read, valued), (price, &id), Some(u), ctx)
+        self.priced_read(m, (read, valued), (price, &id), Some(u), (env, ctx))
     }
 
     /// A price named by `by p` or `by last(p)`, an input or def keyed by unit, read at unit
@@ -244,7 +245,7 @@ impl Engine {
     ) -> Result<Result<Num, Hole>, Stop> {
         let (given, figure) = if key_count(m, pid).is_some_and(|n| n != 0) {
             (
-                vec![Value::Key(KeyVal::Thing(u.to_owned()))],
+                vec![Given::Value(Value::Key(KeyVal::Thing(u.to_owned())))],
                 format!("{pid}[{u}]"),
             )
         } else {
@@ -259,53 +260,137 @@ impl Engine {
         per_unit_price(m, &p, (valued.place.as_str(), read.currency.as_str(), u)).map(Ok)
     }
 
-    /// A place's own price clause read on the value's day: at the place's thing, or at its
-    /// position's unit `u`, when the price input is keyed by a kind holding one; a hole naming
-    /// the place or `u` where it is `none` (refcore's `m_priced_read`). L §5.10, §4.6, §8.1.
+    /// A place's own price clause read on the value's day: at the keys it is written with,
+    /// the place section's key variables bound to the place's keys; else at the place's
+    /// thing, or at its position's unit `u`, when the price input is keyed by a kind holding
+    /// one; then the record fields it names, `priced p.f`; a hole naming the place or `u`
+    /// where it is `none` (refcore's `m_priced_read`). L §5.10, §2.3, §4.6, §8.1.
     fn priced_read(
         &mut self,
         m: &Reality,
         (read, valued): (&Valuation, &Valued),
         (price, pid): (&Price, &str),
         u: Option<&str>,
-        ctx: Ctx,
+        (env, ctx): (&Env, Ctx),
     ) -> Result<Result<Num, Hole>, Stop> {
-        if !matches!(price.input, Expr::Name(_)) {
-            return Err(Stop::NotBuilt("a price clause written with its keys"));
-        }
+        let Some((written, fields)) = price_fields(&price.input) else {
+            return Err(invariant("a price clause load didn't read"));
+        };
         let place = valued.place.as_str();
-        let key = match m.first_domain(pid) {
-            None => None,
-            Some(Domain::Kind(kind)) if m.thing_in(place, &kind) => Some(place),
-            Some(Domain::Kind(kind)) if unit_in(m, u, &kind) => u,
-            Some(domain) => {
-                let over = match &domain {
-                    Domain::Kind(id) | Domain::Index(id) | Domain::Axis(id) => id.as_str(),
-                    Domain::List(_) => "a list of keys",
-                    Domain::Range => "a stepped range",
-                };
-                return Err(Stop::Refused(Refusal::new(
-                    Load::Key.at_run(),
-                    format!(
-                        "{place} is priced by {pid}, keyed by {over}, which holds neither {place} nor its unit"
-                    ),
-                )));
-            }
+        let given = if let Expr::Post(_, posts) = &written {
+            let [Postfix::Keys(keys)] = posts.as_slice() else {
+                return Err(invariant("a price clause load didn't read"));
+            };
+            self.clause_keys(m, (price, keys), place, (env, ctx), valued.day)?
+        } else {
+            thing_key(m, pid, place, u)?
         };
-        let (given, figure) = match key {
-            Some(k) => (
-                vec![Value::Key(KeyVal::Thing(k.to_owned()))],
-                format!("{pid}[{k}]"),
-            ),
-            None => (Vec::new(), format!("{pid}[]")),
+        let keys = match self.price_keys(m, (pid, given), valued.day, ctx)? {
+            Err(h) => return Ok(Err(h)),
+            Ok(keys) => keys,
         };
-        let p = self.price_at(m, (pid, given), (valued.day, price.last), ctx)?;
+        let texts: Vec<String> = keys.iter().map(KeyVal::text).collect();
+        let figure = format!("{pid}[{}]", texts.join(", "));
+        let mut p = self.price_read_at(m, (pid, &keys), (valued.day, price.last), ctx)?;
+        // `priced p.f`: the field of the record read (L §2.3 ref); a record that is none
+        // stays the price that is none
+        for field in fields {
+            p = price_field(p, field)?;
+        }
         let who = match u {
             Some(u) => u,
             None => place,
         };
         priced_value(m, (read, valued), p, &figure, who)
     }
+
+    /// The keys a price clause is written with, `priced px[f]`, each read at the value's
+    /// day with the place section's key variables bound to the place's keys (refcore's
+    /// `m_priced_read`, its `_expr` arm). L §5.10, §2.3.
+    fn clause_keys(
+        &mut self,
+        m: &Reality,
+        (price, keys): (&Price, &[Key]),
+        place: &str,
+        (env, ctx): (&Env, Ctx),
+        day: Day,
+    ) -> Result<Vec<Given>, Stop> {
+        let mut bound = env.clone();
+        let section = m
+            .things
+            .get(place)
+            .and_then(|thing| thing.place.as_ref())
+            .and_then(|own| Some((own, m.places.get(&own.place)?)))
+            .filter(|(_, info)| info.priced.as_ref() == Some(price));
+        if let Some((own, info)) = section {
+            for (bind, key) in info.binds.iter().zip(&own.keys) {
+                let value = Value::Key(key.clone());
+                bound = bound.with(&bind.var, value, Some(bind.domain.clone()));
+            }
+        }
+        let at = Ctx {
+            law: Some(day),
+            ..ctx
+        };
+        let mut given = Vec::with_capacity(keys.len());
+        for key in keys {
+            let Key::Expr(e) = key else {
+                return Err(Stop::NotBuilt("a price clause read at *"));
+            };
+            given.push(self.given_key(m, e, &bound, at)?);
+        }
+        Ok(given)
+    }
+}
+
+/// The key a price clause with no keys written is read at: none for an unkeyed price; the
+/// place's thing, or its position's unit `u`, for a price keyed by a kind holding it
+/// (refcore's `m_priced_read`, its `info.binds` arm). L §5.10.
+///
+/// # Errors
+///
+/// `LOAD-KEY` for a price keyed by a domain that holds neither.
+fn thing_key(m: &Reality, pid: &str, place: &str, u: Option<&str>) -> Result<Vec<Given>, Stop> {
+    let key = match m.first_domain(pid) {
+        None => None,
+        Some(Domain::Kind(kind)) if m.thing_in(place, &kind) => Some(place),
+        Some(Domain::Kind(kind)) if unit_in(m, u, &kind) => u,
+        Some(domain) => {
+            let over = match &domain {
+                Domain::Kind(id) | Domain::Index(id) | Domain::Axis(id) => id.as_str(),
+                Domain::List(_) => "a list of keys",
+                Domain::Range => "a stepped range",
+            };
+            return Err(Stop::Refused(Refusal::new(
+                Load::Key.at_run(),
+                format!(
+                    "{place} is priced by {pid}, keyed by {over}, which holds neither {place} nor its unit"
+                ),
+            )));
+        }
+    };
+    Ok(key
+        .map(|k| Given::Value(Value::Key(KeyVal::Thing(k.to_owned()))))
+        .into_iter()
+        .collect())
+}
+
+/// A record's field `name`, read of a price: a hole or `none` stays itself (refcore's
+/// `m_priced_read`, its fields). L §2.3, §5.10.
+fn price_field(v: Value, name: &str) -> Result<Value, Stop> {
+    if let Value::Hole(_) | Value::None = v {
+        return Ok(v);
+    }
+    let Value::Record(fields) = v else {
+        return Err(invariant(
+            "a price's field of a value that is no record: load refuses it (LOAD-FIELD)",
+        ));
+    };
+    fields
+        .into_iter()
+        .find(|(f, _)| f == name)
+        .map(|(_, value)| value)
+        .ok_or_else(|| invariant("a price's field its record lacks: load refuses it (LOAD-FIELD)"))
 }
 
 /// What a `value` reads besides the read as written: its place, its day, the place's price

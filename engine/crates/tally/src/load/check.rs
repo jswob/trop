@@ -520,6 +520,9 @@ pub(super) struct Checker {
     vars: usize,
     /// Each checked move's legs' static amount types, by (move, leg) (refcore's `ln._lt`).
     pub(super) leg_types: BTreeMap<(String, String), Ty>,
+    /// Whether each checked move's leg touches a place the walk guards, by (move, leg): its
+    /// booking reads that place's balance (refcore's `m_leg_guarded`; L §5.5, R8).
+    pub(super) leg_guarded: BTreeMap<(String, String), bool>,
     /// Each checked move's legs' amounts' types, by (move, leg): the unit a leg brings to a place
     /// of any unit (refcore's `ln.amount._t`).
     pub(super) leg_amounts: BTreeMap<(String, String), Ty>,
@@ -1190,6 +1193,9 @@ impl Checker {
             }
             AskBody::Residuals(residuals) => {
                 self.expr(m, scope, &residuals.place, None, 0)?;
+                // the ledger reads the booking state, so the ask reaches what the balances
+                // read and fans out over their axes (E §6.3; L §5.5, R8)
+                self.edge(&scope.item, Node::balances(), Rel::Bal);
                 self.span(m, scope, &residuals.span, 0)
             }
         }

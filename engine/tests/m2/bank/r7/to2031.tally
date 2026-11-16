@@ -1,0 +1,14 @@
+model tropek_r7
+  tally 2
+  on 2026-10-17
+  start 2024-01-01
+  end 2031-01-31
+  note "T, M2 (issues #167, #114), DONE gate 2: R7 (to2028.tally's texts) to 2031-01-31, for OKI's tax of 2030 (pins-1-7.json oki_tax/tax[2030], 1 729): the mean of OKI's value over 2030's days, at the rate of 2028 on (19 % of the NBP reference rate, 0.71 %). The end is past 2030-12's rule's next pay (2031-01-07). The longest horizon refcore runs within the 8 GB cap: every 15th's projection walks to the end (P2, GOLDENS.md)."
+
+index cal_year = year 2024..2031
+
+index day = day 2026-10-17..2031-01-31
+
+index month = month 2024-01..2031-01
+
+ask pin_oki_tax_2030: oki_tax[2030], oki_rate[2030]

@@ -1,0 +1,74 @@
+model w_known
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 C2, G3 (P6): a known window at run, on a version (kv), a row (kr) and an observation's version (ko), read as known inside the window and past it, plain and windows each; a moves line at run (mv): the moved version read at a law date in its old span and its new, as known before and after the moves line"
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place work: outside lives 1900-01-01..
+
+input bank: observed
+input a: money PLN
+input b: money PLN
+input c: money PLN
+input amt: money PLN
+
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from work to konto amount amt
+
+ask kv_in: a law 2026-06-01 as known 2026-03-15
+ask kv_in_each: a law 2026-06-01 as known 2026-03-15 windows each
+ask kv_past: a law 2026-06-01 as known 2026-04-01
+ask kr_in_each: b law 2026-06-01 as known 2026-03-15 windows each
+ask kr_before: b law 2026-06-01 as known 2026-03-01
+ask ko_in_each: bal(konto, 2026-02-28) as known 2026-03-15 windows each
+ask ko_past: bal(konto, 2026-02-28) as known 2026-04-01
+ask mv_old_before: c law 2026-02-15 as known 2026-02-01
+ask mv_old_after: c law 2026-02-15 as known 2026-04-01
+ask mv_new_after: c law 2026-05-15 as known 2026-04-01
+ask mv_new_before: c law 2026-05-15 as known 2026-02-01
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  a = 1.00 PLN "c"
+  amt = 10.00 PLN "c"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
+
+version va
+  cite card
+  governs always
+  known window(2026-03-10, 2026-03-20)
+  replace a = 2.00 PLN "c"
+
+version vb
+  cite card
+  governs always
+  known 2026-01-01
+  b = 3.00 PLN "c"
+  replace b = 4.00 PLN known window(2026-03-10, 2026-03-20) "c"
+
+version bank_feb
+  cite card
+  governs 2026-02
+  known window(2026-03-10, 2026-03-20)
+  covers konto
+  bank[r1] = (on: 2026-02-01, kind: transfers, leg cash from work to konto amount 11.00 PLN, fulfils: pay[2026-02]) "r1"
+
+version vc
+  cite card
+  governs 2026-01..2026-03
+  known 2026-01-01
+  c = 5.00 PLN "c"
+
+version vmove
+  cite card
+  governs always
+  known 2026-03-01
+  moves vc to 2026-04..2026-06

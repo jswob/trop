@@ -17,7 +17,7 @@ use crate::eval::Memo;
 use crate::load::{Loaded, load_run, split_files};
 use crate::oracle::Days;
 use crate::syntax::Stop;
-use crate::walk::Lows;
+use crate::walk::{Forks, Lows};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// One file the run is given: its path as the run names it, and its bytes, or none when the
@@ -133,8 +133,13 @@ pub fn run_in(
     disk: &BTreeMap<&str, &[u8]>,
     request: &Request,
 ) -> Result<Answer, NotImplemented> {
-    answered(given, disk, request, How::new(Memo::Classes, Lows::Tree))
+    answered(given, disk, request, FENCES)
 }
+
+/// How [`run`] computes: every fence's form, the cells shared by a law date class (E §3.2),
+/// a projection's common case from F5's tree (P §2.3), a projection's walk read again
+/// continued by F6 (P §2.5).
+const FENCES: How = How::new(Memo::Classes, Lows::Tree, Forks::On);
 
 /// Loads a reality's files and answers with what load prints when no ask is answered: its one
 /// refusal, or each refused scenario's line and the warnings (L §8, §8.5). The fuzz target
@@ -167,7 +172,7 @@ pub fn run_with_memo(
     request: &Request,
     memo: Memo,
 ) -> Result<Answer, NotImplemented> {
-    answered(given, &BTreeMap::new(), request, How::new(memo, Lows::Tree))
+    answered(given, &BTreeMap::new(), request, How { memo, ..FENCES })
 }
 
 /// [`run`] with each ask's engine reading a written projection's common case as `lows` says:
@@ -184,12 +189,40 @@ pub fn run_with_lows(
     request: &Request,
     lows: Lows,
 ) -> Result<Answer, NotImplemented> {
-    answered(
-        given,
-        &BTreeMap::new(),
-        request,
-        How::new(Memo::Classes, lows),
-    )
+    answered(given, &BTreeMap::new(), request, How { lows, ..FENCES })
+}
+
+/// [`run`] with each ask's engine continuing a projection's walk read again through a later
+/// day as `forks` says: from where it stood, by fence F6, as [`run`] walks (`Forks::On`), or
+/// walked anew from its first day, each read its own walk (`Forks::Off`), the plain twin the
+/// equivalence test compares it with (P §2.5, E §4.3). Both print the same bytes for every
+/// reality and request: a difference is a fault of the fence (R-130), which is how a test of
+/// the fence uses it.
+///
+/// # Errors
+///
+/// As [`run`].
+pub fn run_with_forks(
+    given: Vec<Given>,
+    request: &Request,
+    forks: Forks,
+) -> Result<Answer, NotImplemented> {
+    answered(given, &BTreeMap::new(), request, How { forks, ..FENCES })
+}
+
+/// [`run`] with each ask's engine computing as `how` says, each fence's form or its plain
+/// twin: what an equivalence test uses to turn two fences together (E §3.2, §4.3; P §2.3,
+/// §2.5, §3.3; R-130).
+///
+/// # Errors
+///
+/// As [`run`].
+pub fn run_with_how(
+    given: Vec<Given>,
+    request: &Request,
+    how: How,
+) -> Result<Answer, NotImplemented> {
+    answered(given, &BTreeMap::new(), request, how)
 }
 
 /// [`run`] with `fault` planted, its twin for the fixture of `ENGINE-INVARIANT`, which only an
@@ -207,7 +240,7 @@ pub fn run_faulted(
 ) -> Result<Answer, NotImplemented> {
     let how = How {
         fault: Some(fault),
-        ..How::new(Memo::Classes, Lows::Tree)
+        ..FENCES
     };
     answered(given, &BTreeMap::new(), request, how)
 }

@@ -4,11 +4,14 @@
 //! §8.2 (`assumed`, `given`, `missing` entries); E §3.2 (the memo: one cell per def, keys and
 //! context, its result kept, refusal included; a cell read while it is computed is `RUN-CYCLE`);
 //! L §4.4 (a window a def computes is the read's value in its cell's world; one it passes on
-//! keeps the read that made it).
+//! keeps the read that made it); E §10 (a walk-bound def's cell at each walk point a decision
+//! read it, kept for `explain`).
 //! Twin: engine/tools/refcore/evaluate.py (`read_def`, `_read_def`, `law_value`, `def_cell`,
 //! `coerce_def`, `rule_in_force`, `beats_order`, `eval_rules`).
 //! Invariants: every result a cell computes is kept, with the register entries it met; the
 //! entries reach every reader of the cell; recursion through cells is counted (R-16).
+
+use std::collections::BTreeMap;
 
 use super::state::{
     Cell, Ctx, DEPTH_LIMIT, Engine, Env, Task, a_day, invariant, num_stop, refuse, refuse_load,
@@ -17,17 +20,17 @@ use crate::base::{Load, Run};
 use crate::hole::{Hole, spread};
 use crate::model::{
     Class, DefInfo, KeyVal, Node, NodeKind, Number, Reality, RuleVer, Shown, Ty, Unit, Value,
-    pattern_text,
+    Window, pattern_text,
 };
-use crate::read::{Clocks, Test, candidates, choose, origin, rule_in_force, worded};
+use crate::read::{Clocks, Test, candidates, choose, known_inside, origin, rule_in_force, worded};
 use crate::syntax::{LawDate, RuleValue, Stop};
 use crate::time::Day;
 
 use super::convert::{ConvertFor, Converted, convert_read};
 use super::memo::{CellId, CellKey, LawClass, Read, rows_class, rules_class};
-use super::read::{at_keys, pinned_at, shown};
-use super::trace::Seen;
-use super::windows::as_read;
+use super::read::{at_keys, kept_rows, pinned_at, row_cell, shown};
+use super::trace::{RuleState, Seen};
+use super::windows::{as_read, window_days};
 
 impl Engine {
     /// A read of def `def` at keys already made keys (refcore's `read_def`): its law date by
@@ -48,7 +51,50 @@ impl Engine {
         let outer = self.holding(Node::new(NodeKind::Def, &def.id));
         let read = self.read_def_held(m, def, keys, ctx);
         self.holder = outer;
+        self.keep_walk_cell(m, def, keys, ctx, &read)?;
         read
+    }
+
+    /// Keeps walk-bound def `def`'s cell at `keys` where a decision read it at its point of
+    /// a main walk, its value or refusal, for `explain` to print (refcore's `read_def`, its
+    /// `walk_cells`). E §10, §3.2.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a walk the engine lacks.
+    fn keep_walk_cell(
+        &mut self,
+        m: &Reality,
+        def: &DefInfo,
+        keys: &[KeyVal],
+        ctx: Ctx,
+        read: &Result<Value, Stop>,
+    ) -> Result<(), Stop> {
+        let Some(at) = ctx.at else {
+            return Ok(());
+        };
+        if self.rereading
+            || !m.graph.walk_bound.contains(&def.id)
+            || self.walk(at.walk)?.proj.is_some()
+        {
+            return Ok(());
+        }
+        let kept = match read {
+            Ok(value) => Ok(value.clone()),
+            Err(Stop::Refused(refusal)) => Err(refusal.clone()),
+            Err(_) => return Ok(()),
+        };
+        let key = (at.walk, origin(&def.id, keys));
+        match self.walk_cells.get_mut(&key) {
+            Some(cells) => {
+                cells.insert(at.point, kept);
+            }
+            None => {
+                self.walk_cells
+                    .insert(key, BTreeMap::from([(at.point, kept)]));
+            }
+        }
+        Ok(())
     }
 
     /// [`Engine::read_def_at`] with the def holding what its `where` and `at` read. L §5.11,
@@ -70,7 +116,7 @@ impl Engine {
         let value = self.def_cell(m, def, keys, &env, cell)?;
         // a window the def computed is this read's value, in the world its cell is computed
         // in; one it passes on keeps the read that made it (L §4.4)
-        Ok(as_read(value, (&def.id, keys), cell, None))
+        Ok(as_read(value, (&def.id, keys), cell.world()))
     }
 
     /// The context def `def`'s cell at its keys is computed in, `env` binding them: its law
@@ -92,7 +138,8 @@ impl Engine {
         // a pin wins over the def's rules and givens (L §5.11); the def's cell keeps only the
         // pins its def reaches (E §3.2)
         if let Some(pinned) = self.pin_of(&def.id, keys, ctx)? {
-            return pinned_at(pinned, &def.binds, keys).map(Err);
+            let value = pinned_at(pinned, &def.binds, keys)?;
+            return Ok(Err(self.pin_chosen(value, &origin(&def.id, keys), ctx)?));
         }
         let ctx = self.trimmed(m, &def.id, ctx)?;
         for bind in &def.binds {
@@ -122,11 +169,12 @@ impl Engine {
                 if let Value::Hole(_) = law {
                     return Ok(Err(law));
                 }
-                if let Value::Window(_) = law {
-                    // a window `at` reads the def once per law-date class the window overlaps
-                    // (L §4.3, §5.14 `at e`): not a load refusal, and not built (M2, with
-                    // `windows each`)
-                    return Err(Stop::NotBuilt("a def's law date set by a window"));
+                if let Value::Window(w) = &law
+                    && matches!(w.lo, Value::Day(_))
+                {
+                    // a window `at` reads the def at each law date the window can take
+                    // (L §4.3, §5.14 `at e`); the memo shares a class's cells
+                    return self.def_window(m, def, (keys, env), ctx, w).map(Err);
                 }
                 let Value::Day(day) = law else {
                     return Err(bad_law_date(m, def, &law)?);
@@ -135,6 +183,70 @@ impl Engine {
             }
         };
         Ok(Ok(cell))
+    }
+
+    /// Def `def` whose `at` gives window `w`: its cell at each law date the window can take,
+    /// one value where all agree, else `HOLE-IMPRECISE` (refcore's `def_window`). L §4.3,
+    /// E §3.2.
+    ///
+    /// # Errors
+    ///
+    /// The refusals of its cells; not built where every day gives the gap rule's hole and
+    /// they differ only by the day they name (E §3.2's classes, refcore's `window_bounded`).
+    fn def_window(
+        &mut self,
+        m: &Reality,
+        def: &DefInfo,
+        (keys, env): (&[KeyVal], &Env),
+        ctx: Ctx,
+        w: &Window,
+    ) -> Result<Value, Stop> {
+        // once per law-date class: a day its class holds gives what it gave (L §4.4's cost)
+        let mut vals = Vec::new();
+        let mut class: Option<LawClass> = None;
+        for day in window_days(w)? {
+            if class.is_some_and(|c| c.holds(day)) {
+                continue;
+            }
+            let mark = self.open_law_class(day);
+            let value = self.def_cell(m, def, keys, env, ctx.at_law(Some(day)));
+            class = Some(self.close_law_class(mark, day)?);
+            vals.push(as_read(value?, (&def.id, keys), ctx.world()));
+        }
+        let Some((first, rest)) = vals.split_first() else {
+            return Err(invariant("a window with no day"));
+        };
+        if rest.iter().all(|v| v == first) {
+            return Ok(first.clone());
+        }
+        let window = w.question_text(m).map_err(num_stop)?;
+        let imprecise = Value::Hole(Hole::asked(
+            &format!(
+                "date within {window} not precise enough for the law date of {}",
+                def.id
+            ),
+            &origin(&def.id, keys),
+        ));
+        let mut undated = Vec::with_capacity(vals.len());
+        for v in &vals {
+            let Value::Hole(h) = v else {
+                return Ok(imprecise);
+            };
+            undated.push(h.undated());
+        }
+        // every day a hole, alike but for the day the gap rule's names: one law-date class
+        // or two, by the spans inside the window (E §3.2)
+        let dated = undated.iter().any(|(_, dated)| *dated);
+        let alike = match undated.split_first() {
+            Some(((head, _), others)) => others.iter().all(|(q, _)| q == head),
+            None => true,
+        };
+        if dated && alike {
+            return Err(Stop::NotBuilt(
+                "a window `at` whose days give the gap rule's holes (E §3.2's classes)",
+            ));
+        }
+        Ok(imprecise)
     }
 
     /// A def's cell: the memo's result, or the rules evaluated now and kept (refcore's
@@ -184,10 +296,13 @@ impl Engine {
             let met = cell.met.clone();
             self.absorb(&met);
             self.narrow(ctx.law, class);
-            self.read(Read::Cell(CellId::new(key, ctx.law)));
-            if let Seen::Met(at) = seen {
-                self.trace_again(at);
+            let id = CellId::new(key, ctx.law);
+            match seen {
+                Seen::Met(at) => self.trace_again(at),
+                Seen::Dropped(at) => self.trace_taken_back(id.clone(), at),
+                Seen::Untraced | Seen::Unmet => {}
             }
+            self.read(Read::Cell(id));
             #[cfg(feature = "counters")]
             self.counts.add(crate::Unit::DefHit);
             return Ok(Err(result));
@@ -403,7 +518,7 @@ impl Engine {
         }
         if let Some(hole) = spread(&relevant) {
             if let Some(first) = cands.first() {
-                self.trace_state(node, label_of(def, *first), "candidate".to_owned());
+                self.trace_state(node, label_of(def, *first), RuleState::Candidate);
             }
             return Ok(Err(Value::Hole(hole)));
         }
@@ -430,7 +545,7 @@ impl Engine {
         applicable: &[InForce],
     ) {
         if node.is_some() {
-            self.trace_state(node, label_of(def, at), beaten_text(def, applicable, at));
+            self.trace_state(node, label_of(def, at), beaten_state(def, applicable, at));
         }
     }
 
@@ -448,9 +563,9 @@ impl Engine {
             return;
         }
         if let Value::Hole(_) = tested {
-            self.trace_state(node, label, "unknown".to_owned());
+            self.trace_state(node, label, RuleState::Unknown);
         } else if *tested == Value::Bool(false) {
-            self.trace_state(node, label, "not applicable".to_owned());
+            self.trace_state(node, label, RuleState::NotApplicable);
         }
         self.trace_groups(node, label, (group, None));
     }
@@ -480,7 +595,7 @@ impl Engine {
         if node.is_none() {
             return;
         }
-        match won_text(m, rule) {
+        match won_state(m, rule) {
             Ok(state) => self.trace_state(node, &rule.label, state),
             Err(stop) => self.trace_kept(stop),
         }
@@ -541,13 +656,26 @@ impl Engine {
         }
         let clocks = self.clocks(ctx, &def.id)?;
         let binds = (def.binds.as_slice(), keys);
-        let cands = candidates(m, &def.givens, binds, Test::At(ctx.law), clocks)?;
-        let cands = worded(m, &def.givens, cands, clocks)?;
-        let Some(at) = choose(m, &def.givens, &def.binds, &cands, ctx.cut, &def.id)? else {
+        // a given known in a window that holds the cut: the line's `windows each` decides
+        // it, else the read is `HOLE-IMPRECISE` (L §4.5)
+        let inside = known_inside(m, &def.givens, binds, Test::At(ctx.law), clocks)?;
+        let hidden = match self.hidden_rows(&inside, ctx)? {
+            Err(h) => return Ok(Some(Value::Hole(h))),
+            Ok(hidden) => hidden,
+        };
+        let seen;
+        let givens = if hidden.is_empty() {
+            &def.givens
+        } else {
+            seen = kept_rows(&def.givens, &hidden);
+            &seen
+        };
+        let cands = candidates(m, givens, binds, Test::At(ctx.law), clocks)?;
+        let cands = worded(m, givens, cands, clocks)?;
+        let Some(at) = choose(m, givens, &def.binds, &cands, ctx.cut, &def.id)? else {
             return Ok(None);
         };
-        let row = def
-            .givens
+        let row = givens
             .get(at)
             .ok_or_else(|| invariant("the read rule took a given the def lacks"))?;
         let figure = origin(&def.id, keys);
@@ -583,7 +711,14 @@ impl Engine {
             let line = format!("given {}{keys_text} (version {})", def.id, row.version);
             self.trace_line(node, line);
         }
-        Ok(Some(value))
+        // only a window keeps its read, and under `windows each` a given's window takes its
+        // day, named by its row and figure as an input row's is (L §4.4)
+        if !matches!(value, Value::Window(_)) {
+            return Ok(Some(value));
+        }
+        let value = as_read(value, (&def.id, keys), row_cell(row));
+        let chosen = self.chosen(value, (format!("row {} {figure}", row.sid), &figure), ctx)?;
+        Ok(Some(chosen))
     }
 }
 
@@ -605,31 +740,28 @@ fn in_force(m: &Reality, def: &DefInfo, clocks: Clocks) -> Result<Vec<InForce>, 
 
 /// `beaten by a, b`: the rules among `applicable` that beat rule `at`, by label (refcore's
 /// `eval_rules`, its states). L §5.18.
-fn beaten_text(def: &DefInfo, applicable: &[InForce], at: InForce) -> String {
+fn beaten_state(def: &DefInfo, applicable: &[InForce], at: InForce) -> RuleState {
     // the labels in their text's order, each once
     let by: std::collections::BTreeSet<&str> = applicable
         .iter()
         .filter(|o| **o != at && beats(def, **o, at))
         .map(|o| label_of(def, *o))
         .collect();
-    format!(
-        "beaten by {}",
-        by.into_iter().collect::<Vec<_>>().join(", ")
-    )
+    RuleState::Beaten(by.into_iter().map(str::to_owned).collect())
 }
 
 /// `won`, with the version that states the rule and its source where it cites one: its `v`,
 /// else the version holding it (refcore's `explain_node`, `rv.v or rv.version`). E §10.
-fn won_text(m: &Reality, rule: &RuleVer) -> Result<String, Stop> {
+fn won_state(m: &Reality, rule: &RuleVer) -> Result<RuleState, Stop> {
     let Some(version) = rule.v.as_ref().or(rule.version.as_ref()) else {
-        return Ok("won".to_owned());
+        return Ok(RuleState::Won(None));
     };
     let cite = &m
         .versions
         .get(version)
         .ok_or_else(|| invariant("a rule names a version load didn't build"))?
         .cite;
-    Ok(format!("won (version {version}, source {cite})"))
+    Ok(RuleState::Won(Some((version.clone(), cite.clone()))))
 }
 
 /// The version of a rule in force.
