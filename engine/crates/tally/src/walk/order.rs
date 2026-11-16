@@ -790,8 +790,7 @@ impl Engine {
         }
         run.inst.status = if t < cut { Status::Past } else { Status::Plan };
         let mut reg = Vec::new();
-        // one stated same as an observed row was observed (L §6.1)
-        if t < cut && run.inst.obs.is_empty() && !walk.same_observed.contains(&run.inst.id) {
+        if t < cut && run.inst.obs.is_empty() {
             reg.push(Entry {
                 word: "unfulfilled",
                 text: run.inst.id.clone(),

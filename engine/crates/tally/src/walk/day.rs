@@ -282,11 +282,7 @@ impl Engine {
             Act::Leg(mv, leg) => {
                 let (movement, lg) = self.movement_leg(id, mv, leg)?;
                 let mut reg = Vec::new();
-                // one stated same as an observed row was observed (L §6.1)
-                if movement.status == Status::Past
-                    && movement.obs.is_empty()
-                    && !self.walk(id)?.same_observed.contains(&movement.id)
-                {
+                if movement.status == Status::Past && movement.obs.is_empty() {
                     reg.push(Entry {
                         word: "unfulfilled",
                         text: movement.id.clone(),

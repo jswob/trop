@@ -7,7 +7,10 @@
 //! 2.1.8 R12: a `same` line is seen under a cut as its version's rows are, one known in a
 //! window that holds the cut read as seen and as unseen).
 //! Twin: engine/tools/refcore/moves.py (`same_lines`, `same_groups`, `once_obs`,
-//! `same_obs_differ`), model.py (`same_seen`) and mreads.py (`once_by_same`).
+//! `same_obs_differ`), model.py (`same_seen`) and mreads.py (`once_by_same`); refcore's
+//! walk.py `same_observed` (an instance stated `same` as an observed row) serves only a joint
+//! model's lines since load refuses the pair in one model (tally 2.1.8), and is built here from
+//! it when joint models run (M5c).
 //! Invariants: a group's members are in the order the same lines first name them; a group is
 //! counted by its first member a read meets, its other members beside it; two rows disagree
 //! only on a leg both state, never where either side is a hole.
@@ -795,36 +798,6 @@ impl Engine {
                 if self.covering(m, p, day, cut)?.contains(&o.version) {
                     out.insert((*p).to_owned());
                 }
-            }
-        }
-        Ok(out)
-    }
-
-    /// The plan instances and decisions stated `same` as an observation the cut sees: the
-    /// group is one movement, observed, so none of them is unfulfilled or open (refcore's
-    /// `same_observed`). L §6.1, §5.19.
-    ///
-    /// # Errors
-    ///
-    /// As [`Engine::observations`].
-    pub(crate) fn same_observed_ids(
-        &mut self,
-        m: &Reality,
-        cut: Day,
-    ) -> Result<BTreeSet<String>, Stop> {
-        let groups = self.same_groups(m, cut)?;
-        if groups.is_empty() {
-            return Ok(BTreeSet::new());
-        }
-        let observed: BTreeSet<String> = self
-            .observations(m, cut)?
-            .iter()
-            .map(|o| o.id.clone())
-            .collect();
-        let mut out = BTreeSet::new();
-        for (x, group) in groups {
-            if group.iter().any(|y| *y != x && observed.contains(y)) {
-                out.insert(x);
             }
         }
         Ok(out)

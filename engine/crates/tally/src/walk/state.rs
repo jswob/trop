@@ -358,9 +358,6 @@ pub struct Walk {
     /// The ends stated `same` as a decision not yet run, by the decision's id: booked at its
     /// point (refcore's `same_waiting`; L §6.1).
     pub(crate) same_waiting: BTreeMap<String, Vec<crate::book::Waiting>>,
-    /// The plan instances and decisions stated `same` as an observation: observed, so never
-    /// unfulfilled nor open (refcore's `same_observed`; L §6.1).
-    pub(crate) same_observed: BTreeSet<String>,
     /// The pads this walk booked or refused, each at its point, in the order it met them
     /// (refcore's `pads`; E §6.1): the members of a binding over pads.
     pub(crate) pads: Vec<(crate::book::Pad, At)>,
@@ -560,7 +557,6 @@ impl Walk {
             after: BTreeMap::new(),
             after_at: BTreeMap::new(),
             same_waiting: BTreeMap::new(),
-            same_observed: BTreeSet::new(),
             pads: Vec::new(),
             upto: None,
             walked: BTreeMap::new(),

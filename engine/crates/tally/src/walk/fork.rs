@@ -258,7 +258,6 @@ fn agrees(kept: &Walk, fresh: &Walk) -> bool {
         && kept.orders == fresh.orders
         && kept.endings == fresh.endings
         && kept.first_reading == fresh.first_reading
-        && kept.same_observed == fresh.same_observed
         && kept.plan_lists == fresh.plan_lists
         && kept.uncertain.starts_with(&fresh.uncertain)
         && kept.modelled.starts_with(&fresh.modelled);
