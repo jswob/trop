@@ -4484,9 +4484,6 @@ class Engine:
         if k == 0:
             raise refuse('RUN-ZERO', 'add_business(%s, 0, %s)' % (d, _ntxt(n.args[2])))
         step = 1 if k > 0 else -1
-        # k business days move at least k days: past the day range that is refused whatever a hole on the way says,
-        # since a refusal the outcome meets outranks the hole (L §8, §8.1; tally 2.1.8 R11, #169-a)
-        add_days(d, k)
 
         def count():
             left = abs(k)
@@ -4495,6 +4492,10 @@ class Engine:
                 cur = add_days(cur, step)
                 b = self.business(n.args[2], env, ctx, cur, seek=True)
                 if isinstance(b, Hole):
+                    # k business days move at least k days: past the day range that is refused whatever the hole on
+                    # the way says, since a refusal the outcome meets outranks the hole (L §8, §8.1; tally 2.1.8 R11,
+                    # #169-a); a refusal met first in day order stands before it (pick P26, g1_none)
+                    add_days(d, k)
                     return b
                 if b:
                     left -= 1
