@@ -137,6 +137,42 @@ class WCut(datetime.date):
         return self._plain().replace(*args, **kw)
 
 
+# A same line known in a window that holds the cut is read seen and unseen (L §4.5, tally 2.1.8 R12): the line being
+# answered records the ones it meets ({version id: (known, the rows it names)}), and is read again with each choice
+# ({version id: seen}); ask.Asker.answer_same_undecided.
+_SAMEMET = [None]
+_SAMEPICK = [None]
+
+
+def same_seen(v, ctx, names):
+    """Whether a version's same line is seen at ctx: its world and its known, a known window that holds the cut taken
+    as the pick says, or as seen while it is recorded."""
+    if v is None:
+        return True
+    if not in_world(v):
+        return False
+    vis = visible(v.known, ctx.cut, v.id)
+    if vis is not None:
+        return vis
+    if _EACH[0] is not None and getattr(_EACH[0], 'forced', None) is not None:
+        # under windows each, a same line not yet taken is an unknown day the line's answer rests on (L §4.5, §4.4;
+        # tally 2.1.8 R12, R13): the run takes it, so it is no choice of the line's (ask.answer_same_undecided)
+        _EACH[0].forced.append(known_window_id(v.id)[0])
+        return True
+    pick = _SAMEPICK[0]
+    if pick is not None and v.id in pick:
+        return pick[v.id]
+    if _SAMEMET[0] is not None:
+        _SAMEMET[0].setdefault(v.id, (v.known, set())).__getitem__(1).update(names)
+    return True
+
+
+def same_key(ctx):
+    """The key of the same lines ctx sees: its cut, its windows choice, its world and the pick."""
+    pick = _SAMEPICK[0]
+    return (ctx.cut, repr(getattr(ctx.cut, 'windows', None)), _WSET[0], tuple(sorted(pick.items())) if pick else ())
+
+
 _EACH = [None]   # the windows met by the line windows each is running, {window id: (label, days)} (ask.each_rows)
 
 
@@ -179,9 +215,10 @@ class WindowUndecided(NotYet):
         self.origin = origin
 
     def hole(self):
+        from .evaluate import carry_hole, known_carry
         lo, hi = self.known
-        return Hole([('date within window(%s, %s) not precise enough for the cut %s' % (lo, hi, self.K),
-                      self.origin)])
+        return carry_hole(Hole([('date within window(%s, %s) not precise enough for the cut %s' % (lo, hi, self.K),
+                                 self.origin)]), ids=[known_carry(self.origin, self.known)])
 
 
 class LifeHole(WindowUndecided):
@@ -217,7 +254,8 @@ def visible(known, K, sid=None):
             days = [lo + datetime.timedelta(days=i) for i in range((hi - lo).days + 1)]
             if _EACH[0] is not None:
                 _EACH[0].setdefault(wid, (label, days))
-            return days[0] <= K
+            # not yet taken: the plain line's, undecided (tally 2.1.8 R13)
+            return None
         return None
     return known <= K
 
@@ -402,10 +440,13 @@ class SameDiffers(WindowUndecided):
 
     def hole(self):
         from .joint import shown
-        parts = ' and '.join('%s (%s)' % (sp, shown(row)) for sp, row in self.sides)
-        q = '%s are one, but the entry into %s differs on %s: %s' % (' and '.join(shown(n) for n in self.names),
+        from .moves import and_list
+        # L §8.1 HOLE-SAME, the sides in the order of their ids, each of a larger class named (tally 2.1.8 S6)
+        order = sorted(range(len(self.names)), key=lambda i: shown(self.names[i]))
+        parts = and_list('%s (%s)' % (self.sides[i][0], shown(self.sides[i][1])) for i in order)
+        q = '%s are one, but the entry into %s differs on %s: %s' % (and_list(shown(self.names[i]) for i in order),
                                                                    shown(self.kind), self.when, parts)
-        return Hole([(q, ', '.join(shown(n) for n in self.names))])
+        return Hole([(q, ', '.join(shown(self.names[i]) for i in order))])
 
 
 class PlaceThing(ThingInfo):

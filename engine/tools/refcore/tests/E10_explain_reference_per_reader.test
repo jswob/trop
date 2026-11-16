@@ -1,0 +1,42 @@
+# tally 2.1.8 S8 (#181), E §10 Long derivations fold: "A cause met again is referenced by its line, once under each
+# line that reads it". f reads x twice and g reads f and x twice: x prints in full under f's rule, once, and is
+# referenced once under g's. 2.1.7's refcore (and the M2 engine) printed a reference for each read: one more under
+# f's rule, two under g's.
+=== m.tally
+model t
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input x: money PLN
+input y: money PLN
+
+def f: money PLN
+  rule base = x + x + y
+
+def g: money PLN
+  rule base = f + x + x
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x = 10.00 PLN "s"
+  y = 1.00 PLN "s"
+
+ask e: explain g
+=== expect
+e: 41.00 PLN
+  [1] g = 41.00 PLN
+      rule base: won
+        [2] f = 21.00 PLN
+            rule base: won
+              [3] row v:x = 10.00 PLN
+                  version v, source s, "s", locator "s", governs always, known 2026-01-01
+              [4] row v:y = 1.00 PLN
+                  version v, source s, "s", locator "s", governs always, known 2026-01-01
+        (v:x: see [3])
+  cut 2026-03-01

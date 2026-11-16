@@ -11,8 +11,10 @@ import datetime
 
 from .dates import Period, ONE_DAY, END, past_days
 from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, RandomLine, at_run
-from .model import visible, row_known_sid, known_first, PlaceThing, _kv, key_text, in_world, _WSET
+from .model import visible, row_known_sid, known_first, PlaceThing, _kv, key_text, in_world, _WSET, _SAMEMET, \
+    same_seen, same_key
 from .values import Num, Money, Hole, Thing, Mv, Iv, Rec, Text, NONE, NEVER, CURRENCIES, fmt, vkey
+from .evaluate import carry_hole, known_carry, CARRY_TEXT
 
 # the stratum a pad takes in the movement order: above every decision's, as observations and adjustments take -1,
 # below every plan's 0 (E §4.1, tally 2.1.2; tally 2.1.1 wrote 9, which only text compare put after stratum 10)
@@ -141,6 +143,7 @@ class ObsMv(Movement):
         self.attrs = {a: _obs_attr(v, o) for a, v in o.attrs.items()} if o.attrs else o.attrs
         self.fulfils = o.fulfils
         self.forp = None
+        self.und = None         # the hole of a row known in a window that holds the cut (m_observations)
         self.err = None
         self.status = 'observed'
         self.coll = None
@@ -231,8 +234,10 @@ class AdjMv(Movement):
 class PadMv(Movement):
     """A pad (E §6.1): takes up a statement's gap."""
 
-    def __init__(self, vid, place, itext, amount, frm, to, day, unit):
-        self.id = 'pads:%s:%s@%s' % (vid, place, itext)
+    def __init__(self, vid, place, itext, amount, frm, to, day, unit, per_unit=False):
+        # at a place of unit any the id ends with the unit, so two units' pads at one instant are two movements
+        # (L §5.10, E §6.1; tally 2.1.8 R14, #175)
+        self.id = 'pads:%s:%s@%s' % (vid, place, itext) + (':%s' % unit if per_unit else '')
         self.kind = 'pads'
         self.day = day
         self.legs = [Leg('cash', frm, to, amount, unit, day)]
@@ -377,6 +382,7 @@ def m_coverage(self, ctx):
             # (HOLE-IMPRECISE)
             lo, hi = v.known
             q = ('date within window(%s, %s) not precise enough for the cut %s' % (lo, hi, ctx.cut), vid)
+            carry_hole(Hole([q]), ids=[known_carry(v.id, v.known)])
             for th, sp in v.covers:
                 span = sp if sp is not None else v.span_at(ctx.cut)
                 if span is not None:
@@ -422,6 +428,7 @@ def m_observations(self, ctx):
         if not inf.observed:
             continue
         by = {}
+        by_dec = {}     # each row id's latest restatement whose known the cut decides
         undecided = {}
         for o in getattr(inf, 'obs', []):
             if not self.world_ok(o.version, ctx):
@@ -432,21 +439,33 @@ def m_observations(self, ctx):
                 # everything the version or row brings: ... its observations" (HOLE-IMPRECISE): it is booked or not,
                 # so each of its legs is a hole carrying that question
                 lo, hi = o.known
-                undecided[id(o)] = Hole([('date within window(%s, %s) not precise enough for the cut %s' % (
-                    lo, hi, ctx.cut), o.sid)])
+                # tally 2.1.8 R12 (P70): the hole names the row and its version
+                q = 'date within window(%s, %s) not precise enough for the cut %s' % (lo, hi, ctx.cut)
+                undecided[id(o)] = carry_hole(Hole([(q, o.sid), (q, o.version.id)]), ids=[known_carry(
+                    o.version.id if getattr(o, 'own_known', None) is None else o.sid, o.known)])
             elif not vis:
                 continue
-            cur = by.get(o.key)
             # the latest restatement; a scenario's stands above its base's whatever their known dates (L §4.6 step 2)
-            if cur is None or (row_layer(m, o), known_first(o.known)) > (row_layer(m, cur), known_first(cur.known)):
-                by[o.key] = o
+            for tab in ((by,) if id(o) in undecided else (by, by_dec)):
+                cur = tab.get(o.key)
+                if cur is None or (row_layer(m, o), known_first(o.known)) > (row_layer(m, cur), known_first(cur.known)):
+                    tab[o.key] = o
         for k in sorted(by):
             o = by[k]
+            hq = undecided.get(id(o))
+            if hq is not None and o.removed:
+                # an undecided removal removes the row or not (L §4.5, tally 2.1.8 R12, #169-f): the restatement before
+                # it stands, its legs that hole
+                o = by_dec.get(k)
+                if o is None:
+                    continue
             if o.removed:
                 continue
-            hq = undecided.get(id(o))
             legs = [Leg(n, f, t, hq if hq is not None else a, u, d or o.day) for n, f, t, a, u, d in o.legs]
             ob = ObsMv(o, legs)
+            # seen and unseen are two accounts of one movement (L §4.5, tally 2.1.8 R12): a binding meets it as one,
+            # an unknown member where the two differ (m_span_members)
+            ob.und = hq
             ob.coll = _coll()
             ob.coll.rows[o.sid] = o
             if ob.fulfils is not None and ob.fulfils[0] == 'inst':
@@ -494,6 +513,7 @@ def m_readings(self, ctx):
                 lo, hi = r.known
                 r = copy.copy(r)
                 r.val = ('hole', 'date within window(%s, %s) not precise enough for the cut %s' % (lo, hi, ctx.cut))
+                CARRY_TEXT.setdefault(r.val[1], (known_carry(row_known_sid(r), r.known),))
             elif not vis:
                 continue
             place = r.pattern[0][1].name
@@ -504,6 +524,7 @@ def m_readings(self, ctx):
             # their known dates; inside one layer the latest known restates
             if cur is None or (row_layer(m, r), known_first(r.known)) > (row_layer(m, cur), known_first(cur.known)):
                 keep[k] = r
+    keep = any_unitless(m, keep)
     # a place stated same in a joint model: its readings from the members are read together, a joint model's own
     # row settles them, and two that disagree are a hole naming both rows (L §6.1, HOLE-SAME)
     byk = {}
@@ -528,6 +549,33 @@ def m_readings(self, ctx):
     return res
 
 
+def any_unitless(m, keep):
+    """L §5.10 (tally 2.1.8 R14): at a place of unit any a reading is keyed by the unit its value states, and a row
+    that states none (a hole, none) leaves it unstated: a row for every unit the place holds at its instant, a unit's
+    own reading there the narrower claim. With replace it replaces every unit's reading there (none: removes them).
+    The unitless row keeps the units it doesn't stand for (`_except`); the walk gives it the rest (Walk.apply_reading)."""
+    from .loader import row_layer
+    out = dict(keep)
+    for k, r in keep.items():
+        iid, place, it, u, o = k
+        if u != 'any':
+            continue
+        own = [(k2, r2) for k2, r2 in keep.items() if k2[:3] == k[:3] and k2[4] == o and k2[3] != 'any']
+        rank = (row_layer(m, r), known_first(r.known))
+        if r.replace:
+            for k2, r2 in own:
+                if (row_layer(m, r2), known_first(r2.known)) < rank:
+                    out.pop(k2, None)
+        if r.val is NONE:
+            out.pop(k, None)
+            continue
+        import copy
+        r = copy.copy(r)
+        r._except = frozenset(k2[3] for k2, r2 in own if k2 in out)
+        out[k] = r
+    return out
+
+
 def row_owner(m, r):
     """The member a row comes from in a joint model ('' for the joint model's own, or any row elsewhere)."""
     if getattr(m, 'joint', None) is None or r.version is None:
@@ -542,15 +590,19 @@ def same_hole_row(m, iid, place, it, rows):
     import copy
     from .joint import shown
     J = m.joint
-    names = [n for (o, n, out) in J.groups.get(place, ())]
-    a, b = rows[0], rows[1]
-    q = '%s and %s are one, but %s differs on %s: %s (%s) and %s (%s)' % (
-        names[0] if names else shown(place), names[1] if len(names) > 1 else shown(place), iid, it,
-        fmt(a.val) if not isinstance(a.val, tuple) else '?', shown(a.sid or ''),
-        fmt(b.val) if not isinstance(b.val, tuple) else '?', shown(b.sid or ''))
-    r = copy.copy(a)
+    names = sorted((shown(n) for (o, n, out) in J.groups.get(place, ())), key=str) or [shown(place)] * 2
+    rows = sorted(rows, key=lambda r: shown(r.sid or ''))
+    vals = ['%s (%s)' % (fmt(r.val) if not isinstance(r.val, tuple) else '?', shown(r.sid or '')) for r in rows]
+    q = '%s are one, but %s differs on %s: %s' % (and_list(names), iid, it, and_list(vals))
+    r = copy.copy(rows[0])
     r.val = ('hole', q)
     return r
+
+
+def and_list(xs):
+    """`a`, `a and b`, `a, b and c`: how L §8.1's HOLE-SAME names a class's rows and values (tally 2.1.8 S6)."""
+    xs = list(xs)
+    return xs[0] if len(xs) == 1 else '%s and %s' % (', '.join(xs[:-1]), xs[-1])
 
 
 # -- move instances (E §4.1, §5 steps 0-1) -------------------------------------------------------------------------
@@ -589,7 +641,8 @@ def law_days(law):
 
 
 def imprecise_law(law, what):
-    return Hole([('date within %s not precise enough for the law date of %s' % (law.window_text(), what), what)])
+    return carry_hole(Hole([('date within %s not precise enough for the law date of %s' % (law.window_text(), what),
+                             what)]), law)
 
 
 def m_move_tuples(self, mi, ctx):
@@ -649,6 +702,13 @@ def m_move_tuples(self, mi, ctx):
                 self.stack.append(cw)
                 try:
                     w = self.ev(b.where, e2, bctx)
+                    if len(lds) > 1 and not isinstance(w, Hole):
+                        # a window at: the where is decided only where every law date agrees (L §4.4; tally 2.1.8
+                        # §4, #169-e), else whether the tuple is bound is the window's hole
+                        for dd in lds[1:]:
+                            if vkey_opt(self.ev(b.where, e2, ctx.but(law=dd))) != vkey_opt(w):
+                                w = imprecise_law(law, mi.id)
+                                break
                 except TallyError as e:
                     # tally 2.1.6 (issue #51): a refused `where` makes a refused instance at that tuple, which reaches
                     # as a hole movement does, its places from its day (L §8.4, §5.14 Keys; E §4.2); it no longer
@@ -720,6 +780,39 @@ def m_move_instances(self, mi, ctx):
     return out
 
 
+def m_answer_booking(self, mi, i, tctx, upto=None):
+    """E §5 step 1: "An A0 that is a hole, from its amounts or its when, stays a hole movement until a version answers
+    it, with a value or with a refusal (LANGUAGE §8), under cuts from that version's known, and the answer is its
+    booking from then on, so one answered by a refusal stays refused; a version under which the when is false answers
+    it with 0, and nothing is booked."  The first later version known by the cut whose re-measurement is no hole
+    answers it where the instance is made, so every read of it (the walk, a field, a binding, a settlement's link,
+    explain) takes the answer, a settlement's included (tally 2.1.8 S9, §4, #179, #169-h); i.answered is (that cut, its
+    versions), which explain prints (S4).  adjust_move_compute measures the steps after it; a refused answer, as a
+    refused A0, none."""
+    if not (isinstance(i.exists, Hole) or any(isinstance(lg.amount, Hole) for lg in i.legs)):
+        return
+    if not isinstance(i.day, datetime.date) or i.day >= tctx.cut:
+        return
+    for c, vids in self.known_dates():
+        if not i.day < c <= tctx.cut:
+            continue
+        j = self.eval_inst(mi, i.env, i.keys, tctx, at_cut=c, upto=upto)
+        if j is None:
+            continue
+        if j.err is not None:
+            i.err = j.err
+        else:
+            if not self.keys_seen(mi, i.keys, c):
+                j.exists = False
+            if isinstance(j.exists, Hole) or any(isinstance(lg.amount, Hole) for lg in j.legs):
+                continue
+            i.exists, i.legs = j.exists, j.legs
+        i.coll.merge(j.coll)
+        i.answered = (c, self.step_versions(j, vids))
+        i.status = None
+        return
+
+
 def m_insts_of_tuples(self, mi, tuples, tctx, upto=None):
     if True:
         out = []
@@ -746,6 +839,8 @@ def m_insts_of_tuples(self, mi, tuples, tctx, upto=None):
                     continue
                 if not mi.decision and inst.cut is not None and inst.err is None:
                     self.inv5(inst, tctx, upto)
+                if not mi.decision and inst.err is None:
+                    self.answer_booking(mi, inst, tctx, upto)
             inst.coll.merge(c)
             out.append(inst)
         for inst in out:
@@ -931,21 +1026,22 @@ def m_eval_inst(self, mi, env, keys, tctx, exists0=True, at_cut=None, upto=None)
             else:
                 cuts = [K]
             inst.cut = cuts[0]
-            if not self.keys_seen(mi, keys, cuts[-1]):
+            seen = [self.keys_seen(mi, keys, c) for c in cuts]
+            if not any(seen):
                 # a key entered after the booking cut: the instance didn't exist then, A0 = 0 (E §5 steps 1-3)
                 inst.exists = False
                 return inst
-            bodies = [self.body_over_law(mi, env, inst, tctx.but(cut=c), law, exists0) for c in cuts]
+            # a key entered inside the window of booking cuts: at a cut before it the instance didn't exist (no body),
+            # so whether it did is the window's (agreed_body; L §4.4, tally 2.1.8 §4, #169-e)
+            bodies = [self.body_over_law(mi, env, inst, tctx.but(cut=c), law, exists0) if s else
+                      (False, [], {}, None, None) for c, s in zip(cuts, seen)]
             b0 = bodies[0]
-            if len(bodies) > 1 and body_key(bodies[0]) != body_key(bodies[1]):
-                # a version known inside a windowed instance's window (L §5.14.3)
-                hq = Hole([('date within %s not precise enough for the booking cut of %s' % (day.window_text(),
-                                                                                             inst.id), inst.id)])
-                b1 = bodies[1]
-                src = b0[1] if b0[1] else b1[1]
-                legs = [Leg(lg.name, lg.frm, lg.to, hq, lg.unit, lg.day) for lg in src]
-                ex = b0[0] if (b0[0] is b1[0] or vkey_ex(b0[0]) == vkey_ex(b1[0])) else hq
-                b0 = (ex, legs, b0[2], b0[3], b0[4])
+            if len(bodies) > 1:
+                # a version known inside a windowed instance's window (L §5.14.3): each part decided where both
+                # booking cuts agree (agreed_body)
+                b0 = agreed_body(bodies, lambda: carry_hole(Hole([(
+                    'date within %s not precise enough for the booking cut of %s' % (day.window_text(), inst.id),
+                    inst.id)]), day))
             inst.exists, inst.legs, inst.attrs, inst.forp, inst.fulfils = b0
         except TallyError as e:
             if isinstance(e, LoadError) or load_now(e):
@@ -1003,16 +1099,43 @@ def m_body_over_law(self, mi, env, inst, c0, law, exists0=True):
     """An instance's body at its law date; for a window `at`, at each law date of the window: one value where all
     agree, otherwise HOLE-IMPRECISE (L §5.14 at e)."""
     lds = law_days(law)
-    b0 = self.inst_body(mi, env, inst, c0.but(law=lds[0]), exists0)
-    for dd in lds[1:]:
-        b1 = self.inst_body(mi, env, inst, c0.but(law=dd), exists0)
-        if body_key(b1) != body_key(b0):
-            hq = imprecise_law(law, inst.id)
-            src = b0[1] if b0[1] else b1[1]
-            legs = [Leg(lg.name, lg.frm, lg.to, hq, lg.unit, lg.day) for lg in src]
-            ex = b0[0] if vkey_ex(b0[0]) == vkey_ex(b1[0]) else hq
-            return (ex, legs, b0[2], b0[3], b0[4])
-    return b0
+    bodies = [self.inst_body(mi, env, inst, c0.but(law=dd), exists0) for dd in lds]
+    if len(bodies) == 1:
+        return bodies[0]
+    return agreed_body(bodies, lambda: imprecise_law(law, inst.id))
+
+
+def agreed_body(bodies, hole):
+    """L §4.4 (tally 2.1.8 §4, #169-e): a window decides a read only where every day agrees. Of an instance's bodies
+    over the days a window leaves open (its law dates, its booking cuts), each part (its existence, its legs, its for,
+    each attribute, its fulfils) is their value where all give the same, else the window's hole (hole()). 2.1.7
+    compared the existence and the legs alone and read the rest at the first."""
+    b0 = bodies[0]
+    ex_d = any(vkey_ex(b[0]) != vkey_ex(b0[0]) for b in bodies[1:])
+    legs_d = any(body_key((True,) + tuple(b[1:])) != body_key((True,) + tuple(b0[1:])) for b in bodies[1:])
+    for_d = any(vkey_opt(b[3]) != vkey_opt(b0[3]) for b in bodies[1:])
+    ful_d = any(vkey_opt(b[4]) != vkey_opt(b0[4]) for b in bodies[1:])
+    attrs_d = set(a for b in bodies[1:] for a in set(b0[2]) | set(b[2])
+                  if vkey_opt(b0[2].get(a)) != vkey_opt(b[2].get(a)))
+    if not (ex_d or legs_d or for_d or ful_d or attrs_d):
+        return b0
+    hq = hole()
+    src = next((b[1] for b in bodies if b[1]), [])
+    legs = [Leg(lg.name, lg.frm, lg.to, hq, lg.unit, lg.day) for lg in src] if legs_d else b0[1]
+    attrs = dict((a, hq if a in attrs_d else v) for a, v in b0[2].items())
+    return (hq if ex_d else b0[0], legs, attrs, hq if for_d else b0[3], hq if ful_d else b0[4])
+
+
+def vkey_opt(x):
+    """A comparable key of a body part that may be none, a hole or a refusal."""
+    if x is None or isinstance(x, bool):
+        return x
+    if isinstance(x, TallyError):
+        return ('err', x.code, x.msg)
+    try:
+        return vkey(x)
+    except Exception:
+        return repr(x)
 
 
 def m_inst_body(self, mi, env, inst, c1, exists0=True):
@@ -1280,11 +1403,12 @@ def m_obs_links_for(self, tid, ctx):
                 continue
             o.target = _LinkTarget(tid, self, mi, list(kv), ctx)
             res.append(o)
+        res = self.same_fulfils_differ(tid, res, ctx)
         res = self.unjoined_refused(tid, res, ctx)
         # rows stated same are one movement, "its fulfils ... stated on either row" (L §5.19 One movement on two
         # statements): a row with no fulfils of its own stated same as one that fulfils tid fulfils it too, so which
         # row carries the link changes no answer (a decision's own observations, its point, the walk's booking)
-        groups = same_groups(m)
+        groups = same_groups(m, ctx)
         if res and any(o.id in groups for o in res):
             by_id = dict((x.id, x) for x in self.observations(ctx))
             for o in list(res):
@@ -1308,10 +1432,43 @@ def m_obs_links_for(self, tid, ctx):
     return res
 
 
-def same_groups(m):
-    """{movement id: its group, in the order the same lines name them} (L §6.1, round 14: "same is an equivalence:
-    lines that share a side make one group"; "A group of movements is one movement")."""
-    groups = getattr(m, '_same_groups', None)
+def same_lines(m, ctx):
+    """[(a, b, loc, owner)] of the movements' same lines seen at ctx's cut in the world it reads (L §4.5 Whatever a
+    version states is read as its rows are, tally 2.1.8 R12): a version's line only when known by the cut (its
+    visibility undecided, inside a known window, as seen; m_same_undecided) and in the worlds its file is in (§6.4);
+    the header's always. ctx None: every line (load's own reads)."""
+    sm = getattr(m, 'same_moves', None) or ()
+    vs = getattr(m, 'same_versions', None) or [None] * len(sm)
+    ows = getattr(m, 'same_owners', None) or [''] * len(sm)
+    if ctx is None:
+        return [(a, b, loc, o) for (a, b, loc), o in zip(sm, ows)]
+    key = same_key(ctx)
+    cache = m.__dict__.setdefault('_same_lines', {})
+    hit = cache.get(key)
+    if hit is not None:
+        if _SAMEMET[0] is not None:
+            for (a, b, loc), v in zip(sm, vs):
+                if v is not None:
+                    same_seen(v, ctx, (a, b))
+        return hit
+    out = []
+    for (a, b, loc), v, o in zip(sm, vs, ows):
+        if not same_seen(v, ctx, (a, b)):
+            continue
+        out.append((a, b, loc, o))
+    cache[key] = out
+    return out
+
+
+def same_groups(m, ctx):
+    """{movement id: its group, in the order of the members' ids compared by code point (L §2.5; tally 2.1.8 S6, #177:
+    a class joined by lines in two files has no written order)} (L §6.1, round 14: "same is an equivalence: lines
+    that share a side make one group"; "A group of movements is one movement"), of the lines seen at ctx
+    (same_lines)."""
+    lines = same_lines(m, ctx)
+    key = None if ctx is None else same_key(ctx)
+    cache = m.__dict__.setdefault('_same_groups', {})
+    groups = cache.get(key)
     if groups is not None:
         return groups
     parent = {}
@@ -1321,7 +1478,7 @@ def same_groups(m):
             a = parent[a]
         return a
     order = []
-    for a, b, loc in getattr(m, 'same_moves', None) or ():
+    for a, b, loc, _o in lines:
         for y in (a, b):
             if y not in order:
                 order.append(y)
@@ -1329,18 +1486,56 @@ def same_groups(m):
         if ra != rb:
             parent[rb] = ra
     by = {}
-    for y in order:
+    from .joint import shown
+    for y in sorted(order, key=shown):
         by.setdefault(find(y), []).append(y)
     groups = dict((y, g) for g in by.values() for y in g)
-    m._same_groups = groups
+    cache[key] = groups
     return groups
 
 
-def once_obs(m, obs):
+def same_pairs(m, ctx):
+    """{movement id: (group, the same line naming it)} from the same lines seen at ctx (same_lines). L §6.1 (round 14):
+    "same is an equivalence: lines that share a side make one group"; "A group of movements is one movement"."""
+    key = None if ctx is None else same_key(ctx)
+    cache = m.__dict__.setdefault('_same_pairs', {})
+    sp = cache.get(key)
+    if sp is not None:
+        return sp
+    parent = {}
+
+    def find(x):
+        while parent.get(x, x) != x:
+            x = parent[x]
+        return x
+    lines = {}
+    order = []
+    for a, b, loc, _o in same_lines(m, ctx):
+        for x in (a, b):
+            if x not in order:
+                order.append(x)
+        ra, rb = find(a), find(b)
+        if ra != rb:
+            parent[rb] = ra
+        lines.setdefault(a, (a, b))
+        lines.setdefault(b, (a, b))
+    groups = {}
+    from .joint import shown
+    for x in sorted(order, key=shown):
+        groups.setdefault(find(x), []).append(x)
+    sp = {}
+    for g in groups.values():
+        for x in g:
+            sp[x] = (g, lines[x])
+    cache[key] = sp
+    return sp
+
+
+def once_obs(m, obs, ctx):
     """The observations that fulfil one instance, a group stated same counted once (L §5.19 One movement on two
     statements: "the movement is ... counted once by observed(m[k]) and flows"): [(the group's first row, the group's
     other rows)], in the order given."""
-    groups = same_groups(m)
+    groups = same_groups(m, ctx)
     out = []
     at = {}
     for o in obs:
@@ -1359,23 +1554,61 @@ def same_obs_differ(a, others, leg=None):
     (its leg's amount in observed, in flows of a move or through a binding) is the disagreement's hole, HOLE-SAME,
     naming both rows"): that hole, in L §8.1's form, else None.  leg, where given, is the one leg read."""
     from .joint import shown
-    for b in others:
-        lb = dict((g.name, g) for g in b.legs)
-        for g in a.legs:
-            if leg is not None and g.name != leg:
+    for g in a.legs:
+        if leg is not None and g.name != leg:
+            continue
+        mem = [(a, g)] + [(b, h) for b in others for h in b.legs if h.name == g.name]
+        if len(mem) < 2:
+            continue
+        mem.sort(key=lambda t: shown(t[0].id))
+        for what, get in (('the amount of %s' % g.name, lambda h: h.amount), ('the day of %s' % g.name,
+                                                                                lambda h: h.day)):
+            xs = [get(h) for o, h in mem]
+            if any(isinstance(x, Hole) for x in xs) or len(set(vkey(x) for x in xs)) == 1:
                 continue
-            h = lb.get(g.name)
-            if h is None:
-                continue
-            for what, x, y in (('the amount of %s' % g.name, g.amount, h.amount), ('the day of %s' % g.name, g.day,
-                                                                                       h.day)):
-                if isinstance(x, Hole) or isinstance(y, Hole) or vkey(x) == vkey(y):
-                    continue
-                d = g.day if isinstance(g.day, datetime.date) else a.day
-                q = '%s and %s are one, but %s differs on %s: %s (%s) and %s (%s)' % (
-                    shown(a.id), shown(b.id), what, d, fmt(x), shown(a.id), fmt(y), shown(b.id))
-                return Hole([(q, '%s, %s' % (shown(a.id), shown(b.id)))])
+            d = g.day if isinstance(g.day, datetime.date) else a.day
+            # L §8.1 HOLE-SAME, the rows in the order of their ids, each of a larger class named (tally 2.1.8 S6)
+            q = '%s are one, but %s differs on %s: %s' % (
+                and_list(shown(o.id) for o, h in mem), what, d,
+                and_list('%s (%s)' % (fmt(get(h)), shown(o.id)) for o, h in mem))
+            return Hole([(q, ', '.join(shown(o.id) for o, h in mem))])
     return None
+
+
+def m_same_fulfils_differ(self, tid, res, ctx):
+    """L §5.19 One movement on two statements (tally 2.1.8 S1, #177): rows stated same whose fulfils name different
+    instances are refused, RUN-RECORD `<r> and <r'> are stated same and fulfil <a> and <b>`, the rows in id order, each
+    with its own. Returns the links left."""
+    groups = same_groups(self.m, ctx)
+    if not res or not any(o.id in groups for o in res):
+        return res
+    from .joint import shown
+    tid_of = {}
+    for t2, os in self.link_targets(ctx).items():
+        for o in os:
+            tid_of[o.id] = t2
+    by_id = dict((x.id, x) for x in self.observations(ctx))
+    bad = set()
+    for o in res:
+        for y in groups.get(o.id, ()):
+            x = by_id.get(y)
+            t2 = tid_of.get(y)
+            if x is None or x.fulfils is None or t2 is None or t2 == tid:
+                continue
+            (a, ta), (b, tb) = sorted([(o, tid), (x, t2)], key=lambda p: p[0].id)
+            e = refuse('RUN-RECORD', '%s and %s are stated same and fulfil %s and %s' % (
+                shown(a.id), shown(b.id), shown(ta), shown(tb)))
+            for z in (o, x):
+                if z.err is None:
+                    z.err = e
+            bad.add(id(o))
+            # what reads either instance's realised movement rests on the refused records (L §8.4)
+            badl = self.run_cache.setdefault(('badlinks', self.wkey(ctx)), {})
+            badl.setdefault(tid, e)
+            badl.setdefault(t2, e)
+    if not bad:
+        return res
+    return [o for o in res if id(o) not in bad]
 
 
 def m_unjoined_refused(self, tid, res, ctx):
@@ -1386,7 +1619,7 @@ def m_unjoined_refused(self, tid, res, ctx):
     if len(res) < 2:
         return res
     from .joint import shown
-    groups = same_groups(self.m)
+    groups = same_groups(self.m, ctx)
 
     def ends(o):
         ps = set()
@@ -1511,8 +1744,12 @@ def m_status(self, i, ctx):
     m = self.m
     S, E, K = m.S, m.E, ctx.cut
     i.obs = self.obs_links_for(i.id, ctx)
+    # an observation dated on K or later is seen but not applied, and nor is the link it states, so the instance it
+    # fulfils stays in the plan (L §4.5, L §5.19 Coverage, E §4.1 step 3; tally 2.1.8 R12, #182)
+    applied = [o for o in i.obs if not (isinstance(o.day, datetime.date) and o.day >= K)]
     d = i.day
     lo, hi = day_lo(d), day_hi(d)
+    i.class_q = None
     if i.exists is False:
         st = 'none'
     elif lo is not None and (hi < S or lo > E):
@@ -1523,15 +1760,20 @@ def m_status(self, i, ctx):
         st = 'leftout'
     elif i.err is not None:
         st = 'refused'
-    elif i.obs and not i.decision:
-        # on any day, an instance that an observation the cut sees fulfils is modelled past: its observations stand
+    elif applied and not i.decision:
+        # on any day, an instance that an observation the cut applies fulfils is modelled past: its observations stand
         # in for it (E §4.1 step 3, L §5.19); one fulfilling a hole movement answers it
         st = 'modelled'
     elif isinstance(d, Hole) or isinstance(i.exists, Hole):
         st = 'hole'
+    elif self.window_class_depends(i, ctx, lo, hi):
+        # booked on some of its window's days and not on the rest: the window's hole (E §4.1 step 2, L §4.4)
+        st = 'hole'
+        i.class_q = frozenset([('date within %s not precise enough for a balance' % d.window_text(), i.id)])
+        carry_hole(Hole(i.class_q), d)
     elif i.decision:
         st = 'decision'
-    elif self.kind_certainty(i.kind) == 'uncertain' and not i.obs:
+    elif self.kind_certainty(i.kind) == 'uncertain' and not applied:
         st = 'uncertain'
     elif lo < K and self.touches_covered(i, ctx):
         st = 'modelled'
@@ -1582,9 +1824,28 @@ def m_before_scen_from(self, i, day):
     return True
 
 
-def m_touches_covered(self, i, ctx):
+def m_window_class_depends(self, i, ctx, lo, hi):
+    """Whether a plan instance dated by a window takes its class (E §4.1 step 3) one way on some of the window's days
+    and another on the rest (E §4.1 step 2, L §4.4; tally 2.1.8 item 77): inside [S, E] or before it (a window that
+    crosses E is its hole already, in the walk), and modelled past or booked."""
+    if lo is None or lo == hi or not isinstance(i.day, Iv) or i.decision:
+        return False
+    S, K = self.m.S, ctx.cut
+    if lo < S <= hi:
+        return True
+    if lo >= K:
+        return False
+    rs = []
+    d = lo
+    while d <= hi:
+        rs.append(d < K and self.touches_covered(i, ctx, d))
+        d = d + datetime.timedelta(1)
+    return any(rs) and not all(rs)
+
+
+def m_touches_covered(self, i, ctx, day=None):
     for lg in i.legs:
-        ld = lg.day if isinstance(lg.day, datetime.date) else day_lo(i.day)
+        ld = lg.day if isinstance(lg.day, datetime.date) else (day or day_lo(i.day))
         if ld is None:
             continue
         for p in (lg.frm, lg.to):
@@ -1720,10 +1981,14 @@ def m_adjust_move(self, mi, ctx):
     if key in self.inst_active:
         raise refuse('RUN-CYCLE', 'the adjustments of %s read themselves' % mi.id)
     self.inst_active.add(key)
+    # the re-measurements are the adjustments' own reads, not the instance's: a trace of a read of it (a field read,
+    # a balance) prints the rows its value reads (E §10 l.472; R1; tally 2.1.8 #169-g)
+    tracing, self.tracing = self.tracing, False
     try:
         out = self.adjust_move_compute(mi, ctx)
     finally:
         self.inst_active.discard(key)
+        self.tracing = tracing
     self.run_cache[key] = out
     return out
 
@@ -1742,7 +2007,9 @@ def m_adjust_move_compute(self, mi, ctx):
             if not isinstance(i.day, datetime.date) or i.day >= K:
                 continue
             t = i.day
-            steps = [(c, vs) for c, vs in kds if t < c <= K]
+            ans = getattr(i, 'answered', None)
+            # a hole booking a version answered is measured from that version's known on (E §5 step 1, answer_booking)
+            steps = [(c, vs) for c, vs in kds if t < c <= K and (ans is None or c > ans[0])]
             if not steps:
                 continue
             prev = i
@@ -1755,6 +2022,10 @@ def m_adjust_move_compute(self, mi, ctx):
                 continue
             # E §5 step 3 (tally 2.1.2, issue #34, the user's "A: the refusal spreads"): the state the next step
             # measures against may be refused, or its existence a hole; then that step's δ is too
+            if hole0:
+                # no version known by the cut answers it (answer_booking): every step re-measures a hole, and a hole
+                # booking records no adjustment (E §5 step 1)
+                continue
             prev_bad = None
             prev_hole = None
             for c, vids in steps:
@@ -1762,11 +2033,9 @@ def m_adjust_move_compute(self, mi, ctx):
                 if j is None:
                     continue
                 if j.err is not None:
-                    # tally 2.1.7 R2 (#94): a version answers a hole movement with a value or with a refusal (E §5
-                    # step 1; L §8: a refusal outranks a hole), so a refused re-measurement of a hole booking answers
-                    # it with its refusal, from that version's known, as it does a booking that had a value
-                    # re-measured and refused (its day, `when` or a place): each leg's adjustment is refused, and so
-                    # is the next step's, measured against it; tally 2.1.1 skipped the step
+                    # tally 2.1.7 R2 (#94): a booking that had a value re-measured and refused (its day, `when` or a
+                    # place): each leg's adjustment is refused, and so is the next step's, measured against it; tally
+                    # 2.1.1 skipped the step. A hole booking answered by a refusal is refused (answer_booking)
                     for lg in self.step_legs(i, prev, j):
                         self.adjust_made(i, lg, j.err, c, j, vids, out, err=j.err)
                     prev_bad, prev_hole = j.err, None
@@ -1788,17 +2057,6 @@ def m_adjust_move_compute(self, mi, ctx):
                             self.adjust_made(i, lg, merge(prev_hole, *now), c, j, vids, out)
                     prev_bad = None
                     prev_hole = j.exists if isinstance(j.exists, Hole) else None
-                    prev, prev_ex = j, j.exists is True
-                    continue
-                if hole0:
-                    if isinstance(j.exists, Hole) or any(isinstance(lg.amount, Hole) for lg in j.legs):
-                        continue
-                    # a version answers the hole movement: its amounts are the instance's (E §5 step 1)
-                    i.exists, i.legs = j.exists, j.legs
-                    i.coll.merge(j.coll)
-                    i.status = None
-                    self.status(i, ctx)
-                    hole0 = False
                     prev, prev_ex = j, j.exists is True
                     continue
                 if isinstance(j.exists, Hole):
@@ -1980,13 +2238,13 @@ def m_settle_links(self, adjs, ctx):
             iid = '%s[%s]' % (mid, ', '.join(key_text(k) for k in kv)) if kv else mid
             named.setdefault((iid, leg, vid), []).append(o)
     if named:
-        groups = same_groups(m)
+        groups = same_groups(m, ctx)
         by_id = None
         for a in adjs:
             for vid in a.vids:
                 # rows stated same are one movement (L §5.19 One movement on two statements), so one settlement:
                 # counted once, its amount the disagreement's hole (HOLE-SAME) where the rows disagree
-                for o, _ in once_obs(m, named.get((a.inst.id, a.leg.name, vid), ())):
+                for o, _ in once_obs(m, named.get((a.inst.id, a.leg.name, vid), ()), ctx):
                     # one adjustment of a step of several versions, named by each of them (E §5 step 4)
                     if not o.legs:
                         links.append((a, o, None))

@@ -1,0 +1,59 @@
+# tally 2.1.8 item 77 (#201), E §4.1 step 2 and L §4.4: a test of a window-dated movement that comes out one way on
+# some of its days and another on the rest is the window's hole, as far as the refusal or the other class would reach.
+# jar gives put's leg (into box, alive from 03-08) and pin's (into old, alive to 03-06), both on days of
+# window(03-05, 03-10). The plain line was pin's refusal, which three of wo's days don't give: now the hole, and
+# windows each gives six lines, one of them 300.00 PLN. A refusal reaching jar after put's uncertain test (pin's,
+# with wo on 03-07) doesn't outrank put's hole: which comes first is what wd leaves open. 2.1.7's refcore: refused,
+# RUN-LIFESPAN pin.cash. T's d77/lifespan b_jar, rebuilt from the twin check's description.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+kind accts: place PLN signed
+place jar: accts lives 2025-01-01..
+place box: accts lives 2026-03-08..
+place old: accts lives 2025-01-01..2026-03-06
+input amt: money PLN
+input wd: date
+input wo: date
+
+move put: transfers
+  on wd
+  leg cash from jar to box amount amt
+
+move pin: transfers
+  on wo
+  leg cash from jar to old amount amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  amt = 100.00 PLN "s"
+  wd = window(2026-03-05, 2026-03-10) "s"
+  wo = window(2026-03-05, 2026-03-10) "s"
+  opening[jar] = 500.00 PLN at 2026-01-01 start "s"
+  opening[old] = 0.00 PLN at 2026-01-01 start "s"
+
+ask b_jar: bal(jar, 2026-03-31)
+ask b_jar_each: bal(jar, 2026-03-31) windows each
+=== expect
+b_jar: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (pin, put)
+  cut 2026-01-01
+b_jar_each [wo = 2026-03-05 .. 2026-03-10, wd = 2026-03-05 .. 2026-03-06]: refused: RUN-LIFESPAN put.cash moves into or out of box outside its lifespan
+  cut 2026-01-01
+b_jar_each [wo = 2026-03-05 .. 2026-03-06, wd = 2026-03-07]: refused: RUN-LIFESPAN put.cash moves into or out of box outside its lifespan
+  cut 2026-01-01
+b_jar_each [wo = 2026-03-05 .. 2026-03-06, wd = 2026-03-08 .. 2026-03-10]: 300.00 PLN
+  cut 2026-01-01
+b_jar_each [wo = 2026-03-07, wd = 2026-03-07 .. 2026-03-10]: refused: RUN-LIFESPAN pin.cash moves into or out of old outside its lifespan
+  cut 2026-01-01
+b_jar_each [wo = 2026-03-08 .. 2026-03-10, wd = 2026-03-07]: refused: RUN-LIFESPAN put.cash moves into or out of box outside its lifespan
+  cut 2026-01-01
+b_jar_each [wo = 2026-03-08 .. 2026-03-10, wd = 2026-03-08 .. 2026-03-10]: refused: RUN-LIFESPAN pin.cash moves into or out of old outside its lifespan
+  cut 2026-01-01

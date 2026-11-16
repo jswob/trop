@@ -7,6 +7,35 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.1.8 (the spec round after M2: 77 items, six rules)
+
+The spec patch tally 2.1.8 (`spec/CHANGES.md` 2.1.8-1 to 2.1.8-25), the lead's ruling of the plan on 2026-11-16 and
+the user's cut. Each new test was seen failing on the commit before. **1 492 tests, all pass** (1 379, 113 new, 21
+changed; `refcore_fast` byte-equal). One mechanism per rule:
+
+- **Refusals stop at readings (R11).** `walk.apply`'s `'reset'` arm ends a dated refusal as it ends a hole; a
+  refusal met on the way outranks a hole (`evaluate`'s business days, division, `kind_has_member`).
+- **What a version states (R12).** `same` lines by their version's cut and world (`model.same_seen`); an undecided
+  statement leaves one movement; a link applies only with the row that states it.
+- **Every clause on every form (R13).** One fan-out path (`ask`); `windows each` takes the unknown day its answer
+  carries (`evaluate.CARRY`, `Iv.carry`, `ask.each_next`), one at a time in the order the reads met them.
+- **Unit `any` (R14).** Readings keyed by their unit (`moves.any_unitless`, `Walk.apply_reading`, `units_held`).
+- **Partial (R15).** `evaluate.lin_passes`; `mreads.leg_lin`, `lin_fold` for the walked sums.
+- **Definitions (R16).** `mreads.modelled_account`; `mreads.after_day` for a reading `after m`; the keyed quantile's
+  level; `walk.base_legs`, a projection's legs by their own day.
+- **Singletons.** `moves.same_fulfils_differ` (S1); `resid`'s `<f> <value>` heads (S3); `ask.explain_instance`'s
+  `answered at` (S4); `evaluate.same_class`, `moves.and_list`, HOLE-SAME in id order (S6); `ask.each_limit` (S7);
+  `ask.explain_node`'s one set per line (S8); `moves.answer_booking`, a hole booking answered where the instance is
+  made (S9).
+- **The §4 groups.** `ask.print_line`'s pins (#161); `check.open_key`, `check3.m_check_any_priced`, the `to u` checks
+  as `RUN-DOMAIN` (#162, in part); `evaluate.carry_latest` (#169-c); `moves.agreed_body` (#169-e); item 77's
+  three-valued test, `walk.imp_three`, `imp_hole`, `window_lifespan`, `moves.m_window_class_depends`;
+  `walk.own_obs` for a walk-bound trace and the adjustments measured with the trace off (#169-g); `check.assign`'s
+  four-digit figure and `RUN-NONE` naming the row (#169-l); `gap` through `run_ends` (#159).
+- **The cut.** A version's `same` between an observed row and a planned instance of one model is `LOAD-SAME`.
+- **Left.** #162's three load-coded run sites T's texts reach and the ones no text reaches (`LoadAtRun`, `is_load`
+  stay); #169-e's `fixes/g3/h2` and `p6win`.
+
 ## tally 2.1.7 (the spec round after M1: 84 items, ten rules)
 
 The spec patch tally 2.1.7 (`spec/CHANGES.md` 2.1.7-1 to 2.1.7-30), the coordinator's picks P3–P32 under the user's

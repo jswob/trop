@@ -202,16 +202,18 @@ class Iv:
     day it is (tally 2.1.7 R3, L §4.4): set by a read (an input's row, a def's
     cell, a calendar's added entry), kept by a copy, None for a computed value,
     so only a copy is the same unknown (a window compared with its own name is
-    decided)."""
-    __slots__ = ('lo', 'hi', 'days', 'src', 'origin', 'name')
+    decided).  `carry` is the unknown days it was computed from, in the order the line's reads met them (tally
+    2.1.8 R13, L §4.4): None for a read, which carries its own (evaluate.iv_carry)."""
+    __slots__ = ('lo', 'hi', 'days', 'src', 'origin', 'name', 'carry')
 
-    def __init__(self, lo, hi, days=None, src=None, origin=None, name=None):
+    def __init__(self, lo, hi, days=None, src=None, origin=None, name=None, carry=None):
         self.lo = lo
         self.hi = hi
         self.days = days
         self.src = src
         self.origin = origin
         self.name = name
+        self.carry = carry
 
     def key(self):
         return ('iv', vkey(self.lo), vkey(self.hi), tuple(sorted(self.days)) if self.days else None)
@@ -223,13 +225,16 @@ class Iv:
 
 
 class Cal:
-    __slots__ = ('weekends', 'yearly', 'yfrom', 'added')
+    """A calendar; `at` is the place of the row that states it, so each row's added entries are unknown days of
+    their own (L §4.4: each entry of a list is a read of its own; tally 2.1.8 R13)."""
+    __slots__ = ('weekends', 'yearly', 'yfrom', 'added', 'at')
 
-    def __init__(self, weekends, yearly, yfrom, added):
+    def __init__(self, weekends, yearly, yfrom, added, at=None):
         self.weekends = weekends
         self.yearly = yearly
         self.yfrom = yfrom
         self.added = added
+        self.at = at
 
     def key(self):
         return ('cal', tuple(sorted(self.weekends)), tuple(self.yearly), self.yfrom,

@@ -1,0 +1,29 @@
+# tally 2.1.8 R14 (item 74), L §5.10, §8.4: gap reads the reading its instant gives; EUR's and PLN's both stand at
+# 2026-02-15 end, so it is refused RUN-DOMAIN, never one unit's gap picked in silence.
+=== m.tally
+model t
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind wallets: place any signed
+place broker: wallets lives 2025-01-01..
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  anchor broker
+  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
+  opening[broker] = 2.00 PLN at 2026-01-01 start "s"
+  stated[broker] = 4.00 EUR at 2026-02-15 end "s"
+  stated[broker] = 10.00 PLN at 2026-02-15 end "s"
+
+ask g: gap(broker, 2026-02-15)
+=== expect
+g: refused: RUN-DOMAIN gap of broker: its readings at 2026-02-15 end are in EUR and PLN
+  cut 2026-06-10

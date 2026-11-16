@@ -1,0 +1,29 @@
+# tally 2.1.8 R16 (#171, vector 5), L §5.11, §8.3: a level outside (0, 1] that load sees, the literal 0, is
+# LOAD-DOMAIN.
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+index ks = [a, b, c]
+input v[k in ks]: num
+input lv[k in ks]: num
+def lz: num = lv[a] - lv[a]
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  v[a] = 1 "s"
+  v[b] = 2 "s"
+  v[c] = 3 "s"
+  lv[a] = 1.01 "s"
+  lv[b] = 1 "s"
+  lv[c] = 0.5 "s"
+
+ask q0: quantile(v[k] for k in ks, 0)
+=== expect
+refused: LOAD-DOMAIN quantile has no meaning for the level 0 (m.tally:24)

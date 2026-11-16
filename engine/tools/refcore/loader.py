@@ -1681,11 +1681,13 @@ class Loader:
         """`same p = q` naming two rows or two movements, in a joint model's header or in a version: two rows are
         read together (HOLE-SAME where they disagree, a joint model's own row settles them), two movements count once
         (the walk).  Things, places and kinds were joined before parsing (joint.py)."""
-        from .joint import owner_of, shown
+        from .joint import owner_deep, owner_of, shown
         m = self.m
         m.same_moves = []
         m.same_owners = []      # the member whose version states each same_moves line ('' the joint's own)
-        m.same_rows = {}
+        m.same_versions = []    # the version that states each line (None: the header), read by its cut (R12)
+        m.same_rows = {}            # {a row's key: (its input, its keys, its text)} for every row a same line names
+        m.same_row_edges = []       # (one row's key, the other's, the version stating the line or None: the header)
         m.same_settle = {}
         pairs = [(l, r, m.header.loc, None) for l, r in m.header.sames] + [(it.l, it.r, it.loc, v) for v, it in m.sames]
         for l, r, loc, v in pairs:
@@ -1698,6 +1700,15 @@ class Loader:
             if v is not None and (a[0] == 'thing' or b[0] == 'thing'):
                 raise LoadError('LOAD-SAME', 'same %s = %s in a version names a kind or a thing' % (
                     shown(_txt_node(l)), shown(_txt_node(r))), loc)
+            if v is not None and a[0] == b[0] == 'move' and set((a[2], b[2])) == set(('row', 'instance')) and \
+                    owner_deep(a[1]) == owner_deep(b[1]) == owner_deep(v.id):
+                # L §6.1 Identities are written (tally 2.1.8, the user's cut): inside one model a row realises an
+                # instance by its fulfils (§5.19), so a version's same between the two is refused; a joint model's
+                # line between two members' movements, or a member's and its own, stands
+                row, inst = (l, r) if a[2] == 'row' else (r, l)
+                raise LoadError('LOAD-SAME', 'same %s = %s: an observed row and a planned instance of one model; '
+                                             'state fulfils on the row' % (shown(_txt_node(row)), shown(_txt_node(inst))),
+                                loc)
             if a[0] == 'other' or b[0] == 'other' or a[0] != b[0]:
                 wa = what.get(a[0]) or ('a %s' % a[1])
                 wb = what.get(b[0]) or ('a %s' % b[1])
@@ -1718,11 +1729,15 @@ class Loader:
                         shown(ta), shown(tb), T.show(ia.type), T.show(ib.type)), loc)
                 kka = (ia.id, tuple(_kv(k) for k in ka))
                 kkb = (ib.id, tuple(_kv(k) for k in kb))
-                m.same_rows[kka] = (ib, kb, ta, tb)
-                m.same_rows[kkb] = (ia, ka, tb, ta)
+                # L §6.1 l.1805: same is an equivalence, lines that share a side make one class (tally 2.1.8 S6,
+                # #187): each line is an edge, read by its version's cut (evaluate.same_class)
+                m.same_rows.setdefault(kka, (ia, ka, ta))
+                m.same_rows.setdefault(kkb, (ib, kb, tb))
+                m.same_row_edges.append((kka, kkb, v))
                 continue
             m.same_moves.append((a[1], b[1], loc))
             m.same_owners.append(owner_of(v.id) if v is not None else '')
+            m.same_versions.append(v)
         # a row of the joint model on a member's item states the value of two rows stated same ("the joint model
         # settles it with a version row of its own"); on any other member's item it would change an imported one
         if getattr(m, 'joint', None) is not None:
@@ -1904,11 +1919,11 @@ class Loader:
                 raise LoadError('LOAD-KEY', 'wrong number of keys for %s' % info.id, loc)
             kvs = self.move_keys(info, keys, loc)
             iid = '%s[%s]' % (info.id, ', '.join(key_text(k) for k in kvs)) if kvs else info.id
-            return ('move', iid)
+            return ('move', iid, 'instance')
         if kind == 'input' and info.observed:
             if len(keys) != 1 or keys[0].k not in ('name', 'key', 'num'):
                 raise LoadError('LOAD-KEY', 'an observation row is named by its id: %s[<id>]' % info.id, loc)
-            return ('move', '%s[%s]' % (info.id, resolve_text(keys[0])))
+            return ('move', '%s[%s]' % (info.id, resolve_text(keys[0])), 'row')
         if kind == 'input':
             if len(keys) != len(info.binds):
                 raise LoadError('LOAD-KEY', 'wrong number of keys for %s' % info.id, loc)
@@ -2278,7 +2293,8 @@ class Loader:
             gk = pattern_norm(r.pattern)
             if isinstance(inf, InputInfo) and inf.builtin and isinstance(getattr(r, 'val', None), Num):
                 gk = gk + (r.val.u,)
-            elif isinstance(inf, InputInfo) and inf.builtin and getattr(r, 'val', None) is NONE:
+            elif isinstance(inf, InputInfo) and inf.builtin and getattr(r, 'val', None) is NONE and \
+                    not reading_of_any(m, r):
                 nones.append((gk, r))
                 continue
             groups.setdefault(gk, []).append(r)
@@ -2286,6 +2302,14 @@ class Loader:
             # a balance reading of none states no balance (L §5.19); it is of the unit of the readings it may replace
             units = [g for g in groups if g[:-1] == gk and len(g) == len(gk) + 1]
             groups.setdefault(units[0] if len(units) == 1 else gk, []).append(r)
+        # at a place of unit any a row that states no unit (a hole, none) is a row for every unit there: with
+        # replace it replaces every unit's reading at its instant (L §5.10; tally 2.1.8 R14, P25 reopened)
+        wider = {}
+        if isinstance(inf, InputInfo) and inf.builtin:
+            for gk, rs in groups.items():
+                if rs and reading_of_any(m, rs[0]) and not isinstance(getattr(rs[0], 'val', None), Num):
+                    wider[gk] = [o for g2, rs2 in groups.items() if g2[:-1] == gk and len(g2) == len(gk) + 1
+                                 for o in rs2]
         jo = getattr(m, 'joint', None) is not None
         if jo:
             from .joint import owner_of
@@ -2341,7 +2365,8 @@ class Loader:
                 # LOAD-REPLACE "in a scenario, no base row at those keys either")
                 if r.replace and not any((known_first(o.known) < known_first(r.known) or
                                           row_layer(m, o) < row_layer(m, r)) and ov(o, r) and not owners_differ(o, r)
-                                         for o in rs if o is not r and row_layer(m, o) <= row_layer(m, r)):
+                                         for o in rs + wider.get(pat, [])
+                                         if o is not r and row_layer(m, o) <= row_layer(m, r)):
                     raise LoadError('LOAD-REPLACE', 'replace %s%s: no earlier row to replace' % (inf.id, r.keys_text()),
                                     r.loc)
         # ties between rows of different patterns (L §4.6 step 4)
@@ -2585,6 +2610,15 @@ def narrower(m, inf, pa, pb):
         if r == 'in':
             strict = True
     return strict
+
+
+def reading_of_any(m, r):
+    """Whether a row is a balance reading of a place of unit any (L §5.10)."""
+    try:
+        place = r.pattern[0][1].name
+        return m.place_unit(m.things[place]) == 'any'
+    except (AttributeError, IndexError, KeyError, TypeError):
+        return False
 
 
 def row_layer(m, r):
@@ -3036,7 +3070,7 @@ def convert_value(m, node, ty, loc, factor, target, binds=None, pattern=None, al
                 added.append(('window', a.a, a.b))
             else:
                 added.append(('oneof', frozenset(a.days)))
-        return Cal(tuple(node.weekends), tuple(node.yearly), node.yfrom, tuple(added))
+        return Cal(tuple(node.weekends), tuple(node.yearly), node.yfrom, tuple(added), at=repr(getattr(node, 'loc', None)))
     if tk == 'key' and ty.ix in m.kinds and ty.ix in m.kinds['events'].subtree(m) and k in ('index', 'name'):
         # a key of an event kind is a movement (L §3.1 `key K`, "a thing of kind K"; L §5.7; L §2.3 field: a ref): an
         # observed row `kb[k03]` or a move's instance, kept by its id and read as that movement (writer 11, the

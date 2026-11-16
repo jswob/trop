@@ -1,0 +1,62 @@
+# L §4.4, §5.18 (tally 2.1.8 R13, #186): a ledger under windows each whose lines differ by sub-window prints one
+# block per run of sub-windows that agree, each under its head, then its lines; one unlabelled block where all
+# agree. `one` lands on 2026-03-30, 2026-03-31 or 2026-04-01: April's ledger agrees over the first two days (q), and
+# February's over all three (q2). 2.1.7's refcore printed the first day's lines unlabelled; the engine stopped "not
+# built".
+=== m.tally
+model pw
+  tally 2
+  on 2026-04-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input dk: date
+input dd: int
+
+move one: transfers
+  on dk
+  leg cash from world to konto amount amt
+
+move pay[m in months]: transfers
+  on day_of(m, dd)
+  leg cash from world to konto amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "s"
+  dd = 10 "s"
+  dk = window(2026-03-30, 2026-04-01) "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+
+ask q: residuals konto 2026-04 windows each
+ask q2: residuals konto 2026-02 windows each
+
+version st
+  cite s
+  governs 2026-02..2026-04
+  known 2026-04-01
+  covers konto
+  bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 12.00 PLN) "r1"
+=== expect
+q [dk = 2026-03-30 .. 2026-03-31]: residuals konto 2026-04
+  2026-04 move pay: model 10.00 PLN, observed 0.00 PLN, difference -10.00 PLN
+    expected but missing pay[2026-04] on 2026-04-10: model 10.00 PLN
+  cut 2026-04-25
+q [dk = 2026-04-01]: residuals konto 2026-04
+  2026-04 move one: model 10.00 PLN, observed 0.00 PLN, difference -10.00 PLN
+    expected but missing one on 2026-04-01: model 10.00 PLN
+  2026-04 move pay: model 10.00 PLN, observed 0.00 PLN, difference -10.00 PLN
+    expected but missing pay[2026-04] on 2026-04-10: model 10.00 PLN
+  cut 2026-04-25
+q2: residuals konto 2026-02
+  2026-02 move pay: model 10.00 PLN, observed 0.00 PLN, difference -10.00 PLN
+    expected but missing pay[2026-02] on 2026-02-10: model 10.00 PLN
+  cut 2026-04-25

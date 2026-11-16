@@ -60,7 +60,6 @@ a: 14
               [22] tot = 2, law date 2026-06-30
                   rule base: won
                     (v:r: see [13])
-                    (v:r: see [13])
   pinned: r[*] = 7
   law date 2026-06-30, cut 2026-06-30
 w: 10
@@ -74,7 +73,6 @@ w: 10
   [6] outside the pins: 2
     [7] tot = 2, law date 2026-06-30
         rule base: won
-          (v:r: see [5])
           (v:r: see [5])
   pinned: r[k1] = 9
   law date 2026-06-30, cut 2026-06-30

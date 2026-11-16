@@ -214,6 +214,34 @@ def cross_stack_diff(aid, a, realities, chains, askers, mid):
     return asker0.diff_print(a, axes, cells, ctx)
 
 
+def cross_world_forks(realities):
+    """L §5.5 (LOAD-FORKS at 64, counted at load) with L §5.18 Every clause stands on every form (tally 2.1.8 R13,
+    #169-k): a diff's cells are read in its two worlds, so the axes it reaches are those it reaches in either; each
+    world's own load counts its side only. The LoadError of the first base ask past 64 combinations, or None."""
+    from .errors import LoadError
+    base = realities.get(None)
+    if base is None:
+        return None
+    for a in base.asks:
+        dw = getattr(a, 'diff', None)
+        if not dw:
+            continue
+        axes = set(getattr(a, '_axes', ()))
+        for w in (dw[2], dw[3]):
+            r = realities.get(w)
+            if r is None:
+                continue
+            for b in r.asks:
+                if b.id == a.id:
+                    axes |= set(getattr(b, '_axes', ()))
+        n = 1
+        for ax in axes:
+            n *= len(base.axes[ax].options)
+        if n > 64:
+            return LoadError('LOAD-FORKS', 'ask %s reaches %d axis combinations; the cap is 64' % (a.id, n), a.loc)
+    return None
+
+
 def run_worlds(heads, ids=None, loader=None, srcs=None):
     """A reality with scenarios (L §6.4): the base loads alone, and each scenario with the base and the scenarios it
     stacks on, so a load refusal in a scenario file refuses only that scenario and those over it.  Each ask is
@@ -287,6 +315,9 @@ def run_worlds(heads, ids=None, loader=None, srcs=None):
             if getattr(e, 'base_file', False):
                 return ['refused: %s' % e.text()]
             errs[sid] = e
+    forks = cross_world_forks(realities)
+    if forks is not None:
+        return ['refused: %s' % forks.text()]
     if ids:
         # E §11 (tally 2.1.3, issue #58): after load (the base's refusal has printed above; a scenario's refuses only
         # that scenario, L §8), the first id of the request that names no ask of any world, no member's ask (L §6.1)

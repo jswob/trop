@@ -1,0 +1,37 @@
+# tally 2.1.8 R15 (#184), L §5.18: bal(x, d) from t is a balance, linear as the plain one is: the projection's
+# start (9 999.00 PLN, its base's balance at t) is the known part, the February leg's hole its term.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input dom: int
+input hamt[m in months]: money PLN
+place k2: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+move hm[m in months]: transfers
+  on day_of(m, dom)
+  leg cash from k2 to world amount hamt[m]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  dom = 5 "s"
+  hamt[2026-01] = 1.00 PLN "s"
+  hamt[2026-02] = ?"how much in Feb" "s"
+  hamt[2026-03..2026-12] = 1.00 PLN "s"
+  opening[k2] = 10 000.00 PLN at 2026-01-01 start "s"
+
+ask p4: bal(k2, 2026-02-28) from 2026-01-15 partial
+ask p4b: bal(k2, 2026-03-31) from 2026-01-15 - bal(k2, 2026-01-31) partial
+=== expect
+p4: 9 999.00 PLN + -1 × ?"how much in Feb" (hamt[2026-02])
+  cut 2026-01-01
+p4b: -1.00 PLN + -1 × ?"how much in Feb" (hamt[2026-02])
+  cut 2026-01-01

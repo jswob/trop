@@ -1,0 +1,43 @@
+# L §6.1 Identities are written (tally 2.1.8, the user's cut, plan §13; #187): a version's same between an observed row
+# and a move instance of that model is refused at load (LOAD-SAME): a row realises an instance by its fulfils (§5.19).
+# Load refuses it whatever the asks (R5). 2.1.7's refcore booked the pair as one movement.
+=== m.tally
+model hh
+  tally 2
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bk "bank"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input dom: int
+
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to world amount amt
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "plan"
+  dom = 10 "plan"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "saldo"
+
+version st
+  cite bk
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from konto to world amount 100.00 PLN) "line 1"
+  same bank[r1] = pay[2026-03]
+
+ask b: bal(konto, 2026-03-31)
+=== expect
+refused: LOAD-SAME same bank[r1] = pay[2026-03]: an observed row and a planned instance of one model; state fulfils on the row (m.tally:35)

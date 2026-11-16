@@ -1,0 +1,73 @@
+# tally 2.1.8 §4 (#179), E §5 step 1 and step 2: a settlement's hole booking is answered like any instance's; only
+# steps 2-3 leave it unmeasured. v2 (known 1 March) raises pay[2026-01] by 50.00 PLN; back settles it at a.change *
+# share, and share has no row until v3 (known 1 April): at cut 2026-06-30 back books 50.00 PLN (f1), the adjustment is
+# settled and the balance of 31 March is 1 650.00 PLN (b1); at cut 2026-03-15 the hole stands (b0, f0). 2.1.7's
+# refcore (and the M2 engine) never answered a settlement's hole.
+=== m.tally
+model hh
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input amt[m in months]: money PLN
+input share: num
+input dom: int
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  leg cash from konto to world amount amt[m]
+
+move back[a in adjustments over ..]: transfers
+  on a.day
+  fulfils a
+  leg cash from konto to world amount a.change * share
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  dom = 10 "s"
+  amt[*] = 100.00 PLN "s"
+  opening[konto] = 2 000.00 PLN at 2026-01-01 start "s"
+
+version v2
+  cite s
+  governs always
+  known 2026-03-01
+  amt[2026-01] = 150.00 PLN "s"
+
+version v3
+  cite s
+  governs always
+  known 2026-04-01
+  share = 1 "s"
+
+ask b1: bal(konto, 2026-03-31)
+ask b0: bal(konto, 2026-03-31) as known 2026-03-15
+ask f1: flows(back, 2026-03-01 .. 2026-03-31)
+ask f0: flows(back, 2026-03-01 .. 2026-03-31) as known 2026-03-15
+=== expect
+b0: ?"share: no value" (share)
+  adjustment: pay[2026-01] by 50.00 PLN on 2026-03-01 (version v2), remaining ?"share: no value" (share)
+  unfulfilled: back[adjustments[pay[2026-01].cash, v2]]
+  unfulfilled: pay[2026-01]
+  unfulfilled: pay[2026-02]
+  unfulfilled: pay[2026-03]
+  cut 2026-03-15
+b1: 1 650.00 PLN
+  unfulfilled: back[adjustments[pay[2026-01].cash, v2]]
+  unfulfilled: pay[2026-01]
+  unfulfilled: pay[2026-02]
+  unfulfilled: pay[2026-03]
+  cut 2026-06-30
+f0: ?"share: no value" (share)
+  unfulfilled: back[adjustments[pay[2026-01].cash, v2]]
+  cut 2026-03-15
+f1: 50.00 PLN
+  unfulfilled: back[adjustments[pay[2026-01].cash, v2]]
+  cut 2026-06-30

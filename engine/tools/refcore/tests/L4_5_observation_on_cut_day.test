@@ -1,0 +1,49 @@
+# L §4.5 Whatever a version states is read as its rows are, L §5.19 Coverage, E §4.1 step 3 (tally 2.1.8 R12, #182; the
+# plan's c4): an observation dated on K or later is seen but not applied, and so is the link it states: the plan
+# instance it fulfils stays booked. With on = 2026-04-10, pay[2026-04] (1 000.00 PLN on the 10th) is booked, the row
+# of that day isn't: konto 2 000.00 PLN on 04-30 (b), flows(pay) 1 000.00 PLN (f), one movement (c). 2.1.7's refcore
+# took the instance out of the plan for the row and booked neither: 1 000.00 and 950.00 PLN.
+=== m.tally
+model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input dom: int
+
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  leg cash from world to konto amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 1000.00 PLN "s"
+  dom = 10 "s"
+  opening[konto] = 0.00 PLN at 2026-03-01 start "s"
+
+version st
+  cite s
+  governs 2026-04
+  known 2026-04-10
+  bank[r1] = (on: 2026-04-10, kind: transfers, leg cash from world to konto amount 950.00 PLN, fulfils: pay[2026-04]) "r"
+
+ask b: bal(konto, 2026-04-30), bal(konto, 2026-03-31)
+ask f: flows(pay, 2026-04-01 .. 2026-04-30)
+ask c: count(t in transfers over 2026-04)
+=== expect
+b: (2 000.00 PLN, 1 000.00 PLN)
+  unfulfilled: pay[2026-03]
+  cut 2026-04-10
+c: 1
+  cut 2026-04-10
+f: 1 000.00 PLN
+  cut 2026-04-10

@@ -228,6 +228,10 @@ def m_movement_field(self, n, t, sc):
     for ld in legs:
         if ld.name == name:
             n._r = ('mvfield', 'leg', name)
+            if sc.item is not None and sc.item[0] == 'ask':
+                # an ask's read of a leg reads the walk that books it, and so the axes the walk reads (L §5.5
+                # Fan-out; tally 2.1.8 R13, #169-k): mreads.m_mv_field
+                self.edge(sc, ('balances',), 'leg')
             return self.leg_type(ld)
     for a, at in m.kind_attrs(kid):
         if a == name:
@@ -583,6 +587,7 @@ def m_t_bal(self, n, sc, expect):
         raise LoadError('LOAD-PARSE', 'cannot parse: bal(x) with no day takes no clause', n.loc)
     if n.modelled:
         n._form = 'modelled'
+        self.modelled_marks.setdefault(sc.item, set()).add(target)
     elif n.proj and 'frm' in n.proj:
         n._form = 'proj'
         self.check_proj(n, sc, target)
@@ -707,6 +712,10 @@ def m_t_low(self, n, sc, expect):
         n._form = 'day'
         self.mark(sc, 'bal', target)
         n._ctgt = ('bal', target)
+        if n.proj and n.proj.get('windows') == 'each':
+            # L §4.4 "for that read": a line that reaches a low stating windows each splits by the windows it meets
+            # (ask.Asker), as for a projection's (tally 2.1.8 R13, #169: P11's low without from)
+            self.m.read_each = True
     self.edge(sc, ('balances',), 'bal')
     return ut
 
@@ -1153,8 +1162,10 @@ def m_check_priced(self):
         fixed = pu not in (None, 'any', 'one')
         if info.binds:
             dom = info.binds[0].dom
-            if dom[0] == 'kind' and not m.thing_in(name, dom[1]) and fixed and \
-                    not (pu in m.things and m.thing_in(pu, dom[1])):
+            if dom[0] in ('kind', 'index') and fixed and not self.price_key_holds(dom, name) and \
+                    not self.price_key_holds(dom, pu):
+                # tally 2.1.8 §4 (#162, L §8.4 Load refuses what load sees): an index-keyed price as a kind-keyed one
+                # (a place of unit any: check_any_priced, once the moves' legs are read)
                 faults.append(LoadError('LOAD-KEY', '%s is priced by %s, keyed by %s, which holds neither %s nor its '
                                         'unit' % (name, pid, dom[1], name), pn.loc))
                 continue
@@ -1163,6 +1174,59 @@ def m_check_priced(self):
                 name, pn._cur, name, pn._cur, pn._per, pn._cur, pu), pn.loc))
     if faults:
         raise min(faults, key=lambda e: _loc_order(e.loc))
+
+
+def m_check_any_priced(self):
+    """A place of unit any priced by an input keyed by a kind or an index: each unit a move's written leg brings into
+    or takes out of it must be a key of the price (LOAD-KEY at load; tally 2.1.8 §4, #162's comment, P48: L §8.4 Load
+    refuses what load sees, the written leg). Made after the moves are checked, which resolve the legs' places."""
+    m = self.m
+    faults = []
+    for name in sorted(m.things):
+        th = m.things[name]
+        if m.place_unit(th) != 'any':
+            continue
+        try:
+            pn = m.price_of(th)
+        except Unspecified:
+            continue
+        if pn is None or getattr(pn, '_expr', None) is not None or getattr(pn, '_r', None) is None:
+            continue
+        kind, pid = pn._r
+        info = m.inputs[pid] if kind == 'input' else m.defs[pid]
+        if not info.binds or info.binds[0].dom[0] not in ('kind', 'index'):
+            continue
+        dom = info.binds[0].dom
+        if self.price_key_holds(dom, name):
+            continue
+        bad = [u for u in self.written_units(name) if not self.price_key_holds(dom, u)]
+        if bad:
+            faults.append(LoadError('LOAD-KEY', '%s is priced by %s, keyed by %s, which holds neither %s nor %s' % (
+                name, pid, dom[1], name, bad[0]), pn.loc))
+    if faults:
+        raise min(faults, key=lambda e: _loc_order(e.loc))
+
+
+def m_price_key_holds(self, dom, x):
+    """Whether a price input's first key position (a kind or an index) holds x, a place's id or a unit."""
+    m = self.m
+    if dom[0] == 'kind':
+        return x in m.things and m.thing_in(x, dom[1])
+    ix = m.indexes.get(dom[1])
+    return ix is not None and x in (ix.texts or ())
+
+
+def m_written_units(self, place):
+    """The units the moves' legs written into or out of a place state (a leg whose kind declares its unit), sorted."""
+    m = self.m
+    out = set()
+    for qid in sorted(m.moves):
+        for ln, d in m.moves[qid].legs:
+            if d is None or d.unit in (None, 'any') or d.unit in m.kinds:
+                continue
+            if place in (self.literal_place(ln.frm), self.literal_place(ln.to)):
+                out.add(d.unit)
+    return sorted(out)
 
 
 def _loc_order(loc):
@@ -1435,11 +1499,30 @@ def m_check_moves_graph(self):
         memo[item] = out
         return out
     self.reached_marks = reached
+
+    def reached_modelled(item):
+        # the bal(x, d) modelled reads an item reaches through defs, fills and its day (L §5.19; tally 2.1.8 R16)
+        out, seen, stack = set(), set(), [item]
+        while stack:
+            x = stack.pop()
+            if x in seen:
+                continue
+            seen.add(x)
+            out |= self.modelled_marks.get(x, set())
+            for t in E.get(x, {}):
+                if t[0] in ('def', 'fill', 'moveon'):
+                    stack.append(t)
+        return out
     # LOAD-READS (L §5.14.1, E §3.1 step 7)
     for qid in sorted(m.moves):
         mi = m.moves[qid]
-        rs = reached(('move', qid))
         loc = mi.decl.loc
+        mm = reached_modelled(('move', qid)) | reached_modelled(('moveon', qid))
+        if mm:
+            # the model's account exists after the walk, so no movement reads it (L §5.19; tally 2.1.8 R16, #176)
+            raise LoadError('LOAD-READS', '%s reaches bal(%s) modelled' % (qid, _tname(sorted(mm, key=repr)[0])),
+                            loc)
+        rs = reached(('move', qid))
         if not mi.decision:
             if rs:
                 w, tgt = sorted(rs, key=repr)[0]
@@ -2058,6 +2141,27 @@ def m_check_after_readings(self):
             if (mv is not None and not mv.decision) or obs:
                 raise LoadError('LOAD-ORDER', '%s%s after %s: %s is a plan or an observation' % (
                     iid, r.keys_text(), _txt(node), _txt(node)), r.loc)
+            if mv is not None and node.k == 'index':
+                # a key load sees that isn't a key of m's index (L §4.6, §8.3 R5; tally 2.1.8 R16, #175)
+                for kn, b in zip(node.keys, mv.binds):
+                    kv = _after_key(kn)
+                    dom = getattr(b, 'dom', None)
+                    if kv is not None and isinstance(dom, tuple) and dom[0] == 'index' and dom[1] in m.indexes \
+                            and m.indexes[dom[1]].pos(kv) is None:
+                        raise LoadError('LOAD-KEY', '%s%s after %s: %s is not a key of %s' % (
+                            iid, r.keys_text(), _txt(node), _txt(kn), dom[1]), r.loc)
+
+
+def _after_key(kn):
+    """A literal key of a reading's `after m[k]` as a key value, or None where load doesn't see it."""
+    from .dates import month_period, quarter_period, year_period
+    if kn.k == 'month' and getattr(kn, '_r', None) is None:
+        return month_period(*kn.v)
+    if kn.k == 'quarter' and getattr(kn, '_r', None) is None:
+        return quarter_period(*kn.v)
+    if kn.k == 'date':
+        return kn.v
+    return None
 
 
 def m_check_proj_seen(self):

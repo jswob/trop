@@ -1,0 +1,68 @@
+# L §8 Refusals outrank holes, L §8.1 (tally 2.1.8 R11, #169-a; T's fixes/g1/edge_hole, g14/past_64_counts): n business
+# days move at least n days, so add_business past the day range is refused (RUN-LIMIT) whatever a hole on the way
+# says (h_back, h_fwd), as over a calendar with no hole (s_back, s_fwd); a shift that lands inside the range keeps the
+# hole it meets (h_in2) or answers (h_in). 2.1.7's refcore printed the calendar's hole for h_back and h_fwd.
+=== m.tally
+model shift_hole
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+
+input d: date
+
+input cal: calendar
+
+input cal_h: calendar
+
+input nb: int
+
+input nf: int
+
+input n5: int
+
+input n200: int
+
+ask h_back: add_business(d, nb, cal_h)
+
+ask h_fwd: add_business(d, nf, cal_h)
+
+ask s_back: add_business(d, nb, cal)
+
+ask s_fwd: add_business(d, nf, cal)
+
+ask h_in: add_business(d, n5, cal_h)
+
+ask h_in2: add_business(d, n200, cal_h)
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  d = 2026-06-01
+  cal = calendar(weekends [sat, sun])
+  nb = -739768
+  nf = 2912292
+  n5 = 5
+  n200 = 200
+
+version v2026
+  cite plan
+  governs 2026
+  known 2026-01-01
+  cal_h = calendar(weekends [sat, sun])
+=== expect
+h_back: refused: RUN-LIMIT a day comes before 0001-01-01
+  cut 2026-12-31
+h_fwd: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 2026-12-31
+h_in: 2026-06-08
+  cut 2026-12-31
+h_in2: ?"calendar cal_h doesn't cover 2027" (cal_h)
+  cut 2026-12-31
+s_back: refused: RUN-LIMIT a day comes before 0001-01-01
+  cut 2026-12-31
+s_fwd: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 2026-12-31

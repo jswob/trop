@@ -1,0 +1,56 @@
+# tally 2.1.8 R16 (#175, p6pre), L §4.6: m before S: the reading is a fact the walk doesn't apply (no pad, no
+# anchor; konto as without it), and last sees it on m's day: 90.00 PLN. 2.1.7 dropped it.
+=== m.tally
+model t
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input keep: money PLN
+input d_save: date
+input go: bool
+
+move save: transfers
+  on d_save
+  reads konto
+  when go
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+move mm[m in months]: transfers
+  on end_of(m) - 1 day
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  d_save = 2026-02-10 "s"
+  go = true "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+version st
+  cite s
+  governs 2026-03..2026-05
+  known 2026-01-02
+  anchor konto
+  stated[konto] = 90.00 PLN after save "saldo"
+
+ask b: bal(konto, 2026-03-10), bal(konto, 2026-03-20), bal(konto, 2026-04-20), bal(konto, 2026-05-31)
+ask g: last(stated[konto], 2026-05-31)
+=== expect
+b: (1 050.00 PLN, 1 050.00 PLN, 100.00 PLN, 100.00 PLN)
+  unfulfilled: mm[2026-03]
+  cut 2026-06-10
+g: 90.00 PLN
+  held: stated[konto] = 90.00 PLN (st), read for 2026-05-31
+  cut 2026-06-10
+warning: WARN-UNREAD place world is read by nothing

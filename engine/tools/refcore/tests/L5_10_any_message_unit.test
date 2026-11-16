@@ -1,0 +1,35 @@
+# tally 2.1.8 R14 (#172), L §5.10: a message names the unit of the read that met it: PLN's reading breaks min 0,
+# and RUN-PLACE names PLN's balance though EUR sorts first; EUR's read is not refused.
+=== m.tally
+model t
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+unit USD: currency minor 0.01
+kind wallets: place any min 0
+place broker: wallets lives 2025-01-01..
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  anchor broker
+  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
+  opening[broker] = 2.00 PLN at 2026-01-01 start "s"
+  stated[broker] = 4.00 EUR at 2026-02-15 end "s"
+  stated[broker] = -3.00 PLN at 2026-02-15 end "s"
+
+ask a: bal(broker, EUR, 2026-02-20)
+ask b: bal(broker, PLN, 2026-02-20)
+=== expect
+a: 4.00 EUR
+  anchor: broker 2026-02-15 end, stated 4.00 EUR, difference 3.00 EUR
+  cut 2026-06-10
+b: refused: RUN-PLACE broker is -3.00 PLN after its reading at 2026-02-15 end
+  anchor: broker 2026-02-15 end, stated -3.00 PLN, difference -5.00 PLN
+  cut 2026-06-10

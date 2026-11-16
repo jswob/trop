@@ -23,6 +23,7 @@ def install(E):
     E.ask_paths = None
     E.path_cache = None
     E.each_met = None
+    E.cal_met_days = {}
 
 
 def _ev():
@@ -143,7 +144,7 @@ def m_round_real(self, x, to, env, ctx, uo, what, encd_hull=None):
     the exact values over the arguments' enclosures, when an argument is an interval."""
     if to is None:
         if x.ex is None:
-            raise refuse('LOAD-TO', '%s needs to u' % what)
+            raise refuse('RUN-DOMAIN', '%s needs to u' % what)
         return Num(x.ex, uo, enc=encd_hull)
     step = self.step_value(to.unit, env, ctx, uo)
     if isinstance(step, Hole):
@@ -515,7 +516,7 @@ def m_sample_read(self, info, keys, ctx):
             if mr.ex is not None:
                 return Num(mr.ex, d.unit)
             if d.step is None:
-                raise refuse('LOAD-TO', 'random at mean of %s needs its distribution\'s to u' % org)
+                raise refuse('RUN-DOMAIN', 'random at mean of %s needs its distribution\'s to u' % org)
             v, _ = R.round_to(mr, d.step, 'mean of %s' % d.fn)
             return Num(v, d.unit, enc=widened(v, mr, d.step))
         v, enc = D.quantile(d, r[2], step=d.step)
@@ -682,7 +683,7 @@ def m_dist_value_quantile(self, n, env, ctx, to):
             D._qcheck(d, q.q)
             return Num(d.params[0] + q.q * (d.params[1] - d.params[0]), d.unit)
         if to is None:
-            raise refuse('LOAD-TO', 'quantile of %s needs to u' % d.fn)
+            raise refuse('RUN-DOMAIN', 'quantile of %s needs to u' % d.fn)
         step = self.step_value(to.unit, env, ctx, d.unit)
         if isinstance(step, Hole):
             return step
@@ -769,7 +770,7 @@ def m_closed_query(self, n, env, ctx, to=None):
                 subs[id(x)] = Num(mr.ex, d.unit)
             else:
                 if d.step is None:
-                    raise refuse('LOAD-TO', 'mean of %s needs to u' % d.fn)
+                    raise refuse('RUN-DOMAIN', 'mean of %s needs to u' % d.fn)
                 v, _ = R.round_to(mr, d.step, 'mean of %s' % d.fn)
                 subs[id(x)] = Num(v, d.unit, enc=widened(v, mr, d.step))
         v = self.ev_sub(arg, env, ctx, subs)
@@ -817,7 +818,7 @@ def m_closed_query(self, n, env, ctx, to=None):
                 Q = Num(d.params[0] + qq * (d.params[1] - d.params[0]), d.unit)
             else:
                 if step is None:
-                    raise refuse('LOAD-TO', 'quantile of %s needs to u' % d.fn)
+                    raise refuse('RUN-DOMAIN', 'quantile of %s needs to u' % d.fn)
                 v, enc = D.quantile(d, qq, step)
                 x0 = R.const(enc[0]) if enc is not None and enc[0] == enc[1] else None
                 Q = Num(v, d.unit, enc=widened(v, x0, step) if x0 is not None else (v - step / 2, v + step / 2))
@@ -867,7 +868,7 @@ def m_closed_query(self, n, env, ctx, to=None):
             op = flip[op]
     r = self.prob(d, op, t, 'share')
     if r.ex is None and to is None:
-        raise refuse('LOAD-TO', 'share of %s needs to u (a cdf of %s needs to)' % (d.fn, d.fn))
+        raise refuse('RUN-DOMAIN', 'share of %s needs to u (a cdf of %s needs to)' % (d.fn, d.fn))
     return self.round_real(r, to, env, ctx, (), 'share'), None
 
 
