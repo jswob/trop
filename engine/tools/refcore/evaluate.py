@@ -271,16 +271,18 @@ class Engine:
             raise NotYet('evaluation of %s' % n.k, n.loc)
         try:
             v = f(n, env, ctx)
-            if ctx.partial and isinstance(v, Hole) and v.lin is not False and plain_node(n):
-                # a rounding, min, max, a band or a comparison meeting a hole makes a plain hole (L §5.18)
+            if ctx.partial and isinstance(v, Hole) and v.lin is not False and \
+                    (plain_node(n) or (v.lin is None and not lin_passes(n))):
+                # L §5.18 (tally 2.1.8 R15): a value is linear only through what adds, scales by a known number or
+                # passes one on unchanged; a hole met any other way makes the value a plain hole naming every hole
                 return Hole(v.qs, False)
             return v
         except HoleSignal as h:
             # one value needed from an undecided interval: the operation is the hole (L §4.4)
-            return h.hole
+            return Hole(h.hole.qs, False) if ctx.partial else h.hole
         except WindowUndecided as w:
             # something known in a window that holds the cut, with no windows clause: HOLE-IMPRECISE (L §4.5)
-            return w.hole()
+            return Hole(w.hole().qs, False) if ctx.partial else w.hole()
 
     def e_paren(self, n, env, ctx):
         return self.ev(n.e, env, ctx)
@@ -762,7 +764,8 @@ class Engine:
         info = self.m.inputs[iid] if kind == 'input' else self.m.defs[iid]
         keys, hole = self.key_values(info, keynodes, n._convs, env, ctx)
         if hole is not None:
-            return hole
+            # a key that is a hole: the value is no linear form of it (L §5.18; tally 2.1.8 R15)
+            return Hole(hole.qs, False) if ctx.partial else hole
         if getattr(n, '_sample', False):
             return self.sample_read(info, keys, ctx)
         bw = getattr(n, '_world', None)
@@ -3284,6 +3287,7 @@ class Engine:
             return self.agg_anyall(n, mem, ctx)
         terms = []
         holes = []
+        picked = True       # every member picked by a known where (L §5.18; tally 2.1.8 R15)
         snap = self.trace_snap() if fn in ('min', 'max', 'argmin', 'argmax') and n.term is not None else None
         for e2, st in mem:
             if n.term is None:
@@ -3293,6 +3297,7 @@ class Engine:
             if isinstance(st, Hole):
                 if fn == 'sum' and isinstance(t, Num) and t.q == 0:
                     continue
+                picked = False
                 holes.append(st)
                 if isinstance(t, Hole):
                     holes.append(t)
@@ -3307,23 +3312,24 @@ class Engine:
             if holes:
                 return merge(*holes)
             return Int(sum(1 for e2, t in terms if t is True))
+        if fn == 'sum' and holes and ctx.partial:
+            # L §5.18 (tally 2.1.8 R15): a sum is linear in its terms; a member's where that is a hole makes the plain
+            # hole
+            acc = self.zero_of(n._t)
+            for e2, t in terms:
+                acc = arith('+', acc, t, n._t, n._t, n.term._t)
+            lin = (acc, ())
+            ok = picked
+            for h in holes:
+                lh = lin_of(h)
+                if lh is None:
+                    ok = False
+                else:
+                    lin = lin_add(lin, lh)
+            qs = set().union(*[h.qs for h in holes])
+            return Hole(qs, lin if ok else False)
         if fn == 'sum':
             if holes:
-                if ctx.partial:
-                    acc = self.zero_of(n._t)
-                    for e2, t in terms:
-                        acc = arith('+', acc, t, n._t, n._t, n.term._t)
-                    out = Hole(set())
-                    lin = (acc, ())
-                    ok = True
-                    for h in holes:
-                        lh = lin_of(h)
-                        if lh is None:
-                            ok = False
-                        else:
-                            lin = lin_add(lin, lh)
-                    qs = set().union(*[h.qs for h in holes])
-                    return Hole(qs, lin if ok else False)
                 return merge(*holes)
             acc = self.zero_of(n._t)
             for e2, t in terms:
@@ -3702,6 +3708,17 @@ class Engine:
             if t is NONE:
                 raise refuse('RUN-NONE', 'a term of %s is none here' % n.fn)
             terms.append(t)
+        if holes and ctx.partial and n.fn == 'mean' and not any(isinstance(st, Hole) for e2, st in mem):
+            # L §5.18 (tally 2.1.8 R15): a mean over a known count is its sum scaled by the count, linear in its terms
+            lin = (None, ())
+            for t in terms:
+                lin = lin_add(lin, (t, ()))
+            for h in holes:
+                lh = lin_of(h)
+                if lh is None:
+                    return merge(*holes)
+                lin = lin_add(lin, lh)
+            return Hole(set().union(*[h.qs for h in holes]), lin_scale(lin, Num(len(mem), (), isint=True), div=True))
         if holes:
             return merge(*holes)
         if not terms:
@@ -4980,6 +4997,18 @@ _PLAIN_CALLS = frozenset(('round', 'min', 'max', 'abs', 'pow', 'marginal', 'band
 _PLAIN_AGGS = frozenset(('min', 'max', 'argmin', 'argmax', 'count', 'all', 'any'))
 
 
+def lin_passes(n):
+    """The forms that pass a value on unchanged (L §5.18; tally 2.1.8 R15): a read of a number (an input, a def, a
+    binding), a field, a taken branch, a carried read. Any other form returns its own linear form or none."""
+    k = n.k
+    if k in ('paren', 'if', 'lastx'):
+        return True
+    if k in ('name', 'index', 'field'):
+        t = getattr(n, '_t', None)
+        return t is not None and t.k in ('money', 'num', 'int', 'flex', 'rate')
+    return False
+
+
 def plain_node(n):
     k = n.k
     if k in ('cmp', 'not', 'and', 'or', 'in'):
@@ -5037,10 +5066,15 @@ def lin_scale(l, s, div=False):
                 raise refuse('RUN-DIV', 'division by zero')
             return arith('/', x, s, None, None, None)
         return arith('*', x, s, None, None, None)
-    k2 = None if k is None else sc(k)
-    if k is not None and k.money and s.isint and not div:
-        k2 = Num(k2.q, k.u, money=True)
-    return (k2, tuple((atom, sc(c)) for atom, c in ts))
+    def money(x, y):
+        # money times a whole number stays money, printed with its minor unit's digits (L §2.4; tally 2.1.8 R9, the
+        # gate's rest 3): a known part and a coefficient alike
+        y2 = sc(x)
+        if not div and ((x.money and s.isint) or (x.isint and s.money)):
+            return Num(y2.q, y2.u, money=True)
+        return y2
+    k2 = None if k is None else money(k, s)
+    return (k2, tuple((atom, money(c, s)) for atom, c in ts))
 
 
 def lin_bin(op, a, b, n):
@@ -5048,6 +5082,9 @@ def lin_bin(op, a, b, n):
     for v in (a, b):
         if isinstance(v, Hole):
             qs |= v.qs
+    if any(not isinstance(v, (Hole, Num)) for v in (a, b)):
+        # a day, a period or a key is no coefficient's operand (L §5.18; tally 2.1.8 R15)
+        return Hole(qs, False)
     la, lb = lin_of(a), lin_of(b)
     if la is None or lb is None:
         return Hole(qs, False)

@@ -1070,30 +1070,58 @@ def m_partial_bal(self, w, place, unit, key, v):
     §5.10), a sum, so the line prints its known part and the holes it is linear in (L §5.18 Partial answers): the booked
     known part plus each hole leg's amount, signed by its direction at the place, as the line reads it (MC-B-F2). A
     hole of any other making (an anchor, a window, a hole movement's day, a sign rule) leaves the plain hole."""
-    from .evaluate import lin_of, lin_add, lin_scale
+    from .evaluate import lin_of, lin_add
     st, lg, i = w.state(place, unit, key)
     if st.bad is not None or st.val is None or st.perm or st.imp or lg is None:
         return v
-    if st.rst < 0 and (w.base is not None or w.default(place, unit).hole):
+    if st.rst < 0 and w.default(place, unit).hole:
+        # a projection's walk starts from its base's balance at t (E §4.3), a known part when it is known
         return v
     acc = lin_of(st.val)
     seen = frozenset()
     for e in lg.ents[st.rst + 1:i + 1]:
         if e.kind != 'hole':
             continue
-        lgx = e.leg
-        if e.sgn is None or lgx is None or lgx.src is None:
-            return v
-        node, env, c = lgx.src
-        h = self.ev(node, env, c.but(partial=True))
-        lh = lin_of(h) if isinstance(h, Hole) else None
+        lh = self.leg_lin(e.leg, e.sgn, e.qs)
         if lh is None:
             return v
-        acc = lin_add(acc, lin_scale(lh, Num(e.sgn, (), isint=True)), 1)
+        acc = lin_add(acc, lh, 1)
         seen |= e.qs
-    if not acc[1] or set(seen) != set(st.hole):
+    # every hole the read carries is a leg's amount: a hole movement's day, which the walk carries beside them, is no
+    # operand (L §5.18; tally 2.1.8 R15, #169-i)
+    if not acc[1] or set(seen) != set(st.hole) or set(seen) != set(v.qs):
         return v
     return Hole(v.qs, acc)
+
+
+def m_leg_lin(self, lgx, sgn, qs):
+    """A hole leg's amount as its linear form, read again under partial and signed by its direction (L §5.18; tally
+    2.1.8 R15), or None: a plain hole, or a form naming other holes than the leg's."""
+    from .evaluate import lin_of, lin_scale
+    src = getattr(lgx, 'src', None)
+    if sgn is None or src is None:
+        return None
+    node, env, c = src
+    h = self.ev(node, env, c.but(partial=True))
+    lh = lin_of(h) if isinstance(h, Hole) else None
+    if lh is None or set(a for a, _c in lh[1]) != set(qs):
+        return None
+    return lin_scale(lh, Num(sgn, (), isint=True))
+
+
+def lin_fold(known, holes):
+    """A walked sum under partial (L §5.18; tally 2.1.8 R15): its known part plus each hole's linear form; the plain
+    hole unless every hole is one (h.lin a form) and the known part is a number."""
+    from .evaluate import lin_add
+    qs = set()
+    for h in holes:
+        qs |= h.qs
+    if not isinstance(known, Num) or any(not isinstance(h.lin, tuple) for h in holes):
+        return Hole(qs, False)
+    acc = (known, ())
+    for h in holes:
+        acc = lin_add(acc, h.lin)
+    return Hole(qs, acc)
 
 
 def m_with_uncertain(self, place, unit, d, v, ctx):
@@ -1114,14 +1142,33 @@ def m_with_uncertain(self, place, unit, d, v, ctx):
                     if x.coll is not None:
                         self.cur.merge(x.coll)
                     if isinstance(g.amount, Hole):
-                        hs.append(g.amount)
+                        hs.append(self.partial_leg(g, s, ctx))
                     elif isinstance(g.amount, TallyError):
                         raise g.amount
                     else:
                         add += s * g.amount.q
+    if ctx.partial and (isinstance(v, Hole) or hs):
+        # L §5.18 (tally 2.1.8 R15): the total is a sum, linear in the balance and the uncertain legs
+        if isinstance(v, Hole):
+            if not isinstance(v.lin, tuple) or v.lin[0] is None:
+                return merge(v, *hs)
+            k, parts = v.lin[0], [Hole(v.qs, (None, v.lin[1]))]
+        else:
+            k, parts = v, []
+        known = qty(k.q + add, unit) if k.money or k.u else Num(k.q + add, k.u)
+        return lin_fold(known, parts + hs)
     if isinstance(v, Hole) or hs:
         return merge(v, *hs)
     return qty(v.q + add, unit) if v.money or v.u else Num(v.q + add, v.u)
+
+
+def m_partial_leg(self, g, sgn, ctx):
+    """A hole leg's amount as an operand of a walked sum: under partial, its linear form signed (leg_lin)."""
+    a = g.amount
+    if not ctx.partial:
+        return a
+    lh = self.leg_lin(g, sgn, a.qs)
+    return Hole(a.qs, lh if lh is not None else False)
 
 
 def m_proj_clauses(self, proj, ctx):
@@ -1165,9 +1212,12 @@ def m_proj_bal(self, n, place, unit, d, env, ctx, regs_to=None):
         note_read(ctx.walk, place, True)
     w.run_to(d)
     v = self.read_state(w, place, unit, K_end(d))
+    if ctx.partial and isinstance(v, Hole):
+        # a projection's balance is a sum as the plain one is (L §5.18; tally 2.1.8 R15)
+        v = self.partial_bal(w, place, unit, K_end(d), v)
     self.proj_regs(w, t, regs_to or d)
     if clauses[2] and not isinstance(v, Hole):
-        v = self.proj_uncertain(w, place, unit, d, v)
+        v = self.proj_uncertain(w, place, unit, d, v, ctx)
     return v
 
 
@@ -1178,7 +1228,7 @@ def m_proj_regs(self, w, t, d):
             self.reg(('left out', '%s, %d instances, first %s' % (mid, len(days), min(days))))
 
 
-def m_proj_uncertain(self, w, place, unit, d, v):
+def m_proj_uncertain(self, w, place, unit, d, v, ctx=None):
     add = Fraction(0)
     hs = []
     for x in w.uncertain:
@@ -1192,11 +1242,13 @@ def m_proj_uncertain(self, w, place, unit, d, v):
                     if x.coll is not None:
                         self.cur.merge(x.coll)
                     if isinstance(g.amount, Hole):
-                        hs.append(g.amount)
+                        hs.append(self.partial_leg(g, s, ctx) if ctx is not None else g.amount)
                     elif isinstance(g.amount, TallyError):
                         raise g.amount
                     else:
                         add += s * g.amount.q
+    if hs and ctx is not None and ctx.partial and not isinstance(v, Hole):
+        return lin_fold(qty(v.q + add, unit), hs)
     if hs or isinstance(v, Hole):
         return merge(v, *hs)
     return qty(v.q + add, unit)
@@ -1395,6 +1447,14 @@ def m_flows_place(self, place, sp, conv, env, ctx, fk=None):
             self.reg(e)
     # the joint model's own unlinked movements into the place on or before the span's last day (L §6.1, round 17b)
     self.joint_left_out(w, place, limit)
+    if holes and ctx.partial and conv is None and pu != 'any' and len(totals) <= 1 and (totals or units or pu):
+        # flows is a sum of its movements (L §5.18; tally 2.1.8 R15): linear in each hole leg's amount
+        if totals:
+            u, q = list(totals.items())[0]
+        else:
+            u, q = (units[0] if len(units) == 1 else pu), 0
+        if u is not None:
+            return lin_fold(qty(q, u), holes)
     if holes:
         return merge(*holes)
     if conv is not None:
@@ -1520,7 +1580,8 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ct
             if other_for(e) or (fk is not None and e.kind == 'reset'):
                 continue
             if e.kind in ('hole', 'perm'):
-                holes.append(Hole(e.qs))
+                lh = self.leg_lin(e.leg, e.sgn, e.qs) if ctx.partial and e.kind == 'hole' and conv is None else None
+                holes.append(Hole(e.qs, lh if lh is not None else False))
                 # its register too, as a balance takes it (Walk.cum): the joint model's own movement into a member's
                 # place, a hole there, is listed under every result that reads the place (L §6.1, round 17; §8.2
                 # left out:)
@@ -1732,7 +1793,7 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
             if isinstance(a, TallyError):
                 raise a
             if isinstance(a, Hole):
-                holes.append(a)
+                holes.append(self.partial_leg(lg, 1, ctx) if conv is None else a)
                 continue
             err = self.leg_refused(i.id, lg.name, ctx, lg.day if isinstance(lg.day, datetime.date) else i.day) \
                 if a.q != 0 else None
@@ -1782,6 +1843,15 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
                     continue
                 total = sign * amt.q if total is None else total + sign * amt.q
                 u = u or unit_of_value(amt)
+    if holes and ctx.partial and conv is None and len(seen_units) <= 1:
+        # flows of a move is a sum of its movements (L §5.18; tally 2.1.8 R15)
+        lt = getattr(n, '_t', None)
+        known = qty(total or 0, u) if u is not None else (
+            Money(total or 0, lt.cur) if lt is not None and lt.k == 'money' else
+            Num(total or 0, lt.u) if lt is not None and lt.k == 'num' and lt.u else
+            qty(total or 0, n._leg_unit) if getattr(n, '_leg_unit', None) is not None else None)
+        if known is not None:
+            return lin_fold(known, holes)
     if holes:
         return merge(*holes)
     if conv is not None:
@@ -1857,17 +1927,7 @@ def m_e_value(self, n, env, ctx):
         ofq = self.of_value(n.of, env, ctx)
         if isinstance(ofq, Hole):
             return ofq
-    for u in units:
-        q = self.bal_day(place, u, d, K_end(d), ctx) if ofq is None else self.bal_of_day(place, u, d, K_end(d), ctx,
-                                                                                         ofq)
-        if isinstance(q, Hole):
-            holes.append(q)
-            continue
-        if u == cur:
-            total += q.q
-            continue
-        if q.q == 0:
-            continue
+    def price(u):
         pr = self.by_price(n, place, u, cur, d, env, ctx)
         if pr is None and priced is not None:
             per = self.priced_per(priced, th, u)
@@ -1877,10 +1937,42 @@ def m_e_value(self, n, env, ctx):
             pr = self.priced_read(priced, th, u, d, n, env, ctx)
         elif pr is None:
             raise refuse('LOAD-PRICE', 'value(%s) in %s holds units in %s and states no by' % (place, cur, u))
+        return pr
+    from .evaluate import lin_of, lin_scale, lin_add
+    # under partial, each hole position's term as a linear form (L §5.18; tally 2.1.8 R15): a hole number of units
+    # at a known price, or a known number of units at a hole price; both holes, the plain hole
+    lins = []
+    for u in units:
+        q = self.bal_day(place, u, d, K_end(d), ctx) if ofq is None else self.bal_of_day(place, u, d, K_end(d), ctx,
+                                                                                         ofq)
+        if isinstance(q, Hole):
+            holes.append(q)
+            if ctx.partial:
+                pr = price(u) if u != cur else Num(1, (), isint=True)
+                if isinstance(pr, Hole):
+                    holes.append(pr)
+                    lins.append(None)
+                else:
+                    lins.append(lin_scale(q.lin, pr) if isinstance(q.lin, tuple) else None)
+            continue
+        if u == cur:
+            total += q.q
+            continue
+        if q.q == 0:
+            continue
+        pr = price(u)
         if isinstance(pr, Hole):
             holes.append(pr)
+            if ctx.partial:
+                lp = lin_of(pr)
+                lins.append(lin_scale(lp, q) if lp is not None else None)
             continue
         total += q.q * pr.q
+    if holes and ctx.partial and lins and all(lx is not None for lx in lins):
+        acc = (Num(total, ((cur, 1),)), ())
+        for lx in lins:
+            acc = lin_add(acc, lx)
+        return Hole(set().union(*[h.qs for h in holes]), acc)
     if holes:
         return merge(*holes)
     return Num(total, ((cur, 1),))
