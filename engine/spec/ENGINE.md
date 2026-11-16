@@ -309,7 +309,7 @@ The balance at S comes from `opening`, and from each `stated` reading on, by its
 - An observation that fulfils an uncertain instance makes it count: the observation is booked, and the instance leaves `uncertain`.
 
 **Readings** (LANGUAGE §5.19). A `stated[x]` reading that the cut K sees, at an instant before K, is applied at its instant in the walk (§4.2): at the start of its day, right after the movement it names, or at the close. Its **gap** is the reading less the balance the walk reached at that instant. Its version's gap role says what follows:
-- **`pad x from y`:** a movement of the prelude kind `pads`, with id `pads:<version>:<x>@<instant>`, of |gap| between y and x (into x when the gap is positive), is booked at the instant, status `pad`. `flows` and bindings count it, and the register of every figure that reads it flags it (`pad:`).
+- **`pad x from y`:** a movement of the prelude kind `pads`, with id `pads:<version>:<x>@<instant>` (and `:<u>` at a place of unit `any`), of |gap| between y and x (into x when the gap is positive), is booked at the instant, status `pad`. `flows` and bindings count it, and the register of every figure that reads it flags it (`pad:`).
 - **`anchor x`:** x's balance is set to the reading. Nothing is booked, `flows` doesn't count it, and no other place changes. The gap is the reading's balance line in the residual ledger (§6.3) and an `anchor:` entry (LANGUAGE §8.2).
 
 Either way, from the instant on x's balance is the statement's, plus what is booked since; before x's first reading, it is the opening plus what is booked since.
