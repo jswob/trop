@@ -255,6 +255,7 @@ class Walk:
         self.post_e = []            # the instances dated after E, which flows counts (E §2; tally 2.1.7 S1, #93)
         self.bad_legs = {}          # (movement id, leg) -> the refusal of a leg the walk refused (E §4.2 step 5)
         self.hole_legs = {}         # (movement id, leg) -> the hole of a window leg its lifespan test leaves open
+        self.hole_flows = {}        # (movement id, leg) -> the hole a test some days of a window pass gives its reads
         self.running = False
 
     # -- E §9 invariant 2: worth moves only at the boundary or at an anchor ---------------------------------------
@@ -906,7 +907,7 @@ class Walk:
             if st.val is None or st.hole or st.perm or st.bad:
                 return None
             if st.imp:
-                r = self.imp_three(st, lambda v: self.sign_breaks(place, v))
+                r = self.words_differ(st, self.imp_three(st, lambda v: self.sign_breaks(place, v)))
                 if r == 'depends':
                     dep.append((place, u, st))
                 return st.val.q if r is True else None
@@ -971,6 +972,14 @@ class Walk:
             return False
         return self.three([test(v) for v in cs])
 
+    def words_differ(self, st, r):
+        """A refusal every day gives, whose words (the balance it prints) differ by the day, is the window's hole:
+        the answer is what prints (pick P30, item 7 of the follow-up; L §4.4 "a refusal that only some of its days
+        give"). One in the same words on every day stays the refusal."""
+        if r is True and len(set(self.imp_cands(st) or ())) > 1:
+            return 'depends'
+        return r
+
     @staticmethod
     def three(rs):
         if all(r is True for r in rs):
@@ -994,6 +1003,13 @@ class Walk:
             if x[3] is not None:
                 ends.add(x[3])
         UNCERTAIN.update(qs)
+        # the legs the refusal would reach, pending or booked with the group, are read as that hole by flows and a
+        # field read (item 8 of the follow-up)
+        for mv, lg in legs:
+            self.hole_flows.setdefault((mv.id, lg.name), Hole(qs))
+        for x in st.imp:
+            mid, _, lname = x[0].rpartition('.')
+            self.hole_flows.setdefault((mid, lname), Hole(qs))
         for p in sorted(ends):
             self.add(p, u, Ent(key, 'hole', qs=qs, flow=Hole(qs)))
 
@@ -2287,7 +2303,7 @@ class Walk:
                     continue
                 st = self.pstate(place, u, key, raw=True)
                 if st.val is not None and st.imp and not st.bad and not st.hole and not isinstance(nxt, Hole):
-                    r = self.imp_three(st, lambda v: v != 0)
+                    r = self.words_differ(st, self.imp_three(st, lambda v: v != 0))
                     if r == 'depends':
                         self.imp_hole(key, place, u, st)
                         continue

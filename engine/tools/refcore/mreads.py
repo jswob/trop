@@ -136,7 +136,8 @@ def m_leg_refused(self, iid, leg, ctx, day=None):
     needs a cell still being evaluated (m_guarded_walk; E §3.2 "Evaluation is demand-driven")."""
     w = ctx.walk if ctx.walk is not None else self.ask_walk(ctx, day)
     while w is not None:
-        err = w.bad_legs.get((iid, leg)) or getattr(w, 'hole_legs', {}).get((iid, leg))
+        err = w.bad_legs.get((iid, leg)) or getattr(w, 'hole_legs', {}).get((iid, leg)) or \
+            getattr(w, 'hole_flows', {}).get((iid, leg))
         if err is not None:
             return err
         w = w.base
@@ -1947,6 +1948,10 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
             if isinstance(err, Hole):
                 # a window leg whose lifespan test some of its days pass (walk.window_lifespan): the flows read's hole
                 w = lg.day if isinstance(lg.day, Iv) else d
+                if not isinstance(w, Iv):
+                    # a leg of a fixed day the window's test reaches: the hole it gives (walk.imp_hole)
+                    holes.append(err)
+                    continue
                 holes.append(carry_hole(Hole([('date within %s not precise enough for flows of %s' % (
                     w.window_text(), mi.id), i.id)]), w))
                 continue
