@@ -1593,6 +1593,9 @@ def m_status(self, i, ctx):
     m = self.m
     S, E, K = m.S, m.E, ctx.cut
     i.obs = self.obs_links_for(i.id, ctx)
+    # an observation dated on K or later is seen but not applied, and nor is the link it states, so the instance it
+    # fulfils stays in the plan (L §4.5, L §5.19 Coverage, E §4.1 step 3; tally 2.1.8 R12, #182)
+    applied = [o for o in i.obs if not (isinstance(o.day, datetime.date) and o.day >= K)]
     d = i.day
     lo, hi = day_lo(d), day_hi(d)
     if i.exists is False:
@@ -1605,15 +1608,15 @@ def m_status(self, i, ctx):
         st = 'leftout'
     elif i.err is not None:
         st = 'refused'
-    elif i.obs and not i.decision:
-        # on any day, an instance that an observation the cut sees fulfils is modelled past: its observations stand
+    elif applied and not i.decision:
+        # on any day, an instance that an observation the cut applies fulfils is modelled past: its observations stand
         # in for it (E §4.1 step 3, L §5.19); one fulfilling a hole movement answers it
         st = 'modelled'
     elif isinstance(d, Hole) or isinstance(i.exists, Hole):
         st = 'hole'
     elif i.decision:
         st = 'decision'
-    elif self.kind_certainty(i.kind) == 'uncertain' and not i.obs:
+    elif self.kind_certainty(i.kind) == 'uncertain' and not applied:
         st = 'uncertain'
     elif lo < K and self.touches_covered(i, ctx):
         st = 'modelled'
