@@ -14,7 +14,8 @@ use super::check::invariant;
 use super::steps::refuse;
 use crate::base::Load;
 use crate::model::{
-    BindInfo, Domain, KeyVal, Observation, Pat, Reality, Row, RowInstant, Span, Value, pattern_text,
+    BindInfo, Domain, KeyVal, Observation, Pat, Reality, Row, RowInstant, Span, Value, World,
+    pattern_text,
 };
 use crate::num::Num;
 use crate::syntax::Stop;
@@ -515,7 +516,9 @@ fn covered(m: &Reality, o: &Observation) -> Result<(), Stop> {
         .get(&o.version)
         .ok_or_else(|| invariant(format!("version {} isn't built", o.version)))?;
     for (place, own) in &version.covers {
-        let span = own.clone().or_else(|| version.span_at(m.on).cloned());
+        let span = own
+            .clone()
+            .or_else(|| version.span_at(&m.scenarios, (m.on, World::Whole)).cloned());
         for leg in &o.legs {
             if leg.from != *place && leg.to != *place {
                 continue;
@@ -556,7 +559,7 @@ fn span(m: &Reality, row: &Row) -> Result<Option<Span>, Stop> {
         .versions
         .get(&row.version)
         .ok_or_else(|| invariant(format!("version {} isn't built", row.version)))?;
-    Ok(version.span_at(m.on).cloned())
+    Ok(version.span_at(&m.scenarios, (m.on, World::Whole)).cloned())
 }
 
 /// Whether a row governs `always` (refcore's `check_overlap`, its precedence of a span over

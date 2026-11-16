@@ -190,7 +190,14 @@ pub fn read_input(
     let test = Test::At(point.day);
     let cands = candidates(m, &input.rows, (&input.binds, keys), test, clocks)?;
     let cands = worded(m, &input.rows, cands, clocks)?;
-    match choose(m, &input.rows, &input.binds, &cands, clocks.cut, &input.id)? {
+    match choose(
+        m,
+        &input.rows,
+        &input.binds,
+        &cands,
+        (clocks.cut, clocks.world),
+        &input.id,
+    )? {
         Some(at) => Ok(Found::Row(at)),
         None => no_candidate(m, input, keys, &point, (clocks.cut, clocks.world), asked),
     }
@@ -216,7 +223,14 @@ pub fn read_last(
         Ok(kept) => kept,
         Err(found) => return Ok(found),
     };
-    match choose(m, &input.rows, &input.binds, &kept, clocks.cut, &input.id)? {
+    match choose(
+        m,
+        &input.rows,
+        &input.binds,
+        &kept,
+        (clocks.cut, clocks.world),
+        &input.id,
+    )? {
         Some(at) => Ok(Found::Row(at)),
         None => Err(invariant("last's candidates chose no row")),
     }
@@ -248,7 +262,7 @@ pub fn last_began(
             .rows
             .get(at)
             .ok_or_else(|| invariant("a candidate past its rows"))?;
-        starts.push((at, row_start(m, row, clocks.cut)?));
+        starts.push((at, row_start(m, row, (clocks.cut, clocks.world))?));
     }
     let began: BTreeSet<Option<Day>> = starts.iter().map(|(_, start)| *start).collect();
     // the latest instant whose reading was removed, held for the note when no reading stands
@@ -315,8 +329,14 @@ fn read_reading(
     let cands = candidates(m, &input.rows, (&input.binds, keys), test, clocks)?;
     let cands = worded(m, &input.rows, cands, clocks)?;
     // a reading `replace … = none` removed leaves its instant with no reading (L §5.19)
-    if let Some(at) = choose(m, &input.rows, &input.binds, &cands, clocks.cut, &input.id)?
-        && !removed(input, at)
+    if let Some(at) = choose(
+        m,
+        &input.rows,
+        &input.binds,
+        &cands,
+        (clocks.cut, clocks.world),
+        &input.id,
+    )? && !removed(input, at)
     {
         return Ok(Found::Row(at));
     }

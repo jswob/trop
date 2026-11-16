@@ -24,7 +24,7 @@ use crate::book::reading_place;
 use crate::hole::{Hole, spread};
 use crate::model::{
     BindInfo, Class, Domain, InputInfo, KeyVal, Number, Pat, Reality, Row, RowInstant, TimePos,
-    Unit, Value,
+    Unit, Value, World,
 };
 use crate::read::{
     Asked, Clocks, Found, KnownInside, Test, held, known_inside, last_began, need_law, origin,
@@ -122,7 +122,7 @@ fn after_at(row: &Row, place: Option<&str>) -> bool {
 fn read_past(
     m: &Reality,
     row: &Row,
-    (day, cut): (Day, Day),
+    (day, seen): (Day, (Day, World)),
     after: Option<Day>,
 ) -> Result<bool, Stop> {
     match &row.instant {
@@ -130,7 +130,7 @@ fn read_past(
         // a reading after m stands on the day the walk applies it (L §4.6 Readings)
         Some(RowInstant::After(_)) => Ok(after.is_some_and(|at| day > at)),
         None => {
-            let Some(span) = crate::read::row_span(m, row, cut)? else {
+            let Some(span) = crate::read::row_span(m, row, seen)? else {
                 return Ok(false);
             };
             Ok(!span.is_always() && span.end().is_some_and(|end| day >= end))
@@ -579,7 +579,7 @@ impl Engine {
         if matches!(input.time_pos, TimePos::At(_)) {
             return Ok(false);
         }
-        let class = rows_class(m, &input.rows, ctx.cut, day)?;
+        let class = rows_class(m, &input.rows, (ctx.cut, ctx.world), day)?;
         self.narrow(ctx.law, class);
         Ok(true)
     }
@@ -661,7 +661,7 @@ impl Engine {
         };
         let value = self.row_converted(m, (input, row, &latest.keys), &figure, at)?;
         let after = self.row_after_day(m, row, ctx.cut)?;
-        if read_past(m, row, (latest.day, ctx.cut), after)? {
+        if read_past(m, row, (latest.day, (ctx.cut, ctx.world)), after)? {
             let text = format!(
                 "{figure} = {} ({}), read for {}",
                 held_text(m, &value)?,
@@ -967,7 +967,7 @@ impl Engine {
     /// E §3.2).
     fn unheld_class(&mut self, m: &Reality, row: &Row, ctx: Ctx, day: Day) -> Result<(), Stop> {
         if row.instant.is_none()
-            && let Some(span) = crate::read::row_span(m, row, ctx.cut)?
+            && let Some(span) = crate::read::row_span(m, row, (ctx.cut, ctx.world))?
             && may_hold(&span)
         {
             let class = LawClass::all().by_ask_cut(day, self.ask_cut);

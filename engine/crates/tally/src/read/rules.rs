@@ -46,7 +46,7 @@ fn rule_exists(m: &Reality, rule: &RuleVer, clocks: Clocks) -> Result<bool, Stop
     };
     let unworded = |version: &str| -> Result<bool, Stop> {
         match wording {
-            Some(by) => Ok(enters(m, version, own_time, cut)? > by),
+            Some(by) => Ok(enters(m, version, own_time, (cut, clocks.world))? > by),
             None => Ok(false),
         }
     };
@@ -56,7 +56,7 @@ fn rule_exists(m: &Reality, rule: &RuleVer, clocks: Clocks) -> Result<bool, Stop
         }
         let span = match &rule.span {
             Some(own) => Some(own.clone()),
-            None => version_span(m, version, cut)?,
+            None => version_span(m, version, (cut, clocks.world))?,
         };
         let Some(span) = span else {
             return Ok(false);
@@ -68,7 +68,7 @@ fn rule_exists(m: &Reality, rule: &RuleVer, clocks: Clocks) -> Result<bool, Stop
         if version_known(m, v)? > cut || unworded(v)? {
             return Ok(false);
         }
-        let Some(span) = version_span(m, v, cut)? else {
+        let Some(span) = version_span(m, v, (cut, clocks.world))? else {
             return Ok(false);
         };
         exists = holds(&span, law)?;

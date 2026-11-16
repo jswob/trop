@@ -472,7 +472,7 @@ impl Engine {
         loop {
             // the read's refusal stands; a hole, read or added, is passed like a known class
             self.calendar_on(m, (&name, &keys), ctx, (current, true))?;
-            let class = rows_class(m, &input.rows, ctx.cut, current)?;
+            let class = rows_class(m, &input.rows, (ctx.cut, ctx.world), current)?;
             current = class.beyond(step).ok_or_else(|| past_days(step))?;
         }
     }

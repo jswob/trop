@@ -754,6 +754,10 @@ impl Engine {
         cut: Day,
     ) -> Result<Status, Stop> {
         inst.obs = self.obs_links_for(m, &inst.id, cut)?;
+        // an observation dated on K or later is seen but not applied, and nor is the link it
+        // states, so the instance it fulfils stays in the plan (L §4.5, §5.19 Coverage; tally
+        // 2.1.8 R12, #182)
+        let applied = self.links_applied(m, &inst.obs, cut)?;
         // a window's first day and its last (refcore's `day_lo`, `day_hi`)
         let (day, last) = match &inst.day {
             Some(dated) => (dated.lo(), dated.hi()),
@@ -773,7 +777,7 @@ impl Engine {
         if inst.err.is_some() {
             return Ok(Status::Refused);
         }
-        if !inst.obs.is_empty() && !mv.decision {
+        if applied && !mv.decision {
             return Ok(Status::Modelled);
         }
         let Some(d) = day else {
@@ -785,13 +789,30 @@ impl Engine {
         if mv.decision {
             return Ok(Status::Decision);
         }
-        if kind_certainty(m, &mv.kind) == Some(Certainty::Uncertain) && inst.obs.is_empty() {
+        if kind_certainty(m, &mv.kind) == Some(Certainty::Uncertain) && !applied {
             return Ok(Status::Uncertain);
         }
         if d < cut && self.touches_covered(m, inst, cut)? {
             return Ok(Status::Modelled);
         }
         Ok(if d < cut { Status::Past } else { Status::Plan })
+    }
+
+    /// Whether one of the observations `obs` that fulfil an instance is applied at cut `cut`:
+    /// dated before it (refcore's `m_status`, its `applied`). L §4.5 (what a day applies is
+    /// applied only when dated before K; tally 2.1.8 R12), §5.19, E §4.1 step 3.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::observations`].
+    fn links_applied(&mut self, m: &Reality, obs: &[String], cut: Day) -> Result<bool, Stop> {
+        if obs.is_empty() {
+            return Ok(false);
+        }
+        Ok(self
+            .observations(m, cut)?
+            .iter()
+            .any(|o| o.day < cut && obs.contains(&o.id)))
     }
 
     /// Every instance of a move at its binding tuples, sorted (refcore's `insts_of_tuples`).

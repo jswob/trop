@@ -26,7 +26,7 @@ use super::memo::{CellId, CellKey, Cells, Open};
 use super::stack::Item;
 use super::state::{Ctx, Engine, Env, invariant};
 use crate::base::Code;
-use crate::model::{KeyVal, Reality, Row, RowInstant, Value};
+use crate::model::{KeyVal, Reality, Row, RowInstant, Value, World};
 use crate::read::{origin, row_known, row_span};
 use crate::syntax::{Edge, Expr, Stop};
 use crate::time::Day;
@@ -749,9 +749,9 @@ impl Engine {
     /// its version, source, locator, governs span or instant, and known date (refcore's
     /// `trace_row`). E §10.
     pub(super) fn trace_row(&mut self, m: &Reality, row: &Row) -> Option<usize> {
-        let ask_cut = self.ask_cut;
+        let seen = (self.ask_cut, self.timeline_world());
         let trace = self.traced()?;
-        match provenance(m, row, ask_cut) {
+        match provenance(m, row, seen) {
             Ok(line) => {
                 let mut node = Node::new(Kind::Row, row.sid.clone());
                 node.lines.push(line);
@@ -946,7 +946,7 @@ fn shifted(at: usize, offset: usize) -> Result<usize, Stop> {
 
 /// A row's provenance as `explain` prints it: `version v, source s, "title", locator "…",
 /// governs <span>` or `at <instant>`, `known <day>` (refcore's `trace_row`). L §3.7, E §10.
-fn provenance(m: &Reality, row: &Row, ask_cut: Day) -> Result<String, Stop> {
+fn provenance(m: &Reality, row: &Row, seen: (Day, World)) -> Result<String, Stop> {
     let version = m
         .versions
         .get(&row.version)
@@ -975,7 +975,7 @@ fn provenance(m: &Reality, row: &Row, ask_cut: Day) -> Result<String, Stop> {
             bits.push(format!("after {}", crate::load::expr_text(node)));
         }
         None => {
-            let span = row_span(m, row, ask_cut)?.map_or_else(|| "?".to_owned(), |s| s.text());
+            let span = row_span(m, row, seen)?.map_or_else(|| "?".to_owned(), |s| s.text());
             bits.push(format!("governs {span}"));
         }
     }

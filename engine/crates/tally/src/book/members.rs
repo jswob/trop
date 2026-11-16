@@ -13,7 +13,7 @@
 //! passes the binding's `where`; an uncertain instance is a member only `with uncertain`, and
 //! brings its `uncertain:` line.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use super::adjust::Adjustment;
 use super::observe::Obs;
@@ -67,6 +67,9 @@ pub(crate) struct MvMember {
     pub day: Dated,
     /// Its stable id (L §2.5).
     pub id: String,
+    /// For a row known in a window that holds the cut whose day and its instance's differ,
+    /// that row's hole: which comes first is undecided (L §4.5, tally 2.1.8 R12, B6).
+    pub two_days: Option<Hole>,
 }
 
 impl Moving {
@@ -243,7 +246,27 @@ impl Engine {
         binds_future(m, dom, sp, ctx)?;
         let mut out: Vec<(Moving, Option<Hole>)> = Vec::new();
         let mut fulfilled: BTreeSet<String> = BTreeSet::new();
+        let mut two_days: BTreeMap<String, Hole> = BTreeMap::new();
         for x in self.movements_of(m, dom, ctx)? {
+            if let Moving::Obs(o) = &x
+                && let Some(und) = &o.undecided
+            {
+                // a row known in a window that holds the cut is one movement read seen and
+                // unseen: unseen, a row of an observed input is no row, and a movement of an
+                // event kind is the instance it fulfils; a member either way is a member,
+                // else an unknown one (L §4.5, tally 2.1.8 R12; refcore's `span_members`)
+                let alt = self.unseen_day(m, o, dom.0, ctx)?;
+                let (seen_in, unseen_in) =
+                    (sp.contains(o.day), alt.is_some_and(|d| sp.contains(d)));
+                if alt.is_some_and(|d| d != o.day) {
+                    two_days.insert(o.id.clone(), und.clone());
+                }
+                if seen_in || unseen_in {
+                    let unknown = (!(seen_in && unseen_in)).then(|| und.clone());
+                    out.push((x, unknown));
+                }
+                continue;
+            }
             let mut st = match x.day() {
                 None => {
                     if let Moving::Plan(i) = &x
@@ -318,9 +341,33 @@ impl Engine {
                 coll,
                 day,
                 id: x.id().to_owned(),
+                two_days: two_days.get(x.id()).cloned(),
             });
         }
         Ok(res)
+    }
+
+    /// The day an undecided row's movement has unseen: for a binding over an event kind, the
+    /// day of the instance it fulfils, if any; for an observed input's, none, since unseen it
+    /// is no row (refcore's `span_members`, `x.target`). L §4.5, §5.19.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::move_instances`].
+    fn unseen_day(
+        &mut self,
+        m: &Reality,
+        o: &Obs,
+        dom: MvDom,
+        ctx: Ctx,
+    ) -> Result<Option<Day>, Stop> {
+        let (MvDom::Event, Some(tid)) = (dom, o.target_id()) else {
+            return Ok(None);
+        };
+        Ok(match self.planned_by_id(m, &tid, ctx.cut)? {
+            Some(Moving::Plan(i)) => i.day.as_ref().and_then(Dated::day),
+            Some(Moving::Obs(_) | Moving::Adj(_) | Moving::Pad(..)) | None => None,
+        })
     }
 
     /// `next(K, d)`: `first(m in K over d ..) ties by m.day`, the first movement of event kind
@@ -352,10 +399,13 @@ impl Engine {
         };
         let members =
             self.span_members(m, (MvDom::Event, kind), &Span::between(Some(d), None), ctx)?;
+        // a member whose day is a hole may come first, and so may an undecided row's
+        // movement where its two days differ, never a tie (L §4.5, tally 2.1.8 R12, B6)
         let hole_days: Vec<Option<&Hole>> = members
             .iter()
             .filter(|x| matches!(x.day, Dated::Hole(_)))
             .map(|x| x.unknown.as_ref())
+            .chain(members.iter().map(|x| x.two_days.as_ref()))
             .collect();
         if let Some(h) = spread(&hole_days) {
             return Ok(Value::Hole(h));

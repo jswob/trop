@@ -71,10 +71,11 @@ pub type Groups = BTreeMap<String, Vec<String>>;
 
 impl Engine {
     /// Whether the cut of `ctx` sees a `same` line of version `version`, which names `sides`:
-    /// a line in a joint model's header always; else its version's `known` on or before the
-    /// cut, a window that holds the cut decided by the line's `windows each`, else as the
-    /// run's pick says, read as seen and as unseen (refcore's `same_seen`). L §4.5 (tally
-    /// 2.1.8 R12: whatever a version states is read as its rows are), §4.4.
+    /// a line in a joint model's header always; else only in the worlds its version's file is
+    /// in, its version's `known` on or before the cut, a window that holds the cut decided by
+    /// the line's `windows each`, else as the run's pick says, read as seen and as unseen
+    /// (refcore's `same_seen`, `same_lines`). L §4.5 (tally 2.1.8 R12: whatever a version
+    /// states is read as its rows are), §4.4, §6.4.
     ///
     /// # Errors
     ///
@@ -89,6 +90,9 @@ impl Engine {
         let Some(id) = version else {
             return Ok(true);
         };
+        if !m.scenarios.sees(ctx.world, Some(id)) {
+            return Ok(false);
+        }
         let info = m
             .versions
             .get(id)

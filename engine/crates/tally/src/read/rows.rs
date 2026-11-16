@@ -83,11 +83,16 @@ pub(super) fn version_known(m: &Reality, id: &str) -> Result<Day, Stop> {
     m.versions.get(id).map(|v| v.known).ok_or_else(no_version)
 }
 
-/// Version `id`'s governs span in force under `cut` (L §4.6 step 1, §5.3).
-pub(super) fn version_span(m: &Reality, id: &str, cut: Day) -> Result<Option<Span>, Stop> {
+/// Version `id`'s governs span in force under the cut of `seen`, in its world (L §4.6 step 1,
+/// §5.3, §6.4).
+pub(super) fn version_span(
+    m: &Reality,
+    id: &str,
+    seen: (Day, World),
+) -> Result<Option<Span>, Stop> {
     m.versions
         .get(id)
-        .map(|v| v.span_at(cut).cloned())
+        .map(|v| v.span_at(&m.scenarios, seen).cloned())
         .ok_or_else(no_version)
 }
 
@@ -132,16 +137,17 @@ pub fn time_point(input: &InputInfo, keys: &[KeyVal], law: Option<Day>) -> Resul
     })
 }
 
-/// A row's span under cut `cut`: its own, else its version's in force (L §4.6 step 1).
+/// A row's span under the cut of `seen`, in its world: its own, else its version's in force
+/// (L §4.6 step 1, §6.4).
 ///
 /// # Errors
 ///
 /// `ENGINE-INVARIANT` when its version is missing.
-pub fn row_span(m: &Reality, row: &Row, cut: Day) -> Result<Option<Span>, Stop> {
+pub fn row_span(m: &Reality, row: &Row, seen: (Day, World)) -> Result<Option<Span>, Stop> {
     if let Some(own) = &row.own_span {
         return Ok(Some(own.clone()));
     }
-    version_span(m, &row.version, cut)
+    version_span(m, &row.version, seen)
 }
 
 /// A row's `known`: its own, else its version's (L §4.5).
@@ -385,7 +391,7 @@ fn instant_day(instant: &RowInstant) -> Option<Day> {
 /// reading at an instant on or before d, a state whose span began on or before d, a span
 /// with no start (`always`, `..e`) before every d (L §4.6 step 1, Readings, Past the last
 /// row; §5.3 `governs always` governs every day).
-fn in_time(m: &Reality, row: &Row, test: Test, cut: Day) -> Result<bool, Stop> {
+fn in_time(m: &Reality, row: &Row, test: Test, seen: (Day, World)) -> Result<bool, Stop> {
     if let Some(instant) = &row.instant {
         return Ok(match test {
             Test::At(_) => true,
@@ -393,7 +399,7 @@ fn in_time(m: &Reality, row: &Row, test: Test, cut: Day) -> Result<bool, Stop> {
             Test::Last(at) => instant_day(instant).is_some_and(|day| day <= at),
         });
     }
-    let Some(span) = row_span(m, row, cut)? else {
+    let Some(span) = row_span(m, row, seen)? else {
         return Ok(false);
     };
     match test {
@@ -412,13 +418,13 @@ fn in_time(m: &Reality, row: &Row, test: Test, cut: Day) -> Result<bool, Stop> {
 ///
 /// `ENGINE-INVARIANT` for a reading with no day or a state with no span, which `in_time`
 /// never takes, or a row whose version is missing.
-pub(super) fn row_start(m: &Reality, row: &Row, cut: Day) -> Result<Option<Day>, Stop> {
+pub(super) fn row_start(m: &Reality, row: &Row, seen: (Day, World)) -> Result<Option<Day>, Stop> {
     if let Some(instant) = &row.instant {
         let day = instant_day(instant).ok_or_else(|| invariant("a reading of last with no day"))?;
         return Ok(Some(day));
     }
     let span =
-        row_span(m, row, cut)?.ok_or_else(|| invariant("a candidate of last with no span"))?;
+        row_span(m, row, seen)?.ok_or_else(|| invariant("a candidate of last with no span"))?;
     Ok(span.start())
 }
 
@@ -445,7 +451,7 @@ pub fn candidates(
             && row_matches(m, row, binds, keys)
             && unstated_ok(m, row, (binds, keys), clocks.world)?
             && row_known(m, row)? <= cut
-            && in_time(m, row, test, cut)?
+            && in_time(m, row, test, (cut, clocks.world))?
         {
             out.push(at);
         }
@@ -498,7 +504,7 @@ pub fn known_inside(
             && m.scenarios.sees(clocks.world, Some(&row.version))
             && row_matches(m, row, binds, keys)
             && unstated_ok(m, row, (binds, keys), clocks.world)?
-            && in_time(m, row, test, clocks.cut)?
+            && in_time(m, row, test, (clocks.cut, clocks.world))?
         {
             out.push(KnownInside { at, window, sid });
         }
@@ -527,7 +533,7 @@ pub fn worded(
         let row = rows
             .get(at)
             .ok_or_else(|| invariant("a candidate past its rows"))?;
-        if enters(m, &row.version, own_time(row), clocks.cut)? <= by {
+        if enters(m, &row.version, own_time(row), (clocks.cut, clocks.world))? <= by {
             out.push(at);
         }
     }
@@ -552,9 +558,9 @@ fn own_time(row: &Row) -> OwnTime {
 /// # Errors
 ///
 /// `ENGINE-INVARIANT` for a version load didn't build.
-pub(super) fn enters(m: &Reality, id: &str, own: OwnTime, cut: Day) -> Result<Day, Stop> {
+pub(super) fn enters(m: &Reality, id: &str, own: OwnTime, seen: (Day, World)) -> Result<Day, Stop> {
     let version = m.versions.get(id).ok_or_else(no_version)?;
-    Ok(version.enters_at(cut, own))
+    Ok(version.enters_at(&m.scenarios, seen, own))
 }
 
 /// How one key position of a row relates to another's (L §4.6 steps 2 and 3.2).
@@ -708,14 +714,19 @@ fn narrower_than(
 }
 
 /// The candidates with a span (or an instant), where any has one (L §4.6 step 3.3).
-fn spanned(m: &Reality, rows: &[Row], keep: Vec<usize>, cut: Day) -> Result<Vec<usize>, Stop> {
+fn spanned(
+    m: &Reality,
+    rows: &[Row],
+    keep: Vec<usize>,
+    seen: (Day, World),
+) -> Result<Vec<usize>, Stop> {
     let mut out = Vec::new();
     for &at in &keep {
         let row = rows
             .get(at)
             .ok_or_else(|| invariant("a candidate past its rows"))?;
         let dated =
-            row.instant.is_some() || row_span(m, row, cut)?.is_some_and(|span| !span.is_always());
+            row.instant.is_some() || row_span(m, row, seen)?.is_some_and(|span| !span.is_always());
         if dated {
             out.push(at);
         }
@@ -736,7 +747,7 @@ pub fn choose(
     rows: &[Row],
     binds: &[BindInfo],
     cands: &[usize],
-    cut: Day,
+    seen: (Day, World),
     id: &str,
 ) -> Result<Option<usize>, Stop> {
     if cands.is_empty() {
@@ -747,7 +758,7 @@ pub fn choose(
         keep = narrowest(m, rows, binds, &keep);
     }
     if keep.len() > 1 {
-        keep = spanned(m, rows, keep, cut)?;
+        keep = spanned(m, rows, keep, seen)?;
     }
     if let [first, second, ..] = keep.as_slice() {
         let (Some(a), Some(b)) = (rows.get(*first), rows.get(*second)) else {
@@ -779,7 +790,7 @@ pub fn held(m: &Reality, row: &Row, day: Option<Day>, clocks: Clocks) -> Result<
     if row.instant.is_some() {
         return Ok(false);
     }
-    let Some(span) = row_span(m, row, clocks.cut)? else {
+    let Some(span) = row_span(m, row, (clocks.cut, clocks.world))? else {
         return Ok(false);
     };
     Ok(!span.is_always()

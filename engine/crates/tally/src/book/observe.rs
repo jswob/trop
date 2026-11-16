@@ -64,6 +64,9 @@ pub struct Obs {
     pub fulfils: Option<Fulfils>,
     /// What reading it met: its row, and what judging its link read.
     pub coll: Collected,
+    /// The hole of a row known in a window that holds the cut: seen and unseen, it is one
+    /// movement read two ways (L §4.5, tally 2.1.8 R12; refcore's `ObsMv.und`).
+    pub undecided: Option<Hole>,
 }
 
 impl Obs {
@@ -281,8 +284,10 @@ impl Engine {
     }
 
     /// `covered(x, span)`: versions the cut knows cover `x` on every day of the span; false
-    /// for a hole or `none` place, a hole span or one with an open end, never a hole (refcore's
-    /// `c_covered`). L §5.19 Coverage.
+    /// for a hole or `none` place, a hole span or one with an open end; where a cover is known
+    /// in a window that holds the cut and the answer differs seen and unseen,
+    /// `HOLE-IMPRECISE` naming its version (refcore's `c_covered`). L §5.19 Coverage, §4.5
+    /// (tally 2.1.8 R12).
     ///
     /// # Errors
     ///
@@ -301,29 +306,30 @@ impl Engine {
         let Ok(sp) = self.span_value(m, span, env, ctx)? else {
             return Ok(Value::Bool(false));
         };
-        let (Some(mut d), Some(end)) = (sp.start(), sp.end()) else {
+        let (Some(start), Some(end)) = (sp.start(), sp.end()) else {
             return Ok(Value::Bool(false));
         };
-        let spans: Vec<Span> = match self.coverage(m, ctx.cut)?.spans.get(&name) {
+        let coverage = self.coverage(m, ctx.cut)?;
+        let mut spans: Vec<Span> = match coverage.spans.get(&name) {
             Some(list) => list.iter().map(|(s, _)| s.clone()).collect(),
             None => Vec::new(),
         };
-        while d < end {
-            let mut next: Option<Day> = None;
-            for s in spans.iter().filter(|s| s.contains(d)) {
-                let Some(e) = s.end() else {
-                    return Ok(Value::Bool(true));
-                };
-                if next.is_none_or(|n| e > n) {
-                    next = Some(e);
-                }
-            }
-            let Some(n) = next else {
-                return Ok(Value::Bool(false));
-            };
-            d = n;
+        let undecided: Vec<(Span, Hole)> = coverage
+            .undecided
+            .iter()
+            .filter(|(at, _, _)| *at == name)
+            .map(|(_, s, h)| (s.clone(), h.clone()))
+            .collect();
+        let unseen = covers_all(&spans, (start, end));
+        if undecided.is_empty() {
+            return Ok(Value::Bool(unseen));
         }
-        Ok(Value::Bool(true))
+        spans.extend(undecided.iter().map(|(s, _)| s.clone()));
+        if covers_all(&spans, (start, end)) == unseen {
+            return Ok(Value::Bool(unseen));
+        }
+        let holes: Vec<Option<&Hole>> = undecided.iter().map(|(_, h)| Some(h)).collect();
+        spread(&holes).map_or(Ok(Value::Bool(unseen)), |h| Ok(Value::Hole(h)))
     }
 
     /// Whether an instance touches a place a version covers on its leg's day, or the
@@ -812,15 +818,16 @@ fn seen_observations(
             // one known in a window the cut leaves undecided is booked or not: each of its
             // legs is that hole (L §4.5; refcore's `observations`, its `undecided`)
             if let Some(question) = &undecided {
-                // a removal's hole is asked of the row and of the version that removes it, as
-                // a cover known in a window is asked of its version (refcore's twin form; P70)
+                // the hole is asked of the row and of its version, the removal's for a removal
+                // (tally 2.1.8 R12, P70; refcore's `observations`)
                 let row = Hole::asked(question, &seen.id);
-                let removal = o.removed.then(|| Hole::asked(question, &o.version));
-                let hole = spread(&[Some(&row), removal.as_ref()])
-                    .ok_or_else(|| invariant("a removal's hole spread from none"))?;
+                let version = Hole::asked(question, &o.version);
+                let hole = spread(&[Some(&row), Some(&version)])
+                    .ok_or_else(|| invariant("an undecided row's hole spread from none"))?;
                 for lg in &mut seen.legs {
                     lg.amount = Amount::Hole(hole.clone());
                 }
+                seen.undecided = Some(hole);
             }
             // the row as `inputs-of` lists it, kept by an engine answering one (E §10)
             if rows == Rows::Kept {
@@ -856,6 +863,28 @@ fn share_fulfils(groups: &BTreeMap<String, Vec<String>>, seen: &mut [Obs]) {
             o.fulfils = Some(f.clone());
         }
     }
+}
+
+/// Whether `spans` cover every day from `start` up to `end` (refcore's `covers_all`). L §5.19
+/// Coverage.
+fn covers_all(spans: &[Span], (start, end): (Day, Day)) -> bool {
+    let mut d = start;
+    while d < end {
+        let mut next: Option<Day> = None;
+        for s in spans.iter().filter(|s| s.contains(d)) {
+            let Some(e) = s.end() else {
+                return true;
+            };
+            if next.is_none_or(|n| e > n) {
+                next = Some(e);
+            }
+        }
+        let Some(n) = next else {
+            return false;
+        };
+        d = n;
+    }
+    true
 }
 
 /// Whose `known` an observation's is: its own (`input[key]`), else its version's (refcore's
@@ -942,6 +971,7 @@ fn observation(o: &crate::model::Observation) -> Result<Obs, Stop> {
         values: o.values.clone(),
         fulfils: o.fulfils.clone(),
         coll,
+        undecided: None,
     })
 }
 
@@ -965,7 +995,10 @@ fn seen_coverage(m: &Reality, (cut, world): (Day, World), known: &KnownAtCut) ->
         // covers is that hole from its span's first day (L §4.5; refcore's `covund`)
         let undecided = known.hole(&v.id, cut, &v.id);
         for (place, span) in &v.covers {
-            let Some(span) = span.as_ref().or_else(|| v.span_at(cut)) else {
+            let Some(span) = span
+                .as_ref()
+                .or_else(|| v.span_at(&m.scenarios, (cut, world)))
+            else {
                 continue;
             };
             match &undecided {
