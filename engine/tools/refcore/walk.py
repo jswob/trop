@@ -1435,6 +1435,14 @@ class Walk:
     # -- readings (E §6.1) -----------------------------------------------------------------------------------------
     def apply_reading(self, key, iid, place, unit, r):
         m = self.m
+        if unit == 'any':
+            # a row that states no unit at a place of unit any: a row for every unit the place has a position in at
+            # its instant (zero included), but a unit with its own reading there (L §5.10; tally 2.1.8 R14)
+            ex = getattr(r, '_except', frozenset())
+            for u in self.units_held(place, key):
+                if u not in ex:
+                    self.apply_reading(key, iid, place, u, r)
+            return
         val = r.val
         c = _coll()
         c.rows[r.sid] = r
@@ -1507,7 +1515,8 @@ class Walk:
         positive = isinstance(gap, Num) and gap.q > 0
         frm, to = (Thing(y.name), Thing(place)) if (positive or not isinstance(gap, Num)) else \
             (Thing(place), Thing(y.name))
-        pad = PadMv(r.version.id, place, it, amt, frm, to, day, unit)
+        pad = PadMv(r.version.id, place, it, amt, frm, to, day, unit,
+                    per_unit=m.place_unit(m.things[place]) == 'any')
         pad.coll = bc
         pad.point = key
         self.pads.append(pad)
@@ -1548,6 +1557,15 @@ class Walk:
             # the balance the reading states breaks its place's sign rule: refused from there to the place's next
             # reading, as an anchor's is (L §5.10, E §4.2 step 5; tally 2.1.8 R11), not ended by its own reading
             self.add(place, unit, Ent(key[:4] + (key[4] + 1,), 'bad', err=self.bad_legs[(pad.id, lg.name)], mv=pad))
+
+    def units_held(self, place, key):
+        """The units a place has a position in before key: those an opening, a reading or a booked leg has given it
+        (L §5.10 l.1063), a balance of zero included, by name."""
+        out = []
+        for (p, u), log in self.logs.items():
+            if p == place and u not in ('*', 'any') and any(e.key < key for e in log.ents):
+                out.append(u)
+        return sorted(out)
 
     def booked_coll(self, place, unit, key):
         """The register of a place's booked balance at an instant (as a balance read gathers it, mreads.read_state)."""

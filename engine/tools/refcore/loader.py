@@ -2291,7 +2291,8 @@ class Loader:
             gk = pattern_norm(r.pattern)
             if isinstance(inf, InputInfo) and inf.builtin and isinstance(getattr(r, 'val', None), Num):
                 gk = gk + (r.val.u,)
-            elif isinstance(inf, InputInfo) and inf.builtin and getattr(r, 'val', None) is NONE:
+            elif isinstance(inf, InputInfo) and inf.builtin and getattr(r, 'val', None) is NONE and \
+                    not reading_of_any(m, r):
                 nones.append((gk, r))
                 continue
             groups.setdefault(gk, []).append(r)
@@ -2299,6 +2300,14 @@ class Loader:
             # a balance reading of none states no balance (L §5.19); it is of the unit of the readings it may replace
             units = [g for g in groups if g[:-1] == gk and len(g) == len(gk) + 1]
             groups.setdefault(units[0] if len(units) == 1 else gk, []).append(r)
+        # at a place of unit any a row that states no unit (a hole, none) is a row for every unit there: with
+        # replace it replaces every unit's reading at its instant (L §5.10; tally 2.1.8 R14, P25 reopened)
+        wider = {}
+        if isinstance(inf, InputInfo) and inf.builtin:
+            for gk, rs in groups.items():
+                if rs and reading_of_any(m, rs[0]) and not isinstance(getattr(rs[0], 'val', None), Num):
+                    wider[gk] = [o for g2, rs2 in groups.items() if g2[:-1] == gk and len(g2) == len(gk) + 1
+                                 for o in rs2]
         jo = getattr(m, 'joint', None) is not None
         if jo:
             from .joint import owner_of
@@ -2354,7 +2363,8 @@ class Loader:
                 # LOAD-REPLACE "in a scenario, no base row at those keys either")
                 if r.replace and not any((known_first(o.known) < known_first(r.known) or
                                           row_layer(m, o) < row_layer(m, r)) and ov(o, r) and not owners_differ(o, r)
-                                         for o in rs if o is not r and row_layer(m, o) <= row_layer(m, r)):
+                                         for o in rs + wider.get(pat, [])
+                                         if o is not r and row_layer(m, o) <= row_layer(m, r)):
                     raise LoadError('LOAD-REPLACE', 'replace %s%s: no earlier row to replace' % (inf.id, r.keys_text()),
                                     r.loc)
         # ties between rows of different patterns (L §4.6 step 4)
@@ -2598,6 +2608,15 @@ def narrower(m, inf, pa, pb):
         if r == 'in':
             strict = True
     return strict
+
+
+def reading_of_any(m, r):
+    """Whether a row is a balance reading of a place of unit any (L §5.10)."""
+    try:
+        place = r.pattern[0][1].name
+        return m.place_unit(m.things[place]) == 'any'
+    except (AttributeError, IndexError, KeyError, TypeError):
+        return False
 
 
 def row_layer(m, r):

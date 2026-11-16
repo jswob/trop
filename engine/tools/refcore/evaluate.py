@@ -999,6 +999,13 @@ class Engine:
             spans = [c for c in keep if c.instant is not None or not c.span(self._K).always]
             if spans:
                 keep = spans
+        if len(keep) > 1 and getattr(info, 'reading', False):
+            units = sorted(set(unit_of_row(c) for c in keep) - {None})
+            if len(units) > 1 and len(set(instant_key(c) for c in keep)) == 1:
+                # L §5.10 (tally 2.1.8 R14): at a place of unit any a reading is keyed by its unit; a read that names
+                # none takes the reading its instant gives, refused where two units' stand there
+                raise refuse('RUN-DOMAIN', units_at_instant('last' if what == 'last' else info.id,
+                                                            keep[0].pattern[0][1].name, keep[0], units))
         if len(keep) > 1:
             raise refuse('LOAD-OVERLAP', 'rows %s and %s of %s tie' % (keep[0].loc, keep[1].loc, info.id))
         return keep[0]
@@ -4437,6 +4444,25 @@ def range_is_literal(d):
 # line's reads met them. A hole made of others keeps their questions, so it carries their windows.
 CARRY = {}
 CARRY_TEXT = {}   # a question known only by its text (a reading's row known in a window), to the same
+
+
+def unit_of_row(r):
+    """The unit a reading's value states, or None."""
+    v = getattr(r, 'val', None)
+    if isinstance(v, Num) and v.u and len(v.u) == 1 and v.u[0][1] == 1:
+        return v.u[0][0]
+    return None
+
+
+def instant_key(r):
+    return repr(getattr(r, 'instant', None))
+
+
+def units_at_instant(read, place, r, units):
+    """RUN-DOMAIN's `<read> of <x>: its readings at <instant> are in <u> and <u'>` (L §8.4; tally 2.1.8 R14)."""
+    from .moves import instant_text
+    return '%s of %s: its readings at %s are in %s' % (read, place, instant_text(r),
+                                                       ', '.join(units[:-1]) + ' and ' + units[-1])
 
 
 def known_carry(sid, known):
