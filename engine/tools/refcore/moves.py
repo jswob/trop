@@ -773,6 +773,39 @@ def m_move_instances(self, mi, ctx):
     return out
 
 
+def m_answer_booking(self, mi, i, tctx, upto=None):
+    """E §5 step 1: "An A0 that is a hole, from its amounts or its when, stays a hole movement until a version answers
+    it, with a value or with a refusal (LANGUAGE §8), under cuts from that version's known, and the answer is its
+    booking from then on, so one answered by a refusal stays refused; a version under which the when is false answers
+    it with 0, and nothing is booked."  The first later version known by the cut whose re-measurement is no hole
+    answers it where the instance is made, so every read of it (the walk, a field, a binding, a settlement's link,
+    explain) takes the answer, a settlement's included (tally 2.1.8 S9, §4, #179, #169-h); i.answered is (that cut, its
+    versions), which explain prints (S4).  adjust_move_compute measures the steps after it; a refused answer, as a
+    refused A0, none."""
+    if not (isinstance(i.exists, Hole) or any(isinstance(lg.amount, Hole) for lg in i.legs)):
+        return
+    if not isinstance(i.day, datetime.date) or i.day >= tctx.cut:
+        return
+    for c, vids in self.known_dates():
+        if not i.day < c <= tctx.cut:
+            continue
+        j = self.eval_inst(mi, i.env, i.keys, tctx, at_cut=c, upto=upto)
+        if j is None:
+            continue
+        if j.err is not None:
+            i.err = j.err
+        else:
+            if not self.keys_seen(mi, i.keys, c):
+                j.exists = False
+            if isinstance(j.exists, Hole) or any(isinstance(lg.amount, Hole) for lg in j.legs):
+                continue
+            i.exists, i.legs = j.exists, j.legs
+        i.coll.merge(j.coll)
+        i.answered = (c, self.step_versions(j, vids))
+        i.status = None
+        return
+
+
 def m_insts_of_tuples(self, mi, tuples, tctx, upto=None):
     if True:
         out = []
@@ -799,6 +832,8 @@ def m_insts_of_tuples(self, mi, tuples, tctx, upto=None):
                     continue
                 if not mi.decision and inst.cut is not None and inst.err is None:
                     self.inv5(inst, tctx, upto)
+                if not mi.decision and inst.err is None:
+                    self.answer_booking(mi, inst, tctx, upto)
             inst.coll.merge(c)
             out.append(inst)
         for inst in out:
@@ -1908,7 +1943,9 @@ def m_adjust_move_compute(self, mi, ctx):
             if not isinstance(i.day, datetime.date) or i.day >= K:
                 continue
             t = i.day
-            steps = [(c, vs) for c, vs in kds if t < c <= K]
+            ans = getattr(i, 'answered', None)
+            # a hole booking a version answered is measured from that version's known on (E §5 step 1, answer_booking)
+            steps = [(c, vs) for c, vs in kds if t < c <= K and (ans is None or c > ans[0])]
             if not steps:
                 continue
             prev = i
@@ -1921,6 +1958,10 @@ def m_adjust_move_compute(self, mi, ctx):
                 continue
             # E §5 step 3 (tally 2.1.2, issue #34, the user's "A: the refusal spreads"): the state the next step
             # measures against may be refused, or its existence a hole; then that step's δ is too
+            if hole0:
+                # no version known by the cut answers it (answer_booking): every step re-measures a hole, and a hole
+                # booking records no adjustment (E §5 step 1)
+                continue
             prev_bad = None
             prev_hole = None
             for c, vids in steps:
@@ -1928,11 +1969,9 @@ def m_adjust_move_compute(self, mi, ctx):
                 if j is None:
                     continue
                 if j.err is not None:
-                    # tally 2.1.7 R2 (#94): a version answers a hole movement with a value or with a refusal (E §5
-                    # step 1; L §8: a refusal outranks a hole), so a refused re-measurement of a hole booking answers
-                    # it with its refusal, from that version's known, as it does a booking that had a value
-                    # re-measured and refused (its day, `when` or a place): each leg's adjustment is refused, and so
-                    # is the next step's, measured against it; tally 2.1.1 skipped the step
+                    # tally 2.1.7 R2 (#94): a booking that had a value re-measured and refused (its day, `when` or a
+                    # place): each leg's adjustment is refused, and so is the next step's, measured against it; tally
+                    # 2.1.1 skipped the step. A hole booking answered by a refusal is refused (answer_booking)
                     for lg in self.step_legs(i, prev, j):
                         self.adjust_made(i, lg, j.err, c, j, vids, out, err=j.err)
                     prev_bad, prev_hole = j.err, None
@@ -1954,17 +1993,6 @@ def m_adjust_move_compute(self, mi, ctx):
                             self.adjust_made(i, lg, merge(prev_hole, *now), c, j, vids, out)
                     prev_bad = None
                     prev_hole = j.exists if isinstance(j.exists, Hole) else None
-                    prev, prev_ex = j, j.exists is True
-                    continue
-                if hole0:
-                    if isinstance(j.exists, Hole) or any(isinstance(lg.amount, Hole) for lg in j.legs):
-                        continue
-                    # a version answers the hole movement: its amounts are the instance's (E §5 step 1)
-                    i.exists, i.legs = j.exists, j.legs
-                    i.coll.merge(j.coll)
-                    i.status = None
-                    self.status(i, ctx)
-                    hole0 = False
                     prev, prev_ex = j, j.exists is True
                     continue
                 if isinstance(j.exists, Hole):

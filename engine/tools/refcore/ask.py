@@ -1599,22 +1599,16 @@ class Asker:
             out.append('attr %s = %s' % (k, fmt_value(val)))
         if not inst.decision and inst.cut is not None and inst.env is not None:
             # the derivation at the booking cut, traced (E §10: re-evaluates the cell's cone with tracing on)
-            eng.tracing = True
-            eng.trace_cells = {}
-            saved = eng.memo
-            eng.memo = {}
-            root = TraceNode('root', inst.id)
-            eng.trace_stack = [root]
-            try:
-                eng.eval_inst(inst.move, inst.env, inst.keys, tctx, at_cut=inst.cut)
-            finally:
-                eng.tracing = False
-                eng.trace_stack = []
-                eng.memo = saved
-            sub = self.explain_lines(root, ctx)
+            sub = self.trace_inst(eng, inst, tctx, ctx, inst.cut)
             if sub:
                 out.append('derivation at %s:' % inst.cut)
-                out.extend('  ' + l.strip() if False else l for l in sub)
+                out.extend(sub)
+            ans = getattr(inst, 'answered', None)
+            if ans is not None:
+                # E §10 (tally 2.1.8 S4, #179): "a version that answers a hole booking prints `answered at <cut>
+                # (version <V>):` before its rows", the derivation under that version's known
+                out.append('answered at %s (version %s):' % (ans[0], ', '.join(ans[1])))
+                out.extend(self.trace_inst(eng, inst, tctx, ctx, ans[0]))
         if not inst.decision:
             for adj in eng.adjustments(ctx):
                 if adj.inst.id != inst.id:
@@ -1630,6 +1624,22 @@ class Asker:
                     adj.id, fmt_value(adj.delta), adj.day, ', '.join(adj.vids),
                     ('waived' if adj.waived else 'settled by %s' % by), 'none' if rem is None else fmt_value(rem)))
         return out
+
+    def trace_inst(self, eng, inst, tctx, ctx, cut):
+        """A plan instance's derivation at a cut, traced (E §10: re-evaluates the cell's cone with tracing on)."""
+        eng.tracing = True
+        eng.trace_cells = {}
+        saved = eng.memo
+        eng.memo = {}
+        root = TraceNode('root', inst.id)
+        eng.trace_stack = [root]
+        try:
+            eng.eval_inst(inst.move, inst.env, inst.keys, tctx, at_cut=cut)
+        finally:
+            eng.tracing = False
+            eng.trace_stack = []
+            eng.memo = saved
+        return self.explain_lines(root, ctx)
 
     def explain_pins(self, eng, a, env, ctx, root, v):
         """explain under an ask's `with` pins, an as if over the line (E §10): the pins with their values, the
