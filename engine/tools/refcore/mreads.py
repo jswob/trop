@@ -1665,7 +1665,10 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ct
         if lg is None:
             continue
         wins = {}
+        closed = set()
         for e in lg.ents:
+            if e.kind == 'delta' and e.wid is not None:
+                closed.add(e.wid)
             if e.key <= lo:
                 if e.kind == 'perm' and e.key <= limit:
                     holes.append(Hole(e.qs))
@@ -1721,6 +1724,15 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ct
                     continue
             uu = conv[0] if conv is not None else u
             totals[uu] = totals.get(uu, Fraction(0)) + f.q
+        # a movement whose window opened by the span's end and closes after the walk's end books no delta in this walk:
+        # whether it falls in the span is the window's hole, as for one that closes after the span (L §4.4; tally
+        # 2.1.8 §4, #169-e: a window crossing the run's end)
+        for wid, win in sorted(wins.items(), key=lambda x: str(x[0])):
+            overlaps = win.lo <= last and (sp.start is None or win.hi >= sp.start) if isinstance(win, Iv) else False
+            if wid not in closed and overlaps and not (sp.contains(win.lo) and win.hi <= last):
+                mv = next((e.mv for e in lg.ents if e.kind == 'imp_on' and e.wid == wid), None)
+                holes.append(carry_hole(Hole([('date within %s not precise enough for flows of %s' % (
+                    win.window_text(), place), mv.id if mv is not None else place)]), win))
 
 
 def m_convert(self, f, day, conv, env, ctx):
@@ -1848,7 +1860,7 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
                 continue
         elif not sp.contains(d):
             continue
-        if fk is not None and (i.forp is None or vkey(i.forp) != vkey(fk)):
+        if fk is not None and not isinstance(i.forp, Hole) and (i.forp is None or vkey(i.forp) != vkey(fk)):
             continue
         if st == 'modelled':
             # on a day a statement covers, the observations that fulfil the instance stand in for it (L §5.14.3)
@@ -1894,6 +1906,10 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
             continue
         if st == 'past' and not getattr(i, 'obs', None):
             self.reg(('unfulfilled', i.id))
+        if fk is not None and isinstance(i.forp, Hole):
+            # a for the window doesn't decide (moves.body_over_law; L §4.4, #169-e): whether it counts is its hole
+            holes.append(i.forp)
+            continue
         for lg in i.legs:
             if leg is not None and lg.name != leg:
                 continue

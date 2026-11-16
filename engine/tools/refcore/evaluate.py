@@ -3459,6 +3459,13 @@ class Engine:
             if isinstance(t, Hole):
                 holes.append(t)
                 continue
+            if fn == 'sum' and isinstance(t, Iv) and isinstance(getattr(t, 'src', None), str):
+                # a term a window leaves open: the sum is decided only where every day agrees (L §4.4; tally 2.1.8
+                # §4, #169-e), so it is the window's hole, named by the day it comes from
+                w = t.src       # the text of the window the term comes from
+                holes.append(carry_hole(Hole([('date within %s not precise enough for a term of sum' % (
+                    w), t.origin[1] if t.origin else '')]), t))
+                continue
             if t is NONE:
                 raise refuse('RUN-NONE', 'a term of %s is none here' % fn)
             terms.append((e2, t))

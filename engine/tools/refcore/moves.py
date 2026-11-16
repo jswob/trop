@@ -702,6 +702,13 @@ def m_move_tuples(self, mi, ctx):
                 self.stack.append(cw)
                 try:
                     w = self.ev(b.where, e2, bctx)
+                    if len(lds) > 1 and not isinstance(w, Hole):
+                        # a window at: the where is decided only where every law date agrees (L §4.4; tally 2.1.8
+                        # §4, #169-e), else whether the tuple is bound is the window's hole
+                        for dd in lds[1:]:
+                            if vkey_opt(self.ev(b.where, e2, ctx.but(law=dd))) != vkey_opt(w):
+                                w = imprecise_law(law, mi.id)
+                                break
                 except TallyError as e:
                     # tally 2.1.6 (issue #51): a refused `where` makes a refused instance at that tuple, which reaches
                     # as a hole movement does, its places from its day (L §8.4, §5.14 Keys; E §4.2); it no longer
@@ -1019,21 +1026,22 @@ def m_eval_inst(self, mi, env, keys, tctx, exists0=True, at_cut=None, upto=None)
             else:
                 cuts = [K]
             inst.cut = cuts[0]
-            if not self.keys_seen(mi, keys, cuts[-1]):
+            seen = [self.keys_seen(mi, keys, c) for c in cuts]
+            if not any(seen):
                 # a key entered after the booking cut: the instance didn't exist then, A0 = 0 (E §5 steps 1-3)
                 inst.exists = False
                 return inst
-            bodies = [self.body_over_law(mi, env, inst, tctx.but(cut=c), law, exists0) for c in cuts]
+            # a key entered inside the window of booking cuts: at a cut before it the instance didn't exist (no body),
+            # so whether it did is the window's (agreed_body; L §4.4, tally 2.1.8 §4, #169-e)
+            bodies = [self.body_over_law(mi, env, inst, tctx.but(cut=c), law, exists0) if s else
+                      (False, [], {}, None, None) for c, s in zip(cuts, seen)]
             b0 = bodies[0]
-            if len(bodies) > 1 and body_key(bodies[0]) != body_key(bodies[1]):
-                # a version known inside a windowed instance's window (L §5.14.3)
-                hq = carry_hole(Hole([('date within %s not precise enough for the booking cut of %s' % (
-                    day.window_text(), inst.id), inst.id)]), day)
-                b1 = bodies[1]
-                src = b0[1] if b0[1] else b1[1]
-                legs = [Leg(lg.name, lg.frm, lg.to, hq, lg.unit, lg.day) for lg in src]
-                ex = b0[0] if (b0[0] is b1[0] or vkey_ex(b0[0]) == vkey_ex(b1[0])) else hq
-                b0 = (ex, legs, b0[2], b0[3], b0[4])
+            if len(bodies) > 1:
+                # a version known inside a windowed instance's window (L §5.14.3): each part decided where both
+                # booking cuts agree (agreed_body)
+                b0 = agreed_body(bodies, lambda: carry_hole(Hole([(
+                    'date within %s not precise enough for the booking cut of %s' % (day.window_text(), inst.id),
+                    inst.id)]), day))
             inst.exists, inst.legs, inst.attrs, inst.forp, inst.fulfils = b0
         except TallyError as e:
             if isinstance(e, LoadError) or load_now(e):
@@ -1091,16 +1099,43 @@ def m_body_over_law(self, mi, env, inst, c0, law, exists0=True):
     """An instance's body at its law date; for a window `at`, at each law date of the window: one value where all
     agree, otherwise HOLE-IMPRECISE (L §5.14 at e)."""
     lds = law_days(law)
-    b0 = self.inst_body(mi, env, inst, c0.but(law=lds[0]), exists0)
-    for dd in lds[1:]:
-        b1 = self.inst_body(mi, env, inst, c0.but(law=dd), exists0)
-        if body_key(b1) != body_key(b0):
-            hq = imprecise_law(law, inst.id)
-            src = b0[1] if b0[1] else b1[1]
-            legs = [Leg(lg.name, lg.frm, lg.to, hq, lg.unit, lg.day) for lg in src]
-            ex = b0[0] if vkey_ex(b0[0]) == vkey_ex(b1[0]) else hq
-            return (ex, legs, b0[2], b0[3], b0[4])
-    return b0
+    bodies = [self.inst_body(mi, env, inst, c0.but(law=dd), exists0) for dd in lds]
+    if len(bodies) == 1:
+        return bodies[0]
+    return agreed_body(bodies, lambda: imprecise_law(law, inst.id))
+
+
+def agreed_body(bodies, hole):
+    """L §4.4 (tally 2.1.8 §4, #169-e): a window decides a read only where every day agrees. Of an instance's bodies
+    over the days a window leaves open (its law dates, its booking cuts), each part (its existence, its legs, its for,
+    each attribute, its fulfils) is their value where all give the same, else the window's hole (hole()). 2.1.7
+    compared the existence and the legs alone and read the rest at the first."""
+    b0 = bodies[0]
+    ex_d = any(vkey_ex(b[0]) != vkey_ex(b0[0]) for b in bodies[1:])
+    legs_d = any(body_key((True,) + tuple(b[1:])) != body_key((True,) + tuple(b0[1:])) for b in bodies[1:])
+    for_d = any(vkey_opt(b[3]) != vkey_opt(b0[3]) for b in bodies[1:])
+    ful_d = any(vkey_opt(b[4]) != vkey_opt(b0[4]) for b in bodies[1:])
+    attrs_d = set(a for b in bodies[1:] for a in set(b0[2]) | set(b[2])
+                  if vkey_opt(b0[2].get(a)) != vkey_opt(b[2].get(a)))
+    if not (ex_d or legs_d or for_d or ful_d or attrs_d):
+        return b0
+    hq = hole()
+    src = next((b[1] for b in bodies if b[1]), [])
+    legs = [Leg(lg.name, lg.frm, lg.to, hq, lg.unit, lg.day) for lg in src] if legs_d else b0[1]
+    attrs = dict((a, hq if a in attrs_d else v) for a, v in b0[2].items())
+    return (hq if ex_d else b0[0], legs, attrs, hq if for_d else b0[3], hq if ful_d else b0[4])
+
+
+def vkey_opt(x):
+    """A comparable key of a body part that may be none, a hole or a refusal."""
+    if x is None or isinstance(x, bool):
+        return x
+    if isinstance(x, TallyError):
+        return ('err', x.code, x.msg)
+    try:
+        return vkey(x)
+    except Exception:
+        return repr(x)
 
 
 def m_inst_body(self, mi, env, inst, c1, exists0=True):
