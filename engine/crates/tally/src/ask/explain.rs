@@ -27,7 +27,7 @@ use super::walked::{Read, balance_line};
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{
     Collected, Ctx, Engine, Env, Item, RuleLine, Trace, TraceKind, TracedBalance, UNSET_AXIS,
-    num_stop,
+    num_stop, partial_text,
 };
 use crate::model::{NameKind, Node, NodeKind, Reality, Value};
 use crate::syntax::{Ask, Expr, PinForm, Postfix, Stop};
@@ -66,7 +66,7 @@ pub(super) fn explain_line(
     if let Some(place) = m.asks_unresolved.get(&ask.id) {
         unresolved_word(core::slice::from_ref(&item), place)?;
     }
-    let text = plain_text(m, &item)?;
+    let text = head_text(m, &item)?;
     let trace = match engine.unpinned {
         Some(unpinned) if !ask.pins.is_empty() => outside_pins(
             m,
@@ -701,6 +701,23 @@ fn value_text(m: &Reality, item: Option<&Item>) -> Result<String, Stop> {
         Some(item) => plain_text(m, item),
         None => Ok("?".to_owned()),
     }
+}
+
+/// A line's value as `explain` prints its head: under `partial` a hole in its linear form, as
+/// a value line prints it, the derivation below keeping the plain hole; else [`plain_text`]
+/// (refcore's `print_line`, `fmt_value` with the line's `partial`). L §5.18 Partial answers
+/// (tally 2.1.8 R15).
+///
+/// # Errors
+///
+/// A number's printing error.
+pub(super) fn head_text(m: &Reality, item: &Item) -> Result<String, Stop> {
+    if let Item::Value(Value::Hole(h)) = item
+        && let Some(text) = partial_text(m, h)?
+    {
+        return Ok(text);
+    }
+    plain_text(m, item)
 }
 
 /// A line's value by no static type, as `explain` prints its head (refcore's `fmt_value`

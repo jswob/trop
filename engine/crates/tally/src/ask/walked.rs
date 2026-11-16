@@ -21,7 +21,7 @@ use core::cmp::Ordering;
 
 use super::answer::unresolved_word;
 use super::check::Printed;
-use super::explain::{invariant, plain_text};
+use super::explain::{head_text, invariant, plain_text};
 use crate::base::Code;
 use crate::book::{gap_text, instant_text};
 use crate::eval::{Ctx, Engine, Env, Item};
@@ -84,7 +84,7 @@ pub(super) fn balance_line(
     let Ok([item]) = <[Item; 1]>::try_from(items) else {
         return Err(invariant("an explained line with other than one value"));
     };
-    let text = plain_text(m, &item)?;
+    let text = head_text(m, &item)?;
     let body = match (&item, read) {
         (Item::Refused(_), _) => Vec::new(),
         (Item::Value(_), Read::Bal(b)) if b.args.is_empty() => Vec::new(),

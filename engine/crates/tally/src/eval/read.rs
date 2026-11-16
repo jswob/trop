@@ -612,7 +612,7 @@ impl Engine {
             }
         }
         if is_held {
-            let shown = shown(m, &value)?;
+            let shown = held_text(m, &value)?;
             let read_for = match (&point.period, point.day) {
                 (Some(period), _) => Value::of_key(period).text(m).map_err(num_stop)?,
                 (None, Some(day)) => day.text(),
@@ -664,7 +664,7 @@ impl Engine {
         if read_past(m, row, (latest.day, ctx.cut), after)? {
             let text = format!(
                 "{figure} = {} ({}), read for {}",
-                shown(m, &value)?,
+                held_text(m, &value)?,
                 row.version,
                 latest.day.text()
             );
@@ -1091,6 +1091,15 @@ fn plain_unit(v: &Value) -> Unit {
         return n.unit();
     }
     Unit::one()
+}
+
+/// A row's value as its `held:` entry shows it: a hole in its own form, `?"…" (x[k])`, as
+/// L §8.1 prints it (L §8.2: a hole lists them like a value; tally 2.1.8 R7, R9, #179).
+fn held_text(m: &Reality, v: &Value) -> Result<String, Stop> {
+    if let Value::Hole(h) = v {
+        return Ok(h.text());
+    }
+    v.text(m).map_err(num_stop)
 }
 
 /// A value as a register entry shows it: a hole as `?` (L §8.2).

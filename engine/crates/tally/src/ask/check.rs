@@ -8,7 +8,9 @@
 //! run refuses the run; a side's text is refcore's `_txt` of the expression.
 
 use crate::base::{Code, Refusal, Run};
-use crate::eval::{Collected, Ctx, Engine, Env, Item, Op, arith, equal_sides, num_stop};
+use crate::eval::{
+    Collected, Ctx, Engine, Env, Item, Op, arith, equal_sides, num_stop, partial_text,
+};
 use crate::model::{KeyVal, Reality, Value};
 use crate::syntax::{Expr, PinForm, Stop};
 use crate::time::Day;
@@ -209,9 +211,15 @@ fn keys_of_one_index(m: &Reality, a: &Value, b: &Value) -> bool {
 
 /// A side as a check prints it in place of a decided comparison: a refusal as `refused: …`, a
 /// key outside its index as its `RUN-KEY`, an interval that isn't a window of days as its
-/// `HOLE-IMPRECISE`, any other value as L §5.18 prints it (refcore's `fmt_value` with no
-/// static type).
+/// `HOLE-IMPRECISE`, under `partial` a hole in its linear form (tally 2.1.8 R15), any other
+/// value as L §5.18 prints it (refcore's `fmt_value` with no static type and the line's
+/// `partial`).
 fn side_text(m: &Reality, item: &Item) -> Result<String, Stop> {
+    if let Item::Value(Value::Hole(h)) = item
+        && let Some(text) = partial_text(m, h)?
+    {
+        return Ok(text);
+    }
     match item {
         Item::Refused(r) => Ok(format!("refused: {}", r.text())),
         Item::Value(Value::OutKey { index, text }) => Ok(format!(
