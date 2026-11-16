@@ -89,12 +89,22 @@ struct Side {
     world: String,
     /// The cells per binding tuple, once answered.
     cells: Option<SideCells>,
+    /// The choice of seen and unseen this side is answered under; none for the first run,
+    /// which sees every `same` line (L §4.5, tally 2.1.8 R12).
+    pick: Option<BTreeMap<String, bool>>,
+    /// The `same` lines known in a window that holds the cut the side's run met, and that
+    /// cut, once answered.
+    met: Option<(SameMet, Day)>,
 }
 
 /// One side of a diff over two stacks: per binding tuple of the ask's `for`, its binding
 /// part, ` (k = a)`, and its cells or the hole its line prints; one tuple with no part where
 /// the ask binds nothing.
 type SideCells = Vec<(String, Result<Cells, String>)>;
+
+/// Both sides of a diff over two stacks answered: each side's cells, and the `same` lines
+/// known in a window that holds the cut the two met, with that cut (L §6.4, §4.5).
+type Crossing = (Vec<SideCells>, Option<(SameMet, Day)>);
 
 /// How a run's engines compute: keeping their cells as `memo` says, reading a written
 /// projection's common case as `lows` says and continuing a projection's walk read again as
@@ -275,44 +285,116 @@ pub(crate) fn answer_turns(
 /// The lines of a diff whose two worlds sit on two stacks of scenarios: each side answered by
 /// the world of the reality whose stack holds it, as that reality holds the ask, then printed
 /// as one diff, cell by cell over the axes either side reads; a side whose ask is refused or
-/// a hole before its cells prints that line alone (refcore's `cross_stack_diff`). L §6.4,
-/// §5.5, §5.18.
+/// a hole before its cells prints that line alone (refcore's `cross_stack_diff`). Where the
+/// sides met a `same` line known in a window that holds the cut, both sides are answered again
+/// under each other choice of seen and unseen, their warnings and bookings not kept, and the
+/// blocks compared by every line (L §4.5, tally 2.1.8 R12; P27 on #196). L §6.4, §5.5, §5.18.
 ///
 /// # Errors
 ///
-/// A load refusal met at run; `NotBuilt` for a construct not built yet.
+/// A load refusal met at run; `RUN-LIMIT` past [`SAME_LIMIT`] choices; `NotBuilt` for a
+/// construct not built yet.
 fn cross_lines(
     realities: &[&Reality],
     worlds: &mut [World],
     sides: &[(usize, usize, String); 2],
     days: Days,
 ) -> Result<Vec<String>, Stop> {
-    let mut got = Vec::with_capacity(sides.len());
-    for (place, at, world) in sides {
-        let m = realities.get(*place).ok_or_else(no_turn)?;
-        let gathered = worlds.get_mut(*place).ok_or_else(no_turn)?;
-        gathered.seen.side = Some(Side {
-            world: world.clone(),
-            cells: None,
-        });
-        let lines = gathered.answer(m, *at, days);
-        let side = gathered.seen.side.take();
-        let lines = lines?;
-        match side.and_then(|s| s.cells) {
-            Some(cells) => got.push(cells),
-            None => return Ok(lines),
-        }
-    }
     let [(place, at, _), _] = sides;
     let m = realities.get(*place).ok_or_else(no_turn)?;
     let ask = m.asks.get(*at).ok_or_else(no_turn)?;
     let AskBody::Diff(diff) = &ask.body else {
         return Err(no_turn());
     };
-    let [ours, theirs] = got.as_slice() else {
+    let (got, met) = match side_cells(realities, worlds, (sides, days), None)? {
+        Ok(answered) => answered,
+        Err(lines) => return Ok(lines),
+    };
+    let first = crossed_tuples(m, (ask, diff), &got)?;
+    let Some((met, cut)) = met else {
+        return Ok(first);
+    };
+    let mut others = Vec::new();
+    for pick in same_picks(&met)? {
+        let kept: Vec<_> = worlds
+            .iter()
+            .map(|w| (w.seen.booked.clone(), w.seen.warnings.clone()))
+            .collect();
+        let picked = side_cells(realities, worlds, (sides, days), Some(&pick));
+        for (w, (booked, warnings)) in worlds.iter_mut().zip(kept) {
+            w.seen.booked = booked;
+            w.seen.warnings = warnings;
+        }
+        others.push(match picked? {
+            Ok((cells, _)) => crossed_tuples(m, (ask, diff), &cells)?,
+            Err(lines) => lines,
+        });
+    }
+    let hole = same_hole(&met, cut)?;
+    Ok(undecided_lines((&ask.id, true), &first, &others, &hole))
+}
+
+/// Both sides of a diff over two stacks answered under choice `pick` of seen and unseen, none
+/// for the first run: each side's cells, and the `same` lines known in a window that holds the
+/// cut the two met, with that cut; or the lines of a side whose ask is refused or a hole
+/// before its cells (refcore's `cross_stack_diff`). L §6.4, §4.5.
+///
+/// # Errors
+///
+/// A load refusal met at run; `NotBuilt` for a construct not built yet.
+fn side_cells(
+    realities: &[&Reality],
+    worlds: &mut [World],
+    (sides, days): (&[(usize, usize, String); 2], Days),
+    pick: Option<&BTreeMap<String, bool>>,
+) -> Result<Result<Crossing, Vec<String>>, Stop> {
+    let mut got = Vec::with_capacity(sides.len());
+    let mut all: Option<(SameMet, Day)> = None;
+    for (place, at, world) in sides {
+        let m = realities.get(*place).ok_or_else(no_turn)?;
+        let gathered = worlds.get_mut(*place).ok_or_else(no_turn)?;
+        gathered.seen.side = Some(Side {
+            world: world.clone(),
+            cells: None,
+            pick: pick.cloned(),
+            met: None,
+        });
+        let lines = gathered.answer(m, *at, days);
+        let side = gathered.seen.side.take();
+        let lines = lines?;
+        let Some(Side {
+            cells: Some(cells),
+            met,
+            ..
+        }) = side
+        else {
+            return Ok(Err(lines));
+        };
+        got.push(cells);
+        if let Some((met, cut)) = met {
+            all.get_or_insert_with(|| (SameMet::new(), cut))
+                .0
+                .extend(met);
+        }
+    }
+    Ok(Ok((got, all)))
+}
+
+/// The blocks of a diff over two stacks from its sides' cells `got`: one per binding tuple,
+/// each side's at that tuple; a side's hole, or a run-time refusal met crossing them, that
+/// tuple's line (L §5.18, tally 2.1.8 R13.1; §8.4).
+///
+/// # Errors
+///
+/// A load refusal; `NotBuilt` for sides that bind other tuples.
+fn crossed_tuples(
+    m: &Reality,
+    (ask, diff): (&Ask, &Diff),
+    got: &[SideCells],
+) -> Result<Vec<String>, Stop> {
+    let [ours, theirs] = got else {
         return Err(no_turn());
     };
-    // one block per binding tuple, each side's at that tuple (L §5.18, tally 2.1.8 R13)
     let mut out = Vec::new();
     for (part, left) in ours {
         let head = format!("{}{part}", ask.id);
@@ -601,9 +683,21 @@ fn ask_lines(
         known_engine = Some(engine);
     }
     let mut engine = ask_engine(cut, (ask, env), days, seen);
+    // a side of a diff over two stacks is answered under the choice its crossing gives
+    if let Some(side) = &seen.side {
+        engine.same_picks.pick.clone_from(&side.pick);
+    }
     let out = ask_body(m, ask, &mut engine, (cut, seen.side.as_mut()));
     gather(seen, &mut engine);
-    let met = core::mem::take(&mut engine.same_picks.met);
+    let mut met = core::mem::take(&mut engine.same_picks.met);
+    // and its first run's `same` lines go to the crossing, which reads the choices
+    // (`cross_lines`)
+    if let Some(side) = seen.side.as_mut() {
+        if side.pick.is_none() && !met.is_empty() {
+            side.met = Some((core::mem::take(&mut met), engine.ask_cut));
+        }
+        met.clear();
+    }
     let lines = if met.is_empty() {
         out?
     } else {
@@ -634,8 +728,8 @@ fn ask_lines(
 ///
 /// # Errors
 ///
-/// A load or request refusal a run meets; `RUN-LIMIT` past [`SAME_LIMIT`] choices;
-/// `NotBuilt` for a diff over two stacks.
+/// A load or request refusal a run meets; `RUN-LIMIT` past [`SAME_LIMIT`] choices. A diff
+/// over two stacks reads its choices where its sides are crossed (`cross_lines`).
 fn picked_lines(
     m: &Reality,
     (ask, env): (&Ask, &Env),
@@ -643,11 +737,6 @@ fn picked_lines(
     seen: &mut Seen,
     met: &SameMet,
 ) -> Result<Vec<Vec<String>>, Stop> {
-    if seen.side.is_some() {
-        return Err(Stop::NotBuilt(
-            "a `same` line known in a window that holds the cut, read by a diff over two stacks",
-        ));
-    }
     let mut others = Vec::new();
     for pick in same_picks(met)? {
         let booked = seen.booked.clone();

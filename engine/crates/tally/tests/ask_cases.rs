@@ -938,6 +938,45 @@ version sc_link
         );
     }
 
+    /// A second stack over `ls` for [`SAME_DIFF`]'s asks to diff `sc` against (the review of
+    /// group 1's N3).
+    const SAME_DIFF_SD: &str = "scenario sd over ls
+  tally 2
+  from 2026-01-01
+
+version sd_v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  replace amt = 300.00 PLN \"s\"
+";
+
+    /// A diff over two stacks reads its `same` lines seen and unseen across both sides, the
+    /// choices joint (tally 2.1.8 R12), where it stopped `NotBuilt`.
+    #[test]
+    fn a_diff_over_two_stacks_reads_its_same_lines_seen_and_unseen() {
+        let base = SAME_DIFF.replace("in sc against ls", "in sc against sd");
+        let hole = "d1: ?\"date within window(2026-05-01, 2026-05-20) not precise enough for the cut 2026-05-10\" (bank[a1], bank[b1], link1) ?\"date within window(2026-05-08, 2026-05-15) not precise enough for the cut 2026-05-10\" (bank[c1], bank[d1], sc_link)";
+        assert_eq!(
+            lines_of_files(&[
+                ("ls.tally", &base),
+                ("sc.tally", SAME_DIFF_SC),
+                ("sd.tally", SAME_DIFF_SD)
+            ]),
+            [
+                hole,
+                "  cut 2026-05-10",
+                "d2: diff in sc against sd: 1 changed, 0 added, 0 removed, 0 unchanged",
+                "  changed count(...): 2 against 3",
+                "  world: sc",
+                "  world: sd",
+                "  cut 2026-05-25",
+                "warning: WARN-UNREAD input amt is read by nothing",
+            ],
+            "d1's sides count differently seen and unseen; d2's cut is past both windows"
+        );
+    }
+
     /// A window of one day read as a key, beside the plain day (the review of group 1's N6).
     const ONE_DAY_KEY: &str = "model w
   tally 2
