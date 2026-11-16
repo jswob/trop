@@ -294,7 +294,9 @@ def m_residuals(self, place, span, by, ctx, unit=None):
         for o in os:
             vals.add(obs_field(o, by))
         if len(vals) == 1 and None not in vals:
-            return vals.pop()
+            # a value group prints `<f> <value>`, as a move's prints `move <id>`, so it is never taken for balance,
+            # unexplained or a move (E §6.3; tally 2.1.8 S3, #178)
+            return '%s %s' % (by, vals.pop())
         return 'move %s' % mid
 
     for i in model:
@@ -404,7 +406,8 @@ def m_residuals(self, place, span, by, ctx, unit=None):
         # an observation that fulfils nothing, or whose instance or adjustment the model at K doesn't hold (E §6.3)
         ob = obs_flow(o)
         if by is not None:
-            g = obs_field(o, by) or 'unexplained'
+            v = obs_field(o, by)
+            g = '%s %s' % (by, v) if v is not None else 'unexplained'
         else:
             g = 'unexplained'
         ids = ', '.join(also.get(o.id) or [o.id])

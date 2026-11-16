@@ -1,0 +1,60 @@
+# tally 2.1.8 S3 (#178), E §6.3 Grouping: with by f a matched line whose observation lacks f goes by its move,
+# move rent, as a line with no observation does, and an unexplained observation that lacks it stays unexplained:
+# today's answer, now the text's.
+=== m.tally
+model t
+  tally 2
+  on 2026-04-10
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+kind shopping: transfers
+  attr cat: text
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input dom: int
+
+move rent[m in months]: transfers
+  on day_of(m, dom)
+  leg cash from konto to shop amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  dom = 5 "s"
+  opening[konto] = 1000.00 PLN at 2026-01-01 start "s"
+
+version st
+  cite s
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+  anchor konto
+  bank[r1] = (on: 2026-02-05, kind: shopping, leg cash from konto to shop amount 100.00 PLN, cat: "home", fulfils: rent[2026-02]) "r1"
+  bank[r2] = (on: 2026-02-07, kind: shopping, leg cash from konto to shop amount 3.00 PLN, cat: "balance") "r2"
+  bank[r3] = (on: 2026-02-08, kind: shopping, leg cash from konto to shop amount 4.00 PLN, cat: "food") "r3"
+  stated[konto] = 793.00 PLN at 2026-02-28 end "saldo"
+
+version st3
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  anchor konto
+  bank[q1] = (on: 2026-03-05, kind: transfers, leg cash from konto to shop amount 100.00 PLN, fulfils: rent[2026-03]) "q1"
+  bank[q2] = (on: 2026-03-07, kind: transfers, leg cash from konto to shop amount 6.00 PLN) "q2"
+
+ask gb: residuals konto 2026-03 by cat
+=== expect
+gb: residuals konto 2026-03 by cat
+  2026-03 unexplained: model 0.00 PLN, observed -6.00 PLN, difference -6.00 PLN
+    unexplained bank[q2] on 2026-03-07: observed -6.00 PLN
+  2026-03 move rent: model -100.00 PLN, observed -100.00 PLN, difference 0.00 PLN
+    matched rent[2026-03] on 2026-03-05: model -100.00 PLN, observed -100.00 PLN, difference 0.00 PLN, timing +0 days
+  cut 2026-04-10
