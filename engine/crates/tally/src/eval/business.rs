@@ -677,8 +677,7 @@ impl Engine {
     ///
     /// # Errors
     ///
-    /// The read rule's refusals; `ENGINE-INVARIANT` for a calendar whose read took no row,
-    /// or a known window no `windows each` decides (the caller reads under one).
+    /// The read rule's refusals; `ENGINE-INVARIANT` for a calendar whose read took no row.
     fn calendar_row(
         &mut self,
         m: &Reality,
@@ -692,10 +691,7 @@ impl Engine {
         if let Some(row) = self.calendar_own_row(m, (name, keys), ctx)? {
             return Ok(row);
         }
-        let other = self
-            .same_row_of(m, (name, keys), ctx)?
-            .map_err(|h| invariant(&format!("a calendar's same line undecided: {}", h.text())))?;
-        let Some((other, other_keys)) = other else {
+        let Some((other, other_keys)) = self.same_row_of(m, (name, keys), ctx)? else {
             return Err(invariant("a calendar's added window read from no row"));
         };
         self.calendar_own_row(m, (&other, &other_keys), ctx)?

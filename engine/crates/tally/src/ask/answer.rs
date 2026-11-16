@@ -1,14 +1,17 @@
 //! Answering the asks: each ask's cut, law date and `with` pins, its binding tuples, its line's values, check or solve, and each line's register.
 //! Spec: L §5.18 (asks: `as known`, `law`, `in`, `with`, `for`, `check`, `solve`, `diff`, one line
 //! per binding tuple, a tuple whose `where` is a hole printed as that hole); L §4.3 (the law
-//! date), §4.5 (the cut), §5.11 (an ask's `law`, `as known` or pin that is a hole makes the ask
+//! date), §4.5 (the cut; tally 2.1.8 R12: a line that reads a `same` line known in a window
+//! that holds the cut is answered with it seen and unseen, `HOLE-IMPRECISE` where the two
+//! differ), §5.11 (an ask's `law`, `as known` or pin that is a hole makes the ask
 //! line that hole), §8.2 (the register), §8.4 (a run-time refusal prints as the ask's line),
 //! §8.5 (warnings last), §6.4 (the line's world: its `in`, else the model's; `law` and
 //! `as known` in the model's), §5.5 (tally 2.1.7 R8: an ask of any form fans out over the
 //! axes it reaches, `axes.rs`; a `diff`'s and a ledger's results are their sets of lines,
 //! `diff.rs`, `residuals.rs`); E §11 (`REQ-ASK`, tally 2.1.3; `REQ-CLOCK`).
 //! Twin: engine/tools/refcore/ask.py (`Asker.run`, `req_ask`, `answer`, `_answer`,
-//! `_answer_in`, `evaluate`, `one`, `one_solve`, `print_line`, `fmt_value`, `fmt_bind`) and
+//! `answer_same_undecided`, `_answer_in`, `evaluate`, `one`, `one_solve`, `print_line`,
+//! `fmt_value`, `fmt_bind`) and
 //! evaluate.py (`date_of`, `apply_pins`); refcore answers an `as known` after `on` where E §11
 //! refuses it (codes/m1 held.tsv, P22).
 //! Invariants: asks print in id order unless the run names them; every id the run names is
@@ -26,9 +29,10 @@ use super::explain::{explain_line, inputs_line, readers_line};
 use super::register::{check_register_lines, register_lines, warning_lines};
 use super::residuals::residual_lines;
 use crate::base::{Code, Load, Place, Reach, Refusal, Req, Run, Warn};
+use crate::book::SameMet;
 use crate::eval::{
-    Collected, Ctx, Engine, Entry, Env, Item, Member, Memo, after_on, names_in, num_stop, one_day,
-    past_days, world_named,
+    Collected, Ctx, Engine, Entry, Env, Item, Member, Memo, after_on, combinations, known_question,
+    names_in, num_stop, one_day, past_days, world_named,
 };
 use crate::model::{Reality, Value};
 use crate::syntax::{Ask, AskBody, Bind, Domain, Expr, Key, Lit, OfQ, Pin, PinForm, Step, Stop};
@@ -482,7 +486,13 @@ fn answer_in(
     days: Days,
     seen: &mut Seen,
 ) -> Result<Vec<String>, Stop> {
-    match ask_lines(m, ask, env, days, seen) {
+    refusal_line(ask, ask_lines(m, ask, env, days, seen))
+}
+
+/// Ask `ask`'s lines `lines`, or the one line of the run-time refusal its reading met; a load
+/// or request refusal stays the run's (L §8.3, §8.4; E §11).
+fn refusal_line(ask: &Ask, lines: Result<Vec<String>, Stop>) -> Result<Vec<String>, Stop> {
+    match lines {
         Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_) | Code::Req(_)) => {
             Ok(vec![format!("{}: refused: {}", ask.id, r.text())])
         }
@@ -521,13 +531,193 @@ fn ask_lines(
     let mut engine = ask_engine(cut, (ask, env), days, seen);
     let out = ask_body(m, ask, &mut engine, (cut, seen.side.as_mut()));
     gather(seen, &mut engine);
-    let lines = out?;
+    let met = core::mem::take(&mut engine.same_picks.met);
+    let lines = if met.is_empty() {
+        out?
+    } else {
+        refusal_line(ask, out)?
+    };
     // E §9 item 4: asks move no money; the walks the ask made are as they were when walked
     if let Some(first) = &known_engine {
         first.asks_moved_no_money()?;
     }
     engine.asks_moved_no_money()?;
-    Ok(lines)
+    if met.is_empty() {
+        return Ok(lines);
+    }
+    let hole = same_hole(&met, engine.ask_cut)?;
+    let others = picked_lines(m, (ask, env), (cut, days), seen, &met)?;
+    Ok(undecided_lines(ask, &lines, &others, &hole))
+}
+
+/// Ask `ask`'s lines in scope `env` at cut `cut` under each choice of seen and unseen for
+/// the `same` lines `met` but the first run's, each on an engine of its own, its warnings and
+/// bookings not kept (refcore's `answer_same_undecided`, on fresh caches). L §4.5 (tally
+/// 2.1.8 R12).
+///
+/// # Errors
+///
+/// A load or request refusal a run meets; `NotBuilt` for a diff over two stacks, or past
+/// [`SAME_CAP`] choices.
+fn picked_lines(
+    m: &Reality,
+    (ask, env): (&Ask, &Env),
+    (cut, days): (Day, Days),
+    seen: &mut Seen,
+    met: &SameMet,
+) -> Result<Vec<Vec<String>>, Stop> {
+    if seen.side.is_some() {
+        return Err(Stop::NotBuilt(
+            "a `same` line known in a window that holds the cut, read by a diff over two stacks",
+        ));
+    }
+    let mut others = Vec::new();
+    for pick in same_picks(met)? {
+        let booked = seen.booked.clone();
+        let mut engine = ask_engine(cut, (ask, env), days, seen);
+        engine.same_picks.pick = Some(pick);
+        let out = ask_body(m, ask, &mut engine, (cut, None));
+        seen.booked = booked;
+        #[cfg(feature = "counters")]
+        seen.counts.merge(engine.counters());
+        others.push(refusal_line(ask, out)?);
+        engine.asks_moved_no_money()?;
+    }
+    Ok(others)
+}
+
+/// Every choice of seen and unseen for the `same` lines `met` but the first run's, which saw
+/// them all: the versions in id order, the first slowest, seen before unseen (refcore's
+/// `answer_same_undecided`, its `picks`). L §4.5 (tally 2.1.8 R12).
+///
+/// # Errors
+///
+/// `NotBuilt` past 64 choices: more than six such lines in one line's reads.
+fn same_picks(met: &SameMet) -> Result<Vec<BTreeMap<String, bool>>, Stop> {
+    let counts = vec![2; met.len()];
+    let Some(combos) = combinations(&counts, SAME_CAP) else {
+        return Err(Stop::NotBuilt(
+            "more than six `same` lines known in a window that holds the cut in one line",
+        ));
+    };
+    let mut out = Vec::new();
+    for combo in combos.into_iter().skip(1) {
+        let pick = met
+            .keys()
+            .zip(combo)
+            .map(|(id, at)| (id.clone(), at == 0))
+            .collect();
+        out.push(pick);
+    }
+    Ok(out)
+}
+
+/// The most choices of seen and unseen one line is read under (64: six `same` lines known
+/// in a window that holds the cut, as many as an ask's axes take, L §5.5).
+const SAME_CAP: usize = 64;
+
+/// The `HOLE-IMPRECISE` of the `same` lines `met` under cut `cut`: for each line's version,
+/// `date within window(a, b) not precise enough for the cut K`, asked of the rows or
+/// movements its lines join, then of the version (refcore's `answer_same_undecided`). L §4.5
+/// (tally 2.1.8 R12), §8.1.
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for no line met.
+fn same_hole(met: &SameMet, cut: Day) -> Result<crate::hole::Hole, Stop> {
+    let mut asked = Vec::new();
+    for (version, (window, sides)) in met {
+        let question = known_question(*window, cut);
+        for side in sides {
+            asked.push(crate::hole::Hole::asked(&question, side));
+        }
+        asked.push(crate::hole::Hole::asked(&question, version));
+    }
+    let operands: Vec<_> = asked.iter().map(Some).collect();
+    crate::hole::spread(&operands).ok_or_else(|| invariant("a same line's hole with no line"))
+}
+
+/// Ask `ask`'s lines where its first run, `first`, saw every `same` line known in a window
+/// that holds the cut and the runs `others` took the other choices: the lines where every run
+/// prints them; else each block (a line and the lines under it) whose first line differs
+/// becomes its head and `hole`, the first run's register under it; and where the runs' heads
+/// differ, the one line of `hole` with the first run's last cut or law date line (refcore's
+/// `answer_same_undecided`). L §4.5 (tally 2.1.8 R12: a read on which seen and unseen
+/// differ is `HOLE-IMPRECISE`), §8.2.
+fn undecided_lines(
+    ask: &Ask,
+    first: &[String],
+    others: &[Vec<String>],
+    hole: &crate::hole::Hole,
+) -> Vec<String> {
+    if others.iter().all(|lines| lines.as_slice() == first) {
+        return first.to_vec();
+    }
+    let own = heads(first);
+    if others.iter().any(|lines| heads(lines) != own) {
+        let mut out = vec![format!("{}: {}", ask.id, hole.text())];
+        out.extend(last_clock(first).cloned());
+        return out;
+    }
+    let theirs: Vec<Vec<&str>> = others.iter().map(|lines| leads(lines)).collect();
+    let mut out = Vec::new();
+    for (at, block) in blocks(first).into_iter().enumerate() {
+        let Some((lead, under)) = block.split_first() else {
+            continue;
+        };
+        let agree = theirs.iter().all(|led| led.get(at) == Some(lead));
+        if agree || !lead.contains(": ") {
+            out.extend(block.iter().map(|l| (*l).to_owned()));
+            continue;
+        }
+        out.push(format!("{}: {}", line_head(lead), hole.text()));
+        out.extend(under.iter().map(|l| (*l).to_owned()));
+    }
+    out
+}
+
+/// Lines `lines` in blocks: a line and the indented lines under it.
+fn blocks(lines: &[String]) -> Vec<Vec<&str>> {
+    let mut out: Vec<Vec<&str>> = Vec::new();
+    for line in lines {
+        match out.last_mut() {
+            Some(block) if line.starts_with(' ') => block.push(line),
+            _ => out.push(vec![line.as_str()]),
+        }
+    }
+    out
+}
+
+/// The first line of each block of `lines`.
+fn leads(lines: &[String]) -> Vec<&str> {
+    let mut out = Vec::new();
+    for block in blocks(lines) {
+        out.extend(block.first());
+    }
+    out
+}
+
+/// The head of each block of `lines`, its first line's.
+fn heads(lines: &[String]) -> Vec<&str> {
+    leads(lines).into_iter().map(line_head).collect()
+}
+
+/// The last cut or law date line under the last block of `lines`.
+fn last_clock(lines: &[String]) -> Option<&String> {
+    let mut found = None;
+    for line in lines {
+        if !line.starts_with(' ') {
+            found = None;
+        } else if line.starts_with("  cut") || line.starts_with("  law date") {
+            found = Some(line);
+        }
+    }
+    found
+}
+
+/// A line's head: its text before its first `: `, the whole line where it has none.
+fn line_head(line: &str) -> &str {
+    line.split_once(": ").map_or(line, |(head, _)| head)
 }
 
 /// The cuts the request's asks state as literals, `as known D` or `with known D` (`what`), on or

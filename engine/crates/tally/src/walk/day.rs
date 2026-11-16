@@ -23,7 +23,7 @@ use super::point::At;
 use super::readings::Broke;
 use super::state::{ALL, Change, Ent, Group, HoleLeg, Progress, Taken, Today, Walk, WalkObs};
 use crate::base::{Code, Refusal, Run, Warn};
-use crate::book::{Member, stated_same};
+use crate::book::Member;
 use crate::eval::{Collected, Engine, Entry, GUARDED};
 use crate::hole::{Hole, spread};
 use crate::model::{Reality, World};
@@ -407,7 +407,7 @@ impl Engine {
             reg.extend(before_from(m, world, (&inst.move_id, day), &inst.coll));
         }
         let mut mask = Ends::both();
-        if stated_same(m, &inst.id, cut)? && !matches!(lg.amount, Amount::Refused(_)) {
+        if self.stated_same(m, &inst.id, cut)? && !matches!(lg.amount, Amount::Refused(_)) {
             // one movement on two statements books each place once (L §6.1)
             let mover = self.mover_of(m, id, inst)?;
             mask = self.same_mask(m, id, (&mover, lg), at, (&reg, &inst.coll), mask)?;
@@ -621,7 +621,7 @@ impl Engine {
             to,
             whole: false,
         };
-        if stated_same(m, &wo.obs.id, cut)? {
+        if self.stated_same(m, &wo.obs.id, cut)? {
             // one movement on two statements books each place once (L §6.1)
             let mover = Member::Obs(wo.obs.clone());
             mask = self.same_mask(m, id, (&mover, lg), at, (&[], &wo.obs.coll), mask)?;

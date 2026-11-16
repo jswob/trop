@@ -16,7 +16,7 @@ use super::plan::{Amount, Dated, DayWindow, Exists, Inst, Status, invariant, qty
 use super::reads::refuse;
 use super::state::Progress;
 use crate::base::{Refusal, Run};
-use crate::book::{Obs, once_obs, same_differ, same_groups};
+use crate::book::{Obs, once_obs, same_differ};
 use crate::eval::{Collected, Ctx, Engine, Entry, Env, GUARDED, UNSET_AXIS};
 use crate::hole::{Hole, spread};
 use crate::model::{KeyVal, MoveInfo, Reality, Span, Value};
@@ -227,7 +227,7 @@ impl Engine {
                 figure: String::new(),
             });
         }
-        let groups = same_groups(m, cut)?;
+        let groups = self.same_groups(m, cut)?;
         for (first, rest) in once_obs(&groups, &obs) {
             let others: Vec<&Obs> = rest.iter().filter_map(|&k| obs.get(k)).collect();
             let Some(o) = obs.get(first) else {

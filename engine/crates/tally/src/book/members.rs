@@ -18,7 +18,7 @@ use std::collections::BTreeSet;
 use super::adjust::Adjustment;
 use super::observe::Obs;
 use super::reading::Pad;
-use super::same::{kept_once, same_differ, same_groups};
+use super::same::{Groups, kept_once, same_differ};
 use crate::base::{Code, Load, Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Entry, Env};
 use crate::hole::{Hole, spread};
@@ -550,7 +550,8 @@ impl Engine {
             out.extend(pads.into_iter().map(|(p, at)| Moving::Pad(p, at)));
         }
         out.extend(self.decided_members(m, &decided, ctx)?);
-        in_order(once_by_same(m, out, ctx.cut)?)
+        let groups = self.same_groups(m, ctx.cut)?;
+        in_order(once_by_same(&groups, out))
     }
 
     /// The runs of the decision moves `decided` that a binding over their kind ranges over,
@@ -771,7 +772,7 @@ impl Engine {
         kind: &str,
         ctx: Ctx,
     ) -> Result<Option<Hole>, Stop> {
-        let groups = same_groups(m, ctx.cut)?;
+        let groups = self.same_groups(m, ctx.cut)?;
         let Some(group) = groups.get(x.id()) else {
             return Ok(None);
         };
@@ -836,7 +837,7 @@ impl Engine {
         leg: Option<&str>,
         cut: Day,
     ) -> Result<Option<Hole>, Stop> {
-        let groups = same_groups(m, cut)?;
+        let groups = self.same_groups(m, cut)?;
         let Some(group) = groups.get(&o.id) else {
             return Ok(None);
         };
@@ -1168,22 +1169,21 @@ fn entry(word: &'static str, text: &str) -> Entry {
     }
 }
 
-/// The movements `movements`, a group stated `same` bound once, by the member its same lines
-/// name first (refcore's `once_by_same`). L §6.1, §5.19.
-fn once_by_same(m: &Reality, movements: Vec<Moving>, cut: Day) -> Result<Vec<Moving>, Stop> {
-    let groups = same_groups(m, cut)?;
+/// The movements `movements`, a group of `groups` stated `same` bound once, by the member its
+/// same lines name first (refcore's `once_by_same`). L §6.1, §5.19.
+fn once_by_same(groups: &Groups, movements: Vec<Moving>) -> Vec<Moving> {
     if groups.is_empty() {
-        return Ok(movements);
+        return movements;
     }
     let keep = {
         let ids: Vec<&str> = movements.iter().map(Moving::id).collect();
-        kept_once(&groups, &ids)
+        kept_once(groups, &ids)
     };
-    Ok(movements
+    movements
         .into_iter()
         .zip(keep)
         .filter_map(|(mv, kept)| kept.then_some(mv))
-        .collect())
+        .collect()
 }
 
 /// Movements in movement order: by day, then by their typed order, ties as they came (refcore's

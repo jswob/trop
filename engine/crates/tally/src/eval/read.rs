@@ -190,14 +190,10 @@ impl Engine {
             return self.pin_chosen(value, &origin(&input.id, keys), ctx);
         }
         // two rows stated `same` are read together (L §6.1, §5.19)
-        if !input.reading {
-            match self.same_row_of(m, (&input.id, keys), ctx)? {
-                Err(h) => return Ok(Value::Hole(h)),
-                Ok(Some(other)) => {
-                    return self.read_same_rows(m, (input, keys), (&other.0, &other.1), ctx, asked);
-                }
-                Ok(None) => {}
-            }
+        if !input.reading
+            && let Some(other) = self.same_row_of(m, (&input.id, keys), ctx)?
+        {
+            return self.read_same_rows(m, (input, keys), (&other.0, &other.1), ctx, asked);
         }
         let clocks = self.clocks(ctx, &input.id)?;
         #[cfg(feature = "counters")]
@@ -267,63 +263,32 @@ impl Engine {
     }
 
     /// The row a `same` line the cut of `ctx` sees states one with input `id`'s at `keys`:
-    /// the other side's input and keys, the last such line's where several name it; the hole
-    /// where no `windows each` decides a line whose version is known in a window that holds
-    /// the cut (refcore's `same_rows`). L §6.1, §5.19, §4.5.
+    /// the other side's input and keys, the last such line's where several name it; a line
+    /// whose version is known in a window that holds the cut is seen as
+    /// [`Engine::same_line_seen`] decides (refcore's `same_rows`, `same_row_seen`). L §6.1,
+    /// §5.19, §4.5 (tally 2.1.8 R12).
     ///
     /// # Errors
     ///
-    /// As [`Engine::same_seen`].
+    /// As [`Engine::same_line_seen`].
     pub(super) fn same_row_of(
         &mut self,
         m: &Reality,
         (id, keys): (&str, &[KeyVal]),
         ctx: Ctx,
-    ) -> Result<Result<Option<SameRow>, Hole>, Stop> {
+    ) -> Result<Option<SameRow>, Stop> {
         let mut out = None;
         for pair in &m.sames {
             let Some((other, other_keys, version)) = pair.other_row(id, keys) else {
                 continue;
             };
-            match self.same_seen(m, version, ctx)? {
-                Err(h) => return Ok(Err(h)),
-                Ok(true) => out = Some((other.to_owned(), other_keys.to_vec())),
-                Ok(false) => {}
+            let sides = [origin(id, keys), origin(other, other_keys)];
+            let [ours, theirs] = &sides;
+            if self.same_line_seen(m, version, ctx, [ours, theirs])? {
+                out = Some((other.to_owned(), other_keys.to_vec()));
             }
         }
-        Ok(Ok(out))
-    }
-
-    /// Whether the cut of `ctx` sees a `same` line of version `version`: one in a joint
-    /// model's header always; else its version's `known` is on or before the cut, a window
-    /// that holds it decided by the line's `windows each`, else `HOLE-IMPRECISE` (L §4.5:
-    /// a `known` holds for everything the version brings).
-    ///
-    /// # Errors
-    ///
-    /// `ENGINE-INVARIANT` for a version load didn't build; as [`Engine::known_seen`].
-    fn same_seen(
-        &mut self,
-        m: &Reality,
-        version: Option<&str>,
-        ctx: Ctx,
-    ) -> Result<Result<bool, Hole>, Stop> {
-        let Some(id) = version else {
-            return Ok(Ok(true));
-        };
-        let info = m
-            .versions
-            .get(id)
-            .ok_or_else(|| invariant("a same line's version load didn't build"))?;
-        let (lo, cut) = (info.known, ctx.cut);
-        // a window that ends on or before the cut is seen, one that starts after it unseen
-        let Some(hi) = info.window.filter(|hi| lo <= cut && cut < *hi) else {
-            return Ok(Ok(lo <= cut));
-        };
-        Ok(match self.known_seen(ctx, (lo, hi), &info.id)? {
-            Some(seen) => Ok(seen),
-            None => Err(known_hole((lo, hi), cut, &info.id)),
-        })
+        Ok(out)
     }
 
     /// A read of input `input` at `keys`, whose row a `same` line states one with input

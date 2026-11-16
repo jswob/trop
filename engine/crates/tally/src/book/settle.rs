@@ -159,7 +159,7 @@ impl Engine {
             }
         }
         let observed = self.observations(m, cut)?.to_vec();
-        let groups = super::same_groups(m, cut)?;
+        let groups = self.same_groups(m, cut)?;
         for a in adjs.iter_mut() {
             for vid in a.vids.clone() {
                 link_observed(m, a, &vid, (&observed, &groups))?;

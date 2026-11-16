@@ -593,6 +593,9 @@ pub struct Engine {
     /// The windows a `windows each` run met that its choice names no day of, in the order
     /// met; none outside such a run (L §4.4; refcore's `each_met`).
     pub(crate) each_met: Option<Vec<super::context::Met>>,
+    /// How this run of the ask's line reads the `same` lines known in a window that holds the
+    /// cut, which no `windows each` decides (L §4.5, tally 2.1.8 R12).
+    pub(crate) same_picks: crate::book::SamePicks,
     /// The splits `prorata`'s `rest largest` made, once per total, step and weights (L §5.13
     /// Cost).
     pub(super) splits: super::prorata::Splits,
@@ -686,6 +689,7 @@ impl Engine {
             each_refused: BTreeMap::new(),
             calendar_pass: None,
             each_met: None,
+            same_picks: crate::book::SamePicks::default(),
             splits: super::prorata::Splits::default(),
             layers: Layers::default(),
             timelines: Timelines::default(),

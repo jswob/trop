@@ -164,7 +164,8 @@ impl Engine {
             // `HOLE-IMPRECISE` (L §4.5)
             let known = self.known_at_cut(known_windows(m)?, cut)?;
             let mut seen = seen_observations(m, (cut, world), self.keep_rows, &known)?;
-            share_fulfils(&super::same_groups(m, cut)?, &mut seen);
+            let groups = self.same_groups(m, cut)?;
+            share_fulfils(&groups, &mut seen);
             self.observed.insert(cut, seen);
         }
         self.observed

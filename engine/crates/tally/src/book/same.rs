@@ -3,9 +3,11 @@
 //! group, a group of movements is one movement, bound once, counted once by `flows` and
 //! `observed`), §5.19 (One movement on two statements: a read of the movement away from its
 //! places is the disagreement's hole, `HOLE-SAME`, naming both rows), §8.1 (`HOLE-SAME`'s form
-//! `<p> and <q> are one, but <x> differs on <d>: <a> (<row>) and <b> (<row>)`).
-//! Twin: engine/tools/refcore/moves.py (`same_groups`, `once_obs`, `same_obs_differ`) and
-//! mreads.py (`once_by_same`).
+//! `<p> and <q> are one, but <x> differs on <d>: <a> (<row>) and <b> (<row>)`), §4.5 (tally
+//! 2.1.8 R12: a `same` line is seen under a cut as its version's rows are, one known in a
+//! window that holds the cut read as seen and as unseen).
+//! Twin: engine/tools/refcore/moves.py (`same_lines`, `same_groups`, `once_obs`,
+//! `same_obs_differ`), model.py (`same_seen`) and mreads.py (`once_by_same`).
 //! Invariants: a group's members are in the order the same lines first name them; a group is
 //! counted by its first member a read meets, its other members beside it; two rows disagree
 //! only on a leg both state, never where either side is a hole.
@@ -25,78 +27,179 @@ use crate::walk::{
     qty_value,
 };
 
-/// The `same` lines of movements cut `cut` sees, each its two sides, in the order written:
-/// a line in a joint model's header always, a version's from its `known` day (L §4.5: a
-/// `known` holds for everything the version brings).
-///
-/// # Errors
-///
-/// `ENGINE-INVARIANT` for a version load didn't build; not built for a line whose version
-/// is known in a window that holds the cut, which makes the rows one movement or two.
-fn move_lines(m: &Reality, cut: Day) -> Result<Vec<(&String, &String)>, Stop> {
-    let mut out = Vec::new();
-    for pair in &m.sames {
-        let SamePair::Moves(left, right, version) = pair else {
-            continue;
-        };
-        if let Some(id) = version {
-            let v = m
-                .versions
-                .get(id)
-                .ok_or_else(|| invariant("a same line's version load didn't build"))?;
-            if v.known > cut {
-                continue;
-            }
-            if v.window.is_some_and(|hi| cut < hi) {
-                return Err(Stop::NotBuilt(
-                    "a movement `same` line known in a window that holds the cut",
-                ));
-            }
+/// The versions whose `same` line a line's first run read under a cut their `known` window
+/// holds, no `windows each` deciding it: each with its window and the sides its lines name
+/// (refcore's `_SAMEMET`). L §4.5 (tally 2.1.8 R12).
+pub(crate) type SameMet = BTreeMap<String, ((Day, Day), BTreeSet<String>)>;
+
+/// How one run of an ask's line reads the `same` lines known in a window that holds the
+/// cut, which no `windows each` decides (L §4.5, tally 2.1.8 R12: such a line is read as
+/// seen and as unseen): the line's first run takes each seen and notes it; a later run takes
+/// each as its pick says (refcore's `_SAMEMET`, `_SAMEPICK`).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub(crate) struct SamePicks {
+    /// Each version's line seen or not in this run; none in the line's first run.
+    pub(crate) pick: Option<BTreeMap<String, bool>>,
+    /// What the line's first run met.
+    pub(crate) met: SameMet,
+}
+
+impl SamePicks {
+    /// Whether this run sees the line of version `id`, known in `window`, which holds the cut
+    /// and no `windows each` decides: as the pick says, a line it names no choice for seen;
+    /// in the line's first run seen, noted with its window and the sides `sides` it names
+    /// (refcore's `same_seen`). L §4.5 (tally 2.1.8 R12).
+    fn seen(&mut self, id: &str, window: (Day, Day), sides: [&str; 2]) -> bool {
+        if let Some(pick) = &self.pick {
+            return pick.get(id) != Some(&false);
         }
-        out.push((left, right));
+        let (_, named) = self
+            .met
+            .entry(id.to_owned())
+            .or_insert_with(|| (window, BTreeSet::new()));
+        named.extend(sides.iter().map(|side| (*side).to_owned()));
+        true
     }
-    Ok(out)
 }
 
 /// Each movement stated `same`, by id, with its group's members in the order the same lines
 /// first name them (L §6.1).
 pub type Groups = BTreeMap<String, Vec<String>>;
 
-/// Each movement stated `same` by a line cut `cut` sees, with its group, the group's
-/// members in the order the same lines first name them (refcore's `same_groups`). L §6.1,
-/// §4.5.
-///
-/// # Errors
-///
-/// As `move_lines`.
-pub fn same_groups(m: &Reality, cut: Day) -> Result<Groups, Stop> {
-    let mut order: Vec<&str> = Vec::new();
-    let mut parent: BTreeMap<String, String> = BTreeMap::new();
-    for (left, right) in move_lines(m, cut)? {
-        for side in [left.as_str(), right.as_str()] {
-            if !order.contains(&side) {
-                order.push(side);
+impl Engine {
+    /// Whether the cut of `ctx` sees a `same` line of version `version`, which names `sides`:
+    /// a line in a joint model's header always; else its version's `known` on or before the
+    /// cut, a window that holds the cut decided by the line's `windows each`, else as the
+    /// run's pick says, read as seen and as unseen (refcore's `same_seen`). L §4.5 (tally
+    /// 2.1.8 R12: whatever a version states is read as its rows are), §4.4.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a version load didn't build; as [`Engine::known_seen`].
+    pub(crate) fn same_line_seen(
+        &mut self,
+        m: &Reality,
+        version: Option<&str>,
+        ctx: Ctx,
+        sides: [&str; 2],
+    ) -> Result<bool, Stop> {
+        let Some(id) = version else {
+            return Ok(true);
+        };
+        let info = m
+            .versions
+            .get(id)
+            .ok_or_else(|| invariant("a same line's version load didn't build"))?;
+        let (lo, cut) = (info.known, ctx.cut);
+        // a window that ends on or before the cut is seen, one that starts after it unseen
+        let Some(hi) = info.window.filter(|hi| lo <= cut && cut < *hi) else {
+            return Ok(lo <= cut);
+        };
+        if let Some(seen) = self.known_seen(ctx, (lo, hi), &info.id)? {
+            return Ok(seen);
+        }
+        Ok(self.same_picks.seen(&info.id, (lo, hi), sides))
+    }
+
+    /// Whether cut `cut` sees each `same` line of the reality, in the order written: a line
+    /// of movements as [`Engine::same_line_seen`] decides, a line of rows never (its read is
+    /// the row's, `eval/read.rs`). L §6.1, §4.5.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::same_line_seen`].
+    fn moves_seen(&mut self, m: &Reality, cut: Day) -> Result<Vec<bool>, Stop> {
+        let ctx = self.timeline_ctx(None, cut);
+        let mut out = Vec::with_capacity(m.sames.len());
+        for pair in &m.sames {
+            let seen = match pair {
+                SamePair::Moves(left, right, version) => {
+                    self.same_line_seen(m, version.as_deref(), ctx, [left, right])?
+                }
+                SamePair::Rows(..) => false,
+            };
+            out.push(seen);
+        }
+        Ok(out)
+    }
+
+    /// Each movement stated `same` by a line cut `cut` sees, with its group, the group's
+    /// members in the order the same lines first name them (refcore's `same_groups`).
+    /// L §6.1, §4.5.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::same_line_seen`].
+    pub(crate) fn same_groups(&mut self, m: &Reality, cut: Day) -> Result<Groups, Stop> {
+        let mut order: Vec<&str> = Vec::new();
+        let mut parent: BTreeMap<String, String> = BTreeMap::new();
+        for (left, right) in move_lines(m, self.moves_seen(m, cut)?) {
+            for side in [left.as_str(), right.as_str()] {
+                if !order.contains(&side) {
+                    order.push(side);
+                }
+            }
+            let (top, under) = (root(&parent, left), root(&parent, right));
+            if top != under {
+                parent.insert(under, top);
             }
         }
-        let (top, under) = (root(&parent, left), root(&parent, right));
-        if top != under {
-            parent.insert(under, top);
+        let mut by_root: BTreeMap<String, Vec<String>> = BTreeMap::new();
+        for side in &order {
+            by_root
+                .entry(root(&parent, side))
+                .or_insert_with(Vec::new)
+                .push((*side).to_owned());
+        }
+        let mut out = BTreeMap::new();
+        for group in by_root.into_values() {
+            for member in &group {
+                out.insert(member.clone(), group.clone());
+            }
+        }
+        Ok(out)
+    }
+
+    /// Whether movement `id` is named by a `same` line cut `cut` sees. L §6.1, §4.5.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::same_line_seen`].
+    pub(crate) fn stated_same(&mut self, m: &Reality, id: &str, cut: Day) -> Result<bool, Stop> {
+        Ok(move_lines(m, self.moves_seen(m, cut)?)
+            .iter()
+            .any(|(a, b)| *a == id || *b == id))
+    }
+
+    /// The first `same` line cut `cut` sees naming movement `id`, its two sides (refcore's
+    /// `same_pairs`, its lines). L §6.1, §4.5.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::same_line_seen`].
+    fn first_line(
+        &mut self,
+        m: &Reality,
+        id: &str,
+        cut: Day,
+    ) -> Result<Option<(String, String)>, Stop> {
+        Ok(move_lines(m, self.moves_seen(m, cut)?)
+            .into_iter()
+            .find(|(a, b)| *a == id || *b == id)
+            .map(|(a, b)| (a.clone(), b.clone())))
+    }
+}
+
+/// The `same` lines of movements of `m` that `seen` flags (one flag per line, as
+/// [`Engine::moves_seen`] gives them), each its two sides, in the order written. L §6.1, §4.5.
+fn move_lines(m: &Reality, seen: Vec<bool>) -> Vec<(&String, &String)> {
+    let mut out = Vec::new();
+    for (pair, flag) in m.sames.iter().zip(seen) {
+        if let (SamePair::Moves(left, right, _), true) = (pair, flag) {
+            out.push((left, right));
         }
     }
-    let mut by_root: BTreeMap<String, Vec<String>> = BTreeMap::new();
-    for side in &order {
-        by_root
-            .entry(root(&parent, side))
-            .or_insert_with(Vec::new)
-            .push((*side).to_owned());
-    }
-    let mut out = BTreeMap::new();
-    for group in by_root.into_values() {
-        for member in &group {
-            out.insert(member.clone(), group.clone());
-        }
-    }
-    Ok(out)
+    out
 }
 
 /// The root of `start` among the links `parent`, a union-find (refcore's `find`); a walk up
@@ -314,30 +417,6 @@ impl Member {
 /// An end waiting for a decision's point: the movement, its leg, the side, what it carries.
 pub(crate) type Waiting = (String, LegVal, usize, Vec<Entry>, Collected);
 
-/// Whether movement `id` is named by a `same` line cut `cut` sees. L §6.1, §4.5.
-///
-/// # Errors
-///
-/// As `move_lines`.
-pub(crate) fn stated_same(m: &Reality, id: &str, cut: Day) -> Result<bool, Stop> {
-    Ok(move_lines(m, cut)?
-        .iter()
-        .any(|(a, b)| *a == id || *b == id))
-}
-
-/// The first `same` line cut `cut` sees naming movement `id`, its two sides (refcore's
-/// `same_pairs`, its lines). L §6.1, §4.5.
-///
-/// # Errors
-///
-/// As `move_lines`.
-fn first_line(m: &Reality, id: &str, cut: Day) -> Result<Option<(String, String)>, Stop> {
-    Ok(move_lines(m, cut)?
-        .into_iter()
-        .find(|(a, b)| *a == id || *b == id)
-        .map(|(a, b)| (a.clone(), b.clone())))
-}
-
 /// A leg's amount as a `HOLE-SAME` question prints it: the amount, `refused`, or the hole.
 /// L §8.1.
 fn amount_text(m: &Reality, lg: &LegVal) -> Result<String, Stop> {
@@ -509,7 +588,7 @@ impl Engine {
             .moves
             .get(name)
             .ok_or_else(|| invariant("an observed movement of a move load didn't build"))?;
-        let groups = same_groups(m, ctx.cut)?;
+        let groups = self.same_groups(m, ctx.cut)?;
         let once = once_obs(&groups, &obs);
         let mut fields = Vec::new();
         for (leg, _, _) in m.kind_legs(&mv.kind) {
@@ -543,7 +622,7 @@ impl Engine {
         cut: Day,
     ) -> Result<(Vec<Obs>, BTreeMap<String, String>), Stop> {
         let mut also = BTreeMap::new();
-        let groups = same_groups(m, cut)?;
+        let groups = self.same_groups(m, cut)?;
         if groups.is_empty() {
             return Ok((obs, also));
         }
@@ -656,7 +735,7 @@ impl Engine {
         if good.len() < 2 {
             return Ok(bad);
         }
-        let groups = same_groups(m, cut)?;
+        let groups = self.same_groups(m, cut)?;
         for (i, a) in good.iter().enumerate() {
             for b in good.iter().skip(i).skip(1) {
                 if !self.one_transfer(m, &groups, (a, b), cut)? {
@@ -733,7 +812,7 @@ impl Engine {
         m: &Reality,
         cut: Day,
     ) -> Result<BTreeSet<String>, Stop> {
-        let groups = same_groups(m, cut)?;
+        let groups = self.same_groups(m, cut)?;
         if groups.is_empty() {
             return Ok(BTreeSet::new());
         }
@@ -845,7 +924,7 @@ impl Engine {
         (mover, lg): (&Member, &LegVal),
     ) -> Result<[EndBook; 2], Stop> {
         let cut = self.walk(id)?.cut;
-        let groups = same_groups(m, cut)?;
+        let groups = self.same_groups(m, cut)?;
         let Some(group) = groups.get(mover.id()) else {
             return Ok([EndBook::Written, EndBook::Written]);
         };
@@ -853,8 +932,9 @@ impl Engine {
         let (mut others, mut waiting) = (Vec::new(), Vec::new());
         for x in group.iter().filter(|x| x.as_str() != mover.id()) {
             let Some(found) = self.walk_member(m, id, x)? else {
-                let (left, right) =
-                    first_line(m, x, cut)?.unwrap_or_else(|| (x.clone(), mover.id().to_owned()));
+                let (left, right) = self
+                    .first_line(m, x, cut)?
+                    .unwrap_or_else(|| (x.clone(), mover.id().to_owned()));
                 return Err(Stop::Refused(Refusal::new(
                     Code::Run(Run::Record),
                     format!("same {left} = {right}: {x} doesn't exist"),
