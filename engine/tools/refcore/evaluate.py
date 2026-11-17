@@ -4485,6 +4485,10 @@ class Engine:
         if k == 0:
             raise refuse('RUN-ZERO', 'add_business(%s, 0, %s)' % (d, _ntxt(n.args[2])))
         step = 1 if k > 0 else -1
+        try:
+            add_days(d, k)
+        except TallyError as edge:
+            self.edge_first(n, d, step, env, ctx, edge)
 
         def count():
             left = abs(k)
@@ -4502,6 +4506,27 @@ class Engine:
                     left -= 1
             return cur
         return self.over_added(n, count)
+
+    def edge_first(self, n, d, step, env, ctx, edge):
+        """add_business whose count passes the day range: the count can't end before the edge, so the outcome is the
+        first refusal or hole the walk meets in day order, else the edge's RUN-LIMIT (R11, pick P26). Both change only
+        where a calendar row's span starts or ends, so the walk visits those days: a refusal there stands; a hole, or
+        a row with a window or a hole among its added days, is met first, and the edge's refusal outranks it."""
+        r = getattr(n.args[2], '_r', None)
+        inf = self.m.inputs.get(r[2]) if r is not None and r[0] == 'read' and r[1] == 'input' else None
+        bounds = {d + datetime.timedelta(days=step)}
+        for row in (inf.rows if inf is not None else ()):
+            sp = row.version.span_at(ctx.cut) if hasattr(row.version, 'span_at') else None
+            for x in ((sp.start, sp.end) if sp is not None else ()):
+                if x is not None:
+                    bounds |= {x, x - ONE_DAY}
+        days = sorted((x for x in bounds if (x > d if step > 0 else x < d)), reverse=step < 0)
+        for x in days:
+            b = self.business(n.args[2], env, ctx, x, seek=True)
+            cal = self.cal_at(n.args[2], env, ctx, x)
+            if isinstance(b, Hole) or any(a[0] in ('window', 'oneof', 'hole') for a in getattr(cal, 'added', ())):
+                raise edge
+        raise edge
 
     def c_last_business(self, n, env, ctx):
         """the n-th last business day of period p (L §4.2)"""
