@@ -2151,6 +2151,7 @@ def m_check_after_readings(self):
     which sees m's class (LOAD-ORDER): the batch has no order (§5.14.2, P-7). The refusal is by class, so it holds for
     an observation booked at a decision's point too"; L §8.3 `<x> after <m>: <m> is a plan or an observation`."""
     m = self.m
+    rows = []
     for iid in ('stated', 'opening'):
         inf = m.inputs.get(iid)
         if inf is None:
@@ -2163,12 +2164,11 @@ def m_check_after_readings(self):
             base = node.obj if node.k == 'index' else node
             if base.k != 'name':
                 continue
-            mv = m.moves.get(base.id)
-            obs = base.id in m.inputs and m.inputs[base.id].observed
-            if (mv is not None and not mv.decision) or obs:
-                raise LoadError('LOAD-ORDER', '%s%s after %s: %s is a plan or an observation' % (
-                    iid, r.keys_text(), _txt(node), _txt(node)), r.loc)
-            if mv is not None and node.k == 'index':
+            rows.append((iid, r, node, m.moves.get(base.id), base.id in m.inputs and m.inputs[base.id].observed))
+    # E §3.1's passes: a row's keys are pass 3's, the readings `after` a decision pass 5's, so every row's key check
+    # comes before any order check (group 3's fix review N-b: `after rent[ka]` with rent a plan is LOAD-KEY)
+    for iid, r, node, mv, obs in rows:
+        if mv is not None and node.k == 'index':
                 # a key load sees that isn't a key of m's index (L §4.6, §8.3 R5; tally 2.1.8 R16, #175)
                 for kn, b in zip(node.keys, mv.binds):
                     kv = _after_key(kn)
@@ -2182,6 +2182,10 @@ def m_check_after_readings(self):
                             and m.indexes[dom[1]].pos(kv) is None:
                         raise LoadError('LOAD-KEY', '%s%s after %s: %s is not a key of %s' % (
                             iid, r.keys_text(), _txt(node), _txt(kn), dom[1]), r.loc)
+    for iid, r, node, mv, obs in rows:
+        if (mv is not None and not mv.decision) or obs:
+            raise LoadError('LOAD-ORDER', '%s%s after %s: %s is a plan or an observation' % (
+                iid, r.keys_text(), _txt(node), _txt(node)), r.loc)
 
 
 def _after_key(kn):
