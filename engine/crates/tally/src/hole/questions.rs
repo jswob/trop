@@ -224,6 +224,12 @@ impl Hole {
         }
     }
 
+    /// Whether the two holes carry a question in common. L §8.1.
+    #[must_use]
+    pub fn shares(&self, other: &Hole) -> bool {
+        !self.questions.is_disjoint(&other.questions)
+    }
+
     /// Whether the two holes carry the same questions. L §8.1.
     #[must_use]
     pub fn same_questions(&self, other: &Hole) -> bool {

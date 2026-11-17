@@ -830,4 +830,65 @@ ask e: explain fee_out[2026-03].cash.amount
             "the answer's row right after the hole it answers"
         );
     }
+
+    /// The final check's `d77/lifespan` (L §4.4 l.672, a refusal that only some of a
+    /// window's days give; tally 2.1.8 item 77): a window leg whose lifespan test comes out
+    /// both ways is the window's hole from the window's first day, and a refusal a fixed-day
+    /// leg brings the place later doesn't outrank it, which comes first being the window's to
+    /// say; `windows each` splits on that window.
+    #[test]
+    fn a_refusal_after_a_window_lifespan_test_leaves_the_windows_hole() {
+        let text = r#"model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-06-30
+
+source src "s"
+unit PLN: currency minor 0.01
+place pot: accounts PLN lives 2025-01-01..
+place fresh: accounts PLN lives 2026-04-08..
+place shut: accounts PLN lives 2025-01-01..2026-04-06
+input amt: money PLN
+input dw: date
+input df: date
+
+move into_fresh: transfers
+  on dw
+  leg cash from pot to fresh amount amt
+
+move into_shut: transfers
+  on df
+  leg cash from pot to shut amount amt
+
+version v
+  cite src
+  governs always
+  known 2025-12-01
+  amt = 50.00 PLN "s"
+  dw = window(2026-04-05, 2026-04-10) "s"
+  df = 2026-04-08 "s"
+  opening[pot] = 400.00 PLN at 2026-01-01 start "s"
+  opening[shut] = 0.00 PLN at 2026-01-01 start "s"
+
+ask b: bal(pot, 2026-04-30)
+ask b_each: bal(pot, 2026-04-30) windows each
+"#;
+        let lines = lines_of("d77_lifespan_first.tally", text);
+        assert_eq!(
+            lines,
+            [
+                "b: ?\"date within window(2026-04-05, 2026-04-10) not precise enough for a \
+                 balance\" (into_fresh)",
+                "  cut 2026-01-01",
+                "b_each [dw = 2026-04-05 .. 2026-04-07]: refused: RUN-LIFESPAN into_fresh.cash \
+                 moves into or out of fresh outside its lifespan",
+                "  cut 2026-01-01",
+                "b_each [dw = 2026-04-08 .. 2026-04-10]: refused: RUN-LIFESPAN into_shut.cash \
+                 moves into or out of shut outside its lifespan",
+                "  cut 2026-01-01",
+            ],
+            "the window's hole, then one refusal per sub-window"
+        );
+    }
 }
