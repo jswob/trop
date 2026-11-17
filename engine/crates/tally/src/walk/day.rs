@@ -726,8 +726,10 @@ impl Engine {
         for sp in &spans {
             first = first.and_then(|d| sp.first_from(d));
         }
-        let some = first.is_some_and(|d| d <= w.hi && spans.iter().all(|sp| sp.contains(d)));
-        if !some {
+        let Some(first) = first.filter(|d| *d <= w.hi) else {
+            return Ok(None);
+        };
+        if !spans.iter().all(|sp| sp.contains(first)) {
             return Ok(None);
         }
         let text = format!(
