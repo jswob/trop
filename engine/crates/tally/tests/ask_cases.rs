@@ -942,6 +942,72 @@ version sx_v
         );
     }
 
+    /// A calendar stated `same` as another, whose row from 2028-03-01 has no business day,
+    /// a day the first calendar's own rows don't bound (the review of group 1's fix, N3).
+    const SHIFT_SAME_ROW: &str = "model n3
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source plan \"plan\"
+input d: date
+input cr: calendar
+input cq: calendar
+input huge: int
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  d = 2026-06-01 \"a day\"
+  huge = 100000000000000000000 \"10^20\"
+
+version v26
+  cite plan
+  governs 2026
+  known 2026-01-01
+  cq = calendar(weekends [sat, sun]) \"s\"
+
+version vr
+  cite plan
+  governs 2026-01-01..2028-02-29
+  known 2026-01-01
+  cr = calendar(weekends [sat, sun]) \"s\"
+
+version vz
+  cite plan
+  governs 2028-03-01..
+  known 2026-01-01
+  cr = calendar(weekends [mon, tue, wed, thu, fri, sat, sun]) \"s\"
+
+version link
+  cite plan
+  governs always
+  known 2026-01-01
+  same cq = cr
+
+ask f: add_business(d, huge, cq)
+ask g: add_business(d, huge, cr)
+";
+
+    #[test]
+    fn a_shift_past_the_edge_reads_the_rows_a_same_row_follows() {
+        let held = "  held: cr = calendar(weekends [mon, tue, wed, thu, fri, sat, sun]) (vz), read for 2028-03-01";
+        assert_eq!(
+            lines_of_files(&[("n3.tally", SHIFT_SAME_ROW)]),
+            [
+                "f: refused: RUN-DOMAIN calendar cq has no business day",
+                held,
+                "  cut 2026-12-31",
+                "g: refused: RUN-DOMAIN calendar cr has no business day",
+                held,
+                "  cut 2026-12-31",
+            ],
+            "the refusal cq meets through its same row isn't hidden by the edge's RUN-LIMIT"
+        );
+    }
+
     /// [`same_links`]'s fifteen versions with an input both scenarios state, and asks over
     /// April, two days of it and March, one a diff over two stacks (the review of group 1's
     /// fix, F1 and F3: `b3_15`).
