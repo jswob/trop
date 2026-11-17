@@ -177,7 +177,7 @@ T's re-run of every stored output, first on refcore f843e443, then on the tag's 
 
 ## STOP-REPORTs of tally 2.1.8's last re-run (T, 2026-11-17, refcore 21c79026)
 
-Refcore answers 9 of `m2/spec.tsv`'s 17 rows now (`spec.py --refcore`). Five moved to `m2/vectors.tsv` (`fixes/…`, refcore's bytes): `g3/k2`, `g3/ez06`, `g4/nb3_atT` and `g6/b4_q1` print the spec row's answer, and `g4/nb3_at` prints 70.00 PLN by R11, as the lead ruled. Four print otherwise than the spec's answer, which the round's engine prints (all four green on it). They stay `m2/spec.tsv`'s answers until a ruling:
+Refcore answers 9 of `m2/spec.tsv`'s 17 rows now (`spec.py --refcore`). Five moved to `m2/vectors.tsv` (`fixes/…`, refcore's bytes): `g3/k2`, `g3/ez06`, `g4/nb3_atT` and `g6/b4_q1` print the spec row's answer, and `g4/nb3_at` prints 70.00 PLN by R11, as the lead ruled. Four print otherwise than the spec's answer, which the round's engine prints (all four green on it). **Ruled: refcore's, #207** (P56, the lead, 2026-11-17: T is right on all four; refcore is mended at M3, not in this round). They stay `m2/spec.tsv`'s answers, held for #207 in each row's section:
 
 - **SR 8, `spec/g4/nb3_after`** (`m2/fixes/g4/nb3_after.tally`, `q_konto`): the spec row is `refused: RUN-CYCLE the link to sw[2026-03] reads its own observations` (L §4.6, §5.14.2: a link's `when` that reads a reading after its own instance); refcore is `refused: RUN-RECORD reading stated[konto] after sw[2026-03]: sw[2026-03] doesn't exist`. That is, it reads the link as false, not as a cycle.
 - **SR 9, `spec/g4/nb3_afterT`** (its twin, `q_konto`): the spec row is the same `RUN-CYCLE`; refcore is `60.00 PLN`.

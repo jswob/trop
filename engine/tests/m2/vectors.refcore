@@ -117928,9 +117928,9 @@ version sx_v
   governs 2026-01-01..
   known 2026-01-01
   replace cq = bm.cr "s"
-,,1:0,151:f: refused: RUN-LIMIT a day passes 9999-12-31
+,,1:0,118:f: refused: RUN-LIMIT a day passes 9999-12-31
   world: sx
-  held: cq = ?"cr: no value at 2027-01-01" (cr) (sx_v), read for 2027-01-01
+  held: cq = ? (sx_v), read for 2027-01-01
   cut 2026-12-31
 ,26:fixes/rv/g2_b1_cover_reach,8:fixes-rv,24:run b4_cover_reach.tally,841:20:b4_cover_reach.tally,812:model t
   tally 2
