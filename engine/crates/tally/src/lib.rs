@@ -195,7 +195,7 @@ pub mod eval {
     pub(crate) use keys::{Given, thing_seen, to_key};
     pub(crate) use memo::LawClass;
     pub use memo::Memo;
-    pub(crate) use partial::{lin_balance, partial_text};
+    pub(crate) use partial::{lin_balance, lin_fold, lin_negated, lin_times, partial_text};
     pub(crate) use pins::after_on;
     pub(crate) use ranges::{range_literal_key, value_key};
     pub use stack::Item;

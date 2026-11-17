@@ -62,6 +62,22 @@ impl Engine {
             terms.push(t);
         }
         if !holes.is_empty() {
+            // a `partial` line's mean over a known count: its sum scaled by the count, linear in
+            // its terms (L §5.18; tally 2.1.8 R15)
+            if ctx.partial
+                && query.func == QueryFn::Mean
+                && members.iter().all(|b| b.unknown.is_none())
+            {
+                let count = Value::int(i64::try_from(members.len()).map_err(|_| too_many())?);
+                let mut known: Option<Value> = None;
+                for t in terms {
+                    known = Some(match known {
+                        None => t,
+                        Some(acc) => arith(m, Op::Add, &acc, &t)?,
+                    });
+                }
+                return super::partial::lin_mean(m, known, &holes, &count);
+            }
             let operands: Vec<Option<&Hole>> = holes.iter().map(Some).collect();
             return hole_of(&operands);
         }

@@ -12,7 +12,9 @@
 
 use super::flows::span_last;
 use super::order::WalkAt;
-use super::plan::{Amount, Dated, DayWindow, Exists, Inst, LegVal, Status, invariant, qty_value};
+use super::plan::{
+    Amount, Dated, DayWindow, Exists, HoleSrc, Inst, LegVal, Status, invariant, qty_value,
+};
 use super::reads::refuse;
 use super::state::{LegOut, Progress};
 use crate::base::Run;
@@ -62,6 +64,7 @@ impl Engine {
             total,
             mut units,
             holes,
+            legs,
             settle_unit,
             ..
         } = acc;
@@ -71,6 +74,23 @@ impl Engine {
             units.insert(u);
         }
         if let Some(h) = spread(&holes.iter().map(Some).collect::<Vec<_>>()) {
+            // a sum of its movements: under `partial`, linear in each hole leg's amount where
+            // every hole is one, in one unit (L §5.18; tally 2.1.8 R15)
+            let unit = match units.first() {
+                Some(u) if units.len() == 1 => Some(u.clone()),
+                Some(_) => None,
+                None => static_unit(m, mv, leg),
+            };
+            if let Some(unit) = unit.filter(|_| ctx.partial && legs.len() == holes.len())
+                && let Some(parts) = self.legs_linear(m, &legs)?
+            {
+                let sum = match &total {
+                    Some(t) => t.clone(),
+                    None => Num::zero(),
+                };
+                let known = qty_value(m, &sum, &unit)?;
+                return crate::eval::lin_fold(m, &h, known, parts);
+            }
             return Ok(Value::Hole(h));
         }
         if units.len() > 1 {
@@ -193,7 +213,7 @@ impl Engine {
                 let q = match &lg.amount {
                     Amount::Refused(r) => return Err(Stop::Refused(r.clone())),
                     Amount::Hole(h) => {
-                        acc.holes.push(h.clone());
+                        acc.hole_leg(h, lg.src.as_deref());
                         continue;
                     }
                     Amount::Qty(q) => q,
@@ -485,6 +505,9 @@ struct Counted {
     units: BTreeSet<String>,
     /// The holes met.
     holes: Vec<Hole>,
+    /// The holes of them that are a leg's amount, each with where it was read, which a
+    /// `partial` line reads again (L §5.18; tally 2.1.8 R15).
+    legs: Vec<(Hole, bool, HoleSrc)>,
     /// The register met.
     met: Collected,
     /// The unit of the first settlement leg counted.
@@ -492,6 +515,15 @@ struct Counted {
 }
 
 impl Counted {
+    /// A leg's amount that is a hole, kept with where it was read where it was (L §5.18;
+    /// tally 2.1.8 R15).
+    fn hole_leg(&mut self, h: &Hole, src: Option<&HoleSrc>) {
+        if let Some(src) = src {
+            self.legs.push((h.clone(), true, src.clone()));
+        }
+        self.holes.push(h.clone());
+    }
+
     /// A leg's amount counted, its unit noted. L §5.14.3.
     fn add(&mut self, q: &Num, unit: Option<&String>) -> Result<(), Stop> {
         self.total = Some(add_to(self.total.take(), q)?);

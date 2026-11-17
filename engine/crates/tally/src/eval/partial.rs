@@ -28,10 +28,26 @@ pub(super) fn partial_value(m: &Reality, e: &Expr, env: &Env, ctx: Ctx, v: Value
     let Value::Hole(h) = &v else {
         return v;
     };
+    // a walked sum or a mean builds its own linear form; met any other way the hole is plain
+    // (tally 2.1.8 R15)
+    if builds_linear(e) {
+        return if h.printed_linear().is_some() {
+            v
+        } else {
+            Value::Hole(h.plain())
+        };
+    }
     if keeps_linear(e) && reads_a_number(m, e, env, ctx) {
         return v;
     }
     Value::Hole(h.plain())
+}
+
+/// Whether node `e` gives its own linear form under a `partial` line: `flows`, a sum of its
+/// movements; `value`, a sum of each position's units times its price; a query (`mean` over
+/// a known count, its sum scaled; `share` and `quantile` none). L §5.18 (tally 2.1.8 R15).
+fn builds_linear(e: &Expr) -> bool {
+    matches!(e, Expr::Flows(_) | Expr::Query(_) | Expr::Value(_))
 }
 
 /// Whether node `e` passes a hole's linear part on: a read, a sum or difference, a product
@@ -241,6 +257,73 @@ pub(super) fn lin_sum(m: &Reality, known: Value, holes: &[Hole]) -> Result<Value
         let Some(lin) = h.linear_part() else {
             return Ok(Value::Hole(qs.plain()));
         };
+        acc = lin_add(m, acc, lin, Op::Add)?;
+    }
+    Ok(Value::Hole(qs.linear(acc)))
+}
+
+/// `mean` under a `partial` line over a known count `count` whose terms include holes: the
+/// known terms' sum `known` plus each hole term, scaled by the count; plain where a hole term
+/// isn't linear (refcore's `e_query`, its `mean`). L §5.18 (tally 2.1.8 R15), §5.11.
+pub(super) fn lin_mean(
+    m: &Reality,
+    known: Option<Value>,
+    holes: &[Hole],
+    count: &Value,
+) -> Result<Value, Stop> {
+    let all: Vec<Option<&Hole>> = holes.iter().map(Some).collect();
+    let qs = spread(&all).ok_or_else(|| invariant("a partial mean with no hole term"))?;
+    let mut acc = Linear {
+        known,
+        terms: Vec::new(),
+    };
+    for h in holes {
+        let Some(lin) = h.linear_part() else {
+            return Ok(Value::Hole(qs.plain()));
+        };
+        acc = lin_add(m, acc, lin, Op::Add)?;
+    }
+    Ok(Value::Hole(qs.linear(lin_scale(m, acc, count, Op::Div)?)))
+}
+
+/// A linear part scaled by known `factor`: a position's units by its price, or its price by
+/// its units. L §5.18 (tally 2.1.8 R15).
+///
+/// # Errors
+///
+/// A number's error.
+pub(crate) fn lin_times(m: &Reality, lin: Linear, factor: &Value) -> Result<Linear, Stop> {
+    lin_scale(m, lin, factor, Op::Mul)
+}
+
+/// A linear part times -1: a hole leg's where it leaves the place it is read at. L §5.18,
+/// §5.10.
+///
+/// # Errors
+///
+/// A number's error.
+pub(crate) fn lin_negated(m: &Reality, lin: Linear) -> Result<Linear, Stop> {
+    lin_scale(m, lin, &Value::int(-1), Op::Mul)
+}
+
+/// A walked sum read by a `partial` line (a place's or a move's `flows`, a `with uncertain`
+/// total): its known part `known` plus each hole operand's linear part `parts`, over the hole
+/// `qs` of every hole met (refcore's `lin_fold`). L §5.18 (tally 2.1.8 R15).
+///
+/// # Errors
+///
+/// A number's error.
+pub(crate) fn lin_fold(
+    m: &Reality,
+    qs: &Hole,
+    known: Value,
+    parts: Vec<Linear>,
+) -> Result<Value, Stop> {
+    let mut acc = Linear {
+        known: Some(known),
+        terms: Vec::new(),
+    };
+    for lin in parts {
         acc = lin_add(m, acc, lin, Op::Add)?;
     }
     Ok(Value::Hole(qs.linear(acc)))

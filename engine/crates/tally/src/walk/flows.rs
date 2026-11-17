@@ -7,7 +7,7 @@
 //! Invariants: a refused `flows` keeps the register it met before the refusal, as refcore
 //! registers while it counts; a read of a projection's walk reads the walks it continues
 //! through the point each continues from.
-use super::plan::{Amount, Dated, DayWindow, Exists, Inst, Status, invariant, qty_value};
+use super::plan::{Amount, Dated, DayWindow, Exists, HoleSrc, Inst, Status, invariant, qty_value};
 use super::point::At;
 use super::reads::{Sees, expr_text, refuse};
 use super::state::{ALL, Change, Ent, Walk};
@@ -140,6 +140,7 @@ impl Engine {
             span: (start, last),
             totals: BTreeMap::new(),
             holes: Vec::new(),
+            legs: Vec::new(),
             met: Collected::default(),
             keep,
         };
@@ -164,6 +165,19 @@ impl Engine {
         }
         self.absorb(&sums.met);
         if let Some(h) = spread(&sums.holes.iter().map(Some).collect::<Vec<_>>()) {
+            // a sum of its movements: under `partial`, linear in each hole leg's amount where
+            // every hole is one, in one unit (L §5.18; tally 2.1.8 R15)
+            let one = match sums.totals.first_key_value() {
+                Some((u, q)) if sums.totals.len() == 1 => Some((u.clone(), q.clone())),
+                Some(_) => None,
+                None => Some((pu.clone(), Num::zero())),
+            };
+            if let Some((unit, q)) =
+                one.filter(|_| ctx.partial && pu != "any" && sums.legs.len() == sums.holes.len())
+                && let Some(parts) = self.legs_linear(m, &sums.legs)?
+            {
+                return crate::eval::lin_fold(m, &h, qty_value(m, &q, &unit)?, parts);
+            }
             return Ok(Value::Hole(h));
         }
         if pu == "any" {
@@ -352,6 +366,9 @@ struct Sums {
     totals: BTreeMap<String, Num>,
     /// The holes met.
     holes: Vec<Hole>,
+    /// The holes of them that are a booked leg's amount, each with its direction at the place
+    /// and where it was read, which a `partial` line reads again (L §5.18; tally 2.1.8 R15).
+    legs: Vec<(Hole, bool, HoleSrc)>,
     /// The register met.
     met: Collected,
     /// Under `, for k`, the movements for period k by id; none counts every movement.
@@ -460,6 +477,11 @@ impl Sums {
             }
             if self.other_period(e) {
                 continue;
+            }
+            if let (Change::Hole(h), Some(leg)) = (&e.change, &e.hole_leg)
+                && let Some(src) = &leg.src
+            {
+                self.legs.push((h.clone(), leg.into, HoleSrc::clone(src)));
             }
             match &e.change {
                 Change::Bad(r) | Change::PermBad(r) => return Err(Stop::Refused(r.clone())),

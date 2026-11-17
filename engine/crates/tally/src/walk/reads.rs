@@ -17,12 +17,12 @@
 
 use std::collections::BTreeSet;
 
-use super::plan::{Amount, Dated, Inst, invariant, qty_value};
+use super::plan::{Amount, Dated, HoleSrc, Inst, invariant, qty_value};
 use super::point::At;
 use super::state::{ALL, GapAt, St, Walk};
 use crate::base::{Code, Load, Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Entry, Env};
-use crate::hole::{Hole, spread};
+use crate::hole::{Hole, Linear, spread};
 use crate::model::{KeyVal, Reality, Value};
 use crate::num::Num;
 use crate::syntax::{Bal, Expr, Stop};
@@ -307,7 +307,7 @@ impl Engine {
     /// §5.10), a sum, so the line prints its known part and each hole leg's amount, read again
     /// as the line reads it and signed by its direction at the place (L §5.18); a hole of any
     /// other making stays the plain hole (refcore's `m_partial_bal`).
-    fn partial_bal(
+    pub(super) fn partial_bal(
         &mut self,
         m: &Reality,
         id: usize,
@@ -331,6 +331,32 @@ impl Engine {
         let known = qty_value(m, &read.known, unit)?;
         let legs: Vec<(&Hole, bool)> = legs.iter().map(|(h, into)| (h, *into)).collect();
         crate::eval::lin_balance(m, (&v, known), &legs)
+    }
+
+    /// Each hole leg of `legs`, its hole, its direction at the place and where its amount was
+    /// read, as a `partial` line reads it: read again under the line's clause, its linear part
+    /// signed by its direction; none where one isn't linear, or is linear in other holes than
+    /// its own (refcore's `leg_lin`). L §5.18 (tally 2.1.8 R15).
+    pub(super) fn legs_linear(
+        &mut self,
+        m: &Reality,
+        legs: &[(Hole, bool, HoleSrc)],
+    ) -> Result<Option<Vec<Linear>>, Stop> {
+        let mut out = Vec::with_capacity(legs.len());
+        for (hole, into, src) in legs {
+            let Value::Hole(h) = self.ev(m, &src.amount, &src.env, src.ctx.partial())? else {
+                return Ok(None);
+            };
+            let Some(lin) = h.linear_part().filter(|_| h.same_questions(hole)) else {
+                return Ok(None);
+            };
+            out.push(if *into {
+                lin
+            } else {
+                crate::eval::lin_negated(m, lin)?
+            });
+        }
+        Ok(Some(out))
     }
 
     /// A running read of a modelled decision, against the booked balance less its own
@@ -513,7 +539,7 @@ impl Engine {
             .and_then(|r| walk.entries(place, unit).get(r))
             .map(|e| e.at);
         let window = Window::SinceReading { day, since };
-        self.uncertain_sum(m, id, (place, unit), read, window)
+        self.uncertain_sum(m, id, (place, unit), read, (window, ctx))
     }
 
     /// A projection's balance `with uncertain`: plus the movements of uncertain kinds its
@@ -523,29 +549,31 @@ impl Engine {
         m: &Reality,
         id: usize,
         (place, unit): (&str, &str),
-        day: Day,
-        read: &Value,
+        (day, read): (Day, &Value),
+        ctx: Ctx,
     ) -> Result<Value, Stop> {
         let start = self.walk(id)?.start;
         let window = Window::Projected { start, day };
-        self.uncertain_sum(m, id, (place, unit), read, window)
+        self.uncertain_sum(m, id, (place, unit), read, (window, ctx))
     }
 
     /// A balance plus the uncertain movements walk `id` keeps at the place inside `window`,
-    /// with `uncertain:` in the register; a hole where an amount is one (refcore's
-    /// `with_uncertain`, `proj_uncertain`). L §5.14.
+    /// with `uncertain:` in the register; a hole where an amount is one, under `partial` a sum
+    /// linear in the balance and each hole leg's amount (refcore's `with_uncertain`,
+    /// `proj_uncertain`, `lin_fold`). L §5.14, §5.18 (tally 2.1.8 R15).
     fn uncertain_sum(
         &mut self,
         m: &Reality,
         id: usize,
         (place, unit): (&str, &str),
         read: &Value,
-        window: Window,
+        (window, ctx): (Window, Ctx),
     ) -> Result<Value, Stop> {
         let walk = self.walk(id)?;
         let mut acc = Uncertain {
             add: Num::zero(),
             holes: Vec::new(),
+            legs: Vec::new(),
             met: Collected::default(),
         };
         let added = acc.movements(&walk.uncertain, place, window);
@@ -556,15 +584,38 @@ impl Engine {
         if let Value::Hole(h) = read {
             all.push(Some(h));
         }
-        if let Some(h) = spread(&all) {
+        let Some(h) = spread(&all) else {
+            let (q, _) = super::plan::quantity(m, read)?;
+            let total = q.checked_add(&acc.add).map_err(crate::eval::num_stop)?;
+            return qty_value(m, &total, unit);
+        };
+        if !ctx.partial || acc.legs.len() != acc.holes.len() {
             return Ok(Value::Hole(h));
         }
-        let (q, _) = super::plan::quantity(m, read)?;
-        qty_value(
-            m,
-            &q.checked_add(&acc.add).map_err(crate::eval::num_stop)?,
-            unit,
-        )
+        // the balance's own known part and terms, where it is a hole that has them
+        let (known, own) = if let Value::Hole(balance) = read {
+            match balance.printed_linear() {
+                Some(Linear {
+                    known: Some(part),
+                    terms,
+                }) => (part.clone(), terms.clone()),
+                Some(_) | None => return Ok(Value::Hole(h)),
+            }
+        } else {
+            (read.clone(), Vec::new())
+        };
+        let Some(mut parts) = self.legs_linear(m, &acc.legs)? else {
+            return Ok(Value::Hole(h));
+        };
+        parts.push(Linear {
+            known: None,
+            terms: own,
+        });
+        let (booked, _) = super::plan::quantity(m, &known)?;
+        let total = booked
+            .checked_add(&acc.add)
+            .map_err(crate::eval::num_stop)?;
+        crate::eval::lin_fold(m, &h, qty_value(m, &total, unit)?, parts)
     }
 
     /// Walk `id`, then each walk it continues, the nearest first: a projection's walk
@@ -749,6 +800,9 @@ struct Uncertain {
     add: Num,
     /// The holes met.
     holes: Vec<Hole>,
+    /// The holes of them that are a leg's amount, each with its direction at the place and
+    /// where it was read (L §5.18; tally 2.1.8 R15).
+    legs: Vec<(Hole, bool, HoleSrc)>,
     /// The register met.
     met: Collected,
 }
@@ -787,6 +841,9 @@ impl Uncertain {
             self.met.merge(&movement.coll);
             let q = match &leg.amount {
                 Amount::Hole(h) => {
+                    if let Some(src) = &leg.src {
+                        self.legs.push((h.clone(), sign > 0, HoleSrc::clone(src)));
+                    }
                     self.holes.push(h.clone());
                     continue;
                 }
