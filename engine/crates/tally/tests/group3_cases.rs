@@ -42,6 +42,11 @@ mod tests {
         }
     }
 
+    /// `lines` are `expected`, every one, in order.
+    fn all_of(lines: &[String], expected: &[&str]) {
+        assert_eq!(lines, expected, "every line of the run");
+    }
+
     /// B1 (`t13.tally`): a decision run before t whose leg is dated t, read at a point of t after it: the start holds it.
     #[test]
     fn a_base_leg_the_start_holds_is_counted_once() {
@@ -581,6 +586,68 @@ ask b8: explain bal(k2, 2026-03-31) from 2026-03-05
                 "b3: 9 999.00 PLN + -1 × ?\"how much in Feb\" (hamt[2026-02]) + -1 × ?\"how much in Mar\" (hamt[2026-03])",
                 "b6: 9 999.00 PLN + -1 × ?\"how much in Feb\" (hamt[2026-02]) + -1 × ?\"how much in Mar\" (hamt[2026-03])",
                 "b7: 9 999.00 PLN + -1 × ?\"how much in Feb\" (hamt[2026-02])",
+            ],
+        );
+    }
+
+    /// N1 (`r14_none.tally`): `last` after a unitless `replace … = none`: nothing is read, so no `held:` line (every line checked).
+    #[test]
+    fn last_of_a_reading_replaced_by_none_holds_nothing() {
+        let text = r#"model t
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind wallets: place any signed
+place broker: wallets lives 2025-01-01..
+place world: outside lives 1900-01-01..
+
+input dbuy: date
+input amt: money EUR
+move buy: transfers
+  on dbuy
+  leg cash from world to broker amount amt
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  anchor broker
+  dbuy = 2026-02-10 "s"
+  amt = 3.00 EUR "s"
+  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
+  opening[broker] = 2.00 PLN at 2026-01-01 start "s"
+  stated[broker] = 6.00 EUR at 2026-02-15 end "s"
+  stated[broker] = 10.00 PLN at 2026-02-15 end "s"
+
+version v2
+  cite s
+  governs always
+  known 2026-03-01
+  anchor broker
+  replace stated[broker] = none at 2026-02-15 end "s"
+
+ask a: bal(broker, EUR, 2026-02-20), bal(broker, PLN, 2026-02-20)
+ask g: gap(broker, 2026-02-15)
+ask l: last(stated[broker], 2026-02-20)
+ask s1: since(stated[broker], 2026-02-20)
+"#;
+        all_of(
+            &lines_of("r14_none.tally", text),
+            &[
+                "a: (4.00 EUR, 2.00 PLN)",
+                "  unfulfilled: buy",
+                "  cut 2026-06-10",
+                "g: ?\"stated[broker] has no reading at 2026-02-15\" (stated[broker])",
+                "  cut 2026-06-10",
+                "l: ?\"stated[broker] has no reading on or before 2026-02-20\" (stated[broker])",
+                "  cut 2026-06-10",
+                "s1: ?\"stated[broker] has no reading on or before 2026-02-20\" (stated[broker])",
+                "  cut 2026-06-10",
             ],
         );
     }

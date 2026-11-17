@@ -819,6 +819,12 @@ impl Engine {
             ..ctx
         };
         let value = self.row_converted(m, (input, row, &latest.keys), &figure, at)?;
+        // a reading `replace … = none` removed is no reading (L §5.19: "it removes the
+        // reading it replaces"; L §4.6 Readings, `HOLE-NOREADING`; refcore's `e_lastx`): nothing
+        // is read, so nothing is held (N1 of group 3's review)
+        if input.reading && value == Value::None {
+            return Ok(Value::Hole(no_reading(&figure, latest.day)));
+        }
         // a window's reading stands from its last day (pick P29 on #175)
         let after = match self.row_after_day(m, &input.id, row, ctx)? {
             AfterDay::Day(day) => Some(day),
@@ -833,11 +839,6 @@ impl Engine {
                 latest.day.text()
             );
             self.note("held", text, String::new());
-        }
-        // a reading `replace … = none` removed is no reading (L §5.19: "it removes the
-        // reading it replaces"; L §4.6 Readings, `HOLE-NOREADING`; refcore's `e_lastx`)
-        if input.reading && value == Value::None {
-            return Ok(Value::Hole(no_reading(&figure, latest.day)));
         }
         // a read of x at its keys, named by the row it took, whatever day d took it (L §4.4)
         let value = as_read(value, (&input.id, &latest.keys), row_cell(row));
