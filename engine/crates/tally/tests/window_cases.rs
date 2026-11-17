@@ -15,6 +15,7 @@
 
 #[cfg(test)]
 mod tests {
+    use tally::time::Day;
     use tally::{Asks, Days, Given, Pin, Request, run};
 
     /// The lines a run of `text` prints for `asks`.
@@ -49,10 +50,34 @@ mod tests {
         out
     }
 
+    /// An unknown day's input and the days a line `windows each` doesn't split is pinned to.
+    type Unsplit<'a> = Option<(&'a str, &'a [String])>;
+
+    /// The days from `first` to `last`, each written `YYYY-MM-DD`.
+    fn days_from(first: &str, last: &str) -> Vec<String> {
+        let day = |text: &str| {
+            let mut parts = text.split('-');
+            let mut part = || parts.next().expect("a date's part");
+            let year: u16 = part().parse().expect("a year");
+            let month: u8 = part().parse().expect("a month");
+            let day: u8 = part().parse().expect("a day");
+            Day::from_ymd(year, month, day).expect("a day")
+        };
+        let (mut d, end) = (day(first), day(last));
+        let mut out = vec![d.text()];
+        while d < end {
+            d = d.next().expect("the next day");
+            out.push(d.text());
+        }
+        out
+    }
+
     /// Every line `windows each` splits by a window's days equals its ask's plain line
-    /// pinned to its sub-window's first day and its last: the same answer and the same
-    /// register, the pin's own `pinned:` line and the run's warnings aside (the lead's ruling on P30).
-    fn pinned_twins(text: &str) -> Vec<String> {
+    /// pinned to each day of its sub-window, and a line it doesn't split equals the plain line
+    /// pinned to each of `unsplit`'s days of its unknown: the same answer and the same
+    /// register, the pin's own `pinned:` line and the run's warnings aside (the lead's ruling
+    /// on P30; the review of group 2's fix, N-h).
+    fn pinned_twins(text: &str, unsplit: Unsplit<'_>) -> Vec<String> {
         let mut checked = Vec::new();
         let asks: Vec<(String, String)> = text
             .lines()
@@ -64,20 +89,22 @@ mod tests {
         let all = blocks(&lines_of(text));
         for (name, expr) in &asks {
             let head = format!("{name} [");
-            for block in all.iter().filter(|b| b[0].starts_with(&head)) {
-                let (pins, answer) = block[0]
-                    .strip_prefix(&head)
-                    .and_then(|rest| rest.split_once("]: "))
-                    .expect("a split line's head");
-                let (var, span) = pins.split_once(" = ").expect("one pin");
-                assert!(!span.contains(", "), "one unknown day: {}", block[0]);
-                let (first, last) = span.split_once(" .. ").unwrap_or((span, span));
-                let days = if first == last {
-                    vec![first]
+            let plain = format!("{name}: ");
+            for block in &all {
+                let (var, days, answer) = if let Some(rest) = block[0].strip_prefix(&head) {
+                    let (pins, answer) = rest.split_once("]: ").expect("a split line's head");
+                    let (var, span) = pins.split_once(" = ").expect("one pin");
+                    assert!(!span.contains(", "), "one unknown day: {}", block[0]);
+                    let (first, last) = span.split_once(" .. ").unwrap_or((span, span));
+                    (var.to_owned(), days_from(first, last), answer.to_owned())
+                } else if let (Some(answer), Some((var, days))) =
+                    (block[0].strip_prefix(&plain), unsplit)
+                {
+                    (var.to_owned(), days.to_vec(), answer.to_owned())
                 } else {
-                    vec![first, last]
+                    continue;
                 };
-                for day in days {
+                for day in &days {
                     let twin = format!("{text}\nask zz_twin: {expr} with {var} = {day}\n");
                     let got = lines_for(&twin, Asks::Named(vec!["zz_twin".to_owned()]));
                     let mut want = vec![format!("zz_twin: {answer}")];
@@ -579,6 +606,70 @@ q6: true
 q7: ?"date within window(2026-03-01, 2026-03-03) not precise enough for a print" (a)
   cut 2026-01-01"#;
 
+    /// A pending leg no day refuses (the review of group 2's fix, G1): `oa` moves 10.00 from
+    /// `pot` (`min 0`, 50.00) to `jar` on one of 04-05 and 04-09; `ob` takes 200.00 out of
+    /// `pot` on 04-07 and is refused on either day. `oa` is never refused, so `jar` and
+    /// `flows(oa)` keep 10.00: the hole reaches only the legs the refusal would refuse.
+    const PENDING_KEPT: &str = r#"model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+kind savings: place PLN min 0
+place pot: savings lives 2025-01-01..
+place jar: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input wa: date
+input db: date
+input small: money PLN
+input amt2: money PLN
+
+move oa: transfers
+  on wa
+  leg cash from pot to jar amount small
+
+move ob: transfers
+  on db
+  leg cash from pot to world amount amt2
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  small = 10.00 PLN "s"
+  amt2 = 200.00 PLN "s"
+  wa = one_of([2026-04-05, 2026-04-09]) "s"
+  db = 2026-04-07 "s"
+  opening[pot] = 50.00 PLN at 2026-01-01 start "s"
+  opening[jar] = 0.00 PLN at 2026-01-01 start "s"
+
+ask j1: bal(jar, 2026-04-30)
+ask j2: bal(jar, 2026-04-30) windows each
+ask j3: flows(oa, 2026-04)
+ask j4: bal(jar, 2026-04-30) with wa = 2026-04-05
+ask j5: bal(jar, 2026-04-30) with wa = 2026-04-09
+ask j6: flows(oa, 2026-04) with wa = 2026-04-09
+"#;
+
+    const PENDING_KEPT_LINES: &str = r"j1: 10.00 PLN
+  cut 2026-01-01
+j2: 10.00 PLN
+  cut 2026-01-01
+j3: 10.00 PLN
+  cut 2026-01-01
+j4: 10.00 PLN
+  pinned: wa = 2026-04-05
+  cut 2026-01-01
+j5: 10.00 PLN
+  pinned: wa = 2026-04-09
+  cut 2026-01-01
+j6: 10.00 PLN
+  pinned: wa = 2026-04-09
+  cut 2026-01-01";
+
     #[test]
     fn a_window_whose_days_take_two_classes_keeps_its_window_and_the_reads_question() {
         for (text, want) in [
@@ -590,6 +681,7 @@ q7: ?"date within window(2026-03-01, 2026-03-03) not precise enough for a print"
             (BOTH_BREAK, BOTH_BREAK_LINES),
             (CLOSE_TWO, CLOSE_TWO_LINES),
             (TWO_WINDOWS, TWO_WINDOWS_LINES),
+            (PENDING_KEPT, PENDING_KEPT_LINES),
         ] {
             let want: Vec<&str> = want.lines().collect();
             assert_eq!(lines_of(text), want, "refcore's lines");
@@ -598,23 +690,24 @@ q7: ?"date within window(2026-03-01, 2026-03-03) not precise enough for a print"
 
     #[test]
     fn each_line_of_a_window_whose_days_take_two_classes_is_its_pinned_twin() {
-        let checked: Vec<String> = [
-            COVER_REACH,
-            ANCHOR_AFTER,
-            RUN_START,
-            COVER_GAP,
-            SIGN_ENDS,
-            BOTH_BREAK,
-            CLOSE_TWO,
-        ]
-        .iter()
-        .flat_map(|text| pinned_twins(text))
-        .collect();
-        assert_eq!(
-            checked.len(),
-            38,
-            "two sub-windows each in a4 and b5, three each in c2, f2, j2 and p2, two each in g2, g4 and e4, one or two days each: \
-             {checked:?}"
-        );
+        let one_of = ["2026-04-05".to_owned(), "2026-04-09".to_owned()];
+        let start = days_from("2025-12-30", "2026-01-03");
+        let texts: [(&str, Unsplit<'_>); 8] = [
+            (COVER_REACH, None),
+            (ANCHOR_AFTER, None),
+            (RUN_START, Some(("ws", &start))),
+            (COVER_GAP, None),
+            (SIGN_ENDS, None),
+            (BOTH_BREAK, None),
+            (CLOSE_TWO, None),
+            (PENDING_KEPT, Some(("wa", &one_of))),
+        ];
+        let checked: Vec<String> = texts
+            .iter()
+            .flat_map(|(text, unsplit)| pinned_twins(text, *unsplit))
+            .collect();
+        // a4 and b5 six days each, s4w five, c2 seven, f2, j2 and p2 six each, g2 and g4 six
+        // each, e4 six, j2 of PENDING_KEPT two
+        assert_eq!(checked.len(), 62, "every day of each window: {checked:?}");
     }
 }

@@ -934,11 +934,10 @@ impl Walk {
                 Amount::Qty(a) => Some(signed(a, if into { 1 } else { -1 })?),
                 Amount::Hole(_) | Amount::Refused(_) => None,
             };
-            ent.other = if into { lg.from.place() } else { lg.to.place() }.map(str::to_owned);
             self.add(m, p, &unit, ent)?;
         }
         for p in ends(lg) {
-            self.imp_test(m, (p, &unit), at)?;
+            self.imp_test(m, (p, &unit), at, (movement, lg))?;
         }
         Ok(())
     }
@@ -952,26 +951,36 @@ impl Walk {
     /// # Errors
     ///
     /// A number past the cap; `ENGINE-INVARIANT` for a place load didn't build.
-    fn imp_test(&mut self, m: &Reality, (place, unit): (&str, &str), at: At) -> Result<(), Stop> {
+    fn imp_test(
+        &mut self,
+        m: &Reality,
+        (place, unit): (&str, &str),
+        at: At,
+        (movement, lg): (&str, &LegVal),
+    ) -> Result<(), Stop> {
+        let key = (place.to_owned(), unit.to_owned());
+        let leg = (movement.to_owned(), lg.clone());
         if let Some(group) = self.open_group(at) {
-            group
-                .entry((place.to_owned(), unit.to_owned()))
-                .or_insert_with(Vec::new);
+            group.entry(key.clone()).or_insert_with(Vec::new);
+            // tested with its group: where its own amount breaks the place, a leg the refusal
+            // reaches (refcore's `pend_at`)
+            self.pend_at.entry(key).or_insert_with(Vec::new).push(leg);
             return Ok(());
         }
         let st = self.pstate(m, place, unit, at);
         if imp_breaks(m, place, &st, None, Words::Same)? == Three::Depends {
-            self.imp_hole(m, at, (place, unit), &[])?;
+            self.imp_hole(m, at, (place, unit), &[leg])?;
         }
         Ok(())
     }
 
     /// A test of E §4.2 step 5 that comes out one way on some days of the windows pending at
     /// `place` in `unit` and another on the rest: their `HOLE-IMPRECISE`, naming them, as far
-    /// as the refusal would reach, each place to its next reading: the place, the other ends
-    /// of the group's legs `legs` at it, and the other ends of the pending legs; a read of each
-    /// of those legs is the hole too (refcore's `imp_hole`). E §4.1 step 2, L §4.4; tally
-    /// 2.1.8 item 77.
+    /// as the refusal would reach, each place to its next reading: the place and the other
+    /// ends of the legs `legs` it would refuse with it (a window-dated leg tested on its first
+    /// day among them); a read of each of those legs is the hole too. A pending leg the
+    /// refusal wouldn't refuse keeps its value at its other end and in its flows (refcore's
+    /// `imp_hole`). E §4.1 step 2, L §4.4; tally 2.1.8 item 77.
     ///
     /// # Errors
     ///
@@ -994,14 +1003,6 @@ impl Walk {
             self.hole_legs
                 .entry((mv.clone(), lg.name.clone()))
                 .or_insert_with(|| h.clone());
-        }
-        for pending in &st.imp {
-            reach.extend(pending.other.iter().cloned());
-            if let Some((mv, leg)) = pending.wid.rsplit_once('.') {
-                self.hole_legs
-                    .entry((mv.to_owned(), leg.to_owned()))
-                    .or_insert_with(|| h.clone());
-            }
         }
         for p in &reach {
             self.add(m, p, unit, Ent::new(at, Change::Hole(h.clone())))?;

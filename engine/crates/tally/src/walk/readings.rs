@@ -304,8 +304,15 @@ impl Engine {
                 bad.push((place.clone(), unit.clone(), nv, legs.clone()));
             }
         }
-        for (place, unit, legs) in depends {
-            self.walk_mut(id)?.imp_hole(m, at, (&place, &unit), &legs)?;
+        let pending_walk = self.walk_mut(id)?;
+        for (place, unit, mut legs) in depends {
+            if let Some(pending) = pending_walk.pend_at.get(&(place.clone(), unit.clone())) {
+                legs.extend(pending.iter().cloned());
+            }
+            pending_walk.imp_hole(m, at, (&place, &unit), &legs)?;
+        }
+        for key in group.keys() {
+            pending_walk.pend_at.remove(key);
         }
         for (place, unit, nv, legs) in bad {
             let shown = qty_value(m, &nv, &unit)?

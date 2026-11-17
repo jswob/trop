@@ -105,8 +105,6 @@ pub struct Pending {
     pub hole: Hole,
     /// Its leg's amount signed as a flow into the place, where known.
     pub signed: Option<Num>,
-    /// The place at the leg's other end, where there is one.
-    pub other: Option<String>,
 }
 
 /// What a read of a leg the walk took out meets: its refusal, or the hole a test some of a
@@ -220,8 +218,6 @@ pub struct Ent {
     /// An `ImpOn`'s leg amount signed as a flow into the place, where known (tally 2.1.8
     /// item 77).
     pub signed: Option<Num>,
-    /// An `ImpOn`'s place at the leg's other end (refcore's `imp`, its other end).
-    pub other: Option<String>,
     /// The state after it.
     pub st: St,
 }
@@ -264,7 +260,6 @@ impl Ent {
             flow: None,
             hole_leg: None,
             signed: None,
-            other: None,
             st: St::of(None),
         }
     }
@@ -381,6 +376,10 @@ pub struct Walk {
     /// leg), which a read of the leg meets (refcore's `hole_legs`, `hole_flows`; tally 2.1.8
     /// item 77).
     pub(crate) hole_legs: BTreeMap<(String, String), Hole>,
+    /// The window-dated legs whose first day's sign test waits for their point's group, by
+    /// (place, unit): the legs that group's refusal would reach (refcore's `pend_at`; tally
+    /// 2.1.8 item 77).
+    pub(crate) pend_at: BTreeMap<(String, String), Vec<(String, LegVal)>>,
     /// The warnings it met (L §8.5).
     pub(crate) warnings: Vec<(Warn, String)>,
     /// Whether each (place, unit) ended its last day below zero (`WARN-NEGATIVE`).
@@ -615,6 +614,7 @@ impl Walk {
             adj_regs: BTreeMap::new(),
             bad_legs: BTreeMap::new(),
             hole_legs: BTreeMap::new(),
+            pend_at: BTreeMap::new(),
             warnings: Vec::new(),
             negative: BTreeMap::new(),
             conserved: BTreeMap::new(),
@@ -1174,7 +1174,6 @@ fn apply_ent(prev: &St, ent: &Ent, at: usize) -> Result<St, Stop> {
                 wid: wid.clone(),
                 hole: h.clone(),
                 signed: ent.signed.clone(),
-                other: ent.other.clone(),
             }),
             Change::Delta(_) | Change::Hole(_) => st.imp.retain(|p| &p.wid != wid),
             Change::Reset { .. }
