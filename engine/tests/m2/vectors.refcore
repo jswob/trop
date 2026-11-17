@@ -15923,7 +15923,7 @@ version b
   covers konto
   anchor konto
   bank[o1] = (on: 2026-03-01, kind: pays, leg cash from work to konto amount 11.00 PLN, fulfils: pay[2026-03]) "paid"
-,,1:0,968:e1: 10.00 PLN
+,,1:0,1151:e1: 10.00 PLN
   [1] tot[2026-02] = 10.00 PLN
       rule base: won
         [2] row v:amt[2026-01..2026-06] = 10.00 PLN
@@ -15941,6 +15941,8 @@ e3: 11.00 PLN
       rule base: won
         [2] row v:amt[2026-01..2026-06] = 10.00 PLN
             version v, source s, "synthetic", locator "plan", governs always, known 2026-01-01
+        [3] row b:bank[o1] = (from: work, to: konto, amount: 11.00 PLN, day: 2026-03-01)
+            version b, source s, "synthetic", locator "paid", on 2026-03-01, known 2026-03-10
   cut 2026-03-15
 warning: WARN-UNREAD def cnt is read by nothing
 warning: WARN-UNREAD input big is read by nothing
