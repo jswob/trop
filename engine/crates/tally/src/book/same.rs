@@ -868,6 +868,12 @@ impl Engine {
                         .entry((cut, t.to_owned()))
                         .or_insert_with(|| err.clone());
                 }
+                // S1's reach: every read resting on the class or on either instance (P42)
+                for k in [tid, t2.as_str(), o.id.as_str(), x.as_str()] {
+                    self.s1_links
+                        .entry((cut, k.to_owned()))
+                        .or_insert_with(|| err.clone());
+                }
                 refuse_once(&mut bad, o, &err);
             }
         }

@@ -175,4 +175,77 @@ ask sl: last(c, 2026-05-01)
             ],
         );
     }
+
+    /// B2 (`s1_two_b.tally` and January's count): rows stated same whose `fulfils` name two
+    /// instances refuse every read resting on the class or on either instance, a count, a sum
+    /// and flows of the move as `bal` and `observed` (S1, P42); a month neither is in answers.
+    #[test]
+    fn s1_refuses_every_read_resting_on_the_class() {
+        let text = r#"model p
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind pays: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2026-01-01..
+place work: outside lives 1900-01-01..
+input amt[m in months]: money PLN
+input bank: observed
+input card: observed
+def tot[m in months]: money PLN = sum(p.cash.amount for p in pays over m)
+
+move pay[m in months]: pays
+  on start_of(m)
+  leg cash from work to konto amount amt[m]
+
+ask b3: bal(konto, 2026-03-31)
+ask t2: tot[2026-02]
+ask t3: tot[2026-03]
+ask c3: count(p in pays over 2026-03)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[2026-01..2026-06] = 10.00 PLN "plan"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
+
+version b
+  cite s
+  governs 2026-03
+  known 2026-03-10
+  bank[o1] = (on: 2026-03-01, kind: pays, leg cash from work to konto amount 11.00 PLN, fulfils: pay[2026-03]) "b1"
+  card[o1] = (on: 2026-03-01, kind: pays, leg cash from work to konto amount 11.00 PLN, fulfils: pay[2026-02]) "c1"
+
+version sm
+  cite s
+  known 2026-03-11
+  same bank[o1] = card[o1]
+ask fp: flows(pay, 2026-03)
+ask ob: observed(pay[2026-03])
+ask c2: count(p in pays over 2026-02)
+ask c1: count(p in pays over 2026-01)
+"#;
+        let refused = "refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]";
+        let lines = lines_of("s1_two_b.tally", text);
+        let mut want = vec![
+            format!("b3: {refused}"),
+            "  unfulfilled: pay[2026-01]".to_owned(),
+            "  unfulfilled: pay[2026-02]".to_owned(),
+            "  unfulfilled: pay[2026-03]".to_owned(),
+            "  cut 2026-06-30".to_owned(),
+            "c1: 1".to_owned(),
+            "  unfulfilled: pay[2026-01]".to_owned(),
+            "  cut 2026-06-30".to_owned(),
+        ];
+        for id in ["c2", "c3", "fp", "ob", "t2", "t3"] {
+            want.push(format!("{id}: {refused}"));
+            want.push("  cut 2026-06-30".to_owned());
+        }
+        assert_eq!(lines, want, "every line of the run");
+    }
 }

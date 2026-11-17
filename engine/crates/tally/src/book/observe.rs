@@ -460,6 +460,57 @@ impl Engine {
         Ok(obs)
     }
 
+    /// The refusal S1 gives a read resting on movement or instance `id` under cut `cut`, or
+    /// none: the links a `same` class's rows make are judged once, every one, so both
+    /// instances a class fulfils and both its rows are known before any read takes one
+    /// (refcore's `s1_refusal`, pick P42). L §5.19 One movement on two statements, §8.4.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::obs_links_for`].
+    pub(crate) fn s1_refusal(
+        &mut self,
+        m: &Reality,
+        id: &str,
+        cut: Day,
+    ) -> Result<Option<Refusal>, Stop> {
+        if self.s1_judged.insert(cut) {
+            // what the judging reads is the refusal's, not the reader's: its register, its
+            // read set and the trace's note of a walk read (E §10) go back as they stood
+            let before = self.trace_walked();
+            self.push();
+            let mark = self.reads_apart();
+            let judged = self.judge_class_links(m, cut);
+            self.reads_back(mark);
+            self.pop_alone();
+            self.trace_walked_back(before);
+            judged?;
+        }
+        Ok(self.s1_links.get(&(cut, id.to_owned())).cloned())
+    }
+
+    /// Each instance a row of a `same` class fulfils, its links judged, in the observations'
+    /// order (refcore's `s1_refusal`, its loop). L §5.19 One movement on two statements.
+    fn judge_class_links(&mut self, m: &Reality, cut: Day) -> Result<(), Stop> {
+        let groups = self.same_groups(m, cut)?;
+        if groups.is_empty() {
+            return Ok(());
+        }
+        let mut targets: Vec<String> = Vec::new();
+        for o in self.observations(m, cut)? {
+            if let Some(t) = o.target_id()
+                && groups.contains_key(&o.id)
+                && !targets.contains(&t)
+            {
+                targets.push(t);
+            }
+        }
+        for t in &targets {
+            self.obs_links_for(m, t, cut)?;
+        }
+        Ok(())
+    }
+
     /// Each observation naming `tid`, its link judged (refcore's `obs_links_for`, its loop).
     /// L §5.19 Links.
     fn judge_links(

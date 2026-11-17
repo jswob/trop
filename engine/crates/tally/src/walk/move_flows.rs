@@ -190,6 +190,11 @@ impl Engine {
                 acc.holes.push(Hole::after_run(&i.id));
                 continue;
             }
+            if let Some(e) = self.s1_refusal(m, &i.id, ctx.cut)? {
+                // an instance a `same` class fulfils with another: what reads it is refused
+                // (L §5.19 One movement on two statements, P42)
+                return Err(Stop::Refused(e));
+            }
             if i.status == Status::Modelled {
                 self.count_standing_in(m, i, leg, ctx.cut, acc)?;
                 continue;

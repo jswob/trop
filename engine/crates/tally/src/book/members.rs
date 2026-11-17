@@ -221,11 +221,15 @@ impl Engine {
         h: Hole,
         ctx: Ctx,
     ) -> Result<Result<Vec<MvMember>, Hole>, Stop> {
-        let cands = self
-            .movements_of(m, dom, ctx)?
-            .iter()
-            .map(Moving::value)
-            .collect();
+        let movements = self.movements_of(m, dom, ctx)?;
+        for x in &movements {
+            // each could be a member: S1's refusal of one is the binding's (L §5.19, P42;
+            // refcore's `possible_members`)
+            if let Some(e) = self.s1_refusal(m, x.id(), ctx.cut)? {
+                return Err(Stop::Refused(e));
+            }
+        }
+        let cands = movements.iter().map(Moving::value).collect();
         Ok(if self.may_hold(m, (bind, env), cands, ctx)? {
             Err(h)
         } else {
@@ -248,6 +252,12 @@ impl Engine {
         let mut fulfilled: BTreeSet<String> = BTreeSet::new();
         let mut two_days: BTreeMap<String, Hole> = BTreeMap::new();
         for x in self.movements_of(m, dom, ctx)? {
+            // a binding rests on each movement it takes: S1's refusal is its own (L §5.19, P42)
+            if let Some(e) = self.s1_refusal(m, x.id(), ctx.cut)?
+                && rests_in(&x, sp)
+            {
+                return Err(Stop::Refused(e));
+            }
             if let Moving::Obs(o) = &x
                 && let Some(und) = &o.undecided
             {
@@ -1192,6 +1202,17 @@ fn window_member(w: &DayWindow, sp: &Span) -> Option<bool> {
     let after = sp.end().is_some_and(|end| w.lo >= end);
     let before = sp.start().is_some_and(|start| w.hi < start);
     (after || before).then_some(false)
+}
+
+/// Whether a binding over span `sp` rests on movement `x`, so meets its S1 refusal: one dated
+/// on a day outside the span doesn't; one whose day is a window, a hole or refused may be a
+/// member, so does (refcore's `span_members`, its `s1_refusal` test). L §5.19 One movement on
+/// two statements, Bindings.
+fn rests_in(x: &Moving, sp: &Span) -> bool {
+    match x.day() {
+        Some(Dated::Day(d)) => sp.contains(d),
+        Some(Dated::Window(_) | Dated::Hole(_)) | None => true,
+    }
 }
 
 /// A running read's binding over a kind the walk itself books, decisions or pads, through a

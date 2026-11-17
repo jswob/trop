@@ -565,6 +565,11 @@ pub struct Engine {
     /// The refusal an instance's realised movement rests on, per cut, by instance: a record
     /// its link refused (refcore's `badlinks`; L §5.19, §8.4).
     pub(crate) bad_links: BTreeMap<(Day, String), Refusal>,
+    /// S1's refusal, per cut, by each instance and row a `same` class whose `fulfils` differ
+    /// names: what every read resting on either rests on (refcore's `s1links`; L §5.19, P42).
+    pub(crate) s1_links: BTreeMap<(Day, String), Refusal>,
+    /// The cuts whose `same` classes' links are judged, every one (refcore's `s1done`).
+    pub(crate) s1_judged: BTreeSet<Day>,
     /// The adjustments a settlement move's binding over adjustments is held to while its
     /// candidates are made (refcore's `_adj_restrict`, E §5 step 5).
     pub(crate) adj_restrict: Option<Vec<Adjustment>>,
@@ -682,6 +687,8 @@ impl Engine {
             link_active: BTreeSet::new(),
             obs_errs: BTreeMap::new(),
             bad_links: BTreeMap::new(),
+            s1_links: BTreeMap::new(),
+            s1_judged: BTreeSet::new(),
             adj_restrict: None,
             settled: BTreeMap::new(),
             unsettled: BTreeMap::new(),
