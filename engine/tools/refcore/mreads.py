@@ -2090,6 +2090,7 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
 # -- value (L §5.10) -----------------------------------------------------------------------------------------------
 
 def m_e_value(self, n, env, ctx):
+    from .evaluate import lin_of
     m = self.m
     p = self.place_arg(n.ref, env, ctx)
     if isinstance(p, Hole):
@@ -2110,6 +2111,10 @@ def m_e_value(self, n, env, ctx):
         # input p (tally 1's asset)" (L §5.7); `value` = p at d (L §5.10)
         v = self.priced_read(priced, th, None, d, n, env, ctx)
         if isinstance(v, Hole):
+            if ctx.partial and priced._cur == cur and lin_of(v) is not None:
+                # value passes its price on unchanged, so under partial its hole stays linear (L §5.18, tally 2.1.8
+                # R15; T's STOP-REPORT 7, ASK-02)
+                return Hole(v.qs, lin_of(v))
             return v
         amt = v.q
         if priced._cur != cur:
