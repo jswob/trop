@@ -117,8 +117,9 @@ impl Engine {
             value = self.partial_bal(m, id, (place, unit), At::end(day), h)?;
         }
         self.proj_regs(id, start, day)?;
-        // the read's own clause, else the ask line's, which no decision's context carries
-        if (read.proj.uncertain || ctx.unc) && !matches!(value, Value::Hole(_)) {
+        // the read's own clause, else the ask line's, which no decision's context carries; a
+        // `partial` line's hole keeps the uncertain amounts in its known part (L §5.18, R15)
+        if (read.proj.uncertain || ctx.unc) && (ctx.partial || !matches!(value, Value::Hole(_))) {
             return self.proj_uncertain(m, id, (place, unit), (day, &value), ctx);
         }
         Ok(value)

@@ -139,4 +139,56 @@ version v
             ],
         );
     }
+
+    /// B3 (`t8.tally`): `with uncertain partial` over a projection whose balance is a hole: the uncertain repayments stay in its known part.
+    #[test]
+    fn a_projection_with_uncertain_partial_keeps_the_uncertain_amounts() {
+        let text = r#"model u
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source own "own"
+unit PLN: currency minor 0.01
+kind promises: event uncertain
+  leg cash: PLN
+kind gifts: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2020-01-01..
+place friend: outside lives 1900-01-01..
+input owed[m in months]: money PLN
+input repay_dom: int
+input gift[m in months]: money PLN
+
+move repay[m in months]: promises
+  on day_of(m, repay_dom)
+  at start_of(m)
+  leg cash from friend to konto amount owed[m]
+
+move g[m in months]: gifts
+  on day_of(m, repay_dom)
+  at start_of(m)
+  leg cash from friend to konto amount gift[m]
+
+version v
+  cite own
+  governs 2026..
+  known 2026-01-01
+  owed = 500.00 PLN "note"
+  repay_dom = 1 "note"
+  gift = 10.00 PLN "note"
+  gift[2026-03] = ?"gift in march" "note"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "statement"
+
+ask a: bal(konto, 2026-04-30) from 2026-02-15 with uncertain partial
+ask b: bal(konto, 2026-04-30) with uncertain partial
+ask c: bal(konto, 2026-04-30) from 2026-02-15 with uncertain
+ask d: bal(konto, 2026-04-30) from 2026-02-15 partial
+"#;
+        holds(
+            &lines_of(text),
+            &["a: 2 030.00 PLN + 1 × ?\"gift in march\" (gift[2026-03])"],
+        );
+    }
 }
