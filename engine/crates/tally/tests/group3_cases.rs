@@ -275,4 +275,42 @@ ask pl: stated[broker] law 2026-02-15
             ],
         );
     }
+
+    /// B7 (`t7.tally`): a level of 0 from a def, two hole terms: the refusal outranks the holes.
+    #[test]
+    fn a_refused_quantile_level_refuses_before_its_hole_terms() {
+        let text = r#"model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+unit PLN: currency minor 0.01
+index ks = [a, b, c]
+input z[k in ks]: money PLN
+input w[k in ks]: int
+input x: money PLN
+input lv: num
+version zz
+  cite plan
+  governs always
+  known 2026-01-01
+  z[a] = 10.00 PLN "s"
+  z[b] = ?"z of b" "s"
+  z[c] = ?"z of c" "s"
+  w[a] = 1 "s"
+  w[b] = 1 "s"
+  w[c] = 0 "s"
+  x = ?"what is x" "s"
+  lv = 0 "s"
+ask q1: quantile(z[k] for k in ks, lv)
+ask q2: quantile(z[k] for k in ks where w[k] > 1, lv)
+ask q3: quantile(z[k] for k in [a], lv)
+"#;
+        holds(
+            &lines_of(text),
+            &["q1: refused: RUN-DOMAIN quantile has no meaning for the level 0"],
+        );
+    }
 }
