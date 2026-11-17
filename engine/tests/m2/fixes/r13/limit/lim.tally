@@ -1,0 +1,45 @@
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-01-31
+  note "T, tally 2.1.8 S7 (#174): ten pay windows of three days in one month and one rent on 2026-01-15, so every day's balance reads them: 3^10 day combinations, and windows each over the lowest balance is RUN-LIMIT past 20 000 (L 7.6 limit 6). m.tally's ten months walked each combination ten times as long, past refcore's 90 s budget on a loaded machine"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+index ks = 1..10
+input pay: money PLN
+input rent: money PLN
+input pd[k in ks]: date
+input rd: date
+
+move inc[k in ks]: transfers
+  on pd[k]
+  leg cash from world to konto amount pay
+
+move out: transfers
+  on rd
+  leg cash from konto to world amount rent
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  pay = 10.00 PLN "s"
+  rent = 100.00 PLN "s"
+  rd = 2026-01-15 "s"
+  pd[1] = window(2026-01-02, 2026-01-04) "s"
+  pd[2] = window(2026-01-05, 2026-01-07) "s"
+  pd[3] = window(2026-01-08, 2026-01-10) "s"
+  pd[4] = window(2026-01-11, 2026-01-13) "s"
+  pd[5] = window(2026-01-14, 2026-01-16) "s"
+  pd[6] = window(2026-01-17, 2026-01-19) "s"
+  pd[7] = window(2026-01-20, 2026-01-22) "s"
+  pd[8] = window(2026-01-23, 2026-01-25) "s"
+  pd[9] = window(2026-01-26, 2026-01-28) "s"
+  pd[10] = window(2026-01-29, 2026-01-31) "s"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "s"
+
+ask lim: low(konto, 2026-01-01 .. 2026-01-31) windows each

@@ -1,0 +1,32 @@
+model z2
+  tally 2
+  on 2026-08-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..2026-04-18
+place world: outside lives 1900-01-01..
+input w_zer: date
+input zero: money PLN
+
+move zer: transfers
+  on w_zer
+  leg cash from world to konto amount zero
+
+ask fz: flows(konto, 2026-04-09 .. 2026-04-21)
+ask fm: flows(zer, 2026-04-09 .. 2026-04-21)
+ask nz: count(t in transfers over 2026-04-09 .. 2026-04-21)
+ask bz: bal(konto, 2026-04-20)
+ask xz: x.cash.amount for x in transfers over 2026-04-09 .. 2026-04-21
+ask fe: flows(konto, 2026-04-09 .. 2026-04-21) windows each
+ask fw: flows(konto, 2026-04-01 .. 2026-04-17)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  w_zer = window(2026-04-15, 2026-04-25) "s"
+  zero = 0.00 PLN "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"

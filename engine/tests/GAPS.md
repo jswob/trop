@@ -174,3 +174,12 @@ T's re-run of every stored output, first on refcore f843e443, then on the tag's 
 - **New (75f27ca1):** `q_net_worth (p = ola): ?"…" (car_value)`, the plain hole.
 - **Which is wrong:** refcore. R15.1 (L §5.18 l.1632): a hole stays linear "through every operation that adds its operands, scales them by a known number or passes one on unchanged"; `value` of a place valued whole is its price at d (L §5.10), passed on unchanged, and R15's vector 1 makes `value` linear for a known number of units at a hole price. refcore's evaluator (`ev`, evaluate.py, the R15 wrapper) makes plain every hole whose node isn't one `lin_passes` lists, and `m_e_value`'s whole-priced branch returns the price's hole with no linear form of its own. The first run's second form, a leg's `amount` in a `sum` (household B's `b08_cards`), was the same; the sixth turn's dcc23eac fixed it, and `b08_cards` prints its stored bytes.
 - **What T did:** `U:ask/ASK-02`'s baseline keeps 2.1.7's bytes (it differs in `run.py` until refcore is fixed); no store row moves by it.
+
+## STOP-REPORTs of tally 2.1.8's last re-run (T, 2026-11-17, refcore 21c79026)
+
+Refcore answers 9 of `m2/spec.tsv`'s 17 rows now (`spec.py --refcore`). Five moved to `m2/vectors.tsv` (`fixes/…`, refcore's bytes): `g3/k2`, `g3/ez06`, `g4/nb3_atT` and `g6/b4_q1` print the spec row's answer, and `g4/nb3_at` prints 70.00 PLN by R11, as the lead ruled. Four print otherwise than the spec's answer, which the round's engine prints (all four green on it). They stay `m2/spec.tsv`'s answers until a ruling:
+
+- **SR 8, `spec/g4/nb3_after`** (`m2/fixes/g4/nb3_after.tally`, `q_konto`): the spec row is `refused: RUN-CYCLE the link to sw[2026-03] reads its own observations` (L §4.6, §5.14.2: a link's `when` that reads a reading after its own instance); refcore is `refused: RUN-RECORD reading stated[konto] after sw[2026-03]: sw[2026-03] doesn't exist`. That is, it reads the link as false, not as a cycle.
+- **SR 9, `spec/g4/nb3_afterT`** (its twin, `q_konto`): the spec row is the same `RUN-CYCLE`; refcore is `60.00 PLN`.
+- **SR 10, `spec/p60/num_list_key`** (`m2/fixes/p60/num_list_key.tally`, its register): the spec row is `unfulfilled: ml[1.5]` (L §5.14: a move binds each key of its list; §8.2); refcore is `unfulfilled: ml[2]`.
+- **SR 11, `spec/g6/n3`** (`m2/fixes/g6/n3.tally`, `q3`): the spec row is `q3 (k = a) [d[a] = 2026-03-02]: true` first (L §5.18: one line per binding tuple, in binding order); refcore prints `q3 (k = b): true` first. This is P29's known difference, still there.

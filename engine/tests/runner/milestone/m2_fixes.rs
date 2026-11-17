@@ -38,7 +38,7 @@ mod tests {
     ];
 
     /// The groups of `m2/spec.vectors`, one `#[test]` each.
-    const SPEC_GROUPS: [&str; 4] = ["spec-forms", "spec-windows", "spec-records", "spec-sweep"];
+    const SPEC_GROUPS: [&str; 3] = ["spec-forms", "spec-records", "spec-sweep"];
 
     /// Runs every vector of `group` in `store` on the engine, less the held ones, and holds it
     /// to the stored run.
@@ -223,13 +223,6 @@ mod tests {
     #[test]
     fn m2_fixes_spec_forms() {
         group_holds(SPEC, "spec-forms");
-    }
-
-    /// The spec's answers for G3's fixes (P11, P27 B1, B2, B4, B5, NB-6, NB-7, P30) and the
-    /// interim cap past 20 000 day combinations (P28, #174).
-    #[test]
-    fn m2_fixes_spec_windows() {
-        group_holds(SPEC, "spec-windows");
     }
 
     /// The spec's answers for G6's held probes (L §5.18 partial answers, L §8.4 an observed
