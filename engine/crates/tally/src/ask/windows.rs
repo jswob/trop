@@ -869,7 +869,11 @@ fn each_rows(
 /// rests on, `forced`, that the choice names no day of, the first the run met; else the first
 /// its answer carries; none where it carries none (refcore's `each_next`). L §4.4; tally
 /// 2.1.8 R13.
-fn each_next(met: &[Met], choice: &Choice, (carried, forced): (&[Met], &[String])) -> Option<Met> {
+pub(super) fn each_next(
+    met: &[Met],
+    choice: &Choice,
+    (carried, forced): (&[Met], &[String]),
+) -> Option<Met> {
     let open: Vec<&Met> = carried.iter().filter(|w| !names(choice, &w.id)).collect();
     let mut wanted: Vec<&str> = open.iter().map(|w| w.id.as_str()).collect();
     for f in forced {

@@ -27,7 +27,7 @@ use super::answer::{item_text, tuple_key};
 use super::axes::{Axes, result_lines};
 use super::check::Printed;
 use super::register::register_lines;
-use super::windows::{CellRuns, EACH_CAP, crossed_lines, names, past_cap};
+use super::windows::{CellRuns, EACH_CAP, crossed_lines, each_next, past_cap};
 use crate::eval::{Choice, Collected, Ctx, Engine, Entry, Env, Item, Met, world_named};
 use crate::model::{Reality, Value};
 use crate::syntax::{Ask, Diff, Stop};
@@ -158,8 +158,9 @@ pub(super) fn diff_cells(
 }
 
 /// One side's cell at combination `options`: the diff's value in world `only`, or under
-/// `windows each` its runs, one per choice of the days the windows its reads meet can take,
-/// depth first, each with its cell (refcore's `each_rows`, one side at a time). L §4.4, §6.4.
+/// `windows each` its runs, one per choice of the days of the windows its answer carries,
+/// the first its reads met taken first, depth first, each with its cell (refcore's
+/// `each_rows`, `each_next`, one side at a time). L §4.4, §6.4; tally 2.1.8 R13.2.
 fn side_cell(
     m: &Reality,
     (ask, diff): (&Ask, &Diff),
@@ -178,7 +179,14 @@ fn side_cell(
         let met = core::mem::replace(&mut engine.each_met, outer)
             .ok_or_else(|| invariant("a run's windows met taken while it ran"))?;
         let made = made?;
-        let Some(new) = met.into_iter().find(|w| !names(&choice, &w.id)) else {
+        // a run takes next only a window its answer carries (L §4.4; tally 2.1.8 R13.2)
+        let values: Vec<&Item> = [&made.ours, &made.theirs]
+            .into_iter()
+            .flatten()
+            .flat_map(|side| side.iter().map(|(_, v)| v))
+            .collect();
+        let carried = super::check::carried_of(&values);
+        let Some(new) = each_next(&met, &choice, (&carried, &[])) else {
             runs.each.push((choice, made));
             continue;
         };
