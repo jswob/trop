@@ -303,7 +303,14 @@ def m_mv_field(self, n, env, ctx):
             getattr(src, 'status', None) in ('past', 'plan'):
         # a leg the walk books is read with the axes the walk read to book it, so the read fans out over them (L §5.5
         # Fan-out; tally 2.1.8 R13, #169-k); a leg the walk refused is refused below (leg_refused)
-        w = self.ask_walk(ctx, src.day if isinstance(src.day, datetime.date) else None)
+        # building the walk to learn its axes reads other movements' days and amounts, none of them the value's
+        # (E §10; tally 2.1.8 P50: b2_reads c3 listed pay's v:dom under an explain of xs)
+        saved_tr = (self.trace_stack, self.tracing)
+        self.trace_stack, self.tracing = [], False
+        try:
+            w = self.ask_walk(ctx, src.day if isinstance(src.day, datetime.date) else None)
+        finally:
+            self.trace_stack, self.tracing = saved_tr
         for lg in (src.legs if w is not None else ()):
             if lg.name != name:
                 continue
