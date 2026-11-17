@@ -915,7 +915,7 @@ fn after_run_line(m: &Reality, lines: &mut Lines, span: &Span) -> Result<(), Sto
 
 /// An unexplained line: an observation that fulfils nothing the model at the cut holds, its
 /// amount the difference, named by `ids` (its id, or its `same` group's); in its month's
-/// `unexplained` group, or with `by f` in the group of its value of f where it has one
+/// `unexplained` group, or with `by f` in the group `<f> <value>` where it has a value of f
 /// (refcore's unexplained `RLine`). E §6.3 unexplained, Grouping.
 fn unexplained_line(m: &Reality, lines: &mut Lines, o: &Obs, ids: &str) -> Result<(), Stop> {
     let ob = flow_into(&o.legs, &lines.of)?;
@@ -925,8 +925,10 @@ fn unexplained_line(m: &Reality, lines: &mut Lines, o: &Obs, ids: &str) -> Resul
         o.day.text(),
         fig_text(m, &ob, &lines.of.unit)?
     );
+    // a value group prints `<f> <value>`, never to be taken for `unexplained`, `balance` or a
+    // move (tally 2.1.8 S3)
     let field = match &lines.by {
-        Some(f) => obs_field(m, o, f)?,
+        Some(f) => obs_field(m, o, f)?.map(|v| format!("{f} {v}")),
         None => None,
     };
     lines.out.push(Line {
@@ -1074,8 +1076,9 @@ fn observed_sum(os: &[Obs], of: &Of) -> Result<Fig, Stop> {
 }
 
 /// The group of a line on `day` of move `move_id` whose observations are `os`: with `by f`,
-/// the value of f the observations agree on; else, or where they disagree, one lacks it or
-/// there are none, `move <id>` (refcore's `field_group`). E §6.3 Grouping.
+/// `<f> <value>`, the value of f the observations agree on; else, or where they disagree, one
+/// lacks it or there are none, `move <id>` (refcore's `field_group`). E §6.3 Grouping (tally
+/// 2.1.8 S3).
 fn move_group(
     m: &Reality,
     lines: &Lines,
@@ -1090,7 +1093,7 @@ fn move_group(
             values.insert(obs_field(m, o, f)?);
         }
         if let [Some(v)] = values.into_iter().collect::<Vec<_>>().as_slice() {
-            agreed = Some(v.clone());
+            agreed = Some(format!("{f} {v}"));
         }
     }
     month_group(day, agreed.unwrap_or_else(|| format!("move {move_id}")))
