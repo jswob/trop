@@ -308,20 +308,28 @@ impl Reality {
             (None, None) => &[],
         };
         for (i, key) in keys.split(',').map(str::trim).enumerate() {
-            let pos = binds.get(i).and_then(|bind| match &bind.domain {
-                Domain::Index(index) => self
-                    .indexes
-                    .get(index)
-                    .filter(|ix| ix.form != super::index::IndexForm::Open)
-                    .and_then(|ix| ix.keys().iter().position(|k| k.text() == key)),
-                Domain::Kind(_) | Domain::Axis(_) | Domain::List(_) | Domain::Range => None,
-            });
-            out.push(match pos {
-                Some(p) => (0, p, String::new()),
-                None => (1, 0, key.to_owned()),
-            });
+            out.push(
+                match binds.get(i).and_then(|bind| self.key_place(bind, key)) {
+                    Some(p) => (0, p, String::new()),
+                    None => (1, 0, key.to_owned()),
+                },
+            );
         }
         out
+    }
+
+    /// The place of key `key` in the index bind `bind` ranges over, where that index keeps its
+    /// own order (a list, a range, a built-in); none for an open index, a kind or what isn't
+    /// its key (refcore's `id_order`, its `pos`). L §2.5.
+    fn key_place(&self, bind: &super::decl::BindInfo, key: &str) -> Option<usize> {
+        let Domain::Index(index) = &bind.domain else {
+            return None;
+        };
+        let ix = self.indexes.get(index)?;
+        if ix.form == super::index::IndexForm::Open {
+            return None;
+        }
+        ix.keys().iter().position(|k| k.text() == key)
     }
 
     /// The id of the thing named `name`, which its table holds (the caller pushed or found
