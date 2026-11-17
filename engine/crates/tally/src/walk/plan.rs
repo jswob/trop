@@ -1320,23 +1320,29 @@ impl Engine {
             inst.exists = Exists::No;
             return Ok(true);
         }
-        let mut body = self.body_over_law(m, mv, inst, self.timeline_ctx(None, cut))?;
+        // at a booking cut that doesn't see its keys the instance has no body (E §5 steps 1–3)
+        let mut body = if seen.0 {
+            self.body_over_law(m, mv, inst, self.timeline_ctx(None, cut))?
+        } else {
+            no_body()
+        };
         if let (Dated::Window(w), true) = (&day, last != cut) {
-            // a version known inside the window of a windowed instance (L §5.14.3)
+            // a version known inside the window of a windowed instance (L §5.14.3): each
+            // part is the window's hole where the two booking cuts differ, so a key added or
+            // dropped inside the window leaves its existence and its legs to the day
+            // (refcore's `agreed_body`; L §4.4, tally 2.1.8 #169-e)
             let text = format!(
                 "date within {} not precise enough for the booking cut of {}",
                 w.question, inst.id
             );
             let hole = Hole::asked(&text, &inst.id).carrying(&w.value.carry);
-            if seen.0 == seen.1 {
-                let other = self.body_over_law(m, mv, inst, self.timeline_ctx(None, last))?;
-                if !same_body(&body, &other) {
-                    body = imprecise_body(body, &other, &hole);
-                }
+            let other = if seen.1 {
+                self.body_over_law(m, mv, inst, self.timeline_ctx(None, last))?
             } else {
-                // a key added or dropped inside the window: whether the instance exists
-                // turns on the day (E §5 step 1)
-                body.exists = join(body.exists, &hole);
+                no_body()
+            };
+            if !same_body(&body, &other) {
+                body = imprecise_body(body, &other, &hole);
             }
         }
         inst.exists = body.exists;
@@ -1537,6 +1543,19 @@ impl Engine {
             for_period,
             fulfils,
         })
+    }
+}
+
+/// The body of an instance at a booking cut that doesn't see its keys: it doesn't exist, and
+/// moves, states and fulfils nothing (refcore's `(False, [], {}, None, None)`). E §5 steps
+/// 1–3.
+fn no_body() -> Body {
+    Body {
+        exists: Exists::No,
+        legs: Vec::new(),
+        attrs: Vec::new(),
+        for_period: None,
+        fulfils: None,
     }
 }
 
