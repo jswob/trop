@@ -31,7 +31,7 @@ use crate::model::{
     Domain, GapRole, Graph, Mark, MoveInfo, Node, NodeKind, Reality, Rel, RowInstant, SamePair,
     Shift, Target, Ty, pattern_text,
 };
-use crate::syntax::{Expr, Field, Lit, Order, Postfix, Section, Stop, Value as Written};
+use crate::syntax::{AskBody, Expr, Field, Lit, Order, Postfix, Section, Stop, Value as Written};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// An invariant of the graph's own searches broken: a cycle or a layer that must exist.
@@ -574,19 +574,63 @@ fn running_reads(
             ));
         }
     }
-    let Some((item, (file, line))) = graph
+    if let Some((item, (file, line))) = graph
         .balnow
         .iter()
         .find(|(item, _)| !decided.contains(*item))
-    else {
-        return Ok(());
-    };
-    // at the read's line, as every load refusal (L §8.3; tally 2.1.7 S9)
-    let message = format!(
-        "{} holds bal(x) with no day: a running read outside a decision and its defs",
-        item.id
-    );
-    Err(refuse(Load::Reads, message, file, *line))
+    {
+        // at the read's line, as every load refusal (L §8.3; tally 2.1.7 S9)
+        let message = format!(
+            "{} holds bal(x) with no day: a running read outside a decision and its defs",
+            item.id
+        );
+        return Err(refuse(Load::Reads, message, file, *line));
+    }
+    ask_running_reads(m, graph)
+}
+
+/// `LOAD-READS` for an ask whose value reaches `bal(x)` with no day through its defs and
+/// fills: it reads it outside a decision, which load sees, in the words run gave it; an
+/// `explain`, `inputs-of` or `readers-of` reads a walk-bound def at its walk points (refcore's
+/// `check3`, its asks' loop; tally 2.1.8 #162, pick P29). L §5.14.1, §8.4 (R5).
+fn ask_running_reads(m: &Reality, graph: &Graph) -> Result<(), Stop> {
+    for ask in &m.asks {
+        if matches!(
+            ask.body,
+            AskBody::Explain(_) | AskBody::InputsOf(_) | AskBody::ReadersOf(_)
+        ) {
+            continue;
+        }
+        let mut seen: BTreeSet<Node> = BTreeSet::new();
+        let mut stack = vec![Node::new(NodeKind::Ask, &ask.id)];
+        while let Some(x) = stack.pop() {
+            if !seen.insert(x.clone()) {
+                continue;
+            }
+            if graph.balnow.contains_key(&x) {
+                let place = graph
+                    .marks
+                    .get(&x)
+                    .into_iter()
+                    .flatten()
+                    .filter(|(mark, _)| *mark == Mark::BalNow)
+                    .map(|(_, target)| target_name(target))
+                    .min()
+                    .unwrap_or(x.id.as_str());
+                return Err(Stop::Refused(Refusal::new(
+                    Code::Load(Load::Reads),
+                    format!("bal({place}) with no day outside a decision"),
+                )));
+            }
+            let reads = graph.edges.get(&x).into_iter().flat_map(BTreeMap::keys);
+            stack.extend(
+                reads
+                    .filter(|t| matches!(t.kind, NodeKind::Def | NodeKind::Fill))
+                    .cloned(),
+            );
+        }
+    }
+    Ok(())
 }
 
 /// The `LOAD-READS` message for one move, where it needs one (refcore's
