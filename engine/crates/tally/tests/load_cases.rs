@@ -4987,4 +4987,35 @@ version v1
             assert_eq!(load_lines(&files, "q"), expected, "{n} axes");
         }
     }
+
+    /// `none` written for a place in an observed row's leg is named as written (refcore's
+    /// `place_ref`, its `ref.k`; the review of group 2's N4). L §5.10.
+    #[test]
+    fn none_for_a_leg_s_place_is_named_none() {
+        let text = r#"model t
+  tally 2
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+input bank: observed
+
+version v
+  cite s
+  governs always
+  known 2026-04-02
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+  bank[a1] = (on: 2026-03-31, kind: transfers, leg cash from konto to none amount 50.00 PLN) "a"
+
+ask q: bal(konto, 2026-04-30)
+"#;
+        assert_eq!(
+            refusal(text),
+            "LOAD-KIND a place is written by its id: none (a.tally:17)",
+            "refcore's message"
+        );
+    }
 }
