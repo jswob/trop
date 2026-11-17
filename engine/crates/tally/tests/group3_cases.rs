@@ -1119,4 +1119,73 @@ ask g: last(stated[konto], 2026-05-31), since(stated[konto], 2026-05-31)
             ],
         );
     }
+
+    /// N-f (`k9k10.tally`): two decisions' windows ending on one day, `save[k9]` and `save[k10]` of `ks = [k9, k10]`: their ends list k9 first, keys in index order, never as text (E §4.1); refcore's lines, which list them as text.
+    #[test]
+    fn window_ends_at_one_point_apply_in_index_order() {
+        let text = r#"model t
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [k9, k10]
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input d_save: date
+input amt: money PLN
+
+move save[k in ks]: transfers
+  on d_save
+  reads konto
+  leg cash from konto to sav amount min(amt, bal(konto))
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "s"
+  d_save = window(2026-03-16, 2026-03-25) "s"
+  opening[konto] = 1000.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+version r
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto, sav
+  anchor konto
+  anchor sav
+  stated[konto] = 700.00 PLN after save[k9] "after k9"
+  stated[sav] = 25.00 PLN after save[k10] "after k10"
+
+ask b: bal(konto, 2026-03-25), bal(konto, 2026-03-31), bal(sav, 2026-03-31)
+ask e: explain bal(konto, 2026-03-31)
+ask l: last(stated[konto], 2026-03-31)
+"#;
+        all_of(
+            &lines_of("k9k10.tally", text),
+            &[
+                "b: (?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]\" (save[k10]) ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]\" (save[k9]), ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]\" (save[k10]) ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]\" (save[k9]), ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]\" (save[k10]) ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]\" (save[k9]))",
+                "  cut 2026-06-10",
+                "e: ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]\" (save[k10]) ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]\" (save[k9])",
+                "  balance of konto (PLN) at the end of 2026-03-31",
+                "  from: opening v:opening[konto] = 1 000.00 PLN, 2026-03-01 start (version v, source s, locator \"s\")",
+                "  2026-03-16:",
+                "    save[k9]: hole: ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]\" (save[k9])",
+                "    save[k10]: hole: ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]\" (save[k10])",
+                "  2026-03-25:",
+                "    save[k9]: hole: ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]\" (save[k9])",
+                "    save[k10]: hole: ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]\" (save[k10])",
+                "  cut 2026-06-10",
+                "l: 700.00 PLN",
+                "  held: stated[konto] = 700.00 PLN (r), read for 2026-03-31",
+                "  cut 2026-06-10",
+                "warning: WARN-UNREAD place world is read by nothing",
+            ],
+        );
+    }
 }

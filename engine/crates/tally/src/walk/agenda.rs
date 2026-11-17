@@ -130,23 +130,6 @@ impl Walk {
             .push((at, act));
     }
 
-    /// The end of decision instance `mid`'s window at point `at`: two ends at one point apply
-    /// in their instances' id order, as refcore's key orders them, the day's stable sort
-    /// keeping it (L §4.4, pick P29; N4 of group 3's review).
-    pub(crate) fn window_end_at(&mut self, at: At, (mid, w, h): (String, Box<DayWindow>, Hole)) {
-        let acts = self.agenda.entry(at.day).or_insert_with(Vec::new);
-        let mut out = Vec::new();
-        let mut end = Some(Act::WindowEnd(mid.clone(), w, h));
-        for (a, act) in core::mem::take(acts) {
-            if a == at && matches!(&act, Act::WindowEnd(other, ..) if *other > mid) {
-                out.extend(end.take().map(|e| (at, e)));
-            }
-            out.push((a, act));
-        }
-        out.extend(end.map(|e| (at, e)));
-        *acts = out;
-    }
-
     /// The next day to walk after the last one walked, by the day source: the event walk's
     /// next day with an act (the run's first day and each lifespan's last are acts too), or
     /// the oracle's next day (P §2.2).
@@ -1001,12 +984,16 @@ fn schedule_decision(
             );
             let h = Hole::asked(&text, &inst.id).carrying(&w.value.carry);
             if w.hi <= walk.end {
-                // m has fallen by the end of the window's last day (pick P29 on #175)
+                // m has fallen by the end of the window's last day (pick P29 on #175); ends
+                // at one point apply by move id, then keys in index order, the plan's order
+                // that the day's stable sort keeps, never as text (E §4.1; N-f of group 3's
+                // fix review: `save[k9]` before `save[k10]`)
                 let end = At {
                     stratum: 2,
+                    rank,
                     ..At::of(w.hi, Step::End)
                 };
-                walk.window_end_at(end, (inst.id.clone(), Box::new(w), h.clone()));
+                walk.at(end, Act::WindowEnd(inst.id.clone(), Box::new(w), h.clone()));
             }
             decision_hole(walk, (at, h), &inst, places)?;
         }
