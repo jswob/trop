@@ -3,7 +3,10 @@
 //! index), §5.8 (inputs and their values), §3.4 (a figure in Y prices), §8.1 (a read whose
 //! key is a hole carries the key's questions only), §8.2 (the register entries a read makes),
 //! §8.4 (`RUN-KEY`, `RUN-NONE`), `last(x, d)` and `since(x, d)` (§4.6 Past the last row,
-//! Readings; §5.3); §4.4 (a window read is that read's value, its holes asked of its row). A
+//! Readings; §5.3); §4.4 (a window read is that read's value, its holes asked of its row);
+//! §6.1 (a read of a `same` class takes the class's latest kept reading, a side whose
+//! readings are all removed none, tally 2.1.8 B1, G1); §4.6 (a reading `after m` read is
+//! `RUN-RECORD` where m doesn't exist or nothing books it by the cut, tally 2.1.8 R16). A
 //! read's keys made keys of their positions are `keys.rs`'s (§2.5); a row's value converted
 //! to its input's type is `convert.rs`'s; a scenario's expression row evaluated, `srows.rs`'s
 //! (§6.4).
