@@ -18,7 +18,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::observe::{KnownAtCut, Obs, Windows};
-use crate::base::{Code, Load, Refusal};
+use crate::base::{Code, Load, Refusal, Run};
 use crate::eval::{Collected, Engine, Entry, Rows};
 use crate::hole::{Hole, spread};
 use crate::model::{GapRole, Reality, RowInstant, World};
@@ -27,7 +27,8 @@ use crate::read::row_known;
 use crate::syntax::{Edge, Stop};
 use crate::time::Day;
 use crate::walk::{
-    Amount, At, Change, Dated, End, Ends, Ent, GapAt, LegVal, Reading, St, invariant, qty_value,
+    Amount, At, Change, Dated, DayWindow, End, Ends, Ent, Exists, GapAt, LegVal, Reading, St,
+    invariant, qty_value,
 };
 
 /// A reading the cut sees: its day, where it stands in the day, its place, its input, and
@@ -57,8 +58,37 @@ pub enum Stands {
 }
 
 /// The day each reading `after m` stands on, by m's id and the reading's place, where the
-/// plan pass gives m one: the day the walk applies it (E §4.2 step 3, L §4.6).
+/// plan pass gives m one: the day the walk applies it, or the last day of m's window
+/// (E §4.2 step 3, L §4.6).
 pub type AfterDays = BTreeMap<(String, String), Day>;
+
+/// What m gives a reading `after m` (L §4.6 Readings, §8.4; tally 2.1.8 R16; refcore's
+/// `after_day`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AfterDay {
+    /// The day the walk applies it.
+    Day(Day),
+    /// m's day, a window no `windows each` chose: the reading stands from its last day on.
+    Window(Box<DayWindow>),
+    /// m's day, or whether m exists, is this hole.
+    Hole(Hole),
+    /// m doesn't exist, its day is refused, or it is modelled past and nothing fulfils it
+    /// (`RUN-RECORD`).
+    Refused(Refusal),
+    /// No decision instance the reading stands after: it has no instant.
+    Unplaced,
+}
+
+/// `RUN-RECORD` for the reading of `input` at `place` `after` decision instance `id`, which
+/// doesn't exist, or is modelled past and nothing fulfils it (refcore's `after_refusal`).
+/// L §4.6 Readings, §8.4.
+#[must_use]
+pub fn after_missing((input, place, id): (&str, &str, &str), why: &str) -> Refusal {
+    Refusal::new(
+        Code::Run(Run::Record),
+        format!("reading {input}[{place}] after {id}: {id} {why}"),
+    )
+}
 
 /// The place a reading row names, its one key (L §4.6 Readings); none where its key is no
 /// thing.
@@ -522,20 +552,24 @@ impl Engine {
                 if out.contains_key(&key) {
                     continue;
                 }
-                if let Some(day) = self.reading_day(m, node, place, cut)? {
-                    out.insert(key, day);
-                }
+                // a window's reading stands from its last day (pick P29 on #175)
+                match self.reading_day(m, node, (input, place), cut)? {
+                    AfterDay::Day(day) => out.insert(key, day),
+                    AfterDay::Window(w) => out.insert(key, w.hi),
+                    AfterDay::Hole(_) | AfterDay::Refused(_) | AfterDay::Unplaced => None,
+                };
             }
         }
         Ok(out)
     }
 
-    /// The day a reading of `place` `after m` stands on at cut `cut`, m the decision instance
-    /// `node` names, as the walk applies it: just after the observations that fulfil m, on
-    /// the day of the last of them, where any do; else on m's day as the plan pass lists it;
-    /// none for an m it doesn't list or whose day is a hole or a window, so the reading has
-    /// no instant. What the plan pass and the links meet is the walk's, kept apart from the
-    /// read that asks (refcore's `after`, keyed by `_txt`). L §4.6 Readings, E §4.2 step 3.
+    /// What m, the decision instance `node` names, gives a reading of `input` at `place`
+    /// `after m` at cut `cut`, as the walk applies it: the day of the last of the
+    /// observations that fulfil m, where any do; else m's day as the plan pass lists it, a
+    /// day, a window or a hole; the hole of whether m exists; `RUN-RECORD` where m doesn't
+    /// exist, and m's own refusal where its day is refused. What the plan pass and the links
+    /// meet is the walk's, kept apart from the read that asks (refcore's `after_day`, keyed
+    /// by `_txt`). L §4.6 Readings, §8.4, E §4.2 step 3.
     ///
     /// # Errors
     ///
@@ -544,12 +578,12 @@ impl Engine {
         &mut self,
         m: &Reality,
         node: &crate::syntax::Expr,
-        place: &str,
+        (input, place): (&str, &str),
         cut: Day,
-    ) -> Result<Option<Day>, Stop> {
+    ) -> Result<AfterDay, Stop> {
         let id = crate::load::expr_text(node);
         self.push();
-        let found = self.standing_day(m, (node, &id), place, cut);
+        let found = self.standing_day(m, (node, &id), (input, place), cut);
         self.pop_alone();
         found
     }
@@ -559,47 +593,64 @@ impl Engine {
         &mut self,
         m: &Reality,
         (node, id): (&crate::syntax::Expr, &str),
-        place: &str,
+        (input, place): (&str, &str),
         cut: Day,
-    ) -> Result<Option<Day>, Stop> {
-        let Some(day) = self.instance_day(m, node, id, cut)? else {
-            return Ok(None);
+    ) -> Result<AfterDay, Stop> {
+        let day = match self.instance_day(m, node, (input, place, id), cut)? {
+            Ok(day) => day,
+            Err(judged) => return Ok(judged),
         };
         let links = self.obs_links_for(m, id, cut)?;
-        if links.is_empty() {
-            return Ok(Some(day));
-        }
-        let obs = self.observations(m, cut)?;
-        let last = last_standing_day(obs, &links, place, (m.start, m.end, cut));
-        Ok(Some(last.unwrap_or(day)))
+        let obs = if links.is_empty() {
+            None
+        } else {
+            let obs = self.observations(m, cut)?;
+            last_standing_day(obs, &links, place, (m.start, m.end, cut))
+        };
+        Ok(match (obs, day) {
+            (Some(last), _) | (None, Dated::Day(last)) => AfterDay::Day(last),
+            (None, Dated::Window(w)) => AfterDay::Window(Box::new(w)),
+            (None, Dated::Hole(h)) => AfterDay::Hole(h),
+        })
     }
 
     /// The day of the decision instance `id` that `node` names, as the plan pass at cut `cut`
-    /// lists it; none for a move that isn't a decision, an instance it doesn't list, or a day
-    /// that is a hole or a window (refcore's `after_mv`, its test). E §4.2 step 3.
+    /// lists it; else what the reading of `input` at `place` is instead: unplaced for a move
+    /// that isn't a decision, `RUN-RECORD` for an instance that doesn't exist (one the pass
+    /// doesn't list, or a false `when`), the hole of whether it exists, its refusal where its
+    /// day is refused (refcore's `after_day`). E §4.2 step 3, L §4.6 Readings, §8.4.
     fn instance_day(
         &mut self,
         m: &Reality,
         node: &crate::syntax::Expr,
-        id: &str,
+        (input, place, id): (&str, &str, &str),
         cut: Day,
-    ) -> Result<Option<Day>, Stop> {
+    ) -> Result<Result<Dated, AfterDay>, Stop> {
         let base = if let crate::syntax::Expr::Post(inner, _) = node {
             inner.as_ref()
         } else {
             node
         };
         let crate::syntax::Expr::Name(name) = base else {
-            return Ok(None);
+            return Ok(Err(AfterDay::Unplaced));
         };
         let Some(mv) = m.moves.get(name).filter(|mv| mv.decision) else {
-            return Ok(None);
+            return Ok(Err(AfterDay::Unplaced));
         };
         let insts = self.plan_list(m, mv, cut)?;
-        Ok(insts
-            .iter()
-            .find(|inst| inst.id == id)
-            .and_then(|inst| inst.day.as_ref().and_then(Dated::day)))
+        let inst = insts.iter().find(|inst| inst.id == id);
+        Ok(match inst {
+            Some(inst) if inst.exists != Exists::No => match (&inst.day, &inst.err, &inst.exists) {
+                (None, Some(err), _) => Err(AfterDay::Refused(err.clone())),
+                (_, _, Exists::Unknown(h)) => Err(AfterDay::Hole(h.clone())),
+                (Some(day), _, _) => Ok(day.clone()),
+                (None, None, _) => Err(AfterDay::Unplaced),
+            },
+            Some(_) | None => Err(AfterDay::Refused(after_missing(
+                (input, place, id),
+                "doesn't exist",
+            ))),
+        })
     }
 
     /// A `stated` reading at its point: its gap against the booked balance, then, by its
@@ -730,7 +781,7 @@ impl Engine {
                     // tested as it is booked, the pad refused before anything is (L §5.10
                     // point 2, E §4.2 step 5; refcore's `apply_reading`)
                     let err = Refusal::new(
-                        Code::Run(crate::base::Run::Place),
+                        Code::Run(Run::Place),
                         crate::walk::takes_text(m, &pad.id, &r.place),
                     );
                     self.walk_mut(id)?

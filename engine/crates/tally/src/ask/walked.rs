@@ -649,6 +649,7 @@ fn reset_value(m: &Reality, e: &Ent, unit: &str) -> Result<String, Stop> {
         | Change::Bad(_)
         | Change::PermBad(_)
         | Change::ImpOn(_)
+        | Change::Unperm(_)
         | Change::Mark => Err(invariant("a reading that is no reset")),
     }
 }
@@ -699,7 +700,7 @@ fn entry_text(
                 .map_or("", String::as_str);
             format!("{} {sid} = {}", reading_word(e), reset_value(m, e, unit)?)
         }
-        Change::Mark => return Ok(None),
+        Change::Unperm(_) | Change::Mark => return Ok(None),
     };
     Ok(Some(text))
 }

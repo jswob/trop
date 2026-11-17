@@ -26,7 +26,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use super::plan::{Amount, Dated, End, Exists, Inst, Order, Status};
+use super::plan::{Amount, Dated, DayWindow, End, Exists, Inst, Order, Status};
 use super::point::{At, Step};
 use super::state::{Progress, Walk, WalkObs};
 use crate::Days;
@@ -109,6 +109,9 @@ pub enum Act {
     GlobalBad(Refusal),
     /// The decisions of a move due that day (E §4.2 step 3).
     Decide(String, Day),
+    /// The end of the last day of a decision's window, by its id, with the window and the
+    /// hole it left its places (refcore's `dec_win_end`; pick P29 on #175).
+    WindowEnd(String, Box<DayWindow>, Hole),
     /// An observed leg, by the observation's place in the walk's list and the leg's (E §4.2
     /// step 1).
     Obs(usize, usize),
@@ -955,6 +958,14 @@ fn schedule_decision(
                 w.question, inst.id
             );
             let h = Hole::asked(&text, &inst.id).carrying(&w.value.carry);
+            if w.hi <= walk.end {
+                // m has fallen by the end of the window's last day (pick P29 on #175)
+                let end = At {
+                    stratum: 2,
+                    ..At::of(w.hi, Step::End)
+                };
+                walk.at(end, Act::WindowEnd(inst.id.clone(), Box::new(w), h.clone()));
+            }
             decision_hole(walk, (at, h), &inst, places)?;
         }
         None => {

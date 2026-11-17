@@ -414,6 +414,7 @@ impl Sums {
                 }
                 Change::Bad(_)
                 | Change::PermBad(_)
+                | Change::Unperm(_)
                 | Change::Reset { .. }
                 | Change::Delta(_)
                 | Change::ImpOn(_)
@@ -459,6 +460,7 @@ impl Sums {
                     // as a hole day's (tally 2.1.8, R11)
                     Change::PermBad(r) if e.at <= limit => return Err(Stop::Refused(r.clone())),
                     Change::Perm(_)
+                    | Change::Unperm(_)
                     | Change::PermBad(_)
                     | Change::Bad(_)
                     | Change::Reset { .. }
@@ -504,7 +506,7 @@ impl Sums {
                     Some(Amount::Hole(h)) => self.count(e, unit, Err(h))?,
                     Some(Amount::Refused(_)) | None => {}
                 },
-                Change::ImpOn(_) | Change::Mark => {}
+                Change::ImpOn(_) | Change::Unperm(_) | Change::Mark => {}
             }
         }
         for (w, movement) in windows.into_values() {

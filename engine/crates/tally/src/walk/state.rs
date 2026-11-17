@@ -58,6 +58,10 @@ pub enum Change {
     Hole(Hole),
     /// A hole no reading answers: a hole day, `HOLE-CHANGED` (E §4.2, E §5 step 5).
     Perm(Hole),
+    /// A decision dated by a window has fallen at the window's last day: its hole no reading
+    /// answered is taken back, as each unit's hole a reading ends takes its place (L §4.6,
+    /// §4.4; pick P29 on #175; refcore's `unperm`).
+    Unperm(Hole),
     /// A refusal that holds from here to the place's next reading: a dated refused movement's,
     /// or the sign rule's (E §4.2 step 5; L §8, tally 2.1.8).
     Bad(Refusal),
@@ -1139,6 +1143,7 @@ fn apply(prev: &St, change: &Change, at: usize) -> Result<St, Stop> {
         }
         Change::Hole(h) => st.hole = spread(&[st.hole.as_ref(), Some(h)]),
         Change::Perm(h) => st.perm = spread(&[st.perm.as_ref(), Some(h)]),
+        Change::Unperm(h) => st.perm = st.perm.as_ref().and_then(|p| p.without(h)),
         Change::Bad(r) => {
             if st.bad.is_none() {
                 st.bad = Some(r.clone());
@@ -1174,6 +1179,7 @@ fn apply_ent(prev: &St, ent: &Ent, at: usize) -> Result<St, Stop> {
             Change::Delta(_) | Change::Hole(_) => st.imp.retain(|p| &p.wid != wid),
             Change::Reset { .. }
             | Change::Perm(_)
+            | Change::Unperm(_)
             | Change::Bad(_)
             | Change::PermBad(_)
             | Change::Mark => {}

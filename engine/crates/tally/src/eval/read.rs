@@ -18,9 +18,9 @@ use super::convert::{ConvertFor, Converted, convert_read};
 use super::keys::Given;
 use super::memo::{LawClass, Read, may_hold, rows_class};
 use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load};
-use super::windows::{as_read, known_hole, one_day};
+use super::windows::{as_read, imprecise, known_hole, one_day};
 use crate::base::{Load, Run};
-use crate::book::reading_place;
+use crate::book::{AfterDay, after_missing, reading_place};
 use crate::hole::{Hole, spread};
 use crate::model::{
     BindInfo, Class, Domain, InputInfo, KeyVal, Number, Pat, Reality, Row, RowInstant, TimePos,
@@ -32,6 +32,7 @@ use crate::read::{
 };
 use crate::syntax::{Call, Expr, Stop, Value as Written};
 use crate::time::{Day, PeriodKind};
+use crate::walk::Status;
 
 /// One side of two rows stated `same`: the value of the row its read takes with the row's
 /// id, or what the read finds where it takes none; and the read's day (L §6.1).
@@ -114,6 +115,15 @@ pub(super) fn kept_rows(rows: &[Row], hidden: &[usize]) -> Vec<Row> {
 /// Whether `row` is a reading `after m` of `place`. L §4.6 Readings, step 1.
 fn after_at(row: &Row, place: Option<&str>) -> bool {
     matches!(row.instant, Some(RowInstant::After(_))) && reading_place(row) == place
+}
+
+/// A reading row's instant `after m` as text, `after save` (refcore's `instant_text`). L §4.6
+/// Readings.
+fn after_text(row: &Row) -> String {
+    match &row.instant {
+        Some(RowInstant::After(node)) => format!("after {}", crate::load::expr_text(node)),
+        Some(RowInstant::At(..)) | None => String::new(),
+    }
 }
 
 /// Whether `last(x, d)` reads its row past it, for day `day`: a reading past its instant's
@@ -489,8 +499,10 @@ impl Engine {
             return Ok(Ok(None));
         }
         let mut rows = kept_rows(&input.rows, &hidden);
-        if after {
-            self.after_on_days(m, &mut rows, place, clocks.cut)?;
+        if after
+            && let Err(h) = self.after_on_days(m, (&input.id, &mut rows), (place, test), ctx)?
+        {
+            return Ok(Err(h));
         }
         Ok(Ok(Some(InputInfo {
             rows,
@@ -498,41 +510,78 @@ impl Engine {
         })))
     }
 
-    /// Each reading `after m` of `place` among `rows` read on the day the walk at cut `cut`
-    /// applies it ([`Engine::reading_day`]), so `last`, `since` and a plain read find it
-    /// there; one whose m has no day keeps no instant a read finds; a reading of another
-    /// place is left as it is (L §4.6 Readings; E §4.2 step 3).
+    /// Each reading `after m` of `place` among the rows of input `input` read on the day the
+    /// walk at the read's cut applies it ([`Engine::row_after_day`]), so `last`, `since` and a
+    /// plain read find it there: m's window's last day once the read's day `test` is past it,
+    /// none before its first, the window's hole inside it (or at an instant in it); a hole
+    /// where m's day or whether it exists is one; refused where m doesn't exist; one with no
+    /// day keeps no instant a read finds; a reading of another place is left as it is (L §4.6
+    /// Readings, §4.4; E §4.2 step 3; tally 2.1.8 R16, pick P29 on #175; refcore's
+    /// `rows_for`, its readings after m).
     fn after_on_days(
         &mut self,
         m: &Reality,
-        rows: &mut [Row],
-        place: Option<&str>,
-        cut: Day,
-    ) -> Result<(), Stop> {
+        (input, rows): (&str, &mut [Row]),
+        (place, test): (Option<&str>, Test),
+        ctx: Ctx,
+    ) -> Result<Result<(), Hole>, Stop> {
         for row in rows {
             if !after_at(row, place) {
                 continue;
             }
-            let (Some(RowInstant::After(node)), Some(at)) = (&row.instant, reading_place(row))
-            else {
-                continue;
+            let day = match self.row_after_day(m, input, row, ctx)? {
+                AfterDay::Day(day) => day,
+                AfterDay::Window(w) => {
+                    let (probe, exact) = match test {
+                        Test::Last(day) => (Some(day), false),
+                        Test::Instant(day) | Test::At(Some(day)) => (Some(day), true),
+                        Test::At(None) => (None, false),
+                    };
+                    let Some(probe) = probe.filter(|d| *d >= w.lo && !(exact && *d > w.hi)) else {
+                        continue;
+                    };
+                    if exact || probe < w.hi {
+                        let what = format!("the day of {}", after_text(row));
+                        return Ok(Err(imprecise(m, &w.value, &what)?));
+                    }
+                    w.hi
+                }
+                AfterDay::Hole(h) => return Ok(Err(h)),
+                AfterDay::Refused(r) => return Err(Stop::Refused(r)),
+                AfterDay::Unplaced => continue,
             };
-            let (node, at) = (node.clone(), at.to_owned());
-            if let Some(day) = self.reading_day(m, &node, &at, cut)? {
-                row.instant = Some(RowInstant::At(day, None));
-            }
+            row.instant = Some(RowInstant::At(day, None));
         }
-        Ok(())
+        Ok(Ok(()))
     }
 
-    /// The day a reading row `after m` stands on at cut `cut`, as the walk applies it; none
-    /// for any other row, or an m with no day (L §4.6 Readings; E §4.2 step 3).
-    fn row_after_day(&mut self, m: &Reality, row: &Row, cut: Day) -> Result<Option<Day>, Stop> {
+    /// What m gives the reading row `after m` of input `input` read in context `ctx`, as the
+    /// walk applies it ([`Engine::reading_day`]), and as m's run there judged it: `RUN-RECORD`
+    /// where m's `when` was false at its point, or m is modelled past and nothing fulfils it;
+    /// unplaced for any other row (L §4.6 Readings, §8.4; E §4.2 step 3; refcore's
+    /// `after_day`).
+    fn row_after_day(
+        &mut self,
+        m: &Reality,
+        input: &str,
+        row: &Row,
+        ctx: Ctx,
+    ) -> Result<AfterDay, Stop> {
         let (Some(RowInstant::After(node)), Some(place)) = (&row.instant, reading_place(row))
         else {
-            return Ok(None);
+            return Ok(AfterDay::Unplaced);
         };
-        self.reading_day(m, node, place, cut)
+        let judged = self.reading_day(m, node, (input, place), ctx.cut)?;
+        if !matches!(judged, AfterDay::Day(_)) {
+            return Ok(judged);
+        }
+        let mid = crate::load::expr_text(node);
+        let why = match self.run_status(m, &mid, ctx)? {
+            Some((Status::None, _)) => "doesn't exist",
+            Some((Status::Modelled, false)) => "is modelled past and nothing fulfils it",
+            Some(_) | None => return Ok(judged),
+        };
+        Ok(AfterDay::Refused(after_missing((input, place, &mid), why)))
     }
 
     /// The positions of the rows `inside`, each known in a window that holds the cut, that
@@ -660,7 +709,12 @@ impl Engine {
             ..ctx
         };
         let value = self.row_converted(m, (input, row, &latest.keys), &figure, at)?;
-        let after = self.row_after_day(m, row, ctx.cut)?;
+        // a window's reading stands from its last day (pick P29 on #175)
+        let after = match self.row_after_day(m, &input.id, row, ctx)? {
+            AfterDay::Day(day) => Some(day),
+            AfterDay::Window(w) => Some(w.hi),
+            AfterDay::Hole(_) | AfterDay::Refused(_) | AfterDay::Unplaced => None,
+        };
         if read_past(m, row, (latest.day, (ctx.cut, ctx.world)), after)? {
             let text = format!(
                 "{figure} = {} ({}), read for {}",
@@ -703,10 +757,20 @@ impl Engine {
         let row = latest_of(input, latest.at)?;
         let at = match &row.instant {
             Some(RowInstant::At(at, _)) => *at,
-            // a reading after m counts from the day the walk applies it (L §4.6 Readings)
-            Some(RowInstant::After(_)) => self
-                .row_after_day(m, row, ctx.cut)?
-                .ok_or_else(|| invariant("since took a reading after an m with no day"))?,
+            // a reading after m counts from the day the walk applies it; since reads the day
+            // itself, so a window's is imprecise (L §4.6 Readings, §4.4)
+            Some(RowInstant::After(_)) => match self.row_after_day(m, &input.id, row, ctx)? {
+                AfterDay::Day(on) => on,
+                AfterDay::Window(w) => {
+                    let what = format!("the day of {}", after_text(row));
+                    return Ok(Value::Hole(imprecise(m, &w.value, &what)?));
+                }
+                AfterDay::Hole(h) => return Ok(Value::Hole(h)),
+                AfterDay::Refused(r) => return Err(Stop::Refused(r)),
+                AfterDay::Unplaced => {
+                    return Err(invariant("since took a reading after an m with no day"));
+                }
+            },
             None => return Err(invariant("since read a reading with no day")),
         };
         let days = at

@@ -16,12 +16,13 @@ use std::collections::BTreeSet;
 
 use super::agenda::Reading;
 use super::day::ends;
-use super::plan::{End, LegVal, Status, invariant, qty_value};
+use super::plan::{Amount, DayWindow, End, LegVal, Status, invariant, qty_value};
 use super::point::At;
 use super::state::{ALL, Change, Ent, Group, St, Taken, Walk};
 use crate::base::{Code, Refusal, Run};
 use crate::eval::Engine;
-use crate::model::Reality;
+use crate::hole::Hole;
+use crate::model::{GapRole, Reality};
 use crate::num::Num;
 use crate::syntax::{Sign, Stop};
 use crate::time::Day;
@@ -30,6 +31,50 @@ use crate::time::Day;
 /// (0), the observations booked there (1) and its group's test (2) (refcore's `key[4] + 5`).
 /// E §4.2 step 3.
 const AFTER_SUB: u32 = 5;
+
+/// The logs where decision instance `mid`'s window left a hole no reading answers, each with
+/// the units its hole a reading ends goes to: the log's own, or for a place-wide log the
+/// place's units in the walk, else its unit (refcore's `dec_win_end`, its logs). L §4.6,
+/// E §4.2 Holes in the walk.
+fn fallen_places(m: &Reality, walk: &Walk, mid: &str) -> Vec<(String, String, Vec<String>)> {
+    let mut fallen = Vec::new();
+    for ((place, unit), log) in &walk.logs {
+        let held = log
+            .ents
+            .iter()
+            .any(|e| matches!(e.change, Change::Perm(_)) && e.mv.as_deref() == Some(mid));
+        if !held {
+            continue;
+        }
+        let mut units: Vec<String> = Vec::new();
+        if unit == ALL {
+            let others = walk.logs.keys().filter(|(p, u)| p == place && u != ALL);
+            units.extend(others.map(|(_, u)| u.clone()));
+            if units.is_empty()
+                && let Some(thing) = m.things.get(place)
+            {
+                units.extend(m.place_unit(thing));
+            }
+        } else {
+            units.push(unit.clone());
+        }
+        fallen.push((place.clone(), unit.clone(), units));
+    }
+    fallen
+}
+
+/// Whether anything but decision instance `mid` touched reading `r`'s place inside `mid`'s
+/// window `w`, in its unit or every unit, so the balance after it would differ by m's day
+/// (pick P29 on #175; refcore's `dec_win_end`, its `others`). L §4.6, §4.4.
+fn touched_inside(walk: &Walk, r: &Reading, (mid, w): (&str, &DayWindow)) -> bool {
+    [r.unit.as_str(), ALL].into_iter().any(|unit| {
+        walk.entries(&r.place, unit).iter().any(|e| {
+            (w.lo..=w.hi).contains(&e.at.day)
+                && e.mv.as_deref() != Some(mid)
+                && !matches!(e.change, Change::Unperm(_))
+        })
+    })
+}
 
 /// How a refusal of the sign rule names what broke it (refcore's `check_group` messages).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -100,18 +145,11 @@ impl Engine {
                 Status::Past => self.apply_after(m, id, at, &r)?,
                 Status::Modelled if linked => self.apply_after(m, id, at, &r)?,
                 Status::Modelled => {
-                    let err = Refusal::new(
-                        Code::Run(Run::Record),
-                        format!(
-                            "reading {}[{}] {}: {mid} is modelled past and nothing fulfils it",
-                            r.input, r.place, r.instant
-                        ),
-                    );
-                    self.walk_mut(id)?
-                        .add(m, &r.place, &r.unit, Ent::new(at, Change::Bad(err)))?;
+                    let why = "is modelled past and nothing fulfils it";
+                    self.after_missing(m, id, at, (&r, &mid, why))?;
                 }
+                Status::None => self.after_missing(m, id, at, (&r, &mid, "doesn't exist"))?,
                 Status::Open
-                | Status::None
                 | Status::LeftOut
                 | Status::Refused
                 | Status::Hole
@@ -119,6 +157,85 @@ impl Engine {
                 | Status::Uncertain
                 | Status::Plan => {}
             }
+        }
+        Ok(())
+    }
+
+    /// The end of the last day of decision `mid`'s window `w`, at point `at`: m has fallen,
+    /// so the hole `h` it left its places becomes each unit's, which a reading ends; a reading
+    /// `after` m before the cut then stands where nothing else touched its place inside the
+    /// window, the balance being the reading plus what is booked since, the same for every
+    /// day of the window; else the hole stays up to the place's next reading (refcore's
+    /// `dec_win_end`; pick P29 on #175). L §4.6 Readings, §4.4, E §4.2 Holes in the walk.
+    pub(super) fn window_end(
+        &mut self,
+        m: &Reality,
+        id: usize,
+        at: At,
+        (mid, w, h): (&str, &DayWindow, &Hole),
+    ) -> Result<(), Stop> {
+        let fallen = fallen_places(m, self.walk(id)?, mid);
+        let walk = self.walk_mut(id)?;
+        for (place, unit, units) in fallen {
+            let mut back = Ent::new(at, Change::Unperm(h.clone()));
+            back.mv = Some(mid.to_owned());
+            walk.add(m, &place, &unit, back)?;
+            for each in units {
+                let mut ent = Ent::new(at, Change::Hole(h.clone()));
+                ent.mv = Some(mid.to_owned());
+                ent.flow = Some(Amount::Hole(h.clone()));
+                walk.add(m, &place, &each, ent)?;
+            }
+        }
+        if w.hi >= walk.cut {
+            return Ok(());
+        }
+        let Some(waiting) = walk.after.remove(mid) else {
+            return Ok(());
+        };
+        let mut kept = Vec::new();
+        for r in waiting {
+            if touched_inside(self.walk(id)?, &r, (mid, w)) {
+                kept.push(r);
+            } else {
+                self.apply_after(m, id, at.with_sub(1), &r)?;
+            }
+        }
+        if !kept.is_empty() {
+            self.walk_mut(id)?.after.insert(mid.to_owned(), kept);
+        }
+        Ok(())
+    }
+
+    /// A reading `after m` where m doesn't exist, or is modelled past with nothing standing in
+    /// for it: `RUN-RECORD` at its place from m's point `at` on, and at the other place of a
+    /// pad, whose pad is a refused movement there (refcore's `after_missing`). L §4.6
+    /// Readings, §8.4.
+    fn after_missing(
+        &mut self,
+        m: &Reality,
+        id: usize,
+        at: At,
+        (r, mid, why): (&Reading, &str, &str),
+    ) -> Result<(), Stop> {
+        let err = Refusal::new(
+            Code::Run(Run::Record),
+            format!(
+                "reading {}[{}] {}: {mid} {why}",
+                r.input, r.place, r.instant
+            ),
+        );
+        let pad = m
+            .versions
+            .get(&r.version)
+            .and_then(|v| v.gap_roles.iter().find(|(p, _)| *p == r.place))
+            .and_then(|(_, role)| match role {
+                GapRole::Pad(other) => Some(other.clone()),
+                GapRole::Anchor => None,
+            });
+        let walk = self.walk_mut(id)?;
+        for place in std::iter::once(r.place.clone()).chain(pad) {
+            walk.add(m, &place, &r.unit, Ent::new(at, Change::Bad(err.clone())))?;
         }
         Ok(())
     }

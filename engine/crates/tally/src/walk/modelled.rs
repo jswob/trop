@@ -209,7 +209,7 @@ impl Engine {
                 Change::Bad(err) | Change::PermBad(err) => return Err(Stop::Refused(err.clone())),
                 Change::Delta(flow) => q = q.checked_add(flow).map_err(crate::eval::num_stop)?,
                 Change::Hole(hole) | Change::Perm(hole) => holes.push(hole.clone()),
-                Change::Reset { .. } | Change::ImpOn(_) | Change::Mark => {}
+                Change::Reset { .. } | Change::ImpOn(_) | Change::Unperm(_) | Change::Mark => {}
             }
             if let Some(coll) = &entry.coll {
                 met.push(coll.clone());

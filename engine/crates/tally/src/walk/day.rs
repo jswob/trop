@@ -361,6 +361,7 @@ impl Engine {
                 self.walk_mut(id)?
                     .add(m, ALL, ALL, Ent::new(at, Change::Bad(err)))
             }
+            Act::WindowEnd(mid, window, h) => self.window_end(m, id, at, (&mid, &window, &h)),
             Act::Decide(..) => Err(invariant("a decision act taken as a plain act")),
         }
     }

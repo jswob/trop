@@ -17,7 +17,7 @@
 
 use std::collections::BTreeSet;
 
-use super::plan::{Amount, Dated, HoleSrc, Inst, invariant, qty_value};
+use super::plan::{Amount, Dated, HoleSrc, Inst, Status, invariant, qty_value};
 use super::point::At;
 use super::state::{ALL, GapAt, St, Walk};
 use crate::base::{Code, Load, Refusal, Run};
@@ -670,6 +670,43 @@ impl Engine {
         self.walking.remove(&id);
         walked?;
         Ok(id)
+    }
+
+    /// The status of decision instance `mid`'s run in the walk a read in context `ctx` sees,
+    /// and whether observations stand in for it: the walk it reads at, or else the main walk
+    /// of its cut, through the walks it continues; none where m hasn't run there, or where
+    /// that main walk is being walked (refcore's `after_day`, its run). E §4.2 step 3, L §4.6
+    /// Readings.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::main_walk`].
+    pub(crate) fn run_status(
+        &mut self,
+        m: &Reality,
+        mid: &str,
+        ctx: Ctx,
+    ) -> Result<Option<(Status, bool)>, Stop> {
+        let id = if let Some(at) = ctx.at {
+            at.walk
+        } else {
+            let busy = self.main_walks.get(&ctx.cut);
+            if busy.is_some_and(|id| self.walking.contains(id)) {
+                return Ok(None);
+            }
+            self.main_walk(m, ctx.cut)?
+        };
+        for wid in self.chain(id)? {
+            let walk = self.walk(wid)?;
+            if let Some(ix) = walk.run_ids.get(mid) {
+                let run = walk
+                    .runs
+                    .get(*ix)
+                    .ok_or_else(|| invariant("a run by its id"))?;
+                return Ok(Some((run.inst.status, !run.inst.obs.is_empty())));
+            }
+        }
+        Ok(None)
     }
 
     /// The walk of the timeline of cut `cut` from S through `day`, its plan pass listing no

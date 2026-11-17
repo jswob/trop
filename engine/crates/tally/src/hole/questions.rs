@@ -210,6 +210,25 @@ impl Hole {
         self.questions == other.questions
     }
 
+    /// The hole of the questions this one carries and `other` doesn't, with its unknown days;
+    /// none where `other` carries every one (refcore's `perm - e.qs`). L §8.1.
+    #[must_use]
+    pub fn without(&self, other: &Hole) -> Option<Hole> {
+        let questions: BTreeSet<Asked> = self
+            .questions
+            .difference(&other.questions)
+            .cloned()
+            .collect();
+        if questions.is_empty() {
+            return None;
+        }
+        Some(Hole {
+            questions,
+            lin: Lin::Plain,
+            ..self.clone()
+        })
+    }
+
     /// `HOLE-PRERUN`'s hole, asked of `figure`: a walked value of a day before the run's
     /// start S, which nothing walks (L §8.1; E §2).
     #[must_use]

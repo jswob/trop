@@ -280,7 +280,9 @@ pub mod book {
     pub use ledger_order::{Group, GroupKey};
     pub(crate) use members::{MvDom, MvMember, inst_ref};
     pub use observe::{Coverage, Linked, Obs, inst_id};
-    pub use reading::{AfterDays, Pad, Seen, Stands, per_unit, reading_rank};
+    pub use reading::{
+        AfterDay, AfterDays, Pad, Seen, Stands, after_missing, per_unit, reading_rank,
+    };
     pub(crate) use reading::{gap_text, instant_text, reading_place};
     pub use same::{Groups, kept_once, once_obs, same_differ};
     pub(crate) use same::{Member, SameMet, SamePicks, Waiting};
