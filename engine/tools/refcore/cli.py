@@ -203,6 +203,29 @@ def cross_stack_diff(aid, a, realities, chains, askers, mid):
             return lines
         sides[w] = side
         asker0 = asker0 or asker
+    if sides[sw][0] == 'binds':
+        # an ask-level for: each tuple's two sides combined, under the head naming it (L §5.18; item 17 of the
+        # fourth turn: the tuple's own law date)
+        out = []
+        other = dict(sides[bw][1])
+        for txt, s in sides[sw][1]:
+            o = other.get(txt)
+            if s[0] == 'line':
+                out.extend(s[1])
+                continue
+            if o is None or o[0] == 'line':
+                out.extend(o[1] if o is not None else ['%s%s: refused: %s' % (aid, txt, NotYet(
+                    'a tuple of a diff over two stacks that one world binds and the other does not').text())])
+                continue
+            lines = cross_stack_cells(aid, a, {sw: s, bw: o}, sw, bw, asker0)
+            out.extend(aid + txt + ln[len(aid):] if ln.startswith(aid) else ln for ln in lines)
+        return out
+    return cross_stack_cells(aid, a, sides, sw, bw, asker0)
+
+
+def cross_stack_cells(aid, a, sides, sw, bw, asker0):
+    """The two sides' cells of a diff over two stacks, printed as one diff."""
+    from .ask import Coll, is_load as is_load_err
     if len(sides[sw]) == 4:
         try:
             return cross_stack_each(a, sides, sw, bw, asker0)

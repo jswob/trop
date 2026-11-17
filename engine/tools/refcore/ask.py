@@ -487,7 +487,10 @@ class Asker:
             after_on(m, K)
         eng.ask_K = K
         law = None
-        if a.law is not None:
+        # a diff's law that reads its ask-level for is read per tuple (L §5.18: every clause stands on every form;
+        # item 17 of the fourth turn), in diff_binds
+        self._tuple_law = a.law if (a.law is not None and a.form == 'diff' and law_reads_binds(a)) else None
+        if a.law is not None and self._tuple_law is None:
             v = eng.ev(a.law, {}, Ctx(None, K))
             if isinstance(v, Hole):
                 return ['%s: %s' % (a.id, fmt_value(v))]
@@ -756,20 +759,41 @@ class Asker:
         follow-up), each tuple's block under the head naming it, `h (k = b): diff in …`; a tuple whose where is a
         hole prints its line as that hole."""
         out = []
+        only = getattr(self, '_diff_only', None) is not None
+        tsides = []
         for env, st in list(eng.members(a.binds, {}, ctx)):
             if isinstance(st, tuple) and st[0] == 'domainhole':
                 out.append('%s: %s' % (a.id, fmt_value(st[1])))
+                tsides.append(('', ('line', out[-1:])))
                 continue
             txt = ' (%s)' % ', '.join('%s = %s' % (b.var, fmt_bind(b, env[b.var])) for b in a.binds)
             if isinstance(st, Hole):
                 out.append('%s%s: %s' % (a.id, txt, fmt_value(st)))
+                tsides.append((txt, ('line', out[-1:])))
                 continue
+            tctx = ctx
+            if getattr(self, '_tuple_law', None) is not None:
+                # the tuple's law date (item 17 of the fourth turn): a hole makes its line that hole
+                v = eng.ev(self._tuple_law, env, Ctx(None, ctx.cut))
+                if isinstance(v, Hole):
+                    out.append('%s%s: %s' % (a.id, txt, fmt_value(v)))
+                    tsides.append((txt, ('line', out[-1:])))
+                    continue
+                tctx = ctx.but(law=eng.date_of(v, 'the law of an ask'))
             self._diff_env = env
+            self._diff_side = None
             try:
-                lines = self.answer_diff(eng, a, ctx, pins_coll)
+                lines = self.answer_diff(eng, a, tctx, pins_coll)
             finally:
                 self._diff_env = None
+            if only:
+                # one side of a diff over two stacks: each tuple's cells, for cli.cross_stack_diff
+                tsides.append((txt, self._diff_side if self._diff_side is not None else ('line', lines)))
+                continue
             out.extend(a.id + txt + ln[len(a.id):] if ln.startswith(a.id) else ln for ln in lines)
+        if only:
+            self._diff_side = ('binds', tsides)
+            return []
         return out
 
     def diff_each(self, eng, a, ctx, pins_coll):
@@ -2373,6 +2397,14 @@ def trace_key(tn):
     for ch in subs:
         out.append(trace_key(ch) if isinstance(ch, TraceNode) else repr(ch))
     return tuple(out)
+
+
+def law_reads_binds(a):
+    """Whether an ask's law expression reads one of its ask-level for's variables."""
+    from .node import walk
+    vs = set(b.var for b in (a.binds or ()))
+    return bool(vs) and any(getattr(x, '_r', None) is not None and x._r[0] == 'var' and x._r[1] in vs
+                            for x in walk(a.law))
 
 
 def each_next(met, assigned, answer, forced=()):
