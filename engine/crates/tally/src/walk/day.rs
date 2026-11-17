@@ -487,12 +487,19 @@ impl Engine {
         if q.is_zero() {
             return Ok(());
         }
-        if let Some(h) = self.lifespan_depends(m, id, (movement, lg))? {
+        if let Some(h) = self.walk(id)?.lifespan_depends(m, (movement, lg))? {
             // inside a lifespan on some of the window's days and outside it on the rest: the
             // leg is the window's hole, and so is a read of it (E §4.1 step 2; tally 2.1.8
-            // item 77)
-            self.walk_mut(id)?
+            // item 77); booked so from the window's first day where that was walked
+            let walk = self.walk_mut(id)?;
+            if walk
                 .hole_legs
+                .contains_key(&(movement.to_owned(), lg.name.clone()))
+            {
+                return Ok(());
+            }
+            walk.open_tests = spread(&[walk.open_tests.as_ref(), Some(&h)]);
+            walk.hole_legs
                 .entry((movement.to_owned(), lg.name.clone()))
                 .or_insert_with(|| h.clone());
             let mut hole_leg = lg.clone();
@@ -700,68 +707,6 @@ impl Engine {
         Ok(())
     }
 
-    /// The window's hole of leg `lg` of `movement`, dated by a window some of whose days are
-    /// inside the lifespan of every place it moves into or out of and some aren't, each day
-    /// of the window asked; none where every day is inside, or none is, which are the
-    /// lifespan's yes and no, or where a lifespan's end is a hole (refcore's
-    /// `window_lifespan`). The lifespans are intervals, so every day is inside where the
-    /// window's first and last are, and one is where their common first day from the window's
-    /// first lies in the window: no day is walked (E §4.1 step 2, §4.2 step 5; L §4.4; tally
-    /// 2.1.8 item 77).
-    ///
-    /// # Errors
-    ///
-    /// `ENGINE-INVARIANT` for a leg's place load didn't build.
-    fn lifespan_depends(
-        &self,
-        m: &Reality,
-        id: usize,
-        (movement, lg): (&str, &LegVal),
-    ) -> Result<Option<Hole>, Stop> {
-        let Dated::Window(w) = &lg.day else {
-            return Ok(None);
-        };
-        let walk = self.walk(id)?;
-        let mut spans = Vec::new();
-        for p in ends(lg) {
-            let thing = m
-                .things
-                .get(p)
-                .ok_or_else(|| invariant("a leg's place load didn't build"))?;
-            // no lifespan: no day is inside, the plain refusal
-            let Some(sp) = m.lifespan(thing, (walk.cut, walk.world)) else {
-                return Ok(None);
-            };
-            if sp.end_question().is_some() {
-                return Ok(None);
-            }
-            spans.push(sp);
-        }
-        if spans
-            .iter()
-            .all(|sp| sp.contains(w.lo) && sp.contains(w.hi))
-        {
-            return Ok(None);
-        }
-        // the first day from the window's first that every lifespan may hold: the latest of
-        // their first days, which holds a day of all of them where any does
-        let mut first = Some(w.lo);
-        for sp in &spans {
-            first = first.and_then(|d| sp.first_from(d));
-        }
-        let Some(first) = first.filter(|d| *d <= w.hi) else {
-            return Ok(None);
-        };
-        if !spans.iter().all(|sp| sp.contains(first)) {
-            return Ok(None);
-        }
-        let text = format!(
-            "date within {} not precise enough for a balance",
-            w.question
-        );
-        Ok(Some(Hole::asked(&text, movement).carrying(&w.value.carry)))
-    }
-
     /// The day's close: conservation, `WARN-NEGATIVE` at the accounts and cash it touched, and
     /// `RUN-LIFESPAN` for a place whose lifespan ends holding something (refcore's
     /// `close_day`). E §4.2 steps 4–5, E §9 items 1 and 6.
@@ -939,6 +884,66 @@ impl Walk {
         Ok(())
     }
 
+    /// The window's hole of leg `lg` of `movement`, dated by a window some of whose days are
+    /// inside the lifespan of every place it moves into or out of and some aren't, each day
+    /// of the window asked; none where every day is inside, or none is, which are the
+    /// lifespan's yes and no, or where a lifespan's end is a hole (refcore's
+    /// `window_lifespan`). The lifespans are intervals, so every day is inside where the
+    /// window's first and last are, and one is where their common first day from the window's
+    /// first lies in the window: no day is walked (E §4.1 step 2, §4.2 step 5; L §4.4; tally
+    /// 2.1.8 item 77).
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a leg's place load didn't build.
+    fn lifespan_depends(
+        &self,
+        m: &Reality,
+        (movement, lg): (&str, &LegVal),
+    ) -> Result<Option<Hole>, Stop> {
+        let Dated::Window(w) = &lg.day else {
+            return Ok(None);
+        };
+        let mut spans = Vec::new();
+        for p in ends(lg) {
+            let thing = m
+                .things
+                .get(p)
+                .ok_or_else(|| invariant("a leg's place load didn't build"))?;
+            // no lifespan: no day is inside, the plain refusal
+            let Some(sp) = m.lifespan(thing, (self.cut, self.world)) else {
+                return Ok(None);
+            };
+            if sp.end_question().is_some() {
+                return Ok(None);
+            }
+            spans.push(sp);
+        }
+        if spans
+            .iter()
+            .all(|sp| sp.contains(w.lo) && sp.contains(w.hi))
+        {
+            return Ok(None);
+        }
+        // the first day from the window's first that every lifespan may hold: the latest of
+        // their first days, which holds a day of all of them where any does
+        let mut first = Some(w.lo);
+        for sp in &spans {
+            first = first.and_then(|d| sp.first_from(d));
+        }
+        let Some(first) = first.filter(|d| *d <= w.hi) else {
+            return Ok(None);
+        };
+        if !spans.iter().all(|sp| sp.contains(first)) {
+            return Ok(None);
+        }
+        let text = format!(
+            "date within {} not precise enough for a balance",
+            w.question
+        );
+        Ok(Some(Hole::asked(&text, movement).carrying(&w.value.carry)))
+    }
+
     /// A leg dated by a window, from the window's first day: each place it names is
     /// `HOLE-IMPRECISE` for a balance, its amount's questions too where that is a hole, until
     /// the leg books at the window's last day (refcore's `imp_on`). L §4.4, §8.1; E §4.2.
@@ -984,8 +989,56 @@ impl Walk {
             };
             self.add(m, p, &unit, ent)?;
         }
+        if let Amount::Qty(a) = &lg.amount
+            && !a.is_zero()
+            && let Some(h) = self.lifespan_depends(m, (movement, lg))?
+        {
+            // its lifespan, asked of each of the window's days, comes out both ways: the leg
+            // is the window's hole at both ends from here, never booked (refcore's
+            // `imp_tests`, `window_lifespan`; E §4.1 step 2; tally 2.1.8 item 77)
+            return self.window_hole_ends(m, (movement, lg), at, (&h, coll));
+        }
         for p in ends(lg) {
             self.imp_test(m, (p, &unit), at, (movement, lg))?;
+        }
+        Ok(())
+    }
+
+    /// Leg `lg` of `movement` as the window's hole `h` at both its ends from point `at`, where
+    /// its lifespan test comes out one way on some of the window's days and another on the
+    /// rest: a read of the leg meets the hole, and a refusal reaching a place after it doesn't
+    /// outrank it (refcore's `window_lifespan`). E §4.1 step 2, L §4.4; tally 2.1.8 item 77.
+    ///
+    /// # Errors
+    ///
+    /// A number error.
+    fn window_hole_ends(
+        &mut self,
+        m: &Reality,
+        (movement, lg): (&str, &LegVal),
+        at: At,
+        (h, coll): (&Hole, &Collected),
+    ) -> Result<(), Stop> {
+        self.open_tests = spread(&[self.open_tests.as_ref(), Some(h)]);
+        self.hole_legs
+            .entry((movement.to_owned(), lg.name.clone()))
+            .or_insert_with(|| h.clone());
+        let unit = lg.unit.clone().unwrap_or_else(|| ALL.to_owned());
+        self.worth_add(&unit, None)?;
+        for (end, into) in [(&lg.from, false), (&lg.to, true)] {
+            let Some(p) = end.place() else {
+                continue;
+            };
+            let mut ent = Ent::new(at, Change::Hole(h.clone()));
+            ent.mv = Some(movement.to_owned());
+            ent.leg = Some(lg.name.clone());
+            ent.hole_leg = Some(HoleLeg {
+                into,
+                src: lg.src.clone(),
+            });
+            ent.window = leg_window(movement, lg);
+            ent.coll = Some(coll.clone());
+            self.add(m, p, &unit, ent)?;
         }
         Ok(())
     }
@@ -1044,6 +1097,7 @@ impl Walk {
         let Some(h) = st.imp_hole() else {
             return Ok(());
         };
+        self.open_tests = spread(&[self.open_tests.as_ref(), Some(&h)]);
         let mut reach: BTreeSet<String> = BTreeSet::new();
         reach.insert(place.to_owned());
         for (mv, lg) in legs {

@@ -100,6 +100,21 @@ pub(crate) fn reading_place(row: &crate::model::Row) -> Option<&str> {
     }
 }
 
+/// Whether an observation of `links` stands in for its instance where the walk books it: a leg
+/// dated inside [S, E] and before the cut; one dated before S is a fact booked by none, which
+/// gives a reading `after` the instance no point (refcore's `after_day`, its `legs`). L §4.6
+/// Readings, §5.19 Before the run.
+pub(crate) fn stands_in(obs: &[Obs], links: &[String], (start, end, cut): (Day, Day, Day)) -> bool {
+    for o in obs.iter().filter(|o| links.contains(&o.id)) {
+        for d in o.legs.iter().filter_map(|lg| lg.day.day()) {
+            if start <= d && d <= end && d < cut {
+                return true;
+            }
+        }
+    }
+    false
+}
+
 /// The day of the last leg of the observations `obs` that links `links` names, booked from
 /// `start` through `end` before the cut, a leg at `place` first, all where none is: where a
 /// reading `after m` with m modelled past stands, just after the observations that fulfil m,

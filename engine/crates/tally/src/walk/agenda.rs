@@ -888,6 +888,7 @@ fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
             {
                 // a window whose days take different classes (tally 2.1.8 item 77)
                 let class = super::plan::class_hole(&inst, w);
+                walk.open_tests = spread(&[walk.open_tests.as_ref(), Some(&class)]);
                 qs = spread(&[qs.as_ref(), Some(&class)]);
             }
             for (leg, lg) in inst.legs.iter().enumerate() {

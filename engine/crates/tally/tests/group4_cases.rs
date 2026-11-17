@@ -28,6 +28,21 @@ mod tests {
         answer.lines().to_vec()
     }
 
+    /// The lines a run of `text`, read from `path`, prints for the asks `asks`.
+    fn asked_lines_of(path: &str, text: &str, asks: &[&str]) -> Vec<String> {
+        let given = vec![Given {
+            path: path.to_owned(),
+            bytes: Some(text.as_bytes().to_vec()),
+        }];
+        let request = Request {
+            asks: Asks::Named(asks.iter().map(|a| (*a).to_owned()).collect()),
+            pin: Pin::Canonical,
+            days: Days::Events,
+        };
+        let answer = run(given, &request).expect("an answer");
+        answer.lines().to_vec()
+    }
+
     /// Each of `expected` is the line of `lines` with its head (the text before `: `).
     fn holds(lines: &[String], expected: &[&str]) {
         for want in expected {
@@ -626,6 +641,341 @@ version sm
                 "l (x = pay[mm]): 500.00 PLN".to_owned()
             ],
             "pay[zz] stands, in the list's order"
+        );
+    }
+
+    /// The final check's `r11/sum_first` (tally 2.1.8 R11): a sum whose first term is a booked
+    /// leg refused at its amount builds the walk its hole twin's read builds, so the run warns
+    /// as the twin's does: `b` goes below zero on the walk, though the sum reads no balance.
+    #[test]
+    fn a_refused_leg_read_warns_as_its_hole_twin() {
+        let text = r#"model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-06-30
+
+source src "s"
+unit PLN: currency minor 0.01
+input amt: money PLN
+input dom: int
+input dq: int
+input div[m in months]: num
+place a: accounts PLN lives 2020-01-01..
+place b: accounts PLN lives 2020-01-01..
+place world: outside lives 1900-01-01..
+
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from a to world amount round(amt * div[m] / div[m], minor(PLN), half-even)
+
+move q[m in months]: transfers
+  on day_of(m, dq)
+  at start_of(m)
+  leg cash from b to world amount amt
+
+version p
+  cite src
+  governs 2026..
+  known 2026-01-01
+  amt = 400.00 PLN "p"
+  dom = 4 "p"
+  dq = 10 "p"
+  div[2026-01] = 1 "ok"
+  div[2026-02] = 0 "zero"
+  div[2026-03..2026-06] = 1 "ok"
+  opening[a] = 1 000.00 PLN at 2026-01-01 start "o"
+  opening[b] = 1 000.00 PLN at 2026-01-01 start "o"
+
+ask s: sum(t.cash.amount for t in transfers over 2026-02)
+"#;
+        let lines = asked_lines_of("r11_warns.tally", text, &["s"]);
+        assert_eq!(
+            lines,
+            [
+                "s: refused: RUN-DIV division by zero",
+                "  unfulfilled: pay[2026-02]",
+                "  unfulfilled: q[2026-02]",
+                "  cut 2026-06-30",
+                "warning: WARN-NEGATIVE b is below zero from 2026-03-10",
+            ],
+            "the refusal, and the warning the walk meets"
+        );
+    }
+
+    /// The final check's `r16/after_m_obs_before_start` (L §4.6, §5.19 Before the run): a
+    /// reading `after m` whose m only an observation dated before S fulfils has no point the
+    /// walk applies (that row is booked by none), so it anchors nothing; a read of it is
+    /// `RUN-RECORD`, nothing booking m by the cut.
+    #[test]
+    fn a_reading_after_m_fulfilled_before_start_is_not_applied() {
+        let text = r#"model t
+  tally 2
+  on 2026-08-01
+  start 2026-05-02
+  end 2026-07-31
+
+source src "s"
+unit PLN: currency minor 0.01
+place a: accounts PLN lives 2026-01-01..
+place b: accounts PLN lives 2026-01-01..
+input rows: observed
+input floor: money PLN
+input d_sv: int
+
+move sv[m in months]: transfers
+  on day_of(m, d_sv)
+  reads a
+  leg cash from a to b amount max(0 PLN, bal(a) - floor)
+
+version v
+  cite src
+  governs always
+  known 2026-01-01
+  floor = 50.00 PLN "s"
+  d_sv = 20 "s"
+  opening[a] = 300.00 PLN at 2026-05-02 start "s"
+  opening[b] = 0.00 PLN at 2026-05-02 start "s"
+
+version st
+  cite src
+  governs 2026-05
+  known 2026-06-02
+  covers a
+  anchor a
+  rows[r1] = (on: 2026-05-01, kind: transfers, leg cash from a to b amount 250.00 PLN, fulfils: sv[2026-05]) "r1"
+  stated[a] = 300.00 PLN after sv[2026-05] "saldo"
+
+ask q: bal(a, 2026-05-31), bal(a, 2026-05-31) modelled
+ask r: since(stated[a], 2026-05-25)
+"#;
+        let lines = lines_of("r16_before_start.tally", text);
+        assert_eq!(
+            lines,
+            [
+                "q: (300.00 PLN, 50.00 PLN)",
+                "  cut 2026-08-01",
+                "r: refused: RUN-RECORD reading stated[a] after sv[2026-05]: sv[2026-05] is \
+                 modelled past and nothing fulfils it",
+                "  cut 2026-08-01",
+            ],
+            "no anchor line; the read of the reading refused"
+        );
+    }
+
+    /// The final check's `fixes/gate8/d512_hole_ans` (E §10, §5 step 1): an explanation lists
+    /// the row a later version answers a hole booking with right after that booking's hole,
+    /// as the instance is answered where it is made, before the next instance's rows.
+    #[test]
+    fn an_answer_row_is_listed_after_the_hole_it_answers() {
+        let text = r#"model t
+  tally 2
+  on 2026-08-31
+  start 2026-01-01
+  end 2026-08-31
+
+source src "s"
+unit PLN: currency minor 0.01
+input fee[m in months]: money PLN
+input dd: int
+place a: accounts PLN lives 2020-01-01..
+place out: outside lives 1900-01-01..
+
+move fee_out[m in months]: transfers
+  on day_of(m, dd)
+  at start_of(m)
+  leg cash from a to out amount fee[m]
+
+version base
+  cite src
+  governs 2026..
+  known 2026-01-01
+  dd = 3 "s"
+  fee[2026-01] = 10.00 PLN "s"
+  fee[2026-05..2026-08] = 10.00 PLN "s"
+  opening[a] = 500.00 PLN at 2026-01-01 start "s"
+
+version open_q
+  cite src
+  governs 2026-02..2026-04
+  known 2026-01-01
+  fee[2026-02] = ?"What was the February fee?"
+  fee[2026-03] = ?"What was the March fee?"
+  fee[2026-04] = ?"What was the April fee?"
+
+version later
+  cite src
+  governs 2026-03
+  known 2026-06-01
+  replace fee[2026-03] = 12.00 PLN "s"
+
+ask e: explain fee_out[2026-03].cash.amount
+"#;
+        let rows: Vec<String> = lines_of("d512_answer_order.tally", text)
+            .into_iter()
+            .filter(|l| l.starts_with("  ["))
+            .collect();
+        assert_eq!(
+            rows,
+            [
+                "  [1] row base:dd = 3",
+                "  [2] row base:fee[2026-01] = 10.00 PLN",
+                "  [3] row open_q:fee[2026-02] = ?\"What was the February fee?\" (fee[2026-02])",
+                "  [4] row open_q:fee[2026-03] = ?\"What was the March fee?\" (fee[2026-03])",
+                "  [5] row later:fee[2026-03] = 12.00 PLN",
+                "  [6] row open_q:fee[2026-04] = ?\"What was the April fee?\" (fee[2026-04])",
+                "  [7] row base:fee[2026-05..2026-08] = 10.00 PLN",
+            ],
+            "the answer's row right after the hole it answers"
+        );
+    }
+
+    /// The final check's `d77/lifespan` (L §4.4 l.672, a refusal that only some of a
+    /// window's days give; tally 2.1.8 item 77): a window leg whose lifespan test comes out
+    /// both ways is the window's hole from the window's first day, and a refusal a fixed-day
+    /// leg brings the place later doesn't outrank it, which comes first being the window's to
+    /// say; `windows each` splits on that window.
+    #[test]
+    fn a_refusal_after_a_window_lifespan_test_leaves_the_windows_hole() {
+        let text = r#"model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-06-30
+
+source src "s"
+unit PLN: currency minor 0.01
+place pot: accounts PLN lives 2025-01-01..
+place fresh: accounts PLN lives 2026-04-08..
+place shut: accounts PLN lives 2025-01-01..2026-04-06
+input amt: money PLN
+input dw: date
+input df: date
+
+move into_fresh: transfers
+  on dw
+  leg cash from pot to fresh amount amt
+
+move into_shut: transfers
+  on df
+  leg cash from pot to shut amount amt
+
+version v
+  cite src
+  governs always
+  known 2025-12-01
+  amt = 50.00 PLN "s"
+  dw = window(2026-04-05, 2026-04-10) "s"
+  df = 2026-04-08 "s"
+  opening[pot] = 400.00 PLN at 2026-01-01 start "s"
+  opening[shut] = 0.00 PLN at 2026-01-01 start "s"
+
+ask b: bal(pot, 2026-04-30)
+ask b_each: bal(pot, 2026-04-30) windows each
+"#;
+        let lines = lines_of("d77_lifespan_first.tally", text);
+        assert_eq!(
+            lines,
+            [
+                "b: ?\"date within window(2026-04-05, 2026-04-10) not precise enough for a \
+                 balance\" (into_fresh)",
+                "  cut 2026-01-01",
+                "b_each [dw = 2026-04-05 .. 2026-04-07]: refused: RUN-LIFESPAN into_fresh.cash \
+                 moves into or out of fresh outside its lifespan",
+                "  cut 2026-01-01",
+                "b_each [dw = 2026-04-08 .. 2026-04-10]: refused: RUN-LIFESPAN into_shut.cash \
+                 moves into or out of shut outside its lifespan",
+                "  cut 2026-01-01",
+            ],
+            "the window's hole, then one refusal per sub-window"
+        );
+    }
+
+    /// The final check's `fixes/rv/rc_diff_two_stacks_each` (L §4.4; tally 2.1.8 R13.2): a
+    /// diff whose worlds sit on two stacks, under `windows each`, names in its heads only the
+    /// windows its answer carries: `db`, the day `main` is paid on, never `da`, a window its
+    /// walk meets at another place.
+    #[test]
+    fn a_two_stack_diff_head_names_only_the_windows_its_answer_carries() {
+        let model = r#"model q
+  tally 2
+  on 2026-05-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place main: accounts PLN lives 2026-01-01..
+place side: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input fee: money PLN
+input da: date
+input db: date
+input d0: date
+
+move to_side: transfers
+  on da
+  at d0
+  leg cash from world to side amount fee
+
+move to_main: transfers
+  on db
+  at d0
+  leg cash from world to main amount fee
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fee = 4.00 PLN "s"
+  d0 = 2026-01-01 "s"
+  da = window(2026-02-01, 2026-02-09) "s"
+  db = window(2026-02-03, 2026-02-05) "s"
+  opening[main] = 0.00 PLN at 2026-01-01 start "s"
+  opening[side] = 0.00 PLN at 2026-01-01 start "s"
+
+ask d: diff(bal(main, 2026-02-04)) in s2 against s1 windows each
+"#;
+        let scenario = |name: &str, fee: &str| {
+            format!(
+                "scenario {name} over q\n  tally 2\n  from 2026-01-01\n\nversion {name}_v\n  \
+                 cite s\n  governs 2026-01-01..\n  known 2026-01-01\n  replace fee = {fee} PLN \
+                 \"s\"\n"
+            )
+        };
+        let given = [
+            ("m.tally", model.to_owned()),
+            ("s1.tally", scenario("s1", "5.00")),
+            ("s2.tally", scenario("s2", "6.00")),
+        ]
+        .into_iter()
+        .map(|(path, text)| Given {
+            path: path.to_owned(),
+            bytes: Some(text.into_bytes()),
+        })
+        .collect();
+        let request = Request {
+            asks: Asks::Every,
+            pin: Pin::Canonical,
+            days: Days::Events,
+        };
+        let answer = run(given, &request).expect("an answer");
+        let heads: Vec<&str> = answer
+            .lines()
+            .iter()
+            .filter(|l| l.starts_with("d "))
+            .map(String::as_str)
+            .collect();
+        assert_eq!(
+            heads,
+            [
+                "d [db = 2026-02-03 .. 2026-02-04]: diff in s2 against s1: 1 changed, 0 added, \
+                 0 removed, 0 unchanged",
+                "d [db = 2026-02-05]: diff in s2 against s1: 0 changed, 0 added, 0 removed, 1 \
+                 unchanged",
+            ],
+            "db alone in the heads"
         );
     }
 }

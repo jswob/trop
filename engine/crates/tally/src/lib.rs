@@ -203,7 +203,9 @@ pub mod eval {
     pub(crate) use state::{a_day, num_stop, past_days};
     pub(crate) use time_arith::periods_of;
     pub(crate) use timelines::combinations;
-    pub(crate) use trace::{Balance as TracedBalance, Kind as TraceKind, RuleLine, Trace, Walked};
+    pub(crate) use trace::{
+        Balance as TracedBalance, Kind as TraceKind, RuleLine, Snap, Trace, Walked,
+    };
     pub(crate) use windows::{known_question, known_unknown, one_day, window_days};
     pub(crate) use years::year_form;
 }
@@ -283,7 +285,7 @@ pub mod book {
     pub use reading::{
         AfterDay, AfterDays, Pad, Seen, Stands, after_missing, per_unit, reading_rank,
     };
-    pub(crate) use reading::{gap_text, instant_text, reading_place};
+    pub(crate) use reading::{gap_text, instant_text, reading_place, stands_in};
     pub use same::{Groups, kept_once, once_obs, same_differ};
     pub(crate) use same::{Member, SameMet, SamePicks, Waiting, and_list};
     pub(crate) use settle::settlement_move;

@@ -4121,3 +4121,37 @@ Oracle: the snapshot `tmp/spec-2.1.8-build/refcore-last` (spec/2.1.8 at 00a00b22
   - `items/explain/from` is green.
 - **STOP-REPORTs:** none. **Exceptions:** +0 (6; report-only hits as the lock).
 - **Checks:** `check commit: red at tests, stopped after 10 of 23 steps (152s)` on the ids above; `check quick: green, 11 steps`.
+
+## 2026-11-17 tally 2.1.8, the final check's five engine vectors (the round's last builder turn; round PR #202; issues #195, #200, #201)
+
+Oracle: `engine/tools/refcore` at 21c79026 (the final spec, merged into this branch at 36d842c5). Every vector below is byte-equal to it now (`gate.py`: EQUAL), each with a test of its own text in `crates/tally/tests/group4_cases.rs`.
+
+- **`r11/sum_first`, fbe10868** `book/members.rs` `leg_field`, `booked_walk` (R11: a refused movement is read as its hole twin is, warnings included).
+  - A leg read of a booked instance whose amount is refused returned before the walk; its hole twin's read builds the ask's walk, so the run missed that walk's `WARN-NEGATIVE` lines.
+  - The read now builds the walk first (refcore's `mv_field`, its `ask_walk`), the amount's refusal standing. Test: `a_refused_leg_read_warns_as_its_hole_twin`.
+- **`r16/after_m_obs_before_start`, 1bd56dd4** `book/reading.rs` `stands_in`; `walk/readings.rs` `readings_after`; `walk/reads.rs` `run_status`.
+  - save[2026-03] is modelled past, fulfilled only by o1, which is dated before S and so "booked by none" (L §5.19 Before the run). Nothing books m by the cut, so the reading `after` it is `RUN-RECORD` when read (L §4.6), and the walk never applies it.
+  - The engine counted any linked observation as standing in, anchored konto at m's own day (550.00 PLN, with an anchor line) and dated the reading 03-15. Now only an observation leg inside [S, E] before the cut stands in. Test: `a_reading_after_m_fulfilled_before_start_is_not_applied`.
+  - For the spec writer, no change asked: the text's note says "last, since and a plain read see it on that observation's day". refcore refuses them instead, and so does the engine now. L §4.6's "a fact the walk doesn't apply before S" then has no case a reading reaches, since a row before S books nothing. That is the one reading under which L §4.6 and §5.19 say the same thing.
+- **`fixes/gate8/d512_hole_ans`, b1eeb99c** `walk/plan.rs` `make_instances_held`, `trace_answers`; `eval/trace.rs` `trace_move_to` (E §10, §5 step 1).
+  - An explanation traced each answered hole booking's answer after the whole list. refcore answers a booking where it makes the instance (`answer_booking`), so v2's row follows the hole it answers.
+  - The traced list now marks where each instance's own reads end, and the answer's reads move there; what the list computes is unchanged. Test: `an_answer_row_is_listed_after_the_hole_it_answers`.
+- **`d77/lifespan` b_jar_each, b0074238** `walk/day.rs` `imprecise_ends`, `window_hole_ends`, `lifespan_depends` (now the walk's); `walk/state.rs` `open_tests`, `apply`; `walk/agenda.rs`; `walk/projection.rs`; `hole/questions.rs` `Hole::shares`.
+  - refcore's grouping is L §4.4's sentence: its six lines are maximal boxes over which the answer is constant. The engine's `[wo = 03-07 .. 03-10]` was a wrong answer, not just a different grouping. With wo = 03-08 and wd a window, put's refusal (wd 05..07) comes before pin's (08), so the answer depends on wd: refcore gives the window's hole, the engine gave pin's refusal.
+  - Two causes, both fixed:
+    - The window lifespan test ran when the leg was booked on the window's last day. It now runs on the first day (refcore's `imp_tests`, `window_lifespan`), and the leg is the window's hole at both ends from there.
+    - A dated refusal outranked a hole that a window test leaves open. It no longer does (refcore's `UNCERTAIN` in `apply`; L §4.4, "a refusal that only some of its days give"). The questions are kept per walk and inherited by a projection.
+  - Tests: `a_refusal_after_a_window_lifespan_test_leaves_the_windows_hole`, and the unit test `a_refusal_after_a_window_test_leaves_its_hole`.
+- **`fixes/rv/rc_diff_two_stacks_each` e1 (and e5), c62b21e1** `ask/diff.rs` `side_cell`; `ask/windows.rs` `each_next` (R13.2).
+  - One side of a two-stack diff took next the first window its reads met (dk[a], from the walk at jar[a]). It now takes the windows its cell's values carry, as a line's run does. Test: `a_two_stack_diff_head_names_only_the_windows_its_answer_carries`.
+- **cc033b89**: the three report-only hits these commits added (a nested closure in `side_cell`, long chains in `stands_in` and `trace_move_to`) are plain loops now, and the lock stands.
+- **Sweep** (385 sets) against the worktree's refcore: 2 608 of 2 647 blocks same at 36d842c5 and after each commit, with no block moving either way. The five vectors live in T's suites, not in the sweep's sets.
+- **Size:** `git diff --shortstat 059f17ba..HEAD -- engine/crates/`: 87 files changed, 10622 insertions(+), 1639 deletions(-).
+- **Cost:** `perf counts P8-14`: def_misses 25 318, days_stepped 960, walks_shared 582 (exit 0), unchanged.
+- **Red gating ids (`check commit`: 8 of 1 094 tests red, from 12):** all the tests session's, as the brief lists them.
+  - `fixes/gate8/m2_gate8_window_moves`, `m2_g3_fix2_r3` and `m2_d512_plans_same`; `spec/g4/nb3_at`; `spec/gate8/at_window_mk2`; `m2_counts_ahead`.
+  - `r12/entry_known_window` (held for #204) and `r15/converted_plain` (held for #205).
+  - `fixes/rv/g2_b3_both_break`, `rc_refusal_words_differ` and `g3_b3_uncertain_partial`; `s6/hole_same_order_class`.
+  - Now green: `m2_fixes_ledger`, `m2_fixes_tally_218_d`, `_r11` and `_r16`.
+- **STOP-REPORTs:** none. **Exceptions:** +0 (the lock unchanged).
+- **Checks:** `check commit: red at tests, stopped after 10 of 23 steps (150s)` on the ids above; `check quick: green, 11 steps`.
