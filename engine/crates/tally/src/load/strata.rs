@@ -635,6 +635,42 @@ fn move_reads(m: &Reality, graph: &Graph, id: &str, mv: &MoveInfo) -> Option<Str
     None
 }
 
+/// `LOAD-KEY` for a reading `after m[k]` whose literal month, quarter or day k load sees isn't
+/// a key of the index m's binding ranges over: m has no such instance (refcore's
+/// `_after_key`). L §4.6 Readings, §8.3 (tally 2.1.8 R16, #175).
+fn after_keys(
+    m: &Reality,
+    (id, row): (&str, &crate::model::Row),
+    (node, keys): (&Expr, &[crate::syntax::Key]),
+    binds: &[crate::model::BindInfo],
+    (file, line): (&str, u32),
+) -> Result<(), Stop> {
+    for (key, bind) in keys.iter().zip(binds) {
+        let (
+            crate::syntax::Key::Expr(
+                e @ Expr::Lit(Lit::Month(..) | Lit::Quarter(..) | Lit::Day(_)),
+            ),
+            Domain::Index(ix),
+        ) = (key, &bind.domain)
+        else {
+            continue;
+        };
+        let Some(lit) = super::types::key_lit_of(e) else {
+            continue;
+        };
+        if super::keys::resolve_key(m, &lit, &bind.domain, file, line).is_err() {
+            let message = format!(
+                "{id}{} after {}: {} is not a key of {ix}",
+                pattern_text(&row.pattern),
+                text(node),
+                text(e)
+            );
+            return Err(refuse(Load::Key, message, file, line));
+        }
+    }
+    Ok(())
+}
+
 /// `LOAD-ORDER` for a reading `after m` of `stated` or `opening`, with m a plan or an
 /// observation: load sees m's class, and the batch has no order (refcore's
 /// `m_check_after_readings`). L §4.6 Readings, §5.14.2, §8.3.
@@ -648,14 +684,20 @@ fn after_readings(m: &Reality, files: &Files) -> Result<(), Stop> {
                 continue;
             };
             let mut base = node;
+            let mut keys: &[crate::syntax::Key] = &[];
             if let Expr::Post(inner, posts) = node
-                && let [Postfix::Keys(_)] = posts.as_slice()
+                && let [Postfix::Keys(written)] = posts.as_slice()
             {
                 base = inner;
+                keys = written;
             }
             let Expr::Name(name) = base else {
                 continue;
             };
+            if let Some(mv) = m.moves.get(name) {
+                let at = (files.of_version(&row.version)?, row.line);
+                after_keys(m, (id, row), (node, keys), &mv.binds, at)?;
+            }
             let plan = m.moves.get(name).is_some_and(|mv| !mv.decision);
             let observed = m.inputs.get(name).is_some_and(|named| named.observed);
             if plan || observed {
