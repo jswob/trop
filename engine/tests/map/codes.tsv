@@ -353,13 +353,13 @@ RUN-FUTURE	L §8.4	S	a decision on <d> binds over <K> through <d'>, after its da
 RUN-FUTURE	L §8.4	S	a decision on <d> reads a projection from <t>, after its day	6	S	kernel/g8/proj
 RUN-SOLVE	L §8.4	M1	*	4	M1	codes/m1/rules/solve
 RUN-SOLVE	L §8.4	M1	no sign change on [lo, hi]	4	M1	codes/m1/rules/solve
-RUN-RECORD	L §8.4	S	*	51	S	kernel/g10/ledger
+RUN-RECORD	L §8.4	S	*	52	S	kernel/g10/ledger
 RUN-RECORD	L §8.4	S	observation <r> fulfils <instance>, which doesn't exist or doesn't touch its places	19	S	kernel/g10/ledger
 RUN-RECORD	L §8.4	S	observation <r> fulfils <instance> and lacks its leg <l>	9	S	kernel/g10/observe
 RUN-RECORD	L §8.4	S	settlement <m> of <adjustment> touches neither place of its leg	4	S	kernel/g11/refused
 RUN-RECORD	L §8.4	S	settlement <m> of <adjustment>: the leg is turned round	8	S	kernel/g11/refused
 RUN-RECORD	L §8.4	S	<movement> fulfils <adjustment>, which no version made by the cut	2	M1	m1/fixes/gate8/m2_rt_l5_19_fulfils_adjustment_none
-RUN-RECORD	L §8.4	S	reading <r> after <m>: <m> is modelled past and nothing fulfils it	2	M2	m2/fixes/g4/a_none
+RUN-RECORD	L §8.4	S	reading <r> after <m>: <m> is modelled past and nothing fulfils it	3	M2	codes/m2/records/reading-after
 RUN-RECORD	L §8.4	S	… <m> doesn't exist	22	S	kernel/g10/ledger
 RUN-RECORD	L §8.4	S	same <p> = <q>: <p> doesn't exist	2	M1	m1/fixes/gate8/m2_d512_missing_right
 RUN-RECORD	L §8.4	S	<r> and <r'> state one transfer and both fulfil <instance>: state them same	12	M1	m1/fixes/gate8/m2_d512_three_unjoined
