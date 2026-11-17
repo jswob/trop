@@ -5224,8 +5224,10 @@ def lin_passes(n):
     if k in ('paren', 'if', 'lastx'):
         return True
     if k in ('name', 'index', 'field'):
+        # a number of a unit known only at run (`dyn`: a leg's amount, `t.cash.amount`) passes as one known at load
+        # (gate_a3 b8)
         t = getattr(n, '_t', None)
-        return t is not None and t.k in ('money', 'num', 'int', 'flex', 'rate')
+        return t is not None and t.k in ('money', 'num', 'int', 'flex', 'rate', 'dyn')
     return False
 
 
