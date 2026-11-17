@@ -502,6 +502,10 @@ class Walk:
                         oa, ob = os[a_i], os[b_i]
                         if oa.row.version is ob.row.version:
                             continue
+                        from .moves import id_order
+                        if id_order(self.m, ob.id) < id_order(self.m, oa.id):
+                            # the two observations in id order, as S6 names a class's rows (tally 2.1.8 P54)
+                            oa, ob = ob, oa
                         la = {g.name: g.amount for g in oa.legs}
                         lb = {g.name: g.amount for g in ob.legs}
                         if any(n in lb and vkey(la[n]) != vkey(lb[n]) for n in la if not isinstance(la[n], Hole)):

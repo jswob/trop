@@ -21,4 +21,5 @@ version v
 ask q1: b(x) law 2026-06-30
 === expect
 q1: ?"what is x?" (x)
+  held: x = ?"what is x?" (x) (v), read for 2026-06-30
   law date 2026-06-30, cut 2026-01-01

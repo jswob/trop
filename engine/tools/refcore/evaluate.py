@@ -1133,8 +1133,10 @@ class Engine:
                 if ix.assumed is not None:
                     self.reg(('assumed', '%s: %s' % (ix.id, ix.assumed), ''))  # L §5.6: assumed: <index>: <reason>
         if isinstance(v, tuple) and v and v[0] == 'hole':
-            return Hole([(v[1], org)])
-        if isinstance(v, tuple) and v and v[0] == 'node':
+            # a hole row carried past the cut is listed like a value, in the hole's own form (L §8.2, R7, R9; tally
+            # 2.1.8 P54)
+            v = Hole([(v[1], org)])
+        elif isinstance(v, tuple) and v and v[0] == 'node':
             # a dist row gives the distribution by an expression (L §5.16)
             v = self.ev(v[1], {}, ctx)
         elif isinstance(v, tuple) and v and v[0] == 'sexpr':
@@ -1155,8 +1157,10 @@ class Engine:
             sp = r.span(ctx.cut)
             if not sp.always and sp.start is not None and sp.end is None and d > self.ask_K:
                 per = fmt(period) if period is not None else d.isoformat()
-                self.reg(('held', '%s = %s (%s), read for %s' % (org, fmt(v) if not isinstance(v, Hole) else '?',
+                self.reg(('held', '%s = %s (%s), read for %s' % (org, fmt_hole(v) if isinstance(v, Hole) else fmt(v),
                                                                   r.version.id, per)))
+        if isinstance(v, Hole):
+            return v
         if isinstance(v, Iv):
             # the read names the unknown day (tally 2.1.7 R3, L §4.4): its row and cell
             v = Iv(v.lo, v.hi, v.days, v.src, origin=(r.sid, org), name=('row', r.sid, org))

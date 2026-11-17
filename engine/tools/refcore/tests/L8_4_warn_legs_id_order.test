@@ -1,0 +1,85 @@
+# tally 2.1.8 P54, S6 (the final check, T's s6_hole_same_order_class): WARN-LEGS names the two observations that
+# disagree in id order, as S6 names a class's rows: bank[q1] (35.00 PLN) before bank[q2] (30.00 PLN).
+# 7167d6b4 named bank[q2] first.
+=== m.tally
+model t
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+  note "T, tally 2.1.8 S6 (#177, #187; P51 reopened): HOLE-SAME names its rows in the order of their ids, and a class joined by two same lines (in two versions) names each of its rows and values. pair: same bank[q2] = bank[q1], written q2 first, named q1 first (fp); three: r3 = r1 and r1 = r2 make one class of three (f3, b3)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place box: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input d15: int
+input d20: int
+
+move save[m in months]: transfers
+  on day_of(m, d15)
+  leg cash from konto to sav amount amt
+
+move tip[m in months]: transfers
+  on day_of(m, d20)
+  leg cash from box to world amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 900.00 PLN "s"
+  d15 = 15 "s"
+  d20 = 20 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+  opening[box] = 1000.00 PLN at 2026-03-01 start "s"
+
+version st_konto
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto, box
+  bank[r1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "r1"
+  bank[q2] = (on: 2026-03-20, kind: transfers, leg cash from box to world amount 30.00 PLN, fulfils: tip[2026-03]) "q2"
+
+version st_sav
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers sav
+  bank[r2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN) "r2"
+  bank[r3] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 940.00 PLN) "r3"
+  bank[q1] = (on: 2026-03-20, kind: transfers, leg cash from box to world amount 35.00 PLN) "q1"
+
+version join_a
+  cite s
+  governs 2026-03
+  known 2026-04-04
+  same bank[r3] = bank[r1]
+  same bank[q2] = bank[q1]
+
+version join_b
+  cite s
+  governs 2026-03
+  known 2026-04-05
+  same bank[r1] = bank[r2]
+
+ask fp: flows(tip, 2026-03)
+ask f3: flows(save, 2026-03)
+ask b3: bal(sav, 2026-03-31), bal(konto, 2026-03-31)
+=== expect
+b3: (?"bank[r2] and bank[r3] are one, but the leg at sav differs on 2026-03-15: 950.00 PLN (bank[r2]) and 940.00 PLN (bank[r3])" (bank[r2], bank[r3]), 100.00 PLN)
+  cut 2026-06-10
+f3: ?"bank[r1], bank[r2] and bank[r3] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[r1]), 950.00 PLN (bank[r2]) and 940.00 PLN (bank[r3])" (bank[r1], bank[r2], bank[r3])
+  cut 2026-06-10
+fp: ?"bank[q1] and bank[q2] are one, but the amount of cash differs on 2026-03-20: 35.00 PLN (bank[q1]) and 30.00 PLN (bank[q2])" (bank[q1], bank[q2])
+  cut 2026-06-10
+warning: WARN-LEGS the two observations of save[2026-03] disagree: bank[r1] (950.00 PLN) and bank[r3] (940.00 PLN)
+warning: WARN-LEGS the two observations of tip[2026-03] disagree: bank[q1] (35.00 PLN) and bank[q2] (30.00 PLN)
+warning: WARN-NEGATIVE box is below zero from 2026-05-20
+warning: WARN-NEGATIVE konto is below zero from 2026-04-15
