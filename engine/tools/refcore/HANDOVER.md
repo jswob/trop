@@ -70,6 +70,10 @@ changed; `refcore_fast` byte-equal). One mechanism per rule:
 - **The ninth turn** (group 3's fix review, P46; **1 542 tests**): `evaluate.units_at_reading` reads the cut's
   `prefix_walk` up to the instant, inside a walk or not; `check.t_lastx` types a reading at a place of unit `any` by
   what it meets; `check3.check_after_readings` checks every row's `after` key before any row's order.
+- **The tenth turn** (group 4's fix review, P50; **1 547 tests**): `moves.id_order` orders ids in index order for a
+  class's member and every HOLE-SAME list; `evaluate.kind_has_member` raises S1's refusal on a hole day;
+  `mreads.flows_place_walk` leaves a known zero leg out of a window's holes; `mv_field` traces nothing of
+  `leg_refused`'s walk. Left: `b2_reads` c3's `[4] row v:dom` under explain (the review's note, not this turn's).
 - **Left.** About 125 run sites no text reaches (`LoadAtRun`, `is_load` stay); explain's `windows each` block
   against its pinned twin's pins section, and `n9_start`'s plain `?` group (next round's); the covered face asks
   every day of its window (`moves.m_window_class_depends`, a cost, no byte); a law per tuple on forms other than
