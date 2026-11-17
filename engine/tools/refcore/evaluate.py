@@ -4082,6 +4082,10 @@ class Engine:
             return h
         a = self.as_date_or_iv(a, 'days_between')
         b = self.as_date_or_iv(b, 'days_between')
+        if isinstance(a, Iv) and isinstance(b, Iv) and a.name is not None and a.name == b.name:
+            # a window taken with its own name once (L §4.4, as iv_compare): one unknown day, 0 days from itself
+            # (the third turn's note, the review of group 2's fix)
+            return Int(0)
         return self.lift(lambda x, y: Int((y - x).days), a, b)
 
     def c_add_days(self, n, env, ctx):
