@@ -91,6 +91,12 @@ enum Side {
     Missing(Value),
 }
 
+/// Whether the row at position `at` of `input` is a removal, `replace … = none` (L §5.19,
+/// §4.6 Readings).
+fn removed_row(input: &InputInfo, at: usize) -> bool {
+    matches!(input.rows.get(at), Some(row) if row.value == Written::None)
+}
+
 /// The row at position `at` of `input`, which the read rule took (L §4.6).
 fn latest_of(input: &InputInfo, at: usize) -> Result<&Row, Stop> {
     input
@@ -979,7 +985,17 @@ impl Engine {
                 .inputs
                 .get(id)
                 .ok_or_else(|| invariant("a row stated same of an input load didn't build"))?;
-            match self.latest_side(m, (info, ks.clone()), day, past, ctx)? {
+            let side = match self.latest_side(m, (info, ks.clone()), day, past, ctx)? {
+                // a side whose readings are all removed (`replace … = none`) is no row: the
+                // class's latest kept reading carries (L §6.1 l.1806, §4.6 Readings; refcore's
+                // `carry_latest`, B1 of group 4's review); with no kept reading on any side the
+                // read is none, as refcore's `last`
+                Side::Row(latest) if info.reading && removed_row(info, latest.at) => {
+                    Side::Missing(Value::None)
+                }
+                side @ (Side::Row(_) | Side::Signal(_) | Side::Missing(_)) => side,
+            };
+            match side {
                 Side::Signal(value) => return Ok(Err(value)),
                 Side::Missing(value) => {
                     if *id == input.id && ks.as_slice() == keys {
