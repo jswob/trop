@@ -67,6 +67,9 @@ changed; `refcore_fast` byte-equal). One mechanism per rule:
   by its first id (`mreads`); `last` over always rows names its read's day in HOLE-SAME.
 - **The eighth turn** (T's STOP-REPORTs 6 and 7; **1 539 tests**): `mreads.m_e_value`'s whole-priced branch keeps
   its price's hole linear under partial; STOP-REPORT 6 was the seventh turn's `trace_obs_row`.
+- **The ninth turn** (group 3's fix review, P46; **1 542 tests**): `evaluate.units_at_reading` reads the cut's
+  `prefix_walk` up to the instant, inside a walk or not; `check.t_lastx` types a reading at a place of unit `any` by
+  what it meets; `check3.check_after_readings` checks every row's `after` key before any row's order.
 - **Left.** About 125 run sites no text reaches (`LoadAtRun`, `is_load` stay); explain's `windows each` block
   against its pinned twin's pins section, and `n9_start`'s plain `?` group (next round's); the covered face asks
   every day of its window (`moves.m_window_class_depends`, a cost, no byte); a law per tuple on forms other than
