@@ -1,0 +1,86 @@
+# tally 2.2 (CHANGES.md 2.2-10, plan §3, choice C-2 (a)). E §3.2: a def's cell is kept under its context trimmed to
+# what the def can depend on, and a def keyed by a movement depends on the movement. The dependency graph had no edge
+# for a def's own key over an event kind, where an aggregate's binding over the same kind records the kind and its
+# moves, so in_pln's cone held no movement and no axis: h and h2 printed one line [work = *], 400.00 PLN, the cell
+# computed once under the first option. With the edge, the helper def splits as the inline sum i does: 100.00 EUR at
+# 4 under yes, 300.00 EUR under no. hp, a pin of amt[yes] under work = yes, reaches the def: 2 000.00 PLN.
+=== m.tally
+model fx1
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+axis work
+  yes "in work"
+  no "not in work"
+place wallet: accounts EUR lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input fx: num PLN/EUR
+input d1: date
+input amt[w in work]: money EUR
+input mo: month
+
+def pay: money EUR at reader
+  rule base = amt[work]
+
+move in1: transfers
+  on d1
+  at d1
+  leg cash from world to wallet amount pay
+
+def in_pln[t in transfers]: money PLN = round(t.cash.amount * fx, minor(PLN), half-up) at t.day
+
+def by_inline: money PLN at reader
+  rule base = sum(round(t.cash.amount * fx, minor(PLN), half-up) for t in transfers over mo where t.cash.to == wallet)
+def by_helper: money PLN at reader
+  rule base = sum(in_pln[t] for t in transfers over mo where t.cash.to == wallet)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  d1 = 2026-03-05 "s"
+  amt[yes] = 100.00 EUR "s"
+  amt[no] = 300.00 EUR "s"
+  mo = 2026-03 "s"
+  fx = 4.0 "s"
+  opening[wallet] = 0.00 EUR at 2026-01-01 start "s"
+
+ask i: by_inline law 2026-06-01
+ask h: by_helper law 2026-06-01
+ask h2: in_pln[t] for t in transfers over 2026-03 law 2026-06-01
+ask hp: by_helper, by_helper as if {amt[yes] = 500.00 EUR}, by_inline as if {amt[yes] = 500.00 EUR} with work = yes law 2026-06-01
+=== expect i h h2 hp
+i [work = yes]: 400.00 PLN
+  reading: work = yes
+  unfulfilled: in1
+  law date 2026-06-01, cut 2026-06-10
+i [work = no]: 1 200.00 PLN
+  reading: work = no
+  unfulfilled: in1
+  law date 2026-06-01, cut 2026-06-10
+h [work = yes]: 400.00 PLN
+  reading: work = yes
+  unfulfilled: in1
+  law date 2026-06-01, cut 2026-06-10
+h [work = no]: 1 200.00 PLN
+  reading: work = no
+  unfulfilled: in1
+  law date 2026-06-01, cut 2026-06-10
+h2 (t = in1) [work = yes]: 400.00 PLN
+  reading: work = yes
+  unfulfilled: in1
+  law date 2026-06-01, cut 2026-06-10
+h2 (t = in1) [work = no]: 1 200.00 PLN
+  reading: work = no
+  unfulfilled: in1
+  law date 2026-06-01, cut 2026-06-10
+hp: (400.00 PLN, 2 000.00 PLN, 2 000.00 PLN)
+  pinned: amt[yes] = 500.00 EUR
+  pinned: work = yes
+  unfulfilled: in1
+  law date 2026-06-01, cut 2026-06-10

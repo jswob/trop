@@ -386,6 +386,7 @@ class Checker:
         m = self.m
         # law date
         sc0 = self.def_scope(d, 'at')
+        self.def_key_edges(d, sc0)
         # a key bind's where is a condition over the key variables, read like the def's rules (L §2.3 bind, L §5.6)
         for b in d.binds:
             w = getattr(b.node, 'where', None) if b.node is not None else None
