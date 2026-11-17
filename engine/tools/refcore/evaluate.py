@@ -1006,7 +1006,16 @@ class Engine:
                 keep = spans
         if len(keep) > 1 and getattr(info, 'reading', False):
             units = sorted(set(unit_of_row(c) for c in keep) - {None})
+            if units and len(units) < len(keep) and len(set(instant_key(c) for c in keep)) == 1:
+                # a row that states no unit beside a unit's reading at one instant: a row for every unit the place
+                # has a position in there, a unit's own reading the narrower claim (L §5.10; tally 2.1.8 R14, B4)
+                units = self.units_at_reading(keep, units)
+                if len(units) == 1:
+                    keep = [c for c in keep if unit_of_row(c) is not None]
             if len(units) > 1 and len(set(instant_key(c) for c in keep)) == 1:
+                if what == 'since':
+                    # since reads only the instant (L §5.10; tally 2.1.8 R14)
+                    return next((c for c in keep if c.val is not NONE), keep[0])
                 # L §5.10 (tally 2.1.8 R14): at a place of unit any a reading is keyed by its unit; a read that names
                 # none takes the reading its instant gives, refused where two units' stand there
                 raise refuse('RUN-DOMAIN', units_at_instant('last' if what == 'last' else info.id,
@@ -1015,10 +1024,29 @@ class Engine:
             raise refuse('LOAD-OVERLAP', 'rows %s and %s of %s tie' % (keep[0].loc, keep[1].loc, info.id))
         return keep[0]
 
+    def units_at_reading(self, keep, units):
+        """The units a place of unit any has readings in at the instant of keep's rows: the walk's gaps there, which
+        give a row that states no unit for every unit the place holds (walk.apply_reading); the stated units where the
+        read is inside a walk or no gap is recorded."""
+        ctx = getattr(self, '_Kctx', None)
+        if ctx is None or ctx.walk is not None or ctx.wp is not None:
+            return units
+        r = keep[0]
+        day = r.instant[0]
+        if not isinstance(day, datetime.date):
+            return units
+        w = self.main_walk(ctx)
+        gs = w.gaps.get((r.pattern[0][1].name, day), ())
+        sids = set(c.sid for c in keep)
+        at = set(g[0] for g in gs if g[2].sid in sids)
+        got = sorted(set(units) | set(g[4] for g in gs if g[0] in at))
+        return got
+
     def candidates(self, rows, keys, d, ctx, info, instant=None, last_before=None):
         out = []
         undecided = []
         self._K = ctx.cut
+        self._Kctx = ctx
         for r in rows:
             if not self.row_matches(r, keys, info):
                 continue
@@ -1497,7 +1525,7 @@ class Engine:
         sp = c.span(ctx.cut)
         return datetime.date.min if sp.always or sp.start is None else sp.start
 
-    def carry_latest(self, sides, ctx):
+    def carry_latest(self, sides, ctx, what='last'):
         """The latest day some side's rows began on, with each side's row there and its value, [(text, value, row)],
         and the first such side (input, keys); None when none began.  A reading replaced by `none` is removed, so
         the instant before it is the last (L §4.6 Readings, L §5.19 l.1728; tally 2.1.8 §4, #169-c, P24): last,
@@ -1510,7 +1538,7 @@ class Engine:
                 cs = [c for c in cands if self.carry_began(c, inf, ctx) == day]
                 if not cs:
                     continue
-                row = self.choose(cs, inf, 'last')
+                row = self.choose(cs, inf, what)
                 v = self.row_value(row, inf, ks, ctx, None, None)
                 if inf.reading and v is NONE:
                     continue
@@ -1559,7 +1587,7 @@ class Engine:
                     # since reads the day itself: a window's is imprecise (L §4.4)
                     return self.imprecise(rd, 'the day of %s' % self.after_text(c)).hole
         # the latest reading not removed by a replace to none (carry_latest; #169-c)
-        hit = self.carry_latest(sides, ctx)
+        hit = self.carry_latest(sides, ctx, 'since')
         if hit is None:
             org = self.origin(info, keys)
             return Hole([('%s has no reading on or before %s' % (org, d), org)])
@@ -3881,6 +3909,15 @@ class Engine:
                     return merge(*holes)
                 lin = lin_add(lin, lh)
             return Hole(set().union(*[h.qs for h in holes]), lin_scale(lin, Num(len(mem), (), isint=True), div=True))
+        if holes and n.fn == 'quantile' and terms is not None:
+            # a level that is refused refuses before the hole terms: refusals outrank holes (L §8; tally 2.1.8 R16(c),
+            # #171; B7 of group 3's review)
+            q = self.ev(n.q, env, ctx)
+            if not isinstance(q, Hole) and (q.q <= 0 or q.q > 1):
+                from .values import fmt_q
+                raise refuse('RUN-DOMAIN', 'quantile has no meaning for the level %s' % fmt_q(q.q))
+            if isinstance(q, Hole):
+                holes.append(q)
         if holes:
             return merge(*holes)
         if not terms:
@@ -5215,8 +5252,10 @@ def lin_passes(n):
     if k in ('paren', 'if', 'lastx'):
         return True
     if k in ('name', 'index', 'field'):
+        # a number of a unit known only at run (`dyn`: a leg's amount, `t.cash.amount`) passes as one known at load
+        # (gate_a3 b8)
         t = getattr(n, '_t', None)
-        return t is not None and t.k in ('money', 'num', 'int', 'flex', 'rate')
+        return t is not None and t.k in ('money', 'num', 'int', 'flex', 'rate', 'dyn')
     return False
 
 

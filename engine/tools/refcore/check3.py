@@ -2173,6 +2173,11 @@ def m_check_after_readings(self):
                 for kn, b in zip(node.keys, mv.binds):
                     kv = _after_key(kn)
                     dom = getattr(b, 'dom', None)
+                    if kv is None and kn.k == 'name' and getattr(kn, '_r', None) is None and \
+                            isinstance(dom, tuple) and dom[0] == 'index':
+                        # a bare key of a list index, which load sees too (B6 of group 3's review: kz of ks)
+                        from .values import Key
+                        kv = Key(dom[1], kn.id)
                     if kv is not None and isinstance(dom, tuple) and dom[0] == 'index' and dom[1] in m.indexes \
                             and m.indexes[dom[1]].pos(kv) is None:
                         raise LoadError('LOAD-KEY', '%s%s after %s: %s is not a key of %s' % (

@@ -1,0 +1,57 @@
+# tally 2.1.8 R15, L §5.18 (group 3's review, T's m2_gate_a3/a4 b8): a sum is linear in its terms, and a leg's
+# amount (`t.cash.amount`, a number whose unit is known only at run) passes its hole's linear form on as any number
+# read does: s1 is 1 000.00 PLN + 1 x May's extra, as flows (f1). 8591f57f printed s1 the plain hole.
+=== m.tally
+model m
+  tally 2
+  on 2026-04-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input amt: money PLN
+
+input d_bonus: int
+
+input extra[m in months]: money PLN question "extra?"
+
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from world to konto amount amt
+
+move bonus[m in months]: transfers
+  on day_of(m, d_bonus)
+  leg cash from world to konto amount extra[m]
+
+ask s1: sum(t.cash.amount for t in transfers over 2026-05-01 .. 2026-05-10) partial
+ask s2: sum(t.cash.amount for t in transfers over 2026-05-01 .. 2026-05-10)
+ask s3: sum(t.cash.amount for t in transfers over 2026-04-01 .. 2026-04-10) partial
+ask f1: flows(konto, 2026-05-01 .. 2026-05-10) partial
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 1000.00 PLN "s"
+  d_bonus = 5 "s"
+  extra[*] = 0.00 PLN "none"
+  extra[2026-05] = ?"What is May's extra?" "May"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+=== expect
+f1: 1 000.00 PLN + 1 × ?"What is May's extra?" (extra[2026-05])
+  cut 2026-04-10
+s1: 1 000.00 PLN + 1 × ?"What is May's extra?" (extra[2026-05])
+  cut 2026-04-10
+s2: ?"What is May's extra?" (extra[2026-05])
+  cut 2026-04-10
+s3: 1 000.00 PLN
+  unfulfilled: bonus[2026-04]
+  unfulfilled: pay[2026-04]
+  cut 2026-04-10

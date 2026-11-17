@@ -1103,13 +1103,26 @@ def m_partial_bal(self, w, place, unit, key, v):
     hole of any other making (an anchor, a window, a hole movement's day, a sign rule) leaves the plain hole."""
     from .evaluate import lin_of, lin_add
     st, lg, i = w.state(place, unit, key)
+    if lg is None and w.base is not None and w.point is not None and st.hole and st.val is not None and \
+            st.bad is None and not st.perm and not st.imp:
+        # a projection that books nothing at the place: its start balance, the base's at the point (B9)
+        return self.partial_bal(w.base, place, unit, w.point, v)
     if st.bad is not None or st.val is None or st.perm or st.imp or lg is None:
-        return v
-    if st.rst < 0 and w.default(place, unit).hole:
-        # a projection's walk starts from its base's balance at t (E §4.3), a known part when it is known
         return v
     acc = lin_of(st.val)
     seen = frozenset()
+    if st.rst < 0 and w.default(place, unit).hole:
+        # a projection's walk starts from its base's balance at t (E §4.3): the start balance plus the counted legs,
+        # so its hole terms are the base's at the point, read the same way (L §5.18; tally 2.1.8 R15, B9 of group
+        # 3's review); its known part is already in this walk's value
+        d0 = w.default(place, unit)
+        if w.base is None or w.point is None:
+            return v
+        bv = self.partial_bal(w.base, place, unit, w.point, Hole(d0.hole))
+        if not isinstance(bv.lin, tuple) or bv.lin[0] is None:
+            return v
+        acc = lin_add(acc, (None, bv.lin[1]), 1)
+        seen |= frozenset(d0.hole)
     for e in lg.ents[st.rst + 1:i + 1]:
         if e.kind != 'hole':
             continue
@@ -1247,7 +1260,9 @@ def m_proj_bal(self, n, place, unit, d, env, ctx, regs_to=None):
         # a projection's balance is a sum as the plain one is (L §5.18; tally 2.1.8 R15)
         v = self.partial_bal(w, place, unit, K_end(d), v)
     self.proj_regs(w, t, regs_to or d)
-    if clauses[2] and not isinstance(v, Hole):
+    if clauses[2] and (not isinstance(v, Hole) or ctx.partial):
+        # with uncertain partial: the uncertain amounts join the known part of a hole's linear form (L §5.18, §5.14;
+        # tally 2.1.8 R15, B3 of group 3's review)
         v = self.proj_uncertain(w, place, unit, d, v, ctx)
     return v
 
@@ -1280,6 +1295,11 @@ def m_proj_uncertain(self, w, place, unit, d, v, ctx=None):
                         add += s * g.amount.q
     if hs and ctx is not None and ctx.partial and not isinstance(v, Hole):
         return lin_fold(qty(v.q + add, unit), hs)
+    if ctx is not None and ctx.partial and isinstance(v, Hole) and isinstance(v.lin, tuple) and v.lin[0] is not None:
+        # the start balance plus the counted legs, linear in its hole terms and the uncertain legs (R15)
+        k = v.lin[0]
+        known = qty(k.q + add, unit) if k.money or k.u else Num(k.q + add, k.u)
+        return lin_fold(known, [Hole(v.qs, (None, v.lin[1]))] + hs)
     if hs or isinstance(v, Hole):
         return merge(v, *hs)
     return qty(v.q + add, unit)
@@ -1304,11 +1324,14 @@ def m_modelled_account(self, w, place, unit, key, d):
             r0 = next((j for j in range(i, -1, -1) if lg.ents[j].kind == 'reset' and
                        lg.ents[j].note == 'opening' and lg.ents[j].key[0] == d.toordinal()), -1)
     since = lg.ents[r0].key if (lg is not None and r0 >= 0) else None
-    after = None
+    # m's leg is never counted after a reading `after m`: the start reading's, or an earlier one's, which every later
+    # reading holds too (pick P39 on B8 of group 3's review)
+    after = set()
     if since is not None:
-        ins = getattr(lg.ents[r0].row, 'instant', None)
-        if isinstance(ins, tuple) and ins[0] == 'after':
-            after = _txt(ins[1])
+        for e in lg.ents[:r0 + 1]:
+            ins = getattr(getattr(e, 'row', None), 'instant', None) if e.kind == 'reset' else None
+            if isinstance(ins, tuple) and ins and ins[0] == 'after':
+                after.add(_txt(ins[1]))
     ents = []
     if lg is not None:
         for e in lg.ents[r0 + 1:i + 1]:
@@ -1318,7 +1341,7 @@ def m_modelled_account(self, w, place, unit, key, d):
             ents.append(e)
     legs = []
     for x in w.modelled:
-        if after is not None and x.id == after:
+        if x.id in after:
             continue
         for g in x.legs:
             if not any(isinstance(p, Thing) and p.name == place for p in (g.frm, g.to)):
@@ -1692,18 +1715,26 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ct
             continue
         wins = {}
         closed = set()
+        # a perm before the span is a hole of the span unless its window ended before it (an unperm: the decision has
+        # fallen, walk.dec_win_end; B5 of group 3's review)
+        perms = []
         for e in lg.ents:
             if e.kind == 'delta' and e.wid is not None:
                 closed.add(e.wid)
             if e.key <= lo:
                 if e.kind == 'perm' and e.key <= limit:
-                    holes.append(Hole(e.qs))
+                    perms.append(e)
+                if e.kind == 'unperm':
+                    perms = [x for x in perms if x.mv is not e.mv]
                 if e.kind == 'pbad' and e.key <= limit:
                     # a refused movement whose day is a hole or refused may fall in the span, as perm's (R11)
                     raise e.err
                 if e.kind == 'imp_on':
                     wins[e.wid] = e.win
                 continue
+            if perms:
+                holes.extend(Hole(x.qs) for x in perms)
+                perms = []
             if e.key > limit:
                 if e.kind == 'delta' and e.wid is not None and e.wid in wins:
                     holes.append(carry_hole(Hole([('date within %s not precise enough for flows of %s' % (
@@ -1750,6 +1781,7 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ct
                     continue
             uu = conv[0] if conv is not None else u
             totals[uu] = totals.get(uu, Fraction(0)) + f.q
+        holes.extend(Hole(x.qs) for x in perms)
         # a movement whose window opened by the span's end and closes after the walk's end books no delta in this walk:
         # whether it falls in the span is the window's hole, as for one that closes after the span (L §4.4; tally
         # 2.1.8 §4, #169-e: a window crossing the run's end)

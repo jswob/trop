@@ -55,6 +55,12 @@ changed; `refcore_fast` byte-equal). One mechanism per rule:
   joint model's `reprint` loads it whole; `evaluate.carry_hole` adds each window a question's text is given (a
   shifted window prints as another); `walk.each_before_from` lists a window leg's `before from:` per day under
   `windows each`, the day not taken; the spec's household values its wrappers' units `by etf_price[month_of(d)]`.
+- **The sixth turn** (group 3's review, P39; **1 532 tests**): `mreads.m_modelled_account` skips the leg of every
+  `after m` reading before the read; `m_flows_place_walk` drops a window day's perm once its decision has fallen;
+  `walk.base_legs(after=t)` books an earlier decision of day t from t on; `check3` refuses an `after` key no index
+  holds; a quantile's refused level comes before its holes; `m_partial_bal` and `m_proj_uncertain` keep a
+  projection's start hole and its uncertain amounts linear; `lin_passes` lets a `dyn` field (a leg's amount) pass;
+  `evaluate.units_at_reading` takes a unitless row's units from the walk's gaps, and `since` reads only the instant.
 - **Left.** About 125 run sites no text reaches (`LoadAtRun`, `is_load` stay); explain's `windows each` block
   against its pinned twin's pins section, and `n9_start`'s plain `?` group (next round's); the covered face asks
   every day of its window (`moves.m_window_class_depends`, a cost, no byte); a law per tuple on forms other than
