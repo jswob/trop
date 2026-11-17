@@ -1103,13 +1103,26 @@ def m_partial_bal(self, w, place, unit, key, v):
     hole of any other making (an anchor, a window, a hole movement's day, a sign rule) leaves the plain hole."""
     from .evaluate import lin_of, lin_add
     st, lg, i = w.state(place, unit, key)
+    if lg is None and w.base is not None and w.point is not None and st.hole and st.val is not None and \
+            st.bad is None and not st.perm and not st.imp:
+        # a projection that books nothing at the place: its start balance, the base's at the point (B9)
+        return self.partial_bal(w.base, place, unit, w.point, v)
     if st.bad is not None or st.val is None or st.perm or st.imp or lg is None:
-        return v
-    if st.rst < 0 and w.default(place, unit).hole:
-        # a projection's walk starts from its base's balance at t (E §4.3), a known part when it is known
         return v
     acc = lin_of(st.val)
     seen = frozenset()
+    if st.rst < 0 and w.default(place, unit).hole:
+        # a projection's walk starts from its base's balance at t (E §4.3): the start balance plus the counted legs,
+        # so its hole terms are the base's at the point, read the same way (L §5.18; tally 2.1.8 R15, B9 of group
+        # 3's review); its known part is already in this walk's value
+        d0 = w.default(place, unit)
+        if w.base is None or w.point is None:
+            return v
+        bv = self.partial_bal(w.base, place, unit, w.point, Hole(d0.hole))
+        if not isinstance(bv.lin, tuple) or bv.lin[0] is None:
+            return v
+        acc = lin_add(acc, (None, bv.lin[1]), 1)
+        seen |= frozenset(d0.hole)
     for e in lg.ents[st.rst + 1:i + 1]:
         if e.kind != 'hole':
             continue
