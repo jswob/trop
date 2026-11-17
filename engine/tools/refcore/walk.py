@@ -938,11 +938,19 @@ class Walk:
             if st.val is None or st.hole or st.perm or st.bad:
                 return None
             if st.imp:
-                r = self.words_differ(st, self.imp_three(st, lambda v: self.sign_breaks(place, v)))
+                r = self.words_differ(st, self.imp_three(st, lambda v: self.sign_breaks(place, v)),
+                                      lambda v: words(place, u, v))
                 if r == 'depends':
                     dep.append((place, u, st))
                 return st.val.q if r is True else None
             return st.val.q if self.sign_breaks(place, st.val.q) else None
+
+        def words(place, u, nv):
+            # the bytes the refusal at place prints for the balance nv (below)
+            if not bl[(place, u)]:
+                return '%s is %s after its reading at %s' % (
+                    place, fmt(qty(nv, u)), self.__dict__.get('anchor_at', {}).get((place, u)))
+            return msg(place, fmt(qty(nv, u)), bl[(place, u)])
         dep = []
         places = sorted(bl, key=str)
         bad = [(pu, nv) for pu in places for nv in [broken(*pu)] if nv is not None]
@@ -956,10 +964,9 @@ class Walk:
                 # an anchored place (an opening included) with no leg of the group at it: refused from here, with the
                 # reading's own message (L §8.4; tally 2.1.2, issue #46)
                 at = self.__dict__.get('anchor_at', {}).get((place, u))
-                self.add(place, u, Ent(key, 'bad', err=refuse('RUN-PLACE', '%s is %s after its reading at %s' % (
-                    place, fmt(qty(nv, u)), at))))
+                self.add(place, u, Ent(key, 'bad', err=refuse('RUN-PLACE', words(place, u, nv))))
                 continue
-            err = refuse('RUN-PLACE', msg(place, fmt(qty(nv, u)), bl[(place, u)]))
+            err = refuse('RUN-PLACE', words(place, u, nv))
             for mv, lg in bl[(place, u)]:
                 if (mv.id, lg.name) in self.bad_legs:
                     continue
@@ -1006,11 +1013,13 @@ class Walk:
             return False
         return self.three([test(v) for v in cs])
 
-    def words_differ(self, st, r):
-        """A refusal every day gives, whose words (the balance it prints) differ by the day, is the window's hole:
-        the answer is what prints (pick P30, item 7 of the follow-up; L §4.4 "a refusal that only some of its days
-        give"). One in the same words on every day stays the refusal."""
-        if r is True and len(set(self.imp_cands(st) or ())) > 1:
+    def words_differ(self, st, r, words):
+        """A refusal every day gives, whose words differ by the day, is the window's hole: the answer is what
+        prints (pick P30, item 7 of the follow-up; L §4.4 "a refusal that only some of its days give"). words(v) is
+        the refusal's bytes for the balance v; one that prints the same bytes on every day stays that refusal,
+        whatever its message's form (item 15 of the third turn: a decision's "ob takes pot below 0" names no
+        balance)."""
+        if r is True and len(set(words(v) for v in (self.imp_cands(st) or ()))) > 1:
             return 'depends'
         return r
 
@@ -2335,7 +2344,8 @@ class Walk:
                     continue
                 st = self.pstate(place, u, key, raw=True)
                 if st.val is not None and st.imp and not st.bad and not st.hole and not isinstance(nxt, Hole):
-                    r = self.words_differ(st, self.imp_three(st, lambda v: v != 0))
+                    r = self.words_differ(st, self.imp_three(st, lambda v: v != 0),
+                                          lambda v: '%s ends on %s holding %s' % (place, d, fmt(qty(v, u))))
                     if r == 'depends':
                         self.imp_hole(key, place, u, st)
                         continue
