@@ -3,7 +3,7 @@ model hh
   on 2026-10-20
   start 2026-01-01
   end 2026-12-31
-  note "T, tally 2.1.8 R15 (#199): partial follows what is linear. #184, mean over a known count (m1), flows of a place and a move, a projection and a with uncertain total (w_*) are linear; #169-i, a min, a hole where, a hole-day movement are plain (i_*); no-item 2 low, 3 a rounded conversion, 4 share, 5 round and a known scale, 6 a hole with coefficient 0 (n_*); §4 item 72, a money coefficient prints its minor digits (n_money: 10.00 PLN ×). p1 to p11 are the planner's p7"
+  note "T, tally 2.1.8 R15 (#199): partial follows what is linear. #184, mean over a known count (m1), flows of a place and a move, a projection and a with uncertain total (w_*) are linear; #169-i, a min, a hole where, a hole-day movement are plain (i_*); no-item 2 low, 3 a rounded conversion (its ask n_fx, a converted flows, went with the form in tally 2.2, S-7; that a round isn't linear is n_round's), 4 share, 5 round and a known scale, 6 a hole with coefficient 0 (n_*); §4 item 72, a money coefficient prints its minor digits (n_money: 10.00 PLN ×). p1 to p11 are the planner's p7"
 
 source plan "plan"
 source bk "bank"
@@ -70,11 +70,9 @@ ask p9: check bal(k2, 2026-02-28) == z[a] partial
 ask p10: bal(k2, 2026-02-28) + z[b] partial
 ask p11: low(k2, 2026-02-01 .. 2026-02-28) partial
 
-unit EUR: currency minor 0.01
 input xh: money PLN
 input hd: date
 input rate: num
-input fx: num EUR/PLN
 input kn: money PLN
 input dz: int
 input five: money PLN
@@ -94,7 +92,6 @@ version zz2
   xh = ?"what is h" "s"
   hd = ?"which day" "s"
   rate = 2 "s"
-  fx = 0.25 "s"
   kn = 10.00 PLN "s"
   dz = 5 "s"
   five = 5.00 PLN "s"
@@ -112,7 +109,6 @@ ask i_min: -(min(z[b], zp)) + onep partial
 ask i_where: sum(z[k] for k in ks where z[k] > five) partial
 ask i_day: bal(k5, 2026-03-31) partial
 ask n_low: low(k2, 2026-02-01 .. 2026-03-31) partial
-ask n_fx: flows(k2, 2026-02) in EUR at fx half-even partial
 ask n_share: share(z[k] > five for k in ks) partial
 ask n_round: round(bal(k2, 2026-02-28), onepln, half-even) partial
 ask n_scale: bal(k2, 2026-02-28) * rate partial

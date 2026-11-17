@@ -1,3 +1,2 @@
 id	target	issue	why
 r12/entry_known_window	m2_fixes	#204	tally 2.1.8 R12 (the plan's a2): a version's statement over the five forms the engine stops on, "not implemented" there; built at M3
-r15/converted_plain	m2_fixes	#205	tally 2.1.8 R15's vector 3: a converted flows(...) in EUR at fx ... partial; the engine has no conversion of flows yet; built at M3

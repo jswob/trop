@@ -113070,12 +113070,12 @@ ask l: last(stated[broker], 2026-02-16)
 ask lw: stated[broker] law 2026-02-15
 ,,1:0,130:lw: refused: RUN-DOMAIN stated of broker: its readings at 2026-02-15 end are in EUR and PLN
   law date 2026-02-15, cut 2026-06-10
-,15:r15/mean_linear,9:fixes-r15,20:run m.tally --ask m1,3971:7:m.tally,3955:model hh
+,15:r15/mean_linear,9:fixes-r15,20:run m.tally --ask m1,3955:7:m.tally,3939:model hh
   tally 2
   on 2026-10-20
   start 2026-01-01
   end 2026-12-31
-  note "T, tally 2.1.8 R15 (#199): partial follows what is linear. #184, mean over a known count (m1), flows of a place and a move, a projection and a with uncertain total (w_*) are linear; #169-i, a min, a hole where, a hole-day movement are plain (i_*); no-item 2 low, 3 a rounded conversion, 4 share, 5 round and a known scale, 6 a hole with coefficient 0 (n_*); §4 item 72, a money coefficient prints its minor digits (n_money: 10.00 PLN ×). p1 to p11 are the planner's p7"
+  note "T, tally 2.1.8 R15 (#199): partial follows what is linear. #184, mean over a known count (m1), flows of a place and a move, a projection and a with uncertain total (w_*) are linear; #169-i, a min, a hole where, a hole-day movement are plain (i_*); no-item 2 low, 3 a rounded conversion (its ask n_fx, a converted flows, went with the form in tally 2.2, S-7; that a round isn't linear is n_round's), 4 share, 5 round and a known scale, 6 a hole with coefficient 0 (n_*); §4 item 72, a money coefficient prints its minor digits (n_money: 10.00 PLN ×). p1 to p11 are the planner's p7"
 
 source plan "plan"
 source bk "bank"
@@ -113142,11 +113142,9 @@ ask p9: check bal(k2, 2026-02-28) == z[a] partial
 ask p10: bal(k2, 2026-02-28) + z[b] partial
 ask p11: low(k2, 2026-02-01 .. 2026-02-28) partial
 
-unit EUR: currency minor 0.01
 input xh: money PLN
 input hd: date
 input rate: num
-input fx: num EUR/PLN
 input kn: money PLN
 input dz: int
 input five: money PLN
@@ -113166,7 +113164,6 @@ version zz2
   xh = ?"what is h" "s"
   hd = ?"which day" "s"
   rate = 2 "s"
-  fx = 0.25 "s"
   kn = 10.00 PLN "s"
   dz = 5 "s"
   five = 5.00 PLN "s"
@@ -113184,7 +113181,6 @@ ask i_min: -(min(z[b], zp)) + onep partial
 ask i_where: sum(z[k] for k in ks where z[k] > five) partial
 ask i_day: bal(k5, 2026-03-31) partial
 ask n_low: low(k2, 2026-02-01 .. 2026-03-31) partial
-ask n_fx: flows(k2, 2026-02) in EUR at fx half-even partial
 ask n_share: share(z[k] > five for k in ks) partial
 ask n_round: round(bal(k2, 2026-02-28), onepln, half-even) partial
 ask n_scale: bal(k2, 2026-02-28) * rate partial
@@ -113201,12 +113197,12 @@ ask n_money: kn * hn partial
 ,,1:0,127:m1: 5 PLN + 0 × ?"what is h" (xh) + 0.5 × ?"z of b" (z[b])
   cut 2026-10-20
 warning: WARN-UNREAD input dz is read by nothing
-,17:r15/walked_linear,9:fixes-r15,42:run m.tally --ask w_flp w_flm w_from w_unc,3971:7:m.tally,3955:model hh
+,17:r15/walked_linear,9:fixes-r15,42:run m.tally --ask w_flp w_flm w_from w_unc,3955:7:m.tally,3939:model hh
   tally 2
   on 2026-10-20
   start 2026-01-01
   end 2026-12-31
-  note "T, tally 2.1.8 R15 (#199): partial follows what is linear. #184, mean over a known count (m1), flows of a place and a move, a projection and a with uncertain total (w_*) are linear; #169-i, a min, a hole where, a hole-day movement are plain (i_*); no-item 2 low, 3 a rounded conversion, 4 share, 5 round and a known scale, 6 a hole with coefficient 0 (n_*); §4 item 72, a money coefficient prints its minor digits (n_money: 10.00 PLN ×). p1 to p11 are the planner's p7"
+  note "T, tally 2.1.8 R15 (#199): partial follows what is linear. #184, mean over a known count (m1), flows of a place and a move, a projection and a with uncertain total (w_*) are linear; #169-i, a min, a hole where, a hole-day movement are plain (i_*); no-item 2 low, 3 a rounded conversion (its ask n_fx, a converted flows, went with the form in tally 2.2, S-7; that a round isn't linear is n_round's), 4 share, 5 round and a known scale, 6 a hole with coefficient 0 (n_*); §4 item 72, a money coefficient prints its minor digits (n_money: 10.00 PLN ×). p1 to p11 are the planner's p7"
 
 source plan "plan"
 source bk "bank"
@@ -113273,11 +113269,9 @@ ask p9: check bal(k2, 2026-02-28) == z[a] partial
 ask p10: bal(k2, 2026-02-28) + z[b] partial
 ask p11: low(k2, 2026-02-01 .. 2026-02-28) partial
 
-unit EUR: currency minor 0.01
 input xh: money PLN
 input hd: date
 input rate: num
-input fx: num EUR/PLN
 input kn: money PLN
 input dz: int
 input five: money PLN
@@ -113297,7 +113291,6 @@ version zz2
   xh = ?"what is h" "s"
   hd = ?"which day" "s"
   rate = 2 "s"
-  fx = 0.25 "s"
   kn = 10.00 PLN "s"
   dz = 5 "s"
   five = 5.00 PLN "s"
@@ -113315,7 +113308,6 @@ ask i_min: -(min(z[b], zp)) + onep partial
 ask i_where: sum(z[k] for k in ks where z[k] > five) partial
 ask i_day: bal(k5, 2026-03-31) partial
 ask n_low: low(k2, 2026-02-01 .. 2026-03-31) partial
-ask n_fx: flows(k2, 2026-02) in EUR at fx half-even partial
 ask n_share: share(z[k] > five for k in ks) partial
 ask n_round: round(bal(k2, 2026-02-28), onepln, half-even) partial
 ask n_scale: bal(k2, 2026-02-28) * rate partial
@@ -113347,12 +113339,12 @@ w_unc: ?"how much in Feb" (hamt[2026-02])
   cut 2026-10-20
 warning: WARN-NEGATIVE konto is below zero from 2026-04-05
 warning: WARN-UNREAD input dz is read by nothing
-,14:r15/not_linear,9:fixes-r15,37:run m.tally --ask i_min i_where i_day,3971:7:m.tally,3955:model hh
+,14:r15/not_linear,9:fixes-r15,37:run m.tally --ask i_min i_where i_day,3955:7:m.tally,3939:model hh
   tally 2
   on 2026-10-20
   start 2026-01-01
   end 2026-12-31
-  note "T, tally 2.1.8 R15 (#199): partial follows what is linear. #184, mean over a known count (m1), flows of a place and a move, a projection and a with uncertain total (w_*) are linear; #169-i, a min, a hole where, a hole-day movement are plain (i_*); no-item 2 low, 3 a rounded conversion, 4 share, 5 round and a known scale, 6 a hole with coefficient 0 (n_*); §4 item 72, a money coefficient prints its minor digits (n_money: 10.00 PLN ×). p1 to p11 are the planner's p7"
+  note "T, tally 2.1.8 R15 (#199): partial follows what is linear. #184, mean over a known count (m1), flows of a place and a move, a projection and a with uncertain total (w_*) are linear; #169-i, a min, a hole where, a hole-day movement are plain (i_*); no-item 2 low, 3 a rounded conversion (its ask n_fx, a converted flows, went with the form in tally 2.2, S-7; that a round isn't linear is n_round's), 4 share, 5 round and a known scale, 6 a hole with coefficient 0 (n_*); §4 item 72, a money coefficient prints its minor digits (n_money: 10.00 PLN ×). p1 to p11 are the planner's p7"
 
 source plan "plan"
 source bk "bank"
@@ -113419,11 +113411,9 @@ ask p9: check bal(k2, 2026-02-28) == z[a] partial
 ask p10: bal(k2, 2026-02-28) + z[b] partial
 ask p11: low(k2, 2026-02-01 .. 2026-02-28) partial
 
-unit EUR: currency minor 0.01
 input xh: money PLN
 input hd: date
 input rate: num
-input fx: num EUR/PLN
 input kn: money PLN
 input dz: int
 input five: money PLN
@@ -113443,7 +113433,6 @@ version zz2
   xh = ?"what is h" "s"
   hd = ?"which day" "s"
   rate = 2 "s"
-  fx = 0.25 "s"
   kn = 10.00 PLN "s"
   dz = 5 "s"
   five = 5.00 PLN "s"
@@ -113461,7 +113450,6 @@ ask i_min: -(min(z[b], zp)) + onep partial
 ask i_where: sum(z[k] for k in ks where z[k] > five) partial
 ask i_day: bal(k5, 2026-03-31) partial
 ask n_low: low(k2, 2026-02-01 .. 2026-03-31) partial
-ask n_fx: flows(k2, 2026-02) in EUR at fx half-even partial
 ask n_share: share(z[k] > five for k in ks) partial
 ask n_round: round(bal(k2, 2026-02-28), onepln, half-even) partial
 ask n_scale: bal(k2, 2026-02-28) * rate partial
@@ -113541,12 +113529,12 @@ vp: 0 PLN + 3 etf × ?"price" (hpx)
 vb: ?"how many units" (na) ?"price" (hpx)
   unfulfilled: buy_c
   cut 2026-06-30
-,13:r15/low_plain,9:fixes-r15,23:run m.tally --ask n_low,3971:7:m.tally,3955:model hh
+,13:r15/low_plain,9:fixes-r15,23:run m.tally --ask n_low,3955:7:m.tally,3939:model hh
   tally 2
   on 2026-10-20
   start 2026-01-01
   end 2026-12-31
-  note "T, tally 2.1.8 R15 (#199): partial follows what is linear. #184, mean over a known count (m1), flows of a place and a move, a projection and a with uncertain total (w_*) are linear; #169-i, a min, a hole where, a hole-day movement are plain (i_*); no-item 2 low, 3 a rounded conversion, 4 share, 5 round and a known scale, 6 a hole with coefficient 0 (n_*); §4 item 72, a money coefficient prints its minor digits (n_money: 10.00 PLN ×). p1 to p11 are the planner's p7"
+  note "T, tally 2.1.8 R15 (#199): partial follows what is linear. #184, mean over a known count (m1), flows of a place and a move, a projection and a with uncertain total (w_*) are linear; #169-i, a min, a hole where, a hole-day movement are plain (i_*); no-item 2 low, 3 a rounded conversion (its ask n_fx, a converted flows, went with the form in tally 2.2, S-7; that a round isn't linear is n_round's), 4 share, 5 round and a known scale, 6 a hole with coefficient 0 (n_*); §4 item 72, a money coefficient prints its minor digits (n_money: 10.00 PLN ×). p1 to p11 are the planner's p7"
 
 source plan "plan"
 source bk "bank"
@@ -113613,11 +113601,9 @@ ask p9: check bal(k2, 2026-02-28) == z[a] partial
 ask p10: bal(k2, 2026-02-28) + z[b] partial
 ask p11: low(k2, 2026-02-01 .. 2026-02-28) partial
 
-unit EUR: currency minor 0.01
 input xh: money PLN
 input hd: date
 input rate: num
-input fx: num EUR/PLN
 input kn: money PLN
 input dz: int
 input five: money PLN
@@ -113637,7 +113623,6 @@ version zz2
   xh = ?"what is h" "s"
   hd = ?"which day" "s"
   rate = 2 "s"
-  fx = 0.25 "s"
   kn = 10.00 PLN "s"
   dz = 5 "s"
   five = 5.00 PLN "s"
@@ -113655,7 +113640,6 @@ ask i_min: -(min(z[b], zp)) + onep partial
 ask i_where: sum(z[k] for k in ks where z[k] > five) partial
 ask i_day: bal(k5, 2026-03-31) partial
 ask n_low: low(k2, 2026-02-01 .. 2026-03-31) partial
-ask n_fx: flows(k2, 2026-02) in EUR at fx half-even partial
 ask n_share: share(z[k] > five for k in ks) partial
 ask n_round: round(bal(k2, 2026-02-28), onepln, half-even) partial
 ask n_scale: bal(k2, 2026-02-28) * rate partial
@@ -113677,12 +113661,12 @@ ask n_money: kn * hn partial
   cut 2026-10-20
 warning: WARN-NEGATIVE konto is below zero from 2026-04-05
 warning: WARN-UNREAD input dz is read by nothing
-,19:r15/converted_plain,9:fixes-r15,22:run m.tally --ask n_fx,3971:7:m.tally,3955:model hh
+,15:r15/share_plain,9:fixes-r15,25:run m.tally --ask n_share,3955:7:m.tally,3939:model hh
   tally 2
   on 2026-10-20
   start 2026-01-01
   end 2026-12-31
-  note "T, tally 2.1.8 R15 (#199): partial follows what is linear. #184, mean over a known count (m1), flows of a place and a move, a projection and a with uncertain total (w_*) are linear; #169-i, a min, a hole where, a hole-day movement are plain (i_*); no-item 2 low, 3 a rounded conversion, 4 share, 5 round and a known scale, 6 a hole with coefficient 0 (n_*); §4 item 72, a money coefficient prints its minor digits (n_money: 10.00 PLN ×). p1 to p11 are the planner's p7"
+  note "T, tally 2.1.8 R15 (#199): partial follows what is linear. #184, mean over a known count (m1), flows of a place and a move, a projection and a with uncertain total (w_*) are linear; #169-i, a min, a hole where, a hole-day movement are plain (i_*); no-item 2 low, 3 a rounded conversion (its ask n_fx, a converted flows, went with the form in tally 2.2, S-7; that a round isn't linear is n_round's), 4 share, 5 round and a known scale, 6 a hole with coefficient 0 (n_*); §4 item 72, a money coefficient prints its minor digits (n_money: 10.00 PLN ×). p1 to p11 are the planner's p7"
 
 source plan "plan"
 source bk "bank"
@@ -113749,11 +113733,9 @@ ask p9: check bal(k2, 2026-02-28) == z[a] partial
 ask p10: bal(k2, 2026-02-28) + z[b] partial
 ask p11: low(k2, 2026-02-01 .. 2026-02-28) partial
 
-unit EUR: currency minor 0.01
 input xh: money PLN
 input hd: date
 input rate: num
-input fx: num EUR/PLN
 input kn: money PLN
 input dz: int
 input five: money PLN
@@ -113773,7 +113755,6 @@ version zz2
   xh = ?"what is h" "s"
   hd = ?"which day" "s"
   rate = 2 "s"
-  fx = 0.25 "s"
   kn = 10.00 PLN "s"
   dz = 5 "s"
   five = 5.00 PLN "s"
@@ -113791,140 +113772,6 @@ ask i_min: -(min(z[b], zp)) + onep partial
 ask i_where: sum(z[k] for k in ks where z[k] > five) partial
 ask i_day: bal(k5, 2026-03-31) partial
 ask n_low: low(k2, 2026-02-01 .. 2026-03-31) partial
-ask n_fx: flows(k2, 2026-02) in EUR at fx half-even partial
-ask n_share: share(z[k] > five for k in ks) partial
-ask n_round: round(bal(k2, 2026-02-28), onepln, half-even) partial
-ask n_scale: bal(k2, 2026-02-28) * rate partial
-ask n_zero: kn + xh - xh partial
-
-input hn: num
-version zz3
-  cite plan
-  governs always
-  known 2026-01-01
-  hn = ?"how many" "s"
-
-ask n_money: kn * hn partial
-,,1:0,193:n_fx: ?"how much in Feb" (hamt[2026-02])
-  unfulfilled: hm[2026-02]
-  cut 2026-10-20
-warning: WARN-NEGATIVE konto is below zero from 2026-04-05
-warning: WARN-UNREAD input dz is read by nothing
-,15:r15/share_plain,9:fixes-r15,25:run m.tally --ask n_share,3971:7:m.tally,3955:model hh
-  tally 2
-  on 2026-10-20
-  start 2026-01-01
-  end 2026-12-31
-  note "T, tally 2.1.8 R15 (#199): partial follows what is linear. #184, mean over a known count (m1), flows of a place and a move, a projection and a with uncertain total (w_*) are linear; #169-i, a min, a hole where, a hole-day movement are plain (i_*); no-item 2 low, 3 a rounded conversion, 4 share, 5 round and a known scale, 6 a hole with coefficient 0 (n_*); §4 item 72, a money coefficient prints its minor digits (n_money: 10.00 PLN ×). p1 to p11 are the planner's p7"
-
-source plan "plan"
-source bk "bank"
-unit PLN: currency minor 0.01
-input g_amt: money PLN
-input dom: int
-input divisor[m in months]: num
-input hamt[m in months]: money PLN
-place konto: accounts PLN lives 2019-05-01..
-place k2: accounts PLN lives 2019-05-01..
-place world: outside lives 1900-01-01..
-
-move groc[m in months]: transfers
-  on day_of(m, dom)
-  at start_of(m)
-  leg cash from konto to world amount round(g_amt * divisor[m] / divisor[m], minor(PLN), half-even)
-
-move hm[m in months]: transfers
-  on day_of(m, dom)
-  at start_of(m)
-  leg cash from k2 to world amount hamt[m]
-
-version plan_2026
-  cite plan
-  governs 2026..
-  known 2026-01-01
-  g_amt = 500.00 PLN "plan"
-  dom = 5 "plan"
-  divisor[2026-01] = 1 "ok"
-  divisor[2026-02] = 0 "zero"
-  divisor[2026-03..2026-12] = 1 "ok"
-  hamt[2026-01] = 1.00 PLN "ok"
-  hamt[2026-02] = ?"how much in Feb" "hole"
-  hamt[2026-03..2026-12] = 1.00 PLN "ok"
-  opening[konto] = 10 000.00 PLN at 2026-01-01 start "w"
-  opening[k2] = 10 000.00 PLN at 2026-01-01 start "w"
-
-version st
-  cite bk
-  governs 2026-03
-  known 2026-04-02
-  anchor konto
-  anchor k2
-  stated[konto] = 200.00 PLN at 2026-03-10 end "saldo"
-  stated[k2] = 200.00 PLN at 2026-03-10 end "saldo"
-
-index ks = [a, b]
-input z[k in ks]: money PLN
-version zz
-  cite plan
-  governs always
-  known 2026-01-01
-  z[a] = 10.00 PLN "s"
-  z[b] = ?"z of b" "s"
-ask p1: bal(k2, 2026-02-28) partial
-ask p2: flows(k2, 2026-02) partial
-ask p3: flows(hm, 2026-02) partial
-ask p4: bal(k2, 2026-02-28) from 2026-01-15 partial
-ask p5: mean(z[k] for k in ks) partial
-ask p6: sum(z[k] for k in ks) partial
-ask p7: -bal(k2, 2026-02-28) partial
-ask p8: sum(t.cash.amount for t in transfers over 2026-02 where t.cash.from == k2) partial
-ask p9: check bal(k2, 2026-02-28) == z[a] partial
-ask p10: bal(k2, 2026-02-28) + z[b] partial
-ask p11: low(k2, 2026-02-01 .. 2026-02-28) partial
-
-unit EUR: currency minor 0.01
-input xh: money PLN
-input hd: date
-input rate: num
-input fx: num EUR/PLN
-input kn: money PLN
-input dz: int
-input five: money PLN
-input zp: money PLN
-input onep: money PLN
-input onepln: money PLN
-place k5: accounts PLN lives 2019-05-01..
-
-move hdm: transfers
-  on hd
-  leg cash from world to k5 amount kn
-
-version zz2
-  cite plan
-  governs always
-  known 2026-01-01
-  xh = ?"what is h" "s"
-  hd = ?"which day" "s"
-  rate = 2 "s"
-  fx = 0.25 "s"
-  kn = 10.00 PLN "s"
-  dz = 5 "s"
-  five = 5.00 PLN "s"
-  zp = 0.00 PLN "s"
-  onep = 1.00 PLN "s"
-  onepln = 1.00 PLN "s"
-  opening[k5] = 100.00 PLN at 2026-01-01 start "w"
-
-ask m1: mean(z[k] + xh for k in ks) - xh partial
-ask w_flp: flows(k2, 2026-01-01 .. 2026-02-28) partial
-ask w_flm: flows(hm, 2026-01-01 .. 2026-03-31) partial
-ask w_from: bal(k2, 2026-03-05) from 2026-01-10 partial
-ask w_unc: low(k2, 2026-03-01 .. 2026-03-31) from 2026-03-01 with uncertain partial
-ask i_min: -(min(z[b], zp)) + onep partial
-ask i_where: sum(z[k] for k in ks where z[k] > five) partial
-ask i_day: bal(k5, 2026-03-31) partial
-ask n_low: low(k2, 2026-02-01 .. 2026-03-31) partial
-ask n_fx: flows(k2, 2026-02) in EUR at fx half-even partial
 ask n_share: share(z[k] > five for k in ks) partial
 ask n_round: round(bal(k2, 2026-02-28), onepln, half-even) partial
 ask n_scale: bal(k2, 2026-02-28) * rate partial
@@ -113941,12 +113788,12 @@ ask n_money: kn * hn partial
 ,,1:0,92:n_share: ?"z of b" (z[b])
   cut 2026-10-20
 warning: WARN-UNREAD input dz is read by nothing
-,15:r15/round_scale,9:fixes-r15,33:run m.tally --ask n_round n_scale,3971:7:m.tally,3955:model hh
+,15:r15/round_scale,9:fixes-r15,33:run m.tally --ask n_round n_scale,3955:7:m.tally,3939:model hh
   tally 2
   on 2026-10-20
   start 2026-01-01
   end 2026-12-31
-  note "T, tally 2.1.8 R15 (#199): partial follows what is linear. #184, mean over a known count (m1), flows of a place and a move, a projection and a with uncertain total (w_*) are linear; #169-i, a min, a hole where, a hole-day movement are plain (i_*); no-item 2 low, 3 a rounded conversion, 4 share, 5 round and a known scale, 6 a hole with coefficient 0 (n_*); §4 item 72, a money coefficient prints its minor digits (n_money: 10.00 PLN ×). p1 to p11 are the planner's p7"
+  note "T, tally 2.1.8 R15 (#199): partial follows what is linear. #184, mean over a known count (m1), flows of a place and a move, a projection and a with uncertain total (w_*) are linear; #169-i, a min, a hole where, a hole-day movement are plain (i_*); no-item 2 low, 3 a rounded conversion (its ask n_fx, a converted flows, went with the form in tally 2.2, S-7; that a round isn't linear is n_round's), 4 share, 5 round and a known scale, 6 a hole with coefficient 0 (n_*); §4 item 72, a money coefficient prints its minor digits (n_money: 10.00 PLN ×). p1 to p11 are the planner's p7"
 
 source plan "plan"
 source bk "bank"
@@ -114013,11 +113860,9 @@ ask p9: check bal(k2, 2026-02-28) == z[a] partial
 ask p10: bal(k2, 2026-02-28) + z[b] partial
 ask p11: low(k2, 2026-02-01 .. 2026-02-28) partial
 
-unit EUR: currency minor 0.01
 input xh: money PLN
 input hd: date
 input rate: num
-input fx: num EUR/PLN
 input kn: money PLN
 input dz: int
 input five: money PLN
@@ -114037,7 +113882,6 @@ version zz2
   xh = ?"what is h" "s"
   hd = ?"which day" "s"
   rate = 2 "s"
-  fx = 0.25 "s"
   kn = 10.00 PLN "s"
   dz = 5 "s"
   five = 5.00 PLN "s"
@@ -114055,7 +113899,6 @@ ask i_min: -(min(z[b], zp)) + onep partial
 ask i_where: sum(z[k] for k in ks where z[k] > five) partial
 ask i_day: bal(k5, 2026-03-31) partial
 ask n_low: low(k2, 2026-02-01 .. 2026-03-31) partial
-ask n_fx: flows(k2, 2026-02) in EUR at fx half-even partial
 ask n_share: share(z[k] > five for k in ks) partial
 ask n_round: round(bal(k2, 2026-02-28), onepln, half-even) partial
 ask n_scale: bal(k2, 2026-02-28) * rate partial
@@ -114079,12 +113922,12 @@ n_scale: 19 998 PLN + -2 × ?"how much in Feb" (hamt[2026-02])
   cut 2026-10-20
 warning: WARN-NEGATIVE konto is below zero from 2026-04-05
 warning: WARN-UNREAD input dz is read by nothing
-,20:r15/zero_coefficient,9:fixes-r15,24:run m.tally --ask n_zero,3971:7:m.tally,3955:model hh
+,20:r15/zero_coefficient,9:fixes-r15,24:run m.tally --ask n_zero,3955:7:m.tally,3939:model hh
   tally 2
   on 2026-10-20
   start 2026-01-01
   end 2026-12-31
-  note "T, tally 2.1.8 R15 (#199): partial follows what is linear. #184, mean over a known count (m1), flows of a place and a move, a projection and a with uncertain total (w_*) are linear; #169-i, a min, a hole where, a hole-day movement are plain (i_*); no-item 2 low, 3 a rounded conversion, 4 share, 5 round and a known scale, 6 a hole with coefficient 0 (n_*); §4 item 72, a money coefficient prints its minor digits (n_money: 10.00 PLN ×). p1 to p11 are the planner's p7"
+  note "T, tally 2.1.8 R15 (#199): partial follows what is linear. #184, mean over a known count (m1), flows of a place and a move, a projection and a with uncertain total (w_*) are linear; #169-i, a min, a hole where, a hole-day movement are plain (i_*); no-item 2 low, 3 a rounded conversion (its ask n_fx, a converted flows, went with the form in tally 2.2, S-7; that a round isn't linear is n_round's), 4 share, 5 round and a known scale, 6 a hole with coefficient 0 (n_*); §4 item 72, a money coefficient prints its minor digits (n_money: 10.00 PLN ×). p1 to p11 are the planner's p7"
 
 source plan "plan"
 source bk "bank"
@@ -114151,11 +113994,9 @@ ask p9: check bal(k2, 2026-02-28) == z[a] partial
 ask p10: bal(k2, 2026-02-28) + z[b] partial
 ask p11: low(k2, 2026-02-01 .. 2026-02-28) partial
 
-unit EUR: currency minor 0.01
 input xh: money PLN
 input hd: date
 input rate: num
-input fx: num EUR/PLN
 input kn: money PLN
 input dz: int
 input five: money PLN
@@ -114175,7 +114016,6 @@ version zz2
   xh = ?"what is h" "s"
   hd = ?"which day" "s"
   rate = 2 "s"
-  fx = 0.25 "s"
   kn = 10.00 PLN "s"
   dz = 5 "s"
   five = 5.00 PLN "s"
@@ -114193,7 +114033,6 @@ ask i_min: -(min(z[b], zp)) + onep partial
 ask i_where: sum(z[k] for k in ks where z[k] > five) partial
 ask i_day: bal(k5, 2026-03-31) partial
 ask n_low: low(k2, 2026-02-01 .. 2026-03-31) partial
-ask n_fx: flows(k2, 2026-02) in EUR at fx half-even partial
 ask n_share: share(z[k] > five for k in ks) partial
 ask n_round: round(bal(k2, 2026-02-28), onepln, half-even) partial
 ask n_scale: bal(k2, 2026-02-28) * rate partial
@@ -114210,12 +114049,12 @@ ask n_money: kn * hn partial
 ,,1:0,109:n_zero: 10.00 PLN + 0 × ?"what is h" (xh)
   cut 2026-10-20
 warning: WARN-UNREAD input dz is read by nothing
-,14:r15/planner_p7,9:fixes-r15,24:run m.tally --ask p1 p11,3971:7:m.tally,3955:model hh
+,14:r15/planner_p7,9:fixes-r15,24:run m.tally --ask p1 p11,3955:7:m.tally,3939:model hh
   tally 2
   on 2026-10-20
   start 2026-01-01
   end 2026-12-31
-  note "T, tally 2.1.8 R15 (#199): partial follows what is linear. #184, mean over a known count (m1), flows of a place and a move, a projection and a with uncertain total (w_*) are linear; #169-i, a min, a hole where, a hole-day movement are plain (i_*); no-item 2 low, 3 a rounded conversion, 4 share, 5 round and a known scale, 6 a hole with coefficient 0 (n_*); §4 item 72, a money coefficient prints its minor digits (n_money: 10.00 PLN ×). p1 to p11 are the planner's p7"
+  note "T, tally 2.1.8 R15 (#199): partial follows what is linear. #184, mean over a known count (m1), flows of a place and a move, a projection and a with uncertain total (w_*) are linear; #169-i, a min, a hole where, a hole-day movement are plain (i_*); no-item 2 low, 3 a rounded conversion (its ask n_fx, a converted flows, went with the form in tally 2.2, S-7; that a round isn't linear is n_round's), 4 share, 5 round and a known scale, 6 a hole with coefficient 0 (n_*); §4 item 72, a money coefficient prints its minor digits (n_money: 10.00 PLN ×). p1 to p11 are the planner's p7"
 
 source plan "plan"
 source bk "bank"
@@ -114282,11 +114121,9 @@ ask p9: check bal(k2, 2026-02-28) == z[a] partial
 ask p10: bal(k2, 2026-02-28) + z[b] partial
 ask p11: low(k2, 2026-02-01 .. 2026-02-28) partial
 
-unit EUR: currency minor 0.01
 input xh: money PLN
 input hd: date
 input rate: num
-input fx: num EUR/PLN
 input kn: money PLN
 input dz: int
 input five: money PLN
@@ -114306,7 +114143,6 @@ version zz2
   xh = ?"what is h" "s"
   hd = ?"which day" "s"
   rate = 2 "s"
-  fx = 0.25 "s"
   kn = 10.00 PLN "s"
   dz = 5 "s"
   five = 5.00 PLN "s"
@@ -114324,7 +114160,6 @@ ask i_min: -(min(z[b], zp)) + onep partial
 ask i_where: sum(z[k] for k in ks where z[k] > five) partial
 ask i_day: bal(k5, 2026-03-31) partial
 ask n_low: low(k2, 2026-02-01 .. 2026-03-31) partial
-ask n_fx: flows(k2, 2026-02) in EUR at fx half-even partial
 ask n_share: share(z[k] > five for k in ks) partial
 ask n_round: round(bal(k2, 2026-02-28), onepln, half-even) partial
 ask n_scale: bal(k2, 2026-02-28) * rate partial
@@ -116329,12 +116164,12 @@ b_k2: 32.00 PLN
   unfulfilled: pay[2026-02]
   unfulfilled: pay[2026-03]
   cut 2026-03-20
-,21:d72/money_coefficient,7:fixes-d,25:run m.tally --ask n_money,3971:7:m.tally,3955:model hh
+,21:d72/money_coefficient,7:fixes-d,25:run m.tally --ask n_money,3955:7:m.tally,3939:model hh
   tally 2
   on 2026-10-20
   start 2026-01-01
   end 2026-12-31
-  note "T, tally 2.1.8 R15 (#199): partial follows what is linear. #184, mean over a known count (m1), flows of a place and a move, a projection and a with uncertain total (w_*) are linear; #169-i, a min, a hole where, a hole-day movement are plain (i_*); no-item 2 low, 3 a rounded conversion, 4 share, 5 round and a known scale, 6 a hole with coefficient 0 (n_*); §4 item 72, a money coefficient prints its minor digits (n_money: 10.00 PLN ×). p1 to p11 are the planner's p7"
+  note "T, tally 2.1.8 R15 (#199): partial follows what is linear. #184, mean over a known count (m1), flows of a place and a move, a projection and a with uncertain total (w_*) are linear; #169-i, a min, a hole where, a hole-day movement are plain (i_*); no-item 2 low, 3 a rounded conversion (its ask n_fx, a converted flows, went with the form in tally 2.2, S-7; that a round isn't linear is n_round's), 4 share, 5 round and a known scale, 6 a hole with coefficient 0 (n_*); §4 item 72, a money coefficient prints its minor digits (n_money: 10.00 PLN ×). p1 to p11 are the planner's p7"
 
 source plan "plan"
 source bk "bank"
@@ -116401,11 +116236,9 @@ ask p9: check bal(k2, 2026-02-28) == z[a] partial
 ask p10: bal(k2, 2026-02-28) + z[b] partial
 ask p11: low(k2, 2026-02-01 .. 2026-02-28) partial
 
-unit EUR: currency minor 0.01
 input xh: money PLN
 input hd: date
 input rate: num
-input fx: num EUR/PLN
 input kn: money PLN
 input dz: int
 input five: money PLN
@@ -116425,7 +116258,6 @@ version zz2
   xh = ?"what is h" "s"
   hd = ?"which day" "s"
   rate = 2 "s"
-  fx = 0.25 "s"
   kn = 10.00 PLN "s"
   dz = 5 "s"
   five = 5.00 PLN "s"
@@ -116443,7 +116275,6 @@ ask i_min: -(min(z[b], zp)) + onep partial
 ask i_where: sum(z[k] for k in ks where z[k] > five) partial
 ask i_day: bal(k5, 2026-03-31) partial
 ask n_low: low(k2, 2026-02-01 .. 2026-03-31) partial
-ask n_fx: flows(k2, 2026-02) in EUR at fx half-even partial
 ask n_share: share(z[k] > five for k in ks) partial
 ask n_round: round(bal(k2, 2026-02-28), onepln, half-even) partial
 ask n_scale: bal(k2, 2026-02-28) * rate partial

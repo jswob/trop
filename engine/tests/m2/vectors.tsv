@@ -260,7 +260,6 @@ r15/walked_linear	fixes-r15		engine/tests/m2/fixes/r15/lin	engine/tests/m2/fixes
 r15/not_linear	fixes-r15		engine/tests/m2/fixes/r15/lin	engine/tests/m2/fixes/r15/lin/m.tally	i_min i_where i_day		R15
 r15/value_price	fixes-r15		engine/tests/m2/fixes/r15/value	engine/tests/m2/fixes/r15/value/m.tally	vu vp vb		R15
 r15/low_plain	fixes-r15		engine/tests/m2/fixes/r15/lin	engine/tests/m2/fixes/r15/lin/m.tally	n_low		R15
-r15/converted_plain	fixes-r15		engine/tests/m2/fixes/r15/lin	engine/tests/m2/fixes/r15/lin/m.tally	n_fx		R15
 r15/share_plain	fixes-r15		engine/tests/m2/fixes/r15/lin	engine/tests/m2/fixes/r15/lin/m.tally	n_share		R15
 r15/round_scale	fixes-r15		engine/tests/m2/fixes/r15/lin	engine/tests/m2/fixes/r15/lin/m.tally	n_round n_scale		R15
 r15/zero_coefficient	fixes-r15		engine/tests/m2/fixes/r15/lin	engine/tests/m2/fixes/r15/lin/m.tally	n_zero		R15

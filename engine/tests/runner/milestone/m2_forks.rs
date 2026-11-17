@@ -1516,10 +1516,11 @@ mod tests {
         group_holds(M2_VECTORS, "fixes-r14", (0, 1), 16);
     }
 
-    /// `m2/vectors.refcore`'s group `fixes-r15`, every vector.
+    /// `m2/vectors.refcore`'s group `fixes-r15`, every vector (8 since tally 2.2 dropped
+    /// `r15/converted_plain`: the converted flows is cut, S-7).
     #[test]
     fn m2_forks_on_prints_off_on_m2_fixes_r15() {
-        group_holds(M2_VECTORS, "fixes-r15", (0, 1), 9);
+        group_holds(M2_VECTORS, "fixes-r15", (0, 1), 8);
     }
 
     /// `m2/vectors.refcore`'s group `fixes-r16`, every vector (18 since tally 2.2 dropped
