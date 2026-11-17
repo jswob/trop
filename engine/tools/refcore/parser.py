@@ -680,22 +680,23 @@ class P:
         self.close()
         return args
 
-    def span(self):
-        """span = expr ".." [expr] | ".." [expr] | expr"""
+    def span(self, no_in=False):
+        """span = expr ".." [expr] | ".." [expr] | expr.  With no_in, an `in` after it is the world (L §2.3 rule
+        4: `residuals x span in S`)."""
         if self.at('..'):
             self.peek().role = 'bin'
             self.i += 1
             b = None
-            if not self._span_end():
-                b = self.expr()
+            if not self._span_end() and not (no_in and self.at('in')):
+                b = self.expr(no_in)
             return self.N('span', a=None, b=b, dots=True)
-        a = self.expr()
+        a = self.expr(no_in)
         if self.at('..'):
             self.peek().role = 'bin'
         if self.accept('..'):
             b = None
-            if not self._span_end():
-                b = self.expr()
+            if not self._span_end() and not (no_in and self.at('in')):
+                b = self.expr(no_in)
             return self.N('span', a=a, b=b, dots=True)
         return self.N('span', a=a, b=None, dots=False)
 
@@ -2454,7 +2455,8 @@ def sec_ask(p, body, units, line):
     elif p.accept('residuals'):
         a.form = 'residuals'
         r = p.ref()
-        sp = p.span()
+        # `in S` after the span names the world, as after every body (L §2.3 rule 4; tally 2.1.8 R13 rest 1)
+        sp = p.span(no_in=True)
         by = None
         if p.accept('by'):
             by = p.ident()

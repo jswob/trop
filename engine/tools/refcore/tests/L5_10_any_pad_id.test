@@ -1,0 +1,38 @@
+# tally 2.1.8 R14 (#175), L §5.10, E §6.1: at a place of unit any a pad's id ends with its unit, so two units' pads
+# at one instant are two movements (count 2), and explain lists EUR's pad only.
+=== m.tally
+model t
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+unit USD: currency minor 0.01
+kind wallets: place any signed
+place broker: wallets lives 2025-01-01..
+place world: outside lives 2025-01-01..
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  pad broker from world
+  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
+  opening[broker] = 2.00 PLN at 2026-01-01 start "s"
+  stated[broker] = 4.00 EUR at 2026-02-15 end "s"
+  stated[broker] = 3.00 PLN at 2026-02-15 end "s"
+
+ask n: count(p in pads over 2026-02)
+ask e: explain bal(broker, EUR, 2026-02-20)
+=== expect
+e: 4.00 EUR
+  balance of broker (EUR) at the end of 2026-02-20
+  from: pad v1:stated[broker] 2026-02-15 end = 4.00 EUR, 2026-02-15 end (version v1, source s, locator "s"), gap role pad from world, gap 3.00 EUR (pads:v1:broker@2026-02-15 end:EUR)
+  no movement
+  pad: broker 2026-02-15 end, pads:v1:broker@2026-02-15 end:EUR of 3.00 EUR
+  cut 2026-06-10
+n: 2
+  cut 2026-06-10

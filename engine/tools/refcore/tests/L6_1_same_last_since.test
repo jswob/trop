@@ -1,0 +1,55 @@
+# tally 2.1.8 §4 (#187), L §6.1 l.1806: facts about rows stated same are read together, by every read of either, a
+# last and a since included. px[EUR] reads 4.3 on 2026-03-02, qx[EUR] 4.4 on 2026-03-06: last(px[EUR], 2026-03-10) is
+# the class's latest reading, 4.4 and 4 days, held as qx[EUR]'s row; a plain read of px[EUR] at 2026-03-06 is qx[EUR]'s
+# reading. px[USD] and qx[USD] read 4.0 and 4.1 on 2026-03-08: last is HOLE-SAME on that day, since 2. 2.1.7's refcore
+# read px alone.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+unit USD: currency minor 0.01
+
+input px[u in currencies]: num PLN/u reading
+input qx[u in currencies]: num PLN/u reading
+
+version r
+  cite s
+  known 2026-03-09
+  px[EUR] = 4.3 PLN/EUR at 2026-03-02
+  qx[EUR] = 4.4 PLN/EUR at 2026-03-06
+  px[USD] = 3.9 PLN/USD at 2026-03-02
+  px[USD] = 4.0 PLN/USD at 2026-03-08
+  qx[USD] = 4.1 PLN/USD at 2026-03-08
+
+version j
+  cite s
+  governs always
+  known 2026-01-01
+  same px[EUR] = qx[EUR]
+  same px[USD] = qx[USD]
+
+ask e: last(px[EUR], 2026-03-10), since(px[EUR], 2026-03-10)
+ask e5: last(px[EUR], 2026-03-05), since(px[EUR], 2026-03-05)
+ask el: px[EUR] law 2026-03-06
+ask us: last(qx[USD], 2026-03-10), since(qx[USD], 2026-03-10)
+ask us7: last(qx[USD], 2026-03-07)
+=== expect
+e: (4.4 PLN/EUR, 4)
+  held: qx[EUR] = 4.4 PLN/EUR (r), read for 2026-03-10
+  cut 2026-12-31
+e5: (4.3 PLN/EUR, 3)
+  held: px[EUR] = 4.3 PLN/EUR (r), read for 2026-03-05
+  cut 2026-12-31
+el: 4.4 PLN/EUR
+  law date 2026-03-06, cut 2026-12-31
+us: (?"px[USD] and qx[USD] are one, but the value differs on 2026-03-08: 4 PLN/USD (r:px[USD] 2026-03-08) and 4.1 PLN/USD (r:qx[USD])" (px[USD], qx[USD]), 2)
+  cut 2026-12-31
+us7: 3.9 PLN/USD
+  held: px[USD] = 3.9 PLN/USD (r), read for 2026-03-07
+  cut 2026-12-31

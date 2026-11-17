@@ -102,7 +102,7 @@ back: residuals konto 2026-01 .. 2026-03
     matched rent[2026-03] on 2026-03-03: model -2 000.00 PLN, observed -2 000.00 PLN, difference 0.00 PLN, timing +0 days
   cut 2026-01-15
 byp: residuals konto 2026-02 by payee
-  2026-02 "BIEDRONKA": model 0.00 PLN, observed -400.00 PLN, difference -400.00 PLN
+  2026-02 payee "BIEDRONKA": model 0.00 PLN, observed -400.00 PLN, difference -400.00 PLN
     unexplained bank[r3] on 2026-02-20: observed -400.00 PLN
   2026-02 move wage: model 5 000.00 PLN, observed 5 300.00 PLN, difference 300.00 PLN
     matched wage[2026-02] on 2026-02-10: model 5 000.00 PLN, observed 5 300.00 PLN, difference 300.00 PLN, timing +2 days

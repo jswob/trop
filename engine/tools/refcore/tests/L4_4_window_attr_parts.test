@@ -1,0 +1,94 @@
+# tally 2.1.8 §4 (#169-e), L §4.4: an attribute that differs across a window at's law dates is the window's hole
+# where it is read. T's fixes/g8b/aw_attr.
+=== m.tally
+model aw
+  tally 2
+  on 2026-08-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind ev: event certain
+  leg cash: PLN
+  attr n: int
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input wl: date
+input pq: date
+input a1: money PLN
+input nv: int
+input ns: int
+input on1: int
+
+move ma: ev
+  on pq
+  at wl
+  attr n = nv
+  leg cash from world to konto amount a1
+
+move mb: ev
+  on pq
+  at wl
+  attr n = ns
+  leg cash from world to konto amount a1
+
+move mw: ev
+  on pq
+  at wl
+  when on1 > 0
+  attr n = ns
+  leg cash from world to konto amount a1
+
+ask n_ma: ma.n
+ask n_mb: mb.n
+ask f_ma: flows(ma, 2026-04-01 .. 2026-04-30)
+ask f_mb: flows(mb, 2026-04-01 .. 2026-04-30)
+ask f_mw: flows(mw, 2026-04-01 .. 2026-04-30)
+ask c: count(t in ev over 2026-04)
+ask b: bal(konto, 2026-04-30)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  wl = window(2026-03-30, 2026-04-02) "s"
+  a1 = 1.00 PLN "s"
+  pq = 2026-04-10 "s"
+  ns = 7 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+
+version old
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-01-01
+  nv = 1 "s"
+  on1 = 1 "s"
+
+version new
+  cite s
+  governs 2026-04-01..
+  known 2026-01-01
+  nv = 2 "s"
+  on1 = 0 "s"
+=== expect
+b: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+  unfulfilled: ma
+  unfulfilled: mb
+  cut 2026-08-01
+c: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+  unfulfilled: ma
+  unfulfilled: mb
+  cut 2026-08-01
+f_ma: 1.00 PLN
+  unfulfilled: ma
+  cut 2026-08-01
+f_mb: 1.00 PLN
+  unfulfilled: mb
+  cut 2026-08-01
+f_mw: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+  cut 2026-08-01
+n_ma: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of ma" (ma)
+  cut 2026-08-01
+n_mb: 7
+  cut 2026-08-01

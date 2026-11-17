@@ -1,0 +1,43 @@
+# L §5.7, L §8 R1 and Refusals outrank holes (tally 2.1.8 R11, #180): a binding on a hole day reads its where for every
+# thing that could be in it, so a where that refuses (w[p] / zero) refuses the count (c1) and the sum (c4), with the
+# where's code, outranking the day's hole; the where on a known day refuses alike (c2). Twins: no where, the day's hole
+# (c0); a where no thing passes, 0 (c3). 2.1.7's refcore printed the day's hole for c1 and c4.
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+kind persons
+input dd: date
+input zero: num
+input w[p in persons]: num
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ola] lives 1990-02-01..
+  persons + [jan] lives 1991-02-01..
+  dd = ?"which day" "s"
+  zero = 0 "s"
+  w[ola] = 2 "s"
+  w[jan] = 3 "s"
+ask c0: count(p in persons on dd)
+ask c1: count(p in persons on dd where w[p] / zero > 1)
+ask c2: count(p in persons on 2026-03-01 where w[p] / zero > 1)
+ask c3: count(p in persons on dd where w[p] > w[ola] + w[jan])
+ask c4: sum(w[p] for p in persons on dd where w[p] / zero > 1)
+=== expect
+c0: ?"which day" (dd)
+  cut 2026-10-20
+c1: refused: RUN-DIV division by zero
+  cut 2026-10-20
+c2: refused: RUN-DIV division by zero
+  cut 2026-10-20
+c3: 0
+  cut 2026-10-20
+c4: refused: RUN-DIV division by zero
+  cut 2026-10-20

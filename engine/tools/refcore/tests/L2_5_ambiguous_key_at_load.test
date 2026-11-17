@@ -1,0 +1,25 @@
+# tally 2.1.8 §4 (#162), L §2.5 Keys and L §8.4 Load refuses what load sees: a bare y that no index, axis or thing
+# holds, with no position to name its index, is LOAD-KEY at load, whatever the asks: a's law is a hole, so nothing
+# inside it is evaluated (L §5.11), and the reality is still refused. 2.1.7's refcore met it only where a read
+# evaluated it (a printed the law's hole, b 1).
+=== m.tally
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input dd: date
+input n: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  n = 1 "s"
+
+ask a: y law dd
+ask b: n
+=== expect
+refused: LOAD-KEY ambiguous key y (m.tally:17)

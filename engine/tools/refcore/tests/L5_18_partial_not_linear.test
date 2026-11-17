@@ -1,0 +1,93 @@
+# tally 2.1.8 R15 (#169-i), L §5.18: a hole met any other way than by adding, scaling by a known number or passing
+# on makes the plain hole naming every hole: -(min(x, 0)) + 1 (q1), a sum whose where is a hole (q2), a balance with a
+# movement whose day is a hole (q3), a period's difference (q4), low (q5), a converted flows (q6), a share (q7), a
+# rounding (q8). A where known whatever the hole (q9) and the plain balance (q10) stay linear.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index ks = [a, b]
+input x: money PLN
+input z[k in ks]: money PLN
+input f[k in ks]: bool
+input c[k in ks]: bool
+input pm: month
+input fx: num PLN/EUR
+input amt: money PLN
+input pday: date
+input dd: date
+input ten: money PLN
+place konto: accounts PLN lives 2026-01-01..
+place konto2: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on pday
+  leg cash from world to konto amount amt
+
+move topup: transfers
+  on dd
+  reads konto2
+  leg cash from world to konto2 amount ten + 0 * bal(konto2)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x = ?"x?" "s"
+  z[a] = 10.00 PLN "s"
+  z[b] = ?"z?" "s"
+  f[a] = true "s"
+  f[b] = ?"f?" "s"
+  c[a] = true "s"
+  c[b] = ?"is b" "s"
+  pm = ?"which month" "s"
+  fx = 4 PLN/EUR "s"
+  amt = ?"how much" "s"
+  pday = 2026-02-05 "s"
+  dd = ?"top-up day" "s"
+  ten = 10.00 PLN "s"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+  opening[konto2] = 100.00 PLN at 2026-01-01 start "s"
+
+ask q1: -(min(x, 0 PLN)) + 1 PLN partial
+ask q2: sum(z[k] for k in ks where f[k]) partial
+ask q3: bal(konto2, 2026-06-30) partial
+ask q4: pm - 2026-01 partial
+ask q5: low(konto, 2026-02-01 .. 2026-02-28) partial
+ask q6: flows(konto, 2026-02) in EUR at fx half-even partial
+ask q7: share(c[k] for k in ks) partial
+ask q8: round(x, 1 PLN, half-even) partial
+ask q9: sum(z[k] for k in ks where c[k] or true) partial
+
+move pay2: transfers
+  on pday
+  leg cash from world to konto2 amount amt
+ask q10: bal(konto, 2026-06-30) partial
+=== expect
+q1: ?"x?" (x)
+  cut 2026-01-01
+q10: 100.00 PLN + 1 × ?"how much" (amt)
+  cut 2026-01-01
+q2: ?"f?" (f[b]) ?"z?" (z[b])
+  cut 2026-01-01
+q3: ?"how much" (amt) ?"top-up day" (dd)
+  cut 2026-01-01
+q4: ?"which month" (pm)
+  cut 2026-01-01
+q5: ?"how much" (amt)
+  cut 2026-01-01
+q6: ?"how much" (amt)
+  cut 2026-01-01
+q7: ?"is b" (c[b])
+  cut 2026-01-01
+q8: ?"x?" (x)
+  cut 2026-01-01
+q9: 10.00 PLN + 1 × ?"z?" (z[b])
+  cut 2026-01-01

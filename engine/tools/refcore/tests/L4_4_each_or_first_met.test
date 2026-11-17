@@ -1,0 +1,59 @@
+# L §4.4 (tally 2.1.8 R13, X1; c3n x2): the first unknown day the answer carries, the first its reads met, is taken
+# first, and each run again: w1 = 2026-03-05 decides the or, so w2 is not taken there. Taking both at once would
+# print [w1 = 2026-03-05, w2 = ...]. The same lines as 2.1.7's refcore: a guard on the order.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input w1: date
+input w2: date
+input w3: date
+input a: date
+input b[d in days]: date
+
+move m1: transfers
+  on w1
+  leg cash from world to konto amount amt
+
+move m2: transfers
+  on w2
+  leg cash from world to konto amount amt
+
+move m3: transfers
+  on w3
+  leg cash from world to konto amount amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  amt = 100.00 PLN "s"
+  w1 = window(2026-03-05, 2026-03-07) "s"
+  w2 = window(2026-03-06, 2026-03-08) "s"
+  w3 = window(2026-05-01, 2026-05-03) "s"
+  a = window(2026-03-01, 2026-03-02) "s"
+  b[2026-03-01] = window(2026-04-01, 2026-04-02) "s"
+  b[2026-03-02] = 2026-05-01 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+
+ask x1: (w1 < 2026-03-06) or (w2 > 2026-03-07)
+ask x2: (w1 < 2026-03-06) or (w2 > 2026-03-07) windows each
+=== expect
+x1: ?"date within window(2026-03-05, 2026-03-07) not precise enough for w1 < 2026-03-06" (w1) ?"date within window(2026-03-06, 2026-03-08) not precise enough for w2 > 2026-03-07" (w2)
+  cut 2026-01-01
+x2 [w1 = 2026-03-05]: true
+  cut 2026-01-01
+x2 [w1 = 2026-03-06 .. 2026-03-07, w2 = 2026-03-06 .. 2026-03-07]: false
+  cut 2026-01-01
+x2 [w1 = 2026-03-06 .. 2026-03-07, w2 = 2026-03-08]: true
+  cut 2026-01-01
+warning: WARN-UNREAD input a is read by nothing
+warning: WARN-UNREAD input b is read by nothing

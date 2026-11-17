@@ -1,0 +1,60 @@
+# tally 2.1.8 §4 (#169-e), L §4.4: a window decides a read only where every day agrees. g's day is a window crossing
+# the run's end: whether it falls in December, or in January after the run, is open, so flows of konto over either
+# month is the window's hole (fa, fb), as h's is over January and February. 2.1.7's refcore counted g nowhere
+# (December 0.00). T's fixes/g3/f.
+=== m.tally
+model pf
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place work: outside lives 1900-01-01..
+
+input wd: date
+input wd2: date
+input amt: money PLN
+
+move g: transfers
+  on wd
+  leg cash from work to konto amount amt
+
+move h: transfers
+  on wd2
+  leg cash from work to konto amount amt
+
+ask fa: flows(konto, 2026-12-01 .. 2026-12-31)
+ask fb: flows(konto, 2027-01-01 .. 2027-01-31)
+ask fc: flows(konto, 2027-02-01 .. 2027-02-28)
+ask be: bal(konto, 2026-12-31)
+ask bea: bal(konto, 2027-01-31)
+ask few: flows(konto, 2026-12-01 .. 2026-12-31) windows each
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "c"
+  wd = window(2026-12-20, 2027-01-10) "c"
+  wd2 = window(2027-01-25, 2027-02-05) "c"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
+=== expect
+be: ?"date within window(2026-12-20, 2027-01-10) not precise enough for a balance" (g)
+  left out: h, 1 instances, first 2027-01-25
+  cut 2026-03-01
+bea: ?"after the run's end" (konto)
+  cut 2026-03-01
+fa: ?"date within window(2026-12-20, 2027-01-10) not precise enough for flows of konto" (g)
+  cut 2026-03-01
+fb: ?"date within window(2026-12-20, 2027-01-10) not precise enough for flows of konto" (g) ?"date within window(2027-01-25, 2027-02-05) not precise enough for flows of konto" (h)
+  cut 2026-03-01
+fc: ?"date within window(2027-01-25, 2027-02-05) not precise enough for flows of konto" (h)
+  cut 2026-03-01
+few [wd = 2026-12-20 .. 2026-12-31]: 10.00 PLN
+  cut 2026-03-01
+few [wd = 2027-01-01 .. 2027-01-10]: 0.00 PLN
+  cut 2026-03-01

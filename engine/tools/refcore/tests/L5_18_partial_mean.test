@@ -1,0 +1,30 @@
+# tally 2.1.8 R15 (#184), L §5.18: a mean over a known count is its sum scaled by the count, linear in its terms:
+# mean(z[k] + x for k in ks) - x is 5 PLN + 0.5 × the hole (a mean of money is a num PLN, as a known mean prints).
+=== m.tally
+model t
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [a, b]
+input z[k in ks]: money PLN
+input x: money PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  z[a] = 10.00 PLN "s"
+  z[b] = ?"z of b" "s"
+  x = 4.00 PLN "s"
+
+ask p5: mean(z[k] for k in ks) partial
+ask p5b: mean(z[k] + x for k in ks) - x partial
+=== expect
+p5: 5 PLN + 0.5 × ?"z of b" (z[b])
+  cut 2026-06-10
+p5b: 5 PLN + 0.5 × ?"z of b" (z[b])
+  cut 2026-06-10

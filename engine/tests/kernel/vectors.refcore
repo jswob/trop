@@ -1501,7 +1501,7 @@ q_se: (24 328.00 USD, 24 328.00 USD, 22 467.00 USD, 22 467.00 USD, 22 467.00 USD
   assumed: the case lists no entry for Schedule SE line 8c (wages, Form 8919), and the scenario has no Form 8919 (entry[bse_08c])
   assumed: the case's W-2 transcription lists no box 7 (social security tips) (w2_box7)
   law date 2025-12-31, cut 2026-10-18
-,22:I:X:konto_balance@b_r1,6:checks,399:run cut11/b_r1/asks/cut.tally cut11/b_r1/facts/2026.tally cut11/b_r1/law/pl/benefits.tally cut11/b_r1/law/pl/business.tally cut11/b_r1/law/pl/common.tally cut11/b_r1/law/pl/employment.tally cut11/b_r1/law/pl/wrappers.tally cut11/b_r1/loans.tally cut11/b_r1/pays.tally cut11/b_r1/people.tally cut11/b_r1/places.tally cut11/b_r1/reality.tally cut11/b_r1/records/mbank/2026-09.tally --ask konto_balance,48753:25:cut11/b_r1/asks/cut.tally,203:part asks_core
+,22:I:X:konto_balance@b_r1,6:checks,399:run cut11/b_r1/asks/cut.tally cut11/b_r1/facts/2026.tally cut11/b_r1/law/pl/benefits.tally cut11/b_r1/law/pl/business.tally cut11/b_r1/law/pl/common.tally cut11/b_r1/law/pl/employment.tally cut11/b_r1/law/pl/wrappers.tally cut11/b_r1/loans.tally cut11/b_r1/pays.tally cut11/b_r1/people.tally cut11/b_r1/places.tally cut11/b_r1/reality.tally cut11/b_r1/records/mbank/2026-09.tally --ask konto_balance,48764:25:cut11/b_r1/asks/cut.tally,203:part asks_core
   tally 2
 
 ask konto_balance: bal(konto, d) with uncertain, bal(konto, d) with uncertain - vat_owed[d] for d in [2026-10-31] law cut
@@ -2102,7 +2102,7 @@ version sus_2026
   ee_rate[disability] = 0.015 "art. 22 ust. 1 pkt b, część pracownika"
   ee_rate[pension] = 0.0976 "art. 22 ust. 1 pkt a, część pracownika"
   ee_rate[sickness] = 0.0245 "art. 22 ust. 1 pkt c"
-,32:cut11/b_r1/law/pl/wrappers.tally,3474:part pl_wrappers
+,32:cut11/b_r1/law/pl/wrappers.tally,3502:part pl_wrappers
   tally 2
   law
   note "IKE: roczny limit wpłat. OKI: od 2027, podatek od średniej wartości rachunku ponad kwotę wolną, płatny do 31 maja."
@@ -2146,7 +2146,7 @@ def ike_limit[y in tax_year]: money PLN at start_of(y)
 def nbp_oct[y in tax_year]: num = nbp_ref at add_days(add_months(start_of(y), -nbp_oct_2), -1)
 
 def oki_avg[y in tax_year]: num PLN at start_of(y)
-  rule base v oki_rules = sum(value(wunits[oki], d) in PLN + bal(wcash[oki], d) for d in day where year_of(d) == y) / days_between(start_of(y), end_of(y))
+  rule base v oki_rules = sum((value(wunits[oki], d) in PLN by etf_price[month_of(d)]) + bal(wcash[oki], d) for d in day where year_of(d) == y) / days_between(start_of(y), end_of(y))
 
 def oki_rate[y in tax_year]: num at start_of(y)
   rule base v oki_2027 = oki_rate_first
@@ -2439,7 +2439,7 @@ version people_2026
   parent = false "brak dzieci"
   residence = pl governs 2026-01.. "meldunek w Krakowie"
   works_for[wife_acme] = wife "umowa o pracę"
-,23:cut11/b_r1/places.tally,2067:part places
+,23:cut11/b_r1/places.tally,2050:part places
   tally 2
   note "Miejsca gospodarstwa i schemat wyciągów. Miejsca na zewnątrz nazywają, skąd i dokąd płyną pieniądze."
 
@@ -2476,7 +2476,7 @@ place urzad_skarbowy: tax_offices lives 2026-01-01..
 
 place wcash[w in wrapper]: accounts PLN lives 2026-01-01..
 
-place wunits[w in wrapper]: holdings etf_unit priced etf_price lives 2026-01-01..
+place wunits[w in wrapper]: holdings etf_unit lives 2026-01-01..
 
 place wynajmujacy: outside lives 2026-01-01..
 
@@ -2653,7 +2653,7 @@ version mbank_2026_09
 warning: WARN-NEGATIVE konto is below zero from 2026-03-01
 warning: WARN-NEGATIVE konto is below zero from 2026-03-17
 warning: WARN-UNREAD place gotowka is read by nothing
-,25:I:X:replay_september@b_r1,6:checks,402:run cut11/b_r1/asks/cut.tally cut11/b_r1/facts/2026.tally cut11/b_r1/law/pl/benefits.tally cut11/b_r1/law/pl/business.tally cut11/b_r1/law/pl/common.tally cut11/b_r1/law/pl/employment.tally cut11/b_r1/law/pl/wrappers.tally cut11/b_r1/loans.tally cut11/b_r1/pays.tally cut11/b_r1/people.tally cut11/b_r1/places.tally cut11/b_r1/reality.tally cut11/b_r1/records/mbank/2026-09.tally --ask replay_september,48753:25:cut11/b_r1/asks/cut.tally,203:part asks_core
+,25:I:X:replay_september@b_r1,6:checks,402:run cut11/b_r1/asks/cut.tally cut11/b_r1/facts/2026.tally cut11/b_r1/law/pl/benefits.tally cut11/b_r1/law/pl/business.tally cut11/b_r1/law/pl/common.tally cut11/b_r1/law/pl/employment.tally cut11/b_r1/law/pl/wrappers.tally cut11/b_r1/loans.tally cut11/b_r1/pays.tally cut11/b_r1/people.tally cut11/b_r1/places.tally cut11/b_r1/reality.tally cut11/b_r1/records/mbank/2026-09.tally --ask replay_september,48764:25:cut11/b_r1/asks/cut.tally,203:part asks_core
   tally 2
 
 ask konto_balance: bal(konto, d) with uncertain, bal(konto, d) with uncertain - vat_owed[d] for d in [2026-10-31] law cut
@@ -3254,7 +3254,7 @@ version sus_2026
   ee_rate[disability] = 0.015 "art. 22 ust. 1 pkt b, część pracownika"
   ee_rate[pension] = 0.0976 "art. 22 ust. 1 pkt a, część pracownika"
   ee_rate[sickness] = 0.0245 "art. 22 ust. 1 pkt c"
-,32:cut11/b_r1/law/pl/wrappers.tally,3474:part pl_wrappers
+,32:cut11/b_r1/law/pl/wrappers.tally,3502:part pl_wrappers
   tally 2
   law
   note "IKE: roczny limit wpłat. OKI: od 2027, podatek od średniej wartości rachunku ponad kwotę wolną, płatny do 31 maja."
@@ -3298,7 +3298,7 @@ def ike_limit[y in tax_year]: money PLN at start_of(y)
 def nbp_oct[y in tax_year]: num = nbp_ref at add_days(add_months(start_of(y), -nbp_oct_2), -1)
 
 def oki_avg[y in tax_year]: num PLN at start_of(y)
-  rule base v oki_rules = sum(value(wunits[oki], d) in PLN + bal(wcash[oki], d) for d in day where year_of(d) == y) / days_between(start_of(y), end_of(y))
+  rule base v oki_rules = sum((value(wunits[oki], d) in PLN by etf_price[month_of(d)]) + bal(wcash[oki], d) for d in day where year_of(d) == y) / days_between(start_of(y), end_of(y))
 
 def oki_rate[y in tax_year]: num at start_of(y)
   rule base v oki_2027 = oki_rate_first
@@ -3591,7 +3591,7 @@ version people_2026
   parent = false "brak dzieci"
   residence = pl governs 2026-01.. "meldunek w Krakowie"
   works_for[wife_acme] = wife "umowa o pracę"
-,23:cut11/b_r1/places.tally,2067:part places
+,23:cut11/b_r1/places.tally,2050:part places
   tally 2
   note "Miejsca gospodarstwa i schemat wyciągów. Miejsca na zewnątrz nazywają, skąd i dokąd płyną pieniądze."
 
@@ -3628,7 +3628,7 @@ place urzad_skarbowy: tax_offices lives 2026-01-01..
 
 place wcash[w in wrapper]: accounts PLN lives 2026-01-01..
 
-place wunits[w in wrapper]: holdings etf_unit priced etf_price lives 2026-01-01..
+place wunits[w in wrapper]: holdings etf_unit lives 2026-01-01..
 
 place wynajmujacy: outside lives 2026-01-01..
 
@@ -3827,7 +3827,7 @@ version mbank_2026_09
 warning: WARN-NEGATIVE konto is below zero from 2026-03-01
 warning: WARN-NEGATIVE konto is below zero from 2026-03-17
 warning: WARN-UNREAD place gotowka is read by nothing
-,26:I:X:replay_september@b_r1s,6:checks,415:run cut11/b_r1s/asks/cut.tally cut11/b_r1s/facts/2026.tally cut11/b_r1s/law/pl/benefits.tally cut11/b_r1s/law/pl/business.tally cut11/b_r1s/law/pl/common.tally cut11/b_r1s/law/pl/employment.tally cut11/b_r1s/law/pl/wrappers.tally cut11/b_r1s/loans.tally cut11/b_r1s/pays.tally cut11/b_r1s/people.tally cut11/b_r1s/places.tally cut11/b_r1s/reality.tally cut11/b_r1s/records/mbank/2026-09.tally --ask replay_september,48642:26:cut11/b_r1s/asks/cut.tally,80:part asks_core
+,26:I:X:replay_september@b_r1s,6:checks,415:run cut11/b_r1s/asks/cut.tally cut11/b_r1s/facts/2026.tally cut11/b_r1s/law/pl/benefits.tally cut11/b_r1s/law/pl/business.tally cut11/b_r1s/law/pl/common.tally cut11/b_r1s/law/pl/employment.tally cut11/b_r1s/law/pl/wrappers.tally cut11/b_r1s/loans.tally cut11/b_r1s/pays.tally cut11/b_r1s/people.tally cut11/b_r1s/places.tally cut11/b_r1s/reality.tally cut11/b_r1s/records/mbank/2026-09.tally --ask replay_september,48653:26:cut11/b_r1s/asks/cut.tally,80:part asks_core
   tally 2
 
 ask replay_september: residuals konto 2026-09 law cut
@@ -4426,7 +4426,7 @@ version sus_2026
   ee_rate[disability] = 0.015 "art. 22 ust. 1 pkt b, część pracownika"
   ee_rate[pension] = 0.0976 "art. 22 ust. 1 pkt a, część pracownika"
   ee_rate[sickness] = 0.0245 "art. 22 ust. 1 pkt c"
-,33:cut11/b_r1s/law/pl/wrappers.tally,3474:part pl_wrappers
+,33:cut11/b_r1s/law/pl/wrappers.tally,3502:part pl_wrappers
   tally 2
   law
   note "IKE: roczny limit wpłat. OKI: od 2027, podatek od średniej wartości rachunku ponad kwotę wolną, płatny do 31 maja."
@@ -4470,7 +4470,7 @@ def ike_limit[y in tax_year]: money PLN at start_of(y)
 def nbp_oct[y in tax_year]: num = nbp_ref at add_days(add_months(start_of(y), -nbp_oct_2), -1)
 
 def oki_avg[y in tax_year]: num PLN at start_of(y)
-  rule base v oki_rules = sum(value(wunits[oki], d) in PLN + bal(wcash[oki], d) for d in day where year_of(d) == y) / days_between(start_of(y), end_of(y))
+  rule base v oki_rules = sum((value(wunits[oki], d) in PLN by etf_price[month_of(d)]) + bal(wcash[oki], d) for d in day where year_of(d) == y) / days_between(start_of(y), end_of(y))
 
 def oki_rate[y in tax_year]: num at start_of(y)
   rule base v oki_2027 = oki_rate_first
@@ -4763,7 +4763,7 @@ version people_2026
   parent = false "brak dzieci"
   residence = pl governs 2026-01.. "meldunek w Krakowie"
   works_for[wife_acme] = wife "umowa o pracę"
-,24:cut11/b_r1s/places.tally,2067:part places
+,24:cut11/b_r1s/places.tally,2050:part places
   tally 2
   note "Miejsca gospodarstwa i schemat wyciągów. Miejsca na zewnątrz nazywają, skąd i dokąd płyną pieniądze."
 
@@ -4800,7 +4800,7 @@ place urzad_skarbowy: tax_offices lives 2026-01-01..
 
 place wcash[w in wrapper]: accounts PLN lives 2026-01-01..
 
-place wunits[w in wrapper]: holdings etf_unit priced etf_price lives 2026-01-01..
+place wunits[w in wrapper]: holdings etf_unit lives 2026-01-01..
 
 place wynajmujacy: outside lives 2026-01-01..
 
@@ -8748,7 +8748,7 @@ q_bal (d = 2026-02-20): (100.00 PLN, refused: RUN-DIV division by zero)
 q_bal (d = 2026-03-20): (100.00 PLN, refused: RUN-DIV division by zero)
   unfulfilled: split[2026-01]
   law date 2026-02-15, cut 2026-02-15
-,7:g9/sign,2:g9,17:run g9/sign.tally,7498:13:g9/sign.tally,7475:model g9_sign
+,7:g9/sign,2:g9,17:run g9/sign.tally,7462:13:g9/sign.tally,7439:model g9_sign
   tally 2
   on 2026-03-25
   start 2026-01-01
@@ -8777,9 +8777,9 @@ place lent4: claims PLN lives 2026-01-01..
 
 place owed: debts PLN lives 2026-01-01..
 
-place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+place fund: holdings etf_unit lives 2026-01-01..
 
-place fund2: holdings etf_unit priced fund_price lives 2026-01-01..
+place fund2: holdings etf_unit lives 2026-01-01..
 
 place gone: accounts PLN lives 2026-01-01..2026-02-27
 
@@ -8983,30 +8983,30 @@ version lent4_feb
   known 2026-03-02
   anchor lent4
   stated[lent4] = 0.00 at 2026-02-28 end "the twin: a claim stated at 0"
-,,1:0,5602:q_claims (d = 2026-01-31): (50.00 PLN, 0.00 PLN, refused: RUN-PLACE repay[2026-01] takes lent3 below 0, refused: RUN-PLACE lent4 is -5.00 PLN after its reading at 2026-01-31 end)
+,,1:0,5342:q_claims (d = 2026-01-31): (50.00 PLN, 0.00 PLN, refused: RUN-PLACE repay[2026-01] takes lent3 below 0, refused: RUN-PLACE lent4 is -5.00 PLN after its reading at 2026-01-31 end)
   anchor: lent4 2026-01-31 end, stated -5.00 PLN, difference -25.00 PLN
   unfulfilled: back[2026-01]
   law date 2026-03-25, cut 2026-03-25
-q_claims (d = 2026-02-28): (0.00 PLN, 0.00 PLN, refused: RUN-PLACE repay[2026-01] takes lent3 below 0, refused: RUN-PLACE lent4 is -5.00 PLN after its reading at 2026-01-31 end)
+q_claims (d = 2026-02-28): (0.00 PLN, 0.00 PLN, refused: RUN-PLACE repay[2026-01] takes lent3 below 0, 0.00 PLN)
   anchor: lent4 2026-02-28 end, stated 0.00 PLN, difference refused: RUN-PLACE lent4 is -5.00 PLN after its reading at 2026-01-31 end
   unfulfilled: back[2026-01]
   unfulfilled: back[2026-02]
   law date 2026-03-25, cut 2026-03-25
-q_claims (d = 2026-03-10): (refused: RUN-PLACE lent is -30.00 PLN after the day's observations and plans of 2026-03-10, 10.00 PLN, refused: RUN-PLACE repay[2026-01] takes lent3 below 0, refused: RUN-PLACE lent4 is -5.00 PLN after its reading at 2026-01-31 end)
-  anchor: lent4 2026-02-28 end, stated 0.00 PLN, difference refused: RUN-PLACE lent4 is -5.00 PLN after its reading at 2026-01-31 end
-  unfulfilled: back[2026-01]
-  unfulfilled: back[2026-02]
-  unfulfilled: swing_in[2026-03]
-  unfulfilled: swing_out[2026-03]
-  law date 2026-03-25, cut 2026-03-25
-q_claims (d = 2026-03-20): (refused: RUN-PLACE lent is -30.00 PLN after the day's observations and plans of 2026-03-10, 10.00 PLN, refused: RUN-PLACE repay[2026-01] takes lent3 below 0, refused: RUN-PLACE lent4 is -5.00 PLN after its reading at 2026-01-31 end)
+q_claims (d = 2026-03-10): (refused: RUN-PLACE lent is -30.00 PLN after the day's observations and plans of 2026-03-10, 10.00 PLN, refused: RUN-PLACE repay[2026-01] takes lent3 below 0, 0.00 PLN)
   anchor: lent4 2026-02-28 end, stated 0.00 PLN, difference refused: RUN-PLACE lent4 is -5.00 PLN after its reading at 2026-01-31 end
   unfulfilled: back[2026-01]
   unfulfilled: back[2026-02]
   unfulfilled: swing_in[2026-03]
   unfulfilled: swing_out[2026-03]
   law date 2026-03-25, cut 2026-03-25
-q_claims (d = 2026-03-31): (refused: RUN-PLACE lent is -30.00 PLN after the day's observations and plans of 2026-03-10, 10.00 PLN, refused: RUN-PLACE repay[2026-01] takes lent3 below 0, refused: RUN-PLACE lent4 is -5.00 PLN after its reading at 2026-01-31 end)
+q_claims (d = 2026-03-20): (refused: RUN-PLACE lent is -30.00 PLN after the day's observations and plans of 2026-03-10, 10.00 PLN, refused: RUN-PLACE repay[2026-01] takes lent3 below 0, 0.00 PLN)
+  anchor: lent4 2026-02-28 end, stated 0.00 PLN, difference refused: RUN-PLACE lent4 is -5.00 PLN after its reading at 2026-01-31 end
+  unfulfilled: back[2026-01]
+  unfulfilled: back[2026-02]
+  unfulfilled: swing_in[2026-03]
+  unfulfilled: swing_out[2026-03]
+  law date 2026-03-25, cut 2026-03-25
+q_claims (d = 2026-03-31): (refused: RUN-PLACE lent is -30.00 PLN after the day's observations and plans of 2026-03-10, 10.00 PLN, refused: RUN-PLACE repay[2026-01] takes lent3 below 0, 0.00 PLN)
   anchor: lent4 2026-02-28 end, stated 0.00 PLN, difference refused: RUN-PLACE lent4 is -5.00 PLN after its reading at 2026-01-31 end
   unfulfilled: back[2026-01]
   unfulfilled: back[2026-02]
@@ -9084,7 +9084,7 @@ q_wallet (d = 2026-03-15): 60.00 PLN
 warning: WARN-NEGATIVE wallet is below zero from 2026-01-15
 warning: WARN-NEGATIVE wallet is below zero from 2026-02-15
 warning: WARN-UNREAD input fund_price is read by nothing
-,7:g6/plan,2:g6,17:run g6/plan.tally,4770:13:g6/plan.tally,4747:model g6_plan
+,7:g6/plan,2:g6,17:run g6/plan.tally,4752:13:g6/plan.tally,4729:model g6_plan
   tally 2
   on 2026-02-15
   start 2026-01-01
@@ -9112,7 +9112,7 @@ kind anys: event certain
 
 place konto: accounts PLN lives 2026-01-01..
 
-place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+place fund: holdings etf_unit lives 2026-01-01..
 
 place shop: outside lives 2026-01-01..
 
@@ -10018,7 +10018,7 @@ q_unc: (619.00 PLN, ?"late has no balance before 2026-02-12" (late), ?"late has 
   uncertain: g_on_d
   uncertain: g_on_t
   law date 2026-02-15, cut 2026-02-15
-,8:g7/flows,2:g7,18:run g7/flows.tally,5374:14:g7/flows.tally,5350:model g7_flows
+,8:g7/flows,2:g7,18:run g7/flows.tally,5356:14:g7/flows.tally,5332:model g7_flows
   tally 2
   on 2026-02-15
   start 2026-01-01
@@ -10046,7 +10046,7 @@ place konto: accounts PLN lives 2026-01-01..
 
 place fresh: accounts PLN lives 2026-01-01..
 
-place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+place fund: holdings etf_unit lives 2026-01-01..
 
 place box_h: accounts PLN lives 2026-01-01..
 
@@ -10444,7 +10444,7 @@ version openings
 ,,1:0,132:q_after: (1 000.00 PLN, 1 000.00 PLN, 0.00 PLN)
   left out: pp, 1 instances, first 2026-03-05
   law date 2026-02-15, cut 2026-02-15
-,11:g10/observe,3:g10,21:run g10/observe.tally,6987:17:g10/observe.tally,6960:model g10_observe
+,11:g10/observe,3:g10,21:run g10/observe.tally,6951:17:g10/observe.tally,6924:model g10_observe
   tally 2
   on 2026-03-15
   start 2026-01-01
@@ -10473,9 +10473,9 @@ place k3: accounts PLN lives 2026-01-01..
 
 place k6: accounts PLN lives 2026-01-01..
 
-place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+place fund: holdings etf_unit lives 2026-01-01..
 
-place fund2: holdings etf_unit priced fund_price lives 2026-01-01..
+place fund2: holdings etf_unit lives 2026-01-01..
 
 place shop: outside lives 2026-01-01..
 
@@ -12011,7 +12011,7 @@ version stmt2
   card[c_rent2] = (on: 2025-02-03, kind: transfers, leg cash from bank2 to out amount 300.00 DUK, fulfils: rent2) "rent2, on a day no statement covers"
   card[c_rx] = (on: 2025-02-03, kind: transfers, leg cash from bank3 to out amount 300.00 DUK, fulfils: rentx[s2]) "the second of an indexed move"
   card[c_late] = (on: 2025-03-20, kind: transfers, leg cash from bank2 to bank amount 40.00 DUK, fulfils: late) "late, dated after the cut, into a covered place"
-,,1:0,19931:big (m = card[c_rent2]): 300.00 DUK
+,,1:0,19835:big (m = card[c_rent2]): 300.00 DUK
   cut 2025-03-10
 big (m = card[c_rx]): 300.00 DUK
   cut 2025-03-10
@@ -12086,7 +12086,7 @@ members (m = dues[dan]): 15.00 DUK
   assumed: the dues day isn't set yet (dues_day)
   unfulfilled: dues[dan]
   cut 2025-03-10
-members (m = card[c_late]): 40.00 DUK
+members (m = late): 40.00 DUK
   cut 2025-03-10
 members (m = dues2): ?"When is the check?" (check_day)
 members (m = dues3): ?"When does the law apply?" (law_day)
@@ -12138,7 +12138,7 @@ members_all (m = dues[dan]): 15.00 DUK
   assumed: the dues day isn't set yet (dues_day)
   unfulfilled: dues[dan]
   cut 2025-03-10
-members_all (m = card[c_late]): 40.00 DUK
+members_all (m = late): 40.00 DUK
   cut 2025-03-10
 members_all (m = post): 40.00 DUK
   cut 2025-03-10
@@ -12182,7 +12182,7 @@ pairs (m = card[c_tip], n = dues[dan]): 55.00 DUK
   assumed: the dues day isn't set yet (dues_day)
   unfulfilled: dues[dan]
   cut 2025-03-10
-pairs (m = card[c_tip], n = card[c_late]): 80.00 DUK
+pairs (m = card[c_tip], n = late): 80.00 DUK
   cut 2025-03-10
 pairs (m = card[c_tip], n = dues2): ?"When is the check?" (check_day)
 pairs (m = card[c_tip], n = dues3): ?"When does the law apply?" (law_day)
@@ -12222,7 +12222,7 @@ pairs (m = card[a1], n = dues[dan]): 17.00 DUK
   assumed: the dues day isn't set yet (dues_day)
   unfulfilled: dues[dan]
   cut 2025-03-10
-pairs (m = card[a1], n = card[c_late]): 42.00 DUK
+pairs (m = card[a1], n = late): 42.00 DUK
   cut 2025-03-10
 pairs (m = card[a1], n = dues2): ?"When is the check?" (check_day)
 pairs (m = card[a1], n = dues3): ?"When does the law apply?" (law_day)
@@ -12262,7 +12262,7 @@ pairs (m = card[z1], n = dues[dan]): 16.00 DUK
   assumed: the dues day isn't set yet (dues_day)
   unfulfilled: dues[dan]
   cut 2025-03-10
-pairs (m = card[z1], n = card[c_late]): 41.00 DUK
+pairs (m = card[z1], n = late): 41.00 DUK
   cut 2025-03-10
 pairs (m = card[z1], n = dues2): ?"When is the check?" (check_day)
 pairs (m = card[z1], n = dues3): ?"When does the law apply?" (law_day)
@@ -12302,7 +12302,7 @@ pairs (m = card2[x], n = dues[dan]): 18.00 DUK
   assumed: the dues day isn't set yet (dues_day)
   unfulfilled: dues[dan]
   cut 2025-03-10
-pairs (m = card2[x], n = card[c_late]): 43.00 DUK
+pairs (m = card2[x], n = late): 43.00 DUK
   cut 2025-03-10
 pairs (m = card2[x], n = dues2): ?"When is the check?" (check_day)
 pairs (m = card2[x], n = dues3): ?"When does the law apply?" (law_day)
@@ -12320,7 +12320,7 @@ pairs (m = dues2, n = dues[ana]): ?"When is the check?" (check_day)
 pairs (m = dues2, n = dues[bob]): ?"When is the check?" (check_day)
 pairs (m = dues2, n = dues[cid]): ?"When is the check?" (check_day)
 pairs (m = dues2, n = dues[dan]): ?"When is the check?" (check_day)
-pairs (m = dues2, n = card[c_late]): ?"When is the check?" (check_day)
+pairs (m = dues2, n = late): ?"When is the check?" (check_day)
 pairs (m = dues2, n = dues2): ?"When is the check?" (check_day)
 pairs (m = dues2, n = dues3): ?"When does the law apply?" (law_day) ?"When is the check?" (check_day)
 pairs (m = dues2, n = dues4): ?"When is the check?" (check_day)
@@ -12337,7 +12337,7 @@ pairs (m = dues3, n = dues[ana]): ?"When does the law apply?" (law_day)
 pairs (m = dues3, n = dues[bob]): ?"When does the law apply?" (law_day)
 pairs (m = dues3, n = dues[cid]): ?"When does the law apply?" (law_day)
 pairs (m = dues3, n = dues[dan]): ?"When does the law apply?" (law_day)
-pairs (m = dues3, n = card[c_late]): ?"When does the law apply?" (law_day)
+pairs (m = dues3, n = late): ?"When does the law apply?" (law_day)
 pairs (m = dues3, n = dues2): ?"When does the law apply?" (law_day) ?"When is the check?" (check_day)
 pairs (m = dues3, n = dues3): ?"When does the law apply?" (law_day)
 pairs (m = dues3, n = dues4): ?"When does the law apply?" (law_day) ?"When is the check?" (check_day)
@@ -12354,7 +12354,7 @@ pairs (m = dues4, n = dues[ana]): ?"When is the check?" (check_day)
 pairs (m = dues4, n = dues[bob]): ?"When is the check?" (check_day)
 pairs (m = dues4, n = dues[cid]): ?"When is the check?" (check_day)
 pairs (m = dues4, n = dues[dan]): ?"When is the check?" (check_day)
-pairs (m = dues4, n = card[c_late]): ?"When is the check?" (check_day)
+pairs (m = dues4, n = late): ?"When is the check?" (check_day)
 pairs (m = dues4, n = dues2): ?"When is the check?" (check_day)
 pairs (m = dues4, n = dues3): ?"When does the law apply?" (law_day) ?"When is the check?" (check_day)
 pairs (m = dues4, n = dues4): ?"When is the check?" (check_day)
@@ -12371,7 +12371,7 @@ pairs (m = fee, n = dues[ana]): ?"When is the fee charged?" (fee_day)
 pairs (m = fee, n = dues[bob]): ?"When is the fee charged?" (fee_day)
 pairs (m = fee, n = dues[cid]): ?"When is the fee charged?" (fee_day)
 pairs (m = fee, n = dues[dan]): ?"When is the fee charged?" (fee_day)
-pairs (m = fee, n = card[c_late]): ?"When is the fee charged?" (fee_day)
+pairs (m = fee, n = late): ?"When is the fee charged?" (fee_day)
 pairs (m = fee, n = dues2): ?"When is the check?" (check_day) ?"When is the fee charged?" (fee_day)
 pairs (m = fee, n = dues3): ?"When does the law apply?" (law_day) ?"When is the fee charged?" (fee_day)
 pairs (m = fee, n = dues4): ?"When is the check?" (check_day) ?"When is the fee charged?" (fee_day)
@@ -12388,7 +12388,7 @@ pairs (m = free, n = dues[ana]): ?"When is the fee charged?" (fee_day)
 pairs (m = free, n = dues[bob]): ?"When is the fee charged?" (fee_day)
 pairs (m = free, n = dues[cid]): ?"When is the fee charged?" (fee_day)
 pairs (m = free, n = dues[dan]): ?"When is the fee charged?" (fee_day)
-pairs (m = free, n = card[c_late]): ?"When is the fee charged?" (fee_day)
+pairs (m = free, n = late): ?"When is the fee charged?" (fee_day)
 pairs (m = free, n = dues2): ?"When is the check?" (check_day) ?"When is the fee charged?" (fee_day)
 pairs (m = free, n = dues3): ?"When does the law apply?" (law_day) ?"When is the fee charged?" (fee_day)
 pairs (m = free, n = dues4): ?"When is the check?" (check_day) ?"When is the fee charged?" (fee_day)
@@ -12405,7 +12405,7 @@ pairs (m = odd, n = dues[ana]): ?"When is the fee charged?" (fee_day)
 pairs (m = odd, n = dues[bob]): ?"When is the fee charged?" (fee_day)
 pairs (m = odd, n = dues[cid]): ?"When is the fee charged?" (fee_day)
 pairs (m = odd, n = dues[dan]): ?"When is the fee charged?" (fee_day)
-pairs (m = odd, n = card[c_late]): ?"When is the fee charged?" (fee_day)
+pairs (m = odd, n = late): ?"When is the fee charged?" (fee_day)
 pairs (m = odd, n = dues2): ?"When is the check?" (check_day) ?"When is the fee charged?" (fee_day)
 pairs (m = odd, n = dues3): ?"When does the law apply?" (law_day) ?"When is the fee charged?" (fee_day)
 pairs (m = odd, n = dues4): ?"When is the check?" (check_day) ?"When is the fee charged?" (fee_day)
@@ -15615,7 +15615,7 @@ ask sweep_power: factor(rz, huge, year, effective), factor(rz, huge, month, nomi
 ask sweep_power_twin: factor(rz, n2, year, effective), factor(rneg2, n2, year, effective)
 
 ask sweep_calendar: is_business(d, cy), is_business(2026-01-01, cy)
-,,1:0,1547:g1_hole: (?"calendar calh doesn't cover 2026" (calh), ?"calendar calh doesn't cover 2026" (calh), ?"calendar calh doesn't cover 2026" (calh))
+,,1:0,1553:g1_hole: (refused: RUN-LIMIT a day passes 9999-12-31, refused: RUN-LIMIT a day comes before 0001-01-01, refused: RUN-LIMIT a day passes 9999-12-31)
   cut 2026-12-31
 g1_none: (refused: RUN-DOMAIN calendar cal7 has no business day, refused: RUN-DOMAIN calendar cal7 has no business day, refused: RUN-DOMAIN calendar cal7 has no business day, refused: RUN-DOMAIN calendar cal7 has no business day)
   cut 2026-12-31
@@ -17750,7 +17750,7 @@ a: 1
   cut 2026-12-31
 warning: WARN-UNREAD input r5 is read by nothing
 warning: WARN-UNREAD input who is read by nothing
-,21:g13/range_key_unasked,3:g13,31:run g13/range_key_unasked.tally,1330:27:g13/range_key_unasked.tally,1293:model g13_range_key_unasked
+,21:g13/range_key_unasked,3:g13,31:run g13/range_key_unasked.tally,1312:27:g13/range_key_unasked.tally,1275:model g13_range_key_unasked
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -17770,7 +17770,7 @@ kind gifts: event certain
 
 place konto[p in persons]: accounts PLN lives 2026-01-01..
 
-place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+place fund: holdings etf_unit lives 2026-01-01..
 
 place world: outside lives 2026-01-01..
 
@@ -17793,7 +17793,7 @@ version card_2026
   opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
   bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[ana] amount 1.00 PLN) "a gift"
 ,,1:1,85:refused: LOAD-KEY 4 is not a value of 1 .. 9 step 2 (g13/range_key_unasked.tally:40)
-,25:g13/range_key_unasked_ask,3:g13,42:run g13/range_key_unasked.tally --ask nope,1330:27:g13/range_key_unasked.tally,1293:model g13_range_key_unasked
+,25:g13/range_key_unasked_ask,3:g13,42:run g13/range_key_unasked.tally --ask nope,1312:27:g13/range_key_unasked.tally,1275:model g13_range_key_unasked
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -17813,7 +17813,7 @@ kind gifts: event certain
 
 place konto[p in persons]: accounts PLN lives 2026-01-01..
 
-place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+place fund: holdings etf_unit lives 2026-01-01..
 
 place world: outside lives 2026-01-01..
 

@@ -1,0 +1,41 @@
+# tally 2.1.8 R15 (#184), L §5.18 Partial answers: flows of a place and of a move is a sum of its movements, so a
+# partial line prints its known part and the hole leg's amount with its coefficient, signed by its direction at the
+# place (out of k2: -1) or unsigned for the move's own flows (+1).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input dom: int
+input hamt[m in months]: money PLN
+place k2: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+move hm[m in months]: transfers
+  on day_of(m, dom)
+  leg cash from k2 to world amount hamt[m]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  dom = 5 "s"
+  hamt[2026-01] = 1.00 PLN "s"
+  hamt[2026-02] = ?"how much in Feb" "s"
+  hamt[2026-03..2026-12] = 1.00 PLN "s"
+  opening[k2] = 10 000.00 PLN at 2026-01-01 start "s"
+
+ask p2: flows(k2, 2026-02) partial
+ask p2b: flows(k2, 2026-01 .. 2026-03) partial
+ask p3: flows(hm, 2026-01 .. 2026-03) partial
+=== expect
+p2: 0.00 PLN + -1 × ?"how much in Feb" (hamt[2026-02])
+  cut 2026-01-01
+p2b: -2.00 PLN + -1 × ?"how much in Feb" (hamt[2026-02])
+  cut 2026-01-01
+p3: 2.00 PLN + 1 × ?"how much in Feb" (hamt[2026-02])
+  cut 2026-01-01

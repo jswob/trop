@@ -7,6 +7,71 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.1.8 (the spec round after M2: 77 items, six rules)
+
+The spec patch tally 2.1.8 (`spec/CHANGES.md` 2.1.8-1 to 2.1.8-25), the lead's ruling of the plan on 2026-11-16 and
+the user's cut. Each new test was seen failing on the commit before. **1 492 tests, all pass** (1 379, 113 new, 21
+changed; `refcore_fast` byte-equal). One mechanism per rule:
+
+- **Refusals stop at readings (R11).** `walk.apply`'s `'reset'` arm ends a dated refusal as it ends a hole; a
+  refusal met on the way outranks a hole (`evaluate`'s business days, division, `kind_has_member`).
+- **What a version states (R12).** `same` lines by their version's cut and world (`model.same_seen`); an undecided
+  statement leaves one movement; a link applies only with the row that states it.
+- **Every clause on every form (R13).** One fan-out path (`ask`); `windows each` takes the unknown day its answer
+  carries (`evaluate.CARRY`, `Iv.carry`, `ask.each_next`), one at a time in the order the reads met them.
+- **Unit `any` (R14).** Readings keyed by their unit (`moves.any_unitless`, `Walk.apply_reading`, `units_held`).
+- **Partial (R15).** `evaluate.lin_passes`; `mreads.leg_lin`, `lin_fold` for the walked sums.
+- **Definitions (R16).** `mreads.modelled_account`; `mreads.after_day` for a reading `after m`; the keyed quantile's
+  level; `walk.base_legs`, a projection's legs by their own day.
+- **Singletons.** `moves.same_fulfils_differ` (S1); `resid`'s `<f> <value>` heads (S3); `ask.explain_instance`'s
+  `answered at` (S4); `evaluate.same_class`, `moves.and_list`, HOLE-SAME in id order (S6); `ask.each_limit` (S7);
+  `ask.explain_node`'s one set per line (S8); `moves.answer_booking`, a hole booking answered where the instance is
+  made (S9).
+- **The §4 groups.** `ask.print_line`'s pins (#161); `check.open_key`, `check3.m_check_any_priced`, the `to u` checks
+  as `RUN-DOMAIN` (#162, in part); `evaluate.carry_latest` (#169-c); `moves.agreed_body` (#169-e); item 77's
+  three-valued test, `walk.imp_three`, `imp_hole`, `window_lifespan`, `moves.m_window_class_depends`;
+  `walk.own_obs` for a walk-bound trace and the adjustments measured with the trace off (#169-g); `check.assign`'s
+  four-digit figure and `RUN-NONE` naming the row (#169-l); `gap` through `run_ends` (#159).
+- **The cut.** A version's `same` between an observed row and a planned instance of one model is `LOAD-SAME`.
+- **The follow-up after the first build groups** (P26, P27, P29, P30; **1 509 tests**, 17 new, 1 changed): a refusal
+  met first stands before the edge's `RUN-LIMIT` (`add_business_at`); a reading compared in a `when` typed by its
+  place (`check.t_lastx`); `ask.answer_same_undecided` refuses past 20 000 choices and compares whole blocks;
+  `ask.diff_binds`; a def's computed window keeps its carry; `walk.dec_win_end` (#175's p6win); a refused line and a
+  count of none list their pin; `walk.words_differ`, `hole_flows`; a binding's member modelled on some days is its
+  hole; load checks for an ask's law expression, a running read in an ask's value, a band patch under an ask's cut
+  (`loader.patch_under_cut`) and `bal`/`low` at a written place of unit `any` (`check3.any_needs_unit`).
+- **The third turn** (P33, the review of group 2's fix; **1 517 tests**, 8 new, 4 of this round's moved):
+  `walk.imp_hole` reaches only the legs the refusal would refuse (a pending window leg tested with its batch through
+  `pend_at`); `walk.words_differ` compares the refusal's bytes; `moves.answer_booking` leaves a
+  left-out instance unanswered; a two-stack diff under `windows each` (`ask.diff_side_each`, `each_rows(runs=True)`,
+  `each_group`, `diff_each_print`, `cli.cross_stack_each`); `days_between(w, w)` is 0. The every-day pinned-twin
+  check is `tmp/spec-2.1.8/runs/twins.py` (untracked), over answer lines since P34.
+- **The fourth turn** (P34, the builder's last fix; **1 519 tests**): the third turn's register split taken back
+  (P34: the register is the line's read set, `windows each` cuts by the answer); a two-stack diff's side that
+  prints (S7's seen and unseen limit) is the line; a diff's law that reads its `for` is read per tuple
+  (`ask.law_reads_binds`, `diff_binds`), on two stacks per tuple (`cli.cross_stack_cells`); `evaluate.edge_first`
+  visits the rows a `same` row follows.
+- **The fifth turn** (P37 on T's re-run's STOP-REPORTs; **1 522 tests**): `moves.py` imports `evaluate` last, so a
+  joint model's `reprint` loads it whole; `evaluate.carry_hole` adds each window a question's text is given (a
+  shifted window prints as another); `walk.each_before_from` lists a window leg's `before from:` per day under
+  `windows each`, the day not taken; the spec's household values its wrappers' units `by etf_price[month_of(d)]`.
+- **The sixth turn** (group 3's review, P39; **1 532 tests**): `mreads.m_modelled_account` skips the leg of every
+  `after m` reading before the read; `m_flows_place_walk` drops a window day's perm once its decision has fallen;
+  `walk.base_legs(after=t)` books an earlier decision of day t from t on; `check3` refuses an `after` key no index
+  holds; a quantile's refused level comes before its holes; `m_partial_bal` and `m_proj_uncertain` keep a
+  projection's start hole and its uncertain amounts linear; `lin_passes` lets a `dyn` field (a leg's amount) pass;
+  `evaluate.units_at_reading` takes a unitless row's units from the walk's gaps, and `since` reads only the instant.
+- **The seventh turn** (group 4's review, P42; **1 538 tests**): `check` stops an ask's law chain at a def with its own
+  `at`; `moves.s1_refusal` names S1's refusal for both instances and rows, which bindings over movements and `flows`
+  of a move raise; `evaluate.trace_obs_row` prints an observation a sum reads as its row; a class stands in a binding
+  by its first id (`mreads`); `last` over always rows names its read's day in HOLE-SAME.
+- **The eighth turn** (T's STOP-REPORTs 6 and 7; **1 539 tests**): `mreads.m_e_value`'s whole-priced branch keeps
+  its price's hole linear under partial; STOP-REPORT 6 was the seventh turn's `trace_obs_row`.
+- **Left.** About 125 run sites no text reaches (`LoadAtRun`, `is_load` stay); explain's `windows each` block
+  against its pinned twin's pins section, and `n9_start`'s plain `?` group (next round's); the covered face asks
+  every day of its window (`moves.m_window_class_depends`, a cost, no byte); a law per tuple on forms other than
+  `diff` (`REFCORE-NOT-YET`, as at 2.1.7).
+
 ## tally 2.1.7 (the spec round after M1: 84 items, ten rules)
 
 The spec patch tally 2.1.7 (`spec/CHANGES.md` 2.1.7-1 to 2.1.7-30), the coordinator's picks P3–P32 under the user's

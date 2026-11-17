@@ -1,0 +1,66 @@
+# tally 2.1.8 item 77 (#201), E §4.1 step 2 and L §4.4: a test of a window-dated movement that comes out one way on
+# some of its days and another on the rest is the window's hole, as far as the refusal or the other class would reach.
+# st covers konto from 03-01 to 03-07, so pay, dated in window(03-05, 03-10) and before K (03-08) only on its first
+# three days, is modelled past on those days (open: no observation) and booked as past on the rest: c1 and c3 are the
+# hole, and each splits. As known 2026-03-07, st isn't known and nothing is covered (c5). 2.1.7's refcore asked the
+# window's first day (0.00 PLN). The plan's i77b.
+=== m.tally
+model t
+  tally 2
+  on 2026-03-08
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input wd: date
+
+move pay: transfers
+  on wd
+  leg cash from world to konto amount amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  amt = 100.00 PLN "s"
+  wd = window(2026-03-05, 2026-03-10) "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+
+version st
+  cite s
+  governs 2026-03-01..2026-03-07
+  known 2026-03-08
+  covers konto
+
+ask c1: bal(konto, 2026-03-31)
+ask c2: bal(konto, 2026-03-31) windows each
+ask c3: flows(pay, 2026-03)
+ask c4: flows(pay, 2026-03) windows each
+ask c5: bal(konto, 2026-03-31) as known 2026-03-07
+ask c6: bal(konto, 2026-03-31) as known 2026-03-07 windows each
+=== expect
+c1: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (pay)
+  cut 2026-03-08
+c2 [wd = 2026-03-05 .. 2026-03-07]: 0.00 PLN
+  open: pay
+  cut 2026-03-08
+c2 [wd = 2026-03-08 .. 2026-03-10]: 100.00 PLN
+  cut 2026-03-08
+c3: ?"date within window(2026-03-05, 2026-03-10) not precise enough for flows of pay" (pay)
+  cut 2026-03-08
+c4 [wd = 2026-03-05 .. 2026-03-07]: 0.00 PLN
+  open: pay
+  cut 2026-03-08
+c4 [wd = 2026-03-08 .. 2026-03-10]: 100.00 PLN
+  cut 2026-03-08
+c5: 100.00 PLN
+  unfulfilled: pay
+  cut 2026-03-07
+c6: 100.00 PLN
+  unfulfilled: pay
+  cut 2026-03-07

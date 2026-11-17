@@ -1,0 +1,40 @@
+# tally 2.1.8 R16(c), #171 (B7 of group 3's review): a quantile whose level is refused (lv = 0) refuses before its
+# hole terms z[b], z[c], since refusals outrank holes (L §8); q3, with no hole term, was already so. 2f019698
+# printed q1 as the terms' holes.
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+unit PLN: currency minor 0.01
+index ks = [a, b, c]
+input z[k in ks]: money PLN
+input w[k in ks]: int
+input x: money PLN
+input lv: num
+version zz
+  cite plan
+  governs always
+  known 2026-01-01
+  z[a] = 10.00 PLN "s"
+  z[b] = ?"z of b" "s"
+  z[c] = ?"z of c" "s"
+  w[a] = 1 "s"
+  w[b] = 1 "s"
+  w[c] = 0 "s"
+  x = ?"what is x" "s"
+  lv = 0 "s"
+ask q1: quantile(z[k] for k in ks, lv)
+ask q2: quantile(z[k] for k in ks where w[k] > 1, lv)
+ask q3: quantile(z[k] for k in [a], lv)
+=== expect
+q1: refused: RUN-DOMAIN quantile has no meaning for the level 0
+  cut 2026-10-20
+q2: refused: RUN-EMPTY quantile over no keys
+  cut 2026-10-20
+q3: refused: RUN-DOMAIN quantile has no meaning for the level 0
+  cut 2026-10-20
+warning: WARN-UNREAD input x is read by nothing

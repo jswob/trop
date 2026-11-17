@@ -27,9 +27,9 @@ place lent4: claims PLN lives 2026-01-01..
 
 place owed: debts PLN lives 2026-01-01..
 
-place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+place fund: holdings etf_unit lives 2026-01-01..
 
-place fund2: holdings etf_unit priced fund_price lives 2026-01-01..
+place fund2: holdings etf_unit lives 2026-01-01..
 
 place gone: accounts PLN lives 2026-01-01..2026-02-27
 

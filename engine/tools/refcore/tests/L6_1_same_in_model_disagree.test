@@ -30,5 +30,5 @@ version statement_01
 
 ask b: bal(konto, 2026-01-31)
 === expect
-b: ?"bank[r32] and bank[r31] are one, but the leg at konto differs on 2026-01-12: 90.00 PLN (bank[r32]) and 100.00 PLN (bank[r31])" (bank[r32], bank[r31])
+b: ?"bank[r31] and bank[r32] are one, but the leg at konto differs on 2026-01-12: 100.00 PLN (bank[r31]) and 90.00 PLN (bank[r32])" (bank[r31], bank[r32])
   cut 2026-03-01

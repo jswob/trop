@@ -1,0 +1,37 @@
+# tally 2.1.8 R14, L §5.10, E §6.3: at a place of unit any each ledger is its unit's: EUR's balance line takes
+# EUR's reading and pad only, PLN's PLN's.
+=== m.tally
+model t
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+unit USD: currency minor 0.01
+kind wallets: place any signed
+place broker: wallets lives 2025-01-01..
+place world: outside lives 2025-01-01..
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  pad broker from world
+  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
+  opening[broker] = 2.00 PLN at 2026-01-01 start "s"
+  stated[broker] = 4.00 EUR at 2026-02-15 end "s"
+  stated[broker] = 3.00 PLN at 2026-02-15 end "s"
+
+ask r: residuals broker 2026-02
+=== expect
+r: residuals broker 2026-02
+  ledger EUR:
+    2026-02 balance: model 1.00 EUR, observed 4.00 EUR, difference 3.00 EUR
+      balance broker 2026-02-15 end (padded): booked 1.00 EUR, stated 4.00 EUR, gap 3.00 EUR
+  ledger PLN:
+    2026-02 balance: model 2.00 PLN, observed 3.00 PLN, difference 1.00 PLN
+      balance broker 2026-02-15 end (padded): booked 2.00 PLN, stated 3.00 PLN, gap 1.00 PLN
+  cut 2026-06-10

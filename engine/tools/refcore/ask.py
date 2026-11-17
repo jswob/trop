@@ -26,6 +26,14 @@ from .eval2 import QOut
 REG_ORDER = ['assumed', 'given', 'missing', 'pinned', 'pinned sample', 'sample', 'world', 'reading', 'anchor', 'pad',
              'adjustment', 'unfulfilled', 'open', 'left out', 'uncertain', 'held']
 MAX_PATHS = 100000   # E §7: N <= 100 000 (REQ-PATHS)
+# L §7.6 Limits 6 (tally 2.1.8 S7, #174): "One line's windows each takes at most 20 000 combinations of days, for one
+# binding tuple and one combination of axis options (RUN-LIMIT)"; L §8.4's form
+EACH_LIMIT = 20000
+
+
+def each_limit():
+    from .evaluate import refuse
+    return refuse('RUN-LIMIT', 'windows each over more than 20 000 day combinations')
 
 
 class LoadAtRun(Exception):
@@ -140,6 +148,9 @@ class Result:
     def key(self):
         return tuple(rkey(v) for v in self.vals)
 
+    def carry_vals(self):
+        return list(self.vals) + ([self.trace] if self.trace is not None else [])
+
 
 def rkey(v):
     if isinstance(v, TallyError):
@@ -148,6 +159,8 @@ def rkey(v):
         return ('check', v.key())
     if isinstance(v, RowSet):
         return ('rows', tuple(sorted(v.rows)))
+    if isinstance(v, (Ledgers, DiffOut)):
+        return v.key()
     if isinstance(v, QOut):
         return v.key()
     if isinstance(v, Hole):
@@ -163,18 +176,57 @@ def lin_key(l):
 
 
 class CheckOut:
-    def __init__(self, text, kind):
+    def __init__(self, text, kind, vals=()):
         self.text = text
         self.kind = kind
+        self.vals = vals
+
+    def carry_vals(self):
+        return self.vals
 
     def key(self):
         return (self.kind, self.text)
 
 
+class DiffOut:
+    """A diff cell's answer: its head's counts and its lines (L §5.18)."""
+
+    def __init__(self, counted, body, vals=()):
+        self.counted = counted
+        self.body = body
+        self.vals = vals
+
+    def carry_vals(self):
+        return self.vals
+
+    def key(self):
+        return ('diff', self.counted, tuple(self.body))
+
+
+class Ledgers:
+    """residuals' answer: its head (the place, the span, the grouping) and its lines, each ledger's groups with
+    their totals and lines (E §6.3)."""
+
+    def __init__(self, head, lines, vals=()):
+        self.head = head
+        self.lines = lines
+        self.vals = vals
+
+    def carry_vals(self):
+        return self.vals
+
+    def key(self):
+        return ('ledgers', self.head, tuple(self.lines))
+
+
 class RowSet:
-    def __init__(self, rows, texts):
+    def __init__(self, rows, texts, read=None):
         self.rows = rows
         self.texts = texts
+        self.read = read          # the value whose rows they are: what the set rests on (tally 2.1.8 R13)
+
+    def carry_vals(self):
+        return [self.read]
 
 
 def day_text(d, inst=None):
@@ -235,6 +287,16 @@ def fmt_partial(h):
 def lin_day(d):
     from .moves import day_lo
     return day_lo(d)
+
+
+class DiffSide(DiffOut):
+    """One side's cell of a diff over two stacks, run under windows each: its lines ({world: [(key, value)]}) and
+    the expression's type; its values carry the unknown days (cli.cross_stack_diff pairs the two sides' runs)."""
+
+    def __init__(self, res, t):
+        DiffOut.__init__(self, '', (), [v for lines in res.values() for _k, v in lines])
+        self.res = res
+        self.t = t
 
 
 class EachRes:
@@ -425,7 +487,10 @@ class Asker:
             after_on(m, K)
         eng.ask_K = K
         law = None
-        if a.law is not None:
+        # a diff's law that reads its ask-level for is read per tuple (L §5.18: every clause stands on every form;
+        # item 17 of the fourth turn), in diff_binds
+        self._tuple_law = a.law if (a.law is not None and a.form == 'diff' and law_reads_binds(a)) else None
+        if a.law is not None and self._tuple_law is None:
             v = eng.ev(a.law, {}, Ctx(None, K))
             if isinstance(v, Hole):
                 return ['%s: %s' % (a.id, fmt_value(v))]
@@ -457,7 +522,7 @@ class Asker:
         eng.ask_K = ctx.cut
         old_ws = set_world(eng.world_chain(ctx.world))
         try:
-            out = self._answer_in(eng, a, ctx, pins_coll)
+            out = self.answer_same_undecided(eng, a, ctx, pins_coll)
         finally:
             set_world(old_ws)
         # E §9 invariant 4: asks move no money; the timelines the ask walked are as they were when walked
@@ -468,13 +533,95 @@ class Asker:
                         'ask was answered (E §9 invariant 4)' % (a.id, w.K)]
         return out
 
+    def answer_same_undecided(self, eng, a, ctx, pins_coll):
+        """L §4.5 Whatever a version states is read as its rows are (tally 2.1.8 R12; #187's known-window comment): a
+        same line known in a window that holds the cut is read as seen and as unseen, and a result on which the two
+        differ is HOLE-IMPRECISE, naming the rows it joins and its version; one on which they agree answers. The line
+        is answered with every such line it meets seen, then again with each other choice, on fresh caches."""
+        from . import model as MD
+        if MD._SAMEMET[0] is not None or MD._SAMEPICK[0] is not None:
+            return self._answer_in(eng, a, ctx, pins_coll)
+        MD._SAMEMET[0] = {}
+        try:
+            out = self._answer_in(eng, a, ctx, pins_coll)
+            met = MD._SAMEMET[0]
+        finally:
+            MD._SAMEMET[0] = None
+        if not met:
+            return out
+        vids = sorted(met)
+        if 2 ** len(vids) > EACH_LIMIT:
+            # L §7.6 limit 6 (tally 2.1.8, pick P27): a plain line takes at most 20 000 seen and unseen choices,
+            # refused before any rerun
+            from .evaluate import refuse
+            raise refuse('RUN-LIMIT', 'seen and unseen over more than 20 000 choices')
+        picks = [()]
+        for v in vids:
+            picks = [p + ((v, s),) for p in picks for s in (True, False)]
+        names = ('memo', 'run_cache', 'walks', 'walk_cells', '_fast', 'walk_warnings')
+        saved = dict((n, eng.__dict__[n]) for n in names if n in eng.__dict__)
+        outs = [out]
+        try:
+            for p in picks[1:]:
+                for n in names:
+                    if n == '_fast':
+                        eng.__dict__.pop(n, None)
+                    elif n in saved:
+                        eng.__dict__[n] = [] if n == 'walk_warnings' else {}
+                MD._SAMEPICK[0] = dict(p)
+                try:
+                    outs.append(self._answer_in(eng, a, ctx, pins_coll))
+                finally:
+                    MD._SAMEPICK[0] = None
+        finally:
+            for n in names:
+                eng.__dict__.pop(n, None)
+            eng.__dict__.update(saved)
+        if all(o == out for o in outs):
+            return out
+        qs = []
+        for v in vids:
+            (lo, hi), rows = met[v]
+            q = 'date within window(%s, %s) not precise enough for the cut %s' % (lo, hi, ctx.cut)
+            qs += [(q, x) for x in sorted(rows)] + [(q, v)]
+        hole = fmt_value(Hole(qs))
+
+        def blocks(lines):
+            bs = []
+            for ln in lines:
+                if ln.startswith(' ') and bs:
+                    bs[-1].append(ln)
+                else:
+                    bs.append([ln])
+            return bs
+        bss = [blocks(o) for o in outs]
+        heads = [[b[0].split(': ', 1)[0] for b in bs] for bs in bss]
+        if any(h != heads[0] for h in heads):
+            regs = [ln for ln in bss[0][-1][1:] if ln.startswith(('  cut', '  law date'))] if bss[0] else []
+            return ['%s: %s' % (a.id, hole)] + regs[-1:]
+        res = []
+        # a result is all the form prints (R13.1): a ledger, a diff, an explanation or a read set that differs in any
+        # line is the hole; a value's, a check's or a solve's register may differ (tally 2.1.8, item 5)
+        whole = a.form in ('diff', 'explain', 'inputs-of', 'readers-of', 'residuals')
+        for i, b in enumerate(bss[0]):
+            if whole and any(bs[i] != b for bs in bss):
+                regs = [ln for ln in b[1:] if ln.startswith(('  cut', '  law date'))]
+                res.append('%s: %s' % (heads[0][i], hole))
+                res.extend(regs[-1:])
+                continue
+            if all(bs[i][0] == b[0] for bs in bss) or not b[0].split(': ', 1)[1:]:
+                res.extend(b)
+                continue
+            # the value differs between the two accounts: the hole, with the register the seen account gives
+            res.append('%s: %s' % (heads[0][i], hole))
+            res.extend(b[1:])
+        return res
+
     def _answer_in(self, eng, a, ctx, pins_coll):
         m = self.m
         each_mode = ctx.windows[0] if isinstance(ctx.windows, tuple) and ctx.windows else None
         if a.form == 'diff':
             return self.answer_diff(eng, a, ctx, pins_coll)
-        if a.form == 'residuals':
-            return self.answer_residuals(eng, a, ctx, pins_coll)
         if a.path is not None:
             # path p replays path p of the run (L §5.16)
             ctx = ctx.but(path=(a.seed, a.path))
@@ -486,6 +633,8 @@ class Asker:
             combos = [c + ((ax, o),) for c in combos for o in opts]
         if a.binds and axes and a.form != 'readers-of' and each_mode is None:
             return self.binds_over_axes(eng, a, ctx, pins_coll, pinned_axes, axes, combos)
+        if a.binds and a.form != 'readers-of' and each_mode is not None:
+            return self.each_binds(eng, a, ctx, pins_coll, pinned_axes, axes, combos, each_mode)
         # binding tuples (L §5.18: one line per binding tuple)
         tuples = []
         tregs = {}
@@ -537,9 +686,9 @@ class Asker:
         wholes = {}
         for c in combos:
             cctx = ctx.but(axes=tuple(sorted(list(pinned_axes.items()) + list(c))))
-            mem = list(eng.members(a.binds, {}, cctx))
+            mem = list(eng.members(a.binds, {}, cctx, regs=[]))
             prev = -1
-            for env, st in mem:
+            for env, st, rg in mem:
                 if isinstance(st, tuple) and st[0] == 'domainhole':
                     return ['%s: %s' % (a.id, fmt_value(st[1]))]
                 key = tuple(vkey(env[b.var]) for b in a.binds)
@@ -547,13 +696,16 @@ class Asker:
                     # L §5.18: "A tuple whose where is a hole prints its line as that hole, its value unevaluated"
                     wholes.setdefault(key, []).append(st)
                 if key not in per:
-                    per[key] = (env, [])
+                    per[key] = (env, [], {})
                     order.insert(prev + 1, key)
                 prev = order.index(key)
                 per[key][1].append(c)
+                # each combination binds its own tuple: a movement bound is that combination's (L §5.5, §5.18;
+                # tally 2.1.8 R13, #169-k)
+                per[key][2][c] = (env, rg)
         out = []
         for key in order:
-            env, cs = per[key]
+            env, cs, envs = per[key]
             env_text = ' (%s)' % ', '.join('%s = %s' % (b.var, fmt_bind(b, env[b.var])) for b in a.binds)
             if key in wholes:
                 out.append('%s%s: %s' % (a.id, env_text, fmt_value(merge(*wholes[key]))))
@@ -561,7 +713,11 @@ class Asker:
             results = {}
             for c in cs:
                 cctx = ctx.but(axes=tuple(sorted(list(pinned_axes.items()) + list(c))))
-                results[c] = self.evaluate(eng, a, env, cctx)
+                cenv, rg = envs[c]
+                results[c] = self.evaluate(eng, a, cenv, cctx)
+                # what the tuple's members brought in that combination (an unfulfilled instance it binds, L §8.2)
+                for rc in rg:
+                    results[c].coll.merge(rc)
             for ln in self.group(a, axes, cs, results):
                 out.extend(self.print_line(a, env_text, ln, pins_coll, ctx))
         return out
@@ -581,6 +737,12 @@ class Asker:
         """diff(e [for binds]) in S against B, evaluated per combination of the axes it reads (L §5.5, tally 2.1.7
         R8): each combination a cell, `diff_worlds`; the cells' results printed by `diff_print`. On a stack that holds
         one of the two worlds (cli.cross_stack_diff) the cells of that side are kept for the caller instead."""
+        if a.binds and getattr(self, '_diff_env', None) is None:
+            return self.diff_binds(eng, a, ctx, pins_coll)
+        if isinstance(ctx.windows, tuple) and ctx.windows and getattr(self, '_diff_only', None) is None:
+            return self.diff_each(eng, a, ctx, pins_coll)
+        if isinstance(ctx.windows, tuple) and ctx.windows:
+            return self.diff_side_each(eng, a, ctx, pins_coll)
         axes = self.diff_axes(a, ctx)
         pinned = list(ctx.axes)
         cells = {}
@@ -592,6 +754,102 @@ class Asker:
             return []
         return self.diff_print(a, axes, cells, ctx)
 
+    def diff_binds(self, eng, a, ctx, pins_coll):
+        """A diff with an ask-level `for`: the body per binding tuple (L §5.18; tally 2.1.8 R13.1, item 3 of the
+        follow-up), each tuple's block under the head naming it, `h (k = b): diff in …`; a tuple whose where is a
+        hole prints its line as that hole."""
+        out = []
+        only = getattr(self, '_diff_only', None) is not None
+        tsides = []
+        for env, st in list(eng.members(a.binds, {}, ctx)):
+            if isinstance(st, tuple) and st[0] == 'domainhole':
+                out.append('%s: %s' % (a.id, fmt_value(st[1])))
+                tsides.append(('', ('line', out[-1:])))
+                continue
+            txt = ' (%s)' % ', '.join('%s = %s' % (b.var, fmt_bind(b, env[b.var])) for b in a.binds)
+            if isinstance(st, Hole):
+                out.append('%s%s: %s' % (a.id, txt, fmt_value(st)))
+                tsides.append((txt, ('line', out[-1:])))
+                continue
+            tctx = ctx
+            if getattr(self, '_tuple_law', None) is not None:
+                # the tuple's law date (item 17 of the fourth turn): a hole makes its line that hole
+                v = eng.ev(self._tuple_law, env, Ctx(None, ctx.cut))
+                if isinstance(v, Hole):
+                    out.append('%s%s: %s' % (a.id, txt, fmt_value(v)))
+                    tsides.append((txt, ('line', out[-1:])))
+                    continue
+                tctx = ctx.but(law=eng.date_of(v, 'the law of an ask'))
+            self._diff_env = env
+            self._diff_side = None
+            try:
+                lines = self.answer_diff(eng, a, tctx, pins_coll)
+            finally:
+                self._diff_env = None
+            if only:
+                # one side of a diff over two stacks: each tuple's cells, for cli.cross_stack_diff
+                tsides.append((txt, self._diff_side if self._diff_side is not None else ('line', lines)))
+                continue
+            out.extend(a.id + txt + ln[len(a.id):] if ln.startswith(a.id) else ln for ln in lines)
+        if only:
+            self._diff_side = ('binds', tsides)
+            return []
+        return out
+
+    def diff_each(self, eng, a, ctx, pins_coll):
+        """diff under windows each: each combination's cell read again per sub-window (each_rows), one block per run
+        of sub-windows whose set of lines agrees, under its head, then its lines; one unlabelled block where all agree
+        (L §4.4, §5.18; tally 2.1.8 R13, #186).  Layout: the window part, then the axis part, as a value line's."""
+        axes = self.diff_axes(a, ctx)
+        pinned = list(ctx.axes)
+        combos = self.diff_combos(axes)
+
+        def evalf(xctx):
+            res, coll, _c, t = self.diff_worlds(eng, a, xctx, pins_coll)
+            counted, body = self.diff_lines(a, res, xctx, t)
+            return Result((DiffOut(counted, body, [v for lines in res.values() for _k, v in lines]),), coll)
+        results = {}
+        for c in combos:
+            cctx = ctx.but(axes=tuple(sorted(pinned + list(c)))) if c else ctx
+            results[c] = EachRes(self.each_rows(eng, a, None, cctx, evalf=evalf))
+
+        return self.diff_each_print(a, axes, combos, results, ctx)
+
+    def diff_side_each(self, eng, a, ctx, pins_coll):
+        """One side of a diff over two stacks under windows each (cli.cross_stack_diff): per combination of the
+        axes it reads, that side's runs, each once per choice of its windows' days (each_rows' runs), kept for the
+        caller, which pairs them (L §4.4, §5.18; tally 2.1.8 R13.1, item 2)."""
+        axes = self.diff_axes(a, ctx)
+        pinned = list(ctx.axes)
+
+        def evalf(xctx):
+            res, coll, _c, t = self.diff_worlds(eng, a, xctx, pins_coll)
+            return Result((DiffSide(res, t),), coll)
+        runs = {}
+        for c in self.diff_combos(axes):
+            cctx = ctx.but(axes=tuple(sorted(pinned + list(c)))) if c else ctx
+            runs[c] = self.each_rows(eng, a, None, cctx, evalf=evalf, runs=True)
+        self._diff_side = (axes, runs, ctx, 'each')
+        return []
+
+    def diff_each_print(self, a, axes, combos, results, ctx):
+        """A windows-each diff's blocks: per run of sub-windows (and axis options) that agree, its head, its lines
+        and its register."""
+        def block(head, row, reading):
+            d = row.vals[0]
+            return ['%s: %s' % (head, d.counted)] + list(d.body) + ['  ' + r for r in self.register(row.coll, reading,
+                                                                                                    ctx)]
+        out = []
+        if not axes:
+            for suffix, row in results[()].trace:
+                out.extend(block(a.id + suffix, row, []))
+            return out
+        for ln in self.group(a, axes, combos, results):
+            ax = ' [%s]' % ', '.join('%s = %s' % (x, '*' if ol is None else ' | '.join(ol)) for x, ol in ln.axes_text)
+            for suffix, row in ln.trace:
+                out.extend(block(a.id + suffix + ax, row, ln.reading))
+        return out
+
     def diff_worlds(self, eng, a, ctx, pins_coll):
         """One cell of a diff: e in world S and in world B (or the one this stack holds), line by line keyed by the
         binding tuple (the expression's text without binds). Returns ({world: [(key, value)]}, coll, ctx, type)."""
@@ -601,6 +859,7 @@ class Asker:
         coll.merge(pins_coll)
         res = {}
         only = getattr(self, '_diff_only', None)
+        base = getattr(self, '_diff_env', None) or {}
         for w in (sw, bw):
             if only is not None and w != only:
                 continue
@@ -612,7 +871,7 @@ class Asker:
                 eng.reg(('world', w))
                 lines = []
                 if bs:
-                    mem = list(eng.members(bs, {}, wctx))
+                    mem = list(eng.members(bs, dict(base), wctx))
                     for env, st in mem:
                         if isinstance(st, tuple) and st[0] == 'domainhole':
                             lines.append((_txt(e), st[1]))
@@ -624,7 +883,7 @@ class Asker:
                             continue
                         lines.append((key, self.one(eng, e, env, wctx)))
                 else:
-                    lines.append((_txt(e), self.one(eng, e, {}, wctx)))
+                    lines.append((_txt(e), self.one(eng, e, dict(base), wctx)))
             finally:
                 eng.stack.pop()
                 set_world(old)
@@ -699,53 +958,50 @@ class Asker:
         return [l for _, ls in out for l in ls]
 
     # -- residuals (E §6.3) ----------------------------------------------------------------------------
-    def answer_residuals(self, eng, a, ctx, pins_coll):
-        """residuals x span [by f]: the ledger's groups, each with its totals and its lines.  Layout (this
-        interpreter's): a head line, then per group `<month> <group>: model M, observed O, difference D` and its
-        lines indented under it, then the register."""
+    def ledgers(self, eng, a, env, ctx):
+        """residuals x span [by f]: the ledger's groups, each with its totals and its lines, as one answer of the
+        line, so a binding, an axis and windows each fan it out as any answer (L §5.5, §4.4, §5.18; tally 2.1.8 R13,
+        #185, #186).  Layout (this interpreter's): per group `<month> <group>: model M, observed O, difference D`
+        and its lines indented under it; a place of unit any's ledgers each under `ledger <u>:`."""
         r, sp, by = a.resid
-        coll = Coll()
-        coll.merge(pins_coll)
-        eng.stack.append(coll)
+        p = eng.place_arg(r, env, ctx)
+        if isinstance(p, Hole):
+            return p
+        span = eng.span_value(sp, env, ctx)
+        if isinstance(span, Hole):
+            return span
         try:
-            p = eng.place_arg(r, {}, ctx)
-            if isinstance(p, Hole):
-                return ['%s: %s' % (a.id, fmt_value(p))]
-            span = eng.span_value(sp, {}, ctx)
-            if isinstance(span, Hole):
-                return ['%s: %s' % (a.id, fmt_value(span))]
-            try:
-                pu = eng.m.place_unit(eng.m.things[p.name])
-                if pu == 'any':
-                    # E §6.3 (round 12): "A place of unit any gives one ledger per unit, in the order of the units'
-                    # ids" (writer 5's T-101)
-                    ledgers = []
-                    for u in eng.residual_units(p.name, span, ctx):
-                        groups, unit = eng.residuals(p.name, span, by, ctx, unit=u)
-                        ledgers.append((u, groups, unit))
-                else:
-                    groups, unit = eng.residuals(p.name, span, by, ctx)
-                    ledgers = [(None, groups, unit)]
-            except TallyError as err:
-                if is_load(err):
-                    raise LoadAtRun(err)
-                return ['%s: refused: %s %s' % (a.id, err.code, err.msg)]
-        finally:
-            eng.stack.pop()
-        out = ['%s: residuals %s %s%s' % (a.id, p.name, _txt(sp), (' by %s' % by) if by else '')]
+            pu = eng.m.place_unit(eng.m.things[p.name])
+            if pu == 'any':
+                # E §6.3 (round 12): "A place of unit any gives one ledger per unit, in the order of the units'
+                # ids" (writer 5's T-101)
+                ledgers = []
+                for u in eng.residual_units(p.name, span, ctx):
+                    groups, unit = eng.residuals(p.name, span, by, ctx, unit=u)
+                    ledgers.append((u, groups, unit))
+            else:
+                groups, unit = eng.residuals(p.name, span, by, ctx)
+                ledgers = [(None, groups, unit)]
+        except TallyError as err:
+            if is_load(err):
+                raise LoadAtRun(err)
+            return err
+        out = []
+        vals = []
         for u, groups, unit in ledgers:
             ind = '  '
             if u is not None:
                 out.append('  ledger %s:' % u)
                 ind = '    '
             for g, mt, ot, dt, ls in groups:
+                vals += [mt, ot, dt] + [x for ln in ls for x in (ln.model, ln.observed, ln.diff, ln.day,
+                                                           getattr(ln, 'carry_day', None))]
                 out.append('%s%s: model %s, observed %s, difference %s' % (
                     ind, ('%s %s' % (g[0].label(), g[1])) if g[0] is not None else g[1], eng.rtext(mt, unit),
                     eng.rtext(ot, unit), eng.rtext(dt, unit)))
                 for ln in ls:
                     out.append(ind + '  ' + ln.text)
-        out.extend('  ' + x for x in self.register(coll, [], ctx))
-        return out
+        return Ledgers('%s %s%s' % (p.name, _txt(sp), (' by %s' % by) if by else ''), out, vals)
 
     # -- windows each (L §4.4, §5.18) ----------------------------------------------------------------
     def each_lines(self, eng, a, env, env_text, ctx, pins_coll):
@@ -771,20 +1027,170 @@ class Asker:
                 out.extend(self.print_line(a, env_text + suffix, l2, pins_coll, ctx))
         return out
 
-    def each_rows(self, eng, a, env, ctx):
-        """The sub-window lines of windows each: [(window part, Line)]."""
+    def each_binds(self, eng, a, ctx, pins_coll, pinned_axes, axes, combos, mode):
+        """windows each on a line with a binding: the binding is read inside each run, so a tuple bound over some
+        sub-windows of a window its binding reads prints under those only, with their head (L §4.4, §5.18; P29,
+        tally 2.1.8 R13, #169).  Over axes, every combination binds its own tuples (L §5.5)."""
+        order = []
+        per = {}
+        binding = {}
+        for c in combos:
+            cctx = ctx.but(axes=tuple(sorted(list(pinned_axes.items()) + list(c))))
+            r = self.each_binding(eng, a, cctx, mode)
+            if isinstance(r, str):
+                return [r]
+            prev = -1
+            for key, env, info in r:
+                if key not in per:
+                    per[key] = env
+                    order.insert(prev + 1, key)
+                prev = order.index(key)
+                binding.setdefault(c, {})[key] = info
+        out = []
+        for key in order:
+            env = per[key]
+            env_text = ' (%s)' % ', '.join('%s = %s' % (b.var, fmt_bind(b, env[b.var])) for b in a.binds)
+            cs = [c for c in combos if key in binding.get(c, {})]
+            sts = [st for c in cs for (e, st, rg) in binding[c][key][0].values()]
+            if all(isinstance(st, Hole) for st in sts):
+                # L §5.18: "A tuple whose where is a hole prints its line as that hole, its value unevaluated"
+                out.append('%s%s: %s' % (a.id, env_text, fmt_value(merge(*sts))))
+                continue
+            results = {}
+            for c in cs:
+                cctx = ctx.but(axes=tuple(sorted(list(pinned_axes.items()) + list(c))))
+                results[c] = EachRes(self.each_rows(eng, a, env, cctx, bound=binding[c][key]))
+            if not axes:
+                for suffix, ln in results[()].trace:
+                    out.extend(self.print_line(a, env_text + suffix, ln, pins_coll, ctx))
+                continue
+            for ln in self.group(a, axes, cs, results):
+                for suffix, row in ln.trace:
+                    l2 = Line(None, ln.axes_text, row.vals, row.coll, ln.reading, row.trace)
+                    out.extend(self.print_line(a, env_text + suffix, l2, pins_coll, ctx))
+        return out
+
+    def each_binding(self, eng, a, ctx, mode):
+        """The binding of a windows each line read day by day over the windows it reads: [(tuple key, env,
+        (starts, full, labels))], starts mapping each run of the windows that decide whether the tuple is bound
+        (or its where's hole) to that run's (env, status, registers); full when it is bound over every run.  A
+        line's text (a domain hole) instead when the binding has no members to give."""
+        from .evaluate import EachMet
+        pending = [()]
+        done = []
+        labels = {}
+        while pending:
+            asg = pending.pop(0)
+            eng.each_met = EachMet(eng)
+            old = set_each(eng.each_met)
+            coll = Coll()
+            eng.stack.append(coll)
+            try:
+                mem = list(eng.members(a.binds, {}, ctx.but(windows=(mode, asg)), regs=[]))
+            finally:
+                eng.stack.pop()
+                set_each(old)
+                met = eng.each_met
+                eng.each_met = None
+            for k, v in (coll.each or {}).items():
+                dict.setdefault(met, k, v)
+            nxt = each_next(met, dict(asg), [st for _e, st, _r in mem], met.forced)
+            if nxt is not None:
+                w, label, days = nxt
+                labels[w] = (label, days)
+                pending = [asg + ((w, d),) for d in days] + pending
+                if len(pending) + len(done) > EACH_LIMIT:
+                    raise each_limit()
+                continue
+            for env, st, rg in mem:
+                if isinstance(st, tuple) and st[0] == 'domainhole':
+                    return '%s: %s' % (a.id, fmt_value(st[1]))
+            done.append((asg, mem))
+        order = list(labels)
+        uniform = all(set(dict(asg)) == set(order) for asg, mem in done)
+        keys = []
+        runs = {}
+        envs = {}
+        for asg, mem in done:
+            for env, st, rg in mem:
+                key = tuple(vkey(env[b.var]) for b in a.binds)
+                if key not in runs:
+                    keys.append(key)
+                    runs[key] = {}
+                    envs[key] = env
+                runs[key][asg] = (env, st, rg)
+        out = []
+        for key in keys:
+            got = runs[key]
+            if uniform and order:
+                sig = {}
+                for asg, mem in done:
+                    x = got.get(asg)
+                    sig[tuple(sorted(asg))] = None if x is None else rkey(x[1])
+
+                def keeps(w):
+                    # the tuple's binding doesn't change along w: w doesn't split it
+                    for asg, mem in done:
+                        d = dict(asg)
+                        for o in labels[w][1]:
+                            d2 = dict(d)
+                            d2[w] = o
+                            if sig.get(tuple(sorted(d2.items()))) != sig[tuple(sorted(asg))]:
+                                return False
+                    return True
+                matter = [w for w in order if not keeps(w)]
+                starts = {}
+                for asg, mem in done:
+                    if asg in got:
+                        d = dict(asg)
+                        starts.setdefault(tuple((w, d[w]) for w in matter), got[asg])
+                n = 1
+                for w in matter:
+                    n *= len(labels[w][1])
+                full = len(starts) == n and len(set(rkey(x[1]) for x in starts.values())) == 1
+            else:
+                starts = dict(got)
+                full = len(got) == len(done) and len(set(rkey(x[1]) for x in got.values())) == 1
+            out.append((key, envs[key], (starts, full, labels)))
+        return out
+
+    def each_rows(self, eng, a, env, ctx, bound=None, evalf=None, runs=False):
+        """The sub-window lines of windows each: [(window part, Line)].  With bound (each_binding's), the line's
+        runs start from those its binding is read in, each with its own tuple; a run whose where is a hole is
+        that hole.  With evalf, a run is evalf(its context) (a diff's cell, answer_diff).  With runs, the runs
+        themselves, (done, seqs, labels): one side of a diff over two stacks (cli.cross_stack_diff pairs them)."""
         pending = [()]
         done = []
         seqs = []
         labels = {}
         mode = ctx.windows[0] if isinstance(ctx.windows, tuple) and ctx.windows else 'each'
+        starts = None
+        if bound is not None:
+            starts, full, blabels = bound
+            pending = list(starts)
+            for s in starts:
+                for w, d in s:
+                    labels[w] = blabels[w]
         while pending:
             asg = pending.pop(0)
             from .evaluate import EachMet
+            benv, bst, brg = env, True, ()
+            if starts is not None:
+                s = next(s for s in starts if asg[:len(s)] == s)
+                benv, bst, brg = starts[s]
+            if isinstance(bst, Hole):
+                done.append((dict(asg), Result((bst,), Coll())))
+                seqs.append(asg)
+                continue
             eng.each_met = EachMet(eng)
             old = set_each(eng.each_met)
             try:
-                res = self.evaluate(eng, a, env, ctx.but(windows=(mode, asg)))
+                if evalf is not None:
+                    res = evalf(ctx.but(windows=(mode, asg)))
+                else:
+                    res = self.evaluate(eng, a, benv, ctx.but(windows=(mode, asg)))
+                for rc in brg:
+                    res.coll.merge(rc)
             finally:
                 set_each(old)
                 met = eng.each_met
@@ -793,19 +1199,25 @@ class Asker:
             for k, v in (getattr(getattr(res, 'coll', None), 'each', None) or {}).items():
                 dict.setdefault(met, k, v)
             assigned = dict(asg)
-            new = [w for w in met if w not in assigned]
-            if new:
-                w = new[0]
-                label, days = met[w]
+            nxt = each_next(met, assigned, res, met.forced)
+            if nxt is not None:
+                w, label, days = nxt
                 labels[w] = (label, days)
                 pending = [asg + ((w, d),) for d in days] + pending
-                if len(pending) + len(done) > 20000:
-                    raise NotYet('windows each over more than 20 000 day combinations')
+                if len(pending) + len(done) > EACH_LIMIT:
+                    raise each_limit()
                 continue
             done.append((assigned, res))
             seqs.append(asg)
-        keys = set(r.key() for asg, r in done)
-        if len(keys) == 1:
+        if runs:
+            return done, seqs, labels
+        return self.each_group(done, seqs, labels, starts is None or full)
+
+    def each_group(self, done, seqs, labels, full=True):
+        """windows each's runs, (assignment, Result) with their assignment sequences, as its printed blocks: one
+        plain line where all agree, else one per maximal sub-window (or nested combination) whose answer agrees."""
+        keys = set(self.each_key(r) for asg, r in done)
+        if len(keys) == 1 and full:
             ln = Line(None, [], done[0][1].vals, done[0][1].coll, [], done[0][1].trace)
             for asg, r in done[1:]:
                 ln.coll.merge(r.coll)
@@ -816,7 +1228,7 @@ class Asker:
         # runs of consecutive days with the same answer, window by window (a product of runs per line)
         by = {}
         for asg, r in done:
-            by.setdefault(r.key(), []).append((asg, r))
+            by.setdefault(self.each_key(r), []).append((asg, r))
         rows = []
         for k, items in by.items():
             cells = [tuple(asg[w] for w in order) for asg, r in items]
@@ -835,6 +1247,19 @@ class Asker:
             out.append((' [%s]' % ', '.join(parts), ln))
         return out
 
+    def each_key(self, r):
+        """What a run's answer is, for windows each: its values, and what its explanation prints with them, each
+        cause with its value (the derivation is something the form prints, L §4.4; tally 2.1.8 R13, #191 Q4).  A
+        run's own law date is no part of it: a block prints its first sub-window's."""
+        k = r.key()
+        if isinstance(r.trace, ExplainLines):
+            # its causes and their values, whatever days they fall on: a block prints its first sub-window's
+            k = k + (tuple(sorted(re.sub(r'\d{4}-\d{2}-\d{2}', 'D', ln) for ln in r.trace.lines
+                                  if not re.match(r'^\s*\d{4}-\d{2}-\d{2}:$', ln))),)
+        elif isinstance(r.trace, TraceNode):
+            k = k + (trace_key(r.trace),)
+        return k
+
     def each_nested(self, items, labels):
         """windows each where the windows a line meets depend on the day an earlier window takes: "the combinations
         nest: under each sub-window of the earlier window, the windows met there are split in turn" (L §4.4)."""
@@ -843,7 +1268,7 @@ class Asker:
 
         def nest(its, depth):
             # its share their first `depth` assignments; the next window met is then one and the same
-            if len(set(r.key() for sq, r in its)) == 1:
+            if len(set(self.each_key(r) for sq, r in its)) == 1:
                 return [((), [r for sq, r in its])]
             w = its[0][0][depth][0]
             label, days = labels[w]
@@ -855,9 +1280,9 @@ class Asker:
             out = []
             i = 0
             while i < len(per):
-                sig = [(parts, rs[0].key()) for parts, rs in per[i][1]]
+                sig = [(parts, self.each_key(rs[0])) for parts, rs in per[i][1]]
                 j = i
-                while j + 1 < len(per) and [(parts, rs[0].key()) for parts, rs in per[j + 1][1]] == sig:
+                while j + 1 < len(per) and [(parts, self.each_key(rs[0])) for parts, rs in per[j + 1][1]] == sig:
                     j += 1
                 dl = [d for d, _ in per]
                 for k, (parts, rs) in enumerate(per[i][1]):
@@ -884,6 +1309,9 @@ class Asker:
                 trace = None
             elif f == 'solve':
                 vals = (self.one_solve(eng, a, env, ctx),)
+                trace = None
+            elif f == 'residuals':
+                vals = (self.ledgers(eng, a, env, ctx),)
                 trace = None
             elif f == 'check':
                 vals = (self.check(eng, a, env, ctx),)
@@ -938,7 +1366,7 @@ class Asker:
                 texts = {}
                 for sid, r in sub.rows.items():
                     texts[sid] = self.row_line(r)
-                vals = (RowSet(set(texts), texts),)
+                vals = (RowSet(set(texts), texts, v),)
                 trace = None
             else:
                 raise NotYet('ask form %s' % f)
@@ -998,7 +1426,7 @@ class Asker:
         lt, rt = _txt(l), _txt(r)
         if isinstance(lv, (TallyError, Hole)) or isinstance(rv, (TallyError, Hole)):
             return CheckOut('%s = %s, %s = %s' % (lt, fmt_value(lv, ctx.partial), rt, fmt_value(rv, ctx.partial)),
-                            'open')
+                            'open', (lv, rv))
         try:
             same = eng.compare('==', lv, rv, None, ctx)
         except TallyError as err:
@@ -1006,7 +1434,7 @@ class Asker:
                 raise LoadAtRun(err)
             return CheckOut('refused: %s %s' % (err.code, err.msg), 'refused')
         if isinstance(same, Hole):
-            return CheckOut('%s = %s, %s = %s' % (lt, fmt_value(lv), rt, fmt_value(rv)), 'open')
+            return CheckOut('%s = %s, %s = %s' % (lt, fmt_value(lv), rt, fmt_value(rv)), 'open', (lv, rv, same))
         if same:
             return CheckOut('ok', 'ok')
         diff = ''
@@ -1090,7 +1518,13 @@ class Asker:
         head = '%s%s%s' % (a.id, env_text, ax)
         vals = ln.vals
         out = []
-        if a.form == 'inputs-of':
+        if a.form == 'residuals':
+            if not isinstance(vals[0], Ledgers):
+                # a ledger whose place or span is a hole, or that is refused, is that line alone
+                return ['%s: %s' % (head, fmt_value(vals[0]))]
+            out.append('%s: residuals %s' % (head, vals[0].head))
+            out.extend(vals[0].lines)
+        elif a.form == 'inputs-of':
             rs = vals[0]
             out.append('%s:' % head)
             for sid in sorted(rs.rows):
@@ -1114,10 +1548,14 @@ class Asker:
         # reads of its cell met only under an inner or narrower claim (an as if's pin, a solve's variable; R4: the
         # innermost claim wins) is in no read of the line, so it isn't listed. The line's own read set says both:
         # a read that took the pin registered it, one that met it under another claim `pin met` (eng.pin_value; P45:
-        # per result, not per ask)
+        # per result, not per ask). tally 2.1.8 §4 (#161): an entry is listed exactly when a read in its set gives it,
+        # so a with pin on a cell that no read of the line took, met or not, isn't listed either
         cells = getattr(self, 'pin_cells', {})
+        refused = bool(vals) and all(isinstance(v, TallyError) for v in vals)
         for e in [e for e in pins_coll.reg if e[0] == 'pinned' and e[1] in cells and e not in ln.coll.reg]:
-            if ('pin met', e[1]) in ln.coll.reg:
+            # a refusal carries no read set of its own: what it rests on took the pin unless an inner claim met it
+            # (item 9 of the follow-up; the stored m1 vectors)
+            if not refused or ('pin met', e[1]) in ln.coll.reg:
                 coll.reg.discard(e)
         laws = getattr(vals[0], 'laws', None) if vals else None
         out.extend('  ' + r for r in self.register(coll, ln.reading, ctx, a.path is not None, laws))
@@ -1268,22 +1706,16 @@ class Asker:
             out.append('attr %s = %s' % (k, fmt_value(val)))
         if not inst.decision and inst.cut is not None and inst.env is not None:
             # the derivation at the booking cut, traced (E §10: re-evaluates the cell's cone with tracing on)
-            eng.tracing = True
-            eng.trace_cells = {}
-            saved = eng.memo
-            eng.memo = {}
-            root = TraceNode('root', inst.id)
-            eng.trace_stack = [root]
-            try:
-                eng.eval_inst(inst.move, inst.env, inst.keys, tctx, at_cut=inst.cut)
-            finally:
-                eng.tracing = False
-                eng.trace_stack = []
-                eng.memo = saved
-            sub = self.explain_lines(root, ctx)
+            sub = self.trace_inst(eng, inst, tctx, ctx, inst.cut)
             if sub:
                 out.append('derivation at %s:' % inst.cut)
-                out.extend('  ' + l.strip() if False else l for l in sub)
+                out.extend(sub)
+            ans = getattr(inst, 'answered', None)
+            if ans is not None:
+                # E §10 (tally 2.1.8 S4, #179): "a version that answers a hole booking prints `answered at <cut>
+                # (version <V>):` before its rows", the derivation under that version's known
+                out.append('answered at %s (version %s):' % (ans[0], ', '.join(ans[1])))
+                out.extend(self.trace_inst(eng, inst, tctx, ctx, ans[0]))
         if not inst.decision:
             for adj in eng.adjustments(ctx):
                 if adj.inst.id != inst.id:
@@ -1300,12 +1732,32 @@ class Asker:
                     ('waived' if adj.waived else 'settled by %s' % by), 'none' if rem is None else fmt_value(rem)))
         return out
 
+    def trace_inst(self, eng, inst, tctx, ctx, cut):
+        """A plan instance's derivation at a cut, traced (E §10: re-evaluates the cell's cone with tracing on)."""
+        eng.tracing = True
+        eng.trace_cells = {}
+        saved = eng.memo
+        eng.memo = {}
+        root = TraceNode('root', inst.id)
+        eng.trace_stack = [root]
+        try:
+            eng.eval_inst(inst.move, inst.env, inst.keys, tctx, at_cut=cut)
+        finally:
+            eng.tracing = False
+            eng.trace_stack = []
+            eng.memo = saved
+        return self.explain_lines(root, ctx)
+
     def explain_pins(self, eng, a, env, ctx, root, v):
         """explain under an ask's `with` pins, an as if over the line (E §10): the pins with their values, the
         derivation inside them, and the one outside them.  Layout: this interpreter's."""
         from .evaluate import _tfmt
         pinned = set(p.axis for p in a.pins if getattr(p, 'pkind', None) == 'axis')
         octx = self._outside_ctx.but(axes=tuple((ax, o) for ax, o in ctx.axes if ax not in pinned))
+        if isinstance(ctx.windows, tuple) and ctx.windows:
+            # under windows each the part outside the pins keeps the sub-window's choice, and a window only it meets
+            # is one the line meets, split under its own head (L §4.4; tally 2.1.8 R13, #191 Q4, #169-d)
+            octx = octx.but(windows=ctx.windows)
 
         def outside_of(oc, fixed):
             # outside the pins, an axis the ask pinned is read as every other line reads an axis: the derivation fans
@@ -1339,6 +1791,7 @@ class Asker:
                 return nodes
             tag = (' [%s]' % ', '.join('%s = %s' % f for f in fixed)) if fixed else ''
             node = TraceNode('group', 'outside the pins%s: %s' % (tag, _tfmt(vo)))
+            node.carry_v = vo
             node.children = oroot.children
             return [node]
         outs = outside_of(octx, ())
@@ -1390,6 +1843,10 @@ class Asker:
                                                            fmt_value(cells[p])))
             # the state just before the reader's own booking at p: "its running reads as balances up to that point"
             ctx2 = w.tctx.but(cut=min(d, w.K), walk=w, wp=p[:4] + (p[4] - 0.5,))
+            # inside the reader's run: its own earlier observations left out, as its value was (E §10 l.472, §4.2
+            # step 3; tally 2.1.8 #169-g)
+            old_less = getattr(w, 'less_obs', None)
+            w.less_obs = w.own_obs(byp[p], d) if p in byp else None
             eng._explaining_wb = True
             eng.tracing = True
             eng.trace_cells = {}
@@ -1414,6 +1871,7 @@ class Asker:
                 eng.trace_stack = []
                 eng.memo = saved
                 eng._explaining_wb = False
+                w.less_obs = old_less
             root.value = v2
             out.extend('  ' + l for l in self.explain_lines(root, ctx2))
         return CheckOut('walk-bound, read at %d walk point%s' % (len(cells), '' if len(cells) == 1 else 's'),
@@ -1562,7 +2020,7 @@ class Asker:
             eng.stack.pop()
 
     def _explain_bal_lines(self, eng, a, n, env, ctx, day=None):
-        from .walk import K_end, K_start, kday, gtext
+        from .walk import K_end, K_start, kday, gtext, St
         p = eng.place_arg(n.ref, env, ctx)
         if isinstance(p, Hole):
             return ['the place is a hole: %s' % fmt_hole(p)]
@@ -1594,6 +2052,10 @@ class Asker:
         out = ['balance of %s (%s) at the %s of %s%s' % (place, unit, 'start' if getattr(n, 'start', False) else 'end', end,
                                                           ', modelled' if modelled else '')]
         st, lg, i = w.state(place, unit, key)
+        if modelled:
+            # the model's own account (L §5.19; tally 2.1.8 R16): its start, entries and modelled legs
+            lg, r0, m_ents, m_legs = eng.modelled_account(w, place, unit, key, end)
+            st = St(st.val, st.hole, st.perm, st.imp, st.bad, r0, st.pbad)
         since = None
         lo = -1
         if lg is None or st.rst < 0:
@@ -1613,24 +2075,25 @@ class Asker:
             e = lg.ents[st.rst]
             lo = st.rst
             since = e.key
-            out.append('from: %s' % self._reading_text(w, place, e, gtext))
+            out.append('from: %s' % self._reading_text(w, place, e, gtext, unit))
         ents = []
-        if lg is not None:
+        if modelled:
+            ents.extend(m_ents)
+        elif lg is not None:
             ents.extend(lg.ents[lo + 1:i + 1])
         wl = w.logs.get((place, '*'))
         if wl is not None:
             ents.extend(x for x in wl.ents if (since is None or x.key > since) and x.key <= key)
-        from .moves import ObsMv
         rows = []
         for x in sorted(ents, key=lambda x: x.key):
-            if modelled and isinstance(x.mv, ObsMv):
-                continue
             t = self._entry_text(x, gtext)
             if t is not None:
                 rows.append((kday(x.key), t))
         extra = []
         if modelled:
-            extra.extend((x, 'modelled') for x in w.modelled)
+            for x, g, sg, bk in m_legs:
+                if g is not None:
+                    rows.append((kday(bk), '%s.%s (modelled): %s' % (x.id, g.name, self._amount_text(g.amount, sg))))
         if n.proj and n.proj.get('uncertain'):
             extra.extend((x, 'uncertain') for x in w.uncertain)
         for x, stt in extra:
@@ -1710,7 +2173,7 @@ class Asker:
                 out.append('lowest: %s at the end of %s' % (fmt(best[1]), best[0]))
         return out
 
-    def _reading_text(self, w, place, e, gtext):
+    def _reading_text(self, w, place, e, gtext, unit=None):
         from .moves import instant_text
         rows = list(e.coll.rows.values()) if e.coll is not None else []
         val = fmt_hole(Hole(e.qs)) if e.qs else fmt(e.val)
@@ -1726,7 +2189,8 @@ class Asker:
         if e.note in ('anchor', 'pad'):
             from .walk import kday
             for key, gap, r2, role, u, _bc in w.gaps.get((place, kday(e.key)), ()):
-                if r2 is r or getattr(r2, 'sid', None) == r.sid:
+                # at a place of unit any each unit's reading has its own gap (L §5.10; tally 2.1.8 R14)
+                if (r2 is r or getattr(r2, 'sid', None) == r.sid) and (unit is None or u == unit):
                     if role[0] == 'anchor':
                         s += ', gap role anchor, gap %s' % gtext(gap)
                     else:
@@ -1762,7 +2226,7 @@ class Asker:
         if x.kind == 'imp_on':
             return '%s: its window %s opens: %s' % (head, x.win.window_text() if x.win is not None else '',
                                                     fmt_hole(Hole(x.qs)))
-        if x.kind == 'bad':
+        if x.kind in ('bad', 'pbad'):
             return '%s: refused: %s %s' % (head, x.err.code, x.err.msg)
         if x.kind == 'reset':
             return '%s' % self._reading_text_plain(x)
@@ -1798,8 +2262,9 @@ class Asker:
         out = []
         self._no = 0
         self._seen = {}
+        under = set()
         for kind, ch in root.children:
-            self.explain_node(ch, kind, 1, out)
+            self.explain_node(ch, kind, 1, out, under)
         return out
 
     def def_causes(self, tn):
@@ -1823,13 +2288,13 @@ class Asker:
                 return ch
         return None
 
-    def explain_step(self, tn, ch, kind, depth, out):
+    def explain_step(self, tn, ch, kind, depth, out, under):
         """A def cell's cause. A chain of more than 3 cells of one def, each read by the one before it, folds (E §10
         Long derivations fold; tally 2.1.7 S4, #131): tn, then `… <n> more steps of <x>, <k2> .. <kn-1> …` where its
         second step would print, then its last step there; a cause only the folded steps read prints where it is next
         met, as they never print."""
         if ch.kind != 'def' or getattr(ch, 'def_id', None) != getattr(tn, 'def_id', None) or id(ch) in self._seen:
-            self.explain_node(ch, kind, depth, out)
+            self.explain_node(ch, kind, depth, out, under)
             return
         rest = [ch]
         taken = {id(tn), id(ch)}
@@ -1840,19 +2305,25 @@ class Asker:
             rest.append(nx)
             taken.add(id(nx))
         if 1 + len(rest) <= 3:
-            self.explain_node(ch, kind, depth, out)
+            self.explain_node(ch, kind, depth, out, under)
             return
         keys = lambda c: ', '.join(key_text(k) for k in c.keys)
         out.append('%s\u2026 %d more steps of %s, %s .. %s \u2026' % (
             '  ' * depth, len(rest) - 1, tn.def_id, keys(rest[0]), keys(rest[-2])))
-        self.explain_node(rest[-1], kind, depth, out)
+        self.explain_node(rest[-1], kind, depth, out, under)
 
-    def explain_node(self, tn, kind, depth, out):
+    def explain_node(self, tn, kind, depth, out, under):
+        """tn under a line whose causes printed so far are under (a set of their idents)."""
         ind = '  ' * depth
         ident = ('row', tn.label) if tn.kind in ('row', 'bandrow') else id(tn)
         # a cause prints in full where it is first printed and as a reference after (L §5.18 "Each cause prints
         # once; a cause met again is referenced by its line"): the print order (rules in canonical order) need not
-        # be the evaluation order (beaters first), so a cell traced first may print second
+        # be the evaluation order (beaters first), so a cell traced first may print second.  E §10 (tally 2.1.8 S8,
+        # #181): "A cause met again is referenced by its line, once under each line that reads it", whatever order
+        # the cells were computed in: a line's cause met again under that line prints nothing more
+        if ident in under:
+            return
+        under.add(ident)
         if ident in self._seen:
             out.append('%s(%s: see [%d])' % (ind, tn.label, self._seen[ident]))
             return
@@ -1894,20 +2365,62 @@ class Asker:
                         extra = ' (version %s, source %s)' % (vv.id, vv.cite)
                 out.append('%s    rule %s: %s%s' % (ind, lab, st, extra))
                 w = whens.get(lab)
+                below = set()       # the rule's line reads its when and, the winner, its value
                 if w is not None:
                     for k2, ch in w.children:
-                        self.explain_step(tn, ch, k2, depth + 3, out)
+                        self.explain_step(tn, ch, k2, depth + 3, out, below)
                 if st == 'won':
                     vc = getattr(tn, 'value_children', None)
                     if vc is not None:
                         for k2, ch in vc.children:
-                            self.explain_step(tn, ch, k2, depth + 3, out)
+                            self.explain_step(tn, ch, k2, depth + 3, out, below)
+            below = set()
             for k2, ch in tn.children:
-                self.explain_step(tn, ch, k2, depth + 2, out)
+                self.explain_step(tn, ch, k2, depth + 2, out, below)
             return
         out.append('%s[%d] %s' % (ind, no, tn.label))
+        below = set()
         for k2, ch in tn.children:
-            self.explain_node(ch, k2, depth + 1, out)
+            self.explain_node(ch, k2, depth + 1, out, below)
+
+
+def trace_key(tn):
+    """An explanation's causes as a comparable value: each node's kind, label and value, its rules' states and its
+    causes in turn (ask.Asker.each_key)."""
+    out = [tn.kind, tn.label, rkey(tn.value) if tn.value is not None else None,
+           tuple(sorted(getattr(tn, 'rule_states', {}).items()))]
+    subs = [ch for _k, ch in tn.children]
+    subs += [ch for _k, w in getattr(tn, 'when_children', []) for _k2, ch in getattr(w, 'children', [])]
+    vc = getattr(tn, 'value_children', None)
+    if vc is not None:
+        subs += [ch for _k, ch in vc.children]
+    for ch in subs:
+        out.append(trace_key(ch) if isinstance(ch, TraceNode) else repr(ch))
+    return tuple(out)
+
+
+def law_reads_binds(a):
+    """Whether an ask's law expression reads one of its ask-level for's variables."""
+    from .node import walk
+    vs = set(b.var for b in (a.binds or ()))
+    return bool(vs) and any(getattr(x, '_r', None) is not None and x._r[0] == 'var' and x._r[1] in vs
+                            for x in walk(a.law))
+
+
+def each_next(met, assigned, answer, forced=()):
+    """The unknown day windows each takes next (L §4.4; tally 2.1.8 R13): of those the answer carries and the run
+    hasn't taken, the first its reads met; (id, label, days), or None when it carries none."""
+    from .evaluate import carried
+    cs = [w for w in carried(answer) if w[0] not in assigned]
+    ids = set(w[0] for w in cs) | set(w for w in forced if w not in assigned and w in met)
+    if not ids:
+        return None
+    for w in met:
+        if w in ids:
+            label, days = met[w]
+            return w, label, days
+    w = cs[0]
+    return w[0], w[1], list(w[2])
 
 
 def boxes(cells, axes_days):

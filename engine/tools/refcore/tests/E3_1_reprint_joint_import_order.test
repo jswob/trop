@@ -1,0 +1,65 @@
+# E §3.1 step 1, L §2.4 (STOP-REPORT 1 of T's re-run, pick P37; T's m0/format/joint/folder): reprint of a set
+# holding a joint model prints each file's canonical text and the reality's sha256, as the stored record does.
+# Since de9d244a moves imported evaluate at its top, and a reprint, which loads the members first, reached moves
+# half loaded through walk: REFCORE-NOT-YET (ImportError). 9296e8dd crashed so.
+=== options reprint
+=== j.tally
+model j
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  use m = "m" sha256 "2437ba566c390985157be44193a5f9ef5e9435633246ed3401a46cada2aa9dc6"
+  note "T, pre-M1 (#97, chunk 4; G3 review, 5815c57, #105, P17): a member folder of one model file and a part"
+
+input y: num
+
+source s "s"
+=== m/a.tally
+model mm
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input v: num
+=== m/b.tally
+part pb
+  tally 2
+
+source tb "t"
+
+input wb: num
+=== expect
+--- j.tally
+model j
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  use m = "m" sha256 "2437ba566c390985157be44193a5f9ef5e9435633246ed3401a46cada2aa9dc6"
+  note "T, pre-M1 (#97, chunk 4; G3 review, 5815c57, #105, P17): a member folder of one model file and a part"
+
+source s "s"
+
+input y: num
+--- m/a.tally
+model mm
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input v: num
+--- m/b.tally
+part pb
+  tally 2
+
+source tb "t"
+
+input wb: num
+sha256 1c27ee282ceb7a25e7bbc1e28711a672a1e9d19e9bd61db4eb82153aea9e5a10

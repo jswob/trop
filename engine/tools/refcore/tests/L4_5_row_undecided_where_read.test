@@ -1,0 +1,37 @@
+# L §4.5 (tally 2.1.8 R12, #169-f; T's fixes/g3/j3): a row known in a window that holds the cut makes a read a hole only
+# where the row would be the one read: v2 governs 2027 on, so rate at law 2026-06-01 is 10.00 PLN (q, qw), and at
+# 2027-06-01 the hole (q27). 2.1.7's refcore printed the hole for q.
+=== m.tally
+model pj
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2027-12-31
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+input rate: money PLN
+
+ask q: rate law 2026-06-01 as known 2026-02-25
+ask qw: rate law 2026-06-01 as known 2026-02-25 windows each
+ask q27: rate law 2027-06-01 as known 2026-02-25
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  rate = 10.00 PLN "c"
+
+version v2
+  cite card
+  governs 2027-01-01..
+  known window(2026-02-20, 2026-02-28)
+  replace rate = 12.00 PLN "c"
+=== expect
+q: 10.00 PLN
+  law date 2026-06-01, cut 2026-02-25
+q27: ?"date within window(2026-02-20, 2026-02-28) not precise enough for the cut 2026-02-25" (v2)
+  law date 2027-06-01, cut 2026-02-25
+qw: 10.00 PLN
+  law date 2026-06-01, cut 2026-02-25

@@ -1,0 +1,58 @@
+# tally 2.1.8 item 77 (#201), E §4.1 step 2 and L §4.4: a test of a window-dated movement that comes out one way on
+# some of its days and another on the rest is the window's hole, as far as the refusal or the other class would reach.
+# put moves 100.00 PLN into box, alive from 03-08, on a day of window(03-05, 03-10): outside box's lifespan on three
+# days, inside on three, so box's balance and flows of put are put's hole from the window's first day, and each
+# splits in two. 2.1.7's refcore booked put on 03-10 (100.00 PLN). T's d77/lifespan b_box and f_put, rebuilt from
+# the twin check's description; wo is a window neither reads.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+kind accts: place PLN signed
+place jar: accts lives 2025-01-01..
+place box: accts lives 2026-03-08..
+place old: accts lives 2025-01-01..2026-03-06
+input amt: money PLN
+input wd: date
+input wo: date
+
+move put: transfers
+  on wd
+  leg cash from jar to box amount amt
+
+move pin: transfers
+  on wo
+  leg cash from jar to old amount amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  amt = 100.00 PLN "s"
+  wd = window(2026-03-05, 2026-03-10) "s"
+  wo = window(2026-03-05, 2026-03-10) "s"
+  opening[jar] = 500.00 PLN at 2026-01-01 start "s"
+  opening[old] = 0.00 PLN at 2026-01-01 start "s"
+
+ask b_box: bal(box, 2026-03-31)
+ask b_box_each: bal(box, 2026-03-31) windows each
+ask f_put: flows(put, 2026-03)
+ask f_put_each: flows(put, 2026-03) windows each
+=== expect
+b_box: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (put)
+  cut 2026-01-01
+b_box_each [wd = 2026-03-05 .. 2026-03-07]: refused: RUN-LIFESPAN put.cash moves into or out of box outside its lifespan
+  cut 2026-01-01
+b_box_each [wd = 2026-03-08 .. 2026-03-10]: 100.00 PLN
+  cut 2026-01-01
+f_put: ?"date within window(2026-03-05, 2026-03-10) not precise enough for flows of put" (put)
+  cut 2026-01-01
+f_put_each [wd = 2026-03-05 .. 2026-03-07]: refused: RUN-LIFESPAN put.cash moves into or out of box outside its lifespan
+  cut 2026-01-01
+f_put_each [wd = 2026-03-08 .. 2026-03-10]: 100.00 PLN
+  cut 2026-01-01

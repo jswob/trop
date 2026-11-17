@@ -93,6 +93,24 @@ class Scope:
         return s
 
 
+def _level_literal(q):
+    """A quantile level written as a literal (a number, or minus one), as a fraction; None otherwise."""
+    from fractions import Fraction
+    neg = False
+    if q.k == 'neg':
+        neg, q = True, q.e
+    if q.k != 'num':
+        return None
+    v = getattr(q, '_val', None)
+    if v is None:
+        v = getattr(q, 'v', None)
+    try:
+        f = Fraction(v)
+    except (TypeError, ValueError):
+        return None
+    return -f if neg else f
+
+
 class Checker:
     def __init__(self, m):
         self.m = m
@@ -112,6 +130,7 @@ class Checker:
         self.random_items = set()
         self.fill_infos = {}       # fill id -> its bindings' domains and taken's type (L §5.12)
         self.marks = {}            # item -> {(running read, target)} (E §3.1 step 7)
+        self.modelled_marks = {}   # item -> {target}: its bal(x, d) modelled reads (L §5.19; tally 2.1.8 R16)
         self.proj_nc = {}          # item -> {target}: its projections with no random clause (L §8.3 item 10)
         self.cycle_cands = []      # (move, bal node, day node): a decision's plain bal at a day (L §5.14.1)
         self.period_cands = []     # (index, key node, holder item): a period read at a time index's key (L §4.6)
@@ -141,6 +160,7 @@ class Checker:
         # and fills by id)
         for qid in list(m.moves):
             self.check_move(m.moves[qid])
+        self.check_any_priced()
         for qid in list(m.fills):
             self.check_fill(qid)
         for qid, d in m.defs.items():
@@ -598,6 +618,11 @@ class Checker:
             t = self.tc(a.known, sc)
             if not self.is_date(t):
                 raise uerr('as known of ask %s is %s, not a date' % (a.id, T.show(t)), a.loc)
+            kv = getattr(a.known, 'v', None)
+            if isinstance(kv, datetime.date):
+                # a band patch under the ask's written cut (R5; #162's rest)
+                from .loader import patch_under_cut
+                patch_under_cut(self.m, kv)
         if a.random is not None and a.random[0] == 'quantile':
             scq = sc.child()
             scq.allow_lit = True   # the level of a quantile (L §7.1 An ask)
@@ -607,7 +632,7 @@ class Checker:
         f = a.form
         if f == 'exprs':
             for e in a.exprs:
-                self.tc(e, sc)
+                self.open_key(e, self.tc(e, sc), sc)
         elif f == 'check':
             l, r = a.check
             lt = self.tc(l, sc)
@@ -616,7 +641,7 @@ class Checker:
                 self.tc(l, sc, expect=rt)
             self.compare('==', l, r, a.loc)
         elif f in ('explain', 'inputs-of'):
-            self.tc(a.ref, sc)
+            self.open_key(a.ref, self.tc(a.ref, sc), sc)
             ok = ('name', 'index', 'field') + (('bal', 'low') if f == 'explain' else ())
             if a.ref.k not in ok:
                 raise LoadError('LOAD-PARSE', 'cannot parse: %s takes a reference' % f, a.loc)
@@ -979,6 +1004,21 @@ class Checker:
         m = self.m
         return (any(name in (x.keys or ()) for x in m.indexes.values())
                 or any(name in a.options for a in m.axes.values()) or name in m.things)
+
+    def open_key(self, e, t, sc):
+        """A key literal an ask states with no position to name its index (L §2.5): resolved when one index, axis or
+        thing holds it, else refused here, at load (LOAD-KEY `ambiguous key <k>`; L §8.4 Load refuses what load sees,
+        tally 2.1.8 §4, #162: 2.1.7's refcore met it at run)."""
+        if t is None or t.k != 'keylit':
+            return t
+        m = self.m
+        hits = [('ix', ix.id) for ix in m.indexes.values() if t.n in ix.texts]
+        hits += [('ax', ax.id) for ax in m.axes.values() if t.n in ax.options]
+        if t.n in m.things:
+            hits.append(('thing', m.things[t.n].base))
+        if len(hits) != 1:
+            raise LoadError('LOAD-KEY', 'ambiguous key %s' % t.n, e.loc)
+        return t
 
     def keylit(self, n, sc, expect):
         """A key literal: resolved by the type its position expects (L §2.5)."""
@@ -2201,6 +2241,14 @@ class Checker:
                 self.tc(node, Scope(self, ('x', None), None, 'ask'), expect=target)
                 return
             raise LoadError('LOAD-KEY', 'ambiguous key %s for %s' % (t.n, what), loc)
+        if tk == 'money' and k == 'year4':
+            # a four-digit figure where money is expected is a figure, not a year, and the literal rule takes it
+            # (L §3.2 Inline figures, §7.1; tally 2.1.8 #169-l)
+            sc = getattr(node, '_litsc', None)
+            if sc is not None:
+                self.lit_rule(sc, node, 'num', node.v)
+            node._t = t = T.flex(node.v)
+            k = 'flex'
         if tk == 'money':
             if k == 'money' and t.cur == target.cur:
                 return
@@ -2562,8 +2610,11 @@ class Checker:
         qt = self.tc(n.q, scq)
         if self.numcls(qt) not in ('num', 'flex', 'int'):
             raise uerr('the level of quantile is %s' % T.show(qt), n.loc)
-        if sc.where in ('def', 'at') and not (n.q.k == 'num' and n.q.v in (0, 1)):
-            pass
+        lv = _level_literal(n.q)
+        if lv is not None and (lv <= 0 or lv > 1):
+            # type 1 over its terms, its range of q included (L §5.11, §5.16; tally 2.1.8 R16, #171): load sees it
+            from .values import fmt_q
+            raise LoadError('LOAD-DOMAIN', 'quantile has no meaning for the level %s' % fmt_q(lv), n.loc)
         return tt
 
     # -- calls -----------------------------------------------------------------------------
@@ -3121,6 +3172,13 @@ class Checker:
         if not (getattr(r, '_r', None) and r._r[0] == 'read' and r._r[1] == 'input'):
             raise LoadError('LOAD-PARSE', 'cannot parse: last(x[k], d) takes a read of an input', n.loc)
         self.tdate(n.d, sc, n)
+        if t is None and r._r[2] in ('stated', 'opening') and getattr(r, 'keys', None) and r.keys[0].k == 'name':
+            # a reading's value is in its place's unit (L §4.6, §5.10): a comparison in a when reads it so (spec/g4/
+            # nb3_at; 2.1.8's first refcore stopped on the untyped side)
+            th = self.m.things.get(r.keys[0].id)
+            cur = self.m.place_unit(th) if th is not None else None
+            if isinstance(cur, str) and cur in CURRENCIES:
+                t = T.money(cur)
         return t
 
     def t_star(self, n, sc, expect):
@@ -3195,6 +3253,17 @@ class Checker:
                 read.add(t)
         # tally 2.1: a def an arrival rule or a takes clause reads is read (parts.chk_check_parts)
         read |= getattr(self, 'parts_reads', set())
+        # rows stated same are read together, by every read of either (L §6.1 l.1806; tally 2.1.8 §4, #187): a read of
+        # one side reads the other's input
+        edges = getattr(m, 'same_row_edges', [])
+        grew = True
+        while grew:
+            grew = False
+            for a, b, _v in edges:
+                for x, y in ((a, b), (b, a)):
+                    if ('input', x[0]) in read and ('input', y[0]) not in read:
+                        read.add(('input', y[0]))
+                        grew = True
         for qid, inf in m.inputs.items():
             if inf.builtin:
                 continue
@@ -3438,6 +3507,23 @@ class Checker:
         self.lawdated = lawdated
 
         for a in m.asks:
+            if a.law is not None:
+                # the ask's law expression is itself read with no law date, so a def it reaches that takes its
+                # reader's is refused at load, where load sees it (R5; #162, m2/g1/n1_law; the message run gave)
+                seen, todo = set(), [x._r[2] for x in walk(a.law) if getattr(x, '_r', None) and x._r[0] == 'read'
+                                     and x._r[1] == 'def']
+                while todo:
+                    q = todo.pop()
+                    if q in seen or q not in m.defs:
+                        continue
+                    seen.add(q)
+                    if m.defs[q].at is not None and m.defs[q].at.k == 'law_reader':
+                        raise LoadError('LOAD-LAWDATE', 'ask reaches an at reader def (%s) without law' % q)
+                    if m.defs[q].at is not None:
+                        # a def with its own written at reads at that date: the chain stops there (L §4.3; tally
+                        # 2.1.8 P42, group 4's review B3)
+                        continue
+                    todo.extend(t[1] for t in E.get(('def', q), {}) if t[0] == 'def')
             if a._has_law:
                 continue
             for t, rels in E.get(('ask', a.id), {}).items():

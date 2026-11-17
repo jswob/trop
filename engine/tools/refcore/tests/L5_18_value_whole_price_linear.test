@@ -1,0 +1,38 @@
+# tally 2.1.8 R15, L §5.18, §5.10 (T's STOP-REPORT 7, unit/probes/ask/ASK-02): value of a place valued whole is its
+# price at d, so it passes the price on unchanged and under partial its hole stays linear: v1 is 100.00 DUK + 1 x the
+# car's hole, scaled by a known share in v2. Without partial (v3) the line is the hole. db8894ca printed v1 plain.
+=== m.tally
+model m
+  tally 2
+  on 2025-06-30
+  start 2025-01-01
+  end 2025-12-31
+
+source s "synthetic"
+
+unit DUK: currency minor 0.01
+
+place car: assets DUK priced car_value lives 2025-01-01..
+
+input car_value: money DUK question "What is the car worth?"
+input extra: money DUK
+input share: num
+
+ask v1: value(car, 2025-06-30) in DUK + extra partial
+ask v2: share * (value(car, 2025-06-30) in DUK) partial
+ask v3: value(car, 2025-06-30) in DUK + extra
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  car_value = ?"What is the car worth?" "none"
+  extra = 100.00 DUK "s"
+  share = 0.5 "s"
+=== expect
+v1: 100.00 DUK + 1 × ?"What is the car worth?" (car_value)
+  cut 2025-06-30
+v2: 0.5 × ?"What is the car worth?" (car_value)
+  cut 2025-06-30
+v3: ?"What is the car worth?" (car_value)
+  cut 2025-06-30

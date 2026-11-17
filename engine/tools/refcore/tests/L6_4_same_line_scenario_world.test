@@ -1,0 +1,79 @@
+# L §4.5 Whatever a version states is read as its rows are, "in the worlds its file is in (§6.4)"; L §6.4 (nothing in
+# its base), E §3.2 (tally 2.1.8 R12, #187, #191 Q3): a scenario version's same line joins rows only in that scenario's
+# world. The base has two unjoined rows of one transfer that both fulfil save[2026-03] (RUN-RECORD); sc states them
+# same. On one line each cell is read in its own world: the scenario's 950.00 PLN, the base's refusal (q_obs, q_pair,
+# q_rev). 2.1.7's refcore joined them in the base too: (950.00 PLN, 950.00 PLN).
+=== t.tally
+model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place unexplained: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input d_save: int
+
+move save[m in months]: transfers
+  on day_of(m, d_save)
+  leg cash from konto to sav amount amt
+
+ask q_base: flows(save, 2026-03-01 .. 2026-03-31)
+ask q_sc: flows(save, 2026-03-01 .. 2026-03-31) as if {scenario sc}
+ask q_pair: flows(save, 2026-03-01 .. 2026-03-31) as if {scenario sc}, flows(save, 2026-03-01 .. 2026-03-31)
+ask q_rev: flows(save, 2026-03-01 .. 2026-03-31), flows(save, 2026-03-01 .. 2026-03-31) as if {scenario sc}
+ask q_obs: observed(save[2026-03]).cash.amount as if {scenario sc}, observed(save[2026-03]).cash.amount
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 900.00 PLN "s"
+  d_save = 15 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+version st_konto
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "a"
+
+version st_sav
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers sav
+  bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "b"
+=== sc.tally
+scenario sc over t
+  tally 2
+  from 2026-03-01
+
+version joined
+  cite s
+  governs 2026-03
+  known 2026-04-04
+  same bank[a2] = bank[b1]
+=== expect
+q_base: refused: RUN-RECORD bank[a2] and bank[b1] state one transfer and both fulfil save[2026-03]: state them same
+  cut 2026-04-10
+q_obs: (950.00 PLN, refused: RUN-RECORD bank[a2] and bank[b1] state one transfer and both fulfil save[2026-03]: state them same)
+  world: sc
+  cut 2026-04-10
+q_pair: (950.00 PLN, refused: RUN-RECORD bank[a2] and bank[b1] state one transfer and both fulfil save[2026-03]: state them same)
+  world: sc
+  cut 2026-04-10
+q_rev: (refused: RUN-RECORD bank[a2] and bank[b1] state one transfer and both fulfil save[2026-03]: state them same, 950.00 PLN)
+  world: sc
+  cut 2026-04-10
+q_sc: 950.00 PLN
+  world: sc
+  cut 2026-04-10
+warning: WARN-UNREAD place unexplained is read by nothing

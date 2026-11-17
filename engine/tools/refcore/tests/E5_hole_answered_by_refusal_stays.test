@@ -1,0 +1,70 @@
+# tally 2.1.8 S9 (#179), E §5 step 1: "the answer is its booking from then on, so one answered by a refusal stays
+# refused". pay's amount is a hole at its booking (1 February); v2 (known 1 March) states it and refuses its when
+# (1 / 0); v3 (known 1 April) makes the when true again: from v2's known the booking is refused (b2, b3, the field
+# a3) and, as a refused A0, no later version re-measures it, so no adjustment is made (n3). Before v2 (b1) the hole
+# stands. 2.1.7's refcore refused two adjustments and kept the booking a hole; the M2 engine keeps it a hole.
+=== m.tally
+model h94
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+input dday: date
+
+input amt: money PLN
+
+input div: int
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+move pay: transfers
+  on dday
+  when 1 / div > 0
+  leg cash from world to konto amount amt
+
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  dday = 2026-02-01 "c"
+  div = 1 "c"
+  opening[konto] = 10.00 PLN at 2026-01-01 start "c"
+
+version v2
+  cite card
+  governs always
+  known 2026-03-01
+  amt = 100.00 PLN "c"
+  replace div = 0 "c"
+
+version v3
+  cite card
+  governs always
+  known 2026-04-01
+  replace div = 1 "c"
+
+ask b2: bal(konto, 2026-02-15) as known 2026-03-15
+ask b3: bal(konto, 2026-06-30)
+ask b1: bal(konto, 2026-02-15) as known 2026-02-20
+ask n3: count(a in adjustments over 2026)
+ask a3: pay.cash.amount
+=== expect
+a3: refused: RUN-DIV division by zero
+  cut 2026-06-30
+b1: ?"amt: no value" (amt)
+  unfulfilled: pay
+  cut 2026-02-20
+b2: refused: RUN-DIV division by zero
+  cut 2026-03-15
+b3: refused: RUN-DIV division by zero
+  cut 2026-06-30
+n3: 0
+  cut 2026-06-30

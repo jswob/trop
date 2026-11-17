@@ -1,0 +1,33 @@
+# L §8 Refusals outrank holes, L §8.1 "It stops propagating" (tally 2.1.8 R11, #169-a; T's fixes/g6/r4_d2): x / 0 is
+# refused whatever x is, so with x a hole the outcome is decided without it: RUN-DIV, plainly (d) and under partial (p).
+# Its twin x / two stays the hole (h). 2.1.7's refcore printed the hole ?"x?" (x) for d.
+=== m.tally
+model m
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input x: num question "x?"
+input zero: num
+input two: num
+
+ask d: x / zero
+ask p: x / zero partial
+ask h: x / two
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x = ? "unknown"
+  zero = 0 "s"
+  two = 2 "s"
+=== expect
+d: refused: RUN-DIV division by zero
+  cut 2026-01-01
+h: ?"unknown" (x)
+  cut 2026-01-01
+p: refused: RUN-DIV division by zero
+  cut 2026-01-01

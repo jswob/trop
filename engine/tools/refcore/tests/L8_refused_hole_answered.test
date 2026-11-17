@@ -1,7 +1,9 @@
-# L §8 Refusals outrank holes; E §5 step 1 (tally 2.1.7 R2, issue #141; #94): pay is booked on 1 February with its
-# amount a hole (amt has no row at its booking cut). v2, known 1 March, measures it again and refuses it (its when
-# divides by zero): a version answers a hole movement with a value or with a refusal, so from v2's known the booking
-# is refused; before it, the hole stands. 2.1.6's refcore kept the hole.
+# L §8 Refusals outrank holes; E §5 step 1 (tally 2.1.7 R2, issue #141; #94; tally 2.1.8 S9, #179): pay is booked on 1
+# February with its amount a hole (amt has no row at its booking cut). v2, known 1 March, measures it again and
+# refuses it (its when divides by zero): a version answers a hole movement with a value or with a refusal, under cuts
+# from its known, and the answer is its booking from then on: at cut 2026-06-30 the booking of 1 February is refused,
+# early and late both, as one refused at its own cut (no unfulfilled line); at cut 2026-02-20 (early2) the hole stands.
+# 2.1.6's refcore kept the hole; 2.1.7's refused an adjustment at v2's known, so early kept the hole.
 === m.tally
 model h94
   tally 2
@@ -45,8 +47,12 @@ version v2
   known 2026-03-01
   amt = 100.00 PLN "c"
   replace div = 0 "c"
+ask early2: bal(konto, 2026-02-15) as known 2026-02-20
 === expect
-early: ?"amt: no value" (amt)
-...
+early: refused: RUN-DIV division by zero
+  cut 2026-06-30
+early2: ?"amt: no value" (amt)
+  unfulfilled: pay
+  cut 2026-02-20
 late: refused: RUN-DIV division by zero
-...
+  cut 2026-06-30
