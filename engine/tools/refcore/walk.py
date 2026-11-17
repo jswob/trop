@@ -619,9 +619,10 @@ class Walk:
             for a in eng.adjustments(ctx):
                 self.sched_adj(a)
 
-    def base_legs(self, i):
+    def base_legs(self, i, after=None):
         """A decision dated before a projection's start: the legs its run in the base walk booked on days from the
-        start on, scheduled here on their own days (#183)."""
+        start on, scheduled here on their own days (#183). With after (a day), one that ran earlier on the
+        projection's day t, before its point: its legs dated after t (those of day t are in the start state)."""
         run, ww = None, self.base
         while ww is not None and run is None:
             run = ww.decs.get(i.id)
@@ -629,7 +630,8 @@ class Walk:
         if run is None or getattr(run, 'status', None) not in ('past', 'plan'):
             return
         for lg in run.legs:
-            if isinstance(lg.day, datetime.date) and self.start <= lg.day <= self.end:
+            if isinstance(lg.day, datetime.date) and self.start <= lg.day <= self.end and \
+                    (after is None or lg.day > after):
                 self.at((lg.day.toordinal(), 2, 0, plan_key(run), 0), 'leg', (run, lg))
 
     def dec_win_end(self, key, i, w, qs):
@@ -2565,6 +2567,12 @@ def m_proj_walk(self, ctx, t, leftout, clauses):
                 # it counts (L §5.14.1)
                 acts = w.sched.get(t.toordinal(), [])
                 w.sched[t.toordinal()] = [a for a in acts if _act_after(a[0], point) and a[1] in ('decday',)]
+                # a decision that ran earlier on day t: the projection counts its legs dated t through d (L §5.14.1,
+                # E §4.3 step 2; tally 2.1.8 R16(d), pick P39 on B2 of group 3's review), those after t by their day
+                for a in acts:
+                    if a[1] == 'decday' and not _act_after(a[0], point):
+                        for i in w.decday.get((a[2][0].id, a[2][1]), ()):
+                            w.base_legs(i, after=t)
         except TallyError as e:
             w.failed = e
             raise
