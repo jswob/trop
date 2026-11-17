@@ -1504,7 +1504,9 @@ class Engine:
         if hit is None:
             return NONE
         latest, got, side = hit
-        v = self.same_value(latest, got)
+        # rows that govern always began on no day: they disagree on the day the read reads them for (L §8.1
+        # HOLE-SAME's `differs on <d>`, as a plain read at d prints; tally 2.1.8 P42, group 4's review N3)
+        v = self.same_value(d if latest == datetime.date.min else latest, got)
         if len(got) > 1 and isinstance(v, Hole):
             return v
         info, keys = side      # the held line names the row that states the value
