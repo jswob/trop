@@ -843,6 +843,47 @@ version v1
         );
     }
 
+    /// [`same_links`]'s fifteen versions with an input both scenarios state, and asks over
+    /// April, two days of it and March, one a diff over two stacks (the review of group 1's
+    /// fix, F1 and F3: `b3_15`).
+    fn same_links_asked(n: usize) -> String {
+        same_links(n).replace(
+            "input bank: observed\n",
+            "input bank: observed\ninput amt: money PLN\n",
+        ) + "ask d: diff(count(t in transfers over 2026-04)) in sc against sd as known 2026-05-10\n\
+               ask e: count(t in transfers over 2026-04-01 .. 2026-04-03) as known 2026-05-10\n\
+               ask z: count(t in transfers over 2026-03) as known 2026-05-10\n"
+    }
+
+    fn same_links_side(name: &str) -> String {
+        format!(
+            "scenario {name} over sev\n  tally 2\n  from 2026-01-01\n\nversion {name}_v\n  cite s\n  governs 2026-01-01..\n  known 2026-01-01\n  amt = 1.00 PLN \"s\"\n"
+        )
+    }
+
+    #[test]
+    fn a_two_stack_diff_past_the_choices_limit_is_its_asks_line() {
+        let text = same_links_asked(15);
+        let (sc, sd) = (same_links_side("sc"), same_links_side("sd"));
+        let lines = lines_of_files(&[("sev.tally", &text), ("sc.tally", &sc), ("sd.tally", &sd)]);
+        let heads: Vec<&str> = lines
+            .iter()
+            .filter(|l| !l.starts_with(' '))
+            .filter_map(|l| l.split_once(':').map(|(head, _)| head))
+            .collect();
+        assert_eq!(
+            heads,
+            ["c", "d", "e", "z", "warning"],
+            "every ask answers: {lines:?}"
+        );
+        assert!(
+            lines.contains(
+                &"d: refused: RUN-LIMIT seen and unseen over more than 20 000 choices".to_owned()
+            ),
+            "the diff's line, not the run's: {lines:?}"
+        );
+    }
+
     /// Two observations of each of two transfers, one pair stated `same` in the model, the
     /// other in the scenario, each by a version known in a window (the review of group 1's
     /// `a1_diff`, N5).

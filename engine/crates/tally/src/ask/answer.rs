@@ -314,16 +314,17 @@ fn cross_lines(
     let Some((met, cut)) = met else {
         return Ok(first);
     };
+    // past the limit, the ask's one line (L §8.4), the other asks answered
+    let picks = match same_picks(&met) {
+        Ok(picks) => picks,
+        Err(stop) => return refusal_line(ask, Err(stop)),
+    };
     let mut others = Vec::new();
-    for pick in same_picks(&met)? {
-        let kept: Vec<_> = worlds
-            .iter()
-            .map(|w| (w.seen.booked.clone(), w.seen.warnings.clone()))
-            .collect();
+    for pick in picks {
+        let kept: Vec<Kept> = worlds.iter().map(|w| Kept::of(&w.seen)).collect();
         let picked = side_cells(realities, worlds, (sides, days), Some(&pick));
-        for (w, (booked, warnings)) in worlds.iter_mut().zip(kept) {
-            w.seen.booked = booked;
-            w.seen.warnings = warnings;
+        for (w, before) in worlds.iter_mut().zip(kept) {
+            before.restore(&mut w.seen);
         }
         others.push(match picked? {
             Ok((cells, _)) => crossed_tuples(m, (ask, diff), &cells)?,
@@ -739,17 +740,44 @@ fn picked_lines(
 ) -> Result<Vec<Vec<String>>, Stop> {
     let mut others = Vec::new();
     for pick in same_picks(met)? {
-        let booked = seen.booked.clone();
+        let kept = Kept::of(seen);
         let mut engine = ask_engine(cut, (ask, env), days, seen);
         engine.same_picks.pick = Some(pick);
         let out = ask_body(m, ask, &mut engine, (cut, None));
-        seen.booked = booked;
+        kept.restore(seen);
         #[cfg(feature = "counters")]
         seen.counts.merge(engine.counters());
         others.push(refusal_line(ask, out)?);
         engine.asks_moved_no_money()?;
     }
     Ok(others)
+}
+
+/// What an answer under another choice of seen and unseen leaves as it found: the bookings
+/// and the warnings the asks met (refcore's fresh caches; L §4.5, tally 2.1.8 R12). Both
+/// loops over the choices, a line's (`picked_lines`) and a diff's over two stacks
+/// (`cross_lines`), keep it.
+struct Kept {
+    /// The bookings before the choice was answered.
+    booked: Bookings,
+    /// The warnings before the choice was answered.
+    warnings: Vec<(Warn, String)>,
+}
+
+impl Kept {
+    /// What `seen` holds now.
+    fn of(seen: &Seen) -> Kept {
+        Kept {
+            booked: seen.booked.clone(),
+            warnings: seen.warnings.clone(),
+        }
+    }
+
+    /// `seen` as it was when kept.
+    fn restore(self, seen: &mut Seen) {
+        seen.booked = self.booked;
+        seen.warnings = self.warnings;
+    }
 }
 
 /// Every choice of seen and unseen for the `same` lines `met` but the first run's, which saw
