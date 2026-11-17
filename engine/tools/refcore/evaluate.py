@@ -3081,7 +3081,14 @@ class Engine:
         m = self.m
         dom = b._dom
         if dom[0] in ('event', 'obs'):
-            cands = [x.mv() for x in self.movements_of(dom, ctx, getattr(b, '_owner', None)) if member_moves(m, b, x)]
+            xs = [x for x in self.movements_of(dom, ctx, getattr(b, '_owner', None)) if member_moves(m, b, x)]
+            for x in xs:
+                e = self.s1_refusal(getattr(x, 'id', None), ctx)
+                if e is not None:
+                    # a movement the binding could meet on the day is refused (S1), and a refusal outranks the day's
+                    # hole (L §8; tally 2.1.8 R11, #180; P50, group 4's fix review G2)
+                    raise e
+            cands = [x.mv() for x in xs]
         elif dom[0] == 'kind':
             cands = [Thing(t.name) for t in m.things.values() if m.thing_seen(t, ctx.cut) and m.thing_in(t.name, dom[1])
                      and member_owns(m, b, t)]
