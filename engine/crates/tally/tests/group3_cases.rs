@@ -651,4 +651,210 @@ ask s1: since(stated[broker], 2026-02-20)
             ],
         );
     }
+
+    /// G1 (`p5_min.tally`): a plan booked before K whose amount reads `last` of a unitless hole: the hole, the same at its booking cut and at K (pick P46).
+    #[test]
+    fn a_plan_reading_a_lone_unitless_hole_reads_it_alike_at_every_cut() {
+        let text = r#"model t
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind wallets: place any signed
+place broker: wallets lives 2025-01-01..
+place konto: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d_p: date
+input x1: money PLN
+input x2: money PLN
+input d_q: date
+def lb: money EUR = last(stated[broker], d_q)
+def amt: money PLN = if lb > 0 EUR then x1 else x2
+move pay: transfers
+  on d_p
+  leg cash from world to konto amount amt
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  anchor broker
+  d_p = 2026-03-05 "s"
+  x1 = 1.00 PLN "s"
+  x2 = 2.00 PLN "s"
+  d_q = 2026-02-16 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
+
+
+
+version v2
+  cite s
+  governs always
+  known 2026-03-01
+  anchor broker
+  stated[broker] = ?"not read" at 2026-02-15 end "s"
+
+ask k: bal(konto, 2026-03-31)
+"#;
+        all_of(
+            &lines_of("p5_min.tally", text),
+            &[
+                "k: ?\"not read\" (stated[broker])",
+                "  unfulfilled: pay",
+                "  held: stated[broker] = ?\"not read\" (stated[broker]) (v2), read for 2026-02-16",
+                "  cut 2026-06-10",
+            ],
+        );
+    }
+
+    /// G1 (`p5_plan.tally`): the same plan with a EUR reading beside the hole: `RUN-DOMAIN … in EUR and PLN` wherever it is read (pick P46).
+    #[test]
+    fn a_plan_reading_a_unitless_hole_beside_a_unit_is_run_domain_at_every_cut() {
+        let text = r#"model t
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind wallets: place any signed
+place broker: wallets lives 2025-01-01..
+place konto: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d_p: date
+input x1: money PLN
+input x2: money PLN
+input d_q: date
+def lb: money EUR = last(stated[broker], d_q)
+def amt: money PLN = if lb > 0 EUR then x1 else x2
+move pay: transfers
+  on d_p
+  leg cash from world to konto amount amt
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  anchor broker
+  d_p = 2026-03-05 "s"
+  x1 = 1.00 PLN "s"
+  x2 = 2.00 PLN "s"
+  d_q = 2026-02-16 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
+  opening[broker] = 2.00 PLN at 2026-01-01 start "s"
+  stated[broker] = 4.00 EUR at 2026-02-15 end "s"
+
+
+version v2
+  cite s
+  governs always
+  known 2026-03-01
+  anchor broker
+  stated[broker] = ?"not read" at 2026-02-15 end "s"
+
+ask k: bal(konto, 2026-03-31)
+"#;
+        all_of(
+            &lines_of("p5_plan.tally", text),
+            &[
+                "k: refused: RUN-DOMAIN last of broker: its readings at 2026-02-15 end are in EUR and PLN",
+                "  cut 2026-06-10",
+            ],
+        );
+    }
+
+    /// G1 (`p4_planlast.tally`): a plan's leg reading `last` of the place: every ask answers as refcore, none `ENGINE-INVARIANT` (pick P46).
+    #[test]
+    fn reads_of_a_unitless_hole_inside_a_plans_leg_load_and_answer() {
+        let text = r#"model t
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind wallets: place any signed
+place broker: wallets lives 2025-01-01..
+place konto: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d_p: date
+input x1: money PLN
+input x2: money PLN
+input x5: money PLN
+input x6: money PLN
+input d_q: date
+def lb: money EUR = last(stated[broker], d_q)
+def amt: money PLN = if lb > 0 EUR then x1 else x2
+move pay: transfers
+  on d_p
+  leg cash from world to konto amount amt
+move dec: transfers
+  on d_p
+  reads konto
+  leg cash from world to konto amount if last(stated[broker], d_q) > 0 EUR and bal(konto) > 0 PLN then x5 else x6
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  anchor broker
+  d_p = 2026-03-05 "s"
+  x1 = 1.00 PLN "s"
+  x2 = 2.00 PLN "s"
+  x5 = 5.00 PLN "s"
+  x6 = 6.00 PLN "s"
+  d_q = 2026-02-16 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
+  opening[broker] = 2.00 PLN at 2026-01-01 start "s"
+  stated[broker] = 4.00 EUR at 2026-02-15 end "s"
+
+
+version v2
+  cite s
+  governs always
+  known 2026-03-01
+  anchor broker
+  stated[broker] = ?"not read" at 2026-02-15 end "s"
+
+ask a: bal(broker, EUR, 2026-02-20), bal(broker, PLN, 2026-02-20)
+ask la: last(stated[broker], 2026-02-16)
+ask ga: gap(broker, 2026-02-15)
+ask si: since(stated[broker], 2026-02-16)
+ask pl: stated[broker] law 2026-02-15
+ask k: bal(konto, 2026-03-31)
+ask lbx: lb
+"#;
+        all_of(
+            &lines_of("p4_planlast.tally", text),
+            &[
+                "a: (4.00 EUR, ?\"not read\" (stated[broker]))",
+                "  anchor: broker 2026-02-15 end, stated 4.00 EUR, difference 3.00 EUR",
+                "  anchor: broker 2026-02-15 end, stated ?\"not read\" (stated[broker]), difference ?\"not read\" (stated[broker])",
+                "  cut 2026-06-10",
+                "ga: refused: RUN-DOMAIN gap of broker: its readings at 2026-02-15 end are in EUR and PLN",
+                "  cut 2026-06-10",
+                "k: refused: RUN-DOMAIN last of broker: its readings at 2026-02-15 end are in EUR and PLN",
+                "  cut 2026-06-10",
+                "la: refused: RUN-DOMAIN last of broker: its readings at 2026-02-15 end are in EUR and PLN",
+                "  cut 2026-06-10",
+                "lbx: refused: RUN-DOMAIN last of broker: its readings at 2026-02-15 end are in EUR and PLN",
+                "  cut 2026-06-10",
+                "pl: refused: RUN-DOMAIN stated of broker: its readings at 2026-02-15 end are in EUR and PLN",
+                "  law date 2026-02-15, cut 2026-06-10",
+                "si: 1",
+                "  cut 2026-06-10",
+            ],
+        );
+    }
 }

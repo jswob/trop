@@ -584,9 +584,9 @@ impl Engine {
     }
 
     /// For each instant where a reading row of `place` among `rows` states no unit: the units
-    /// the main walk of the read's cut applied a reading in there, its gaps at that instant;
-    /// none for a read inside a walk, which takes the stated units alone (L §5.10; tally
-    /// 2.1.8 R14, B4 of group 3's review; refcore's `units_at_reading`).
+    /// the walk of the read's cut up to the instant's day applied a reading in there, its gaps
+    /// at that instant, alike for every reader at that cut, inside a walk or not (L §5.10;
+    /// tally 2.1.8 R14, B4 of group 3's review, pick P46; refcore's `units_at_reading`).
     fn unitless_held(
         &mut self,
         m: &Reality,
@@ -595,9 +595,6 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<BTreeMap<String, BTreeSet<String>>, Stop> {
         let mut out = BTreeMap::new();
-        if ctx.at.is_some() {
-            return Ok(out);
-        }
         let mut instants = Vec::new();
         for row in rows {
             if let Some(RowInstant::At(day, Some(edge))) = row.instant
@@ -607,14 +604,15 @@ impl Engine {
                 instants.push((day, crate::book::instant_text(day, edge)));
             }
         }
-        if instants.is_empty() {
-            return Ok(out);
-        }
-        let Some(id) = self.free_main_walk(m, ctx.cut)? else {
-            return Ok(out);
-        };
-        let walk = self.walk(id)?;
         for (day, text) in instants {
+            // the cut's walk up to the day, which lists no plan after it; one being walked
+            // already holds its gaps of the days it passed (refcore's `prefix_walk`, its
+            // running walk); stated units alone where it is refused at run
+            let Some(id) = self.unitless_walk(m, ctx.cut, day)? else {
+                out.insert(text, BTreeSet::new());
+                continue;
+            };
+            let walk = self.walk(id)?;
             let mut units = BTreeSet::new();
             for g in walk
                 .gaps
@@ -629,6 +627,23 @@ impl Engine {
             out.insert(text, units);
         }
         Ok(out)
+    }
+
+    /// The walk of cut `cut` up to day `day` whose gaps give a unitless row its units: one
+    /// kept to that day or a later one, if it is being walked, else the prefix walk; none
+    /// where it is refused at run (refcore's `prefix_walk`). L §5.10, E §3.2, §4.1.
+    fn unitless_walk(&mut self, m: &Reality, cut: Day, day: Day) -> Result<Option<usize>, Stop> {
+        let kept = self
+            .prefixes
+            .walks
+            .range((cut, day)..)
+            .next()
+            .filter(|((c, _), id)| *c == cut && self.walking.contains(id))
+            .map(|(_, id)| *id);
+        if kept.is_some() {
+            return Ok(kept);
+        }
+        self.prefix_walk(m, cut, Some(day))
     }
 
     /// Each reading `after m` of `place` among the rows of input `input` read on the day the
