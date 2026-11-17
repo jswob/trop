@@ -51,10 +51,14 @@ changed; `refcore_fast` byte-equal). One mechanism per rule:
   prints (S7's seen and unseen limit) is the line; a diff's law that reads its `for` is read per tuple
   (`ask.law_reads_binds`, `diff_binds`), on two stacks per tuple (`cli.cross_stack_cells`); `evaluate.edge_first`
   visits the rows a `same` row follows.
+- **The fifth turn** (P37 on T's re-run's STOP-REPORTs; **1 522 tests**): `moves.py` imports `evaluate` last, so a
+  joint model's `reprint` loads it whole; `evaluate.carry_hole` adds each window a question's text is given (a
+  shifted window prints as another); `walk.each_before_from` lists a window leg's `before from:` per day under
+  `windows each`, the day not taken; the spec's household values its wrappers' units `by etf_price[month_of(d)]`.
 - **Left.** About 125 run sites no text reaches (`LoadAtRun`, `is_load` stay); explain's `windows each` block
   against its pinned twin's pins section, and `n9_start`'s plain `?` group (next round's); the covered face asks
-  every day of its window (`moves.m_window_class_depends`, a cost, no byte); `f5_start`'s `left out:` entry printed
-  once per day where P34 prints its hole; a law per tuple on forms other than `diff`.
+  every day of its window (`moves.m_window_class_depends`, a cost, no byte); a law per tuple on forms other than
+  `diff` (`REFCORE-NOT-YET`, as at 2.1.7).
 
 ## tally 2.1.7 (the spec round after M1: 84 items, ten rules)
 
