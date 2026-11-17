@@ -1304,11 +1304,14 @@ def m_modelled_account(self, w, place, unit, key, d):
             r0 = next((j for j in range(i, -1, -1) if lg.ents[j].kind == 'reset' and
                        lg.ents[j].note == 'opening' and lg.ents[j].key[0] == d.toordinal()), -1)
     since = lg.ents[r0].key if (lg is not None and r0 >= 0) else None
-    after = None
+    # m's leg is never counted after a reading `after m`: the start reading's, or an earlier one's, which every later
+    # reading holds too (pick P39 on B8 of group 3's review)
+    after = set()
     if since is not None:
-        ins = getattr(lg.ents[r0].row, 'instant', None)
-        if isinstance(ins, tuple) and ins[0] == 'after':
-            after = _txt(ins[1])
+        for e in lg.ents[:r0 + 1]:
+            ins = getattr(getattr(e, 'row', None), 'instant', None) if e.kind == 'reset' else None
+            if isinstance(ins, tuple) and ins and ins[0] == 'after':
+                after.add(_txt(ins[1]))
     ents = []
     if lg is not None:
         for e in lg.ents[r0 + 1:i + 1]:
@@ -1318,7 +1321,7 @@ def m_modelled_account(self, w, place, unit, key, d):
             ents.append(e)
     legs = []
     for x in w.modelled:
-        if after is not None and x.id == after:
+        if x.id in after:
             continue
         for g in x.legs:
             if not any(isinstance(p, Thing) and p.name == place for p in (g.frm, g.to)):
