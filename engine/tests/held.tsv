@@ -1,2 +1,3 @@
 id	target	issue	why
-fixes/gate8/at_window_mk2	m2_fixes	#169	tally 2.1.8 re-run, reported to the lead: refcore now prints spec.tsv's answer and one more register line, unfulfilled: mk2[p], the instance whose imprecise law date the hole names (R7: a read that met it took it, as follow-up item 9 rules for a pin); the spec row predates R7's ruling. Released when the lead takes refcore's line
+r12/entry_known_window	m2_fixes	#204	tally 2.1.8 R12 (the plan's a2): a version's statement over the five forms the engine stops on, "not implemented" there; built at M3
+r15/converted_plain	m2_fixes	#205	tally 2.1.8 R15's vector 3: a converted flows(...) in EUR at fx ... partial; the engine has no conversion of flows yet; built at M3

@@ -330,7 +330,7 @@ mod tests {
     ];
 
     /// The groups of `m2/spec.vectors`, each tested below.
-    const SPEC_GROUPS: [&str; 4] = ["spec-forms", "spec-windows", "spec-records", "spec-sweep"];
+    const SPEC_GROUPS: [&str; 3] = ["spec-forms", "spec-records", "spec-sweep"];
 
     /// Each group of the four stores has its tests here, so a new group is never left out.
     #[test]
@@ -1653,21 +1653,15 @@ mod tests {
         group_holds(M2_SPEC, "spec-forms", (0, 1), 2);
     }
 
-    /// `m2/spec.vectors`'s group `spec-windows`, every vector.
-    #[test]
-    fn m2_forks_on_prints_off_on_spec_spec_windows() {
-        group_holds(M2_SPEC, "spec-windows", (0, 1), 3);
-    }
-
     /// `m2/spec.vectors`'s group `spec-records`, every vector.
     #[test]
     fn m2_forks_on_prints_off_on_spec_spec_records() {
-        group_holds(M2_SPEC, "spec-records", (0, 1), 4);
+        group_holds(M2_SPEC, "spec-records", (0, 1), 2);
     }
 
     /// `m2/spec.vectors`'s group `spec-sweep`, every vector.
     #[test]
     fn m2_forks_on_prints_off_on_spec_spec_sweep() {
-        group_holds(M2_SPEC, "spec-sweep", (0, 1), 9);
+        group_holds(M2_SPEC, "spec-sweep", (0, 1), 8);
     }
 }

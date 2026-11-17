@@ -348,3 +348,8 @@ fixes/rv/g4_b3_law_via_at	fixes-rv		engine/tests/m2/fixes/rv/g4_b3_law_via_at	en
 fixes/rv/rc_diff_two_stacks_each	fixes-rv		engine/tests/m2/fixes/rv/rc_diff_two_stacks_each	engine/tests/m2/fixes/rv/rc_diff_two_stacks_each/m.tally engine/tests/m2/fixes/rv/rc_diff_two_stacks_each/sc.tally engine/tests/m2/fixes/rv/rc_diff_two_stacks_each/sd.tally engine/tests/m2/fixes/rv/rc_diff_two_stacks_each/se.tally			R13
 fixes/rv/rc_account_any_line	fixes-rv		engine/tests/m2/fixes/rv/rc_account_any_line	engine/tests/m2/fixes/rv/rc_account_any_line/m.tally			R12
 fixes/rv/rc_refusal_words_differ	fixes-rv		engine/tests/m2/fixes/rv/rc_refusal_words_differ	engine/tests/m2/fixes/rv/rc_refusal_words_differ/m.tally			I77
+fixes/g3/k2	fixes-windows		engine/tests/m2/fixes/g3	engine/tests/m2/fixes/g3/k2.tally	t		windows
+fixes/g3/ez06	fixes-windows		engine/tests/m2/fixes/g3	engine/tests/m2/fixes/g3/ez06.tally	c		windows
+fixes/g4/nb3_at	fixes-records		engine/tests/m2/fixes/g4	engine/tests/m2/fixes/g4/nb3_at.tally			records
+fixes/g4/nb3_atT	fixes-records		engine/tests/m2/fixes/g4	engine/tests/m2/fixes/g4/nb3_atT.tally			records
+fixes/g6/b4_q1	fixes-sweep		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/b4.tally	q1		sweep

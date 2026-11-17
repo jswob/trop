@@ -165,7 +165,8 @@ mod tests {
         "b_konto: on days_stepped=14 nonempty_days=13 walks=2 walks_shared=0 legs_booked=124 def_hits=300 def_misses=24; off days_stepped=14 nonempty_days=13 walks=2 walks_shared=0 legs_booked=124 def_hits=300 def_misses=24\n",
     );
 
-    /// `b2`'s asks, at 2026-11-15 (fc79eff9).
+    /// `b2`'s asks, at 2026-11-17 on tally 2.1.8's engine (91421810): the walks #183 forces
+    /// (R16, #200) take walks 6 to 28 (4 to 26 for `b2_one`); at 2026-11-15 (fc79eff9) before.
     #[test]
     fn m2_counts_ahead() {
         let got = table(&AHEAD, &["b2_min", "b2_all", "b2_one"], false);
@@ -176,8 +177,8 @@ mod tests {
     }
 
     const AHEAD_COUNTS: &str = concat!(
-        "b2_min: on days_stepped=104 nonempty_days=104 walks=6 walks_shared=46 legs_booked=78 def_hits=136 def_misses=38; off days_stepped=228 nonempty_days=228 walks=50 walks_shared=0 legs_booked=156 def_hits=136 def_misses=84\n",
-        "b2_all: on days_stepped=102 nonempty_days=102 walks=6 walks_shared=18 legs_booked=76 def_hits=136 def_misses=38; off days_stepped=154 nonempty_days=154 walks=22 walks_shared=0 legs_booked=110 def_hits=136 def_misses=56\n",
-        "b2_one: on days_stepped=102 nonempty_days=102 walks=4 walks_shared=0 legs_booked=76 def_hits=136 def_misses=38; off days_stepped=102 nonempty_days=102 walks=4 walks_shared=0 legs_booked=76 def_hits=136 def_misses=38\n",
+        "b2_min: on days_stepped=148 nonempty_days=148 walks=28 walks_shared=318 legs_booked=122 def_hits=136 def_misses=38; off days_stepped=676 nonempty_days=676 walks=344 walks_shared=0 legs_booked=604 def_hits=136 def_misses=84\n",
+        "b2_all: on days_stepped=146 nonempty_days=146 walks=28 walks_shared=290 legs_booked=120 def_hits=136 def_misses=38; off days_stepped=602 nonempty_days=602 walks=316 walks_shared=0 legs_booked=558 def_hits=136 def_misses=56\n",
+        "b2_one: on days_stepped=146 nonempty_days=146 walks=26 walks_shared=272 legs_booked=120 def_hits=136 def_misses=38; off days_stepped=550 nonempty_days=550 walks=298 walks_shared=0 legs_booked=524 def_hits=136 def_misses=38\n",
     );
 }
