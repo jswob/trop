@@ -946,8 +946,11 @@ class Walk:
         dep = []
         places = sorted(bl, key=str)
         bad = [(pu, nv) for pu in places for nv in [broken(*pu)] if nv is not None]
+        pend = self.__dict__.get('pend_at', {})
         for place, u, st in dep:
-            self.imp_hole(key, place, u, st, bl.get((place, u), ()))
+            self.imp_hole(key, place, u, st, tuple(bl.get((place, u), ())) + tuple(pend.get((place, u), ())))
+        for pu in places:
+            pend.pop(pu, None)
         for (place, u), nv in bad:
             if not bl[(place, u)]:
                 # an anchored place (an opening included) with no leg of the group at it: refused from here, with the
@@ -1021,26 +1024,20 @@ class Walk:
 
     def imp_hole(self, key, place, u, st, legs=()):
         """A test of §4.2 step 5 that comes out one way on some days of a pending window and another on the rest:
-        HOLE-IMPRECISE, naming the window, as far as the refusal would reach (E §4.1 step 2, L §4.4): the place, the
-        other ends of the legs it would refuse with it, and the other ends of the pending legs, up to each place's
-        next reading."""
+        HOLE-IMPRECISE, naming the window, as far as the refusal would reach (E §4.1 step 2, L §4.4): the place and
+        the other ends of the legs it would refuse with it (a window-dated leg tested on its own days among them), up
+        to each place's next reading. A pending leg the refusal wouldn't refuse keeps its value at its other end and in
+        its flows (§14; item 14 of the third turn)."""
         qs = frozenset().union(*(x[1] for x in st.imp))
         ends = {place}
         for mv, lg in legs:
             for p in (lg.frm, lg.to):
                 if isinstance(p, Thing):
                     ends.add(p.name)
-        for x in st.imp:
-            if x[3] is not None:
-                ends.add(x[3])
         UNCERTAIN.update(qs)
-        # the legs the refusal would reach, pending or booked with the group, are read as that hole by flows and a
-        # field read (item 8 of the follow-up)
+        # the legs the refusal would reach are read as that hole by flows and a field read (item 8 of the follow-up)
         for mv, lg in legs:
             self.hole_flows.setdefault((mv.id, lg.name), Hole(qs))
-        for x in st.imp:
-            mid, _, lname = x[0].rpartition('.')
-            self.hole_flows.setdefault((mid, lname), Hole(qs))
         for p in sorted(ends):
             self.add(p, u, Ent(key, 'hole', qs=qs, flow=Hole(qs)))
 
@@ -1058,12 +1055,14 @@ class Walk:
                 continue
             if grp is not None:
                 grp.setdefault((p.name, u), [])
+                # tested with its group: on the days its own amount breaks the place, it is a leg the refusal reaches
+                self.__dict__.setdefault('pend_at', {}).setdefault((p.name, u), []).append((i, lg))
                 continue
             st = self.pstate(p.name, u, key, raw=True)
             if st.val is None or st.hole or st.perm or st.bad:
                 continue
             if self.imp_three(st, lambda v: self.sign_breaks(p.name, v)) == 'depends':
-                self.imp_hole(key, p.name, u, st)
+                self.imp_hole(key, p.name, u, st, ((i, lg),))
 
     def sign_anchor(self, key, place, unit, rv, it):
         """L §5.10, E §4.2 step 5 (tally 2.1.2, issue #46, the user's "2: spec wins, refused"): an anchor, an opening
