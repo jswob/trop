@@ -1103,18 +1103,43 @@ fn read_target(m: &Reality, scope: &Scope, e: &Expr) -> Option<Node> {
     (kind == NameKind::Def).then(|| Node::new(NodeKind::Def, name))
 }
 
+/// A level's literal as a number: as written, a hundredth of it written with `%`; none with
+/// any other unit, which the level's type check meets (L §2.1, §5.11; refcore's
+/// `_level_literal`).
+fn literal_level(n: &crate::syntax::Number) -> Result<Option<Num>, Stop> {
+    let Some(unit) = &n.unit else {
+        return Ok(Some(n.value.clone()));
+    };
+    let [term] = unit.terms.as_slice() else {
+        return Ok(None);
+    };
+    if term.base != "%" || term.power != Num::int(1) {
+        return Ok(None);
+    }
+    n.value
+        .checked_div(&Num::int(100))
+        .map(Some)
+        .map_err(super::steps::num_stop)
+}
+
 /// A keyed quantile's level written as a number, or minus one, outside (0, 1]: `LOAD-DOMAIN`,
 /// since the level's range is type 1's own and load sees the literal; a level only the run
 /// gives is the run's `RUN-DOMAIN` (L §5.11, §5.16; tally 2.1.8 R16, #171; refcore's
 /// `_level_literal`).
 fn level_in_range(m: &Reality, level: Option<&Expr>) -> Result<(), Stop> {
-    let written = if let Some(Expr::Lit(Lit::Num(n))) = level {
-        n.value.clone()
+    let literal = if let Some(Expr::Lit(Lit::Num(n))) = level {
+        literal_level(n)?
     } else if let Some(Expr::Neg(inner)) = level
         && let Expr::Lit(Lit::Num(n)) = &**inner
     {
-        n.value.checked_neg().map_err(super::steps::num_stop)?
+        match literal_level(n)? {
+            Some(q) => Some(q.checked_neg().map_err(super::steps::num_stop)?),
+            None => None,
+        }
     } else {
+        None
+    };
+    let Some(written) = literal else {
         return Ok(());
     };
     let above_zero = written
