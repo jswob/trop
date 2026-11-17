@@ -4155,3 +4155,52 @@ Oracle: `engine/tools/refcore` at 21c79026 (the final spec, merged into this bra
   - Now green: `m2_fixes_ledger`, `m2_fixes_tally_218_d`, `_r11` and `_r16`.
 - **STOP-REPORTs:** none. **Exceptions:** +0 (the lock unchanged).
 - **Checks:** `check commit: red at tests, stopped after 10 of 23 steps (150s)` on the ids above; `check quick: green, 11 steps`.
+
+## 2026-11-17 tally 2.1.8, the round's close: headers and the closing figures (round PR #202; issues #204, #205, #207)
+
+On the lead's merge 8066ed27 (the tests session's close e115d8cb; the spec tagged on 51712a8f), `check commit` was green before any change: `check commit: green, 23 steps (212s)`. This turn changes no code.
+
+- **Headers (R-120), comments only:**
+  - `ask/answer.rs`: the sentence that broke at lines 9–10 is rewrapped (group 1's fix review, N7).
+  - `walk/day.rs`: Spec adds L §4.4 (a window-dated leg imprecise from its first day; a test some of its days pass makes it the window's hole there, which a later refusal doesn't outrank; item 77). Twin adds `imp_tests`, `window_lifespan` and `imp_hole`.
+  - `walk/plan.rs`: E §4.1 adds the window class hole; E §5 step 1 adds the answered hole booking, its reads listed where its instance's end (E §10). Twin adds `answer_booking`.
+  - `book/same.rs`: Invariants now give the member order by index place (P50) and S1's `RUN-RECORD` reach (P42).
+  - `eval/read.rs`: Spec adds L §6.1 (a `same` class's latest kept reading; B1, G1) and §4.6 (a reading `after m` that nothing books is `RUN-RECORD`; R16).
+  - `ask/windows.rs`: Spec adds §8.2 (P37's per-day `before from:` listed by a block alone); the over-long Invariants line is rewrapped.
+  - `ask/diff.rs`: Invariants add that a two-stack side takes only the windows its answer carries (R13.2).
+- **Size:** `git diff --shortstat 059f17ba..HEAD -- engine/crates/`: 87 files changed, 10622 insertions(+), 1639 deletions(-) (before this turn's headers).
+- **Held ids, the tests session's:** `r12/entry_known_window` (#204), `r15/converted_plain` (#205), and four spec rows held for #207. All are logged by the tests session's close, and none is red on this tree.
+- **Files over 1 000 lines (29), with how each would split, for M3's first group:**
+  - `walk/plan.rs` 2 165: the instance list and its cache (`move_instances`, `plan_list`) / evaluating one instance (`eval_inst`, the body) / status and classes (`status`, the window class) / the movement order.
+  - `ask/answer.rs` 1 763: the run's driver and pins / one ask's line per tuple / the two-stack diff's sides / the not-built gates.
+  - `syntax/tree.rs` 1 718: the declarations' nodes / the expression nodes / the asks' nodes.
+  - `eval/read.rs` 1 576: the read rule and a row's value / `last` and `since` / `same` classes / readings `after m`.
+  - `walk/state.rs` 1 510: `St` and `apply` / `Ent` and `Log` / `Walk` and its constructors / the register a balance read gathers.
+  - `load/check.rs` 1 457: the walk over expressions / the read records and key relations.
+  - `walk/lows.rs` 1 451 (fence F5): the tree of running sums / the projection reads it serves.
+  - `walk/order.rs` 1 376: ordering a day's decisions / running one at its point / cycles and their refusals.
+  - `book/same.rs` 1 376: groups and sides / disagreement holes (`same_differ`) / S1's links.
+  - `ask/windows.rs` 1 362: the runs (`each_rows`, `each_next`) / merging into boxes and nests / two stacks crossed.
+  - `book/members.rs` 1 335: binding members / movement fields (`mv_field`, `leg_field`) / kind membership.
+  - `load/strata.rs` 1 333: cycles and recurrences / unread items / strata and the decisions' reach.
+  - `walk/agenda.rs` 1 318: scheduling instances / the day steps.
+  - `walk/day.rs` 1 312: the day's acts / booking a leg's ends / window legs (`imprecise_ends`, `window_hole_ends`, `lifespan_depends`) / the close.
+  - `eval/expr.rs` 1 235: the dispatch / the arithmetic and comparison steps.
+  - `load/across.rs` 1 218: periods across keys / days at Tally's limits / scenarios' moves.
+  - `load/random.rs` 1 161: distributions / queries and `crps`.
+  - `book/observe.rs` 1 142: observations at a cut / coverage / links and S1's refusal pass.
+  - `eval/memo.rs` 1 131: keys and classes / the store and its read sets.
+  - `book/ledger.rs` 1 125: the ledger's lines / their groups.
+  - `load/types.rs` 1 064: the expression types / the refusals they make.
+  - `walk/reads.rs` 1 062: plain and running balances / `prefix_walk` and run status.
+  - `eval/trace.rs` 1 061: the trace tree / its snaps and moves (`trace_snap`, `trace_drop`, `trace_move_to`) / the winner.
+  - `load/prices.rs` 1 053: price inputs / `value(…) in CUR`.
+  - `syntax/expr.rs` 1 043: precedence climbing / postfixes and atoms.
+  - `eval/builtin.rs` 1 018: the dispatch / the number built-ins.
+  - `load/parts.rs` 1 015: kind clauses / arrival and leaving rules.
+  - `load/calls.rs` 1 006: built-in signatures / band calls and spans.
+  - `eval/state.rs` 1 001: the context and scope / `Collected` / the engine's fields.
+- **Exceptions against master:** +0 (`git diff master..HEAD -- engine/EXCEPTIONS.lock` is empty).
+- **Cost:** `perf counts P8-14`: def_misses 25 318, days_stepped 960, walks_shared 582 (exit 0; budget def_misses <= 30 400), unchanged.
+- **STOP-REPORTs:** none.
+- **Checks:** `check commit: green, 23 steps (330s)` on this tree, headers included.

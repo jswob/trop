@@ -5,9 +5,9 @@
 //! law date), §4.5 (the cut; tally 2.1.8 R12: a line that reads a `same` line known in a
 //! window that holds the cut is answered with it seen and unseen, `HOLE-IMPRECISE` where the
 //! two differ, a ledger's, diff's, `explain`'s or `inputs-of`'s block by every line, P27 on
-//! #196; at most 20 000 choices, L §7.6 item 6, P27 on #174), §5.11 (an ask's `law`,
-//! `as known` or pin that is a hole makes the ask
-//! line that hole), §8.2 (the register), §8.4 (a run-time refusal prints as the tuple's line),
+//! #196; at most 20 000 choices, L §7.6 item 6, P27 on #174), §5.11 (an ask's `law`, `as known`
+//! or pin that is a hole makes the ask line that hole), §8.2 (the register), §8.4 (a run-time
+//! refusal prints as the tuple's line),
 //! §8.5 (warnings last), §6.4 (the line's world: its `in`, else the model's; `law` and
 //! `as known` in the model's), §5.5 (tally 2.1.7 R8: an ask of any form fans out over the
 //! axes it reaches, `axes.rs`; a `diff`'s and a ledger's results are their sets of lines,

@@ -18,8 +18,9 @@
 //! B's keys that S lacks; two values are unchanged only when they are the same value, a hole
 //! or a refusal included; a cell's register is the ask's pins' and both evaluations' entries;
 //! a cell across two stacks is each side's at the options of the axes that side reads, and
-//! under `windows each` its runs are the pairs of the two sides' runs that take the same day
-//! of every window both meet (L §4.4; tally 2.1.8 R13, #186; refcore prints the first day's).
+//! under `windows each` each side takes only the windows its answer carries (tally 2.1.8
+//! R13.2), its runs being the pairs of the two sides' runs that take the same day of every
+//! window both meet (L §4.4; tally 2.1.8 R13, #186; refcore prints the first day's).
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 

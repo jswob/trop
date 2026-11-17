@@ -1,6 +1,9 @@
 //! The plan pass: each move's instances over its binding tuples, dated at the cut, evaluated at their booking cut, and classified.
 //! Spec: E §4.1 (enumerate the instances, date them at K, evaluate them at min(t, K),
-//! classify them, the movement order); E §5 (steps 0 and 1: dating at K, the booking cut);
+//! classify them, the movement order; a window whose days take different classes makes a
+//! hole movement from its first day, tally 2.1.8 item 77); E §5 (steps 0 and 1: dating at K,
+//! the booking cut; a hole booking a later version answers is that version's, and an
+//! explanation lists the answer's reads where its instance's own end, E §10);
 //! L §5.14 (moves: keys, `on`, `at`, `for`, `when`, legs and their days; a day or a `when`
 //! that is a hole makes a hole movement); L §8.4 (a refused key's `where`, `when`, attribute
 //! or `for` makes a refused movement, its day and legs' places still read; tally 2.1.6);
@@ -8,7 +11,7 @@
 //! `tuples.rs`'s, a leg's places and amount `legs.rs`'s.
 //! Twin: engine/tools/refcore/moves.py (`move_instances`, `insts_of_tuples`,
 //! `decision_instances`, `eval_inst`, `refused_places`, `body_over_law`, `inst_body`,
-//! `status`, `scen_early`, `inst_order`, `key_sort`, `keys_seen`).
+//! `status`, `scen_early`, `inst_order`, `key_sort`, `keys_seen`, `answer_booking`).
 //! Invariants: an instance's day is read at the ask's cut K and its body at its booking cut
 //! min(t, K); a run-time refusal met evaluating an instance stays with that instance; a move's
 //! instances are computed once per cut, and a move that reads its own instances is `RUN-CYCLE`.
