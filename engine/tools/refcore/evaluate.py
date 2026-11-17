@@ -4739,8 +4739,10 @@ def carry_hole(h, *vals, ids=None):
     ws = tuple(ids) if ids is not None else carry_union(*vals)
     if ws:
         for q in h.qs:
-            if q not in CARRY:
-                CARRY[q] = ws
+            # one question's text may come from two windows (a shifted window prints as another: STOP-REPORT 4 of
+            # T's re-run, i2's qs), so it carries the days of each
+            old = CARRY.get(q, ())
+            CARRY[q] = old + tuple(w for w in ws if w[0] not in set(x[0] for x in old))
     return h
 
 
