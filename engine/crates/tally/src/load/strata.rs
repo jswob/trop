@@ -698,15 +698,23 @@ fn after_keys(
     (file, line): (&str, u32),
 ) -> Result<(), Stop> {
     for (key, bind) in keys.iter().zip(binds) {
-        let (
-            crate::syntax::Key::Expr(
-                e @ Expr::Lit(Lit::Month(..) | Lit::Quarter(..) | Lit::Day(_)),
-            ),
-            Domain::Index(ix),
-        ) = (key, &bind.domain)
-        else {
+        let (crate::syntax::Key::Expr(e), Domain::Index(ix)) = (key, &bind.domain) else {
             continue;
         };
+        // a period, a day, or a bare key of a list index that names no def (B6 of group 3's
+        // review: `kz` of `ks`)
+        let period = matches!(
+            e,
+            Expr::Lit(Lit::Month(..) | Lit::Quarter(..) | Lit::Day(_))
+        );
+        let bare = if let Expr::Name(name) = e {
+            m.defs.get(name).is_none()
+        } else {
+            false
+        };
+        if !period && !bare {
+            continue;
+        }
         let Some(lit) = super::types::key_lit_of(e) else {
             continue;
         };

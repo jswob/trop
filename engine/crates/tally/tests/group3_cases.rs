@@ -15,10 +15,10 @@
 mod tests {
     use tally::{Asks, Days, Given, Pin, Request, run};
 
-    /// The lines a run of `text` prints, every ask.
-    fn lines_of(text: &str) -> Vec<String> {
+    /// The lines a run of `text`, read from `path`, prints, every ask.
+    fn lines_of(path: &str, text: &str) -> Vec<String> {
         let given = vec![Given {
-            path: "r.tally".to_owned(),
+            path: path.to_owned(),
             bytes: Some(text.as_bytes().to_vec()),
         }];
         let request = Request {
@@ -81,7 +81,7 @@ version v
   opening[konto] = 0.00 DUK at 2026-01-01 start "c"
 "#;
         holds(
-            &lines_of(text),
+            &lines_of("t13.tally", text),
             &[
                 "a: (500.00 DUK, 500.00 DUK, 0.00 DUK)",
                 "b: (500.00 DUK, 500.00 DUK)",
@@ -132,7 +132,7 @@ version v
   opening[sav] = 0.00 DUK at 2026-01-01 start "c"
 "#;
         holds(
-            &lines_of(text),
+            &lines_of("t17.tally", text),
             &[
                 "a: (500.00 DUK, 400.00 DUK, 0.00 DUK)",
                 "b: (500.00 DUK, 500.00 DUK)",
@@ -187,7 +187,7 @@ ask c: bal(konto, 2026-04-30) from 2026-02-15 with uncertain
 ask d: bal(konto, 2026-04-30) from 2026-02-15 partial
 "#;
         holds(
-            &lines_of(text),
+            &lines_of("t8.tally", text),
             &["a: 2 030.00 PLN + 1 × ?\"gift in march\" (gift[2026-03])"],
         );
     }
@@ -227,7 +227,7 @@ version v2
 ask la: last(stated[broker], 2026-02-16)
 "#;
         holds(
-            &lines_of(text),
+            &lines_of("t1_la.tally", text),
             &[
                 "la: refused: RUN-DOMAIN last of broker: its readings at 2026-02-15 end are in EUR and PLN",
             ],
@@ -269,7 +269,7 @@ version v2
 ask pl: stated[broker] law 2026-02-15
 "#;
         holds(
-            &lines_of(text),
+            &lines_of("t1_pl.tally", text),
             &[
                 "pl: refused: RUN-DOMAIN stated of broker: its readings at 2026-02-15 end are in EUR and PLN",
             ],
@@ -309,8 +309,73 @@ ask q2: quantile(z[k] for k in ks where w[k] > 1, lv)
 ask q3: quantile(z[k] for k in [a], lv)
 "#;
         holds(
-            &lines_of(text),
+            &lines_of("t7.tally", text),
             &["q1: refused: RUN-DOMAIN quantile has no meaning for the level 0"],
+        );
+    }
+
+    /// B6 (`t14.tally`): a reading `after save[kz]`, `kz` a bare name that is no key of the list index `ks`.
+    #[test]
+    fn a_reading_after_a_key_its_index_lacks_is_load_key() {
+        let text = r#"model t
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input keep: money PLN
+input d_save: int
+input d_sday: date
+input d_rent: int
+input rentamt: money PLN
+
+index ks = [ka]
+move save[k in ks]: transfers
+  on d_sday
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+move rent[m in months]: transfers
+  on day_of(m, d_rent)
+  leg cash from konto to world amount rentamt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  d_save = 15 "s"
+  d_sday = 2026-03-15 "s"
+  d_rent = 13 "s"
+  rentamt = 30.00 PLN "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  anchor konto
+  bank[o1] = (on: 2026-03-12, kind: transfers, leg cash from konto to sav amount 500.00 PLN, fulfils: save[ka]) "o1"
+  bank[o2] = (on: 2026-03-13, kind: transfers, leg cash from konto to world amount 30.00 PLN, fulfils: rent[2026-03]) "o2"
+  stated[konto] = 550.00 PLN after save[kz] "saldo"
+
+ask b: bal(konto, 2026-03-31)
+ask md: bal(konto, 2026-03-14) modelled, bal(konto, 2026-03-31) modelled
+ask g: last(stated[konto], 2026-05-31), since(stated[konto], 2026-05-31)
+"#;
+        holds(
+            &lines_of("t14.tally", text),
+            &[
+                "refused: LOAD-KEY stated[konto] after save[kz]: kz is not a key of ks (t14.tally:49)",
+            ],
         );
     }
 }
