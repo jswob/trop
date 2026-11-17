@@ -97,32 +97,3 @@ ask zx22: explain bal(zo, 2026-12-31) from 2026-03-02
 
 ask zx23: explain bal(zo, 2026-12-31) from 2026-06-30
 
-ask zx25: explain bal(w_s, 2026-03-02) from 2026-01-01
-
-ask zx26: explain bal(w_s, 2026-06-30) from 2026-01-14
-
-ask zx27: explain bal(w_s, 2026-06-30) from 2026-01-15
-
-ask zx28: explain bal(w_s, 2026-12-31) from 2026-03-02
-
-ask zx29: explain bal(w_s, 2026-12-31) from 2026-06-30
-
-ask zx31: explain bal(w_zs, 2026-03-02) from 2026-01-01
-
-ask zx32: explain bal(w_zs, 2026-06-30) from 2026-01-14
-
-ask zx33: explain bal(w_zs, 2026-06-30) from 2026-01-15
-
-ask zx34: explain bal(w_zs, 2026-12-31) from 2026-03-02
-
-ask zx35: explain bal(w_zs, 2026-12-31) from 2026-06-30
-
-ask zx37: explain bal(world, 2026-03-02) from 2026-01-01
-
-ask zx38: explain bal(world, 2026-06-30) from 2026-01-14
-
-ask zx39: explain bal(world, 2026-06-30) from 2026-01-15
-
-ask zx40: explain bal(world, 2026-12-31) from 2026-03-02
-
-ask zx41: explain bal(world, 2026-12-31) from 2026-06-30

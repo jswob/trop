@@ -41,7 +41,6 @@ ask b14: bal(konto, 2026-03-14)
 ask b15: bal(konto, 2026-03-15)
 ask b16: bal(konto, 2026-03-16)
 ask pd: sum(p.cash.amount for p in pads over 2026-03)
-ask un: bal(unexplained, 2026-03-31)
 ask e15: explain bal(konto, 2026-03-15)
 
 version st_konto

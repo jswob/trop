@@ -51482,7 +51482,7 @@ warning: WARN-NEGATIVE konto is below zero from 2026-10-03
 warning: WARN-UNREAD def fire_on_track is read by nothing
 warning: WARN-UNREAD def spend_daily is read by nothing
 warning: WARN-UNREAD input fire_from is read by nothing
-,14:fixes/g4/a_cov,13:fixes-records,56:run a_cov.tally --ask q_konto q_flk q_led b15 b16 pd e15,1865:11:a_cov.tally,1844:model t
+,14:fixes/g4/a_cov,13:fixes-records,56:run a_cov.tally --ask q_konto q_flk q_led b15 b16 pd e15,1828:11:a_cov.tally,1807:model t
   tally 2
   on 2026-04-10
   start 2026-03-01
@@ -51525,7 +51525,6 @@ ask b14: bal(konto, 2026-03-14)
 ask b15: bal(konto, 2026-03-15)
 ask b16: bal(konto, 2026-03-16)
 ask pd: sum(p.cash.amount for p in pads over 2026-03)
-ask un: bal(unexplained, 2026-03-31)
 ask e15: explain bal(konto, 2026-03-15)
 
 version st_konto
@@ -51549,8 +51548,33 @@ version rd
   known 2026-04-04
   pad konto from unexplained
   stated[konto] = 90.00 PLN after save[2026-03] "saldo"
-,,1:1,109:refused: LOAD-UNIT bal(unexplained, d) of a place of unit any states its unit: bal(x, u, d) (a_cov.tally:44)
-,13:fixes/g4/a_mp,13:fixes-records,59:run a_mp.tally --ask q_konto q_flk q_led b14 b15 b16 pd e15,1864:10:a_mp.tally,1844:model t
+,,1:0,1285:q_konto: 90.00 PLN
+  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of -10.00 PLN
+  cut 2026-04-10
+q_flk: -960.00 PLN
+  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of -10.00 PLN
+  cut 2026-04-10
+q_led: residuals konto 2026-03
+  2026-03 balance: model 100.00 PLN, observed 90.00 PLN, difference -10.00 PLN
+    balance konto after save[2026-03] (padded): booked 100.00 PLN, stated 90.00 PLN, gap -10.00 PLN
+  2026-03 move save: model -950.00 PLN, observed -950.00 PLN, difference 0.00 PLN
+    matched save[2026-03] on 2026-03-15: model -950.00 PLN, observed -950.00 PLN, difference 0.00 PLN, timing +0 days
+  cut 2026-04-10
+b15: 90.00 PLN
+  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of -10.00 PLN
+  cut 2026-04-10
+b16: 90.00 PLN
+  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of -10.00 PLN
+  cut 2026-04-10
+pd: 10.00 PLN
+  cut 2026-04-10
+e15: 90.00 PLN
+  balance of konto (PLN) at the end of 2026-03-15
+  from: pad rd:stated[konto] = 90.00 PLN, after save[2026-03] (version rd, source s, locator "saldo"), gap role pad from unexplained, gap -10.00 PLN (pads:rd:konto@after save[2026-03])
+  no movement
+  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of -10.00 PLN
+  cut 2026-04-10
+,13:fixes/g4/a_mp,13:fixes-records,59:run a_mp.tally --ask q_konto q_flk q_led b14 b15 b16 pd e15,1827:10:a_mp.tally,1807:model t
   tally 2
   on 2026-04-10
   start 2026-03-01
@@ -51593,7 +51617,6 @@ ask b14: bal(konto, 2026-03-14)
 ask b15: bal(konto, 2026-03-15)
 ask b16: bal(konto, 2026-03-16)
 ask pd: sum(p.cash.amount for p in pads over 2026-03)
-ask un: bal(unexplained, 2026-03-31)
 ask e15: explain bal(konto, 2026-03-15)
 
 version st_konto
@@ -51617,8 +51640,36 @@ version rd
   known 2026-04-04
   pad konto from unexplained
   stated[konto] = 90.00 PLN after save[2026-03] "saldo"
-,,1:1,108:refused: LOAD-UNIT bal(unexplained, d) of a place of unit any states its unit: bal(x, u, d) (a_mp.tally:44)
-,15:fixes/g4/a_none,13:fixes-records,48:run a_none.tally --ask q_konto q_flk b15 b16 e15,1619:12:a_none.tally,1597:model t
+,,1:0,1403:q_konto: 90.00 PLN
+  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of -10.00 PLN
+  cut 2026-04-10
+q_flk: -960.00 PLN
+  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of -10.00 PLN
+  cut 2026-04-10
+q_led: residuals konto 2026-03
+  2026-03 balance: model 100.00 PLN, observed 90.00 PLN, difference -10.00 PLN
+    balance konto after save[2026-03] (padded): booked 100.00 PLN, stated 90.00 PLN, gap -10.00 PLN
+  2026-03 move save: model -940.00 PLN, observed -950.00 PLN, difference -10.00 PLN
+    matched save[2026-03] on 2026-03-15: model -940.00 PLN, observed -950.00 PLN, difference -10.00 PLN, timing -1 days
+  cut 2026-04-10
+b14: 90.00 PLN
+  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of -10.00 PLN
+  cut 2026-04-10
+b15: 90.00 PLN
+  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of -10.00 PLN
+  cut 2026-04-10
+b16: 90.00 PLN
+  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of -10.00 PLN
+  cut 2026-04-10
+pd: 10.00 PLN
+  cut 2026-04-10
+e15: 90.00 PLN
+  balance of konto (PLN) at the end of 2026-03-15
+  from: pad rd:stated[konto] = 90.00 PLN, after save[2026-03] (version rd, source s, locator "saldo"), gap role pad from unexplained, gap -10.00 PLN (pads:rd:konto@after save[2026-03])
+  no movement
+  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of -10.00 PLN
+  cut 2026-04-10
+,15:fixes/g4/a_none,13:fixes-records,48:run a_none.tally --ask q_konto q_flk b15 b16 e15,1582:12:a_none.tally,1560:model t
   tally 2
   on 2026-04-10
   start 2026-03-01
@@ -51661,7 +51712,6 @@ ask b14: bal(konto, 2026-03-14)
 ask b15: bal(konto, 2026-03-15)
 ask b16: bal(konto, 2026-03-16)
 ask pd: sum(p.cash.amount for p in pads over 2026-03)
-ask un: bal(unexplained, 2026-03-31)
 ask e15: explain bal(konto, 2026-03-15)
 
 version st_konto
@@ -51677,7 +51727,16 @@ version rd
   known 2026-04-04
   pad konto from unexplained
   stated[konto] = 90.00 PLN after save[2026-03] "saldo"
-,,1:1,110:refused: LOAD-UNIT bal(unexplained, d) of a place of unit any states its unit: bal(x, u, d) (a_none.tally:44)
+,,1:0,701:q_konto: refused: RUN-RECORD reading stated[konto] after save[2026-03]: save[2026-03] is modelled past and nothing fulfils it
+  cut 2026-04-10
+q_flk: refused: RUN-RECORD reading stated[konto] after save[2026-03]: save[2026-03] is modelled past and nothing fulfils it
+  cut 2026-04-10
+b15: refused: RUN-RECORD reading stated[konto] after save[2026-03]: save[2026-03] is modelled past and nothing fulfils it
+  cut 2026-04-10
+b16: refused: RUN-RECORD reading stated[konto] after save[2026-03]: save[2026-03] is modelled past and nothing fulfils it
+  cut 2026-04-10
+e15: refused: RUN-RECORD reading stated[konto] after save[2026-03]: save[2026-03] is modelled past and nothing fulfils it
+  cut 2026-04-10
 ,17:fixes/g4/b1_since,13:fixes-records,30:run b1_since.tally --ask la sn,2621:14:b1_since.tally,2597:model x_explain
   tally 2
   on 2026-06-30
@@ -51782,7 +51841,7 @@ version jar_read
   cut 2026-06-30
 sn: 30
   cut 2026-06-30
-,16:fixes/g4/b2_last,13:fixes-records,74:run b2_last.tally --ask q_konto q_flk q_led b14 b15 b16 pd e15 l14 l16 s14,1991:13:b2_last.tally,1968:model t
+,16:fixes/g4/b2_last,13:fixes-records,74:run b2_last.tally --ask q_konto q_flk q_led b14 b15 b16 pd e15 l14 l16 s14,1954:13:b2_last.tally,1931:model t
   tally 2
   on 2026-04-10
   start 2026-03-01
@@ -51825,7 +51884,6 @@ ask b14: bal(konto, 2026-03-14)
 ask b15: bal(konto, 2026-03-15)
 ask b16: bal(konto, 2026-03-16)
 ask pd: sum(p.cash.amount for p in pads over 2026-03)
-ask un: bal(unexplained, 2026-03-31)
 ask e15: explain bal(konto, 2026-03-15)
 
 version st_konto
@@ -51853,7 +51911,43 @@ version rd
 ask l14: last(stated[konto], 2026-03-14)
 ask l16: last(stated[konto], 2026-03-16)
 ask s14: last(stated[konto], 2026-03-15)
-,,1:1,111:refused: LOAD-UNIT bal(unexplained, d) of a place of unit any states its unit: bal(x, u, d) (b2_last.tally:44)
+,,1:0,1619:q_konto: 90.00 PLN
+  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of -10.00 PLN
+  cut 2026-04-10
+q_flk: -960.00 PLN
+  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of -10.00 PLN
+  cut 2026-04-10
+q_led: residuals konto 2026-03
+  2026-03 balance: model 100.00 PLN, observed 90.00 PLN, difference -10.00 PLN
+    balance konto after save[2026-03] (padded): booked 100.00 PLN, stated 90.00 PLN, gap -10.00 PLN
+  2026-03 move save: model -940.00 PLN, observed -950.00 PLN, difference -10.00 PLN
+    matched save[2026-03] on 2026-03-15: model -940.00 PLN, observed -950.00 PLN, difference -10.00 PLN, timing -1 days
+  cut 2026-04-10
+b14: 90.00 PLN
+  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of -10.00 PLN
+  cut 2026-04-10
+b15: 90.00 PLN
+  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of -10.00 PLN
+  cut 2026-04-10
+b16: 90.00 PLN
+  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of -10.00 PLN
+  cut 2026-04-10
+pd: 10.00 PLN
+  cut 2026-04-10
+e15: 90.00 PLN
+  balance of konto (PLN) at the end of 2026-03-15
+  from: pad rd:stated[konto] = 90.00 PLN, after save[2026-03] (version rd, source s, locator "saldo"), gap role pad from unexplained, gap -10.00 PLN (pads:rd:konto@after save[2026-03])
+  no movement
+  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of -10.00 PLN
+  cut 2026-04-10
+l14: 90.00 PLN
+  cut 2026-04-10
+l16: 90.00 PLN
+  held: stated[konto] = 90.00 PLN (rd), read for 2026-03-16
+  cut 2026-04-10
+s14: 90.00 PLN
+  held: stated[konto] = 90.00 PLN (rd), read for 2026-03-15
+  cut 2026-04-10
 ,17:fixes/g4/b4_cycle,13:fixes-records,27:run b4_cycle.tally --ask la,2651:14:b4_cycle.tally,2627:model x_explain
   tally 2
   on 2026-06-30
@@ -52343,7 +52437,7 @@ sn: 30
   cut 2026-06-30
 s41: 0
   cut 2026-06-30
-,16:fixes/g4/c_since,13:fixes-records,84:run c_since.tally --ask q_konto q_flk q_led b14 b15 b16 pd e15 l14 l16 s14 sc20 sc14,2161:13:c_since.tally,2138:model t
+,16:fixes/g4/c_since,13:fixes-records,84:run c_since.tally --ask q_konto q_flk q_led b14 b15 b16 pd e15 l14 l16 s14 sc20 sc14,2124:13:c_since.tally,2101:model t
   tally 2
   on 2026-04-10
   start 2026-03-01
@@ -52386,7 +52480,6 @@ ask b14: bal(konto, 2026-03-14)
 ask b15: bal(konto, 2026-03-15)
 ask b16: bal(konto, 2026-03-16)
 ask pd: sum(p.cash.amount for p in pads over 2026-03)
-ask un: bal(unexplained, 2026-03-31)
 ask e15: explain bal(konto, 2026-03-15)
 
 version st_konto
@@ -52418,7 +52511,47 @@ ask sc20: since(stated[konto], 2026-03-20)
 ask sc14: since(stated[konto], 2026-03-14)
 ask sc13: since(stated[konto], 2026-03-13)
 ask l13: last(stated[konto], 2026-03-13)
-,,1:1,111:refused: LOAD-UNIT bal(unexplained, d) of a place of unit any states its unit: bal(x, u, d) (c_since.tally:44)
+,,1:0,1669:q_konto: 90.00 PLN
+  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of -10.00 PLN
+  cut 2026-04-10
+q_flk: -960.00 PLN
+  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of -10.00 PLN
+  cut 2026-04-10
+q_led: residuals konto 2026-03
+  2026-03 balance: model 100.00 PLN, observed 90.00 PLN, difference -10.00 PLN
+    balance konto after save[2026-03] (padded): booked 100.00 PLN, stated 90.00 PLN, gap -10.00 PLN
+  2026-03 move save: model -940.00 PLN, observed -950.00 PLN, difference -10.00 PLN
+    matched save[2026-03] on 2026-03-15: model -940.00 PLN, observed -950.00 PLN, difference -10.00 PLN, timing -1 days
+  cut 2026-04-10
+b14: 90.00 PLN
+  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of -10.00 PLN
+  cut 2026-04-10
+b15: 90.00 PLN
+  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of -10.00 PLN
+  cut 2026-04-10
+b16: 90.00 PLN
+  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of -10.00 PLN
+  cut 2026-04-10
+pd: 10.00 PLN
+  cut 2026-04-10
+e15: 90.00 PLN
+  balance of konto (PLN) at the end of 2026-03-15
+  from: pad rd:stated[konto] = 90.00 PLN, after save[2026-03] (version rd, source s, locator "saldo"), gap role pad from unexplained, gap -10.00 PLN (pads:rd:konto@after save[2026-03])
+  no movement
+  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of -10.00 PLN
+  cut 2026-04-10
+l14: 90.00 PLN
+  cut 2026-04-10
+l16: 90.00 PLN
+  held: stated[konto] = 90.00 PLN (rd), read for 2026-03-16
+  cut 2026-04-10
+s14: 90.00 PLN
+  held: stated[konto] = 90.00 PLN (rd), read for 2026-03-15
+  cut 2026-04-10
+sc20: 6
+  cut 2026-04-10
+sc14: 0
+  cut 2026-04-10
 ,25:fixes/gate8/d512_am_touch,13:fixes-records,18:run am_touch.tally,1652:14:am_touch.tally,1628:model t
   tally 2
   on 2026-04-10

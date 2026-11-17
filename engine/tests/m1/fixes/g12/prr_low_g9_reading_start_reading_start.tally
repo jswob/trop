@@ -97,32 +97,3 @@ ask zx22: explain low(zo, 2026-03-02 .. 2026-12-31)
 
 ask zx23: explain low(zo, 2026-06-30 .. 2026-12-31)
 
-ask zx25: explain low(w_s, 2026-01-01 .. 2026-03-02)
-
-ask zx26: explain low(w_s, 2026-01-14 .. 2026-06-30)
-
-ask zx27: explain low(w_s, 2026-01-15 .. 2026-06-30)
-
-ask zx28: explain low(w_s, 2026-03-02 .. 2026-12-31)
-
-ask zx29: explain low(w_s, 2026-06-30 .. 2026-12-31)
-
-ask zx31: explain low(w_zs, 2026-01-01 .. 2026-03-02)
-
-ask zx32: explain low(w_zs, 2026-01-14 .. 2026-06-30)
-
-ask zx33: explain low(w_zs, 2026-01-15 .. 2026-06-30)
-
-ask zx34: explain low(w_zs, 2026-03-02 .. 2026-12-31)
-
-ask zx35: explain low(w_zs, 2026-06-30 .. 2026-12-31)
-
-ask zx37: explain low(world, 2026-01-01 .. 2026-03-02)
-
-ask zx38: explain low(world, 2026-01-14 .. 2026-06-30)
-
-ask zx39: explain low(world, 2026-01-15 .. 2026-06-30)
-
-ask zx40: explain low(world, 2026-03-02 .. 2026-12-31)
-
-ask zx41: explain low(world, 2026-06-30 .. 2026-12-31)
