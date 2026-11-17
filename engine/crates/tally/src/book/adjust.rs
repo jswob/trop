@@ -197,8 +197,9 @@ impl Adjustment {
 impl Engine {
     /// The adjustments of one plan move's booked instances at cut `cut`, kept per move, cut
     /// and the list they measure (the whole list, or a walk up to a day's); a hole booking a
-    /// later version answers becomes, in that list, what that version gives (refcore's
-    /// `adjust_move`, its key with `upto_tag`). E §5 steps 1–4, §3.2.
+    /// later version answers becomes, in that list, what that version gives, a settlement's
+    /// too, which has no adjustment (refcore's `adjust_move`, its key with `upto_tag`,
+    /// `answer_booking`). E §5 steps 1–4, §3.2 (tally 2.1.8 §4, item 28).
     ///
     /// # Errors
     ///
@@ -213,10 +214,6 @@ impl Engine {
         let key = (mv.id.clone(), cut, upto);
         if let Some(hit) = self.adjustments.get(&key) {
             return Ok(hit.adjustments.clone());
-        }
-        if super::settle::settlement_move(m, mv)? {
-            self.adjustments.insert(key, Measured::default());
-            return Ok(Vec::new());
         }
         if self.adjust_active.contains(&key) {
             self.narrow_open_to_days();
@@ -309,6 +306,40 @@ impl Engine {
         }
     }
 
+    /// Instances `made` of move `mv` apart from its list (a settlement's bound to the
+    /// adjustments it settles), each hole booking before cut `cut` that a later version
+    /// answers in its answer's place, so a settlement's hole booking is answered like any
+    /// instance's (refcore's `answer_booking`). E §5 step 1 (tally 2.1.8 §4, item 28).
+    ///
+    /// # Errors
+    ///
+    /// The refusals of the measuring.
+    pub(crate) fn answer_apart(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        made: Vec<Inst>,
+        cut: Day,
+    ) -> Result<Vec<Inst>, Stop> {
+        let steps_all = known_dates(m);
+        let mut out = Vec::with_capacity(made.len());
+        for inst in made {
+            let t = inst.day.as_ref().and_then(crate::walk::Dated::day);
+            let Some(t) = t.filter(|t| *t < cut && is_hole_booking(&inst)) else {
+                out.push(inst);
+                continue;
+            };
+            let steps: Vec<&(Day, BTreeSet<String>)> = steps_all
+                .iter()
+                .filter(|(c, _)| t < *c && *c <= cut)
+                .collect();
+            let mut answered = Vec::new();
+            self.measure_inst(m, mv, (&inst, t), (&steps, cut), &mut answered)?;
+            out.push(answered.pop().unwrap_or(inst));
+        }
+        Ok(out)
+    }
+
     /// Each booked instance before the cut measured at each later step, with the hole
     /// bookings a step answers, as the instances they become (refcore's
     /// `adjust_move_compute`). E §5 steps 1–4.
@@ -321,8 +352,14 @@ impl Engine {
         let steps_all = known_dates(m);
         let mut out = Vec::new();
         let mut answered = Vec::new();
+        // a settlement's hole booking is answered like any instance's; steps 2–3 leave the
+        // rest of it unmeasured (E §5 steps 1–2; tally 2.1.8 §4, item 28)
+        let settles = super::settle::settlement_move(m, mv)?;
         for inst in self.plan_list(m, mv, cut)?.iter() {
             if !matches!(inst.status, Status::Past | Status::Hole | Status::None) {
+                continue;
+            }
+            if settles && !is_hole_booking(inst) {
                 continue;
             }
             let Some(t) = inst.day.as_ref().and_then(crate::walk::Dated::day) else {
@@ -338,7 +375,10 @@ impl Engine {
             if steps.is_empty() {
                 continue;
             }
-            out.extend(self.measure_inst(m, mv, (inst, t), (&steps, cut), &mut answered)?);
+            let made = self.measure_inst(m, mv, (inst, t), (&steps, cut), &mut answered)?;
+            if !settles {
+                out.extend(made);
+            }
         }
         out.sort_by(|a, b| {
             (a.day, &a.move_id, &a.inst_id, &a.leg.name).cmp(&(
@@ -354,7 +394,8 @@ impl Engine {
     /// One instance measured at each step: δ per leg against the state before (refcore's
     /// `adjust_move_compute`, its steps). A booking refused at κ₀ stays refused and records
     /// nothing; a hole booking stays a hole until a step answers it, which `answered` gets as
-    /// the instance at the cut; a refused step makes each leg's adjustment refused, a step
+    /// the instance at the cut, and one answered by a refusal stays refused, measured no more
+    /// (tally 2.1.8 S9); a refused step makes each leg's adjustment refused, a step
     /// whose `when` is a hole makes each a hole but a leg's whose amount is refused on either
     /// side, refused (tally 2.1.6), and the step after either is measured against it (tally
     /// 2.1.2). E §5 steps 1–4.
@@ -397,6 +438,18 @@ impl Engine {
                 vids: step_versions(&j.coll, vids),
                 coll: j.coll.clone(),
             };
+            if hole0 && let Some(err) = &j.err {
+                // the answer is its booking from then on: one answered by a refusal stays
+                // refused and, as a refused A0, no later version measures it again (E §5 step
+                // 1; tally 2.1.8 S9)
+                let mut answer = inst.clone();
+                answer.err = Some(err.clone());
+                answer.coll.merge(&j.coll);
+                answer.answered = Some((c, step.vids.clone()));
+                answer.status = self.status(m, mv, &mut answer, cut)?;
+                answered.push(answer);
+                return Ok(out);
+            }
             if let Some(err) = &j.err {
                 // a version answers a hole movement with a value or a refusal (E §5 step 1; L
                 // §8, a refusal outranks a hole: tally 2.1.7 R2, #94): each leg's adjustment

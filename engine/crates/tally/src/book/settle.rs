@@ -194,7 +194,8 @@ impl Engine {
         let made = self.make_instances(m, mv, cut, None);
         self.adj_restrict = before;
         self.plan_active.remove(&key);
-        made
+        // a settlement's hole booking is answered like any instance's (E §5 step 1)
+        self.answer_apart(m, mv, made?, cut)
     }
 }
 
