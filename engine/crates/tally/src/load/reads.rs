@@ -173,6 +173,9 @@ impl Checker {
     pub(super) fn bal(&mut self, m: &Reality, scope: &Scope, bal: &Bal, depth: u32) -> Typed {
         let t = self.place_arg(m, scope, &bal.place, "bal", depth)?;
         let mut ut = place_type_unit(m, scope, &t, &bal.place)?;
+        if let ([_], false) = (bal.args.as_slice(), bal.modelled) {
+            any_needs_unit(m, scope, &bal.place)?;
+        }
         let target = place_target(m, scope, &bal.place)?;
         let day = match bal.args.as_slice() {
             [unit, day] => {
@@ -440,6 +443,7 @@ impl Checker {
     pub(super) fn low(&mut self, m: &Reality, scope: &Scope, low: &Low, depth: u32) -> Typed {
         let t = self.place_arg(m, scope, &low.place, "low", depth)?;
         let ut = place_type_unit(m, scope, &t, &low.place)?;
+        any_needs_unit(m, scope, &low.place)?;
         let target = place_target(m, scope, &low.place)?;
         self.span(m, scope, &low.span, depth)?;
         if low.span.from.is_none() || low.span.to.is_none() {
@@ -878,6 +882,26 @@ fn quantity_unit(m: &Reality, unit: Option<&str>) -> bool {
     !m.currencies.contains_key(u)
         && !m.unit_kind_keys.contains_key(u)
         && !matches!(u, "any" | "one")
+}
+
+/// `bal(x, d)` or `low(x, a .. b)` that names no unit, of a place written by name whose unit
+/// is `any`: `LOAD-UNIT`, which load sees, in the words the run gives it; a place read
+/// through a variable stays the run's (refcore's `m_any_needs_unit`; tally 2.1.8 item 76,
+/// P31). A `low` is refused as the `bal(x, d)` of its definition. L §5.10, §5.14.1, §8.4.
+fn any_needs_unit(m: &Reality, scope: &Scope, place: &Expr) -> Result<(), Stop> {
+    let Some(name) = literal_place(m, scope, place)? else {
+        return Ok(());
+    };
+    let Some(thing) = m.things.get(&name) else {
+        return Ok(());
+    };
+    if m.place_unit(thing).is_some_and(|u| u != "any") {
+        return Ok(());
+    }
+    Err(refused(
+        Load::Unit,
+        format!("bal({name}, d) of a place of unit any states its unit: bal(x, u, d)"),
+    ))
 }
 
 /// A balance's unit argument named as a unit: a currency, or a key written as a literal
