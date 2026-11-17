@@ -676,6 +676,20 @@ impl Engine {
         Ok(id)
     }
 
+    /// The main walk of cut `cut`, walked to its end, unless it is being walked (a read from
+    /// inside its own walk): none then. E §3.3, §4.2.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::main_walk`].
+    pub(crate) fn free_main_walk(&mut self, m: &Reality, cut: Day) -> Result<Option<usize>, Stop> {
+        let busy = self.main_walks.get(&cut);
+        if busy.is_some_and(|id| self.walking.contains(id)) {
+            return Ok(None);
+        }
+        self.main_walk(m, cut).map(Some)
+    }
+
     /// The status of decision instance `mid`'s run in the walk a read in context `ctx` sees,
     /// and whether observations stand in for it: the walk it reads at, or else the main walk
     /// of its cut, through the walks it continues; none where m hasn't run there, or where
@@ -694,11 +708,10 @@ impl Engine {
         let id = if let Some(at) = ctx.at {
             at.walk
         } else {
-            let busy = self.main_walks.get(&ctx.cut);
-            if busy.is_some_and(|id| self.walking.contains(id)) {
+            let Some(id) = self.free_main_walk(m, ctx.cut)? else {
                 return Ok(None);
-            }
-            self.main_walk(m, ctx.cut)?
+            };
+            id
         };
         for wid in self.chain(id)? {
             let walk = self.walk(wid)?;

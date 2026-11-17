@@ -224,7 +224,7 @@ pub fn read_last(
         Ok(kept) => kept,
         Err(found) => return Ok(found),
     };
-    one_unit(m, input, &kept, "last")?;
+    let kept = one_unit(m, input, kept, "last")?;
     match choose(
         m,
         &input.rows,
@@ -316,18 +316,27 @@ fn removed(input: &InputInfo, at: usize) -> bool {
 }
 
 /// A read of reading `input` that names no unit, among the rows `cands` at one instant:
-/// refused where the rows that stand there state two units (L §5.10, tally 2.1.8 R14;
-/// refcore's `choose`, its unit test). `read` names the read: `last`, or the input.
+/// refused where the rows that stand there state two units, a row that states none standing
+/// for every unit the walk applied it in there (`input.held`); where that leaves one unit,
+/// its own reading is the narrower claim and the unitless rows go (L §5.10, tally 2.1.8 R14,
+/// B4 of group 3's review; refcore's `choose`, its unit test). `read` names the read:
+/// `last`, or the input.
 ///
 /// # Errors
 ///
 /// `RUN-DOMAIN` for two units' readings; `ENGINE-INVARIANT` where load's promises break.
-fn one_unit(m: &Reality, input: &InputInfo, cands: &[usize], read: &str) -> Result<(), Stop> {
+fn one_unit(
+    m: &Reality,
+    input: &InputInfo,
+    cands: Vec<usize>,
+    read: &str,
+) -> Result<Vec<usize>, Stop> {
     if !input.reading || cands.len() < 2 {
-        return Ok(());
+        return Ok(cands);
     }
     let (mut units, mut instants, mut place) = (BTreeSet::new(), BTreeSet::new(), None);
-    for at in standing_rows(m, &input.rows, cands)? {
+    let mut unitless = Vec::new();
+    for at in standing_rows(m, &input.rows, &cands)? {
         let row = input
             .rows
             .get(at)
@@ -338,18 +347,33 @@ fn one_unit(m: &Reality, input: &InputInfo, cands: &[usize], read: &str) -> Resu
             .transpose()
             .map_err(crate::eval::num_stop)?
             .flatten();
-        if let Some((unit, _)) = unit {
-            units.insert(unit);
+        match unit {
+            Some((unit, _)) => {
+                units.insert(unit);
+            }
+            None => unitless.push(at),
         }
         instants.insert(instant_of(row));
     }
-    match (place, instants.first()) {
-        (Some(place), Some(instant)) if units.len() > 1 && instants.len() == 1 => {
-            let units: Vec<String> = units.into_iter().collect();
-            Err(two_units(read, place, instant, &units))
+    let (Some(place), Some(instant), 1) = (place, instants.first(), instants.len()) else {
+        return Ok(cands);
+    };
+    if !unitless.is_empty() && !units.is_empty() {
+        if let Some(held) = input.held.get(instant) {
+            units.extend(held.iter().cloned());
         }
-        _ => Ok(()),
+        if units.len() == 1 {
+            return Ok(cands
+                .into_iter()
+                .filter(|c| !unitless.contains(c))
+                .collect());
+        }
     }
+    if units.len() > 1 {
+        let units: Vec<String> = units.into_iter().collect();
+        return Err(two_units(read, place, instant, &units));
+    }
+    Ok(cands)
 }
 
 /// A reading row's instant as text: `2026-02-15 end`, `after save[2026-03]`, or its day
@@ -398,7 +422,7 @@ fn read_reading(
     let test = Test::Instant(day);
     let cands = candidates(m, &input.rows, (&input.binds, keys), test, clocks)?;
     let cands = worded(m, &input.rows, cands, clocks)?;
-    one_unit(m, input, &cands, &input.id)?;
+    let cands = one_unit(m, input, cands, &input.id)?;
     // a reading `replace … = none` removed leaves its instant with no reading (L §5.19)
     if let Some(at) = choose(
         m,

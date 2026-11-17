@@ -191,4 +191,88 @@ ask d: bal(konto, 2026-04-30) from 2026-02-15 partial
             &["a: 2 030.00 PLN + 1 × ?\"gift in march\" (gift[2026-03])"],
         );
     }
+
+    /// B4 (`t1_la.tally`): `last` at an instant where a unitless hole stands beside a EUR reading, the place holding EUR and PLN.
+    #[test]
+    fn last_beside_a_unitless_hole_and_a_units_reading_is_run_domain() {
+        let text = r#"model t
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind wallets: place any signed
+place broker: wallets lives 2025-01-01..
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  anchor broker
+  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
+  opening[broker] = 2.00 PLN at 2026-01-01 start "s"
+  stated[broker] = 4.00 EUR at 2026-02-15 end "s"
+
+
+version v2
+  cite s
+  governs always
+  known 2026-03-01
+  anchor broker
+  stated[broker] = ?"not read" at 2026-02-15 end "s"
+
+ask la: last(stated[broker], 2026-02-16)
+"#;
+        holds(
+            &lines_of(text),
+            &[
+                "la: refused: RUN-DOMAIN last of broker: its readings at 2026-02-15 end are in EUR and PLN",
+            ],
+        );
+    }
+
+    /// B4 (`t1_pl.tally`): a plain read at the law date of that instant, as `last`.
+    #[test]
+    fn a_law_read_beside_a_unitless_hole_and_a_units_reading_is_run_domain() {
+        let text = r#"model t
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind wallets: place any signed
+place broker: wallets lives 2025-01-01..
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  anchor broker
+  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
+  opening[broker] = 2.00 PLN at 2026-01-01 start "s"
+  stated[broker] = 4.00 EUR at 2026-02-15 end "s"
+
+
+version v2
+  cite s
+  governs always
+  known 2026-03-01
+  anchor broker
+  stated[broker] = ?"not read" at 2026-02-15 end "s"
+
+ask pl: stated[broker] law 2026-02-15
+"#;
+        holds(
+            &lines_of(text),
+            &[
+                "pl: refused: RUN-DOMAIN stated of broker: its readings at 2026-02-15 end are in EUR and PLN",
+            ],
+        );
+    }
 }

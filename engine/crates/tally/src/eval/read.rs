@@ -12,6 +12,8 @@
 //! Invariants: a row's value has its input's declared type; a hole is built in the hole
 //! module.
 
+use std::collections::{BTreeMap, BTreeSet};
+
 use super::arith::{Op, arith, same_value};
 use super::builtin::read_parts;
 use super::convert::{ConvertFor, Converted, convert_read};
@@ -520,7 +522,7 @@ impl Engine {
         (past, clocks): (Option<Day>, Clocks),
         ctx: Ctx,
     ) -> Result<Result<Option<InputInfo>, Hole>, Stop> {
-        if !input.holds.known_window && !input.holds.after {
+        if !input.holds.known_window && !input.holds.after && !input.holds.unitless {
             return Ok(Ok(None));
         }
         let test = match past {
@@ -550,7 +552,11 @@ impl Engine {
         };
         // only `stated` and `opening` hold readings `after m`
         let after = input.holds.after && input.rows.iter().any(|row| after_at(row, place));
-        if hidden.is_empty() && !after {
+        let held = match place {
+            Some(p) if input.holds.unitless => self.unitless_held(m, &input.rows, p, ctx)?,
+            Some(_) | None => BTreeMap::new(),
+        };
+        if hidden.is_empty() && !after && held.is_empty() {
             return Ok(Ok(None));
         }
         let mut rows = kept_rows(&input.rows, &hidden);
@@ -561,8 +567,57 @@ impl Engine {
         }
         Ok(Ok(Some(InputInfo {
             rows,
+            held,
             ..input.clone()
         })))
+    }
+
+    /// For each instant where a reading row of `place` among `rows` states no unit: the units
+    /// the main walk of the read's cut applied a reading in there, its gaps at that instant;
+    /// none for a read inside a walk, which takes the stated units alone (L §5.10; tally
+    /// 2.1.8 R14, B4 of group 3's review; refcore's `units_at_reading`).
+    fn unitless_held(
+        &mut self,
+        m: &Reality,
+        rows: &[Row],
+        place: &str,
+        ctx: Ctx,
+    ) -> Result<BTreeMap<String, BTreeSet<String>>, Stop> {
+        let mut out = BTreeMap::new();
+        if ctx.at.is_some() {
+            return Ok(out);
+        }
+        let mut instants = Vec::new();
+        for row in rows {
+            if let Some(RowInstant::At(day, Some(edge))) = row.instant
+                && reading_place(row) == Some(place)
+                && m.reading_ty(place, &row.value).map_err(num_stop)?.is_none()
+            {
+                instants.push((day, crate::book::instant_text(day, edge)));
+            }
+        }
+        if instants.is_empty() {
+            return Ok(out);
+        }
+        let Some(id) = self.free_main_walk(m, ctx.cut)? else {
+            return Ok(out);
+        };
+        let walk = self.walk(id)?;
+        for (day, text) in instants {
+            let mut units = BTreeSet::new();
+            for g in walk
+                .gaps
+                .get(&(place.to_owned(), day))
+                .into_iter()
+                .flatten()
+            {
+                if g.instant == text {
+                    units.insert(g.unit.clone());
+                }
+            }
+            out.insert(text, units);
+        }
+        Ok(out)
     }
 
     /// Each reading `after m` of `place` among the rows of input `input` read on the day the
