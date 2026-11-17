@@ -351,8 +351,16 @@ def m_mv_field(self, n, env, ctx):
             if lg.name == name:
                 if isinstance(lg.amount, TallyError):
                     raise lg.amount
-                err = self.leg_refused(src.id, name, ctx, lg.day if isinstance(lg.day, datetime.date) else
-                                       src.day)
+                # whether the walk refused the leg is no read of its value: what building the walk reads (the plans'
+                # amounts and days) isn't listed under an explain of it (E §10; tally 2.1.8 P50, group 4's fix
+                # review: s6_reads_agree s4 listed d_p and amt)
+                saved_tr = (self.trace_stack, self.tracing)
+                self.trace_stack, self.tracing = [], False
+                try:
+                    err = self.leg_refused(src.id, name, ctx, lg.day if isinstance(lg.day, datetime.date) else
+                                           src.day)
+                finally:
+                    self.trace_stack, self.tracing = saved_tr
                 if isinstance(err, Hole):
                     return err
                 if err is not None:
