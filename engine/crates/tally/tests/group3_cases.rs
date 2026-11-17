@@ -88,4 +88,55 @@ version v
             ],
         );
     }
+
+    /// B2 (`t17.tally`): a decision run earlier on day t: its leg dated after t is counted (pick P39).
+    #[test]
+    fn a_decision_run_earlier_on_t_counts_its_later_legs() {
+        let text = r#"model p
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+source card "probe"
+unit DUK: currency minor 0.01
+place konto: accounts DUK lives 2026-01-01..
+place world: outside lives 2026-01-01..
+place sav: accounts DUK lives 2026-01-01..
+input amt: money DUK
+input floor: money DUK
+input d_mv: date
+input d_leg: date
+input d_late: date
+input d_to: date
+move early: transfers
+  on d_mv
+  reads sav
+  leg cash from world to konto amount amt + bal(sav) on d_leg
+move late: transfers
+  on d_late
+  reads konto
+  leg cash from world to konto amount max(0 DUK, floor - bal(konto, d_to) from d_late)
+ask a: bal(konto, 2026-03-31), bal(konto, 2026-03-01), bal(konto, 2026-02-28)
+ask b: bal(konto, 2026-03-31) from 2026-02-01, bal(konto, 2026-03-31) from 2026-03-01
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 DUK "c"
+  floor = 500.00 DUK "c"
+  d_mv = 2026-03-01 "c"
+  d_leg = 2026-03-10 "c"
+  d_late = 2026-03-01 "c"
+  d_to = 2026-03-31 "c"
+  opening[konto] = 0.00 DUK at 2026-01-01 start "c"
+  opening[sav] = 0.00 DUK at 2026-01-01 start "c"
+"#;
+        holds(
+            &lines_of(text),
+            &[
+                "a: (500.00 DUK, 400.00 DUK, 0.00 DUK)",
+                "b: (500.00 DUK, 500.00 DUK)",
+            ],
+        );
+    }
 }

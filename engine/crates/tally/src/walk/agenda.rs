@@ -290,20 +290,25 @@ impl Engine {
         walk.endings = endings(m, walk);
         walk.progress = Progress::Walking;
         // the legs of day t the start state already holds go with the point's filter
-        self.base_legs(id, &before_start)?;
-        after_the_point(self.walk_mut(id)?);
-        Ok(())
+        self.base_legs(id, &before_start, None)?;
+        let planned = self.walk_mut(id)?;
+        let first = planned.start;
+        let earlier = after_the_point(planned);
+        // a decision that ran earlier on day t: its legs dated after t (pick P39 on B2)
+        self.base_legs(id, &earlier, Some(first))
     }
 
-    /// A projection's walk `id`: each decision of `ids`, dated before its first day t, ran in
-    /// the walk it continues; that run's legs dated t on are put on their own days here, as
-    /// the projection counts every leg dated t through d by the leg's own day (refcore's
-    /// `base_legs`). E §4.3 step 2, L §5.14.1 (tally 2.1.8 R16, #183).
+    /// A projection's walk `id`: each decision of `ids`, dated before its first day t or run
+    /// on t before the projection's point, ran in the walk it continues; that run's legs dated
+    /// t on (after day `after`, where given: those of t are in the start) are put on their
+    /// own days here, as the projection counts every leg dated t through d by the leg's own
+    /// day (refcore's `base_legs`). E §4.3 step 2, L §5.14.1 (tally 2.1.8 R16, #183; pick P39
+    /// on B2 of group 3's review).
     ///
     /// # Errors
     ///
     /// `ENGINE-INVARIANT` for a walk the engine lacks.
-    fn base_legs(&mut self, id: usize, ids: &[String]) -> Result<(), Stop> {
+    fn base_legs(&mut self, id: usize, ids: &[String], after: Option<Day>) -> Result<(), Stop> {
         let base = self.walk(id)?.proj.as_ref().map(|p| p.base);
         for inst_id in ids {
             let mut found = None;
@@ -330,6 +335,7 @@ impl Engine {
                 if let Dated::Day(d) = lg.day
                     && d >= walk.start
                     && d <= walk.end
+                    && after.is_none_or(|a| d > a)
                 {
                     let at = At {
                         rank,
@@ -470,19 +476,36 @@ pub(super) fn left_out_lines(
 }
 
 /// A projection's walk read at a decision's point: on its first day only the decisions after
-/// that point are left, since what the day booked before it is in the start (refcore's
-/// `proj_walk`). L §5.14.1, E §4.3 step 1.
-fn after_the_point(walk: &mut Walk) {
+/// that point are left, since what the day booked before it is in the start; the instances
+/// of the decisions it drops, which ran earlier that day (refcore's `proj_walk`). L §5.14.1,
+/// E §4.3 step 1.
+fn after_the_point(walk: &mut Walk) -> Vec<String> {
     let Some(p) = &walk.proj else {
-        return;
+        return Vec::new();
     };
     let (point, first) = (p.point, walk.start);
     if point <= At::start(first) {
-        return;
+        return Vec::new();
     }
-    if let Some(acts) = walk.agenda.get_mut(&first) {
-        acts.retain(|(at, act)| matches!(act, Act::Decide(..)) && *at > point);
+    let Some(acts) = walk.agenda.get_mut(&first) else {
+        return Vec::new();
+    };
+    let mut ran = Vec::new();
+    for (at, act) in acts.iter() {
+        if let Act::Decide(move_id, day) = act
+            && *at <= point
+        {
+            ran.push((move_id.clone(), *day));
+        }
     }
+    acts.retain(|(at, act)| matches!(act, Act::Decide(..)) && *at > point);
+    let mut earlier = Vec::new();
+    for key in ran {
+        if let Some(insts) = walk.due.get(&key) {
+            earlier.extend(insts.iter().map(|i| i.id.clone()));
+        }
+    }
+    earlier
 }
 
 /// The decision moves by id (refcore's decision day keys). E §4.2 step 3.
