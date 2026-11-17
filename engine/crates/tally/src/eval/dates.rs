@@ -323,13 +323,13 @@ fn lifted(m: &Reality, f: DateFn, args: &[Value]) -> Result<Value, Stop> {
             Some(_) => vec![window_end(v, End::Low), window_end(v, End::High)],
             None => vec![v.clone()],
         };
-        corners = corners
-            .iter()
-            .flat_map(|c| {
-                ends.iter()
-                    .map(move |e| [c.as_slice(), core::slice::from_ref(e)].concat())
-            })
-            .collect();
+        let mut next = Vec::with_capacity(corners.len());
+        for c in &corners {
+            for e in &ends {
+                next.push([c.as_slice(), core::slice::from_ref(e)].concat());
+            }
+        }
+        corners = next;
     }
     let mut outs = Vec::with_capacity(corners.len());
     for c in &corners {
