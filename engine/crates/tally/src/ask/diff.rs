@@ -180,11 +180,10 @@ fn side_cell(
             .ok_or_else(|| invariant("a run's windows met taken while it ran"))?;
         let made = made?;
         // a run takes next only a window its answer carries (L §4.4; tally 2.1.8 R13.2)
-        let values: Vec<&Item> = [&made.ours, &made.theirs]
-            .into_iter()
-            .flatten()
-            .flat_map(|side| side.iter().map(|(_, v)| v))
-            .collect();
+        let mut values: Vec<&Item> = Vec::new();
+        for side in [&made.ours, &made.theirs].into_iter().flatten() {
+            values.extend(side.iter().map(|(_, v)| v));
+        }
         let carried = super::check::carried_of(&values);
         let Some(new) = each_next(&met, &choice, (&carried, &[])) else {
             runs.each.push((choice, made));

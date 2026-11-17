@@ -888,26 +888,27 @@ impl Engine {
         if since.children > node.children.len() {
             return;
         }
-        let to = done
-            .iter()
-            .filter(|(d, _)| d.parent == mark.parent && d.children <= mark.children)
-            .try_fold(mark.children, |at, (_, count)| at.checked_add(*count));
-        let Some(to) = to else {
-            return;
-        };
+        let mut to = mark.children;
+        for (d, count) in done.iter() {
+            if d.parent != mark.parent || d.children > mark.children {
+                continue;
+            }
+            let Some(after) = to.checked_add(*count) else {
+                return;
+            };
+            to = after;
+        }
         if to > since.children {
             return;
         }
         // the children before `to`, those listed since `since`, then the rest before `since`
         let old = core::mem::take(&mut node.children);
         let count = old.iter().skip(since.children).count();
-        node.children = old
-            .iter()
-            .take(to)
-            .chain(old.iter().skip(since.children))
-            .chain(old.iter().take(since.children).skip(to))
-            .copied()
-            .collect();
+        let mut moved = Vec::with_capacity(old.len());
+        moved.extend(old.iter().take(to));
+        moved.extend(old.iter().skip(since.children));
+        moved.extend(old.iter().take(since.children).skip(to));
+        node.children = moved;
         done.push((mark, count));
     }
 
