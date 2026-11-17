@@ -454,6 +454,8 @@ pub(crate) struct GapAt {
     pub gap: Amount,
     /// The reading's unit.
     pub unit: String,
+    /// The reading's instant as text (refcore's `instant_text`).
+    pub instant: String,
     /// The register of the booked balance and the reading's row.
     pub coll: Collected,
 }

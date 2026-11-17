@@ -381,7 +381,7 @@ pub mod read {
     pub use bands::{BandAt, band_no_row, band_no_table, band_origin, band_rows, table_held};
     pub use gap::{
         Asked, Found, Question, last_began, member_span, no_candidate, origin, read_input,
-        read_last,
+        read_last, two_units,
     };
     pub use rows::{
         Clocks, KnownInside, Point, Test, candidates, choose, held, known_inside, lawless,

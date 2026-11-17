@@ -32,6 +32,9 @@ pub(super) enum Stated {
     Hole,
     /// `none`.
     Nothing,
+    /// A hole or `none` at a place of unit `any`, which states no unit: a row for every unit
+    /// there, so its `replace` replaces each unit's reading (L §5.10; tally 2.1.8 R14).
+    Unstated,
 }
 
 /// One group of a target's rows: a pattern, a balance reading's unit, the rows' places.
@@ -60,7 +63,7 @@ pub(super) fn check_overlap(
 ) -> Result<(), Stop> {
     let groups = group_rows(rows, stated);
     for group in &groups {
-        same_keys(m, id, rows, &group.rows)?;
+        same_keys(m, id, rows, &group.rows, &wider(&groups, group, stated))?;
     }
     if stated.is_some() {
         return Ok(());
@@ -86,7 +89,7 @@ fn group_rows(rows: &[Row], stated: Option<&[Stated]>) -> Vec<Group> {
                 nothing.push(at);
                 continue;
             }
-            Some(Stated::Hole) | None => None,
+            Some(Stated::Hole | Stated::Unstated) | None => None,
         };
         join(&mut groups, &row.pattern, unit, at);
     }
@@ -105,6 +108,25 @@ fn group_rows(rows: &[Row], stated: Option<&[Stated]>) -> Vec<Group> {
         join(&mut groups, &row.pattern, unit, at);
     }
     groups
+}
+
+/// The rows a `replace` in `group` may replace beyond its own: for the rows that state no
+/// unit at a place of unit `any`, each unit's readings at their pattern (refcore's `wider`;
+/// L §5.10, tally 2.1.8 R14).
+fn wider(groups: &[Group], group: &Group, stated: Option<&[Stated]>) -> Vec<usize> {
+    let unstated = group
+        .rows
+        .first()
+        .and_then(|at| stated.and_then(|s| s.get(*at)))
+        .is_some_and(|s| *s == Stated::Unstated);
+    if !unstated {
+        return Vec::new();
+    }
+    groups
+        .iter()
+        .filter(|g| g.pattern == group.pattern && g.unit.is_some())
+        .flat_map(|g| g.rows.iter().copied())
+        .collect()
 }
 
 /// Puts row `at` into the group of `pattern` and `unit`, a new one at the end if none.
@@ -126,12 +148,24 @@ fn join(groups: &mut Vec<Group>, pattern: &[Pat], unit: Option<String>, at: usiz
 /// Rows at the same keys (refcore's `check_overlap`, its pairs and its `replace`s): two
 /// that overlap from two layers, the higher says `replace`; from one layer, known the same
 /// day, they tie unless precedence orders a span over `always`; else the later says
-/// `replace`; and a `replace` has an earlier row to replace. L §4.6 step 2, §6.4.
-fn same_keys(m: &Reality, id: &str, rows: &[Row], group: &[usize]) -> Result<(), Stop> {
+/// `replace`; and a `replace` has an earlier row to replace, its group's or one of the rows
+/// `wider` it stands for too. L §4.6 step 2, §6.4, §5.10.
+fn same_keys(
+    m: &Reality,
+    id: &str,
+    rows: &[Row],
+    group: &[usize],
+    wider: &[usize],
+) -> Result<(), Stop> {
     let mut members = Vec::new();
     for at in group {
         let row = rows.get(*at);
         members.push(row.ok_or_else(|| invariant("a row group past its rows".to_owned()))?);
+    }
+    let mut others = Vec::new();
+    for at in wider {
+        let row = rows.get(*at);
+        others.push(row.ok_or_else(|| invariant("a row group past its rows".to_owned()))?);
     }
     for (i, a) in members.iter().enumerate() {
         for b in members.iter().skip(i).skip(1) {
@@ -143,8 +177,13 @@ fn same_keys(m: &Reality, id: &str, rows: &[Row], group: &[usize]) -> Result<(),
             continue;
         }
         let mut replaces = false;
-        for (j, o) in members.iter().enumerate() {
-            if i == j || layer(m, &o.version) > layer(m, &r.version) {
+        let not_itself = members
+            .iter()
+            .enumerate()
+            .filter(|(j, _)| *j != i)
+            .map(|(_, o)| o);
+        for o in not_itself.chain(others.iter()) {
+            if layer(m, &o.version) > layer(m, &r.version) {
                 continue;
             }
             let earlier =

@@ -108,7 +108,17 @@ impl Loader {
                 format!("a row of {input} states its place"),
             ));
         };
+        let place_unit = self
+            .m
+            .things
+            .get(place)
+            .and_then(|thing| self.m.place_unit(thing));
+        // a hole or `none` at a place of unit `any` states no unit: a row for every unit
+        // there (L §5.10; tally 2.1.8 R14)
+        let any = place_unit.as_deref() == Some("any");
         let number = match &row.value {
+            Written::Hole(_) if any => return Ok((Stated::Unstated, None)),
+            Written::None if any => return Ok((Stated::Unstated, Some(Value::None))),
             Written::Hole(_) => return Ok((Stated::Hole, None)),
             Written::None => return Ok((Stated::Nothing, Some(Value::None))),
             Written::Lit(Lit::Num(number)) => number,
@@ -127,13 +137,7 @@ impl Loader {
                 ));
             }
         };
-        let stated = self
-            .m
-            .things
-            .get(place)
-            .and_then(|thing| self.m.place_unit(thing))
-            .filter(|unit| unit != "any");
-        let unit = match stated {
+        let unit = match place_unit.filter(|unit| unit != "any") {
             Some(unit) => unit,
             None => row_unit(input, place, number)?,
         };

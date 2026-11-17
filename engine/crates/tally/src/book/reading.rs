@@ -15,7 +15,7 @@
 //! the register, a pad's amount) and kept per (place, day) for `gap(x, d)`; the ledger's
 //! balance line computes its own from the reading (`book/ledger.rs`).
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use super::observe::{KnownAtCut, Obs, Windows};
 use crate::base::{Code, Load, Refusal};
@@ -102,7 +102,7 @@ fn last_standing_day(
 /// A pad: a movement of `pads` that takes up a statement's gap (refcore's `PadMv`). E §6.1.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Pad {
-    /// Its id, `pads:<version>:<place>@<instant>`.
+    /// Its id, `pads:<version>:<place>@<instant>`, then `:<unit>` at a place of unit `any`.
     pub id: String,
     /// Its one leg, from the pad's other place or to it.
     pub leg: LegVal,
@@ -191,17 +191,11 @@ pub(crate) fn readings(
     }
     let mut out = Vec::with_capacity(cands.len());
     for ((place, instant, input), rows_at) in cands {
-        for unit in stated_units(&rows_at) {
-            // the unit's own rows and the rows that state no unit, which stand for it
-            let rows_of: Vec<Kept> = rows_at
-                .iter()
-                .filter(|(u, _)| u.is_none() || *u == unit)
-                .map(|(_, kept)| kept.clone())
-                .collect();
-            let Some((_, day, stands, row)) = standing(m, rows_of) else {
-                continue;
-            };
-            let mut reading = reading_of(m, (&input, &place, &instant), &row, unit.as_deref())?;
+        for ((_, day, stands, row), own) in by_unit(m, &rows_at) {
+            let mut reading = reading_of(m, (&input, &place, &instant), &row)?;
+            if let Some(r) = &mut reading {
+                r.own = own;
+            }
             // one known in a window the cut leaves undecided: the hole it states carries that
             // unknown day (L §4.4; tally 2.1.8 R13; refcore's `CARRY_TEXT`)
             if let Some(Reading { value: Err(h), .. }) = &mut reading
@@ -229,9 +223,10 @@ pub(crate) fn readings(
 }
 
 /// Reading `r`, applied at point `at` of walk `walk`, once per unit it stands for: itself, or
-/// for a hole that states no unit (unit `ALL`) one per unit its place holds at that point, in
-/// text order, none where it holds none yet; each unit's own next anchor sets that unit's
-/// balance again (pick P22, #173; P24). L §4.6 Readings, E §6.1.
+/// for a row that states no unit (unit `ALL`) one per unit its place has a position in at
+/// that point but a unit with its own reading there, in text order, none where it holds none
+/// yet; each unit's own next anchor sets that unit's balance again (L §5.10, tally 2.1.8
+/// R14; pick P24). L §4.6 Readings, E §6.1.
 #[must_use]
 pub fn per_unit(walk: &crate::walk::Walk, r: &Reading, at: At) -> Vec<Reading> {
     if r.unit != crate::walk::ALL {
@@ -241,22 +236,49 @@ pub fn per_unit(walk: &crate::walk::Walk, r: &Reading, at: At) -> Vec<Reading> {
     for unit in walk.units_of(&r.place) {
         // a unit the place holds by `at`: its first entry is at or before it
         let held = matches!(walk.entries(&r.place, &unit).first(), Some(e) if e.at <= at);
-        if held {
+        if held && !r.own.contains(&unit) {
             out.push(Reading { unit, ..r.clone() });
         }
     }
     out
 }
 
-/// The units the rows of one place, instant and input state, in text order; one `None` where
-/// none states a unit, every unit the place holds then (pick P22, #173). L §4.6 Readings.
-fn stated_units(rows_at: &[UnitKept]) -> Vec<Option<String>> {
-    let units: std::collections::BTreeSet<&String> =
-        rows_at.iter().filter_map(|(u, _)| u.as_ref()).collect();
-    if units.is_empty() {
-        return vec![None];
+/// The readings that stand among the rows `rows_at` of one place, instant and input, each
+/// with the units it doesn't stand for: per unit in text order, of that unit's own rows; then of the rows that state no
+/// unit (a hole, `none`), a row for every other unit, whose `replace` replaces each unit's
+/// reading known before it (L §5.10, tally 2.1.8 R14; refcore's `any_unitless`). L §4.6
+/// steps 2 and 4 (a unit's own reading is the narrower claim).
+fn by_unit(m: &Reality, rows_at: &[UnitKept]) -> Vec<(Kept, BTreeSet<String>)> {
+    let wide = standing(m, rows_with(rows_at, None));
+    let units: BTreeSet<&String> = rows_at.iter().filter_map(|(u, _)| u.as_ref()).collect();
+    let mut out = Vec::new();
+    let mut own = BTreeSet::new();
+    for unit in units {
+        let Some(kept) = standing(m, rows_with(rows_at, Some(unit))) else {
+            continue;
+        };
+        if wide
+            .as_ref()
+            .is_some_and(|w| replaced(m, std::slice::from_ref(w), (kept.0, &kept.3)))
+        {
+            continue;
+        }
+        own.insert(unit.clone());
+        out.push((kept, BTreeSet::new()));
     }
-    units.into_iter().map(|u| Some(u.clone())).collect()
+    if let Some(w) = wide {
+        out.push((w, own));
+    }
+    out
+}
+
+/// The rows among `rows_at` that state unit `unit` (none: that state no unit). L §5.10.
+fn rows_with(rows_at: &[UnitKept], unit: Option<&String>) -> Vec<Kept> {
+    rows_at
+        .iter()
+        .filter(|(u, _)| u.as_ref() == unit)
+        .map(|(_, kept)| kept.clone())
+        .collect()
 }
 
 /// The row that stands among the readings `rows_at` of one place, instant and input: of the
@@ -386,16 +408,14 @@ pub(crate) fn stands_text(day: Day, stands: &Stands) -> String {
     }
 }
 
-/// A reading's row as the walk applies it, for unit `stands` among its instant's: its value
-/// in its unit, a stated hole, or none for a row whose value is `none`. A hole that states no
-/// unit stands for `stands`, or for every unit the place holds at its point (`ALL`) where no
-/// row at its instant states one (refcore's `apply_reading`, its value; pick P22, #173).
-/// L §5.19, §4.6 Readings.
+/// A reading's row as the walk applies it: its value in its unit, a stated hole, or none for
+/// a row whose value is `none`. A hole that states no unit stands for every unit the place
+/// has a position in at its point (`ALL`) but those with their own reading there (refcore's
+/// `apply_reading`, its value; L §5.10, tally 2.1.8 R14). L §5.19, §4.6 Readings.
 fn reading_of(
     m: &Reality,
     (input, place, instant): (&str, &str, &str),
     row: &crate::model::Row,
-    stands: Option<&str>,
 ) -> Result<Option<Reading>, Stop> {
     if row.value == crate::syntax::Value::None {
         return Ok(None);
@@ -410,10 +430,9 @@ fn reading_of(
             Ok(crate::model::Value::None) => return Ok(None),
             Ok(v) => (unit, Ok(crate::walk::quantity(m, &v)?.0)),
         },
-        (None, crate::syntax::Value::Hole(text)) => (
-            stands.unwrap_or(crate::walk::ALL).to_owned(),
-            Err(Hole::asked(text, &figure)),
-        ),
+        (None, crate::syntax::Value::Hole(text)) => {
+            (crate::walk::ALL.to_owned(), Err(Hole::asked(text, &figure)))
+        }
         (None, _) => {
             return Err(Stop::NotBuilt(
                 "a reading whose unit neither its place nor its row states",
@@ -437,6 +456,7 @@ fn reading_of(
         coll,
         version: row.version.clone(),
         instant: instant.to_owned(),
+        own: BTreeSet::new(),
     }))
 }
 
@@ -634,6 +654,7 @@ impl Engine {
                 at,
                 gap: gap.clone(),
                 unit: r.unit.clone(),
+                instant: r.instant.clone(),
                 coll: bc.clone(),
             });
         // E §9 item 2: an anchor's gap, or a pad's from outside, moves worth; a pad from an
@@ -679,7 +700,7 @@ impl Engine {
                 anchored.sign_anchor(m, at, r)
             }
             GapRole::Pad(other) => {
-                let pad = make_pad(r, &other, &gap, bc, at)?;
+                let pad = make_pad(m, r, &other, &gap, (bc, at))?;
                 // a member of a binding over pads from its point (L §5.14.1)
                 self.walk_mut(id)?.pads.push((pad.clone(), at));
                 let text = format!(
@@ -793,8 +814,16 @@ impl Engine {
 }
 
 /// A pad of gap `gap` at reading `r`, from `other` into the place when the gap is positive or
-/// unknown, else out of it (refcore's `PadMv`). E §6.1.
-fn make_pad(r: &Reading, other: &str, gap: &Amount, coll: Collected, at: At) -> Result<Pad, Stop> {
+/// unknown, else out of it; at a place of unit `any` its id ends with its unit, so two units'
+/// pads at one instant are two movements (refcore's `PadMv`; L §5.10, tally 2.1.8 R14).
+/// E §6.1.
+fn make_pad(
+    m: &Reality,
+    r: &Reading,
+    other: &str,
+    gap: &Amount,
+    (coll, at): (Collected, At),
+) -> Result<Pad, Stop> {
     let (amount, into) = match gap {
         Amount::Qty(g) if g.is_negative() => (
             Amount::Qty(g.checked_neg().map_err(crate::eval::num_stop)?),
@@ -808,8 +837,14 @@ fn make_pad(r: &Reading, other: &str, gap: &Amount, coll: Collected, at: At) -> 
     } else {
         (End::Place(r.place.clone()), End::Place(other.to_owned()))
     };
+    let any = m
+        .things
+        .get(&r.place)
+        .and_then(|t| m.place_unit(t))
+        .is_some_and(|u| u == "any");
+    let id = format!("pads:{}:{}@{}", r.version, r.place, r.instant);
     Ok(Pad {
-        id: format!("pads:{}:{}@{}", r.version, r.place, r.instant),
+        id: if any { format!("{id}:{}", r.unit) } else { id },
         leg: LegVal {
             name: "cash".to_owned(),
             from,

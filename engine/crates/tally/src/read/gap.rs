@@ -211,7 +211,8 @@ pub fn read_input(
 ///
 /// # Errors
 ///
-/// `LOAD-OVERLAP` for rows still tied; `ENGINE-INVARIANT` where load's promises break.
+/// `LOAD-OVERLAP` for rows still tied; `RUN-DOMAIN` where two units' readings stand at the
+/// instant (L §5.10); `ENGINE-INVARIANT` where load's promises break.
 pub fn read_last(
     m: &Reality,
     input: &InputInfo,
@@ -223,6 +224,7 @@ pub fn read_last(
         Ok(kept) => kept,
         Err(found) => return Ok(found),
     };
+    one_unit(m, input, &kept, "last")?;
     match choose(
         m,
         &input.rows,
@@ -313,6 +315,74 @@ fn removed(input: &InputInfo, at: usize) -> bool {
     matches!(input.rows.get(at), Some(row) if row.value == crate::syntax::Value::None)
 }
 
+/// A read of reading `input` that names no unit, among the rows `cands` at one instant:
+/// refused where the rows that stand there state two units (L §5.10, tally 2.1.8 R14;
+/// refcore's `choose`, its unit test). `read` names the read: `last`, or the input.
+///
+/// # Errors
+///
+/// `RUN-DOMAIN` for two units' readings; `ENGINE-INVARIANT` where load's promises break.
+fn one_unit(m: &Reality, input: &InputInfo, cands: &[usize], read: &str) -> Result<(), Stop> {
+    if !input.reading || cands.len() < 2 {
+        return Ok(());
+    }
+    let (mut units, mut instants, mut place) = (BTreeSet::new(), BTreeSet::new(), None);
+    for at in standing_rows(m, &input.rows, cands)? {
+        let row = input
+            .rows
+            .get(at)
+            .ok_or_else(|| invariant("a candidate past its rows"))?;
+        place = place.or_else(|| crate::book::reading_place(row));
+        let unit = crate::book::reading_place(row)
+            .map(|p| m.reading_ty(p, &row.value))
+            .transpose()
+            .map_err(crate::eval::num_stop)?
+            .flatten();
+        if let Some((unit, _)) = unit {
+            units.insert(unit);
+        }
+        instants.insert(instant_of(row));
+    }
+    match (place, instants.first()) {
+        (Some(place), Some(instant)) if units.len() > 1 && instants.len() == 1 => {
+            let units: Vec<String> = units.into_iter().collect();
+            Err(two_units(read, place, instant, &units))
+        }
+        _ => Ok(()),
+    }
+}
+
+/// A reading row's instant as text: `2026-02-15 end`, `after save[2026-03]`, or its day
+/// (refcore's `instant_text`). L §4.6 Readings.
+fn instant_of(row: &crate::model::Row) -> String {
+    match &row.instant {
+        Some(crate::model::RowInstant::At(day, Some(edge))) => {
+            crate::book::instant_text(*day, *edge)
+        }
+        Some(crate::model::RowInstant::At(day, None)) => day.text(),
+        Some(crate::model::RowInstant::After(node)) => {
+            format!("after {}", crate::load::expr_text(node))
+        }
+        None => String::new(),
+    }
+}
+
+/// `RUN-DOMAIN` for a read that names no unit where readings in two units stand at its
+/// instant: `<read> of <x>: its readings at <instant> are in EUR and PLN` (L §5.10, §8.4;
+/// tally 2.1.8 R14; refcore's `units_at_instant`).
+#[must_use]
+pub fn two_units(read: &str, place: &str, instant: &str, units: &[String]) -> Stop {
+    let listed = match units.split_last() {
+        Some((last, [])) => last.clone(),
+        Some((last, rest)) => format!("{} and {last}", rest.join(", ")),
+        None => String::new(),
+    };
+    Stop::Refused(crate::base::Refusal::new(
+        crate::base::Code::Run(crate::base::Run::Domain),
+        format!("{read} of {place}: its readings at {instant} are in {listed}"),
+    ))
+}
+
 /// A plain read of a reading at law date d: the reading at that instant, else a hole naming
 /// the reading and the day (`HOLE-NOREADING`, L §4.6 Readings).
 fn read_reading(
@@ -328,6 +398,7 @@ fn read_reading(
     let test = Test::Instant(day);
     let cands = candidates(m, &input.rows, (&input.binds, keys), test, clocks)?;
     let cands = worded(m, &input.rows, cands, clocks)?;
+    one_unit(m, input, &cands, &input.id)?;
     // a reading `replace … = none` removed leaves its instant with no reading (L §5.19)
     if let Some(at) = choose(
         m,

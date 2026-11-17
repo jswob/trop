@@ -66,6 +66,9 @@ pub struct Reading {
     pub version: String,
     /// Its instant as text, `2026-09-30 end` (refcore's `instant_text`).
     pub instant: String,
+    /// For a row that states no unit at a place of unit `any`: the units with their own
+    /// reading at its instant, which it doesn't stand for (L §5.10; tally 2.1.8 R14).
+    pub own: BTreeSet<String>,
 }
 
 /// The places a decision instance whose day is a hole makes holes, or none for every place
