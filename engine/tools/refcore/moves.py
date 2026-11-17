@@ -14,7 +14,6 @@ from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_no
 from .model import visible, row_known_sid, known_first, PlaceThing, _kv, key_text, in_world, _WSET, _SAMEMET, \
     same_seen, same_key
 from .values import Num, Money, Hole, Thing, Mv, Iv, Rec, Text, NONE, NEVER, CURRENCIES, fmt, vkey
-from .evaluate import carry_hole, known_carry, CARRY_TEXT
 
 # the stratum a pad takes in the movement order: above every decision's, as observations and adjustments take -1,
 # below every plan's 0 (E §4.1, tally 2.1.2; tally 2.1.1 wrote 9, which only text compare put after stratum 10)
@@ -2299,3 +2298,8 @@ def settle_sign(lg, a, s):
     if f == at or t == af:
         return -1
     raise refuse('RUN-RECORD', 'settlement %s of %s touches neither place of its leg' % (s.id, a.id))
+
+
+# last, so that walk, which evaluate imports, finds this module whole when moves is imported first (a joint
+# model's member load reaches it through loader.check_part_rows; STOP-REPORT 1 of T's re-run, pick P37)
+from .evaluate import carry_hole, known_carry, CARRY_TEXT  # noqa: E402
