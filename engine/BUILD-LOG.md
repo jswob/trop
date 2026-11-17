@@ -3877,3 +3877,62 @@ The review of group 2's fix (`tmp/spec-2.1.8-build/review-g2-fix.md`) found two 
 - **`engine/tools/perf counts P8-14`:** `ok P8-14 counts(1w): def_misses 25318, days_stepped 960, walks_shared 582`, unchanged.
 - **STOP-REPORTs:** none. **Exceptions:** +0 (6; report-only hits 9, as the lock).
 - **Checks:** `check commit` is red only at `tests` (`25 of 1044 tests are red`), on 63 gating vectors: the 47 of group 2's entry and 16 of group 3's entry (c9606e87). No other id is red. The steps it then left out, each run alone with `check step`, are all green: milestone-report, doc, build, gungraun-build, doctest, fault-injection-probe, deny, deny-tally, tree-probe, ast-grep-test, special-casing, spec-loadcheck-selftest, spec-loadcheck. `check fences: green, 1 step (29s)`.
+
+## 2026-11-17 tally 2.1.8, build group 4: b8, b9, the load checks and the engine's halves (round PR #202; issues #177, #178, #179, #181, #159, #161, #162, #169)
+
+The plan's b8 and b9, R5's load checks and the three halves 2.1.8's CHANGES.md leaves open, on `build/2.1.8b` from 7c0ca092. The oracle: `tmp/spec-2.1.8-build/refcore-g4`, a `git archive` of spec/2.1.8 at 3b9f51f1. Choices taken as the brief's recommended ones: S8 by refcore's count (ruling 3); #162 at refcore's sorted sites (ruling 7).
+
+- **b8:**
+  - S1 with item 20 (9f3b2a1d): rows stated `same` whose `fulfils` name different instances are `RUN-RECORD … are stated same and fulfil a and b`; a row with none takes its class's (`book/observe.rs` `share_fulfils`, `book/same.rs` `fulfils_differ`).
+  - S3 (6d40c399): a `by f` group prints `<f> <value>`.
+  - S6 with items 40 and 41 (6d613625): a `same` class names its rows in id order, every member listed (`and_list`); every read of either side reads the class (`eval/read.rs` `same_class`, `read_same_rows`, a priced side, readings too, the carried value's `HOLE-SAME`); the WARN-UNREAD of rows read together. 74289640: the class is bound once by the member its lines name first as written, not by id (refcore's `once_by_same`).
+  - S8 (f9f5d4c1): a cause is referenced once under each line that reads it.
+  - S9 with item 28 (d3ad935a): a hole booking answered by a refusal stays refused; a settlement's hole booking is answered like any.
+- **b9:**
+  - Item 1 (87224dd6): `gap` at a stated reading outside the run is the run's hole.
+  - Item 51, #161 under R7 (b032a4e9): a pin is listed only where a read took it; a refused line and a count of none list theirs.
+- **The load checks, #162 (R5), each in refcore's words:**
+  - ea83a32b: `LOAD-LAWDATE` for an ask's law expression reaching an `at reader` def; `LOAD-READS` for an ask's value reaching a running `bal(x)`. A band patch under an ask's cut was already a guard.
+  - e6c62374: `LOAD-KEY` for a place's own unkeyed price keyed by an index (a period index among them) holding neither the place nor its unit; and for a place of unit `any` whose kind- or index-keyed price lacks a unit a written leg brings.
+  - a459a571: `LOAD-UNIT` for `bal(x, d)` and `low` of a written place of unit `any` naming no unit (item 76, P31).
+  - 2a5fa9ac: `LOAD-KEY ambiguous key` for an ask's bare key literal.
+  - b7f4cf5b: an attribute a movement lacks refuses its value `RUN-DOMAIN`.
+- **The halves:**
+  - 84d50f85: under a window `at` the domain is compared whole and each member's `where` on its own, so `at_window_mk2` lists `unfulfilled: mk2[p]`.
+  - `fixes/g3/h2`'s `q` heads already equal refcore-g4 (nested, `a`'s first day first): no change.
+  - 17600709: a modelled-past decision takes back only the ends its own rows booked, so a `same` pair isn't taken off twice. Probe `g4/probes/same_own.tally`: residuals model −950.00 PLN, was −1 900.00.
+- **Plain writing (22b2f605):** 14 report-only hits this group brought (lifetimes, nested closures, long chains), rewritten so the lock's 9 hold.
+- **Size (changed lines in engine/crates, plan's figure):**
+  - b8 with items 20, 28, 40 and 41: 924, plus 64 for 74289640. The plan has b8 ≈ 300 and those items ≈ 345 in b9. S6 is 652, against refcore's one-class-for-every-read change.
+  - b9's rest: item 1 36, #161 75.
+  - The load checks: 298.
+  - The halves: 132 and 76.
+  - Plain writing: 217.
+  - **The group: +1 323 −313, 1 636 changed lines, against the plan's ≈ 1 130 plus the load checks and the halves.**
+- **New red gating ids (`check commit`: 66 of 1 044 tests red, 209 vectors; the 63 known, 47 of group 2 and 16 of group 3, still red):** 146 new. Each was run on its text against refcore-g4 (`g2/gate.py`, `REF=refcore-g4`). 131 are equal, 14 have no row there, and 1 differs. By rule:
+  - Item 76 (P31), 58: their texts' `bal`/`low` of a written place of unit `any` is the one `LOAD-UNIT` line. Families: `fixes/g12/pb*`, `pp*`, `pr*`, `prr*`, `r_pb_*`, `r_agent_ord_order`; `fixes/g9/r_unit_u_bal`, `_eur`, `_low`; `fixes/gate8/m2_g2_wb2_pb`, `m2_g4_a_cov`, `_a_mp`, `_a_none`, `_b2_last`, `_c_since`, `_p_pad`; `spec/g4/a_cov`, `a_mp`, `a_none`, `b2_last`, `c_since`.
+  - The price key (#162, P48 and 2.1.8-16's fifth turn: the check stands, T's household copies predate the mend), 32: `LOAD-KEY … keyed by month(s), which holds neither …`.
+    - `household`, `changes/c1`–`c7`, `v3`–`v5`, `goldens/g6_raise`, `goldens/pins_employment`: `wunits` priced by `etf_price`. refcore-g4 gives the same line on a copy of `cut11/b_r1`.
+    - `written/base`, `written/key-ask`, `written/range-key-frac`, `g10/observe`, `g6/plan`, `g7/flows`, `g13/range_key_unasked`, `_ask`, and `fixes/g12/*_observe_observe` and `prr_low_g9_sign_sign`: `fund` priced by `fund_price`. refcore-g4 gives the same line on m0's `written/base.tally`.
+  - S8, 29: references once under each line. Ids: `fixes/g11/r_agent_d1`, `_d4`, `_d5`, `r_p_a`; `fixes/g12/pm2/pm4/pm8` agenda and flows_touched, `pm6/pm9_remeasure_refused_when`, `r_agent_u_u`; `fixes/g13/r_p_q3`, `fixes/g14/pt_two_p6`, `fixes/g5/p4_wexp`; `fixes/gate8/m2_g2_f18` to `_m7`, `m2_g2_sum`, `_sum2`; `r7/t_f18`, `r7/t_f4_views`; `spec/g5/p4_adj_e2`, `p4_hole_e2`; and `spec/g2/sumobs2`, the one that differs, below.
+  - S6, 13:
+    - id order: `fixes/g4/adj_amt`, `fixes/gate8/m2_d512_both_cover_day`, `_day_rows`, `_two_groups`, `m2_g4_adj_amt`, `m2_g4_g3_amt`, `m2_g6b_same_two`, `_sr1`, `_sr2`, `m2_rt_l6_1_same_in_model_disagree`, `_same_rows_kinds`, `fixes/p60/same_rows`;
+    - the WARN-UNREAD of rows read together: `fixes/g6b/b1`.
+  - S3, 7: `fixes/g5/p1_bycat`, `p2_agree`, `p2b`, `p2c`, `p2d`, `goldens/bank_g4_by_cat`, `spec/g5/p3_any`.
+  - #161 (R7), 5: `fixes/g11/ai2_m_with_ai2_infl8_e_pick_x`, `fixes/g14/b2_base_with_b2_b2`, `r_p_base_with_r_p_asks`, `t_pin_pt_base_with_t_pin_pg2`, `fixes/gate8/m2_g2_wb`.
+  - S9, 1: `r2/l8_refused_hole_answered`.
+  - #169-e, the half, 1: `spec/gate8/at_window_mk2`. T's spec reading prints the hole alone; the brief and refcore-g4 list `unfulfilled: mk2[p]` (L §8.2, one read set). T's to record again.
+  - **The one that differs:** `spec/g2/sumobs2` e3. The engine lists `[3] row b:bank[o1]`, the observation that stands in for `pay[2026-03]` and gives the 11.00. refcore-g4 doesn't, and nor do refcore-g3 or refcore before its S8 commit (b548dc5b^) when e3 is asked alone. T's stored row came from asking e1–e3 together on an older refcore. The engine listed it at group 3's end too, so this group didn't bring the difference; S8 only made the vector red. Left for the lead: E §10 l.472 ("the traced value equals the stored one") reads for the engine.
+- **The stored texts a load check turns into one line (the sweep's):** `g2/probes/r11h`, `r11v`, `review-g3/r14_unitless`, `spec-2.1.8/probes/c2`, `c9low` (item 76), each equal to refcore-g4. T's are the ids above.
+- **Compared with refcore-g4:** the sweep after each piece (`g4/sweep.py`, over `tmp/spec-2.1.8/probes/`, the earlier groups' probes and the reviews' inputs). No block turned same→different. 2 153 of 2 201 blocks are equal now: 2 141 at #161, 2 146 after item 76, 2 153 with this group's probes. refcore-g4's own tests on the engine (`g4/rtest.py`, with `--ask`): 1 197 at the load checks' start, 1 205 now, gains only.
+- **Not compared, or not built:**
+  - 2.1.8-16's six `to u` checks (refcore-g4's `L3_3_accrue_to`, `L3_3_periodic_to`, `L5_16_share_to`, `L7_3_pow_runtime_to`): the engine says not implemented for these forms.
+  - `L4_6_after_key_not_of_index_at_load`: group 3's review B6, not this group's list.
+  - Joint models' asks (`L6_1_same_row_instance_joint_loads` and the joint `same` tests).
+  - a2, parts at a place of unit `any`, forks across timelines.
+- **`engine/tools/perf counts P8-14`:** on this tree `def_misses 0, days_stepped 0, walks_shared 0 (exit 1)`. Its text, `I:X:replay_september@b_r1`, is T's household copy, which load now refuses by the price key, as refcore-g4 does. On a copy with bbc9e960's three mends (`tmp/spec-2.1.8-build/g4/t/b_r1`), the counters build gives `def_misses=25318 days_stepped=960 walks_shared=582`, as at group 3, and `replay_september` equals refcore-g4. The row needs T's household re-recorded with the mend (for the lead).
+- **STOP-REPORTs:** none. **Exceptions:** +0 (6; report-only hits 9, as the lock).
+- **Checks:**
+  - `check commit` is red only at `tests` (`66 of 1044 tests are red`), on the 63 known vectors and the 146 above.
+  - The 13 steps it then left out, each run alone with `check step`, are all green: milestone-report, doc, build, gungraun-build, doctest, fault-injection-probe, deny, deny-tally, tree-probe, ast-grep-test, special-casing, spec-loadcheck-selftest, spec-loadcheck.
+  - `check fences: green, 1 step (21s)`; `check quick: green, 11 steps (83s)`.
