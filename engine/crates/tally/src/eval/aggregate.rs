@@ -572,7 +572,7 @@ impl Engine {
         env: &Env,
         ctx: Ctx,
     ) -> Result<Decided, Stop> {
-        self.members_where(m, (bind, env), LawAt::One(ctx))
+        self.members_where(m, (bind, env), &LawAt::One(ctx))
     }
 
     /// One binding's members under a window `at` whose law dates don't all give the same
@@ -590,9 +590,9 @@ impl Engine {
         m: &Reality,
         (bind, env): (&Bind, &Env),
         ctx: Ctx,
-        (days, differ): (&[Day], &Hole),
+        (days, differ): (Vec<Day>, Hole),
     ) -> Result<Decided, Stop> {
-        self.members_where(m, (bind, env), LawAt::Over(ctx, days, differ))
+        self.members_where(m, (bind, env), &LawAt::Over(ctx, days, differ))
     }
 
     /// `binding_members` at one law date, or over a window's law dates.
@@ -600,7 +600,7 @@ impl Engine {
         &mut self,
         m: &Reality,
         (bind, env): (&Bind, &Env),
-        at: LawAt<'_>,
+        at: &LawAt,
     ) -> Result<Decided, Stop> {
         let ctx = at.first()?;
         self.push();
@@ -678,11 +678,11 @@ impl Engine {
         m: &Reality,
         bind: &Bind,
         inner: &Env,
-        at: LawAt<'_>,
+        at: &LawAt,
     ) -> Result<Kept, Stop> {
         let (ctx, days, differ) = match at {
-            LawAt::One(ctx) => return self.where_keeps(m, bind, inner, ctx),
-            LawAt::Over(ctx, days, differ) => (ctx, days, differ),
+            LawAt::One(ctx) => return self.where_keeps(m, bind, inner, *ctx),
+            LawAt::Over(ctx, days, differ) => (*ctx, days, differ),
         };
         let first = self.where_keeps(m, bind, inner, at.first()?)?;
         if let Kept::In(Some(_)) = first {
@@ -769,19 +769,19 @@ fn sum_terms(
 
 /// The law dates a binding's members are read at: one, or a window's, one for each class
 /// of law dates that give the same, with the window's hole (L §4.3, §4.4).
-#[derive(Debug, Clone, Copy)]
-enum LawAt<'d> {
+#[derive(Debug, Clone)]
+enum LawAt {
     /// The context's law date.
     One(Ctx),
-    /// Each of `days`, the first first, with the hole a difference between them is.
-    Over(Ctx, &'d [Day], &'d Hole),
+    /// Each of the days, the first first, with the hole a difference between them is.
+    Over(Ctx, Vec<Day>, Hole),
 }
 
-impl LawAt<'_> {
+impl LawAt {
     /// The context of the first law date.
-    fn first(self) -> Result<Ctx, Stop> {
+    fn first(&self) -> Result<Ctx, Stop> {
         match self {
-            LawAt::One(ctx) => Ok(ctx),
+            LawAt::One(ctx) => Ok(*ctx),
             LawAt::Over(ctx, days, _) => days
                 .first()
                 .map(|day| ctx.at_law(Some(*day)))

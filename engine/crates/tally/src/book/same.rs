@@ -804,13 +804,16 @@ impl Engine {
         if !good.iter().any(|o| groups.contains_key(&o.id)) {
             return Ok(bad);
         }
-        let others: Vec<(String, String)> = self
-            .observations(m, cut)?
-            .iter()
-            .filter(|x| !x.shared)
-            .filter_map(|x| x.target_id().map(|t| (x.id.clone(), t)))
-            .filter(|(_, t)| t != tid)
-            .collect();
+        // the rows with a `fulfils` of their own that link another instance
+        let seen = self.observations(m, cut)?;
+        let mut others: Vec<(String, String)> = Vec::new();
+        for x in seen.iter().filter(|x| !x.shared) {
+            if let Some(t) = x.target_id()
+                && t.as_str() != tid
+            {
+                others.push((x.id.clone(), t));
+            }
+        }
         for o in good {
             let Some(group) = groups.get(&o.id) else {
                 continue;

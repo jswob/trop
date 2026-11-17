@@ -533,9 +533,10 @@ impl Engine {
             good.push(o);
         }
         let differ = self.fulfils_differ(m, tid, &good, cut)?;
+        let differs: BTreeSet<&str> = differ.iter().map(|(id, _)| id.as_str()).collect();
         let left: Vec<Obs> = good
             .into_iter()
-            .filter(|o| !differ.iter().any(|(id, _)| *id == o.id))
+            .filter(|o| !differs.contains(o.id.as_str()))
             .collect();
         errs.extend(differ);
         let unjoined = self.unjoined(m, tid, &left, cut)?;
@@ -553,14 +554,15 @@ impl Engine {
         errs.extend(unjoined);
         // a row with no `fulfils` of its own stands in where a row of its class does
         let groups = self.same_groups(m, cut)?;
-        let standing: Vec<String> = shared
-            .into_iter()
-            .filter(|id| {
-                groups
-                    .get(id)
-                    .is_some_and(|g| g.iter().any(|y| stands.contains(y)))
-            })
-            .collect();
+        let mut standing: Vec<String> = Vec::new();
+        for id in shared {
+            let Some(class) = groups.get(&id) else {
+                continue;
+            };
+            if class.iter().any(|y| stands.contains(y)) {
+                standing.push(id);
+            }
+        }
         let seen = self.observations(m, cut)?;
         let linked = seen
             .iter()

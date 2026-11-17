@@ -145,7 +145,7 @@ impl Engine {
         // the domain is compared whole, each member's `where` on its own: a member every law
         // date keeps alike stays a member (refcore's `move_tuples`, its `lds`; #169-e)
         let hole = imprecise_law((text, carry), &mv.id);
-        self.binding_members_over(m, (bind, env), ctx, (&days, &hole))
+        self.binding_members_over(m, (bind, env), ctx, (days, hole))
     }
 
     /// A binding's members at law date `day`, with the law dates that give the same

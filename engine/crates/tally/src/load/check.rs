@@ -1213,22 +1213,21 @@ fn open_key(m: &Reality, scope: &Scope, typed: &Ty) -> Result<(), Stop> {
     let Ty::KeyLit(key) = typed else {
         return Ok(());
     };
-    let indexes = m
-        .indexes
-        .entries()
-        .filter(|(_, ix)| ix.by_text(key).is_some());
-    let axes = m
-        .axes
-        .entries()
-        .filter(|(_, axis)| axis.options.iter().any(|(option, _)| option == key));
-    let thing = m.things.get(key).into_iter();
-    let hits = indexes
-        .map(|_| ())
-        .chain(axes.map(|_| ()))
-        .chain(thing.map(|_| ()))
-        .take(2)
-        .count();
-    if hits == 1 {
+    let mut hits: Vec<&str> = Vec::new();
+    for (_, ix) in m.indexes.entries() {
+        if ix.by_text(key).is_some() {
+            hits.push(ix.id.as_str());
+        }
+    }
+    for (_, axis) in m.axes.entries() {
+        if axis.options.iter().any(|(option, _)| option == key) {
+            hits.push(axis.id.as_str());
+        }
+    }
+    if m.things.get(key).is_some() {
+        hits.push(key);
+    }
+    if let [_] = hits.as_slice() {
         return Ok(());
     }
     Err(scope.place(refused(Load::Key, format!("ambiguous key {key}"))))

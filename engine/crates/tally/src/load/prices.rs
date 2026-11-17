@@ -776,9 +776,11 @@ fn price_fits(m: &Reality, files: &Files, things: &[&Thing]) -> Result<(), Stop>
         };
         let name = &thing.name;
         let domain = m.first_domain(&pid);
-        let holds = |x: &str| domain.as_ref().and_then(|d| key_holds(m, d, x));
+        let neither = domain.as_ref().is_some_and(|d| {
+            key_holds(m, d, name) == Some(false) && key_holds(m, d, &pu) == Some(false)
+        });
         let (code, message) = match (key_over(domain.as_ref()), &mode) {
-            (Some(k), _) if holds(name) == Some(false) && holds(&pu) == Some(false) => (
+            (Some(k), _) if neither => (
                 Load::Key,
                 format!(
                     "{name} is priced by {pid}, keyed by {k}, which holds neither {name} nor its unit"
@@ -878,15 +880,20 @@ fn written_units(
     legs: &BTreeMap<(String, String), LegEnds>,
     name: &str,
 ) -> BTreeSet<String> {
-    legs.values()
-        .filter(|leg| leg.unit != "any" && m.kinds.get(&leg.unit).is_none())
-        .filter(|leg| {
-            leg.ends
-                .iter()
-                .any(|(literal, _)| literal.as_deref() == Some(name))
-        })
-        .map(|leg| leg.unit.clone())
-        .collect()
+    let mut out = BTreeSet::new();
+    for leg in legs.values() {
+        if leg.unit == "any" || m.kinds.get(&leg.unit).is_some() {
+            continue;
+        }
+        if leg
+            .ends
+            .iter()
+            .any(|(literal, _)| literal.as_deref() == Some(name))
+        {
+            out.insert(leg.unit.clone());
+        }
+    }
+    out
 }
 
 /// The kind or index a price's first key ranges over, as a `LOAD-KEY` names it; none for

@@ -589,6 +589,22 @@ fn running_reads(
     ask_running_reads(m, graph)
 }
 
+/// The place an item's `bal(x)` with no day reads, the first by name among its marks; the
+/// item's own id where no mark names one (refcore's `check3`, its asks' loop). L §5.14.1.
+fn balnow_place(graph: &Graph, x: &Node) -> String {
+    let mut place: Option<&str> = None;
+    for (mark, target) in graph.marks.get(x).into_iter().flatten() {
+        if *mark != Mark::BalNow {
+            continue;
+        }
+        let name = target_name(target);
+        if place.is_none_or(|p| name < p) {
+            place = Some(name);
+        }
+    }
+    place.unwrap_or(x.id.as_str()).to_owned()
+}
+
 /// `LOAD-READS` for an ask whose value reaches `bal(x)` with no day through its defs and
 /// fills: it reads it outside a decision, which load sees, in the words run gave it; an
 /// `explain`, `inputs-of` or `readers-of` reads a walk-bound def at its walk points (refcore's
@@ -608,15 +624,7 @@ fn ask_running_reads(m: &Reality, graph: &Graph) -> Result<(), Stop> {
                 continue;
             }
             if graph.balnow.contains_key(&x) {
-                let place = graph
-                    .marks
-                    .get(&x)
-                    .into_iter()
-                    .flatten()
-                    .filter(|(mark, _)| *mark == Mark::BalNow)
-                    .map(|(_, target)| target_name(target))
-                    .min()
-                    .unwrap_or(x.id.as_str());
+                let place = balnow_place(graph, &x);
                 return Err(Stop::Refused(Refusal::new(
                     Code::Load(Load::Reads),
                     format!("bal({place}) with no day outside a decision"),
@@ -813,12 +821,12 @@ fn closed_cycle(stack: &[(Node, Vec<Node>)], again: Node) -> Vec<Node> {
 /// The inputs read: those `read` holds, and every input a `same` line ties to one read, since
 /// rows stated `same` are read together, by every read of either (refcore's `check_graph`,
 /// its `same_row_edges`). L §6.1, §8.5 (tally 2.1.8 §4).
-fn read_with_same<'m>(m: &'m Reality, read: &BTreeSet<&Node>) -> BTreeSet<&'m str> {
-    let mut inputs: BTreeSet<&str> = m
+fn read_with_same(m: &Reality, read: &BTreeSet<&Node>) -> BTreeSet<String> {
+    let mut inputs: BTreeSet<String> = m
         .inputs
         .entries()
         .filter(|(id, _)| read.contains(&Node::new(NodeKind::Input, id)))
-        .map(|(id, _)| id.as_str())
+        .map(|(id, _)| id.clone())
         .collect();
     let mut grew = true;
     while grew {
@@ -828,7 +836,7 @@ fn read_with_same<'m>(m: &'m Reality, read: &BTreeSet<&Node>) -> BTreeSet<&'m st
                 continue;
             };
             for (x, y) in [(a, b), (b, a)] {
-                if inputs.contains(x.as_str()) && inputs.insert(y.as_str()) {
+                if inputs.contains(x) && inputs.insert(y.clone()) {
                     grew = true;
                 }
             }
@@ -852,7 +860,7 @@ fn unread(m: &Reality, graph: &Graph) -> Vec<(Warn, String)> {
     let inputs = read_with_same(m, &read);
     let mut out = Vec::new();
     for (id, input) in m.inputs.entries() {
-        let unread = !inputs.contains(id.as_str());
+        let unread = !inputs.contains(id);
         if unread && !input.builtin && !input.observed {
             out.push((Warn::Unread, format!("input {id} is read by nothing")));
         }

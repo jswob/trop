@@ -581,8 +581,9 @@ fn derivation_as(m: &Reality, trace: &Trace, laws: Laws) -> Result<Vec<String>, 
     // by equality
     let mut balances: Vec<(&TracedBalance, usize)> = Vec::new();
     let mut count: usize = 0;
-    // the causes printed so far under each line that reads them, the ask's line first
-    let mut unders: Vec<Vec<Under<'_>>> = vec![Vec::new()];
+    // the causes printed so far under each line that reads them, the ask's line first, each
+    // by its node in the trace
+    let mut unders: Vec<Vec<usize>> = vec![Vec::new()];
     let top = trace.top()?;
     let mut todo: Vec<Step> = top.iter().rev().map(|c| Step::Node(*c, 1, 0)).collect();
     while let Some(step) = todo.pop() {
@@ -607,20 +608,13 @@ fn derivation_as(m: &Reality, trace: &Trace, laws: Laws) -> Result<Vec<String>, 
         // a cause met again under the line that reads it prints nothing more there: one
         // reference under each line, whatever order the cells were computed in (E §10; tally
         // 2.1.8 S8)
-        let ident = match &node.kind {
-            TraceKind::Row | TraceKind::BandRow => Under::Row(&node.label),
-            TraceKind::Balance(read) => Under::Balance(read),
-            TraceKind::Def(_) | TraceKind::Root | TraceKind::Group | TraceKind::Side => {
-                Under::Node(at)
-            }
-        };
         let under = unders
             .get_mut(line)
             .ok_or_else(|| invariant("a derivation's line"))?;
-        if under.contains(&ident) {
+        if met_under(trace, under, at)? {
             continue;
         }
-        under.push(ident);
+        under.push(at);
         // a row is met again by its stable id; a balance only as the same read, its unit, cut
         // and timeline too, since its label has none of them (P63)
         let met = match &node.kind {
@@ -655,16 +649,34 @@ fn derivation_as(m: &Reality, trace: &Trace, laws: Laws) -> Result<Vec<String>, 
     Ok(out)
 }
 
-/// A cause as a line that reads it knows it: a row by its stable id, a balance by its read,
-/// any other node by its place (refcore's `ident`). E §10.
-#[derive(Debug, PartialEq, Eq)]
-enum Under<'t> {
-    /// A row or a band row, by its label.
-    Row(&'t str),
-    /// A balance, by the read it is.
-    Balance(&'t TracedBalance),
-    /// Any other node, by its place in the trace.
-    Node(usize),
+/// Whether the cause at trace node `at` is one a line already printed under it, among the
+/// nodes `under` (refcore's `ident` in its set). E §10.
+fn met_under(trace: &Trace, under: &[usize], at: usize) -> Result<bool, Stop> {
+    for seen in under {
+        if one_cause(trace, *seen, at)? {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
+/// Whether trace nodes `a` and `b` are one cause as a line that reads them knows it: two rows
+/// (or band rows) by their stable id, two balances by their read, any other node by its place
+/// in the trace (refcore's `ident`). E §10.
+fn one_cause(trace: &Trace, a: usize, b: usize) -> Result<bool, Stop> {
+    if a == b {
+        return Ok(true);
+    }
+    let (x, y) = (trace.node(a)?, trace.node(b)?);
+    if let (TraceKind::Row | TraceKind::BandRow, TraceKind::Row | TraceKind::BandRow) =
+        (&x.kind, &y.kind)
+    {
+        return Ok(x.label == y.label);
+    }
+    if let (TraceKind::Balance(p), TraceKind::Balance(q)) = (&x.kind, &y.kind) {
+        return Ok(p == q);
+    }
+    Ok(false)
 }
 
 /// The indent of a line at depth `depth`: two spaces a level.
