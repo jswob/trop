@@ -255,8 +255,11 @@ pub(crate) struct PartialLegs {
     pub known: Num,
     /// Each hole leg's direction and where its amount was read.
     pub legs: Vec<(bool, HoleSrc)>,
-    /// Whether the legs' questions are the balance's holes, every one.
+    /// Whether the legs' questions, with the start's, are the balance's holes, every one.
     pub all_met: bool,
+    /// A projection's start hole where no reading reset the place since: the walk it continues
+    /// holds its terms at the point (E §4.3; B9 of group 3's review).
+    pub start: Option<Hole>,
 }
 
 impl Ent {
@@ -783,6 +786,14 @@ impl Walk {
         };
         let mut legs = Vec::new();
         let mut seen: Vec<Option<&Hole>> = Vec::new();
+        // a projection's walk starts from its base's balance at the point: its hole terms are
+        // the base's there (E §4.3; L §5.18, R15; B9 of group 3's review)
+        let start = if st.rst.is_none() && self.proj.is_some() {
+            self.default_state(m, place, unit).hole
+        } else {
+            None
+        };
+        seen.push(start.as_ref());
         for e in log.ents.iter().take(next_entry(i)?).skip(from) {
             let Change::Hole(h) = &e.change else {
                 continue;
@@ -806,6 +817,7 @@ impl Walk {
             known,
             legs,
             all_met,
+            start,
         }))
     }
 

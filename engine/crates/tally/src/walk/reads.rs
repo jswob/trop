@@ -318,22 +318,49 @@ impl Engine {
         key: At,
         v: Hole,
     ) -> Result<Value, Stop> {
-        let Some(read) = self.walk(id)?.partial_legs(m, place, unit, key)? else {
-            return Ok(Value::Hole(v));
-        };
-        let mut legs: Vec<(Hole, bool)> = Vec::with_capacity(read.legs.len());
-        for (into, src) in &read.legs {
-            let Value::Hole(h) = self.ev(m, &src.amount, &src.env, src.ctx.partial())? else {
+        // a projection is its start balance plus the counted legs: its start's hole terms are
+        // the walk it continues at the point, read the same way, up the chain (E §4.3; L §5.18,
+        // R15; B9 of group 3's review); the chain's walks bound the steps (R-16)
+        let mut at = (id, key);
+        let mut known: Option<Value> = None;
+        let mut legs: Vec<(Hole, bool)> = Vec::new();
+        for _ in 0..=self.walks.len() {
+            let walk = self.walk(at.0)?;
+            let base = walk.proj.as_ref().map(|p| (p.base, p.point));
+            if !walk.logs.contains_key(&(place.to_owned(), unit.to_owned())) {
+                // a projection that books nothing at the place: its start, the base's balance
+                let st = walk.default_state(m, place, unit);
+                let plain = st.val.is_none() || st.bad.is_some() || st.perm.is_some();
+                let (Some(next), false) = (base, plain || !st.imp.is_empty()) else {
+                    return Ok(Value::Hole(v));
+                };
+                at = next;
+                continue;
+            }
+            let Some(read) = walk.partial_legs(m, place, unit, at.1)? else {
                 return Ok(Value::Hole(v));
             };
-            legs.push((h, *into));
+            for (into, src) in &read.legs {
+                let Value::Hole(h) = self.ev(m, &src.amount, &src.env, src.ctx.partial())? else {
+                    return Ok(Value::Hole(v));
+                };
+                legs.push((h, *into));
+            }
+            if !read.all_met {
+                return Ok(Value::Hole(v));
+            }
+            // the known part is this walk's own: the start's is already in its value
+            if known.is_none() {
+                known = Some(qty_value(m, &read.known, unit)?);
+            }
+            let (Some(next), Some(_)) = (base, &read.start) else {
+                let known = known.ok_or_else(|| invariant("a partial balance's known part"))?;
+                let legs: Vec<(&Hole, bool)> = legs.iter().map(|(h, into)| (h, *into)).collect();
+                return crate::eval::lin_balance(m, (&v, known), &legs);
+            };
+            at = next;
         }
-        if !read.all_met {
-            return Ok(Value::Hole(v));
-        }
-        let known = qty_value(m, &read.known, unit)?;
-        let legs: Vec<(&Hole, bool)> = legs.iter().map(|(h, into)| (h, *into)).collect();
-        crate::eval::lin_balance(m, (&v, known), &legs)
+        Err(invariant("a projection's chain longer than its walks"))
     }
 
     /// Each hole leg of `legs`, its hole, its direction at the place and where its amount was

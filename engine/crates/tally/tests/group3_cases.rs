@@ -492,4 +492,96 @@ ask b: bal(konto, 2026-03-31), bal(konto, 2026-04-30), flows(konto, 2026-04), fl
             &["b: (90.00 PLN, 90.00 PLN, 0.00 PLN, 0.00 PLN)"],
         );
     }
+
+    /// B9 (`r15_b3.tally`): `partial` projections whose start balance holds a hole: the start's terms are the base's at the point.
+    #[test]
+    fn a_projection_from_a_start_hole_keeps_the_linear_form() {
+        let text = r#"model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bk "bank"
+unit PLN: currency minor 0.01
+input g_amt: money PLN
+input dom: int
+input divisor[m in months]: num
+input hamt[m in months]: money PLN
+place konto: accounts PLN lives 2019-05-01..
+place k2: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+kind maybes: transfers uncertain
+input uamt: money PLN
+move gift: maybes
+  on dgift
+  at dgift
+  leg cash from world to k2 amount uamt
+input dgift: date
+
+move groc[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to world amount round(g_amt * divisor[m] / divisor[m], minor(PLN), half-even)
+
+move hm[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from k2 to world amount hamt[m]
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  g_amt = 500.00 PLN "plan"
+  dom = 5 "plan"
+  divisor[2026-01] = 1 "ok"
+  divisor[2026-02] = 0 "zero"
+  divisor[2026-03..2026-12] = 1 "ok"
+  hamt[2026-01] = 1.00 PLN "ok"
+  hamt[2026-02] = ?"how much in Feb" "hole"
+  hamt[2026-03] = ?"how much in Mar" "hole"
+  hamt[2026-04..2026-12] = 1.00 PLN "ok"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "w"
+  opening[k2] = 10 000.00 PLN at 2026-01-01 start "w"
+
+version st
+  cite bk
+  governs 2026-03
+  known 2026-04-02
+  anchor konto
+  anchor k2
+  stated[konto] = 200.00 PLN at 2026-03-10 end "saldo"
+  stated[k2] = 200.00 PLN at 2026-03-10 end "saldo"
+
+index ks = [a, b]
+input z[k in ks]: money PLN
+input two: num
+version zz
+  cite plan
+  governs always
+  known 2026-01-01
+  z[a] = 10.00 PLN "s"
+  two = 2 "s"
+  uamt = ?"gift size" "hole"
+  dgift = 2026-03-20 "s"
+  z[b] = ?"z of b" "s"
+
+ask b3: bal(k2, 2026-03-31) from 2026-03-05 partial
+ask b4: bal(k2, 2026-03-31) from 2026-03-05
+ask b5: bal(k2, 2026-03-04) partial
+ask b6: bal(k2, 2026-03-31) from 2026-03-06 partial
+ask b7: bal(k2, 2026-03-04) from 2026-03-04 partial
+ask b8: explain bal(k2, 2026-03-31) from 2026-03-05
+"#;
+        holds(
+            &lines_of("r15_b3.tally", text),
+            &[
+                "b3: 9 999.00 PLN + -1 × ?\"how much in Feb\" (hamt[2026-02]) + -1 × ?\"how much in Mar\" (hamt[2026-03])",
+                "b6: 9 999.00 PLN + -1 × ?\"how much in Feb\" (hamt[2026-02]) + -1 × ?\"how much in Mar\" (hamt[2026-03])",
+                "b7: 9 999.00 PLN + -1 × ?\"how much in Feb\" (hamt[2026-02])",
+            ],
+        );
+    }
 }
