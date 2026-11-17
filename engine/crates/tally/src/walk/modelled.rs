@@ -103,12 +103,13 @@ impl Walk {
         key: At,
         since: Option<At>,
     ) -> Result<Vec<(usize, usize, i64)>, Stop> {
-        // the m of a reading `after m` it starts from: m's own leg is never counted after it
-        // (L §5.19; tally 2.1.8 R16, #191 Q5)
+        // the m of a reading `after m` it starts from, or of an earlier one, which every later
+        // reading holds too: m's own leg is never counted after it (L §5.19; tally 2.1.8 R16,
+        // #191 Q5; pick P39 on B8 of group 3's review)
         let after: Vec<&str> = self
             .after_at
             .iter()
-            .filter(|((p, ..), at)| p == place && Some(**at) == since)
+            .filter(|((p, ..), at)| p == place && since.is_some_and(|s| **at <= s))
             .filter_map(|((_, instant, _), _)| instant.strip_prefix("after "))
             .collect();
         let mut out = Vec::new();
