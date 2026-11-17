@@ -21,7 +21,7 @@ use core::cmp::Ordering;
 
 use super::answer::unresolved_word;
 use super::check::Printed;
-use super::explain::{invariant, plain_text};
+use super::explain::{head_text, invariant, plain_text};
 use crate::base::Code;
 use crate::book::{gap_text, instant_text};
 use crate::eval::{Ctx, Engine, Env, Item};
@@ -84,7 +84,7 @@ pub(super) fn balance_line(
     let Ok([item]) = <[Item; 1]>::try_from(items) else {
         return Err(invariant("an explained line with other than one value"));
     };
-    let text = plain_text(m, &item)?;
+    let text = head_text(m, &item)?;
     let body = match (&item, read) {
         (Item::Refused(_), _) => Vec::new(),
         (Item::Value(_), Read::Bal(b)) if b.args.is_empty() => Vec::new(),
@@ -106,14 +106,18 @@ pub(super) fn balance_line(
             }
         }
     };
+    let body: Vec<String> = body.into_iter().map(|l| format!("  {l}")).collect();
     Ok(Printed {
         text,
-        body: body.into_iter().map(|l| format!("  {l}")).collect(),
+        causes: Some(super::check::undated_causes(&body)),
+        body,
         bare: false,
 
         whole: false,
+        alone: false,
         met,
         laws: None,
+        carried: super::check::carried_of(&[&item]),
     })
 }
 
@@ -217,7 +221,8 @@ fn modelled_lines(
         "balance of {place} ({unit}) at the {edge} of {}, modelled",
         end.text()
     )];
-    let counted = walk.modelled_counted(m, (place, unit), end)?;
+    let key = if start { At::start(end) } else { At::end(end) };
+    let counted = walk.modelled_counted(m, (place, unit), key)?;
     let log = walk.entries(place, unit);
     out.push(match counted.start {
         Some(r) => {
@@ -642,7 +647,9 @@ fn reset_value(m: &Reality, e: &Ent, unit: &str) -> Result<String, Stop> {
         | Change::Hole(_)
         | Change::Perm(_)
         | Change::Bad(_)
+        | Change::PermBad(_)
         | Change::ImpOn(_)
+        | Change::Unperm(_)
         | Change::Mark => Err(invariant("a reading that is no reset")),
     }
 }
@@ -684,7 +691,7 @@ fn entry_text(
             let window = e.window.as_ref().map_or("", |(_, w)| w.question.as_str());
             format!("{head}: its window {window} opens: {}", h.text())
         }
-        Change::Bad(r) => format!("{head}: refused: {}", r.text()),
+        Change::Bad(r) | Change::PermBad(r) => format!("{head}: refused: {}", r.text()),
         Change::Reset { .. } => {
             let sid = e
                 .coll
@@ -693,7 +700,7 @@ fn entry_text(
                 .map_or("", String::as_str);
             format!("{} {sid} = {}", reading_word(e), reset_value(m, e, unit)?)
         }
-        Change::Mark => return Ok(None),
+        Change::Unperm(_) | Change::Mark => return Ok(None),
     };
     Ok(Some(text))
 }

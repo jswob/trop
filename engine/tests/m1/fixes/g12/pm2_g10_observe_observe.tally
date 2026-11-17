@@ -27,9 +27,9 @@ place k3: accounts PLN lives 2026-01-01..
 
 place k6: accounts PLN lives 2026-01-01..
 
-place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+place fund: holdings etf_unit lives 2026-01-01..
 
-place fund2: holdings etf_unit priced fund_price lives 2026-01-01..
+place fund2: holdings etf_unit lives 2026-01-01..
 
 place shop: outside lives 2026-01-01..
 

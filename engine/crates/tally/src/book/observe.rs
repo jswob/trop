@@ -62,8 +62,14 @@ pub struct Obs {
     pub values: Vec<(String, Value)>,
     /// What it fulfils.
     pub fulfils: Option<Fulfils>,
+    /// Whether its `fulfils` is its class's, stated on a row it is stated `same` with: the
+    /// link is judged on the row that states it (L §5.19 One movement on two statements).
+    pub shared: bool,
     /// What reading it met: its row, and what judging its link read.
     pub coll: Collected,
+    /// The hole of a row known in a window that holds the cut: seen and unseen, it is one
+    /// movement read two ways (L §4.5, tally 2.1.8 R12; refcore's `ObsMv.und`).
+    pub undecided: Option<Hole>,
 }
 
 impl Obs {
@@ -122,9 +128,30 @@ impl KnownAtCut {
             .map(|window| crate::eval::known_question(*window, cut))
     }
 
-    /// [`KnownAtCut::question`]'s hole, asked of `source` (L §4.5, §8.1).
-    pub(crate) fn hole(&self, sid: &str, cut: Day, source: &str) -> Option<Hole> {
-        self.question(sid, cut).map(|q| Hole::asked(&q, source))
+    /// The unknown day of `sid`'s `known`, where the cut leaves it undecided (L §4.4, §4.5).
+    ///
+    /// # Errors
+    ///
+    /// `RUN-LIMIT` past the calendar's edge.
+    pub(crate) fn unknown(&self, sid: &str) -> Result<Option<crate::hole::Unknown>, Stop> {
+        self.undecided
+            .get(sid)
+            .map(|window| crate::eval::known_unknown(*window, sid))
+            .transpose()
+    }
+
+    /// [`KnownAtCut::question`]'s hole, asked of `source`, carrying that unknown day (L §4.5,
+    /// §4.4, §8.1).
+    ///
+    /// # Errors
+    ///
+    /// `RUN-LIMIT` past the calendar's edge.
+    pub(crate) fn hole(&self, sid: &str, cut: Day, source: &str) -> Result<Option<Hole>, Stop> {
+        let Some(q) = self.question(sid, cut) else {
+            return Ok(None);
+        };
+        let carry: Vec<crate::hole::Unknown> = self.unknown(sid)?.into_iter().collect();
+        Ok(Some(Hole::asked(&q, source).carrying(&carry)))
     }
 }
 
@@ -164,7 +191,8 @@ impl Engine {
             // `HOLE-IMPRECISE` (L §4.5)
             let known = self.known_at_cut(known_windows(m)?, cut)?;
             let mut seen = seen_observations(m, (cut, world), self.keep_rows, &known)?;
-            share_fulfils(&super::same_groups(m, cut)?, &mut seen);
+            let groups = self.same_groups(m, cut)?;
+            share_fulfils(&groups, &mut seen);
             self.observed.insert(cut, seen);
         }
         self.observed
@@ -219,7 +247,7 @@ impl Engine {
             // line's `windows each` puts its day on or before the cut, and with none whether
             // it covers them is undecided (L §4.5)
             let known = self.known_at_cut(covering_windows(m), cut)?;
-            let seen = seen_coverage(m, (cut, world), &known);
+            let seen = seen_coverage(m, (cut, world), &known)?;
             self.covered.insert(cut, seen);
         }
         self.covered
@@ -280,8 +308,10 @@ impl Engine {
     }
 
     /// `covered(x, span)`: versions the cut knows cover `x` on every day of the span; false
-    /// for a hole or `none` place, a hole span or one with an open end, never a hole (refcore's
-    /// `c_covered`). L §5.19 Coverage.
+    /// for a hole or `none` place, a hole span or one with an open end; where a cover is known
+    /// in a window that holds the cut and the answer differs seen and unseen,
+    /// `HOLE-IMPRECISE` naming its version (refcore's `c_covered`). L §5.19 Coverage, §4.5
+    /// (tally 2.1.8 R12).
     ///
     /// # Errors
     ///
@@ -300,33 +330,35 @@ impl Engine {
         let Ok(sp) = self.span_value(m, span, env, ctx)? else {
             return Ok(Value::Bool(false));
         };
-        let (Some(mut d), Some(end)) = (sp.start(), sp.end()) else {
+        let (Some(start), Some(end)) = (sp.start(), sp.end()) else {
             return Ok(Value::Bool(false));
         };
-        let spans: Vec<Span> = match self.coverage(m, ctx.cut)?.spans.get(&name) {
+        let coverage = self.coverage(m, ctx.cut)?;
+        let mut spans: Vec<Span> = match coverage.spans.get(&name) {
             Some(list) => list.iter().map(|(s, _)| s.clone()).collect(),
             None => Vec::new(),
         };
-        while d < end {
-            let mut next: Option<Day> = None;
-            for s in spans.iter().filter(|s| s.contains(d)) {
-                let Some(e) = s.end() else {
-                    return Ok(Value::Bool(true));
-                };
-                if next.is_none_or(|n| e > n) {
-                    next = Some(e);
-                }
-            }
-            let Some(n) = next else {
-                return Ok(Value::Bool(false));
-            };
-            d = n;
+        let undecided: Vec<(Span, Hole)> = coverage
+            .undecided
+            .iter()
+            .filter(|(at, _, _)| *at == name)
+            .map(|(_, s, h)| (s.clone(), h.clone()))
+            .collect();
+        let unseen = covers_all(&spans, (start, end));
+        if undecided.is_empty() {
+            return Ok(Value::Bool(unseen));
         }
-        Ok(Value::Bool(true))
+        spans.extend(undecided.iter().map(|(s, _)| s.clone()));
+        if covers_all(&spans, (start, end)) == unseen {
+            return Ok(Value::Bool(unseen));
+        }
+        let holes: Vec<Option<&Hole>> = undecided.iter().map(|(_, h)| Some(h)).collect();
+        spread(&holes).map_or(Ok(Value::Bool(unseen)), |h| Ok(Value::Hole(h)))
     }
 
-    /// Whether an instance touches a place a version covers on its leg's day, or the
-    /// instance's (refcore's `touches_covered`). E §4.1 step 3, L §5.19 Coverage.
+    /// Whether an instance touches a place a version covers under cut `cut` on its leg's day,
+    /// or on day `on`, or the instance's (refcore's `touches_covered`). E §4.1 step 3,
+    /// L §5.19 Coverage.
     ///
     /// # Errors
     ///
@@ -335,12 +367,13 @@ impl Engine {
         &mut self,
         m: &Reality,
         inst: &Inst,
-        cut: Day,
+        (cut, on): (Day, Option<Day>),
     ) -> Result<bool, Stop> {
         for leg in &inst.legs {
             let Some(day) = leg
                 .day
                 .day()
+                .or(on)
                 .or_else(|| inst.day.as_ref().and_then(Dated::lo))
             else {
                 continue;
@@ -427,6 +460,57 @@ impl Engine {
         Ok(obs)
     }
 
+    /// The refusal S1 gives a read resting on movement or instance `id` under cut `cut`, or
+    /// none: the links a `same` class's rows make are judged once, every one, so both
+    /// instances a class fulfils and both its rows are known before any read takes one
+    /// (refcore's `s1_refusal`, pick P42). L §5.19 One movement on two statements, §8.4.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::obs_links_for`].
+    pub(crate) fn s1_refusal(
+        &mut self,
+        m: &Reality,
+        id: &str,
+        cut: Day,
+    ) -> Result<Option<Refusal>, Stop> {
+        if self.s1_judged.insert(cut) {
+            // what the judging reads is the refusal's, not the reader's: its register, its
+            // read set and the trace's note of a walk read (E §10) go back as they stood
+            let before = self.trace_walked();
+            self.push();
+            let mark = self.reads_apart();
+            let judged = self.judge_class_links(m, cut);
+            self.reads_back(mark);
+            self.pop_alone();
+            self.trace_walked_back(before);
+            judged?;
+        }
+        Ok(self.s1_links.get(&(cut, id.to_owned())).cloned())
+    }
+
+    /// Each instance a row of a `same` class fulfils, its links judged, in the observations'
+    /// order (refcore's `s1_refusal`, its loop). L §5.19 One movement on two statements.
+    fn judge_class_links(&mut self, m: &Reality, cut: Day) -> Result<(), Stop> {
+        let groups = self.same_groups(m, cut)?;
+        if groups.is_empty() {
+            return Ok(());
+        }
+        let mut targets: Vec<String> = Vec::new();
+        for o in self.observations(m, cut)? {
+            if let Some(t) = o.target_id()
+                && groups.contains_key(&o.id)
+                && !targets.contains(&t)
+            {
+                targets.push(t);
+            }
+        }
+        for t in &targets {
+            self.obs_links_for(m, t, cut)?;
+        }
+        Ok(())
+    }
+
     /// Each observation naming `tid`, its link judged (refcore's `obs_links_for`, its loop).
     /// L §5.19 Links.
     fn judge_links(
@@ -442,8 +526,14 @@ impl Engine {
             }
         }
         let mut good = Vec::new();
+        let mut shared = Vec::new();
         let mut errs = Vec::new();
         for o in naming {
+            // a `fulfils` stated on another row of its class is judged on that row (L §5.19)
+            if o.shared {
+                shared.push(o.id);
+                continue;
+            }
             let Some(Fulfils::Instance(move_id, keys)) = &o.fulfils else {
                 continue;
             };
@@ -493,20 +583,44 @@ impl Engine {
             }
             good.push(o);
         }
-        let unjoined = self.unjoined(m, tid, &good, cut)?;
+        let differ = self.fulfils_differ(m, tid, &good, cut)?;
+        let differs: BTreeSet<&str> = differ.iter().map(|(id, _)| id.as_str()).collect();
+        let left: Vec<Obs> = good
+            .into_iter()
+            .filter(|o| !differs.contains(o.id.as_str()))
+            .collect();
+        errs.extend(differ);
+        let unjoined = self.unjoined(m, tid, &left, cut)?;
         if let Some((_, err)) = unjoined.first() {
             self.bad_links
                 .entry((cut, tid.to_owned()))
                 .or_insert_with(|| err.clone());
         }
         let refused: BTreeSet<&str> = unjoined.iter().map(|(id, _)| id.as_str()).collect();
-        let good = good
+        let stands: Vec<String> = left
             .into_iter()
             .filter(|o| !refused.contains(o.id.as_str()))
             .map(|o| o.id)
             .collect();
         errs.extend(unjoined);
-        Ok((good, errs))
+        // a row with no `fulfils` of its own stands in where a row of its class does
+        let groups = self.same_groups(m, cut)?;
+        let mut standing: Vec<String> = Vec::new();
+        for id in shared {
+            let Some(class) = groups.get(&id) else {
+                continue;
+            };
+            if class.iter().any(|y| stands.contains(y)) {
+                standing.push(id);
+            }
+        }
+        let seen = self.observations(m, cut)?;
+        let linked = seen
+            .iter()
+            .filter(|o| stands.contains(&o.id) || standing.contains(&o.id))
+            .map(|o| o.id.clone())
+            .collect();
+        Ok((linked, errs))
     }
 
     /// The observations that stand in for a modelled instance on a covered day: those whose
@@ -547,7 +661,12 @@ impl Engine {
         cut: Day,
     ) -> Result<Option<Refusal>, Stop> {
         if let Some(tid) = o.target_id() {
-            self.judged(m, &tid, cut)?;
+            // judging the link is no read of the walk the explanation prints (E §10): a row
+            // whose class states its `fulfils` explains as a row (group 4's review, N4)
+            let before = self.trace_walked();
+            let judged = self.judged(m, &tid, cut);
+            self.trace_walked_back(before);
+            judged?;
         }
         Ok(self.obs_errs.get(&(cut, o.id.clone())).cloned())
     }
@@ -811,15 +930,19 @@ fn seen_observations(
             // one known in a window the cut leaves undecided is booked or not: each of its
             // legs is that hole (L §4.5; refcore's `observations`, its `undecided`)
             if let Some(question) = &undecided {
-                // a removal's hole is asked of the row and of the version that removes it, as
-                // a cover known in a window is asked of its version (refcore's twin form; P70)
+                // the hole is asked of the row and of its version, the removal's for a removal
+                // (tally 2.1.8 R12, P70; refcore's `observations`)
                 let row = Hole::asked(question, &seen.id);
-                let removal = o.removed.then(|| Hole::asked(question, &o.version));
-                let hole = spread(&[Some(&row), removal.as_ref()])
-                    .ok_or_else(|| invariant("a removal's hole spread from none"))?;
+                let version = Hole::asked(question, &o.version);
+                let carry: Vec<crate::hole::Unknown> =
+                    known.unknown(&known_sid(o))?.into_iter().collect();
+                let hole = spread(&[Some(&row), Some(&version)])
+                    .ok_or_else(|| invariant("an undecided row's hole spread from none"))?
+                    .carrying(&carry);
                 for lg in &mut seen.legs {
                     lg.amount = Amount::Hole(hole.clone());
                 }
+                seen.undecided = Some(hole);
             }
             // the row as `inputs-of` lists it, kept by an engine answering one (E §10)
             if rows == Rows::Kept {
@@ -853,8 +976,31 @@ fn share_fulfils(groups: &BTreeMap<String, Vec<String>>, seen: &mut [Obs]) {
         };
         if let Some(f) = group.iter().find_map(|member| stated.get(member)) {
             o.fulfils = Some(f.clone());
+            o.shared = true;
         }
     }
+}
+
+/// Whether `spans` cover every day from `start` up to `end` (refcore's `covers_all`). L §5.19
+/// Coverage.
+fn covers_all(spans: &[Span], (start, end): (Day, Day)) -> bool {
+    let mut d = start;
+    while d < end {
+        let mut next: Option<Day> = None;
+        for s in spans.iter().filter(|s| s.contains(d)) {
+            let Some(e) = s.end() else {
+                return true;
+            };
+            if next.is_none_or(|n| e > n) {
+                next = Some(e);
+            }
+        }
+        let Some(n) = next else {
+            return false;
+        };
+        d = n;
+    }
+    true
 }
 
 /// Whose `known` an observation's is: its own (`input[key]`), else its version's (refcore's
@@ -940,14 +1086,24 @@ fn observation(o: &crate::model::Observation) -> Result<Obs, Stop> {
         legs,
         values: o.values.clone(),
         fulfils: o.fulfils.clone(),
+        shared: false,
         coll,
+        undecided: None,
     })
 }
 
 /// The versions the cut and the world of `seen` see that cover each place, by version id: each
 /// place with its span, the one written or the version's `governs` (refcore's `coverage`).
 /// L §5.19 Coverage, §6.4.
-fn seen_coverage(m: &Reality, (cut, world): (Day, World), known: &KnownAtCut) -> Coverage {
+///
+/// # Errors
+///
+/// `RUN-LIMIT` past the calendar's edge.
+fn seen_coverage(
+    m: &Reality,
+    (cut, world): (Day, World),
+    known: &KnownAtCut,
+) -> Result<Coverage, Stop> {
     let mut out = Coverage::default();
     let mut versions: Vec<&crate::model::VersionInfo> =
         m.versions.entries().map(|(_, v)| v).collect();
@@ -962,9 +1118,12 @@ fn seen_coverage(m: &Reality, (cut, world): (Day, World), known: &KnownAtCut) ->
         }
         // one known in a window the cut leaves undecided covers nothing, and each place it
         // covers is that hole from its span's first day (L §4.5; refcore's `covund`)
-        let undecided = known.hole(&v.id, cut, &v.id);
+        let undecided = known.hole(&v.id, cut, &v.id)?;
         for (place, span) in &v.covers {
-            let Some(span) = span.as_ref().or_else(|| v.span_at(cut)) else {
+            let Some(span) = span
+                .as_ref()
+                .or_else(|| v.span_at(&m.scenarios, (cut, world)))
+            else {
                 continue;
             };
             match &undecided {
@@ -979,5 +1138,5 @@ fn seen_coverage(m: &Reality, (cut, world): (Day, World), known: &KnownAtCut) ->
             }
         }
     }
-    out
+    Ok(out)
 }

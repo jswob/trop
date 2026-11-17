@@ -1,0 +1,9 @@
+scenario sx over bm
+  tally 2
+  from 2026-01-01
+
+version sx_v
+  cite plan
+  governs 2026-01-01..
+  known 2026-01-01
+  replace cq = bm.cr "s"

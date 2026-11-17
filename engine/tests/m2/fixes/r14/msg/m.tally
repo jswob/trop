@@ -1,0 +1,26 @@
+model t
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-06-30
+  note "T, tally 2.1.8 R14 (#198): item #172, a message whose form names the place's unit names the unit of the read that met it; no-item 3, RUN-PLACE at a place any min 0 kind prints the balance of the unit whose reading broke the rule (eur: refused, -5.00 EUR; pln: 3.00 PLN)"
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind safes: place any min 0
+place box: safes lives 2025-01-01..
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  anchor box
+  opening[box] = 1.00 EUR at 2026-01-01 start "s"
+  opening[box] = 2.00 PLN at 2026-01-01 start "s"
+  stated[box] = -5.00 EUR at 2026-02-15 end "s"
+  stated[box] = 3.00 PLN at 2026-02-15 end "s"
+
+ask eur: bal(box, EUR, 2026-02-20)
+ask pln: bal(box, PLN, 2026-02-20)
+ask g_eur: gap(box, 2026-02-14)

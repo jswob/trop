@@ -157,11 +157,8 @@ version st_sav
   anchor sav
   bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "Z KONTA"
   same bank[a2] = bank[b1]
-,,1:0,151:q_konto: 200.00 PLN
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  unfulfilled: save[2026-01]
-  unfulfilled: save[2026-02]
+,,1:0,112:q_konto: 200.00 PLN
+  anchor: konto after top[2026-03], stated 200.00 PLN, difference 0.00 PLN
   cut 2026-04-10
 ,21:records/answers/q_sav,1:-,7:records,26:run base.tally --ask q_sav,2389:10:base.tally,2369:model rec
   tally 2
@@ -654,7 +651,7 @@ version st_sav
   bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "Z KONTA"
 ,,1:0,133:q_save: refused: RUN-RECORD bank[a2] and bank[b1] state one transfer and both fulfil save[2026-03]: state them same
   cut 2026-04-10
-,25:records/adjustment-unmade,10:RUN-RECORD,7:records,28:run base.tally --ask q_konto,2410:10:base.tally,2390:model rec
+,25:records/adjustment-unmade,10:RUN-RECORD,7:records,28:run base.tally --ask q_moved,2410:10:base.tally,2390:model rec
   tally 2
   on 2026-04-10
   start 2026-01-01
@@ -733,11 +730,6 @@ version st_sav
   anchor sav
   bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "Z KONTA"
   same bank[a2] = bank[b1]
-,,1:0,266:q_konto: refused: RUN-RECORD bank[a1] fulfils adjustments[pay[2026-03].cash, v], which no version made by the cut
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  unfulfilled: save[2026-01]
-  unfulfilled: save[2026-02]
-  open: pay[2026-03]
+,,1:0,131:q_moved: refused: RUN-RECORD bank[a1] fulfils adjustments[pay[2026-03].cash, v], which no version made by the cut
   cut 2026-04-10
 ,

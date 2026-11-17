@@ -14,7 +14,7 @@ use super::steps::{Loader, refuse};
 use crate::base::{Code, Load, Place as At, Refusal};
 use crate::eval::{ConvertFor, Converted, convert};
 use crate::model::{
-    BandEnd, BandInfo, BandRow, BandTable, KeyVal, Reality, Span, Ty, Value, money_num,
+    BandEnd, BandInfo, BandRow, BandTable, KeyVal, Reality, Span, Ty, Value, World, money_num,
 };
 use crate::num::Num;
 use crate::syntax::{Lit, Stop, Value as Written};
@@ -514,7 +514,7 @@ fn version_span(m: &Reality, id: &str) -> Result<Option<Span>, Stop> {
         .versions
         .get(id)
         .ok_or_else(|| invariant(format!("version {id} isn't built")))?;
-    Ok(version.span_at(m.on).cloned())
+    Ok(version.span_at(&m.scenarios, (m.on, World::Whole)).cloned())
 }
 
 /// A version's `known`, or its window's first day. L §4.5.

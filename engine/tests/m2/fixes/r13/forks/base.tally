@@ -1,0 +1,43 @@
+model fk
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.8 R13 (#197), #169-k: a cross-world diff past 64 axis combinations is LOAD-FORKS (L §5.5 l.872): d reads x and y here, z in sa and w in sb, so diff(d) in sa against sb reaches 81"
+
+source s "synthetic"
+
+axis x
+  x1 "1"
+  x2 "2"
+  x3 "3"
+
+axis y
+  y1 "1"
+  y2 "2"
+  y3 "3"
+
+axis z
+  z1 "1"
+  z2 "2"
+  z3 "3"
+
+axis w
+  w1 "1"
+  w2 "2"
+  w3 "3"
+
+input flag: bool
+
+def d: int at reader
+  rule base = 1
+  rule bx beats base = 0 when x == x2 and y == y2
+  rule bz beats base, bx = 1 when flag
+
+ask q: diff(d) in sa against sb law 2026-06-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  flag = false

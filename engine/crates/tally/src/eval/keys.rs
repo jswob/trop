@@ -3,7 +3,8 @@
 //! values), §4.6 (a day or a period read at a period key), §5.5 (an axis's option), §5.7 and
 //! §5.11 (a movement as the key of an event kind), §6.4 (keys a world sees), §7.6 item 3 (a
 //! key offset's 18 digits), §8.1 (a read whose key is a hole carries the key's questions
-//! only), §8.4 (`RUN-KEY`, `RUN-NONE`).
+//! only; a window as a key is `HOLE-IMPRECISE … for a key`, tally 2.1.8 R13), §8.4
+//! (`RUN-KEY`, `RUN-NONE`).
 //! Twin: engine/tools/refcore/evaluate.py (`key_values`, `to_key`, `check_key`) and loader.py
 //! (`resolve_key_literal`).
 //! Invariants: a key a read takes is a key its domain holds and the cut and the read's world
@@ -12,6 +13,7 @@
 use super::arith::int_of;
 use super::ranges::value_key;
 use super::state::{Ctx, Engine, Env, Figures, a_day, invariant, num_stop, refuse};
+use super::windows::{imprecise, single};
 use crate::base::Run;
 use crate::hole::Hole;
 use crate::load::index_key_of;
@@ -81,8 +83,16 @@ impl Engine {
         let mut keys = Vec::with_capacity(binds.len());
         let mut holes: Vec<Hole> = Vec::new();
         for (bind, written) in binds.iter().zip(given) {
+            // a window of one day is that day (L §4.4; refcore's `one_day`)
+            let written = match written {
+                Given::Value(v @ Value::Window(_)) => Given::Value(single(&v).clone()),
+                other @ (Given::Value(_) | Given::Literal(_)) => other,
+            };
             let made = match written {
                 Given::Value(Value::Hole(h)) => Err(h),
+                // a window where one key is needed is imprecise, the read its hole (L §4.4,
+                // §8.1; tally 2.1.8 R13; refcore's `to_key`)
+                Given::Value(Value::Window(w)) => Err(imprecise(m, &w, "a key")?),
                 at_range if bind.domain == Domain::Range => {
                     self.range_key(m, bind, at_range, (&earlier, ctx))?
                 }

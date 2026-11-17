@@ -27,9 +27,9 @@ place lent4: claims PLN lives 2026-01-01..
 
 place owed: debts PLN lives 2026-01-01..
 
-place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+place fund: holdings etf_unit lives 2026-01-01..
 
-place fund2: holdings etf_unit priced fund_price lives 2026-01-01..
+place fund2: holdings etf_unit lives 2026-01-01..
 
 place gone: accounts PLN lives 2026-01-01..2026-02-27
 
@@ -754,82 +754,3 @@ ask zx271: explain bal(box_d, 2026-03-31) from 2026-03-20
 
 ask zx272: explain bal(box_d, 2026-03-31) from 2026-03-25
 
-ask zx274: explain bal(market, 2026-02-15) from 2025-12-01
-
-ask zx275: explain bal(market, 2026-02-15) from 2025-12-31
-
-ask zx276: explain bal(market, 2026-02-25) from 2026-01-01
-
-ask zx277: explain bal(market, 2026-02-25) from 2026-01-10
-
-ask zx278: explain bal(market, 2026-02-27) from 2026-01-14
-
-ask zx279: explain bal(market, 2026-02-27) from 2026-01-15
-
-ask zx280: explain bal(market, 2026-02-28) from 2026-01-20
-
-ask zx281: explain bal(market, 2026-02-28) from 2026-01-25
-
-ask zx282: explain bal(market, 2026-03-02) from 2026-01-31
-
-ask zx283: explain bal(market, 2026-03-02) from 2026-02-01
-
-ask zx284: explain bal(market, 2026-03-10) from 2026-02-02
-
-ask zx285: explain bal(market, 2026-03-10) from 2026-02-15
-
-ask zx286: explain bal(market, 2026-03-15) from 2026-02-25
-
-ask zx287: explain bal(market, 2026-03-15) from 2026-02-27
-
-ask zx288: explain bal(market, 2026-03-20) from 2026-02-28
-
-ask zx289: explain bal(market, 2026-03-20) from 2026-03-02
-
-ask zx290: explain bal(market, 2026-03-25) from 2026-03-10
-
-ask zx291: explain bal(market, 2026-03-25) from 2026-03-15
-
-ask zx292: explain bal(market, 2026-03-31) from 2026-03-20
-
-ask zx293: explain bal(market, 2026-03-31) from 2026-03-25
-
-ask zx295: explain bal(world, 2026-02-15) from 2025-12-01
-
-ask zx296: explain bal(world, 2026-02-15) from 2025-12-31
-
-ask zx297: explain bal(world, 2026-02-25) from 2026-01-01
-
-ask zx298: explain bal(world, 2026-02-25) from 2026-01-10
-
-ask zx299: explain bal(world, 2026-02-27) from 2026-01-14
-
-ask zx300: explain bal(world, 2026-02-27) from 2026-01-15
-
-ask zx301: explain bal(world, 2026-02-28) from 2026-01-20
-
-ask zx302: explain bal(world, 2026-02-28) from 2026-01-25
-
-ask zx303: explain bal(world, 2026-03-02) from 2026-01-31
-
-ask zx304: explain bal(world, 2026-03-02) from 2026-02-01
-
-ask zx305: explain bal(world, 2026-03-10) from 2026-02-02
-
-ask zx306: explain bal(world, 2026-03-10) from 2026-02-15
-
-ask zx307: explain bal(world, 2026-03-15) from 2026-02-25
-
-ask zx308: explain bal(world, 2026-03-15) from 2026-02-27
-
-ask zx309: explain bal(world, 2026-03-20) from 2026-02-28
-
-ask zx310: explain bal(world, 2026-03-20) from 2026-03-02
-
-ask zx311: explain bal(world, 2026-03-25) from 2026-03-10
-
-ask zx312: explain bal(world, 2026-03-25) from 2026-03-15
-
-ask zx313: explain bal(world, 2026-03-31) from 2026-03-20
-
-ask zx314: explain bal(world, 2026-03-31) from 2026-03-25

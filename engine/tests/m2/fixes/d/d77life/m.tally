@@ -1,0 +1,48 @@
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-06-30
+  note "T, tally 2.1.8 §4 item 77 (#201), its next place (plan §9 item 2): a leg into a thing outside its lifespan on some days of a window. put's leg reaches box, which lives from 2026-03-08, so 03-05 to 03-07 refuse RUN-LIFESPAN and 03-08 to 03-10 book; pin and pout cross old, which lives to 2026-03-06, so 03-07 to 03-10 refuse. The plain lines must be HOLE-IMPRECISE (L §4.4 l.672 after R13.9)"
+
+source s "s"
+unit PLN: currency minor 0.01
+kind accts: place PLN signed
+place jar: accts lives 2025-01-01..
+place box: accts lives 2026-03-08..
+place old: accts lives 2025-01-01..2026-03-06
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input wd: date
+input wo: date
+
+move put: transfers
+  on wd
+  leg cash from jar to box amount amt
+
+move pin: transfers
+  on wo
+  leg cash from jar to old amount amt
+
+move pout: transfers
+  on wo
+  leg cash from old to world amount amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  amt = 100.00 PLN "s"
+  wd = window(2026-03-05, 2026-03-10) "s"
+  wo = window(2026-03-05, 2026-03-10) "s"
+  opening[jar] = 500.00 PLN at 2026-01-01 start "s"
+  opening[old] = 0.00 PLN at 2026-01-01 start "s"
+
+ask b_box: bal(box, 2026-03-31)
+ask b_box_each: bal(box, 2026-03-31) windows each
+ask b_jar: bal(jar, 2026-03-31)
+ask b_jar_each: bal(jar, 2026-03-31) windows each
+ask b_old: bal(old, 2026-03-06)
+ask b_old_each: bal(old, 2026-03-06) windows each
+ask f_put: flows(put, 2026-03)
+ask f_put_each: flows(put, 2026-03) windows each

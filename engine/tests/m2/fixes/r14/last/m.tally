@@ -1,0 +1,25 @@
+model t
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-06-30
+  note "T, tally 2.1.8 R14 (#198): EUR's and PLN's readings both at 2026-02-15 end. Item 74, last there is RUN-DOMAIN at run, naming the two units (l; before 2.1.8 both refuse the file, LOAD-OVERLAP); no-item 6, a law read of the reading refuses at run and the file loads (lw)"
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind wallets: place any signed
+place broker: wallets lives 2025-01-01..
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  anchor broker
+  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
+  opening[broker] = 2.00 PLN at 2026-01-01 start "s"
+  stated[broker] = 4.00 EUR at 2026-02-15 end "s"
+  stated[broker] = 10.00 PLN at 2026-02-15 end "s"
+
+ask l: last(stated[broker], 2026-02-16)
+ask lw: stated[broker] law 2026-02-15

@@ -1,0 +1,27 @@
+model t
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-06-30
+  note "T, tally 2.1.8 §4 item 56 (#169-c): after replace … = none removes the later reading, the earlier one is the last (l: 40.00 PLN at 2026-02-10 end; s counts from it)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+
+version v1
+  cite s
+  known 2026-01-01
+  anchor konto
+  opening[konto] = 10.00 PLN at 2026-01-01 start "s"
+  stated[konto] = 40.00 PLN at 2026-02-10 end "s"
+  stated[konto] = 50.00 PLN at 2026-02-20 end "s"
+
+version v2
+  cite s
+  known 2026-03-01
+  anchor konto
+  replace stated[konto] = none at 2026-02-20 end
+
+ask l: last(stated[konto], 2026-02-25), since(stated[konto], 2026-02-25), bal(konto, 2026-02-25)
+ask l0: last(stated[konto], 2026-02-25) as known 2026-02-01

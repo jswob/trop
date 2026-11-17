@@ -1,0 +1,43 @@
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+kind savings: place PLN min 0
+place pot: savings lives 2025-01-01..
+place jar: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+place box: accounts PLN lives 2025-01-01..
+input wa: date
+input db: date
+input small: money PLN
+input amt2: money PLN
+
+move oa: transfers
+  on wa
+  leg cash from pot to jar amount small
+
+move ob: transfers
+  on db
+  when bal(box) >= 0.00 PLN
+  reads box
+  leg cash from pot to world amount amt2
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  small = 10.00 PLN "s"
+  amt2 = 200.00 PLN "s"
+  wa = window(2026-04-05, 2026-04-10) "s"
+  db = 2026-04-07 "s"
+  opening[pot] = 50.00 PLN at 2026-01-01 start "s"
+  opening[jar] = 0.00 PLN at 2026-01-01 start "s"
+  opening[box] = 0.00 PLN at 2026-01-01 start "s"
+
+ask d1: bal(pot, 2026-04-30)
+ask d2: flows(ob, 2026-04)
+ask d3: bal(jar, 2026-04-30)

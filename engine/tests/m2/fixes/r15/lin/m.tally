@@ -1,0 +1,128 @@
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.8 R15 (#199): partial follows what is linear. #184, mean over a known count (m1), flows of a place and a move, a projection and a with uncertain total (w_*) are linear; #169-i, a min, a hole where, a hole-day movement are plain (i_*); no-item 2 low, 3 a rounded conversion, 4 share, 5 round and a known scale, 6 a hole with coefficient 0 (n_*); §4 item 72, a money coefficient prints its minor digits (n_money: 10.00 PLN ×). p1 to p11 are the planner's p7"
+
+source plan "plan"
+source bk "bank"
+unit PLN: currency minor 0.01
+input g_amt: money PLN
+input dom: int
+input divisor[m in months]: num
+input hamt[m in months]: money PLN
+place konto: accounts PLN lives 2019-05-01..
+place k2: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+
+move groc[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to world amount round(g_amt * divisor[m] / divisor[m], minor(PLN), half-even)
+
+move hm[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from k2 to world amount hamt[m]
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  g_amt = 500.00 PLN "plan"
+  dom = 5 "plan"
+  divisor[2026-01] = 1 "ok"
+  divisor[2026-02] = 0 "zero"
+  divisor[2026-03..2026-12] = 1 "ok"
+  hamt[2026-01] = 1.00 PLN "ok"
+  hamt[2026-02] = ?"how much in Feb" "hole"
+  hamt[2026-03..2026-12] = 1.00 PLN "ok"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "w"
+  opening[k2] = 10 000.00 PLN at 2026-01-01 start "w"
+
+version st
+  cite bk
+  governs 2026-03
+  known 2026-04-02
+  anchor konto
+  anchor k2
+  stated[konto] = 200.00 PLN at 2026-03-10 end "saldo"
+  stated[k2] = 200.00 PLN at 2026-03-10 end "saldo"
+
+index ks = [a, b]
+input z[k in ks]: money PLN
+version zz
+  cite plan
+  governs always
+  known 2026-01-01
+  z[a] = 10.00 PLN "s"
+  z[b] = ?"z of b" "s"
+ask p1: bal(k2, 2026-02-28) partial
+ask p2: flows(k2, 2026-02) partial
+ask p3: flows(hm, 2026-02) partial
+ask p4: bal(k2, 2026-02-28) from 2026-01-15 partial
+ask p5: mean(z[k] for k in ks) partial
+ask p6: sum(z[k] for k in ks) partial
+ask p7: -bal(k2, 2026-02-28) partial
+ask p8: sum(t.cash.amount for t in transfers over 2026-02 where t.cash.from == k2) partial
+ask p9: check bal(k2, 2026-02-28) == z[a] partial
+ask p10: bal(k2, 2026-02-28) + z[b] partial
+ask p11: low(k2, 2026-02-01 .. 2026-02-28) partial
+
+unit EUR: currency minor 0.01
+input xh: money PLN
+input hd: date
+input rate: num
+input fx: num EUR/PLN
+input kn: money PLN
+input dz: int
+input five: money PLN
+input zp: money PLN
+input onep: money PLN
+input onepln: money PLN
+place k5: accounts PLN lives 2019-05-01..
+
+move hdm: transfers
+  on hd
+  leg cash from world to k5 amount kn
+
+version zz2
+  cite plan
+  governs always
+  known 2026-01-01
+  xh = ?"what is h" "s"
+  hd = ?"which day" "s"
+  rate = 2 "s"
+  fx = 0.25 "s"
+  kn = 10.00 PLN "s"
+  dz = 5 "s"
+  five = 5.00 PLN "s"
+  zp = 0.00 PLN "s"
+  onep = 1.00 PLN "s"
+  onepln = 1.00 PLN "s"
+  opening[k5] = 100.00 PLN at 2026-01-01 start "w"
+
+ask m1: mean(z[k] + xh for k in ks) - xh partial
+ask w_flp: flows(k2, 2026-01-01 .. 2026-02-28) partial
+ask w_flm: flows(hm, 2026-01-01 .. 2026-03-31) partial
+ask w_from: bal(k2, 2026-03-05) from 2026-01-10 partial
+ask w_unc: low(k2, 2026-03-01 .. 2026-03-31) from 2026-03-01 with uncertain partial
+ask i_min: -(min(z[b], zp)) + onep partial
+ask i_where: sum(z[k] for k in ks where z[k] > five) partial
+ask i_day: bal(k5, 2026-03-31) partial
+ask n_low: low(k2, 2026-02-01 .. 2026-03-31) partial
+ask n_fx: flows(k2, 2026-02) in EUR at fx half-even partial
+ask n_share: share(z[k] > five for k in ks) partial
+ask n_round: round(bal(k2, 2026-02-28), onepln, half-even) partial
+ask n_scale: bal(k2, 2026-02-28) * rate partial
+ask n_zero: kn + xh - xh partial
+
+input hn: num
+version zz3
+  cite plan
+  governs always
+  known 2026-01-01
+  hn = ?"how many" "s"
+
+ask n_money: kn * hn partial

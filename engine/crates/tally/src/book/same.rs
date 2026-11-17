@@ -3,12 +3,18 @@
 //! group, a group of movements is one movement, bound once, counted once by `flows` and
 //! `observed`), §5.19 (One movement on two statements: a read of the movement away from its
 //! places is the disagreement's hole, `HOLE-SAME`, naming both rows), §8.1 (`HOLE-SAME`'s form
-//! `<p> and <q> are one, but <x> differs on <d>: <a> (<row>) and <b> (<row>)`).
-//! Twin: engine/tools/refcore/moves.py (`same_groups`, `once_obs`, `same_obs_differ`) and
-//! mreads.py (`once_by_same`).
-//! Invariants: a group's members are in the order the same lines first name them; a group is
-//! counted by its first member a read meets, its other members beside it; two rows disagree
-//! only on a leg both state, never where either side is a hole.
+//! `<p> and <q> are one, but <x> differs on <d>: <a> (<row>) and <b> (<row>)`), §4.5 (tally
+//! 2.1.8 R12: a `same` line is seen under a cut as its version's rows are, one known in a
+//! window that holds the cut read as seen and as unseen).
+//! Twin: engine/tools/refcore/moves.py (`same_lines`, `same_groups`, `once_obs`,
+//! `same_obs_differ`), model.py (`same_seen`) and mreads.py (`once_by_same`); refcore's
+//! walk.py `same_observed` (an instance stated `same` as an observed row) serves only a joint
+//! model's lines since load refuses the pair in one model (tally 2.1.8), and is built here from
+//! it when joint models run (M5c).
+//! Invariants: a group's members are in the order of their ids (tally 2.1.8 S6); a group is
+//! counted by its first member a read meets, its other members beside it; rows disagree
+//! only on a leg two of them state, never where any side is a hole; `HOLE-SAME` names every
+//! row of the class that states the fact, in id order.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -25,78 +31,214 @@ use crate::walk::{
     qty_value,
 };
 
-/// The `same` lines of movements cut `cut` sees, each its two sides, in the order written:
-/// a line in a joint model's header always, a version's from its `known` day (L §4.5: a
-/// `known` holds for everything the version brings).
-///
-/// # Errors
-///
-/// `ENGINE-INVARIANT` for a version load didn't build; not built for a line whose version
-/// is known in a window that holds the cut, which makes the rows one movement or two.
-fn move_lines(m: &Reality, cut: Day) -> Result<Vec<(&String, &String)>, Stop> {
-    let mut out = Vec::new();
-    for pair in &m.sames {
-        let SamePair::Moves(left, right, version) = pair else {
-            continue;
-        };
-        if let Some(id) = version {
-            let v = m
-                .versions
-                .get(id)
-                .ok_or_else(|| invariant("a same line's version load didn't build"))?;
-            if v.known > cut {
-                continue;
-            }
-            if v.window.is_some_and(|hi| cut < hi) {
-                return Err(Stop::NotBuilt(
-                    "a movement `same` line known in a window that holds the cut",
-                ));
-            }
+/// The versions whose `same` line a line's first run read under a cut their `known` window
+/// holds, no `windows each` deciding it: each with its window and the sides its lines name
+/// (refcore's `_SAMEMET`). L §4.5 (tally 2.1.8 R12).
+pub(crate) type SameMet = BTreeMap<String, ((Day, Day), BTreeSet<String>)>;
+
+/// How one run of an ask's line reads the `same` lines known in a window that holds the
+/// cut, which no `windows each` decides (L §4.5, tally 2.1.8 R12: such a line is read as
+/// seen and as unseen): the line's first run takes each seen and notes it; a later run takes
+/// each as its pick says (refcore's `_SAMEMET`, `_SAMEPICK`).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub(crate) struct SamePicks {
+    /// Each version's line seen or not in this run; none in the line's first run.
+    pub(crate) pick: Option<BTreeMap<String, bool>>,
+    /// What the line's first run met.
+    pub(crate) met: SameMet,
+}
+
+impl SamePicks {
+    /// Whether this run sees the line of version `id`, known in `window`, which holds the cut
+    /// and no `windows each` decides: as the pick says, a line it names no choice for seen;
+    /// in the line's first run seen, noted with its window and the sides `sides` it names
+    /// (refcore's `same_seen`). L §4.5 (tally 2.1.8 R12).
+    fn seen(&mut self, id: &str, window: (Day, Day), sides: [&str; 2]) -> bool {
+        if let Some(pick) = &self.pick {
+            return pick.get(id) != Some(&false);
         }
-        out.push((left, right));
+        let (_, named) = self
+            .met
+            .entry(id.to_owned())
+            .or_insert_with(|| (window, BTreeSet::new()));
+        named.extend(sides.iter().map(|side| (*side).to_owned()));
+        true
     }
-    Ok(out)
 }
 
 /// Each movement stated `same`, by id, with its group's members in the order the same lines
 /// first name them (L §6.1).
 pub type Groups = BTreeMap<String, Vec<String>>;
 
-/// Each movement stated `same` by a line cut `cut` sees, with its group, the group's
-/// members in the order the same lines first name them (refcore's `same_groups`). L §6.1,
-/// §4.5.
-///
-/// # Errors
-///
-/// As `move_lines`.
-pub fn same_groups(m: &Reality, cut: Day) -> Result<Groups, Stop> {
-    let mut order: Vec<&str> = Vec::new();
-    let mut parent: BTreeMap<String, String> = BTreeMap::new();
-    for (left, right) in move_lines(m, cut)? {
-        for side in [left.as_str(), right.as_str()] {
-            if !order.contains(&side) {
-                order.push(side);
+impl Engine {
+    /// Whether the cut of `ctx` sees a `same` line of version `version`, which names `sides`:
+    /// a line in a joint model's header always; else only in the worlds its version's file is
+    /// in, its version's `known` on or before the cut, a window that holds the cut decided by
+    /// the line's `windows each`, else as the run's pick says, read as seen and as unseen
+    /// (refcore's `same_seen`, `same_lines`). L §4.5 (tally 2.1.8 R12: whatever a version
+    /// states is read as its rows are), §4.4, §6.4.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a version load didn't build; as [`Engine::known_seen`].
+    pub(crate) fn same_line_seen(
+        &mut self,
+        m: &Reality,
+        version: Option<&str>,
+        ctx: Ctx,
+        sides: [&str; 2],
+    ) -> Result<bool, Stop> {
+        let Some(id) = version else {
+            return Ok(true);
+        };
+        if !m.scenarios.sees(ctx.world, Some(id)) {
+            return Ok(false);
+        }
+        let info = m
+            .versions
+            .get(id)
+            .ok_or_else(|| invariant("a same line's version load didn't build"))?;
+        let (lo, cut) = (info.known, ctx.cut);
+        // a window that ends on or before the cut is seen, one that starts after it unseen
+        let Some(hi) = info.window.filter(|hi| lo <= cut && cut < *hi) else {
+            return Ok(lo <= cut);
+        };
+        if let Some(seen) = self.known_seen(ctx, (lo, hi), &info.id)? {
+            return Ok(seen);
+        }
+        if self.chooses(ctx)? {
+            // under `windows each`, a line not yet taken is an unknown day the line's answer
+            // rests on: the run takes it as seen, and the line takes its days next (L §4.5,
+            // §4.4; tally 2.1.8 R12, R13; refcore's `same_seen`, its `forced`)
+            let forced = crate::eval::known_unknown((lo, hi), &info.id)?.id;
+            if !self.each_forced.contains(&forced) {
+                self.each_forced.push(forced);
+            }
+            return Ok(true);
+        }
+        Ok(self.same_picks.seen(&info.id, (lo, hi), sides))
+    }
+
+    /// Whether cut `cut` sees each `same` line of the reality, in the order written: a line
+    /// of movements as [`Engine::same_line_seen`] decides, a line of rows never (its read is
+    /// the row's, `eval/read.rs`). L §6.1, §4.5.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::same_line_seen`].
+    fn moves_seen(&mut self, m: &Reality, cut: Day) -> Result<Vec<bool>, Stop> {
+        let ctx = self.timeline_ctx(None, cut);
+        let mut out = Vec::with_capacity(m.sames.len());
+        for pair in &m.sames {
+            let seen = match pair {
+                SamePair::Moves(left, right, version) => {
+                    self.same_line_seen(m, version.as_deref(), ctx, [left, right])?
+                }
+                SamePair::Rows(..) => false,
+            };
+            out.push(seen);
+        }
+        Ok(out)
+    }
+
+    /// Each movement stated `same` by a line cut `cut` sees, with its group, the group's
+    /// members in the order of their ids (refcore's `same_groups`). L §6.1, §2.5, §4.5
+    /// (tally 2.1.8 S6).
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::same_line_seen`].
+    pub(crate) fn same_groups(&mut self, m: &Reality, cut: Day) -> Result<Groups, Stop> {
+        // a class joined by lines in two files has no written order: its members go by their
+        // ids in id order (L §2.5; tally 2.1.8 S6, P50)
+        let mut order: BTreeSet<&str> = BTreeSet::new();
+        let mut parent: BTreeMap<String, String> = BTreeMap::new();
+        for (left, right) in move_lines(m, self.moves_seen(m, cut)?) {
+            order.insert(left.as_str());
+            order.insert(right.as_str());
+            let (top, under) = (root(&parent, left), root(&parent, right));
+            if top != under {
+                parent.insert(under, top);
             }
         }
-        let (top, under) = (root(&parent, left), root(&parent, right));
-        if top != under {
-            parent.insert(under, top);
+        let mut by_root: BTreeMap<String, Vec<String>> = BTreeMap::new();
+        // in id order, a list or range index keeping its own (pick P50)
+        let mut order: Vec<&str> = order.into_iter().collect();
+        order.sort_by_cached_key(|side| m.id_order(side));
+        for side in &order {
+            by_root
+                .entry(root(&parent, side))
+                .or_insert_with(Vec::new)
+                .push((*side).to_owned());
+        }
+        let mut out = BTreeMap::new();
+        for group in by_root.into_values() {
+            for member in &group {
+                out.insert(member.clone(), group.clone());
+            }
+        }
+        Ok(out)
+    }
+
+    /// The sides of the `same` lines cut `cut` sees, each once, in id order, a list or range
+    /// index keeping its own order: section order changes nothing, and S6 names a class's
+    /// rows in id order (refcore's `once_by_same`, `id_order`; picks P42 and P50, group 4's
+    /// review N2 and its fix's F1). L §6.1, §2.5, §4.5.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::same_line_seen`].
+    pub(crate) fn same_sides(&mut self, m: &Reality, cut: Day) -> Result<Vec<String>, Stop> {
+        let mut out: BTreeSet<String> = BTreeSet::new();
+        for (left, right) in move_lines(m, self.moves_seen(m, cut)?) {
+            out.insert(left.clone());
+            out.insert(right.clone());
+        }
+        let mut out: Vec<String> = out.into_iter().collect();
+        out.sort_by_cached_key(|side| m.id_order(side));
+        Ok(out)
+    }
+
+    /// Whether movement `id` is named by a `same` line cut `cut` sees. L §6.1, §4.5.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::same_line_seen`].
+    pub(crate) fn stated_same(&mut self, m: &Reality, id: &str, cut: Day) -> Result<bool, Stop> {
+        Ok(move_lines(m, self.moves_seen(m, cut)?)
+            .iter()
+            .any(|(a, b)| *a == id || *b == id))
+    }
+
+    /// The first `same` line cut `cut` sees naming movement `id`, its two sides (refcore's
+    /// `same_pairs`, its lines). L §6.1, §4.5.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::same_line_seen`].
+    fn first_line(
+        &mut self,
+        m: &Reality,
+        id: &str,
+        cut: Day,
+    ) -> Result<Option<(String, String)>, Stop> {
+        Ok(move_lines(m, self.moves_seen(m, cut)?)
+            .into_iter()
+            .find(|(a, b)| *a == id || *b == id)
+            .map(|(a, b)| (a.clone(), b.clone())))
+    }
+}
+
+/// The `same` lines of movements of `m` that `seen` flags (one flag per line, as
+/// [`Engine::moves_seen`] gives them), each its two sides, in the order written. L §6.1, §4.5.
+fn move_lines(m: &Reality, seen: Vec<bool>) -> Vec<(&String, &String)> {
+    let mut out = Vec::new();
+    for (pair, flag) in m.sames.iter().zip(seen) {
+        if let (SamePair::Moves(left, right, _), true) = (pair, flag) {
+            out.push((left, right));
         }
     }
-    let mut by_root: BTreeMap<String, Vec<String>> = BTreeMap::new();
-    for side in &order {
-        by_root
-            .entry(root(&parent, side))
-            .or_insert_with(Vec::new)
-            .push((*side).to_owned());
-    }
-    let mut out = BTreeMap::new();
-    for group in by_root.into_values() {
-        for member in &group {
-            out.insert(member.clone(), group.clone());
-        }
-    }
-    Ok(out)
+    out
 }
 
 /// The root of `start` among the links `parent`, a union-find (refcore's `find`); a walk up
@@ -148,14 +290,26 @@ pub fn once_obs(groups: &BTreeMap<String, Vec<String>>, obs: &[Obs]) -> Vec<(usi
 }
 
 /// Which of the movements `ids` a binding keeps: of each group stated `same`, the member
-/// the same lines name first among them, so the group is bound once (refcore's
-/// `once_by_same`). L §6.1, §5.19.
+/// first among them in `sides`, the same lines' sides in id order, so the group is bound
+/// once, by its first id (refcore's `once_by_same`; pick P42). L §6.1, §5.19.
 #[must_use]
-pub fn kept_once(groups: &BTreeMap<String, Vec<String>>, ids: &[&str]) -> Vec<bool> {
+pub fn kept_once(
+    groups: &BTreeMap<String, Vec<String>>,
+    sides: &[String],
+    ids: &[&str],
+) -> Vec<bool> {
     let mut kept: Vec<&str> = Vec::new();
-    for group in groups.values() {
-        if let Some(first) = group.iter().find(|member| ids.contains(&member.as_str())) {
-            kept.push(first.as_str());
+    // the groups met so far, each by its first member
+    let mut met: BTreeSet<&str> = BTreeSet::new();
+    for side in sides {
+        if !ids.contains(&side.as_str()) {
+            continue;
+        }
+        let Some(lead) = groups.get(side).and_then(|group| group.first()) else {
+            continue;
+        };
+        if met.insert(lead.as_str()) {
+            kept.push(side.as_str());
         }
     }
     let mut out = Vec::with_capacity(ids.len());
@@ -167,85 +321,90 @@ pub fn kept_once(groups: &BTreeMap<String, Vec<String>>, ids: &[&str]) -> Vec<bo
 
 /// Where row `row` and the rows `others` stated `same` with it disagree on a leg's amount
 /// or day (on leg `leg` alone, where given), the disagreement's hole in L §8.1's form,
-/// naming both rows; none where they agree or either side is a hole (refcore's
-/// `same_obs_differ`). L §5.19, §6.1, §8.1.
+/// naming every row of the class that states the leg, in id order; none where they agree or
+/// any side is a hole (refcore's `same_obs_differ`). L §5.19, §6.1, §8.1 (tally 2.1.8 S6).
 ///
 /// # Errors
 ///
 /// A number error printing an amount.
 pub fn same_differ(
     m: &Reality,
-    groups: &BTreeMap<String, Vec<String>>,
     row: &Obs,
     others: &[&Obs],
     leg: Option<&str>,
 ) -> Result<Option<Hole>, Stop> {
-    for other in others {
-        for mine in &row.legs {
-            if leg.is_some_and(|name| mine.name != name) {
-                continue;
-            }
-            let Some(theirs) = other.legs.iter().find(|lg| lg.name == mine.name) else {
-                continue;
-            };
-            let (what, (one, two)) = if let Some(pair) = amounts_differ(m, mine, theirs)? {
-                (format!("the amount of {}", mine.name), pair)
-            } else if let Some(pair) = days_differ(mine, theirs) {
-                (format!("the day of {}", mine.name), pair)
-            } else {
-                continue;
-            };
-            // the two rows in the order the same lines write them (P51, #177)
-            let ((first, first_leg, one), (second, two)) =
-                if written_before(groups, &other.id, &row.id) {
-                    ((*other, theirs, two), (row, one))
-                } else {
-                    ((row, mine, one), (*other, two))
-                };
-            let day = first_leg.day.day().unwrap_or(first.day);
-            let text = format!(
-                "{} and {} are one, but {what} differs on {}: {one} ({}) and {two} ({})",
-                first.id,
-                second.id,
-                day.text(),
-                first.id,
-                second.id
-            );
-            let ids = format!("{}, {}", first.id, second.id);
-            return Ok(Some(Hole::asked(&text, &ids)));
+    for mine in &row.legs {
+        if leg.is_some_and(|name| mine.name != name) {
+            continue;
         }
+        let mut class: Vec<(&Obs, &LegVal)> = vec![(row, mine)];
+        for other in others {
+            for theirs in other.legs.iter().filter(|lg| lg.name == mine.name) {
+                class.push((other, theirs));
+            }
+        }
+        if class.len() < 2 {
+            continue;
+        }
+        // the rows in id order (L §8.1 HOLE-SAME, §2.5; P50)
+        class.sort_by_cached_key(|(o, _)| m.id_order(&o.id));
+        let (what, figures) = if let Some(figures) = amounts_differ(m, &class)? {
+            (format!("the amount of {}", mine.name), figures)
+        } else if let Some(figures) = days_differ(&class) {
+            (format!("the day of {}", mine.name), figures)
+        } else {
+            continue;
+        };
+        let ids: Vec<String> = class.iter().map(|(o, _)| o.id.clone()).collect();
+        let parts: Vec<String> = figures
+            .iter()
+            .zip(&ids)
+            .map(|(figure, id)| format!("{figure} ({id})"))
+            .collect();
+        let day = mine.day.day().unwrap_or(row.day);
+        let text = format!(
+            "{} are one, but {what} differs on {}: {}",
+            and_list(&ids),
+            day.text(),
+            and_list(&parts)
+        );
+        return Ok(Some(Hole::asked(&text, &ids.join(", "))));
     }
     Ok(None)
 }
 
-/// Whether the same lines name row `earlier` before row `later` in their group, the order
-/// the household wrote them (refcore's, P51 for #177). L §6.1, §8.1.
-fn written_before(groups: &BTreeMap<String, Vec<String>>, earlier: &str, later: &str) -> bool {
-    let Some(group) = groups.get(earlier) else {
-        return false;
-    };
-    let first = group.iter().position(|member| member == earlier);
-    let second = group.iter().position(|member| member == later);
-    matches!((first, second), (Some(one), Some(two)) if one < two)
+/// `a`, `a and b`, `a, b and c`: how `HOLE-SAME` names a class's rows and values (refcore's
+/// `and_list`). L §8.1 (tally 2.1.8 S6).
+#[must_use]
+pub(crate) fn and_list(items: &[String]) -> String {
+    match items.split_last() {
+        Some((last, rest)) if !rest.is_empty() => format!("{} and {last}", rest.join(", ")),
+        Some((last, _)) => last.clone(),
+        None => String::new(),
+    }
 }
 
-/// Two legs' amounts as they print where both are numbers that differ (refcore's `vkey`
-/// compare). L §5.19.
-fn amounts_differ(
-    m: &Reality,
-    mine: &LegVal,
-    theirs: &LegVal,
-) -> Result<Option<(String, String)>, Stop> {
-    let (Amount::Qty(one), Amount::Qty(two)) = (&mine.amount, &theirs.amount) else {
-        return Ok(None);
-    };
-    if one == two && mine.unit == theirs.unit {
+/// The legs' amounts as they print where every one is a number and they don't all agree
+/// (refcore's `vkey` compare). L §5.19.
+fn amounts_differ(m: &Reality, class: &[(&Obs, &LegVal)]) -> Result<Option<Vec<String>>, Stop> {
+    let mut figures: Vec<(&Num, &str)> = Vec::with_capacity(class.len());
+    for (_, lg) in class {
+        let Amount::Qty(amount) = &lg.amount else {
+            return Ok(None);
+        };
+        let Some(unit) = &lg.unit else {
+            return Err(invariant("an observed leg's amount with no unit"));
+        };
+        figures.push((amount, unit));
+    }
+    if figures.iter().all(|f| Some(f) == figures.first()) {
         return Ok(None);
     }
-    let (Some(one_unit), Some(two_unit)) = (&mine.unit, &theirs.unit) else {
-        return Err(invariant("an observed leg's amount with no unit"));
-    };
-    Ok(Some((shown(m, one, one_unit)?, shown(m, two, two_unit)?)))
+    let mut texts = Vec::with_capacity(figures.len());
+    for (amount, unit) in figures {
+        texts.push(shown(m, amount, unit)?);
+    }
+    Ok(Some(texts))
 }
 
 /// An amount in its unit as L §2.4 prints it. L §2.4 Values.
@@ -253,12 +412,19 @@ fn shown(m: &Reality, amount: &Num, unit: &str) -> Result<String, Stop> {
     qty_value(m, amount, unit)?.text(m).map_err(num_stop)
 }
 
-/// Two legs' days as they print where both are days that differ. L §5.19.
-fn days_differ(mine: &LegVal, theirs: &LegVal) -> Option<(String, String)> {
-    let (Dated::Day(one), Dated::Day(two)) = (&mine.day, &theirs.day) else {
+/// The legs' days as they print where every one is a day and they don't all agree. L §5.19.
+fn days_differ(class: &[(&Obs, &LegVal)]) -> Option<Vec<String>> {
+    let mut days = Vec::with_capacity(class.len());
+    for (_, lg) in class {
+        let Dated::Day(day) = &lg.day else {
+            return None;
+        };
+        days.push(*day);
+    }
+    if days.iter().all(|d| Some(d) == days.first()) {
         return None;
-    };
-    (one != two).then(|| (one.text(), two.text()))
+    }
+    Some(days.into_iter().map(Day::text).collect())
 }
 
 /// What one end of a leg books under the `same` lines (refcore's `consol`). L §6.1.
@@ -313,30 +479,6 @@ impl Member {
 
 /// An end waiting for a decision's point: the movement, its leg, the side, what it carries.
 pub(crate) type Waiting = (String, LegVal, usize, Vec<Entry>, Collected);
-
-/// Whether movement `id` is named by a `same` line cut `cut` sees. L §6.1, §4.5.
-///
-/// # Errors
-///
-/// As `move_lines`.
-pub(crate) fn stated_same(m: &Reality, id: &str, cut: Day) -> Result<bool, Stop> {
-    Ok(move_lines(m, cut)?
-        .iter()
-        .any(|(a, b)| *a == id || *b == id))
-}
-
-/// The first `same` line cut `cut` sees naming movement `id`, its two sides (refcore's
-/// `same_pairs`, its lines). L §6.1, §4.5.
-///
-/// # Errors
-///
-/// As `move_lines`.
-fn first_line(m: &Reality, id: &str, cut: Day) -> Result<Option<(String, String)>, Stop> {
-    Ok(move_lines(m, cut)?
-        .into_iter()
-        .find(|(a, b)| *a == id || *b == id)
-        .map(|(a, b)| (a.clone(), b.clone())))
-}
 
 /// A leg's amount as a `HOLE-SAME` question prints it: the amount, `refused`, or the hole.
 /// L §8.1.
@@ -397,11 +539,11 @@ impl Realised {
 }
 
 /// Leg `leg` of instance `tid`'s realised movement, over its observations `obs` grouped
-/// `once` by the `same` groups `groups` (refcore's `m_c_observed`, a leg). L §5.19 Realised
-/// amounts, One movement on two statements.
+/// `once` by the `same` groups (refcore's `m_c_observed`, a leg). L §5.19 Realised amounts,
+/// One movement on two statements.
 fn realised_leg(
     m: &Reality,
-    (tid, groups): (&str, &Groups),
+    tid: &str,
     (obs, once): (&[Obs], &[(usize, Vec<usize>)]),
     leg: &str,
 ) -> Result<Value, Stop> {
@@ -414,7 +556,7 @@ fn realised_leg(
             .ok_or_else(|| invariant("a same group with no first row"))?;
         let others: Vec<&Obs> = rest.iter().filter_map(|&k| obs.get(k)).collect();
         if differs.is_none() {
-            differs = same_differ(m, groups, row, &others, Some(leg))?;
+            differs = same_differ(m, row, &others, Some(leg))?;
         }
         for lg in row.legs.iter().filter(|lg| lg.name == leg) {
             met = true;
@@ -509,11 +651,11 @@ impl Engine {
             .moves
             .get(name)
             .ok_or_else(|| invariant("an observed movement of a move load didn't build"))?;
-        let groups = same_groups(m, ctx.cut)?;
+        let groups = self.same_groups(m, ctx.cut)?;
         let once = once_obs(&groups, &obs);
         let mut fields = Vec::new();
         for (leg, _, _) in m.kind_legs(&mv.kind) {
-            let value = realised_leg(m, (&v.id, &groups), (&obs, &once), &leg)?;
+            let value = realised_leg(m, &v.id, (&obs, &once), &leg)?;
             fields.push((leg, value));
         }
         let day = obs
@@ -543,7 +685,7 @@ impl Engine {
         cut: Day,
     ) -> Result<(Vec<Obs>, BTreeMap<String, String>), Stop> {
         let mut also = BTreeMap::new();
-        let groups = same_groups(m, cut)?;
+        let groups = self.same_groups(m, cut)?;
         if groups.is_empty() {
             return Ok((obs, also));
         }
@@ -656,7 +798,7 @@ impl Engine {
         if good.len() < 2 {
             return Ok(bad);
         }
-        let groups = same_groups(m, cut)?;
+        let groups = self.same_groups(m, cut)?;
         for (i, a) in good.iter().enumerate() {
             for b in good.iter().skip(i).skip(1) {
                 if !self.one_transfer(m, &groups, (a, b), cut)? {
@@ -671,6 +813,71 @@ impl Engine {
                 );
                 refuse_once(&mut bad, a, &err);
                 refuse_once(&mut bad, b, &err);
+            }
+        }
+        Ok(bad)
+    }
+
+    /// Of rows `good`, which fulfil `tid`, those stated `same` as a row whose own `fulfils`
+    /// names another instance, each refused `RUN-RECORD` naming both rows in id order: a
+    /// movement on two statements fulfils what is stated on either row or on both alike, and
+    /// what reads either instance's realised movement rests on the refusal (refcore's
+    /// `same_fulfils_differ`). L §5.19 One movement on two statements, §8.4 (tally 2.1.8 S1).
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::same_line_seen`], and the observations'.
+    pub(crate) fn fulfils_differ(
+        &mut self,
+        m: &Reality,
+        tid: &str,
+        good: &[Obs],
+        cut: Day,
+    ) -> Result<Vec<(String, Refusal)>, Stop> {
+        let mut bad: Vec<(String, Refusal)> = Vec::new();
+        let groups = self.same_groups(m, cut)?;
+        if !good.iter().any(|o| groups.contains_key(&o.id)) {
+            return Ok(bad);
+        }
+        // the rows with a `fulfils` of their own that link another instance
+        let seen = self.observations(m, cut)?;
+        let mut others: Vec<(String, String)> = Vec::new();
+        for x in seen.iter().filter(|x| !x.shared) {
+            if let Some(t) = x.target_id()
+                && t.as_str() != tid
+            {
+                others.push((x.id.clone(), t));
+            }
+        }
+        for o in good {
+            let Some(group) = groups.get(&o.id) else {
+                continue;
+            };
+            for (x, t2) in others.iter().filter(|(x, _)| group.contains(x)) {
+                let ((a, ta), (b, tb)) = if o.id <= *x {
+                    ((o.id.as_str(), tid), (x.as_str(), t2.as_str()))
+                } else {
+                    ((x.as_str(), t2.as_str()), (o.id.as_str(), tid))
+                };
+                let err = Refusal::new(
+                    Code::Run(Run::Record),
+                    format!("{a} and {b} are stated same and fulfil {ta} and {tb}"),
+                );
+                self.obs_errs
+                    .entry((cut, x.clone()))
+                    .or_insert_with(|| err.clone());
+                for t in [tid, t2.as_str()] {
+                    self.bad_links
+                        .entry((cut, t.to_owned()))
+                        .or_insert_with(|| err.clone());
+                }
+                // S1's reach: every read resting on the class or on either instance (P42)
+                for k in [tid, t2.as_str(), o.id.as_str(), x.as_str()] {
+                    self.s1_links
+                        .entry((cut, k.to_owned()))
+                        .or_insert_with(|| err.clone());
+                }
+                refuse_once(&mut bad, o, &err);
             }
         }
         Ok(bad)
@@ -716,36 +923,6 @@ impl Engine {
                 if self.covering(m, p, day, cut)?.contains(&o.version) {
                     out.insert((*p).to_owned());
                 }
-            }
-        }
-        Ok(out)
-    }
-
-    /// The plan instances and decisions stated `same` as an observation the cut sees: the
-    /// group is one movement, observed, so none of them is unfulfilled or open (refcore's
-    /// `same_observed`). L §6.1, §5.19.
-    ///
-    /// # Errors
-    ///
-    /// As [`Engine::observations`].
-    pub(crate) fn same_observed_ids(
-        &mut self,
-        m: &Reality,
-        cut: Day,
-    ) -> Result<BTreeSet<String>, Stop> {
-        let groups = same_groups(m, cut)?;
-        if groups.is_empty() {
-            return Ok(BTreeSet::new());
-        }
-        let observed: BTreeSet<String> = self
-            .observations(m, cut)?
-            .iter()
-            .map(|o| o.id.clone())
-            .collect();
-        let mut out = BTreeSet::new();
-        for (x, group) in groups {
-            if group.iter().any(|y| *y != x && observed.contains(y)) {
-                out.insert(x);
             }
         }
         Ok(out)
@@ -845,7 +1022,7 @@ impl Engine {
         (mover, lg): (&Member, &LegVal),
     ) -> Result<[EndBook; 2], Stop> {
         let cut = self.walk(id)?.cut;
-        let groups = same_groups(m, cut)?;
+        let groups = self.same_groups(m, cut)?;
         let Some(group) = groups.get(mover.id()) else {
             return Ok([EndBook::Written, EndBook::Written]);
         };
@@ -853,8 +1030,9 @@ impl Engine {
         let (mut others, mut waiting) = (Vec::new(), Vec::new());
         for x in group.iter().filter(|x| x.as_str() != mover.id()) {
             let Some(found) = self.walk_member(m, id, x)? else {
-                let (left, right) =
-                    first_line(m, x, cut)?.unwrap_or_else(|| (x.clone(), mover.id().to_owned()));
+                let (left, right) = self
+                    .first_line(m, x, cut)?
+                    .unwrap_or_else(|| (x.clone(), mover.id().to_owned()));
                 return Err(Stop::Refused(Refusal::new(
                     Code::Run(Run::Record),
                     format!("same {left} = {right}: {x} doesn't exist"),
@@ -877,7 +1055,7 @@ impl Engine {
             };
             *slot = match self.same_wait_for(m, id, (mover, lg), p, &waiting)? {
                 Some(wait) => wait,
-                None => self.same_end(m, id, (mover, lg, side), p, (&others, group))?,
+                None => self.same_end(m, id, (mover, lg, side), p, &others)?,
             };
         }
         Ok(out)
@@ -986,7 +1164,7 @@ impl Engine {
         id: usize,
         (mover, lg, side): (&Member, &LegVal, usize),
         p: &str,
-        (others, group): (&[Member], &[String]),
+        others: &[Member],
     ) -> Result<EndBook, Stop> {
         let mut touch: Vec<(&Member, &LegVal, usize)> = vec![(mover, lg, side)];
         for o in others {
@@ -1026,14 +1204,10 @@ impl Engine {
                 EndBook::Skip
             });
         }
-        // the members in the order the same lines write them
-        let mut placed = Vec::with_capacity(touch.len());
-        for t in touch {
-            placed.push((group.iter().position(|y| y.as_str() == t.0.id()), t));
-        }
-        placed.sort_by_key(|(at, _)| *at);
-        let ordered: Vec<(&Member, &LegVal, usize)> = placed.into_iter().map(|(_, t)| t).collect();
-        let ids: Vec<&str> = ordered.iter().map(|(x, _, _)| x.id()).collect();
+        // the members in the order of their ids, every one named (tally 2.1.8 S6, P50)
+        let mut ordered = touch;
+        ordered.sort_by_cached_key(|(x, _, _)| m.id_order(x.id()));
+        let ids: Vec<String> = ordered.iter().map(|(x, _, _)| x.id().to_owned()).collect();
         let days: BTreeSet<Day> = ordered.iter().filter_map(|(_, g, _)| g.day.day()).collect();
         let days: Vec<String> = days.into_iter().map(Day::text).collect();
         let mut parts = Vec::with_capacity(ordered.len());
@@ -1042,9 +1216,9 @@ impl Engine {
         }
         let text = format!(
             "{} are one, but the leg at {p} differs on {}: {}",
-            ids.join(" and "),
+            and_list(&ids),
             days.join(", "),
-            parts.join(" and ")
+            and_list(&parts)
         );
         Ok(EndBook::Hole(Hole::asked(&text, &ids.join(", "))))
     }
@@ -1177,12 +1351,18 @@ mod tests {
             groups.insert(member.clone(), group.clone());
         }
         assert_eq!(
-            kept_once(&groups, &["c", "b", "z"]),
+            kept_once(&groups, &group, &["c", "b", "z"]),
             vec![false, true, true],
-            "the first member the same lines name is kept"
+            "the first side among the ids is kept"
+        );
+        let sides = vec!["c".to_owned(), "a".to_owned(), "b".to_owned()];
+        assert_eq!(
+            kept_once(&groups, &sides, &["a", "b", "c"]),
+            vec![false, false, true],
+            "the first in the sides' order, which the caller gives by id"
         );
         assert_eq!(
-            kept_once(&groups, &["c"]),
+            kept_once(&groups, &group, &["c"]),
             vec![true],
             "a lone member is kept"
         );

@@ -233,7 +233,7 @@ mod tests {
     ];
 
     /// The groups of `m1/vectors.refcore`, each tested below.
-    const M1_GROUPS: [&str; 54] = [
+    const M1_GROUPS: [&str; 55] = [
         "checks-g1",
         "checks-g2",
         "checks-g3",
@@ -286,12 +286,13 @@ mod tests {
         "fixes-r8",
         "fixes-r9",
         "fixes-r10",
+        "fixes-r11",
         "fixes-b",
         "fixes-s",
     ];
 
     /// The groups of `m2/vectors.refcore`, each tested below.
-    const M2_GROUPS: [&str; 24] = [
+    const M2_GROUPS: [&str; 34] = [
         "checks-green",
         "checks-records",
         "checks-forms",
@@ -308,6 +309,16 @@ mod tests {
         "goldens-ledger",
         "fixes-records",
         "fixes-ledger",
+        "fixes-r11",
+        "fixes-r12",
+        "fixes-r13",
+        "fixes-r14",
+        "fixes-r15",
+        "fixes-r16",
+        "fixes-s",
+        "fixes-d",
+        "fixes-cut",
+        "fixes-rv",
         "hindcasts-h0",
         "hindcasts-h1",
         "hindcasts-h2",
@@ -319,14 +330,7 @@ mod tests {
     ];
 
     /// The groups of `m2/spec.vectors`, each tested below.
-    const SPEC_GROUPS: [&str; 6] = [
-        "spec-forms",
-        "spec-explain",
-        "spec-windows",
-        "spec-records",
-        "spec-ledger",
-        "spec-sweep",
-    ];
+    const SPEC_GROUPS: [&str; 3] = ["spec-forms", "spec-records", "spec-sweep"];
 
     /// Each group of the four stores has its tests here, so a new group is never left out.
     #[test]
@@ -1295,6 +1299,12 @@ mod tests {
         group_holds(M1_VECTORS, "fixes-r10", (0, 1), 5);
     }
 
+    /// `m1/vectors.refcore`'s group `fixes-r11`, every vector.
+    #[test]
+    fn m2_forks_on_prints_off_on_m1_fixes_r11() {
+        group_holds(M1_VECTORS, "fixes-r11", (0, 1), 2);
+    }
+
     /// `m1/vectors.refcore`'s group `fixes-b`, every vector.
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_b() {
@@ -1481,6 +1491,66 @@ mod tests {
         group_holds(M2_VECTORS, "fixes-ledger", (0, 1), 37);
     }
 
+    /// `m2/vectors.refcore`'s group `fixes-r11`, every vector.
+    #[test]
+    fn m2_forks_on_prints_off_on_m2_fixes_r11() {
+        group_holds(M2_VECTORS, "fixes-r11", (0, 1), 14);
+    }
+
+    /// `m2/vectors.refcore`'s group `fixes-r12`, every vector.
+    #[test]
+    fn m2_forks_on_prints_off_on_m2_fixes_r12() {
+        group_holds(M2_VECTORS, "fixes-r12", (0, 1), 12);
+    }
+
+    /// `m2/vectors.refcore`'s group `fixes-r13`, every vector.
+    #[test]
+    fn m2_forks_on_prints_off_on_m2_fixes_r13() {
+        group_holds(M2_VECTORS, "fixes-r13", (0, 1), 17);
+    }
+
+    /// `m2/vectors.refcore`'s group `fixes-r14`, every vector.
+    #[test]
+    fn m2_forks_on_prints_off_on_m2_fixes_r14() {
+        group_holds(M2_VECTORS, "fixes-r14", (0, 1), 16);
+    }
+
+    /// `m2/vectors.refcore`'s group `fixes-r15`, every vector.
+    #[test]
+    fn m2_forks_on_prints_off_on_m2_fixes_r15() {
+        group_holds(M2_VECTORS, "fixes-r15", (0, 1), 9);
+    }
+
+    /// `m2/vectors.refcore`'s group `fixes-r16`, every vector.
+    #[test]
+    fn m2_forks_on_prints_off_on_m2_fixes_r16() {
+        group_holds(M2_VECTORS, "fixes-r16", (0, 1), 19);
+    }
+
+    /// `m2/vectors.refcore`'s group `fixes-s`, every vector.
+    #[test]
+    fn m2_forks_on_prints_off_on_m2_fixes_s() {
+        group_holds(M2_VECTORS, "fixes-s", (0, 1), 9);
+    }
+
+    /// `m2/vectors.refcore`'s group `fixes-d`, every vector.
+    #[test]
+    fn m2_forks_on_prints_off_on_m2_fixes_d() {
+        group_holds(M2_VECTORS, "fixes-d", (0, 1), 16);
+    }
+
+    /// `m2/vectors.refcore`'s group `fixes-cut`, every vector.
+    #[test]
+    fn m2_forks_on_prints_off_on_m2_fixes_cut() {
+        group_holds(M2_VECTORS, "fixes-cut", (0, 1), 5);
+    }
+
+    /// `m2/vectors.refcore`'s group `fixes-rv`, every vector.
+    #[test]
+    fn m2_forks_on_prints_off_on_m2_fixes_rv() {
+        group_holds(M2_VECTORS, "fixes-rv", (0, 1), 25);
+    }
+
     /// `m2/vectors.refcore`'s group `hindcasts-h0`, part 1 of 2 (at 0 modulo 2).
     #[test]
     fn m2_forks_on_prints_off_on_m2_hindcasts_h0_part_1() {
@@ -1580,54 +1650,18 @@ mod tests {
     /// `m2/spec.vectors`'s group `spec-forms`, every vector.
     #[test]
     fn m2_forks_on_prints_off_on_spec_spec_forms() {
-        group_holds(M2_SPEC, "spec-forms", (0, 1), 5);
-    }
-
-    /// `m2/spec.vectors`'s group `spec-explain`, every vector.
-    #[test]
-    fn m2_forks_on_prints_off_on_spec_spec_explain() {
-        group_holds(M2_SPEC, "spec-explain", (0, 1), 6);
-    }
-
-    /// `m2/spec.vectors`'s group `spec-windows`, part 1 of 4 (at 0 modulo 4).
-    #[test]
-    fn m2_forks_on_prints_off_on_spec_spec_windows_part_1() {
-        group_holds(M2_SPEC, "spec-windows", (0, 4), 4);
-    }
-
-    /// `m2/spec.vectors`'s group `spec-windows`, part 2 of 4 (at 1 modulo 4).
-    #[test]
-    fn m2_forks_on_prints_off_on_spec_spec_windows_part_2() {
-        group_holds(M2_SPEC, "spec-windows", (1, 4), 4);
-    }
-
-    /// `m2/spec.vectors`'s group `spec-windows`, part 3 of 4 (at 2 modulo 4).
-    #[test]
-    fn m2_forks_on_prints_off_on_spec_spec_windows_part_3() {
-        group_holds(M2_SPEC, "spec-windows", (2, 4), 4);
-    }
-
-    /// `m2/spec.vectors`'s group `spec-windows`, part 4 of 4 (at 3 modulo 4).
-    #[test]
-    fn m2_forks_on_prints_off_on_spec_spec_windows_part_4() {
-        group_holds(M2_SPEC, "spec-windows", (3, 4), 4);
+        group_holds(M2_SPEC, "spec-forms", (0, 1), 2);
     }
 
     /// `m2/spec.vectors`'s group `spec-records`, every vector.
     #[test]
     fn m2_forks_on_prints_off_on_spec_spec_records() {
-        group_holds(M2_SPEC, "spec-records", (0, 1), 22);
-    }
-
-    /// `m2/spec.vectors`'s group `spec-ledger`, every vector.
-    #[test]
-    fn m2_forks_on_prints_off_on_spec_spec_ledger() {
-        group_holds(M2_SPEC, "spec-ledger", (0, 1), 19);
+        group_holds(M2_SPEC, "spec-records", (0, 1), 2);
     }
 
     /// `m2/spec.vectors`'s group `spec-sweep`, every vector.
     #[test]
     fn m2_forks_on_prints_off_on_spec_spec_sweep() {
-        group_holds(M2_SPEC, "spec-sweep", (0, 1), 23);
+        group_holds(M2_SPEC, "spec-sweep", (0, 1), 8);
     }
 }

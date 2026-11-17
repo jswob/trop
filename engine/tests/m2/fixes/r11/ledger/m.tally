@@ -1,0 +1,56 @@
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.8 R11 (#195), item #191 Q1: a plan instance whose day is refused refuses every ledger of a place its legs may give, every month (its day may be any day, as a hole day's). groc[2026-03]'s day is refused; konto's ledgers of January, February and May are refused, k9's answers"
+
+source plan "plan"
+source bk "bank"
+unit PLN: currency minor 0.01
+input bank: observed
+input g_amt: money PLN
+input g_dom: int
+input divisor[m in months]: num
+input d9: int
+place konto: accounts PLN lives 2019-05-01..
+place k9: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+move groc[m in months]: transfers
+  on day_of(m, g_dom * divisor[m] / divisor[m])
+  at start_of(m)
+  leg cash from konto to world amount g_amt
+
+move nine[m in months]: transfers
+  on day_of(m, d9)
+  at start_of(m)
+  leg cash from k9 to world amount g_amt
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  g_amt = 500.00 PLN "plan"
+  g_dom = 5 "plan"
+  d9 = 9 "plan"
+  divisor[2026-01..2026-02] = 1 "ok"
+  divisor[2026-03] = 0 "zero"
+  divisor[2026-04..2026-12] = 1 "ok"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "w"
+  opening[k9] = 10 000.00 PLN at 2026-01-01 start "w"
+
+version statement_02
+  cite bk
+  governs 2026-01..2026-05
+  known 2026-06-02
+  covers konto, k9
+  pad konto from unexplained
+  bank[r1] = (on: 2026-02-05, kind: transfers, leg cash from konto to world amount 300.00 PLN, fulfils: groc[2026-02]) "l1"
+  bank[r2] = (on: 2026-02-09, kind: transfers, leg cash from k9 to world amount 500.00 PLN, fulfils: nine[2026-02]) "l2"
+
+ask r_jan: residuals konto 2026-01
+ask r_feb: residuals konto 2026-02
+ask r_may: residuals konto 2026-05
+ask r_k9: residuals k9 2026-02

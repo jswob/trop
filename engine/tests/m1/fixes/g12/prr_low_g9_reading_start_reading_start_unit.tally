@@ -1,0 +1,128 @@
+model g9_reading_start
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.2 (issue #46), G9: L §5.10 point 1, §5.19, E §4.2 steps 0 and 5: a reading's own place is tested at the points of the sign rule S builds (point 3, the close, is g9/reading_close). Point 1, a reading at a day's start, is in the day's first batch: ys (claims, min 0) stated at -5.00 PLN at 2026-01-15 start, padded from w_s, with nothing else that day, has its pad refused, <place> is <b> after the day's observations and plans of <d> (q_start); its twin zs, stated the same with top_s paying 10.00 PLN in that day, nets to 5.00 PLN and stands. Point 2, a reading after a decision, is not here: S builds no reading at an instant after a decision (M2, readings at instants). An opening always anchors: yo opening at -5.00 PLN is refused from the first batch's end, its opening instant reads as stated, and zo opening at 0 stands (q_open). tally 2.1.1 tested a pad's other place only: ys and yo stood at -5.00 PLN."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+source bank_feed "T's invented bank feed"
+
+unit PLN: currency minor 0.01
+
+place ys: claims PLN lives 2026-01-01..
+
+place zs: claims PLN lives 2026-01-01..
+
+place yo: claims PLN lives 2026-01-01..
+
+place zo: claims PLN lives 2026-01-01..
+
+place w_s: outside lives 2026-01-01..
+
+place w_zs: outside lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input amt: money PLN
+
+input start_day: date
+
+move top_s: transfers
+  on start_day
+  leg cash from world to zs amount amt
+
+ask q_start: bal(ys, 2026-01-14), bal(ys, 2026-01-15), bal(zs, 2026-01-15)
+
+ask q_open: bal(yo, 2026-01-01 start), bal(yo, 2026-01-01), bal(zo, 2026-01-01), bal(world, PLN, 2026-01-01)
+
+version facts
+  cite fixture
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN
+  start_day = 2026-01-15
+  opening[ys] = 20.00 PLN at 2026-01-01 start
+  opening[zs] = 20.00 PLN at 2026-01-01 start
+  opening[yo] = -5.00 PLN at 2026-01-01 start
+  opening[zo] = 0 PLN at 2026-01-01 start
+
+version statement_01
+  cite bank_feed
+  governs 2026-01
+  known 2026-03-02
+  pad ys from w_s
+  pad zs from w_zs
+  stated[ys] = -5.00 PLN at 2026-01-15 start
+  stated[zs] = -5.00 PLN at 2026-01-15 start
+
+ask zx1: explain low(ys, 2026-01-01 .. 2026-03-02)
+
+ask zx2: explain low(ys, 2026-01-14 .. 2026-06-30)
+
+ask zx3: explain low(ys, 2026-01-15 .. 2026-06-30)
+
+ask zx4: explain low(ys, 2026-03-02 .. 2026-12-31)
+
+ask zx5: explain low(ys, 2026-06-30 .. 2026-12-31)
+
+ask zx7: explain low(zs, 2026-01-01 .. 2026-03-02)
+
+ask zx8: explain low(zs, 2026-01-14 .. 2026-06-30)
+
+ask zx9: explain low(zs, 2026-01-15 .. 2026-06-30)
+
+ask zx10: explain low(zs, 2026-03-02 .. 2026-12-31)
+
+ask zx11: explain low(zs, 2026-06-30 .. 2026-12-31)
+
+ask zx13: explain low(yo, 2026-01-01 .. 2026-03-02)
+
+ask zx14: explain low(yo, 2026-01-14 .. 2026-06-30)
+
+ask zx15: explain low(yo, 2026-01-15 .. 2026-06-30)
+
+ask zx16: explain low(yo, 2026-03-02 .. 2026-12-31)
+
+ask zx17: explain low(yo, 2026-06-30 .. 2026-12-31)
+
+ask zx19: explain low(zo, 2026-01-01 .. 2026-03-02)
+
+ask zx20: explain low(zo, 2026-01-14 .. 2026-06-30)
+
+ask zx21: explain low(zo, 2026-01-15 .. 2026-06-30)
+
+ask zx22: explain low(zo, 2026-03-02 .. 2026-12-31)
+
+ask zx23: explain low(zo, 2026-06-30 .. 2026-12-31)
+
+ask zx25: explain low(w_s, 2026-01-01 .. 2026-03-02)
+
+ask zx26: explain low(w_s, 2026-01-14 .. 2026-06-30)
+
+ask zx27: explain low(w_s, 2026-01-15 .. 2026-06-30)
+
+ask zx28: explain low(w_s, 2026-03-02 .. 2026-12-31)
+
+ask zx29: explain low(w_s, 2026-06-30 .. 2026-12-31)
+
+ask zx31: explain low(w_zs, 2026-01-01 .. 2026-03-02)
+
+ask zx32: explain low(w_zs, 2026-01-14 .. 2026-06-30)
+
+ask zx33: explain low(w_zs, 2026-01-15 .. 2026-06-30)
+
+ask zx34: explain low(w_zs, 2026-03-02 .. 2026-12-31)
+
+ask zx35: explain low(w_zs, 2026-06-30 .. 2026-12-31)
+
+ask zx37: explain low(world, 2026-01-01 .. 2026-03-02)
+
+ask zx38: explain low(world, 2026-01-14 .. 2026-06-30)
+
+ask zx39: explain low(world, 2026-01-15 .. 2026-06-30)
+
+ask zx40: explain low(world, 2026-03-02 .. 2026-12-31)
+
+ask zx41: explain low(world, 2026-06-30 .. 2026-12-31)

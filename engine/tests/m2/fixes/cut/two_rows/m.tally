@@ -1,0 +1,53 @@
+model t
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+  note "T, tally 2.1.8, the cut (plan §13): a version's same between two observed rows of one model still loads (L §5.19 one movement on two statements): k_after reads them joined"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place unexplained: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input d15: int
+
+move save[m in months]: transfers
+  on day_of(m, d15)
+  leg cash from konto to sav amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 900.00 PLN "s"
+  d15 = 15 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+version st_konto
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "a"
+
+version st_sav
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers sav
+  bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "b"
+
+version joined
+  cite s
+  governs 2026-03
+  known 2026-04-20
+  same bank[a2] = bank[b1]
+
+ask k_before: flows(save, 2026-03) as known 2026-04-10
+ask k_before_rows: count(o in bank over 2026-03) as known 2026-04-10
+ask k_after: flows(save, 2026-03), bal(sav, 2026-03-31) as known 2026-04-25
+ask led: residuals sav 2026-03 as known 2026-04-25

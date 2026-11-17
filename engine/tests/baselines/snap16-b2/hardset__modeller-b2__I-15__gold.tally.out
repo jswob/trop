@@ -85,10 +85,8 @@ fees (o = storage[2028-09-30, vault_acct]) [gram_cost_mode = *, price_path = p_h
   reading: price_path = p_high
   held: gold_px[p_high] = 150 SOL/gram (facts), read for 2028-07-01
   held: gold_px[p_high] = 150 SOL/gram (facts), read for 2028-09-30
-  held: gold_px[p_low] = 120 SOL/gram (facts), read for 2028-07-01
   held: rate_px[p_high] = 2.05 DUK/SOL (facts), read for 2028-07-01
   held: rate_px[p_high] = 2.05 DUK/SOL (facts), read for 2028-09-30
-  held: rate_px[p_low] = 1.9 DUK/SOL (facts), read for 2028-07-01
   cut 2027-01-01
 fees (o = storage[2028-12-31, vault_acct]) [gram_cost_mode = *, price_path = p_low]: (2028-12-31, 0.043 gram, 9.80 DUK, 10.73 DUK, -0.93 DUK)
   reading: price_path = p_low
@@ -101,18 +99,23 @@ fees (o = storage[2028-12-31, vault_acct]) [gram_cost_mode = *, price_path = p_h
   reading: price_path = p_high
   held: gold_px[p_high] = 150 SOL/gram (facts), read for 2028-07-01
   held: gold_px[p_high] = 150 SOL/gram (facts), read for 2028-12-31
-  held: gold_px[p_low] = 120 SOL/gram (facts), read for 2028-07-01
   held: rate_px[p_high] = 2.05 DUK/SOL (facts), read for 2028-07-01
   held: rate_px[p_high] = 2.05 DUK/SOL (facts), read for 2028-12-31
-  held: rate_px[p_low] = 1.9 DUK/SOL (facts), read for 2028-07-01
   cut 2027-01-01
 sales_2028 (o = sell_coins[c20280303]) [gram_cost_mode = *, price_path = *]: (2028-03-03, 7 300.00 DUK, 9 439.76 DUK, -2 139.76 DUK, 0.00 DUK)
   assumed: the card does not say whether Adam is registered under the Levy Act; a private holder is taken as not registered (registered)
   cut 2027-01-01
-sales_2028 (o = sell_gold[s20280701]) [gram_cost_mode = *, price_path = *]: (2028-07-01, 9 120.00 DUK, 9 984.36 DUK, -864.36 DUK, 0.00 DUK)
+sales_2028 (o = sell_gold[s20280701]) [gram_cost_mode = *, price_path = p_low]: (2028-07-01, 9 120.00 DUK, 9 984.36 DUK, -864.36 DUK, 0.00 DUK)
   assumed: the card does not say whether Adam is registered under the Levy Act; a private holder is taken as not registered (registered)
+  reading: price_path = p_low
   held: gold_px[p_low] = 120 SOL/gram (facts), read for 2028-07-01
   held: rate_px[p_low] = 1.9 DUK/SOL (facts), read for 2028-07-01
+  cut 2027-01-01
+sales_2028 (o = sell_gold[s20280701]) [gram_cost_mode = *, price_path = p_high]: (2028-07-01, 12 300.00 DUK, 9 984.36 DUK, 2 315.64 DUK, 0.00 DUK)
+  assumed: the card does not say whether Adam is registered under the Levy Act; a private holder is taken as not registered (registered)
+  reading: price_path = p_high
+  held: gold_px[p_high] = 150 SOL/gram (facts), read for 2028-07-01
+  held: rate_px[p_high] = 2.05 DUK/SOL (facts), read for 2028-07-01
   cut 2027-01-01
 tax (y = 2027) [gram_cost_mode = *, price_path = *]: (-96.48 DUK, 0.00 DUK, 2028-04-30)
   cut 2027-01-01

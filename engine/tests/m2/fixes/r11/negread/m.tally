@@ -1,0 +1,53 @@
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.8, R11 (#195; the builder's probe p7 of group 2): konto's February groceries are refused (RUN-DIV, a divisor of 0) and k2's February payment is a hole. Both are stated 200.00 at 2026-03-10 end, and a place's balance after a later reading is what the reading states (R11.1). So konto is 200.00 after the reading, March's and April's 500.00 take it below zero from 2026-04-05 (WARN-NEGATIVE, as for any balance), and k2, paying 1.00 a month, stays above it."
+
+source plan "plan"
+source bk "bank"
+unit PLN: currency minor 0.01
+input g_amt: money PLN
+input dom: int
+input divisor[m in months]: num
+input hamt[m in months]: money PLN
+place konto: accounts PLN lives 2019-05-01..
+place k2: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+
+move groc[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to world amount round(g_amt * divisor[m] / divisor[m], minor(PLN), half-even)
+
+move hm[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from k2 to world amount hamt[m]
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  g_amt = 500.00 PLN "plan"
+  dom = 5 "plan"
+  divisor[2026-01] = 1 "ok"
+  divisor[2026-02] = 0 "zero"
+  divisor[2026-03..2026-12] = 1 "ok"
+  hamt[2026-01] = 1.00 PLN "ok"
+  hamt[2026-02] = ?"how much in Feb" "hole"
+  hamt[2026-03..2026-12] = 1.00 PLN "ok"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "w"
+  opening[k2] = 10 000.00 PLN at 2026-01-01 start "w"
+
+version st
+  cite bk
+  governs 2026-03
+  known 2026-04-02
+  anchor konto
+  anchor k2
+  stated[konto] = 200.00 PLN at 2026-03-10 end "saldo"
+  stated[k2] = 200.00 PLN at 2026-03-10 end "saldo"
+
+ask neg: bal(konto, d), bal(k2, d) for d in [2026-02-28, 2026-03-10, 2026-04-05, 2026-05-05]

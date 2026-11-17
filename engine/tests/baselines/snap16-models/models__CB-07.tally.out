@@ -79,7 +79,6 @@ q_p12_why: pol
             version mf_examples, source mf_objasnienia, "Objaśnienia podatkowe z dnia 29 kwietnia 2021 r. Rezydencja podatkowa oraz zakres obowiązku podatkowego osób fizycznych w Polsce (Minister Finansów, Funduszy i Polityki Regionalnej)", locator "p. 12, Przykład 12: w Polsce pani Renata posiada dom, męża oraz dzieci", governs always, known 2026-10-19
         [5] row mf_examples:closer[renata, esp] = false
             version mf_examples, source mf_objasnienia, "Objaśnienia podatkowe z dnia 29 kwietnia 2021 r. Rezydencja podatkowa oraz zakres obowiązku podatkowego osób fizycznych w Polsce (Minister Finansów, Funduszy i Polityki Regionalnej)", locator "p. 12, Przykład 12: To kryterium pozwala rozstrzygnąć konflikt rezydencji, gdyż w Polsce pani Renata posiada dom, męża oraz dzieci.", governs always, known 2026-10-19
-        (mf_examples:closer[renata, pol]: see [4])
   assumed: the source says only that the first criterion (a permanent home) could not decide; with her home in Poland, that needs a permanent home in Spain as well (home[renata, esp])
   law date 2026-10-19, cut 2026-10-19
 q_p13_dual: true
@@ -106,7 +105,6 @@ q_p13_why: pol
             version mf_examples, source mf_objasnienia, "Objaśnienia podatkowe z dnia 29 kwietnia 2021 r. Rezydencja podatkowa oraz zakres obowiązku podatkowego osób fizycznych w Polsce (Minister Finansów, Funduszy i Polityki Regionalnej)", locator "p. 12, Przykład 13: obywatelem polskim", governs always, known 2026-10-19
         [7] row mf_examples:national[jakub, can] = false
             version mf_examples, source mf_objasnienia, "Objaśnienia podatkowe z dnia 29 kwietnia 2021 r. Rezydencja podatkowa oraz zakres obowiązku podatkowego osób fizycznych w Polsce (Minister Finansów, Funduszy i Polityki Regionalnej)", locator "p. 12, Przykład 13: Pan Jakub posiada obywatelstwo polskie", governs always, known 2026-10-19
-        (mf_examples:national[jakub, pol]: see [6])
       rule vital: not applicable
         (mf_examples:home[jakub, pol]: see [4])
         (mf_examples:home[jakub, can]: see [5])

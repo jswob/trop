@@ -14,12 +14,13 @@
 //! explicit stack (R-16).
 
 use super::check::{Files, Walked, invariant};
+use super::cone::all_children;
 use super::steps::refuse;
-use crate::base::Load;
+use crate::base::{Code, Load, Refusal};
 use crate::model::{
     DefInfo, Graph, InputInfo, MoveInfo, Node, NodeKind, Reality, Rel, Row, Span, TimePos,
 };
-use crate::syntax::{LawDate, PinForm, Stop};
+use crate::syntax::{Expr, LawDate, PinForm, Stop};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// Each def's reads inside its `at`, with their relations.
@@ -297,8 +298,12 @@ pub(super) fn check_lawdates(
         }
     }
     for ask in m.asks.iter().filter(|a| !m.asks_alone.contains_key(&a.id)) {
+        if let Some(law) = &ask.law {
+            law_reader(m, graph, law)?;
+            continue;
+        }
         let law_pin = ask.pins.iter().any(|p| matches!(p.form, PinForm::Law(_)));
-        if ask.law.is_some() || law_pin {
+        if law_pin {
             continue;
         }
         let Some(reads) = graph.reads(&Node::new(NodeKind::Ask, &ask.id)) else {
@@ -322,6 +327,56 @@ pub(super) fn check_lawdates(
         }
     }
     Ok(dated)
+}
+
+/// `LOAD-LAWDATE` for an ask's law expression `law` that reaches an `at reader` def through
+/// the defs it reads: the expression is read with no law date, which load sees, in the words
+/// run gave it (refcore's `check`, the asks' law dates; tally 2.1.8 #162, pick P29). L §4.3,
+/// §8.4 (R5).
+///
+/// # Errors
+///
+/// That refusal.
+fn law_reader(m: &Reality, graph: &Graph, law: &Expr) -> Result<(), Stop> {
+    let mut todo: Vec<String> = Vec::new();
+    let mut exprs = vec![law];
+    while let Some(e) = exprs.pop() {
+        if let Expr::Name(name) = e
+            && m.defs.get(name).is_some()
+        {
+            todo.push(name.clone());
+        }
+        exprs.extend(all_children(e));
+    }
+    let mut seen: BTreeSet<String> = BTreeSet::new();
+    while let Some(q) = todo.pop() {
+        if !seen.insert(q.clone()) {
+            continue;
+        }
+        let Some(def) = m.defs.get(&q) else {
+            continue;
+        };
+        if def.at == Some(LawDate::Reader) {
+            return Err(Stop::Refused(Refusal::new(
+                Code::Load(Load::LawDate),
+                format!("ask reaches an at reader def ({q}) without law"),
+            )));
+        }
+        if def.at.is_some() {
+            // a def with its own written `at` reads at that date: the chain stops there
+            // (L §4.3; pick P42, group 4's review B3)
+            continue;
+        }
+        let reads = graph.reads(&Node::new(NodeKind::Def, &q));
+        todo.extend(
+            reads
+                .into_iter()
+                .flat_map(BTreeMap::keys)
+                .filter(|t| t.kind == NodeKind::Def)
+                .map(|t| t.id.clone()),
+        );
+    }
+    Ok(())
 }
 
 /// The `LOAD-LAWDATE` message for an ask with no `law` that reads `target`, where it needs

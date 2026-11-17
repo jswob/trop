@@ -242,7 +242,8 @@ ask q: calm.cash.amount
 ask k: bal(konto, 2026-06-01)
 "#;
 
-    /// refcore's lines for [`WINDOWS`].
+    /// refcore's lines for [`WINDOWS`]: `pw`'s head names no `v`, which its result never
+    /// reads (tally 2.1.8 R13, L §4.4).
     const WINDOW_LINES: [&str; 20] = [
         "a: ?\"date within window(2026-03-29, 2026-04-02) not precise enough for the law date of due\" (due)",
         "  cut 2026-06-30",
@@ -258,9 +259,9 @@ ask k: bal(konto, 2026-06-01)
         "  cut 2026-06-30",
         "p: ?\"date within window(2026-03-29, 2026-04-02) not precise enough for the law date of pay\" (pay)",
         "  cut 2026-06-30",
-        "pw [w = 2026-03-29 .. 2026-03-31, v = 2026-01-05 .. 2026-02-20]: 10.00 PLN",
+        "pw [w = 2026-03-29 .. 2026-03-31]: 10.00 PLN",
         "  cut 2026-06-30",
-        "pw [w = 2026-04-01 .. 2026-04-02, v = 2026-01-05 .. 2026-02-20]: 20.00 PLN",
+        "pw [w = 2026-04-01 .. 2026-04-02]: 20.00 PLN",
         "  cut 2026-06-30",
         "q: 10.00 PLN",
         "  cut 2026-06-30",

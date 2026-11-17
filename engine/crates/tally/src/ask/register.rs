@@ -97,8 +97,9 @@ fn entry_lines(met: &Collected) -> Result<Vec<String>, Stop> {
     let mut pins: Vec<&str> = Vec::new();
     for entry in &met.entries {
         // an ask pin a read met under another claim: in the read set, printed by no view
-        // (L §8.2 One read set; P45)
-        if entry.word == "pin met" {
+        // (L §8.2 One read set; P45); an ask's pin of a cell, which says which pins a read
+        // must take to be listed, likewise (tally 2.1.8 §4, #161)
+        if entry.word == "pin met" || entry.word == "pin cell" {
             continue;
         }
         if entry.word == "assumed" {

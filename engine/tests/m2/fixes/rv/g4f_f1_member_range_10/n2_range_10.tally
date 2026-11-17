@@ -1,0 +1,34 @@
+model n2_list
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+
+source s "s"
+unit PLN: currency minor 0.01
+index who = 1..12
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input dd: date
+input amt: money PLN
+kind wages: transfers
+
+move pay[w in who]: wages
+  on dd
+  leg cash from world to konto amount amt
+
+ask l: x.cash.amount for x in wages over 2026-03
+ask n: count(t in wages over 2026-03)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1000.00 PLN at 2026-03-01 start "s"
+  dd = 2026-03-10 "s"
+  amt = 500.00 PLN "s"
+
+version sm
+  cite s
+  known 2026-01-02
+  same pay[10] = pay[9]

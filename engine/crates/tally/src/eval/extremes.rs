@@ -91,6 +91,12 @@ pub(super) fn min_max(m: &Reality, vals: Vec<Value>, pick: End) -> Result<Value,
     // a computed interval has no read, but its questions name the first window's figure
     // (L §8.1; tally 2.1.7 R3, T's SR-5)
     let (src, figure) = (w.src.clone(), w.figure.clone());
+    let mut carry = Vec::new();
+    for v in &vals {
+        if let Some(one) = as_window(v) {
+            crate::hole::carry_union(&mut carry, &one.carry);
+        }
+    }
     let los: Vec<Value> = vals.iter().map(|v| window_end(v, End::Low)).collect();
     let his: Vec<Value> = vals.iter().map(|v| window_end(v, End::High)).collect();
     let (lo, hi) = (extreme_of(m, los, pick)?, extreme_of(m, his, pick)?);
@@ -104,6 +110,7 @@ pub(super) fn min_max(m: &Reality, vals: Vec<Value>, pick: End) -> Result<Value,
         src,
         figure,
         read: None,
+        carry,
     })))
 }
 

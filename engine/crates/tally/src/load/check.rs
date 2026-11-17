@@ -636,6 +636,7 @@ pub(super) fn walk(m: &Reality, sections: &[(String, Section)]) -> Result<Walked
     for (_, mv) in m.moves.entries() {
         facts.push(checker.check_move(m, mv, files.of_move(&mv.id)?)?);
     }
+    super::prices::any_priced(m, &files, &checker.leg_ends)?;
     for (id, _) in m.fills.entries() {
         checker.check_fill(m, id)?;
     }
@@ -1142,6 +1143,7 @@ impl Checker {
             AskBody::Exprs(exprs) => {
                 for e in exprs {
                     let typed = self.expr(m, scope, e, None, 0)?;
+                    open_key(m, scope, &typed)?;
                     self.unresolved_key(scope, &ask.id, &typed);
                 }
                 Ok(())
@@ -1152,6 +1154,7 @@ impl Checker {
             }
             AskBody::Explain(reference) | AskBody::InputsOf(reference) => {
                 let typed = self.expr(m, scope, reference, None, 0)?;
+                open_key(m, scope, &typed)?;
                 self.unresolved_key(scope, &ask.id, &typed);
                 let explain = matches!(ask.body, AskBody::Explain(_));
                 let plain = matches!(reference, Expr::Name(_) | Expr::Post(..));
@@ -1200,6 +1203,34 @@ impl Checker {
             }
         }
     }
+}
+
+/// A key literal an ask states with no position to name its index: `LOAD-KEY ambiguous key
+/// <k>` at load where no index, axis or thing holds it, or more than one does, whatever the
+/// asks read (refcore's `open_key`; tally 2.1.8 §4, #162: 2.1.7 met it at run). L §2.5,
+/// §8.4.
+fn open_key(m: &Reality, scope: &Scope, typed: &Ty) -> Result<(), Stop> {
+    let Ty::KeyLit(key) = typed else {
+        return Ok(());
+    };
+    let mut hits: Vec<&str> = Vec::new();
+    for (_, ix) in m.indexes.entries() {
+        if ix.by_text(key).is_some() {
+            hits.push(ix.id.as_str());
+        }
+    }
+    for (_, axis) in m.axes.entries() {
+        if axis.options.iter().any(|(option, _)| option == key) {
+            hits.push(axis.id.as_str());
+        }
+    }
+    if m.things.get(key).is_some() {
+        hits.push(key);
+    }
+    if let [_] = hits.as_slice() {
+        return Ok(());
+    }
+    Err(scope.place(refused(Load::Key, format!("ambiguous key {key}"))))
 }
 
 /// The literal rule on a four-digit figure by its reading. L §2.1, §7.1.

@@ -37,13 +37,10 @@ s10_used_by_1314 (s = ty2011-12): 1 000.00 GBP
 s10_used_by_1314 (s = ty2012-13): 1 000.00 GBP
   law date 2026-10-18, cut 2026-10-18
 s10n_capacity_1415: 43 000.00 GBP
-  pinned: pia[sam, ty2010-11] = 50 000.00 GBP
   law date 2026-10-18, cut 2026-10-18
 s10n_cf_1415: 3 000.00 GBP
-  pinned: pia[sam, ty2010-11] = 50 000.00 GBP
   law date 2026-10-18, cut 2026-10-18
 s10n_to_pre_1213: 1 000.00 GBP
-  pinned: pia[sam, ty2010-11] = 50 000.00 GBP
   law date 2026-10-18, cut 2026-10-18
 s9_capacity_1415: 102 000.00 GBP
   law date 2026-10-18, cut 2026-10-18

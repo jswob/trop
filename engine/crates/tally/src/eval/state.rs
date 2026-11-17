@@ -373,6 +373,11 @@ pub struct Collected {
     /// lists: a row of a scenario's version, and a thing's entry a `lifespan` read met
     /// (refcore's `Coll.rows` and `lifeof` entries; L §8.2 `before from:`, tally 2.1.7 R7).
     pub listed: BTreeSet<(String, String)>,
+    /// The entries only a `windows each` line lists: a window-dated leg whose day the line
+    /// hasn't taken stands for each of its window's days, its `before from:` with each day,
+    /// the read set of those days; a plain line lists none (refcore's `each_before_from`;
+    /// pick P37, L §4.4, §8.2).
+    pub each: BTreeSet<Entry>,
     /// The rows read, by stable id, each with its version and locator: an input's, a given,
     /// a band row, a reading and an observed row, the walk's counted movements' included
     /// (refcore's `Coll.rows`). Kept only by an engine answering `inputs-of` (E §3.2, §10).
@@ -416,6 +421,7 @@ impl Collected {
         self.versions.extend(other.versions.iter().cloned());
         self.scenario.extend(other.scenario.iter().cloned());
         self.listed.extend(other.listed.iter().cloned());
+        self.each.extend(other.each.iter().cloned());
         for (sid, seen) in &other.rows {
             self.rows.insert(sid.clone(), seen.clone());
         }
@@ -565,6 +571,11 @@ pub struct Engine {
     /// The refusal an instance's realised movement rests on, per cut, by instance: a record
     /// its link refused (refcore's `badlinks`; L §5.19, §8.4).
     pub(crate) bad_links: BTreeMap<(Day, String), Refusal>,
+    /// S1's refusal, per cut, by each instance and row a `same` class whose `fulfils` differ
+    /// names: what every read resting on either rests on (refcore's `s1links`; L §5.19, P42).
+    pub(crate) s1_links: BTreeMap<(Day, String), Refusal>,
+    /// The cuts whose `same` classes' links are judged, every one (refcore's `s1done`).
+    pub(crate) s1_judged: BTreeSet<Day>,
     /// The adjustments a settlement move's binding over adjustments is held to while its
     /// candidates are made (refcore's `_adj_restrict`, E §5 step 5).
     pub(crate) adj_restrict: Option<Vec<Adjustment>>,
@@ -593,6 +604,13 @@ pub struct Engine {
     /// The windows a `windows each` run met that its choice names no day of, in the order
     /// met; none outside such a run (L §4.4; refcore's `each_met`).
     pub(crate) each_met: Option<Vec<super::context::Met>>,
+    /// The unknown days a `windows each` run rests on with no hole to carry them, by id: the
+    /// `same` lines known in a window it met untaken, which it takes as seen (L §4.5, §4.4;
+    /// tally 2.1.8 R12, R13; refcore's `EachMet.forced`).
+    pub(crate) each_forced: Vec<String>,
+    /// How this run of the ask's line reads the `same` lines known in a window that holds the
+    /// cut, which no `windows each` decides (L §4.5, tally 2.1.8 R12).
+    pub(crate) same_picks: crate::book::SamePicks,
     /// The splits `prorata`'s `rest largest` made, once per total, step and weights (L §5.13
     /// Cost).
     pub(super) splits: super::prorata::Splits,
@@ -675,6 +693,8 @@ impl Engine {
             link_active: BTreeSet::new(),
             obs_errs: BTreeMap::new(),
             bad_links: BTreeMap::new(),
+            s1_links: BTreeMap::new(),
+            s1_judged: BTreeSet::new(),
             adj_restrict: None,
             settled: BTreeMap::new(),
             unsettled: BTreeMap::new(),
@@ -686,6 +706,8 @@ impl Engine {
             each_refused: BTreeMap::new(),
             calendar_pass: None,
             each_met: None,
+            each_forced: Vec::new(),
+            same_picks: crate::book::SamePicks::default(),
             splits: super::prorata::Splits::default(),
             layers: Layers::default(),
             timelines: Timelines::default(),

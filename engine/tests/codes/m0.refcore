@@ -612,7 +612,7 @@ version v
   lift_amt = 2.00 PLN
   opening[konto] = 10.00 PLN at 2025-12-30 start
 ,,1:1,36:refused: REQ-ASK no ask zz_m0_probe
-,12:written/base,7:REQ-ASK,7:written,32:run base.tally --ask zz_m0_probe,1242:10:base.tally,1222:model written
+,12:written/base,7:REQ-ASK,7:written,32:run base.tally --ask zz_m0_probe,1224:10:base.tally,1204:model written
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -632,7 +632,7 @@ kind gifts: event certain
 
 place konto[p in persons]: accounts PLN lives 2026-01-01..
 
-place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+place fund: holdings etf_unit lives 2026-01-01..
 
 place world: outside lives 2026-01-01..
 
@@ -10892,7 +10892,7 @@ q_top: 15.00 PLN
   world: topup
   unfulfilled: top[2026-01-01]
   cut 2026-01-02
-,18:written/leg-key-if,8:LOAD-KEY,7:written,32:run base.tally --ask zz_m0_probe,1264:10:base.tally,1244:model written
+,18:written/leg-key-if,8:LOAD-KEY,7:written,32:run base.tally --ask zz_m0_probe,1246:10:base.tally,1226:model written
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -10912,7 +10912,7 @@ kind gifts: event certain
 
 place konto[p in persons]: accounts PLN lives 2026-01-01..
 
-place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+place fund: holdings etf_unit lives 2026-01-01..
 
 place world: outside lives 2026-01-01..
 
@@ -10937,7 +10937,7 @@ version card_2026
   opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
   bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[if true then ana else ben] amount 1.00 PLN) "a gift"
 ,,1:1,84:refused: LOAD-KEY if true then ana else ben is not a key of persons (base.tally:44)
-,21:written/leg-key-paren,8:LOAD-KEY,7:written,32:run base.tally --ask zz_m0_probe,1244:10:base.tally,1224:model written
+,21:written/leg-key-paren,8:LOAD-KEY,7:written,32:run base.tally --ask zz_m0_probe,1226:10:base.tally,1206:model written
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -10957,7 +10957,7 @@ kind gifts: event certain
 
 place konto[p in persons]: accounts PLN lives 2026-01-01..
 
-place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+place fund: holdings etf_unit lives 2026-01-01..
 
 place world: outside lives 2026-01-01..
 
@@ -11027,7 +11027,7 @@ version card_2026
   opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
   bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[ana] amount 1.00 PLN) "a gift"
 ,,1:1,78:refused: LOAD-PARSE cannot parse: expected a reference, got ( (base.tally:21)
-,22:written/range-key-name,8:LOAD-KEY,7:written,32:run base.tally --ask zz_m0_probe,1244:10:base.tally,1224:model written
+,22:written/range-key-name,8:LOAD-KEY,7:written,32:run base.tally --ask zz_m0_probe,1226:10:base.tally,1206:model written
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -11047,7 +11047,7 @@ kind gifts: event certain
 
 place konto[p in persons]: accounts PLN lives 2026-01-01..
 
-place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+place fund: holdings etf_unit lives 2026-01-01..
 
 place world: outside lives 2026-01-01..
 
@@ -11072,7 +11072,7 @@ version card_2026
   opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
   bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[ana] amount 1.00 PLN) "a gift"
 ,,1:1,72:refused: LOAD-KEY ana is not a value of a stepped range (base.tally:42)
-,22:written/range-key-frac,8:LOAD-KEY,7:written,22:run base.tally --ask q,1244:10:base.tally,1224:model written
+,22:written/range-key-frac,8:LOAD-KEY,7:written,22:run base.tally --ask q,1226:10:base.tally,1206:model written
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -11092,7 +11092,7 @@ kind gifts: event certain
 
 place konto[p in persons]: accounts PLN lives 2026-01-01..
 
-place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+place fund: holdings etf_unit lives 2026-01-01..
 
 place world: outside lives 2026-01-01..
 
@@ -11117,7 +11117,7 @@ version card_2026
   opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
   bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[ana] amount 1.00 PLN) "a gift"
 ,,1:1,70:refused: LOAD-KEY 2.5 is not a value of 1 .. 9 step 2 (base.tally:42)
-,22:written/range-key-bool,8:LOAD-KEY,7:written,32:run base.tally --ask zz_m0_probe,1245:10:base.tally,1225:model written
+,22:written/range-key-bool,8:LOAD-KEY,7:written,32:run base.tally --ask zz_m0_probe,1227:10:base.tally,1207:model written
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -11137,7 +11137,7 @@ kind gifts: event certain
 
 place konto[p in persons]: accounts PLN lives 2026-01-01..
 
-place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+place fund: holdings etf_unit lives 2026-01-01..
 
 place world: outside lives 2026-01-01..
 
@@ -11162,7 +11162,7 @@ version card_2026
   opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
   bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[ana] amount 1.00 PLN) "a gift"
 ,,1:1,73:refused: LOAD-KEY true is not a value of a stepped range (base.tally:42)
-,23:written/range-key-place,8:LOAD-KEY,7:written,32:run base.tally --ask zz_m0_probe,1251:10:base.tally,1231:model written
+,23:written/range-key-place,8:LOAD-KEY,7:written,32:run base.tally --ask zz_m0_probe,1233:10:base.tally,1213:model written
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -11182,7 +11182,7 @@ kind gifts: event certain
 
 place konto[p in persons]: accounts PLN lives 2026-01-01..
 
-place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+place fund: holdings etf_unit lives 2026-01-01..
 
 place world: outside lives 2026-01-01..
 
@@ -12312,7 +12312,7 @@ version card_2026
   v[konto[ana]] = 1 "the card"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
 ,,1:1,64:refused: LOAD-KEY konto[ana] is not a key of ns (base.tally:48)
-,16:written/key-kind,8:LOAD-KEY,7:written,32:run base.tally --ask zz_m0_probe,1289:10:base.tally,1269:model written
+,16:written/key-kind,8:LOAD-KEY,7:written,32:run base.tally --ask zz_m0_probe,1271:10:base.tally,1251:model written
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -12332,7 +12332,7 @@ kind gifts: event certain
 
 place konto[p in persons]: accounts PLN lives 2026-01-01..
 
-place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+place fund: holdings etf_unit lives 2026-01-01..
 
 place world: outside lives 2026-01-01..
 
@@ -12360,7 +12360,7 @@ version card_2026
   opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
   bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[ana] amount 1.00 PLN) "a gift"
 ,,1:1,62:refused: LOAD-KEY zed is not a key of persons (base.tally:45)
-,17:written/key-index,8:LOAD-KEY,7:written,32:run base.tally --ask zz_m0_probe,1304:10:base.tally,1284:model written
+,17:written/key-index,8:LOAD-KEY,7:written,32:run base.tally --ask zz_m0_probe,1286:10:base.tally,1266:model written
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -12380,7 +12380,7 @@ kind gifts: event certain
 
 place konto[p in persons]: accounts PLN lives 2026-01-01..
 
-place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+place fund: holdings etf_unit lives 2026-01-01..
 
 place world: outside lives 2026-01-01..
 
@@ -12410,7 +12410,7 @@ version card_2026
   opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
   bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[ana] amount 1.00 PLN) "a gift"
 ,,1:1,56:refused: LOAD-KEY q9 is not a key of qs (base.tally:47)
-,17:written/key-month,8:LOAD-KEY,7:written,32:run base.tally --ask zz_m0_probe,1292:10:base.tally,1272:model written
+,17:written/key-month,8:LOAD-KEY,7:written,32:run base.tally --ask zz_m0_probe,1274:10:base.tally,1254:model written
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -12430,7 +12430,7 @@ kind gifts: event certain
 
 place konto[p in persons]: accounts PLN lives 2026-01-01..
 
-place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+place fund: holdings etf_unit lives 2026-01-01..
 
 place world: outside lives 2026-01-01..
 
@@ -12458,7 +12458,7 @@ version card_2026
   opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
   bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[ana] amount 1.00 PLN) "a gift"
 ,,1:1,65:refused: LOAD-KEY 2031-05 is not a key of months (base.tally:45)
-,15:written/key-row,8:LOAD-KEY,7:written,32:run base.tally --ask zz_m0_probe,1294:10:base.tally,1274:model written
+,15:written/key-row,8:LOAD-KEY,7:written,32:run base.tally --ask zz_m0_probe,1276:10:base.tally,1256:model written
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -12478,7 +12478,7 @@ kind gifts: event certain
 
 place konto[p in persons]: accounts PLN lives 2026-01-01..
 
-place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+place fund: holdings etf_unit lives 2026-01-01..
 
 place world: outside lives 2026-01-01..
 
@@ -12506,7 +12506,7 @@ version card_2026
   opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
   bank[r1] = (on: 2026-02-01, kind: gifts, leg cash from world to konto[ana] amount 1.00 PLN) "a gift"
 ,,1:1,62:refused: LOAD-KEY zed is not a key of persons (base.tally:45)
-,15:written/key-ask,8:LOAD-KEY,7:written,22:run base.tally --ask z,1309:10:base.tally,1289:model written
+,15:written/key-ask,8:LOAD-KEY,7:written,22:run base.tally --ask z,1291:10:base.tally,1271:model written
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -12526,7 +12526,7 @@ kind gifts: event certain
 
 place konto[p in persons]: accounts PLN lives 2026-01-01..
 
-place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+place fund: holdings etf_unit lives 2026-01-01..
 
 place world: outside lives 2026-01-01..
 

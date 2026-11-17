@@ -1,0 +1,43 @@
+model t
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+  note "T, tally 2.1.8 R11 (#195), no-item 2 (c2): a min 0 place stated -50.00 with pad is refused from that reading (the sign rule's own clause) up to its next reading, then known again: jar with pad, can with anchor"
+
+source s "s"
+unit PLN: currency minor 0.01
+kind savings: place PLN min 0
+place jar: savings lives 2026-01-01..
+place can: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  opening[jar] = 100.00 PLN at 2026-03-01 start "s"
+  opening[can] = 100.00 PLN at 2026-03-01 start "s"
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  pad jar from world
+  anchor can
+  stated[jar] = -50.00 PLN at 2026-03-20 end "s"
+  stated[can] = -50.00 PLN at 2026-03-20 end "s"
+
+version st2
+  cite s
+  governs 2026-04
+  known 2026-05-02
+  pad jar from world
+  anchor can
+  stated[jar] = 70.00 PLN at 2026-04-20 end "s"
+  stated[can] = 70.00 PLN at 2026-04-20 end "s"
+
+ask a: bal(jar, 2026-03-19), bal(jar, 2026-03-21), bal(world, PLN, 2026-03-21)
+ask b: bal(jar, 2026-04-21), bal(world, PLN, 2026-04-21), gap(jar, 2026-04-20)
+ask an: bal(can, 2026-03-21), bal(can, 2026-04-21), gap(can, 2026-04-20)
+ask m: bal(jar, 2026-04-26) modelled, bal(can, 2026-04-26) modelled

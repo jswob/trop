@@ -74,16 +74,6 @@ impl LawClass {
         }
     }
 
-    /// The first day past it in the direction of `step`: the day after its last, or for a
-    /// negative step the day before its first; none where it is open that way or the day
-    /// would pass the calendar's edge (E §3.2, L §7.6 item 1).
-    pub(super) fn beyond(self, step: i64) -> Option<Day> {
-        if step > 0 {
-            return self.until.filter(|d| !d.is_end());
-        }
-        self.from.and_then(Day::previous)
-    }
-
     /// Whether it holds law date `day`.
     pub(crate) fn holds(self, day: Day) -> bool {
         self.from.is_none_or(|f| f <= day) && self.until.is_none_or(|u| day < u)
@@ -717,24 +707,29 @@ impl Engine {
 /// # Errors
 ///
 /// `ENGINE-INVARIANT` for a row whose version load didn't build.
-pub(super) fn rows_class(m: &Reality, rows: &[Row], cut: Day, day: Day) -> Result<LawClass, Stop> {
+pub(super) fn rows_class(
+    m: &Reality,
+    rows: &[Row],
+    seen: (Day, World),
+    day: Day,
+) -> Result<LawClass, Stop> {
     let mut class = LawClass::all();
     for row in rows {
         if row.instant.is_some() {
             continue;
         }
-        if let Some(span) = row_span(m, row, cut)? {
+        if let Some(span) = row_span(m, row, seen)? {
             class = class.by_span(day, &span);
         }
     }
     Ok(class)
 }
 
-/// The governs span of version `id` under cut `cut`.
-fn version_span(m: &Reality, id: &str, cut: Day) -> Result<Option<Span>, Stop> {
+/// The governs span of version `id` under the cut of `seen`, in its world (L §6.4).
+fn version_span(m: &Reality, id: &str, seen: (Day, World)) -> Result<Option<Span>, Stop> {
     m.versions
         .get(id)
-        .map(|v| v.span_at(cut).cloned())
+        .map(|v| v.span_at(&m.scenarios, seen).cloned())
         .ok_or_else(|| invariant("a version load didn't build"))
 }
 
@@ -747,13 +742,13 @@ fn version_span(m: &Reality, id: &str, cut: Day) -> Result<Option<Span>, Stop> {
 pub(super) fn rules_class(
     m: &Reality,
     def: &DefInfo,
-    cut: Day,
+    seen: (Day, World),
     day: Day,
 ) -> Result<LawClass, Stop> {
     let mut class = LawClass::all();
     for (_, versions) in &def.rules {
         for rule in versions {
-            class = rule_class(m, rule, cut, day, class)?;
+            class = rule_class(m, rule, seen, day, class)?;
         }
     }
     Ok(class)
@@ -763,13 +758,13 @@ pub(super) fn rules_class(
 fn rule_class(
     m: &Reality,
     rule: &RuleVer,
-    cut: Day,
+    seen: (Day, World),
     day: Day,
     class: LawClass,
 ) -> Result<LawClass, Stop> {
     let mut out = class;
     for id in [&rule.version, &rule.v].into_iter().flatten() {
-        if let Some(span) = version_span(m, id, cut)? {
+        if let Some(span) = version_span(m, id, seen)? {
             out = out.by_span(day, &span);
         }
     }
@@ -788,12 +783,12 @@ fn rule_class(
 pub(super) fn tables_class(
     m: &Reality,
     band: &BandInfo,
-    cut: Day,
+    seen: (Day, World),
     day: Day,
 ) -> Result<LawClass, Stop> {
     let mut class = LawClass::all();
     for table in &band.tables {
-        if let Some(span) = version_span(m, &table.version, cut)? {
+        if let Some(span) = version_span(m, &table.version, seen)? {
             class = class.by_span(day, &span);
         }
     }

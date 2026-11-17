@@ -227,7 +227,7 @@ pub(super) fn fanned_lines(
     for (at, set) in options.iter().enumerate() {
         let inside = engine.with_options(ctx, set)?;
         engine.open_layer(m, inside)?;
-        let evaluated = evaluate_tuples(m, ask, engine, (inside, at), &mut bound);
+        let evaluated = evaluate_tuples(m, ask, engine, (inside, at, pinned), &mut bound);
         engine.end_layer(inside.layer, evaluated.as_ref().err())?;
         evaluated?;
     }
@@ -253,7 +253,7 @@ fn bind_tuples(
     for (at, set) in options.iter().enumerate() {
         let inside = engine.with_options(ctx, set)?;
         engine.open_layer(m, inside)?;
-        let members = engine.tuples(m, &ask.binds, inside);
+        let members = engine.tuples(m, &ask.binds, (&Env::empty(), inside));
         engine.end_layer(inside.layer, members.as_ref().err())?;
         let members = match members? {
             Err(hole) => return Ok(Err(hole)),
@@ -320,21 +320,21 @@ fn bound_in(tuple: &mut Bound, at: usize, member: Member) {
     tuple.combos.push((at, member.brought));
 }
 
-/// Each tuple's line in the combination at `at`, of context `inside`; a tuple whose `where` is
-/// a hole in some combination is left unevaluated, its line that hole (refcore's
-/// `binds_over_axes`). L §5.18.
+/// Each tuple's line in the combination at `at`, of context `inside`, the ask's pins
+/// `pinned` given to a form whose register holds them; a tuple whose `where` is a hole in some
+/// combination is left unevaluated, its line that hole (refcore's `binds_over_axes`). L §5.18.
 fn evaluate_tuples(
     m: &Reality,
     ask: &Ask,
     engine: &mut Engine,
-    (inside, at): (Ctx, usize),
+    (inside, at, pinned): (Ctx, usize, &Collected),
     bound: &mut [Bound],
 ) -> Result<(), Stop> {
     for tuple in bound.iter_mut().filter(|t| t.unknown.is_empty()) {
         let Some((_, brought)) = tuple.combos.iter().find(|(combo, _)| *combo == at) else {
             continue;
         };
-        let mut line = form_line(m, ask, engine, &tuple.env, inside)?;
+        let mut line = form_line(m, ask, engine, (&tuple.env, inside, pinned))?;
         line.met.merge(brought);
         tuple.results.push((at, line));
     }
@@ -380,6 +380,10 @@ pub(super) fn result_lines(
             .get(line.first)
             .ok_or_else(|| invariant("a line's result past the results"))?;
         out.extend(first.lines(&format!("{head} [{}]", axes.head(&line.product)?)));
+        // a ledger's hole or refusal prints alone, with no register (refcore's `one`)
+        if first.alone {
+            continue;
+        }
         let mut met = line.met;
         met.merge(&super::answer::ask_pins_listed(pinned, &met));
         for reading in axes.readings(&line.product)? {

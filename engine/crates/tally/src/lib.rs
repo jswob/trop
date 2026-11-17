@@ -147,7 +147,7 @@ pub mod model {
 pub mod hole {
     mod questions;
 
-    pub use questions::{Hole, Linear, atom_text, spread};
+    pub use questions::{Hole, Linear, Unknown, atom_text, carry_union, spread};
 }
 
 /// The evaluator (E §3.2): expressions over the reality, def cells in the memo, rules, bands,
@@ -195,7 +195,7 @@ pub mod eval {
     pub(crate) use keys::{Given, thing_seen, to_key};
     pub(crate) use memo::LawClass;
     pub use memo::Memo;
-    pub(crate) use partial::{lin_balance, partial_text};
+    pub(crate) use partial::{lin_balance, lin_fold, lin_negated, lin_times, partial_text};
     pub(crate) use pins::after_on;
     pub(crate) use ranges::{range_literal_key, value_key};
     pub use stack::Item;
@@ -203,8 +203,10 @@ pub mod eval {
     pub(crate) use state::{a_day, num_stop, past_days};
     pub(crate) use time_arith::periods_of;
     pub(crate) use timelines::combinations;
-    pub(crate) use trace::{Balance as TracedBalance, Kind as TraceKind, RuleLine, Trace, Walked};
-    pub(crate) use windows::{known_question, one_day, window_days};
+    pub(crate) use trace::{
+        Balance as TracedBalance, Kind as TraceKind, RuleLine, Snap, Trace, Walked,
+    };
+    pub(crate) use windows::{known_question, known_unknown, one_day, window_days};
     pub(crate) use years::year_form;
 }
 
@@ -242,8 +244,8 @@ pub mod walk {
     pub use lows::{Lows, RangeMinimum};
     pub use order::{Run, WalkAt};
     pub use plan::{
-        Amount, Booked, BookedLeg, Bookings, Dated, DayWindow, End, Exists, Inst, LegVal, Order,
-        Seed, Status, Term, kind_certainty, qty_value,
+        Amount, Booked, BookedLeg, Bookings, Dated, DayWindow, Depends, End, Exists, Inst, LegVal,
+        Order, Seed, Status, Term, kind_certainty, qty_value,
     };
     pub(crate) use plan::{invariant, quantity};
     pub use point::{At, Step};
@@ -254,8 +256,8 @@ pub mod walk {
     pub(crate) use reads::state_value;
     pub(crate) use state::GapAt;
     pub use state::{
-        ALL, Change, Checkpoint, Ent, Group, Log, Progress, Projected, St, Taken, Today, Walk,
-        WalkObs,
+        ALL, Change, Checkpoint, Ent, Group, LegOut, Log, Pending, Progress, Projected, St, Taken,
+        Today, Walk, WalkObs,
     };
     pub use tuples::Law;
 }
@@ -280,10 +282,12 @@ pub mod book {
     pub use ledger_order::{Group, GroupKey};
     pub(crate) use members::{MvDom, MvMember, inst_ref};
     pub use observe::{Coverage, Linked, Obs, inst_id};
-    pub use reading::{AfterDays, Pad, Seen, Stands, per_unit, reading_rank};
-    pub(crate) use reading::{gap_text, instant_text, reading_place};
-    pub use same::{Groups, kept_once, once_obs, same_differ, same_groups};
-    pub(crate) use same::{Member, Waiting, stated_same};
+    pub use reading::{
+        AfterDay, AfterDays, Pad, Seen, Stands, after_missing, per_unit, reading_rank,
+    };
+    pub(crate) use reading::{gap_text, instant_text, reading_place, stands_in};
+    pub use same::{Groups, kept_once, once_obs, same_differ};
+    pub(crate) use same::{Member, SameMet, SamePicks, Waiting, and_list};
     pub(crate) use settle::settlement_move;
 }
 
@@ -381,7 +385,7 @@ pub mod read {
     pub use bands::{BandAt, band_no_row, band_no_table, band_origin, band_rows, table_held};
     pub use gap::{
         Asked, Found, Question, last_began, member_span, no_candidate, origin, read_input,
-        read_last,
+        read_last, two_units,
     };
     pub use rows::{
         Clocks, KnownInside, Point, Test, candidates, choose, held, known_inside, lawless,

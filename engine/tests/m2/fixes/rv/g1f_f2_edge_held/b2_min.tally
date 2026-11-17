@@ -1,0 +1,27 @@
+model bm
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+input d: date
+input cr: calendar
+input cq: calendar
+input huge: int
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  d = 2026-06-01 "a day"
+  huge = 100000000000000000000 "10^20"
+
+version v26
+  cite plan
+  governs 2026
+  known 2026-01-01
+  cr = calendar(weekends [sat, sun]) "s"
+  cq = calendar(weekends [sat, sun]) "s"
+
+ask f: add_business(d, huge, cq) in sx

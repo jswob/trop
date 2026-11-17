@@ -160,3 +160,26 @@ section, SR-1 to SR-14, ruled by P36.
 SR-1 to SR-14 were ruled by P36 (2026-11-13, the coordinator under the user's standing rule, on each rule's issue):
 each was refcore or one of the spec's own texts not following a rule's text, fixed in 70e8016..a98820c; T's re-run
 on that refcore (`test(refcore)` after a98820c) released their rows and restored the forms left out.
+
+## STOP-REPORTs of tally 2.1.8's re-run (T, 2026-11-17)
+
+T's re-run of every stored output, first on refcore f843e443, then on the tag's 2f019698. SR 1 to SR 5 of the first run were ruled by P37 (2026-11-17, the lead, on each issue) and fixed before the second: reprint of a joint model crashed (27f44590); the spec's own household was refused by item 52's load check (bbc9e960, the household mended as T's copies were); an instance left out before the run read its amount at the ask's cut, not its booking cut (`g12/members` `pre_b`, c669fbc9); `windows each` over an `added` window read through a def printed one window value (ed4f1be4); a window leg's `before from:` entry was dropped under `windows each` (ac76a207). Each prints its stored bytes on 2f019698, and no row is held for it. `codes/m1_fault.py` imports `refcore.evaluate` before `refcore.walk`, a run's order: with `walk` first, 2.1.8's modules still meet their import cycle (`walk` → `moves` → `evaluate` → `walk`).
+
+### SR 7: `partial` makes a hole plain through `value` of a place valued whole (R15)
+
+**Mended** (the spec writer's eighth turn, b74543a6, "value of a place valued whole keeps its price linear", pick P43): `ASK-02` prints its stored bytes again on 61f8630b. SR 6 of this re-run (explain dropped the observed row `bank[o1]` that `fixes/g2/sumobs2`'s sum reads) is mended too (8bf0d761, the seventh turn): its row is released with the round's held rows.
+
+- **Smallest text:** `engine/tests/unit/probes/ask/ASK-02.tally`: `value(x, asked_on) in DUK` of `place car: assets DUK priced car_value`, the price a hole, inside `sum(owns[p, x] * (value(x, asked_on) in DUK) for x in places …) partial`. `(value(car, asked_on) in DUK) + (value(flat, asked_on) in DUK) partial` alone prints the plain hole too.
+- **Old bytes:** `q_net_worth (p = ola): 200 000 DUK + 1 × ?"What is Ola's car worth on 2025-06-30? Nobody has valued it." (car_value)`.
+- **New (75f27ca1):** `q_net_worth (p = ola): ?"…" (car_value)`, the plain hole.
+- **Which is wrong:** refcore. R15.1 (L §5.18 l.1632): a hole stays linear "through every operation that adds its operands, scales them by a known number or passes one on unchanged"; `value` of a place valued whole is its price at d (L §5.10), passed on unchanged, and R15's vector 1 makes `value` linear for a known number of units at a hole price. refcore's evaluator (`ev`, evaluate.py, the R15 wrapper) makes plain every hole whose node isn't one `lin_passes` lists, and `m_e_value`'s whole-priced branch returns the price's hole with no linear form of its own. The first run's second form, a leg's `amount` in a `sum` (household B's `b08_cards`), was the same; the sixth turn's dcc23eac fixed it, and `b08_cards` prints its stored bytes.
+- **What T did:** `U:ask/ASK-02`'s baseline keeps 2.1.7's bytes (it differs in `run.py` until refcore is fixed); no store row moves by it.
+
+## STOP-REPORTs of tally 2.1.8's last re-run (T, 2026-11-17, refcore 21c79026)
+
+Refcore answers 9 of `m2/spec.tsv`'s 17 rows now (`spec.py --refcore`). Five moved to `m2/vectors.tsv` (`fixes/…`, refcore's bytes): `g3/k2`, `g3/ez06`, `g4/nb3_atT` and `g6/b4_q1` print the spec row's answer, and `g4/nb3_at` prints 70.00 PLN by R11, as the lead ruled. Four print otherwise than the spec's answer, which the round's engine prints (all four green on it). **Ruled: refcore's, #207** (P56, the lead, 2026-11-17: T is right on all four; refcore is mended at M3, not in this round). They stay `m2/spec.tsv`'s answers, held for #207 in each row's section:
+
+- **SR 8, `spec/g4/nb3_after`** (`m2/fixes/g4/nb3_after.tally`, `q_konto`): the spec row is `refused: RUN-CYCLE the link to sw[2026-03] reads its own observations` (L §4.6, §5.14.2: a link's `when` that reads a reading after its own instance); refcore is `refused: RUN-RECORD reading stated[konto] after sw[2026-03]: sw[2026-03] doesn't exist`. That is, it reads the link as false, not as a cycle.
+- **SR 9, `spec/g4/nb3_afterT`** (its twin, `q_konto`): the spec row is the same `RUN-CYCLE`; refcore is `60.00 PLN`.
+- **SR 10, `spec/p60/num_list_key`** (`m2/fixes/p60/num_list_key.tally`, its register): the spec row is `unfulfilled: ml[1.5]` (L §5.14: a move binds each key of its list; §8.2); refcore is `unfulfilled: ml[2]`.
+- **SR 11, `spec/g6/n3`** (`m2/fixes/g6/n3.tally`, `q3`): the spec row is `q3 (k = a) [d[a] = 2026-03-02]: true` first (L §5.18: one line per binding tuple, in binding order); refcore prints `q3 (k = b): true` first. This is P29's known difference, still there.

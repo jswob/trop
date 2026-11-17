@@ -258,7 +258,6 @@ fn agrees(kept: &Walk, fresh: &Walk) -> bool {
         && kept.orders == fresh.orders
         && kept.endings == fresh.endings
         && kept.first_reading == fresh.first_reading
-        && kept.same_observed == fresh.same_observed
         && kept.plan_lists == fresh.plan_lists
         && kept.uncertain.starts_with(&fresh.uncertain)
         && kept.modelled.starts_with(&fresh.modelled);
@@ -356,6 +355,11 @@ fn continue_with(walk: &mut Walk, fresh: Walk) -> Result<(), Stop> {
         Some(first) => agenda.split_off(&first),
         None => BTreeMap::new(),
     };
+    // the plan's legs of decisions run before t (#183) are the kept walk's own too, carried
+    // below with what it booked ahead: the plan's copies would book them twice
+    for acts in later.values_mut() {
+        acts.retain(|(_, act)| !booked_ahead(act));
+    }
     for (day, acts) in core::mem::take(&mut walk.agenda) {
         for act in acts.into_iter().filter(|(_, act)| booked_ahead(act)) {
             later.entry(day).or_insert_with(Vec::new).push(act);
