@@ -377,4 +377,76 @@ version v
         assert_eq!(lines_of("s6_sec_a.tally", &first), want, "jj first");
         assert_eq!(lines_of("s6_sec_b.tally", &last), want, "jj last");
     }
+
+    /// N4 (`agent/s6_reads.tally`): `explain` of an observed row's field in a `same` class
+    /// whose rows disagree prints the class's `HOLE-SAME`, as the plain read does; judging the
+    /// link the class's `fulfils` makes is no walk read (L §6.1, §8.1, E §10).
+    #[test]
+    fn explain_of_a_field_of_a_same_class_prints_its_hole() {
+        let text = r#"model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place card: accounts PLN lives 2026-01-01..
+input bank: observed
+input amt: money PLN
+input d_p: int
+
+move pay[m in months]: transfers
+  on day_of(m, d_p)
+  leg cash from konto to sav amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  d_p = 10 "s"
+  opening[konto] = 1000.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+  opening[card] = 0.00 PLN at 2026-03-01 start "s"
+
+version st_sav
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers sav
+  bank[c1] = (on: 2026-03-10, kind: transfers, leg cash from konto to sav amount 110.00 PLN) "c"
+
+version st_konto
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[b1] = (on: 2026-03-10, kind: transfers, leg cash from konto to sav amount 100.00 PLN, fulfils: pay[2026-03]) "a"
+
+version st_card
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers card
+  bank[a1] = (on: 2026-03-10, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "b"
+  same bank[c1] = bank[b1]
+  same bank[a1] = bank[c1]
+
+ask s4: explain bank[a1].cash.amount
+ask s5: bank[a1].cash.amount
+"#;
+        let hole = "?\"bank[a1], bank[b1] and bank[c1] are one, but the amount of cash differs on 2026-03-10: 100.00 PLN (bank[a1]), 100.00 PLN (bank[b1]) and 110.00 PLN (bank[c1])\" (bank[a1], bank[b1], bank[c1])";
+        let lines = lines_of("s6_reads.tally", text);
+        let want = [
+            format!("s4: {hole}"),
+            "  cut 2026-04-10".to_owned(),
+            format!("s5: {hole}"),
+            "  cut 2026-04-10".to_owned(),
+            "warning: WARN-UNREAD place card is read by nothing".to_owned(),
+        ];
+        assert_eq!(lines, want, "every line of the run");
+    }
 }

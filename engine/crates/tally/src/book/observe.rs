@@ -661,7 +661,12 @@ impl Engine {
         cut: Day,
     ) -> Result<Option<Refusal>, Stop> {
         if let Some(tid) = o.target_id() {
-            self.judged(m, &tid, cut)?;
+            // judging the link is no read of the walk the explanation prints (E §10): a row
+            // whose class states its `fulfils` explains as a row (group 4's review, N4)
+            let before = self.trace_walked();
+            let judged = self.judged(m, &tid, cut);
+            self.trace_walked_back(before);
+            judged?;
         }
         Ok(self.obs_errs.get(&(cut, o.id.clone())).cloned())
     }
