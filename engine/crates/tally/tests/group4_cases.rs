@@ -248,4 +248,57 @@ ask c1: count(p in pays over 2026-01)
         }
         assert_eq!(lines, want, "every line of the run");
     }
+
+    /// B3 (`agent/law_via_at.tally`): an ask's law chain stops at a def with its own written
+    /// `at`, so an `at reader` def that one reads is no `LOAD-LAWDATE` (L §4.3, P42).
+    #[test]
+    fn a_law_chain_stops_at_a_def_with_its_own_at() {
+        let text = r#"model t
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input cutoff: date
+input fixday: date
+
+def cutoff_r: date at reader
+  rule base = cutoff
+
+def fixed: date at fixday
+  rule base = cutoff_r
+
+def amount: num at reader
+  rule base = 1
+
+ask q: amount law fixed
+ask q2: fixed
+
+version v0
+  cite s
+  governs always
+  known 2026-01-01
+  fixday = 2026-03-01 "s"
+
+version v1
+  cite s
+  governs 2026-01-01..
+  known 2026-01-01
+  cutoff = 2026-04-01 "s"
+"#;
+        let lines = lines_of("law_via_at.tally", text);
+        assert_eq!(
+            lines,
+            [
+                "q: 1",
+                "  law date 2026-04-01, cut 2026-06-10",
+                "q2: 2026-04-01",
+                "  cut 2026-06-10",
+            ],
+            "every line of the run"
+        );
+    }
 }

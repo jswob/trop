@@ -362,6 +362,11 @@ fn law_reader(m: &Reality, graph: &Graph, law: &Expr) -> Result<(), Stop> {
                 format!("ask reaches an at reader def ({q}) without law"),
             )));
         }
+        if def.at.is_some() {
+            // a def with its own written `at` reads at that date: the chain stops there
+            // (L §4.3; pick P42, group 4's review B3)
+            continue;
+        }
         let reads = graph.reads(&Node::new(NodeKind::Def, &q));
         todo.extend(
             reads
