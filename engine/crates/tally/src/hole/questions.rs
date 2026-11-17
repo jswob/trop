@@ -143,6 +143,26 @@ impl Hole {
         self
     }
 
+    /// The hole a read `read` meets where a window's test reaches it: each question a window
+    /// put for a balance asked for `read` instead, the rest as they are (the plan's §14.1: a
+    /// hole's printed question is the read's; tally 2.1.8 item 77). L §4.4.
+    #[must_use]
+    pub fn for_read(&self, read: &str) -> Hole {
+        let mut out = self.clone();
+        out.questions = self
+            .questions
+            .iter()
+            .map(|q| match q.text.strip_suffix(" for a balance") {
+                Some(head) if head.starts_with("date within ") => Asked {
+                    text: format!("{head} for {read}"),
+                    figure: q.figure.clone(),
+                },
+                _ => q.clone(),
+            })
+            .collect();
+        out
+    }
+
     /// The unknown days it carries, in the order met (refcore's `carried` of a hole). L §4.4.
     #[must_use]
     pub fn carried(&self) -> &[Unknown] {

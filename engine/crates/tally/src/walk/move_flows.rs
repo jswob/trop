@@ -229,8 +229,11 @@ impl Engine {
                 }
                 if let Some(LegOut::Hole(h)) = out {
                     // a window leg's: the flows read's question; a fixed day's the window's
-                    // test reaches: the hole it gives (tally 2.1.8 item 77)
-                    acc.holes.push(flows_hole(mv, i, lg).unwrap_or(h));
+                    // test reaches: its questions asked for this read (tally 2.1.8 item 77;
+                    // the review of group 2's fix, N-i)
+                    let read = format!("flows of {}", mv.id);
+                    acc.holes
+                        .push(flows_hole(mv, i, lg).unwrap_or_else(|| h.for_read(&read)));
                     continue;
                 }
                 acc.add(q, lg.unit.as_ref())?;

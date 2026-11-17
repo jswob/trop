@@ -285,11 +285,10 @@ impl Engine {
         for ((place, unit), legs) in group {
             let st = self.walk(id)?.pstate(m, place, unit, at);
             // legs dated by a window may still fall here: the test asked of each balance they
-            // allow, a refusal whose words differ by the day the window's hole (E §4.1 step 2;
-            // tally 2.1.8 item 77, pick P30)
+            // allow (E §4.1 step 2; tally 2.1.8 item 77)
             let nv = match st.known() {
                 Some(nv) => Some(nv.clone()),
-                None => match imp_breaks(m, place, &st, None, Words::Printed)? {
+                None => match self.group_three(m, id, broke, (place, unit), legs, &st)? {
                     Three::Depends => {
                         depends.push((place.clone(), unit.clone(), legs.clone()));
                         None
@@ -315,30 +314,15 @@ impl Engine {
             pending_walk.pend_at.remove(key);
         }
         for (place, unit, nv, legs) in bad {
-            let shown = qty_value(m, &nv, &unit)?
-                .text(m)
-                .map_err(crate::eval::num_stop)?;
+            let words = self.refusal_words(m, id, broke, (&place, &unit), &legs, &nv)?;
+            let err = Refusal::new(Code::Run(Run::Place), words);
             if legs.is_empty() {
                 // an anchored place with no leg of the group at it: refused from here, with
                 // its reading's message (L §8.4; tally 2.1.2)
-                let instant = self
-                    .today(id)?
-                    .anchors
-                    .get(&(place.clone(), unit.clone()))
-                    .cloned()
-                    .ok_or_else(|| invariant("a place in a group with no leg and no anchor"))?;
-                let err = Refusal::new(
-                    Code::Run(Run::Place),
-                    format!("{place} is {shown} after its reading at {instant}"),
-                );
                 self.walk_mut(id)?
                     .add(m, &place, &unit, Ent::new(at, Change::Bad(err)))?;
                 continue;
             }
-            let err = Refusal::new(
-                Code::Run(Run::Place),
-                broke_text(m, broke, &place, &shown, &legs),
-            );
             for (mv, leg) in &legs {
                 let walk = self.walk_mut(id)?;
                 let key = (mv.clone(), leg.name.clone());
@@ -357,6 +341,68 @@ impl Engine {
             }
         }
         Ok(())
+    }
+
+    /// The sign rule at a group's `place` in `unit`, whose state `st` has window-dated legs
+    /// pending, asked of each balance they allow: where every one breaks it, the refusal is the
+    /// windows' hole where the bytes it prints differ by the day, whatever its message's form
+    /// (`ob takes pot below 0` names no balance; refcore's `words_differ`, its `words`). E §4.1
+    /// step 2, §4.2 step 5; L §4.4; tally 2.1.8 item 77, pick P30.
+    ///
+    /// # Errors
+    ///
+    /// A number past the cap; `ENGINE-INVARIANT` for an anchored place with no instant.
+    fn group_three(
+        &self,
+        m: &Reality,
+        id: usize,
+        broke: &Broke,
+        (place, unit): (&str, &str),
+        legs: &[(String, LegVal)],
+        st: &St,
+    ) -> Result<Three, Stop> {
+        let three = imp_breaks(m, place, st, None)?;
+        let (Three::Every, Some((lo, hi))) = (three, st.imp_range()?) else {
+            return Ok(three);
+        };
+        let low = self.refusal_words(m, id, broke, (place, unit), legs, &lo)?;
+        let high = self.refusal_words(m, id, broke, (place, unit), legs, &hi)?;
+        Ok(if low == high {
+            Three::Every
+        } else {
+            Three::Depends
+        })
+    }
+
+    /// The bytes the sign rule's refusal at a group's `place` in `unit` prints for balance
+    /// `nv`: the group's message for its legs `legs`, or an anchored place's with no leg there
+    /// (refcore's `check_group`, its `words`). L §5.10, §8.4; E §4.2 step 5.
+    ///
+    /// # Errors
+    ///
+    /// A number past the cap; `ENGINE-INVARIANT` for an anchored place with no instant.
+    fn refusal_words(
+        &self,
+        m: &Reality,
+        id: usize,
+        broke: &Broke,
+        (place, unit): (&str, &str),
+        legs: &[(String, LegVal)],
+        nv: &Num,
+    ) -> Result<String, Stop> {
+        let shown = qty_value(m, nv, unit)?
+            .text(m)
+            .map_err(crate::eval::num_stop)?;
+        if !legs.is_empty() {
+            return Ok(broke_text(m, broke, place, &shown, legs));
+        }
+        let instant = self
+            .today(id)?
+            .anchors
+            .get(&(place.to_owned(), unit.to_owned()))
+            .cloned()
+            .ok_or_else(|| invariant("a place in a group with no leg and no anchor"))?;
+        Ok(format!("{place} is {shown} after its reading at {instant}"))
     }
 
     /// Puts a leg's booked ends in the group of the sign rule it waits for: the day's first
@@ -451,7 +497,7 @@ impl Walk {
                 // legs dated by a window may still fall here: the test asked of each balance
                 // they allow; its refusal names no balance, so its words are every day's
                 // (tally 2.1.8 item 77)
-                match imp_breaks(m, p, &st, Some(&flow), Words::Same)? {
+                match imp_breaks(m, p, &st, Some(&flow))? {
                     Three::Depends => return Ok(Alone::Depends(p.clone())),
                     Three::Every => {
                         return Ok(Alone::Refused(Refusal::new(
@@ -598,26 +644,16 @@ pub(super) enum Alone {
 pub(super) enum Three {
     /// No balance the pending legs allow breaks the rule.
     None,
-    /// Every one does, in the same words.
+    /// Every one does.
     Every,
-    /// Some do and some don't, or all do in words that differ by the day.
+    /// Some do and some don't, or, at a group, all do in bytes that differ by the day.
     Depends,
-}
-
-/// Whether a refusal prints the balance it found, so its words differ where the balances do
-/// (pick P30: the answer is what prints).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(super) enum Words {
-    /// It prints the balance.
-    Printed,
-    /// It doesn't.
-    Same,
 }
 
 /// The sign rule at `place` asked of each balance the window-dated legs pending in `st` allow,
 /// a leg's `flow` added where one is being booked: the least and the greatest, the rule being
 /// monotone in the balance; none where the balance isn't known but for them (refcore's
-/// `imp_three`, `words_differ`). E §4.1 step 2, §4.2 step 5; L §4.4; tally 2.1.8 item 77.
+/// `imp_three`). E §4.1 step 2, §4.2 step 5; L §4.4; tally 2.1.8 item 77.
 ///
 /// # Errors
 ///
@@ -627,7 +663,6 @@ pub(super) fn imp_breaks(
     place: &str,
     st: &St,
     flow: Option<&Num>,
-    words: Words,
 ) -> Result<Three, Stop> {
     let Some((mut lo, mut hi)) = st.imp_range()? else {
         return Ok(Three::None);
@@ -638,7 +673,7 @@ pub(super) fn imp_breaks(
     }
     Ok(match (breaks(m, place, &lo), breaks(m, place, &hi)) {
         (false, false) => Three::None,
-        (true, true) if words == Words::Same || lo == hi => Three::Every,
+        (true, true) => Three::Every,
         _ => Three::Depends,
     })
 }

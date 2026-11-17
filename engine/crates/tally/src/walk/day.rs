@@ -20,7 +20,7 @@ use super::agenda::{Act, Mv};
 use super::fork::Forks;
 use super::plan::{Amount, Dated, DayWindow, End, Inst, LegVal, Status, invariant, qty_value};
 use super::point::At;
-use super::readings::{Alone, Broke, Three, Words, imp_breaks};
+use super::readings::{Alone, Broke, Three, imp_breaks};
 use super::state::{ALL, Change, Ent, Group, HoleLeg, Progress, Taken, Today, Walk, WalkObs};
 use crate::base::{Code, Refusal, Run, Warn};
 use crate::book::Member;
@@ -968,7 +968,7 @@ impl Walk {
             return Ok(());
         }
         let st = self.pstate(m, place, unit, at);
-        if imp_breaks(m, place, &st, None, Words::Same)? == Three::Depends {
+        if imp_breaks(m, place, &st, None)? == Three::Depends {
             self.imp_hole(m, at, (place, unit), &[leg])?;
         }
         Ok(())

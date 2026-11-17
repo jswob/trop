@@ -432,7 +432,8 @@ p2 [wa = 2026-04-07 .. 2026-04-10]: 50.00 PLN
     /// P30): `oa` takes 10.00 from `pot` (`min 0`, 50.00) on a day of `window(04-05,
     /// 04-10)`, `ob` 200.00 on 04-07; `pot` is -160.00 where `oa` has fallen by 04-07,
     /// -150.00 after. The plain line is the window's hole; `windows each` prints each day's
-    /// own refusal.
+    /// own refusal. `g1`'s question is the read's, "for flows of ob" (the review of group 2's
+    /// fix, N-i), where refcore at 2f019698 still asks "for a balance".
     const BOTH_BREAK: &str = r#"model t
   tally 2
   on 2026-01-01
@@ -480,7 +481,7 @@ ask g6: bal(pot, 2026-04-30) with wa = 2026-04-05
 ask g7: flows(ob, 2026-04) with wa = 2026-04-05
 "#;
 
-    const BOTH_BREAK_LINES: &str = r#"g1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for a balance" (oa)
+    const BOTH_BREAK_LINES: &str = r#"g1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for flows of ob" (oa)
   cut 2026-01-01
 g2 [wa = 2026-04-05 .. 2026-04-07]: refused: RUN-PLACE pot is -160.00 PLN after the day's observations and plans of 2026-04-07
   cut 2026-01-01
@@ -670,6 +671,71 @@ j6: 10.00 PLN
   pinned: wa = 2026-04-09
   cut 2026-01-01";
 
+    /// A refusal that names no balance (the review of group 2's fix, G2): `ob`, a decision,
+    /// takes 200.00 out of `pot` on 04-07, and `oa` 10.00 on a day of `window(04-05, 04-10)`;
+    /// every day refuses `ob` in the same bytes, `ob takes pot below 0`, so the plain line is
+    /// that refusal, and `oa`, never refused, keeps 10.00 at `jar`.
+    const WORDS_SAME: &str = r#"model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+kind savings: place PLN min 0
+place pot: savings lives 2025-01-01..
+place jar: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+place box: accounts PLN lives 2025-01-01..
+input wa: date
+input db: date
+input small: money PLN
+input amt2: money PLN
+
+move oa: transfers
+  on wa
+  leg cash from pot to jar amount small
+
+move ob: transfers
+  on db
+  when bal(box) >= 0.00 PLN
+  reads box
+  leg cash from pot to world amount amt2
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  small = 10.00 PLN "s"
+  amt2 = 200.00 PLN "s"
+  wa = window(2026-04-05, 2026-04-10) "s"
+  db = 2026-04-07 "s"
+  opening[pot] = 50.00 PLN at 2026-01-01 start "s"
+  opening[jar] = 0.00 PLN at 2026-01-01 start "s"
+  opening[box] = 0.00 PLN at 2026-01-01 start "s"
+
+ask d1: bal(pot, 2026-04-30)
+ask d2: flows(ob, 2026-04)
+ask d3: bal(jar, 2026-04-30)
+ask d1w: bal(pot, 2026-04-30) windows each
+ask d2w: flows(ob, 2026-04) windows each
+ask d3w: bal(jar, 2026-04-30) windows each
+"#;
+
+    const WORDS_SAME_LINES: &str = r"d1: refused: RUN-PLACE ob takes pot below 0
+  cut 2026-01-01
+d1w: refused: RUN-PLACE ob takes pot below 0
+  cut 2026-01-01
+d2: refused: RUN-PLACE ob takes pot below 0
+  cut 2026-01-01
+d2w: refused: RUN-PLACE ob takes pot below 0
+  cut 2026-01-01
+d3: 10.00 PLN
+  cut 2026-01-01
+d3w: 10.00 PLN
+  cut 2026-01-01";
+
     #[test]
     fn a_window_whose_days_take_two_classes_keeps_its_window_and_the_reads_question() {
         for (text, want) in [
@@ -682,6 +748,7 @@ j6: 10.00 PLN
             (CLOSE_TWO, CLOSE_TWO_LINES),
             (TWO_WINDOWS, TWO_WINDOWS_LINES),
             (PENDING_KEPT, PENDING_KEPT_LINES),
+            (WORDS_SAME, WORDS_SAME_LINES),
         ] {
             let want: Vec<&str> = want.lines().collect();
             assert_eq!(lines_of(text), want, "refcore's lines");
@@ -692,7 +759,8 @@ j6: 10.00 PLN
     fn each_line_of_a_window_whose_days_take_two_classes_is_its_pinned_twin() {
         let one_of = ["2026-04-05".to_owned(), "2026-04-09".to_owned()];
         let start = days_from("2025-12-30", "2026-01-03");
-        let texts: [(&str, Unsplit<'_>); 8] = [
+        let window = days_from("2026-04-05", "2026-04-10");
+        let texts: [(&str, Unsplit<'_>); 9] = [
             (COVER_REACH, None),
             (ANCHOR_AFTER, None),
             (RUN_START, Some(("ws", &start))),
@@ -701,13 +769,14 @@ j6: 10.00 PLN
             (BOTH_BREAK, None),
             (CLOSE_TWO, None),
             (PENDING_KEPT, Some(("wa", &one_of))),
+            (WORDS_SAME, Some(("wa", &window))),
         ];
         let checked: Vec<String> = texts
             .iter()
             .flat_map(|(text, unsplit)| pinned_twins(text, *unsplit))
             .collect();
         // a4 and b5 six days each, s4w five, c2 seven, f2, j2 and p2 six each, g2 and g4 six
-        // each, e4 six, j2 of PENDING_KEPT two
-        assert_eq!(checked.len(), 62, "every day of each window: {checked:?}");
+        // each, e4 six, j2 of PENDING_KEPT two, d1w, d2w and d3w of WORDS_SAME six each
+        assert_eq!(checked.len(), 80, "every day of each window: {checked:?}");
     }
 }
