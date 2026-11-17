@@ -1,8 +1,9 @@
 # tally 2.1.8 R13.1 (item 2, left by the follow-up; the review of group 1's a4_d texts): a diff whose worlds sit on
 # two stacks, sc and sd over pw, under windows each. Each side runs once per choice of its windows' days; the
 # runs are paired that take the same day of every window both meet (e1: dj, three pairs, not nine), and the pairs
-# print one block per run of sub-windows that agree, as the pins e2, e3 do; e4 splits on dk[a], which both meet,
-# by its register; e5's se states dj, so only sc's runs take it. 9762e319..c669fbc9 ignored the clause and printed
+# print one block per run of sub-windows that agree, as the pins e2, e3 do; e4's answer is the same on every day
+# of dk[a], which both meet, so it is one block, its register the read set of all its days (pick P34); e5's se
+# states dj, so only sc's runs take it. 9762e319..c669fbc9 ignored the clause and printed
 # the plain line.
 === m.tally
 model pw
@@ -122,17 +123,11 @@ e3: diff in sd against sc: 0 changed, 0 added, 0 removed, 1 unchanged
   unfulfilled: pay[2026-01]
   unfulfilled: pay[2026-02]
   cut 2026-04-25
-e4 [dk[a] = 2026-03-01 .. 2026-03-05]: diff in sd against sc: 1 changed, 0 added, 0 removed, 1 unchanged
+e4: diff in sd against sc: 1 changed, 0 added, 0 removed, 1 unchanged
   changed (k = b): 0.00 PLN against 10.00 PLN
   world: sc
   world: sd
   unfulfilled: one[a]
-  unfulfilled: one[b]
-  cut 2026-04-25
-e4 [dk[a] = 2026-03-06 .. 2026-03-10]: diff in sd against sc: 1 changed, 0 added, 0 removed, 1 unchanged
-  changed (k = b): 0.00 PLN against 10.00 PLN
-  world: sc
-  world: sd
   unfulfilled: one[b]
   cut 2026-04-25
 e5 [dj = 2026-03-02 .. 2026-03-03]: diff in se against sc: 1 changed, 0 added, 0 removed, 0 unchanged

@@ -55,12 +55,6 @@ r2: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balanc
 r3: 80.00 PLN
   anchor: jar 2026-04-15 end, stated 80.00 PLN, difference ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (out)
   cut 2026-05-01
-r4 [wd = 2026-03-05]: 80.00 PLN
-  anchor: jar 2026-04-15 end, stated 80.00 PLN, difference refused: RUN-PLACE jar is -50.00 PLN after the day's observations and plans of 2026-03-05
-  cut 2026-05-01
-r4 [wd = 2026-03-06]: 80.00 PLN
-  anchor: jar 2026-04-15 end, stated 80.00 PLN, difference refused: RUN-PLACE jar is -50.00 PLN after the day's observations and plans of 2026-03-06
-  cut 2026-05-01
-r4 [wd = 2026-03-07 .. 2026-03-10]: 80.00 PLN
-  anchor: jar 2026-04-15 end, stated 80.00 PLN, difference 30.00 PLN
+r4: 80.00 PLN
+  anchor: jar 2026-04-15 end, stated 80.00 PLN, difference ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (out)
   cut 2026-05-01

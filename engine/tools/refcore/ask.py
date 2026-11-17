@@ -1234,12 +1234,6 @@ class Asker:
                                   if not re.match(r'^\s*\d{4}-\d{2}-\d{2}:$', ln))),)
         elif isinstance(r.trace, TraceNode):
             k = k + (trace_key(r.trace),)
-        # and its register (an anchor's difference, a left-out instance's first day): each block equals the plain
-        # line pinned to each day of its sub-window (R13.2; the third turn's every-day check), so a run whose register
-        # prints other lines is another block. The law and cut line is the line's own, not the run's.
-        coll = getattr(r, 'coll', None)
-        if coll is not None:
-            k = k + (tuple(self.register(coll, [], _NoLaw)[:-1]),)
         return k
 
     def each_nested(self, items, labels):
@@ -2379,12 +2373,6 @@ def trace_key(tn):
     for ch in subs:
         out.append(trace_key(ch) if isinstance(ch, TraceNode) else repr(ch))
     return tuple(out)
-
-
-class _NoLaw:
-    """A context for a run's register in each_key: its last line (law date, cut) is dropped there."""
-    law = None
-    cut = None
 
 
 def each_next(met, assigned, answer, forced=()):

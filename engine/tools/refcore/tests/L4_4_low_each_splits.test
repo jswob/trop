@@ -61,12 +61,9 @@ lw [wd = 2026-04-01] [ax = lo]: 12.00 PLN
   reading: ax = lo
   held: rate = 12.00 PLN (r2), read for 2026-04-01
   cut 2026-03-01
-lw [wd = 2026-04-02] [ax = lo]: 0.00 PLN
+lw [wd = 2026-04-02 .. 2026-04-03] [ax = lo]: 0.00 PLN
   reading: ax = lo
   held: rate = 12.00 PLN (r2), read for 2026-04-02
-  cut 2026-03-01
-lw [wd = 2026-04-03] [ax = lo]: 0.00 PLN
-  reading: ax = lo
   cut 2026-03-01
 lw [wd = 2026-03-28 .. 2026-03-31] [ax = hi]: 20.00 PLN
   reading: ax = hi
@@ -75,10 +72,7 @@ lw [wd = 2026-04-01] [ax = hi]: 24.00 PLN
   reading: ax = hi
   held: rate = 12.00 PLN (r2), read for 2026-04-01
   cut 2026-03-01
-lw [wd = 2026-04-02] [ax = hi]: 0.00 PLN
+lw [wd = 2026-04-02 .. 2026-04-03] [ax = hi]: 0.00 PLN
   reading: ax = hi
   held: rate = 12.00 PLN (r2), read for 2026-04-02
-  cut 2026-03-01
-lw [wd = 2026-04-03] [ax = hi]: 0.00 PLN
-  reading: ax = hi
   cut 2026-03-01
