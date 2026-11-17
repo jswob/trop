@@ -111,10 +111,12 @@ impl Engine {
                 return Err(Stop::NotBuilt("explain of a modelled balance"));
             }
             // before S or after E it is the run's hole, as every balance (E §6.2, §2)
-            return match outside {
-                Some(hole) => Ok(hole),
-                None => self.bal_modelled(m, (&place, &unit), d, ctx.cut),
-            };
+            if let Some(hole) = outside {
+                return Ok(hole);
+            }
+            // the plain read's instant, its start included (tally 2.1.8 R16, B5)
+            let key = if b.start { At::start(d) } else { At::end(d) };
+            return self.bal_modelled(m, (&place, &unit), key, ctx.cut);
         }
         if b.proj.from.is_some() {
             return match outside {

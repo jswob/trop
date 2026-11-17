@@ -221,7 +221,8 @@ fn modelled_lines(
         "balance of {place} ({unit}) at the {edge} of {}, modelled",
         end.text()
     )];
-    let counted = walk.modelled_counted(m, (place, unit), end)?;
+    let key = if start { At::start(end) } else { At::end(end) };
+    let counted = walk.modelled_counted(m, (place, unit), key)?;
     let log = walk.entries(place, unit);
     out.push(match counted.start {
         Some(r) => {
