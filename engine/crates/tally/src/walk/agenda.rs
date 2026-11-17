@@ -130,6 +130,23 @@ impl Walk {
             .push((at, act));
     }
 
+    /// The end of decision instance `mid`'s window at point `at`: two ends at one point apply
+    /// in their instances' id order, as refcore's key orders them, the day's stable sort
+    /// keeping it (L §4.4, pick P29; N4 of group 3's review).
+    pub(crate) fn window_end_at(&mut self, at: At, (mid, w, h): (String, Box<DayWindow>, Hole)) {
+        let acts = self.agenda.entry(at.day).or_insert_with(Vec::new);
+        let mut out = Vec::new();
+        let mut end = Some(Act::WindowEnd(mid.clone(), w, h));
+        for (a, act) in core::mem::take(acts) {
+            if a == at && matches!(&act, Act::WindowEnd(other, ..) if *other > mid) {
+                out.extend(end.take().map(|e| (at, e)));
+            }
+            out.push((a, act));
+        }
+        out.extend(end.map(|e| (at, e)));
+        *acts = out;
+    }
+
     /// The next day to walk after the last one walked, by the day source: the event walk's
     /// next day with an act (the run's first day and each lifespan's last are acts too), or
     /// the oracle's next day (P §2.2).
@@ -989,7 +1006,7 @@ fn schedule_decision(
                     stratum: 2,
                     ..At::of(w.hi, Step::End)
                 };
-                walk.at(end, Act::WindowEnd(inst.id.clone(), Box::new(w), h.clone()));
+                walk.window_end_at(end, (inst.id.clone(), Box::new(w), h.clone()));
             }
             decision_hole(walk, (at, h), &inst, places)?;
         }
