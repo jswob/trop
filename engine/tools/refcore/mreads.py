@@ -357,7 +357,12 @@ def m_mv_field(self, n, env, ctx):
                     return err
                 if err is not None:
                     raise err
-                return lg.rec()
+                rec = lg.rec()
+                if isinstance(src, ObsMv):
+                    # an observation's leg read through a binding prints as its row (E §10 l.472; P24 F-2, #169;
+                    # tally 2.1.8 P42, group 4's review: whatever other asks run)
+                    self.trace_obs_row(src.row, rec)
+                return rec
         if src.exists is False or getattr(src, 'status', None) == 'none':
             made = self.made_to_exist_leg(src, name, ctx)
             if made is not None:

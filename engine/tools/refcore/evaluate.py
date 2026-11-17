@@ -4671,6 +4671,27 @@ class Engine:
         raise refuse('LOAD-UNIT', 'schedule: %s is not a roll' % w)
 
     # -- tracing for explain ---------------------------------------------------------------------
+    def trace_obs_row(self, r, rec):
+        """An observed row read through a movement (E §10): its sid, the leg it states, its version, source, locator,
+        day and known."""
+        if not self.trace_stack:
+            return
+        tn = TraceNode('row', r.sid if ':' in r.sid else '%s:%s' % (r.version.id, r.sid))
+        src = self.m.sources.get(r.version.cite)
+        bits = ['version %s' % r.version.id, 'source %s' % r.version.cite]
+        if src is not None:
+            bits.append('"%s"' % src.title)
+        if r.locator:
+            bits.append('locator "%s"' % r.locator)
+        day = rec.get('day')
+        if isinstance(day, datetime.date):
+            bits.append('on %s' % day)
+        kn = r.known
+        bits.append('known %s' % (('window(%s, %s)' % kn) if isinstance(kn, tuple) else kn))
+        tn.lines.append(', '.join(bits))
+        tn.value = rec
+        self.trace_stack[-1].children.append(('node', tn))
+
     def trace_row(self, r, info, keys):
         if not self.trace_stack:
             return
