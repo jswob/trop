@@ -16,7 +16,7 @@ use super::point::At;
 use super::reads::refuse;
 use crate::base::{Load, Refusal, Run};
 use crate::eval::{Ctx, Engine, Env, Given};
-use crate::hole::{Hole, spread};
+use crate::hole::{Hole, Linear, spread};
 use crate::model::{Domain, KeyVal, Priced, Reality, Value, price_fields};
 use crate::num::Num;
 use crate::syntax::{Expr, Key, Postfix, Price, Stop, Valuation};
@@ -84,13 +84,20 @@ impl Engine {
         let cur = read.currency.as_str();
         let mut total = Num::zero();
         let mut holes = Vec::new();
+        // under `partial`, each hole position's term as a linear form (tally 2.1.8 R15)
+        let mut lins: Vec<Option<Linear>> = Vec::new();
         for u in units {
-            let q = self.bal_day(m, (&place, &u), day, At::end(day), ctx)?;
-            if let Value::Hole(h) = q {
-                holes.push(h);
+            let held = self.bal_day(m, (&place, &u), day, At::end(day), ctx)?;
+            if let Value::Hole(h) = held {
+                holes.push(h.clone());
+                if ctx.partial {
+                    let lin =
+                        self.hole_position(m, (read, &valued), (&u, &h), (env, ctx), &mut holes)?;
+                    lins.push(lin);
+                }
                 continue;
             }
-            let (q, _) = super::plan::quantity(m, &q)?;
+            let (q, _) = super::plan::quantity(m, &held)?;
             if u == cur {
                 total = total.checked_add(&q).map_err(crate::eval::num_stop)?;
                 continue;
@@ -99,7 +106,12 @@ impl Engine {
                 continue;
             }
             match self.position_price(m, (read, &valued), &u, env, ctx)? {
-                Err(h) => holes.push(h),
+                Err(h) => {
+                    if ctx.partial {
+                        lins.push(scaled(m, h.linear_part(), &held)?);
+                    }
+                    holes.push(h);
+                }
                 Ok(p) => {
                     let worth = q.checked_mul(&p).map_err(crate::eval::num_stop)?;
                     total = total.checked_add(&worth).map_err(crate::eval::num_stop)?;
@@ -107,9 +119,45 @@ impl Engine {
             }
         }
         if let Some(h) = spread(&holes.iter().map(Some).collect::<Vec<_>>()) {
+            // a sum of each position's units times its price: linear where every hole
+            // position's term is (L §5.18; tally 2.1.8 R15)
+            if ctx.partial && !lins.is_empty() && lins.iter().all(Option::is_some) {
+                let parts = lins.into_iter().flatten().collect();
+                return crate::eval::lin_fold(m, &h, in_currency(cur, total)?, parts);
+            }
             return Ok(Value::Hole(h));
         }
         in_currency(cur, total)
+    }
+
+    /// A `partial` line's term of a position whose units are hole `h`: its linear part times
+    /// the price of one unit `u` in CUR, 1 in CUR itself; none where the price is a hole too,
+    /// which joins `holes` (refcore's `m_e_value`, its partial arm). L §5.18 (tally 2.1.8
+    /// R15), §5.10.
+    fn hole_position(
+        &mut self,
+        m: &Reality,
+        (read, valued): (&Valuation, &Valued),
+        (u, h): (&str, &Hole),
+        (env, ctx): (&Env, Ctx),
+        holes: &mut Vec<Hole>,
+    ) -> Result<Option<Linear>, Stop> {
+        let cur = read.currency.as_str();
+        let price = if u == cur {
+            Num::int(1)
+        } else {
+            match self.position_price(m, (read, valued), u, env, ctx)? {
+                Err(p) => {
+                    holes.push(p);
+                    return Ok(None);
+                }
+                Ok(p) => p,
+            }
+        };
+        let per = crate::model::Unit::make(vec![(cur.to_owned(), 1), (u.to_owned(), -1)])
+            .map_err(crate::eval::num_stop)?;
+        let price = Value::Number(crate::model::Number::plain(price, per));
+        scaled(m, h.printed_linear().cloned(), &price)
     }
 
     /// A place priced whole, `priced p` with p a value in a currency: p at the value's day,
@@ -504,4 +552,13 @@ fn in_currency(cur: &str, total: Num) -> Result<Value, Stop> {
     let unit = crate::model::Unit::make(vec![(cur.to_owned(), 1)])
         .map_err(|_| invariant("a currency's unit"))?;
     Ok(Value::Number(crate::model::Number::plain(total, unit)))
+}
+
+/// A position's linear part `lin` scaled by `factor`, a price or a number of units; none
+/// where it has none (L §5.18; tally 2.1.8 R15).
+fn scaled(m: &Reality, lin: Option<Linear>, factor: &Value) -> Result<Option<Linear>, Stop> {
+    match lin {
+        Some(lin) => crate::eval::lin_times(m, lin, factor).map(Some),
+        None => Ok(None),
+    }
 }

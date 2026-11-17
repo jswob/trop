@@ -1,7 +1,8 @@
 //! Load's `same` lines of rows and movements: each side named, both sides of one sort, two rows of one type.
 //! Spec: L §6.1 (Identities are written: a side is a kind, a thing, a row or a movement, both
 //! of one sort, `LOAD-SAME` otherwise; a `same` in a version that names a kind or a thing is
-//! refused), §5.19 (`same` between observed rows), §8.3 (`LOAD-SAME`'s forms).
+//! refused, and so is one between an observed row and a move instance of that model, tally
+//! 2.1.8), §5.19 (`same` between observed rows), §8.3 (`LOAD-SAME`'s forms).
 //! Twin: engine/tools/refcore/loader.py (`joint_sames`, `sref`, `move_keys`, `_txt_node`,
 //! `joint_place_sames`, `place_side`, `_has_keys`).
 //! Invariants: the header's lines are taken first, then the versions' in the order load built
@@ -37,8 +38,8 @@ pub(super) struct SameLine {
 
 /// What a side names (refcore's `sref`): a movement, a row, a thing, or another item.
 enum Side {
-    /// A move instance or an observed row, by its id.
-    Move(String),
+    /// A move instance or an observed row, by its id, and which of the two it is.
+    Move(String, Mover),
     /// An input's row at its keys: the input, its keys, its text and its type.
     Row(String, Vec<KeyVal>, String, Option<Ty>),
     /// A kind, a place or a thing.
@@ -47,11 +48,20 @@ enum Side {
     Other(String),
 }
 
+/// Which movement a side names (refcore's `sref`, its third slot). L §6.1.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Mover {
+    /// An observed row.
+    Row,
+    /// A move instance: a plan or a decision.
+    Instance,
+}
+
 impl Side {
     /// What a message calls the side (refcore's `what`).
     fn what(&self) -> String {
         match self {
-            Side::Move(_) => "a movement".to_owned(),
+            Side::Move(..) => "a movement".to_owned(),
             Side::Row(..) => "a row".to_owned(),
             Side::Thing => "a thing".to_owned(),
             Side::Other(what) => what.clone(),
@@ -61,12 +71,38 @@ impl Side {
     /// The side's sort, for the pair's test.
     fn sort(&self) -> u8 {
         match self {
-            Side::Move(_) => 0,
+            Side::Move(..) => 0,
             Side::Row(..) => 1,
             Side::Thing => 2,
             Side::Other(_) => 3,
         }
     }
+}
+
+/// The refusal of a version's `same` between an observed row and a move instance of the model
+/// the version belongs to, in either order, the row named first: a row realises an instance
+/// by its `fulfils`; a joint model's line between two members' movements, or a member's and
+/// its own, stands (refcore's `joint_sames`, the user's cut). L §6.1 (Identities are written,
+/// tally 2.1.8), §5.19, §8.4 (`LOAD-SAME`).
+fn row_and_instance(same: &SameLine, (left, right): (&Side, &Side)) -> Option<String> {
+    let version = same.version.as_deref()?;
+    let (Side::Move(a, ma), Side::Move(b, mb)) = (left, right) else {
+        return None;
+    };
+    let (row, inst) = match (ma, mb) {
+        (Mover::Row, Mover::Instance) => (&same.left, &same.right),
+        (Mover::Instance, Mover::Row) => (&same.right, &same.left),
+        (Mover::Row, Mover::Row) | (Mover::Instance, Mover::Instance) => return None,
+    };
+    let owner = super::joint::owner_deep(version);
+    if super::joint::owner_deep(a) != owner || super::joint::owner_deep(b) != owner {
+        return None;
+    }
+    Some(format!(
+        "same {} = {}: an observed row and a planned instance of one model; state fulfils on the row",
+        shown(row),
+        shown(inst)
+    ))
 }
 
 /// A side's text as a message names it, a member's prefix printed with its dot (refcore's
@@ -92,6 +128,9 @@ impl Loader {
                     "same {l} = {r} in a version names a kind or a thing"
                 )));
             }
+            if let Some(message) = row_and_instance(same, (&left, &right)) {
+                return Err(at(message));
+            }
             if matches!(left, Side::Other(_)) || left.sort() != right.sort() {
                 return Err(at(format!(
                     "same {l} = {r}: {} and {}",
@@ -113,7 +152,7 @@ impl Loader {
                     let version = same.version.clone();
                     self.m.sames.push(SamePair::Rows(a, ka, b, kb, version));
                 }
-                (Side::Move(a), Side::Move(b)) => {
+                (Side::Move(a, _), Side::Move(b, _)) => {
                     let version = same.version.clone();
                     self.m.sames.push(SamePair::Moves(a, b, version));
                 }
@@ -122,7 +161,7 @@ impl Loader {
                         "same {l} = {r}: a thing written with keys that is not a keyed place"
                     )));
                 }
-                (Side::Move(_) | Side::Row(..) | Side::Thing | Side::Other(_), _) => {
+                (Side::Move(..) | Side::Row(..) | Side::Thing | Side::Other(_), _) => {
                     return Err(invariant(
                         "a same pair of two sorts past the sort test".to_owned(),
                     ));
@@ -279,7 +318,7 @@ impl Loader {
         match kind {
             NameKind::Move => {
                 let values = self.move_instance_keys(name, keys, &same.file, same.line)?;
-                Ok(Side::Move(instance_text(name, &values)))
+                Ok(Side::Move(instance_text(name, &values), Mover::Instance))
             }
             NameKind::Input => self.input_side(name, keys, same),
             NameKind::Place | NameKind::Kind => Ok(Side::Thing),
@@ -306,7 +345,7 @@ impl Loader {
                     "an observation row is named by its id: {name}[<id>]"
                 )));
             };
-            return Ok(Side::Move(format!("{name}[{id}]")));
+            return Ok(Side::Move(format!("{name}[{id}]"), Mover::Row));
         }
         if keys.len() != info.binds.len() {
             return Err(at(format!("wrong number of keys for {name}")));

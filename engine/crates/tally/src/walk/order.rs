@@ -18,12 +18,13 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use super::agenda::{Act, Mv};
 use super::day::ends;
-use super::plan::{Amount, Dated, Exists, Inst, LegVal, Status, invariant, kind_certainty};
+use super::plan::{Amount, Dated, End, Exists, Inst, Status, invariant, kind_certainty};
 use super::point::{At, Step};
 use super::readings::Broke;
-use super::state::{ALL, Change, Ent, Group, Taken, WalkObs};
+use super::state::{ALL, Change, Ent, Group, OwnLeg, Taken, WalkObs};
 use crate::base::{Code, Refusal, Run as RunCode};
-use crate::eval::{Ctx, Engine, Entry};
+use crate::book::Obs;
+use crate::eval::{Collected, Ctx, Engine, Entry};
 use crate::hole::spread;
 use crate::model::{KeyVal, MoveInfo, Reality, Target, Value};
 use crate::syntax::{Certainty, Stop};
@@ -143,7 +144,9 @@ impl Engine {
             let n32 = u32::try_from(n).map_err(|_| invariant("an instance's rank"))?;
             let key = At { n: n32, ..at };
             match item.refused {
-                Some(err) => self.refused_run(m, id, item.inst, key, err, item.changes)?,
+                Some(err) => {
+                    self.refused_run(m, id, item.inst, key, (err, item.changes, &item.met))?;
+                }
                 None => {
                     self.run_one(m, id, item.inst, key)?;
                 }
@@ -201,6 +204,13 @@ impl Engine {
         let (order, bad) = cycle_ranks(&members, &tied, &m.graph.written_order, day)?;
         let mut refused: Vec<(usize, Refusal)> = bad.into_iter().collect();
         refused.sort_by(|a, b| rank_cmp(&members, a.0, b.0));
+        // a refusal of the order rests on what every instance due read to be ordered, so the
+        // pins and assumptions those reads took are listed with it (L §8.2 One read set;
+        // tally 2.1.8 §4, #161; refcore's `run_group`, `ord_reads`)
+        let mut rests = Collected::default();
+        for member in &members {
+            rests.merge(&member.met);
+        }
         let mut items = Vec::with_capacity(members.len());
         for (x, err) in refused {
             let member = members
@@ -210,6 +220,7 @@ impl Engine {
                 inst: member.inst.clone(),
                 refused: Some(err),
                 changes: member.changes.clone(),
+                met: rests.clone(),
             });
         }
         for x in order {
@@ -220,6 +231,7 @@ impl Engine {
                 inst: member.inst.clone(),
                 refused: None,
                 changes: member.changes.clone(),
+                met: Collected::default(),
             });
         }
         Ok(items)
@@ -253,7 +265,9 @@ impl Engine {
         } else {
             Ok((false, BTreeSet::new()))
         };
-        self.pop_alone();
+        // what it read to be ordered, with what its instance read (refcore's `ord_reads`)
+        let mut met = inst.coll.clone();
+        met.merge(&self.pop_alone());
         let (changes, reads, moves) = read?;
         let (off, seen) = when?;
         Ok(CycleMember {
@@ -263,6 +277,7 @@ impl Engine {
             moves,
             off,
             seen,
+            met,
         })
     }
 
@@ -376,10 +391,14 @@ impl Engine {
         id: usize,
         mut inst: Inst,
         key: At,
-        err: Refusal,
-        changes: Option<BTreeSet<String>>,
+        (err, changes, met): (Refusal, Option<BTreeSet<String>>, &Collected),
     ) -> Result<(), Stop> {
         let walk = self.walk_mut(id)?;
+        let refused = || {
+            let mut ent = Ent::new(key, Change::Bad(err.clone()));
+            ent.coll = Some(met.clone());
+            ent
+        };
         match changes.filter(|c| !c.is_empty()) {
             Some(places) => {
                 for place in places {
@@ -388,10 +407,10 @@ impl Engine {
                         .get(&place)
                         .and_then(|t| m.place_unit(t))
                         .unwrap_or_else(|| ALL.to_owned());
-                    walk.add(m, &place, &unit, Ent::new(key, Change::Bad(err.clone())))?;
+                    walk.add(m, &place, &unit, refused())?;
                 }
             }
-            None => walk.add(m, ALL, ALL, Ent::new(key, Change::Bad(err.clone())))?,
+            None => walk.add(m, ALL, ALL, refused())?,
         }
         inst.legs = Vec::new();
         inst.attrs = Vec::new();
@@ -707,7 +726,8 @@ impl Engine {
             (walk.cut, walk.proj.is_none())
         };
         let modelled = main
-            && ((t < cut && self.touches_covered(m, &run.inst, cut)?) || !run.inst.obs.is_empty());
+            && ((t < cut && self.touches_covered(m, &run.inst, (cut, None))?)
+                || !run.inst.obs.is_empty());
         let legless = m
             .moves
             .get(&run.inst.move_id)
@@ -790,8 +810,7 @@ impl Engine {
         }
         run.inst.status = if t < cut { Status::Past } else { Status::Plan };
         let mut reg = Vec::new();
-        // one stated same as an observed row was observed (L §6.1)
-        if t < cut && run.inst.obs.is_empty() && !walk.same_observed.contains(&run.inst.id) {
+        if t < cut && run.inst.obs.is_empty() {
             reg.push(Entry {
                 word: "unfulfilled",
                 text: run.inst.id.clone(),
@@ -832,7 +851,7 @@ impl Engine {
         m: &Reality,
         id: usize,
         run: &Run,
-    ) -> Result<Option<Vec<LegVal>>, Stop> {
+    ) -> Result<Option<Vec<OwnLeg>>, Stop> {
         let Some(Dated::Day(t)) = run.inst.day else {
             return Err(invariant("a decision run with no day"));
         };
@@ -845,21 +864,21 @@ impl Engine {
     /// # Errors
     ///
     /// `ENGINE-INVARIANT` for a walk the engine lacks.
-    pub(crate) fn leave_run(&mut self, id: usize, prev: Option<Vec<LegVal>>) -> Result<(), Stop> {
+    pub(crate) fn leave_run(&mut self, id: usize, prev: Option<Vec<OwnLeg>>) -> Result<(), Stop> {
         self.walk_mut(id)?.less_obs = prev;
         Ok(())
     }
 
     /// The legs of a decision's own observations booked on their days before its day, the
-    /// cut and after the walk's start: its computation reads the balances less them (refcore's
-    /// `run_one_body`, `less_obs`). E §4.2 step 3, L §5.19.
+    /// cut and after the walk's start, each with the ends its row booked: its computation
+    /// reads the balances less them (refcore's `own_obs`, `less_obs`). E §4.2 step 3, L §5.19.
     fn own_earlier_obs(
         &mut self,
         m: &Reality,
         id: usize,
         inst: &Inst,
         t: Day,
-    ) -> Result<Option<Vec<LegVal>>, Stop> {
+    ) -> Result<Option<Vec<OwnLeg>>, Stop> {
         let walk = self.walk(id)?;
         if walk.proj.is_some() {
             return Ok(None);
@@ -870,13 +889,39 @@ impl Engine {
             if self.obs_err(m, &o, cut)?.is_some() {
                 continue;
             }
-            out.extend(
-                o.legs
-                    .into_iter()
-                    .filter(|lg| matches!(lg.day, Dated::Day(d) if d < t && d < cut && d >= start)),
-            );
+            for leg in &o.legs {
+                let Dated::Day(d) = leg.day else {
+                    continue;
+                };
+                if d >= t || d >= cut || d < start {
+                    continue;
+                }
+                let from = self.end_booked(m, &o, &leg.from, (d, cut))?;
+                let to = self.end_booked(m, &o, &leg.to, (d, cut))?;
+                out.push(OwnLeg {
+                    leg: leg.clone(),
+                    from,
+                    to,
+                });
+            }
         }
         Ok((!out.is_empty()).then_some(out))
+    }
+
+    /// Whether observation `o` books its end `end` on day `d`: a place no version covers
+    /// that day, or one `o`'s own version covers (refcore's `own_obs`, its `obs_end_on`).
+    /// L §5.19 Booking an observation.
+    fn end_booked(
+        &mut self,
+        m: &Reality,
+        o: &Obs,
+        end: &End,
+        (d, cut): (Day, Day),
+    ) -> Result<bool, Stop> {
+        let Some(place) = end.place() else {
+            return Ok(false);
+        };
+        self.obs_end_on(m, o, place, d, cut)
     }
 
     /// A decision's own observations dated its day before the cut, booked just after its
@@ -911,7 +956,7 @@ impl Engine {
 
 impl super::state::Walk {
     /// Records a run: its place in the list, by its instance's id. E §4.2.
-    fn record(&mut self, run: Run) {
+    pub(super) fn record(&mut self, run: Run) {
         let ix = self.runs.len();
         self.run_ids.insert(run.inst.id.clone(), ix);
         self.runs.push(run);
@@ -928,6 +973,9 @@ pub struct CycleItem {
     pub refused: Option<Refusal>,
     /// The places its legs give that day; none where one can't be read there.
     pub changes: Option<BTreeSet<String>>,
+    /// What its refusal rests on: what every instance due read to be ordered; empty for one
+    /// that runs.
+    pub met: Collected,
 }
 
 /// What orders one instance of a cycle (refcore's `run_group`, its `info`). L §5.14.2.
@@ -944,6 +992,8 @@ struct CycleMember {
     off: bool,
     /// The places its `when` read.
     seen: BTreeSet<String>,
+    /// What it and its instance read to be ordered (refcore's `ord_reads`).
+    met: Collected,
 }
 
 /// The places an instance's legs give, the places it declares it reads, each none where one

@@ -52,11 +52,11 @@ impl Walk {
         &self,
         m: &Reality,
         (place, unit): (&str, &str),
-        d: Day,
+        key: At,
     ) -> Result<Counted, Stop> {
-        let (_, last) = self.state(m, place, unit, At::end(d));
+        let (_, last) = self.state(m, place, unit, key);
         let log = self.entries(place, unit);
-        let start = modelled_start(log, last, d);
+        let start = modelled_start(log, last, key.day);
         let first = match start {
             Some(at) => at
                 .checked_add(1)
@@ -75,7 +75,8 @@ impl Walk {
             .ok_or_else(|| invariant("a modelled balance past its log"))?;
         let mut ents = Vec::new();
         for (j, e) in (first..).zip(since_start) {
-            if matches!(e.change, Change::Bad(_)) || !booked_elsewhere(e, &obs) {
+            if matches!(e.change, Change::Bad(_) | Change::PermBad(_)) || !booked_elsewhere(e, &obs)
+            {
                 ents.push(j);
             }
         }
@@ -87,7 +88,7 @@ impl Walk {
             ),
             None => None,
         };
-        let legs = self.modelled_legs((place, unit), d, since)?;
+        let legs = self.modelled_legs((place, unit), key, since)?;
         Ok(Counted { start, ents, legs })
     }
 
@@ -99,23 +100,38 @@ impl Walk {
     fn modelled_legs(
         &self,
         (place, unit): (&str, &str),
-        d: Day,
+        key: At,
         since: Option<At>,
     ) -> Result<Vec<(usize, usize, i64)>, Stop> {
+        // the m of a reading `after m` it starts from, or of an earlier one, which every later
+        // reading holds too: m's own leg is never counted after it (L §5.19; tally 2.1.8 R16,
+        // #191 Q5; pick P39 on B8 of group 3's review)
+        let mut after: Vec<&str> = Vec::new();
+        if let Some(start) = since {
+            after = self
+                .after_at
+                .iter()
+                .filter(|((p, ..), at)| p == place && **at <= start)
+                .filter_map(|((_, instant, _), _)| instant.strip_prefix("after "))
+                .collect();
+        }
         let mut out = Vec::new();
         for (ii, inst) in self.modelled.iter().enumerate() {
+            if after.contains(&inst.id.as_str()) {
+                continue;
+            }
             let inst_day = inst.day.as_ref().and_then(Dated::lo);
             for (li, lg) in inst.legs.iter().enumerate() {
                 let Some(gd) = lg.day.day().or(inst_day) else {
                     continue;
                 };
                 let in_unit = lg.unit.as_deref().is_none_or(|u| u == unit);
-                if gd > d || !in_unit {
+                if gd > key.day || !in_unit {
                     continue;
                 }
-                if let Some(s) = since
-                    && self.leg_point(inst, gd)? <= s
-                {
+                // through the plain read's instant: `start` leaves day d's legs out
+                let point = self.leg_point(inst, gd)?;
+                if point > key || since.is_some_and(|s| point <= s) {
                     continue;
                 }
                 for sign in signs_at(lg, place) {
@@ -162,12 +178,12 @@ impl Engine {
         &mut self,
         m: &Reality,
         (place, unit): (&str, &str),
-        d: Day,
+        key: At,
         cut: Day,
     ) -> Result<Value, Stop> {
         let id = self.main_walk(m, cut)?;
         let walk = self.walk(id)?;
-        let counted = walk.modelled_counted(m, (place, unit), d)?;
+        let counted = walk.modelled_counted(m, (place, unit), key)?;
         let ents = walk.entries(place, unit);
         let value = match counted.start {
             Some(at) => {
@@ -194,10 +210,10 @@ impl Engine {
                 .get(*at)
                 .ok_or_else(|| invariant("a modelled balance past its log"))?;
             match &entry.change {
-                Change::Bad(err) => return Err(Stop::Refused(err.clone())),
+                Change::Bad(err) | Change::PermBad(err) => return Err(Stop::Refused(err.clone())),
                 Change::Delta(flow) => q = q.checked_add(flow).map_err(crate::eval::num_stop)?,
                 Change::Hole(hole) | Change::Perm(hole) => holes.push(hole.clone()),
-                Change::Reset { .. } | Change::ImpOn(_) | Change::Mark => {}
+                Change::Reset { .. } | Change::ImpOn(_) | Change::Unperm(_) | Change::Mark => {}
             }
             if let Some(coll) = &entry.coll {
                 met.push(coll.clone());

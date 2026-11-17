@@ -70,11 +70,16 @@ fn table_candidates(
         }
         // a `wording D` pin keeps the tables that entered into force by D (L §4.3)
         if let Some(by) = clocks.wording
-            && enters(m, &table.version, OwnTime::Version, clocks.cut)? > by
+            && enters(
+                m,
+                &table.version,
+                OwnTime::Version,
+                (clocks.cut, clocks.world),
+            )? > by
         {
             continue;
         }
-        let Some(span) = version_span(m, &table.version, clocks.cut)? else {
+        let Some(span) = version_span(m, &table.version, (clocks.cut, clocks.world))? else {
             continue;
         };
         let governs = match clocks.law {
@@ -275,7 +280,10 @@ fn patch(band: &BandInfo, at: usize, base: &[BandAt]) -> Result<Vec<BandAt>, Sto
 ///
 /// `ENGINE-INVARIANT` when the table's version is missing.
 pub fn table_held(m: &Reality, table: &Table, clocks: Clocks) -> Result<bool, Stop> {
-    let (Some(span), Some(law)) = (version_span(m, &table.version, clocks.cut)?, clocks.law) else {
+    let (Some(span), Some(law)) = (
+        version_span(m, &table.version, (clocks.cut, clocks.world))?,
+        clocks.law,
+    ) else {
         return Ok(false);
     };
     Ok(!span.is_always() && span.start().is_some() && span.end().is_none() && law > clocks.ask_cut)

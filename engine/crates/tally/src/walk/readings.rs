@@ -16,12 +16,13 @@ use std::collections::BTreeSet;
 
 use super::agenda::Reading;
 use super::day::ends;
-use super::plan::{End, LegVal, Status, invariant, qty_value};
+use super::plan::{Amount, DayWindow, End, LegVal, Status, invariant, qty_value};
 use super::point::At;
-use super::state::{ALL, Change, Ent, Group, Taken, Walk};
+use super::state::{ALL, Change, Ent, Group, St, Taken, Walk};
 use crate::base::{Code, Refusal, Run};
 use crate::eval::Engine;
-use crate::model::Reality;
+use crate::hole::Hole;
+use crate::model::{GapRole, Reality};
 use crate::num::Num;
 use crate::syntax::{Sign, Stop};
 use crate::time::Day;
@@ -30,6 +31,54 @@ use crate::time::Day;
 /// (0), the observations booked there (1) and its group's test (2) (refcore's `key[4] + 5`).
 /// E §4.2 step 3.
 const AFTER_SUB: u32 = 5;
+
+/// The logs where decision instance `mid`'s window left a hole no reading answers, each with
+/// the units its hole a reading ends goes to: the log's own, or for a place-wide log the
+/// place's units in the walk, else its unit (refcore's `dec_win_end`, its logs). L §4.6,
+/// E §4.2 Holes in the walk.
+fn fallen_places(m: &Reality, walk: &Walk, mid: &str) -> Vec<(String, String, Vec<String>)> {
+    let mut fallen = Vec::new();
+    for ((place, unit), log) in &walk.logs {
+        let held = log
+            .ents
+            .iter()
+            .any(|e| matches!(e.change, Change::Perm(_)) && e.mv.as_deref() == Some(mid));
+        if !held {
+            continue;
+        }
+        let mut units: Vec<String> = Vec::new();
+        if unit == ALL {
+            let others = walk.logs.keys().filter(|(p, u)| p == place && u != ALL);
+            units.extend(others.map(|(_, u)| u.clone()));
+            if units.is_empty()
+                && let Some(thing) = m.things.get(place)
+            {
+                units.extend(m.place_unit(thing));
+            }
+        } else {
+            units.push(unit.clone());
+        }
+        fallen.push((place.clone(), unit.clone(), units));
+    }
+    fallen
+}
+
+/// Whether anything but decision instance `mid` touched reading `r`'s place inside `mid`'s
+/// window `w`, in its unit or every unit, so the balance after it would differ by m's day
+/// (pick P29 on #175; refcore's `dec_win_end`, its `others`). L §4.6, §4.4.
+fn touched_inside(walk: &Walk, r: &Reading, (mid, w): (&str, &DayWindow)) -> bool {
+    for unit in [r.unit.as_str(), ALL] {
+        for e in walk.entries(&r.place, unit) {
+            if (w.lo..=w.hi).contains(&e.at.day)
+                && e.mv.as_deref() != Some(mid)
+                && !matches!(e.change, Change::Unperm(_))
+            {
+                return true;
+            }
+        }
+    }
+    false
+}
 
 /// How a refusal of the sign rule names what broke it (refcore's `check_group` messages).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -100,18 +149,11 @@ impl Engine {
                 Status::Past => self.apply_after(m, id, at, &r)?,
                 Status::Modelled if linked => self.apply_after(m, id, at, &r)?,
                 Status::Modelled => {
-                    let err = Refusal::new(
-                        Code::Run(Run::Record),
-                        format!(
-                            "reading {}[{}] {}: {mid} is modelled past and nothing fulfils it",
-                            r.input, r.place, r.instant
-                        ),
-                    );
-                    self.walk_mut(id)?
-                        .add(m, &r.place, &r.unit, Ent::new(at, Change::Bad(err)))?;
+                    let why = "is modelled past and nothing fulfils it";
+                    self.after_missing(m, id, at, (&r, &mid, why))?;
                 }
+                Status::None => self.after_missing(m, id, at, (&r, &mid, "doesn't exist"))?,
                 Status::Open
-                | Status::None
                 | Status::LeftOut
                 | Status::Refused
                 | Status::Hole
@@ -119,6 +161,84 @@ impl Engine {
                 | Status::Uncertain
                 | Status::Plan => {}
             }
+        }
+        Ok(())
+    }
+
+    /// The end of the last day of decision `mid`'s window `w`, at point `at`: m has fallen,
+    /// so the hole `h` it left its places becomes each unit's, which a reading ends; a reading
+    /// `after` m before the cut then stands where nothing else touched its place inside the
+    /// window, the balance being the reading plus what is booked since, the same for every
+    /// day of the window; else the hole stays up to the place's next reading (refcore's
+    /// `dec_win_end`; pick P29 on #175). L §4.6 Readings, §4.4, E §4.2 Holes in the walk.
+    pub(super) fn window_end(
+        &mut self,
+        m: &Reality,
+        id: usize,
+        at: At,
+        (mid, w, h): (&str, &DayWindow, &Hole),
+    ) -> Result<(), Stop> {
+        let fallen = fallen_places(m, self.walk(id)?, mid);
+        let walk = self.walk_mut(id)?;
+        for (place, unit, units) in fallen {
+            let mut back = Ent::new(at, Change::Unperm(h.clone()));
+            back.mv = Some(mid.to_owned());
+            walk.add(m, &place, &unit, back)?;
+            for each in units {
+                let mut ent = Ent::new(at, Change::Hole(h.clone()));
+                ent.mv = Some(mid.to_owned());
+                ent.flow = Some(Amount::Hole(h.clone()));
+                walk.add(m, &place, &each, ent)?;
+            }
+        }
+        if w.hi >= walk.cut {
+            return Ok(());
+        }
+        let Some(waiting) = walk.after.remove(mid) else {
+            return Ok(());
+        };
+        let mut kept = Vec::new();
+        for r in waiting {
+            if touched_inside(self.walk(id)?, &r, (mid, w)) {
+                kept.push(r);
+            } else {
+                self.apply_after(m, id, at.with_sub(1), &r)?;
+            }
+        }
+        if !kept.is_empty() {
+            self.walk_mut(id)?.after.insert(mid.to_owned(), kept);
+        }
+        Ok(())
+    }
+
+    /// A reading `after m` where m doesn't exist, or is modelled past with nothing standing in
+    /// for it: `RUN-RECORD` at its place from m's point `at` on, and at the other place of a
+    /// pad, whose pad is a refused movement there (refcore's `after_missing`). L §4.6
+    /// Readings, §8.4.
+    fn after_missing(
+        &mut self,
+        m: &Reality,
+        id: usize,
+        at: At,
+        (r, mid, why): (&Reading, &str, &str),
+    ) -> Result<(), Stop> {
+        let err = Refusal::new(
+            Code::Run(Run::Record),
+            format!(
+                "reading {}[{}] {}: {mid} {why}",
+                r.input, r.place, r.instant
+            ),
+        );
+        let mut places = vec![r.place.clone()];
+        if let Some(version) = m.versions.get(&r.version)
+            && let Some((_, GapRole::Pad(other))) =
+                version.gap_roles.iter().find(|(p, _)| *p == r.place)
+        {
+            places.push(other.clone());
+        }
+        let walk = self.walk_mut(id)?;
+        for place in places {
+            walk.add(m, &place, &r.unit, Ent::new(at, Change::Bad(err.clone())))?;
         }
         Ok(())
     }
@@ -161,40 +281,48 @@ impl Engine {
         broke: &Broke,
     ) -> Result<(), Stop> {
         let mut bad = Vec::new();
+        let mut depends = Vec::new();
         for ((place, unit), legs) in group {
             let st = self.walk(id)?.pstate(m, place, unit, at);
-            let Some(nv) = st.known() else {
-                continue;
+            // legs dated by a window may still fall here: the test asked of each balance they
+            // allow (E §4.1 step 2; tally 2.1.8 item 77)
+            let nv = match st.known() {
+                Some(nv) => Some(nv.clone()),
+                None => match self.group_three(m, id, broke, (place, unit), legs, &st)? {
+                    Three::Depends => {
+                        depends.push((place.clone(), unit.clone(), legs.clone()));
+                        None
+                    }
+                    Three::Every => st.val.clone(),
+                    Three::None => None,
+                },
             };
-            if breaks(m, place, nv) {
-                bad.push((place.clone(), unit.clone(), nv.clone(), legs.clone()));
+            if let Some(nv) = nv
+                && breaks(m, place, &nv)
+            {
+                bad.push((place.clone(), unit.clone(), nv, legs.clone()));
             }
         }
+        let pending_walk = self.walk_mut(id)?;
+        for (place, unit, mut legs) in depends {
+            if let Some(pending) = pending_walk.pend_at.get(&(place.clone(), unit.clone())) {
+                legs.extend(pending.iter().cloned());
+            }
+            pending_walk.imp_hole(m, at, (&place, &unit), &legs)?;
+        }
+        for key in group.keys() {
+            pending_walk.pend_at.remove(key);
+        }
         for (place, unit, nv, legs) in bad {
-            let shown = qty_value(m, &nv, &unit)?
-                .text(m)
-                .map_err(crate::eval::num_stop)?;
+            let words = self.refusal_words(m, id, broke, (&place, &unit), &legs, &nv)?;
+            let err = Refusal::new(Code::Run(Run::Place), words);
             if legs.is_empty() {
                 // an anchored place with no leg of the group at it: refused from here, with
                 // its reading's message (L §8.4; tally 2.1.2)
-                let instant = self
-                    .today(id)?
-                    .anchors
-                    .get(&(place.clone(), unit.clone()))
-                    .cloned()
-                    .ok_or_else(|| invariant("a place in a group with no leg and no anchor"))?;
-                let err = Refusal::new(
-                    Code::Run(Run::Place),
-                    format!("{place} is {shown} after its reading at {instant}"),
-                );
                 self.walk_mut(id)?
                     .add(m, &place, &unit, Ent::new(at, Change::Bad(err)))?;
                 continue;
             }
-            let err = Refusal::new(
-                Code::Run(Run::Place),
-                broke_text(m, broke, &place, &shown, &legs),
-            );
             for (mv, leg) in &legs {
                 let walk = self.walk_mut(id)?;
                 let key = (mv.clone(), leg.name.clone());
@@ -213,6 +341,68 @@ impl Engine {
             }
         }
         Ok(())
+    }
+
+    /// The sign rule at a group's `place` in `unit`, whose state `st` has window-dated legs
+    /// pending, asked of each balance they allow: where every one breaks it, the refusal is the
+    /// windows' hole where the bytes it prints differ by the day, whatever its message's form
+    /// (`ob takes pot below 0` names no balance; refcore's `words_differ`, its `words`). E §4.1
+    /// step 2, §4.2 step 5; L §4.4; tally 2.1.8 item 77, pick P30.
+    ///
+    /// # Errors
+    ///
+    /// A number past the cap; `ENGINE-INVARIANT` for an anchored place with no instant.
+    fn group_three(
+        &self,
+        m: &Reality,
+        id: usize,
+        broke: &Broke,
+        (place, unit): (&str, &str),
+        legs: &[(String, LegVal)],
+        st: &St,
+    ) -> Result<Three, Stop> {
+        let three = imp_breaks(m, place, st, None)?;
+        let (Three::Every, Some((lo, hi))) = (three, st.imp_range()?) else {
+            return Ok(three);
+        };
+        let low = self.refusal_words(m, id, broke, (place, unit), legs, &lo)?;
+        let high = self.refusal_words(m, id, broke, (place, unit), legs, &hi)?;
+        Ok(if low == high {
+            Three::Every
+        } else {
+            Three::Depends
+        })
+    }
+
+    /// The bytes the sign rule's refusal at a group's `place` in `unit` prints for balance
+    /// `nv`: the group's message for its legs `legs`, or an anchored place's with no leg there
+    /// (refcore's `check_group`, its `words`). L §5.10, §8.4; E §4.2 step 5.
+    ///
+    /// # Errors
+    ///
+    /// A number past the cap; `ENGINE-INVARIANT` for an anchored place with no instant.
+    fn refusal_words(
+        &self,
+        m: &Reality,
+        id: usize,
+        broke: &Broke,
+        (place, unit): (&str, &str),
+        legs: &[(String, LegVal)],
+        nv: &Num,
+    ) -> Result<String, Stop> {
+        let shown = qty_value(m, nv, unit)?
+            .text(m)
+            .map_err(crate::eval::num_stop)?;
+        if !legs.is_empty() {
+            return Ok(broke_text(m, broke, place, &shown, legs));
+        }
+        let instant = self
+            .today(id)?
+            .anchors
+            .get(&(place.to_owned(), unit.to_owned()))
+            .cloned()
+            .ok_or_else(|| invariant("a place in a group with no leg and no anchor"))?;
+        Ok(format!("{place} is {shown} after its reading at {instant}"))
     }
 
     /// Puts a leg's booked ends in the group of the sign rule it waits for: the day's first
@@ -299,26 +489,34 @@ impl Walk {
         on: &[(String, i64)],
         unit: &str,
         at: At,
-    ) -> Result<Option<Refusal>, Stop> {
+    ) -> Result<Alone, Stop> {
         for (p, sign) in on {
             let st = self.pstate(m, p, unit, at);
+            let flow = super::day::signed(q, *sign)?;
             let Some(v) = st.known() else {
-                continue;
+                // legs dated by a window may still fall here: the test asked of each balance
+                // they allow; its refusal names no balance, so its words are every day's
+                // (tally 2.1.8 item 77)
+                match imp_breaks(m, p, &st, Some(&flow))? {
+                    Three::Depends => return Ok(Alone::Depends(p.clone())),
+                    Three::Every => {
+                        return Ok(Alone::Refused(Refusal::new(
+                            Code::Run(Run::Place),
+                            takes_text(m, movement, p),
+                        )));
+                    }
+                    Three::None => continue,
+                }
             };
-            let moved = if *sign < 0 {
-                v.checked_sub(q)
-            } else {
-                v.checked_add(q)
-            }
-            .map_err(crate::eval::num_stop)?;
+            let moved = v.checked_add(&flow).map_err(crate::eval::num_stop)?;
             if breaks(m, p, &moved) {
-                return Ok(Some(Refusal::new(
+                return Ok(Alone::Refused(Refusal::new(
                     Code::Run(Run::Place),
                     takes_text(m, movement, p),
                 )));
             }
         }
-        Ok(None)
+        Ok(Alone::Passes)
     }
 
     /// An anchored reading's place, an opening's included, tested at the reading's point by
@@ -427,6 +625,57 @@ impl Walk {
 pub(super) fn place_sign(m: &Reality, place: &str) -> Option<Sign> {
     let base = m.things.get(place)?.base.as_deref()?;
     m.kind_sign(base)
+}
+
+/// What a leg tested alone meets (refcore's `book_leg`, its test outside a group). L §5.10,
+/// E §4.2 step 5.
+pub(super) enum Alone {
+    /// The leg is booked.
+    Passes,
+    /// The leg is refused.
+    Refused(Refusal),
+    /// Some of a pending window's days refuse it and some don't: the place named is the
+    /// window's hole (tally 2.1.8 item 77).
+    Depends(String),
+}
+
+/// A three-valued test (E §4.1 step 2; refcore's `three`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum Three {
+    /// No balance the pending legs allow breaks the rule.
+    None,
+    /// Every one does.
+    Every,
+    /// Some do and some don't, or, at a group, all do in bytes that differ by the day.
+    Depends,
+}
+
+/// The sign rule at `place` asked of each balance the window-dated legs pending in `st` allow,
+/// a leg's `flow` added where one is being booked: the least and the greatest, the rule being
+/// monotone in the balance; none where the balance isn't known but for them (refcore's
+/// `imp_three`). E §4.1 step 2, §4.2 step 5; L §4.4; tally 2.1.8 item 77.
+///
+/// # Errors
+///
+/// A number past the cap.
+pub(super) fn imp_breaks(
+    m: &Reality,
+    place: &str,
+    st: &St,
+    flow: Option<&Num>,
+) -> Result<Three, Stop> {
+    let Some((mut lo, mut hi)) = st.imp_range()? else {
+        return Ok(Three::None);
+    };
+    if let Some(f) = flow {
+        lo = lo.checked_add(f).map_err(crate::eval::num_stop)?;
+        hi = hi.checked_add(f).map_err(crate::eval::num_stop)?;
+    }
+    Ok(match (breaks(m, place, &lo), breaks(m, place, &hi)) {
+        (false, false) => Three::None,
+        (true, true) => Three::Every,
+        _ => Three::Depends,
+    })
 }
 
 /// Whether balance `v` breaks its place's sign rule (L §5.10).

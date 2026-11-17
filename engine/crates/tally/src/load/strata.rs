@@ -28,10 +28,10 @@ use super::steps::{Loader, refuse};
 use super::texts::text;
 use crate::base::{Code, Load, Refusal, Warn};
 use crate::model::{
-    Domain, GapRole, Graph, Mark, MoveInfo, Node, NodeKind, Reality, Rel, RowInstant, Shift,
-    Target, Ty, pattern_text,
+    Domain, GapRole, Graph, Mark, MoveInfo, Node, NodeKind, Reality, Rel, RowInstant, SamePair,
+    Shift, Target, Ty, pattern_text,
 };
-use crate::syntax::{Expr, Field, Lit, Order, Postfix, Section, Stop, Value as Written};
+use crate::syntax::{AskBody, Expr, Field, Lit, Order, Postfix, Section, Stop, Value as Written};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// An invariant of the graph's own searches broken: a cycle or a layer that must exist.
@@ -474,6 +474,32 @@ fn reached_marks(graph: &Graph, item: &Node) -> Vec<(Mark, Target)> {
         .collect()
 }
 
+/// The first, in refcore's order, of the `bal(x, d) modelled` reads move `id` reaches, its
+/// legs and its day, through the defs, fills and days they read (refcore's
+/// `reached_modelled`). L §5.19 (tally 2.1.8 R16, #176).
+fn reached_modelled(graph: &Graph, id: &str) -> Option<Target> {
+    let mut found: BTreeMap<String, Target> = BTreeMap::new();
+    let mut seen = BTreeSet::new();
+    let mut stack = vec![
+        Node::new(NodeKind::Move, id),
+        Node::new(NodeKind::MoveOn, id),
+    ];
+    while let Some(next) = stack.pop() {
+        if !seen.insert(next.clone()) {
+            continue;
+        }
+        for target in graph.modelled.get(&next).into_iter().flatten() {
+            found.insert(target_repr(target), target.clone());
+        }
+        for read in graph.reads(&next).into_iter().flat_map(BTreeMap::keys) {
+            if matches!(read.kind, NodeKind::Def | NodeKind::Fill | NodeKind::MoveOn) {
+                stack.push(read.clone());
+            }
+        }
+    }
+    found.into_values().next()
+}
+
 /// A target as Python's `repr` prints refcore's tuple for it, which orders refcore's sort.
 fn target_repr(target: &Target) -> String {
     match target {
@@ -548,24 +574,84 @@ fn running_reads(
             ));
         }
     }
-    let Some((item, (file, line))) = graph
+    if let Some((item, (file, line))) = graph
         .balnow
         .iter()
         .find(|(item, _)| !decided.contains(*item))
-    else {
-        return Ok(());
-    };
-    // at the read's line, as every load refusal (L §8.3; tally 2.1.7 S9)
-    let message = format!(
-        "{} holds bal(x) with no day: a running read outside a decision and its defs",
-        item.id
-    );
-    Err(refuse(Load::Reads, message, file, *line))
+    {
+        // at the read's line, as every load refusal (L §8.3; tally 2.1.7 S9)
+        let message = format!(
+            "{} holds bal(x) with no day: a running read outside a decision and its defs",
+            item.id
+        );
+        return Err(refuse(Load::Reads, message, file, *line));
+    }
+    ask_running_reads(m, graph)
+}
+
+/// The place an item's `bal(x)` with no day reads, the first by name among its marks; the
+/// item's own id where no mark names one (refcore's `check3`, its asks' loop). L §5.14.1.
+fn balnow_place(graph: &Graph, x: &Node) -> String {
+    let mut place: Option<&str> = None;
+    for (mark, target) in graph.marks.get(x).into_iter().flatten() {
+        if *mark != Mark::BalNow {
+            continue;
+        }
+        let name = target_name(target);
+        if place.is_none_or(|p| name < p) {
+            place = Some(name);
+        }
+    }
+    place.unwrap_or(x.id.as_str()).to_owned()
+}
+
+/// `LOAD-READS` for an ask whose value reaches `bal(x)` with no day through its defs and
+/// fills: it reads it outside a decision, which load sees, in the words run gave it; an
+/// `explain`, `inputs-of` or `readers-of` reads a walk-bound def at its walk points (refcore's
+/// `check3`, its asks' loop; tally 2.1.8 #162, pick P29). L §5.14.1, §8.4 (R5).
+fn ask_running_reads(m: &Reality, graph: &Graph) -> Result<(), Stop> {
+    for ask in &m.asks {
+        if matches!(
+            ask.body,
+            AskBody::Explain(_) | AskBody::InputsOf(_) | AskBody::ReadersOf(_)
+        ) {
+            continue;
+        }
+        let mut seen: BTreeSet<Node> = BTreeSet::new();
+        let mut stack = vec![Node::new(NodeKind::Ask, &ask.id)];
+        while let Some(x) = stack.pop() {
+            if !seen.insert(x.clone()) {
+                continue;
+            }
+            if graph.balnow.contains_key(&x) {
+                let place = balnow_place(graph, &x);
+                return Err(Stop::Refused(Refusal::new(
+                    Code::Load(Load::Reads),
+                    format!("bal({place}) with no day outside a decision"),
+                )));
+            }
+            let reads = graph.edges.get(&x).into_iter().flat_map(BTreeMap::keys);
+            stack.extend(
+                reads
+                    .filter(|t| matches!(t.kind, NodeKind::Def | NodeKind::Fill))
+                    .cloned(),
+            );
+        }
+    }
+    Ok(())
 }
 
 /// The `LOAD-READS` message for one move, where it needs one (refcore's
 /// `m_check_moves_graph`, its loop body). L §5.14.1.
 fn move_reads(m: &Reality, graph: &Graph, id: &str, mv: &MoveInfo) -> Option<String> {
+    // the model's account exists after the walk, so no movement reads it (L §5.19; tally
+    // 2.1.8 R16, #176)
+    if let Some(target) = reached_modelled(graph, id) {
+        return Some(format!(
+            "{id} reaches bal({}) modelled",
+            target_name(&target)
+        ));
+    }
     let reached = reached_marks(graph, &Node::new(NodeKind::Move, id));
     let without = |target: &Target| {
         let name = target_name(target);
@@ -601,6 +687,45 @@ fn move_reads(m: &Reality, graph: &Graph, id: &str, mv: &MoveInfo) -> Option<Str
     None
 }
 
+/// `LOAD-KEY` for a reading `after m[k]` whose literal month, quarter or day k load sees isn't
+/// a key of the index m's binding ranges over: m has no such instance (refcore's
+/// `_after_key`). L §4.6 Readings, §8.3 (tally 2.1.8 R16, #175).
+fn after_keys(
+    m: &Reality,
+    (id, row): (&str, &crate::model::Row),
+    (node, keys): (&Expr, &[crate::syntax::Key]),
+    binds: &[crate::model::BindInfo],
+    (file, line): (&str, u32),
+) -> Result<(), Stop> {
+    for (key, bind) in keys.iter().zip(binds) {
+        let (crate::syntax::Key::Expr(e), Domain::Index(ix)) = (key, &bind.domain) else {
+            continue;
+        };
+        // a period, a day, or a bare key of a list index, a def's name too: a reading's key is
+        // a literal (L §2.5 Keys; B6 of group 3's review, `kz` of `ks`; N-a of its fix's)
+        let period = matches!(
+            e,
+            Expr::Lit(Lit::Month(..) | Lit::Quarter(..) | Lit::Day(_))
+        );
+        if !period && !matches!(e, Expr::Name(_)) {
+            continue;
+        }
+        let Some(lit) = super::types::key_lit_of(e) else {
+            continue;
+        };
+        if super::keys::resolve_key(m, &lit, &bind.domain, file, line).is_err() {
+            let message = format!(
+                "{id}{} after {}: {} is not a key of {ix}",
+                pattern_text(&row.pattern),
+                text(node),
+                text(e)
+            );
+            return Err(refuse(Load::Key, message, file, line));
+        }
+    }
+    Ok(())
+}
+
 /// `LOAD-ORDER` for a reading `after m` of `stated` or `opening`, with m a plan or an
 /// observation: load sees m's class, and the batch has no order (refcore's
 /// `m_check_after_readings`). L §4.6 Readings, §5.14.2, §8.3.
@@ -614,14 +739,20 @@ fn after_readings(m: &Reality, files: &Files) -> Result<(), Stop> {
                 continue;
             };
             let mut base = node;
+            let mut keys: &[crate::syntax::Key] = &[];
             if let Expr::Post(inner, posts) = node
-                && let [Postfix::Keys(_)] = posts.as_slice()
+                && let [Postfix::Keys(written)] = posts.as_slice()
             {
                 base = inner;
+                keys = written;
             }
             let Expr::Name(name) = base else {
                 continue;
             };
+            if let Some(mv) = m.moves.get(name) {
+                let at = (files.of_version(&row.version)?, row.line);
+                after_keys(m, (id, row), (node, keys), &mv.binds, at)?;
+            }
             let plan = m.moves.get(name).is_some_and(|mv| !mv.decision);
             let observed = m.inputs.get(name).is_some_and(|named| named.observed);
             if plan || observed {
@@ -690,6 +821,33 @@ fn closed_cycle(stack: &[(Node, Vec<Node>)], again: Node) -> Vec<Node> {
     cycle
 }
 
+/// The inputs read: those `read` holds, and every input a `same` line ties to one read, since
+/// rows stated `same` are read together, by every read of either (refcore's `check_graph`,
+/// its `same_row_edges`). L §6.1, §8.5 (tally 2.1.8 §4).
+fn read_with_same(m: &Reality, read: &BTreeSet<&Node>) -> BTreeSet<String> {
+    let mut inputs: BTreeSet<String> = m
+        .inputs
+        .entries()
+        .filter(|(id, _)| read.contains(&Node::new(NodeKind::Input, id)))
+        .map(|(id, _)| id.clone())
+        .collect();
+    let mut grew = true;
+    while grew {
+        grew = false;
+        for pair in &m.sames {
+            let SamePair::Rows(a, _, b, _, _) = pair else {
+                continue;
+            };
+            for (x, y) in [(a, b), (b, a)] {
+                if inputs.contains(x) && inputs.insert(y.clone()) {
+                    grew = true;
+                }
+            }
+        }
+    }
+    inputs
+}
+
 /// `input x is read by nothing` for an input that isn't built in or observed, `def d is read
 /// by nothing`, and `place p is read by nothing` for a `place` section no line names, for
 /// each nothing reads (refcore's `check_graph`, its end). L §8.5; E §3.1 step 6.
@@ -702,9 +860,10 @@ fn unread(m: &Reality, graph: &Graph) -> Vec<(Warn, String)> {
         .flat_map(BTreeMap::keys)
         .chain(&graph.parts_reads)
         .collect();
+    let inputs = read_with_same(m, &read);
     let mut out = Vec::new();
     for (id, input) in m.inputs.entries() {
-        let unread = !read.contains(&Node::new(NodeKind::Input, id));
+        let unread = !inputs.contains(id);
         if unread && !input.builtin && !input.observed {
             out.push((Warn::Unread, format!("input {id} is read by nothing")));
         }

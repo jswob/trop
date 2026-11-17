@@ -131,7 +131,7 @@ pub enum Value {
 
 /// A window: the interval of values a day not yet known can give, from its lowest to its
 /// highest (refcore's `Iv`). L §4.4.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct Window {
     /// The lowest value.
     pub lo: Value,
@@ -148,6 +148,57 @@ pub struct Window {
     /// The read of an item it is the value of; none for a value an operation computed. Two
     /// reads alike are one value, decided against itself (L §4.4).
     pub read: Option<ReadOf>,
+    /// The unknown days it was computed from, in the order the line's reads met them: a read's
+    /// own under `windows each`, an operation's operands' (L §4.4: "a window value carries the
+    /// names of the unknown days it was computed from"; tally 2.1.8 R13). No part of the value.
+    pub carry: Vec<crate::hole::Unknown>,
+}
+
+impl PartialEq for Window {
+    /// The same interval, days, text, figure and read, whatever unknown days it carries
+    /// (L §4.4).
+    fn eq(&self, other: &Window) -> bool {
+        self.lo == other.lo
+            && self.hi == other.hi
+            && self.days == other.days
+            && self.src == other.src
+            && self.figure == other.figure
+            && self.read == other.read
+    }
+}
+
+impl Eq for Window {}
+
+impl Value {
+    /// The unknown days the value carries, added to `into` in order, each once: a hole's and a
+    /// window's, and those of the values a record or a list holds (refcore's `carried`). L §4.4;
+    /// tally 2.1.8 R13.
+    pub fn carried_into(&self, into: &mut Vec<crate::hole::Unknown>) {
+        let mut todo: Vec<&Value> = vec![self];
+        while let Some(v) = todo.pop() {
+            match v {
+                Value::Hole(h) => crate::hole::carry_union(into, h.carried()),
+                Value::Window(w) => crate::hole::carry_union(into, &w.carry),
+                Value::Record(fields) => todo.extend(fields.iter().rev().map(|(_, x)| x)),
+                Value::List(items) => todo.extend(items.iter().rev()),
+                Value::Number(_)
+                | Value::Money(_)
+                | Value::Bool(_)
+                | Value::Day(_)
+                | Value::Period(_)
+                | Value::MonthDay(..)
+                | Value::Key(_)
+                | Value::Text(_)
+                | Value::Code(_)
+                | Value::Calendar(_)
+                | Value::None
+                | Value::Never
+                | Value::Word(_)
+                | Value::OutKey { .. }
+                | Value::Mv(_) => {}
+            }
+        }
+    }
 }
 
 /// One read of an item: the input or def, its keys and the cell it was read at. Two reads

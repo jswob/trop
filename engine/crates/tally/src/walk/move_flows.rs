@@ -12,11 +12,13 @@
 
 use super::flows::span_last;
 use super::order::WalkAt;
-use super::plan::{Amount, Dated, DayWindow, Exists, Inst, Status, invariant, qty_value};
+use super::plan::{
+    Amount, Dated, DayWindow, Exists, HoleSrc, Inst, LegVal, Status, invariant, qty_value,
+};
 use super::reads::refuse;
-use super::state::Progress;
-use crate::base::{Refusal, Run};
-use crate::book::{Obs, once_obs, same_differ, same_groups};
+use super::state::{LegOut, Progress};
+use crate::base::Run;
+use crate::book::{Obs, once_obs, same_differ};
 use crate::eval::{Collected, Ctx, Engine, Entry, Env, GUARDED, UNSET_AXIS};
 use crate::hole::{Hole, spread};
 use crate::model::{KeyVal, MoveInfo, Reality, Span, Value};
@@ -62,6 +64,7 @@ impl Engine {
             total,
             mut units,
             holes,
+            legs,
             settle_unit,
             ..
         } = acc;
@@ -71,6 +74,23 @@ impl Engine {
             units.insert(u);
         }
         if let Some(h) = spread(&holes.iter().map(Some).collect::<Vec<_>>()) {
+            // a sum of its movements: under `partial`, linear in each hole leg's amount where
+            // every hole is one, in one unit (L §5.18; tally 2.1.8 R15)
+            let unit = match units.first() {
+                Some(u) if units.len() == 1 => Some(u.clone()),
+                Some(_) => None,
+                None => static_unit(m, mv, leg),
+            };
+            if let Some(unit) = unit.filter(|_| ctx.partial && legs.len() == holes.len())
+                && let Some(parts) = self.legs_linear(m, &legs)?
+            {
+                let sum = match &total {
+                    Some(t) => t.clone(),
+                    None => Num::zero(),
+                };
+                let known = qty_value(m, &sum, &unit)?;
+                return crate::eval::lin_fold(m, &h, known, parts);
+            }
             return Ok(Value::Hole(h));
         }
         if units.len() > 1 {
@@ -135,7 +155,8 @@ impl Engine {
                             "date within {} not precise enough for flows of {}",
                             w.question, mv.id
                         );
-                        acc.holes.push(Hole::asked(&text, &i.id));
+                        acc.holes
+                            .push(Hole::asked(&text, &i.id).carrying(&w.value.carry));
                         continue;
                     }
                 },
@@ -146,6 +167,19 @@ impl Engine {
                         .map_or_else(|| invariant("an instance with no day"), Stop::Refused));
                 }
             };
+            if i.depends.is_some()
+                && let Some(Dated::Window(w)) = &i.day
+            {
+                // booked on some of its window's days, modelled or left out on the rest
+                // (E §4.1 step 2, L §4.4; tally 2.1.8 item 77)
+                let text = format!(
+                    "date within {} not precise enough for flows of {}",
+                    w.question, mv.id
+                );
+                acc.holes
+                    .push(Hole::asked(&text, &i.id).carrying(&w.value.carry));
+                continue;
+            }
             if let Some(k) = fk
                 && !for_period_of(i, k, acc)
             {
@@ -155,6 +189,11 @@ impl Engine {
                 // never walked, so its amount reads a walk that doesn't hold its day (E §2)
                 acc.holes.push(Hole::after_run(&i.id));
                 continue;
+            }
+            if let Some(e) = self.s1_refusal(m, &i.id, ctx.cut)? {
+                // an instance a `same` class fulfils with another: what reads it is refused
+                // (L §5.19 One movement on two statements, P42)
+                return Err(Stop::Refused(e));
             }
             if i.status == Status::Modelled {
                 self.count_standing_in(m, i, leg, ctx.cut, acc)?;
@@ -179,16 +218,28 @@ impl Engine {
                 let q = match &lg.amount {
                     Amount::Refused(r) => return Err(Stop::Refused(r.clone())),
                     Amount::Hole(h) => {
-                        acc.holes.push(h.clone());
+                        acc.hole_leg(h, lg.src.as_deref());
                         continue;
                     }
                     Amount::Qty(q) => q,
                 };
                 let leg_day = lg.day.day().or(day);
-                if !q.is_zero()
-                    && let Some(err) = self.leg_refused(m, (&i.id, &lg.name), leg_day, ctx)?
-                {
-                    return Err(Stop::Refused(err));
+                let out = if q.is_zero() {
+                    None
+                } else {
+                    self.leg_refused(m, (&i.id, &lg.name), leg_day, ctx)?
+                };
+                if let Some(LegOut::Refused(err)) = &out {
+                    return Err(Stop::Refused(err.clone()));
+                }
+                if let Some(LegOut::Hole(h)) = out {
+                    // a window leg's: the flows read's question; a fixed day's the window's
+                    // test reaches: its questions asked for this read (tally 2.1.8 item 77;
+                    // the review of group 2's fix, N-i)
+                    let read = format!("flows of {}", mv.id);
+                    acc.holes
+                        .push(flows_hole(mv, i, lg).unwrap_or_else(|| h.for_read(&read)));
+                    continue;
                 }
                 acc.add(q, lg.unit.as_ref())?;
             }
@@ -227,7 +278,7 @@ impl Engine {
                 figure: String::new(),
             });
         }
-        let groups = same_groups(m, cut)?;
+        let groups = self.same_groups(m, cut)?;
         for (first, rest) in once_obs(&groups, &obs) {
             let others: Vec<&Obs> = rest.iter().filter_map(|&k| obs.get(k)).collect();
             let Some(o) = obs.get(first) else {
@@ -237,7 +288,7 @@ impl Engine {
             for x in &others {
                 acc.met.merge(&x.coll);
             }
-            if let Some(h) = same_differ(m, &groups, o, &others, leg)? {
+            if let Some(h) = same_differ(m, o, &others, leg)? {
                 acc.holes.push(h);
                 continue;
             }
@@ -344,7 +395,7 @@ impl Engine {
         key: (&str, &str),
         day: Option<Day>,
         ctx: Ctx,
-    ) -> Result<Option<Refusal>, Stop> {
+    ) -> Result<Option<LegOut>, Stop> {
         let wanted = (key.0.to_owned(), key.1.to_owned());
         if let Some(WalkAt { walk, .. }) = ctx.at {
             return self.chain_refusal(walk, &wanted);
@@ -355,7 +406,7 @@ impl Engine {
             || !self.walking.is_empty();
         let ours = !busy && ctx.cut == self.ask_cut;
         if ours && let Some(read) = self.refused_by_each(&wanted, ctx.cut) {
-            return read;
+            return read.map(|r| r.map(LegOut::Refused));
         }
         let unfinished = match id {
             None => true,
@@ -385,7 +436,9 @@ impl Engine {
                 }
                 // the walk read an axis the timeline sets no option of (E §3.3)
                 Err(Stop::NotBuilt(why)) if why == UNSET_AXIS => {
-                    return self.refused_in_each(m, &wanted, ctx.cut, Stop::NotBuilt(why));
+                    return self
+                        .refused_in_each(m, &wanted, ctx.cut, Stop::NotBuilt(why))
+                        .map(|r| r.map(LegOut::Refused));
                 }
                 Err(stop) => return Err(stop),
             };
@@ -396,17 +449,37 @@ impl Engine {
         self.chain_refusal(w, &wanted)
     }
 
-    /// The refusal of leg `wanted` in walk `id` or in a walk it continues, the nearest first:
-    /// a projection's walk keeps what the walks it continues have refused so far (refcore's
-    /// `leg_refused`, its loop over `w.base`). E §4.2 step 5, §4.3 step 1.
-    fn chain_refusal(&self, id: usize, wanted: &(String, String)) -> Result<Option<Refusal>, Stop> {
+    /// The refusal of leg `wanted` in walk `id` or in a walk it continues, the nearest first,
+    /// else the hole a test some of a window's days pass left it: a projection's walk keeps
+    /// what the walks it continues have refused so far (refcore's `leg_refused`, its loop over
+    /// `w.base`). E §4.2 step 5, §4.3 step 1; tally 2.1.8 item 77.
+    fn chain_refusal(&self, id: usize, wanted: &(String, String)) -> Result<Option<LegOut>, Stop> {
         for wid in self.chain(id)? {
-            if let Some(refusal) = self.walk(wid)?.bad_legs.get(wanted) {
-                return Ok(Some(refusal.clone()));
+            let walk = self.walk(wid)?;
+            if let Some(refusal) = walk.bad_legs.get(wanted) {
+                return Ok(Some(LegOut::Refused(refusal.clone())));
+            }
+            if let Some(hole) = walk.hole_legs.get(wanted) {
+                return Ok(Some(LegOut::Hole(hole.clone())));
             }
         }
         Ok(None)
     }
+}
+
+/// The hole `flows` of move `mv` reads in leg `lg` of instance `i` where a test some of a
+/// window's days pass left it the window's hole: asked for flows of the move, of the leg's
+/// window or its instance's; none for a leg of a fixed day (refcore's `flows_move`, its
+/// `leg_refused` hole). L §4.4; tally 2.1.8 item 77.
+fn flows_hole(mv: &MoveInfo, i: &Inst, lg: &LegVal) -> Option<Hole> {
+    let ((Dated::Window(w), _) | (_, Some(Dated::Window(w)))) = (&lg.day, &i.day) else {
+        return None;
+    };
+    let text = format!(
+        "date within {} not precise enough for flows of {}",
+        w.question, mv.id
+    );
+    Some(Hole::asked(&text, &i.id).carrying(&w.value.carry))
 }
 
 /// Whether instance `i` is for period `k` under `flows(…, for k)`: its period equal to `k`;
@@ -440,6 +513,9 @@ struct Counted {
     units: BTreeSet<String>,
     /// The holes met.
     holes: Vec<Hole>,
+    /// The holes of them that are a leg's amount, each with where it was read, which a
+    /// `partial` line reads again (L §5.18; tally 2.1.8 R15).
+    legs: Vec<(Hole, bool, HoleSrc)>,
     /// The register met.
     met: Collected,
     /// The unit of the first settlement leg counted.
@@ -447,6 +523,15 @@ struct Counted {
 }
 
 impl Counted {
+    /// A leg's amount that is a hole, kept with where it was read where it was (L §5.18;
+    /// tally 2.1.8 R15).
+    fn hole_leg(&mut self, h: &Hole, src: Option<&HoleSrc>) {
+        if let Some(src) = src {
+            self.legs.push((h.clone(), true, src.clone()));
+        }
+        self.holes.push(h.clone());
+    }
+
     /// A leg's amount counted, its unit noted. L §5.14.3.
     fn add(&mut self, q: &Num, unit: Option<&String>) -> Result<(), Stop> {
         self.total = Some(add_to(self.total.take(), q)?);

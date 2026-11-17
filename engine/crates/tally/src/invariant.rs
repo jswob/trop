@@ -414,7 +414,7 @@ fn day_odds(
         ours: mine,
         flagged: matches!(
             moved.change,
-            Change::Hole(_) | Change::Perm(_) | Change::Bad(_)
+            Change::Hole(_) | Change::Perm(_) | Change::Bad(_) | Change::PermBad(_)
         ),
     };
     for moved in ours.into_iter().flatten() {

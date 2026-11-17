@@ -62,6 +62,34 @@ impl Engine {
             terms.push(t);
         }
         if !holes.is_empty() {
+            // a `partial` line's mean over a known count: its sum scaled by the count, linear in
+            // its terms (L §5.18; tally 2.1.8 R15)
+            if ctx.partial
+                && query.func == QueryFn::Mean
+                && members.iter().all(|b| b.unknown.is_none())
+            {
+                let count = Value::int(i64::try_from(members.len()).map_err(|_| too_many())?);
+                let mut known: Option<Value> = None;
+                for t in terms {
+                    known = Some(match known {
+                        None => t,
+                        Some(acc) => arith(m, Op::Add, &acc, &t)?,
+                    });
+                }
+                return super::partial::lin_mean(m, known, &holes, &count);
+            }
+            // a refused level refuses before the hole terms: refusals outrank holes (L §8;
+            // tally 2.1.8 R16, #171; B7 of group 3's review)
+            if query.func == QueryFn::Quantile
+                && let Some(level) = &query.level
+            {
+                let read = self.ev(m, level, env, ctx)?;
+                if let Value::Hole(h) = &read {
+                    holes.push(h.clone());
+                } else if let Value::Number(Number { q, .. }) = &read {
+                    level_in_range(m, &read, q)?;
+                }
+            }
             let operands: Vec<Option<&Hole>> = holes.iter().map(Some).collect();
             return hole_of(&operands);
         }
@@ -99,9 +127,10 @@ impl Engine {
             let text = "a value is none here: the level of quantile".to_owned();
             return Err(refuse(Run::None, text));
         }
-        let Value::Number(Number { q, .. }) = read else {
+        let Value::Number(Number { q, .. }) = &read else {
             return Err(not_typed());
         };
+        level_in_range(m, &read, q)?;
         let mut failed: Option<Stop> = None;
         terms.sort_by(|a, b| match compare(m, a, b, Test::Order) {
             Ok(order) => order,
@@ -126,6 +155,19 @@ impl Engine {
         }
         last.ok_or_else(|| refuse(Run::Empty, "quantile over no keys".to_owned()))
     }
+}
+
+/// A quantile's level `q` (read as `read`) outside (0, 1]: type 1 over its terms has no
+/// smallest term there, `RUN-DOMAIN` (L §5.11, §5.16; tally 2.1.8 R16, #171).
+fn level_in_range(m: &Reality, read: &Value, q: &Num) -> Result<(), Stop> {
+    let above_zero = q.compare(&Num::zero()).map_err(num_stop)?;
+    let past_one = q.compare(&Num::int(1)).map_err(num_stop)?;
+    if above_zero != Ordering::Greater || past_one == Ordering::Greater {
+        let shown = read.text(m).map_err(num_stop)?;
+        let text = format!("quantile has no meaning for the level {shown}");
+        return Err(refuse(Run::Domain, text));
+    }
+    Ok(())
 }
 
 /// `mean(t for b)`: the terms added as `sum` adds them, divided by their count, exactly.

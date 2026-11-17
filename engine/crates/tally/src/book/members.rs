@@ -13,12 +13,12 @@
 //! passes the binding's `where`; an uncertain instance is a member only `with uncertain`, and
 //! brings its `uncertain:` line.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use super::adjust::Adjustment;
 use super::observe::Obs;
 use super::reading::Pad;
-use super::same::{kept_once, same_differ, same_groups};
+use super::same::{Groups, and_list, kept_once, same_differ};
 use crate::base::{Code, Load, Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Entry, Env};
 use crate::hole::{Hole, spread};
@@ -27,8 +27,8 @@ use crate::num::Num;
 use crate::syntax::{Bind, Call, Expr, Stop};
 use crate::time::Day;
 use crate::walk::{
-    Amount, At, Dated, DayWindow, End, Exists, Inst, LegVal, Status, Term, WalkAt, invariant,
-    qty_value,
+    Amount, At, Dated, DayWindow, Depends, End, Exists, Inst, LegOut, LegVal, Status, Term, WalkAt,
+    invariant, qty_value,
 };
 
 /// What a binding over movements ranges over (refcore's `_dom`, `event` or `obs`).
@@ -67,6 +67,9 @@ pub(crate) struct MvMember {
     pub day: Dated,
     /// Its stable id (L §2.5).
     pub id: String,
+    /// For a row known in a window that holds the cut whose day and its instance's differ,
+    /// that row's hole: which comes first is undecided (L §4.5, tally 2.1.8 R12, B6).
+    pub two_days: Option<Hole>,
 }
 
 impl Moving {
@@ -218,11 +221,15 @@ impl Engine {
         h: Hole,
         ctx: Ctx,
     ) -> Result<Result<Vec<MvMember>, Hole>, Stop> {
-        let cands = self
-            .movements_of(m, dom, ctx)?
-            .iter()
-            .map(Moving::value)
-            .collect();
+        let movements = self.movements_of(m, dom, ctx)?;
+        for x in &movements {
+            // each could be a member: S1's refusal of one is the binding's (L §5.19, P42;
+            // refcore's `possible_members`)
+            if let Some(e) = self.s1_refusal(m, x.id(), ctx.cut)? {
+                return Err(Stop::Refused(e));
+            }
+        }
+        let cands = movements.iter().map(Moving::value).collect();
         Ok(if self.may_hold(m, (bind, env), cands, ctx)? {
             Err(h)
         } else {
@@ -243,7 +250,33 @@ impl Engine {
         binds_future(m, dom, sp, ctx)?;
         let mut out: Vec<(Moving, Option<Hole>)> = Vec::new();
         let mut fulfilled: BTreeSet<String> = BTreeSet::new();
+        let mut two_days: BTreeMap<String, Hole> = BTreeMap::new();
         for x in self.movements_of(m, dom, ctx)? {
+            // a binding rests on each movement it takes: S1's refusal is its own (L §5.19, P42)
+            if let Some(e) = self.s1_refusal(m, x.id(), ctx.cut)?
+                && rests_in(&x, sp)
+            {
+                return Err(Stop::Refused(e));
+            }
+            if let Moving::Obs(o) = &x
+                && let Some(und) = &o.undecided
+            {
+                // a row known in a window that holds the cut is one movement read seen and
+                // unseen: unseen, a row of an observed input is no row, and a movement of an
+                // event kind is the instance it fulfils; a member either way is a member,
+                // else an unknown one (L §4.5, tally 2.1.8 R12; refcore's `span_members`)
+                let alt = self.unseen_day(m, o, dom.0, ctx)?;
+                let (seen_in, unseen_in) =
+                    (sp.contains(o.day), alt.is_some_and(|d| sp.contains(d)));
+                if alt.is_some_and(|d| d != o.day) {
+                    two_days.insert(o.id.clone(), und.clone());
+                }
+                if seen_in || unseen_in {
+                    let unknown = (!(seen_in && unseen_in)).then(|| und.clone());
+                    out.push((x, unknown));
+                }
+                continue;
+            }
             let mut st = match x.day() {
                 None => {
                     if let Moving::Plan(i) = &x
@@ -266,13 +299,25 @@ impl Engine {
                             "date within {} not precise enough for a binding over {}",
                             w.question, dom.1
                         );
-                        Some(Hole::asked(&text, x.id()))
+                        Some(Hole::asked(&text, x.id()).carrying(&w.value.carry))
                     }
                 },
             };
             if let Moving::Plan(i) = &x {
                 if let Exists::Unknown(h) = &i.exists {
                     st = spread(&[st.as_ref(), Some(h)]);
+                }
+                if i.depends == Some(Depends::Covered)
+                    && let Some(Dated::Window(w)) = &i.day
+                {
+                    // modelled past on some of its window's days, booked on the rest: whether
+                    // it is a member is the window's hole (E §4.1 step 2; tally 2.1.8 item 77)
+                    let text = format!(
+                        "date within {} not precise enough for a binding over {}",
+                        w.question, dom.1
+                    );
+                    let h = Hole::asked(&text, &i.id).carrying(&w.value.carry);
+                    st = spread(&[st.as_ref(), Some(&h)]);
                 }
                 if let Some(e) = &i.err {
                     return Err(Stop::Refused(e.clone()));
@@ -318,9 +363,33 @@ impl Engine {
                 coll,
                 day,
                 id: x.id().to_owned(),
+                two_days: two_days.get(x.id()).cloned(),
             });
         }
         Ok(res)
+    }
+
+    /// The day an undecided row's movement has unseen: for a binding over an event kind, the
+    /// day of the instance it fulfils, if any; for an observed input's, none, since unseen it
+    /// is no row (refcore's `span_members`, `x.target`). L §4.5, §5.19.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::move_instances`].
+    fn unseen_day(
+        &mut self,
+        m: &Reality,
+        o: &Obs,
+        dom: MvDom,
+        ctx: Ctx,
+    ) -> Result<Option<Day>, Stop> {
+        let (MvDom::Event, Some(tid)) = (dom, o.target_id()) else {
+            return Ok(None);
+        };
+        Ok(match self.planned_by_id(m, &tid, ctx.cut)? {
+            Some(Moving::Plan(i)) => i.day.as_ref().and_then(Dated::day),
+            Some(Moving::Obs(_) | Moving::Adj(_) | Moving::Pad(..)) | None => None,
+        })
     }
 
     /// `next(K, d)`: `first(m in K over d ..) ties by m.day`, the first movement of event kind
@@ -352,11 +421,15 @@ impl Engine {
         };
         let members =
             self.span_members(m, (MvDom::Event, kind), &Span::between(Some(d), None), ctx)?;
-        let hole_days: Vec<Option<&Hole>> = members
-            .iter()
-            .filter(|x| matches!(x.day, Dated::Hole(_)))
-            .map(|x| x.unknown.as_ref())
-            .collect();
+        // a member whose day is a hole may come first, and so may an undecided row's
+        // movement where its two days differ, never a tie (L §4.5, tally 2.1.8 R12, B6)
+        let mut hole_days: Vec<Option<&Hole>> = Vec::with_capacity(members.len());
+        for x in &members {
+            if matches!(x.day, Dated::Hole(_)) {
+                hole_days.push(x.unknown.as_ref());
+            }
+        }
+        hole_days.extend(members.iter().map(|x| x.two_days.as_ref()));
         if let Some(h) = spread(&hole_days) {
             return Ok(Value::Hole(h));
         }
@@ -387,7 +460,7 @@ impl Engine {
                     "date within {} not precise enough for {written}",
                     w.question
                 );
-                return Ok(Value::Hole(Hole::asked(&text, id)));
+                return Ok(Value::Hole(Hole::asked(&text, id).carrying(&w.value.carry)));
             }
             let ids: Vec<&str> = firsts.iter().map(|x| x.id.as_str()).collect();
             return Err(Stop::Refused(Refusal::new(
@@ -501,6 +574,7 @@ impl Engine {
         moves.retain(|mv| sub.contains(&mv.kind));
         let mut out = Vec::new();
         let mut decided = Vec::new();
+        let mut pins = Vec::new();
         for mv in moves {
             // a scenario's move the binding ranges over is a fact of it (E §9 item 3)
             if m.scenarios.of(&mv.id).is_some() {
@@ -512,7 +586,15 @@ impl Engine {
             }
             for i in self.move_instances(m, mv, cut)?.iter() {
                 match i.status {
-                    Status::None | Status::Modelled => {}
+                    // the binding read its day to leave it out: the pins that day took are
+                    // the binding's reads too (L §8.2 One read set; tally 2.1.8 §4, #161)
+                    Status::None | Status::Modelled => pins.extend(
+                        i.coll
+                            .entries
+                            .iter()
+                            .filter(|e| e.word == "pinned")
+                            .cloned(),
+                    ),
                     Status::Uncertain if !ctx.unc => {}
                     Status::Uncertain
                     | Status::Open
@@ -524,6 +606,9 @@ impl Engine {
                     | Status::Plan => out.push(Moving::Plan(i.clone())),
                 }
             }
+        }
+        for e in pins {
+            self.note(e.word, e.text, e.figure);
         }
         let before = self.trace_walked();
         let planned = out.len();
@@ -550,7 +635,9 @@ impl Engine {
             out.extend(pads.into_iter().map(|(p, at)| Moving::Pad(p, at)));
         }
         out.extend(self.decided_members(m, &decided, ctx)?);
-        in_order(once_by_same(m, out, ctx.cut)?)
+        let groups = self.same_groups(m, ctx.cut)?;
+        let sides = self.same_sides(m, ctx.cut)?;
+        in_order(once_by_same((&groups, &sides), out))
     }
 
     /// The runs of the decision moves `decided` that a binding over their kind ranges over,
@@ -761,9 +848,9 @@ impl Engine {
     }
 
     /// A movement of a `same` group whose members state kinds not all inside the binding's
-    /// kind `kind`: an unknown member of it, the `HOLE-SAME` naming the first member and the
-    /// first whose kind differs; none where every kind the group states is inside `kind`
-    /// (refcore's `same_kind_hole`). L §6.1 (one movement has one base kind), §8.1.
+    /// kind `kind`: an unknown member of it, the `HOLE-SAME` naming every member with its
+    /// kind, in id order; none where every kind the group states is inside `kind` (refcore's
+    /// `same_kind_hole`). L §6.1 (one movement has one base kind), §8.1 (tally 2.1.8 S6).
     fn same_kind_hole(
         &mut self,
         m: &Reality,
@@ -771,7 +858,7 @@ impl Engine {
         kind: &str,
         ctx: Ctx,
     ) -> Result<Option<Hole>, Stop> {
-        let groups = same_groups(m, ctx.cut)?;
+        let groups = self.same_groups(m, ctx.cut)?;
         let Some(group) = groups.get(x.id()) else {
             return Ok(None);
         };
@@ -796,22 +883,22 @@ impl Engine {
         if kinds.len() < 2 || kinds.iter().all(|k| sub.contains(*k)) {
             return Ok(None);
         }
-        let ([(first, first_kind), rest @ ..], Some(differs)) = (members.as_slice(), kinds.get(1))
-        else {
-            return Ok(None);
-        };
-        let Some((other, other_kind)) = rest.iter().find(|(_, k)| k == differs) else {
-            return Ok(None);
-        };
-        let day = [x, first, other]
-            .into_iter()
+        let day = std::iter::once(x)
+            .chain(members.iter().map(|(mv, _)| mv))
             .find_map(|mv| mv.day().as_ref().and_then(Dated::day))
             .map_or_else(|| "every day".to_owned(), Day::text);
-        let (one, two) = (first.id(), other.id());
+        // every member, in the order of their ids (tally 2.1.8 S6)
+        let ids: Vec<String> = members.iter().map(|(mv, _)| mv.id().to_owned()).collect();
+        let parts: Vec<String> = members
+            .iter()
+            .map(|(mv, k)| format!("{k} ({})", mv.id()))
+            .collect();
         let text = format!(
-            "{one} and {two} are one, but the kind differs on {day}: {first_kind} ({one}) and {other_kind} ({two})"
+            "{} are one, but the kind differs on {day}: {}",
+            and_list(&ids),
+            and_list(&parts)
         );
-        Ok(Some(Hole::asked(&text, &format!("{one}, {two}"))))
+        Ok(Some(Hole::asked(&text, &ids.join(", "))))
     }
 
     /// A plan's instance by id at the cut, a move named by the id's head (refcore's
@@ -836,12 +923,11 @@ impl Engine {
         leg: Option<&str>,
         cut: Day,
     ) -> Result<Option<Hole>, Stop> {
-        let groups = same_groups(m, cut)?;
+        let groups = self.same_groups(m, cut)?;
         let Some(group) = groups.get(&o.id) else {
             return Ok(None);
         };
         let all = self.observations(m, cut)?;
-        // in the order the same lines name them
         let mut others: Vec<&Obs> = Vec::new();
         for y in group.iter().filter(|y| **y != o.id) {
             others.extend(all.iter().find(|x| x.id == *y));
@@ -849,7 +935,7 @@ impl Engine {
         if others.is_empty() {
             return Ok(None);
         }
-        same_differ(m, &groups, o, &others, leg)
+        same_differ(m, o, &others, leg)
     }
 
     /// What a movement's `fulfils` names at the cut: the instance or the adjustment, or none
@@ -910,8 +996,13 @@ impl Engine {
             // the walk is a cause an explanation prints in its own form only where it refused
             // the leg; else the leg is its instance's, traced as the instance was (E §10)
             let back = self.trace_walked();
-            if let Some(err) = self.leg_refused(m, (src.id(), name), day, ctx)? {
-                return Err(Stop::Refused(err));
+            match self.leg_refused(m, (src.id(), name), day, ctx)? {
+                Some(LegOut::Refused(err)) => return Err(Stop::Refused(err)),
+                Some(LegOut::Hole(h)) => {
+                    self.trace_walked_back(back);
+                    return Ok(Value::Hole(h));
+                }
+                None => {}
             }
             self.trace_walked_back(back);
             let record = leg_record(m, lg)?;
@@ -999,7 +1090,8 @@ impl Engine {
 }
 
 /// An attribute of a movement: an instance's or an observation's, an adjustment's `adjusts`
-/// and `change` (refcore's `mv_field`, an attribute). L §5.14, §5.14.3.
+/// and `change`; one it lacks is `RUN-DOMAIN` (refcore's `mv_field`, an attribute). L §5.14,
+/// §5.14.3, §8.4.
 fn attr_field(m: &Reality, src: &Moving, name: &str) -> Result<Value, Stop> {
     let found = match src {
         Moving::Plan(i) => i
@@ -1030,8 +1122,10 @@ fn attr_field(m: &Reality, src: &Moving, name: &str) -> Result<Value, Stop> {
     if let Some(h) = body_hole(src) {
         return Ok(Value::Hole(h));
     }
+    // which movement lacks the attribute only the run knows: the value is refused, in load's
+    // words, and the reality isn't (L §8.4 Load refuses what load sees; tally 2.1.8 §4, #162)
     Err(Stop::Refused(Refusal::new(
-        Code::Load(Load::Field),
+        Code::Run(Run::Domain),
         format!("{name} is not a field of {}", src.id()),
     )))
 }
@@ -1110,6 +1204,17 @@ fn window_member(w: &DayWindow, sp: &Span) -> Option<bool> {
     (after || before).then_some(false)
 }
 
+/// Whether a binding over span `sp` rests on movement `x`, so meets its S1 refusal: one dated
+/// on a day outside the span doesn't; one whose day is a window, a hole or refused may be a
+/// member, so does (refcore's `span_members`, its `s1_refusal` test). L §5.19 One movement on
+/// two statements, Bindings.
+fn rests_in(x: &Moving, sp: &Span) -> bool {
+    match x.day() {
+        Some(Dated::Day(d)) => sp.contains(d),
+        Some(Dated::Window(_) | Dated::Hole(_)) | None => true,
+    }
+}
+
 /// A running read's binding over a kind the walk itself books, decisions or pads, through a
 /// day after the reader's: its future, `RUN-FUTURE` (refcore's `span_members`, its first
 /// test). L §5.14.1 Running reads ("a span past the reader's day, in a binding or in flows,
@@ -1168,22 +1273,22 @@ fn entry(word: &'static str, text: &str) -> Entry {
     }
 }
 
-/// The movements `movements`, a group stated `same` bound once, by the member its same lines
-/// name first (refcore's `once_by_same`). L §6.1, §5.19.
-fn once_by_same(m: &Reality, movements: Vec<Moving>, cut: Day) -> Result<Vec<Moving>, Stop> {
-    let groups = same_groups(m, cut)?;
+/// The movements `movements`, a group of `groups` stated `same` bound once, by its first
+/// member in id order among them, `sides` the same lines' sides in id order (refcore's
+/// `once_by_same`; pick P42). L §6.1, §5.19.
+fn once_by_same((groups, sides): (&Groups, &[String]), movements: Vec<Moving>) -> Vec<Moving> {
     if groups.is_empty() {
-        return Ok(movements);
+        return movements;
     }
     let keep = {
         let ids: Vec<&str> = movements.iter().map(Moving::id).collect();
-        kept_once(&groups, &ids)
+        kept_once(groups, sides, &ids)
     };
-    Ok(movements
+    movements
         .into_iter()
         .zip(keep)
         .filter_map(|(mv, kept)| kept.then_some(mv))
-        .collect())
+        .collect()
 }
 
 /// Movements in movement order: by day, then by their typed order, ties as they came (refcore's

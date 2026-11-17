@@ -1,14 +1,20 @@
-//! Answering the asks: each ask's cut, law date and `with` pins, its binding tuples, its line's values, check or solve, and each line's register.
+//! Answering the asks: each ask's cut, law date and pins, its binding tuples, each tuple's line of any form, read seen and unseen, and its register.
 //! Spec: L §5.18 (asks: `as known`, `law`, `in`, `with`, `for`, `check`, `solve`, `diff`, one line
-//! per binding tuple, a tuple whose `where` is a hole printed as that hole); L §4.3 (the law
-//! date), §4.5 (the cut), §5.11 (an ask's `law`, `as known` or pin that is a hole makes the ask
-//! line that hole), §8.2 (the register), §8.4 (a run-time refusal prints as the ask's line),
+//! per binding tuple, a tuple whose `where` is a hole printed as that hole; tally 2.1.8 R13.1:
+//! every clause on every form, a diff's own `for` per tuple, on one stack or two); L §4.3 (the
+//! law date), §4.5 (the cut; tally 2.1.8 R12: a line that reads a `same` line known in a
+//! window that holds the cut is answered with it seen and unseen, `HOLE-IMPRECISE` where the
+//! two differ, a ledger's, diff's, `explain`'s or `inputs-of`'s block by every line, P27 on
+//! #196; at most 20 000 choices, L §7.6 item 6, P27 on #174), §5.11 (an ask's `law`,
+//! `as known` or pin that is a hole makes the ask
+//! line that hole), §8.2 (the register), §8.4 (a run-time refusal prints as the tuple's line),
 //! §8.5 (warnings last), §6.4 (the line's world: its `in`, else the model's; `law` and
 //! `as known` in the model's), §5.5 (tally 2.1.7 R8: an ask of any form fans out over the
 //! axes it reaches, `axes.rs`; a `diff`'s and a ledger's results are their sets of lines,
 //! `diff.rs`, `residuals.rs`); E §11 (`REQ-ASK`, tally 2.1.3; `REQ-CLOCK`).
 //! Twin: engine/tools/refcore/ask.py (`Asker.run`, `req_ask`, `answer`, `_answer`,
-//! `_answer_in`, `evaluate`, `one`, `one_solve`, `print_line`, `fmt_value`, `fmt_bind`) and
+//! `answer_same_undecided`, `_answer_in`, `evaluate`, `one`, `one_solve`, `print_line`,
+//! `fmt_value`, `fmt_bind`) and
 //! evaluate.py (`date_of`, `apply_pins`); refcore answers an `as known` after `on` where E §11
 //! refuses it (codes/m1 held.tsv, P22).
 //! Invariants: asks print in id order unless the run names them; every id the run names is
@@ -20,18 +26,21 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::axes::{Axes, fanned_lines};
-use super::check::{Printed, check_line};
-use super::diff::{Cells, cells_lines, crossed, diff_cells, diff_lines};
+use super::check::{Printed, carried_of, check_line};
+use super::diff::{Cells, cells_lines, crossed, diff_cells, diff_result};
 use super::explain::{explain_line, inputs_line, readers_line};
 use super::register::{check_register_lines, register_lines, warning_lines};
-use super::residuals::residual_lines;
+use super::residuals::residual_result;
 use crate::base::{Code, Load, Place, Reach, Refusal, Req, Run, Warn};
+use crate::book::SameMet;
 use crate::eval::{
-    Collected, Ctx, Engine, Entry, Env, Item, Member, Memo, after_on, names_in, num_stop, one_day,
-    past_days, world_named,
+    Collected, Ctx, Engine, Entry, Env, Item, Member, Memo, after_on, combinations, known_question,
+    names_in, num_stop, one_day, past_days, world_named,
 };
 use crate::model::{Reality, Value};
-use crate::syntax::{Ask, AskBody, Bind, Domain, Expr, Key, Lit, OfQ, Pin, PinForm, Step, Stop};
+use crate::syntax::{
+    Ask, AskBody, Bind, Diff, Domain, Expr, Key, Lit, OfQ, Pin, PinForm, Step, Stop,
+};
 use crate::time::Day;
 use crate::walk::{Bookings, Forks, Lows, invariant};
 use crate::{Asks, Days};
@@ -78,9 +87,28 @@ struct Seen {
 struct Side {
     /// The world.
     world: String,
-    /// The cells, once answered.
-    cells: Option<Cells>,
+    /// The cells per binding tuple, once answered.
+    cells: Option<SideCells>,
+    /// The binding part of the tuple answered now, ` (k = a)`, where the ask's law date, cut
+    /// or pins are formed per tuple and each tuple is answered as an ask of its own
+    /// (`tuple_asks`); empty otherwise.
+    part: String,
+    /// The choice of seen and unseen this side is answered under; none for the first run,
+    /// which sees every `same` line (L §4.5, tally 2.1.8 R12).
+    pick: Option<BTreeMap<String, bool>>,
+    /// The `same` lines known in a window that holds the cut the side's run met, and that
+    /// cut, once answered.
+    met: Option<(SameMet, Day)>,
 }
+
+/// One side of a diff over two stacks: per binding tuple of the ask's `for`, its binding
+/// part, ` (k = a)`, and its cells or the hole its line prints; one tuple with no part where
+/// the ask binds nothing.
+type SideCells = Vec<(String, Result<Cells, String>)>;
+
+/// Both sides of a diff over two stacks answered: each side's cells, and the `same` lines
+/// known in a window that holds the cut the two met, with that cut (L §6.4, §4.5).
+type Crossing = (Vec<SideCells>, Option<(SameMet, Day)>);
 
 /// How a run's engines compute: keeping their cells as `memo` says, reading a written
 /// projection's common case as `lows` says and continuing a projection's walk read again as
@@ -261,44 +289,188 @@ pub(crate) fn answer_turns(
 /// The lines of a diff whose two worlds sit on two stacks of scenarios: each side answered by
 /// the world of the reality whose stack holds it, as that reality holds the ask, then printed
 /// as one diff, cell by cell over the axes either side reads; a side whose ask is refused or
-/// a hole before its cells prints that line alone (refcore's `cross_stack_diff`). L §6.4,
-/// §5.5, §5.18.
+/// a hole before its cells prints that line alone (refcore's `cross_stack_diff`). Where the
+/// sides met a `same` line known in a window that holds the cut, both sides are answered again
+/// under each other choice of seen and unseen, their warnings and bookings not kept, and the
+/// blocks compared by every line (L §4.5, tally 2.1.8 R12; P27 on #196). L §6.4, §5.5, §5.18.
 ///
 /// # Errors
 ///
-/// A load refusal met at run; `NotBuilt` for a construct not built yet.
+/// A load refusal met at run; `RUN-LIMIT` past [`SAME_LIMIT`] choices; `NotBuilt` for a
+/// construct not built yet.
 fn cross_lines(
     realities: &[&Reality],
     worlds: &mut [World],
     sides: &[(usize, usize, String); 2],
     days: Days,
 ) -> Result<Vec<String>, Stop> {
-    let mut got = Vec::with_capacity(sides.len());
-    for (place, at, world) in sides {
-        let m = realities.get(*place).ok_or_else(no_turn)?;
-        let gathered = worlds.get_mut(*place).ok_or_else(no_turn)?;
-        gathered.seen.side = Some(Side {
-            world: world.clone(),
-            cells: None,
-        });
-        let lines = gathered.answer(m, *at, days);
-        let side = gathered.seen.side.take();
-        let lines = lines?;
-        match side.and_then(|s| s.cells) {
-            Some(cells) => got.push(cells),
-            None => return Ok(lines),
-        }
-    }
     let [(place, at, _), _] = sides;
     let m = realities.get(*place).ok_or_else(no_turn)?;
     let ask = m.asks.get(*at).ok_or_else(no_turn)?;
     let AskBody::Diff(diff) = &ask.body else {
         return Err(no_turn());
     };
-    let [ours, theirs] = got.as_slice() else {
+    let (got, met) = match side_cells(realities, worlds, (sides, days), None)? {
+        Ok(answered) => answered,
+        Err(lines) => return Ok(lines),
+    };
+    let first = crossed_tuples(m, (ask, diff), &got)?;
+    let Some((met, cut)) = met else {
+        return Ok(first);
+    };
+    // past the limit, the ask's one line (L §8.4), the other asks answered
+    let picks = match same_picks(&met) {
+        Ok(picks) => picks,
+        Err(stop) => return refusal_line(ask, Err(stop)),
+    };
+    let mut others = Vec::new();
+    for pick in picks {
+        let kept: Vec<Kept> = worlds.iter().map(|w| Kept::of(&w.seen)).collect();
+        let picked = side_cells(realities, worlds, (sides, days), Some(&pick));
+        for (w, before) in worlds.iter_mut().zip(kept) {
+            before.restore(&mut w.seen);
+        }
+        others.push(match picked? {
+            Ok((cells, _)) => crossed_tuples(m, (ask, diff), &cells)?,
+            Err(lines) => lines,
+        });
+    }
+    let hole = same_hole(&met, cut)?;
+    Ok(undecided_lines((&ask.id, true), &first, &others, &hole))
+}
+
+/// Both sides of a diff over two stacks answered under choice `pick` of seen and unseen, none
+/// for the first run: each side's cells, and the `same` lines known in a window that holds the
+/// cut the two met, with that cut; or the lines of a side whose ask is refused or a hole
+/// before its cells (refcore's `cross_stack_diff`). L §6.4, §4.5.
+///
+/// # Errors
+///
+/// A load refusal met at run; `NotBuilt` for a construct not built yet.
+fn side_cells(
+    realities: &[&Reality],
+    worlds: &mut [World],
+    (sides, days): (&[(usize, usize, String); 2], Days),
+    pick: Option<&BTreeMap<String, bool>>,
+) -> Result<Result<Crossing, Vec<String>>, Stop> {
+    let mut got = Vec::with_capacity(sides.len());
+    let mut all: Option<(SameMet, Day)> = None;
+    for (place, at, world) in sides {
+        let m = realities.get(*place).ok_or_else(no_turn)?;
+        let gathered = worlds.get_mut(*place).ok_or_else(no_turn)?;
+        gathered.seen.side = Some(Side {
+            world: world.clone(),
+            cells: None,
+            part: String::new(),
+            pick: pick.cloned(),
+            met: None,
+        });
+        let lines = gathered.answer(m, *at, days);
+        let side = gathered.seen.side.take();
+        let lines = lines?;
+        let Some(Side {
+            cells: Some(cells),
+            met,
+            ..
+        }) = side
+        else {
+            return Ok(Err(lines));
+        };
+        got.push(cells);
+        if let Some((met, cut)) = met {
+            // a version both sides met names both sides' rows (L §8.1)
+            let (joint, _) = all.get_or_insert_with(|| (SameMet::new(), cut));
+            for (version, (window, rows)) in met {
+                joint
+                    .entry(version)
+                    .or_insert_with(|| (window, BTreeSet::new()))
+                    .1
+                    .extend(rows);
+            }
+        }
+    }
+    Ok(Ok((got, all)))
+}
+
+/// The blocks of a diff over two stacks from its sides' cells `got`: one per binding tuple,
+/// each side's at that tuple; a side's hole, or a run-time refusal met crossing them, that
+/// tuple's line (L §5.18, tally 2.1.8 R13.1; §8.4).
+///
+/// # Errors
+///
+/// A load refusal; `NotBuilt` for sides that bind other tuples.
+fn crossed_tuples(
+    m: &Reality,
+    (ask, diff): (&Ask, &Diff),
+    got: &[SideCells],
+) -> Result<Vec<String>, Stop> {
+    let [ours, theirs] = got else {
         return Err(no_turn());
     };
-    cells_lines(m, (ask, diff), &crossed(m, (ours, theirs))?)
+    let mut out = Vec::new();
+    for (part, left) in ours {
+        let head = format!("{}{part}", ask.id);
+        let right = theirs
+            .iter()
+            .find(|(other, _)| other == part)
+            .map(|(_, cells)| cells)
+            .ok_or(Stop::NotBuilt(
+                "a diff over two stacks whose sides bind other tuples",
+            ))?;
+        match (left, right) {
+            (Err(hole), _) | (_, Err(hole)) => out.push(format!("{head}: {hole}")),
+            (Ok(l), Ok(r)) => match crossed(m, (l, r))
+                .and_then(|cells| cells_lines(m, (ask, diff, &head), &cells))
+            {
+                Ok(lines) => out.extend(lines),
+                // a run-time refusal, past S7's runs say, prints as the tuple's line (L §8.4)
+                Err(Stop::Refused(refusal)) if !matches!(refusal.code(), Code::Load(_)) => {
+                    out.push(format!("{head}: refused: {}", refusal.text()));
+                }
+                Err(stop) => return Err(stop),
+            },
+        }
+    }
+    Ok(out)
+}
+
+/// One side of a diff whose worlds sit on two stacks, in context `ctx` with the ask's pins
+/// `pinned`: its cells in world `world` per binding tuple of the ask's `for`, each with what
+/// its tuple brought; a tuple whose `where` is a hole that hole; or the one line of a domain
+/// that is a hole (L §5.18, tally 2.1.8 R13; §6.4).
+///
+/// # Errors
+///
+/// A load refusal met at run; `NotBuilt` past what the engine builds.
+fn side_tuples(
+    m: &Reality,
+    (ask, diff): (&Ask, &Diff),
+    engine: &mut Engine,
+    (ctx, pinned): (Ctx, &Collected),
+    world: &str,
+) -> Result<Result<SideCells, String>, Stop> {
+    if ask.binds.is_empty() {
+        // the tuple's scope where it is answered as an ask of its own (`tuple_asks`)
+        let env = engine.ask_env.clone();
+        let cells = diff_cells(m, (ask, diff), engine, (&env, ctx, pinned), world)?;
+        return Ok(Ok(vec![(String::new(), Ok(cells))]));
+    }
+    let tuples = match engine.tuples(m, &ask.binds, (&Env::empty(), ctx))? {
+        Err(hole) => return Ok(Err(format!("{}: {}", ask.id, hole.text()))),
+        Ok(tuples) => tuples,
+    };
+    let mut out = Vec::with_capacity(tuples.len());
+    for tuple in tuples {
+        let part = env_text(m, &ask.binds, &tuple.env)?;
+        if let Some(hole) = tuple.unknown {
+            out.push((part, Err(hole.text())));
+            continue;
+        }
+        let mut cells = diff_cells(m, (ask, diff), engine, (&tuple.env, ctx, pinned), world)?;
+        cells.bring(&tuple.brought);
+        out.push((part, Ok(cells)));
+    }
+    Ok(Ok(out))
 }
 
 /// What a world's asks' engines gather, and what its reality holds that the run doesn't take
@@ -482,7 +654,13 @@ fn answer_in(
     days: Days,
     seen: &mut Seen,
 ) -> Result<Vec<String>, Stop> {
-    match ask_lines(m, ask, env, days, seen) {
+    refusal_line(ask, ask_lines(m, ask, env, days, seen))
+}
+
+/// Ask `ask`'s lines `lines`, or the one line of the run-time refusal its reading met; a load
+/// or request refusal stays the run's (L §8.3, §8.4; E §11).
+fn refusal_line(ask: &Ask, lines: Result<Vec<String>, Stop>) -> Result<Vec<String>, Stop> {
+    match lines {
         Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_) | Code::Req(_)) => {
             Ok(vec![format!("{}: refused: {}", ask.id, r.text())])
         }
@@ -519,15 +697,275 @@ fn ask_lines(
         known_engine = Some(engine);
     }
     let mut engine = ask_engine(cut, (ask, env), days, seen);
+    // a side of a diff over two stacks is answered under the choice its crossing gives
+    if let Some(side) = &seen.side {
+        engine.same_picks.pick.clone_from(&side.pick);
+    }
     let out = ask_body(m, ask, &mut engine, (cut, seen.side.as_mut()));
     gather(seen, &mut engine);
-    let lines = out?;
+    let mut met = core::mem::take(&mut engine.same_picks.met);
+    // and its first run's `same` lines go to the crossing, which reads the choices
+    // (`cross_lines`)
+    if let Some(side) = seen.side.as_mut() {
+        if side.pick.is_none() && !met.is_empty() {
+            side.met = Some((core::mem::take(&mut met), engine.ask_cut));
+        }
+        met.clear();
+    }
+    let lines = if met.is_empty() {
+        out?
+    } else {
+        refusal_line(ask, out)?
+    };
     // E §9 item 4: asks move no money; the walks the ask made are as they were when walked
     if let Some(first) = &known_engine {
         first.asks_moved_no_money()?;
     }
     engine.asks_moved_no_money()?;
-    Ok(lines)
+    if met.is_empty() {
+        return Ok(lines);
+    }
+    let hole = same_hole(&met, engine.ask_cut)?;
+    let others = picked_lines(m, (ask, env), (cut, days), seen, &met)?;
+    Ok(undecided_lines(
+        (&ask.id, by_every_line(ask)),
+        &lines,
+        &others,
+        &hole,
+    ))
+}
+
+/// Ask `ask`'s lines in scope `env` at cut `cut` under each choice of seen and unseen for
+/// the `same` lines `met` but the first run's, each on an engine of its own, its warnings and
+/// bookings not kept (refcore's `answer_same_undecided`, on fresh caches). L §4.5 (tally
+/// 2.1.8 R12).
+///
+/// # Errors
+///
+/// A load or request refusal a run meets; `RUN-LIMIT` past [`SAME_LIMIT`] choices. A diff
+/// over two stacks reads its choices where its sides are crossed (`cross_lines`).
+fn picked_lines(
+    m: &Reality,
+    (ask, env): (&Ask, &Env),
+    (cut, days): (Day, Days),
+    seen: &mut Seen,
+    met: &SameMet,
+) -> Result<Vec<Vec<String>>, Stop> {
+    let mut others = Vec::new();
+    for pick in same_picks(met)? {
+        let kept = Kept::of(seen);
+        let mut engine = ask_engine(cut, (ask, env), days, seen);
+        engine.same_picks.pick = Some(pick);
+        let out = ask_body(m, ask, &mut engine, (cut, None));
+        kept.restore(seen);
+        #[cfg(feature = "counters")]
+        seen.counts.merge(engine.counters());
+        others.push(refusal_line(ask, out)?);
+        engine.asks_moved_no_money()?;
+    }
+    Ok(others)
+}
+
+/// What an answer under another choice of seen and unseen leaves as it found: the bookings
+/// and the warnings the asks met (refcore's fresh caches; L §4.5, tally 2.1.8 R12). Both
+/// loops over the choices, a line's (`picked_lines`) and a diff's over two stacks
+/// (`cross_lines`), keep it.
+struct Kept {
+    /// The bookings before the choice was answered.
+    booked: Bookings,
+    /// The warnings before the choice was answered.
+    warnings: Vec<(Warn, String)>,
+}
+
+impl Kept {
+    /// What `seen` holds now.
+    fn of(seen: &Seen) -> Kept {
+        Kept {
+            booked: seen.booked.clone(),
+            warnings: seen.warnings.clone(),
+        }
+    }
+
+    /// `seen` as it was when kept.
+    fn restore(self, seen: &mut Seen) {
+        seen.booked = self.booked;
+        seen.warnings = self.warnings;
+    }
+}
+
+/// Every choice of seen and unseen for the `same` lines `met` but the first run's, which saw
+/// them all: the versions in id order, the first slowest, seen before unseen (refcore's
+/// `answer_same_undecided`, its `picks`). L §4.5 (tally 2.1.8 R12).
+///
+/// # Errors
+///
+/// `RUN-LIMIT` past [`SAME_LIMIT`] choices, before any is read (S7, pick P27 on #174).
+fn same_picks(met: &SameMet) -> Result<Vec<BTreeMap<String, bool>>, Stop> {
+    let counts = vec![2; met.len()];
+    let Some(combos) = combinations(&counts, SAME_LIMIT) else {
+        return Err(Stop::Refused(Refusal::new(
+            Code::Run(Run::Limit),
+            SAME_LIMIT_TEXT.to_owned(),
+        )));
+    };
+    let mut out = Vec::new();
+    for combo in combos.into_iter().skip(1) {
+        let pick = met
+            .keys()
+            .zip(combo)
+            .map(|(id, at)| (id.clone(), at == 0))
+            .collect();
+        out.push(pick);
+    }
+    Ok(out)
+}
+
+/// The most choices of seen and unseen one line is read under: S7's limit, which reaches a
+/// line's seen and unseen choices as it reaches its day combinations (pick P27, on #174;
+/// L §7.6 item 6). Past it the line is `RUN-LIMIT`, [`SAME_LIMIT_TEXT`].
+const SAME_LIMIT: usize = 20_000;
+
+/// The message of a line past [`SAME_LIMIT`]: the builder's words, until the spec's commit
+/// gives the bytes (`spec(ask): a line's seen and unseen choices fall under its limit`).
+const SAME_LIMIT_TEXT: &str = "seen and unseen over more than 20 000 choices";
+
+/// The `HOLE-IMPRECISE` of the `same` lines `met` under cut `cut`: for each line's version,
+/// `date within window(a, b) not precise enough for the cut K`, asked of the rows or
+/// movements its lines join, then of the version (refcore's `answer_same_undecided`). L §4.5
+/// (tally 2.1.8 R12), §8.1.
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for no line met.
+fn same_hole(met: &SameMet, cut: Day) -> Result<crate::hole::Hole, Stop> {
+    let mut asked = Vec::new();
+    for (version, (window, sides)) in met {
+        let question = known_question(*window, cut);
+        for side in sides {
+            asked.push(crate::hole::Hole::asked(&question, side));
+        }
+        asked.push(crate::hole::Hole::asked(&question, version));
+    }
+    let operands: Vec<_> = asked.iter().map(Some).collect();
+    crate::hole::spread(&operands).ok_or_else(|| invariant("a same line's hole with no line"))
+}
+
+/// The lines of ask `id` where its first run, `first`, saw every `same` line known in a
+/// window that holds the cut and the runs `others` took the other choices: the lines where
+/// every run prints them; where the runs' heads differ, the one line of `hole` with the first
+/// run's last cut or law date line (refcore's `answer_same_undecided`). Else block by block (a
+/// line and the lines under it): a block of a form that prints lines of its own (`whole`: a
+/// ledger, a diff, an `explain`, an `inputs-of`) that differs in any line becomes its head
+/// and `hole`, with its last cut or law date line, as where heads differ (pick P27, on #196);
+/// a value, `check` or `solve` block whose first line differs becomes its head and `hole`,
+/// the first run's register under it, its register free to differ. L §4.5 (tally 2.1.8 R12: a
+/// read on which seen and unseen differ is `HOLE-IMPRECISE`), §8.2.
+fn undecided_lines(
+    (id, whole): (&str, bool),
+    first: &[String],
+    others: &[Vec<String>],
+    hole: &crate::hole::Hole,
+) -> Vec<String> {
+    if others.iter().all(|lines| lines.as_slice() == first) {
+        return first.to_vec();
+    }
+    let own = heads(first);
+    if others.iter().any(|lines| heads(lines) != own) {
+        let mut out = vec![format!("{id}: {}", hole.text())];
+        out.extend(last_clock(first).cloned());
+        return out;
+    }
+    let theirs: Vec<Vec<Vec<&str>>> = others.iter().map(|lines| blocks(lines)).collect();
+    let mut out = Vec::new();
+    for (at, block) in blocks(first).into_iter().enumerate() {
+        let Some((lead, under)) = block.split_first() else {
+            continue;
+        };
+        let agree = theirs.iter().all(|bs| match bs.get(at) {
+            Some(other) if whole => *other == block,
+            Some(other) => other.first() == Some(lead),
+            None => false,
+        });
+        if agree || !lead.contains(": ") {
+            out.extend(block.iter().map(|l| (*l).to_owned()));
+            continue;
+        }
+        out.push(format!("{}: {}", line_head(lead), hole.text()));
+        if whole {
+            out.extend(block_clock(under));
+        } else {
+            out.extend(under.iter().map(|l| (*l).to_owned()));
+        }
+    }
+    out
+}
+
+/// Whether seen and unseen compare ask `ask`'s blocks by every line: a ledger, a diff, an
+/// `explain`, an `inputs-of` or a `readers-of` prints its result in lines under its head; a
+/// value, `check` or `solve` block by its first line, its register free to differ (pick P27,
+/// on #196; refcore's `answer_same_undecided`, its `whole`). L §4.5 (tally 2.1.8 R12), §5.18.
+fn by_every_line(ask: &Ask) -> bool {
+    match ask.body {
+        AskBody::Residuals(_)
+        | AskBody::Diff(_)
+        | AskBody::Explain(_)
+        | AskBody::InputsOf(_)
+        | AskBody::ReadersOf(_) => true,
+        AskBody::Exprs(_) | AskBody::Check(..) | AskBody::Solve(_) => false,
+    }
+}
+
+/// The last cut or law date line among a block's lines `under`.
+fn block_clock(under: &[&str]) -> Option<String> {
+    under
+        .iter()
+        .rev()
+        .find(|l| l.starts_with("  cut") || l.starts_with("  law date"))
+        .map(|l| (*l).to_owned())
+}
+
+/// Lines `lines` in blocks: a line and the indented lines under it.
+fn blocks(lines: &[String]) -> Vec<Vec<&str>> {
+    let mut out: Vec<Vec<&str>> = Vec::new();
+    for line in lines {
+        match out.last_mut() {
+            Some(block) if line.starts_with(' ') => block.push(line),
+            _ => out.push(vec![line.as_str()]),
+        }
+    }
+    out
+}
+
+/// The first line of each block of `lines`.
+fn leads(lines: &[String]) -> Vec<&str> {
+    let mut out = Vec::new();
+    for block in blocks(lines) {
+        out.extend(block.first());
+    }
+    out
+}
+
+/// The head of each block of `lines`, its first line's.
+fn heads(lines: &[String]) -> Vec<&str> {
+    leads(lines).into_iter().map(line_head).collect()
+}
+
+/// The last cut or law date line under the last block of `lines`.
+fn last_clock(lines: &[String]) -> Option<&String> {
+    let mut found = None;
+    for line in lines {
+        if !line.starts_with(' ') {
+            found = None;
+        } else if line.starts_with("  cut") || line.starts_with("  law date") {
+            found = Some(line);
+        }
+    }
+    found
+}
+
+/// A line's head: its text before its first `: `, the whole line where it has none.
+fn line_head(line: &str) -> &str {
+    line.split_once(": ").map_or(line, |(head, _)| head)
 }
 
 /// The cuts the request's asks state as literals, `as known D` or `with known D` (`what`), on or
@@ -644,40 +1082,35 @@ fn ask_body(
         engine.open_layer(m, inside)?;
         inside
     };
-    if ask.windows_each && matches!(ask.body, AskBody::Diff(_) | AskBody::Residuals(_)) {
-        if side.is_some() {
-            return Err(Stop::NotBuilt("a diff's `windows each` over two stacks"));
-        }
-        // a diff's and a ledger's result is their set of lines (R8), run per sub-window
-        return super::windows::each_set(m, ask, engine, (ctx, &pinned));
-    }
-    match &ask.body {
-        AskBody::Exprs(_)
-        | AskBody::Check(..)
-        | AskBody::Solve(_)
-        | AskBody::Explain(_)
-        | AskBody::InputsOf(_) => tuple_lines(m, ask, engine, (ctx, &pinned)),
+    match (&ask.body, side) {
         // `readers-of` is static: its tuples are read for a domain that is a hole, and it
         // fans out over no axis (refcore's `_answer_in`, its readers-of return)
-        AskBody::ReadersOf(reference) => {
+        (AskBody::ReadersOf(reference), _) => {
             if !ask.binds.is_empty()
-                && let Err(hole) = engine.tuples(m, &ask.binds, ctx)?
+                && let Err(hole) = engine.tuples(m, &ask.binds, (&Env::empty(), ctx))?
             {
                 return Ok(vec![format!("{}: {}", ask.id, hole.text())]);
             }
             Ok(vec![readers_line(m, ask, reference)?])
         }
-        AskBody::Residuals(r) => residual_lines(m, ask, r, engine, (ctx, &pinned)),
-        // one side of a diff whose worlds sit on two stacks: its cells, kept for the turn
-        // that prints both (refcore's `_diff_only`, `_diff_side`)
-        AskBody::Diff(diff) => match side {
-            Some(side) => {
-                let cells = diff_cells(m, (ask, diff), engine, (ctx, &pinned), Some(&side.world))?;
-                side.cells = Some(cells);
-                Ok(Vec::new())
+        // one side of a diff whose worlds sit on two stacks: its cells, under `windows each`
+        // each cell's runs, kept for the turn that prints both (refcore's `_diff_only`,
+        // `_diff_side`; tally 2.1.8 R13, #186)
+        (AskBody::Diff(diff), Some(side)) => {
+            // a tuple answered as an ask of its own adds its cells to the side's
+            match side_tuples(m, (ask, diff), engine, (ctx, &pinned), &side.world)? {
+                Ok(cells) => side.cells.get_or_insert_with(Vec::new).extend(
+                    cells
+                        .into_iter()
+                        .map(|(part, cell)| (format!("{}{part}", side.part), cell)),
+                ),
+                Err(line) => return Ok(vec![line]),
             }
-            None => diff_lines(m, (ask, diff), engine, (ctx, &pinned)),
-        },
+            Ok(Vec::new())
+        }
+        // every other form: per binding tuple, axis combination and sub-window, its result
+        // what the form prints (L §5.18, tally 2.1.8 R13)
+        _ => tuple_lines(m, ask, engine, (ctx, &pinned)),
     }
 }
 
@@ -693,15 +1126,23 @@ fn model_ctx(
     Ok(ctx)
 }
 
-/// An ask's form a tuple's line doesn't hold: a residual ledger, a diff, `readers-of`.
-fn beyond_built() -> Stop {
-    Stop::NotBuilt("an ask's form beyond values, check, solve, explain and inputs-of")
+/// An ask's lines: a line per binding tuple with the register under it, fanned out over the
+/// axes the ask reaches and, under `windows each`, split by sub-window, each line the result
+/// its form prints: values, a check, a solve, an `explain`, an `inputs-of`, a residual ledger
+/// or a diff (refcore's `_answer_in`, `print_line`). L §5.18 (tally 2.1.8 R13: every clause
+/// stands on every form), §5.5, §4.4.
+fn tuple_lines(
+    m: &Reality,
+    ask: &Ask,
+    engine: &mut Engine,
+    (ctx, pinned): (Ctx, &Collected),
+) -> Result<Vec<String>, Stop> {
+    clause_lines(m, ask, engine, (ctx, pinned))
 }
 
-/// An ask's lines of values, of a check or of a solve: a line per binding tuple with the
-/// register under it, fanned out over the axes the ask reaches (refcore's `_answer_in`,
-/// `print_line`). L §5.18, §5.5.
-fn tuple_lines(
+/// [`tuple_lines`] of an ask whose binding its form takes: its `windows each` clause, a
+/// read's, or neither. L §4.4, §5.18.
+fn clause_lines(
     m: &Reality,
     ask: &Ask,
     engine: &mut Engine,
@@ -767,7 +1208,7 @@ fn plain_lines(
             brought: Collected::default(),
         }]
     } else {
-        match engine.tuples(m, &ask.binds, ctx)? {
+        match engine.tuples(m, &ask.binds, (&Env::empty(), ctx))? {
             Err(hole) => return Ok(vec![format!("{}: {}", ask.id, hole.text())]),
             Ok(tuples) => tuples,
         }
@@ -779,8 +1220,11 @@ fn plain_lines(
             out.push(format!("{head}: {}", hole.text()));
             continue;
         }
-        let mut line = form_line(m, ask, engine, &tuple.env, ctx)?;
+        let mut line = form_line(m, ask, engine, (&tuple.env, ctx, pinned))?;
         out.extend(line.lines(&head));
+        if line.alone {
+            continue;
+        }
         line.met.merge(&tuple.brought);
         line.met.merge(&ask_pins_listed(pinned, &line.met));
         let register = match line.laws {
@@ -792,49 +1236,81 @@ fn plain_lines(
     Ok(out)
 }
 
-/// The ask's `with` pins and what they read, as a line lists them: an ask pin the line's
-/// reads didn't take, which its own read set records as met under an inner or narrower claim
-/// of its cell (`pin met`: an `as if`'s pin, a `solve`'s variable; the innermost claim wins,
-/// L §4.6), is in no read of it and isn't listed; a pin no read reaches stays listed, as
-/// refcore's walk reads don't reach a refused result yet (L §8.2 One read set; tally 2.1.7
-/// R7, P45; refcore's `print_line`, `pin_value`).
+/// The ask's `with` pins and what they read, as a line with read set `line` lists them: an
+/// entry is listed exactly when a read in its set gives it, so an ask's pin of a cell (noted
+/// `pin cell`) that no read of the line took isn't listed; a pin of an axis or a clock stays
+/// listed (L §8.2 One read set; tally 2.1.7 R7, P45; tally 2.1.8 §4, #161; refcore's
+/// `print_line`, `pin_value`).
 pub(super) fn ask_pins_listed(pinned: &Collected, line: &Collected) -> Collected {
     let mut kept = pinned.clone();
     kept.entries.retain(|e| {
-        let met = Entry {
-            word: "pin met",
-            text: e.text.clone(),
-            figure: String::new(),
-        };
-        e.word != "pinned" || line.entries.contains(e) || !line.entries.contains(&met)
+        e.word != "pinned"
+            || !pinned.entries.contains(&pin_entry("pin cell", &e.text))
+            || line.entries.contains(e)
     });
     kept
 }
 
-/// One tuple's line after its head, with the register entries it met: the values of
-/// `e, f, …`, a `check`'s or a `solve`'s (refcore's `evaluate`). A line holding a bare key
-/// literal meets its `LOAD-KEY ambiguous key` where it is evaluated (L §2.5, §8.3; P39).
+/// The ask's pins of a cell, `pinned`, that a line whose every value is refused takes: a
+/// refusal carries no read set of its own, so what it rests on took each pin, but one its
+/// read set `line` records as met under an inner or narrower claim of its cell (`pin met`: an
+/// `as if`'s pin, a `solve`'s variable; the innermost claim wins, L §4.6) (refcore's
+/// `print_line`, its `refused`; tally 2.1.8 §4, #161). L §8.2 One read set.
+fn refused_pins(pinned: &Collected, line: &Collected) -> Collected {
+    let mut kept = Collected::default();
+    for e in &pinned.entries {
+        let cell = pinned.entries.contains(&pin_entry("pin cell", &e.text));
+        if e.word == "pinned" && cell && !line.entries.contains(&pin_entry("pin met", &e.text)) {
+            kept.entries.insert(e.clone());
+        }
+    }
+    kept
+}
+
+/// The register entry `word` of pin `text`, as a read set notes it (L §8.2).
+fn pin_entry(word: &'static str, text: &str) -> Entry {
+    Entry {
+        word,
+        text: text.to_owned(),
+        figure: String::new(),
+    }
+}
+
+/// One tuple's line after its head in scope `env` and context `ctx`, with the register
+/// entries it met: the result its form prints, the values of `e, f, …`, a `check`'s, a
+/// `solve`'s, an `explain`'s, an `inputs-of`'s, a residual ledger or a diff, whose register
+/// holds the ask's pins `pinned` (refcore's `evaluate`, `answer_residuals`, `answer_diff`). A
+/// line holding a bare key literal meets its `LOAD-KEY ambiguous key` where it is evaluated
+/// (L §2.5, §8.3; P39). L §5.18 (tally 2.1.8 R13).
 pub(super) fn form_line(
     m: &Reality,
     ask: &Ask,
     engine: &mut Engine,
-    env: &Env,
-    ctx: Ctx,
+    (env, ctx, pinned): (&Env, Ctx, &Collected),
 ) -> Result<Printed, Stop> {
     match &ask.body {
         AskBody::Exprs(exprs) => {
-            let (items, met) = engine.line(m, exprs, env, ctx)?;
+            let (items, mut met) = engine.line(m, exprs, env, ctx)?;
             if let Some(place) = m.asks_unresolved.get(&ask.id) {
                 unresolved_word(&items, place)?;
             }
+            if !items.is_empty() && items.iter().all(|i| matches!(i, Item::Refused(_))) {
+                // a refused line rests on what refused it, which took the ask's pins
+                let taken = refused_pins(pinned, &met);
+                met.merge(&taken);
+            }
+            let carried = carried_of(&items.iter().collect::<Vec<_>>());
             Ok(Printed {
                 text: line_values(m, &items)?,
                 body: Vec::new(),
                 bare: false,
 
                 whole: false,
+                alone: false,
                 met,
                 laws: None,
+                carried,
+                causes: None,
             })
         }
         AskBody::Check(left, right) => check_line(m, engine, (left, right), env, ctx),
@@ -846,13 +1322,18 @@ pub(super) fn form_line(
                 bare: false,
 
                 whole: false,
+                alone: false,
                 met,
                 laws: None,
+                carried: carried_of(&[&item]),
+                causes: None,
             })
         }
         AskBody::Explain(reference) => explain_line(m, (ask, reference), engine, env, ctx),
         AskBody::InputsOf(reference) => inputs_line(m, (ask, reference), engine, env, ctx),
-        AskBody::Residuals(_) | AskBody::ReadersOf(_) | AskBody::Diff(_) => Err(beyond_built()),
+        AskBody::Residuals(r) => residual_result(m, r, engine, (env, ctx, pinned)),
+        AskBody::Diff(diff) => diff_result(m, diff, engine, (env, ctx, pinned)),
+        AskBody::ReadersOf(_) => Err(invariant("readers-of read as a tuple's line")),
     }
 }
 
@@ -918,7 +1399,9 @@ pub(super) fn item_text(m: &Reality, item: &Item) -> Result<String, Stop> {
             // a window prints as a date; any other interval needs its one value (L §4.4)
             let window = w.question_text(m).map_err(num_stop)?;
             let text = format!("date within {window} not precise enough for a print");
-            Ok(crate::hole::Hole::asked(&text, w.figure()).text())
+            Ok(crate::hole::Hole::asked(&text, w.figure())
+                .carrying(&w.carry)
+                .text())
         }
         Item::Value(v) => v.typed_text(m).map_err(num_stop),
     }
@@ -1007,8 +1490,8 @@ fn ask_engine(cut: Day, (ask, env): (&Ask, &Env), days: Days, seen: &mut Seen) -
 /// membership is a hole prints that hole (L §5.18, §5.11, §2.5).
 fn tuple_asks(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<String>, Stop> {
     let mut engine = ask_engine(m.on, (ask, &Env::empty()), days, seen);
-    let read =
-        model_ctx(m, &mut engine, (None, m.on)).and_then(|ctx| engine.tuples(m, &ask.binds, ctx));
+    let read = model_ctx(m, &mut engine, (None, m.on))
+        .and_then(|ctx| engine.tuples(m, &ask.binds, (&Env::empty(), ctx)));
     gather(seen, &mut engine);
     let members = match read {
         Ok(Ok(members)) => members,
@@ -1022,6 +1505,15 @@ fn tuple_asks(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec
     let mut out = Vec::new();
     for member in members {
         let head = env_text(m, &ask.binds, &member.env)?;
+        // one side of a diff over two stacks: each tuple's cells under its part (`cross_lines`)
+        if let Some(side) = seen.side.as_mut() {
+            side.part.clone_from(&head);
+            if let Some(hole) = &member.unknown {
+                let cells = side.cells.get_or_insert_with(Vec::new);
+                cells.push((head.clone(), Err(hole.text())));
+                continue;
+            }
+        }
         if let Some(hole) = member.unknown {
             out.push(format!("{}{head}: {}", ask.id, hole.text()));
             continue;
@@ -1201,5 +1693,71 @@ fn pin_parts(pin: &Pin) -> Vec<&Expr> {
         }
         PinForm::Law(e) | PinForm::Known(e) | PinForm::Wording(e, _) => vec![e],
         PinForm::Scenario(_) => Vec::new(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::undecided_lines;
+    use crate::hole::Hole;
+
+    fn owned(lines: &[&str]) -> Vec<String> {
+        lines.iter().map(|l| (*l).to_owned()).collect()
+    }
+
+    const HEAD: &str = "r: residuals konto 2026-04";
+    const GROUP: &str =
+        "  2026-04 unexplained: model 0.00 PLN, observed -100.00 PLN, difference -100.00 PLN";
+
+    /// Seen and unseen accounts of one block under one first line (the review of group 1's
+    /// N5; pick P27, on #196): a ledger's, a diff's, an `explain`'s or an `inputs-of`'s block
+    /// that differs in any line is the hole, with its last cut or law date line; a value's
+    /// block compares by its first line, its register free to differ.
+    #[test]
+    fn a_block_of_lines_is_compared_by_every_line() {
+        let hole = Hole::asked(
+            "date within window(2026-05-01, 2026-05-20) not precise enough for the cut 2026-05-10",
+            "link1",
+        );
+        let hole_line = format!("r: {}", hole.text());
+        let seen = owned(&[
+            HEAD,
+            GROUP,
+            "    unexplained bank[a1], bank[b1] on 2026-04-10: observed -100.00 PLN",
+            "  law date 2026-04-01, cut 2026-05-10",
+            "q: 3",
+            "  cut 2026-05-10",
+        ]);
+        let unseen = owned(&[
+            HEAD,
+            GROUP,
+            "    unexplained bank[a1] on 2026-04-10: observed -100.00 PLN",
+            "  law date 2026-04-01, cut 2026-05-10",
+            "q: 3",
+            "  cut 2026-05-10",
+        ]);
+        let others = [unseen];
+        assert_eq!(
+            undecided_lines(("r", true), &seen, &others, &hole),
+            [
+                hole_line.as_str(),
+                "  law date 2026-04-01, cut 2026-05-10",
+                "q: 3",
+                "  cut 2026-05-10"
+            ],
+            "a ledger's line under one head moves: the hole and its clock"
+        );
+        assert_eq!(
+            undecided_lines(("r", false), &seen, &others, &hole),
+            seen,
+            "a value's block: its first line agrees"
+        );
+        let moved = owned(&["q: 3", "  open: two", "  cut 2026-05-10"]);
+        let still = owned(&["q: 3", "  cut 2026-05-10"]);
+        assert_eq!(
+            undecided_lines(("q", false), &moved, &[still], &hole),
+            moved,
+            "a value's register may differ"
+        );
     }
 }

@@ -54,14 +54,18 @@ pub(super) fn instance_line(
     let lines = instance_lines(m, engine, &item, ctx);
     let mut met = met;
     met.merge(&engine.pop_alone());
+    let body: Vec<String> = lines?.into_iter().map(|l| format!("  {l}")).collect();
     Ok(Printed {
         text,
-        body: lines?.into_iter().map(|l| format!("  {l}")).collect(),
+        causes: Some(super::check::undated_causes(&body)),
+        body,
         bare: false,
 
         whole: false,
+        alone: false,
         met,
         laws: None,
+        carried: super::check::carried_of(&[&item]),
     })
 }
 

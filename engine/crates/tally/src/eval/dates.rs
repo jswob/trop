@@ -17,7 +17,7 @@ use super::expr::hole_of;
 use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load};
 use super::state::{a_day, not_typed, past_days};
 use super::time_arith::step_count;
-use super::windows::{End, as_window, imprecise, interval, single, window_end};
+use super::windows::{End, as_window, imprecise, interval, interval_of, single, window_end};
 use super::years::as_year;
 use crate::base::{Load, Run};
 use crate::model::{Class, Code, Number, Reality, Unit, Value, Window};
@@ -195,7 +195,15 @@ impl Engine {
             return Ok(Value::Hole(imprecise(m, w, name)?));
         }
         match name {
-            "days_between" => lifted(m, DateFn::Between, &[first, date_or_window(b, name)?]),
+            "days_between" => {
+                let second = date_or_window(b, name)?;
+                if super::windows::one_read(&first, &second) {
+                    // a window taken with its own name once: one unknown day, 0 days from
+                    // itself (L §4.4; refcore's `c_days_between`)
+                    return Ok(Value::int(0));
+                }
+                lifted(m, DateFn::Between, &[first, second])
+            }
             "add_days" => lifted(m, DateFn::AddDays(step_count(m, &b, 1)?), &[first]),
             "add_months" => lifted(m, DateFn::AddMonths(months_arg(m, &b, "month")?), &[first]),
             "add_years" => lifted(m, DateFn::AddMonths(months_arg(m, &b, "year")?), &[first]),
@@ -308,30 +316,43 @@ fn arity() -> Stop {
     invariant("a built-in called with the wrong number of arguments")
 }
 
-/// The value of date built-in `f` at `args`; where one is a window, the interval of its
-/// values at the window's first and last day, `HOLE-IMPRECISE` where two are or where it is
-/// `none` at an end (refcore's `lift`). L §4.4.
+/// The value of date built-in `f` at `args`; where some are windows, the interval of its
+/// values at every corner of their first and last days, a computed value carrying each
+/// window's unknown day; `HOLE-IMPRECISE` where it is `none` at a corner (refcore's `lift`;
+/// tally 2.1.7 R3, the natural interval extension). L §4.4.
 fn lifted(m: &Reality, f: DateFn, args: &[Value]) -> Result<Value, Stop> {
     let windows: Vec<&Window> = args.iter().filter_map(as_window).collect();
-    let window = match windows.as_slice() {
-        [] => return apply(f, args),
-        [one] => *one,
-        [first, ..] => {
-            return Ok(Value::Hole(imprecise(
-                m,
-                first,
-                "a built-in of two windows",
-            )?));
-        }
+    let [window, others @ ..] = windows.as_slice() else {
+        return apply(f, args);
     };
-    let lows: Vec<Value> = args.iter().map(|v| window_end(v, End::Low)).collect();
-    let highs: Vec<Value> = args.iter().map(|v| window_end(v, End::High)).collect();
-    let (low, high) = (apply(f, &lows)?, apply(f, &highs)?);
-    if low == Value::None || high == Value::None {
-        let what = "a built-in that is none on part of the window";
-        return Ok(Value::Hole(imprecise(m, window, what)?));
+    let mut corners: Vec<Vec<Value>> = vec![Vec::new()];
+    for v in args {
+        let ends = match as_window(v) {
+            Some(_) => vec![window_end(v, End::Low), window_end(v, End::High)],
+            None => vec![v.clone()],
+        };
+        let mut next = Vec::with_capacity(corners.len());
+        for c in &corners {
+            for e in &ends {
+                next.push([c.as_slice(), core::slice::from_ref(e)].concat());
+            }
+        }
+        corners = next;
     }
-    interval(m, (low, high), window)
+    let mut outs = Vec::with_capacity(corners.len());
+    for c in &corners {
+        let out = apply(f, c)?;
+        if out == Value::None {
+            let what = "a built-in that is none on part of the window";
+            return Ok(Value::Hole(imprecise(m, window, what)?));
+        }
+        outs.push(out);
+    }
+    let mut from = (*window).clone();
+    for w in others {
+        crate::hole::carry_union(&mut from.carry, &w.carry);
+    }
+    interval_of(m, outs, &from)
 }
 
 /// Date built-in `f` at days (refcore's lambdas under `lift`). L §4.2.
@@ -420,6 +441,7 @@ fn window_weekday(w: &Window) -> Result<Value, Stop> {
         src: w.src.clone(),
         figure: w.figure.clone(),
         read: None,
+        carry: w.carry.clone(),
     })))
 }
 

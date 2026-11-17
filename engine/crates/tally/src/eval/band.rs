@@ -245,7 +245,7 @@ impl Engine {
             key: key.clone(),
         });
         if let Some(day) = ctx.law {
-            let class = tables_class(m, band, ctx.cut, day)?;
+            let class = tables_class(m, band, (ctx.cut, ctx.world), day)?;
             self.narrow(ctx.law, class);
         }
         let Some(rows) = band_rows(m, band, key.as_ref(), self.clocks(ctx, &band.id)?)? else {
@@ -304,7 +304,7 @@ impl Engine {
             .versions
             .get(&table.version)
             .ok_or_else(|| invariant("a band table of a version load didn't build"))?
-            .span_at(ctx.cut);
+            .span_at(&m.scenarios, (ctx.cut, ctx.world));
         if span.is_some_and(may_hold) {
             let class = LawClass::all().by_ask_cut(day, self.ask_cut);
             self.narrow(ctx.law, class);

@@ -82,6 +82,10 @@ pub(crate) struct Timeline {
     obs_errs: BTreeMap<(Day, String), Refusal>,
     /// The refusal each instance's realised movement rests on, per cut.
     bad_links: BTreeMap<(Day, String), Refusal>,
+    /// S1's refusal per cut, by instance and row.
+    s1_links: BTreeMap<(Day, String), Refusal>,
+    /// The cuts whose `same` classes' links are judged.
+    s1_judged: BTreeSet<Day>,
     /// Each plan move's adjustments per cut, settled.
     settled: BTreeMap<(String, Day), Vec<Adjustment>>,
     /// Every adjustment per cut, unsettled.
@@ -449,6 +453,8 @@ impl Engine {
             link_active: core::mem::take(&mut self.link_active),
             obs_errs: core::mem::take(&mut self.obs_errs),
             bad_links: core::mem::take(&mut self.bad_links),
+            s1_links: core::mem::take(&mut self.s1_links),
+            s1_judged: core::mem::take(&mut self.s1_judged),
             settled: core::mem::take(&mut self.settled),
             unsettled: core::mem::take(&mut self.unsettled),
             adjust_all_active: core::mem::take(&mut self.adjust_all_active),
@@ -478,6 +484,8 @@ impl Engine {
         self.link_active = t.link_active;
         self.obs_errs = t.obs_errs;
         self.bad_links = t.bad_links;
+        self.s1_links = t.s1_links;
+        self.s1_judged = t.s1_judged;
         self.settled = t.settled;
         self.unsettled = t.unsettled;
         self.adjust_all_active = t.adjust_all_active;

@@ -765,7 +765,7 @@ fn price_place(m: &Reality, files: &Files, thing: &Thing) -> Result<Option<(Stri
 fn price_fits(m: &Reality, files: &Files, things: &[&Thing]) -> Result<(), Stop> {
     let mut first: Option<((String, u32), Stop)> = None;
     for thing in things {
-        let Some((pid, mode)) = m.price_of(thing).and_then(|p| m.clause_mode(&p)) else {
+        let Some((pid, mode)) = unkeyed_clause(m, thing) else {
             continue;
         };
         let Some(pu) = m
@@ -775,8 +775,12 @@ fn price_fits(m: &Reality, files: &Files, things: &[&Thing]) -> Result<(), Stop>
             continue;
         };
         let name = &thing.name;
-        let (code, message) = match (m.first_domain(&pid), &mode) {
-            (Some(Domain::Kind(k)), _) if !m.thing_in(name, &k) && !m.thing_in(&pu, &k) => (
+        let domain = m.first_domain(&pid);
+        let neither = domain.as_ref().is_some_and(|d| {
+            key_holds(m, d, name) == Some(false) && key_holds(m, d, &pu) == Some(false)
+        });
+        let (code, message) = match (key_over(domain.as_ref()), &mode) {
+            (Some(k), _) if neither => (
                 Load::Key,
                 format!(
                     "{name} is priced by {pid}, keyed by {k}, which holds neither {name} nor its unit"
@@ -800,6 +804,116 @@ fn price_fits(m: &Reality, files: &Files, things: &[&Thing]) -> Result<(), Stop>
         }
     }
     first.map_or(Ok(()), |(_, stop)| Err(stop))
+}
+
+/// A place of unit `any` priced by an input or a def keyed by a kind or an index that
+/// doesn't hold the place: `LOAD-KEY` where a unit a move's written leg brings into it or
+/// takes out of it isn't a key of the price, whatever the asks read; the first by file and
+/// line prints (refcore's `m_check_any_priced`, made once the moves are checked). L §5.10,
+/// §8.4 (Load refuses what load sees), §8.3 `LOAD-KEY`.
+///
+/// # Errors
+///
+/// That refusal; a file load doesn't know, `ENGINE-INVARIANT`.
+pub(super) fn any_priced(
+    m: &Reality,
+    files: &Files,
+    legs: &BTreeMap<(String, String), LegEnds>,
+) -> Result<(), Stop> {
+    let mut things: Vec<&Thing> = m.things.entries().map(|(_, thing)| thing).collect();
+    things.sort_by(|a, b| a.name.cmp(&b.name));
+    let mut first: Option<((String, u32), Stop)> = None;
+    for thing in things {
+        if m.place_unit(thing).as_deref() != Some("any") {
+            continue;
+        }
+        let Some((pid, _)) = unkeyed_clause(m, thing) else {
+            continue;
+        };
+        let Some(domain) = m.first_domain(&pid) else {
+            continue;
+        };
+        let (Some(over), Some(false)) =
+            (key_over(Some(&domain)), key_holds(m, &domain, &thing.name))
+        else {
+            continue;
+        };
+        let Some(bad) = written_units(m, legs, &thing.name)
+            .into_iter()
+            .find(|u| key_holds(m, &domain, u) == Some(false))
+        else {
+            continue;
+        };
+        let name = &thing.name;
+        let message = format!(
+            "{name} is priced by {pid}, keyed by {over}, which holds neither {name} nor {bad}"
+        );
+        let at = price_place(m, files, thing)?;
+        let key = at.clone().unwrap_or_else(|| (String::new(), 0));
+        if first.as_ref().is_none_or(|(k, _)| key < *k) {
+            let refusal = Refusal::new(Code::Load(Load::Key), message);
+            let refusal = match at {
+                Some((file, line)) => refusal.placed(At::Line(file, line)),
+                None => refusal,
+            };
+            first = Some((key, Stop::Refused(refusal)));
+        }
+    }
+    first.map_or(Ok(()), |(_, stop)| Err(stop))
+}
+
+/// The input or def a thing's price clause names and how it values the place, where the
+/// clause writes no keys of its own (`priced px`, not `priced px[k]`, whose keys load reads
+/// as it reads any keys) (refcore's `pn._r` where `pn._expr` is none). L §5.10, §2.3.
+fn unkeyed_clause(m: &Reality, thing: &Thing) -> Option<(String, Priced)> {
+    let price = m.price_of(thing)?;
+    if let Some((Expr::Post(..), _)) = price_fields(&price.input) {
+        return None;
+    }
+    m.clause_mode(&price)
+}
+
+/// The units the moves' legs written into or out of place `name` state: a leg whose kind
+/// declares a unit (not `any`, not a kind), by name (refcore's `m_written_units`). L §5.14.
+fn written_units(
+    m: &Reality,
+    legs: &BTreeMap<(String, String), LegEnds>,
+    name: &str,
+) -> BTreeSet<String> {
+    let mut out = BTreeSet::new();
+    for leg in legs.values() {
+        if leg.unit == "any" || m.kinds.get(&leg.unit).is_some() {
+            continue;
+        }
+        if leg
+            .ends
+            .iter()
+            .any(|(literal, _)| literal.as_deref() == Some(name))
+        {
+            out.insert(leg.unit.clone());
+        }
+    }
+    out
+}
+
+/// The kind or index a price's first key ranges over, as a `LOAD-KEY` names it; none for
+/// another domain, or a price with no keys. L §5.10.
+fn key_over(domain: Option<&Domain>) -> Option<&str> {
+    match domain? {
+        Domain::Kind(id) | Domain::Index(id) => Some(id.as_str()),
+        Domain::Axis(_) | Domain::List(_) | Domain::Range => None,
+    }
+}
+
+/// Whether a price's first key, a kind or an index, holds `x`, a place's name or a unit:
+/// a thing of the kind, or a key of the index by its text; none for another domain
+/// (refcore's `m_price_key_holds`). L §5.10.
+fn key_holds(m: &Reality, domain: &Domain, x: &str) -> Option<bool> {
+    match domain {
+        Domain::Kind(kind) => Some(m.thing_in(x, kind)),
+        Domain::Index(id) => Some(m.indexes.get(id).is_some_and(|ix| ix.by_text(x).is_some())),
+        Domain::Axis(_) | Domain::List(_) | Domain::Range => None,
+    }
 }
 
 /// Whether `e` is an input that is no bound variable, read with keys: `px[k]`.

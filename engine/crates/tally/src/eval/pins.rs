@@ -488,8 +488,10 @@ impl Engine {
             None => format!("{head} = {}", value.typed_text(m).map_err(num_stop)?),
         };
         if how == Pinning::Ask {
-            // an ask's `with` pins print with every line (L §5.18 The world of an ask)
+            // an ask's `with` pin of a cell is listed where a read of the line took it (L
+            // §8.2 One read set; tally 2.1.8 §4, #161)
             self.note("pinned", text.clone(), String::new());
+            self.note("pin cell", text.clone(), String::new());
         }
         Ok(Some(Pinned {
             solve: false,

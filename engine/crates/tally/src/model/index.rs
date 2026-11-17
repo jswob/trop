@@ -12,6 +12,7 @@
 //! line the cut sees, else its own.
 
 use super::key::{KeyVal, Span};
+use super::world::{Scenarios, World};
 use crate::time::{Day, PeriodKind};
 use core::cmp::Ordering;
 
@@ -293,11 +294,15 @@ impl Moved {
 impl VersionInfo {
     /// The governs span in force under cut `cut`: the span of the latest-known `moves` line
     /// the cut sees, else the version's own (refcore's `VersionInfo.span_at`). L §4.6 step 1,
-    /// §5.3.
+    /// §5.3; a scenario's line only in the worlds its file is in (§6.4; tally 2.1.8 R12).
     #[must_use]
-    pub fn span_at(&self, cut: Day) -> Option<&Span> {
+    pub fn span_at(&self, scenarios: &Scenarios, (cut, world): (Day, World)) -> Option<&Span> {
         let mut best: Option<&Moved> = None;
-        for line in self.moved_by.iter().filter(|line| line.seen_at(cut)) {
+        for line in self
+            .moved_by
+            .iter()
+            .filter(|line| line.seen_at(cut) && scenarios.sees(world, Some(&line.by)))
+        {
             if best.is_none_or(|b| line.known > b.known) {
                 best = Some(line);
             }
@@ -309,13 +314,13 @@ impl VersionInfo {
     /// `enters` if stated, else the later of `known` and the row's own start, or of the
     /// governs span's start. L §5.3.
     #[must_use]
-    pub fn enters_at(&self, cut: Day, own: OwnTime) -> Day {
+    pub fn enters_at(&self, scenarios: &Scenarios, seen: (Day, World), own: OwnTime) -> Day {
         if let Some(day) = self.enters {
             return day;
         }
         let start = match own {
             OwnTime::Stated(own_start) => own_start,
-            OwnTime::Version => self.span_at(cut).and_then(Span::start),
+            OwnTime::Version => self.span_at(scenarios, seen).and_then(Span::start),
         };
         start.map_or(self.known, |s| self.known.max(s))
     }

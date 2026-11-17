@@ -279,6 +279,59 @@ impl SamePair {
 }
 
 impl Reality {
+    /// An id as a sort key in id order: a row's version prefix (`v:`) first, then the item's
+    /// name by code point, then each key by its position in its index, a list, range or
+    /// built-in index keeping its own order (`pay[9]` before `pay[10]`; on `[zz, aa, mm]` zz
+    /// first); an open index's keys, things and what isn't an item's key go by code point
+    /// (refcore's `id_order`; pick P50). L §2.5, §6.1, §8.1 `HOLE-SAME`.
+    #[must_use]
+    pub fn id_order(&self, id: &str) -> Vec<(u8, usize, String)> {
+        let mut out = Vec::new();
+        let mut text = id;
+        if let Some((prefix, rest)) = id.split_once(':')
+            && !prefix.contains('[')
+        {
+            out.push((0, 0, prefix.to_owned()));
+            text = rest;
+        }
+        let Some((name, keys)) = text
+            .strip_suffix(']')
+            .and_then(|inner| inner.split_once('['))
+        else {
+            out.push((1, 0, text.to_owned()));
+            return out;
+        };
+        out.push((1, 0, name.to_owned()));
+        let binds = match (self.moves.get(name), self.inputs.get(name)) {
+            (Some(mv), _) => mv.binds.as_slice(),
+            (None, Some(input)) => input.binds.as_slice(),
+            (None, None) => &[],
+        };
+        for (i, key) in keys.split(',').map(str::trim).enumerate() {
+            out.push(
+                match binds.get(i).and_then(|bind| self.key_place(bind, key)) {
+                    Some(p) => (0, p, String::new()),
+                    None => (1, 0, key.to_owned()),
+                },
+            );
+        }
+        out
+    }
+
+    /// The place of key `key` in the index bind `bind` ranges over, where that index keeps its
+    /// own order (a list, a range, a built-in); none for an open index, a kind or what isn't
+    /// its key (refcore's `id_order`, its `pos`). L §2.5.
+    fn key_place(&self, bind: &super::decl::BindInfo, key: &str) -> Option<usize> {
+        let Domain::Index(index) = &bind.domain else {
+            return None;
+        };
+        let ix = self.indexes.get(index)?;
+        if ix.form == super::index::IndexForm::Open {
+            return None;
+        }
+        ix.keys().iter().position(|k| k.text() == key)
+    }
+
     /// The id of the thing named `name`, which its table holds (the caller pushed or found
     /// it).
     ///

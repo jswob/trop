@@ -15,6 +15,12 @@ use super::tree::{Bind, Domain, Expr, Postfix, Span};
 impl P<'_> {
     /// `span = expr ".." [expr] | ".." [expr] | expr` (L §2.3).
     pub(super) fn span(&mut self) -> Result<Span, Stop> {
+        self.span_to(Ends::Free)
+    }
+
+    /// [`P::span`], each end's expression ending as `ends` says: a residual ledger's span ends
+    /// at the `in` that names the ask's world (L §2.3 rule 4; tally 2.1.8 R13 rest 1).
+    pub(super) fn span_to(&mut self, ends: Ends) -> Result<Span, Stop> {
         if self.at("..", 0) {
             self.role(Some(self.i), Role::Bin);
         }
@@ -22,7 +28,7 @@ impl P<'_> {
             let to = if self.span_end() {
                 None
             } else {
-                Some(self.expr(Ends::Free)?)
+                Some(self.expr(ends)?)
             };
             return Ok(Span {
                 from: None,
@@ -30,7 +36,7 @@ impl P<'_> {
                 dots: true,
             });
         }
-        let from = self.expr(Ends::Free)?;
+        let from = self.expr(ends)?;
         if self.at("..", 0) {
             self.role(Some(self.i), Role::Bin);
         }
@@ -38,7 +44,7 @@ impl P<'_> {
             let to = if self.span_end() {
                 None
             } else {
-                Some(self.expr(Ends::Free)?)
+                Some(self.expr(ends)?)
             };
             return Ok(Span {
                 from: Some(from),

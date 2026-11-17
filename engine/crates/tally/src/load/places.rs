@@ -315,9 +315,15 @@ impl Loader {
             if role == Written::Covers {
                 return Err(not_place("an expression"));
             }
+            // `none` is named as written (refcore's `ref.k`)
+            let what = if *written == Expr::None {
+                "none"
+            } else {
+                "an expression"
+            };
             return Err(refuse(
                 Load::Kind,
-                "a place is written by its id: an expression".to_owned(),
+                format!("a place is written by its id: {what}"),
                 file,
                 line,
             ));
