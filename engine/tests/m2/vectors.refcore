@@ -115882,31 +115882,32 @@ f3: ?"bank[r1], bank[r2] and bank[r3] are one, but the amount of cash differs on
 b3: (?"bank[r2] and bank[r3] are one, but the leg at sav differs on 2026-03-15: 950.00 PLN (bank[r2]) and 940.00 PLN (bank[r3])" (bank[r2], bank[r3]), 100.00 PLN)
   cut 2026-06-10
 warning: WARN-LEGS the two observations of save[2026-03] disagree: bank[r1] (950.00 PLN) and bank[r3] (940.00 PLN)
-warning: WARN-LEGS the two observations of tip[2026-03] disagree: bank[q2] (30.00 PLN) and bank[q1] (35.00 PLN)
+warning: WARN-LEGS the two observations of tip[2026-03] disagree: bank[q1] (35.00 PLN) and bank[q2] (30.00 PLN)
 warning: WARN-NEGATIVE box is below zero from 2026-05-20
 warning: WARN-NEGATIVE konto is below zero from 2026-04-15
-,13:s7/each_limit,7:fixes-s,21:run m.tally --ask lim,1777:7:m.tally,1761:model t
+,13:s7/each_limit,7:fixes-s,23:run lim.tally --ask lim,1518:9:lim.tally,1500:model t
   tally 2
   on 2026-01-01
   start 2026-01-01
-  end 2026-10-31
-  note "T, tally 2.1.8 R13 (#197) and S7 (#174), no-item 7: ten monthly pay windows of three days; January's lowest balance reads one of them, so windows each takes three days (lo; refused RUN-LIMIT before 2.1.8), and the January balance answers on its plain line (bj); lo_plain, the plain twin, is the hole; S7, a line whose hole names all ten windows passes 20 000 day combinations, RUN-LIMIT (lim)"
+  end 2026-01-31
+  note "T, tally 2.1.8 S7 (#174): ten pay windows of three days in one month and one rent on 2026-01-15, so every day's balance reads them: 3^10 day combinations, and windows each over the lowest balance is RUN-LIMIT past 20 000 (L 7.6 limit 6). m.tally's ten months walked each combination ten times as long, past refcore's 90 s budget on a loaded machine"
 
 source s "s"
 unit PLN: currency minor 0.01
 place konto: accounts PLN lives 2025-01-01..
 place world: outside lives 1900-01-01..
+index ks = 1..10
 input pay: money PLN
 input rent: money PLN
-input pd[m in months]: date
-input rd: int
+input pd[k in ks]: date
+input rd: date
 
-move inc[m in months]: transfers
-  on pd[m]
+move inc[k in ks]: transfers
+  on pd[k]
   leg cash from world to konto amount pay
 
-move out[m in months]: transfers
-  on day_of(m, rd)
+move out: transfers
+  on rd
   leg cash from konto to world amount rent
 
 version v
@@ -115915,25 +115916,21 @@ version v
   known 2025-12-01
   pay = 10.00 PLN "s"
   rent = 100.00 PLN "s"
-  rd = 5 "s"
-  pd[2026-01] = window(2026-01-10, 2026-01-12) "s"
-  pd[2026-02] = window(2026-02-10, 2026-02-12) "s"
-  pd[2026-03] = window(2026-03-10, 2026-03-12) "s"
-  pd[2026-04] = window(2026-04-10, 2026-04-12) "s"
-  pd[2026-05] = window(2026-05-10, 2026-05-12) "s"
-  pd[2026-06] = window(2026-06-10, 2026-06-12) "s"
-  pd[2026-07] = window(2026-07-10, 2026-07-12) "s"
-  pd[2026-08] = window(2026-08-10, 2026-08-12) "s"
-  pd[2026-09] = window(2026-09-10, 2026-09-12) "s"
-  pd[2026-10] = window(2026-10-10, 2026-10-12) "s"
+  rd = 2026-01-15 "s"
+  pd[1] = window(2026-01-02, 2026-01-04) "s"
+  pd[2] = window(2026-01-05, 2026-01-07) "s"
+  pd[3] = window(2026-01-08, 2026-01-10) "s"
+  pd[4] = window(2026-01-11, 2026-01-13) "s"
+  pd[5] = window(2026-01-14, 2026-01-16) "s"
+  pd[6] = window(2026-01-17, 2026-01-19) "s"
+  pd[7] = window(2026-01-20, 2026-01-22) "s"
+  pd[8] = window(2026-01-23, 2026-01-25) "s"
+  pd[9] = window(2026-01-26, 2026-01-28) "s"
+  pd[10] = window(2026-01-29, 2026-01-31) "s"
   opening[konto] = 500.00 PLN at 2026-01-01 start "s"
 
-ask lo: low(konto, 2026-01-01 .. 2026-01-31) windows each
-ask lo_plain: low(konto, 2026-01-01 .. 2026-01-31)
-ask bj: bal(konto, 2026-01-31) windows each
-ask lim: low(konto, 2026-01-01 .. 2026-10-31) windows each
-,,1:0,135:lim: refused: RUN-LIMIT windows each over more than 20 000 day combinations
-warning: WARN-NEGATIVE konto is below zero from 2026-06-05
+ask lim: low(konto, 2026-01-01 .. 2026-01-31) windows each
+,,1:0,76:lim: refused: RUN-LIMIT windows each over more than 20 000 day combinations
 ,15:s8/explain_refs,7:fixes-s,23:run m.tally --ask ex ez,601:7:m.tally,586:model t
   tally 2
   on 2026-06-30
@@ -117931,9 +117928,9 @@ version sx_v
   governs 2026-01-01..
   known 2026-01-01
   replace cq = bm.cr "s"
-,,1:0,118:f: refused: RUN-LIMIT a day passes 9999-12-31
+,,1:0,151:f: refused: RUN-LIMIT a day passes 9999-12-31
   world: sx
-  held: cq = ? (sx_v), read for 2027-01-01
+  held: cq = ?"cr: no value at 2027-01-01" (cr) (sx_v), read for 2027-01-01
   cut 2026-12-31
 ,26:fixes/rv/g2_b1_cover_reach,8:fixes-rv,24:run b4_cover_reach.tally,841:20:b4_cover_reach.tally,812:model t
   tally 2
@@ -118146,7 +118143,7 @@ ask g4: bal(pot, 2026-04-30) windows each
 ask g5: bal(pot, 2026-04-30) with wa = 2026-04-09
 ask g6: bal(pot, 2026-04-30) with wa = 2026-04-05
 ask g7: flows(ob, 2026-04) with wa = 2026-04-05
-,,1:0,1250:g1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for a balance" (oa)
+,,1:0,1252:g1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for flows of ob" (oa)
   cut 2026-01-01
 g2 [wa = 2026-04-05 .. 2026-04-07]: refused: RUN-PLACE pot is -160.00 PLN after the day's observations and plans of 2026-04-07
   cut 2026-01-01
@@ -118461,10 +118458,11 @@ ask a: bal(konto, 2026-04-30) from 2026-02-15 with uncertain partial
 ask b: bal(konto, 2026-04-30) with uncertain partial
 ask c: bal(konto, 2026-04-30) from 2026-02-15 with uncertain
 ask d: bal(konto, 2026-04-30) from 2026-02-15 partial
-,,1:0,1737:a: 2 030.00 PLN + 1 × ?"gift in march" (gift[2026-03])
+,,1:0,2053:a: 2 030.00 PLN + 1 × ?"gift in march" (gift[2026-03])
   uncertain: repay[2026-03]
   uncertain: repay[2026-04]
   held: gift[2026-02] = 10.00 PLN (v), read for 2026-02
+  held: gift[2026-03] = ?"gift in march" (gift[2026-03]) (v), read for 2026-03
   held: gift[2026-04] = 10.00 PLN (v), read for 2026-04
   held: owed[2026-03] = 500.00 PLN (v), read for 2026-03
   held: owed[2026-04] = 500.00 PLN (v), read for 2026-04
@@ -118478,6 +118476,7 @@ b: 3 030.00 PLN + 1 × ?"gift in march" (gift[2026-03])
   uncertain: repay[2026-03]
   uncertain: repay[2026-04]
   held: gift[2026-02] = 10.00 PLN (v), read for 2026-02
+  held: gift[2026-03] = ?"gift in march" (gift[2026-03]) (v), read for 2026-03
   held: gift[2026-04] = 10.00 PLN (v), read for 2026-04
   held: owed[2026-02] = 500.00 PLN (v), read for 2026-02
   held: owed[2026-03] = 500.00 PLN (v), read for 2026-03
@@ -118488,6 +118487,7 @@ b: 3 030.00 PLN + 1 × ?"gift in march" (gift[2026-03])
   cut 2026-01-01
 c: ?"gift in march" (gift[2026-03])
   held: gift[2026-02] = 10.00 PLN (v), read for 2026-02
+  held: gift[2026-03] = ?"gift in march" (gift[2026-03]) (v), read for 2026-03
   held: gift[2026-04] = 10.00 PLN (v), read for 2026-04
   held: repay_dom = 1 (v), read for 2026-02-01
   held: repay_dom = 1 (v), read for 2026-03-01
@@ -118495,6 +118495,7 @@ c: ?"gift in march" (gift[2026-03])
   cut 2026-01-01
 d: 1 030.00 PLN + 1 × ?"gift in march" (gift[2026-03])
   held: gift[2026-02] = 10.00 PLN (v), read for 2026-02
+  held: gift[2026-03] = ?"gift in march" (gift[2026-03]) (v), read for 2026-03
   held: gift[2026-04] = 10.00 PLN (v), read for 2026-04
   held: repay_dom = 1 (v), read for 2026-02-01
   held: repay_dom = 1 (v), read for 2026-03-01
@@ -119221,7 +119222,7 @@ ask g3: bal(pot, 2026-04-30)
 ask g4: bal(pot, 2026-04-30) windows each
 ask g5: bal(pot, 2026-04-30) with wa = 2026-04-09
 ask g6: bal(pot, 2026-04-30) with wa = 2026-04-05
-,,1:0,1112:g1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for a balance" (oa)
+,,1:0,1114:g1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for flows of ob" (oa)
   cut 2026-01-01
 g2 [wa = 2026-04-05 .. 2026-04-07]: refused: RUN-PLACE pot is -160.00 PLN after the day's observations and plans of 2026-04-07
   cut 2026-01-01

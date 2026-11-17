@@ -1,4 +1,5 @@
 # tally 2.1.8 (T's re-run): the blocks of tx2_owes_explain from refcore 2f019698 (tag tally-2.1.8), each move named by its rule
+# tally 2.1.8 (T's re-run): the blocks of tx2_mtg_live from refcore 2f019698 (tag tally-2.1.8), each move named by its rule
 tx2_owes: 9 227.29 DUK
   law date 2025-12-31, cut 2026-01-07
 tx2_owes_explain: 9 227.29 DUK
@@ -767,7 +768,7 @@ tx2_cis_explain: 786.87 DUK
   law date 2025-12-31, cut 2026-01-07
 tx2_mtg_day: (window(2027-04-05, 2027-04-06), 2027-04-05, 36 326.10 DUK, 18 700.00 DUK)
   law date 2025-12-31, cut 2026-01-07
-tx2_mtg_live: (true, window(2027-04-05, 2027-04-06), ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays), 14 652.96 DUK)
+tx2_mtg_live: (true, window(2027-04-05, 2027-04-06), ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for flows of cis" (gap_card_pays), 14 652.96 DUK)
   assumed: B-HR2 .2 says 12 % of the net to the ort and names no mode (hr2_tax_round)
   assumed: the November export's day is not stated: the 2nd of the next month (story) (gap_from, gap_to)
   anchor: cis 2025-06-30 end, stated 14 652.96 DUK, difference 0.00 DUK
