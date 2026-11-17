@@ -61,6 +61,10 @@ changed; `refcore_fast` byte-equal). One mechanism per rule:
   holds; a quantile's refused level comes before its holes; `m_partial_bal` and `m_proj_uncertain` keep a
   projection's start hole and its uncertain amounts linear; `lin_passes` lets a `dyn` field (a leg's amount) pass;
   `evaluate.units_at_reading` takes a unitless row's units from the walk's gaps, and `since` reads only the instant.
+- **The seventh turn** (group 4's review, P42; **1 538 tests**): `check` stops an ask's law chain at a def with its own
+  `at`; `moves.s1_refusal` names S1's refusal for both instances and rows, which bindings over movements and `flows`
+  of a move raise; `evaluate.trace_obs_row` prints an observation a sum reads as its row; a class stands in a binding
+  by its first id (`mreads`); `last` over always rows names its read's day in HOLE-SAME.
 - **Left.** About 125 run sites no text reaches (`LoadAtRun`, `is_load` stay); explain's `windows each` block
   against its pinned twin's pins section, and `n9_start`'s plain `?` group (next round's); the covered face asks
   every day of its window (`moves.m_window_class_depends`, a cost, no byte); a law per tuple on forms other than
