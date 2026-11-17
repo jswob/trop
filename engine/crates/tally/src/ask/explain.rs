@@ -457,11 +457,12 @@ fn nodes_of(m: &Reality, item: &Node) -> Vec<Node> {
 /// One step of printing a derivation: a node at its depth, a def cell's cause, or a line
 /// made already.
 enum Step {
-    /// The node at this place, printed at this depth.
-    Node(usize, usize),
+    /// The node at this place, printed at this depth, under the line numbered third.
+    Node(usize, usize, usize),
     /// A cause of the def cell at the first place, the node at the second, printed at this
-    /// depth, or folded with the chain it starts (refcore's `explain_step`).
-    Cause(usize, usize, usize),
+    /// depth, or folded with the chain it starts (refcore's `explain_step`), under the line
+    /// numbered fourth.
+    Cause(usize, usize, usize, usize),
     /// A line, printed as it is.
     Line(String),
 }
@@ -580,27 +581,46 @@ fn derivation_as(m: &Reality, trace: &Trace, laws: Laws) -> Result<Vec<String>, 
     // by equality
     let mut balances: Vec<(&TracedBalance, usize)> = Vec::new();
     let mut count: usize = 0;
+    // the causes printed so far under each line that reads them, the ask's line first
+    let mut unders: Vec<Vec<Under<'_>>> = vec![Vec::new()];
     let top = trace.top()?;
-    let mut todo: Vec<Step> = top.iter().rev().map(|c| Step::Node(*c, 1)).collect();
+    let mut todo: Vec<Step> = top.iter().rev().map(|c| Step::Node(*c, 1, 0)).collect();
     while let Some(step) = todo.pop() {
-        let (at, depth) = match step {
-            Step::Line(line) => {
-                out.push(line);
+        let (at, depth, line) = match step {
+            Step::Line(text) => {
+                out.push(text);
                 continue;
             }
-            Step::Node(at, depth) => (at, depth),
-            Step::Cause(parent, at, depth) => {
+            Step::Node(at, depth, line) => (at, depth, line),
+            Step::Cause(parent, at, depth, line) => {
                 match folded(trace, &numbered, (parent, at), depth)? {
-                    Some((line, last)) => {
-                        out.push(line);
-                        (last, depth)
+                    Some((text, last)) => {
+                        out.push(text);
+                        (last, depth, line)
                     }
-                    None => (at, depth),
+                    None => (at, depth, line),
                 }
             }
         };
         let node = trace.node(at)?;
         let ind = indent(depth);
+        // a cause met again under the line that reads it prints nothing more there: one
+        // reference under each line, whatever order the cells were computed in (E §10; tally
+        // 2.1.8 S8)
+        let ident = match &node.kind {
+            TraceKind::Row | TraceKind::BandRow => Under::Row(&node.label),
+            TraceKind::Balance(read) => Under::Balance(read),
+            TraceKind::Def(_) | TraceKind::Root | TraceKind::Group | TraceKind::Side => {
+                Under::Node(at)
+            }
+        };
+        let under = unders
+            .get_mut(line)
+            .ok_or_else(|| invariant("a derivation's line"))?;
+        if under.contains(&ident) {
+            continue;
+        }
+        under.push(ident);
         // a row is met again by its stable id; a balance only as the same read, its unit, cut
         // and timeline too, since its label has none of them (P63)
         let met = match &node.kind {
@@ -626,11 +646,25 @@ fn derivation_as(m: &Reality, trace: &Trace, laws: Laws) -> Result<Vec<String>, 
                 numbered.insert(at, count);
             }
         }
-        let (head, below) = node_lines(m, trace, (at, depth), (count, laws))?;
+        let mut lines = unders.len();
+        let (head, below) = node_lines(m, trace, (at, depth), (count, laws), &mut lines)?;
+        unders.resize_with(lines, Vec::new);
         out.extend(head);
         todo.extend(below.into_iter().rev());
     }
     Ok(out)
+}
+
+/// A cause as a line that reads it knows it: a row by its stable id, a balance by its read,
+/// any other node by its place (refcore's `ident`). E §10.
+#[derive(Debug, PartialEq, Eq)]
+enum Under<'t> {
+    /// A row or a band row, by its label.
+    Row(&'t str),
+    /// A balance, by the read it is.
+    Balance(&'t TracedBalance),
+    /// Any other node, by its place in the trace.
+    Node(usize),
 }
 
 /// The indent of a line at depth `depth`: two spaces a level.
@@ -640,12 +674,15 @@ fn indent(depth: usize) -> String {
 
 /// A node's own lines, numbered `no` at its depth, and the steps that print under it in
 /// order (refcore's `explain_node`); a balance's in the balance form, from the walk it read,
-/// but for a refused one (ruling P63, #132). L §5.18, E §10.
+/// but for a refused one (ruling P63, #132). Each line its causes print under (a rule's, a
+/// def's beside its rules, a group's) takes the next number from `lines` (tally 2.1.8 S8).
+/// L §5.18, E §10.
 fn node_lines(
     m: &Reality,
     trace: &Trace,
     (at, depth): (usize, usize),
     (no, laws): (usize, Laws),
+    lines: &mut usize,
 ) -> Result<(Vec<String>, Vec<Step>), Stop> {
     let node = trace.node(at)?;
     let ind = indent(depth);
@@ -695,16 +732,23 @@ fn node_lines(
                     rule.label,
                     state.text()
                 )));
+                // the rule's line reads its `when` and, the winner's, its value
+                let line = next_line(lines)?;
                 let groups = [rule.when, rule.value.filter(|_| state.won())];
                 for group in groups.into_iter().flatten() {
                     let children = &trace.node(group)?.children;
-                    below.extend(children.iter().map(|c| Step::Cause(at, *c, inner)));
+                    below.extend(children.iter().map(|c| Step::Cause(at, *c, inner, line)));
                 }
             }
             let beside = depth
                 .checked_add(2)
                 .ok_or_else(|| invariant("a derivation's depth"))?;
-            below.extend(node.children.iter().map(|c| Step::Cause(at, *c, beside)));
+            let line = next_line(lines)?;
+            below.extend(
+                node.children
+                    .iter()
+                    .map(|c| Step::Cause(at, *c, beside, line)),
+            );
         }
         TraceKind::Root | TraceKind::Group | TraceKind::Side => {
             let value = match (&node.kind, &node.value) {
@@ -715,10 +759,20 @@ fn node_lines(
             let inner = depth
                 .checked_add(1)
                 .ok_or_else(|| invariant("a derivation's depth"))?;
-            below.extend(node.children.iter().map(|c| Step::Node(*c, inner)));
+            let line = next_line(lines)?;
+            below.extend(node.children.iter().map(|c| Step::Node(*c, inner, line)));
         }
     }
     Ok((head, below))
+}
+
+/// The next line's number from `lines`, the count of lines numbered so far (tally 2.1.8 S8).
+fn next_line(lines: &mut usize) -> Result<usize, Stop> {
+    let line = *lines;
+    *lines = line
+        .checked_add(1)
+        .ok_or_else(|| invariant("a count of a derivation's lines"))?;
+    Ok(line)
 }
 
 /// A traced value as `explain` prints it, by no static type (refcore's `fmt_value` with
