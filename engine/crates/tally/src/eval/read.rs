@@ -1021,8 +1021,11 @@ impl Engine {
         let Some(first) = latest.first() else {
             return Err(invariant("the latest rows of a class are none"));
         };
+        // rows that govern always began on no day: they disagree on the day the read reads
+        // them for, as a plain read there prints (L §8.1 HOLE-SAME's `differs on <d>`; refcore's
+        // `e_call_last`, P42, group 4's review N3)
         if past != Past::Since
-            && let Some(hole) = self.carry_disagrees(m, &latest, top, ctx)?
+            && let Some(hole) = self.carry_disagrees(m, &latest, top.unwrap_or(day), ctx)?
         {
             return Ok(Err(Value::Hole(hole)));
         }
@@ -1059,7 +1062,7 @@ impl Engine {
         &mut self,
         m: &Reality,
         latest: &[Latest],
-        began: Option<Day>,
+        began: Day,
         ctx: Ctx,
     ) -> Result<Option<Hole>, Stop> {
         let mut got: Vec<(String, Value, String)> = Vec::with_capacity(latest.len());
@@ -1105,7 +1108,7 @@ impl Engine {
         for (_, v, sid) in &got {
             parts.push(format!("{} ({sid})", v.text(m).map_err(num_stop)?));
         }
-        let day = began.map_or_else(|| "every day".to_owned(), Day::text);
+        let day = began.text();
         let text = format!(
             "{} are one, but the value differs on {day}: {}",
             and_list(&names),

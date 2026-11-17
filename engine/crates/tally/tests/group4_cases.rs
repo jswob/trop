@@ -158,6 +158,13 @@ ask sa: a law 2026-05-01
 ask sl: last(c, 2026-05-01)
 "#;
         let lines = lines_of("same3.tally", text);
+        // N3: rows that govern always disagree on the day the read reads them for
+        holds(
+            &lines,
+            &[
+                "sl: ?\"a, b and c are one, but the value differs on 2026-05-01: 1.00 PLN (st:a), 2.00 PLN (st:b) and 3.00 PLN (st:c)\" (a, b, c)",
+            ],
+        );
         holds(
             &lines,
             &[
