@@ -33,8 +33,15 @@ changed; `refcore_fast` byte-equal). One mechanism per rule:
   `walk.own_obs` for a walk-bound trace and the adjustments measured with the trace off (#169-g); `check.assign`'s
   four-digit figure and `RUN-NONE` naming the row (#169-l); `gap` through `run_ends` (#159).
 - **The cut.** A version's `same` between an observed row and a planned instance of one model is `LOAD-SAME`.
-- **Left.** #162's three load-coded run sites T's texts reach and the ones no text reaches (`LoadAtRun`, `is_load`
-  stay); #169-e's `fixes/g3/h2` and `p6win`.
+- **The follow-up after the first build groups** (P26, P27, P29, P30; **1 509 tests**, 17 new, 1 changed): a refusal
+  met first stands before the edge's `RUN-LIMIT` (`add_business_at`); a reading compared in a `when` typed by its
+  place (`check.t_lastx`); `ask.answer_same_undecided` refuses past 20 000 choices and compares whole blocks;
+  `ask.diff_binds`; a def's computed window keeps its carry; `walk.dec_win_end` (#175's p6win); a refused line and a
+  count of none list their pin; `walk.words_differ`, `hole_flows`; a binding's member modelled on some days is its
+  hole; load checks for an ask's law expression, a running read in an ask's value, a band patch under an ask's cut
+  (`loader.patch_under_cut`) and `bal`/`low` at a written place of unit `any` (`check3.any_needs_unit`).
+- **Left.** A two-stack `diff` under `windows each` (item 2 of the follow-up); about 125 run sites no text reaches
+  (`LoadAtRun`, `is_load` stay).
 
 ## tally 2.1.7 (the spec round after M1: 84 items, ten rules)
 
