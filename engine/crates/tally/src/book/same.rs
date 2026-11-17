@@ -11,10 +11,12 @@
 //! walk.py `same_observed` (an instance stated `same` as an observed row) serves only a joint
 //! model's lines since load refuses the pair in one model (tally 2.1.8), and is built here from
 //! it when joint models run (M5c).
-//! Invariants: a group's members are in the order of their ids (tally 2.1.8 S6); a group is
-//! counted by its first member a read meets, its other members beside it; rows disagree
-//! only on a leg two of them state, never where any side is a hole; `HOLE-SAME` names every
-//! row of the class that states the fact, in id order.
+//! Invariants: a group's members are in the order of their ids, an id by its item's name and
+//! then each key by its place in its index, an open index's by code point (tally 2.1.8 S6, pick
+//! P50); a group is counted by its first member a read meets, its other members beside it;
+//! rows disagree only on a leg two of them state, never where any side is a hole; `HOLE-SAME`
+//! names every row of the class that states the fact, in that order; rows stated `same` that
+//! state different `fulfils` are `RUN-RECORD` for every read that rests on them (S1, P42).
 
 use std::collections::{BTreeMap, BTreeSet};
 

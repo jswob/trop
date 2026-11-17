@@ -6,9 +6,13 @@
 //! `RUN-LIFESPAN`), §5.19 (an observed leg before K, each end from the observation of the
 //! version that covers its place that day, or from this one where none does; one that fulfils
 //! a decision dated its day at the decision's point; a record refused refuses its places),
-//! §8.5; E §6.1.
+//! §4.4 (a leg dated by a window is `HOLE-IMPRECISE` from the window's first day and booked at
+//! its last; where its lifespan or sign test comes out one way on some of the window's days
+//! and another on the rest, it is the window's hole from the first day, and a refusal reaching
+//! its place after that doesn't outrank the hole; tally 2.1.8 item 77), §8.5; E §6.1.
 //! Twin: engine/tools/refcore/walk.py (`run_to`, `walk_day`, `act`, `leg_bad`, `book_leg`,
-//! `book_obs_leg`, `book_obs_now`, `alive_day`, `close_day`).
+//! `book_obs_leg`, `book_obs_now`, `alive_day`, `close_day`, `imp_tests`, `window_lifespan`,
+//! `imp_hole`).
 //! Invariants: a leg is booked at both its ends or refused at both; a refused leg is taken back
 //! and refuses its places from that point; the legs booked on a day sum to zero per unit; a
 //! day's acts run in walk order, and a day cut short past the counted depth resumes at the act

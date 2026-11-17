@@ -8,16 +8,18 @@
 //! combinations whose lines are the same print under one head, the window part first), §5.18
 //! (one line per binding tuple; tally 2.1.8 R13.1: a ledger's and a diff's blocks, each a
 //! result; a diff over two stacks crosses its sides' windows, `crossed_lines`), §7.6 item 6
-//! (at most 20 000 runs, `past_cap`), §8.2.
+//! (at most 20 000 runs, `past_cap`), §8.2 (a window-dated leg's `before from:` for each day
+//! of its window is listed by a block alone, `each_listed`, P37).
 //! Twin: engine/tools/refcore/ask.py (`each_lines`, `each_over_axes`, `each_rows`,
 //! `each_next`, `each_key`, `each_nested`, `boxes`, `_box_cells`, `EachRes`, `diff_each`).
 //! Invariants: the runs go depth first, a run whose answer carries an unknown day its choice
 //! names no day of run again once per day of the first of them its reads met, those runs
 //! before every run left, so a window the result never reads is never taken (tally 2.1.8
 //! R13); a run's layer is open only while it runs; two runs give one answer when their lines
-//! print the same text, an `explain`'s causes too; the boxes are made per answer, in the order the answers were first given, each grown
-//! greedily from its least day tuple, window by window in the order met, then sorted by their
-//! first days; a line's register is every run's of its box together.
+//! print the same text, an `explain`'s causes too; the boxes are made per answer, in the order
+//! the answers were first given, each grown greedily from its least day tuple, window by
+//! window in the order met, then sorted by their first days; a line's register is every run's
+//! of its box together.
 
 use std::collections::{BTreeSet, VecDeque};
 
