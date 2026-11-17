@@ -564,6 +564,7 @@ impl Engine {
         moves.retain(|mv| sub.contains(&mv.kind));
         let mut out = Vec::new();
         let mut decided = Vec::new();
+        let mut pins = Vec::new();
         for mv in moves {
             // a scenario's move the binding ranges over is a fact of it (E §9 item 3)
             if m.scenarios.of(&mv.id).is_some() {
@@ -575,7 +576,15 @@ impl Engine {
             }
             for i in self.move_instances(m, mv, cut)?.iter() {
                 match i.status {
-                    Status::None | Status::Modelled => {}
+                    // the binding read its day to leave it out: the pins that day took are
+                    // the binding's reads too (L §8.2 One read set; tally 2.1.8 §4, #161)
+                    Status::None | Status::Modelled => pins.extend(
+                        i.coll
+                            .entries
+                            .iter()
+                            .filter(|e| e.word == "pinned")
+                            .cloned(),
+                    ),
                     Status::Uncertain if !ctx.unc => {}
                     Status::Uncertain
                     | Status::Open
@@ -587,6 +596,9 @@ impl Engine {
                     | Status::Plan => out.push(Moving::Plan(i.clone())),
                 }
             }
+        }
+        for e in pins {
+            self.note(e.word, e.text, e.figure);
         }
         let before = self.trace_walked();
         let planned = out.len();

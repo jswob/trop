@@ -1236,23 +1236,44 @@ fn plain_lines(
     Ok(out)
 }
 
-/// The ask's `with` pins and what they read, as a line lists them: an ask pin the line's
-/// reads didn't take, which its own read set records as met under an inner or narrower claim
-/// of its cell (`pin met`: an `as if`'s pin, a `solve`'s variable; the innermost claim wins,
-/// L §4.6), is in no read of it and isn't listed; a pin no read reaches stays listed, as
-/// refcore's walk reads don't reach a refused result yet (L §8.2 One read set; tally 2.1.7
-/// R7, P45; refcore's `print_line`, `pin_value`).
+/// The ask's `with` pins and what they read, as a line with read set `line` lists them: an
+/// entry is listed exactly when a read in its set gives it, so an ask's pin of a cell (noted
+/// `pin cell`) that no read of the line took isn't listed; a pin of an axis or a clock stays
+/// listed (L §8.2 One read set; tally 2.1.7 R7, P45; tally 2.1.8 §4, #161; refcore's
+/// `print_line`, `pin_value`).
 pub(super) fn ask_pins_listed(pinned: &Collected, line: &Collected) -> Collected {
     let mut kept = pinned.clone();
     kept.entries.retain(|e| {
-        let met = Entry {
-            word: "pin met",
-            text: e.text.clone(),
-            figure: String::new(),
-        };
-        e.word != "pinned" || line.entries.contains(e) || !line.entries.contains(&met)
+        e.word != "pinned"
+            || !pinned.entries.contains(&pin_entry("pin cell", &e.text))
+            || line.entries.contains(e)
     });
     kept
+}
+
+/// The ask's pins of a cell, `pinned`, that a line whose every value is refused takes: a
+/// refusal carries no read set of its own, so what it rests on took each pin, but one its
+/// read set `line` records as met under an inner or narrower claim of its cell (`pin met`: an
+/// `as if`'s pin, a `solve`'s variable; the innermost claim wins, L §4.6) (refcore's
+/// `print_line`, its `refused`; tally 2.1.8 §4, #161). L §8.2 One read set.
+fn refused_pins(pinned: &Collected, line: &Collected) -> Collected {
+    let mut kept = Collected::default();
+    for e in &pinned.entries {
+        let cell = pinned.entries.contains(&pin_entry("pin cell", &e.text));
+        if e.word == "pinned" && cell && !line.entries.contains(&pin_entry("pin met", &e.text)) {
+            kept.entries.insert(e.clone());
+        }
+    }
+    kept
+}
+
+/// The register entry `word` of pin `text`, as a read set notes it (L §8.2).
+fn pin_entry(word: &'static str, text: &str) -> Entry {
+    Entry {
+        word,
+        text: text.to_owned(),
+        figure: String::new(),
+    }
 }
 
 /// One tuple's line after its head in scope `env` and context `ctx`, with the register
@@ -1269,9 +1290,14 @@ pub(super) fn form_line(
 ) -> Result<Printed, Stop> {
     match &ask.body {
         AskBody::Exprs(exprs) => {
-            let (items, met) = engine.line(m, exprs, env, ctx)?;
+            let (items, mut met) = engine.line(m, exprs, env, ctx)?;
             if let Some(place) = m.asks_unresolved.get(&ask.id) {
                 unresolved_word(&items, place)?;
+            }
+            if !items.is_empty() && items.iter().all(|i| matches!(i, Item::Refused(_))) {
+                // a refused line rests on what refused it, which took the ask's pins
+                let taken = refused_pins(pinned, &met);
+                met.merge(&taken);
             }
             let carried = carried_of(&items.iter().collect::<Vec<_>>());
             Ok(Printed {
