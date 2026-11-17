@@ -3936,3 +3936,48 @@ The plan's b8 and b9, R5's load checks and the three halves 2.1.8's CHANGES.md l
   - `check commit` is red only at `tests` (`66 of 1044 tests are red`), on the 63 known vectors and the 146 above.
   - The 13 steps it then left out, each run alone with `check step`, are all green: milestone-report, doc, build, gungraun-build, doctest, fault-injection-probe, deny, deny-tally, tree-probe, ast-grep-test, special-casing, spec-loadcheck-selftest, spec-loadcheck.
   - `check fences: green, 1 step (21s)`; `check quick: green, 11 steps (83s)`.
+
+## 2026-11-17 tally 2.1.8, build group 3's fix: the review's B1–B9, N1 and N4 (round PR #202; issues #169, #175, #183, #191, #200)
+
+The fix of the nine wrong results that group 3's review (`tmp/spec-2.1.8-build/review-g3.md`) found, on `build/2.1.8b` from 995d9f61. The oracle: `tmp/spec-2.1.8-build/refcore-g3fix`, a `git archive` of spec/2.1.8 at 75f27ca1 (the spec writer's sixth turn). The lead's pick P39 rules B8 and B2. Each test is in `tests/group3_cases.rs`: the review's input text, with refcore-g3fix's lines for the asks named.
+
+- **The findings, each with its commit and test:**
+  - B1 (73401624): a projection doesn't book a base decision's leg that its start state already holds (`walk/agenda.rs` `base_legs`). Test `a_base_leg_the_start_holds_is_counted_once` (t13: 500.00).
+  - B2 (a3034aa7, P39): a projection from a point of day t counts the legs dated t through d of a decision run earlier on day t (`after_the_point`). Test `a_decision_run_earlier_on_t_counts_its_later_legs` (t17: 500.00).
+  - B3 (eeb45e55): `with uncertain partial` keeps the uncertain amounts in a projection's known part (`walk/projection.rs`). Test `a_projection_with_uncertain_partial_keeps_the_uncertain_amounts` (t8 a).
+  - B4 (9cca7ed6): `last`, or a read at a law date, where a unitless hole stands beside a unit's reading at one instant, is that ask's `RUN-DOMAIN … in EUR and PLN`, and the file loads (`read/gap.rs` `one_unit`, `eval/read.rs` `unitless_held`, `load/rows.rs` `unitless_any`). Tests `last_beside_a_unitless_hole_and_a_units_reading_is_run_domain` (t1_la), `a_law_read_beside_a_unitless_hole_and_a_units_reading_is_run_domain` (t1_pl).
+  - B5 (d6a0882f): `flows` over a span after a window-day decision's window has ended leaves the window's hole out, once its end (the log's unperm) also stands before the span (`walk/flows.rs` `place_log`). Test `flows_after_a_window_days_end_is_decided` (t12: 0.00 each).
+  - B6 (5c774304): a reading `after m[k]` whose k is a bare name, naming no def, and not a key of m's list index is `LOAD-KEY … kz is not a key of ks` (`load/strata.rs` `after_keys`). Test `a_reading_after_a_key_its_index_lacks_is_load_key` (t14).
+  - B7 (43a59bcb): a quantile whose level is refused refuses before its hole terms (`eval/queries.rs` `level_in_range`). Test `a_refused_quantile_level_refuses_before_its_hole_terms` (t7).
+  - B8 (6320b3f2, P39; c3a75738 writes it without a nested closure): `bal … modelled` never counts m's leg after any reading `after m` at the place up to its start reading (`walk/modelled.rs`). Test `a_modelled_read_never_counts_m_after_a_reading_after_m` (t3: 520.00).
+  - B9 (0d4631bc): under `partial`, a projection whose start balance holds a hole keeps the linear form. The start's terms are those of the walk it continues, at the point, read up the chain; the walks bound the loop (R-16) (`walk/reads.rs` `partial_bal`, `walk/state.rs` `PartialLegs.start`). Test `a_projection_from_a_start_hole_keeps_the_linear_form` (r15_b3 b3, b6, b7).
+  - N1 (b3fa396b): `last` of a reading replaced by `none` registers no `held:` line (`eval/read.rs` `last_value`). Test `last_of_a_reading_replaced_by_none_holds_nothing` (r14_none, every line).
+  - N4 (82830516): two windows ending at one point apply in their instances' id order, as refcore's key orders them (`walk/agenda.rs` `window_end_at`). No input shows it (the review: no vector).
+- **Not fixed:**
+  - N5 (`agent/t15.tally`): a converted `flows(…) in EUR at fx …` is still `NotBuilt` ("flows converted"), which ends the whole run "not implemented". The conversion of flows is built nowhere yet: a feature, not a fix. Making `NotBuilt` one ask's line would change the run's contract for every not-built form.
+  - N2, N3 and N7 stand, as ruled.
+- **Sweep against refcore-g3fix** (`g3/sweep.py`, 315 sets: `tmp/spec-2.1.8/probes/`, every review's inputs including review-g3 and review-g3/agent, the groups' probes). Blocks the same after each step:
+  - start (995d9f61): 2 183 of 2 267;
+  - B1 2 185, B2 2 187, B3 2 188, B4 2 197 of 2 262, B7 2 198, B6 2 199 of 2 258, B8 2 200, B5 2 202, B9 2 206, N1 2 207, N4 2 207, end 2 207 of 2 258. The total falls where a text loads now (t1) or refuses at load (t14).
+  - No block turned from same to different at any step.
+- **Where the bytes still differ (51 blocks in 12 texts, each different at the start too):**
+  - The engine follows the text:
+    - `agent/t8` and `agent/t18`: the `held:` line of a hole row on a plain `bal` or a projection (N2, a spec question in T's GAPS).
+  - Not built:
+    - `agent/t15`: N5.
+  - Earlier groups' known differences, none this fix's:
+    - `g1/a1/v1` and `v1d` (BUILD-LOG l.1999's priced-reading split);
+    - `g1/a3/l1`, `g1/a5/h` and `hv`;
+    - `g2/fix/nd_far`, `g2/fix/wc/both_break`, `review-g2/b4_both_break`;
+    - `review-g1/B4_ledger_refused`.
+  - The review's four differences from refcore (`m2_g2_any_a` s1, `m2_gate_a3`/`a4` b8, `r14v4_si`, `LOAD-UNIT` for a unitless `bal` of unit `any`) aren't in the sweep's texts. The first three are the engine's right, as the review says. The fourth was ruled for group 4 (P31).
+- **Red gating ids (`check commit`: 66 of 1 055 tests red; the 11 new tests are green):**
+  - Group 4's 209 vectors: still red, every one, and none of them turned green.
+  - Turned by this fix, 2: `fixes/gate8/m2_g2_nb3` and `m2_g2_anynone`. N1 drops their `held: stated[broker] = none (r3), read for 2026-03-01`. refcore-g3fix doesn't print it either: on copies of their texts (`g3/n1/`), the engine and refcore-g3fix are byte-equal. T's stored rows predate the spec writer's mend. T's to record again.
+  - No other id is red.
+- **`engine/tools/perf counts P8-14`:** `def_misses 0, days_stepped 0, walks_shared 0 (exit 1)`, as at group 4. Its household text is refused by the price key until T records it again.
+- **STOP-REPORTs:** none. **Exceptions:** +0 (6; report-only hits 9, as the lock).
+- **Checks:**
+  - `check commit` is red only at `tests`, on the ids above.
+  - The 13 steps it then left out, each run alone with `check step`, are all green: milestone-report, doc, build, gungraun-build, doctest, fault-injection-probe, deny, deny-tally, tree-probe, ast-grep-test, special-casing, spec-loadcheck-selftest, spec-loadcheck.
+  - `check fences: green, 1 step (21s)`; `check quick: green, 11 steps (82s)`.
