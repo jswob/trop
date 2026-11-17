@@ -496,9 +496,14 @@ impl Engine {
         figure: &str,
         ctx: Ctx,
     ) -> Result<Value, Stop> {
-        let Value::Window(w) = &value else {
+        let Value::Window(mut w) = value else {
             return Ok(value);
         };
+        // a pinned window's holes are asked of the item it pins, as a row's of its row
+        // (L §8.1, §5.11)
+        if w.figure.is_none() {
+            w.figure = Some(figure.to_owned());
+        }
         let (id, label) = match &w.read {
             Some(read) => {
                 let from = origin(&read.item, &read.keys);
@@ -506,7 +511,7 @@ impl Engine {
             }
             None => (format!("pin {figure}"), figure.to_owned()),
         };
-        self.chosen(value, (id, &label), ctx)
+        self.chosen(Value::Window(w), (id, &label), ctx)
     }
 
     /// Input `input` as a read at `keys` in `ctx` under `clocks` sees its rows, a read at its
