@@ -1009,9 +1009,14 @@ impl Engine {
                 // a side whose readings are all removed (`replace … = none`) is no row: the
                 // class's latest kept reading carries (L §6.1 l.1806, §4.6 Readings; refcore's
                 // `carry_latest`, B1 of group 4's review); with no kept reading on any side the
-                // read is none, as refcore's `last`
+                // read is its own `HOLE-NOREADING`, as the plain read and `since` (L §4.6
+                // l.730; G1 of the fix's review), a price none
                 Side::Row(latest) if info.reading && removed_row(info, latest.at) => {
-                    Side::Missing(Value::None)
+                    if past == Past::Price {
+                        Side::Missing(Value::None)
+                    } else {
+                        Side::Missing(Value::Hole(no_reading(&origin(id, ks), day)))
+                    }
                 }
                 side @ (Side::Row(_) | Side::Signal(_) | Side::Missing(_)) => side,
             };

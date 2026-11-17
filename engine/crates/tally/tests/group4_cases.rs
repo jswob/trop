@@ -1,9 +1,10 @@
 //! The builder's tests of group 4's review: each review input, the lines refcore prints for the asks it names.
 //! Spec: L §6.1 (`same`: one value, the class's latest kept reading, #177; B1 and N3 of the
 //! review), L §5.19 and §4.6 Readings (`replace … = none` removes a reading).
-//! Twin: engine/tools/refcore (spec/2.1.8 at 61f8630b, the eighth turn); each expected line is
-//! its run of the same text (`python3 -m refcore run`), each text an input of the review of
-//! build group 4 (`tmp/spec-2.1.8-build/review-g4/`).
+//! Twin: engine/tools/refcore (spec/2.1.8 at 61f8630b, the eighth turn, and at 00a00b22, the
+//! tenth, for the fix review's G1 and F1); each expected line is its run of the same text
+//! (`python3 -m refcore run`), each text an input of the review of build group 4 or of its fix
+//! (`tmp/spec-2.1.8-build/review-g4/`, `review-g4fix/`).
 //! Invariants: reads no test, vector or answer key (R-93); the texts are written here.
 
 #![forbid(unsafe_code)]
@@ -501,6 +502,57 @@ version v2
             format!("bw: {hole}"),
             "  unfulfilled: mw[a1]".to_owned(),
             "  cut 2026-06-30".to_owned(),
+        ];
+        assert_eq!(lines, want, "every line of the run");
+    }
+
+    /// G1 of the fix's review (`agent/b1_onlyq.tally`): a class whose only reading is removed
+    /// has no reading, so `last` is `HOLE-NOREADING` as `since` and the plain read are, never
+    /// none (L §4.6 l.730, R-27).
+    #[test]
+    fn a_class_whose_only_reading_is_removed_has_no_reading() {
+        let text = r#"model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+
+input px[u in currencies]: num PLN/u reading
+input qx[u in currencies]: num PLN/u reading
+
+version r
+  cite s
+  known 2026-03-09
+  qx[EUR] = 4.4 PLN/EUR at 2026-03-08
+
+version r2
+  cite s
+  known 2026-04-01
+  replace qx[EUR] = none at 2026-03-08
+
+version j
+  cite s
+  governs always
+  known 2026-01-01
+  same px[EUR] = qx[EUR]
+
+ask e: last(px[EUR], 2026-03-10), since(px[EUR], 2026-03-10)
+ask q: last(qx[EUR], 2026-03-10), since(qx[EUR], 2026-03-10)
+ask v: px[EUR] law 2026-03-08
+"#;
+        let none = |x: &str| format!("?\"{x} has no reading on or before 2026-03-10\" ({x})");
+        let lines = lines_of("b1_onlyq.tally", text);
+        let want = [
+            format!("e: ({}, {})", none("px[EUR]"), none("px[EUR]")),
+            "  cut 2026-12-31".to_owned(),
+            format!("q: ({}, {})", none("qx[EUR]"), none("qx[EUR]")),
+            "  cut 2026-12-31".to_owned(),
+            "v: ?\"px[EUR] has no reading at 2026-03-08\" (px[EUR])".to_owned(),
+            "  law date 2026-03-08, cut 2026-12-31".to_owned(),
         ];
         assert_eq!(lines, want, "every line of the run");
     }
