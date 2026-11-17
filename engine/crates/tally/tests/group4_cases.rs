@@ -28,6 +28,21 @@ mod tests {
         answer.lines().to_vec()
     }
 
+    /// The lines a run of `text`, read from `path`, prints for the asks `asks`.
+    fn asked_lines_of(path: &str, text: &str, asks: &[&str]) -> Vec<String> {
+        let given = vec![Given {
+            path: path.to_owned(),
+            bytes: Some(text.as_bytes().to_vec()),
+        }];
+        let request = Request {
+            asks: Asks::Named(asks.iter().map(|a| (*a).to_owned()).collect()),
+            pin: Pin::Canonical,
+            days: Days::Events,
+        };
+        let answer = run(given, &request).expect("an answer");
+        answer.lines().to_vec()
+    }
+
     /// Each of `expected` is the line of `lines` with its head (the text before `: `).
     fn holds(lines: &[String], expected: &[&str]) {
         for want in expected {
@@ -626,6 +641,66 @@ version sm
                 "l (x = pay[mm]): 500.00 PLN".to_owned()
             ],
             "pay[zz] stands, in the list's order"
+        );
+    }
+
+    /// The final check's `r11/sum_first` (tally 2.1.8 R11): a sum whose first term is a booked
+    /// leg refused at its amount builds the walk its hole twin's read builds, so the run warns
+    /// as the twin's does: `b` goes below zero on the walk, though the sum reads no balance.
+    #[test]
+    fn a_refused_leg_read_warns_as_its_hole_twin() {
+        let text = r#"model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-06-30
+
+source src "s"
+unit PLN: currency minor 0.01
+input amt: money PLN
+input dom: int
+input dq: int
+input div[m in months]: num
+place a: accounts PLN lives 2020-01-01..
+place b: accounts PLN lives 2020-01-01..
+place world: outside lives 1900-01-01..
+
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from a to world amount round(amt * div[m] / div[m], minor(PLN), half-even)
+
+move q[m in months]: transfers
+  on day_of(m, dq)
+  at start_of(m)
+  leg cash from b to world amount amt
+
+version p
+  cite src
+  governs 2026..
+  known 2026-01-01
+  amt = 400.00 PLN "p"
+  dom = 4 "p"
+  dq = 10 "p"
+  div[2026-01] = 1 "ok"
+  div[2026-02] = 0 "zero"
+  div[2026-03..2026-06] = 1 "ok"
+  opening[a] = 1 000.00 PLN at 2026-01-01 start "o"
+  opening[b] = 1 000.00 PLN at 2026-01-01 start "o"
+
+ask s: sum(t.cash.amount for t in transfers over 2026-02)
+"#;
+        let lines = asked_lines_of("r11_warns.tally", text, &["s"]);
+        assert_eq!(
+            lines,
+            [
+                "s: refused: RUN-DIV division by zero",
+                "  unfulfilled: pay[2026-02]",
+                "  unfulfilled: q[2026-02]",
+                "  cut 2026-06-30",
+                "warning: WARN-NEGATIVE b is below zero from 2026-03-10",
+            ],
+            "the refusal, and the warning the walk meets"
         );
     }
 }

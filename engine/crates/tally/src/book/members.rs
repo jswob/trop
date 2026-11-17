@@ -986,13 +986,14 @@ impl Engine {
             Moving::Pad(p, _) => core::slice::from_ref(&p.leg),
         };
         if let Some(lg) = legs.iter().find(|lg| lg.name == name) {
-            if let Amount::Refused(r) = &lg.amount {
-                return Err(Stop::Refused(r.clone()));
-            }
             let day = lg
                 .day
                 .day()
                 .or_else(|| src.day().as_ref().and_then(Dated::day));
+            if let Amount::Refused(r) = &lg.amount {
+                self.booked_walk(m, src, (name, day), ctx)?;
+                return Err(Stop::Refused(r.clone()));
+            }
             // the walk is a cause an explanation prints in its own form only where it refused
             // the leg; else the leg is its instance's, traced as the instance was (E §10)
             let back = self.trace_walked();
@@ -1030,6 +1031,36 @@ impl Engine {
             Code::Load(Load::Field),
             format!("{name} is not a field of {}", src.id()),
         )))
+    }
+
+    /// The walk a leg read of a booked instance meets before its amount, whose refusal is its
+    /// answer: the walk the hole twin's read builds, so the run warns as its twin's does; a
+    /// refusal met building it is left to the walk, the amount's refusal standing (refcore's
+    /// `mv_field`, its `ask_walk`). L §8 (head), §8.5; E §4.2 step 5; tally 2.1.8 R11.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT`, or a part not built yet, met building the walk.
+    fn booked_walk(
+        &mut self,
+        m: &Reality,
+        src: &Moving,
+        (name, day): (&str, Option<Day>),
+        ctx: Ctx,
+    ) -> Result<(), Stop> {
+        let Moving::Plan(i) = src else {
+            return Ok(());
+        };
+        if !matches!(i.status, Status::Past | Status::Plan) {
+            return Ok(());
+        }
+        let back = self.trace_walked();
+        let walked = self.leg_refused(m, (src.id(), name), day, ctx);
+        self.trace_walked_back(back);
+        match walked {
+            Ok(_) | Err(Stop::Refused(_)) => Ok(()),
+            Err(stop) => Err(stop),
+        }
     }
 
     /// Leg `name` of plan instance `i`, which didn't exist at its booking cut, as a later
