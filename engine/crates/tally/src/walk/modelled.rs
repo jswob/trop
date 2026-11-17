@@ -106,12 +106,15 @@ impl Walk {
         // the m of a reading `after m` it starts from, or of an earlier one, which every later
         // reading holds too: m's own leg is never counted after it (L §5.19; tally 2.1.8 R16,
         // #191 Q5; pick P39 on B8 of group 3's review)
-        let after: Vec<&str> = self
-            .after_at
-            .iter()
-            .filter(|((p, ..), at)| p == place && since.is_some_and(|s| **at <= s))
-            .filter_map(|((_, instant, _), _)| instant.strip_prefix("after "))
-            .collect();
+        let mut after: Vec<&str> = Vec::new();
+        if let Some(start) = since {
+            after = self
+                .after_at
+                .iter()
+                .filter(|((p, ..), at)| p == place && **at <= start)
+                .filter_map(|((_, instant, _), _)| instant.strip_prefix("after "))
+                .collect();
+        }
         let mut out = Vec::new();
         for (ii, inst) in self.modelled.iter().enumerate() {
             if after.contains(&inst.id.as_str()) {
