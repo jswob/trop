@@ -7,6 +7,23 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.2 (the cuts round: nine forms removed; group G1)
+
+The user's cuts of 2026-11-17 (`spec/CHANGES.md` 2.1.8 → 2.2), applied in five groups. **Group G1: 1 550 tests,
+all pass** (1 552, 3 new, 5 dropped, 2 refusals rewritten, 4 restated; `refcore_fast` byte-equal). A cut form is
+refused by the grammar, `LOAD-PARSE`, with no message of its own.
+
+- **The fault S-7 waited on (2.2-10).** A def's header key over an event kind records the dependency edges an
+  aggregate's binding over the kind records (`check3.kind_bind_edges`, shared by both; `def_key_edges` from
+  `check_def`), so `def_axes` keeps the axes and pins a def keyed by a movement reads.
+- **A leg's own `on` (S-6, 2.2-6).** Gone from `parser.leg_body`, the loader's observed legs (their tuple has five
+  fields), `check3`'s leg and scenario checks, `moves.eval_leg`, `m_plan_list`, `scen_early`, and the walk:
+  `base_legs` (#183) and a decision's leg booked ahead. A `Leg` keeps its `day`: the movement's, or the day a
+  window-dated instance takes (`ask.explain_instance` still prints ` on <day>` for that).
+- **The converted `flows` (S-7, 2.2-7).** Gone from the parser, `canon.forced`, `check._txt`, `check3.t_flows`
+  (and `check.mode_arg`'s `fn`), and `mreads`' conversion thread (`m_convert`). A total converted movement by
+  movement is a sum of a def keyed by the movement (`L7_2_mode_axis` b, `L5_18_partial_not_linear` q6).
+
 ## tally 2.1.8 (the spec round after M2: 77 items, six rules)
 
 The spec patch tally 2.1.8 (`spec/CHANGES.md` 2.1.8-1 to 2.1.8-25), the lead's ruling of the plan on 2026-11-16 and
