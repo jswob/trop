@@ -289,6 +289,16 @@ def lin_day(d):
     return day_lo(d)
 
 
+class DiffSide(DiffOut):
+    """One side's cell of a diff over two stacks, run under windows each: its lines ({world: [(key, value)]}) and
+    the expression's type; its values carry the unknown days (cli.cross_stack_diff pairs the two sides' runs)."""
+
+    def __init__(self, res, t):
+        DiffOut.__init__(self, '', (), [v for lines in res.values() for _k, v in lines])
+        self.res = res
+        self.t = t
+
+
 class EachRes:
     """One axis combination's windows-each lines, as a result the axis grouping compares (L §5.5)."""
 
@@ -728,6 +738,8 @@ class Asker:
             return self.diff_binds(eng, a, ctx, pins_coll)
         if isinstance(ctx.windows, tuple) and ctx.windows and getattr(self, '_diff_only', None) is None:
             return self.diff_each(eng, a, ctx, pins_coll)
+        if isinstance(ctx.windows, tuple) and ctx.windows:
+            return self.diff_side_each(eng, a, ctx, pins_coll)
         axes = self.diff_axes(a, ctx)
         pinned = list(ctx.axes)
         cells = {}
@@ -777,6 +789,28 @@ class Asker:
             cctx = ctx.but(axes=tuple(sorted(pinned + list(c)))) if c else ctx
             results[c] = EachRes(self.each_rows(eng, a, None, cctx, evalf=evalf))
 
+        return self.diff_each_print(a, axes, combos, results, ctx)
+
+    def diff_side_each(self, eng, a, ctx, pins_coll):
+        """One side of a diff over two stacks under windows each (cli.cross_stack_diff): per combination of the
+        axes it reads, that side's runs, each once per choice of its windows' days (each_rows' runs), kept for the
+        caller, which pairs them (L §4.4, §5.18; tally 2.1.8 R13.1, item 2)."""
+        axes = self.diff_axes(a, ctx)
+        pinned = list(ctx.axes)
+
+        def evalf(xctx):
+            res, coll, _c, t = self.diff_worlds(eng, a, xctx, pins_coll)
+            return Result((DiffSide(res, t),), coll)
+        runs = {}
+        for c in self.diff_combos(axes):
+            cctx = ctx.but(axes=tuple(sorted(pinned + list(c)))) if c else ctx
+            runs[c] = self.each_rows(eng, a, None, cctx, evalf=evalf, runs=True)
+        self._diff_side = (axes, runs, ctx, 'each')
+        return []
+
+    def diff_each_print(self, a, axes, combos, results, ctx):
+        """A windows-each diff's blocks: per run of sub-windows (and axis options) that agree, its head, its lines
+        and its register."""
         def block(head, row, reading):
             d = row.vals[0]
             return ['%s: %s' % (head, d.counted)] + list(d.body) + ['  ' + r for r in self.register(row.coll, reading,
@@ -1096,10 +1130,11 @@ class Asker:
             out.append((key, envs[key], (starts, full, labels)))
         return out
 
-    def each_rows(self, eng, a, env, ctx, bound=None, evalf=None):
+    def each_rows(self, eng, a, env, ctx, bound=None, evalf=None, runs=False):
         """The sub-window lines of windows each: [(window part, Line)].  With bound (each_binding's), the line's
         runs start from those its binding is read in, each with its own tuple; a run whose where is a hole is
-        that hole.  With evalf, a run is evalf(its context) (a diff's cell, answer_diff)."""
+        that hole.  With evalf, a run is evalf(its context) (a diff's cell, answer_diff).  With runs, the runs
+        themselves, (done, seqs, labels): one side of a diff over two stacks (cli.cross_stack_diff pairs them)."""
         pending = [()]
         done = []
         seqs = []
@@ -1150,8 +1185,15 @@ class Asker:
                 continue
             done.append((assigned, res))
             seqs.append(asg)
+        if runs:
+            return done, seqs, labels
+        return self.each_group(done, seqs, labels, starts is None or full)
+
+    def each_group(self, done, seqs, labels, full=True):
+        """windows each's runs, (assignment, Result) with their assignment sequences, as its printed blocks: one
+        plain line where all agree, else one per maximal sub-window (or nested combination) whose answer agrees."""
         keys = set(self.each_key(r) for asg, r in done)
-        if len(keys) == 1 and (starts is None or full):
+        if len(keys) == 1 and full:
             ln = Line(None, [], done[0][1].vals, done[0][1].coll, [], done[0][1].trace)
             for asg, r in done[1:]:
                 ln.coll.merge(r.coll)
