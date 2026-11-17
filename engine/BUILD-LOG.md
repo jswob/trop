@@ -3981,3 +3981,83 @@ The fix of the nine wrong results that group 3's review (`tmp/spec-2.1.8-build/r
   - `check commit` is red only at `tests`, on the ids above.
   - The 13 steps it then left out, each run alone with `check step`, are all green: milestone-report, doc, build, gungraun-build, doctest, fault-injection-probe, deny, deny-tally, tree-probe, ast-grep-test, special-casing, spec-loadcheck-selftest, spec-loadcheck.
   - `check fences: green, 1 step (21s)`; `check quick: green, 11 steps (82s)`.
+
+## STOP-REPORT 2026-11-17: check-frozen is red since the tag tally-2.1.8 moved to spec/2.1.8's ninth turn
+
+- **Kind:** other. The frozen pin follows a tag that moved during this turn, and the build role can't bring the tree to it.
+- **Where:**
+  - `engine/tools/frozen.toml`: `tag = "tally-2.1.8"`, with no `pin`, so the pin is the tag.
+  - The tag is now 18f191a2 (created 2026-11-17 07:41:46), on c5dbc72f. That is three commits past the spec and refcore this branch holds (61f8630b): 9f155cc8 and 2a107428 (`fix(refcore)`: group 3's fix review, G1 and N-b), and c5dbc72f (closes the ninth turn).
+  - They change `engine/tools/refcore/` (check.py, check3.py, evaluate.py, HANDOVER.md, 3 tests), `engine/tools/SHA256SUMS`, and `engine/spec/CHANGES.md` and `SHA256SUMS`. Nothing under `engine/crates/`.
+- **Rule or gate:** R-80 (check-frozen) and R-79 (the guard).
+- **What happens:**
+  - `engine/tools/check quick` exits 1 with `FAIL check-frozen: FAIL spec: differs from tally-2.1.8: M engine/spec/CHANGES.md`, then `red at check-frozen, stopped after 5 of 11 steps`.
+  - It is red the same way on HEAD 74ca62a4 with nothing uncommitted.
+  - The N3 commit's `check quick` was green (94 s), just before the tag moved.
+- **What I tried:**
+  - `git merge --no-ff --no-edit spec/2.1.8`: the guard refused it ("refused `git merge`, which can change any file in the tree (R-79)").
+  - `git apply` of my own saved diff: refused the same way.
+  - `check step <name>` runs every quick step but quick's `tests`, which isn't a step of `full` (the nearest, `test-dev`, is `check full`'s whole workspace run, and I don't run `full` locally). So nothing after N3 can be tested, swept or committed.
+- **What I ask:** the lead merges spec/2.1.8 (c5dbc72f) into build/2.1.8b, as with the earlier turns, then resumes this turn for what is left. My oracle for the turn stays the snapshot `tmp/spec-2.1.8-build/refcore-g4fix` (61f8630b). By their subjects, the ninth turn's two fixes are about a unitless row's units and a reading's `after` key, not S1, S6, the law chain or `explain`.
+- **State:**
+  - Last green commit: 74ca62a4, pushed (f21c2ef2..74ca62a4); `commit-check master` exit 0.
+  - Committed this turn:
+    - 6a8e82f7, B1: a `same` side whose readings are all removed is no row.
+    - 74ca62a4, N3: `differs on <the read's day>`, no longer `every day`.
+    - Both with their review inputs as tests in `tests/group4_cases.rs`.
+    - Sweep against refcore-g4fix, over 350 sets (the probes and every review's inputs, group 4's added): baseline at HEAD bbc6d62b 2366 of 2438 blocks same; after B1 2369; after N3 2370. Only different→same moves: `same_removed` e and q, `same3` e2 (B1); `same3` sl (N3).
+  - Uncommitted, B2: S1's refusal reaches a binding over movements (span members, and a binding whose day is a hole), and `flows` of either instance.
+    - The files: `eval/state.rs` and `eval/timelines.rs` (`s1_links`, `s1_judged`), `book/same.rs` (`fulfils_differ` names the refusal for both instances and both rows), `book/observe.rs` (`s1_refusal` and `judge_class_links`, one pass per cut with its register dropped, as refcore's), `book/members.rs` (`span_members`, `unknown_day`, `rests_in`), `walk/move_flows.rs` (`count_move`).
+    - Its test `s1_refuses_every_read_resting_on_the_class` holds refcore's `L5_19_same_fulfils_differ_reach`.
+    - Green: clippy-lib, clippy-tests, exceptions, check-rules, headers, trace, ast-grep-scan (`check step`). The tests haven't run, and it hasn't been swept. A copy is in `tmp/spec-2.1.8-build/g4/b2-wip.patch`.
+  - Not started: B3, N2, N4, N5, the nine engine vectors of `red-after-merge.md`, and the BUILD-LOG addendum (with how `book/same.rs` would split).
+  - Usage: 2.37 % of the week by `engine/tools/usage` (this turn 0.25 %).
+- **Closed 2026-11-17:** the lead had moved the local tag; it is back on 61f8630b, the spec this tree holds, and check-frozen is green. Nothing was undone; B2 went on from the tree.
+
+## 2026-11-17 tally 2.1.8, build group 4's fix: the review's B1–B3, N2–N5 and the nine engine vectors after the merge (addendum to group 4's entry; round PR #202; issues #177, #162, #169, #161)
+
+Oracle: the snapshot `tmp/spec-2.1.8-build/refcore-g4fix` (spec/2.1.8 at 61f8630b). Rulings: P42 (B2: S1's refusal reaches every read resting on the class or either instance; N2: a class stands in a binding by its first id). The review: `tmp/spec-2.1.8-build/review-g4.md`. The builder's tests: `tests/group4_cases.rs` (8 tests, each a review input with refcore's lines).
+
+- **The findings, one commit each:**
+  - B1, 6a8e82f7 `eval/read.rs`: a `same` side whose readings are all removed is no row; the class's latest kept reading carries (`same_removed` e, q; `same3` e2).
+  - N3, 74ca62a4 `eval/read.rs`: `last` over always-governing rows that disagree names the read's day (`same3` sl), not `every day`.
+  - B2, f1170c0e `book/observe.rs` (`s1_refusal`, `judge_class_links`), `book/members.rs`, `walk/move_flows.rs`, `book/same.rs`, `eval/state.rs`, `eval/timelines.rs`: the links of a `same` class's rows are judged once per cut. That pass leaves the reader's register, read set and walk note as they were. A count, a sum, a binding whose day is a hole and `flows` of either instance are now `RUN-RECORD` (`s1_two` c3, t2, t3; `s1_two_b` c2, c3, fp, t2, t3; January's c1 answers).
+  - B3, 1e2fa15f `load/lawdates.rs`: an ask's law chain stops at a def with its own `at` (`law_via_at` q: 1).
+  - N2, af582679 `book/same.rs` (`same_sides`, `kept_once`), `book/members.rs`: the member that stands is the first id (`s6_sec_a`, `s6_sec_b`: bank[a1] both ways). It takes back 74289640's written order.
+  - N4, cbd38c52 `book/observe.rs` `obs_err`: judging the link a class's `fulfils` makes is no walk read. `explain` of the field now prints the class's HOLE-SAME instead of ending the run (`s6_reads --ask s4`).
+  - N5, 80573b0f `walk/plan.rs` (`no_body`): at a booking cut that doesn't see the keys the instance has no body. Each part the two cuts give differently is the window's hole, its legs included (refcore's `L4_4_window_booking_cut_key`; `fixes/g3/n7` and `fixes/gate8/m2_g3_n7` aw).
+- **The nine engine vectors of `red-after-merge.md`:**
+  - `fixes/g13/rf_x_model_with_rf_x_pn1`, `_pn3`, `_pn4`: fixed, f83a0cb4 `eval/read.rs` `pin_chosen`. A pinned window's holes are asked of the item it pins (`(d2)`).
+  - `fixes/g10/b_order_base` and `codes/m1` decide/order: fixed, 3c1c6f6f `walk/order.rs`. A refused cycle's entries carry what every instance due read to be ordered (refcore's `ord_reads`). No commit of the round dropped the line: refcore added it this round (tally 2.1.8 §4, #161, L §8.2 One read set).
+  - `fixes/gate8/m2_g3_n7` aw: fixed by N5.
+  - `fixes/gate8/m2_g3_fix2_r3` fa (0.00 PLN) and `fixes/gate8/m2_gate8_window_moves` fk_in (1.00 PLN; also fk_z 0.00): **refcore is wrong, the engine stands.**
+    - Both rest on a leg of amount 0 whose window crosses the span. L §4.4 l.672 makes a read a hole only where "its value depends on where in a window the day falls", and a zero leg's doesn't. That is pick P32 of M2 (8238ec1d, `zero_amount`), and T's own note on `window_moves` names `zer` as its test.
+    - refcore has no zero rule. 8238ec1d's "as refcore" held only because refcore then left out a window crossing the walk's end, which its 1fc74930 (#169-e) fixed.
+    - With 5.00 PLN for `amt`, both engines give the window's hole, so group 3's d6a0882f took nothing with it.
+    - T holds both "for #169", and refcore is mended at the round.
+  - `items/explain/from` bl, fl: **not fixed; the engine is wrong** (P37, SR-5).
+    - Under `windows each`, a window-dated leg whose day the line hasn't taken lists its `before from:` once for each day of its window (refcore's `Walk.each_before_from`). The engine lists none.
+    - It needs the walk run under the line's `windows each` mode, which refcore keys into the walk's context (`K.windows`). The engine's walks are shared by cut and world, so `bl` and `bl_plain` would get one register. That reaches the walk cache's key and the timelines: the next turn's first item.
+- **Sweep** (`g4/sweep.py`, the probes and every review's inputs, group 4's two directories added; 350 sets) against refcore-g4fix:
+  - Baseline at bbc6d62b: 2 366 of 2 438 blocks same. After B1 2 369, N3 2 370, B2 2 378, B3 2 380, N2 2 382, N4 2 393, N5 and the vectors 2 393 of 2 435. Every move was different → same.
+  - B2's first build turned `sumobs2` into `not implemented`: its pass marked the trace as walked. That was fixed before the commit by giving the note back.
+  - Still different:
+    - `g1/a1/v1`, `v1d` (`not implemented` at the baseline already), `g1/a3/l1`, `g1/a5/h`, `hv`, `g2/fix/nd_far`, `g2/fix/wc/both_break`, `review-g2/b4_both_break`, `review-g1/B4_ledger_refused`: the differences group 3's entry lists.
+    - `review-g4/agent/s6_reads_agree` and `s6_reads_nosame` s4: refcore's derivation of `explain bank[a1].cash.amount` lists d_p and amt, rows only bank[b1]'s link judging reads, with no `same` line too. For the lead; I think refcore's is wrong (the value doesn't rest on them, E §10).
+  - No remaining line differs only by the spec writer's ninth turn (c5dbc72f, not merged here): each predates this turn's baseline or is explained above.
+- **Red gating ids (`check commit`: 7 of 1 062 tests red):**
+  - The tests', not mine (`m2_fixes_spec_*`, `m2_counts`): `spec/g4/a_cov`, `a_mp`, `a_none`, `b2_last`, `c_since`, `nb3_at`; `spec/g5/p3_any`, `p3_anyhole`, `p4_hole_e2`, `p4_adj_e2`; `spec/g2/sumobs2`; `spec/gate8/g6r_dec_same`, `at_window_mk2`; `spec/g3/h2`; `m2_counts_ahead`.
+  - Moved by N2, T's to record again (`m1_fixes_gate8_survivors`): `fixes/gate8/m2_d512_both_cover_day`, `m2_d512_day_rows`, `m2_d512_plans_same`. All 25 `m2_d512_*` texts are byte-equal to refcore-g4fix.
+  - Mine, as above: `fixes/gate8/m2_g3_fix2_r3` and `m2_gate8_window_moves` (refcore's), `items/explain/from` (`m2_items_explain`, the engine's).
+  - `m1_code_run_order` is green.
+- **`book/same.rs` (1 368 lines) would split into four files under `book/same/`:**
+  - `classes.rs` (~330): the `same` lines seen, the groups, the sides, `kept_once`, `once_obs`.
+  - `differ.rs` (~340): `same_differ`, the amount and day checks, the realised movement, `observed_of`.
+  - `links.rs` (~260): `same_once_at`, `end_book_at`, `unjoined`, `fulfils_differ`, `one_transfer`, `row_covers`.
+  - `booking.rs` (~430): the walk's booking of one movement on two statements, `same_mask` through `same_release`.
+  - Each holds one spec subject (L §6.1 classes, §8.1 HOLE-SAME, §5.19 links, E §4.2's booking). It waits for the close (R-127).
+- **STOP-REPORTs:** the tag one above, closed. **Exceptions:** +0 (6; report-only hits as the lock).
+- **Checks:**
+  - `check commit: red at tests, stopped after 10 of 23 steps (77s)` on the ids above.
+  - `check quick: green, 11 steps`.
+  - Usage 2.83 % of the week before this entry.
