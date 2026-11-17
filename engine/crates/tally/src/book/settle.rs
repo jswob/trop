@@ -317,7 +317,7 @@ fn link_observed(
             continue;
         }
         let others: Vec<&Obs> = rest.iter().filter_map(|&k| naming.get(k)).collect();
-        match same_differ(m, groups, o, &others, None)? {
+        match same_differ(m, o, &others, None)? {
             None => link(a, &o.id, Some(o.day), &o.legs)?,
             Some(hole) => {
                 let legs: Vec<LegVal> = o

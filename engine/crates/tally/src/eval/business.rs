@@ -709,11 +709,15 @@ impl Engine {
         if let Some(row) = self.calendar_own_row(m, (name, keys), ctx)? {
             return Ok(row);
         }
-        let Some((other, other_keys)) = self.same_row_of(m, (name, keys), ctx)? else {
+        let Some(class) = self.same_class(m, (name, keys), ctx)? else {
             return Err(invariant("a calendar's added window read from no row"));
         };
-        self.calendar_own_row(m, (&other, &other_keys), ctx)?
-            .ok_or_else(|| invariant("a calendar's added window read from no row"))
+        for (other, other_keys) in class {
+            if let Some(row) = self.calendar_own_row(m, (&other, &other_keys), ctx)? {
+                return Ok(row);
+            }
+        }
+        Err(invariant("a calendar's added window read from no row"))
     }
 
     /// The row input `name`'s own read at `keys` in `ctx` takes, by its stable id, among the

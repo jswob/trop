@@ -18,7 +18,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::adjust::Adjustment;
 use super::observe::Obs;
 use super::reading::Pad;
-use super::same::{Groups, kept_once, same_differ};
+use super::same::{Groups, and_list, kept_once, same_differ};
 use crate::base::{Code, Load, Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Entry, Env};
 use crate::hole::{Hole, spread};
@@ -825,9 +825,9 @@ impl Engine {
     }
 
     /// A movement of a `same` group whose members state kinds not all inside the binding's
-    /// kind `kind`: an unknown member of it, the `HOLE-SAME` naming the first member and the
-    /// first whose kind differs; none where every kind the group states is inside `kind`
-    /// (refcore's `same_kind_hole`). L §6.1 (one movement has one base kind), §8.1.
+    /// kind `kind`: an unknown member of it, the `HOLE-SAME` naming every member with its
+    /// kind, in id order; none where every kind the group states is inside `kind` (refcore's
+    /// `same_kind_hole`). L §6.1 (one movement has one base kind), §8.1 (tally 2.1.8 S6).
     fn same_kind_hole(
         &mut self,
         m: &Reality,
@@ -860,22 +860,22 @@ impl Engine {
         if kinds.len() < 2 || kinds.iter().all(|k| sub.contains(*k)) {
             return Ok(None);
         }
-        let ([(first, first_kind), rest @ ..], Some(differs)) = (members.as_slice(), kinds.get(1))
-        else {
-            return Ok(None);
-        };
-        let Some((other, other_kind)) = rest.iter().find(|(_, k)| k == differs) else {
-            return Ok(None);
-        };
-        let day = [x, first, other]
-            .into_iter()
+        let day = std::iter::once(x)
+            .chain(members.iter().map(|(mv, _)| mv))
             .find_map(|mv| mv.day().as_ref().and_then(Dated::day))
             .map_or_else(|| "every day".to_owned(), Day::text);
-        let (one, two) = (first.id(), other.id());
+        // every member, in the order of their ids (tally 2.1.8 S6)
+        let ids: Vec<String> = members.iter().map(|(mv, _)| mv.id().to_owned()).collect();
+        let parts: Vec<String> = members
+            .iter()
+            .map(|(mv, k)| format!("{k} ({})", mv.id()))
+            .collect();
         let text = format!(
-            "{one} and {two} are one, but the kind differs on {day}: {first_kind} ({one}) and {other_kind} ({two})"
+            "{} are one, but the kind differs on {day}: {}",
+            and_list(&ids),
+            and_list(&parts)
         );
-        Ok(Some(Hole::asked(&text, &format!("{one}, {two}"))))
+        Ok(Some(Hole::asked(&text, &ids.join(", "))))
     }
 
     /// A plan's instance by id at the cut, a move named by the id's head (refcore's
@@ -905,7 +905,6 @@ impl Engine {
             return Ok(None);
         };
         let all = self.observations(m, cut)?;
-        // in the order the same lines name them
         let mut others: Vec<&Obs> = Vec::new();
         for y in group.iter().filter(|y| **y != o.id) {
             others.extend(all.iter().find(|x| x.id == *y));
@@ -913,7 +912,7 @@ impl Engine {
         if others.is_empty() {
             return Ok(None);
         }
-        same_differ(m, &groups, o, &others, leg)
+        same_differ(m, o, &others, leg)
     }
 
     /// What a movement's `fulfils` names at the cut: the instance or the adjustment, or none

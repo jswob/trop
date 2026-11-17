@@ -11,9 +11,10 @@
 //! walk.py `same_observed` (an instance stated `same` as an observed row) serves only a joint
 //! model's lines since load refuses the pair in one model (tally 2.1.8), and is built here from
 //! it when joint models run (M5c).
-//! Invariants: a group's members are in the order the same lines first name them; a group is
-//! counted by its first member a read meets, its other members beside it; two rows disagree
-//! only on a leg both state, never where either side is a hole.
+//! Invariants: a group's members are in the order of their ids (tally 2.1.8 S6); a group is
+//! counted by its first member a read meets, its other members beside it; rows disagree
+//! only on a leg two of them state, never where any side is a hole; `HOLE-SAME` names every
+//! row of the class that states the fact, in id order.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -141,21 +142,20 @@ impl Engine {
     }
 
     /// Each movement stated `same` by a line cut `cut` sees, with its group, the group's
-    /// members in the order the same lines first name them (refcore's `same_groups`).
-    /// L §6.1, §4.5.
+    /// members in the order of their ids (refcore's `same_groups`). L §6.1, §2.5, §4.5
+    /// (tally 2.1.8 S6).
     ///
     /// # Errors
     ///
     /// As [`Engine::same_line_seen`].
     pub(crate) fn same_groups(&mut self, m: &Reality, cut: Day) -> Result<Groups, Stop> {
-        let mut order: Vec<&str> = Vec::new();
+        // a class joined by lines in two files has no written order: its members go by their
+        // ids, compared by code point (L §2.5; tally 2.1.8 S6)
+        let mut order: BTreeSet<&str> = BTreeSet::new();
         let mut parent: BTreeMap<String, String> = BTreeMap::new();
         for (left, right) in move_lines(m, self.moves_seen(m, cut)?) {
-            for side in [left.as_str(), right.as_str()] {
-                if !order.contains(&side) {
-                    order.push(side);
-                }
-            }
+            order.insert(left.as_str());
+            order.insert(right.as_str());
             let (top, under) = (root(&parent, left), root(&parent, right));
             if top != under {
                 parent.insert(under, top);
@@ -287,85 +287,89 @@ pub fn kept_once(groups: &BTreeMap<String, Vec<String>>, ids: &[&str]) -> Vec<bo
 
 /// Where row `row` and the rows `others` stated `same` with it disagree on a leg's amount
 /// or day (on leg `leg` alone, where given), the disagreement's hole in L §8.1's form,
-/// naming both rows; none where they agree or either side is a hole (refcore's
-/// `same_obs_differ`). L §5.19, §6.1, §8.1.
+/// naming every row of the class that states the leg, in id order; none where they agree or
+/// any side is a hole (refcore's `same_obs_differ`). L §5.19, §6.1, §8.1 (tally 2.1.8 S6).
 ///
 /// # Errors
 ///
 /// A number error printing an amount.
 pub fn same_differ(
     m: &Reality,
-    groups: &BTreeMap<String, Vec<String>>,
     row: &Obs,
     others: &[&Obs],
     leg: Option<&str>,
 ) -> Result<Option<Hole>, Stop> {
-    for other in others {
-        for mine in &row.legs {
-            if leg.is_some_and(|name| mine.name != name) {
-                continue;
-            }
-            let Some(theirs) = other.legs.iter().find(|lg| lg.name == mine.name) else {
-                continue;
-            };
-            let (what, (one, two)) = if let Some(pair) = amounts_differ(m, mine, theirs)? {
-                (format!("the amount of {}", mine.name), pair)
-            } else if let Some(pair) = days_differ(mine, theirs) {
-                (format!("the day of {}", mine.name), pair)
-            } else {
-                continue;
-            };
-            // the two rows in the order the same lines write them (P51, #177)
-            let ((first, first_leg, one), (second, two)) =
-                if written_before(groups, &other.id, &row.id) {
-                    ((*other, theirs, two), (row, one))
-                } else {
-                    ((row, mine, one), (*other, two))
-                };
-            let day = first_leg.day.day().unwrap_or(first.day);
-            let text = format!(
-                "{} and {} are one, but {what} differs on {}: {one} ({}) and {two} ({})",
-                first.id,
-                second.id,
-                day.text(),
-                first.id,
-                second.id
-            );
-            let ids = format!("{}, {}", first.id, second.id);
-            return Ok(Some(Hole::asked(&text, &ids)));
+    for mine in &row.legs {
+        if leg.is_some_and(|name| mine.name != name) {
+            continue;
         }
+        let mut class: Vec<(&Obs, &LegVal)> = vec![(row, mine)];
+        for other in others {
+            for theirs in other.legs.iter().filter(|lg| lg.name == mine.name) {
+                class.push((other, theirs));
+            }
+        }
+        if class.len() < 2 {
+            continue;
+        }
+        class.sort_by(|a, b| a.0.id.cmp(&b.0.id));
+        let (what, figures) = if let Some(figures) = amounts_differ(m, &class)? {
+            (format!("the amount of {}", mine.name), figures)
+        } else if let Some(figures) = days_differ(&class) {
+            (format!("the day of {}", mine.name), figures)
+        } else {
+            continue;
+        };
+        let ids: Vec<String> = class.iter().map(|(o, _)| o.id.clone()).collect();
+        let parts: Vec<String> = figures
+            .iter()
+            .zip(&ids)
+            .map(|(figure, id)| format!("{figure} ({id})"))
+            .collect();
+        let day = mine.day.day().unwrap_or(row.day);
+        let text = format!(
+            "{} are one, but {what} differs on {}: {}",
+            and_list(&ids),
+            day.text(),
+            and_list(&parts)
+        );
+        return Ok(Some(Hole::asked(&text, &ids.join(", "))));
     }
     Ok(None)
 }
 
-/// Whether the same lines name row `earlier` before row `later` in their group, the order
-/// the household wrote them (refcore's, P51 for #177). L §6.1, §8.1.
-fn written_before(groups: &BTreeMap<String, Vec<String>>, earlier: &str, later: &str) -> bool {
-    let Some(group) = groups.get(earlier) else {
-        return false;
-    };
-    let first = group.iter().position(|member| member == earlier);
-    let second = group.iter().position(|member| member == later);
-    matches!((first, second), (Some(one), Some(two)) if one < two)
+/// `a`, `a and b`, `a, b and c`: how `HOLE-SAME` names a class's rows and values (refcore's
+/// `and_list`). L §8.1 (tally 2.1.8 S6).
+#[must_use]
+pub(crate) fn and_list(items: &[String]) -> String {
+    match items.split_last() {
+        Some((last, rest)) if !rest.is_empty() => format!("{} and {last}", rest.join(", ")),
+        Some((last, _)) => last.clone(),
+        None => String::new(),
+    }
 }
 
-/// Two legs' amounts as they print where both are numbers that differ (refcore's `vkey`
-/// compare). L §5.19.
-fn amounts_differ(
-    m: &Reality,
-    mine: &LegVal,
-    theirs: &LegVal,
-) -> Result<Option<(String, String)>, Stop> {
-    let (Amount::Qty(one), Amount::Qty(two)) = (&mine.amount, &theirs.amount) else {
-        return Ok(None);
-    };
-    if one == two && mine.unit == theirs.unit {
+/// The legs' amounts as they print where every one is a number and they don't all agree
+/// (refcore's `vkey` compare). L §5.19.
+fn amounts_differ(m: &Reality, class: &[(&Obs, &LegVal)]) -> Result<Option<Vec<String>>, Stop> {
+    let mut figures: Vec<(&Num, &str)> = Vec::with_capacity(class.len());
+    for (_, lg) in class {
+        let Amount::Qty(amount) = &lg.amount else {
+            return Ok(None);
+        };
+        let Some(unit) = &lg.unit else {
+            return Err(invariant("an observed leg's amount with no unit"));
+        };
+        figures.push((amount, unit));
+    }
+    if figures.iter().all(|f| Some(f) == figures.first()) {
         return Ok(None);
     }
-    let (Some(one_unit), Some(two_unit)) = (&mine.unit, &theirs.unit) else {
-        return Err(invariant("an observed leg's amount with no unit"));
-    };
-    Ok(Some((shown(m, one, one_unit)?, shown(m, two, two_unit)?)))
+    let mut texts = Vec::with_capacity(figures.len());
+    for (amount, unit) in figures {
+        texts.push(shown(m, amount, unit)?);
+    }
+    Ok(Some(texts))
 }
 
 /// An amount in its unit as L §2.4 prints it. L §2.4 Values.
@@ -373,12 +377,19 @@ fn shown(m: &Reality, amount: &Num, unit: &str) -> Result<String, Stop> {
     qty_value(m, amount, unit)?.text(m).map_err(num_stop)
 }
 
-/// Two legs' days as they print where both are days that differ. L §5.19.
-fn days_differ(mine: &LegVal, theirs: &LegVal) -> Option<(String, String)> {
-    let (Dated::Day(one), Dated::Day(two)) = (&mine.day, &theirs.day) else {
+/// The legs' days as they print where every one is a day and they don't all agree. L §5.19.
+fn days_differ(class: &[(&Obs, &LegVal)]) -> Option<Vec<String>> {
+    let mut days = Vec::with_capacity(class.len());
+    for (_, lg) in class {
+        let Dated::Day(day) = &lg.day else {
+            return None;
+        };
+        days.push(*day);
+    }
+    if days.iter().all(|d| Some(d) == days.first()) {
         return None;
-    };
-    (one != two).then(|| (one.text(), two.text()))
+    }
+    Some(days.into_iter().map(Day::text).collect())
 }
 
 /// What one end of a leg books under the `same` lines (refcore's `consol`). L §6.1.
@@ -493,11 +504,11 @@ impl Realised {
 }
 
 /// Leg `leg` of instance `tid`'s realised movement, over its observations `obs` grouped
-/// `once` by the `same` groups `groups` (refcore's `m_c_observed`, a leg). L §5.19 Realised
-/// amounts, One movement on two statements.
+/// `once` by the `same` groups (refcore's `m_c_observed`, a leg). L §5.19 Realised amounts,
+/// One movement on two statements.
 fn realised_leg(
     m: &Reality,
-    (tid, groups): (&str, &Groups),
+    tid: &str,
     (obs, once): (&[Obs], &[(usize, Vec<usize>)]),
     leg: &str,
 ) -> Result<Value, Stop> {
@@ -510,7 +521,7 @@ fn realised_leg(
             .ok_or_else(|| invariant("a same group with no first row"))?;
         let others: Vec<&Obs> = rest.iter().filter_map(|&k| obs.get(k)).collect();
         if differs.is_none() {
-            differs = same_differ(m, groups, row, &others, Some(leg))?;
+            differs = same_differ(m, row, &others, Some(leg))?;
         }
         for lg in row.legs.iter().filter(|lg| lg.name == leg) {
             met = true;
@@ -609,7 +620,7 @@ impl Engine {
         let once = once_obs(&groups, &obs);
         let mut fields = Vec::new();
         for (leg, _, _) in m.kind_legs(&mv.kind) {
-            let value = realised_leg(m, (&v.id, &groups), (&obs, &once), &leg)?;
+            let value = realised_leg(m, &v.id, (&obs, &once), &leg)?;
             fields.push((leg, value));
         }
         let day = obs
@@ -1000,7 +1011,7 @@ impl Engine {
             };
             *slot = match self.same_wait_for(m, id, (mover, lg), p, &waiting)? {
                 Some(wait) => wait,
-                None => self.same_end(m, id, (mover, lg, side), p, (&others, group))?,
+                None => self.same_end(m, id, (mover, lg, side), p, &others)?,
             };
         }
         Ok(out)
@@ -1109,7 +1120,7 @@ impl Engine {
         id: usize,
         (mover, lg, side): (&Member, &LegVal, usize),
         p: &str,
-        (others, group): (&[Member], &[String]),
+        others: &[Member],
     ) -> Result<EndBook, Stop> {
         let mut touch: Vec<(&Member, &LegVal, usize)> = vec![(mover, lg, side)];
         for o in others {
@@ -1149,14 +1160,10 @@ impl Engine {
                 EndBook::Skip
             });
         }
-        // the members in the order the same lines write them
-        let mut placed = Vec::with_capacity(touch.len());
-        for t in touch {
-            placed.push((group.iter().position(|y| y.as_str() == t.0.id()), t));
-        }
-        placed.sort_by_key(|(at, _)| *at);
-        let ordered: Vec<(&Member, &LegVal, usize)> = placed.into_iter().map(|(_, t)| t).collect();
-        let ids: Vec<&str> = ordered.iter().map(|(x, _, _)| x.id()).collect();
+        // the members in the order of their ids, every one named (tally 2.1.8 S6)
+        let mut ordered = touch;
+        ordered.sort_by(|a, b| a.0.id().cmp(b.0.id()));
+        let ids: Vec<String> = ordered.iter().map(|(x, _, _)| x.id().to_owned()).collect();
         let days: BTreeSet<Day> = ordered.iter().filter_map(|(_, g, _)| g.day.day()).collect();
         let days: Vec<String> = days.into_iter().map(Day::text).collect();
         let mut parts = Vec::with_capacity(ordered.len());
@@ -1165,9 +1172,9 @@ impl Engine {
         }
         let text = format!(
             "{} are one, but the leg at {p} differs on {}: {}",
-            ids.join(" and "),
+            and_list(&ids),
             days.join(", "),
-            parts.join(" and ")
+            and_list(&parts)
         );
         Ok(EndBook::Hole(Hole::asked(&text, &ids.join(", "))))
     }

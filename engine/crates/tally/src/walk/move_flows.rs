@@ -283,7 +283,7 @@ impl Engine {
             for x in &others {
                 acc.met.merge(&x.coll);
             }
-            if let Some(h) = same_differ(m, &groups, o, &others, leg)? {
+            if let Some(h) = same_differ(m, o, &others, leg)? {
                 acc.holes.push(h);
                 continue;
             }

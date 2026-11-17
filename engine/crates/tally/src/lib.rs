@@ -285,7 +285,7 @@ pub mod book {
     };
     pub(crate) use reading::{gap_text, instant_text, reading_place};
     pub use same::{Groups, kept_once, once_obs, same_differ};
-    pub(crate) use same::{Member, SameMet, SamePicks, Waiting};
+    pub(crate) use same::{Member, SameMet, SamePicks, Waiting, and_list};
     pub(crate) use settle::settlement_move;
 }
 
