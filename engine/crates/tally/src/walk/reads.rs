@@ -380,7 +380,8 @@ impl Engine {
             return Ok(v);
         }
         let mut delta = Num::zero();
-        for lg in legs {
+        for own in legs {
+            let lg = &own.leg;
             let Some(o) = lg.day.day() else {
                 continue;
             };
@@ -391,10 +392,12 @@ impl Engine {
             if unit != ALL && lg.unit.as_deref().is_some_and(|u| u != ALL && u != unit) {
                 continue;
             }
-            if lg.from.place() == Some(place) {
+            // only the ends its row booked: of two rows stated same, each books the end its
+            // statement covers (L §5.19)
+            if own.from && lg.from.place() == Some(place) {
                 delta = delta.checked_add(q).map_err(crate::eval::num_stop)?;
             }
-            if lg.to.place() == Some(place) {
+            if own.to && lg.to.place() == Some(place) {
                 delta = delta.checked_sub(q).map_err(crate::eval::num_stop)?;
             }
         }

@@ -18,11 +18,12 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use super::agenda::{Act, Mv};
 use super::day::ends;
-use super::plan::{Amount, Dated, Exists, Inst, LegVal, Status, invariant, kind_certainty};
+use super::plan::{Amount, Dated, End, Exists, Inst, Status, invariant, kind_certainty};
 use super::point::{At, Step};
 use super::readings::Broke;
-use super::state::{ALL, Change, Ent, Group, Taken, WalkObs};
+use super::state::{ALL, Change, Ent, Group, OwnLeg, Taken, WalkObs};
 use crate::base::{Code, Refusal, Run as RunCode};
+use crate::book::Obs;
 use crate::eval::{Ctx, Engine, Entry};
 use crate::hole::spread;
 use crate::model::{KeyVal, MoveInfo, Reality, Target, Value};
@@ -832,7 +833,7 @@ impl Engine {
         m: &Reality,
         id: usize,
         run: &Run,
-    ) -> Result<Option<Vec<LegVal>>, Stop> {
+    ) -> Result<Option<Vec<OwnLeg>>, Stop> {
         let Some(Dated::Day(t)) = run.inst.day else {
             return Err(invariant("a decision run with no day"));
         };
@@ -845,21 +846,21 @@ impl Engine {
     /// # Errors
     ///
     /// `ENGINE-INVARIANT` for a walk the engine lacks.
-    pub(crate) fn leave_run(&mut self, id: usize, prev: Option<Vec<LegVal>>) -> Result<(), Stop> {
+    pub(crate) fn leave_run(&mut self, id: usize, prev: Option<Vec<OwnLeg>>) -> Result<(), Stop> {
         self.walk_mut(id)?.less_obs = prev;
         Ok(())
     }
 
     /// The legs of a decision's own observations booked on their days before its day, the
-    /// cut and after the walk's start: its computation reads the balances less them (refcore's
-    /// `run_one_body`, `less_obs`). E §4.2 step 3, L §5.19.
+    /// cut and after the walk's start, each with the ends its row booked: its computation
+    /// reads the balances less them (refcore's `own_obs`, `less_obs`). E §4.2 step 3, L §5.19.
     fn own_earlier_obs(
         &mut self,
         m: &Reality,
         id: usize,
         inst: &Inst,
         t: Day,
-    ) -> Result<Option<Vec<LegVal>>, Stop> {
+    ) -> Result<Option<Vec<OwnLeg>>, Stop> {
         let walk = self.walk(id)?;
         if walk.proj.is_some() {
             return Ok(None);
@@ -870,13 +871,39 @@ impl Engine {
             if self.obs_err(m, &o, cut)?.is_some() {
                 continue;
             }
-            out.extend(
-                o.legs
-                    .into_iter()
-                    .filter(|lg| matches!(lg.day, Dated::Day(d) if d < t && d < cut && d >= start)),
-            );
+            for leg in &o.legs {
+                let Dated::Day(d) = leg.day else {
+                    continue;
+                };
+                if d >= t || d >= cut || d < start {
+                    continue;
+                }
+                let from = self.end_booked(m, &o, &leg.from, (d, cut))?;
+                let to = self.end_booked(m, &o, &leg.to, (d, cut))?;
+                out.push(OwnLeg {
+                    leg: leg.clone(),
+                    from,
+                    to,
+                });
+            }
         }
         Ok((!out.is_empty()).then_some(out))
+    }
+
+    /// Whether observation `o` books its end `end` on day `d`: a place no version covers
+    /// that day, or one `o`'s own version covers (refcore's `own_obs`, its `obs_end_on`).
+    /// L §5.19 Booking an observation.
+    fn end_booked(
+        &mut self,
+        m: &Reality,
+        o: &Obs,
+        end: &End,
+        (d, cut): (Day, Day),
+    ) -> Result<bool, Stop> {
+        let Some(place) = end.place() else {
+            return Ok(false);
+        };
+        self.obs_end_on(m, o, place, d, cut)
     }
 
     /// A decision's own observations dated its day before the cut, booked just after its

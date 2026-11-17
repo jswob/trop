@@ -40,6 +40,20 @@ use crate::time::Day;
 /// The name a log takes for "every place" and "every unit" (refcore's `'*'`).
 pub const ALL: &str = "*";
 
+/// A leg of a modelled-past decision's own observation booked before its day, with the ends
+/// its row booked: of two rows stated `same`, each books the end its statement covers, so an
+/// end another version's row books isn't taken back out (refcore's `own_obs`). L §5.19
+/// Booking an observation, E §4.2 step 3.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct OwnLeg {
+    /// The leg.
+    pub(crate) leg: LegVal,
+    /// Whether its row booked its `from` end.
+    pub(crate) from: bool,
+    /// Whether its row booked its `to` end.
+    pub(crate) to: bool,
+}
+
 /// What an entry does to its place's state (refcore's entry kinds).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Change {
@@ -416,7 +430,7 @@ pub struct Walk {
     pub(crate) modelled: Vec<Inst>,
     /// While a modelled-past decision runs, the legs of its own observations booked on their
     /// days before its own, which its running reads take back out (E §4.2 step 3).
-    pub(crate) less_obs: Option<Vec<LegVal>>,
+    pub(crate) less_obs: Option<Vec<OwnLeg>>,
     /// A main walk's checkpoints, one at the start of each month it walked into, in day
     /// order (P §2.4).
     pub(crate) checkpoints: Vec<Checkpoint>,
