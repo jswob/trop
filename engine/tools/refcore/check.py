@@ -3519,6 +3519,10 @@ class Checker:
                     seen.add(q)
                     if m.defs[q].at is not None and m.defs[q].at.k == 'law_reader':
                         raise LoadError('LOAD-LAWDATE', 'ask reaches an at reader def (%s) without law' % q)
+                    if m.defs[q].at is not None:
+                        # a def with its own written at reads at that date: the chain stops there (L §4.3; tally
+                        # 2.1.8 P42, group 4's review B3)
+                        continue
                     todo.extend(t[1] for t in E.get(('def', q), {}) if t[0] == 'def')
             if a._has_law:
                 continue
