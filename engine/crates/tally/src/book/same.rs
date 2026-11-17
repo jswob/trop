@@ -177,6 +177,24 @@ impl Engine {
         Ok(out)
     }
 
+    /// The sides of the `same` lines cut `cut` sees, in the order written, each once
+    /// (refcore's `once_by_same`, its `order`). L §6.1, §4.5.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::same_line_seen`].
+    pub(crate) fn same_written(&mut self, m: &Reality, cut: Day) -> Result<Vec<String>, Stop> {
+        let mut out: Vec<String> = Vec::new();
+        for (left, right) in move_lines(m, self.moves_seen(m, cut)?) {
+            for side in [left, right] {
+                if !out.contains(side) {
+                    out.push(side.clone());
+                }
+            }
+        }
+        Ok(out)
+    }
+
     /// Whether movement `id` is named by a `same` line cut `cut` sees. L §6.1, §4.5.
     ///
     /// # Errors
@@ -268,14 +286,28 @@ pub fn once_obs(groups: &BTreeMap<String, Vec<String>>, obs: &[Obs]) -> Vec<(usi
 }
 
 /// Which of the movements `ids` a binding keeps: of each group stated `same`, the member
-/// the same lines name first among them, so the group is bound once (refcore's
-/// `once_by_same`). L §6.1, §5.19.
+/// the same lines name first among them, in `written`, the lines' sides as written, so the
+/// group is bound once (refcore's `once_by_same`, its `order`); a group's own order is its
+/// members' ids, which names it (tally 2.1.8 S6), not which member stands for it. L §6.1,
+/// §5.19.
 #[must_use]
-pub fn kept_once(groups: &BTreeMap<String, Vec<String>>, ids: &[&str]) -> Vec<bool> {
+pub fn kept_once(
+    groups: &BTreeMap<String, Vec<String>>,
+    written: &[String],
+    ids: &[&str],
+) -> Vec<bool> {
     let mut kept: Vec<&str> = Vec::new();
-    for group in groups.values() {
-        if let Some(first) = group.iter().find(|member| ids.contains(&member.as_str())) {
-            kept.push(first.as_str());
+    // the groups met so far, each by its first member
+    let mut met: BTreeSet<&str> = BTreeSet::new();
+    for side in written {
+        if !ids.contains(&side.as_str()) {
+            continue;
+        }
+        let Some(lead) = groups.get(side).and_then(|group| group.first()) else {
+            continue;
+        };
+        if met.insert(lead.as_str()) {
+            kept.push(side.as_str());
         }
     }
     let mut out = Vec::with_capacity(ids.len());
@@ -1310,12 +1342,18 @@ mod tests {
             groups.insert(member.clone(), group.clone());
         }
         assert_eq!(
-            kept_once(&groups, &["c", "b", "z"]),
+            kept_once(&groups, &group, &["c", "b", "z"]),
             vec![false, true, true],
             "the first member the same lines name is kept"
         );
+        let written = vec!["c".to_owned(), "a".to_owned(), "b".to_owned()];
         assert_eq!(
-            kept_once(&groups, &["c"]),
+            kept_once(&groups, &written, &["a", "b", "c"]),
+            vec![false, false, true],
+            "the first written, not the first by id"
+        );
+        assert_eq!(
+            kept_once(&groups, &group, &["c"]),
             vec![true],
             "a lone member is kept"
         );
