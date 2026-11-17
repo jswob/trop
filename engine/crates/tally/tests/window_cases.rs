@@ -69,10 +69,15 @@ mod tests {
                     .strip_prefix(&head)
                     .and_then(|rest| rest.split_once("]: "))
                     .expect("a split line's head");
-                let (var, days) = pins.split_once(" = ").expect("one pin");
-                assert!(!days.contains(", "), "one unknown day: {}", block[0]);
-                let (first, last) = days.split_once(" .. ").unwrap_or((days, days));
-                for day in [first, last] {
+                let (var, span) = pins.split_once(" = ").expect("one pin");
+                assert!(!span.contains(", "), "one unknown day: {}", block[0]);
+                let (first, last) = span.split_once(" .. ").unwrap_or((span, span));
+                let days = if first == last {
+                    vec![first]
+                } else {
+                    vec![first, last]
+                };
+                for day in days {
                     let twin = format!("{text}\nask zz_twin: {expr} with {var} = {day}\n");
                     let got = lines_for(&twin, Asks::Named(vec!["zz_twin".to_owned()]));
                     let mut want = vec![format!("zz_twin: {answer}")];
@@ -317,6 +322,85 @@ c4: 0.00 PLN
   open: pay
   cut 2026-04-30"#;
 
+    /// The sign rule's face, its other ends (the review of group 2's B2): `oa` takes 100.00
+    /// from `pot` (`min 0`, 50.00) to `jar` on a day of `window(04-05, 04-10)`; `ob` brings
+    /// 100.00 into `pot` on 04-07. Before 04-07 the rule refuses `oa`, after it it doesn't:
+    /// `pot`, `jar` and a read of `oa`'s leg are the window's hole.
+    const SIGN_ENDS: &str = r#"model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+kind savings: place PLN min 0
+place pot: savings lives 2025-01-01..
+place jar: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input wa: date
+input db: date
+input amt: money PLN
+
+move oa: transfers
+  on wa
+  leg cash from pot to jar amount amt
+
+move ob: transfers
+  on db
+  leg cash from world to pot amount amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  amt = 100.00 PLN "s"
+  wa = window(2026-04-05, 2026-04-10) "s"
+  db = 2026-04-07 "s"
+  opening[pot] = 50.00 PLN at 2026-01-01 start "s"
+  opening[jar] = 0.00 PLN at 2026-01-01 start "s"
+
+ask j1: bal(jar, 2026-04-30)
+ask j2: bal(jar, 2026-04-30) windows each
+ask f1: flows(oa, 2026-04)
+ask f2: flows(oa, 2026-04) windows each
+ask p1: bal(pot, 2026-04-30)
+ask p2: bal(pot, 2026-04-30) windows each
+ask j3: bal(jar, 2026-04-30) with wa = 2026-04-05
+ask f3: flows(oa, 2026-04) with wa = 2026-04-05
+"#;
+
+    const SIGN_ENDS_LINES: &str = r#"f1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for flows of oa" (oa)
+  cut 2026-01-01
+f2 [wa = 2026-04-05]: refused: RUN-PLACE pot is -50.00 PLN after the day's observations and plans of 2026-04-05
+  cut 2026-01-01
+f2 [wa = 2026-04-06]: refused: RUN-PLACE pot is -50.00 PLN after the day's observations and plans of 2026-04-06
+  cut 2026-01-01
+f2 [wa = 2026-04-07 .. 2026-04-10]: 100.00 PLN
+  cut 2026-01-01
+f3: refused: RUN-PLACE pot is -50.00 PLN after the day's observations and plans of 2026-04-05
+  pinned: wa = 2026-04-05
+  cut 2026-01-01
+j1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for a balance" (oa)
+  cut 2026-01-01
+j2 [wa = 2026-04-05]: refused: RUN-PLACE pot is -50.00 PLN after the day's observations and plans of 2026-04-05
+  cut 2026-01-01
+j2 [wa = 2026-04-06]: refused: RUN-PLACE pot is -50.00 PLN after the day's observations and plans of 2026-04-06
+  cut 2026-01-01
+j2 [wa = 2026-04-07 .. 2026-04-10]: 100.00 PLN
+  cut 2026-01-01
+j3: refused: RUN-PLACE pot is -50.00 PLN after the day's observations and plans of 2026-04-05
+  pinned: wa = 2026-04-05
+  cut 2026-01-01
+p1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for a balance" (oa)
+  cut 2026-01-01
+p2 [wa = 2026-04-05]: refused: RUN-PLACE pot is -50.00 PLN after the day's observations and plans of 2026-04-05
+  cut 2026-01-01
+p2 [wa = 2026-04-06]: refused: RUN-PLACE pot is -50.00 PLN after the day's observations and plans of 2026-04-06
+  cut 2026-01-01
+p2 [wa = 2026-04-07 .. 2026-04-10]: 50.00 PLN
+  cut 2026-01-01"#;
+
     #[test]
     fn a_window_whose_days_take_two_classes_keeps_its_window_and_the_reads_question() {
         for (text, want) in [
@@ -324,6 +408,7 @@ c4: 0.00 PLN
             (ANCHOR_AFTER, ANCHOR_AFTER_LINES),
             (RUN_START, RUN_START_LINES),
             (COVER_GAP, COVER_GAP_LINES),
+            (SIGN_ENDS, SIGN_ENDS_LINES),
         ] {
             let want: Vec<&str> = want.lines().collect();
             assert_eq!(lines_of(text), want, "refcore's lines");
@@ -332,14 +417,15 @@ c4: 0.00 PLN
 
     #[test]
     fn each_line_of_a_window_whose_days_take_two_classes_is_its_pinned_twin() {
-        let checked: Vec<String> = [COVER_REACH, ANCHOR_AFTER, RUN_START, COVER_GAP]
+        let checked: Vec<String> = [COVER_REACH, ANCHOR_AFTER, RUN_START, COVER_GAP, SIGN_ENDS]
             .iter()
             .flat_map(|text| pinned_twins(text))
             .collect();
         assert_eq!(
             checked.len(),
-            14,
-            "two sub-windows each in a4 and b5, three in c2, two days each: {checked:?}"
+            26,
+            "two sub-windows each in a4 and b5, three each in c2, f2, j2 and p2, one or two days each: \
+             {checked:?}"
         );
     }
 }

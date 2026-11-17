@@ -27,7 +27,7 @@ use crate::num::Num;
 use crate::syntax::{Bind, Call, Expr, Stop};
 use crate::time::Day;
 use crate::walk::{
-    Amount, At, Dated, DayWindow, Depends, End, Exists, Inst, LegVal, Status, Term, WalkAt,
+    Amount, At, Dated, DayWindow, Depends, End, Exists, Inst, LegOut, LegVal, Status, Term, WalkAt,
     invariant, qty_value,
 };
 
@@ -974,8 +974,13 @@ impl Engine {
             // the walk is a cause an explanation prints in its own form only where it refused
             // the leg; else the leg is its instance's, traced as the instance was (E §10)
             let back = self.trace_walked();
-            if let Some(err) = self.leg_refused(m, (src.id(), name), day, ctx)? {
-                return Err(Stop::Refused(err));
+            match self.leg_refused(m, (src.id(), name), day, ctx)? {
+                Some(LegOut::Refused(err)) => return Err(Stop::Refused(err)),
+                Some(LegOut::Hole(h)) => {
+                    self.trace_walked_back(back);
+                    return Ok(Value::Hole(h));
+                }
+                None => {}
             }
             self.trace_walked_back(back);
             let record = leg_record(m, lg)?;

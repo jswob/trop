@@ -20,7 +20,7 @@ use super::agenda::{Act, Mv};
 use super::fork::Forks;
 use super::plan::{Amount, Dated, DayWindow, End, Inst, LegVal, Status, invariant, qty_value};
 use super::point::At;
-use super::readings::{Broke, breaks};
+use super::readings::{Alone, Broke, Three, imp_breaks};
 use super::state::{ALL, Change, Ent, Group, HoleLeg, Progress, Taken, Today, Walk, WalkObs};
 use crate::base::{Code, Refusal, Run, Warn};
 use crate::book::Member;
@@ -465,7 +465,12 @@ impl Engine {
         }
         if let Some(h) = self.lifespan_depends(m, id, (movement, lg))? {
             // inside a lifespan on some of the window's days and outside it on the rest: the
-            // leg is the window's hole (E §4.1 step 2; tally 2.1.8 item 77)
+            // leg is the window's hole, and so is a read of it (E §4.1 step 2; tally 2.1.8
+            // item 77)
+            self.walk_mut(id)?
+                .hole_legs
+                .entry((movement.to_owned(), lg.name.clone()))
+                .or_insert_with(|| h.clone());
             let mut hole_leg = lg.clone();
             hole_leg.amount = Amount::Hole(h);
             return self.book_leg_ends(m, id, (movement, &hole_leg), at, (reg, coll), mask);
@@ -528,9 +533,18 @@ impl Engine {
         }
         if err.is_none() && !on.is_empty() && !self.group_legs(id, at, movement, lg, &on, &unit)? {
             // outside every group (a reading's pad after a decision): tested as it is booked
-            err = self
+            match self
                 .walk(id)?
-                .tested_alone(m, (movement, &q), &on, &unit, at)?;
+                .tested_alone(m, (movement, &q), &on, &unit, at)?
+            {
+                Alone::Passes => {}
+                Alone::Refused(e) => err = Some(e),
+                Alone::Depends(p) => {
+                    // not booked: the window's hole (tally 2.1.8 item 77)
+                    let legs = [(movement.to_owned(), lg.clone())];
+                    return self.walk_mut(id)?.imp_hole(m, at, (&p, &unit), &legs);
+                }
+            }
         }
         #[cfg(feature = "counters")]
         if err.is_none() {
@@ -759,11 +773,11 @@ impl Engine {
                 // legs dated by a window may still fall here: whether it holds nothing at its
                 // close is asked of the least and the greatest balance they allow; where they
                 // differ, the place is the windows' hole (E §4.1 step 2; tally 2.1.8 item 77)
-                if let (Some((lo, hi)), Some(h)) = (st.imp_range()?, st.imp_hole())
+                if let Some((lo, hi)) = st.imp_range()?
                     && (lo.is_zero() || hi.is_zero() || lo.is_negative() != hi.is_negative())
                     && !(lo.is_zero() && hi.is_zero())
                 {
-                    walk.add(m, &place, &unit, Ent::new(at, Change::Hole(h)))?;
+                    walk.imp_hole(m, at, (&place, &unit), &[])?;
                     continue;
                 }
                 let Some(v) = st.val.clone().filter(|v| !v.is_zero()) else {
@@ -908,6 +922,7 @@ impl Walk {
         };
         let unit = lg.unit.clone().unwrap_or_else(|| ALL.to_owned());
         for p in ends(lg) {
+            let into = lg.to.place() == Some(p);
             let mut ent = Ent::new(at, Change::ImpOn(q.clone()));
             ent.mv = Some(movement.to_owned());
             ent.window = leg_window(movement, lg);
@@ -915,45 +930,82 @@ impl Walk {
             // the leg's amount, which `flows` reads to tell a zero leg (L §4.4)
             ent.flow = Some(lg.amount.clone());
             ent.signed = match &lg.amount {
-                Amount::Qty(a) => {
-                    let into = lg.to.place() == Some(p);
-                    Some(signed(a, if into { 1 } else { -1 })?)
-                }
+                Amount::Qty(a) => Some(signed(a, if into { 1 } else { -1 })?),
                 Amount::Hole(_) | Amount::Refused(_) => None,
             };
+            ent.other = if into { lg.from.place() } else { lg.to.place() }.map(str::to_owned);
             self.add(m, p, &unit, ent)?;
-            self.imp_sign_test(m, (p, &unit), at)?;
+        }
+        for p in ends(lg) {
+            self.imp_test(m, (p, &unit), at)?;
         }
         Ok(())
     }
 
-    /// The sign rule at `place` in `unit` at point `at` while legs dated by a window may still
-    /// fall there, asked of the least and the greatest balance they allow: where one breaks the
-    /// place's rule and the other doesn't, the place is the windows' hole from here to its next
-    /// reading, as far as the refusal would reach; where both pass, or both break, as before
-    /// (E §4.1 step 2, §4.2 step 5; L §4.4; tally 2.1.8 item 77).
+    /// The sign rule at `place` in `unit` from a window-dated leg's first day: tested in its
+    /// point's group where one is open, the place joining it with no leg; else here, asked of
+    /// each balance the pending legs allow, the place the windows' hole where some break the
+    /// rule and some don't (refcore's `imp_tests`). E §4.1 step 2, §4.2 step 5; L §5.10, §4.4;
+    /// tally 2.1.8 item 77.
     ///
     /// # Errors
     ///
     /// A number past the cap; `ENGINE-INVARIANT` for a place load didn't build.
-    pub(super) fn imp_sign_test(
+    fn imp_test(&mut self, m: &Reality, (place, unit): (&str, &str), at: At) -> Result<(), Stop> {
+        if let Some(group) = self.open_group(at) {
+            group
+                .entry((place.to_owned(), unit.to_owned()))
+                .or_insert_with(Vec::new);
+            return Ok(());
+        }
+        let st = self.pstate(m, place, unit, at);
+        if imp_breaks(m, place, &st, None)? == Three::Depends {
+            self.imp_hole(m, at, (place, unit), &[])?;
+        }
+        Ok(())
+    }
+
+    /// A test of E §4.2 step 5 that comes out one way on some days of the windows pending at
+    /// `place` in `unit` and another on the rest: their `HOLE-IMPRECISE`, naming them, as far
+    /// as the refusal would reach, each place to its next reading: the place, the other ends
+    /// of the group's legs `legs` at it, and the other ends of the pending legs; a read of each
+    /// of those legs is the hole too (refcore's `imp_hole`). E §4.1 step 2, L §4.4; tally
+    /// 2.1.8 item 77.
+    ///
+    /// # Errors
+    ///
+    /// A number past the cap; `ENGINE-INVARIANT` for a place load didn't build.
+    pub(super) fn imp_hole(
         &mut self,
         m: &Reality,
-        (place, unit): (&str, &str),
         at: At,
-    ) -> Result<bool, Stop> {
+        (place, unit): (&str, &str),
+        legs: &[(String, LegVal)],
+    ) -> Result<(), Stop> {
         let st = self.pstate(m, place, unit, at);
-        let Some((lo, hi)) = st.imp_range()? else {
-            return Ok(false);
-        };
-        if breaks(m, place, &lo) == breaks(m, place, &hi) {
-            return Ok(false);
-        }
         let Some(h) = st.imp_hole() else {
-            return Ok(false);
+            return Ok(());
         };
-        self.add(m, place, unit, Ent::new(at, Change::Hole(h)))?;
-        Ok(true)
+        let mut reach: BTreeSet<String> = BTreeSet::new();
+        reach.insert(place.to_owned());
+        for (mv, lg) in legs {
+            reach.extend(ends(lg).into_iter().map(str::to_owned));
+            self.hole_legs
+                .entry((mv.clone(), lg.name.clone()))
+                .or_insert_with(|| h.clone());
+        }
+        for pending in &st.imp {
+            reach.extend(pending.other.iter().cloned());
+            if let Some((mv, leg)) = pending.wid.rsplit_once('.') {
+                self.hole_legs
+                    .entry((mv.to_owned(), leg.to_owned()))
+                    .or_insert_with(|| h.clone());
+            }
+        }
+        for p in &reach {
+            self.add(m, p, unit, Ent::new(at, Change::Hole(h.clone())))?;
+        }
+        Ok(())
     }
 }
 
@@ -1086,7 +1138,7 @@ fn changed_after(m: &Reality, world: World, section: &str, day: Day) -> bool {
 }
 
 /// A quantity with a sign: −q out of a place, +q into it. E §4.2.
-fn signed(q: &Num, sign: i64) -> Result<Num, Stop> {
+pub(super) fn signed(q: &Num, sign: i64) -> Result<Num, Stop> {
     if sign < 0 {
         return q.checked_neg().map_err(crate::eval::num_stop);
     }

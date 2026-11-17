@@ -18,7 +18,7 @@ use super::agenda::Reading;
 use super::day::ends;
 use super::plan::{End, LegVal, Status, invariant, qty_value};
 use super::point::At;
-use super::state::{ALL, Change, Ent, Group, Taken, Walk};
+use super::state::{ALL, Change, Ent, Group, St, Taken, Walk};
 use crate::base::{Code, Refusal, Run};
 use crate::eval::Engine;
 use crate::model::Reality;
@@ -161,17 +161,30 @@ impl Engine {
         broke: &Broke,
     ) -> Result<(), Stop> {
         let mut bad = Vec::new();
+        let mut depends = Vec::new();
         for ((place, unit), legs) in group {
             let st = self.walk(id)?.pstate(m, place, unit, at);
-            let Some(nv) = st.known() else {
-                // legs dated by a window may still fall here: the three-valued test (E §4.1
-                // step 2; tally 2.1.8 item 77)
-                self.walk_mut(id)?.imp_sign_test(m, (place, unit), at)?;
-                continue;
+            // legs dated by a window may still fall here: the test asked of each balance they
+            // allow (E §4.1 step 2; tally 2.1.8 item 77)
+            let nv = match st.known() {
+                Some(nv) => Some(nv.clone()),
+                None => match imp_breaks(m, place, &st, None)? {
+                    Three::Depends => {
+                        depends.push((place.clone(), unit.clone(), legs.clone()));
+                        None
+                    }
+                    Three::Every => st.val.clone(),
+                    Three::None => None,
+                },
             };
-            if breaks(m, place, nv) {
-                bad.push((place.clone(), unit.clone(), nv.clone(), legs.clone()));
+            if let Some(nv) = nv
+                && breaks(m, place, &nv)
+            {
+                bad.push((place.clone(), unit.clone(), nv, legs.clone()));
             }
+        }
+        for (place, unit, legs) in depends {
+            self.walk_mut(id)?.imp_hole(m, at, (&place, &unit), &legs)?;
         }
         for (place, unit, nv, legs) in bad {
             let shown = qty_value(m, &nv, &unit)?
@@ -302,26 +315,33 @@ impl Walk {
         on: &[(String, i64)],
         unit: &str,
         at: At,
-    ) -> Result<Option<Refusal>, Stop> {
+    ) -> Result<Alone, Stop> {
         for (p, sign) in on {
             let st = self.pstate(m, p, unit, at);
+            let flow = super::day::signed(q, *sign)?;
             let Some(v) = st.known() else {
-                continue;
+                // legs dated by a window may still fall here: the test asked of each balance
+                // they allow (tally 2.1.8 item 77)
+                match imp_breaks(m, p, &st, Some(&flow))? {
+                    Three::Depends => return Ok(Alone::Depends(p.clone())),
+                    Three::Every => {
+                        return Ok(Alone::Refused(Refusal::new(
+                            Code::Run(Run::Place),
+                            takes_text(m, movement, p),
+                        )));
+                    }
+                    Three::None => continue,
+                }
             };
-            let moved = if *sign < 0 {
-                v.checked_sub(q)
-            } else {
-                v.checked_add(q)
-            }
-            .map_err(crate::eval::num_stop)?;
+            let moved = v.checked_add(&flow).map_err(crate::eval::num_stop)?;
             if breaks(m, p, &moved) {
-                return Ok(Some(Refusal::new(
+                return Ok(Alone::Refused(Refusal::new(
                     Code::Run(Run::Place),
                     takes_text(m, movement, p),
                 )));
             }
         }
-        Ok(None)
+        Ok(Alone::Passes)
     }
 
     /// An anchored reading's place, an opening's included, tested at the reading's point by
@@ -430,6 +450,57 @@ impl Walk {
 pub(super) fn place_sign(m: &Reality, place: &str) -> Option<Sign> {
     let base = m.things.get(place)?.base.as_deref()?;
     m.kind_sign(base)
+}
+
+/// What a leg tested alone meets (refcore's `book_leg`, its test outside a group). L §5.10,
+/// E §4.2 step 5.
+pub(super) enum Alone {
+    /// The leg is booked.
+    Passes,
+    /// The leg is refused.
+    Refused(Refusal),
+    /// Some of a pending window's days refuse it and some don't: the place named is the
+    /// window's hole (tally 2.1.8 item 77).
+    Depends(String),
+}
+
+/// A three-valued test (E §4.1 step 2; refcore's `three`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum Three {
+    /// No balance the pending legs allow breaks the rule.
+    None,
+    /// Every one does.
+    Every,
+    /// Some do and some don't.
+    Depends,
+}
+
+/// The sign rule at `place` asked of each balance the window-dated legs pending in `st` allow,
+/// a leg's `flow` added where one is being booked: the least and the greatest, the rule being
+/// monotone in the balance; none where the balance isn't known but for them (refcore's
+/// `imp_three`). E §4.1 step 2, §4.2 step 5; L §4.4; tally 2.1.8 item 77.
+///
+/// # Errors
+///
+/// A number past the cap.
+pub(super) fn imp_breaks(
+    m: &Reality,
+    place: &str,
+    st: &St,
+    flow: Option<&Num>,
+) -> Result<Three, Stop> {
+    let Some((mut lo, mut hi)) = st.imp_range()? else {
+        return Ok(Three::None);
+    };
+    if let Some(f) = flow {
+        lo = lo.checked_add(f).map_err(crate::eval::num_stop)?;
+        hi = hi.checked_add(f).map_err(crate::eval::num_stop)?;
+    }
+    Ok(match (breaks(m, place, &lo), breaks(m, place, &hi)) {
+        (false, false) => Three::None,
+        (true, true) => Three::Every,
+        _ => Three::Depends,
+    })
 }
 
 /// Whether balance `v` breaks its place's sign rule (L §5.10).

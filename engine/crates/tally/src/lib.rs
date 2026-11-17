@@ -254,8 +254,8 @@ pub mod walk {
     pub(crate) use reads::state_value;
     pub(crate) use state::GapAt;
     pub use state::{
-        ALL, Change, Checkpoint, Ent, Group, Log, Progress, Projected, St, Taken, Today, Walk,
-        WalkObs,
+        ALL, Change, Checkpoint, Ent, Group, LegOut, Log, Pending, Progress, Projected, St, Taken,
+        Today, Walk, WalkObs,
     };
     pub use tuples::Law;
 }

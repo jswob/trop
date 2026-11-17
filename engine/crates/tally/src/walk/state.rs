@@ -85,12 +85,35 @@ pub struct St {
     pub bad: Option<Refusal>,
     /// The refusal no reading ends (refcore's `pbad`): kept as `bad` at a reset.
     pub perm_bad: Option<Refusal>,
-    /// The movements dated by a window that may still fall, each by its window's id, with
-    /// the question it puts and its leg's amount signed as a flow into the place, where known
-    /// (L §4.4; refcore's `imp`; tally 2.1.8 item 77).
-    pub imp: Vec<(String, Hole, Option<Num>)>,
+    /// The movements dated by a window that may still fall (L §4.4; refcore's `imp`).
+    pub imp: Vec<Pending>,
     /// The position of the last reset in its log.
     pub rst: Option<usize>,
+}
+
+/// A movement dated by a window that may still fall at a place (refcore's `imp`, one entry;
+/// L §4.4; tally 2.1.8 item 77).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Pending {
+    /// Its window's id, `<movement>.<leg>`.
+    pub wid: String,
+    /// The question it puts.
+    pub hole: Hole,
+    /// Its leg's amount signed as a flow into the place, where known.
+    pub signed: Option<Num>,
+    /// The place at the leg's other end, where there is one.
+    pub other: Option<String>,
+}
+
+/// What a read of a leg the walk took out meets: its refusal, or the hole a test some of a
+/// window's days pass leaves it (refcore's `bad_legs`, `hole_legs`, `hole_flows`; E §4.2
+/// step 5; tally 2.1.8 item 77).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum LegOut {
+    /// The leg is refused.
+    Refused(Refusal),
+    /// The leg is the window's hole.
+    Hole(Hole),
 }
 
 impl St {
@@ -100,7 +123,7 @@ impl St {
     #[must_use]
     pub fn questions(&self, missing: Option<&Hole>) -> Option<Hole> {
         let mut all = vec![self.hole.as_ref(), self.perm.as_ref()];
-        all.extend(self.imp.iter().map(|(_, h, _)| Some(h)));
+        all.extend(self.imp.iter().map(|p| Some(&p.hole)));
         all.push(missing);
         spread(&all)
     }
@@ -144,8 +167,8 @@ impl St {
             return Ok(None);
         };
         let (mut lo, mut hi) = (val.clone(), val.clone());
-        for (_, _, amount) in &self.imp {
-            let Some(a) = amount else {
+        for pending in &self.imp {
+            let Some(a) = &pending.signed else {
                 return Ok(None);
             };
             if a.is_negative() {
@@ -161,7 +184,7 @@ impl St {
     /// (L §4.4; tally 2.1.8 item 77).
     #[must_use]
     pub fn imp_hole(&self) -> Option<Hole> {
-        let all: Vec<Option<&Hole>> = self.imp.iter().map(|(_, h, _)| Some(h)).collect();
+        let all: Vec<Option<&Hole>> = self.imp.iter().map(|p| Some(&p.hole)).collect();
         spread(&all)
     }
 }
@@ -193,6 +216,8 @@ pub struct Ent {
     /// An `ImpOn`'s leg amount signed as a flow into the place, where known (tally 2.1.8
     /// item 77).
     pub signed: Option<Num>,
+    /// An `ImpOn`'s place at the leg's other end (refcore's `imp`, its other end).
+    pub other: Option<String>,
     /// The state after it.
     pub st: St,
 }
@@ -235,6 +260,7 @@ impl Ent {
             flow: None,
             hole_leg: None,
             signed: None,
+            other: None,
             st: St::of(None),
         }
     }
@@ -347,6 +373,10 @@ pub struct Walk {
     pub(crate) adj_regs: BTreeMap<String, Vec<(Day, Entry)>>,
     /// The legs the walk refused, by (movement, leg) (E §4.2 step 5).
     pub(crate) bad_legs: BTreeMap<(String, String), Refusal>,
+    /// The legs a test some of a window's days pass left the window's hole, by (movement,
+    /// leg), which a read of the leg meets (refcore's `hole_legs`, `hole_flows`; tally 2.1.8
+    /// item 77).
+    pub(crate) hole_legs: BTreeMap<(String, String), Hole>,
     /// The warnings it met (L §8.5).
     pub(crate) warnings: Vec<(Warn, String)>,
     /// Whether each (place, unit) ended its last day below zero (`WARN-NEGATIVE`).
@@ -578,6 +608,7 @@ impl Walk {
             left_out_at: BTreeMap::new(),
             adj_regs: BTreeMap::new(),
             bad_legs: BTreeMap::new(),
+            hole_legs: BTreeMap::new(),
             warnings: Vec::new(),
             negative: BTreeMap::new(),
             conserved: BTreeMap::new(),
@@ -1132,8 +1163,13 @@ fn apply_ent(prev: &St, ent: &Ent, at: usize) -> Result<St, Stop> {
     let mut st = apply(prev, &ent.change, at)?;
     if let Some((wid, _)) = &ent.window {
         match &ent.change {
-            Change::ImpOn(h) => st.imp.push((wid.clone(), h.clone(), ent.signed.clone())),
-            Change::Delta(_) | Change::Hole(_) => st.imp.retain(|(w, ..)| w != wid),
+            Change::ImpOn(h) => st.imp.push(Pending {
+                wid: wid.clone(),
+                hole: h.clone(),
+                signed: ent.signed.clone(),
+                other: ent.other.clone(),
+            }),
+            Change::Delta(_) | Change::Hole(_) => st.imp.retain(|p| &p.wid != wid),
             Change::Reset { .. }
             | Change::Perm(_)
             | Change::Bad(_)

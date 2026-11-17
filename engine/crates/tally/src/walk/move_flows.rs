@@ -12,10 +12,10 @@
 
 use super::flows::span_last;
 use super::order::WalkAt;
-use super::plan::{Amount, Dated, DayWindow, Exists, Inst, Status, invariant, qty_value};
+use super::plan::{Amount, Dated, DayWindow, Exists, Inst, LegVal, Status, invariant, qty_value};
 use super::reads::refuse;
-use super::state::Progress;
-use crate::base::{Refusal, Run};
+use super::state::{LegOut, Progress};
+use crate::base::Run;
 use crate::book::{Obs, once_obs, same_differ};
 use crate::eval::{Collected, Ctx, Engine, Entry, Env, GUARDED, UNSET_AXIS};
 use crate::hole::{Hole, spread};
@@ -199,10 +199,19 @@ impl Engine {
                     Amount::Qty(q) => q,
                 };
                 let leg_day = lg.day.day().or(day);
-                if !q.is_zero()
-                    && let Some(err) = self.leg_refused(m, (&i.id, &lg.name), leg_day, ctx)?
-                {
-                    return Err(Stop::Refused(err));
+                let out = if q.is_zero() {
+                    None
+                } else {
+                    self.leg_refused(m, (&i.id, &lg.name), leg_day, ctx)?
+                };
+                if let Some(LegOut::Refused(err)) = &out {
+                    return Err(Stop::Refused(err.clone()));
+                }
+                if let Some(LegOut::Hole(h)) = out {
+                    // a window leg's: the flows read's question; a fixed day's the window's
+                    // test reaches: the hole it gives (tally 2.1.8 item 77)
+                    acc.holes.push(flows_hole(mv, i, lg).unwrap_or(h));
+                    continue;
                 }
                 acc.add(q, lg.unit.as_ref())?;
             }
@@ -358,7 +367,7 @@ impl Engine {
         key: (&str, &str),
         day: Option<Day>,
         ctx: Ctx,
-    ) -> Result<Option<Refusal>, Stop> {
+    ) -> Result<Option<LegOut>, Stop> {
         let wanted = (key.0.to_owned(), key.1.to_owned());
         if let Some(WalkAt { walk, .. }) = ctx.at {
             return self.chain_refusal(walk, &wanted);
@@ -369,7 +378,7 @@ impl Engine {
             || !self.walking.is_empty();
         let ours = !busy && ctx.cut == self.ask_cut;
         if ours && let Some(read) = self.refused_by_each(&wanted, ctx.cut) {
-            return read;
+            return read.map(|r| r.map(LegOut::Refused));
         }
         let unfinished = match id {
             None => true,
@@ -399,7 +408,9 @@ impl Engine {
                 }
                 // the walk read an axis the timeline sets no option of (E §3.3)
                 Err(Stop::NotBuilt(why)) if why == UNSET_AXIS => {
-                    return self.refused_in_each(m, &wanted, ctx.cut, Stop::NotBuilt(why));
+                    return self
+                        .refused_in_each(m, &wanted, ctx.cut, Stop::NotBuilt(why))
+                        .map(|r| r.map(LegOut::Refused));
                 }
                 Err(stop) => return Err(stop),
             };
@@ -410,17 +421,37 @@ impl Engine {
         self.chain_refusal(w, &wanted)
     }
 
-    /// The refusal of leg `wanted` in walk `id` or in a walk it continues, the nearest first:
-    /// a projection's walk keeps what the walks it continues have refused so far (refcore's
-    /// `leg_refused`, its loop over `w.base`). E §4.2 step 5, §4.3 step 1.
-    fn chain_refusal(&self, id: usize, wanted: &(String, String)) -> Result<Option<Refusal>, Stop> {
+    /// The refusal of leg `wanted` in walk `id` or in a walk it continues, the nearest first,
+    /// else the hole a test some of a window's days pass left it: a projection's walk keeps
+    /// what the walks it continues have refused so far (refcore's `leg_refused`, its loop over
+    /// `w.base`). E §4.2 step 5, §4.3 step 1; tally 2.1.8 item 77.
+    fn chain_refusal(&self, id: usize, wanted: &(String, String)) -> Result<Option<LegOut>, Stop> {
         for wid in self.chain(id)? {
-            if let Some(refusal) = self.walk(wid)?.bad_legs.get(wanted) {
-                return Ok(Some(refusal.clone()));
+            let walk = self.walk(wid)?;
+            if let Some(refusal) = walk.bad_legs.get(wanted) {
+                return Ok(Some(LegOut::Refused(refusal.clone())));
+            }
+            if let Some(hole) = walk.hole_legs.get(wanted) {
+                return Ok(Some(LegOut::Hole(hole.clone())));
             }
         }
         Ok(None)
     }
+}
+
+/// The hole `flows` of move `mv` reads in leg `lg` of instance `i` where a test some of a
+/// window's days pass left it the window's hole: asked for flows of the move, of the leg's
+/// window or its instance's; none for a leg of a fixed day (refcore's `flows_move`, its
+/// `leg_refused` hole). L §4.4; tally 2.1.8 item 77.
+fn flows_hole(mv: &MoveInfo, i: &Inst, lg: &LegVal) -> Option<Hole> {
+    let ((Dated::Window(w), _) | (_, Some(Dated::Window(w)))) = (&lg.day, &i.day) else {
+        return None;
+    };
+    let text = format!(
+        "date within {} not precise enough for flows of {}",
+        w.question, mv.id
+    );
+    Some(Hole::asked(&text, &i.id).carrying(&w.value.carry))
 }
 
 /// Whether instance `i` is for period `k` under `flows(…, for k)`: its period equal to `k`;
