@@ -117,9 +117,10 @@ impl Engine {
     /// point `key`, after its group is tested, each tested as it is booked: where m is booked
     /// before the cut, and where m is modelled past and observations booked at its point stand
     /// in for it; where m is modelled past and nothing fulfils it, the reading's place is
-    /// refused from there (`RUN-RECORD`); none where m doesn't exist, is a hole, uncertain or
-    /// refused (refcore's `after_mv`, `run_one`'s `_after`). E §4.2 steps 3 and 5, L §4.6
-    /// Readings, §5.10 point 2, §5.19.
+    /// refused from there (`RUN-RECORD`); none where only observations dated before S fulfil
+    /// it (a fact the walk doesn't apply), or m doesn't exist, is a hole, uncertain or refused
+    /// (refcore's `after_mv`, `run_one`'s `_after`). E §4.2 steps 3 and 5, L §4.6 Readings,
+    /// §5.10 point 2, §5.19.
     pub(super) fn readings_after(
         &mut self,
         m: &Reality,
@@ -135,19 +136,27 @@ impl Engine {
             .runs
             .get(ix)
             .ok_or_else(|| invariant("a run just made"))?;
-        let (mid, status, linked) = (
+        let (mid, status, links, cut) = (
             run.inst.id.clone(),
             run.inst.status,
-            !run.inst.obs.is_empty(),
+            run.inst.obs.clone(),
+            walk.cut,
         );
         let Some(waiting) = self.walk_mut(id)?.after.remove(&mid) else {
             return Ok(());
+        };
+        let linked = !links.is_empty();
+        let stands = linked && {
+            let obs = self.observations(m, cut)?;
+            crate::book::stands_in(obs, &links, (m.start, m.end, cut))
         };
         let at = key.with_sub(AFTER_SUB);
         for r in waiting {
             match status {
                 Status::Past => self.apply_after(m, id, at, &r)?,
-                Status::Modelled if linked => self.apply_after(m, id, at, &r)?,
+                Status::Modelled if stands => self.apply_after(m, id, at, &r)?,
+                // observations dated before S fulfil it: a fact the walk doesn't apply
+                Status::Modelled if linked => {}
                 Status::Modelled => {
                     let why = "is modelled past and nothing fulfils it";
                     self.after_missing(m, id, at, (&r, &mid, why))?;

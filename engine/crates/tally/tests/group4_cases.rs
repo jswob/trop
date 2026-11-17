@@ -703,4 +703,64 @@ ask s: sum(t.cash.amount for t in transfers over 2026-02)
             "the refusal, and the warning the walk meets"
         );
     }
+
+    /// The final check's `r16/after_m_obs_before_start` (L §4.6, §5.19 Before the run): a
+    /// reading `after m` whose m only an observation dated before S fulfils has no point the
+    /// walk applies (that row is booked by none), so it anchors nothing; a read of it is
+    /// `RUN-RECORD`, nothing booking m by the cut.
+    #[test]
+    fn a_reading_after_m_fulfilled_before_start_is_not_applied() {
+        let text = r#"model t
+  tally 2
+  on 2026-08-01
+  start 2026-05-02
+  end 2026-07-31
+
+source src "s"
+unit PLN: currency minor 0.01
+place a: accounts PLN lives 2026-01-01..
+place b: accounts PLN lives 2026-01-01..
+input rows: observed
+input floor: money PLN
+input d_sv: int
+
+move sv[m in months]: transfers
+  on day_of(m, d_sv)
+  reads a
+  leg cash from a to b amount max(0 PLN, bal(a) - floor)
+
+version v
+  cite src
+  governs always
+  known 2026-01-01
+  floor = 50.00 PLN "s"
+  d_sv = 20 "s"
+  opening[a] = 300.00 PLN at 2026-05-02 start "s"
+  opening[b] = 0.00 PLN at 2026-05-02 start "s"
+
+version st
+  cite src
+  governs 2026-05
+  known 2026-06-02
+  covers a
+  anchor a
+  rows[r1] = (on: 2026-05-01, kind: transfers, leg cash from a to b amount 250.00 PLN, fulfils: sv[2026-05]) "r1"
+  stated[a] = 300.00 PLN after sv[2026-05] "saldo"
+
+ask q: bal(a, 2026-05-31), bal(a, 2026-05-31) modelled
+ask r: since(stated[a], 2026-05-25)
+"#;
+        let lines = lines_of("r16_before_start.tally", text);
+        assert_eq!(
+            lines,
+            [
+                "q: (300.00 PLN, 50.00 PLN)",
+                "  cut 2026-08-01",
+                "r: refused: RUN-RECORD reading stated[a] after sv[2026-05]: sv[2026-05] is \
+                 modelled past and nothing fulfils it",
+                "  cut 2026-08-01",
+            ],
+            "no anchor line; the read of the reading refused"
+        );
+    }
 }

@@ -283,7 +283,7 @@ pub mod book {
     pub use reading::{
         AfterDay, AfterDays, Pad, Seen, Stands, after_missing, per_unit, reading_rank,
     };
-    pub(crate) use reading::{gap_text, instant_text, reading_place};
+    pub(crate) use reading::{gap_text, instant_text, reading_place, stands_in};
     pub use same::{Groups, kept_once, once_obs, same_differ};
     pub(crate) use same::{Member, SameMet, SamePicks, Waiting, and_list};
     pub(crate) use settle::settlement_move;

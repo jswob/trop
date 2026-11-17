@@ -718,10 +718,11 @@ impl Engine {
     }
 
     /// The status of decision instance `mid`'s run in the walk a read in context `ctx` sees,
-    /// and whether observations stand in for it: the walk it reads at, or else the main walk
-    /// of its cut, through the walks it continues; none where m hasn't run there, or where
-    /// that main walk is being walked (refcore's `after_day`, its run). E §4.2 step 3, L §4.6
-    /// Readings.
+    /// and whether observations the walk books stand in for it (none dated before S,
+    /// [`crate::book::stands_in`]): the walk it reads at, or else the main walk of its cut,
+    /// through the walks it continues; none where m hasn't run there, or where that main walk
+    /// is being walked (refcore's `after_day`, its run and its `legs`). E §4.2 step 3, L §4.6
+    /// Readings, §5.19 Before the run.
     ///
     /// # Errors
     ///
@@ -747,7 +748,10 @@ impl Engine {
                     .runs
                     .get(*ix)
                     .ok_or_else(|| invariant("a run by its id"))?;
-                return Ok(Some((run.inst.status, !run.inst.obs.is_empty())));
+                let (status, links, cut) = (run.inst.status, run.inst.obs.clone(), walk.cut);
+                let obs = self.observations(m, cut)?;
+                let stands = crate::book::stands_in(obs, &links, (m.start, m.end, cut));
+                return Ok(Some((status, stands)));
             }
         }
         Ok(None)
